@@ -17,6 +17,11 @@ import {
 import { enrichBlocksWithSignedUrls } from "@/lib/content-blocks/sign-urls";
 import { MarkCompleteButton } from "./mark-complete-button";
 import { QuizRunner, type QuizQuestion } from "./quiz-runner";
+import {
+  AssignmentRunner,
+  type AssignmentDescriptor,
+  type PriorSubmission,
+} from "./assignment-runner";
 
 export default async function LessonPage({
   params,
@@ -130,8 +135,9 @@ export default async function LessonPage({
           backHref={courseId ? `/courses/${courseId}` : "/dashboard"}
         />
       ) : (
-        <AssignmentLessonPlaceholder
+        <AssignmentLessonBody
           assignmentId={lesson.assignment_id as string | null}
+          lessonId={lessonId}
         />
       )}
     </main>
@@ -267,20 +273,57 @@ function toOptionList(value: unknown): RawOptionRow[] {
   return [value as RawOptionRow];
 }
 
-function AssignmentLessonPlaceholder({
+async function AssignmentLessonBody({
   assignmentId,
+  lessonId,
 }: {
   assignmentId: string | null;
+  lessonId: string;
 }) {
+  if (!assignmentId) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Assignment unavailable</CardTitle>
+          <CardDescription>
+            No assignment is attached to this lesson.
+          </CardDescription>
+        </CardHeader>
+      </Card>
+    );
+  }
+
+  const supabase = await createClient();
+  const [{ data: assignment }, { data: subs }] = await Promise.all([
+    supabase
+      .from("assignments")
+      .select("id, title, instructions, submission_type, requires_review")
+      .eq("id", assignmentId)
+      .maybeSingle(),
+    supabase
+      .from("assignment_submissions")
+      .select("id, status, submitted_at, reviewer_notes")
+      .eq("lesson_id", lessonId)
+      .order("submitted_at", { ascending: false }),
+  ]);
+
+  if (!assignment) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Assignment unavailable</CardTitle>
+          <CardDescription>The assignment couldn&apos;t be loaded.</CardDescription>
+        </CardHeader>
+      </Card>
+    );
+  }
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Assignment</CardTitle>
-        <CardDescription>
-          Submission form lands in the next build phase. Assignment id: {assignmentId ?? "(none)"}.
-        </CardDescription>
-      </CardHeader>
-    </Card>
+    <AssignmentRunner
+      lessonId={lessonId}
+      assignment={assignment as AssignmentDescriptor}
+      priorSubmissions={(subs ?? []) as PriorSubmission[]}
+    />
   );
 }
 

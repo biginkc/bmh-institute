@@ -30,12 +30,14 @@ export function FileUpload({
   onUploaded,
   currentPath,
   label = "Upload file",
+  bucket = "content",
 }: {
   accept: string;
   maxMb?: number;
   onUploaded: (file: UploadedFile) => void;
   currentPath?: string | null;
   label?: string;
+  bucket?: "content" | "submissions" | "avatars";
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [progress, setProgress] = useState<number | null>(null);
@@ -73,7 +75,7 @@ export function FileUpload({
       const path = `${user.id}/${Date.now()}-${safeName}`;
 
       const { error } = await supabase.storage
-        .from("content")
+        .from(bucket)
         .upload(path, file, {
           contentType: file.type || "application/octet-stream",
           upsert: false,
