@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import {
   Card,
   CardContent,
@@ -130,7 +132,14 @@ export default async function AdminReportsPage() {
               ) : (
                 learnerStats.map((l) => (
                   <TableRow key={l.id}>
-                    <TableCell className="font-medium">{l.fullName}</TableCell>
+                    <TableCell className="font-medium">
+                      <Link
+                        href={`/admin/reports/users/${l.id}`}
+                        className="underline-offset-2 hover:underline"
+                      >
+                        {l.fullName}
+                      </Link>
+                    </TableCell>
                     <TableCell>
                       <Badge variant="outline" className="capitalize">
                         {l.systemRole}

@@ -7,6 +7,8 @@ import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth/guard";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { sendEmail } from "@/lib/email/send";
+import { renderEnrollmentEmail } from "@/lib/email/enrollment";
 import {
   parseInviteInput,
   type InviteInput,
@@ -84,8 +86,93 @@ export async function inviteUser(
     };
   }
 
+  // Send enrollment email listing the programs + standalone courses the
+  // invitee will have access to. Fire-and-forget — a Resend failure or
+  // missing RESEND_API_KEY shouldn't block the invite since Supabase
+  // already delivered the signup link.
+  await sendEnrollmentEmail({
+    supabase,
+    email: parsed.value.email,
+    roleGroupIds: parsed.value.role_group_ids,
+    appUrl,
+  });
+
   revalidatePath("/admin/users");
   return { ok: true, email: parsed.value.email };
+}
+
+async function sendEnrollmentEmail(input: {
+  supabase: Awaited<ReturnType<typeof createClient>>;
+  email: string;
+  roleGroupIds: string[];
+  appUrl: string;
+}): Promise<void> {
+  let programs: Array<{ id: string; title: string }> = [];
+  let standaloneCourses: Array<{ id: string; title: string }> = [];
+
+  if (input.roleGroupIds.length > 0) {
+    // Programs accessible via any of the invitee's role groups.
+    const { data: pRows } = await input.supabase
+      .from("program_access")
+      .select("programs(id, title)")
+      .in("role_group_id", input.roleGroupIds);
+    const seen = new Set<string>();
+    for (const row of pRows ?? []) {
+      const p = firstRow(row.programs);
+      if (p && typeof p.id === "string" && !seen.has(p.id)) {
+        seen.add(p.id);
+        programs.push({ id: p.id, title: p.title as string });
+      }
+    }
+
+    // Courses accessible directly via course_access AND not already in
+    // one of the invitee's accessible programs.
+    const { data: cRows } = await input.supabase
+      .from("course_access")
+      .select("courses(id, title)")
+      .in("role_group_id", input.roleGroupIds);
+    const courseIdsInPrograms = new Set<string>();
+    if (programs.length > 0) {
+      const { data: pcRows } = await input.supabase
+        .from("program_courses")
+        .select("course_id")
+        .in(
+          "program_id",
+          programs.map((p) => p.id),
+        );
+      for (const r of pcRows ?? []) {
+        courseIdsInPrograms.add(r.course_id as string);
+      }
+    }
+    const seenC = new Set<string>();
+    for (const row of cRows ?? []) {
+      const c = firstRow(row.courses);
+      if (!c || typeof c.id !== "string") continue;
+      if (courseIdsInPrograms.has(c.id)) continue;
+      if (seenC.has(c.id)) continue;
+      seenC.add(c.id);
+      standaloneCourses.push({ id: c.id, title: c.title as string });
+    }
+  }
+
+  const { subject, html } = renderEnrollmentEmail({
+    inviteeEmail: input.email,
+    appUrl: input.appUrl,
+    programs,
+    standaloneCourses,
+  });
+
+  await sendEmail({
+    to: input.email,
+    subject,
+    html,
+  });
+}
+
+function firstRow<T>(value: T | T[] | null | undefined): T | null {
+  if (!value) return null;
+  if (Array.isArray(value)) return value[0] ?? null;
+  return value;
 }
 
 export async function revokeInvite(
