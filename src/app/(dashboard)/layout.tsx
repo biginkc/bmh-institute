@@ -9,6 +9,7 @@ import {
   UsersRound,
   ShieldCheck,
   Inbox,
+  BarChart3,
 } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
@@ -98,6 +99,12 @@ export default async function DashboardLayout({
                   icon={<UsersRound className="size-4" />}
                 >
                   Role groups
+                </NavLink>
+                <NavLink
+                  href="/admin/reports"
+                  icon={<BarChart3 className="size-4" />}
+                >
+                  Reports
                 </NavLink>
               </>
             ) : null}
