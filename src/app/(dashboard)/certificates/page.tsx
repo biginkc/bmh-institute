@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Download } from "lucide-react";
 
 import {
@@ -78,14 +79,13 @@ export default async function CertificatesPage() {
                     {new Date(c.issuedAt).toLocaleDateString()}
                   </div>
                 </div>
-                <button
-                  className="border-border text-muted-foreground hover:text-foreground hover:bg-muted flex items-center gap-2 rounded-md border px-3 py-1.5 text-xs"
-                  disabled
-                  title="PDF generation arrives with the certificate-render phase"
+                <Link
+                  href={`/certificates/${c.scope}/${c.id}`}
+                  className="border-border hover:bg-muted flex items-center gap-2 rounded-md border px-3 py-1.5 text-xs"
                 >
                   <Download className="size-3.5" />
-                  Download
-                </button>
+                  View &amp; print
+                </Link>
               </CardContent>
             </Card>
           ))}
