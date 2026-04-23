@@ -49,6 +49,7 @@ next-env.d.ts
 
 # Playwright E2E artefacts
 /e2e/.auth/
+/e2e-prod/.auth/
 /playwright-report/
 /test-results/
 /playwright/.cache/
