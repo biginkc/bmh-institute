@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ExternalLink } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { VideoBlockPlayer } from "./video-block-player";
 
 export type ContentBlock = {
   id: string;
@@ -87,6 +88,7 @@ export function ContentBlockRenderer({ block }: { block: ContentBlock }) {
     case "video":
       return (
         <VideoBlock
+          blockId={block.id}
           source={stringOr(block.content.source, "upload")}
           signedUrl={stringOr(block.content.signed_url, null)}
           url={stringOr(block.content.url, null)}
@@ -351,11 +353,13 @@ function formatBytes(bytes: number): string {
 }
 
 function VideoBlock({
+  blockId,
   source,
   signedUrl,
   url,
   filePath,
 }: {
+  blockId: string;
   source: string;
   signedUrl: string | null;
   url: string | null;
@@ -371,12 +375,7 @@ function VideoBlock({
         </div>
       );
     }
-    return (
-      <div className="overflow-hidden rounded-md border">
-        {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
-        <video src={src} controls className="h-auto w-full" preload="metadata" />
-      </div>
-    );
+    return <VideoBlockPlayer blockId={blockId} src={src} />;
   }
 
   if (!url) {
