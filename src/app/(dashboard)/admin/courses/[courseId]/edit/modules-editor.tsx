@@ -104,6 +104,9 @@ function ModuleCard({
 }) {
   const [title, setTitle] = useState(mod.title);
   const [newLessonTitle, setNewLessonTitle] = useState("");
+  const [newLessonType, setNewLessonType] = useState<
+    "content" | "quiz" | "assignment"
+  >("content");
 
   function onSaveTitle() {
     if (title === mod.title) return;
@@ -158,7 +161,7 @@ function ModuleCard({
         moduleId: mod.id,
         courseId,
         title: t,
-        lesson_type: "content",
+        lesson_type: newLessonType,
       });
       if (!result.ok) toast.error(result.error);
       else {
@@ -230,13 +233,13 @@ function ModuleCard({
           </ol>
         )}
 
-        <div className="flex items-end gap-2">
+        <div className="flex flex-col gap-2 md:flex-row md:items-end">
           <div className="flex-1">
             <label
               htmlFor={`new-lesson-${mod.id}`}
               className="text-muted-foreground mb-1 block text-xs"
             >
-              Add a content lesson
+              Add lesson
             </label>
             <Input
               id={`new-lesson-${mod.id}`}
@@ -245,8 +248,30 @@ function ModuleCard({
               placeholder="Lesson title"
             />
           </div>
+          <div>
+            <label
+              htmlFor={`new-lesson-type-${mod.id}`}
+              className="text-muted-foreground mb-1 block text-xs"
+            >
+              Type
+            </label>
+            <select
+              id={`new-lesson-type-${mod.id}`}
+              value={newLessonType}
+              onChange={(e) =>
+                setNewLessonType(
+                  e.target.value as "content" | "quiz" | "assignment",
+                )
+              }
+              className="border-input bg-background rounded-md border px-3 py-2 text-sm"
+            >
+              <option value="content">Content</option>
+              <option value="quiz">Quiz</option>
+              <option value="assignment">Assignment</option>
+            </select>
+          </div>
           <Button variant="outline" onClick={onAddLesson} disabled={pending}>
-            {pending ? "..." : "Add lesson"}
+            {pending ? "..." : "Add"}
           </Button>
         </div>
       </div>
@@ -301,18 +326,12 @@ function LessonRow({
         </Badge>
       </div>
       <div className="flex items-center gap-1">
-        {lesson.lesson_type === "content" ? (
-          <Link
-            href={`/admin/lessons/${lesson.id}/edit`}
-            className="text-xs underline-offset-2 hover:underline"
-          >
-            Edit →
-          </Link>
-        ) : (
-          <span className="text-muted-foreground text-xs">
-            {lesson.lesson_type} editor next phase
-          </span>
-        )}
+        <Link
+          href={`/admin/lessons/${lesson.id}/edit`}
+          className="text-xs underline-offset-2 hover:underline"
+        >
+          Edit →
+        </Link>
         <Button
           variant="outline"
           size="icon-sm"

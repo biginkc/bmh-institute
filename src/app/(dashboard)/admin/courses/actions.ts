@@ -210,13 +210,6 @@ export async function createLesson(input: {
   await requireAdmin();
   const title = input.title.trim();
   if (!title) return { ok: false, error: "Title is required." };
-  if (input.lesson_type !== "content") {
-    return {
-      ok: false,
-      error:
-        "Only content lessons can be created here today. Quiz and assignment lessons arrive in the next build.",
-    };
-  }
 
   const supabase = await createClient();
   const { data: last } = await supabase
@@ -228,18 +221,61 @@ export async function createLesson(input: {
     .maybeSingle();
   const nextOrder = last ? (last.sort_order as number) + 1 : 0;
 
+  let quizId: string | null = null;
+  let assignmentId: string | null = null;
+
+  // Quiz / assignment lessons require a backing row ready at insert time
+  // because the lessons_type_matches_fk check constraint enforces it.
+  if (input.lesson_type === "quiz") {
+    const { data: quiz, error: quizErr } = await supabase
+      .from("quizzes")
+      .insert({ title, passing_score: 80 })
+      .select("id")
+      .single();
+    if (quizErr || !quiz) {
+      return {
+        ok: false,
+        error: quizErr?.message ?? "Couldn't create quiz.",
+      };
+    }
+    quizId = quiz.id as string;
+  } else if (input.lesson_type === "assignment") {
+    const { data: asn, error: asnErr } = await supabase
+      .from("assignments")
+      .insert({
+        title,
+        instructions: "Describe what the learner should submit.",
+        submission_type: "text",
+      })
+      .select("id")
+      .single();
+    if (asnErr || !asn) {
+      return {
+        ok: false,
+        error: asnErr?.message ?? "Couldn't create assignment.",
+      };
+    }
+    assignmentId = asn.id as string;
+  }
+
   const { data, error } = await supabase
     .from("lessons")
     .insert({
       module_id: input.moduleId,
       title,
       lesson_type: input.lesson_type,
+      quiz_id: quizId,
+      assignment_id: assignmentId,
       sort_order: nextOrder,
     })
     .select("id")
     .single();
 
   if (error || !data) {
+    // Roll back the orphan quiz/assignment row if the lesson insert failed.
+    if (quizId) await supabase.from("quizzes").delete().eq("id", quizId);
+    if (assignmentId)
+      await supabase.from("assignments").delete().eq("id", assignmentId);
     return { ok: false, error: error?.message ?? "Couldn't create lesson." };
   }
 
@@ -254,11 +290,32 @@ export async function deleteLesson(input: {
 }): Promise<{ ok: true } | { ok: false; error: string }> {
   await requireAdmin();
   const supabase = await createClient();
+
+  // Grab the lesson's backing quiz/assignment (if any) so we can clean up
+  // the orphan after the lesson row is gone. ON DELETE RESTRICT on the
+  // FK means we can't delete the quiz while the lesson still references it.
+  const { data: lesson } = await supabase
+    .from("lessons")
+    .select("quiz_id, assignment_id")
+    .eq("id", input.lessonId)
+    .maybeSingle();
+
   const { error } = await supabase
     .from("lessons")
     .delete()
     .eq("id", input.lessonId);
   if (error) return { ok: false, error: error.message };
+
+  if (lesson?.quiz_id) {
+    await supabase.from("quizzes").delete().eq("id", lesson.quiz_id);
+  }
+  if (lesson?.assignment_id) {
+    await supabase
+      .from("assignments")
+      .delete()
+      .eq("id", lesson.assignment_id);
+  }
+
   revalidatePath(`/admin/courses/${input.courseId}/edit`);
   revalidatePath("/dashboard");
   return { ok: true };
