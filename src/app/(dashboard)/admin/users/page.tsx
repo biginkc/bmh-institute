@@ -69,14 +69,18 @@ export default async function AdminUsersPage() {
                     <TableHead>Email</TableHead>
                     <TableHead>Role</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Action</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {(profiles.data ?? []).map((p) => (
                     <TableRow key={p.id as string}>
                       <TableCell className="font-medium">
-                        {p.full_name as string}
+                        <Link
+                          href={`/admin/users/${p.id as string}/edit`}
+                          className="hover:underline underline-offset-4"
+                        >
+                          {p.full_name as string}
+                        </Link>
                       </TableCell>
                       <TableCell className="text-muted-foreground text-xs">
                         {p.email as string}
@@ -95,14 +99,6 @@ export default async function AdminUsersPage() {
                         >
                           {p.status as string}
                         </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Link
-                          href={`/admin/users/${p.id as string}/edit`}
-                          className="text-xs underline underline-offset-4"
-                        >
-                          Edit
-                        </Link>
                       </TableCell>
                     </TableRow>
                   ))}
