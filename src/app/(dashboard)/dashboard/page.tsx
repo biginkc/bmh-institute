@@ -14,6 +14,10 @@ import { shapeProgramsResponse } from "@/lib/programs/shape";
 export default async function DashboardPage() {
   const supabase = await createClient();
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   const { data, error } = await supabase
     .from("programs")
     .select(
@@ -40,6 +44,56 @@ export default async function DashboardPage() {
 
   const programs = shapeProgramsResponse(data);
 
+  const courseIds = Array.from(
+    new Set(programs.flatMap((p) => p.courses.map((c) => c.id))),
+  );
+
+  // Count required lessons per course and how many the current user finished.
+  // Done as two cheap queries rather than a stored RPC to keep the model
+  // simple — completion volume is low for an internal team.
+  const progressByCourse = new Map<string, { done: number; total: number }>();
+
+  if (courseIds.length > 0 && user) {
+    const [lessonsRes, completionsRes] = await Promise.all([
+      supabase
+        .from("modules")
+        .select("course_id, lessons(id, is_required_for_completion)")
+        .in("course_id", courseIds),
+      supabase
+        .from("user_lesson_completions")
+        .select("lesson_id")
+        .eq("user_id", user.id),
+    ]);
+
+    const requiredLessonsByCourse = new Map<string, Set<string>>();
+    for (const row of lessonsRes.data ?? []) {
+      const courseId = row.course_id as string;
+      const lessons = (row.lessons ?? []) as Array<{
+        id: string;
+        is_required_for_completion: boolean;
+      }>;
+      if (!requiredLessonsByCourse.has(courseId)) {
+        requiredLessonsByCourse.set(courseId, new Set());
+      }
+      const set = requiredLessonsByCourse.get(courseId)!;
+      for (const lesson of lessons) {
+        if (lesson.is_required_for_completion) set.add(lesson.id);
+      }
+    }
+
+    const completedLessonIds = new Set(
+      (completionsRes.data ?? []).map((r) => r.lesson_id as string),
+    );
+
+    for (const [courseId, required] of requiredLessonsByCourse.entries()) {
+      let done = 0;
+      for (const lessonId of required) {
+        if (completedLessonIds.has(lessonId)) done += 1;
+      }
+      progressByCourse.set(courseId, { done, total: required.size });
+    }
+  }
+
   return (
     <main className="mx-auto w-full max-w-5xl flex-1 p-6 md:p-10">
       <div className="mb-8">
@@ -65,7 +119,11 @@ export default async function DashboardPage() {
       ) : (
         <div className="grid gap-6">
           {programs.map((program) => (
-            <ProgramCard key={program.id} program={program} />
+            <ProgramCard
+              key={program.id}
+              program={program}
+              progressByCourse={progressByCourse}
+            />
           ))}
         </div>
       )}
@@ -75,8 +133,10 @@ export default async function DashboardPage() {
 
 function ProgramCard({
   program,
+  progressByCourse,
 }: {
   program: ReturnType<typeof shapeProgramsResponse>[number];
+  progressByCourse: Map<string, { done: number; total: number }>;
 }) {
   return (
     <Card>
@@ -100,32 +160,59 @@ function ProgramCard({
           <p className="text-muted-foreground text-sm">No courses in this program yet.</p>
         ) : (
           <ol className="divide-border divide-y">
-            {program.courses.map((course, idx) => (
-              <li key={course.id} className="flex items-center justify-between py-3 first:pt-0 last:pb-0">
-                <div className="flex items-center gap-3">
-                  <span className="text-muted-foreground w-6 text-sm tabular-nums">
-                    {idx + 1}.
-                  </span>
-                  <div>
+            {program.courses.map((course, idx) => {
+              const progress = progressByCourse.get(course.id);
+              const isComplete =
+                progress !== undefined &&
+                progress.total > 0 &&
+                progress.done >= progress.total;
+              return (
+                <li
+                  key={course.id}
+                  className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0"
+                >
+                  <div className="flex min-w-0 items-center gap-3">
+                    <span className="text-muted-foreground w-6 text-sm tabular-nums">
+                      {idx + 1}.
+                    </span>
+                    <div className="min-w-0">
+                      <Link
+                        href={`/courses/${course.id}`}
+                        className="text-sm font-medium underline-offset-2 hover:underline"
+                      >
+                        {course.title}
+                      </Link>
+                      {course.description ? (
+                        <p className="text-muted-foreground mt-0.5 text-xs">
+                          {course.description}
+                        </p>
+                      ) : null}
+                    </div>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-3">
+                    {progress && progress.total > 0 ? (
+                      <span
+                        className={
+                          isComplete
+                            ? "text-xs font-medium text-emerald-700 dark:text-emerald-300"
+                            : "text-muted-foreground text-xs tabular-nums"
+                        }
+                      >
+                        {isComplete
+                          ? "Complete"
+                          : `${progress.done} / ${progress.total}`}
+                      </span>
+                    ) : null}
                     <Link
                       href={`/courses/${course.id}`}
-                      className="text-sm font-medium underline-offset-2 hover:underline"
+                      className="text-muted-foreground hover:text-foreground text-xs"
                     >
-                      {course.title}
+                      Open →
                     </Link>
-                    {course.description ? (
-                      <p className="text-muted-foreground mt-0.5 text-xs">{course.description}</p>
-                    ) : null}
                   </div>
-                </div>
-                <Link
-                  href={`/courses/${course.id}`}
-                  className="text-muted-foreground hover:text-foreground text-xs"
-                >
-                  Open →
-                </Link>
-              </li>
-            ))}
+                </li>
+              );
+            })}
           </ol>
         )}
       </CardContent>
