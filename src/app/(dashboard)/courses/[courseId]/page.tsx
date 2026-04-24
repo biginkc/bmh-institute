@@ -25,6 +25,10 @@ export default async function CoursePage({
   const { courseId } = await params;
   const supabase = await createClient();
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   const [courseResult, completionsResult] = await Promise.all([
     supabase
       .from("courses")
@@ -55,7 +59,12 @@ export default async function CoursePage({
       )
       .eq("id", courseId)
       .maybeSingle(),
-    supabase.from("user_lesson_completions").select("lesson_id"),
+    user
+      ? supabase
+          .from("user_lesson_completions")
+          .select("lesson_id")
+          .eq("user_id", user.id)
+      : Promise.resolve({ data: [] }),
   ]);
 
   if (courseResult.error || !courseResult.data) {
@@ -68,6 +77,18 @@ export default async function CoursePage({
   const completedLessonIds = new Set(
     (completionsResult.data ?? []).map((c) => c.lesson_id as string),
   );
+
+  const allLessons = course.modules.flatMap((m) => m.lessons);
+  const requiredLessons = allLessons.filter((l) => l.is_required_for_completion);
+  const requiredDone = requiredLessons.filter((l) =>
+    completedLessonIds.has(l.id),
+  ).length;
+  const isCourseComplete =
+    requiredLessons.length > 0 && requiredDone >= requiredLessons.length;
+  const progressPct =
+    requiredLessons.length > 0
+      ? Math.round((requiredDone / requiredLessons.length) * 100)
+      : 0;
 
   return (
     <main className="mx-auto w-full max-w-4xl flex-1 p-6 md:p-10">
@@ -82,6 +103,36 @@ export default async function CoursePage({
         {course.description ? (
           <p className="text-muted-foreground mt-1 text-sm">{course.description}</p>
         ) : null}
+        {requiredLessons.length > 0 ? (
+          <div className="mt-4 flex flex-col gap-1.5">
+            <div className="flex items-center justify-between text-xs">
+              <span
+                className={cn(
+                  "font-medium",
+                  isCourseComplete
+                    ? "text-emerald-700 dark:text-emerald-300"
+                    : "text-muted-foreground",
+                )}
+              >
+                {isCourseComplete
+                  ? "Course complete"
+                  : `${requiredDone} of ${requiredLessons.length} required lessons complete`}
+              </span>
+              <span className="text-muted-foreground tabular-nums">
+                {progressPct}%
+              </span>
+            </div>
+            <div className="bg-muted h-1.5 w-full overflow-hidden rounded-full">
+              <div
+                className={cn(
+                  "h-full rounded-full transition-all",
+                  isCourseComplete ? "bg-emerald-500" : "bg-primary",
+                )}
+                style={{ width: `${progressPct}%` }}
+              />
+            </div>
+          </div>
+        ) : null}
       </div>
 
       {course.modules.length === 0 ? (
@@ -93,13 +144,36 @@ export default async function CoursePage({
         </Card>
       ) : (
         <div className="flex flex-col gap-6">
-          {course.modules.map((mod, modIdx) => (
+          {course.modules.map((mod, modIdx) => {
+            const modRequired = mod.lessons.filter(
+              (l) => l.is_required_for_completion,
+            );
+            const modDone = modRequired.filter((l) =>
+              completedLessonIds.has(l.id),
+            ).length;
+            const modComplete =
+              modRequired.length > 0 && modDone >= modRequired.length;
+            return (
             <Card key={mod.id}>
               <CardHeader>
-                <div className="flex items-start gap-3">
+                <div className="flex items-center justify-between">
                   <span className="text-muted-foreground text-sm tabular-nums">
                     Module {modIdx + 1}
                   </span>
+                  {modRequired.length > 0 ? (
+                    <span
+                      className={cn(
+                        "text-xs tabular-nums",
+                        modComplete
+                          ? "font-medium text-emerald-700 dark:text-emerald-300"
+                          : "text-muted-foreground",
+                      )}
+                    >
+                      {modComplete
+                        ? "Complete"
+                        : `${modDone} / ${modRequired.length}`}
+                    </span>
+                  ) : null}
                 </div>
                 <CardTitle className="mt-1">{mod.title}</CardTitle>
                 {mod.description ? (
@@ -123,7 +197,8 @@ export default async function CoursePage({
                 )}
               </CardContent>
             </Card>
-          ))}
+            );
+          })}
         </div>
       )}
     </main>
