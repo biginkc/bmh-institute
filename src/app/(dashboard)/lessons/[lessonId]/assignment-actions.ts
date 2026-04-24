@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 
 import { createClient } from "@/lib/supabase/server";
+import { sendEmail } from "@/lib/email/send";
+import { renderNewSubmissionEmail } from "@/lib/email/new-submission";
 
 export type SubmitResult =
   | { ok: true }
@@ -36,28 +38,126 @@ export async function submitAssignment(input: {
     }
   }
 
+  const normalizedText =
+    input.submission_type === "text"
+      ? (input.submission_text ?? "").trim()
+      : null;
+  const normalizedUrl =
+    input.submission_type === "url"
+      ? (input.submission_url ?? "").trim()
+      : null;
+  const normalizedFilePath =
+    input.submission_type === "file_upload"
+      ? (input.submission_file_path ?? null)
+      : null;
+
   const { error } = await supabase.from("assignment_submissions").insert({
     assignment_id: input.assignmentId,
     lesson_id: input.lessonId,
     user_id: user.id,
-    submission_text:
-      input.submission_type === "text"
-        ? (input.submission_text ?? "").trim()
-        : null,
-    submission_url:
-      input.submission_type === "url"
-        ? (input.submission_url ?? "").trim()
-        : null,
-    submission_file_path:
-      input.submission_type === "file_upload"
-        ? (input.submission_file_path ?? null)
-        : null,
+    submission_text: normalizedText,
+    submission_url: normalizedUrl,
+    submission_file_path: normalizedFilePath,
     status: "submitted",
   });
   if (error) return { ok: false, error: error.message };
+
+  // Notify admins that there's work to review. Fire-and-forget so SMTP
+  // hiccups don't roll back the submission.
+  await notifyAdminsOfNewSubmission({
+    supabase,
+    learnerId: user.id,
+    assignmentId: input.assignmentId,
+    lessonId: input.lessonId,
+    kind:
+      input.submission_type === "text"
+        ? "text"
+        : input.submission_type === "url"
+          ? "url"
+          : "file",
+    preview:
+      input.submission_type === "text"
+        ? (normalizedText ?? "")
+        : input.submission_type === "url"
+          ? (normalizedUrl ?? "")
+          : filenameFromPath(normalizedFilePath),
+  });
 
   revalidatePath(`/lessons/${input.lessonId}`);
   revalidatePath(`/dashboard`);
   revalidatePath(`/admin/submissions`);
   return { ok: true };
+}
+
+async function notifyAdminsOfNewSubmission(input: {
+  supabase: Awaited<ReturnType<typeof createClient>>;
+  learnerId: string;
+  assignmentId: string;
+  lessonId: string;
+  kind: "text" | "url" | "file";
+  preview: string;
+}): Promise<void> {
+  const [learnerRes, assignmentRes, lessonRes, adminsRes] = await Promise.all([
+    input.supabase
+      .from("profiles")
+      .select("full_name, email")
+      .eq("id", input.learnerId)
+      .maybeSingle(),
+    input.supabase
+      .from("assignments")
+      .select("title")
+      .eq("id", input.assignmentId)
+      .maybeSingle(),
+    input.supabase
+      .from("lessons")
+      .select("title")
+      .eq("id", input.lessonId)
+      .maybeSingle(),
+    input.supabase
+      .from("profiles")
+      .select("email, full_name")
+      .in("system_role", ["owner", "admin"]),
+  ]);
+
+  const learner = learnerRes.data as
+    | { full_name: string; email: string }
+    | null;
+  const assignment = assignmentRes.data as { title: string } | null;
+  const lesson = lessonRes.data as { title: string } | null;
+  const admins = (adminsRes.data ?? []) as Array<{
+    email: string;
+    full_name: string;
+  }>;
+
+  if (!learner || admins.length === 0) return;
+
+  const appUrl =
+    process.env.NEXT_PUBLIC_APP_URL ?? "https://sandra-university.vercel.app";
+  const submissionsUrl = `${appUrl.replace(/\/$/, "")}/admin/submissions`;
+
+  const rendered = renderNewSubmissionEmail({
+    learnerName: learner.full_name || learner.email,
+    learnerEmail: learner.email,
+    assignmentTitle: assignment?.title ?? "Assignment",
+    lessonTitle: lesson?.title ?? "Lesson",
+    submissionKind: input.kind,
+    submissionPreview: input.preview,
+    submissionsUrl,
+  });
+
+  await Promise.all(
+    admins.map((a) =>
+      sendEmail({
+        to: a.email,
+        subject: rendered.subject,
+        html: rendered.html,
+      }),
+    ),
+  );
+}
+
+function filenameFromPath(p: string | null): string {
+  if (!p) return "file";
+  const last = p.split("/").pop() ?? "file";
+  return last.replace(/^\d+-/, "");
 }
