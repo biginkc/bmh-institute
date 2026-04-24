@@ -196,7 +196,14 @@ export default async function AdminReportsPage() {
               ) : (
                 courseStats.map((c) => (
                   <TableRow key={c.id}>
-                    <TableCell className="font-medium">{c.title}</TableCell>
+                    <TableCell className="font-medium">
+                      <Link
+                        href={`/admin/reports/courses/${c.id}`}
+                        className="underline-offset-2 hover:underline"
+                      >
+                        {c.title}
+                      </Link>
+                    </TableCell>
                     <TableCell className="text-right tabular-nums">
                       {c.activeLearners}
                     </TableCell>
@@ -231,7 +238,14 @@ export default async function AdminReportsPage() {
               ) : (
                 programStats.map((p) => (
                   <TableRow key={p.id}>
-                    <TableCell className="font-medium">{p.title}</TableCell>
+                    <TableCell className="font-medium">
+                      <Link
+                        href={`/admin/reports/programs/${p.id}`}
+                        className="underline-offset-2 hover:underline"
+                      >
+                        {p.title}
+                      </Link>
+                    </TableCell>
                     <TableCell className="text-right tabular-nums">
                       {p.completedCount}
                     </TableCell>
