@@ -18,7 +18,15 @@ BMH Institute mirrors Sandra CRM's stack and conventions but runs as an independ
 
 ## Development workflow
 
-**TDD is the standard.** For every feature and bug fix: failing test first, minimum code to pass, refactor. Don't mark work done without a covering test.
+**TDD is the standard, with up-front test inventory review.** For every feature, bug fix, or behavioral change:
+
+1. Enumerate the full test inventory that defines "done" — name every test, its scope (unit / integration / e2e), and what it asserts.
+2. Present the inventory and wait for explicit approval before writing tests or production code.
+3. Write the failing tests first, in their own commit.
+4. Implement the minimum code to make the suite pass.
+5. Refactor with tests green.
+
+Don't mark work done without a covering test. Don't compress steps 1 and 2 into "I'll just write the tests as I go" — the inventory is the reviewable contract on what the feature must satisfy.
 
 - `npm run dev` — next dev on port 3100
 - `npm run test` — vitest unit suite
