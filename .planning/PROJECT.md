@@ -59,7 +59,7 @@ The first GSD-managed milestone is a production-hardening pass driven by gaps su
 
 ## Context
 
-This codebase has shipped fourteen feature commits before adopting GSD; the codebase map under `.planning/codebase/` is the canonical reference for current structure. AGENTS.md is the source of truth for development conventions and project identity. Production runs on the Hobby Vercel plan and the free Supabase tier; cost target is under \$20 per month.
+This codebase has shipped fourteen feature commits before adopting GSD; the codebase map under `.planning/codebase/` is the canonical reference for current structure. AGENTS.md is the source of truth for development conventions and project identity. Production runs on the Hobby Vercel plan and the BMH Group Supabase Pro org subscription (~\$25 per month, shared across all org projects).
 
 The standalone Sandra Practice app has not been bootstrapped yet. Its parked planning bundle lives in `sandra-practice-planning/` and the cross-origin embed contract lives in `role-play-embed-contract.md`. Both are untracked in git — Jarrad will move them when Sandra Practice gets its own repo.
 
