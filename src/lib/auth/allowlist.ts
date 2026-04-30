@@ -1,7 +1,7 @@
 /**
  * Email-based admin allowlist.
  *
- * Sandra University is invite-only: the `invites` table gates account
+ * BMH Institute is invite-only: the `invites` table gates account
  * creation, so no email domain restriction is needed (VAs outside BMH's
  * Workspace can still be invited). This file only answers the narrower
  * question of "is this email considered an admin" — used to promote a

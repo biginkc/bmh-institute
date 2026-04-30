@@ -16,7 +16,7 @@ export async function sendPasswordReset(
 
   const supabase = await createClient();
   const appUrl =
-    process.env.NEXT_PUBLIC_APP_URL ?? "https://sandra-university.vercel.app";
+    process.env.NEXT_PUBLIC_APP_URL ?? "https://bmh-institute.vercel.app";
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: `${appUrl}/auth/callback`,

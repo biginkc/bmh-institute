@@ -4,7 +4,7 @@ Internal Thinkific replacement for BMH Group VA training. Upload content, build 
 
 ## Stack
 
-Mirrors Sandra CRM's stack so UI, conventions, testing, and developer experience stay consistent across the two platforms. Sandra University runs as its own Next.js app and its own Supabase project — auth and data are isolated, visual language and code conventions are shared.
+Mirrors Sandra CRM's stack so UI, conventions, testing, and developer experience stay consistent across the two platforms. BMH Institute runs as its own Next.js app and its own Supabase project — auth and data are isolated, visual language and code conventions are shared.
 
 Next.js 16 + React 19 (App Router, Server Components, Server Actions)
 TypeScript strict
@@ -15,8 +15,8 @@ sonner for toasts, lucide-react for icons, date-fns for dates
 @react-pdf/renderer or pdf-lib for certificate PDF generation
 HTML5 video player for Supabase-hosted video, iframe embeds for YouTube/Vimeo/Loom
 Resend or Postmark for transactional email (invites, password resets)
-Supabase (auth, Postgres, RLS, Storage, Edge Functions) — new project `sandra-university`, independent from `sandra-crm`
-Vercel for hosting — new project `sandra-university`, independent from `sandra`
+Supabase (auth, Postgres, RLS, Storage, Edge Functions) — new project `bmh-institute` (ref `dhvfsyteqsxagokoerrx`), independent from `sandra-crm`
+Vercel for hosting — new project `bmh-institute`, independent from `sandra`
 Vitest for unit + integration tests
 Playwright for e2e
 Husky + ESLint for git hooks and linting
@@ -467,7 +467,7 @@ Each drop persists the new order via a batch update RPC that updates all affecte
 Test tooling mirrors Sandra CRM:
 - **Vitest** for unit tests and integration tests (separate configs — `vitest.config.ts` and `vitest.integration.config.ts`).
 - **Playwright** for end-to-end browser tests.
-- **Integration tests** run against a real Supabase project (`sandra-crm-test` has a counterpart pattern; University may reuse `sandra-university` dev or spin up a dedicated test project once traffic warrants).
+- **Integration tests** run against a real Supabase project (`sandra-crm-test` has a counterpart pattern; BMH Institute may reuse `bmh-institute` dev or spin up a dedicated test project once traffic warrants).
 - **No work is "done"** until tests are green and new behavior has a covering test.
 - Migrations get a test that asserts the migration applies and RLS behaves as specified.
 

@@ -10,7 +10,7 @@ const BASE = {
   recipientName: "Gretchen",
   assignmentTitle: "Phone objections homework",
   lessonTitle: "Handling the 'not interested' objection",
-  lessonUrl: "https://sandra-university.vercel.app/lessons/abc",
+  lessonUrl: "https://bmh-institute.vercel.app/lessons/abc",
 };
 
 describe("renderApprovedEmail", () => {

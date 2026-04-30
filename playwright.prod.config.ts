@@ -4,7 +4,7 @@ import path from "node:path";
 import { defineConfig, devices } from "@playwright/test";
 
 /**
- * Playwright config for smoke-testing the live sandra-university deployment.
+ * Playwright config for smoke-testing the live bmh-institute deployment.
  *
  * Use: `npm run test:prod` — reads creds from `.env.test.local`, logs into
  * the real production URL, saves auth state, then runs read-only specs
@@ -12,7 +12,7 @@ import { defineConfig, devices } from "@playwright/test";
  *
  * This is how Claude verifies post-deploy without bouncing screenshots
  * back to Jarrad. Keep specs read-only to avoid polluting production
- * data. For write coverage we'd need a separate sandra-university-test
+ * data. For write coverage we'd need a separate bmh-institute-test
  * Supabase project.
  */
 
@@ -44,7 +44,7 @@ const env = loadTestEnv();
 const baseURL =
   env.E2E_PROD_BASE_URL ??
   process.env.E2E_PROD_BASE_URL ??
-  "https://sandra-university.vercel.app";
+  "https://bmh-institute.vercel.app";
 
 // Publish for the setup project so it can read creds.
 process.env.E2E_TEST_EMAIL = env.E2E_TEST_EMAIL ?? process.env.E2E_TEST_EMAIL ?? "";

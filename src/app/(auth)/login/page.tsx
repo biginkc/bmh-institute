@@ -27,7 +27,7 @@ export default function LoginPage() {
       <Card className="w-full max-w-sm">
         <CardHeader>
           <CardTitle>Sign in</CardTitle>
-          <CardDescription>Sandra University · BMH Group</CardDescription>
+          <CardDescription>BMH Institute · BMH Group</CardDescription>
         </CardHeader>
         <CardContent>
           <Suspense fallback={<LoginFormFallback />}>

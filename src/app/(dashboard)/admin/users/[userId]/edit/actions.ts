@@ -109,7 +109,7 @@ export async function saveUserSettings(input: {
     if (profile?.email && programList.length > 0) {
       const appUrl =
         process.env.NEXT_PUBLIC_APP_URL ??
-        "https://sandra-university.vercel.app";
+        "https://bmh-institute.vercel.app";
       const { subject, html } = renderEnrollmentEmail({
         inviteeEmail: profile.email as string,
         appUrl,

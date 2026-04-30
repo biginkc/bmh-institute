@@ -4,9 +4,17 @@
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
 <!-- END:nextjs-agent-rules -->
 
-# Sandra University — agent notes
+# BMH Institute — agent notes
 
-Sandra University is BMH Group's internal training platform. It mirrors Sandra CRM's stack and conventions but runs as an independent Next.js app against its own Supabase project (`sandra-university`). Schema, UI, and auth are independent of the CRM; visual language and technical patterns are intentionally shared.
+## Project identity (read this first)
+
+This repo is **BMH Institute**, BMH Group's internal training platform. Renamed from Sandra University on 2026-04-30; the working directory may still say `Sandra University/` while paths catch up.
+
+**This repo is NOT Sandra Practice.** Sandra Practice is a separate planned standalone app (`../Sandra Practice/`, `sandra-practice-planning/` is its parked seed) that will run AI voice role plays and eventually embed into BMH Institute lessons via the contract in `role-play-embed-contract.md`.
+
+If a request describes voice runtime, persona conversations, mic input, Deepgram/Claude/ElevenLabs live integration, scenario authoring, scoring, transcripts, attempts library, or recording playback — **that work belongs in Sandra Practice, not here**. Surface the mismatch and confirm direction before changing this repo.
+
+BMH Institute mirrors Sandra CRM's stack and conventions but runs as an independent Next.js app against its own Supabase project (label `bmh-institute`, ref `dhvfsyteqsxagokoerrx`). Schema, UI, and auth are independent of the CRM; visual language and technical patterns are intentionally shared.
 
 ## Development workflow
 
@@ -20,7 +28,7 @@ Sandra University is BMH Group's internal training platform. It mirrors Sandra C
 
 ## Supabase
 
-- Production project: `sandra-university` (ref `dhvfsyteqsxagokoerrx`)
+- Production project: label `bmh-institute` (ref `dhvfsyteqsxagokoerrx`; ref is permanent)
 - Migrations: `supabase/migrations/NNN_name.sql` applied in order
 - RLS enabled on every table; learner reads scoped by role groups and program/course access
 - Seeds are dev-only; promote your profile to `system_role = 'owner'` manually after first sign-in

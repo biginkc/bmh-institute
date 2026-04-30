@@ -44,7 +44,7 @@ export async function sendEmail(input: {
 
   const fromEmail = input.fromEmail ?? process.env.SMTP_FROM_EMAIL ?? user;
   const fromName =
-    input.fromName ?? process.env.SMTP_FROM_NAME ?? "Sandra University";
+    input.fromName ?? process.env.SMTP_FROM_NAME ?? "BMH Institute";
 
   const transporter = nodemailer.createTransport({
     host,

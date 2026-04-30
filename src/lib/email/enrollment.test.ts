@@ -5,7 +5,7 @@ import { renderEnrollmentEmail } from "./enrollment";
 describe("renderEnrollmentEmail", () => {
   const defaults = {
     inviteeEmail: "new-va@example.com",
-    appUrl: "https://sandra-university.vercel.app",
+    appUrl: "https://bmh-institute.vercel.app",
     programs: [
       { id: "p1", title: "Appointment Setter Onboarding" },
       { id: "p2", title: "Objection Handling" },

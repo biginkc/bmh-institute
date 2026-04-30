@@ -13,8 +13,8 @@ export function renderEnrollmentEmail(input: EnrollmentEmailInput): {
     input.programs.length > 0 || input.standaloneCourses.length > 0;
 
   const subject = hasAssignments
-    ? `You're enrolled in ${summarizeCount(input)} at Sandra University`
-    : "You're invited to Sandra University";
+    ? `You're enrolled in ${summarizeCount(input)} at BMH Institute`
+    : "You're invited to BMH Institute";
 
   const itemsHtml = hasAssignments
     ? `<p>You'll have access to the following when you sign in:</p>
@@ -28,16 +28,16 @@ export function renderEnrollmentEmail(input: EnrollmentEmailInput): {
 
   const html = `
     <div style="font-family:Arial,Helvetica,sans-serif;max-width:560px;margin:0 auto;padding:24px;color:#111;">
-      <h1 style="font-size:22px;margin:0 0 16px;">Welcome to Sandra University</h1>
+      <h1 style="font-size:22px;margin:0 0 16px;">Welcome to BMH Institute</h1>
       <p>Hi there,</p>
       ${itemsHtml}
       <p style="margin-top:24px;">
         <a href="${escapeAttr(input.appUrl)}" style="display:inline-block;background:#111;color:#fff;padding:10px 16px;border-radius:6px;text-decoration:none;">
-          Open Sandra University
+          Open BMH Institute
         </a>
       </p>
       <p style="color:#666;font-size:12px;margin-top:32px;">
-        This email was sent to ${escapeHtml(input.inviteeEmail)} because an admin invited you to Sandra University.
+        This email was sent to ${escapeHtml(input.inviteeEmail)} because an admin invited you to BMH Institute.
       </p>
     </div>
   `.trim();

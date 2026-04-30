@@ -132,7 +132,7 @@ async function notifyAdminsOfNewSubmission(input: {
   if (!learner || admins.length === 0) return;
 
   const appUrl =
-    process.env.NEXT_PUBLIC_APP_URL ?? "https://sandra-university.vercel.app";
+    process.env.NEXT_PUBLIC_APP_URL ?? "https://bmh-institute.vercel.app";
   const submissionsUrl = `${appUrl.replace(/\/$/, "")}/admin/submissions`;
 
   const rendered = renderNewSubmissionEmail({

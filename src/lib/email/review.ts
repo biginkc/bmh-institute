@@ -80,7 +80,7 @@ function openButton(url: string, label: string): string {
 function footer(email: string): string {
   return `
     <p style="color:#666;font-size:12px;margin-top:32px;">
-      This email was sent to ${escapeHtml(email)} from Sandra University.
+      This email was sent to ${escapeHtml(email)} from BMH Institute.
     </p>
   `.trim();
 }

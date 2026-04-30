@@ -24,7 +24,7 @@ export default async function SetPasswordPage() {
         <CardHeader>
           <CardTitle>Set your password</CardTitle>
           <CardDescription>
-            Welcome to Sandra University. Pick a password and you&apos;re in.
+            Welcome to BMH Institute. Pick a password and you&apos;re in.
           </CardDescription>
         </CardHeader>
         <CardContent>

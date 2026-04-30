@@ -4,7 +4,7 @@ import path from "node:path";
 import { defineConfig, devices } from "@playwright/test";
 
 /**
- * Playwright config for the Sandra University E2E safety net.
+ * Playwright config for the BMH Institute E2E safety net.
  *
  * Tests run against a dedicated Supabase test project (populate
  * `.env.test.local` with its keys) and boot the real Next dev server

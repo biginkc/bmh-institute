@@ -9,7 +9,7 @@ const BASE = {
   lessonTitle: "Handling the 'not interested' objection",
   submissionKind: "text" as const,
   submissionPreview: "My approach is to acknowledge then reframe...",
-  submissionsUrl: "https://sandra-university.vercel.app/admin/submissions",
+  submissionsUrl: "https://bmh-institute.vercel.app/admin/submissions",
 };
 
 describe("renderNewSubmissionEmail", () => {

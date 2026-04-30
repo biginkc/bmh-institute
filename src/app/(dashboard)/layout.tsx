@@ -41,7 +41,7 @@ export default async function DashboardLayout({
     <div className="flex min-h-screen flex-1 flex-col">
       <header className="border-border bg-background sticky top-0 z-10 flex items-center justify-between border-b px-6 py-3 print:hidden">
         <Link href="/dashboard" className="text-base font-semibold">
-          Sandra University
+          BMH Institute
         </Link>
         <div className="text-muted-foreground flex items-center gap-4 text-sm">
           <Link

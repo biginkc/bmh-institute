@@ -1,6 +1,6 @@
-# Sandra University
+# BMH Institute
 
-Internal training platform for BMH Group VAs. Isolated Next.js app with its own Supabase project; shares UI language and technical patterns with Sandra CRM.
+Internal training platform for BMH Group VAs. Isolated Next.js app with its own Supabase project; shares UI language and technical patterns with Sandra CRM. (Renamed from Sandra University on 2026-04-30.)
 
 See [AGENTS.md](./AGENTS.md) for development conventions and [bmh-training-platform-spec.md](./bmh-training-platform-spec.md) for the full build spec.
 

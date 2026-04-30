@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Sandra University",
+  title: "BMH Institute",
   description: "BMH Group training platform",
 };
 
