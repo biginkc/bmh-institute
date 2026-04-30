@@ -70,26 +70,26 @@ Mapping of requirements to phases. Updated by the gsd-roadmapper.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| HARDEN-01 | TBD | Pending |
-| HARDEN-02 | TBD | Pending |
-| HARDEN-03 | TBD | Pending |
-| HARDEN-04 | TBD | Pending |
-| HARDEN-05 | TBD | Pending |
-| HARDEN-06 | TBD | Pending |
-| INTEG-01 | TBD | Pending |
-| INTEG-02 | TBD | Pending |
-| INTEG-03 | TBD | Pending |
-| INTEG-04 | TBD | Pending |
-| TYPE-01 | TBD | Pending |
-| TEST-01 | TBD | Pending |
-| TEST-02 | TBD | Pending |
-| TEST-03 | TBD | Pending |
+| HARDEN-01 | Phase 1 | Pending |
+| HARDEN-02 | Phase 1 | Pending |
+| HARDEN-03 | Phase 1 | Pending |
+| HARDEN-04 | Phase 1 | Pending |
+| HARDEN-05 | Phase 2 | Pending |
+| HARDEN-06 | Phase 2 | Pending |
+| INTEG-01 | Phase 3 | Pending |
+| INTEG-02 | Phase 3 | Pending |
+| INTEG-03 | Phase 3 | Pending |
+| INTEG-04 | Phase 3 | Pending |
+| TYPE-01 | Phase 4 | Pending |
+| TEST-01 | Phase 4 | Pending |
+| TEST-02 | Phase 4 | Pending |
+| TEST-03 | Phase 4 | Pending |
 
 **Coverage:**
 - v1 requirements: 14 total
-- Mapped to phases: 0 (roadmap pending)
-- Unmapped: 14 ⚠️ (will be resolved by gsd-roadmapper)
+- Mapped to phases: 14
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-04-30*
-*Last updated: 2026-04-30 after initialization*
+*Last updated: 2026-04-30 — traceability filled by gsd-roadmapper*
