@@ -211,25 +211,19 @@ async function QuizLessonBody({
   }
 
   const supabase = await createClient();
-  const [{ data: quiz }, { data: rawQuestions }, { data: attempts }] =
+  const [{ data: quiz }, questionsResult, { data: attempts }] =
     await Promise.all([
       supabase
         .from("quizzes")
         .select("id, passing_score, max_attempts, retake_cooldown_hours")
         .eq("id", quizId)
         .maybeSingle(),
-      // Explicitly do NOT select is_correct so it never reaches the browser.
+      // HARDEN-04: read from answer_options_public view; is_correct is not
+      // exposed to learner sessions. Two queries + in-process join avoids the
+      // PostgREST embedded-FK cache surprise on views (see PATTERNS.md Path 1).
       supabase
         .from("questions")
-        .select(
-          `
-          id,
-          question_text,
-          question_type,
-          sort_order,
-          answer_options ( id, option_text, sort_order )
-        `,
-        )
+        .select("id, question_text, question_type, sort_order")
         .eq("quiz_id", quizId)
         .order("sort_order"),
       supabase
@@ -238,6 +232,37 @@ async function QuizLessonBody({
         .eq("quiz_id", quizId)
         .order("completed_at", { ascending: false }),
     ]);
+
+  const rawQuestions = questionsResult.data;
+  const questionIds = (rawQuestions ?? []).map((q) => q.id as string);
+  const { data: rawOptions } = questionIds.length
+    ? await supabase
+        .from("answer_options_public")
+        .select("id, question_id, option_text, sort_order")
+        .in("question_id", questionIds)
+        .order("sort_order")
+    : {
+        data: [] as Array<{
+          id: string;
+          question_id: string;
+          option_text: string;
+          sort_order: number;
+        }>,
+      };
+
+  const optionsByQuestion = new Map<
+    string,
+    Array<{ id: string; option_text: string; sort_order: number | null }>
+  >();
+  for (const opt of rawOptions ?? []) {
+    const arr = optionsByQuestion.get(opt.question_id as string) ?? [];
+    arr.push({
+      id: opt.id as string,
+      option_text: opt.option_text as string,
+      sort_order: opt.sort_order as number | null,
+    });
+    optionsByQuestion.set(opt.question_id as string, arr);
+  }
 
   if (!quiz) {
     return (
@@ -284,9 +309,9 @@ async function QuizLessonBody({
     id: q.id as string,
     question_text: q.question_text as string,
     question_type: q.question_type as QuizQuestion["question_type"],
-    options: toOptionList(q.answer_options)
+    options: (optionsByQuestion.get(q.id as string) ?? [])
       .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
-      .map((o) => ({ id: o.id as string, option_text: o.option_text as string })),
+      .map((o) => ({ id: o.id, option_text: o.option_text })),
   }));
 
   return (
@@ -371,18 +396,6 @@ function QuizGateCard({
       </CardContent>
     </Card>
   );
-}
-
-type RawOptionRow = {
-  id: string;
-  option_text: string;
-  sort_order: number | null;
-};
-
-function toOptionList(value: unknown): RawOptionRow[] {
-  if (!value) return [];
-  if (Array.isArray(value)) return value as RawOptionRow[];
-  return [value as RawOptionRow];
 }
 
 async function AssignmentLessonBody({
