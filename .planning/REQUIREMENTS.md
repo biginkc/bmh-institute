@@ -33,6 +33,14 @@ This is the first GSD-managed milestone for a brownfield codebase. The Validated
 - [ ] **TEST-02**: Integration tests cover the trigger-driven completion and certificate pipeline against a real Supabase project, including `fn_issue_course_certificate_if_eligible` and `fn_issue_program_certificate_if_eligible`
 - [ ] **TEST-03**: Playwright write-path coverage exercises invite acceptance, quiz submission, assignment upload, admin approval and revision, and password reset against the prod-config harness
 
+### Testing Parity (Phase 01.1)
+
+- [ ] **TPAR-01**: BMH Institute ships a jsdom RTL suite at parity with Sandra CRM — `vitest.rtl.config.ts`, `vitest.rtl.setup.ts` (jest-dom matchers, in-memory localStorage shim, afterEach cleanup), `@testing-library/react`, `@testing-library/jest-dom`, `@testing-library/user-event`, and `jsdom` installed, `npm run test:rtl` exits 0 against at least one smoke RTL spec
+- [ ] **TPAR-02**: Playwright e2e harness is fully wired — `e2e/auth.setup.ts` writes storage state to `e2e/.auth/user.json`, `e2e/fixtures.ts` exposes a service-role admin client and refuses to run against the BMH Institute prod project ref (`dhvfsyteqsxagokoerrx`), and `npm run test:e2e` exits 0 against at least one no-op spec when `TEST_SUPABASE_*` env vars are populated
+- [ ] **TPAR-03**: Production smoke harness is fully wired — `e2e-prod/auth.setup.ts` plus at least one read-only spec exist; `npm run test:prod` exits 0 against the live deployment with documented credentials
+- [ ] **TPAR-04**: `npm run verify` includes the RTL suite (`npm run typecheck && npm run test && npm run test:rtl`); the husky pre-commit hook continues to run `npm run verify` and fails on RTL regressions
+- [ ] **TPAR-05**: Each of the five Phase 01 HUMAN-UAT items is replaced — read-only items (HARDEN-01 admin route guards, HARDEN-04 cross-course answer options) by automated specs; integration items (HARDEN-03 deleted-user re-auth, HARDEN-04 isolation contract) by un-skipping and de-throwing the existing integration tests; destructive items (HARDEN-02 expired invite teardown, HARDEN-03 deleted user re-auth) by either an automated path or an explicit deferral note in `01-HUMAN-UAT.md` with a recorded reason
+
 ## v2 Requirements
 
 Deferred to a future milestone. Tracked but not in the current roadmap.
@@ -84,10 +92,15 @@ Mapping of requirements to phases. Updated by the gsd-roadmapper.
 | TEST-01 | Phase 4 | Pending |
 | TEST-02 | Phase 4 | Pending |
 | TEST-03 | Phase 4 | Pending |
+| TPAR-01 | Phase 01.1 | Pending |
+| TPAR-02 | Phase 01.1 | Pending |
+| TPAR-03 | Phase 01.1 | Pending |
+| TPAR-04 | Phase 01.1 | Pending |
+| TPAR-05 | Phase 01.1 | Pending |
 
 **Coverage:**
-- v1 requirements: 14 total
-- Mapped to phases: 14
+- v1 requirements: 19 total
+- Mapped to phases: 19
 - Unmapped: 0
 
 ---

@@ -7,6 +7,7 @@ This milestone closes the security and data-integrity gaps surfaced by the codeb
 ## Phases
 
 - [ ] **Phase 1: Auth and Access Hardening** - Lock down route guards, invite expiry, user deletion, and quiz answer exposure
+- [ ] **Phase 01.1: Testing Coverage Parity** (INSERTED) - Add the RTL and Playwright e2e surfaces to match Sandra CRM, then automate the five Phase 01 HUMAN-UAT items
 - [ ] **Phase 2: Content Safety and Rate Limiting** - Sandbox embed iframes, sanitize admin-authored HTML, and throttle password-reset paths
 - [ ] **Phase 3: Data Integrity** - Wrap role-group rewrites and module reordering in transactions, fix certificate-number races, and validate assignment file paths server-side
 - [ ] **Phase 4: Type Safety and Test Coverage** - Generate Supabase types, then add Vitest unit coverage, integration tests for the trigger pipeline, and Playwright write-path e2e
@@ -30,13 +31,16 @@ This milestone closes the security and data-integrity gaps surfaced by the codeb
 
 ### Phase 01.1: Testing Coverage Parity (INSERTED)
 
-**Goal:** [Urgent work - to be planned]
-**Requirements**: TBD
-**Depends on:** Phase 1
-**Plans:** 0 plans
-
-Plans:
-- [ ] TBD (run /gsd-plan-phase 01.1 to break down)
+**Goal**: BMH Institute matches Sandra CRM's four-suite testing standard (Node unit, jsdom RTL, Postgres integration, Playwright e2e), and every HUMAN-UAT item left open by Phase 01 is replaced by a test that runs on demand without a human in the loop
+**Depends on**: Phase 1
+**Requirements**: TPAR-01, TPAR-02, TPAR-03, TPAR-04, TPAR-05
+**Success Criteria** (what must be TRUE):
+  1. `vitest.rtl.config.ts` and `vitest.rtl.setup.ts` exist, jsdom plus the `@testing-library/*` deps are installed, `npm run test:rtl` passes against at least one smoke RTL spec, and `npm run verify` includes the RTL suite
+  2. `e2e/auth.setup.ts` and `e2e/fixtures.ts` exist, the fixtures refuse to run against the BMH Institute prod project ref, and a no-op spec under `e2e/` passes via `npm run test:e2e` once `TEST_SUPABASE_*` env vars are populated
+  3. `e2e-prod/` exists with at least the `auth.setup.ts` referenced by `playwright.prod.config.ts` and one read-only spec; `npm run test:prod` passes against the live deployment with provided credentials
+  4. The HARDEN-01 admin-route-guard HUMAN-UAT item is covered by an automated Playwright spec that runs without a human in the loop, and the HARDEN-04 cross-course answer-options HUMAN-UAT item is covered by `answer-options-isolation.integration.test.ts` running cleanly (no import-time throw on missing env vars)
+  5. The HARDEN-02 expired-invite teardown and HARDEN-03 deleted-user re-auth HUMAN-UAT items are either (a) covered by automated specs that run cleanly with the documented env-var setup, or (b) explicitly logged in `01-HUMAN-UAT.md` as deferred-until-test-environment with a recorded reason — destructive items must not silently remain manual
+**Plans**: TBD
 
 ### Phase 2: Content Safety and Rate Limiting
 **Goal**: Admin-authored HTML cannot execute scripts in learner browsers, embed iframes are sandboxed, and the forgot-password and password-reset paths cannot be abused by automated requests
@@ -74,7 +78,8 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Auth and Access Hardening | 0/4 | Planned | - |
+| 1. Auth and Access Hardening | 4/4 | Complete (human_needed) | - |
+| 01.1. Testing Coverage Parity | 0/TBD | Planning | - |
 | 2. Content Safety and Rate Limiting | 0/TBD | Not started | - |
 | 3. Data Integrity | 0/TBD | Not started | - |
 | 4. Type Safety and Test Coverage | 0/TBD | Not started | - |
