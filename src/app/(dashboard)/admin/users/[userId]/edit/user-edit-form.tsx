@@ -88,7 +88,7 @@ export function UserEditForm({
   function onDelete() {
     if (
       !confirm(
-        "Suspend this user? They'll lose access immediately. The auth account itself stays in Supabase (delete from the dashboard if you want it gone).",
+        "Permanently delete this user? They will be removed from auth and all their progress, certificates, and role assignments will be deleted. This cannot be undone.",
       )
     ) {
       return;
@@ -97,7 +97,7 @@ export function UserEditForm({
       const result = await deleteUser(userId);
       if (!result.ok) toast.error(result.error);
       else {
-        toast.success("User suspended.");
+        toast.success("User deleted.");
         router.push("/admin/users");
       }
     });
@@ -196,7 +196,7 @@ export function UserEditForm({
               disabled={pending}
               className="text-destructive hover:text-destructive"
             >
-              Suspend + remove from list
+              Delete user
             </Button>
           ) : null}
         </div>

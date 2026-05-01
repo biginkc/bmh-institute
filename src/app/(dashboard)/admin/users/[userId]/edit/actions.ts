@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { requireAdmin } from "@/lib/auth/guard";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { sendEmail } from "@/lib/email/send";
 import { renderEnrollmentEmail } from "@/lib/email/enrollment";
 
@@ -158,16 +159,41 @@ export async function deleteUser(userId: string): Promise<{
   if (me.id === userId) {
     return { ok: false, error: "You can't delete yourself." };
   }
-  // We only remove the public.profiles row + user_role_groups. The
-  // auth.users row is left intact (the service role key is needed to
-  // delete via auth.admin.deleteUser — do it from the Supabase dashboard
-  // if you want the auth record gone).
+
   const supabase = await createClient();
-  const { error } = await supabase
+
+  // HARDEN-03 / D-06: refuse to delete the last remaining owner.
+  const { data: target } = await supabase
     .from("profiles")
-    .update({ status: "suspended" })
-    .eq("id", userId);
-  if (error) return { ok: false, error: error.message };
+    .select("system_role")
+    .eq("id", userId)
+    .maybeSingle();
+  if (target?.system_role === "owner") {
+    const { count } = await supabase
+      .from("profiles")
+      .select("id", { count: "exact", head: true })
+      .eq("system_role", "owner");
+    if ((count ?? 0) <= 1) {
+      return { ok: false, error: "Can't delete the last owner." };
+    }
+  }
+
+  let admin;
+  try {
+    admin = createAdminClient();
+  } catch (e) {
+    const message = e instanceof Error ? e.message : "Admin client unavailable.";
+    return { ok: false, error: message };
+  }
+
+  // HARDEN-03 / D-04: removing auth.users cascades to public.profiles via
+  // migration 001 (profiles.id references auth.users(id) on delete cascade).
+  // All user-scoped tables cascade off profiles.id per the FKs declared in
+  // migration 001 lines 40, 216, 229, 237, 245, 258, 268, 278. No new
+  // migration is required (D-05).
+  const { error: authErr } = await admin.auth.admin.deleteUser(userId);
+  if (authErr) return { ok: false, error: authErr.message };
+
   revalidatePath("/admin/users");
   return { ok: true };
 }
