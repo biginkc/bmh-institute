@@ -18,18 +18,18 @@ No new user-facing features. Every change ships with TDD coverage that did not e
 
 ### HARDEN-02 expired-invite UX
 - **D-01:** Add a new `invite_expired` error code on `/login` distinct from the existing `invite_failed`. Login page renders dedicated copy: "This invite link has expired. Ask your admin to send you a fresh one."
-- **D-02:** Auth callback does the expiry check post-fetch (`new Date(invite.expires_at) > new Date()`) and redirects to `/login?error=invite_expired` without applying any role assignment when expired.
-- **D-03:** Admin invites list flags expired invites visually and exposes a Resend action that mints a new token with a fresh `expires_at`.
+- **D-02:** Auth callback does the expiry check post-fetch (`new Date(invite.expires_at) > new Date()`). `applyInvite` returns a discriminated union `{ ok: true } | { ok: false; reason: "expired" }` (it currently returns `void`); the GET handler branches on the result and redirects to `/login?error=invite_expired` without applying any role assignment when expired.
+- **D-03:** Admin invites list (in `src/app/(dashboard)/admin/users/`, alongside the existing `invite-form.tsx` and `revoke-invite-button.tsx`) flags expired invites visually and exposes a Resend control that mints a new token with a fresh `expires_at`. Path correction: invites are co-located with users; there is no separate `admin/invites/` directory.
 
 ### HARDEN-03 delete vs suspend
 - **D-04:** "Delete" becomes a true permanent delete: `deleteUser` calls `admin.auth.admin.deleteUser(userId)` then removes the `profiles` row. Suspend stays available as a separate reversible action via the existing edit form's `status` toggle (active / invited / suspended).
-- **D-05:** Hard cascade on delete. Add `ON DELETE CASCADE` to FKs from `user_role_groups`, `user_lesson_completions`, `user_block_progress`, `user_quiz_attempts`, `assignment_submissions`, `course_certificates`, `program_certificates` to `profiles.id`. When a user is deleted their learning history goes with them. Internal-training context — no audit-preservation requirement.
+- **D-05:** Hard cascade on delete is the desired semantic and **already enforced by `001_initial_schema.sql`** — every user-scoped FK to `profiles.id` already declares `on delete cascade`, and `profiles.id` itself cascades from `auth.users(id) on delete cascade`. No new cascade migration is required. Plan 1-3 ships an integration test that simulates concurrent learning records and asserts they all vanish when the user is deleted; the test commit references the existing 001 cascade declarations as the contract.
 - **D-06:** Self-delete guard stays (admins cannot delete themselves); add an equivalent guard to prevent the last `owner` from being deleted.
 
 ### HARDEN-04 answer-key isolation
-- **D-07:** Migration creates view `answer_options_public` exposing `(id, question_id, option_text, sort_order)`. `GRANT SELECT` on the view to the `authenticated` role.
-- **D-08:** `REVOKE SELECT` on `public.answer_options` from `authenticated`. Service role and admin sessions retain access (service role bypasses, admin policy already exists).
-- **D-09:** Learner lesson page (`src/app/(dashboard)/lessons/[lessonId]/page.tsx`) reads from `answer_options_public`. Admin edit pages keep reading the underlying table.
+- **D-07:** Migration creates view `answer_options_public` exposing exactly four pinned columns `(id, question_id, option_text, sort_order)` with `security_invoker = off` (definer mode). The pinned column list prevents future column leak via `*`; definer mode means a learner SELECTing the view runs the underlying read as the view owner, so revoking the table from `authenticated` does not break the view. `GRANT SELECT` on the view to the `authenticated` role.
+- **D-08:** `REVOKE SELECT` on `public.answer_options` from `authenticated`. Service role and admin sessions retain access (service role bypasses GRANT/REVOKE; the existing admin RLS policy continues to apply when admins read the table directly via the admin client).
+- **D-09:** Learner lesson page (`src/app/(dashboard)/lessons/[lessonId]/page.tsx`) reads from `answer_options_public`. Admin edit pages keep reading the underlying table directly.
 - **D-10:** `submitQuizAttempt` (`src/app/(dashboard)/lessons/[lessonId]/quiz-actions.ts`) switches the `is_correct` fetch only to `createAdminClient()`. Other queries in that action stay on the learner client. Scoring logic (`src/lib/quizzes/score.ts`) is unchanged.
 
 ### Plan granularity
@@ -75,9 +75,9 @@ No new user-facing features. Every change ships with TDD coverage that did not e
 
 ### Code surfaces touched per HARDEN
 - HARDEN-01: `src/app/(dashboard)/admin/reports/page.tsx`, `.../users/[userId]/page.tsx`, `.../courses/[courseId]/page.tsx`, `.../programs/[programId]/page.tsx`; guard at `src/lib/auth/guard.ts`
-- HARDEN-02: `src/app/auth/callback/route.ts`, `src/app/(auth)/login/page.tsx` (error rendering), `src/app/(dashboard)/admin/invites/` (admin list + resend action)
-- HARDEN-03: `src/app/(dashboard)/admin/users/[userId]/edit/actions.ts`, new migration adding `ON DELETE CASCADE` FKs
-- HARDEN-04: new migration creating `answer_options_public` view + grants/revokes; `src/app/(dashboard)/lessons/[lessonId]/page.tsx` (line 230); `src/app/(dashboard)/lessons/[lessonId]/quiz-actions.ts` (line 88); admin paths unchanged
+- HARDEN-02: `src/app/auth/callback/route.ts`, `src/app/(auth)/login/page.tsx` (error rendering), `src/app/(dashboard)/admin/users/` (invite list + new resend action + new ResendInviteButton, alongside existing `invite-form.tsx` and `revoke-invite-button.tsx`)
+- HARDEN-03: `src/app/(dashboard)/admin/users/[userId]/edit/actions.ts` (rewrite `deleteUser` to use admin client). No new cascade migration — `001_initial_schema.sql` already declares `on delete cascade` on every user-scoped FK to `profiles.id` and on `profiles.id` itself.
+- HARDEN-04: new migration creating `answer_options_public` view (definer mode, pinned column list) + grants/revokes; `src/app/(dashboard)/lessons/[lessonId]/page.tsx` (line 230); `src/app/(dashboard)/lessons/[lessonId]/quiz-actions.ts` (line 88); admin paths unchanged
 
 </canonical_refs>
 
