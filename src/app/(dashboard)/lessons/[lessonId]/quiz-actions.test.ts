@@ -3,6 +3,10 @@
 // queries continue to run against the learner client.
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+vi.mock("next/cache", () => ({
+  revalidatePath: vi.fn(),
+}));
+
 const learnerFromCalls: string[] = [];
 const adminFromCalls: string[] = [];
 let questionsRows: Array<{
@@ -12,7 +16,8 @@ let questionsRows: Array<{
   sort_order: number;
   answer_options: Array<{ id: string; is_correct: boolean }>;
 }> = [];
-let attemptInsertSpy = vi.fn(async () => ({ data: null, error: null }));
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let attemptInsertSpy = vi.fn(async (_rows?: any) => ({ data: null, error: null }));
 let adminFactoryThrows: Error | null = null;
 let lastInsertedAttempt: Record<string, unknown> | null = null;
 
@@ -55,12 +60,10 @@ vi.mock("@/lib/supabase/server", () => ({
               }),
             }),
           }),
-          insert: async (rows: Record<string, unknown>) => {
+          insert: (rows: Record<string, unknown>) => {
             lastInsertedAttempt = rows;
-            await attemptInsertSpy(rows);
+            attemptInsertSpy(rows);
             return {
-              data: [{ id: "attempt-1" }],
-              error: null,
               select: () => ({
                 single: async () => ({
                   data: { id: "attempt-1" },

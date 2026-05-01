@@ -8,7 +8,10 @@
 // except for throwaway user creation/deletion via the service-role admin API.
 // Run with: npm run test:integration
 import { describe, expect, it } from "vitest";
-import { createClient as createSbClient } from "@supabase/supabase-js";
+import {
+  createClient as createSbClient,
+  type SupabaseClient,
+} from "@supabase/supabase-js";
 import { randomBytes } from "node:crypto";
 
 const SUPABASE_URL = process.env.TEST_SUPABASE_URL;
@@ -26,7 +29,8 @@ const admin = createSbClient(SUPABASE_URL, SERVICE_ROLE, {
 });
 
 async function withThrowawayLearner<T>(
-  fn: (learner: ReturnType<typeof createSbClient>, userId: string) => Promise<T>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  fn: (learner: SupabaseClient<any, any, any>, userId: string) => Promise<T>,
 ): Promise<T> {
   const email = `harden-04-${randomBytes(8).toString("hex")}@bmh.invalid`;
   const password = `${randomBytes(16).toString("base64url")}!Aa1`;

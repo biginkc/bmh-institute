@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import {
   scoreQuizAttempt,
   type ScoringQuestion,
@@ -77,7 +78,18 @@ export async function submitQuizAttempt(input: {
     };
   }
 
-  const { data: rawQuestions, error: qErr } = await supabase
+  let admin;
+  try {
+    admin = createAdminClient();
+  } catch (e) {
+    const message = e instanceof Error ? e.message : "Admin client unavailable.";
+    return { ok: false, error: message };
+  }
+
+  // HARDEN-04 / D-10: is_correct is RLS-revoked from learner sessions, so the
+  // scoring fetch uses the service-role client. Eligibility checks above
+  // already ran against the learner's session.
+  const { data: rawQuestions, error: qErr } = await admin
     .from("questions")
     .select(
       `
