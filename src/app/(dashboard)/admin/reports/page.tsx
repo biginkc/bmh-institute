@@ -16,9 +16,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { requireAdmin } from "@/lib/auth/guard";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function AdminReportsPage() {
+  // HARDEN-01: page-level guard so a direct fetch can't bypass the layout.
+  await requireAdmin();
   const supabase = await createClient();
 
   const [
