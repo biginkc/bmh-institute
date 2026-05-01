@@ -327,10 +327,10 @@ export default async function ProgramReportPage({
                     <TableCell className="text-muted-foreground text-xs">
                       {r.programCert
                         ? r.programCert.certificate_number
-                        : "—"}
+                        : "-"}
                     </TableCell>
                     <TableCell className="text-muted-foreground text-xs">
-                      {r.latest ? new Date(r.latest).toLocaleString() : "—"}
+                      {r.latest ? new Date(r.latest).toLocaleString() : "-"}
                     </TableCell>
                   </TableRow>
                 ))}

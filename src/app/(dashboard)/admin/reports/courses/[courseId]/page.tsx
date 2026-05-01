@@ -230,10 +230,10 @@ export default async function CourseReportPage({
                       {r.pct}%
                     </TableCell>
                     <TableCell className="text-muted-foreground text-xs">
-                      {r.cert ? r.cert.certificate_number : "—"}
+                      {r.cert ? r.cert.certificate_number : "-"}
                     </TableCell>
                     <TableCell className="text-muted-foreground text-xs">
-                      {r.latest ? new Date(r.latest).toLocaleString() : "—"}
+                      {r.latest ? new Date(r.latest).toLocaleString() : "-"}
                     </TableCell>
                   </TableRow>
                 ))}

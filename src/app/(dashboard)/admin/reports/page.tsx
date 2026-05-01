@@ -166,7 +166,7 @@ export default async function AdminReportsPage() {
                     <TableCell className="text-muted-foreground text-xs">
                       {l.lastActivity
                         ? new Date(l.lastActivity).toLocaleString()
-                        : "—"}
+                        : "-"}
                     </TableCell>
                   </TableRow>
                 ))

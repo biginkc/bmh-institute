@@ -278,7 +278,7 @@ export default async function UserReportPage({
                                   ? cert.certificate_number
                                   : pct === 100
                                     ? "Pending issuance"
-                                    : "—"}
+                                    : "-"}
                               </TableCell>
                             </TableRow>
                           );
@@ -349,7 +349,7 @@ export default async function UserReportPage({
                   attempts.reduce<number | null>((best, a) => {
                     if (a.score === null) return best;
                     return best === null ? a.score : Math.max(best, a.score);
-                  }, null) ?? "—"
+                  }, null) ?? "-"
                 }
                 suffix={
                   attempts.some((a) => a.score !== null) ? "%" : undefined
