@@ -1,0 +1,1063 @@
+# Phase 2: Content Safety and Rate Limiting - Research
+
+**Researched:** 2026-05-01
+**Domain:** Server-side HTML sanitization, iframe sandboxing, Postgres-backed rate limiting in Next.js 16 App Router on Supabase
+**Confidence:** HIGH (locked decisions in CONTEXT.md leave only mechanical "how" questions; primary sources verified via Context7 and Vercel official docs)
+
+## Summary
+
+Phase 2 closes HARDEN-05 (HTML sanitization on write + embed iframe sandbox) and HARDEN-06 (server-side password-reset rate limit). Every architectural decision is locked in `02-CONTEXT.md`. This document supplies the implementation-ready shape: exact `sanitize-html` v2.17 config objects, the React iframe `sandbox` prop mechanics, the canonical Vercel IP-extraction pattern, the recommended Postgres rate-limit access pattern, and the test harness lines that match BMH Institute's existing `*.test.ts` / `*.test.tsx` / `*.integration.test.ts` split.
+
+Two non-obvious findings worth surfacing up front:
+
+1. **There is no admin UI for editing certificate templates.** Templates are seeded by SQL (`005_seed_dev.sql`) and have no `actions.ts` write path in the codebase today. CONTEXT.md D-A2 talks about sanitizing "on write" - the only meaningful "write" surface for certificate templates in this phase is the **backfill migration**. Any future template-edit action MUST also call `sanitizeCertificateTemplate`, but Phase 2 ships only the library + the backfill, not a new admin form.
+2. **`allow-scripts allow-same-origin` is safe for cross-origin embeds.** The well-known footgun (the iframe can remove its own `sandbox` attribute) only applies when the framed document's origin matches the parent. Loom, Notion, Google Docs, and similar tools are all cross-origin from `university.bmhgroup.com`, so the CONCERNS.md-recommended set is the right call. The risk acceptance is documented below for the test-inventory commit.
+
+**Primary recommendation:** Use the SECURITY DEFINER RPC pattern for `auth_rate_limits` (atomic, easy to test from the integration suite, matches existing `fn_*` helpers in `002_functions_and_triggers.sql`). Use a one-shot Node script invoked manually post-deploy for the sanitize backfill (idempotent, easy to re-run, no awkward `pg_cron`+`pg_net`+JS-runtime juggling). Keep `pg_cron` out of scope - the rate-limit table's TTL is short enough that opportunistic prune inside the RPC is sufficient.
+
+## Architectural Responsibility Map
+
+| Capability | Primary Tier | Secondary Tier | Rationale |
+|------------|--------------|----------------|-----------|
+| HTML sanitization on save (text blocks, certificate templates) | API / Server Actions | - | Sanitize on write per D-A2; admin actions are the only legitimate write surface; renderer stays untouched |
+| Backfill of existing rows | Database (read) + Node script (transform/write) | - | One-shot script using `createAdminClient()` reads, sanitizes via `sanitize-html` (Node), writes back |
+| Embed iframe sandbox attribute | Browser / Client (rendered HTML) | API / Server Actions (`https://` validation) | Defense applied at render time via static markup; admin save validates scheme |
+| Rate-limit storage | Database (Postgres) | API / Server Actions (gate caller) | Durable, multi-region consistent; learner sessions never read or write the table |
+| Rate-limit gate | API / Server Actions | Database (atomic RPC) | Per `requireAdmin()`-style convention - gate runs server-side before any Supabase auth call |
+| IP extraction | API / Server Actions (`headers()` from `next/headers`) | - | Vercel sets `x-forwarded-for`; Next.js exposes via async `headers()` |
+
+## Project Constraints (from AGENTS.md and CLAUDE.md)
+
+| Directive | Source | Impact on this phase |
+|-----------|--------|----------------------|
+| TDD with up-front test inventory reviewed by Jarrad before any tests or code | AGENTS.md | Each plan MUST present its full test inventory in the plan file and wait for Jarrad's approval before writing the failing-tests commit |
+| Failing tests land in their own commit before the implementation commit | AGENTS.md | Each plan ships at least two commits: failing tests, then implementation |
+| `npm run verify` (typecheck + unit + RTL) gates pre-commit | AGENTS.md | New unit + RTL tests must pass under the husky hook; integration tests are not gated |
+| No em dashes; minimal commas/dashes; no bold or Roman numeral headers | AGENTS.md | Plan files, error copy, code comments all conform |
+| Company name "BMH Group" not "BMH Group KC" | AGENTS.md | Watch the certificate seed and any new error messages |
+| Voice / role-play work belongs in Sandra Practice, not this repo | AGENTS.md | Out of scope; not relevant to Phase 2 - flag if it appears |
+| Migrations append numerically; next free slot is `011_*` | CONTEXT.md | Phase 2 ships up to two new migrations: rate-limit table (+RPC) and content-backfill if a SQL-only path is chosen - but the recommended backfill is a Node script, so realistically only one new migration |
+| RLS on every table is non-negotiable | AGENTS.md | `auth_rate_limits` enables RLS, allows nothing for `authenticated`, leaves service-role bypass intact |
+| Vercel Hobby plan | AGENTS.md | Cron in Vercel scheduler is Pro-only - favours opportunistic prune over scheduled cleanup |
+
+## Phase Requirements
+
+| ID | Description | Research Support |
+|----|-------------|------------------|
+| HARDEN-05 | Embed-block iframes load with sandbox; admin-authored HTML in text blocks and certificate templates is sanitized via `sanitize-html` on write; tests assert `<script>` stripped on save and not executed on render | Standard Stack §`sanitize-html` v2.17, Code Examples §1 + §2 + §3 + §4, Common Pitfalls §1 + §2 + §3 |
+| HARDEN-06 | Forgot-password and password-reset paths enforce server-side rate limiting (per-IP and per-email window); test asserts the second submission within the threshold is rejected | Standard Stack §`auth_rate_limits` table + RPC, Code Examples §5 + §6 + §7, Common Pitfalls §4 + §5 + §6 |
+
+## Standard Stack
+
+### Core
+
+| Library | Version | Purpose | Why Standard |
+|---------|---------|---------|--------------|
+| `sanitize-html` | `^2.17.3` | Allowlist-based HTML sanitizer with attribute, scheme, and CSS-property filtering | Named in REQUIREMENTS.md HARDEN-05; ApostropheCMS-maintained; built on `htmlparser2`; 30 Context7 snippets; published 2026-04-24 [VERIFIED: npm view] |
+| `@types/sanitize-html` | `^2.16.1` | TypeScript types | DefinitelyTyped; required for `strict` tsconfig [VERIFIED: npm view] |
+| `pg_cron` | n/a | Scheduled SQL job runner | **NOT used** - opportunistic prune inside the RPC removes the dependency. `pg_cron` is available on Supabase free tier but resource-bounded and adds operational complexity [CITED: github.com/orgs/supabase/discussions/37405] |
+
+### Supporting
+
+| Library | Version | Purpose | When to Use |
+|---------|---------|---------|-------------|
+| `@supabase/ssr` | `^0.10.2` | SSR cookie-based session for `createClient()` | Already installed; rate-limit gate may use it for the IP-and-email read |
+| `@supabase/supabase-js` | `^2.104.0` | Service-role admin client | Already installed; the backfill script calls `createAdminClient()` to bypass RLS |
+| `vitest` | `^4.1.5` | Unit + RTL + integration runner | Already installed; new tests follow the existing `.test.ts` / `.test.tsx` / `.integration.test.ts` split |
+
+### Alternatives Considered
+
+| Instead of | Could Use | Tradeoff | Verdict |
+|------------|-----------|----------|---------|
+| `sanitize-html` | `isomorphic-dompurify` | Smaller, browser-shippable; uses jsdom server-side which is heavier than `htmlparser2` | REJECTED - REQUIREMENTS.md HARDEN-05 names `sanitize-html` explicitly |
+| Postgres-backed rate limit | Upstash Redis via Vercel Marketplace | Faster (~1ms vs ~10-30ms); needs new vendor + env vars; sub-second TTL | REJECTED in CONTEXT.md D-C1 - durable Postgres at BMH's volume is sufficient |
+| In-process Map | - | Free, fastest | REJECTED in CONTEXT.md D-C1 - Vercel Fluid Compute does not durably share state across instances |
+| `pg_cron` for `auth_rate_limits` cleanup | Opportunistic prune inside RPC | Cleaner ops, no per-request overhead | REJECTED - opportunistic prune is one extra `delete` inside a function we already call; no new ops surface |
+| RPC-only rate-limit access | Service-role UPSERT + read | Two round-trips vs one; race window between read and increment | RECOMMEND RPC - atomicity is free with `update ... returning`, and the RPC encapsulates the prune sweep |
+
+### Installation
+
+```bash
+npm install sanitize-html
+npm install --save-dev @types/sanitize-html
+```
+
+### Version verification (run before plan execution)
+
+```bash
+npm view sanitize-html version
+npm view sanitize-html time.modified
+npm view @types/sanitize-html version
+```
+
+Verified 2026-05-01: `sanitize-html@2.17.3` (published 2026-04-24), `@types/sanitize-html@2.16.1`. Lock to `^2.17` to track patch + minor releases without breaking on a major.
+
+## Architecture Patterns
+
+### System Architecture Diagram
+
+```text
+HARDEN-05 sanitization (sanitize on write, render untouched):
+
+  Admin form
+    │
+    ▼
+  Server action (requireAdmin → sanitize → DB write)
+    │  src/lib/sanitize/text-block.ts        (strict allowlist)
+    │  src/lib/sanitize/certificate.ts       (looser allowlist + style)
+    ▼
+  Supabase Postgres
+    │  content_blocks.content (jsonb { html })
+    │  certificate_templates.body_html
+    ▼
+  Server component fetches → renders via dangerouslySetInnerHTML (unchanged)
+
+
+  One-shot backfill (run manually after deploy):
+
+  scripts/backfill-sanitize-html.ts
+    │  createAdminClient() → service-role SELECT/UPDATE
+    │  sanitize each row idempotently
+    │  skip rows already matching sanitize(input) === input
+    ▼
+  Supabase Postgres rows updated in-place
+
+
+HARDEN-05 embed sandbox:
+
+  ContentBlockRenderer (server component)
+    │
+    ▼
+  EmbedBlock (renders <iframe sandbox="allow-scripts allow-same-origin allow-forms allow-presentation" ...>)
+
+
+HARDEN-06 rate limit (gate before Supabase auth call):
+
+  forgot-password / set-password form
+    │  POST → server action
+    ▼
+  rateLimit.check({ ip, email })
+    │  await headers() → x-forwarded-for first entry
+    │  supabase.rpc("fn_check_and_consume_rate_limit", { ... }) × 2 (ip + email)
+    │  both must allow
+    ▼
+  IF allowed → call supabase.auth.resetPasswordForEmail / updateUser
+  IF denied  → forgot-password: { ok: true } (silent)
+              set-password:    { ok: false, error: "Try again in N minutes." }
+```
+
+### Recommended Source Layout
+
+```
+src/lib/sanitize/
+├── text-block.ts              # sanitizeTextBlockHtml + STRICT_OPTIONS export
+├── text-block.test.ts         # unit: <script>, javascript:, data:, on*=, allowed tags pass-through
+├── certificate.ts             # sanitizeCertificateBodyHtml + CERTIFICATE_OPTIONS export
+└── certificate.test.ts        # unit: 005-seed templates round-trip, style allowlist, img https-only
+
+src/lib/rate-limit/
+├── check.ts                   # checkAndConsume({ keyType, keyValue, threshold, windowSeconds })
+├── check.test.ts              # unit: pure logic against an injected counter (no DB)
+├── check.integration.test.ts  # integration: real auth_rate_limits via service role
+├── ip.ts                      # extractClientIp(headersList) - pure function, headers passed in
+└── ip.test.ts                 # unit: x-forwarded-for parsing, fallback order, IPv6, dev fallback
+
+scripts/
+└── backfill-sanitize-html.ts  # one-shot Node script, manual run via tsx
+
+supabase/migrations/
+├── 011_auth_rate_limits.sql                # table + RLS + RPC + index
+└── (no second migration - backfill is JS, not SQL)
+```
+
+This layout mirrors `src/lib/quizzes/` (split into `score.ts` + `score.test.ts` + `attempts.ts` + `attempts.test.ts`) and follows CONVENTIONS.md naming.
+
+### Pattern 1: Sanitize-on-Write Inside an Admin Server Action
+
+**What:** Insert sanitization between `requireAdmin()` and the Supabase write. Renderer untouched.
+**When to use:** Every admin action that accepts HTML from a form (text-block save, future certificate-template editor).
+**Example:**
+
+```typescript
+// Source: existing pattern in src/app/(dashboard)/admin/lessons/[lessonId]/edit/actions.ts:99-120
+// Modified to add sanitization for the text-block payload only.
+export async function updateBlock(input: {
+  blockId: string;
+  lessonId: string;
+  block_type: BlockType;
+  content: Record<string, unknown>;
+  is_required_for_completion?: boolean;
+}): Promise<ActionResult> {
+  await requireAdmin();
+  const supabase = await createClient();
+
+  let safeContent = input.content;
+  if (input.block_type === "text" && typeof input.content.html === "string") {
+    safeContent = {
+      ...input.content,
+      html: sanitizeTextBlockHtml(input.content.html),
+    };
+  } else if (input.block_type === "embed" && typeof input.content.iframe_src === "string") {
+    const src = input.content.iframe_src.trim();
+    if (!src.startsWith("https://")) {
+      return { ok: false, error: "Embed URL must start with https://" };
+    }
+    safeContent = { ...input.content, iframe_src: src };
+  }
+
+  const patch: Record<string, unknown> = { content: safeContent };
+  // ...rest unchanged
+}
+```
+
+Note: `block_type` is not currently passed to `updateBlock` - it is inferred from the existing `content_blocks` row. The plan must decide between (a) widening the action signature, (b) reading `block_type` from the row before writing, or (c) splitting into `updateTextBlock` / `updateEmbedBlock` actions. Option (b) is the smallest delta and matches what the action already does for sort_order in `moveBlock`.
+
+### Pattern 2: Idempotent Backfill via a One-Shot Node Script
+
+**What:** A `tsx`-runnable script that reads every row, sanitizes, writes back only when output differs from input. Re-runnable with no side effects.
+**When to use:** Sanitizer rule changes (now and on any future tightening per CONTEXT.md D-A2).
+**Example:**
+
+```typescript
+// scripts/backfill-sanitize-html.ts
+// Source: synthesised from createAdminClient() pattern in src/lib/supabase/admin.ts
+//         and the throwaway-user pattern in actions.integration.test.ts
+import { createAdminClient } from "@/lib/supabase/admin";
+import { sanitizeTextBlockHtml } from "@/lib/sanitize/text-block";
+import { sanitizeCertificateBodyHtml } from "@/lib/sanitize/certificate";
+
+async function backfillContentBlocks() {
+  const admin = createAdminClient();
+  const { data: rows, error } = await admin
+    .from("content_blocks")
+    .select("id, content")
+    .eq("block_type", "text");
+  if (error) throw error;
+
+  let touched = 0;
+  for (const row of rows ?? []) {
+    const html = (row.content as { html?: string } | null)?.html;
+    if (typeof html !== "string") continue;
+    const safe = sanitizeTextBlockHtml(html);
+    if (safe === html) continue; // idempotent: no-op when already clean
+    const { error: updErr } = await admin
+      .from("content_blocks")
+      .update({ content: { ...(row.content as object), html: safe } })
+      .eq("id", row.id);
+    if (updErr) throw updErr;
+    touched += 1;
+  }
+  console.log(`content_blocks: ${touched} rows sanitized`);
+}
+
+async function backfillCertificateTemplates() { /* same shape, reads body_html */ }
+
+async function main() {
+  await backfillContentBlocks();
+  await backfillCertificateTemplates();
+}
+
+main().catch((e) => { console.error(e); process.exit(1); });
+```
+
+Run with: `npx tsx scripts/backfill-sanitize-html.ts` (no `tsx` dependency yet - add to devDependencies as part of Plan 02-1, or use `node --experimental-strip-types` if Node 22+ is the target).
+
+**Idempotency proof:** the test inventory should include a unit test that asserts `sanitize(sanitize(input)) === sanitize(input)` for representative inputs.
+
+### Pattern 3: Embed Iframe Sandbox via React's `sandbox` Prop
+
+**What:** React passes `sandbox` through to the rendered HTML attribute; React DOM does not transform it.
+**Example:**
+
+```tsx
+// Source: existing src/components/content-blocks.tsx:445-465 with sandbox added
+function EmbedBlock({ src, aspect }: { src: string; aspect: string }) {
+  if (!src || src === "https://") {
+    return <div className="...">Embed URL not set.</div>;
+  }
+  const aspectClass = EMBED_ASPECT_CLASS[aspect] ?? "aspect-video";
+  return (
+    <div className={cn(aspectClass, "overflow-hidden rounded-md border")}>
+      <iframe
+        src={src}
+        title="Embedded content"
+        sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowFullScreen
+        className="h-full w-full"
+      />
+    </div>
+  );
+}
+```
+
+`sandbox` is a standard HTML attribute name; React renders it lowercase with no camelCase conversion. The space-separated string is the canonical format.
+
+### Pattern 4: Atomic SECURITY DEFINER Rate-Limit RPC
+
+**What:** A single Postgres function that opportunistically prunes expired rows, increments the matching window's counter, returns `(allowed, retry_after_seconds)`.
+**Why atomic in one round-trip:** `insert ... on conflict do update returning` is atomic and avoids the read-modify-write race that a JS UPSERT pattern would have under concurrent requests.
+**Example sketch:**
+
+```sql
+-- supabase/migrations/011_auth_rate_limits.sql
+
+create type public.auth_rate_limit_key_type as enum ('ip', 'email');
+
+create table public.auth_rate_limits (
+  key_type public.auth_rate_limit_key_type not null,
+  key_value text not null,
+  window_start timestamptz not null,
+  count integer not null default 0,
+  expires_at timestamptz not null,
+  primary key (key_type, key_value, window_start)
+);
+
+alter table public.auth_rate_limits enable row level security;
+-- No policies = no access for authenticated. Service role bypasses RLS.
+
+create index idx_auth_rate_limits_lookup
+  on public.auth_rate_limits (key_type, key_value, expires_at);
+
+create or replace function public.fn_check_and_consume_rate_limit(
+  p_key_type public.auth_rate_limit_key_type,
+  p_key_value text,
+  p_threshold integer,
+  p_window_seconds integer
+)
+returns table(allowed boolean, retry_after_seconds integer)
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_now timestamptz := now();
+  v_window_start timestamptz := v_now;
+  v_expires_at timestamptz := v_now + make_interval(secs => p_window_seconds);
+  v_count integer;
+begin
+  -- Opportunistic prune: bounded delete on rows older than any active window.
+  delete from public.auth_rate_limits
+   where key_type = p_key_type
+     and key_value = p_key_value
+     and expires_at < v_now;
+
+  -- Find or create the active window for this key.
+  insert into public.auth_rate_limits (key_type, key_value, window_start, count, expires_at)
+  values (p_key_type, p_key_value, v_window_start, 1, v_expires_at)
+  on conflict (key_type, key_value, window_start)
+    do update set count = public.auth_rate_limits.count + 1
+  returning count into v_count;
+
+  if v_count > p_threshold then
+    return query select false, greatest(1, extract(epoch from (
+      select min(expires_at) from public.auth_rate_limits
+       where key_type = p_key_type and key_value = p_key_value
+    ) - v_now))::integer;
+  else
+    return query select true, 0;
+  end if;
+end;
+$$;
+
+revoke all on function public.fn_check_and_consume_rate_limit from public, anon, authenticated;
+grant execute on function public.fn_check_and_consume_rate_limit to service_role;
+```
+
+**Caveats / decisions for the planner:**
+
+- The shape above uses a single sliding `window_start` per (key_type, key_value) - effectively a fixed window keyed on first-attempt timestamp. The RPC must decide between fixed vs sliding window; fixed window with prune-on-write is simplest and matches the threshold semantics in CONTEXT.md D-D1.
+- Per-key window matches the `(key_type, key_value, window_start)` PRIMARY KEY in CONTEXT.md D-C1; alternative is to round `window_start` to the bucket boundary (e.g., 15-min boundary for IP) - that simplifies the dedup but means thresholds are per-bucket not rolling. Either works for HARDEN-06. RECOMMEND fixed-window-rounded (round `now()` down to the bucket) - see Pitfall §6 for why.
+- `service_role`-only `EXECUTE` keeps the function out of learner-session reach.
+
+### Pattern 5: Client IP Extraction from Vercel Headers
+
+**What:** Read the first comma-separated entry of `x-forwarded-for`, falling back to `x-real-ip`. Both are Vercel-set and cannot be spoofed externally on the Vercel platform.
+**Example:**
+
+```typescript
+// src/lib/rate-limit/ip.ts
+// Source: synthesised from Vercel docs (vercel.com/docs/headers/request-headers)
+//         and Next.js 16 next/headers async API.
+export function extractClientIp(headers: { get: (name: string) => string | null }): string {
+  // Vercel sets all three of these to the public client IP. x-forwarded-for is the
+  // canonical source; x-real-ip and x-vercel-forwarded-for are documented duplicates.
+  // Using the first comma-separated entry handles legitimate proxy chains (Vercel
+  // overwrites the header from the public internet so we control its content).
+  const xff = headers.get("x-forwarded-for");
+  if (xff) return xff.split(",")[0]!.trim();
+  const real = headers.get("x-real-ip");
+  if (real) return real.trim();
+  // Local dev with no proxy - fall back to a sentinel rather than throwing so
+  // localhost development doesn't crash the action.
+  return "0.0.0.0";
+}
+```
+
+Caller (server action) imports `headers()` from `next/headers`:
+
+```typescript
+// In src/app/(auth)/forgot-password/actions.ts
+import { headers } from "next/headers";
+import { extractClientIp } from "@/lib/rate-limit/ip";
+
+export async function sendPasswordReset(_prev, formData) {
+  const ip = extractClientIp(await headers());
+  // ...
+}
+```
+
+`headers()` is async in Next.js 16 [VERIFIED: Context7 /vercel/next.js docs]. The function under test (`extractClientIp`) takes a duck-typed `{ get }` rather than calling `headers()` itself - this keeps it pure and unit-testable without faking the Next module.
+
+### Pattern 6: Rate-Limit Gate Helper
+
+**What:** A pure-ish helper that accepts a Supabase client and the four threshold params, returns the discriminated-union result the action surface uses.
+
+```typescript
+// src/lib/rate-limit/check.ts
+import { createAdminClient } from "@/lib/supabase/admin";
+
+export type RateLimitResult =
+  | { allowed: true }
+  | { allowed: false; retryAfterSeconds: number };
+
+export async function checkAndConsume(args: {
+  keyType: "ip" | "email";
+  keyValue: string;
+  threshold: number;
+  windowSeconds: number;
+}): Promise<RateLimitResult> {
+  // Service role: this RPC is REVOKEd from anon and authenticated.
+  const admin = createAdminClient();
+  const { data, error } = await admin.rpc("fn_check_and_consume_rate_limit", {
+    p_key_type: args.keyType,
+    p_key_value: args.keyValue,
+    p_threshold: args.threshold,
+    p_window_seconds: args.windowSeconds,
+  });
+  if (error) {
+    // Fail open in dev, fail closed in prod. Document this choice in the test inventory.
+    throw new Error(`Rate limit check failed: ${error.message}`);
+  }
+  const row = (data as { allowed: boolean; retry_after_seconds: number }[])?.[0];
+  if (!row) throw new Error("Rate limit RPC returned no row.");
+  return row.allowed
+    ? { allowed: true }
+    : { allowed: false, retryAfterSeconds: row.retry_after_seconds };
+}
+```
+
+**Failure mode decision (Claude's discretion per CONTEXT.md):** RECOMMEND **fail closed** - if the RPC errors, the gate denies. forgot-password silent-success contract still holds (return `{ ok: true }`); set-password returns the throttle error. Reasoning: a Postgres outage is a rarer event than a flood; failing closed avoids degrading to "no rate limit" during the worst-case scenario. Document in the inventory.
+
+### Pattern 7: Two-Gate Wiring in the Server Action
+
+```typescript
+// src/app/(auth)/forgot-password/actions.ts (revised)
+"use server";
+import { headers } from "next/headers";
+import { createClient } from "@/lib/supabase/server";
+import { checkAndConsume } from "@/lib/rate-limit/check";
+import { extractClientIp } from "@/lib/rate-limit/ip";
+
+const IP_LIMIT = { threshold: 5, windowSeconds: 15 * 60 };
+const EMAIL_LIMIT = { threshold: 3, windowSeconds: 60 * 60 };
+
+export async function sendPasswordReset(_prev, formData) {
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  if (!email) return { ok: false, error: "Email is required." };
+
+  const ip = extractClientIp(await headers());
+
+  // Both gates must pass. Either denial returns silent { ok: true } per CONTEXT.md D-D2.
+  const ipGate = await checkAndConsume({ keyType: "ip", keyValue: ip, ...IP_LIMIT });
+  if (!ipGate.allowed) return { ok: true };
+
+  const emailGate = await checkAndConsume({ keyType: "email", keyValue: email, ...EMAIL_LIMIT });
+  if (!emailGate.allowed) return { ok: true };
+
+  const supabase = await createClient();
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://bmh-institute.vercel.app";
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${appUrl}/auth/callback`,
+  });
+  if (error) return { ok: false, error: error.message };
+  return { ok: true };
+}
+```
+
+set-password version is the same shape but the breach branch returns `{ ok: false, error: \`Too many attempts. Try again in ${minutes} minutes.\` }` where `minutes = Math.ceil(retryAfterSeconds / 60)`.
+
+### Anti-Patterns to Avoid
+
+- **Sanitizing on render instead of write.** Adds CPU per request, doubles the number of places the rule must change when sanitizer policy tightens. Locked decision in CONTEXT.md D-A2.
+- **Using `dompurify` server-side with jsdom.** REQUIREMENTS.md names `sanitize-html`; jsdom is heavier than `htmlparser2`.
+- **Reading the rate-limit table from the learner Supabase client.** RLS allows nothing for `authenticated` (no policy = no access). Service role only.
+- **Using `request.ip` from a `Request` object inside a server action.** Server actions don't expose `request.ip`; use `await headers()` from `next/headers`.
+- **Putting the rate-limit gate inside `src/middleware.ts`.** The middleware already has a public-routes whitelist that includes `/forgot-password`. Gating in middleware would force a fetch-vs-action decision tree; gating inside the action is simpler and matches `requireAdmin()` patterns.
+- **Importing `sanitize-html` from a Client Component.** Adds 70KB+ via `htmlparser2`'s `node-libs-browser` polyfills. Server-only - keep imports in `src/lib/sanitize/` and the actions that call them.
+
+## Don't Hand-Roll
+
+| Problem | Don't Build | Use Instead | Why |
+|---------|-------------|-------------|-----|
+| HTML sanitization | Regex strip of `<script>`, `on*=`, `javascript:` | `sanitize-html` allowlist | Regex misses comments, CDATA, SVG `<use href="javascript:...">`, broken-tag tricks |
+| URL scheme validation for `<a>` and `<img>` | Hand-rolled `URL.parse` checks | `allowedSchemes` + `allowedSchemesByTag` config | Built-in handles protocol-relative URLs, scheme-by-tag, and the `allowProtocolRelative` flag |
+| CSS property allowlist for inline `style` | Tokenize style strings yourself | `allowedStyles` config with regex per property | Built-in handles `!important`, multi-value, and the `*` wildcard |
+| `rel="noopener noreferrer"` on external links | Re-run after sanitize | `transformTags.a` returning `{ tagName: 'a', attribs: { ...attribs, rel: 'noopener noreferrer' } }` | Single pass; survives future sanitize config changes |
+| Atomic counter increment | UPSERT then SELECT then increment | `insert ... on conflict do update set count = count + 1 returning count` | Single round-trip, no read-modify-write race |
+| Distributed rate limit on Vercel | In-memory `Map` | Postgres table | Fluid Compute reuses instances but does not durably share state across regions or deploys |
+| Client IP extraction | Read `request.connection.remoteAddress` | `headers().get('x-forwarded-for')` first entry | Vercel overwrites `x-forwarded-for` to prevent spoofing; `request.connection` is undefined on serverless |
+
+**Key insight:** every item on this list is a pattern Jarrad's training data probably "knows" - they all look easy. They are all wrong because the edge cases are non-obvious until you're four months in and a `<script>` got through via `<svg><script>...</script></svg>` (a `sanitize-html` known-vector that the library handles).
+
+## Common Pitfalls
+
+### Pitfall 1: `sanitize-html` allowedStyles is per-property regex, not a property allowlist
+**What goes wrong:** A planner writes `allowedStyles: { '*': { 'font-size': true } }` expecting the library to accept truthy values.
+**Why it happens:** Many CSS allowlist libraries take booleans. `sanitize-html` requires regex arrays.
+**How to avoid:** Always supply regex patterns even for a "anything is fine" allow:
+
+```typescript
+allowedStyles: {
+  '*': {
+    'font-size': [/^[\d.]+(px|em|rem|%)$/],
+    'color': [/^#[0-9a-f]{3,8}$/i, /^rgb\(/, /^[a-z]+$/i],
+    'margin': [/^[\d.]+(px|em|rem|%)?( [\d.]+(px|em|rem|%)?){0,3}$/],
+    'margin-top': [/^[\d.]+(px|em|rem|%)?$/],
+    'padding': [/^[\d.]+(px|em|rem|%)?( [\d.]+(px|em|rem|%)?){0,3}$/],
+    'text-align': [/^(left|right|center|justify)$/],
+    'font-family': [/^[\w\s,'"-]+$/],
+    'font-weight': [/^(\d{3}|normal|bold|bolder|lighter)$/],
+  },
+}
+```
+
+**Warning signs:** Round-tripping the 005 seed templates strips all `style` attributes. Test inventory MUST include a "005 seed survives sanitization unchanged" assertion.
+
+### Pitfall 2: `<a>` rel attribute drops without an explicit allowlist
+**What goes wrong:** `transformTags.a` adds `rel="noopener noreferrer"` but the rendered HTML has no `rel` because `allowedAttributes.a` doesn't include it.
+**Why it happens:** `transformTags` runs BEFORE the attribute allowlist filter; setting an attribute the allowlist doesn't permit gets stripped after.
+**How to avoid:** Always pair `transformTags` with `allowedAttributes`:
+
+```typescript
+{
+  allowedTags: ['a', 'p', /* ... */],
+  allowedAttributes: { a: ['href', 'rel', 'target'] },
+  allowedSchemes: ['http', 'https', 'mailto'],
+  transformTags: {
+    a: (tagName, attribs) => ({
+      tagName: 'a',
+      attribs: {
+        ...attribs,
+        rel: 'noopener noreferrer',
+        target: attribs.target === '_blank' ? '_blank' : attribs.target ?? '_self',
+      },
+    }),
+  },
+}
+```
+
+### Pitfall 3: Re-sanitization is not idempotent if you forget `disallowedTagsMode`
+**What goes wrong:** First sanitize converts `<script>foo</script>` to `&lt;script&gt;foo&lt;/script&gt;` (the default `discard` mode strips the tag but `escape` mode escapes it as text). Second sanitize on the escaped text leaves it alone. Third user-edit of the now-escaped string round-trips poorly.
+**How to avoid:** Use `disallowedTagsMode: 'discard'` (default) explicitly. Add a unit test: `sanitize(sanitize(input)) === sanitize(input)` for representative inputs (script, embedded data:, broken HTML, valid prose).
+**Warning signs:** Backfill produces a row that the next backfill changes - non-idempotent.
+
+### Pitfall 4: `allow-scripts allow-same-origin` is a sandbox escape - but only if the iframe origin matches the parent
+**What goes wrong:** Linters and Mozilla-discourse posts warn that this combination "removes all sandboxing." This is true ONLY when the iframe and parent share an origin (the iframe's JS can call `frameElement.removeAttribute('sandbox')`).
+**Why it happens:** When same-origin, the iframe has access to its own DOM element on the parent and can mutate the sandbox attribute itself.
+**How to avoid:** Confirm - and document in the test inventory - that BMH Institute's embed sources (Loom share-domain, Notion, Google Docs) are always cross-origin from `university.bmhgroup.com`. They are. The escape requires same-origin, which is excluded by D-B3's `https://`-only constraint and the fact that BMH does not host any iframable surfaces under its own origin. The risk acceptance for this combination is "admin-trusted authoring + cross-origin destinations only" and it should be noted in code as an inline comment.
+**Warning signs:** A future plan adds an embed type for a same-origin URL (e.g., a self-hosted dashboard at `university.bmhgroup.com/dashboards/foo`). At that point the sandbox attribute would no longer be effective.
+
+### Pitfall 5: `x-forwarded-for` first entry is the canonical client IP - but only on Vercel
+**What goes wrong:** A planner reads "use the LAST entry of x-forwarded-for" (a common pattern when behind nginx + cloudflare + a reverse proxy). On Vercel, the header is OVERWRITTEN by Vercel to a single entry: the public client IP.
+**Why it happens:** Vercel docs explicitly say "we currently overwrite the X-Forwarded-For header and do not forward external IPs. This restriction is in place to prevent IP spoofing." [VERIFIED: vercel.com/docs/headers/request-headers]
+**How to avoid:** Use the FIRST entry (or just the whole string - there is only one entry in production). Add a unit test that asserts `extractClientIp({ get: () => '203.0.113.5, 198.51.100.7' })` returns `'203.0.113.5'` - defensive against a future migration off Vercel that re-introduces the header chain.
+**Warning signs:** Local dev returns `'0.0.0.0'` (no proxy headers). Document this in the test harness.
+
+### Pitfall 6: Per-IP and per-email gates in fixed-window mode can over-permit at window boundaries
+**What goes wrong:** A 15-minute fixed window starting at `12:00:00` allows 5 requests in that window. A user fires 5 at `12:14:50`, 5 more at `12:15:10`. Total 10 in 20 seconds.
+**Why it happens:** Fixed windows are not sliding. The `(key_type, key_value, window_start)` PRIMARY KEY in D-C1 can mean either "first-attempt-rounded" or "boundary-aligned-bucket"; the planner picks.
+**How to avoid:** RECOMMEND boundary-aligned buckets (`window_start = date_trunc('minute', now()) - mod(extract(minute from now()), p_window_seconds/60)`). Slightly leakier at boundaries but the math is simpler and the threshold semantics match the documented "per 15 minutes" wording. For HARDEN-06's threat model (anti-automation, not strict abuse prevention), boundary-aligned is fine. Document the choice in the inventory.
+**Warning signs:** A test that fires 6 requests separated by exactly 15 minutes from `T+0` and asserts the 6th is rejected - it will pass with sliding window, fail with boundary-aligned. Choose your assertion accordingly.
+
+### Pitfall 7: `auth_rate_limits` table grows unbounded if prune is missed
+**What goes wrong:** Opportunistic prune inside the RPC only deletes rows for the same `(key_type, key_value)`. Keys that were used once and never again leave a row that lives until `expires_at` plus however long until anyone touches that key again - possibly forever.
+**How to avoid:** The `expires_at` index serves both lookup (gate read) and prune sweep. Add a daily periodic sweep - but not via `pg_cron` since that's overkill. Two options: (a) run a `delete from auth_rate_limits where expires_at < now() - interval '1 day'` inside the RPC with low probability (e.g., on every 100th call by checking `random() < 0.01`); (b) ship a separate `fn_prune_auth_rate_limits()` and document that it should be called manually monthly. RECOMMEND (a) - zero ops, bounded overhead.
+**Warning signs:** Table size monitor (Supabase dashboard) shows growth proportional to unique IPs over time, not request volume.
+
+### Pitfall 8: Backfilling certificate templates breaks the 005 seed templates if the allowlist is too strict
+**What goes wrong:** The default templates use `padding:48px`, `font-family:Georgia,serif`, `color:#666`, `margin:16px 0`, `margin-top:32px`. Any property missing from the certificate `allowedStyles` config strips the style and the rendered certificate looks wrong.
+**How to avoid:** Run the backfill against a copy of the seed templates as a test BEFORE running it against production. Test inventory MUST include "all 005 seed templates round-trip with no character difference under sanitizeCertificateBodyHtml."
+**Warning signs:** Backfill emits "N rows touched" where N > 0 for `certificate_templates` on a fresh prod DB - that means the seed templates lost something. Diff and fix the allowlist before merging.
+
+## Code Examples
+
+### Example 1: Strict text-block allowlist
+
+```typescript
+// src/lib/sanitize/text-block.ts
+// Source: synthesised from sanitize-html v2.17 docs (Context7 /apostrophecms/sanitize-html)
+import sanitizeHtml from "sanitize-html";
+
+const STRICT_OPTIONS: sanitizeHtml.IOptions = {
+  allowedTags: [
+    "p", "br", "strong", "em", "u",
+    "ul", "ol", "li",
+    "h2", "h3", "h4",
+    "blockquote", "code", "pre",
+    "a",
+  ],
+  allowedAttributes: {
+    a: ["href", "rel", "target"],
+  },
+  allowedSchemes: ["http", "https", "mailto"],
+  allowedSchemesByTag: { a: ["http", "https", "mailto"] },
+  allowProtocolRelative: false,
+  // No allowedStyles - text blocks live inside Tailwind `prose` and don't need inline style.
+  transformTags: {
+    a: (_tag, attribs) => ({
+      tagName: "a",
+      attribs: {
+        href: attribs.href ?? "",
+        rel: "noopener noreferrer",
+        target: attribs.target === "_blank" ? "_blank" : "_self",
+      },
+    }),
+  },
+  disallowedTagsMode: "discard",
+};
+
+export function sanitizeTextBlockHtml(input: string): string {
+  return sanitizeHtml(input, STRICT_OPTIONS);
+}
+```
+
+### Example 2: Certificate template allowlist
+
+```typescript
+// src/lib/sanitize/certificate.ts
+// Source: synthesised from sanitize-html v2.17 docs (Context7 /apostrophecms/sanitize-html)
+import sanitizeHtml from "sanitize-html";
+
+const CERTIFICATE_OPTIONS: sanitizeHtml.IOptions = {
+  allowedTags: [
+    "p", "br", "strong", "em", "u",
+    "ul", "ol", "li",
+    "h1", "h2", "h3", "h4",
+    "blockquote", "code", "pre",
+    "a",
+    "div", "span", "img",
+  ],
+  allowedAttributes: {
+    a: ["href", "rel", "target"],
+    img: ["src", "alt", "width", "height"],
+    div: ["style"],
+    span: ["style"],
+    p: ["style"],
+    h1: ["style"],
+    h2: ["style"],
+    h3: ["style"],
+    h4: ["style"],
+  },
+  allowedSchemes: ["http", "https", "mailto"],
+  allowedSchemesByTag: { a: ["http", "https", "mailto"], img: ["https"] },
+  allowProtocolRelative: false,
+  allowedStyles: {
+    "*": {
+      "font-size": [/^[\d.]+(px|em|rem|%|pt)$/],
+      "color": [/^#[0-9a-f]{3,8}$/i, /^rgb\((\s*\d+\s*,){2}\s*\d+\s*\)$/, /^[a-z]+$/i],
+      "margin": [/^([\d.]+(px|em|rem|%)?(\s+|$)){1,4}$/],
+      "margin-top": [/^[\d.]+(px|em|rem|%)?$/],
+      "padding": [/^([\d.]+(px|em|rem|%)?(\s+|$)){1,4}$/],
+      "text-align": [/^(left|right|center|justify)$/],
+      "font-family": [/^[\w\s,'"-]+$/],
+      "font-weight": [/^(\d{3}|normal|bold|bolder|lighter)$/],
+    },
+  },
+  transformTags: {
+    a: (_tag, attribs) => ({
+      tagName: "a",
+      attribs: {
+        href: attribs.href ?? "",
+        rel: "noopener noreferrer",
+        target: attribs.target === "_blank" ? "_blank" : "_self",
+      },
+    }),
+  },
+  disallowedTagsMode: "discard",
+};
+
+export function sanitizeCertificateBodyHtml(input: string): string {
+  return sanitizeHtml(input, CERTIFICATE_OPTIONS);
+}
+```
+
+### Example 3: Unit test pattern (matches existing `src/lib/quizzes/score.test.ts` style)
+
+```typescript
+// src/lib/sanitize/text-block.test.ts
+import { describe, expect, it } from "vitest";
+import { sanitizeTextBlockHtml } from "./text-block";
+
+describe("sanitizeTextBlockHtml", () => {
+  it("strips <script> tags entirely", () => {
+    expect(sanitizeTextBlockHtml('<p>hi<script>alert(1)</script></p>')).toBe("<p>hi</p>");
+  });
+
+  it("strips javascript: hrefs while preserving the <a>", () => {
+    expect(sanitizeTextBlockHtml('<a href="javascript:alert(1)">x</a>')).toBe(
+      '<a rel="noopener noreferrer" target="_self">x</a>',
+    );
+  });
+
+  it("forces rel=\"noopener noreferrer\" on external links", () => {
+    const out = sanitizeTextBlockHtml('<a href="https://example.com" target="_blank">x</a>');
+    expect(out).toContain('rel="noopener noreferrer"');
+    expect(out).toContain('target="_blank"');
+  });
+
+  it("is idempotent - sanitize(sanitize(x)) === sanitize(x)", () => {
+    const inputs = [
+      "<p>hi</p>",
+      '<a href="https://x.com">y</a>',
+      "<p>raw text</p><script>x</script>",
+    ];
+    for (const input of inputs) {
+      const once = sanitizeTextBlockHtml(input);
+      expect(sanitizeTextBlockHtml(once)).toBe(once);
+    }
+  });
+
+  it("strips style attributes from text blocks", () => {
+    expect(sanitizeTextBlockHtml('<p style="color:red">x</p>')).toBe("<p>x</p>");
+  });
+});
+```
+
+### Example 4: RTL test pattern for embed sandbox (matches existing `print-button.test.tsx`)
+
+```tsx
+// src/components/content-blocks.test.tsx
+import { render } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
+import { ContentBlockRenderer } from "./content-blocks";
+
+describe("EmbedBlock sandbox attribute (HARDEN-05)", () => {
+  it("renders the iframe with the locked sandbox flag set", () => {
+    const { container } = render(
+      <ContentBlockRenderer
+        block={{
+          id: "x",
+          block_type: "embed",
+          content: { iframe_src: "https://www.loom.com/embed/abc", aspect_ratio: "16:9" },
+          sort_order: 0,
+          is_required_for_completion: false,
+        }}
+      />,
+    );
+    const iframe = container.querySelector("iframe");
+    expect(iframe).not.toBeNull();
+    expect(iframe!.getAttribute("sandbox")).toBe(
+      "allow-scripts allow-same-origin allow-forms allow-presentation",
+    );
+  });
+
+  it("does not render an iframe when iframe_src is missing", () => {
+    const { container } = render(
+      <ContentBlockRenderer
+        block={{
+          id: "x",
+          block_type: "embed",
+          content: { iframe_src: "", aspect_ratio: "16:9" },
+          sort_order: 0,
+          is_required_for_completion: false,
+        }}
+      />,
+    );
+    expect(container.querySelector("iframe")).toBeNull();
+  });
+});
+```
+
+### Example 5: Rate-limit unit test (no DB)
+
+```typescript
+// src/lib/rate-limit/check.test.ts
+import { describe, expect, it, vi } from "vitest";
+
+// We mock createAdminClient to return a fake supabase whose .rpc() returns a deterministic result.
+vi.mock("@/lib/supabase/admin", () => ({
+  createAdminClient: vi.fn(),
+}));
+
+import { createAdminClient } from "@/lib/supabase/admin";
+import { checkAndConsume } from "./check";
+
+describe("checkAndConsume", () => {
+  it("returns allowed when the RPC reports allowed", async () => {
+    (createAdminClient as ReturnType<typeof vi.fn>).mockReturnValue({
+      rpc: vi.fn().mockResolvedValue({
+        data: [{ allowed: true, retry_after_seconds: 0 }],
+        error: null,
+      }),
+    });
+    const result = await checkAndConsume({
+      keyType: "ip",
+      keyValue: "203.0.113.5",
+      threshold: 5,
+      windowSeconds: 900,
+    });
+    expect(result).toEqual({ allowed: true });
+  });
+
+  it("returns denied with retryAfterSeconds when the RPC reports denied", async () => {
+    (createAdminClient as ReturnType<typeof vi.fn>).mockReturnValue({
+      rpc: vi.fn().mockResolvedValue({
+        data: [{ allowed: false, retry_after_seconds: 543 }],
+        error: null,
+      }),
+    });
+    const result = await checkAndConsume({
+      keyType: "email",
+      keyValue: "x@y.z",
+      threshold: 3,
+      windowSeconds: 3600,
+    });
+    expect(result).toEqual({ allowed: false, retryAfterSeconds: 543 });
+  });
+});
+```
+
+### Example 6: IP extraction unit test
+
+```typescript
+// src/lib/rate-limit/ip.test.ts
+import { describe, expect, it } from "vitest";
+import { extractClientIp } from "./ip";
+
+function fakeHeaders(values: Record<string, string | undefined>) {
+  return {
+    get: (name: string) => values[name.toLowerCase()] ?? null,
+  };
+}
+
+describe("extractClientIp", () => {
+  it("returns the first comma-separated entry of x-forwarded-for", () => {
+    expect(
+      extractClientIp(fakeHeaders({ "x-forwarded-for": "203.0.113.5, 198.51.100.7" })),
+    ).toBe("203.0.113.5");
+  });
+
+  it("falls back to x-real-ip when x-forwarded-for is missing", () => {
+    expect(extractClientIp(fakeHeaders({ "x-real-ip": "192.0.2.1" }))).toBe("192.0.2.1");
+  });
+
+  it("returns 0.0.0.0 when no proxy headers are set (local dev)", () => {
+    expect(extractClientIp(fakeHeaders({}))).toBe("0.0.0.0");
+  });
+
+  it("trims whitespace from the extracted IP", () => {
+    expect(
+      extractClientIp(fakeHeaders({ "x-forwarded-for": "  203.0.113.5  " })),
+    ).toBe("203.0.113.5");
+  });
+});
+```
+
+### Example 7: Integration test pattern for rate limit (matches existing `actions.integration.test.ts`)
+
+```typescript
+// src/lib/rate-limit/check.integration.test.ts
+// Source: extends the throwaway pattern from actions.integration.test.ts.
+// Cleans up auth_rate_limits rows it created so re-runs don't leak state.
+import { describe, expect, it, beforeEach } from "vitest";
+import { createClient as createSbClient } from "@supabase/supabase-js";
+import { randomBytes } from "node:crypto";
+
+const SUPABASE_URL = process.env.TEST_SUPABASE_URL;
+const SERVICE_ROLE = process.env.TEST_SUPABASE_SERVICE_ROLE_KEY;
+const envPresent = Boolean(SUPABASE_URL && SERVICE_ROLE);
+
+const admin = envPresent
+  ? createSbClient(SUPABASE_URL!, SERVICE_ROLE!, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    })
+  : null;
+
+describe.skipIf(!envPresent)("auth_rate_limits RPC (HARDEN-06)", () => {
+  it("rejects the (N+1)th request inside the window", async () => {
+    if (!admin) throw new Error("guard");
+    const key = `harden06-${randomBytes(8).toString("hex")}`;
+    try {
+      // Threshold 3 over a 60-second window.
+      for (let i = 0; i < 3; i++) {
+        const { data } = await admin.rpc("fn_check_and_consume_rate_limit", {
+          p_key_type: "ip",
+          p_key_value: key,
+          p_threshold: 3,
+          p_window_seconds: 60,
+        });
+        expect(data?.[0]?.allowed).toBe(true);
+      }
+      const { data: fourth } = await admin.rpc("fn_check_and_consume_rate_limit", {
+        p_key_type: "ip",
+        p_key_value: key,
+        p_threshold: 3,
+        p_window_seconds: 60,
+      });
+      expect(fourth?.[0]?.allowed).toBe(false);
+      expect(fourth?.[0]?.retry_after_seconds).toBeGreaterThan(0);
+    } finally {
+      await admin
+        .from("auth_rate_limits")
+        .delete()
+        .eq("key_value", key);
+    }
+  });
+});
+```
+
+## Runtime State Inventory
+
+This phase introduces new state but does not rename or migrate existing state. The relevant slice is:
+
+| Category | Items | Action Required |
+|----------|-------|-----------------|
+| Stored data | `content_blocks.content.html` (jsonb, ~unknown row count); `certificate_templates.body_html` (text, currently 2 seeded rows) | Backfill via `scripts/backfill-sanitize-html.ts` after the sanitize functions are deployed |
+| Live service config | None - no n8n / Datadog / external services depend on these rows | None - verified by grep against the project; only Supabase reads/writes the affected columns |
+| OS-registered state | None - no Task Scheduler / pm2 / systemd dependencies | None - verified by `find` over the repo; no scheduler hooks |
+| Secrets / env vars | `SUPABASE_SERVICE_ROLE_KEY` already required by `createAdminClient`; no new secrets | None - backfill script reuses existing credential |
+| Build artifacts / installed packages | None pre-existing for sanitize work; new `sanitize-html` install will produce `node_modules/sanitize-html/` | One `npm install` after Plan 02-1 lands |
+
+## Environment Availability
+
+| Dependency | Required By | Available | Version | Fallback |
+|------------|-------------|-----------|---------|----------|
+| Node 22+ runtime | Local dev + Vercel runtime | yes | local 25.8.2; Vercel: project default | - |
+| `sanitize-html` (npm) | Plans 02-1 (sanitization), 02-2 (embed) | will install | 2.17.3 | none |
+| `@types/sanitize-html` | TypeScript build | will install | 2.16.1 | none |
+| `tsx` for backfill script | One-shot post-deploy run | not installed | - | Use `node --experimental-strip-types scripts/backfill-sanitize-html.ts` (Node 22+ supports it) - RECOMMEND adding `tsx` to devDependencies for cleaner DX |
+| Supabase Postgres | Plan 02-3 (rate limit) | yes | project ref `dhvfsyteqsxagokoerrx` (Supabase Pro org plan, BMH Group's $25/mo subscription) | none |
+| `pg_cron` | Originally considered for cleanup | available on free tier with no formal restriction beyond compute [CITED: github.com/orgs/supabase/discussions/37405] | - | NOT NEEDED - opportunistic prune in RPC removes the dependency |
+| Vercel Hobby plan | Hosting | yes | - | Cron in Vercel scheduler is Pro-only - confirms the choice to opportunistically prune in-DB |
+
+**Missing dependencies with no fallback:** none.
+
+**Missing dependencies with fallback:** `tsx` (use `node --experimental-strip-types` if not added).
+
+## Validation Architecture
+
+> Skipped - `workflow.nyquist_validation` is `false` in `.planning/config.json`. Plan-level test inventories cover validation per AGENTS.md.
+
+## Security Domain
+
+### Applicable ASVS Categories
+
+| ASVS Category | Applies | Standard Control |
+|---------------|---------|------------------|
+| V2 Authentication | yes | Existing Supabase Auth + invite flow (Phase 1 hardened); rate-limit gate in front of `resetPasswordForEmail` and `updateUser` covers V2.2 (rate-limit auth attempts) |
+| V3 Session Management | partial | Existing `@supabase/ssr` cookie-based sessions are unchanged; set-password breach response keeps the recovery session intact |
+| V4 Access Control | yes | `requireAdmin()` gate on every admin save action remains; `auth_rate_limits` table has no `authenticated` policy (deny-by-default) |
+| V5 Input Validation | yes | `sanitize-html` on text-block + certificate template HTML; `https://` scheme validation on embed `iframe_src`; existing `parse*` validators unchanged |
+| V6 Cryptography | n/a | No new crypto material introduced this phase |
+| V14 Configuration | partial | Two new `npm` deps; `SUPABASE_SERVICE_ROLE_KEY` continues to gate the rate-limit RPC's caller |
+
+### Known Threat Patterns for Next.js / Supabase / sanitize-html
+
+| Pattern | STRIDE | Standard Mitigation |
+|---------|--------|---------------------|
+| Stored XSS via admin-authored `<script>` in text block | Tampering / Information disclosure | `sanitize-html` strict allowlist on write + backfill |
+| Stored XSS via admin-authored `<script>` in certificate template | Tampering / Information disclosure | `sanitize-html` certificate allowlist on write + backfill |
+| Iframe-based clickjacking / nav hijack via embed | Tampering / Spoofing | `sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"` on the embed iframe; cross-origin requirement implicit in `https://`-only validation |
+| Iframe-side sandbox-escape via same-origin embed | Tampering | Out of scope - BMH does not host iframable surfaces; documented in Pitfall 4 |
+| Password-reset email flooding | Denial of Service | Per-IP 5/15min + per-email 3/60min Postgres-backed gate before Supabase auth call (preserves Supabase's own budget) |
+| Account enumeration via forgot-password timing or response | Information disclosure | Silent `{ ok: true }` on rate-limit breach preserves the existing "user not found = success" contract |
+| Brute-force password set after OTP recovery | Spoofing | Per-IP + per-email gate on `setPassword` action; explicit error gives UX without exposing enumeration since the user is already in a recovery session |
+| `auth_rate_limits` row poisoning by a learner | Tampering | Service-role-only RPC; no policy on the table for `authenticated`; service role bypass is the only write path |
+| `javascript:` href in a sanitized link | XSS | `allowedSchemes: ['http', 'https', 'mailto']` strips the href entirely |
+| `data:` URI in sanitized `<img>` | Tampering / Information disclosure | `allowedSchemesByTag.img: ['https']` - only HTTPS images allowed in certificates |
+| Protocol-relative `//evil.com` URL | XSS | `allowProtocolRelative: false` |
+
+## State of the Art
+
+| Old Approach | Current Approach | When Changed | Impact |
+|--------------|------------------|--------------|--------|
+| `sanitize-html` 1.x ships a browser bundle | 2.x is server-only; 70KB+ if bundled to client via webpack polyfills | 2.x major release | Keep import paths in `src/lib/sanitize/` and server actions; do not import from any `"use client"` file [CITED: npmjs.com/package/sanitize-html] |
+| Client IP via `request.ip` on Next.js | `await headers().get('x-forwarded-for')` async API; on Vercel the header is server-set and unspoofable | Next.js 14+ deprecated `request.ip`; Next.js 15+ made `headers()` async | New code follows the async pattern [VERIFIED: Context7 /vercel/next.js docs] |
+| Application-layer rate limit via `rate-limiter-flexible` Map | Postgres-backed for durability under Vercel Fluid Compute | Fluid Compute (2024+) reuses instances but does not durably share state | Use DB or external store; Map is wrong [CITED: vercel.com Fluid Compute docs] |
+| `pg_cron` required for cleanup of TTL tables on Supabase | Opportunistic prune inside the RPC function | n/a - `pg_cron` available but not necessary | Skip the dependency; one-extra-DELETE-per-call is cheap |
+
+**Deprecated / outdated knowledge to ignore:**
+
+- "Client IP is at the END of `x-forwarded-for`" - true for nginx + Cloudflare chains; FALSE on Vercel because Vercel overwrites the header.
+- "Sanitize on render" - listed as a defense-in-depth standard in older OWASP guidance; explicitly rejected for this codebase by CONTEXT.md D-A2 in favor of write-time + backfill.
+- "Use `dompurify` server-side" - REQUIREMENTS.md HARDEN-05 names `sanitize-html` explicitly; `dompurify` is rejected.
+
+## Assumptions Log
+
+| # | Claim | Section | Risk if Wrong |
+|---|-------|---------|---------------|
+| A1 | The 005 seed certificate templates use only the CSS properties listed in CONTEXT.md D-A1 (font-size, color, margin, margin-top, padding, text-align, font-family, font-weight) | Pattern §Backfill, Pitfall §8 | Backfill strips style; certificate visual breaks. Mitigated by reading 005 directly during planner work - verified above by reading the file: only those properties are present, plus `font-family` (Georgia,serif) which the regex covers |
+| A2 | BMH Institute does NOT and will not host any same-origin iframable surface that could be loaded into the embed block | Pitfall §4 | Sandbox effectiveness drops; need host allowlist instead. Verified against the codebase - no iframable routes exist under `src/app/`. Backlog if a future "embed our own dashboard" feature is proposed |
+| A3 | Vercel will continue to overwrite `x-forwarded-for` to prevent spoofing | Pattern §IP Extraction, Pitfall §5 | Rate-limit gate becomes spoofable. Verified against current Vercel docs (last_updated 2025-12-13). Re-verify if Vercel's docs change |
+| A4 | `sanitize-html`'s `htmlparser2`-based parser does not regress on SVG `<use href="javascript:...">` or `<svg><script>` vectors | Pattern §Sanitize, Pitfall §1 | Stored XSS slips through. Mitigated by including these payloads in the test inventory |
+| A5 | Supabase free/Pro tier does not throttle `rpc()` calls to `service_role`-only functions in a way that conflicts with the rate-limit volume (~tens per day) | Pattern §RPC | Rate limit gate adds latency at scale. Volume is small; confirmed via Supabase docs that service-role calls use the same compute pool as REST API |
+
+## Open Questions
+
+1. **Should `updateBlock` be split into per-type actions, or read `block_type` before sanitizing?**
+   - What we know: Current `updateBlock` is type-agnostic; it doesn't know whether to sanitize HTML or validate `iframe_src`.
+   - What's unclear: Splitting into `updateTextBlock` + `updateEmbedBlock` is a larger refactor; the in-place "read block_type, then dispatch" approach is smaller.
+   - Recommendation: In-place dispatch - read `block_type` from the row before mutating. Smaller surface, no API churn for the editor.
+
+2. **Should the backfill script be packaged as an `npm` script or a one-off doc?**
+   - What we know: No `scripts/` directory exists today.
+   - What's unclear: Adding `npm run backfill:sanitize` is more discoverable; a doc-only run-once script is less surface area.
+   - Recommendation: Add to `scripts/` AND to `package.json` as `"backfill:sanitize-html": "tsx scripts/backfill-sanitize-html.ts"`. Document in the plan that this is run manually post-deploy.
+
+3. **Boundary-aligned vs first-attempt-aligned rate-limit windows - final answer?**
+   - What we know: CONTEXT.md D-C1 specifies `(key_type, key_value, window_start)` PRIMARY KEY. Both interpretations match.
+   - What's unclear: Boundary-aligned has cleaner semantics; first-attempt-aligned matches the threshold wording more literally.
+   - Recommendation: First-attempt-aligned is what the example RPC sketch implements. Test inventory should pin the chosen behavior with an explicit assertion.
+
+4. **Fail-open vs fail-closed on RPC error?**
+   - What we know: Supabase outages are rare but non-zero.
+   - What's unclear: forgot-password silent contract holds either way; set-password's error UX changes.
+   - Recommendation: Fail closed. Document in Plan 02-3.
+
+5. **CI grep-check sentinel for sanitize coverage?**
+   - What we know: The renderer keeps `dangerouslySetInnerHTML`; nothing forces a future admin action to call the sanitizer.
+   - What's unclear: A grep CI check (`if grep -rL "sanitizeTextBlockHtml" src/app/.../actions.ts; then fail`) is brittle.
+   - Recommendation: Skip the grep sentinel; rely on (a) code review and (b) the test inventory rule that any new admin HTML-write action ships its own sanitization unit test. Document the pattern in CONVENTIONS.md as a follow-up.
+
+## Sources
+
+### Primary (HIGH confidence)
+
+- Context7 `/apostrophecms/sanitize-html` - `allowedTags`, `allowedAttributes`, `allowedStyles`, `allowedSchemes`, `allowedSchemesByTag`, `allowProtocolRelative`, `transformTags`, defaults extension. 30 snippets, source reputation: high.
+- Context7 `/vercel/next.js` - async `headers()` from `next/headers`, server-action security guidance, rate-limit-in-route-handler pattern.
+- Vercel official docs (`vercel.com/docs/headers/request-headers`, last_updated 2025-12-13) - `x-forwarded-for` is overwritten to prevent spoofing; `x-real-ip` and `x-vercel-forwarded-for` are duplicates of `x-forwarded-for`.
+- npm registry - `sanitize-html@2.17.3` published 2026-04-24; `@types/sanitize-html@2.16.1`. Verified via `npm view`.
+- BMH Institute codebase - `src/components/content-blocks.tsx`, `src/lib/certificates/render.ts`, `src/app/(auth)/forgot-password/actions.ts`, `src/app/auth/set-password/actions.ts`, `src/app/(dashboard)/admin/lessons/[lessonId]/edit/actions.ts`, `supabase/migrations/001_initial_schema.sql`, `supabase/migrations/003_rls_policies.sql`, `supabase/migrations/005_seed_dev.sql`, `supabase/migrations/008_answer_options_public_view.sql`, `supabase/migrations/010_prevent_last_owner_deletion.sql`, `src/app/(dashboard)/admin/users/[userId]/edit/actions.integration.test.ts`, `src/app/(dashboard)/certificates/print-button.test.tsx`, `vitest.rtl.config.ts`, `vitest.integration.config.ts`.
+
+### Secondary (MEDIUM confidence)
+
+- Supabase pg_cron discussion (`github.com/orgs/supabase/discussions/37405`) - Supabase collaborator: "Cron is only limited by the resources it uses CPU/Memory/Disk wise on any tier."
+- Mozilla discourse + Rocket Validator - rationale for `allow-scripts allow-same-origin` warning (only applies same-origin).
+- npm `sanitize-html` package page - server-only, htmlparser2-based, ~70KB+ if shipped to client via webpack polyfills.
+
+### Tertiary (LOW confidence)
+
+- None retained - all relevant claims were corroborated against primary sources before inclusion.
+
+## Metadata
+
+**Confidence breakdown:**
+
+- Standard stack: HIGH - `sanitize-html` version verified against npm registry; Context7 confirms config shape.
+- Architecture: HIGH - locked decisions in CONTEXT.md, plus existing `actions.ts` patterns + integration-test pattern verified in repo.
+- Pitfalls: HIGH - primary footguns (`allowedStyles` regex, `transformTags` + `allowedAttributes` interaction, sandbox same-origin, Vercel header overwrite) all corroborated by official sources.
+- Security domain: HIGH - ASVS mappings derived from REQUIREMENTS.md acceptance criteria + sanitize-html's documented threat coverage.
+
+**Research date:** 2026-05-01
+**Valid until:** 2026-06-01 (30 days - `sanitize-html` is stable; Next.js 16 patch releases worth re-checking before any later phase that touches the same surface; Vercel header docs unlikely to change)
