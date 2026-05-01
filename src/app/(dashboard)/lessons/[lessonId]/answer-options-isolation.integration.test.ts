@@ -17,21 +17,23 @@ import { randomBytes } from "node:crypto";
 const SUPABASE_URL = process.env.TEST_SUPABASE_URL;
 const ANON = process.env.TEST_SUPABASE_ANON_KEY;
 const SERVICE_ROLE = process.env.TEST_SUPABASE_SERVICE_ROLE_KEY;
+const envPresent = Boolean(SUPABASE_URL && ANON && SERVICE_ROLE);
 
-if (!SUPABASE_URL || !ANON || !SERVICE_ROLE) {
-  throw new Error(
-    "Integration test requires TEST_SUPABASE_URL, TEST_SUPABASE_ANON_KEY, TEST_SUPABASE_SERVICE_ROLE_KEY in .env.test.local",
-  );
-}
-
-const admin = createSbClient(SUPABASE_URL, SERVICE_ROLE, {
-  auth: { autoRefreshToken: false, persistSession: false },
-});
+const admin = envPresent
+  ? createSbClient(SUPABASE_URL!, SERVICE_ROLE!, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    })
+  : null;
 
 async function withThrowawayLearner<T>(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   fn: (learner: SupabaseClient<any, any, any>, userId: string) => Promise<T>,
 ): Promise<T> {
+  if (!admin || !SUPABASE_URL || !ANON) {
+    throw new Error(
+      "withThrowawayLearner called without env present — describe.skipIf should have prevented this",
+    );
+  }
   const email = `harden-04-${randomBytes(8).toString("hex")}@bmh.invalid`;
   const password = `${randomBytes(16).toString("base64url")}!Aa1`;
   let userId: string | null = null;
@@ -65,7 +67,7 @@ async function withThrowawayLearner<T>(
   }
 }
 
-describe("answer_options isolation (HARDEN-04)", () => {
+describe.skipIf(!envPresent)("answer_options isolation (HARDEN-04)", () => {
   it(
     "denies a learner anon-key SELECT on public.answer_options",
     { timeout: 30_000 },
@@ -95,6 +97,7 @@ describe("answer_options isolation (HARDEN-04)", () => {
     "denies a learner with no role-group access from reading answer options for an out-of-scope question",
     { timeout: 30_000 },
     async () => {
+      if (!admin) return; // describe.skipIf prevents this branch in practice
       // CR-01 (migration 009) regression: the public view runs in invoker
       // mode and delegates to the answer_options_learner_read policy, which
       // requires fn_user_has_course_access on the question's course. A
@@ -139,6 +142,7 @@ describe("answer_options isolation (HARDEN-04)", () => {
     "exposes only id, question_id, option_text, sort_order on the public view shape",
     { timeout: 30_000 },
     async () => {
+      if (!admin) return; // describe.skipIf prevents this branch in practice
       // Shape contract for the view: even when service-role reads it, the
       // pinned column list is the only thing exposed and is_correct is
       // never present.
@@ -164,6 +168,7 @@ describe("answer_options isolation (HARDEN-04)", () => {
     "preserves admin SELECT on public.answer_options including is_correct",
     { timeout: 30_000 },
     async () => {
+      if (!admin) return; // describe.skipIf prevents this branch in practice
       const { data, error } = await admin
         .from("answer_options")
         .select("id, is_correct")

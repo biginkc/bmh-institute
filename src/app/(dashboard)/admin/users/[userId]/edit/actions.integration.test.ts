@@ -6,13 +6,9 @@
 // harness setup": this test's safe shape is documented in
 // .planning/phases/01-auth-and-access-hardening/01-3-user-deletion-PLAN.md.
 //
-// NOTE: These tests are skipped in the parallel worktree execution context.
-// Per the project memory and AGENTS.md, integration tests run against the
-// production Supabase project (bmh-institute, ref dhvfsyteqsxagokoerrx).
-// The throwaway-user pattern (randomised email, try/finally cleanup) is safe
-// to run, but is skipped here so the orchestrator can validate after all
-// worktree agents complete and the human can confirm the run explicitly.
-// Remove the `.skip` and run `npm run test:integration` manually to verify.
+// Gated by describe.skipIf — runs when TEST_SUPABASE_URL,
+// TEST_SUPABASE_ANON_KEY, TEST_SUPABASE_SERVICE_ROLE_KEY are populated in
+// .env.test.local; reports `skipped` otherwise.
 import { describe, expect, it, vi } from "vitest";
 import { createClient as createSbClient } from "@supabase/supabase-js";
 import { randomBytes } from "node:crypto";
@@ -31,9 +27,10 @@ import { deleteUser } from "./actions";
 const SUPABASE_URL = process.env.TEST_SUPABASE_URL;
 const ANON = process.env.TEST_SUPABASE_ANON_KEY;
 const SERVICE_ROLE = process.env.TEST_SUPABASE_SERVICE_ROLE_KEY;
+const envPresent = Boolean(SUPABASE_URL && ANON && SERVICE_ROLE);
 
 // Build admin client once at module scope (only evaluated when tests run).
-// If env vars are missing the test.skip guard below prevents execution.
+// If env vars are missing the describe.skipIf guard below prevents execution.
 const admin =
   SUPABASE_URL && SERVICE_ROLE
     ? createSbClient(SUPABASE_URL, SERVICE_ROLE, {
@@ -41,11 +38,8 @@ const admin =
       })
     : null;
 
-describe.skip(
+describe.skipIf(!envPresent)(
   "deleteUser integration (HARDEN-03)",
-  // Skipped: see file header note. Remove .skip to run manually with a
-  // populated .env.test.local (TEST_SUPABASE_URL, TEST_SUPABASE_ANON_KEY,
-  // TEST_SUPABASE_SERVICE_ROLE_KEY).
   () => {
     it(
       "removes the auth.users row so the deleted user cannot re-authenticate",
