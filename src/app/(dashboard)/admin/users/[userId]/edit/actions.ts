@@ -163,6 +163,14 @@ export async function deleteUser(userId: string): Promise<{
   const supabase = await createClient();
 
   // HARDEN-03 / D-06: refuse to delete the last remaining owner.
+  //
+  // WR-04: the database is the source of truth. Migration 010 installs
+  // a BEFORE DELETE trigger on public.profiles
+  // (fn_prevent_last_owner_deletion) that raises when the delete would
+  // leave zero owners, regardless of which client issues the delete.
+  // The check below is kept for the friendlier toast, but the trigger
+  // closes the concurrent-delete race that this read-then-write pair
+  // could otherwise lose.
   const { data: target } = await supabase
     .from("profiles")
     .select("system_role")
@@ -189,10 +197,19 @@ export async function deleteUser(userId: string): Promise<{
   // HARDEN-03 / D-04: removing auth.users cascades to public.profiles via
   // migration 001 (profiles.id references auth.users(id) on delete cascade).
   // All user-scoped tables cascade off profiles.id per the FKs declared in
-  // migration 001 lines 40, 216, 229, 237, 245, 258, 268, 278. No new
-  // migration is required (D-05).
+  // migration 001 lines 40, 216, 229, 237, 245, 258, 268, 278.
+  //
+  // WR-04: if a concurrent delete has already removed the only other
+  // owner, the cascade will fire migration 010's trigger and the auth
+  // delete will fail with a check_violation. Surface it with a clear
+  // toast.
   const { error: authErr } = await admin.auth.admin.deleteUser(userId);
-  if (authErr) return { ok: false, error: authErr.message };
+  if (authErr) {
+    if (authErr.message.includes("last remaining owner")) {
+      return { ok: false, error: "Can't delete the last owner." };
+    }
+    return { ok: false, error: authErr.message };
+  }
 
   revalidatePath("/admin/users");
   return { ok: true };

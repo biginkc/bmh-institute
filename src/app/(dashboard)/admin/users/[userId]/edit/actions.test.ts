@@ -120,4 +120,27 @@ describe("deleteUser (HARDEN-03)", () => {
     const result = await deleteUser("admin-2");
     expect(result).toEqual({ ok: false, error: "user not found" });
   });
+
+  it("translates the migration 010 trigger raise into the friendly last-owner toast", async () => {
+    // WR-04: when a concurrent delete has already removed the only other
+    // owner, fn_prevent_last_owner_deletion fires on cascade and the
+    // auth delete returns a Postgres check_violation surfaced through
+    // the admin SDK as a generic message containing "last remaining
+    // owner". Translate to the same friendly string the in-process
+    // guard returns so the UX is consistent regardless of who lost the
+    // race.
+    targetRow = { system_role: "admin" };
+    deleteUserSpy.mockResolvedValueOnce({
+      data: null,
+      error: {
+        message:
+          "Database error: Cannot delete the last remaining owner.",
+      },
+    });
+    const result = await deleteUser("admin-2");
+    expect(result).toEqual({
+      ok: false,
+      error: "Can't delete the last owner.",
+    });
+  });
 });
