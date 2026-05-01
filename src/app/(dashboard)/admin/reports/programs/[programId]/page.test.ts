@@ -21,7 +21,16 @@ vi.mock("@/lib/supabase/server", () => ({
       in: () => chain,
       order: () => chain,
       limit: () => chain,
-      maybeSingle: async () => ({ data: null, error: null }),
+      maybeSingle: async () => ({
+        data: {
+          id: "p-1",
+          title: "Test Program",
+          description: null,
+          course_order_mode: "free",
+          is_published: true,
+        },
+        error: null,
+      }),
       then: (r: (v: { data: unknown[]; error: null }) => unknown) =>
         Promise.resolve({ data: [], error: null }).then(r),
     };
