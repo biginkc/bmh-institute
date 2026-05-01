@@ -65,6 +65,20 @@ This milestone closes the security and data-integrity gaps surfaced by the codeb
 | 3. Data Integrity | 0/TBD | Not started | - |
 | 4. Type Safety and Test Coverage | 0/TBD | Not started | - |
 
+## Backlog
+
+### Phase 999.1: Rename working directory to BMH Institute (BACKLOG)
+
+**Goal:** Bring the local working directory in line with the new project identity by renaming `~/Sites/Sandra University/` to `~/Sites/BMH Institute/` (and the matching `~/.claude/projects/` memory path), then verifying nothing external is broken.
+**Captured:** 2026-04-30 during /gsd-discuss-phase 1
+**Why deferred:** Path mismatch is not blocking. Rename touches IDE workspace state, open terminals, shell aliases, the auto-memory dir, and any scripts pointing at the old path. Better as a deliberate housekeeping session than mid-phase.
+**Steps:**
+- [ ] `mv ~/Sites/"Sandra University" ~/Sites/"BMH Institute"`
+- [ ] `mv ~/.claude/projects/-Users-jarradhenry-Sites-Sandra-University ~/.claude/projects/-Users-jarradhenry-Sites-BMH-Institute`
+- [ ] Verify `.vercel/project.json` still resolves the linked Vercel project
+- [ ] Sweep `~/.zshrc`, `~/.zsh_aliases`, scripts under `~/Sites/` for hardcoded "Sandra University"
+- [ ] Reopen any IDE workspace files / restored tabs from the new path
+
 ---
 *Roadmap created: 2026-04-30*
 *Milestone: v1 Production Hardening*
