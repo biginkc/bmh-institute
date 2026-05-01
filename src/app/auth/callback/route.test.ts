@@ -11,8 +11,10 @@ type InviteRow = {
 } | null;
 
 let inviteRow: InviteRow = null;
-const profileUpdate = vi.fn(async () => ({ error: null }));
-const userRoleInsert = vi.fn(async () => ({ error: null }));
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const profileUpdate = vi.fn(async (_patch: any) => ({ error: null }));
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const userRoleInsert = vi.fn(async (_rows: any) => ({ error: null }));
 const userRoleDelete = vi.fn(async () => ({ error: null }));
 
 vi.mock("@/lib/supabase/admin", () => ({

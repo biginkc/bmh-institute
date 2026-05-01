@@ -50,7 +50,9 @@ function LoginForm() {
     actionError ??
     (urlError === "invite_failed"
       ? "Invite link couldn't be verified. Ask an admin to resend it."
-      : null);
+      : urlError === "invite_expired"
+        ? "This invite link has expired. Ask your admin to send you a fresh one."
+        : null);
 
   return (
     <form action={formAction} className="flex flex-col gap-4">

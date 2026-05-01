@@ -31,10 +31,13 @@ export async function GET(request: NextRequest) {
   }
 
   if (inviteToken) {
-    await applyInvite({
+    const result = await applyInvite({
       userId: data.session.user.id,
       token: inviteToken,
     });
+    if (!result.ok && result.reason === "expired") {
+      return NextResponse.redirect(`${origin}/login?error=invite_expired`);
+    }
   }
 
   if (type === "invite" || type === "recovery" || type === "signup") {
@@ -44,33 +47,45 @@ export async function GET(request: NextRequest) {
   return NextResponse.redirect(`${origin}${sanitizeNextUrl(next)}`);
 }
 
+export type ApplyInviteResult = { ok: true } | { ok: false; reason: "expired" };
+
 /**
  * Look up the invite by token and apply its system_role and role_group_ids
  * to the user. Uses the service-role client so RLS doesn't block the writes
  * from a learner-scoped session.
+ *
+ * Returns a discriminated union so the GET handler can redirect on expiry.
+ * HARDEN-02 / D-02: refuses expired invites before applying any role assignment.
  */
-async function applyInvite({
+export async function applyInvite({
   userId,
   token,
 }: {
   userId: string;
   token: string;
-}) {
+}): Promise<ApplyInviteResult> {
   let admin;
   try {
     admin = createAdminClient();
   } catch {
     // No service-role key configured yet — skip pre-assignment. The user still
     // lands with a 'learner' profile and can be upgraded by hand.
-    return;
+    return { ok: true };
   }
 
   const { data: invite } = await admin
     .from("invites")
-    .select("id, system_role, role_group_ids, accepted_at")
+    .select("id, system_role, role_group_ids, accepted_at, expires_at")
     .eq("token", token)
     .maybeSingle();
-  if (!invite || invite.accepted_at) return;
+  if (!invite || invite.accepted_at) return { ok: true };
+
+  // HARDEN-02 / D-02: refuse expired invites before applying any role
+  // assignment. Expired tokens redirect the caller back to /login with a
+  // dedicated error code. The unit test in route.test.ts pins this contract.
+  if (new Date(invite.expires_at as string) <= new Date()) {
+    return { ok: false, reason: "expired" };
+  }
 
   await admin
     .from("profiles")
@@ -94,4 +109,6 @@ async function applyInvite({
     .from("invites")
     .update({ accepted_at: new Date().toISOString() })
     .eq("id", invite.id as string);
+
+  return { ok: true };
 }
