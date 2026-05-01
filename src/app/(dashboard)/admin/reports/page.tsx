@@ -34,6 +34,7 @@ export default async function AdminReportsPage() {
     auditRes,
     quizAttemptsRes,
     submissionsRes,
+    lessonCourseRes,
   ] = await Promise.all([
     supabase
       .from("profiles")
@@ -58,6 +59,12 @@ export default async function AdminReportsPage() {
     supabase
       .from("assignment_submissions")
       .select("user_id, status, submitted_at"),
+    // WR-03: lesson -> module -> course mapping so the per-course "active
+    // learners" count is scoped to the course rather than the org-wide
+    // distinct-user total.
+    supabase
+      .from("lessons")
+      .select("id, modules!inner(course_id)"),
   ]);
 
   const profiles = (profilesRes.data ?? []) as Profile[];
@@ -69,6 +76,23 @@ export default async function AdminReportsPage() {
   const auditRows = (auditRes.data ?? []) as AuditRow[];
   const quizAttempts = (quizAttemptsRes.data ?? []) as QuizAttempt[];
   const submissions = (submissionsRes.data ?? []) as Submission[];
+
+  // WR-03: build a lesson_id -> course_id index. PostgREST returns the inner
+  // join either as a scalar object or a one-element array depending on
+  // server version, so handle both shapes.
+  const lessonCourseRows = (lessonCourseRes.data ?? []) as Array<{
+    id: string;
+    modules:
+      | { course_id: string }
+      | Array<{ course_id: string }>
+      | null;
+  }>;
+  const courseIdByLessonId = new Map<string, string>();
+  for (const row of lessonCourseRows) {
+    const m = row.modules;
+    const courseId = Array.isArray(m) ? m[0]?.course_id : m?.course_id;
+    if (courseId) courseIdByLessonId.set(row.id, courseId);
+  }
 
   const profilesById = new Map(profiles.map((p) => [p.id, p]));
   const programsById = new Map(programs.map((p) => [p.id, p.title]));
@@ -83,7 +107,12 @@ export default async function AdminReportsPage() {
     submissions,
   });
 
-  const courseStats = summarizeByCourse({ courses, courseCerts, completions });
+  const courseStats = summarizeByCourse({
+    courses,
+    courseCerts,
+    completions,
+    courseIdByLessonId,
+  });
   const programStats = summarizeByProgram({ programs, programCerts });
 
   return (
@@ -438,24 +467,38 @@ function summarizeLearners({
     });
 }
 
-function summarizeByCourse({
+export function summarizeByCourse({
   courses,
   courseCerts,
   completions,
+  courseIdByLessonId,
 }: {
   courses: Entity[];
   courseCerts: CourseCert[];
   completions: Completion[];
+  courseIdByLessonId: Map<string, string>;
 }) {
   const certCountByCourse = groupCount(courseCerts, (c) => c.course_id);
-  // "Active learners" approximated as distinct users with any lesson
-  // completion. Finer-grained per-course counts need a lessons-to-course
-  // join; skip for MVP.
-  const activeLearnerCount = new Set(completions.map((c) => c.user_id)).size;
+  // WR-03: per-course active learners. A learner counts as "active" for a
+  // course when they have at least one lesson completion in that course.
+  // Aggregating distinct user_ids per course replaces the previous
+  // org-wide distinct-user count that was rendered identically on every
+  // row.
+  const learnersByCourse = new Map<string, Set<string>>();
+  for (const c of completions) {
+    const courseId = courseIdByLessonId.get(c.lesson_id);
+    if (!courseId) continue;
+    let set = learnersByCourse.get(courseId);
+    if (!set) {
+      set = new Set<string>();
+      learnersByCourse.set(courseId, set);
+    }
+    set.add(c.user_id);
+  }
   return courses.map((c) => ({
     id: c.id,
     title: c.title,
-    activeLearners: activeLearnerCount,
+    activeLearners: learnersByCourse.get(c.id)?.size ?? 0,
     completedCount: certCountByCourse.get(c.id) ?? 0,
   }));
 }
