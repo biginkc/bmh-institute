@@ -4,14 +4,14 @@ milestone: v1.0
 milestone_name: milestone
 status: executing
 stopped_at: Phase 1 context gathered
-last_updated: "2026-05-01T02:15:39.826Z"
-last_activity: 2026-05-01 -- Phase 01 execution started
+last_updated: "2026-05-01T05:40:21.596Z"
+last_activity: 2026-05-01
 progress:
   total_phases: 6
   completed_phases: 1
-  total_plans: 4
-  completed_plans: 4
-  percent: 100
+  total_plans: 7
+  completed_plans: 5
+  percent: 71
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-30)
 ## Current Position
 
 Phase: 01 (auth-and-access-hardening) — EXECUTING
-Plan: 1 of 4
-Status: Executing Phase 01
-Last activity: 2026-05-01 -- Phase 01 execution started
+Plan: 2 of 4
+Status: Ready to execute
+Last activity: 2026-05-01
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [███████░░░] 71%
 
 ## Performance Metrics
 
@@ -52,6 +52,7 @@ Progress: [░░░░░░░░░░] 0%
 - Trend: -
 
 *Updated after each plan completion*
+| Phase 01.1 P2 | ~12m | 3 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -66,6 +67,8 @@ Recent decisions affecting current work:
 
 - Milestone init: First GSD-managed milestone is a hardening pass, not features. Coarse granularity, parallel execution, YOLO mode.
 - TDD rule: Test inventory must be enumerated and approved before any tests or code are written.
+- [Phase ?]: Path A locked: e2e fixtures expose adminClient + ensureTestUser + prod-ref guard only; write-path helpers deferred until Path B/C lock
+- [Phase ?]: BMH e2e fixtures use untyped SupabaseClient (src/lib/supabase/types.ts does not exist; TYPE-01 territory in Phase 4)
 
 ### Pending Todos
 
@@ -85,6 +88,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-01T00:23:05.503Z
+Last session: 2026-05-01T05:39:41.780Z
 Stopped at: Phase 1 context gathered
-Resume file: .planning/phases/01-auth-and-access-hardening/01-CONTEXT.md
+Resume file: None
