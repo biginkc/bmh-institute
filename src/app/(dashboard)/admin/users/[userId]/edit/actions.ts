@@ -29,7 +29,7 @@ export async function saveUserSettings(input: {
   if (me.id === input.userId && input.system_role !== "owner") {
     return {
       ok: false,
-      error: "You can't downgrade your own role — you'd lock yourself out.",
+      error: "You can't downgrade your own role. You'd lock yourself out.",
     };
   }
 
