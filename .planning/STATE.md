@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
+status: completed
 stopped_at: Phase 1 context gathered
-last_updated: "2026-05-01T02:15:39.826Z"
-last_activity: 2026-05-01 -- Phase 01 execution started
+last_updated: "2026-05-01T05:38:55.326Z"
+last_activity: 2026-05-01 -- Plan 01.1-3 (HARDEN/UAT replacement) completed
 progress:
   total_phases: 6
   completed_phases: 1
-  total_plans: 4
-  completed_plans: 4
-  percent: 100
+  total_plans: 7
+  completed_plans: 5
+  percent: 71
 ---
 
 # Project State
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-30)
 
 **Core value:** A VA can sign in via an admin invite, work through assigned programs and courses on their own time, take quizzes and submit assignments without supervision, and receive a certificate when they finish. Admins can author content, manage learners, review submissions, and see who is making progress without leaving the platform.
-**Current focus:** Phase 01 — auth-and-access-hardening
+**Current focus:** Phase 01.1 — testing-coverage-parity
 
 ## Current Position
 
-Phase: 01 (auth-and-access-hardening) — EXECUTING
-Plan: 1 of 4
-Status: Executing Phase 01
-Last activity: 2026-05-01 -- Phase 01 execution started
+Phase: 01.1 (testing-coverage-parity) — EXECUTING
+Plan: 1 of 3 next; Plan 3 completed out of order (Plans 1 and 2 still pending)
+Status: Plan 01.1-3 complete; resume with Plan 01.1-1 (RTL infrastructure)
+Last activity: 2026-05-01 -- Plan 01.1-3 (HARDEN/UAT replacement) completed
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -52,6 +52,7 @@ Progress: [░░░░░░░░░░] 0%
 - Trend: -
 
 *Updated after each plan completion*
+| Phase 01.1 P3 | 7min | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -66,6 +67,9 @@ Recent decisions affecting current work:
 
 - Milestone init: First GSD-managed milestone is a hardening pass, not features. Coarse granularity, parallel execution, YOLO mode.
 - TDD rule: Test inventory must be enumerated and approved before any tests or code are written.
+- [Phase ?]: Plan 01.1-3: storage-state strategy locked as in-spec opt-out via test.use storageState empty — Option 1, smallest delta, no learner-only account on prod
+- [Phase ?]: Plan 01.1-3: Path A locked — destructive HARDEN-02 and HARDEN-03 UI variant remain manual until a write-capable test environment exists
+- [Phase ?]: Plan 01.1-3: 01-HUMAN-UAT.md status changed to closed-with-deferrals; file is a closed historical record
 
 ### Pending Todos
 
@@ -85,6 +89,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-01T00:23:05.503Z
+Last session: 2026-05-01T05:38:44.135Z
 Stopped at: Phase 1 context gathered
-Resume file: .planning/phases/01-auth-and-access-hardening/01-CONTEXT.md
+Resume file: None
