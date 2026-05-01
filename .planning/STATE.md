@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 1 context gathered
-last_updated: "2026-05-01T02:15:39.826Z"
-last_activity: 2026-05-01 -- Phase 01 execution started
+stopped_at: Phase 01.1 Plan 1 complete (RTL infrastructure)
+last_updated: "2026-05-01T05:34:26Z"
+last_activity: 2026-05-01 -- Phase 01.1 Plan 1 complete
 progress:
   total_phases: 6
   completed_phases: 1
-  total_plans: 4
-  completed_plans: 4
-  percent: 100
+  total_plans: 7
+  completed_plans: 5
+  percent: 71
 ---
 
 # Project State
@@ -21,30 +21,30 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-30)
 
 **Core value:** A VA can sign in via an admin invite, work through assigned programs and courses on their own time, take quizzes and submit assignments without supervision, and receive a certificate when they finish. Admins can author content, manage learners, review submissions, and see who is making progress without leaving the platform.
-**Current focus:** Phase 01 — auth-and-access-hardening
+**Current focus:** Phase 01.1 — testing-coverage-parity
 
 ## Current Position
 
-Phase: 01 (auth-and-access-hardening) — EXECUTING
-Plan: 1 of 4
-Status: Executing Phase 01
-Last activity: 2026-05-01 -- Phase 01 execution started
+Phase: 01.1 (testing-coverage-parity) — EXECUTING
+Plan: 2 of 3
+Status: Plan 1 complete; ready for Plan 2 (Playwright e2e harness)
+Last activity: 2026-05-01 -- Phase 01.1 Plan 1 complete (RTL infrastructure)
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [███████░░░] 71%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 0
-- Average duration: -
-- Total execution time: -
+- Total plans completed: 1 (in Phase 01.1)
+- Average duration: ~5 min
+- Total execution time: ~5 min
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| - | - | - | - |
+| 01.1 | 1 | ~5 min | ~5 min |
 
 **Recent Trend:**
 
@@ -66,6 +66,7 @@ Recent decisions affecting current work:
 
 - Milestone init: First GSD-managed milestone is a hardening pass, not features. Coarse granularity, parallel execution, YOLO mode.
 - TDD rule: Test inventory must be enumerated and approved before any tests or code are written.
+- 2026-05-01 (Plan 01.1-1): RTL config and setup mirror Sandra CRM verbatim including the localStorage shim. Vitest 4 transforms TSX natively so no @vitejs/plugin-react. Failing-tests commit lands with HUSKY=0 because the harness has not been installed yet; the harness commit runs the full hook end-to-end.
 
 ### Pending Todos
 
@@ -85,6 +86,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-01T00:23:05.503Z
-Stopped at: Phase 1 context gathered
-Resume file: .planning/phases/01-auth-and-access-hardening/01-CONTEXT.md
+Last session: 2026-05-01T05:34:26Z
+Stopped at: Phase 01.1 Plan 1 complete (RTL infrastructure); ready for Plan 2 (Playwright e2e harness)
+Resume file: .planning/phases/01.1-testing-coverage-parity/01.1-2-playwright-e2e-harness-PLAN.md

@@ -43,7 +43,7 @@ This milestone closes the security and data-integrity gaps surfaced by the codeb
 **Plans**: 3 plans
 
 Plans:
-- [ ] 01.1-1-rtl-test-infrastructure-PLAN.md (TPAR-01, TPAR-04) — vitest.rtl.config + setup, @testing-library/* deps, jsdom, test:rtl script, smoke RTL spec
+- [x] 01.1-1-rtl-test-infrastructure-PLAN.md (TPAR-01, TPAR-04) — vitest.rtl.config + setup, @testing-library/* deps, jsdom, test:rtl script, smoke RTL spec
 - [ ] 01.1-2-playwright-e2e-harness-PLAN.md (TPAR-02) — e2e/fixtures.ts with BMH prod-ref guard, auth.setup.ts, smoke spec, .env.example extension
 - [ ] 01.1-3-harden-uat-replacement-PLAN.md (TPAR-03, TPAR-05) — HARDEN-01 learner-context spec in e2e-prod/, integration-test gate fixes, env-var runbook, HUMAN-UAT updates
 
@@ -84,7 +84,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Auth and Access Hardening | 4/4 | Complete (human_needed) | - |
-| 01.1. Testing Coverage Parity | 0/TBD | Planning | - |
+| 01.1. Testing Coverage Parity | 1/3 | Executing | - |
 | 2. Content Safety and Rate Limiting | 0/TBD | Not started | - |
 | 3. Data Integrity | 0/TBD | Not started | - |
 | 4. Type Safety and Test Coverage | 0/TBD | Not started | - |
