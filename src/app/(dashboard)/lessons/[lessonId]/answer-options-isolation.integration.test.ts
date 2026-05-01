@@ -92,10 +92,15 @@ describe("answer_options isolation (HARDEN-04)", () => {
   );
 
   it(
-    "allows a learner anon-key SELECT on public.answer_options_public and returns no is_correct field",
+    "denies a learner with no role-group access from reading answer options for an out-of-scope question",
     { timeout: 30_000 },
     async () => {
-      // Find a question id with at least one answer option via service role.
+      // CR-01 (migration 009) regression: the public view runs in invoker
+      // mode and delegates to the answer_options_learner_read policy, which
+      // requires fn_user_has_course_access on the question's course. A
+      // throwaway learner has zero role-group access, so an arbitrary
+      // question id must return zero rows even though the GRANT permits
+      // the SELECT.
       const { data: anyOption } = await admin
         .from("answer_options")
         .select("question_id")
@@ -103,14 +108,15 @@ describe("answer_options isolation (HARDEN-04)", () => {
         .maybeSingle();
 
       if (!anyOption) {
-        // No data in the project; skip the row-shape assertion. The
-        // GRANT contract still holds (no error on the SELECT).
+        // No data in the project; the SELECT must still resolve without
+        // error and return an empty set.
         await withThrowawayLearner(async (learner) => {
-          const { error } = await learner
+          const { data, error } = await learner
             .from("answer_options_public")
             .select("*")
             .limit(1);
           expect(error).toBeNull();
+          expect(data ?? []).toEqual([]);
         });
         return;
       }
@@ -121,19 +127,36 @@ describe("answer_options isolation (HARDEN-04)", () => {
           .select("*")
           .eq("question_id", anyOption.question_id as string)
           .limit(1);
+        // Contract: no error (the GRANT is intact) but zero rows because
+        // the learner has no course access.
         expect(error).toBeNull();
-        if ((data ?? []).length > 0) {
-          const row = (data as Array<Record<string, unknown>>)[0];
-          // Shape contract: exactly the four pinned columns, no is_correct.
-          expect(Object.keys(row).sort()).toEqual([
-            "id",
-            "option_text",
-            "question_id",
-            "sort_order",
-          ]);
-          expect(row).not.toHaveProperty("is_correct");
-        }
+        expect(data ?? []).toEqual([]);
       });
+    },
+  );
+
+  it(
+    "exposes only id, question_id, option_text, sort_order on the public view shape",
+    { timeout: 30_000 },
+    async () => {
+      // Shape contract for the view: even when service-role reads it, the
+      // pinned column list is the only thing exposed and is_correct is
+      // never present.
+      const { data, error } = await admin
+        .from("answer_options_public")
+        .select("*")
+        .limit(1);
+      expect(error).toBeNull();
+      if ((data ?? []).length > 0) {
+        const row = (data as Array<Record<string, unknown>>)[0];
+        expect(Object.keys(row).sort()).toEqual([
+          "id",
+          "option_text",
+          "question_id",
+          "sort_order",
+        ]);
+        expect(row).not.toHaveProperty("is_correct");
+      }
     },
   );
 
