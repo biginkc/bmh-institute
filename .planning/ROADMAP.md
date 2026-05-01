@@ -37,7 +37,7 @@ This milestone closes the security and data-integrity gaps surfaced by the codeb
 **Success Criteria** (what must be TRUE):
   1. `vitest.rtl.config.ts` and `vitest.rtl.setup.ts` exist, jsdom plus the `@testing-library/*` deps are installed, `npm run test:rtl` passes against at least one smoke RTL spec, and `npm run verify` includes the RTL suite
   2. `e2e/auth.setup.ts` and `e2e/fixtures.ts` exist, the fixtures refuse to run against the BMH Institute prod project ref, and a no-op spec under `e2e/` passes via `npm run test:e2e` once `TEST_SUPABASE_*` env vars are populated
-  3. `e2e-prod/` exists with at least the `auth.setup.ts` referenced by `playwright.prod.config.ts` and one read-only spec; `npm run test:prod` passes against the live deployment with provided credentials
+  3. The existing `e2e-prod/` harness (auth.setup.ts, admin.spec.ts, dashboard.spec.ts) is extended with a learner-context spec automating the HARDEN-01 admin route guard, and `npm run test:prod` passes both the existing admin specs and the new learner spec against the live deployment with provided credentials
   4. The HARDEN-01 admin-route-guard HUMAN-UAT item is covered by an automated Playwright spec that runs without a human in the loop, and the HARDEN-04 cross-course answer-options HUMAN-UAT item is covered by `answer-options-isolation.integration.test.ts` running cleanly (no import-time throw on missing env vars)
   5. The HARDEN-02 expired-invite teardown and HARDEN-03 deleted-user re-auth HUMAN-UAT items are either (a) covered by automated specs that run cleanly with the documented env-var setup, or (b) explicitly logged in `01-HUMAN-UAT.md` as deferred-until-test-environment with a recorded reason — destructive items must not silently remain manual
 **Plans**: TBD
