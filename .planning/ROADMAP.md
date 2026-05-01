@@ -39,8 +39,13 @@ This milestone closes the security and data-integrity gaps surfaced by the codeb
   2. `e2e/auth.setup.ts` and `e2e/fixtures.ts` exist, the fixtures refuse to run against the BMH Institute prod project ref, and a no-op spec under `e2e/` passes via `npm run test:e2e` once `TEST_SUPABASE_*` env vars are populated
   3. The existing `e2e-prod/` harness (auth.setup.ts, admin.spec.ts, dashboard.spec.ts) is extended with a learner-context spec automating the HARDEN-01 admin route guard, and `npm run test:prod` passes both the existing admin specs and the new learner spec against the live deployment with provided credentials
   4. The HARDEN-01 admin-route-guard HUMAN-UAT item is covered by an automated Playwright spec that runs without a human in the loop, and the HARDEN-04 cross-course answer-options HUMAN-UAT item is covered by `answer-options-isolation.integration.test.ts` running cleanly (no import-time throw on missing env vars)
-  5. The HARDEN-02 expired-invite teardown and HARDEN-03 deleted-user re-auth HUMAN-UAT items are either (a) covered by automated specs that run cleanly with the documented env-var setup, or (b) explicitly logged in `01-HUMAN-UAT.md` as deferred-until-test-environment with a recorded reason — destructive items must not silently remain manual
-**Plans**: TBD
+  5. The HARDEN-02 expired-invite teardown and HARDEN-03 deleted-user re-auth HUMAN-UAT items are either (a) covered by automated specs that run cleanly with the documented env-var setup, or (b) explicitly logged in `01-HUMAN-UAT.md` as deferred-until-test-environment with a recorded reason. Destructive items must not silently remain manual.
+**Plans**: 3 plans
+
+Plans:
+- [ ] 01.1-1-rtl-test-infrastructure-PLAN.md (TPAR-01, TPAR-04) — vitest.rtl.config + setup, @testing-library/* deps, jsdom, test:rtl script, smoke RTL spec
+- [ ] 01.1-2-playwright-e2e-harness-PLAN.md (TPAR-02) — e2e/fixtures.ts with BMH prod-ref guard, auth.setup.ts, smoke spec, .env.example extension
+- [ ] 01.1-3-harden-uat-replacement-PLAN.md (TPAR-03, TPAR-05) — HARDEN-01 learner-context spec in e2e-prod/, integration-test gate fixes, env-var runbook, HUMAN-UAT updates
 
 ### Phase 2: Content Safety and Rate Limiting
 **Goal**: Admin-authored HTML cannot execute scripts in learner browsers, embed iframes are sandboxed, and the forgot-password and password-reset paths cannot be abused by automated requests
