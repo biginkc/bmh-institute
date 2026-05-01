@@ -36,6 +36,21 @@ export async function GET(request: NextRequest) {
       token: inviteToken,
     });
     if (!result.ok && result.reason === "expired") {
+      // CR-02: applyInvite runs after exchangeCodeForSession, so by the time
+      // we detect expiry the auth.users row exists, the cookie session is
+      // set, and the handle_new_user trigger has populated profiles with a
+      // default 'learner' row. Without teardown the user could navigate
+      // straight to /dashboard. Sign out clears the cookie; admin
+      // deleteUser removes the auth.users row, and the FK cascade declared
+      // in migration 001 cleans up profiles.
+      await supabase.auth.signOut();
+      try {
+        const admin = createAdminClient();
+        await admin.auth.admin.deleteUser(data.session.user.id);
+      } catch {
+        // If the service-role client is unavailable the session is at least
+        // gone; an orphan auth.users row will be cleaned up out-of-band.
+      }
       return NextResponse.redirect(`${origin}/login?error=invite_expired`);
     }
   }
