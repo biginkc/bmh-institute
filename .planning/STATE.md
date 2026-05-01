@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 01.1 Plans 1 and 3 complete; Plan 2 pending merge
-last_updated: "2026-05-01T05:42:00Z"
-last_activity: 2026-05-01 -- Phase 01.1 Plans 01.1-1 and 01.1-3 merged to main
+stopped_at: Phase 01.1 all 3 plans merged; ready for verification
+last_updated: "2026-05-01T05:45:00Z"
+last_activity: 2026-05-01 -- Phase 01.1 Plans 01.1-1, 01.1-2, 01.1-3 all merged to main
 progress:
   total_phases: 6
   completed_phases: 1
@@ -25,10 +25,10 @@ See: .planning/PROJECT.md (updated 2026-04-30)
 
 ## Current Position
 
-Phase: 01.1 (testing-coverage-parity) — EXECUTING
-Plan: 2 of 3 (Plans 1 and 3 complete; Plan 2 pending merge from worktree)
-Status: Plans 01.1-1 and 01.1-3 merged to main; merging Plan 01.1-2 next
-Last activity: 2026-05-01 -- Plans 01.1-1 and 01.1-3 merged to main
+Phase: 01.1 (testing-coverage-parity) — READY FOR VERIFICATION
+Plan: 3 of 3 (all plans complete and merged)
+Status: All 3 plans merged to main; awaiting gsd-verifier
+Last activity: 2026-05-01 -- All Phase 01.1 plans merged to main
 
 Progress: [███████░░░] 71%
 
@@ -52,7 +52,9 @@ Progress: [███████░░░] 71%
 - Trend: -
 
 *Updated after each plan completion*
-| Phase 01.1 P3 | 7min | 3 tasks | 5 files |
+| Phase 01.1 P1 | ~5m | 3 tasks | 5 files |
+| Phase 01.1 P2 | ~12m | 3 tasks | 4 files |
+| Phase 01.1 P3 | ~9m | 3 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -68,6 +70,8 @@ Recent decisions affecting current work:
 - Milestone init: First GSD-managed milestone is a hardening pass, not features. Coarse granularity, parallel execution, YOLO mode.
 - TDD rule: Test inventory must be enumerated and approved before any tests or code are written.
 - 2026-05-01 (Plan 01.1-1): RTL config and setup mirror Sandra CRM verbatim including the localStorage shim. Vitest 4 transforms TSX natively so no @vitejs/plugin-react. Failing-tests commit lands with HUSKY=0 because the harness has not been installed yet; the harness commit runs the full hook end-to-end.
+- 2026-05-01 (Plan 01.1-2): e2e fixtures expose adminClient + ensureTestUser + prod-ref guard only; write-path helpers deferred until Path B/C lock
+- 2026-05-01 (Plan 01.1-2): BMH e2e fixtures use untyped SupabaseClient (src/lib/supabase/types.ts does not exist; TYPE-01 territory in Phase 4)
 - 2026-05-01 (Plan 01.1-3): storage-state strategy locked as in-spec opt-out via test.use storageState empty — Option 1, smallest delta, no learner-only account on prod
 - 2026-05-01 (Plan 01.1-3): Path A locked — destructive HARDEN-02 and HARDEN-03 UI variant remain manual until a write-capable test environment exists
 - 2026-05-01 (Plan 01.1-3): 01-HUMAN-UAT.md status changed to closed-with-deferrals; file is a closed historical record
@@ -90,6 +94,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-01T05:42:00Z
-Stopped at: Phase 01.1 Plans 01.1-1 and 01.1-3 merged; Plan 01.1-2 pending merge from worktree
-Resume file: .planning/phases/01.1-testing-coverage-parity/01.1-2-playwright-e2e-harness-PLAN.md
+Last session: 2026-05-01T05:45:00Z
+Stopped at: Phase 01.1 all 3 plans merged to main; ready for verification
+Resume file: None
