@@ -33,7 +33,7 @@ No new user-facing features. Every change ships with TDD coverage that did not e
 - **D-10:** `submitQuizAttempt` (`src/app/(dashboard)/lessons/[lessonId]/quiz-actions.ts`) switches the `is_correct` fetch only to `createAdminClient()`. Other queries in that action stay on the learner client. Scoring logic (`src/lib/quizzes/score.ts`) is unchanged.
 
 ### Plan granularity
-- **D-11:** Phase 1 ships as four parallel plans: `1-1 admin-route-guards`, `1-2 invite-expiry`, `1-3 user-deletion`, `1-4 answer-options-view`. File-disjoint so they run in parallel waves per the milestone-init "coarse granularity, parallel execution, YOLO" decision. Each plan carries its own test inventory, failing-tests commit, and implementation commit.
+- **D-11 [informational]:** Phase 1 ships as four parallel plans: `1-1 admin-route-guards`, `1-2 invite-expiry`, `1-3 user-deletion`, `1-4 answer-options-view`. File-disjoint so they run in parallel waves per the milestone-init "coarse granularity, parallel execution, YOLO" decision. Each plan carries its own test inventory, failing-tests commit, and implementation commit. This is a structural decision about the phase plan layout itself, not an implementation requirement; it is honored by the existence of the four plan files.
 
 ### Claude's Discretion
 - Exact wording of the expired-invite UI copy and the admin invite-list "expired" badge styling.

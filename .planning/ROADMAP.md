@@ -22,7 +22,11 @@ This milestone closes the security and data-integrity gaps surfaced by the codeb
   2. An expired invite token that reaches the auth callback is rejected and the learner receives no role-group access
   3. A user whose record has been deleted via the admin UI cannot sign in with their original credentials
   4. A learner querying the Supabase anon API for answer_options receives no is_correct field in the response
-**Plans**: TBD
+**Plans**: 4 plans
+- [ ] 01-1-admin-route-guards-PLAN.md — HARDEN-01: page-level requireAdmin() on the four admin report pages with a regression unit per page
+- [ ] 01-2-invite-expiry-PLAN.md — HARDEN-02: callback expiry check, dedicated /login copy, and admin Resend control
+- [ ] 01-3-user-deletion-PLAN.md — HARDEN-03: deleteUser uses admin auth client (cascade FKs already in 001), with last-owner guard and the codebase's first integration test
+- [ ] 01-4-answer-options-view-PLAN.md — HARDEN-04: definer-mode view answer_options_public, REVOKE on the underlying table, scoring switches to service-role
 
 ### Phase 2: Content Safety and Rate Limiting
 **Goal**: Admin-authored HTML cannot execute scripts in learner browsers, embed iframes are sandboxed, and the forgot-password and password-reset paths cannot be abused by automated requests
@@ -60,7 +64,7 @@ This milestone closes the security and data-integrity gaps surfaced by the codeb
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Auth and Access Hardening | 0/TBD | Not started | - |
+| 1. Auth and Access Hardening | 0/4 | Planned | - |
 | 2. Content Safety and Rate Limiting | 0/TBD | Not started | - |
 | 3. Data Integrity | 0/TBD | Not started | - |
 | 4. Type Safety and Test Coverage | 0/TBD | Not started | - |
