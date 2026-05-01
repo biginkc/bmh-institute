@@ -17,6 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { requireAdmin } from "@/lib/auth/guard";
 import { createClient } from "@/lib/supabase/server";
 
 import { InviteForm } from "./invite-form";
@@ -24,6 +25,12 @@ import { ResendInviteButton } from "./resend-invite-button";
 import { RevokeInviteButton } from "./revoke-invite-button";
 
 export default async function AdminUsersPage() {
+  // WR-05: page-level guard mirroring HARDEN-01's pattern on the reports
+  // tree. The (dashboard)/admin/layout.tsx wraps this route with the same
+  // requireAdmin() check, but defending in depth at the page boundary
+  // means a direct fetch against this route file can't rely on the layout
+  // having run.
+  await requireAdmin();
   const supabase = await createClient();
   const [profiles, invites, roleGroups] = await Promise.all([
     supabase
