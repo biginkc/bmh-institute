@@ -28,6 +28,16 @@ This milestone closes the security and data-integrity gaps surfaced by the codeb
 - [x] 01-3-user-deletion-PLAN.md — HARDEN-03: deleteUser uses admin auth client (cascade FKs already in 001), with last-owner guard and the codebase's first integration test
 - [x] 01-4-answer-options-view-PLAN.md — HARDEN-04: definer-mode view answer_options_public, REVOKE on the underlying table, scoring switches to service-role
 
+### Phase 01.1: Testing Coverage Parity (INSERTED)
+
+**Goal:** [Urgent work - to be planned]
+**Requirements**: TBD
+**Depends on:** Phase 1
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd-plan-phase 01.1 to break down)
+
 ### Phase 2: Content Safety and Rate Limiting
 **Goal**: Admin-authored HTML cannot execute scripts in learner browsers, embed iframes are sandboxed, and the forgot-password and password-reset paths cannot be abused by automated requests
 **Depends on**: Phase 1

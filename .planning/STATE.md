@@ -4,14 +4,14 @@ milestone: v1.0
 milestone_name: milestone
 status: executing
 stopped_at: Phase 1 context gathered
-last_updated: "2026-05-01T01:15:22.619Z"
+last_updated: "2026-05-01T02:15:39.826Z"
 last_activity: 2026-05-01 -- Phase 01 execution started
 progress:
-  total_phases: 5
-  completed_phases: 0
+  total_phases: 6
+  completed_phases: 1
   total_plans: 4
-  completed_plans: 0
-  percent: 0
+  completed_plans: 4
+  percent: 100
 ---
 
 # Project State
@@ -54,6 +54,10 @@ Progress: [░░░░░░░░░░] 0%
 *Updated after each plan completion*
 
 ## Accumulated Context
+
+### Roadmap Evolution
+
+- Phase 01.1 inserted after Phase 1: Testing Coverage Parity: bring repo to Sandra CRM testing standard (RTL config, Playwright e2e dir, deps, scripts) and replace phase 1 HUMAN-UAT items with automated specs (URGENT)
 
 ### Decisions
 
