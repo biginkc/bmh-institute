@@ -235,6 +235,70 @@ export async function setUserRoleGroups(input: {
   return { ok: true };
 }
 
+export async function resendInvite(
+  inviteId: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const inviter = await requireAdmin();
+
+  let admin;
+  try {
+    admin = createAdminClient();
+  } catch (e) {
+    const message = e instanceof Error ? e.message : "Admin client unavailable.";
+    return { ok: false, error: message };
+  }
+
+  const supabase = await createClient();
+  const { data: invite, error: lookupErr } = await supabase
+    .from("invites")
+    .select("id, email, system_role, role_group_ids, accepted_at")
+    .eq("id", inviteId)
+    .maybeSingle();
+  if (lookupErr || !invite) {
+    return { ok: false, error: lookupErr?.message ?? "Invite not found." };
+  }
+  if (invite.accepted_at) {
+    return { ok: false, error: "This invite was already accepted." };
+  }
+
+  const token = randomBytes(32).toString("base64url");
+  const fourteenDays = 14 * 24 * 60 * 60 * 1000;
+  const newExpiry = new Date(Date.now() + fourteenDays).toISOString();
+
+  const { error: updateErr } = await supabase
+    .from("invites")
+    .update({ token, expires_at: newExpiry })
+    .eq("id", inviteId);
+  if (updateErr) return { ok: false, error: updateErr.message };
+
+  const appUrl =
+    process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3100";
+  const redirectTo = `${appUrl.replace(/\/$/, "")}/auth/callback?invite_token=${encodeURIComponent(token)}`;
+
+  // HARDEN-02 / D-03: re-fire the Supabase invite email through the existing
+  // admin.auth.admin.inviteUserByEmail path. Skip the enrollment email
+  // re-send (already sent at original invite).
+  const { error: inviteError } = await admin.auth.admin.inviteUserByEmail(
+    invite.email as string,
+    {
+      redirectTo,
+      data: {
+        invited_by: inviter.email,
+        system_role: invite.system_role as string,
+      },
+    },
+  );
+  if (inviteError) {
+    return {
+      ok: false,
+      error: `Supabase rejected the invite: ${inviteError.message}`,
+    };
+  }
+
+  revalidatePath("/admin/users");
+  return { ok: true };
+}
+
 function fieldResult(
   parsed: Extract<ParseResult<InviteInput>, { ok: false }>,
   formData: FormData,

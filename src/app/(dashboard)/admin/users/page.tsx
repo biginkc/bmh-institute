@@ -20,6 +20,7 @@ import {
 import { createClient } from "@/lib/supabase/server";
 
 import { InviteForm } from "./invite-form";
+import { ResendInviteButton } from "./resend-invite-button";
 import { RevokeInviteButton } from "./revoke-invite-button";
 
 export default async function AdminUsersPage() {
@@ -149,6 +150,7 @@ export default async function AdminUsersPage() {
               <TableBody>
                 {pendingInvites.map((i) => {
                   const expires = new Date(i.expires_at as string);
+                  const isExpired = expires <= new Date();
                   return (
                     <TableRow key={i.id as string}>
                       <TableCell>{i.email as string}</TableCell>
@@ -156,10 +158,17 @@ export default async function AdminUsersPage() {
                         {i.system_role as string}
                       </TableCell>
                       <TableCell className="text-muted-foreground text-xs">
-                        in {formatDistanceToNow(expires)}
+                        {isExpired ? (
+                          <Badge variant="destructive">Expired</Badge>
+                        ) : (
+                          <>in {formatDistanceToNow(expires)}</>
+                        )}
                       </TableCell>
                       <TableCell className="text-right">
-                        <RevokeInviteButton inviteId={i.id as string} />
+                        <div className="flex justify-end gap-2">
+                          <ResendInviteButton inviteId={i.id as string} />
+                          <RevokeInviteButton inviteId={i.id as string} />
+                        </div>
                       </TableCell>
                     </TableRow>
                   );
