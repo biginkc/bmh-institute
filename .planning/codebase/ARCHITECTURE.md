@@ -31,7 +31,7 @@
                              │ @supabase/ssr / service-role client
                              ▼
 ┌──────────────────────────────────────────────────────────────────────┐
-│                       Supabase (sandra-university)                    │
+│                       Supabase (bmh-institute)                        │
 │  Auth (invite-only)  ·  Postgres + RLS  ·  Storage (content/        │
 │  submissions buckets)  ·  DB triggers (progress → certificates)      │
 └──────────────────────────────────────────────────────────────────────┘

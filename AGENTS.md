@@ -8,7 +8,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 ## Project identity (read this first)
 
-This repo is **BMH Institute**, BMH Group's internal training platform. Renamed from Sandra University on 2026-04-30; the working directory may still say `Sandra University/` while paths catch up.
+This repo is **BMH Institute**, BMH Group's internal training platform. Renamed from Sandra University on 2026-04-30.
 
 **This repo is NOT Sandra Practice.** Sandra Practice is a separate planned standalone app (`../Sandra Practice/`, `sandra-practice-planning/` is its parked seed) that will run AI voice role plays and eventually embed into BMH Institute lessons via the contract in `role-play-embed-contract.md`.
 

@@ -14,7 +14,7 @@ test("header shows the signed-in email and a sign-out control", async ({
 }) => {
   await page.goto("/dashboard");
   await expect(
-    page.getByRole("link", { name: /sandra university/i }),
+    page.getByRole("link", { name: /bmh institute/i }),
   ).toBeVisible();
   await expect(page.getByRole("button", { name: /sign out/i })).toBeVisible();
 });

@@ -89,7 +89,7 @@
 - Fix approach: Add explicit guards matching the pattern used in `src/lib/supabase/admin.ts` (which throws clearly).
 
 **`NEXT_PUBLIC_APP_URL` has three different fallback values across the codebase:**
-- Issue: `src/app/(auth)/forgot-password/actions.ts` falls back to `https://sandra-university.vercel.app`. `src/app/(dashboard)/admin/users/actions.ts` falls back to `http://localhost:3100`. `src/app/(dashboard)/admin/submissions/actions.ts` and `src/app/(dashboard)/lessons/[lessonId]/assignment-actions.ts` fall back to `https://sandra-university.vercel.app`. Mixed fallbacks mean invite links and submission notification links point to different origins depending on which code path runs.
+- Issue: `src/app/(auth)/forgot-password/actions.ts` falls back to `https://bmh-institute.vercel.app`. `src/app/(dashboard)/admin/users/actions.ts` falls back to `http://localhost:3100`. `src/app/(dashboard)/admin/submissions/actions.ts` and `src/app/(dashboard)/lessons/[lessonId]/assignment-actions.ts` fall back to `https://bmh-institute.vercel.app`. Mixed fallbacks mean invite links and submission notification links point to different origins depending on which code path runs.
 - Files: `src/app/(auth)/forgot-password/actions.ts`, `src/app/(dashboard)/admin/users/actions.ts`, `src/app/(dashboard)/admin/submissions/actions.ts`, `src/app/(dashboard)/lessons/[lessonId]/assignment-actions.ts`
 - Fix approach: Centralize into a single `src/lib/config.ts` that exports `appUrl` with one validated fallback.
 

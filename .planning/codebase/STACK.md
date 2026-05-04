@@ -114,9 +114,9 @@
 - Port 3200 for Playwright E2E local dev server
 
 **Production:**
-- Vercel (Hobby plan) — project: `sandra-university`, org: `team_uELniQVfObNI03AFG17L8yEI`
+- Vercel (Hobby plan) — project: `bmh-institute`, org: `team_uELniQVfObNI03AFG17L8yEI`
 - Deployed to: `university.bmhgroup.com` (custom domain)
-- Supabase project: `sandra-university` (ref `dhvfsyteqsxagokoerrx`)
+- Supabase project: `bmh-institute` (ref `dhvfsyteqsxagokoerrx`)
 
 ---
 

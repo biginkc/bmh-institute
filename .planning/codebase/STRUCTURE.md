@@ -5,7 +5,7 @@
 ## Directory Layout
 
 ```
-sandra-university/
+bmh-institute/
 ├── src/
 │   ├── app/                        # Next.js App Router
 │   │   ├── layout.tsx              # Root HTML shell (fonts, Toaster)
@@ -215,7 +215,7 @@ sandra-university/
 - Each sub-module has a `.test.ts` pair co-located with the implementation
 
 **`supabase/migrations/`:**
-- Purpose: Sequential SQL migrations applied to the `sandra-university` Supabase project
+- Purpose: Sequential SQL migrations applied to the `bmh-institute` Supabase project
 - File naming: `NNN_name.sql` applied in numeric order
 - Triggers in `002_functions_and_triggers.sql` drive lesson completion → certificate issuance
 

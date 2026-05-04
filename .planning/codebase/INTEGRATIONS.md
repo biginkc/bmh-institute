@@ -30,7 +30,7 @@
 **Deployment:**
 - Vercel — hosting; project config at `.vercel/project.json`
   - Project ID: `prj_dqTvXS2iRS4GyuWuGRiLoMdHhu6m`
-  - Production URL: `https://sandra-university.vercel.app` (also served at `university.bmhgroup.com`)
+  - Production URL: `https://bmh-institute.vercel.app` (also served at `university.bmhgroup.com`)
 
 ## Data Storage
 
@@ -97,7 +97,7 @@
 - `SMTP_USER` — SMTP username / sender address
 - `SMTP_PASS` — SMTP app password (Google Workspace app password)
 - `SMTP_FROM_EMAIL` — From address in sent emails
-- `SMTP_FROM_NAME` — From display name (defaults to `Sandra University`)
+- `SMTP_FROM_NAME` — From display name (defaults to `BMH Institute`)
 - `ADMIN_EMAILS` — Comma-separated admin email allowlist (defaults to `jarrad@bmhgroup.com`)
 
 **Secrets location:**
