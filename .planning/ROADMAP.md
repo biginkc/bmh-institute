@@ -91,16 +91,19 @@ Plans:
 
 ## Backlog
 
-### Phase 999.1: Rename working directory to BMH Institute (BACKLOG)
+### Phase 999.1: Rename working directory to BMH Institute (IN PROGRESS — 2026-05-04)
 
 **Goal:** Bring the local working directory in line with the new project identity by renaming `~/Sites/Sandra University/` to `~/Sites/BMH Institute/` (and the matching `~/.claude/projects/` memory path), then verifying nothing external is broken.
 **Captured:** 2026-04-30 during /gsd-discuss-phase 1
 **Why deferred:** Path mismatch is not blocking. Rename touches IDE workspace state, open terminals, shell aliases, the auto-memory dir, and any scripts pointing at the old path. Better as a deliberate housekeeping session than mid-phase.
+**In-repo sweep:** Shipped 2026-05-04 as commit `04deb69` (9 files: env example, e2e-prod assertion, planning codebase docs, AGENTS.md caveat removed). Session handoff: `docs/handoff/2026-05-04-bmh-institute-rename.md`.
 **Steps:**
-- [ ] `mv ~/Sites/"Sandra University" ~/Sites/"BMH Institute"`
-- [ ] `mv ~/.claude/projects/-Users-jarradhenry-Sites-Sandra-University ~/.claude/projects/-Users-jarradhenry-Sites-BMH-Institute`
-- [ ] Verify `.vercel/project.json` still resolves the linked Vercel project
-- [ ] Sweep `~/.zshrc`, `~/.zsh_aliases`, scripts under `~/Sites/` for hardcoded "Sandra University"
+- [x] In-repo sweep of "Sandra University" / "sandra-university" string references (commit `04deb69`, 2026-05-04)
+- [x] `.vercel/project.json` realigned locally to `projectName: "bmh-institute"` (gitignored)
+- [x] Sweep `~/.zshrc`, `~/.zsh_aliases` — verified clean (no Sandra references)
+- [ ] `mv ~/Sites/"Sandra University" ~/Sites/"BMH Institute"` (user-side, requires Claude exit)
+- [ ] `mv ~/.claude/projects/-Users-jarradhenry-Sites-Sandra-University ~/.claude/projects/-Users-jarradhenry-Sites-BMH-Institute` (user-side)
+- [ ] User to update `.env.local` if it contains `SMTP_FROM_NAME=Sandra University` or `E2E_PROD_BASE_URL=https://sandra-university.vercel.app`
 - [ ] Reopen any IDE workspace files / restored tabs from the new path
 
 ---
