@@ -9,7 +9,8 @@ This milestone closes the security and data-integrity gaps surfaced by the codeb
 - [x] **Phase 1: Auth and Access Hardening** - Lock down route guards, invite expiry, user deletion, and quiz answer exposure
 - [x] **Phase 01.1: Testing Coverage Parity** (INSERTED) - Add the RTL and Playwright e2e surfaces to match Sandra CRM, then automate the five Phase 01 HUMAN-UAT items
 - [x] **Phase 2: Content Safety and Rate Limiting** - Sandbox embed iframes, sanitize admin-authored HTML, and throttle password-reset paths
-- [ ] **Phase 3: Data Integrity** - Wrap role-group rewrites and module reordering in transactions, fix certificate-number races, and validate assignment file paths server-side
+- [x] **Phase 2.5: Sandra Design System Stitch Pass** (INSERTED) - Adapt the Sandra family shell and Stitch design system to BMH Institute before Phase 3 implementation continues
+- [x] **Phase 3: Data Integrity** - Wrap role-group rewrites and module reordering in transactions, fix certificate-number races, and validate assignment file paths server-side
 - [ ] **Phase 4: Type Safety and Test Coverage** - Generate Supabase types, then add Vitest unit coverage, integration tests for the trigger pipeline, and Playwright write-path e2e
 
 ## Phase Details
@@ -60,6 +61,18 @@ Plans:
 - [x] 02-2-embed-iframe-sandbox-PLAN.md - HARDEN-05: sandbox embed-block iframes and enforce https iframe_src saves
 - [x] 02-3-password-reset-rate-limit-PLAN.md - HARDEN-06: Postgres-backed per-IP and per-email rate limits for forgot-password and set-password
 
+### Phase 2.5: Sandra Design System Stitch Pass (INSERTED)
+**Goal**: BMH Institute inherits the Sandra family visual language through a dedicated Stitch project, BMH-specific design contract, and first-pass desktop screens before new feature and integrity work expands the UI surface
+**Depends on**: Phase 2
+**Requirements**: UI-01
+**Success Criteria** (what must be TRUE):
+  1. `.stitch/DESIGN.md` exists for BMH Institute and points to the Sandra Design System source of truth
+  2. The Stitch project uses the Sandra fixed topbar, 256px left sidebar, active nav left border, PageHeader pattern, warm paper palette, and no default card shadows
+  3. Initial desktop screens exist for learner dashboard, lesson view, admin overview, and admin users
+  4. Generated HTML and screenshots are saved under the Sandra Design System `.stitch/designs/bmh-institute-*` convention and opened in Chrome for review
+**Plans**: 1 plan
+- [x] 02.5-1-stitch-design-system-pass - UI-01: create BMH Stitch contract, project, design system, and first-pass screens
+
 ### Phase 3: Data Integrity
 **Goal**: Role-group assignment and module reordering are atomic so a mid-operation failure cannot leave users with no access or modules with corrupt sort order, certificate numbers are collision-free under concurrent completions, and assignment file paths are validated server-side
 **Depends on**: Phase 1
@@ -69,7 +82,11 @@ Plans:
   2. A simulated mid-sequence failure during module reordering leaves no module with a negative sort_order
   3. N concurrent course completions produce N distinct certificate numbers with no unique-constraint violation
   4. A server action call with a submission_file_path that does not begin with the authenticated user's ID is rejected before the row is inserted
-**Plans**: TBD
+**Plans**: 4 plans
+- [x] 03-1-atomic-role-group-rewrite-PLAN.md - INTEG-01: move user role-group rewrites into admin-guarded Postgres functions with rollback-safe integration coverage
+- [x] 03-2-atomic-module-reorder-PLAN.md - INTEG-02: replace multi-step negative-temp reordering with an atomic database sort-order swap
+- [x] 03-3-certificate-number-sequence-PLAN.md - INTEG-03: reserve certificate numbers through an atomic counter so concurrent completions cannot collide
+- [x] 03-4-assignment-file-path-validation-PLAN.md - INTEG-04: reject assignment file paths outside the authenticated user's storage prefix before insert
 
 ### Phase 4: Type Safety and Test Coverage
 **Goal**: The Supabase generated Database type replaces ad-hoc assertions across the codebase, and every critical write path has at minimum a Vitest unit test, an integration test for the trigger-driven certificate pipeline, and a Playwright e2e write-path test
@@ -89,7 +106,8 @@ Plans:
 | 1. Auth and Access Hardening | 4/4 | Complete (human_needed) | - |
 | 01.1. Testing Coverage Parity | 3/3 | Complete | 2026-05-01 |
 | 2. Content Safety and Rate Limiting | 3/3 | Complete | 2026-05-08 |
-| 3. Data Integrity | 0/TBD | Not started | - |
+| 2.5. Sandra Design System Stitch Pass | 1/1 | Complete | - |
+| 3. Data Integrity | 4/4 | Complete | 2026-05-08 |
 | 4. Type Safety and Test Coverage | 0/TBD | Not started | - |
 
 ## Backlog

@@ -61,36 +61,17 @@ export async function saveUserSettings(input: {
     (id) => !oldProgramIds.includes(id),
   );
 
-  // 1) Profile row: role + status.
-  const { error: pErr } = await supabase
-    .from("profiles")
-    .update({
-      system_role: input.system_role,
-      status: input.status,
-    })
-    .eq("id", input.userId);
-  if (pErr) return { ok: false, error: pErr.message };
-
-  // 2) user_role_groups: wipe + re-insert.
-  const { error: dErr } = await supabase
-    .from("user_role_groups")
-    .delete()
-    .eq("user_id", input.userId);
-  if (dErr) return { ok: false, error: dErr.message };
-  if (input.role_group_ids.length > 0) {
-    const rows = input.role_group_ids.map((rg) => ({
-      user_id: input.userId,
-      role_group_id: rg,
-    }));
-    const { error: iErr } = await supabase
-      .from("user_role_groups")
-      .insert(rows);
-    if (iErr) return { ok: false, error: iErr.message };
-  }
+  const { error: saveErr } = await supabase.rpc("fn_save_user_settings", {
+    p_user_id: input.userId,
+    p_system_role: input.system_role,
+    p_status: input.status,
+    p_role_group_ids: input.role_group_ids,
+  });
+  if (saveErr) return { ok: false, error: saveErr.message };
 
   let newProgramTitles: string[] = [];
 
-  // 3) Enrollment email, if we granted new programs.
+  // Enrollment email, if we granted new programs.
   if (trulyNewProgramIds.length > 0 && addedGroupIds.length > 0) {
     const { data: programs } = await supabase
       .from("programs")

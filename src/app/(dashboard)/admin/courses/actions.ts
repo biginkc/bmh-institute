@@ -167,33 +167,12 @@ export async function moveModule(input: {
 }): Promise<{ ok: true } | { ok: false; error: string }> {
   await requireAdmin();
   const supabase = await createClient();
-  const { data: modules } = await supabase
-    .from("modules")
-    .select("id, sort_order")
-    .eq("course_id", input.courseId)
-    .order("sort_order");
-
-  const list = (modules ?? []) as { id: string; sort_order: number }[];
-  const idx = list.findIndex((m) => m.id === input.moduleId);
-  if (idx < 0) return { ok: false, error: "Module not found." };
-
-  const swapIdx = input.direction === "up" ? idx - 1 : idx + 1;
-  if (swapIdx < 0 || swapIdx >= list.length) return { ok: true };
-
-  const current = list[idx];
-  const neighbor = list[swapIdx];
-  // Use a temp sort_order to avoid unique-constraint-like issues (no uniq here
-  // but this keeps monotonic values clean).
-  const tmp = -1 - idx;
-  await supabase.from("modules").update({ sort_order: tmp }).eq("id", current.id);
-  await supabase
-    .from("modules")
-    .update({ sort_order: current.sort_order })
-    .eq("id", neighbor.id);
-  await supabase
-    .from("modules")
-    .update({ sort_order: neighbor.sort_order })
-    .eq("id", current.id);
+  const { error } = await supabase.rpc("fn_move_module", {
+    p_module_id: input.moduleId,
+    p_course_id: input.courseId,
+    p_direction: input.direction,
+  });
+  if (error) return { ok: false, error: error.message };
 
   revalidatePath(`/admin/courses/${input.courseId}/edit`);
   return { ok: true };

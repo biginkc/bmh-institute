@@ -26,6 +26,8 @@ let inviteEmailArgs: { email: string; opts: Record<string, unknown> } | null =
   null;
 let inviteEmailError: { message: string } | null = null;
 let adminFactoryThrows: Error | null = null;
+let rpcCalls: Array<{ name: string; params: Record<string, unknown> }> = [];
+let rpcError: { message: string } | null = null;
 
 vi.mock("@/lib/auth/guard", () => ({
   requireAdmin: vi.fn(async () => {
@@ -36,6 +38,10 @@ vi.mock("@/lib/auth/guard", () => ({
 
 vi.mock("@/lib/supabase/server", () => ({
   createClient: vi.fn(async () => ({
+    rpc: async (name: string, params: Record<string, unknown>) => {
+      rpcCalls.push({ name, params });
+      return { data: null, error: rpcError };
+    },
     from: (table: string) => {
       if (table !== "invites") {
         throw new Error(`Unexpected learner-client table ${table}`);
@@ -84,7 +90,7 @@ vi.mock("@/lib/supabase/admin", () => ({
 
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
-import { resendInvite } from "./actions";
+import { resendInvite, setUserRoleGroups } from "./actions";
 
 describe("resendInvite (HARDEN-02)", () => {
   beforeEach(() => {
@@ -96,6 +102,8 @@ describe("resendInvite (HARDEN-02)", () => {
     inviteEmailArgs = null;
     inviteEmailError = null;
     adminFactoryThrows = null;
+    rpcCalls = [];
+    rpcError = null;
   });
 
   afterEach(() => {
@@ -198,5 +206,47 @@ describe("resendInvite (HARDEN-02)", () => {
       ok: false,
       error: "Supabase rejected the invite: rate limited",
     });
+  });
+});
+
+describe("setUserRoleGroups (INTEG-01)", () => {
+  beforeEach(() => {
+    calls.length = 0;
+    rpcCalls = [];
+    rpcError = null;
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("rewrites role groups through the transactional database function", async () => {
+    const result = await setUserRoleGroups({
+      userId: "user-1",
+      role_group_ids: ["group-1", "group-2"],
+    });
+
+    expect(result).toEqual({ ok: true });
+    expect(calls[0]).toBe("requireAdmin");
+    expect(rpcCalls).toEqual([
+      {
+        name: "fn_set_user_role_groups",
+        params: {
+          p_user_id: "user-1",
+          p_role_group_ids: ["group-1", "group-2"],
+        },
+      },
+    ]);
+  });
+
+  it("surfaces transactional rewrite errors", async () => {
+    rpcError = { message: "insert failed" };
+
+    const result = await setUserRoleGroups({
+      userId: "user-1",
+      role_group_ids: ["missing-group"],
+    });
+
+    expect(result).toEqual({ ok: false, error: "insert failed" });
   });
 });

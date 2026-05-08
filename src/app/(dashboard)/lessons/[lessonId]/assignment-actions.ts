@@ -36,6 +36,12 @@ export async function submitAssignment(input: {
     if (!input.submission_file_path) {
       return { ok: false, error: "Upload a file before submitting." };
     }
+    if (!pathBelongsToUser(input.submission_file_path, user.id)) {
+      return {
+        ok: false,
+        error: "Upload a file from your account before submitting.",
+      };
+    }
   }
 
   const normalizedText =
@@ -160,4 +166,8 @@ function filenameFromPath(p: string | null): string {
   if (!p) return "file";
   const last = p.split("/").pop() ?? "file";
   return last.replace(/^\d+-/, "");
+}
+
+function pathBelongsToUser(path: string, userId: string): boolean {
+  return path.startsWith(`${userId}/`);
 }

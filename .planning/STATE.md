@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: ready
-stopped_at: Phase 2 verified; ready for deployment prerequisites or Phase 3 planning
-last_updated: "2026-05-08T21:45:00.000Z"
-last_activity: 2026-05-08 -- removed stale pause gate from active project instructions and memory
+stopped_at: Phase 3 deployed to production and smoke verified
+last_updated: "2026-05-08T23:30:00.000Z"
+last_activity: 2026-05-08 -- Phase 3 deployed to production and smoke verified
 progress:
-  total_phases: 5
-  completed_phases: 2
-  total_plans: 10
-  completed_plans: 10
+  total_phases: 6
+  completed_phases: 5
+  total_plans: 14
+  completed_plans: 14
   percent: 100
 ---
 
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-30)
 
 **Core value:** A VA can sign in via an admin invite, work through assigned programs and courses on their own time, take quizzes and submit assignments without supervision, and receive a certificate when they finish. Admins can author content, manage learners, review submissions, and see who is making progress without leaving the platform.
-**Current focus:** Phase 2 verified; choose deployment prerequisites or Phase 3 planning next
+**Current focus:** Phase 3 deployed; next unblocked milestone item is Phase 4 planning
 
 ## Current Position
 
-Phase: 02 (content-safety-and-rate-limiting) - VERIFIED
-Plan: 3 of 3 complete
-Status: Phase 2 verified with deployment prerequisites
-Last activity: 2026-05-08 -- Phase 2 verification complete
+Phase: 03 (data-integrity) - VERIFIED
+Plan: 4 of 4 complete
+Status: Phase 3 deployed and production smoke verified
+Last activity: 2026-05-08 -- Phase 3 production deploy complete
 
 Progress: [██████████] 100%
 
@@ -80,6 +80,7 @@ Recent decisions affecting current work:
 - 2026-05-08 (Plan 02-1): Text block and certificate HTML sanitizers use sanitize-html on write. Existing render paths stay unchanged. Certificate template writes have no admin UI today, so the shipped enforcement is sanitizer library plus manual backfill script.
 - 2026-05-08 (Plan 02-2): Embed block iframes render with the locked sandbox value and embed saves reject non-https iframe_src values before writing. Video iframes remain unchanged per D-B2.
 - 2026-05-08 (Plan 02-3): Forgot-password and set-password now use durable Postgres-backed rate-limit gates before Supabase auth calls. Forgot-password denies silently; set-password denies with retry copy.
+- 2026-05-08 (Phase 3): Data integrity work uses migration 012 for transactional role-group rewrites, transactional module reorder, and atomic certificate number counters. Assignment file uploads are server-validated against the authenticated user's storage prefix.
 
 ### Pending Todos
 
@@ -111,6 +112,21 @@ Session handoff: docs/handoff/2026-05-04-bmh-institute-rename.md (paste-ready ne
 - `npm run test:integration -- src/lib/rate-limit/check.integration.test.ts` skipped cleanly because `.env.test.local` lacks `TEST_SUPABASE_*` values.
 - `E2E_PROD_BASE_URL=http://localhost:3100 npm run test:prod -- e2e-prod/embed-sandbox.spec.ts` passed.
 - Verdict: PASS with deployment prerequisites.
+
+### 2026-05-08 - Phase 3 verification complete
+
+- Added `.planning/phases/03-data-integrity/` plans, summaries, and verification.
+- Added `supabase/migrations/012_data_integrity.sql`.
+- `setUserRoleGroups` and `saveUserSettings` now call transactional RPCs.
+- `moveModule` now calls transactional RPC `fn_move_module`.
+- `submitAssignment` rejects file paths outside `${user.id}/` before insert.
+- Added unit coverage for all four app action surfaces.
+- Added gated integration coverage in `src/lib/data-integrity.integration.test.ts`.
+- Applied migration 012 to linked Supabase and repaired migration history.
+- Linked Supabase checks passed for role-group rollback, module sort-order safety, and 20 concurrent certificate number reservations.
+- Deployed production app to `https://sandra-university-5sh1s1zin-jarrad-5416s-projects.vercel.app`.
+- Production throwaway-user login smoke passed and the temporary auth user was deleted.
+- `npm run verify` passed.
 
 ### 2026-05-08 - Phase 2 plan 02-3 complete
 

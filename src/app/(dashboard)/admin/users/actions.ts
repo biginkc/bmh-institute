@@ -212,23 +212,11 @@ export async function setUserRoleGroups(input: {
   await requireAdmin();
   const supabase = await createClient();
 
-  // Rewrite the user's role_groups atomically: wipe and re-insert.
-  const { error: delErr } = await supabase
-    .from("user_role_groups")
-    .delete()
-    .eq("user_id", input.userId);
-  if (delErr) return { ok: false, error: delErr.message };
-
-  if (input.role_group_ids.length > 0) {
-    const rows = input.role_group_ids.map((rg) => ({
-      user_id: input.userId,
-      role_group_id: rg,
-    }));
-    const { error: insErr } = await supabase
-      .from("user_role_groups")
-      .insert(rows);
-    if (insErr) return { ok: false, error: insErr.message };
-  }
+  const { error } = await supabase.rpc("fn_set_user_role_groups", {
+    p_user_id: input.userId,
+    p_role_group_ids: input.role_group_ids,
+  });
+  if (error) return { ok: false, error: error.message };
 
   revalidatePath("/admin/users");
   revalidatePath("/dashboard");

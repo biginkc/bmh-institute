@@ -18,10 +18,10 @@ This is the first GSD-managed milestone for a brownfield codebase. The Validated
 
 ### Data Integrity
 
-- [ ] **INTEG-01**: `setUserRoleGroups` and `saveUserSettings` rewrite `user_role_groups` inside a Postgres function with transactional semantics (delete + insert atomic), with an integration test that simulates an insert failure and asserts the original rows are preserved
-- [ ] **INTEG-02**: Module reordering runs in a single Postgres function (CASE-expression update or explicit transaction) so a partial failure cannot leave a module with a negative `sort_order`, with an integration test that asserts ordering is consistent under simulated mid-sequence failure
-- [ ] **INTEG-03**: `fn_next_certificate_number` uses a Postgres sequence (or `SELECT ... FOR UPDATE`) so concurrent completions cannot collide on the unique constraint, with an integration test that fires N concurrent completions and asserts N distinct certificate numbers were issued
-- [ ] **INTEG-04**: Assignment submission `submission_file_path` is server-validated against `${user.id}/` prefix before insert, with a unit test that rejects a path pointing at another user's prefix
+- [x] **INTEG-01**: `setUserRoleGroups` and `saveUserSettings` rewrite `user_role_groups` inside a Postgres function with transactional semantics (delete + insert atomic), with an integration test that simulates an insert failure and asserts the original rows are preserved
+- [x] **INTEG-02**: Module reordering runs in a single Postgres function (CASE-expression update or explicit transaction) so a partial failure cannot leave a module with a negative `sort_order`, with an integration test that asserts ordering is consistent under simulated mid-sequence failure
+- [x] **INTEG-03**: `fn_next_certificate_number` uses a Postgres sequence (or `SELECT ... FOR UPDATE`) so concurrent completions cannot collide on the unique constraint, with an integration test that fires N concurrent completions and asserts N distinct certificate numbers were issued
+- [x] **INTEG-04**: Assignment submission `submission_file_path` is server-validated against `${user.id}/` prefix before insert, with a unit test that rejects a path pointing at another user's prefix
 
 ### Type Safety
 
@@ -84,10 +84,10 @@ Mapping of requirements to phases. Updated by the gsd-roadmapper.
 | HARDEN-04 | Phase 1 | Complete |
 | HARDEN-05 | Phase 2 | Complete |
 | HARDEN-06 | Phase 2 | Complete |
-| INTEG-01 | Phase 3 | Pending |
-| INTEG-02 | Phase 3 | Pending |
-| INTEG-03 | Phase 3 | Pending |
-| INTEG-04 | Phase 3 | Pending |
+| INTEG-01 | Phase 3 | Complete |
+| INTEG-02 | Phase 3 | Complete |
+| INTEG-03 | Phase 3 | Complete |
+| INTEG-04 | Phase 3 | Complete |
 | TYPE-01 | Phase 4 | Pending |
 | TEST-01 | Phase 4 | Pending |
 | TEST-02 | Phase 4 | Pending |
