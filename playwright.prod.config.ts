@@ -16,8 +16,8 @@ import { defineConfig, devices } from "@playwright/test";
  * Supabase project.
  */
 
-function loadTestEnv(): Record<string, string> {
-  const filepath = path.resolve(__dirname, ".env.test.local");
+function loadEnvFile(filename: string): Record<string, string> {
+  const filepath = path.resolve(__dirname, filename);
   if (!fs.existsSync(filepath)) return {};
   const raw = fs.readFileSync(filepath, "utf8");
   const out: Record<string, string> = {};
@@ -39,11 +39,14 @@ function loadTestEnv(): Record<string, string> {
   return out;
 }
 
-const env = loadTestEnv();
+const env = {
+  ...loadEnvFile(".env.local"),
+  ...loadEnvFile(".env.test.local"),
+};
 
 const baseURL =
-  env.E2E_PROD_BASE_URL ??
   process.env.E2E_PROD_BASE_URL ??
+  env.E2E_PROD_BASE_URL ??
   "https://bmh-institute.vercel.app";
 
 // Publish for the setup project so it can read creds.
@@ -51,6 +54,21 @@ process.env.E2E_TEST_EMAIL = env.E2E_TEST_EMAIL ?? process.env.E2E_TEST_EMAIL ??
 process.env.E2E_TEST_PASSWORD =
   env.E2E_TEST_PASSWORD ?? process.env.E2E_TEST_PASSWORD ?? "";
 process.env.E2E_PROD_BASE_URL = baseURL;
+process.env.TEST_SUPABASE_URL =
+  env.TEST_SUPABASE_URL ??
+  process.env.TEST_SUPABASE_URL ??
+  env.NEXT_PUBLIC_SUPABASE_URL ??
+  "";
+process.env.TEST_SUPABASE_ANON_KEY =
+  env.TEST_SUPABASE_ANON_KEY ??
+  process.env.TEST_SUPABASE_ANON_KEY ??
+  env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
+  "";
+process.env.TEST_SUPABASE_SERVICE_ROLE_KEY =
+  env.TEST_SUPABASE_SERVICE_ROLE_KEY ??
+  process.env.TEST_SUPABASE_SERVICE_ROLE_KEY ??
+  env.SUPABASE_SERVICE_ROLE_KEY ??
+  "";
 
 export default defineConfig({
   testDir: "./e2e-prod",

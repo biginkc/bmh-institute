@@ -20,11 +20,13 @@ tech-stack:
 key-files:
   created:
     - src/components/content-blocks.test.tsx
+    - e2e-prod/embed-sandbox.spec.ts
   modified:
     - src/components/content-blocks.tsx
     - src/app/(dashboard)/admin/lessons/[lessonId]/edit/actions.ts
     - src/app/(dashboard)/admin/lessons/[lessonId]/edit/actions.test.ts
     - src/app/(dashboard)/admin/lessons/[lessonId]/edit/blocks-editor.tsx
+    - playwright.prod.config.ts
 
 key-decisions:
   - "EmbedBlock gets the locked sandbox value from 02-CONTEXT.md D-B1."
@@ -59,6 +61,7 @@ completed: 2026-05-08
 - Added `https://` validation and whitespace trimming for embed `iframe_src` saves.
 - Preserved Plan 02-1 text sanitization dispatch inside `updateBlock`.
 - Added admin helper copy under the iframe source field.
+- Added a prod-config Playwright smoke that creates a disposable embed lesson, verifies unsafe URL rejection, verifies trimmed HTTPS persistence, verifies rendered sandbox, and cleans up.
 
 ## Task Commits
 
@@ -72,6 +75,8 @@ completed: 2026-05-08
 - `src/app/(dashboard)/admin/lessons/[lessonId]/edit/actions.ts` - `updateBlock` validates and trims embed `iframe_src`.
 - `src/app/(dashboard)/admin/lessons/[lessonId]/edit/actions.test.ts` - Unit coverage for accepted and rejected embed URLs plus text branch preservation.
 - `src/app/(dashboard)/admin/lessons/[lessonId]/edit/blocks-editor.tsx` - Helper text clarifies trusted https embed URL boundary.
+- `e2e-prod/embed-sandbox.spec.ts` - Browser-level write-path smoke for embed validation and rendered sandbox behavior.
+- `playwright.prod.config.ts` - Loads Supabase browser credentials from `.env.local` for prod-config write-path smoke setup and allows `E2E_PROD_BASE_URL` process overrides.
 
 ## Decisions Made
 
@@ -86,10 +91,15 @@ None - plan executed as written.
 ## Issues Encountered
 
 - The red tests failed for the expected reasons: sandbox was missing and embed URLs were written without validation.
+- A first live-deployment Playwright run failed because the live deployment still served older code. A local-dev run against the prod DB passed.
 
 ## User Setup Required
 
-None.
+Deploy the current branch before expecting the prod URL to pass `e2e-prod/embed-sandbox.spec.ts`. Before deploy, run it against local dev with:
+
+```bash
+E2E_PROD_BASE_URL=http://localhost:3100 npm run test:prod -- e2e-prod/embed-sandbox.spec.ts
+```
 
 ## Next Phase Readiness
 

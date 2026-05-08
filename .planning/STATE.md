@@ -5,7 +5,7 @@ milestone_name: milestone
 status: verifying
 stopped_at: Phase 2 plan 02-2 complete; ready for 02-3 password reset rate limit
 last_updated: "2026-05-08T20:28:31.000Z"
-last_activity: 2026-05-08 -- completed 02-2 embed iframe sandbox with tests, sandbox attribute, https validation, and helper copy
+last_activity: 2026-05-08 -- added Playwright prod-config smoke for embed sandbox behavior; local-dev run against prod DB passed
 progress:
   total_phases: 5
   completed_phases: 2
@@ -111,6 +111,8 @@ Session handoff: docs/handoff/2026-05-04-bmh-institute-rename.md (paste-ready ne
 - Added RTL coverage in `src/components/content-blocks.test.tsx`.
 - Extended `actions.test.ts` with embed branch coverage and text sanitizer branch preservation.
 - Verification passed: `npm run verify`.
+- Added `e2e-prod/embed-sandbox.spec.ts` after implementation to confirm the real browser flow.
+- Live prod URL run failed because the deployment still served older code. Local dev against the prod DB passed with `E2E_PROD_BASE_URL=http://localhost:3100 npm run test:prod -- e2e-prod/embed-sandbox.spec.ts`.
 
 ### 2026-05-08 - Phase 2 plan 02-1 complete
 
