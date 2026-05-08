@@ -38,5 +38,5 @@ jobs:
           fi
 
           ENCODED_PASSWORD="$(node -e 'process.stdout.write(encodeURIComponent(process.env.TEST_SUPABASE_DB_PASSWORD))')"
-          DB_URL="postgresql://postgres:${ENCODED_PASSWORD}@db.${TEST_PROJECT_REF}.supabase.co:5432/postgres"
+          DB_URL="postgresql://postgres.${TEST_PROJECT_REF}:${ENCODED_PASSWORD}@aws-0-us-west-1.pooler.supabase.com:6543/postgres"
           supabase db push --include-all --db-url "$DB_URL"
