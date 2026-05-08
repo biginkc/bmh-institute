@@ -2,10 +2,10 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: verifying
+status: ready
 stopped_at: Phase 2 verified; ready for deployment prerequisites or Phase 3 planning
-last_updated: "2026-05-08T21:15:00.000Z"
-last_activity: 2026-05-08 -- verified Phase 2 against HARDEN-05/HARDEN-06 and wrote 02-VERIFICATION.md
+last_updated: "2026-05-08T21:45:00.000Z"
+last_activity: 2026-05-08 -- removed stale pause gate from active project instructions and memory
 progress:
   total_phases: 5
   completed_phases: 2
@@ -21,11 +21,11 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-30)
 
 **Core value:** A VA can sign in via an admin invite, work through assigned programs and courses on their own time, take quizzes and submit assignments without supervision, and receive a certificate when they finish. Admins can author content, manage learners, review submissions, and see who is making progress without leaving the platform.
-**Current focus:** Phase 2 - content-safety-and-rate-limiting
+**Current focus:** Phase 2 verified; choose deployment prerequisites or Phase 3 planning next
 
 ## Current Position
 
-Phase: 02 (content-safety-and-rate-limiting) - PLANNED
+Phase: 02 (content-safety-and-rate-limiting) - VERIFIED
 Plan: 3 of 3 complete
 Status: Phase 2 verified with deployment prerequisites
 Last activity: 2026-05-08 -- Phase 2 verification complete
@@ -69,7 +69,7 @@ Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
 - Milestone init: First GSD-managed milestone is a hardening pass, not features. Coarse granularity, parallel execution, YOLO mode.
-- TDD rule: Test inventory must be enumerated and approved before any tests or code are written.
+- TDD rule: Test-first execution remains the default for meaningful changes; continue without waiting unless Jarrad asks for a review gate or risk requires one.
 - 2026-05-01 (Plan 01.1-1): RTL config and setup mirror Sandra CRM verbatim including the localStorage shim. Vitest 4 transforms TSX natively so no @vitejs/plugin-react. Failing-tests commit lands with HUSKY=0 because the harness has not been installed yet; the harness commit runs the full hook end-to-end.
 - 2026-05-01 (Plan 01.1-2): e2e fixtures expose adminClient + ensureTestUser + prod-ref guard only; write-path helpers deferred until Path B/C lock
 - 2026-05-01 (Plan 01.1-2): BMH e2e fixtures use untyped SupabaseClient (src/lib/supabase/types.ts does not exist; TYPE-01 territory in Phase 4)
@@ -154,7 +154,13 @@ Session handoff: docs/handoff/2026-05-04-bmh-institute-rename.md (paste-ready ne
   - `.planning/phases/02-content-safety-and-rate-limiting/02-3-password-reset-rate-limit-PLAN.md`
 - `ROADMAP.md` now lists all three Phase 2 plans and progress as 0/3 Planned.
 - `REQUIREMENTS.md` traceability now marks HARDEN-01..04 Complete and HARDEN-05/HARDEN-06 Planned.
-- Next step: execute 02-1 with TDD inventory approval before writing tests or production code.
+- Superseded: Phase 2 is verified. Next step is deployment prerequisites or Phase 3 planning.
+
+### 2026-05-08 - Instruction cleanup
+
+- Removed the active pause gate from `AGENTS.md` and `.planning/PROJECT.md`.
+- Removed the matching Claude memory item and its index entry.
+- Kept TDD as the default for meaningful behavior changes.
 
 ### 2026-05-08 — backlog Phase 999.1 complete
 

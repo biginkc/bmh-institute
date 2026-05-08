@@ -71,7 +71,7 @@ Email transport pivoted from SendGrid to Google Workspace SMTP in commit `ce6e49
 - **Database**: Supabase project ref `dhvfsyteqsxagokoerrx` (label `bmh-institute`) — RLS on every table is non-negotiable
 - **Email**: Google Workspace SMTP via nodemailer — no alternate providers
 - **Hosting**: Vercel Hobby plan — Password Protection and Automation Bypass are Pro-only and unavailable
-- **Testing**: Vitest unit + integration; Playwright e2e. **Test-first TDD with up-front inventory review** — for every change, the full test inventory is enumerated and approved by Jarrad before any tests or code are written; failing tests land in their own commit before the implementation commit. `npm run verify` (typecheck + unit) gates the husky pre-commit hook
+- **Testing**: Vitest unit + integration; Playwright e2e. **Test-first TDD for meaningful changes**. State intended coverage briefly, write failing tests first when useful, then implement. `npm run verify` (typecheck + unit) gates the husky pre-commit hook
 - **Writing style**: No em dashes, minimal commas/dashes, no bold or Roman numeral headers, company is "BMH Group" not "BMH Group KC"
 
 ## Key Decisions
@@ -83,7 +83,7 @@ Email transport pivoted from SendGrid to Google Workspace SMTP in commit `ce6e49
 | Coarse granularity, parallel execution, YOLO mode | Matches Jarrad's parked Sandra Practice config and his shipping pace; keeps phase count low so velocity stays high | — Pending |
 | Quality model profile, all workflow gates on | Hardening work has long blast radius; pay for deeper analysis up front | — Pending |
 | Voice runtime work belongs in Sandra Practice, not here | The embed contract was written specifically to keep the LMS lean and the role-play app reusable; conflating them would break the architecture | ✓ Good |
-| Test-first with inventory review is mandatory | Catches missing edge cases before code is written; prevents "I thought this was done" disagreements; keeps the executed surface honest about coverage | ✓ Good |
+| Test-first execution is the default for meaningful changes | Keeps behavior changes covered without turning routine execution into an execution bottleneck | ✓ Good |
 
 ## Evolution
 

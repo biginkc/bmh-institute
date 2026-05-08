@@ -18,15 +18,14 @@ BMH Institute mirrors Sandra CRM's stack and conventions but runs as an independ
 
 ## Development workflow
 
-**TDD is the standard, with up-front test inventory review.** For every feature, bug fix, or behavioral change:
+**TDD is the standard for meaningful changes.** For every feature, bug fix, or behavioral change:
 
-1. Enumerate the full test inventory that defines "done" — name every test, its scope (unit / integration / e2e), and what it asserts.
-2. Present the inventory and wait for explicit approval before writing tests or production code.
-3. Write the failing tests first, in their own commit.
-4. Implement the minimum code to make the suite pass.
-5. Refactor with tests green.
+1. State the intended test coverage briefly before changing behavior.
+2. Write the failing tests first when the change benefits from TDD.
+3. Implement the minimum code to make the suite pass.
+4. Refactor with tests green.
 
-Don't mark work done without a covering test. Don't compress steps 1 and 2 into "I'll just write the tests as I go" — the inventory is the reviewable contract on what the feature must satisfy.
+Don't mark meaningful behavior changes done without covering tests. Continue without waiting unless Jarrad explicitly asks for a review gate or the change is high-risk.
 
 - `npm run dev` — next dev on port 3100
 - `npm run test` — vitest unit suite
@@ -64,7 +63,7 @@ BMH Institute is BMH Group's internal training platform for VAs (mostly Philippi
 - **Database**: Supabase project ref `dhvfsyteqsxagokoerrx` (label `bmh-institute`) — RLS on every table is non-negotiable
 - **Email**: Google Workspace SMTP via nodemailer — no alternate providers
 - **Hosting**: Vercel Hobby plan — Password Protection and Automation Bypass are Pro-only and unavailable
-- **Testing**: Vitest unit + integration; Playwright e2e. **Test-first TDD with up-front inventory review** — for every change, the full test inventory is enumerated and approved by Jarrad before any tests or code are written; failing tests land in their own commit before the implementation commit. `npm run verify` (typecheck + unit) gates the husky pre-commit hook
+- **Testing**: Vitest unit + integration; Playwright e2e. **Test-first TDD for meaningful changes**. State intended coverage briefly, write failing tests first when useful, then implement. `npm run verify` (typecheck + unit) gates the husky pre-commit hook
 - **Writing style**: No em dashes, minimal commas/dashes, no bold or Roman numeral headers, company is "BMH Group" not "BMH Group KC"
 <!-- GSD:project-end -->
 
