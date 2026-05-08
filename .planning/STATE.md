@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: verifying
-stopped_at: Phase 2 state repaired; ready to execute 02-1 sanitize-html-policy
-last_updated: "2026-05-08T21:18:00.000Z"
-last_activity: 2026-05-08 -- added missing Phase 2 password reset rate-limit plan and synced ROADMAP/REQUIREMENTS/STATE after folder rename
+stopped_at: Phase 2 plan 02-1 complete; ready for 02-2 embed iframe sandbox
+last_updated: "2026-05-08T20:21:09.000Z"
+last_activity: 2026-05-08 -- completed 02-1 sanitize-html policy with tests, write-time sanitization, and backfill script
 progress:
   total_phases: 5
   completed_phases: 2
   total_plans: 10
-  completed_plans: 7
-  percent: 70
+  completed_plans: 8
+  percent: 80
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-30)
 ## Current Position
 
 Phase: 02 (content-safety-and-rate-limiting) - PLANNED
-Plan: 1 of 3 next (02-1-sanitize-html-policy)
-Status: Phase 2 planning state repaired after BMH Institute folder rename; ready to execute 02-1
-Last activity: 2026-05-08 -- Added missing 02-3 password reset rate-limit plan and synced planning indexes
+Plan: 2 of 3 next (02-2-embed-iframe-sandbox)
+Status: Plan 02-1 complete; HARDEN-05 sanitization half shipped, iframe sandbox half remains
+Last activity: 2026-05-08 -- Plan 02-1 sanitize-html policy complete
 
-Progress: [███████░░░] 70%
+Progress: [████████░░] 80%
 
 ## Performance Metrics
 
@@ -77,6 +77,7 @@ Recent decisions affecting current work:
 - 2026-05-01 (Plan 01.1-3): Path A locked — destructive HARDEN-02 and HARDEN-03 UI variant remain manual until a write-capable test environment exists
 - 2026-05-01 (Plan 01.1-3): 01-HUMAN-UAT.md status changed to closed-with-deferrals; file is a closed historical record
 - 2026-05-08 (Phase 2 repair): Phase 2 has three plans per 02-CONTEXT.md D-E1. The missing 02-3 password-reset-rate-limit plan was regenerated from 02-CONTEXT.md, 02-RESEARCH.md, and 02-PATTERNS.md. ROADMAP and REQUIREMENTS now mark HARDEN-05/HARDEN-06 as planned, not executed.
+- 2026-05-08 (Plan 02-1): Text block and certificate HTML sanitizers use sanitize-html on write. Existing render paths stay unchanged. Certificate template writes have no admin UI today, so the shipped enforcement is sanitizer library plus manual backfill script.
 
 ### Pending Todos
 
@@ -96,10 +97,21 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-08T21:18:00.000Z
-Stopped at: Phase 2 planning state repaired; execute 02-1 next.
-Resume file: .planning/phases/02-content-safety-and-rate-limiting/02-1-sanitize-html-policy-PLAN.md
+Last session: 2026-05-08T20:21:09.000Z
+Stopped at: Phase 2 plan 02-1 complete; execute 02-2 next.
+Resume file: .planning/phases/02-content-safety-and-rate-limiting/02-2-embed-iframe-sandbox-PLAN.md
 Session handoff: docs/handoff/2026-05-04-bmh-institute-rename.md (paste-ready next-tab prompt + verification block)
+
+### 2026-05-08 - Phase 2 plan 02-1 complete
+
+- Added `sanitize-html`, `@types/sanitize-html`, and `tsx`.
+- Added text block sanitizer and certificate sanitizer under `src/lib/sanitize/`.
+- `updateBlock` now reads the stored `block_type` and sanitizes `content.html` for text blocks before the update.
+- Added `scripts/backfill-sanitize-html.ts` and `npm run backfill:sanitize-html` for existing rows.
+- TDD commits:
+  - `b01f8ac` failing tests
+  - implementation commit, feat(phase-02): sanitize admin html on write
+- Verification passed: `npm run verify`.
 
 ### 2026-05-08 - Phase 2 planning state repair
 

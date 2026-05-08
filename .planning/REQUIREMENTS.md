@@ -82,7 +82,7 @@ Mapping of requirements to phases. Updated by the gsd-roadmapper.
 | HARDEN-02 | Phase 1 | Complete |
 | HARDEN-03 | Phase 1 | Complete |
 | HARDEN-04 | Phase 1 | Complete |
-| HARDEN-05 | Phase 2 | Planned |
+| HARDEN-05 | Phase 2 | In progress |
 | HARDEN-06 | Phase 2 | Planned |
 | INTEG-01 | Phase 3 | Pending |
 | INTEG-02 | Phase 3 | Pending |

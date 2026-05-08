@@ -56,7 +56,7 @@ Plans:
   2. An embed block iframe renders with a sandbox attribute that prevents top-level navigation and unscoped script execution
   3. A second forgot-password or set-password request from the same IP or email within the configured window is rejected with an error before reaching Supabase auth
 **Plans**: 3 plans
-- [ ] 02-1-sanitize-html-policy-PLAN.md - HARDEN-05: sanitize admin-authored text block HTML and certificate template bodies on write, with idempotent backfill tooling
+- [x] 02-1-sanitize-html-policy-PLAN.md - HARDEN-05: sanitize admin-authored text block HTML and certificate template bodies on write, with idempotent backfill tooling
 - [ ] 02-2-embed-iframe-sandbox-PLAN.md - HARDEN-05: sandbox embed-block iframes and enforce https iframe_src saves
 - [ ] 02-3-password-reset-rate-limit-PLAN.md - HARDEN-06: Postgres-backed per-IP and per-email rate limits for forgot-password and set-password
 
@@ -88,7 +88,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 1. Auth and Access Hardening | 4/4 | Complete (human_needed) | - |
 | 01.1. Testing Coverage Parity | 3/3 | Complete | 2026-05-01 |
-| 2. Content Safety and Rate Limiting | 0/3 | Planned | - |
+| 2. Content Safety and Rate Limiting | 1/3 | In progress | - |
 | 3. Data Integrity | 0/TBD | Not started | - |
 | 4. Type Safety and Test Coverage | 0/TBD | Not started | - |
 

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { requireAdmin } from "@/lib/auth/guard";
+import { sanitizeTextBlockHtml } from "@/lib/sanitize/text-block";
 import { createClient } from "@/lib/supabase/server";
 
 export type ActionResult =
@@ -104,7 +105,23 @@ export async function updateBlock(input: {
 }): Promise<ActionResult> {
   await requireAdmin();
   const supabase = await createClient();
-  const patch: Record<string, unknown> = { content: input.content };
+  const { data: existing, error: lookupError } = await supabase
+    .from("content_blocks")
+    .select("block_type")
+    .eq("id", input.blockId)
+    .maybeSingle();
+  if (lookupError) return { ok: false, error: lookupError.message };
+  if (!existing) return { ok: false, error: "Block not found." };
+
+  let safeContent = input.content;
+  if (existing.block_type === "text" && typeof input.content.html === "string") {
+    safeContent = {
+      ...input.content,
+      html: sanitizeTextBlockHtml(input.content.html),
+    };
+  }
+
+  const patch: Record<string, unknown> = { content: safeContent };
   if (typeof input.is_required_for_completion === "boolean") {
     patch.is_required_for_completion = input.is_required_for_completion;
   }
