@@ -30,7 +30,7 @@ This is the first GSD-managed milestone for a brownfield codebase. The Validated
 ### Test Coverage
 
 - [x] **TEST-01**: Vitest unit coverage added for the auth callback flow (`src/app/auth/callback/route.ts`), assignment submission (`src/app/(dashboard)/lessons/[lessonId]/assignment-actions.ts`), admin review actions (`src/app/(dashboard)/admin/submissions/actions.ts`), forgot-password and set-password actions
-- [ ] **TEST-02**: Integration tests cover the trigger-driven completion and certificate pipeline against a real Supabase project, including `fn_issue_course_certificate_if_eligible` and `fn_issue_program_certificate_if_eligible`
+- [x] **TEST-02**: Integration tests cover the trigger-driven completion and certificate pipeline against a real Supabase project, including `fn_issue_course_certificate_if_eligible` and `fn_issue_program_certificate_if_eligible`
 - [ ] **TEST-03**: Playwright write-path coverage exercises invite acceptance, quiz submission, assignment upload, admin approval and revision, and password reset against the prod-config harness
 
 ### Testing Parity (Phase 01.1)
@@ -90,7 +90,7 @@ Mapping of requirements to phases. Updated by the gsd-roadmapper.
 | INTEG-04 | Phase 3 | Complete |
 | TYPE-01 | Phase 4 | Complete |
 | TEST-01 | Phase 4 | Complete |
-| TEST-02 | Phase 4 | Pending |
+| TEST-02 | Phase 4 | Complete |
 | TEST-03 | Phase 4 | Pending |
 | TPAR-01 | Phase 01.1 | Complete |
 | TPAR-02 | Phase 01.1 | Complete |

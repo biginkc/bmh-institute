@@ -47,9 +47,14 @@ export default defineConfig({
     // Sequential — tests TRUNCATE shared tables in beforeEach; parallel would race.
     fileParallelism: false,
     env: {
-      TEST_SUPABASE_URL: env.TEST_SUPABASE_URL ?? "",
-      TEST_SUPABASE_ANON_KEY: env.TEST_SUPABASE_ANON_KEY ?? "",
-      TEST_SUPABASE_SERVICE_ROLE_KEY: env.TEST_SUPABASE_SERVICE_ROLE_KEY ?? "",
+      TEST_SUPABASE_URL:
+        process.env.TEST_SUPABASE_URL ?? env.TEST_SUPABASE_URL ?? "",
+      TEST_SUPABASE_ANON_KEY:
+        process.env.TEST_SUPABASE_ANON_KEY ?? env.TEST_SUPABASE_ANON_KEY ?? "",
+      TEST_SUPABASE_SERVICE_ROLE_KEY:
+        process.env.TEST_SUPABASE_SERVICE_ROLE_KEY ??
+        env.TEST_SUPABASE_SERVICE_ROLE_KEY ??
+        "",
     },
   },
   resolve: {

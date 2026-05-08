@@ -100,7 +100,7 @@ Plans:
 **Plans**: 4 plans
 - [x] 04-1-supabase-generated-types-PLAN.md - TYPE-01: generate Supabase Database types, wire typed clients, and remove report/lesson result assertions
 - [x] 04-2-unit-coverage-gaps-PLAN.md - TEST-01: add missing admin submissions action unit coverage and confirm existing critical action tests
-- [ ] 04-3-certificate-trigger-integration-PLAN.md - TEST-02: cover course and program certificate trigger pipeline with real Supabase integration tests
+- [x] 04-3-certificate-trigger-integration-PLAN.md - TEST-02: cover course and program certificate trigger pipeline with real Supabase integration tests
 - [ ] 04-4-write-path-e2e-PLAN.md - TEST-03: add write-path Playwright coverage for invite, quiz, assignment review, and password reset flows
 
 ## Progress
@@ -112,7 +112,7 @@ Plans:
 | 2. Content Safety and Rate Limiting | 3/3 | Complete | 2026-05-08 |
 | 2.5. Sandra Design System Stitch Pass | 1/1 | Complete | - |
 | 3. Data Integrity | 4/4 | Complete | 2026-05-08 |
-| 4. Type Safety and Test Coverage | 2/4 | In progress | - |
+| 4. Type Safety and Test Coverage | 3/4 | In progress | - |
 
 ## Backlog
 

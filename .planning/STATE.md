@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: ready
-stopped_at: Phase 4 plans 04-1 and 04-2 complete and deployed; ready for certificate trigger integration
-last_updated: "2026-05-08T23:55:00.000Z"
-last_activity: 2026-05-08 -- Phase 4 type wiring and unit coverage gaps deployed
+stopped_at: Phase 4 plan 04-3 complete; ready for write-path e2e
+last_updated: "2026-05-09T00:00:00.000Z"
+last_activity: 2026-05-08 -- Phase 4 certificate trigger integration complete
 progress:
   total_phases: 6
   completed_phases: 5
   total_plans: 18
-  completed_plans: 16
-  percent: 89
+  completed_plans: 17
+  percent: 94
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-30)
 
 **Core value:** A VA can sign in via an admin invite, work through assigned programs and courses on their own time, take quizzes and submit assignments without supervision, and receive a certificate when they finish. Admins can author content, manage learners, review submissions, and see who is making progress without leaving the platform.
-**Current focus:** Phase 4 in progress; execute certificate trigger integration next
+**Current focus:** Phase 4 in progress; execute write-path e2e next
 
 ## Current Position
 
 Phase: 04 (type-safety-and-test-coverage) - PLANNED
-Plan: 2 of 4 complete
+Plan: 3 of 4 complete
 Status: Phase 4 in progress; 04-1 and 04-2 deployed
-Last activity: 2026-05-08 -- TYPE-01 and TEST-01 deployed
+Last activity: 2026-05-08 -- TEST-02 complete
 
-Progress: [█████████░] 89%
+Progress: [█████████░] 94%
 
 ## Performance Metrics
 
@@ -149,6 +149,14 @@ Session handoff: docs/handoff/2026-05-04-bmh-institute-rename.md (paste-ready ne
 - `npm run verify` passed.
 - Deployed production app to `https://sandra-university-qnyae6rsn-jarrad-5416s-projects.vercel.app`.
 - Production throwaway-user login smoke passed and the temporary auth user was deleted.
+
+### 2026-05-08 - Phase 4 plan 04-3 complete
+
+- Added trigger-driven certificate pipeline integration coverage.
+- The test completes a required content block through `user_block_progress` and asserts both course and program certificate issuance.
+- `vitest.integration.config.ts` now allows shell-provided `TEST_SUPABASE_*` values.
+- The test passed against linked Supabase with service-role env injected from the Supabase CLI.
+- `npm run verify` passed.
 
 ### 2026-05-08 - Phase 2 plan 02-3 complete
 
