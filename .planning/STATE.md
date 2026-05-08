@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: verifying
-stopped_at: Phase 2 context gathered; backlog rename (Phase 999.1) in-repo step shipped 2026-05-04
-last_updated: "2026-05-04T11:30:00.000Z"
-last_activity: 2026-05-04 -- chore(rename) 04deb69 — exhaustive Sandra University to BMH Institute sweep across 9 files; folder + memory dir mv pending manual user step
+stopped_at: Phase 2 context gathered; backlog rename (Phase 999.1) complete 2026-05-08
+last_updated: "2026-05-08T20:04:05.000Z"
+last_activity: 2026-05-08 -- completed filesystem rename to /Users/jarradhenry/Sites/BMH Institute and moved Claude memory dir; npm run verify passed from new path
 progress:
   total_phases: 6
   completed_phases: 2
@@ -95,13 +95,20 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-05-04T11:30:00.000Z
-Stopped at: Backlog Phase 999.1 in-repo rename shipped (commit 04deb69); folder + auto-memory-dir mv pending user-side; Phase 2 context still loaded and ready to resume.
+Stopped at: Backlog Phase 999.1 complete; Phase 2 context still loaded and ready to resume.
 Resume file: .planning/phases/02-content-safety-and-rate-limiting/02-CONTEXT.md
 Session handoff: docs/handoff/2026-05-04-bmh-institute-rename.md (paste-ready next-tab prompt + verification block)
+
+### 2026-05-08 — backlog Phase 999.1 complete
+
+- Repo folder moved from `/Users/jarradhenry/Sites/Sandra University` to `/Users/jarradhenry/Sites/BMH Institute`.
+- Claude memory directory moved from `~/.claude/projects/-Users-jarradhenry-Sites-Sandra-University` to `~/.claude/projects/-Users-jarradhenry-Sites-BMH-Institute`.
+- `.env.local` old rename strings cleared without printing secrets.
+- `.vercel/project.json` confirmed with `projectName: "bmh-institute"`.
+- `npm run verify` passed from the new path: typecheck, 117 unit tests, 1 RTL test.
 
 ### 2026-05-04 — backlog Phase 999.1 (in-repo step)
 
 - Commit `04deb69`: 9 files updated to swap Sandra University → BMH Institute (env example, e2e-prod assertion, planning codebase docs, AGENTS.md caveat). `npm run verify` green via husky.
 - `.vercel/project.json` updated locally to `projectName: "bmh-institute"` (gitignored — local realignment with already-renamed Vercel upstream).
-- Pending user-side: `mv ~/Sites/"Sandra University" ~/Sites/"BMH Institute"` and matching `mv` of `~/.claude/projects/-Users-jarradhenry-Sites-Sandra-University` directory.
 - Telegram channel: not yet configured. User to message @BotFather and run `/telegram:configure <token>` after reopening in the new path.
