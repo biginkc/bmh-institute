@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ExternalLink } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { RolePlayBlock } from "./role-play-block";
 import { VideoBlockPlayer } from "./video-block-player";
 
 export type ContentBlock = {
@@ -15,6 +16,7 @@ export type ContentBlock = {
     | "download"
     | "external_link"
     | "embed"
+    | "role_play"
     | "divider"
     | "callout";
   content: Record<string, unknown>;
@@ -102,6 +104,16 @@ export function ContentBlockRenderer({ block }: { block: ContentBlock }) {
           aspect={stringOr(block.content.aspect_ratio, "16:9")}
         />
       );
+    case "role_play":
+      return (
+        <RolePlayBlock
+          blockId={block.id}
+          scenarioId={stringOr(block.content.scenario_id, "")}
+          title={stringOr(block.content.title, "Role play")}
+          iframeSrc={stringOr(block.content.iframe_src, "")}
+          initialHeightPx={numberOr(block.content.height_px, 720)}
+        />
+      );
     default:
       return <UnsupportedBlock type={block.block_type} />;
   }
@@ -116,6 +128,10 @@ function stringOr<T extends string | null>(
 
 function boolOr(value: unknown, fallback: boolean): boolean {
   return typeof value === "boolean" ? value : fallback;
+}
+
+function numberOr(value: unknown, fallback: number): number {
+  return typeof value === "number" ? value : fallback;
 }
 
 function TextBlock({ html }: { html: string }) {
