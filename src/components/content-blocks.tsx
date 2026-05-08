@@ -457,6 +457,7 @@ function EmbedBlock({ src, aspect }: { src: string; aspect: string }) {
         src={src}
         title="Embedded content"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"
         allowFullScreen
         className="h-full w-full"
       />

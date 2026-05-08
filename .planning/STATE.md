@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: verifying
-stopped_at: Phase 2 plan 02-1 complete; ready for 02-2 embed iframe sandbox
-last_updated: "2026-05-08T20:21:09.000Z"
-last_activity: 2026-05-08 -- completed 02-1 sanitize-html policy with tests, write-time sanitization, and backfill script
+stopped_at: Phase 2 plan 02-2 complete; ready for 02-3 password reset rate limit
+last_updated: "2026-05-08T20:28:31.000Z"
+last_activity: 2026-05-08 -- completed 02-2 embed iframe sandbox with tests, sandbox attribute, https validation, and helper copy
 progress:
   total_phases: 5
   completed_phases: 2
   total_plans: 10
-  completed_plans: 8
-  percent: 80
+  completed_plans: 9
+  percent: 90
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-30)
 ## Current Position
 
 Phase: 02 (content-safety-and-rate-limiting) - PLANNED
-Plan: 2 of 3 next (02-2-embed-iframe-sandbox)
-Status: Plan 02-1 complete; HARDEN-05 sanitization half shipped, iframe sandbox half remains
-Last activity: 2026-05-08 -- Plan 02-1 sanitize-html policy complete
+Plan: 3 of 3 next (02-3-password-reset-rate-limit)
+Status: Plan 02-2 complete; HARDEN-05 complete, HARDEN-06 remains
+Last activity: 2026-05-08 -- Plan 02-2 embed iframe sandbox complete
 
-Progress: [████████░░] 80%
+Progress: [█████████░] 90%
 
 ## Performance Metrics
 
@@ -78,6 +78,7 @@ Recent decisions affecting current work:
 - 2026-05-01 (Plan 01.1-3): 01-HUMAN-UAT.md status changed to closed-with-deferrals; file is a closed historical record
 - 2026-05-08 (Phase 2 repair): Phase 2 has three plans per 02-CONTEXT.md D-E1. The missing 02-3 password-reset-rate-limit plan was regenerated from 02-CONTEXT.md, 02-RESEARCH.md, and 02-PATTERNS.md. ROADMAP and REQUIREMENTS now mark HARDEN-05/HARDEN-06 as planned, not executed.
 - 2026-05-08 (Plan 02-1): Text block and certificate HTML sanitizers use sanitize-html on write. Existing render paths stay unchanged. Certificate template writes have no admin UI today, so the shipped enforcement is sanitizer library plus manual backfill script.
+- 2026-05-08 (Plan 02-2): Embed block iframes render with the locked sandbox value and embed saves reject non-https iframe_src values before writing. Video iframes remain unchanged per D-B2.
 
 ### Pending Todos
 
@@ -97,10 +98,19 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-08T20:21:09.000Z
-Stopped at: Phase 2 plan 02-1 complete; execute 02-2 next.
-Resume file: .planning/phases/02-content-safety-and-rate-limiting/02-2-embed-iframe-sandbox-PLAN.md
+Last session: 2026-05-08T20:28:31.000Z
+Stopped at: Phase 2 plan 02-2 complete; execute 02-3 next.
+Resume file: .planning/phases/02-content-safety-and-rate-limiting/02-3-password-reset-rate-limit-PLAN.md
 Session handoff: docs/handoff/2026-05-04-bmh-institute-rename.md (paste-ready next-tab prompt + verification block)
+
+### 2026-05-08 - Phase 2 plan 02-2 complete
+
+- `EmbedBlock` now renders `sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"`.
+- `updateBlock` now validates embed `iframe_src` values start with `https://` after trimming whitespace.
+- `blocks-editor.tsx` now shows the admin-trusted helper note under the iframe source input.
+- Added RTL coverage in `src/components/content-blocks.test.tsx`.
+- Extended `actions.test.ts` with embed branch coverage and text sanitizer branch preservation.
+- Verification passed: `npm run verify`.
 
 ### 2026-05-08 - Phase 2 plan 02-1 complete
 

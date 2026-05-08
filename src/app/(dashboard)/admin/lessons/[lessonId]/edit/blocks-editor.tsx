@@ -837,6 +837,10 @@ function EmbedBlockEditor({
           onChange={(e) => setSrc(e.target.value)}
           placeholder="https://www.loom.com/embed/..."
         />
+        <p className="text-muted-foreground text-xs">
+          Admin-trusted: must start with https. The iframe is rendered with a
+          sandbox attribute that blocks top-level navigation.
+        </p>
       </div>
       <div className="flex flex-col gap-1.5">
         <Label htmlFor={`aspect-${block.id}`}>Aspect ratio</Label>

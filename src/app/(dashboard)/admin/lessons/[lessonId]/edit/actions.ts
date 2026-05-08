@@ -119,6 +119,15 @@ export async function updateBlock(input: {
       ...input.content,
       html: sanitizeTextBlockHtml(input.content.html),
     };
+  } else if (
+    existing.block_type === "embed" &&
+    typeof input.content.iframe_src === "string"
+  ) {
+    const src = input.content.iframe_src.trim();
+    if (!src.startsWith("https://")) {
+      return { ok: false, error: "Embed URL must start with https://" };
+    }
+    safeContent = { ...input.content, iframe_src: src };
   }
 
   const patch: Record<string, unknown> = { content: safeContent };
