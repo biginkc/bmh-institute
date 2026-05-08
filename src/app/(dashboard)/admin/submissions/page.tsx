@@ -35,7 +35,7 @@ export default async function AdminSubmissionsPage({
       user_id,
       lesson_id,
       assignment_id,
-      profiles ( email, full_name ),
+      profiles!assignment_submissions_user_id_fkey ( email, full_name ),
       assignments ( title ),
       lessons ( title )
     `,

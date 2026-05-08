@@ -80,8 +80,8 @@ export default async function LessonPage({
   const alreadyComplete = Boolean(completion);
   const moduleJoin = firstRow(lesson.modules);
   const courseJoin = firstRow(moduleJoin?.courses);
-  const courseId = courseJoin?.id as string | undefined;
-  const courseTitle = courseJoin?.title as string | undefined;
+  const courseId = courseJoin?.id;
+  const courseTitle = courseJoin?.title;
 
   return (
     <main className="mx-auto w-full max-w-3xl flex-1 p-6 md:p-10">
@@ -105,7 +105,7 @@ export default async function LessonPage({
 
       <div className="mb-8">
         <div className="mb-2 flex items-center gap-2">
-          <LessonTypePill type={lesson.lesson_type as string} />
+          <LessonTypePill type={lesson.lesson_type} />
         </div>
         <h1 className="text-2xl font-semibold">{lesson.title}</h1>
         {lesson.description ? (
@@ -131,13 +131,13 @@ export default async function LessonPage({
         />
       ) : lesson.lesson_type === "quiz" ? (
         <QuizLessonBody
-          quizId={lesson.quiz_id as string | null}
+          quizId={lesson.quiz_id}
           lessonId={lessonId}
           backHref={courseId ? `/courses/${courseId}` : "/dashboard"}
         />
       ) : (
         <AssignmentLessonBody
-          assignmentId={lesson.assignment_id as string | null}
+          assignmentId={lesson.assignment_id}
           lessonId={lessonId}
         />
       )}
@@ -234,7 +234,7 @@ async function QuizLessonBody({
     ]);
 
   const rawQuestions = questionsResult.data;
-  const questionIds = (rawQuestions ?? []).map((q) => q.id as string);
+  const questionIds = (rawQuestions ?? []).map((q) => q.id);
   const { data: rawOptions } = questionIds.length
     ? await supabase
         .from("answer_options_public")
@@ -255,13 +255,14 @@ async function QuizLessonBody({
     Array<{ id: string; option_text: string; sort_order: number | null }>
   >();
   for (const opt of rawOptions ?? []) {
-    const arr = optionsByQuestion.get(opt.question_id as string) ?? [];
+    if (!opt.id || !opt.question_id || !opt.option_text) continue;
+    const arr = optionsByQuestion.get(opt.question_id) ?? [];
     arr.push({
-      id: opt.id as string,
-      option_text: opt.option_text as string,
-      sort_order: opt.sort_order as number | null,
+      id: opt.id,
+      option_text: opt.option_text,
+      sort_order: opt.sort_order,
     });
-    optionsByQuestion.set(opt.question_id as string, arr);
+    optionsByQuestion.set(opt.question_id, arr);
   }
 
   if (!quiz) {
@@ -278,12 +279,12 @@ async function QuizLessonBody({
   }
 
   const eligibility = computeQuizEligibility({
-    maxAttempts: quiz.max_attempts as number | null,
-    retakeCooldownHours: (quiz.retake_cooldown_hours as number) ?? 0,
+    maxAttempts: quiz.max_attempts,
+    retakeCooldownHours: (quiz.retake_cooldown_hours) ?? 0,
     attempts: (attempts ?? []).map((a) => ({
-      passed: a.passed as boolean | null,
-      score: a.score as number | null,
-      completed_at: a.completed_at as string | null,
+      passed: a.passed,
+      score: a.score,
+      completed_at: a.completed_at,
     })),
     now: new Date(),
   });
@@ -294,7 +295,7 @@ async function QuizLessonBody({
         state={eligibility.state}
         bestScore={eligibility.bestScore}
         attemptsUsed={eligibility.attemptsUsed}
-        maxAttempts={quiz.max_attempts as number | null}
+        maxAttempts={quiz.max_attempts}
         nextAvailableAt={
           eligibility.state === "cooldown"
             ? eligibility.nextAvailableAt
@@ -306,10 +307,10 @@ async function QuizLessonBody({
   }
 
   const questions: QuizQuestion[] = (rawQuestions ?? []).map((q) => ({
-    id: q.id as string,
-    question_text: q.question_text as string,
+    id: q.id,
+    question_text: q.question_text,
     question_type: q.question_type as QuizQuestion["question_type"],
-    options: (optionsByQuestion.get(q.id as string) ?? [])
+    options: (optionsByQuestion.get(q.id) ?? [])
       .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
       .map((o) => ({ id: o.id, option_text: o.option_text })),
   }));
@@ -318,7 +319,7 @@ async function QuizLessonBody({
     <QuizRunner
       quizId={quizId}
       lessonId={lessonId}
-      passingScore={quiz.passing_score as number}
+      passingScore={quiz.passing_score}
       questions={questions}
       backHref={backHref}
       attemptsUsed={eligibility.attemptsUsed}

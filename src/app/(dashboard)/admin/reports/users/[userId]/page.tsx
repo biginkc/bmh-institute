@@ -123,7 +123,7 @@ export default async function UserReportPage({
     );
 
   const completedLessonIds = new Set(
-    (completionsRes.data ?? []).map((c) => c.lesson_id as string),
+    (completionsRes.data ?? []).map((c) => c.lesson_id),
   );
 
   // Index required lessons per course.
@@ -133,11 +133,11 @@ export default async function UserReportPage({
       | { id: string; is_required_for_completion: boolean }[]
       | null;
     if (!lessons) continue;
-    const bucket = requiredByCourse.get(m.course_id as string) ?? new Set();
+    const bucket = requiredByCourse.get(m.course_id) ?? new Set();
     for (const l of lessons) {
       if (l.is_required_for_completion) bucket.add(l.id);
     }
-    requiredByCourse.set(m.course_id as string, bucket);
+    requiredByCourse.set(m.course_id, bucket);
   }
 
   function percentForCourse(courseId: string): {
@@ -154,10 +154,10 @@ export default async function UserReportPage({
   }
 
   const courseCertsByCourseId = new Map(
-    (certificatesRes.data ?? []).map((c) => [c.course_id as string, c]),
+    (certificatesRes.data ?? []).map((c) => [c.course_id, c]),
   );
   const programCertsByProgramId = new Map(
-    (programCertsRes.data ?? []).map((c) => [c.program_id as string, c]),
+    (programCertsRes.data ?? []).map((c) => [c.program_id, c]),
   );
 
   const attempts = (attemptsRes.data ?? []) as Array<{

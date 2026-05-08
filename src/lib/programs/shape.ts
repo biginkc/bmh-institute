@@ -26,7 +26,8 @@ type RawProgramCourse = {
   courses: CourseSummary | CourseSummary[] | null;
 };
 
-type RawProgram = ProgramSummary & {
+type RawProgram = Omit<ProgramSummary, "course_order_mode"> & {
+  course_order_mode: string;
   program_courses: RawProgramCourse[] | null;
 };
 
@@ -54,10 +55,14 @@ export function shapeProgramsResponse(
         id: program.id,
         title: program.title,
         description: program.description,
-        course_order_mode: program.course_order_mode,
+        course_order_mode: parseCourseOrderMode(program.course_order_mode),
         is_published: program.is_published,
         sort_order: program.sort_order,
         courses,
       };
     });
+}
+
+function parseCourseOrderMode(value: string): ProgramSummary["course_order_mode"] {
+  return value === "sequential" ? "sequential" : "free";
 }

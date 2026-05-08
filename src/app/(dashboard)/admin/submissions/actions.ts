@@ -102,7 +102,7 @@ async function notifyReview(input: {
       id,
       lesson_id,
       user_id,
-      profiles ( email, full_name ),
+      profiles!assignment_submissions_user_id_fkey ( email, full_name ),
       assignments ( title ),
       lessons ( title )
     `,

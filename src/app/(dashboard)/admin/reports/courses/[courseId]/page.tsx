@@ -94,12 +94,12 @@ export default async function CourseReportPage({
   };
   const byUser = new Map<string, Row>();
   for (const c of completionsRes.data ?? []) {
-    const uid = c.user_id as string;
-    const lid = c.lesson_id as string;
+    const uid = c.user_id;
+    const lid = c.lesson_id;
     if (!requiredLessonIds.has(lid)) continue;
     const row = byUser.get(uid) ?? { userId: uid, doneCount: 0, latest: null };
     row.doneCount++;
-    const ts = c.completed_at as string;
+    const ts = c.completed_at;
     if (!row.latest || ts > row.latest) row.latest = ts;
     byUser.set(uid, row);
   }
@@ -109,9 +109,9 @@ export default async function CourseReportPage({
     { issued_at: string; certificate_number: string }
   >();
   for (const cert of certsRes.data ?? []) {
-    certByUser.set(cert.user_id as string, {
-      issued_at: cert.issued_at as string,
-      certificate_number: cert.certificate_number as string,
+    certByUser.set(cert.user_id, {
+      issued_at: cert.issued_at,
+      certificate_number: cert.certificate_number,
     });
   }
 

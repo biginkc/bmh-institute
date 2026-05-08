@@ -42,7 +42,7 @@ export async function markLessonComplete(
 
   const rows = blocks.map((b) => ({
     user_id: user.id,
-    block_id: b.id as string,
+    block_id: b.id,
   }));
 
   const { error: insertError } = await supabase

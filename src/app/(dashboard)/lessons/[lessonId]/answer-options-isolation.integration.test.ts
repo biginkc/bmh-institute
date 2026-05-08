@@ -125,10 +125,13 @@ describe.skipIf(!envPresent)("answer_options isolation (HARDEN-04)", () => {
       }
 
       await withThrowawayLearner(async (learner) => {
+        if (!anyOption.question_id) {
+          throw new Error("Expected seeded answer option to have a question_id.");
+        }
         const { data, error } = await learner
           .from("answer_options_public")
           .select("*")
-          .eq("question_id", anyOption.question_id as string)
+          .eq("question_id", anyOption.question_id)
           .limit(1);
         // Contract: no error (the GRANT is intact) but zero rows because
         // the learner has no course access.

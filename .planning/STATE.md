@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: ready
-stopped_at: Phase 3 deployed to production and smoke verified
-last_updated: "2026-05-08T23:30:00.000Z"
-last_activity: 2026-05-08 -- Phase 3 deployed to production and smoke verified
+stopped_at: Phase 4 plans 04-1 and 04-2 complete and deployed; ready for certificate trigger integration
+last_updated: "2026-05-08T23:55:00.000Z"
+last_activity: 2026-05-08 -- Phase 4 type wiring and unit coverage gaps deployed
 progress:
   total_phases: 6
   completed_phases: 5
-  total_plans: 14
-  completed_plans: 14
-  percent: 100
+  total_plans: 18
+  completed_plans: 16
+  percent: 89
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-30)
 
 **Core value:** A VA can sign in via an admin invite, work through assigned programs and courses on their own time, take quizzes and submit assignments without supervision, and receive a certificate when they finish. Admins can author content, manage learners, review submissions, and see who is making progress without leaving the platform.
-**Current focus:** Phase 3 deployed; next unblocked milestone item is Phase 4 planning
+**Current focus:** Phase 4 in progress; execute certificate trigger integration next
 
 ## Current Position
 
-Phase: 03 (data-integrity) - VERIFIED
-Plan: 4 of 4 complete
-Status: Phase 3 deployed and production smoke verified
-Last activity: 2026-05-08 -- Phase 3 production deploy complete
+Phase: 04 (type-safety-and-test-coverage) - PLANNED
+Plan: 2 of 4 complete
+Status: Phase 4 in progress; 04-1 and 04-2 deployed
+Last activity: 2026-05-08 -- TYPE-01 and TEST-01 deployed
 
-Progress: [██████████] 100%
+Progress: [█████████░] 89%
 
 ## Performance Metrics
 
@@ -81,6 +81,7 @@ Recent decisions affecting current work:
 - 2026-05-08 (Plan 02-2): Embed block iframes render with the locked sandbox value and embed saves reject non-https iframe_src values before writing. Video iframes remain unchanged per D-B2.
 - 2026-05-08 (Plan 02-3): Forgot-password and set-password now use durable Postgres-backed rate-limit gates before Supabase auth calls. Forgot-password denies silently; set-password denies with retry copy.
 - 2026-05-08 (Phase 3): Data integrity work uses migration 012 for transactional role-group rewrites, transactional module reorder, and atomic certificate number counters. Assignment file uploads are server-validated against the authenticated user's storage prefix.
+- 2026-05-08 (Phase 4 planning): TYPE-01 runs first, followed by admin submissions unit coverage, certificate trigger integration, and write-path e2e.
 
 ### Pending Todos
 
@@ -127,6 +128,27 @@ Session handoff: docs/handoff/2026-05-04-bmh-institute-rename.md (paste-ready ne
 - Deployed production app to `https://sandra-university-5sh1s1zin-jarrad-5416s-projects.vercel.app`.
 - Production throwaway-user login smoke passed and the temporary auth user was deleted.
 - `npm run verify` passed.
+
+### 2026-05-08 - Phase 4 planned
+
+- Added `.planning/phases/04-type-safety-and-test-coverage/04-CONTEXT.md`.
+- Added four Phase 4 plan files:
+  - `04-1-supabase-generated-types-PLAN.md`
+  - `04-2-unit-coverage-gaps-PLAN.md`
+  - `04-3-certificate-trigger-integration-PLAN.md`
+  - `04-4-write-path-e2e-PLAN.md`
+- Roadmap updated to 0/4 planned for Phase 4.
+
+### 2026-05-08 - Phase 4 plans 04-1 and 04-2 complete
+
+- Generated `src/lib/supabase/types.ts` from linked Supabase.
+- Wired generated `Database` types into Supabase clients.
+- Removed `as string`, `as number`, and `as boolean` assertions from lesson and admin report surfaces.
+- Added admin submissions action unit coverage.
+- Fixed admin submissions profile embedding with `profiles!assignment_submissions_user_id_fkey`.
+- `npm run verify` passed.
+- Deployed production app to `https://sandra-university-qnyae6rsn-jarrad-5416s-projects.vercel.app`.
+- Production throwaway-user login smoke passed and the temporary auth user was deleted.
 
 ### 2026-05-08 - Phase 2 plan 02-3 complete
 

@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth/guard";
 import { sanitizeTextBlockHtml } from "@/lib/sanitize/text-block";
 import { createClient } from "@/lib/supabase/server";
+import type { Json } from "@/lib/supabase/types";
 
 export type ActionResult =
   | { ok: true }
@@ -49,7 +50,7 @@ export type BlockType =
   | "audio"
   | "download";
 
-const DEFAULT_CONTENT: Record<BlockType, Record<string, unknown>> = {
+const DEFAULT_CONTENT: Record<BlockType, Json> = {
   text: { html: "<p>Start writing...</p>" },
   callout: { variant: "info", markdown: "Heads up." },
   external_link: {
@@ -113,12 +114,12 @@ export async function updateBlock(input: {
   if (lookupError) return { ok: false, error: lookupError.message };
   if (!existing) return { ok: false, error: "Block not found." };
 
-  let safeContent = input.content;
+  let safeContent: Json = input.content as Json;
   if (existing.block_type === "text" && typeof input.content.html === "string") {
     safeContent = {
       ...input.content,
       html: sanitizeTextBlockHtml(input.content.html),
-    };
+    } as Json;
   } else if (
     existing.block_type === "embed" &&
     typeof input.content.iframe_src === "string"
@@ -127,10 +128,12 @@ export async function updateBlock(input: {
     if (!src.startsWith("https://")) {
       return { ok: false, error: "Embed URL must start with https://" };
     }
-    safeContent = { ...input.content, iframe_src: src };
+    safeContent = { ...input.content, iframe_src: src } as Json;
   }
 
-  const patch: Record<string, unknown> = { content: safeContent };
+  const patch: { content: Json; is_required_for_completion?: boolean } = {
+    content: safeContent,
+  };
   if (typeof input.is_required_for_completion === "boolean") {
     patch.is_required_for_completion = input.is_required_for_completion;
   }

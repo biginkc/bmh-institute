@@ -96,17 +96,17 @@ export default async function ProgramReportPage({
   // Required lessons per course in this program.
   const requiredByCourse = new Map<string, Set<string>>();
   for (const m of modulesRes.data ?? []) {
-    if (!programCourseIds.has(m.course_id as string)) continue;
+    if (!programCourseIds.has(m.course_id)) continue;
     const lessons = m.lessons as
       | { id: string; is_required_for_completion: boolean }[]
       | null;
     if (!lessons) continue;
     const bucket =
-      requiredByCourse.get(m.course_id as string) ?? new Set<string>();
+      requiredByCourse.get(m.course_id) ?? new Set<string>();
     for (const l of lessons) {
       if (l.is_required_for_completion) bucket.add(l.id);
     }
-    requiredByCourse.set(m.course_id as string, bucket);
+    requiredByCourse.set(m.course_id, bucket);
   }
 
   const programRequiredLessonIds = new Set<string>();
@@ -120,10 +120,10 @@ export default async function ProgramReportPage({
     { total: number; latest: string | null }
   >();
   for (const c of completionsRes.data ?? []) {
-    const lid = c.lesson_id as string;
+    const lid = c.lesson_id;
     if (!programRequiredLessonIds.has(lid)) continue;
-    const uid = c.user_id as string;
-    const ts = c.completed_at as string;
+    const uid = c.user_id;
+    const ts = c.completed_at;
     const row = completionsByUser.get(uid) ?? { total: 0, latest: null };
     row.total++;
     if (!row.latest || ts > row.latest) row.latest = ts;
@@ -133,9 +133,9 @@ export default async function ProgramReportPage({
   // Course certificates filtered to this program's courses.
   const courseCertsByUser = new Map<string, Set<string>>();
   for (const cert of courseCertsRes.data ?? []) {
-    const cid = cert.course_id as string;
+    const cid = cert.course_id;
     if (!programCourseIds.has(cid)) continue;
-    const uid = cert.user_id as string;
+    const uid = cert.user_id;
     const set = courseCertsByUser.get(uid) ?? new Set<string>();
     set.add(cid);
     courseCertsByUser.set(uid, set);
@@ -146,9 +146,9 @@ export default async function ProgramReportPage({
     { certificate_number: string; issued_at: string }
   >();
   for (const pc of programCertsRes.data ?? []) {
-    programCertByUser.set(pc.user_id as string, {
-      certificate_number: pc.certificate_number as string,
-      issued_at: pc.issued_at as string,
+    programCertByUser.set(pc.user_id, {
+      certificate_number: pc.certificate_number,
+      issued_at: pc.issued_at,
     });
   }
 

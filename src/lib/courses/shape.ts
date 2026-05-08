@@ -26,12 +26,16 @@ export type CourseWithModulesAndLessons = {
   modules: ModuleWithLessons[];
 };
 
+type RawLessonSummary = Omit<LessonSummary, "lesson_type"> & {
+  lesson_type: string;
+};
+
 type RawModule = {
   id: string;
   title: string;
   description: string | null;
   sort_order: number;
-  lessons: LessonSummary[] | null;
+  lessons: RawLessonSummary[] | null;
 };
 
 type RawCourse = {
@@ -54,9 +58,12 @@ export function shapeCourseResponse(
       title: m.title,
       description: m.description,
       sort_order: m.sort_order,
-      lessons: [...(m.lessons ?? [])].sort(
-        (a, b) => a.sort_order - b.sort_order,
-      ),
+      lessons: [...(m.lessons ?? [])]
+        .sort((a, b) => a.sort_order - b.sort_order)
+        .map((lesson) => ({
+          ...lesson,
+          lesson_type: parseLessonType(lesson.lesson_type),
+        })),
     }));
 
   return {
@@ -66,4 +73,9 @@ export function shapeCourseResponse(
     is_published: raw.is_published,
     modules,
   };
+}
+
+function parseLessonType(value: string): LessonSummary["lesson_type"] {
+  if (value === "quiz" || value === "assignment") return value;
+  return "content";
 }

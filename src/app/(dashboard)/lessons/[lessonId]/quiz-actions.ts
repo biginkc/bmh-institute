@@ -51,12 +51,12 @@ export async function submitQuizAttempt(input: {
     .eq("quiz_id", input.quizId);
 
   const eligibility = computeQuizEligibility({
-    maxAttempts: quiz.max_attempts as number | null,
-    retakeCooldownHours: (quiz.retake_cooldown_hours as number) ?? 0,
+    maxAttempts: quiz.max_attempts,
+    retakeCooldownHours: (quiz.retake_cooldown_hours) ?? 0,
     attempts: (priorAttempts ?? []).map((a) => ({
-      passed: a.passed as boolean | null,
-      score: a.score as number | null,
-      completed_at: a.completed_at as string | null,
+      passed: a.passed,
+      score: a.score,
+      completed_at: a.completed_at,
     })),
     now: new Date(),
   });
@@ -110,18 +110,18 @@ export async function submitQuizAttempt(input: {
   }
 
   const scoring: ScoringQuestion[] = rawQuestions.map((q) => ({
-    id: q.id as string,
+    id: q.id,
     type: q.question_type as ScoringQuestion["type"],
-    points: (q.points as number) ?? 1,
+    points: (q.points) ?? 1,
     correctOptionIds: toOptionArray(q.answer_options)
       .filter((o) => o.is_correct === true)
-      .map((o) => o.id as string),
+      .map((o) => o.id),
   }));
 
   const result = scoreQuizAttempt(
     scoring,
     input.responses,
-    quiz.passing_score as number,
+    quiz.passing_score,
   );
 
   const { data: attempt, error: attemptErr } = await supabase
@@ -156,7 +156,7 @@ export async function submitQuizAttempt(input: {
     passed: result.passed,
     earnedPoints: result.earnedPoints,
     totalPoints: result.totalPoints,
-    attemptId: attempt.id as string,
+    attemptId: attempt.id,
   };
 }
 
