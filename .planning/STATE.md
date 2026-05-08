@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: verifying
-stopped_at: Phase 2 plan 02-2 complete; ready for 02-3 password reset rate limit
-last_updated: "2026-05-08T20:28:31.000Z"
-last_activity: 2026-05-08 -- added Playwright prod-config smoke for embed sandbox behavior; local-dev run against prod DB passed
+stopped_at: Phase 2 implementation complete; ready for phase verification
+last_updated: "2026-05-08T21:06:39.000Z"
+last_activity: 2026-05-08 -- completed 02-3 password reset rate limiting with migration, helper modules, server-action gates, and tests
 progress:
   total_phases: 5
   completed_phases: 2
   total_plans: 10
-  completed_plans: 9
-  percent: 90
+  completed_plans: 10
+  percent: 100
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-30)
 ## Current Position
 
 Phase: 02 (content-safety-and-rate-limiting) - PLANNED
-Plan: 3 of 3 next (02-3-password-reset-rate-limit)
-Status: Plan 02-2 complete; HARDEN-05 complete, HARDEN-06 remains
-Last activity: 2026-05-08 -- Plan 02-2 embed iframe sandbox complete
+Plan: 3 of 3 complete
+Status: Phase 2 implementation complete; awaiting verification
+Last activity: 2026-05-08 -- Plan 02-3 password reset rate limit complete
 
-Progress: [█████████░] 90%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -79,6 +79,7 @@ Recent decisions affecting current work:
 - 2026-05-08 (Phase 2 repair): Phase 2 has three plans per 02-CONTEXT.md D-E1. The missing 02-3 password-reset-rate-limit plan was regenerated from 02-CONTEXT.md, 02-RESEARCH.md, and 02-PATTERNS.md. ROADMAP and REQUIREMENTS now mark HARDEN-05/HARDEN-06 as planned, not executed.
 - 2026-05-08 (Plan 02-1): Text block and certificate HTML sanitizers use sanitize-html on write. Existing render paths stay unchanged. Certificate template writes have no admin UI today, so the shipped enforcement is sanitizer library plus manual backfill script.
 - 2026-05-08 (Plan 02-2): Embed block iframes render with the locked sandbox value and embed saves reject non-https iframe_src values before writing. Video iframes remain unchanged per D-B2.
+- 2026-05-08 (Plan 02-3): Forgot-password and set-password now use durable Postgres-backed rate-limit gates before Supabase auth calls. Forgot-password denies silently; set-password denies with retry copy.
 
 ### Pending Todos
 
@@ -98,10 +99,20 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-08T20:28:31.000Z
-Stopped at: Phase 2 plan 02-2 complete; execute 02-3 next.
-Resume file: .planning/phases/02-content-safety-and-rate-limiting/02-3-password-reset-rate-limit-PLAN.md
+Last session: 2026-05-08T21:06:39.000Z
+Stopped at: Phase 2 implementation complete; verify phase next.
+Resume file: .planning/phases/02-content-safety-and-rate-limiting/02-3-SUMMARY.md
 Session handoff: docs/handoff/2026-05-04-bmh-institute-rename.md (paste-ready next-tab prompt + verification block)
+
+### 2026-05-08 - Phase 2 plan 02-3 complete
+
+- Added `supabase/migrations/011_auth_rate_limits.sql`.
+- Added `src/lib/rate-limit/ip.ts` and `src/lib/rate-limit/check.ts`.
+- Forgot-password now checks IP and normalized email before calling `resetPasswordForEmail`; denies return silent success.
+- Set-password now checks IP and authenticated user email before calling `updateUser`; denies return retry copy.
+- Unit tests pass for helper behavior and both auth actions.
+- Integration test exists but skipped locally because `.env.test.local` lacks `TEST_SUPABASE_*` keys.
+- Verification passed: `npm run verify`.
 
 ### 2026-05-08 - Phase 2 plan 02-2 complete
 

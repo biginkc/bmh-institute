@@ -8,7 +8,7 @@ This milestone closes the security and data-integrity gaps surfaced by the codeb
 
 - [x] **Phase 1: Auth and Access Hardening** - Lock down route guards, invite expiry, user deletion, and quiz answer exposure
 - [x] **Phase 01.1: Testing Coverage Parity** (INSERTED) - Add the RTL and Playwright e2e surfaces to match Sandra CRM, then automate the five Phase 01 HUMAN-UAT items
-- [ ] **Phase 2: Content Safety and Rate Limiting** - Sandbox embed iframes, sanitize admin-authored HTML, and throttle password-reset paths
+- [x] **Phase 2: Content Safety and Rate Limiting** - Sandbox embed iframes, sanitize admin-authored HTML, and throttle password-reset paths
 - [ ] **Phase 3: Data Integrity** - Wrap role-group rewrites and module reordering in transactions, fix certificate-number races, and validate assignment file paths server-side
 - [ ] **Phase 4: Type Safety and Test Coverage** - Generate Supabase types, then add Vitest unit coverage, integration tests for the trigger pipeline, and Playwright write-path e2e
 
@@ -58,7 +58,7 @@ Plans:
 **Plans**: 3 plans
 - [x] 02-1-sanitize-html-policy-PLAN.md - HARDEN-05: sanitize admin-authored text block HTML and certificate template bodies on write, with idempotent backfill tooling
 - [x] 02-2-embed-iframe-sandbox-PLAN.md - HARDEN-05: sandbox embed-block iframes and enforce https iframe_src saves
-- [ ] 02-3-password-reset-rate-limit-PLAN.md - HARDEN-06: Postgres-backed per-IP and per-email rate limits for forgot-password and set-password
+- [x] 02-3-password-reset-rate-limit-PLAN.md - HARDEN-06: Postgres-backed per-IP and per-email rate limits for forgot-password and set-password
 
 ### Phase 3: Data Integrity
 **Goal**: Role-group assignment and module reordering are atomic so a mid-operation failure cannot leave users with no access or modules with corrupt sort order, certificate numbers are collision-free under concurrent completions, and assignment file paths are validated server-side
@@ -88,7 +88,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 1. Auth and Access Hardening | 4/4 | Complete (human_needed) | - |
 | 01.1. Testing Coverage Parity | 3/3 | Complete | 2026-05-01 |
-| 2. Content Safety and Rate Limiting | 2/3 | In progress | - |
+| 2. Content Safety and Rate Limiting | 3/3 | Complete | 2026-05-08 |
 | 3. Data Integrity | 0/TBD | Not started | - |
 | 4. Type Safety and Test Coverage | 0/TBD | Not started | - |
 

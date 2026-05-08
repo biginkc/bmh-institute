@@ -5,7 +5,7 @@ const mocks = vi.hoisted(() => {
     data: null,
     error: null as { message: string } | null,
   }));
-  const getUser = vi.fn(async () => ({
+  const getUser = vi.fn<() => Promise<{ data: { user: { email: string } | null } }>>(async () => ({
     data: { user: { email: "Learner@Example.COM" } },
   }));
   const checkAndConsume = vi.fn(async () => ({

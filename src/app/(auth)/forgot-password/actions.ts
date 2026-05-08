@@ -1,5 +1,9 @@
 "use server";
 
+import { headers } from "next/headers";
+
+import { checkAndConsume } from "@/lib/rate-limit/check";
+import { extractClientIp } from "@/lib/rate-limit/ip";
 import { createClient } from "@/lib/supabase/server";
 
 export type ForgotPasswordState =
@@ -13,6 +17,25 @@ export async function sendPasswordReset(
 ): Promise<ForgotPasswordState> {
   const email = String(formData.get("email") ?? "").trim();
   if (!email) return { ok: false, error: "Email is required." };
+
+  const headersList = await headers();
+  const ip = extractClientIp(headersList);
+  const ipGate = await checkAndConsume({
+    keyType: "ip",
+    keyValue: ip,
+    threshold: 5,
+    windowSeconds: 15 * 60,
+  });
+  if (!ipGate.allowed) return { ok: true };
+
+  const emailKey = email.toLowerCase();
+  const emailGate = await checkAndConsume({
+    keyType: "email",
+    keyValue: emailKey,
+    threshold: 3,
+    windowSeconds: 60 * 60,
+  });
+  if (!emailGate.allowed) return { ok: true };
 
   const supabase = await createClient();
   const appUrl =
