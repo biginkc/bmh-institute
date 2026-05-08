@@ -192,3 +192,50 @@ describe("updateBlock embed branch (HARDEN-05)", () => {
     });
   });
 });
+
+describe("updateBlock role_play branch", () => {
+  beforeEach(() => {
+    blockTypeRow = { block_type: "role_play" };
+    updatePatch = null;
+    updateError = null;
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("trims the configured scenario id before saving", async () => {
+    const result = await updateBlock({
+      blockId: "block-1",
+      lessonId: "lesson-1",
+      content: {
+        scenario_id: "  scenario-1  ",
+        title: " Handle the price objection ",
+        height_px: 900,
+      },
+    });
+
+    expect(result).toEqual({ ok: true });
+    expect(updatePatch).toEqual({
+      content: {
+        scenario_id: "scenario-1",
+        title: "Handle the price objection",
+        height_px: 900,
+      },
+    });
+  });
+
+  it("rejects an empty scenario id without updating", async () => {
+    const result = await updateBlock({
+      blockId: "block-1",
+      lessonId: "lesson-1",
+      content: { scenario_id: "   ", title: "Role play", height_px: 720 },
+    });
+
+    expect(result).toEqual({
+      ok: false,
+      error: "Scenario ID is required.",
+    });
+    expect(updatePatch).toBeNull();
+  });
+});

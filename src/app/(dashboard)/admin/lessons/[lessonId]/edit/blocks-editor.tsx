@@ -37,6 +37,7 @@ const ADDABLE_TYPES: { type: BlockType; label: string }[] = [
   { type: "callout", label: "Callout" },
   { type: "external_link", label: "External link" },
   { type: "embed", label: "Embed (iframe)" },
+  { type: "role_play", label: "Role play" },
   { type: "divider", label: "Divider" },
 ];
 
@@ -197,6 +198,9 @@ function BlockEditor({
   if (blockType === "embed") {
     return <EmbedBlockEditor block={block} lessonId={lessonId} pending={pending} startTransition={startTransition} />;
   }
+  if (blockType === "role_play") {
+    return <RolePlayBlockEditor block={block} lessonId={lessonId} pending={pending} startTransition={startTransition} />;
+  }
   if (blockType === "video") {
     return <VideoBlockEditor block={block} lessonId={lessonId} pending={pending} startTransition={startTransition} />;
   }
@@ -243,6 +247,10 @@ function stringOr(value: unknown, fallback: string): string {
 
 function boolOr(value: unknown, fallback: boolean): boolean {
   return typeof value === "boolean" ? value : fallback;
+}
+
+function numberOr(value: unknown, fallback: number): number {
+  return typeof value === "number" ? value : fallback;
 }
 
 function TextBlockEditor({
@@ -861,6 +869,77 @@ function EmbedBlockEditor({
           size="sm"
           disabled={pending}
           onClick={() => save({ iframe_src: src, aspect_ratio: aspect })}
+        >
+          Save block
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function RolePlayBlockEditor({
+  block,
+  lessonId,
+  pending,
+  startTransition,
+}: {
+  block: BlockRow;
+  lessonId: string;
+  pending: boolean;
+  startTransition: (cb: () => void | Promise<void>) => void;
+}) {
+  const save = useBlockSaver({ blockId: block.id, lessonId, startTransition });
+  const [scenarioId, setScenarioId] = useState(
+    stringOr(block.content.scenario_id, ""),
+  );
+  const [title, setTitle] = useState(stringOr(block.content.title, "Role play"));
+  const [heightPx, setHeightPx] = useState(
+    String(numberOr(block.content.height_px, 720)),
+  );
+
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor={`rp-scenario-${block.id}`}>Scenario ID</Label>
+        <Input
+          id={`rp-scenario-${block.id}`}
+          value={scenarioId}
+          onChange={(e) => setScenarioId(e.target.value)}
+          placeholder="2da3a001-2dc6-467a-bfa3-af3665ee311c"
+        />
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor={`rp-title-${block.id}`}>Title</Label>
+        <Input
+          id={`rp-title-${block.id}`}
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="Handle the price objection"
+        />
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor={`rp-height-${block.id}`}>Initial height</Label>
+        <Input
+          id={`rp-height-${block.id}`}
+          type="number"
+          min={360}
+          max={1400}
+          value={heightPx}
+          onChange={(e) => setHeightPx(e.target.value)}
+        />
+      </div>
+      <div>
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={pending}
+          onClick={() =>
+            save({
+              scenario_id: scenarioId,
+              title,
+              height_px: Number(heightPx) || 720,
+            })
+          }
         >
           Save block
         </Button>
