@@ -9,10 +9,10 @@ This is the first GSD-managed milestone for a brownfield codebase. The Validated
 
 ### Security Hardening
 
-- [ ] **HARDEN-01**: Every admin route page calls `requireAdmin()` at the top of its function so direct navigation cannot reach admin data through a learner session, with regression coverage that asserts a learner-session fetch returns 403 or redirects to /login
-- [ ] **HARDEN-02**: The auth callback rejects expired invites by comparing `invites.expires_at > now()` before applying `system_role` and `role_group_ids`, with a unit test covering an expired invite and an active invite
-- [ ] **HARDEN-03**: `deleteUser` removes the `auth.users` record via the admin client in addition to suspending the profile, with a test that asserts a deleted user cannot re-authenticate
-- [ ] **HARDEN-04**: Quiz `is_correct` is hidden from learner-session reads via a Postgres view that excludes the column, with RLS that revokes direct table read for non-admin sessions and a test that asserts a learner anon-key query returns no `is_correct` field
+- [x] **HARDEN-01**: Every admin route page calls `requireAdmin()` at the top of its function so direct navigation cannot reach admin data through a learner session, with regression coverage that asserts a learner-session fetch returns 403 or redirects to /login
+- [x] **HARDEN-02**: The auth callback rejects expired invites by comparing `invites.expires_at > now()` before applying `system_role` and `role_group_ids`, with a unit test covering an expired invite and an active invite
+- [x] **HARDEN-03**: `deleteUser` removes the `auth.users` record via the admin client in addition to suspending the profile, with a test that asserts a deleted user cannot re-authenticate
+- [x] **HARDEN-04**: Quiz `is_correct` is hidden from learner-session reads via a Postgres view that excludes the column, with RLS that revokes direct table read for non-admin sessions and a test that asserts a learner anon-key query returns no `is_correct` field
 - [ ] **HARDEN-05**: Embed-block iframes load with a sandbox attribute, and admin-authored HTML in text blocks and certificate templates is sanitized via `sanitize-html` on write, with tests that assert `<script>` tags are stripped on save and not executed on render
 - [ ] **HARDEN-06**: Forgot-password and password-reset paths enforce server-side rate limiting (request-count threshold per IP plus per-email window), with a test that asserts the second submission within the threshold is rejected
 
@@ -78,12 +78,12 @@ Mapping of requirements to phases. Updated by the gsd-roadmapper.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| HARDEN-01 | Phase 1 | Pending |
-| HARDEN-02 | Phase 1 | Pending |
-| HARDEN-03 | Phase 1 | Pending |
-| HARDEN-04 | Phase 1 | Pending |
-| HARDEN-05 | Phase 2 | Pending |
-| HARDEN-06 | Phase 2 | Pending |
+| HARDEN-01 | Phase 1 | Complete |
+| HARDEN-02 | Phase 1 | Complete |
+| HARDEN-03 | Phase 1 | Complete |
+| HARDEN-04 | Phase 1 | Complete |
+| HARDEN-05 | Phase 2 | Planned |
+| HARDEN-06 | Phase 2 | Planned |
 | INTEG-01 | Phase 3 | Pending |
 | INTEG-02 | Phase 3 | Pending |
 | INTEG-03 | Phase 3 | Pending |
@@ -105,4 +105,4 @@ Mapping of requirements to phases. Updated by the gsd-roadmapper.
 
 ---
 *Requirements defined: 2026-04-30*
-*Last updated: 2026-04-30 — traceability filled by gsd-roadmapper*
+*Last updated: 2026-05-08 - Phase 2 plan traceability repaired after folder rename*

@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: verifying
-stopped_at: Phase 2 context gathered; backlog rename (Phase 999.1) complete 2026-05-08
-last_updated: "2026-05-08T20:04:05.000Z"
-last_activity: 2026-05-08 -- completed filesystem rename to /Users/jarradhenry/Sites/BMH Institute and moved Claude memory dir; npm run verify passed from new path
+stopped_at: Phase 2 state repaired; ready to execute 02-1 sanitize-html-policy
+last_updated: "2026-05-08T21:18:00.000Z"
+last_activity: 2026-05-08 -- added missing Phase 2 password reset rate-limit plan and synced ROADMAP/REQUIREMENTS/STATE after folder rename
 progress:
-  total_phases: 6
+  total_phases: 5
   completed_phases: 2
-  total_plans: 7
+  total_plans: 10
   completed_plans: 7
-  percent: 100
+  percent: 70
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-30)
 
 **Core value:** A VA can sign in via an admin invite, work through assigned programs and courses on their own time, take quizzes and submit assignments without supervision, and receive a certificate when they finish. Admins can author content, manage learners, review submissions, and see who is making progress without leaving the platform.
-**Current focus:** Phase 01.1 — testing-coverage-parity
+**Current focus:** Phase 2 - content-safety-and-rate-limiting
 
 ## Current Position
 
-Phase: 01.1 (testing-coverage-parity) — READY FOR VERIFICATION
-Plan: 3 of 3 (all plans complete and merged)
-Status: All 3 plans merged to main; awaiting gsd-verifier
-Last activity: 2026-05-01 -- All Phase 01.1 plans merged to main
+Phase: 02 (content-safety-and-rate-limiting) - PLANNED
+Plan: 1 of 3 next (02-1-sanitize-html-policy)
+Status: Phase 2 planning state repaired after BMH Institute folder rename; ready to execute 02-1
+Last activity: 2026-05-08 -- Added missing 02-3 password reset rate-limit plan and synced planning indexes
 
-Progress: [███████░░░] 71%
+Progress: [███████░░░] 70%
 
 ## Performance Metrics
 
@@ -61,6 +61,7 @@ Progress: [███████░░░] 71%
 ### Roadmap Evolution
 
 - Phase 01.1 inserted after Phase 1: Testing Coverage Parity: bring repo to Sandra CRM testing standard (RTL config, Playwright e2e dir, deps, scripts) and replace phase 1 HUMAN-UAT items with automated specs (URGENT)
+- Phase 2 planned as three file-disjoint hardening plans: 02-1 sanitize HTML, 02-2 sandbox embed iframes, 02-3 password reset rate limits
 
 ### Decisions
 
@@ -75,6 +76,7 @@ Recent decisions affecting current work:
 - 2026-05-01 (Plan 01.1-3): storage-state strategy locked as in-spec opt-out via test.use storageState empty — Option 1, smallest delta, no learner-only account on prod
 - 2026-05-01 (Plan 01.1-3): Path A locked — destructive HARDEN-02 and HARDEN-03 UI variant remain manual until a write-capable test environment exists
 - 2026-05-01 (Plan 01.1-3): 01-HUMAN-UAT.md status changed to closed-with-deferrals; file is a closed historical record
+- 2026-05-08 (Phase 2 repair): Phase 2 has three plans per 02-CONTEXT.md D-E1. The missing 02-3 password-reset-rate-limit plan was regenerated from 02-CONTEXT.md, 02-RESEARCH.md, and 02-PATTERNS.md. ROADMAP and REQUIREMENTS now mark HARDEN-05/HARDEN-06 as planned, not executed.
 
 ### Pending Todos
 
@@ -94,10 +96,22 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-04T11:30:00.000Z
-Stopped at: Backlog Phase 999.1 complete; Phase 2 context still loaded and ready to resume.
-Resume file: .planning/phases/02-content-safety-and-rate-limiting/02-CONTEXT.md
+Last session: 2026-05-08T21:18:00.000Z
+Stopped at: Phase 2 planning state repaired; execute 02-1 next.
+Resume file: .planning/phases/02-content-safety-and-rate-limiting/02-1-sanitize-html-policy-PLAN.md
 Session handoff: docs/handoff/2026-05-04-bmh-institute-rename.md (paste-ready next-tab prompt + verification block)
+
+### 2026-05-08 - Phase 2 planning state repair
+
+- GSD health check reported degraded with no auto-repairable issues.
+- Existing untracked Phase 2 plans preserved:
+  - `.planning/phases/02-content-safety-and-rate-limiting/02-1-sanitize-html-policy-PLAN.md`
+  - `.planning/phases/02-content-safety-and-rate-limiting/02-2-embed-iframe-sandbox-PLAN.md`
+- Missing plan added:
+  - `.planning/phases/02-content-safety-and-rate-limiting/02-3-password-reset-rate-limit-PLAN.md`
+- `ROADMAP.md` now lists all three Phase 2 plans and progress as 0/3 Planned.
+- `REQUIREMENTS.md` traceability now marks HARDEN-01..04 Complete and HARDEN-05/HARDEN-06 Planned.
+- Next step: execute 02-1 with TDD inventory approval before writing tests or production code.
 
 ### 2026-05-08 — backlog Phase 999.1 complete
 
