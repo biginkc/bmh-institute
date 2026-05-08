@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: ready
-stopped_at: Phase 4 plan 04-3 complete; ready for write-path e2e
-last_updated: "2026-05-09T00:00:00.000Z"
-last_activity: 2026-05-08 -- Phase 4 certificate trigger integration complete
+stopped_at: Phase 4 complete with TEST-03 deferred to issue #2
+last_updated: "2026-05-08T23:59:00.000Z"
+last_activity: 2026-05-08 -- Phase 4 completed with durable Playwright write-path coverage deferred
 progress:
   total_phases: 6
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 18
-  completed_plans: 17
-  percent: 94
+  completed_plans: 18
+  percent: 100
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-30)
 
 **Core value:** A VA can sign in via an admin invite, work through assigned programs and courses on their own time, take quizzes and submit assignments without supervision, and receive a certificate when they finish. Admins can author content, manage learners, review submissions, and see who is making progress without leaving the platform.
-**Current focus:** Phase 4 in progress; execute write-path e2e next
+**Current focus:** v1 production hardening complete except deferred durable Playwright issue #2
 
 ## Current Position
 
-Phase: 04 (type-safety-and-test-coverage) - PLANNED
-Plan: 3 of 4 complete
-Status: Phase 4 in progress; 04-1 and 04-2 deployed
-Last activity: 2026-05-08 -- TEST-02 complete
+Phase: 04 (type-safety-and-test-coverage) - COMPLETE
+Plan: 4 of 4 complete
+Status: Phase 4 complete with deferred_issue
+Last activity: 2026-05-08 -- TEST-03 durable Playwright coverage deferred to issue #2 after manual UI verification
 
-Progress: [█████████░] 94%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -82,6 +82,7 @@ Recent decisions affecting current work:
 - 2026-05-08 (Plan 02-3): Forgot-password and set-password now use durable Postgres-backed rate-limit gates before Supabase auth calls. Forgot-password denies silently; set-password denies with retry copy.
 - 2026-05-08 (Phase 3): Data integrity work uses migration 012 for transactional role-group rewrites, transactional module reorder, and atomic certificate number counters. Assignment file uploads are server-validated against the authenticated user's storage prefix.
 - 2026-05-08 (Phase 4 planning): TYPE-01 runs first, followed by admin submissions unit coverage, certificate trigger integration, and write-path e2e.
+- 2026-05-08 (Phase 4 TEST-03): Durable write-path Playwright automation is deferred to GitHub issue #2. Manual production Playwright verification covered login, course visibility, quiz submit, assignment submit/revision/approval, certificates, file upload, and forgot-password success. Invite acceptance waits for non-prod email capture.
 
 ### Pending Todos
 
@@ -157,6 +158,25 @@ Session handoff: docs/handoff/2026-05-04-bmh-institute-rename.md (paste-ready ne
 - `vitest.integration.config.ts` now allows shell-provided `TEST_SUPABASE_*` values.
 - The test passed against linked Supabase with service-role env injected from the Supabase CLI.
 - `npm run verify` passed.
+
+### 2026-05-08 - Phase 4 plan 04-4 deferred to issue #2
+
+- Created GitHub issue #2 for durable Playwright write-path coverage.
+- Manual Playwright verification against production confirmed:
+  - admin login
+  - learner login
+  - learner dashboard assigned program
+  - course lesson visibility
+  - quiz submission and pass state
+  - text assignment submission
+  - admin revision request
+  - learner revision resubmission
+  - admin approval
+  - learner approved state
+  - certificate UI visibility
+  - file upload assignment submission
+  - forgot-password success state
+- Invite send and acceptance were not fully confirmed because Supabase email delivery limits were hit.
 
 ### 2026-05-08 - Phase 2 plan 02-3 complete
 
