@@ -104,3 +104,91 @@ describe("updateBlock sanitization (HARDEN-05)", () => {
     expect(updatePatch).toBeNull();
   });
 });
+
+describe("updateBlock embed branch (HARDEN-05)", () => {
+  beforeEach(() => {
+    blockTypeRow = { block_type: "embed" };
+    updatePatch = null;
+    updateError = null;
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("accepts a valid https iframe_src and writes the trimmed value", async () => {
+    const result = await updateBlock({
+      blockId: "block-1",
+      lessonId: "lesson-1",
+      content: {
+        iframe_src: "  https://www.loom.com/embed/abc  ",
+        aspect_ratio: "16:9",
+      },
+    });
+
+    expect(result).toEqual({ ok: true });
+    expect(updatePatch).toEqual({
+      content: {
+        iframe_src: "https://www.loom.com/embed/abc",
+        aspect_ratio: "16:9",
+      },
+    });
+  });
+
+  it("rejects an http iframe_src without updating", async () => {
+    const result = await updateBlock({
+      blockId: "block-1",
+      lessonId: "lesson-1",
+      content: { iframe_src: "http://example.com" },
+    });
+
+    expect(result).toEqual({
+      ok: false,
+      error: "Embed URL must start with https://",
+    });
+    expect(updatePatch).toBeNull();
+  });
+
+  it("rejects a javascript iframe_src without updating", async () => {
+    const result = await updateBlock({
+      blockId: "block-1",
+      lessonId: "lesson-1",
+      content: { iframe_src: "javascript:alert(1)" },
+    });
+
+    expect(result).toEqual({
+      ok: false,
+      error: "Embed URL must start with https://",
+    });
+    expect(updatePatch).toBeNull();
+  });
+
+  it("rejects a protocol-relative iframe_src without updating", async () => {
+    const result = await updateBlock({
+      blockId: "block-1",
+      lessonId: "lesson-1",
+      content: { iframe_src: "//example.com/foo" },
+    });
+
+    expect(result).toEqual({
+      ok: false,
+      error: "Embed URL must start with https://",
+    });
+    expect(updatePatch).toBeNull();
+  });
+
+  it("preserves the text sanitizer branch when block_type is text", async () => {
+    blockTypeRow = { block_type: "text" };
+
+    const result = await updateBlock({
+      blockId: "block-1",
+      lessonId: "lesson-1",
+      content: { html: "<p>hi</p>", iframe_src: "http://danger" },
+    });
+
+    expect(result).toEqual({ ok: true });
+    expect(updatePatch).toEqual({
+      content: { html: "<p>hi</p>", iframe_src: "http://danger" },
+    });
+  });
+});
