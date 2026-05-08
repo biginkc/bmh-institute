@@ -16,6 +16,7 @@ import {
 } from "@/components/content-blocks";
 import { enrichBlocksWithSignedUrls } from "@/lib/content-blocks/sign-urls";
 import { computeQuizEligibility } from "@/lib/quizzes/attempts";
+import { mintRolePlayEmbedToken } from "@/lib/role-plays/embed-token";
 import { MarkCompleteButton } from "./mark-complete-button";
 import { QuizRunner, type QuizQuestion } from "./quiz-runner";
 import {
@@ -160,7 +161,11 @@ async function ContentLessonBody({
     .order("sort_order");
 
   const rows = (blocks ?? []) as ContentBlock[];
-  const enriched = await enrichBlocksWithSignedUrls(rows);
+  const enriched = await attachRolePlayEmbeds(
+    await enrichBlocksWithSignedUrls(rows),
+    lessonId,
+    supabase,
+  );
 
   if (enriched.length === 0) {
     return (
@@ -188,6 +193,74 @@ async function ContentLessonBody({
       </div>
     </>
   );
+}
+
+async function attachRolePlayEmbeds(
+  blocks: ContentBlock[],
+  lessonId: string,
+  supabase: Awaited<ReturnType<typeof createClient>>,
+): Promise<ContentBlock[]> {
+  if (!blocks.some((block) => block.block_type === "role_play")) {
+    return blocks;
+  }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return blocks;
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("full_name")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  const learnerName =
+    typeof profile?.full_name === "string" && profile.full_name.trim()
+      ? profile.full_name
+      : (user.email ?? "Learner");
+  const baseUrl = getRolePlayBaseUrl();
+
+  return blocks.map((block) => {
+    if (block.block_type !== "role_play") return block;
+    const scenarioId = stringOr(block.content.scenario_id, "");
+    if (!scenarioId || !baseUrl) return block;
+
+    try {
+      const token = mintRolePlayEmbedToken({
+        userId: user.id,
+        lessonId,
+        blockId: block.id,
+        learnerName,
+        scenarioId,
+      });
+      const iframeUrl = new URL(
+        `/embed/role-play/${encodeURIComponent(scenarioId)}`,
+        baseUrl,
+      );
+      iframeUrl.searchParams.set("token", token);
+
+      return {
+        ...block,
+        content: {
+          ...block.content,
+          iframe_src: iframeUrl.toString(),
+        },
+      };
+    } catch {
+      return block;
+    }
+  });
+}
+
+function getRolePlayBaseUrl(): string | null {
+  const value = process.env.NEXT_PUBLIC_ROLE_PLAY_BASE_URL;
+  if (!value) return null;
+  try {
+    return new URL(value).origin;
+  } catch {
+    return null;
+  }
 }
 
 async function QuizLessonBody({
@@ -449,4 +522,8 @@ function firstRow<T>(value: T | T[] | null | undefined): T | null {
   if (!value) return null;
   if (Array.isArray(value)) return value[0] ?? null;
   return value;
+}
+
+function stringOr(value: unknown, fallback: string): string {
+  return typeof value === "string" ? value : fallback;
 }
