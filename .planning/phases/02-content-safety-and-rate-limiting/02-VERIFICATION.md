@@ -1,7 +1,7 @@
 # Phase 2 Verification: Content Safety and Rate Limiting
 
 Date: 2026-05-08
-Status: PASS with deployment prerequisites
+Status: PASS, deployed and verified
 
 ## Scope
 
@@ -125,40 +125,57 @@ Notes:
 - Apply `supabase/migrations/011_auth_rate_limits.sql` before deployment.
 - Populate `.env.test.local` with `TEST_SUPABASE_URL` and `TEST_SUPABASE_SERVICE_ROLE_KEY` after migration application to run live RPC integration coverage.
 
+## Deployment Verification
+
+Post-deploy verification run on 2026-05-08:
+
+- Production deployment ready at `https://sandra-university-asyxn8swy-jarrad-5416s-projects.vercel.app`.
+- Migration `011_auth_rate_limits.sql` was applied to Supabase project `dhvfsyteqsxagokoerrx` and migration history was repaired.
+- DB object proof passed with the current Supabase CLI service-role key:
+  - `auth_rate_limits` readable by service role.
+  - `fn_check_and_consume_rate_limit` callable by service role.
+  - First consume with threshold 1 returned allowed.
+  - Second consume with threshold 1 returned denied with positive retry seconds.
+- Sanitizer backfill ran after migration and reported:
+  - Sanitized 0 text content block rows.
+  - Sanitized 0 certificate template rows.
+- Production embed sandbox smoke passed:
+
+```bash
+E2E_PROD_BASE_URL=https://sandra-university-asyxn8swy-jarrad-5416s-projects.vercel.app npm run test:prod -- e2e-prod/embed-sandbox.spec.ts
+```
+
+Result:
+
+- Passed: setup login plus embed sandbox browser smoke.
+- Confirms unsafe `http://` iframe URL rejection, trimmed `https://` persistence, rendered sandbox attribute, and cleanup of disposable fixture against the deployed app.
+
+Production forgot-password smoke passed with a disposable invalid email:
+
+- `/forgot-password` submitted successfully.
+- Success copy rendered.
+- No browser console errors surfaced.
+- Confirms deployed `SUPABASE_SERVICE_ROLE_KEY` can execute the rate-limit gate before Supabase Auth.
+
 ## Issues Found
 
 No blocking code issues found.
 
-Operational prerequisites remain:
+Operational notes:
 
-- Deploy the current code before running the prod URL embed sandbox Playwright test.
-- Apply migration `011_auth_rate_limits.sql` before enabling rate-limit code in production.
-- Run `npm run backfill:sanitize-html` after deploy if existing text blocks or certificate templates need cleanup.
-- Add `TEST_SUPABASE_*` values to `.env.test.local` if integration tests should exercise the live RPC locally.
+- `.env.local` appears to contain a stale local `SUPABASE_SERVICE_ROLE_KEY`; direct local checks with it failed as invalid. The deployed Vercel env works, and the current key is available through `supabase projects api-keys --project-ref dhvfsyteqsxagokoerrx`.
+- Add `TEST_SUPABASE_*` values to `.env.test.local` if the Vitest integration command should exercise the live RPC locally without a one-off CLI-key check.
 
 ## Residual Risk
 
-- `checkAndConsume` depends on the service-role key at runtime. If production is missing `SUPABASE_SERVICE_ROLE_KEY`, forgot-password and set-password will fail closed by surfacing a server error path rather than allowing unlimited auth calls. This matches the security posture, but should be caught during deployment verification.
-- The rate-limit integration test is present but was not executed locally because credentials are not configured in `.env.test.local`.
+- The rate-limit integration test is present but was not executed through Vitest because `.env.test.local` is not configured with `TEST_SUPABASE_*`. Equivalent live RPC behavior was verified with the current Supabase CLI service-role key.
 - Certificate template write-time sanitization cannot be verified through an admin UI because no such UI exists in this repo today.
 
 ## Verdict
 
-PASS with deployment prerequisites.
+PASS, deployed and verified.
 
-Phase 2 satisfies the roadmap goal in code and automated unit, RTL, and browser verification. Live DB proof for HARDEN-06 requires applying migration `011` and running the integration test with Supabase test credentials.
-
-Next recommended step:
-
-- Apply migration `011_auth_rate_limits.sql`.
-- Run `npm run backfill:sanitize-html`.
-- Deploy the branch.
-- Re-run:
-
-```bash
-npm run test:integration -- src/lib/rate-limit/check.integration.test.ts
-npm run test:prod -- e2e-prod/embed-sandbox.spec.ts
-```
+Phase 2 satisfies the roadmap goal in code, automated unit and RTL verification, live DB proof, and deployed browser smoke verification.
 
 ---
 *Phase: 02-content-safety-and-rate-limiting*
