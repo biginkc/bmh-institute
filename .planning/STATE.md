@@ -1,11 +1,11 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.1
-milestone_name: Ecosystem UI Alignment
+milestone: v1 follow-up
+milestone_name: TEST-03 Write Path Coverage
 status: ready
-stopped_at: Phase 5 complete; ready for review and PR
+stopped_at: issue #2 write-path coverage PR #39 green; ready to merge
 last_updated: "2026-05-09T01:57:00.000Z"
-last_activity: 2026-05-09 -- quick task corrected to consume shared Sandra Design System package
+last_activity: 2026-05-09 -- issue #2 durable write-path Playwright coverage added and verified by CI seeded E2E
 progress:
   total_phases: 1
   completed_phases: 1
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-30)
 
 **Core value:** A VA can sign in via an admin invite, work through assigned programs and courses on their own time, take quizzes and submit assignments without supervision, and receive a certificate when they finish. Admins can author content, manage learners, review submissions, and see who is making progress without leaving the platform.
-**Current focus:** v1.1 ecosystem UI alignment complete; ready for PR review
+**Current focus:** issue #2 TEST-03 durable write-path Playwright follow-up complete in PR #39
 
 ## Current Position
 
-Phase: 05 (ecosystem-navigation-alignment) - COMPLETE
-Plan: 1 of 1 complete
+Phase: issue #2 follow-up for Phase 04-4 TEST-03
+Plan: quick task complete
 Status: Complete
-Last activity: 2026-05-08 -- shared dashboard shell implemented and verified
+Last activity: 2026-05-09 -- non-production write-path specs and fixtures added; local full verify passed; PR CI seeded E2E passed
 
 Progress: [██████████] 100%
 
@@ -82,11 +82,12 @@ Recent decisions affecting current work:
 - 2026-05-08 (Plan 02-3): Forgot-password and set-password now use durable Postgres-backed rate-limit gates before Supabase auth calls. Forgot-password denies silently; set-password denies with retry copy.
 - 2026-05-08 (Phase 3): Data integrity work uses migration 012 for transactional role-group rewrites, transactional module reorder, and atomic certificate number counters. Assignment file uploads are server-validated against the authenticated user's storage prefix.
 - 2026-05-08 (Phase 4 planning): TYPE-01 runs first, followed by admin submissions unit coverage, certificate trigger integration, and write-path e2e.
-- 2026-05-08 (Phase 4 TEST-03): Durable write-path Playwright automation is deferred to GitHub issue #2. Manual production Playwright verification covered login, course visibility, quiz submit, assignment submit/revision/approval, certificates, file upload, and forgot-password success. Invite acceptance waits for non-prod email capture.
-- 2026-05-08 (v1 audit): v1 Production Hardening closed as pass with tracked deferral. TEST-03 remains in GitHub issue #2. PR #1 was closed because role-play embed overlaps future EMBD-01..05.
+- 2026-05-08 (Phase 4 TEST-03): Durable write-path Playwright automation was deferred to GitHub issue #2 after manual production Playwright verification covered login, course visibility, quiz submit, assignment submit/revision/approval, certificates, file upload, and forgot-password success. Invite acceptance waits for non-prod email capture.
+- 2026-05-08 (v1 audit): v1 Production Hardening closed as pass with tracked deferral. TEST-03 was tracked in GitHub issue #2. PR #1 was closed because role-play embed overlaps future EMBD-01..05.
 - 2026-05-08 (Phase 5 planning): Ecosystem navigation alignment is the next milestone. The first plan implements the shared BMH fixed topbar, 256px left nav, active left-border nav state, PageHeader foundation, admin-only nav visibility, pending submissions badge preservation, profile access, sign-out, and responsive shell behavior.
 - 2026-05-08 (Phase 5 complete): Implemented the shared fixed topbar and left nav shell, mobile primary nav, active left-border nav style, PageHeader foundation, and PageHeader usage on primary learner/admin pages. Added RTL sidebar coverage and Playwright shell smoke coverage. `npm run verify` and local Playwright shell smoke passed.
 - 2026-05-09 (quick task): BMH Institute now consumes `@sandra/tokens` from `../Sandra Design System`, imports the shared token CSS in `globals.css`, adds the registry-style `BrandLockup` component locally, uses webpack for local dev to resolve linked design-system CSS, and covers the package contract with `src/app/globals.test.ts`.
+- 2026-05-09 (quick task): Added durable non-production Playwright write-path coverage for issue #2. The suite creates disposable users/content, drives learner/admin LMS writes through the browser, validates certificate visibility, checks unassigned learner denial, and keeps invite acceptance deferred pending email capture. Local `npm run verify` passed, and PR #39 CI passed both `Verify` and `Seeded Playwright E2E`.
 
 ### Pending Todos
 
@@ -94,7 +95,7 @@ None yet.
 
 ### Blockers/Concerns
 
-- Durable write-path Playwright coverage remains deferred to issue #2. The non-prod Supabase target now exists as `bmh-institute-test` (`jvaabkchkihkjllehmft`) with seeded content; email capture still needs a committed strategy.
+- Invite acceptance Playwright coverage remains deferred until a stable non-production email capture strategy exists.
 - Phase 5 should read sibling repos for reference only. Do not write to Sandra, Closer Lab, Jitter, or Sandra Design System.
 
 ## Deferred Items

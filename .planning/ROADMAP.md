@@ -11,7 +11,7 @@ This milestone closes the security and data-integrity gaps surfaced by the codeb
 - [x] **Phase 2: Content Safety and Rate Limiting** - Sandbox embed iframes, sanitize admin-authored HTML, and throttle password-reset paths
 - [x] **Phase 2.5: Sandra Design System Stitch Pass** (INSERTED) - Adapt the Sandra family shell and Stitch design system to BMH Institute before Phase 3 implementation continues
 - [x] **Phase 3: Data Integrity** - Wrap role-group rewrites and module reordering in transactions, fix certificate-number races, and validate assignment file paths server-side
-- [ ] **Phase 4: Type Safety and Test Coverage** - Generate Supabase types, then add Vitest unit coverage, integration tests for the trigger pipeline, and Playwright write-path e2e
+- [x] **Phase 4: Type Safety and Test Coverage** - Generate Supabase types, then add Vitest unit coverage, integration tests for the trigger pipeline, and Playwright write-path e2e
 
 ## Phase Details
 
@@ -101,7 +101,7 @@ Plans:
 - [x] 04-1-supabase-generated-types-PLAN.md - TYPE-01: generate Supabase Database types, wire typed clients, and remove report/lesson result assertions
 - [x] 04-2-unit-coverage-gaps-PLAN.md - TEST-01: add missing admin submissions action unit coverage and confirm existing critical action tests
 - [x] 04-3-certificate-trigger-integration-PLAN.md - TEST-02: cover course and program certificate trigger pipeline with real Supabase integration tests
-- [x] 04-4-write-path-e2e-PLAN.md - TEST-03: deferred durable write-path Playwright coverage to GitHub issue #2 after manual production UI verification
+- [x] 04-4-write-path-e2e-PLAN.md - TEST-03: manual production UI verification completed first; issue #2 follow-up now adds durable non-production Playwright write-path coverage, with invite acceptance still deferred pending email capture
 
 ## Progress
 
@@ -112,7 +112,7 @@ Plans:
 | 2. Content Safety and Rate Limiting | 3/3 | Complete | 2026-05-08 |
 | 2.5. Sandra Design System Stitch Pass | 1/1 | Complete | - |
 | 3. Data Integrity | 4/4 | Complete | 2026-05-08 |
-| 4. Type Safety and Test Coverage | 4/4 | Complete (deferred_issue) | 2026-05-08 |
+| 4. Type Safety and Test Coverage | 4/4 | Complete (issue #2 follow-up green) | 2026-05-08 |
 
 ## Milestone: v1.1 Ecosystem UI Alignment
 
