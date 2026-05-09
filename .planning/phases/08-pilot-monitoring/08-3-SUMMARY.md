@@ -1,6 +1,6 @@
 # Plan 08-3 Summary: Export And Browser Verification
 
-Status: implementation complete, seeded browser verification pending CI
+Status: complete
 
 ## Completed
 
@@ -12,5 +12,4 @@ Status: implementation complete, seeded browser verification pending CI
 
 - `npm run verify` passed.
 - Local seeded Playwright cannot run because local `.env.test.local` does not include `TEST_SUPABASE_URL`, `TEST_SUPABASE_ANON_KEY`, or `TEST_SUPABASE_SERVICE_ROLE_KEY`.
-- GitHub Actions seeded e2e is the required browser verification gate for this branch.
-
+- PR #50 GitHub Actions `Seeded Playwright E2E` passed with configured non-production Supabase secrets.

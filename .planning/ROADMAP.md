@@ -37,7 +37,7 @@ Production evidence:
 
 **Goal:** Make BMH Institute ready for BMH Group's first real internal learner pilot.
 
-Progress: 2 of 4 phases complete.
+Progress: 3 of 4 phases complete.
 
 ### Phase 6: Pilot Cohort Setup
 
@@ -79,7 +79,7 @@ Delivered:
 
 ### Phase 8: Pilot Monitoring
 
-**Status:** not started
+**Status:** complete 2026-05-09
 
 **Goal:** Let admins monitor pilot progress and act on blockers quickly.
 
@@ -91,6 +91,13 @@ Success criteria:
 2. Admin can identify stalled learners, pending reviews, and certificate-ready learners.
 3. Admin can reach the relevant review or learner detail flow from the monitoring surface.
 4. Pilot status can be exported or recorded for internal review.
+
+Delivered:
+
+- Pilot monitoring model for learner blocker and progress states.
+- `/admin/reports` pilot panel with action links to access editing, submissions review, and learner reports.
+- CSV export route for pilot status evidence.
+- Unit, route, and seeded Playwright e2e coverage.
 
 ### Phase 9: Pilot Runbook and Readiness Checks
 
