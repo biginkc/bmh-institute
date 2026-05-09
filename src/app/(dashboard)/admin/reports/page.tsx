@@ -18,6 +18,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { requireAdmin } from "@/lib/auth/guard";
+import { summarizePilotMonitoring } from "@/lib/pilot-monitoring/summary";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function AdminReportsPage() {
@@ -36,10 +37,12 @@ export default async function AdminReportsPage() {
     quizAttemptsRes,
     submissionsRes,
     lessonCourseRes,
+    userRoleGroupsRes,
+    requiredLessonsRes,
   ] = await Promise.all([
     supabase
       .from("profiles")
-      .select("id, email, full_name, system_role"),
+      .select("id, email, full_name, system_role, status"),
     supabase.from("programs").select("id, title"),
     supabase.from("courses").select("id, title"),
     supabase.from("certificates").select("user_id, course_id, issued_at"),
@@ -66,6 +69,11 @@ export default async function AdminReportsPage() {
     supabase
       .from("lessons")
       .select("id, title, modules!inner(course_id, courses(id, title))"),
+    supabase.from("user_role_groups").select("user_id, role_group_id"),
+    supabase
+      .from("lessons")
+      .select("id, title, is_required_for_completion, modules!inner(course_id)")
+      .eq("is_required_for_completion", true),
   ]);
 
   const profiles = (profilesRes.data ?? []) as Profile[];
@@ -77,6 +85,8 @@ export default async function AdminReportsPage() {
   const auditRows = (auditRes.data ?? []) as AuditRow[];
   const quizAttempts = (quizAttemptsRes.data ?? []) as QuizAttempt[];
   const submissions = (submissionsRes.data ?? []) as Submission[];
+  const userRoleGroups = (userRoleGroupsRes.data ?? []) as UserRoleGroup[];
+  const requiredLessons = (requiredLessonsRes.data ?? []) as RequiredLessonRow[];
 
   // WR-03: build a lesson_id -> course_id index. PostgREST returns the inner
   // join either as a scalar object or a one-element array depending on
@@ -145,6 +155,59 @@ export default async function AdminReportsPage() {
       courseTitlesByLessonId,
     }),
   }));
+  const roleGroupIdsByUserId = new Map<string, string[]>();
+  for (const row of userRoleGroups) {
+    const values = roleGroupIdsByUserId.get(row.user_id) ?? [];
+    values.push(row.role_group_id);
+    roleGroupIdsByUserId.set(row.user_id, values);
+  }
+  const pilotSummary = summarizePilotMonitoring({
+    now: new Date(),
+    learners: profiles.map((profile) => ({
+      id: profile.id,
+      email: profile.email,
+      fullName: profile.full_name,
+      systemRole: profile.system_role,
+      status: profile.status,
+      roleGroupIds: roleGroupIdsByUserId.get(profile.id) ?? [],
+    })),
+    requiredLessons: requiredLessons.map((lesson) => {
+      const moduleRow = Array.isArray(lesson.modules)
+        ? lesson.modules[0]
+        : lesson.modules;
+      return {
+        id: lesson.id,
+        title: lesson.title,
+        courseId: moduleRow?.course_id ?? "",
+      };
+    }),
+    completions: completions.map((completion) => ({
+      userId: completion.user_id,
+      lessonId: completion.lesson_id,
+      completedAt: completion.completed_at,
+    })),
+    quizAttempts: quizAttempts.map((attempt) => ({
+      userId: attempt.user_id,
+      passed: attempt.passed,
+      score: attempt.score,
+      completedAt: attempt.completed_at,
+    })),
+    submissions: submissions.map((submission) => ({
+      userId: submission.user_id,
+      status: submission.status,
+      submittedAt: submission.submitted_at,
+    })),
+    courseCertificates: courseCerts.map((certificate) => ({
+      userId: certificate.user_id,
+      courseId: certificate.course_id,
+      issuedAt: certificate.issued_at,
+    })),
+    programCertificates: programCerts.map((certificate) => ({
+      userId: certificate.user_id,
+      programId: certificate.program_id,
+      issuedAt: certificate.issued_at,
+    })),
+  });
 
   return (
     <main className="mx-auto w-full max-w-5xl flex-1 p-6 md:p-10">
@@ -168,6 +231,8 @@ export default async function AdminReportsPage() {
         <StatCard label="Course certs" value={courseCerts.length} />
         <StatCard label="Program certs" value={programCerts.length} />
       </div>
+
+      <PilotMonitoringPanel summary={pilotSummary} />
 
       <section className="mt-8">
         <h2 className="mb-3 text-lg font-semibold">Learners</h2>
@@ -374,11 +439,132 @@ function StatCard({ label, value }: { label: string; value: number }) {
   );
 }
 
+function PilotMonitoringPanel({
+  summary,
+}: {
+  summary: ReturnType<typeof summarizePilotMonitoring>;
+}) {
+  const actionRows = summary.rows.filter((row) =>
+    ["blocked", "needs_revision", "needs_review", "not_started"].includes(
+      row.statusKey,
+    ),
+  );
+
+  return (
+    <section className="mt-8">
+      <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h2 className="text-lg font-semibold">Pilot monitoring</h2>
+          <p className="text-muted-foreground text-sm">
+            Watch learner blockers, assignment review, progress, and certificates.
+          </p>
+        </div>
+        <Link
+          href="/admin/reports/pilot/export"
+          className="text-primary text-sm font-medium underline-offset-2 hover:underline"
+        >
+          Export CSV
+        </Link>
+      </div>
+      <div className="grid gap-3 md:grid-cols-5">
+        <PilotStat label="Needs access" value={summary.totals.blocked} />
+        <PilotStat label="Needs revision" value={summary.totals.needsRevision} />
+        <PilotStat label="Needs review" value={summary.totals.needsReview} />
+        <PilotStat label="In progress" value={summary.totals.inProgress} />
+        <PilotStat label="Certified" value={summary.totals.certified} />
+      </div>
+      <div className="border-border mt-4 rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Learner</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="text-right">Required</TableHead>
+              <TableHead className="text-right">Submissions</TableHead>
+              <TableHead>Last activity</TableHead>
+              <TableHead>Action</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {actionRows.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} className="text-muted-foreground text-sm">
+                  No pilot learner blockers right now.
+                </TableCell>
+              </TableRow>
+            ) : (
+              actionRows.map((row) => (
+                <TableRow key={row.userId}>
+                  <TableCell>
+                    <div className="font-medium">{row.name}</div>
+                    <div className="text-muted-foreground text-xs">{row.email}</div>
+                  </TableCell>
+                  <TableCell>
+                    <PilotStatusBadge statusKey={row.statusKey} label={row.statusLabel} />
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums">
+                    {row.progressLabel}
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums">
+                    {row.pendingSubmissions + row.needsRevisionSubmissions}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground text-xs">
+                    {row.lastActivity
+                      ? new Date(row.lastActivity).toLocaleString()
+                      : "-"}
+                  </TableCell>
+                  <TableCell>
+                    <Link
+                      href={row.actionHref}
+                      className="text-primary text-sm font-medium underline-offset-2 hover:underline"
+                    >
+                      {row.actionLabel}
+                    </Link>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
+    </section>
+  );
+}
+
+function PilotStat({ label, value }: { label: string; value: number }) {
+  return (
+    <Card>
+      <CardHeader className="space-y-1">
+        <CardDescription>{label}</CardDescription>
+        <CardTitle className="text-2xl font-semibold tabular-nums">
+          {value}
+        </CardTitle>
+      </CardHeader>
+      <CardContent />
+    </Card>
+  );
+}
+
+function PilotStatusBadge({
+  statusKey,
+  label,
+}: {
+  statusKey: string;
+  label: string;
+}) {
+  if (statusKey === "blocked" || statusKey === "needs_revision") {
+    return <Badge variant="destructive">{label}</Badge>;
+  }
+  if (statusKey === "needs_review") return <Badge>{label}</Badge>;
+  return <Badge variant="secondary">{label}</Badge>;
+}
+
 type Profile = {
   id: string;
   email: string;
   full_name: string;
   system_role: "owner" | "admin" | "learner";
+  status: "active" | "invited" | "suspended";
 };
 
 type Entity = { id: string; title: string };
@@ -407,6 +593,18 @@ type Submission = {
   submitted_at: string;
 };
 
+type UserRoleGroup = {
+  user_id: string;
+  role_group_id: string;
+};
+
+type RequiredLessonRow = {
+  id: string;
+  title: string;
+  is_required_for_completion: boolean;
+  modules: { course_id: string } | Array<{ course_id: string }> | null;
+};
+
 type AuditRow = {
   id: string;
   user_id: string | null;
@@ -418,7 +616,7 @@ type AuditRow = {
 };
 
 export type ActivityMaps = {
-  profilesById: Map<string, Profile>;
+  profilesById: Map<string, ActivityProfile>;
   coursesById: Map<string, string>;
   programsById: Map<string, string>;
   lessonTitlesById: Map<string, string>;
@@ -444,6 +642,8 @@ type LearnerStat = {
   submissions: number;
   lastActivity: string | null;
 };
+
+type ActivityProfile = Pick<Profile, "id" | "email" | "full_name" | "system_role">;
 
 function summarizeLearners({
   profiles,
