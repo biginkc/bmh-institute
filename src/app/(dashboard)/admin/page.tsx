@@ -7,6 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { PageHeader } from "@/components/page-header";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function AdminOverviewPage() {
@@ -27,7 +28,13 @@ export default async function AdminOverviewPage() {
 
   return (
     <main className="flex-1 p-6 md:p-10">
-      <h1 className="mb-6 text-2xl font-semibold">Overview</h1>
+      <div className="mb-6">
+        <PageHeader
+          title="Overview"
+          description="Training activity, content inventory, and submissions that need attention."
+          breadcrumb={[{ label: "Admin" }, { label: "Overview" }]}
+        />
+      </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         <StatCard
           label="Pending submissions"

@@ -114,6 +114,35 @@ Plans:
 | 3. Data Integrity | 4/4 | Complete | 2026-05-08 |
 | 4. Type Safety and Test Coverage | 4/4 | Complete (deferred_issue) | 2026-05-08 |
 
+## Milestone: v1.1 Ecosystem UI Alignment
+
+This milestone moves the Phase 2.5 Stitch direction into the production app shell. It keeps BMH Institute functionality stable while aligning top navigation, left navigation, page headers, and responsive shell behavior with the rest of the BMH ecosystem.
+
+## Phases
+
+- [x] **Phase 5: Ecosystem Navigation Alignment** - Implement the shared BMH ecosystem topbar, left nav, and page header foundation in BMH Institute production UI
+
+## Phase Details
+
+### Phase 5: Ecosystem Navigation Alignment
+**Goal**: BMH Institute uses the same fixed topbar, fixed left nav, active left-border nav state, warm paper shell, and page header pattern as Sandra, Closer Lab, and Jitter while preserving LMS routes, auth behavior, admin-only navigation, pending submission badges, profile access, and sign-out.
+**Depends on**: v1 Production Hardening audit
+**Requirements**: UI-02, UI-03
+**Success Criteria** (what must be TRUE):
+  1. Desktop shell renders a fixed 64px topbar and 256px sidebar with the brand area aligned to the sidebar column
+  2. Active navigation uses the ecosystem 4px left-border pattern and does not use filled active pills
+  3. Learners see only learner navigation, while admins see admin navigation and the pending submissions badge
+  4. Profile access, user identity, and sign-out continue to work through the topbar
+  5. The shell remains usable at narrow viewport widths and is verified through browser automation
+**Plans**: 1 plan
+- [x] 05-1-shared-dashboard-shell-PLAN.md - UI-02/UI-03: implement shared dashboard shell and PageHeader foundation
+
+## Progress
+
+| Phase | Plans Complete | Status | Completed |
+|-------|----------------|--------|-----------|
+| 5. Ecosystem Navigation Alignment | 1/1 | Complete | 2026-05-08 |
+
 ## Backlog
 
 ### Phase 999.1: Rename working directory to BMH Institute (COMPLETE — 2026-05-08)

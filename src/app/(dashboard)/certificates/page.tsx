@@ -8,6 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { PageHeader } from "@/components/page-header";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function CertificatesPage() {
@@ -48,10 +49,11 @@ export default async function CertificatesPage() {
   return (
     <main className="mx-auto w-full max-w-3xl flex-1 p-6 md:p-10">
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold">Certificates</h1>
-        <p className="text-muted-foreground mt-1 text-sm">
-          Every course and program you&apos;ve completed.
-        </p>
+        <PageHeader
+          title="Certificates"
+          description="Every course and program you've completed."
+          breadcrumb={[{ label: "Learn" }, { label: "Certificates" }]}
+        />
       </div>
 
       {allCerts.length === 0 ? (

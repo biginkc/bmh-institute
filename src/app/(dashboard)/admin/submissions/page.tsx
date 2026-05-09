@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -52,20 +53,20 @@ export default async function AdminSubmissionsPage({
 
   return (
     <main className="mx-auto w-full max-w-4xl flex-1 p-6 md:p-10">
-      <div className="mb-6 flex items-end justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">Submissions</h1>
-          <p className="text-muted-foreground mt-1 text-sm">
-            Review assignment submissions. Approving marks the lesson complete
-            automatically.
-          </p>
-        </div>
-        <div className="flex gap-2 text-xs">
-          <FilterLink current={filterStatus} value="submitted">Pending</FilterLink>
-          <FilterLink current={filterStatus} value="needs_revision">Needs revision</FilterLink>
-          <FilterLink current={filterStatus} value="approved">Approved</FilterLink>
-          <FilterLink current={filterStatus} value="all">All</FilterLink>
-        </div>
+      <div className="mb-6">
+        <PageHeader
+          title="Submissions"
+          description="Review assignment submissions. Approving marks the lesson complete automatically."
+          breadcrumb={[{ label: "Admin" }, { label: "Submissions" }]}
+          actions={
+            <div className="flex gap-2 text-xs">
+              <FilterLink current={filterStatus} value="submitted">Pending</FilterLink>
+              <FilterLink current={filterStatus} value="needs_revision">Needs revision</FilterLink>
+              <FilterLink current={filterStatus} value="approved">Approved</FilterLink>
+              <FilterLink current={filterStatus} value="all">All</FilterLink>
+            </div>
+          }
+        />
       </div>
 
       {rows.length === 0 ? (

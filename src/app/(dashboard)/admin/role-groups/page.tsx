@@ -1,3 +1,4 @@
+import { PageHeader } from "@/components/page-header";
 import {
   Card,
   CardContent,
@@ -19,11 +20,11 @@ export default async function AdminRoleGroupsPage() {
   return (
     <main className="mx-auto w-full max-w-3xl flex-1 p-6 md:p-10">
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold">Role groups</h1>
-        <p className="text-muted-foreground mt-1 text-sm">
-          Custom groupings of team members. Assign programs and courses to
-          role groups to control which learners see what.
-        </p>
+        <PageHeader
+          title="Role groups"
+          description="Custom groupings of team members. Assign programs and courses to role groups to control which learners see what."
+          breadcrumb={[{ label: "Admin" }, { label: "Role groups" }]}
+        />
       </div>
 
       <Card>
