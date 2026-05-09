@@ -78,6 +78,7 @@ Latest evidence:
 - Vercel production `NEXT_PUBLIC_APP_URL` was set to `https://institute.bmhgroupkc.com` on 2026-05-09, current `main` was redeployed to `sandra-university-ogb6o1qnt-jarrad-5416s-projects.vercel.app`, and `institute.bmhgroupkc.com` was aliased to that deployment. GitHub Actions production-readiness run `25596438899` passed afterward from `main`. Result: 2 lifecycle and rate-limit tests passed, 1 email-link test skipped.
 - Production email-link capture harness added on 2026-05-09. It uses an IMAP-readable mailbox to retrieve real Supabase invite and recovery links, then completes invite acceptance, first-password setup, password reset, and sign-in through the browser.
 - PR #45 merged on 2026-05-09. GitHub Actions production-readiness run `25598402881` passed from `main` against `https://institute.bmhgroupkc.com`. Result: 4 passed, 0 skipped.
+- PR #57 merged on 2026-05-09. It added embedded Closer Lab role-play results to admin user reports, deployed to Vercel production deployment `dpl_Pa1Zy7Tx5ou2hW9zTeJrMG8ZCHQD`, and GitHub Actions production-readiness run `25609474981` passed from `main` afterward. Result: 4 passed, 0 skipped.
 
 ## Required production validation scenarios
 
@@ -215,4 +216,4 @@ Current status: covered by `npm run test:prod:readiness`.
 
 BMH Institute can be called production-ready after the production readiness workflow passes auth and onboarding, password reset, learner lifecycle, admin review, certificates, storage, access control, content safety, rate limiting, deployment, rollback, observability, cleanup, and recovery checks against real production services with no mocked providers.
 
-As of 2026-05-09, GitHub Actions production-readiness run `25598402881` passed from `main` with all four checks green against `https://institute.bmhgroupkc.com`. The app is production-ready for the internal pilot scope, with future role-play embed and threshold-triggered performance work intentionally parked for later milestones.
+As of 2026-05-09, GitHub Actions production-readiness run `25609474981` passed from `main` with all four checks green against `https://institute.bmhgroupkc.com`. The app is production-ready for the internal pilot scope, including the embedded Closer Lab role-play walkthrough and admin report visibility for completed role plays. Threshold-triggered performance work remains intentionally parked for a later milestone.

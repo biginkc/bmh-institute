@@ -35,6 +35,7 @@ Key accomplishments:
 - Extended seeded e2e and production readiness coverage for pilot-critical flows.
 - Deployed current `main` to production and aliased `https://institute.bmhgroupkc.com`.
 - Verified production readiness with GitHub Actions run `25600994876`.
+- Added embedded Closer Lab role-play reporting to admin user reports and re-verified production readiness with GitHub Actions run `25609474981`.
 
 Archives:
 
