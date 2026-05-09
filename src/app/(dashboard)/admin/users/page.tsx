@@ -110,38 +110,40 @@ export default async function AdminUsersPage() {
               ready.
             </p>
           ) : (
-            <Table className="min-w-[52rem]">
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Person</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Setup status</TableHead>
-                  <TableHead>Access</TableHead>
-                  <TableHead className="text-right">Action</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {pilotRows.map((row) => (
-                  <TableRow key={`${row.kind}-${row.id}`}>
-                    <TableCell className="font-medium">{row.name}</TableCell>
-                    <TableCell className="text-muted-foreground text-xs">
-                      {row.email}
-                    </TableCell>
-                    <TableCell>
-                      <PilotStatusBadge statusKey={row.statusKey}>
-                        {row.statusLabel}
-                      </PilotStatusBadge>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground text-xs">
-                      {row.accessLabel}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <PilotRowActions row={row} />
-                    </TableCell>
+            <DenseTableScroll testId="pilot-setup-table-scroll">
+              <Table className="min-w-[52rem]">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Person</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Setup status</TableHead>
+                    <TableHead>Access</TableHead>
+                    <TableHead className="text-right">Action</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {pilotRows.map((row) => (
+                    <TableRow key={`${row.kind}-${row.id}`}>
+                      <TableCell className="font-medium">{row.name}</TableCell>
+                      <TableCell className="text-muted-foreground text-xs">
+                        {row.email}
+                      </TableCell>
+                      <TableCell>
+                        <PilotStatusBadge statusKey={row.statusKey}>
+                          {row.statusLabel}
+                        </PilotStatusBadge>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground text-xs">
+                        {row.accessLabel}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <PilotRowActions row={row} />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </DenseTableScroll>
           )}
         </CardContent>
       </Card>
@@ -158,48 +160,50 @@ export default async function AdminUsersPage() {
             {(profiles.data ?? []).length === 0 ? (
               <p className="text-muted-foreground text-sm">No members yet.</p>
             ) : (
-              <Table className="min-w-[40rem]">
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Role</TableHead>
-                    <TableHead>Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {(profiles.data ?? []).map((p) => (
-                    <TableRow key={p.id as string}>
-                      <TableCell className="font-medium">
-                        <Link
-                          href={`/admin/users/${p.id as string}/edit`}
-                          className="hover:underline underline-offset-4"
-                        >
-                          {p.full_name as string}
-                        </Link>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground text-xs">
-                        {p.email as string}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="capitalize">
-                          {p.system_role as string}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={
-                            p.status === "active" ? "default" : "secondary"
-                          }
-                          className="capitalize"
-                        >
-                          {p.status as string}
-                        </Badge>
-                      </TableCell>
+              <DenseTableScroll testId="active-members-table-scroll">
+                <Table className="min-w-[46rem]">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Role</TableHead>
+                      <TableHead>Status</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {(profiles.data ?? []).map((p) => (
+                      <TableRow key={p.id as string}>
+                        <TableCell className="font-medium">
+                          <Link
+                            href={`/admin/users/${p.id as string}/edit`}
+                            className="hover:underline underline-offset-4"
+                          >
+                            {p.full_name as string}
+                          </Link>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground text-xs">
+                          {p.email as string}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="capitalize">
+                            {p.system_role as string}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant={
+                              p.status === "active" ? "default" : "secondary"
+                            }
+                            className="capitalize"
+                          >
+                            {p.status as string}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </DenseTableScroll>
             )}
           </CardContent>
         </Card>
@@ -233,47 +237,63 @@ export default async function AdminUsersPage() {
           {pendingInvites.length === 0 ? (
             <p className="text-muted-foreground text-sm">No pending invites.</p>
           ) : (
-            <Table className="min-w-[44rem]">
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Expires</TableHead>
-                  <TableHead className="text-right">Action</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {pendingInvites.map((i) => {
-                  const expires = new Date(i.expires_at as string);
-                  const isExpired = expires <= new Date();
-                  return (
-                    <TableRow key={i.id as string}>
-                      <TableCell>{i.email as string}</TableCell>
-                      <TableCell className="capitalize">
-                        {i.system_role as string}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground text-xs">
-                        {isExpired ? (
-                          <Badge variant="destructive">Expired</Badge>
-                        ) : (
-                          <>in {formatDistanceToNow(expires)}</>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <ResendInviteButton inviteId={i.id as string} />
-                          <RevokeInviteButton inviteId={i.id as string} />
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+            <DenseTableScroll testId="pending-invites-table-scroll">
+              <Table className="min-w-[48rem]">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Role</TableHead>
+                    <TableHead>Expires</TableHead>
+                    <TableHead className="text-right">Action</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {pendingInvites.map((i) => {
+                    const expires = new Date(i.expires_at as string);
+                    const isExpired = expires <= new Date();
+                    return (
+                      <TableRow key={i.id as string}>
+                        <TableCell>{i.email as string}</TableCell>
+                        <TableCell className="capitalize">
+                          {i.system_role as string}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground text-xs">
+                          {isExpired ? (
+                            <Badge variant="destructive">Expired</Badge>
+                          ) : (
+                            <>in {formatDistanceToNow(expires)}</>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <ResendInviteButton inviteId={i.id as string} />
+                            <RevokeInviteButton inviteId={i.id as string} />
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </DenseTableScroll>
           )}
         </CardContent>
       </Card>
     </main>
+  );
+}
+
+function DenseTableScroll({
+  testId,
+  children,
+}: {
+  testId: string;
+  children: ReactNode;
+}) {
+  return (
+    <div data-testid={testId} className="overflow-x-auto pb-1">
+      {children}
+    </div>
   );
 }
 
