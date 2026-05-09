@@ -898,6 +898,57 @@ export type Database = {
         }
         Relationships: []
       }
+      role_play_results: {
+        Row: {
+          attempt_id: string
+          block_id: string
+          completed_at: string
+          goals_met: Json
+          id: string
+          scenario_id: string
+          score: number | null
+          summary: Json
+          user_id: string
+        }
+        Insert: {
+          attempt_id: string
+          block_id: string
+          completed_at?: string
+          goals_met?: Json
+          id?: string
+          scenario_id: string
+          score?: number | null
+          summary?: Json
+          user_id: string
+        }
+        Update: {
+          attempt_id?: string
+          block_id?: string
+          completed_at?: string
+          goals_met?: Json
+          id?: string
+          scenario_id?: string
+          score?: number | null
+          summary?: Json
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "role_play_results_block_id_fkey"
+            columns: ["block_id"]
+            isOneToOne: false
+            referencedRelation: "content_blocks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "role_play_results_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_block_progress: {
         Row: {
           block_id: string

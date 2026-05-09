@@ -43,6 +43,7 @@ export type BlockType =
   | "callout"
   | "external_link"
   | "embed"
+  | "role_play"
   | "divider"
   | "video"
   | "pdf"
@@ -60,6 +61,7 @@ const DEFAULT_CONTENT: Record<BlockType, Json> = {
     open_in_new_tab: true,
   },
   embed: { iframe_src: "https://", aspect_ratio: "16:9" },
+  role_play: { scenario_id: "", title: "Role play", height_px: 720 },
   divider: {},
   video: { source: "upload", file_path: "", url: "" },
   pdf: { file_path: "", filename: "", display: "inline" },
@@ -129,6 +131,26 @@ export async function updateBlock(input: {
       return { ok: false, error: "Embed URL must start with https://" };
     }
     safeContent = { ...input.content, iframe_src: src } as Json;
+  } else if (existing.block_type === "role_play") {
+    const scenarioId =
+      typeof input.content.scenario_id === "string"
+        ? input.content.scenario_id.trim()
+        : "";
+    if (!scenarioId) {
+      return { ok: false, error: "Scenario ID is required." };
+    }
+    safeContent = {
+      ...input.content,
+      scenario_id: scenarioId,
+      title:
+        typeof input.content.title === "string"
+          ? input.content.title.trim()
+          : "Role play",
+      height_px:
+        typeof input.content.height_px === "number"
+          ? input.content.height_px
+          : 720,
+    } as Json;
   }
 
   const patch: { content: Json; is_required_for_completion?: boolean } = {

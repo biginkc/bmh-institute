@@ -1,0 +1,42 @@
+name: Apply Supabase migrations to test
+
+on:
+  workflow_dispatch: {}
+  pull_request:
+    branches: [main]
+    paths:
+      - "supabase/migrations/**"
+      - ".github/workflows/db-migrate-test.yml"
+
+jobs:
+  migrate-test:
+    name: Apply migrations to BMH test
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    env:
+      TEST_PROJECT_REF: jvaabkchkihkjllehmft
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+
+      - name: Apply pending migrations
+        env:
+          TEST_SUPABASE_DB_PASSWORD: ${{ secrets.TEST_SUPABASE_DB_PASSWORD }}
+        run: |
+          if [ -z "$TEST_SUPABASE_DB_PASSWORD" ]; then
+            echo "TEST_SUPABASE_DB_PASSWORD secret is required."
+            exit 1
+          fi
+
+          ENCODED_PASSWORD="$(node -e 'process.stdout.write(encodeURIComponent(process.env.TEST_SUPABASE_DB_PASSWORD))')"
+          DB_URL="postgresql://postgres.${TEST_PROJECT_REF}:${ENCODED_PASSWORD}@aws-1-us-west-1.pooler.supabase.com:5432/postgres"
+          supabase db push --include-all --db-url "$DB_URL" --yes
