@@ -27,6 +27,14 @@ BMH Institute mirrors Sandra CRM's stack and conventions but runs as an independ
 
 Don't mark meaningful behavior changes done without covering tests. Continue without waiting unless Jarrad explicitly asks for a review gate or the change is high-risk.
 
+**PR-first is mandatory.** Do not push directly to `main`, even when the change is verified and seems safe. For completed work:
+
+1. Create or reuse a feature branch.
+2. Push the branch.
+3. Open a pull request.
+4. Let Jarrad review or explicitly authorize merge.
+5. Merge the PR instead of pushing commits straight to `main`.
+
 - `npm run dev` — next dev on port 3100
 - `npm run test` — vitest unit suite
 - `npm run test:integration` — vitest against a real Supabase (populate `.env.test.local`)
