@@ -40,11 +40,13 @@ Confirmed through the deployed UI:
 - File upload assignment through the browser file chooser, then submit.
 - Forgot-password form shows the success state.
 
-## Not Fully Confirmed
+## Follow-Up Confirmation
 
-- Invite send and invite acceptance were exercised through the UI, but Supabase returned email delivery limits during verification. This should be covered after a stable non-prod email capture strategy exists.
+- Invite acceptance was later covered through generated Supabase invite action links in the non-production E2E suite.
+- Production invite and password-reset email-link capture passed in GitHub Actions production-readiness run `25598402881` from `main` after PR #45.
 
 ## Follow-Up
 
-- Invite acceptance remains blocked until a stable non-production email capture strategy exists.
 - Seeded E2E verification passed in PR #39 CI.
+- Invite acceptance verification passed in PR #40 CI.
+- Production email-link verification passed in PR #45 and main production-readiness run `25598402881`.
