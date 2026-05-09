@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
@@ -34,21 +34,36 @@ export function UserEditForm({
   const [roleGroupIds, setRoleGroupIds] = useState<string[]>(
     initialRoleGroupIds,
   );
+  const systemRoleRef = useRef(systemRole);
+  const statusRef = useRef(status);
+  const roleGroupIdsRef = useRef(roleGroupIds);
   const [pending, startTransition] = useTransition();
 
   function toggleGroup(id: string) {
-    setRoleGroupIds((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
-    );
+    const next = roleGroupIdsRef.current.includes(id)
+      ? roleGroupIdsRef.current.filter((x) => x !== id)
+      : [...roleGroupIdsRef.current, id];
+    roleGroupIdsRef.current = next;
+    setRoleGroupIds(next);
+  }
+
+  function updateSystemRole(next: "owner" | "admin" | "learner") {
+    systemRoleRef.current = next;
+    setSystemRole(next);
+  }
+
+  function updateStatus(next: "active" | "invited" | "suspended") {
+    statusRef.current = next;
+    setStatus(next);
   }
 
   function onSave() {
     startTransition(async () => {
       const result = await saveUserSettings({
         userId,
-        system_role: systemRole,
-        status,
-        role_group_ids: roleGroupIds,
+        system_role: systemRoleRef.current,
+        status: statusRef.current,
+        role_group_ids: roleGroupIdsRef.current,
       });
       if (!result.ok) {
         toast.error(result.error);
@@ -65,18 +80,19 @@ export function UserEditForm({
   }
 
   function onSuspendToggle() {
-    const nextStatus = status === "suspended" ? "active" : "suspended";
-    setStatus(nextStatus);
+    const previousStatus = statusRef.current;
+    const nextStatus = previousStatus === "suspended" ? "active" : "suspended";
+    updateStatus(nextStatus);
     startTransition(async () => {
       const result = await saveUserSettings({
         userId,
-        system_role: systemRole,
+        system_role: systemRoleRef.current,
         status: nextStatus,
-        role_group_ids: roleGroupIds,
+        role_group_ids: roleGroupIdsRef.current,
       });
       if (!result.ok) {
         toast.error(result.error);
-        setStatus(status); // revert
+        updateStatus(previousStatus);
       } else {
         toast.success(
           nextStatus === "suspended" ? "User suspended." : "User reactivated.",
@@ -111,7 +127,7 @@ export function UserEditForm({
           id="system_role"
           value={systemRole}
           onChange={(e) =>
-            setSystemRole(
+            updateSystemRole(
               e.target.value as "owner" | "admin" | "learner",
             )
           }
@@ -135,7 +151,7 @@ export function UserEditForm({
           id="status"
           value={status}
           onChange={(e) =>
-            setStatus(
+            updateStatus(
               e.target.value as "active" | "invited" | "suspended",
             )
           }
