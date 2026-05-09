@@ -41,10 +41,10 @@ Progress: 4 of 4 phases complete.
 
 Production evidence:
 
-- GitHub Actions production-readiness run `25600994876` passed from `main` on 2026-05-09.
+- GitHub Actions production-readiness run `25610410328` passed from `main` on 2026-05-09.
 - Result: 4 passed.
 - Production URL: `https://institute.bmhgroupkc.com`.
-- Deployment: `https://sandra-university-25079yv0x-jarrad-5416s-projects.vercel.app`.
+- Current production deploys now flow from Vercel Git integration on `main`; manual aliasing is no longer part of the routine release path.
 
 ### Phase 6: Pilot Cohort Setup
 
@@ -147,6 +147,43 @@ Completed:
 - `.vercel/project.json` confirmed with `projectName: "bmh-institute"`.
 - `npm run verify` passed from the new path.
 
+### Backlog item 999.2: BMH Platform monorepo migration readiness
+
+**Status:** documentation complete 2026-05-09
+
+Completed:
+
+- Added `MIGRATION-NOTES.md` for the upcoming move into `bmh-platform/apps/bmh-institute/`.
+- Captured runtime and package-manager state, env var names, Supabase projects, migrations, CI workflows, scheduled jobs, route handlers, Vercel details, custom scripts, and migration surprises.
+- Confirmed the main migration surprise is the external `@sandra/tokens` dependency from the Sandra Design System.
+
+### Backlog item 999.3: Guided walkthrough system extraction plan
+
+**Status:** planned 2026-05-09
+
+Archive:
+
+- Plan: `docs/guided-walkthrough-system.md`
+- GitHub issue: `#64`
+
+Decision:
+
+- Keep the BMH Institute walkthrough app-local for now.
+- Preserve the shared step, overlay, URL, and path-scoped state contract.
+- Copy the pattern into a second app when needed.
+- Extract `@bmh/guided-walkthrough` only after three apps need the same behavior.
+
+### Backlog item 999.4: Vercel production domain workflow cleanup
+
+**Status:** complete 2026-05-09
+
+Completed:
+
+- Reconnected the Vercel project to `biginkc/bmh-institute`.
+- Set `autoAssignCustomDomains` to true.
+- Verified PR #71 created a production Git deployment for commit `405e1dd`.
+- Verified `institute.bmhgroupkc.com` was automatically included in production aliases without `vercel deploy --prod` or `vercel alias set`.
+
 ## Future Candidates
 
 ### Embedded Closer Lab role play
@@ -168,3 +205,9 @@ Parked until `docs/performance-thresholds.md` triggers are breached:
 - PERF-01: admin reports overview pagination or aggregation pushdown.
 - PERF-02: user report module query filtering or completion RPC.
 - PERF-03: signed URL caching.
+
+### Shared guided walkthrough package
+
+Tracked by GitHub issue #64 and `docs/guided-walkthrough-system.md`.
+
+Do not extract yet. Wait until at least three BMH apps need the same walkthrough behavior, or until Jarrad explicitly chooses a platform-level implementation.
