@@ -13,6 +13,7 @@ describe("WalkthroughCaptionOverlay", () => {
   beforeEach(() => {
     searchParamsMock.mockReturnValue(new URLSearchParams());
     window.sessionStorage.clear();
+    window.history.pushState({}, "", "/dashboard");
   });
 
   it("stays hidden without a walkthrough caption", () => {
@@ -98,16 +99,19 @@ describe("WalkthroughCaptionOverlay", () => {
       caption: "Step 2: Review the dashboard.",
       backHref: "/login?walkthrough=demo&step=1",
       nextHref: "/courses/demo?walkthrough=demo&step=3",
+      path: "/dashboard",
     });
   });
 
   it("restores active walkthrough state when refreshed without params", () => {
+    window.history.pushState({}, "", "/courses/demo");
     window.sessionStorage.setItem(
       "bmh-institute.walkthrough",
       JSON.stringify({
         caption: "Step 2: Review the dashboard.",
         backHref: "/login?walkthrough=demo&step=1",
         nextHref: "/courses/demo?walkthrough=demo&step=3",
+        path: "/courses/demo",
       }),
     );
 
@@ -124,6 +128,28 @@ describe("WalkthroughCaptionOverlay", () => {
       "href",
       "/courses/demo?walkthrough=demo&step=3",
     );
+  });
+
+  it("does not restore stale walkthrough state on a different path", () => {
+    window.history.pushState(
+      {},
+      "",
+      "/lessons/8efc3f0b-0629-49f7-b41d-c7b72b2f2232",
+    );
+    window.sessionStorage.setItem(
+      "bmh-institute.walkthrough",
+      JSON.stringify({
+        caption: "Step 2: Course overview.",
+        backHref: "/dashboard?walkthrough=bmh-institute-demo&step=1",
+        nextHref:
+          "/lessons/8efc3f0b-0629-49f7-b41d-c7b72b2f2232?walkthrough=bmh-institute-demo&step=3",
+        path: "/courses/3803c874-b9da-44c7-9e2b-88bc5a870ef2",
+      }),
+    );
+
+    render(<WalkthroughCaptionOverlay />);
+
+    expect(screen.queryByRole("status")).toBeNull();
   });
 
   it("renders BMH demo walkthrough steps from stable step params", () => {
