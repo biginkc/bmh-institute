@@ -12,6 +12,7 @@ vi.mock("next/navigation", () => ({
 describe("WalkthroughCaptionOverlay", () => {
   beforeEach(() => {
     searchParamsMock.mockReturnValue(new URLSearchParams());
+    window.sessionStorage.clear();
   });
 
   it("stays hidden without a walkthrough caption", () => {
@@ -76,5 +77,52 @@ describe("WalkthroughCaptionOverlay", () => {
 
     expect(screen.getByRole("button", { name: "Back" })).toBeDisabled();
     expect(screen.getByRole("link", { name: "Next" })).toBeTruthy();
+  });
+
+  it("saves active walkthrough state from URL params", () => {
+    searchParamsMock.mockReturnValue(
+      new URLSearchParams({
+        walkthroughCaption: "Step 2: Review the dashboard.",
+        walkthroughBack: "/login?walkthrough=demo&step=1",
+        walkthroughNext: "/courses/demo?walkthrough=demo&step=3",
+      }),
+    );
+
+    render(<WalkthroughCaptionOverlay />);
+
+    expect(
+      JSON.parse(
+        window.sessionStorage.getItem("bmh-institute.walkthrough") ?? "{}",
+      ),
+    ).toEqual({
+      caption: "Step 2: Review the dashboard.",
+      backHref: "/login?walkthrough=demo&step=1",
+      nextHref: "/courses/demo?walkthrough=demo&step=3",
+    });
+  });
+
+  it("restores active walkthrough state when refreshed without params", () => {
+    window.sessionStorage.setItem(
+      "bmh-institute.walkthrough",
+      JSON.stringify({
+        caption: "Step 2: Review the dashboard.",
+        backHref: "/login?walkthrough=demo&step=1",
+        nextHref: "/courses/demo?walkthrough=demo&step=3",
+      }),
+    );
+
+    render(<WalkthroughCaptionOverlay />);
+
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Step 2: Review the dashboard.",
+    );
+    expect(screen.getByRole("link", { name: "Back" })).toHaveAttribute(
+      "href",
+      "/login?walkthrough=demo&step=1",
+    );
+    expect(screen.getByRole("link", { name: "Next" })).toHaveAttribute(
+      "href",
+      "/courses/demo?walkthrough=demo&step=3",
+    );
   });
 });
