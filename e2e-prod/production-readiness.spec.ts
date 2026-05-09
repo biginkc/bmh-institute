@@ -3,6 +3,7 @@ import {
   cleanupProductionReadinessFixture,
   createProductionReadinessFixture,
   productionAdminClient,
+  productionUserClient,
   type ProductionReadinessFixture,
 } from "./production-fixtures";
 
@@ -158,6 +159,51 @@ test.describe("production readiness lifecycle", () => {
       expect(signed.error).toBeNull();
       expect(signed.data?.signedUrl).toContain("/storage/v1/object/sign/submissions/");
 
+      const learnerClient = await productionUserClient(
+        fixture.learner.email,
+        fixture.password,
+      );
+      const unassignedClient = await productionUserClient(
+        fixture.unassigned.email,
+        fixture.password,
+      );
+      await expectAccessibleRows(learnerClient, "courses", fixture.courseId, 1);
+      await expectAccessibleRows(learnerClient, "lessons", fixture.contentLessonId, 1);
+      await expectAccessibleRows(unassignedClient, "courses", fixture.courseId, 0);
+      await expectAccessibleRows(unassignedClient, "lessons", fixture.contentLessonId, 0);
+      await expectAccessibleRows(
+        unassignedClient,
+        "assignment_submissions",
+        fixture.fileAssignmentLessonId,
+        0,
+        "lesson_id",
+      );
+
+      const learnerDownload = await learnerClient.storage
+        .from("submissions")
+        .download(uploadedPath);
+      expect(learnerDownload.error).toBeNull();
+      await expect(learnerDownload.data?.text()).resolves.toContain(
+        `${fixture.prefix} production readiness upload`,
+      );
+
+      const unassignedDownload = await unassignedClient.storage
+        .from("submissions")
+        .download(uploadedPath);
+      expect(unassignedDownload.data).toBeNull();
+      expect(unassignedDownload.error).not.toBeNull();
+
+      const blockedCrossPrefixPath = `${fixture.learner.id}/blocked-cross-prefix.txt`;
+      const crossPrefixUpload = await unassignedClient.storage
+        .from("submissions")
+        .upload(blockedCrossPrefixPath, Buffer.from("blocked"), {
+          contentType: "text/plain",
+          upsert: false,
+        });
+      expect(crossPrefixUpload.data).toBeNull();
+      expect(crossPrefixUpload.error).not.toBeNull();
+      await admin.storage.from("submissions").remove([blockedCrossPrefixPath]);
+
       await adminPage.goto("/admin/submissions");
       const fileSubmissionCard = adminPage
         .locator('[data-slot="card"]')
@@ -233,6 +279,21 @@ async function getBlockContent(
     throw error ?? new Error(`Content block ${blockId} was not found.`);
   }
   return data.content as Record<string, unknown>;
+}
+
+async function expectAccessibleRows(
+  client: ReturnType<typeof productionAdminClient>,
+  table: string,
+  id: string,
+  expectedCount: number,
+  column = "id",
+) {
+  const { data, error } = await client
+    .from(table)
+    .select("id")
+    .eq(column, id);
+  expect(error).toBeNull();
+  expect(data ?? []).toHaveLength(expectedCount);
 }
 
 async function hasCourseAndProgramCertificates(
