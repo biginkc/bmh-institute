@@ -57,6 +57,8 @@ Implemented production validation:
 
 The implemented check creates disposable prefixed production auth users, database records, and storage files. It signs in through the real production app, exercises the learner and admin lifecycle, verifies certificates, and cleans up the fixture.
 
+GitHub production-readiness secrets have been configured for the production app URL, Supabase URL, Supabase anon key, Supabase service-role key, and disposable-user password. The manual workflow cannot be dispatched from GitHub until `.github/workflows/production-readiness.yml` exists on the default branch after this PR is merged, because GitHub only registers `workflow_dispatch` workflows from the default branch.
+
 ## Required production validation scenarios
 
 ### Auth and onboarding
@@ -164,7 +166,7 @@ Current status: embed safety has existing production smoke coverage. Unsafe text
 ## Automation model
 
 - Keep the existing non-production Supabase CI suite for pull-request regression coverage.
-- Add a separate production readiness workflow later.
+- Use the separate production readiness workflow for release-gate validation after it lands on the default branch.
 - Do not run production readiness on every PR by default because it performs real provider calls and real production writes.
 - Run production readiness on demand before release and on a scheduled cadence.
 - Treat production readiness as a release gate before calling the app production-ready.
