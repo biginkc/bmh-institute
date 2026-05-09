@@ -1,7 +1,16 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+
+const STORAGE_KEY = "bmh-institute.walkthrough";
+
+type WalkthroughState = {
+  caption: string;
+  backHref: string | null;
+  nextHref: string | null;
+};
 
 function normalizeHref(href: string | null) {
   const trimmed = href?.trim();
@@ -17,13 +26,65 @@ function normalizeHref(href: string | null) {
   return null;
 }
 
+function readStoredWalkthrough(): WalkthroughState | null {
+  try {
+    const raw = window.sessionStorage.getItem(STORAGE_KEY);
+    if (!raw) {
+      return null;
+    }
+
+    const parsed = JSON.parse(raw) as Partial<WalkthroughState>;
+    const caption = typeof parsed.caption === "string" ? parsed.caption : "";
+
+    if (!caption.trim()) {
+      return null;
+    }
+
+    return {
+      caption: caption.trim(),
+      backHref: normalizeHref(parsed.backHref ?? null),
+      nextHref: normalizeHref(parsed.nextHref ?? null),
+    };
+  } catch {
+    return null;
+  }
+}
+
+function writeStoredWalkthrough(state: WalkthroughState) {
+  window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
 export function WalkthroughCaptionOverlay() {
   const searchParams = useSearchParams();
-  const caption = searchParams.get("walkthroughCaption")?.trim();
-  const backHref = normalizeHref(searchParams.get("walkthroughBack"));
-  const nextHref = normalizeHref(searchParams.get("walkthroughNext"));
+  const captionFromUrl = searchParams.get("walkthroughCaption")?.trim() ?? "";
+  const backFromUrl = searchParams.get("walkthroughBack");
+  const nextFromUrl = searchParams.get("walkthroughNext");
+  const stateFromUrl = useMemo(
+    () =>
+      captionFromUrl
+        ? {
+            caption: captionFromUrl,
+            backHref: normalizeHref(backFromUrl),
+            nextHref: normalizeHref(nextFromUrl),
+          }
+        : null,
+    [backFromUrl, captionFromUrl, nextFromUrl],
+  );
+  const [storedState, setStoredState] = useState<WalkthroughState | null>(() =>
+    typeof window === "undefined" ? null : readStoredWalkthrough(),
+  );
+  const activeState = stateFromUrl ?? storedState;
 
-  if (!caption) {
+  useEffect(() => {
+    if (!stateFromUrl) {
+      return;
+    }
+
+    writeStoredWalkthrough(stateFromUrl);
+    setStoredState(stateFromUrl);
+  }, [stateFromUrl]);
+
+  if (!activeState) {
     return null;
   }
 
@@ -33,10 +94,10 @@ export function WalkthroughCaptionOverlay() {
       aria-live="polite"
       className="pointer-events-auto fixed bottom-4 left-1/2 z-[60] flex max-h-[18vh] w-auto max-w-[min(48rem,calc(100vw-2rem))] -translate-x-1/2 items-center gap-3 overflow-y-auto rounded-md bg-slate-950/80 px-4 py-3 text-sm leading-relaxed font-medium text-white shadow-2xl backdrop-blur-sm print:hidden"
     >
-      <p className="min-w-0 flex-1">{caption}</p>
+      <p className="min-w-0 flex-1">{activeState.caption}</p>
       <div className="flex shrink-0 items-center gap-2">
-        <WizardControl direction="back" href={backHref} />
-        <WizardControl direction="next" href={nextHref} />
+        <WizardControl direction="back" href={activeState.backHref} />
+        <WizardControl direction="next" href={activeState.nextHref} />
       </div>
     </div>
   );
