@@ -47,10 +47,10 @@ export default async function DashboardLayout({
 
   return (
     <div className="bg-background min-h-screen">
-      <header className="border-border bg-background fixed inset-x-0 top-0 z-40 flex h-16 items-center justify-between border-b pr-4 md:pr-8 print:hidden">
+      <header className="border-border bg-background fixed inset-x-0 top-0 z-40 flex h-16 items-center justify-between border-b pr-6 md:pr-8 print:hidden">
         <Link
           href="/dashboard"
-          className="border-border flex h-full items-center gap-3 px-4 md:w-64 md:border-r md:px-6"
+          className="border-border flex h-full items-center px-6 transition-opacity hover:opacity-90 md:w-64 md:border-r"
         >
           <BrandLockup
             mark={
@@ -75,12 +75,6 @@ export default async function DashboardLayout({
             <span className="bg-muted text-muted-foreground rounded-full px-2 py-0.5 text-[10px] font-bold tracking-widest uppercase">
               {isAdmin ? "admin" : "learner"}
             </span>
-          </Link>
-          <Link
-            href="/profile"
-            className="text-muted-foreground hover:text-foreground text-sm font-medium transition-colors sm:hidden"
-          >
-            Profile
           </Link>
           <form
             action="/auth/signout"
@@ -109,15 +103,7 @@ export default async function DashboardLayout({
         </div>
       </aside>
 
-      <div className="border-border bg-background fixed inset-x-0 top-16 z-30 border-b md:hidden print:hidden">
-        <SidebarNav
-          isAdmin={isAdmin}
-          pendingSubmissionsCount={pendingSubmissions}
-          variant="mobile"
-        />
-      </div>
-
-      <div className="flex min-h-screen flex-col pt-[7.25rem] md:ml-64 md:pt-16">
+      <div className="flex min-h-screen flex-col pt-16 md:ml-64">
         <main className="flex flex-1 flex-col">{children}</main>
       </div>
     </div>
