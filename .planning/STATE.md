@@ -111,14 +111,14 @@ None yet.
 
 ### Concerns
 
-- v1.1 should stay focused on the first real internal pilot. Sandra Practice embed work and performance threshold work remain parked until their triggers are met.
+- v1.1 internal pilot work is production-ready. The embedded Closer Lab walkthrough is live, role-play completions persist in BMH Institute, and user reports surface completed role plays. Performance threshold work remains parked until its triggers are met.
 - Spending changes, provider changes, or infrastructure changes still require explicit approval.
 
 ## Deferred Items
 
 | Category | Item | Status | Deferred At |
 |----------|------|--------|-------------|
-| Role-play embed | EMBD-01..05 | v2 | Milestone init |
+| Role-play embed | EMBD-01..05 | completed | 2026-05-09 after Closer Lab walkthrough deployment |
 | Performance | PERF-01..03 | v2 | Milestone init |
 | Quick task | sandra-design-system-stitch-pass | acknowledged at close; archived by Phase 02.5 records | 2026-05-09 milestone close |
 | UAT | Phase 01 HUMAN-UAT closed-with-deferrals | acknowledged at close; superseded by later automation | 2026-05-09 milestone close |

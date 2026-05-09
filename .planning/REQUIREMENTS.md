@@ -32,13 +32,16 @@ Make BMH Institute ready for BMH Group's first real internal learner pilot.
 - [x] RUN-03: Production-readiness automation covers the pilot-critical flows or clearly records what remains manual.
 - [x] RUN-04: Pilot launch does not require spending changes, provider changes, or new infrastructure unless explicitly approved.
 
+## Embedded Role Play
+
+- [x] EMBD-01: Role-play block type and `role_play_results` table.
+- [x] EMBD-02: Short-lived embed JWT helper.
+- [x] EMBD-03: `RolePlayBlock` iframe and postMessage listener.
+- [x] EMBD-04: Admin block editor role-play option.
+- [x] EMBD-05: Role-play result persistence and report surfacing.
+
 ## Future Requirements
 
-- [ ] EMBD-01: Role-play block type and `role_play_results` table.
-- [ ] EMBD-02: Short-lived embed JWT helper.
-- [ ] EMBD-03: `RolePlayBlock` iframe and postMessage listener.
-- [ ] EMBD-04: Admin block editor role-play option.
-- [ ] EMBD-05: Role-play result persistence and report surfacing.
 - [ ] PERF-01: Admin reports overview pagination or aggregation pushdown.
 - [ ] PERF-02: User report module query filtering or completion RPC.
 - [ ] PERF-03: Signed URL caching.
@@ -70,3 +73,8 @@ Make BMH Institute ready for BMH Group's first real internal learner pilot.
 | RUN-02 | Phase 9 |
 | RUN-03 | Phase 9 |
 | RUN-04 | Phase 9 |
+| EMBD-01 | Quick tasks and PR #35 |
+| EMBD-02 | Quick tasks and PR #35 |
+| EMBD-03 | Quick tasks and PR #35 |
+| EMBD-04 | Quick tasks and PR #35 |
+| EMBD-05 | PR #35 and PR #57 |
