@@ -43,10 +43,31 @@ const supabaseServiceRoleKey =
   env.TEST_SUPABASE_SERVICE_ROLE_KEY ??
   process.env.TEST_SUPABASE_SERVICE_ROLE_KEY ??
   "";
+const closerSupabaseUrl =
+  env.CLOSER_TEST_SUPABASE_URL ?? process.env.CLOSER_TEST_SUPABASE_URL ?? "";
+const closerSupabaseAnonKey =
+  env.CLOSER_TEST_SUPABASE_ANON_KEY ??
+  process.env.CLOSER_TEST_SUPABASE_ANON_KEY ??
+  "";
+const closerSupabaseServiceRoleKey =
+  env.CLOSER_TEST_SUPABASE_SERVICE_ROLE_KEY ??
+  process.env.CLOSER_TEST_SUPABASE_SERVICE_ROLE_KEY ??
+  "";
+const rolePlayJwtSecret =
+  env.ROLE_PLAY_JWT_SECRET ?? process.env.ROLE_PLAY_JWT_SECRET ?? "";
+const rolePlayBaseUrl =
+  env.NEXT_PUBLIC_ROLE_PLAY_BASE_URL ??
+  process.env.NEXT_PUBLIC_ROLE_PLAY_BASE_URL ??
+  "http://localhost:3458";
 
 process.env.TEST_SUPABASE_URL = supabaseUrl;
 process.env.TEST_SUPABASE_ANON_KEY = supabaseAnonKey;
 process.env.TEST_SUPABASE_SERVICE_ROLE_KEY = supabaseServiceRoleKey;
+process.env.CLOSER_TEST_SUPABASE_URL = closerSupabaseUrl;
+process.env.CLOSER_TEST_SUPABASE_ANON_KEY = closerSupabaseAnonKey;
+process.env.CLOSER_TEST_SUPABASE_SERVICE_ROLE_KEY = closerSupabaseServiceRoleKey;
+process.env.ROLE_PLAY_JWT_SECRET = rolePlayJwtSecret;
+process.env.NEXT_PUBLIC_ROLE_PLAY_BASE_URL = rolePlayBaseUrl;
 
 const webServerEnv: Record<string, string> = {
   NEXT_PUBLIC_SUPABASE_URL: supabaseUrl,
@@ -54,6 +75,8 @@ const webServerEnv: Record<string, string> = {
   SUPABASE_SERVICE_ROLE_KEY: supabaseServiceRoleKey,
   ADMIN_EMAILS: "claude@test.com,jarrad@bmhgroup.com",
   NODE_ENV: "development",
+  ROLE_PLAY_JWT_SECRET: rolePlayJwtSecret,
+  NEXT_PUBLIC_ROLE_PLAY_BASE_URL: rolePlayBaseUrl,
 };
 
 export default defineConfig({
@@ -80,6 +103,13 @@ export default defineConfig({
       use: {
         ...devices["Desktop Chrome"],
         storageState: "e2e/.auth/user.json",
+        permissions: ["microphone", "camera"],
+        launchOptions: {
+          args: [
+            "--use-fake-ui-for-media-stream",
+            "--use-fake-device-for-media-stream",
+          ],
+        },
       },
       dependencies: ["setup"],
     },

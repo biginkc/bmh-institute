@@ -1,6 +1,6 @@
 import { createHmac } from "node:crypto";
 
-const ISSUER = "bmh-institute";
+const ISSUER = "sandra-university";
 const DEFAULT_TTL_SECONDS = 5 * 60;
 const MIN_SECRET_BYTES = 32;
 
