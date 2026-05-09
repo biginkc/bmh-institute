@@ -20,10 +20,10 @@ Make BMH Institute ready for BMH Group's first real internal learner pilot.
 
 ## Pilot Monitoring
 
-- [ ] OPS-01: Admin can see pilot progress by learner, program, course, quiz, assignment, and certificate state.
-- [ ] OPS-02: Admin can quickly identify learners who are stalled, blocked, pending review, or ready for certification.
-- [ ] OPS-03: Admin can act on pending submissions and learner blockers from the monitoring flow.
-- [ ] OPS-04: Admin can export or record pilot status evidence for internal review.
+- [x] OPS-01: Admin can see pilot progress by learner, program, course, quiz, assignment, and certificate state.
+- [x] OPS-02: Admin can quickly identify learners who are stalled, blocked, pending review, or ready for certification.
+- [x] OPS-03: Admin can act on pending submissions and learner blockers from the monitoring flow.
+- [x] OPS-04: Admin can export or record pilot status evidence for internal review.
 
 ## Operational Readiness
 
