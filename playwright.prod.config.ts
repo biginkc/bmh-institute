@@ -50,9 +50,9 @@ const baseURL =
   "https://bmh-institute.vercel.app";
 
 // Publish for the setup project so it can read creds.
-process.env.E2E_TEST_EMAIL = env.E2E_TEST_EMAIL ?? process.env.E2E_TEST_EMAIL ?? "";
+process.env.E2E_TEST_EMAIL = process.env.E2E_TEST_EMAIL ?? env.E2E_TEST_EMAIL ?? "";
 process.env.E2E_TEST_PASSWORD =
-  env.E2E_TEST_PASSWORD ?? process.env.E2E_TEST_PASSWORD ?? "";
+  process.env.E2E_TEST_PASSWORD ?? env.E2E_TEST_PASSWORD ?? "";
 process.env.E2E_PROD_BASE_URL = baseURL;
 process.env.TEST_SUPABASE_URL =
   env.TEST_SUPABASE_URL ??

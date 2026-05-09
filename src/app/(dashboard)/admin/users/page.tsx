@@ -2,6 +2,7 @@ import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 
 import { Badge } from "@/components/ui/badge";
+import { PageHeader } from "@/components/page-header";
 import {
   Card,
   CardContent,
@@ -51,11 +52,11 @@ export default async function AdminUsersPage() {
   return (
     <main className="mx-auto w-full max-w-4xl flex-1 p-6 md:p-10">
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold">Users</h1>
-        <p className="text-muted-foreground mt-1 text-sm">
-          Active team members and pending invites. Invite new users and
-          Supabase emails them a signup link.
-        </p>
+        <PageHeader
+          title="Users"
+          description="Active team members and pending invites. Invite new users and Supabase emails them a signup link."
+          breadcrumb={[{ label: "Admin" }, { label: "Users" }]}
+        />
       </div>
 
       <div className="grid gap-6 md:grid-cols-5">

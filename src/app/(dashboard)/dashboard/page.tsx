@@ -8,6 +8,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { PageHeader } from "@/components/page-header";
 import { createClient } from "@/lib/supabase/server";
 import { shapeProgramsResponse } from "@/lib/programs/shape";
 
@@ -97,10 +98,11 @@ export default async function DashboardPage() {
   return (
     <main className="mx-auto w-full max-w-5xl flex-1 p-6 md:p-10">
       <div className="mb-8">
-        <h1 className="text-2xl font-semibold">Your training</h1>
-        <p className="text-muted-foreground mt-1 text-sm">
-          Programs assigned to you, with the courses you can work through.
-        </p>
+        <PageHeader
+          title="Your training"
+          description="Programs assigned to you, with the courses you can work through."
+          breadcrumb={[{ label: "Learn" }, { label: "Dashboard" }]}
+        />
       </div>
 
       {error ? (

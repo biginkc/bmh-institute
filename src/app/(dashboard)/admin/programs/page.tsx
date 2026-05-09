@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -20,19 +21,20 @@ export default async function AdminProgramsPage() {
 
   return (
     <main className="flex-1 p-6 md:p-10">
-      <div className="mb-6 flex items-end justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">Programs</h1>
-          <p className="text-muted-foreground mt-1 text-sm">
-            Top-level containers. Courses attach into programs.
-          </p>
-        </div>
-        <Link
-          href="/admin/programs/new"
-          className="border-border hover:bg-muted rounded-md border px-3 py-1.5 text-sm"
-        >
-          New program
-        </Link>
+      <div className="mb-6">
+        <PageHeader
+          title="Programs"
+          description="Top-level containers. Courses attach into programs."
+          breadcrumb={[{ label: "Admin" }, { label: "Programs" }]}
+          actions={
+            <Link
+              href="/admin/programs/new"
+              className="border-border hover:bg-muted rounded-md border px-3 py-1.5 text-sm"
+            >
+              New program
+            </Link>
+          }
+        />
       </div>
 
       {(programs ?? []).length === 0 ? (
