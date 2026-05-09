@@ -5,6 +5,7 @@ import { randomBytes } from "node:crypto";
 import { revalidatePath } from "next/cache";
 
 import { requireAdmin } from "@/lib/auth/guard";
+import { getAppUrl } from "@/lib/app-url";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendEmail } from "@/lib/email/send";
@@ -65,9 +66,8 @@ export async function inviteUser(
     };
   }
 
-  const appUrl =
-    process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3100";
-  const redirectTo = `${appUrl.replace(/\/$/, "")}/auth/callback?invite_token=${encodeURIComponent(token)}`;
+  const appUrl = getAppUrl();
+  const redirectTo = `${appUrl}/auth/callback?invite_token=${encodeURIComponent(token)}`;
 
   const { error: inviteError } =
     await admin.auth.admin.inviteUserByEmail(parsed.value.email, {
@@ -259,9 +259,8 @@ export async function resendInvite(
     .eq("id", inviteId);
   if (updateErr) return { ok: false, error: updateErr.message };
 
-  const appUrl =
-    process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3100";
-  const redirectTo = `${appUrl.replace(/\/$/, "")}/auth/callback?invite_token=${encodeURIComponent(token)}`;
+  const appUrl = getAppUrl();
+  const redirectTo = `${appUrl}/auth/callback?invite_token=${encodeURIComponent(token)}`;
 
   // HARDEN-02 / D-03: re-fire the Supabase invite email through the existing
   // admin.auth.admin.inviteUserByEmail path. Skip the enrollment email

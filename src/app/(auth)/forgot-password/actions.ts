@@ -5,6 +5,7 @@ import { headers } from "next/headers";
 import { checkAndConsume } from "@/lib/rate-limit/check";
 import { extractClientIp } from "@/lib/rate-limit/ip";
 import { createClient } from "@/lib/supabase/server";
+import { getAppUrl } from "@/lib/app-url";
 
 export type ForgotPasswordState =
   | { ok: true }
@@ -38,11 +39,10 @@ export async function sendPasswordReset(
   if (!emailGate.allowed) return { ok: true };
 
   const supabase = await createClient();
-  const appUrl =
-    process.env.NEXT_PUBLIC_APP_URL ?? "https://sandra-university.vercel.app";
+  const appUrl = getAppUrl();
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${appUrl}/auth/callback`,
+    redirectTo: `${appUrl}/auth/callback?next=/auth/set-password`,
   });
 
   // Intentionally treat "user not found" the same as success to avoid

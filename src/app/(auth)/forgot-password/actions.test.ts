@@ -124,7 +124,7 @@ describe("sendPasswordReset rate limit (HARDEN-06)", () => {
       ok: true,
     });
     expect(mocks.resetPasswordForEmail).toHaveBeenCalledWith("learner@example.com", {
-      redirectTo: "https://sandra-university.vercel.app/auth/callback",
+      redirectTo: "http://localhost:3100/auth/callback?next=/auth/set-password",
     });
   });
 });

@@ -27,6 +27,7 @@ export type ProductionInviteFixture = {
   password: string;
   roleGroupId: string;
   programId: string;
+  courseId: string;
   inviter: { id: string; email: string };
   inviteeEmail: string;
 };
@@ -337,10 +338,25 @@ export async function createProductionInviteFixture(
     certificate_enabled: false,
     sort_order: 9999,
   });
+  const courseId = await insertOne(admin, "courses", {
+    title: `${prefix} Invite Course`,
+    description: "Disposable production invite course.",
+    is_published: true,
+    certificate_enabled: false,
+    sort_order: 9999,
+  });
 
   await admin
     .from("program_access")
     .insert({ program_id: programId, role_group_id: roleGroupId })
+    .throwOnError();
+  await admin
+    .from("course_access")
+    .insert({ course_id: courseId, role_group_id: roleGroupId })
+    .throwOnError();
+  await admin
+    .from("program_courses")
+    .insert({ program_id: programId, course_id: courseId, sort_order: 10 })
     .throwOnError();
 
   return {
@@ -348,6 +364,7 @@ export async function createProductionInviteFixture(
     password,
     roleGroupId,
     programId,
+    courseId,
     inviter,
     inviteeEmail,
   };
@@ -361,6 +378,7 @@ export async function cleanupProductionInviteFixture(
 
   await admin.from("invites").delete().eq("email", fixture.inviteeEmail);
   await admin.from("programs").delete().eq("id", fixture.programId);
+  await admin.from("courses").delete().eq("id", fixture.courseId);
   await admin.from("role_groups").delete().eq("id", fixture.roleGroupId);
   await deleteAuthUserByEmail(admin, fixture.inviteeEmail);
   await admin.auth.admin.deleteUser(fixture.inviter.id);

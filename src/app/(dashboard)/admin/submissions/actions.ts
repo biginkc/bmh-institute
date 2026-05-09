@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { requireAdmin } from "@/lib/auth/guard";
+import { getAppUrl } from "@/lib/app-url";
 import { createClient } from "@/lib/supabase/server";
 import { sendEmail } from "@/lib/email/send";
 import {
@@ -120,9 +121,7 @@ async function notifyReview(input: {
   const lesson = firstRow(row.lessons) as { title: string } | null;
   if (!profile?.email) return;
 
-  const appUrl =
-    process.env.NEXT_PUBLIC_APP_URL ?? "https://sandra-university.vercel.app";
-  const lessonUrl = `${appUrl.replace(/\/$/, "")}/lessons/${row.lesson_id}`;
+  const lessonUrl = `${getAppUrl()}/lessons/${row.lesson_id}`;
 
   const payload: ReviewEmailInput = {
     recipientEmail: profile.email,
