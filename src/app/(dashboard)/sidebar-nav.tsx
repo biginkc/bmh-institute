@@ -9,7 +9,7 @@ import {
   Inbox,
   LayoutDashboard,
   Package,
-  ShieldCheck,
+  User,
   Users,
   UsersRound,
 } from "lucide-react";
@@ -19,90 +19,81 @@ import { cn } from "@/lib/utils";
 
 type Item = {
   href: string;
-  icon: React.ReactNode;
+  icon: typeof LayoutDashboard;
   label: string;
   badge?: number;
+  offset?: boolean;
 };
+
+const ITEM_BASE =
+  "flex items-center gap-3 py-3 text-sm font-bold tracking-wide transition-all duration-200 ease-in-out focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none";
+const ITEM_ACTIVE = "border-l-4 border-foreground pl-4 text-foreground";
+const ITEM_INACTIVE =
+  "pl-5 text-muted-foreground hover:bg-muted hover:text-foreground";
 
 export function SidebarNav({
   isAdmin,
   pendingSubmissionsCount,
-  variant = "sidebar",
 }: {
   isAdmin: boolean;
   pendingSubmissionsCount: number;
-  variant?: "sidebar" | "mobile";
 }) {
   const pathname = usePathname();
 
   const learnerItems: Item[] = [
     {
       href: "/dashboard",
-      icon: <LayoutDashboard className="size-4" />,
+      icon: LayoutDashboard,
       label: "Dashboard",
     },
     {
       href: "/certificates",
-      icon: <GraduationCap className="size-4" />,
+      icon: GraduationCap,
       label: "Certificates",
+    },
+    {
+      href: "/profile",
+      icon: User,
+      label: "My Profile",
     },
   ];
 
   const adminItems: Item[] = [
-    { href: "/admin", icon: <LayoutDashboard className="size-4" />, label: "Overview" },
-    { href: "/admin/programs", icon: <Package className="size-4" />, label: "Programs" },
-    { href: "/admin/courses", icon: <BookOpen className="size-4" />, label: "Courses" },
-    { href: "/admin/users", icon: <Users className="size-4" />, label: "Users" },
+    { href: "/admin", icon: LayoutDashboard, label: "Overview", offset: true },
+    { href: "/admin/programs", icon: Package, label: "Programs" },
+    { href: "/admin/courses", icon: BookOpen, label: "Courses" },
+    { href: "/admin/users", icon: Users, label: "Users" },
     {
       href: "/admin/submissions",
-      icon: <Inbox className="size-4" />,
+      icon: Inbox,
       label: "Submissions",
       badge: pendingSubmissionsCount > 0 ? pendingSubmissionsCount : undefined,
     },
     {
       href: "/admin/role-groups",
-      icon: <UsersRound className="size-4" />,
+      icon: UsersRound,
       label: "Role groups",
     },
-    { href: "/admin/reports", icon: <BarChart3 className="size-4" />, label: "Reports" },
+    { href: "/admin/reports", icon: BarChart3, label: "Reports" },
   ];
 
-  const mobile = variant === "mobile";
-
   return (
-    <nav
-      aria-label="Primary"
-      className={cn(
-        "text-sm",
-        mobile
-          ? "flex gap-1 overflow-x-auto px-4 py-2"
-          : "flex flex-1 flex-col gap-1",
-      )}
-    >
-      {!mobile ? <NavSectionLabel>Learn</NavSectionLabel> : null}
+    <nav aria-label="Primary" className="flex flex-1 flex-col gap-1 text-sm">
       {learnerItems.map((item) => (
         <NavLink
           key={item.href}
           item={item}
           pathname={pathname}
-          variant={variant}
         />
       ))}
 
       {isAdmin ? (
         <>
-          {!mobile ? (
-            <NavSectionLabel className="mt-4">
-              <ShieldCheck className="mr-1 inline size-3" />
-              Admin
-            </NavSectionLabel>
-          ) : null}
           {adminItems.map((item) => (
             <NavLink
               key={item.href}
               item={item}
               pathname={pathname}
-              variant={variant}
             />
           ))}
         </>
@@ -114,35 +105,25 @@ export function SidebarNav({
 function NavLink({
   item,
   pathname,
-  variant,
 }: {
   item: Item;
   pathname: string;
-  variant: "sidebar" | "mobile";
 }) {
   const isActive = isLinkActive(pathname, item.href);
-  const mobile = variant === "mobile";
+  const Icon = item.icon;
   return (
     <Link
       href={item.href}
       aria-current={isActive ? "page" : undefined}
       data-active={isActive || undefined}
       className={cn(
-        "flex items-center gap-3 text-sm font-bold tracking-wide transition-all duration-200 ease-in-out focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
-        mobile ? "h-10 shrink-0 px-3" : "py-3",
-        isActive
-          ? mobile
-            ? "border-b-4 border-foreground text-foreground"
-            : "border-l-4 border-foreground pl-4 text-foreground"
-          : mobile
-            ? "text-muted-foreground hover:bg-muted hover:text-foreground"
-            : "pl-5 text-muted-foreground hover:bg-muted hover:text-foreground",
+        ITEM_BASE,
+        item.offset && "mt-2",
+        isActive ? ITEM_ACTIVE : ITEM_INACTIVE,
       )}
     >
-      {item.icon}
-      <span className={mobile ? "whitespace-nowrap" : "flex-1"}>
-        {item.label}
-      </span>
+      <Icon className="size-5" aria-hidden />
+      <span className="flex-1">{item.label}</span>
       {item.badge ? (
         <Badge
           variant={isActive ? "secondary" : "default"}
@@ -152,25 +133,6 @@ function NavLink({
         </Badge>
       ) : null}
     </Link>
-  );
-}
-
-function NavSectionLabel({
-  children,
-  className,
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <div
-      className={cn(
-        "text-muted-foreground px-2 pb-1 text-xs font-semibold uppercase tracking-wide",
-        className,
-      )}
-    >
-      {children}
-    </div>
   );
 }
 
