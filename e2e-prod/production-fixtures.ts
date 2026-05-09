@@ -39,6 +39,28 @@ export type ProductionRecoveryFixture = {
   newPassword: string;
 };
 
+export type ProductionPilotDryRunFixture = {
+  prefix: string;
+  password: string;
+  roleGroupId: string;
+  programId: string;
+  courseId: string;
+  moduleId: string;
+  contentLessonId: string;
+  quizId: string;
+  quizLessonId: string;
+  textAssignmentId: string;
+  textAssignmentLessonId: string;
+  admin: { id: string; email: string };
+  certified: { id: string; email: string };
+  needsReview: { id: string; email: string };
+  needsRevision: { id: string; email: string };
+  notStarted: { id: string; email: string };
+  needsAccess: { id: string; email: string };
+  accessCorrection: { id: string; email: string };
+  suspended: { id: string; email: string };
+};
+
 type InsertResult = { id: string };
 
 const PROD_PROJECT_REF = "dhvfsyteqsxagokoerrx";
@@ -408,6 +430,296 @@ export async function cleanupProductionRecoveryFixture(
   await admin.auth.admin.deleteUser(fixture.userId);
 }
 
+export async function createProductionPilotDryRunFixture(
+  admin: SupabaseClient,
+): Promise<ProductionPilotDryRunFixture> {
+  const prefix = `PILOT-DRYRUN-${Date.now()}-${crypto.randomUUID().slice(0, 8)}`;
+  const password = process.env.PROD_READINESS_TEST_PASSWORD?.trim()
+    || `BMHPilotDryRun-${crypto.randomUUID()}!1`;
+  const email = (name: string) =>
+    `${prefix.toLowerCase()}-${name}@bmh-institute.test`;
+
+  const [
+    adminUser,
+    certified,
+    needsReview,
+    needsRevision,
+    notStarted,
+    needsAccess,
+    accessCorrection,
+    suspended,
+  ] = await Promise.all([
+    createFixtureUser(admin, {
+      email: email("owner"),
+      password,
+      fullName: `${prefix} Owner`,
+      systemRole: "owner",
+    }),
+    createFixtureUser(admin, {
+      email: email("certified"),
+      password,
+      fullName: `${prefix} Certified Learner`,
+      systemRole: "learner",
+    }),
+    createFixtureUser(admin, {
+      email: email("needs-review"),
+      password,
+      fullName: `${prefix} Needs Review`,
+      systemRole: "learner",
+    }),
+    createFixtureUser(admin, {
+      email: email("needs-revision"),
+      password,
+      fullName: `${prefix} Needs Revision`,
+      systemRole: "learner",
+    }),
+    createFixtureUser(admin, {
+      email: email("not-started"),
+      password,
+      fullName: `${prefix} Not Started`,
+      systemRole: "learner",
+    }),
+    createFixtureUser(admin, {
+      email: email("needs-access"),
+      password,
+      fullName: `${prefix} Needs Access`,
+      systemRole: "learner",
+    }),
+    createFixtureUser(admin, {
+      email: email("access-correction"),
+      password,
+      fullName: `${prefix} Access Correction`,
+      systemRole: "learner",
+    }),
+    createFixtureUser(admin, {
+      email: email("suspended"),
+      password,
+      fullName: `${prefix} Suspended`,
+      systemRole: "learner",
+    }),
+  ]);
+
+  const roleGroupId = await insertOne(admin, "role_groups", {
+    name: `${prefix} Pilot Cohort`,
+    description: "Disposable production pilot dry-run role group.",
+  });
+
+  await admin
+    .from("user_role_groups")
+    .insert([
+      { user_id: certified.id, role_group_id: roleGroupId },
+      { user_id: needsReview.id, role_group_id: roleGroupId },
+      { user_id: needsRevision.id, role_group_id: roleGroupId },
+      { user_id: notStarted.id, role_group_id: roleGroupId },
+      { user_id: suspended.id, role_group_id: roleGroupId },
+    ])
+    .throwOnError();
+  await admin
+    .from("profiles")
+    .update({ status: "suspended" })
+    .eq("id", suspended.id)
+    .throwOnError();
+
+  const programId = await insertOne(admin, "programs", {
+    title: `${prefix} Pilot Program`,
+    description: "Disposable production pilot dry-run program.",
+    is_published: true,
+    course_order_mode: "free",
+    certificate_enabled: true,
+    sort_order: 9999,
+  });
+  const courseId = await insertOne(admin, "courses", {
+    title: `${prefix} Pilot Course`,
+    description: "Disposable production pilot dry-run course.",
+    is_published: true,
+    certificate_enabled: true,
+    sort_order: 9999,
+  });
+  await admin
+    .from("program_access")
+    .insert({ program_id: programId, role_group_id: roleGroupId })
+    .throwOnError();
+  await admin
+    .from("course_access")
+    .insert({ course_id: courseId, role_group_id: roleGroupId })
+    .throwOnError();
+  await admin
+    .from("program_courses")
+    .insert({ program_id: programId, course_id: courseId, sort_order: 10 })
+    .throwOnError();
+
+  const moduleId = await insertOne(admin, "modules", {
+    course_id: courseId,
+    title: `${prefix} Pilot Module`,
+    description: "Disposable production pilot dry-run module.",
+    sort_order: 10,
+  });
+  const contentLessonId = await insertOne(admin, "lessons", {
+    module_id: moduleId,
+    title: `${prefix} Pilot Content`,
+    description: "Disposable pilot content lesson.",
+    lesson_type: "content",
+    is_required_for_completion: true,
+    sort_order: 10,
+  });
+  await insertOne(admin, "content_blocks", {
+    lesson_id: contentLessonId,
+    block_type: "text",
+    content: {
+      html: `<h2>${prefix} Pilot standard</h2><p>Disposable pilot dry-run content.</p>`,
+    },
+    sort_order: 10,
+    is_required_for_completion: true,
+  });
+
+  const quizId = await insertOne(admin, "quizzes", {
+    title: `${prefix} Pilot Quiz`,
+    description: "Disposable production pilot dry-run quiz.",
+    passing_score: 80,
+    randomize_questions: false,
+    randomize_answers: false,
+    max_attempts: 3,
+    retake_cooldown_hours: 0,
+    show_correct_answers_after: "after_pass",
+  });
+  const questionId = await insertOne(admin, "questions", {
+    quiz_id: quizId,
+    question_text: "What confirms the pilot dry-run quiz path?",
+    question_type: "single_choice",
+    explanation: "The test inserts known passed attempts for reporting.",
+    points: 1,
+    sort_order: 10,
+  });
+  await admin
+    .from("answer_options")
+    .insert([
+      {
+        question_id: questionId,
+        option_text: `${prefix} correct answer`,
+        is_correct: true,
+        sort_order: 10,
+      },
+      {
+        question_id: questionId,
+        option_text: `${prefix} incorrect answer`,
+        is_correct: false,
+        sort_order: 20,
+      },
+    ])
+    .throwOnError();
+  const quizLessonId = await insertOne(admin, "lessons", {
+    module_id: moduleId,
+    title: `${prefix} Pilot Quiz`,
+    description: "Disposable pilot quiz lesson.",
+    lesson_type: "quiz",
+    quiz_id: quizId,
+    is_required_for_completion: true,
+    sort_order: 20,
+  });
+
+  const textAssignmentId = await insertOne(admin, "assignments", {
+    title: `${prefix} Pilot Assignment`,
+    instructions: "Submit a response for production pilot dry-run validation.",
+    submission_type: "text",
+    requires_review: true,
+  });
+  const textAssignmentLessonId = await insertOne(admin, "lessons", {
+    module_id: moduleId,
+    title: `${prefix} Pilot Assignment`,
+    description: "Disposable pilot assignment lesson.",
+    lesson_type: "assignment",
+    assignment_id: textAssignmentId,
+    is_required_for_completion: true,
+    sort_order: 30,
+  });
+
+  await seedPilotDryRunStates(admin, {
+    prefix,
+    programId,
+    courseId,
+    contentLessonId,
+    quizLessonId,
+    textAssignmentId,
+    textAssignmentLessonId,
+    quizId,
+    adminId: adminUser.id,
+    certifiedId: certified.id,
+    needsReviewId: needsReview.id,
+    needsRevisionId: needsRevision.id,
+  });
+
+  return {
+    prefix,
+    password,
+    roleGroupId,
+    programId,
+    courseId,
+    moduleId,
+    contentLessonId,
+    quizId,
+    quizLessonId,
+    textAssignmentId,
+    textAssignmentLessonId,
+    admin: adminUser,
+    certified,
+    needsReview,
+    needsRevision,
+    notStarted,
+    needsAccess,
+    accessCorrection,
+    suspended,
+  };
+}
+
+export async function cleanupProductionPilotDryRunFixture(
+  admin: SupabaseClient,
+  fixture: ProductionPilotDryRunFixture | null,
+): Promise<void> {
+  if (!fixture) return;
+
+  const userIds = [
+    fixture.admin.id,
+    fixture.certified.id,
+    fixture.needsReview.id,
+    fixture.needsRevision.id,
+    fixture.notStarted.id,
+    fixture.needsAccess.id,
+    fixture.accessCorrection.id,
+    fixture.suspended.id,
+  ];
+
+  await admin.from("programs").delete().eq("id", fixture.programId);
+  await admin.from("courses").delete().eq("id", fixture.courseId);
+  await admin
+    .from("assignments")
+    .delete()
+    .eq("id", fixture.textAssignmentId);
+  await admin.from("quizzes").delete().eq("id", fixture.quizId);
+  await admin.from("role_groups").delete().eq("id", fixture.roleGroupId);
+
+  for (const userId of userIds) {
+    await admin.auth.admin.deleteUser(userId);
+  }
+}
+
+export async function countProductionPilotDryRunArtifacts(
+  admin: SupabaseClient,
+  prefix: string,
+): Promise<Record<string, number>> {
+  const lowerPrefix = prefix.toLowerCase();
+  const [profiles, roleGroups, programs, courses, assignments, quizzes] =
+    await Promise.all([
+      countRows(admin, "profiles", "email", `${lowerPrefix}%`),
+      countRows(admin, "role_groups", "name", `${prefix}%`),
+      countRows(admin, "programs", "title", `${prefix}%`),
+      countRows(admin, "courses", "title", `${prefix}%`),
+      countRows(admin, "assignments", "title", `${prefix}%`),
+      countRows(admin, "quizzes", "title", `${prefix}%`),
+    ]);
+
+  return { profiles, roleGroups, programs, courses, assignments, quizzes };
+}
+
 async function cleanupProductionReadinessStorage(
   admin: SupabaseClient,
   learnerId: string,
@@ -431,6 +743,126 @@ async function cleanupProductionReadinessStorage(
       .remove(paths);
     if (removeError) throw removeError;
   }
+}
+
+async function seedPilotDryRunStates(
+  admin: SupabaseClient,
+  input: {
+    prefix: string;
+    programId: string;
+    courseId: string;
+    contentLessonId: string;
+    quizId: string;
+    quizLessonId: string;
+    textAssignmentId: string;
+    textAssignmentLessonId: string;
+    adminId: string;
+    certifiedId: string;
+    needsReviewId: string;
+    needsRevisionId: string;
+  },
+) {
+  const completedAt = new Date().toISOString();
+  const { data: requiredLessons, error: requiredLessonsError } = await admin
+    .from("lessons")
+    .select("id")
+    .eq("is_required_for_completion", true);
+  if (requiredLessonsError) throw requiredLessonsError;
+  const certifiedLessonCompletions = Array.from(
+    new Set([
+      ...(requiredLessons ?? []).map((lesson) => lesson.id as string),
+      input.contentLessonId,
+      input.quizLessonId,
+      input.textAssignmentLessonId,
+    ]),
+  ).map((lessonId) => ({ user_id: input.certifiedId, lesson_id: lessonId }));
+  await admin
+    .from("user_lesson_completions")
+    .insert([
+      ...certifiedLessonCompletions,
+      { user_id: input.needsReviewId, lesson_id: input.contentLessonId },
+      { user_id: input.needsReviewId, lesson_id: input.quizLessonId },
+      { user_id: input.needsRevisionId, lesson_id: input.contentLessonId },
+      { user_id: input.needsRevisionId, lesson_id: input.quizLessonId },
+    ])
+    .throwOnError();
+  await admin
+    .from("user_quiz_attempts")
+    .insert([
+      {
+        user_id: input.certifiedId,
+        quiz_id: input.quizId,
+        lesson_id: input.quizLessonId,
+        score: 100,
+        passed: true,
+        responses: {},
+        completed_at: completedAt,
+      },
+      {
+        user_id: input.needsReviewId,
+        quiz_id: input.quizId,
+        lesson_id: input.quizLessonId,
+        score: 100,
+        passed: true,
+        responses: {},
+        completed_at: completedAt,
+      },
+      {
+        user_id: input.needsRevisionId,
+        quiz_id: input.quizId,
+        lesson_id: input.quizLessonId,
+        score: 100,
+        passed: true,
+        responses: {},
+        completed_at: completedAt,
+      },
+    ])
+    .throwOnError();
+  await admin
+    .from("assignment_submissions")
+    .insert([
+      {
+        assignment_id: input.textAssignmentId,
+        lesson_id: input.textAssignmentLessonId,
+        user_id: input.certifiedId,
+        submission_text: `${input.prefix} approved response`,
+        status: "approved",
+        reviewed_by: input.adminId,
+        reviewed_at: completedAt,
+      },
+      {
+        assignment_id: input.textAssignmentId,
+        lesson_id: input.textAssignmentLessonId,
+        user_id: input.needsReviewId,
+        submission_text: `${input.prefix} pending response`,
+        status: "submitted",
+      },
+      {
+        assignment_id: input.textAssignmentId,
+        lesson_id: input.textAssignmentLessonId,
+        user_id: input.needsRevisionId,
+        submission_text: `${input.prefix} revision response`,
+        status: "needs_revision",
+        reviewed_by: input.adminId,
+        reviewed_at: completedAt,
+        reviewer_notes: `${input.prefix} revise this`,
+      },
+    ])
+    .throwOnError();
+}
+
+async function countRows(
+  admin: SupabaseClient,
+  table: string,
+  column: string,
+  pattern: string,
+): Promise<number> {
+  const { count, error } = await admin
+    .from(table)
+    .select("id", { count: "exact", head: true })
+    .like(column, pattern);
+  if (error) throw error;
+  return count ?? 0;
 }
 
 async function deleteAuthUserByEmail(admin: SupabaseClient, email: string) {
