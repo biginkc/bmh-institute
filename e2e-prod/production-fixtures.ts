@@ -44,6 +44,34 @@ export function productionAdminClient(): SupabaseClient {
   });
 }
 
+export function productionAnonClient(): SupabaseClient {
+  const url = process.env.TEST_SUPABASE_URL;
+  const key = process.env.TEST_SUPABASE_ANON_KEY;
+  if (!url || !key) {
+    throw new Error(
+      "Production readiness needs TEST_SUPABASE_URL and TEST_SUPABASE_ANON_KEY.",
+    );
+  }
+  if (!url.includes(PROD_PROJECT_REF)) {
+    throw new Error(
+      `Production readiness must point at production ref ${PROD_PROJECT_REF}.`,
+    );
+  }
+  return createClient(url, key, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+}
+
+export async function productionUserClient(
+  email: string,
+  password: string,
+): Promise<SupabaseClient> {
+  const client = productionAnonClient();
+  const { error } = await client.auth.signInWithPassword({ email, password });
+  if (error) throw error;
+  return client;
+}
+
 export async function createProductionReadinessFixture(
   admin: SupabaseClient,
 ): Promise<ProductionReadinessFixture> {
