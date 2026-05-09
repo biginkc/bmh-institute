@@ -24,7 +24,7 @@ The application is not production-ready until repeatable validation proves the f
 | Content safety | Ready | Production readiness spec validates unsafe text-block save sanitization, learner render safety, HTTPS-only embed validation, and iframe sandboxing. |
 | Rate limiting and abuse controls | Partially ready | Code, unit, and live RPC proof exist, but production UI behavior under real limits needs controlled validation. |
 | Deployment and rollback | Blocked | The manual production-readiness workflow runs from GitHub Actions, but the custom domain does not resolve and rollback validation is not automated. |
-| Observability and recovery | Partially ready | Playwright traces, screenshots, and cleanup verification exist. Manual interrupted-run cleanup runbook is still needed. |
+| Observability and recovery | Ready | Playwright traces, screenshots, cleanup verification, and an interrupted-run cleanup runbook now exist. |
 
 Allowed statuses:
 
@@ -68,6 +68,7 @@ Latest evidence:
 - Post-run cleanup verification found 0 prefixed production programs, courses, modules, lessons, role groups, assignments, quizzes, answer options, and auth users.
 - Local production-readiness run on 2026-05-09 passed after adding content-safety coverage. It verified unsafe text-block sanitization through the admin UI, HTTPS-only embed validation through the admin UI, sandboxed learner iframe rendering, and cleanup of the disposable fixture.
 - Local production-readiness run on 2026-05-09 passed after adding access-control coverage. It verified assigned and unassigned learner route behavior, direct production RLS reads through learner-scoped Supabase clients, cross-user submission isolation, blocked cross-prefix storage reads and writes, and cleanup of the disposable fixture.
+- Production-readiness recovery runbook added on 2026-05-09 at `docs/production-readiness-recovery.md`, backed by the dry-run-first `npm run cleanup:prod-readiness` script. The first dry run found 5 timestamped storage leftovers from earlier canary runs; execute mode removed them. After fixing fixture cleanup, a fresh production-readiness run left 0 remaining leftovers.
 
 ## Required production validation scenarios
 
@@ -161,6 +162,8 @@ Current status: covered by `npm run test:prod:readiness`.
 - Playwright artifacts include traces, screenshots, and cleanup logs.
 - Interrupted-run cleanup has a documented manual runbook using disposable prefixes and recorded IDs.
 
+Current status: covered by `docs/production-readiness-recovery.md` and `npm run cleanup:prod-readiness`.
+
 ## Required production test infrastructure
 
 - Dedicated production-safe admin test account.
@@ -190,7 +193,7 @@ Current status: covered by `npm run test:prod:readiness`.
 - Password reset tests must avoid locking out real operators or consuming normal-user rate limits.
 - Storage cleanup must verify files are removed from the real bucket.
 - Rollback validation needs an explicit safe drill so it does not disrupt live users.
-- Observability is not complete until failed production readiness runs leave enough artifacts to diagnose provider, auth, database, storage, and cleanup failures.
+- Keep the recovery runbook current as the production-readiness fixture adds new tables, buckets, or providers.
 
 ## Success condition
 
