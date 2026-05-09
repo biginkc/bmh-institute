@@ -47,7 +47,7 @@ const env = {
 const baseURL =
   process.env.E2E_PROD_BASE_URL ??
   env.E2E_PROD_BASE_URL ??
-  "https://bmh-institute.vercel.app";
+  "https://sandra-university.vercel.app";
 
 // Publish for the setup project so it can read creds.
 process.env.E2E_TEST_EMAIL = process.env.E2E_TEST_EMAIL ?? env.E2E_TEST_EMAIL ?? "";
