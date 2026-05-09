@@ -23,7 +23,7 @@ The application is not production-ready until repeatable validation proves the f
 | Access control and RLS isolation | Partially ready | Unit, integration, and smoke checks exist, but cross-user production isolation needs full Playwright proof. |
 | Content safety | Partially ready | Sanitization and embed hardening are implemented, but production unsafe-content save/render checks need repeatable coverage. |
 | Rate limiting and abuse controls | Partially ready | Code, unit, and live RPC proof exist, but production UI behavior under real limits needs controlled validation. |
-| Deployment and rollback | Blocked | A repeatable production deployment, custom-domain, env-var, and rollback validation workflow is not documented or automated. |
+| Deployment and rollback | Blocked | The manual production-readiness workflow runs from GitHub Actions, but the custom domain does not resolve and rollback validation is not automated. |
 | Observability and recovery | Partially ready | Playwright traces, screenshots, and cleanup verification exist. Manual interrupted-run cleanup runbook is still needed. |
 
 Allowed statuses:
@@ -57,7 +57,13 @@ Implemented production validation:
 
 The implemented check creates disposable prefixed production auth users, database records, and storage files. It signs in through the real production app, exercises the learner and admin lifecycle, verifies certificates, and cleans up the fixture.
 
-GitHub production-readiness secrets have been configured for the production app URL, Supabase URL, Supabase anon key, Supabase service-role key, and disposable-user password. The manual workflow cannot be dispatched from GitHub until `.github/workflows/production-readiness.yml` exists on the default branch after this PR is merged, because GitHub only registers `workflow_dispatch` workflows from the default branch.
+GitHub production-readiness secrets have been configured for the production app URL, Supabase URL, Supabase anon key, Supabase service-role key, and disposable-user password. The production app URL currently points to `https://sandra-university.vercel.app` because `https://university.bmhgroup.com` does not resolve in local or GitHub Actions DNS.
+
+Latest evidence:
+
+- GitHub Actions production-readiness run `25589792026` passed on 2026-05-09 from `main`.
+- Result: 1 lifecycle test passed, 1 email-link test skipped because no production email inbox capture is configured.
+- Post-run cleanup verification found 0 prefixed production programs, courses, modules, lessons, role groups, assignments, quizzes, answer options, and auth users.
 
 ## Required production validation scenarios
 
@@ -174,6 +180,7 @@ Current status: embed safety has existing production smoke coverage. Unsafe text
 ## Open blockers and risks
 
 - Production email capture is the main blocker for invite and password reset automation.
+- `university.bmhgroup.com` does not currently resolve. Production-readiness CI uses the Vercel production URL until the custom domain DNS is fixed.
 - GitHub production readiness secrets must use the current production Supabase service-role key. A stale local `.env.local` service-role key caused `Invalid API key` until the current key was injected from the Supabase CLI.
 - Production writes require strict disposable prefixes and cleanup so tests do not pollute real learner records.
 - Password reset tests must avoid locking out real operators or consuming normal-user rate limits.
