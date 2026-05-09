@@ -9,7 +9,6 @@ import {
   Inbox,
   LayoutDashboard,
   Package,
-  User,
   Users,
   UsersRound,
 } from "lucide-react";
@@ -22,7 +21,6 @@ type Item = {
   icon: typeof LayoutDashboard;
   label: string;
   badge?: number;
-  offset?: boolean;
 };
 
 const ITEM_BASE =
@@ -51,15 +49,10 @@ export function SidebarNav({
       icon: GraduationCap,
       label: "Certificates",
     },
-    {
-      href: "/profile",
-      icon: User,
-      label: "My Profile",
-    },
   ];
 
   const adminItems: Item[] = [
-    { href: "/admin", icon: LayoutDashboard, label: "Overview", offset: true },
+    { href: "/admin", icon: LayoutDashboard, label: "Overview" },
     { href: "/admin/programs", icon: Package, label: "Programs" },
     { href: "/admin/courses", icon: BookOpen, label: "Courses" },
     { href: "/admin/users", icon: Users, label: "Users" },
@@ -79,6 +72,7 @@ export function SidebarNav({
 
   return (
     <nav aria-label="Primary" className="flex flex-1 flex-col gap-1 text-sm">
+      <NavSectionLabel>Learn</NavSectionLabel>
       {learnerItems.map((item) => (
         <NavLink
           key={item.href}
@@ -89,6 +83,7 @@ export function SidebarNav({
 
       {isAdmin ? (
         <>
+          <NavSectionLabel className="mt-4">Admin</NavSectionLabel>
           {adminItems.map((item) => (
             <NavLink
               key={item.href}
@@ -99,6 +94,25 @@ export function SidebarNav({
         </>
       ) : null}
     </nav>
+  );
+}
+
+function NavSectionLabel({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div
+      className={cn(
+        "px-5 pb-1 pt-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground",
+        className,
+      )}
+    >
+      {children}
+    </div>
   );
 }
 
@@ -118,7 +132,6 @@ function NavLink({
       data-active={isActive || undefined}
       className={cn(
         ITEM_BASE,
-        item.offset && "mt-2",
         isActive ? ITEM_ACTIVE : ITEM_INACTIVE,
       )}
     >

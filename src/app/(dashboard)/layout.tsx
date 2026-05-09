@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { GraduationCap } from "lucide-react";
+import { Bell, GraduationCap } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
 import { BrandLockup } from "@/components/ui/brand-lockup";
@@ -44,6 +44,7 @@ export default async function DashboardLayout({
     : 0;
 
   const displayName = profile?.full_name || user.email || "BMH Institute user";
+  const roleLabel = profile?.system_role ?? "learner";
 
   return (
     <div className="bg-background min-h-screen">
@@ -55,7 +56,7 @@ export default async function DashboardLayout({
           <BrandLockup
             mark={
               <GraduationCap
-                className="text-primary-foreground size-4"
+                className="text-primary-foreground size-5"
                 aria-hidden
               />
             }
@@ -64,6 +65,15 @@ export default async function DashboardLayout({
           />
         </Link>
         <div className="flex items-center gap-3 text-sm">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            aria-label="Notifications"
+            className="hidden sm:inline-flex"
+          >
+            <Bell className="size-5" aria-hidden />
+          </Button>
           <Link
             href="/profile"
             className="hidden items-center gap-2 sm:flex"
@@ -73,7 +83,7 @@ export default async function DashboardLayout({
               {displayName}
             </span>
             <span className="bg-muted text-muted-foreground rounded-full px-2 py-0.5 text-[10px] font-bold tracking-widest uppercase">
-              {isAdmin ? "admin" : "learner"}
+              {roleLabel}
             </span>
           </Link>
           <form
