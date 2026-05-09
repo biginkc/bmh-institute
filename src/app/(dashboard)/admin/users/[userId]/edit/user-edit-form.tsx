@@ -152,7 +152,8 @@ export function UserEditForm({
         <Label>Role groups</Label>
         {allRoleGroups.length === 0 ? (
           <p className="text-muted-foreground text-xs">
-            No role groups defined. Create them under Role groups.
+            No role groups defined. Create role groups before inviting pilot
+            learners.
           </p>
         ) : (
           <div className="flex flex-col gap-2">
@@ -173,8 +174,8 @@ export function UserEditForm({
           </div>
         )}
         <p className="text-muted-foreground text-xs">
-          Adding a role group that grants access to a program the user
-          didn&apos;t have before triggers an enrollment email.
+          Role groups control pilot program and course access. Adding a group
+          that grants a new program triggers an enrollment email.
         </p>
       </div>
 
