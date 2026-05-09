@@ -93,7 +93,7 @@ None yet.
 
 ### Blockers/Concerns
 
-- Durable write-path Playwright coverage remains deferred to issue #2 until a non-prod Supabase target and email capture exist.
+- Durable write-path Playwright coverage remains deferred to issue #2. The non-prod Supabase target now exists as `bmh-institute-test` (`jvaabkchkihkjllehmft`) with seeded content; email capture still needs a committed strategy.
 - Phase 5 should read sibling repos for reference only. Do not write to Sandra, Closer Lab, Jitter, or Sandra Design System.
 
 ## Deferred Items

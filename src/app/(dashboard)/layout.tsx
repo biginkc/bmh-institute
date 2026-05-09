@@ -7,6 +7,9 @@ import { Button } from "@/components/ui/button";
 
 import { SidebarNav } from "./sidebar-nav";
 
+export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
+
 export default async function DashboardLayout({
   children,
 }: {

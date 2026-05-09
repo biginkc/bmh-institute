@@ -13,6 +13,8 @@
     "test:rtl": "vitest run --config vitest.rtl.config.ts",
     "test:e2e": "playwright test",
     "test:prod": "playwright test --config playwright.prod.config.ts",
+    "test:prod:readiness": "playwright test --config playwright.prod-readiness.config.ts",
+    "seed:e2e": "tsx scripts/seed-e2e-test-content.ts",
     "typecheck": "tsc --noEmit",
     "verify": "npm run typecheck && npm run test && npm run test:rtl",
     "prepare": "husky",
