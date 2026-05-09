@@ -14,7 +14,8 @@ const PROD_PROJECT_REF = "dhvfsyteqsxagokoerrx";
 const SUPABASE_URL = process.env.TEST_SUPABASE_URL;
 const SERVICE_ROLE = process.env.TEST_SUPABASE_SERVICE_ROLE_KEY;
 
-const E2E_PASSWORD = process.env.E2E_SEED_PASSWORD ?? "BMHInstituteTest123!";
+const E2E_PASSWORD =
+  process.env.E2E_SEED_PASSWORD?.trim() || "BMHInstituteTest123!";
 const SEED = {
   roleGroup: "E2E Appointment Setters",
   program: "E2E VA Onboarding",
