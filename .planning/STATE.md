@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v1 follow-up
-milestone_name: Production Readiness Evidence
-status: completed
-stopped_at: v1 follow-up archived; start next milestone with /gsd-new-milestone
-last_updated: "2026-05-09T10:23:05.000Z"
-last_activity: 2026-05-09 -- v1 follow-up milestone archived after production-readiness run 25598402881 passed from main
+milestone: v1.1
+milestone_name: Internal Pilot Operations
+status: executing
+stopped_at: Phase 6 complete; next step is /gsd-discuss-phase 7
+last_updated: "2026-05-09T10:56:43.076Z"
+last_activity: 2026-05-09
 progress:
-  total_phases: 8
-  completed_phases: 8
-  total_plans: 19
-  completed_plans: 21
+  total_phases: 4
+  completed_phases: 1
+  total_plans: 3
+  completed_plans: 3
   percent: 100
 ---
 
@@ -21,22 +21,20 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-30)
 
 **Core value:** A VA can sign in via an admin invite, work through assigned programs and courses on their own time, take quizzes and submit assignments without supervision, and receive a certificate when they finish. Admins can author content, manage learners, review submissions, and see who is making progress without leaving the platform.
-**Current focus:** no active milestone; v1 follow-up is archived and production readiness is green
+**Current focus:** v1.1 Internal Pilot Operations
 
 ## Current Position
 
-Phase: milestone archive
-Plan: v1 follow-up archive complete
-Status: Complete
-Last activity: 2026-05-09 -- archive files created under .planning/milestones and ROADMAP collapsed
-
-Progress: [██████████] 100%
+Phase: 7
+Plan: Not started
+Status: Ready to execute
+Last activity: 2026-05-09
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 1 (in Phase 01.1)
+- Total plans completed: 4 (in Phase 01.1)
 - Average duration: ~5 min
 - Total execution time: ~5 min
 
@@ -45,6 +43,7 @@ Progress: [██████████] 100%
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01.1 | 1 | ~5 min | ~5 min |
+| 6 | 3 | - | - |
 
 **Recent Trend:**
 
@@ -101,8 +100,8 @@ None yet.
 
 ### Concerns
 
-- No active milestone is defined.
-- Start the next milestone with `/gsd-new-milestone` when ready.
+- v1.1 should stay focused on the first real internal pilot. Sandra Practice embed work and performance threshold work remain parked until their triggers are met.
+- Spending changes, provider changes, or infrastructure changes still require explicit approval.
 
 ## Deferred Items
 
@@ -115,10 +114,10 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-08T21:15:00.000Z
-Stopped at: Phase 2 verified; choose deployment prerequisites or Phase 3 planning next.
-Resume file: .planning/phases/02-content-safety-and-rate-limiting/02-VERIFICATION.md
-Session handoff: docs/handoff/2026-05-04-bmh-institute-rename.md (paste-ready next-tab prompt + verification block)
+Last session: 2026-05-09T10:44:20.478Z
+Stopped at: Phase 6 complete; next step is /gsd-discuss-phase 7
+Resume file: .planning/phases/06-pilot-cohort-setup/06-VERIFICATION.md
+Session handoff: .planning/STATE.md
 
 ### 2026-05-08 - Phase 2 verification complete
 
