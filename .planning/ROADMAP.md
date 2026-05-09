@@ -149,15 +149,17 @@ Completed:
 
 ## Future Candidates
 
-### Role-play embed
+### Embedded Closer Lab role play
 
-Parked for a future milestone after Sandra Practice ships its first public scenario:
+Completed for the internal walkthrough after Closer Lab shipped a usable hosted scenario:
 
 - EMBD-01: role-play block type and `role_play_results` table.
 - EMBD-02: short-lived embed JWT helper.
 - EMBD-03: `RolePlayBlock` iframe and postMessage listener.
 - EMBD-04: admin block editor role-play option.
 - EMBD-05: role-play result persistence and report surfacing.
+
+Production-readiness run `25609474981` passed after the embedded role-play walkthrough and user-report surfacing were deployed.
 
 ### Performance threshold work
 
