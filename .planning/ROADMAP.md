@@ -33,11 +33,18 @@ Production evidence:
 
 ### v1.1: Internal Pilot Operations
 
-**Status:** executing
+**Status:** shipped 2026-05-09
 
 **Goal:** Make BMH Institute ready for BMH Group's first real internal learner pilot.
 
-Progress: 3 of 4 phases complete.
+Progress: 4 of 4 phases complete.
+
+Production evidence:
+
+- GitHub Actions production-readiness run `25600994876` passed from `main` on 2026-05-09.
+- Result: 4 passed.
+- Production URL: `https://institute.bmhgroupkc.com`.
+- Deployment: `https://sandra-university-25079yv0x-jarrad-5416s-projects.vercel.app`.
 
 ### Phase 6: Pilot Cohort Setup
 
@@ -101,7 +108,7 @@ Delivered:
 
 ### Phase 9: Pilot Runbook and Readiness Checks
 
-**Status:** not started
+**Status:** complete 2026-05-09
 
 **Goal:** Make the internal pilot repeatable without ad hoc Codex guidance.
 
@@ -113,6 +120,14 @@ Success criteria:
 2. Pre-pilot checklist verifies domain, email links, auth, content access, submissions, certificates, and cleanup.
 3. Production-readiness automation covers pilot-critical flows or clearly documents manual gaps.
 4. No new spending, providers, or infrastructure are introduced without explicit approval.
+
+Delivered:
+
+- Internal pilot runbook.
+- Pre-pilot checklist.
+- Production readiness coverage for pilot monitoring and CSV export.
+- Production deployment and custom domain alias refresh.
+- Production readiness run `25600994876` passed.
 
 ## Backlog
 

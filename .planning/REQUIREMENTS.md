@@ -27,10 +27,10 @@ Make BMH Institute ready for BMH Group's first real internal learner pilot.
 
 ## Operational Readiness
 
-- [ ] RUN-01: Team has a production pilot runbook that covers launch, monitoring, common support cases, and rollback.
-- [ ] RUN-02: Team has a reusable pre-pilot checklist that verifies domain, email links, auth, content access, submissions, certificates, and cleanup.
-- [ ] RUN-03: Production-readiness automation covers the pilot-critical flows or clearly records what remains manual.
-- [ ] RUN-04: Pilot launch does not require spending changes, provider changes, or new infrastructure unless explicitly approved.
+- [x] RUN-01: Team has a production pilot runbook that covers launch, monitoring, common support cases, and rollback.
+- [x] RUN-02: Team has a reusable pre-pilot checklist that verifies domain, email links, auth, content access, submissions, certificates, and cleanup.
+- [x] RUN-03: Production-readiness automation covers the pilot-critical flows or clearly records what remains manual.
+- [x] RUN-04: Pilot launch does not require spending changes, provider changes, or new infrastructure unless explicitly approved.
 
 ## Future Requirements
 
