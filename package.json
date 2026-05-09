@@ -18,7 +18,8 @@
     "typecheck": "tsc --noEmit",
     "verify": "npm run typecheck && npm run test && npm run test:rtl",
     "prepare": "husky",
-    "backfill:sanitize-html": "tsx scripts/backfill-sanitize-html.ts"
+    "backfill:sanitize-html": "tsx scripts/backfill-sanitize-html.ts",
+    "cleanup:prod-readiness": "tsx scripts/cleanup-production-readiness.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",
