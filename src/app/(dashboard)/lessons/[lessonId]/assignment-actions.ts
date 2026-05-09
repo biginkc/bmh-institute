@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { sendEmail } from "@/lib/email/send";
 import { renderNewSubmissionEmail } from "@/lib/email/new-submission";
+import { getAppUrl } from "@/lib/app-url";
 
 export type SubmitResult =
   | { ok: true }
@@ -137,9 +138,7 @@ async function notifyAdminsOfNewSubmission(input: {
 
   if (!learner || admins.length === 0) return;
 
-  const appUrl =
-    process.env.NEXT_PUBLIC_APP_URL ?? "https://sandra-university.vercel.app";
-  const submissionsUrl = `${appUrl.replace(/\/$/, "")}/admin/submissions`;
+  const submissionsUrl = `${getAppUrl()}/admin/submissions`;
 
   const rendered = renderNewSubmissionEmail({
     learnerName: learner.full_name || learner.email,
