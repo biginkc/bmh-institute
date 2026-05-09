@@ -8,6 +8,9 @@ on:
       - "supabase/migrations/**"
       - ".github/workflows/db-migrate-test.yml"
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   migrate-test:
     name: Apply migrations to BMH test
