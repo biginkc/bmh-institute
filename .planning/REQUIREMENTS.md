@@ -69,7 +69,7 @@ Deferred to a future milestone. Tracked but not in the current roadmap.
 | Feature | Reason |
 |---------|--------|
 | AI voice role-play runtime | Owned by the standalone Sandra Practice app; embed surface lives in BMH Institute v2 |
-| Test Supabase project | `npm run test:integration` and `npm run test:e2e` continue against prod read-only as a deliberate cost choice |
+| Additional production-like Supabase projects | TEST-03 now uses the existing `bmh-institute-test` Supabase project. More environments remain out of scope unless a future milestone needs them. |
 | New content authoring features | Hardening milestone, no scope creep |
 | Mobile native app | Web-first, never in scope |
 | Auto translation | English-first |
