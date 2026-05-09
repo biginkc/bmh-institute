@@ -1,3 +1,12 @@
+# Requirements Archive: v1-follow-up v1-follow-up
+
+**Archived:** 2026-05-09
+**Status:** SHIPPED
+
+Fresh requirements will be created by the next `/gsd-new-milestone` run.
+
+---
+
 # Requirements: BMH Institute
 
 **Defined:** 2026-04-30
