@@ -1,7 +1,7 @@
 # Production readiness hardening assessment
 
 Date: 2026-05-09
-Status: not production-ready
+Status: partially ready, not production-ready
 
 ## Purpose
 
@@ -13,18 +13,18 @@ The application is not production-ready until repeatable validation proves the f
 
 | Area | Status | Reason |
 |------|--------|--------|
-| Overall application readiness | Not ready | Production write-path validation is not automated and repeatable yet. |
+| Overall application readiness | Partially ready | A real production lifecycle check now passes, but invite and password-reset email-link validation is still blocked. |
 | Production auth and onboarding | Not ready | Invite acceptance and first-password setup are not repeatably validated with real production email. |
 | Password reset | Not ready | Reset-link delivery and completion are not repeatably validated through the real production provider. |
-| Learner lifecycle | Partially ready | Manual production smoke covered important paths, but the complete lifecycle is not automated against production. |
-| Admin review lifecycle | Partially ready | Manual production smoke covered review paths, but revision, approval, and cleanup need repeatable production validation. |
-| Certificates | Partially ready | Trigger behavior has integration coverage, but production UI issuance and print/download validation are not repeatable. |
-| Storage uploads | Partially ready | Server-side prefix validation exists, but production upload, readback, and cleanup are not repeatably validated. |
+| Learner lifecycle | Ready | On-demand production readiness spec validates assigned and unassigned learners, course access, content completion, quiz pass, text assignment, and file assignment. |
+| Admin review lifecycle | Ready | On-demand production readiness spec validates revision request, learner resubmission, admin approval, and cleanup. |
+| Certificates | Ready | On-demand production readiness spec validates real course and program certificate issuance plus certificate UI print path. |
+| Storage uploads | Ready | On-demand production readiness spec validates real production storage upload, signed URL creation, user-prefix path, and cleanup. |
 | Access control and RLS isolation | Partially ready | Unit, integration, and smoke checks exist, but cross-user production isolation needs full Playwright proof. |
 | Content safety | Partially ready | Sanitization and embed hardening are implemented, but production unsafe-content save/render checks need repeatable coverage. |
 | Rate limiting and abuse controls | Partially ready | Code, unit, and live RPC proof exist, but production UI behavior under real limits needs controlled validation. |
 | Deployment and rollback | Blocked | A repeatable production deployment, custom-domain, env-var, and rollback validation workflow is not documented or automated. |
-| Observability and recovery | Blocked | Failure artifacts exist for Playwright, but production cleanup and interrupted-run recovery need a runbook. |
+| Observability and recovery | Partially ready | Playwright traces, screenshots, and cleanup verification exist. Manual interrupted-run cleanup runbook is still needed. |
 
 Allowed statuses:
 
@@ -49,6 +49,14 @@ All production-readiness checks must:
 
 The current seeded test-database CI suite remains useful for PR regression coverage. It does not prove production readiness because it does not validate the real production provider stack.
 
+Implemented production validation:
+
+- `npm run test:prod:readiness`
+- `.github/workflows/production-readiness.yml`
+- `e2e-prod/production-readiness.spec.ts`
+
+The implemented check creates disposable prefixed production auth users, database records, and storage files. It signs in through the real production app, exercises the learner and admin lifecycle, verifies certificates, and cleans up the fixture.
+
 ## Required production validation scenarios
 
 ### Auth and onboarding
@@ -60,6 +68,8 @@ The current seeded test-database CI suite remains useful for PR regression cover
 - Learner signs in with the new password.
 - Cleanup removes the disposable auth user, profile, role groups, progress, submissions, certificates, and storage objects.
 
+Current status: blocked until production email inbox/capture credentials are available.
+
 ### Password reset and email delivery
 
 - Existing production test user requests forgot-password.
@@ -68,6 +78,8 @@ The current seeded test-database CI suite remains useful for PR regression cover
 - User sets a new password and signs in with that password.
 - Cleanup restores the original password or recreates the disposable test user safely.
 - Rate-limit behavior is verified without locking out operators or consuming normal-user limits.
+
+Current status: blocked until production email inbox/capture credentials are available.
 
 ### Learner lifecycle
 
@@ -80,6 +92,8 @@ The current seeded test-database CI suite remains useful for PR regression cover
 - Learner uploads a file assignment to real production storage.
 - Learner sees the resulting submitted or pending state.
 
+Current status: covered by `npm run test:prod:readiness`.
+
 ### Admin review lifecycle
 
 - Admin sees the learner submission in the production review queue.
@@ -90,6 +104,8 @@ The current seeded test-database CI suite remains useful for PR regression cover
 - Admin approves the resubmission.
 - Learner sees approved state.
 
+Current status: covered by `npm run test:prod:readiness`.
+
 ### Certificate lifecycle
 
 - Completing required course or program work triggers real certificate issuance.
@@ -97,6 +113,8 @@ The current seeded test-database CI suite remains useful for PR regression cover
 - Certificate number is persisted in production.
 - Certificate print or download path renders successfully.
 - Cleanup removes disposable certificate rows created by the test.
+
+Current status: covered by `npm run test:prod:readiness`.
 
 ### Storage, access control, and RLS isolation
 
@@ -108,6 +126,8 @@ The current seeded test-database CI suite remains useful for PR regression cover
 - Storage upload is readable through the intended signed URL path and removed during cleanup.
 - Admin-only paths remain available to owner/admin production test users.
 
+Current status: partially covered by `npm run test:prod:readiness`. Cross-user direct data probing should be expanded in a follow-up.
+
 ### Content safety
 
 - Admin saves a text block containing unsafe HTML in production.
@@ -117,6 +137,8 @@ The current seeded test-database CI suite remains useful for PR regression cover
 - Learner render includes the sandbox attribute.
 - Invalid non-HTTPS embed source is rejected through the production UI.
 - Disposable unsafe-content fixture is cleaned up.
+
+Current status: embed safety has existing production smoke coverage. Unsafe text-block save/render should be added to the production readiness spec.
 
 ### Deployment, rollback, observability, and recovery
 
@@ -150,6 +172,7 @@ The current seeded test-database CI suite remains useful for PR regression cover
 ## Open blockers and risks
 
 - Production email capture is the main blocker for invite and password reset automation.
+- GitHub production readiness secrets must use the current production Supabase service-role key. A stale local `.env.local` service-role key caused `Invalid API key` until the current key was injected from the Supabase CLI.
 - Production writes require strict disposable prefixes and cleanup so tests do not pollute real learner records.
 - Password reset tests must avoid locking out real operators or consuming normal-user rate limits.
 - Storage cleanup must verify files are removed from the real bucket.
@@ -159,3 +182,5 @@ The current seeded test-database CI suite remains useful for PR regression cover
 ## Success condition
 
 BMH Institute can be called production-ready only after the production readiness workflow repeatedly passes auth and onboarding, password reset, learner lifecycle, admin review, certificates, storage, access control, content safety, rate limiting, deployment, rollback, observability, cleanup, and recovery checks against real production services with no mocked providers.
+
+As of 2026-05-09, production lifecycle, storage, admin review, and certificate checks pass. The app is still not production-ready because invite acceptance and password reset require real production email-link capture, and deployment rollback/recovery still need a documented drill.
