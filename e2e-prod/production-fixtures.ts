@@ -9,6 +9,7 @@ export type ProductionReadinessFixture = {
   moduleId: string;
   contentLessonId: string;
   contentBlockId: string;
+  embedBlockId: string;
   quizId: string;
   quizLessonId: string;
   correctOptionText: string;
@@ -132,6 +133,16 @@ export async function createProductionReadinessFixture(
     sort_order: 10,
     is_required_for_completion: true,
   });
+  const embedBlockId = await insertOne(admin, "content_blocks", {
+    lesson_id: contentLessonId,
+    block_type: "embed",
+    content: {
+      iframe_src: "https://example.com",
+      aspect_ratio: "16:9",
+    },
+    sort_order: 20,
+    is_required_for_completion: false,
+  });
 
   const quizId = await insertOne(admin, "quizzes", {
     title: `${prefix} Quiz`,
@@ -220,6 +231,7 @@ export async function createProductionReadinessFixture(
     moduleId,
     contentLessonId,
     contentBlockId,
+    embedBlockId,
     quizId,
     quizLessonId,
     correctOptionText,
