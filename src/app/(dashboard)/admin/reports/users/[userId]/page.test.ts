@@ -4,6 +4,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const calls: string[] = [];
+const tablesQueried: string[] = [];
 
 vi.mock("@/lib/auth/guard", () => ({
   requireAdmin: vi.fn(async () => {
@@ -37,7 +38,10 @@ vi.mock("@/lib/supabase/server", () => ({
         Promise.resolve({ data: [], error: null }).then(r),
     };
     return {
-      from: () => chain,
+      from: (table: string) => {
+        tablesQueried.push(table);
+        return chain;
+      },
       auth: { getUser: async () => ({ data: { user: null } }) },
     };
   }),
@@ -57,6 +61,7 @@ function makeRedirectError(path: string) {
 describe("UserReportPage", () => {
   beforeEach(() => {
     calls.length = 0;
+    tablesQueried.length = 0;
     vi.mocked(requireAdmin).mockReset();
     vi.mocked(requireAdmin).mockImplementation(async () => {
       calls.push("requireAdmin");
@@ -73,6 +78,11 @@ describe("UserReportPage", () => {
     expect(calls[0]).toBe("requireAdmin");
     expect(calls).toContain("createClient");
     expect(calls.indexOf("requireAdmin")).toBeLessThan(calls.indexOf("createClient"));
+  });
+
+  it("queries role-play results for the learner report", async () => {
+    await UserReportPage({ params: Promise.resolve({ userId: "u-1" }) });
+    expect(tablesQueried).toContain("role_play_results");
   });
 
   it("redirects unauthenticated requests to /login", async () => {
