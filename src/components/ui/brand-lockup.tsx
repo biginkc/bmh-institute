@@ -20,7 +20,7 @@ export function BrandLockup({
       className={cn("flex items-center gap-3", className)}
       {...props}
     >
-      <div className="bg-primary flex aspect-square size-8 shrink-0 items-center justify-center rounded-lg">
+      <div className="bg-primary flex aspect-square size-10 shrink-0 items-center justify-center rounded-xl">
         {mark}
       </div>
       <div className="grid min-w-0 flex-1 text-left leading-tight">

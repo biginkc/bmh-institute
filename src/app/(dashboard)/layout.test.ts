@@ -16,6 +16,12 @@ describe("DashboardLayout sibling shell contract", () => {
     expect(layoutSource).toContain("md:ml-64");
   });
 
+  it("keeps the Stitch topbar identity controls", () => {
+    expect(layoutSource).toContain("Bell");
+    expect(layoutSource).toContain("roleLabel");
+    expect(layoutSource).toContain("rounded-full px-2 py-0.5");
+  });
+
   it("does not render a separate mobile-only nav strip outside the sibling shell", () => {
     expect(layoutSource).not.toContain('variant="mobile"');
     expect(layoutSource).not.toContain("md:hidden print:hidden");
