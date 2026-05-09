@@ -40,4 +40,41 @@ describe("WalkthroughCaptionOverlay", () => {
     expect(overlay).toHaveClass("bg-slate-950/80");
     expect(overlay).toHaveClass("text-white");
   });
+
+  it("renders persistent wizard controls when step links are provided", () => {
+    searchParamsMock.mockReturnValue(
+      new URLSearchParams({
+        walkthroughCaption: "Step 2: Review the dashboard.",
+        walkthroughBack: "/login?walkthrough=demo&step=1",
+        walkthroughNext: "/courses/demo?walkthrough=demo&step=3",
+      }),
+    );
+
+    render(<WalkthroughCaptionOverlay />);
+
+    const overlay = screen.getByRole("status");
+    expect(overlay).toHaveClass("pointer-events-auto");
+    expect(screen.getByRole("link", { name: "Back" })).toHaveAttribute(
+      "href",
+      "/login?walkthrough=demo&step=1",
+    );
+    expect(screen.getByRole("link", { name: "Next" })).toHaveAttribute(
+      "href",
+      "/courses/demo?walkthrough=demo&step=3",
+    );
+  });
+
+  it("keeps disabled wizard controls visible at the beginning and end", () => {
+    searchParamsMock.mockReturnValue(
+      new URLSearchParams({
+        walkthroughCaption: "Step 1: Start here.",
+        walkthroughNext: "/dashboard?walkthrough=demo&step=2",
+      }),
+    );
+
+    render(<WalkthroughCaptionOverlay />);
+
+    expect(screen.getByRole("button", { name: "Back" })).toBeDisabled();
+    expect(screen.getByRole("link", { name: "Next" })).toBeTruthy();
+  });
 });
