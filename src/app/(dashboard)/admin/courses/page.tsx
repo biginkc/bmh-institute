@@ -14,10 +14,17 @@ import { createClient } from "@/lib/supabase/server";
 
 export default async function AdminCoursesPage() {
   const supabase = await createClient();
-  const { data: courses } = await supabase
-    .from("courses")
-    .select("id, title, is_published")
-    .order("title");
+  const [coursesRes, modulesRes] = await Promise.all([
+    supabase
+      .from("courses")
+      .select("id, title, is_published")
+      .order("title"),
+    supabase.from("modules").select("course_id, lessons(id)"),
+  ]);
+  const courses = addCourseContentCounts(
+    (coursesRes.data ?? []) as CourseListRow[],
+    (modulesRes.data ?? []) as ModuleCountRow[],
+  );
 
   return (
     <main className="flex-1 p-6 md:p-10">
@@ -37,7 +44,7 @@ export default async function AdminCoursesPage() {
         />
       </div>
 
-      {(courses ?? []).length === 0 ? (
+      {courses.length === 0 ? (
         <p className="text-muted-foreground text-sm">No courses yet.</p>
       ) : (
         <div className="border-border rounded-md border">
@@ -45,15 +52,23 @@ export default async function AdminCoursesPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Title</TableHead>
+                <TableHead className="text-right">Modules</TableHead>
+                <TableHead className="text-right">Lessons</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Edit</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {(courses ?? []).map((c) => (
+              {courses.map((c) => (
                 <TableRow key={c.id as string}>
                   <TableCell className="font-medium">
                     {c.title as string}
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums">
+                    {c.moduleCount}
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums">
+                    {c.lessonCount}
                   </TableCell>
                   <TableCell>
                     <Badge variant={c.is_published ? "default" : "outline"}>
@@ -76,4 +91,48 @@ export default async function AdminCoursesPage() {
       )}
     </main>
   );
+}
+
+type CourseListRow = {
+  id: string;
+  title: string;
+  is_published: boolean;
+};
+
+type LessonCountShape = { id: string } | Array<{ id: string }> | null;
+
+type ModuleCountRow = {
+  course_id: string;
+  lessons: LessonCountShape;
+};
+
+export function addCourseContentCounts<T extends { id: string }>(
+  courses: T[],
+  modules: ModuleCountRow[],
+): Array<T & { moduleCount: number; lessonCount: number }> {
+  const moduleCountByCourse = new Map<string, number>();
+  const lessonCountByCourse = new Map<string, number>();
+
+  for (const moduleRow of modules) {
+    moduleCountByCourse.set(
+      moduleRow.course_id,
+      (moduleCountByCourse.get(moduleRow.course_id) ?? 0) + 1,
+    );
+    lessonCountByCourse.set(
+      moduleRow.course_id,
+      (lessonCountByCourse.get(moduleRow.course_id) ?? 0) +
+        countLessons(moduleRow.lessons),
+    );
+  }
+
+  return courses.map((course) => ({
+    ...course,
+    moduleCount: moduleCountByCourse.get(course.id) ?? 0,
+    lessonCount: lessonCountByCourse.get(course.id) ?? 0,
+  }));
+}
+
+function countLessons(lessons: LessonCountShape): number {
+  if (!lessons) return 0;
+  return Array.isArray(lessons) ? lessons.length : 1;
 }
