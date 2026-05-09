@@ -20,7 +20,7 @@ The application is not production-ready until repeatable validation proves the f
 | Admin review lifecycle | Ready | On-demand production readiness spec validates revision request, learner resubmission, admin approval, and cleanup. |
 | Certificates | Ready | On-demand production readiness spec validates real course and program certificate issuance plus certificate UI print path. |
 | Storage uploads | Ready | On-demand production readiness spec validates real production storage upload, signed URL creation, user-prefix path, and cleanup. |
-| Access control and RLS isolation | Partially ready | Unit, integration, and smoke checks exist, but cross-user production isolation needs full Playwright proof. |
+| Access control and RLS isolation | Ready | Production readiness spec validates route protection, assigned versus unassigned learner access, direct RLS reads, cross-user submission isolation, and storage prefix isolation. |
 | Content safety | Ready | Production readiness spec validates unsafe text-block save sanitization, learner render safety, HTTPS-only embed validation, and iframe sandboxing. |
 | Rate limiting and abuse controls | Partially ready | Code, unit, and live RPC proof exist, but production UI behavior under real limits needs controlled validation. |
 | Deployment and rollback | Blocked | The manual production-readiness workflow runs from GitHub Actions, but the custom domain does not resolve and rollback validation is not automated. |
@@ -67,6 +67,7 @@ Latest evidence:
 - Result: 1 lifecycle test passed, 1 email-link test skipped because no production email inbox capture is configured.
 - Post-run cleanup verification found 0 prefixed production programs, courses, modules, lessons, role groups, assignments, quizzes, answer options, and auth users.
 - Local production-readiness run on 2026-05-09 passed after adding content-safety coverage. It verified unsafe text-block sanitization through the admin UI, HTTPS-only embed validation through the admin UI, sandboxed learner iframe rendering, and cleanup of the disposable fixture.
+- Local production-readiness run on 2026-05-09 passed after adding access-control coverage. It verified assigned and unassigned learner route behavior, direct production RLS reads through learner-scoped Supabase clients, cross-user submission isolation, blocked cross-prefix storage reads and writes, and cleanup of the disposable fixture.
 
 ## Required production validation scenarios
 
@@ -137,7 +138,7 @@ Current status: covered by `npm run test:prod:readiness`.
 - Storage upload is readable through the intended signed URL path and removed during cleanup.
 - Admin-only paths remain available to owner/admin production test users.
 
-Current status: partially covered by `npm run test:prod:readiness`. Cross-user direct data probing should be expanded in a follow-up.
+Current status: covered by `npm run test:prod:readiness`.
 
 ### Content safety
 
@@ -195,4 +196,4 @@ Current status: covered by `npm run test:prod:readiness`.
 
 BMH Institute can be called production-ready only after the production readiness workflow repeatedly passes auth and onboarding, password reset, learner lifecycle, admin review, certificates, storage, access control, content safety, rate limiting, deployment, rollback, observability, cleanup, and recovery checks against real production services with no mocked providers.
 
-As of 2026-05-09, production lifecycle, storage, admin review, certificates, and content-safety checks pass. The app is still not production-ready because invite acceptance and password reset require real production email-link capture, and deployment rollback/recovery still need a documented drill.
+As of 2026-05-09, production lifecycle, storage, access control, admin review, certificates, and content-safety checks pass. The app is still not production-ready because invite acceptance and password reset require real production email-link capture, and deployment rollback/recovery still need a documented drill.
