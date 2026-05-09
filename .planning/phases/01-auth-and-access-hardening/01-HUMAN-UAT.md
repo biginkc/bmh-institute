@@ -1,10 +1,11 @@
 ---
-status: closed-with-deferrals
+status: complete
 phase: 01-auth-and-access-hardening
 source: [01-VERIFICATION.md]
 started: 2026-04-30T21:15:00Z
 updated: 2026-05-01T05:35:11Z
 retired_by: 01.1-testing-coverage-parity
+closed_with_deferrals: true
 ---
 
 ## Current Test

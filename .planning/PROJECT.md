@@ -32,10 +32,7 @@ A VA can sign in via an admin invite, work through assigned programs and courses
 
 ### Active
 
-The current milestone is v1.1 Ecosystem UI Alignment. It moves the Phase 2.5 Stitch direction into production UI without changing LMS behavior.
-
-- [x] UI-02: BMH Institute production dashboard shell matches the BMH ecosystem navigation pattern used by Sandra, Closer Lab, and Jitter.
-- [x] UI-03: BMH Institute production dashboard pages adopt the Sandra PageHeader pattern for title, description, breadcrumb, and action layout.
+No active milestone is defined. Start the next milestone with `/gsd-new-milestone`.
 
 ### Out of Scope
 
@@ -48,7 +45,17 @@ The current milestone is v1.1 Ecosystem UI Alignment. It moves the Phase 2.5 Sti
 
 ## Context
 
-This codebase has shipped fourteen feature commits before adopting GSD. v1 Production Hardening is complete with durable write-path Playwright coverage deferred to GitHub issue #2. The codebase map under `.planning/codebase/` is the canonical reference for current structure. AGENTS.md is the source of truth for development conventions and project identity. Production runs on the Hobby Vercel plan and the BMH Group Supabase Pro org subscription (~\$25 per month, shared across all org projects).
+This codebase has shipped the v1 follow-up milestone. BMH Institute is ready for the internal pilot scope: custom domain, production auth, production Supabase writes, production storage, production email-link invite acceptance, password reset, admin review, certificates, cleanup, and recovery checks all pass through GitHub Actions production-readiness.
+
+Latest production-readiness evidence:
+
+- Run: `25598402881`
+- Branch: `main`
+- Date: 2026-05-09
+- Result: 4 passed, 0 skipped
+- URL: `https://institute.bmhgroupkc.com`
+
+The codebase map under `.planning/codebase/` is the canonical reference for current structure. AGENTS.md is the source of truth for development conventions and project identity. Production runs on the Hobby Vercel plan and the BMH Group Supabase Pro org subscription.
 
 The standalone Sandra Practice app has not been bootstrapped yet. Its parked planning bundle lives in `sandra-practice-planning/` and the cross-origin embed contract lives in `role-play-embed-contract.md`. Both are untracked in git — Jarrad will move them when Sandra Practice gets its own repo.
 
@@ -67,14 +74,14 @@ Email transport pivoted from SendGrid to Google Workspace SMTP in commit `ce6e49
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Adopt GSD on a brownfield codebase mid-flight | Future work needs phase tracking, atomic commits, and verification gates beyond pre-commit linting | — Pending |
-| First milestone is hardening, not features | Concerns map surfaced security and data-integrity gaps that should close before the BMH team scales up; hardening is a one-shot foundation cost | — Pending |
-| Coarse granularity, parallel execution, YOLO mode | Matches Jarrad's parked Sandra Practice config and his shipping pace; keeps phase count low so velocity stays high | — Pending |
-| Quality model profile, all workflow gates on | Hardening work has long blast radius; pay for deeper analysis up front | — Pending |
+| Adopt GSD on a brownfield codebase mid-flight | Future work needs phase tracking, atomic commits, and verification gates beyond pre-commit linting | ✓ Good |
+| First milestone is hardening, not features | Concerns map surfaced security and data-integrity gaps that should close before the BMH team scales up; hardening is a one-shot foundation cost | ✓ Good |
+| Coarse granularity, parallel execution, YOLO mode | Matches Jarrad's parked Sandra Practice config and his shipping pace; keeps phase count low so velocity stays high | ✓ Good |
+| Quality model profile, all workflow gates on | Hardening work has long blast radius; pay for deeper analysis up front | ✓ Good |
 | Voice runtime work belongs in Sandra Practice, not here | The embed contract was written specifically to keep the LMS lean and the role-play app reusable; conflating them would break the architecture | ✓ Good |
 | Test-first execution is the default for meaningful changes | Keeps behavior changes covered without turning routine execution into an execution bottleneck | ✓ Good |
-| v1 hardening closed with TEST-03 deferred | Manual production Playwright verified major write paths; durable automation needs non-prod Supabase and email capture | ✓ Good |
-| v1.1 focuses on shared BMH ecosystem shell | Jarrad wants BMH Institute navigation to match Sandra, Closer Lab, and Jitter instead of drifting as a standalone LMS | — Pending |
+| v1 hardening closed with TEST-03 deferred | Manual production Playwright verified major write paths; durable automation needs non-prod Supabase and email capture | ✓ Superseded by PR #39, PR #40, and PR #45 |
+| v1.1 focuses on shared BMH ecosystem shell | Jarrad wants BMH Institute navigation to match Sandra, Closer Lab, and Jitter instead of drifting as a standalone LMS | ✓ Good |
 
 ## Evolution
 
@@ -94,4 +101,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-08 after v1 audit and v1.1 milestone planning*
+*Last updated: 2026-05-09 after v1 follow-up milestone archive*
