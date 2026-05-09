@@ -1,11 +1,11 @@
 ---
 gsd_state_version: 1.0
 milestone: v1 follow-up
-milestone_name: Invite Acceptance Coverage
+milestone_name: Performance Threshold Policy
 status: ready
-stopped_at: invite acceptance E2E PR #40 green; ready to merge
-last_updated: "2026-05-09T01:57:00.000Z"
-last_activity: 2026-05-09 -- invite acceptance E2E added and verified by PR #40 CI seeded E2E
+stopped_at: performance thresholds documented; ready for verification and PR
+last_updated: "2026-05-09T02:25:00.000-05:00"
+last_activity: 2026-05-09 -- performance trigger policy added for GitHub issue #9
 progress:
   total_phases: 1
   completed_phases: 1
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-30)
 
 **Core value:** A VA can sign in via an admin invite, work through assigned programs and courses on their own time, take quizzes and submit assignments without supervision, and receive a certificate when they finish. Admins can author content, manage learners, review submissions, and see who is making progress without leaving the platform.
-**Current focus:** durable non-production invite acceptance and first password setup coverage complete in PR #40
+**Current focus:** performance threshold policy for parked PERF-01..03 work
 
 ## Current Position
 
-Phase: TEST-03 invite acceptance follow-up
+Phase: Issue #9 performance threshold follow-up
 Plan: quick task complete
 Status: Complete
-Last activity: 2026-05-09 -- Supabase generated invite-link fixture added; local `npm run verify` passed; PR #40 CI seeded E2E passed
+Last activity: 2026-05-09 -- `docs/performance-thresholds.md` added as the trigger policy for report and signed URL performance work
 
 Progress: [██████████] 100%
 
@@ -89,6 +89,7 @@ Recent decisions affecting current work:
 - 2026-05-09 (quick task): BMH Institute now consumes `@sandra/tokens` from `../Sandra Design System`, imports the shared token CSS in `globals.css`, adds the registry-style `BrandLockup` component locally, uses webpack for local dev to resolve linked design-system CSS, and covers the package contract with `src/app/globals.test.ts`.
 - 2026-05-09 (quick task): Added durable non-production Playwright write-path coverage for issue #2. The suite creates disposable users/content, drives learner/admin LMS writes through the browser, validates certificate visibility, checks unassigned learner denial, and keeps invite acceptance separate. Local `npm run verify` passed, and PR #39 CI passed both `Verify` and `Seeded Playwright E2E`.
 - 2026-05-09 (quick task): Added invite acceptance coverage using Supabase Admin `generateLink({ type: "invite" })` in the non-production test project. This drives the real browser through the invite action link, `/auth/callback`, first password setup, dashboard access, and DB assertions for accepted invite/profile/role group state. It also fixed hash-token invite callbacks by adding a browser bridge and `/auth/apply-invite` route. Local `npm run verify` passed, and PR #40 CI passed both `Verify` and `Seeded Playwright E2E`.
+- 2026-05-09 (quick task): Defined the performance trigger policy for GitHub issue #9 in `docs/performance-thresholds.md`. PERF-01..03 remain parked until route timing, signed URL timing, production-readiness duration, or volume thresholds are breached.
 
 ### Pending Todos
 
