@@ -279,9 +279,7 @@ export async function cleanupProductionReadinessFixture(
 ): Promise<void> {
   if (!fixture) return;
 
-  await admin.storage.from("submissions").remove([
-    `${fixture.learner.id}/production-readiness-upload.txt`,
-  ]);
+  await cleanupProductionReadinessStorage(admin, fixture.learner.id);
   await admin.from("programs").delete().eq("id", fixture.programId);
   await admin.from("courses").delete().eq("id", fixture.courseId);
   await admin
@@ -293,6 +291,31 @@ export async function cleanupProductionReadinessFixture(
   await admin.auth.admin.deleteUser(fixture.admin.id);
   await admin.auth.admin.deleteUser(fixture.learner.id);
   await admin.auth.admin.deleteUser(fixture.unassigned.id);
+}
+
+async function cleanupProductionReadinessStorage(
+  admin: SupabaseClient,
+  learnerId: string,
+) {
+  const { data, error } = await admin.storage
+    .from("submissions")
+    .list(learnerId, { limit: 1000 });
+  if (error) throw error;
+
+  const paths = (data ?? [])
+    .map((item) => `${learnerId}/${item.name}`)
+    .filter(
+      (path) =>
+        path.endsWith("production-readiness-upload.txt") ||
+        path.endsWith("blocked-cross-prefix.txt"),
+    );
+
+  if (paths.length > 0) {
+    const { error: removeError } = await admin.storage
+      .from("submissions")
+      .remove(paths);
+    if (removeError) throw removeError;
+  }
 }
 
 async function createFixtureUser(
