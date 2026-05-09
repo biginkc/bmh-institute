@@ -23,15 +23,15 @@ describe("isAdminEmail", () => {
     expect(isAdminEmail("")).toBe(false);
   });
 
-  it("defaults to jarrad@bmhgroup.com when ADMIN_EMAILS is unset", () => {
-    expect(isAdminEmail("jarrad@bmhgroup.com")).toBe(true);
-    expect(isAdminEmail("someone-else@bmhgroup.com")).toBe(false);
+  it("defaults to jarrad@bmhgroupkc.com when ADMIN_EMAILS is unset", () => {
+    expect(isAdminEmail("jarrad@bmhgroupkc.com")).toBe(true);
+    expect(isAdminEmail("someone-else@bmhgroupkc.com")).toBe(false);
   });
 
   it("matches emails case-insensitively", () => {
-    process.env.ADMIN_EMAILS = "Jarrad@BmhGroup.com";
-    expect(isAdminEmail("jarrad@bmhgroup.com")).toBe(true);
-    expect(isAdminEmail("JARRAD@BMHGROUP.COM")).toBe(true);
+    process.env.ADMIN_EMAILS = "Jarrad@BmhGroupKc.com";
+    expect(isAdminEmail("jarrad@bmhgroupkc.com")).toBe(true);
+    expect(isAdminEmail("JARRAD@BMHGROUPKC.COM")).toBe(true);
   });
 
   it("parses a comma-separated list and trims whitespace", () => {

@@ -127,7 +127,7 @@ BMH Institute is BMH Group's internal training platform for VAs (mostly Philippi
 - Path aliases: `@/*` maps to `./src/*`, `@tests/*` maps to `./tests/*`
 - Module resolution: `bundler`
 - Config: `next.config.ts`
-- Server Actions enabled with `allowedOrigins`: `university.bmhgroup.com` and `localhost:3100`
+- Server Actions enabled with `allowedOrigins`: `institute.bmhgroupkc.com` and `localhost:3100`
 - Server Action body size limit: 25MB (supports file uploads)
 - Config: `components.json`
 - Style: `base-nova`
@@ -148,8 +148,9 @@ BMH Institute is BMH Group's internal training platform for VAs (mostly Philippi
 - npm 11.x
 - Port 3100 for `npm run dev`
 - Port 3200 for Playwright E2E local dev server
-- Vercel (Hobby plan) — project: `bmh-institute` (renamed from `sandra-university` 2026-04-30), org: `team_uELniQVfObNI03AFG17L8yEI`
-- Deployed to: `university.bmhgroup.com` (custom domain — domain not yet renamed)
+- Vercel (Hobby plan) — project slug currently `sandra-university` (legacy infrastructure name; app is BMH Institute), org: `team_uELniQVfObNI03AFG17L8yEI`
+- Intended custom domain: `institute.bmhgroupkc.com`
+- Current fallback deployment: `https://sandra-university.vercel.app` until DNS is configured
 - Supabase project: label `bmh-institute` (ref `dhvfsyteqsxagokoerrx`; ref is permanent)
 <!-- GSD:stack-end -->
 

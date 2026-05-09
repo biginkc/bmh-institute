@@ -34,7 +34,7 @@ const env = {
 const baseURL =
   process.env.E2E_PROD_BASE_URL ??
   env.E2E_PROD_BASE_URL ??
-  "https://bmh-institute.vercel.app";
+  "https://sandra-university.vercel.app";
 
 process.env.E2E_PROD_BASE_URL = baseURL;
 process.env.TEST_SUPABASE_URL =

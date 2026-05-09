@@ -57,9 +57,9 @@ Implemented production validation:
 
 The implemented check creates disposable prefixed production auth users, database records, and storage files. It signs in through the real production app, exercises the learner and admin lifecycle, verifies certificates, and cleans up the fixture.
 
-GitHub production-readiness secrets have been configured for the production app URL, Supabase URL, Supabase anon key, Supabase service-role key, and disposable-user password. The production app URL currently points to `https://sandra-university.vercel.app` because `https://university.bmhgroup.com` does not resolve in local or GitHub Actions DNS.
+GitHub production-readiness secrets have been configured for the production app URL, Supabase URL, Supabase anon key, Supabase service-role key, and disposable-user password. The production app URL currently points to `https://sandra-university.vercel.app` because the owned custom domain `https://institute.bmhgroupkc.com` is not configured yet.
 
-`university.bmhgroup.com` has been added to the Vercel project `sandra-university`. Vercel reports the domain is not configured properly because Cloudflare DNS does not point the subdomain at Vercel. The required DNS record is `A university.bmhgroup.com 76.76.21.21`. Current nameservers are `leia.ns.cloudflare.com` and `luke.ns.cloudflare.com`.
+`institute.bmhgroupkc.com` has been added to the Vercel project `sandra-university`. Vercel reports the domain is not configured properly because DNS does not point the subdomain at Vercel. The required DNS record is `A institute.bmhgroupkc.com 76.76.21.21`. Current nameservers are `ns47.domaincontrol.com` and `ns48.domaincontrol.com`.
 
 Latest evidence:
 
@@ -200,7 +200,7 @@ Current status: forgot-password covered by `npm run test:prod:readiness`; set-pa
 ## Open blockers and risks
 
 - Production email capture is the main blocker for invite and password reset automation.
-- `university.bmhgroup.com` is added in Vercel but does not currently resolve. Add `A university.bmhgroup.com 76.76.21.21` in Cloudflare, then switch production-readiness CI back to the custom domain after verification passes.
+- `institute.bmhgroupkc.com` is added in Vercel but does not currently resolve. Add `A institute.bmhgroupkc.com 76.76.21.21` in DNS, then switch production-readiness CI back to the custom domain after verification passes.
 - GitHub production readiness secrets must use the current production Supabase service-role key. A stale local `.env.local` service-role key caused `Invalid API key` until the current key was injected from the Supabase CLI.
 - Production writes require strict disposable prefixes and cleanup so tests do not pollute real learner records.
 - Password reset tests must avoid locking out real operators or consuming normal-user rate limits.
@@ -212,4 +212,4 @@ Current status: forgot-password covered by `npm run test:prod:readiness`; set-pa
 
 BMH Institute can be called production-ready only after the production readiness workflow repeatedly passes auth and onboarding, password reset, learner lifecycle, admin review, certificates, storage, access control, content safety, rate limiting, deployment, rollback, observability, cleanup, and recovery checks against real production services with no mocked providers.
 
-As of 2026-05-09, production lifecycle, storage, access control, admin review, certificates, content-safety, forgot-password rate limiting, rollback, and recovery checks pass. The app is still not production-ready because invite acceptance, password reset, and set-password rate-limit UI proof require real production email-link capture, and the custom domain still requires Cloudflare DNS.
+As of 2026-05-09, production lifecycle, storage, access control, admin review, certificates, content-safety, forgot-password rate limiting, rollback, and recovery checks pass. The app is still not production-ready because invite acceptance, password reset, and set-password rate-limit UI proof require real production email-link capture, and `institute.bmhgroupkc.com` still requires DNS configuration.
