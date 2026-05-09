@@ -39,10 +39,10 @@ export function UserEditForm({
   const roleGroupIdsRef = useRef(roleGroupIds);
   const [pending, startTransition] = useTransition();
 
-  function toggleGroup(id: string) {
-    const next = roleGroupIdsRef.current.includes(id)
-      ? roleGroupIdsRef.current.filter((x) => x !== id)
-      : [...roleGroupIdsRef.current, id];
+  function setGroupChecked(id: string, checked: boolean) {
+    const next = checked
+      ? Array.from(new Set([...roleGroupIdsRef.current, id]))
+      : roleGroupIdsRef.current.filter((x) => x !== id);
     roleGroupIdsRef.current = next;
     setRoleGroupIds(next);
   }
@@ -181,7 +181,12 @@ export function UserEditForm({
                 <input
                   type="checkbox"
                   checked={roleGroupIds.includes(rg.id)}
-                  onChange={() => toggleGroup(rg.id)}
+                  onChange={(e) =>
+                    setGroupChecked(rg.id, e.currentTarget.checked)
+                  }
+                  onClick={(e) =>
+                    setGroupChecked(rg.id, e.currentTarget.checked)
+                  }
                   className="size-4"
                 />
                 {rg.name}
