@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { GraduationCap } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
+import { BrandLockup } from "@/components/ui/brand-lockup";
 import { Button } from "@/components/ui/button";
 
 import { SidebarNav } from "./sidebar-nav";
@@ -51,20 +52,16 @@ export default async function DashboardLayout({
           href="/dashboard"
           className="border-border flex h-full items-center gap-3 px-4 md:w-64 md:border-r md:px-6"
         >
-          <div className="bg-primary flex size-10 items-center justify-center rounded-xl">
-            <GraduationCap
-              className="text-primary-foreground size-5"
-              aria-hidden
-            />
-          </div>
-          <div className="flex min-w-0 flex-col">
-            <span className="text-foreground truncate text-lg font-black tracking-wide">
-              BMH Institute
-            </span>
-            <span className="text-muted-foreground text-[10px] font-bold tracking-widest uppercase">
-              Training Platform
-            </span>
-          </div>
+          <BrandLockup
+            mark={
+              <GraduationCap
+                className="text-primary-foreground size-4"
+                aria-hidden
+              />
+            }
+            productName="BMH Institute"
+            subLabel="Training Platform"
+          />
         </Link>
         <div className="flex items-center gap-3 text-sm">
           <Link
