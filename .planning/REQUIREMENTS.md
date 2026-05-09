@@ -6,10 +6,10 @@ Make BMH Institute ready for BMH Group's first real internal learner pilot.
 
 ## Pilot Cohort Setup
 
-- [ ] PILOT-01: Admin can define or identify the first internal pilot cohort and see who is ready to be invited.
-- [ ] PILOT-02: Admin can assign pilot learners to the correct role groups, programs, and courses before launch.
-- [ ] PILOT-03: Admin can send pilot invites with enough status visibility to know who has accepted, expired, or still needs action.
-- [ ] PILOT-04: Admin can safely correct pilot learner access mistakes without direct database edits.
+- [x] PILOT-01: Admin can define or identify the first internal pilot cohort and see who is ready to be invited.
+- [x] PILOT-02: Admin can assign pilot learners to the correct role groups, programs, and courses before launch.
+- [x] PILOT-03: Admin can send pilot invites with enough status visibility to know who has accepted, expired, or still needs action.
+- [x] PILOT-04: Admin can safely correct pilot learner access mistakes without direct database edits.
 
 ## Learner Onboarding
 

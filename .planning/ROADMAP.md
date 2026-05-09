@@ -33,15 +33,15 @@ Production evidence:
 
 ### v1.1: Internal Pilot Operations
 
-**Status:** planning
+**Status:** executing
 
 **Goal:** Make BMH Institute ready for BMH Group's first real internal learner pilot.
 
-Progress: 0 of 4 phases complete.
+Progress: 1 of 4 phases complete.
 
 ### Phase 6: Pilot Cohort Setup
 
-**Status:** not started
+**Status:** complete 2026-05-09
 
 **Goal:** Give admins a reliable way to prepare the first real pilot cohort.
 
