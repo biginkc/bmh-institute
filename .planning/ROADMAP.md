@@ -41,7 +41,7 @@ Progress: 4 of 4 phases complete.
 
 Production evidence:
 
-- GitHub Actions production-readiness run `25610410328` passed from `main` on 2026-05-09.
+- GitHub Actions production-readiness run `25614367824` passed from `main` on 2026-05-09.
 - Result: 4 passed.
 - Production URL: `https://institute.bmhgroupkc.com`.
 - Current production deploys now flow from Vercel Git integration on `main`; manual aliasing is no longer part of the routine release path.
@@ -183,6 +183,18 @@ Completed:
 - Set `autoAssignCustomDomains` to true.
 - Verified PR #71 created a production Git deployment for commit `405e1dd`.
 - Verified `institute.bmhgroupkc.com` was automatically included in production aliases without `vercel deploy --prod` or `vercel alias set`.
+
+### Backlog item 999.5: Content/admin polish QA cleanup
+
+**Status:** complete 2026-05-09
+
+Completed:
+
+- Fixed `/admin/users` dense table clipping with explicit horizontal scroll regions and regression coverage.
+- Grouped `/admin/reports` recent activity so learner actions appear above system events.
+- Closed the content/admin polish QA tracker with evidence for learner empty state, admin overview needs-attention signals, and authoring list counts.
+- Cleaned stale QA markers for the old Phase 06 local Playwright env blocker.
+- Verified final production-readiness run `25614367824` passed from `main` with 4 checks.
 
 ## Future Candidates
 

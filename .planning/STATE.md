@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Internal Pilot Operations
 status: shipped
-stopped_at: v1.1 Internal Pilot Operations shipped; post-ship documentation and workflow cleanup are current
-last_updated: "2026-05-09T17:30:00.000Z"
+stopped_at: v1.1 Internal Pilot Operations shipped; no unblocked BMH Institute repo work remains
+last_updated: "2026-05-09T18:25:00.000Z"
 last_activity: 2026-05-09
 progress:
   total_phases: 4
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-30)
 
 **Core value:** A VA can sign in via an admin invite, work through assigned programs and courses on their own time, take quizzes and submit assignments without supervision, and receive a certificate when they finish. Admins can author content, manage learners, review submissions, and see who is making progress without leaving the platform.
-**Current focus:** Post-ship cleanup and monorepo migration readiness
+**Current focus:** Ready for internal pilot; monorepo migration readiness is documented
 
 ## Current Position
 
 Phase: Complete
 Plan: Complete
-Status: v1.1 shipped; post-ship quick tasks are in progress
+Status: v1.1 shipped; post-ship QA and workflow cleanup complete
 Last activity: 2026-05-09
 
 ## Performance Metrics
@@ -108,14 +108,21 @@ Recent decisions affecting current work:
 - 2026-05-09 (quick task): Fixed walkthrough overlay state restoration so saved state is path-scoped for every step. Production Playwright verified all six BMH demo steps hide stale saved state on different routes, same-path refresh still restores, and Step 6 keeps Next disabled. PR #69 passed local, CI, deployment, and production browser verification.
 - 2026-05-09 (quick task): Restored the normal Vercel Git production flow. The `sandra-university` Vercel project is connected to `biginkc/bmh-institute`, `autoAssignCustomDomains` is true, and merging PR #71 created a production deployment for commit `405e1dd` with `institute.bmhgroupkc.com` automatically included in production aliases. Agents should no longer run `vercel deploy --prod` or `vercel alias set` after routine merges.
 - 2026-05-09 (quick task): Added `docs/guided-walkthrough-system.md` and updated GitHub issue #64. The recommended direction is to keep the BMH Institute walkthrough app-local, preserve a shared step/overlay/state contract, copy the small pattern into a second app when needed, and extract `@bmh/guided-walkthrough` only after three apps need the same behavior. PR #71 passed `Verify`, `Seeded Playwright E2E`, and Vercel preview.
+- 2026-05-09 (quick task): Synced post-ship GSD state after PRs #69 through #71. PR #72 passed `Verify`, `Seeded Playwright E2E`, and Vercel preview.
+- 2026-05-09 (quick task): Fixed the first content/admin polish QA item. `/admin/users` dense tables now have explicit horizontal scroll regions, widened minimum table widths, and regression coverage. PR #73 passed `Verify`, `Seeded Playwright E2E`, and Vercel preview.
+- 2026-05-09 (quick task): Improved `/admin/reports` recent activity readability. Learner activity now appears first and system-generated certificate, import, and maintenance rows are grouped under `System events`. PR #74 passed `Verify`, `Seeded Playwright E2E`, and Vercel preview.
+- 2026-05-09 (quick task): Closed the content/admin polish QA tracker after confirming learner empty-state copy, admin overview needs-attention signals, and authoring list counts were already covered by shipped work and tests. PR #75 passed `Verify`, `Seeded Playwright E2E`, and Vercel preview.
+- 2026-05-09 (quick task): Cleaned stale QA markers. The old Phase 06 local Playwright blocker now records that CI-seeded Playwright resolves the product verification path, while local runs still need `.env.test.local`. PR #76 passed `Verify`, `Seeded Playwright E2E`, and Vercel preview.
+- 2026-05-09 (production readiness): GitHub Actions run `25614367824` passed from `main` with 4 production checks against `https://institute.bmhgroupkc.com` after the final post-ship QA cleanup.
 
 ### Pending Todos
 
 - GitHub issue #64 remains open by design. It should not close until a second app consumes the walkthrough contract or the monorepo is ready to extract a shared walkthrough package.
+- No open PRs remain as of the final 2026-05-09 queue check.
 
 ### Concerns
 
-- v1.1 internal pilot work is production-ready. The embedded Closer Lab walkthrough is live, role-play completions persist in BMH Institute, and user reports surface completed role plays. Performance threshold work remains parked until its triggers are met.
+- v1.1 internal pilot work is production-ready. The embedded Closer Lab walkthrough is live, role-play completions persist in BMH Institute, user reports surface completed role plays, and final production readiness run `25614367824` passed. Performance threshold work remains parked until its triggers are met.
 - Post-ship production deploys should use Vercel's Git flow. Custom production domains should auto-assign to the latest `main` deployment.
 - Spending changes, provider changes, or infrastructure changes still require explicit approval.
 
@@ -131,8 +138,8 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-05-09T17:30:00.000Z
-Stopped at: v1.1 shipped; post-ship cleanup and monorepo migration readiness are current
+Last session: 2026-05-09T18:25:00.000Z
+Stopped at: v1.1 shipped; no unblocked BMH Institute repo work remains
 Resume file: .planning/STATE.md
 Session handoff: .planning/STATE.md
 
