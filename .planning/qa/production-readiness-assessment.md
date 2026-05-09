@@ -23,7 +23,7 @@ The application is not production-ready until repeatable validation proves the f
 | Access control and RLS isolation | Ready | Production readiness spec validates route protection, assigned versus unassigned learner access, direct RLS reads, cross-user submission isolation, and storage prefix isolation. |
 | Content safety | Ready | Production readiness spec validates unsafe text-block save sanitization, learner render safety, HTTPS-only embed validation, and iframe sandboxing. |
 | Rate limiting and abuse controls | Partially ready | Forgot-password production UI behavior is covered with disposable email counters. Set-password production UI behavior still needs reset-link or recovery-session automation. |
-| Deployment and rollback | Blocked | The manual production-readiness workflow runs from GitHub Actions, but the custom domain does not resolve and rollback validation is not automated. |
+| Deployment and rollback | Blocked | The Vercel rollback drill passed for `sandra-university.vercel.app`, but the custom domain still does not resolve. |
 | Observability and recovery | Ready | Playwright traces, screenshots, cleanup verification, and an interrupted-run cleanup runbook now exist. |
 
 Allowed statuses:
@@ -70,6 +70,8 @@ Latest evidence:
 - Local production-readiness run on 2026-05-09 passed after adding access-control coverage. It verified assigned and unassigned learner route behavior, direct production RLS reads through learner-scoped Supabase clients, cross-user submission isolation, blocked cross-prefix storage reads and writes, and cleanup of the disposable fixture.
 - Production-readiness recovery runbook added on 2026-05-09 at `docs/production-readiness-recovery.md`, backed by the dry-run-first `npm run cleanup:prod-readiness` script. The first dry run found 5 timestamped storage leftovers from earlier canary runs; execute mode removed them. After fixing fixture cleanup, a fresh production-readiness run left 0 remaining leftovers.
 - Local production-readiness run on 2026-05-09 passed after adding forgot-password rate-limit coverage. It submitted a disposable `prd-ready-rate-*` email through the production UI until the real email counter exceeded the threshold, verified the UI remained enumeration-safe, and confirmed 0 disposable rate-limit email rows remained after cleanup.
+- GitHub Actions production-readiness run `25590873884` passed on 2026-05-09 from `main`. Result: 2 lifecycle and rate-limit tests passed, 1 email-link test skipped.
+- Vercel rollback drill passed on 2026-05-09. `sandra-university.vercel.app` was rolled back from `sandra-university-wlvsahai0-jarrad-5416s-projects.vercel.app` to `sandra-university-muv2z3cz7-jarrad-5416s-projects.vercel.app`, verified by `vercel inspect`, then restored to `sandra-university-wlvsahai0-jarrad-5416s-projects.vercel.app` and verified by `vercel inspect` plus an HTTP 307 health response.
 
 ## Required production validation scenarios
 
@@ -210,4 +212,4 @@ Current status: forgot-password covered by `npm run test:prod:readiness`; set-pa
 
 BMH Institute can be called production-ready only after the production readiness workflow repeatedly passes auth and onboarding, password reset, learner lifecycle, admin review, certificates, storage, access control, content safety, rate limiting, deployment, rollback, observability, cleanup, and recovery checks against real production services with no mocked providers.
 
-As of 2026-05-09, production lifecycle, storage, access control, admin review, certificates, and content-safety checks pass. The app is still not production-ready because invite acceptance and password reset require real production email-link capture, and deployment rollback/recovery still need a documented drill.
+As of 2026-05-09, production lifecycle, storage, access control, admin review, certificates, content-safety, forgot-password rate limiting, rollback, and recovery checks pass. The app is still not production-ready because invite acceptance, password reset, and set-password rate-limit UI proof require real production email-link capture, and the custom domain still requires Cloudflare DNS.
