@@ -32,16 +32,16 @@ A VA can sign in via an admin invite, work through assigned programs and courses
 
 ### Active
 
-Current milestone: v1.1 Internal Pilot Operations
+Current milestone: none. v1.1 Internal Pilot Operations is shipped.
 
-Goal: Make BMH Institute ready for BMH Group's first real internal learner pilot.
+Current focus: post-ship cleanup and monorepo migration readiness.
 
-Target features:
+Current tasks:
 
-- Pilot cohort setup that lets admins prepare real learner access with less manual risk.
-- Learner onboarding polish so invited VAs know what to do after first sign-in.
-- Pilot monitoring surfaces that show progress, blockers, submissions, and certificate readiness.
-- Operational runbooks and production checks for the first internal rollout.
+- Keep BMH Institute production-ready for the first internal pilot.
+- Keep migration notes current for the upcoming BMH Platform monorepo move.
+- Preserve the guided walkthrough contract while keeping implementation app-local.
+- Keep performance work parked until documented thresholds are breached.
 
 ### Out of Scope
 
@@ -54,17 +54,19 @@ Target features:
 
 ## Context
 
-This codebase has shipped the v1 follow-up milestone. BMH Institute is ready for the internal pilot scope: custom domain, production auth, production Supabase writes, production storage, production email-link invite acceptance, password reset, admin review, certificates, cleanup, and recovery checks all pass through GitHub Actions production-readiness.
+This codebase has shipped the v1 follow-up milestone and the v1.1 Internal Pilot Operations milestone. BMH Institute is ready for the internal pilot scope: custom domain, production auth, production Supabase writes, production storage, production email-link invite acceptance, password reset, admin review, certificates, cleanup, role-play walkthrough, user report visibility, and recovery checks all pass through GitHub Actions production-readiness or targeted production browser verification.
 
-The current milestone moves from "production is technically ready" to "the team can run a small internal pilot without needing Codex in the loop for every operational question." It should favor clear admin workflows, durable pilot checks, and small product improvements that reduce support friction for VA learners.
+Current post-ship work is documentation and operational cleanup. It should not introduce new providers, spending, cross-app imports, direct cross-app database reads, or premature shared packages.
 
 Latest production-readiness evidence:
 
-- Run: `25598402881`
+- Run: `25610410328`
 - Branch: `main`
 - Date: 2026-05-09
-- Result: 4 passed, 0 skipped
+- Result: 4 passed
 - URL: `https://institute.bmhgroupkc.com`
+
+Vercel production deploys now use the Git integration on `main`. `institute.bmhgroupkc.com` auto-assigned to the production deployment for PR #71 without a manual alias command.
 
 The codebase map under `.planning/codebase/` is the canonical reference for current structure. AGENTS.md is the source of truth for development conventions and project identity. Production runs on the Hobby Vercel plan and the BMH Group Supabase Pro org subscription.
 
@@ -93,7 +95,9 @@ Email transport pivoted from SendGrid to Google Workspace SMTP in commit `ce6e49
 | Test-first execution is the default for meaningful changes | Keeps behavior changes covered without turning routine execution into an execution bottleneck | ✓ Good |
 | v1 hardening closed with TEST-03 deferred | Manual production Playwright verified major write paths; durable automation needs non-prod Supabase and email capture | ✓ Superseded by PR #39, PR #40, and PR #45 |
 | v1.1 focuses on shared BMH ecosystem shell | Jarrad wants BMH Institute navigation to match Sandra, Closer Lab, and Jitter instead of drifting as a standalone LMS | ✓ Good |
-| v1.1 Internal Pilot Operations starts after production readiness | The app is green on production-readiness; the next risk is operational adoption by real internal learners and admins | Active |
+| v1.1 Internal Pilot Operations starts after production readiness | The app is green on production-readiness; the next risk is operational adoption by real internal learners and admins | ✓ Shipped |
+| Guided walkthrough system waits for rule-of-three extraction | BMH Institute has the proof point, but the BMH Platform plan forbids premature shared packages until three apps need the same code | Active |
+| Vercel Git flow replaces manual production aliasing | Routine deploys should follow merge-to-main production deployments with auto-assigned custom domains | ✓ Good |
 
 ## Evolution
 
@@ -113,4 +117,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-09 after starting v1.1 Internal Pilot Operations*
+*Last updated: 2026-05-09 after post-ship workflow and migration-readiness cleanup*
