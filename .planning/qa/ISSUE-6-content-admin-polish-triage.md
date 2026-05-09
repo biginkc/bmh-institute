@@ -16,7 +16,7 @@ Screenshots were captured under `test-results/polish-triage/` and are intentiona
 
 ### P1: Admin user and invite tables are clipped on narrow viewports
 
-Status: fixed in PR pending for `codex/20260509-admin-users-responsive-tables`.
+Status: fixed in PR #73.
 
 URLs:
 
@@ -77,7 +77,7 @@ Resolution:
 
 ### P2: Admin reports show raw system activity that is hard to scan
 
-Status: fixed in PR pending for `codex/20260509-admin-reports-activity-readability`.
+Status: fixed in PR #74.
 
 URL:
 
