@@ -8,7 +8,15 @@ import {
 } from "./fixtures";
 
 const closerUrl = process.env.CLOSER_TEST_SUPABASE_URL ?? "";
+const closerAnonKey = process.env.CLOSER_TEST_SUPABASE_ANON_KEY ?? "";
 const closerServiceRoleKey = process.env.CLOSER_TEST_SUPABASE_SERVICE_ROLE_KEY ?? "";
+const rolePlayBaseUrl = process.env.NEXT_PUBLIC_ROLE_PLAY_BASE_URL ?? "";
+
+const hasCrossAppEnv =
+  Boolean(closerUrl) &&
+  Boolean(closerAnonKey) &&
+  Boolean(closerServiceRoleKey) &&
+  Boolean(rolePlayBaseUrl);
 
 function closerAdmin(): SupabaseClient {
   if (!closerUrl || !closerServiceRoleKey) {
@@ -210,6 +218,10 @@ async function cleanupBmhLesson(
 
 test.describe("Phase 5 cross-app role play", () => {
   test.describe.configure({ timeout: 120_000 });
+  test.skip(
+    !hasCrossAppEnv,
+    "Cross-app role-play E2E needs Closer Lab env and a running embed app.",
+  );
 
   let closerSeed:
     | { personaId: string; rolePlayId: string; goalId: string }
