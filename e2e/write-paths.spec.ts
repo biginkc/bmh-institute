@@ -108,6 +108,18 @@ async function inviteWasAccepted(
   );
 }
 
+async function clearSetPasswordRateLimits(
+  admin: ReturnType<typeof writePathAdminClient>,
+  email: string,
+): Promise<void> {
+  await Promise.all([
+    deleteRateLimitRows(admin, "email", email),
+    deleteRateLimitRows(admin, "ip", "127.0.0.1"),
+    deleteRateLimitRows(admin, "ip", "::1"),
+    deleteRateLimitRows(admin, "ip", "::ffff:127.0.0.1"),
+  ]);
+}
+
 test.describe("durable write-path coverage", () => {
   test.describe.configure({ timeout: 120_000 });
 
@@ -121,6 +133,7 @@ test.describe("durable write-path coverage", () => {
 
     try {
       fixture = await createInviteAcceptanceFixture(admin);
+      await clearSetPasswordRateLimits(admin, fixture.invitee.email);
 
       await page.goto(fixture.inviteLink);
       await page.waitForURL(/\/auth\/set-password/, { timeout: 30_000 });
@@ -136,6 +149,9 @@ test.describe("durable write-path coverage", () => {
         .poll(() => inviteWasAccepted(admin, fixture!), { timeout: 20_000 })
         .toBe(true);
     } finally {
+      if (fixture) {
+        await clearSetPasswordRateLimits(admin, fixture.invitee.email);
+      }
       await context.close();
       await cleanupInviteAcceptanceFixture(admin, fixture);
     }
