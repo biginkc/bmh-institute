@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Internal Pilot Operations
 status: executing
-stopped_at: Phase 8 complete; next step is /gsd-discuss-phase 9
-last_updated: "2026-05-09T12:15:00.000Z"
+stopped_at: Phase 9 implementation complete; waiting on production readiness workflow
+last_updated: "2026-05-09T12:25:00.000Z"
 last_activity: 2026-05-09
 progress:
   total_phases: 4
   completed_phases: 3
-  total_plans: 9
-  completed_plans: 9
-  percent: 100
+  total_plans: 11
+  completed_plans: 10
+  percent: 91
 ---
 
 # Project State
@@ -26,8 +26,8 @@ See: .planning/PROJECT.md (updated 2026-04-30)
 ## Current Position
 
 Phase: 7
-Plan: Not started
-Status: Ready to execute
+Plan: 09-2
+Status: Implementation complete, production readiness workflow pending
 Last activity: 2026-05-09
 
 ## Performance Metrics
@@ -47,7 +47,7 @@ Last activity: 2026-05-09
 
 **Recent Trend:**
 
-- Last 5 plans: 07-2, 07-3, 08-1, 08-2, 08-3
+- Last 5 plans: 08-1, 08-2, 08-3, 09-1, 09-2 implementation
 - Trend: steady
 
 *Updated after each plan completion*
@@ -60,6 +60,8 @@ Last activity: 2026-05-09
 | Phase 08 P1 | - | 4 tasks | 2 files |
 | Phase 08 P2 | - | 5 tasks | 1 file |
 | Phase 08 P3 | - | 6 tasks | 3 files |
+| Phase 09 P1 | - | 4 tasks | 2 files |
+| Phase 09 P2 | - | 4 tasks | 1 file |
 
 ## Accumulated Context
 
@@ -101,6 +103,7 @@ Recent decisions affecting current work:
 - 2026-05-09 (quick task): Set Vercel production `NEXT_PUBLIC_APP_URL` to `https://institute.bmhgroupkc.com`, redeployed current `main` to `sandra-university-ogb6o1qnt-jarrad-5416s-projects.vercel.app`, aliased `institute.bmhgroupkc.com` to that deployment, and verified GitHub Actions production-readiness run `25596438899` passed afterward.
 - 2026-05-09 (Phase 7): Learner onboarding complete. Added a pure onboarding summary model, dashboard first-step panel, no-assignment support copy, profile and password recovery copy updates, dashboard unit coverage, and seeded Playwright coverage. Local `npm run verify` passed. PR #49 GitHub Actions passed `Verify` and `Seeded Playwright E2E`.
 - 2026-05-09 (Phase 8): Pilot monitoring complete. Added a pure monitoring summary model, `/admin/reports` pilot monitoring panel, CSV export route, route unit coverage, and seeded Playwright coverage. Local `npm run verify` passed. PR #50 GitHub Actions passed `Verify` and `Seeded Playwright E2E`.
+- 2026-05-09 (Phase 9): Pilot runbook implementation is complete on branch `codex/20260509-071152-pilot-runbook`. Added internal pilot runbook, pre-pilot checklist, and production readiness assertions for pilot monitoring and CSV export. Local `npm run verify` passed. Production readiness workflow remains the external verification gate.
 
 ### Pending Todos
 
@@ -122,9 +125,9 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-09T12:15:00.000Z
-Stopped at: Phase 8 complete; next step is /gsd-discuss-phase 9
-Resume file: .planning/phases/08-pilot-monitoring/08-VERIFICATION.md
+Last session: 2026-05-09T12:25:00.000Z
+Stopped at: Phase 9 implementation complete; waiting on production readiness workflow
+Resume file: .planning/phases/09-pilot-runbook-readiness/09-VERIFICATION.md
 Session handoff: .planning/STATE.md
 
 ### 2026-05-08 - Phase 2 verification complete

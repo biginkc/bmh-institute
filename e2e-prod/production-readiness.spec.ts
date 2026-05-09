@@ -71,6 +71,28 @@ test.describe("production readiness lifecycle", () => {
       const adminPage = await adminContext.newPage();
       await signIn(adminPage, fixture.admin.email, fixture.password);
 
+      await adminPage.goto("/admin/reports");
+      await expect(
+        adminPage.getByRole("heading", { name: "Pilot monitoring" }),
+      ).toBeVisible();
+      await expect(
+        adminPage.getByRole("link", { name: /^export csv$/i }),
+      ).toHaveAttribute("href", "/admin/reports/pilot/export");
+      const monitoringReviewRow = adminPage
+        .getByRole("row")
+        .filter({ hasText: fixture.learner.email });
+      await expect(monitoringReviewRow).toContainText("Needs review");
+      await expect(
+        monitoringReviewRow.getByRole("link", { name: /^review submissions$/i }),
+      ).toHaveAttribute("href", "/admin/submissions");
+      const monitoringBlockedRow = adminPage
+        .getByRole("row")
+        .filter({ hasText: fixture.unassigned.email });
+      await expect(monitoringBlockedRow).toContainText("Needs access");
+      await expect(
+        monitoringBlockedRow.getByRole("link", { name: /^review access$/i }),
+      ).toHaveAttribute("href", `/admin/users/${fixture.unassigned.id}/edit`);
+
       await adminPage.goto(`/admin/lessons/${fixture.contentLessonId}/edit`);
       const unsafeHtml = [
         `<p style="color:red">${fixture.prefix} sanitized text</p>`,
