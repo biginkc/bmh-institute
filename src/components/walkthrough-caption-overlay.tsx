@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
 import {
@@ -157,8 +156,8 @@ function WizardControl({
   }
 
   return (
-    <Link href={href} aria-label={label} className={className}>
+    <a href={href} aria-label={label} className={className}>
       {label}
-    </Link>
+    </a>
   );
 }
