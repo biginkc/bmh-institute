@@ -24,8 +24,8 @@ Already covered by PR #22:
 
 ## Missing Playwright coverage
 
-- Invite acceptance
-- First password setup from invite
+- Invite acceptance - covered by generated Supabase invite action link in non-production E2E
+- First password setup from invite - covered by generated Supabase invite action link in non-production E2E
 - Forgot-password reset link flow
 - Password reset completion
 - Learner quiz submission
@@ -39,15 +39,15 @@ Already covered by PR #22:
 
 ## Missing test infrastructure
 
-- Non-production email capture for invite links
+- Non-production email capture for invite links, superseded by generated Supabase invite action links
 - Non-production email capture for password reset links
 - CI-safe way to read captured links during Playwright runs
 - Durable Playwright specs for the seeded content beyond the current dashboard smoke
 
 ## Recommended implementation order
 
-1. Add email capture for non-production auth links.
-2. Add invite acceptance and first password setup Playwright coverage.
+1. Add invite acceptance and first password setup Playwright coverage through generated Supabase invite action links.
+2. Keep email capture work focused on production-readiness and password reset links.
 3. Add forgot-password reset link and password reset completion coverage.
 4. Add learner quiz submission coverage.
 5. Add learner assignment text submission and file upload coverage.
@@ -57,4 +57,4 @@ Already covered by PR #22:
 
 ## Success condition
 
-TEST-03 can close when `npm run test:e2e` in GitHub Actions covers the invite, password reset, quiz, assignment, admin review, revision, and certificate paths against the seeded non-production Supabase project.
+TEST-03 can close when `npm run test:e2e` in GitHub Actions covers the invite, password reset fallback, quiz, assignment, admin review, revision, and certificate paths against the seeded non-production Supabase project.

@@ -217,6 +217,17 @@ describe("auth callback GET (CR-02 expired-invite teardown)", () => {
     );
   });
 
+  it("preserves invite_token for browser hash-token invite callbacks", async () => {
+    const res = await GET(
+      makeRequest("https://example.test/auth/callback?invite_token=tok-hash"),
+    );
+
+    expect(exchangeCodeForSession).not.toHaveBeenCalled();
+    expect(res.headers.get("location")).toBe(
+      "https://example.test/login?invite_token=tok-hash",
+    );
+  });
+
   it("does not call signOut or deleteUser when the invite is active", async () => {
     const future = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
     inviteRow = {

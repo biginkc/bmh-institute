@@ -20,6 +20,18 @@ export type WritePathFixture = {
   unassigned: { id: string; email: string };
 };
 
+export type InviteAcceptanceFixture = {
+  prefix: string;
+  password: string;
+  inviteId: string;
+  inviteToken: string;
+  inviteLink: string;
+  roleGroupId: string;
+  programId: string;
+  inviter: { id: string; email: string };
+  invitee: { id: string; email: string };
+};
+
 type InsertResult = { id: string };
 
 const TEST_PROJECT_REF = "jvaabkchkihkjllehmft";
@@ -264,6 +276,90 @@ export async function deleteRateLimitRows(
     .eq("key_type", keyType)
     .eq("key_value", keyValue)
     .throwOnError();
+}
+
+export async function createInviteAcceptanceFixture(
+  admin: SupabaseClient,
+): Promise<InviteAcceptanceFixture> {
+  const prefix = `E2E-INVITE-${Date.now()}-${crypto.randomUUID().slice(0, 8)}`;
+  const password = `BMHInvite-${crypto.randomUUID()}!1`;
+  const inviteToken = crypto.randomUUID().replaceAll("-", "");
+  const inviteeEmail = `${prefix.toLowerCase()}-invitee@bmh-institute.test`;
+
+  const inviter = await createFixtureUser(admin, {
+    email: `${prefix.toLowerCase()}-owner@bmh-institute.test`,
+    password,
+    fullName: `${prefix} Owner`,
+    systemRole: "owner",
+  });
+
+  const roleGroupId = await insertOne(admin, "role_groups", {
+    name: `${prefix} Invite Role Group`,
+    description: "Disposable invite acceptance E2E role group.",
+  });
+
+  const programId = await insertOne(admin, "programs", {
+    title: `${prefix} Invite Program`,
+    description: "Disposable invite acceptance E2E program.",
+    is_published: true,
+    course_order_mode: "free",
+    certificate_enabled: false,
+    sort_order: 9999,
+  });
+
+  await admin
+    .from("program_access")
+    .insert({ program_id: programId, role_group_id: roleGroupId })
+    .throwOnError();
+
+  const inviteId = await insertOne(admin, "invites", {
+    email: inviteeEmail,
+    role_group_ids: [roleGroupId],
+    system_role: "learner",
+    token: inviteToken,
+    invited_by: inviter.id,
+  });
+
+  const redirectTo = `http://localhost:3200/auth/callback?invite_token=${encodeURIComponent(inviteToken)}`;
+  const { data, error } = await admin.auth.admin.generateLink({
+    type: "invite",
+    email: inviteeEmail,
+    options: {
+      redirectTo,
+      data: {
+        invited_by: inviter.email,
+        system_role: "learner",
+      },
+    },
+  });
+  if (error || !data.properties?.action_link || !data.user?.id) {
+    throw error ?? new Error("Failed to generate invite action link.");
+  }
+
+  return {
+    prefix,
+    password,
+    inviteId,
+    inviteToken,
+    inviteLink: data.properties.action_link,
+    roleGroupId,
+    programId,
+    inviter,
+    invitee: { id: data.user.id, email: inviteeEmail },
+  };
+}
+
+export async function cleanupInviteAcceptanceFixture(
+  admin: SupabaseClient,
+  fixture: InviteAcceptanceFixture | null,
+): Promise<void> {
+  if (!fixture) return;
+
+  await admin.from("programs").delete().eq("id", fixture.programId);
+  await admin.from("role_groups").delete().eq("id", fixture.roleGroupId);
+  await admin.from("invites").delete().eq("id", fixture.inviteId);
+  await admin.auth.admin.deleteUser(fixture.invitee.id);
+  await admin.auth.admin.deleteUser(fixture.inviter.id);
 }
 
 async function cleanupSubmissionStorage(
