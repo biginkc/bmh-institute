@@ -155,6 +155,7 @@ export default async function AdminReportsPage() {
       courseTitlesByLessonId,
     }),
   }));
+  const activityGroups = splitActivityRows(activityRows);
   const roleGroupIdsByUserId = new Map<string, string[]>();
   for (const row of userRoleGroups) {
     const values = roleGroupIdsByUserId.get(row.user_id) ?? [];
@@ -388,40 +389,81 @@ export default async function AdminReportsPage() {
       <section className="mt-8">
         <h2 className="mb-3 text-lg font-semibold">Recent activity</h2>
         <Card>
+          <CardHeader>
+            <CardTitle>Learning activity</CardTitle>
+            <CardDescription>
+              Learner actions first. System-generated certificate and maintenance
+              events are grouped below.
+            </CardDescription>
+          </CardHeader>
           <CardContent className="p-0">
             {auditRows.length === 0 ? (
               <p className="text-muted-foreground p-6 text-sm">
                 Nothing logged yet.
               </p>
             ) : (
-              <ol className="divide-border divide-y">
-                {activityRows.map((row) => (
-                  <li key={row.id} className="px-6 py-3 text-sm">
-                    <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                      <div className="min-w-0">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="font-medium">{row.actor}</span>
-                          <Badge variant="outline">{row.badge}</Badge>
-                        </div>
-                        <p className="text-muted-foreground mt-1 text-xs">
-                          <span className="text-foreground font-medium">
-                            {row.label}
-                          </span>
-                          {row.detail ? `: ${row.detail}` : ""}
-                        </p>
-                      </div>
-                      <time className="text-muted-foreground shrink-0 text-xs">
-                        {new Date(row.createdAt).toLocaleString()}
-                      </time>
+              <div>
+                <ActivityList
+                  rows={activityGroups.learnerRows}
+                  emptyCopy="No learner activity logged yet."
+                />
+                {activityGroups.systemRows.length > 0 ? (
+                  <div className="border-border border-t">
+                    <div className="px-6 pt-4">
+                      <h3 className="text-sm font-medium">System events</h3>
+                      <p className="text-muted-foreground mt-1 text-xs">
+                        Automated certificates, imports, and maintenance events.
+                      </p>
                     </div>
-                  </li>
-                ))}
-              </ol>
+                    <ActivityList rows={activityGroups.systemRows} />
+                  </div>
+                ) : null}
+              </div>
             )}
           </CardContent>
         </Card>
       </section>
     </main>
+  );
+}
+
+function ActivityList({
+  rows,
+  emptyCopy,
+}: {
+  rows: Array<FormattedActivityRow & { id: string }>;
+  emptyCopy?: string;
+}) {
+  if (rows.length === 0) {
+    return emptyCopy ? (
+      <p className="text-muted-foreground px-6 py-4 text-sm">{emptyCopy}</p>
+    ) : null;
+  }
+
+  return (
+    <ol className="divide-border divide-y">
+      {rows.map((row) => (
+        <li key={row.id} className="px-6 py-3 text-sm">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="font-medium">{row.actor}</span>
+                <Badge variant="outline">{row.badge}</Badge>
+              </div>
+              <p className="text-muted-foreground mt-1 text-xs">
+                <span className="text-foreground font-medium">
+                  {row.label}
+                </span>
+                {row.detail ? `: ${row.detail}` : ""}
+              </p>
+            </div>
+            <time className="text-muted-foreground shrink-0 text-xs">
+              {new Date(row.createdAt).toLocaleString()}
+            </time>
+          </div>
+        </li>
+      ))}
+    </ol>
   );
 }
 
@@ -630,6 +672,21 @@ export type FormattedActivityRow = {
   badge: string;
   createdAt: string;
 };
+
+export function splitActivityRows<T extends FormattedActivityRow>(rows: T[]) {
+  const learnerRows: T[] = [];
+  const systemRows: T[] = [];
+
+  for (const row of rows) {
+    if (row.actor === "System activity" || row.badge === "System") {
+      systemRows.push(row);
+    } else {
+      learnerRows.push(row);
+    }
+  }
+
+  return { learnerRows, systemRows };
+}
 
 type LearnerStat = {
   id: string;

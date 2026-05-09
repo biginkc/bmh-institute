@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { formatActivityRow } from "./page";
+import { formatActivityRow, splitActivityRows } from "./page";
 
 describe("formatActivityRow", () => {
   const profilesById = new Map([
@@ -66,6 +66,40 @@ describe("formatActivityRow", () => {
       detail: "Intro to BMH, BMH-C-1001",
       badge: "Certificate",
       createdAt: "2026-05-02T12:00:00.000Z",
+    });
+  });
+
+  it("splits learner activity from system events", () => {
+    const rows = [
+      {
+        id: "audit-1",
+        actor: "Maria Santos",
+        label: "Passed quiz",
+        detail: "Lead intake basics in Intro to BMH",
+        badge: "Learning",
+        createdAt: "2026-05-01T12:00:00.000Z",
+      },
+      {
+        id: "audit-2",
+        actor: "System activity",
+        label: "Issued course certificate",
+        detail: "Intro to BMH, BMH-C-1001",
+        badge: "Certificate",
+        createdAt: "2026-05-02T12:00:00.000Z",
+      },
+      {
+        id: "audit-3",
+        actor: "System activity",
+        label: "Rebuilt progress",
+        detail: "audit_log",
+        badge: "System",
+        createdAt: "2026-05-03T12:00:00.000Z",
+      },
+    ];
+
+    expect(splitActivityRows(rows)).toEqual({
+      learnerRows: [rows[0]],
+      systemRows: [rows[1], rows[2]],
     });
   });
 });
