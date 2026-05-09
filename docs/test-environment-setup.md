@@ -15,7 +15,7 @@ TEST_SUPABASE_SERVICE_ROLE_KEY=<service role key from Supabase Dashboard>
 For the Playwright prod-smoke suite (`npm run test:prod`) you also need:
 
 ```
-E2E_PROD_BASE_URL=https://bmh-institute.vercel.app
+E2E_PROD_BASE_URL=https://sandra-university.vercel.app
 E2E_TEST_EMAIL=<an account that exists on the deployed environment with admin privileges>
 E2E_TEST_PASSWORD=<that account's password>
 ```
@@ -30,7 +30,7 @@ TEST_SUPABASE_ANON_KEY: from your throwaway project's Dashboard at Project Setti
 
 TEST_SUPABASE_SERVICE_ROLE_KEY: from the same Dashboard panel. The "service_role secret" key. Treat this like a password.
 
-E2E_PROD_BASE_URL: the deployed BMH Institute URL. Production is `https://bmh-institute.vercel.app`. A Vercel preview URL also works.
+E2E_PROD_BASE_URL: the deployed BMH Institute URL. Production currently uses the legacy fallback `https://sandra-university.vercel.app` until `https://institute.bmhgroupkc.com` is configured. A Vercel preview URL also works.
 
 E2E_TEST_EMAIL and E2E_TEST_PASSWORD: an account on the deployed environment. A real BMH Group VA account or a dedicated test account with admin privileges.
 

@@ -52,7 +52,7 @@ const webServerEnv: Record<string, string> = {
   NEXT_PUBLIC_SUPABASE_URL: supabaseUrl,
   NEXT_PUBLIC_SUPABASE_ANON_KEY: supabaseAnonKey,
   SUPABASE_SERVICE_ROLE_KEY: supabaseServiceRoleKey,
-  ADMIN_EMAILS: "claude@test.com,jarrad@bmhgroup.com",
+  ADMIN_EMAILS: "claude@test.com,jarrad@bmhgroupkc.com",
   NODE_ENV: "development",
 };
 

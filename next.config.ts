@@ -3,7 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   experimental: {
     serverActions: {
-      allowedOrigins: ["university.bmhgroup.com", "localhost:3100"],
+      allowedOrigins: ["institute.bmhgroupkc.com", "localhost:3100"],
       bodySizeLimit: "25mb",
     },
   },
