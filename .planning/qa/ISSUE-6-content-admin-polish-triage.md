@@ -2,6 +2,7 @@
 
 Date: 2026-05-08
 Environment: production deployment `sandra-university-muv2z3cz7-jarrad-5416s-projects.vercel.app`
+Status: closed 2026-05-09
 
 ## Scope
 
@@ -106,6 +107,8 @@ Resolution:
 
 ### P2: Admin overview is sparse after shell alignment
 
+Status: fixed by admin overview needs-attention work.
+
 URL:
 
 - `/admin`
@@ -124,7 +127,15 @@ Recommended fix:
 - Surface pending invites or learners with no assigned program if cheap to query.
 - Keep the page lightweight. Avoid building analytics-heavy reports here.
 
+Resolution:
+
+- `/admin` now renders a compact `Needs attention` band above the stat cards.
+- The band links admins to pending submissions, expired invites, pending invites, draft programs, and draft courses when present.
+- `src/app/(dashboard)/admin/page.test.ts` covers `getNeedsAttentionItems` for the calm empty state and actionable signal ordering.
+
 ### P2: Authoring list pages are functional but low-context
+
+Status: fixed by authoring list count work.
 
 URLs:
 
@@ -145,6 +156,13 @@ Recommended fix:
 
 - Add lightweight counts where existing queries make this cheap.
 - Defer heavier joins or RPCs unless performance remains acceptable.
+
+Resolution:
+
+- `/admin/programs` now shows a course count column using `program_courses`.
+- `/admin/courses` now shows module and lesson count columns using `modules` with nested `lessons(id)`.
+- `src/app/(dashboard)/admin/programs/page.test.ts` covers `addProgramCourseCounts`.
+- `src/app/(dashboard)/admin/courses/page.test.ts` covers `addCourseContentCounts`.
 
 ## Recommended Execution Order
 
