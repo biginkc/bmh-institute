@@ -50,7 +50,7 @@ export default async function AdminUsersPage() {
   );
 
   return (
-    <main className="mx-auto w-full max-w-4xl flex-1 p-6 md:p-10">
+    <main className="mx-auto w-full max-w-6xl flex-1 p-6 md:p-10">
       <div className="mb-6">
         <PageHeader
           title="Users"
@@ -59,8 +59,8 @@ export default async function AdminUsersPage() {
         />
       </div>
 
-      <div className="grid gap-6 md:grid-cols-5">
-        <Card className="md:col-span-3">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(20rem,1fr)]">
+        <Card>
           <CardHeader>
             <CardTitle>Active members</CardTitle>
             <CardDescription>
@@ -71,7 +71,7 @@ export default async function AdminUsersPage() {
             {(profiles.data ?? []).length === 0 ? (
               <p className="text-muted-foreground text-sm">No members yet.</p>
             ) : (
-              <Table>
+              <Table className="min-w-[40rem]">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Name</TableHead>
@@ -117,7 +117,7 @@ export default async function AdminUsersPage() {
           </CardContent>
         </Card>
 
-        <Card className="md:col-span-2">
+        <Card>
           <CardHeader>
             <CardTitle>Invite someone</CardTitle>
             <CardDescription>
@@ -146,7 +146,7 @@ export default async function AdminUsersPage() {
           {pendingInvites.length === 0 ? (
             <p className="text-muted-foreground text-sm">No pending invites.</p>
           ) : (
-            <Table>
+            <Table className="min-w-[44rem]">
               <TableHeader>
                 <TableRow>
                   <TableHead>Email</TableHead>
