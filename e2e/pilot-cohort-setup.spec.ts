@@ -55,6 +55,9 @@ test.describe("pilot cohort setup", () => {
       await expect(missingRow).toContainText("Needs access");
       await expect(missingRow).toContainText("No role group assigned");
       await missingRow.getByRole("link", { name: /review access/i }).click();
+      await expect(
+        page.locator("[data-user-edit-form][data-hydrated='true']"),
+      ).toBeVisible();
 
       const pilotRoleGroup = page.getByLabel(`${fixture.prefix} Role Group`);
       await pilotRoleGroup.check();

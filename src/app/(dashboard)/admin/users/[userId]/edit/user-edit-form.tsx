@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
@@ -34,7 +34,12 @@ export function UserEditForm({
   const formRef = useRef<HTMLDivElement>(null);
   const systemRoleRef = useRef(systemRole);
   const statusRef = useRef(status);
+  const [hydrated, setHydrated] = useState(false);
   const [pending, startTransition] = useTransition();
+
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
 
   function getCurrentRoleGroupIds() {
     const checkedIds = Array.from(
@@ -120,7 +125,12 @@ export function UserEditForm({
   }
 
   return (
-    <div ref={formRef} className="flex flex-col gap-5">
+    <div
+      ref={formRef}
+      data-user-edit-form
+      data-hydrated={hydrated ? "true" : "false"}
+      className="flex flex-col gap-5"
+    >
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="system_role">System role</Label>
         <select
@@ -131,7 +141,7 @@ export function UserEditForm({
               e.target.value as "owner" | "admin" | "learner",
             )
           }
-          disabled={!canModifyRole}
+          disabled={!hydrated || !canModifyRole}
           className="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
         >
           <option value="learner">Learner</option>
@@ -155,7 +165,7 @@ export function UserEditForm({
               e.target.value as "active" | "invited" | "suspended",
             )
           }
-          disabled={!canSuspend}
+          disabled={!hydrated || !canSuspend}
           className="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
         >
           <option value="active">Active</option>
@@ -182,6 +192,7 @@ export function UserEditForm({
                   type="checkbox"
                   data-role-group-id={rg.id}
                   defaultChecked={initialRoleGroupIds.includes(rg.id)}
+                  disabled={!hydrated}
                   className="size-4"
                 />
                 {rg.name}
@@ -201,7 +212,7 @@ export function UserEditForm({
             <Button
               variant="outline"
               onClick={onSuspendToggle}
-              disabled={pending}
+              disabled={!hydrated || pending}
             >
               {status === "suspended" ? "Reactivate" : "Suspend"}
             </Button>
@@ -210,14 +221,14 @@ export function UserEditForm({
             <Button
               variant="outline"
               onClick={onDelete}
-              disabled={pending}
+              disabled={!hydrated || pending}
               className="text-destructive hover:text-destructive"
             >
               Delete user
             </Button>
           ) : null}
         </div>
-        <Button onClick={onSave} disabled={pending}>
+        <Button onClick={onSave} disabled={!hydrated || pending}>
           {pending ? "Saving..." : "Save changes"}
         </Button>
       </div>
