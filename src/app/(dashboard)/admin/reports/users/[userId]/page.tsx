@@ -41,6 +41,7 @@ export default async function UserReportPage({
     certificatesRes,
     programCertsRes,
     attemptsRes,
+    rolePlayResultsRes,
     auditRes,
   ] = await Promise.all([
     supabase
@@ -95,6 +96,22 @@ export default async function UserReportPage({
       .from("user_quiz_attempts")
       .select("quiz_id, score, passed, completed_at")
       .eq("user_id", userId),
+    supabase
+      .from("role_play_results")
+      .select(
+        `block_id, scenario_id, attempt_id, score, summary, completed_at,
+         content_blocks(
+           content,
+           lessons(
+             title,
+             modules(
+               courses(title)
+             )
+           )
+         )`,
+      )
+      .eq("user_id", userId)
+      .order("completed_at", { ascending: false }),
     supabase
       .from("audit_log")
       .select("id, action, entity_type, entity_id, metadata, created_at")
@@ -166,6 +183,7 @@ export default async function UserReportPage({
     passed: boolean | null;
     completed_at: string | null;
   }>;
+  const rolePlayResults = (rolePlayResultsRes.data ?? []) as RolePlayResult[];
   const auditRows = (auditRes.data ?? []) as AuditRow[];
 
   // Standalone courses: accessible via course_access AND not already listed
@@ -360,6 +378,33 @@ export default async function UserReportPage({
         </Card>
         <Card>
           <CardHeader>
+            <CardTitle>Role-play activity</CardTitle>
+            <CardDescription>
+              Closer Lab attempts completed from embedded lessons.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="text-sm">
+            <div className="flex flex-col gap-1">
+              <Stat label="Attempts" value={rolePlayResults.length} />
+              <Stat
+                label="Best score"
+                value={
+                  rolePlayResults.reduce<number | null>((best, r) => {
+                    if (r.score === null) return best;
+                    return best === null ? r.score : Math.max(best, r.score);
+                  }, null) ?? "-"
+                }
+                suffix={
+                  rolePlayResults.some((r) => r.score !== null)
+                    ? "%"
+                    : undefined
+                }
+              />
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
             <CardTitle>Certificates</CardTitle>
             <CardDescription>Earned course and program certs.</CardDescription>
           </CardHeader>
@@ -374,6 +419,75 @@ export default async function UserReportPage({
                 value={(programCertsRes.data ?? []).length}
               />
             </div>
+          </CardContent>
+        </Card>
+      </section>
+
+      <section className="mb-8">
+        <h2 className="mb-3 text-lg font-semibold">Role-play results</h2>
+        <Card>
+          <CardContent className="p-0">
+            {rolePlayResults.length === 0 ? (
+              <p className="text-muted-foreground p-6 text-sm">
+                No embedded role plays completed yet.
+              </p>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Role play</TableHead>
+                    <TableHead>Course</TableHead>
+                    <TableHead className="text-right">Score</TableHead>
+                    <TableHead>Completed</TableHead>
+                    <TableHead>Summary</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {rolePlayResults.map((result) => {
+                    const block = firstRow(result.content_blocks);
+                    const lesson = firstRow(block?.lessons);
+                    const module = firstRow(lesson?.modules);
+                    const course = firstRow(module?.courses);
+                    const title =
+                      stringOr(block?.content?.title, null) ??
+                      result.scenario_id;
+                    const summaryUrl = stringOr(
+                      result.summary?.summary_url,
+                      null,
+                    );
+
+                    return (
+                      <TableRow key={result.attempt_id}>
+                        <TableCell className="font-medium">{title}</TableCell>
+                        <TableCell className="text-muted-foreground text-sm">
+                          {course?.title ?? "-"}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums">
+                          {result.score === null ? "-" : `${result.score}%`}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground text-xs">
+                          {new Date(result.completed_at).toLocaleString()}
+                        </TableCell>
+                        <TableCell className="text-xs">
+                          {summaryUrl ? (
+                            <a
+                              href={summaryUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-primary hover:underline"
+                            >
+                              Open
+                            </a>
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            )}
           </CardContent>
         </Card>
       </section>
@@ -435,6 +549,95 @@ type AuditRow = {
   created_at: string;
 };
 
+type RolePlayResult = {
+  block_id: string;
+  scenario_id: string;
+  attempt_id: string;
+  score: number | null;
+  summary: { summary_url?: unknown } | null;
+  completed_at: string;
+  content_blocks:
+    | {
+        content: { title?: unknown } | null;
+        lessons:
+          | {
+              title: string;
+              modules:
+                | {
+                    courses:
+                      | { title: string }
+                      | Array<{ title: string }>
+                      | null;
+                  }
+                | Array<{
+                    courses:
+                      | { title: string }
+                      | Array<{ title: string }>
+                      | null;
+                  }>
+                | null;
+            }
+          | Array<{
+              title: string;
+              modules:
+                | {
+                    courses:
+                      | { title: string }
+                      | Array<{ title: string }>
+                      | null;
+                  }
+                | Array<{
+                    courses:
+                      | { title: string }
+                      | Array<{ title: string }>
+                      | null;
+                  }>
+                | null;
+            }>
+          | null;
+      }
+    | Array<{
+        content: { title?: unknown } | null;
+        lessons:
+          | {
+              title: string;
+              modules:
+                | {
+                    courses:
+                      | { title: string }
+                      | Array<{ title: string }>
+                      | null;
+                  }
+                | Array<{
+                    courses:
+                      | { title: string }
+                      | Array<{ title: string }>
+                      | null;
+                  }>
+                | null;
+            }
+          | Array<{
+              title: string;
+              modules:
+                | {
+                    courses:
+                      | { title: string }
+                      | Array<{ title: string }>
+                      | null;
+                  }
+                | Array<{
+                    courses:
+                      | { title: string }
+                      | Array<{ title: string }>
+                      | null;
+                  }>
+                | null;
+            }>
+          | null;
+      }>
+    | null;
+};
+
 function Stat({
   label,
   value,
@@ -459,4 +662,11 @@ function firstRow<T>(value: T | T[] | null | undefined): T | null {
   if (!value) return null;
   if (Array.isArray(value)) return value[0] ?? null;
   return value;
+}
+
+function stringOr<T extends string | null>(
+  value: unknown,
+  fallback: T,
+): string | T {
+  return typeof value === "string" ? value : fallback;
 }
