@@ -39,5 +39,4 @@ jobs:
 
           ENCODED_PASSWORD="$(node -e 'process.stdout.write(encodeURIComponent(process.env.TEST_SUPABASE_DB_PASSWORD))')"
           DB_URL="postgresql://postgres.${TEST_PROJECT_REF}:${ENCODED_PASSWORD}@aws-1-us-west-1.pooler.supabase.com:5432/postgres"
-          supabase migration repair 012 --status reverted --db-url "$DB_URL" --yes || true
           supabase db push --include-all --db-url "$DB_URL" --yes
