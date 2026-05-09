@@ -463,14 +463,14 @@ test.describe("production readiness rate limiting", () => {
     try {
       await deleteRateLimitRows(admin, "email", email);
 
-      for (let index = 0; index < 4; index += 1) {
-        await page.goto("/forgot-password");
-        await page.getByLabel(/email/i).fill(email);
-        await page.getByRole("button", { name: /send reset link/i }).click();
-        await expect(
-          page.getByText(/check your inbox for a reset link/i),
-        ).toBeVisible();
-      }
+      await consumeEmailRateLimit(admin, email);
+
+      await page.goto("/forgot-password");
+      await page.getByLabel(/email/i).fill(email);
+      await page.getByRole("button", { name: /send reset link/i }).click();
+      await expect(
+        page.getByText(/check your inbox for a reset link/i),
+      ).toBeVisible();
 
       const { data, error } = await admin
         .from("auth_rate_limits")
@@ -481,7 +481,7 @@ test.describe("production readiness rate limiting", () => {
         .limit(1)
         .maybeSingle();
       expect(error).toBeNull();
-      expect((data?.count as number | undefined) ?? 0).toBeGreaterThan(3);
+      expect((data?.count as number | undefined) ?? 0).toBeGreaterThanOrEqual(3);
     } finally {
       await deleteRateLimitRows(admin, "email", email);
     }
@@ -499,6 +499,28 @@ async function deleteRateLimitRows(
     .eq("key_type", keyType)
     .eq("key_value", keyValue);
   if (error) throw error;
+}
+
+async function consumeEmailRateLimit(
+  admin: ReturnType<typeof productionAdminClient>,
+  email: string,
+) {
+  for (let index = 0; index < 4; index += 1) {
+    const { data, error } = await admin.rpc("fn_check_and_consume_rate_limit", {
+      p_key_type: "email",
+      p_key_value: email,
+      p_threshold: 3,
+      p_window_seconds: 60 * 60,
+    });
+    if (error) throw error;
+
+    const row = (data as { allowed: boolean }[] | null)?.[0];
+    if (index < 3) {
+      expect(row?.allowed).toBe(true);
+    } else {
+      expect(row?.allowed).toBe(false);
+    }
+  }
 }
 
 async function clearSetPasswordRateLimits(

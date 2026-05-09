@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { requireAdmin } from "@/lib/auth/guard";
+import { getAppUrl } from "@/lib/app-url";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendEmail } from "@/lib/email/send";
@@ -89,12 +90,9 @@ export async function saveUserSettings(input: {
     newProgramTitles = programList.map((p) => p.title);
 
     if (profile?.email && programList.length > 0) {
-      const appUrl =
-        process.env.NEXT_PUBLIC_APP_URL ??
-        "https://sandra-university.vercel.app";
       const { subject, html } = renderEnrollmentEmail({
         inviteeEmail: profile.email as string,
-        appUrl,
+        appUrl: getAppUrl(),
         programs: programList,
         standaloneCourses: [],
       });

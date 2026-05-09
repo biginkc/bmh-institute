@@ -18,18 +18,25 @@ export function emailCaptureConfigFromEnv(): EmailCaptureConfig | null {
   const pass = process.env.PROD_READINESS_EMAIL_IMAP_PASS?.trim();
   if (!inbox || !pass) return null;
 
-  const port = Number(process.env.PROD_READINESS_EMAIL_IMAP_PORT ?? "993");
   return {
     inbox,
     host: process.env.PROD_READINESS_EMAIL_IMAP_HOST?.trim() || "imap.gmail.com",
-    port,
+    port: readPositiveNumberEnv("PROD_READINESS_EMAIL_IMAP_PORT", 993),
     secure: (process.env.PROD_READINESS_EMAIL_IMAP_SECURE ?? "true") !== "false",
     user: process.env.PROD_READINESS_EMAIL_IMAP_USER?.trim() || inbox,
     pass,
     mailbox: process.env.PROD_READINESS_EMAIL_MAILBOX?.trim() || "INBOX",
-    pollMs: Number(process.env.PROD_READINESS_EMAIL_POLL_MS ?? "5000"),
-    timeoutMs: Number(process.env.PROD_READINESS_EMAIL_TIMEOUT_MS ?? "90000"),
+    pollMs: readPositiveNumberEnv("PROD_READINESS_EMAIL_POLL_MS", 5000),
+    timeoutMs: readPositiveNumberEnv("PROD_READINESS_EMAIL_TIMEOUT_MS", 90000),
   };
+}
+
+function readPositiveNumberEnv(name: string, fallback: number): number {
+  const raw = process.env[name]?.trim();
+  if (!raw) return fallback;
+
+  const value = Number(raw);
+  return Number.isFinite(value) && value > 0 ? value : fallback;
 }
 
 export function buildTaggedEmailAddress(inbox: string, tag: string): string {
@@ -136,7 +143,7 @@ export function extractFirstLink(source: string, pattern: RegExp): string | null
   const decoded = decodeHtmlEntities(source);
   const urls = decoded.match(/https?:\/\/[^\s"'<>]+/g) ?? [];
   for (const raw of urls) {
-    const cleaned = raw.replace(/[),.]+$/, "");
+    const cleaned = raw.replace(/[)\],.]+$/, "");
     if (pattern.test(cleaned)) return cleaned;
   }
   return null;

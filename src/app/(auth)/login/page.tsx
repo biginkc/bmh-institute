@@ -42,7 +42,7 @@ export default function LoginPage() {
 
 function LoginForm() {
   const [state, formAction, pending] = useActionState(signIn, null);
-  const [hashInviteState, setHashInviteState] = useState<
+  const [hashAuthState, setHashAuthState] = useState<
     "idle" | "processing" | "failed"
   >("idle");
   const actionError = state && !state.ok ? state.error : null;
@@ -52,32 +52,40 @@ function LoginForm() {
   const inviteToken = searchParams.get("invite_token");
 
   useEffect(() => {
-    if (!inviteToken || hashInviteState !== "idle") return;
+    if (hashAuthState !== "idle") return;
 
     const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
     const accessToken = hash.get("access_token");
     const refreshToken = hash.get("refresh_token");
+    const type = hash.get("type");
     if (!accessToken || !refreshToken) return;
+    if (!inviteToken && type !== "recovery" && type !== "invite") return;
     const sessionTokens = {
       access_token: accessToken,
       refresh_token: refreshToken,
     };
 
     let cancelled = false;
-    setHashInviteState("processing");
+    setHashAuthState("processing");
 
-    async function finishHashInvite() {
+    async function finishHashAuth() {
       const supabase = createClient();
       const { error } = await supabase.auth.setSession(sessionTokens);
       if (error) {
-        if (!cancelled) setHashInviteState("failed");
+        if (!cancelled) setHashAuthState("failed");
+        return;
+      }
+
+      if (!inviteToken) {
+        window.history.replaceState(null, "", "/auth/set-password");
+        window.location.assign("/auth/set-password");
         return;
       }
 
       const response = await fetch("/auth/apply-invite", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ token: inviteToken }),
+        body: JSON.stringify({ token: inviteToken, accessToken }),
       });
 
       if (response.ok) {
@@ -95,19 +103,19 @@ function LoginForm() {
         return;
       }
 
-      if (!cancelled) setHashInviteState("failed");
+      if (!cancelled) setHashAuthState("failed");
     }
 
-    void finishHashInvite();
+    void finishHashAuth();
 
     return () => {
       cancelled = true;
     };
-  }, [hashInviteState, inviteToken]);
+  }, [hashAuthState, inviteToken]);
 
   const errorMessage =
     actionError ??
-    (hashInviteState === "failed"
+    (hashAuthState === "failed"
       ? "Invite link couldn't be verified. Ask an admin to resend it."
       : urlError === "invite_failed"
       ? "Invite link couldn't be verified. Ask an admin to resend it."
@@ -115,10 +123,10 @@ function LoginForm() {
         ? "This invite link has expired. Ask your admin to send you a fresh one."
         : null);
 
-  if (hashInviteState === "processing") {
+  if (hashAuthState === "processing") {
     return (
       <div className="text-muted-foreground text-sm">
-        Finishing your invite...
+        Finishing sign in...
       </div>
     );
   }
