@@ -4,8 +4,8 @@ milestone: v1.1
 milestone_name: Ecosystem UI Alignment
 status: ready
 stopped_at: Phase 5 complete; ready for review and PR
-last_updated: "2026-05-08T23:59:00.000Z"
-last_activity: 2026-05-08 -- Phase 5 ecosystem navigation alignment implemented and verified
+last_updated: "2026-05-09T01:57:00.000Z"
+last_activity: 2026-05-09 -- quick task corrected to consume shared Sandra Design System package
 progress:
   total_phases: 1
   completed_phases: 1
@@ -86,6 +86,7 @@ Recent decisions affecting current work:
 - 2026-05-08 (v1 audit): v1 Production Hardening closed as pass with tracked deferral. TEST-03 remains in GitHub issue #2. PR #1 was closed because role-play embed overlaps future EMBD-01..05.
 - 2026-05-08 (Phase 5 planning): Ecosystem navigation alignment is the next milestone. The first plan implements the shared BMH fixed topbar, 256px left nav, active left-border nav state, PageHeader foundation, admin-only nav visibility, pending submissions badge preservation, profile access, sign-out, and responsive shell behavior.
 - 2026-05-08 (Phase 5 complete): Implemented the shared fixed topbar and left nav shell, mobile primary nav, active left-border nav style, PageHeader foundation, and PageHeader usage on primary learner/admin pages. Added RTL sidebar coverage and Playwright shell smoke coverage. `npm run verify` and local Playwright shell smoke passed.
+- 2026-05-09 (quick task): BMH Institute now consumes `@sandra/tokens` from `../Sandra Design System`, imports the shared token CSS in `globals.css`, adds the registry-style `BrandLockup` component locally, uses webpack for local dev to resolve linked design-system CSS, and covers the package contract with `src/app/globals.test.ts`.
 
 ### Pending Todos
 
