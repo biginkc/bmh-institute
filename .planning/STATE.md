@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Internal Pilot Operations
 status: shipped
-stopped_at: v1.1 Internal Pilot Operations shipped; next step is start next milestone when needed
-last_updated: "2026-05-09T12:35:00.000Z"
+stopped_at: v1.1 Internal Pilot Operations shipped; post-ship documentation and workflow cleanup are current
+last_updated: "2026-05-09T17:30:00.000Z"
 last_activity: 2026-05-09
 progress:
   total_phases: 4
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-30)
 
 **Core value:** A VA can sign in via an admin invite, work through assigned programs and courses on their own time, take quizzes and submit assignments without supervision, and receive a certificate when they finish. Admins can author content, manage learners, review submissions, and see who is making progress without leaving the platform.
-**Current focus:** v1.1 Internal Pilot Operations
+**Current focus:** Post-ship cleanup and monorepo migration readiness
 
 ## Current Position
 
 Phase: Complete
 Plan: Complete
-Status: v1.1 shipped
+Status: v1.1 shipped; post-ship quick tasks are in progress
 Last activity: 2026-05-09
 
 ## Performance Metrics
@@ -104,14 +104,19 @@ Recent decisions affecting current work:
 - 2026-05-09 (Phase 7): Learner onboarding complete. Added a pure onboarding summary model, dashboard first-step panel, no-assignment support copy, profile and password recovery copy updates, dashboard unit coverage, and seeded Playwright coverage. Local `npm run verify` passed. PR #49 GitHub Actions passed `Verify` and `Seeded Playwright E2E`.
 - 2026-05-09 (Phase 8): Pilot monitoring complete. Added a pure monitoring summary model, `/admin/reports` pilot monitoring panel, CSV export route, route unit coverage, and seeded Playwright coverage. Local `npm run verify` passed. PR #50 GitHub Actions passed `Verify` and `Seeded Playwright E2E`.
 - 2026-05-09 (Phase 9): Pilot runbook and readiness complete. Added internal pilot runbook, pre-pilot checklist, and production readiness assertions for pilot monitoring and CSV export. Local `npm run verify` passed. PR #51 passed `Verify` and `Seeded Playwright E2E`. Deployed current `main` to Vercel, aliased `institute.bmhgroupkc.com`, and GitHub Actions production-readiness run `25600994876` passed with 4 tests.
+- 2026-05-09 (quick task): Added `MIGRATION-NOTES.md` for the upcoming BMH Platform monorepo migration. It captures runtime/package-manager state, env var names, Supabase projects and migrations, CI workflows, scheduled jobs, route handlers, custom scripts, Vercel details, `@sandra/tokens`, and migration-day reminders. PR #70 passed `Verify` and `Seeded Playwright E2E`.
+- 2026-05-09 (quick task): Fixed walkthrough overlay state restoration so saved state is path-scoped for every step. Production Playwright verified all six BMH demo steps hide stale saved state on different routes, same-path refresh still restores, and Step 6 keeps Next disabled. PR #69 passed local, CI, deployment, and production browser verification.
+- 2026-05-09 (quick task): Restored the normal Vercel Git production flow. The `sandra-university` Vercel project is connected to `biginkc/bmh-institute`, `autoAssignCustomDomains` is true, and merging PR #71 created a production deployment for commit `405e1dd` with `institute.bmhgroupkc.com` automatically included in production aliases. Agents should no longer run `vercel deploy --prod` or `vercel alias set` after routine merges.
+- 2026-05-09 (quick task): Added `docs/guided-walkthrough-system.md` and updated GitHub issue #64. The recommended direction is to keep the BMH Institute walkthrough app-local, preserve a shared step/overlay/state contract, copy the small pattern into a second app when needed, and extract `@bmh/guided-walkthrough` only after three apps need the same behavior. PR #71 passed `Verify`, `Seeded Playwright E2E`, and Vercel preview.
 
 ### Pending Todos
 
-None yet.
+- GitHub issue #64 remains open by design. It should not close until a second app consumes the walkthrough contract or the monorepo is ready to extract a shared walkthrough package.
 
 ### Concerns
 
 - v1.1 internal pilot work is production-ready. The embedded Closer Lab walkthrough is live, role-play completions persist in BMH Institute, and user reports surface completed role plays. Performance threshold work remains parked until its triggers are met.
+- Post-ship production deploys should use Vercel's Git flow. Custom production domains should auto-assign to the latest `main` deployment.
 - Spending changes, provider changes, or infrastructure changes still require explicit approval.
 
 ## Deferred Items
@@ -120,14 +125,15 @@ None yet.
 |----------|------|--------|-------------|
 | Role-play embed | EMBD-01..05 | completed | 2026-05-09 after Closer Lab walkthrough deployment |
 | Performance | PERF-01..03 | v2 | Milestone init |
+| Guided walkthrough package | `@bmh/guided-walkthrough` | wait for three app consumers | 2026-05-09 issue #64 plan |
 | Quick task | sandra-design-system-stitch-pass | acknowledged at close; archived by Phase 02.5 records | 2026-05-09 milestone close |
 | UAT | Phase 01 HUMAN-UAT closed-with-deferrals | acknowledged at close; superseded by later automation | 2026-05-09 milestone close |
 
 ## Session Continuity
 
-Last session: 2026-05-09T12:35:00.000Z
-Stopped at: v1.1 Internal Pilot Operations shipped; next step is start next milestone when needed
-Resume file: .planning/phases/09-pilot-runbook-readiness/09-VERIFICATION.md
+Last session: 2026-05-09T17:30:00.000Z
+Stopped at: v1.1 shipped; post-ship cleanup and monorepo migration readiness are current
+Resume file: .planning/STATE.md
 Session handoff: .planning/STATE.md
 
 ### 2026-05-08 - Phase 2 verification complete
