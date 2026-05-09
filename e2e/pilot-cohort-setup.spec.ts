@@ -56,9 +56,9 @@ test.describe("pilot cohort setup", () => {
       await expect(missingRow).toContainText("No role group assigned");
       await missingRow.getByRole("link", { name: /review access/i }).click();
 
-      await page
-        .getByLabel(`${fixture.prefix} Role Group`)
-        .check();
+      const pilotRoleGroup = page.getByLabel(`${fixture.prefix} Role Group`);
+      await pilotRoleGroup.check();
+      await expect(pilotRoleGroup).toBeChecked();
       await page.getByRole("button", { name: /^save changes$/i }).click();
 
       await expect
