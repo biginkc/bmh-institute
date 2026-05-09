@@ -107,12 +107,12 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Auth and Access Hardening | 4/4 | Complete (human_needed) | - |
+| 1. Auth and Access Hardening | 4/4 | Complete | 2026-05-09 |
 | 01.1. Testing Coverage Parity | 3/3 | Complete | 2026-05-01 |
 | 2. Content Safety and Rate Limiting | 3/3 | Complete | 2026-05-08 |
-| 2.5. Sandra Design System Stitch Pass | 1/1 | Complete | - |
+| 2.5. Sandra Design System Stitch Pass | 1/1 | Complete | 2026-05-09 |
 | 3. Data Integrity | 4/4 | Complete | 2026-05-08 |
-| 4. Type Safety and Test Coverage | 4/4 | Complete (issue #2 follow-up green) | 2026-05-08 |
+| 4. Type Safety and Test Coverage | 4/4 | Complete | 2026-05-09 |
 
 ## Milestone: v1.1 Ecosystem UI Alignment
 

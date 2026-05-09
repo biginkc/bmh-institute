@@ -1,7 +1,7 @@
 ---
 phase: 01-auth-and-access-hardening
 verified: 2026-04-30T21:10:00Z
-status: human_needed
+status: passed
 score: 4/4 must-haves verified
 overrides_applied: 0
 human_verification:
@@ -24,9 +24,20 @@ human_verification:
 
 # Phase 1: Auth and Access Hardening Verification Report
 
+## 2026-05-09 Superseding Note
+
+The original verification report below was created before the later seeded E2E and production-readiness work existed. Its manual caveats are now superseded by follow-up automation and production evidence:
+
+- Phase 01.1 replaced the original HUMAN-UAT items with automated or explicit test-environment paths.
+- Phase 4 follow-ups added durable seeded E2E for LMS write paths and invite acceptance.
+- PR #45 added real production email-link readiness for invite and password reset.
+- GitHub Actions production-readiness run `25598402881` passed from `main` with 4 checks on 2026-05-09.
+
+Current status: PASS.
+
 **Phase Goal:** Every authenticated route enforces the correct access level, expired invites cannot grant access, deleted users cannot re-authenticate, and quiz correct-answer data is inaccessible to learner sessions
 **Verified:** 2026-04-30T21:10:00Z
-**Status:** human_needed
+**Status:** passed after superseding follow-up verification
 **Re-verification:** No - initial verification
 
 ## Goal Achievement
