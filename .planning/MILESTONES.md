@@ -36,6 +36,7 @@ Key accomplishments:
 - Deployed current `main` to production and aliased `https://institute.bmhgroupkc.com`.
 - Verified production readiness with GitHub Actions run `25600994876`.
 - Added embedded Closer Lab role-play reporting to admin user reports and re-verified production readiness with GitHub Actions run `25609474981`.
+- Added durable walkthrough onboarding content with four modules, eight lessons, a Closer Lab role-play block, production seed evidence, and browser smoke verification.
 
 Archives:
 
