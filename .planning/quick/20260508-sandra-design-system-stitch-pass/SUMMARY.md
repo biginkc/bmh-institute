@@ -1,3 +1,8 @@
+---
+status: complete
+completed: 2026-05-08
+---
+
 # Sandra Design System Stitch Pass Summary
 
 Status: completed on 2026-05-08

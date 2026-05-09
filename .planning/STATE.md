@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1 follow-up
 milestone_name: Production Readiness Evidence
-status: ready
-stopped_at: v1 follow-up audit passed; next step is milestone archive
-last_updated: "2026-05-09T05:12:00.000-05:00"
-last_activity: 2026-05-09 -- PR #45 merged; production email-link capture and main production-readiness passed with 4 checks
+status: completed
+stopped_at: v1 follow-up archived; start next milestone with /gsd-new-milestone
+last_updated: "2026-05-09T10:23:05.000Z"
+last_activity: 2026-05-09 -- v1 follow-up milestone archived after production-readiness run 25598402881 passed from main
 progress:
-  total_phases: 1
-  completed_phases: 1
-  total_plans: 1
-  completed_plans: 1
+  total_phases: 8
+  completed_phases: 8
+  total_plans: 19
+  completed_plans: 21
   percent: 100
 ---
 
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-30)
 
 **Core value:** A VA can sign in via an admin invite, work through assigned programs and courses on their own time, take quizzes and submit assignments without supervision, and receive a certificate when they finish. Admins can author content, manage learners, review submissions, and see who is making progress without leaving the platform.
-**Current focus:** production readiness evidence current; v1 follow-up audit passed and milestone archival is next
+**Current focus:** no active milestone; v1 follow-up is archived and production readiness is green
 
 ## Current Position
 
-Phase: milestone audit
-Plan: v1 follow-up audit complete
+Phase: milestone archive
+Plan: v1 follow-up archive complete
 Status: Complete
-Last activity: 2026-05-09 -- PR #45 merged and GitHub Actions production-readiness run 25598402881 passed from main with 4 checks
+Last activity: 2026-05-09 -- archive files created under .planning/milestones and ROADMAP collapsed
 
 Progress: [██████████] 100%
 
@@ -101,8 +101,8 @@ None yet.
 
 ### Concerns
 
-- Production invite/password-reset email-link specs now pass in GitHub Actions using the configured mailbox secrets.
-- Phase 5 should read sibling repos for reference only. Do not write to Sandra, Closer Lab, Jitter, or Sandra Design System.
+- No active milestone is defined.
+- Start the next milestone with `/gsd-new-milestone` when ready.
 
 ## Deferred Items
 
@@ -110,6 +110,8 @@ None yet.
 |----------|------|--------|-------------|
 | Role-play embed | EMBD-01..05 | v2 | Milestone init |
 | Performance | PERF-01..03 | v2 | Milestone init |
+| Quick task | sandra-design-system-stitch-pass | acknowledged at close; archived by Phase 02.5 records | 2026-05-09 milestone close |
+| UAT | Phase 01 HUMAN-UAT closed-with-deferrals | acknowledged at close; superseded by later automation | 2026-05-09 milestone close |
 
 ## Session Continuity
 
