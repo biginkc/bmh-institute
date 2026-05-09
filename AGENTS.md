@@ -29,11 +29,14 @@ Don't mark meaningful behavior changes done without covering tests. Continue wit
 
 **PR-first is mandatory.** Do not push directly to `main`, even when the change is verified and seems safe. For completed work:
 
-1. Create or reuse a feature branch.
+1. Create or reuse a git worktree for the task.
 2. Push the branch.
 3. Open a pull request.
-4. Let Jarrad review or explicitly authorize merge.
-5. Merge the PR instead of pushing commits straight to `main`.
+4. Use engineering judgment to decide whether the PR is complete, segmented correctly, and safe to merge.
+5. Merge the PR after required checks pass unless there is a real blocker, an explicit review gate, or a high-risk decision that needs Jarrad's input.
+6. Sync the base branch after merge and keep moving to the next unblocked step.
+
+Always work in a git worktree for code, docs, config, and planning changes. Do not edit the main checkout directly. You do not need permission to create a worktree, open a PR, or merge a completed PR when checks are green and the change is within the agreed scope. Segment PRs by coherent units of value: keep unrelated changes in separate PRs, but do not split tightly coupled implementation, tests, docs, and workflow updates apart just to make more branches.
 
 - `npm run dev` — next dev on port 3100
 - `npm run test` — vitest unit suite
