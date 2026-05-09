@@ -21,7 +21,7 @@ The application is not production-ready until repeatable validation proves the f
 | Certificates | Ready | On-demand production readiness spec validates real course and program certificate issuance plus certificate UI print path. |
 | Storage uploads | Ready | On-demand production readiness spec validates real production storage upload, signed URL creation, user-prefix path, and cleanup. |
 | Access control and RLS isolation | Partially ready | Unit, integration, and smoke checks exist, but cross-user production isolation needs full Playwright proof. |
-| Content safety | Partially ready | Sanitization and embed hardening are implemented, but production unsafe-content save/render checks need repeatable coverage. |
+| Content safety | Ready | Production readiness spec validates unsafe text-block save sanitization, learner render safety, HTTPS-only embed validation, and iframe sandboxing. |
 | Rate limiting and abuse controls | Partially ready | Code, unit, and live RPC proof exist, but production UI behavior under real limits needs controlled validation. |
 | Deployment and rollback | Blocked | The manual production-readiness workflow runs from GitHub Actions, but the custom domain does not resolve and rollback validation is not automated. |
 | Observability and recovery | Partially ready | Playwright traces, screenshots, and cleanup verification exist. Manual interrupted-run cleanup runbook is still needed. |
@@ -66,6 +66,7 @@ Latest evidence:
 - GitHub Actions production-readiness run `25589792026` passed on 2026-05-09 from `main`.
 - Result: 1 lifecycle test passed, 1 email-link test skipped because no production email inbox capture is configured.
 - Post-run cleanup verification found 0 prefixed production programs, courses, modules, lessons, role groups, assignments, quizzes, answer options, and auth users.
+- Local production-readiness run on 2026-05-09 passed after adding content-safety coverage. It verified unsafe text-block sanitization through the admin UI, HTTPS-only embed validation through the admin UI, sandboxed learner iframe rendering, and cleanup of the disposable fixture.
 
 ## Required production validation scenarios
 
@@ -148,7 +149,7 @@ Current status: partially covered by `npm run test:prod:readiness`. Cross-user d
 - Invalid non-HTTPS embed source is rejected through the production UI.
 - Disposable unsafe-content fixture is cleaned up.
 
-Current status: embed safety has existing production smoke coverage. Unsafe text-block save/render should be added to the production readiness spec.
+Current status: covered by `npm run test:prod:readiness`.
 
 ### Deployment, rollback, observability, and recovery
 
@@ -194,4 +195,4 @@ Current status: embed safety has existing production smoke coverage. Unsafe text
 
 BMH Institute can be called production-ready only after the production readiness workflow repeatedly passes auth and onboarding, password reset, learner lifecycle, admin review, certificates, storage, access control, content safety, rate limiting, deployment, rollback, observability, cleanup, and recovery checks against real production services with no mocked providers.
 
-As of 2026-05-09, production lifecycle, storage, admin review, and certificate checks pass. The app is still not production-ready because invite acceptance and password reset require real production email-link capture, and deployment rollback/recovery still need a documented drill.
+As of 2026-05-09, production lifecycle, storage, admin review, certificates, and content-safety checks pass. The app is still not production-ready because invite acceptance and password reset require real production email-link capture, and deployment rollback/recovery still need a documented drill.

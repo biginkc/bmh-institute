@@ -58,6 +58,47 @@ test.describe("production readiness lifecycle", () => {
       const adminContext = await browser.newContext();
       const adminPage = await adminContext.newPage();
       await signIn(adminPage, fixture.admin.email, fixture.password);
+
+      await adminPage.goto(`/admin/lessons/${fixture.contentLessonId}/edit`);
+      const unsafeHtml = [
+        `<p style="color:red">${fixture.prefix} sanitized text</p>`,
+        '<script>window.__bmhUnsafe = true</script>',
+        '<a href="javascript:alert(1)">unsafe link</a>',
+      ].join("");
+      await adminPage.getByLabel(/^html$/i).fill(unsafeHtml);
+      await adminPage.getByRole("button", { name: /^save block$/i }).first().click();
+      await expect(adminPage.getByText(/^saved\.$/i)).toBeVisible();
+
+      await adminPage.getByLabel(/iframe src/i).fill("http://example.com");
+      await adminPage.getByRole("button", { name: /^save block$/i }).nth(1).click();
+      await expect(
+        adminPage.getByText(/embed url must start with https:\/\//i),
+      ).toBeVisible();
+      await adminPage.getByLabel(/iframe src/i).fill("https://example.com");
+      await adminPage.getByRole("button", { name: /^save block$/i }).nth(1).click();
+      await expect(adminPage.getByText(/^saved\.$/i)).toBeVisible();
+
+      const [sanitizedText, embedContent] = await Promise.all([
+        getBlockContent(admin, fixture.contentBlockId),
+        getBlockContent(admin, fixture.embedBlockId),
+      ]);
+      expect(String(sanitizedText.html)).toContain(`${fixture.prefix} sanitized text`);
+      expect(String(sanitizedText.html)).not.toContain("<script");
+      expect(String(sanitizedText.html)).not.toContain("javascript:");
+      expect(String(sanitizedText.html)).not.toContain("style=");
+      expect(embedContent.iframe_src).toBe("https://example.com");
+
+      await learner.goto(`/lessons/${fixture.contentLessonId}`);
+      await expect(
+        learner.getByText(`${fixture.prefix} sanitized text`),
+      ).toBeVisible();
+      const renderedEmbed = learner.getByTitle("Embedded content");
+      await expect(renderedEmbed).toBeVisible();
+      await expect(renderedEmbed).toHaveAttribute(
+        "sandbox",
+        "allow-scripts allow-same-origin allow-forms allow-presentation",
+      );
+
       await adminPage.goto("/admin/submissions");
       const textSubmissionCard = adminPage
         .locator('[data-slot="card"]')
@@ -177,6 +218,21 @@ async function findUploadedSubmissionPath(
     throw error ?? new Error("File submission path was not recorded.");
   }
   return data.submission_file_path as string;
+}
+
+async function getBlockContent(
+  admin: ReturnType<typeof productionAdminClient>,
+  blockId: string,
+): Promise<Record<string, unknown>> {
+  const { data, error } = await admin
+    .from("content_blocks")
+    .select("content")
+    .eq("id", blockId)
+    .maybeSingle();
+  if (error || !data?.content) {
+    throw error ?? new Error(`Content block ${blockId} was not found.`);
+  }
+  return data.content as Record<string, unknown>;
 }
 
 async function hasCourseAndProgramCertificates(
