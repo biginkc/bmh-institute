@@ -14,12 +14,14 @@
     "test:e2e": "playwright test",
     "test:prod": "playwright test --config playwright.prod.config.ts",
     "test:prod:readiness": "playwright test --config playwright.prod-readiness.config.ts",
+    "test:prod:dryrun": "playwright test --config playwright.prod-dryrun.config.ts",
     "seed:e2e": "tsx scripts/seed-e2e-test-content.ts",
     "typecheck": "tsc --noEmit",
     "verify": "npm run typecheck && npm run test && npm run test:rtl",
     "prepare": "husky",
     "backfill:sanitize-html": "tsx scripts/backfill-sanitize-html.ts",
-    "cleanup:prod-readiness": "tsx scripts/cleanup-production-readiness.ts"
+    "cleanup:prod-readiness": "tsx scripts/cleanup-production-readiness.ts",
+    "cleanup:prod-dryrun": "tsx scripts/cleanup-production-readiness.ts --prefix PILOT-DRYRUN-"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",
