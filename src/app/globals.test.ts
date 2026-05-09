@@ -1,7 +1,9 @@
 import { readFileSync } from "node:fs";
-import { join } from "node:path";
+import { createRequire } from "node:module";
+import { dirname, join } from "node:path";
 import { describe, expect, it } from "vitest";
 
+const require = createRequire(import.meta.url);
 const globalsCss = readFileSync(join(process.cwd(), "src/app/globals.css"), {
   encoding: "utf8",
 });
@@ -17,7 +19,7 @@ const packageJson = JSON.parse(
 describe("BMH shared design tokens", () => {
   it("depends on the shared Sandra Design System token package", () => {
     expect(packageJson.dependencies?.["@sandra/tokens"]).toBe(
-      "file:../Sandra Design System",
+      "github:biginkc/sandra-design-system#main",
     );
   });
 
@@ -32,8 +34,15 @@ describe("BMH shared design tokens", () => {
   });
 
   it("exposes shared status and alert utilities for cross-app UI reuse", () => {
+    const tokensPackageJsonPath = require.resolve("@sandra/tokens/package.json");
+    const tokensPackageJson = JSON.parse(
+      readFileSync(tokensPackageJsonPath, { encoding: "utf8" }),
+    ) as { exports?: Record<string, string> };
+    const themeCssExport = tokensPackageJson.exports?.["./theme.css"];
+    expect(themeCssExport).toBeDefined();
+
     const sharedTokensCss = readFileSync(
-      join(process.cwd(), "node_modules/@sandra/tokens/tokens/theme.css"),
+      join(dirname(tokensPackageJsonPath), themeCssExport as string),
       { encoding: "utf8" },
     );
 
