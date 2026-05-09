@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Internal Pilot Operations
 status: planning
-stopped_at: Phase 6 context gathered
-last_updated: "2026-05-09T10:39:48.216Z"
+stopped_at: Phase 6 UI-SPEC approved
+last_updated: "2026-05-09T10:41:33.131Z"
 last_activity: 2026-05-09 - Milestone v1.1 started
 progress:
   total_phases: 4
@@ -112,9 +112,9 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-09T10:39:48.212Z
-Stopped at: Phase 6 context gathered
-Resume file: .planning/phases/06-pilot-cohort-setup/06-CONTEXT.md
+Last session: 2026-05-09T10:41:33.126Z
+Stopped at: Phase 6 UI-SPEC approved
+Resume file: .planning/phases/06-pilot-cohort-setup/06-UI-SPEC.md
 Session handoff: .planning/STATE.md
 
 ### 2026-05-08 - Phase 2 verification complete
