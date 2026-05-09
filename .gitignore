@@ -42,7 +42,12 @@ yarn-error.log*
 next-env.d.ts
 
 # Claude Code per-user settings
+.claude/settings.json
 .claude/settings.local.json
+.claude/worktrees/
+
+# Supabase CLI local cache
+supabase/.temp/
 
 # Scratch / sample data
 /tmp/
