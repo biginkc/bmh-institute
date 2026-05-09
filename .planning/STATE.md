@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v1 follow-up
 milestone_name: Production Readiness Evidence
 status: ready
-stopped_at: production email-link harness added; remaining blocker is mailbox secrets
-last_updated: "2026-05-09T03:20:00.000-05:00"
-last_activity: 2026-05-09 -- production email-link capture harness added for invite and reset links, gated by mailbox secrets
+stopped_at: v1 follow-up audit passed; next step is milestone archive
+last_updated: "2026-05-09T05:12:00.000-05:00"
+last_activity: 2026-05-09 -- PR #45 merged; production email-link capture and main production-readiness passed with 4 checks
 progress:
   total_phases: 1
   completed_phases: 1
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-30)
 
 **Core value:** A VA can sign in via an admin invite, work through assigned programs and courses on their own time, take quizzes and submit assignments without supervision, and receive a certificate when they finish. Admins can author content, manage learners, review submissions, and see who is making progress without leaving the platform.
-**Current focus:** production readiness evidence current; remaining blocker is production email-link mailbox secrets
+**Current focus:** production readiness evidence current; v1 follow-up audit passed and milestone archival is next
 
 ## Current Position
 
-Phase: production readiness follow-up
-Plan: quick task complete
+Phase: milestone audit
+Plan: v1 follow-up audit complete
 Status: Complete
-Last activity: 2026-05-09 -- production email-link capture harness added for invite and reset links; specs remain gated until mailbox secrets are configured
+Last activity: 2026-05-09 -- PR #45 merged and GitHub Actions production-readiness run 25598402881 passed from main with 4 checks
 
 Progress: [██████████] 100%
 
@@ -99,9 +99,9 @@ Recent decisions affecting current work:
 
 None yet.
 
-### Blockers/Concerns
+### Concerns
 
-- Production invite/password-reset email-link specs are implemented but remain blocked on mailbox secrets. Non-production invite acceptance no longer requires email capture because the E2E suite uses Supabase Admin generated action links.
+- Production invite/password-reset email-link specs now pass in GitHub Actions using the configured mailbox secrets.
 - Phase 5 should read sibling repos for reference only. Do not write to Sandra, Closer Lab, Jitter, or Sandra Design System.
 
 ## Deferred Items

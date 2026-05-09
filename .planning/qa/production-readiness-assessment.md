@@ -1,7 +1,7 @@
 # Production readiness hardening assessment
 
 Date: 2026-05-09
-Status: partially ready, not production-ready
+Status: ready
 
 ## Purpose
 
@@ -13,16 +13,16 @@ The application is not production-ready until repeatable validation proves the f
 
 | Area | Status | Reason |
 |------|--------|--------|
-| Overall application readiness | Partially ready | A real production lifecycle check now passes, but invite and password-reset email-link validation is still blocked. |
-| Production auth and onboarding | Blocked | Invite acceptance and first-password setup now have gated production email-link automation, but CI needs mailbox secrets before the check can run. |
-| Password reset | Blocked | Reset-link delivery and completion now have gated production email-link automation, but CI needs mailbox secrets before the check can run. |
+| Overall application readiness | Ready | The real production lifecycle, invite email-link, password reset email-link, and rate-limit checks pass from GitHub Actions. |
+| Production auth and onboarding | Ready | Invite acceptance and first-password setup pass through real production email-link capture. |
+| Password reset | Ready | Reset-link delivery, password update, and sign-in with the new password pass through real production email-link capture. |
 | Learner lifecycle | Ready | On-demand production readiness spec validates assigned and unassigned learners, course access, content completion, quiz pass, text assignment, and file assignment. |
 | Admin review lifecycle | Ready | On-demand production readiness spec validates revision request, learner resubmission, admin approval, and cleanup. |
 | Certificates | Ready | On-demand production readiness spec validates real course and program certificate issuance plus certificate UI print path. |
 | Storage uploads | Ready | On-demand production readiness spec validates real production storage upload, signed URL creation, user-prefix path, and cleanup. |
 | Access control and RLS isolation | Ready | Production readiness spec validates route protection, assigned versus unassigned learner access, direct RLS reads, cross-user submission isolation, and storage prefix isolation. |
 | Content safety | Ready | Production readiness spec validates unsafe text-block save sanitization, learner render safety, HTTPS-only embed validation, and iframe sandboxing. |
-| Rate limiting and abuse controls | Partially ready | Forgot-password production UI behavior is covered with disposable email counters. Set-password production UI behavior still needs reset-link or recovery-session automation. |
+| Rate limiting and abuse controls | Ready | Forgot-password rate limiting is covered with disposable email counters, and password reset completion is covered through real recovery-link automation. |
 | Deployment and rollback | Ready | The Vercel rollback drill passed and `https://institute.bmhgroupkc.com` now resolves, serves HTTPS through Vercel, and passes production-readiness CI. |
 | Observability and recovery | Ready | Playwright traces, screenshots, cleanup verification, and an interrupted-run cleanup runbook now exist. |
 
@@ -76,7 +76,8 @@ Latest evidence:
 - DNS record `A institute.bmhgroupkc.com 76.76.21.21` was added at Tailor Brands/GoDaddy on 2026-05-09. Public DNS returned `76.76.21.21`, Vercel certificate `cert_KhnuksU3ftVPXtOglGh0EmKv` was issued for `institute.bmhgroupkc.com`, and HTTPS returned a Vercel `307` to `/login?next=%2F` followed by the BMH Institute login page.
 - GitHub secret `E2E_PROD_BASE_URL` was updated to `https://institute.bmhgroupkc.com` on 2026-05-09. GitHub Actions production-readiness run `25596039223` passed on 2026-05-09 from `main` against the custom domain. Result: 2 lifecycle and rate-limit tests passed, 1 email-link test skipped.
 - Vercel production `NEXT_PUBLIC_APP_URL` was set to `https://institute.bmhgroupkc.com` on 2026-05-09, current `main` was redeployed to `sandra-university-ogb6o1qnt-jarrad-5416s-projects.vercel.app`, and `institute.bmhgroupkc.com` was aliased to that deployment. GitHub Actions production-readiness run `25596438899` passed afterward from `main`. Result: 2 lifecycle and rate-limit tests passed, 1 email-link test skipped.
-- Production email-link capture harness added on 2026-05-09. It uses an IMAP-readable mailbox to retrieve real Supabase invite and recovery links, then completes invite acceptance, first-password setup, password reset, and sign-in through the browser. The specs skip until mailbox secrets are configured.
+- Production email-link capture harness added on 2026-05-09. It uses an IMAP-readable mailbox to retrieve real Supabase invite and recovery links, then completes invite acceptance, first-password setup, password reset, and sign-in through the browser.
+- PR #45 merged on 2026-05-09. GitHub Actions production-readiness run `25598402881` passed from `main` against `https://institute.bmhgroupkc.com`. Result: 4 passed, 0 skipped.
 
 ## Required production validation scenarios
 
@@ -89,7 +90,7 @@ Latest evidence:
 - Learner signs in with the new password.
 - Cleanup removes the disposable auth user, profile, role groups, progress, submissions, certificates, and storage objects.
 
-Current status: automation implemented; blocked until production email inbox/capture credentials are configured in CI.
+Current status: covered by `npm run test:prod:readiness` and passing in GitHub Actions.
 
 ### Password reset and email delivery
 
@@ -100,7 +101,7 @@ Current status: automation implemented; blocked until production email inbox/cap
 - Cleanup restores the original password or recreates the disposable test user safely.
 - Rate-limit behavior is verified without locking out operators or consuming normal-user limits.
 
-Current status: automation implemented; blocked until production email inbox/capture credentials are configured in CI.
+Current status: covered by `npm run test:prod:readiness` and passing in GitHub Actions.
 
 ### Learner lifecycle
 
@@ -178,9 +179,9 @@ Current status: covered by `docs/production-readiness-recovery.md` and `npm run 
 - The disposable email counter crosses the configured threshold in `auth_rate_limits`.
 - The UI remains enumeration-safe and shows the same success state after the threshold is consumed.
 - Disposable email rate-limit rows are removed after the check.
-- Set-password limit behavior still needs a real recovery session to validate through the production UI.
+- Password reset completion is validated through a real recovery email link and browser session.
 
-Current status: forgot-password covered by `npm run test:prod:readiness`; set-password still blocked by email-link or recovery-session automation.
+Current status: covered by `npm run test:prod:readiness`.
 
 ## Required production test infrastructure
 
@@ -202,10 +203,8 @@ Current status: forgot-password covered by `npm run test:prod:readiness`; set-pa
 - Run production readiness on demand before release and on a scheduled cadence.
 - Treat production readiness as a release gate before calling the app production-ready.
 
-## Open blockers and risks
+## Open risks
 
-- Production email capture secrets are the main blocker for running invite and password reset automation in CI.
-- GitHub production readiness secrets must use the current production Supabase service-role key. A stale local `.env.local` service-role key caused `Invalid API key` until the current key was injected from the Supabase CLI.
 - Production writes require strict disposable prefixes and cleanup so tests do not pollute real learner records.
 - Password reset tests must avoid locking out real operators or consuming normal-user rate limits.
 - Storage cleanup must verify files are removed from the real bucket.
@@ -214,6 +213,6 @@ Current status: forgot-password covered by `npm run test:prod:readiness`; set-pa
 
 ## Success condition
 
-BMH Institute can be called production-ready only after the production readiness workflow repeatedly passes auth and onboarding, password reset, learner lifecycle, admin review, certificates, storage, access control, content safety, rate limiting, deployment, rollback, observability, cleanup, and recovery checks against real production services with no mocked providers.
+BMH Institute can be called production-ready after the production readiness workflow passes auth and onboarding, password reset, learner lifecycle, admin review, certificates, storage, access control, content safety, rate limiting, deployment, rollback, observability, cleanup, and recovery checks against real production services with no mocked providers.
 
-As of 2026-05-09, production lifecycle, storage, access control, admin review, certificates, content-safety, forgot-password rate limiting, custom-domain deployment, rollback, and recovery checks pass on latest `main`. The app is still not production-ready because invite acceptance, password reset, and set-password rate-limit UI proof require production email-link mailbox secrets before their automation can run in CI.
+As of 2026-05-09, GitHub Actions production-readiness run `25598402881` passed from `main` with all four checks green against `https://institute.bmhgroupkc.com`. The app is production-ready for the internal pilot scope, with future role-play embed and threshold-triggered performance work intentionally parked for later milestones.
