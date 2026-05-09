@@ -112,9 +112,10 @@ export default async function DashboardPage() {
       ) : programs.length === 0 ? (
         <Card>
           <CardHeader>
-            <CardTitle>No programs yet</CardTitle>
+            <CardTitle>No training assigned yet</CardTitle>
             <CardDescription>
-              Nothing has been assigned to your account. Reach out to an admin to get access.
+              Your account is active, but no programs are assigned yet. Ask your BMH
+              Institute admin or manager to add you to the right role group.
             </CardDescription>
           </CardHeader>
         </Card>
