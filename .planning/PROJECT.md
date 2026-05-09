@@ -32,7 +32,16 @@ A VA can sign in via an admin invite, work through assigned programs and courses
 
 ### Active
 
-No active milestone is defined. Start the next milestone with `/gsd-new-milestone`.
+Current milestone: v1.1 Internal Pilot Operations
+
+Goal: Make BMH Institute ready for BMH Group's first real internal learner pilot.
+
+Target features:
+
+- Pilot cohort setup that lets admins prepare real learner access with less manual risk.
+- Learner onboarding polish so invited VAs know what to do after first sign-in.
+- Pilot monitoring surfaces that show progress, blockers, submissions, and certificate readiness.
+- Operational runbooks and production checks for the first internal rollout.
 
 ### Out of Scope
 
@@ -46,6 +55,8 @@ No active milestone is defined. Start the next milestone with `/gsd-new-mileston
 ## Context
 
 This codebase has shipped the v1 follow-up milestone. BMH Institute is ready for the internal pilot scope: custom domain, production auth, production Supabase writes, production storage, production email-link invite acceptance, password reset, admin review, certificates, cleanup, and recovery checks all pass through GitHub Actions production-readiness.
+
+The current milestone moves from "production is technically ready" to "the team can run a small internal pilot without needing Codex in the loop for every operational question." It should favor clear admin workflows, durable pilot checks, and small product improvements that reduce support friction for VA learners.
 
 Latest production-readiness evidence:
 
@@ -82,6 +93,7 @@ Email transport pivoted from SendGrid to Google Workspace SMTP in commit `ce6e49
 | Test-first execution is the default for meaningful changes | Keeps behavior changes covered without turning routine execution into an execution bottleneck | ✓ Good |
 | v1 hardening closed with TEST-03 deferred | Manual production Playwright verified major write paths; durable automation needs non-prod Supabase and email capture | ✓ Superseded by PR #39, PR #40, and PR #45 |
 | v1.1 focuses on shared BMH ecosystem shell | Jarrad wants BMH Institute navigation to match Sandra, Closer Lab, and Jitter instead of drifting as a standalone LMS | ✓ Good |
+| v1.1 Internal Pilot Operations starts after production readiness | The app is green on production-readiness; the next risk is operational adoption by real internal learners and admins | Active |
 
 ## Evolution
 
@@ -101,4 +113,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-09 after v1 follow-up milestone archive*
+*Last updated: 2026-05-09 after starting v1.1 Internal Pilot Operations*

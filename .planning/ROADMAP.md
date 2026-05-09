@@ -31,9 +31,73 @@ Production evidence:
 
 ## Current Milestone
 
-No active milestone is defined.
+### v1.1: Internal Pilot Operations
 
-Start the next milestone with `/gsd-new-milestone`.
+**Status:** planning
+
+**Goal:** Make BMH Institute ready for BMH Group's first real internal learner pilot.
+
+Progress: 0 of 4 phases complete.
+
+### Phase 6: Pilot Cohort Setup
+
+**Status:** not started
+
+**Goal:** Give admins a reliable way to prepare the first real pilot cohort.
+
+**Requirements:** PILOT-01, PILOT-02, PILOT-03, PILOT-04
+
+Success criteria:
+
+1. Admin can identify the pilot cohort and confirm each learner's invite and access state.
+2. Admin can assign or correct pilot learner role groups and course access without direct database edits.
+3. Invite status is visible enough to distinguish accepted, pending, expired, and failed states.
+4. The implementation has focused unit or integration coverage for access and invite state changes.
+
+### Phase 7: Learner Onboarding
+
+**Status:** not started
+
+**Goal:** Reduce first-session confusion for invited VA learners.
+
+**Requirements:** LEARN-01, LEARN-02, LEARN-03, LEARN-04
+
+Success criteria:
+
+1. Invited learner sees a clear first action after sign-in.
+2. Learner dashboard explains assigned programs, required courses, and completion expectations.
+3. Common onboarding recovery paths are discoverable without admin intervention.
+4. Learner-facing copy is reviewed for plain language and verified in the browser.
+
+### Phase 8: Pilot Monitoring
+
+**Status:** not started
+
+**Goal:** Let admins monitor pilot progress and act on blockers quickly.
+
+**Requirements:** OPS-01, OPS-02, OPS-03, OPS-04
+
+Success criteria:
+
+1. Admin can view pilot progress by learner, program, course, quiz, assignment, and certificate state.
+2. Admin can identify stalled learners, pending reviews, and certificate-ready learners.
+3. Admin can reach the relevant review or learner detail flow from the monitoring surface.
+4. Pilot status can be exported or recorded for internal review.
+
+### Phase 9: Pilot Runbook and Readiness Checks
+
+**Status:** not started
+
+**Goal:** Make the internal pilot repeatable without ad hoc Codex guidance.
+
+**Requirements:** RUN-01, RUN-02, RUN-03, RUN-04
+
+Success criteria:
+
+1. Production pilot runbook covers launch, monitoring, support cases, cleanup, and rollback.
+2. Pre-pilot checklist verifies domain, email links, auth, content access, submissions, certificates, and cleanup.
+3. Production-readiness automation covers pilot-critical flows or clearly documents manual gaps.
+4. No new spending, providers, or infrastructure are introduced without explicit approval.
 
 ## Backlog
 
