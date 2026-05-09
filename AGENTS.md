@@ -38,6 +38,8 @@ Don't mark meaningful behavior changes done without covering tests. Continue wit
 
 Always work in a git worktree for code, docs, config, and planning changes. Do not edit the main checkout directly. You do not need permission to create a worktree, open a PR, or merge a completed PR when checks are green and the change is within the agreed scope. Segment PRs by coherent units of value: keep unrelated changes in separate PRs, but do not split tightly coupled implementation, tests, docs, and workflow updates apart just to make more branches.
 
+**Pre-user production boundary.** While this application is not actively used by learners, agents may run production writes, real provider calls, production canaries, cleanup scripts, and other production verification needed to harden the app without stopping for permission each time. Spending still requires explicit Jarrad approval. Destructive or high-risk actions must protect existing prospects, leads, learner records, and unrelated production data. Use disposable prefixed test records and cleanup helpers whenever possible, and stop if a step could affect real users or existing business data outside the agreed scope.
+
 - `npm run dev` — next dev on port 3100
 - `npm run test` — vitest unit suite
 - `npm run test:integration` — vitest against a real Supabase (populate `.env.test.local`)
