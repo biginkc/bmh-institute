@@ -23,16 +23,20 @@ create table if not exists public.role_play_results (
 
 alter table public.role_play_results enable row level security;
 
+drop policy if exists role_play_results_self_insert on public.role_play_results;
 create policy role_play_results_self_insert on public.role_play_results
   for insert with check (user_id = auth.uid());
 
+drop policy if exists role_play_results_self_update on public.role_play_results;
 create policy role_play_results_self_update on public.role_play_results
   for update using (user_id = auth.uid())
   with check (user_id = auth.uid());
 
+drop policy if exists role_play_results_self_read on public.role_play_results;
 create policy role_play_results_self_read on public.role_play_results
   for select using (user_id = auth.uid());
 
+drop policy if exists role_play_results_admin_read on public.role_play_results;
 create policy role_play_results_admin_read on public.role_play_results
   for select using (public.is_admin(auth.uid()));
 
