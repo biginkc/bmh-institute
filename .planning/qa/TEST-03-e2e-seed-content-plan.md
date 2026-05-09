@@ -1,7 +1,7 @@
 # TEST-03 E2E seed content plan
 
 Date: 2026-05-09
-Status: seed available, durable Playwright specs still pending
+Status: seed available, durable Playwright specs added, seeded verification passed in CI
 
 ## Goal
 
@@ -73,12 +73,17 @@ Before promoting this into durable Playwright coverage, verify:
 
 ## Follow-up
 
-TEST-03 remains open until durable Playwright specs commit the write-path flows:
+TEST-03 durable Playwright coverage now includes:
 
-- invite acceptance or a documented email-capture replacement
 - quiz submission
 - assignment upload
 - admin approval and revision
 - password reset with non-production email capture or a covered server-action fallback
+- assigned and unassigned learner access checks
+- certificate visibility after required work is approved
 
-The seed content is the test substrate for that work. It is not itself the completion of TEST-03.
+Invite acceptance remains separate until there is a stable non-production email capture strategy.
+
+The seed content remains the baseline CI substrate. The write-path spec creates its own disposable users and content for mutable flows.
+
+Current branch status: `npm run verify` passes locally, and PR #39 CI passed `Seeded Playwright E2E` using the `TEST_SUPABASE_*` secrets for `bmh-institute-test`.

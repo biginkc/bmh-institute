@@ -24,7 +24,7 @@ The two sets are independent. You can populate one without the other.
 
 ## Where to obtain each value
 
-TEST_SUPABASE_URL: a Supabase project URL of the form `https://<ref>.supabase.co`. The project must NOT be the BMH Institute prod project (ref `dhvfsyteqsxagokoerrx`). Per project memory there is no permanent BMH Institute test project, so contributors needing to run the integration suite locally should provision their own throwaway Supabase project, apply the migrations from `supabase/migrations/`, and use that project's URL.
+TEST_SUPABASE_URL: the BMH Institute non-production test project URL. The durable Playwright write-path suite expects project ref `jvaabkchkihkjllehmft` (`bmh-institute-test`) and refuses the production ref `dhvfsyteqsxagokoerrx`.
 
 TEST_SUPABASE_ANON_KEY: from your throwaway project's Dashboard at Project Settings then API. The "anon public" key.
 
@@ -58,10 +58,12 @@ Expected output: signs in via the live `/login`, runs the read-only specs in `e2
 
 The HARDEN-01 learner-context spec (`e2e-prod/admin-route-guard-learner.spec.ts`) opts out of storage state and asserts the unauthenticated redirect on the four `/admin/reports/*` routes. It does not need the E2E_TEST_EMAIL credentials to pass; the credentials are still required for the existing admin-context specs.
 
-## Why no permanent test Supabase project
+## BMH Institute test Supabase project
 
-Project memory on file: there is no permanent `bmh-institute-test` Supabase project. The current default is Path A: contributors provision their own throwaway Supabase project, integration tests gate on `describe.skipIf` so they report `skipped` when env is unset, and destructive HUMAN-UAT items stay manual. The Path B alternative (Supabase ephemeral branches per CI run) costs Branching Compute Hours that bypass the standard Compute Credit and the spend cap; revisit only if Jarrad explicitly locks that trade.
+The durable Playwright suite uses the existing `bmh-institute-test` Supabase project. Run `npm run seed:e2e` before `npm run test:e2e`; CI does this automatically with the `TEST_SUPABASE_*` secrets.
+
+The fixture guard is intentionally strict. If you see a production-ref refusal, switch `TEST_SUPABASE_URL` away from `dhvfsyteqsxagokoerrx`. If you see an unexpected-ref refusal, point it at `jvaabkchkihkjllehmft`.
 
 ## Phase 01 HUMAN-UAT items
 
-The five items in `.planning/phases/01-auth-and-access-hardening/01-HUMAN-UAT.md` were retired in Phase 01.1. Read-only items moved to Playwright specs in `e2e-prod/`; integration items got their gates flipped (this file's purpose). The destructive items HARDEN-02 (expired-invite teardown) and the UI-flow variant of HARDEN-03 remain explicitly deferred under the deferred-until-test-environment label until a Path B or Path C decision lands.
+The five items in `.planning/phases/01-auth-and-access-hardening/01-HUMAN-UAT.md` were retired in Phase 01.1. Read-only items moved to Playwright specs in `e2e-prod/`; integration items got their gates flipped; durable LMS write paths now run against `bmh-institute-test` through `npm run test:e2e`. Invite acceptance remains separate until there is a stable non-production email capture strategy.

@@ -2,11 +2,25 @@
 
 ## Status
 
-Deferred to GitHub issue #2: Add durable Playwright write-path coverage.
+Implemented and verified. Durable non-production Playwright write-path coverage now exists after the initial manual production verification, and PR #39 CI passed the seeded E2E job with the repository `TEST_SUPABASE_*` secrets.
 
-## Why Deferred
+## Original Deferral
 
 Manual Playwright verification against production confirmed the major UI write paths, but making that script permanent now would create churn while the UI and data setup are still changing. The durable suite also needs a non-prod Supabase project with migrations and storage buckets applied. The current e2e fixture correctly refuses to run against the production project `dhvfsyteqsxagokoerrx`.
+
+## Durable Coverage Added
+
+The issue #2 follow-up adds a strict non-production fixture and a browser spec for the mutable LMS paths:
+
+- disposable admin, assigned learner, and unassigned learner users
+- assigned course access
+- content completion
+- quiz submission
+- text assignment submission, revision, resubmission, and approval
+- file assignment upload and approval
+- certificate visibility
+- unassigned learner no-access behavior
+- forgot-password enumeration-safe success copy
 
 ## Manual Playwright Verification
 
@@ -32,5 +46,5 @@ Confirmed through the deployed UI:
 
 ## Follow-Up
 
-- GitHub issue: `https://github.com/biginkc/bmh-institute/issues/2`
-
+- Invite acceptance remains blocked until a stable non-production email capture strategy exists.
+- Seeded E2E verification passed in PR #39 CI.
