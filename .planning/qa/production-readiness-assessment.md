@@ -14,8 +14,8 @@ The application is not production-ready until repeatable validation proves the f
 | Area | Status | Reason |
 |------|--------|--------|
 | Overall application readiness | Partially ready | A real production lifecycle check now passes, but invite and password-reset email-link validation is still blocked. |
-| Production auth and onboarding | Not ready | Invite acceptance and first-password setup are not repeatably validated with real production email. |
-| Password reset | Not ready | Reset-link delivery and completion are not repeatably validated through the real production provider. |
+| Production auth and onboarding | Blocked | Invite acceptance and first-password setup now have gated production email-link automation, but CI needs mailbox secrets before the check can run. |
+| Password reset | Blocked | Reset-link delivery and completion now have gated production email-link automation, but CI needs mailbox secrets before the check can run. |
 | Learner lifecycle | Ready | On-demand production readiness spec validates assigned and unassigned learners, course access, content completion, quiz pass, text assignment, and file assignment. |
 | Admin review lifecycle | Ready | On-demand production readiness spec validates revision request, learner resubmission, admin approval, and cleanup. |
 | Certificates | Ready | On-demand production readiness spec validates real course and program certificate issuance plus certificate UI print path. |
@@ -75,6 +75,8 @@ Latest evidence:
 - GitHub Actions production-readiness run `25595576897` passed on 2026-05-09 from latest `main` after PRs #40 and #41. Result: 2 lifecycle and rate-limit tests passed, 1 email-link test skipped. At that time, the custom domain returned no A or CNAME answer during local DNS check.
 - DNS record `A institute.bmhgroupkc.com 76.76.21.21` was added at Tailor Brands/GoDaddy on 2026-05-09. Public DNS returned `76.76.21.21`, Vercel certificate `cert_KhnuksU3ftVPXtOglGh0EmKv` was issued for `institute.bmhgroupkc.com`, and HTTPS returned a Vercel `307` to `/login?next=%2F` followed by the BMH Institute login page.
 - GitHub secret `E2E_PROD_BASE_URL` was updated to `https://institute.bmhgroupkc.com` on 2026-05-09. GitHub Actions production-readiness run `25596039223` passed on 2026-05-09 from `main` against the custom domain. Result: 2 lifecycle and rate-limit tests passed, 1 email-link test skipped.
+- Vercel production `NEXT_PUBLIC_APP_URL` was set to `https://institute.bmhgroupkc.com` on 2026-05-09, current `main` was redeployed to `sandra-university-ogb6o1qnt-jarrad-5416s-projects.vercel.app`, and `institute.bmhgroupkc.com` was aliased to that deployment. GitHub Actions production-readiness run `25596438899` passed afterward from `main`. Result: 2 lifecycle and rate-limit tests passed, 1 email-link test skipped.
+- Production email-link capture harness added on 2026-05-09. It uses an IMAP-readable mailbox to retrieve real Supabase invite and recovery links, then completes invite acceptance, first-password setup, password reset, and sign-in through the browser. The specs skip until mailbox secrets are configured.
 
 ## Required production validation scenarios
 
@@ -87,7 +89,7 @@ Latest evidence:
 - Learner signs in with the new password.
 - Cleanup removes the disposable auth user, profile, role groups, progress, submissions, certificates, and storage objects.
 
-Current status: blocked until production email inbox/capture credentials are available.
+Current status: automation implemented; blocked until production email inbox/capture credentials are configured in CI.
 
 ### Password reset and email delivery
 
@@ -98,7 +100,7 @@ Current status: blocked until production email inbox/capture credentials are ava
 - Cleanup restores the original password or recreates the disposable test user safely.
 - Rate-limit behavior is verified without locking out operators or consuming normal-user limits.
 
-Current status: blocked until production email inbox/capture credentials are available.
+Current status: automation implemented; blocked until production email inbox/capture credentials are configured in CI.
 
 ### Learner lifecycle
 
@@ -202,7 +204,7 @@ Current status: forgot-password covered by `npm run test:prod:readiness`; set-pa
 
 ## Open blockers and risks
 
-- Production email capture is the main blocker for invite and password reset automation.
+- Production email capture secrets are the main blocker for running invite and password reset automation in CI.
 - GitHub production readiness secrets must use the current production Supabase service-role key. A stale local `.env.local` service-role key caused `Invalid API key` until the current key was injected from the Supabase CLI.
 - Production writes require strict disposable prefixes and cleanup so tests do not pollute real learner records.
 - Password reset tests must avoid locking out real operators or consuming normal-user rate limits.
@@ -214,4 +216,4 @@ Current status: forgot-password covered by `npm run test:prod:readiness`; set-pa
 
 BMH Institute can be called production-ready only after the production readiness workflow repeatedly passes auth and onboarding, password reset, learner lifecycle, admin review, certificates, storage, access control, content safety, rate limiting, deployment, rollback, observability, cleanup, and recovery checks against real production services with no mocked providers.
 
-As of 2026-05-09, production lifecycle, storage, access control, admin review, certificates, content-safety, forgot-password rate limiting, custom-domain deployment, rollback, and recovery checks pass on latest `main`. The app is still not production-ready because invite acceptance, password reset, and set-password rate-limit UI proof require real production email-link capture.
+As of 2026-05-09, production lifecycle, storage, access control, admin review, certificates, content-safety, forgot-password rate limiting, custom-domain deployment, rollback, and recovery checks pass on latest `main`. The app is still not production-ready because invite acceptance, password reset, and set-password rate-limit UI proof require production email-link mailbox secrets before their automation can run in CI.

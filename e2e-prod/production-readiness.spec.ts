@@ -1,11 +1,22 @@
 import { expect, test, type Page } from "@playwright/test";
 import {
+  cleanupProductionInviteFixture,
+  cleanupProductionRecoveryFixture,
   cleanupProductionReadinessFixture,
+  createProductionInviteFixture,
+  createProductionRecoveryFixture,
   createProductionReadinessFixture,
   productionAdminClient,
   productionUserClient,
+  type ProductionInviteFixture,
+  type ProductionRecoveryFixture,
   type ProductionReadinessFixture,
 } from "./production-fixtures";
+import {
+  buildTaggedEmailAddress,
+  emailCaptureConfigFromEnv,
+  waitForEmailLink,
+} from "./email-capture";
 
 async function signIn(page: Page, email: string, password: string) {
   await page.goto("/login");
@@ -319,11 +330,126 @@ async function hasCourseAndProgramCertificates(
 }
 
 test.describe("production readiness email links", () => {
-  test("documents the current blocker for invite and reset-link validation", async () => {
+  test("accepts a real production invite link sent through the admin UI", async ({
+    browser,
+  }) => {
+    const emailConfig = emailCaptureConfigFromEnv();
     test.skip(
-      !process.env.PROD_READINESS_EMAIL_INBOX,
-      "PROD_READINESS_EMAIL_INBOX is required before real invite and password-reset link retrieval can be automated.",
+      !emailConfig,
+      "PROD_READINESS_EMAIL_INBOX and PROD_READINESS_EMAIL_IMAP_PASS are required for real invite-link retrieval.",
     );
+
+    const admin = productionAdminClient();
+    const inviteeEmail = buildTaggedEmailAddress(
+      emailConfig!.inbox,
+      `prd-invite-${Date.now()}-${crypto.randomUUID().slice(0, 8)}`,
+    );
+    let fixture: ProductionInviteFixture | null = null;
+    const sentAfter = new Date(Date.now() - 15_000);
+    const adminContext = await browser.newContext();
+    const adminPage = await adminContext.newPage();
+    const inviteeContext = await browser.newContext({
+      storageState: { cookies: [], origins: [] },
+    });
+    const inviteePage = await inviteeContext.newPage();
+
+    try {
+      fixture = await createProductionInviteFixture(admin, inviteeEmail);
+      await clearSetPasswordRateLimits(admin, inviteeEmail);
+
+      await signIn(adminPage, fixture.inviter.email, fixture.password);
+      await adminPage.goto("/admin/users");
+      await adminPage.getByLabel(/^email$/i).fill(inviteeEmail);
+      await adminPage.getByLabel(/^role$/i).selectOption("learner");
+      await adminPage
+        .getByLabel(`${fixture.prefix} Invite Role Group`)
+        .check();
+      await adminPage.getByRole("button", { name: /^send invite$/i }).click();
+      await expect(
+        adminPage.getByText(`Invite sent to ${inviteeEmail}`),
+      ).toBeVisible();
+
+      const inviteLink = await waitForEmailLink({
+        config: emailConfig!,
+        sentAfter,
+        to: inviteeEmail,
+        linkPattern: /\/auth\/v1\/verify\?.*(type=invite|type%3Dinvite)/,
+      });
+
+      await inviteePage.goto(inviteLink);
+      await inviteePage.waitForURL(/\/auth\/set-password/, { timeout: 30_000 });
+      await expect(inviteePage.getByLabel(/email/i)).toHaveValue(inviteeEmail);
+      await inviteePage.getByLabel(/^new password$/i).fill(fixture.password);
+      await inviteePage.getByLabel(/^confirm password$/i).fill(fixture.password);
+      await inviteePage.getByRole("button", { name: /save and continue/i }).click();
+      await inviteePage.waitForURL(/\/dashboard/, { timeout: 20_000 });
+      await expect(
+        inviteePage.getByText(`${fixture.prefix} Invite Program`),
+      ).toBeVisible();
+
+      await expect
+        .poll(() => productionInviteWasAccepted(admin, fixture!), {
+          timeout: 20_000,
+        })
+        .toBe(true);
+    } finally {
+      if (fixture) await clearSetPasswordRateLimits(admin, fixture.inviteeEmail);
+      await adminContext.close();
+      await inviteeContext.close();
+      await cleanupProductionInviteFixture(admin, fixture);
+    }
+  });
+
+  test("resets a real production user's password from the emailed recovery link", async ({
+    browser,
+  }) => {
+    const emailConfig = emailCaptureConfigFromEnv();
+    test.skip(
+      !emailConfig,
+      "PROD_READINESS_EMAIL_INBOX and PROD_READINESS_EMAIL_IMAP_PASS are required for real reset-link retrieval.",
+    );
+
+    const admin = productionAdminClient();
+    const email = buildTaggedEmailAddress(
+      emailConfig!.inbox,
+      `prd-reset-${Date.now()}-${crypto.randomUUID().slice(0, 8)}`,
+    );
+    let fixture: ProductionRecoveryFixture | null = null;
+    const sentAfter = new Date(Date.now() - 15_000);
+    const context = await browser.newContext({ storageState: { cookies: [], origins: [] } });
+    const page = await context.newPage();
+
+    try {
+      fixture = await createProductionRecoveryFixture(admin, email);
+      await clearSetPasswordRateLimits(admin, email);
+
+      await page.goto("/forgot-password");
+      await page.getByLabel(/email/i).fill(email);
+      await page.getByRole("button", { name: /send reset link/i }).click();
+      await expect(page.getByText(/check your inbox for a reset link/i)).toBeVisible();
+
+      const resetLink = await waitForEmailLink({
+        config: emailConfig!,
+        sentAfter,
+        to: email,
+        linkPattern: /\/auth\/v1\/verify\?.*(type=recovery|type%3Drecovery)/,
+      });
+
+      await page.goto(resetLink);
+      await page.waitForURL(/\/auth\/set-password/, { timeout: 30_000 });
+      await expect(page.getByLabel(/email/i)).toHaveValue(email);
+      await page.getByLabel(/^new password$/i).fill(fixture.newPassword);
+      await page.getByLabel(/^confirm password$/i).fill(fixture.newPassword);
+      await page.getByRole("button", { name: /save and continue/i }).click();
+      await page.waitForURL(/\/dashboard/, { timeout: 20_000 });
+
+      await page.goto("/auth/signout");
+      await signIn(page, email, fixture.newPassword);
+    } finally {
+      if (fixture) await clearSetPasswordRateLimits(admin, fixture.email);
+      await context.close();
+      await cleanupProductionRecoveryFixture(admin, fixture);
+    }
   });
 });
 
@@ -373,4 +499,47 @@ async function deleteRateLimitRows(
     .eq("key_type", keyType)
     .eq("key_value", keyValue);
   if (error) throw error;
+}
+
+async function clearSetPasswordRateLimits(
+  admin: ReturnType<typeof productionAdminClient>,
+  email: string,
+): Promise<void> {
+  await Promise.all([
+    deleteRateLimitRows(admin, "email", email),
+    deleteRateLimitRows(admin, "ip", "127.0.0.1"),
+    deleteRateLimitRows(admin, "ip", "::1"),
+    deleteRateLimitRows(admin, "ip", "::ffff:127.0.0.1"),
+  ]);
+}
+
+async function productionInviteWasAccepted(
+  admin: ReturnType<typeof productionAdminClient>,
+  fixture: ProductionInviteFixture,
+): Promise<boolean> {
+  const [invite, profile] = await Promise.all([
+    admin
+      .from("invites")
+      .select("accepted_at")
+      .eq("email", fixture.inviteeEmail)
+      .maybeSingle(),
+    admin
+      .from("profiles")
+      .select("id, system_role, status")
+      .eq("email", fixture.inviteeEmail)
+      .maybeSingle(),
+  ]);
+  if (invite.error || profile.error || !profile.data?.id) return false;
+  const roleGroups = await admin
+    .from("user_role_groups")
+    .select("role_group_id")
+    .eq("user_id", profile.data.id as string)
+    .eq("role_group_id", fixture.roleGroupId);
+  if (roleGroups.error) return false;
+  return Boolean(
+    invite.data?.accepted_at &&
+      profile.data?.system_role === "learner" &&
+      profile.data?.status === "active" &&
+      (roleGroups.data ?? []).length === 1,
+  );
 }

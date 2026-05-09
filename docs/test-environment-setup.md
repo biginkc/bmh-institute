@@ -15,7 +15,7 @@ TEST_SUPABASE_SERVICE_ROLE_KEY=<service role key from Supabase Dashboard>
 For the Playwright prod-smoke suite (`npm run test:prod`) you also need:
 
 ```
-E2E_PROD_BASE_URL=https://sandra-university.vercel.app
+E2E_PROD_BASE_URL=https://institute.bmhgroupkc.com
 E2E_TEST_EMAIL=<an account that exists on the deployed environment with admin privileges>
 E2E_TEST_PASSWORD=<that account's password>
 ```
@@ -30,7 +30,7 @@ TEST_SUPABASE_ANON_KEY: from your throwaway project's Dashboard at Project Setti
 
 TEST_SUPABASE_SERVICE_ROLE_KEY: from the same Dashboard panel. The "service_role secret" key. Treat this like a password.
 
-E2E_PROD_BASE_URL: the deployed BMH Institute URL. Production currently uses the legacy fallback `https://sandra-university.vercel.app` until `https://institute.bmhgroupkc.com` is configured. A Vercel preview URL also works.
+E2E_PROD_BASE_URL: the deployed BMH Institute URL. Production uses `https://institute.bmhgroupkc.com`. A Vercel preview URL also works.
 
 E2E_TEST_EMAIL and E2E_TEST_PASSWORD: an account on the deployed environment. A real BMH Group VA account or a dedicated test account with admin privileges.
 
@@ -67,3 +67,19 @@ The fixture guard is intentionally strict. If you see a production-ref refusal, 
 ## Phase 01 HUMAN-UAT items
 
 The five items in `.planning/phases/01-auth-and-access-hardening/01-HUMAN-UAT.md` were retired in Phase 01.1. Read-only items moved to Playwright specs in `e2e-prod/`; integration items got their gates flipped; durable LMS write paths now run against `bmh-institute-test` through `npm run test:e2e`. Invite acceptance uses Supabase Admin `generateLink` in the non-production test project so the browser can exercise the real invite callback and first password setup without an inbox.
+
+## Production-readiness email-link capture
+
+`npm run test:prod:readiness` includes real production invite and forgot-password link checks. They skip until an IMAP-readable mailbox is configured.
+
+Add these GitHub Actions secrets to enable them:
+
+- `PROD_READINESS_EMAIL_INBOX`: mailbox address that receives disposable plus-addressed emails.
+- `PROD_READINESS_EMAIL_IMAP_USER`: IMAP username. Defaults to the inbox address when omitted.
+- `PROD_READINESS_EMAIL_IMAP_PASS`: IMAP app password or mailbox password.
+- `PROD_READINESS_EMAIL_IMAP_HOST`: defaults to `imap.gmail.com`.
+- `PROD_READINESS_EMAIL_IMAP_PORT`: defaults to `993`.
+- `PROD_READINESS_EMAIL_IMAP_SECURE`: defaults to `true`.
+- `PROD_READINESS_EMAIL_MAILBOX`: defaults to `INBOX`.
+
+The specs send to aliases like `qa+prd-invite-...@bmhgroupkc.com`, retrieve the real Supabase action link from the inbox, complete the browser flow, and clean up disposable production users and rows.
