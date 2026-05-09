@@ -15,6 +15,7 @@ type WalkthroughState = {
   caption: string;
   backHref: string | null;
   nextHref: string | null;
+  path: string;
 };
 
 function normalizeHref(href: string | null) {
@@ -40,8 +41,9 @@ function readStoredWalkthrough(): WalkthroughState | null {
 
     const parsed = JSON.parse(raw) as Partial<WalkthroughState>;
     const caption = typeof parsed.caption === "string" ? parsed.caption : "";
+    const path = typeof parsed.path === "string" ? parsed.path : "";
 
-    if (!caption.trim()) {
+    if (!caption.trim() || !path || path !== window.location.pathname) {
       return null;
     }
 
@@ -49,6 +51,7 @@ function readStoredWalkthrough(): WalkthroughState | null {
       caption: caption.trim(),
       backHref: normalizeHref(parsed.backHref ?? null),
       nextHref: normalizeHref(parsed.nextHref ?? null),
+      path,
     };
   } catch {
     return null;
@@ -84,6 +87,7 @@ export function WalkthroughCaptionOverlay() {
       caption: step.caption,
       backHref: getBmhDemoWalkthroughUrl(walkthroughStep - 1),
       nextHref: getBmhDemoWalkthroughUrl(walkthroughStep + 1),
+      path: step.path,
     };
   }, [walkthroughId, walkthroughStep]);
   const stateFromUrl = useMemo(
@@ -94,6 +98,7 @@ export function WalkthroughCaptionOverlay() {
             caption: captionFromUrl,
             backHref: normalizeHref(backFromUrl),
             nextHref: normalizeHref(nextFromUrl),
+            path: typeof window === "undefined" ? "" : window.location.pathname,
           }
         : null),
     [backFromUrl, captionFromUrl, nativeStepState, nextFromUrl],
