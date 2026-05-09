@@ -1,6 +1,6 @@
 # Plan 07-3 Summary: Recovery Copy And Browser Verification
 
-Status: implementation complete, seeded browser verification pending CI
+Status: complete
 
 ## Completed
 
@@ -13,5 +13,4 @@ Status: implementation complete, seeded browser verification pending CI
 
 - `npm run verify` passed.
 - Local `npm run test:e2e -- e2e/learner-onboarding.spec.ts` could not complete because local `.env.test.local` does not include `TEST_SUPABASE_URL`, `TEST_SUPABASE_ANON_KEY`, or `TEST_SUPABASE_SERVICE_ROLE_KEY`.
-- The Playwright suite is expected to run in GitHub Actions where the seeded non-production Supabase secrets are configured.
-
+- PR #49 GitHub Actions `Seeded Playwright E2E` passed with the configured non-production Supabase secrets.

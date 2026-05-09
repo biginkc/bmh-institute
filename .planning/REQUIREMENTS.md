@@ -13,10 +13,10 @@ Make BMH Institute ready for BMH Group's first real internal learner pilot.
 
 ## Learner Onboarding
 
-- [ ] LEARN-01: Invited learner can understand the first thing to do after signing in.
-- [ ] LEARN-02: Learner can clearly see assigned programs, required courses, and completion expectations.
-- [ ] LEARN-03: Learner can recover from common onboarding issues, including password reset and incomplete profile setup.
-- [ ] LEARN-04: Learner-facing copy is plain enough for async VA training where English may be a second language.
+- [x] LEARN-01: Invited learner can understand the first thing to do after signing in.
+- [x] LEARN-02: Learner can clearly see assigned programs, required courses, and completion expectations.
+- [x] LEARN-03: Learner can recover from common onboarding issues, including password reset and incomplete profile setup.
+- [x] LEARN-04: Learner-facing copy is plain enough for async VA training where English may be a second language.
 
 ## Pilot Monitoring
 

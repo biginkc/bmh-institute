@@ -1,6 +1,6 @@
 # Phase 7 Verification: Learner Onboarding
 
-Status: pending seeded browser verification
+Status: pass
 
 ## Scope
 
@@ -25,10 +25,9 @@ Phase 7 covers LEARN-01 through LEARN-04.
 
 - Unit, page, typecheck, and verify gates passed locally.
 - Local seeded Playwright could not run because this machine lacks the non-production `TEST_SUPABASE_*` keys in `.env.test.local`.
-- Phase completion is waiting on GitHub Actions seeded Playwright e2e for this branch.
+- PR #49 GitHub Actions `Verify` passed.
+- PR #49 GitHub Actions `Seeded Playwright E2E` passed.
 
 ## Pending
 
-- Confirm GitHub Actions `Seeded Playwright E2E` passes for the branch.
-- Mark LEARN-01 through LEARN-04 complete after seeded browser verification is green.
-
+- None.
