@@ -1,0 +1,34 @@
+{
+  "outDir": "/Users/jarradhenry/Sites/BMH-Institute-codex-20260508-193554-bmh-role-play-listener/artifacts/phase-5-cross-app-screenshots/20260508-202130",
+  "lessonUrl": "http://localhost:3200/lessons/22c2b45b-6f79-4fb2-834e-c8e411a9a727",
+  "embeddedContent": {
+    "blockTitle": "Cross-app role play",
+    "scenarioId": "fbf09385-eb67-44a4-91c8-28902894a54e",
+    "heightPx": 720
+  },
+  "proof": {
+    "progressRow": {
+      "id": "a6bf9640-0414-4bda-9e68-e259182161ae",
+      "block_id": "945dae13-7cf8-4c33-8898-60cff56fc0d2",
+      "completed_at": "2026-05-09T01:21:40.98887+00:00"
+    },
+    "resultRow": {
+      "id": "94a66480-4a39-4d0c-a3b3-31d192e8026a",
+      "block_id": "945dae13-7cf8-4c33-8898-60cff56fc0d2",
+      "scenario_id": "fbf09385-eb67-44a4-91c8-28902894a54e",
+      "attempt_id": "22b6de9f-e06f-48c0-b4d2-139007cd730f",
+      "score": 0,
+      "completed_at": "2026-05-09T01:21:40.895636+00:00"
+    }
+  },
+  "screenshots": [
+    "01-bmh-lesson-with-closer-iframe-briefing.png",
+    "02-closer-iframe-briefing-content.png",
+    "03-bmh-page-with-active-closer-runtime.png",
+    "04-closer-iframe-active-runtime.png",
+    "05-bmh-page-after-rp-complete.png",
+    "06-closer-iframe-after-complete.png",
+    "07-bmh-lesson-reloaded-after-completion.png",
+    "08-db-proof-page.png"
+  ]
+}
