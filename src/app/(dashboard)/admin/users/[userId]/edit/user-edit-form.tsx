@@ -34,6 +34,7 @@ export function UserEditForm({
   const [roleGroupIds, setRoleGroupIds] = useState<string[]>(
     initialRoleGroupIds,
   );
+  const formRef = useRef<HTMLDivElement>(null);
   const systemRoleRef = useRef(systemRole);
   const statusRef = useRef(status);
   const roleGroupIdsRef = useRef(roleGroupIds);
@@ -47,6 +48,17 @@ export function UserEditForm({
     setRoleGroupIds(next);
   }
 
+  function getCurrentRoleGroupIds() {
+    const checkedIds = Array.from(
+      formRef.current?.querySelectorAll<HTMLInputElement>(
+        "input[data-role-group-id]:checked",
+      ) ?? [],
+    ).map((input) => input.dataset.roleGroupId);
+    const current = checkedIds.filter((id): id is string => Boolean(id));
+    roleGroupIdsRef.current = current;
+    return current;
+  }
+
   function updateSystemRole(next: "owner" | "admin" | "learner") {
     systemRoleRef.current = next;
     setSystemRole(next);
@@ -58,12 +70,13 @@ export function UserEditForm({
   }
 
   function onSave() {
+    const currentRoleGroupIds = getCurrentRoleGroupIds();
     startTransition(async () => {
       const result = await saveUserSettings({
         userId,
         system_role: systemRoleRef.current,
         status: statusRef.current,
-        role_group_ids: roleGroupIdsRef.current,
+        role_group_ids: currentRoleGroupIds,
       });
       if (!result.ok) {
         toast.error(result.error);
@@ -82,13 +95,14 @@ export function UserEditForm({
   function onSuspendToggle() {
     const previousStatus = statusRef.current;
     const nextStatus = previousStatus === "suspended" ? "active" : "suspended";
+    const currentRoleGroupIds = getCurrentRoleGroupIds();
     updateStatus(nextStatus);
     startTransition(async () => {
       const result = await saveUserSettings({
         userId,
         system_role: systemRoleRef.current,
         status: nextStatus,
-        role_group_ids: roleGroupIdsRef.current,
+        role_group_ids: currentRoleGroupIds,
       });
       if (!result.ok) {
         toast.error(result.error);
@@ -120,7 +134,7 @@ export function UserEditForm({
   }
 
   return (
-    <div className="flex flex-col gap-5">
+    <div ref={formRef} className="flex flex-col gap-5">
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="system_role">System role</Label>
         <select
@@ -180,11 +194,9 @@ export function UserEditForm({
               >
                 <input
                   type="checkbox"
+                  data-role-group-id={rg.id}
                   checked={roleGroupIds.includes(rg.id)}
                   onChange={(e) =>
-                    setGroupChecked(rg.id, e.currentTarget.checked)
-                  }
-                  onClick={(e) =>
                     setGroupChecked(rg.id, e.currentTarget.checked)
                   }
                   className="size-4"
