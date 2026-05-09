@@ -49,7 +49,8 @@ export default async function ProfilePage() {
       <div className="mb-6">
         <h1 className="text-2xl font-semibold">Profile</h1>
         <p className="text-muted-foreground mt-1 text-sm">
-          Update your name or password.
+          Check your account details, update your certificate name, or change
+          your password.
         </p>
       </div>
 
@@ -106,7 +107,8 @@ export default async function ProfilePage() {
         <CardHeader>
           <CardTitle>Display name</CardTitle>
           <CardDescription>
-            Shown to admins in reports and in certificate PDFs.
+            Use your real name before you finish training. This is the name
+            admins see in reports and certificates.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -118,7 +120,8 @@ export default async function ProfilePage() {
         <CardHeader>
           <CardTitle>Change password</CardTitle>
           <CardDescription>
-            Minimum 8 characters. Takes effect immediately.
+            Use this if you can sign in but want a new password. If you are
+            signed out, use the reset password link on the sign-in page.
           </CardDescription>
         </CardHeader>
         <CardContent>

@@ -31,7 +31,8 @@ export default function ForgotPasswordPage() {
         <CardHeader>
           <CardTitle>Reset password</CardTitle>
           <CardDescription>
-            We&apos;ll email you a link to set a new password.
+            Enter the email from your BMH Institute invite. We&apos;ll send a
+            link to set a new password.
           </CardDescription>
         </CardHeader>
         <CardContent>

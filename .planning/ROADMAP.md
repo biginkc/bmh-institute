@@ -37,7 +37,7 @@ Production evidence:
 
 **Goal:** Make BMH Institute ready for BMH Group's first real internal learner pilot.
 
-Progress: 1 of 4 phases complete.
+Progress: 2 of 4 phases complete.
 
 ### Phase 6: Pilot Cohort Setup
 
@@ -56,7 +56,7 @@ Success criteria:
 
 ### Phase 7: Learner Onboarding
 
-**Status:** not started
+**Status:** complete 2026-05-09
 
 **Goal:** Reduce first-session confusion for invited VA learners.
 
@@ -68,6 +68,14 @@ Success criteria:
 2. Learner dashboard explains assigned programs, required courses, and completion expectations.
 3. Common onboarding recovery paths are discoverable without admin intervention.
 4. Learner-facing copy is reviewed for plain language and verified in the browser.
+
+Delivered:
+
+- Learner onboarding summary model for assigned programs, courses, required lessons, and first action.
+- Dashboard first-step panel with next lesson or first course link.
+- No-assignment support copy for manager escalation.
+- Profile, forgot-password, and set-password recovery copy updates.
+- Unit, page, and seeded Playwright e2e coverage.
 
 ### Phase 8: Pilot Monitoring
 
