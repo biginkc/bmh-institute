@@ -65,7 +65,7 @@ export default async function AdminReportsPage() {
     // distinct-user total.
     supabase
       .from("lessons")
-      .select("id, modules!inner(course_id)"),
+      .select("id, title, modules!inner(course_id, courses(id, title))"),
   ]);
 
   const profiles = (profilesRes.data ?? []) as Profile[];
@@ -83,16 +83,36 @@ export default async function AdminReportsPage() {
   // server version, so handle both shapes.
   const lessonCourseRows = (lessonCourseRes.data ?? []) as Array<{
     id: string;
+    title: string;
     modules:
-      | { course_id: string }
-      | Array<{ course_id: string }>
+      | {
+          course_id: string;
+          courses:
+            | { id: string; title: string }
+            | Array<{ id: string; title: string }>
+            | null;
+        }
+      | Array<{
+          course_id: string;
+          courses:
+            | { id: string; title: string }
+            | Array<{ id: string; title: string }>
+            | null;
+        }>
       | null;
   }>;
   const courseIdByLessonId = new Map<string, string>();
+  const lessonTitlesById = new Map<string, string>();
+  const courseTitlesByLessonId = new Map<string, string>();
   for (const row of lessonCourseRows) {
-    const m = row.modules;
-    const courseId = Array.isArray(m) ? m[0]?.course_id : m?.course_id;
+    const moduleRow = Array.isArray(row.modules) ? row.modules[0] : row.modules;
+    const courseId = moduleRow?.course_id;
     if (courseId) courseIdByLessonId.set(row.id, courseId);
+    lessonTitlesById.set(row.id, row.title);
+    const course = Array.isArray(moduleRow?.courses)
+      ? moduleRow?.courses[0]
+      : moduleRow?.courses;
+    if (course?.title) courseTitlesByLessonId.set(row.id, course.title);
   }
 
   const profilesById = new Map(profiles.map((p) => [p.id, p]));
@@ -115,6 +135,16 @@ export default async function AdminReportsPage() {
     courseIdByLessonId,
   });
   const programStats = summarizeByProgram({ programs, programCerts });
+  const activityRows = auditRows.map((row) => ({
+    id: row.id,
+    ...formatActivityRow(row, {
+      profilesById,
+      coursesById,
+      programsById,
+      lessonTitlesById,
+      courseTitlesByLessonId,
+    }),
+  }));
 
   return (
     <main className="mx-auto w-full max-w-5xl flex-1 p-6 md:p-10">
@@ -300,26 +330,24 @@ export default async function AdminReportsPage() {
               </p>
             ) : (
               <ol className="divide-border divide-y">
-                {auditRows.map((row) => (
+                {activityRows.map((row) => (
                   <li key={row.id} className="px-6 py-3 text-sm">
-                    <div className="flex items-center justify-between gap-4">
-                      <div className="flex flex-col">
-                        <span className="font-medium">
-                          {row.user_id
-                            ? (profilesById.get(row.user_id)?.full_name ??
-                              "Unknown")
-                            : "System"}
-                        </span>
-                        <span className="text-muted-foreground text-xs">
-                          {formatAction(row, {
-                            coursesById,
-                            programsById,
-                          })}
-                        </span>
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="font-medium">{row.actor}</span>
+                          <Badge variant="outline">{row.badge}</Badge>
+                        </div>
+                        <p className="text-muted-foreground mt-1 text-xs">
+                          <span className="text-foreground font-medium">
+                            {row.label}
+                          </span>
+                          {row.detail ? `: ${row.detail}` : ""}
+                        </p>
                       </div>
-                      <span className="text-muted-foreground text-xs">
-                        {new Date(row.created_at).toLocaleString()}
-                      </span>
+                      <time className="text-muted-foreground shrink-0 text-xs">
+                        {new Date(row.createdAt).toLocaleString()}
+                      </time>
                     </div>
                   </li>
                 ))}
@@ -387,6 +415,22 @@ type AuditRow = {
   entity_id: string | null;
   metadata: Record<string, unknown>;
   created_at: string;
+};
+
+export type ActivityMaps = {
+  profilesById: Map<string, Profile>;
+  coursesById: Map<string, string>;
+  programsById: Map<string, string>;
+  lessonTitlesById: Map<string, string>;
+  courseTitlesByLessonId: Map<string, string>;
+};
+
+export type FormattedActivityRow = {
+  actor: string;
+  label: string;
+  detail: string;
+  badge: string;
+  createdAt: string;
 };
 
 type LearnerStat = {
@@ -528,37 +572,101 @@ function groupCount<T>(items: T[], key: (t: T) => string): Map<string, number> {
   return out;
 }
 
-function formatAction(
+export function formatActivityRow(
   row: AuditRow,
-  maps: {
-    coursesById: Map<string, string>;
-    programsById: Map<string, string>;
-  },
-): string {
+  maps: ActivityMaps,
+): FormattedActivityRow {
+  const profile = row.user_id ? maps.profilesById.get(row.user_id) : undefined;
+  const actor = row.user_id
+    ? (profile?.full_name || profile?.email || "Unknown learner")
+    : "System activity";
+  const lessonDetail = formatLessonDetail(row.entity_id, maps);
+
   switch (row.action) {
     case "lesson_completed":
-      return "completed a lesson";
+      return {
+        actor,
+        label: "Completed lesson",
+        detail: lessonDetail,
+        badge: "Learning",
+        createdAt: row.created_at,
+      };
     case "quiz_passed": {
       const score = row.metadata?.score;
-      return typeof score === "number"
-        ? `passed a quiz with ${score}%`
-        : "passed a quiz";
+      return {
+        actor,
+        label: "Passed quiz",
+        detail:
+          typeof score === "number"
+            ? `${lessonDetail} with ${score}%`
+            : lessonDetail,
+        badge: "Learning",
+        createdAt: row.created_at,
+      };
     }
     case "assignment_approved":
-      return "had an assignment approved";
+      return {
+        actor,
+        label: "Assignment approved",
+        detail: lessonDetail,
+        badge: "Assignment",
+        createdAt: row.created_at,
+      };
     case "course_certificate_issued": {
       const title = row.entity_id
         ? maps.coursesById.get(row.entity_id)
         : undefined;
-      return title ? `earned a certificate for ${title}` : "earned a course certificate";
+      return {
+        actor,
+        label: "Issued course certificate",
+        detail: appendDetail(title ?? "Course", certificateNumber(row)),
+        badge: "Certificate",
+        createdAt: row.created_at,
+      };
     }
     case "program_certificate_issued": {
       const title = row.entity_id
         ? maps.programsById.get(row.entity_id)
         : undefined;
-      return title ? `earned a certificate for the ${title} program` : "earned a program certificate";
+      return {
+        actor,
+        label: "Issued program certificate",
+        detail: appendDetail(title ?? "Program", certificateNumber(row)),
+        badge: "Certificate",
+        createdAt: row.created_at,
+      };
     }
     default:
-      return row.action.replace(/_/g, " ");
+      return {
+        actor,
+        label: titleize(row.action),
+        detail: row.entity_type,
+        badge: row.user_id ? "Activity" : "System",
+        createdAt: row.created_at,
+      };
   }
+}
+
+function formatLessonDetail(
+  lessonId: string | null,
+  maps: ActivityMaps,
+): string {
+  if (!lessonId) return "Lesson";
+  const lessonTitle = maps.lessonTitlesById.get(lessonId) ?? "Lesson";
+  const courseTitle = maps.courseTitlesByLessonId.get(lessonId);
+  return courseTitle ? `${lessonTitle} in ${courseTitle}` : lessonTitle;
+}
+
+function certificateNumber(row: AuditRow): string {
+  const number = row.metadata?.certificate_number;
+  return typeof number === "string" ? number : "";
+}
+
+function appendDetail(primary: string, secondary: string): string {
+  return secondary ? `${primary}, ${secondary}` : primary;
+}
+
+function titleize(value: string): string {
+  const clean = value.replace(/_/g, " ");
+  return clean.charAt(0).toUpperCase() + clean.slice(1);
 }
