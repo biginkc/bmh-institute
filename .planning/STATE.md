@@ -3,15 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Internal Pilot Operations
 status: planning
-stopped_at: Phase 6 not started; next step is /gsd-discuss-phase 6
-last_updated: "2026-05-09T10:35:25.363Z"
-last_activity: 2026-05-09
+stopped_at: Phase 6 context gathered
+last_updated: "2026-05-09T10:39:48.216Z"
+last_activity: 2026-05-09 - Milestone v1.1 started
 progress:
   total_phases: 4
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
-  percent: 0
 ---
 
 # Project State
@@ -113,9 +112,9 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-09T10:37:00.000Z
-Stopped at: Phase 6 not started; next step is /gsd-discuss-phase 6
-Resume file: .planning/ROADMAP.md
+Last session: 2026-05-09T10:39:48.212Z
+Stopped at: Phase 6 context gathered
+Resume file: .planning/phases/06-pilot-cohort-setup/06-CONTEXT.md
 Session handoff: .planning/STATE.md
 
 ### 2026-05-08 - Phase 2 verification complete
