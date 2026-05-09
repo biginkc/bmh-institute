@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/table";
 import { requireAdmin } from "@/lib/auth/guard";
 import { createClient } from "@/lib/supabase/server";
+import { shapePilotCohortRows } from "@/lib/pilot-cohort/status";
 
 import { InviteForm } from "./invite-form";
 import { ResendInviteButton } from "./resend-invite-button";
@@ -33,7 +34,7 @@ export default async function AdminUsersPage() {
   // having run.
   await requireAdmin();
   const supabase = await createClient();
-  const [profiles, invites, roleGroups] = await Promise.all([
+  const [profiles, invites, roleGroups, userRoleGroups] = await Promise.all([
     supabase
       .from("profiles")
       .select("id, email, full_name, system_role, status, created_at")
@@ -43,11 +44,41 @@ export default async function AdminUsersPage() {
       .select("id, email, system_role, role_group_ids, created_at, accepted_at, expires_at")
       .order("created_at", { ascending: false }),
     supabase.from("role_groups").select("id, name").order("name"),
+    supabase.from("user_role_groups").select("user_id, role_group_id"),
   ]);
 
   const pendingInvites = (invites.data ?? []).filter(
     (i) => !i.accepted_at,
   );
+  const userRoleGroupsByUserId = (userRoleGroups.data ?? []).reduce<
+    Record<string, string[]>
+  >((acc, row) => {
+    const userId = row.user_id as string;
+    const roleGroupId = row.role_group_id as string;
+    acc[userId] = [...(acc[userId] ?? []), roleGroupId];
+    return acc;
+  }, {});
+  const pilotRows = shapePilotCohortRows({
+    profiles: (profiles.data ?? []).map((p) => ({
+      id: p.id as string,
+      email: p.email as string | null,
+      full_name: p.full_name as string | null,
+      system_role: p.system_role as "owner" | "admin" | "learner",
+      status: p.status as "active" | "invited" | "suspended",
+      created_at: p.created_at as string,
+    })),
+    invites: (invites.data ?? []).map((i) => ({
+      id: i.id as string,
+      email: i.email as string,
+      system_role: i.system_role as "owner" | "admin" | "learner",
+      role_group_ids: i.role_group_ids as string[] | null,
+      created_at: i.created_at as string,
+      accepted_at: i.accepted_at as string | null,
+      expires_at: i.expires_at as string,
+    })),
+    userRoleGroupsByUserId,
+    now: new Date(),
+  });
 
   return (
     <main className="mx-auto w-full max-w-6xl flex-1 p-6 md:p-10">
