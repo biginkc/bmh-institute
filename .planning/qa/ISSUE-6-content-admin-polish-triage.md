@@ -47,6 +47,8 @@ Resolution:
 
 ### P1: Learner empty state is technically correct but not operationally helpful
 
+Status: fixed by Phase 7 learner onboarding work.
+
 URL:
 
 - `/dashboard`
@@ -65,7 +67,16 @@ Recommended fix:
 - Consider showing `Contact your BMH Institute admin` plus a configured support/admin email if the app has one.
 - Keep it simple. Do not add a request-access workflow unless Jarrad asks for it.
 
+Resolution:
+
+- `/dashboard` now renders `No training assigned yet`.
+- Copy tells learners to ask their BMH Institute admin or manager to add the right role group.
+- The empty state links to profile and password recovery.
+- `src/app/(dashboard)/dashboard/page.test.ts` covers the support-oriented copy.
+
 ### P2: Admin reports show raw system activity that is hard to scan
+
+Status: fixed in PR pending for `codex/20260509-admin-reports-activity-readability`.
 
 URL:
 
@@ -85,6 +96,13 @@ Recommended fix:
 - Group or label system activity more clearly.
 - Add stronger empty/summary states.
 - Consider suppressing low-value system rows or moving them below learner-facing activity.
+
+Resolution:
+
+- Added `splitActivityRows` to separate learner activity from system events.
+- `/admin/reports` now renders learner activity first and groups system-generated events under `System events`.
+- Added clearer card and empty-state copy.
+- Added `src/app/(dashboard)/admin/reports/activity-format.test.ts` coverage for the split.
 
 ### P2: Admin overview is sparse after shell alignment
 
