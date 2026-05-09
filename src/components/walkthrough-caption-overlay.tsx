@@ -4,6 +4,12 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
+import {
+  BMH_DEMO_WALKTHROUGH_ID,
+  getBmhDemoWalkthroughStep,
+  getBmhDemoWalkthroughUrl,
+} from "@/lib/walkthrough/bmh-demo";
+
 const STORAGE_KEY = "bmh-institute.walkthrough";
 
 type WalkthroughState = {
@@ -59,16 +65,39 @@ export function WalkthroughCaptionOverlay() {
   const captionFromUrl = searchParams.get("walkthroughCaption")?.trim() ?? "";
   const backFromUrl = searchParams.get("walkthroughBack");
   const nextFromUrl = searchParams.get("walkthroughNext");
+  const walkthroughId = searchParams.get("walkthrough");
+  const walkthroughStep = Number(searchParams.get("step"));
+  const nativeStepState = useMemo(() => {
+    if (
+      walkthroughId !== BMH_DEMO_WALKTHROUGH_ID ||
+      !Number.isInteger(walkthroughStep)
+    ) {
+      return null;
+    }
+
+    const step = getBmhDemoWalkthroughStep(walkthroughStep);
+
+    if (!step) {
+      return null;
+    }
+
+    return {
+      caption: step.caption,
+      backHref: getBmhDemoWalkthroughUrl(walkthroughStep - 1),
+      nextHref: getBmhDemoWalkthroughUrl(walkthroughStep + 1),
+    };
+  }, [walkthroughId, walkthroughStep]);
   const stateFromUrl = useMemo(
     () =>
-      captionFromUrl
+      nativeStepState ??
+      (captionFromUrl
         ? {
             caption: captionFromUrl,
             backHref: normalizeHref(backFromUrl),
             nextHref: normalizeHref(nextFromUrl),
           }
-        : null,
-    [backFromUrl, captionFromUrl, nextFromUrl],
+        : null),
+    [backFromUrl, captionFromUrl, nativeStepState, nextFromUrl],
   );
   const [storedState, setStoredState] = useState<WalkthroughState | null>(() =>
     typeof window === "undefined" ? null : readStoredWalkthrough(),
