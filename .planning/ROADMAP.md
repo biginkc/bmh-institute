@@ -101,7 +101,7 @@ Plans:
 - [x] 04-1-supabase-generated-types-PLAN.md - TYPE-01: generate Supabase Database types, wire typed clients, and remove report/lesson result assertions
 - [x] 04-2-unit-coverage-gaps-PLAN.md - TEST-01: add missing admin submissions action unit coverage and confirm existing critical action tests
 - [x] 04-3-certificate-trigger-integration-PLAN.md - TEST-02: cover course and program certificate trigger pipeline with real Supabase integration tests
-- [x] 04-4-write-path-e2e-PLAN.md - TEST-03: manual production UI verification completed first; issue #2 follow-up now adds durable non-production Playwright write-path coverage, with invite acceptance still deferred pending email capture
+- [x] 04-4-write-path-e2e-PLAN.md - TEST-03: manual production UI verification completed first; follow-ups now add durable non-production Playwright write-path coverage and invite acceptance via generated Supabase invite action links
 
 ## Progress
 

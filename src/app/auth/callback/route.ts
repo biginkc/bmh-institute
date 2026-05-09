@@ -21,6 +21,11 @@ export async function GET(request: NextRequest) {
   const inviteToken = searchParams.get("invite_token");
 
   if (!code) {
+    if (inviteToken) {
+      return NextResponse.redirect(
+        `${origin}/login?invite_token=${encodeURIComponent(inviteToken)}`,
+      );
+    }
     return NextResponse.redirect(`${origin}/login?error=invite_failed`);
   }
 

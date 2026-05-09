@@ -1,10 +1,13 @@
 import { expect, test, type Page } from "@playwright/test";
 
 import {
+  cleanupInviteAcceptanceFixture,
   cleanupWritePathFixture,
+  createInviteAcceptanceFixture,
   createWritePathFixture,
   deleteRateLimitRows,
   writePathAdminClient,
+  type InviteAcceptanceFixture,
   type WritePathFixture,
 } from "./write-path-fixtures";
 
@@ -20,6 +23,7 @@ async function approveSubmission(
   page: Page,
   fixture: WritePathFixture,
   assignmentTitle: string,
+  assignmentId: string,
 ) {
   await page.goto("/admin/submissions");
   const card = page
@@ -28,7 +32,28 @@ async function approveSubmission(
     .first();
   await expect(card).toBeVisible();
   await card.getByRole("button", { name: /^approve$/i }).click();
-  await expect(page.getByText(/approved/i)).toBeVisible();
+  await expect
+    .poll(() => submissionIsApproved(writePathAdminClient(), fixture, assignmentId), {
+      timeout: 20_000,
+    })
+    .toBe(true);
+}
+
+async function submissionIsApproved(
+  admin: ReturnType<typeof writePathAdminClient>,
+  fixture: WritePathFixture,
+  assignmentId: string,
+): Promise<boolean> {
+  const { data, error } = await admin
+    .from("assignment_submissions")
+    .select("status")
+    .eq("user_id", fixture.learner.id)
+    .eq("assignment_id", assignmentId)
+    .order("submitted_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) return false;
+  return data?.status === "approved";
 }
 
 async function hasCourseAndProgramCertificates(
@@ -53,8 +78,68 @@ async function hasCourseAndProgramCertificates(
   return Boolean(course.data?.id && program.data?.id);
 }
 
+async function inviteWasAccepted(
+  admin: ReturnType<typeof writePathAdminClient>,
+  fixture: InviteAcceptanceFixture,
+): Promise<boolean> {
+  const [invite, profile, roleGroups] = await Promise.all([
+    admin
+      .from("invites")
+      .select("accepted_at")
+      .eq("id", fixture.inviteId)
+      .maybeSingle(),
+    admin
+      .from("profiles")
+      .select("system_role, status")
+      .eq("id", fixture.invitee.id)
+      .maybeSingle(),
+    admin
+      .from("user_role_groups")
+      .select("role_group_id")
+      .eq("user_id", fixture.invitee.id)
+      .eq("role_group_id", fixture.roleGroupId),
+  ]);
+  if (invite.error || profile.error || roleGroups.error) return false;
+  return Boolean(
+    invite.data?.accepted_at &&
+      profile.data?.system_role === "learner" &&
+      profile.data?.status === "active" &&
+      (roleGroups.data ?? []).length === 1,
+  );
+}
+
 test.describe("durable write-path coverage", () => {
   test.describe.configure({ timeout: 120_000 });
+
+  test("accepts an invite and sets the first password without email capture", async ({
+    browser,
+  }) => {
+    const admin = writePathAdminClient();
+    let fixture: InviteAcceptanceFixture | null = null;
+    const context = await browser.newContext({ storageState: { cookies: [], origins: [] } });
+    const page = await context.newPage();
+
+    try {
+      fixture = await createInviteAcceptanceFixture(admin);
+
+      await page.goto(fixture.inviteLink);
+      await page.waitForURL(/\/auth\/set-password/, { timeout: 30_000 });
+      await expect(page.getByLabel(/email/i)).toHaveValue(fixture.invitee.email);
+
+      await page.getByLabel(/^new password$/i).fill(fixture.password);
+      await page.getByLabel(/^confirm password$/i).fill(fixture.password);
+      await page.getByRole("button", { name: /save and continue/i }).click();
+      await page.waitForURL(/\/dashboard/, { timeout: 20_000 });
+      await expect(page.getByText(`${fixture.prefix} Invite Program`)).toBeVisible();
+
+      await expect
+        .poll(() => inviteWasAccepted(admin, fixture!), { timeout: 20_000 })
+        .toBe(true);
+    } finally {
+      await context.close();
+      await cleanupInviteAcceptanceFixture(admin, fixture);
+    }
+  });
 
   test("drives learner/admin LMS write paths against non-production data", async ({
     browser,
@@ -113,7 +198,12 @@ test.describe("durable write-path coverage", () => {
       await page.getByRole("button", { name: /^submit$/i }).click();
       await expect(page.getByText(/submitted, awaiting review/i)).toBeVisible();
 
-      await approveSubmission(adminPage, fixture, `${fixture.prefix} Text Assignment`);
+      await approveSubmission(
+        adminPage,
+        fixture,
+        `${fixture.prefix} Text Assignment`,
+        fixture.textAssignmentId,
+      );
 
       await page.goto(`/lessons/${fixture.textAssignmentLessonId}`);
       await expect(page.getByText(/^Approved$/).first()).toBeVisible();
@@ -128,7 +218,12 @@ test.describe("durable write-path coverage", () => {
       await page.getByRole("button", { name: /^submit$/i }).click();
       await expect(page.getByText(/submitted, awaiting review/i)).toBeVisible();
 
-      await approveSubmission(adminPage, fixture, `${fixture.prefix} File Assignment`);
+      await approveSubmission(
+        adminPage,
+        fixture,
+        `${fixture.prefix} File Assignment`,
+        fixture.fileAssignmentId,
+      );
       await expect
         .poll(() => hasCourseAndProgramCertificates(admin, fixture!), {
           timeout: 20_000,

@@ -1,11 +1,11 @@
 ---
 gsd_state_version: 1.0
 milestone: v1 follow-up
-milestone_name: TEST-03 Write Path Coverage
+milestone_name: Invite Acceptance Coverage
 status: ready
-stopped_at: issue #2 write-path coverage PR #39 green; ready to merge
+stopped_at: invite acceptance E2E PR #40 green; ready to merge
 last_updated: "2026-05-09T01:57:00.000Z"
-last_activity: 2026-05-09 -- issue #2 durable write-path Playwright coverage added and verified by CI seeded E2E
+last_activity: 2026-05-09 -- invite acceptance E2E added and verified by PR #40 CI seeded E2E
 progress:
   total_phases: 1
   completed_phases: 1
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-30)
 
 **Core value:** A VA can sign in via an admin invite, work through assigned programs and courses on their own time, take quizzes and submit assignments without supervision, and receive a certificate when they finish. Admins can author content, manage learners, review submissions, and see who is making progress without leaving the platform.
-**Current focus:** issue #2 TEST-03 durable write-path Playwright follow-up complete in PR #39
+**Current focus:** durable non-production invite acceptance and first password setup coverage complete in PR #40
 
 ## Current Position
 
-Phase: issue #2 follow-up for Phase 04-4 TEST-03
+Phase: TEST-03 invite acceptance follow-up
 Plan: quick task complete
 Status: Complete
-Last activity: 2026-05-09 -- non-production write-path specs and fixtures added; local full verify passed; PR CI seeded E2E passed
+Last activity: 2026-05-09 -- Supabase generated invite-link fixture added; local `npm run verify` passed; PR #40 CI seeded E2E passed
 
 Progress: [██████████] 100%
 
@@ -87,7 +87,8 @@ Recent decisions affecting current work:
 - 2026-05-08 (Phase 5 planning): Ecosystem navigation alignment is the next milestone. The first plan implements the shared BMH fixed topbar, 256px left nav, active left-border nav state, PageHeader foundation, admin-only nav visibility, pending submissions badge preservation, profile access, sign-out, and responsive shell behavior.
 - 2026-05-08 (Phase 5 complete): Implemented the shared fixed topbar and left nav shell, mobile primary nav, active left-border nav style, PageHeader foundation, and PageHeader usage on primary learner/admin pages. Added RTL sidebar coverage and Playwright shell smoke coverage. `npm run verify` and local Playwright shell smoke passed.
 - 2026-05-09 (quick task): BMH Institute now consumes `@sandra/tokens` from `../Sandra Design System`, imports the shared token CSS in `globals.css`, adds the registry-style `BrandLockup` component locally, uses webpack for local dev to resolve linked design-system CSS, and covers the package contract with `src/app/globals.test.ts`.
-- 2026-05-09 (quick task): Added durable non-production Playwright write-path coverage for issue #2. The suite creates disposable users/content, drives learner/admin LMS writes through the browser, validates certificate visibility, checks unassigned learner denial, and keeps invite acceptance deferred pending email capture. Local `npm run verify` passed, and PR #39 CI passed both `Verify` and `Seeded Playwright E2E`.
+- 2026-05-09 (quick task): Added durable non-production Playwright write-path coverage for issue #2. The suite creates disposable users/content, drives learner/admin LMS writes through the browser, validates certificate visibility, checks unassigned learner denial, and keeps invite acceptance separate. Local `npm run verify` passed, and PR #39 CI passed both `Verify` and `Seeded Playwright E2E`.
+- 2026-05-09 (quick task): Added invite acceptance coverage using Supabase Admin `generateLink({ type: "invite" })` in the non-production test project. This drives the real browser through the invite action link, `/auth/callback`, first password setup, dashboard access, and DB assertions for accepted invite/profile/role group state. It also fixed hash-token invite callbacks by adding a browser bridge and `/auth/apply-invite` route. Local `npm run verify` passed, and PR #40 CI passed both `Verify` and `Seeded Playwright E2E`.
 
 ### Pending Todos
 
@@ -95,7 +96,7 @@ None yet.
 
 ### Blockers/Concerns
 
-- Invite acceptance Playwright coverage remains deferred until a stable non-production email capture strategy exists.
+- Production invite/password-reset email capture remains a production-readiness gap. Non-production invite acceptance no longer requires email capture because the E2E suite uses Supabase Admin generated action links.
 - Phase 5 should read sibling repos for reference only. Do not write to Sandra, Closer Lab, Jitter, or Sandra Design System.
 
 ## Deferred Items

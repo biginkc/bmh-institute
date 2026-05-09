@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Suspense, useActionState } from "react";
+import { Suspense, useActionState, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { createClient } from "@/lib/supabase/client";
 
 import { signIn } from "./actions";
 
@@ -41,18 +42,86 @@ export default function LoginPage() {
 
 function LoginForm() {
   const [state, formAction, pending] = useActionState(signIn, null);
+  const [hashInviteState, setHashInviteState] = useState<
+    "idle" | "processing" | "failed"
+  >("idle");
   const actionError = state && !state.ok ? state.error : null;
   const searchParams = useSearchParams();
   const next = searchParams.get("next") ?? "";
   const urlError = searchParams.get("error");
+  const inviteToken = searchParams.get("invite_token");
+
+  useEffect(() => {
+    if (!inviteToken || hashInviteState !== "idle") return;
+
+    const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+    const accessToken = hash.get("access_token");
+    const refreshToken = hash.get("refresh_token");
+    if (!accessToken || !refreshToken) return;
+    const sessionTokens = {
+      access_token: accessToken,
+      refresh_token: refreshToken,
+    };
+
+    let cancelled = false;
+    setHashInviteState("processing");
+
+    async function finishHashInvite() {
+      const supabase = createClient();
+      const { error } = await supabase.auth.setSession(sessionTokens);
+      if (error) {
+        if (!cancelled) setHashInviteState("failed");
+        return;
+      }
+
+      const response = await fetch("/auth/apply-invite", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ token: inviteToken }),
+      });
+
+      if (response.ok) {
+        window.history.replaceState(null, "", "/auth/set-password");
+        window.location.assign("/auth/set-password");
+        return;
+      }
+
+      const body = (await response.json().catch(() => ({}))) as {
+        error?: string;
+      };
+      if (body.error === "invite_expired") {
+        window.history.replaceState(null, "", "/login?error=invite_expired");
+        window.location.assign("/login?error=invite_expired");
+        return;
+      }
+
+      if (!cancelled) setHashInviteState("failed");
+    }
+
+    void finishHashInvite();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [hashInviteState, inviteToken]);
 
   const errorMessage =
     actionError ??
-    (urlError === "invite_failed"
+    (hashInviteState === "failed"
+      ? "Invite link couldn't be verified. Ask an admin to resend it."
+      : urlError === "invite_failed"
       ? "Invite link couldn't be verified. Ask an admin to resend it."
       : urlError === "invite_expired"
         ? "This invite link has expired. Ask your admin to send you a fresh one."
         : null);
+
+  if (hashInviteState === "processing") {
+    return (
+      <div className="text-muted-foreground text-sm">
+        Finishing your invite...
+      </div>
+    );
+  }
 
   return (
     <form action={formAction} className="flex flex-col gap-4">

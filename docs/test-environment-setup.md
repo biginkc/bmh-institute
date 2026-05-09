@@ -66,4 +66,4 @@ The fixture guard is intentionally strict. If you see a production-ref refusal, 
 
 ## Phase 01 HUMAN-UAT items
 
-The five items in `.planning/phases/01-auth-and-access-hardening/01-HUMAN-UAT.md` were retired in Phase 01.1. Read-only items moved to Playwright specs in `e2e-prod/`; integration items got their gates flipped; durable LMS write paths now run against `bmh-institute-test` through `npm run test:e2e`. Invite acceptance remains separate until there is a stable non-production email capture strategy.
+The five items in `.planning/phases/01-auth-and-access-hardening/01-HUMAN-UAT.md` were retired in Phase 01.1. Read-only items moved to Playwright specs in `e2e-prod/`; integration items got their gates flipped; durable LMS write paths now run against `bmh-institute-test` through `npm run test:e2e`. Invite acceptance uses Supabase Admin `generateLink` in the non-production test project so the browser can exercise the real invite callback and first password setup without an inbox.

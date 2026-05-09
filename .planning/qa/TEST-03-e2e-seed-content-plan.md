@@ -75,6 +75,8 @@ Before promoting this into durable Playwright coverage, verify:
 
 TEST-03 durable Playwright coverage now includes:
 
+- invite acceptance through a generated Supabase invite action link
+- first password setup after invite callback
 - quiz submission
 - assignment upload
 - admin approval and revision
@@ -82,8 +84,8 @@ TEST-03 durable Playwright coverage now includes:
 - assigned and unassigned learner access checks
 - certificate visibility after required work is approved
 
-Invite acceptance remains separate until there is a stable non-production email capture strategy.
+Invite acceptance uses Supabase Admin `generateLink` against `bmh-institute-test`, so it does not need an inbox for the non-production E2E suite.
 
 The seed content remains the baseline CI substrate. The write-path spec creates its own disposable users and content for mutable flows.
 
-Current branch status: `npm run verify` passes locally, and PR #39 CI passed `Seeded Playwright E2E` using the `TEST_SUPABASE_*` secrets for `bmh-institute-test`.
+Current branch status: `npm run verify` passes locally, PR #39 CI passed the durable LMS write-path suite, and PR #40 CI passed invite acceptance through generated Supabase invite action links using the `TEST_SUPABASE_*` secrets for `bmh-institute-test`.
