@@ -3,15 +3,15 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  LayoutDashboard,
-  GraduationCap,
-  Users,
-  BookOpen,
-  Package,
-  UsersRound,
-  ShieldCheck,
-  Inbox,
   BarChart3,
+  BookOpen,
+  GraduationCap,
+  Inbox,
+  LayoutDashboard,
+  Package,
+  ShieldCheck,
+  Users,
+  UsersRound,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -27,9 +27,11 @@ type Item = {
 export function SidebarNav({
   isAdmin,
   pendingSubmissionsCount,
+  variant = "sidebar",
 }: {
   isAdmin: boolean;
   pendingSubmissionsCount: number;
+  variant?: "sidebar" | "mobile";
 }) {
   const pathname = usePathname();
 
@@ -65,21 +67,43 @@ export function SidebarNav({
     { href: "/admin/reports", icon: <BarChart3 className="size-4" />, label: "Reports" },
   ];
 
+  const mobile = variant === "mobile";
+
   return (
-    <nav className="flex flex-col gap-1 p-4 text-sm">
-      <NavSectionLabel>Learn</NavSectionLabel>
+    <nav
+      aria-label="Primary"
+      className={cn(
+        "text-sm",
+        mobile
+          ? "flex gap-1 overflow-x-auto px-4 py-2"
+          : "flex flex-1 flex-col gap-1",
+      )}
+    >
+      {!mobile ? <NavSectionLabel>Learn</NavSectionLabel> : null}
       {learnerItems.map((item) => (
-        <NavLink key={item.href} item={item} pathname={pathname} />
+        <NavLink
+          key={item.href}
+          item={item}
+          pathname={pathname}
+          variant={variant}
+        />
       ))}
 
       {isAdmin ? (
         <>
-          <NavSectionLabel className="mt-4">
-            <ShieldCheck className="mr-1 inline size-3" />
-            Admin
-          </NavSectionLabel>
+          {!mobile ? (
+            <NavSectionLabel className="mt-4">
+              <ShieldCheck className="mr-1 inline size-3" />
+              Admin
+            </NavSectionLabel>
+          ) : null}
           {adminItems.map((item) => (
-            <NavLink key={item.href} item={item} pathname={pathname} />
+            <NavLink
+              key={item.href}
+              item={item}
+              pathname={pathname}
+              variant={variant}
+            />
           ))}
         </>
       ) : null}
@@ -87,20 +111,38 @@ export function SidebarNav({
   );
 }
 
-function NavLink({ item, pathname }: { item: Item; pathname: string }) {
+function NavLink({
+  item,
+  pathname,
+  variant,
+}: {
+  item: Item;
+  pathname: string;
+  variant: "sidebar" | "mobile";
+}) {
   const isActive = isLinkActive(pathname, item.href);
+  const mobile = variant === "mobile";
   return (
     <Link
       href={item.href}
+      aria-current={isActive ? "page" : undefined}
+      data-active={isActive || undefined}
       className={cn(
-        "flex items-center gap-2 rounded-md px-2 py-1.5",
+        "flex items-center gap-3 text-sm font-bold tracking-wide transition-all duration-200 ease-in-out focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+        mobile ? "h-10 shrink-0 px-3" : "py-3",
         isActive
-          ? "bg-primary text-primary-foreground"
-          : "text-foreground/80 hover:bg-muted hover:text-foreground",
+          ? mobile
+            ? "border-b-4 border-foreground text-foreground"
+            : "border-l-4 border-foreground pl-4 text-foreground"
+          : mobile
+            ? "text-muted-foreground hover:bg-muted hover:text-foreground"
+            : "pl-5 text-muted-foreground hover:bg-muted hover:text-foreground",
       )}
     >
       {item.icon}
-      <span className="flex-1">{item.label}</span>
+      <span className={mobile ? "whitespace-nowrap" : "flex-1"}>
+        {item.label}
+      </span>
       {item.badge ? (
         <Badge
           variant={isActive ? "secondary" : "default"}

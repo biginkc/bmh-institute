@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { PageHeader } from "@/components/page-header";
 import {
   Card,
   CardContent,
@@ -118,11 +119,11 @@ export default async function AdminReportsPage() {
   return (
     <main className="mx-auto w-full max-w-5xl flex-1 p-6 md:p-10">
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold">Reports</h1>
-        <p className="text-muted-foreground mt-1 text-sm">
-          Rollup view of who&apos;s learning what. Click a row to drill in.
-          (Drill-ins land in the next phase.)
-        </p>
+        <PageHeader
+          title="Reports"
+          description="Rollup view of who's learning what. Click a row to drill in."
+          breadcrumb={[{ label: "Admin" }, { label: "Reports" }]}
+        />
       </div>
 
       <div className="grid gap-4 md:grid-cols-4">

@@ -32,26 +32,15 @@ A VA can sign in via an admin invite, work through assigned programs and courses
 
 ### Active
 
-The first GSD-managed milestone is a production-hardening pass driven by gaps surfaced in `.planning/codebase/CONCERNS.md`. No new user-facing features.
+The current milestone is v1.1 Ecosystem UI Alignment. It moves the Phase 2.5 Stitch direction into production UI without changing LMS behavior.
 
-- [ ] HARDEN-01: Admin route guards on every report page so direct navigation cannot reach admin data through learner sessions
-- [ ] HARDEN-02: Invite expiry enforced in the auth callback so expired invites cannot apply role-group access
-- [ ] HARDEN-03: `deleteUser` removes the `auth.users` record via the admin client so suspended users cannot re-authenticate
-- [ ] HARDEN-04: `is_correct` quiz flag protected from anon-key reads via a public view that excludes it
-- [ ] HARDEN-05: Embed block iframe loads with a sandbox attribute and admin-authored HTML in text blocks and certificate templates is sanitized
-- [ ] HARDEN-06: Rate limiting on the forgot-password and password-reset paths
-- [ ] INTEG-01: Role-group rewrites and module reorder run inside Postgres functions with transaction semantics
-- [ ] INTEG-02: Certificate-number allocation uses a sequence or `SELECT ... FOR UPDATE` instead of `max()+1`
-- [ ] INTEG-03: Assignment submission file paths are server-validated against the uploader's user id
-- [ ] TYPE-01: Supabase types generated and the codebase migrated off ad-hoc `as string` assertions
-- [ ] TEST-01: Vitest coverage added for the auth callback, assignment submission, admin review, and password reset server actions
-- [ ] TEST-02: Integration tests added for the trigger-driven completion and certificate pipeline
-- [ ] TEST-03: Playwright write-path coverage for invite acceptance, quiz submission, assignment upload, admin review, and password reset
+- [x] UI-02: BMH Institute production dashboard shell matches the BMH ecosystem navigation pattern used by Sandra, Closer Lab, and Jitter.
+- [x] UI-03: BMH Institute production dashboard pages adopt the Sandra PageHeader pattern for title, description, breadcrumb, and action layout.
 
 ### Out of Scope
 
 - AI voice role plays — owned by the standalone Sandra Practice app, not this milestone. Embed scaffolding (`role_play` block type, `role_play_results` table, JWT helper, RolePlayBlock listener) is deferred to v2 and arrives only when Sandra Practice ships its first public scenario.
-- New content authoring features — this milestone is purely about hardening what is already shipped.
+- New content authoring features — the current milestone is shell and navigation alignment only.
 - Performance pagination of admin reports — `.planning/codebase/CONCERNS.md` flags this as a future scale concern, not a current bug. Defer until learner volume forces it.
 - Test Supabase project — `npm run test:integration` and `npm run test:e2e` continue to run against the production project read-only as a deliberate cost choice.
 - Mobile-native app or auto-translation — never in scope.
@@ -59,7 +48,7 @@ The first GSD-managed milestone is a production-hardening pass driven by gaps su
 
 ## Context
 
-This codebase has shipped fourteen feature commits before adopting GSD; the codebase map under `.planning/codebase/` is the canonical reference for current structure. AGENTS.md is the source of truth for development conventions and project identity. Production runs on the Hobby Vercel plan and the BMH Group Supabase Pro org subscription (~\$25 per month, shared across all org projects).
+This codebase has shipped fourteen feature commits before adopting GSD. v1 Production Hardening is complete with durable write-path Playwright coverage deferred to GitHub issue #2. The codebase map under `.planning/codebase/` is the canonical reference for current structure. AGENTS.md is the source of truth for development conventions and project identity. Production runs on the Hobby Vercel plan and the BMH Group Supabase Pro org subscription (~\$25 per month, shared across all org projects).
 
 The standalone Sandra Practice app has not been bootstrapped yet. Its parked planning bundle lives in `sandra-practice-planning/` and the cross-origin embed contract lives in `role-play-embed-contract.md`. Both are untracked in git — Jarrad will move them when Sandra Practice gets its own repo.
 
@@ -84,6 +73,8 @@ Email transport pivoted from SendGrid to Google Workspace SMTP in commit `ce6e49
 | Quality model profile, all workflow gates on | Hardening work has long blast radius; pay for deeper analysis up front | — Pending |
 | Voice runtime work belongs in Sandra Practice, not here | The embed contract was written specifically to keep the LMS lean and the role-play app reusable; conflating them would break the architecture | ✓ Good |
 | Test-first execution is the default for meaningful changes | Keeps behavior changes covered without turning routine execution into an execution bottleneck | ✓ Good |
+| v1 hardening closed with TEST-03 deferred | Manual production Playwright verified major write paths; durable automation needs non-prod Supabase and email capture | ✓ Good |
+| v1.1 focuses on shared BMH ecosystem shell | Jarrad wants BMH Institute navigation to match Sandra, Closer Lab, and Jitter instead of drifting as a standalone LMS | — Pending |
 
 ## Evolution
 
@@ -103,4 +94,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-30 after initialization*
+*Last updated: 2026-05-08 after v1 audit and v1.1 milestone planning*

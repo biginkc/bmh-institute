@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -20,19 +21,20 @@ export default async function AdminCoursesPage() {
 
   return (
     <main className="flex-1 p-6 md:p-10">
-      <div className="mb-6 flex items-end justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">Courses</h1>
-          <p className="text-muted-foreground mt-1 text-sm">
-            Courses can live standalone or inside one or more programs.
-          </p>
-        </div>
-        <Link
-          href="/admin/courses/new"
-          className="border-border hover:bg-muted rounded-md border px-3 py-1.5 text-sm"
-        >
-          New course
-        </Link>
+      <div className="mb-6">
+        <PageHeader
+          title="Courses"
+          description="Courses can live standalone or inside one or more programs."
+          breadcrumb={[{ label: "Admin" }, { label: "Courses" }]}
+          actions={
+            <Link
+              href="/admin/courses/new"
+              className="border-border hover:bg-muted rounded-md border px-3 py-1.5 text-sm"
+            >
+              New course
+            </Link>
+          }
+        />
       </div>
 
       {(courses ?? []).length === 0 ? (

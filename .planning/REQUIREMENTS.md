@@ -45,6 +45,11 @@ This is the first GSD-managed milestone for a brownfield codebase. The Validated
 
 Deferred to a future milestone. Tracked but not in the current roadmap.
 
+### Ecosystem Navigation Alignment
+
+- [x] **UI-02**: BMH Institute production dashboard shell matches the BMH ecosystem navigation pattern used by Sandra, Closer Lab, and Jitter: fixed 64px topbar, 256px desktop left sidebar, brand area spanning the sidebar column, active nav with a 4px left border, no filled nav pills, warm paper surfaces, user identity, sign-out, admin-only navigation visibility, pending submission badge preservation, and responsive mobile navigation.
+- [x] **UI-03**: BMH Institute production dashboard pages adopt the Sandra PageHeader pattern for title, description, breadcrumb, and action layout without changing route permissions or page data behavior.
+
 ### Role-Play Embed Scaffolding
 
 - **EMBD-01**: Migration 008 adds the `role_play` block type and `role_play_results` table per `role-play-embed-contract.md`
@@ -97,12 +102,16 @@ Mapping of requirements to phases. Updated by the gsd-roadmapper.
 | TPAR-03 | Phase 01.1 | Complete |
 | TPAR-04 | Phase 01.1 | Complete |
 | TPAR-05 | Phase 01.1 | Complete |
+| UI-02 | Phase 5 | Complete |
+| UI-03 | Phase 5 | Complete |
 
 **Coverage:**
 - v1 requirements: 19 total
 - Mapped to phases: 19
 - Unmapped: 0
+- future requirements: 10 total
+- mapped or parked: 10
 
 ---
 *Requirements defined: 2026-04-30*
-*Last updated: 2026-05-08 - Phase 2 plan traceability repaired after folder rename*
+*Last updated: 2026-05-08 - Added future ecosystem navigation alignment requirements*

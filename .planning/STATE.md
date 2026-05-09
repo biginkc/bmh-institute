@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: milestone
+milestone: v1.1
+milestone_name: Ecosystem UI Alignment
 status: ready
-stopped_at: Phase 4 complete with TEST-03 deferred to issue #2
+stopped_at: Phase 5 complete; ready for review and PR
 last_updated: "2026-05-08T23:59:00.000Z"
-last_activity: 2026-05-08 -- Phase 4 completed with durable Playwright write-path coverage deferred
+last_activity: 2026-05-08 -- Phase 5 ecosystem navigation alignment implemented and verified
 progress:
-  total_phases: 6
-  completed_phases: 6
-  total_plans: 18
-  completed_plans: 18
+  total_phases: 1
+  completed_phases: 1
+  total_plans: 1
+  completed_plans: 1
   percent: 100
 ---
 
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-30)
 
 **Core value:** A VA can sign in via an admin invite, work through assigned programs and courses on their own time, take quizzes and submit assignments without supervision, and receive a certificate when they finish. Admins can author content, manage learners, review submissions, and see who is making progress without leaving the platform.
-**Current focus:** v1 production hardening complete except deferred durable Playwright issue #2
+**Current focus:** v1.1 ecosystem UI alignment complete; ready for PR review
 
 ## Current Position
 
-Phase: 04 (type-safety-and-test-coverage) - COMPLETE
-Plan: 4 of 4 complete
-Status: Phase 4 complete with deferred_issue
-Last activity: 2026-05-08 -- TEST-03 durable Playwright coverage deferred to issue #2 after manual UI verification
+Phase: 05 (ecosystem-navigation-alignment) - COMPLETE
+Plan: 1 of 1 complete
+Status: Complete
+Last activity: 2026-05-08 -- shared dashboard shell implemented and verified
 
 Progress: [██████████] 100%
 
@@ -83,6 +83,9 @@ Recent decisions affecting current work:
 - 2026-05-08 (Phase 3): Data integrity work uses migration 012 for transactional role-group rewrites, transactional module reorder, and atomic certificate number counters. Assignment file uploads are server-validated against the authenticated user's storage prefix.
 - 2026-05-08 (Phase 4 planning): TYPE-01 runs first, followed by admin submissions unit coverage, certificate trigger integration, and write-path e2e.
 - 2026-05-08 (Phase 4 TEST-03): Durable write-path Playwright automation is deferred to GitHub issue #2. Manual production Playwright verification covered login, course visibility, quiz submit, assignment submit/revision/approval, certificates, file upload, and forgot-password success. Invite acceptance waits for non-prod email capture.
+- 2026-05-08 (v1 audit): v1 Production Hardening closed as pass with tracked deferral. TEST-03 remains in GitHub issue #2. PR #1 was closed because role-play embed overlaps future EMBD-01..05.
+- 2026-05-08 (Phase 5 planning): Ecosystem navigation alignment is the next milestone. The first plan implements the shared BMH fixed topbar, 256px left nav, active left-border nav state, PageHeader foundation, admin-only nav visibility, pending submissions badge preservation, profile access, sign-out, and responsive shell behavior.
+- 2026-05-08 (Phase 5 complete): Implemented the shared fixed topbar and left nav shell, mobile primary nav, active left-border nav style, PageHeader foundation, and PageHeader usage on primary learner/admin pages. Added RTL sidebar coverage and Playwright shell smoke coverage. `npm run verify` and local Playwright shell smoke passed.
 
 ### Pending Todos
 
@@ -90,8 +93,8 @@ None yet.
 
 ### Blockers/Concerns
 
-- TYPE-01 (Supabase type generation) is a prerequisite for tight test fixtures in TEST-01..03. Phase 4 depends on Phase 3 completing first to stabilize the migration surface before generating types.
-- Integration tests (TEST-02) run against the production Supabase project. No writes in integration tests without explicit confirmation of safe harness setup.
+- Durable write-path Playwright coverage remains deferred to issue #2 until a non-prod Supabase target and email capture exist.
+- Phase 5 should read sibling repos for reference only. Do not write to Sandra, Closer Lab, Jitter, or Sandra Design System.
 
 ## Deferred Items
 
