@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
@@ -31,24 +31,43 @@ export function UserEditForm({
   const router = useRouter();
   const [systemRole, setSystemRole] = useState(initialSystemRole);
   const [status, setStatus] = useState(initialStatus);
-  const [roleGroupIds, setRoleGroupIds] = useState<string[]>(
-    initialRoleGroupIds,
-  );
+  const formRef = useRef<HTMLDivElement>(null);
+  const systemRoleRef = useRef(systemRole);
+  const statusRef = useRef(status);
+  const [hydrated, setHydrated] = useState(false);
   const [pending, startTransition] = useTransition();
 
-  function toggleGroup(id: string) {
-    setRoleGroupIds((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
-    );
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
+
+  function getCurrentRoleGroupIds() {
+    const checkedIds = Array.from(
+      formRef.current?.querySelectorAll<HTMLInputElement>(
+        "input[data-role-group-id]:checked",
+      ) ?? [],
+    ).map((input) => input.dataset.roleGroupId);
+    return checkedIds.filter((id): id is string => Boolean(id));
+  }
+
+  function updateSystemRole(next: "owner" | "admin" | "learner") {
+    systemRoleRef.current = next;
+    setSystemRole(next);
+  }
+
+  function updateStatus(next: "active" | "invited" | "suspended") {
+    statusRef.current = next;
+    setStatus(next);
   }
 
   function onSave() {
+    const currentRoleGroupIds = getCurrentRoleGroupIds();
     startTransition(async () => {
       const result = await saveUserSettings({
         userId,
-        system_role: systemRole,
-        status,
-        role_group_ids: roleGroupIds,
+        system_role: systemRoleRef.current,
+        status: statusRef.current,
+        role_group_ids: currentRoleGroupIds,
       });
       if (!result.ok) {
         toast.error(result.error);
@@ -65,18 +84,20 @@ export function UserEditForm({
   }
 
   function onSuspendToggle() {
-    const nextStatus = status === "suspended" ? "active" : "suspended";
-    setStatus(nextStatus);
+    const previousStatus = statusRef.current;
+    const nextStatus = previousStatus === "suspended" ? "active" : "suspended";
+    const currentRoleGroupIds = getCurrentRoleGroupIds();
+    updateStatus(nextStatus);
     startTransition(async () => {
       const result = await saveUserSettings({
         userId,
-        system_role: systemRole,
+        system_role: systemRoleRef.current,
         status: nextStatus,
-        role_group_ids: roleGroupIds,
+        role_group_ids: currentRoleGroupIds,
       });
       if (!result.ok) {
         toast.error(result.error);
-        setStatus(status); // revert
+        updateStatus(previousStatus);
       } else {
         toast.success(
           nextStatus === "suspended" ? "User suspended." : "User reactivated.",
@@ -104,18 +125,23 @@ export function UserEditForm({
   }
 
   return (
-    <div className="flex flex-col gap-5">
+    <div
+      ref={formRef}
+      data-user-edit-form
+      data-hydrated={hydrated ? "true" : "false"}
+      className="flex flex-col gap-5"
+    >
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="system_role">System role</Label>
         <select
           id="system_role"
           value={systemRole}
           onChange={(e) =>
-            setSystemRole(
+            updateSystemRole(
               e.target.value as "owner" | "admin" | "learner",
             )
           }
-          disabled={!canModifyRole}
+          disabled={!hydrated || !canModifyRole}
           className="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
         >
           <option value="learner">Learner</option>
@@ -135,11 +161,11 @@ export function UserEditForm({
           id="status"
           value={status}
           onChange={(e) =>
-            setStatus(
+            updateStatus(
               e.target.value as "active" | "invited" | "suspended",
             )
           }
-          disabled={!canSuspend}
+          disabled={!hydrated || !canSuspend}
           className="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
         >
           <option value="active">Active</option>
@@ -152,7 +178,8 @@ export function UserEditForm({
         <Label>Role groups</Label>
         {allRoleGroups.length === 0 ? (
           <p className="text-muted-foreground text-xs">
-            No role groups defined. Create them under Role groups.
+            No role groups defined. Create role groups before inviting pilot
+            learners.
           </p>
         ) : (
           <div className="flex flex-col gap-2">
@@ -163,8 +190,9 @@ export function UserEditForm({
               >
                 <input
                   type="checkbox"
-                  checked={roleGroupIds.includes(rg.id)}
-                  onChange={() => toggleGroup(rg.id)}
+                  data-role-group-id={rg.id}
+                  defaultChecked={initialRoleGroupIds.includes(rg.id)}
+                  disabled={!hydrated}
                   className="size-4"
                 />
                 {rg.name}
@@ -173,8 +201,8 @@ export function UserEditForm({
           </div>
         )}
         <p className="text-muted-foreground text-xs">
-          Adding a role group that grants access to a program the user
-          didn&apos;t have before triggers an enrollment email.
+          Role groups control pilot program and course access. Adding a group
+          that grants a new program triggers an enrollment email.
         </p>
       </div>
 
@@ -184,7 +212,7 @@ export function UserEditForm({
             <Button
               variant="outline"
               onClick={onSuspendToggle}
-              disabled={pending}
+              disabled={!hydrated || pending}
             >
               {status === "suspended" ? "Reactivate" : "Suspend"}
             </Button>
@@ -193,14 +221,14 @@ export function UserEditForm({
             <Button
               variant="outline"
               onClick={onDelete}
-              disabled={pending}
+              disabled={!hydrated || pending}
               className="text-destructive hover:text-destructive"
             >
               Delete user
             </Button>
           ) : null}
         </div>
-        <Button onClick={onSave} disabled={pending}>
+        <Button onClick={onSave} disabled={!hydrated || pending}>
           {pending ? "Saving..." : "Save changes"}
         </Button>
       </div>
