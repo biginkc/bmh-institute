@@ -59,6 +59,8 @@ The implemented check creates disposable prefixed production auth users, databas
 
 GitHub production-readiness secrets have been configured for the production app URL, Supabase URL, Supabase anon key, Supabase service-role key, and disposable-user password. The production app URL currently points to `https://sandra-university.vercel.app` because `https://university.bmhgroup.com` does not resolve in local or GitHub Actions DNS.
 
+`university.bmhgroup.com` has been added to the Vercel project `sandra-university`. Vercel reports the domain is not configured properly because Cloudflare DNS does not point the subdomain at Vercel. The required DNS record is `A university.bmhgroup.com 76.76.21.21`. Current nameservers are `leia.ns.cloudflare.com` and `luke.ns.cloudflare.com`.
+
 Latest evidence:
 
 - GitHub Actions production-readiness run `25589792026` passed on 2026-05-09 from `main`.
@@ -180,7 +182,7 @@ Current status: embed safety has existing production smoke coverage. Unsafe text
 ## Open blockers and risks
 
 - Production email capture is the main blocker for invite and password reset automation.
-- `university.bmhgroup.com` does not currently resolve. Production-readiness CI uses the Vercel production URL until the custom domain DNS is fixed.
+- `university.bmhgroup.com` is added in Vercel but does not currently resolve. Add `A university.bmhgroup.com 76.76.21.21` in Cloudflare, then switch production-readiness CI back to the custom domain after verification passes.
 - GitHub production readiness secrets must use the current production Supabase service-role key. A stale local `.env.local` service-role key caused `Invalid API key` until the current key was injected from the Supabase CLI.
 - Production writes require strict disposable prefixes and cleanup so tests do not pollute real learner records.
 - Password reset tests must avoid locking out real operators or consuming normal-user rate limits.
