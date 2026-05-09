@@ -39,14 +39,17 @@ test.describe("pilot cohort setup", () => {
       await signIn(page, fixture.admin.email, fixture.password);
       await page.goto("/admin/users");
 
-      await expect(page.getByText("Pilot setup")).toBeVisible();
-      const readyRow = page
+      const pilotSetup = page.locator("[data-slot='card']").filter({
+        has: page.getByText("Pilot setup"),
+      });
+      await expect(pilotSetup.getByText("Pilot setup")).toBeVisible();
+      const readyRow = pilotSetup
         .getByRole("row")
         .filter({ hasText: fixture.learner.email });
       await expect(readyRow).toContainText("Ready");
       await expect(readyRow).toContainText("Role group assigned");
 
-      const missingRow = page
+      const missingRow = pilotSetup
         .getByRole("row")
         .filter({ hasText: fixture.unassigned.email });
       await expect(missingRow).toContainText("Needs access");
@@ -64,7 +67,7 @@ test.describe("pilot cohort setup", () => {
 
       await page.goto("/admin/users");
       await expect(
-        page.getByRole("row").filter({ hasText: fixture.unassigned.email }),
+        pilotSetup.getByRole("row").filter({ hasText: fixture.unassigned.email }),
       ).toContainText("Ready");
     } finally {
       await cleanupWritePathFixture(admin, fixture);
