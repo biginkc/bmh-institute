@@ -22,6 +22,22 @@ export type ProductionReadinessFixture = {
   unassigned: { id: string; email: string };
 };
 
+export type ProductionInviteFixture = {
+  prefix: string;
+  password: string;
+  roleGroupId: string;
+  programId: string;
+  inviter: { id: string; email: string };
+  inviteeEmail: string;
+};
+
+export type ProductionRecoveryFixture = {
+  email: string;
+  userId: string;
+  oldPassword: string;
+  newPassword: string;
+};
+
 type InsertResult = { id: string };
 
 const PROD_PROJECT_REF = "dhvfsyteqsxagokoerrx";
@@ -293,6 +309,87 @@ export async function cleanupProductionReadinessFixture(
   await admin.auth.admin.deleteUser(fixture.unassigned.id);
 }
 
+export async function createProductionInviteFixture(
+  admin: SupabaseClient,
+  inviteeEmail: string,
+): Promise<ProductionInviteFixture> {
+  const prefix = `PRD-INVITE-${Date.now()}-${crypto.randomUUID().slice(0, 8)}`;
+  const password = process.env.PROD_READINESS_TEST_PASSWORD?.trim()
+    || `BMHProdInvite-${crypto.randomUUID()}!1`;
+
+  const inviter = await createFixtureUser(admin, {
+    email: `${prefix.toLowerCase()}-owner@bmh-institute.test`,
+    password,
+    fullName: `${prefix} Owner`,
+    systemRole: "owner",
+  });
+
+  const roleGroupId = await insertOne(admin, "role_groups", {
+    name: `${prefix} Invite Role Group`,
+    description: "Disposable production invite role group.",
+  });
+
+  const programId = await insertOne(admin, "programs", {
+    title: `${prefix} Invite Program`,
+    description: "Disposable production invite program.",
+    is_published: true,
+    course_order_mode: "free",
+    certificate_enabled: false,
+    sort_order: 9999,
+  });
+
+  await admin
+    .from("program_access")
+    .insert({ program_id: programId, role_group_id: roleGroupId })
+    .throwOnError();
+
+  return {
+    prefix,
+    password,
+    roleGroupId,
+    programId,
+    inviter,
+    inviteeEmail,
+  };
+}
+
+export async function cleanupProductionInviteFixture(
+  admin: SupabaseClient,
+  fixture: ProductionInviteFixture | null,
+): Promise<void> {
+  if (!fixture) return;
+
+  await admin.from("invites").delete().eq("email", fixture.inviteeEmail);
+  await admin.from("programs").delete().eq("id", fixture.programId);
+  await admin.from("role_groups").delete().eq("id", fixture.roleGroupId);
+  await deleteAuthUserByEmail(admin, fixture.inviteeEmail);
+  await admin.auth.admin.deleteUser(fixture.inviter.id);
+}
+
+export async function createProductionRecoveryFixture(
+  admin: SupabaseClient,
+  email: string,
+): Promise<ProductionRecoveryFixture> {
+  const oldPassword = process.env.PROD_READINESS_TEST_PASSWORD?.trim()
+    || `BMHProdRecovery-${crypto.randomUUID()}!1`;
+  const newPassword = `BMHProdRecoveryNew-${crypto.randomUUID()}!1`;
+  const user = await createFixtureUser(admin, {
+    email,
+    password: oldPassword,
+    fullName: "Production Readiness Recovery",
+    systemRole: "learner",
+  });
+  return { email, userId: user.id, oldPassword, newPassword };
+}
+
+export async function cleanupProductionRecoveryFixture(
+  admin: SupabaseClient,
+  fixture: ProductionRecoveryFixture | null,
+): Promise<void> {
+  if (!fixture) return;
+  await admin.auth.admin.deleteUser(fixture.userId);
+}
+
 async function cleanupProductionReadinessStorage(
   admin: SupabaseClient,
   learnerId: string,
@@ -315,6 +412,15 @@ async function cleanupProductionReadinessStorage(
       .from("submissions")
       .remove(paths);
     if (removeError) throw removeError;
+  }
+}
+
+async function deleteAuthUserByEmail(admin: SupabaseClient, email: string) {
+  const { data, error } = await admin.auth.admin.listUsers({ perPage: 1000 });
+  if (error) throw error;
+  const user = data.users.find((candidate) => candidate.email === email);
+  if (user) {
+    await admin.auth.admin.deleteUser(user.id);
   }
 }
 
