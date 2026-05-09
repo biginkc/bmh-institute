@@ -34,7 +34,7 @@ A VA can sign in via an admin invite, work through assigned programs and courses
 
 Current milestone: none. v1.1 Internal Pilot Operations is shipped.
 
-Current focus: post-ship cleanup and monorepo migration readiness.
+Current focus: ready for internal pilot. Post-ship cleanup is complete and monorepo migration readiness is documented.
 
 Current tasks:
 
@@ -42,6 +42,7 @@ Current tasks:
 - Keep migration notes current for the upcoming BMH Platform monorepo move.
 - Preserve the guided walkthrough contract while keeping implementation app-local.
 - Keep performance work parked until documented thresholds are breached.
+- Start a new milestone before adding more BMH Institute product scope.
 
 ### Out of Scope
 
@@ -60,7 +61,7 @@ Current post-ship work is documentation and operational cleanup. It should not i
 
 Latest production-readiness evidence:
 
-- Run: `25610410328`
+- Run: `25614367824`
 - Branch: `main`
 - Date: 2026-05-09
 - Result: 4 passed
@@ -97,6 +98,7 @@ Email transport pivoted from SendGrid to Google Workspace SMTP in commit `ce6e49
 | v1.1 focuses on shared BMH ecosystem shell | Jarrad wants BMH Institute navigation to match Sandra, Closer Lab, and Jitter instead of drifting as a standalone LMS | ✓ Good |
 | v1.1 Internal Pilot Operations starts after production readiness | The app is green on production-readiness; the next risk is operational adoption by real internal learners and admins | ✓ Shipped |
 | Guided walkthrough system waits for rule-of-three extraction | BMH Institute has the proof point, but the BMH Platform plan forbids premature shared packages until three apps need the same code | Active |
+| Content/admin polish QA cleanup is closed | The remaining QA findings were fixed or matched shipped work with tests, and production readiness passed afterward | ✓ Good |
 | Vercel Git flow replaces manual production aliasing | Routine deploys should follow merge-to-main production deployments with auto-assigned custom domains | ✓ Good |
 
 ## Evolution
