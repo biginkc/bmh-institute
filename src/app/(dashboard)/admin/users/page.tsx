@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { formatDistanceToNow } from "date-fns";
 
 import { Badge } from "@/components/ui/badge";
@@ -20,7 +21,11 @@ import {
 } from "@/components/ui/table";
 import { requireAdmin } from "@/lib/auth/guard";
 import { createClient } from "@/lib/supabase/server";
-import { shapePilotCohortRows } from "@/lib/pilot-cohort/status";
+import {
+  shapePilotCohortRows,
+  type PilotCohortRow,
+  type PilotStatusKey,
+} from "@/lib/pilot-cohort/status";
 
 import { InviteForm } from "./invite-form";
 import { ResendInviteButton } from "./resend-invite-button";
@@ -85,10 +90,61 @@ export default async function AdminUsersPage() {
       <div className="mb-6">
         <PageHeader
           title="Users"
-          description="Active team members and pending invites. Invite new users and Supabase emails them a signup link."
+          description="Pilot learner access, invite status, and role groups."
           breadcrumb={[{ label: "Admin" }, { label: "Users" }]}
         />
       </div>
+
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Pilot setup</CardTitle>
+          <CardDescription>
+            Learner access, invite status, and next actions for the internal
+            pilot.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {pilotRows.length === 0 ? (
+            <p className="text-muted-foreground text-sm">
+              No learners yet. Send the first pilot invite when the cohort is
+              ready.
+            </p>
+          ) : (
+            <Table className="min-w-[52rem]">
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Person</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Setup status</TableHead>
+                  <TableHead>Access</TableHead>
+                  <TableHead className="text-right">Action</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {pilotRows.map((row) => (
+                  <TableRow key={`${row.kind}-${row.id}`}>
+                    <TableCell className="font-medium">{row.name}</TableCell>
+                    <TableCell className="text-muted-foreground text-xs">
+                      {row.email}
+                    </TableCell>
+                    <TableCell>
+                      <PilotStatusBadge statusKey={row.statusKey}>
+                        {row.statusLabel}
+                      </PilotStatusBadge>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground text-xs">
+                      {row.accessLabel}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <PilotRowActions row={row} />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(20rem,1fr)]">
         <Card>
@@ -218,5 +274,51 @@ export default async function AdminUsersPage() {
         </CardContent>
       </Card>
     </main>
+  );
+}
+
+function PilotStatusBadge({
+  statusKey,
+  children,
+}: {
+  statusKey: PilotStatusKey;
+  children: ReactNode;
+}) {
+  if (statusKey === "expired_invite") {
+    return <Badge variant="destructive">{children}</Badge>;
+  }
+  if (statusKey === "missing_access") {
+    return (
+      <Badge
+        variant="outline"
+        className="border-amber-300 bg-amber-50 text-amber-950 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-100"
+      >
+        {children}
+      </Badge>
+    );
+  }
+  if (statusKey === "ready") {
+    return <Badge variant="default">{children}</Badge>;
+  }
+  return <Badge variant="secondary">{children}</Badge>;
+}
+
+function PilotRowActions({ row }: { row: PilotCohortRow }) {
+  if (row.kind === "profile") {
+    return (
+      <Link
+        href={`/admin/users/${row.id}/edit`}
+        className="text-muted-foreground hover:text-foreground text-sm"
+      >
+        Review access
+      </Link>
+    );
+  }
+
+  return (
+    <div className="flex justify-end gap-2">
+      <ResendInviteButton inviteId={row.id} />
+      <RevokeInviteButton inviteId={row.id} />
+    </div>
   );
 }
