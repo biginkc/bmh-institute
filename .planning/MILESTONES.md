@@ -21,3 +21,24 @@ Archives:
 - `.planning/milestones/v1-follow-up-MILESTONE-AUDIT.md`
 
 ---
+
+## v1.1: Internal Pilot Operations (shipped 2026-05-09)
+
+Phases completed: 4 phases, 11 plans.
+
+Key accomplishments:
+
+- Added pilot cohort setup and access correction from the admin users flow.
+- Added learner onboarding guidance, first-step dashboard copy, and recovery links.
+- Added pilot monitoring in reports with blocker states, action links, and CSV export.
+- Added internal pilot runbook and reusable pre-pilot checklist.
+- Extended seeded e2e and production readiness coverage for pilot-critical flows.
+- Deployed current `main` to production and aliased `https://institute.bmhgroupkc.com`.
+- Verified production readiness with GitHub Actions run `25600994876`.
+
+Archives:
+
+- Roadmap and requirements remain in active planning files until the next milestone is initialized.
+- Verification: `.planning/phases/09-pilot-runbook-readiness/09-VERIFICATION.md`
+
+---
