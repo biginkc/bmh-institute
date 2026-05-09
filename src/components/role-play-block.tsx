@@ -111,8 +111,8 @@ export function RolePlayBlock({
       <iframe
         src={iframeSrc}
         title={title || "Role play"}
-        allow="microphone; clipboard-write"
-        sandbox="allow-scripts allow-same-origin allow-forms allow-clipboard-write"
+        allow="microphone; camera; clipboard-write"
+        sandbox="allow-scripts allow-same-origin allow-forms"
         className={cn("w-full", pending && "opacity-80")}
         style={{ height: `${heightPx}px` }}
       />
