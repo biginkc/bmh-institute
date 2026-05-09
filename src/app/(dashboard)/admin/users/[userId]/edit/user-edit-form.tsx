@@ -31,22 +31,10 @@ export function UserEditForm({
   const router = useRouter();
   const [systemRole, setSystemRole] = useState(initialSystemRole);
   const [status, setStatus] = useState(initialStatus);
-  const [roleGroupIds, setRoleGroupIds] = useState<string[]>(
-    initialRoleGroupIds,
-  );
   const formRef = useRef<HTMLDivElement>(null);
   const systemRoleRef = useRef(systemRole);
   const statusRef = useRef(status);
-  const roleGroupIdsRef = useRef(roleGroupIds);
   const [pending, startTransition] = useTransition();
-
-  function setGroupChecked(id: string, checked: boolean) {
-    const next = checked
-      ? Array.from(new Set([...roleGroupIdsRef.current, id]))
-      : roleGroupIdsRef.current.filter((x) => x !== id);
-    roleGroupIdsRef.current = next;
-    setRoleGroupIds(next);
-  }
 
   function getCurrentRoleGroupIds() {
     const checkedIds = Array.from(
@@ -54,9 +42,7 @@ export function UserEditForm({
         "input[data-role-group-id]:checked",
       ) ?? [],
     ).map((input) => input.dataset.roleGroupId);
-    const current = checkedIds.filter((id): id is string => Boolean(id));
-    roleGroupIdsRef.current = current;
-    return current;
+    return checkedIds.filter((id): id is string => Boolean(id));
   }
 
   function updateSystemRole(next: "owner" | "admin" | "learner") {
@@ -195,10 +181,7 @@ export function UserEditForm({
                 <input
                   type="checkbox"
                   data-role-group-id={rg.id}
-                  checked={roleGroupIds.includes(rg.id)}
-                  onChange={(e) =>
-                    setGroupChecked(rg.id, e.currentTarget.checked)
-                  }
+                  defaultChecked={initialRoleGroupIds.includes(rg.id)}
                   className="size-4"
                 />
                 {rg.name}
