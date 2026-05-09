@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v1 follow-up
 milestone_name: Production Readiness Evidence
 status: ready
-stopped_at: latest production-readiness workflow recorded; remaining blocker is email-link capture and DNS
-last_updated: "2026-05-09T02:43:00.000-05:00"
-last_activity: 2026-05-09 -- production-readiness run 25595576897 passed on latest main with email-link test skipped
+stopped_at: custom-domain production-readiness workflow recorded; remaining blocker is email-link capture
+last_updated: "2026-05-09T03:06:00.000-05:00"
+last_activity: 2026-05-09 -- production-readiness run 25596039223 passed on latest main against https://institute.bmhgroupkc.com with email-link test skipped
 progress:
   total_phases: 1
   completed_phases: 1
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-30)
 
 **Core value:** A VA can sign in via an admin invite, work through assigned programs and courses on their own time, take quizzes and submit assignments without supervision, and receive a certificate when they finish. Admins can author content, manage learners, review submissions, and see who is making progress without leaving the platform.
-**Current focus:** production readiness evidence current; remaining blocker is production email-link capture and custom-domain DNS
+**Current focus:** production readiness evidence current; remaining blocker is production email-link capture
 
 ## Current Position
 
 Phase: production readiness follow-up
 Plan: quick task complete
 Status: Complete
-Last activity: 2026-05-09 -- GitHub Actions production-readiness run `25595576897` passed on latest `main`; 2 tests passed and the known email-link test skipped
+Last activity: 2026-05-09 -- GitHub Actions production-readiness run `25596039223` passed on latest `main` against `https://institute.bmhgroupkc.com`; 2 tests passed and the known email-link test skipped
 
 Progress: [██████████] 100%
 
@@ -91,6 +91,7 @@ Recent decisions affecting current work:
 - 2026-05-09 (quick task): Added invite acceptance coverage using Supabase Admin `generateLink({ type: "invite" })` in the non-production test project. This drives the real browser through the invite action link, `/auth/callback`, first password setup, dashboard access, and DB assertions for accepted invite/profile/role group state. It also fixed hash-token invite callbacks by adding a browser bridge and `/auth/apply-invite` route. Local `npm run verify` passed, and PR #40 CI passed both `Verify` and `Seeded Playwright E2E`.
 - 2026-05-09 (quick task): Defined the performance trigger policy for GitHub issue #9 in `docs/performance-thresholds.md`. PERF-01..03 remain parked until route timing, signed URL timing, production-readiness duration, or volume thresholds are breached.
 - 2026-05-09 (quick task): Ran production readiness from latest `main` after PRs #40 and #41. GitHub Actions run `25595576897` passed in 1m44s with 2 passed and 1 skipped for the known email-link capture gap. Local DNS check still returned no A or CNAME answer for `institute.bmhgroupkc.com`.
+- 2026-05-09 (quick task): Configured `institute.bmhgroupkc.com` in Tailor Brands/GoDaddy DNS with `A institute 76.76.21.21`, issued Vercel certificate `cert_KhnuksU3ftVPXtOglGh0EmKv`, updated GitHub secret `E2E_PROD_BASE_URL` to `https://institute.bmhgroupkc.com`, and verified GitHub Actions production-readiness run `25596039223` passed from `main`.
 
 ### Pending Todos
 
@@ -98,7 +99,7 @@ None yet.
 
 ### Blockers/Concerns
 
-- Production invite/password-reset email capture remains a production-readiness gap. Non-production invite acceptance no longer requires email capture because the E2E suite uses Supabase Admin generated action links.
+- Production invite/password-reset email capture remains the only known production-readiness gap. Non-production invite acceptance no longer requires email capture because the E2E suite uses Supabase Admin generated action links.
 - Phase 5 should read sibling repos for reference only. Do not write to Sandra, Closer Lab, Jitter, or Sandra Design System.
 
 ## Deferred Items
