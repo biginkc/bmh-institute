@@ -15,6 +15,8 @@ Screenshots were captured under `test-results/polish-triage/` and are intentiona
 
 ### P1: Admin user and invite tables are clipped on narrow viewports
 
+Status: fixed in PR pending for `codex/20260509-admin-users-responsive-tables`.
+
 URLs:
 
 - `/admin/users`
@@ -35,6 +37,13 @@ Recommended fix:
 - Wrap admin tables in `overflow-x-auto`.
 - Set sensible min widths for table content.
 - Consider stacked mobile cards later if the table still feels cramped.
+
+Resolution:
+
+- Added explicit page-level scroll wrappers for pilot setup, active members, and pending invites tables.
+- Increased active members and pending invites minimum table widths.
+- Added `src/app/(dashboard)/admin/users/page.test.ts` coverage that asserts the dense tables render named horizontal scroll regions.
+- Verified with focused page tests and `npm run verify`.
 
 ### P1: Learner empty state is technically correct but not operationally helpful
 

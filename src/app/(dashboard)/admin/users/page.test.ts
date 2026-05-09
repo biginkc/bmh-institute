@@ -141,4 +141,46 @@ describe("AdminUsersPage (WR-05)", () => {
     expect(html).toContain("Role group assigned");
     expect(html).toContain("Send invite");
   });
+
+  it("wraps dense users tables in horizontal scroll regions", async () => {
+    tableData = {
+      profiles: [
+        {
+          id: "user-ready",
+          email: "ready@example.com",
+          full_name: "Ready Learner",
+          system_role: "learner",
+          status: "active",
+          created_at: "2026-05-09T10:00:00.000Z",
+        },
+      ],
+      invites: [
+        {
+          id: "invite-pending",
+          email: "pending@example.com",
+          system_role: "learner",
+          role_group_ids: ["group-1"],
+          created_at: "2026-05-09T11:00:00.000Z",
+          accepted_at: null,
+          expires_at: "2026-05-10T00:00:00.000Z",
+        },
+      ],
+      role_groups: [{ id: "group-1", name: "Pilot Learners" }],
+      user_role_groups: [
+        { user_id: "user-ready", role_group_id: "group-1" },
+      ],
+    };
+
+    const html = renderToStaticMarkup(await AdminUsersPage());
+
+    expect(html).toMatch(
+      /data-testid="pilot-setup-table-scroll" class="[^"]*overflow-x-auto/,
+    );
+    expect(html).toMatch(
+      /data-testid="active-members-table-scroll" class="[^"]*overflow-x-auto/,
+    );
+    expect(html).toMatch(
+      /data-testid="pending-invites-table-scroll" class="[^"]*overflow-x-auto/,
+    );
+  });
 });
