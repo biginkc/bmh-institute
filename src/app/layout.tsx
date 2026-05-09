@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -32,7 +33,9 @@ export default function RootLayout({
     >
       <body className="flex min-h-full flex-col">
         <TooltipProvider>{children}</TooltipProvider>
-        <WalkthroughCaptionOverlay />
+        <Suspense fallback={null}>
+          <WalkthroughCaptionOverlay />
+        </Suspense>
         <Toaster richColors position="top-right" />
       </body>
     </html>
