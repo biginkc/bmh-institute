@@ -22,7 +22,7 @@ The application is not production-ready until repeatable validation proves the f
 | Storage uploads | Ready | On-demand production readiness spec validates real production storage upload, signed URL creation, user-prefix path, and cleanup. |
 | Access control and RLS isolation | Ready | Production readiness spec validates route protection, assigned versus unassigned learner access, direct RLS reads, cross-user submission isolation, and storage prefix isolation. |
 | Content safety | Ready | Production readiness spec validates unsafe text-block save sanitization, learner render safety, HTTPS-only embed validation, and iframe sandboxing. |
-| Rate limiting and abuse controls | Partially ready | Code, unit, and live RPC proof exist, but production UI behavior under real limits needs controlled validation. |
+| Rate limiting and abuse controls | Partially ready | Forgot-password production UI behavior is covered with disposable email counters. Set-password production UI behavior still needs reset-link or recovery-session automation. |
 | Deployment and rollback | Blocked | The manual production-readiness workflow runs from GitHub Actions, but the custom domain does not resolve and rollback validation is not automated. |
 | Observability and recovery | Ready | Playwright traces, screenshots, cleanup verification, and an interrupted-run cleanup runbook now exist. |
 
@@ -69,6 +69,7 @@ Latest evidence:
 - Local production-readiness run on 2026-05-09 passed after adding content-safety coverage. It verified unsafe text-block sanitization through the admin UI, HTTPS-only embed validation through the admin UI, sandboxed learner iframe rendering, and cleanup of the disposable fixture.
 - Local production-readiness run on 2026-05-09 passed after adding access-control coverage. It verified assigned and unassigned learner route behavior, direct production RLS reads through learner-scoped Supabase clients, cross-user submission isolation, blocked cross-prefix storage reads and writes, and cleanup of the disposable fixture.
 - Production-readiness recovery runbook added on 2026-05-09 at `docs/production-readiness-recovery.md`, backed by the dry-run-first `npm run cleanup:prod-readiness` script. The first dry run found 5 timestamped storage leftovers from earlier canary runs; execute mode removed them. After fixing fixture cleanup, a fresh production-readiness run left 0 remaining leftovers.
+- Local production-readiness run on 2026-05-09 passed after adding forgot-password rate-limit coverage. It submitted a disposable `prd-ready-rate-*` email through the production UI until the real email counter exceeded the threshold, verified the UI remained enumeration-safe, and confirmed 0 disposable rate-limit email rows remained after cleanup.
 
 ## Required production validation scenarios
 
@@ -163,6 +164,16 @@ Current status: covered by `npm run test:prod:readiness`.
 - Interrupted-run cleanup has a documented manual runbook using disposable prefixes and recorded IDs.
 
 Current status: covered by `docs/production-readiness-recovery.md` and `npm run cleanup:prod-readiness`.
+
+### Rate limiting and abuse controls
+
+- Forgot-password uses real production UI submissions with disposable `prd-ready-rate-*` emails.
+- The disposable email counter crosses the configured threshold in `auth_rate_limits`.
+- The UI remains enumeration-safe and shows the same success state after the threshold is consumed.
+- Disposable email rate-limit rows are removed after the check.
+- Set-password limit behavior still needs a real recovery session to validate through the production UI.
+
+Current status: forgot-password covered by `npm run test:prod:readiness`; set-password still blocked by email-link or recovery-session automation.
 
 ## Required production test infrastructure
 

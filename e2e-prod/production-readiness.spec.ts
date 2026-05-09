@@ -326,3 +326,51 @@ test.describe("production readiness email links", () => {
     );
   });
 });
+
+test.describe("production readiness rate limiting", () => {
+  test("keeps forgot-password enumeration-safe after the email limit is consumed", async ({
+    page,
+  }) => {
+    const admin = productionAdminClient();
+    const email = `prd-ready-rate-${Date.now()}-${crypto.randomUUID().slice(0, 8)}@bmh-institute.test`;
+
+    try {
+      await deleteRateLimitRows(admin, "email", email);
+
+      for (let index = 0; index < 4; index += 1) {
+        await page.goto("/forgot-password");
+        await page.getByLabel(/email/i).fill(email);
+        await page.getByRole("button", { name: /send reset link/i }).click();
+        await expect(
+          page.getByText(/check your inbox for a reset link/i),
+        ).toBeVisible();
+      }
+
+      const { data, error } = await admin
+        .from("auth_rate_limits")
+        .select("count")
+        .eq("key_type", "email")
+        .eq("key_value", email)
+        .order("count", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      expect(error).toBeNull();
+      expect((data?.count as number | undefined) ?? 0).toBeGreaterThan(3);
+    } finally {
+      await deleteRateLimitRows(admin, "email", email);
+    }
+  });
+});
+
+async function deleteRateLimitRows(
+  admin: ReturnType<typeof productionAdminClient>,
+  keyType: "email" | "ip",
+  keyValue: string,
+) {
+  const { error } = await admin
+    .from("auth_rate_limits")
+    .delete()
+    .eq("key_type", keyType)
+    .eq("key_value", keyValue);
+  if (error) throw error;
+}
