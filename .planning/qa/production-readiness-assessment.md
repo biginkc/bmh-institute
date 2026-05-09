@@ -72,6 +72,7 @@ Latest evidence:
 - Local production-readiness run on 2026-05-09 passed after adding forgot-password rate-limit coverage. It submitted a disposable `prd-ready-rate-*` email through the production UI until the real email counter exceeded the threshold, verified the UI remained enumeration-safe, and confirmed 0 disposable rate-limit email rows remained after cleanup.
 - GitHub Actions production-readiness run `25590873884` passed on 2026-05-09 from `main`. Result: 2 lifecycle and rate-limit tests passed, 1 email-link test skipped.
 - Vercel rollback drill passed on 2026-05-09. `sandra-university.vercel.app` was rolled back from `sandra-university-wlvsahai0-jarrad-5416s-projects.vercel.app` to `sandra-university-muv2z3cz7-jarrad-5416s-projects.vercel.app`, verified by `vercel inspect`, then restored to `sandra-university-wlvsahai0-jarrad-5416s-projects.vercel.app` and verified by `vercel inspect` plus an HTTP 307 health response.
+- GitHub Actions production-readiness run `25595576897` passed on 2026-05-09 from latest `main` after PRs #40 and #41. Result: 2 lifecycle and rate-limit tests passed, 1 email-link test skipped. The custom domain still returned no A or CNAME answer during local DNS check.
 
 ## Required production validation scenarios
 
@@ -212,4 +213,4 @@ Current status: forgot-password covered by `npm run test:prod:readiness`; set-pa
 
 BMH Institute can be called production-ready only after the production readiness workflow repeatedly passes auth and onboarding, password reset, learner lifecycle, admin review, certificates, storage, access control, content safety, rate limiting, deployment, rollback, observability, cleanup, and recovery checks against real production services with no mocked providers.
 
-As of 2026-05-09, production lifecycle, storage, access control, admin review, certificates, content-safety, forgot-password rate limiting, rollback, and recovery checks pass. The app is still not production-ready because invite acceptance, password reset, and set-password rate-limit UI proof require real production email-link capture, and `institute.bmhgroupkc.com` still requires DNS configuration.
+As of 2026-05-09, production lifecycle, storage, access control, admin review, certificates, content-safety, forgot-password rate limiting, rollback, and recovery checks pass on latest `main`. The app is still not production-ready because invite acceptance, password reset, and set-password rate-limit UI proof require real production email-link capture, and `institute.bmhgroupkc.com` still requires DNS configuration.
