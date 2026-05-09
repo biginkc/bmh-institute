@@ -79,6 +79,7 @@ Latest evidence:
 - Production email-link capture harness added on 2026-05-09. It uses an IMAP-readable mailbox to retrieve real Supabase invite and recovery links, then completes invite acceptance, first-password setup, password reset, and sign-in through the browser.
 - PR #45 merged on 2026-05-09. GitHub Actions production-readiness run `25598402881` passed from `main` against `https://institute.bmhgroupkc.com`. Result: 4 passed, 0 skipped.
 - PR #57 merged on 2026-05-09. It added embedded Closer Lab role-play results to admin user reports, deployed to Vercel production deployment `dpl_Pa1Zy7Tx5ou2hW9zTeJrMG8ZCHQD`, and GitHub Actions production-readiness run `25609474981` passed from `main` afterward. Result: 4 passed, 0 skipped.
+- PR #60 merged on 2026-05-09. It added a durable walkthrough onboarding seed, production was reseeded with `BMH Institute Walkthrough Onboarding`, Vercel production was redeployed as `dpl_XsRNRRUn2namyh8guRVqzhkbsPrt`, and GitHub Actions production-readiness run `25610410328` passed afterward. Result: 4 passed, 0 skipped.
 
 ## Required production validation scenarios
 
@@ -216,4 +217,4 @@ Current status: covered by `npm run test:prod:readiness`.
 
 BMH Institute can be called production-ready after the production readiness workflow passes auth and onboarding, password reset, learner lifecycle, admin review, certificates, storage, access control, content safety, rate limiting, deployment, rollback, observability, cleanup, and recovery checks against real production services with no mocked providers.
 
-As of 2026-05-09, GitHub Actions production-readiness run `25609474981` passed from `main` with all four checks green against `https://institute.bmhgroupkc.com`. The app is production-ready for the internal pilot scope, including the embedded Closer Lab role-play walkthrough and admin report visibility for completed role plays. Threshold-triggered performance work remains intentionally parked for a later milestone.
+As of 2026-05-09, GitHub Actions production-readiness run `25610410328` passed from `main` with all four checks green against `https://institute.bmhgroupkc.com`. The app is production-ready for the internal pilot scope, including durable walkthrough onboarding content, the embedded Closer Lab role-play walkthrough, and admin report visibility for completed role plays. Threshold-triggered performance work remains intentionally parked for a later milestone.
