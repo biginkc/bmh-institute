@@ -20,6 +20,7 @@ describe("SidebarNav ecosystem shell contract", () => {
     expect(screen.getByRole("navigation", { name: "Primary" })).toBeTruthy();
     expect(screen.getByRole("link", { name: /dashboard/i })).toBeTruthy();
     expect(screen.getByRole("link", { name: /certificates/i })).toBeTruthy();
+    expect(screen.getByRole("link", { name: /my profile/i })).toBeTruthy();
     expect(screen.queryByRole("link", { name: /programs/i })).toBeNull();
     expect(screen.queryByText("7")).toBeNull();
   });
@@ -44,5 +45,12 @@ describe("SidebarNav ecosystem shell contract", () => {
     expect(activeLink).toHaveClass("border-foreground");
     expect(activeLink).not.toHaveClass("bg-primary");
     expect(activeLink).not.toHaveClass("text-primary-foreground");
+  });
+
+  it("keeps the sibling app flat primary nav without section labels", () => {
+    render(<SidebarNav isAdmin pendingSubmissionsCount={0} />);
+
+    expect(screen.queryByText("Learn")).toBeNull();
+    expect(screen.queryByText("Admin")).toBeNull();
   });
 });
