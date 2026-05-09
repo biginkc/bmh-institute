@@ -24,7 +24,8 @@ export default async function SetPasswordPage() {
         <CardHeader>
           <CardTitle>Set your password</CardTitle>
           <CardDescription>
-            Welcome to BMH Institute. Pick a password and you&apos;re in.
+            Welcome to BMH Institute. Pick a password, then start your assigned
+            training from the dashboard.
           </CardDescription>
         </CardHeader>
         <CardContent>
