@@ -14,10 +14,17 @@ import { createClient } from "@/lib/supabase/server";
 
 export default async function AdminProgramsPage() {
   const supabase = await createClient();
-  const { data: programs } = await supabase
-    .from("programs")
-    .select("id, title, description, course_order_mode, is_published, sort_order")
-    .order("sort_order");
+  const [programsRes, programCoursesRes] = await Promise.all([
+    supabase
+      .from("programs")
+      .select("id, title, description, course_order_mode, is_published, sort_order")
+      .order("sort_order"),
+    supabase.from("program_courses").select("program_id"),
+  ]);
+  const programs = addProgramCourseCounts(
+    (programsRes.data ?? []) as ProgramListRow[],
+    (programCoursesRes.data ?? []) as ProgramCourseCountRow[],
+  );
 
   return (
     <main className="flex-1 p-6 md:p-10">
@@ -37,7 +44,7 @@ export default async function AdminProgramsPage() {
         />
       </div>
 
-      {(programs ?? []).length === 0 ? (
+      {programs.length === 0 ? (
         <p className="text-muted-foreground text-sm">
           No programs yet. Create one to get started.
         </p>
@@ -47,16 +54,20 @@ export default async function AdminProgramsPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Title</TableHead>
+                <TableHead className="text-right">Courses</TableHead>
                 <TableHead>Order</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Edit</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {(programs ?? []).map((p) => (
+              {programs.map((p) => (
                 <TableRow key={p.id as string}>
                   <TableCell className="font-medium">
                     {p.title as string}
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums">
+                    {p.courseCount}
                   </TableCell>
                   <TableCell>
                     <Badge variant="secondary">
@@ -86,4 +97,31 @@ export default async function AdminProgramsPage() {
       )}
     </main>
   );
+}
+
+type ProgramListRow = {
+  id: string;
+  title: string;
+  description: string | null;
+  course_order_mode: string;
+  is_published: boolean;
+  sort_order: number;
+};
+
+type ProgramCourseCountRow = {
+  program_id: string;
+};
+
+export function addProgramCourseCounts<T extends { id: string }>(
+  programs: T[],
+  programCourses: ProgramCourseCountRow[],
+): Array<T & { courseCount: number }> {
+  const countByProgram = new Map<string, number>();
+  for (const row of programCourses) {
+    countByProgram.set(row.program_id, (countByProgram.get(row.program_id) ?? 0) + 1);
+  }
+  return programs.map((program) => ({
+    ...program,
+    courseCount: countByProgram.get(program.id) ?? 0,
+  }));
 }
