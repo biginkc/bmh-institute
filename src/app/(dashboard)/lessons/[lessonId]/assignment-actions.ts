@@ -58,6 +58,20 @@ export async function submitAssignment(input: {
       ? (input.submission_file_path ?? null)
       : null;
 
+  // Resolve review policy from the assignment itself — never trust the client.
+  // When an assignment doesn't require review, the submission is auto-approved
+  // so the existing `trg_after_assignment_approved` trigger marks the lesson
+  // complete. Default to requiring review if the row can't be read.
+  const { data: assignmentRow } = await supabase
+    .from("assignments")
+    .select("requires_review")
+    .eq("id", input.assignmentId)
+    .maybeSingle();
+  const requiresReview =
+    (assignmentRow as { requires_review?: boolean } | null)?.requires_review ??
+    true;
+  const status = requiresReview ? "submitted" : "approved";
+
   const { error } = await supabase.from("assignment_submissions").insert({
     assignment_id: input.assignmentId,
     lesson_id: input.lessonId,
@@ -65,30 +79,36 @@ export async function submitAssignment(input: {
     submission_text: normalizedText,
     submission_url: normalizedUrl,
     submission_file_path: normalizedFilePath,
-    status: "submitted",
+    status,
+    // Auto-approved submissions have no human reviewer; stamp the time so they
+    // don't read as "pending" in admin views.
+    reviewed_at: requiresReview ? null : new Date().toISOString(),
   });
   if (error) return { ok: false, error: error.message };
 
-  // Notify admins that there's work to review. Fire-and-forget so SMTP
-  // hiccups don't roll back the submission.
-  await notifyAdminsOfNewSubmission({
-    supabase,
-    learnerId: user.id,
-    assignmentId: input.assignmentId,
-    lessonId: input.lessonId,
-    kind:
-      input.submission_type === "text"
-        ? "text"
-        : input.submission_type === "url"
-          ? "url"
-          : "file",
-    preview:
-      input.submission_type === "text"
-        ? (normalizedText ?? "")
-        : input.submission_type === "url"
-          ? (normalizedUrl ?? "")
-          : filenameFromPath(normalizedFilePath),
-  });
+  // Only ping admins when there's actually something to review. Auto-completed
+  // submissions need no action. Fire-and-forget so SMTP hiccups don't roll back
+  // the submission.
+  if (requiresReview) {
+    await notifyAdminsOfNewSubmission({
+      supabase,
+      learnerId: user.id,
+      assignmentId: input.assignmentId,
+      lessonId: input.lessonId,
+      kind:
+        input.submission_type === "text"
+          ? "text"
+          : input.submission_type === "url"
+            ? "url"
+            : "file",
+      preview:
+        input.submission_type === "text"
+          ? (normalizedText ?? "")
+          : input.submission_type === "url"
+            ? (normalizedUrl ?? "")
+            : filenameFromPath(normalizedFilePath),
+    });
+  }
 
   revalidatePath(`/lessons/${input.lessonId}`);
   revalidatePath(`/dashboard`);
