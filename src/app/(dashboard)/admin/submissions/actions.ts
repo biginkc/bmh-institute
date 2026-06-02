@@ -6,6 +6,7 @@ import { requireAdmin } from "@/lib/auth/guard";
 import { getAppUrl } from "@/lib/app-url";
 import { createClient } from "@/lib/supabase/server";
 import { sendEmail } from "@/lib/email/send";
+import { emitSandraCourseCompletedForLesson } from "@/lib/integrations/sandra/course-completed";
 import {
   renderApprovedEmail,
   renderRevisionEmail,
@@ -32,6 +33,8 @@ export async function approveSubmission(input: {
     .eq("id", input.submissionId);
   if (error) return { ok: false, error: error.message };
 
+  await emitCompletionForApprovedSubmission(supabase, input.submissionId);
+
   // Fire-and-forget email — SMTP hiccups shouldn't block the approval.
   await notifyReview({
     submissionId: input.submissionId,
@@ -42,6 +45,23 @@ export async function approveSubmission(input: {
   revalidatePath("/admin/submissions");
   revalidatePath("/dashboard");
   return { ok: true };
+}
+
+async function emitCompletionForApprovedSubmission(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  submissionId: string,
+): Promise<void> {
+  const { data: row } = await supabase
+    .from("assignment_submissions")
+    .select("lesson_id, user_id")
+    .eq("id", submissionId)
+    .maybeSingle();
+  if (!row?.lesson_id || !row?.user_id) return;
+
+  await emitSandraCourseCompletedForLesson(supabase, {
+    userId: row.user_id,
+    lessonId: row.lesson_id,
+  });
 }
 
 export async function requestRevision(input: {

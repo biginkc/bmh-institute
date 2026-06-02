@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { emitSandraCourseCompletedForLesson } from "@/lib/integrations/sandra/course-completed";
 import {
   scoreQuizAttempt,
   type ScoringQuestion,
@@ -149,6 +150,13 @@ export async function submitQuizAttempt(input: {
 
   revalidatePath(`/lessons/${input.lessonId}`);
   revalidatePath(`/dashboard`);
+
+  if (result.passed) {
+    await emitSandraCourseCompletedForLesson(supabase, {
+      userId: user.id,
+      lessonId: input.lessonId,
+    });
+  }
 
   return {
     ok: true,
