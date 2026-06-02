@@ -38,7 +38,8 @@ export function UserEditForm({
   const [pending, startTransition] = useTransition();
 
   useEffect(() => {
-    setHydrated(true);
+    const timer = window.setTimeout(() => setHydrated(true), 0);
+    return () => window.clearTimeout(timer);
   }, []);
 
   function getCurrentRoleGroupIds() {

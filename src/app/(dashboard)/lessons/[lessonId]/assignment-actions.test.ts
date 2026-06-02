@@ -10,9 +10,10 @@ vi.mock("@/lib/email/send", () => ({
   sendEmail: vi.fn(async () => undefined),
 }));
 
-let insertSpy = vi.fn(async (_row: Record<string, unknown>) => ({
-  error: null,
-}));
+const insertSpy = vi.fn(async (row: Record<string, unknown>) => {
+  void row;
+  return { error: null };
+});
 let insertedRow: Record<string, unknown> | null = null;
 
 vi.mock("@/lib/supabase/server", () => ({
@@ -129,4 +130,3 @@ describe("submitAssignment (INTEG-04 file path validation)", () => {
     });
   });
 });
-

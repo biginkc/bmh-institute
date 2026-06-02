@@ -9,14 +9,17 @@ vi.mock("next/cache", () => ({
   revalidatePath: vi.fn(),
 }));
 
-const sendEmailSpy = vi.fn(async (_args: unknown) => undefined);
+const sendEmailSpy = vi.fn(async (args: unknown) => {
+  void args;
+});
 vi.mock("@/lib/email/send", () => ({
   sendEmail: (args: unknown) => sendEmailSpy(args),
 }));
 
-let insertSpy = vi.fn(async (_row: Record<string, unknown>) => ({
-  error: null,
-}));
+const insertSpy = vi.fn(async (row: Record<string, unknown>) => {
+  void row;
+  return { error: null };
+});
 let insertedRow: Record<string, unknown> | null = null;
 
 // Flipped per-test to drive the review policy returned by the assignments row.

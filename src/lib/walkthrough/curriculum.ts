@@ -289,8 +289,8 @@ export const walkthroughModules: WalkthroughModule[] = [
 
 export function getWalkthroughContentTypeCounts() {
   const counts = new Map<string, number>();
-  for (const module of walkthroughModules) {
-    for (const lesson of module.lessons) {
+  for (const walkthroughModule of walkthroughModules) {
+    for (const lesson of walkthroughModule.lessons) {
       counts.set(lesson.type, (counts.get(lesson.type) ?? 0) + 1);
       if (lesson.type === "content") {
         for (const block of lesson.blocks) {
