@@ -107,8 +107,8 @@ async function sendEnrollmentEmail(input: {
   roleGroupIds: string[];
   appUrl: string;
 }): Promise<void> {
-  let programs: Array<{ id: string; title: string }> = [];
-  let standaloneCourses: Array<{ id: string; title: string }> = [];
+  const programs: Array<{ id: string; title: string }> = [];
+  const standaloneCourses: Array<{ id: string; title: string }> = [];
 
   if (input.roleGroupIds.length > 0) {
     // Programs accessible via any of the invitee's role groups.

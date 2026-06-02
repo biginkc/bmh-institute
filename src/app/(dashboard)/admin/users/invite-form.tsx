@@ -83,7 +83,7 @@ export function InviteForm({
       ) : null}
       {state && state.ok ? (
         <div className="border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-100 rounded-md border px-3 py-2 text-sm">
-          Invite sent to {state.email}. They'll receive a Supabase email with a signup link.
+          Invite sent to {state.email}. They&apos;ll receive a Supabase email with a signup link.
         </div>
       ) : null}
 

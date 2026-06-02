@@ -11,6 +11,7 @@ export type WritePathFixture = {
   quizId: string;
   quizLessonId: string;
   correctOptionText: string;
+  incorrectOptionText: string;
   textAssignmentId: string;
   textAssignmentLessonId: string;
   fileAssignmentId: string;
@@ -165,6 +166,7 @@ export async function createWritePathFixture(
     sort_order: 10,
   });
   const correctOptionText = `${prefix} confirm the next step`;
+  const incorrectOptionText = `${prefix} end without notes`;
   await admin
     .from("answer_options")
     .insert([
@@ -176,7 +178,7 @@ export async function createWritePathFixture(
       },
       {
         question_id: questionId,
-        option_text: `${prefix} end without notes`,
+        option_text: incorrectOptionText,
         is_correct: false,
         sort_order: 20,
       },
@@ -189,6 +191,7 @@ export async function createWritePathFixture(
     lesson_type: "quiz",
     quiz_id: quizId,
     is_required_for_completion: true,
+    prerequisite_lesson_id: contentLessonId,
     sort_order: 20,
   });
 
@@ -205,6 +208,7 @@ export async function createWritePathFixture(
     lesson_type: "assignment",
     assignment_id: textAssignmentId,
     is_required_for_completion: true,
+    prerequisite_lesson_id: quizLessonId,
     sort_order: 30,
   });
 
@@ -221,6 +225,7 @@ export async function createWritePathFixture(
     lesson_type: "assignment",
     assignment_id: fileAssignmentId,
     is_required_for_completion: true,
+    prerequisite_lesson_id: textAssignmentLessonId,
     sort_order: 40,
   });
 
@@ -235,6 +240,7 @@ export async function createWritePathFixture(
     quizId,
     quizLessonId,
     correctOptionText,
+    incorrectOptionText,
     textAssignmentId,
     textAssignmentLessonId,
     fileAssignmentId,
