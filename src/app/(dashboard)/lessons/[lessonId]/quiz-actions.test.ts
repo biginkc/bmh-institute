@@ -16,8 +16,10 @@ let questionsRows: Array<{
   sort_order: number;
   answer_options: Array<{ id: string; is_correct: boolean }>;
 }> = [];
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let attemptInsertSpy = vi.fn(async (_rows?: any) => ({ data: null, error: null }));
+const attemptInsertSpy = vi.fn(async (rows?: unknown) => {
+  void rows;
+  return { data: null, error: null };
+});
 let adminFactoryThrows: Error | null = null;
 let lastInsertedAttempt: Record<string, unknown> | null = null;
 

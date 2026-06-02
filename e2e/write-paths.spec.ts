@@ -78,6 +78,40 @@ async function hasCourseAndProgramCertificates(
   return Boolean(course.data?.id && program.data?.id);
 }
 
+async function issuedCertificateRefs(
+  admin: ReturnType<typeof writePathAdminClient>,
+  fixture: WritePathFixture,
+): Promise<{
+  courseId: string;
+  coursePdfPath: string | null;
+  programId: string;
+  programPdfPath: string | null;
+} | null> {
+  const [course, program] = await Promise.all([
+    admin
+      .from("certificates")
+      .select("id, certificate_number, pdf_path")
+      .eq("user_id", fixture.learner.id)
+      .eq("course_id", fixture.courseId)
+      .maybeSingle(),
+    admin
+      .from("program_certificates")
+      .select("id, certificate_number, pdf_path")
+      .eq("user_id", fixture.learner.id)
+      .eq("program_id", fixture.programId)
+      .maybeSingle(),
+  ]);
+  if (course.error || program.error || !course.data || !program.data) {
+    return null;
+  }
+  return {
+    courseId: course.data.id as string,
+    coursePdfPath: course.data.pdf_path as string | null,
+    programId: program.data.id as string,
+    programPdfPath: program.data.pdf_path as string | null,
+  };
+}
+
 async function inviteWasAccepted(
   admin: ReturnType<typeof writePathAdminClient>,
   fixture: InviteAcceptanceFixture,
@@ -180,9 +214,31 @@ test.describe("durable write-path coverage", () => {
       await expect(page.getByText(/lesson complete/i)).toBeVisible();
 
       await page.goto(`/lessons/${fixture.quizLessonId}`);
+      await page.getByText(fixture.incorrectOptionText).click();
+      await page.getByRole("button", { name: /submit quiz/i }).click();
+      await expect(page.getByText(/didn.t pass/i)).toBeVisible();
+      await expect(page.getByText(/score: 0%/i)).toBeVisible();
+      await page.goto(`/courses/${fixture.courseId}`);
+      await expect(
+        page
+          .locator("li.cursor-not-allowed")
+          .filter({ hasText: `${fixture.prefix} Text Assignment Lesson` }),
+      ).toBeVisible();
+
+      await page.goto(`/lessons/${fixture.quizLessonId}`);
+      const retakeButton = page.getByRole("button", { name: /retake quiz/i });
+      if (await retakeButton.isVisible()) {
+        await retakeButton.click();
+      }
       await page.getByText(fixture.correctOptionText).click();
       await page.getByRole("button", { name: /submit quiz/i }).click();
       await expect(page.getByText(/^Passed$/)).toBeVisible();
+      await page.goto(`/courses/${fixture.courseId}`);
+      await expect(
+        page
+          .locator("a")
+          .filter({ hasText: `${fixture.prefix} Text Assignment Lesson` }),
+      ).toBeVisible();
 
       await page.goto(`/lessons/${fixture.textAssignmentLessonId}`);
       await page.getByLabel(/response/i).fill(`${fixture.prefix} first response`);
@@ -245,10 +301,25 @@ test.describe("durable write-path coverage", () => {
           timeout: 20_000,
         })
         .toBe(true);
+      const certificateRefs = await issuedCertificateRefs(admin, fixture);
+      expect(certificateRefs).not.toBeNull();
+      expect(certificateRefs?.coursePdfPath).toBe("pending");
+      expect(certificateRefs?.programPdfPath).toBe("pending");
 
       await page.goto("/certificates");
       await expect(page.getByText(`${fixture.prefix} Course`)).toBeVisible();
       await expect(page.getByText(`${fixture.prefix} Program`)).toBeVisible();
+      await page.goto(`/certificates/course/${certificateRefs!.courseId}`);
+      await expect(page.locator(".print-cert")).toContainText(
+        `${fixture.prefix} Course`,
+      );
+      await page.evaluate(() => {
+        window.print = () => window.sessionStorage.setItem("print-called", "1");
+      });
+      await page.getByRole("button", { name: /print \/ save pdf/i }).click();
+      await expect
+        .poll(() => page.evaluate(() => window.sessionStorage.getItem("print-called")))
+        .toBe("1");
 
       const unassignedContext = await browser.newContext();
       const unassigned = await unassignedContext.newPage();

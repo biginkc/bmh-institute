@@ -14,6 +14,7 @@ vi.mock("@/lib/auth/guard", () => ({
       email: "a@b.com",
       system_role: "admin",
       full_name: "Admin",
+      status: "active",
     };
   }),
 }));
@@ -61,6 +62,7 @@ describe("AdminUsersPage (WR-05)", () => {
         email: "a@b.com",
         system_role: "admin",
         full_name: "Admin",
+        status: "active",
       };
     });
   });

@@ -13,12 +13,29 @@ import { describe, expect, it, vi } from "vitest";
 import { createClient as createSbClient } from "@supabase/supabase-js";
 import { randomBytes } from "node:crypto";
 
+const serverClientMock = vi.hoisted(() => ({
+  client: null as unknown,
+}));
+
 vi.mock("@/lib/auth/guard", () => ({
   requireAdmin: vi.fn(async () => ({
     id: "00000000-0000-0000-0000-000000000000",
     email: "harden-03-test@bmh.invalid",
     system_role: "owner",
   })),
+}));
+
+vi.mock("@/lib/supabase/server", () => ({
+  createClient: vi.fn(async () => {
+    if (!serverClientMock.client) {
+      throw new Error("Integration server client mock was not initialized.");
+    }
+    return serverClientMock.client;
+  }),
+}));
+
+vi.mock("next/cache", () => ({
+  revalidatePath: vi.fn(),
 }));
 
 import { deleteUser } from "./actions";
@@ -50,6 +67,7 @@ describe.skipIf(!envPresent)(
             "Integration test requires TEST_SUPABASE_URL, TEST_SUPABASE_ANON_KEY, TEST_SUPABASE_SERVICE_ROLE_KEY in .env.test.local",
           );
         }
+        serverClientMock.client = admin;
 
         const email = `harden-03-${randomBytes(8).toString("hex")}@bmh.invalid`;
         const password = `${randomBytes(16).toString("base64url")}!Aa1`;
@@ -108,6 +126,7 @@ describe.skipIf(!envPresent)(
             "Integration test requires TEST_SUPABASE_URL, TEST_SUPABASE_ANON_KEY, TEST_SUPABASE_SERVICE_ROLE_KEY in .env.test.local",
           );
         }
+        serverClientMock.client = admin;
 
         const email = `harden-03-${randomBytes(8).toString("hex")}@bmh.invalid`;
         const password = `${randomBytes(16).toString("base64url")}!Aa1`;
