@@ -8,7 +8,7 @@ const calls: string[] = [];
 vi.mock("@/lib/auth/guard", () => ({
   requireAdmin: vi.fn(async () => {
     calls.push("requireAdmin");
-    return { id: "admin-1", email: "a@b.com", system_role: "admin", full_name: "Admin" };
+    return { id: "admin-1", email: "a@b.com", system_role: "admin", full_name: "Admin", status: "active" };
   }),
 }));
 
@@ -56,7 +56,7 @@ describe("ProgramReportPage", () => {
     vi.mocked(requireAdmin).mockReset();
     vi.mocked(requireAdmin).mockImplementation(async () => {
       calls.push("requireAdmin");
-      return { id: "admin-1", email: "a@b.com", system_role: "admin", full_name: "Admin" };
+      return { id: "admin-1", email: "a@b.com", system_role: "admin", full_name: "Admin", status: "active" };
     });
   });
 

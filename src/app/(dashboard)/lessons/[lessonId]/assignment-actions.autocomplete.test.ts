@@ -34,6 +34,12 @@ vi.mock("@/lib/supabase/server", () => ({
         },
       }),
     },
+    rpc: async (name: string) => {
+      if (name !== "fn_lesson_is_unlocked") {
+        throw new Error(`Unexpected rpc: ${name}`);
+      }
+      return { data: true, error: null };
+    },
     from: (table: string) => {
       if (table === "assignment_submissions") {
         return {
@@ -81,7 +87,7 @@ vi.mock("@/lib/supabase/server", () => ({
           select: () => ({
             eq: () => ({
               maybeSingle: async () => ({
-                data: { title: "Lesson one" },
+                data: { title: "Lesson one", assignment_id: "assignment-1" },
                 error: null,
               }),
             }),

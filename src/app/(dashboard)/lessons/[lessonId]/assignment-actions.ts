@@ -58,7 +58,25 @@ export async function submitAssignment(input: {
       ? (input.submission_file_path ?? null)
       : null;
 
-  // Resolve review policy from the assignment itself — never trust the client.
+  const { data: lessonRow } = await supabase
+    .from("lessons")
+    .select("assignment_id")
+    .eq("id", input.lessonId)
+    .maybeSingle();
+  if (lessonRow?.assignment_id !== input.assignmentId) {
+    return { ok: false, error: "This assignment does not belong to the lesson." };
+  }
+
+  const { data: unlocked } = await supabase.rpc("fn_lesson_is_unlocked", {
+    p_user_id: user.id,
+    p_lesson_id: input.lessonId,
+  });
+  if (unlocked !== true) {
+    return { ok: false, error: "Complete the prerequisite lessons first." };
+  }
+
+  // Resolve review policy from the assignment itself after proving it is bound
+  // to the submitted lesson. Never trust client-supplied lesson/assignment ids.
   // When an assignment doesn't require review, the submission is auto-approved
   // so the existing `trg_after_assignment_approved` trigger marks the lesson
   // complete. Default to requiring review if the row can't be read.

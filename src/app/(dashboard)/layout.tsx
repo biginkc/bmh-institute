@@ -27,9 +27,14 @@ export default async function DashboardLayout({
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("system_role, full_name")
+    .select("system_role, full_name, status")
     .eq("id", user.id)
     .maybeSingle();
+
+  if (profile?.status === "suspended") {
+    await supabase.auth.signOut();
+    redirect("/login");
+  }
 
   const isAdmin =
     profile?.system_role === "owner" || profile?.system_role === "admin";
