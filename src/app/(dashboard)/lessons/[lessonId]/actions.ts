@@ -2,6 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 
+import {
+  emitSandraCourseCompletedForBlock,
+  emitSandraCourseCompletedForLesson,
+} from "@/lib/integrations/sandra/course-completed";
 import { createClient } from "@/lib/supabase/server";
 
 export type MarkLessonResult =
@@ -53,6 +57,11 @@ export async function markLessonComplete(
     return { ok: false, error: insertError.message };
   }
 
+  await emitSandraCourseCompletedForLesson(supabase, {
+    userId: user.id,
+    lessonId,
+  });
+
   revalidatePath(`/lessons/${lessonId}`);
   revalidatePath(`/dashboard`);
 
@@ -95,6 +104,11 @@ export async function markBlockComplete(
     .select("id");
 
   if (error) return { ok: false, error: error.message };
+
+  await emitSandraCourseCompletedForBlock(supabase, {
+    userId: user.id,
+    blockId,
+  });
 
   revalidatePath(`/dashboard`);
   return { ok: true, alreadyMarked: (data ?? []).length === 0 };
@@ -141,6 +155,11 @@ export async function completeRolePlayBlock(
     .select("id");
 
   if (error) return { ok: false, error: error.message };
+
+  await emitSandraCourseCompletedForBlock(supabase, {
+    userId: user.id,
+    blockId,
+  });
 
   revalidatePath(`/dashboard`);
   return { ok: true, alreadyMarked: (data ?? []).length === 0 };
