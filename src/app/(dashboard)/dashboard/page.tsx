@@ -149,7 +149,7 @@ export default async function DashboardPage() {
 
       {error ? (
         <div className="border-destructive/30 bg-destructive/10 text-destructive rounded-md border px-4 py-3 text-sm">
-          We couldn't load your programs. Try refreshing. ({error.message})
+          We couldn&apos;t load your programs. Try refreshing. ({error.message})
         </div>
       ) : programs.length === 0 ? (
         <NoAssignments />

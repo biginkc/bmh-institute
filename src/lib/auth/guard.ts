@@ -9,6 +9,7 @@ export type AuthedProfile = {
   email: string;
   full_name: string;
   system_role: ProfileRole;
+  status: "active" | "invited" | "suspended";
 };
 
 export async function getAuthedProfile(): Promise<AuthedProfile | null> {
@@ -20,11 +21,15 @@ export async function getAuthedProfile(): Promise<AuthedProfile | null> {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("id, email, full_name, system_role")
+    .select("id, email, full_name, system_role, status")
     .eq("id", user.id)
     .maybeSingle();
 
   if (!profile) return null;
+  if (profile.status === "suspended") {
+    await supabase.auth.signOut();
+    return null;
+  }
   return profile as AuthedProfile;
 }
 

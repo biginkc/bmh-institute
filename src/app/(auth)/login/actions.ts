@@ -22,10 +22,30 @@ export async function signIn(
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
 
   if (error) {
     return { ok: false, error: error.message };
+  }
+
+  const userId = data.user?.id;
+  if (userId) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("status")
+      .eq("id", userId)
+      .maybeSingle();
+
+    if (profile?.status === "suspended") {
+      await supabase.auth.signOut();
+      return {
+        ok: false,
+        error: "Your account has been suspended. Contact your administrator.",
+      };
+    }
   }
 
   redirect(next);

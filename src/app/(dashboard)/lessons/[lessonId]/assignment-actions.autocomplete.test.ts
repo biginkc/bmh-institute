@@ -9,14 +9,17 @@ vi.mock("next/cache", () => ({
   revalidatePath: vi.fn(),
 }));
 
-const sendEmailSpy = vi.fn(async (_args: unknown) => undefined);
+const sendEmailSpy = vi.fn(async (args: unknown) => {
+  void args;
+});
 vi.mock("@/lib/email/send", () => ({
   sendEmail: (args: unknown) => sendEmailSpy(args),
 }));
 
-let insertSpy = vi.fn(async (_row: Record<string, unknown>) => ({
-  error: null,
-}));
+const insertSpy = vi.fn(async (row: Record<string, unknown>) => {
+  void row;
+  return { error: null };
+});
 let insertedRow: Record<string, unknown> | null = null;
 
 // Flipped per-test to drive the review policy returned by the assignments row.
@@ -30,6 +33,12 @@ vi.mock("@/lib/supabase/server", () => ({
           user: { id: "user-1", email: "learner@bmh.test" },
         },
       }),
+    },
+    rpc: async (name: string) => {
+      if (name !== "fn_lesson_is_unlocked") {
+        throw new Error(`Unexpected rpc: ${name}`);
+      }
+      return { data: true, error: null };
     },
     from: (table: string) => {
       if (table === "assignment_submissions") {
@@ -78,7 +87,7 @@ vi.mock("@/lib/supabase/server", () => ({
           select: () => ({
             eq: () => ({
               maybeSingle: async () => ({
-                data: { title: "Lesson one" },
+                data: { title: "Lesson one", assignment_id: "assignment-1" },
                 error: null,
               }),
             }),

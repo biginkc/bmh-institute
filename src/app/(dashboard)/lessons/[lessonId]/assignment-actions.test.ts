@@ -10,10 +10,14 @@ vi.mock("@/lib/email/send", () => ({
   sendEmail: vi.fn(async () => undefined),
 }));
 
-let insertSpy = vi.fn(async (_row: Record<string, unknown>) => ({
-  error: null,
-}));
+const insertSpy = vi.fn(async (row: Record<string, unknown>) => {
+  void row;
+  return { error: null };
+});
 let insertedRow: Record<string, unknown> | null = null;
+let lessonAssignmentId = "assignment-1";
+let lessonUnlocked = true;
+let assignmentRequiresReview = true;
 
 vi.mock("@/lib/supabase/server", () => ({
   createClient: vi.fn(async () => ({
@@ -23,6 +27,12 @@ vi.mock("@/lib/supabase/server", () => ({
           user: { id: "user-1", email: "learner@bmh.test" },
         },
       }),
+    },
+    rpc: async (name: string) => {
+      if (name !== "fn_lesson_is_unlocked") {
+        throw new Error(`Unexpected rpc: ${name}`);
+      }
+      return { data: lessonUnlocked, error: null };
     },
     from: (table: string) => {
       if (table === "assignment_submissions") {
@@ -57,7 +67,10 @@ vi.mock("@/lib/supabase/server", () => ({
           select: () => ({
             eq: () => ({
               maybeSingle: async () => ({
-                data: { title: "Upload assignment" },
+                data: {
+                  title: "Upload assignment",
+                  requires_review: assignmentRequiresReview,
+                },
                 error: null,
               }),
             }),
@@ -69,7 +82,10 @@ vi.mock("@/lib/supabase/server", () => ({
           select: () => ({
             eq: () => ({
               maybeSingle: async () => ({
-                data: { title: "Lesson one" },
+                data: {
+                  title: "Lesson one",
+                  assignment_id: lessonAssignmentId,
+                },
                 error: null,
               }),
             }),
@@ -86,6 +102,9 @@ import { submitAssignment } from "./assignment-actions";
 describe("submitAssignment (INTEG-04 file path validation)", () => {
   beforeEach(() => {
     insertedRow = null;
+    lessonAssignmentId = "assignment-1";
+    lessonUnlocked = true;
+    assignmentRequiresReview = true;
     insertSpy.mockReset();
     insertSpy.mockResolvedValue({ error: null });
   });
@@ -128,5 +147,61 @@ describe("submitAssignment (INTEG-04 file path validation)", () => {
       status: "submitted",
     });
   });
-});
 
+  it("rejects a client-supplied assignment id that is not attached to the lesson", async () => {
+    lessonAssignmentId = "assignment-2";
+
+    const result = await submitAssignment({
+      assignmentId: "assignment-1",
+      lessonId: "lesson-1",
+      submission_type: "text",
+      submission_text: "My answer",
+    });
+
+    expect(result).toEqual({
+      ok: false,
+      error: "This assignment does not belong to the lesson.",
+    });
+    expect(insertSpy).not.toHaveBeenCalled();
+    expect(insertedRow).toBeNull();
+  });
+
+  it("rejects submissions for locked lessons before insert", async () => {
+    lessonUnlocked = false;
+
+    const result = await submitAssignment({
+      assignmentId: "assignment-1",
+      lessonId: "lesson-1",
+      submission_type: "text",
+      submission_text: "My answer",
+    });
+
+    expect(result).toEqual({
+      ok: false,
+      error: "Complete the prerequisite lessons first.",
+    });
+    expect(insertSpy).not.toHaveBeenCalled();
+    expect(insertedRow).toBeNull();
+  });
+
+  it("auto-approves a bound unlocked assignment that does not require review", async () => {
+    assignmentRequiresReview = false;
+
+    const result = await submitAssignment({
+      assignmentId: "assignment-1",
+      lessonId: "lesson-1",
+      submission_type: "text",
+      submission_text: "My answer",
+    });
+
+    expect(result).toEqual({ ok: true });
+    expect(insertedRow).toMatchObject({
+      assignment_id: "assignment-1",
+      lesson_id: "lesson-1",
+      user_id: "user-1",
+      submission_text: "My answer",
+      status: "approved",
+    });
+    expect(insertedRow?.reviewed_at).toEqual(expect.any(String));
+  });
+});

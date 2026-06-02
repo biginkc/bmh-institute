@@ -35,7 +35,6 @@ export default async function UserReportPage({
     roleGroupsRes,
     programsRes,
     courseAccessRes,
-    coursesRes,
     modulesLessonsRes,
     completionsRes,
     certificatesRes,
@@ -76,7 +75,6 @@ export default async function UserReportPage({
          courses( id, title, is_published )`,
       )
       .eq("role_groups.user_role_groups.user_id", userId),
-    supabase.from("courses").select("id, title"),
     supabase
       .from("modules")
       .select("id, course_id, lessons(id, is_required_for_completion)"),
@@ -446,8 +444,8 @@ export default async function UserReportPage({
                   {rolePlayResults.map((result) => {
                     const block = firstRow(result.content_blocks);
                     const lesson = firstRow(block?.lessons);
-                    const module = firstRow(lesson?.modules);
-                    const course = firstRow(module?.courses);
+                    const courseModule = firstRow(lesson?.modules);
+                    const course = firstRow(courseModule?.courses);
                     const title =
                       stringOr(block?.content?.title, null) ??
                       result.scenario_id;

@@ -66,7 +66,9 @@ function LoginForm() {
     };
 
     let cancelled = false;
-    setHashAuthState("processing");
+    const processingTimer = window.setTimeout(() => {
+      if (!cancelled) setHashAuthState("processing");
+    }, 0);
 
     async function finishHashAuth() {
       const supabase = createClient();
@@ -110,6 +112,7 @@ function LoginForm() {
 
     return () => {
       cancelled = true;
+      window.clearTimeout(processingTimer);
     };
   }, [hashAuthState, inviteToken]);
 

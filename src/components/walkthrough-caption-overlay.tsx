@@ -114,7 +114,8 @@ export function WalkthroughCaptionOverlay() {
     }
 
     writeStoredWalkthrough(stateFromUrl);
-    setStoredState(stateFromUrl);
+    const timer = window.setTimeout(() => setStoredState(stateFromUrl), 0);
+    return () => window.clearTimeout(timer);
   }, [stateFromUrl]);
 
   if (!activeState) {
