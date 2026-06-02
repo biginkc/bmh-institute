@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { sendEmail } from "@/lib/email/send";
 import { renderNewSubmissionEmail } from "@/lib/email/new-submission";
 import { getAppUrl } from "@/lib/app-url";
+import { emitSandraCourseCompletedForLesson } from "@/lib/integrations/sandra/course-completed";
 
 export type SubmitResult =
   | { ok: true }
@@ -125,6 +126,11 @@ export async function submitAssignment(input: {
           : input.submission_type === "url"
             ? (normalizedUrl ?? "")
             : filenameFromPath(normalizedFilePath),
+    });
+  } else {
+    await emitSandraCourseCompletedForLesson(supabase, {
+      userId: user.id,
+      lessonId: input.lessonId,
     });
   }
 
