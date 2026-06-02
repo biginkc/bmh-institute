@@ -69,26 +69,20 @@ async function withThrowawayLearner<T>(
 
 describe.skipIf(!envPresent)("answer_options isolation (HARDEN-04)", () => {
   it(
-    "denies a learner anon-key SELECT on public.answer_options",
+    "denies a learner anon-key SELECT of is_correct on public.answer_options",
     { timeout: 30_000 },
     async () => {
       await withThrowawayLearner(async (learner) => {
         const { data, error } = await learner
           .from("answer_options")
-          .select("*")
+          .select("id, question_id, is_correct")
           .limit(1);
 
-        // Either an explicit error or an empty data array is acceptable.
-        // The contract is: the learner cannot read is_correct.
-        const denied = error !== null || (data ?? []).length === 0;
-        expect(denied).toBe(true);
-
-        // Stronger assertion: if data did come back, it must NOT contain is_correct.
-        for (const row of data ?? []) {
-          expect(
-            Object.keys(row as Record<string, unknown>),
-          ).not.toContain("is_correct");
-        }
+        expect(error).not.toBeNull();
+        expect(data).toBeNull();
+        expect(error?.message.toLowerCase()).toMatch(
+          /permission denied|is_correct/,
+        );
       });
     },
   );

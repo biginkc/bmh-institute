@@ -8,6 +8,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { requireAdmin } from "@/lib/auth/guard";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 import { LessonDetailsForm } from "./lesson-details-form";
@@ -24,6 +26,7 @@ export default async function EditLessonPage({
   params: Promise<{ lessonId: string }>;
 }) {
   const { lessonId } = await params;
+  await requireAdmin();
   const supabase = await createClient();
 
   const { data: lesson } = await supabase
@@ -148,7 +151,7 @@ async function QuizLessonEditor({
     );
   }
 
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   const [{ data: quiz }, { data: questions }] = await Promise.all([
     supabase
       .from("quizzes")

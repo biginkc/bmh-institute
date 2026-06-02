@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { requireAdmin } from "@/lib/auth/guard";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 export type ActionResult =
@@ -60,6 +61,9 @@ export async function createQuestion(input: {
 }): Promise<ActionResult> {
   await requireAdmin();
   const supabase = await createClient();
+  const adminForSeed =
+    input.type === "true_false" ? getAdminClientResult() : null;
+  if (adminForSeed?.ok === false) return adminForSeed;
 
   const { data: last } = await supabase
     .from("questions")
@@ -87,20 +91,22 @@ export async function createQuestion(input: {
 
   // true_false auto-seeds True/False options so admins don't have to.
   if (input.type === "true_false") {
-    const { error: optErr } = await supabase.from("answer_options").insert([
-      {
-        question_id: question.id,
-        option_text: "True",
-        is_correct: false,
-        sort_order: 0,
-      },
-      {
-        question_id: question.id,
-        option_text: "False",
-        is_correct: false,
-        sort_order: 1,
-      },
-    ]);
+    const { error: optErr } = await adminForSeed!.supabase
+      .from("answer_options")
+      .insert([
+        {
+          question_id: question.id,
+          option_text: "True",
+          is_correct: false,
+          sort_order: 0,
+        },
+        {
+          question_id: question.id,
+          option_text: "False",
+          is_correct: false,
+          sort_order: 1,
+        },
+      ]);
     if (optErr) return { ok: false, error: optErr.message };
   }
 
@@ -192,7 +198,9 @@ export async function createAnswerOption(input: {
   await requireAdmin();
   const text = input.text.trim();
   if (!text) return { ok: false, error: "Option text is required." };
-  const supabase = await createClient();
+  const admin = getAdminClientResult();
+  if (!admin.ok) return admin;
+  const supabase = admin.supabase;
 
   const { data: last } = await supabase
     .from("answer_options")
@@ -226,7 +234,9 @@ export async function updateAnswerOption(input: {
 }): Promise<ActionResult> {
   await requireAdmin();
   if (!input.text.trim()) return { ok: false, error: "Text is required." };
-  const supabase = await createClient();
+  const admin = getAdminClientResult();
+  if (!admin.ok) return admin;
+  const supabase = admin.supabase;
 
   if (input.is_correct && input.exclusivePeerOptionIds?.length) {
     await supabase
@@ -253,7 +263,9 @@ export async function deleteAnswerOption(input: {
   lessonId: string;
 }): Promise<ActionResult> {
   await requireAdmin();
-  const supabase = await createClient();
+  const admin = getAdminClientResult();
+  if (!admin.ok) return admin;
+  const supabase = admin.supabase;
   const { error } = await supabase
     .from("answer_options")
     .delete()
@@ -262,4 +274,17 @@ export async function deleteAnswerOption(input: {
   revalidatePath(`/admin/lessons/${input.lessonId}/edit`);
   revalidatePath(`/lessons/${input.lessonId}`);
   return { ok: true };
+}
+
+function getAdminClientResult():
+  | { ok: true; supabase: ReturnType<typeof createAdminClient> }
+  | { ok: false; error: string } {
+  try {
+    return { ok: true, supabase: createAdminClient() };
+  } catch (e) {
+    return {
+      ok: false,
+      error: e instanceof Error ? e.message : "Admin client unavailable.",
+    };
+  }
 }
