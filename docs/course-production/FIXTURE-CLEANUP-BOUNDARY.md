@@ -1,0 +1,143 @@
+# BMH Institute fixture cleanup boundary
+
+Status: boundary recorded, cleanup not authorized and not executed.
+
+## Evidence
+
+The private rollback snapshot and a fresh read-only production inventory were compared before this boundary was written.
+
+- Project: `bmh-institute` (`dhvfsyteqsxagokoerrx`)
+- Rollback data SHA-256: `46037814916bc4286ab9cded45cb57eb40e1e9280d43cfe87c6eeeed29a140dc`
+- Rollback schema SHA-256: `3eb8893601ef4ae67e5fa40fc8989b7164b61b9cad5e12387376d0d65424d1f2`
+- Existing physical backup: `1130851936`, created `2026-07-16T11:34:16.963Z`
+- Read-only production capture: `2026-07-16T23:07:39.408Z`
+- Snapshot and production identity comparison: no missing or added IDs in any catalog, access or activity table
+- Storage comparison: zero objects in both `content` and `submissions` in the snapshot and live capture
+- Machine manifest: `fixture-boundary-manifest.json`
+- Current manifest SHA-256: `02da6ef0fe67dbf58a3648ac78cf841e8e231e407ec0c4cd8b546abc7c59b0c3`
+
+The live inventory used the approved 1Password service-account path to read a Browser V1 owner fixture. Owner-scoped production reads verified every current ID and every owner-readable field. `answer_options.is_correct` is intentionally not owner-readable. Those protected values came from the rollback snapshot and the service-role-only atomic RPC must recheck them before deletion.
+
+Fields added after the capture are also guarded. Migration 015 defaults must remain `thumbnail_path is null` and `rubric = '[]'::jsonb`. Migration 020 provenance must remain `content_import_id is null` on all fixture programs, courses and lessons. A fixture row that acquires real artwork, a rubric or import provenance fails the cleanup fingerprint.
+
+## Exact deletion set
+
+The manifest contains 463 exact fixture identities.
+
+| Table | Rows |
+| --- | ---: |
+| programs | 9 |
+| program_courses | 12 |
+| courses | 15 |
+| modules | 20 |
+| lessons | 40 |
+| content_blocks | 79 |
+| quizzes | 10 |
+| questions | 17 |
+| answer_options | 45 |
+| assignments | 14 |
+| role_groups | 10 |
+| program_access | 11 |
+| course_access | 9 |
+| user_role_groups | 17 |
+| invites | 6 |
+| assignment_submissions | 7 |
+| certificates | 9 |
+| program_certificates | 3 |
+| role_play_results | 0 |
+| user_block_progress | 67 |
+| user_video_progress | 0 |
+| user_course_resume | 12 |
+| user_lesson_completions | 40 |
+| user_quiz_attempts | 11 |
+| content storage objects | 0 |
+| submissions storage objects | 0 |
+
+Every row is classified as fixture-owned based on Jarrad's explicit statement that the app has never been used, has no genuine learner activity and has no course content worth salvaging. Titles and source traces further classify rows as Browser V1, walkthrough, production-readiness or legacy training fixtures.
+
+## Retained boundary
+
+Cleanup never targets:
+
+- 22 `profiles` rows
+- 22 snapshot `auth.users` rows and all later auth accounts
+- 427 captured `audit_log` rows and all later audit history
+- two certificate templates
+- certificate number counters
+- auth rate-limit history
+- any row imported for the real course
+- any unrelated storage object
+
+Fourteen retained profiles are referenced by fixture activity. Those references are expected because activity rows are deleted while the accounts remain. The manifest also records 106 retained audit entries that point to fixture entity IDs. They stay as historical evidence even after the fixture entity is removed.
+
+The fixture blocks contain 37 external URL, scenario or file references. They are payloads inside the exact fixture blocks, not database or storage ownership claims. No unexplained database reference or storage object remained after classification.
+
+## Guarded cleanup command
+
+`npm run cleanup:fixtures` is dry-run by default. It reads the exact manifest, verifies its checksum, requires the exact production host and checks current production rows, dependents, accounts, audit history and storage. It cannot delete anything without `--execute`.
+
+Production credentials must come only from an approved `BMH Secrets` item read with the 1Password service account. Do not use cached CLI credentials, a browser session, desktop authorization or a GUI prompt. If the required service-role item is not available to the service account, stop.
+
+The mutation path is migration `021_atomic_fixture_catalog_cleanup.sql`. The migration only installs a dormant RPC. Calling the RPC:
+
+1. Takes a transaction advisory lock.
+2. Locks every catalog, dependent, profile, audit and auth table against concurrent writes.
+3. Rechecks the exact manifest checksum and confirmation.
+4. Requires every expected fixture row to be present and fingerprint-identical, or every one to be absent for an idempotent retry.
+5. Rejects partial state, changed rows, new activity and any unmanifested dependent.
+6. Rechecks every retained profile, auth user and audit row.
+7. Deletes exact identities in dependency order in one database transaction.
+8. Rechecks retained rows before commit.
+
+The RPC is revoked from `public`, `anon` and `authenticated`. Only `service_role` can execute it. The command has no auth-user deletion method. Storage deletion runs only after the database transaction commits and only for exact manifest object names. This manifest contains no storage deletion names.
+
+The confirmation string printed by dry-run is only a typo guard. It is not authorization. Execution additionally requires:
+
+- the real course to pass acceptance
+- a separate JSON approval record from Jarrad for this exact manifest hash
+- a fresh rollback JSON record captured within the previous 24 hours
+- migration 020 to be present before migration 021
+- an explicit `--execute` invocation
+
+Approval record shape:
+
+```json
+{
+  "project_ref": "dhvfsyteqsxagokoerrx",
+  "manifest_sha256": "02da6ef0fe67dbf58a3648ac78cf841e8e231e407ec0c4cd8b546abc7c59b0c3",
+  "approved_by": "Jarrad Henry",
+  "approved_at": "<ISO timestamp>",
+  "scope": "fixture_cleanup_after_real_course_acceptance",
+  "authorization": "execute"
+}
+```
+
+Fresh rollback record shape:
+
+```json
+{
+  "project_ref": "dhvfsyteqsxagokoerrx",
+  "manifest_sha256": "02da6ef0fe67dbf58a3648ac78cf841e8e231e407ec0c4cd8b546abc7c59b0c3",
+  "captured_at": "<ISO timestamp within 24 hours>",
+  "backup_id": "<new backup identifier>",
+  "schema_sha256": "<64 lowercase hex characters>",
+  "data_sha256": "<64 lowercase hex characters>",
+  "storage_inventory_sha256": "<64 lowercase hex characters>"
+}
+```
+
+No approval or fresh rollback record is committed now.
+
+## Rollback
+
+The July 16 snapshot proves the initial boundary but must not be used as the only rollback for a later cleanup. Restoring it wholesale after the real course import would also remove the newly imported course.
+
+Immediately before an authorized execution:
+
+1. Take a fresh physical backup plus schema, data and storage inventories.
+2. Record all identifiers and SHA-256 values in the required rollback JSON.
+3. Rehearse restoration in an isolated database.
+4. Restore schema first, then data with triggers disabled because `lessons` has circular foreign-key ordering.
+5. Reconcile every table and storage object before accepting the rehearsal.
+
+If the atomic RPC fails, PostgreSQL rolls the entire database deletion back. Do not retry until the reported drift or unexplained reference is classified. If database cleanup commits but an exact storage deletion fails, rerun the same command. The RPC returns `already_deleted`, then retries only the exact storage list. This manifest's storage list is empty.

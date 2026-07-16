@@ -24,6 +24,7 @@
     "backfill:sanitize-html": "tsx scripts/backfill-sanitize-html.ts",
     "cleanup:prod-readiness": "tsx scripts/cleanup-production-readiness.ts",
     "cleanup:prod-dryrun": "tsx scripts/cleanup-production-readiness.ts --prefix PILOT-DRYRUN-",
+    "cleanup:fixtures": "tsx scripts/cleanup-fixture-catalog.ts",
     "course:import": "tsx scripts/course-import.ts",
     "course:assets:stage": "tsx scripts/course-assets-stage.ts"
   },
