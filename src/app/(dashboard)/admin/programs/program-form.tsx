@@ -2,9 +2,7 @@
 
 import { useActionState } from "react";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Button, Input } from "@/components/bmh-ds";
 import type { FormState } from "./actions";
 
 type Action = (state: FormState, formData: FormData) => Promise<FormState>;
@@ -34,15 +32,15 @@ export function ProgramForm({
 
   return (
     <form action={formAction} className="flex flex-col gap-5">
-      <Field label="Title" htmlFor="title" error={fieldError("title")}>
-        <Input
-          id="title"
-          name="title"
-          required
-          defaultValue={defaults?.title ?? ""}
-          maxLength={200}
-        />
-      </Field>
+      <Input
+        id="title"
+        name="title"
+        label="Title"
+        required
+        defaultValue={defaults?.title ?? ""}
+        maxLength={200}
+        error={fieldError("title")}
+      />
 
       <Field
         label="Description"
@@ -54,7 +52,7 @@ export function ProgramForm({
           name="description"
           rows={3}
           defaultValue={defaults?.description ?? ""}
-          className="border-input bg-background w-full rounded-md border px-3 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+          className="w-full rounded-[var(--bmh-radius-md)] border-2 border-[var(--ink-300)] bg-[var(--paper)] px-4 py-3 font-[family-name:var(--font-body)] text-base font-semibold text-[var(--ink-900)] outline-none transition focus-visible:border-[var(--action)] focus-visible:ring-4 focus-visible:ring-[var(--focus-ring)]"
         />
       </Field>
 
@@ -67,31 +65,36 @@ export function ProgramForm({
           id="course_order_mode"
           name="course_order_mode"
           defaultValue={defaults?.course_order_mode ?? "free"}
-          className="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
+          className="w-full rounded-[var(--bmh-radius-md)] border-2 border-[var(--ink-300)] bg-[var(--paper)] px-4 py-3 font-[family-name:var(--font-body)] text-base font-bold text-[var(--ink-900)] outline-none focus-visible:border-[var(--action)] focus-visible:ring-4 focus-visible:ring-[var(--focus-ring)]"
         >
-          <option value="free">Free — learner picks order</option>
-          <option value="sequential">Sequential — unlock one at a time</option>
+          <option value="free">Free: learner picks order</option>
+          <option value="sequential">Sequential: unlock one at a time</option>
         </select>
       </Field>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2.5">
         <input
           id="is_published"
           name="is_published"
           type="checkbox"
           defaultChecked={defaults?.is_published ?? false}
-          className="size-4"
+          className="size-[18px] accent-[var(--action)]"
         />
-        <Label htmlFor="is_published">Published (visible to learners)</Label>
+        <label
+          htmlFor="is_published"
+          className="font-[family-name:var(--font-body)] text-sm font-bold text-[var(--ink-800)]"
+        >
+          Published (visible to learners)
+        </label>
       </div>
 
       {state && !state.ok ? (
-        <div className="border-destructive/30 bg-destructive/10 text-destructive rounded-md border px-3 py-2 text-sm">
+        <div className="rounded-[var(--bmh-radius-md)] border border-[var(--danger)] bg-[var(--danger-soft)] px-4 py-3 font-[family-name:var(--font-body)] text-sm font-semibold text-[var(--danger)]">
           {state.error}
         </div>
       ) : null}
       {state && state.ok ? (
-        <div className="border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-100 rounded-md border px-3 py-2 text-sm">
+        <div className="rounded-[var(--bmh-radius-md)] border border-[var(--success)] bg-[var(--success-soft)] px-4 py-3 font-[family-name:var(--font-body)] text-sm font-semibold text-[var(--green-500)]">
           Saved.
         </div>
       ) : null}
@@ -118,10 +121,17 @@ function Field({
 }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <Label htmlFor={htmlFor}>{label}</Label>
+      <label
+        htmlFor={htmlFor}
+        className="font-[family-name:var(--font-body)] text-sm font-bold text-[var(--ink-800)]"
+      >
+        {label}
+      </label>
       {children}
       {error ? (
-        <p className="text-destructive text-xs">{error}</p>
+        <p className="font-[family-name:var(--font-body)] text-xs font-bold text-[var(--danger)]">
+          {error}
+        </p>
       ) : null}
     </div>
   );

@@ -1,22 +1,30 @@
 import Link from "next/link";
 
+import { Card } from "@/components/bmh-ds";
+import { PageHeader } from "@/components/page-header";
+
 import { ProgramForm } from "../program-form";
 import { createProgram } from "../actions";
 
 export default function NewProgramPage() {
   return (
-    <main className="mx-auto w-full max-w-xl flex-1 p-6 md:p-10">
+    <main className="mx-auto w-full max-w-[720px] flex-1 px-5 py-8 md:px-7 md:pb-16">
       <Link
         href="/admin/programs"
-        className="text-muted-foreground hover:text-foreground text-xs"
+        className="font-[family-name:var(--font-body)] text-sm font-bold text-[var(--action)] transition-colors hover:text-[var(--action-hover)]"
       >
         ← Back to programs
       </Link>
-      <h1 className="mt-3 text-2xl font-semibold">New program</h1>
-      <p className="text-muted-foreground mb-6 mt-1 text-sm">
-        A program is the named container VAs will see on their dashboard.
-      </p>
-      <ProgramForm action={createProgram} submitLabel="Create program" />
+      <div className="mb-7 mt-3">
+        <PageHeader
+          title="New program"
+          description="Create a learner-facing bundle, then attach its courses."
+          breadcrumb={[{ label: "Admin" }, { label: "Programs" }]}
+        />
+      </div>
+      <Card padding="md">
+        <ProgramForm action={createProgram} submitLabel="Create program" />
+      </Card>
     </main>
   );
 }
