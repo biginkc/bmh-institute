@@ -39,6 +39,7 @@ integration_head: 976c9db
 - Browser assertions confirmed configured inner surfaces for all 11 block types, no failed responses, and no unexpected console errors.
 - Independent manual review found and verified fixes for canonical unlock parity, preserved completion display, upstream branch drift, and proof integrity. Final review is clean.
 - Proof PNGs and the report remain untracked in `._dsf05-proofs/`.
+- PR #95 is open and unmerged for the orchestrating session's review.
 
 ## Commits
 

@@ -17,7 +17,7 @@
 - [x] Video 90 percent completion tracking, sanitized HTML, signed URLs, iframe sandboxing, and role-play embed token flow remain intact.
 - [x] `npm run verify`, `npm run build`, scoped lint, and diff checks pass.
 - [x] Three requested 1280x800 screenshots exist under untracked `._dsf05-proofs/`.
-- [ ] Manual review is clean and the requested PR is open without merge.
+- [x] Manual review is clean and the requested PR is open without merge.
 
 ## Preflight
 
