@@ -82,16 +82,16 @@ them.
 
 The manifest contains 155 assets:
 
-- 29 videos: 23 approved and 6 held
-- 29 exact-cut caption placeholders
-- 29 exact-cut transcript placeholders
+- 29 videos: 21 approved and 8 held
+- 29 exact-cut caption assets: 21 approved and 8 missing pending held-cut approval
+- 29 exact-cut transcript assets: 21 approved and 8 missing pending held-cut approval
 - 20 thumbnail placeholders: one program cover and 19 topic thumbnails
 - 29 video-poster placeholders
 - 19 accessible learner-guide PDF placeholders
 
-There are 126 missing generated assets. Together with the six video holds, six
+There are 84 missing generated assets. Together with the eight video holds, six
 pending Closer Lab IDs, and one operating-stack confirmation, the validator
-reports 139 publication blockers and zero manifest errors.
+reports 99 publication blockers and zero manifest errors.
 
 ## Quiz curation
 
@@ -156,7 +156,9 @@ exist and their real IDs replace those placeholders.
 
 The draft must not be published until all of these are resolved:
 
-- Jarrad approves the six held corrected videos in `HELD-VIDEO-REVIEW.md`.
+- Jarrad approves the eight held videos in `HELD-VIDEO-REVIEW.md`. The
+  Compensation Engine and Career Growth cuts require wording corrections or
+  explicit policy decisions before they can be approved.
 - Exact-cut captions and transcripts are produced and approved for all 29 videos.
 - The course cover and 19 topic thumbnails are produced and approved.
 - All 29 dedicated video posters are produced, approved, and mapped one-to-one.
@@ -171,7 +173,7 @@ The draft must not be published until all of these are resolved:
   captions, quizzes, and flashcards.
 
 The manifest records all missing derivatives as `approval_status: missing` and
-all six corrected cuts as `approval_status: hold`. The validator reports these
+all eight held cuts as `approval_status: hold`. The validator reports these
 as publication blockers rather than silently treating the course as ready.
 
 ## Verification

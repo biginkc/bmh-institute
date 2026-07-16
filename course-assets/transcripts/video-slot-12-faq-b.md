@@ -1,0 +1,13 @@
+# Seller FAQ Decoder Questions 6 through 10
+
+Video: video-slot-12-faq-b
+
+Welcome back. In the last lesson, we decoded the first five seller questions. Now we'll finish the set with questions six through ten, then tie the whole thing back to how you sound on a real call. Do I need to make any repairs? This is huge for a lot of sellers, especially ones who know their house is in rough shape. Tell them no. Zero repairs. We buy properties in any condition. That's the whole point. They can leave the place exactly as it is. Are there any fees or commissions? They want to know what the real number is. Are you going to hit them with something later? The answer is no. No fees, no commissions, no closing costs on their end.
+
+The offer number is what they walk away with at closing, period. What happens after I sign? They're nervous about the unknown. What happens between saying yes and actually getting a check? Walk them through it. The transaction team handles everything from there. Title work, any inspections, closing logistics. They'll know what's happening at each step. On closing day, they sign the final paperwork and get their money, usually the same day or the day after. Can I stay in the house after selling? Some sellers need the cash but aren't ready to move immediately. Tell them it's something you can discuss.
+
+It's called a leaseback where they'd stay in the home for a set period after closing, usually for a small monthly amount. The acquisition team works out the specifics. You're just confirming it's possible. What if I change my mind? They're scared of being locked in. Tell them the contract has an inspection period built in, which gives both sides time to review everything. Nothing is final until both parties are comfortable, and you'd never want them to move forward unless they feel genuinely good about it. Reduce the fear of saying yes. The thing that ties all of these together is that you're not performing. You're not delivering lines.
+
+You're talking to another person who needs information to make a big decision, and you're giving them that information clearly and honestly. If you can do that while sounding like a real human being and not a recorded message, you'll handle any question that comes your way. Practice saying these answers out loud until they feel natural. Say them to yourself in the car. Say them to your dog. Say them in the mirror if you have to. The point is that when a seller asks one of these questions on a live call, you don't hesitate. You just answer, the way you'd explain it to a friend who asked.
+
+Alright, next up, the follow-up game where most of the money actually gets made.

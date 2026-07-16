@@ -141,6 +141,18 @@ test("known held cuts are immutable and never replaced by older files", async ()
       checksum_sha256: "439f8d06d2e449637509f0f21f9d0b4a5464c65aec1995fca7147e4e4e67310b",
       size_bytes: 56052870,
     },
+    {
+      source_key: "video-slot-17-compensation",
+      local_path: "course-assets/review-lesson17/LESSON-17-v1-QT.mp4",
+      checksum_sha256: "cecad85478bb1a8ba5bfed7404dc045440c567ed0eaaa90b11b644e124b27846",
+      size_bytes: 45346253,
+    },
+    {
+      source_key: "video-slot-19-career",
+      local_path: "course-assets/review-lesson19/LESSON-19-v7.mp4",
+      checksum_sha256: "1ddcf7b1b0b45bbc90ec14b3660b3d5f5a284b5095dd0d0682164924ce1a3da9",
+      size_bytes: 77199756,
+    },
   ]);
   for (const asset of manifest.assets.filter((candidate) => candidate.kind === "video")) {
     assert.match(asset.storage_path, new RegExp(`${asset.checksum_sha256}\\.mp4$`));

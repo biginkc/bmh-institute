@@ -17,6 +17,8 @@ const HELD_METADATA = {
   "video-slot-10-objection-scripts": [1508.757, 572011027, "59c745ccca7387f82d0b13eaf95439f9f6a50a8f727ad3c1db4fb839050b1ebb"],
   "video-slot-15-closing": [329.429, 55329810, "6e3aa1b007117b303a05906ca8443a8b9bc38f7c44bd61475c5437b99e7c90d2"],
   "video-slot-16-kpis": [402.154, 56052870, "439f8d06d2e449637509f0f21f9d0b4a5464c65aec1995fca7147e4e4e67310b"],
+  "video-slot-17-compensation": [181.013, 45346253, "cecad85478bb1a8ba5bfed7404dc045440c567ed0eaaa90b11b644e124b27846"],
+  "video-slot-19-career": [252.949, 77199756, "1ddcf7b1b0b45bbc90ec14b3660b3d5f5a284b5095dd0d0682164924ce1a3da9"],
 };
 
 const VIDEO_SOURCES = [
@@ -428,6 +430,46 @@ async function buildVideoAsset([sourceKey, slot, title, partLabel, localPath]) {
   };
 }
 
+async function buildDerivativeAsset(videoAsset, kind) {
+  const extension = kind === "caption" ? "vtt" : "md";
+  const mimeType = kind === "caption" ? "text/vtt" : "text/markdown";
+  const localPath = `course-assets/${kind === "caption" ? "captions" : "transcripts"}/${videoAsset.source_key}.${extension}`;
+  const fullPath = path.join(REPO_ROOT, localPath);
+  let fileStat = null;
+  try {
+    fileStat = await stat(fullPath);
+  } catch (error) {
+    if (error?.code !== "ENOENT") throw error;
+  }
+
+  if (videoAsset.approval_status === "hold") {
+    if (fileStat) throw new Error(`${videoAsset.source_key} ${kind} exists before the held cut is approved`);
+    return {
+      source_key: `${kind}-${videoAsset.source_key}`,
+      kind,
+      local_path: localPath,
+      storage_path: `courses/bmh-employee-training/v1/${kind === "caption" ? "captions" : "transcripts"}/${videoAsset.source_key}.${extension}`,
+      mime_type: mimeType,
+      checksum_sha256: null,
+      size_bytes: null,
+      approval_status: "missing",
+    };
+  }
+
+  if (!fileStat) throw new Error(`${videoAsset.source_key} approved cut is missing its ${kind}`);
+  const checksum = await sha256(fullPath);
+  return {
+    source_key: `${kind}-${videoAsset.source_key}`,
+    kind,
+    local_path: localPath,
+    storage_path: `courses/bmh-employee-training/v1/${kind === "caption" ? "captions" : "transcripts"}/${videoAsset.source_key}.${checksum}.${extension}`,
+    mime_type: mimeType,
+    checksum_sha256: checksum,
+    size_bytes: fileStat.size,
+    approval_status: "approved",
+  };
+}
+
 function spreadSelect(candidates, count) {
   const selected = [];
   const used = new Set();
@@ -501,28 +543,11 @@ async function buildManifest() {
   }
 
   const videoAssets = videoAssetsWithMetadata.map(({ _slot, _title, _partLabel, _duration, ...asset }) => asset);
-  const derivativeAssets = videoAssetsWithMetadata.flatMap((asset) => [
-    {
-      source_key: `caption-${asset.source_key}`,
-      kind: "caption",
-      local_path: `course-assets/captions/${asset.source_key}.vtt`,
-      storage_path: `courses/bmh-employee-training/v1/captions/${asset.source_key}.vtt`,
-      mime_type: "text/vtt",
-      checksum_sha256: null,
-      size_bytes: null,
-      approval_status: "missing",
-    },
-    {
-      source_key: `transcript-${asset.source_key}`,
-      kind: "transcript",
-      local_path: `course-assets/transcripts/${asset.source_key}.md`,
-      storage_path: `courses/bmh-employee-training/v1/transcripts/${asset.source_key}.md`,
-      mime_type: "text/markdown",
-      checksum_sha256: null,
-      size_bytes: null,
-      approval_status: "missing",
-    },
-  ]);
+  const derivativeAssets = [];
+  for (const asset of videoAssetsWithMetadata) {
+    derivativeAssets.push(await buildDerivativeAsset(asset, "caption"));
+    derivativeAssets.push(await buildDerivativeAsset(asset, "transcript"));
+  }
   const imageAssets = [
     {
       source_key: "thumbnail-program-bmh-employee-training",
