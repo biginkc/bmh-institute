@@ -53,9 +53,20 @@ Implement the approved concurrent completion plan for the reusable BMH Institute
 - A read-only storage inventory found the `content` and `submissions` buckets with no listed objects. This must be rechecked immediately before import or fixture cleanup.
 - The missing local PostgreSQL export runtime was installed without changing the shell profile. Private schema and data dumps were captured under `_codex_backups/bmh-institute-2026-07-16/` with a checksum-backed rollback record. The data-only dump warns about the circular `lessons` relationship, so a controlled restore rehearsal remains required before destructive cleanup.
 
+### 2026-07-16 Wave 1 integration
+
+- The runtime, deterministic importer, media/artwork support, full course manifest, and signed Closer Lab completion contract are integrated on the controller branch.
+- The combined automated baseline now passes 337 Node tests and 88 browser-component tests, and the production build succeeds on Next.js 16.2.10.
+- Direct production dependencies were upgraded until no high or critical production advisory remained. Two moderate advisories remain inside Next.js's bundled PostCSS dependency; the audit tool's offered fix is an invalid downgrade to Next.js 9 and was rejected.
+- Migrations 015 and 016 were applied only to the isolated `bmh-institute-test` project. The remote migration ledger matches local migrations 001 through 016, and all 14 database integration tests pass there, including storage authorization, answer-key isolation, certificate behavior, and destructive user cleanup.
+- Nineteen deterministic accessible learner-guide PDFs were generated, checksum-addressed, text-checked, rendered to images, and visually inspected. Two generator runs produced identical hashes.
+- The isolated Tech Stack canary manifest validates structurally and remains release-blocked by exactly its unapproved artwork and media derivatives.
+- Three thumbnail pilots and their 16:9 poster derivatives were generated and visually inspected. They remain deliberately absent from the release manifest until Jarrad approves the pilot.
+- Caption review found that the Compensation Engine cut states a specific compensation architecture. It is now treated as a seventh held video because the locked course rule is to defer compensation terms to each learner's current written plan.
+
 ## Hard gates
 
-- Jarrad must approve the six corrected finished videos before their exact files become publishable.
+- Jarrad must approve or request recuts for the seven held videos before their exact files become publishable.
 - Jarrad must approve the three-image thumbnail pilot before batch thumbnail generation.
 - Billing changes, new paid vendors and uncontrolled external provider use require immediate approval.
 - Publishing and fixture deletion occur only after all acceptance evidence is complete.
