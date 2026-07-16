@@ -15,7 +15,8 @@ The unpublished import draft now contains the full authored course shape:
 - 6 text assignments with reviewer rubrics
 - 6 required Closer Lab scenario specifications
 - 19 learner summaries, objective sets, and accessible in-app text guides
-- 19 required, checksum-addressed accessible learner-guide PDFs
+- 19 approved, checksum-addressed accessible learner-guide PDFs whose downloads
+  remain available without blocking lesson completion
 - 29 dedicated video-poster placeholders
 
 The machine-readable source is
@@ -74,10 +75,12 @@ Every content topic is followed by its own quiz. Each section ends with one
 required, reviewed assignment.
 
 Each grouped content lesson keeps its accessible in-app text guide as a fallback
-and also references exactly one required learner-guide PDF download. All 19 PDFs
-are produced, machine-checked, rendered, visually inspected, and approved. Each
-video references its own poster asset rather than reusing a topic thumbnail; the
-29 posters remain gated on approval of the three-image visual pilot.
+and also references exactly one learner-guide PDF download. The downloads are
+not completion-required because the runtime has no trustworthy download-
+progress operation. All 19 PDFs are produced, machine-checked, rendered,
+visually inspected, and approved. Each video references its own poster asset
+rather than reusing a topic thumbnail; the 29 posters remain gated on approval
+of the three-image visual pilot.
 
 ## Asset inventory
 
@@ -91,9 +94,11 @@ The manifest contains 155 assets:
 - 19 approved accessible learner-guide PDFs
 
 There are 67 missing generated assets: 18 held-cut caption/transcript
-derivatives, 20 thumbnails, and 29 posters. Together with the nine video holds,
-six pending production Closer Lab IDs, and one operating-stack confirmation,
-the validator reports 83 publication blockers and zero manifest errors.
+derivatives, 20 thumbnails, and 29 posters. Together with the nine video holds
+and six pending production Closer Lab IDs, the validator reports 82 publication
+blockers and zero manifest errors. The dated operating-stack confirmation is a
+warning that must be refreshed immediately before publication, not an
+additional blocker in the current validator result.
 
 ## Quiz curation
 
@@ -145,8 +150,9 @@ manifest.
 | Performance and Career | Mission Control and Growth Capstone | Operating discipline, measurement, growth |
 
 All assignments use text submission and require reviewer approval. The rubrics
-are included in the manifest even though the current database stores only the
-assignment title, instructions, submission type, and review requirement.
+are included in the manifest, persisted in the database, editable in the admin
+lesson editor with server-side validation, and displayed beside learner work on
+the submission-review screen.
 
 ## Closer Lab specifications
 
@@ -160,23 +166,25 @@ The manifest includes authored specifications for:
 - Full-cycle seller conversation
 
 Each specification includes context, learner goal, success criteria, and fail
-conditions. Their scenario IDs intentionally start with `pending:`. They cannot
-be accepted as production mappings until the corresponding Closer Lab scenarios
-exist and their real IDs replace those placeholders.
+conditions. Six corresponding scenarios and personas have been applied and
+verified in `closer-lab-test`, but their production IDs intentionally remain
+`pending:`. They cannot be accepted as production mappings until the production
+scenarios exist and their real IDs replace those placeholders.
 
 ## Publication gates
 
 The draft must not be published until all of these are resolved:
 
-- Jarrad approves the nine held videos in `HELD-VIDEO-REVIEW.md`. The
-  Compensation Engine, Operator Playbook, and Career Growth cuts require wording corrections or
-  explicit policy decisions before they can be approved.
+- Jarrad reviews the six corrected cuts in `HELD-VIDEO-REVIEW.md`. The exact
+  Compensation Engine, Operator Playbook, and Career Growth source hashes are
+  terminal `changes_requested`; replacement files must be produced from their
+  prepared scripts/edit specifications before those three can enter review.
 - Exact-cut captions and transcripts are produced and approved for all 29 videos.
 - The course cover and 19 topic thumbnails are produced and approved.
 - All 29 dedicated video posters are produced, approved, and mapped one-to-one.
 - The 19 approved accessible learner-guide PDFs remain checksum-matched to
-  their required download blocks. The in-app text guides remain available as a
-  fallback.
+  their non-blocking download blocks. The in-app text guides remain available
+  as a fallback.
 - The six Closer Lab scenarios are built, tested, and mapped to production IDs.
 - The current operating stack is rechecked immediately before publication.
   The dated machine-readable confirmation in

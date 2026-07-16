@@ -25,11 +25,11 @@ Implement the approved concurrent completion plan for the reusable BMH Institute
 
 ## Acceptance gates
 
-- [ ] Runtime and database writes enforce ownership, access, prerequisites and server-side scoring.
-- [ ] Required videos persist watched ranges and require at least 90 percent watched coverage.
+- [x] Runtime and database writes enforce ownership, access, prerequisites and server-side scoring.
+- [x] Required videos persist watched ranges and require at least 90 percent watched coverage.
 - [ ] The deterministic importer validates, uploads, applies, verifies and rolls back only manifest-owned records.
 - [ ] Nineteen grouped lessons map to 29 approved videos across six sections.
-- [ ] Nineteen quizzes contain audited current questions with role-agnostic compensation content.
+- [x] Nineteen quizzes contain audited current questions with role-agnostic compensation content.
 - [ ] Six assignments and six verified Closer Lab scenarios are mapped.
 - [ ] Captions, transcripts, guides, flashcards, objectives and thumbnail assets are complete.
 - [ ] Dummy walkthrough content is removed only after the real draft passes acceptance.
@@ -108,9 +108,47 @@ Implement the approved concurrent completion plan for the reusable BMH Institute
 - This content-only reconciliation changed no video, caption, transcript,
   artwork, approval, provider, upload, production record, or publication state.
 
+### 2026-07-16 preapproval hardening
+
+- Migration 018 was applied to `bmh-institute-test` only. The test migration
+  ledger now matches local migrations 001 through 018, the private `content`
+  bucket retained its existing MIME allowlist and added `text/markdown`, and
+  all 16 database integration tests passed with the test project mapped to the
+  application environment variables. Production was not changed.
+- All 19 guide PDFs are tagged PDF 1.7 documents with language, title, logical
+  heading/list structure, ParentTree mappings, embedded subset fonts, and
+  selectable text. The deterministic rebuild and the semantic-graph validator
+  run in `test:course-content`; the current 45 content tests, three caption
+  tests, two semantic corruption tests, and 19-guide rebuild all pass. This is
+  not a PDF/UA certification claim because PAC/veraPDF and manual assistive-
+  technology review remain outside the available tool surface.
+- Guide downloads remain present and checksum locked, but are deliberately not
+  completion-required because the runtime has no download-progress operation.
+  This removes a course-wide completion deadlock without removing the guides.
+- Program and course artwork paths are selected only through learner-authorized
+  rows, signed server-side, and rendered with a branded fallback. Assignment
+  rubrics are now stored, editable with validation, and visible beside learner
+  submissions during admin review.
+- The held-video ledger now distinguishes six exact corrected cuts awaiting
+  Jarrad review from three exact policy-defective source hashes that are
+  terminal `changes_requested`. The known-bad Compensation Engine, Operator
+  Playbook, and Career Growth hashes cannot be approved; their replacement
+  scripts and edit specifications remain provider-call gated.
+- The current manifest has zero structural/content errors and 82 publication
+  blockers: six production Closer Lab IDs, nine held videos, 18 held-cut
+  caption/transcript derivatives, 20 cover/lesson artworks, and 29 posters.
+  DialPad confirmation is a dated warning, not an additional blocker, and must
+  still be refreshed immediately before publication.
+- A post-merge adversarial review reproduced six upload/rollback defects despite
+  the focused tests passing: two pathname ownership races, incomplete rollback
+  dependency coverage/atomicity, cleartext TUS credential targets, under-bound
+  resume state, and approved draft uploads without integrity fields. They are
+  active release blockers and are being fixed before any upload or rollback.
+
 ## Hard gates
 
-- Jarrad must approve or request recuts for the nine held videos before their exact files become publishable.
+- Jarrad must review the six corrected held cuts. The three policy-defective
+  source hashes require replacement files and cannot be approved as-is.
 - Jarrad must approve the three-image thumbnail pilot before batch thumbnail generation.
 - Billing changes, new paid vendors and uncontrolled external provider use require immediate approval.
 - Publishing and fixture deletion occur only after all acceptance evidence is complete.
