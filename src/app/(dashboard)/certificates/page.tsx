@@ -47,7 +47,7 @@ export default async function CertificatesPage() {
   const programCertificateEarned = (programCerts.data ?? []).length > 0;
 
   return (
-    <main className="mx-auto w-full max-w-[860px] flex-1 px-5 py-8 md:px-7 md:py-10">
+    <main className="w-full flex-1 px-5 py-8 md:px-7 md:py-10">
       <div className="mb-7">
         <p className="font-[family-name:var(--font-body)] text-[11px] font-extrabold tracking-[0.1em] text-[var(--text-muted)] uppercase">
           Learn

@@ -187,7 +187,7 @@ export default async function ProgramReportPage({
     .sort((a, b) => b.pct - a.pct || a.name.localeCompare(b.name));
 
   return (
-    <main className="mx-auto w-full max-w-5xl flex-1 p-6 md:p-10">
+    <main className="w-full flex-1 p-6 md:p-10">
       <AdminPageHeader
         eyebrow="Admin · Report"
         title={program.title}

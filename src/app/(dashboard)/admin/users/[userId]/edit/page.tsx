@@ -50,7 +50,7 @@ export default async function EditUserPage({
   const isEditingSelf = me.id === profile.id;
 
   return (
-    <main className="mx-auto w-full max-w-2xl flex-1 p-6 md:p-10">
+    <main className="w-full flex-1 p-6 md:p-10">
       <AdminPageHeader
         eyebrow="Admin · Users"
         title={profile.full_name}
