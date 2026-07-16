@@ -2,6 +2,8 @@ export type ProgramSummary = {
   id: string;
   title: string;
   description: string | null;
+  thumbnail_path: string | null;
+  thumbnailUrl?: string;
   course_order_mode: "sequential" | "free";
   is_published: boolean;
   sort_order: number;
@@ -11,6 +13,8 @@ export type CourseSummary = {
   id: string;
   title: string;
   description: string | null;
+  thumbnail_path: string | null;
+  thumbnailUrl?: string;
   is_published: boolean;
 };
 
@@ -55,6 +59,7 @@ export function shapeProgramsResponse(
         id: program.id,
         title: program.title,
         description: program.description,
+        thumbnail_path: program.thumbnail_path,
         course_order_mode: parseCourseOrderMode(program.course_order_mode),
         is_published: program.is_published,
         sort_order: program.sort_order,

@@ -53,7 +53,7 @@ test("every video has its own release-gated poster asset", async () => {
   }
 });
 
-test("every grouped lesson has one required accessible guide download", async () => {
+test("every grouped lesson has one accessible guide download that cannot block completion", async () => {
   const manifest = await loadManifest(MANIFEST_URL);
   const assetsByKey = new Map(manifest.assets.map((asset) => [asset.source_key, asset]));
   const contentLessons = manifest.program.courses
@@ -65,12 +65,31 @@ test("every grouped lesson has one required accessible guide download", async ()
   for (const lesson of contentLessons) {
     const guides = lesson.blocks.filter((block) => block.type === "download" && /^block-guide-pdf-slot-/.test(block.source_key));
     assert.equal(guides.length, 1, `${lesson.source_key} has one guide download`);
-    assert.equal(guides[0].required, true);
+    assert.equal(guides[0].required, false);
     const guide = assetsByKey.get(guides[0].content.asset_key);
     assert.ok(guide, `${lesson.source_key} guide is inventoried`);
     assert.equal(guide.kind, "pdf");
     assert.equal(guides[0].content.file_path, guide.storage_path);
     assert.ok(["approved", "missing"].includes(guide.approval_status));
+  }
+});
+
+test("all six reviewed assignments carry usable reviewer rubrics", async () => {
+  const manifest = await loadManifest(MANIFEST_URL);
+  const assignments = manifest.program.courses
+    .flatMap((course) => course.modules)
+    .flatMap((module) => module.lessons)
+    .filter((lesson) => lesson.type === "assignment")
+    .map((lesson) => lesson.assignment);
+
+  assert.equal(assignments.length, 6);
+  for (const assignment of assignments) {
+    assert.equal(assignment.requires_review, true);
+    assert.ok(assignment.rubric.length >= 3, `${assignment.source_key} has reviewer criteria`);
+    for (const item of assignment.rubric) {
+      assert.ok(item.criterion.trim(), `${assignment.source_key} criterion has a name`);
+      assert.ok(item.description.trim(), `${assignment.source_key} criterion has guidance`);
+    }
   }
 });
 

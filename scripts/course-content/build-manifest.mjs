@@ -666,7 +666,10 @@ async function buildManifest() {
           source_key: `block-guide-pdf-slot-${slotKey}`,
           type: "download",
           sort_order: videoBlocks.length + 3,
-          required: true,
+          // Guides are required course resources, but downloading a file does not
+          // produce durable learner progress. Keep the guide available without
+          // making it a completion gate that can deadlock the lesson.
+          required: false,
           content: {
             asset_key: `guide-slot-${slotKey}`,
             file_path: `courses/bmh-employee-training/v1/guides/slot-${slotKey}-learner-guide.pdf`,

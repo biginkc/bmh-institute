@@ -1643,7 +1643,7 @@
                     "source_key": "block-guide-pdf-slot-01",
                     "type": "download",
                     "sort_order": 5,
-                    "required": true,
+                    "required": false,
                     "content": {
                       "asset_key": "guide-slot-01",
                       "file_path": "courses/bmh-employee-training/v1/guides/guide-slot-01.58eb5978febd4cc417cab3fec18439752dea305ab82980841039abaa80e26808.pdf",
@@ -2335,7 +2335,7 @@
                     "source_key": "block-guide-pdf-slot-02",
                     "type": "download",
                     "sort_order": 4,
-                    "required": true,
+                    "required": false,
                     "content": {
                       "asset_key": "guide-slot-02",
                       "file_path": "courses/bmh-employee-training/v1/guides/guide-slot-02.0080cb47689b0d204635bfc42277a485162aa78f37e83f53e4696a0b2c30bb7a.pdf",
@@ -3015,7 +3015,7 @@
                     "source_key": "block-guide-pdf-slot-03",
                     "type": "download",
                     "sort_order": 4,
-                    "required": true,
+                    "required": false,
                     "content": {
                       "asset_key": "guide-slot-03",
                       "file_path": "courses/bmh-employee-training/v1/guides/guide-slot-03.e084f864dc2a2d7fa443b8969881d9b5e521f47de83aceea1575a7bc9d63ffc0.pdf",
@@ -3811,7 +3811,7 @@
                     "source_key": "block-guide-pdf-slot-04",
                     "type": "download",
                     "sort_order": 6,
-                    "required": true,
+                    "required": false,
                     "content": {
                       "asset_key": "guide-slot-04",
                       "file_path": "courses/bmh-employee-training/v1/guides/guide-slot-04.c5dcee93c1813527654a7c19553b60de573f6bc6f23b0a3e4b5f606f30fa0f69.pdf",
@@ -4578,7 +4578,7 @@
                     "source_key": "block-guide-pdf-slot-05",
                     "type": "download",
                     "sort_order": 5,
-                    "required": true,
+                    "required": false,
                     "content": {
                       "asset_key": "guide-slot-05",
                       "file_path": "courses/bmh-employee-training/v1/guides/guide-slot-05.0b5d752c5c900c04e8052fd50d6fc5f7191ec69f3f0e6880682c86e5b312ac90.pdf",
@@ -5347,7 +5347,7 @@
                     "source_key": "block-guide-pdf-slot-06",
                     "type": "download",
                     "sort_order": 5,
-                    "required": true,
+                    "required": false,
                     "content": {
                       "asset_key": "guide-slot-06",
                       "file_path": "courses/bmh-employee-training/v1/guides/guide-slot-06.4f72846e5ac89395d4df98fa6f82246022b7f91b3ca98d88f1a0accef3ede935.pdf",
@@ -6090,7 +6090,7 @@
                     "source_key": "block-guide-pdf-slot-07",
                     "type": "download",
                     "sort_order": 5,
-                    "required": true,
+                    "required": false,
                     "content": {
                       "asset_key": "guide-slot-07",
                       "file_path": "courses/bmh-employee-training/v1/guides/guide-slot-07.30bb781a1c07a7c8b2354f431a96acc803959801b83d09c69a9624bd947d61f7.pdf",
@@ -6835,7 +6835,7 @@
                     "source_key": "block-guide-pdf-slot-08",
                     "type": "download",
                     "sort_order": 5,
-                    "required": true,
+                    "required": false,
                     "content": {
                       "asset_key": "guide-slot-08",
                       "file_path": "courses/bmh-employee-training/v1/guides/guide-slot-08.e65db332fdae925fc202fd17af637454ed31b6a66f002ac5da68df0ff5813798.pdf",
@@ -7633,7 +7633,7 @@
                     "source_key": "block-guide-pdf-slot-09",
                     "type": "download",
                     "sort_order": 4,
-                    "required": true,
+                    "required": false,
                     "content": {
                       "asset_key": "guide-slot-09",
                       "file_path": "courses/bmh-employee-training/v1/guides/guide-slot-09.8a643d823a1bd4e9aac0d63824260c330471a642dbefcb1bed3a6240f454dbcb.pdf",
@@ -8337,7 +8337,7 @@
                     "source_key": "block-guide-pdf-slot-10",
                     "type": "download",
                     "sort_order": 4,
-                    "required": true,
+                    "required": false,
                     "content": {
                       "asset_key": "guide-slot-10",
                       "file_path": "courses/bmh-employee-training/v1/guides/guide-slot-10.c1e380c5f31d8cd825fc8b66de9195146ba79a2319f9d10eb65d33680eb87612.pdf",
@@ -9056,7 +9056,7 @@
                     "source_key": "block-guide-pdf-slot-11",
                     "type": "download",
                     "sort_order": 5,
-                    "required": true,
+                    "required": false,
                     "content": {
                       "asset_key": "guide-slot-11",
                       "file_path": "courses/bmh-employee-training/v1/guides/guide-slot-11.8345650eee0ce8e24df206e883a55475cf4e0b3b7b44b23097da590b86f3c97e.pdf",
@@ -9801,7 +9801,7 @@
                     "source_key": "block-guide-pdf-slot-12",
                     "type": "download",
                     "sort_order": 5,
-                    "required": true,
+                    "required": false,
                     "content": {
                       "asset_key": "guide-slot-12",
                       "file_path": "courses/bmh-employee-training/v1/guides/guide-slot-12.58cac14b8bfb1ea60b13782b2ec32c218f7c60b993855e39e06d6661504500da.pdf",
@@ -10531,7 +10531,7 @@
                     "source_key": "block-guide-pdf-slot-13",
                     "type": "download",
                     "sort_order": 4,
-                    "required": true,
+                    "required": false,
                     "content": {
                       "asset_key": "guide-slot-13",
                       "file_path": "courses/bmh-employee-training/v1/guides/guide-slot-13.254efdbcc9d64008dcc40d6f7b04224f643901e6ce303997f8083ae7fd531fc8.pdf",
@@ -11255,7 +11255,7 @@
                     "source_key": "block-guide-pdf-slot-14",
                     "type": "download",
                     "sort_order": 4,
-                    "required": true,
+                    "required": false,
                     "content": {
                       "asset_key": "guide-slot-14",
                       "file_path": "courses/bmh-employee-training/v1/guides/guide-slot-14.70b15d9e29fee2e45fc61e35b4395d34482354b0ab9b2192e61cc53a0c8673d7.pdf",
@@ -11989,7 +11989,7 @@
                     "source_key": "block-guide-pdf-slot-15",
                     "type": "download",
                     "sort_order": 4,
-                    "required": true,
+                    "required": false,
                     "content": {
                       "asset_key": "guide-slot-15",
                       "file_path": "courses/bmh-employee-training/v1/guides/guide-slot-15.d0e48a60f7587f8b26b69416c8c61ca8799a2ce4799e1c09146fc0d984d3dea3.pdf",
@@ -12743,7 +12743,7 @@
                     "source_key": "block-guide-pdf-slot-16",
                     "type": "download",
                     "sort_order": 4,
-                    "required": true,
+                    "required": false,
                     "content": {
                       "asset_key": "guide-slot-16",
                       "file_path": "courses/bmh-employee-training/v1/guides/guide-slot-16.52fba6bfab15ec9b91cf5814b0ab2a04d03189387f96574056852fb778aeaae6.pdf",
@@ -13447,7 +13447,7 @@
                     "source_key": "block-guide-pdf-slot-17",
                     "type": "download",
                     "sort_order": 4,
-                    "required": true,
+                    "required": false,
                     "content": {
                       "asset_key": "guide-slot-17",
                       "file_path": "courses/bmh-employee-training/v1/guides/guide-slot-17.d609cb8b5f0a0e2b8e814f9c8870e3ce227342b2bb3382d72d33c51b9488c6f5.pdf",
@@ -14160,7 +14160,7 @@
                     "source_key": "block-guide-pdf-slot-18",
                     "type": "download",
                     "sort_order": 5,
-                    "required": true,
+                    "required": false,
                     "content": {
                       "asset_key": "guide-slot-18",
                       "file_path": "courses/bmh-employee-training/v1/guides/guide-slot-18.ac1afbe4f1284639de206ff2c2075e46d6e3b13e3b9b44a77e5bc173236de5ae.pdf",
@@ -14881,7 +14881,7 @@
                     "source_key": "block-guide-pdf-slot-19",
                     "type": "download",
                     "sort_order": 4,
-                    "required": true,
+                    "required": false,
                     "content": {
                       "asset_key": "guide-slot-19",
                       "file_path": "courses/bmh-employee-training/v1/guides/guide-slot-19.5fb287b0a30120071b289446e4d222a75169a34a2a8f239389490dd0d575ba6a.pdf",

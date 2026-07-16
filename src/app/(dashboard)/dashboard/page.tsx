@@ -6,6 +6,7 @@ import { Card } from "@/components/bmh-ds/card";
 import { Coach } from "@/components/bmh-ds/coach";
 import { LessonCard } from "@/components/bmh-ds/lesson-card";
 import { ProgressBar } from "@/components/bmh-ds/progress-bar";
+import { CourseCoverArtwork } from "@/components/course-cover-artwork";
 import { createClient } from "@/lib/supabase/server";
 import { shapeProgramsResponse } from "@/lib/programs/shape";
 import { summarizeLearnerOnboarding } from "@/lib/learner-onboarding/summary";
@@ -25,6 +26,7 @@ export default async function DashboardPage() {
       id,
       title,
       description,
+      thumbnail_path,
       course_order_mode,
       is_published,
       sort_order,
@@ -34,6 +36,7 @@ export default async function DashboardPage() {
           id,
           title,
           description,
+          thumbnail_path,
           is_published
         )
       )
@@ -126,11 +129,27 @@ export default async function DashboardPage() {
     }
   }
 
-  const thumbnailSignedByPath = await signContentPaths(
-    Array.from(lessonsByCourse.values())
+  const thumbnailSignedByPath = await signContentPaths([
+    ...programs.flatMap((program) => [
+      ...(program.thumbnail_path ? [program.thumbnail_path] : []),
+      ...program.courses.flatMap((course) =>
+        course.thumbnail_path ? [course.thumbnail_path] : [],
+      ),
+    ]),
+    ...Array.from(lessonsByCourse.values())
       .flat()
       .flatMap((lesson) => (lesson.thumbnailPath ? [lesson.thumbnailPath] : [])),
-  );
+  ]);
+  for (const program of programs) {
+    if (program.thumbnail_path) {
+      program.thumbnailUrl = thumbnailSignedByPath.get(program.thumbnail_path);
+    }
+    for (const course of program.courses) {
+      if (course.thumbnail_path) {
+        course.thumbnailUrl = thumbnailSignedByPath.get(course.thumbnail_path);
+      }
+    }
+  }
   for (const lessons of lessonsByCourse.values()) {
     for (const lesson of lessons) {
       if (lesson.thumbnailPath) lesson.thumbnailUrl = thumbnailSignedByPath.get(lesson.thumbnailPath);
@@ -177,6 +196,7 @@ export default async function DashboardPage() {
               programs[0]?.description ??
               "Complete your assigned lessons and build confidence one step at a time."
             }
+            coverUrl={currentCourse?.thumbnailUrl}
           />
 
           <div className="grid items-start gap-7 lg:grid-cols-[minmax(290px,0.9fr)_minmax(0,1.55fr)]">
@@ -260,10 +280,12 @@ function DashboardHero({
   summary,
   courseTitle,
   description,
+  coverUrl,
 }: {
   summary: ReturnType<typeof summarizeLearnerOnboarding>;
   courseTitle: string;
   description: string;
+  coverUrl?: string;
 }) {
   const actionHref = summary.nextLesson
     ? `/lessons/${summary.nextLesson.id}`
@@ -309,19 +331,11 @@ function DashboardHero({
           </p>
         </div>
 
-        <div className="hidden justify-end lg:flex">
-          <Coach
-            base="/brand/mascot"
-            pose={complete ? "wave" : "present"}
-            tone="white"
-            side="right"
-            align="flex-start"
-            height={235}
-            message={
-              complete
-                ? "Nice work. Your completed training is ready to review anytime."
-                : "Ready when you are. Let's pick up where you left off."
-            }
+        <div className="flex justify-center lg:justify-end">
+          <CourseCoverArtwork
+            imageUrl={coverUrl}
+            alt={`${courseTitle} course cover`}
+            size="hero"
           />
         </div>
       </div>
@@ -358,6 +372,14 @@ function ProgramRail({
         <Badge tone="blue" size="sm">
           {program.course_order_mode === "sequential" ? "Sequential" : "Any order"}
         </Badge>
+      </div>
+
+      <div className="px-2 pb-3">
+        <CourseCoverArtwork
+          imageUrl={program.thumbnailUrl}
+          alt={`${program.title} program cover`}
+          size="rail"
+        />
       </div>
 
       {program.courses.length === 0 ? (

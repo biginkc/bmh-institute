@@ -466,8 +466,8 @@ export function validateManifest(
       } else {
         const guideBlock = guides[0];
         const guideAsset = assetsByKey.get(guideBlock.content.asset_key);
-        if (!guideBlock.required || !guideAsset || guideAsset.kind !== "pdf" || guideBlock.content.file_path !== guideAsset.storage_path) {
-          errors.push(`${lesson.source_key} guide download is not required or correctly mapped`);
+        if (guideBlock.required || !guideAsset || guideAsset.kind !== "pdf" || guideBlock.content.file_path !== guideAsset.storage_path) {
+          errors.push(`${lesson.source_key} guide download must be non-blocking and correctly mapped`);
         }
       }
     } else if (lesson.type === "quiz") {

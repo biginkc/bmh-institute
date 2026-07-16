@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Card } from "@/components/bmh-ds";
 import { PageHeader } from "@/components/page-header";
 import { requireAdmin } from "@/lib/auth/guard";
+import { parseAssignmentRubric } from "@/lib/assignments/rubric";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -213,7 +214,7 @@ async function AssignmentLessonEditor({
   const supabase = await createClient();
   const { data: asn } = await supabase
     .from("assignments")
-    .select("id, title, instructions, submission_type, requires_review")
+    .select("id, title, instructions, submission_type, requires_review, rubric")
     .eq("id", assignmentId)
     .maybeSingle();
 
@@ -236,7 +237,10 @@ async function AssignmentLessonEditor({
       />
       <AssignmentEditor
         lessonId={lessonId}
-        assignment={asn as AssignmentSettings}
+        assignment={{
+          ...(asn as Omit<AssignmentSettings, "rubric">),
+          rubric: parseAssignmentRubric(asn.rubric),
+        }}
       />
     </Card>
   );

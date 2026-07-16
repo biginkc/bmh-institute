@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { Badge, Card, Coach } from "@/components/bmh-ds";
+import { parseAssignmentRubric } from "@/lib/assignments/rubric";
 import { createClient } from "@/lib/supabase/server";
 
 import { AdminPageHeader } from "../_components/admin-shell";
@@ -30,7 +31,7 @@ export default async function AdminSubmissionsPage({
       lesson_id,
       assignment_id,
       profiles!assignment_submissions_user_id_fkey ( email, full_name ),
-      assignments ( title ),
+      assignments ( title, rubric ),
       lessons ( title )
     `,
     )
@@ -89,7 +90,7 @@ type Row = {
   submission_url: string | null;
   submission_file_path: string | null;
   profiles: { email: string; full_name: string } | { email: string; full_name: string }[] | null;
-  assignments: { title: string } | { title: string }[] | null;
+  assignments: { title: string; rubric: unknown } | { title: string; rubric: unknown }[] | null;
   lessons: { title: string } | { title: string }[] | null;
 };
 
@@ -97,6 +98,7 @@ function SubmissionCard({ row }: { row: Row }) {
   const profile = firstRow(row.profiles);
   const assignment = firstRow(row.assignments);
   const lesson = firstRow(row.lessons);
+  const rubric = parseAssignmentRubric(assignment?.rubric);
 
   return (
     <Card padding="md">
@@ -116,6 +118,28 @@ function SubmissionCard({ row }: { row: Row }) {
         <div className="text-xs font-semibold text-[var(--text-muted)]">
           Submitted {new Date(row.submitted_at).toLocaleString()}
         </div>
+
+        {rubric.length > 0 ? (
+          <section
+            aria-labelledby={`submission-${row.id}-rubric`}
+            className="rounded-[var(--bmh-radius-md)] border border-[var(--border-hairline)] bg-[var(--surface-tint)] p-4"
+          >
+            <h3
+              id={`submission-${row.id}-rubric`}
+              className="font-[family-name:var(--font-display)] text-base font-extrabold text-[var(--ink-900)]"
+            >
+              Review rubric
+            </h3>
+            <ol className="mt-3 space-y-3">
+              {rubric.map((item, index) => (
+                <li key={`${item.criterion}-${index}`} className="text-sm text-[var(--text-body)]">
+                  <p className="font-extrabold text-[var(--ink-900)]">{item.criterion}</p>
+                  <p className="mt-0.5 font-semibold leading-relaxed">{item.description}</p>
+                </li>
+              ))}
+            </ol>
+          </section>
+        ) : null}
 
         {row.submission_text ? (
           <div className="whitespace-pre-wrap rounded-[var(--bmh-radius-md)] border border-[var(--border-hairline)] bg-[var(--ink-050)] p-3 text-sm font-semibold text-[var(--text-body)]">

@@ -12,11 +12,13 @@ import type { AriaAttributes } from "react";
 
 import { Badge } from "@/components/bmh-ds/badge";
 import { Card } from "@/components/bmh-ds/card";
+import { CourseCoverArtwork } from "@/components/course-cover-artwork";
 import {
   ProgressBar,
   type ProgressBarProps,
 } from "@/components/bmh-ds/progress-bar";
 import { createClient } from "@/lib/supabase/server";
+import { signContentPaths } from "@/lib/content-blocks/sign-urls";
 import {
   shapeCourseResponse,
   type LessonSummary,
@@ -42,6 +44,7 @@ export default async function CoursePage({
         id,
         title,
         description,
+        thumbnail_path,
         is_published,
         modules (
           id,
@@ -78,6 +81,9 @@ export default async function CoursePage({
 
   const course = shapeCourseResponse(courseResult.data);
   if (!course) notFound();
+  const courseCoverUrl = course.thumbnail_path
+    ? (await signContentPaths([course.thumbnail_path])).get(course.thumbnail_path)
+    : undefined;
 
   const completedLessonIds = new Set(
     (completionsResult.data ?? []).map((completion) =>
@@ -134,6 +140,13 @@ export default async function CoursePage({
             {course.description}
           </p>
         ) : null}
+        <div className="mt-6 max-w-2xl">
+          <CourseCoverArtwork
+            imageUrl={courseCoverUrl}
+            alt={`${course.title} course cover`}
+            size="course"
+          />
+        </div>
         {requiredLessons.length > 0 ? (
           <div className="mt-6 max-w-3xl">
             <div className="mb-2 flex items-center justify-between gap-4 text-sm font-extrabold">

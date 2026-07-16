@@ -148,7 +148,7 @@
                     "source_key": "block-guide-pdf-slot-03",
                     "type": "download",
                     "sort_order": 4,
-                    "required": true,
+                    "required": false,
                     "content": {
                       "asset_key": "guide-slot-03",
                       "file_path": "courses/bmh-employee-training/v1/guides/guide-slot-03.e084f864dc2a2d7fa443b8969881d9b5e521f47de83aceea1575a7bc9d63ffc0.pdf",
