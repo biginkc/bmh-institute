@@ -1,5 +1,14 @@
 import Link from "next/link";
-import { ExternalLink } from "lucide-react";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  Download,
+  ExternalLink,
+  FileAudio,
+  FileText,
+  Info,
+  Lightbulb,
+} from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { RolePlayBlock } from "./role-play-block";
@@ -25,6 +34,14 @@ export type ContentBlock = {
 };
 
 export function ContentBlockRenderer({ block }: { block: ContentBlock }) {
+  return (
+    <div data-content-block={block.block_type} className="w-full">
+      {renderContentBlock(block)}
+    </div>
+  );
+}
+
+function renderContentBlock(block: ContentBlock) {
   switch (block.block_type) {
     case "text":
       return <TextBlock html={stringOr(block.content.html, "")} />;
@@ -45,7 +62,7 @@ export function ContentBlockRenderer({ block }: { block: ContentBlock }) {
         />
       );
     case "divider":
-      return <hr className="border-border my-4" />;
+      return <hr className="my-6 border-0 border-t border-[var(--border-hairline)]" />;
     case "image":
       return (
         <ImageBlock
@@ -137,19 +154,24 @@ function numberOr(value: unknown, fallback: number): number {
 function TextBlock({ html }: { html: string }) {
   return (
     <div
-      className="prose prose-neutral dark:prose-invert max-w-none text-sm [&_blockquote]:text-muted-foreground [&_blockquote]:border-l-2 [&_blockquote]:pl-4 [&_blockquote]:italic [&_h2]:mb-3 [&_h2]:mt-4 [&_h2]:text-lg [&_h2]:font-semibold [&_h3]:mb-2 [&_h3]:mt-3 [&_h3]:text-base [&_h3]:font-semibold [&_p]:mb-3 [&_p]:leading-relaxed"
+      className="prose prose-neutral max-w-none font-[family-name:var(--font-body)] text-[15px] leading-relaxed font-semibold text-[var(--text-body)] [&_a]:font-extrabold [&_a]:text-[var(--action)] [&_blockquote]:rounded-r-[var(--bmh-radius-md)] [&_blockquote]:border-l-4 [&_blockquote]:border-[var(--action)] [&_blockquote]:bg-[var(--surface-tint)] [&_blockquote]:px-5 [&_blockquote]:py-3 [&_blockquote]:text-[var(--ink-700)] [&_h2]:mb-3 [&_h2]:mt-5 [&_h2]:font-[family-name:var(--font-display)] [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:text-[var(--ink-900)] [&_h3]:mb-2 [&_h3]:mt-4 [&_h3]:font-[family-name:var(--font-display)] [&_h3]:text-xl [&_h3]:font-bold [&_h3]:text-[var(--ink-900)] [&_li]:my-1 [&_p]:mb-4 [&_strong]:font-extrabold [&_strong]:text-[var(--ink-900)]"
       dangerouslySetInnerHTML={{ __html: html }}
     />
   );
 }
 
 const CALLOUT_CLASSES: Record<string, string> = {
-  info: "border-blue-200 bg-blue-50 text-blue-900 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-100",
-  warning:
-    "border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-100",
-  success:
-    "border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-100",
-  note: "border-border bg-muted/50 text-foreground",
+  info: "border-[var(--blue-200)] bg-[var(--action-soft)] text-[var(--blue-700)]",
+  warning: "border-[var(--yellow-300)] bg-[var(--warning-soft)] text-[var(--yellow-600)]",
+  success: "border-[var(--green-500)] bg-[var(--success-soft)] text-[var(--green-500)]",
+  note: "border-[var(--ink-200)] bg-[var(--ink-050)] text-[var(--ink-700)]",
+};
+
+const CALLOUT_ICONS = {
+  info: Info,
+  warning: AlertTriangle,
+  success: CheckCircle2,
+  note: Lightbulb,
 };
 
 function CalloutBlock({
@@ -160,9 +182,17 @@ function CalloutBlock({
   markdown: string;
 }) {
   const cls = CALLOUT_CLASSES[variant] ?? CALLOUT_CLASSES.note;
+  const Icon = CALLOUT_ICONS[variant as keyof typeof CALLOUT_ICONS] ?? Lightbulb;
   return (
-    <div className={cn("rounded-md border px-4 py-3 text-sm", cls)}>
-      {markdown}
+    <div
+      role="note"
+      className={cn(
+        "flex items-start gap-3 rounded-[var(--bmh-radius-md)] border px-4 py-4 font-[family-name:var(--font-body)] text-sm font-bold shadow-[var(--bmh-shadow-xs)]",
+        cls,
+      )}
+    >
+      <Icon aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
+      <span className="leading-relaxed text-[var(--ink-900)]">{markdown}</span>
     </div>
   );
 }
@@ -180,18 +210,21 @@ function ExternalLinkBlock({
 }) {
   const isExternal = url.startsWith("http") || openInNewTab;
   const className =
-    "border-border hover:bg-muted/40 flex items-start gap-3 rounded-md border px-4 py-3 text-sm transition-colors";
+    "group flex items-center gap-3 rounded-[var(--bmh-radius-md)] border border-[var(--border-card)] bg-[var(--surface-card)] px-4 py-4 font-[family-name:var(--font-body)] text-sm shadow-[var(--bmh-shadow-xs)] transition-all hover:-translate-y-0.5 hover:border-[var(--blue-300)] hover:shadow-[var(--shadow-pop)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--action)]";
   const content = (
     <>
-      <ExternalLink className="mt-0.5 size-4 shrink-0" />
-      <div>
-        <div className="font-medium">{label}</div>
+      <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[var(--action-soft)] text-[var(--action)]">
+        <ExternalLink aria-hidden="true" className="size-4" />
+      </span>
+      <div className="min-w-0 flex-1">
+        <div className="font-extrabold text-[var(--ink-900)]">{label}</div>
         {description ? (
-          <div className="text-muted-foreground mt-0.5 text-xs">
+          <div className="mt-0.5 text-xs font-semibold text-[var(--text-muted)]">
             {description}
           </div>
         ) : null}
       </div>
+      <ExternalLink aria-hidden="true" className="size-4 shrink-0 text-[var(--text-muted)] transition-transform group-hover:translate-x-0.5" />
     </>
   );
 
@@ -229,17 +262,17 @@ function ImageBlock({
   const src = signedUrl ?? (filePath || null);
   if (!src) {
     return (
-      <div className="border-border bg-muted/40 text-muted-foreground rounded-md border border-dashed p-6 text-center text-sm">
+      <div className="rounded-[var(--bmh-radius-md)] border border-dashed border-[var(--ink-300)] bg-[var(--ink-050)] p-6 text-center text-sm font-semibold text-[var(--text-muted)]">
         Image not set.
       </div>
     );
   }
   return (
-    <figure className="my-4">
+    <figure className="my-2 overflow-hidden rounded-[var(--bmh-radius-lg)] border border-[var(--border-card)] bg-[var(--surface-card)] shadow-[var(--bmh-shadow-sm)]">
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={src} alt={alt} className="rounded-md border" />
+      <img src={src} alt={alt} className="h-auto w-full" />
       {caption ? (
-        <figcaption className="text-muted-foreground mt-2 text-xs">
+        <figcaption className="border-t border-[var(--border-hairline)] px-4 py-3 font-[family-name:var(--font-body)] text-xs font-semibold text-[var(--text-muted)]">
           {caption}
         </figcaption>
       ) : null}
@@ -261,7 +294,7 @@ function PdfBlock({
   const src = signedUrl ?? filePath;
   if (!src) {
     return (
-      <div className="border-border bg-muted/40 text-muted-foreground rounded-md border border-dashed p-6 text-center text-sm">
+      <div className="rounded-[var(--bmh-radius-md)] border border-dashed border-[var(--ink-300)] bg-[var(--ink-050)] p-6 text-center text-sm font-semibold text-[var(--text-muted)]">
         PDF not set.
       </div>
     );
@@ -272,19 +305,26 @@ function PdfBlock({
       <a
         href={src}
         download={filename ?? undefined}
-        className="border-border hover:bg-muted/40 flex items-center gap-3 rounded-md border px-4 py-3 text-sm"
+        aria-label={`Download ${filename ?? "PDF"}`}
+        className="flex items-center gap-3 rounded-[var(--bmh-radius-md)] border border-[var(--border-card)] bg-[var(--surface-card)] px-4 py-4 font-[family-name:var(--font-body)] text-sm shadow-[var(--bmh-shadow-xs)] transition hover:-translate-y-0.5 hover:shadow-[var(--shadow-pop)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--action)]"
       >
-        <ExternalLink className="size-4" />
+        <span className="flex size-10 items-center justify-center rounded-full bg-[var(--action-soft)] text-[var(--action)]">
+          <FileText aria-hidden="true" className="size-5" />
+        </span>
         <div>
-          <div className="font-medium">{filename ?? "Download PDF"}</div>
-          <div className="text-muted-foreground text-xs">PDF document</div>
+          <div className="font-extrabold text-[var(--ink-900)]">{filename ?? "Download PDF"}</div>
+          <div className="text-xs font-semibold text-[var(--text-muted)]">PDF document</div>
         </div>
       </a>
     );
   }
 
   return (
-    <div className="overflow-hidden rounded-md border">
+    <div className="overflow-hidden rounded-[var(--bmh-radius-lg)] border border-[var(--border-card)] bg-[var(--surface-card)] shadow-[var(--bmh-shadow-sm)]">
+      <div className="flex items-center gap-2 border-b border-[var(--border-hairline)] px-4 py-3 font-[family-name:var(--font-body)] text-sm font-extrabold text-[var(--ink-900)]">
+        <FileText aria-hidden="true" className="size-4 text-[var(--action)]" />
+        {filename ?? "PDF document"}
+      </div>
       <iframe
         src={src}
         title={filename ?? "PDF"}
@@ -309,15 +349,23 @@ function AudioBlock({
     source === "upload" ? (signedUrl ?? filePath) : (url ?? signedUrl);
   if (!src) {
     return (
-      <div className="border-border bg-muted/40 text-muted-foreground rounded-md border border-dashed p-6 text-center text-sm">
+      <div className="rounded-[var(--bmh-radius-md)] border border-dashed border-[var(--ink-300)] bg-[var(--ink-050)] p-6 text-center text-sm font-semibold text-[var(--text-muted)]">
         Audio not set.
       </div>
     );
   }
   return (
-    <div className="border-border rounded-md border p-3">
-      {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
-      <audio src={src} controls preload="metadata" className="w-full" />
+    <div className="flex items-center gap-4 rounded-[var(--bmh-radius-lg)] border border-[var(--border-card)] bg-[var(--surface-card)] p-4 shadow-[var(--bmh-shadow-sm)]">
+      <span className="hidden size-11 shrink-0 items-center justify-center rounded-full bg-[var(--action-soft)] text-[var(--action)] sm:flex">
+        <FileAudio aria-hidden="true" className="size-5" />
+      </span>
+      <audio
+        src={src}
+        controls
+        preload="metadata"
+        aria-label="Lesson audio"
+        className="w-full"
+      />
     </div>
   );
 }
@@ -338,7 +386,7 @@ function DownloadBlock({
   const href = signedUrl ?? filePath;
   if (!href) {
     return (
-      <div className="border-border bg-muted/40 text-muted-foreground rounded-md border border-dashed p-6 text-center text-sm">
+      <div className="rounded-[var(--bmh-radius-md)] border border-dashed border-[var(--ink-300)] bg-[var(--ink-050)] p-6 text-center text-sm font-semibold text-[var(--text-muted)]">
         File not set.
       </div>
     );
@@ -347,12 +395,15 @@ function DownloadBlock({
     <a
       href={href}
       download={filename}
-      className="border-border hover:bg-muted/40 flex items-center gap-3 rounded-md border px-4 py-3 text-sm"
+      aria-label={`Download ${filename}`}
+      className="group flex items-center gap-3 rounded-[var(--bmh-radius-md)] border border-[var(--border-card)] bg-[var(--surface-card)] px-4 py-4 font-[family-name:var(--font-body)] text-sm shadow-[var(--bmh-shadow-xs)] transition-all hover:-translate-y-0.5 hover:border-[var(--blue-300)] hover:shadow-[var(--shadow-pop)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--action)]"
     >
-      <ExternalLink className="size-4" />
+      <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[var(--yellow-100)] text-[var(--yellow-600)]">
+        <Download aria-hidden="true" className="size-5" />
+      </span>
       <div className="flex-1">
-        <div className="font-medium">{filename}</div>
-        <div className="text-muted-foreground text-xs">
+        <div className="font-extrabold text-[var(--ink-900)]">{filename}</div>
+        <div className="text-xs font-semibold text-[var(--text-muted)]">
           {sizeBytes !== null ? formatBytes(sizeBytes) : null}
           {description ? (sizeBytes !== null ? " · " : "") + description : ""}
         </div>
@@ -386,7 +437,7 @@ function VideoBlock({
     const src = signedUrl ?? filePath;
     if (!src) {
       return (
-        <div className="border-border bg-muted/40 text-muted-foreground rounded-md border border-dashed p-6 text-center text-sm">
+        <div className="rounded-[var(--bmh-radius-md)] border border-dashed border-[var(--ink-300)] bg-[var(--ink-050)] p-6 text-center text-sm font-semibold text-[var(--text-muted)]">
           Video not available.
         </div>
       );
@@ -396,7 +447,7 @@ function VideoBlock({
 
   if (!url) {
     return (
-      <div className="border-border bg-muted/40 text-muted-foreground rounded-md border border-dashed p-6 text-center text-sm">
+      <div className="rounded-[var(--bmh-radius-md)] border border-dashed border-[var(--ink-300)] bg-[var(--ink-050)] p-6 text-center text-sm font-semibold text-[var(--text-muted)]">
         Video URL not set.
       </div>
     );
@@ -404,7 +455,7 @@ function VideoBlock({
 
   const embedSrc = toEmbedSrc(source, url);
   return (
-    <div className="aspect-video overflow-hidden rounded-md border">
+    <div className="aspect-video overflow-hidden rounded-[var(--bmh-radius-lg)] border-[2.5px] border-[var(--ink-900)] bg-[var(--ink-900)] shadow-[var(--bmh-shadow-sm)]">
       <iframe
         src={embedSrc}
         title="Video"
@@ -461,14 +512,14 @@ const EMBED_ASPECT_CLASS: Record<string, string> = {
 function EmbedBlock({ src, aspect }: { src: string; aspect: string }) {
   if (!src || src === "https://") {
     return (
-      <div className="border-border bg-muted/40 text-muted-foreground rounded-md border border-dashed p-6 text-center text-sm">
+      <div className="rounded-[var(--bmh-radius-md)] border border-dashed border-[var(--ink-300)] bg-[var(--ink-050)] p-6 text-center text-sm font-semibold text-[var(--text-muted)]">
         Embed URL not set.
       </div>
     );
   }
   const aspectClass = EMBED_ASPECT_CLASS[aspect] ?? "aspect-video";
   return (
-    <div className={cn(aspectClass, "overflow-hidden rounded-md border")}>
+    <div className={cn(aspectClass, "overflow-hidden rounded-[var(--bmh-radius-lg)] border border-[var(--border-card)] bg-[var(--surface-card)] shadow-[var(--bmh-shadow-sm)]")}>
       <iframe
         src={src}
         title="Embedded content"
@@ -483,7 +534,7 @@ function EmbedBlock({ src, aspect }: { src: string; aspect: string }) {
 
 function UnsupportedBlock({ type }: { type: string }) {
   return (
-    <div className="border-border bg-muted/40 text-muted-foreground rounded-md border border-dashed px-4 py-3 text-xs">
+    <div className="rounded-[var(--bmh-radius-md)] border border-dashed border-[var(--ink-300)] bg-[var(--ink-050)] px-4 py-3 text-xs font-semibold text-[var(--text-muted)]">
       Block type &quot;{type}&quot; isn&apos;t rendered yet.
     </div>
   );

@@ -82,18 +82,20 @@ export function RolePlayBlock({
 
   if (!iframeSrc || !trustedOrigin) {
     return (
-      <div className="border-border bg-muted/40 text-muted-foreground rounded-md border border-dashed p-6 text-center text-sm">
+      <div className="rounded-[var(--bmh-radius-md)] border border-dashed border-[var(--ink-300)] bg-[var(--ink-050)] p-6 text-center font-[family-name:var(--font-body)] text-sm font-semibold text-[var(--text-muted)]">
         Role play not configured.
       </div>
     );
   }
 
   return (
-    <section className="border-border overflow-hidden rounded-md border">
-      <div className="border-border bg-card flex items-center justify-between gap-3 border-b px-4 py-3">
+    <section className="overflow-hidden rounded-[var(--bmh-radius-lg)] border border-[var(--border-card)] bg-[var(--surface-card)] shadow-[var(--bmh-shadow-sm)]">
+      <div className="flex items-center justify-between gap-3 border-b border-[var(--border-hairline)] bg-[var(--surface-tint)] px-5 py-4 font-[family-name:var(--font-body)]">
         <div>
-          <h2 className="text-sm font-medium">{title || "Role play"}</h2>
-          <p className="text-muted-foreground text-xs">
+          <h2 className="font-[family-name:var(--font-display)] text-lg font-bold text-[var(--ink-900)]">
+            {title || "Role play"}
+          </h2>
+          <p className="mt-0.5 text-xs font-bold text-[var(--text-muted)]">
             {complete
               ? "Completed"
               : ready
@@ -102,7 +104,7 @@ export function RolePlayBlock({
           </p>
         </div>
         {complete ? (
-          <div className="text-emerald-700 dark:text-emerald-300 flex items-center gap-1 text-xs font-medium">
+          <div className="flex items-center gap-1 rounded-full bg-[var(--success-soft)] px-2.5 py-1 text-xs font-extrabold text-[var(--success)]">
             <CheckCircle2 className="size-4" />
             Complete
           </div>
@@ -117,7 +119,7 @@ export function RolePlayBlock({
         style={{ height: `${heightPx}px` }}
       />
       {error ? (
-        <p className="border-border bg-destructive/5 text-destructive border-t px-4 py-3 text-sm">
+        <p className="border-t border-[var(--danger)] bg-[var(--danger-soft)] px-4 py-3 font-[family-name:var(--font-body)] text-sm font-bold text-[var(--danger)]">
           {error}
         </p>
       ) : null}
