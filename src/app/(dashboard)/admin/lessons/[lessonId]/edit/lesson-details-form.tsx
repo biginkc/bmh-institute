@@ -3,8 +3,7 @@
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button, Input } from "@/components/bmh-ds";
 import { Label } from "@/components/ui/label";
 
 import { updateLessonDetails } from "./actions";
@@ -39,7 +38,7 @@ export function LessonDetailsForm({
   }
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-5 font-[family-name:var(--font-body)]">
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="title">Title</Label>
         <Input
@@ -57,7 +56,7 @@ export function LessonDetailsForm({
           rows={2}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          className="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
+          className="w-full rounded-[var(--bmh-radius-md)] border-2 border-[var(--ink-300)] bg-[var(--paper)] px-4 py-3 text-sm font-semibold text-[var(--ink-900)] outline-none focus:border-[var(--action)] focus:ring-4 focus:ring-[var(--focus-ring)]"
         />
       </div>
 
@@ -67,7 +66,7 @@ export function LessonDetailsForm({
           type="checkbox"
           checked={required}
           onChange={(e) => setRequired(e.target.checked)}
-          className="size-4"
+          className="size-4 accent-[var(--action)]"
         />
         <Label htmlFor="is_required">
           Required for course completion

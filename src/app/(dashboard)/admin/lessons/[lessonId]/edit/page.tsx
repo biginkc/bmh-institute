@@ -1,13 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card } from "@/components/bmh-ds";
+import { PageHeader } from "@/components/page-header";
 import { requireAdmin } from "@/lib/auth/guard";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -19,6 +14,7 @@ import {
   AssignmentEditor,
   type AssignmentSettings,
 } from "./assignment-editor";
+import { LessonEditorTabs } from "./lesson-editor-tabs";
 
 export default async function EditLessonPage({
   params,
@@ -56,51 +52,57 @@ export default async function EditLessonPage({
 
   const lessonType = lesson.lesson_type as "content" | "quiz" | "assignment";
 
+  const editor =
+    lessonType === "content" ? (
+      <ContentLessonEditor lessonId={lessonId} />
+    ) : lessonType === "quiz" ? (
+      <QuizLessonEditor
+        lessonId={lessonId}
+        quizId={lesson.quiz_id as string | null}
+      />
+    ) : (
+      <AssignmentLessonEditor
+        lessonId={lessonId}
+        assignmentId={lesson.assignment_id as string | null}
+      />
+    );
+
+  const details = (
+    <Card padding="md">
+      <PanelHeading
+        title="Lesson details"
+        description="Update the title, description, and completion requirement."
+      />
+      <LessonDetailsForm
+        lessonId={lessonId}
+        defaultTitle={lesson.title as string}
+        defaultDescription={lesson.description as string | null}
+        defaultRequired={lesson.is_required_for_completion as boolean}
+      />
+    </Card>
+  );
+
   return (
-    <main className="mx-auto w-full max-w-3xl flex-1 p-6 md:p-10">
+    <main className="mx-auto w-full max-w-[860px] flex-1 px-5 py-8 md:px-7 md:pb-16">
       <Link
         href={courseId ? `/admin/courses/${courseId}/edit` : "/admin/courses"}
-        className="text-muted-foreground hover:text-foreground text-xs"
+        className="font-[family-name:var(--font-body)] text-sm font-bold text-[var(--action)] transition-colors hover:text-[var(--action-hover)]"
       >
         ← {moduleRow ? `Back to course (module: ${moduleRow.title})` : "Back to courses"}
       </Link>
-      <h1 className="mt-3 text-2xl font-semibold">Edit lesson</h1>
-      <p className="text-muted-foreground mb-8 mt-1 text-sm">
-        Lesson type: {lessonType}.
-      </p>
-
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Details</CardTitle>
-          <CardDescription>Title, description, required flag.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <LessonDetailsForm
-            lessonId={lessonId}
-            defaultTitle={lesson.title as string}
-            defaultDescription={lesson.description as string | null}
-            defaultRequired={lesson.is_required_for_completion as boolean}
-          />
-        </CardContent>
-      </Card>
-
-      {lessonType === "content" ? (
-        <ContentLessonEditor lessonId={lessonId} />
-      ) : null}
-
-      {lessonType === "quiz" ? (
-        <QuizLessonEditor
-          lessonId={lessonId}
-          quizId={lesson.quiz_id as string | null}
+      <div className="mb-7 mt-3">
+        <PageHeader
+          title={lesson.title as string}
+          description={`Edit this ${lessonType} lesson and keep learner-facing content current.`}
+          breadcrumb={[{ label: "Admin" }, { label: "Lessons" }]}
         />
-      ) : null}
+      </div>
 
-      {lessonType === "assignment" ? (
-        <AssignmentLessonEditor
-          lessonId={lessonId}
-          assignmentId={lesson.assignment_id as string | null}
-        />
-      ) : null}
+      <LessonEditorTabs
+        lessonType={lessonType}
+        editor={editor}
+        details={details}
+      />
     </main>
   );
 }
@@ -115,20 +117,7 @@ async function ContentLessonEditor({ lessonId }: { lessonId: string }) {
 
   const blockRows = (blocks ?? []) as BlockRow[];
 
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Content blocks</CardTitle>
-        <CardDescription>
-          Stack any mix of text, video, image, PDF, audio, download, callout,
-          external link, embed, or divider.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <BlocksEditor lessonId={lessonId} initialBlocks={blockRows} />
-      </CardContent>
-    </Card>
-  );
+  return <BlocksEditor lessonId={lessonId} initialBlocks={blockRows} />;
 }
 
 async function QuizLessonEditor({
@@ -140,13 +129,11 @@ async function QuizLessonEditor({
 }) {
   if (!quizId) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Quiz</CardTitle>
-          <CardDescription>
-            This quiz lesson has no quiz row. Delete and recreate the lesson.
-          </CardDescription>
-        </CardHeader>
+      <Card padding="md">
+        <PanelHeading
+          title="Quiz"
+          description="This quiz lesson has no quiz row. Delete and recreate the lesson."
+        />
       </Card>
     );
   }
@@ -179,31 +166,26 @@ async function QuizLessonEditor({
 
   if (!quiz) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Quiz unavailable</CardTitle>
-          <CardDescription>The quiz row couldn&apos;t be loaded.</CardDescription>
-        </CardHeader>
+      <Card padding="md">
+        <PanelHeading
+          title="Quiz unavailable"
+          description="The quiz row couldn't be loaded."
+        />
       </Card>
     );
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Quiz</CardTitle>
-        <CardDescription>
-          Settings, questions, and answer options. Radio for single-choice and
-          true/false; checkbox for multi-select.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <QuizEditor
-          lessonId={lessonId}
-          quiz={quiz as QuizSettings}
-          questions={(questions ?? []) as QuestionRow[]}
-        />
-      </CardContent>
+    <Card padding="md">
+      <PanelHeading
+        title="Quiz"
+        description="Settings, questions, and answer options. Correct answers stay hidden from learners."
+      />
+      <QuizEditor
+        lessonId={lessonId}
+        quiz={quiz as QuizSettings}
+        questions={(questions ?? []) as QuestionRow[]}
+      />
     </Card>
   );
 }
@@ -217,13 +199,11 @@ async function AssignmentLessonEditor({
 }) {
   if (!assignmentId) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Assignment</CardTitle>
-          <CardDescription>
-            This assignment lesson has no assignment row. Delete and recreate the lesson.
-          </CardDescription>
-        </CardHeader>
+      <Card padding="md">
+        <PanelHeading
+          title="Assignment"
+          description="This assignment lesson has no assignment row. Delete and recreate the lesson."
+        />
       </Card>
     );
   }
@@ -237,32 +217,39 @@ async function AssignmentLessonEditor({
 
   if (!asn) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Assignment unavailable</CardTitle>
-          <CardDescription>
-            The assignment row couldn&apos;t be loaded.
-          </CardDescription>
-        </CardHeader>
+      <Card padding="md">
+        <PanelHeading
+          title="Assignment unavailable"
+          description="The assignment row couldn't be loaded."
+        />
       </Card>
     );
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Assignment</CardTitle>
-        <CardDescription>
-          What the learner submits and whether it needs review.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <AssignmentEditor
-          lessonId={lessonId}
-          assignment={asn as AssignmentSettings}
-        />
-      </CardContent>
+    <Card padding="md">
+      <PanelHeading
+        title="Assignment"
+        description="Set what the learner submits and whether an admin must review it."
+      />
+      <AssignmentEditor
+        lessonId={lessonId}
+        assignment={asn as AssignmentSettings}
+      />
     </Card>
+  );
+}
+
+function PanelHeading({ title, description }: { title: string; description: string }) {
+  return (
+    <div className="mb-5">
+      <h2 className="font-[family-name:var(--font-display)] text-xl font-bold text-[var(--ink-900)]">
+        {title}
+      </h2>
+      <p className="mt-1 font-[family-name:var(--font-body)] text-sm font-semibold leading-relaxed text-[var(--text-muted)]">
+        {description}
+      </p>
+    </div>
   );
 }
 

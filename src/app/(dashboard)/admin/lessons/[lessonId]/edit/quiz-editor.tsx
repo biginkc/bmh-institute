@@ -4,9 +4,7 @@ import { useState, useTransition } from "react";
 import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Badge, Button, Card, IconButton, Input } from "@/components/bmh-ds";
 import { Label } from "@/components/ui/label";
 
 import {
@@ -58,7 +56,7 @@ export function QuizEditor({
   questions: QuestionRow[];
 }) {
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-5 font-[family-name:var(--font-body)]">
       <QuizSettingsEditor lessonId={lessonId} quiz={quiz} />
       <QuestionsEditor
         lessonId={lessonId}
@@ -113,8 +111,10 @@ function QuizSettingsEditor({
   }
 
   return (
-    <div className="border-border rounded-md border p-4">
-      <h3 className="mb-4 text-sm font-semibold">Quiz settings</h3>
+    <Card padding="md" tint>
+      <h3 className="mb-4 font-[family-name:var(--font-display)] text-lg font-bold text-[var(--ink-900)]">
+        Quiz settings
+      </h3>
       <div className="grid gap-4 md:grid-cols-2">
         <Field label="Title" htmlFor="q-title">
           <Input
@@ -139,7 +139,7 @@ function QuizSettingsEditor({
             rows={2}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
+            className="w-full rounded-[var(--bmh-radius-md)] border-2 border-[var(--ink-300)] bg-[var(--paper)] px-4 py-3 text-sm font-semibold text-[var(--ink-900)] outline-none focus:border-[var(--action)] focus:ring-4 focus:ring-[var(--focus-ring)]"
           />
         </Field>
         <Field label="Questions served per attempt" htmlFor="q-per">
@@ -188,7 +188,7 @@ function QuizSettingsEditor({
                 e.target.value as "never" | "after_pass" | "always",
               )
             }
-            className="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
+            className="w-full rounded-[var(--bmh-radius-md)] border-2 border-[var(--ink-300)] bg-[var(--paper)] px-4 py-3 text-sm font-semibold text-[var(--ink-900)] outline-none focus:border-[var(--action)] focus:ring-4 focus:ring-[var(--focus-ring)]"
           >
             <option value="never">Never</option>
             <option value="after_pass">After a passing attempt</option>
@@ -201,7 +201,7 @@ function QuizSettingsEditor({
             type="checkbox"
             checked={randomizeQ}
             onChange={(e) => setRandomizeQ(e.target.checked)}
-            className="size-4"
+            className="size-4 accent-[var(--action)]"
           />
           <Label htmlFor="q-rq">Randomize question order</Label>
           <div className="w-4" />
@@ -210,7 +210,7 @@ function QuizSettingsEditor({
             type="checkbox"
             checked={randomizeA}
             onChange={(e) => setRandomizeA(e.target.checked)}
-            className="size-4"
+            className="size-4 accent-[var(--action)]"
           />
           <Label htmlFor="q-ra">Randomize answer order</Label>
         </div>
@@ -220,7 +220,7 @@ function QuizSettingsEditor({
           {pending ? "Saving..." : "Save settings"}
         </Button>
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -248,10 +248,14 @@ function QuestionsEditor({
 
   return (
     <div className="flex flex-col gap-4">
-      <h3 className="text-sm font-semibold">Questions</h3>
+      <h3 className="font-[family-name:var(--font-display)] text-lg font-bold text-[var(--ink-900)]">
+        Questions
+      </h3>
 
       {questions.length === 0 ? (
-        <p className="text-muted-foreground text-sm">No questions yet.</p>
+        <Card padding="md" tint>
+          <p className="text-sm font-semibold text-[var(--text-muted)]">No questions yet.</p>
+        </Card>
       ) : (
         questions
           .slice()
@@ -271,7 +275,7 @@ function QuestionsEditor({
           ))
       )}
 
-      <div className="border-border flex items-end gap-2 border-t pt-4">
+      <div className="flex flex-wrap items-end gap-3 border-t border-[var(--border-hairline)] pt-4">
         <div>
           <Label htmlFor="new-q-type">New question type</Label>
           <select
@@ -282,15 +286,19 @@ function QuestionsEditor({
                 e.target.value as "true_false" | "single_choice" | "multi_select",
               )
             }
-            className="border-input bg-background mt-1 rounded-md border px-3 py-2 text-sm"
+            className="mt-1 rounded-[var(--bmh-radius-md)] border-2 border-[var(--ink-300)] bg-[var(--paper)] px-4 py-3 text-sm font-bold text-[var(--ink-900)] outline-none focus:border-[var(--action)] focus:ring-4 focus:ring-[var(--focus-ring)]"
           >
             <option value="single_choice">Single choice</option>
             <option value="true_false">True / False</option>
             <option value="multi_select">Multi-select</option>
           </select>
         </div>
-        <Button variant="outline" onClick={onAdd} disabled={pending}>
-          <Plus className="size-3.5" />
+        <Button
+          variant="secondary"
+          onClick={onAdd}
+          disabled={pending}
+          iconLeft={<Plus className="size-4 accent-[var(--action)]" />}
+        >
           Add question
         </Button>
       </div>
@@ -389,44 +397,44 @@ function QuestionCard({
   );
 
   return (
-    <div className="border-border rounded-md border">
-      <div className="border-border flex items-center justify-between gap-2 border-b px-3 py-2">
+    <Card padding="none">
+      <div className="flex items-center justify-between gap-2 border-b border-[var(--border-hairline)] px-4 py-3">
         <div className="flex items-center gap-2">
-          <span className="text-muted-foreground text-sm tabular-nums">
+          <span className="text-sm font-extrabold tabular-nums text-[var(--text-muted)]">
             Q{index + 1}
           </span>
-          <Badge variant="secondary" className="capitalize">
-            {question.question_type.replace("_", " ")}
+          <Badge tone="blue" size="sm">
+            <span className="capitalize">{question.question_type.replaceAll("_", " ")}</span>
           </Badge>
         </div>
         <div className="flex items-center gap-1">
-          <Button
-            variant="outline"
-            size="icon-sm"
+          <IconButton
+            label="Move question up"
+            variant="plain"
+            size="sm"
             disabled={!canMoveUp || pending}
             onClick={() => onMove("up")}
-            aria-label="Move up"
           >
-            <ArrowUp className="size-3.5" />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon-sm"
+            <ArrowUp className="size-4 accent-[var(--action)]" />
+          </IconButton>
+          <IconButton
+            label="Move question down"
+            variant="plain"
+            size="sm"
             disabled={!canMoveDown || pending}
             onClick={() => onMove("down")}
-            aria-label="Move down"
           >
-            <ArrowDown className="size-3.5" />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon-sm"
+            <ArrowDown className="size-4 accent-[var(--action)]" />
+          </IconButton>
+          <IconButton
+            label="Delete question"
+            variant="plain"
+            size="sm"
             disabled={pending}
             onClick={onDelete}
-            aria-label="Delete question"
           >
-            <Trash2 className="size-3.5" />
-          </Button>
+            <Trash2 className="size-4 accent-[var(--action)]" />
+          </IconButton>
         </div>
       </div>
 
@@ -437,7 +445,7 @@ function QuestionCard({
             rows={2}
             value={text}
             onChange={(e) => setText(e.target.value)}
-            className="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
+            className="w-full rounded-[var(--bmh-radius-md)] border-2 border-[var(--ink-300)] bg-[var(--paper)] px-4 py-3 text-sm font-semibold text-[var(--ink-900)] outline-none focus:border-[var(--action)] focus:ring-4 focus:ring-[var(--focus-ring)]"
           />
         </Field>
         <div className="grid gap-3 md:grid-cols-4">
@@ -463,17 +471,17 @@ function QuestionCard({
           </Field>
         </div>
         <div>
-          <Button variant="outline" size="sm" onClick={onSave} disabled={pending}>
+          <Button variant="secondary" size="sm" onClick={onSave} disabled={pending}>
             Save question
           </Button>
         </div>
 
         <div className="mt-2">
-          <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
             Options
           </div>
           {sortedOptions.length === 0 ? (
-            <p className="text-muted-foreground text-xs">No options yet.</p>
+            <p className="text-[var(--text-muted)] text-xs">No options yet.</p>
           ) : (
             <ul className="flex flex-col gap-2">
               {sortedOptions.map((o) => (
@@ -499,14 +507,14 @@ function QuestionCard({
                 onChange={(e) => setNewOption(e.target.value)}
                 placeholder="New option"
               />
-              <Button variant="outline" onClick={onAddOption} disabled={pending}>
+              <Button variant="secondary" onClick={onAddOption} disabled={pending}>
                 Add option
               </Button>
             </div>
           ) : null}
         </div>
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -569,25 +577,26 @@ function OptionRow({
         type={isRadio ? "radio" : "checkbox"}
         checked={correct}
         onChange={(e) => onCorrectChange(e.target.checked)}
-        className="size-4"
+        className="size-4 accent-[var(--action)]"
         aria-label="Mark correct"
       />
-      <Input
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        onBlur={() => save()}
-        className="flex-1"
-      />
+      <div className="min-w-0 flex-1">
+        <Input
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          onBlur={() => save()}
+        />
+      </div>
       {questionType === "true_false" ? null : (
-        <Button
-          variant="outline"
-          size="icon-sm"
+        <IconButton
+          label="Delete option"
+          variant="plain"
+          size="sm"
           disabled={pending}
           onClick={onDelete}
-          aria-label="Delete option"
         >
-          <Trash2 className="size-3.5" />
-        </Button>
+          <Trash2 className="size-4 accent-[var(--action)]" />
+        </IconButton>
       )}
     </li>
   );
