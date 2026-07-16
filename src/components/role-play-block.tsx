@@ -63,8 +63,7 @@ export function RolePlayBlock({
             blockId,
             scenarioId,
             attemptId: data.attempt_id,
-            score: data.score,
-            summaryUrl: data.summary_url,
+            completionToken: data.completion_token,
           });
           if (result.ok) {
             setComplete(true);

@@ -18,9 +18,8 @@ import {
 import { enrichBlocksWithSignedUrls } from "@/lib/content-blocks/sign-urls";
 import { computeQuizEligibility } from "@/lib/quizzes/attempts";
 import { mintRolePlayEmbedToken } from "@/lib/role-plays/embed-token";
-import { MarkCompleteButton } from "./mark-complete-button";
 import { QuizGateCard } from "./quiz-gate-card";
-import { QuizRunner, type QuizQuestion } from "./quiz-runner";
+import { QuizRunner } from "./quiz-runner";
 import {
   AssignmentRunner,
   type AssignmentDescriptor,
@@ -267,12 +266,8 @@ async function ContentLessonBody({
           <p className="text-sm font-bold text-[var(--text-muted)]">
             {alreadyComplete
               ? "Nice. This lesson is complete."
-              : "Mark this lesson complete when you are done."}
+              : "Required videos complete after 90% of their content has been watched."}
           </p>
-          <MarkCompleteButton
-            lessonId={lessonId}
-            alreadyComplete={alreadyComplete}
-          />
         </div>
       </div>
 
@@ -490,59 +485,18 @@ async function QuizLessonBody({
   }
 
   const supabase = await createClient();
-  const [{ data: quiz }, questionsResult, { data: attempts }] =
-    await Promise.all([
+  const [{ data: quiz }, { data: attempts }] = await Promise.all([
       supabase
         .from("quizzes")
         .select("id, passing_score, max_attempts, retake_cooldown_hours")
         .eq("id", quizId)
         .maybeSingle(),
-      // HARDEN-04: read from answer_options_public view; is_correct is not
-      // exposed to learner sessions. Two queries + in-process join avoids the
-      // PostgREST embedded-FK cache surprise on views (see PATTERNS.md Path 1).
-      supabase
-        .from("questions")
-        .select("id, question_text, question_type, sort_order")
-        .eq("quiz_id", quizId)
-        .order("sort_order"),
       supabase
         .from("user_quiz_attempts")
         .select("passed, score, completed_at")
         .eq("quiz_id", quizId)
         .order("completed_at", { ascending: false }),
     ]);
-
-  const rawQuestions = questionsResult.data;
-  const questionIds = (rawQuestions ?? []).map((q) => q.id);
-  const { data: rawOptions } = questionIds.length
-    ? await supabase
-        .from("answer_options_public")
-        .select("id, question_id, option_text, sort_order")
-        .in("question_id", questionIds)
-        .order("sort_order")
-    : {
-        data: [] as Array<{
-          id: string;
-          question_id: string;
-          option_text: string;
-          sort_order: number;
-        }>,
-      };
-
-  const optionsByQuestion = new Map<
-    string,
-    Array<{ id: string; option_text: string; sort_order: number | null }>
-  >();
-  for (const opt of rawOptions ?? []) {
-    if (!opt.id || !opt.question_id || !opt.option_text) continue;
-    const arr = optionsByQuestion.get(opt.question_id) ?? [];
-    arr.push({
-      id: opt.id,
-      option_text: opt.option_text,
-      sort_order: opt.sort_order,
-    });
-    optionsByQuestion.set(opt.question_id, arr);
-  }
 
   if (!quiz) {
     return (
@@ -585,21 +539,11 @@ async function QuizLessonBody({
     );
   }
 
-  const questions: QuizQuestion[] = (rawQuestions ?? []).map((q) => ({
-    id: q.id,
-    question_text: q.question_text,
-    question_type: q.question_type as QuizQuestion["question_type"],
-    options: (optionsByQuestion.get(q.id) ?? [])
-      .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
-      .map((o) => ({ id: o.id, option_text: o.option_text })),
-  }));
-
   return (
     <QuizRunner
       quizId={quizId}
       lessonId={lessonId}
       passingScore={quiz.passing_score}
-      questions={questions}
       backHref={backHref}
       attemptsUsed={eligibility.attemptsUsed}
       attemptsLeft={eligibility.attemptsLeft}

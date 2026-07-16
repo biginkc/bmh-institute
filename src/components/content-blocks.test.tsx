@@ -3,7 +3,14 @@ import { describe, expect, it, vi } from "vitest";
 
 vi.mock("@/app/(dashboard)/lessons/[lessonId]/actions", () => ({
   completeRolePlayBlock: vi.fn(),
-  markBlockComplete: vi.fn(),
+  loadVideoProgress: vi.fn(async () => ({
+    ok: true,
+    positionSeconds: 0,
+    watchedRanges: [],
+    watchedPercent: 0,
+    completed: false,
+  })),
+  recordVideoProgress: vi.fn(),
 }));
 
 import { ContentBlockRenderer, type ContentBlock } from "./content-blocks";

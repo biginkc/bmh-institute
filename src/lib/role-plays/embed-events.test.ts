@@ -14,6 +14,7 @@ describe("role-play embed event helpers", () => {
       scenario_id: "scenario-1",
       attempt_id: "attempt-1",
       score: 87,
+      completion_token: "signed-result",
     });
 
     expect(
@@ -32,6 +33,7 @@ describe("role-play embed event helpers", () => {
       scenario_id: "scenario-1",
       attempt_id: "attempt-1",
       score: 87,
+      completion_token: "signed-result",
     });
 
     expect(

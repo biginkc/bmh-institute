@@ -1138,6 +1138,54 @@ export type Database = {
           },
         ]
       }
+      user_video_progress: {
+        Row: {
+          block_id: string
+          duration_seconds: number
+          last_observed_at: string | null
+          last_observed_position_seconds: number
+          position_seconds: number
+          updated_at: string
+          user_id: string
+          watched_ranges: Json
+        }
+        Insert: {
+          block_id: string
+          duration_seconds: number
+          last_observed_at?: string | null
+          last_observed_position_seconds?: number
+          position_seconds?: number
+          updated_at?: string
+          user_id: string
+          watched_ranges?: Json
+        }
+        Update: {
+          block_id?: string
+          duration_seconds?: number
+          last_observed_at?: string | null
+          last_observed_position_seconds?: number
+          position_seconds?: number
+          updated_at?: string
+          user_id?: string
+          watched_ranges?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_video_progress_block_id_fkey"
+            columns: ["block_id"]
+            isOneToOne: false
+            referencedRelation: "content_blocks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_video_progress_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_role_groups: {
         Row: {
           role_group_id: string
@@ -1216,6 +1264,10 @@ export type Database = {
       fn_course_completion_percent: {
         Args: { p_course_id: string; p_user_id: string }
         Returns: number
+      }
+      fn_course_completed_at: {
+        Args: { p_course_id: string; p_user_id: string }
+        Returns: string | null
       }
       fn_course_is_complete: {
         Args: { p_course_id: string; p_user_id: string }

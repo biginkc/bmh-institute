@@ -1,17 +1,31 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const markBlockComplete = vi.fn();
+const loadVideoProgress = vi.fn();
+const recordVideoProgress = vi.fn();
 
 vi.mock("@/app/(dashboard)/lessons/[lessonId]/actions", () => ({
-  markBlockComplete: (...args: unknown[]) => markBlockComplete(...args),
+  loadVideoProgress: (...args: unknown[]) => loadVideoProgress(...args),
+  recordVideoProgress: (...args: unknown[]) => recordVideoProgress(...args),
 }));
 
 import { VideoBlockPlayer } from "./video-block-player";
 
 describe("<VideoBlockPlayer />", () => {
   beforeEach(() => {
-    markBlockComplete.mockReset();
+    loadVideoProgress.mockReset();
+    loadVideoProgress.mockResolvedValue({
+      ok: true,
+      positionSeconds: 0,
+      watchedRanges: [],
+      completed: false,
+    });
+    recordVideoProgress.mockReset();
+    recordVideoProgress.mockResolvedValue({
+      ok: true,
+      watchedPercent: 0,
+      completed: false,
+    });
   });
 
   it("uses the real media duration in the branded play overlay", () => {
@@ -25,7 +39,7 @@ describe("<VideoBlockPlayer />", () => {
     expect(screen.getByText("1:40")).toBeVisible();
   });
 
-  it("marks the block complete once after playback reaches 90 percent", () => {
+  it("records only contiguous playback samples and does not complete from a seek", () => {
     render(<VideoBlockPlayer blockId="block-1" src="https://example.com/video.mp4" />);
 
     const video = screen.getByLabelText("Lesson video") as HTMLVideoElement;
@@ -34,15 +48,17 @@ describe("<VideoBlockPlayer />", () => {
       currentTime: { configurable: true, writable: true, value: 89 },
     });
 
+    fireEvent.play(video);
     fireEvent.timeUpdate(video);
-    expect(markBlockComplete).not.toHaveBeenCalled();
-
-    video.currentTime = 90;
+    fireEvent.seeking(video);
+    video.currentTime = 94;
+    fireEvent.seeked(video);
     fireEvent.timeUpdate(video);
     video.currentTime = 95;
     fireEvent.timeUpdate(video);
 
-    expect(markBlockComplete).toHaveBeenCalledTimes(1);
-    expect(markBlockComplete).toHaveBeenCalledWith("block-1");
+    expect(recordVideoProgress).not.toHaveBeenCalledWith(
+      expect.objectContaining({ observedFrom: 89, observedTo: 94 }),
+    );
   });
 });

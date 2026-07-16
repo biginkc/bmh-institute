@@ -1,7 +1,13 @@
 import { createHmac } from "node:crypto";
 
+import { getAppUrl } from "@/lib/app-url";
+
 type SupabaseLike = {
+  // Supabase's fluent PostgREST builder varies by table and selected relation.
+  // This integration deliberately accepts the app client and test doubles.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   from: (table: string) => any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   rpc: any;
 };
 
@@ -192,7 +198,7 @@ async function courseCompletionDetails(
   supabase: SupabaseLike,
   args: { userId: string; courseId: string },
 ): Promise<SandraCourseCompletedInput | null> {
-  const [profileResult, courseResult, certificateResult] = await Promise.all([
+  const [profileResult, courseResult, certificateResult, completedAtResult, programLinksResult] = await Promise.all([
     supabase
       .from("profiles")
       .select("email, full_name")
@@ -209,11 +215,40 @@ async function courseCompletionDetails(
       .eq("user_id", args.userId)
       .eq("course_id", args.courseId)
       .maybeSingle(),
+    supabase.rpc("fn_course_completed_at", {
+      p_user_id: args.userId,
+      p_course_id: args.courseId,
+    }),
+    supabase
+      .from("program_courses")
+      .select("program_id")
+      .eq("course_id", args.courseId),
   ]);
 
-  if (profileResult.error || courseResult.error || certificateResult.error) {
+  if (
+    profileResult.error ||
+    courseResult.error ||
+    certificateResult.error ||
+    completedAtResult.error ||
+    programLinksResult.error
+  ) {
     return null;
   }
+
+  const programIds = (programLinksResult.data ?? []).map(
+    (row: { program_id: string }) => row.program_id,
+  );
+  const programCertificateResult = programIds.length
+    ? await supabase
+        .from("program_certificates")
+        .select("id, certificate_number, issued_at")
+        .eq("user_id", args.userId)
+        .in("program_id", programIds)
+        .order("issued_at", { ascending: false })
+        .limit(1)
+        .maybeSingle()
+    : { data: null, error: null };
+  if (programCertificateResult.error) return null;
 
   const profile = profileResult.data as
     | { email?: string | null; full_name?: string | null }
@@ -222,6 +257,15 @@ async function courseCompletionDetails(
   const certificate = certificateResult.data as
     | { id?: string | null; certificate_number?: string | null; issued_at?: string | null }
     | null;
+  const programCertificate = programCertificateResult.data as
+    | { id?: string | null; certificate_number?: string | null; issued_at?: string | null }
+    | null;
+  const finalCertificate = programCertificate ?? certificate;
+  const certificatePath = programCertificate?.id
+    ? `/certificates/program/${programCertificate.id}`
+    : certificate?.id
+      ? `/certificates/course/${certificate.id}`
+      : null;
 
   return {
     userId: args.userId,
@@ -229,8 +273,11 @@ async function courseCompletionDetails(
     learnerEmail: profile?.email ?? null,
     learnerName: profile?.full_name ?? null,
     courseTitle: course?.title ?? null,
-    completedAt: certificate?.issued_at ?? new Date().toISOString(),
-    certificateNumber: certificate?.certificate_number ?? null,
-    certificateUrl: certificate?.id ? `/certificates/${certificate.id}` : null,
+    completedAt:
+      (completedAtResult.data as string | null) ??
+      finalCertificate?.issued_at ??
+      new Date().toISOString(),
+    certificateNumber: finalCertificate?.certificate_number ?? null,
+    certificateUrl: certificatePath ? `${getAppUrl()}${certificatePath}` : null,
   };
 }

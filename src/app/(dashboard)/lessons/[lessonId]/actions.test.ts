@@ -3,13 +3,45 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 let resultUpsert: Record<string, unknown> | null = null;
 let progressUpsert: Record<string, unknown> | null = null;
 
+vi.mock("@/lib/role-plays/completion-token", () => ({
+  verifyRolePlayCompletionToken: vi.fn(() => ({
+    ok: true,
+    score: 87,
+    summaryUrl: "http://localhost:3200/recordings/attempt-1",
+  })),
+}));
+
 vi.mock("@/lib/supabase/server", () => ({
   createClient: vi.fn(async () => ({
     auth: {
-      getUser: async () => ({
-        data: { user: { id: "user-1" } },
-      }),
+      getUser: async () => ({ data: { user: { id: "user-1" } } }),
     },
+    rpc: async () => ({ data: true, error: null }),
+    from: (table: string) => {
+      if (table === "content_blocks") {
+        return {
+          select: () => ({
+            eq: () => ({
+              maybeSingle: async () => ({
+                data: {
+                  id: "block-1",
+                  lesson_id: "lesson-1",
+                  block_type: "role_play",
+                  content: { scenario_id: "scenario-1" },
+                },
+                error: null,
+              }),
+            }),
+          }),
+        };
+      }
+      throw new Error(`Unexpected learner table ${table}`);
+    },
+  })),
+}));
+
+vi.mock("@/lib/supabase/admin", () => ({
+  createAdminClient: vi.fn(() => ({
     from: (table: string) => {
       if (table === "role_play_results") {
         return {
@@ -32,14 +64,12 @@ vi.mock("@/lib/supabase/server", () => ({
           },
         };
       }
-      throw new Error(`Unexpected table ${table}`);
+      throw new Error(`Unexpected admin table ${table}`);
     },
   })),
 }));
 
-vi.mock("next/cache", () => ({
-  revalidatePath: vi.fn(),
-}));
+vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
 import { completeRolePlayBlock } from "./actions";
 
@@ -49,13 +79,12 @@ describe("completeRolePlayBlock", () => {
     progressUpsert = null;
   });
 
-  it("saves the role-play result before marking the content block complete", async () => {
+  it("uses the server-verified result before marking the block complete", async () => {
     const result = await completeRolePlayBlock({
       blockId: "block-1",
       scenarioId: "scenario-1",
       attemptId: "attempt-1",
-      score: 87,
-      summaryUrl: "http://localhost:3200/recordings/attempt-1",
+      completionToken: "signed-result",
     });
 
     expect(result).toEqual({ ok: true, alreadyMarked: false });

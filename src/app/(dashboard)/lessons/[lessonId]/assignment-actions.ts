@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { sendEmail } from "@/lib/email/send";
 import { renderNewSubmissionEmail } from "@/lib/email/new-submission";
 import { getAppUrl } from "@/lib/app-url";
@@ -91,7 +92,16 @@ export async function submitAssignment(input: {
     true;
   const status = requiresReview ? "submitted" : "approved";
 
-  const { error } = await supabase.from("assignment_submissions").insert({
+  let admin;
+  try {
+    admin = createAdminClient();
+  } catch (error) {
+    return {
+      ok: false,
+      error: error instanceof Error ? error.message : "Admin client unavailable.",
+    };
+  }
+  const { error } = await admin.from("assignment_submissions").insert({
     assignment_id: input.assignmentId,
     lesson_id: input.lessonId,
     user_id: user.id,

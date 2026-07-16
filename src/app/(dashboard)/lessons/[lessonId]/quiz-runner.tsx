@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import { RotateCcw, Send } from "lucide-react";
+import { Play, RotateCcw, Send } from "lucide-react";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/bmh-ds/badge";
@@ -10,7 +10,11 @@ import { Button } from "@/components/bmh-ds/button";
 import { Card } from "@/components/bmh-ds/card";
 import { Coach } from "@/components/bmh-ds/coach";
 
-import { submitQuizAttempt, type QuizSubmitResult } from "./quiz-actions";
+import {
+  startQuizAttempt,
+  submitQuizAttempt,
+  type QuizSubmitResult,
+} from "./quiz-actions";
 
 export type QuizQuestion = {
   id: string;
@@ -26,7 +30,6 @@ export function QuizRunner({
   quizId,
   lessonId,
   passingScore,
-  questions,
   backHref,
   attemptsUsed,
   attemptsLeft,
@@ -34,29 +37,50 @@ export function QuizRunner({
   quizId: string;
   lessonId: string;
   passingScore: number;
-  questions: QuizQuestion[];
   backHref: string;
   attemptsUsed: number;
   attemptsLeft: number | null;
 }) {
   const [responses, setResponses] = useState<Record<string, string[]>>({});
   const [result, setResult] = useState<QuizSubmitResult | null>(null);
+  const [attemptId, setAttemptId] = useState<string | null>(null);
+  const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [pending, startTransition] = useTransition();
 
-  if (questions.length === 0) {
+  function beginAttempt() {
+    startTransition(async () => {
+      const response = await startQuizAttempt({ quizId, lessonId });
+      if (!response.ok) {
+        toast.error(response.error);
+        return;
+      }
+      setAttemptId(response.attemptId);
+      setQuestions(response.questions);
+      setResponses({});
+      setResult(null);
+    });
+  }
+
+  if (!attemptId) {
     return (
       <Card outline padding="lg">
-        <div className="mb-5">
+        <div className="mb-5 text-center">
           <h2 className="font-[family-name:var(--font-display)] text-2xl font-extrabold text-[var(--ink-900)]">
-            No questions yet
+            Ready for the checkpoint?
           </h2>
+          <p className="mt-2 font-[family-name:var(--font-body)] text-sm font-semibold text-[var(--text-muted)]">
+            Your question and answer order is saved when the attempt starts.
+          </p>
         </div>
-        <Coach
-          emotion="curious"
-          tone="tint"
-          size="sm"
-          message="This quiz doesn't have any questions yet. An admin needs to add some."
-        />
+        <div className="flex justify-center">
+          <Button
+            onClick={beginAttempt}
+            disabled={pending}
+            iconLeft={<Play aria-hidden="true" className="size-4" />}
+          >
+            {pending ? "Starting..." : "Start quiz"}
+          </Button>
+        </div>
       </Card>
     );
   }
@@ -68,7 +92,8 @@ export function QuizRunner({
         passingScore={passingScore}
         backHref={backHref}
         onRetake={() => {
-          setResult(null);
+          setAttemptId(null);
+          setQuestions([]);
           setResponses({});
         }}
       />
@@ -99,7 +124,8 @@ export function QuizRunner({
       return;
     }
     startTransition(async () => {
-      const response = await submitQuizAttempt({ quizId, lessonId, responses });
+      if (!attemptId) return;
+      const response = await submitQuizAttempt({ attemptId, responses });
       setResult(response);
       if (!response.ok) {
         toast.error(response.error);
@@ -240,6 +266,29 @@ function QuizResultCard({
           }
         />
       </div>
+
+      {result.review?.length ? (
+        <div className="mx-auto mb-7 max-w-xl space-y-3">
+          <h3 className="font-[family-name:var(--font-display)] text-xl font-bold text-[var(--ink-900)]">
+            Answer review
+          </h3>
+          {result.review.map((item, index) => (
+            <div
+              key={item.questionId}
+              className="rounded-[var(--bmh-radius-md)] border-2 border-[var(--ink-200)] bg-[var(--ink-050)] p-4 text-left"
+            >
+              <p className="text-sm font-extrabold text-[var(--ink-900)]">
+                Question {index + 1}: {item.correctOptions.join(", ")}
+              </p>
+              {item.explanation ? (
+                <p className="mt-1 text-sm font-semibold text-[var(--text-muted)]">
+                  {item.explanation}
+                </p>
+              ) : null}
+            </div>
+          ))}
+        </div>
+      ) : null}
 
       <div className="flex flex-col-reverse justify-center gap-3 sm:flex-row">
         <Link href={backHref} className={linkButtonClass}>

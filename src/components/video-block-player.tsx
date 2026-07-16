@@ -1,13 +1,16 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Play } from "lucide-react";
 
-import { markBlockComplete } from "@/app/(dashboard)/lessons/[lessonId]/actions";
+import {
+  loadVideoProgress,
+  recordVideoProgress,
+} from "@/app/(dashboard)/lessons/[lessonId]/actions";
 
 /**
- * HTML5 video player that auto-marks its owning content block complete
- * once playback crosses 90% of duration. Fires at most once per mount.
+ * HTML5 video player that records short contiguous playback observations.
+ * Seeking moves the resume point but does not add watched coverage.
  */
 export function VideoBlockPlayer({
   blockId,
@@ -16,22 +19,50 @@ export function VideoBlockPlayer({
   blockId: string;
   src: string;
 }) {
-  const firedRef = useRef(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const sampleStartRef = useRef<number | null>(null);
+  const resumePositionRef = useRef(0);
   const [playing, setPlaying] = useState(false);
   const [duration, setDuration] = useState(0);
 
+  useEffect(() => {
+    let active = true;
+    void loadVideoProgress(blockId).then((result) => {
+      if (!active || !result.ok) return;
+      resumePositionRef.current = result.positionSeconds;
+      const video = videoRef.current;
+      if (video?.readyState && result.positionSeconds > 0) {
+        video.currentTime = result.positionSeconds;
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, [blockId]);
+
   function onTimeUpdate(e: React.SyntheticEvent<HTMLVideoElement>) {
-    if (firedRef.current) return;
     const el = e.currentTarget;
     if (!el.duration || !isFinite(el.duration)) return;
-    const ratio = el.currentTime / el.duration;
-    if (ratio >= 0.9) {
-      firedRef.current = true;
-      // Fire-and-forget. The next page render sees the updated
-      // user_block_progress row.
-      void markBlockComplete(blockId);
+    if (sampleStartRef.current === null) {
+      sampleStartRef.current = el.currentTime;
+      return;
     }
+    if (el.currentTime - sampleStartRef.current < 5) return;
+    flushProgress(el);
+  }
+
+  function flushProgress(el: HTMLVideoElement) {
+    const observedFrom = sampleStartRef.current;
+    if (observedFrom === null || el.currentTime <= observedFrom) return;
+    const observedTo = el.currentTime;
+    sampleStartRef.current = observedTo;
+    void recordVideoProgress({
+      blockId,
+      positionSeconds: observedTo,
+      durationSeconds: el.duration,
+      observedFrom,
+      observedTo,
+    });
   }
 
   function playVideo() {
@@ -53,10 +84,31 @@ export function VideoBlockPlayer({
         onLoadedMetadata={(event) => {
           const nextDuration = event.currentTarget.duration;
           setDuration(Number.isFinite(nextDuration) ? nextDuration : 0);
+          if (resumePositionRef.current > 0) {
+            event.currentTarget.currentTime = Math.min(
+              resumePositionRef.current,
+              nextDuration,
+            );
+          }
         }}
-        onPlay={() => setPlaying(true)}
-        onPause={() => setPlaying(false)}
-        onEnded={() => setPlaying(false)}
+        onPlay={(event) => {
+          setPlaying(true);
+          sampleStartRef.current = event.currentTarget.currentTime;
+        }}
+        onSeeking={() => {
+          sampleStartRef.current = null;
+        }}
+        onSeeked={(event) => {
+          sampleStartRef.current = event.currentTarget.currentTime;
+        }}
+        onPause={(event) => {
+          flushProgress(event.currentTarget);
+          setPlaying(false);
+        }}
+        onEnded={(event) => {
+          flushProgress(event.currentTarget);
+          setPlaying(false);
+        }}
         onTimeUpdate={onTimeUpdate}
       />
       {!playing ? (

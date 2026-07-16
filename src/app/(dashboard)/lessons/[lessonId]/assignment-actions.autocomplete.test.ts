@@ -25,6 +25,22 @@ let insertedRow: Record<string, unknown> | null = null;
 // Flipped per-test to drive the review policy returned by the assignments row.
 let assignmentRequiresReview = true;
 
+vi.mock("@/lib/supabase/admin", () => ({
+  createAdminClient: vi.fn(() => ({
+    from: (table: string) => {
+      if (table !== "assignment_submissions") {
+        throw new Error(`Unexpected admin table: ${table}`);
+      }
+      return {
+        insert: (row: Record<string, unknown>) => {
+          insertedRow = row;
+          return insertSpy(row);
+        },
+      };
+    },
+  })),
+}));
+
 vi.mock("@/lib/supabase/server", () => ({
   createClient: vi.fn(async () => ({
     auth: {
@@ -41,14 +57,6 @@ vi.mock("@/lib/supabase/server", () => ({
       return { data: true, error: null };
     },
     from: (table: string) => {
-      if (table === "assignment_submissions") {
-        return {
-          insert: (row: Record<string, unknown>) => {
-            insertedRow = row;
-            return insertSpy(row);
-          },
-        };
-      }
       if (table === "assignments") {
         return {
           select: () => ({

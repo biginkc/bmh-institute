@@ -19,6 +19,22 @@ let lessonAssignmentId = "assignment-1";
 let lessonUnlocked = true;
 let assignmentRequiresReview = true;
 
+vi.mock("@/lib/supabase/admin", () => ({
+  createAdminClient: vi.fn(() => ({
+    from: (table: string) => {
+      if (table !== "assignment_submissions") {
+        throw new Error(`Unexpected admin table: ${table}`);
+      }
+      return {
+        insert: (row: Record<string, unknown>) => {
+          insertedRow = row;
+          return insertSpy(row);
+        },
+      };
+    },
+  })),
+}));
+
 vi.mock("@/lib/supabase/server", () => ({
   createClient: vi.fn(async () => ({
     auth: {
@@ -35,14 +51,6 @@ vi.mock("@/lib/supabase/server", () => ({
       return { data: lessonUnlocked, error: null };
     },
     from: (table: string) => {
-      if (table === "assignment_submissions") {
-        return {
-          insert: (row: Record<string, unknown>) => {
-            insertedRow = row;
-            return insertSpy(row);
-          },
-        };
-      }
       if (table === "profiles") {
         return {
           select: () => ({
