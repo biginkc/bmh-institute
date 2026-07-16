@@ -276,7 +276,7 @@
       "mime_type": "video/mp4",
       "checksum_sha256": "6e6a3f257ff8cf3ef201de775de47c6e7833e3abd673e44bb8d4d5ac3aafa048",
       "size_bytes": 85657783,
-      "approval_status": "approved"
+      "approval_status": "hold"
     },
     {
       "source_key": "video-slot-18-mission-control",
@@ -422,9 +422,9 @@
       "source_key": "caption-video-slot-04-ideal-seller",
       "kind": "caption",
       "local_path": "course-assets/captions/video-slot-04-ideal-seller.vtt",
-      "storage_path": "courses/bmh-employee-training/v1/captions/video-slot-04-ideal-seller.2844e4cf18e3f631590cbc40119a45b7289ef7812db1d10553d7afad72999029.vtt",
+      "storage_path": "courses/bmh-employee-training/v1/captions/video-slot-04-ideal-seller.fd2855c7e76f0e6d8b88407e753acc5373b87887fea5660d7a294c5baae8c0b7.vtt",
       "mime_type": "text/vtt",
-      "checksum_sha256": "2844e4cf18e3f631590cbc40119a45b7289ef7812db1d10553d7afad72999029",
+      "checksum_sha256": "fd2855c7e76f0e6d8b88407e753acc5373b87887fea5660d7a294c5baae8c0b7",
       "size_bytes": 6862,
       "approval_status": "approved"
     },
@@ -442,10 +442,10 @@
       "source_key": "caption-video-slot-05-offer-a",
       "kind": "caption",
       "local_path": "course-assets/captions/video-slot-05-offer-a.vtt",
-      "storage_path": "courses/bmh-employee-training/v1/captions/video-slot-05-offer-a.44551f64f063500af859f4f2905d1586de20c06b908ec2ac0b0ddff93cb6058d.vtt",
+      "storage_path": "courses/bmh-employee-training/v1/captions/video-slot-05-offer-a.6dafc8e515918f2b88536afc46316e99f1b36ffc4e7a50d3a1f8d831c78f70ad.vtt",
       "mime_type": "text/vtt",
-      "checksum_sha256": "44551f64f063500af859f4f2905d1586de20c06b908ec2ac0b0ddff93cb6058d",
-      "size_bytes": 10432,
+      "checksum_sha256": "6dafc8e515918f2b88536afc46316e99f1b36ffc4e7a50d3a1f8d831c78f70ad",
+      "size_bytes": 10430,
       "approval_status": "approved"
     },
     {
@@ -542,20 +542,20 @@
       "source_key": "caption-video-slot-07-fact-find",
       "kind": "caption",
       "local_path": "course-assets/captions/video-slot-07-fact-find.vtt",
-      "storage_path": "courses/bmh-employee-training/v1/captions/video-slot-07-fact-find.02390b83d86f3e7eeeda6672a5283bac70101948782553e31df50acce72c861b.vtt",
+      "storage_path": "courses/bmh-employee-training/v1/captions/video-slot-07-fact-find.247ae9dfc84be1cb341b6bb06d1269c462006781ead978d6d1113f24b96ac204.vtt",
       "mime_type": "text/vtt",
-      "checksum_sha256": "02390b83d86f3e7eeeda6672a5283bac70101948782553e31df50acce72c861b",
-      "size_bytes": 5743,
+      "checksum_sha256": "247ae9dfc84be1cb341b6bb06d1269c462006781ead978d6d1113f24b96ac204",
+      "size_bytes": 5742,
       "approval_status": "approved"
     },
     {
       "source_key": "transcript-video-slot-07-fact-find",
       "kind": "transcript",
       "local_path": "course-assets/transcripts/video-slot-07-fact-find.md",
-      "storage_path": "courses/bmh-employee-training/v1/transcripts/video-slot-07-fact-find.7a9f51a4dd586633ae763a1ee155fa8c799233c0dfdb0050d88ee8d5f8632567.md",
+      "storage_path": "courses/bmh-employee-training/v1/transcripts/video-slot-07-fact-find.2fe7b8f133380c92ed256cfadd0abf51fe10fc44aaa71f362dd01272dbaa6f21.md",
       "mime_type": "text/markdown",
-      "checksum_sha256": "7a9f51a4dd586633ae763a1ee155fa8c799233c0dfdb0050d88ee8d5f8632567",
-      "size_bytes": 3521,
+      "checksum_sha256": "2fe7b8f133380c92ed256cfadd0abf51fe10fc44aaa71f362dd01272dbaa6f21",
+      "size_bytes": 3520,
       "approval_status": "approved"
     },
     {
@@ -742,10 +742,10 @@
       "source_key": "caption-video-slot-14-flow",
       "kind": "caption",
       "local_path": "course-assets/captions/video-slot-14-flow.vtt",
-      "storage_path": "courses/bmh-employee-training/v1/captions/video-slot-14-flow.ca6f6915d46c1fe9a0318b35785aa1c1b23ead65bcf6a56541646d9ea58d9b79.vtt",
+      "storage_path": "courses/bmh-employee-training/v1/captions/video-slot-14-flow.79d34e3574b3a7661f162237d682ec1651204450d0aa91a21bc4b7c87eef2f1d.vtt",
       "mime_type": "text/vtt",
-      "checksum_sha256": "ca6f6915d46c1fe9a0318b35785aa1c1b23ead65bcf6a56541646d9ea58d9b79",
-      "size_bytes": 8871,
+      "checksum_sha256": "79d34e3574b3a7661f162237d682ec1651204450d0aa91a21bc4b7c87eef2f1d",
+      "size_bytes": 8870,
       "approval_status": "approved"
     },
     {
@@ -822,21 +822,21 @@
       "source_key": "caption-video-slot-18-operator",
       "kind": "caption",
       "local_path": "course-assets/captions/video-slot-18-operator.vtt",
-      "storage_path": "courses/bmh-employee-training/v1/captions/video-slot-18-operator.27e8f8187b1072d6acedddb1a9686f0bdaa80d9ab9d8c65429e5bd8b289bf3ec.vtt",
+      "storage_path": "courses/bmh-employee-training/v1/captions/video-slot-18-operator.vtt",
       "mime_type": "text/vtt",
-      "checksum_sha256": "27e8f8187b1072d6acedddb1a9686f0bdaa80d9ab9d8c65429e5bd8b289bf3ec",
-      "size_bytes": 9034,
-      "approval_status": "approved"
+      "checksum_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing"
     },
     {
       "source_key": "transcript-video-slot-18-operator",
       "kind": "transcript",
       "local_path": "course-assets/transcripts/video-slot-18-operator.md",
-      "storage_path": "courses/bmh-employee-training/v1/transcripts/video-slot-18-operator.043a1c29d51aa3e17351255868cc41aef3fcd48d7680e5a2c76cc0efdab98674.md",
+      "storage_path": "courses/bmh-employee-training/v1/transcripts/video-slot-18-operator.md",
       "mime_type": "text/markdown",
-      "checksum_sha256": "043a1c29d51aa3e17351255868cc41aef3fcd48d7680e5a2c76cc0efdab98674",
-      "size_bytes": 5378,
-      "approval_status": "approved"
+      "checksum_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing"
     },
     {
       "source_key": "caption-video-slot-18-mission-control",

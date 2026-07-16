@@ -4,6 +4,7 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const STALE_COMPENSATION_PATTERN = /\$\s*\d|hourly base|ramp(?:-up|ing up) base|performance pay|milestone bonus|commission on (?:every|the) deal|earning potential|earnings can grow|compensation .* tied to .* output|guaranteed pay|fixed pay promise/i;
+const FIXED_DIAL_QUOTA_PATTERN = /\b(?:\d{2,3}(?:\s*(?:to|-|plus|\+))\s*\d{2,3}|\d{2,3}\s*(?:plus|\+))\s+(?:total\s+)?dials?\b|\bdial target\b/i;
 
 function sha256(buffer) {
   return createHash("sha256").update(buffer).digest("hex");
@@ -113,11 +114,16 @@ export async function inspectApprovedCaptionAssets(manifest, repoRootUrl) {
     }
 
     const captionText = await inspectFile(caption, repoRoot, "caption", errors);
+    let captionProse = null;
     if (captionText !== null) {
       approvedCaptions += 1;
       const parsed = parseWebVtt(captionText);
       errors.push(...parsed.errors.map((error) => `${caption.source_key}: ${error}`));
       const finalCue = parsed.cues.at(-1);
+      captionProse = parsed.cues.map((cue) => cue.text).join(" ").replace(/\s+/g, " ").trim();
+      if (parsed.cues.some((cue) => /^[-,.;:!?]/.test(cue.text))) {
+        errors.push(`${caption.source_key} starts a cue with detached punctuation`);
+      }
       if (finalCue && duration && finalCue.end > duration + 0.75) {
         errors.push(`${caption.source_key} extends beyond the video duration`);
       }
@@ -127,11 +133,18 @@ export async function inspectApprovedCaptionAssets(manifest, repoRootUrl) {
     if (transcriptText !== null) {
       approvedTranscripts += 1;
       const prose = transcriptText.replace(/^#.*$/gm, "").trim();
+      const transcriptProse = transcriptText.split("\n").slice(4).join(" ").replace(/\s+/g, " ").trim();
       if (prose.length < 100) errors.push(`${transcript.source_key} is empty or implausibly short`);
       if (prose.includes("\u2014")) errors.push(`${transcript.source_key} contains an em dash`);
       if (/BMH Group KC/i.test(prose)) errors.push(`${transcript.source_key} uses the wrong company name`);
       if (["video-slot-17-compensation", "video-slot-19-career"].includes(video.source_key) && STALE_COMPENSATION_PATTERN.test(prose)) {
         errors.push(`${transcript.source_key} contains a stale or fixed compensation promise`);
+      }
+      if (FIXED_DIAL_QUOTA_PATTERN.test(prose)) {
+        errors.push(`${transcript.source_key} contains a fixed dial quota`);
+      }
+      if (captionProse !== null && captionProse !== transcriptProse) {
+        errors.push(`${video.source_key} caption and transcript disagree`);
       }
     }
   }

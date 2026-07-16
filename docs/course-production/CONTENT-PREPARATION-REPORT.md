@@ -83,17 +83,17 @@ video references its own poster asset rather than reusing a topic thumbnail; the
 
 The manifest contains 155 assets:
 
-- 29 videos: 21 approved and 8 held
-- 29 exact-cut caption assets: 21 approved and 8 missing pending held-cut approval
-- 29 exact-cut transcript assets: 21 approved and 8 missing pending held-cut approval
+- 29 videos: 20 approved and 9 held
+- 29 exact-cut caption assets: 20 approved and 9 missing pending held-cut approval
+- 29 exact-cut transcript assets: 20 approved and 9 missing pending held-cut approval
 - 20 thumbnail placeholders: one program cover and 19 topic thumbnails
 - 29 video-poster placeholders
 - 19 approved accessible learner-guide PDFs
 
-There are 65 missing generated assets: 16 held-cut caption/transcript
-derivatives, 20 thumbnails, and 29 posters. Together with the eight video holds,
+There are 67 missing generated assets: 18 held-cut caption/transcript
+derivatives, 20 thumbnails, and 29 posters. Together with the nine video holds,
 six pending production Closer Lab IDs, and one operating-stack confirmation,
-the validator reports 80 publication blockers and zero manifest errors.
+the validator reports 83 publication blockers and zero manifest errors.
 
 ## Quiz curation
 
@@ -158,8 +158,8 @@ exist and their real IDs replace those placeholders.
 
 The draft must not be published until all of these are resolved:
 
-- Jarrad approves the eight held videos in `HELD-VIDEO-REVIEW.md`. The
-  Compensation Engine and Career Growth cuts require wording corrections or
+- Jarrad approves the nine held videos in `HELD-VIDEO-REVIEW.md`. The
+  Compensation Engine, Operator Playbook, and Career Growth cuts require wording corrections or
   explicit policy decisions before they can be approved.
 - Exact-cut captions and transcripts are produced and approved for all 29 videos.
 - The course cover and 19 topic thumbnails are produced and approved.
@@ -175,7 +175,7 @@ The draft must not be published until all of these are resolved:
   captions, quizzes, and flashcards.
 
 The manifest records all missing derivatives as `approval_status: missing` and
-all eight held cuts as `approval_status: hold`. The validator reports these
+all nine held cuts as `approval_status: hold`. The validator reports these
 as publication blockers rather than silently treating the course as ready.
 
 ## Verification

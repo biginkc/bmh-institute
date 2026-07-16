@@ -148,6 +148,12 @@ test("known held cuts are immutable and never replaced by older files", async ()
       size_bytes: 45346253,
     },
     {
+      source_key: "video-slot-18-operator",
+      local_path: "course-assets/review-lesson18A/LESSON-18A-v10.mp4",
+      checksum_sha256: "6e6a3f257ff8cf3ef201de775de47c6e7833e3abd673e44bb8d4d5ac3aafa048",
+      size_bytes: 85657783,
+    },
+    {
       source_key: "video-slot-19-career",
       local_path: "course-assets/review-lesson19/LESSON-19-v7.mp4",
       checksum_sha256: "1ddcf7b1b0b45bbc90ec14b3660b3d5f5a284b5095dd0d0682164924ce1a3da9",

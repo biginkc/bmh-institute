@@ -10,9 +10,6 @@ import re
 import textwrap
 from pathlib import Path
 
-import mlx_whisper
-
-
 INITIAL_PROMPT = (
     "BMH Group. Sandra CRM. Closer Lab. Dialpad. DealMachine. BatchLeads. "
     "Paycom. Slack. Zoom. ARV. MAO. CRM. Kansas City. St. Louis. Dayton. "
@@ -46,9 +43,32 @@ def clean_text(value: str) -> str:
     text = re.sub(r"\s+", " ", value).strip()
     text = re.sub(r"\s+-\s*", "-", text)
     text = re.sub(r"\s+([,.;:!?%])", r"\1", text)
+    text = re.sub(r"(?<=\d),\s+(?=\d{3}\b)", ",", text)
     for pattern, replacement in TERM_REPLACEMENTS:
         text = pattern.sub(replacement, text)
     return text.replace("\u2014", "-")
+
+
+def repair_cue_boundaries(cues: list[dict]) -> list[dict]:
+    """Keep punctuation and hyphenated words from being split across cues."""
+    repaired: list[dict] = []
+    for original in cues:
+        cue = {**original, "text": clean_text(original["text"])}
+        if repaired:
+            previous = repaired[-1]
+            if re.search(r"\bBMH$", previous["text"]) and re.match(r"^group\b", cue["text"], re.I):
+                cue["text"] = re.sub(r"^group\b", "Group", cue["text"], count=1, flags=re.I)
+
+            leading_hyphen = re.match(r"^(-[A-Za-z]+)(.*)$", cue["text"])
+            previous_word = re.match(r"^(.*?)([A-Za-z]+)$", previous["text"])
+            if leading_hyphen and previous_word:
+                previous["text"] = previous_word.group(1).rstrip()
+                cue["text"] = f"{previous_word.group(2)}{leading_hyphen.group(1)}{leading_hyphen.group(2)}"
+                if not previous["text"]:
+                    repaired.pop()
+
+        repaired.append(cue)
+    return repaired
 
 
 def timestamp(seconds: float) -> str:
@@ -110,7 +130,7 @@ def make_cues(result: dict) -> list[dict]:
         start = max(cue["start"], normalized[-1]["end"] if normalized else 0)
         end = max(start + 0.25, cue["end"])
         normalized.append({**cue, "start": start, "end": end})
-    return normalized
+    return repair_cue_boundaries(normalized)
 
 
 def wrap_cue(text: str) -> str:
@@ -176,6 +196,11 @@ def main() -> None:
     parser.add_argument("--repo-root", required=True, type=Path)
     parser.add_argument("--model", default="mlx-community/whisper-medium.en-mlx")
     parser.add_argument("--only")
+    parser.add_argument(
+        "--replace-existing",
+        action="store_true",
+        help="explicitly allow overwriting an existing caption/transcript pair",
+    )
     args = parser.parse_args()
 
     manifest = json.loads(args.manifest.read_text(encoding="utf-8"))
@@ -186,6 +211,8 @@ def main() -> None:
     if not videos:
         raise SystemExit("No approved videos selected")
 
+    import mlx_whisper
+
     for index, video in enumerate(videos, start=1):
         source = args.source_root / video["local_path"]
         if not source.is_file():
@@ -193,6 +220,12 @@ def main() -> None:
         actual_checksum = sha256(source)
         if actual_checksum != video["checksum_sha256"]:
             raise RuntimeError(f"{video['source_key']} source checksum changed")
+        caption_path = args.repo_root / f"course-assets/captions/{video['source_key']}.vtt"
+        transcript_path = args.repo_root / f"course-assets/transcripts/{video['source_key']}.md"
+        if not args.replace_existing and (caption_path.exists() or transcript_path.exists()):
+            raise FileExistsError(
+                f"{video['source_key']} derivatives already exist; pass --replace-existing after review"
+            )
         print(f"[{index}/{len(videos)}] transcribing {video['source_key']}", flush=True)
         result = mlx_whisper.transcribe(
             str(source),
@@ -207,9 +240,9 @@ def main() -> None:
         cues = make_cues(result)
         if not cues:
             raise RuntimeError(f"{video['source_key']} produced no cues")
-        write_vtt(args.repo_root / f"course-assets/captions/{video['source_key']}.vtt", cues)
+        write_vtt(caption_path, cues)
         write_transcript(
-            args.repo_root / f"course-assets/transcripts/{video['source_key']}.md",
+            transcript_path,
             titles[video["source_key"]],
             video["source_key"],
             cues,
