@@ -2,16 +2,16 @@
 
 import { Printer } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/bmh-ds/button";
 
 export function PrintButton() {
   return (
     <Button
-      variant="outline"
+      variant="secondary"
       size="sm"
+      iconLeft={<Printer aria-hidden="true" size={16} />}
       onClick={() => window.print()}
     >
-      <Printer className="size-3.5" />
       Print / Save PDF
     </Button>
   );
