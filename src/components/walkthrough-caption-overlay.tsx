@@ -2,6 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+
+import { Button } from "@/components/bmh-ds/button";
+import { Coach } from "@/components/bmh-ds/coach";
 
 import {
   BMH_DEMO_WALKTHROUGH_ID,
@@ -10,6 +14,9 @@ import {
 } from "@/lib/walkthrough/bmh-demo";
 
 const STORAGE_KEY = "bmh-institute.walkthrough";
+const PROGRESS_STEP_COUNT = 4;
+
+const STEP_EMOTIONS = ["smile", "curious", "thinking", "content"] as const;
 
 type WalkthroughState = {
   caption: string;
@@ -60,6 +67,17 @@ function readStoredWalkthrough(): WalkthroughState | null {
 
 function writeStoredWalkthrough(state: WalkthroughState) {
   window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function getDisplayedStep(caption: string, nativeStep: number | null) {
+  if (nativeStep && Number.isInteger(nativeStep) && nativeStep > 0) {
+    return nativeStep;
+  }
+
+  const captionStep = caption.match(/^Step\s+(\d+)/i)?.[1];
+  const parsedStep = Number(captionStep);
+
+  return Number.isInteger(parsedStep) && parsedStep > 0 ? parsedStep : null;
 }
 
 export function WalkthroughCaptionOverlay() {
@@ -122,17 +140,84 @@ export function WalkthroughCaptionOverlay() {
     return null;
   }
 
+  const displayedStep = getDisplayedStep(
+    activeState.caption,
+    nativeStepState ? walkthroughStep : null,
+  );
+  const emotion = STEP_EMOTIONS[
+    Math.min(displayedStep ?? 2, PROGRESS_STEP_COUNT) - 1
+  ];
+  const skipPath = activeState.path;
+
+  function skipTour() {
+    window.sessionStorage.removeItem(STORAGE_KEY);
+    window.location.assign(skipPath);
+  }
+
   return (
     <div
       role="status"
       aria-live="polite"
-      className="pointer-events-auto fixed bottom-4 left-1/2 z-[60] flex max-h-[18vh] w-auto max-w-[min(48rem,calc(100vw-2rem))] -translate-x-1/2 items-center gap-3 overflow-y-auto rounded-md bg-slate-950/80 px-4 py-3 text-sm leading-relaxed font-medium text-white shadow-2xl backdrop-blur-sm print:hidden"
+      className="pointer-events-auto fixed bottom-4 left-1/2 z-[60] max-h-[18vh] w-[min(35rem,calc(100vw-2rem))] max-w-[min(48rem,calc(100vw-2rem))] -translate-x-1/2 overflow-y-auto bg-slate-950/80 text-white print:hidden"
+      style={{
+        background: "transparent",
+        color: "var(--ink-900)",
+        maxHeight: "none",
+      }}
     >
-      <p className="min-w-0 flex-1">{activeState.caption}</p>
-      <div className="flex shrink-0 items-center gap-2">
-        <WizardControl direction="back" href={activeState.backHref} />
-        <WizardControl direction="next" href={activeState.nextHref} />
-      </div>
+      <Coach
+        emotion={emotion}
+        height={72}
+        tone="white"
+        size="sm"
+        align="flex-start"
+        message={
+          <div className="min-w-0 font-[family-name:var(--font-body)]">
+            <div className="mb-2 flex items-center justify-between gap-3">
+              {displayedStep ? (
+                <div
+                  aria-label={`Walkthrough progress, step ${displayedStep}`}
+                  className="flex items-center gap-1.5"
+                >
+                  <span className="text-[11px] font-extrabold text-[var(--text-muted)]">
+                    Step {displayedStep}
+                  </span>
+                  <span aria-hidden="true" className="flex gap-1">
+                    {Array.from({ length: PROGRESS_STEP_COUNT }, (_, index) => (
+                      <span
+                        key={index}
+                        className={`h-1.5 w-5 rounded-full ${
+                          index < Math.min(displayedStep, PROGRESS_STEP_COUNT)
+                            ? "bg-[var(--yellow-500)]"
+                            : "bg-[var(--ink-200)]"
+                        }`}
+                      />
+                    ))}
+                  </span>
+                </div>
+              ) : (
+                <span />
+              )}
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={skipTour}
+                style={{ padding: "5px 7px", color: "var(--text-muted)" }}
+              >
+                Skip tour
+              </Button>
+            </div>
+            <p className="text-sm leading-snug font-bold text-[var(--ink-900)]">
+              {activeState.caption}
+            </p>
+            <div className="mt-3 flex items-center justify-end gap-2">
+              <WizardControl direction="back" href={activeState.backHref} />
+              <WizardControl direction="next" href={activeState.nextHref} />
+            </div>
+          </div>
+        }
+      />
     </div>
   );
 }
@@ -145,25 +230,46 @@ function WizardControl({
   href: string | null;
 }) {
   const label = direction === "back" ? "Back" : "Next";
-  const className =
-    "rounded-md border border-white/25 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-white/15 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white";
+  const icon =
+    direction === "back" ? (
+      <ChevronLeft aria-hidden="true" size={16} />
+    ) : (
+      <ChevronRight aria-hidden="true" size={16} />
+    );
 
   if (!href) {
     return (
-      <button
-        type="button"
+      <Button
         disabled
         aria-label={label}
-        className={`${className} cursor-not-allowed opacity-45`}
+        variant={direction === "back" ? "secondary" : "primary"}
+        size="sm"
+        iconLeft={direction === "back" ? icon : undefined}
+        iconRight={direction === "next" ? icon : undefined}
       >
         {label}
-      </button>
+      </Button>
     );
   }
 
   return (
-    <a href={href} aria-label={label} className={className}>
-      {label}
-    </a>
+    <span className="relative inline-flex">
+      <Button
+        tabIndex={-1}
+        aria-hidden="true"
+        variant={direction === "back" ? "secondary" : "primary"}
+        size="sm"
+        iconLeft={direction === "back" ? icon : undefined}
+        iconRight={direction === "next" ? icon : undefined}
+        style={{ pointerEvents: "none" }}
+      >
+        {label}
+      </Button>
+      <a
+        href={href}
+        aria-label={label}
+        className="absolute inset-0 rounded-[var(--bmh-radius-sm)] focus-visible:ring-4 focus-visible:ring-[var(--focus-ring)] focus-visible:outline-none"
+      />
+    </span>
   );
 }
