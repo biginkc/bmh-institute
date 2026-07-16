@@ -27,6 +27,7 @@ export default async function EditCoursePage({
       description,
       is_published,
       thumbnail_path,
+      content_import_id,
       modules (
         id,
         title,
@@ -77,6 +78,7 @@ export default async function EditCoursePage({
             description="Title, description and publish state."
           />
           <CourseForm
+            entityId={courseId}
             action={boundAction}
             submitLabel="Save changes"
             defaults={{
@@ -84,6 +86,7 @@ export default async function EditCoursePage({
               description: shaped.description,
               is_published: shaped.is_published,
               thumbnail_path: shaped.thumbnail_path,
+              content_import_id: shaped.content_import_id,
             }}
           />
         </Card>

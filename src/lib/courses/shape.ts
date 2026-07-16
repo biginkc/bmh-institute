@@ -24,6 +24,7 @@ export type CourseWithModulesAndLessons = {
   description: string | null;
   is_published: boolean;
   thumbnail_path?: string | null;
+  content_import_id: string | null;
   modules: ModuleWithLessons[];
 };
 
@@ -45,6 +46,7 @@ type RawCourse = {
   description: string | null;
   is_published: boolean;
   thumbnail_path?: string | null;
+  content_import_id?: string | null;
   modules: RawModule[] | null;
 };
 
@@ -74,6 +76,7 @@ export function shapeCourseResponse(
     description: raw.description,
     is_published: raw.is_published,
     thumbnail_path: raw.thumbnail_path ?? null,
+    content_import_id: raw.content_import_id ?? null,
     modules,
   };
 }

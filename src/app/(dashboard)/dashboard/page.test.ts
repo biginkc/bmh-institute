@@ -27,8 +27,8 @@ vi.mock("@/lib/supabase/server", () => ({
 }));
 
 vi.mock("@/lib/content-blocks/sign-urls", () => ({
-  signContentPaths: vi.fn(async (paths: string[]) =>
-    new Map(paths.map((path) => [path, `https://signed.example/${path}`])),
+  signAuthorizedArtworkPaths: vi.fn(async (requests: Array<{ path: string | null }>) =>
+    new Map(requests.flatMap(({ path }) => path ? [[path, `https://signed.example/${path}`] as const] : [])),
   ),
 }));
 
@@ -56,7 +56,8 @@ describe("DashboardPage learner onboarding", () => {
           id: "program-1",
           title: "VA Foundations",
           description: "Start here",
-          thumbnail_path: "programs/va-foundations.webp",
+          thumbnail_path: "courses/va-foundations/v1/thumbnails/program.webp",
+          content_import_id: "va-foundations-v1",
           course_order_mode: "sequential",
           is_published: true,
           sort_order: 0,
@@ -67,7 +68,8 @@ describe("DashboardPage learner onboarding", () => {
                 id: "course-1",
                 title: "Getting Started",
                 description: null,
-                thumbnail_path: "courses/getting-started.webp",
+                thumbnail_path: "courses/va-foundations/v1/thumbnails/course.webp",
+                content_import_id: "va-foundations-v1",
                 is_published: true,
               },
             },
@@ -84,14 +86,16 @@ describe("DashboardPage learner onboarding", () => {
               title: "Welcome to BMH Institute",
               sort_order: 0,
               is_required_for_completion: true,
-              thumbnail_path: "lessons/welcome.webp",
+              thumbnail_path: "courses/va-foundations/v1/thumbnails/welcome.webp",
+              content_import_id: "va-foundations-v1",
             },
             {
               id: "lesson-2",
               title: "Your first task",
               sort_order: 1,
               is_required_for_completion: true,
-              thumbnail_path: "lessons/first-task.webp",
+              thumbnail_path: "courses/va-foundations/v1/thumbnails/first-task.webp",
+              content_import_id: "va-foundations-v1",
             },
           ],
         },
@@ -112,10 +116,10 @@ describe("DashboardPage learner onboarding", () => {
     expect(html).toContain("Continue learning");
     expect(html).toContain("Welcome to BMH Institute");
     expect(html).toContain("Password help");
-    expect(html).toContain("https://signed.example/courses/getting-started.webp");
+    expect(html).toContain("https://signed.example/courses/va-foundations/v1/thumbnails/course.webp");
     expect(html).toContain("Getting Started course cover");
-    expect(html).toContain("https://signed.example/programs/va-foundations.webp");
+    expect(html).toContain("https://signed.example/courses/va-foundations/v1/thumbnails/program.webp");
     expect(html).toContain("VA Foundations program cover");
-    expect(html).toContain("https://signed.example/lessons/first-task.webp");
+    expect(html).toContain("https://signed.example/courses/va-foundations/v1/thumbnails/first-task.webp");
   });
 });

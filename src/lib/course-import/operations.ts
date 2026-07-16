@@ -68,6 +68,7 @@ export function buildImportPlan(manifest: CourseImportManifest): ImportPlan {
   const programId = add("programs", program.source_key, {
     title: program.title,
     description: program.description,
+    content_import_id: manifest.import_id,
     thumbnail_path: resolveThumbnail(program.thumbnail_asset_key, assets),
     is_published: false,
     course_order_mode: program.course_order_mode,
@@ -85,6 +86,7 @@ export function buildImportPlan(manifest: CourseImportManifest): ImportPlan {
     const courseId = add("courses", course.source_key, {
       title: course.title,
       description: course.description,
+      content_import_id: manifest.import_id,
       thumbnail_path: resolveThumbnail(course.thumbnail_asset_key, assets),
       is_published: false,
       certificate_enabled: course.certificate_enabled,
@@ -114,6 +116,7 @@ export function buildImportPlan(manifest: CourseImportManifest): ImportPlan {
           module_id: moduleId,
           title: lesson.title,
           description: lesson.description,
+          content_import_id: manifest.import_id,
           lesson_type: lesson.type,
           quiz_id: backing.quizId,
           assignment_id: backing.assignmentId,

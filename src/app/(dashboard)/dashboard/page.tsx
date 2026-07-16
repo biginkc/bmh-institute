@@ -10,7 +10,7 @@ import { CourseCoverArtwork } from "@/components/course-cover-artwork";
 import { createClient } from "@/lib/supabase/server";
 import { shapeProgramsResponse } from "@/lib/programs/shape";
 import { summarizeLearnerOnboarding } from "@/lib/learner-onboarding/summary";
-import { signContentPaths } from "@/lib/content-blocks/sign-urls";
+import { signAuthorizedArtworkPaths } from "@/lib/content-blocks/sign-urls";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -27,6 +27,7 @@ export default async function DashboardPage() {
       title,
       description,
       thumbnail_path,
+      content_import_id,
       course_order_mode,
       is_published,
       sort_order,
@@ -37,6 +38,7 @@ export default async function DashboardPage() {
           title,
           description,
           thumbnail_path,
+          content_import_id,
           is_published
         )
       )
@@ -62,6 +64,7 @@ export default async function DashboardPage() {
       title: string;
       isRequiredForCompletion: boolean;
       thumbnailPath: string | null;
+      contentImportId: string | null;
       thumbnailUrl?: string;
     }>
   >();
@@ -72,7 +75,7 @@ export default async function DashboardPage() {
       supabase
         .from("modules")
         .select(
-          "course_id, sort_order, lessons(id, title, thumbnail_path, sort_order, is_required_for_completion)",
+          "course_id, sort_order, lessons(id, title, thumbnail_path, content_import_id, sort_order, is_required_for_completion)",
         )
         .in("course_id", courseIds),
       supabase
@@ -93,6 +96,7 @@ export default async function DashboardPage() {
         sort_order: number;
         is_required_for_completion: boolean;
         thumbnail_path: string | null;
+        content_import_id: string | null;
       }>;
       if (!requiredLessonsByCourse.has(courseId)) {
         requiredLessonsByCourse.set(courseId, new Set());
@@ -110,6 +114,7 @@ export default async function DashboardPage() {
             title: lesson.title,
             isRequiredForCompletion: true,
             thumbnailPath: lesson.thumbnail_path,
+            contentImportId: lesson.content_import_id,
           });
           lessonsByCourse.set(courseId, courseLessons);
         }
@@ -129,16 +134,27 @@ export default async function DashboardPage() {
     }
   }
 
-  const thumbnailSignedByPath = await signContentPaths([
+  const thumbnailSignedByPath = await signAuthorizedArtworkPaths([
     ...programs.flatMap((program) => [
-      ...(program.thumbnail_path ? [program.thumbnail_path] : []),
-      ...program.courses.flatMap((course) =>
-        course.thumbnail_path ? [course.thumbnail_path] : [],
-      ),
+      {
+        entityType: "program" as const,
+        entityId: program.id,
+        contentImportId: program.content_import_id,
+        path: program.thumbnail_path,
+      },
+      ...program.courses.map((course) => ({
+        entityType: "course" as const,
+        entityId: course.id,
+        contentImportId: course.content_import_id,
+        path: course.thumbnail_path,
+      })),
     ]),
-    ...Array.from(lessonsByCourse.values())
-      .flat()
-      .flatMap((lesson) => (lesson.thumbnailPath ? [lesson.thumbnailPath] : [])),
+    ...Array.from(lessonsByCourse.values()).flat().map((lesson) => ({
+      entityType: "lesson" as const,
+      entityId: lesson.id,
+      contentImportId: lesson.contentImportId,
+      path: lesson.thumbnailPath,
+    })),
   ]);
   for (const program of programs) {
     if (program.thumbnail_path) {

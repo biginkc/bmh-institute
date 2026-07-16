@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
 import { requireAdmin } from "@/lib/auth/guard";
+import { validateArtworkChange } from "@/lib/artwork/paths";
 import { createClient } from "@/lib/supabase/server";
 import {
   parseProgramInput,
@@ -28,6 +29,14 @@ export async function createProgram(
   await requireAdmin();
   const parsed = parseProgramInput(formData);
   if (!parsed.ok) return fieldResult(parsed, formData);
+  if (parsed.value.thumbnail_path) {
+    return {
+      ok: false,
+      error: "Save the program before uploading artwork.",
+      fieldErrors: { thumbnail_path: "Save the program before uploading artwork." },
+      values: parsed.value,
+    };
+  }
 
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -61,6 +70,29 @@ export async function updateProgram(
   if (!parsed.ok) return fieldResult(parsed, formData);
 
   const supabase = await createClient();
+  const current = await supabase
+    .from("programs")
+    .select("thumbnail_path, content_import_id")
+    .eq("id", programId)
+    .maybeSingle();
+  if (current.error || !current.data) {
+    return { ok: false, error: "Couldn't verify the program artwork." };
+  }
+  const artworkError = validateArtworkChange({
+    entityType: "program",
+    entityId: programId,
+    contentImportId: current.data.content_import_id,
+    currentPath: current.data.thumbnail_path,
+    nextPath: parsed.value.thumbnail_path,
+  });
+  if (artworkError) {
+    return {
+      ok: false,
+      error: "Fix the highlighted fields.",
+      fieldErrors: { thumbnail_path: artworkError },
+      values: parsed.value,
+    };
+  }
   const { error } = await supabase
     .from("programs")
     .update({

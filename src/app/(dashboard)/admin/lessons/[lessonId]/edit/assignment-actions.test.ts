@@ -1,6 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-let updatePatch: Record<string, unknown> | null = null;
+const ASSIGNMENT_ID = "11111111-1111-4111-8111-111111111111";
+const LESSON_ID = "22222222-2222-4222-8222-222222222222";
+let lessonResult: unknown;
+let updateResult: unknown;
+let updatePatch: Record<string, unknown> | null;
 
 vi.mock("@/lib/auth/guard", () => ({
   requireAdmin: vi.fn(async () => ({ id: "admin-1" })),
@@ -8,12 +12,25 @@ vi.mock("@/lib/auth/guard", () => ({
 
 vi.mock("@/lib/supabase/server", () => ({
   createClient: vi.fn(async () => ({
-    from: () => ({
-      update: (patch: Record<string, unknown>) => {
-        updatePatch = patch;
-        return { eq: async () => ({ error: null }) };
-      },
-    }),
+    from: (table: string) => {
+      if (table === "lessons") {
+        return {
+          select: () => ({
+            eq: () => ({ maybeSingle: async () => lessonResult }),
+          }),
+        };
+      }
+      return {
+        update: (patch: Record<string, unknown>) => {
+          updatePatch = patch;
+          return {
+            eq: () => ({
+              select: () => ({ maybeSingle: async () => updateResult }),
+            }),
+          };
+        },
+      };
+    },
   })),
 }));
 
@@ -21,29 +38,38 @@ vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
 import { updateAssignment } from "./assignment-actions";
 
-describe("updateAssignment reviewer rubric", () => {
+function validInput() {
+  return {
+    assignmentId: ASSIGNMENT_ID,
+    lessonId: LESSON_ID,
+    title: "  Readiness check ",
+    instructions: " Describe your setup. ",
+    submission_type: "text" as const,
+    requires_review: true,
+    rubric: [
+      {
+        criterion: "  Systems readiness ",
+        description: " Confirms access to every required system. ",
+      },
+    ],
+  };
+}
+
+describe("updateAssignment", () => {
   beforeEach(() => {
+    lessonResult = {
+      data: { lesson_type: "assignment", assignment_id: ASSIGNMENT_ID },
+      error: null,
+    };
+    updateResult = { data: { id: ASSIGNMENT_ID }, error: null };
     updatePatch = null;
   });
 
-  it("persists normalized review criteria with the assignment", async () => {
-    const result = await updateAssignment({
-      assignmentId: "assignment-1",
-      lessonId: "lesson-1",
+  it("proves lesson ownership and persists normalized settings", async () => {
+    expect(await updateAssignment(validInput())).toEqual({ ok: true });
+    expect(updatePatch).toMatchObject({
       title: "Readiness check",
       instructions: "Describe your setup.",
-      submission_type: "text",
-      requires_review: true,
-      rubric: [
-        {
-          criterion: "  Systems readiness ",
-          description: " Confirms access to every required system. ",
-        },
-      ],
-    });
-
-    expect(result).toEqual({ ok: true });
-    expect(updatePatch).toMatchObject({
       rubric: [
         {
           criterion: "Systems readiness",
@@ -53,39 +79,36 @@ describe("updateAssignment reviewer rubric", () => {
     });
   });
 
-  it("rejects a reviewed assignment without usable criteria", async () => {
-    const result = await updateAssignment({
-      assignmentId: "assignment-1",
-      lessonId: "lesson-1",
-      title: "Readiness check",
-      instructions: "Describe your setup.",
-      submission_type: "text",
-      requires_review: true,
-      rubric: [],
-    });
-
-    expect(result).toEqual({
+  it("rejects malformed outer payloads without throwing", async () => {
+    expect(await updateAssignment(null)).toEqual({
       ok: false,
-      error: "Add at least one rubric criterion for reviewers.",
+      error: "The assignment request is malformed.",
     });
     expect(updatePatch).toBeNull();
   });
 
-  it("rejects malformed rubric payloads instead of throwing", async () => {
-    const result = await updateAssignment({
-      assignmentId: "assignment-1",
-      lessonId: "lesson-1",
-      title: "Readiness check",
-      instructions: "Describe your setup.",
-      submission_type: "text",
-      requires_review: true,
-      rubric: [{ criterion: null, description: {} }] as never,
-    });
-
-    expect(result).toEqual({
+  it("rejects a different or non-assignment lesson", async () => {
+    lessonResult = { data: { lesson_type: "content", assignment_id: ASSIGNMENT_ID }, error: null };
+    expect(await updateAssignment(validInput())).toEqual({
       ok: false,
-      error: "Every rubric criterion needs a name and review guidance.",
+      error: "This assignment does not belong to the lesson.",
     });
     expect(updatePatch).toBeNull();
+  });
+
+  it("does not report success when the update matched no row", async () => {
+    updateResult = { data: null, error: null };
+    expect(await updateAssignment(validInput())).toEqual({
+      ok: false,
+      error: "Assignment not found.",
+    });
+  });
+
+  it("returns a stable error instead of leaking database detail", async () => {
+    updateResult = { data: null, error: { message: "sensitive database detail" } };
+    expect(await updateAssignment(validInput())).toEqual({
+      ok: false,
+      error: "Couldn't save the assignment.",
+    });
   });
 });

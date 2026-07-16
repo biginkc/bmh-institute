@@ -25,7 +25,7 @@ export function validCourseManifest(): CourseImportManifest {
         source_key: "thumb-1",
         kind: "thumbnail",
         local_path: "assets/thumb.webp",
-        storage_path: "courses/training/v1/thumb.webp",
+        storage_path: "courses/training/v1/thumbnails/thumb.webp",
         mime_type: "image/webp",
         checksum_sha256: null,
         size_bytes: 10,

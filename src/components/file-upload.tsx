@@ -7,6 +7,7 @@ import { defaultOptions as tusDefaultOptions, Upload as TusUpload } from "tus-js
 
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
+import { artworkMimeMatchesPath } from "@/lib/artwork/paths";
 import {
   ValidatingTusUrlStorage,
   assertSafeTusUrl,
@@ -42,6 +43,7 @@ export function FileUpload({
   currentPath,
   label = "Upload file",
   bucket = "content",
+  pathPrefix,
 }: {
   accept: string;
   maxMb?: number;
@@ -49,6 +51,7 @@ export function FileUpload({
   currentPath?: string | null;
   label?: string;
   bucket?: "content" | "submissions" | "avatars";
+  pathPrefix?: string;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [progress, setProgress] = useState<number | null>(null);
@@ -83,9 +86,16 @@ export function FileUpload({
       const safeName = file.name
         .replace(/\s+/g, "-")
         .replace(/[^a-zA-Z0-9._-]/g, "");
-      const path = `${session.user.id}/${file.size}-${file.lastModified}-${safeName}`;
+      const normalizedPrefix = pathPrefix
+        ? `${pathPrefix.replace(/^\/+|\/+$/g, "")}/`
+        : `${session.user.id}/`;
+      const path = `${normalizedPrefix}${file.size}-${file.lastModified}-${safeName}`;
 
       const contentType = file.type || "application/octet-stream";
+      if (pathPrefix && !artworkMimeMatchesPath(path, contentType)) {
+        toast.error("Choose a supported image whose file extension matches its type.");
+        return;
+      }
       if (file.size > RESUMABLE_THRESHOLD_BYTES) {
         await uploadResumably({
           file,

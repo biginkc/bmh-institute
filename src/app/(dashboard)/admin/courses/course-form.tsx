@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 
 import { Button, Input } from "@/components/bmh-ds";
 import { FileUpload } from "@/components/file-upload";
+import { importArtworkNamespace, importStoragePrefix, manualArtworkNamespace } from "@/lib/artwork/paths";
 
 import type { CourseFormState } from "./actions";
 
@@ -17,16 +18,19 @@ type Defaults = {
   description?: string | null;
   is_published?: boolean | null;
   thumbnail_path?: string | null;
+  content_import_id?: string | null;
 };
 
 export function CourseForm({
   action,
   submitLabel,
   defaults,
+  entityId,
 }: {
   action: Action;
   submitLabel: string;
   defaults?: Defaults;
+  entityId?: string;
 }) {
   const [state, formAction, pending] = useActionState<
     CourseFormState,
@@ -35,6 +39,14 @@ export function CourseForm({
   const fieldError = (name: string): string | undefined =>
     state && !state.ok ? state.fieldErrors?.[name] : undefined;
   const [thumbnailPath, setThumbnailPath] = useState(defaults?.thumbnail_path ?? "");
+  const importPrefix = defaults?.content_import_id
+    ? importStoragePrefix(defaults.content_import_id)
+    : null;
+  const artworkPrefix = importPrefix
+    ? importArtworkNamespace(importPrefix)
+    : entityId
+      ? manualArtworkNamespace("course", entityId)
+      : null;
 
   return (
     <form action={formAction} className="flex flex-col gap-5">
@@ -74,13 +86,18 @@ export function CourseForm({
             Course cover path
           </label>
           <Input id="thumbnail_path_display" value={thumbnailPath} readOnly />
-          <FileUpload
-            accept="image/png,image/jpeg,image/webp"
-            maxMb={20}
-            label="Upload course cover"
-            currentPath={thumbnailPath || null}
-            onUploaded={(file) => setThumbnailPath(file.file_path)}
-          />
+          {artworkPrefix ? (
+            <FileUpload
+              accept="image/png,image/jpeg,image/webp,image/avif"
+              maxMb={20}
+              label="Upload course cover"
+              currentPath={thumbnailPath || null}
+              pathPrefix={artworkPrefix}
+              onUploaded={(file) => setThumbnailPath(file.file_path)}
+            />
+          ) : (
+            <p className="text-xs font-semibold text-[var(--text-muted)]">Save the course before uploading artwork.</p>
+          )}
           {fieldError("thumbnail_path") ? (
             <p className="text-xs font-bold text-[var(--danger)]">{fieldError("thumbnail_path")}</p>
           ) : null}

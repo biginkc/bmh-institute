@@ -1,3 +1,15 @@
+import {
+  artworkMimeMatchesPath,
+  importArtworkNamespace,
+  parseArtworkPath,
+} from "@/lib/artwork/paths";
+import {
+  MAX_ASSIGNMENT_INSTRUCTIONS_LENGTH,
+  MAX_ASSIGNMENT_TITLE_LENGTH,
+  isAssignmentSubmissionType,
+} from "@/lib/assignments/validation";
+import { parseAssignmentRubric } from "@/lib/assignments/rubric";
+
 export type ApprovalStatus = "approved" | "hold" | "missing";
 export type AssetKind =
   | "video"
@@ -186,6 +198,7 @@ export function validateCourseManifest(
 
   const manifest = input as unknown as CourseImportManifest;
   const storagePrefix = storagePrefixForImport(manifest.import_id);
+  const artworkNamespace = importArtworkNamespace(storagePrefix);
   const seenKeys = new Map<string, string>();
   const registerKey = (value: unknown, path: string) => {
     if (typeof value !== "string" || !SOURCE_KEY_PATTERN.test(value)) {
@@ -241,8 +254,14 @@ export function validateCourseManifest(
   registerKey(program.source_key, "program");
   requireNonEmpty(program.title, "program.title", errors);
   if (program.is_published !== false) errors.push("program.is_published must be false for a safe import.");
-  validateAssetReference(program.thumbnail_asset_key, "program.thumbnail_asset_key", assets, errors);
-  if (gate === "release") requireApprovedAsset(program.thumbnail_asset_key, "program.thumbnail_asset_key", assets, errors);
+  validateArtworkReference(
+    program.thumbnail_asset_key,
+    "program.thumbnail_asset_key",
+    assets,
+    artworkNamespace,
+    gate,
+    errors,
+  );
   if (!Array.isArray(program.courses) || program.courses.length === 0) {
     errors.push("program.courses must contain at least one course.");
   } else {
@@ -251,8 +270,14 @@ export function validateCourseManifest(
       registerKey(course.source_key, coursePath);
       requireNonEmpty(course.title, `${coursePath}.title`, errors);
       if (course.is_published !== false) errors.push(`${coursePath}.is_published must be false for a safe import.`);
-      validateAssetReference(course.thumbnail_asset_key, `${coursePath}.thumbnail_asset_key`, assets, errors);
-      if (gate === "release") requireApprovedAsset(course.thumbnail_asset_key, `${coursePath}.thumbnail_asset_key`, assets, errors);
+      validateArtworkReference(
+        course.thumbnail_asset_key,
+        `${coursePath}.thumbnail_asset_key`,
+        assets,
+        artworkNamespace,
+        gate,
+        errors,
+      );
       validateSiblingSortOrders(course.modules, `${coursePath}.modules`, errors);
       for (const [moduleIndex, module] of (course.modules ?? []).entries()) {
         const modulePath = `${coursePath}.modules[${moduleIndex}]`;
@@ -260,7 +285,15 @@ export function validateCourseManifest(
         requireNonEmpty(module.title, `${modulePath}.title`, errors);
         validateSiblingSortOrders(module.lessons, `${modulePath}.lessons`, errors);
         for (const [lessonIndex, lesson] of (module.lessons ?? []).entries()) {
-          validateLesson(lesson, `${modulePath}.lessons[${lessonIndex}]`, assets, registerKey, gate, errors);
+          validateLesson(
+            lesson,
+            `${modulePath}.lessons[${lessonIndex}]`,
+            assets,
+            artworkNamespace,
+            registerKey,
+            gate,
+            errors,
+          );
         }
       }
     }
@@ -275,6 +308,7 @@ function validateLesson(
   lesson: ImportLesson,
   path: string,
   assets: Map<string, CourseImportAsset>,
+  artworkNamespace: string,
   registerKey: (value: unknown, path: string) => void,
   gate: "draft" | "release",
   errors: string[],
@@ -285,10 +319,16 @@ function validateLesson(
   }
   registerKey(lesson.source_key, path);
   requireNonEmpty(lesson.title, `${path}.title`, errors);
-  validateAssetReference(lesson.thumbnail_asset_key, `${path}.thumbnail_asset_key`, assets, errors);
+  validateArtworkReference(
+    lesson.thumbnail_asset_key,
+    `${path}.thumbnail_asset_key`,
+    assets,
+    artworkNamespace,
+    gate,
+    errors,
+  );
 
   if (lesson.type === "content") {
-    if (gate === "release") requireApprovedAsset(lesson.thumbnail_asset_key, `${path}.thumbnail_asset_key`, assets, errors);
     if (lesson.quiz || lesson.assignment) errors.push(`${path} content lesson cannot include quiz or assignment data.`);
     if (!Array.isArray(lesson.blocks) || lesson.blocks.length === 0) errors.push(`${path}.blocks must contain at least one block.`);
     validateSiblingSortOrders(lesson.blocks ?? [], `${path}.blocks`, errors);
@@ -301,8 +341,8 @@ function validateLesson(
         if (value !== undefined && value !== null) {
           validateAssetReference(value, `${blockPath}.content.${field}`, assets, errors);
           const asset = typeof value === "string" ? assets.get(value) : undefined;
-          if (gate === "release" && block.required && asset && asset.approval_status !== "approved") {
-            errors.push(`${blockPath} required asset ${value} is not approved.`);
+          if (gate === "release" && asset && asset.approval_status !== "approved") {
+            errors.push(`${blockPath} referenced asset ${value} is not approved.`);
           }
         }
       }
@@ -323,17 +363,34 @@ function validateLesson(
     if (lesson.quiz) validateQuiz(lesson.quiz, `${path}.quiz`, registerKey, gate, errors);
   } else if (lesson.type === "assignment") {
     if (lesson.blocks || lesson.quiz || !lesson.assignment) errors.push(`${path} assignment lesson must contain only assignment data.`);
-    if (lesson.assignment) {
-      registerKey(lesson.assignment.source_key, `${path}.assignment`);
-      requireNonEmpty(lesson.assignment.title, `${path}.assignment.title`, errors);
-      requireNonEmpty(lesson.assignment.instructions, `${path}.assignment.instructions`, errors);
-      if (!Array.isArray(lesson.assignment.rubric) || lesson.assignment.rubric.length === 0) {
+    const assignment = lesson.assignment as unknown;
+    if (assignment !== undefined && assignment !== null && !isRecord(assignment)) {
+      errors.push(`${path}.assignment must be an object.`);
+    } else if (isRecord(assignment)) {
+      registerKey(assignment.source_key, `${path}.assignment`);
+      validateBoundedString(
+        assignment.title,
+        `${path}.assignment.title`,
+        MAX_ASSIGNMENT_TITLE_LENGTH,
+        errors,
+      );
+      validateBoundedString(
+        assignment.instructions,
+        `${path}.assignment.instructions`,
+        MAX_ASSIGNMENT_INSTRUCTIONS_LENGTH,
+        errors,
+      );
+      if (!isAssignmentSubmissionType(assignment.submission_type)) {
+        errors.push(`${path}.assignment.submission_type is invalid.`);
+      }
+      if (typeof assignment.requires_review !== "boolean") {
+        errors.push(`${path}.assignment.requires_review must be boolean.`);
+      }
+      const rubric = parseAssignmentRubric(assignment.rubric);
+      if (!rubric.ok) {
+        errors.push(`${path}.assignment.rubric: ${rubric.error}`);
+      } else if (rubric.items.length === 0) {
         errors.push(`${path}.assignment.rubric must contain at least one criterion.`);
-      } else {
-        for (const [index, item] of lesson.assignment.rubric.entries()) {
-          requireNonEmpty(item.criterion, `${path}.assignment.rubric[${index}].criterion`, errors);
-          requireNonEmpty(item.description, `${path}.assignment.rubric[${index}].description`, errors);
-        }
       }
     }
   } else {
@@ -458,6 +515,36 @@ function requireString(value: Record<string, unknown>, key: string, path: string
 
 function requireNonEmpty(value: unknown, path: string, errors: string[]) {
   if (typeof value !== "string" || value.trim() === "") errors.push(`${path} is required.`);
+}
+
+function validateBoundedString(value: unknown, path: string, maxLength: number, errors: string[]) {
+  requireNonEmpty(value, path, errors);
+  if (typeof value === "string" && value.trim().length > maxLength) {
+    errors.push(`${path} must be ${maxLength.toLocaleString()} characters or less.`);
+  }
+}
+
+function validateArtworkReference(
+  value: unknown,
+  path: string,
+  assets: Map<string, CourseImportAsset>,
+  expectedNamespace: string,
+  gate: "draft" | "release",
+  errors: string[],
+) {
+  validateAssetReference(value, path, assets, errors);
+  if (value === null) return;
+  const asset = typeof value === "string" ? assets.get(value) : undefined;
+  if (!asset) return;
+  const parsed = parseArtworkPath(asset.storage_path);
+  if (
+    (asset.kind !== "image" && asset.kind !== "thumbnail") ||
+    !artworkMimeMatchesPath(asset.storage_path, asset.mime_type) ||
+    parsed?.namespace !== expectedNamespace
+  ) {
+    errors.push(`${path} must reference an image in ${expectedNamespace}.`);
+  }
+  if (gate === "release") requireApprovedAsset(value, path, assets, errors);
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

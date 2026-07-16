@@ -42,7 +42,7 @@ export default async function AdminSubmissionsPage({
     query = query.eq("status", filterStatus);
   }
 
-  const { data: submissions } = await query;
+  const { data: submissions, error } = await query;
   const rows = (submissions ?? []) as Row[];
 
   return (
@@ -60,7 +60,13 @@ export default async function AdminSubmissionsPage({
         }
       />
 
-      {rows.length === 0 ? (
+      {error ? (
+        <Card padding="md">
+          <div role="alert" className="font-semibold text-[var(--danger)]">
+            We couldn&apos;t load submissions. Refresh the page or try again later.
+          </div>
+        </Card>
+      ) : rows.length === 0 ? (
         <Card padding="md">
           <Coach
             emotion="content"
@@ -119,7 +125,11 @@ function SubmissionCard({ row }: { row: Row }) {
           Submitted {new Date(row.submitted_at).toLocaleString()}
         </div>
 
-        {rubric.length > 0 ? (
+        {!rubric.ok ? (
+          <div role="alert" className="rounded-[var(--bmh-radius-md)] border border-[var(--danger)] bg-[var(--danger-soft)] p-3 text-sm font-semibold text-[var(--danger)]">
+            This assignment&apos;s review rubric is invalid. Repair it before making a review decision.
+          </div>
+        ) : rubric.items.length > 0 ? (
           <section
             aria-labelledby={`submission-${row.id}-rubric`}
             className="rounded-[var(--bmh-radius-md)] border border-[var(--border-hairline)] bg-[var(--surface-tint)] p-4"
@@ -131,7 +141,7 @@ function SubmissionCard({ row }: { row: Row }) {
               Review rubric
             </h3>
             <ol className="mt-3 space-y-3">
-              {rubric.map((item, index) => (
+              {rubric.items.map((item, index) => (
                 <li key={`${item.criterion}-${index}`} className="text-sm text-[var(--text-body)]">
                   <p className="font-extrabold text-[var(--ink-900)]">{item.criterion}</p>
                   <p className="mt-0.5 font-semibold leading-relaxed">{item.description}</p>

@@ -39,8 +39,8 @@ export function parseProgramInput(
   const is_published = formData.get("is_published") === "on";
   const thumbnailRaw = String(formData.get("thumbnail_path") ?? "").trim();
   const thumbnail_path = thumbnailRaw || null;
-  if (thumbnail_path && !isStoragePath(thumbnail_path)) {
-    errors.thumbnail_path = "Use a relative path in private content storage.";
+  if (thumbnail_path && !parseArtworkPath(thumbnail_path)) {
+    errors.thumbnail_path = "Use an image in an approved artwork thumbnail namespace.";
   }
 
   if (Object.keys(errors).length > 0) {
@@ -59,6 +59,4 @@ export function parseProgramInput(
   };
 }
 
-function isStoragePath(value: string): boolean {
-  return !value.startsWith("/") && !value.includes("..") && !value.includes("://");
-}
+import { parseArtworkPath } from "@/lib/artwork/paths";

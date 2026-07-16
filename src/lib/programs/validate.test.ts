@@ -16,7 +16,7 @@ describe("parseProgramInput", () => {
         description: "Core program",
         course_order_mode: "sequential",
         is_published: "on",
-        thumbnail_path: "courses/training/program.webp",
+        thumbnail_path: "courses/training/v1/thumbnails/program.webp",
       }),
     );
     expect(result.ok).toBe(true);
@@ -25,7 +25,7 @@ describe("parseProgramInput", () => {
     expect(result.value.description).toBe("Core program");
     expect(result.value.course_order_mode).toBe("sequential");
     expect(result.value.is_published).toBe(true);
-    expect(result.value.thumbnail_path).toBe("courses/training/program.webp");
+    expect(result.value.thumbnail_path).toBe("courses/training/v1/thumbnails/program.webp");
   });
 
   it("defaults course_order_mode to free when missing", () => {

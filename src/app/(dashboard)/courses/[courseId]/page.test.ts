@@ -5,7 +5,8 @@ const course = {
   id: "course-1",
   title: "Calls and objections",
   description: "Open strong and handle pushback.",
-  thumbnail_path: "courses/calls-and-objections.webp",
+  thumbnail_path: "courses/calls-and-objections/v1/thumbnails/cover.webp",
+  content_import_id: "calls-and-objections-v1",
   is_published: true,
   modules: [
     {
@@ -77,8 +78,8 @@ vi.mock("@/lib/supabase/server", () => ({
 }));
 
 vi.mock("@/lib/content-blocks/sign-urls", () => ({
-  signContentPaths: vi.fn(async (paths: string[]) =>
-    new Map(paths.map((path) => [path, `https://signed.example/${path}`])),
+  signAuthorizedArtworkPaths: vi.fn(async (requests: Array<{ path: string | null }>) =>
+    new Map(requests.flatMap(({ path }) => path ? [[path, `https://signed.example/${path}`] as const] : [])),
   ),
 }));
 
@@ -101,7 +102,7 @@ describe("CoursePage BMH learner presentation", () => {
     expect(html).toContain("Content");
     expect(html).toContain("Quiz");
     expect(html).toContain("Assignment");
-    expect(html).toContain("https://signed.example/courses/calls-and-objections.webp");
+    expect(html).toContain("https://signed.example/courses/calls-and-objections/v1/thumbnails/cover.webp");
     expect(html).toContain("Calls and objections course cover");
   });
 });

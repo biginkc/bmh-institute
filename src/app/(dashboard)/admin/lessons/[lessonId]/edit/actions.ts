@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { requireAdmin } from "@/lib/auth/guard";
+import { validateArtworkChange } from "@/lib/artwork/paths";
 import { sanitizeTextBlockHtml } from "@/lib/sanitize/text-block";
 import { createClient } from "@/lib/supabase/server";
 import type { Json } from "@/lib/supabase/types";
@@ -22,16 +23,23 @@ export async function updateLessonDetails(input: {
   const title = input.title.trim();
   if (!title) return { ok: false, error: "Title is required." };
   const thumbnailPath = input.thumbnail_path?.trim() || null;
-  if (
-    thumbnailPath &&
-    (thumbnailPath.startsWith("/") ||
-      thumbnailPath.includes("..") ||
-      thumbnailPath.includes("://"))
-  ) {
-    return { ok: false, error: "Use a relative path in private content storage." };
-  }
-
   const supabase = await createClient();
+  const current = await supabase
+    .from("lessons")
+    .select("thumbnail_path, content_import_id")
+    .eq("id", input.lessonId)
+    .maybeSingle();
+  if (current.error || !current.data) {
+    return { ok: false, error: "Couldn't verify the lesson artwork." };
+  }
+  const artworkError = validateArtworkChange({
+    entityType: "lesson",
+    entityId: input.lessonId,
+    contentImportId: current.data.content_import_id,
+    currentPath: current.data.thumbnail_path,
+    nextPath: thumbnailPath,
+  });
+  if (artworkError) return { ok: false, error: artworkError };
   const { error } = await supabase
     .from("lessons")
     .update({

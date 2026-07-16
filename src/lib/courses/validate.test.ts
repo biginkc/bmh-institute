@@ -15,7 +15,7 @@ describe("parseCourseInput", () => {
         title: " Phone Basics ",
         description: "Intro",
         is_published: "on",
-        thumbnail_path: "courses/training/course.webp",
+        thumbnail_path: "courses/training/v1/thumbnails/course.webp",
       }),
     );
     expect(result.ok).toBe(true);
@@ -24,7 +24,7 @@ describe("parseCourseInput", () => {
       title: "Phone Basics",
       description: "Intro",
       is_published: true,
-      thumbnail_path: "courses/training/course.webp",
+      thumbnail_path: "courses/training/v1/thumbnails/course.webp",
     });
   });
 

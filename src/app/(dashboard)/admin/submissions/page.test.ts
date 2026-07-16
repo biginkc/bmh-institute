@@ -1,7 +1,12 @@
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 let selectSql = "";
+let queryError: { message: string } | null = null;
+let rubric: unknown = [
+  { criterion: "Systems readiness", description: "Confirms access to every required system." },
+  { criterion: "Service mindset", description: "Explains how the learner will serve sellers respectfully." },
+];
 
 vi.mock("@/lib/supabase/server", () => ({
   createClient: vi.fn(async () => ({
@@ -22,21 +27,12 @@ vi.mock("@/lib/supabase/server", () => ({
             profiles: { email: "learner@example.test", full_name: "Learner One" },
             assignments: {
               title: "Orientation Readiness Check",
-              rubric: [
-                {
-                  criterion: "Systems readiness",
-                  description: "Confirms access to every required system.",
-                },
-                {
-                  criterion: "Service mindset",
-                  description: "Explains how the learner will serve sellers respectfully.",
-                },
-              ],
+              rubric,
             },
             lessons: { title: "Orientation assignment" },
           },
         ],
-        error: null,
+        error: queryError,
       };
       const chain = {
         select: (sql: string) => {
@@ -57,6 +53,14 @@ vi.mock("@/lib/supabase/server", () => ({
 import AdminSubmissionsPage from "./page";
 
 describe("AdminSubmissionsPage assignment rubric", () => {
+  beforeEach(() => {
+    queryError = null;
+    rubric = [
+      { criterion: "Systems readiness", description: "Confirms access to every required system." },
+      { criterion: "Service mindset", description: "Explains how the learner will serve sellers respectfully." },
+    ];
+  });
+
   it("puts the imported reviewer rubric beside the learner submission", async () => {
     const html = renderToStaticMarkup(
       await AdminSubmissionsPage({ searchParams: Promise.resolve({}) }),
@@ -68,5 +72,23 @@ describe("AdminSubmissionsPage assignment rubric", () => {
     expect(html).toContain("Confirms access to every required system.");
     expect(html).toContain("Service mindset");
     expect(html).toContain("I confirmed access and documented my handoff.");
+  });
+
+  it("shows a data-integrity alert instead of silently dropping a corrupt rubric", async () => {
+    rubric = [{ criterion: "Valid", description: null }];
+    const html = renderToStaticMarkup(
+      await AdminSubmissionsPage({ searchParams: Promise.resolve({}) }),
+    );
+    expect(html).toContain("review rubric is invalid");
+    expect(html).not.toContain("Review rubric</h3>");
+  });
+
+  it("does not describe a failed submissions query as an empty queue", async () => {
+    queryError = { message: "database unavailable" };
+    const html = renderToStaticMarkup(
+      await AdminSubmissionsPage({ searchParams: Promise.resolve({}) }),
+    );
+    expect(html).toContain("couldn&#x27;t load submissions");
+    expect(html).not.toContain("all caught up");
   });
 });

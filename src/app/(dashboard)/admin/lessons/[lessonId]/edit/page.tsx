@@ -38,6 +38,7 @@ export default async function EditLessonPage({
       assignment_id,
       is_required_for_completion,
       thumbnail_path,
+      content_import_id,
       module_id,
       modules ( id, title, course_id )
     `,
@@ -81,6 +82,7 @@ export default async function EditLessonPage({
         defaultDescription={lesson.description as string | null}
         defaultRequired={lesson.is_required_for_completion as boolean}
         defaultThumbnailPath={lesson.thumbnail_path as string | null}
+        contentImportId={lesson.content_import_id as string | null}
       />
     </Card>
   );
@@ -229,6 +231,18 @@ async function AssignmentLessonEditor({
     );
   }
 
+  const parsedRubric = parseAssignmentRubric(asn.rubric);
+  if (!parsedRubric.ok) {
+    return (
+      <Card padding="md">
+        <PanelHeading
+          title="Assignment data needs repair"
+          description="The saved review rubric is invalid. Repair the assignment data before editing or reviewing submissions."
+        />
+      </Card>
+    );
+  }
+
   return (
     <Card padding="md">
       <PanelHeading
@@ -239,7 +253,7 @@ async function AssignmentLessonEditor({
         lessonId={lessonId}
         assignment={{
           ...(asn as Omit<AssignmentSettings, "rubric">),
-          rubric: parseAssignmentRubric(asn.rubric),
+          rubric: parsedRubric.items,
         }}
       />
     </Card>

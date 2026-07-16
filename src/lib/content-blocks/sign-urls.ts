@@ -1,5 +1,10 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { ContentBlock } from "@/components/content-blocks";
+import {
+  artworkMimeMatchesPath,
+  isAuthorizedArtworkPath,
+  type ArtworkEntityType,
+} from "@/lib/artwork/paths";
 
 const SIGNED_URL_TTL_SECONDS = 60 * 60; // 1 hour
 
@@ -53,6 +58,56 @@ export async function signContentPaths(paths: string[]): Promise<Map<string, str
   const { data, error } = await supabase.storage
     .from("content")
     .createSignedUrls(uniquePaths, SIGNED_URL_TTL_SECONDS);
+  const signedByPath = new Map<string, string>();
+  if (error || !data) return signedByPath;
+  for (const row of data) {
+    if (row.path && row.signedUrl) signedByPath.set(row.path, row.signedUrl);
+  }
+  return signedByPath;
+}
+
+export type ArtworkSignRequest = {
+  entityType: ArtworkEntityType;
+  entityId: string;
+  contentImportId: string | null;
+  path: string | null;
+};
+
+/** Signs catalog artwork only when its ownership and stored MIME both match. */
+export async function signAuthorizedArtworkPaths(
+  requests: ArtworkSignRequest[],
+): Promise<Map<string, string>> {
+  const authorized = requests.filter(
+    (request): request is ArtworkSignRequest & { path: string } =>
+      typeof request.path === "string" &&
+      isAuthorizedArtworkPath({
+        entityType: request.entityType,
+        entityId: request.entityId,
+        contentImportId: request.contentImportId,
+        path: request.path,
+      }),
+  );
+  if (authorized.length === 0) return new Map();
+
+  const bucket = createAdminClient().storage.from("content");
+  const verifiedPaths: string[] = [];
+  for (const request of authorized) {
+    const { data, error } = await bucket.info(request.path);
+    const metadata = data?.metadata as Record<string, unknown> | undefined;
+    const mime =
+      (typeof metadata?.mimetype === "string" && metadata.mimetype) ||
+      (typeof metadata?.contentType === "string" && metadata.contentType) ||
+      null;
+    if (!error && mime && artworkMimeMatchesPath(request.path, mime)) {
+      verifiedPaths.push(request.path);
+    }
+  }
+  if (verifiedPaths.length === 0) return new Map();
+
+  const { data, error } = await bucket.createSignedUrls(
+    Array.from(new Set(verifiedPaths)),
+    SIGNED_URL_TTL_SECONDS,
+  );
   const signedByPath = new Map<string, string>();
   if (error || !data) return signedByPath;
   for (const row of data) {

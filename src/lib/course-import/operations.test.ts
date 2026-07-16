@@ -12,6 +12,15 @@ describe("buildImportPlan", () => {
     expect(first.operations[0]).toMatchObject({ table: "role_groups", action: "upsert" });
     expect(first.operations.at(-1)).toMatchObject({ table: "program_access", action: "upsert" });
     expect(first.summary).toMatchObject({ programs: 1, courses: 1, modules: 1, lessons: 3 });
+    expect(first.operations.find((operation) => operation.table === "programs")?.row.content_import_id).toBe(
+      "training-v1",
+    );
+    expect(first.operations.find((operation) => operation.table === "courses")?.row.content_import_id).toBe(
+      "training-v1",
+    );
+    expect(first.operations.find((operation) => operation.table === "lessons")?.row.content_import_id).toBe(
+      "training-v1",
+    );
     expect(first.operations.find((operation) => operation.table === "assignments")?.row.rubric).toEqual([
       { criterion: "Complete", description: "Answers every prompt." },
     ]);

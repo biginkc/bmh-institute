@@ -392,6 +392,7 @@ export type Database = {
         Row: {
           certificate_enabled: boolean
           certificate_template_id: string | null
+          content_import_id: string | null
           created_at: string
           description: string | null
           id: string
@@ -405,6 +406,7 @@ export type Database = {
         Insert: {
           certificate_enabled?: boolean
           certificate_template_id?: string | null
+          content_import_id?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -418,6 +420,7 @@ export type Database = {
         Update: {
           certificate_enabled?: boolean
           certificate_template_id?: string | null
+          content_import_id?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -485,6 +488,7 @@ export type Database = {
       lessons: {
         Row: {
           assignment_id: string | null
+          content_import_id: string | null
           created_at: string
           description: string | null
           id: string
@@ -501,6 +505,7 @@ export type Database = {
         }
         Insert: {
           assignment_id?: string | null
+          content_import_id?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -517,6 +522,7 @@ export type Database = {
         }
         Update: {
           assignment_id?: string | null
+          content_import_id?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -748,6 +754,7 @@ export type Database = {
         Row: {
           certificate_enabled: boolean
           certificate_template_id: string | null
+          content_import_id: string | null
           course_order_mode: string
           created_at: string
           description: string | null
@@ -762,6 +769,7 @@ export type Database = {
         Insert: {
           certificate_enabled?: boolean
           certificate_template_id?: string | null
+          content_import_id?: string | null
           course_order_mode?: string
           created_at?: string
           description?: string | null
@@ -776,6 +784,7 @@ export type Database = {
         Update: {
           certificate_enabled?: boolean
           certificate_template_id?: string | null
+          content_import_id?: string | null
           course_order_mode?: string
           created_at?: string
           description?: string | null

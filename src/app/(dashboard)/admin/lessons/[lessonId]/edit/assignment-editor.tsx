@@ -6,6 +6,15 @@ import { toast } from "sonner";
 import { Button, Input } from "@/components/bmh-ds";
 import { Label } from "@/components/ui/label";
 import type { AssignmentRubricItem } from "@/lib/assignments/rubric";
+import {
+  MAX_ASSIGNMENT_INSTRUCTIONS_LENGTH,
+  MAX_ASSIGNMENT_TITLE_LENGTH,
+} from "@/lib/assignments/validation";
+import {
+  MAX_RUBRIC_CRITERION_LENGTH,
+  MAX_RUBRIC_DESCRIPTION_LENGTH,
+  MAX_RUBRIC_ITEMS,
+} from "@/lib/assignments/rubric";
 
 import { updateAssignment } from "./assignment-actions";
 
@@ -59,6 +68,7 @@ export function AssignmentEditor({
         <Input
           id="a-title"
           value={title}
+          maxLength={MAX_ASSIGNMENT_TITLE_LENGTH}
           onChange={(e) => setTitle(e.target.value)}
         />
       </div>
@@ -67,6 +77,7 @@ export function AssignmentEditor({
         <textarea
           id="a-instructions"
           rows={5}
+          maxLength={MAX_ASSIGNMENT_INSTRUCTIONS_LENGTH}
           value={instructions}
           onChange={(e) => setInstructions(e.target.value)}
           className="w-full rounded-[var(--bmh-radius-md)] border-2 border-[var(--ink-300)] bg-[var(--paper)] px-4 py-3 text-sm font-semibold text-[var(--ink-900)] outline-none focus:border-[var(--action)] focus:ring-4 focus:ring-[var(--focus-ring)]"
@@ -130,6 +141,7 @@ export function AssignmentEditor({
               id={`a-rubric-criterion-${index}`}
               label={`Criterion ${index + 1}`}
               value={item.criterion}
+              maxLength={MAX_RUBRIC_CRITERION_LENGTH}
               onChange={(event) =>
                 setRubric((current) =>
                   current.map((criterion, criterionIndex) =>
@@ -145,6 +157,7 @@ export function AssignmentEditor({
               <textarea
                 id={`a-rubric-description-${index}`}
                 rows={3}
+                maxLength={MAX_RUBRIC_DESCRIPTION_LENGTH}
                 value={item.description}
                 onChange={(event) =>
                   setRubric((current) =>
@@ -176,6 +189,7 @@ export function AssignmentEditor({
           <Button
             type="button"
             variant="secondary"
+            disabled={pending || rubric.length >= MAX_RUBRIC_ITEMS}
             onClick={() =>
               setRubric((current) => [...current, { criterion: "", description: "" }])
             }

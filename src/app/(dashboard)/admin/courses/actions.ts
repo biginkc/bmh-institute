@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
 import { requireAdmin } from "@/lib/auth/guard";
+import { validateArtworkChange } from "@/lib/artwork/paths";
 import { createClient } from "@/lib/supabase/server";
 import {
   parseCourseInput,
@@ -28,6 +29,14 @@ export async function createCourse(
   await requireAdmin();
   const parsed = parseCourseInput(formData);
   if (!parsed.ok) return fieldResult(parsed, formData);
+  if (parsed.value.thumbnail_path) {
+    return {
+      ok: false,
+      error: "Save the course before uploading artwork.",
+      fieldErrors: { thumbnail_path: "Save the course before uploading artwork." },
+      values: parsed.value,
+    };
+  }
 
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -60,6 +69,29 @@ export async function updateCourse(
   if (!parsed.ok) return fieldResult(parsed, formData);
 
   const supabase = await createClient();
+  const current = await supabase
+    .from("courses")
+    .select("thumbnail_path, content_import_id")
+    .eq("id", courseId)
+    .maybeSingle();
+  if (current.error || !current.data) {
+    return { ok: false, error: "Couldn't verify the course artwork." };
+  }
+  const artworkError = validateArtworkChange({
+    entityType: "course",
+    entityId: courseId,
+    contentImportId: current.data.content_import_id,
+    currentPath: current.data.thumbnail_path,
+    nextPath: parsed.value.thumbnail_path,
+  });
+  if (artworkError) {
+    return {
+      ok: false,
+      error: "Fix the highlighted fields.",
+      fieldErrors: { thumbnail_path: artworkError },
+      values: parsed.value,
+    };
+  }
   const { error } = await supabase
     .from("courses")
     .update({

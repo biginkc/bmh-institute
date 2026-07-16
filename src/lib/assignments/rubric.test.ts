@@ -9,20 +9,19 @@ describe("parseAssignmentRubric", () => {
         { criterion: "  Systems readiness ", description: " Confirm every login.  " },
         { criterion: "Service mindset", description: "Uses respectful seller language." },
       ]),
-    ).toEqual([
-      { criterion: "Systems readiness", description: "Confirm every login." },
-      { criterion: "Service mindset", description: "Uses respectful seller language." },
-    ]);
+    ).toEqual({
+      ok: true,
+      items: [
+        { criterion: "Systems readiness", description: "Confirm every login." },
+        { criterion: "Service mindset", description: "Uses respectful seller language." },
+      ],
+    });
   });
 
-  it("fails closed for malformed database JSON", () => {
-    expect(
-      parseAssignmentRubric([
-        null,
-        "criterion",
-        { criterion: "Missing description" },
-        { criterion: "", description: "Blank criterion" },
-      ]),
-    ).toEqual([]);
+  it("fails the whole rubric instead of silently dropping corrupt criteria", () => {
+    expect(parseAssignmentRubric([{ criterion: "Valid", description: "Keep me" }, null])).toEqual({
+      ok: false,
+      error: "The assignment rubric contains a malformed criterion.",
+    });
   });
 });
