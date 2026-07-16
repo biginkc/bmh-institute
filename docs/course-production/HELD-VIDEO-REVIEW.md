@@ -27,4 +27,3 @@ For each file, record the exact SHA-256, approval date, and approver in the
 course review record. Approval of a filename without a matching checksum is not
 enough because the local course-production folders contain older and rejected
 cuts with similar names.
-
