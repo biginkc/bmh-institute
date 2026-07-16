@@ -1,12 +1,26 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { ArrowDown, ArrowUp, Trash2 } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowUp,
+  Code2,
+  Download,
+  FileText,
+  Image as ImageIcon,
+  Link2,
+  Megaphone,
+  MessagesSquare,
+  Minus,
+  Trash2,
+  Type,
+  Video,
+  Volume2,
+  type LucideIcon,
+} from "lucide-react";
 import { toast } from "sonner";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Badge, Button, Card, IconButton, Input } from "@/components/bmh-ds";
 import { Label } from "@/components/ui/label";
 
 import { FileUpload } from "@/components/file-upload";
@@ -27,18 +41,18 @@ export type BlockRow = {
   is_required_for_completion: boolean;
 };
 
-const ADDABLE_TYPES: { type: BlockType; label: string }[] = [
-  { type: "text", label: "Text" },
-  { type: "video", label: "Video" },
-  { type: "image", label: "Image" },
-  { type: "pdf", label: "PDF" },
-  { type: "audio", label: "Audio" },
-  { type: "download", label: "Download" },
-  { type: "callout", label: "Callout" },
-  { type: "external_link", label: "External link" },
-  { type: "embed", label: "Embed (iframe)" },
-  { type: "role_play", label: "Role play" },
-  { type: "divider", label: "Divider" },
+const ADDABLE_TYPES: { type: BlockType; label: string; icon: LucideIcon }[] = [
+  { type: "text", label: "Text", icon: Type },
+  { type: "video", label: "Video", icon: Video },
+  { type: "image", label: "Image", icon: ImageIcon },
+  { type: "pdf", label: "PDF", icon: FileText },
+  { type: "audio", label: "Audio", icon: Volume2 },
+  { type: "download", label: "Download", icon: Download },
+  { type: "callout", label: "Callout", icon: Megaphone },
+  { type: "external_link", label: "External link", icon: Link2 },
+  { type: "embed", label: "Embed (iframe)", icon: Code2 },
+  { type: "role_play", label: "Role play", icon: MessagesSquare },
+  { type: "divider", label: "Divider", icon: Minus },
 ];
 
 export function BlocksEditor({
@@ -59,39 +73,56 @@ export function BlocksEditor({
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      {initialBlocks.length === 0 ? (
-        <p className="text-muted-foreground text-sm">
-          No blocks yet. Add one below.
-        </p>
-      ) : (
-        initialBlocks.map((block, idx) => (
-          <BlockCard
-            key={block.id}
-            block={block}
-            lessonId={lessonId}
-            canMoveUp={idx > 0}
-            canMoveDown={idx < initialBlocks.length - 1}
-            pending={pending}
-            startTransition={startTransition}
-          />
-        ))
-      )}
-
-      <div className="border-border flex flex-wrap items-center gap-2 border-t pt-4">
-        <span className="text-muted-foreground text-xs">Add block:</span>
-        {ADDABLE_TYPES.map((t) => (
-          <Button
-            key={t.type}
-            variant="outline"
-            size="sm"
-            disabled={pending}
-            onClick={() => onAdd(t.type)}
-          >
-            {t.label}
-          </Button>
-        ))}
+    <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,3fr)_minmax(300px,2fr)]">
+      <div className="flex min-w-0 flex-col gap-3">
+        {initialBlocks.length === 0 ? (
+          <Card padding="md" tint>
+            <p className="font-[family-name:var(--font-body)] text-sm font-semibold text-[var(--text-muted)]">
+              No blocks yet. Choose a block type to start building this lesson.
+            </p>
+          </Card>
+        ) : (
+          initialBlocks.map((block, idx) => (
+            <BlockCard
+              key={block.id}
+              block={block}
+              lessonId={lessonId}
+              canMoveUp={idx > 0}
+              canMoveDown={idx < initialBlocks.length - 1}
+              pending={pending}
+              startTransition={startTransition}
+            />
+          ))
+        )}
       </div>
+
+      <Card padding="md" className="lg:sticky lg:top-6">
+        <h3 className="mb-2 font-[family-name:var(--font-display)] text-lg font-bold text-[var(--ink-900)]">
+          Add a block
+        </h3>
+        <p className="mb-4 font-[family-name:var(--font-body)] text-xs font-semibold leading-relaxed text-[var(--text-muted)]">
+          Stack any mix of these 11 lesson building blocks.
+        </p>
+        <div className="grid grid-cols-2 gap-2">
+          {ADDABLE_TYPES.map((item) => {
+            const Icon = item.icon;
+            return (
+              <Button
+                key={item.type}
+                variant="secondary"
+                size="sm"
+                block
+                disabled={pending}
+                onClick={() => onAdd(item.type)}
+                iconLeft={<Icon className="size-4 accent-[var(--action)]" />}
+                style={{ justifyContent: "flex-start" }}
+              >
+                {item.label}
+              </Button>
+            );
+          })}
+        </div>
+      </Card>
     </div>
   );
 }
@@ -128,45 +159,45 @@ function BlockCard({
   }
 
   return (
-    <div className="border-border rounded-md border">
-      <div className="border-border flex items-center justify-between gap-2 border-b px-3 py-2">
-        <Badge variant="secondary" className="capitalize">
-          {block.block_type}
+    <Card padding="none">
+      <div className="flex items-center justify-between gap-2 border-b border-[var(--border-hairline)] px-4 py-3">
+        <Badge tone="blue" size="sm">
+          <span className="capitalize">{block.block_type.replaceAll("_", " ")}</span>
         </Badge>
         <div className="flex items-center gap-1">
-          <Button
-            variant="outline"
-            size="icon-sm"
+          <IconButton
+            label="Move block up"
+            variant="plain"
+            size="sm"
             disabled={!canMoveUp || pending}
             onClick={() => onMove("up")}
-            aria-label="Move up"
           >
-            <ArrowUp className="size-3.5" />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon-sm"
+            <ArrowUp className="size-4 accent-[var(--action)]" />
+          </IconButton>
+          <IconButton
+            label="Move block down"
+            variant="plain"
+            size="sm"
             disabled={!canMoveDown || pending}
             onClick={() => onMove("down")}
-            aria-label="Move down"
           >
-            <ArrowDown className="size-3.5" />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon-sm"
+            <ArrowDown className="size-4 accent-[var(--action)]" />
+          </IconButton>
+          <IconButton
+            label="Delete block"
+            variant="plain"
+            size="sm"
             disabled={pending}
             onClick={onDelete}
-            aria-label="Delete block"
           >
-            <Trash2 className="size-3.5" />
-          </Button>
+            <Trash2 className="size-4 accent-[var(--action)]" />
+          </IconButton>
         </div>
       </div>
-      <div className="p-3">
+      <div className="p-4">
         <BlockEditor block={block} lessonId={lessonId} pending={pending} startTransition={startTransition} />
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -184,7 +215,7 @@ function BlockEditor({
   const blockType = block.block_type as BlockType | string;
 
   if (blockType === "divider") {
-    return <p className="text-muted-foreground text-xs">Divider (no fields).</p>;
+    return <p className="text-[var(--text-muted)] text-xs">Divider (no fields).</p>;
   }
   if (blockType === "text") {
     return <TextBlockEditor block={block} lessonId={lessonId} pending={pending} startTransition={startTransition} />;
@@ -217,7 +248,7 @@ function BlockEditor({
     return <DownloadBlockEditor block={block} lessonId={lessonId} pending={pending} startTransition={startTransition} />;
   }
   return (
-    <p className="text-muted-foreground text-xs">
+    <p className="text-[var(--text-muted)] text-xs">
       Editor for &quot;{blockType}&quot; arrives in the upload phase.
     </p>
   );
@@ -275,11 +306,11 @@ function TextBlockEditor({
         rows={6}
         value={html}
         onChange={(e) => setHtml(e.target.value)}
-        className="border-input bg-background w-full rounded-md border px-3 py-2 font-mono text-xs"
+        className="w-full rounded-[var(--bmh-radius-md)] border-2 border-[var(--ink-300)] bg-[var(--paper)] px-4 py-3 font-mono text-xs text-[var(--ink-900)] outline-none focus:border-[var(--action)] focus:ring-4 focus:ring-[var(--focus-ring)]"
       />
       <div>
         <Button
-          variant="outline"
+          variant="secondary"
           size="sm"
           disabled={pending}
           onClick={() => save({ html })}
@@ -318,7 +349,7 @@ function CalloutBlockEditor({
           id={`variant-${block.id}`}
           value={variant}
           onChange={(e) => setVariant(e.target.value)}
-          className="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
+          className="w-full rounded-[var(--bmh-radius-md)] border-2 border-[var(--ink-300)] bg-[var(--paper)] px-4 py-3 font-[family-name:var(--font-body)] text-sm font-semibold text-[var(--ink-900)] outline-none focus:border-[var(--action)] focus:ring-4 focus:ring-[var(--focus-ring)]"
         >
           <option value="info">Info</option>
           <option value="warning">Warning</option>
@@ -333,12 +364,12 @@ function CalloutBlockEditor({
           rows={3}
           value={markdown}
           onChange={(e) => setMarkdown(e.target.value)}
-          className="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
+          className="w-full rounded-[var(--bmh-radius-md)] border-2 border-[var(--ink-300)] bg-[var(--paper)] px-4 py-3 font-[family-name:var(--font-body)] text-sm font-semibold text-[var(--ink-900)] outline-none focus:border-[var(--action)] focus:ring-4 focus:ring-[var(--focus-ring)]"
         />
       </div>
       <div>
         <Button
-          variant="outline"
+          variant="secondary"
           size="sm"
           disabled={pending}
           onClick={() => save({ variant, markdown })}
@@ -404,13 +435,13 @@ function ExternalLinkBlockEditor({
           type="checkbox"
           checked={openInNewTab}
           onChange={(e) => setOpenInNewTab(e.target.checked)}
-          className="size-4"
+          className="size-4 accent-[var(--action)]"
         />
         <Label htmlFor={`new-tab-${block.id}`}>Open in new tab</Label>
       </div>
       <div>
         <Button
-          variant="outline"
+          variant="secondary"
           size="sm"
           disabled={pending}
           onClick={() =>
@@ -465,7 +496,7 @@ function VideoBlockEditor({
           id={`source-${block.id}`}
           value={source}
           onChange={(e) => setSource(e.target.value)}
-          className="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
+          className="w-full rounded-[var(--bmh-radius-md)] border-2 border-[var(--ink-300)] bg-[var(--paper)] px-4 py-3 font-[family-name:var(--font-body)] text-sm font-semibold text-[var(--ink-900)] outline-none focus:border-[var(--action)] focus:ring-4 focus:ring-[var(--focus-ring)]"
         >
           <option value="upload">Upload (MP4/MOV/WebM)</option>
           <option value="youtube">YouTube link</option>
@@ -515,7 +546,7 @@ function VideoBlockEditor({
 
       <div>
         <Button
-          variant="outline"
+          variant="secondary"
           size="sm"
           disabled={pending}
           onClick={onSave}
@@ -579,7 +610,7 @@ function ImageBlockEditor({
       </div>
       <div>
         <Button
-          variant="outline"
+          variant="secondary"
           size="sm"
           disabled={pending}
           onClick={() => save({ file_path: filePath, alt, caption })}
@@ -640,7 +671,7 @@ function PdfBlockEditor({
           id={`display-${block.id}`}
           value={display}
           onChange={(e) => setDisplay(e.target.value)}
-          className="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
+          className="w-full rounded-[var(--bmh-radius-md)] border-2 border-[var(--ink-300)] bg-[var(--paper)] px-4 py-3 font-[family-name:var(--font-body)] text-sm font-semibold text-[var(--ink-900)] outline-none focus:border-[var(--action)] focus:ring-4 focus:ring-[var(--focus-ring)]"
         >
           <option value="inline">Inline viewer</option>
           <option value="download">Download link</option>
@@ -648,7 +679,7 @@ function PdfBlockEditor({
       </div>
       <div>
         <Button
-          variant="outline"
+          variant="secondary"
           size="sm"
           disabled={pending}
           onClick={() =>
@@ -690,7 +721,7 @@ function AudioBlockEditor({
           id={`src-${block.id}`}
           value={source}
           onChange={(e) => setSource(e.target.value)}
-          className="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
+          className="w-full rounded-[var(--bmh-radius-md)] border-2 border-[var(--ink-300)] bg-[var(--paper)] px-4 py-3 font-[family-name:var(--font-body)] text-sm font-semibold text-[var(--ink-900)] outline-none focus:border-[var(--action)] focus:ring-4 focus:ring-[var(--focus-ring)]"
         >
           <option value="upload">Upload (MP3/M4A/WAV)</option>
           <option value="url">External URL</option>
@@ -726,7 +757,7 @@ function AudioBlockEditor({
       )}
       <div>
         <Button
-          variant="outline"
+          variant="secondary"
           size="sm"
           disabled={pending}
           onClick={() =>
@@ -806,7 +837,7 @@ function DownloadBlockEditor({
       </div>
       <div>
         <Button
-          variant="outline"
+          variant="secondary"
           size="sm"
           disabled={pending}
           onClick={() => save({ file_path: filePath, filename, description })}
@@ -845,7 +876,7 @@ function EmbedBlockEditor({
           onChange={(e) => setSrc(e.target.value)}
           placeholder="https://www.loom.com/embed/..."
         />
-        <p className="text-muted-foreground text-xs">
+        <p className="text-[var(--text-muted)] text-xs">
           Admin-trusted: must start with https. The iframe is rendered with a
           sandbox attribute that blocks top-level navigation.
         </p>
@@ -856,7 +887,7 @@ function EmbedBlockEditor({
           id={`aspect-${block.id}`}
           value={aspect}
           onChange={(e) => setAspect(e.target.value)}
-          className="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
+          className="w-full rounded-[var(--bmh-radius-md)] border-2 border-[var(--ink-300)] bg-[var(--paper)] px-4 py-3 font-[family-name:var(--font-body)] text-sm font-semibold text-[var(--ink-900)] outline-none focus:border-[var(--action)] focus:ring-4 focus:ring-[var(--focus-ring)]"
         >
           <option value="16:9">16:9</option>
           <option value="4:3">4:3</option>
@@ -865,7 +896,7 @@ function EmbedBlockEditor({
       </div>
       <div>
         <Button
-          variant="outline"
+          variant="secondary"
           size="sm"
           disabled={pending}
           onClick={() => save({ iframe_src: src, aspect_ratio: aspect })}
@@ -930,7 +961,7 @@ function RolePlayBlockEditor({
       </div>
       <div>
         <Button
-          variant="outline"
+          variant="secondary"
           size="sm"
           disabled={pending}
           onClick={() =>

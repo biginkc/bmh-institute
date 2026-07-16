@@ -1,13 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card } from "@/components/bmh-ds";
+import { PageHeader } from "@/components/page-header";
 import { createClient } from "@/lib/supabase/server";
 
 import { updateProgram } from "../../actions";
@@ -57,26 +52,27 @@ export default async function EditProgramPage({
   );
 
   return (
-    <main className="mx-auto w-full max-w-2xl flex-1 p-6 md:p-10">
+    <main className="mx-auto w-full max-w-[820px] flex-1 px-5 py-8 md:px-7 md:pb-16">
       <Link
         href="/admin/programs"
-        className="text-muted-foreground hover:text-foreground text-xs"
+        className="font-[family-name:var(--font-body)] text-sm font-bold text-[var(--action)] transition-colors hover:text-[var(--action-hover)]"
       >
         ← Back to programs
       </Link>
-      <h1 className="mt-3 text-2xl font-semibold">Edit program</h1>
-      <p className="text-muted-foreground mb-8 mt-1 text-sm">
-        Editing &quot;{program.title as string}&quot;.
-      </p>
+      <div className="mb-7 mt-3">
+        <PageHeader
+          title={program.title as string}
+          description="Set order mode and attach courses."
+          breadcrumb={[{ label: "Admin" }, { label: "Programs" }]}
+        />
+      </div>
 
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Details</CardTitle>
-          <CardDescription>
-            Title, description, and sequencing behaviour.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+      <div className="flex flex-col gap-5">
+        <Card padding="md">
+          <PanelHeading
+            title="Details"
+            description="Title, description and sequencing behavior."
+          />
           <ProgramForm
             action={boundAction}
             submitLabel="Save changes"
@@ -88,19 +84,13 @@ export default async function EditProgramPage({
               is_published: program.is_published as boolean,
             }}
           />
-        </CardContent>
-      </Card>
+        </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Courses in this program</CardTitle>
-          <CardDescription>
-            Attach existing courses. They appear in the order shown below
-            (top to bottom). For sequential programs, the order controls
-            unlock timing.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+        <Card padding="md">
+          <PanelHeading
+            title="Courses in this program"
+            description="Attach existing courses in the numbered order below. In sequential programs this order controls when each course unlocks."
+          />
           <CourseAttachments
             programId={programId}
             attached={attached
@@ -117,9 +107,22 @@ export default async function EditProgramPage({
               isPublished: c.is_published as boolean,
             }))}
           />
-        </CardContent>
-      </Card>
+        </Card>
+      </div>
     </main>
+  );
+}
+
+function PanelHeading({ title, description }: { title: string; description: string }) {
+  return (
+    <div className="mb-5">
+      <h2 className="font-[family-name:var(--font-display)] text-xl font-bold text-[var(--ink-900)]">
+        {title}
+      </h2>
+      <p className="mt-1 font-[family-name:var(--font-body)] text-sm font-semibold leading-relaxed text-[var(--text-muted)]">
+        {description}
+      </p>
+    </div>
   );
 }
 
