@@ -1,0 +1,53 @@
+/* BMH Institute — Spacing, radii, shadows, motion */
+:root{
+  /* Spacing scale (4px base) */
+  --space-1:4px;
+  --space-2:8px;
+  --space-3:12px;
+  --space-4:16px;
+  --space-5:20px;
+  --space-6:24px;
+  --space-8:32px;
+  --space-10:40px;
+  --space-12:48px;
+  --space-16:64px;
+  --space-20:80px;
+
+  /* Corner radii — soft-rounded rectangles */
+  /* Collision mapping: --radius-xs -> --bmh-radius-xs. */
+  --bmh-radius-xs:6px;
+  /* Collision mapping: --radius-sm -> --bmh-radius-sm. */
+  --bmh-radius-sm:10px;
+  /* Collision mapping: --radius-md -> --bmh-radius-md. */
+  --bmh-radius-md:14px;
+  /* Collision mapping: --radius-lg -> --bmh-radius-lg. */
+  --bmh-radius-lg:20px;
+  /* Collision mapping: --radius-xl -> --bmh-radius-xl. */
+  --bmh-radius-xl:28px;
+  /* Collision mapping: --radius-2xl -> --bmh-radius-2xl. */
+  --bmh-radius-2xl:36px;
+  --radius-pill:999px;
+
+  /* Borders */
+  --border-w:1px;         /* @kind other */
+  --border-w-bold:2.5px;   /* @kind other */
+
+  /* Shadows — subtle, soft, slightly blue-cool */
+  /* Collision mapping: --shadow-xs -> --bmh-shadow-xs. */
+  --bmh-shadow-xs:0 1px 2px rgba(14,17,22,.06);
+  /* Collision mapping: --shadow-sm -> --bmh-shadow-sm. */
+  --bmh-shadow-sm:0 2px 6px rgba(14,17,22,.07);
+  /* Collision mapping: --shadow-md -> --bmh-shadow-md. */
+  --bmh-shadow-md:0 6px 18px rgba(14,17,22,.09);
+  /* Collision mapping: --shadow-lg -> --bmh-shadow-lg. */
+  --bmh-shadow-lg:0 16px 40px rgba(14,17,22,.12);
+  --shadow-pop:0 10px 28px rgba(44,147,234,.20);   /* card hover lift */
+
+  /* Motion */
+  /* Collision mapping: --ease-out -> --bmh-ease-out. */
+  --bmh-ease-out:cubic-bezier(.22,.61,.36,1);      /* @kind other */
+  --ease-spring:cubic-bezier(.34,1.56,.64,1);      /* @kind other */
+  --dur-fast:120ms;   /* @kind other */
+  --dur:200ms;        /* @kind other */
+  --dur-slow:320ms;   /* @kind other */
+}
