@@ -72,10 +72,10 @@
       "source_key": "guide-slot-03",
       "kind": "pdf",
       "local_path": "output/pdf/slot-03-learner-guide.pdf",
-      "storage_path": "courses/bmh-employee-training-canary/v1/guides/guide-slot-03.c4cf00134d2074355846c2df9483196228b8e54adddbef6ee5d2e7b0fd03c6aa.pdf",
+      "storage_path": "courses/bmh-employee-training-canary/v1/guides/guide-slot-03.e084f864dc2a2d7fa443b8969881d9b5e521f47de83aceea1575a7bc9d63ffc0.pdf",
       "mime_type": "application/pdf",
-      "checksum_sha256": "c4cf00134d2074355846c2df9483196228b8e54adddbef6ee5d2e7b0fd03c6aa",
-      "size_bytes": 5538,
+      "checksum_sha256": "e084f864dc2a2d7fa443b8969881d9b5e521f47de83aceea1575a7bc9d63ffc0",
+      "size_bytes": 50905,
       "approval_status": "approved"
     }
   ],
@@ -151,9 +151,9 @@
                     "required": true,
                     "content": {
                       "asset_key": "guide-slot-03",
-                      "file_path": "courses/bmh-employee-training/v1/guides/guide-slot-03.c4cf00134d2074355846c2df9483196228b8e54adddbef6ee5d2e7b0fd03c6aa.pdf",
+                      "file_path": "courses/bmh-employee-training/v1/guides/guide-slot-03.e084f864dc2a2d7fa443b8969881d9b5e521f47de83aceea1575a7bc9d63ffc0.pdf",
                       "filename": "slot-03-learner-guide.pdf",
-                      "size_bytes": 5538,
+                      "size_bytes": 50905,
                       "description": "Accessible learner guide for Tech Stack and Systems"
                     }
                   },
