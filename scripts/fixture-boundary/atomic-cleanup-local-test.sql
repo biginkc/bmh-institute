@@ -55,6 +55,50 @@ begin
   end if;
 
   begin
+    alter table public.programs drop column thumbnail_asset_key;
+    perform public.admin_cleanup_fixture_catalog_v1(v_manifest, v_confirmation);
+    raise exception 'test expected a migration-020 prerequisite failure';
+  exception when others then
+    if sqlerrm not like '%migration 020 artwork provenance prerequisite is missing%' then raise; end if;
+  end;
+
+  begin
+    update public.user_course_resume
+      set updated_at = updated_at + interval '1 second'
+      where user_id = '0bce714e-9a91-475e-b4a0-6975cd198c30'
+        and course_id = 'c188c671-e80b-43e5-91c2-c3cb626ec7e8';
+    perform public.admin_cleanup_fixture_catalog_v1(v_manifest, v_confirmation);
+    raise exception 'test expected a timestamp drift failure';
+  exception when others then
+    if sqlerrm not like '%row drift%' then raise; end if;
+  end;
+
+  begin
+    alter table public.courses add column future_real_content text;
+    perform public.admin_cleanup_fixture_catalog_v1(v_manifest, v_confirmation);
+    raise exception 'test expected a column-set drift failure';
+  exception when others then
+    if sqlerrm not like '%column-set drift%' then raise; end if;
+  end;
+
+  begin
+    create schema fixture_cleanup_probe;
+    create table fixture_cleanup_probe.future_course_reference (
+      id uuid primary key,
+      course_id uuid not null references public.courses(id) on delete cascade
+    );
+    insert into fixture_cleanup_probe.future_course_reference (id, course_id)
+    values (
+      '20000000-0000-4000-8000-000000000001',
+      '02c489f6-d43f-43d4-b065-3846feb468f4'
+    );
+    perform public.admin_cleanup_fixture_catalog_v1(v_manifest, v_confirmation);
+    raise exception 'test expected a cross-schema foreign-key failure';
+  exception when others then
+    if sqlerrm not like '%cross-schema foreign key%' then raise; end if;
+  end;
+
+  begin
     update public.assignments
       set rubric = '[{"criterion":"real"}]'::jsonb
       where id = '0dee1efc-2b0c-4fc8-89ee-0e7619929b05';
@@ -80,6 +124,13 @@ $$;
 
 do $$
 begin
+  if has_function_privilege(
+    'anon',
+    'public.admin_cleanup_fixture_catalog_v1(text,text)',
+    'EXECUTE'
+  ) then
+    raise exception 'anon unexpectedly has cleanup execute privilege';
+  end if;
   if has_function_privilege(
     'authenticated',
     'public.admin_cleanup_fixture_catalog_v1(text,text)',

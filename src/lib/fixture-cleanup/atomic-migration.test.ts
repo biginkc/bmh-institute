@@ -31,6 +31,18 @@ describe("atomic fixture cleanup migration", () => {
     expect(manifest.fixture_tables.lessons.fingerprint_fields).toContain("thumbnail_path");
     expect(manifest.fixture_tables.lessons.fingerprint_fields).toContain("content_import_id");
     expect(manifest.fixture_tables.assignments.fingerprint_fields).toContain("rubric");
+    expect(manifest.fixture_tables.invites.fingerprint_fields).toContain("accepted_at");
+    expect(manifest.fixture_tables.user_course_resume.fingerprint_fields).toContain("updated_at");
+    for (const table of ["programs", "courses", "lessons"]) {
+      expect(manifest.fixture_tables[table].fingerprint_fields).toEqual(
+        expect.arrayContaining([
+          "content_import_id",
+          "thumbnail_asset_key",
+          "thumbnail_approved_path",
+          "thumbnail_approved_sha256",
+        ]),
+      );
+    }
     expect(migration).toContain("thumbnail_path");
     expect(migration).toContain("content_import_id");
     expect(migration).toContain("rubric");
@@ -51,6 +63,10 @@ describe("atomic fixture cleanup migration", () => {
     expect(migration).toContain("from pg_constraint constraint_row");
     expect(migration).toContain("unnest(constraint_row.conkey, constraint_row.confkey)");
     expect(migration).toContain("unknown foreign key");
+    expect(migration).toContain("column-set drift");
+    expect(migration).toContain("cross-schema foreign key");
+    expect(migration).toContain("migration 020 artwork provenance prerequisite is missing");
+    expect(migration).not.toContain("and child_schema.nspname = 'public'");
   });
 
   it("preserves accounts and audit history and exposes no broad execution grant", () => {

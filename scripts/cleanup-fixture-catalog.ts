@@ -45,8 +45,13 @@ if (execute) {
   if (!approvalPath || !rollbackPath) {
     throw new Error("Execution requires separate --approval-record and --rollback-record JSON files.");
   }
-  validateExecutionApproval(await readJsonFile(resolve(approvalPath)), manifestSha256);
-  validateFreshRollbackRecord(await readJsonFile(resolve(rollbackPath)), manifestSha256);
+  const resolvedApprovalPath = resolve(approvalPath);
+  const resolvedRollbackPath = resolve(rollbackPath);
+  if (resolvedApprovalPath === resolvedRollbackPath) {
+    throw new Error("Approval and rollback proof must be distinct controller-supplied records.");
+  }
+  validateExecutionApproval(await readJsonFile(resolvedApprovalPath), manifestSha256);
+  validateFreshRollbackRecord(await readJsonFile(resolvedRollbackPath), manifestSha256);
 }
 
 const client = createClient(url, serviceRole, {

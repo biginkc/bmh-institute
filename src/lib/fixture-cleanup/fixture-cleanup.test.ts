@@ -75,6 +75,21 @@ describe("fixture cleanup boundary", () => {
     );
   });
 
+  it("fails closed when a future column appears on a fixture row", async () => {
+    const adapter = fakeAdapter();
+    adapter.rows.courses[0].future_real_content = "must not be deleted";
+
+    const plan = await buildFixtureCleanupPlan({
+      manifest: fixtureManifest(),
+      manifestSha256: "a".repeat(64),
+      adapter,
+    });
+
+    expect(plan.problems).toContainEqual(
+      expect.objectContaining({ code: "fixture_row_drift", table: "courses" }),
+    );
+  });
+
   it("fails closed on an unmanifested dependent reference", async () => {
     const adapter = fakeAdapter();
     adapter.rows.modules.push({ id: "surprise-module", course_id: "fixture-course" });

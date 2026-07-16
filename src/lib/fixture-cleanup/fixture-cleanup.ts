@@ -148,6 +148,13 @@ export function parseFixtureManifest(raw: unknown): FixtureBoundaryManifest {
     if (!Array.isArray(section.fingerprint_fields)) {
       throw new Error(`Fixture manifest is missing ${table} fingerprint fields.`);
     }
+    if (
+      section.rows.length > 0 &&
+      (section.fingerprint_fields.length === 0 ||
+        new Set(section.fingerprint_fields).size !== section.fingerprint_fields.length)
+    ) {
+      throw new Error(`Fixture manifest has an invalid ${table} complete-row field set.`);
+    }
   }
   if (value.reference_classification.unexplained_database_references.length > 0) {
     throw new Error("Manifest contains unexplained database references.");
@@ -193,6 +200,17 @@ export async function buildFixtureCleanupPlan({
           table,
           identity: expected.identity,
           message: `${table} fixture row ${key} is missing.`,
+        });
+        continue;
+      }
+      const actualFields = Object.keys(current).sort();
+      const expectedFields = [...section.fingerprint_fields].sort();
+      if (canonicalJson(actualFields) !== canonicalJson(expectedFields)) {
+        problems.push({
+          code: "fixture_row_drift",
+          table,
+          identity: expected.identity,
+          message: `${table} fixture row ${key} has a changed column set.`,
         });
         continue;
       }

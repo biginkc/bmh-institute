@@ -14,11 +14,11 @@ The private rollback snapshot and a fresh read-only production inventory were co
 - Snapshot and production identity comparison: no missing or added IDs in any catalog, access or activity table
 - Storage comparison: zero objects in both `content` and `submissions` in the snapshot and live capture
 - Machine manifest: `fixture-boundary-manifest.json`
-- Current manifest SHA-256: `02da6ef0fe67dbf58a3648ac78cf841e8e231e407ec0c4cd8b546abc7c59b0c3`
+- Current manifest SHA-256: `d08e3f36e876f1345a2218560879335d11c8ccebce4aa3cc6490a14913698d5b`
 
 The live inventory used the approved 1Password service-account path to read a Browser V1 owner fixture. Owner-scoped production reads verified every current ID and every owner-readable field. `answer_options.is_correct` is intentionally not owner-readable. Those protected values came from the rollback snapshot and the service-role-only atomic RPC must recheck them before deletion.
 
-Fields added after the capture are also guarded. Migration 015 defaults must remain `thumbnail_path is null` and `rubric = '[]'::jsonb`. Migration 020 provenance must remain `content_import_id is null` on all fixture programs, courses and lessons. A fixture row that acquires real artwork, a rubric or import provenance fails the cleanup fingerprint.
+Every captured column is guarded, including creation, update, acceptance, review, completion and resume timestamps. The RPC also requires the live column set to exactly match the manifest, so a later migration cannot add an unreviewed deletion-relevant field. Migration 015 defaults must remain `thumbnail_path is null` and `rubric = '[]'::jsonb`. Migration 020 requires `content_import_id`, `thumbnail_asset_key`, `thumbnail_approved_path` and `thumbnail_approved_sha256` to exist and remain null on every fixture program, course and lesson. A fixture row that acquires real artwork, a rubric, import provenance or any timestamp-only activity fails the cleanup fingerprint.
 
 ## Exact deletion set
 
@@ -81,10 +81,10 @@ Production credentials must come only from an approved `BMH Secrets` item read w
 The mutation path is migration `021_atomic_fixture_catalog_cleanup.sql`. The migration only installs a dormant RPC. Calling the RPC:
 
 1. Takes a transaction advisory lock.
-2. Locks every catalog, dependent, profile, audit and auth table against concurrent writes.
+2. Locks every catalog, public dependent, profile, audit and auth table against concurrent writes.
 3. Rechecks the exact manifest checksum and confirmation.
 4. Requires every expected fixture row to be present and fingerprint-identical, or every one to be absent for an idempotent retry.
-5. Rejects partial state, changed rows, new activity and any unmanifested dependent.
+5. Rejects partial state, changed rows, timestamp-only activity, changed column sets, any unmanifested public dependent and every cross-schema foreign key into the fixture graph.
 6. Rechecks every retained profile, auth user and audit row.
 7. Deletes exact identities in dependency order in one database transaction.
 8. Rechecks retained rows before commit.
@@ -94,8 +94,10 @@ The RPC is revoked from `public`, `anon` and `authenticated`. Only `service_role
 The confirmation string printed by dry-run is only a typo guard. It is not authorization. Execution additionally requires:
 
 - the real course to pass acceptance
-- a separate JSON approval record from Jarrad for this exact manifest hash
+- a separate controller-recorded JSON approval from Jarrad, issued within 24 hours for this exact manifest hash
 - a fresh rollback JSON record captured within the previous 24 hours
+- a controller-supplied live provider verification, no older than one hour, proving that exact backup is complete in this production project
+- a passed isolated restore rehearsal from the previous 24 hours, with an evidence checksum
 - migration 020 to be present before migration 021
 - an explicit `--execute` invocation
 
@@ -104,9 +106,11 @@ Approval record shape:
 ```json
 {
   "project_ref": "dhvfsyteqsxagokoerrx",
-  "manifest_sha256": "02da6ef0fe67dbf58a3648ac78cf841e8e231e407ec0c4cd8b546abc7c59b0c3",
+  "manifest_sha256": "d08e3f36e876f1345a2218560879335d11c8ccebce4aa3cc6490a14913698d5b",
   "approved_by": "Jarrad Henry",
-  "approved_at": "<ISO timestamp>",
+  "approved_at": "<ISO timestamp within 24 hours>",
+  "recorded_by": "controller",
+  "evidence_sha256": "<checksum of the controller-held approval evidence>",
   "scope": "fixture_cleanup_after_real_course_acceptance",
   "authorization": "execute"
 }
@@ -117,16 +121,26 @@ Fresh rollback record shape:
 ```json
 {
   "project_ref": "dhvfsyteqsxagokoerrx",
-  "manifest_sha256": "02da6ef0fe67dbf58a3648ac78cf841e8e231e407ec0c4cd8b546abc7c59b0c3",
+  "manifest_sha256": "d08e3f36e876f1345a2218560879335d11c8ccebce4aa3cc6490a14913698d5b",
   "captured_at": "<ISO timestamp within 24 hours>",
   "backup_id": "<new backup identifier>",
+  "backup_provider": "supabase",
+  "backup_project_ref": "dhvfsyteqsxagokoerrx",
+  "backup_status": "COMPLETED",
+  "backup_verified_live_at": "<ISO timestamp within one hour>",
+  "backup_verified_by": "controller",
+  "backup_verification_evidence_sha256": "<checksum of redacted provider evidence>",
+  "restore_rehearsal_status": "passed",
+  "restore_rehearsal_backup_id": "<same new backup identifier>",
+  "restore_rehearsed_at": "<ISO timestamp within 24 hours>",
+  "restore_rehearsal_evidence_sha256": "<checksum of reconciliation evidence>",
   "schema_sha256": "<64 lowercase hex characters>",
   "data_sha256": "<64 lowercase hex characters>",
   "storage_inventory_sha256": "<64 lowercase hex characters>"
 }
 ```
 
-No approval or fresh rollback record is committed now.
+No approval or fresh rollback record is committed now. The cleanup command deliberately does not call the provider management API or read provider credentials beyond the scoped database credential. The controller must create the rollback record only after a live provider check and isolated restore rehearsal; execution fails closed without that distinct record. The local JSON is a carrier for controller-verified evidence, not a substitute for that verification.
 
 ## Rollback
 

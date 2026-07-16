@@ -162,6 +162,17 @@ begin
       into v_result
       from jsonb_array_elements(p_value) with ordinality as item(value, ordinal);
     return v_result;
+  elsif v_kind = 'string' and (p_value #>> '{}') ~ '^\\d{4}-\\d{2}-\\d{2}(T| )' then
+    begin
+      return to_jsonb(
+        to_char(
+          (p_value #>> '{}')::timestamptz at time zone 'UTC',
+          'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'
+        )
+      )::text;
+    exception when others then
+      return p_value::text;
+    end;
   end if;
   return p_value::text;
 end;
@@ -209,6 +220,8 @@ declare
   v_reference record;
   v_fk record;
   v_table record;
+  v_current_fields text[];
+  v_expected_fields text[];
   v_current_rows jsonb;
   v_current_row jsonb;
   v_identity jsonb;
@@ -263,8 +276,58 @@ begin
     auth.users
   in share row exclusive mode;
 
+  if exists (
+    select 1
+    from (values ('programs'), ('courses'), ('lessons')) required_table(table_name)
+    cross join (values
+      ('content_import_id'),
+      ('thumbnail_asset_key'),
+      ('thumbnail_approved_path'),
+      ('thumbnail_approved_sha256')
+    ) required_column(column_name)
+    where not exists (
+      select 1
+      from pg_attribute attribute_row
+      join pg_class table_row on table_row.oid = attribute_row.attrelid
+      join pg_namespace schema_row on schema_row.oid = table_row.relnamespace
+      where schema_row.nspname = 'public'
+        and table_row.relname = required_table.table_name
+        and attribute_row.attname = required_column.column_name
+        and attribute_row.attnum > 0
+        and not attribute_row.attisdropped
+    )
+  ) then
+    raise exception 'fixture cleanup blocked: migration 020 artwork provenance prerequisite is missing';
+  end if;
+
+  for v_table in
+    select table_name
+    from private.fixture_cleanup_tables_v1
+    where expected_count > 0
+    order by table_name
+  loop
+    select array_agg(attribute_row.attname::text order by attribute_row.attname)
+      into v_current_fields
+      from pg_attribute attribute_row
+      join pg_class table_row on table_row.oid = attribute_row.attrelid
+      join pg_namespace schema_row on schema_row.oid = table_row.relnamespace
+      where schema_row.nspname = 'public'
+        and table_row.relname = v_table.table_name
+        and attribute_row.attnum > 0
+        and not attribute_row.attisdropped;
+    select fingerprint_fields
+      into strict v_expected_fields
+      from private.fixture_cleanup_boundary_v1
+      where table_name = v_table.table_name
+      limit 1;
+    if v_current_fields is distinct from v_expected_fields then
+      raise exception 'fixture cleanup blocked: column-set drift in public.%', v_table.table_name;
+    end if;
+  end loop;
+
   for v_fk in
     select
+      child_schema.nspname as child_schema,
       child.relname as child_table,
       child_column.attname as child_field,
       parent.relname as parent_table,
@@ -283,11 +346,14 @@ begin
       on parent_column.attrelid = parent.oid
       and parent_column.attnum = columns.parent_number
     where constraint_row.contype = 'f'
-      and child_schema.nspname = 'public'
       and parent_schema.nspname = 'public'
       and parent.relname in (select table_name from private.fixture_cleanup_tables_v1)
     order by child.relname, child_column.attname
   loop
+    if v_fk.child_schema <> 'public' then
+      raise exception 'fixture cleanup blocked: cross-schema foreign key %.% -> public.%.%',
+        v_fk.child_schema, v_fk.child_table, v_fk.parent_table, v_fk.parent_field;
+    end if;
     execute format('lock table public.%I in share row exclusive mode', v_fk.child_table);
     if v_fk.parent_field <> 'id' or not exists (
       select 1

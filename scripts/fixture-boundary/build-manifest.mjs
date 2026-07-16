@@ -73,22 +73,17 @@ for (const table of TARGET_TABLES) {
   fixtureTables[table] = {
     identity_fields: COMPOSITE_KEYS[table] ?? ["id"],
     fingerprint_fields: Object.keys(rows[0] ?? identityFor(table, {}))
-      .filter((field) => !isTimestampField(field))
       .sort(),
     current_row_count: rows.length,
     snapshot_row_count: snapshotRows.length,
     current_read_surface:
       table === "answer_options"
         ? "public.answer_options_public plus protected is_correct from rollback snapshot"
-        : `public.${table}${hasMigrationDefaultGuard(table) ? " plus migration 015 default guard" : ""}`,
+        : `public.${table}${hasMigrationDefaultGuard(table) ? " plus post-capture migration default guards" : ""}`,
     rows: rows.map((row) => ({
       identity: identityFor(table, row),
       row_sha256: sha256(
-        canonicalJson(
-          Object.fromEntries(
-            Object.entries(row).filter(([field]) => !isTimestampField(field)),
-          ),
-        ),
+        canonicalJson(row),
       ),
       origin_classification: classifyOrigin(row),
       ownership_basis: "explicit_empty_app_fixture_declaration",
@@ -140,7 +135,7 @@ const manifest = {
       protected_answer_field_note:
         "answer_options.is_correct is not owner-readable. IDs and public fields matched live production while is_correct came from the rollback snapshot and must be rechecked by service role before execution.",
       post_capture_migration_default_note:
-        "Post-capture migration fields are included in fixture fingerprints at their required defaults: thumbnail_path and content_import_id are null and assignment rubric is an empty array.",
+        "Every captured column, including timestamps, is fingerprinted. Post-capture migration fields are included at their required defaults: thumbnail_path, content_import_id, thumbnail_asset_key, thumbnail_approved_path and thumbnail_approved_sha256 are null and assignment rubric is an empty array.",
     },
   },
   fixture_tables: fixtureTables,
@@ -289,7 +284,14 @@ function mergeProtectedAnswerFields(liveRows, snapshotRows) {
 
 function addMigrationDefaultGuards(table, rows) {
   if (["programs", "courses", "lessons"].includes(table)) {
-    return rows.map((row) => ({ ...row, thumbnail_path: null, content_import_id: null }));
+    return rows.map((row) => ({
+      ...row,
+      thumbnail_path: null,
+      content_import_id: null,
+      thumbnail_asset_key: null,
+      thumbnail_approved_path: null,
+      thumbnail_approved_sha256: null,
+    }));
   }
   if (table === "assignments") {
     return rows.map((row) => ({ ...row, rubric: [] }));
@@ -360,10 +362,6 @@ function normalize(value) {
     if (!Number.isNaN(parsed.valueOf())) return parsed.toISOString();
   }
   return value;
-}
-
-function isTimestampField(field) {
-  return field.endsWith("_at") || field === "expires_at";
 }
 
 function canonicalJson(value) {
