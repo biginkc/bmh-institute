@@ -3,7 +3,11 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import type { Database } from "./types";
 
-export function isPublicPath(path: string, nodeEnv = process.env.NODE_ENV) {
+export function isDesignSystemPath(path: string) {
+  return path === "/design-system" || path.startsWith("/design-system/");
+}
+
+export function isPublicPath(path: string) {
   return (
     path.startsWith("/login") ||
     path.startsWith("/forgot-password") ||
@@ -11,16 +15,15 @@ export function isPublicPath(path: string, nodeEnv = process.env.NODE_ENV) {
     path.startsWith("/invite") ||
     path.startsWith("/auth") ||
     path.startsWith("/api/webhooks") ||
-    path.startsWith("/api/cron") ||
-    (nodeEnv !== "production" && path.startsWith("/design-system"))
+    path.startsWith("/api/cron")
   );
 }
 
 export async function updateSession(request: NextRequest) {
   const path = request.nextUrl.pathname;
 
-  // The unlinked specimen is a local QC surface and must not require project credentials.
-  if (process.env.NODE_ENV !== "production" && path.startsWith("/design-system")) {
+  // The page owns its production 404. Skip auth here so local QC needs no project credentials.
+  if (isDesignSystemPath(path)) {
     return NextResponse.next({ request });
   }
 

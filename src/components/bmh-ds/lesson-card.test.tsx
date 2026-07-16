@@ -1,4 +1,4 @@
-import { fireEvent, render } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import { LessonCard } from "./lesson-card";
@@ -16,5 +16,10 @@ describe("<LessonCard />", () => {
     rerender(<LessonCard title="Open lesson" onClick={onClick} />);
     fireEvent.click(container.firstElementChild as HTMLElement);
     expect(onClick).toHaveBeenCalledOnce();
+
+    fireEvent.keyDown(screen.getByRole("button", { name: /open lesson/i }), {
+      key: "Enter",
+    });
+    expect(onClick).toHaveBeenCalledTimes(2);
   });
 });

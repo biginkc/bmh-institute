@@ -2,10 +2,10 @@
 
 import React from "react";
 
-import { Mascot } from "./mascot";
+import { Mascot, type MascotProps } from "./mascot";
 
 export interface LogoProps {
-  /** Sprite folder relative to the page. @default "assets/mascot" */
+  /** Sprite folder relative to the page. @default "/brand/mascot" */
   base?: string;
   /** Wordmark font-size / lockup height driver, px. @default 36 */
   height?: number;
@@ -16,29 +16,39 @@ export interface LogoProps {
   onClick?: (e: React.MouseEvent) => void;
 }
 
+type LogoRuntimeProps = LogoProps &
+  Omit<React.HTMLAttributes<HTMLElement>, keyof LogoProps>;
+
+type RuntimeMascotProps = MascotProps &
+  Omit<React.ImgHTMLAttributes<HTMLImageElement>, keyof MascotProps>;
+
+const RuntimeMascot = Mascot as React.ComponentType<RuntimeMascotProps>;
+
 /**
  * The official BMH Institute logo lockup — Andrea's headset head + "BMH Institute" wordmark.
  * @startingPoint section="Brand" subtitle="BMH Institute logo lockup with Andrea" viewport="360x100"
  */
-export function Logo({
-  base = "/brand/mascot",
-  height = 36,
-  mascot = true,
-  mono = false,
-  onClick,
-}: LogoProps) {
+export function Logo(props: LogoProps) {
+  const {
+    base = "/brand/mascot",
+    height = 36,
+    mascot = true,
+    mono = false,
+    onClick,
+    style,
+    ...rest
+  } = props as LogoRuntimeProps;
   const ink = mono ? "currentColor" : "var(--ink-900)";
   const blue = mono ? "currentColor" : "var(--blue-500)";
   const content = (
     <>
       {mascot && (
-        <span style={{ flexShrink: 0 }}>
-          <Mascot
-            src={`${base}/logo-head.png`}
-            height={height * 1.34}
-            alt="Andrea"
-          />
-        </span>
+        <RuntimeMascot
+          src={`${base}/logo-head.png`}
+          height={height * 1.34}
+          alt="Andrea"
+          style={{ flexShrink: 0 }}
+        />
       )}
       <span
         style={{
@@ -55,7 +65,7 @@ export function Logo({
       </span>
     </>
   );
-  const style: React.CSSProperties = {
+  const rootStyle: React.CSSProperties = {
     display: "inline-flex",
     alignItems: "center",
     gap: height * 0.32,
@@ -63,13 +73,14 @@ export function Logo({
     border: "none",
     padding: 0,
     cursor: onClick ? "pointer" : "default",
+    ...style,
   };
 
   return onClick ? (
-    <button type="button" onClick={onClick} style={style}>
+    <button type="button" onClick={onClick} style={rootStyle} {...rest}>
       {content}
     </button>
   ) : (
-    <span style={style}>{content}</span>
+    <span style={rootStyle} {...rest}>{content}</span>
   );
 }

@@ -1,16 +1,16 @@
 import { describe, expect, it } from "vitest";
 
-import { isPublicPath } from "./middleware";
+import { isDesignSystemPath, isPublicPath } from "./middleware";
 
 describe("isPublicPath", () => {
-  it("exposes the design-system specimen only outside production", () => {
-    expect(isPublicPath("/design-system", "development")).toBe(true);
-    expect(isPublicPath("/design-system", "test")).toBe(true);
-    expect(isPublicPath("/design-system", "production")).toBe(false);
+  it("lets the design-system page own its environment gate", () => {
+    expect(isDesignSystemPath("/design-system")).toBe(true);
+    expect(isDesignSystemPath("/design-system/example")).toBe(true);
+    expect(isDesignSystemPath("/design-system-preview")).toBe(false);
   });
 
   it("preserves existing public routes in production", () => {
-    expect(isPublicPath("/login", "production")).toBe(true);
-    expect(isPublicPath("/api/webhooks/course", "production")).toBe(true);
+    expect(isPublicPath("/login")).toBe(true);
+    expect(isPublicPath("/api/webhooks/course")).toBe(true);
   });
 });

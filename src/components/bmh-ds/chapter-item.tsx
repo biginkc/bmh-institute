@@ -20,16 +20,22 @@ export interface ChapterItemProps {
   onClick?: (e: React.MouseEvent) => void;
 }
 
+type ChapterItemRuntimeProps = ChapterItemProps &
+  Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, keyof ChapterItemProps>;
+
 /** A row in the course "Chapters" list, with status marker + progress. */
-export function ChapterItem({
-  index,
-  title,
-  meta,
-  status = "todo",
-  progress = 0,
-  active = false,
-  onClick,
-}: ChapterItemProps) {
+export function ChapterItem(props: ChapterItemProps) {
+  const {
+    index,
+    title,
+    meta,
+    status = "todo",
+    progress = 0,
+    active = false,
+    onClick,
+    style,
+    ...rest
+  } = props as ChapterItemRuntimeProps;
   const [hover, setHover] = React.useState(false);
   const locked = status === "locked";
   const done = status === "done";
@@ -49,6 +55,7 @@ export function ChapterItem({
     <button
       type="button"
       onClick={locked ? undefined : onClick}
+      disabled={locked}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
       style={{
@@ -69,7 +76,9 @@ export function ChapterItem({
         cursor: locked ? "not-allowed" : "pointer",
         opacity: locked ? 0.6 : 1,
         transition: "background var(--dur) var(--bmh-ease-out)",
+        ...style,
       }}
+      {...rest}
     >
       <span
         style={{
