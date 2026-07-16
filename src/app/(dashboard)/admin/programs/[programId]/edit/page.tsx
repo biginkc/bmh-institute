@@ -22,7 +22,7 @@ export default async function EditProgramPage({
       supabase
         .from("programs")
         .select(
-          "id, title, description, course_order_mode, is_published, sort_order",
+          "id, title, description, thumbnail_path, course_order_mode, is_published, sort_order",
         )
         .eq("id", programId)
         .maybeSingle(),
@@ -82,6 +82,7 @@ export default async function EditProgramPage({
               course_order_mode:
                 (program.course_order_mode as "sequential" | "free") ?? "free",
               is_published: program.is_published as boolean,
+              thumbnail_path: program.thumbnail_path as string | null,
             }}
           />
         </Card>

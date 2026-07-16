@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { Upload, X } from "lucide-react";
 import { toast } from "sonner";
+import { Upload as TusUpload } from "tus-js-client";
 
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
@@ -14,6 +15,9 @@ export type UploadedFile = {
   size_bytes: number;
   mime_type: string;
 };
+
+const RESUMABLE_THRESHOLD_BYTES = 6 * 1024 * 1024;
+const TUS_CHUNK_BYTES = 6 * 1024 * 1024;
 
 /**
  * Uploads directly from the browser to the `content` Supabase Storage bucket
@@ -62,9 +66,9 @@ export function FileUpload({
     try {
       const supabase = createClient();
       const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session?.user) {
         toast.error("You need to be signed in to upload.");
         return;
       }
@@ -72,27 +76,36 @@ export function FileUpload({
       const safeName = file.name
         .replace(/\s+/g, "-")
         .replace(/[^a-zA-Z0-9._-]/g, "");
-      const path = `${user.id}/${Date.now()}-${safeName}`;
+      const path = `${session.user.id}/${file.size}-${file.lastModified}-${safeName}`;
 
-      const { error } = await supabase.storage
-        .from(bucket)
-        .upload(path, file, {
-          contentType: file.type || "application/octet-stream",
+      const contentType = file.type || "application/octet-stream";
+      if (file.size > RESUMABLE_THRESHOLD_BYTES) {
+        await uploadResumably({
+          file,
+          bucket,
+          path,
+          contentType,
+          accessToken: session.access_token,
+          onProgress: setProgress,
+        });
+      } else {
+        const { error } = await supabase.storage.from(bucket).upload(path, file, {
+          contentType,
           upsert: false,
         });
-
-      if (error) {
-        toast.error(`Upload failed: ${error.message}`);
-        return;
+        if (error) throw error;
+        setProgress(100);
       }
 
       onUploaded({
         file_path: path,
         filename: file.name,
         size_bytes: file.size,
-        mime_type: file.type || "application/octet-stream",
+        mime_type: contentType,
       });
       toast.success("Uploaded.");
+    } catch (error) {
+      toast.error(`Upload failed: ${error instanceof Error ? error.message : "Unknown error"}`);
     } finally {
       setUploading(false);
       setProgress(null);
@@ -142,4 +155,62 @@ export function FileUpload({
       </Button>
     </div>
   );
+}
+
+function uploadResumably({
+  file,
+  bucket,
+  path,
+  contentType,
+  accessToken,
+  onProgress,
+}: {
+  file: File;
+  bucket: string;
+  path: string;
+  contentType: string;
+  accessToken: string;
+  onProgress: (progress: number) => void;
+}) {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!supabaseUrl) return Promise.reject(new Error("NEXT_PUBLIC_SUPABASE_URL is not configured."));
+
+  return new Promise<void>((resolve, reject) => {
+    const upload = new TusUpload(file, {
+      endpoint: resumableEndpoint(supabaseUrl),
+      retryDelays: [0, 3_000, 5_000, 10_000, 20_000],
+      headers: {
+        authorization: `Bearer ${accessToken}`,
+        "x-upsert": "false",
+      },
+      uploadDataDuringCreation: true,
+      removeFingerprintOnSuccess: true,
+      fingerprint: async () => `bmh:${bucket}:${path}`,
+      chunkSize: TUS_CHUNK_BYTES,
+      metadata: {
+        bucketName: bucket,
+        objectName: path,
+        contentType,
+        cacheControl: "3600",
+      },
+      onProgress: (uploaded, total) => onProgress(total > 0 ? Math.round((uploaded / total) * 100) : 0),
+      onError: reject,
+      onSuccess: () => resolve(),
+    });
+
+    void upload.findPreviousUploads().then((previous) => {
+      if (previous[0]) upload.resumeFromPreviousUpload(previous[0]);
+      upload.start();
+    }, reject);
+  });
+}
+
+function resumableEndpoint(supabaseUrl: string) {
+  const url = new URL(supabaseUrl);
+  const projectId = url.hostname.endsWith(".supabase.co")
+    ? url.hostname.slice(0, -".supabase.co".length)
+    : null;
+  return projectId
+    ? `${url.protocol}//${projectId}.storage.supabase.co/storage/v1/upload/resumable`
+    : `${supabaseUrl.replace(/\/$/, "")}/storage/v1/upload/resumable`;
 }

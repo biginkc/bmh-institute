@@ -8,6 +8,7 @@ import {
   Download,
   FileText,
   Image as ImageIcon,
+  Layers3,
   Link2,
   Megaphone,
   MessagesSquare,
@@ -52,6 +53,7 @@ const ADDABLE_TYPES: { type: BlockType; label: string; icon: LucideIcon }[] = [
   { type: "external_link", label: "External link", icon: Link2 },
   { type: "embed", label: "Embed (iframe)", icon: Code2 },
   { type: "role_play", label: "Role play", icon: MessagesSquare },
+  { type: "flashcard", label: "Flashcards", icon: Layers3 },
   { type: "divider", label: "Divider", icon: Minus },
 ];
 
@@ -101,7 +103,7 @@ export function BlocksEditor({
           Add a block
         </h3>
         <p className="mb-4 font-[family-name:var(--font-body)] text-xs font-semibold leading-relaxed text-[var(--text-muted)]">
-          Stack any mix of these 11 lesson building blocks.
+          Stack any mix of these 12 lesson building blocks.
         </p>
         <div className="grid grid-cols-2 gap-2">
           {ADDABLE_TYPES.map((item) => {
@@ -234,6 +236,9 @@ function BlockEditor({
   }
   if (blockType === "video") {
     return <VideoBlockEditor block={block} lessonId={lessonId} pending={pending} startTransition={startTransition} />;
+  }
+  if (blockType === "flashcard") {
+    return <FlashcardBlockEditor block={block} lessonId={lessonId} pending={pending} startTransition={startTransition} />;
   }
   if (blockType === "image") {
     return <ImageBlockEditor block={block} lessonId={lessonId} pending={pending} startTransition={startTransition} />;
@@ -479,12 +484,23 @@ function VideoBlockEditor({
     stringOr(block.content.file_path, ""),
   );
   const [url, setUrl] = useState(stringOr(block.content.url, ""));
+  const [title, setTitle] = useState(stringOr(block.content.title, ""));
+  const [partLabel, setPartLabel] = useState(stringOr(block.content.part_label, ""));
+  const [posterPath, setPosterPath] = useState(stringOr(block.content.poster_path, ""));
+  const [captionPath, setCaptionPath] = useState(stringOr(block.content.caption_path, ""));
+  const [transcriptPath, setTranscriptPath] = useState(stringOr(block.content.transcript_path, ""));
 
-  function onSave() {
+  function onSave(overrides: Record<string, unknown> = {}) {
     save({
       source,
       file_path: source === "upload" ? filePath : "",
       url: source === "upload" ? "" : url,
+      title,
+      part_label: partLabel,
+      poster_path: posterPath,
+      caption_path: captionPath,
+      transcript_path: transcriptPath,
+      ...overrides,
     });
   }
 
@@ -514,13 +530,11 @@ function VideoBlockEditor({
             currentPath={filePath || null}
             onUploaded={(f) => {
               setFilePath(f.file_path);
-              save({
-                source: "upload",
+              onSave({
                 file_path: f.file_path,
                 filename: f.filename,
                 size_bytes: f.size_bytes,
                 mime_type: f.mime_type,
-                url: "",
               });
             }}
             label="Upload video"
@@ -544,18 +558,134 @@ function VideoBlockEditor({
         </div>
       )}
 
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor={`video-title-${block.id}`}>Video title</Label>
+          <Input id={`video-title-${block.id}`} value={title} onChange={(e) => setTitle(e.target.value)} />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor={`part-label-${block.id}`}>Part label</Label>
+          <Input id={`part-label-${block.id}`} value={partLabel} onChange={(e) => setPartLabel(e.target.value)} placeholder="Part A" />
+        </div>
+      </div>
+
+      <div className="grid gap-3 lg:grid-cols-3">
+        <div className="flex flex-col gap-1.5">
+          <Label>Poster image</Label>
+          <FileUpload
+            accept="image/png,image/jpeg,image/webp"
+            maxMb={20}
+            label="Upload poster"
+            currentPath={posterPath || null}
+            onUploaded={(file) => {
+              setPosterPath(file.file_path);
+              onSave({ poster_path: file.file_path });
+            }}
+          />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label>Captions (VTT)</Label>
+          <FileUpload
+            accept="text/vtt,.vtt"
+            maxMb={10}
+            label="Upload captions"
+            currentPath={captionPath || null}
+            onUploaded={(file) => {
+              setCaptionPath(file.file_path);
+              onSave({ caption_path: file.file_path });
+            }}
+          />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label>Transcript</Label>
+          <FileUpload
+            accept="application/pdf,text/plain"
+            maxMb={50}
+            label="Upload transcript"
+            currentPath={transcriptPath || null}
+            onUploaded={(file) => {
+              setTranscriptPath(file.file_path);
+              onSave({ transcript_path: file.file_path });
+            }}
+          />
+        </div>
+      </div>
+
       <div>
         <Button
           variant="secondary"
           size="sm"
           disabled={pending}
-          onClick={onSave}
+          onClick={() => onSave()}
         >
           Save block
         </Button>
       </div>
     </div>
   );
+}
+
+function FlashcardBlockEditor({
+  block,
+  lessonId,
+  pending,
+  startTransition,
+}: {
+  block: BlockRow;
+  lessonId: string;
+  pending: boolean;
+  startTransition: (cb: () => void | Promise<void>) => void;
+}) {
+  const save = useBlockSaver({ blockId: block.id, lessonId, startTransition });
+  const [lines, setLines] = useState(() => flashcardLines(block.content.cards));
+
+  return (
+    <div className="flex flex-col gap-2">
+      <Label htmlFor={`cards-${block.id}`}>Cards</Label>
+      <textarea
+        id={`cards-${block.id}`}
+        rows={8}
+        value={lines}
+        onChange={(event) => setLines(event.target.value)}
+        placeholder="Prompt | Answer"
+        className="w-full rounded-[var(--bmh-radius-md)] border-2 border-[var(--ink-300)] bg-[var(--paper)] px-4 py-3 font-mono text-xs text-[var(--ink-900)] outline-none focus:border-[var(--action)] focus:ring-4 focus:ring-[var(--focus-ring)]"
+      />
+      <p className="text-xs font-semibold text-[var(--text-muted)]">
+        Enter one card per line. Separate the prompt and answer with a vertical bar.
+      </p>
+      <div>
+        <Button
+          variant="secondary"
+          size="sm"
+          disabled={pending}
+          onClick={() => save({ cards: parseFlashcardLines(lines) })}
+        >
+          Save cards
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function flashcardLines(value: unknown): string {
+  if (!Array.isArray(value)) return "";
+  return value
+    .flatMap((card) => {
+      if (typeof card !== "object" || card === null) return [];
+      const row = card as Record<string, unknown>;
+      return typeof row.front === "string" && typeof row.back === "string"
+        ? [`${row.front} | ${row.back}`]
+        : [];
+    })
+    .join("\n");
+}
+
+function parseFlashcardLines(value: string) {
+  return value
+    .split("\n")
+    .map((line) => line.split("|", 2).map((part) => part.trim()))
+    .filter(([front, back]) => Boolean(front && back))
+    .map(([front, back]) => ({ front, back }));
 }
 
 function ImageBlockEditor({

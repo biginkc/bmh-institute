@@ -36,6 +36,7 @@ export default async function EditLessonPage({
       quiz_id,
       assignment_id,
       is_required_for_completion,
+      thumbnail_path,
       module_id,
       modules ( id, title, course_id )
     `,
@@ -78,6 +79,7 @@ export default async function EditLessonPage({
         defaultTitle={lesson.title as string}
         defaultDescription={lesson.description as string | null}
         defaultRequired={lesson.is_required_for_completion as boolean}
+        defaultThumbnailPath={lesson.thumbnail_path as string | null}
       />
     </Card>
   );

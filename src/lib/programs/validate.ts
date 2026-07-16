@@ -3,6 +3,7 @@ export type ProgramInput = {
   description: string | null;
   course_order_mode: "sequential" | "free";
   is_published: boolean;
+  thumbnail_path: string | null;
 };
 
 export type ParseResult<T> =
@@ -36,6 +37,11 @@ export function parseProgramInput(
   }
 
   const is_published = formData.get("is_published") === "on";
+  const thumbnailRaw = String(formData.get("thumbnail_path") ?? "").trim();
+  const thumbnail_path = thumbnailRaw || null;
+  if (thumbnail_path && !isStoragePath(thumbnail_path)) {
+    errors.thumbnail_path = "Use a relative path in private content storage.";
+  }
 
   if (Object.keys(errors).length > 0) {
     return { ok: false, errors };
@@ -48,6 +54,11 @@ export function parseProgramInput(
       description,
       course_order_mode: orderMode as "sequential" | "free",
       is_published,
+      thumbnail_path,
     },
   };
+}
+
+function isStoragePath(value: string): boolean {
+  return !value.startsWith("/") && !value.includes("..") && !value.includes("://");
 }

@@ -131,4 +131,29 @@ describe("<VideoBlockPlayer />", () => {
       "Video progress could not be saved",
     );
   });
+
+  it("renders a poster, English captions, and transcript link", () => {
+    const { container } = render(
+      <VideoBlockPlayer
+        blockId="block-1"
+        src="https://example.com/video.mp4"
+        posterSrc="https://example.com/poster.webp"
+        captionsSrc="https://example.com/captions.vtt"
+        transcriptSrc="https://example.com/transcript.pdf"
+      />,
+    );
+
+    expect(screen.getByLabelText("Lesson video")).toHaveAttribute(
+      "poster",
+      "https://example.com/poster.webp",
+    );
+    expect(container.querySelector('track[kind="captions"]')).toHaveAttribute(
+      "src",
+      "https://example.com/captions.vtt",
+    );
+    expect(screen.getByRole("link", { name: "Open video transcript" })).toHaveAttribute(
+      "href",
+      "https://example.com/transcript.pdf",
+    );
+  });
 });

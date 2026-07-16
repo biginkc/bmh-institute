@@ -37,6 +37,7 @@ export async function createProgram(
       description: parsed.value.description,
       course_order_mode: parsed.value.course_order_mode,
       is_published: parsed.value.is_published,
+      thumbnail_path: parsed.value.thumbnail_path,
     })
     .select("id")
     .single();
@@ -67,6 +68,7 @@ export async function updateProgram(
       description: parsed.value.description,
       course_order_mode: parsed.value.course_order_mode,
       is_published: parsed.value.is_published,
+      thumbnail_path: parsed.value.thumbnail_path,
     })
     .eq("id", programId);
 
@@ -150,6 +152,7 @@ function fieldResult(
       course_order_mode:
         (formData.get("course_order_mode") as "sequential" | "free") ?? "free",
       is_published: formData.get("is_published") === "on",
+      thumbnail_path: String(formData.get("thumbnail_path") ?? "") || null,
     },
   };
 }

@@ -52,10 +52,37 @@ describe("ContentBlockRenderer BMH treatments", () => {
     ],
     ["divider", {}],
     ["callout", { variant: "info", markdown: "Lead with certainty." }],
+    ["flashcard", { cards: [{ front: "BMH", back: "Better Made Homes" }] }],
   ] as const)("renders the %s block inside its branded surface", (blockType, content) => {
     const { container } = renderBlock(blockType, content);
 
     expect(container.querySelector(`[data-content-block="${blockType}"]`)).not.toBeNull();
+  });
+
+  it("renders flashcards through the native accessible player", () => {
+    renderBlock("flashcard", {
+      cards: [{ front: "BMH", back: "Better Made Homes" }],
+    });
+
+    expect(screen.getByText("BMH")).toBeVisible();
+    expect(screen.getByRole("button", { name: "Reveal answer" })).toBeVisible();
+  });
+
+  it("passes signed video support assets to the learner player", () => {
+    const { container } = renderBlock("video", {
+      source: "upload",
+      signed_url: "https://example.com/video.mp4",
+      poster_signed_url: "https://example.com/poster.webp",
+      caption_signed_url: "https://example.com/captions.vtt",
+      transcript_signed_url: "https://example.com/transcript.pdf",
+    });
+
+    expect(screen.getByLabelText("Lesson video")).toHaveAttribute(
+      "poster",
+      "https://example.com/poster.webp",
+    );
+    expect(container.querySelector('track[kind="captions"]')).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Open video transcript" })).toBeVisible();
   });
 
   it("keeps authored text HTML intact at the trusted rendering boundary", () => {

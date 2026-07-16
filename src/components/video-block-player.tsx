@@ -15,9 +15,15 @@ import {
 export function VideoBlockPlayer({
   blockId,
   src,
+  posterSrc,
+  captionsSrc,
+  transcriptSrc,
 }: {
   blockId: string;
   src: string;
+  posterSrc?: string;
+  captionsSrc?: string;
+  transcriptSrc?: string;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const sampleStartRef = useRef<number | null>(null);
@@ -112,70 +118,88 @@ export function VideoBlockPlayer({
   }
 
   return (
-    <div>
+    <div className="flex flex-col gap-3">
       <div className="relative aspect-video overflow-hidden rounded-[var(--bmh-radius-lg)] border-[2.5px] border-[var(--ink-900)] bg-[var(--thumb-blue)] shadow-[var(--bmh-shadow-sm)]">
-      <video
-        ref={videoRef}
-        src={src}
-        controls
-        preload="metadata"
-        aria-label="Lesson video"
-        className="h-full w-full bg-[var(--ink-900)] object-contain"
-        onLoadedMetadata={(event) => {
-          const nextDuration = event.currentTarget.duration;
-          setDuration(Number.isFinite(nextDuration) ? nextDuration : 0);
-          if (resumePositionRef.current > 0) {
-            event.currentTarget.currentTime = Math.min(
-              resumePositionRef.current,
-              nextDuration,
-            );
-          }
-        }}
-        onPlay={(event) => {
-          setPlaying(true);
-          sampleStartRef.current = event.currentTarget.currentTime;
-        }}
-        onSeeking={() => {
-          sampleStartRef.current = null;
-        }}
-        onSeeked={(event) => {
-          sampleStartRef.current = event.currentTarget.currentTime;
-        }}
-        onPause={(event) => {
-          flushProgress(event.currentTarget);
-          setPlaying(false);
-        }}
-        onEnded={(event) => {
-          flushProgress(event.currentTarget);
-          setPlaying(false);
-        }}
-        onTimeUpdate={onTimeUpdate}
-      />
-        {!playing ? (
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-gradient-to-b from-transparent via-transparent to-[rgb(14_17_22_/_18%)]">
-          <button
-            type="button"
-            onClick={playVideo}
-            aria-label="Play lesson video"
-            className="pointer-events-auto flex size-20 items-center justify-center rounded-full bg-[rgb(14_17_22_/_86%)] text-white shadow-[var(--bmh-shadow-md)] transition-transform hover:scale-105 focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-white active:scale-95"
-          >
-            <Play aria-hidden="true" className="ml-1 size-8 fill-current" />
-          </button>
-          {duration > 0 ? (
-            <span className="absolute bottom-4 right-4 rounded-[var(--bmh-radius-sm)] bg-[rgb(14_17_22_/_86%)] px-2.5 py-1 font-[family-name:var(--font-body)] text-xs font-extrabold text-white">
-              {formatDuration(duration)}
-            </span>
+        <video
+          ref={videoRef}
+          src={src}
+          poster={posterSrc}
+          controls
+          preload="metadata"
+          aria-label="Lesson video"
+          className="h-full w-full bg-[var(--ink-900)] object-contain"
+          onLoadedMetadata={(event) => {
+            const nextDuration = event.currentTarget.duration;
+            setDuration(Number.isFinite(nextDuration) ? nextDuration : 0);
+            if (resumePositionRef.current > 0) {
+              event.currentTarget.currentTime = Math.min(
+                resumePositionRef.current,
+                nextDuration,
+              );
+            }
+          }}
+          onPlay={(event) => {
+            setPlaying(true);
+            sampleStartRef.current = event.currentTarget.currentTime;
+          }}
+          onSeeking={() => {
+            sampleStartRef.current = null;
+          }}
+          onSeeked={(event) => {
+            sampleStartRef.current = event.currentTarget.currentTime;
+          }}
+          onPause={(event) => {
+            flushProgress(event.currentTarget);
+            setPlaying(false);
+          }}
+          onEnded={(event) => {
+            flushProgress(event.currentTarget);
+            setPlaying(false);
+          }}
+          onTimeUpdate={onTimeUpdate}
+        >
+          {captionsSrc ? (
+            <track
+              kind="captions"
+              src={captionsSrc}
+              srcLang="en"
+              label="English"
+              default
+            />
           ) : null}
-        </div>
+        </video>
+        {!playing ? (
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-gradient-to-b from-transparent via-transparent to-[rgb(14_17_22_/_18%)]">
+            <button
+              type="button"
+              onClick={playVideo}
+              aria-label="Play lesson video"
+              className="pointer-events-auto flex size-20 items-center justify-center rounded-full bg-[rgb(14_17_22_/_86%)] text-white shadow-[var(--bmh-shadow-md)] transition-transform hover:scale-105 focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-white active:scale-95"
+            >
+              <Play aria-hidden="true" className="ml-1 size-8 fill-current" />
+            </button>
+            {duration > 0 ? (
+              <span className="absolute bottom-4 right-4 rounded-[var(--bmh-radius-sm)] bg-[rgb(14_17_22_/_86%)] px-2.5 py-1 font-[family-name:var(--font-body)] text-xs font-extrabold text-white">
+                {formatDuration(duration)}
+              </span>
+            ) : null}
+          </div>
         ) : null}
       </div>
       {progressError ? (
-        <p
-          role="status"
-          className="mt-2 text-sm font-bold text-[var(--danger)]"
-        >
+        <p role="status" className="text-sm font-bold text-[var(--danger)]">
           {progressError}
         </p>
+      ) : null}
+      {transcriptSrc ? (
+        <a
+          href={transcriptSrc}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-fit text-sm font-extrabold text-[var(--action)] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--action)]"
+        >
+          Open video transcript
+        </a>
       ) : null}
     </div>
   );

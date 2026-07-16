@@ -61,6 +61,7 @@ supabase/.temp/
 
 # Uploaded content during dev (Supabase Storage mirrors should not leak in)
 /content-uploads/
+/.course-import-state/
 
 # BMH course video assets — regenerable build outputs, not versioned (recipe lives in docs/course-production/shotlists)
 course-assets/

@@ -15,6 +15,7 @@ describe("parseCourseInput", () => {
         title: " Phone Basics ",
         description: "Intro",
         is_published: "on",
+        thumbnail_path: "courses/training/course.webp",
       }),
     );
     expect(result.ok).toBe(true);
@@ -23,6 +24,7 @@ describe("parseCourseInput", () => {
       title: "Phone Basics",
       description: "Intro",
       is_published: true,
+      thumbnail_path: "courses/training/course.webp",
     });
   });
 
@@ -37,6 +39,14 @@ describe("parseCourseInput", () => {
     if (!result.ok) return;
     expect(result.value.is_published).toBe(false);
     expect(result.value.description).toBeNull();
+    expect(result.value.thumbnail_path).toBeNull();
+  });
+
+  it("rejects absolute or traversal thumbnail paths", () => {
+    const result = parseCourseInput(
+      fd({ title: "Course", thumbnail_path: "../course.webp" }),
+    );
+    expect(result.ok).toBe(false);
   });
 
   it("rejects titles over 200 chars", () => {

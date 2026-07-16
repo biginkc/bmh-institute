@@ -13,6 +13,7 @@ import {
 import { cn } from "@/lib/utils";
 import { RolePlayBlock } from "./role-play-block";
 import { VideoBlockPlayer } from "./video-block-player";
+import { FlashcardBlock, type Flashcard } from "./flashcard-block";
 
 export type ContentBlock = {
   id: string;
@@ -27,7 +28,8 @@ export type ContentBlock = {
     | "embed"
     | "role_play"
     | "divider"
-    | "callout";
+    | "callout"
+    | "flashcard";
   content: Record<string, unknown>;
   sort_order: number;
   is_required_for_completion: boolean;
@@ -112,6 +114,9 @@ function renderContentBlock(block: ContentBlock) {
           signedUrl={stringOr(block.content.signed_url, null)}
           url={stringOr(block.content.url, null)}
           filePath={stringOr(block.content.file_path, null)}
+          posterSignedUrl={stringOr(block.content.poster_signed_url, null)}
+          captionSignedUrl={stringOr(block.content.caption_signed_url, null)}
+          transcriptSignedUrl={stringOr(block.content.transcript_signed_url, null)}
         />
       );
     case "embed":
@@ -131,9 +136,31 @@ function renderContentBlock(block: ContentBlock) {
           initialHeightPx={numberOr(block.content.height_px, 720)}
         />
       );
+    case "flashcard":
+      return <FlashcardBlock cards={flashcardsOrEmpty(block.content.cards)} />;
     default:
       return <UnsupportedBlock type={block.block_type} />;
   }
+}
+
+function flashcardsOrEmpty(value: unknown): Flashcard[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((card) => {
+    if (
+      typeof card === "object" &&
+      card !== null &&
+      typeof (card as Record<string, unknown>).front === "string" &&
+      typeof (card as Record<string, unknown>).back === "string"
+    ) {
+      return [
+        {
+          front: (card as Record<string, string>).front,
+          back: (card as Record<string, string>).back,
+        },
+      ];
+    }
+    return [];
+  });
 }
 
 function stringOr<T extends string | null>(
@@ -425,12 +452,18 @@ function VideoBlock({
   signedUrl,
   url,
   filePath,
+  posterSignedUrl,
+  captionSignedUrl,
+  transcriptSignedUrl,
 }: {
   blockId: string;
   source: string;
   signedUrl: string | null;
   url: string | null;
   filePath: string | null;
+  posterSignedUrl: string | null;
+  captionSignedUrl: string | null;
+  transcriptSignedUrl: string | null;
 }) {
   // Uploaded video: prefer the signed URL the server attached.
   if (source === "upload") {
@@ -442,7 +475,15 @@ function VideoBlock({
         </div>
       );
     }
-    return <VideoBlockPlayer blockId={blockId} src={src} />;
+    return (
+      <VideoBlockPlayer
+        blockId={blockId}
+        src={src}
+        posterSrc={posterSignedUrl ?? undefined}
+        captionsSrc={captionSignedUrl ?? undefined}
+        transcriptSrc={transcriptSignedUrl ?? undefined}
+      />
+    );
   }
 
   if (!url) {

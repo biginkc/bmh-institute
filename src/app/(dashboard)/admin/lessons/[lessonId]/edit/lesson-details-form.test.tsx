@@ -34,6 +34,7 @@ describe("<LessonDetailsForm />", () => {
       title: "Opening the call",
       description: "Updated opening",
       is_required_for_completion: true,
+      thumbnail_path: null,
     });
   });
 });

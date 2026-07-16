@@ -129,6 +129,7 @@ export type Database = {
           id: string
           instructions: string
           requires_review: boolean
+          rubric: Json
           submission_type: string
           title: string
           updated_at: string
@@ -138,6 +139,7 @@ export type Database = {
           id?: string
           instructions: string
           requires_review?: boolean
+          rubric?: Json
           submission_type: string
           title: string
           updated_at?: string
@@ -147,6 +149,7 @@ export type Database = {
           id?: string
           instructions?: string
           requires_review?: boolean
+          rubric?: Json
           submission_type?: string
           title?: string
           updated_at?: string
@@ -395,6 +398,7 @@ export type Database = {
           is_published: boolean
           sort_order: number
           thumbnail_url: string | null
+          thumbnail_path: string | null
           title: string
           updated_at: string
         }
@@ -407,6 +411,7 @@ export type Database = {
           is_published?: boolean
           sort_order?: number
           thumbnail_url?: string | null
+          thumbnail_path?: string | null
           title: string
           updated_at?: string
         }
@@ -419,6 +424,7 @@ export type Database = {
           is_published?: boolean
           sort_order?: number
           thumbnail_url?: string | null
+          thumbnail_path?: string | null
           title?: string
           updated_at?: string
         }
@@ -489,6 +495,7 @@ export type Database = {
           prerequisite_quiz_min_score: number | null
           quiz_id: string | null
           sort_order: number
+          thumbnail_path: string | null
           title: string
           updated_at: string
         }
@@ -504,6 +511,7 @@ export type Database = {
           prerequisite_quiz_min_score?: number | null
           quiz_id?: string | null
           sort_order?: number
+          thumbnail_path?: string | null
           title: string
           updated_at?: string
         }
@@ -519,6 +527,7 @@ export type Database = {
           prerequisite_quiz_min_score?: number | null
           quiz_id?: string | null
           sort_order?: number
+          thumbnail_path?: string | null
           title?: string
           updated_at?: string
         }
@@ -746,6 +755,7 @@ export type Database = {
           is_published: boolean
           sort_order: number
           thumbnail_url: string | null
+          thumbnail_path: string | null
           title: string
           updated_at: string
         }
@@ -759,6 +769,7 @@ export type Database = {
           is_published?: boolean
           sort_order?: number
           thumbnail_url?: string | null
+          thumbnail_path?: string | null
           title: string
           updated_at?: string
         }
@@ -772,6 +783,7 @@ export type Database = {
           is_published?: boolean
           sort_order?: number
           thumbnail_url?: string | null
+          thumbnail_path?: string | null
           title?: string
           updated_at?: string
         }

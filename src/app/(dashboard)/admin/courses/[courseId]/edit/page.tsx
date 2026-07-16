@@ -26,6 +26,7 @@ export default async function EditCoursePage({
       title,
       description,
       is_published,
+      thumbnail_path,
       modules (
         id,
         title,
@@ -82,6 +83,7 @@ export default async function EditCoursePage({
               title: shaped.title,
               description: shaped.description,
               is_published: shaped.is_published,
+              thumbnail_path: shaped.thumbnail_path,
             }}
           />
         </Card>

@@ -1,8 +1,9 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 
 import { Button, Input } from "@/components/bmh-ds";
+import { FileUpload } from "@/components/file-upload";
 import type { FormState } from "./actions";
 
 type Action = (state: FormState, formData: FormData) => Promise<FormState>;
@@ -12,6 +13,7 @@ type Defaults = {
   description?: string | null;
   course_order_mode?: "sequential" | "free" | null;
   is_published?: boolean | null;
+  thumbnail_path?: string | null;
 };
 
 export function ProgramForm({
@@ -29,6 +31,7 @@ export function ProgramForm({
   );
   const fieldError = (name: string): string | undefined =>
     state && !state.ok ? state.fieldErrors?.[name] : undefined;
+  const [thumbnailPath, setThumbnailPath] = useState(defaults?.thumbnail_path ?? "");
 
   return (
     <form action={formAction} className="flex flex-col gap-5">
@@ -53,6 +56,22 @@ export function ProgramForm({
           rows={3}
           defaultValue={defaults?.description ?? ""}
           className="w-full rounded-[var(--bmh-radius-md)] border-2 border-[var(--ink-300)] bg-[var(--paper)] px-4 py-3 font-[family-name:var(--font-body)] text-base font-semibold text-[var(--ink-900)] outline-none transition focus-visible:border-[var(--action)] focus-visible:ring-4 focus-visible:ring-[var(--focus-ring)]"
+        />
+      </Field>
+
+      <Field
+        label="Program cover path"
+        htmlFor="thumbnail_path_display"
+        error={fieldError("thumbnail_path")}
+      >
+        <input type="hidden" name="thumbnail_path" value={thumbnailPath} />
+        <Input id="thumbnail_path_display" value={thumbnailPath} readOnly />
+        <FileUpload
+          accept="image/png,image/jpeg,image/webp"
+          maxMb={20}
+          label="Upload program cover"
+          currentPath={thumbnailPath || null}
+          onUploaded={(file) => setThumbnailPath(file.file_path)}
         />
       </Field>
 

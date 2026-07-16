@@ -16,10 +16,20 @@ export async function updateLessonDetails(input: {
   title: string;
   description: string | null;
   is_required_for_completion: boolean;
+  thumbnail_path: string | null;
 }): Promise<ActionResult> {
   await requireAdmin();
   const title = input.title.trim();
   if (!title) return { ok: false, error: "Title is required." };
+  const thumbnailPath = input.thumbnail_path?.trim() || null;
+  if (
+    thumbnailPath &&
+    (thumbnailPath.startsWith("/") ||
+      thumbnailPath.includes("..") ||
+      thumbnailPath.includes("://"))
+  ) {
+    return { ok: false, error: "Use a relative path in private content storage." };
+  }
 
   const supabase = await createClient();
   const { error } = await supabase
@@ -28,6 +38,7 @@ export async function updateLessonDetails(input: {
       title,
       description: input.description,
       is_required_for_completion: input.is_required_for_completion,
+      thumbnail_path: thumbnailPath,
     })
     .eq("id", input.lessonId);
   if (error) return { ok: false, error: error.message };
@@ -49,7 +60,8 @@ export type BlockType =
   | "pdf"
   | "image"
   | "audio"
-  | "download";
+  | "download"
+  | "flashcard";
 
 const DEFAULT_CONTENT: Record<BlockType, Json> = {
   text: { html: "<p>Start writing...</p>" },
@@ -68,6 +80,7 @@ const DEFAULT_CONTENT: Record<BlockType, Json> = {
   image: { file_path: "", alt: "", caption: "" },
   audio: { source: "upload", file_path: "", url: "" },
   download: { file_path: "", filename: "", size_bytes: 0, description: "" },
+  flashcard: { cards: [{ front: "Term", back: "Definition" }] },
 };
 
 export async function createBlock(input: {

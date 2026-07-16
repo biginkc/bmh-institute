@@ -16,6 +16,7 @@ describe("parseProgramInput", () => {
         description: "Core program",
         course_order_mode: "sequential",
         is_published: "on",
+        thumbnail_path: "courses/training/program.webp",
       }),
     );
     expect(result.ok).toBe(true);
@@ -24,6 +25,7 @@ describe("parseProgramInput", () => {
     expect(result.value.description).toBe("Core program");
     expect(result.value.course_order_mode).toBe("sequential");
     expect(result.value.is_published).toBe(true);
+    expect(result.value.thumbnail_path).toBe("courses/training/program.webp");
   });
 
   it("defaults course_order_mode to free when missing", () => {
@@ -33,6 +35,14 @@ describe("parseProgramInput", () => {
     expect(result.value.course_order_mode).toBe("free");
     expect(result.value.is_published).toBe(false);
     expect(result.value.description).toBeNull();
+    expect(result.value.thumbnail_path).toBeNull();
+  });
+
+  it("rejects absolute or traversal thumbnail paths", () => {
+    for (const thumbnail_path of ["https://example.com/a.webp", "../a.webp", "/a.webp"]) {
+      const result = parseProgramInput(fd({ title: "Program", thumbnail_path }));
+      expect(result.ok).toBe(false);
+    }
   });
 
   it("rejects empty or whitespace-only title", () => {

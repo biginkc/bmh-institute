@@ -16,6 +16,7 @@ describe("<ProgramForm />", () => {
           description: "Core training.",
           course_order_mode: "sequential",
           is_published: false,
+          thumbnail_path: "courses/training/program.webp",
         }}
       />,
     );
@@ -30,6 +31,9 @@ describe("<ProgramForm />", () => {
     expect(screen.getByRole("button", { name: "Save changes" })).toHaveAttribute(
       "type",
       "submit",
+    );
+    expect(screen.getByLabelText("Program cover path")).toHaveValue(
+      "courses/training/program.webp",
     );
   });
 

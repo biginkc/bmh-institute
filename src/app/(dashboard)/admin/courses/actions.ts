@@ -36,6 +36,7 @@ export async function createCourse(
       title: parsed.value.title,
       description: parsed.value.description,
       is_published: parsed.value.is_published,
+      thumbnail_path: parsed.value.thumbnail_path,
     })
     .select("id")
     .single();
@@ -65,6 +66,7 @@ export async function updateCourse(
       title: parsed.value.title,
       description: parsed.value.description,
       is_published: parsed.value.is_published,
+      thumbnail_path: parsed.value.thumbnail_path,
     })
     .eq("id", courseId);
   if (error) return { ok: false, error: error.message };
@@ -350,6 +352,7 @@ function fieldResult(
       title: String(formData.get("title") ?? ""),
       description: String(formData.get("description") ?? "") || null,
       is_published: formData.get("is_published") === "on",
+      thumbnail_path: String(formData.get("thumbnail_path") ?? "") || null,
     },
   };
 }

@@ -9,6 +9,7 @@ import { ProgressBar } from "@/components/bmh-ds/progress-bar";
 import { createClient } from "@/lib/supabase/server";
 import { shapeProgramsResponse } from "@/lib/programs/shape";
 import { summarizeLearnerOnboarding } from "@/lib/learner-onboarding/summary";
+import { signContentPaths } from "@/lib/content-blocks/sign-urls";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -57,6 +58,8 @@ export default async function DashboardPage() {
       id: string;
       title: string;
       isRequiredForCompletion: boolean;
+      thumbnailPath: string | null;
+      thumbnailUrl?: string;
     }>
   >();
   let completedLessonIds = new Set<string>();
@@ -66,7 +69,7 @@ export default async function DashboardPage() {
       supabase
         .from("modules")
         .select(
-          "course_id, sort_order, lessons(id, title, sort_order, is_required_for_completion)",
+          "course_id, sort_order, lessons(id, title, thumbnail_path, sort_order, is_required_for_completion)",
         )
         .in("course_id", courseIds),
       supabase
@@ -86,6 +89,7 @@ export default async function DashboardPage() {
         title: string;
         sort_order: number;
         is_required_for_completion: boolean;
+        thumbnail_path: string | null;
       }>;
       if (!requiredLessonsByCourse.has(courseId)) {
         requiredLessonsByCourse.set(courseId, new Set());
@@ -102,6 +106,7 @@ export default async function DashboardPage() {
             id: lesson.id,
             title: lesson.title,
             isRequiredForCompletion: true,
+            thumbnailPath: lesson.thumbnail_path,
           });
           lessonsByCourse.set(courseId, courseLessons);
         }
@@ -118,6 +123,17 @@ export default async function DashboardPage() {
         if (completedLessonIds.has(lessonId)) done += 1;
       }
       progressByCourse.set(courseId, { done, total: required.size });
+    }
+  }
+
+  const thumbnailSignedByPath = await signContentPaths(
+    Array.from(lessonsByCourse.values())
+      .flat()
+      .flatMap((lesson) => (lesson.thumbnailPath ? [lesson.thumbnailPath] : [])),
+  );
+  for (const lessons of lessonsByCourse.values()) {
+    for (const lesson of lessons) {
+      if (lesson.thumbnailPath) lesson.thumbnailUrl = thumbnailSignedByPath.get(lesson.thumbnailPath);
     }
   }
 
@@ -461,7 +477,7 @@ function ContinueLearning({
 }: {
   courseId?: string;
   courseTitle?: string;
-  lessons: Array<{ id: string; title: string }>;
+  lessons: Array<{ id: string; title: string; thumbnailUrl?: string }>;
   completedLessonIds: Set<string>;
   nextLessonId?: string;
 }) {
@@ -517,6 +533,7 @@ function ContinueLearning({
                   <LessonCard
                     eyebrow="Required lesson"
                     title={lesson.title}
+                    image={lesson.thumbnailUrl}
                     tone={tones[index % tones.length]}
                     pose={poses[index % poses.length]}
                     mascotBase="/brand/mascot"
