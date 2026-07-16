@@ -1,14 +1,13 @@
 import Link from "next/link";
-import { Download } from "lucide-react";
-
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { PageHeader } from "@/components/page-header";
+  ArrowUpRight,
+  Award,
+  GraduationCap,
+  LockKeyhole,
+} from "lucide-react";
+
+import { Badge } from "@/components/bmh-ds/badge";
+import { Card } from "@/components/bmh-ds/card";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function CertificatesPage() {
@@ -45,54 +44,110 @@ export default async function CertificatesPage() {
       scope: "course" as const,
     })),
   ];
+  const programCertificateEarned = (programCerts.data ?? []).length > 0;
 
   return (
-    <main className="mx-auto w-full max-w-3xl flex-1 p-6 md:p-10">
-      <div className="mb-6">
-        <PageHeader
-          title="Certificates"
-          description="Every course and program you've completed."
-          breadcrumb={[{ label: "Learn" }, { label: "Certificates" }]}
-        />
+    <main className="mx-auto w-full max-w-[860px] flex-1 px-5 py-8 md:px-7 md:py-10">
+      <div className="mb-7">
+        <p className="font-[family-name:var(--font-body)] text-[11px] font-extrabold tracking-[0.1em] text-[var(--text-muted)] uppercase">
+          Learn
+        </p>
+        <h1 className="mt-1 font-[family-name:var(--font-display)] text-4xl leading-tight font-extrabold tracking-[-0.01em] text-[var(--ink-900)]">
+          Certificates
+        </h1>
+        <p className="mt-1.5 max-w-2xl font-[family-name:var(--font-body)] text-base font-semibold text-[var(--text-muted)]">
+          Completed courses and programs. Update your name on your profile
+          before printing.
+        </p>
       </div>
 
-      {allCerts.length === 0 ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>No certificates yet</CardTitle>
-            <CardDescription>
-              Finish a course to earn your first one. Complete every course
-              in a program for a program-level certificate.
-            </CardDescription>
-          </CardHeader>
-        </Card>
-      ) : (
-        <div className="grid gap-3">
-          {allCerts.map((c) => (
-            <Card key={c.id}>
-              <CardContent className="flex items-center justify-between gap-4 p-4">
-                <div>
-                  <div className="text-xs uppercase tracking-wide text-muted-foreground">
-                    {c.scope === "program" ? "Program" : "Course"}
+      <div className="grid gap-5 sm:grid-cols-2">
+        {allCerts.length === 0 ? (
+          <Card padding="md" tint>
+            <div className="flex items-start gap-4">
+              <span className="inline-flex size-12 shrink-0 items-center justify-center rounded-[var(--bmh-radius-md)] bg-[var(--paper)] text-[var(--text-muted)]">
+                <GraduationCap aria-hidden="true" size={24} />
+              </span>
+              <div>
+                <h2 className="font-[family-name:var(--font-display)] text-lg font-bold text-[var(--ink-900)]">
+                  No certificates yet
+                </h2>
+                <p className="mt-1 font-[family-name:var(--font-body)] text-sm font-semibold leading-relaxed text-[var(--text-muted)]">
+                  Finish a course to earn your first one. Complete every course
+                  in a program for a program-level certificate.
+                </p>
+              </div>
+            </div>
+          </Card>
+        ) : (
+          allCerts.map((c) => (
+            <Link
+              key={c.id}
+              href={`/certificates/${c.scope}/${c.id}`}
+              aria-label={`View and print ${c.title} certificate`}
+              className="rounded-[var(--bmh-radius-lg)] focus-visible:ring-4 focus-visible:ring-[var(--focus-ring)] focus-visible:outline-none"
+            >
+              <Card interactive padding="md" className="h-full">
+                <div className="flex h-full items-center gap-4">
+                  <span
+                    className={`inline-flex size-12 shrink-0 items-center justify-center rounded-[var(--bmh-radius-md)] ${
+                      c.scope === "program"
+                        ? "bg-[var(--action-soft)] text-[var(--blue-600)]"
+                        : "bg-[var(--success-soft)] text-[var(--success)]"
+                    }`}
+                  >
+                    {c.scope === "program" ? (
+                      <Award aria-hidden="true" size={24} />
+                    ) : (
+                      <GraduationCap aria-hidden="true" size={24} />
+                    )}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <Badge
+                      tone={c.scope === "program" ? "blue" : "green"}
+                      size="sm"
+                    >
+                      {c.scope === "program" ? "Program" : "Course"}
+                    </Badge>
+                    <h2 className="mt-2 font-[family-name:var(--font-display)] text-lg leading-tight font-bold text-[var(--ink-900)]">
+                      {c.title}
+                    </h2>
+                    <p className="mt-1 font-[family-name:var(--font-body)] text-[13px] font-bold text-[var(--text-muted)]">
+                      Issued {new Date(c.issuedAt).toLocaleDateString()}
+                    </p>
+                    <p className="mt-0.5 truncate font-[family-name:var(--font-body)] text-xs font-semibold text-[var(--ink-400)]">
+                      Certificate {c.number}
+                    </p>
                   </div>
-                  <div className="mt-1 font-medium">{c.title}</div>
-                  <div className="text-muted-foreground mt-1 text-xs">
-                    {c.number} · issued{" "}
-                    {new Date(c.issuedAt).toLocaleDateString()}
-                  </div>
+                  <ArrowUpRight
+                    aria-hidden="true"
+                    className="shrink-0 text-[var(--action)]"
+                    size={20}
+                  />
                 </div>
-                <Link
-                  href={`/certificates/${c.scope}/${c.id}`}
-                  className="border-border hover:bg-muted flex items-center gap-2 rounded-md border px-3 py-1.5 text-xs"
-                >
-                  <Download className="size-3.5" />
-                  View &amp; print
-                </Link>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
+              </Card>
+            </Link>
+          ))
+        )}
+
+        {!programCertificateEarned ? (
+          <Card padding="md" className="h-full opacity-70">
+            <div className="flex h-full items-center gap-4">
+              <span className="inline-flex size-12 shrink-0 items-center justify-center rounded-[var(--bmh-radius-md)] bg-[var(--ink-100)] text-[var(--ink-400)]">
+                <LockKeyhole aria-hidden="true" size={22} />
+              </span>
+              <div>
+                <h2 className="font-[family-name:var(--font-display)] text-lg leading-tight font-bold text-[var(--ink-700)]">
+                  Program certificate
+                </h2>
+                <p className="mt-1 font-[family-name:var(--font-body)] text-[13px] font-bold text-[var(--text-muted)]">
+                  Finish all courses to unlock
+                </p>
+              </div>
+            </div>
+          </Card>
+        ) : null}
+      </div>
     </main>
   );
 }

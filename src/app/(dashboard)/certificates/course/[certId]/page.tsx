@@ -1,10 +1,9 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
 import { renderCertificateHtml } from "@/lib/certificates/render";
 
-import { PrintButton } from "../../print-button";
+import { CertificateLayout } from "../../certificate-layout";
 
 export default async function CourseCertificatePage({
   params,
@@ -70,36 +69,9 @@ export default async function CourseCertificatePage({
     <CertificateLayout
       backHref="/certificates"
       backLabel="Back to certificates"
+      certificateType="Course certificate"
       html={html}
     />
-  );
-}
-
-export function CertificateLayout({
-  backHref,
-  backLabel,
-  html,
-}: {
-  backHref: string;
-  backLabel: string;
-  html: string;
-}) {
-  return (
-    <main className="mx-auto w-full max-w-3xl flex-1 p-6 md:p-10">
-      <div className="mb-4 flex items-center justify-between print:hidden">
-        <Link
-          href={backHref}
-          className="text-muted-foreground hover:text-foreground text-xs"
-        >
-          ← {backLabel}
-        </Link>
-        <PrintButton />
-      </div>
-      <div
-        className="print-cert border-border rounded-md border bg-white p-6 text-neutral-900 shadow-sm print:border-0 print:shadow-none"
-        dangerouslySetInnerHTML={{ __html: html }}
-      />
-    </main>
   );
 }
 

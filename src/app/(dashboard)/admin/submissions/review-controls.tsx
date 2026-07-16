@@ -3,8 +3,7 @@
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button, Input } from "@/components/bmh-ds";
 
 import {
   approveSubmission,
@@ -67,21 +66,22 @@ export function ReviewControls({
   return (
     <div className="flex flex-col gap-2">
       {filePath ? (
-        <Button variant="outline" size="sm" onClick={onDownload}>
+        <Button variant="secondary" size="sm" onClick={onDownload}>
           Open attached file
         </Button>
       ) : null}
       <Input
         value={note}
         onChange={(e) => setNote(e.target.value)}
-        placeholder="Note to learner (optional for approve, required to request revision)"
+        label="Note to learner"
+        placeholder="Optional for approve, required to request revision"
       />
       <div className="flex gap-2">
         <Button onClick={onApprove} disabled={pending}>
           Approve
         </Button>
         <Button
-          variant="outline"
+          variant="secondary"
           onClick={onRequestRevision}
           disabled={pending}
         >

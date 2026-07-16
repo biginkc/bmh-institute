@@ -3,8 +3,7 @@
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button, Input } from "@/components/bmh-ds";
 import { Label } from "@/components/ui/label";
 
 import { updateAssignment } from "./assignment-actions";
@@ -50,7 +49,7 @@ export function AssignmentEditor({
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 font-[family-name:var(--font-body)]">
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="a-title">Title</Label>
         <Input
@@ -66,7 +65,7 @@ export function AssignmentEditor({
           rows={5}
           value={instructions}
           onChange={(e) => setInstructions(e.target.value)}
-          className="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
+          className="w-full rounded-[var(--bmh-radius-md)] border-2 border-[var(--ink-300)] bg-[var(--paper)] px-4 py-3 text-sm font-semibold text-[var(--ink-900)] outline-none focus:border-[var(--action)] focus:ring-4 focus:ring-[var(--focus-ring)]"
         />
       </div>
       <div className="flex flex-col gap-1.5">
@@ -79,7 +78,7 @@ export function AssignmentEditor({
               e.target.value as "file_upload" | "text" | "url",
             )
           }
-          className="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
+          className="w-full rounded-[var(--bmh-radius-md)] border-2 border-[var(--ink-300)] bg-[var(--paper)] px-4 py-3 text-sm font-bold text-[var(--ink-900)] outline-none focus:border-[var(--action)] focus:ring-4 focus:ring-[var(--focus-ring)]"
         >
           <option value="text">Text response</option>
           <option value="url">URL</option>
@@ -92,7 +91,7 @@ export function AssignmentEditor({
           type="checkbox"
           checked={requiresReview}
           onChange={(e) => setRequiresReview(e.target.checked)}
-          className="size-4"
+          className="size-4 accent-[var(--action)]"
         />
         <Label htmlFor="a-review">Requires admin review</Label>
       </div>

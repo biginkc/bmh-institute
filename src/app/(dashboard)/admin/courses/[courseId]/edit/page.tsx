@@ -1,13 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card } from "@/components/bmh-ds";
+import { PageHeader } from "@/components/page-header";
 import { createClient } from "@/lib/supabase/server";
 import { shapeCourseResponse } from "@/lib/courses/shape";
 
@@ -59,24 +54,27 @@ export default async function EditCoursePage({
   const boundAction = updateCourse.bind(null, courseId);
 
   return (
-    <main className="mx-auto w-full max-w-3xl flex-1 p-6 md:p-10">
+    <main className="mx-auto w-full max-w-[860px] flex-1 px-5 py-8 md:px-7 md:pb-16">
       <Link
         href="/admin/courses"
-        className="text-muted-foreground hover:text-foreground text-xs"
+        className="font-[family-name:var(--font-body)] text-sm font-bold text-[var(--action)] transition-colors hover:text-[var(--action-hover)]"
       >
         ← Back to courses
       </Link>
-      <h1 className="mt-3 text-2xl font-semibold">Edit course</h1>
-      <p className="text-muted-foreground mb-8 mt-1 text-sm">
-        Editing &quot;{shaped.title}&quot;.
-      </p>
+      <div className="mb-7 mt-3">
+        <PageHeader
+          title={shaped.title}
+          description="Update course details, add modules and arrange lessons."
+          breadcrumb={[{ label: "Admin" }, { label: "Courses" }]}
+        />
+      </div>
 
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Details</CardTitle>
-          <CardDescription>Title, description, publish state.</CardDescription>
-        </CardHeader>
-        <CardContent>
+      <div className="flex flex-col gap-5">
+        <Card padding="md">
+          <PanelHeading
+            title="Details"
+            description="Title, description and publish state."
+          />
           <CourseForm
             action={boundAction}
             submitLabel="Save changes"
@@ -86,21 +84,29 @@ export default async function EditCoursePage({
               is_published: shaped.is_published,
             }}
           />
-        </CardContent>
-      </Card>
+        </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Modules</CardTitle>
-          <CardDescription>
-            Containers for lessons. Reorder with the up/down arrows. Each
-            module contains its own lessons.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+        <Card padding="md">
+          <PanelHeading
+            title="Modules"
+            description="Arrange modules and their lessons in learner order."
+          />
           <ModulesEditor courseId={courseId} modules={shaped.modules} />
-        </CardContent>
-      </Card>
+        </Card>
+      </div>
     </main>
+  );
+}
+
+function PanelHeading({ title, description }: { title: string; description: string }) {
+  return (
+    <div className="mb-5">
+      <h2 className="font-[family-name:var(--font-display)] text-xl font-bold text-[var(--ink-900)]">
+        {title}
+      </h2>
+      <p className="mt-1 font-[family-name:var(--font-body)] text-sm font-semibold leading-relaxed text-[var(--text-muted)]">
+        {description}
+      </p>
+    </div>
   );
 }
