@@ -14,7 +14,7 @@ npm run course:import -- rollback content/course-manifests/bmh-employee-training
 
 These commands print a plan without changing storage or the database. Add `--execute` only after reviewing the manifest and the printed counts. `apply` and `verify` enforce the release gate. `--canary` requires a separate approved manifest containing only the unpublished Tech Stack slice: one course, one module, one content lesson, optionally its quiz, and no more than ten referenced assets. It cannot relax the full manifest into a draft import.
 
-Manifest asset paths are relative to the repository root by default. If the approved source files live elsewhere, add `--source-root=/absolute/path/to/course-assets` to `upload`. The importer resolves real paths and rejects files that escape that root.
+Manifest asset paths are relative to the repository root by default. If the approved source files live in another checkout, add `--source-root=/absolute/path/to/that/repository-root` to `upload`—the directory must contain the manifest's `course-assets/...` paths, not be the `course-assets` directory itself. The importer resolves real paths and rejects files that escape that root.
 
 Production execution also needs `--allow-production`. Rollback additionally needs `--confirm=<import_id>`.
 
