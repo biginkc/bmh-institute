@@ -3,8 +3,11 @@
 import React from "react";
 
 import { Mascot, type MascotProps } from "./mascot";
+import { OfficialLogoMark } from "./official-logo-mark";
 
 export interface LogoProps {
+  /** Render the official supplied logo SVG (shield crest + script wordmark). Set false for the legacy Andrea-sprite + Baloo lockup. @default true */
+  official?: boolean;
   /** Sprite folder relative to the page. @default "/brand/mascot" */
   base?: string;
   /** Wordmark font-size / lockup height driver, px. @default 36 */
@@ -30,6 +33,7 @@ const RuntimeMascot = Mascot as React.ComponentType<RuntimeMascotProps>;
  */
 export function Logo(props: LogoProps) {
   const {
+    official = true,
     base = "/brand/mascot",
     height = 36,
     mascot = true,
@@ -40,7 +44,12 @@ export function Logo(props: LogoProps) {
   } = props as LogoRuntimeProps;
   const ink = mono ? "currentColor" : "var(--ink-900)";
   const blue = mono ? "currentColor" : "var(--blue-500)";
-  const content = (
+  const content = official ? (
+    <OfficialLogoMark
+      height={height * 1.6}
+      style={{ color: mono ? "currentColor" : "var(--ink-900)", flexShrink: 0 }}
+    />
+  ) : (
     <>
       {mascot && (
         <RuntimeMascot
