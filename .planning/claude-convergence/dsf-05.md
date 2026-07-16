@@ -10,13 +10,13 @@
 
 ## Acceptance gates
 
-- [ ] Course modules and lessons match the BMH design with real type, progress, completion, and prerequisite lock states.
-- [ ] Content lesson header, blocks, completion, previous or next navigation, and sticky chapters rail match the BMH design.
-- [ ] All 11 existing content block types have tested visual coverage.
-- [ ] Quiz and assignment runner markup, server actions, `src/lib`, and middleware remain unchanged.
-- [ ] Video 90 percent completion tracking, sanitized HTML, signed URLs, iframe sandboxing, and role-play embed token flow remain intact.
-- [ ] `npm run verify`, `npm run build`, scoped lint, and diff checks pass.
-- [ ] Three requested 1280x800 screenshots exist under untracked `._dsf05-proofs/`.
+- [x] Course modules and lessons match the BMH design with real type, progress, completion, and prerequisite lock states.
+- [x] Content lesson header, blocks, completion, previous or next navigation, and sticky chapters rail match the BMH design.
+- [x] All 11 existing content block types have tested visual coverage.
+- [x] Quiz and assignment runner markup, server actions, `src/lib`, and middleware remain unchanged.
+- [x] Video 90 percent completion tracking, sanitized HTML, signed URLs, iframe sandboxing, and role-play embed token flow remain intact.
+- [x] `npm run verify`, `npm run build`, scoped lint, and diff checks pass.
+- [x] Three requested 1280x800 screenshots exist under untracked `._dsf05-proofs/`.
 - [ ] Manual review is clean and the requested PR is open without merge.
 
 ## Preflight
@@ -38,3 +38,12 @@
 - Confirmed the real lesson renderer has 11 block types while the kit's lesson specimen covers only video, callout, text, image, divider, download, and external link.
 - Confirmed the real app currently lacks a content-derived duration field and key-points model. These must be reported as gaps rather than synthesized.
 - Confirmed the current lesson page lacks the requested chapter rail and previous or next controls. Read-only course-structure data may be added in the page presentation layer without changing business rules or server actions.
+
+### Implementation and adversarial review
+
+- Wrote the presentation tests before implementation and observed the expected failures on the legacy markup.
+- Implemented the course reskin, content lesson shell, ChapterItem adapter, all 11 block treatments, and uploaded video overlay without changing actions or shared BMH primitives.
+- Manual review caught that direct prerequisite completion was not the canonical unlock rule. Navigation now uses `fn_lesson_is_unlocked` for every chapter and has regression coverage for quiz thresholds and admin access.
+- Manual review separated recorded completion from current availability. Completed chapters still count as done while unavailable navigation is disabled.
+- Merged current `origin/main` after DSF-06 landed and confirmed no DSF-06 or walkthrough files remain in the DSF-05 three-dot diff.
+- Final `npm run verify`, `npm run build`, scoped lint, diff checks, and 1280x800 Playwright proofs passed. Final read-only review reported no actionable findings.
