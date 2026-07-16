@@ -3,20 +3,16 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useActionState, useEffect, useState } from "react";
+import { ArrowRight, LockKeyhole, Mail } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Button, Card, Input, Mascot } from "@/components/bmh-ds";
 import { createClient } from "@/lib/supabase/client";
 
+import { AuthShell } from "../auth-shell";
 import { signIn } from "./actions";
+
+const SUSPENDED_ERROR =
+  "Your account has been suspended. Contact your administrator.";
 
 /**
  * Next 16 requires `useSearchParams` to live inside a Suspense boundary so
@@ -24,19 +20,9 @@ import { signIn } from "./actions";
  */
 export default function LoginPage() {
   return (
-    <div className="flex min-h-screen flex-1 items-center justify-center p-4">
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle>Sign in</CardTitle>
-          <CardDescription>BMH Institute · BMH Group</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Suspense fallback={<LoginFormFallback />}>
-            <LoginForm />
-          </Suspense>
-        </CardContent>
-      </Card>
-    </div>
+    <Suspense fallback={<LoginFormFallback />}>
+      <LoginForm />
+    </Suspense>
   );
 }
 
@@ -128,67 +114,135 @@ function LoginForm() {
 
   if (hashAuthState === "processing") {
     return (
-      <div className="text-muted-foreground text-sm">
-        Finishing sign in...
-      </div>
+      <AuthShell
+        loginHero
+        pose="wave"
+        message="Hi! I'm Andrea. I'll walk you through your first calls."
+      >
+        <p
+          role="status"
+          className="font-[family-name:var(--font-body)] text-sm font-semibold text-[var(--text-muted)]"
+        >
+          Finishing sign in...
+        </p>
+      </AuthShell>
     );
   }
 
+  if (errorMessage === SUSPENDED_ERROR) {
+    return <SuspendedNotice />;
+  }
+
   return (
-    <form action={formAction} className="flex flex-col gap-4">
-      <input type="hidden" name="next" value={next} />
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="email">Email</Label>
+    <AuthShell
+      loginHero
+      pose="wave"
+      message="Hi! I'm Andrea. I'll walk you through your first calls."
+    >
+      <h2 className="font-[family-name:var(--font-display)] text-[30px] leading-tight font-bold text-[var(--ink-900)]">
+        Sign in
+      </h2>
+      <form action={formAction} className="flex flex-col gap-[18px]">
+        <input type="hidden" name="next" value={next} />
         <Input
           id="email"
           name="email"
           type="email"
+          label="Work email"
+          icon={<Mail aria-hidden size={18} />}
           autoComplete="email"
           required
         />
-      </div>
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center justify-between">
-          <Label htmlFor="password">Password</Label>
-          <Link
-            href="/forgot-password"
-            className="text-muted-foreground hover:text-foreground text-xs"
-          >
-            Forgot password?
-          </Link>
-        </div>
         <Input
           id="password"
           name="password"
           type="password"
+          label="Password"
+          icon={<LockKeyhole aria-hidden size={18} />}
           autoComplete="current-password"
           required
         />
-      </div>
-      {errorMessage ? (
-        <div className="border-destructive/30 bg-destructive/10 text-destructive rounded-md border px-3 py-2 text-sm">
-          {errorMessage}
-        </div>
-      ) : null}
-      <Button type="submit" disabled={pending}>
-        {pending ? "Signing in..." : "Sign in"}
-      </Button>
-    </form>
+        {errorMessage ? (
+          <Card
+            role="alert"
+            aria-live="assertive"
+            padding="sm"
+            tint
+            style={{
+              border: "2px solid var(--danger)",
+              color: "var(--danger)",
+              fontFamily: "var(--font-body)",
+              fontSize: "var(--fs-body-sm)",
+              fontWeight: 700,
+            }}
+          >
+            {errorMessage}
+          </Card>
+        ) : null}
+        <Button
+          type="submit"
+          size="lg"
+          block
+          disabled={pending}
+          iconRight={<ArrowRight aria-hidden size={20} />}
+        >
+          {pending ? "Signing in..." : "Continue"}
+        </Button>
+        <Link
+          href="/forgot-password"
+          className="text-center font-[family-name:var(--font-body)] text-sm font-bold text-[var(--action)] underline-offset-4 hover:underline focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--action)]"
+        >
+          Forgot password?
+        </Link>
+      </form>
+    </AuthShell>
   );
 }
 
 function LoginFormFallback() {
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="email">Email</Label>
-        <Input id="email" type="email" disabled />
+    <AuthShell
+      loginHero
+      pose="wave"
+      message="Hi! I'm Andrea. I'll walk you through your first calls."
+    >
+      <h2 className="font-[family-name:var(--font-display)] text-[30px] leading-tight font-bold text-[var(--ink-900)]">
+        Sign in
+      </h2>
+      <div className="flex flex-col gap-[18px]" aria-busy="true">
+        <Input id="email" label="Work email" type="email" disabled />
+        <Input id="password" label="Password" type="password" disabled />
+        <Button size="lg" block disabled>
+          Loading...
+        </Button>
       </div>
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="password">Password</Label>
-        <Input id="password" type="password" disabled />
+    </AuthShell>
+  );
+}
+
+function SuspendedNotice() {
+  return (
+    <main className="flex min-h-screen items-center justify-center bg-[var(--surface-app)] p-6">
+      <div
+        role="alert"
+        aria-live="assertive"
+        className="flex max-w-[460px] flex-col items-center gap-[18px] text-center"
+      >
+        <Mascot emotion="worried" height={150} />
+        <h1 className="font-[family-name:var(--font-display)] text-[30px] leading-tight font-extrabold text-[var(--ink-900)]">
+          Account paused
+        </h1>
+        <p className="font-[family-name:var(--font-body)] text-base leading-[1.55] font-semibold text-[var(--text-body)]">
+          Your BMH Institute access is currently suspended. Contact your
+          administrator to reactivate it.
+        </p>
+        <Button
+          variant="secondary"
+          onClick={() => window.location.assign("/login")}
+        >
+          Back to sign in
+        </Button>
       </div>
-      <Button disabled>Loading...</Button>
-    </div>
+    </main>
   );
 }

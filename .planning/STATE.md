@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Internal Pilot Operations
 status: shipped
-stopped_at: DSF-02 implemented; PR #86 open; independent Claude review blocked by expired OAuth and blank Desktop surface
-last_updated: "2026-07-16T00:12:45-05:00"
+stopped_at: DSF-03 implemented and browser-proven; PR #87 open for orchestrating review
+last_updated: "2026-07-16T01:01:16-05:00"
 last_activity: 2026-07-16
 progress:
   total_phases: 4
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-04-30)
 Phase: Complete
 Plan: Complete
 Status: v1.1 shipped; post-ship QA and workflow cleanup complete
-Last activity: 2026-07-16 - Implemented quick task 260715-wii: DSF-02 component library. PR #86 is open and green. Claude review is blocked by unavailable surfaces.
+Last activity: 2026-07-16 - Completed quick task 260716-0xa: DSF-03 auth screens reskin. PR #87 is open and unmerged for orchestrating review.
 
 ## Performance Metrics
 
@@ -133,6 +133,7 @@ Recent decisions affecting current work:
 | # | Description | Date | Commit | Status | Directory |
 |---|-------------|------|--------|--------|-----------|
 | 260715-vx9 | DSF-01 design-system foundation | 2026-07-15 | e6bc843 | Verified | [260715-vx9-dsf-01-port-exact-design-system-css-vari](./quick/260715-vx9-dsf-01-port-exact-design-system-css-vari/) |
+| 260716-0xa | DSF-03 auth screens reskin | 2026-07-16 | 712cb6f | Verified | [260716-0xa-dsf-03-auth-screens-reskin](./quick/260716-0xa-dsf-03-auth-screens-reskin/) |
 
 ## Deferred Items
 
