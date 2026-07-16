@@ -1,24 +1,15 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { Badge } from "@/components/ui/badge";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Badge, Card } from "@/components/bmh-ds";
 import { requireAdmin } from "@/lib/auth/guard";
 import { createClient } from "@/lib/supabase/server";
+
+import { AdminDataTable } from "../../../_components/admin-data-table";
+import {
+  AdminMetricCard,
+  AdminPageHeader,
+  AdminSectionHeading,
+} from "../../../_components/admin-shell";
 
 export default async function ProgramReportPage({
   params,
@@ -197,33 +188,23 @@ export default async function ProgramReportPage({
 
   return (
     <main className="mx-auto w-full max-w-5xl flex-1 p-6 md:p-10">
-      <Link
-        href="/admin/reports"
-        className="text-muted-foreground hover:text-foreground text-xs"
-      >
-        ← Back to reports
-      </Link>
-
-      <div className="mt-3 mb-8 flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold">{program.title}</h1>
-          {program.description ? (
-            <p className="text-muted-foreground mt-1 text-sm">
-              {program.description}
-            </p>
-          ) : null}
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            <Badge variant="secondary">
-              {program.course_order_mode === "sequential"
-                ? "Sequential"
-                : "Any order"}
+      <AdminPageHeader
+        eyebrow="Admin · Report"
+        title={program.title}
+        description={program.description}
+        backHref="/admin/reports"
+        backLabel="Back to reports"
+        actions={
+          <div className="flex gap-2">
+            <Badge tone="blue" size="sm">
+              {program.course_order_mode === "sequential" ? "Sequential" : "Any order"}
             </Badge>
-            <Badge variant={program.is_published ? "default" : "outline"}>
+            <Badge tone={program.is_published ? "green" : "neutral"} size="sm">
               {program.is_published ? "Published" : "Draft"}
             </Badge>
           </div>
-        </div>
-      </div>
+        }
+      />
 
       <div className="mb-6 grid gap-4 md:grid-cols-4">
         <StatCard label="Courses" value={totalCourses} />
@@ -235,126 +216,65 @@ export default async function ProgramReportPage({
         />
       </div>
 
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Courses in order</CardTitle>
-          <CardDescription>
-            {program.course_order_mode === "sequential"
-              ? "Sequential: each course unlocks after the prior one completes."
-              : "Free: learners pick any order."}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-16">#</TableHead>
-                <TableHead>Course</TableHead>
-                <TableHead className="text-right">Drill in</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {programCourses.map((pc, idx) => {
-                if (!pc.course) return null;
-                return (
-                  <TableRow key={pc.course.id}>
-                    <TableCell className="text-muted-foreground tabular-nums">
-                      {idx + 1}
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      {pc.course.title}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Link
-                        href={`/admin/reports/courses/${pc.course.id}`}
-                        className="text-xs underline-offset-2 hover:underline"
-                      >
-                        View →
-                      </Link>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </CardContent>
+      <Card padding="sm" style={{ marginBottom: 24 }}>
+        <div style={{ padding: "6px 12px 12px" }}>
+          <AdminSectionHeading
+            title="Courses in order"
+            description={program.course_order_mode === "sequential" ? "Sequential: each course unlocks after the prior one completes." : "Free: learners pick any order."}
+          />
+        </div>
+        <AdminDataTable
+          rowKey="id"
+          columns={[
+            { key: "position", label: "#", width: "4rem", muted: true, tabular: true },
+            { key: "title", label: "Course" },
+            { key: "action", label: "Drill in", align: "right", presentation: "link", hrefKey: "href" },
+          ]}
+          rows={programCourses.flatMap((programCourse, index) => programCourse.course ? [{
+            id: programCourse.course.id,
+            position: index + 1,
+            title: programCourse.course.title,
+            action: "View →",
+            href: `/admin/reports/courses/${programCourse.course.id}`,
+          }] : [])}
+          empty="No courses in this program yet."
+        />
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Progress by learner</CardTitle>
-          <CardDescription>
-            Across every required lesson in the program&apos;s courses.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="p-0">
-          {rows.length === 0 ? (
-            <p className="text-muted-foreground p-6 text-sm">
-              Nobody&apos;s started the program yet.
-            </p>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead className="text-right">Lessons</TableHead>
-                  <TableHead className="text-right">%</TableHead>
-                  <TableHead className="text-right">Courses done</TableHead>
-                  <TableHead>Program cert</TableHead>
-                  <TableHead>Last activity</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {rows.map((r) => (
-                  <TableRow key={r.id}>
-                    <TableCell className="font-medium">
-                      <Link
-                        href={`/admin/reports/users/${r.id}`}
-                        className="underline-offset-2 hover:underline"
-                      >
-                        {r.name}
-                      </Link>
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {r.doneCount} / {r.total}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {r.pct}%
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {r.coursesComplete} / {r.totalCourses}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground text-xs">
-                      {r.programCert
-                        ? r.programCert.certificate_number
-                        : "-"}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground text-xs">
-                      {r.latest ? new Date(r.latest).toLocaleString() : "-"}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
+      <Card padding="sm">
+        <div style={{ padding: "6px 12px 12px" }}>
+          <AdminSectionHeading
+            title="Progress by learner"
+            description="Across every required lesson in the program's courses."
+          />
+        </div>
+        <AdminDataTable
+          minWidth="52rem"
+          empty="Nobody's started the program yet."
+          columns={[
+            { key: "name", label: "Name", presentation: "link", hrefKey: "href" },
+            { key: "lessons", label: "Lessons", align: "right", tabular: true },
+            { key: "pct", label: "%", align: "right", tabular: true, suffix: "%" },
+            { key: "coursesDone", label: "Courses done", align: "right", tabular: true },
+            { key: "certificate", label: "Program cert", muted: true },
+            { key: "latestLabel", label: "Last activity", muted: true },
+          ]}
+          rows={rows.map((row) => ({
+            ...row,
+            href: `/admin/reports/users/${row.id}`,
+            lessons: `${row.doneCount} / ${row.total}`,
+            coursesDone: `${row.coursesComplete} / ${row.totalCourses}`,
+            certificate: row.programCert?.certificate_number ?? "-",
+            latestLabel: row.latest ? new Date(row.latest).toLocaleString() : "-",
+          }))}
+        />
       </Card>
     </main>
   );
 }
 
 function StatCard({ label, value }: { label: string; value: number }) {
-  return (
-    <Card>
-      <CardHeader>
-        <CardDescription>{label}</CardDescription>
-        <CardTitle className="text-3xl font-semibold tabular-nums">
-          {value}
-        </CardTitle>
-      </CardHeader>
-      <CardContent />
-    </Card>
-  );
+  return <AdminMetricCard label={label} value={value} />;
 }
 
 function firstRow<T>(value: T | T[] | null | undefined): T | null {

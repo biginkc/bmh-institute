@@ -1,16 +1,9 @@
 import Link from "next/link";
 
-import { PageHeader } from "@/components/page-header";
-import { Badge } from "@/components/ui/badge";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Badge, Card, Coach } from "@/components/bmh-ds";
 import { createClient } from "@/lib/supabase/server";
 
+import { AdminPageHeader } from "../_components/admin-shell";
 import { ReviewControls } from "./review-controls";
 
 export default async function AdminSubmissionsPage({
@@ -53,30 +46,28 @@ export default async function AdminSubmissionsPage({
 
   return (
     <main className="mx-auto w-full max-w-4xl flex-1 p-6 md:p-10">
-      <div className="mb-6">
-        <PageHeader
-          title="Submissions"
-          description="Review assignment submissions. Approving marks the lesson complete automatically."
-          breadcrumb={[{ label: "Admin" }, { label: "Submissions" }]}
-          actions={
-            <div className="flex gap-2 text-xs">
-              <FilterLink current={filterStatus} value="submitted">Pending</FilterLink>
-              <FilterLink current={filterStatus} value="needs_revision">Needs revision</FilterLink>
-              <FilterLink current={filterStatus} value="approved">Approved</FilterLink>
-              <FilterLink current={filterStatus} value="all">All</FilterLink>
-            </div>
-          }
-        />
-      </div>
+      <AdminPageHeader
+        title="Submissions"
+        description="Review assignment submissions. Approving marks the lesson complete automatically."
+        actions={
+          <div className="flex flex-wrap gap-2 text-xs">
+            <FilterLink current={filterStatus} value="submitted">Pending</FilterLink>
+            <FilterLink current={filterStatus} value="needs_revision">Needs revision</FilterLink>
+            <FilterLink current={filterStatus} value="approved">Approved</FilterLink>
+            <FilterLink current={filterStatus} value="all">All</FilterLink>
+          </div>
+        }
+      />
 
       {rows.length === 0 ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>Nothing to review</CardTitle>
-            <CardDescription>
-              Everything in this filter is cleared.
-            </CardDescription>
-          </CardHeader>
+        <Card padding="md">
+          <Coach
+            emotion="content"
+            tone="tint"
+            size="sm"
+            height={80}
+            message="Nothing to review in this filter. You're all caught up."
+          />
         </Card>
       ) : (
         <div className="flex flex-col gap-4">
@@ -108,28 +99,26 @@ function SubmissionCard({ row }: { row: Row }) {
   const lesson = firstRow(row.lessons);
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <CardTitle className="text-base">
-              {assignment?.title ?? "Assignment"}
-            </CardTitle>
-            <CardDescription>
-              {lesson?.title ?? "Lesson"} · {profile?.full_name ?? "Unknown"}{" "}
-              ({profile?.email ?? "?"})
-            </CardDescription>
-          </div>
-          <StatusBadge status={row.status} />
+    <Card padding="md">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h2 className="font-[var(--font-display)] text-lg font-bold text-[var(--ink-900)]">
+            {assignment?.title ?? "Assignment"}
+          </h2>
+          <p className="text-sm font-semibold text-[var(--text-muted)]">
+            {lesson?.title ?? "Lesson"} · {profile?.full_name ?? "Unknown"}{" "}
+            ({profile?.email ?? "?"})
+          </p>
         </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="text-muted-foreground text-xs">
+        <StatusBadge status={row.status} />
+      </div>
+      <div className="mt-4 space-y-4">
+        <div className="text-xs font-semibold text-[var(--text-muted)]">
           Submitted {new Date(row.submitted_at).toLocaleString()}
         </div>
 
         {row.submission_text ? (
-          <div className="border-border bg-muted/30 whitespace-pre-wrap rounded-md border p-3 text-sm">
+          <div className="whitespace-pre-wrap rounded-[var(--bmh-radius-md)] border border-[var(--border-hairline)] bg-[var(--ink-050)] p-3 text-sm font-semibold text-[var(--text-body)]">
             {row.submission_text}
           </div>
         ) : null}
@@ -139,15 +128,15 @@ function SubmissionCard({ row }: { row: Row }) {
             href={row.submission_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-sm underline-offset-2 hover:underline"
+            className="text-sm font-bold text-[var(--action)] underline-offset-2 hover:underline"
           >
             {row.submission_url}
           </a>
         ) : null}
 
         {row.reviewer_notes ? (
-          <div className="border-border bg-muted/20 rounded-md border p-3 text-sm">
-            <span className="text-muted-foreground text-xs">Note: </span>
+          <div className="rounded-[var(--bmh-radius-md)] border border-[var(--border-hairline)] bg-[var(--surface-tint)] p-3 text-sm">
+            <span className="text-xs font-bold text-[var(--text-muted)]">Note: </span>
             {row.reviewer_notes}
           </div>
         ) : null}
@@ -158,16 +147,16 @@ function SubmissionCard({ row }: { row: Row }) {
             filePath={row.submission_file_path}
           />
         ) : null}
-      </CardContent>
+      </div>
     </Card>
   );
 }
 
 function StatusBadge({ status }: { status: Row["status"] }) {
-  if (status === "approved") return <Badge>Approved</Badge>;
+  if (status === "approved") return <Badge tone="green" size="sm">Approved</Badge>;
   if (status === "needs_revision")
-    return <Badge variant="destructive">Needs revision</Badge>;
-  return <Badge variant="secondary">Pending</Badge>;
+    return <Badge tone="red" size="sm">Needs revision</Badge>;
+  return <Badge tone="yellow" size="sm" dot>Pending</Badge>;
 }
 
 function FilterLink({
@@ -183,11 +172,11 @@ function FilterLink({
   return (
     <Link
       href={value === "submitted" ? "/admin/submissions" : `/admin/submissions?status=${value}`}
-      className={
-        active
-          ? "bg-primary text-primary-foreground rounded-md px-2 py-1"
-          : "text-muted-foreground hover:text-foreground rounded-md px-2 py-1"
-      }
+      className="rounded-full px-3 py-2 font-extrabold no-underline"
+      style={{
+        background: active ? "var(--action)" : "var(--ink-100)",
+        color: active ? "var(--text-on-brand)" : "var(--ink-700)",
+      }}
     >
       {children}
     </Link>
