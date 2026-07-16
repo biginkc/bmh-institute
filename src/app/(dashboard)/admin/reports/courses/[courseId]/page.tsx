@@ -1,24 +1,15 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { Badge } from "@/components/ui/badge";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Badge, Card } from "@/components/bmh-ds";
 import { requireAdmin } from "@/lib/auth/guard";
 import { createClient } from "@/lib/supabase/server";
+
+import { AdminDataTable } from "../../../_components/admin-data-table";
+import {
+  AdminMetricCard,
+  AdminPageHeader,
+  AdminSectionHeading,
+} from "../../../_components/admin-shell";
 
 export default async function CourseReportPage({
   params,
@@ -152,26 +143,18 @@ export default async function CourseReportPage({
 
   return (
     <main className="mx-auto w-full max-w-4xl flex-1 p-6 md:p-10">
-      <Link
-        href="/admin/reports"
-        className="text-muted-foreground hover:text-foreground text-xs"
-      >
-        ← Back to reports
-      </Link>
-
-      <div className="mt-3 mb-8 flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold">{course.title}</h1>
-          {course.description ? (
-            <p className="text-muted-foreground mt-1 text-sm">
-              {course.description}
-            </p>
-          ) : null}
-        </div>
-        <Badge variant={course.is_published ? "default" : "outline"}>
-          {course.is_published ? "Published" : "Draft"}
-        </Badge>
-      </div>
+      <AdminPageHeader
+        eyebrow="Admin · Report"
+        title={course.title}
+        description={course.description}
+        backHref="/admin/reports"
+        backLabel="Back to reports"
+        actions={
+          <Badge tone={course.is_published ? "green" : "neutral"} size="sm">
+            {course.is_published ? "Published" : "Draft"}
+          </Badge>
+        }
+      />
 
       <div className="mb-6 grid gap-4 md:grid-cols-3">
         <StatCard label="Required lessons" value={totalRequired} />
@@ -182,80 +165,38 @@ export default async function CourseReportPage({
         />
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Progress by learner</CardTitle>
-          <CardDescription>
-            Only learners with at least one completion or an issued certificate
-            appear here. Click a name for their full cross-course view.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="p-0">
-          {rows.length === 0 ? (
-            <p className="text-muted-foreground p-6 text-sm">
-              No one has started this course yet.
-            </p>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead className="text-right">Done</TableHead>
-                  <TableHead className="text-right">%</TableHead>
-                  <TableHead>Certificate</TableHead>
-                  <TableHead>Last activity</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {rows.map((r) => (
-                  <TableRow key={r.id}>
-                    <TableCell className="font-medium">
-                      <Link
-                        href={`/admin/reports/users/${r.id}`}
-                        className="underline-offset-2 hover:underline"
-                      >
-                        {r.name}
-                      </Link>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className="capitalize">
-                        {r.systemRole}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {r.doneCount} / {r.total}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {r.pct}%
-                    </TableCell>
-                    <TableCell className="text-muted-foreground text-xs">
-                      {r.cert ? r.cert.certificate_number : "-"}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground text-xs">
-                      {r.latest ? new Date(r.latest).toLocaleString() : "-"}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
+      <Card padding="sm">
+        <div style={{ padding: "6px 12px 12px" }}>
+          <AdminSectionHeading
+            title="Progress by learner"
+            description="Only learners with at least one completion or an issued certificate appear here. Click a name for their full cross-course view."
+          />
+        </div>
+        <AdminDataTable
+          minWidth="48rem"
+          empty="No one has started this course yet."
+          columns={[
+            { key: "name", label: "Name", presentation: "link", hrefKey: "href" },
+            { key: "systemRole", label: "Role", presentation: "badge", toneKey: "roleTone" },
+            { key: "doneLabel", label: "Done", align: "right", tabular: true },
+            { key: "pct", label: "%", align: "right", tabular: true, suffix: "%" },
+            { key: "certificate", label: "Certificate", muted: true },
+            { key: "latestLabel", label: "Last activity", muted: true },
+          ]}
+          rows={rows.map((row) => ({
+            ...row,
+            href: `/admin/reports/users/${row.id}`,
+            roleTone: row.systemRole === "owner" ? "solid" : row.systemRole === "admin" ? "blue" : "neutral",
+            doneLabel: `${row.doneCount} / ${row.total}`,
+            certificate: row.cert?.certificate_number ?? "-",
+            latestLabel: row.latest ? new Date(row.latest).toLocaleString() : "-",
+          }))}
+        />
       </Card>
     </main>
   );
 }
 
 function StatCard({ label, value }: { label: string; value: number }) {
-  return (
-    <Card>
-      <CardHeader>
-        <CardDescription>{label}</CardDescription>
-        <CardTitle className="text-3xl font-semibold tabular-nums">
-          {value}
-        </CardTitle>
-      </CardHeader>
-      <CardContent />
-    </Card>
-  );
+  return <AdminMetricCard label={label} value={value} />;
 }

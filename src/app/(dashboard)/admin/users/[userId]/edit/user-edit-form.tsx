@@ -4,8 +4,7 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
+import { Button } from "@/components/bmh-ds";
 
 import { deleteUser, saveUserSettings } from "./actions";
 
@@ -133,7 +132,7 @@ export function UserEditForm({
       className="flex flex-col gap-5"
     >
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="system_role">System role</Label>
+        <label htmlFor="system_role" className="text-sm font-bold text-[var(--ink-800)]">System role</label>
         <select
           id="system_role"
           value={systemRole}
@@ -143,7 +142,7 @@ export function UserEditForm({
             )
           }
           disabled={!hydrated || !canModifyRole}
-          className="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
+          className="w-full rounded-[var(--bmh-radius-md)] border-2 border-[var(--ink-300)] bg-[var(--paper)] px-3 py-3 text-sm font-bold text-[var(--ink-900)]"
         >
           <option value="learner">Learner</option>
           <option value="admin">Admin</option>
@@ -157,7 +156,7 @@ export function UserEditForm({
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="status">Status</Label>
+        <label htmlFor="status" className="text-sm font-bold text-[var(--ink-800)]">Status</label>
         <select
           id="status"
           value={status}
@@ -167,7 +166,7 @@ export function UserEditForm({
             )
           }
           disabled={!hydrated || !canSuspend}
-          className="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
+          className="w-full rounded-[var(--bmh-radius-md)] border-2 border-[var(--ink-300)] bg-[var(--paper)] px-3 py-3 text-sm font-bold text-[var(--ink-900)]"
         >
           <option value="active">Active</option>
           <option value="invited">Invited</option>
@@ -176,7 +175,7 @@ export function UserEditForm({
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label>Role groups</Label>
+        <p className="text-sm font-bold text-[var(--ink-800)]">Role groups</p>
         {allRoleGroups.length === 0 ? (
           <p className="text-muted-foreground text-xs">
             No role groups defined. Create role groups before inviting pilot
@@ -207,11 +206,11 @@ export function UserEditForm({
         </p>
       </div>
 
-      <div className="flex items-center justify-between gap-3 border-t pt-4">
+      <div className="flex items-center justify-between gap-3 border-t border-[var(--border-hairline)] pt-4">
         <div className="flex gap-2">
           {canSuspend ? (
             <Button
-              variant="outline"
+              variant="secondary"
               onClick={onSuspendToggle}
               disabled={!hydrated || pending}
             >
@@ -220,10 +219,10 @@ export function UserEditForm({
           ) : null}
           {canModifyRole ? (
             <Button
-              variant="outline"
+              variant="ghost"
               onClick={onDelete}
               disabled={!hydrated || pending}
-              className="text-destructive hover:text-destructive"
+              style={{ color: "var(--danger)" }}
             >
               Delete user
             </Button>

@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { Plus, X } from "lucide-react";
 import { toast } from "sonner";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Badge, Button, IconButton } from "@/components/bmh-ds";
 
 import {
   attachCourseToProgram,
@@ -62,48 +62,52 @@ export function CourseAttachments({
   return (
     <div className="flex flex-col gap-4">
       {attached.length === 0 ? (
-        <p className="text-muted-foreground text-sm">
+        <p className="font-[family-name:var(--font-body)] text-sm font-semibold text-[var(--text-muted)]">
           No courses attached yet.
         </p>
       ) : (
-        <ol className="divide-border divide-y">
+        <ol className="flex flex-col gap-2">
           {attached.map((c, idx) => (
             <li
               key={c.courseId}
-              className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0"
+              className="flex items-center justify-between gap-3 rounded-[var(--bmh-radius-md)] border border-[var(--border-card)] bg-[var(--paper)] px-3 py-3"
             >
               <div className="flex items-center gap-3">
-                <span className="text-muted-foreground w-6 text-sm tabular-nums">
-                  {idx + 1}.
+                <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-[var(--action)] font-[family-name:var(--font-display)] text-xs font-extrabold text-[var(--paper)]">
+                  {idx + 1}
                 </span>
                 <div>
-                  <div className="text-sm font-medium">{c.title}</div>
+                  <div className="font-[family-name:var(--font-body)] text-sm font-bold text-[var(--ink-900)]">
+                    {c.title}
+                  </div>
                   <Badge
-                    variant={c.isPublished ? "default" : "outline"}
-                    className="mt-1"
+                    tone={c.isPublished ? "green" : "neutral"}
+                    size="sm"
                   >
                     {c.isPublished ? "Published" : "Draft"}
                   </Badge>
                 </div>
               </div>
-              <Button
-                variant="outline"
+              <IconButton
+                variant="plain"
+                size="sm"
+                label={`Remove ${c.title}`}
                 onClick={() => onDetach(c.courseId)}
                 disabled={pending}
               >
-                Remove
-              </Button>
+                <X className="size-4" aria-hidden />
+              </IconButton>
             </li>
           ))}
         </ol>
       )}
 
       {available.length > 0 ? (
-        <div className="border-border flex items-end gap-3 border-t pt-4">
+        <div className="flex flex-col gap-3 border-t border-[var(--border-hairline)] pt-4 sm:flex-row sm:items-end">
           <div className="flex-1">
             <label
               htmlFor="attach-course"
-              className="text-muted-foreground mb-1 block text-xs"
+              className="mb-1.5 block font-[family-name:var(--font-body)] text-sm font-bold text-[var(--ink-800)]"
             >
               Attach a course
             </label>
@@ -111,7 +115,7 @@ export function CourseAttachments({
               id="attach-course"
               value={selected}
               onChange={(e) => setSelected(e.target.value)}
-              className="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
+              className="min-h-[46px] w-full rounded-[var(--bmh-radius-md)] border-2 border-[var(--ink-300)] bg-[var(--paper)] px-3 font-[family-name:var(--font-body)] text-sm font-bold text-[var(--ink-900)] outline-none focus-visible:border-[var(--action)] focus-visible:ring-4 focus-visible:ring-[var(--focus-ring)]"
             >
               {available.map((c) => (
                 <option key={c.id} value={c.id}>
@@ -120,12 +124,16 @@ export function CourseAttachments({
               ))}
             </select>
           </div>
-          <Button onClick={onAttach} disabled={pending}>
+          <Button
+            onClick={onAttach}
+            disabled={pending}
+            iconLeft={<Plus className="size-4" aria-hidden />}
+          >
             {pending ? "Saving..." : "Attach"}
           </Button>
         </div>
       ) : (
-        <p className="text-muted-foreground text-xs">
+        <p className="font-[family-name:var(--font-body)] text-xs font-semibold text-[var(--text-muted)]">
           All courses are already attached (or none exist yet).
         </p>
       )}

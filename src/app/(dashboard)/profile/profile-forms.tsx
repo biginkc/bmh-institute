@@ -1,10 +1,10 @@
 "use client";
 
 import { useActionState } from "react";
+import { LockKeyhole, UserRound } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Button } from "@/components/bmh-ds/button";
+import { Input } from "@/components/bmh-ds/input";
 
 import {
   changePassword,
@@ -19,24 +19,30 @@ export function UpdateNameForm({ defaultName }: { defaultName: string }) {
   >(updateProfile, null);
 
   return (
-    <form action={formAction} className="flex flex-col gap-3">
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="full_name">Full name</Label>
-        <Input
-          id="full_name"
-          name="full_name"
-          defaultValue={defaultName}
-          maxLength={200}
-          required
-        />
-      </div>
+    <form action={formAction} className="flex flex-col gap-4">
+      <Input
+        id="full_name"
+        name="full_name"
+        label="Full name"
+        hint="Shown on certificates and in admin reports"
+        icon={<UserRound aria-hidden="true" size={18} />}
+        defaultValue={defaultName}
+        maxLength={200}
+        required
+      />
       {state && !state.ok ? (
-        <div className="border-destructive/30 bg-destructive/10 text-destructive rounded-md border px-3 py-2 text-sm">
+        <div
+          role="alert"
+          className="rounded-[var(--bmh-radius-md)] border border-[var(--danger)] bg-[var(--danger-soft)] px-4 py-3 font-[family-name:var(--font-body)] text-sm font-bold text-[var(--danger)]"
+        >
           {state.error}
         </div>
       ) : null}
       {state && state.ok ? (
-        <div className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-100">
+        <div
+          role="status"
+          className="rounded-[var(--bmh-radius-md)] border border-[var(--success)] bg-[var(--success-soft)] px-4 py-3 font-[family-name:var(--font-body)] text-sm font-bold text-[var(--success)]"
+        >
           Saved.
         </div>
       ) : null}
@@ -56,36 +62,41 @@ export function ChangePasswordForm() {
   >(changePassword, null);
 
   return (
-    <form action={formAction} className="flex flex-col gap-3">
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="password">New password</Label>
-        <Input
-          id="password"
-          name="password"
-          type="password"
-          minLength={8}
-          autoComplete="new-password"
-          required
-        />
-      </div>
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="confirm">Confirm new password</Label>
-        <Input
-          id="confirm"
-          name="confirm"
-          type="password"
-          minLength={8}
-          autoComplete="new-password"
-          required
-        />
-      </div>
+    <form action={formAction} className="flex flex-col gap-4">
+      <Input
+        id="password"
+        name="password"
+        label="New password"
+        hint="At least 8 characters"
+        icon={<LockKeyhole aria-hidden="true" size={18} />}
+        type="password"
+        minLength={8}
+        autoComplete="new-password"
+        required
+      />
+      <Input
+        id="confirm"
+        name="confirm"
+        label="Confirm new password"
+        icon={<LockKeyhole aria-hidden="true" size={18} />}
+        type="password"
+        minLength={8}
+        autoComplete="new-password"
+        required
+      />
       {state && !state.ok ? (
-        <div className="border-destructive/30 bg-destructive/10 text-destructive rounded-md border px-3 py-2 text-sm">
+        <div
+          role="alert"
+          className="rounded-[var(--bmh-radius-md)] border border-[var(--danger)] bg-[var(--danger-soft)] px-4 py-3 font-[family-name:var(--font-body)] text-sm font-bold text-[var(--danger)]"
+        >
           {state.error}
         </div>
       ) : null}
       {state && state.ok ? (
-        <div className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-100">
+        <div
+          role="status"
+          className="rounded-[var(--bmh-radius-md)] border border-[var(--success)] bg-[var(--success-soft)] px-4 py-3 font-[family-name:var(--font-body)] text-sm font-bold text-[var(--success)]"
+        >
           Password changed. It&apos;s live across the app.
         </div>
       ) : null}

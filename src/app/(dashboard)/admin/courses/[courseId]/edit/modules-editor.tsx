@@ -2,12 +2,18 @@
 
 import Link from "next/link";
 import { useState, useTransition } from "react";
-import { ArrowDown, ArrowUp, Trash2 } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowUp,
+  FileText,
+  ListChecks,
+  PenLine,
+  Plus,
+  Trash2,
+} from "lucide-react";
 import { toast } from "sonner";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Badge, Button, Card, IconButton, Input } from "@/components/bmh-ds";
 import type { ModuleWithLessons } from "@/lib/courses/shape";
 
 import {
@@ -47,9 +53,11 @@ export function ModulesEditor({
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-5">
       {modules.length === 0 ? (
-        <p className="text-muted-foreground text-sm">No modules yet.</p>
+        <p className="font-[family-name:var(--font-body)] text-sm font-semibold text-[var(--text-muted)]">
+          No modules yet.
+        </p>
       ) : (
         modules.map((mod, idx) => (
           <ModuleCard
@@ -64,22 +72,21 @@ export function ModulesEditor({
         ))
       )}
 
-      <div className="border-border flex items-end gap-3 border-t pt-4">
+      <div className="flex flex-col gap-3 border-t border-[var(--border-hairline)] pt-5 sm:flex-row sm:items-end">
         <div className="flex-1">
-          <label
-            htmlFor="new-module-title"
-            className="text-muted-foreground mb-1 block text-xs"
-          >
-            Add a module
-          </label>
           <Input
             id="new-module-title"
+            label="Add a module"
             value={newModuleTitle}
             onChange={(e) => setNewModuleTitle(e.target.value)}
             placeholder="Module title"
           />
         </div>
-        <Button onClick={onCreateModule} disabled={pending}>
+        <Button
+          onClick={onCreateModule}
+          disabled={pending}
+          iconLeft={<Plus className="size-4" aria-hidden />}
+        >
           {pending ? "Saving..." : "Add module"}
         </Button>
       </div>
@@ -172,52 +179,55 @@ function ModuleCard({
   }
 
   return (
-    <div className="border-border rounded-md border">
-      <div className="border-border flex items-center justify-between gap-3 border-b px-4 py-3">
-        <div className="flex flex-1 items-center gap-2">
+    <Card padding="sm">
+      <div className="flex flex-col gap-3 border-b border-[var(--border-hairline)] px-2 pb-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0 flex-1">
           <Input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             onBlur={onSaveTitle}
-            className="max-w-sm"
+            aria-label={`Module title: ${mod.title}`}
+            size="sm"
           />
         </div>
         <div className="flex items-center gap-1">
-          <Button
-            variant="outline"
-            size="icon-sm"
+          <IconButton
+            variant="plain"
+            size="sm"
+            label="Move module up"
             disabled={!canMoveUp || pending}
             onClick={() => onMove("up")}
-            aria-label="Move up"
           >
             <ArrowUp className="size-3.5" />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon-sm"
+          </IconButton>
+          <IconButton
+            variant="plain"
+            size="sm"
+            label="Move module down"
             disabled={!canMoveDown || pending}
             onClick={() => onMove("down")}
-            aria-label="Move down"
           >
             <ArrowDown className="size-3.5" />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon-sm"
+          </IconButton>
+          <IconButton
+            variant="plain"
+            size="sm"
+            label={`Delete module ${mod.title}`}
             disabled={pending}
             onClick={onDelete}
-            aria-label="Delete module"
           >
             <Trash2 className="size-3.5" />
-          </Button>
+          </IconButton>
         </div>
       </div>
 
-      <div className="p-4">
+      <div className="px-2 pt-4">
         {mod.lessons.length === 0 ? (
-          <p className="text-muted-foreground text-xs">No lessons yet.</p>
+          <p className="font-[family-name:var(--font-body)] text-xs font-semibold text-[var(--text-muted)]">
+            No lessons yet.
+          </p>
         ) : (
-          <ol className="divide-border mb-3 divide-y">
+          <ol className="mb-4 divide-y divide-[var(--border-hairline)]">
             {mod.lessons.map((lesson, idx) => (
               <LessonRow
                 key={lesson.id}
@@ -233,16 +243,11 @@ function ModuleCard({
           </ol>
         )}
 
-        <div className="flex flex-col gap-2 md:flex-row md:items-end">
+        <div className="flex flex-col gap-3 border-t border-[var(--border-hairline)] pt-4 md:flex-row md:items-end">
           <div className="flex-1">
-            <label
-              htmlFor={`new-lesson-${mod.id}`}
-              className="text-muted-foreground mb-1 block text-xs"
-            >
-              Add lesson
-            </label>
             <Input
               id={`new-lesson-${mod.id}`}
+              label="Add lesson"
               value={newLessonTitle}
               onChange={(e) => setNewLessonTitle(e.target.value)}
               placeholder="Lesson title"
@@ -251,7 +256,7 @@ function ModuleCard({
           <div>
             <label
               htmlFor={`new-lesson-type-${mod.id}`}
-              className="text-muted-foreground mb-1 block text-xs"
+              className="mb-1.5 block font-[family-name:var(--font-body)] text-sm font-bold text-[var(--ink-800)]"
             >
               Type
             </label>
@@ -263,19 +268,24 @@ function ModuleCard({
                   e.target.value as "content" | "quiz" | "assignment",
                 )
               }
-              className="border-input bg-background rounded-md border px-3 py-2 text-sm"
+              className="min-h-[44px] rounded-[var(--bmh-radius-md)] border-2 border-[var(--ink-300)] bg-[var(--paper)] px-3 font-[family-name:var(--font-body)] text-sm font-bold text-[var(--ink-900)] outline-none focus-visible:border-[var(--action)] focus-visible:ring-4 focus-visible:ring-[var(--focus-ring)]"
             >
               <option value="content">Content</option>
               <option value="quiz">Quiz</option>
               <option value="assignment">Assignment</option>
             </select>
           </div>
-          <Button variant="outline" onClick={onAddLesson} disabled={pending}>
-            {pending ? "..." : "Add"}
+          <Button
+            variant="secondary"
+            onClick={onAddLesson}
+            disabled={pending}
+            iconLeft={<Plus className="size-4" aria-hidden />}
+          >
+            {pending ? "Saving..." : "Add lesson"}
           </Button>
         </div>
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -318,48 +328,67 @@ function LessonRow({
   }
 
   return (
-    <li className="flex items-center justify-between gap-3 py-2 first:pt-0 last:pb-0">
-      <div className="flex items-center gap-3">
-        <span className="text-sm">{lesson.title}</span>
-        <Badge variant="outline" className="capitalize">
-          {lesson.lesson_type}
+    <li className="flex flex-col gap-3 py-3 first:pt-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex min-w-0 items-center gap-3">
+        <span className="flex size-8 shrink-0 items-center justify-center rounded-[var(--bmh-radius-sm)] bg-[var(--action-soft)] text-[var(--blue-600)]">
+          <LessonTypeIcon type={lesson.lesson_type} />
+        </span>
+        <span className="truncate font-[family-name:var(--font-body)] text-sm font-bold text-[var(--ink-900)]">
+          {lesson.title}
+        </span>
+        <Badge
+          tone={lesson.lesson_type === "quiz" ? "blue" : lesson.lesson_type === "assignment" ? "orange" : "neutral"}
+          size="sm"
+        >
+          {lesson.lesson_type === "content"
+            ? "Content"
+            : lesson.lesson_type === "quiz"
+              ? "Quiz"
+              : "Assignment"}
         </Badge>
       </div>
-      <div className="flex items-center gap-1">
+      <div className="flex shrink-0 items-center gap-1 self-end sm:self-auto">
         <Link
           href={`/admin/lessons/${lesson.id}/edit`}
-          className="text-xs underline-offset-2 hover:underline"
+          aria-label={`Edit ${lesson.title}`}
+          className="mr-1 font-[family-name:var(--font-body)] text-sm font-extrabold text-[var(--action)] hover:underline"
         >
-          Edit →
+          Edit
         </Link>
-        <Button
-          variant="outline"
-          size="icon-sm"
+        <IconButton
+          variant="plain"
+          size="sm"
+          label="Move lesson up"
           disabled={!canMoveUp || pending}
           onClick={() => onMove("up")}
-          aria-label="Move up"
         >
           <ArrowUp className="size-3.5" />
-        </Button>
-        <Button
-          variant="outline"
-          size="icon-sm"
+        </IconButton>
+        <IconButton
+          variant="plain"
+          size="sm"
+          label="Move lesson down"
           disabled={!canMoveDown || pending}
           onClick={() => onMove("down")}
-          aria-label="Move down"
         >
           <ArrowDown className="size-3.5" />
-        </Button>
-        <Button
-          variant="outline"
-          size="icon-sm"
+        </IconButton>
+        <IconButton
+          variant="plain"
+          size="sm"
+          label={`Delete lesson ${lesson.title}`}
           disabled={pending}
           onClick={onDelete}
-          aria-label="Delete lesson"
         >
           <Trash2 className="size-3.5" />
-        </Button>
+        </IconButton>
       </div>
     </li>
   );
+}
+
+function LessonTypeIcon({ type }: { type: string }) {
+  if (type === "quiz") return <ListChecks className="size-4" aria-hidden />;
+  if (type === "assignment") return <PenLine className="size-4" aria-hidden />;
+  return <FileText className="size-4" aria-hidden />;
 }
