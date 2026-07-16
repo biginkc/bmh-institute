@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { CheckCircle2 } from "lucide-react";
 
 import { completeRolePlayBlock } from "@/app/(dashboard)/lessons/[lessonId]/actions";
@@ -32,6 +32,7 @@ export function RolePlayBlock({
   const [error, setError] = useState<string | null>(null);
   const [heightPx, setHeightPx] = useState(clampRolePlayHeight(initialHeightPx));
   const [pending, startTransition] = useTransition();
+  const iframeRef = useRef<HTMLIFrameElement>(null);
   const trustedOrigin = useMemo(() => getTrustedOrigin(iframeSrc), [iframeSrc]);
 
   useEffect(() => {
@@ -44,6 +45,8 @@ export function RolePlayBlock({
         !isTrustedRolePlayMessage({
           eventOrigin: event.origin,
           trustedOrigin,
+          eventSource: event.source,
+          trustedSource: iframeRef.current?.contentWindow ?? null,
           expectedScenarioId: scenarioId,
           event: data,
         })
@@ -110,6 +113,7 @@ export function RolePlayBlock({
         ) : null}
       </div>
       <iframe
+        ref={iframeRef}
         src={iframeSrc}
         title={title || "Role play"}
         allow="microphone; camera; clipboard-write"

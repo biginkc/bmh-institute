@@ -46,12 +46,16 @@ export function getTrustedOrigin(src: string): string | null {
 export function isTrustedRolePlayMessage(params: {
   eventOrigin: string;
   trustedOrigin: string | null;
+  eventSource: MessageEventSource | null;
+  trustedSource: MessageEventSource | null;
   expectedScenarioId: string;
   event: RolePlayEvent | null;
 }): boolean {
   return (
     params.trustedOrigin !== null &&
+    params.trustedSource !== null &&
     params.eventOrigin === params.trustedOrigin &&
+    params.eventSource === params.trustedSource &&
     params.event?.scenario_id === params.expectedScenarioId
   );
 }

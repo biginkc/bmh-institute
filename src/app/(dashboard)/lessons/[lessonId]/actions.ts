@@ -251,6 +251,7 @@ export async function completeRolePlayBlock(
       scenario_id: scenarioId,
       attempt_id: attemptId,
       score: verified.score,
+      goals_met: verified.goalsMet,
       summary: verified.summaryUrl
         ? { summary_url: verified.summaryUrl }
         : {},

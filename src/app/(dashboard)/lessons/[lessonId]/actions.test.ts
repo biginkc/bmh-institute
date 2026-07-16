@@ -8,6 +8,7 @@ vi.mock("@/lib/role-plays/completion-token", () => ({
     ok: true,
     score: 87,
     summaryUrl: "http://localhost:3200/recordings/attempt-1",
+    goalsMet: { discovery: true, close: false },
   })),
 }));
 
@@ -94,6 +95,7 @@ describe("completeRolePlayBlock", () => {
       scenario_id: "scenario-1",
       attempt_id: "attempt-1",
       score: 87,
+      goals_met: { discovery: true, close: false },
       summary: { summary_url: "http://localhost:3200/recordings/attempt-1" },
     });
     expect(progressUpsert).toEqual({
