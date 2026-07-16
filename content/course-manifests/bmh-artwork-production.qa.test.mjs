@@ -19,11 +19,16 @@ const pilotChecksumsPath = new URL(
   "../../docs/course-production/thumbnail-pilots/checksums.json",
   import.meta.url,
 );
+const pilotGenerationLineagePath = new URL(
+  "../../docs/course-production/thumbnail-pilots/generation-lineage.json",
+  import.meta.url,
+);
 
-const [manifest, inventory, pilotChecksums] = await Promise.all([
+const [manifest, inventory, pilotChecksums, pilotGenerationLineage] = await Promise.all([
   readFile(manifestPath, "utf8").then(JSON.parse),
   readFile(inventoryPath, "utf8").then(JSON.parse),
   readFile(pilotChecksumsPath, "utf8").then(JSON.parse),
+  readFile(pilotGenerationLineagePath, "utf8").then(JSON.parse),
 ]);
 
 const course = manifest.program.courses[0];
@@ -155,6 +160,81 @@ test("three pilots map to their intended manifest topics and stay unapproved", (
   for (const lesson of inventory.lessons.filter((entry) => !entry.pilot)) {
     assert.equal(lesson.production_source_mode, "generate-after-pilot-approval");
   }
+});
+
+test("promoted pilots retain exact ordered image_gen lineage", async () => {
+  assert.equal(
+    pilotGenerationLineage.schema_version,
+    "bmh-thumbnail-pilot-lineage/v1",
+  );
+  assert.equal(pilotGenerationLineage.status, "awaiting-jarrad-approval");
+  assert.deepEqual(
+    pilotGenerationLineage.records.map((record) => record.slug),
+    ["orientation", "opening-the-call", "objection-architecture"],
+  );
+
+  const pilots = inventory.lessons.filter((lesson) => lesson.pilot);
+  for (const lesson of pilots) {
+    const record = pilotGenerationLineage.records.find(
+      (candidate) => candidate.slug === lesson.pilot_review.slug,
+    );
+    assert.ok(record, lesson.slot);
+    assert.deepEqual(lesson.pilot_review.generation_lineage, record);
+    assert.equal(
+      lesson.pilot_review.generation_lineage_record_path,
+      "docs/course-production/thumbnail-pilots/generation-lineage.json",
+    );
+
+    const checksumRecord = pilotChecksums.assets.find(
+      (asset) => asset.slug === record.slug,
+    );
+    const terminal = record.steps.at(-1).output;
+    assert.equal(record.terminal_output_sha256, terminal.sha256);
+    assert.equal(terminal.sha256, checksumRecord.source.sha256);
+    assert.equal(terminal.path, checksumRecord.source.path);
+
+    let previousOutput = null;
+    for (const [index, step] of record.steps.entries()) {
+      assert.equal(step.step, index + 1);
+      assert.equal(step.operation, index === 0 ? "generate" : "edit");
+      const prompt = (await readFile(
+        new URL(`../../${step.prompt_path}`, import.meta.url),
+        "utf8",
+      )).replace(/\r?\n$/, "");
+      assert.equal(sha256(prompt), step.prompt_sha256);
+      if (index === 0) assert.equal(step.prompt_sha256, lesson.prompt_sha256);
+      if (index > 0) assert.equal(step.inputs[0].sha256, previousOutput.sha256);
+
+      for (const input of step.inputs) {
+        const contents = await readFile(
+          new URL(`../../${input.path}`, import.meta.url),
+        );
+        assert.equal(sha256(contents), input.sha256, input.path);
+      }
+      const outputContents = await readFile(
+        new URL(`../../${step.output.path}`, import.meta.url),
+      );
+      const outputStat = await stat(
+        new URL(`../../${step.output.path}`, import.meta.url),
+      );
+      assert.equal(sha256(outputContents), step.output.sha256);
+      assert.equal(outputStat.size, step.output.size_bytes);
+      assert.match(step.tool_evidence.invocation_call_id, /^call_/);
+      assert.match(step.tool_evidence.tool_output_call_id, /^call_/);
+      assert.match(step.tool_evidence.tool_output_id, /^exec-/);
+      assert.ok(
+        Date.parse(step.tool_evidence.completed_at) >=
+          Date.parse(step.tool_evidence.invoked_at),
+      );
+      previousOutput = step.output;
+    }
+  }
+
+  assert.equal(
+    pilotGenerationLineage.records.find((record) => record.slug === "orientation")
+      .steps.length,
+    2,
+  );
 });
 
 test("every generated master has an exact guarded prompt and provenance record", () => {

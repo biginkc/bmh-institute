@@ -1,0 +1,11 @@
+Use case: stylized-concept
+Asset type: BMH Institute lesson-thumbnail pilot, wide 16:9 master designed to crop safely to 16:10
+Primary request: Create the Orientation thumbnail for a new employee beginning BMH Institute. Show an iconic welcoming BMH training building as one large central sticker, with a simple open doorway, a tiny new learner approaching, a small compass, checklist, and upward path markers floating as separate supporting stickers. The five-second read should be “welcome, direction, begin training.”
+Input images: Image 1 and Image 2 are the canonical BMH Sticker System style references; Image 3 is a subject reference for the recognizable BMH building only. Preserve the flat sticker language from Images 1–2 and simplify the building from Image 3 into an icon rather than a realistic scene.
+Scene/backdrop: uninterrupted flat cornflower-blue field with generous active negative space; floating sticker composition, never a continuous environment
+Style/medium: hand-drawn flat sticker-sheet illustration; thick slightly wobbly black outlines; rounded imperfect primitive geometry; every object is an individually croppable sticker
+Composition/framing: large building sticker centered slightly right, tiny learner and open-door cue lower left, small compass/checklist/path marks balanced around it; keep all meaningful content inside the central 80% so both 16:9 and 16:10 crops remain intact
+Color palette: cornflower blue, golden yellow, orange, cream, white, black, and at most one muted green; 6–8 flat colors maximum
+Characters: tiny scale, dot eyes, minimal face, cylindrical limbs, simple silhouette
+Constraints: no title, no words, no letters, no logos, no watermark; flat fills only; strong silhouettes; uniform complexity; decorative doodles limited to a few purposeful sparkles and motion marks
+Avoid: gradients, texture, lighting, shadows, reflections, depth, realistic perspective, photorealism, 3D rendering, detailed architecture, busy interiors, edge-cropped key objects

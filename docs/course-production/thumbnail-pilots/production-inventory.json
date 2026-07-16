@@ -352,7 +352,90 @@
             "sha256": "71094a3f54b908963ab44096b4a9af3ce2ba7b1212c73f19a1f92fc5aaf49b20"
           }
         },
-        "checksum_record_path": "docs/course-production/thumbnail-pilots/checksums.json"
+        "checksum_record_path": "docs/course-production/thumbnail-pilots/checksums.json",
+        "generation_lineage_record_path": "docs/course-production/thumbnail-pilots/generation-lineage.json",
+        "generation_lineage": {
+          "slug": "orientation",
+          "terminal_output_sha256": "25307aedf8d8ac0f60181e9e0d2bbad4eb76b0548af254de12fa9f9451ad99a5",
+          "steps": [
+            {
+              "step": 1,
+              "operation": "generate",
+              "prompt_path": "docs/course-production/thumbnail-pilots/prompts/orientation-initial.txt",
+              "prompt_sha256": "f1f17b066b59af4a1803b99b02687f4ec8b77aba45e15d289669a5e6d13ff79f",
+              "inputs": [
+                {
+                  "path": "docs/design/style-ref-1.png",
+                  "sha256": "d65ce4c3fc84a0a52b08e513d42d978f94d5db2f6e59034aedbbd1e9486c18ca"
+                },
+                {
+                  "path": "docs/design/style-ref-2.png",
+                  "sha256": "f1affc2ab6b931be8cfd6920165dff330d49b79e6f4abfe5568e67e70c6934a6"
+                },
+                {
+                  "path": "docs/course-production/thumbnail-pilots/references/mV0_LV0_s10_bmh-lowangle.png",
+                  "sha256": "438bab4f68f7b71e5daec17def6ea1ceb091e010b57c135968746fba92ba42dc"
+                }
+              ],
+              "tool_evidence": {
+                "thread_id": "019f6cb9-c3ed-74e0-975f-a5d0d8154c59",
+                "agent_path": "/root/thumbnail_pilots",
+                "invocation_call_id": "call_jkg32a9D7R5P4x0wi6NHt816",
+                "tool_output_call_id": "call_fb5x1aAbLV8XnFx0FPsnVnup",
+                "tool_output_id": "exec-1da1fab0-8b0b-4983-98e7-589893bbaab3",
+                "invoked_at": "2026-07-16T21:00:33.602Z",
+                "completed_at": "2026-07-16T21:01:21.122Z"
+              },
+              "output": {
+                "path": "course-assets/thumbnails/pilots/sources/orientation-initial-generated.png",
+                "dimensions": [
+                  1672,
+                  941
+                ],
+                "size_bytes": 1349670,
+                "sha256": "0dd1dc48fbb52bc3ed4c640b24d63dcf7e7da8650e9e7e2ac2d18ae1f9d1fc2f"
+              }
+            },
+            {
+              "step": 2,
+              "operation": "edit",
+              "prompt_path": "docs/course-production/thumbnail-pilots/prompts/orientation-correction.txt",
+              "prompt_sha256": "ede30dc1dc4d3b500a8b6b629780780b47882600afba74570a08844c82a6009a",
+              "inputs": [
+                {
+                  "path": "course-assets/thumbnails/pilots/sources/orientation-initial-generated.png",
+                  "sha256": "0dd1dc48fbb52bc3ed4c640b24d63dcf7e7da8650e9e7e2ac2d18ae1f9d1fc2f"
+                },
+                {
+                  "path": "docs/design/style-ref-1.png",
+                  "sha256": "d65ce4c3fc84a0a52b08e513d42d978f94d5db2f6e59034aedbbd1e9486c18ca"
+                },
+                {
+                  "path": "docs/design/style-ref-2.png",
+                  "sha256": "f1affc2ab6b931be8cfd6920165dff330d49b79e6f4abfe5568e67e70c6934a6"
+                }
+              ],
+              "tool_evidence": {
+                "thread_id": "019f6cb9-c3ed-74e0-975f-a5d0d8154c59",
+                "agent_path": "/root/thumbnail_pilots",
+                "invocation_call_id": "call_ymsG97sLazIVMEU4mKDZaA5J",
+                "tool_output_call_id": "call_SIlavtTJpymL19x1xdAXAV17",
+                "tool_output_id": "exec-7e24e498-2c35-4b30-8b08-9ce116051118",
+                "invoked_at": "2026-07-16T21:03:58.189Z",
+                "completed_at": "2026-07-16T21:04:47.870Z"
+              },
+              "output": {
+                "path": "course-assets/thumbnails/pilots/sources/orientation-generated.png",
+                "dimensions": [
+                  1672,
+                  941
+                ],
+                "size_bytes": 1303833,
+                "sha256": "25307aedf8d8ac0f60181e9e0d2bbad4eb76b0548af254de12fa9f9451ad99a5"
+              }
+            }
+          ]
+        }
       },
       "provenance": {
         "generator": "built-in image_gen",
@@ -1412,7 +1495,52 @@
             "sha256": "ef6d25c3a00d8582bc1daf8149a51672848e5358b66e9d54cef0c90d4c9611ae"
           }
         },
-        "checksum_record_path": "docs/course-production/thumbnail-pilots/checksums.json"
+        "checksum_record_path": "docs/course-production/thumbnail-pilots/checksums.json",
+        "generation_lineage_record_path": "docs/course-production/thumbnail-pilots/generation-lineage.json",
+        "generation_lineage": {
+          "slug": "opening-the-call",
+          "terminal_output_sha256": "024256e8af219b185de73bbbd8274dfda67c40d28dd2692f861345dc68b0518b",
+          "steps": [
+            {
+              "step": 1,
+              "operation": "generate",
+              "prompt_path": "docs/course-production/thumbnail-pilots/prompts/opening-the-call.txt",
+              "prompt_sha256": "b1dd0fda35d7c63e482e30f0a5c79ed0abf8c5bf4320b1e66fe6ca341a820119",
+              "inputs": [
+                {
+                  "path": "docs/design/style-ref-1.png",
+                  "sha256": "d65ce4c3fc84a0a52b08e513d42d978f94d5db2f6e59034aedbbd1e9486c18ca"
+                },
+                {
+                  "path": "docs/design/style-ref-2.png",
+                  "sha256": "f1affc2ab6b931be8cfd6920165dff330d49b79e6f4abfe5568e67e70c6934a6"
+                },
+                {
+                  "path": "docs/course-production/thumbnail-pilots/references/m05_L5A_phones.png",
+                  "sha256": "2d59d64e913c43b1fba45080b0bf59c9e51356f1d4b057c5d2831bfa0f7af6e8"
+                }
+              ],
+              "tool_evidence": {
+                "thread_id": "019f6cb9-c3ed-74e0-975f-a5d0d8154c59",
+                "agent_path": "/root/thumbnail_pilots",
+                "invocation_call_id": "call_omiyboB188f8BVoSkgEcUkJv",
+                "tool_output_call_id": "call_PzBae3aVHUak2VLrWBviwtvA",
+                "tool_output_id": "exec-bcc12c1a-207b-44d8-8e45-644698774fa6",
+                "invoked_at": "2026-07-16T21:01:41.299Z",
+                "completed_at": "2026-07-16T21:02:28.218Z"
+              },
+              "output": {
+                "path": "course-assets/thumbnails/pilots/sources/opening-the-call-generated.png",
+                "dimensions": [
+                  1672,
+                  941
+                ],
+                "size_bytes": 1172023,
+                "sha256": "024256e8af219b185de73bbbd8274dfda67c40d28dd2692f861345dc68b0518b"
+              }
+            }
+          ]
+        }
       },
       "provenance": {
         "generator": "built-in image_gen",
@@ -1755,7 +1883,52 @@
             "sha256": "ef478ca179f9b410bf60811bef1a4ff9ca8fae5b5e0587812f0c7912789a1fd8"
           }
         },
-        "checksum_record_path": "docs/course-production/thumbnail-pilots/checksums.json"
+        "checksum_record_path": "docs/course-production/thumbnail-pilots/checksums.json",
+        "generation_lineage_record_path": "docs/course-production/thumbnail-pilots/generation-lineage.json",
+        "generation_lineage": {
+          "slug": "objection-architecture",
+          "terminal_output_sha256": "b0d30bbb17d89f6141251a7fa0541a162d543d70706a1cdacdfe0c71aab9cfd1",
+          "steps": [
+            {
+              "step": 1,
+              "operation": "generate",
+              "prompt_path": "docs/course-production/thumbnail-pilots/prompts/objection-architecture.txt",
+              "prompt_sha256": "586ebac39db2c79f4a728b569ebcc46d01820cf642f9a207cba795145cdada9b",
+              "inputs": [
+                {
+                  "path": "docs/design/style-ref-1.png",
+                  "sha256": "d65ce4c3fc84a0a52b08e513d42d978f94d5db2f6e59034aedbbd1e9486c18ca"
+                },
+                {
+                  "path": "docs/design/style-ref-2.png",
+                  "sha256": "f1affc2ab6b931be8cfd6920165dff330d49b79e6f4abfe5568e67e70c6934a6"
+                },
+                {
+                  "path": "docs/course-production/thumbnail-pilots/references/m07_L7A_b03_reframe.png",
+                  "sha256": "57fe03b31eca46336c664c2ca78cf877b8db3138443964e7976ce70eb91db311"
+                }
+              ],
+              "tool_evidence": {
+                "thread_id": "019f6cb9-c3ed-74e0-975f-a5d0d8154c59",
+                "agent_path": "/root/thumbnail_pilots",
+                "invocation_call_id": "call_k4q5g4ye6DDeIMyUPBP0KdUi",
+                "tool_output_call_id": "call_982qVPUL25T8cfbQBfC9xXcM",
+                "tool_output_id": "exec-5df58555-c80c-4526-8d1e-aab528034a60",
+                "invoked_at": "2026-07-16T21:02:45.451Z",
+                "completed_at": "2026-07-16T21:03:37.134Z"
+              },
+              "output": {
+                "path": "course-assets/thumbnails/pilots/sources/objection-architecture-generated.png",
+                "dimensions": [
+                  1672,
+                  941
+                ],
+                "size_bytes": 1239107,
+                "sha256": "b0d30bbb17d89f6141251a7fa0541a162d543d70706a1cdacdfe0c71aab9cfd1"
+              }
+            }
+          ]
+        }
       },
       "provenance": {
         "generator": "built-in image_gen",

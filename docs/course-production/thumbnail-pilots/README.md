@@ -26,10 +26,16 @@ Both derivative sets are lossless WebP files.
 - Deterministic post-processing: exact eight-color locked palette, no dithering.
 - Reproduction command: `python3 scripts/course-content/prepare-thumbnail-pilots.py`
 - Checksums and dimensions: `checksums.json` in this directory.
+- Exact prompt files, ordered input checksums, invocation/output call IDs,
+  invocation/completion times, and retained output checksums:
+  `generation-lineage.json` and the `prompts/` directory.
 
 The generated PNGs are retained under
 `course-assets/thumbnails/pilots/sources/`. Flat PNG masters are retained under
 `course-assets/thumbnails/pilots/flat-masters/`.
+Orientation's initial generated source is retained separately as
+`orientation-initial-generated.png`; the final `orientation-generated.png` is
+the checksum-linked output of the documented correction pass.
 
 ## Reference record
 

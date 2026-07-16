@@ -21,6 +21,10 @@ const pilotChecksumsPath = path.join(
   repoRoot,
   "docs/course-production/thumbnail-pilots/checksums.json",
 );
+const pilotGenerationLineagePath = path.join(
+  repoRoot,
+  "docs/course-production/thumbnail-pilots/generation-lineage.json",
+);
 const args = process.argv.slice(2);
 const unknownArgs = args.filter((arg) => arg !== "--check");
 if (unknownArgs.length > 0) {
@@ -28,9 +32,10 @@ if (unknownArgs.length > 0) {
 }
 const checkMode = args.includes("--check");
 
-const [manifest, pilotChecksums] = await Promise.all([
+const [manifest, pilotChecksums, pilotGenerationLineage] = await Promise.all([
   readFile(manifestPath, "utf8").then(JSON.parse),
   readFile(pilotChecksumsPath, "utf8").then(JSON.parse),
+  readFile(pilotGenerationLineagePath, "utf8").then(JSON.parse),
 ]);
 const course = manifest.program.courses[0];
 const lessons = course.modules.flatMap((module) =>
@@ -83,6 +88,117 @@ for (const reference of references) {
   }
 }
 
+function repoPath(localPath) {
+  const candidate = path.resolve(repoRoot, localPath);
+  if (candidate !== repoRoot && !candidate.startsWith(`${repoRoot}${path.sep}`)) {
+    throw new Error(`Pilot lineage path escapes the repository: ${localPath}`);
+  }
+  return candidate;
+}
+
+function pngDimensions(contents, localPath) {
+  const signature = "89504e470d0a1a0a";
+  if (contents.length < 24 || contents.subarray(0, 8).toString("hex") !== signature) {
+    throw new Error(`Pilot lineage output is not a PNG: ${localPath}`);
+  }
+  return [contents.readUInt32BE(16), contents.readUInt32BE(20)];
+}
+
+async function validatePilotGenerationLineage() {
+  if (pilotGenerationLineage.schema_version !== "bmh-thumbnail-pilot-lineage/v1") {
+    throw new Error("Pilot generation lineage schema is invalid");
+  }
+  if (pilotGenerationLineage.status !== "awaiting-jarrad-approval") {
+    throw new Error("Pilot generation lineage must remain awaiting Jarrad approval");
+  }
+  if (!Array.isArray(pilotGenerationLineage.records)) {
+    throw new Error("Pilot generation lineage records are missing");
+  }
+  const expectedSlugs = Object.values(pilotSlugBySlot);
+  if (
+    pilotGenerationLineage.records.length !== expectedSlugs.length ||
+    new Set(pilotGenerationLineage.records.map((record) => record.slug)).size !==
+      expectedSlugs.length ||
+    expectedSlugs.some(
+      (slug) => !pilotGenerationLineage.records.some((record) => record.slug === slug),
+    )
+  ) {
+    throw new Error("Pilot generation lineage must cover each pilot exactly once");
+  }
+
+  for (const record of pilotGenerationLineage.records) {
+    const checksumRecord = pilotChecksums.assets.find(
+      (asset) => asset.slug === record.slug,
+    );
+    if (!checksumRecord || !Array.isArray(record.steps) || record.steps.length === 0) {
+      throw new Error(`Pilot generation lineage is incomplete for ${record.slug}`);
+    }
+
+    let priorOutput = null;
+    for (const [index, step] of record.steps.entries()) {
+      if (step.step !== index + 1) {
+        throw new Error(`${record.slug} generation lineage is out of order`);
+      }
+      if (step.operation !== (index === 0 ? "generate" : "edit")) {
+        throw new Error(`${record.slug} generation lineage operation is invalid`);
+      }
+      const promptBytes = await readFile(repoPath(step.prompt_path), "utf8");
+      const prompt = promptBytes.replace(/\r?\n$/, "");
+      if (sha256(prompt) !== step.prompt_sha256) {
+        throw new Error(`${record.slug} generation prompt checksum changed`);
+      }
+      if (!Array.isArray(step.inputs) || step.inputs.length === 0) {
+        throw new Error(`${record.slug} generation inputs are missing`);
+      }
+      for (const input of step.inputs) {
+        const contents = await readFile(repoPath(input.path));
+        if (sha256(contents) !== input.sha256) {
+          throw new Error(`${record.slug} generation input checksum changed: ${input.path}`);
+        }
+      }
+      if (index > 0 && step.inputs[0]?.sha256 !== priorOutput?.sha256) {
+        throw new Error(`${record.slug} edit step is not tied to the prior output`);
+      }
+
+      const evidence = step.tool_evidence;
+      const invokedAt = Date.parse(evidence?.invoked_at ?? "");
+      const completedAt = Date.parse(evidence?.completed_at ?? "");
+      if (
+        !evidence?.thread_id ||
+        !evidence?.agent_path ||
+        !evidence?.invocation_call_id ||
+        !evidence?.tool_output_call_id ||
+        !evidence?.tool_output_id ||
+        !Number.isFinite(invokedAt) ||
+        !Number.isFinite(completedAt) ||
+        completedAt < invokedAt
+      ) {
+        throw new Error(`${record.slug} generation tool evidence is incomplete`);
+      }
+
+      const outputContents = await readFile(repoPath(step.output.path));
+      if (
+        sha256(outputContents) !== step.output.sha256 ||
+        outputContents.length !== step.output.size_bytes ||
+        JSON.stringify(pngDimensions(outputContents, step.output.path)) !==
+          JSON.stringify(step.output.dimensions)
+      ) {
+        throw new Error(`${record.slug} generation output checksum, size, or dimensions changed`);
+      }
+      priorOutput = step.output;
+    }
+
+    const terminal = record.steps.at(-1).output;
+    if (
+      record.terminal_output_sha256 !== terminal.sha256 ||
+      terminal.sha256 !== checksumRecord.source.sha256 ||
+      terminal.path !== checksumRecord.source.path
+    ) {
+      throw new Error(`${record.slug} terminal generation output does not match the review source`);
+    }
+  }
+}
+
 function buildProvenance(plannedGenerationCallId, generationCall) {
   return {
     generator: "built-in image_gen",
@@ -109,6 +225,8 @@ const pilotSlugBySlot = {
   "slot-07": "opening-the-call",
   "slot-09": "objection-architecture",
 };
+
+await validatePilotGenerationLineage();
 
 const pilotApproval = {
   status: "awaiting-jarrad-approval",
@@ -497,6 +615,11 @@ const inventoryLessons = lessonSpecs.map((spec, index) => {
           ),
           checksum_record_path:
             "docs/course-production/thumbnail-pilots/checksums.json",
+          generation_lineage_record_path:
+            "docs/course-production/thumbnail-pilots/generation-lineage.json",
+          generation_lineage: pilotGenerationLineage.records.find(
+            (record) => record.slug === pilotSlugBySlot[spec.slot],
+          ),
         }
       : null,
     provenance: lessonProvenance,

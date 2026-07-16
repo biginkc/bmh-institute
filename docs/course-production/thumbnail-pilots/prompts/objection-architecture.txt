@@ -1,0 +1,11 @@
+Use case: stylized-concept
+Asset type: BMH Institute lesson-thumbnail pilot, wide 16:9 master designed to crop safely to 16:10
+Primary request: Create the Objection Architecture thumbnail. The five-second read must be “hear an objection, reframe it, build a calm response.” Use a large central bridge or modular arch assembled from three chunky sticker blocks: an ear icon on the left block, a curved reframe arrow on the center block, and a calm speech bubble with a check mark on the right block. Include a tiny thoughtful phone rep below the arch and two small floating puzzle-piece/support-beam icons.
+Input images: Image 1 and Image 2 are the canonical BMH Sticker System style references; Image 3 is a subject reference for the thoughtful phone-rep character only. Preserve the flat, loose sticker-sheet language of Images 1–2, simplify the character from Image 3, and do not reproduce a scene.
+Scene/backdrop: perfectly uniform flat cornflower-blue field with generous active negative space; floating sticker composition, never a continuous room, construction site, or environment
+Style/medium: hand-drawn flat sticker-sheet illustration; thick slightly wobbly black outlines; rounded imperfect primitive geometry; every object independently croppable
+Composition/framing: three-block arch centered and instantly legible left-to-right; small rep below but not touching an edge; support icons and a few purposeful doodle marks around it; keep all meaningful content inside central 80% for safe 16:9 and 16:10 crops
+Color palette: cornflower blue, golden yellow, orange, cream, white, and black only; 6 flat colors maximum
+Characters: one tiny rep with dot eyes, minimal facial features, cylindrical limbs, light hair, orange goggles resting on head, phone prop
+Constraints: no title, no words, no letters, no numbers, no logos, no watermark; absolutely uniform flat fills; no white sticker border; strong silhouettes; uniform complexity; the three-step visual logic must be obvious without labels
+Avoid: any gradient, texture, lighting, glow, shadow, reflection, depth, realistic perspective, photorealism, 3D rendering, complex diagrams, busy masonry, detailed interiors, edge-cropped key objects
