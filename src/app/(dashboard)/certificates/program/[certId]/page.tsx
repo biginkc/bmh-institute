@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { renderCertificateHtml } from "@/lib/certificates/render";
 
-import { CertificateLayout } from "../../course/[certId]/page";
+import { CertificateLayout } from "../../certificate-layout";
 
 export default async function ProgramCertificatePage({
   params,
@@ -69,6 +69,7 @@ export default async function ProgramCertificatePage({
     <CertificateLayout
       backHref="/certificates"
       backLabel="Back to certificates"
+      certificateType="Program certificate"
       html={html}
     />
   );
