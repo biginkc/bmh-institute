@@ -1,21 +1,26 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CheckCircle2, Circle, Lock, FileText, PenLine } from "lucide-react";
-
-import { Badge } from "@/components/ui/badge";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+  ArrowLeft,
+  Check,
+  Circle,
+  FileText,
+  Lock,
+  PenLine,
+} from "lucide-react";
+import type { AriaAttributes } from "react";
+
+import { Badge } from "@/components/bmh-ds/badge";
+import { Card } from "@/components/bmh-ds/card";
+import {
+  ProgressBar,
+  type ProgressBarProps,
+} from "@/components/bmh-ds/progress-bar";
 import { createClient } from "@/lib/supabase/server";
 import {
   shapeCourseResponse,
   type LessonSummary,
 } from "@/lib/courses/shape";
-import { cn } from "@/lib/utils";
 
 export default async function CoursePage({
   params,
@@ -75,13 +80,16 @@ export default async function CoursePage({
   if (!course) notFound();
 
   const completedLessonIds = new Set(
-    (completionsResult.data ?? []).map((c) => c.lesson_id as string),
+    (completionsResult.data ?? []).map((completion) =>
+      String(completion.lesson_id),
+    ),
   );
-
-  const allLessons = course.modules.flatMap((m) => m.lessons);
-  const requiredLessons = allLessons.filter((l) => l.is_required_for_completion);
-  const requiredDone = requiredLessons.filter((l) =>
-    completedLessonIds.has(l.id),
+  const allLessons = course.modules.flatMap((module) => module.lessons);
+  const requiredLessons = allLessons.filter(
+    (lesson) => lesson.is_required_for_completion,
+  );
+  const requiredDone = requiredLessons.filter((lesson) =>
+    completedLessonIds.has(lesson.id),
   ).length;
   const isCourseComplete =
     requiredLessons.length > 0 && requiredDone >= requiredLessons.length;
@@ -89,119 +97,129 @@ export default async function CoursePage({
     requiredLessons.length > 0
       ? Math.round((requiredDone / requiredLessons.length) * 100)
       : 0;
+  const courseProgressProps: ProgressBarProps & AriaAttributes = {
+    value: progressPct,
+    size: "md",
+    tone: isCourseComplete ? "green" : "yellow",
+    "aria-label": "Course progress",
+  };
+  const currentLessonId = allLessons.find(
+    (lesson) =>
+      !completedLessonIds.has(lesson.id) &&
+      !isLessonLocked(lesson, completedLessonIds),
+  )?.id;
 
   return (
-    <main className="mx-auto w-full max-w-4xl flex-1 p-6 md:p-10">
-      <div className="mb-6">
-        <Link href="/dashboard" className="text-muted-foreground hover:text-foreground text-xs">
-          ← Back to dashboard
-        </Link>
-      </div>
+    <div
+      className="mx-auto w-full max-w-5xl flex-1 p-5 font-[family-name:var(--font-body)] md:p-8 lg:p-10"
+      data-bmh-course-page
+    >
+      <Link
+        href="/dashboard"
+        className="inline-flex items-center gap-1.5 text-sm font-extrabold text-[var(--action)] underline-offset-4 hover:underline focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--action)]"
+      >
+        <ArrowLeft aria-hidden="true" className="size-4" />
+        Back to dashboard
+      </Link>
 
-      <div className="mb-8">
-        <h1 className="text-2xl font-semibold">{course.title}</h1>
+      <header className="mt-6 border-b border-[var(--border-hairline)] pb-8">
+        <Badge tone={isCourseComplete ? "green" : "solid"} size="sm">
+          {isCourseComplete ? "Course complete" : "In progress"}
+        </Badge>
+        <h1 className="mt-3 font-[family-name:var(--font-display)] text-4xl leading-[1.05] font-extrabold tracking-[-0.025em] text-[var(--ink-900)]">
+          {course.title}
+        </h1>
         {course.description ? (
-          <p className="text-muted-foreground mt-1 text-sm">{course.description}</p>
+          <p className="mt-2 max-w-3xl text-base leading-relaxed font-semibold text-[var(--text-muted)]">
+            {course.description}
+          </p>
         ) : null}
         {requiredLessons.length > 0 ? (
-          <div className="mt-4 flex flex-col gap-1.5">
-            <div className="flex items-center justify-between text-xs">
-              <span
-                className={cn(
-                  "font-medium",
-                  isCourseComplete
-                    ? "text-emerald-700 dark:text-emerald-300"
-                    : "text-muted-foreground",
-                )}
-              >
+          <div className="mt-6 max-w-3xl">
+            <div className="mb-2 flex items-center justify-between gap-4 text-sm font-extrabold">
+              <span className={isCourseComplete ? "text-[var(--success)]" : "text-[var(--ink-800)]"}>
                 {isCourseComplete
                   ? "Course complete"
                   : `${requiredDone} of ${requiredLessons.length} required lessons complete`}
               </span>
-              <span className="text-muted-foreground tabular-nums">
+              <span className="shrink-0 tabular-nums text-[var(--ink-900)]">
                 {progressPct}%
               </span>
             </div>
-            <div className="bg-muted h-1.5 w-full overflow-hidden rounded-full">
-              <div
-                className={cn(
-                  "h-full rounded-full transition-all",
-                  isCourseComplete ? "bg-emerald-500" : "bg-primary",
-                )}
-                style={{ width: `${progressPct}%` }}
-              />
-            </div>
+            <ProgressBar {...courseProgressProps} />
           </div>
         ) : null}
-      </div>
+      </header>
 
       {course.modules.length === 0 ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>No modules yet</CardTitle>
-            <CardDescription>Content is on the way.</CardDescription>
-          </CardHeader>
-        </Card>
+        <div className="mt-8">
+          <Card padding="lg">
+            <h2 className="font-[family-name:var(--font-display)] text-xl font-bold text-[var(--ink-900)]">
+              No modules yet
+            </h2>
+            <p className="mt-1 text-sm font-semibold text-[var(--text-muted)]">
+              Content is on the way.
+            </p>
+          </Card>
+        </div>
       ) : (
-        <div className="flex flex-col gap-6">
-          {course.modules.map((mod, modIdx) => {
-            const modRequired = mod.lessons.filter(
-              (l) => l.is_required_for_completion,
+        <div className="mt-8 flex flex-col gap-6">
+          {course.modules.map((module, moduleIndex) => {
+            const moduleRequired = module.lessons.filter(
+              (lesson) => lesson.is_required_for_completion,
             );
-            const modDone = modRequired.filter((l) =>
-              completedLessonIds.has(l.id),
+            const moduleDone = moduleRequired.filter((lesson) =>
+              completedLessonIds.has(lesson.id),
             ).length;
-            const modComplete =
-              modRequired.length > 0 && modDone >= modRequired.length;
+            const moduleComplete =
+              moduleRequired.length > 0 && moduleDone >= moduleRequired.length;
+
             return (
-            <Card key={mod.id}>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground text-sm tabular-nums">
-                    Module {modIdx + 1}
-                  </span>
-                  {modRequired.length > 0 ? (
-                    <span
-                      className={cn(
-                        "text-xs tabular-nums",
-                        modComplete
-                          ? "font-medium text-emerald-700 dark:text-emerald-300"
-                          : "text-muted-foreground",
-                      )}
-                    >
-                      {modComplete
-                        ? "Complete"
-                        : `${modDone} / ${modRequired.length}`}
-                    </span>
+              <Card key={module.id} padding="none" radius="lg">
+                <div className="flex flex-wrap items-start justify-between gap-4 border-b border-[var(--border-hairline)] px-5 py-5 md:px-7">
+                  <div>
+                    <p className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-[var(--text-muted)]">
+                      Module {moduleIndex + 1}
+                    </p>
+                    <h2 className="mt-1 font-[family-name:var(--font-display)] text-2xl leading-tight font-bold text-[var(--ink-900)]">
+                      {module.title}
+                    </h2>
+                    {module.description ? (
+                      <p className="mt-1 text-sm font-semibold text-[var(--text-muted)]">
+                        {module.description}
+                      </p>
+                    ) : null}
+                  </div>
+                  {moduleRequired.length > 0 ? (
+                    <Badge tone={moduleComplete ? "green" : "neutral"} size="sm">
+                      {moduleComplete ? "Complete" : `${moduleDone} / ${moduleRequired.length}`}
+                    </Badge>
                   ) : null}
                 </div>
-                <CardTitle className="mt-1">{mod.title}</CardTitle>
-                {mod.description ? (
-                  <CardDescription>{mod.description}</CardDescription>
-                ) : null}
-              </CardHeader>
-              <CardContent>
-                {mod.lessons.length === 0 ? (
-                  <p className="text-muted-foreground text-sm">No lessons yet.</p>
+
+                {module.lessons.length === 0 ? (
+                  <p className="px-5 py-6 text-sm font-semibold text-[var(--text-muted)] md:px-7">
+                    No lessons yet.
+                  </p>
                 ) : (
-                  <ol className="divide-border divide-y">
-                    {mod.lessons.map((lesson) => (
+                  <ol className="px-3 py-3 md:px-4">
+                    {module.lessons.map((lesson) => (
                       <LessonRow
                         key={lesson.id}
                         lesson={lesson}
                         completed={completedLessonIds.has(lesson.id)}
                         locked={isLessonLocked(lesson, completedLessonIds)}
+                        active={lesson.id === currentLessonId}
                       />
                     ))}
                   </ol>
                 )}
-              </CardContent>
-            </Card>
+              </Card>
             );
           })}
         </div>
       )}
-    </main>
+    </div>
   );
 }
 
@@ -217,38 +235,25 @@ function LessonRow({
   lesson,
   completed,
   locked,
+  active,
 }: {
   lesson: LessonSummary;
   completed: boolean;
   locked: boolean;
+  active: boolean;
 }) {
-  const href = `/lessons/${lesson.id}`;
-  const Icon = completed ? CheckCircle2 : locked ? Lock : Circle;
-
   const row = (
-    <div className="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0">
-      <div className="flex items-center gap-3">
-        <Icon
-          className={cn(
-            "size-4 shrink-0",
-            completed
-              ? "text-primary"
-              : locked
-                ? "text-muted-foreground"
-                : "text-muted-foreground",
-          )}
-        />
-        <div>
-          <span
-            className={cn(
-              "text-sm font-medium",
-              locked && "text-muted-foreground",
-            )}
-          >
+    <div className="flex min-h-16 items-center justify-between gap-4 px-3 py-3 md:px-4">
+      <div className="flex min-w-0 items-center gap-3">
+        <LessonStatus completed={completed} locked={locked} active={active} />
+        <div className="min-w-0">
+          <span className={`block text-sm font-extrabold ${locked ? "text-[var(--ink-500)]" : "text-[var(--ink-900)]"}`}>
             {lesson.title}
           </span>
-          {lesson.description ? (
-            <p className="text-muted-foreground mt-0.5 text-xs">{lesson.description}</p>
+          {lesson.description || locked ? (
+            <span className="mt-0.5 block text-xs font-semibold text-[var(--text-muted)]">
+              {locked ? "Locked" : lesson.description}
+            </span>
           ) : null}
         </div>
       </div>
@@ -257,38 +262,78 @@ function LessonRow({
   );
 
   if (locked) {
-    return <li className="cursor-not-allowed opacity-60">{row}</li>;
+    return (
+      <li className="cursor-not-allowed opacity-70">
+        {row}
+      </li>
+    );
   }
 
   return (
-    <li className="hover:bg-muted/40 -mx-2 rounded-md px-2 transition-colors">
-      <Link href={href} className="block">
+    <li>
+      <Link
+        href={`/lessons/${lesson.id}`}
+        aria-current={active ? "step" : undefined}
+        className={`block rounded-[var(--bmh-radius-md)] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--action)] ${
+          active
+            ? "bg-[var(--surface-tint)] shadow-[inset_3px_0_0_var(--action)]"
+            : "hover:bg-[var(--ink-050)]"
+        }`}
+      >
         {row}
       </Link>
     </li>
   );
 }
 
-function LessonTypeBadge({
-  type,
+function LessonStatus({
+  completed,
+  locked,
+  active,
 }: {
-  type: LessonSummary["lesson_type"];
+  completed: boolean;
+  locked: boolean;
+  active: boolean;
 }) {
+  const className = `flex size-7 shrink-0 items-center justify-center rounded-full border-2 ${
+    completed
+      ? "border-[var(--success)] bg-[var(--success)] text-white"
+      : active
+        ? "border-[var(--action)] bg-[var(--action)] text-white"
+        : "border-[var(--ink-300)] bg-[var(--paper)] text-[var(--ink-500)]"
+  }`;
+
+  return (
+    <span className={className} aria-hidden="true">
+      {completed ? (
+        <Check className="size-4" />
+      ) : locked ? (
+        <Lock className="size-3.5" />
+      ) : (
+        <Circle className="size-3 fill-current" />
+      )}
+    </span>
+  );
+}
+
+function LessonTypeBadge({ type }: { type: LessonSummary["lesson_type"] }) {
   if (type === "quiz") {
     return (
-      <Badge variant="outline" className="gap-1">
-        <FileText className="size-3" />
+      <Badge tone="blue" size="sm" icon={<FileText aria-hidden="true" className="size-3" />}>
         Quiz
       </Badge>
     );
   }
   if (type === "assignment") {
     return (
-      <Badge variant="outline" className="gap-1">
-        <PenLine className="size-3" />
+      <Badge tone="orange" size="sm" icon={<PenLine aria-hidden="true" className="size-3" />}>
         Assignment
       </Badge>
     );
   }
-  return <Badge variant="secondary">Content</Badge>;
+  return (
+    <Badge tone="neutral" size="sm">
+      Content
+    </Badge>
+  );
 }
