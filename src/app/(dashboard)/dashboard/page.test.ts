@@ -40,9 +40,10 @@ describe("DashboardPage learner onboarding", () => {
     expect(html).toContain("They can check your invite and role group.");
     expect(html).toContain("Check your profile");
     expect(html).toContain("Reset password");
+    expect(html).toContain("Andrea");
   });
 
-  it("renders the first action and completion expectations", async () => {
+  it("renders the real resume target and progress in the BMH dashboard", async () => {
     tableData = {
       programs: [
         {
@@ -90,11 +91,16 @@ describe("DashboardPage learner onboarding", () => {
 
     const html = renderToStaticMarkup(await DashboardPage());
 
-    expect(html).toContain("First step");
+    expect(html).toContain("In progress");
+    expect(html).toContain("Getting Started");
     expect(html).toContain("Your first task");
-    expect(html).toContain("Start next lesson");
+    expect(html).toContain("Resume lesson");
+    expect(html).toContain('href="/lessons/lesson-2"');
     expect(html).toContain("Complete required lessons");
     expect(html).toContain("1/2");
+    expect(html).toContain("50%");
+    expect(html).toContain("Continue learning");
+    expect(html).toContain("Welcome to BMH Institute");
     expect(html).toContain("Password help");
   });
 });
