@@ -20,7 +20,7 @@ setup("authenticate", async ({ page }) => {
   await page.goto("/login");
   await page.getByLabel(/email/i).fill(TEST_USER_EMAIL);
   await page.getByLabel(/password/i).fill(TEST_USER_PASSWORD);
-  await page.getByRole("button", { name: /^sign in$/i }).click();
+  await page.getByRole("button", { name: /^continue$/i }).click();
 
   await page.waitForURL(/\/(dashboard|auth\/set-password)/, { timeout: 20_000 });
 

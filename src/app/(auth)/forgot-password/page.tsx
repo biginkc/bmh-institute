@@ -2,18 +2,11 @@
 
 import Link from "next/link";
 import { useActionState } from "react";
+import { Mail } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Button, Card, Input } from "@/components/bmh-ds";
 
+import { AuthShell } from "../auth-shell";
 import {
   sendPasswordReset,
   type ForgotPasswordState,
@@ -26,59 +19,87 @@ export default function ForgotPasswordPage() {
   >(sendPasswordReset, null);
 
   return (
-    <div className="flex min-h-screen flex-1 items-center justify-center p-4">
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle>Reset password</CardTitle>
-          <CardDescription>
+    <AuthShell
+      pose="present"
+      message="No worries. Enter your email and I'll send a reset link."
+    >
+      {state && state.ok ? (
+        <>
+          <h1 className="font-[family-name:var(--font-display)] text-[28px] leading-tight font-bold text-[var(--ink-900)]">
+            Check your email
+          </h1>
+          <Card
+            role="status"
+            aria-live="polite"
+            padding="sm"
+            tint
+            style={{
+              color: "var(--text-body)",
+              fontFamily: "var(--font-body)",
+              fontSize: "var(--fs-body-sm)",
+              fontWeight: 700,
+              lineHeight: 1.55,
+            }}
+          >
+            Check your inbox for a reset link. If the address is on file,
+            it&apos;ll land there in a minute or two.
+          </Card>
+          <AuthLink />
+        </>
+      ) : (
+        <>
+          <h1 className="font-[family-name:var(--font-display)] text-[28px] leading-tight font-bold text-[var(--ink-900)]">
+            Reset password
+          </h1>
+          <p className="font-[family-name:var(--font-body)] text-sm leading-[1.55] font-semibold text-[var(--text-muted)]">
             Enter the email from your BMH Institute invite. We&apos;ll send a
             link to set a new password.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {state && state.ok ? (
-            <div className="flex flex-col gap-4">
-              <div className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-100">
-                Check your inbox for a reset link. If the address is on file,
-                it&apos;ll land there in a minute or two.
-              </div>
-              <Link
-                href="/login"
-                className="text-muted-foreground hover:text-foreground text-xs"
+          </p>
+          <form action={formAction} className="flex flex-col gap-[18px]">
+            <Input
+              id="email"
+              name="email"
+              type="email"
+              label="Work email"
+              icon={<Mail aria-hidden size={18} />}
+              autoComplete="email"
+              required
+            />
+            {state && !state.ok ? (
+              <Card
+                role="alert"
+                aria-live="assertive"
+                padding="sm"
+                tint
+                style={{
+                  border: "2px solid var(--danger)",
+                  color: "var(--danger)",
+                  fontFamily: "var(--font-body)",
+                  fontSize: "var(--fs-body-sm)",
+                  fontWeight: 700,
+                }}
               >
-                ← Back to sign in
-              </Link>
-            </div>
-          ) : (
-            <form action={formAction} className="flex flex-col gap-4">
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                />
-              </div>
-              {state && !state.ok ? (
-                <div className="border-destructive/30 bg-destructive/10 text-destructive rounded-md border px-3 py-2 text-sm">
-                  {state.error}
-                </div>
-              ) : null}
-              <Button type="submit" disabled={pending}>
-                {pending ? "Sending..." : "Send reset link"}
-              </Button>
-              <Link
-                href="/login"
-                className="text-muted-foreground hover:text-foreground text-center text-xs"
-              >
-                ← Back to sign in
-              </Link>
-            </form>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+                {state.error}
+              </Card>
+            ) : null}
+            <Button type="submit" size="lg" block disabled={pending}>
+              {pending ? "Sending..." : "Send reset link"}
+            </Button>
+            <AuthLink />
+          </form>
+        </>
+      )}
+    </AuthShell>
+  );
+}
+
+function AuthLink() {
+  return (
+    <Link
+      href="/login"
+      className="text-center font-[family-name:var(--font-body)] text-sm font-bold text-[var(--action)] underline-offset-4 hover:underline focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--action)]"
+    >
+      Back to sign in
+    </Link>
   );
 }
