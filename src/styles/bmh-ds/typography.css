@@ -1,0 +1,30 @@
+/* BMH Institute — Typography tokens */
+:root{
+  --font-display:var(--font-baloo-2),'Baloo 2 Fallback',system-ui,'Segoe UI',sans-serif;
+  --font-body:var(--font-nunito-sans),'Nunito Sans Fallback',system-ui,-apple-system,'Segoe UI',sans-serif;
+  /* Collision mapping: --font-mono -> --bmh-font-mono. */
+  --bmh-font-mono:ui-monospace,monospace;
+
+  /* Weights */
+  --fw-regular:400;    /* @kind font */
+  --fw-semibold:600;   /* @kind font */
+  --fw-bold:700;       /* @kind font */
+  --fw-extrabold:800;  /* @kind font */
+
+  /* Type scale (px). Display uses Baloo 2, body uses Nunito Sans. */
+  --fs-display-1:64px;   --lh-display-1:1.02; /* @kind other */ --ls-display-1:-0.01em; /* @kind other */
+  --fs-display-2:48px;   --lh-display-2:1.05; /* @kind other */ --ls-display-2:-0.01em; /* @kind other */
+  --fs-h1:36px;          --lh-h1:1.1;  /* @kind other */        --ls-h1:-0.005em; /* @kind other */
+  --fs-h2:28px;          --lh-h2:1.15; /* @kind other */
+  --fs-h3:22px;          --lh-h3:1.2;  /* @kind other */
+  --fs-title:18px;       --lh-title:1.3; /* @kind other */
+  --fs-body-lg:17px;     --lh-body-lg:1.55; /* @kind other */
+  --fs-body:15px;        --lh-body:1.55; /* @kind other */
+  --fs-body-sm:13px;     --lh-body-sm:1.5; /* @kind other */
+  --fs-caption:12px;     --lh-caption:1.4; /* @kind other */   --ls-caption:0.01em; /* @kind other */
+  --fs-overline:11px;    --lh-overline:1.3; /* @kind other */  --ls-overline:0.08em; /* @kind other */
+
+  /* Roles */
+  --text-display:var(--fw-extrabold) var(--fs-display-1)/var(--lh-display-1) var(--font-display); /* @kind font */
+  --text-heading:var(--fw-bold) var(--fs-h1)/var(--lh-h1) var(--font-display); /* @kind font */
+}
