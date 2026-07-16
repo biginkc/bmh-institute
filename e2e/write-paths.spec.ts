@@ -15,7 +15,7 @@ async function signIn(page: Page, email: string, password: string) {
   await page.goto("/login");
   await page.getByLabel(/email/i).fill(email);
   await page.getByLabel(/password/i).fill(password);
-  await page.getByRole("button", { name: /^sign in$/i }).click();
+  await page.getByRole("button", { name: /^continue$/i }).click();
   await page.waitForURL(/\/dashboard/, { timeout: 20_000 });
 }
 
@@ -175,7 +175,7 @@ test.describe("durable write-path coverage", () => {
 
       await page.getByLabel(/^new password$/i).fill(fixture.password);
       await page.getByLabel(/^confirm password$/i).fill(fixture.password);
-      await page.getByRole("button", { name: /save and continue/i }).click();
+      await page.getByRole("button", { name: /finish setup/i }).click();
       await page.waitForURL(/\/dashboard/, { timeout: 20_000 });
       await expect(page.getByText(`${fixture.prefix} Invite Program`)).toBeVisible();
 

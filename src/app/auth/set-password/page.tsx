@@ -1,12 +1,6 @@
 import { redirect } from "next/navigation";
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { AuthShell } from "@/app/(auth)/auth-shell";
 import { createClient } from "@/lib/supabase/server";
 
 import { SetPasswordForm } from "./set-password-form";
@@ -18,20 +12,23 @@ export default async function SetPasswordPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
+  return <SetPasswordScreen email={user.email ?? ""} />;
+}
+
+export function SetPasswordScreen({ email }: { email: string }) {
   return (
-    <div className="flex min-h-screen flex-1 items-center justify-center p-4">
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle>Set your password</CardTitle>
-          <CardDescription>
-            Welcome to BMH Institute. Pick a password, then start your assigned
-            training from the dashboard.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <SetPasswordForm email={user.email ?? ""} />
-        </CardContent>
-      </Card>
-    </div>
+    <AuthShell
+      pose="point"
+      message="Welcome aboard! Pick a password and you're in."
+    >
+      <h1 className="font-[family-name:var(--font-display)] text-[28px] leading-tight font-bold text-[var(--ink-900)]">
+        Set your password
+      </h1>
+      <p className="font-[family-name:var(--font-body)] text-sm leading-[1.55] font-semibold text-[var(--text-muted)]">
+        Welcome to BMH Institute. Pick a password, then start your assigned
+        training from the dashboard.
+      </p>
+      <SetPasswordForm email={email} />
+    </AuthShell>
   );
 }

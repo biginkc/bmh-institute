@@ -21,7 +21,7 @@ setup("authenticate via the live /login form", async ({ page }) => {
 
   await page.getByLabel(/email/i).fill(email);
   await page.getByLabel(/password/i).fill(password);
-  await page.getByRole("button", { name: /^sign in$/i }).click();
+  await page.getByRole("button", { name: /^continue$/i }).click();
 
   // Supabase redirects into the app; wait for a dashboard surface.
   await page.waitForURL(/\/(dashboard|auth\/set-password)/, { timeout: 20_000 });
