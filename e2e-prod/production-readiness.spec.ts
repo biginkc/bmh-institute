@@ -22,7 +22,7 @@ async function signIn(page: Page, email: string, password: string) {
   await page.goto("/login");
   await page.getByLabel(/email/i).fill(email);
   await page.getByLabel(/password/i).fill(password);
-  await page.getByRole("button", { name: /^sign in$/i }).click();
+  await page.getByRole("button", { name: /^continue$/i }).click();
   await page.waitForURL(/\/dashboard/, { timeout: 20_000 });
 }
 
@@ -403,7 +403,7 @@ test.describe("production readiness email links", () => {
       await expect(inviteePage.getByLabel(/email/i)).toHaveValue(inviteeEmail);
       await inviteePage.getByLabel(/^new password$/i).fill(fixture.password);
       await inviteePage.getByLabel(/^confirm password$/i).fill(fixture.password);
-      await inviteePage.getByRole("button", { name: /save and continue/i }).click();
+      await inviteePage.getByRole("button", { name: /finish setup/i }).click();
       await inviteePage.waitForURL(/\/dashboard/, { timeout: 20_000 });
       await expect(
         inviteePage.getByText(`${fixture.prefix} Invite Program`),
@@ -462,7 +462,7 @@ test.describe("production readiness email links", () => {
       await expect(page.getByLabel(/email/i)).toHaveValue(email);
       await page.getByLabel(/^new password$/i).fill(fixture.newPassword);
       await page.getByLabel(/^confirm password$/i).fill(fixture.newPassword);
-      await page.getByRole("button", { name: /save and continue/i }).click();
+      await page.getByRole("button", { name: /finish setup/i }).click();
       await page.waitForURL(/\/dashboard/, { timeout: 20_000 });
 
       await page.goto("/auth/signout");
