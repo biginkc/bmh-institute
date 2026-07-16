@@ -49,6 +49,9 @@ Implement the approved concurrent completion plan for the reusable BMH Institute
 - Untouched baseline verification passed: 64 unit files with 267 tests and 34 RTL files with 79 tests.
 - Untouched production build passed. Baseline warnings are the Next.js middleware deprecation and Node `module.register()` deprecation.
 - Dependency install reported 19 inherited audit findings: 2 low, 7 moderate, 9 high and 1 critical. Dependency remediation is tracked separately from course behavior so it cannot be hidden by this migration.
+- The authenticated production project was confirmed as `bmh-institute` (`dhvfsyteqsxagokoerrx`). Its latest completed physical backup before implementation is backup `1130851936`, created at `2026-07-16T11:34:16.963Z`. PITR is not enabled.
+- A read-only storage inventory found the `content` and `submissions` buckets with no listed objects. This must be rechecked immediately before import or fixture cleanup.
+- The missing local PostgreSQL export runtime was installed without changing the shell profile. Private schema and data dumps were captured under `_codex_backups/bmh-institute-2026-07-16/` with a checksum-backed rollback record. The data-only dump warns about the circular `lessons` relationship, so a controlled restore rehearsal remains required before destructive cleanup.
 
 ## Hard gates
 
