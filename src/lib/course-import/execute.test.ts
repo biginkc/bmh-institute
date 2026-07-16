@@ -6,13 +6,14 @@ import {
   reconcileImportPlan,
   rollbackImportPlan,
   type CourseImportAdapter,
+  type RollbackOwnedIds,
 } from "./execute";
-import { buildImportPlan } from "./operations";
+import { buildImportPlan, deterministicImportId } from "./operations";
 import { validCourseManifest } from "./test-fixtures";
 
 function recordingAdapter(plan = buildImportPlan(validCourseManifest())) {
   const writes: Array<{ table: string; row: Record<string, unknown> }> = [];
-  const rollbacks: Array<{ importId: string; ownedIds: Record<string, string[]> }> = [];
+  const rollbacks: Array<{ importId: string; ownedIds: RollbackOwnedIds }> = [];
   const adapter: CourseImportAdapter = {
     async upsert(table, row) { writes.push({ table, row }); },
     async readRows(table, ids) {
@@ -56,7 +57,9 @@ describe("course import execution", () => {
     const plan = buildImportPlan(validCourseManifest());
     const recorder = recordingAdapter();
     await rollbackImportPlan(plan, recorder.adapter);
-    const deletedIds = new Set(Object.values(recorder.rollbacks[0].ownedIds).flat());
+    const deletedIds = new Set(
+      Object.values(recorder.rollbacks[0].ownedIds).flat().map((entry) => entry.id),
+    );
     const manifestIds = new Set(plan.operations.map((operation) => operation.id));
     expect(deletedIds).toEqual(manifestIds);
     expect(recorder.rollbacks).toHaveLength(1);
@@ -66,10 +69,12 @@ describe("course import execution", () => {
   it("batches reconcile filters and confirms an atomic rollback above 1,292 IDs", async () => {
     const base = buildImportPlan(validCourseManifest());
     const operations = Array.from({ length: 1_293 }, (_, index) => {
-      const id = `00000000-0000-4000-8000-${String(index).padStart(12, "0")}`;
+      const sourceKey = `bulk-option-${index}`;
+      const id = deterministicImportId(base.importId, sourceKey);
       return {
         table: "answer_options" as const,
         action: "upsert" as const,
+        sourceKey,
         id,
         row: { id },
       };

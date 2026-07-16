@@ -104,11 +104,11 @@ npm run test:integration -- src/lib/course-import/atomic-rollback.integration.te
 ```
 
 The rollback integration suite uses only `TEST_SUPABASE_*` credentials. It
-proves a complete synthetic rollback, proves an unexplained dependent aborts
-without partial deletion, and proves anonymous and authenticated clients
-cannot execute the service-role-only function. A skipped suite is not
-acceptance evidence; all three rollback tests must run and pass on the
-disposable project.
+proves every independent synthetic catalog row is deleted, unknown IDs and
+external dependents abort with zero partial deletion, QA-group invite overlap
+blocks rollback, and anonymous and authenticated clients cannot execute the
+service-role-only function. A skipped suite is not acceptance evidence; all
+rollback tests must run and pass on the disposable project.
 
 Then confirm the bucket kept its prior allowlist and added Markdown exactly once:
 
@@ -140,6 +140,6 @@ any production migration.
 - Apply uses deterministic upserts so reruns do not create duplicates.
 - Verify compares every manifest-owned database field and confirms storage size, checksum metadata, and exact remote bytes.
 - Verify reads use bounded ID batches so large manifests do not create oversized PostgREST filters.
-- Database rollback sends the complete deterministic ID set to one service-role-only database function. The function validates the payload, locks every catalog and dependent table, checks for learner activity, certificates, QA-group memberships, and unexplained catalog dependents, then performs all database deletions in the same transaction.
+- Database rollback sends each deterministic ID together with its source key to one service-role-only database function. Migration 019 predates the explicit `content_import_id` columns in migration 020, so it proves provenance by recomputing every UUID from `import_id + source_key` and requiring a complete closed catalog graph. This assumes the import was applied through the deterministic importer; hand-created rows that deliberately reuse those exact derived IDs are outside the rollback contract. The function locks every catalog and dependent table, rejects missing IDs and QA-group invite overlap, checks learner activity, certificates, memberships, and unexplained dependents, then verifies every actual per-table delete count in the same transaction.
 - Storage rollback automatically deletes nothing because the storage API has no conditional delete. It inspects approved objects only and reports exact import-owned, size-matched, checksum-matched objects as manual cleanup candidates; uncertain, raced, held, missing, or unrelated objects are preserved.
 - Authentication accounts, audit history, learner activity, and unrelated storage objects are never rollback targets.

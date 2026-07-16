@@ -64,16 +64,28 @@ export function assertSafeTusUrl(candidate: string, endpoint: string) {
   const normalizedEndpoint = new URL(normalizeTusEndpoint(endpoint));
   const url = new URL(candidate);
   const routePrefix = `${normalizedEndpoint.pathname}/`;
+  const encodedPathControl = /%(?:25|2e|2f|5c)/i.test(url.pathname);
   let decodedPath: string;
   try {
     decodedPath = decodeURIComponent(url.pathname);
   } catch {
     throw new Error(`Refusing malformed TUS upload URL: ${candidate}`);
   }
+  const suffix = decodedPath === normalizedEndpoint.pathname
+    ? ""
+    : decodedPath.slice(routePrefix.length);
+  const unsafeSegment = suffix !== "" && suffix
+    .split("/")
+    .some((segment) => segment === "" || segment === "." || segment === "..");
   if (
     url.username ||
     url.password ||
+    url.search ||
+    url.hash ||
     url.origin !== normalizedEndpoint.origin ||
+    encodedPathControl ||
+    decodedPath.includes("\\") ||
+    unsafeSegment ||
     (url.pathname !== normalizedEndpoint.pathname && !url.pathname.startsWith(routePrefix)) ||
     (decodedPath !== normalizedEndpoint.pathname && !decodedPath.startsWith(routePrefix))
   ) {

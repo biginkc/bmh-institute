@@ -102,6 +102,14 @@ describe("shared TUS safety", () => {
         ENDPOINT,
       ),
     ).toThrow(/unsafe TUS upload URL/i);
+    for (const candidate of [
+      `${ENDPOINT}/%252e%252e/object/x`,
+      `${ENDPOINT}/%2f..%2fobject/x`,
+      `${ENDPOINT}//double-slash`,
+      `${ENDPOINT}/upload-id?redirect=1`,
+    ]) {
+      expect(() => assertSafeTusUrl(candidate, ENDPOINT)).toThrow(/unsafe TUS upload URL/i);
+    }
   });
 
   it("rejects cleartext non-loopback endpoints", () => {

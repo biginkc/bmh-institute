@@ -2,7 +2,8 @@ import type { ImportPlan, ImportTable } from "./operations";
 
 export const POSTGREST_ID_BATCH_SIZE = 100;
 
-export type RollbackOwnedIds = Record<ImportTable, string[]>;
+export type RollbackOwnedEntry = { id: string; source_key: string };
+export type RollbackOwnedIds = Record<ImportTable, RollbackOwnedEntry[]>;
 
 export interface CourseImportAdapter {
   upsert(table: ImportTable, row: Record<string, unknown>): Promise<void>;
@@ -61,7 +62,7 @@ export async function reconcileImportPlan(plan: ImportPlan, adapter: CourseImpor
 export async function rollbackImportPlan(plan: ImportPlan, adapter: CourseImportAdapter) {
   const ownedIds = buildRollbackOwnedIds(plan);
   const response = await adapter.rollbackAtomically(plan.importId, ownedIds);
-  const expectedCount = Object.values(ownedIds).reduce((total, ids) => total + ids.length, 0);
+  const expectedCount = Object.values(ownedIds).reduce((total, entries) => total + entries.length, 0);
   if (
     !response ||
     typeof response !== "object" ||
@@ -75,7 +76,12 @@ export async function rollbackImportPlan(plan: ImportPlan, adapter: CourseImport
 }
 
 export function buildRollbackOwnedIds(plan: ImportPlan): RollbackOwnedIds {
-  const grouped = groupPlanIds(plan);
+  const grouped = new Map<ImportTable, RollbackOwnedEntry[]>();
+  for (const operation of plan.operations) {
+    const entries = grouped.get(operation.table) ?? [];
+    entries.push({ id: operation.id, source_key: operation.sourceKey });
+    grouped.set(operation.table, entries);
+  }
   return Object.fromEntries(
     ROLLBACK_ORDER.map((table) => [table, grouped.get(table) ?? []]),
   ) as RollbackOwnedIds;

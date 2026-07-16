@@ -3,6 +3,8 @@ import { randomBytes, randomUUID } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 import { describe, expect, it } from "vitest";
 
+import { deterministicImportId } from "./operations";
+
 const url = process.env.TEST_SUPABASE_URL;
 const anonKey = process.env.TEST_SUPABASE_ANON_KEY;
 const serviceKey = process.env.TEST_SUPABASE_SERVICE_ROLE_KEY;
@@ -16,6 +18,13 @@ const admin = envPresent
 
 type CatalogFixture = {
   importId: string;
+  sourceKeys: {
+    roleGroup: string;
+    program: string;
+    course: string;
+    programCourse: string;
+    programAccess: string;
+  };
   roleGroupId: string;
   programId: string;
   courseId: string;
@@ -23,7 +32,16 @@ type CatalogFixture = {
   programAccessId: string;
 };
 
-function ownedPayload(fixture?: CatalogFixture) {
+type OwnedEntry = { id: string; source_key: string };
+type OwnedPayload = Record<
+  | "answer_options" | "questions" | "content_blocks" | "lessons"
+  | "assignments" | "quizzes" | "modules" | "program_access"
+  | "program_courses" | "courses" | "programs" | "role_groups",
+  OwnedEntry[]
+>;
+
+function ownedPayload(fixture?: CatalogFixture): OwnedPayload {
+  const entry = (id: string, source_key: string) => ({ id, source_key });
   return {
     answer_options: [],
     questions: [],
@@ -32,24 +50,39 @@ function ownedPayload(fixture?: CatalogFixture) {
     assignments: [],
     quizzes: [],
     modules: [],
-    program_access: fixture ? [fixture.programAccessId] : [],
-    program_courses: fixture ? [fixture.programCourseId] : [],
-    courses: fixture ? [fixture.courseId] : [],
-    programs: fixture ? [fixture.programId] : [],
-    role_groups: fixture ? [fixture.roleGroupId] : [],
+    program_access: fixture
+      ? [entry(fixture.programAccessId, fixture.sourceKeys.programAccess)]
+      : [],
+    program_courses: fixture
+      ? [entry(fixture.programCourseId, fixture.sourceKeys.programCourse)]
+      : [],
+    courses: fixture ? [entry(fixture.courseId, fixture.sourceKeys.course)] : [],
+    programs: fixture ? [entry(fixture.programId, fixture.sourceKeys.program)] : [],
+    role_groups: fixture
+      ? [entry(fixture.roleGroupId, fixture.sourceKeys.roleGroup)]
+      : [],
   };
 }
 
 async function createCatalogFixture(): Promise<CatalogFixture> {
   if (!admin) throw new Error("Test-project service client is unavailable.");
   const suffix = randomBytes(8).toString("hex");
+  const importId = `rollback-integration-${suffix}`;
+  const sourceKeys = {
+    roleGroup: `rollback-role-group-${suffix}`,
+    program: `rollback-program-${suffix}`,
+    course: `rollback-course-${suffix}`,
+    programCourse: `rollback-program-course-${suffix}`,
+    programAccess: `rollback-program-access-${suffix}`,
+  };
   const fixture = {
-    importId: `rollback-integration-${suffix}`,
-    roleGroupId: randomUUID(),
-    programId: randomUUID(),
-    courseId: randomUUID(),
-    programCourseId: randomUUID(),
-    programAccessId: randomUUID(),
+    importId,
+    sourceKeys,
+    roleGroupId: deterministicImportId(importId, sourceKeys.roleGroup),
+    programId: deterministicImportId(importId, sourceKeys.program),
+    courseId: deterministicImportId(importId, sourceKeys.course),
+    programCourseId: deterministicImportId(importId, sourceKeys.programCourse),
+    programAccessId: deterministicImportId(importId, sourceKeys.programAccess),
   };
   try {
     const { error: roleError } = await admin.from("role_groups").insert({
@@ -127,13 +160,69 @@ describe.skipIf(!envPresent)("atomic course import rollback on a test project", 
         owned_id_count: 5,
       });
 
-      const { count, error: countError } = await admin
-        .from("programs")
-        .select("id", { count: "exact", head: true })
-        .eq("id", fixture.programId);
-      if (countError) throw countError;
-      expect(count).toBe(0);
+      for (const [table, id] of [
+        ["role_groups", fixture.roleGroupId],
+        ["programs", fixture.programId],
+        ["courses", fixture.courseId],
+        ["program_courses", fixture.programCourseId],
+        ["program_access", fixture.programAccessId],
+      ] as const) {
+        const { count, error: countError } = await admin
+          .from(table)
+          .select("id", { count: "exact", head: true })
+          .eq("id", id);
+        if (countError) throw countError;
+        expect(count, `${table}.${id} must be deleted`).toBe(0);
+      }
     } finally {
+      await removeFixture(fixture);
+    }
+  });
+
+  it("rejects one unknown deterministic ID without partially deleting owned rows", async () => {
+    if (!admin) throw new Error("Test-project service client is unavailable.");
+    const fixture = await createCatalogFixture();
+    const sourceKey = `unknown-answer-${randomBytes(8).toString("hex")}`;
+    const payload = ownedPayload(fixture);
+    payload.answer_options.push({
+      id: deterministicImportId(fixture.importId, sourceKey),
+      source_key: sourceKey,
+    });
+    try {
+      const { error } = await admin.rpc("fn_rollback_course_import", {
+        p_import_id: fixture.importId,
+        p_owned: payload,
+      });
+      expect(error?.message).toMatch(/unknown answer_options id/i);
+      await expectCatalogPresent(fixture);
+    } finally {
+      await removeFixture(fixture);
+    }
+  });
+
+  it("blocks an invite that still references the QA role group with zero partial delete", async () => {
+    if (!admin) throw new Error("Test-project service client is unavailable.");
+    const fixture = await createCatalogFixture();
+    const inviteId = randomUUID();
+    try {
+      const { error: inviteError } = await admin.from("invites").insert({
+        id: inviteId,
+        email: `rollback-invite-${randomBytes(6).toString("hex")}@bmh.invalid`,
+        role_group_ids: [fixture.roleGroupId],
+        system_role: "learner",
+        token: randomBytes(24).toString("hex"),
+        expires_at: new Date(Date.now() + 86_400_000).toISOString(),
+      });
+      if (inviteError) throw inviteError;
+
+      const { error } = await admin.rpc("fn_rollback_course_import", {
+        p_import_id: fixture.importId,
+        p_owned: ownedPayload(fixture),
+      });
+      expect(error?.message).toMatch(/invites reference the qa group/i);
+      await expectCatalogPresent(fixture);
+    } finally {
+      await admin.from("invites").delete().eq("id", inviteId);
       await removeFixture(fixture);
     }
   });
@@ -164,12 +253,13 @@ describe.skipIf(!envPresent)("atomic course import rollback on a test project", 
 
   it("denies execute to anonymous and authenticated clients", async () => {
     if (!admin || !url || !anonKey) throw new Error("Test-project clients are unavailable.");
+    const fixture = await createCatalogFixture();
     const anonymous = createClient(url, anonKey, {
       auth: { autoRefreshToken: false, persistSession: false },
     });
     const deniedAnon = await anonymous.rpc("fn_rollback_course_import", {
-      p_import_id: "rollback-privilege-test",
-      p_owned: ownedPayload(),
+      p_import_id: fixture.importId,
+      p_owned: ownedPayload(fixture),
     });
     expect(deniedAnon.error).not.toBeNull();
 
@@ -192,12 +282,14 @@ describe.skipIf(!envPresent)("atomic course import rollback on a test project", 
       const signedIn = await authenticated.auth.signInWithPassword({ email, password });
       if (signedIn.error) throw signedIn.error;
       const deniedAuthenticated = await authenticated.rpc("fn_rollback_course_import", {
-        p_import_id: "rollback-privilege-test",
-        p_owned: ownedPayload(),
+        p_import_id: fixture.importId,
+        p_owned: ownedPayload(fixture),
       });
       expect(deniedAuthenticated.error).not.toBeNull();
+      await expectCatalogPresent(fixture);
     } finally {
       if (userId) await admin.auth.admin.deleteUser(userId).catch(() => undefined);
+      await removeFixture(fixture);
     }
   });
 });

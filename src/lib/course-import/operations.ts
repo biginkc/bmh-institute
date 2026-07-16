@@ -24,6 +24,7 @@ export type ImportTable =
 export type ImportOperation = {
   table: ImportTable;
   action: "upsert";
+  sourceKey: string;
   id: string;
   row: Record<string, unknown>;
 };
@@ -56,7 +57,13 @@ export function buildImportPlan(manifest: CourseImportManifest): ImportPlan {
   const assets = new Map(manifest.assets.map((asset) => [asset.source_key, asset]));
   const add = (table: ImportTable, sourceKey: string, row: Record<string, unknown>) => {
     const rowId = id(sourceKey);
-    operations.push({ table, action: "upsert", id: rowId, row: { id: rowId, ...row } });
+    operations.push({
+      table,
+      action: "upsert",
+      sourceKey,
+      id: rowId,
+      row: { id: rowId, ...row },
+    });
     return rowId;
   };
 

@@ -317,6 +317,12 @@ describe("TUS resume isolation", () => {
         ENDPOINT,
       ),
     ).toThrow(/unsafe TUS upload URL/i);
+    expect(() =>
+      assertSafeTusRequestUrl(`${ENDPOINT}/%252e%252e/object/upload-id`, ENDPOINT),
+    ).toThrow(/unsafe TUS upload URL/i);
+    expect(() =>
+      assertSafeTusRequestUrl(`${ENDPOINT}/%2f..%2fobject/upload-id`, ENDPOINT),
+    ).toThrow(/unsafe TUS upload URL/i);
   });
 
   it("rejects cleartext cloud endpoints before credentials can be attached", () => {
