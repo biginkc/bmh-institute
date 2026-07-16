@@ -1,0 +1,2817 @@
+{
+  "schema_version": "bmh-artwork-production/v1",
+  "status": "blocked-pending-pilot-approval",
+  "generation_policy": {
+    "gate": "Jarrad must approve all three pilots before any new image generation",
+    "generator": "built-in image_gen",
+    "call_strategy": "one distinct image_gen call per cover or lesson master",
+    "model_native_text": "forbidden",
+    "manifest_approval_updates": "forbidden until visual QA and explicit approval",
+    "upload_or_publish": "forbidden in artwork production"
+  },
+  "style_system": {
+    "name": "BMH Sticker System",
+    "reference_inputs": [
+      {
+        "id": "style-ref-1",
+        "role": "canonical BMH Sticker System style",
+        "path": "docs/design/style-ref-1.png",
+        "sha256": "d65ce4c3fc84a0a52b08e513d42d978f94d5db2f6e59034aedbbd1e9486c18ca"
+      },
+      {
+        "id": "style-ref-2",
+        "role": "canonical BMH Sticker System style",
+        "path": "docs/design/style-ref-2.png",
+        "sha256": "f1affc2ab6b931be8cfd6920165dff330d49b79e6f4abfe5568e67e70c6934a6"
+      },
+      {
+        "id": "orientation-building",
+        "role": "Orientation subject reference only",
+        "path": "course-assets/scenes/module-v0/mV0_LV0_s10_bmh-lowangle.png",
+        "sha256": "438bab4f68f7b71e5daec17def6ea1ceb091e010b57c135968746fba92ba42dc"
+      },
+      {
+        "id": "opening-phone-shapes",
+        "role": "Opening the Call subject reference only",
+        "path": "course-assets/scenes/module-05/m05_L5A_phones.png",
+        "sha256": "2d59d64e913c43b1fba45080b0bf59c9e51356f1d4b057c5d2831bfa0f7af6e8"
+      },
+      {
+        "id": "objection-character",
+        "role": "Objection Architecture character reference only",
+        "path": "course-assets/scenes/module-07/m07_L7A_b03_reframe.png",
+        "sha256": "57fe03b31eca46336c664c2ca78cf877b8db3138443964e7976ce70eb91db311"
+      }
+    ],
+    "palette_rgb": [
+      [
+        103,
+        182,
+        255
+      ],
+      [
+        255,
+        211,
+        1
+      ],
+      [
+        255,
+        174,
+        1
+      ],
+      [
+        255,
+        110,
+        0
+      ],
+      [
+        254,
+        255,
+        198
+      ],
+      [
+        255,
+        255,
+        255
+      ],
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        105,
+        153,
+        53
+      ]
+    ],
+    "crop_profiles": {
+      "full-safe": {
+        "x": 0,
+        "y": 0,
+        "width": 1,
+        "height": 1
+      },
+      "left-safe": {
+        "x": 0.05,
+        "y": 0.2,
+        "width": 0.6,
+        "height": 0.6
+      },
+      "center-safe": {
+        "x": 0.2,
+        "y": 0.2,
+        "width": 0.6,
+        "height": 0.6
+      },
+      "right-safe": {
+        "x": 0.35,
+        "y": 0.2,
+        "width": 0.6,
+        "height": 0.6
+      }
+    },
+    "safe_crop_rules": [
+      "Generate a 16:9 master with all meaningful objects inside the central 80 percent.",
+      "Build the 16:10 lesson card by containment and solid palette padding. Never crop a lesson master to make the card.",
+      "A focused poster crop must contain its complete named subject with at least 5 percent internal breathing room.",
+      "If a generated anchor misses its declared safe zone, reject or correct the master. Do not move the crop to another subject.",
+      "All 29 final poster pixel SHA-256 values must be unique. A checksum collision means a duplicated poster and blocks approval.",
+      "A human must confirm each focused poster still depicts its mapped video title before manifest approval."
+    ]
+  },
+  "course_cover": {
+    "asset_key": "thumbnail-program-bmh-employee-training",
+    "output_path": "course-assets/thumbnails/program-bmh-employee-training.webp",
+    "source_path": "course-assets/thumbnails/production/sources/program-bmh-employee-training-generated.png",
+    "flat_master_path": "course-assets/thumbnails/production/flat-masters/program-bmh-employee-training-flat-master.png",
+    "reference_ids": [
+      "style-ref-1",
+      "style-ref-2"
+    ],
+    "prompt": "Use case: stylized-concept\nAsset type: BMH Institute BMH Employee Training course cover, wide 16:9 master designed to crop safely to 16:10\nPrimary request: Create the course cover for BMH Employee Training. The five-second read must be “one clear path from orientation through confident service and career growth.” Use a welcoming training doorway as the central hero sticker. Arrange six small supporting stickers around it for the six course sections: compass and checklist, homeowner and heart, connected speech bubbles, ear and reframe arrow, calendar and handshake, and a clean dashboard leading to broad growth steps.\nInput images: Image 1 and Image 2 are the canonical BMH Sticker System style references. Use them only for the flat visual language, line quality, palette, character simplicity, and sticker spacing. Do not copy their subjects or layouts.\nScene/backdrop: perfectly uniform flat cornflower-blue field with generous active negative space; a floating sticker composition, never a continuous building interior, landscape, or realistic environment\nStyle/medium: hand-drawn flat sticker-sheet illustration; thick slightly wobbly black outlines; rounded imperfect primitive geometry; strong simple silhouettes; every object independently croppable\nComposition/framing: large welcoming doorway centered with a tiny learner moving toward it; six supporting course-section stickers form a loose balanced path around the doorway; keep all meaningful content inside the central 80% so the 16:9 source and 16:10 contained card remain intact\nColor palette: cornflower blue, golden yellow, amber, orange, cream, white, black, and one muted green; exactly the locked eight-color palette after deterministic flattening; no extra colors\nCharacters: one tiny learner with dot eyes, minimal face, cylindrical limbs, and a simple silhouette\nConstraints: no title, no words, no letters, no numbers, no currency amounts, no logos, no watermark; absolutely uniform flat fills; no white sticker border; no fixed performance promises; the six section motifs must read as one learning journey rather than six disconnected scenes\nAvoid: gradients, texture, lighting, glow, shadows, reflections, depth, realistic perspective, photorealism, 3D rendering, detailed architecture, tiny unreadable symbols, busy backgrounds, edge-cropped key objects, and lesson-specific subject dominance",
+    "provenance": {
+      "generator": "built-in image_gen",
+      "generation_call": "one-distinct-call",
+      "source_capture_required": true,
+      "prompt_checksum_required": true,
+      "reference_checksums_required": true,
+      "generated_at_required": true,
+      "generated_by_required": true,
+      "model_output_path_required": true
+    },
+    "approval": {
+      "status": "blocked-pending-pilot-approval",
+      "approved_by": null,
+      "approved_at": null,
+      "evidence": null
+    }
+  },
+  "lessons": [
+    {
+      "slot": "slot-01",
+      "lesson_source_key": "lesson-content-slot-01",
+      "title": "Welcome and Mindset",
+      "pilot": true,
+      "production_source_mode": "promote-approved-pilot-flat-master",
+      "reference_ids": [
+        "style-ref-1",
+        "style-ref-2",
+        "orientation-building"
+      ],
+      "prompt": "Use case: stylized-concept\nAsset type: BMH Institute lesson-thumbnail pilot, wide 16:9 master designed to crop safely to 16:10\nPrimary request: Create the Orientation thumbnail for a new employee beginning BMH Institute. Show an iconic welcoming BMH training building as one large central sticker, with a simple open doorway, a tiny new learner approaching, a small compass, checklist, and upward path markers floating as separate supporting stickers. The five-second read should be “welcome, direction, begin training.”\nInput images: Image 1 and Image 2 are the canonical BMH Sticker System style references; Image 3 is a subject reference for the recognizable BMH building only. Preserve the flat sticker language from Images 1–2 and simplify the building from Image 3 into an icon rather than a realistic scene.\nScene/backdrop: uninterrupted flat cornflower-blue field with generous active negative space; floating sticker composition, never a continuous environment\nStyle/medium: hand-drawn flat sticker-sheet illustration; thick slightly wobbly black outlines; rounded imperfect primitive geometry; every object is an individually croppable sticker\nComposition/framing: large building sticker centered slightly right, tiny learner and open-door cue lower left, small compass/checklist/path marks balanced around it; keep all meaningful content inside the central 80% so both 16:9 and 16:10 crops remain intact\nColor palette: cornflower blue, golden yellow, orange, cream, white, black, and at most one muted green; 6–8 flat colors maximum\nCharacters: tiny scale, dot eyes, minimal face, cylindrical limbs, simple silhouette\nConstraints: no title, no words, no letters, no logos, no watermark; flat fills only; strong silhouettes; uniform complexity; decorative doodles limited to a few purposeful sparkles and motion marks\nAvoid: gradients, texture, lighting, shadows, reflections, depth, realistic perspective, photorealism, 3D rendering, detailed architecture, busy interiors, edge-cropped key objects",
+      "master": {
+        "id": "master-slot-01",
+        "source_path": "course-assets/thumbnails/production/sources/slot-01-generated.png",
+        "flat_master_path": "course-assets/thumbnails/production/flat-masters/slot-01-flat-master.png",
+        "expected_aspect_ratio": "16:9",
+        "meaningful_content_bounds": {
+          "x_min_percent": 10,
+          "x_max_percent": 90,
+          "y_min_percent": 10,
+          "y_max_percent": 90
+        }
+      },
+      "lesson_card": {
+        "asset_key": "thumbnail-slot-01",
+        "output_path": "course-assets/thumbnails/slot-01.webp",
+        "derivative": {
+          "source_master_id": "master-slot-01",
+          "target_dimensions": [
+            1280,
+            800
+          ],
+          "method": "contain-master-at-1280x720-and-pad-40px-top-and-bottom",
+          "padding_color_rgb": [
+            103,
+            182,
+            255
+          ],
+          "crop_allowed": false,
+          "resample": "lanczos",
+          "output_format": "lossless-webp"
+        },
+        "provenance": {
+          "generator": "built-in image_gen",
+          "generation_call": "one-distinct-call",
+          "source_capture_required": true,
+          "prompt_checksum_required": true,
+          "reference_checksums_required": true,
+          "generated_at_required": true,
+          "generated_by_required": true,
+          "model_output_path_required": true
+        },
+        "approval": {
+          "status": "blocked-pending-pilot-approval",
+          "approved_by": null,
+          "approved_at": null,
+          "evidence": null
+        }
+      },
+      "posters": [
+        {
+          "asset_key": "poster-video-slot-01-welcome",
+          "video_asset_key": "video-slot-01-welcome",
+          "video_title": "Welcome and the Navigator's Playbook",
+          "output_path": "course-assets/posters/video-slot-01-welcome.webp",
+          "focus_subject": "welcome at the open training doorway",
+          "derivative": {
+            "recipe_id": "slot-01-video-slot-01-welcome-full-safe",
+            "source_master_id": "master-slot-01",
+            "crop_profile": "full-safe",
+            "target_dimensions": [
+              1280,
+              720
+            ],
+            "resample": "lanczos",
+            "output_format": "lossless-webp",
+            "duplicate_pixel_sha256_forbidden": true,
+            "visual_subject_confirmation_required": true
+          },
+          "provenance": {
+            "generator": "built-in image_gen",
+            "generation_call": "one-distinct-call",
+            "source_capture_required": true,
+            "prompt_checksum_required": true,
+            "reference_checksums_required": true,
+            "generated_at_required": true,
+            "generated_by_required": true,
+            "model_output_path_required": true
+          },
+          "approval": {
+            "status": "blocked-pending-pilot-approval",
+            "approved_by": null,
+            "approved_at": null,
+            "evidence": null
+          }
+        },
+        {
+          "asset_key": "poster-video-slot-01-mindset",
+          "video_asset_key": "video-slot-01-mindset",
+          "video_title": "Mindset",
+          "output_path": "course-assets/posters/video-slot-01-mindset.webp",
+          "focus_subject": "learner choosing a steady compass-led path",
+          "derivative": {
+            "recipe_id": "slot-01-video-slot-01-mindset-left-safe",
+            "source_master_id": "master-slot-01",
+            "crop_profile": "left-safe",
+            "target_dimensions": [
+              1280,
+              720
+            ],
+            "resample": "lanczos",
+            "output_format": "lossless-webp",
+            "duplicate_pixel_sha256_forbidden": true,
+            "visual_subject_confirmation_required": true
+          },
+          "provenance": {
+            "generator": "built-in image_gen",
+            "generation_call": "one-distinct-call",
+            "source_capture_required": true,
+            "prompt_checksum_required": true,
+            "reference_checksums_required": true,
+            "generated_at_required": true,
+            "generated_by_required": true,
+            "model_output_path_required": true
+          },
+          "approval": {
+            "status": "blocked-pending-pilot-approval",
+            "approved_by": null,
+            "approved_at": null,
+            "evidence": null
+          }
+        }
+      ],
+      "pilot_review": {
+        "slug": "orientation",
+        "status": "pilot-awaiting-jarrad-approval",
+        "assets": {
+          "slug": "orientation",
+          "source": {
+            "path": "course-assets/thumbnails/pilots/sources/orientation-generated.png",
+            "dimensions": [
+              1672,
+              941
+            ],
+            "sha256": "25307aedf8d8ac0f60181e9e0d2bbad4eb76b0548af254de12fa9f9451ad99a5"
+          },
+          "flat_master": {
+            "path": "course-assets/thumbnails/pilots/flat-masters/orientation-flat-master.png",
+            "dimensions": [
+              1672,
+              941
+            ],
+            "sha256": "0c26f841a92a4253692e36f851b10d090ecca78874054f8fc4e64738b116288c"
+          },
+          "lesson_card": {
+            "path": "course-assets/thumbnails/pilots/lesson-cards/orientation-lesson-card-16x10.webp",
+            "dimensions": [
+              1280,
+              800
+            ],
+            "sha256": "2f18cc10daca3ec29c9005feacb8b4b6167f60720786dffabaa66071f7105c02"
+          },
+          "video_poster": {
+            "path": "course-assets/posters/pilots/orientation-video-poster-16x9.webp",
+            "dimensions": [
+              1280,
+              720
+            ],
+            "sha256": "71094a3f54b908963ab44096b4a9af3ce2ba7b1212c73f19a1f92fc5aaf49b20"
+          }
+        },
+        "checksum_record_path": "docs/course-production/thumbnail-pilots/checksums.json"
+      },
+      "provenance": {
+        "generator": "built-in image_gen",
+        "generation_call": "one-distinct-call",
+        "source_capture_required": true,
+        "prompt_checksum_required": true,
+        "reference_checksums_required": true,
+        "generated_at_required": true,
+        "generated_by_required": true,
+        "model_output_path_required": true
+      },
+      "approval": {
+        "status": "awaiting-jarrad-approval",
+        "approved_by": null,
+        "approved_at": null,
+        "evidence": null
+      }
+    },
+    {
+      "slot": "slot-02",
+      "lesson_source_key": "lesson-content-slot-02",
+      "title": "Real Estate Terms Glossary",
+      "pilot": false,
+      "production_source_mode": "generate-after-pilot-approval",
+      "reference_ids": [
+        "style-ref-1",
+        "style-ref-2"
+      ],
+      "prompt": "Use case: stylized-concept\nAsset type: BMH Institute Real Estate Terms Glossary lesson master, wide 16:9 artwork designed for one 16:10 lesson card and distinct 16:9 video posters\nPrimary request: Create the Real Estate Terms Glossary lesson illustration. The five-second read must be “turn unfamiliar real estate language into clear shared meaning.” Build the visual around an open reference book surrounded by a house, key, contract page, map pin, and speech bubble stickers. Each requested poster anchor must be visually independent and recognizable without labels.\nInput images: Image 1 and Image 2 are the canonical BMH Sticker System style references. Use them only for the flat visual language, line quality, palette, character simplicity, and sticker spacing. Do not copy their subjects or layouts.\nScene/backdrop: perfectly uniform flat cornflower-blue field with generous active negative space; a floating sticker composition, never a continuous room, landscape, or realistic environment\nStyle/medium: hand-drawn flat sticker-sheet illustration; thick slightly wobbly black outlines; rounded imperfect primitive geometry; strong silhouettes; every object independently croppable\nComposition/framing: poster anchor 1 is plain-language real estate reference kit in the center safe zone; balance the anchors as one coherent lesson composition; keep all meaningful content inside the central 80% and each named anchor fully inside its assigned safe zone so the 16:10 padded card and focused 16:9 poster crops stay intact\nColor palette: cornflower blue, golden yellow, amber, orange, cream, white, black, and at most one muted green; exactly the locked eight-color palette after deterministic flattening; no extra colors\nCharacters: tiny scale, dot eyes, minimal faces, cylindrical limbs, simple hair and clothing silhouettes; use only the minimum people needed to explain the subject\nConstraints: no title, no words, no letters, no numbers, no currency amounts, no logos, no watermark; absolutely uniform flat fills; no white sticker border; no invented software interface; no fixed performance promises; no decorative object without a teaching purpose\nAvoid: gradients, texture, lighting, glow, shadows, reflections, depth, realistic perspective, photorealism, 3D rendering, detailed screens, tiny unreadable symbols, busy backgrounds, edge-cropped key objects, duplicated poster anchors, and subject matter from another lesson",
+      "master": {
+        "id": "master-slot-02",
+        "source_path": "course-assets/thumbnails/production/sources/slot-02-generated.png",
+        "flat_master_path": "course-assets/thumbnails/production/flat-masters/slot-02-flat-master.png",
+        "expected_aspect_ratio": "16:9",
+        "meaningful_content_bounds": {
+          "x_min_percent": 10,
+          "x_max_percent": 90,
+          "y_min_percent": 10,
+          "y_max_percent": 90
+        }
+      },
+      "lesson_card": {
+        "asset_key": "thumbnail-slot-02",
+        "output_path": "course-assets/thumbnails/slot-02.webp",
+        "derivative": {
+          "source_master_id": "master-slot-02",
+          "target_dimensions": [
+            1280,
+            800
+          ],
+          "method": "contain-master-at-1280x720-and-pad-40px-top-and-bottom",
+          "padding_color_rgb": [
+            103,
+            182,
+            255
+          ],
+          "crop_allowed": false,
+          "resample": "lanczos",
+          "output_format": "lossless-webp"
+        },
+        "provenance": {
+          "generator": "built-in image_gen",
+          "generation_call": "one-distinct-call",
+          "source_capture_required": true,
+          "prompt_checksum_required": true,
+          "reference_checksums_required": true,
+          "generated_at_required": true,
+          "generated_by_required": true,
+          "model_output_path_required": true
+        },
+        "approval": {
+          "status": "blocked-pending-pilot-approval",
+          "approved_by": null,
+          "approved_at": null,
+          "evidence": null
+        }
+      },
+      "posters": [
+        {
+          "asset_key": "poster-video-slot-02-terms",
+          "video_asset_key": "video-slot-02-terms",
+          "video_title": "Real Estate Terms Glossary",
+          "output_path": "course-assets/posters/video-slot-02-terms.webp",
+          "focus_subject": "plain-language real estate reference kit",
+          "derivative": {
+            "recipe_id": "slot-02-video-slot-02-terms-full-safe",
+            "source_master_id": "master-slot-02",
+            "crop_profile": "full-safe",
+            "target_dimensions": [
+              1280,
+              720
+            ],
+            "resample": "lanczos",
+            "output_format": "lossless-webp",
+            "duplicate_pixel_sha256_forbidden": true,
+            "visual_subject_confirmation_required": true
+          },
+          "provenance": {
+            "generator": "built-in image_gen",
+            "generation_call": "one-distinct-call",
+            "source_capture_required": true,
+            "prompt_checksum_required": true,
+            "reference_checksums_required": true,
+            "generated_at_required": true,
+            "generated_by_required": true,
+            "model_output_path_required": true
+          },
+          "approval": {
+            "status": "blocked-pending-pilot-approval",
+            "approved_by": null,
+            "approved_at": null,
+            "evidence": null
+          }
+        }
+      ],
+      "pilot_review": null,
+      "provenance": {
+        "generator": "built-in image_gen",
+        "generation_call": "one-distinct-call",
+        "source_capture_required": true,
+        "prompt_checksum_required": true,
+        "reference_checksums_required": true,
+        "generated_at_required": true,
+        "generated_by_required": true,
+        "model_output_path_required": true
+      },
+      "approval": {
+        "status": "blocked-pending-pilot-approval",
+        "approved_by": null,
+        "approved_at": null,
+        "evidence": null
+      }
+    },
+    {
+      "slot": "slot-03",
+      "lesson_source_key": "lesson-content-slot-03",
+      "title": "Tech Stack and Systems",
+      "pilot": false,
+      "production_source_mode": "generate-after-pilot-approval",
+      "reference_ids": [
+        "style-ref-1",
+        "style-ref-2"
+      ],
+      "prompt": "Use case: stylized-concept\nAsset type: BMH Institute Tech Stack and Systems lesson master, wide 16:9 artwork designed for one 16:10 lesson card and distinct 16:9 video posters\nPrimary request: Create the Tech Stack and Systems lesson illustration. The five-second read must be “use connected tools as one reliable operating system.” Build the visual around a central hub linking a lead card, phone, task checklist, coaching headset, and clean dashboard stickers. Each requested poster anchor must be visually independent and recognizable without labels.\nInput images: Image 1 and Image 2 are the canonical BMH Sticker System style references. Use them only for the flat visual language, line quality, palette, character simplicity, and sticker spacing. Do not copy their subjects or layouts.\nScene/backdrop: perfectly uniform flat cornflower-blue field with generous active negative space; a floating sticker composition, never a continuous room, landscape, or realistic environment\nStyle/medium: hand-drawn flat sticker-sheet illustration; thick slightly wobbly black outlines; rounded imperfect primitive geometry; strong silhouettes; every object independently croppable\nComposition/framing: poster anchor 1 is connected tool hub and reliable handoffs in the center safe zone; balance the anchors as one coherent lesson composition; keep all meaningful content inside the central 80% and each named anchor fully inside its assigned safe zone so the 16:10 padded card and focused 16:9 poster crops stay intact\nColor palette: cornflower blue, golden yellow, amber, orange, cream, white, black, and at most one muted green; exactly the locked eight-color palette after deterministic flattening; no extra colors\nCharacters: tiny scale, dot eyes, minimal faces, cylindrical limbs, simple hair and clothing silhouettes; use only the minimum people needed to explain the subject\nConstraints: no title, no words, no letters, no numbers, no currency amounts, no logos, no watermark; absolutely uniform flat fills; no white sticker border; no invented software interface; no fixed performance promises; no decorative object without a teaching purpose\nAvoid: gradients, texture, lighting, glow, shadows, reflections, depth, realistic perspective, photorealism, 3D rendering, detailed screens, tiny unreadable symbols, busy backgrounds, edge-cropped key objects, duplicated poster anchors, and subject matter from another lesson",
+      "master": {
+        "id": "master-slot-03",
+        "source_path": "course-assets/thumbnails/production/sources/slot-03-generated.png",
+        "flat_master_path": "course-assets/thumbnails/production/flat-masters/slot-03-flat-master.png",
+        "expected_aspect_ratio": "16:9",
+        "meaningful_content_bounds": {
+          "x_min_percent": 10,
+          "x_max_percent": 90,
+          "y_min_percent": 10,
+          "y_max_percent": 90
+        }
+      },
+      "lesson_card": {
+        "asset_key": "thumbnail-slot-03",
+        "output_path": "course-assets/thumbnails/slot-03.webp",
+        "derivative": {
+          "source_master_id": "master-slot-03",
+          "target_dimensions": [
+            1280,
+            800
+          ],
+          "method": "contain-master-at-1280x720-and-pad-40px-top-and-bottom",
+          "padding_color_rgb": [
+            103,
+            182,
+            255
+          ],
+          "crop_allowed": false,
+          "resample": "lanczos",
+          "output_format": "lossless-webp"
+        },
+        "provenance": {
+          "generator": "built-in image_gen",
+          "generation_call": "one-distinct-call",
+          "source_capture_required": true,
+          "prompt_checksum_required": true,
+          "reference_checksums_required": true,
+          "generated_at_required": true,
+          "generated_by_required": true,
+          "model_output_path_required": true
+        },
+        "approval": {
+          "status": "blocked-pending-pilot-approval",
+          "approved_by": null,
+          "approved_at": null,
+          "evidence": null
+        }
+      },
+      "posters": [
+        {
+          "asset_key": "poster-video-slot-03-tech-stack",
+          "video_asset_key": "video-slot-03-tech-stack",
+          "video_title": "Tech Stack and Systems",
+          "output_path": "course-assets/posters/video-slot-03-tech-stack.webp",
+          "focus_subject": "connected tool hub and reliable handoffs",
+          "derivative": {
+            "recipe_id": "slot-03-video-slot-03-tech-stack-full-safe",
+            "source_master_id": "master-slot-03",
+            "crop_profile": "full-safe",
+            "target_dimensions": [
+              1280,
+              720
+            ],
+            "resample": "lanczos",
+            "output_format": "lossless-webp",
+            "duplicate_pixel_sha256_forbidden": true,
+            "visual_subject_confirmation_required": true
+          },
+          "provenance": {
+            "generator": "built-in image_gen",
+            "generation_call": "one-distinct-call",
+            "source_capture_required": true,
+            "prompt_checksum_required": true,
+            "reference_checksums_required": true,
+            "generated_at_required": true,
+            "generated_by_required": true,
+            "model_output_path_required": true
+          },
+          "approval": {
+            "status": "blocked-pending-pilot-approval",
+            "approved_by": null,
+            "approved_at": null,
+            "evidence": null
+          }
+        }
+      ],
+      "pilot_review": null,
+      "provenance": {
+        "generator": "built-in image_gen",
+        "generation_call": "one-distinct-call",
+        "source_capture_required": true,
+        "prompt_checksum_required": true,
+        "reference_checksums_required": true,
+        "generated_at_required": true,
+        "generated_by_required": true,
+        "model_output_path_required": true
+      },
+      "approval": {
+        "status": "blocked-pending-pilot-approval",
+        "approved_by": null,
+        "approved_at": null,
+        "evidence": null
+      }
+    },
+    {
+      "slot": "slot-04",
+      "lesson_source_key": "lesson-content-slot-04",
+      "title": "Humanizing the Lead",
+      "pilot": false,
+      "production_source_mode": "generate-after-pilot-approval",
+      "reference_ids": [
+        "style-ref-1",
+        "style-ref-2"
+      ],
+      "prompt": "Use case: stylized-concept\nAsset type: BMH Institute Humanizing the Lead lesson master, wide 16:9 artwork designed for one 16:10 lesson card and distinct 16:9 video posters\nPrimary request: Create the Humanizing the Lead lesson illustration. The five-second read must be “see the person and situation before the property.” Build the visual around three separate human-first stickers: a homeowner beside a small house, an unfolding story path, and a calm fit lens aligning person, property, and timing. Each requested poster anchor must be visually independent and recognizable without labels.\nInput images: Image 1 and Image 2 are the canonical BMH Sticker System style references. Use them only for the flat visual language, line quality, palette, character simplicity, and sticker spacing. Do not copy their subjects or layouts.\nScene/backdrop: perfectly uniform flat cornflower-blue field with generous active negative space; a floating sticker composition, never a continuous room, landscape, or realistic environment\nStyle/medium: hand-drawn flat sticker-sheet illustration; thick slightly wobbly black outlines; rounded imperfect primitive geometry; strong silhouettes; every object independently croppable\nComposition/framing: poster anchor 1 is homeowner before property details in the left safe zone; poster anchor 2 is seller story and situation path in the center safe zone; poster anchor 3 is ideal seller fit lens in the right safe zone; balance the anchors as one coherent lesson composition; keep all meaningful content inside the central 80% and each named anchor fully inside its assigned safe zone so the 16:10 padded card and focused 16:9 poster crops stay intact\nColor palette: cornflower blue, golden yellow, amber, orange, cream, white, black, and at most one muted green; exactly the locked eight-color palette after deterministic flattening; no extra colors\nCharacters: tiny scale, dot eyes, minimal faces, cylindrical limbs, simple hair and clothing silhouettes; use only the minimum people needed to explain the subject\nConstraints: no title, no words, no letters, no numbers, no currency amounts, no logos, no watermark; absolutely uniform flat fills; no white sticker border; no invented software interface; no fixed performance promises; no decorative object without a teaching purpose\nAvoid: gradients, texture, lighting, glow, shadows, reflections, depth, realistic perspective, photorealism, 3D rendering, detailed screens, tiny unreadable symbols, busy backgrounds, edge-cropped key objects, duplicated poster anchors, and subject matter from another lesson",
+      "master": {
+        "id": "master-slot-04",
+        "source_path": "course-assets/thumbnails/production/sources/slot-04-generated.png",
+        "flat_master_path": "course-assets/thumbnails/production/flat-masters/slot-04-flat-master.png",
+        "expected_aspect_ratio": "16:9",
+        "meaningful_content_bounds": {
+          "x_min_percent": 10,
+          "x_max_percent": 90,
+          "y_min_percent": 10,
+          "y_max_percent": 90
+        }
+      },
+      "lesson_card": {
+        "asset_key": "thumbnail-slot-04",
+        "output_path": "course-assets/thumbnails/slot-04.webp",
+        "derivative": {
+          "source_master_id": "master-slot-04",
+          "target_dimensions": [
+            1280,
+            800
+          ],
+          "method": "contain-master-at-1280x720-and-pad-40px-top-and-bottom",
+          "padding_color_rgb": [
+            103,
+            182,
+            255
+          ],
+          "crop_allowed": false,
+          "resample": "lanczos",
+          "output_format": "lossless-webp"
+        },
+        "provenance": {
+          "generator": "built-in image_gen",
+          "generation_call": "one-distinct-call",
+          "source_capture_required": true,
+          "prompt_checksum_required": true,
+          "reference_checksums_required": true,
+          "generated_at_required": true,
+          "generated_by_required": true,
+          "model_output_path_required": true
+        },
+        "approval": {
+          "status": "blocked-pending-pilot-approval",
+          "approved_by": null,
+          "approved_at": null,
+          "evidence": null
+        }
+      },
+      "posters": [
+        {
+          "asset_key": "poster-video-slot-04-humanizing-a",
+          "video_asset_key": "video-slot-04-humanizing-a",
+          "video_title": "Humanizing the Lead",
+          "output_path": "course-assets/posters/video-slot-04-humanizing-a.webp",
+          "focus_subject": "homeowner before property details",
+          "derivative": {
+            "recipe_id": "slot-04-video-slot-04-humanizing-a-left-safe",
+            "source_master_id": "master-slot-04",
+            "crop_profile": "left-safe",
+            "target_dimensions": [
+              1280,
+              720
+            ],
+            "resample": "lanczos",
+            "output_format": "lossless-webp",
+            "duplicate_pixel_sha256_forbidden": true,
+            "visual_subject_confirmation_required": true
+          },
+          "provenance": {
+            "generator": "built-in image_gen",
+            "generation_call": "one-distinct-call",
+            "source_capture_required": true,
+            "prompt_checksum_required": true,
+            "reference_checksums_required": true,
+            "generated_at_required": true,
+            "generated_by_required": true,
+            "model_output_path_required": true
+          },
+          "approval": {
+            "status": "blocked-pending-pilot-approval",
+            "approved_by": null,
+            "approved_at": null,
+            "evidence": null
+          }
+        },
+        {
+          "asset_key": "poster-video-slot-04-humanizing-b",
+          "video_asset_key": "video-slot-04-humanizing-b",
+          "video_title": "Humanizing the Lead",
+          "output_path": "course-assets/posters/video-slot-04-humanizing-b.webp",
+          "focus_subject": "seller story and situation path",
+          "derivative": {
+            "recipe_id": "slot-04-video-slot-04-humanizing-b-center-safe",
+            "source_master_id": "master-slot-04",
+            "crop_profile": "center-safe",
+            "target_dimensions": [
+              1280,
+              720
+            ],
+            "resample": "lanczos",
+            "output_format": "lossless-webp",
+            "duplicate_pixel_sha256_forbidden": true,
+            "visual_subject_confirmation_required": true
+          },
+          "provenance": {
+            "generator": "built-in image_gen",
+            "generation_call": "one-distinct-call",
+            "source_capture_required": true,
+            "prompt_checksum_required": true,
+            "reference_checksums_required": true,
+            "generated_at_required": true,
+            "generated_by_required": true,
+            "model_output_path_required": true
+          },
+          "approval": {
+            "status": "blocked-pending-pilot-approval",
+            "approved_by": null,
+            "approved_at": null,
+            "evidence": null
+          }
+        },
+        {
+          "asset_key": "poster-video-slot-04-ideal-seller",
+          "video_asset_key": "video-slot-04-ideal-seller",
+          "video_title": "Ideal Seller Profile",
+          "output_path": "course-assets/posters/video-slot-04-ideal-seller.webp",
+          "focus_subject": "ideal seller fit lens",
+          "derivative": {
+            "recipe_id": "slot-04-video-slot-04-ideal-seller-right-safe",
+            "source_master_id": "master-slot-04",
+            "crop_profile": "right-safe",
+            "target_dimensions": [
+              1280,
+              720
+            ],
+            "resample": "lanczos",
+            "output_format": "lossless-webp",
+            "duplicate_pixel_sha256_forbidden": true,
+            "visual_subject_confirmation_required": true
+          },
+          "provenance": {
+            "generator": "built-in image_gen",
+            "generation_call": "one-distinct-call",
+            "source_capture_required": true,
+            "prompt_checksum_required": true,
+            "reference_checksums_required": true,
+            "generated_at_required": true,
+            "generated_by_required": true,
+            "model_output_path_required": true
+          },
+          "approval": {
+            "status": "blocked-pending-pilot-approval",
+            "approved_by": null,
+            "approved_at": null,
+            "evidence": null
+          }
+        }
+      ],
+      "pilot_review": null,
+      "provenance": {
+        "generator": "built-in image_gen",
+        "generation_call": "one-distinct-call",
+        "source_capture_required": true,
+        "prompt_checksum_required": true,
+        "reference_checksums_required": true,
+        "generated_at_required": true,
+        "generated_by_required": true,
+        "model_output_path_required": true
+      },
+      "approval": {
+        "status": "blocked-pending-pilot-approval",
+        "approved_by": null,
+        "approved_at": null,
+        "evidence": null
+      }
+    },
+    {
+      "slot": "slot-05",
+      "lesson_source_key": "lesson-content-slot-05",
+      "title": "The BMH Offer Playbook",
+      "pilot": false,
+      "production_source_mode": "generate-after-pilot-approval",
+      "reference_ids": [
+        "style-ref-1",
+        "style-ref-2"
+      ],
+      "prompt": "Use case: stylized-concept\nAsset type: BMH Institute The BMH Offer Playbook lesson master, wide 16:9 artwork designed for one 16:10 lesson card and distinct 16:9 video posters\nPrimary request: Create the The BMH Offer Playbook lesson illustration. The five-second read must be “match a seller situation to a clear respectful option.” Build the visual around two balanced offer stations: a situation-to-option scale and a choice path ending in a calm handshake. Each requested poster anchor must be visually independent and recognizable without labels.\nInput images: Image 1 and Image 2 are the canonical BMH Sticker System style references. Use them only for the flat visual language, line quality, palette, character simplicity, and sticker spacing. Do not copy their subjects or layouts.\nScene/backdrop: perfectly uniform flat cornflower-blue field with generous active negative space; a floating sticker composition, never a continuous room, landscape, or realistic environment\nStyle/medium: hand-drawn flat sticker-sheet illustration; thick slightly wobbly black outlines; rounded imperfect primitive geometry; strong silhouettes; every object independently croppable\nComposition/framing: poster anchor 1 is situation-to-option balance in the left safe zone; poster anchor 2 is clear choice path and respectful agreement in the right safe zone; balance the anchors as one coherent lesson composition; keep all meaningful content inside the central 80% and each named anchor fully inside its assigned safe zone so the 16:10 padded card and focused 16:9 poster crops stay intact\nColor palette: cornflower blue, golden yellow, amber, orange, cream, white, black, and at most one muted green; exactly the locked eight-color palette after deterministic flattening; no extra colors\nCharacters: tiny scale, dot eyes, minimal faces, cylindrical limbs, simple hair and clothing silhouettes; use only the minimum people needed to explain the subject\nConstraints: no title, no words, no letters, no numbers, no currency amounts, no logos, no watermark; absolutely uniform flat fills; no white sticker border; no invented software interface; no fixed performance promises; no decorative object without a teaching purpose\nAvoid: gradients, texture, lighting, glow, shadows, reflections, depth, realistic perspective, photorealism, 3D rendering, detailed screens, tiny unreadable symbols, busy backgrounds, edge-cropped key objects, duplicated poster anchors, and subject matter from another lesson",
+      "master": {
+        "id": "master-slot-05",
+        "source_path": "course-assets/thumbnails/production/sources/slot-05-generated.png",
+        "flat_master_path": "course-assets/thumbnails/production/flat-masters/slot-05-flat-master.png",
+        "expected_aspect_ratio": "16:9",
+        "meaningful_content_bounds": {
+          "x_min_percent": 10,
+          "x_max_percent": 90,
+          "y_min_percent": 10,
+          "y_max_percent": 90
+        }
+      },
+      "lesson_card": {
+        "asset_key": "thumbnail-slot-05",
+        "output_path": "course-assets/thumbnails/slot-05.webp",
+        "derivative": {
+          "source_master_id": "master-slot-05",
+          "target_dimensions": [
+            1280,
+            800
+          ],
+          "method": "contain-master-at-1280x720-and-pad-40px-top-and-bottom",
+          "padding_color_rgb": [
+            103,
+            182,
+            255
+          ],
+          "crop_allowed": false,
+          "resample": "lanczos",
+          "output_format": "lossless-webp"
+        },
+        "provenance": {
+          "generator": "built-in image_gen",
+          "generation_call": "one-distinct-call",
+          "source_capture_required": true,
+          "prompt_checksum_required": true,
+          "reference_checksums_required": true,
+          "generated_at_required": true,
+          "generated_by_required": true,
+          "model_output_path_required": true
+        },
+        "approval": {
+          "status": "blocked-pending-pilot-approval",
+          "approved_by": null,
+          "approved_at": null,
+          "evidence": null
+        }
+      },
+      "posters": [
+        {
+          "asset_key": "poster-video-slot-05-offer-a",
+          "video_asset_key": "video-slot-05-offer-a",
+          "video_title": "The BMH Offer Playbook",
+          "output_path": "course-assets/posters/video-slot-05-offer-a.webp",
+          "focus_subject": "situation-to-option balance",
+          "derivative": {
+            "recipe_id": "slot-05-video-slot-05-offer-a-left-safe",
+            "source_master_id": "master-slot-05",
+            "crop_profile": "left-safe",
+            "target_dimensions": [
+              1280,
+              720
+            ],
+            "resample": "lanczos",
+            "output_format": "lossless-webp",
+            "duplicate_pixel_sha256_forbidden": true,
+            "visual_subject_confirmation_required": true
+          },
+          "provenance": {
+            "generator": "built-in image_gen",
+            "generation_call": "one-distinct-call",
+            "source_capture_required": true,
+            "prompt_checksum_required": true,
+            "reference_checksums_required": true,
+            "generated_at_required": true,
+            "generated_by_required": true,
+            "model_output_path_required": true
+          },
+          "approval": {
+            "status": "blocked-pending-pilot-approval",
+            "approved_by": null,
+            "approved_at": null,
+            "evidence": null
+          }
+        },
+        {
+          "asset_key": "poster-video-slot-05-offer-b",
+          "video_asset_key": "video-slot-05-offer-b",
+          "video_title": "The BMH Offer Playbook",
+          "output_path": "course-assets/posters/video-slot-05-offer-b.webp",
+          "focus_subject": "clear choice path and respectful agreement",
+          "derivative": {
+            "recipe_id": "slot-05-video-slot-05-offer-b-right-safe",
+            "source_master_id": "master-slot-05",
+            "crop_profile": "right-safe",
+            "target_dimensions": [
+              1280,
+              720
+            ],
+            "resample": "lanczos",
+            "output_format": "lossless-webp",
+            "duplicate_pixel_sha256_forbidden": true,
+            "visual_subject_confirmation_required": true
+          },
+          "provenance": {
+            "generator": "built-in image_gen",
+            "generation_call": "one-distinct-call",
+            "source_capture_required": true,
+            "prompt_checksum_required": true,
+            "reference_checksums_required": true,
+            "generated_at_required": true,
+            "generated_by_required": true,
+            "model_output_path_required": true
+          },
+          "approval": {
+            "status": "blocked-pending-pilot-approval",
+            "approved_by": null,
+            "approved_at": null,
+            "evidence": null
+          }
+        }
+      ],
+      "pilot_review": null,
+      "provenance": {
+        "generator": "built-in image_gen",
+        "generation_call": "one-distinct-call",
+        "source_capture_required": true,
+        "prompt_checksum_required": true,
+        "reference_checksums_required": true,
+        "generated_at_required": true,
+        "generated_by_required": true,
+        "model_output_path_required": true
+      },
+      "approval": {
+        "status": "blocked-pending-pilot-approval",
+        "approved_by": null,
+        "approved_at": null,
+        "evidence": null
+      }
+    },
+    {
+      "slot": "slot-06",
+      "lesson_source_key": "lesson-content-slot-06",
+      "title": "Sales Pipeline and Stage Ownership",
+      "pilot": false,
+      "production_source_mode": "generate-after-pilot-approval",
+      "reference_ids": [
+        "style-ref-1",
+        "style-ref-2"
+      ],
+      "prompt": "Use case: stylized-concept\nAsset type: BMH Institute Sales Pipeline and Stage Ownership lesson master, wide 16:9 artwork designed for one 16:10 lesson card and distinct 16:9 video posters\nPrimary request: Create the Sales Pipeline and Stage Ownership lesson illustration. The five-second read must be “move each conversation through clear owned stages.” Build the visual around a pipeline of distinct stage cards passed with a baton, beside a five-step stepping-stone conversation path. Each requested poster anchor must be visually independent and recognizable without labels.\nInput images: Image 1 and Image 2 are the canonical BMH Sticker System style references. Use them only for the flat visual language, line quality, palette, character simplicity, and sticker spacing. Do not copy their subjects or layouts.\nScene/backdrop: perfectly uniform flat cornflower-blue field with generous active negative space; a floating sticker composition, never a continuous room, landscape, or realistic environment\nStyle/medium: hand-drawn flat sticker-sheet illustration; thick slightly wobbly black outlines; rounded imperfect primitive geometry; strong silhouettes; every object independently croppable\nComposition/framing: poster anchor 1 is owned pipeline stages and baton handoff in the left safe zone; poster anchor 2 is five-step conversation path in the right safe zone; balance the anchors as one coherent lesson composition; keep all meaningful content inside the central 80% and each named anchor fully inside its assigned safe zone so the 16:10 padded card and focused 16:9 poster crops stay intact\nColor palette: cornflower blue, golden yellow, amber, orange, cream, white, black, and at most one muted green; exactly the locked eight-color palette after deterministic flattening; no extra colors\nCharacters: tiny scale, dot eyes, minimal faces, cylindrical limbs, simple hair and clothing silhouettes; use only the minimum people needed to explain the subject\nConstraints: no title, no words, no letters, no numbers, no currency amounts, no logos, no watermark; absolutely uniform flat fills; no white sticker border; no invented software interface; no fixed performance promises; no decorative object without a teaching purpose\nAvoid: gradients, texture, lighting, glow, shadows, reflections, depth, realistic perspective, photorealism, 3D rendering, detailed screens, tiny unreadable symbols, busy backgrounds, edge-cropped key objects, duplicated poster anchors, and subject matter from another lesson",
+      "master": {
+        "id": "master-slot-06",
+        "source_path": "course-assets/thumbnails/production/sources/slot-06-generated.png",
+        "flat_master_path": "course-assets/thumbnails/production/flat-masters/slot-06-flat-master.png",
+        "expected_aspect_ratio": "16:9",
+        "meaningful_content_bounds": {
+          "x_min_percent": 10,
+          "x_max_percent": 90,
+          "y_min_percent": 10,
+          "y_max_percent": 90
+        }
+      },
+      "lesson_card": {
+        "asset_key": "thumbnail-slot-06",
+        "output_path": "course-assets/thumbnails/slot-06.webp",
+        "derivative": {
+          "source_master_id": "master-slot-06",
+          "target_dimensions": [
+            1280,
+            800
+          ],
+          "method": "contain-master-at-1280x720-and-pad-40px-top-and-bottom",
+          "padding_color_rgb": [
+            103,
+            182,
+            255
+          ],
+          "crop_allowed": false,
+          "resample": "lanczos",
+          "output_format": "lossless-webp"
+        },
+        "provenance": {
+          "generator": "built-in image_gen",
+          "generation_call": "one-distinct-call",
+          "source_capture_required": true,
+          "prompt_checksum_required": true,
+          "reference_checksums_required": true,
+          "generated_at_required": true,
+          "generated_by_required": true,
+          "model_output_path_required": true
+        },
+        "approval": {
+          "status": "blocked-pending-pilot-approval",
+          "approved_by": null,
+          "approved_at": null,
+          "evidence": null
+        }
+      },
+      "posters": [
+        {
+          "asset_key": "poster-video-slot-06-pipeline",
+          "video_asset_key": "video-slot-06-pipeline",
+          "video_title": "Sales Pipeline and Stage Ownership",
+          "output_path": "course-assets/posters/video-slot-06-pipeline.webp",
+          "focus_subject": "owned pipeline stages and baton handoff",
+          "derivative": {
+            "recipe_id": "slot-06-video-slot-06-pipeline-left-safe",
+            "source_master_id": "master-slot-06",
+            "crop_profile": "left-safe",
+            "target_dimensions": [
+              1280,
+              720
+            ],
+            "resample": "lanczos",
+            "output_format": "lossless-webp",
+            "duplicate_pixel_sha256_forbidden": true,
+            "visual_subject_confirmation_required": true
+          },
+          "provenance": {
+            "generator": "built-in image_gen",
+            "generation_call": "one-distinct-call",
+            "source_capture_required": true,
+            "prompt_checksum_required": true,
+            "reference_checksums_required": true,
+            "generated_at_required": true,
+            "generated_by_required": true,
+            "model_output_path_required": true
+          },
+          "approval": {
+            "status": "blocked-pending-pilot-approval",
+            "approved_by": null,
+            "approved_at": null,
+            "evidence": null
+          }
+        },
+        {
+          "asset_key": "poster-video-slot-06-framework",
+          "video_asset_key": "video-slot-06-framework",
+          "video_title": "The Five-Step Conversation Framework",
+          "output_path": "course-assets/posters/video-slot-06-framework.webp",
+          "focus_subject": "five-step conversation path",
+          "derivative": {
+            "recipe_id": "slot-06-video-slot-06-framework-right-safe",
+            "source_master_id": "master-slot-06",
+            "crop_profile": "right-safe",
+            "target_dimensions": [
+              1280,
+              720
+            ],
+            "resample": "lanczos",
+            "output_format": "lossless-webp",
+            "duplicate_pixel_sha256_forbidden": true,
+            "visual_subject_confirmation_required": true
+          },
+          "provenance": {
+            "generator": "built-in image_gen",
+            "generation_call": "one-distinct-call",
+            "source_capture_required": true,
+            "prompt_checksum_required": true,
+            "reference_checksums_required": true,
+            "generated_at_required": true,
+            "generated_by_required": true,
+            "model_output_path_required": true
+          },
+          "approval": {
+            "status": "blocked-pending-pilot-approval",
+            "approved_by": null,
+            "approved_at": null,
+            "evidence": null
+          }
+        }
+      ],
+      "pilot_review": null,
+      "provenance": {
+        "generator": "built-in image_gen",
+        "generation_call": "one-distinct-call",
+        "source_capture_required": true,
+        "prompt_checksum_required": true,
+        "reference_checksums_required": true,
+        "generated_at_required": true,
+        "generated_by_required": true,
+        "model_output_path_required": true
+      },
+      "approval": {
+        "status": "blocked-pending-pilot-approval",
+        "approved_by": null,
+        "approved_at": null,
+        "evidence": null
+      }
+    },
+    {
+      "slot": "slot-07",
+      "lesson_source_key": "lesson-content-slot-07",
+      "title": "Opening the Call",
+      "pilot": true,
+      "production_source_mode": "promote-approved-pilot-flat-master",
+      "reference_ids": [
+        "style-ref-1",
+        "style-ref-2",
+        "opening-phone-shapes"
+      ],
+      "prompt": "Use case: stylized-concept\nAsset type: BMH Institute lesson-thumbnail pilot, wide 16:9 master designed to crop safely to 16:10\nPrimary request: Create the Opening the Call thumbnail. The five-second read must be “start a confident, human phone conversation.” Use a large friendly telephone handset as the hero sticker bridging two simple speech bubbles, with a tiny headset-wearing employee on one side and a tiny homeowner on the other. Add a small open-door icon and a few purposeful sound-wave marks as supporting stickers.\nInput images: Image 1 and Image 2 are the canonical BMH Sticker System style references; Image 3 is a subject reference for phone icon shapes only. Match the loose flat sticker-sheet language of Images 1–2; simplify the phones from Image 3 and do not reproduce a scene.\nScene/backdrop: perfectly uniform flat cornflower-blue field with generous active negative space; floating sticker composition, never a continuous room or environment\nStyle/medium: hand-drawn flat sticker-sheet illustration; thick slightly wobbly black outlines; rounded imperfect primitive geometry; every object is independently croppable\nComposition/framing: large curved handset near center linking left and right speech bubbles; tiny employee and homeowner separated but visibly connected through the call; open-door icon and sound marks balanced around the hero; keep meaningful content inside the central 80% for safe 16:9 and 16:10 crops\nColor palette: cornflower blue, golden yellow, orange, cream, white, and black only; 6 flat colors maximum\nCharacters: tiny scale, dot eyes, minimal faces, cylindrical limbs, simple hair silhouettes, one headset prop\nConstraints: no title, no words, no letters, no numbers, no logos, no watermark; absolutely uniform flat fills; no white sticker border; strong silhouettes; uniform complexity; decorative rhythm limited to speech bubbles, sound marks, and two sparkles\nAvoid: any gradient, texture, lighting, glow, shadow, reflection, depth, realistic perspective, photorealism, 3D rendering, detailed smartphone interface, busy interiors, edge-cropped key objects",
+      "master": {
+        "id": "master-slot-07",
+        "source_path": "course-assets/thumbnails/production/sources/slot-07-generated.png",
+        "flat_master_path": "course-assets/thumbnails/production/flat-masters/slot-07-flat-master.png",
+        "expected_aspect_ratio": "16:9",
+        "meaningful_content_bounds": {
+          "x_min_percent": 10,
+          "x_max_percent": 90,
+          "y_min_percent": 10,
+          "y_max_percent": 90
+        }
+      },
+      "lesson_card": {
+        "asset_key": "thumbnail-slot-07",
+        "output_path": "course-assets/thumbnails/slot-07.webp",
+        "derivative": {
+          "source_master_id": "master-slot-07",
+          "target_dimensions": [
+            1280,
+            800
+          ],
+          "method": "contain-master-at-1280x720-and-pad-40px-top-and-bottom",
+          "padding_color_rgb": [
+            103,
+            182,
+            255
+          ],
+          "crop_allowed": false,
+          "resample": "lanczos",
+          "output_format": "lossless-webp"
+        },
+        "provenance": {
+          "generator": "built-in image_gen",
+          "generation_call": "one-distinct-call",
+          "source_capture_required": true,
+          "prompt_checksum_required": true,
+          "reference_checksums_required": true,
+          "generated_at_required": true,
+          "generated_by_required": true,
+          "model_output_path_required": true
+        },
+        "approval": {
+          "status": "blocked-pending-pilot-approval",
+          "approved_by": null,
+          "approved_at": null,
+          "evidence": null
+        }
+      },
+      "posters": [
+        {
+          "asset_key": "poster-video-slot-07-opening",
+          "video_asset_key": "video-slot-07-opening",
+          "video_title": "Opening the Call",
+          "output_path": "course-assets/posters/video-slot-07-opening.webp",
+          "focus_subject": "confident human call opening",
+          "derivative": {
+            "recipe_id": "slot-07-video-slot-07-opening-full-safe",
+            "source_master_id": "master-slot-07",
+            "crop_profile": "full-safe",
+            "target_dimensions": [
+              1280,
+              720
+            ],
+            "resample": "lanczos",
+            "output_format": "lossless-webp",
+            "duplicate_pixel_sha256_forbidden": true,
+            "visual_subject_confirmation_required": true
+          },
+          "provenance": {
+            "generator": "built-in image_gen",
+            "generation_call": "one-distinct-call",
+            "source_capture_required": true,
+            "prompt_checksum_required": true,
+            "reference_checksums_required": true,
+            "generated_at_required": true,
+            "generated_by_required": true,
+            "model_output_path_required": true
+          },
+          "approval": {
+            "status": "blocked-pending-pilot-approval",
+            "approved_by": null,
+            "approved_at": null,
+            "evidence": null
+          }
+        },
+        {
+          "asset_key": "poster-video-slot-07-fact-find",
+          "video_asset_key": "video-slot-07-fact-find",
+          "video_title": "The Fact Find",
+          "output_path": "course-assets/posters/video-slot-07-fact-find.webp",
+          "focus_subject": "curious fact-finding conversation",
+          "derivative": {
+            "recipe_id": "slot-07-video-slot-07-fact-find-right-safe",
+            "source_master_id": "master-slot-07",
+            "crop_profile": "right-safe",
+            "target_dimensions": [
+              1280,
+              720
+            ],
+            "resample": "lanczos",
+            "output_format": "lossless-webp",
+            "duplicate_pixel_sha256_forbidden": true,
+            "visual_subject_confirmation_required": true
+          },
+          "provenance": {
+            "generator": "built-in image_gen",
+            "generation_call": "one-distinct-call",
+            "source_capture_required": true,
+            "prompt_checksum_required": true,
+            "reference_checksums_required": true,
+            "generated_at_required": true,
+            "generated_by_required": true,
+            "model_output_path_required": true
+          },
+          "approval": {
+            "status": "blocked-pending-pilot-approval",
+            "approved_by": null,
+            "approved_at": null,
+            "evidence": null
+          }
+        }
+      ],
+      "pilot_review": {
+        "slug": "opening-the-call",
+        "status": "pilot-awaiting-jarrad-approval",
+        "assets": {
+          "slug": "opening-the-call",
+          "source": {
+            "path": "course-assets/thumbnails/pilots/sources/opening-the-call-generated.png",
+            "dimensions": [
+              1672,
+              941
+            ],
+            "sha256": "024256e8af219b185de73bbbd8274dfda67c40d28dd2692f861345dc68b0518b"
+          },
+          "flat_master": {
+            "path": "course-assets/thumbnails/pilots/flat-masters/opening-the-call-flat-master.png",
+            "dimensions": [
+              1672,
+              941
+            ],
+            "sha256": "98ce86bdb4dfaeb4906aca4ed287b80d78920df4f02f0c8b89bae1b33a7cfbf8"
+          },
+          "lesson_card": {
+            "path": "course-assets/thumbnails/pilots/lesson-cards/opening-the-call-lesson-card-16x10.webp",
+            "dimensions": [
+              1280,
+              800
+            ],
+            "sha256": "4c71982ce2f43660ae07076e3f3613264cfca2a1b097d5657e2d15383d473f55"
+          },
+          "video_poster": {
+            "path": "course-assets/posters/pilots/opening-the-call-video-poster-16x9.webp",
+            "dimensions": [
+              1280,
+              720
+            ],
+            "sha256": "ef6d25c3a00d8582bc1daf8149a51672848e5358b66e9d54cef0c90d4c9611ae"
+          }
+        },
+        "checksum_record_path": "docs/course-production/thumbnail-pilots/checksums.json"
+      },
+      "provenance": {
+        "generator": "built-in image_gen",
+        "generation_call": "one-distinct-call",
+        "source_capture_required": true,
+        "prompt_checksum_required": true,
+        "reference_checksums_required": true,
+        "generated_at_required": true,
+        "generated_by_required": true,
+        "model_output_path_required": true
+      },
+      "approval": {
+        "status": "awaiting-jarrad-approval",
+        "approved_by": null,
+        "approved_at": null,
+        "evidence": null
+      }
+    },
+    {
+      "slot": "slot-08",
+      "lesson_source_key": "lesson-content-slot-08",
+      "title": "Discovery and Handoff",
+      "pilot": false,
+      "production_source_mode": "generate-after-pilot-approval",
+      "reference_ids": [
+        "style-ref-1",
+        "style-ref-2"
+      ],
+      "prompt": "Use case: stylized-concept\nAsset type: BMH Institute Discovery and Handoff lesson master, wide 16:9 artwork designed for one 16:10 lesson card and distinct 16:9 video posters\nPrimary request: Create the Discovery and Handoff lesson illustration. The five-second read must be “listen deeply then transfer clear context without dropping it.” Build the visual around a listening magnifier uncovering a seller need, beside two teammates passing a complete context folder across a short bridge. Each requested poster anchor must be visually independent and recognizable without labels.\nInput images: Image 1 and Image 2 are the canonical BMH Sticker System style references. Use them only for the flat visual language, line quality, palette, character simplicity, and sticker spacing. Do not copy their subjects or layouts.\nScene/backdrop: perfectly uniform flat cornflower-blue field with generous active negative space; a floating sticker composition, never a continuous room, landscape, or realistic environment\nStyle/medium: hand-drawn flat sticker-sheet illustration; thick slightly wobbly black outlines; rounded imperfect primitive geometry; strong silhouettes; every object independently croppable\nComposition/framing: poster anchor 1 is listening-led discovery in the left safe zone; poster anchor 2 is complete context handoff in the right safe zone; balance the anchors as one coherent lesson composition; keep all meaningful content inside the central 80% and each named anchor fully inside its assigned safe zone so the 16:10 padded card and focused 16:9 poster crops stay intact\nColor palette: cornflower blue, golden yellow, amber, orange, cream, white, black, and at most one muted green; exactly the locked eight-color palette after deterministic flattening; no extra colors\nCharacters: tiny scale, dot eyes, minimal faces, cylindrical limbs, simple hair and clothing silhouettes; use only the minimum people needed to explain the subject\nConstraints: no title, no words, no letters, no numbers, no currency amounts, no logos, no watermark; absolutely uniform flat fills; no white sticker border; no invented software interface; no fixed performance promises; no decorative object without a teaching purpose\nAvoid: gradients, texture, lighting, glow, shadows, reflections, depth, realistic perspective, photorealism, 3D rendering, detailed screens, tiny unreadable symbols, busy backgrounds, edge-cropped key objects, duplicated poster anchors, and subject matter from another lesson",
+      "master": {
+        "id": "master-slot-08",
+        "source_path": "course-assets/thumbnails/production/sources/slot-08-generated.png",
+        "flat_master_path": "course-assets/thumbnails/production/flat-masters/slot-08-flat-master.png",
+        "expected_aspect_ratio": "16:9",
+        "meaningful_content_bounds": {
+          "x_min_percent": 10,
+          "x_max_percent": 90,
+          "y_min_percent": 10,
+          "y_max_percent": 90
+        }
+      },
+      "lesson_card": {
+        "asset_key": "thumbnail-slot-08",
+        "output_path": "course-assets/thumbnails/slot-08.webp",
+        "derivative": {
+          "source_master_id": "master-slot-08",
+          "target_dimensions": [
+            1280,
+            800
+          ],
+          "method": "contain-master-at-1280x720-and-pad-40px-top-and-bottom",
+          "padding_color_rgb": [
+            103,
+            182,
+            255
+          ],
+          "crop_allowed": false,
+          "resample": "lanczos",
+          "output_format": "lossless-webp"
+        },
+        "provenance": {
+          "generator": "built-in image_gen",
+          "generation_call": "one-distinct-call",
+          "source_capture_required": true,
+          "prompt_checksum_required": true,
+          "reference_checksums_required": true,
+          "generated_at_required": true,
+          "generated_by_required": true,
+          "model_output_path_required": true
+        },
+        "approval": {
+          "status": "blocked-pending-pilot-approval",
+          "approved_by": null,
+          "approved_at": null,
+          "evidence": null
+        }
+      },
+      "posters": [
+        {
+          "asset_key": "poster-video-slot-08-discovery",
+          "video_asset_key": "video-slot-08-discovery",
+          "video_title": "Discovery",
+          "output_path": "course-assets/posters/video-slot-08-discovery.webp",
+          "focus_subject": "listening-led discovery",
+          "derivative": {
+            "recipe_id": "slot-08-video-slot-08-discovery-left-safe",
+            "source_master_id": "master-slot-08",
+            "crop_profile": "left-safe",
+            "target_dimensions": [
+              1280,
+              720
+            ],
+            "resample": "lanczos",
+            "output_format": "lossless-webp",
+            "duplicate_pixel_sha256_forbidden": true,
+            "visual_subject_confirmation_required": true
+          },
+          "provenance": {
+            "generator": "built-in image_gen",
+            "generation_call": "one-distinct-call",
+            "source_capture_required": true,
+            "prompt_checksum_required": true,
+            "reference_checksums_required": true,
+            "generated_at_required": true,
+            "generated_by_required": true,
+            "model_output_path_required": true
+          },
+          "approval": {
+            "status": "blocked-pending-pilot-approval",
+            "approved_by": null,
+            "approved_at": null,
+            "evidence": null
+          }
+        },
+        {
+          "asset_key": "poster-video-slot-08-handoff",
+          "video_asset_key": "video-slot-08-handoff",
+          "video_title": "The Handoff",
+          "output_path": "course-assets/posters/video-slot-08-handoff.webp",
+          "focus_subject": "complete context handoff",
+          "derivative": {
+            "recipe_id": "slot-08-video-slot-08-handoff-right-safe",
+            "source_master_id": "master-slot-08",
+            "crop_profile": "right-safe",
+            "target_dimensions": [
+              1280,
+              720
+            ],
+            "resample": "lanczos",
+            "output_format": "lossless-webp",
+            "duplicate_pixel_sha256_forbidden": true,
+            "visual_subject_confirmation_required": true
+          },
+          "provenance": {
+            "generator": "built-in image_gen",
+            "generation_call": "one-distinct-call",
+            "source_capture_required": true,
+            "prompt_checksum_required": true,
+            "reference_checksums_required": true,
+            "generated_at_required": true,
+            "generated_by_required": true,
+            "model_output_path_required": true
+          },
+          "approval": {
+            "status": "blocked-pending-pilot-approval",
+            "approved_by": null,
+            "approved_at": null,
+            "evidence": null
+          }
+        }
+      ],
+      "pilot_review": null,
+      "provenance": {
+        "generator": "built-in image_gen",
+        "generation_call": "one-distinct-call",
+        "source_capture_required": true,
+        "prompt_checksum_required": true,
+        "reference_checksums_required": true,
+        "generated_at_required": true,
+        "generated_by_required": true,
+        "model_output_path_required": true
+      },
+      "approval": {
+        "status": "blocked-pending-pilot-approval",
+        "approved_by": null,
+        "approved_at": null,
+        "evidence": null
+      }
+    },
+    {
+      "slot": "slot-09",
+      "lesson_source_key": "lesson-content-slot-09",
+      "title": "Objection Architecture",
+      "pilot": true,
+      "production_source_mode": "promote-approved-pilot-flat-master",
+      "reference_ids": [
+        "style-ref-1",
+        "style-ref-2",
+        "objection-character"
+      ],
+      "prompt": "Use case: stylized-concept\nAsset type: BMH Institute lesson-thumbnail pilot, wide 16:9 master designed to crop safely to 16:10\nPrimary request: Create the Objection Architecture thumbnail. The five-second read must be “hear an objection, reframe it, build a calm response.” Use a large central bridge or modular arch assembled from three chunky sticker blocks: an ear icon on the left block, a curved reframe arrow on the center block, and a calm speech bubble with a check mark on the right block. Include a tiny thoughtful phone rep below the arch and two small floating puzzle-piece/support-beam icons.\nInput images: Image 1 and Image 2 are the canonical BMH Sticker System style references; Image 3 is a subject reference for the thoughtful phone-rep character only. Preserve the flat, loose sticker-sheet language of Images 1–2, simplify the character from Image 3, and do not reproduce a scene.\nScene/backdrop: perfectly uniform flat cornflower-blue field with generous active negative space; floating sticker composition, never a continuous room, construction site, or environment\nStyle/medium: hand-drawn flat sticker-sheet illustration; thick slightly wobbly black outlines; rounded imperfect primitive geometry; every object independently croppable\nComposition/framing: three-block arch centered and instantly legible left-to-right; small rep below but not touching an edge; support icons and a few purposeful doodle marks around it; keep all meaningful content inside central 80% for safe 16:9 and 16:10 crops\nColor palette: cornflower blue, golden yellow, orange, cream, white, and black only; 6 flat colors maximum\nCharacters: one tiny rep with dot eyes, minimal facial features, cylindrical limbs, light hair, orange goggles resting on head, phone prop\nConstraints: no title, no words, no letters, no numbers, no logos, no watermark; absolutely uniform flat fills; no white sticker border; strong silhouettes; uniform complexity; the three-step visual logic must be obvious without labels\nAvoid: any gradient, texture, lighting, glow, shadow, reflection, depth, realistic perspective, photorealism, 3D rendering, complex diagrams, busy masonry, detailed interiors, edge-cropped key objects",
+      "master": {
+        "id": "master-slot-09",
+        "source_path": "course-assets/thumbnails/production/sources/slot-09-generated.png",
+        "flat_master_path": "course-assets/thumbnails/production/flat-masters/slot-09-flat-master.png",
+        "expected_aspect_ratio": "16:9",
+        "meaningful_content_bounds": {
+          "x_min_percent": 10,
+          "x_max_percent": 90,
+          "y_min_percent": 10,
+          "y_max_percent": 90
+        }
+      },
+      "lesson_card": {
+        "asset_key": "thumbnail-slot-09",
+        "output_path": "course-assets/thumbnails/slot-09.webp",
+        "derivative": {
+          "source_master_id": "master-slot-09",
+          "target_dimensions": [
+            1280,
+            800
+          ],
+          "method": "contain-master-at-1280x720-and-pad-40px-top-and-bottom",
+          "padding_color_rgb": [
+            103,
+            182,
+            255
+          ],
+          "crop_allowed": false,
+          "resample": "lanczos",
+          "output_format": "lossless-webp"
+        },
+        "provenance": {
+          "generator": "built-in image_gen",
+          "generation_call": "one-distinct-call",
+          "source_capture_required": true,
+          "prompt_checksum_required": true,
+          "reference_checksums_required": true,
+          "generated_at_required": true,
+          "generated_by_required": true,
+          "model_output_path_required": true
+        },
+        "approval": {
+          "status": "blocked-pending-pilot-approval",
+          "approved_by": null,
+          "approved_at": null,
+          "evidence": null
+        }
+      },
+      "posters": [
+        {
+          "asset_key": "poster-video-slot-09-objection-architecture",
+          "video_asset_key": "video-slot-09-objection-architecture",
+          "video_title": "Objection Architecture",
+          "output_path": "course-assets/posters/video-slot-09-objection-architecture.webp",
+          "focus_subject": "hear reframe and respond architecture",
+          "derivative": {
+            "recipe_id": "slot-09-video-slot-09-objection-architecture-full-safe",
+            "source_master_id": "master-slot-09",
+            "crop_profile": "full-safe",
+            "target_dimensions": [
+              1280,
+              720
+            ],
+            "resample": "lanczos",
+            "output_format": "lossless-webp",
+            "duplicate_pixel_sha256_forbidden": true,
+            "visual_subject_confirmation_required": true
+          },
+          "provenance": {
+            "generator": "built-in image_gen",
+            "generation_call": "one-distinct-call",
+            "source_capture_required": true,
+            "prompt_checksum_required": true,
+            "reference_checksums_required": true,
+            "generated_at_required": true,
+            "generated_by_required": true,
+            "model_output_path_required": true
+          },
+          "approval": {
+            "status": "blocked-pending-pilot-approval",
+            "approved_by": null,
+            "approved_at": null,
+            "evidence": null
+          }
+        }
+      ],
+      "pilot_review": {
+        "slug": "objection-architecture",
+        "status": "pilot-awaiting-jarrad-approval",
+        "assets": {
+          "slug": "objection-architecture",
+          "source": {
+            "path": "course-assets/thumbnails/pilots/sources/objection-architecture-generated.png",
+            "dimensions": [
+              1672,
+              941
+            ],
+            "sha256": "b0d30bbb17d89f6141251a7fa0541a162d543d70706a1cdacdfe0c71aab9cfd1"
+          },
+          "flat_master": {
+            "path": "course-assets/thumbnails/pilots/flat-masters/objection-architecture-flat-master.png",
+            "dimensions": [
+              1672,
+              941
+            ],
+            "sha256": "445d7bc6a714a2f35e0dec13cf0ade52c0cabdf3232ffc379cfe2c7f613040e2"
+          },
+          "lesson_card": {
+            "path": "course-assets/thumbnails/pilots/lesson-cards/objection-architecture-lesson-card-16x10.webp",
+            "dimensions": [
+              1280,
+              800
+            ],
+            "sha256": "f585ff79241da17bf4fb513680cd98bb2ec9d5986aba53711112c0cf6f157fd9"
+          },
+          "video_poster": {
+            "path": "course-assets/posters/pilots/objection-architecture-video-poster-16x9.webp",
+            "dimensions": [
+              1280,
+              720
+            ],
+            "sha256": "ef478ca179f9b410bf60811bef1a4ff9ca8fae5b5e0587812f0c7912789a1fd8"
+          }
+        },
+        "checksum_record_path": "docs/course-production/thumbnail-pilots/checksums.json"
+      },
+      "provenance": {
+        "generator": "built-in image_gen",
+        "generation_call": "one-distinct-call",
+        "source_capture_required": true,
+        "prompt_checksum_required": true,
+        "reference_checksums_required": true,
+        "generated_at_required": true,
+        "generated_by_required": true,
+        "model_output_path_required": true
+      },
+      "approval": {
+        "status": "awaiting-jarrad-approval",
+        "approved_by": null,
+        "approved_at": null,
+        "evidence": null
+      }
+    },
+    {
+      "slot": "slot-10",
+      "lesson_source_key": "lesson-content-slot-10",
+      "title": "Objection Scripts Playbook",
+      "pilot": false,
+      "production_source_mode": "generate-after-pilot-approval",
+      "reference_ids": [
+        "style-ref-1",
+        "style-ref-2"
+      ],
+      "prompt": "Use case: stylized-concept\nAsset type: BMH Institute Objection Scripts Playbook lesson master, wide 16:9 artwork designed for one 16:10 lesson card and distinct 16:9 video posters\nPrimary request: Create the Objection Scripts Playbook lesson illustration. The five-second read must be “use a flexible response tool without sounding robotic.” Build the visual around a compact toolbox holding modular speech-bubble cards, an ear, a curved response arrow, and a calm rep. Each requested poster anchor must be visually independent and recognizable without labels.\nInput images: Image 1 and Image 2 are the canonical BMH Sticker System style references. Use them only for the flat visual language, line quality, palette, character simplicity, and sticker spacing. Do not copy their subjects or layouts.\nScene/backdrop: perfectly uniform flat cornflower-blue field with generous active negative space; a floating sticker composition, never a continuous room, landscape, or realistic environment\nStyle/medium: hand-drawn flat sticker-sheet illustration; thick slightly wobbly black outlines; rounded imperfect primitive geometry; strong silhouettes; every object independently croppable\nComposition/framing: poster anchor 1 is flexible objection response toolbox in the center safe zone; balance the anchors as one coherent lesson composition; keep all meaningful content inside the central 80% and each named anchor fully inside its assigned safe zone so the 16:10 padded card and focused 16:9 poster crops stay intact\nColor palette: cornflower blue, golden yellow, amber, orange, cream, white, black, and at most one muted green; exactly the locked eight-color palette after deterministic flattening; no extra colors\nCharacters: tiny scale, dot eyes, minimal faces, cylindrical limbs, simple hair and clothing silhouettes; use only the minimum people needed to explain the subject\nConstraints: no title, no words, no letters, no numbers, no currency amounts, no logos, no watermark; absolutely uniform flat fills; no white sticker border; no invented software interface; no fixed performance promises; no decorative object without a teaching purpose\nAvoid: gradients, texture, lighting, glow, shadows, reflections, depth, realistic perspective, photorealism, 3D rendering, detailed screens, tiny unreadable symbols, busy backgrounds, edge-cropped key objects, duplicated poster anchors, and subject matter from another lesson",
+      "master": {
+        "id": "master-slot-10",
+        "source_path": "course-assets/thumbnails/production/sources/slot-10-generated.png",
+        "flat_master_path": "course-assets/thumbnails/production/flat-masters/slot-10-flat-master.png",
+        "expected_aspect_ratio": "16:9",
+        "meaningful_content_bounds": {
+          "x_min_percent": 10,
+          "x_max_percent": 90,
+          "y_min_percent": 10,
+          "y_max_percent": 90
+        }
+      },
+      "lesson_card": {
+        "asset_key": "thumbnail-slot-10",
+        "output_path": "course-assets/thumbnails/slot-10.webp",
+        "derivative": {
+          "source_master_id": "master-slot-10",
+          "target_dimensions": [
+            1280,
+            800
+          ],
+          "method": "contain-master-at-1280x720-and-pad-40px-top-and-bottom",
+          "padding_color_rgb": [
+            103,
+            182,
+            255
+          ],
+          "crop_allowed": false,
+          "resample": "lanczos",
+          "output_format": "lossless-webp"
+        },
+        "provenance": {
+          "generator": "built-in image_gen",
+          "generation_call": "one-distinct-call",
+          "source_capture_required": true,
+          "prompt_checksum_required": true,
+          "reference_checksums_required": true,
+          "generated_at_required": true,
+          "generated_by_required": true,
+          "model_output_path_required": true
+        },
+        "approval": {
+          "status": "blocked-pending-pilot-approval",
+          "approved_by": null,
+          "approved_at": null,
+          "evidence": null
+        }
+      },
+      "posters": [
+        {
+          "asset_key": "poster-video-slot-10-objection-scripts",
+          "video_asset_key": "video-slot-10-objection-scripts",
+          "video_title": "Objection Scripts Playbook",
+          "output_path": "course-assets/posters/video-slot-10-objection-scripts.webp",
+          "focus_subject": "flexible objection response toolbox",
+          "derivative": {
+            "recipe_id": "slot-10-video-slot-10-objection-scripts-full-safe",
+            "source_master_id": "master-slot-10",
+            "crop_profile": "full-safe",
+            "target_dimensions": [
+              1280,
+              720
+            ],
+            "resample": "lanczos",
+            "output_format": "lossless-webp",
+            "duplicate_pixel_sha256_forbidden": true,
+            "visual_subject_confirmation_required": true
+          },
+          "provenance": {
+            "generator": "built-in image_gen",
+            "generation_call": "one-distinct-call",
+            "source_capture_required": true,
+            "prompt_checksum_required": true,
+            "reference_checksums_required": true,
+            "generated_at_required": true,
+            "generated_by_required": true,
+            "model_output_path_required": true
+          },
+          "approval": {
+            "status": "blocked-pending-pilot-approval",
+            "approved_by": null,
+            "approved_at": null,
+            "evidence": null
+          }
+        }
+      ],
+      "pilot_review": null,
+      "provenance": {
+        "generator": "built-in image_gen",
+        "generation_call": "one-distinct-call",
+        "source_capture_required": true,
+        "prompt_checksum_required": true,
+        "reference_checksums_required": true,
+        "generated_at_required": true,
+        "generated_by_required": true,
+        "model_output_path_required": true
+      },
+      "approval": {
+        "status": "blocked-pending-pilot-approval",
+        "approved_by": null,
+        "approved_at": null,
+        "evidence": null
+      }
+    },
+    {
+      "slot": "slot-11",
+      "lesson_source_key": "lesson-content-slot-11",
+      "title": "Complex Objections",
+      "pilot": false,
+      "production_source_mode": "generate-after-pilot-approval",
+      "reference_ids": [
+        "style-ref-1",
+        "style-ref-2"
+      ],
+      "prompt": "Use case: stylized-concept\nAsset type: BMH Institute Complex Objections lesson master, wide 16:9 artwork designed for one 16:10 lesson card and distinct 16:9 video posters\nPrimary request: Create the Complex Objections lesson illustration. The five-second read must be “untangle layered concerns while preserving trust.” Build the visual around a rep calmly untangling a knot of house, clock, contract, and price symbols, beside a shield-shaped bridge connecting two people. Each requested poster anchor must be visually independent and recognizable without labels.\nInput images: Image 1 and Image 2 are the canonical BMH Sticker System style references. Use them only for the flat visual language, line quality, palette, character simplicity, and sticker spacing. Do not copy their subjects or layouts.\nScene/backdrop: perfectly uniform flat cornflower-blue field with generous active negative space; a floating sticker composition, never a continuous room, landscape, or realistic environment\nStyle/medium: hand-drawn flat sticker-sheet illustration; thick slightly wobbly black outlines; rounded imperfect primitive geometry; strong silhouettes; every object independently croppable\nComposition/framing: poster anchor 1 is untangling layered objections in the left safe zone; poster anchor 2 is trust and people bridge in the right safe zone; balance the anchors as one coherent lesson composition; keep all meaningful content inside the central 80% and each named anchor fully inside its assigned safe zone so the 16:10 padded card and focused 16:9 poster crops stay intact\nColor palette: cornflower blue, golden yellow, amber, orange, cream, white, black, and at most one muted green; exactly the locked eight-color palette after deterministic flattening; no extra colors\nCharacters: tiny scale, dot eyes, minimal faces, cylindrical limbs, simple hair and clothing silhouettes; use only the minimum people needed to explain the subject\nConstraints: no title, no words, no letters, no numbers, no currency amounts, no logos, no watermark; absolutely uniform flat fills; no white sticker border; no invented software interface; no fixed performance promises; no decorative object without a teaching purpose\nAvoid: gradients, texture, lighting, glow, shadows, reflections, depth, realistic perspective, photorealism, 3D rendering, detailed screens, tiny unreadable symbols, busy backgrounds, edge-cropped key objects, duplicated poster anchors, and subject matter from another lesson",
+      "master": {
+        "id": "master-slot-11",
+        "source_path": "course-assets/thumbnails/production/sources/slot-11-generated.png",
+        "flat_master_path": "course-assets/thumbnails/production/flat-masters/slot-11-flat-master.png",
+        "expected_aspect_ratio": "16:9",
+        "meaningful_content_bounds": {
+          "x_min_percent": 10,
+          "x_max_percent": 90,
+          "y_min_percent": 10,
+          "y_max_percent": 90
+        }
+      },
+      "lesson_card": {
+        "asset_key": "thumbnail-slot-11",
+        "output_path": "course-assets/thumbnails/slot-11.webp",
+        "derivative": {
+          "source_master_id": "master-slot-11",
+          "target_dimensions": [
+            1280,
+            800
+          ],
+          "method": "contain-master-at-1280x720-and-pad-40px-top-and-bottom",
+          "padding_color_rgb": [
+            103,
+            182,
+            255
+          ],
+          "crop_allowed": false,
+          "resample": "lanczos",
+          "output_format": "lossless-webp"
+        },
+        "provenance": {
+          "generator": "built-in image_gen",
+          "generation_call": "one-distinct-call",
+          "source_capture_required": true,
+          "prompt_checksum_required": true,
+          "reference_checksums_required": true,
+          "generated_at_required": true,
+          "generated_by_required": true,
+          "model_output_path_required": true
+        },
+        "approval": {
+          "status": "blocked-pending-pilot-approval",
+          "approved_by": null,
+          "approved_at": null,
+          "evidence": null
+        }
+      },
+      "posters": [
+        {
+          "asset_key": "poster-video-slot-11-complex",
+          "video_asset_key": "video-slot-11-complex",
+          "video_title": "Complex Objections",
+          "output_path": "course-assets/posters/video-slot-11-complex.webp",
+          "focus_subject": "untangling layered objections",
+          "derivative": {
+            "recipe_id": "slot-11-video-slot-11-complex-left-safe",
+            "source_master_id": "master-slot-11",
+            "crop_profile": "left-safe",
+            "target_dimensions": [
+              1280,
+              720
+            ],
+            "resample": "lanczos",
+            "output_format": "lossless-webp",
+            "duplicate_pixel_sha256_forbidden": true,
+            "visual_subject_confirmation_required": true
+          },
+          "provenance": {
+            "generator": "built-in image_gen",
+            "generation_call": "one-distinct-call",
+            "source_capture_required": true,
+            "prompt_checksum_required": true,
+            "reference_checksums_required": true,
+            "generated_at_required": true,
+            "generated_by_required": true,
+            "model_output_path_required": true
+          },
+          "approval": {
+            "status": "blocked-pending-pilot-approval",
+            "approved_by": null,
+            "approved_at": null,
+            "evidence": null
+          }
+        },
+        {
+          "asset_key": "poster-video-slot-11-trust",
+          "video_asset_key": "video-slot-11-trust",
+          "video_title": "Trust and People Objections",
+          "output_path": "course-assets/posters/video-slot-11-trust.webp",
+          "focus_subject": "trust and people bridge",
+          "derivative": {
+            "recipe_id": "slot-11-video-slot-11-trust-right-safe",
+            "source_master_id": "master-slot-11",
+            "crop_profile": "right-safe",
+            "target_dimensions": [
+              1280,
+              720
+            ],
+            "resample": "lanczos",
+            "output_format": "lossless-webp",
+            "duplicate_pixel_sha256_forbidden": true,
+            "visual_subject_confirmation_required": true
+          },
+          "provenance": {
+            "generator": "built-in image_gen",
+            "generation_call": "one-distinct-call",
+            "source_capture_required": true,
+            "prompt_checksum_required": true,
+            "reference_checksums_required": true,
+            "generated_at_required": true,
+            "generated_by_required": true,
+            "model_output_path_required": true
+          },
+          "approval": {
+            "status": "blocked-pending-pilot-approval",
+            "approved_by": null,
+            "approved_at": null,
+            "evidence": null
+          }
+        }
+      ],
+      "pilot_review": null,
+      "provenance": {
+        "generator": "built-in image_gen",
+        "generation_call": "one-distinct-call",
+        "source_capture_required": true,
+        "prompt_checksum_required": true,
+        "reference_checksums_required": true,
+        "generated_at_required": true,
+        "generated_by_required": true,
+        "model_output_path_required": true
+      },
+      "approval": {
+        "status": "blocked-pending-pilot-approval",
+        "approved_by": null,
+        "approved_at": null,
+        "evidence": null
+      }
+    },
+    {
+      "slot": "slot-12",
+      "lesson_source_key": "lesson-content-slot-12",
+      "title": "Seller FAQ Decoder",
+      "pilot": false,
+      "production_source_mode": "generate-after-pilot-approval",
+      "reference_ids": [
+        "style-ref-1",
+        "style-ref-2"
+      ],
+      "prompt": "Use case: stylized-concept\nAsset type: BMH Institute Seller FAQ Decoder lesson master, wide 16:9 artwork designed for one 16:10 lesson card and distinct 16:9 video posters\nPrimary request: Create the Seller FAQ Decoder lesson illustration. The five-second read must be “decode common seller questions into clear helpful answers.” Build the visual around two question clusters connected to an answer lens: one around process and timing, one around property, contract, and next steps. Each requested poster anchor must be visually independent and recognizable without labels.\nInput images: Image 1 and Image 2 are the canonical BMH Sticker System style references. Use them only for the flat visual language, line quality, palette, character simplicity, and sticker spacing. Do not copy their subjects or layouts.\nScene/backdrop: perfectly uniform flat cornflower-blue field with generous active negative space; a floating sticker composition, never a continuous room, landscape, or realistic environment\nStyle/medium: hand-drawn flat sticker-sheet illustration; thick slightly wobbly black outlines; rounded imperfect primitive geometry; strong silhouettes; every object independently croppable\nComposition/framing: poster anchor 1 is process and timing question cluster in the left safe zone; poster anchor 2 is property contract and next-step question cluster in the right safe zone; balance the anchors as one coherent lesson composition; keep all meaningful content inside the central 80% and each named anchor fully inside its assigned safe zone so the 16:10 padded card and focused 16:9 poster crops stay intact\nColor palette: cornflower blue, golden yellow, amber, orange, cream, white, black, and at most one muted green; exactly the locked eight-color palette after deterministic flattening; no extra colors\nCharacters: tiny scale, dot eyes, minimal faces, cylindrical limbs, simple hair and clothing silhouettes; use only the minimum people needed to explain the subject\nConstraints: no title, no words, no letters, no numbers, no currency amounts, no logos, no watermark; absolutely uniform flat fills; no white sticker border; no invented software interface; no fixed performance promises; no decorative object without a teaching purpose\nAvoid: gradients, texture, lighting, glow, shadows, reflections, depth, realistic perspective, photorealism, 3D rendering, detailed screens, tiny unreadable symbols, busy backgrounds, edge-cropped key objects, duplicated poster anchors, and subject matter from another lesson",
+      "master": {
+        "id": "master-slot-12",
+        "source_path": "course-assets/thumbnails/production/sources/slot-12-generated.png",
+        "flat_master_path": "course-assets/thumbnails/production/flat-masters/slot-12-flat-master.png",
+        "expected_aspect_ratio": "16:9",
+        "meaningful_content_bounds": {
+          "x_min_percent": 10,
+          "x_max_percent": 90,
+          "y_min_percent": 10,
+          "y_max_percent": 90
+        }
+      },
+      "lesson_card": {
+        "asset_key": "thumbnail-slot-12",
+        "output_path": "course-assets/thumbnails/slot-12.webp",
+        "derivative": {
+          "source_master_id": "master-slot-12",
+          "target_dimensions": [
+            1280,
+            800
+          ],
+          "method": "contain-master-at-1280x720-and-pad-40px-top-and-bottom",
+          "padding_color_rgb": [
+            103,
+            182,
+            255
+          ],
+          "crop_allowed": false,
+          "resample": "lanczos",
+          "output_format": "lossless-webp"
+        },
+        "provenance": {
+          "generator": "built-in image_gen",
+          "generation_call": "one-distinct-call",
+          "source_capture_required": true,
+          "prompt_checksum_required": true,
+          "reference_checksums_required": true,
+          "generated_at_required": true,
+          "generated_by_required": true,
+          "model_output_path_required": true
+        },
+        "approval": {
+          "status": "blocked-pending-pilot-approval",
+          "approved_by": null,
+          "approved_at": null,
+          "evidence": null
+        }
+      },
+      "posters": [
+        {
+          "asset_key": "poster-video-slot-12-faq-a",
+          "video_asset_key": "video-slot-12-faq-a",
+          "video_title": "Seller FAQ Decoder Questions 1 through 5",
+          "output_path": "course-assets/posters/video-slot-12-faq-a.webp",
+          "focus_subject": "process and timing question cluster",
+          "derivative": {
+            "recipe_id": "slot-12-video-slot-12-faq-a-left-safe",
+            "source_master_id": "master-slot-12",
+            "crop_profile": "left-safe",
+            "target_dimensions": [
+              1280,
+              720
+            ],
+            "resample": "lanczos",
+            "output_format": "lossless-webp",
+            "duplicate_pixel_sha256_forbidden": true,
+            "visual_subject_confirmation_required": true
+          },
+          "provenance": {
+            "generator": "built-in image_gen",
+            "generation_call": "one-distinct-call",
+            "source_capture_required": true,
+            "prompt_checksum_required": true,
+            "reference_checksums_required": true,
+            "generated_at_required": true,
+            "generated_by_required": true,
+            "model_output_path_required": true
+          },
+          "approval": {
+            "status": "blocked-pending-pilot-approval",
+            "approved_by": null,
+            "approved_at": null,
+            "evidence": null
+          }
+        },
+        {
+          "asset_key": "poster-video-slot-12-faq-b",
+          "video_asset_key": "video-slot-12-faq-b",
+          "video_title": "Seller FAQ Decoder Questions 6 through 10",
+          "output_path": "course-assets/posters/video-slot-12-faq-b.webp",
+          "focus_subject": "property contract and next-step question cluster",
+          "derivative": {
+            "recipe_id": "slot-12-video-slot-12-faq-b-right-safe",
+            "source_master_id": "master-slot-12",
+            "crop_profile": "right-safe",
+            "target_dimensions": [
+              1280,
+              720
+            ],
+            "resample": "lanczos",
+            "output_format": "lossless-webp",
+            "duplicate_pixel_sha256_forbidden": true,
+            "visual_subject_confirmation_required": true
+          },
+          "provenance": {
+            "generator": "built-in image_gen",
+            "generation_call": "one-distinct-call",
+            "source_capture_required": true,
+            "prompt_checksum_required": true,
+            "reference_checksums_required": true,
+            "generated_at_required": true,
+            "generated_by_required": true,
+            "model_output_path_required": true
+          },
+          "approval": {
+            "status": "blocked-pending-pilot-approval",
+            "approved_by": null,
+            "approved_at": null,
+            "evidence": null
+          }
+        }
+      ],
+      "pilot_review": null,
+      "provenance": {
+        "generator": "built-in image_gen",
+        "generation_call": "one-distinct-call",
+        "source_capture_required": true,
+        "prompt_checksum_required": true,
+        "reference_checksums_required": true,
+        "generated_at_required": true,
+        "generated_by_required": true,
+        "model_output_path_required": true
+      },
+      "approval": {
+        "status": "blocked-pending-pilot-approval",
+        "approved_by": null,
+        "approved_at": null,
+        "evidence": null
+      }
+    },
+    {
+      "slot": "slot-13",
+      "lesson_source_key": "lesson-content-slot-13",
+      "title": "Follow-Up Cadence",
+      "pilot": false,
+      "production_source_mode": "generate-after-pilot-approval",
+      "reference_ids": [
+        "style-ref-1",
+        "style-ref-2"
+      ],
+      "prompt": "Use case: stylized-concept\nAsset type: BMH Institute Follow-Up Cadence lesson master, wide 16:9 artwork designed for one 16:10 lesson card and distinct 16:9 video posters\nPrimary request: Create the Follow-Up Cadence lesson illustration. The five-second read must be “follow up consistently with purpose and respect.” Build the visual around a calendar loop connecting a phone, message bubble, task check, and pause marker around one calm homeowner. Each requested poster anchor must be visually independent and recognizable without labels.\nInput images: Image 1 and Image 2 are the canonical BMH Sticker System style references. Use them only for the flat visual language, line quality, palette, character simplicity, and sticker spacing. Do not copy their subjects or layouts.\nScene/backdrop: perfectly uniform flat cornflower-blue field with generous active negative space; a floating sticker composition, never a continuous room, landscape, or realistic environment\nStyle/medium: hand-drawn flat sticker-sheet illustration; thick slightly wobbly black outlines; rounded imperfect primitive geometry; strong silhouettes; every object independently croppable\nComposition/framing: poster anchor 1 is purposeful respectful follow-up loop in the center safe zone; balance the anchors as one coherent lesson composition; keep all meaningful content inside the central 80% and each named anchor fully inside its assigned safe zone so the 16:10 padded card and focused 16:9 poster crops stay intact\nColor palette: cornflower blue, golden yellow, amber, orange, cream, white, black, and at most one muted green; exactly the locked eight-color palette after deterministic flattening; no extra colors\nCharacters: tiny scale, dot eyes, minimal faces, cylindrical limbs, simple hair and clothing silhouettes; use only the minimum people needed to explain the subject\nConstraints: no title, no words, no letters, no numbers, no currency amounts, no logos, no watermark; absolutely uniform flat fills; no white sticker border; no invented software interface; no fixed performance promises; no decorative object without a teaching purpose\nAvoid: gradients, texture, lighting, glow, shadows, reflections, depth, realistic perspective, photorealism, 3D rendering, detailed screens, tiny unreadable symbols, busy backgrounds, edge-cropped key objects, duplicated poster anchors, and subject matter from another lesson",
+      "master": {
+        "id": "master-slot-13",
+        "source_path": "course-assets/thumbnails/production/sources/slot-13-generated.png",
+        "flat_master_path": "course-assets/thumbnails/production/flat-masters/slot-13-flat-master.png",
+        "expected_aspect_ratio": "16:9",
+        "meaningful_content_bounds": {
+          "x_min_percent": 10,
+          "x_max_percent": 90,
+          "y_min_percent": 10,
+          "y_max_percent": 90
+        }
+      },
+      "lesson_card": {
+        "asset_key": "thumbnail-slot-13",
+        "output_path": "course-assets/thumbnails/slot-13.webp",
+        "derivative": {
+          "source_master_id": "master-slot-13",
+          "target_dimensions": [
+            1280,
+            800
+          ],
+          "method": "contain-master-at-1280x720-and-pad-40px-top-and-bottom",
+          "padding_color_rgb": [
+            103,
+            182,
+            255
+          ],
+          "crop_allowed": false,
+          "resample": "lanczos",
+          "output_format": "lossless-webp"
+        },
+        "provenance": {
+          "generator": "built-in image_gen",
+          "generation_call": "one-distinct-call",
+          "source_capture_required": true,
+          "prompt_checksum_required": true,
+          "reference_checksums_required": true,
+          "generated_at_required": true,
+          "generated_by_required": true,
+          "model_output_path_required": true
+        },
+        "approval": {
+          "status": "blocked-pending-pilot-approval",
+          "approved_by": null,
+          "approved_at": null,
+          "evidence": null
+        }
+      },
+      "posters": [
+        {
+          "asset_key": "poster-video-slot-13-follow-up",
+          "video_asset_key": "video-slot-13-follow-up",
+          "video_title": "Follow-Up Cadence",
+          "output_path": "course-assets/posters/video-slot-13-follow-up.webp",
+          "focus_subject": "purposeful respectful follow-up loop",
+          "derivative": {
+            "recipe_id": "slot-13-video-slot-13-follow-up-full-safe",
+            "source_master_id": "master-slot-13",
+            "crop_profile": "full-safe",
+            "target_dimensions": [
+              1280,
+              720
+            ],
+            "resample": "lanczos",
+            "output_format": "lossless-webp",
+            "duplicate_pixel_sha256_forbidden": true,
+            "visual_subject_confirmation_required": true
+          },
+          "provenance": {
+            "generator": "built-in image_gen",
+            "generation_call": "one-distinct-call",
+            "source_capture_required": true,
+            "prompt_checksum_required": true,
+            "reference_checksums_required": true,
+            "generated_at_required": true,
+            "generated_by_required": true,
+            "model_output_path_required": true
+          },
+          "approval": {
+            "status": "blocked-pending-pilot-approval",
+            "approved_by": null,
+            "approved_at": null,
+            "evidence": null
+          }
+        }
+      ],
+      "pilot_review": null,
+      "provenance": {
+        "generator": "built-in image_gen",
+        "generation_call": "one-distinct-call",
+        "source_capture_required": true,
+        "prompt_checksum_required": true,
+        "reference_checksums_required": true,
+        "generated_at_required": true,
+        "generated_by_required": true,
+        "model_output_path_required": true
+      },
+      "approval": {
+        "status": "blocked-pending-pilot-approval",
+        "approved_by": null,
+        "approved_at": null,
+        "evidence": null
+      }
+    },
+    {
+      "slot": "slot-14",
+      "lesson_source_key": "lesson-content-slot-14",
+      "title": "Conversation Flow Mastery",
+      "pilot": false,
+      "production_source_mode": "generate-after-pilot-approval",
+      "reference_ids": [
+        "style-ref-1",
+        "style-ref-2"
+      ],
+      "prompt": "Use case: stylized-concept\nAsset type: BMH Institute Conversation Flow Mastery lesson master, wide 16:9 artwork designed for one 16:10 lesson card and distinct 16:9 video posters\nPrimary request: Create the Conversation Flow Mastery lesson illustration. The five-second read must be “guide a natural conversation from opening to clear next step.” Build the visual around a flowing path of listening, discovery, option, agreement, and next-step stickers led by one calm rep. Each requested poster anchor must be visually independent and recognizable without labels.\nInput images: Image 1 and Image 2 are the canonical BMH Sticker System style references. Use them only for the flat visual language, line quality, palette, character simplicity, and sticker spacing. Do not copy their subjects or layouts.\nScene/backdrop: perfectly uniform flat cornflower-blue field with generous active negative space; a floating sticker composition, never a continuous room, landscape, or realistic environment\nStyle/medium: hand-drawn flat sticker-sheet illustration; thick slightly wobbly black outlines; rounded imperfect primitive geometry; strong silhouettes; every object independently croppable\nComposition/framing: poster anchor 1 is natural conversation flow from listen to next step in the center safe zone; balance the anchors as one coherent lesson composition; keep all meaningful content inside the central 80% and each named anchor fully inside its assigned safe zone so the 16:10 padded card and focused 16:9 poster crops stay intact\nColor palette: cornflower blue, golden yellow, amber, orange, cream, white, black, and at most one muted green; exactly the locked eight-color palette after deterministic flattening; no extra colors\nCharacters: tiny scale, dot eyes, minimal faces, cylindrical limbs, simple hair and clothing silhouettes; use only the minimum people needed to explain the subject\nConstraints: no title, no words, no letters, no numbers, no currency amounts, no logos, no watermark; absolutely uniform flat fills; no white sticker border; no invented software interface; no fixed performance promises; no decorative object without a teaching purpose\nAvoid: gradients, texture, lighting, glow, shadows, reflections, depth, realistic perspective, photorealism, 3D rendering, detailed screens, tiny unreadable symbols, busy backgrounds, edge-cropped key objects, duplicated poster anchors, and subject matter from another lesson",
+      "master": {
+        "id": "master-slot-14",
+        "source_path": "course-assets/thumbnails/production/sources/slot-14-generated.png",
+        "flat_master_path": "course-assets/thumbnails/production/flat-masters/slot-14-flat-master.png",
+        "expected_aspect_ratio": "16:9",
+        "meaningful_content_bounds": {
+          "x_min_percent": 10,
+          "x_max_percent": 90,
+          "y_min_percent": 10,
+          "y_max_percent": 90
+        }
+      },
+      "lesson_card": {
+        "asset_key": "thumbnail-slot-14",
+        "output_path": "course-assets/thumbnails/slot-14.webp",
+        "derivative": {
+          "source_master_id": "master-slot-14",
+          "target_dimensions": [
+            1280,
+            800
+          ],
+          "method": "contain-master-at-1280x720-and-pad-40px-top-and-bottom",
+          "padding_color_rgb": [
+            103,
+            182,
+            255
+          ],
+          "crop_allowed": false,
+          "resample": "lanczos",
+          "output_format": "lossless-webp"
+        },
+        "provenance": {
+          "generator": "built-in image_gen",
+          "generation_call": "one-distinct-call",
+          "source_capture_required": true,
+          "prompt_checksum_required": true,
+          "reference_checksums_required": true,
+          "generated_at_required": true,
+          "generated_by_required": true,
+          "model_output_path_required": true
+        },
+        "approval": {
+          "status": "blocked-pending-pilot-approval",
+          "approved_by": null,
+          "approved_at": null,
+          "evidence": null
+        }
+      },
+      "posters": [
+        {
+          "asset_key": "poster-video-slot-14-flow",
+          "video_asset_key": "video-slot-14-flow",
+          "video_title": "Conversation Flow Mastery",
+          "output_path": "course-assets/posters/video-slot-14-flow.webp",
+          "focus_subject": "natural conversation flow from listen to next step",
+          "derivative": {
+            "recipe_id": "slot-14-video-slot-14-flow-full-safe",
+            "source_master_id": "master-slot-14",
+            "crop_profile": "full-safe",
+            "target_dimensions": [
+              1280,
+              720
+            ],
+            "resample": "lanczos",
+            "output_format": "lossless-webp",
+            "duplicate_pixel_sha256_forbidden": true,
+            "visual_subject_confirmation_required": true
+          },
+          "provenance": {
+            "generator": "built-in image_gen",
+            "generation_call": "one-distinct-call",
+            "source_capture_required": true,
+            "prompt_checksum_required": true,
+            "reference_checksums_required": true,
+            "generated_at_required": true,
+            "generated_by_required": true,
+            "model_output_path_required": true
+          },
+          "approval": {
+            "status": "blocked-pending-pilot-approval",
+            "approved_by": null,
+            "approved_at": null,
+            "evidence": null
+          }
+        }
+      ],
+      "pilot_review": null,
+      "provenance": {
+        "generator": "built-in image_gen",
+        "generation_call": "one-distinct-call",
+        "source_capture_required": true,
+        "prompt_checksum_required": true,
+        "reference_checksums_required": true,
+        "generated_at_required": true,
+        "generated_by_required": true,
+        "model_output_path_required": true
+      },
+      "approval": {
+        "status": "blocked-pending-pilot-approval",
+        "approved_by": null,
+        "approved_at": null,
+        "evidence": null
+      }
+    },
+    {
+      "slot": "slot-15",
+      "lesson_source_key": "lesson-content-slot-15",
+      "title": "Closing and Deal Engineering",
+      "pilot": false,
+      "production_source_mode": "generate-after-pilot-approval",
+      "reference_ids": [
+        "style-ref-1",
+        "style-ref-2"
+      ],
+      "prompt": "Use case: stylized-concept\nAsset type: BMH Institute Closing and Deal Engineering lesson master, wide 16:9 artwork designed for one 16:10 lesson card and distinct 16:9 video posters\nPrimary request: Create the Closing and Deal Engineering lesson illustration. The five-second read must be “assemble a sound agreement that works for both sides.” Build the visual around two sides of a bridge joined by contract, calendar, house, and handshake puzzle pieces with a final fit check. Each requested poster anchor must be visually independent and recognizable without labels.\nInput images: Image 1 and Image 2 are the canonical BMH Sticker System style references. Use them only for the flat visual language, line quality, palette, character simplicity, and sticker spacing. Do not copy their subjects or layouts.\nScene/backdrop: perfectly uniform flat cornflower-blue field with generous active negative space; a floating sticker composition, never a continuous room, landscape, or realistic environment\nStyle/medium: hand-drawn flat sticker-sheet illustration; thick slightly wobbly black outlines; rounded imperfect primitive geometry; strong silhouettes; every object independently croppable\nComposition/framing: poster anchor 1 is sound agreement and deal-fit bridge in the center safe zone; balance the anchors as one coherent lesson composition; keep all meaningful content inside the central 80% and each named anchor fully inside its assigned safe zone so the 16:10 padded card and focused 16:9 poster crops stay intact\nColor palette: cornflower blue, golden yellow, amber, orange, cream, white, black, and at most one muted green; exactly the locked eight-color palette after deterministic flattening; no extra colors\nCharacters: tiny scale, dot eyes, minimal faces, cylindrical limbs, simple hair and clothing silhouettes; use only the minimum people needed to explain the subject\nConstraints: no title, no words, no letters, no numbers, no currency amounts, no logos, no watermark; absolutely uniform flat fills; no white sticker border; no invented software interface; no fixed performance promises; no decorative object without a teaching purpose\nAvoid: gradients, texture, lighting, glow, shadows, reflections, depth, realistic perspective, photorealism, 3D rendering, detailed screens, tiny unreadable symbols, busy backgrounds, edge-cropped key objects, duplicated poster anchors, and subject matter from another lesson",
+      "master": {
+        "id": "master-slot-15",
+        "source_path": "course-assets/thumbnails/production/sources/slot-15-generated.png",
+        "flat_master_path": "course-assets/thumbnails/production/flat-masters/slot-15-flat-master.png",
+        "expected_aspect_ratio": "16:9",
+        "meaningful_content_bounds": {
+          "x_min_percent": 10,
+          "x_max_percent": 90,
+          "y_min_percent": 10,
+          "y_max_percent": 90
+        }
+      },
+      "lesson_card": {
+        "asset_key": "thumbnail-slot-15",
+        "output_path": "course-assets/thumbnails/slot-15.webp",
+        "derivative": {
+          "source_master_id": "master-slot-15",
+          "target_dimensions": [
+            1280,
+            800
+          ],
+          "method": "contain-master-at-1280x720-and-pad-40px-top-and-bottom",
+          "padding_color_rgb": [
+            103,
+            182,
+            255
+          ],
+          "crop_allowed": false,
+          "resample": "lanczos",
+          "output_format": "lossless-webp"
+        },
+        "provenance": {
+          "generator": "built-in image_gen",
+          "generation_call": "one-distinct-call",
+          "source_capture_required": true,
+          "prompt_checksum_required": true,
+          "reference_checksums_required": true,
+          "generated_at_required": true,
+          "generated_by_required": true,
+          "model_output_path_required": true
+        },
+        "approval": {
+          "status": "blocked-pending-pilot-approval",
+          "approved_by": null,
+          "approved_at": null,
+          "evidence": null
+        }
+      },
+      "posters": [
+        {
+          "asset_key": "poster-video-slot-15-closing",
+          "video_asset_key": "video-slot-15-closing",
+          "video_title": "Closing and Deal Engineering",
+          "output_path": "course-assets/posters/video-slot-15-closing.webp",
+          "focus_subject": "sound agreement and deal-fit bridge",
+          "derivative": {
+            "recipe_id": "slot-15-video-slot-15-closing-full-safe",
+            "source_master_id": "master-slot-15",
+            "crop_profile": "full-safe",
+            "target_dimensions": [
+              1280,
+              720
+            ],
+            "resample": "lanczos",
+            "output_format": "lossless-webp",
+            "duplicate_pixel_sha256_forbidden": true,
+            "visual_subject_confirmation_required": true
+          },
+          "provenance": {
+            "generator": "built-in image_gen",
+            "generation_call": "one-distinct-call",
+            "source_capture_required": true,
+            "prompt_checksum_required": true,
+            "reference_checksums_required": true,
+            "generated_at_required": true,
+            "generated_by_required": true,
+            "model_output_path_required": true
+          },
+          "approval": {
+            "status": "blocked-pending-pilot-approval",
+            "approved_by": null,
+            "approved_at": null,
+            "evidence": null
+          }
+        }
+      ],
+      "pilot_review": null,
+      "provenance": {
+        "generator": "built-in image_gen",
+        "generation_call": "one-distinct-call",
+        "source_capture_required": true,
+        "prompt_checksum_required": true,
+        "reference_checksums_required": true,
+        "generated_at_required": true,
+        "generated_by_required": true,
+        "model_output_path_required": true
+      },
+      "approval": {
+        "status": "blocked-pending-pilot-approval",
+        "approved_by": null,
+        "approved_at": null,
+        "evidence": null
+      }
+    },
+    {
+      "slot": "slot-16",
+      "lesson_source_key": "lesson-content-slot-16",
+      "title": "KPIs and Sales Telemetry",
+      "pilot": false,
+      "production_source_mode": "generate-after-pilot-approval",
+      "reference_ids": [
+        "style-ref-1",
+        "style-ref-2"
+      ],
+      "prompt": "Use case: stylized-concept\nAsset type: BMH Institute KPIs and Sales Telemetry lesson master, wide 16:9 artwork designed for one 16:10 lesson card and distinct 16:9 video posters\nPrimary request: Create the KPIs and Sales Telemetry lesson illustration. The five-second read must be “use quality signals to improve the work without chasing vanity numbers.” Build the visual around a clean signal dashboard with a gauge, conversation-quality waveform, funnel, coaching magnifier, and improvement arrow. Each requested poster anchor must be visually independent and recognizable without labels.\nInput images: Image 1 and Image 2 are the canonical BMH Sticker System style references. Use them only for the flat visual language, line quality, palette, character simplicity, and sticker spacing. Do not copy their subjects or layouts.\nScene/backdrop: perfectly uniform flat cornflower-blue field with generous active negative space; a floating sticker composition, never a continuous room, landscape, or realistic environment\nStyle/medium: hand-drawn flat sticker-sheet illustration; thick slightly wobbly black outlines; rounded imperfect primitive geometry; strong silhouettes; every object independently croppable\nComposition/framing: poster anchor 1 is quality signals coaching and improvement in the center safe zone; balance the anchors as one coherent lesson composition; keep all meaningful content inside the central 80% and each named anchor fully inside its assigned safe zone so the 16:10 padded card and focused 16:9 poster crops stay intact\nColor palette: cornflower blue, golden yellow, amber, orange, cream, white, black, and at most one muted green; exactly the locked eight-color palette after deterministic flattening; no extra colors\nCharacters: tiny scale, dot eyes, minimal faces, cylindrical limbs, simple hair and clothing silhouettes; use only the minimum people needed to explain the subject\nConstraints: no title, no words, no letters, no numbers, no currency amounts, no logos, no watermark; absolutely uniform flat fills; no white sticker border; no invented software interface; no fixed performance promises; no decorative object without a teaching purpose\nAvoid: gradients, texture, lighting, glow, shadows, reflections, depth, realistic perspective, photorealism, 3D rendering, detailed screens, tiny unreadable symbols, busy backgrounds, edge-cropped key objects, duplicated poster anchors, and subject matter from another lesson",
+      "master": {
+        "id": "master-slot-16",
+        "source_path": "course-assets/thumbnails/production/sources/slot-16-generated.png",
+        "flat_master_path": "course-assets/thumbnails/production/flat-masters/slot-16-flat-master.png",
+        "expected_aspect_ratio": "16:9",
+        "meaningful_content_bounds": {
+          "x_min_percent": 10,
+          "x_max_percent": 90,
+          "y_min_percent": 10,
+          "y_max_percent": 90
+        }
+      },
+      "lesson_card": {
+        "asset_key": "thumbnail-slot-16",
+        "output_path": "course-assets/thumbnails/slot-16.webp",
+        "derivative": {
+          "source_master_id": "master-slot-16",
+          "target_dimensions": [
+            1280,
+            800
+          ],
+          "method": "contain-master-at-1280x720-and-pad-40px-top-and-bottom",
+          "padding_color_rgb": [
+            103,
+            182,
+            255
+          ],
+          "crop_allowed": false,
+          "resample": "lanczos",
+          "output_format": "lossless-webp"
+        },
+        "provenance": {
+          "generator": "built-in image_gen",
+          "generation_call": "one-distinct-call",
+          "source_capture_required": true,
+          "prompt_checksum_required": true,
+          "reference_checksums_required": true,
+          "generated_at_required": true,
+          "generated_by_required": true,
+          "model_output_path_required": true
+        },
+        "approval": {
+          "status": "blocked-pending-pilot-approval",
+          "approved_by": null,
+          "approved_at": null,
+          "evidence": null
+        }
+      },
+      "posters": [
+        {
+          "asset_key": "poster-video-slot-16-kpis",
+          "video_asset_key": "video-slot-16-kpis",
+          "video_title": "KPIs and Sales Telemetry",
+          "output_path": "course-assets/posters/video-slot-16-kpis.webp",
+          "focus_subject": "quality signals coaching and improvement",
+          "derivative": {
+            "recipe_id": "slot-16-video-slot-16-kpis-full-safe",
+            "source_master_id": "master-slot-16",
+            "crop_profile": "full-safe",
+            "target_dimensions": [
+              1280,
+              720
+            ],
+            "resample": "lanczos",
+            "output_format": "lossless-webp",
+            "duplicate_pixel_sha256_forbidden": true,
+            "visual_subject_confirmation_required": true
+          },
+          "provenance": {
+            "generator": "built-in image_gen",
+            "generation_call": "one-distinct-call",
+            "source_capture_required": true,
+            "prompt_checksum_required": true,
+            "reference_checksums_required": true,
+            "generated_at_required": true,
+            "generated_by_required": true,
+            "model_output_path_required": true
+          },
+          "approval": {
+            "status": "blocked-pending-pilot-approval",
+            "approved_by": null,
+            "approved_at": null,
+            "evidence": null
+          }
+        }
+      ],
+      "pilot_review": null,
+      "provenance": {
+        "generator": "built-in image_gen",
+        "generation_call": "one-distinct-call",
+        "source_capture_required": true,
+        "prompt_checksum_required": true,
+        "reference_checksums_required": true,
+        "generated_at_required": true,
+        "generated_by_required": true,
+        "model_output_path_required": true
+      },
+      "approval": {
+        "status": "blocked-pending-pilot-approval",
+        "approved_by": null,
+        "approved_at": null,
+        "evidence": null
+      }
+    },
+    {
+      "slot": "slot-17",
+      "lesson_source_key": "lesson-content-slot-17",
+      "title": "Compensation Engine",
+      "pilot": false,
+      "production_source_mode": "generate-after-pilot-approval",
+      "reference_ids": [
+        "style-ref-1",
+        "style-ref-2"
+      ],
+      "prompt": "Use case: stylized-concept\nAsset type: BMH Institute Compensation Engine lesson master, wide 16:9 artwork designed for one 16:10 lesson card and distinct 16:9 video posters\nPrimary request: Create the Compensation Engine lesson illustration. The five-second read must be “understand how role expectations and verified outcomes connect to the current written plan.” Build the visual around a written role sheet connected by gears to quality work, verified outcome, and review check stickers, with no money symbols. Each requested poster anchor must be visually independent and recognizable without labels.\nInput images: Image 1 and Image 2 are the canonical BMH Sticker System style references. Use them only for the flat visual language, line quality, palette, character simplicity, and sticker spacing. Do not copy their subjects or layouts.\nScene/backdrop: perfectly uniform flat cornflower-blue field with generous active negative space; a floating sticker composition, never a continuous room, landscape, or realistic environment\nStyle/medium: hand-drawn flat sticker-sheet illustration; thick slightly wobbly black outlines; rounded imperfect primitive geometry; strong silhouettes; every object independently croppable\nComposition/framing: poster anchor 1 is written role plan linked to verified outcomes in the center safe zone; balance the anchors as one coherent lesson composition; keep all meaningful content inside the central 80% and each named anchor fully inside its assigned safe zone so the 16:10 padded card and focused 16:9 poster crops stay intact\nColor palette: cornflower blue, golden yellow, amber, orange, cream, white, black, and at most one muted green; exactly the locked eight-color palette after deterministic flattening; no extra colors\nCharacters: tiny scale, dot eyes, minimal faces, cylindrical limbs, simple hair and clothing silhouettes; use only the minimum people needed to explain the subject\nConstraints: no title, no words, no letters, no numbers, no currency amounts, no logos, no watermark; absolutely uniform flat fills; no white sticker border; no invented software interface; no fixed performance promises; no decorative object without a teaching purpose\nAvoid: gradients, texture, lighting, glow, shadows, reflections, depth, realistic perspective, photorealism, 3D rendering, detailed screens, tiny unreadable symbols, busy backgrounds, edge-cropped key objects, duplicated poster anchors, and subject matter from another lesson",
+      "master": {
+        "id": "master-slot-17",
+        "source_path": "course-assets/thumbnails/production/sources/slot-17-generated.png",
+        "flat_master_path": "course-assets/thumbnails/production/flat-masters/slot-17-flat-master.png",
+        "expected_aspect_ratio": "16:9",
+        "meaningful_content_bounds": {
+          "x_min_percent": 10,
+          "x_max_percent": 90,
+          "y_min_percent": 10,
+          "y_max_percent": 90
+        }
+      },
+      "lesson_card": {
+        "asset_key": "thumbnail-slot-17",
+        "output_path": "course-assets/thumbnails/slot-17.webp",
+        "derivative": {
+          "source_master_id": "master-slot-17",
+          "target_dimensions": [
+            1280,
+            800
+          ],
+          "method": "contain-master-at-1280x720-and-pad-40px-top-and-bottom",
+          "padding_color_rgb": [
+            103,
+            182,
+            255
+          ],
+          "crop_allowed": false,
+          "resample": "lanczos",
+          "output_format": "lossless-webp"
+        },
+        "provenance": {
+          "generator": "built-in image_gen",
+          "generation_call": "one-distinct-call",
+          "source_capture_required": true,
+          "prompt_checksum_required": true,
+          "reference_checksums_required": true,
+          "generated_at_required": true,
+          "generated_by_required": true,
+          "model_output_path_required": true
+        },
+        "approval": {
+          "status": "blocked-pending-pilot-approval",
+          "approved_by": null,
+          "approved_at": null,
+          "evidence": null
+        }
+      },
+      "posters": [
+        {
+          "asset_key": "poster-video-slot-17-compensation",
+          "video_asset_key": "video-slot-17-compensation",
+          "video_title": "Compensation Engine",
+          "output_path": "course-assets/posters/video-slot-17-compensation.webp",
+          "focus_subject": "written role plan linked to verified outcomes",
+          "derivative": {
+            "recipe_id": "slot-17-video-slot-17-compensation-full-safe",
+            "source_master_id": "master-slot-17",
+            "crop_profile": "full-safe",
+            "target_dimensions": [
+              1280,
+              720
+            ],
+            "resample": "lanczos",
+            "output_format": "lossless-webp",
+            "duplicate_pixel_sha256_forbidden": true,
+            "visual_subject_confirmation_required": true
+          },
+          "provenance": {
+            "generator": "built-in image_gen",
+            "generation_call": "one-distinct-call",
+            "source_capture_required": true,
+            "prompt_checksum_required": true,
+            "reference_checksums_required": true,
+            "generated_at_required": true,
+            "generated_by_required": true,
+            "model_output_path_required": true
+          },
+          "approval": {
+            "status": "blocked-pending-pilot-approval",
+            "approved_by": null,
+            "approved_at": null,
+            "evidence": null
+          }
+        }
+      ],
+      "pilot_review": null,
+      "provenance": {
+        "generator": "built-in image_gen",
+        "generation_call": "one-distinct-call",
+        "source_capture_required": true,
+        "prompt_checksum_required": true,
+        "reference_checksums_required": true,
+        "generated_at_required": true,
+        "generated_by_required": true,
+        "model_output_path_required": true
+      },
+      "approval": {
+        "status": "blocked-pending-pilot-approval",
+        "approved_by": null,
+        "approved_at": null,
+        "evidence": null
+      }
+    },
+    {
+      "slot": "slot-18",
+      "lesson_source_key": "lesson-content-slot-18",
+      "title": "Operator Playbook and Daily Mission Control",
+      "pilot": false,
+      "production_source_mode": "generate-after-pilot-approval",
+      "reference_ids": [
+        "style-ref-1",
+        "style-ref-2"
+      ],
+      "prompt": "Use case: stylized-concept\nAsset type: BMH Institute Operator Playbook and Daily Mission Control lesson master, wide 16:9 artwork designed for one 16:10 lesson card and distinct 16:9 video posters\nPrimary request: Create the Operator Playbook and Daily Mission Control lesson illustration. The five-second read must be “own the daily operating rhythm and keep priorities visible.” Build the visual around an operator station with an ownership checklist, beside a mission-control board linking calendar, calls, tasks, pipeline, and coaching. Each requested poster anchor must be visually independent and recognizable without labels.\nInput images: Image 1 and Image 2 are the canonical BMH Sticker System style references. Use them only for the flat visual language, line quality, palette, character simplicity, and sticker spacing. Do not copy their subjects or layouts.\nScene/backdrop: perfectly uniform flat cornflower-blue field with generous active negative space; a floating sticker composition, never a continuous room, landscape, or realistic environment\nStyle/medium: hand-drawn flat sticker-sheet illustration; thick slightly wobbly black outlines; rounded imperfect primitive geometry; strong silhouettes; every object independently croppable\nComposition/framing: poster anchor 1 is operator ownership checklist in the left safe zone; poster anchor 2 is daily mission-control board in the right safe zone; balance the anchors as one coherent lesson composition; keep all meaningful content inside the central 80% and each named anchor fully inside its assigned safe zone so the 16:10 padded card and focused 16:9 poster crops stay intact\nColor palette: cornflower blue, golden yellow, amber, orange, cream, white, black, and at most one muted green; exactly the locked eight-color palette after deterministic flattening; no extra colors\nCharacters: tiny scale, dot eyes, minimal faces, cylindrical limbs, simple hair and clothing silhouettes; use only the minimum people needed to explain the subject\nConstraints: no title, no words, no letters, no numbers, no currency amounts, no logos, no watermark; absolutely uniform flat fills; no white sticker border; no invented software interface; no fixed performance promises; no decorative object without a teaching purpose\nAvoid: gradients, texture, lighting, glow, shadows, reflections, depth, realistic perspective, photorealism, 3D rendering, detailed screens, tiny unreadable symbols, busy backgrounds, edge-cropped key objects, duplicated poster anchors, and subject matter from another lesson",
+      "master": {
+        "id": "master-slot-18",
+        "source_path": "course-assets/thumbnails/production/sources/slot-18-generated.png",
+        "flat_master_path": "course-assets/thumbnails/production/flat-masters/slot-18-flat-master.png",
+        "expected_aspect_ratio": "16:9",
+        "meaningful_content_bounds": {
+          "x_min_percent": 10,
+          "x_max_percent": 90,
+          "y_min_percent": 10,
+          "y_max_percent": 90
+        }
+      },
+      "lesson_card": {
+        "asset_key": "thumbnail-slot-18",
+        "output_path": "course-assets/thumbnails/slot-18.webp",
+        "derivative": {
+          "source_master_id": "master-slot-18",
+          "target_dimensions": [
+            1280,
+            800
+          ],
+          "method": "contain-master-at-1280x720-and-pad-40px-top-and-bottom",
+          "padding_color_rgb": [
+            103,
+            182,
+            255
+          ],
+          "crop_allowed": false,
+          "resample": "lanczos",
+          "output_format": "lossless-webp"
+        },
+        "provenance": {
+          "generator": "built-in image_gen",
+          "generation_call": "one-distinct-call",
+          "source_capture_required": true,
+          "prompt_checksum_required": true,
+          "reference_checksums_required": true,
+          "generated_at_required": true,
+          "generated_by_required": true,
+          "model_output_path_required": true
+        },
+        "approval": {
+          "status": "blocked-pending-pilot-approval",
+          "approved_by": null,
+          "approved_at": null,
+          "evidence": null
+        }
+      },
+      "posters": [
+        {
+          "asset_key": "poster-video-slot-18-operator",
+          "video_asset_key": "video-slot-18-operator",
+          "video_title": "Operator Playbook",
+          "output_path": "course-assets/posters/video-slot-18-operator.webp",
+          "focus_subject": "operator ownership checklist",
+          "derivative": {
+            "recipe_id": "slot-18-video-slot-18-operator-left-safe",
+            "source_master_id": "master-slot-18",
+            "crop_profile": "left-safe",
+            "target_dimensions": [
+              1280,
+              720
+            ],
+            "resample": "lanczos",
+            "output_format": "lossless-webp",
+            "duplicate_pixel_sha256_forbidden": true,
+            "visual_subject_confirmation_required": true
+          },
+          "provenance": {
+            "generator": "built-in image_gen",
+            "generation_call": "one-distinct-call",
+            "source_capture_required": true,
+            "prompt_checksum_required": true,
+            "reference_checksums_required": true,
+            "generated_at_required": true,
+            "generated_by_required": true,
+            "model_output_path_required": true
+          },
+          "approval": {
+            "status": "blocked-pending-pilot-approval",
+            "approved_by": null,
+            "approved_at": null,
+            "evidence": null
+          }
+        },
+        {
+          "asset_key": "poster-video-slot-18-mission-control",
+          "video_asset_key": "video-slot-18-mission-control",
+          "video_title": "Daily Mission Control",
+          "output_path": "course-assets/posters/video-slot-18-mission-control.webp",
+          "focus_subject": "daily mission-control board",
+          "derivative": {
+            "recipe_id": "slot-18-video-slot-18-mission-control-right-safe",
+            "source_master_id": "master-slot-18",
+            "crop_profile": "right-safe",
+            "target_dimensions": [
+              1280,
+              720
+            ],
+            "resample": "lanczos",
+            "output_format": "lossless-webp",
+            "duplicate_pixel_sha256_forbidden": true,
+            "visual_subject_confirmation_required": true
+          },
+          "provenance": {
+            "generator": "built-in image_gen",
+            "generation_call": "one-distinct-call",
+            "source_capture_required": true,
+            "prompt_checksum_required": true,
+            "reference_checksums_required": true,
+            "generated_at_required": true,
+            "generated_by_required": true,
+            "model_output_path_required": true
+          },
+          "approval": {
+            "status": "blocked-pending-pilot-approval",
+            "approved_by": null,
+            "approved_at": null,
+            "evidence": null
+          }
+        }
+      ],
+      "pilot_review": null,
+      "provenance": {
+        "generator": "built-in image_gen",
+        "generation_call": "one-distinct-call",
+        "source_capture_required": true,
+        "prompt_checksum_required": true,
+        "reference_checksums_required": true,
+        "generated_at_required": true,
+        "generated_by_required": true,
+        "model_output_path_required": true
+      },
+      "approval": {
+        "status": "blocked-pending-pilot-approval",
+        "approved_by": null,
+        "approved_at": null,
+        "evidence": null
+      }
+    },
+    {
+      "slot": "slot-19",
+      "lesson_source_key": "lesson-content-slot-19",
+      "title": "Career Growth Path",
+      "pilot": false,
+      "production_source_mode": "generate-after-pilot-approval",
+      "reference_ids": [
+        "style-ref-1",
+        "style-ref-2"
+      ],
+      "prompt": "Use case: stylized-concept\nAsset type: BMH Institute Career Growth Path lesson master, wide 16:9 artwork designed for one 16:10 lesson card and distinct 16:9 video posters\nPrimary request: Create the Career Growth Path lesson illustration. The five-second read must be “build capability through practice feedback and increasing ownership.” Build the visual around a learner climbing broad steps marked only by practice, coaching, capability, and ownership icons toward a guiding beacon. Each requested poster anchor must be visually independent and recognizable without labels.\nInput images: Image 1 and Image 2 are the canonical BMH Sticker System style references. Use them only for the flat visual language, line quality, palette, character simplicity, and sticker spacing. Do not copy their subjects or layouts.\nScene/backdrop: perfectly uniform flat cornflower-blue field with generous active negative space; a floating sticker composition, never a continuous room, landscape, or realistic environment\nStyle/medium: hand-drawn flat sticker-sheet illustration; thick slightly wobbly black outlines; rounded imperfect primitive geometry; strong silhouettes; every object independently croppable\nComposition/framing: poster anchor 1 is practice coaching capability and ownership path in the center safe zone; balance the anchors as one coherent lesson composition; keep all meaningful content inside the central 80% and each named anchor fully inside its assigned safe zone so the 16:10 padded card and focused 16:9 poster crops stay intact\nColor palette: cornflower blue, golden yellow, amber, orange, cream, white, black, and at most one muted green; exactly the locked eight-color palette after deterministic flattening; no extra colors\nCharacters: tiny scale, dot eyes, minimal faces, cylindrical limbs, simple hair and clothing silhouettes; use only the minimum people needed to explain the subject\nConstraints: no title, no words, no letters, no numbers, no currency amounts, no logos, no watermark; absolutely uniform flat fills; no white sticker border; no invented software interface; no fixed performance promises; no decorative object without a teaching purpose\nAvoid: gradients, texture, lighting, glow, shadows, reflections, depth, realistic perspective, photorealism, 3D rendering, detailed screens, tiny unreadable symbols, busy backgrounds, edge-cropped key objects, duplicated poster anchors, and subject matter from another lesson",
+      "master": {
+        "id": "master-slot-19",
+        "source_path": "course-assets/thumbnails/production/sources/slot-19-generated.png",
+        "flat_master_path": "course-assets/thumbnails/production/flat-masters/slot-19-flat-master.png",
+        "expected_aspect_ratio": "16:9",
+        "meaningful_content_bounds": {
+          "x_min_percent": 10,
+          "x_max_percent": 90,
+          "y_min_percent": 10,
+          "y_max_percent": 90
+        }
+      },
+      "lesson_card": {
+        "asset_key": "thumbnail-slot-19",
+        "output_path": "course-assets/thumbnails/slot-19.webp",
+        "derivative": {
+          "source_master_id": "master-slot-19",
+          "target_dimensions": [
+            1280,
+            800
+          ],
+          "method": "contain-master-at-1280x720-and-pad-40px-top-and-bottom",
+          "padding_color_rgb": [
+            103,
+            182,
+            255
+          ],
+          "crop_allowed": false,
+          "resample": "lanczos",
+          "output_format": "lossless-webp"
+        },
+        "provenance": {
+          "generator": "built-in image_gen",
+          "generation_call": "one-distinct-call",
+          "source_capture_required": true,
+          "prompt_checksum_required": true,
+          "reference_checksums_required": true,
+          "generated_at_required": true,
+          "generated_by_required": true,
+          "model_output_path_required": true
+        },
+        "approval": {
+          "status": "blocked-pending-pilot-approval",
+          "approved_by": null,
+          "approved_at": null,
+          "evidence": null
+        }
+      },
+      "posters": [
+        {
+          "asset_key": "poster-video-slot-19-career",
+          "video_asset_key": "video-slot-19-career",
+          "video_title": "Career Growth Path",
+          "output_path": "course-assets/posters/video-slot-19-career.webp",
+          "focus_subject": "practice coaching capability and ownership path",
+          "derivative": {
+            "recipe_id": "slot-19-video-slot-19-career-full-safe",
+            "source_master_id": "master-slot-19",
+            "crop_profile": "full-safe",
+            "target_dimensions": [
+              1280,
+              720
+            ],
+            "resample": "lanczos",
+            "output_format": "lossless-webp",
+            "duplicate_pixel_sha256_forbidden": true,
+            "visual_subject_confirmation_required": true
+          },
+          "provenance": {
+            "generator": "built-in image_gen",
+            "generation_call": "one-distinct-call",
+            "source_capture_required": true,
+            "prompt_checksum_required": true,
+            "reference_checksums_required": true,
+            "generated_at_required": true,
+            "generated_by_required": true,
+            "model_output_path_required": true
+          },
+          "approval": {
+            "status": "blocked-pending-pilot-approval",
+            "approved_by": null,
+            "approved_at": null,
+            "evidence": null
+          }
+        }
+      ],
+      "pilot_review": null,
+      "provenance": {
+        "generator": "built-in image_gen",
+        "generation_call": "one-distinct-call",
+        "source_capture_required": true,
+        "prompt_checksum_required": true,
+        "reference_checksums_required": true,
+        "generated_at_required": true,
+        "generated_by_required": true,
+        "model_output_path_required": true
+      },
+      "approval": {
+        "status": "blocked-pending-pilot-approval",
+        "approved_by": null,
+        "approved_at": null,
+        "evidence": null
+      }
+    }
+  ]
+}

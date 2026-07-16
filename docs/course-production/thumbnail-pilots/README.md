@@ -118,3 +118,8 @@ Avoid: any gradient, texture, lighting, glow, shadow, reflection, depth, realist
 
 Batch generation remains gated on Jarrad's explicit approval of these three
 pilots.
+
+The locked post-approval prompts, manifest mappings, derivative rules, and
+machine-verifiable count checks are in `PRODUCTION-SPEC.md` and
+`production-inventory.json`. Preparing those files did not generate or approve
+any additional artwork.
