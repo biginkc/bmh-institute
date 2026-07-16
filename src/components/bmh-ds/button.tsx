@@ -96,8 +96,8 @@ export function Button({
 }: ButtonProps) {
   const [hover, setHover] = React.useState(false);
   const [press, setPress] = React.useState(false);
-  const dimensions = sizes[size];
-  const colors = variants[variant];
+  const dimensions = sizes[size] || sizes.md;
+  const colors = variants[variant] || variants.primary;
 
   return (
     <button

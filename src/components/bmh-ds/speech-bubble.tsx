@@ -10,6 +10,9 @@ export interface SpeechBubbleProps {
   size?: "sm" | "md" | "lg";
 }
 
+type SpeechBubbleRuntimeProps = SpeechBubbleProps &
+  Omit<React.HTMLAttributes<HTMLDivElement>, keyof SpeechBubbleProps>;
+
 const tones = {
   white: { background: "var(--paper)", color: "var(--ink-900)", border: "var(--ink-900)" },
   blue: { background: "var(--action)", color: "#fff", border: "var(--ink-900)" },
@@ -86,13 +89,16 @@ function tailStyles(
  * The signature outlined speech bubble motif — friendly one-liners and coach tips.
  * @startingPoint section="Core" subtitle="Outlined speech-bubble motif" viewport="360x140"
  */
-export function SpeechBubble({
-  children,
-  tone = "white",
-  tail = "bottom-left",
-  size = "md",
-}: SpeechBubbleProps) {
-  const colors = tones[tone];
+export function SpeechBubble(props: SpeechBubbleProps) {
+  const {
+    children,
+    tone = "white",
+    tail = "bottom-left",
+    size = "md",
+    style,
+    ...rest
+  } = props as SpeechBubbleRuntimeProps;
+  const colors = tones[tone] || tones.white;
   const padding =
     size === "sm" ? "10px 14px" : size === "lg" ? "18px 24px" : "14px 18px";
   const fontSize =
@@ -119,7 +125,9 @@ export function SpeechBubble({
         fontSize,
         lineHeight: 1.3,
         boxShadow: "var(--bmh-shadow-sm)",
+        ...style,
       }}
+      {...rest}
     >
       {children}
       <span aria-hidden="true" style={triangle.outline} />

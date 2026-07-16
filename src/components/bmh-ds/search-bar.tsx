@@ -11,13 +11,13 @@ export interface SearchBarProps {
   icon?: React.ReactNode;
 }
 
+type SearchBarRuntimeProps = SearchBarProps &
+  Omit<React.HTMLAttributes<HTMLDivElement>, keyof SearchBarProps>;
+
 /** Pill-shaped search field used in the course catalog and dashboard header. */
-export function SearchBar({
-  placeholder = "Search lessons…",
-  value,
-  onChange,
-  icon,
-}: SearchBarProps) {
+export function SearchBar(props: SearchBarProps) {
+  const { placeholder = "Search lessons…", value, onChange, icon, style, ...rest } =
+    props as SearchBarRuntimeProps;
   const [focus, setFocus] = React.useState(false);
 
   return (
@@ -35,7 +35,9 @@ export function SearchBar({
           : "var(--bmh-shadow-xs)",
         transition:
           "border-color var(--dur) var(--bmh-ease-out), box-shadow var(--dur) var(--bmh-ease-out)",
+        ...style,
       }}
+      {...rest}
     >
       <span style={{ display: "inline-flex", color: "var(--ink-400)" }}>
         {icon || <Search aria-hidden="true" size={18} />}
@@ -44,6 +46,7 @@ export function SearchBar({
         value={value}
         onChange={onChange}
         placeholder={placeholder}
+        aria-label={placeholder}
         onFocus={() => setFocus(true)}
         onBlur={() => setFocus(false)}
         style={{

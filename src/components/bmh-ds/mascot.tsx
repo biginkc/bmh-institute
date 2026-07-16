@@ -7,7 +7,7 @@ export interface MascotProps {
   emotion?: "neutral" | "smile" | "laugh" | "curious" | "thinking" | "worried" | "content";
   /** Explicit image URL (overrides pose/emotion). */
   src?: string;
-  /** Folder the sprites live in, relative to the page. @default "assets/mascot" */
+  /** Folder the sprites live in, relative to the page. @default "/brand/mascot" */
   base?: string;
   /** Rendered height in px. @default 230 pose / 88 emotion */
   height?: number;
@@ -17,20 +17,26 @@ export interface MascotProps {
   flip?: boolean;
 }
 
+type MascotRuntimeProps = MascotProps &
+  Omit<React.ImgHTMLAttributes<HTMLImageElement>, keyof MascotProps>;
+
 /**
  * Andrea — the BMH Institute mascot & narrator (transparent PNG sprites).
  * @startingPoint section="Brand" subtitle="Andrea the mascot — poses & expressions" viewport="360x320"
  */
-export function Mascot({
-  pose,
-  emotion,
-  src,
-  base = "/brand/mascot",
-  height,
-  width,
-  alt = "Andrea",
-  flip = false,
-}: MascotProps) {
+export function Mascot(props: MascotProps) {
+  const {
+    pose,
+    emotion,
+    src,
+    base = "/brand/mascot",
+    height,
+    width,
+    alt = "Andrea",
+    flip = false,
+    style,
+    ...rest
+  } = props as MascotRuntimeProps;
   const url =
     src ||
     (emotion
@@ -51,7 +57,9 @@ export function Mascot({
         transform: flip ? "scaleX(-1)" : "none",
         userSelect: "none",
         WebkitUserDrag: "none",
+        ...style,
       } as React.CSSProperties & { WebkitUserDrag: string }}
+      {...rest}
     />
   );
 }

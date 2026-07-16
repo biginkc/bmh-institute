@@ -11,6 +11,9 @@ export interface AvatarProps {
   outline?: boolean;
 }
 
+type AvatarRuntimeProps = AvatarProps &
+  Omit<React.HTMLAttributes<HTMLDivElement>, keyof AvatarProps>;
+
 const palette = [
   ["var(--blue-400)", "var(--blue-700)"],
   ["var(--yellow-500)", "var(--yellow-600)"],
@@ -31,7 +34,9 @@ function initials(name = "") {
 }
 
 /** Round avatar with colored initials fallback. */
-export function Avatar({ name = "", src, size = 40, outline = true }: AvatarProps) {
+export function Avatar(props: AvatarProps) {
+  const { name = "", src, size = 40, outline = true, style, ...rest } =
+    props as AvatarRuntimeProps;
   const paletteIndex = [...name].reduce(
     (total, character) => total + character.charCodeAt(0),
     0,
@@ -55,7 +60,9 @@ export function Avatar({ name = "", src, size = 40, outline = true }: AvatarProp
         fontFamily: "var(--font-display)",
         fontWeight: 800,
         fontSize: size * 0.4,
+        ...style,
       }}
+      {...rest}
     >
       {src ? (
         // The source can be a user-provided URL, so dimensions are controlled by the avatar shell.

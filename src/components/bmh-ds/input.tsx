@@ -26,11 +26,16 @@ export function Input({
   type = "text",
   style,
   id,
+  onFocus,
+  onBlur,
+  "aria-describedby": ariaDescribedBy,
+  "aria-invalid": ariaInvalid,
   ...rest
 }: InputProps) {
   const [focus, setFocus] = React.useState(false);
   const generatedId = React.useId();
   const inputId = id || generatedId;
+  const messageId = `${inputId}-message`;
   const padding = size === "sm" ? "9px 12px" : "13px 15px";
   const border = error
     ? "var(--danger)"
@@ -78,8 +83,20 @@ export function Input({
         <input
           id={inputId}
           type={type}
-          onFocus={() => setFocus(true)}
-          onBlur={() => setFocus(false)}
+          aria-describedby={
+            hint || error
+              ? [ariaDescribedBy, messageId].filter(Boolean).join(" ")
+              : ariaDescribedBy
+          }
+          aria-invalid={error ? true : ariaInvalid}
+          onFocus={(event) => {
+            setFocus(true);
+            onFocus?.(event);
+          }}
+          onBlur={(event) => {
+            setFocus(false);
+            onBlur?.(event);
+          }}
           style={{
             flex: 1,
             border: "none",
@@ -96,6 +113,7 @@ export function Input({
       </div>
       {(hint || error) && (
         <span
+          id={messageId}
           style={{
             fontSize: "var(--fs-caption)",
             fontWeight: 700,

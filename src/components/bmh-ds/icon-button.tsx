@@ -15,6 +15,9 @@ export interface IconButtonProps {
   onClick?: (e: React.MouseEvent) => void;
 }
 
+type IconButtonRuntimeProps = IconButtonProps &
+  Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, keyof IconButtonProps>;
+
 const variants = {
   soft: {
     background: "var(--action-soft)",
@@ -49,18 +52,21 @@ const variants = {
 } as const;
 
 /** Square icon-only button for toolbars and media controls. */
-export function IconButton({
-  children,
-  variant = "soft",
-  size = "md",
-  label,
-  disabled = false,
-  onClick,
-}: IconButtonProps) {
-  const dimension = { sm: 32, md: 40, lg: 48 }[size];
+export function IconButton(props: IconButtonProps) {
+  const {
+    children,
+    variant = "soft",
+    size = "md",
+    label,
+    disabled = false,
+    onClick,
+    style,
+    ...rest
+  } = props as IconButtonRuntimeProps;
+  const dimension = { sm: 32, md: 40, lg: 48 }[size] || 40;
   const [hover, setHover] = React.useState(false);
   const [press, setPress] = React.useState(false);
-  const colors = variants[variant];
+  const colors = variants[variant] || variants.soft;
 
   return (
     <button
@@ -91,7 +97,9 @@ export function IconButton({
         transition:
           "background var(--dur) var(--bmh-ease-out), transform var(--dur-fast) var(--ease-spring)",
         WebkitTapHighlightColor: "transparent",
+        ...style,
       }}
+      {...rest}
     >
       {children}
     </button>

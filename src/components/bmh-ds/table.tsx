@@ -26,17 +26,23 @@ export interface TableProps {
   onRowClick?: (row: any) => void;
 }
 
+type TableRuntimeProps = TableProps &
+  Omit<React.HTMLAttributes<HTMLDivElement>, keyof TableProps>;
+
 /** Lightweight data table for admin lists and reports. */
-export function Table({
-  columns,
-  rows,
-  cell = {},
-  rowKey = "id",
-  empty = "Nothing here yet.",
-  onRowClick,
-}: TableProps) {
+export function Table(props: TableProps) {
+  const {
+    columns = [],
+    rows = [],
+    cell = {},
+    rowKey = "id",
+    empty = "Nothing here yet.",
+    onRowClick,
+    style,
+    ...rest
+  } = props as TableRuntimeProps;
   return (
-    <div style={{ width: "100%", overflowX: "auto" }}>
+    <div style={{ width: "100%", overflowX: "auto", ...style }} {...rest}>
       <table
         style={{
           width: "100%",
@@ -86,6 +92,23 @@ export function Table({
               <tr
                 key={row[rowKey] ?? rowIndex}
                 onClick={onRowClick ? () => onRowClick(row) : undefined}
+                role={onRowClick ? "button" : undefined}
+                tabIndex={onRowClick ? 0 : undefined}
+                aria-label={
+                  onRowClick
+                    ? String(row[columns[0]?.key] ?? `Row ${rowIndex + 1}`)
+                    : undefined
+                }
+                onKeyDown={
+                  onRowClick
+                    ? (event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          onRowClick(row);
+                        }
+                      }
+                    : undefined
+                }
                 style={{
                   cursor: onRowClick ? "pointer" : "default",
                   transition: "background var(--dur) var(--bmh-ease-out)",

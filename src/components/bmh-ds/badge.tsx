@@ -12,6 +12,9 @@ export interface BadgeProps {
   icon?: React.ReactNode;
 }
 
+type BadgeRuntimeProps = BadgeProps &
+  Omit<React.HTMLAttributes<HTMLSpanElement>, keyof BadgeProps>;
+
 const tones = {
   blue: { background: "var(--action-soft)", color: "var(--blue-700)" },
   yellow: { background: "var(--yellow-100)", color: "var(--yellow-600)" },
@@ -23,14 +26,10 @@ const tones = {
 } as const;
 
 /** Rounded status/label pill — durations, "New", "In progress", counts. */
-export function Badge({
-  children,
-  tone = "blue",
-  size = "md",
-  dot = false,
-  icon,
-}: BadgeProps) {
-  const colors = tones[tone];
+export function Badge(props: BadgeProps) {
+  const { children, tone = "blue", size = "md", dot = false, icon, style, ...rest } =
+    props as BadgeRuntimeProps;
+  const colors = tones[tone] || tones.blue;
   const padding = size === "sm" ? "3px 8px" : "5px 11px";
   const fontSize = size === "sm" ? "11px" : "var(--fs-body-sm)";
 
@@ -50,7 +49,9 @@ export function Badge({
         lineHeight: 1,
         letterSpacing: ".01em",
         whiteSpace: "nowrap",
+        ...style,
       }}
+      {...rest}
     >
       {dot && (
         <span

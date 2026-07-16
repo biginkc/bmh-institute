@@ -13,26 +13,39 @@ export interface ProgressBarProps {
   showLabel?: boolean;
 }
 
+type ProgressBarRuntimeProps = ProgressBarProps &
+  Omit<React.HTMLAttributes<HTMLDivElement>, keyof ProgressBarProps>;
+
 /** The signature golden-yellow lesson progress bar. */
-export function ProgressBar({
-  value = 0,
-  max = 100,
-  size = "md",
-  tone = "yellow",
-  showLabel = false,
-}: ProgressBarProps) {
+export function ProgressBar(props: ProgressBarProps) {
+  const {
+    value = 0,
+    max = 100,
+    size = "md",
+    tone = "yellow",
+    showLabel = false,
+    style,
+    ...rest
+  } = props as ProgressBarRuntimeProps;
   const rawPercentage = max > 0 ? (value / max) * 100 : 0;
   const percentage = Math.max(0, Math.min(100, rawPercentage));
-  const height = { sm: 5, md: 8, lg: 12 }[size];
+  const height = { sm: 5, md: 8, lg: 12 }[size] || 8;
   const fill = {
     yellow: "var(--progress-fill)",
     blue: "var(--action)",
     green: "var(--success)",
     orange: "var(--orange-500)",
-  }[tone];
+  }[tone] || "var(--progress-fill)";
 
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+    <div
+      role="progressbar"
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-valuenow={percentage}
+      style={{ display: "flex", alignItems: "center", gap: "10px", ...style }}
+      {...rest}
+    >
       <div
         style={{
           flex: 1,

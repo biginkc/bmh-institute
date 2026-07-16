@@ -26,10 +26,13 @@ export interface LessonCardProps {
   locked?: boolean;
   /** Andrea pose to place on the color panel (when no `image`): stand | wave | present | point | thinking | hips. */
   pose?: "stand" | "wave" | "present" | "point" | "thinking" | "hips";
-  /** Sprite folder relative to the page, for `pose`. @default "assets/mascot" */
+  /** Sprite folder relative to the page, for `pose`. @default "/brand/mascot" */
   mascotBase?: string;
   onClick?: (e: React.MouseEvent) => void;
 }
+
+type LessonCardRuntimeProps = LessonCardProps &
+  Omit<React.HTMLAttributes<HTMLDivElement>, keyof LessonCardProps>;
 
 const thumbnailTones = {
   blue: "var(--thumb-blue)",
@@ -43,20 +46,24 @@ const thumbnailTones = {
  * upload preview and lesson tile.
  * @startingPoint section="Course" subtitle="Signature lesson thumbnail card" viewport="320x320"
  */
-export function LessonCard({
-  title,
-  eyebrow,
-  meta,
-  tone = "blue",
-  image,
-  duration,
-  progress = null,
-  badge,
-  locked = false,
-  pose,
-  mascotBase = "/brand/mascot",
-  onClick,
-}: LessonCardProps) {
+export function LessonCard(props: LessonCardProps) {
+  const {
+    title,
+    eyebrow,
+    meta,
+    tone = "blue",
+    image,
+    duration,
+    progress = null,
+    badge,
+    locked = false,
+    pose,
+    mascotBase = "/brand/mascot",
+    onClick,
+    onKeyDown,
+    style,
+    ...rest
+  } = props as LessonCardRuntimeProps;
   const [hover, setHover] = React.useState(false);
   const dark = tone === "navy";
   const showPlay = locked || hover || (!pose && !image);
@@ -64,6 +71,21 @@ export function LessonCard({
   return (
     <div
       onClick={locked ? undefined : onClick}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick && !locked ? 0 : undefined}
+      aria-disabled={onClick && locked ? true : undefined}
+      onKeyDown={(event) => {
+        onKeyDown?.(event);
+        if (
+          onClick &&
+          !locked &&
+          !event.defaultPrevented &&
+          (event.key === "Enter" || event.key === " ")
+        ) {
+          event.preventDefault();
+          event.currentTarget.click();
+        }
+      }}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
       style={{
@@ -79,13 +101,15 @@ export function LessonCard({
         opacity: locked ? 0.72 : 1,
         transition:
           "transform var(--dur) var(--ease-spring), box-shadow var(--dur) var(--bmh-ease-out)",
+        ...style,
       }}
+      {...rest}
     >
       <div
         style={{
           position: "relative",
           aspectRatio: "16 / 10",
-          background: thumbnailTones[tone],
+          background: thumbnailTones[tone] || thumbnailTones.blue,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
