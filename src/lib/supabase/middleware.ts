@@ -22,8 +22,10 @@ export function isPublicPath(path: string) {
 export async function updateSession(request: NextRequest) {
   const path = request.nextUrl.pathname;
 
-  // The page owns its production 404. Skip auth here so local QC needs no project credentials.
-  if (isDesignSystemPath(path)) {
+  // The page owns its production 404. Skip auth here so local QC needs no project
+  // credentials — but only outside production, so prod keeps the auth redirect even
+  // if a future /design-system/* route ships without its own gate.
+  if (process.env.NODE_ENV !== "production" && isDesignSystemPath(path)) {
     return NextResponse.next({ request });
   }
 
