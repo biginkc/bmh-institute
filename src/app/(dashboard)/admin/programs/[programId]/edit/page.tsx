@@ -52,7 +52,7 @@ export default async function EditProgramPage({
   );
 
   return (
-    <main className="mx-auto w-full max-w-[820px] flex-1 px-5 py-8 md:px-7 md:pb-16">
+    <main className="w-full flex-1 px-5 py-8 md:px-7 md:pb-16">
       <Link
         href="/admin/programs"
         className="font-[family-name:var(--font-body)] text-sm font-bold text-[var(--action)] transition-colors hover:text-[var(--action-hover)]"

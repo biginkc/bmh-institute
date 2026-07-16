@@ -62,7 +62,7 @@ export default async function AdminOverviewPage() {
   });
 
   return (
-    <main className="mx-auto w-full max-w-[66.25rem] flex-1 p-6 md:p-10">
+    <main className="w-full flex-1 p-6 md:p-10">
       <AdminPageHeader
         title="Overview"
         description="Training activity, content inventory, and submissions that need attention."

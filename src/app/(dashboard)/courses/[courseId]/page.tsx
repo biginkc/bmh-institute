@@ -111,7 +111,7 @@ export default async function CoursePage({
 
   return (
     <div
-      className="mx-auto w-full max-w-5xl flex-1 p-5 font-[family-name:var(--font-body)] md:p-8 lg:p-10"
+      className="w-full flex-1 p-5 font-[family-name:var(--font-body)] md:p-8 lg:p-10"
       data-bmh-course-page
     >
       <Link

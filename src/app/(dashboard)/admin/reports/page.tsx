@@ -202,7 +202,7 @@ export default async function AdminReportsPage() {
   });
 
   return (
-    <main className="mx-auto w-full max-w-5xl flex-1 p-6 md:p-10">
+    <main className="w-full flex-1 p-6 md:p-10">
       <AdminPageHeader
         title="Reports"
         description="Rollup view of who's learning what. Click a row to drill in."
