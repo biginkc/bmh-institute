@@ -3,7 +3,7 @@
 import { useTransition } from "react";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/bmh-ds";
 
 import { revokeInvite } from "./actions";
 
@@ -12,7 +12,8 @@ export function RevokeInviteButton({ inviteId }: { inviteId: string }) {
 
   return (
     <Button
-      variant="outline"
+      variant="ghost"
+      style={{ color: "var(--danger)" }}
       size="sm"
       disabled={pending}
       onClick={() => {

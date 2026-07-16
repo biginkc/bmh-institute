@@ -1,24 +1,14 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { Badge } from "@/components/ui/badge";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Badge, Card } from "@/components/bmh-ds";
 import { requireAdmin } from "@/lib/auth/guard";
 import { createClient } from "@/lib/supabase/server";
+
+import { AdminDataTable } from "../../../_components/admin-data-table";
+import {
+  AdminPageHeader,
+  AdminSectionHeading,
+} from "../../../_components/admin-shell";
 
 export default async function UserReportPage({
   params,
@@ -196,44 +186,54 @@ export default async function UserReportPage({
   const standaloneCourses = standaloneCoursesFromAccess.filter(
     (c) => !coursesInPrograms.has(c.id),
   );
+  const rolePlayRows = rolePlayResults.map((result) => {
+    const block = firstRow(result.content_blocks);
+    const lesson = firstRow(block?.lessons);
+    const courseModule = firstRow(lesson?.modules);
+    const course = firstRow(courseModule?.courses);
+    const title = stringOr(block?.content?.title, null) ?? result.scenario_id;
+    const summaryUrl = stringOr(result.summary?.summary_url, null);
+
+    return {
+      id: result.attempt_id,
+      title,
+      course: course?.title ?? "-",
+      score: result.score === null ? "-" : `${result.score}%`,
+      completed: new Date(result.completed_at).toLocaleString(),
+      summary: summaryUrl ? "Open" : "-",
+      summaryUrl,
+    };
+  });
 
   return (
     <main className="mx-auto w-full max-w-4xl flex-1 p-6 md:p-10">
-      <Link
-        href="/admin/reports"
-        className="text-muted-foreground hover:text-foreground text-xs"
-      >
-        ← Back to reports
-      </Link>
-
-      <div className="mt-3 mb-8">
-        <h1 className="text-2xl font-semibold">{profile.full_name}</h1>
-        <p className="text-muted-foreground mt-1 text-sm">
-          {profile.email} · joined{" "}
-          {new Date(profile.created_at).toLocaleDateString()}
-        </p>
-        <div className="mt-3 flex flex-wrap items-center gap-2">
-          <Badge variant="outline" className="capitalize">
-            {profile.system_role}
-          </Badge>
-          <Badge
-            variant={profile.status === "active" ? "default" : "secondary"}
-            className="capitalize"
-          >
-            {profile.status}
-          </Badge>
-          {roleGroups.map((rg) => (
-            <Badge key={rg.id} variant="secondary">
-              {rg.name}
+      <AdminPageHeader
+        eyebrow="Admin · Report"
+        title={profile.full_name}
+        description={`${profile.email} · joined ${new Date(profile.created_at).toLocaleDateString()}`}
+        backHref="/admin/reports"
+        backLabel="Back to reports"
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge tone={profile.system_role === "owner" ? "solid" : profile.system_role === "admin" ? "blue" : "neutral"} size="sm">
+              {profile.system_role}
             </Badge>
-          ))}
-        </div>
-      </div>
+            <Badge tone={profile.status === "active" ? "green" : profile.status === "suspended" ? "red" : "yellow"} size="sm">
+              {profile.status}
+            </Badge>
+            {roleGroups.map((roleGroup) => (
+              <Badge key={roleGroup.id} tone="blue" size="sm">
+                {roleGroup.name}
+              </Badge>
+            ))}
+          </div>
+        }
+      />
 
       <section className="mb-8">
-        <h2 className="mb-3 text-lg font-semibold">Programs</h2>
+        <AdminSectionHeading title="Programs" />
         {accessiblePrograms.length === 0 ? (
-          <p className="text-muted-foreground text-sm">
+          <p className="text-sm font-semibold text-[var(--text-muted)]">
             No program access yet.
           </p>
         ) : (
@@ -243,65 +243,42 @@ export default async function UserReportPage({
               const courseRows = [...(program.program_courses ?? [])].sort(
                 (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0),
               );
+              const shapedCourseRows = courseRows.flatMap((programCourse) => {
+                const course = firstRow(programCourse.courses);
+                if (!course) return [];
+                const { total, done, pct } = percentForCourse(course.id);
+                const cert = courseCertsByCourseId.get(course.id);
+                return [{
+                  id: course.id,
+                  title: course.title,
+                  lessonsDone: `${done} / ${total}`,
+                  pct,
+                  certificate: cert?.certificate_number ?? (pct === 100 ? "Pending issuance" : "-"),
+                }];
+              });
               return (
-                <Card key={program.id}>
-                  <CardHeader>
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <CardTitle>{program.title}</CardTitle>
-                        <CardDescription>
-                          {program.course_order_mode === "sequential"
-                            ? "Sequential"
-                            : "Any order"}
-                        </CardDescription>
-                      </div>
-                      {programCert ? (
-                        <Badge>Completed</Badge>
-                      ) : null}
+                <Card key={program.id} padding="sm">
+                  <div className="flex items-start justify-between gap-3 px-3 pt-2 pb-3">
+                    <div>
+                      <h3 className="font-[var(--font-display)] text-lg font-bold text-[var(--ink-900)]">
+                        {program.title}
+                      </h3>
+                      <p className="text-xs font-semibold text-[var(--text-muted)]">
+                        {program.course_order_mode === "sequential" ? "Sequential" : "Any order"}
+                      </p>
                     </div>
-                  </CardHeader>
-                  <CardContent>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Course</TableHead>
-                          <TableHead className="text-right">
-                            Required lessons done
-                          </TableHead>
-                          <TableHead className="text-right">%</TableHead>
-                          <TableHead>Certificate</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {courseRows.map((pc) => {
-                          const c = firstRow(pc.courses);
-                          if (!c) return null;
-                          const { total, done, pct } = percentForCourse(c.id);
-                          const cert = courseCertsByCourseId.get(c.id);
-                          return (
-                            <TableRow key={c.id}>
-                              <TableCell className="font-medium">
-                                {c.title}
-                              </TableCell>
-                              <TableCell className="text-right tabular-nums">
-                                {done} / {total}
-                              </TableCell>
-                              <TableCell className="text-right tabular-nums">
-                                {pct}%
-                              </TableCell>
-                              <TableCell className="text-muted-foreground text-xs">
-                                {cert
-                                  ? cert.certificate_number
-                                  : pct === 100
-                                    ? "Pending issuance"
-                                    : "-"}
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })}
-                      </TableBody>
-                    </Table>
-                  </CardContent>
+                    {programCert ? <Badge tone="green" size="sm">Completed</Badge> : null}
+                  </div>
+                  <AdminDataTable
+                    empty="No courses in this program."
+                    columns={[
+                      { key: "title", label: "Course" },
+                      { key: "lessonsDone", label: "Required lessons done", align: "right", tabular: true },
+                      { key: "pct", label: "%", align: "right", tabular: true, suffix: "%" },
+                      { key: "certificate", label: "Certificate", muted: true },
+                    ]}
+                    rows={shapedCourseRows}
+                  />
                 </Card>
               );
             })}
@@ -311,48 +288,27 @@ export default async function UserReportPage({
 
       {standaloneCourses.length > 0 ? (
         <section className="mb-8">
-          <h2 className="mb-3 text-lg font-semibold">Standalone courses</h2>
-          <Card>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Course</TableHead>
-                    <TableHead className="text-right">Required lessons</TableHead>
-                    <TableHead className="text-right">%</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {standaloneCourses.map((c) => {
-                    const { total, done, pct } = percentForCourse(c.id);
-                    return (
-                      <TableRow key={c.id}>
-                        <TableCell className="font-medium">{c.title}</TableCell>
-                        <TableCell className="text-right tabular-nums">
-                          {done} / {total}
-                        </TableCell>
-                        <TableCell className="text-right tabular-nums">
-                          {pct}%
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </CardContent>
+          <AdminSectionHeading title="Standalone courses" />
+          <Card padding="sm">
+            <AdminDataTable
+              columns={[
+                { key: "title", label: "Course" },
+                { key: "lessons", label: "Required lessons", align: "right", tabular: true },
+                { key: "pct", label: "%", align: "right", tabular: true, suffix: "%" },
+              ]}
+              rows={standaloneCourses.map((course) => {
+                const { total, done, pct } = percentForCourse(course.id);
+                return { id: course.id, title: course.title, lessons: `${done} / ${total}`, pct };
+              })}
+            />
           </Card>
         </section>
       ) : null}
 
       <section className="mb-8 grid gap-4 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Quiz activity</CardTitle>
-            <CardDescription>
-              Attempts, pass count, best score.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="text-sm">
+        <Card padding="md">
+          <AdminSectionHeading title="Quiz activity" description="Attempts, pass count, best score." />
+          <div className="text-sm">
             <div className="flex flex-col gap-1">
               <Stat label="Attempts" value={attempts.length} />
               <Stat
@@ -372,16 +328,11 @@ export default async function UserReportPage({
                 }
               />
             </div>
-          </CardContent>
+          </div>
         </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Role-play activity</CardTitle>
-            <CardDescription>
-              Closer Lab attempts completed from embedded lessons.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="text-sm">
+        <Card padding="md">
+          <AdminSectionHeading title="Role-play activity" description="Closer Lab attempts completed from embedded lessons." />
+          <div className="text-sm">
             <div className="flex flex-col gap-1">
               <Stat label="Attempts" value={rolePlayResults.length} />
               <Stat
@@ -399,14 +350,11 @@ export default async function UserReportPage({
                 }
               />
             </div>
-          </CardContent>
+          </div>
         </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Certificates</CardTitle>
-            <CardDescription>Earned course and program certs.</CardDescription>
-          </CardHeader>
-          <CardContent className="text-sm">
+        <Card padding="md">
+          <AdminSectionHeading title="Certificates" description="Earned course and program certs." />
+          <div className="text-sm">
             <div className="flex flex-col gap-1">
               <Stat
                 label="Course certificates"
@@ -417,100 +365,43 @@ export default async function UserReportPage({
                 value={(programCertsRes.data ?? []).length}
               />
             </div>
-          </CardContent>
+          </div>
         </Card>
       </section>
 
       <section className="mb-8">
-        <h2 className="mb-3 text-lg font-semibold">Role-play results</h2>
-        <Card>
-          <CardContent className="p-0">
-            {rolePlayResults.length === 0 ? (
-              <p className="text-muted-foreground p-6 text-sm">
-                No embedded role plays completed yet.
-              </p>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Role play</TableHead>
-                    <TableHead>Course</TableHead>
-                    <TableHead className="text-right">Score</TableHead>
-                    <TableHead>Completed</TableHead>
-                    <TableHead>Summary</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {rolePlayResults.map((result) => {
-                    const block = firstRow(result.content_blocks);
-                    const lesson = firstRow(block?.lessons);
-                    const courseModule = firstRow(lesson?.modules);
-                    const course = firstRow(courseModule?.courses);
-                    const title =
-                      stringOr(block?.content?.title, null) ??
-                      result.scenario_id;
-                    const summaryUrl = stringOr(
-                      result.summary?.summary_url,
-                      null,
-                    );
-
-                    return (
-                      <TableRow key={result.attempt_id}>
-                        <TableCell className="font-medium">{title}</TableCell>
-                        <TableCell className="text-muted-foreground text-sm">
-                          {course?.title ?? "-"}
-                        </TableCell>
-                        <TableCell className="text-right tabular-nums">
-                          {result.score === null ? "-" : `${result.score}%`}
-                        </TableCell>
-                        <TableCell className="text-muted-foreground text-xs">
-                          {new Date(result.completed_at).toLocaleString()}
-                        </TableCell>
-                        <TableCell className="text-xs">
-                          {summaryUrl ? (
-                            <a
-                              href={summaryUrl}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="text-primary hover:underline"
-                            >
-                              Open
-                            </a>
-                          ) : (
-                            <span className="text-muted-foreground">-</span>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
+        <AdminSectionHeading title="Role-play results" />
+        <Card padding="sm">
+          <AdminDataTable
+            minWidth="46rem"
+            empty="No embedded role plays completed yet."
+            columns={[
+              { key: "title", label: "Role play" },
+              { key: "course", label: "Course", muted: true },
+              { key: "score", label: "Score", align: "right", tabular: true },
+              { key: "completed", label: "Completed", muted: true },
+              { key: "summary", label: "Summary", presentation: "external-link", hrefKey: "summaryUrl" },
+            ]}
+            rows={rolePlayRows}
+          />
         </Card>
       </section>
 
       <section>
-        <h2 className="mb-3 text-lg font-semibold">Recent activity</h2>
-        <Card>
-          <CardContent className="p-0">
-            {auditRows.length === 0 ? (
-              <p className="text-muted-foreground p-6 text-sm">
-                No logged activity yet.
-              </p>
-            ) : (
-              <ol className="divide-border divide-y">
-                {auditRows.map((row) => (
-                  <li key={row.id} className="flex items-center justify-between gap-4 px-6 py-3 text-sm">
-                    <span>{row.action.replace(/_/g, " ")}</span>
-                    <span className="text-muted-foreground text-xs">
-                      {new Date(row.created_at).toLocaleString()}
-                    </span>
-                  </li>
-                ))}
-              </ol>
-            )}
-          </CardContent>
+        <AdminSectionHeading title="Recent activity" />
+        <Card padding="sm">
+          <AdminDataTable
+            empty="No logged activity yet."
+            columns={[
+              { key: "action", label: "Action" },
+              { key: "createdAt", label: "When", align: "right", muted: true },
+            ]}
+            rows={auditRows.map((row) => ({
+              id: row.id,
+              action: row.action.replace(/_/g, " "),
+              createdAt: new Date(row.created_at).toLocaleString(),
+            }))}
+          />
         </Card>
       </section>
     </main>

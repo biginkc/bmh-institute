@@ -4,9 +4,7 @@ import { useState, useTransition } from "react";
 import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Button, IconButton, Input, Table } from "@/components/bmh-ds";
 
 import {
   createRoleGroup,
@@ -22,6 +20,7 @@ type RoleGroupRow = {
 
 export function RoleGroupsEditor({ initial }: { initial: RoleGroupRow[] }) {
   const [pending, startTransition] = useTransition();
+  const [groups, setGroups] = useState(initial);
   const [newName, setNewName] = useState("");
   const [newDesc, setNewDesc] = useState("");
 
@@ -47,43 +46,73 @@ export function RoleGroupsEditor({ initial }: { initial: RoleGroupRow[] }) {
 
   return (
     <div className="flex flex-col gap-5">
-      {initial.length === 0 ? (
-        <p className="text-muted-foreground text-sm">No role groups yet.</p>
-      ) : (
-        <ul className="divide-border divide-y">
-          {initial.map((g) => (
-            <RoleGroupRow
-              key={g.id}
-              group={g}
-              pending={pending}
-              startTransition={startTransition}
+      <div style={{ width: "100%", overflowX: "auto" }}>
+        <div style={{ minWidth: "38rem" }}>
+        <Table
+        rowKey="id"
+        columns={[
+          { key: "name", label: "Role group" },
+          { key: "description", label: "Description" },
+          { key: "action", label: "Action", align: "right" },
+        ]}
+        rows={groups}
+        empty="No role groups yet."
+        cell={{
+          name: (group) => (
+            <Input
+              aria-label={`${group.name} name`}
+              value={group.name}
+              onChange={(event) => updateField(group.id, "name", event.target.value)}
+              onBlur={() => onSave(group.id)}
+              size="sm"
             />
-          ))}
-        </ul>
-      )}
+          ),
+          description: (group) => (
+            <Input
+              aria-label={`${group.name} description`}
+              value={group.description ?? ""}
+              onChange={(event) => updateField(group.id, "description", event.target.value)}
+              onBlur={() => onSave(group.id)}
+              placeholder="Description"
+              size="sm"
+            />
+          ),
+          action: (group) => (
+            <IconButton
+              label="Delete role group"
+              variant="plain"
+              size="sm"
+              disabled={pending}
+              onClick={() => onDelete(group.id)}
+            >
+              <Trash2 size={16} />
+            </IconButton>
+          ),
+        }}
+        />
+        </div>
+      </div>
 
-      <div className="border-border border-t pt-4">
-        <p className="mb-3 text-xs font-semibold uppercase tracking-wide">
+      <div className="border-t border-[var(--border-hairline)] px-3 pt-5">
+        <p className="mb-3 text-xs font-extrabold uppercase tracking-[.08em] text-[var(--text-muted)]">
           Add a role group
         </p>
         <div className="flex flex-col gap-3 md:flex-row md:items-end">
-          <div className="flex-1">
-            <Label htmlFor="new-name">Name</Label>
+          <div className="min-w-0 flex-1">
             <Input
               id="new-name"
+              label="Name"
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
               placeholder="e.g. Phone Setters"
-              className="mt-1"
             />
           </div>
-          <div className="flex-1">
-            <Label htmlFor="new-desc">Description (optional)</Label>
+          <div className="min-w-0 flex-1">
             <Input
               id="new-desc"
+              label="Description (optional)"
               value={newDesc}
               onChange={(e) => setNewDesc(e.target.value)}
-              className="mt-1"
             />
           </div>
           <Button onClick={onAdd} disabled={pending}>
@@ -93,34 +122,39 @@ export function RoleGroupsEditor({ initial }: { initial: RoleGroupRow[] }) {
       </div>
     </div>
   );
-}
 
-function RoleGroupRow({
-  group,
-  pending,
-  startTransition,
-}: {
-  group: RoleGroupRow;
-  pending: boolean;
-  startTransition: (cb: () => void | Promise<void>) => void;
-}) {
-  const [name, setName] = useState(group.name);
-  const [description, setDescription] = useState(group.description ?? "");
+  function updateField(id: string, field: "name" | "description", value: string) {
+    setGroups((current) =>
+      current.map((group) =>
+        group.id === id ? { ...group, [field]: value } : group,
+      ),
+    );
+  }
 
-  function onSave() {
-    if (name === group.name && description === (group.description ?? "")) return;
+  function onSave(id: string) {
+    const group = groups.find((candidate) => candidate.id === id);
+    const original = initial.find((candidate) => candidate.id === id);
+    if (!group || !original) return;
+    if (
+      group.name === original.name &&
+      (group.description ?? "") === (original.description ?? "")
+    ) {
+      return;
+    }
     startTransition(async () => {
       const result = await updateRoleGroup({
         id: group.id,
-        name,
-        description: description.trim() || null,
+        name: group.name,
+        description: group.description?.trim() || null,
       });
       if (!result.ok) toast.error(result.error);
       else toast.success("Saved.");
     });
   }
 
-  function onDelete() {
+  function onDelete(id: string) {
+    const group = groups.find((candidate) => candidate.id === id);
+    if (!group) return;
     if (!confirm(`Delete "${group.name}"? Learner assignments and access grants for this group go with it.`)) {
       return;
     }
@@ -130,31 +164,4 @@ function RoleGroupRow({
       else toast.success("Role group removed.");
     });
   }
-
-  return (
-    <li className="flex flex-col gap-2 py-3 md:flex-row md:items-center first:pt-0 last:pb-0">
-      <Input
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        onBlur={onSave}
-        className="md:max-w-xs"
-      />
-      <Input
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-        onBlur={onSave}
-        placeholder="Description"
-        className="flex-1"
-      />
-      <Button
-        variant="outline"
-        size="icon-sm"
-        disabled={pending}
-        onClick={onDelete}
-        aria-label="Delete role group"
-      >
-        <Trash2 className="size-3.5" />
-      </Button>
-    </li>
-  );
 }
