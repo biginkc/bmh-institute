@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Internal Pilot Operations
 status: shipped
-stopped_at: DSF-05 implemented, browser-proven, and ready for orchestrating review
-last_updated: "2026-07-16T02:46:56-05:00"
+stopped_at: DSF-05 implemented and browser-proven; PR #95 open for orchestrating review
+last_updated: "2026-07-16T02:50:25-05:00"
 last_activity: 2026-07-16
 progress:
   total_phases: 4
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-04-30)
 Phase: Complete
 Plan: Complete
 Status: v1.1 shipped; post-ship QA and workflow cleanup complete
-Last activity: 2026-07-16 - Completed quick task 260716-2ms: DSF-05 course page and content lesson viewer reskin. The branch is verified and ready for an unmerged PR.
+Last activity: 2026-07-16 - Completed quick task 260716-2ms: DSF-05 course page and content lesson viewer reskin. PR #95 is open and unmerged for orchestrating review.
 
 ## Performance Metrics
 
