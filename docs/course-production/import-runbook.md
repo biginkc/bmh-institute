@@ -16,6 +16,66 @@ These commands print a plan without changing storage or the database. Add `--exe
 
 Manifest asset paths are relative to the repository root by default. If the approved source files live in another checkout, add `--source-root=/absolute/path/to/that/repository-root` to `upload`—the directory must contain the manifest's `course-assets/...` paths, not be the `course-assets` directory itself. The importer resolves real paths and rejects files that escape that root.
 
+### Composite asset staging
+
+The release manifest intentionally draws from two checkouts: generated guides,
+captions, transcripts, and artwork live in the integration checkout, while the
+large approved source videos live in the canonical course checkout. Never copy
+one checkout over the other or point the importer at an incomplete root.
+
+Build one verified local source root first. Pass trusted roots in priority order:
+the integration checkout first, then the canonical checkout. `check` is a
+no-write preflight. `stage` creates only the explicitly named staging tree and
+prefers hardlinks, with a byte-for-byte copy fallback when linking is not
+available.
+
+```bash
+INTEGRATION_ROOT="/absolute/path/to/institute-complete-course-v1"
+CANONICAL_ROOT="/absolute/path/to/BMH Institute"
+STAGING_ROOT="$INTEGRATION_ROOT/.course-import-state/asset-stage/bmh-employee-training-canary-v1"
+
+npm run course:assets:stage -- check \
+  content/course-manifests/bmh-employee-training.v1.json \
+  --source-root="$INTEGRATION_ROOT" \
+  --source-root="$CANONICAL_ROOT" \
+  --report="$INTEGRATION_ROOT/.course-import-state/asset-stage/full-check.json"
+
+npm run course:assets:stage -- stage \
+  content/course-manifests/bmh-employee-training-canary.v1.json \
+  --canary \
+  --source-root="$INTEGRATION_ROOT" \
+  --source-root="$CANONICAL_ROOT" \
+  --staging-root="$STAGING_ROOT" \
+  --report="$INTEGRATION_ROOT/.course-import-state/asset-stage/canary-stage.json"
+```
+
+The JSON report lists the selected root and verified size/SHA-256 for every
+approved asset. A repeated relative path with different bytes is an error even
+when the first root matches the manifest. Traversal, an outside-root symlink,
+an absent approved asset, or a manifest checksum/size mismatch fails closed.
+Assets marked `hold` or `missing` are blockers and are never materialized.
+Exit code `1` means an integrity/safety error; exit code `2` means only approval
+or missing-asset blockers remain. Rerunning `stage` reuses only staged files
+whose bytes still match the manifest.
+
+Once the report has zero errors and zero blockers, upload from the composite
+root:
+
+```bash
+npm run course:import -- upload \
+  content/course-manifests/bmh-employee-training-canary.v1.json \
+  --canary \
+  --source-root="$STAGING_ROOT"
+```
+
+Rollback the local composite tree with the ownership-checked cleanup command.
+It refuses to remove a directory that lacks the tool's marker. This does not
+touch source files, storage, or the database:
+
+```bash
+npm run course:assets:stage -- cleanup "$STAGING_ROOT"
+```
+
 Production execution also needs `--allow-production`. Rollback additionally needs `--confirm=<import_id>`.
 
 ## Safety model

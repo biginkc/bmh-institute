@@ -1,0 +1,612 @@
+import { createHash, randomUUID } from "node:crypto";
+import { createReadStream } from "node:fs";
+import {
+  copyFile,
+  lstat,
+  link,
+  mkdir,
+  readFile,
+  realpath,
+  rename,
+  rm,
+  stat,
+  writeFile,
+} from "node:fs/promises";
+import {
+  basename,
+  dirname,
+  isAbsolute,
+  relative,
+  resolve,
+  sep,
+} from "node:path";
+
+import type { CourseImportAsset, CourseImportManifest } from "./manifest";
+
+const MARKER_NAME = ".bmh-course-asset-stage.json";
+const OWNER = "bmh-course-asset-stager";
+const FORMAT_VERSION = 1;
+
+type StagingMode = "check" | "stage";
+type Materialization = "hardlink" | "copy" | "reused" | null;
+
+export type AssetCandidate = {
+  root: string;
+  path: string;
+  size_bytes: number;
+  checksum_sha256: string;
+};
+
+export type AssetStagingResult = {
+  source_key: string;
+  local_path: string;
+  approval_status: CourseImportAsset["approval_status"];
+  outcome: "verified" | "staged" | "reused" | "blocked" | "error";
+  code:
+    | "verified"
+    | "staged"
+    | "reused"
+    | "approval_hold"
+    | "approval_missing"
+    | "approved_asset_missing"
+    | "invalid_local_path"
+    | "source_escape"
+    | "source_not_file"
+    | "source_conflict"
+    | "manifest_integrity_missing"
+    | "size_mismatch"
+    | "checksum_mismatch"
+    | "stage_path_unsafe"
+    | "stage_write_failed";
+  message: string;
+  selected_root: string | null;
+  selected_path: string | null;
+  staged_path: string | null;
+  materialization: Materialization;
+  candidates: AssetCandidate[];
+};
+
+export type AssetStagingReport = {
+  schema_version: 1;
+  tool: typeof OWNER;
+  mode: StagingMode;
+  manifest_path: string;
+  manifest_sha256: string;
+  import_id: string;
+  source_roots: string[];
+  staging_root: string | null;
+  ready_for_upload: boolean;
+  counts: {
+    total: number;
+    approved: number;
+    held: number;
+    missing: number;
+    verified: number;
+    staged: number;
+    reused: number;
+    blockers: number;
+    errors: number;
+  };
+  blockers: Array<{ source_key: string; code: string; message: string }>;
+  errors: Array<{ source_key: string; code: string; message: string }>;
+  assets: AssetStagingResult[];
+};
+
+type StageMarker = {
+  owner: typeof OWNER;
+  format_version: typeof FORMAT_VERSION;
+  staging_root: string;
+  import_id: string;
+  manifest_sha256: string;
+};
+
+export async function stageManifestAssets(options: {
+  manifest: CourseImportManifest;
+  manifestPath: string;
+  manifestBytes: Buffer;
+  sourceRoots: string[];
+  mode: StagingMode;
+  stagingRoot?: string;
+}): Promise<AssetStagingReport> {
+  let manifestFromBytes: unknown;
+  try {
+    manifestFromBytes = JSON.parse(options.manifestBytes.toString("utf8"));
+  } catch {
+    throw new Error("Manifest bytes are not valid JSON.");
+  }
+  if (JSON.stringify(manifestFromBytes) !== JSON.stringify(options.manifest)) {
+    throw new Error("Manifest object does not match the supplied manifest bytes.");
+  }
+  if (options.sourceRoots.length === 0) {
+    throw new Error("At least one explicit --source-root is required.");
+  }
+  if (options.mode === "stage" && !options.stagingRoot) {
+    throw new Error("--staging-root is required in stage mode.");
+  }
+
+  const roots = await resolveTrustedRoots(options.sourceRoots);
+  const manifestPath = resolve(options.manifestPath);
+  const manifestSha256 = sha256Bytes(options.manifestBytes);
+  const stagingRoot = options.stagingRoot ? resolve(options.stagingRoot) : null;
+  if (options.mode === "stage" && stagingRoot) {
+    await claimStagingRoot(stagingRoot, {
+      owner: OWNER,
+      format_version: FORMAT_VERSION,
+      staging_root: stagingRoot,
+      import_id: options.manifest.import_id,
+      manifest_sha256: manifestSha256,
+    });
+  }
+
+  const assets: AssetStagingResult[] = [];
+  for (const asset of options.manifest.assets) {
+    assets.push(
+      await inspectAsset({
+        asset,
+        roots,
+        mode: options.mode,
+        stagingRoot,
+      }),
+    );
+  }
+
+  const blockers = assets
+    .filter((asset) => asset.outcome === "blocked")
+    .map(({ source_key, code, message }) => ({ source_key, code, message }));
+  const errors = assets
+    .filter((asset) => asset.outcome === "error")
+    .map(({ source_key, code, message }) => ({ source_key, code, message }));
+  const counts = {
+    total: assets.length,
+    approved: options.manifest.assets.filter((asset) => asset.approval_status === "approved").length,
+    held: options.manifest.assets.filter((asset) => asset.approval_status === "hold").length,
+    missing: options.manifest.assets.filter((asset) => asset.approval_status === "missing").length,
+    verified: assets.filter((asset) => asset.outcome === "verified").length,
+    staged: assets.filter((asset) => asset.outcome === "staged").length,
+    reused: assets.filter((asset) => asset.outcome === "reused").length,
+    blockers: blockers.length,
+    errors: errors.length,
+  };
+
+  return {
+    schema_version: 1,
+    tool: OWNER,
+    mode: options.mode,
+    manifest_path: manifestPath,
+    manifest_sha256: manifestSha256,
+    import_id: options.manifest.import_id,
+    source_roots: roots,
+    staging_root: stagingRoot,
+    ready_for_upload: blockers.length === 0 && errors.length === 0,
+    counts,
+    blockers,
+    errors,
+    assets,
+  };
+}
+
+export async function cleanupStagingRoot(stagingRoot: string) {
+  const root = resolve(stagingRoot);
+  const rootStat = await lstatOrNull(root);
+  if (!rootStat) {
+    return { schema_version: 1 as const, tool: OWNER, staging_root: root, removed: false };
+  }
+  if (!rootStat.isDirectory() || rootStat.isSymbolicLink()) {
+    throw new Error(`Refusing cleanup: staging root is not a real directory: ${root}`);
+  }
+  await readAndValidateMarker(root);
+  await rm(root, { recursive: true, force: false });
+  return { schema_version: 1 as const, tool: OWNER, staging_root: root, removed: true };
+}
+
+export async function writeMachineReport(reportPath: string, report: unknown) {
+  const destination = resolve(reportPath);
+  await mkdir(dirname(destination), { recursive: true });
+  const temp = `${destination}.tmp-${randomUUID()}`;
+  await writeFile(temp, `${JSON.stringify(report, null, 2)}\n`, { flag: "wx" });
+  await rename(temp, destination);
+}
+
+async function inspectAsset({
+  asset,
+  roots,
+  mode,
+  stagingRoot,
+}: {
+  asset: CourseImportAsset;
+  roots: string[];
+  mode: StagingMode;
+  stagingRoot: string | null;
+}): Promise<AssetStagingResult> {
+  const base = {
+    source_key: asset.source_key,
+    local_path: asset.local_path,
+    approval_status: asset.approval_status,
+    selected_root: null,
+    selected_path: null,
+    staged_path: null,
+    materialization: null,
+    candidates: [] as AssetCandidate[],
+  };
+
+  const localPathProblem = validateLocalPath(asset.local_path);
+  if (localPathProblem) {
+    return {
+      ...base,
+      outcome: "error",
+      code: "invalid_local_path",
+      message: localPathProblem,
+    };
+  }
+  if (asset.local_path === MARKER_NAME || basename(asset.local_path) === MARKER_NAME) {
+    return {
+      ...base,
+      outcome: "error",
+      code: "invalid_local_path",
+      message: `${MARKER_NAME} is reserved for staging ownership metadata.`,
+    };
+  }
+  if (asset.approval_status === "hold") {
+    return {
+      ...base,
+      outcome: "blocked",
+      code: "approval_hold",
+      message: "Asset remains on approval hold and was not staged.",
+    };
+  }
+  if (asset.approval_status === "missing") {
+    return {
+      ...base,
+      outcome: "blocked",
+      code: "approval_missing",
+      message: "Asset is marked missing and was not staged.",
+    };
+  }
+  if (asset.size_bytes === null || asset.checksum_sha256 === null) {
+    return {
+      ...base,
+      outcome: "error",
+      code: "manifest_integrity_missing",
+      message: "Approved assets require both size_bytes and checksum_sha256 before staging.",
+    };
+  }
+
+  const discovered = await discoverCandidates(roots, asset.local_path);
+  if (discovered.error) {
+    return {
+      ...base,
+      outcome: "error",
+      code: discovered.error.code,
+      message: discovered.error.message,
+    };
+  }
+  const candidates = discovered.candidates;
+  if (candidates.length === 0) {
+    return {
+      ...base,
+      outcome: "blocked",
+      code: "approved_asset_missing",
+      message: "Approved asset is absent from every trusted source root.",
+    };
+  }
+
+  const distinctChecksums = new Set(candidates.map((candidate) => candidate.checksum_sha256));
+  if (distinctChecksums.size > 1) {
+    return {
+      ...base,
+      candidates,
+      outcome: "error",
+      code: "source_conflict",
+      message: "The same relative path has different bytes in trusted source roots.",
+    };
+  }
+
+  const selected = candidates[0];
+  const selectedFields = {
+    candidates,
+    selected_root: selected.root,
+    selected_path: selected.path,
+  };
+  if (selected.size_bytes !== asset.size_bytes) {
+    return {
+      ...base,
+      ...selectedFields,
+      outcome: "error",
+      code: "size_mismatch",
+      message: `Manifest size ${asset.size_bytes} does not match source size ${selected.size_bytes}.`,
+    };
+  }
+  if (selected.checksum_sha256 !== asset.checksum_sha256) {
+    return {
+      ...base,
+      ...selectedFields,
+      outcome: "error",
+      code: "checksum_mismatch",
+      message: "Manifest SHA-256 does not match the source file.",
+    };
+  }
+
+  if (mode === "check") {
+    return {
+      ...base,
+      ...selectedFields,
+      outcome: "verified",
+      code: "verified",
+      message: "Source bytes match the manifest.",
+    };
+  }
+
+  try {
+    const materialized = await materializeAsset({
+      source: selected.path,
+      stagingRoot: stagingRoot!,
+      localPath: asset.local_path,
+      expectedSize: asset.size_bytes,
+      expectedChecksum: asset.checksum_sha256,
+    });
+    return {
+      ...base,
+      ...selectedFields,
+      outcome: materialized.method === "reused" ? "reused" : "staged",
+      code: materialized.method === "reused" ? "reused" : "staged",
+      message:
+        materialized.method === "reused"
+          ? "Existing staged bytes already match the manifest."
+          : `Staged with ${materialized.method}.`,
+      staged_path: materialized.destination,
+      materialization: materialized.method,
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    return {
+      ...base,
+      ...selectedFields,
+      outcome: "error",
+      code: message.startsWith("Unsafe staging path:") ? "stage_path_unsafe" : "stage_write_failed",
+      message,
+    };
+  }
+}
+
+async function resolveTrustedRoots(sourceRoots: string[]) {
+  const roots: string[] = [];
+  const seen = new Set<string>();
+  for (const sourceRoot of sourceRoots) {
+    const root = await realpath(resolve(sourceRoot));
+    const rootStat = await stat(root);
+    if (!rootStat.isDirectory()) throw new Error(`Source root is not a directory: ${sourceRoot}`);
+    if (!seen.has(root)) {
+      roots.push(root);
+      seen.add(root);
+    }
+  }
+  return roots;
+}
+
+async function discoverCandidates(
+  roots: string[],
+  localPath: string,
+): Promise<
+  | { candidates: AssetCandidate[]; error?: never }
+  | {
+      candidates: [];
+      error: {
+        code: "source_escape" | "source_not_file";
+        message: string;
+      };
+    }
+> {
+  const candidates: AssetCandidate[] = [];
+  for (const root of roots) {
+    const unresolved = resolve(root, localPath);
+    const entry = await lstatOrNull(unresolved);
+    if (!entry) continue;
+
+    let resolvedPath: string;
+    try {
+      resolvedPath = await realpath(unresolved);
+    } catch (error) {
+      return {
+        candidates: [],
+        error: {
+          code: "source_not_file",
+          message: `Unable to resolve source path in ${root}: ${error instanceof Error ? error.message : error}`,
+        },
+      };
+    }
+    if (!isWithin(root, resolvedPath)) {
+      return {
+        candidates: [],
+        error: {
+          code: "source_escape",
+          message: `Source path resolves outside trusted root ${root}.`,
+        },
+      };
+    }
+    const fileStat = await stat(resolvedPath);
+    if (!fileStat.isFile()) {
+      return {
+        candidates: [],
+        error: {
+          code: "source_not_file",
+          message: `Source path is not a regular file: ${resolvedPath}`,
+        },
+      };
+    }
+    candidates.push({
+      root,
+      path: resolvedPath,
+      size_bytes: fileStat.size,
+      checksum_sha256: await sha256File(resolvedPath),
+    });
+  }
+  return { candidates };
+}
+
+async function materializeAsset(options: {
+  source: string;
+  stagingRoot: string;
+  localPath: string;
+  expectedSize: number;
+  expectedChecksum: string;
+}) {
+  const destination = resolve(options.stagingRoot, options.localPath);
+  if (!isWithin(options.stagingRoot, destination)) {
+    throw new Error(`Unsafe staging path: ${options.localPath}`);
+  }
+  await ensureSafeParent(options.stagingRoot, dirname(destination));
+
+  const existing = await lstatOrNull(destination);
+  if (existing) {
+    if (existing.isSymbolicLink() || !existing.isFile()) {
+      throw new Error(`Unsafe staging path: destination is not a regular file: ${destination}`);
+    }
+    const existingStat = await stat(destination);
+    if (
+      existingStat.size === options.expectedSize &&
+      (await sha256File(destination)) === options.expectedChecksum
+    ) {
+      return { destination, method: "reused" as const };
+    }
+  }
+
+  const temp = `${destination}.tmp-${randomUUID()}`;
+  let method: "hardlink" | "copy" = "hardlink";
+  try {
+    try {
+      await link(options.source, temp);
+    } catch {
+      method = "copy";
+      await rm(temp, { force: true });
+      await copyFile(options.source, temp);
+    }
+    const tempStat = await stat(temp);
+    if (
+      tempStat.size !== options.expectedSize ||
+      (await sha256File(temp)) !== options.expectedChecksum
+    ) {
+      throw new Error(`Staged bytes changed during materialization: ${destination}`);
+    }
+    await rename(temp, destination);
+  } catch (error) {
+    await rm(temp, { force: true });
+    throw error;
+  }
+  return { destination, method };
+}
+
+async function claimStagingRoot(root: string, marker: StageMarker) {
+  const existing = await lstatOrNull(root);
+  if (existing) {
+    if (!existing.isDirectory() || existing.isSymbolicLink()) {
+      throw new Error(`Refusing staging root that is not a real directory: ${root}`);
+    }
+    const current = await readAndValidateMarker(root);
+    if (
+      current.import_id !== marker.import_id ||
+      current.manifest_sha256 !== marker.manifest_sha256
+    ) {
+      throw new Error(
+        "Refusing to reuse a staging tree owned by a different manifest. Clean it explicitly first.",
+      );
+    }
+    return;
+  }
+
+  await mkdir(dirname(root), { recursive: true });
+  await mkdir(root, { recursive: false });
+  await writeFile(resolve(root, MARKER_NAME), `${JSON.stringify(marker, null, 2)}\n`, {
+    flag: "wx",
+  });
+}
+
+async function readAndValidateMarker(root: string): Promise<StageMarker> {
+  const markerPath = resolve(root, MARKER_NAME);
+  const markerStat = await lstatOrNull(markerPath);
+  if (!markerStat || markerStat.isSymbolicLink() || !markerStat.isFile()) {
+    throw new Error(`Refusing operation on an unowned staging tree: ${root}`);
+  }
+  let marker: unknown;
+  try {
+    marker = JSON.parse(await readFile(markerPath, "utf8"));
+  } catch {
+    throw new Error(`Refusing operation with an invalid staging marker: ${root}`);
+  }
+  if (
+    !isRecord(marker) ||
+    marker.owner !== OWNER ||
+    marker.format_version !== FORMAT_VERSION ||
+    marker.staging_root !== root ||
+    typeof marker.import_id !== "string" ||
+    typeof marker.manifest_sha256 !== "string"
+  ) {
+    throw new Error(`Refusing operation on a staging tree not owned by ${OWNER}: ${root}`);
+  }
+  return marker as StageMarker;
+}
+
+async function ensureSafeParent(root: string, parent: string) {
+  if (!isWithin(root, parent)) throw new Error(`Unsafe staging path: ${parent}`);
+  const pathFromRoot = relative(root, parent);
+  let cursor = root;
+  if (!pathFromRoot) return;
+  for (const segment of pathFromRoot.split(sep)) {
+    cursor = resolve(cursor, segment);
+    const existing = await lstatOrNull(cursor);
+    if (!existing) {
+      await mkdir(cursor, { recursive: false });
+      continue;
+    }
+    if (existing.isSymbolicLink() || !existing.isDirectory()) {
+      throw new Error(`Unsafe staging path: parent is not a real directory: ${cursor}`);
+    }
+  }
+}
+
+function validateLocalPath(localPath: string) {
+  if (!localPath || localPath.includes("\0")) return "Asset local_path must be a non-empty path.";
+  if (isAbsolute(localPath) || localPath.startsWith("/") || /^[A-Za-z]:[\\/]/.test(localPath)) {
+    return `Asset local_path must be relative: ${localPath}`;
+  }
+  const segments = localPath.replaceAll("\\", "/").split("/");
+  if (segments.some((segment) => segment === "" || segment === "." || segment === "..")) {
+    return `Asset local_path contains an unsafe path segment: ${localPath}`;
+  }
+  return null;
+}
+
+function isWithin(root: string, candidate: string) {
+  const pathFromRoot = relative(root, candidate);
+  return pathFromRoot === "" || (!pathFromRoot.startsWith(`..${sep}`) && pathFromRoot !== "..");
+}
+
+async function lstatOrNull(path: string) {
+  try {
+    return await lstat(path);
+  } catch (error) {
+    if (isNodeError(error) && error.code === "ENOENT") return null;
+    throw error;
+  }
+}
+
+function sha256Bytes(bytes: Buffer) {
+  return createHash("sha256").update(bytes).digest("hex");
+}
+
+export function sha256File(path: string) {
+  return new Promise<string>((resolveHash, reject) => {
+    const hash = createHash("sha256");
+    const stream = createReadStream(path);
+    stream.on("error", reject);
+    stream.on("data", (chunk) => hash.update(chunk));
+    stream.on("end", () => resolveHash(hash.digest("hex")));
+  });
+}
+
+function isNodeError(error: unknown): error is NodeJS.ErrnoException {
+  return error instanceof Error && "code" in error;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
