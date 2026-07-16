@@ -142,6 +142,7 @@ describe("AdminUsersPage (WR-05)", () => {
     expect(html).toContain("Expired");
     expect(html).toContain("Role group assigned");
     expect(html).toContain("Send invite");
+    expect(html).toContain("text-transform:uppercase");
   });
 
   it("wraps dense users tables in horizontal scroll regions", async () => {
@@ -176,13 +177,13 @@ describe("AdminUsersPage (WR-05)", () => {
     const html = renderToStaticMarkup(await AdminUsersPage());
 
     expect(html).toMatch(
-      /data-testid="pilot-setup-table-scroll" class="[^"]*overflow-x-auto/,
+      /data-testid="pilot-setup-table-scroll" style="[^"]*overflow-x:auto/,
     );
     expect(html).toMatch(
-      /data-testid="active-members-table-scroll" class="[^"]*overflow-x-auto/,
+      /data-testid="active-members-table-scroll" style="[^"]*overflow-x:auto/,
     );
     expect(html).toMatch(
-      /data-testid="pending-invites-table-scroll" class="[^"]*overflow-x-auto/,
+      /data-testid="pending-invites-table-scroll" style="[^"]*overflow-x:auto/,
     );
   });
 });

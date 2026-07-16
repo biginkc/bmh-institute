@@ -1,13 +1,7 @@
-import { PageHeader } from "@/components/page-header";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card } from "@/components/bmh-ds";
 import { createClient } from "@/lib/supabase/server";
 
+import { AdminPageHeader, AdminSectionHeading } from "../_components/admin-shell";
 import { RoleGroupsEditor } from "./role-groups-editor";
 
 export default async function AdminRoleGroupsPage() {
@@ -18,32 +12,26 @@ export default async function AdminRoleGroupsPage() {
     .order("name");
 
   return (
-    <main className="mx-auto w-full max-w-3xl flex-1 p-6 md:p-10">
-      <div className="mb-6">
-        <PageHeader
-          title="Role groups"
-          description="Custom groupings of team members. Assign programs and courses to role groups to control which learners see what."
-          breadcrumb={[{ label: "Admin" }, { label: "Role groups" }]}
-        />
-      </div>
+    <main className="mx-auto w-full max-w-4xl flex-1 p-6 md:p-10">
+      <AdminPageHeader
+        title="Role groups"
+        description="Custom groupings of team members. Assign programs and courses to role groups to control which learners see what."
+      />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>All role groups</CardTitle>
-          <CardDescription>
-            Rename inline. Deleting removes the group and all its learner
-            assignments and access grants.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <RoleGroupsEditor
-            initial={(groups ?? []).map((g) => ({
-              id: g.id as string,
-              name: g.name as string,
-              description: (g.description as string | null) ?? null,
-            }))}
+      <Card padding="sm">
+        <div style={{ padding: "6px 12px 12px" }}>
+          <AdminSectionHeading
+            title="All role groups"
+            description="Rename inline. Deleting removes the group and all its learner assignments and access grants."
           />
-        </CardContent>
+        </div>
+        <RoleGroupsEditor
+          initial={(groups ?? []).map((g) => ({
+            id: g.id as string,
+            name: g.name as string,
+            description: (g.description as string | null) ?? null,
+          }))}
+        />
       </Card>
     </main>
   );
