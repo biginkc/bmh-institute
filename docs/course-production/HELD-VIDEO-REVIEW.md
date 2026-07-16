@@ -13,6 +13,13 @@ manifest asset from `hold` to `approved` until Jarrad has watched and approved
 that exact file.
 
 All nine use H264 video at 1600 by 900 in yuv420p plus AAC 48 kHz stereo audio.
+Use the fail-closed local review server documented in
+`held-video-review/README.md`; the checked-in HTML is explicitly unverified.
+The server hashes every exact file before listening, displays its verification
+time and held-set SHA lock, and stops if a locked file's stat identity changes.
+The first six cuts intentionally do not have finalized learner captions while
+approval is pending. The final three expose checksum-locked, review-only wording
+evidence and must not be treated as finalized learner captions.
 
 | Slot | Candidate | Duration | Size | SHA-256 | Correction under review |
 |---|---|---:|---:|---|---|

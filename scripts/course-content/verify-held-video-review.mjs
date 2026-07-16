@@ -1,9 +1,18 @@
 #!/usr/bin/env node
 
 import { createHash } from "node:crypto";
-import { createReadStream } from "node:fs";
-import { access, mkdir, readFile, stat, writeFile } from "node:fs/promises";
-import { dirname, join, relative, resolve } from "node:path";
+import { createServer } from "node:http";
+import { watchFile, unwatchFile } from "node:fs";
+import {
+  access,
+  mkdir,
+  open,
+  readFile,
+  realpath,
+  stat,
+  writeFile,
+} from "node:fs/promises";
+import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
@@ -12,6 +21,7 @@ const MANIFEST_PATH = join(REPO_ROOT, "content/course-manifests/bmh-employee-tra
 const REVIEW_HTML_PATH = join(REPO_ROOT, "docs/course-production/held-video-review/index.html");
 
 export const CANONICAL_CHECKOUT = "/Users/jarradhenry/Sites/BMH apps/BMH Institute";
+export const MEDIA_ROOT_ENV = "BMH_HELD_VIDEO_MEDIA_ROOT";
 
 export const EXPECTED_HELD_SOURCE_KEYS = [
   "video-slot-01-welcome",
@@ -41,43 +51,36 @@ const REVIEW_DETAILS = {
   "video-slot-01-welcome": {
     title: "Welcome",
     duration: "4:06",
-    durationSeconds: 246.186,
     reason: "Restores the missing cash-as-is paragraph and the training-starts-now line.",
   },
   "video-slot-01-mindset": {
     title: "Mindset",
     duration: "6:03",
-    durationSeconds: 362.688,
     reason: "Repairs the stranded opener line.",
   },
   "video-slot-02-terms": {
     title: "Terms Glossary",
     duration: "7:32",
-    durationSeconds: 451.754,
     reason: "Corrects the DOM pronunciation and the broken tease or sign-off.",
   },
   "video-slot-10-objection-scripts": {
     title: "Objection Scripts Playbook",
     duration: "25:09",
-    durationSeconds: 1508.757,
     reason: "Restores missing seller prompts and the tail word.",
   },
   "video-slot-15-closing": {
     title: "Closing and Deal Engineering",
     duration: "5:29",
-    durationSeconds: 329.429,
     reason: "Removes the spoken dollar-X placeholder defect.",
   },
   "video-slot-16-kpis": {
     title: "KPIs and Sales Telemetry",
     duration: "6:42",
-    durationSeconds: 402.154,
     reason: "Uses the approved non-finale closer after discarded hand-garbled takes.",
   },
   "video-slot-17-compensation": {
     title: "Compensation Engine",
     duration: "3:01",
-    durationSeconds: 181.013,
     reason: "Audio promises a ramp-up base, performance pay, milestone bonuses, and deal commissions. This conflicts with the role-agnostic current-written-plan rule.",
     evidence: {
       vtt: "course-assets/held-caption-review/video-slot-17-compensation.vtt",
@@ -89,7 +92,6 @@ const REVIEW_DETAILS = {
   "video-slot-18-operator": {
     title: "Operator Playbook",
     duration: "6:19",
-    durationSeconds: 378.858,
     reason: "Audio hard-codes 60 to 80, 150 to 200, and 150-plus dial targets. This conflicts with the locked no-fixed-KPI rule.",
     evidence: {
       vtt: "course-assets/held-caption-review/video-slot-18-operator.vtt",
@@ -101,7 +103,6 @@ const REVIEW_DETAILS = {
   "video-slot-19-career": {
     title: "Career Growth Path",
     duration: "4:13",
-    durationSeconds: 252.949,
     reason: "Audio hard-codes a role ladder, a 90-day performance window, six-month and one-year promotion examples, higher earnings, commissions, and management compensation. This conflicts with reusable current-role-source-of-truth wording.",
     evidence: {
       vtt: "course-assets/held-caption-review/video-slot-19-career.vtt",
@@ -121,14 +122,112 @@ function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
-async function sha256(path) {
+function isPathInside(root, candidate) {
+  const delta = relative(root, candidate);
+  return delta === "" || (!delta.startsWith("..") && !isAbsolute(delta));
+}
+
+export function resolveMediaRoot({ cliValue, env = process.env } = {}) {
+  return resolve(cliValue || env[MEDIA_ROOT_ENV] || CANONICAL_CHECKOUT);
+}
+
+export function resolveManifestMediaPath(mediaRoot, localPath) {
+  if (typeof localPath !== "string" || localPath.length === 0 || localPath.includes("\0")) {
+    throw new Error("Manifest media path must be a non-empty relative path");
+  }
+  if (isAbsolute(localPath)) {
+    throw new Error(`Manifest media path must be relative: ${localPath}`);
+  }
+  const root = resolve(mediaRoot);
+  const candidate = resolve(root, localPath);
+  if (!isPathInside(root, candidate)) {
+    throw new Error(`Manifest media path escapes the configured media root: ${localPath}`);
+  }
+  return candidate;
+}
+
+export async function resolveVerifiedMediaPath(mediaRoot, localPath) {
+  const root = await realpath(resolve(mediaRoot));
+  const lexicalCandidate = resolveManifestMediaPath(root, localPath);
+  const candidate = await realpath(lexicalCandidate);
+  if (!isPathInside(root, candidate)) {
+    throw new Error(`Manifest media path resolves outside the configured media root: ${localPath}`);
+  }
+  return candidate;
+}
+
+function fileSnapshot(info) {
+  return {
+    dev: String(info.dev),
+    ino: String(info.ino),
+    mode: String(info.mode),
+    size: String(info.size),
+    mtimeNs: String(info.mtimeNs),
+    ctimeNs: String(info.ctimeNs),
+  };
+}
+
+function snapshotsMatch(left, right) {
+  return Object.keys(left).every((key) => left[key] === right[key]);
+}
+
+export async function captureFileSnapshot(path) {
+  const info = await stat(path, { bigint: true });
+  if (!info.isFile()) throw new Error(`Not a regular file: ${path}`);
+  return fileSnapshot(info);
+}
+
+export async function assertLockedFileUnchanged(record) {
+  let current;
+  try {
+    current = await captureFileSnapshot(record.absolutePath);
+  } catch (error) {
+    throw new Error(`Locked file is unavailable: ${record.label || record.absolutePath} (${error.message})`);
+  }
+  if (!snapshotsMatch(record.snapshot, current)) {
+    throw new Error(`Locked file stat changed after verification: ${record.label || record.absolutePath}`);
+  }
+}
+
+async function sha256OpenFile(fileHandle) {
   const hash = createHash("sha256");
-  for await (const chunk of createReadStream(path)) hash.update(chunk);
+  for await (const chunk of fileHandle.createReadStream({ autoClose: false })) hash.update(chunk);
   return hash.digest("hex");
 }
 
-function evidenceUrl(path) {
+async function verifyAndSnapshotFile({ absolutePath, expectedSha256, expectedSize, label }) {
+  const fileHandle = await open(absolutePath, "r");
+  try {
+    const beforeInfo = await fileHandle.stat({ bigint: true });
+    if (!beforeInfo.isFile()) throw new Error(`Not a regular file: ${absolutePath}`);
+    const before = fileSnapshot(beforeInfo);
+    if (expectedSize !== undefined && before.size !== String(expectedSize)) {
+      throw new Error(`Size mismatch for ${label}: expected ${expectedSize}, got ${before.size}`);
+    }
+    const actualSha256 = await sha256OpenFile(fileHandle);
+    const after = fileSnapshot(await fileHandle.stat({ bigint: true }));
+    if (!snapshotsMatch(before, after)) {
+      throw new Error(`File stat changed while hashing ${label}`);
+    }
+    if (actualSha256 !== expectedSha256) {
+      throw new Error(`Checksum mismatch for ${label}: expected ${expectedSha256}, got ${actualSha256}`);
+    }
+    return { snapshot: before, sha256: actualSha256 };
+  } finally {
+    await fileHandle.close();
+  }
+}
+
+function evidenceStaticUrl(path) {
   return relative(dirname(REVIEW_HTML_PATH), join(REPO_ROOT, path)).split("\\").join("/");
+}
+
+function mediaRoute(sourceKey) {
+  return `/media/${encodeURIComponent(sourceKey)}.mp4`;
+}
+
+function evidenceRoute(sourceKey, kind) {
+  return `/evidence/${encodeURIComponent(sourceKey)}/${kind === "vtt" ? "review-captions.vtt" : "review-transcript.md"}`;
 }
 
 export function assertHeldAssetMatchesLock(asset) {
@@ -139,7 +238,15 @@ export function assertHeldAssetMatchesLock(asset) {
   }
 }
 
-export function renderHeldVideoReview(manifest) {
+export function renderHeldVideoReview(manifest, {
+  mode = "static",
+  mediaRoot = CANONICAL_CHECKOUT,
+  verification,
+} = {}) {
+  if (mode === "verified" && (!verification?.verifiedAt || !verification?.lockSha256)) {
+    throw new Error("Verified review rendering requires a verification timestamp and held-set SHA lock");
+  }
+
   const held = manifest.assets.filter(
     (asset) => asset.kind === "video" && asset.approval_status === "hold",
   );
@@ -147,22 +254,40 @@ export function renderHeldVideoReview(manifest) {
   const cards = held.map((asset, index) => {
     const details = REVIEW_DETAILS[asset.source_key];
     if (!details) throw new Error(`No review details for ${asset.source_key}`);
-    const absoluteVideoPath = join(CANONICAL_CHECKOUT, asset.local_path);
-    const videoUrl = pathToFileURL(absoluteVideoPath).href;
+    assertHeldAssetMatchesLock(asset);
+    const absoluteVideoPath = resolveManifestMediaPath(mediaRoot, asset.local_path);
+    const videoUrl = mode === "verified"
+      ? mediaRoute(asset.source_key)
+      : pathToFileURL(absoluteVideoPath).href;
+    const vttUrl = details.evidence
+      ? (mode === "verified" ? evidenceRoute(asset.source_key, "vtt") : evidenceStaticUrl(details.evidence.vtt))
+      : null;
+    const transcriptUrl = details.evidence
+      ? (mode === "verified" ? evidenceRoute(asset.source_key, "transcript") : evidenceStaticUrl(details.evidence.transcript))
+      : null;
     const evidence = details.evidence
-      ? `\n      <div class="evidence"><strong>Review-only wording evidence:</strong> <a href="${escapeHtml(evidenceUrl(details.evidence.vtt))}">VTT captions</a> · <a href="${escapeHtml(evidenceUrl(details.evidence.transcript))}">transcript</a></div>`
+      ? `\n      <div class="evidence"><strong>Review-only wording evidence:</strong> <a href="${escapeHtml(vttUrl)}">VTT captions</a> · <a href="${escapeHtml(transcriptUrl)}">transcript</a></div>`
       : "";
     const track = details.evidence
-      ? `<track kind="captions" srclang="en" label="Review transcript" src="${escapeHtml(evidenceUrl(details.evidence.vtt))}">`
+      ? `<track kind="captions" srclang="en" label="Review-only English captions for ${escapeHtml(details.title)}" src="${escapeHtml(vttUrl)}" default>`
       : "";
+    const accessibilityNote = details.evidence
+      ? "Review-only captions are available for wording verification. They are not approved learner captions."
+      : "Captions and a transcript are intentionally not finalized for this cut while exact-file approval is pending.";
+    const videoLabel = `${details.title} held video candidate ${index + 1} of ${held.length}`;
 
     return `<article class="card" data-source-key="${escapeHtml(asset.source_key)}" data-checksum="${asset.checksum_sha256}">
       <header><span class="number">${index + 1}</span><div><h2>${escapeHtml(details.title)}</h2><p class="meta">${details.duration} · ${asset.size_bytes.toLocaleString("en-US")} bytes</p></div></header>
-      <video controls preload="metadata" src="${escapeHtml(videoUrl)}">${track}Your browser cannot play this local video.</video>
+      <video controls preload="metadata" src="${escapeHtml(videoUrl)}" aria-label="${escapeHtml(videoLabel)}" title="${escapeHtml(videoLabel)}">${track}Your browser cannot play this local video.</video>
+      <p class="captions-note"><strong>Accessibility:</strong> ${escapeHtml(accessibilityNote)}</p>
       <p class="reason"><strong>Why it is held:</strong> ${escapeHtml(details.reason)}</p>${evidence}
       <details><summary>Exact-file lock</summary><dl><dt>SHA-256</dt><dd><code>${asset.checksum_sha256}</code></dd><dt>Absolute source</dt><dd><code>${escapeHtml(absoluteVideoPath)}</code></dd><dt>Manifest key</dt><dd><code>${escapeHtml(asset.source_key)}</code></dd></dl></details>
     </article>`;
   }).join("\n");
+
+  const verificationStatus = mode === "verified"
+    ? `<div class="verification verified" role="status"><strong>VERIFIED LOCAL SERVER</strong><span>Verified at <time datetime="${escapeHtml(verification.verifiedAt)}">${escapeHtml(verification.verifiedAt)}</time>.</span><span>Held-set SHA-256 lock: <code>${escapeHtml(verification.lockSha256)}</code></span></div>`
+    : `<div class="verification unverified" role="alert"><strong>UNVERIFIED STATIC PAGE</strong><span>Do not approve a cut from this file-only view. Run <code>node scripts/course-content/verify-held-video-review.mjs --serve</code> and review the verified local-server page.</span></div>`;
 
   return `<!doctype html>
 <html lang="en">
@@ -171,7 +296,7 @@ export function renderHeldVideoReview(manifest) {
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>BMH Institute — Held Video Review</title>
   <style>
-    :root{color-scheme:dark;--bg:#11120f;--panel:#1c1e18;--ink:#f8f5e7;--muted:#b9b8ac;--accent:#f4cf45;--line:#3a3d32;--danger:#ff836f}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}main{width:min(1040px,calc(100% - 32px));margin:40px auto 80px}.intro{border-left:6px solid var(--accent);padding:4px 0 4px 20px;margin-bottom:30px}.eyebrow{text-transform:uppercase;letter-spacing:.14em;color:var(--accent);font-weight:800;font-size:.76rem}h1{font-size:clamp(2rem,6vw,4rem);line-height:1;margin:.25rem 0 1rem}h2{margin:0;font-size:1.35rem}.intro p{max-width:76ch;color:var(--muted)}.warning{color:var(--danger);font-weight:750}.grid{display:grid;gap:22px}.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:0 18px 38px #0005}.card header{display:flex;gap:14px;align-items:center;margin-bottom:16px}.number{display:grid;place-items:center;width:38px;height:38px;border-radius:50%;background:var(--accent);color:#161710;font-weight:900}.meta{margin:2px 0 0;color:var(--muted)}video{display:block;width:100%;max-height:70vh;border-radius:12px;background:#000}.reason{margin:18px 0 8px}.evidence{margin:12px 0;padding:12px 14px;border-radius:10px;background:#2a2c24}a{color:var(--accent)}details{margin-top:14px;color:var(--muted)}summary{cursor:pointer;font-weight:700}dl{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:6px 12px}dt{font-weight:800}dd{margin:0;overflow-wrap:anywhere}code{font-size:.78rem}@media(max-width:600px){main{width:min(100% - 20px,1040px);margin-top:22px}.card{padding:14px}dl{grid-template-columns:1fr}.intro{padding-left:14px}}
+    :root{color-scheme:dark;--bg:#11120f;--panel:#1c1e18;--ink:#f8f5e7;--muted:#b9b8ac;--accent:#f4cf45;--line:#3a3d32;--danger:#ff836f;--safe:#8fe388}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}main{width:min(1040px,calc(100% - 32px));margin:40px auto 80px}.intro{border-left:6px solid var(--accent);padding:4px 0 4px 20px;margin-bottom:30px}.eyebrow{text-transform:uppercase;letter-spacing:.14em;color:var(--accent);font-weight:800;font-size:.76rem}h1{font-size:clamp(2rem,6vw,4rem);line-height:1;margin:.25rem 0 1rem}h2{margin:0;font-size:1.35rem}.intro p{max-width:76ch;color:var(--muted)}.warning{color:var(--danger);font-weight:750}.verification{display:grid;gap:5px;margin:20px 0;padding:14px 16px;border:2px solid;border-radius:10px;overflow-wrap:anywhere}.verification.verified{border-color:var(--safe);color:var(--safe)}.verification.unverified{border-color:var(--danger);color:var(--danger)}.grid{display:grid;gap:22px}.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:0 18px 38px #0005}.card header{display:flex;gap:14px;align-items:center;margin-bottom:16px}.number{display:grid;place-items:center;width:38px;height:38px;border-radius:50%;background:var(--accent);color:#161710;font-weight:900}.meta{margin:2px 0 0;color:var(--muted)}video{display:block;width:100%;max-height:70vh;border-radius:12px;background:#000}.captions-note{margin:10px 0;color:var(--muted)}.reason{margin:18px 0 8px}.evidence{margin:12px 0;padding:12px 14px;border-radius:10px;background:#2a2c24}a{color:var(--accent)}details{margin-top:14px;color:var(--muted)}summary{cursor:pointer;font-weight:700}dl{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:6px 12px}dt{font-weight:800}dd{margin:0;overflow-wrap:anywhere}code{font-size:.78rem}@media(max-width:600px){main{width:min(100% - 20px,1040px);margin-top:22px}.card{padding:14px}dl{grid-template-columns:1fr}.intro{padding-left:14px}}
   </style>
 </head>
 <body>
@@ -179,8 +304,9 @@ export function renderHeldVideoReview(manifest) {
   <section class="intro">
     <div class="eyebrow">Local review only · 9 exact cuts</div>
     <h1>Held video review</h1>
-    <p>Run <code>node scripts/course-content/verify-held-video-review.mjs</code> before watching. Review and decide on the exact cut shown; a filename alone is not approval.</p>
-    <p class="warning">This page does not upload, publish, alter, or approve anything.</p>
+    ${verificationStatus}
+    <p>Review and decide on the exact checksum-locked cut shown; a filename alone is not approval.</p>
+    <p class="warning">This page does not upload, publish, alter, caption, or approve anything.</p>
   </section>
   <section class="grid" aria-label="Held video candidates">
 ${cards}
@@ -191,14 +317,25 @@ ${cards}
 `;
 }
 
-export async function writeHeldVideoReview() {
-  const manifest = JSON.parse(await readFile(MANIFEST_PATH, "utf8"));
-  await mkdir(dirname(REVIEW_HTML_PATH), { recursive: true });
-  await writeFile(REVIEW_HTML_PATH, renderHeldVideoReview(manifest), "utf8");
+async function readManifest() {
+  return JSON.parse(await readFile(MANIFEST_PATH, "utf8"));
 }
 
-export async function verifyHeldVideoReview() {
-  const manifest = JSON.parse(await readFile(MANIFEST_PATH, "utf8"));
+export async function writeHeldVideoReview() {
+  const manifest = await readManifest();
+  await mkdir(dirname(REVIEW_HTML_PATH), { recursive: true });
+  await writeFile(
+    REVIEW_HTML_PATH,
+    renderHeldVideoReview(manifest, { mode: "static", mediaRoot: CANONICAL_CHECKOUT }),
+    "utf8",
+  );
+}
+
+export async function verifyHeldVideoReview({
+  mediaRoot = resolveMediaRoot(),
+  checkHtml = true,
+} = {}) {
+  const manifest = await readManifest();
   const held = manifest.assets.filter(
     (asset) => asset.kind === "video" && asset.approval_status === "hold",
   );
@@ -207,64 +344,382 @@ export async function verifyHeldVideoReview() {
     throw new Error(`Held video set changed. Expected ${EXPECTED_HELD_SOURCE_KEYS.join(", ")}; got ${sourceKeys.join(", ")}`);
   }
 
+  const files = [];
   let evidenceFileCount = 0;
   for (const asset of held) {
     const details = REVIEW_DETAILS[asset.source_key];
     if (!details) throw new Error(`Missing review details for ${asset.source_key}`);
     assertHeldAssetMatchesLock(asset);
-    const absoluteVideoPath = join(CANONICAL_CHECKOUT, asset.local_path);
+    const absoluteVideoPath = await resolveVerifiedMediaPath(mediaRoot, asset.local_path);
     await access(absoluteVideoPath);
-    const info = await stat(absoluteVideoPath);
-    if (!info.isFile()) throw new Error(`Not a file: ${absoluteVideoPath}`);
-    if (info.size !== asset.size_bytes) {
-      throw new Error(`Size mismatch for ${asset.source_key}: expected ${asset.size_bytes}, got ${info.size}`);
-    }
-    const videoChecksum = await sha256(absoluteVideoPath);
-    if (videoChecksum !== asset.checksum_sha256) {
-      throw new Error(`Checksum mismatch for ${asset.source_key}: expected ${asset.checksum_sha256}, got ${videoChecksum}`);
-    }
+    const lockedVideo = await verifyAndSnapshotFile({
+      absolutePath: absoluteVideoPath,
+      expectedSha256: asset.checksum_sha256,
+      expectedSize: asset.size_bytes,
+      label: asset.source_key,
+    });
+    files.push({
+      absolutePath: absoluteVideoPath,
+      contentType: "video/mp4",
+      kind: "video",
+      label: asset.source_key,
+      route: mediaRoute(asset.source_key),
+      sha256: lockedVideo.sha256,
+      snapshot: lockedVideo.snapshot,
+    });
 
     if (details.evidence) {
-      for (const [kind, expected] of [
+      for (const [kind, expectedSha256] of [
         ["vtt", details.evidence.vttSha256],
         ["transcript", details.evidence.transcriptSha256],
       ]) {
-        const evidencePath = join(REPO_ROOT, details.evidence[kind]);
-        await access(evidencePath);
-        const actual = await sha256(evidencePath);
-        if (actual !== expected) {
-          throw new Error(`Review evidence changed for ${asset.source_key} ${kind}: expected ${expected}, got ${actual}`);
+        const relativeEvidencePath = details.evidence[kind];
+        const absoluteEvidencePath = resolveManifestMediaPath(REPO_ROOT, relativeEvidencePath);
+        const canonicalEvidencePath = await realpath(absoluteEvidencePath);
+        if (!isPathInside(await realpath(REPO_ROOT), canonicalEvidencePath)) {
+          throw new Error(`Review evidence resolves outside the repository: ${relativeEvidencePath}`);
         }
+        const lockedEvidence = await verifyAndSnapshotFile({
+          absolutePath: canonicalEvidencePath,
+          expectedSha256,
+          label: `${asset.source_key} ${kind}`,
+        });
+        files.push({
+          absolutePath: canonicalEvidencePath,
+          contentType: kind === "vtt" ? "text/vtt; charset=utf-8" : "text/markdown; charset=utf-8",
+          kind,
+          label: `${asset.source_key} ${kind}`,
+          route: evidenceRoute(asset.source_key, kind),
+          sha256: lockedEvidence.sha256,
+          snapshot: lockedEvidence.snapshot,
+        });
         evidenceFileCount += 1;
       }
     }
   }
 
-  const expectedHtml = renderHeldVideoReview(manifest);
-  const currentHtml = await readFile(REVIEW_HTML_PATH, "utf8");
-  if (currentHtml !== expectedHtml) {
-    throw new Error(`Review HTML is stale. Regenerate it before review: ${relative(REPO_ROOT, REVIEW_HTML_PATH)}`);
+  if (checkHtml) {
+    const expectedHtml = renderHeldVideoReview(manifest, {
+      mode: "static",
+      mediaRoot: CANONICAL_CHECKOUT,
+    });
+    const currentHtml = await readFile(REVIEW_HTML_PATH, "utf8");
+    if (currentHtml !== expectedHtml) {
+      throw new Error(`Review HTML is stale. Regenerate it before review: ${relative(REPO_ROOT, REVIEW_HTML_PATH)}`);
+    }
   }
+
+  const lockSha256 = createHash("sha256")
+    .update(files
+      .map((file) => `${file.route}\0${file.sha256}\0${file.snapshot.size}`)
+      .sort()
+      .join("\n"))
+    .digest("hex");
 
   return {
     sourceKeys,
     videoCount: held.length,
     evidenceFileCount,
-    htmlIsCurrent: true,
+    htmlIsCurrent: checkHtml,
+    files,
+    lockSha256,
+    mediaRoot: resolve(mediaRoot),
+    verifiedAt: new Date().toISOString(),
   };
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  const operation = process.argv.includes("--write")
-    ? writeHeldVideoReview().then(() => verifyHeldVideoReview())
-    : verifyHeldVideoReview();
-  operation
-    .then((result) => {
-      console.log(`Verified ${result.videoCount} held videos and ${result.evidenceFileCount} review evidence files.`);
-      console.log(`Review page: ${REVIEW_HTML_PATH}`);
-    })
-    .catch((error) => {
-      console.error(`Held video review verification failed: ${error.message}`);
-      process.exitCode = 1;
+export async function assertVerificationFilesUnchanged(verification) {
+  for (const file of verification.files) await assertLockedFileUnchanged(file);
+}
+
+function commonResponseHeaders() {
+  return {
+    "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+    "Content-Security-Policy": "default-src 'none'; media-src 'self'; style-src 'unsafe-inline'; img-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'",
+    "Cross-Origin-Resource-Policy": "same-origin",
+    "Pragma": "no-cache",
+    "Referrer-Policy": "no-referrer",
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY",
+  };
+}
+
+function parseRange(rangeHeader, size) {
+  if (!rangeHeader) return null;
+  const match = /^bytes=(\d*)-(\d*)$/.exec(rangeHeader);
+  if (!match || (!match[1] && !match[2])) throw new Error("Invalid byte range");
+  let start;
+  let end;
+  if (!match[1]) {
+    const suffixLength = Number(match[2]);
+    if (!Number.isSafeInteger(suffixLength) || suffixLength <= 0) throw new Error("Invalid suffix range");
+    start = Math.max(0, size - suffixLength);
+    end = size - 1;
+  } else {
+    start = Number(match[1]);
+    end = match[2] ? Number(match[2]) : size - 1;
+  }
+  if (!Number.isSafeInteger(start) || !Number.isSafeInteger(end) || start < 0 || start >= size || end < start) {
+    throw new Error("Unsatisfiable byte range");
+  }
+  end = Math.min(end, size - 1);
+  return { start, end };
+}
+
+function isLoopbackHost(host) {
+  return host === "127.0.0.1" || host === "::1" || host === "localhost";
+}
+
+export function createHeldVideoReviewServer({
+  manifest,
+  verification,
+  host = "127.0.0.1",
+  port = 0,
+  watchIntervalMs = 250,
+} = {}) {
+  if (!isLoopbackHost(host)) throw new Error(`Review server must bind to loopback, not ${host}`);
+  if (!manifest || !verification?.files?.length) throw new Error("Review server requires a verified manifest and locked files");
+
+  const routeMap = new Map(verification.files.map((file) => [file.route, file]));
+  const expectedRoutes = [];
+  for (const sourceKey of EXPECTED_HELD_SOURCE_KEYS) {
+    expectedRoutes.push(mediaRoute(sourceKey));
+    const details = REVIEW_DETAILS[sourceKey];
+    if (details.evidence) {
+      expectedRoutes.push(evidenceRoute(sourceKey, "vtt"), evidenceRoute(sourceKey, "transcript"));
+    }
+  }
+  if (expectedRoutes.some((route) => !routeMap.has(route)) || routeMap.size !== expectedRoutes.length) {
+    throw new Error("Review server refuses an incomplete or expanded verified-file route set");
+  }
+
+  let integrityError = null;
+  let stopping = false;
+  const activeResponses = new Set();
+  const watchedPaths = verification.files.map((file) => file.absolutePath);
+  const stopWatching = () => {
+    for (const path of watchedPaths) unwatchFile(path);
+  };
+
+  let server;
+  const stopAfterResponse = (error, responseToFinish) => {
+    if (stopping) return;
+    stopping = true;
+    stopWatching();
+    for (const activeResponse of activeResponses) {
+      if (activeResponse !== responseToFinish) activeResponse.destroy(error);
+    }
+    setImmediate(() => server.close());
+  };
+  const failIntegrity = (response, error) => {
+    integrityError = error;
+    response.writeHead(409, {
+      ...commonResponseHeaders(),
+      "Content-Type": "text/plain; charset=utf-8",
     });
+    response.end("Integrity lock failed. The local review server is stopping. Re-verify the exact held files before review.\n");
+    stopAfterResponse(error, response);
+  };
+
+  server = createServer(async (request, response) => {
+    activeResponses.add(response);
+    const forgetResponse = () => activeResponses.delete(response);
+    response.once("close", forgetResponse);
+    response.once("finish", forgetResponse);
+    try {
+      if (integrityError) return failIntegrity(response, integrityError);
+      await assertVerificationFilesUnchanged(verification);
+      if (request.method !== "GET" && request.method !== "HEAD") {
+        response.writeHead(405, {
+          ...commonResponseHeaders(),
+          "Allow": "GET, HEAD",
+          "Content-Type": "text/plain; charset=utf-8",
+        });
+        response.end("Method not allowed\n");
+        return;
+      }
+
+      const pathname = new URL(request.url || "/", `http://${host}`).pathname;
+      if (pathname === "/") {
+        const html = renderHeldVideoReview(manifest, {
+          mode: "verified",
+          mediaRoot: verification.mediaRoot,
+          verification,
+        });
+        response.writeHead(200, {
+          ...commonResponseHeaders(),
+          "Content-Length": Buffer.byteLength(html),
+          "Content-Type": "text/html; charset=utf-8",
+        });
+        response.end(request.method === "HEAD" ? undefined : html);
+        return;
+      }
+
+      const file = routeMap.get(pathname);
+      if (!file) {
+        response.writeHead(404, {
+          ...commonResponseHeaders(),
+          "Content-Type": "text/plain; charset=utf-8",
+        });
+        response.end("Not found\n");
+        return;
+      }
+
+      const fileHandle = await open(file.absolutePath, "r");
+      const handleSnapshot = fileSnapshot(await fileHandle.stat({ bigint: true }));
+      if (!snapshotsMatch(file.snapshot, handleSnapshot)) {
+        await fileHandle.close();
+        return failIntegrity(response, new Error(`Locked file changed before streaming: ${file.label}`));
+      }
+      const size = Number(handleSnapshot.size);
+      let range;
+      try {
+        range = parseRange(request.headers.range, size);
+      } catch {
+        await fileHandle.close();
+        response.writeHead(416, {
+          ...commonResponseHeaders(),
+          "Content-Range": `bytes */${size}`,
+          "Content-Type": "text/plain; charset=utf-8",
+        });
+        response.end("Range not satisfiable\n");
+        return;
+      }
+      const status = range ? 206 : 200;
+      const start = range?.start ?? 0;
+      const end = range?.end ?? size - 1;
+      response.writeHead(status, {
+        ...commonResponseHeaders(),
+        "Accept-Ranges": "bytes",
+        "Content-Length": end - start + 1,
+        "Content-Type": file.contentType,
+        ...(range ? { "Content-Range": `bytes ${start}-${end}/${size}` } : {}),
+      });
+      if (request.method === "HEAD") {
+        await fileHandle.close();
+        response.end();
+        return;
+      }
+      const stream = fileHandle.createReadStream({ autoClose: true, start, end });
+      response.once("close", () => stream.destroy());
+      stream.on("error", (error) => {
+        response.destroy(error);
+        stopAfterResponse(error);
+      });
+      stream.pipe(response);
+    } catch (error) {
+      if (!response.headersSent) failIntegrity(response, error);
+      else {
+        response.destroy(error);
+        stopAfterResponse(error);
+      }
+    }
+  });
+
+  for (const file of verification.files) {
+    watchFile(file.absolutePath, { interval: watchIntervalMs, persistent: false, bigint: true }, (current) => {
+      const currentSnapshot = fileSnapshot(current);
+      if (!snapshotsMatch(file.snapshot, currentSnapshot)) {
+        integrityError = new Error(`Locked file stat changed after verification: ${file.label}`);
+        stopAfterResponse(integrityError);
+      }
+    });
+  }
+
+  return {
+    server,
+    async listen() {
+      await new Promise((resolveListen, rejectListen) => {
+        server.once("error", rejectListen);
+        server.listen(port, host, () => {
+          server.off("error", rejectListen);
+          resolveListen();
+        });
+      });
+      const address = server.address();
+      const displayHost = host === "::1" ? "[::1]" : host;
+      return `http://${displayHost}:${address.port}/`;
+    },
+    async close() {
+      stopWatching();
+      if (!server.listening) return;
+      await new Promise((resolveClose, rejectClose) => server.close((error) => error ? rejectClose(error) : resolveClose()));
+    },
+    get integrityError() {
+      return integrityError;
+    },
+  };
+}
+
+export async function serveHeldVideoReview({
+  mediaRoot = resolveMediaRoot(),
+  host = "127.0.0.1",
+  port = 0,
+} = {}) {
+  const manifest = await readManifest();
+  const verification = await verifyHeldVideoReview({ mediaRoot });
+  const runtime = createHeldVideoReviewServer({ manifest, verification, host, port });
+  const url = await runtime.listen();
+  return { ...runtime, url, verification };
+}
+
+function parseCliArgs(argv) {
+  const options = { host: "127.0.0.1", port: 0, serve: false, write: false };
+  const nextValue = (index, flag) => {
+    const value = argv[index + 1];
+    if (value === undefined || value.startsWith("--")) throw new Error(`${flag} requires a value`);
+    return value;
+  };
+  for (let index = 0; index < argv.length; index += 1) {
+    const arg = argv[index];
+    if (arg === "--serve") options.serve = true;
+    else if (arg === "--write") options.write = true;
+    else if (arg === "--media-root") options.mediaRoot = nextValue(index++, arg);
+    else if (arg.startsWith("--media-root=")) options.mediaRoot = arg.slice("--media-root=".length);
+    else if (arg === "--host") options.host = nextValue(index++, arg);
+    else if (arg.startsWith("--host=")) options.host = arg.slice("--host=".length);
+    else if (arg === "--port") options.port = Number(nextValue(index++, arg));
+    else if (arg.startsWith("--port=")) options.port = Number(arg.slice("--port=".length));
+    else throw new Error(`Unknown argument: ${arg}`);
+  }
+  if (options.write && options.serve) throw new Error("--write and --serve cannot be combined");
+  if (options.mediaRoot === "") throw new Error("--media-root requires a path");
+  if (!Number.isInteger(options.port) || options.port < 0 || options.port > 65535) throw new Error("--port must be an integer from 0 to 65535");
+  return options;
+}
+
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  let cliOptions;
+  try {
+    cliOptions = parseCliArgs(process.argv.slice(2));
+  } catch (error) {
+    console.error(`Held video review configuration failed: ${error.message}`);
+    process.exitCode = 1;
+  }
+
+  if (cliOptions) {
+    const mediaRoot = resolveMediaRoot({ cliValue: cliOptions.mediaRoot });
+    const operation = cliOptions.serve
+      ? serveHeldVideoReview({ mediaRoot, host: cliOptions.host, port: cliOptions.port })
+      : (cliOptions.write
+          ? writeHeldVideoReview().then(() => verifyHeldVideoReview({ mediaRoot }))
+          : verifyHeldVideoReview({ mediaRoot }));
+    operation
+      .then((result) => {
+        if (cliOptions.serve) {
+          console.log(`Verified ${result.verification.videoCount} held videos and ${result.verification.evidenceFileCount} review evidence files.`);
+          console.log(`Held-set SHA-256 lock: ${result.verification.lockSha256}`);
+          console.log(`Review server: ${result.url}`);
+          console.log("Press Ctrl-C to stop. The server will also stop if a locked file changes.");
+        } else {
+          console.log(`Verified ${result.videoCount} held videos and ${result.evidenceFileCount} review evidence files.`);
+          console.log(`Held-set SHA-256 lock: ${result.lockSha256}`);
+          console.log(`Static page (unverified fallback only): ${REVIEW_HTML_PATH}`);
+        }
+      })
+      .catch((error) => {
+        console.error(`Held video review verification failed: ${error.message}`);
+        process.exitCode = 1;
+      });
+  }
 }
