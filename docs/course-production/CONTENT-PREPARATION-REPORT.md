@@ -15,7 +15,7 @@ The unpublished import draft now contains the full authored course shape:
 - 6 text assignments with reviewer rubrics
 - 6 required Closer Lab scenario specifications
 - 19 learner summaries, objective sets, and accessible in-app text guides
-- 19 required accessible learner-guide PDF placeholders
+- 19 required, checksum-addressed accessible learner-guide PDFs
 - 29 dedicated video-poster placeholders
 
 The machine-readable source is
@@ -42,7 +42,8 @@ The generator resolves it against
 `/Users/jarradhenry/Sites/BMH apps/BMH Institute`, where the ignored
 `course-assets` production sources live. Video storage paths include the full
 source checksum so a replacement file cannot silently overwrite an approved or
-held object. Missing Wave 2 derivatives receive immutable paths after their
+held object. Produced captions, transcripts, and guides are also checksum
+addressed; remaining Wave 2 derivatives receive immutable paths after their
 files and checksums exist.
 
 ## Grouped course map
@@ -73,10 +74,10 @@ Every content topic is followed by its own quiz. Each section ends with one
 required, reviewed assignment.
 
 Each grouped content lesson keeps its accessible in-app text guide as a fallback
-and also references exactly one required learner-guide PDF download. Each video
-references its own poster asset rather than reusing a topic thumbnail. These 19
-PDFs and 29 posters are intentionally missing until Wave 2 produces and approves
-them.
+and also references exactly one required learner-guide PDF download. All 19 PDFs
+are produced, machine-checked, rendered, visually inspected, and approved. Each
+video references its own poster asset rather than reusing a topic thumbnail; the
+29 posters remain gated on approval of the three-image visual pilot.
 
 ## Asset inventory
 
@@ -87,11 +88,12 @@ The manifest contains 155 assets:
 - 29 exact-cut transcript assets: 21 approved and 8 missing pending held-cut approval
 - 20 thumbnail placeholders: one program cover and 19 topic thumbnails
 - 29 video-poster placeholders
-- 19 accessible learner-guide PDF placeholders
+- 19 approved accessible learner-guide PDFs
 
-There are 84 missing generated assets. Together with the eight video holds, six
-pending Closer Lab IDs, and one operating-stack confirmation, the validator
-reports 99 publication blockers and zero manifest errors.
+There are 65 missing generated assets: 16 held-cut caption/transcript
+derivatives, 20 thumbnails, and 29 posters. Together with the eight video holds,
+six pending production Closer Lab IDs, and one operating-stack confirmation,
+the validator reports 80 publication blockers and zero manifest errors.
 
 ## Quiz curation
 
@@ -162,7 +164,7 @@ The draft must not be published until all of these are resolved:
 - Exact-cut captions and transcripts are produced and approved for all 29 videos.
 - The course cover and 19 topic thumbnails are produced and approved.
 - All 29 dedicated video posters are produced, approved, and mapped one-to-one.
-- All 19 accessible learner-guide PDFs are produced, approved, and mapped to
+- The 19 approved accessible learner-guide PDFs remain checksum-matched to
   their required download blocks. The in-app text guides remain available as a
   fallback.
 - The six Closer Lab scenarios are built, tested, and mapped to production IDs.
@@ -181,12 +183,14 @@ as publication blockers rather than silently treating the course as ready.
 Run:
 
 ```sh
-node scripts/course-content/build-manifest.mjs
 node scripts/course-content/validate-manifest.mjs content/course-manifests/bmh-employee-training.v1.json
-node --test content/course-manifests/bmh-employee-training.qa.test.mjs
+node scripts/course-content/validate-caption-assets.mjs content/course-manifests/bmh-employee-training.v1.json .
+node --test content/course-manifests/*.qa.test.mjs
 ```
 
-The generator verifies the exact local video files and computes checksums for
-the approved cuts. The validator fails on structural drift, wrong counts,
+The rebuild pipeline verifies exact local video files and computes checksums for
+approved cuts before the guide and caption generators add their derivatives.
+Do not run the base builder alone against the release manifest because generated
+assets are separate deterministic stages. The validator fails on structural drift, wrong counts,
 duplicate identifiers, broken answer keys, stale compensation promises,
 removed KPI targets, wrong-track assets, or an accidentally published record.

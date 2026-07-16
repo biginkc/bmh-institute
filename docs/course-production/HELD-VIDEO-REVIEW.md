@@ -4,9 +4,9 @@ Updated: 2026-07-16
 
 ## Review rule
 
-Six corrected cuts are the only candidates for their slots. They passed
-technical QC but do not have a later explicit Jarrad approval in the inspected
-records. The Compensation Engine and Career Growth cuts were added to this hold
+Eight exact cuts are the only candidates for their slots. Six passed technical
+QC but do not have a later explicit Jarrad approval in the inspected records.
+The Compensation Engine and Career Growth cuts were added to this hold
 after exact-cut transcription exposed wording that conflicts with the locked
 course policy. Do not substitute an older known-defective version. Do not change a
 manifest asset from `hold` to `approved` until Jarrad has watched and approved
