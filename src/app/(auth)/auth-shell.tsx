@@ -18,7 +18,7 @@ export function AuthShell({
   return (
     <main className="grid min-h-screen bg-[var(--paper)] lg:grid-cols-[1.05fr_0.95fr]">
       <section className="flex min-h-[320px] flex-col justify-between gap-8 bg-[var(--blue-400)] px-8 py-8 sm:min-h-[400px] sm:px-12 lg:min-h-screen lg:px-16 lg:py-14">
-        <Logo height={24} />
+        <Logo height={21} />
 
         {loginHero ? (
           <div className="max-w-[460px]">
