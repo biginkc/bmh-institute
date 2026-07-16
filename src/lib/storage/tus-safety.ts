@@ -20,6 +20,17 @@ export type TusUrlStorage = {
   addUpload(fingerprint: string, upload: TusPreviousUpload): Promise<string>;
 };
 
+export type TusResumeScope = {
+  endpoint: string;
+  fingerprint: string;
+  size: number;
+  bucket: string;
+  path: string;
+  checksum: string;
+  contentType: string;
+  importId?: string;
+};
+
 export function supabaseResumableEndpoint(supabaseUrl: string) {
   const url = new URL(supabaseUrl);
   const projectId = url.hostname.endsWith(".supabase.co")
@@ -42,6 +53,9 @@ export function normalizeTusEndpoint(endpoint: string) {
   url.pathname = url.pathname.replace(/\/+$/, "");
   if (url.pathname !== SUPABASE_TUS_ROUTE) {
     throw new Error(`TUS endpoint must use the resumable route ${SUPABASE_TUS_ROUTE}.`);
+  }
+  if (url.protocol !== "https:" && !(url.protocol === "http:" && isLoopbackHost(url.hostname))) {
+    throw new Error("TUS endpoints must use HTTPS except on an explicit loopback development host.");
   }
   return url.toString().replace(/\/$/, "");
 }
@@ -101,17 +115,27 @@ export class ValidatingTusUrlStorage implements TusUrlStorage {
 
   constructor(
     private readonly delegate: TusUrlStorage,
-    endpoint: string,
+    private readonly scope: TusResumeScope,
   ) {
-    this.endpoint = normalizeTusEndpoint(endpoint);
+    this.endpoint = normalizeTusEndpoint(scope.endpoint);
+    const expected = createScopedTusFingerprint({
+      endpoint: this.endpoint,
+      bucket: scope.bucket,
+      path: scope.path,
+      checksum: scope.checksum,
+    });
+    if (scope.fingerprint !== expected) {
+      throw new Error("TUS resume scope fingerprint does not match its declared asset.");
+    }
   }
 
   async findAllUploads() {
-    return this.filter(await this.delegate.findAllUploads());
+    return this.filter(await this.delegate.findAllUploads(), false);
   }
 
   async findUploadsByFingerprint(fingerprint: string) {
-    return this.filter(await this.delegate.findUploadsByFingerprint(fingerprint));
+    if (fingerprint !== this.scope.fingerprint) return [];
+    return this.filter(await this.delegate.findUploadsByFingerprint(fingerprint), true);
   }
 
   removeUpload(urlStorageKey: string) {
@@ -119,16 +143,20 @@ export class ValidatingTusUrlStorage implements TusUrlStorage {
   }
 
   addUpload(fingerprint: string, upload: TusPreviousUpload) {
-    this.assertSafe(upload);
+    if (fingerprint !== this.scope.fingerprint || !this.matchesScope(upload)) {
+      throw new Error("Refusing to persist TUS state outside the current asset scope.");
+    }
+    this.assertSafeUrl(upload);
     return this.delegate.addUpload(fingerprint, upload);
   }
 
-  private async filter(uploads: TusPreviousUpload[]) {
+  private async filter(uploads: TusPreviousUpload[], removeScopeMismatch: boolean) {
     const safe: TusPreviousUpload[] = [];
     for (const upload of uploads) {
       try {
-        this.assertSafe(upload);
-        safe.push(upload);
+        this.assertSafeUrl(upload);
+        if (this.matchesScope(upload)) safe.push(upload);
+        else if (removeScopeMismatch) await this.delegate.removeUpload(upload.urlStorageKey);
       } catch {
         await this.delegate.removeUpload(upload.urlStorageKey);
       }
@@ -136,7 +164,7 @@ export class ValidatingTusUrlStorage implements TusUrlStorage {
     return safe;
   }
 
-  private assertSafe(upload: TusPreviousUpload) {
+  private assertSafeUrl(upload: TusPreviousUpload) {
     const urls = [
       ...(upload.uploadUrl ? [upload.uploadUrl] : []),
       ...(upload.parallelUploadUrls ?? []),
@@ -144,4 +172,37 @@ export class ValidatingTusUrlStorage implements TusUrlStorage {
     if (urls.length === 0) throw new Error("Refusing TUS resume state without an upload URL.");
     urls.forEach((url) => assertSafeTusUrl(url, this.endpoint));
   }
+
+  private matchesScope(upload: TusPreviousUpload) {
+    const custom = parseCustomTusMetadata(upload.metadata);
+    return (
+      upload.size === this.scope.size &&
+      upload.metadata.bucketName === this.scope.bucket &&
+      upload.metadata.objectName === this.scope.path &&
+      upload.metadata.contentType === this.scope.contentType &&
+      custom?.sha256 === this.scope.checksum &&
+      (this.scope.importId === undefined || custom.course_import_id === this.scope.importId)
+    );
+  }
+}
+
+export function parseCustomTusMetadata(metadata: Record<string, string>) {
+  try {
+    const parsed = JSON.parse(metadata.metadata) as unknown;
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null;
+    return parsed as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
+
+function isLoopbackHost(hostname: string) {
+  const normalized = hostname.toLowerCase().replace(/^\[|\]$/g, "");
+  if (normalized === "localhost" || normalized === "::1") return true;
+  const octets = normalized.split(".").map(Number);
+  return (
+    octets.length === 4 &&
+    octets.every((octet) => Number.isInteger(octet) && octet >= 0 && octet <= 255) &&
+    octets[0] === 127
+  );
 }

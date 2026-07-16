@@ -184,7 +184,15 @@ async function uploadResumably({
   const endpoint = supabaseResumableEndpoint(supabaseUrl);
   const checksum = await sha256Blob(file);
   const fingerprint = createScopedTusFingerprint({ endpoint, bucket, path, checksum });
-  const urlStorage = new ValidatingTusUrlStorage(tusDefaultOptions.urlStorage, endpoint);
+  const urlStorage = new ValidatingTusUrlStorage(tusDefaultOptions.urlStorage, {
+    endpoint,
+    fingerprint,
+    size: file.size,
+    bucket,
+    path,
+    checksum,
+    contentType,
+  });
 
   return new Promise<void>((resolve, reject) => {
     const upload = new TusUpload(file, {

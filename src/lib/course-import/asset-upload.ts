@@ -15,6 +15,7 @@ import type { CourseImportAsset } from "./manifest";
 import {
   assertSafeTusUrl,
   normalizeTusEndpoint,
+  parseCustomTusMetadata,
   supabaseResumableEndpoint,
 } from "../storage/tus-safety";
 
@@ -23,10 +24,7 @@ const TUS_CHUNK_BYTES = 6 * 1024 * 1024;
 const UPLOAD_OWNER_METADATA_KEY = "course_import_upload_id";
 
 export type CourseImportUploadBucket = RemoteAssetBucket & {
-  remove(paths: string[]): Promise<{
-    data?: unknown;
-    error: RemoteStorageError | null;
-  }>;
+  remove?(paths: string[]): Promise<{ data?: unknown; error: RemoteStorageError | null }>;
 };
 
 export type PinnedFileSource = {
@@ -53,12 +51,14 @@ export type TusUploadRequest = {
   checksum: string | null;
   filename: string;
   ownershipToken: string;
+  importId: string;
   statePath: string;
 };
 
 export async function uploadApprovedAssets(options: {
   endpoint: string;
   serviceKey: string;
+  importId: string;
   sourceRoot: string;
   assets: CourseImportAsset[];
   bucket: CourseImportUploadBucket;
@@ -70,6 +70,7 @@ export async function uploadApprovedAssets(options: {
   const log = options.log ?? console.log;
   const stateRoot = resolve(options.stateRoot ?? join(process.cwd(), ".course-import-state"));
 
+  assertApprovedUploadIntegrity(options.assets);
   for (const asset of options.assets.filter(
     (candidate) => candidate.approval_status === "approved",
   )) {
@@ -115,6 +116,7 @@ export async function uploadApprovedAssets(options: {
           checksum: snapshot.checksum_sha256,
           filename: basename(localPath),
           ownershipToken,
+          importId: options.importId,
           statePath: resolve(stateRoot, "tus-uploads.json"),
         });
       } finally {
@@ -129,18 +131,31 @@ export async function uploadApprovedAssets(options: {
         },
       ]);
       if (uploadedProblems.length > 0) {
-        const cleanup = await removeNewOwnedUpload({
-          bucket: options.bucket,
-          storagePath: asset.storage_path,
-          ownershipToken: completedOwnershipToken,
-        });
         throw new Error(
-          `${asset.source_key} upload failed exact remote verification: ${uploadedProblems.map((problem) => problem.problem).join(", ")}. ${cleanup}`,
+          `${asset.source_key} upload failed exact remote verification: ${uploadedProblems.map((problem) => problem.problem).join(", ")}. The object was preserved because storage does not offer a conditional delete that can close the ownership race. Ownership token: ${completedOwnershipToken}.`,
         );
       }
       log(`Uploaded ${asset.source_key} -> ${asset.storage_path}`);
     } finally {
       await rm(snapshotDirectory, { recursive: true, force: true });
+    }
+  }
+}
+
+export function assertApprovedUploadIntegrity(assets: CourseImportAsset[]) {
+  for (const asset of assets) {
+    if (asset.approval_status !== "approved") continue;
+    if (
+      !Number.isSafeInteger(asset.size_bytes) ||
+      asset.size_bytes === null ||
+      asset.size_bytes < 0 ||
+      !asset.checksum_sha256 ||
+      !/^[0-9a-f]{64}$/.test(asset.checksum_sha256) ||
+      !asset.storage_path.includes(asset.checksum_sha256)
+    ) {
+      throw new Error(
+        `Approved asset ${asset.source_key} requires size_bytes, checksum_sha256, and an immutable checksum-addressed storage_path before upload.`,
+      );
     }
   }
 }
@@ -226,7 +241,16 @@ function uploadTus(request: TusUploadRequest) {
     checksum: request.checksum,
     storagePath: request.storagePath,
   });
-  const urlStorage = new JsonTusUrlStorage(request.statePath, endpoint);
+  const urlStorage = new JsonTusUrlStorage(request.statePath, {
+    endpoint,
+    fingerprint,
+    size: request.size,
+    bucket: COURSE_IMPORT_BUCKET,
+    storagePath: request.storagePath,
+    checksum: request.checksum!,
+    contentType: request.contentType,
+    importId: request.importId,
+  });
 
   return new Promise<string>((resolveUpload, reject) => {
     let effectiveOwnershipToken = request.ownershipToken;
@@ -244,6 +268,7 @@ function uploadTus(request: TusUploadRequest) {
         filename: request.filename,
         metadata: JSON.stringify({
           sha256: request.checksum,
+          course_import_id: request.importId,
           [UPLOAD_OWNER_METADATA_KEY]: request.ownershipToken,
         }),
       },
@@ -321,22 +346,43 @@ export class JsonTusUrlStorage {
 
   constructor(
     private readonly filePath: string,
-    endpoint: string,
+    private readonly scope: {
+      endpoint: string;
+      fingerprint: string;
+      size: number;
+      bucket: string;
+      storagePath: string;
+      checksum: string;
+      contentType: string;
+      importId: string;
+    },
   ) {
-    this.endpoint = normalizeTusEndpoint(endpoint);
+    this.endpoint = normalizeTusEndpoint(scope.endpoint);
+    const expected = createTusResumeFingerprint({
+      endpoint: this.endpoint,
+      bucket: scope.bucket,
+      checksum: scope.checksum,
+      storagePath: scope.storagePath,
+    });
+    if (scope.fingerprint !== expected) {
+      throw new Error("TUS resume scope fingerprint does not match its declared asset.");
+    }
   }
 
   async findAllUploads() {
     const entries = await this.read();
     let changed = false;
     for (const [key, upload] of Object.entries(entries)) {
-      if (!this.isSafe(upload)) {
+      if (!this.hasSafeUrlAndOwner(upload)) {
+        delete entries[key];
+        changed = true;
+      } else if (upload.fingerprint === this.scope.fingerprint && !this.matchesScope(upload)) {
         delete entries[key];
         changed = true;
       }
     }
     if (changed) await this.write(entries);
-    return Object.values(entries);
+    return Object.values(entries).filter((upload) => this.matchesScope(upload));
   }
 
   async findUploadsByFingerprint(fingerprint: string) {
@@ -345,7 +391,11 @@ export class JsonTusUrlStorage {
 
   async addUpload(fingerprint: string, upload: Omit<StoredTusUpload, "fingerprint">) {
     const stored = { ...upload, fingerprint };
-    if (!this.isSafe(stored)) {
+    if (
+      fingerprint !== this.scope.fingerprint ||
+      !this.hasSafeUrlAndOwner(stored) ||
+      !this.matchesScope(stored)
+    ) {
       throw new Error("Refusing to persist an unsafe TUS upload URL.");
     }
     const entries = await this.read();
@@ -361,7 +411,7 @@ export class JsonTusUrlStorage {
     await this.write(entries);
   }
 
-  private isSafe(upload: StoredTusUpload) {
+  private hasSafeUrlAndOwner(upload: StoredTusUpload) {
     const urls = [
       ...(upload.uploadUrl ? [upload.uploadUrl] : []),
       ...(upload.parallelUploadUrls ?? []),
@@ -373,6 +423,19 @@ export class JsonTusUrlStorage {
     } catch {
       return false;
     }
+  }
+
+  private matchesScope(upload: StoredTusUpload) {
+    const custom = parseCustomTusMetadata(upload.metadata);
+    return (
+      upload.fingerprint === this.scope.fingerprint &&
+      upload.size === this.scope.size &&
+      upload.metadata.bucketName === this.scope.bucket &&
+      upload.metadata.objectName === this.scope.storagePath &&
+      upload.metadata.contentType === this.scope.contentType &&
+      custom?.sha256 === this.scope.checksum &&
+      custom.course_import_id === this.scope.importId
+    );
   }
 
   private async read(): Promise<Record<string, StoredTusUpload>> {
@@ -393,9 +456,9 @@ export class JsonTusUrlStorage {
 
 function ownershipTokenFromMetadata(metadata: Record<string, string>) {
   try {
-    const custom = JSON.parse(metadata.metadata) as unknown;
-    if (!custom || typeof custom !== "object" || Array.isArray(custom)) return null;
-    const token = (custom as Record<string, unknown>)[UPLOAD_OWNER_METADATA_KEY];
+    const custom = parseCustomTusMetadata(metadata);
+    if (!custom) return null;
+    const token = custom[UPLOAD_OWNER_METADATA_KEY];
     return typeof token === "string" &&
       /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(token)
       ? token
@@ -403,25 +466,6 @@ function ownershipTokenFromMetadata(metadata: Record<string, string>) {
   } catch {
     return null;
   }
-}
-
-async function removeNewOwnedUpload(options: {
-  bucket: CourseImportUploadBucket;
-  storagePath: string;
-  ownershipToken: string;
-}) {
-  const current = await options.bucket.info(options.storagePath);
-  if (
-    !current.data ||
-    current.data.metadata?.[UPLOAD_OWNER_METADATA_KEY] !== options.ownershipToken
-  ) {
-    return "The object was preserved because this import could not prove ownership.";
-  }
-  const removed = await options.bucket.remove([options.storagePath]);
-  if (removed.error) {
-    return `The owned new object could not be removed: ${removed.error.message}`;
-  }
-  return "The owned new object was removed so the upload can be retried.";
 }
 
 function isExplicitNotFound(error: RemoteStorageError | null) {

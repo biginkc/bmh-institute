@@ -2,11 +2,12 @@ import type { ImportPlan, ImportTable } from "./operations";
 
 export const POSTGREST_ID_BATCH_SIZE = 100;
 
+export type RollbackOwnedIds = Record<ImportTable, string[]>;
+
 export interface CourseImportAdapter {
   upsert(table: ImportTable, row: Record<string, unknown>): Promise<void>;
   readRows(table: ImportTable, ids: string[]): Promise<Map<string, Record<string, unknown>>>;
-  deleteByIds(table: ImportTable, ids: string[]): Promise<void>;
-  assertSafeRollback(plan: ImportPlan): Promise<void>;
+  rollbackAtomically(importId: string, ownedIds: RollbackOwnedIds): Promise<unknown>;
 }
 
 const ROLLBACK_ORDER: ImportTable[] = [
@@ -58,14 +59,26 @@ export async function reconcileImportPlan(plan: ImportPlan, adapter: CourseImpor
 }
 
 export async function rollbackImportPlan(plan: ImportPlan, adapter: CourseImportAdapter) {
-  await adapter.assertSafeRollback(plan);
-  const grouped = groupPlanIds(plan);
-  for (const table of ROLLBACK_ORDER) {
-    const ids = grouped.get(table) ?? [];
-    for (const batch of batchIds(ids)) {
-      await adapter.deleteByIds(table, batch);
-    }
+  const ownedIds = buildRollbackOwnedIds(plan);
+  const response = await adapter.rollbackAtomically(plan.importId, ownedIds);
+  const expectedCount = Object.values(ownedIds).reduce((total, ids) => total + ids.length, 0);
+  if (
+    !response ||
+    typeof response !== "object" ||
+    Array.isArray(response) ||
+    (response as Record<string, unknown>).status !== "rolled_back" ||
+    (response as Record<string, unknown>).import_id !== plan.importId ||
+    (response as Record<string, unknown>).owned_id_count !== expectedCount
+  ) {
+    throw new Error("Atomic course import rollback returned an invalid confirmation payload.");
   }
+}
+
+export function buildRollbackOwnedIds(plan: ImportPlan): RollbackOwnedIds {
+  const grouped = groupPlanIds(plan);
+  return Object.fromEntries(
+    ROLLBACK_ORDER.map((table) => [table, grouped.get(table) ?? []]),
+  ) as RollbackOwnedIds;
 }
 
 function stableJson(value: unknown): string {

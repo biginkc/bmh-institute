@@ -250,7 +250,7 @@ describe("course asset composite staging", () => {
     await expect(access(staging)).rejects.toThrow();
   });
 
-  it("cleanup removes an owned tree but refuses an unowned directory", async () => {
+  it("cleanup quarantines an owned tree but never recursively deletes it", async () => {
     const root = await makeTempRoot();
     const source = join(root, "source");
     const staging = join(root, "staging");
@@ -262,8 +262,11 @@ describe("course asset composite staging", () => {
     await run(manifest, [source], "stage", staging);
 
     await expect(cleanupStagingRoot(unowned)).rejects.toThrow("unowned staging tree");
-    await expect(cleanupStagingRoot(staging)).resolves.toMatchObject({ removed: true });
+    const cleanup = await cleanupStagingRoot(staging);
+    expect(cleanup).toMatchObject({ removed: false, quarantined: true });
     await expect(access(staging)).rejects.toThrow();
+    await expect(access(cleanup.quarantine_path!)).resolves.toBeUndefined();
+    await expect(readFile(join(cleanup.quarantine_path!, file.path), "utf8")).resolves.toBe("stable");
     await expect(readFile(join(source, file.path), "utf8")).resolves.toBe("stable");
   });
 

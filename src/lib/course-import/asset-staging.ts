@@ -197,6 +197,8 @@ export async function cleanupStagingRoot(
       tool: OWNER,
       staging_root: requestedRoot,
       removed: false,
+      quarantined: false,
+      quarantine_path: null,
     };
   }
   if (!rootStat.isDirectory() || rootStat.isSymbolicLink()) {
@@ -221,12 +223,13 @@ export async function cleanupStagingRoot(
       `Refusing cleanup: quarantined staging root identity changed. Preserved without deletion: ${quarantinePath}`,
     );
   }
-  await rm(quarantinePath, { recursive: true, force: false });
   return {
     schema_version: 1 as const,
     tool: OWNER,
     staging_root: canonicalRoot,
-    removed: true,
+    removed: false,
+    quarantined: true,
+    quarantine_path: quarantinePath,
   };
 }
 

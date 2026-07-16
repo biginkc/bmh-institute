@@ -50,6 +50,7 @@ describe("course import approved asset uploads", () => {
     await uploadApprovedAssets({
       endpoint: ENDPOINT,
       serviceKey: "test-only",
+      importId: "import-v1",
       sourceRoot: root,
       assets: [
         { ...approved, source_key: "held", approval_status: "hold" },
@@ -67,7 +68,7 @@ describe("course import approved asset uploads", () => {
     expect(tusCalls).toBe(0);
   });
 
-  it("removes a failed exact-verification upload only when this attempt owns it", async () => {
+  it("never performs a non-atomic delete after failed exact verification", async () => {
     const root = await makeTempRoot();
     const bytes = Buffer.from("approved");
     const approved = asset(bytes);
@@ -79,6 +80,7 @@ describe("course import approved asset uploads", () => {
       uploadApprovedAssets({
         endpoint: ENDPOINT,
         serviceKey: "test-only",
+        importId: "import-v1",
         sourceRoot: root,
         assets: [approved],
         bucket: remote.bucket,
@@ -94,10 +96,10 @@ describe("course import approved asset uploads", () => {
           return request.ownershipToken;
         },
       }),
-    ).rejects.toThrow(/owned new object was removed/i);
+    ).rejects.toThrow(/preserved because storage does not offer a conditional delete/i);
 
-    expect(remote.removed).toEqual([[approved.storage_path]]);
-    expect(remote.current()).toBeNull();
+    expect(remote.removed).toEqual([]);
+    expect(remote.current()).not.toBeNull();
   });
 
   it("preserves a failed-verification object when attempt ownership cannot be proven", async () => {
@@ -112,6 +114,7 @@ describe("course import approved asset uploads", () => {
       uploadApprovedAssets({
         endpoint: ENDPOINT,
         serviceKey: "test-only",
+        importId: "import-v1",
         sourceRoot: root,
         assets: [approved],
         bucket: remote.bucket,
@@ -127,10 +130,45 @@ describe("course import approved asset uploads", () => {
           return request.ownershipToken;
         },
       }),
-    ).rejects.toThrow(/preserved because this import could not prove ownership/i);
+    ).rejects.toThrow(/preserved because storage does not offer a conditional delete/i);
 
     expect(remote.removed).toEqual([]);
     expect(remote.current()).not.toBeNull();
+  });
+
+  it("requires immutable size and checksum evidence for every approved upload", async () => {
+    const root = await makeTempRoot();
+    let storageCalls = 0;
+    const approved = {
+      ...asset(Buffer.from("approved")),
+      checksum_sha256: null,
+      size_bytes: null,
+    };
+
+    await expect(
+      uploadApprovedAssets({
+        endpoint: ENDPOINT,
+        serviceKey: "test-only",
+        importId: "import-v1",
+        sourceRoot: root,
+        assets: [approved],
+        bucket: {
+          async info() {
+            storageCalls += 1;
+            return { data: { size: 8, metadata: {} }, error: null };
+          },
+          download() {
+            storageCalls += 1;
+            return Promise.resolve({ data: new Blob(["anything"]), error: null });
+          },
+          async remove() {
+            storageCalls += 1;
+            return { error: null };
+          },
+        },
+      }),
+    ).rejects.toThrow(/approved asset.*size_bytes.*checksum_sha256/i);
+    expect(storageCalls).toBe(0);
   });
 });
 
@@ -212,10 +250,17 @@ describe("TUS resume isolation", () => {
       checksum: "a".repeat(64),
       storagePath: "courses/import/v1/a.bin",
     });
+    const checksum = "a".repeat(64);
+    const storagePath = "courses/import/v1/a.bin";
     const stored = (uploadUrl: string, key: string) => ({
       size: 1,
       metadata: {
+        bucketName: COURSE_IMPORT_BUCKET,
+        objectName: storagePath,
+        contentType: "application/octet-stream",
         metadata: JSON.stringify({
+          sha256: checksum,
+          course_import_id: "import-v1",
           course_import_upload_id: "00000000-0000-4000-8000-000000000000",
         }),
       },
@@ -240,7 +285,16 @@ describe("TUS resume isolation", () => {
       }),
     );
 
-    const storage = new JsonTusUrlStorage(statePath, ENDPOINT);
+    const storage = new JsonTusUrlStorage(statePath, {
+      endpoint: ENDPOINT,
+      fingerprint,
+      size: 1,
+      bucket: COURSE_IMPORT_BUCKET,
+      storagePath,
+      checksum,
+      contentType: "application/octet-stream",
+      importId: "import-v1",
+    });
     const uploads = await storage.findUploadsByFingerprint(fingerprint);
 
     expect(uploads.map((upload) => upload.urlStorageKey)).toEqual(["safe"]);
@@ -263,6 +317,65 @@ describe("TUS resume isolation", () => {
         ENDPOINT,
       ),
     ).toThrow(/unsafe TUS upload URL/i);
+  });
+
+  it("rejects cleartext cloud endpoints before credentials can be attached", () => {
+    expect(() =>
+      resumableEndpoint("http://project.supabase.co"),
+    ).toThrow(/https/i);
+    expect(resumableEndpoint("http://127.0.0.1:54321")).toBe(
+      "http://127.0.0.1:54321/storage/v1/upload/resumable",
+    );
+  });
+
+  it("drops a same-origin resume whose stored scope does not match the current asset", async () => {
+    const root = await makeTempRoot();
+    const statePath = join(root, "tus.json");
+    const checksum = "a".repeat(64);
+    const storagePath = "courses/import/v1/a.bin";
+    const fingerprint = createTusResumeFingerprint({
+      endpoint: ENDPOINT,
+      bucket: COURSE_IMPORT_BUCKET,
+      checksum,
+      storagePath,
+    });
+    await writeFile(
+      statePath,
+      JSON.stringify({
+        forged: {
+          size: 1,
+          metadata: {
+            bucketName: COURSE_IMPORT_BUCKET,
+            objectName: "courses/import/v1/different.bin",
+            contentType: "application/octet-stream",
+            metadata: JSON.stringify({
+              sha256: checksum,
+              course_import_id: "import-v1",
+              course_import_upload_id: "00000000-0000-4000-8000-000000000000",
+            }),
+          },
+          creationTime: "forged",
+          urlStorageKey: "forged",
+          uploadUrl: `${ENDPOINT}/unrelated-upload`,
+          parallelUploadUrls: null,
+          fingerprint,
+        },
+      }),
+    );
+
+    const storage = new JsonTusUrlStorage(statePath, {
+      endpoint: ENDPOINT,
+      fingerprint,
+      size: 1,
+      bucket: COURSE_IMPORT_BUCKET,
+      storagePath,
+      checksum,
+      contentType: "application/octet-stream",
+      importId: "import-v1",
+    });
+
+    await expect(storage.findUploadsByFingerprint(fingerprint)).resolves.toEqual([]);
+    await expect(readFile(statePath, "utf8")).resolves.not.toContain("unrelated-upload");
   });
 });
 

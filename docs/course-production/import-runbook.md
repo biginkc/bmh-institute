@@ -63,9 +63,10 @@ The ownership marker pins the staging tree's canonical path, device, and inode.
 Reuse and cleanup fail closed if a symlink ancestor is repointed or the owned
 directory identity changes. Cleanup first atomically renames the owned tree to
 a unique quarantine path beside it. It verifies the captured device and inode
-after that rename before recursive deletion. If the identity changed during
-cleanup, the quarantined directory is preserved and its path is reported for
-manual inspection.
+after that rename, then preserves the quarantine and reports its path for
+manual inspection. It does not recursively delete after the final identity
+check because an attacker could replace descendants between that check and a
+path-based deletion.
 
 Once the report has zero errors and zero blockers, upload from the composite
 root:
@@ -77,9 +78,10 @@ npm run course:import -- upload \
   --source-root="$STAGING_ROOT"
 ```
 
-Rollback the local composite tree with the ownership-checked cleanup command.
-It refuses to remove a directory that lacks the tool's marker. This does not
-touch source files, storage, or the database:
+Quarantine the local composite tree with the ownership-checked cleanup command.
+It refuses to move a directory that lacks the tool's marker. This does not
+touch source files, storage, or the database. Inspect and separately remove the
+reported quarantine path only in a trusted maintenance context:
 
 ```bash
 npm run course:assets:stage -- cleanup "$STAGING_ROOT"
@@ -89,7 +91,8 @@ Production execution also needs `--allow-production`. Rollback additionally need
 
 ### Test-project migration verification
 
-Migration `018_storage_content_markdown.sql` must be verified against a disposable
+Migrations `018_storage_content_markdown.sql` and
+`019_atomic_course_import_rollback.sql` must be verified against a disposable
 test Supabase project before any production migration. Do not use the production
 project ref. With test-project environment variables loaded, run:
 
@@ -97,7 +100,15 @@ project ref. With test-project environment variables loaded, run:
 supabase link --project-ref=<TEST_PROJECT_REF>
 supabase db push --dry-run
 supabase db push
+npm run test:integration -- src/lib/course-import/atomic-rollback.integration.test.ts
 ```
+
+The rollback integration suite uses only `TEST_SUPABASE_*` credentials. It
+proves a complete synthetic rollback, proves an unexplained dependent aborts
+without partial deletion, and proves anonymous and authenticated clients
+cannot execute the service-role-only function. A skipped suite is not
+acceptance evidence; all three rollback tests must run and pass on the
+disposable project.
 
 Then confirm the bucket kept its prior allowlist and added Markdown exactly once:
 
@@ -119,15 +130,16 @@ any production migration.
 - Program and course publication are forced off even if input is malformed.
 - The release gate requires approved covers, lesson thumbnails, videos, posters, captions, and transcripts.
 - Every manifest asset path must stay inside `courses/<import>/v<version>/`, including draft upload and rollback commands. Approved release assets additionally require SHA-256-addressed object paths, preventing an import from overwriting mutable shared files or deleting another import's objects during rollback.
-- Uploads validate declared size and SHA-256 when present. Large files use resumable TUS transfers and preserve their resume URLs in ignored `.course-import-state/` state across process restarts.
+- Every approved upload requires an exact size, lowercase SHA-256, and checksum-addressed storage path, including draft upload commands. Large files use resumable TUS transfers and preserve their resume URLs in ignored `.course-import-state/` state across process restarts.
 - Upload considers only assets whose `approval_status` is `approved`. Held and missing assets make no storage or TUS calls.
-- Resume fingerprints include the normalized active Supabase resumable endpoint, bucket, checksum, and storage path. Stored resume URLs are accepted only on that exact origin and under its resumable route. Every outgoing TUS request is checked again before authorization can be sent.
+- Resume fingerprints include the normalized active Supabase resumable endpoint, bucket, checksum, and storage path. Stored resume state must also match the current size, bucket, path, checksum, content type, and import when applicable. Endpoints require HTTPS except for explicit loopback development hosts. Stored resume URLs are accepted only on that exact origin and under its resumable route. Every outgoing TUS request is checked again before authorization can be sent.
 - Each upload reads every chunk from one verified open inode. The snapshot pathname is removed after pinning so source mutation or a replacement file between chunks cannot change uploaded bytes.
 - Existing storage objects are skipped only when size, stored SHA-256 metadata, and exact remote bytes match the manifest.
 - Existing and newly uploaded objects are downloaded and hashed before acceptance. Stored metadata alone is not treated as byte-integrity proof.
-- A new object that fails exact post-upload verification is removed only when the preflight proved it absent and its metadata contains the unique ownership token for that upload attempt. Existing or unproven objects are preserved.
+- A new object that fails exact post-upload verification is preserved. The storage API does not provide a conditional delete that can prove the ownership metadata still belongs to the same object at deletion time.
 - Apply uses deterministic upserts so reruns do not create duplicates.
 - Verify compares every manifest-owned database field and confirms storage size, checksum metadata, and exact remote bytes.
-- Verify reads and rollback deletes use bounded ID batches so large manifests do not create oversized PostgREST filters.
-- Rollback deletes only identifiers and storage paths derived from the supplied manifest. It first refuses to proceed if it finds learner activity, certificates, QA-group memberships, or unexplained `program_courses`, `program_access`, or `course_access` rows that a cascade would otherwise delete.
+- Verify reads use bounded ID batches so large manifests do not create oversized PostgREST filters.
+- Database rollback sends the complete deterministic ID set to one service-role-only database function. The function validates the payload, locks every catalog and dependent table, checks for learner activity, certificates, QA-group memberships, and unexplained catalog dependents, then performs all database deletions in the same transaction.
+- Storage rollback automatically deletes nothing because the storage API has no conditional delete. It inspects approved objects only and reports exact import-owned, size-matched, checksum-matched objects as manual cleanup candidates; uncertain, raced, held, missing, or unrelated objects are preserved.
 - Authentication accounts, audit history, learner activity, and unrelated storage objects are never rollback targets.

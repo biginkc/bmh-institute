@@ -41,11 +41,24 @@ describe("shared TUS safety", () => {
   });
 
   it("removes stored URLs from an old project before they can be resumed", async () => {
-    const safe = upload(`${ENDPOINT}/safe`, "safe");
-    const old = upload(
+    const checksum = "a".repeat(64);
+    const fingerprint = createScopedTusFingerprint({
+      endpoint: ENDPOINT,
+      bucket: "content",
+      path: "user/file.mp4",
+      checksum,
+    });
+    const scopedMetadata = {
+      bucketName: "content",
+      objectName: "user/file.mp4",
+      contentType: "video/mp4",
+      metadata: JSON.stringify({ sha256: checksum }),
+    };
+    const safe = { ...upload(`${ENDPOINT}/safe`, "safe"), metadata: scopedMetadata };
+    const old = { ...upload(
       "https://old-project.storage.supabase.co/storage/v1/upload/resumable/stale",
       "old",
-    );
+    ), metadata: scopedMetadata };
     const removed: string[] = [];
     const delegate: TusUrlStorage = {
       async findAllUploads() {
@@ -61,9 +74,17 @@ describe("shared TUS safety", () => {
         return entry.urlStorageKey;
       },
     };
-    const storage = new ValidatingTusUrlStorage(delegate, ENDPOINT);
+    const storage = new ValidatingTusUrlStorage(delegate, {
+      endpoint: ENDPOINT,
+      fingerprint,
+      size: 1,
+      bucket: "content",
+      path: "user/file.mp4",
+      checksum,
+      contentType: "video/mp4",
+    });
 
-    await expect(storage.findUploadsByFingerprint("fingerprint")).resolves.toEqual([safe]);
+    await expect(storage.findUploadsByFingerprint(fingerprint)).resolves.toEqual([safe]);
     expect(removed).toEqual(["old"]);
   });
 
@@ -81,6 +102,54 @@ describe("shared TUS safety", () => {
         ENDPOINT,
       ),
     ).toThrow(/unsafe TUS upload URL/i);
+  });
+
+  it("rejects cleartext non-loopback endpoints", () => {
+    expect(() =>
+      supabaseResumableEndpoint("http://project.supabase.co"),
+    ).toThrow(/https/i);
+    expect(supabaseResumableEndpoint("http://localhost:54321")).toBe(
+      "http://localhost:54321/storage/v1/upload/resumable",
+    );
+  });
+
+  it("filters same-origin resume URLs whose metadata is for another object", async () => {
+    const checksum = "a".repeat(64);
+    const fingerprint = createScopedTusFingerprint({
+      endpoint: ENDPOINT,
+      bucket: "content",
+      path: "user/file.mp4",
+      checksum,
+    });
+    const forged = {
+      ...upload(`${ENDPOINT}/forged`, "forged"),
+      size: 6,
+      metadata: {
+        bucketName: "content",
+        objectName: "user/other.mp4",
+        contentType: "video/mp4",
+        metadata: JSON.stringify({ sha256: checksum }),
+      },
+    };
+    const removed: string[] = [];
+    const delegate: TusUrlStorage = {
+      async findAllUploads() { return [forged]; },
+      async findUploadsByFingerprint() { return [forged]; },
+      async removeUpload(key) { removed.push(key); },
+      async addUpload(_fingerprint, entry) { return entry.urlStorageKey; },
+    };
+    const storage = new ValidatingTusUrlStorage(delegate, {
+      endpoint: ENDPOINT,
+      fingerprint,
+      size: 6,
+      bucket: "content",
+      path: "user/file.mp4",
+      checksum,
+      contentType: "video/mp4",
+    });
+
+    await expect(storage.findUploadsByFingerprint(fingerprint)).resolves.toEqual([]);
+    expect(removed).toEqual(["forged"]);
   });
 });
 
