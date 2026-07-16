@@ -69,6 +69,26 @@ Implement the approved concurrent completion plan for the reusable BMH Institute
 - A local held-video review page now embeds all nine exact held cuts from the canonical checkout. Its verifier checksum-locks every video plus the six review-evidence caption/transcript files, rejects any held-set drift, and confirms the generated review page is current. It does not upload, approve, transcode, or alter media.
 - After those two review artifacts landed, lint, typechecking, all 344 unit tests, all 89 RTL tests, 18 content tests, the five artwork-contract tests, and the two held-review tests passed on the integration branch.
 
+### 2026-07-16 DialPad stack reconciliation
+
+- The newest vault evidence confirms DialPad remains the employee's manual
+  outbound voice and manager-approved text tool. The evidence does not conflate
+  that workflow with Sandra's current Sendillo provider or Jitter's Telnyx
+  carrier; Jitter remains Jarrad-only until its Phase 2 exit and VA authorization
+  decision.
+- All 10 full-manifest and seven Tech Stack canary DialPad string values were
+  reconciled. The two approved video cuts, four caption/transcript derivatives,
+  and two learner guides were checksum-audited. No statement was contradicted,
+  so no content edit or video recut is required.
+- A machine-readable confirmation now records exact scope, source snapshots,
+  full/canary reference digests, media/guide checksums, recheck triggers, and a
+  one-week expiry at `2026-07-23T17:06:57-05:00`. The validator restores the
+  DialPad blocker when that record is missing, stale, scope-changed, or
+  mismatched to the selected manifest or approved assets. Immediate
+  prepublication recheck remains mandatory even before expiry.
+- This reconciliation made no provider call, upload, video edit, approval
+  change, production mutation, or publication.
+
 ## Hard gates
 
 - Jarrad must approve or request recuts for the nine held videos before their exact files become publishable.

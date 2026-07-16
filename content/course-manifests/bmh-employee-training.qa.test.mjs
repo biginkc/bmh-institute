@@ -8,6 +8,10 @@ import {
 } from "../../scripts/course-content/validate-manifest.mjs";
 
 const MANIFEST_URL = new URL("./bmh-employee-training.v1.json", import.meta.url);
+const STACK_CONFIRMATION_URL = new URL(
+  "./bmh-operating-stack-confirmation.v1.json",
+  import.meta.url,
+);
 
 test("the draft contains the locked course structure", async () => {
   const manifest = await loadManifest(MANIFEST_URL);
@@ -71,8 +75,11 @@ test("every grouped lesson has one required accessible guide download", async ()
 });
 
 test("the manifest passes structural and semantic content QA", async () => {
-  const manifest = await loadManifest(MANIFEST_URL);
-  const report = validateManifest(manifest);
+  const [manifest, stackConfirmation] = await Promise.all([
+    loadManifest(MANIFEST_URL),
+    loadManifest(STACK_CONFIRMATION_URL),
+  ]);
+  const report = validateManifest(manifest, { stackConfirmation });
 
   assert.deepEqual(report.errors, []);
   assert.ok(report.publicationBlockers.length > 0);
@@ -87,8 +94,13 @@ test("the manifest passes structural and semantic content QA", async () => {
     ),
   );
   assert.ok(
-    report.publicationBlockers.some((blocker) =>
-      blocker.includes("DialPad references"),
+    report.publicationBlockers.every(
+      (blocker) => !blocker.includes("DialPad references"),
+    ),
+  );
+  assert.ok(
+    report.warnings.some((warning) =>
+      warning.includes("DialPad employee workflow confirmation"),
     ),
   );
 });

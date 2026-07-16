@@ -1,4 +1,6 @@
+import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
+import { dirname, join } from "node:path";
 import { pathToFileURL } from "node:url";
 
 const REQUIRED_HELD_ASSETS = new Map([
@@ -14,6 +16,204 @@ const REQUIRED_HELD_ASSETS = new Map([
 ]);
 
 const STALE_COMPENSATION_PATTERN = /\$\s*\d|hourly base|appointment bonus|commission tier|tiered commission/i;
+const STACK_CONFIRMATION_SCHEMA = "bmh-operating-stack-confirmation/v1";
+const REQUIRED_STACK_EVIDENCE = new Set([
+  "projects/BMH Training Course.md",
+  "_Active.md",
+  "BMH Training Course/Thinkific/_master-transcripts.md",
+]);
+const REQUIRED_STACK_RECHECK_TRIGGERS = new Set([
+  "before_publication",
+  "confirmation_expiry",
+  "source_evidence_changed",
+  "employee_manual_voice_or_text_workflow_changed",
+  "jitter_employee_access_authorized",
+  "course_dialpad_content_changed",
+  "approved_video_cut_or_derivative_changed",
+]);
+const STACK_ASSETS_BY_IMPORT = new Map([
+  [
+    "bmh-employee-training-v1",
+    [
+      "video-slot-03-tech-stack",
+      "caption-video-slot-03-tech-stack",
+      "transcript-video-slot-03-tech-stack",
+      "video-slot-18-mission-control",
+      "caption-video-slot-18-mission-control",
+      "transcript-video-slot-18-mission-control",
+      "guide-slot-03",
+      "guide-slot-18",
+    ],
+  ],
+  [
+    "bmh-employee-training-canary-v1",
+    [
+      "video-slot-03-tech-stack",
+      "caption-video-slot-03-tech-stack",
+      "transcript-video-slot-03-tech-stack",
+      "guide-slot-03",
+    ],
+  ],
+]);
+
+export function collectDialPadReferences(value, jsonPath = "$", references = []) {
+  if (typeof value === "string") {
+    if (/DialPad/i.test(value)) references.push([jsonPath, value]);
+    return references;
+  }
+  if (Array.isArray(value)) {
+    value.forEach((item, index) =>
+      collectDialPadReferences(item, `${jsonPath}[${index}]`, references),
+    );
+    return references;
+  }
+  if (value && typeof value === "object") {
+    for (const [key, item] of Object.entries(value)) {
+      collectDialPadReferences(item, `${jsonPath}.${key}`, references);
+    }
+  }
+  return references;
+}
+
+export function dialPadReferenceSha256(manifest) {
+  return createHash("sha256")
+    .update(JSON.stringify(collectDialPadReferences(manifest)))
+    .digest("hex");
+}
+
+export function validateStackConfirmation(
+  manifest,
+  confirmation,
+  now = new Date(),
+) {
+  const issues = [];
+  if (!confirmation || typeof confirmation !== "object") {
+    return ["confirmation record is missing"];
+  }
+  if (confirmation.schema_version !== STACK_CONFIRMATION_SCHEMA) {
+    issues.push("confirmation schema is unsupported");
+  }
+  if (confirmation.status !== "confirmed") {
+    issues.push("confirmation status is not confirmed");
+  }
+  if (!confirmation.confirmation_id?.trim()) {
+    issues.push("confirmation ID is missing");
+  }
+  if (confirmation.decision !== "retain-dialpad-for-employee-manual-workflow") {
+    issues.push("confirmation decision does not retain the scoped employee workflow");
+  }
+
+  const nowMs = new Date(now).getTime();
+  const confirmedAtMs = Date.parse(confirmation.confirmed_at);
+  const expiresAtMs = Date.parse(confirmation.expires_at);
+  if (!Number.isFinite(nowMs)) issues.push("validation time is invalid");
+  if (!Number.isFinite(confirmedAtMs) || confirmedAtMs > nowMs) {
+    issues.push("confirmation timestamp is invalid or in the future");
+  }
+  if (!Number.isFinite(expiresAtMs) || expiresAtMs <= nowMs) {
+    issues.push("confirmation is expired or has an invalid expiry");
+  }
+  if (
+    Number.isFinite(confirmedAtMs) &&
+    Number.isFinite(expiresAtMs) &&
+    (expiresAtMs <= confirmedAtMs || expiresAtMs - confirmedAtMs > 8 * 24 * 60 * 60 * 1000)
+  ) {
+    issues.push("confirmation validity window must be positive and no longer than eight days");
+  }
+
+  const employee = confirmation.scope?.employee_manual_workflow;
+  const boundaries = confirmation.scope?.system_boundaries;
+  if (
+    employee?.outbound_voice !== "DialPad" ||
+    employee?.outbound_text !== "DialPad after manager approval" ||
+    employee?.seller_email !== "Gmail after manager approval"
+  ) {
+    issues.push("employee manual workflow scope is incomplete or changed");
+  }
+  if (
+    boundaries?.sandra_messaging_provider_internal !== "Sendillo" ||
+    boundaries?.jitter_voice_provider_internal !== "Telnyx" ||
+    boundaries?.jitter_employee_readiness !==
+      "not employee-ready; Jarrad-only until Phase 2 exit"
+  ) {
+    issues.push("Sandra/Jitter provider boundaries are incomplete or changed");
+  }
+
+  const evidenceByPath = new Map(
+    (confirmation.source_evidence ?? []).map((source) => [source.vault_path, source]),
+  );
+  for (const vaultPath of REQUIRED_STACK_EVIDENCE) {
+    const source = evidenceByPath.get(vaultPath);
+    if (
+      !source ||
+      !/^[a-f0-9]{64}$/.test(source.sha256 ?? "") ||
+      !source.observed_updated ||
+      !source.evidence?.trim()
+    ) {
+      issues.push(`source evidence is incomplete for ${vaultPath}`);
+    }
+  }
+  const evidenceSha256 = createHash("sha256")
+    .update(JSON.stringify(confirmation.source_evidence ?? []))
+    .digest("hex");
+  if (confirmation.source_evidence_sha256 !== evidenceSha256) {
+    issues.push("source evidence checksum does not match the confirmation record");
+  }
+
+  const snapshot = (confirmation.manifest_snapshots ?? []).find(
+    (candidate) => candidate.import_id === manifest.import_id,
+  );
+  const references = collectDialPadReferences(manifest);
+  if (!snapshot) {
+    issues.push(`manifest snapshot is missing for ${manifest.import_id}`);
+  } else {
+    if (snapshot.dialpad_reference_count !== references.length) {
+      issues.push("DialPad reference count does not match the manifest");
+    }
+    if (snapshot.dialpad_reference_sha256 !== dialPadReferenceSha256(manifest)) {
+      issues.push("DialPad reference checksum does not match the manifest");
+    }
+  }
+
+  const assetsByKey = new Map((manifest.assets ?? []).map((asset) => [asset.source_key, asset]));
+  const auditedByKey = new Map(
+    (confirmation.audited_assets ?? []).map((asset) => [asset.source_key, asset]),
+  );
+  const requiredAssetKeys = STACK_ASSETS_BY_IMPORT.get(manifest.import_id);
+  if (!requiredAssetKeys) {
+    issues.push(`confirmation does not support import ${manifest.import_id}`);
+  } else {
+    for (const sourceKey of requiredAssetKeys) {
+      const manifestAsset = assetsByKey.get(sourceKey);
+      const auditedAsset = auditedByKey.get(sourceKey);
+      if (!manifestAsset || !auditedAsset) {
+        issues.push(`audited stack asset is missing: ${sourceKey}`);
+        continue;
+      }
+      if (
+        auditedAsset.local_path !== manifestAsset.local_path ||
+        auditedAsset.checksum_sha256 !== manifestAsset.checksum_sha256 ||
+        manifestAsset.approval_status !== "approved"
+      ) {
+        issues.push(`audited stack asset drifted: ${sourceKey}`);
+      }
+      if (
+        !auditedAsset.audit_result?.trim() ||
+        (manifestAsset.kind === "video"
+          ? auditedAsset.dialpad_reference_count !== null
+          : !Number.isInteger(auditedAsset.dialpad_reference_count))
+      ) {
+        issues.push(`audited stack result is incomplete: ${sourceKey}`);
+      }
+    }
+  }
+
+  const triggerSet = new Set(confirmation.recheck_triggers ?? []);
+  for (const trigger of REQUIRED_STACK_RECHECK_TRIGGERS) {
+    if (!triggerSet.has(trigger)) issues.push(`recheck trigger is missing: ${trigger}`);
+  }
+  return issues;
+}
 
 function normalizedQuestion(text) {
   return String(text).toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
@@ -79,7 +279,10 @@ export function summarizeManifest(manifest) {
   };
 }
 
-export function validateManifest(manifest) {
+export function validateManifest(
+  manifest,
+  { stackConfirmation = null, now = new Date() } = {},
+) {
   const errors = [];
   const publicationBlockers = [];
   const warnings = [];
@@ -273,7 +476,16 @@ export function validateManifest(manifest) {
     errors.push("Fixed daily dial targets are present in Mission Control assessment content");
   }
   if (/DialPad/i.test(serialized)) {
-    publicationBlockers.push("DialPad references require current-stack confirmation before publication");
+    const stackIssues = validateStackConfirmation(manifest, stackConfirmation, now);
+    if (stackIssues.length > 0) {
+      publicationBlockers.push(
+        `DialPad references require a valid current-stack confirmation: ${stackIssues.join("; ")}`,
+      );
+    } else {
+      warnings.push(
+        `DialPad employee workflow confirmation ${stackConfirmation.confirmation_id} expires ${stackConfirmation.expires_at} and must still be rechecked before publication`,
+      );
+    }
   }
 
   if (publicationBlockers.length === 0) {
@@ -285,9 +497,22 @@ export function validateManifest(manifest) {
 
 async function main() {
   const manifestPath = process.argv[2];
-  if (!manifestPath) throw new Error("Usage: node scripts/course-content/validate-manifest.mjs <manifest.json>");
+  if (!manifestPath) {
+    throw new Error(
+      "Usage: node scripts/course-content/validate-manifest.mjs <manifest.json> [stack-confirmation.json]",
+    );
+  }
   const manifest = await loadManifest(manifestPath);
-  const report = validateManifest(manifest);
+  const confirmationPath =
+    process.argv[3] ??
+    join(dirname(manifestPath), "bmh-operating-stack-confirmation.v1.json");
+  let stackConfirmation = null;
+  try {
+    stackConfirmation = await loadManifest(confirmationPath);
+  } catch (error) {
+    if (error?.code !== "ENOENT") throw error;
+  }
+  const report = validateManifest(manifest, { stackConfirmation });
   console.log(JSON.stringify(report, null, 2));
   process.exitCode = report.errors.length ? 1 : 0;
 }

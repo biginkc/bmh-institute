@@ -169,10 +169,15 @@ The draft must not be published until all of these are resolved:
   fallback.
 - The six Closer Lab scenarios are built, tested, and mapped to production IDs.
 - The current operating stack is rechecked immediately before publication.
-  DialPad remains correct for this draft based on the 2026-07-01 Slot 03 audit
-  and the current Jitter access boundary. A future VA cutover to Jitter requires
-  coordinated updates to the Tech Stack and Daily Mission Control videos,
-  captions, quizzes, and flashcards.
+  The dated machine-readable confirmation in
+  `content/course-manifests/bmh-operating-stack-confirmation.v1.json` retains
+  DialPad only for employee manual voice and approved text through
+  2026-07-23. Sandra's Sendillo provider and Jitter's Telnyx carrier are internal
+  implementation boundaries, and Jitter is not employee-ready. The validator
+  fails closed on expiry, manifest/media drift, a missing source snapshot, or a
+  changed boundary. A future employee cutover to Jitter requires coordinated
+  updates to the Tech Stack and Daily Mission Control videos, captions,
+  quizzes, flashcards, and confirmation record.
 
 The manifest records all missing derivatives as `approval_status: missing` and
 all nine held cuts as `approval_status: hold`. The validator reports these
