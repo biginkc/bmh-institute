@@ -1,14 +1,15 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { CheckCircle2, Clock, XCircle } from "lucide-react";
+import { MessageSquare, RotateCcw, Send, UploadCloud } from "lucide-react";
 import { toast } from "sonner";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { FileUpload } from "@/components/file-upload";
+import { Badge } from "@/components/bmh-ds/badge";
+import { Button } from "@/components/bmh-ds/button";
+import { Card } from "@/components/bmh-ds/card";
+import { Coach } from "@/components/bmh-ds/coach";
+import { Input } from "@/components/bmh-ds/input";
 
 import { submitAssignment } from "./assignment-actions";
 
@@ -53,10 +54,8 @@ export function AssignmentRunner({
         assignmentId: assignment.id,
         lessonId,
         submission_type: assignment.submission_type,
-        submission_text:
-          assignment.submission_type === "text" ? text : undefined,
-        submission_url:
-          assignment.submission_type === "url" ? url : undefined,
+        submission_text: assignment.submission_type === "text" ? text : undefined,
+        submission_url: assignment.submission_type === "url" ? url : undefined,
         submission_file_path:
           assignment.submission_type === "file_upload" ? filePath ?? "" : undefined,
       });
@@ -77,164 +76,221 @@ export function AssignmentRunner({
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="border-border rounded-md border p-4">
-        <h3 className="mb-2 text-sm font-semibold">Instructions</h3>
-        <div className="text-sm leading-relaxed whitespace-pre-wrap">
-          {assignment.instructions}
+    <div className="flex flex-col gap-5">
+      <Card outline padding="md" tint>
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+          <h2 className="font-[family-name:var(--font-display)] text-xl font-extrabold text-[var(--ink-900)]">
+            Instructions
+          </h2>
+          <Badge tone="orange">Assignment</Badge>
         </div>
-      </div>
+        <p className="whitespace-pre-wrap font-[family-name:var(--font-body)] text-sm font-semibold leading-relaxed text-[var(--text-body)]">
+          {assignment.instructions}
+        </p>
+      </Card>
 
       {approved ? (
-        <StatusCard
-          variant="success"
-          icon={<CheckCircle2 className="size-5 text-emerald-600" />}
+        <AssignmentStatus
           title="Approved"
-          description="Your submission was accepted. This lesson is complete."
+          emotion="laugh"
+          tone="yellow"
+          badgeTone="green"
+          message="Approved! This lesson is now complete. Great work."
         />
       ) : needsRevision ? (
-        <StatusCard
-          variant="warning"
-          icon={<XCircle className="text-destructive size-5" />}
-          title="Needs revision"
-          description={
-            latest?.reviewer_notes ??
-            "An admin asked for changes. Submit again below."
-          }
-        />
+        <>
+          <AssignmentStatus
+            title="Needs revision"
+            emotion="worried"
+            tone="white"
+            badgeTone="red"
+            message="You're close. Review the note, make the change, and send your work again."
+          />
+          <Card padding="md" outline>
+            <div className="flex items-start gap-3">
+              <MessageSquare
+                aria-hidden="true"
+                className="mt-0.5 size-5 shrink-0 text-[var(--danger)]"
+              />
+              <div>
+                <h3 className="font-[family-name:var(--font-display)] text-base font-extrabold text-[var(--ink-900)]">
+                  Reviewer note
+                </h3>
+                <p className="mt-1 whitespace-pre-wrap font-[family-name:var(--font-body)] text-sm font-semibold leading-relaxed text-[var(--text-body)]">
+                  {latest?.reviewer_notes ??
+                    "An admin asked for changes. Update your work and submit again below."}
+                </p>
+              </div>
+            </div>
+          </Card>
+        </>
       ) : awaitingReview ? (
-        <StatusCard
-          variant="info"
-          icon={<Clock className="size-5 text-blue-600" />}
+        <AssignmentStatus
           title="Submitted, awaiting review"
-          description="An admin will approve or ask for changes."
+          emotion="content"
+          tone="tint"
+          badgeTone="yellow"
+          message="Submitted! Your lead will review your work and leave feedback here."
         />
       ) : null}
 
       {approved ? null : (
-        <div className="border-border rounded-md border p-4">
-          <h3 className="mb-4 text-sm font-semibold">Your submission</h3>
+        <Card padding="md">
+          <h2 className="mb-5 font-[family-name:var(--font-display)] text-xl font-extrabold text-[var(--ink-900)]">
+            Your submission
+          </h2>
+
           {assignment.submission_type === "text" ? (
             <div className="flex flex-col gap-2">
-              <Label htmlFor="sub-text">Response</Label>
+              <label
+                htmlFor="sub-text"
+                className="font-[family-name:var(--font-body)] text-sm font-bold text-[var(--ink-800)]"
+              >
+                Response
+              </label>
               <textarea
                 id="sub-text"
                 rows={8}
                 value={text}
-                onChange={(e) => setText(e.target.value)}
-                className="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
+                onChange={(event) => setText(event.target.value)}
+                className="w-full resize-y rounded-[var(--bmh-radius-md)] border-2 border-[var(--ink-200)] bg-[var(--paper)] px-4 py-3 font-[family-name:var(--font-body)] text-sm font-semibold text-[var(--ink-900)] outline-none transition-shadow placeholder:text-[var(--text-muted)] focus:border-[var(--action)] focus:shadow-[0_0_0_4px_var(--focus-ring)]"
                 placeholder="Type your response..."
               />
             </div>
           ) : null}
 
           {assignment.submission_type === "url" ? (
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="sub-url">URL</Label>
-              <Input
-                id="sub-url"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                placeholder="https://..."
-              />
-            </div>
+            <Input
+              id="sub-url"
+              label="URL"
+              value={url}
+              onChange={(event) => setUrl(event.target.value)}
+              placeholder="https://..."
+            />
           ) : null}
 
           {assignment.submission_type === "file_upload" ? (
-            <div className="flex flex-col gap-2">
-              <Label>File</Label>
-              <FileUpload
-                bucket="submissions"
-                accept="*/*"
-                maxMb={500}
-                currentPath={filePath}
-                onUploaded={(f) => {
-                  setFilePath(f.file_path || null);
-                  setFilename(f.filename || null);
-                }}
-                label="Upload file"
-              />
-              {filename ? (
-                <p className="text-muted-foreground text-xs">
-                  Selected: {filename}
-                </p>
-              ) : null}
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center gap-2 font-[family-name:var(--font-body)] text-sm font-bold text-[var(--ink-800)]">
+                <UploadCloud aria-hidden="true" className="size-5 text-[var(--action)]" />
+                File
+              </div>
+              <div className="rounded-[var(--bmh-radius-lg)] border-2 border-dashed border-[var(--ink-300)] bg-[var(--ink-050)] p-5">
+                <FileUpload
+                  bucket="submissions"
+                  accept="*/*"
+                  maxMb={500}
+                  currentPath={filePath}
+                  onUploaded={(file) => {
+                    setFilePath(file.file_path || null);
+                    setFilename(file.filename || null);
+                  }}
+                  label="Upload file"
+                />
+                {filename ? (
+                  <p className="mt-2 font-[family-name:var(--font-body)] text-xs font-bold text-[var(--text-muted)]">
+                    Selected: {filename}
+                  </p>
+                ) : null}
+              </div>
             </div>
           ) : null}
 
-          <div className="mt-4 flex items-center justify-between gap-2">
-            {assignment.requires_review ? (
-              <Badge variant="outline">Requires admin review</Badge>
-            ) : (
-              <Badge variant="secondary">Auto-complete on submit</Badge>
-            )}
-            <Button onClick={onSubmit} disabled={pending}>
-              {pending ? "Submitting..." : "Submit"}
+          <div className="mt-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+            <Badge tone={assignment.requires_review ? "neutral" : "green"}>
+              {assignment.requires_review
+                ? "Requires admin review"
+                : "Completes when submitted"}
+            </Badge>
+            <Button
+              size="lg"
+              onClick={onSubmit}
+              disabled={pending}
+              iconLeft={
+                needsRevision ? (
+                  <RotateCcw aria-hidden="true" className="size-4" />
+                ) : (
+                  <Send aria-hidden="true" className="size-4" />
+                )
+              }
+            >
+              {pending
+                ? "Submitting..."
+                : needsRevision
+                  ? "Resubmit for review"
+                  : assignment.requires_review
+                    ? "Submit for review"
+                    : "Submit assignment"}
             </Button>
           </div>
-        </div>
+        </Card>
       )}
 
       {priorSubmissions.length > 0 ? (
-        <div className="border-border rounded-md border p-4">
-          <h3 className="mb-3 text-sm font-semibold">Submission history</h3>
-          <ol className="divide-border divide-y">
-            {priorSubmissions.map((s) => (
+        <Card padding="md">
+          <h2 className="mb-3 font-[family-name:var(--font-display)] text-lg font-extrabold text-[var(--ink-900)]">
+            Submission history
+          </h2>
+          <ol className="divide-y divide-[var(--border-card)]">
+            {priorSubmissions.map((submission) => (
               <li
-                key={s.id}
-                className="flex items-center justify-between gap-3 py-2 first:pt-0 last:pb-0"
+                key={submission.id}
+                className="flex items-start justify-between gap-3 py-3 first:pt-0 last:pb-0"
               >
                 <div>
-                  <div className="text-muted-foreground text-xs">
-                    {new Date(s.submitted_at).toLocaleString()}
+                  <div className="font-[family-name:var(--font-body)] text-xs font-bold text-[var(--text-muted)]">
+                    {new Date(submission.submitted_at).toLocaleString()}
                   </div>
-                  {s.reviewer_notes ? (
-                    <div className="text-muted-foreground mt-0.5 text-xs">
-                      {s.reviewer_notes}
+                  {submission.reviewer_notes ? (
+                    <div className="mt-1 font-[family-name:var(--font-body)] text-xs font-semibold text-[var(--text-body)]">
+                      {submission.reviewer_notes}
                     </div>
                   ) : null}
                 </div>
-                <StatusBadge status={s.status} />
+                <StatusBadge status={submission.status} />
               </li>
             ))}
           </ol>
-        </div>
+        </Card>
       ) : null}
     </div>
   );
 }
 
-function StatusBadge({ status }: { status: PriorSubmission["status"] }) {
-  if (status === "approved") return <Badge>Approved</Badge>;
-  if (status === "needs_revision")
-    return <Badge variant="destructive">Needs revision</Badge>;
-  return <Badge variant="secondary">Submitted</Badge>;
+function AssignmentStatus({
+  title,
+  emotion,
+  tone,
+  badgeTone,
+  message,
+}: {
+  title: string;
+  emotion: "laugh" | "worried" | "content";
+  tone: "white" | "yellow" | "tint";
+  badgeTone: "green" | "red" | "yellow";
+  message: string;
+}) {
+  return (
+    <Card padding="md" outline>
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <h2 className="font-[family-name:var(--font-display)] text-xl font-extrabold text-[var(--ink-900)]">
+          {title}
+        </h2>
+        <Badge tone={badgeTone}>{title}</Badge>
+      </div>
+      <Coach emotion={emotion} tone={tone} size="sm" message={message} />
+    </Card>
+  );
 }
 
-function StatusCard({
-  variant,
-  icon,
-  title,
-  description,
-}: {
-  variant: "success" | "warning" | "info";
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-}) {
-  const cls =
-    variant === "success"
-      ? "border-emerald-200 bg-emerald-50 dark:border-emerald-900 dark:bg-emerald-950"
-      : variant === "warning"
-        ? "border-destructive/30 bg-destructive/10"
-        : "border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-950";
+function StatusBadge({ status }: { status: PriorSubmission["status"] }) {
+  if (status === "approved") return <Badge tone="green">Approved</Badge>;
+  if (status === "needs_revision") {
+    return <Badge tone="red">Needs revision</Badge>;
+  }
   return (
-    <div className={`flex items-start gap-3 rounded-md border p-4 ${cls}`}>
-      {icon}
-      <div>
-        <div className="text-sm font-semibold">{title}</div>
-        <div className="mt-0.5 text-sm">{description}</div>
-      </div>
-    </div>
+    <Badge tone="yellow" dot>
+      Submitted
+    </Badge>
   );
 }

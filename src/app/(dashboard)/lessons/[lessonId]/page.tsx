@@ -4,7 +4,6 @@ import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
-  CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
@@ -18,6 +17,7 @@ import { enrichBlocksWithSignedUrls } from "@/lib/content-blocks/sign-urls";
 import { computeQuizEligibility } from "@/lib/quizzes/attempts";
 import { mintRolePlayEmbedToken } from "@/lib/role-plays/embed-token";
 import { MarkCompleteButton } from "./mark-complete-button";
+import { QuizGateCard } from "./quiz-gate-card";
 import { QuizRunner, type QuizQuestion } from "./quiz-runner";
 import {
   AssignmentRunner,
@@ -398,77 +398,6 @@ async function QuizLessonBody({
       attemptsUsed={eligibility.attemptsUsed}
       attemptsLeft={eligibility.attemptsLeft}
     />
-  );
-}
-
-function QuizGateCard({
-  state,
-  bestScore,
-  attemptsUsed,
-  maxAttempts,
-  nextAvailableAt,
-  backHref,
-}: {
-  state: "passed" | "max_reached" | "cooldown";
-  bestScore: number | null;
-  attemptsUsed: number;
-  maxAttempts: number | null;
-  nextAvailableAt: string | null;
-  backHref: string;
-}) {
-  if (state === "passed") {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Passed</CardTitle>
-          <CardDescription>
-            You already passed this quiz with a score of {bestScore ?? 0}%.
-            You don&apos;t need to retake it.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Link
-            href={backHref}
-            className="text-sm underline-offset-2 hover:underline"
-          >
-            Back to course →
-          </Link>
-        </CardContent>
-      </Card>
-    );
-  }
-  if (state === "max_reached") {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>No attempts left</CardTitle>
-          <CardDescription>
-            You&apos;ve used all {maxAttempts ?? attemptsUsed} attempts. Ask an
-            admin to reset if this blocks your progress.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="text-muted-foreground text-sm">
-          Best score so far: {bestScore ?? 0}%.
-        </CardContent>
-      </Card>
-    );
-  }
-  const when = nextAvailableAt ? new Date(nextAvailableAt) : null;
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Retake cooldown in effect</CardTitle>
-        <CardDescription>
-          Your next attempt opens{" "}
-          {when ? when.toLocaleString() : "soon"}.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="text-muted-foreground text-sm">
-        Attempts used: {attemptsUsed}
-        {maxAttempts !== null ? ` / ${maxAttempts}` : ""}. Best score:{" "}
-        {bestScore ?? 0}%.
-      </CardContent>
-    </Card>
   );
 }
 
