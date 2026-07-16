@@ -2,5 +2,8 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @import "@sandra/tokens/theme.css";
+@import "../styles/bmh-ds/colors.css";
+@import "../styles/bmh-ds/typography.css";
+@import "../styles/bmh-ds/spacing.css";
 
 @custom-variant dark (&:is(.dark *));
