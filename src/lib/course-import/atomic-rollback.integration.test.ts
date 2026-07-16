@@ -145,6 +145,29 @@ async function expectCatalogPresent(fixture: CatalogFixture) {
 }
 
 describe.skipIf(!envPresent)("atomic course import rollback on a test project", () => {
+  it("rejects empty and partial root payloads without claiming a rollback", async () => {
+    if (!admin) throw new Error("Test-project service client is unavailable.");
+    const empty = await admin.rpc("fn_rollback_course_import", {
+      p_import_id: `rollback-empty-${randomBytes(8).toString("hex")}`,
+      p_owned: ownedPayload(),
+    });
+    expect(empty.error?.message).toMatch(/cannot be empty/i);
+
+    const fixture = await createCatalogFixture();
+    try {
+      const partial = ownedPayload(fixture);
+      partial.program_access = [];
+      const { error } = await admin.rpc("fn_rollback_course_import", {
+        p_import_id: fixture.importId,
+        p_owned: partial,
+      });
+      expect(error?.message).toMatch(/minimal import root graph/i);
+      await expectCatalogPresent(fixture);
+    } finally {
+      await removeFixture(fixture);
+    }
+  });
+
   it("rolls back a complete synthetic catalog in one confirmed call", async () => {
     if (!admin) throw new Error("Test-project service client is unavailable.");
     const fixture = await createCatalogFixture();

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   ValidatingTusUrlStorage,
+  assertSafeTusResumeUrl,
   assertSafeTusUrl,
   createScopedTusFingerprint,
   sha256Blob,
@@ -105,11 +106,26 @@ describe("shared TUS safety", () => {
     for (const candidate of [
       `${ENDPOINT}/%252e%252e/object/x`,
       `${ENDPOINT}/%2f..%2fobject/x`,
+      `${ENDPOINT}/upload-id/%2e%2e/sibling`,
+      `${ENDPOINT}/upload-id/../sibling`,
+      `${ENDPOINT}/upload-id/./child`,
+      `${ENDPOINT}/upload-id/%5c..%5csibling`,
       `${ENDPOINT}//double-slash`,
       `${ENDPOINT}/upload-id?redirect=1`,
+      `${ENDPOINT}/upload-id#fragment`,
     ]) {
       expect(() => assertSafeTusUrl(candidate, ENDPOINT)).toThrow(/unsafe TUS upload URL/i);
     }
+  });
+
+  it("allows the creation endpoint only for requests, never as persisted resume state", () => {
+    expect(() => assertSafeTusUrl(ENDPOINT, ENDPOINT)).not.toThrow();
+    expect(() => assertSafeTusResumeUrl(ENDPOINT, ENDPOINT)).toThrow(/non-canonical/i);
+    expect(() => assertSafeTusResumeUrl(`${ENDPOINT}/`, ENDPOINT)).toThrow(/non-canonical/i);
+    expect(() => assertSafeTusResumeUrl(`${ENDPOINT}/upload-id`, ENDPOINT)).not.toThrow();
+    expect(() => assertSafeTusResumeUrl(`${ENDPOINT}/upload-id/extra`, ENDPOINT)).toThrow(
+      /non-canonical/i,
+    );
   });
 
   it("rejects cleartext non-loopback endpoints", () => {

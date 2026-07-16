@@ -12,6 +12,71 @@ describe("validateCourseManifest", () => {
     expect(result.value.program.courses[0].modules[0].lessons).toHaveLength(3);
   });
 
+  it("keeps import and source key lengths inside the database rollback contract", () => {
+    const maxImport = validCourseManifest();
+    const maxImportBase = "a".repeat(125);
+    maxImport.import_id = `${maxImportBase}-v1`;
+    for (const asset of maxImport.assets) {
+      asset.storage_path = asset.storage_path.replace(
+        "courses/training/v1/",
+        `courses/${maxImportBase}/v1/`,
+      );
+    }
+    expect(maxImport.import_id).toHaveLength(128);
+    expect(validateCourseManifest(maxImport).ok).toBe(true);
+
+    const longImport = validCourseManifest();
+    longImport.import_id = `${"a".repeat(126)}-v1`;
+    const longImportResult = validateCourseManifest(longImport);
+    expect(longImportResult.ok).toBe(false);
+    if (!longImportResult.ok) {
+      expect(longImportResult.errors).toContain(
+        "import_id must be at most 128 characters and use lowercase letters, numbers, dots, underscores, or hyphens.",
+      );
+    }
+
+    const maxSource = validCourseManifest();
+    maxSource.program.courses[0].modules[0].lessons[0].source_key = "b".repeat(512);
+    expect(validateCourseManifest(maxSource).ok).toBe(true);
+
+    const longSource = validCourseManifest();
+    longSource.program.courses[0].modules[0].lessons[0].source_key = "b".repeat(513);
+    const longSourceResult = validateCourseManifest(longSource);
+    expect(longSourceResult.ok).toBe(false);
+    if (!longSourceResult.ok) {
+      expect(longSourceResult.errors).toEqual(
+        expect.arrayContaining([expect.stringContaining("source_key must be at most 512 characters")]),
+      );
+    }
+
+    const longDerivedSource = validCourseManifest();
+    longDerivedSource.program.source_key = "p".repeat(256);
+    longDerivedSource.program.courses[0].source_key = "c".repeat(256);
+    const longDerivedResult = validateCourseManifest(longDerivedSource);
+    expect(longDerivedResult.ok).toBe(false);
+    if (!longDerivedResult.ok) {
+      expect(longDerivedResult.errors).toContain(
+        "program.courses[0].program_course derived source_key must be at most 512 characters for rollback.",
+      );
+    }
+
+    const longAccessSource = validCourseManifest();
+    longAccessSource.program.source_key = "p".repeat(504);
+    const longAccessResult = validateCourseManifest(longAccessSource);
+    expect(longAccessResult.ok).toBe(false);
+    if (!longAccessResult.ok) {
+      expect(longAccessResult.errors).toContain(
+        "program_access derived source_key must be at most 512 characters for rollback.",
+      );
+    }
+
+    for (const invalidSource of ["Uppercase", "unicodé"]) {
+      const invalid = validCourseManifest();
+      invalid.program.courses[0].modules[0].source_key = invalidSource;
+      expect(validateCourseManifest(invalid).ok).toBe(false);
+    }
+  });
+
   it("rejects publication, duplicate keys, and unresolved asset references", () => {
     const input = validCourseManifest();
     (input.program as { is_published: boolean }).is_published = true;

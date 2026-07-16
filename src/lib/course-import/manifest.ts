@@ -163,6 +163,8 @@ export function validateCanaryScope(manifest: CourseImportManifest): string[] {
   return errors;
 }
 
+const MAX_IMPORT_ID_LENGTH = 128;
+const MAX_SOURCE_KEY_LENGTH = 512;
 const SOURCE_KEY_PATTERN = /^[a-z0-9][a-z0-9._-]*$/;
 const SHA256_PATTERN = /^[a-f0-9]{64}$/;
 const ASSET_REFERENCE_FIELDS = [
@@ -185,10 +187,10 @@ export function validateCourseManifest(
   requireString(input, "import_id", "import_id", errors);
   if (
     typeof input.import_id === "string" &&
-    !SOURCE_KEY_PATTERN.test(input.import_id)
+    (!SOURCE_KEY_PATTERN.test(input.import_id) || input.import_id.length > MAX_IMPORT_ID_LENGTH)
   ) {
     errors.push(
-      "import_id must use lowercase letters, numbers, dots, underscores, or hyphens.",
+      `import_id must be at most ${MAX_IMPORT_ID_LENGTH} characters and use lowercase letters, numbers, dots, underscores, or hyphens.`,
     );
   }
   if (!isRecord(input.qa_role_group)) errors.push("qa_role_group must be an object.");
@@ -201,8 +203,12 @@ export function validateCourseManifest(
   const artworkNamespace = importArtworkNamespace(storagePrefix);
   const seenKeys = new Map<string, string>();
   const registerKey = (value: unknown, path: string) => {
-    if (typeof value !== "string" || !SOURCE_KEY_PATTERN.test(value)) {
-      errors.push(`${path}.source_key must use lowercase letters, numbers, dots, underscores, or hyphens.`);
+    if (
+      typeof value !== "string" ||
+      value.length > MAX_SOURCE_KEY_LENGTH ||
+      !SOURCE_KEY_PATTERN.test(value)
+    ) {
+      errors.push(`${path}.source_key must be at most ${MAX_SOURCE_KEY_LENGTH} characters and use lowercase letters, numbers, dots, underscores, or hyphens.`);
       return;
     }
     const prior = seenKeys.get(value);
@@ -252,6 +258,11 @@ export function validateCourseManifest(
 
   const program = manifest.program;
   registerKey(program.source_key, "program");
+  validateDerivedSourceKey(
+    `${program.source_key}:${manifest.qa_role_group.source_key}`,
+    "program_access",
+    errors,
+  );
   requireNonEmpty(program.title, "program.title", errors);
   if (program.is_published !== false) errors.push("program.is_published must be false for a safe import.");
   validateArtworkReference(
@@ -268,6 +279,11 @@ export function validateCourseManifest(
     for (const [courseIndex, course] of program.courses.entries()) {
       const coursePath = `program.courses[${courseIndex}]`;
       registerKey(course.source_key, coursePath);
+      validateDerivedSourceKey(
+        `${program.source_key}:${course.source_key}`,
+        `${coursePath}.program_course`,
+        errors,
+      );
       requireNonEmpty(course.title, `${coursePath}.title`, errors);
       if (course.is_published !== false) errors.push(`${coursePath}.is_published must be false for a safe import.`);
       validateArtworkReference(
@@ -302,6 +318,14 @@ export function validateCourseManifest(
   return errors.length > 0
     ? { ok: false, errors }
     : { ok: true, value: manifest };
+}
+
+function validateDerivedSourceKey(value: string, path: string, errors: string[]) {
+  if (value.length > MAX_SOURCE_KEY_LENGTH) {
+    errors.push(
+      `${path} derived source_key must be at most ${MAX_SOURCE_KEY_LENGTH} characters for rollback.`,
+    );
+  }
 }
 
 function validateLesson(

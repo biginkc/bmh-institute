@@ -64,7 +64,12 @@ export function assertSafeTusUrl(candidate: string, endpoint: string) {
   const normalizedEndpoint = new URL(normalizeTusEndpoint(endpoint));
   const url = new URL(candidate);
   const routePrefix = `${normalizedEndpoint.pathname}/`;
-  const encodedPathControl = /%(?:25|2e|2f|5c)/i.test(url.pathname);
+  // URL parsing removes dot segments before pathname can be inspected. Check
+  // the supplied URL too, otherwise /upload-id/%2e%2e/other canonicalizes to
+  // an apparently safe sibling upload resource.
+  const encodedPathControl = /%(?:25|2e|2f|5c)/i.test(candidate);
+  const rawDotSegment = /(?:\/|^)(?:\.|\.\.)(?:\/|[?#]|$)/.test(candidate);
+  const rawBackslash = candidate.includes("\\");
   let decodedPath: string;
   try {
     decodedPath = decodeURIComponent(url.pathname);
@@ -84,12 +89,27 @@ export function assertSafeTusUrl(candidate: string, endpoint: string) {
     url.hash ||
     url.origin !== normalizedEndpoint.origin ||
     encodedPathControl ||
+    rawDotSegment ||
+    rawBackslash ||
     decodedPath.includes("\\") ||
     unsafeSegment ||
     (url.pathname !== normalizedEndpoint.pathname && !url.pathname.startsWith(routePrefix)) ||
     (decodedPath !== normalizedEndpoint.pathname && !decodedPath.startsWith(routePrefix))
   ) {
     throw new Error(`Refusing unsafe TUS upload URL: ${candidate}`);
+  }
+}
+
+export function assertSafeTusResumeUrl(candidate: string, endpoint: string) {
+  assertSafeTusUrl(candidate, endpoint);
+  const normalizedEndpoint = new URL(normalizeTusEndpoint(endpoint));
+  const url = new URL(candidate);
+  const routePrefix = `${normalizedEndpoint.pathname}/`;
+  const resourceSuffix = url.pathname.startsWith(routePrefix)
+    ? url.pathname.slice(routePrefix.length)
+    : "";
+  if (!resourceSuffix || resourceSuffix.includes("/")) {
+    throw new Error(`Refusing non-canonical TUS resume URL: ${candidate}`);
   }
 }
 
@@ -182,7 +202,7 @@ export class ValidatingTusUrlStorage implements TusUrlStorage {
       ...(upload.parallelUploadUrls ?? []),
     ];
     if (urls.length === 0) throw new Error("Refusing TUS resume state without an upload URL.");
-    urls.forEach((url) => assertSafeTusUrl(url, this.endpoint));
+    urls.forEach((url) => assertSafeTusResumeUrl(url, this.endpoint));
   }
 
   private matchesScope(upload: TusPreviousUpload) {

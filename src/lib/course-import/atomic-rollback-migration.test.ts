@@ -19,6 +19,10 @@ describe("atomic course import rollback migration", () => {
     expect(sql).toMatch(/duplicate owned UUID/i);
     expect(sql).toMatch(/invalid import_id/i);
     expect(sql).toMatch(/owned ID does not match import_id and source_key/i);
+    expect(sql).toMatch(/owned-ID payload cannot be empty/i);
+    expect(sql).toMatch(/missing the minimal import root graph/i);
+    expect(sql).toMatch(/jsonb_array_length\(p_owned -> 'role_groups'\) <> 1/i);
+    expect(sql).toMatch(/jsonb_array_length\(p_owned -> 'program_courses'\)[\s\S]*jsonb_array_length\(p_owned -> 'courses'\)/i);
     expect(sql).toMatch(/unknown [a-z_]+ ID/i);
     expect(sql.match(/get diagnostics v_deleted = row_count/gi)).toHaveLength(12);
     expect(sql).toMatch(/v_actual_delete_count <> v_item_count/i);

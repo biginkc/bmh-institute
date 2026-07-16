@@ -13,6 +13,7 @@ import {
 import { createVerifiedFileSnapshot } from "./asset-staging";
 import type { CourseImportAsset } from "./manifest";
 import {
+  assertSafeTusResumeUrl,
   assertSafeTusUrl,
   normalizeTusEndpoint,
   parseCustomTusMetadata,
@@ -418,7 +419,7 @@ export class JsonTusUrlStorage {
     ];
     if (urls.length === 0 || !ownershipTokenFromMetadata(upload.metadata)) return false;
     try {
-      urls.forEach((url) => assertSafeTusRequestUrl(url, this.endpoint));
+      urls.forEach((url) => assertSafeTusResumeUrl(url, this.endpoint));
       return true;
     } catch {
       return false;

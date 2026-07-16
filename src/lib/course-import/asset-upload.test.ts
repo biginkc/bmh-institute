@@ -282,6 +282,8 @@ describe("TUS resume isolation", () => {
           "https://project.storage.supabase.co/storage/v1/object/stolen",
           "wrongRoute",
         ),
+        bareEndpoint: stored(ENDPOINT, "bareEndpoint"),
+        nestedRoute: stored(`${ENDPOINT}/upload-id/extra`, "nestedRoute"),
       }),
     );
 
@@ -298,10 +300,13 @@ describe("TUS resume isolation", () => {
     const uploads = await storage.findUploadsByFingerprint(fingerprint);
 
     expect(uploads.map((upload) => upload.urlStorageKey)).toEqual(["safe"]);
-    expect(await readFile(statePath, "utf8")).not.toMatch(/attacker|wrongRoute/);
+    expect(await readFile(statePath, "utf8")).not.toMatch(
+      /attacker|wrongRoute|bareEndpoint|nestedRoute/,
+    );
   });
 
   it("rejects an unsafe request URL before the HTTP stack can send credentials", () => {
+    expect(() => assertSafeTusRequestUrl(ENDPOINT, ENDPOINT)).not.toThrow();
     expect(() =>
       assertSafeTusRequestUrl(`${ENDPOINT}/upload-id`, ENDPOINT),
     ).not.toThrow();
@@ -322,6 +327,12 @@ describe("TUS resume isolation", () => {
     ).toThrow(/unsafe TUS upload URL/i);
     expect(() =>
       assertSafeTusRequestUrl(`${ENDPOINT}/%2f..%2fobject/upload-id`, ENDPOINT),
+    ).toThrow(/unsafe TUS upload URL/i);
+    expect(() =>
+      assertSafeTusRequestUrl(`${ENDPOINT}/upload-id/%2e%2e/sibling`, ENDPOINT),
+    ).toThrow(/unsafe TUS upload URL/i);
+    expect(() =>
+      assertSafeTusRequestUrl(`${ENDPOINT}/upload-id/../sibling`, ENDPOINT),
     ).toThrow(/unsafe TUS upload URL/i);
   });
 

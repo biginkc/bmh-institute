@@ -88,6 +88,18 @@ begin
   if v_item_count > 10000 then
     raise exception 'Rollback refused: owned-ID payload exceeds 10000 IDs.' using errcode = '22023';
   end if;
+  if v_item_count = 0 then
+    raise exception 'Rollback refused: owned-ID payload cannot be empty.' using errcode = '22023';
+  end if;
+  if jsonb_array_length(p_owned -> 'role_groups') <> 1
+     or jsonb_array_length(p_owned -> 'programs') <> 1
+     or jsonb_array_length(p_owned -> 'program_access') <> 1
+     or jsonb_array_length(p_owned -> 'courses') < 1
+     or jsonb_array_length(p_owned -> 'program_courses')
+          <> jsonb_array_length(p_owned -> 'courses') then
+    raise exception 'Rollback refused: owned-ID payload is missing the minimal import root graph.'
+      using errcode = '22023';
+  end if;
   if v_item_count <> v_distinct_item_count then
     raise exception 'Rollback refused: duplicate owned UUID in one table payload.'
       using errcode = '22023';
