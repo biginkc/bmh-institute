@@ -56,17 +56,19 @@ Implement the approved concurrent completion plan for the reusable BMH Institute
 ### 2026-07-16 Wave 1 integration
 
 - The runtime, deterministic importer, media/artwork support, full course manifest, and signed Closer Lab completion contract are integrated on the controller branch.
-- The combined automated baseline now passes 337 Node tests and 88 browser-component tests, and the production build succeeds on Next.js 16.2.10.
+- The combined automated baseline now passes 344 Node tests and 89 browser-component tests, lint is clean, and the production build succeeds on Next.js 16.2.10.
 - Direct production dependencies were upgraded until no high or critical production advisory remained. Two moderate advisories remain inside Next.js's bundled PostCSS dependency; the audit tool's offered fix is an invalid downgrade to Next.js 9 and was rejected.
-- Migrations 015 and 016 were applied only to the isolated `bmh-institute-test` project. The remote migration ledger matches local migrations 001 through 016, and all 14 database integration tests pass there, including storage authorization, answer-key isolation, certificate behavior, and destructive user cleanup.
+- Migrations 015 through 017 were applied only to the isolated `bmh-institute-test` project. The remote migration ledger matches local migrations 001 through 017, and all 16 database integration tests pass there, including storage authorization, answer-key and explanation isolation, certificate behavior, and destructive user cleanup.
 - Nineteen deterministic accessible learner-guide PDFs were generated, checksum-addressed, text-checked, rendered to images, and visually inspected. Two generator runs produced identical hashes.
 - The isolated Tech Stack canary manifest validates structurally and remains release-blocked by exactly its unapproved artwork and media derivatives.
 - Three thumbnail pilots and their 16:9 poster derivatives were generated and visually inspected. They remain deliberately absent from the release manifest until Jarrad approves the pilot.
-- Caption review found that the Compensation Engine cut states a specific compensation architecture. It is now treated as a seventh held video because the locked course rule is to defer compensation terms to each learner's current written plan.
+- Independent caption review produced and approved checksum-locked VTT and transcript assets for 20 exact cuts. Compensation Engine, Career Growth, and Operator Playbook joined the six review-held cuts after transcription exposed fixed compensation, promotion, role-ladder, and dial-quota claims. The final caption QA state is 20 approved videos and nine held videos with no held derivative accidentally referenced for release.
+- Adversarial runtime review closed direct quiz-explanation disclosure, rapid forged video progress, cross-import storage ownership, and final-segment unmount loss. The live test-project authorization suite passed after the append-only explanation migration.
+- Six Closer Lab scenarios, six personas, 24 rubric goals, and 24 links were applied only to `closer-lab-test`. The signed-embed compatibility fix was reconciled with six expected role-play updates and exact verification; production mapping remains null and no provider call occurred.
 
 ## Hard gates
 
-- Jarrad must approve or request recuts for the seven held videos before their exact files become publishable.
+- Jarrad must approve or request recuts for the nine held videos before their exact files become publishable.
 - Jarrad must approve the three-image thumbnail pilot before batch thumbnail generation.
 - Billing changes, new paid vendors and uncontrolled external provider use require immediate approval.
 - Publishing and fixture deletion occur only after all acceptance evidence is complete.
