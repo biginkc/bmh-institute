@@ -144,7 +144,7 @@ export default async function DashboardPage() {
     : [];
 
   return (
-    <main className="mx-auto w-full max-w-7xl flex-1 p-5 md:p-8 lg:p-10">
+    <main className="w-full flex-1 p-5 md:p-8 lg:p-10">
       {error ? (
         <div className="rounded-[var(--bmh-radius-md)] border border-[var(--danger)] bg-[var(--danger-soft)] px-4 py-3 font-[family-name:var(--font-body)] text-sm font-semibold text-[var(--danger)]">
           We couldn&apos;t load your programs. Try refreshing. ({error.message})

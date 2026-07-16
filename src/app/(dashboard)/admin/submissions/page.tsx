@@ -45,7 +45,7 @@ export default async function AdminSubmissionsPage({
   const rows = (submissions ?? []) as Row[];
 
   return (
-    <main className="mx-auto w-full max-w-4xl flex-1 p-6 md:p-10">
+    <main className="w-full flex-1 p-6 md:p-10">
       <AdminPageHeader
         title="Submissions"
         description="Review assignment submissions. Approving marks the lesson complete automatically."

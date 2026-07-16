@@ -22,7 +22,7 @@ export default async function AdminCoursesPage() {
   );
 
   return (
-    <main className="mx-auto w-full max-w-[980px] flex-1 px-5 py-8 md:px-7 md:pb-16">
+    <main className="w-full flex-1 px-5 py-8 md:px-7 md:pb-16">
       <div className="mb-7">
         <PageHeader
           title="Courses"
