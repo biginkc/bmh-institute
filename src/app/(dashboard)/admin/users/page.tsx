@@ -68,7 +68,7 @@ export default async function AdminUsersPage() {
   });
 
   return (
-    <main className="mx-auto w-full max-w-6xl flex-1 p-6 md:p-10">
+    <main className="w-full flex-1 p-6 md:p-10">
       <AdminPageHeader
         title="Users"
         description="Pilot learner access, invite status, and role groups."
