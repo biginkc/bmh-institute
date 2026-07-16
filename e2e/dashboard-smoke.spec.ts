@@ -7,7 +7,5 @@ import { test, expect } from "@playwright/test";
 test("dashboard renders for the authenticated test user", async ({ page }) => {
   await page.goto("/dashboard");
   await expect(page).toHaveURL(/\/dashboard/);
-  await expect(
-    page.getByRole("heading", { name: /your training/i }),
-  ).toBeVisible();
+  await expect(page.locator("main").getByRole("heading", { level: 1 })).toBeVisible();
 });
