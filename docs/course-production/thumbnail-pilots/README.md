@@ -37,12 +37,14 @@ The generated PNGs are retained under
 | --- | --- | --- |
 | `docs/design/style-ref-1.png` | canonical BMH Sticker System style | `d65ce4c3fc84a0a52b08e513d42d978f94d5db2f6e59034aedbbd1e9486c18ca` |
 | `docs/design/style-ref-2.png` | canonical BMH Sticker System style | `f1affc2ab6b931be8cfd6920165dff330d49b79e6f4abfe5568e67e70c6934a6` |
-| `course-assets/scenes/module-v0/mV0_LV0_s10_bmh-lowangle.png` | Orientation subject reference only | `438bab4f68f7b71e5daec17def6ea1ceb091e010b57c135968746fba92ba42dc` |
-| `course-assets/scenes/module-05/m05_L5A_phones.png` | Opening the Call subject reference only | `2d59d64e913c43b1fba45080b0bf59c9e51356f1d4b057c5d2831bfa0f7af6e8` |
-| `course-assets/scenes/module-07/m07_L7A_b03_reframe.png` | Objection Architecture character reference only | `57fe03b31eca46336c664c2ca78cf877b8db3138443964e7976ce70eb91db311` |
+| `docs/course-production/thumbnail-pilots/references/mV0_LV0_s10_bmh-lowangle.png` | Orientation subject reference only | `438bab4f68f7b71e5daec17def6ea1ceb091e010b57c135968746fba92ba42dc` |
+| `docs/course-production/thumbnail-pilots/references/m05_L5A_phones.png` | Opening the Call subject reference only | `2d59d64e913c43b1fba45080b0bf59c9e51356f1d4b057c5d2831bfa0f7af6e8` |
+| `docs/course-production/thumbnail-pilots/references/m07_L7A_b03_reframe.png` | Objection Architecture character reference only | `57fe03b31eca46336c664c2ca78cf877b8db3138443964e7976ce70eb91db311` |
 
-The canonical references remain in the original course-production checkout;
-their checksums lock the exact inputs used for this pilot.
+The three subject files above are tracked portable copies of the exact inputs
+used for the pilots. The two `docs/design` files are style-only references. The
+builder and QA tests read every declared file and fail if it is missing or its
+SHA-256 changes.
 
 ## Source prompts
 
@@ -122,4 +124,6 @@ pilots.
 The locked post-approval prompts, manifest mappings, derivative rules, and
 machine-verifiable count checks are in `PRODUCTION-SPEC.md` and
 `production-inventory.json`. Preparing those files did not generate or approve
-any additional artwork.
+any additional artwork. The Opening pilot is evidence only for its lesson card
+and Opening poster; Fact Find has a separate post-approval master and generation
+call in the production inventory.

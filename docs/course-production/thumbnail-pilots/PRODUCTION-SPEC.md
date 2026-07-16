@@ -36,17 +36,20 @@ rest of the batch.
 | Opening the Call | Opening the Call | `thumbnail-slot-07` | `poster-video-slot-07-opening` |
 | Objection Architecture | Objection Architecture | `thumbnail-slot-09` | `poster-video-slot-09-objection-architecture` |
 
-The Orientation master also supplies a distinct Mindset poster. The Opening
-the Call master also supplies a distinct Fact Find poster. Their focused recipes
-are listed separately in the inventory. The Objection Architecture lesson has
-one video and therefore uses the full safe master for its only poster.
+The Orientation master also supplies a distinct Mindset poster. The Opening the
+Call pilot supplies only its lesson card and Opening the Call poster. Fact Find
+requires its own post-approval image-generation call, exact prompt, source,
+flat master, prompt checksum, and production record; it is not derived from the
+Opening pilot. The Objection Architecture lesson has one video and uses the
+full safe master for its only poster.
 
 ## Generation contract
 
 After explicit pilot approval, use the built-in image generation tool. Make one
-distinct generation call for the course cover and one for each remaining lesson
-master. Do not use a single multi-image call or treat repeated variants as
-distinct lesson subjects.
+distinct generation call for the course cover, one for each of the 16 remaining
+lesson masters, and one separate call for the Fact Find poster master. These 18
+planned calls have unique identifiers in the inventory. Do not use a single
+multi-image call or treat repeated variants as distinct lesson subjects.
 
 Promote each approved pilot from its checksum-locked flat master. Do not call the
 model again for an approved pilot. The inventory marks these three records as
@@ -54,9 +57,10 @@ model again for an approved pilot. The inventory marks these three records as
 `generate-after-pilot-approval`. The retained pilot files are review evidence
 outside the 49 manifest output paths.
 
-Each inventory entry contains its exact prompt, reference input identifiers,
-planned source path, planned flat-master path, provenance requirements, and
-approval record. Keep the following production record for every call:
+Each inventory entry contains its exact prompt and prompt SHA-256, reference
+input identifiers, planned source path, planned flat-master path, provenance
+requirements, and approval record. Fact Find has a `direct_master` record with
+its own fields. Keep the following production record for every call:
 
 - Exact prompt text and prompt SHA-256.
 - Built-in tool as generator.
@@ -66,6 +70,12 @@ approval record. Keep the following production record for every call:
 - Correction prompt and parent checksum when a correction is required.
 - Flat-master path, dimensions, palette result, and checksum.
 - Visual review status, reviewer, timestamp, and evidence path.
+
+All declared references are repo-relative, tracked, and checksum verified by
+both the builder and QA test before the inventory is accepted. The three pilot
+subject references are portable copies of the exact checksum-locked inputs used
+for the pilot calls. The two `docs/design` inputs are style-only references;
+non-pilot prompts use them for visual language, not subject matter.
 
 No generated source is approved merely because it exists. The manifest remains
 `missing` until the source, flat master, card, and all mapped posters pass QA and
@@ -148,12 +158,40 @@ decision, record the pilot decision separately before generating the rest of the
 batch. Do not rewrite historical prompt, reference, or checksum fields when an
 asset receives approval.
 
+Every planned generated master also has a guarded `production_record`. Before a
+source is produced, all evidence fields are null:
+
+```json
+{
+  "status": "not-produced",
+  "generated_at": null,
+  "generated_by": null,
+  "generation_call_id": null,
+  "source_sha256": null,
+  "flat_master_sha256": null,
+  "reviewed_at": null,
+  "reviewed_by": null,
+  "review_evidence": null
+}
+```
+
+`produced-awaiting-review` requires all generation fields and valid source/flat
+SHA-256 values while review fields remain null. `reviewed` additionally requires
+reviewer, review time, and evidence. Partial state transitions fail validation.
+
 ## Commands and checks
 
 Regenerate the inventory from the current course manifest:
 
 ```bash
 node scripts/course-content/build-artwork-production-inventory.mjs
+```
+
+Verify that the tracked inventory exactly matches deterministic builder output
+without writing any file:
+
+```bash
+node scripts/course-content/build-artwork-production-inventory.mjs --check
 ```
 
 Run the inventory contract tests:
@@ -180,8 +218,8 @@ After production assets exist, final QA must verify:
 3. Every final asset uses only the locked eight-color palette.
 4. All 49 output paths and all 29 poster pixel checksums are unique.
 5. Each poster visibly matches its inventory `focus_subject` and video title.
-6. Every source, prompt, reference, flat master, derivative, and approval field
-   has a complete provenance record.
+6. Every source, prompt checksum, reference, flat master, derivative,
+   production record, and approval field has complete provenance.
 7. The course manifest is updated only after checksums and approvals are final.
 
 Batch generation remains prohibited until Jarrad explicitly approves the three

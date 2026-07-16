@@ -2,6 +2,12 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import {
+  createEmptyProductionRecord,
+  sha256,
+  validateProductionRecord,
+} from "./artwork-production-contract.mjs";
+
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const manifestPath = path.join(
   repoRoot,
@@ -15,6 +21,12 @@ const pilotChecksumsPath = path.join(
   repoRoot,
   "docs/course-production/thumbnail-pilots/checksums.json",
 );
+const args = process.argv.slice(2);
+const unknownArgs = args.filter((arg) => arg !== "--check");
+if (unknownArgs.length > 0) {
+  throw new Error(`Unknown argument(s): ${unknownArgs.join(", ")}`);
+}
+const checkMode = args.includes("--check");
 
 const [manifest, pilotChecksums] = await Promise.all([
   readFile(manifestPath, "utf8").then(JSON.parse),
@@ -44,33 +56,46 @@ const references = [
   {
     id: "orientation-building",
     role: "Orientation subject reference only",
-    path: "course-assets/scenes/module-v0/mV0_LV0_s10_bmh-lowangle.png",
+    path: "docs/course-production/thumbnail-pilots/references/mV0_LV0_s10_bmh-lowangle.png",
     sha256: "438bab4f68f7b71e5daec17def6ea1ceb091e010b57c135968746fba92ba42dc",
   },
   {
     id: "opening-phone-shapes",
     role: "Opening the Call subject reference only",
-    path: "course-assets/scenes/module-05/m05_L5A_phones.png",
+    path: "docs/course-production/thumbnail-pilots/references/m05_L5A_phones.png",
     sha256: "2d59d64e913c43b1fba45080b0bf59c9e51356f1d4b057c5d2831bfa0f7af6e8",
   },
   {
     id: "objection-character",
     role: "Objection Architecture character reference only",
-    path: "course-assets/scenes/module-07/m07_L7A_b03_reframe.png",
+    path: "docs/course-production/thumbnail-pilots/references/m07_L7A_b03_reframe.png",
     sha256: "57fe03b31eca46336c664c2ca78cf877b8db3138443964e7976ce70eb91db311",
   },
 ];
 
-const provenance = {
-  generator: "built-in image_gen",
-  generation_call: "one-distinct-call",
-  source_capture_required: true,
-  prompt_checksum_required: true,
-  reference_checksums_required: true,
-  generated_at_required: true,
-  generated_by_required: true,
-  model_output_path_required: true,
-};
+for (const reference of references) {
+  const contents = await readFile(path.join(repoRoot, reference.path));
+  const actualSha256 = sha256(contents);
+  if (actualSha256 !== reference.sha256) {
+    throw new Error(
+      `Reference ${reference.id} SHA-256 mismatch: ${actualSha256} != ${reference.sha256}`,
+    );
+  }
+}
+
+function buildProvenance(plannedGenerationCallId, generationCall) {
+  return {
+    generator: "built-in image_gen",
+    generation_call: generationCall,
+    planned_generation_call_id: plannedGenerationCallId,
+    source_capture_required: true,
+    prompt_checksum_required: true,
+    reference_checksums_required: true,
+    generated_at_required: true,
+    generated_by_required: true,
+    model_output_path_required: true,
+  };
+}
 
 const blockedApproval = {
   status: "blocked-pending-pilot-approval",
@@ -127,6 +152,18 @@ Characters: one tiny rep with dot eyes, minimal facial features, cylindrical lim
 Constraints: no title, no words, no letters, no numbers, no logos, no watermark; absolutely uniform flat fills; no white sticker border; strong silhouettes; uniform complexity; the three-step visual logic must be obvious without labels
 Avoid: any gradient, texture, lighting, glow, shadow, reflection, depth, realistic perspective, photorealism, 3D rendering, complex diagrams, busy masonry, detailed interiors, edge-cropped key objects`,
 };
+
+const factFindPosterPrompt = `Use case: stylized-concept
+Asset type: BMH Institute Fact Find video-poster master, wide 16:9 artwork generated independently from the Opening the Call lesson-card master
+Primary request: Create a focused Fact Find illustration. The five-second read must be “ask with curiosity, listen carefully, and organize the seller facts.” Show one calm employee and one homeowner connected by a simple speech bubble, with a large listening ear, a magnifier, and a clean fact checklist made only from unlabeled lines and check marks. This image must stand on its own as the Fact Find video poster and must not reuse the Opening the Call pilot composition.
+Input images: Image 1 and Image 2 are the canonical BMH Sticker System style references. Use them only for flat visual language, line quality, palette, character simplicity, and sticker spacing. Do not copy their subjects or layouts. No subject reference is authorized for this call.
+Scene/backdrop: perfectly uniform flat cornflower-blue field with generous active negative space; a floating sticker composition, never a continuous room or realistic environment
+Style/medium: hand-drawn flat sticker-sheet illustration; thick slightly wobbly black outlines; rounded imperfect primitive geometry; strong simple silhouettes; every object independently croppable
+Composition/framing: center the listening conversation, keep the ear and magnifier as clearly separate supporting stickers, and place the fact checklist to the right; keep every meaningful object inside the central 80% so the complete 16:9 master can be used without a crop
+Color palette: cornflower blue, golden yellow, amber, orange, cream, white, black, and at most one muted green; exactly the locked eight-color palette after deterministic flattening; no extra colors
+Characters: two tiny people with dot eyes, minimal faces, cylindrical limbs, and simple hair and clothing silhouettes
+Constraints: no title, no words, no letters, no numbers, no currency amounts, no logos, no watermark; absolutely uniform flat fills; no white sticker border; no invented software interface; no fixed performance promises; no reuse of the Opening the Call hero handset composition
+Avoid: gradients, texture, lighting, glow, shadows, reflections, depth, realistic perspective, photorealism, 3D rendering, detailed screens, tiny unreadable symbols, busy backgrounds, edge-cropped key objects, sales-pressure imagery, and unrelated lesson subjects`;
 
 const lessonSpecs = [
   {
@@ -349,6 +386,14 @@ const inventoryLessons = lessonSpecs.map((spec, index) => {
 
   const cardPath = `course-assets/thumbnails/${spec.slot}.webp`;
   assertAsset(lesson.thumbnail_asset_key, cardPath);
+  const prompt = buildPrompt(spec);
+  const plannedGenerationCallId = spec.pilot
+    ? null
+    : `imagegen-lesson-${spec.slot}`;
+  const lessonProvenance = buildProvenance(
+    plannedGenerationCallId,
+    spec.pilot ? "promote-existing-pilot-call" : "one-distinct-call",
+  );
 
   const master = {
     id: `master-${spec.slot}`,
@@ -361,6 +406,7 @@ const inventoryLessons = lessonSpecs.map((spec, index) => {
       y_min_percent: 10,
       y_max_percent: 90,
     },
+    production_record: createEmptyProductionRecord(),
   };
 
   const posters = videoBlocks.map((block, posterIndex) => {
@@ -368,23 +414,48 @@ const inventoryLessons = lessonSpecs.map((spec, index) => {
     const assetKey = block.content.poster_asset_key;
     const outputPath = `course-assets/posters/${block.content.asset_key}.webp`;
     assertAsset(assetKey, outputPath);
+    const isFactFind = assetKey === "poster-video-slot-07-fact-find";
+    const directMaster = isFactFind
+      ? {
+          id: "master-poster-video-slot-07-fact-find",
+          source_path:
+            "course-assets/posters/production/sources/video-slot-07-fact-find-generated.png",
+          flat_master_path:
+            "course-assets/posters/production/flat-masters/video-slot-07-fact-find-flat-master.png",
+          expected_aspect_ratio: "16:9",
+          reference_ids: ["style-ref-1", "style-ref-2"],
+          prompt: factFindPosterPrompt,
+          prompt_sha256: sha256(factFindPosterPrompt),
+          provenance: buildProvenance(
+            "imagegen-poster-video-slot-07-fact-find",
+            "one-distinct-call",
+          ),
+          production_record: createEmptyProductionRecord(),
+        }
+      : null;
+    const posterProvenance = directMaster?.provenance ?? lessonProvenance;
+    const effectiveCropProfile = directMaster ? "full-safe" : cropProfile;
     return {
       asset_key: assetKey,
       video_asset_key: block.content.asset_key,
       video_title: block.content.title,
       output_path: outputPath,
       focus_subject: focusSubject,
+      production_source_mode: directMaster
+        ? "generate-distinct-after-pilot-approval"
+        : "derive-from-lesson-master",
+      direct_master: directMaster,
       derivative: {
-        recipe_id: `${spec.slot}-${block.content.asset_key}-${cropProfile}`,
-        source_master_id: master.id,
-        crop_profile: cropProfile,
+        recipe_id: `${spec.slot}-${block.content.asset_key}-${effectiveCropProfile}`,
+        source_master_id: directMaster?.id ?? master.id,
+        crop_profile: effectiveCropProfile,
         target_dimensions: [1280, 720],
         resample: "lanczos",
         output_format: "lossless-webp",
         duplicate_pixel_sha256_forbidden: true,
         visual_subject_confirmation_required: true,
       },
-      provenance,
+      provenance: posterProvenance,
       approval: blockedApproval,
     };
   });
@@ -398,7 +469,8 @@ const inventoryLessons = lessonSpecs.map((spec, index) => {
       ? "promote-approved-pilot-flat-master"
       : "generate-after-pilot-approval",
     reference_ids: spec.references ?? ["style-ref-1", "style-ref-2"],
-    prompt: buildPrompt(spec),
+    prompt,
+    prompt_sha256: sha256(prompt),
     master,
     lesson_card: {
       asset_key: lesson.thumbnail_asset_key,
@@ -412,7 +484,7 @@ const inventoryLessons = lessonSpecs.map((spec, index) => {
         resample: "lanczos",
         output_format: "lossless-webp",
       },
-      provenance,
+      provenance: lessonProvenance,
       approval: blockedApproval,
     },
     posters,
@@ -427,7 +499,7 @@ const inventoryLessons = lessonSpecs.map((spec, index) => {
             "docs/course-production/thumbnail-pilots/checksums.json",
         }
       : null,
-    provenance,
+    provenance: lessonProvenance,
     approval: spec.pilot ? pilotApproval : blockedApproval,
   };
 });
@@ -441,7 +513,8 @@ const inventory = {
   generation_policy: {
     gate: "Jarrad must approve all three pilots before any new image generation",
     generator: "built-in image_gen",
-    call_strategy: "one distinct image_gen call per cover or lesson master",
+    call_strategy:
+      "one distinct image_gen call per cover or non-pilot lesson master, plus a separate Fact Find poster-master call",
     model_native_text: "forbidden",
     manifest_approval_updates: "forbidden until visual QA and explicit approval",
     upload_or_publish: "forbidden in artwork production",
@@ -493,12 +566,42 @@ Color palette: cornflower blue, golden yellow, amber, orange, cream, white, blac
 Characters: one tiny learner with dot eyes, minimal face, cylindrical limbs, and a simple silhouette
 Constraints: no title, no words, no letters, no numbers, no currency amounts, no logos, no watermark; absolutely uniform flat fills; no white sticker border; no fixed performance promises; the six section motifs must read as one learning journey rather than six disconnected scenes
 Avoid: gradients, texture, lighting, glow, shadows, reflections, depth, realistic perspective, photorealism, 3D rendering, detailed architecture, tiny unreadable symbols, busy backgrounds, edge-cropped key objects, and lesson-specific subject dominance`,
-    provenance,
+    provenance: buildProvenance("imagegen-course-cover", "one-distinct-call"),
+    production_record: createEmptyProductionRecord(),
     approval: blockedApproval,
   },
   lessons: inventoryLessons,
 };
 
-await mkdir(path.dirname(outputPath), { recursive: true });
-await writeFile(outputPath, `${JSON.stringify(inventory, null, 2)}\n`);
-console.log(`Wrote ${path.relative(repoRoot, outputPath)}`);
+inventory.course_cover.prompt_sha256 = sha256(inventory.course_cover.prompt);
+
+const productionRecords = [
+  ["course cover", inventory.course_cover.production_record],
+  ...inventory.lessons.flatMap((lesson) => [
+    [`${lesson.slot} lesson master`, lesson.master.production_record],
+    ...lesson.posters
+      .filter((poster) => poster.direct_master)
+      .map((poster) => [
+        `${poster.asset_key} direct master`,
+        poster.direct_master.production_record,
+      ]),
+  ]),
+];
+for (const [label, record] of productionRecords) {
+  validateProductionRecord(record, label);
+}
+
+const serializedInventory = `${JSON.stringify(inventory, null, 2)}\n`;
+if (checkMode) {
+  const currentInventory = await readFile(outputPath, "utf8");
+  if (currentInventory !== serializedInventory) {
+    throw new Error(
+      `${path.relative(repoRoot, outputPath)} is stale; run the builder without --check`,
+    );
+  }
+  console.log(`Verified ${path.relative(repoRoot, outputPath)}`);
+} else {
+  await mkdir(path.dirname(outputPath), { recursive: true });
+  await writeFile(outputPath, serializedInventory);
+  console.log(`Wrote ${path.relative(repoRoot, outputPath)}`);
+}
