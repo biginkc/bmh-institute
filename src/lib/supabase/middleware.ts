@@ -3,7 +3,27 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import type { Database } from "./types";
 
+export function isPublicPath(path: string, nodeEnv = process.env.NODE_ENV) {
+  return (
+    path.startsWith("/login") ||
+    path.startsWith("/forgot-password") ||
+    path.startsWith("/reset-password") ||
+    path.startsWith("/invite") ||
+    path.startsWith("/auth") ||
+    path.startsWith("/api/webhooks") ||
+    path.startsWith("/api/cron") ||
+    (nodeEnv !== "production" && path.startsWith("/design-system"))
+  );
+}
+
 export async function updateSession(request: NextRequest) {
+  const path = request.nextUrl.pathname;
+
+  // The unlinked specimen is a local QC surface and must not require project credentials.
+  if (process.env.NODE_ENV !== "production" && path.startsWith("/design-system")) {
+    return NextResponse.next({ request });
+  }
+
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient<Database>(
@@ -31,17 +51,7 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const path = request.nextUrl.pathname;
-  const isPublic =
-    path.startsWith("/login") ||
-    path.startsWith("/forgot-password") ||
-    path.startsWith("/reset-password") ||
-    path.startsWith("/invite") ||
-    path.startsWith("/auth") ||
-    path.startsWith("/api/webhooks") ||
-    path.startsWith("/api/cron");
-
-  if (!user && !isPublic) {
+  if (!user && !isPublicPath(path)) {
     // Preserve the original path + query so the login flow can bounce the
     // user back after sign-in. Mirrors Sandra CRM's bounce behaviour.
     const url = request.nextUrl.clone();
