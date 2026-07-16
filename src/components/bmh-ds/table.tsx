@@ -92,13 +92,7 @@ export function Table(props: TableProps) {
               <tr
                 key={row[rowKey] ?? rowIndex}
                 onClick={onRowClick ? () => onRowClick(row) : undefined}
-                role={onRowClick ? "button" : undefined}
                 tabIndex={onRowClick ? 0 : undefined}
-                aria-label={
-                  onRowClick
-                    ? String(row[columns[0]?.key] ?? `Row ${rowIndex + 1}`)
-                    : undefined
-                }
                 onKeyDown={
                   onRowClick
                     ? (event) => {

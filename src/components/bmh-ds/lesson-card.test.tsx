@@ -10,6 +10,7 @@ describe("<LessonCard />", () => {
       <LessonCard title="Locked lesson" locked onClick={onClick} />,
     );
 
+    expect(container.firstElementChild).toHaveAttribute("aria-disabled", "true");
     fireEvent.click(container.firstElementChild as HTMLElement);
     expect(onClick).not.toHaveBeenCalled();
 

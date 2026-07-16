@@ -16,7 +16,10 @@ export interface ProgressBarProps {
 type ProgressBarRuntimeProps = ProgressBarProps &
   Omit<React.HTMLAttributes<HTMLDivElement>, keyof ProgressBarProps>;
 
-/** The signature golden-yellow lesson progress bar. */
+/**
+ * The signature golden-yellow lesson progress bar.
+ * Non-positive maximums render as zero progress instead of dividing by zero.
+ */
 export function ProgressBar(props: ProgressBarProps) {
   const {
     value = 0,
