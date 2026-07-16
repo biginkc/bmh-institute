@@ -16,10 +16,14 @@ describe("<Table />", () => {
       />,
     );
 
-    const row = screen.getByRole("row", { name: "Sofia Ruiz" });
+    const row = screen.getByRole("row", { name: /Sofia Ruiz/ });
     expect(row.tagName).toBe("TR");
 
     const openButton = screen.getByRole("button", { name: "Open Sofia Ruiz" });
+    await user.tab();
+    expect(openButton).toHaveFocus();
+    expect(openButton).toHaveStyle({ outline: "2px solid var(--action)" });
+
     await user.click(openButton);
     expect(onRowClick).toHaveBeenCalledWith({ id: 1, name: "Sofia Ruiz" });
 
