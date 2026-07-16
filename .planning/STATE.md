@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Internal Pilot Operations
 status: shipped
-stopped_at: DSF-04 implemented and browser-proven; PR #90 open for orchestrating review
-last_updated: "2026-07-16T01:37:57-05:00"
+stopped_at: DSF-05 implemented and browser-proven; PR #95 open for orchestrating review
+last_updated: "2026-07-16T02:50:25-05:00"
 last_activity: 2026-07-16
 progress:
   total_phases: 4
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-04-30)
 Phase: Complete
 Plan: Complete
 Status: v1.1 shipped; post-ship QA and workflow cleanup complete
-Last activity: 2026-07-16 - Completed quick task 260716-1nc: DSF-04 app shell and learner dashboard reskin. PR #90 is open and unmerged for orchestrating review.
+Last activity: 2026-07-16 - Completed quick task 260716-2ms: DSF-05 course page and content lesson viewer reskin. PR #95 is open and unmerged for orchestrating review.
 
 ## Performance Metrics
 
@@ -135,6 +135,7 @@ Recent decisions affecting current work:
 | 260715-vx9 | DSF-01 design-system foundation | 2026-07-15 | e6bc843 | Verified | [260715-vx9-dsf-01-port-exact-design-system-css-vari](./quick/260715-vx9-dsf-01-port-exact-design-system-css-vari/) |
 | 260716-0xa | DSF-03 auth screens reskin | 2026-07-16 | 712cb6f | Verified | [260716-0xa-dsf-03-auth-screens-reskin](./quick/260716-0xa-dsf-03-auth-screens-reskin/) |
 | 260716-1nc | DSF-04 app shell and learner dashboard reskin | 2026-07-16 | bc4b2ed | Verified | [260716-1nc-dsf-04-app-shell-and-learner-dashboard-d](./quick/260716-1nc-dsf-04-app-shell-and-learner-dashboard-d/) |
+| 260716-2ms | DSF-05 course page and lesson viewer reskin | 2026-07-16 | 49f340f | Verified | [260716-2ms-dsf-05-course-page-and-lesson-viewer-des](./quick/260716-2ms-dsf-05-course-page-and-lesson-viewer-des/) |
 
 ## Deferred Items
 

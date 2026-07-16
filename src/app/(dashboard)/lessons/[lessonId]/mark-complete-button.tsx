@@ -1,10 +1,10 @@
 "use client";
 
 import { useTransition } from "react";
-import { CheckCircle2 } from "lucide-react";
+import { Check, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/bmh-ds/button";
 
 import { markLessonComplete } from "./actions";
 
@@ -19,8 +19,8 @@ export function MarkCompleteButton({
 
   if (alreadyComplete) {
     return (
-      <div className="text-muted-foreground inline-flex items-center gap-2 text-sm">
-        <CheckCircle2 className="text-primary size-4" />
+      <div className="inline-flex items-center gap-2 rounded-full bg-[var(--success-soft)] px-3 py-2 font-[family-name:var(--font-body)] text-sm font-extrabold text-[var(--success)]">
+        <CheckCircle2 className="size-4" />
         Lesson complete
       </div>
     );
@@ -34,7 +34,7 @@ export function MarkCompleteButton({
           if (result.ok) {
             toast.success(
               result.blocksMarked === 0
-                ? "Lesson already recorded."
+                ? "Lesson already complete."
                 : "Lesson marked complete.",
             );
           } else {
@@ -43,8 +43,9 @@ export function MarkCompleteButton({
         });
       }}
       disabled={pending}
+      iconLeft={pending ? undefined : <Check aria-hidden="true" className="size-4" />}
     >
-      {pending ? "Marking..." : "Mark lesson complete"}
+      {pending ? "Marking..." : "Mark complete"}
     </Button>
   );
 }

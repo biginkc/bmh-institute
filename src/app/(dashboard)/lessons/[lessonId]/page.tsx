@@ -1,13 +1,15 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
 import {
   Card,
   CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Badge as BmhBadge } from "@/components/bmh-ds/badge";
+import { Card as BmhCard } from "@/components/bmh-ds/card";
 import { createClient } from "@/lib/supabase/server";
 import {
   ContentBlockRenderer,
@@ -24,6 +26,14 @@ import {
   type AssignmentDescriptor,
   type PriorSubmission,
 } from "./assignment-runner";
+import {
+  LessonChapters,
+} from "./lesson-chapters";
+import {
+  buildContentLessonNavigation,
+  type ContentLessonNavigation,
+  type NavigationLessonRow,
+} from "./lesson-navigation";
 
 export default async function LessonPage({
   params,
@@ -82,83 +92,118 @@ export default async function LessonPage({
   const moduleJoin = firstRow(lesson.modules);
   const courseJoin = firstRow(moduleJoin?.courses);
   const courseId = courseJoin?.id;
-  const courseTitle = courseJoin?.title;
+  const contentNavigationPromise =
+    lesson.lesson_type === "content" && courseId && user
+      ? loadContentLessonNavigation({
+          supabase,
+          courseId,
+          lessonId,
+          userId: user.id,
+        })
+      : Promise.resolve(null);
 
   return (
-    <main className="mx-auto w-full max-w-3xl flex-1 p-6 md:p-10">
-      <div className="mb-6">
+    <div
+      className="mx-auto w-full max-w-7xl flex-1 p-5 font-[family-name:var(--font-body)] md:p-8 lg:p-10"
+      data-bmh-lesson-page
+    >
+      <div>
         {courseId ? (
           <Link
             href={`/courses/${courseId}`}
-            className="text-muted-foreground hover:text-foreground text-xs"
+            className="inline-flex items-center gap-1.5 text-sm font-extrabold text-[var(--action)] underline-offset-4 hover:underline focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--action)]"
           >
-            ← {courseTitle ?? "Back to course"}
+            <ArrowLeft aria-hidden="true" className="size-4" />
+            Back to course
           </Link>
         ) : (
           <Link
             href="/dashboard"
-            className="text-muted-foreground hover:text-foreground text-xs"
+            className="inline-flex items-center gap-1.5 text-sm font-extrabold text-[var(--action)] underline-offset-4 hover:underline focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--action)]"
           >
-            ← Back to dashboard
+            <ArrowLeft aria-hidden="true" className="size-4" />
+            Back to dashboard
           </Link>
         )}
       </div>
 
-      <div className="mb-8">
-        <div className="mb-2 flex items-center gap-2">
-          <LessonTypePill type={lesson.lesson_type} />
-        </div>
-        <h1 className="text-2xl font-semibold">{lesson.title}</h1>
+      <header className="mb-8 mt-5 max-w-4xl">
+        <h1 className="font-[family-name:var(--font-display)] text-4xl leading-[1.05] font-extrabold tracking-[-0.025em] text-[var(--ink-900)]">
+          {lesson.title}
+        </h1>
         {lesson.description ? (
-          <p className="text-muted-foreground mt-1 text-sm">
+          <p className="mt-2 max-w-3xl text-base leading-relaxed font-semibold text-[var(--text-muted)]">
             {lesson.description}
           </p>
         ) : null}
-      </div>
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          <LessonTypePill type={lesson.lesson_type} />
+          {moduleJoin?.title ? (
+            <BmhBadge tone="neutral" size="sm">
+              {moduleJoin.title}
+            </BmhBadge>
+          ) : null}
+          {lesson.lesson_type === "content" ? (
+            <LessonPosition navigationPromise={contentNavigationPromise} />
+          ) : null}
+        </div>
+      </header>
 
       {!unlocked ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>Locked</CardTitle>
-            <CardDescription>
+        <div className="max-w-3xl">
+          <BmhCard padding="lg" tint>
+            <h2 className="font-[family-name:var(--font-display)] text-2xl font-bold text-[var(--ink-900)]">
+              Locked
+            </h2>
+            <p className="mt-2 text-sm font-semibold text-[var(--text-muted)]">
               You haven&apos;t completed the prerequisite yet. Go back and finish earlier lessons first.
-            </CardDescription>
-          </CardHeader>
-        </Card>
+            </p>
+          </BmhCard>
+        </div>
       ) : lesson.lesson_type === "content" ? (
         <ContentLessonBody
           lessonId={lessonId}
           alreadyComplete={alreadyComplete}
+          navigationPromise={contentNavigationPromise}
         />
       ) : lesson.lesson_type === "quiz" ? (
-        <QuizLessonBody
-          quizId={lesson.quiz_id}
-          lessonId={lessonId}
-          backHref={courseId ? `/courses/${courseId}` : "/dashboard"}
-        />
+        <div className="mx-auto max-w-3xl">
+          <QuizLessonBody
+            quizId={lesson.quiz_id}
+            lessonId={lessonId}
+            backHref={courseId ? `/courses/${courseId}` : "/dashboard"}
+          />
+        </div>
       ) : (
-        <AssignmentLessonBody
-          assignmentId={lesson.assignment_id}
-          lessonId={lessonId}
-        />
+        <div className="mx-auto max-w-3xl">
+          <AssignmentLessonBody
+            assignmentId={lesson.assignment_id}
+            lessonId={lessonId}
+          />
+        </div>
       )}
-    </main>
+    </div>
   );
 }
 
 async function ContentLessonBody({
   lessonId,
   alreadyComplete,
+  navigationPromise,
 }: {
   lessonId: string;
   alreadyComplete: boolean;
+  navigationPromise: Promise<ContentLessonNavigation | null>;
 }) {
   const supabase = await createClient();
-  const { data: blocks } = await supabase
-    .from("content_blocks")
-    .select("id, block_type, content, sort_order, is_required_for_completion")
-    .eq("lesson_id", lessonId)
-    .order("sort_order");
+  const [{ data: blocks }, navigation] = await Promise.all([
+    supabase
+      .from("content_blocks")
+      .select("id, block_type, content, sort_order, is_required_for_completion")
+      .eq("lesson_id", lessonId)
+      .order("sort_order"),
+    navigationPromise,
+  ]);
 
   const rows = (blocks ?? []) as ContentBlock[];
   const enriched = await attachRolePlayEmbeds(
@@ -169,30 +214,191 @@ async function ContentLessonBody({
 
   if (enriched.length === 0) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Empty lesson</CardTitle>
-          <CardDescription>No content has been added yet.</CardDescription>
-        </CardHeader>
-      </Card>
+      <div className="max-w-3xl">
+        <BmhCard padding="lg">
+          <h2 className="font-[family-name:var(--font-display)] text-2xl font-bold text-[var(--ink-900)]">
+            Empty lesson
+          </h2>
+          <p className="mt-2 text-sm font-semibold text-[var(--text-muted)]">
+            No content has been added yet.
+          </p>
+        </BmhCard>
+      </div>
     );
   }
 
   return (
-    <>
-      <div className="flex flex-col gap-4">
-        {enriched.map((block) => (
-          <ContentBlockRenderer key={block.id} block={block} />
-        ))}
+    <div
+      className={
+        navigation
+          ? "grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_330px]"
+          : "max-w-4xl"
+      }
+    >
+      <div className="min-w-0">
+        <div className="flex flex-col gap-5">
+          {enriched.map((block) => (
+            <ContentBlockRenderer key={block.id} block={block} />
+          ))}
+        </div>
+
+        {navigation ? (
+          <nav aria-label="Lesson navigation" className="mt-8 flex flex-wrap gap-3">
+            {navigation.previous ? (
+              <LessonNavigationLink
+                href={`/lessons/${navigation.previous.id}`}
+                label="Previous"
+                title={navigation.previous.title}
+                direction="previous"
+              />
+            ) : null}
+            {navigation.next ? (
+              <LessonNavigationLink
+                href={`/lessons/${navigation.next.id}`}
+                label="Next lesson"
+                title={navigation.next.title}
+                direction="next"
+              />
+            ) : null}
+          </nav>
+        ) : null}
+
+        <div className="mt-8 flex flex-col gap-4 border-t border-[var(--border-hairline)] pt-6 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm font-bold text-[var(--text-muted)]">
+            {alreadyComplete
+              ? "Nice. This lesson is complete."
+              : "Mark this lesson complete when you are done."}
+          </p>
+          <MarkCompleteButton
+            lessonId={lessonId}
+            alreadyComplete={alreadyComplete}
+          />
+        </div>
       </div>
-      <div className="border-border mt-8 flex items-center justify-end border-t pt-6">
-        <MarkCompleteButton
-          lessonId={lessonId}
-          alreadyComplete={alreadyComplete}
+
+      {navigation ? (
+        <LessonChapters
+          chapters={navigation.chapters}
+          completedCount={navigation.completedCount}
         />
-      </div>
-    </>
+      ) : null}
+    </div>
   );
+}
+
+async function LessonPosition({
+  navigationPromise,
+}: {
+  navigationPromise: Promise<ContentLessonNavigation | null>;
+}) {
+  const navigation = await navigationPromise;
+  if (!navigation) return null;
+
+  return (
+    <span className="ml-1 text-xs font-extrabold text-[var(--text-muted)]">
+      Chapter {navigation.chapterIndex} of {navigation.chapters.length}
+    </span>
+  );
+}
+
+function LessonNavigationLink({
+  href,
+  label,
+  title,
+  direction,
+}: {
+  href: string;
+  label: string;
+  title: string;
+  direction: "previous" | "next";
+}) {
+  const primary = direction === "next";
+  return (
+    <Link
+      href={href}
+      className={`inline-flex min-h-11 items-center gap-2 rounded-[var(--bmh-radius-md)] border-[2.5px] px-4 font-extrabold transition-colors focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)] ${
+        primary
+          ? "border-transparent bg-[var(--action)] text-white shadow-[var(--bmh-shadow-sm)] hover:bg-[var(--action-hover)]"
+          : "border-[var(--ink-900)] bg-[var(--paper)] text-[var(--ink-900)] hover:bg-[var(--ink-050)]"
+      }`}
+      aria-label={`${label}: ${title}`}
+    >
+      {direction === "previous" ? (
+        <ChevronLeft aria-hidden="true" className="size-4" />
+      ) : null}
+      {label}
+      {direction === "next" ? (
+        <ChevronRight aria-hidden="true" className="size-4" />
+      ) : null}
+    </Link>
+  );
+}
+
+type NavigationModuleRow = {
+  id: string;
+  sort_order: number;
+  lessons: NavigationLessonRow[] | null;
+};
+
+async function loadContentLessonNavigation({
+  supabase,
+  courseId,
+  lessonId,
+  userId,
+}: {
+  supabase: Awaited<ReturnType<typeof createClient>>;
+  courseId: string;
+  lessonId: string;
+  userId: string;
+}): Promise<ContentLessonNavigation | null> {
+  const [modulesResult, completionsResult] = await Promise.all([
+    supabase
+      .from("modules")
+      .select(
+        "id, sort_order, lessons(id, title, lesson_type, sort_order, prerequisite_lesson_id)",
+      )
+      .eq("course_id", courseId)
+      .order("sort_order"),
+    supabase
+      .from("user_lesson_completions")
+      .select("lesson_id")
+      .eq("user_id", userId),
+  ]);
+
+  const moduleRows = (modulesResult.data ?? []) as NavigationModuleRow[];
+  const lessons = [...moduleRows]
+    .sort((left, right) => left.sort_order - right.sort_order)
+    .flatMap((module) =>
+      [...(module.lessons ?? [])].sort(
+        (left, right) => left.sort_order - right.sort_order,
+      ),
+    );
+  const completedLessonIds = new Set(
+    (completionsResult.data ?? []).map((completion) =>
+      String(completion.lesson_id),
+    ),
+  );
+  const unlockResults = await Promise.all(
+    lessons.map(async (lesson) => {
+      const { data } = await supabase.rpc("fn_lesson_is_unlocked", {
+        p_user_id: userId,
+        p_lesson_id: lesson.id,
+      });
+      return [lesson.id, data === true] as const;
+    }),
+  );
+  const unlockedLessonIds = new Set(
+    unlockResults
+      .filter(([, unlocked]) => unlocked)
+      .map(([unlockedLessonId]) => unlockedLessonId),
+  );
+
+  return buildContentLessonNavigation({
+    lessons,
+    lessonId,
+    completedLessonIds,
+    unlockedLessonIds,
+  });
 }
 
 async function attachRolePlayEmbeds(
@@ -456,9 +662,25 @@ async function AssignmentLessonBody({
 }
 
 function LessonTypePill({ type }: { type: string }) {
-  if (type === "quiz") return <Badge variant="outline">Quiz</Badge>;
-  if (type === "assignment") return <Badge variant="outline">Assignment</Badge>;
-  return <Badge variant="secondary">Lesson</Badge>;
+  if (type === "quiz") {
+    return (
+      <BmhBadge tone="blue" size="sm">
+        Quiz
+      </BmhBadge>
+    );
+  }
+  if (type === "assignment") {
+    return (
+      <BmhBadge tone="orange" size="sm">
+        Assignment
+      </BmhBadge>
+    );
+  }
+  return (
+    <BmhBadge tone="blue" size="sm">
+      Lesson
+    </BmhBadge>
+  );
 }
 
 function firstRow<T>(value: T | T[] | null | undefined): T | null {
