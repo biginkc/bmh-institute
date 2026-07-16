@@ -4,6 +4,7 @@ import {
   copyFile,
   lstat,
   mkdir,
+  open,
   readFile,
   realpath,
   rename,
@@ -184,7 +185,10 @@ export async function stageManifestAssets(options: {
   };
 }
 
-export async function cleanupStagingRoot(stagingRoot: string) {
+export async function cleanupStagingRoot(
+  stagingRoot: string,
+  hooks: { beforeQuarantineRename?: () => Promise<void> } = {},
+) {
   const requestedRoot = resolve(stagingRoot);
   const rootStat = await lstatOrNull(requestedRoot);
   if (!rootStat) {
@@ -200,7 +204,24 @@ export async function cleanupStagingRoot(stagingRoot: string) {
   }
   const { canonicalRoot, marker } = await readAndValidateMarker(requestedRoot);
   await assertStagingIdentity(canonicalRoot, marker);
-  await rm(canonicalRoot, { recursive: true, force: false });
+  const quarantinePath = resolve(
+    dirname(canonicalRoot),
+    `.${basename(canonicalRoot)}.bmh-quarantine-${randomUUID()}`,
+  );
+  await hooks.beforeQuarantineRename?.();
+  await rename(canonicalRoot, quarantinePath);
+  const quarantined = await lstat(quarantinePath);
+  if (
+    quarantined.isSymbolicLink() ||
+    !quarantined.isDirectory() ||
+    String(quarantined.dev) !== marker.staging_device ||
+    String(quarantined.ino) !== marker.staging_inode
+  ) {
+    throw new Error(
+      `Refusing cleanup: quarantined staging root identity changed. Preserved without deletion: ${quarantinePath}`,
+    );
+  }
+  await rm(quarantinePath, { recursive: true, force: false });
   return {
     schema_version: 1 as const,
     tool: OWNER,
@@ -520,33 +541,44 @@ export async function createVerifiedFileSnapshot(options: {
       await copyFile(options.source, options.destination, fsConstants.COPYFILE_EXCL);
     }
 
-    const [sourceStat, destinationEntry, destinationStat] = await Promise.all([
-      stat(options.source),
-      lstat(options.destination),
-      stat(options.destination),
-    ]);
+    const sourceStat = await stat(options.source);
+    const destinationEntry = await lstat(options.destination);
     if (destinationEntry.isSymbolicLink() || !destinationEntry.isFile()) {
       throw new Error(`Snapshot destination is not a regular file: ${options.destination}`);
     }
-    if (sourceStat.dev === destinationStat.dev && sourceStat.ino === destinationStat.ino) {
-      throw new Error(`Snapshot destination aliases its source: ${options.destination}`);
-    }
+    const handle = await open(
+      options.destination,
+      fsConstants.O_RDONLY | (fsConstants.O_NOFOLLOW ?? 0),
+    );
+    try {
+      const destinationStat = await handle.stat();
+      if (!destinationStat.isFile()) {
+        throw new Error(`Snapshot destination is not a regular file: ${options.destination}`);
+      }
+      if (sourceStat.dev === destinationStat.dev && sourceStat.ino === destinationStat.ino) {
+        throw new Error(`Snapshot destination aliases its source: ${options.destination}`);
+      }
 
-    const checksum = await sha256File(options.destination);
-    if (
-      (options.expectedSize !== undefined &&
-        options.expectedSize !== null &&
-        destinationStat.size !== options.expectedSize) ||
-      (options.expectedChecksum && checksum !== options.expectedChecksum)
-    ) {
-      throw new Error(`Snapshot bytes do not match the expected integrity: ${options.destination}`);
+      const checksum = await sha256FileHandle(handle, destinationStat.size);
+      if (
+        (options.expectedSize !== undefined &&
+          options.expectedSize !== null &&
+          destinationStat.size !== options.expectedSize) ||
+        (options.expectedChecksum && checksum !== options.expectedChecksum)
+      ) {
+        throw new Error(`Snapshot bytes do not match the expected integrity: ${options.destination}`);
+      }
+      return {
+        path: options.destination,
+        method,
+        size: destinationStat.size,
+        checksum_sha256: checksum,
+        device: String(destinationStat.dev),
+        inode: String(destinationStat.ino),
+      };
+    } finally {
+      await handle.close();
     }
-    return {
-      path: options.destination,
-      method,
-      size: destinationStat.size,
-      checksum_sha256: checksum,
-    };
   } catch (error) {
     await rm(options.destination, { force: true });
     throw error;
@@ -694,6 +726,25 @@ export function sha256File(path: string) {
     stream.on("data", (chunk) => hash.update(chunk));
     stream.on("end", () => resolveHash(hash.digest("hex")));
   });
+}
+
+async function sha256FileHandle(
+  handle: Awaited<ReturnType<typeof open>>,
+  size: number,
+) {
+  const hash = createHash("sha256");
+  const buffer = Buffer.allocUnsafe(Math.min(1024 * 1024, Math.max(size, 1)));
+  let position = 0;
+  while (position < size) {
+    const length = Math.min(buffer.length, size - position);
+    const { bytesRead } = await handle.read(buffer, 0, length, position);
+    if (bytesRead === 0) {
+      throw new Error("Snapshot ended before its verified size.");
+    }
+    hash.update(buffer.subarray(0, bytesRead));
+    position += bytesRead;
+  }
+  return hash.digest("hex");
 }
 
 function isNodeError(error: unknown): error is NodeJS.ErrnoException {

@@ -5,6 +5,29 @@ import type { CourseImportAsset } from "./manifest";
 import { findRemoteAssetProblems } from "./asset-transfer";
 
 describe("course import remote asset verification", () => {
+  it("makes no storage calls for assets that are not approved", async () => {
+    let calls = 0;
+    const bucket = {
+      async info() {
+        calls += 1;
+        throw new Error("unapproved assets must not reach storage");
+      },
+      download() {
+        calls += 1;
+        throw new Error("unapproved assets must not reach storage");
+      },
+    };
+    const approved = approvedAsset(Buffer.from("approved"));
+
+    await expect(
+      findRemoteAssetProblems(bucket, [
+        { ...approved, source_key: "held", approval_status: "hold" },
+        { ...approved, source_key: "missing", approval_status: "missing" },
+      ]),
+    ).resolves.toEqual([]);
+    expect(calls).toBe(0);
+  });
+
   it("rejects matching metadata when the exact remote bytes differ", async () => {
     const expected = Buffer.from("approved");
     const remote = Buffer.from("tampered");

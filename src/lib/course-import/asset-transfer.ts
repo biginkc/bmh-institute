@@ -3,10 +3,15 @@ import { createHash } from "node:crypto";
 import type { CourseImportAsset } from "./manifest";
 
 export type RemoteAssetProblem = { path: string; problem: string };
+export type RemoteStorageError = {
+  message: string;
+  statusCode?: string | number;
+  status?: string | number;
+};
 
 type RemoteDownloadResult<T> = {
   data: T | null;
-  error: { message: string } | null;
+  error: RemoteStorageError | null;
 };
 
 type RemoteDownloadRequest = PromiseLike<RemoteDownloadResult<Blob>> & {
@@ -16,7 +21,7 @@ type RemoteDownloadRequest = PromiseLike<RemoteDownloadResult<Blob>> & {
 export type RemoteAssetBucket = {
   info(path: string): Promise<{
     data: { size?: number; metadata?: Record<string, unknown> | null } | null;
-    error: { message: string } | null;
+    error: RemoteStorageError | null;
   }>;
   download(path: string): RemoteDownloadRequest;
 };
@@ -27,7 +32,7 @@ export async function findRemoteAssetProblems(
 ) {
   const problems: RemoteAssetProblem[] = [];
   for (const asset of assets) {
-    if (asset.approval_status === "missing") continue;
+    if (asset.approval_status !== "approved") continue;
     const { data, error } = await bucket.info(asset.storage_path);
     if (error || !data) {
       problems.push({ path: asset.storage_path, problem: "missing" });

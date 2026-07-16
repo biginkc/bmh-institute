@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { applyImportPlan, reconcileImportPlan, rollbackImportPlan, type CourseImportAdapter } from "./execute";
+import {
+  POSTGREST_ID_BATCH_SIZE,
+  applyImportPlan,
+  reconcileImportPlan,
+  rollbackImportPlan,
+  type CourseImportAdapter,
+} from "./execute";
 import { buildImportPlan } from "./operations";
 import { validCourseManifest } from "./test-fixtures";
 
@@ -49,5 +55,44 @@ describe("course import execution", () => {
     expect(deletedIds).toEqual(manifestIds);
     expect(recorder.deletes[0].table).toBe("answer_options");
     expect(recorder.deletes.at(-1)?.table).toBe("role_groups");
+  });
+
+  it("batches reconcile and rollback filters for more than 1,292 IDs", async () => {
+    const base = buildImportPlan(validCourseManifest());
+    const operations = Array.from({ length: 1_293 }, (_, index) => {
+      const id = `00000000-0000-4000-8000-${String(index).padStart(12, "0")}`;
+      return {
+        table: "answer_options" as const,
+        action: "upsert" as const,
+        id,
+        row: { id },
+      };
+    });
+    const plan = { ...base, operations };
+    const readBatches: number[] = [];
+    const deleteBatches: number[] = [];
+    const adapter: CourseImportAdapter = {
+      async upsert() {},
+      async readRows(_table, ids) {
+        readBatches.push(ids.length);
+        return new Map(ids.map((id) => [id, { id }]));
+      },
+      async deleteByIds(_table, ids) {
+        deleteBatches.push(ids.length);
+      },
+      async assertSafeRollback() {},
+    };
+
+    await expect(reconcileImportPlan(plan, adapter)).resolves.toMatchObject({
+      checked: 1_293,
+      missing: [],
+      mismatches: [],
+    });
+    await rollbackImportPlan(plan, adapter);
+
+    expect(Math.max(...readBatches)).toBeLessThanOrEqual(POSTGREST_ID_BATCH_SIZE);
+    expect(Math.max(...deleteBatches)).toBeLessThanOrEqual(POSTGREST_ID_BATCH_SIZE);
+    expect(readBatches).toHaveLength(13);
+    expect(deleteBatches).toHaveLength(13);
   });
 });

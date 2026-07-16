@@ -3,10 +3,17 @@
 import { useRef, useState } from "react";
 import { Upload, X } from "lucide-react";
 import { toast } from "sonner";
-import { Upload as TusUpload } from "tus-js-client";
+import { defaultOptions as tusDefaultOptions, Upload as TusUpload } from "tus-js-client";
 
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
+import {
+  ValidatingTusUrlStorage,
+  assertSafeTusUrl,
+  createScopedTusFingerprint,
+  sha256Blob,
+  supabaseResumableEndpoint,
+} from "@/lib/storage/tus-safety";
 import { cn } from "@/lib/utils";
 
 export type UploadedFile = {
@@ -157,7 +164,7 @@ export function FileUpload({
   );
 }
 
-function uploadResumably({
+async function uploadResumably({
   file,
   bucket,
   path,
@@ -174,10 +181,14 @@ function uploadResumably({
 }) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   if (!supabaseUrl) return Promise.reject(new Error("NEXT_PUBLIC_SUPABASE_URL is not configured."));
+  const endpoint = supabaseResumableEndpoint(supabaseUrl);
+  const checksum = await sha256Blob(file);
+  const fingerprint = createScopedTusFingerprint({ endpoint, bucket, path, checksum });
+  const urlStorage = new ValidatingTusUrlStorage(tusDefaultOptions.urlStorage, endpoint);
 
   return new Promise<void>((resolve, reject) => {
     const upload = new TusUpload(file, {
-      endpoint: resumableEndpoint(supabaseUrl),
+      endpoint,
       retryDelays: [0, 3_000, 5_000, 10_000, 20_000],
       headers: {
         authorization: `Bearer ${accessToken}`,
@@ -185,14 +196,18 @@ function uploadResumably({
       },
       uploadDataDuringCreation: true,
       removeFingerprintOnSuccess: true,
-      fingerprint: async () => `bmh:${bucket}:${path}`,
+      storeFingerprintForResuming: true,
+      fingerprint: async () => fingerprint,
+      urlStorage,
       chunkSize: TUS_CHUNK_BYTES,
       metadata: {
         bucketName: bucket,
         objectName: path,
         contentType,
         cacheControl: "3600",
+        metadata: JSON.stringify({ sha256: checksum }),
       },
+      onBeforeRequest: (request) => assertSafeTusUrl(request.getURL(), endpoint),
       onProgress: (uploaded, total) => onProgress(total > 0 ? Math.round((uploaded / total) * 100) : 0),
       onError: reject,
       onSuccess: () => resolve(),
@@ -203,14 +218,4 @@ function uploadResumably({
       upload.start();
     }, reject);
   });
-}
-
-function resumableEndpoint(supabaseUrl: string) {
-  const url = new URL(supabaseUrl);
-  const projectId = url.hostname.endsWith(".supabase.co")
-    ? url.hostname.slice(0, -".supabase.co".length)
-    : null;
-  return projectId
-    ? `${url.protocol}//${projectId}.storage.supabase.co/storage/v1/upload/resumable`
-    : `${supabaseUrl.replace(/\/$/, "")}/storage/v1/upload/resumable`;
 }

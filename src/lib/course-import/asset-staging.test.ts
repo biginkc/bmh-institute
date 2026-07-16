@@ -5,6 +5,7 @@ import {
   mkdir,
   mkdtemp,
   readFile,
+  readdir,
   realpath,
   rename,
   rm,
@@ -339,6 +340,35 @@ describe("course asset composite staging", () => {
     await expect(readFile(join(staging, "unrelated-important.txt"), "utf8")).resolves.toBe(
       "preserve me",
     );
+  });
+
+  it("quarantines but never deletes a directory swapped in after cleanup validation", async () => {
+    const root = await makeTempRoot();
+    const source = join(root, "source");
+    const staging = join(root, "staging");
+    const capturedOwnedTree = join(root, "captured-owned-tree");
+    await mkdir(source);
+    const file = await put(source, "assets/file.bin", "stable");
+    await run(manifestForAssets([asset("file", file.path, file.bytes)]), [source], "stage", staging);
+
+    await expect(
+      cleanupStagingRoot(staging, {
+        async beforeQuarantineRename() {
+          await rename(staging, capturedOwnedTree);
+          await mkdir(staging);
+          await writeFile(join(staging, "unrelated-important.txt"), "preserve me");
+        },
+      }),
+    ).rejects.toThrow(/preserved without deletion/i);
+
+    await expect(readFile(join(capturedOwnedTree, file.path), "utf8")).resolves.toBe("stable");
+    const quarantine = (await readdir(root)).find((entry) =>
+      entry.startsWith(".staging.bmh-quarantine-"),
+    );
+    expect(quarantine).toBeDefined();
+    await expect(
+      readFile(join(root, quarantine!, "unrelated-important.txt"), "utf8"),
+    ).resolves.toBe("preserve me");
   });
 });
 

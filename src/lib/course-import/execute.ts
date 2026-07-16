@@ -1,5 +1,7 @@
 import type { ImportPlan, ImportTable } from "./operations";
 
+export const POSTGREST_ID_BATCH_SIZE = 100;
+
 export interface CourseImportAdapter {
   upsert(table: ImportTable, row: Record<string, unknown>): Promise<void>;
   readRows(table: ImportTable, ids: string[]): Promise<Map<string, Record<string, unknown>>>;
@@ -33,7 +35,11 @@ export async function reconcileImportPlan(plan: ImportPlan, adapter: CourseImpor
   const mismatches: Array<{ table: ImportTable; id: string; fields: string[] }> = [];
   let checked = 0;
   for (const [table, ids] of groupPlanIds(plan).entries()) {
-    const existing = await adapter.readRows(table, ids);
+    const existing = new Map<string, Record<string, unknown>>();
+    for (const batch of batchIds(ids)) {
+      const rows = await adapter.readRows(table, batch);
+      rows.forEach((row, id) => existing.set(id, row));
+    }
     checked += ids.length;
     for (const id of ids) {
       const actual = existing.get(id);
@@ -56,7 +62,9 @@ export async function rollbackImportPlan(plan: ImportPlan, adapter: CourseImport
   const grouped = groupPlanIds(plan);
   for (const table of ROLLBACK_ORDER) {
     const ids = grouped.get(table) ?? [];
-    if (ids.length > 0) await adapter.deleteByIds(table, ids);
+    for (const batch of batchIds(ids)) {
+      await adapter.deleteByIds(table, batch);
+    }
   }
 }
 
@@ -79,4 +87,12 @@ function groupPlanIds(plan: ImportPlan) {
     grouped.set(operation.table, ids);
   }
   return grouped;
+}
+
+export function batchIds(ids: string[]) {
+  const batches: string[][] = [];
+  for (let index = 0; index < ids.length; index += POSTGREST_ID_BATCH_SIZE) {
+    batches.push(ids.slice(index, index + POSTGREST_ID_BATCH_SIZE));
+  }
+  return batches;
 }
