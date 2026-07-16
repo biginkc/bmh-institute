@@ -32,6 +32,7 @@ from pypdf.generic import (
     ContentStream,
     DecodedStreamObject,
     DictionaryObject,
+    IndirectObject,
     NameObject,
     NullObject,
     NumberObject,
@@ -674,11 +675,23 @@ def apply_accessibility_structure(
     document_id = hashlib.sha256(f"bmh-guide:{slot:02d}:{title}:accessible-v1".encode()).digest()[:16]
     writer._ID = ArrayObject([ByteStringObject(document_id), ByteStringObject(document_id)])
     writer.write(output_path)
-    validate_accessible_pdf(output_path, registry)
+    validate_accessible_pdf(output_path)
 
 
-def validate_accessible_pdf(output_path: Path, registry: StructureRegistry) -> None:
-    """Fail closed if any visible text escaped semantics/artifact marking."""
+def _indirect_key(value: object, context: str) -> tuple[int, int]:
+    if not isinstance(value, IndirectObject):
+        raise RuntimeError(f"{context} must be an indirect object reference")
+    return value.idnum, value.generation
+
+
+def validate_accessible_pdf(output_path: Path) -> None:
+    """Fail closed unless the physical content and logical structure agree.
+
+    This deliberately validates the serialized PDF rather than trusting the
+    in-memory registry that produced it. A tagged marker alone is not useful if
+    the structure tree, ParentTree, page mapping, or marked-content roles have
+    drifted apart.
+    """
 
     reader = PdfReader(output_path)
     if reader.pdf_header != "%PDF-1.7":
@@ -690,6 +703,109 @@ def validate_accessible_pdf(output_path: Path, registry: StructureRegistry) -> N
         raise RuntimeError(f"{output_path.name} is not marked as tagged")
     if "/StructTreeRoot" not in root:
         raise RuntimeError(f"{output_path.name} has no structure tree")
+
+    structure_root_ref = root.raw_get("/StructTreeRoot")
+    structure_root_key = _indirect_key(
+        structure_root_ref,
+        f"{output_path.name} structure root",
+    )
+    structure_root = structure_root_ref.get_object()
+    if structure_root.get("/Type") != "/StructTreeRoot":
+        raise RuntimeError(f"{output_path.name} structure root has the wrong type")
+
+    document_ref = structure_root.raw_get("/K")
+    _indirect_key(document_ref, f"{output_path.name} document element")
+    page_indices = {
+        _indirect_key(page.indirect_reference, f"{output_path.name} page {index + 1}"): index
+        for index, page in enumerate(reader.pages)
+    }
+    reachable: set[tuple[int, int]] = set()
+    leaves: dict[tuple[int, int], tuple[IndirectObject, str]] = {}
+    logical_leaf_order: list[tuple[int, int]] = []
+
+    def visit_structure(ref: object, expected_parent: object, *, top_level: bool = False) -> None:
+        ref_key = _indirect_key(ref, f"{output_path.name} structure element")
+        if ref_key in reachable:
+            raise RuntimeError(
+                f"{output_path.name} structure element {ref_key} is duplicated or cyclic",
+            )
+        reachable.add(ref_key)
+        element = ref.get_object()
+        if element.get("/Type") != "/StructElem":
+            raise RuntimeError(f"{output_path.name} structure element {ref_key} has the wrong type")
+        parent_key = _indirect_key(
+            element.raw_get("/P") if "/P" in element else None,
+            f"{output_path.name} structure element {ref_key} parent",
+        )
+        expected_parent_key = (
+            structure_root_key
+            if top_level
+            else _indirect_key(expected_parent, f"{output_path.name} expected parent")
+        )
+        if parent_key != expected_parent_key:
+            raise RuntimeError(
+                f"{output_path.name} structure element {ref_key} has the wrong /P backlink",
+            )
+
+        role = str(element.get("/S", ""))
+        if not role.startswith("/"):
+            raise RuntimeError(f"{output_path.name} structure element {ref_key} has no valid /S role")
+        role = role[1:]
+        if top_level and role != "Document":
+            raise RuntimeError(f"{output_path.name} top-level structure element is not /Document")
+
+        raw_k = element.raw_get("/K") if "/K" in element else None
+        has_page = "/Pg" in element
+        is_leaf = isinstance(raw_k, (int, NumberObject))
+        if has_page != is_leaf:
+            raise RuntimeError(
+                f"{output_path.name} structure element {ref_key} must have leaf /Pg and integer /K together",
+            )
+        if is_leaf:
+            page_ref = element.raw_get("/Pg")
+            page_key = _indirect_key(page_ref, f"{output_path.name} leaf {ref_key} /Pg")
+            if page_key not in page_indices:
+                raise RuntimeError(f"{output_path.name} leaf {ref_key} points to an unknown page")
+            page_index = page_indices[page_key]
+            mcid = int(raw_k)
+            leaf_key = (page_index, mcid)
+            if mcid < 0 or leaf_key in leaves:
+                raise RuntimeError(
+                    f"{output_path.name} has duplicate or invalid leaf mapping {leaf_key}",
+                )
+            leaves[leaf_key] = (ref, role)
+            logical_leaf_order.append(leaf_key)
+            return
+
+        if not isinstance(raw_k, ArrayObject) or not raw_k:
+            raise RuntimeError(
+                f"{output_path.name} grouping element {ref_key} must have a non-empty /K array",
+            )
+        for child_ref in raw_k:
+            visit_structure(child_ref, ref)
+
+    visit_structure(document_ref, structure_root_ref, top_level=True)
+
+    if "/ParentTree" not in structure_root:
+        raise RuntimeError(f"{output_path.name} structure root has no ParentTree")
+    parent_tree_ref = structure_root.raw_get("/ParentTree")
+    _indirect_key(parent_tree_ref, f"{output_path.name} ParentTree")
+    parent_tree = parent_tree_ref.get_object()
+    numbers = parent_tree.get("/Nums")
+    if not isinstance(numbers, ArrayObject) or len(numbers) % 2:
+        raise RuntimeError(f"{output_path.name} ParentTree has an invalid /Nums array")
+    parent_entries: dict[int, ArrayObject] = {}
+    previous_key = -1
+    for index in range(0, len(numbers), 2):
+        key = int(numbers[index])
+        value = numbers[index + 1]
+        if key <= previous_key or not isinstance(value, ArrayObject):
+            raise RuntimeError(f"{output_path.name} ParentTree keys are not ordered unique arrays")
+        previous_key = key
+        parent_entries[key] = value
+
+    page_parent_keys: list[int] = []
+    physical_leaf_order: list[tuple[int, int]] = []
 
     for page_index, page in enumerate(reader.pages):
         if page.get("/Tabs") != "/S":
@@ -703,17 +819,49 @@ def validate_accessible_pdf(output_path: Path, registry: StructureRegistry) -> N
             if "/ToUnicode" not in font:
                 raise RuntimeError(f"{output_path.name} page {page_index + 1} font {font_name} has no Unicode map")
 
+        if "/StructParents" not in page:
+            raise RuntimeError(f"{output_path.name} page {page_index + 1} has no /StructParents key")
+        parent_key = int(page["/StructParents"])
+        if parent_key in page_parent_keys:
+            raise RuntimeError(f"{output_path.name} reuses page /StructParents key {parent_key}")
+        page_parent_keys.append(parent_key)
+        parent_array = parent_entries.get(parent_key)
+        if parent_array is None:
+            raise RuntimeError(
+                f"{output_path.name} page {page_index + 1} has no matching ParentTree entry",
+            )
+
         marked_stack: list[tuple[str, int | None]] = []
         seen_mcids: list[int] = []
+        seen_tags: dict[int, str] = {}
         content = ContentStream(page.get_contents(), reader)
         for operands, raw_operator in content.operations:
             operator = raw_operator.decode("ascii")
             if operator == "BDC":
+                if len(operands) != 2 or not isinstance(operands[1], DictionaryObject):
+                    raise RuntimeError(
+                        f"{output_path.name} page {page_index + 1} has malformed semantic marked content",
+                    )
                 properties = operands[1]
+                if "/MCID" not in properties:
+                    raise RuntimeError(
+                        f"{output_path.name} page {page_index + 1} has BDC content without an /MCID",
+                    )
                 mcid = int(properties["/MCID"])
+                tag = str(operands[0]).removeprefix("/")
+                if mcid in seen_tags:
+                    raise RuntimeError(
+                        f"{output_path.name} page {page_index + 1} repeats MCID {mcid}",
+                    )
                 marked_stack.append(("semantic", mcid))
                 seen_mcids.append(mcid)
+                seen_tags[mcid] = tag
+                physical_leaf_order.append((page_index, mcid))
             elif operator == "BMC":
+                if len(operands) != 1 or str(operands[0]) != "/Artifact":
+                    raise RuntimeError(
+                        f"{output_path.name} page {page_index + 1} has non-semantic content not marked /Artifact",
+                    )
                 marked_stack.append(("artifact", None))
             elif operator == "EMC":
                 if not marked_stack:
@@ -723,11 +871,42 @@ def validate_accessible_pdf(output_path: Path, registry: StructureRegistry) -> N
                 raise RuntimeError(f"{output_path.name} page {page_index + 1} exposes untagged visible text")
         if marked_stack:
             raise RuntimeError(f"{output_path.name} page {page_index + 1} has unclosed marked content")
-        expected = list(range(registry.page_mcid_counts.get(page_index, 0)))
+        expected = list(range(len(seen_mcids)))
         if seen_mcids != expected:
             raise RuntimeError(
                 f"{output_path.name} page {page_index + 1} MCIDs are not contiguous: {seen_mcids} != {expected}",
             )
+        if len(parent_array) != len(seen_mcids):
+            raise RuntimeError(
+                f"{output_path.name} page {page_index + 1} ParentTree array length does not match its MCIDs",
+            )
+        for mcid, element_ref in enumerate(parent_array):
+            leaf = leaves.get((page_index, mcid))
+            if leaf is None:
+                raise RuntimeError(
+                    f"{output_path.name} page {page_index + 1} MCID {mcid} has no reachable structure leaf",
+                )
+            if _indirect_key(element_ref, f"{output_path.name} ParentTree leaf") != _indirect_key(
+                leaf[0],
+                f"{output_path.name} structure leaf",
+            ):
+                raise RuntimeError(
+                    f"{output_path.name} page {page_index + 1} MCID {mcid} ParentTree reference is wrong",
+                )
+            if seen_tags.get(mcid) != leaf[1]:
+                raise RuntimeError(
+                    f"{output_path.name} page {page_index + 1} MCID {mcid} BDC tag does not match /S role",
+                )
+
+    if set(parent_entries) != set(page_parent_keys):
+        raise RuntimeError(f"{output_path.name} ParentTree has missing or orphaned page entries")
+    next_key = int(structure_root.get("/ParentTreeNextKey", -1))
+    if next_key != (max(page_parent_keys, default=-1) + 1):
+        raise RuntimeError(f"{output_path.name} ParentTreeNextKey is inconsistent")
+    if set(leaves) != set(physical_leaf_order):
+        raise RuntimeError(f"{output_path.name} structure leaves and marked content do not match")
+    if logical_leaf_order != physical_leaf_order:
+        raise RuntimeError(f"{output_path.name} logical structure order does not match content order")
 
 
 def build_guide(lesson: dict, output_path: Path, slot: int) -> None:

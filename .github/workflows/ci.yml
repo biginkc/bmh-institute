@@ -28,11 +28,20 @@ jobs:
           node-version: 22
           cache: npm
 
+      - name: Set up uv
+        uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
+
       - name: Install dependencies
         run: npm ci
 
+      - name: Install PDF inspection tools
+        run: sudo apt-get update && sudo apt-get install --yes poppler-utils
+
       - name: Run typecheck, unit, and RTL tests
         run: npm run verify
+
+      - name: Run course-content tests and deterministic guide rebuild
+        run: npm run test:course-content
 
   e2e:
     name: Seeded Playwright E2E
