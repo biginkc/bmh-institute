@@ -1,11 +1,12 @@
-import { createHash } from "node:crypto";
 import { createReadStream } from "node:fs";
-import { mkdir, readFile, realpath, stat, writeFile } from "node:fs/promises";
-import { basename, dirname, relative, resolve } from "node:path";
+import { mkdir, mkdtemp, readFile, realpath, rm, writeFile } from "node:fs/promises";
+import { basename, dirname, join, relative, resolve } from "node:path";
 
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { Upload as TusUpload } from "tus-js-client";
 
+import { findRemoteAssetProblems } from "../src/lib/course-import/asset-transfer";
+import { createVerifiedFileSnapshot } from "../src/lib/course-import/asset-staging";
 import { applyImportPlan, reconcileImportPlan, rollbackImportPlan, type CourseImportAdapter } from "../src/lib/course-import/execute";
 import { validateCanaryScope, validateCourseManifest } from "../src/lib/course-import/manifest";
 import { buildImportPlan, type ImportPlan, type ImportTable } from "../src/lib/course-import/operations";
@@ -84,22 +85,7 @@ async function findAssetProblems(
   supabase: SupabaseClient<Database>,
   assets: ReturnType<typeof buildImportPlan>["assets"],
 ) {
-  const problems: Array<{ path: string; problem: string }> = [];
-  for (const asset of assets) {
-    if (asset.approval_status === "missing") continue;
-    const { data, error } = await supabase.storage.from("content").info(asset.storage_path);
-    if (error || !data) {
-      problems.push({ path: asset.storage_path, problem: "missing" });
-      continue;
-    }
-    if (asset.size_bytes !== null && data.size !== asset.size_bytes) {
-      problems.push({ path: asset.storage_path, problem: `size ${data.size} does not match ${asset.size_bytes}` });
-    }
-    if (asset.checksum_sha256 && data.metadata?.sha256 !== asset.checksum_sha256) {
-      problems.push({ path: asset.storage_path, problem: "stored SHA-256 metadata does not match" });
-    }
-  }
-  return problems;
+  return findRemoteAssetProblems(supabase.storage.from("content"), assets);
 }
 
 function createSupabaseAdapter(
@@ -207,25 +193,42 @@ async function uploadAssets({
       continue;
     }
     const localPath = await resolveSourcePath(sourceRoot, asset.local_path);
-    const fileStat = await stat(localPath);
-    if (asset.size_bytes !== null && asset.size_bytes !== fileStat.size) {
-      throw new Error(`${asset.source_key} size does not match the manifest.`);
+    const snapshotParent = resolve(process.cwd(), ".course-import-state", "upload-snapshots");
+    await mkdir(snapshotParent, { recursive: true });
+    const snapshotDirectory = await mkdtemp(join(snapshotParent, "asset-"));
+    try {
+      const snapshot = await createVerifiedFileSnapshot({
+        source: localPath,
+        destination: join(snapshotDirectory, basename(localPath)),
+        expectedSize: asset.size_bytes,
+        expectedChecksum: asset.checksum_sha256,
+      });
+      await uploadTus({
+        endpoint: resumableEndpoint(url),
+        serviceKey,
+        localPath: snapshot.path,
+        size: snapshot.size,
+        storagePath: asset.storage_path,
+        contentType: asset.mime_type,
+        fingerprint: `${snapshot.checksum_sha256}:${asset.storage_path}`,
+        checksum: snapshot.checksum_sha256,
+      });
+      const uploadedProblems = await findAssetProblems(storage, [
+        {
+          ...asset,
+          size_bytes: snapshot.size,
+          checksum_sha256: snapshot.checksum_sha256,
+        },
+      ]);
+      if (uploadedProblems.length > 0) {
+        throw new Error(
+          `${asset.source_key} upload failed exact remote verification: ${uploadedProblems.map((problem) => problem.problem).join(", ")}`,
+        );
+      }
+      console.log(`Uploaded ${asset.source_key} -> ${asset.storage_path}`);
+    } finally {
+      await rm(snapshotDirectory, { recursive: true, force: true });
     }
-    if (asset.checksum_sha256) {
-      const checksum = await sha256File(localPath);
-      if (checksum !== asset.checksum_sha256) throw new Error(`${asset.source_key} checksum does not match the manifest.`);
-    }
-    await uploadTus({
-      endpoint: resumableEndpoint(url),
-      serviceKey,
-      localPath,
-      size: fileStat.size,
-      storagePath: asset.storage_path,
-      contentType: asset.mime_type,
-      fingerprint: `${asset.checksum_sha256 ?? fileStat.size}:${asset.storage_path}`,
-      checksum: asset.checksum_sha256,
-    });
-    console.log(`Uploaded ${asset.source_key} -> ${asset.storage_path}`);
   }
 }
 
@@ -343,16 +346,6 @@ async function resolveSourcePath(sourceRoot: string, localPath: string) {
     throw new Error(`Asset path escapes --source-root: ${localPath}`);
   }
   return candidate;
-}
-
-function sha256File(path: string) {
-  return new Promise<string>((resolveHash, reject) => {
-    const hash = createHash("sha256");
-    const stream = createReadStream(path);
-    stream.on("error", reject);
-    stream.on("data", (chunk) => hash.update(chunk));
-    stream.on("end", () => resolveHash(hash.digest("hex")));
-  });
 }
 
 function parseArgs(args: string[]) {

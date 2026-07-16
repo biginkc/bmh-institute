@@ -26,8 +26,9 @@ one checkout over the other or point the importer at an incomplete root.
 Build one verified local source root first. Pass trusted roots in priority order:
 the integration checkout first, then the canonical checkout. `check` is a
 no-write preflight. `stage` creates only the explicitly named staging tree and
-prefers hardlinks, with a byte-for-byte copy fallback when linking is not
-available.
+prefers an independent copy-on-write clone, with a byte-for-byte copy fallback
+when cloning is not available. Staged files never share an inode with a source
+file.
 
 ```bash
 INTEGRATION_ROOT="/absolute/path/to/institute-complete-course-v1"
@@ -58,6 +59,10 @@ Exit code `1` means an integrity/safety error; exit code `2` means only approval
 or missing-asset blockers remain. Rerunning `stage` reuses only staged files
 whose bytes still match the manifest.
 
+The ownership marker pins the staging tree's canonical path, device, and inode.
+Reuse and cleanup fail closed if a symlink ancestor is repointed or the owned
+directory identity changes.
+
 Once the report has zero errors and zero blockers, upload from the composite
 root:
 
@@ -85,8 +90,9 @@ Production execution also needs `--allow-production`. Rollback additionally need
 - The release gate requires approved covers, lesson thumbnails, videos, posters, captions, and transcripts.
 - Every manifest asset path must stay inside `courses/<import>/v<version>/`, including draft upload and rollback commands. Approved release assets additionally require SHA-256-addressed object paths, preventing an import from overwriting mutable shared files or deleting another import's objects during rollback.
 - Uploads validate declared size and SHA-256 when present. Large files use resumable TUS transfers and preserve their resume URLs in ignored `.course-import-state/` state across process restarts.
-- Existing storage objects are skipped only when size and stored SHA-256 metadata match the manifest.
+- Existing storage objects are skipped only when size, stored SHA-256 metadata, and exact remote bytes match the manifest.
+- Existing and newly uploaded objects are downloaded and hashed before acceptance. Stored metadata alone is not treated as byte-integrity proof.
 - Apply uses deterministic upserts so reruns do not create duplicates.
-- Verify compares every manifest-owned database field and confirms the exact storage size and checksum metadata.
+- Verify compares every manifest-owned database field and confirms storage size, checksum metadata, and exact remote bytes.
 - Rollback deletes only identifiers and storage paths derived from the supplied manifest. It first refuses to proceed if it finds learner activity, certificates, or QA-group memberships attached to the import.
 - Authentication accounts, audit history, learner activity, and unrelated storage objects are never rollback targets.

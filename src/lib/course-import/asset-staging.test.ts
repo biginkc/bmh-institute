@@ -1,10 +1,13 @@
 import { createHash } from "node:crypto";
 import {
   access,
+  cp,
   mkdir,
   mkdtemp,
   readFile,
   realpath,
+  rename,
+  rm,
   symlink,
   writeFile,
 } from "node:fs/promises";
@@ -15,6 +18,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import type { CourseImportAsset, CourseImportManifest } from "./manifest";
 import {
   cleanupStagingRoot,
+  createVerifiedFileSnapshot,
   stageManifestAssets,
 } from "./asset-staging";
 
@@ -201,6 +205,36 @@ describe("course asset composite staging", () => {
     await expect(readFile(join(staging, file.path), "utf8")).resolves.toBe("stable");
   });
 
+  it("materializes an independent snapshot that source writes cannot mutate", async () => {
+    const root = await makeTempRoot();
+    const source = join(root, "source");
+    const staging = join(root, "staging");
+    await mkdir(source);
+    const file = await put(source, "assets/file.bin", "approved");
+    const manifest = manifestForAssets([asset("file", file.path, file.bytes)]);
+
+    const report = await run(manifest, [source], "stage", staging);
+    await writeFile(join(source, file.path), "mutated!");
+
+    expect(report.ready_for_upload).toBe(true);
+    expect(report.assets[0].materialization).toMatch(/^(clone|copy)$/);
+    await expect(readFile(join(staging, file.path), "utf8")).resolves.toBe("approved");
+    await expect(readFile(join(source, file.path), "utf8")).resolves.toBe("mutated!");
+  });
+
+  it("never removes an existing destination when snapshot creation is refused", async () => {
+    const root = await makeTempRoot();
+    const source = join(root, "source.bin");
+    const destination = join(root, "existing.bin");
+    await writeFile(source, "source");
+    await writeFile(destination, "preserve me");
+
+    await expect(
+      createVerifiedFileSnapshot({ source, destination }),
+    ).rejects.toThrow("existing snapshot destination");
+    await expect(readFile(destination, "utf8")).resolves.toBe("preserve me");
+  });
+
   it("check mode makes no staging tree", async () => {
     const root = await makeTempRoot();
     const source = join(root, "source");
@@ -260,6 +294,51 @@ describe("course asset composite staging", () => {
       code: "stage_path_unsafe",
     });
     await expect(access(join(outside, "second.bin"))).rejects.toThrow();
+  });
+
+  it("refuses cleanup when a staging root ancestor symlink is repointed", async () => {
+    const root = await makeTempRoot();
+    const source = join(root, "source");
+    const firstTarget = join(root, "first-target");
+    const secondTarget = join(root, "second-target");
+    const alias = join(root, "stage-alias");
+    const staging = join(alias, "stage");
+    await Promise.all([mkdir(source), mkdir(firstTarget), mkdir(secondTarget)]);
+    await symlink(firstTarget, alias);
+    const file = await put(source, "assets/file.bin", "stable");
+    const manifest = manifestForAssets([asset("file", file.path, file.bytes)]);
+    await run(manifest, [source], "stage", staging);
+
+    await cp(join(firstTarget, "stage"), join(secondTarget, "stage"), { recursive: true });
+    await writeFile(join(secondTarget, "stage", "unrelated-important.txt"), "preserve me");
+    await rm(alias);
+    await symlink(secondTarget, alias);
+
+    await expect(cleanupStagingRoot(staging)).rejects.toThrow(/canonical staging root/i);
+    await expect(readFile(join(firstTarget, "stage", file.path), "utf8")).resolves.toBe("stable");
+    await expect(
+      readFile(join(secondTarget, "stage", "unrelated-important.txt"), "utf8"),
+    ).resolves.toBe("preserve me");
+  });
+
+  it("refuses cleanup when the canonical staging directory inode changes", async () => {
+    const root = await makeTempRoot();
+    const source = join(root, "source");
+    const staging = join(root, "staging");
+    const original = join(root, "original-staging");
+    await mkdir(source);
+    const file = await put(source, "assets/file.bin", "stable");
+    const manifest = manifestForAssets([asset("file", file.path, file.bytes)]);
+    await run(manifest, [source], "stage", staging);
+
+    await rename(staging, original);
+    await cp(original, staging, { recursive: true });
+    await writeFile(join(staging, "unrelated-important.txt"), "preserve me");
+
+    await expect(cleanupStagingRoot(staging)).rejects.toThrow(/identity changed/i);
+    await expect(readFile(join(staging, "unrelated-important.txt"), "utf8")).resolves.toBe(
+      "preserve me",
+    );
   });
 });
 

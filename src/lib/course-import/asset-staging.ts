@@ -1,9 +1,8 @@
 import { createHash, randomUUID } from "node:crypto";
-import { createReadStream } from "node:fs";
+import { constants as fsConstants, createReadStream } from "node:fs";
 import {
   copyFile,
   lstat,
-  link,
   mkdir,
   readFile,
   realpath,
@@ -25,10 +24,11 @@ import type { CourseImportAsset, CourseImportManifest } from "./manifest";
 
 const MARKER_NAME = ".bmh-course-asset-stage.json";
 const OWNER = "bmh-course-asset-stager";
-const FORMAT_VERSION = 1;
+const FORMAT_VERSION = 2;
 
 type StagingMode = "check" | "stage";
-type Materialization = "hardlink" | "copy" | "reused" | null;
+type SnapshotMaterialization = "clone" | "copy";
+type Materialization = SnapshotMaterialization | "reused" | null;
 
 export type AssetCandidate = {
   root: string;
@@ -96,6 +96,8 @@ type StageMarker = {
   owner: typeof OWNER;
   format_version: typeof FORMAT_VERSION;
   staging_root: string;
+  staging_device: string;
+  staging_inode: string;
   import_id: string;
   manifest_sha256: string;
 };
@@ -127,12 +129,9 @@ export async function stageManifestAssets(options: {
   const roots = await resolveTrustedRoots(options.sourceRoots);
   const manifestPath = resolve(options.manifestPath);
   const manifestSha256 = sha256Bytes(options.manifestBytes);
-  const stagingRoot = options.stagingRoot ? resolve(options.stagingRoot) : null;
+  let stagingRoot = options.stagingRoot ? resolve(options.stagingRoot) : null;
   if (options.mode === "stage" && stagingRoot) {
-    await claimStagingRoot(stagingRoot, {
-      owner: OWNER,
-      format_version: FORMAT_VERSION,
-      staging_root: stagingRoot,
+    stagingRoot = await claimStagingRoot(stagingRoot, {
       import_id: options.manifest.import_id,
       manifest_sha256: manifestSha256,
     });
@@ -186,17 +185,28 @@ export async function stageManifestAssets(options: {
 }
 
 export async function cleanupStagingRoot(stagingRoot: string) {
-  const root = resolve(stagingRoot);
-  const rootStat = await lstatOrNull(root);
+  const requestedRoot = resolve(stagingRoot);
+  const rootStat = await lstatOrNull(requestedRoot);
   if (!rootStat) {
-    return { schema_version: 1 as const, tool: OWNER, staging_root: root, removed: false };
+    return {
+      schema_version: 1 as const,
+      tool: OWNER,
+      staging_root: requestedRoot,
+      removed: false,
+    };
   }
   if (!rootStat.isDirectory() || rootStat.isSymbolicLink()) {
-    throw new Error(`Refusing cleanup: staging root is not a real directory: ${root}`);
+    throw new Error(`Refusing cleanup: staging root is not a real directory: ${requestedRoot}`);
   }
-  await readAndValidateMarker(root);
-  await rm(root, { recursive: true, force: false });
-  return { schema_version: 1 as const, tool: OWNER, staging_root: root, removed: true };
+  const { canonicalRoot, marker } = await readAndValidateMarker(requestedRoot);
+  await assertStagingIdentity(canonicalRoot, marker);
+  await rm(canonicalRoot, { recursive: true, force: false });
+  return {
+    schema_version: 1 as const,
+    tool: OWNER,
+    staging_root: canonicalRoot,
+    removed: true,
+  };
 }
 
 export async function writeMachineReport(reportPath: string, report: unknown) {
@@ -471,57 +481,123 @@ async function materializeAsset(options: {
   }
 
   const temp = `${destination}.tmp-${randomUUID()}`;
-  let method: "hardlink" | "copy" = "hardlink";
   try {
-    try {
-      await link(options.source, temp);
-    } catch {
-      method = "copy";
-      await rm(temp, { force: true });
-      await copyFile(options.source, temp);
-    }
-    const tempStat = await stat(temp);
-    if (
-      tempStat.size !== options.expectedSize ||
-      (await sha256File(temp)) !== options.expectedChecksum
-    ) {
-      throw new Error(`Staged bytes changed during materialization: ${destination}`);
-    }
+    const snapshot = await createVerifiedFileSnapshot({
+      source: options.source,
+      destination: temp,
+      expectedSize: options.expectedSize,
+      expectedChecksum: options.expectedChecksum,
+    });
     await rename(temp, destination);
+    return { destination, method: snapshot.method };
   } catch (error) {
     await rm(temp, { force: true });
     throw error;
   }
-  return { destination, method };
 }
 
-async function claimStagingRoot(root: string, marker: StageMarker) {
+export async function createVerifiedFileSnapshot(options: {
+  source: string;
+  destination: string;
+  expectedSize?: number | null;
+  expectedChecksum?: string | null;
+}) {
+  if (await lstatOrNull(options.destination)) {
+    throw new Error(`Refusing to replace an existing snapshot destination: ${options.destination}`);
+  }
+  let method: SnapshotMaterialization = "clone";
+  try {
+    try {
+      await copyFile(
+        options.source,
+        options.destination,
+        fsConstants.COPYFILE_FICLONE_FORCE | fsConstants.COPYFILE_EXCL,
+      );
+    } catch (error) {
+      if (isNodeError(error) && error.code === "EEXIST") throw error;
+      method = "copy";
+      await rm(options.destination, { force: true });
+      await copyFile(options.source, options.destination, fsConstants.COPYFILE_EXCL);
+    }
+
+    const [sourceStat, destinationEntry, destinationStat] = await Promise.all([
+      stat(options.source),
+      lstat(options.destination),
+      stat(options.destination),
+    ]);
+    if (destinationEntry.isSymbolicLink() || !destinationEntry.isFile()) {
+      throw new Error(`Snapshot destination is not a regular file: ${options.destination}`);
+    }
+    if (sourceStat.dev === destinationStat.dev && sourceStat.ino === destinationStat.ino) {
+      throw new Error(`Snapshot destination aliases its source: ${options.destination}`);
+    }
+
+    const checksum = await sha256File(options.destination);
+    if (
+      (options.expectedSize !== undefined &&
+        options.expectedSize !== null &&
+        destinationStat.size !== options.expectedSize) ||
+      (options.expectedChecksum && checksum !== options.expectedChecksum)
+    ) {
+      throw new Error(`Snapshot bytes do not match the expected integrity: ${options.destination}`);
+    }
+    return {
+      path: options.destination,
+      method,
+      size: destinationStat.size,
+      checksum_sha256: checksum,
+    };
+  } catch (error) {
+    await rm(options.destination, { force: true });
+    throw error;
+  }
+}
+
+async function claimStagingRoot(
+  root: string,
+  ownership: Pick<StageMarker, "import_id" | "manifest_sha256">,
+) {
   const existing = await lstatOrNull(root);
   if (existing) {
     if (!existing.isDirectory() || existing.isSymbolicLink()) {
       throw new Error(`Refusing staging root that is not a real directory: ${root}`);
     }
-    const current = await readAndValidateMarker(root);
+    const { canonicalRoot, marker: current } = await readAndValidateMarker(root);
     if (
-      current.import_id !== marker.import_id ||
-      current.manifest_sha256 !== marker.manifest_sha256
+      current.import_id !== ownership.import_id ||
+      current.manifest_sha256 !== ownership.manifest_sha256
     ) {
       throw new Error(
         "Refusing to reuse a staging tree owned by a different manifest. Clean it explicitly first.",
       );
     }
-    return;
+    return canonicalRoot;
   }
 
   await mkdir(dirname(root), { recursive: true });
   await mkdir(root, { recursive: false });
-  await writeFile(resolve(root, MARKER_NAME), `${JSON.stringify(marker, null, 2)}\n`, {
+  const canonicalRoot = await realpath(root);
+  const rootIdentity = await lstat(canonicalRoot);
+  if (rootIdentity.isSymbolicLink() || !rootIdentity.isDirectory()) {
+    throw new Error(`Refusing staging root that is not a real directory: ${root}`);
+  }
+  const marker: StageMarker = {
+    owner: OWNER,
+    format_version: FORMAT_VERSION,
+    staging_root: canonicalRoot,
+    staging_device: String(rootIdentity.dev),
+    staging_inode: String(rootIdentity.ino),
+    ...ownership,
+  };
+  await writeFile(resolve(canonicalRoot, MARKER_NAME), `${JSON.stringify(marker, null, 2)}\n`, {
     flag: "wx",
   });
+  return canonicalRoot;
 }
 
-async function readAndValidateMarker(root: string): Promise<StageMarker> {
-  const markerPath = resolve(root, MARKER_NAME);
+async function readAndValidateMarker(root: string) {
+  const canonicalRoot = await realpath(root);
+  const markerPath = resolve(canonicalRoot, MARKER_NAME);
   const markerStat = await lstatOrNull(markerPath);
   if (!markerStat || markerStat.isSymbolicLink() || !markerStat.isFile()) {
     throw new Error(`Refusing operation on an unowned staging tree: ${root}`);
@@ -536,13 +612,30 @@ async function readAndValidateMarker(root: string): Promise<StageMarker> {
     !isRecord(marker) ||
     marker.owner !== OWNER ||
     marker.format_version !== FORMAT_VERSION ||
-    marker.staging_root !== root ||
+    marker.staging_root !== canonicalRoot ||
+    typeof marker.staging_device !== "string" ||
+    typeof marker.staging_inode !== "string" ||
     typeof marker.import_id !== "string" ||
     typeof marker.manifest_sha256 !== "string"
   ) {
-    throw new Error(`Refusing operation on a staging tree not owned by ${OWNER}: ${root}`);
+    throw new Error(
+      `Refusing operation: canonical staging root does not match ${OWNER} ownership: ${root}`,
+    );
   }
-  return marker as StageMarker;
+  await assertStagingIdentity(canonicalRoot, marker as StageMarker);
+  return { canonicalRoot, marker: marker as StageMarker };
+}
+
+async function assertStagingIdentity(canonicalRoot: string, marker: StageMarker) {
+  const current = await lstat(canonicalRoot);
+  if (
+    current.isSymbolicLink() ||
+    !current.isDirectory() ||
+    String(current.dev) !== marker.staging_device ||
+    String(current.ino) !== marker.staging_inode
+  ) {
+    throw new Error(`Refusing operation: canonical staging root identity changed: ${canonicalRoot}`);
+  }
 }
 
 async function ensureSafeParent(root: string, parent: string) {
