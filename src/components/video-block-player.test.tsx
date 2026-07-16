@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const loadVideoProgress = vi.fn();
@@ -59,6 +59,76 @@ describe("<VideoBlockPlayer />", () => {
 
     expect(recordVideoProgress).not.toHaveBeenCalledWith(
       expect.objectContaining({ observedFrom: 89, observedTo: 94 }),
+    );
+  });
+
+  it("serializes progress writes so a later sample cannot overwrite stale ranges", async () => {
+    type ProgressSuccess = {
+      ok: true;
+      positionSeconds: number;
+      watchedRanges: [];
+      watchedPercent: number;
+      completed: boolean;
+    };
+    let resolveFirst: (value: ProgressSuccess) => void = () => undefined;
+    recordVideoProgress
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            resolveFirst = resolve;
+          }),
+      )
+      .mockResolvedValue({
+        ok: true,
+        positionSeconds: 10,
+        watchedRanges: [],
+        watchedPercent: 10,
+        completed: false,
+      });
+
+    render(<VideoBlockPlayer blockId="block-1" src="https://example.com/video.mp4" />);
+    const video = screen.getByLabelText("Lesson video") as HTMLVideoElement;
+    Object.defineProperties(video, {
+      duration: { configurable: true, value: 100 },
+      currentTime: { configurable: true, writable: true, value: 0 },
+    });
+
+    fireEvent.play(video);
+    video.currentTime = 5;
+    fireEvent.timeUpdate(video);
+    video.currentTime = 10;
+    fireEvent.timeUpdate(video);
+
+    await waitFor(() => expect(recordVideoProgress).toHaveBeenCalledTimes(1));
+    resolveFirst({
+      ok: true,
+      positionSeconds: 5,
+      watchedRanges: [],
+      watchedPercent: 5,
+      completed: false,
+    });
+    await waitFor(() => expect(recordVideoProgress).toHaveBeenCalledTimes(2));
+  });
+
+  it("retries a failed write once and shows a visible save warning", async () => {
+    recordVideoProgress.mockResolvedValue({
+      ok: false,
+      error: "temporary database error",
+    });
+    render(<VideoBlockPlayer blockId="block-1" src="https://example.com/video.mp4" />);
+    const video = screen.getByLabelText("Lesson video") as HTMLVideoElement;
+    Object.defineProperties(video, {
+      duration: { configurable: true, value: 100 },
+      currentTime: { configurable: true, writable: true, value: 0 },
+    });
+
+    fireEvent.play(video);
+    video.currentTime = 5;
+    fireEvent.timeUpdate(video);
+
+    await waitFor(() => expect(recordVideoProgress).toHaveBeenCalledTimes(2));
+    expect(await screen.findByRole("status")).toHaveTextContent(
+      "Video progress could not be saved",
     );
   });
 });

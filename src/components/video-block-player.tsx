@@ -22,11 +22,15 @@ export function VideoBlockPlayer({
   const videoRef = useRef<HTMLVideoElement>(null);
   const sampleStartRef = useRef<number | null>(null);
   const resumePositionRef = useRef(0);
+  const writeQueueRef = useRef<Promise<void>>(Promise.resolve());
+  const mountedRef = useRef(true);
   const [playing, setPlaying] = useState(false);
   const [duration, setDuration] = useState(0);
+  const [progressError, setProgressError] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
+    mountedRef.current = true;
     void loadVideoProgress(blockId).then((result) => {
       if (!active || !result.ok) return;
       resumePositionRef.current = result.positionSeconds;
@@ -37,8 +41,21 @@ export function VideoBlockPlayer({
     });
     return () => {
       active = false;
+      mountedRef.current = false;
+      const video = videoRef.current;
+      if (video && !video.paused) flushProgress(video);
     };
   }, [blockId]);
+
+  useEffect(() => {
+    function flushWhenHidden() {
+      if (document.visibilityState !== "hidden") return;
+      const video = videoRef.current;
+      if (video) flushProgress(video);
+    }
+    document.addEventListener("visibilitychange", flushWhenHidden);
+    return () => document.removeEventListener("visibilitychange", flushWhenHidden);
+  });
 
   function onTimeUpdate(e: React.SyntheticEvent<HTMLVideoElement>) {
     const el = e.currentTarget;
@@ -56,12 +73,34 @@ export function VideoBlockPlayer({
     if (observedFrom === null || el.currentTime <= observedFrom) return;
     const observedTo = el.currentTime;
     sampleStartRef.current = observedTo;
-    void recordVideoProgress({
+    enqueueProgress({
       blockId,
       positionSeconds: observedTo,
       durationSeconds: el.duration,
       observedFrom,
       observedTo,
+    });
+  }
+
+  function enqueueProgress(
+    progress: Parameters<typeof recordVideoProgress>[0],
+  ) {
+    writeQueueRef.current = writeQueueRef.current.then(async () => {
+      let result: Awaited<ReturnType<typeof recordVideoProgress>> | null = null;
+      for (let attempt = 0; attempt < 2; attempt += 1) {
+        try {
+          result = await recordVideoProgress(progress);
+        } catch {
+          result = null;
+        }
+        if (result?.ok) break;
+      }
+      if (!mountedRef.current) return;
+      setProgressError(
+        result?.ok
+          ? null
+          : "Video progress could not be saved. Pause and resume playback to retry.",
+      );
     });
   }
 
@@ -73,7 +112,8 @@ export function VideoBlockPlayer({
   }
 
   return (
-    <div className="relative aspect-video overflow-hidden rounded-[var(--bmh-radius-lg)] border-[2.5px] border-[var(--ink-900)] bg-[var(--thumb-blue)] shadow-[var(--bmh-shadow-sm)]">
+    <div>
+      <div className="relative aspect-video overflow-hidden rounded-[var(--bmh-radius-lg)] border-[2.5px] border-[var(--ink-900)] bg-[var(--thumb-blue)] shadow-[var(--bmh-shadow-sm)]">
       <video
         ref={videoRef}
         src={src}
@@ -111,7 +151,7 @@ export function VideoBlockPlayer({
         }}
         onTimeUpdate={onTimeUpdate}
       />
-      {!playing ? (
+        {!playing ? (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-gradient-to-b from-transparent via-transparent to-[rgb(14_17_22_/_18%)]">
           <button
             type="button"
@@ -127,6 +167,15 @@ export function VideoBlockPlayer({
             </span>
           ) : null}
         </div>
+        ) : null}
+      </div>
+      {progressError ? (
+        <p
+          role="status"
+          className="mt-2 text-sm font-bold text-[var(--danger)]"
+        >
+          {progressError}
+        </p>
       ) : null}
     </div>
   );
