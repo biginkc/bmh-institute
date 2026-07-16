@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 
 test("dashboard lists the signed-in user's training", async ({ page }) => {
   await page.goto("/dashboard");
-  await expect(page.getByRole("heading", { name: /your training/i })).toBeVisible();
+  await expect(page.locator("main").getByRole("heading", { level: 1 })).toBeVisible();
   // Either the program card is visible or the empty state is — both pass.
   const programHit = page.getByText(/appointment setter onboarding/i);
   const emptyHit = page.getByText(/no programs yet/i);

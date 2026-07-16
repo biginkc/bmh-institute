@@ -13,7 +13,7 @@ import {
   UsersRound,
 } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/components/bmh-ds/badge";
 import { cn } from "@/lib/utils";
 
 type Item = {
@@ -24,10 +24,11 @@ type Item = {
 };
 
 const ITEM_BASE =
-  "flex items-center gap-3 py-3 text-sm font-bold tracking-wide transition-all duration-200 ease-in-out focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none";
-const ITEM_ACTIVE = "border-l-4 border-foreground pl-4 text-foreground";
+  "mx-3 flex min-h-11 items-center gap-3 rounded-[var(--bmh-radius-md)] px-3 py-2.5 font-[family-name:var(--font-body)] text-sm font-extrabold transition-all duration-200 ease-in-out focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:outline-none";
+const ITEM_ACTIVE =
+  "bg-[var(--surface-tint)] text-[var(--blue-700)] shadow-[inset_3px_0_0_var(--action)]";
 const ITEM_INACTIVE =
-  "pl-5 text-muted-foreground hover:bg-muted hover:text-foreground";
+  "text-[var(--ink-700)] hover:bg-[var(--ink-050)] hover:text-[var(--ink-900)]";
 
 export function SidebarNav({
   isAdmin,
@@ -71,7 +72,7 @@ export function SidebarNav({
   ];
 
   return (
-    <nav aria-label="Primary" className="flex flex-1 flex-col gap-1 text-sm">
+    <nav aria-label="Primary" className="flex flex-col gap-1">
       <NavSectionLabel>Learn</NavSectionLabel>
       {learnerItems.map((item) => (
         <NavLink
@@ -83,7 +84,7 @@ export function SidebarNav({
 
       {isAdmin ? (
         <>
-          <NavSectionLabel className="mt-4">Admin</NavSectionLabel>
+          <NavSectionLabel className="mt-5">Admin</NavSectionLabel>
           {adminItems.map((item) => (
             <NavLink
               key={item.href}
@@ -107,7 +108,7 @@ function NavSectionLabel({
   return (
     <div
       className={cn(
-        "px-5 pb-1 pt-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground",
+        "px-6 pb-1 pt-2 font-[family-name:var(--font-body)] text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-muted)]",
         className,
       )}
     >
@@ -138,12 +139,11 @@ function NavLink({
       <Icon className="size-5" aria-hidden />
       <span className="flex-1">{item.label}</span>
       {item.badge ? (
-        <Badge
-          variant={isActive ? "secondary" : "default"}
-          className="tabular-nums"
-        >
-          {item.badge}
-        </Badge>
+        <span className="tabular-nums">
+          <Badge tone={isActive ? "solid" : "blue"} size="sm">
+            {item.badge}
+          </Badge>
+        </span>
       ) : null}
     </Link>
   );

@@ -1,10 +1,13 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Bell, GraduationCap } from "lucide-react";
+import { Bell } from "lucide-react";
 
+import { Avatar } from "@/components/bmh-ds/avatar";
+import { Button } from "@/components/bmh-ds/button";
+import { IconButton } from "@/components/bmh-ds/icon-button";
+import { Logo } from "@/components/bmh-ds/logo";
+import { SearchBar } from "@/components/bmh-ds/search-bar";
 import { createClient } from "@/lib/supabase/server";
-import { BrandLockup } from "@/components/ui/brand-lockup";
-import { Button } from "@/components/ui/button";
 
 import { SidebarNav } from "./sidebar-nav";
 
@@ -52,73 +55,85 @@ export default async function DashboardLayout({
   const roleLabel = profile?.system_role ?? "learner";
 
   return (
-    <div className="bg-background min-h-screen">
-      <header className="border-border bg-background fixed inset-x-0 top-0 z-40 flex h-16 items-center justify-between border-b pr-6 md:pr-8 print:hidden">
+    <div className="min-h-screen bg-[var(--surface-app)]">
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-[var(--border-hairline)] bg-[var(--paper)] md:flex md:w-64 print:hidden">
         <Link
           href="/dashboard"
-          className="border-border flex h-full items-center px-6 transition-opacity hover:opacity-90 md:w-64 md:border-r"
+          className="flex h-[76px] shrink-0 items-center px-6 transition-opacity hover:opacity-90"
+          aria-label="BMH Institute dashboard"
         >
-          <BrandLockup
-            mark={
-              <GraduationCap
-                className="text-primary-foreground size-5"
-                aria-hidden
-              />
-            }
-            productName="BMH Institute"
-            subLabel="Training Platform"
-          />
+          <span className="pointer-events-none">
+            <Logo height={20} />
+          </span>
         </Link>
-        <div className="flex items-center gap-3 text-sm">
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            aria-label="Notifications"
-            className="hidden sm:inline-flex"
-          >
-            <Bell className="size-5" aria-hidden />
-          </Button>
+
+        <div className="min-h-0 flex-1 overflow-y-auto py-3">
+          <SidebarNav
+            isAdmin={isAdmin}
+            pendingSubmissionsCount={pendingSubmissions}
+          />
+        </div>
+
+        <div className="mx-5 border-t border-[var(--border-hairline)] py-4">
           <Link
             href="/profile"
-            className="hidden items-center gap-2 sm:flex"
+            className="flex min-w-0 items-center gap-3 rounded-[var(--bmh-radius-md)] px-1 py-1 transition-colors hover:bg-[var(--ink-050)]"
             title={user.email ?? ""}
           >
-            <span className="text-foreground max-w-48 truncate font-medium">
-              {displayName}
-            </span>
-            <span className="bg-muted text-muted-foreground rounded-full px-2 py-0.5 text-[10px] font-bold tracking-widest uppercase">
-              {roleLabel}
+            <Avatar name={displayName} size={38} />
+            <span className="min-w-0 flex-1">
+              <span className="block truncate font-[family-name:var(--font-body)] text-sm font-extrabold text-[var(--ink-900)]">
+                {displayName}
+              </span>
+              <span className="block truncate font-[family-name:var(--font-body)] text-[11px] font-bold capitalize text-[var(--text-muted)]">
+                {roleLabel}
+              </span>
             </span>
           </Link>
           <form
             action="/auth/signout"
             method="post"
-            className="border-border md:border-l md:pl-3"
+            className="mt-1 pl-[52px]"
           >
-            <Button type="submit" variant="ghost" size="sm">
+            <Button
+              type="submit"
+              variant="ghost"
+              size="sm"
+              style={{ padding: "6px 0", color: "var(--text-muted)" }}
+            >
               Sign out
             </Button>
           </form>
         </div>
-      </header>
-
-      <aside className="border-border bg-background fixed bottom-0 left-0 top-16 z-30 hidden w-64 flex-col border-r pt-6 md:flex print:hidden">
-        <SidebarNav
-          isAdmin={isAdmin}
-          pendingSubmissionsCount={pendingSubmissions}
-        />
-        <div
-          className="border-border mx-6 mt-2 border-t pt-3 text-xs"
-          title={user.email ?? ""}
-        >
-          <span className="text-muted-foreground block truncate">
-            {user.email}
-          </span>
-        </div>
       </aside>
 
-      <div className="flex min-h-screen flex-col pt-16 md:ml-64">
+      <header className="fixed inset-x-0 top-0 z-30 flex h-[76px] items-center gap-4 border-b border-[var(--border-hairline)] bg-[var(--paper)] px-4 md:left-64 md:px-7 print:hidden">
+        <Link
+          href="/dashboard"
+          className="shrink-0 md:hidden"
+          aria-label="BMH Institute dashboard"
+        >
+          <span className="pointer-events-none">
+            <Logo height={17} mascot={false} />
+          </span>
+        </Link>
+        <div className="hidden w-full max-w-[360px] sm:block">
+          <SearchBar placeholder="Search lessons…" />
+        </div>
+        <span className="flex-1" />
+        <IconButton label="Notifications" variant="plain">
+          <Bell aria-hidden="true" size={20} />
+        </IconButton>
+        <Link
+          href="/profile"
+          className="md:hidden"
+          aria-label={`${displayName} profile`}
+        >
+          <Avatar name={displayName} size={36} />
+        </Link>
+      </header>
+
+      <div className="flex min-h-screen flex-col pt-[76px] md:ml-64">
         <main className="flex flex-1 flex-col">{children}</main>
       </div>
     </div>
