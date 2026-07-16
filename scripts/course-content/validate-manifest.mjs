@@ -95,8 +95,8 @@ export function validateManifest(manifest) {
       errors.push(`${course.source_key} course certificate must be disabled`);
     }
     validateSortOrder(course.modules, course.source_key, errors);
-    for (const module of course.modules) {
-      validateSortOrder(module.lessons, module.source_key, errors);
+    for (const courseModule of course.modules) {
+      validateSortOrder(courseModule.lessons, courseModule.source_key, errors);
     }
   }
 

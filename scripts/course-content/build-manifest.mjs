@@ -335,13 +335,6 @@ const ROLE_PLAYS = {
   ],
 };
 
-const QUIZ_FILES = Object.fromEntries(
-  Array.from({ length: 19 }, (_, index) => {
-    const slot = String(index + 1).padStart(2, "0");
-    return [index + 1, slot];
-  }),
-);
-
 const QUIZ_FILE_NAMES = [
   "01 - Welcome & Mindset - quiz.json",
   "02 - Real Estate Terms Glossary - quiz.json",
@@ -542,7 +535,14 @@ async function buildManifest() {
     quizQuestionsBySlot.set(lesson.slot, (await sourceQuestions(lesson.slot)).map((question, index) => shapeQuestion(lesson.slot, question, index)));
   }
 
-  const videoAssets = videoAssetsWithMetadata.map(({ _slot, _title, _partLabel, _duration, ...asset }) => asset);
+  const videoAssets = videoAssetsWithMetadata.map((assetWithMetadata) => {
+    const asset = { ...assetWithMetadata };
+    delete asset._slot;
+    delete asset._title;
+    delete asset._partLabel;
+    delete asset._duration;
+    return asset;
+  });
   const derivativeAssets = [];
   for (const asset of videoAssetsWithMetadata) {
     derivativeAssets.push(await buildDerivativeAsset(asset, "caption"));

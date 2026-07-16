@@ -110,6 +110,32 @@ describe("<VideoBlockPlayer />", () => {
     await waitFor(() => expect(recordVideoProgress).toHaveBeenCalledTimes(2));
   });
 
+  it("flushes the final contiguous sample when the player unmounts", async () => {
+    const { unmount } = render(
+      <VideoBlockPlayer blockId="block-1" src="https://example.com/video.mp4" />,
+    );
+    const video = screen.getByLabelText("Lesson video") as HTMLVideoElement;
+    Object.defineProperties(video, {
+      duration: { configurable: true, value: 100 },
+      currentTime: { configurable: true, writable: true, value: 0 },
+      paused: { configurable: true, value: false },
+    });
+
+    fireEvent.play(video);
+    video.currentTime = 4;
+    unmount();
+
+    await waitFor(() =>
+      expect(recordVideoProgress).toHaveBeenCalledWith({
+        blockId: "block-1",
+        positionSeconds: 4,
+        durationSeconds: 100,
+        observedFrom: 0,
+        observedTo: 4,
+      }),
+    );
+  });
+
   it("retries a failed write once and shows a visible save warning", async () => {
     recordVideoProgress.mockResolvedValue({
       ok: false,

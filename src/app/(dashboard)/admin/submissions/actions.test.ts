@@ -7,7 +7,9 @@ let updateError: { message: string } | null = null;
 let selectSql = "";
 let signedUrlError: { message: string } | null = null;
 
-const sendEmailSpy = vi.fn(async (_input: Record<string, unknown>) => undefined);
+const sendEmailSpy = vi.fn(async (input: Record<string, unknown>) => {
+  void input;
+});
 
 vi.mock("@/lib/auth/guard", () => ({
   requireAdmin: vi.fn(async () => ({
@@ -167,4 +169,3 @@ describe("admin submission review actions (TEST-01)", () => {
     });
   });
 });
-

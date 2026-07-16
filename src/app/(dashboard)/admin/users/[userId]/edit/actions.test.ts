@@ -14,10 +14,13 @@ let programRows: Array<{ id: string; title: string }> = [];
 let rpcError: { message: string } | null = null;
 const rpcCalls: Array<{ name: string; args: Record<string, unknown> }> = [];
 const deleteUserSpy = vi.fn(
-  async (_id: string) => ({
-    data: null,
-    error: null as { message: string } | null,
-  }),
+  async (id: string) => {
+    void id;
+    return {
+      data: null,
+      error: null as { message: string } | null,
+    };
+  },
 );
 
 vi.mock("@/lib/auth/guard", () => ({

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Play } from "lucide-react";
 
 import {
@@ -34,13 +34,53 @@ export function VideoBlockPlayer({
   const [duration, setDuration] = useState(0);
   const [progressError, setProgressError] = useState<string | null>(null);
 
+  const enqueueProgress = useCallback(
+    (progress: Parameters<typeof recordVideoProgress>[0]) => {
+      writeQueueRef.current = writeQueueRef.current.then(async () => {
+        let result: Awaited<ReturnType<typeof recordVideoProgress>> | null = null;
+        for (let attempt = 0; attempt < 2; attempt += 1) {
+          try {
+            result = await recordVideoProgress(progress);
+          } catch {
+            result = null;
+          }
+          if (result?.ok) break;
+        }
+        if (!mountedRef.current) return;
+        setProgressError(
+          result?.ok
+            ? null
+            : "Video progress could not be saved. Pause and resume playback to retry.",
+        );
+      });
+    },
+    [],
+  );
+
+  const flushProgress = useCallback(
+    (el: HTMLVideoElement) => {
+      const observedFrom = sampleStartRef.current;
+      if (observedFrom === null || el.currentTime <= observedFrom) return;
+      const observedTo = el.currentTime;
+      sampleStartRef.current = observedTo;
+      enqueueProgress({
+        blockId,
+        positionSeconds: observedTo,
+        durationSeconds: el.duration,
+        observedFrom,
+        observedTo,
+      });
+    },
+    [blockId, enqueueProgress],
+  );
+
   useEffect(() => {
     let active = true;
+    const video = videoRef.current;
     mountedRef.current = true;
     void loadVideoProgress(blockId).then((result) => {
       if (!active || !result.ok) return;
       resumePositionRef.current = result.positionSeconds;
-      const video = videoRef.current;
       if (video?.readyState && result.positionSeconds > 0) {
         video.currentTime = result.positionSeconds;
       }
@@ -48,10 +88,9 @@ export function VideoBlockPlayer({
     return () => {
       active = false;
       mountedRef.current = false;
-      const video = videoRef.current;
       if (video && !video.paused) flushProgress(video);
     };
-  }, [blockId]);
+  }, [blockId, flushProgress]);
 
   useEffect(() => {
     function flushWhenHidden() {
@@ -61,7 +100,7 @@ export function VideoBlockPlayer({
     }
     document.addEventListener("visibilitychange", flushWhenHidden);
     return () => document.removeEventListener("visibilitychange", flushWhenHidden);
-  });
+  }, [flushProgress]);
 
   function onTimeUpdate(e: React.SyntheticEvent<HTMLVideoElement>) {
     const el = e.currentTarget;
@@ -72,42 +111,6 @@ export function VideoBlockPlayer({
     }
     if (el.currentTime - sampleStartRef.current < 5) return;
     flushProgress(el);
-  }
-
-  function flushProgress(el: HTMLVideoElement) {
-    const observedFrom = sampleStartRef.current;
-    if (observedFrom === null || el.currentTime <= observedFrom) return;
-    const observedTo = el.currentTime;
-    sampleStartRef.current = observedTo;
-    enqueueProgress({
-      blockId,
-      positionSeconds: observedTo,
-      durationSeconds: el.duration,
-      observedFrom,
-      observedTo,
-    });
-  }
-
-  function enqueueProgress(
-    progress: Parameters<typeof recordVideoProgress>[0],
-  ) {
-    writeQueueRef.current = writeQueueRef.current.then(async () => {
-      let result: Awaited<ReturnType<typeof recordVideoProgress>> | null = null;
-      for (let attempt = 0; attempt < 2; attempt += 1) {
-        try {
-          result = await recordVideoProgress(progress);
-        } catch {
-          result = null;
-        }
-        if (result?.ok) break;
-      }
-      if (!mountedRef.current) return;
-      setProgressError(
-        result?.ok
-          ? null
-          : "Video progress could not be saved. Pause and resume playback to retry.",
-      );
-    });
   }
 
   function playVideo() {

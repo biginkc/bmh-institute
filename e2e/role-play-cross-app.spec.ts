@@ -4,7 +4,6 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import {
   adminClient,
   ensureTestUser,
-  TEST_USER_EMAIL,
 } from "./fixtures";
 
 const closerUrl = process.env.CLOSER_TEST_SUPABASE_URL ?? "";
