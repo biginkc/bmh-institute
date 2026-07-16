@@ -22,21 +22,21 @@
       "source_key": "caption-video-slot-03-tech-stack",
       "kind": "caption",
       "local_path": "course-assets/captions/video-slot-03-tech-stack.vtt",
-      "storage_path": "courses/bmh-employee-training-canary/v1/captions/video-slot-03-tech-stack.vtt",
+      "storage_path": "courses/bmh-employee-training-canary/v1/captions/video-slot-03-tech-stack.893e88f6126b1ea3476b946aebc19d2decb3370b1a929ec0308141f245bae714.vtt",
       "mime_type": "text/vtt",
-      "checksum_sha256": null,
-      "size_bytes": null,
-      "approval_status": "missing"
+      "checksum_sha256": "893e88f6126b1ea3476b946aebc19d2decb3370b1a929ec0308141f245bae714",
+      "size_bytes": 9904,
+      "approval_status": "approved"
     },
     {
       "source_key": "transcript-video-slot-03-tech-stack",
       "kind": "transcript",
       "local_path": "course-assets/transcripts/video-slot-03-tech-stack.md",
-      "storage_path": "courses/bmh-employee-training-canary/v1/transcripts/video-slot-03-tech-stack.md",
+      "storage_path": "courses/bmh-employee-training-canary/v1/transcripts/video-slot-03-tech-stack.f96bb3853919ebe2499c25c126fcebe71bae4b072d78df438f6195c8bf26cc4d.md",
       "mime_type": "text/markdown",
-      "checksum_sha256": null,
-      "size_bytes": null,
-      "approval_status": "missing"
+      "checksum_sha256": "f96bb3853919ebe2499c25c126fcebe71bae4b072d78df438f6195c8bf26cc4d",
+      "size_bytes": 6223,
+      "approval_status": "approved"
     },
     {
       "source_key": "thumbnail-program-bmh-employee-training",
