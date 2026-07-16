@@ -203,9 +203,9 @@ const LESSONS = [
     slot: 19,
     module: 6,
     title: "Career Growth Path",
-    summary: "Build readiness for more responsibility through consistent results, clean operations, coachability, and contribution to the team.",
-    objectives: ["Describe the foundation for growth", "Recognize readiness signals", "Use feedback without defensiveness", "Discuss a development path with your manager"],
-    guide: ["Advancement follows demonstrated readiness rather than a fixed calendar", "Quality and clean records matter alongside output", "Leadership begins with helping others succeed", "Your manager and current role expectations define the next development step"],
+    summary: "Build capability in your current role through deliberate practice, useful feedback, coachability, and reliable execution.",
+    objectives: ["Use a practice and feedback loop", "Respond to coaching without defensiveness", "Connect capability to current role expectations", "Confirm any increase in ownership with your manager and current written role plan"],
+    guide: ["Practice, apply feedback, and review the result", "Capability means using knowledge and skills reliably in current work", "Your manager and current written role plan define your responsibilities and expectations", "Take on increased ownership only after the change is documented in your current written role plan"],
   },
 ];
 
@@ -363,7 +363,6 @@ const EXCLUDED_QUESTION_PATTERNS = {
   11: [/^What is a leaseback arrangement\?$/i],
   16: [/target percentage/i, /drops below what percentage/i, /daily target range/i],
   18: [/how many dials should you aim/i, /110 to 150 dials/i, /150 to 200 total dials/i],
-  19: [/commission/i, /compensation/i, /earning potential/i],
 };
 
 function manualQuestion(questionText, options, correct, explanation, type = "single_choice") {
@@ -389,6 +388,27 @@ const COMPENSATION_QUESTIONS = [
   manualQuestion("Some plans may be more fixed while others may be more performance-based.", ["True", "False"], [0], "The structure depends on the responsibilities of the role.", "true_false"),
   manualQuestion("Which item is not a reliable compensation source?", ["An informal hallway conversation", "Your current offer letter", "Your current written plan", "Your current role sheet"], [0], "Informal conversations do not replace the written terms for your role."),
   manualQuestion("What is your responsibility within the compensation engine?", ["Understand your role, follow the current scorecard, and make work visible", "Set your own terms", "Memorize another role's examples", "Treat training as a written agreement"], [0], "Professional execution starts with the current role, scorecard, and written plan."),
+];
+
+const CAREER_GROWTH_QUESTIONS = [
+  manualQuestion("What is the practical focus of career growth in this lesson?", ["Strengthening capability in your current role", "Choosing a new title for yourself", "Taking over a coworker's duties", "Waiting for expectations to change"], [0], "Career growth starts by building capability in the work assigned to your current role."),
+  manualQuestion("Which actions belong in a deliberate development loop?", ["Practice a relevant skill", "Ask for specific feedback", "Apply the feedback", "Review the result", "Change your expectations without approval", "Copy another person's role plan"], [0, 1, 2, 3], "A useful practice loop combines practice, feedback, application, and review.", "multi_select"),
+  manualQuestion("Feedback is useful only when it confirms that your current approach is already correct.", ["True", "False"], [1], "Feedback is useful because it can reveal a skill or process gap to practice."),
+  manualQuestion("What should you do when feedback is unclear?", ["Ask a clarifying question before applying it", "Guess what the manager meant", "Ignore it until it is repeated", "Use a coworker's expectations instead"], [0], "Coachability includes clarifying feedback so you can apply it accurately."),
+  manualQuestion("Which behaviors demonstrate coachability?", ["Listen without becoming defensive", "Confirm the action to practice", "Apply the feedback in the work", "Return with evidence of the change", "Explain why the old approach should never change", "Wait for someone else to fix the gap"], [0, 1, 2, 3], "Coachability is visible when feedback is heard, clarified, practiced, and reflected in changed work.", "multi_select"),
+  manualQuestion("What is the source of truth for your current responsibilities?", ["Your current written role plan and manager", "An older training example", "A coworker's task list", "An informal assumption"], [0], "Your manager and current written role plan define current role expectations."),
+  manualQuestion("A new responsibility is mentioned informally. What should happen before you treat it as assigned ownership?", ["Confirm it with your manager and have it documented in the current written role plan", "Add it to your role without discussion", "Trade duties with a coworker", "Wait for a training example"], [0], "Increased ownership applies only when your manager confirms it and the current written role plan documents it."),
+  manualQuestion("Completing this training automatically changes your assigned responsibilities.", ["True", "False"], [1], "Training builds capability; only manager-confirmed, documented role expectations change assigned ownership."),
+  manualQuestion("A coworker's duties differ from yours. Which expectations should guide your work?", ["Your current written role plan, clarified with your manager", "The coworker's duties", "Whichever tasks seem more advanced", "A previous employee's routine"], [0], "Current role expectations come from your own written role plan and manager, not another person's duties."),
+  manualQuestion("What does capability mean in this lesson?", ["Using knowledge and skills reliably in current work", "Knowing the names of future job titles", "Taking on unassigned work", "Avoiding feedback once trained"], [0], "Capability is the reliable application of relevant knowledge and skills in your current role."),
+  manualQuestion("Which actions make growing capability visible?", ["Practice relevant skills", "Perform current responsibilities consistently", "Keep the work record clean", "Apply specific feedback", "Claim unassigned ownership", "Rely on memory instead of the role plan"], [0, 1, 2, 3], "Practice, consistent execution, clean records, and applied feedback make capability visible.", "multi_select"),
+  manualQuestion("When should you take on increased ownership?", ["After your manager confirms it and the current written role plan documents it", "As soon as you feel ready", "When a coworker suggests it", "After finishing any course"], [0], "Increased ownership must be manager-confirmed and documented in the current written role plan."),
+  manualQuestion("Every employee follows the same fixed development timeline.", ["True", "False"], [1], "The lesson gives no fixed timeline; use current role expectations and manager feedback to guide development."),
+  manualQuestion("Which topics belong in a development discussion with your manager?", ["Current role expectations", "A capability to practice", "Recent feedback to apply", "Any proposed ownership that needs documentation", "Another person's role terms", "An assumed change in duties"], [0, 1, 2, 3], "A grounded development discussion connects current expectations, practice, feedback, and documented ownership.", "multi_select"),
+  manualQuestion("An old training example conflicts with your current role plan. What should guide you?", ["The current written role plan and manager direction", "The older example", "A teammate's memory", "The option with more responsibility"], [0], "The current written role plan and manager direction are the source of truth for current expectations."),
+  manualQuestion("Why can deliberate practice still be useful when it feels repetitive?", ["Repetition helps turn a skill into reliable capability", "Repetition changes assigned ownership", "Repetition replaces manager feedback", "Repetition makes documentation unnecessary"], [0], "Deliberate repetition helps a relevant skill become reliable capability in current work."),
+  manualQuestion("Which response is least coachable after a gap is identified?", ["Defend the old approach and ignore the gap", "Clarify the expected change", "Practice the corrected approach", "Follow up with evidence of improvement"], [0], "Coachability requires engaging with feedback and practicing the correction rather than dismissing the gap."),
+  manualQuestion("Professional development in this lesson means applying practice and feedback to become more capable in your current role.", ["True", "False"], [0], "The lesson defines development as practice, applied feedback, and reliable capability within current role expectations."),
 ];
 
 async function sha256(filePath) {
@@ -479,6 +499,7 @@ function spreadSelect(candidates, count) {
 
 async function sourceQuestions(slot) {
   if (slot === 17) return COMPENSATION_QUESTIONS;
+  if (slot === 19) return CAREER_GROWTH_QUESTIONS;
   const fileName = QUIZ_FILE_NAMES[slot - 1];
   const raw = JSON.parse(await readFile(path.join(SOURCE_ROOT, "_quiz-exports-by-slot", fileName), "utf8"));
   const excluded = EXCLUDED_QUESTION_PATTERNS[slot] ?? [];

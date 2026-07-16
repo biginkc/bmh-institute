@@ -1552,10 +1552,10 @@
       "source_key": "guide-slot-19",
       "kind": "pdf",
       "local_path": "output/pdf/slot-19-learner-guide.pdf",
-      "storage_path": "courses/bmh-employee-training/v1/guides/guide-slot-19.7125279cae363f17ea0653c3be4d89d450c36d9c3941d5e018ee6a58ba8ee92e.pdf",
+      "storage_path": "courses/bmh-employee-training/v1/guides/guide-slot-19.6ea391c95b84ead4497a1c63942023ad99d3dc7c9014a78ce2d311e2ac45f62a.pdf",
       "mime_type": "application/pdf",
-      "checksum_sha256": "7125279cae363f17ea0653c3be4d89d450c36d9c3941d5e018ee6a58ba8ee92e",
-      "size_bytes": 5465,
+      "checksum_sha256": "6ea391c95b84ead4497a1c63942023ad99d3dc7c9014a78ce2d311e2ac45f62a",
+      "size_bytes": 5449,
       "approval_status": "approved"
     }
   ],
@@ -14838,7 +14838,7 @@
               {
                 "source_key": "lesson-content-slot-19",
                 "title": "Career Growth Path",
-                "description": "Build readiness for more responsibility through consistent results, clean operations, coachability, and contribution to the team.",
+                "description": "Build capability in your current role through deliberate practice, useful feedback, coachability, and reliable execution.",
                 "type": "content",
                 "sort_order": 7,
                 "required": true,
@@ -14850,7 +14850,7 @@
                     "sort_order": 1,
                     "required": false,
                     "content": {
-                      "html": "<h2>What you will learn</h2><p>Build readiness for more responsibility through consistent results, clean operations, coachability, and contribution to the team.</p><ul><li>Describe the foundation for growth</li><li>Recognize readiness signals</li><li>Use feedback without defensiveness</li><li>Discuss a development path with your manager</li></ul>"
+                      "html": "<h2>What you will learn</h2><p>Build capability in your current role through deliberate practice, useful feedback, coachability, and reliable execution.</p><ul><li>Use a practice and feedback loop</li><li>Respond to coaching without defensiveness</li><li>Connect capability to current role expectations</li><li>Confirm any increase in ownership with your manager and current written role plan</li></ul>"
                     }
                   },
                   {
@@ -14874,7 +14874,7 @@
                     "sort_order": 3,
                     "required": false,
                     "content": {
-                      "html": "<h2>Learner guide</h2><ul><li>Advancement follows demonstrated readiness rather than a fixed calendar</li><li>Quality and clean records matter alongside output</li><li>Leadership begins with helping others succeed</li><li>Your manager and current role expectations define the next development step</li></ul><p>Use the current written SOP and ask your manager when a live process differs from this lesson.</p>"
+                      "html": "<h2>Learner guide</h2><ul><li>Practice, apply feedback, and review the result</li><li>Capability means using knowledge and skills reliably in current work</li><li>Your manager and current written role plan define your responsibilities and expectations</li><li>Take on increased ownership only after the change is documented in your current written role plan</li></ul><p>Use the current written SOP and ask your manager when a live process differs from this lesson.</p>"
                     }
                   },
                   {
@@ -14884,9 +14884,9 @@
                     "required": true,
                     "content": {
                       "asset_key": "guide-slot-19",
-                      "file_path": "courses/bmh-employee-training/v1/guides/guide-slot-19.7125279cae363f17ea0653c3be4d89d450c36d9c3941d5e018ee6a58ba8ee92e.pdf",
+                      "file_path": "courses/bmh-employee-training/v1/guides/guide-slot-19.6ea391c95b84ead4497a1c63942023ad99d3dc7c9014a78ce2d311e2ac45f62a.pdf",
                       "filename": "slot-19-learner-guide.pdf",
-                      "size_bytes": 5465,
+                      "size_bytes": 5449,
                       "description": "Accessible learner guide for Career Growth Path"
                     }
                   },
@@ -14898,36 +14898,36 @@
                     "content": {
                       "cards": [
                         {
-                          "front": "What are the foundational tasks for someone starting at BMH Group?",
-                          "back": "Working leads; Qualifying sellers; Building a pipeline; Handing off to acquisitions"
+                          "front": "What is the practical focus of career growth in this lesson?",
+                          "back": "Strengthening capability in your current role"
                         },
                         {
-                          "front": "What qualities make a lead 'ready' for the acquisition team handoff?",
-                          "back": "Clean; Well-documented; Genuinely prepared for the next stage"
+                          "front": "Which actions belong in a deliberate development loop?",
+                          "back": "Practice a relevant skill; Ask for specific feedback; Apply the feedback; Review the result"
                         },
                         {
-                          "front": "Which level of lead involves dealing with emotional family dynamics?",
-                          "back": "Probate situations"
+                          "front": "Feedback is useful only when it confirms that your current approach is already correct.",
+                          "back": "False"
                         },
                         {
-                          "front": "How should a team member approach sellers in financial distress?",
-                          "back": "By navigating sensitive conversations with skill"
+                          "front": "What should you do when feedback is unclear?",
+                          "back": "Ask a clarifying question before applying it"
                         },
                         {
-                          "front": "What marks the transition to the 'next level' beyond complex lead management?",
-                          "back": "Presenting offers; Negotiating terms; Closing deals directly"
+                          "front": "Which behaviors demonstrate coachability?",
+                          "back": "Listen without becoming defensive; Confirm the action to practice; Apply the feedback in the work; Return with evidence of the change"
                         },
                         {
-                          "front": "What skill is required when a straightforward approach to a deal fails?",
-                          "back": "The ability to structure deals creatively"
+                          "front": "What is the source of truth for your current responsibilities?",
+                          "back": "Your current written role plan and manager"
                         },
                         {
-                          "front": "On what specific factor are promotions at BMH Group based?",
-                          "back": "Demonstrated performance and readiness"
+                          "front": "A new responsibility is mentioned informally. What should happen before you treat it as assigned ownership?",
+                          "back": "Confirm it with your manager and have it documented in the current written role plan"
                         },
                         {
-                          "front": "Regarding number consistency, what is the expectation for high performers?",
-                          "back": "Hitting numbers every day for extended stretches, not just on good days"
+                          "front": "Completing this training automatically changes your assigned responsibilities.",
+                          "back": "False"
                         }
                       ]
                     }
@@ -14956,91 +14956,79 @@
                   "questions": [
                     {
                       "source_key": "question-slot-19-01",
-                      "question_text": "What are the foundational tasks for someone starting at BMH Group?",
-                      "question_type": "multi_select",
-                      "explanation": "New employees begin by working leads, qualifying sellers, building a pipeline, and handing off to acquisitions - these form the core foundation.",
+                      "question_text": "What is the practical focus of career growth in this lesson?",
+                      "question_type": "single_choice",
+                      "explanation": "Career growth starts by building capability in the work assigned to your current role.",
                       "points": 1,
                       "sort_order": 1,
                       "options": [
                         {
                           "source_key": "option-slot-19-01-1",
-                          "option_text": "Working leads",
+                          "option_text": "Strengthening capability in your current role",
                           "is_correct": true,
                           "sort_order": 1
                         },
                         {
                           "source_key": "option-slot-19-01-2",
-                          "option_text": "Qualifying sellers",
-                          "is_correct": true,
+                          "option_text": "Choosing a new title for yourself",
+                          "is_correct": false,
                           "sort_order": 2
                         },
                         {
                           "source_key": "option-slot-19-01-3",
-                          "option_text": "Building a pipeline",
-                          "is_correct": true,
+                          "option_text": "Taking over a coworker's duties",
+                          "is_correct": false,
                           "sort_order": 3
                         },
                         {
                           "source_key": "option-slot-19-01-4",
-                          "option_text": "Handing off to acquisitions",
-                          "is_correct": true,
+                          "option_text": "Waiting for expectations to change",
+                          "is_correct": false,
                           "sort_order": 4
-                        },
-                        {
-                          "source_key": "option-slot-19-01-5",
-                          "option_text": "Closing deals directly",
-                          "is_correct": false,
-                          "sort_order": 5
-                        },
-                        {
-                          "source_key": "option-slot-19-01-6",
-                          "option_text": "Managing a team",
-                          "is_correct": false,
-                          "sort_order": 6
                         }
                       ]
                     },
                     {
                       "source_key": "question-slot-19-02",
-                      "question_text": "What qualities make a lead 'ready' for the acquisition team handoff?",
+                      "question_text": "Which actions belong in a deliberate development loop?",
                       "question_type": "multi_select",
-                      "explanation": "Leads must be clean, well-documented, and genuinely prepared before they are handed off to acquisitions.",
+                      "explanation": "A useful practice loop combines practice, feedback, application, and review.",
                       "points": 1,
                       "sort_order": 2,
                       "options": [
                         {
                           "source_key": "option-slot-19-02-1",
-                          "option_text": "Clean",
+                          "option_text": "Practice a relevant skill",
                           "is_correct": true,
                           "sort_order": 1
                         },
                         {
                           "source_key": "option-slot-19-02-2",
-                          "option_text": "Well-documented",
+                          "option_text": "Ask for specific feedback",
                           "is_correct": true,
                           "sort_order": 2
                         },
                         {
                           "source_key": "option-slot-19-02-3",
-                          "option_text": "Genuinely prepared for the next stage",
+                          "option_text": "Apply the feedback",
                           "is_correct": true,
                           "sort_order": 3
                         },
                         {
                           "source_key": "option-slot-19-02-4",
-                          "option_text": "Assigned a dollar value",
-                          "is_correct": false,
+                          "option_text": "Review the result",
+                          "is_correct": true,
                           "sort_order": 4
                         },
                         {
                           "source_key": "option-slot-19-02-5",
-                          "option_text": "Approved by a manager",
+                          "option_text": "Change your expectations without approval",
                           "is_correct": false,
                           "sort_order": 5
                         },
                         {
                           "source_key": "option-slot-19-02-6",
-                          "option_text": "Contacted at least three times",
+                          "option_text": "Copy another person's role plan",
                           "is_correct": false,
                           "sort_order": 6
                         }
@@ -15048,67 +15036,55 @@
                     },
                     {
                       "source_key": "question-slot-19-03",
-                      "question_text": "Which level of lead involves dealing with emotional family dynamics?",
-                      "question_type": "single_choice",
-                      "explanation": "Probate situations involve property left behind by a deceased person, which often comes with emotional family dynamics.",
+                      "question_text": "Feedback is useful only when it confirms that your current approach is already correct.",
+                      "question_type": "true_false",
+                      "explanation": "Feedback is useful because it can reveal a skill or process gap to practice.",
                       "points": 1,
                       "sort_order": 3,
                       "options": [
                         {
                           "source_key": "option-slot-19-03-1",
-                          "option_text": "Foreclosure leads",
+                          "option_text": "True",
                           "is_correct": false,
                           "sort_order": 1
                         },
                         {
                           "source_key": "option-slot-19-03-2",
-                          "option_text": "Probate situations",
+                          "option_text": "False",
                           "is_correct": true,
                           "sort_order": 2
-                        },
-                        {
-                          "source_key": "option-slot-19-03-3",
-                          "option_text": "Wholesale leads",
-                          "is_correct": false,
-                          "sort_order": 3
-                        },
-                        {
-                          "source_key": "option-slot-19-03-4",
-                          "option_text": "Absentee owner leads",
-                          "is_correct": false,
-                          "sort_order": 4
                         }
                       ]
                     },
                     {
                       "source_key": "question-slot-19-04",
-                      "question_text": "How should a team member approach sellers in financial distress?",
+                      "question_text": "What should you do when feedback is unclear?",
                       "question_type": "single_choice",
-                      "explanation": "Financial distress requires sensitivity and skill to handle the conversation appropriately.",
+                      "explanation": "Coachability includes clarifying feedback so you can apply it accurately.",
                       "points": 1,
                       "sort_order": 4,
                       "options": [
                         {
                           "source_key": "option-slot-19-04-1",
-                          "option_text": "By offering the lowest possible price",
-                          "is_correct": false,
+                          "option_text": "Ask a clarifying question before applying it",
+                          "is_correct": true,
                           "sort_order": 1
                         },
                         {
                           "source_key": "option-slot-19-04-2",
-                          "option_text": "By rushing through the conversation",
+                          "option_text": "Guess what the manager meant",
                           "is_correct": false,
                           "sort_order": 2
                         },
                         {
                           "source_key": "option-slot-19-04-3",
-                          "option_text": "By navigating sensitive conversations with skill",
-                          "is_correct": true,
+                          "option_text": "Ignore it until it is repeated",
+                          "is_correct": false,
                           "sort_order": 3
                         },
                         {
                           "source_key": "option-slot-19-04-4",
-                          "option_text": "By referring them to a financial advisor first",
+                          "option_text": "Use a coworker's expectations instead",
                           "is_correct": false,
                           "sort_order": 4
                         }
@@ -15116,73 +15092,79 @@
                     },
                     {
                       "source_key": "question-slot-19-05",
-                      "question_text": "What marks the transition to the 'next level' beyond complex lead management?",
+                      "question_text": "Which behaviors demonstrate coachability?",
                       "question_type": "multi_select",
-                      "explanation": "Moving beyond complex leads means taking on presenting offers, negotiating terms, and closing deals directly.",
+                      "explanation": "Coachability is visible when feedback is heard, clarified, practiced, and reflected in changed work.",
                       "points": 1,
                       "sort_order": 5,
                       "options": [
                         {
                           "source_key": "option-slot-19-05-1",
-                          "option_text": "Presenting offers",
+                          "option_text": "Listen without becoming defensive",
                           "is_correct": true,
                           "sort_order": 1
                         },
                         {
                           "source_key": "option-slot-19-05-2",
-                          "option_text": "Negotiating terms",
+                          "option_text": "Confirm the action to practice",
                           "is_correct": true,
                           "sort_order": 2
                         },
                         {
                           "source_key": "option-slot-19-05-3",
-                          "option_text": "Closing deals directly",
+                          "option_text": "Apply the feedback in the work",
                           "is_correct": true,
                           "sort_order": 3
                         },
                         {
                           "source_key": "option-slot-19-05-4",
-                          "option_text": "Training new hires",
-                          "is_correct": false,
+                          "option_text": "Return with evidence of the change",
+                          "is_correct": true,
                           "sort_order": 4
                         },
                         {
                           "source_key": "option-slot-19-05-5",
-                          "option_text": "Managing the CRM system",
+                          "option_text": "Explain why the old approach should never change",
                           "is_correct": false,
                           "sort_order": 5
+                        },
+                        {
+                          "source_key": "option-slot-19-05-6",
+                          "option_text": "Wait for someone else to fix the gap",
+                          "is_correct": false,
+                          "sort_order": 6
                         }
                       ]
                     },
                     {
                       "source_key": "question-slot-19-06",
-                      "question_text": "What skill is required when a straightforward approach to a deal fails?",
+                      "question_text": "What is the source of truth for your current responsibilities?",
                       "question_type": "single_choice",
-                      "explanation": "Creative deal structuring allows closers to find alternative solutions when standard approaches do not work.",
+                      "explanation": "Your manager and current written role plan define current role expectations.",
                       "points": 1,
                       "sort_order": 6,
                       "options": [
                         {
                           "source_key": "option-slot-19-06-1",
-                          "option_text": "The ability to walk away from the deal",
-                          "is_correct": false,
+                          "option_text": "Your current written role plan and manager",
+                          "is_correct": true,
                           "sort_order": 1
                         },
                         {
                           "source_key": "option-slot-19-06-2",
-                          "option_text": "The ability to structure deals creatively",
-                          "is_correct": true,
+                          "option_text": "An older training example",
+                          "is_correct": false,
                           "sort_order": 2
                         },
                         {
                           "source_key": "option-slot-19-06-3",
-                          "option_text": "The ability to escalate to management",
+                          "option_text": "A coworker's task list",
                           "is_correct": false,
                           "sort_order": 3
                         },
                         {
                           "source_key": "option-slot-19-06-4",
-                          "option_text": "The ability to renegotiate the price",
+                          "option_text": "An informal assumption",
                           "is_correct": false,
                           "sort_order": 4
                         }
@@ -15190,33 +15172,33 @@
                     },
                     {
                       "source_key": "question-slot-19-07",
-                      "question_text": "On what specific factor are promotions at BMH Group based?",
+                      "question_text": "A new responsibility is mentioned informally. What should happen before you treat it as assigned ownership?",
                       "question_type": "single_choice",
-                      "explanation": "Promotions are merit-based, determined by demonstrated performance and readiness rather than tenure.",
+                      "explanation": "Increased ownership applies only when your manager confirms it and the current written role plan documents it.",
                       "points": 1,
                       "sort_order": 7,
                       "options": [
                         {
                           "source_key": "option-slot-19-07-1",
-                          "option_text": "Length of employment",
-                          "is_correct": false,
+                          "option_text": "Confirm it with your manager and have it documented in the current written role plan",
+                          "is_correct": true,
                           "sort_order": 1
                         },
                         {
                           "source_key": "option-slot-19-07-2",
-                          "option_text": "Manager recommendations",
+                          "option_text": "Add it to your role without discussion",
                           "is_correct": false,
                           "sort_order": 2
                         },
                         {
                           "source_key": "option-slot-19-07-3",
-                          "option_text": "Demonstrated performance and readiness",
-                          "is_correct": true,
+                          "option_text": "Trade duties with a coworker",
+                          "is_correct": false,
                           "sort_order": 3
                         },
                         {
                           "source_key": "option-slot-19-07-4",
-                          "option_text": "Completion of training modules",
+                          "option_text": "Wait for a training example",
                           "is_correct": false,
                           "sort_order": 4
                         }
@@ -15224,67 +15206,55 @@
                     },
                     {
                       "source_key": "question-slot-19-08",
-                      "question_text": "Regarding number consistency, what is the expectation for high performers?",
-                      "question_type": "single_choice",
-                      "explanation": "High performers hit their numbers every day for extended stretches, not just on their best days.",
+                      "question_text": "Completing this training automatically changes your assigned responsibilities.",
+                      "question_type": "true_false",
+                      "explanation": "Training builds capability; only manager-confirmed, documented role expectations change assigned ownership.",
                       "points": 1,
                       "sort_order": 8,
                       "options": [
                         {
                           "source_key": "option-slot-19-08-1",
-                          "option_text": "Hitting numbers at least three days per week",
+                          "option_text": "True",
                           "is_correct": false,
                           "sort_order": 1
                         },
                         {
                           "source_key": "option-slot-19-08-2",
-                          "option_text": "Hitting numbers on most days",
-                          "is_correct": false,
-                          "sort_order": 2
-                        },
-                        {
-                          "source_key": "option-slot-19-08-3",
-                          "option_text": "Hitting numbers every day for extended stretches, not just on good days",
+                          "option_text": "False",
                           "is_correct": true,
-                          "sort_order": 3
-                        },
-                        {
-                          "source_key": "option-slot-19-08-4",
-                          "option_text": "Hitting numbers weekly even if some days are missed",
-                          "is_correct": false,
-                          "sort_order": 4
+                          "sort_order": 2
                         }
                       ]
                     },
                     {
                       "source_key": "question-slot-19-09",
-                      "question_text": "How are employees expected to contribute to the overall team environment?",
+                      "question_text": "A coworker's duties differ from yours. Which expectations should guide your work?",
                       "question_type": "single_choice",
-                      "explanation": "BMH Group values a collaborative culture where team members help others and share effective strategies.",
+                      "explanation": "Current role expectations come from your own written role plan and manager, not another person's duties.",
                       "points": 1,
                       "sort_order": 9,
                       "options": [
                         {
                           "source_key": "option-slot-19-09-1",
-                          "option_text": "By focusing solely on their own performance",
-                          "is_correct": false,
+                          "option_text": "Your current written role plan, clarified with your manager",
+                          "is_correct": true,
                           "sort_order": 1
                         },
                         {
                           "source_key": "option-slot-19-09-2",
-                          "option_text": "By competing to outperform their peers",
+                          "option_text": "The coworker's duties",
                           "is_correct": false,
                           "sort_order": 2
                         },
                         {
                           "source_key": "option-slot-19-09-3",
-                          "option_text": "By helping others and sharing what strategies are working",
-                          "is_correct": true,
+                          "option_text": "Whichever tasks seem more advanced",
+                          "is_correct": false,
                           "sort_order": 3
                         },
                         {
                           "source_key": "option-slot-19-09-4",
-                          "option_text": "By documenting processes for the company wiki",
+                          "option_text": "A previous employee's routine",
                           "is_correct": false,
                           "sort_order": 4
                         }
@@ -15292,89 +15262,113 @@
                     },
                     {
                       "source_key": "question-slot-19-10",
-                      "question_text": "When BMH Group expands into new markets, high performers are the first ones considered for new opportunities.",
-                      "question_type": "true_false",
-                      "explanation": "High performers get first consideration for every new opportunity that opens up during expansion.",
+                      "question_text": "What does capability mean in this lesson?",
+                      "question_type": "single_choice",
+                      "explanation": "Capability is the reliable application of relevant knowledge and skills in your current role.",
                       "points": 1,
                       "sort_order": 10,
                       "options": [
                         {
                           "source_key": "option-slot-19-10-1",
-                          "option_text": "True",
+                          "option_text": "Using knowledge and skills reliably in current work",
                           "is_correct": true,
                           "sort_order": 1
                         },
                         {
                           "source_key": "option-slot-19-10-2",
-                          "option_text": "False",
-                          "is_correct": false,
-                          "sort_order": 2
-                        }
-                      ]
-                    },
-                    {
-                      "source_key": "question-slot-19-11",
-                      "question_text": "What are multi-owner properties?",
-                      "question_type": "single_choice",
-                      "explanation": "Multi-owner properties involve multiple stakeholders, such as siblings, who may disagree on the sale.",
-                      "points": 1,
-                      "sort_order": 11,
-                      "options": [
-                        {
-                          "source_key": "option-slot-19-11-1",
-                          "option_text": "Properties owned by investment groups",
-                          "is_correct": false,
-                          "sort_order": 1
-                        },
-                        {
-                          "source_key": "option-slot-19-11-2",
-                          "option_text": "Properties with multiple mortgages",
+                          "option_text": "Knowing the names of future job titles",
                           "is_correct": false,
                           "sort_order": 2
                         },
                         {
-                          "source_key": "option-slot-19-11-3",
-                          "option_text": "Leads involving multiple stakeholders, such as siblings, who may disagree on the sale",
-                          "is_correct": true,
+                          "source_key": "option-slot-19-10-3",
+                          "option_text": "Taking on unassigned work",
+                          "is_correct": false,
                           "sort_order": 3
                         },
                         {
-                          "source_key": "option-slot-19-11-4",
-                          "option_text": "Commercial properties with shared ownership",
+                          "source_key": "option-slot-19-10-4",
+                          "option_text": "Avoiding feedback once trained",
                           "is_correct": false,
                           "sort_order": 4
                         }
                       ]
                     },
                     {
+                      "source_key": "question-slot-19-11",
+                      "question_text": "Which actions make growing capability visible?",
+                      "question_type": "multi_select",
+                      "explanation": "Practice, consistent execution, clean records, and applied feedback make capability visible.",
+                      "points": 1,
+                      "sort_order": 11,
+                      "options": [
+                        {
+                          "source_key": "option-slot-19-11-1",
+                          "option_text": "Practice relevant skills",
+                          "is_correct": true,
+                          "sort_order": 1
+                        },
+                        {
+                          "source_key": "option-slot-19-11-2",
+                          "option_text": "Perform current responsibilities consistently",
+                          "is_correct": true,
+                          "sort_order": 2
+                        },
+                        {
+                          "source_key": "option-slot-19-11-3",
+                          "option_text": "Keep the work record clean",
+                          "is_correct": true,
+                          "sort_order": 3
+                        },
+                        {
+                          "source_key": "option-slot-19-11-4",
+                          "option_text": "Apply specific feedback",
+                          "is_correct": true,
+                          "sort_order": 4
+                        },
+                        {
+                          "source_key": "option-slot-19-11-5",
+                          "option_text": "Claim unassigned ownership",
+                          "is_correct": false,
+                          "sort_order": 5
+                        },
+                        {
+                          "source_key": "option-slot-19-11-6",
+                          "option_text": "Rely on memory instead of the role plan",
+                          "is_correct": false,
+                          "sort_order": 6
+                        }
+                      ]
+                    },
+                    {
                       "source_key": "question-slot-19-12",
-                      "question_text": "What specific action should follow when a gap in a process is pointed out?",
+                      "question_text": "When should you take on increased ownership?",
                       "question_type": "single_choice",
-                      "explanation": "The expected response is to fix the gap and come back better, demonstrating coachability.",
+                      "explanation": "Increased ownership must be manager-confirmed and documented in the current written role plan.",
                       "points": 1,
                       "sort_order": 12,
                       "options": [
                         {
                           "source_key": "option-slot-19-12-1",
-                          "option_text": "Document the gap and report it to management",
-                          "is_correct": false,
+                          "option_text": "After your manager confirms it and the current written role plan documents it",
+                          "is_correct": true,
                           "sort_order": 1
                         },
                         {
                           "source_key": "option-slot-19-12-2",
-                          "option_text": "Discuss the gap with the team",
+                          "option_text": "As soon as you feel ready",
                           "is_correct": false,
                           "sort_order": 2
                         },
                         {
                           "source_key": "option-slot-19-12-3",
-                          "option_text": "Fix the gap and come back better",
-                          "is_correct": true,
+                          "option_text": "When a coworker suggests it",
+                          "is_correct": false,
                           "sort_order": 3
                         },
                         {
                           "source_key": "option-slot-19-12-4",
-                          "option_text": "Request additional training",
+                          "option_text": "After finishing any course",
                           "is_correct": false,
                           "sort_order": 4
                         }
@@ -15382,123 +15376,135 @@
                     },
                     {
                       "source_key": "question-slot-19-13",
-                      "question_text": "What type of sellers requires a 'sensitive conversation' approach?",
-                      "question_type": "single_choice",
-                      "explanation": "Sellers in financial distress require careful, sensitive handling during conversations.",
+                      "question_text": "Every employee follows the same fixed development timeline.",
+                      "question_type": "true_false",
+                      "explanation": "The lesson gives no fixed timeline; use current role expectations and manager feedback to guide development.",
                       "points": 1,
                       "sort_order": 13,
                       "options": [
                         {
                           "source_key": "option-slot-19-13-1",
-                          "option_text": "Sellers relocating for work",
+                          "option_text": "True",
                           "is_correct": false,
                           "sort_order": 1
                         },
                         {
                           "source_key": "option-slot-19-13-2",
-                          "option_text": "Sellers with multiple properties",
-                          "is_correct": false,
-                          "sort_order": 2
-                        },
-                        {
-                          "source_key": "option-slot-19-13-3",
-                          "option_text": "Sellers in financial distress",
+                          "option_text": "False",
                           "is_correct": true,
-                          "sort_order": 3
-                        },
-                        {
-                          "source_key": "option-slot-19-13-4",
-                          "option_text": "Sellers who inherited a property",
-                          "is_correct": false,
-                          "sort_order": 4
+                          "sort_order": 2
                         }
                       ]
                     },
                     {
                       "source_key": "question-slot-19-14",
-                      "question_text": "In the management path, what is the manager 'owning' regarding their team?",
-                      "question_type": "single_choice",
-                      "explanation": "Managers own the performance and output of their entire team, not just their individual results.",
+                      "question_text": "Which topics belong in a development discussion with your manager?",
+                      "question_type": "multi_select",
+                      "explanation": "A grounded development discussion connects current expectations, practice, feedback, and documented ownership.",
                       "points": 1,
                       "sort_order": 14,
                       "options": [
                         {
                           "source_key": "option-slot-19-14-1",
-                          "option_text": "The team's schedule and time off",
-                          "is_correct": false,
+                          "option_text": "Current role expectations",
+                          "is_correct": true,
                           "sort_order": 1
                         },
                         {
                           "source_key": "option-slot-19-14-2",
-                          "option_text": "The team's CRM entries",
-                          "is_correct": false,
+                          "option_text": "A capability to practice",
+                          "is_correct": true,
                           "sort_order": 2
                         },
                         {
                           "source_key": "option-slot-19-14-3",
-                          "option_text": "The performance and output of the entire team",
+                          "option_text": "Recent feedback to apply",
                           "is_correct": true,
                           "sort_order": 3
                         },
                         {
                           "source_key": "option-slot-19-14-4",
-                          "option_text": "The team's training materials",
+                          "option_text": "Any proposed ownership that needs documentation",
+                          "is_correct": true,
+                          "sort_order": 4
+                        },
+                        {
+                          "source_key": "option-slot-19-14-5",
+                          "option_text": "Another person's role terms",
+                          "is_correct": false,
+                          "sort_order": 5
+                        },
+                        {
+                          "source_key": "option-slot-19-14-6",
+                          "option_text": "An assumed change in duties",
+                          "is_correct": false,
+                          "sort_order": 6
+                        }
+                      ]
+                    },
+                    {
+                      "source_key": "question-slot-19-15",
+                      "question_text": "An old training example conflicts with your current role plan. What should guide you?",
+                      "question_type": "single_choice",
+                      "explanation": "The current written role plan and manager direction are the source of truth for current expectations.",
+                      "points": 1,
+                      "sort_order": 15,
+                      "options": [
+                        {
+                          "source_key": "option-slot-19-15-1",
+                          "option_text": "The current written role plan and manager direction",
+                          "is_correct": true,
+                          "sort_order": 1
+                        },
+                        {
+                          "source_key": "option-slot-19-15-2",
+                          "option_text": "The older example",
+                          "is_correct": false,
+                          "sort_order": 2
+                        },
+                        {
+                          "source_key": "option-slot-19-15-3",
+                          "option_text": "A teammate's memory",
+                          "is_correct": false,
+                          "sort_order": 3
+                        },
+                        {
+                          "source_key": "option-slot-19-15-4",
+                          "option_text": "The option with more responsibility",
                           "is_correct": false,
                           "sort_order": 4
                         }
                       ]
                     },
                     {
-                      "source_key": "question-slot-19-15",
-                      "question_text": "BMH Group views feedback as an opportunity to improve rather than a reason for defensiveness.",
-                      "question_type": "true_false",
-                      "explanation": "The company culture treats feedback as a growth opportunity, and defensiveness is discouraged.",
-                      "points": 1,
-                      "sort_order": 15,
-                      "options": [
-                        {
-                          "source_key": "option-slot-19-15-1",
-                          "option_text": "True",
-                          "is_correct": true,
-                          "sort_order": 1
-                        },
-                        {
-                          "source_key": "option-slot-19-15-2",
-                          "option_text": "False",
-                          "is_correct": false,
-                          "sort_order": 2
-                        }
-                      ]
-                    },
-                    {
                       "source_key": "question-slot-19-16",
-                      "question_text": "What is the consequence of a lead having 'no plan' in the CRM?",
+                      "question_text": "Why can deliberate practice still be useful when it feels repetitive?",
                       "question_type": "single_choice",
-                      "explanation": "A lead with no plan is a failure in CRM hygiene and signals the employee is not ready for promotion.",
+                      "explanation": "Deliberate repetition helps a relevant skill become reliable capability in current work.",
                       "points": 1,
                       "sort_order": 16,
                       "options": [
                         {
                           "source_key": "option-slot-19-16-1",
-                          "option_text": "The lead is automatically archived",
-                          "is_correct": false,
+                          "option_text": "Repetition helps turn a skill into reliable capability",
+                          "is_correct": true,
                           "sort_order": 1
                         },
                         {
                           "source_key": "option-slot-19-16-2",
-                          "option_text": "The lead is reassigned to another team member",
+                          "option_text": "Repetition changes assigned ownership",
                           "is_correct": false,
                           "sort_order": 2
                         },
                         {
                           "source_key": "option-slot-19-16-3",
-                          "option_text": "It is considered a failure in CRM hygiene and readiness for promotion",
-                          "is_correct": true,
+                          "option_text": "Repetition replaces manager feedback",
+                          "is_correct": false,
                           "sort_order": 3
                         },
                         {
                           "source_key": "option-slot-19-16-4",
-                          "option_text": "The employee receives a written warning",
+                          "option_text": "Repetition makes documentation unnecessary",
                           "is_correct": false,
                           "sort_order": 4
                         }
@@ -15506,33 +15512,33 @@
                     },
                     {
                       "source_key": "question-slot-19-17",
-                      "question_text": "Under what condition is creative deal structuring used?",
+                      "question_text": "Which response is least coachable after a gap is identified?",
                       "question_type": "single_choice",
-                      "explanation": "Creative deal structuring is the fallback when a straightforward approach does not produce results.",
+                      "explanation": "Coachability requires engaging with feedback and practicing the correction rather than dismissing the gap.",
                       "points": 1,
                       "sort_order": 17,
                       "options": [
                         {
                           "source_key": "option-slot-19-17-1",
-                          "option_text": "When the property value exceeds a certain threshold",
-                          "is_correct": false,
+                          "option_text": "Defend the old approach and ignore the gap",
+                          "is_correct": true,
                           "sort_order": 1
                         },
                         {
                           "source_key": "option-slot-19-17-2",
-                          "option_text": "When multiple buyers are competing",
+                          "option_text": "Clarify the expected change",
                           "is_correct": false,
                           "sort_order": 2
                         },
                         {
                           "source_key": "option-slot-19-17-3",
-                          "option_text": "When the straightforward approach to a deal does not work",
-                          "is_correct": true,
+                          "option_text": "Practice the corrected approach",
+                          "is_correct": false,
                           "sort_order": 3
                         },
                         {
                           "source_key": "option-slot-19-17-4",
-                          "option_text": "When the seller requests alternative terms",
+                          "option_text": "Follow up with evidence of improvement",
                           "is_correct": false,
                           "sort_order": 4
                         }
@@ -15540,35 +15546,23 @@
                     },
                     {
                       "source_key": "question-slot-19-18",
-                      "question_text": "Why is coachability tested at BMH Group?",
-                      "question_type": "single_choice",
-                      "explanation": "Coachability testing identifies people who can hear a gap in their process and fix it immediately.",
+                      "question_text": "Professional development in this lesson means applying practice and feedback to become more capable in your current role.",
+                      "question_type": "true_false",
+                      "explanation": "The lesson defines development as practice, applied feedback, and reliable capability within current role expectations.",
                       "points": 1,
                       "sort_order": 18,
                       "options": [
                         {
                           "source_key": "option-slot-19-18-1",
-                          "option_text": "To determine who needs additional training",
-                          "is_correct": false,
+                          "option_text": "True",
+                          "is_correct": true,
                           "sort_order": 1
                         },
                         {
                           "source_key": "option-slot-19-18-2",
-                          "option_text": "To identify people who can hear a gap in their process and fix it immediately",
-                          "is_correct": true,
+                          "option_text": "False",
+                          "is_correct": false,
                           "sort_order": 2
-                        },
-                        {
-                          "source_key": "option-slot-19-18-3",
-                          "option_text": "To assess cultural fit within the team",
-                          "is_correct": false,
-                          "sort_order": 3
-                        },
-                        {
-                          "source_key": "option-slot-19-18-4",
-                          "option_text": "To rank employees for performance reviews",
-                          "is_correct": false,
-                          "sort_order": 4
                         }
                       ]
                     }

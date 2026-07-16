@@ -16,6 +16,13 @@ const REQUIRED_HELD_ASSETS = new Map([
 ]);
 
 const STALE_COMPENSATION_PATTERN = /\$\s*\d|hourly base|appointment bonus|commission tier|tiered commission/i;
+const STALE_CAREER_GROWTH_PATTERN = /\b(?:role ladder|career ladder|promotion|promoted|readiness|first consideration|management path|closer path|acquisitions? role|90(?:-plus)? days?|six months?|one year|commission|compensation|salary|pay increase|earning potential|higher earnings?|daily (?:numbers?|targets?|quotas?)|dial quotas?|hit(?:ting)? (?:their )?numbers every day|guarante(?:e|ed|es)|own(?:s|ing)? (?:the )?(?:entire )?team(?:'s)? performance)\b/i;
+const CAREER_GROWTH_GROUNDING = new Map([
+  ["practice", /\b(?:practic(?:e|ing)|repetition|development loop)\b/i],
+  ["feedback", /\b(?:feedback|coach(?:ing|ability|able)|defensive)\b/i],
+  ["capability", /\b(?:capabilit(?:y|ies)|skills?|reliable|consistently)\b/i],
+  ["current role", /\b(?:current (?:written )?role|role plan|role expectations|assigned responsibilities|manager|documented|ownership)\b/i],
+]);
 const STACK_CONFIRMATION_SCHEMA = "bmh-operating-stack-confirmation/v1";
 const REQUIRED_STACK_EVIDENCE = new Set([
   "projects/BMH Training Course.md",
@@ -79,6 +86,51 @@ export function dialPadReferenceSha256(manifest) {
   return createHash("sha256")
     .update(JSON.stringify(collectDialPadReferences(manifest)))
     .digest("hex");
+}
+
+export function validateCareerGrowthAssessment(quiz) {
+  const issues = [];
+  if (!quiz || !Array.isArray(quiz.questions)) {
+    return ["Career Growth assessment is missing"];
+  }
+  if (quiz.questions.length !== 18) {
+    issues.push(`Career Growth assessment must contain exactly 18 questions, found ${quiz.questions.length}`);
+  }
+
+  const questionTypes = new Set();
+  const coveredConcepts = new Set();
+  for (const question of quiz.questions) {
+    questionTypes.add(question.question_type);
+    const serialized = JSON.stringify(question);
+    if (STALE_CAREER_GROWTH_PATTERN.test(serialized)) {
+      issues.push(`${question.source_key} contains a stale role-ladder or outcome promise`);
+    }
+
+    const correctAnswers = question.options
+      ?.filter((option) => option.is_correct)
+      .map((option) => option.option_text)
+      .join(" ") ?? "";
+    const groundingText = `${question.explanation ?? ""} ${correctAnswers}`;
+    const matches = [...CAREER_GROWTH_GROUNDING]
+      .filter(([, pattern]) => pattern.test(groundingText))
+      .map(([concept]) => concept);
+    if (matches.length === 0) {
+      issues.push(`${question.source_key} is not grounded in the locked Career Growth lesson concepts`);
+    }
+    matches.forEach((concept) => coveredConcepts.add(concept));
+  }
+
+  for (const questionType of ["single_choice", "multi_select", "true_false"]) {
+    if (!questionTypes.has(questionType)) {
+      issues.push(`Career Growth assessment needs ${questionType} questions`);
+    }
+  }
+  for (const concept of CAREER_GROWTH_GROUNDING.keys()) {
+    if (!coveredConcepts.has(concept)) {
+      issues.push(`Career Growth assessment does not cover ${concept}`);
+    }
+  }
+  return issues;
 }
 
 export function validateStackConfirmation(
@@ -475,6 +527,8 @@ export function validateManifest(
   if (/how many dials should you aim|110 to 150 dials|150 to 200 total dials/i.test(missionControlQuestions)) {
     errors.push("Fixed daily dial targets are present in Mission Control assessment content");
   }
+  const careerGrowthLesson = lessons.find((lesson) => lesson.source_key === "lesson-quiz-slot-19");
+  errors.push(...validateCareerGrowthAssessment(careerGrowthLesson?.quiz));
   if (/DialPad/i.test(serialized)) {
     const stackIssues = validateStackConfirmation(manifest, stackConfirmation, now);
     if (stackIssues.length > 0) {

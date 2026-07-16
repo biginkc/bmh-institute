@@ -89,6 +89,25 @@ Implement the approved concurrent completion plan for the reusable BMH Institute
 - This reconciliation made no provider call, upload, video edit, approval
   change, production mutation, or publication.
 
+### 2026-07-16 Career Growth assessment reconciliation
+
+- The entire stale 18-question Career Growth pool was replaced at its builder
+  source. None of the old role ladder, promotion criteria, fixed readiness
+  periods, daily-number expectations, first-consideration claims, management
+  ownership, compensation, or earnings language remains in the learner
+  assessment.
+- The replacement keeps 18 curated questions, 10 randomized per attempt, an 80%
+  pass threshold, answer randomization, explanations, and all three supported
+  question types. Every item is grounded in practice, feedback, coachability,
+  capability, current role expectations, or manager-confirmed written ownership.
+- The in-app lesson objectives and guide, eight derived flashcards, and slot 19
+  accessible guide PDF were rebuilt from the same role-agnostic source. The
+  validator now fails closed on stale career promises and ungrounded questions.
+  Two complete rebuilds were byte-identical, and the Tech Stack canary remained
+  byte-identical.
+- This content-only reconciliation changed no video, caption, transcript,
+  artwork, approval, provider, upload, production record, or publication state.
+
 ## Hard gates
 
 - Jarrad must approve or request recuts for the nine held videos before their exact files become publishable.

@@ -113,12 +113,22 @@ The Compensation Engine bank was replaced in full. Its 18 new questions teach
 role ownership, current scorecards, the current written agreement, and manager
 clarification. They contain no dollar figures, fixed pay terms, or promises.
 
-Career Growth questions about compensation, earnings, and a supposed
-commission increase were excluded. KPI questions that relied on numeric target
-ranges removed from the shipped lesson were also excluded. The duplicate
-leaseback question was retained only in Seller FAQ Decoder. A question claiming
-a specific credit effect from bringing a loan current was excluded from the
-Objection Scripts Playbook.
+The Career Growth bank was also replaced in full rather than filtered from its
+stale source export. Its 18 role-agnostic questions contain 10 single-choice,
+four multi-select, and four true-or-false items. They assess deliberate practice,
+feedback, coachability, capability, current role expectations, and the rule that
+increased ownership applies only when a manager confirms it in the current
+written role plan. The first eight questions deterministically supply the eight
+Career Growth flashcards and the accessible guide's retrieval-practice section.
+The validator rejects role ladders, promotion or earnings promises, fixed
+timelines, first-consideration claims, daily-number expectations, and any
+question whose explanation and correct answer are not grounded in the locked
+lesson concepts.
+
+KPI questions that relied on numeric target ranges removed from the shipped
+lesson were also excluded. The duplicate leaseback question was retained only
+in Seller FAQ Decoder. A question claiming a specific credit effect from
+bringing a loan current was excluded from the Objection Scripts Playbook.
 
 The wrong-track `The Cold Call Blueprint.pdf` is not referenced anywhere in the
 manifest.
