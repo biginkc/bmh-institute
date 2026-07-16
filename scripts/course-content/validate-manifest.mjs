@@ -50,6 +50,7 @@ export async function loadManifest(urlOrPath) {
 export function summarizeManifest(manifest) {
   const lessons = allLessons(manifest);
   const blocks = allBlocks(manifest);
+  const assets = manifest.assets ?? [];
   return {
     modules: manifest.program.courses.reduce(
       (count, course) => count + course.modules.length,
@@ -68,6 +69,10 @@ export function summarizeManifest(manifest) {
       0,
     ),
     rolePlays: blocks.filter((block) => block.type === "role_play").length,
+    posterAssets: assets.filter((asset) => /^poster-video-slot-/.test(asset.source_key)).length,
+    posterReferences: blocks.filter((block) => block.type === "video" && block.content.poster_asset_key).length,
+    guideAssets: assets.filter((asset) => /^guide-slot-/.test(asset.source_key)).length,
+    guideBlocks: blocks.filter((block) => block.type === "download" && /^block-guide-pdf-slot-/.test(block.source_key)).length,
   };
 }
 
@@ -103,6 +108,10 @@ export function validateManifest(manifest) {
     quizQuestions: 342,
     flashcards: 152,
     rolePlays: 6,
+    posterAssets: 29,
+    posterReferences: 29,
+    guideAssets: 19,
+    guideBlocks: 19,
   };
   for (const [field, count] of Object.entries(expected)) {
     if (summary[field] !== count) errors.push(`Expected ${count} ${field}, found ${summary[field]}`);
@@ -131,10 +140,15 @@ export function validateManifest(manifest) {
   ].filter(Boolean));
 
   for (const block of blocks) {
+    if (block.content?.asset_key) referencedAssets.add(block.content.asset_key);
     if (block.type === "video") {
       for (const field of ["asset_key", "poster_asset_key", "caption_asset_key", "transcript_asset_key"]) {
         const key = block.content[field];
         if (key) referencedAssets.add(key);
+      }
+      const poster = assetsByKey.get(block.content.poster_asset_key);
+      if (!poster || poster.kind !== "image" || !/^poster-video-slot-/.test(poster.source_key)) {
+        errors.push(`${block.source_key} does not map to a dedicated poster asset`);
       }
     }
     if (block.type === "flashcard") {
@@ -185,6 +199,18 @@ export function validateManifest(manifest) {
     if (lesson.type === "content") {
       if (!lesson.blocks?.length || lesson.quiz || lesson.assignment) {
         errors.push(`${lesson.source_key} must contain only content blocks`);
+      }
+      const guides = lesson.blocks?.filter(
+        (block) => block.type === "download" && /^block-guide-pdf-slot-/.test(block.source_key),
+      ) ?? [];
+      if (guides.length !== 1) {
+        errors.push(`${lesson.source_key} must contain exactly one accessible guide download`);
+      } else {
+        const guideBlock = guides[0];
+        const guideAsset = assetsByKey.get(guideBlock.content.asset_key);
+        if (!guideBlock.required || !guideAsset || guideAsset.kind !== "pdf" || guideBlock.content.file_path !== guideAsset.storage_path) {
+          errors.push(`${lesson.source_key} guide download is not required or correctly mapped`);
+        }
       }
     } else if (lesson.type === "quiz") {
       if (!lesson.quiz || lesson.blocks || lesson.assignment) {

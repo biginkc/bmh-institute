@@ -1077,6 +1077,486 @@
       "checksum_sha256": null,
       "size_bytes": null,
       "approval_status": "missing"
+    },
+    {
+      "source_key": "poster-video-slot-01-welcome",
+      "kind": "image",
+      "local_path": "course-assets/posters/video-slot-01-welcome.webp",
+      "storage_path": "courses/bmh-employee-training/v1/posters/video-slot-01-welcome.webp",
+      "mime_type": "image/webp",
+      "checksum_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing"
+    },
+    {
+      "source_key": "poster-video-slot-01-mindset",
+      "kind": "image",
+      "local_path": "course-assets/posters/video-slot-01-mindset.webp",
+      "storage_path": "courses/bmh-employee-training/v1/posters/video-slot-01-mindset.webp",
+      "mime_type": "image/webp",
+      "checksum_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing"
+    },
+    {
+      "source_key": "poster-video-slot-02-terms",
+      "kind": "image",
+      "local_path": "course-assets/posters/video-slot-02-terms.webp",
+      "storage_path": "courses/bmh-employee-training/v1/posters/video-slot-02-terms.webp",
+      "mime_type": "image/webp",
+      "checksum_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing"
+    },
+    {
+      "source_key": "poster-video-slot-03-tech-stack",
+      "kind": "image",
+      "local_path": "course-assets/posters/video-slot-03-tech-stack.webp",
+      "storage_path": "courses/bmh-employee-training/v1/posters/video-slot-03-tech-stack.webp",
+      "mime_type": "image/webp",
+      "checksum_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing"
+    },
+    {
+      "source_key": "poster-video-slot-04-humanizing-a",
+      "kind": "image",
+      "local_path": "course-assets/posters/video-slot-04-humanizing-a.webp",
+      "storage_path": "courses/bmh-employee-training/v1/posters/video-slot-04-humanizing-a.webp",
+      "mime_type": "image/webp",
+      "checksum_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing"
+    },
+    {
+      "source_key": "poster-video-slot-04-humanizing-b",
+      "kind": "image",
+      "local_path": "course-assets/posters/video-slot-04-humanizing-b.webp",
+      "storage_path": "courses/bmh-employee-training/v1/posters/video-slot-04-humanizing-b.webp",
+      "mime_type": "image/webp",
+      "checksum_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing"
+    },
+    {
+      "source_key": "poster-video-slot-04-ideal-seller",
+      "kind": "image",
+      "local_path": "course-assets/posters/video-slot-04-ideal-seller.webp",
+      "storage_path": "courses/bmh-employee-training/v1/posters/video-slot-04-ideal-seller.webp",
+      "mime_type": "image/webp",
+      "checksum_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing"
+    },
+    {
+      "source_key": "poster-video-slot-05-offer-a",
+      "kind": "image",
+      "local_path": "course-assets/posters/video-slot-05-offer-a.webp",
+      "storage_path": "courses/bmh-employee-training/v1/posters/video-slot-05-offer-a.webp",
+      "mime_type": "image/webp",
+      "checksum_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing"
+    },
+    {
+      "source_key": "poster-video-slot-05-offer-b",
+      "kind": "image",
+      "local_path": "course-assets/posters/video-slot-05-offer-b.webp",
+      "storage_path": "courses/bmh-employee-training/v1/posters/video-slot-05-offer-b.webp",
+      "mime_type": "image/webp",
+      "checksum_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing"
+    },
+    {
+      "source_key": "poster-video-slot-06-pipeline",
+      "kind": "image",
+      "local_path": "course-assets/posters/video-slot-06-pipeline.webp",
+      "storage_path": "courses/bmh-employee-training/v1/posters/video-slot-06-pipeline.webp",
+      "mime_type": "image/webp",
+      "checksum_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing"
+    },
+    {
+      "source_key": "poster-video-slot-06-framework",
+      "kind": "image",
+      "local_path": "course-assets/posters/video-slot-06-framework.webp",
+      "storage_path": "courses/bmh-employee-training/v1/posters/video-slot-06-framework.webp",
+      "mime_type": "image/webp",
+      "checksum_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing"
+    },
+    {
+      "source_key": "poster-video-slot-07-opening",
+      "kind": "image",
+      "local_path": "course-assets/posters/video-slot-07-opening.webp",
+      "storage_path": "courses/bmh-employee-training/v1/posters/video-slot-07-opening.webp",
+      "mime_type": "image/webp",
+      "checksum_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing"
+    },
+    {
+      "source_key": "poster-video-slot-07-fact-find",
+      "kind": "image",
+      "local_path": "course-assets/posters/video-slot-07-fact-find.webp",
+      "storage_path": "courses/bmh-employee-training/v1/posters/video-slot-07-fact-find.webp",
+      "mime_type": "image/webp",
+      "checksum_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing"
+    },
+    {
+      "source_key": "poster-video-slot-08-discovery",
+      "kind": "image",
+      "local_path": "course-assets/posters/video-slot-08-discovery.webp",
+      "storage_path": "courses/bmh-employee-training/v1/posters/video-slot-08-discovery.webp",
+      "mime_type": "image/webp",
+      "checksum_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing"
+    },
+    {
+      "source_key": "poster-video-slot-08-handoff",
+      "kind": "image",
+      "local_path": "course-assets/posters/video-slot-08-handoff.webp",
+      "storage_path": "courses/bmh-employee-training/v1/posters/video-slot-08-handoff.webp",
+      "mime_type": "image/webp",
+      "checksum_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing"
+    },
+    {
+      "source_key": "poster-video-slot-09-objection-architecture",
+      "kind": "image",
+      "local_path": "course-assets/posters/video-slot-09-objection-architecture.webp",
+      "storage_path": "courses/bmh-employee-training/v1/posters/video-slot-09-objection-architecture.webp",
+      "mime_type": "image/webp",
+      "checksum_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing"
+    },
+    {
+      "source_key": "poster-video-slot-10-objection-scripts",
+      "kind": "image",
+      "local_path": "course-assets/posters/video-slot-10-objection-scripts.webp",
+      "storage_path": "courses/bmh-employee-training/v1/posters/video-slot-10-objection-scripts.webp",
+      "mime_type": "image/webp",
+      "checksum_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing"
+    },
+    {
+      "source_key": "poster-video-slot-11-complex",
+      "kind": "image",
+      "local_path": "course-assets/posters/video-slot-11-complex.webp",
+      "storage_path": "courses/bmh-employee-training/v1/posters/video-slot-11-complex.webp",
+      "mime_type": "image/webp",
+      "checksum_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing"
+    },
+    {
+      "source_key": "poster-video-slot-11-trust",
+      "kind": "image",
+      "local_path": "course-assets/posters/video-slot-11-trust.webp",
+      "storage_path": "courses/bmh-employee-training/v1/posters/video-slot-11-trust.webp",
+      "mime_type": "image/webp",
+      "checksum_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing"
+    },
+    {
+      "source_key": "poster-video-slot-12-faq-a",
+      "kind": "image",
+      "local_path": "course-assets/posters/video-slot-12-faq-a.webp",
+      "storage_path": "courses/bmh-employee-training/v1/posters/video-slot-12-faq-a.webp",
+      "mime_type": "image/webp",
+      "checksum_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing"
+    },
+    {
+      "source_key": "poster-video-slot-12-faq-b",
+      "kind": "image",
+      "local_path": "course-assets/posters/video-slot-12-faq-b.webp",
+      "storage_path": "courses/bmh-employee-training/v1/posters/video-slot-12-faq-b.webp",
+      "mime_type": "image/webp",
+      "checksum_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing"
+    },
+    {
+      "source_key": "poster-video-slot-13-follow-up",
+      "kind": "image",
+      "local_path": "course-assets/posters/video-slot-13-follow-up.webp",
+      "storage_path": "courses/bmh-employee-training/v1/posters/video-slot-13-follow-up.webp",
+      "mime_type": "image/webp",
+      "checksum_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing"
+    },
+    {
+      "source_key": "poster-video-slot-14-flow",
+      "kind": "image",
+      "local_path": "course-assets/posters/video-slot-14-flow.webp",
+      "storage_path": "courses/bmh-employee-training/v1/posters/video-slot-14-flow.webp",
+      "mime_type": "image/webp",
+      "checksum_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing"
+    },
+    {
+      "source_key": "poster-video-slot-15-closing",
+      "kind": "image",
+      "local_path": "course-assets/posters/video-slot-15-closing.webp",
+      "storage_path": "courses/bmh-employee-training/v1/posters/video-slot-15-closing.webp",
+      "mime_type": "image/webp",
+      "checksum_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing"
+    },
+    {
+      "source_key": "poster-video-slot-16-kpis",
+      "kind": "image",
+      "local_path": "course-assets/posters/video-slot-16-kpis.webp",
+      "storage_path": "courses/bmh-employee-training/v1/posters/video-slot-16-kpis.webp",
+      "mime_type": "image/webp",
+      "checksum_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing"
+    },
+    {
+      "source_key": "poster-video-slot-17-compensation",
+      "kind": "image",
+      "local_path": "course-assets/posters/video-slot-17-compensation.webp",
+      "storage_path": "courses/bmh-employee-training/v1/posters/video-slot-17-compensation.webp",
+      "mime_type": "image/webp",
+      "checksum_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing"
+    },
+    {
+      "source_key": "poster-video-slot-18-operator",
+      "kind": "image",
+      "local_path": "course-assets/posters/video-slot-18-operator.webp",
+      "storage_path": "courses/bmh-employee-training/v1/posters/video-slot-18-operator.webp",
+      "mime_type": "image/webp",
+      "checksum_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing"
+    },
+    {
+      "source_key": "poster-video-slot-18-mission-control",
+      "kind": "image",
+      "local_path": "course-assets/posters/video-slot-18-mission-control.webp",
+      "storage_path": "courses/bmh-employee-training/v1/posters/video-slot-18-mission-control.webp",
+      "mime_type": "image/webp",
+      "checksum_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing"
+    },
+    {
+      "source_key": "poster-video-slot-19-career",
+      "kind": "image",
+      "local_path": "course-assets/posters/video-slot-19-career.webp",
+      "storage_path": "courses/bmh-employee-training/v1/posters/video-slot-19-career.webp",
+      "mime_type": "image/webp",
+      "checksum_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing"
+    },
+    {
+      "source_key": "guide-slot-01",
+      "kind": "pdf",
+      "local_path": "course-assets/guides/slot-01-learner-guide.pdf",
+      "storage_path": "courses/bmh-employee-training/v1/guides/slot-01-learner-guide.pdf",
+      "mime_type": "application/pdf",
+      "checksum_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing"
+    },
+    {
+      "source_key": "guide-slot-02",
+      "kind": "pdf",
+      "local_path": "course-assets/guides/slot-02-learner-guide.pdf",
+      "storage_path": "courses/bmh-employee-training/v1/guides/slot-02-learner-guide.pdf",
+      "mime_type": "application/pdf",
+      "checksum_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing"
+    },
+    {
+      "source_key": "guide-slot-03",
+      "kind": "pdf",
+      "local_path": "course-assets/guides/slot-03-learner-guide.pdf",
+      "storage_path": "courses/bmh-employee-training/v1/guides/slot-03-learner-guide.pdf",
+      "mime_type": "application/pdf",
+      "checksum_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing"
+    },
+    {
+      "source_key": "guide-slot-04",
+      "kind": "pdf",
+      "local_path": "course-assets/guides/slot-04-learner-guide.pdf",
+      "storage_path": "courses/bmh-employee-training/v1/guides/slot-04-learner-guide.pdf",
+      "mime_type": "application/pdf",
+      "checksum_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing"
+    },
+    {
+      "source_key": "guide-slot-05",
+      "kind": "pdf",
+      "local_path": "course-assets/guides/slot-05-learner-guide.pdf",
+      "storage_path": "courses/bmh-employee-training/v1/guides/slot-05-learner-guide.pdf",
+      "mime_type": "application/pdf",
+      "checksum_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing"
+    },
+    {
+      "source_key": "guide-slot-06",
+      "kind": "pdf",
+      "local_path": "course-assets/guides/slot-06-learner-guide.pdf",
+      "storage_path": "courses/bmh-employee-training/v1/guides/slot-06-learner-guide.pdf",
+      "mime_type": "application/pdf",
+      "checksum_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing"
+    },
+    {
+      "source_key": "guide-slot-07",
+      "kind": "pdf",
+      "local_path": "course-assets/guides/slot-07-learner-guide.pdf",
+      "storage_path": "courses/bmh-employee-training/v1/guides/slot-07-learner-guide.pdf",
+      "mime_type": "application/pdf",
+      "checksum_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing"
+    },
+    {
+      "source_key": "guide-slot-08",
+      "kind": "pdf",
+      "local_path": "course-assets/guides/slot-08-learner-guide.pdf",
+      "storage_path": "courses/bmh-employee-training/v1/guides/slot-08-learner-guide.pdf",
+      "mime_type": "application/pdf",
+      "checksum_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing"
+    },
+    {
+      "source_key": "guide-slot-09",
+      "kind": "pdf",
+      "local_path": "course-assets/guides/slot-09-learner-guide.pdf",
+      "storage_path": "courses/bmh-employee-training/v1/guides/slot-09-learner-guide.pdf",
+      "mime_type": "application/pdf",
+      "checksum_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing"
+    },
+    {
+      "source_key": "guide-slot-10",
+      "kind": "pdf",
+      "local_path": "course-assets/guides/slot-10-learner-guide.pdf",
+      "storage_path": "courses/bmh-employee-training/v1/guides/slot-10-learner-guide.pdf",
+      "mime_type": "application/pdf",
+      "checksum_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing"
+    },
+    {
+      "source_key": "guide-slot-11",
+      "kind": "pdf",
+      "local_path": "course-assets/guides/slot-11-learner-guide.pdf",
+      "storage_path": "courses/bmh-employee-training/v1/guides/slot-11-learner-guide.pdf",
+      "mime_type": "application/pdf",
+      "checksum_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing"
+    },
+    {
+      "source_key": "guide-slot-12",
+      "kind": "pdf",
+      "local_path": "course-assets/guides/slot-12-learner-guide.pdf",
+      "storage_path": "courses/bmh-employee-training/v1/guides/slot-12-learner-guide.pdf",
+      "mime_type": "application/pdf",
+      "checksum_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing"
+    },
+    {
+      "source_key": "guide-slot-13",
+      "kind": "pdf",
+      "local_path": "course-assets/guides/slot-13-learner-guide.pdf",
+      "storage_path": "courses/bmh-employee-training/v1/guides/slot-13-learner-guide.pdf",
+      "mime_type": "application/pdf",
+      "checksum_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing"
+    },
+    {
+      "source_key": "guide-slot-14",
+      "kind": "pdf",
+      "local_path": "course-assets/guides/slot-14-learner-guide.pdf",
+      "storage_path": "courses/bmh-employee-training/v1/guides/slot-14-learner-guide.pdf",
+      "mime_type": "application/pdf",
+      "checksum_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing"
+    },
+    {
+      "source_key": "guide-slot-15",
+      "kind": "pdf",
+      "local_path": "course-assets/guides/slot-15-learner-guide.pdf",
+      "storage_path": "courses/bmh-employee-training/v1/guides/slot-15-learner-guide.pdf",
+      "mime_type": "application/pdf",
+      "checksum_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing"
+    },
+    {
+      "source_key": "guide-slot-16",
+      "kind": "pdf",
+      "local_path": "course-assets/guides/slot-16-learner-guide.pdf",
+      "storage_path": "courses/bmh-employee-training/v1/guides/slot-16-learner-guide.pdf",
+      "mime_type": "application/pdf",
+      "checksum_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing"
+    },
+    {
+      "source_key": "guide-slot-17",
+      "kind": "pdf",
+      "local_path": "course-assets/guides/slot-17-learner-guide.pdf",
+      "storage_path": "courses/bmh-employee-training/v1/guides/slot-17-learner-guide.pdf",
+      "mime_type": "application/pdf",
+      "checksum_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing"
+    },
+    {
+      "source_key": "guide-slot-18",
+      "kind": "pdf",
+      "local_path": "course-assets/guides/slot-18-learner-guide.pdf",
+      "storage_path": "courses/bmh-employee-training/v1/guides/slot-18-learner-guide.pdf",
+      "mime_type": "application/pdf",
+      "checksum_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing"
+    },
+    {
+      "source_key": "guide-slot-19",
+      "kind": "pdf",
+      "local_path": "course-assets/guides/slot-19-learner-guide.pdf",
+      "storage_path": "courses/bmh-employee-training/v1/guides/slot-19-learner-guide.pdf",
+      "mime_type": "application/pdf",
+      "checksum_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing"
     }
   ],
   "program": {
@@ -1127,7 +1607,7 @@
                     "required": true,
                     "content": {
                       "asset_key": "video-slot-01-welcome",
-                      "poster_asset_key": "thumbnail-slot-01",
+                      "poster_asset_key": "poster-video-slot-01-welcome",
                       "caption_asset_key": "caption-video-slot-01-welcome",
                       "transcript_asset_key": "transcript-video-slot-01-welcome",
                       "title": "Welcome and the Navigator's Playbook",
@@ -1142,7 +1622,7 @@
                     "required": true,
                     "content": {
                       "asset_key": "video-slot-01-mindset",
-                      "poster_asset_key": "thumbnail-slot-01",
+                      "poster_asset_key": "poster-video-slot-01-mindset",
                       "caption_asset_key": "caption-video-slot-01-mindset",
                       "transcript_asset_key": "transcript-video-slot-01-mindset",
                       "title": "Mindset",
@@ -1160,9 +1640,22 @@
                     }
                   },
                   {
+                    "source_key": "block-guide-pdf-slot-01",
+                    "type": "download",
+                    "sort_order": 5,
+                    "required": true,
+                    "content": {
+                      "asset_key": "guide-slot-01",
+                      "file_path": "courses/bmh-employee-training/v1/guides/slot-01-learner-guide.pdf",
+                      "filename": "slot-01-learner-guide.pdf",
+                      "size_bytes": null,
+                      "description": "Accessible learner guide for Welcome and Mindset"
+                    }
+                  },
+                  {
                     "source_key": "block-flashcards-slot-01",
                     "type": "flashcard",
-                    "sort_order": 5,
+                    "sort_order": 6,
                     "required": false,
                     "content": {
                       "cards": [
@@ -1821,7 +2314,7 @@
                     "required": true,
                     "content": {
                       "asset_key": "video-slot-02-terms",
-                      "poster_asset_key": "thumbnail-slot-02",
+                      "poster_asset_key": "poster-video-slot-02-terms",
                       "caption_asset_key": "caption-video-slot-02-terms",
                       "transcript_asset_key": "transcript-video-slot-02-terms",
                       "title": "Real Estate Terms Glossary",
@@ -1839,9 +2332,22 @@
                     }
                   },
                   {
+                    "source_key": "block-guide-pdf-slot-02",
+                    "type": "download",
+                    "sort_order": 4,
+                    "required": true,
+                    "content": {
+                      "asset_key": "guide-slot-02",
+                      "file_path": "courses/bmh-employee-training/v1/guides/slot-02-learner-guide.pdf",
+                      "filename": "slot-02-learner-guide.pdf",
+                      "size_bytes": null,
+                      "description": "Accessible learner guide for Real Estate Terms Glossary"
+                    }
+                  },
+                  {
                     "source_key": "block-flashcards-slot-02",
                     "type": "flashcard",
-                    "sort_order": 4,
+                    "sort_order": 5,
                     "required": false,
                     "content": {
                       "cards": [
@@ -2488,7 +2994,7 @@
                     "required": true,
                     "content": {
                       "asset_key": "video-slot-03-tech-stack",
-                      "poster_asset_key": "thumbnail-slot-03",
+                      "poster_asset_key": "poster-video-slot-03-tech-stack",
                       "caption_asset_key": "caption-video-slot-03-tech-stack",
                       "transcript_asset_key": "transcript-video-slot-03-tech-stack",
                       "title": "Tech Stack and Systems",
@@ -2506,9 +3012,22 @@
                     }
                   },
                   {
+                    "source_key": "block-guide-pdf-slot-03",
+                    "type": "download",
+                    "sort_order": 4,
+                    "required": true,
+                    "content": {
+                      "asset_key": "guide-slot-03",
+                      "file_path": "courses/bmh-employee-training/v1/guides/slot-03-learner-guide.pdf",
+                      "filename": "slot-03-learner-guide.pdf",
+                      "size_bytes": null,
+                      "description": "Accessible learner guide for Tech Stack and Systems"
+                    }
+                  },
+                  {
                     "source_key": "block-flashcards-slot-03",
                     "type": "flashcard",
-                    "sort_order": 4,
+                    "sort_order": 5,
                     "required": false,
                     "content": {
                       "cards": [
@@ -3241,7 +3760,7 @@
                     "required": true,
                     "content": {
                       "asset_key": "video-slot-04-humanizing-a",
-                      "poster_asset_key": "thumbnail-slot-04",
+                      "poster_asset_key": "poster-video-slot-04-humanizing-a",
                       "caption_asset_key": "caption-video-slot-04-humanizing-a",
                       "transcript_asset_key": "transcript-video-slot-04-humanizing-a",
                       "title": "Humanizing the Lead",
@@ -3256,7 +3775,7 @@
                     "required": true,
                     "content": {
                       "asset_key": "video-slot-04-humanizing-b",
-                      "poster_asset_key": "thumbnail-slot-04",
+                      "poster_asset_key": "poster-video-slot-04-humanizing-b",
                       "caption_asset_key": "caption-video-slot-04-humanizing-b",
                       "transcript_asset_key": "transcript-video-slot-04-humanizing-b",
                       "title": "Humanizing the Lead",
@@ -3271,7 +3790,7 @@
                     "required": true,
                     "content": {
                       "asset_key": "video-slot-04-ideal-seller",
-                      "poster_asset_key": "thumbnail-slot-04",
+                      "poster_asset_key": "poster-video-slot-04-ideal-seller",
                       "caption_asset_key": "caption-video-slot-04-ideal-seller",
                       "transcript_asset_key": "transcript-video-slot-04-ideal-seller",
                       "title": "Ideal Seller Profile",
@@ -3289,9 +3808,22 @@
                     }
                   },
                   {
+                    "source_key": "block-guide-pdf-slot-04",
+                    "type": "download",
+                    "sort_order": 6,
+                    "required": true,
+                    "content": {
+                      "asset_key": "guide-slot-04",
+                      "file_path": "courses/bmh-employee-training/v1/guides/slot-04-learner-guide.pdf",
+                      "filename": "slot-04-learner-guide.pdf",
+                      "size_bytes": null,
+                      "description": "Accessible learner guide for Humanizing the Lead"
+                    }
+                  },
+                  {
                     "source_key": "block-flashcards-slot-04",
                     "type": "flashcard",
-                    "sort_order": 6,
+                    "sort_order": 7,
                     "required": false,
                     "content": {
                       "cards": [
@@ -4010,7 +4542,7 @@
                     "required": true,
                     "content": {
                       "asset_key": "video-slot-05-offer-a",
-                      "poster_asset_key": "thumbnail-slot-05",
+                      "poster_asset_key": "poster-video-slot-05-offer-a",
                       "caption_asset_key": "caption-video-slot-05-offer-a",
                       "transcript_asset_key": "transcript-video-slot-05-offer-a",
                       "title": "The BMH Offer Playbook",
@@ -4025,7 +4557,7 @@
                     "required": true,
                     "content": {
                       "asset_key": "video-slot-05-offer-b",
-                      "poster_asset_key": "thumbnail-slot-05",
+                      "poster_asset_key": "poster-video-slot-05-offer-b",
                       "caption_asset_key": "caption-video-slot-05-offer-b",
                       "transcript_asset_key": "transcript-video-slot-05-offer-b",
                       "title": "The BMH Offer Playbook",
@@ -4043,9 +4575,22 @@
                     }
                   },
                   {
+                    "source_key": "block-guide-pdf-slot-05",
+                    "type": "download",
+                    "sort_order": 5,
+                    "required": true,
+                    "content": {
+                      "asset_key": "guide-slot-05",
+                      "file_path": "courses/bmh-employee-training/v1/guides/slot-05-learner-guide.pdf",
+                      "filename": "slot-05-learner-guide.pdf",
+                      "size_bytes": null,
+                      "description": "Accessible learner guide for The BMH Offer Playbook"
+                    }
+                  },
+                  {
                     "source_key": "block-flashcards-slot-05",
                     "type": "flashcard",
-                    "sort_order": 5,
+                    "sort_order": 6,
                     "required": false,
                     "content": {
                       "cards": [
@@ -4766,7 +5311,7 @@
                     "required": true,
                     "content": {
                       "asset_key": "video-slot-06-pipeline",
-                      "poster_asset_key": "thumbnail-slot-06",
+                      "poster_asset_key": "poster-video-slot-06-pipeline",
                       "caption_asset_key": "caption-video-slot-06-pipeline",
                       "transcript_asset_key": "transcript-video-slot-06-pipeline",
                       "title": "Sales Pipeline and Stage Ownership",
@@ -4781,7 +5326,7 @@
                     "required": true,
                     "content": {
                       "asset_key": "video-slot-06-framework",
-                      "poster_asset_key": "thumbnail-slot-06",
+                      "poster_asset_key": "poster-video-slot-06-framework",
                       "caption_asset_key": "caption-video-slot-06-framework",
                       "transcript_asset_key": "transcript-video-slot-06-framework",
                       "title": "The Five-Step Conversation Framework",
@@ -4799,9 +5344,22 @@
                     }
                   },
                   {
+                    "source_key": "block-guide-pdf-slot-06",
+                    "type": "download",
+                    "sort_order": 5,
+                    "required": true,
+                    "content": {
+                      "asset_key": "guide-slot-06",
+                      "file_path": "courses/bmh-employee-training/v1/guides/slot-06-learner-guide.pdf",
+                      "filename": "slot-06-learner-guide.pdf",
+                      "size_bytes": null,
+                      "description": "Accessible learner guide for Sales Pipeline and Stage Ownership"
+                    }
+                  },
+                  {
                     "source_key": "block-flashcards-slot-06",
                     "type": "flashcard",
-                    "sort_order": 5,
+                    "sort_order": 6,
                     "required": false,
                     "content": {
                       "cards": [
@@ -5496,7 +6054,7 @@
                     "required": true,
                     "content": {
                       "asset_key": "video-slot-07-opening",
-                      "poster_asset_key": "thumbnail-slot-07",
+                      "poster_asset_key": "poster-video-slot-07-opening",
                       "caption_asset_key": "caption-video-slot-07-opening",
                       "transcript_asset_key": "transcript-video-slot-07-opening",
                       "title": "Opening the Call",
@@ -5511,7 +6069,7 @@
                     "required": true,
                     "content": {
                       "asset_key": "video-slot-07-fact-find",
-                      "poster_asset_key": "thumbnail-slot-07",
+                      "poster_asset_key": "poster-video-slot-07-fact-find",
                       "caption_asset_key": "caption-video-slot-07-fact-find",
                       "transcript_asset_key": "transcript-video-slot-07-fact-find",
                       "title": "The Fact Find",
@@ -5529,9 +6087,22 @@
                     }
                   },
                   {
+                    "source_key": "block-guide-pdf-slot-07",
+                    "type": "download",
+                    "sort_order": 5,
+                    "required": true,
+                    "content": {
+                      "asset_key": "guide-slot-07",
+                      "file_path": "courses/bmh-employee-training/v1/guides/slot-07-learner-guide.pdf",
+                      "filename": "slot-07-learner-guide.pdf",
+                      "size_bytes": null,
+                      "description": "Accessible learner guide for Opening the Call"
+                    }
+                  },
+                  {
                     "source_key": "block-flashcards-slot-07",
                     "type": "flashcard",
-                    "sort_order": 5,
+                    "sort_order": 6,
                     "required": false,
                     "content": {
                       "cards": [
@@ -6228,7 +6799,7 @@
                     "required": true,
                     "content": {
                       "asset_key": "video-slot-08-discovery",
-                      "poster_asset_key": "thumbnail-slot-08",
+                      "poster_asset_key": "poster-video-slot-08-discovery",
                       "caption_asset_key": "caption-video-slot-08-discovery",
                       "transcript_asset_key": "transcript-video-slot-08-discovery",
                       "title": "Discovery",
@@ -6243,7 +6814,7 @@
                     "required": true,
                     "content": {
                       "asset_key": "video-slot-08-handoff",
-                      "poster_asset_key": "thumbnail-slot-08",
+                      "poster_asset_key": "poster-video-slot-08-handoff",
                       "caption_asset_key": "caption-video-slot-08-handoff",
                       "transcript_asset_key": "transcript-video-slot-08-handoff",
                       "title": "The Handoff",
@@ -6261,9 +6832,22 @@
                     }
                   },
                   {
+                    "source_key": "block-guide-pdf-slot-08",
+                    "type": "download",
+                    "sort_order": 5,
+                    "required": true,
+                    "content": {
+                      "asset_key": "guide-slot-08",
+                      "file_path": "courses/bmh-employee-training/v1/guides/slot-08-learner-guide.pdf",
+                      "filename": "slot-08-learner-guide.pdf",
+                      "size_bytes": null,
+                      "description": "Accessible learner guide for Discovery and Handoff"
+                    }
+                  },
+                  {
                     "source_key": "block-flashcards-slot-08",
                     "type": "flashcard",
-                    "sort_order": 5,
+                    "sort_order": 6,
                     "required": false,
                     "content": {
                       "cards": [
@@ -7028,7 +7612,7 @@
                     "required": true,
                     "content": {
                       "asset_key": "video-slot-09-objection-architecture",
-                      "poster_asset_key": "thumbnail-slot-09",
+                      "poster_asset_key": "poster-video-slot-09-objection-architecture",
                       "caption_asset_key": "caption-video-slot-09-objection-architecture",
                       "transcript_asset_key": "transcript-video-slot-09-objection-architecture",
                       "title": "Objection Architecture",
@@ -7046,9 +7630,22 @@
                     }
                   },
                   {
+                    "source_key": "block-guide-pdf-slot-09",
+                    "type": "download",
+                    "sort_order": 4,
+                    "required": true,
+                    "content": {
+                      "asset_key": "guide-slot-09",
+                      "file_path": "courses/bmh-employee-training/v1/guides/slot-09-learner-guide.pdf",
+                      "filename": "slot-09-learner-guide.pdf",
+                      "size_bytes": null,
+                      "description": "Accessible learner guide for Objection Architecture"
+                    }
+                  },
+                  {
                     "source_key": "block-flashcards-slot-09",
                     "type": "flashcard",
-                    "sort_order": 4,
+                    "sort_order": 5,
                     "required": false,
                     "content": {
                       "cards": [
@@ -7719,7 +8316,7 @@
                     "required": true,
                     "content": {
                       "asset_key": "video-slot-10-objection-scripts",
-                      "poster_asset_key": "thumbnail-slot-10",
+                      "poster_asset_key": "poster-video-slot-10-objection-scripts",
                       "caption_asset_key": "caption-video-slot-10-objection-scripts",
                       "transcript_asset_key": "transcript-video-slot-10-objection-scripts",
                       "title": "Objection Scripts Playbook",
@@ -7737,9 +8334,22 @@
                     }
                   },
                   {
+                    "source_key": "block-guide-pdf-slot-10",
+                    "type": "download",
+                    "sort_order": 4,
+                    "required": true,
+                    "content": {
+                      "asset_key": "guide-slot-10",
+                      "file_path": "courses/bmh-employee-training/v1/guides/slot-10-learner-guide.pdf",
+                      "filename": "slot-10-learner-guide.pdf",
+                      "size_bytes": null,
+                      "description": "Accessible learner guide for Objection Scripts Playbook"
+                    }
+                  },
+                  {
                     "source_key": "block-flashcards-slot-10",
                     "type": "flashcard",
-                    "sort_order": 4,
+                    "sort_order": 5,
                     "required": false,
                     "content": {
                       "cards": [
@@ -8410,7 +9020,7 @@
                     "required": true,
                     "content": {
                       "asset_key": "video-slot-11-complex",
-                      "poster_asset_key": "thumbnail-slot-11",
+                      "poster_asset_key": "poster-video-slot-11-complex",
                       "caption_asset_key": "caption-video-slot-11-complex",
                       "transcript_asset_key": "transcript-video-slot-11-complex",
                       "title": "Complex Objections",
@@ -8425,7 +9035,7 @@
                     "required": true,
                     "content": {
                       "asset_key": "video-slot-11-trust",
-                      "poster_asset_key": "thumbnail-slot-11",
+                      "poster_asset_key": "poster-video-slot-11-trust",
                       "caption_asset_key": "caption-video-slot-11-trust",
                       "transcript_asset_key": "transcript-video-slot-11-trust",
                       "title": "Trust and People Objections",
@@ -8443,9 +9053,22 @@
                     }
                   },
                   {
+                    "source_key": "block-guide-pdf-slot-11",
+                    "type": "download",
+                    "sort_order": 5,
+                    "required": true,
+                    "content": {
+                      "asset_key": "guide-slot-11",
+                      "file_path": "courses/bmh-employee-training/v1/guides/slot-11-learner-guide.pdf",
+                      "filename": "slot-11-learner-guide.pdf",
+                      "size_bytes": null,
+                      "description": "Accessible learner guide for Complex Objections"
+                    }
+                  },
+                  {
                     "source_key": "block-flashcards-slot-11",
                     "type": "flashcard",
-                    "sort_order": 5,
+                    "sort_order": 6,
                     "required": false,
                     "content": {
                       "cards": [
@@ -9142,7 +9765,7 @@
                     "required": true,
                     "content": {
                       "asset_key": "video-slot-12-faq-a",
-                      "poster_asset_key": "thumbnail-slot-12",
+                      "poster_asset_key": "poster-video-slot-12-faq-a",
                       "caption_asset_key": "caption-video-slot-12-faq-a",
                       "transcript_asset_key": "transcript-video-slot-12-faq-a",
                       "title": "Seller FAQ Decoder Questions 1 through 5",
@@ -9157,7 +9780,7 @@
                     "required": true,
                     "content": {
                       "asset_key": "video-slot-12-faq-b",
-                      "poster_asset_key": "thumbnail-slot-12",
+                      "poster_asset_key": "poster-video-slot-12-faq-b",
                       "caption_asset_key": "caption-video-slot-12-faq-b",
                       "transcript_asset_key": "transcript-video-slot-12-faq-b",
                       "title": "Seller FAQ Decoder Questions 6 through 10",
@@ -9175,9 +9798,22 @@
                     }
                   },
                   {
+                    "source_key": "block-guide-pdf-slot-12",
+                    "type": "download",
+                    "sort_order": 5,
+                    "required": true,
+                    "content": {
+                      "asset_key": "guide-slot-12",
+                      "file_path": "courses/bmh-employee-training/v1/guides/slot-12-learner-guide.pdf",
+                      "filename": "slot-12-learner-guide.pdf",
+                      "size_bytes": null,
+                      "description": "Accessible learner guide for Seller FAQ Decoder"
+                    }
+                  },
+                  {
                     "source_key": "block-flashcards-slot-12",
                     "type": "flashcard",
-                    "sort_order": 5,
+                    "sort_order": 6,
                     "required": false,
                     "content": {
                       "cards": [
@@ -9874,7 +10510,7 @@
                     "required": true,
                     "content": {
                       "asset_key": "video-slot-13-follow-up",
-                      "poster_asset_key": "thumbnail-slot-13",
+                      "poster_asset_key": "poster-video-slot-13-follow-up",
                       "caption_asset_key": "caption-video-slot-13-follow-up",
                       "transcript_asset_key": "transcript-video-slot-13-follow-up",
                       "title": "Follow-Up Cadence",
@@ -9892,9 +10528,22 @@
                     }
                   },
                   {
+                    "source_key": "block-guide-pdf-slot-13",
+                    "type": "download",
+                    "sort_order": 4,
+                    "required": true,
+                    "content": {
+                      "asset_key": "guide-slot-13",
+                      "file_path": "courses/bmh-employee-training/v1/guides/slot-13-learner-guide.pdf",
+                      "filename": "slot-13-learner-guide.pdf",
+                      "size_bytes": null,
+                      "description": "Accessible learner guide for Follow-Up Cadence"
+                    }
+                  },
+                  {
                     "source_key": "block-flashcards-slot-13",
                     "type": "flashcard",
-                    "sort_order": 4,
+                    "sort_order": 5,
                     "required": false,
                     "content": {
                       "cards": [
@@ -10585,7 +11234,7 @@
                     "required": true,
                     "content": {
                       "asset_key": "video-slot-14-flow",
-                      "poster_asset_key": "thumbnail-slot-14",
+                      "poster_asset_key": "poster-video-slot-14-flow",
                       "caption_asset_key": "caption-video-slot-14-flow",
                       "transcript_asset_key": "transcript-video-slot-14-flow",
                       "title": "Conversation Flow Mastery",
@@ -10603,9 +11252,22 @@
                     }
                   },
                   {
+                    "source_key": "block-guide-pdf-slot-14",
+                    "type": "download",
+                    "sort_order": 4,
+                    "required": true,
+                    "content": {
+                      "asset_key": "guide-slot-14",
+                      "file_path": "courses/bmh-employee-training/v1/guides/slot-14-learner-guide.pdf",
+                      "filename": "slot-14-learner-guide.pdf",
+                      "size_bytes": null,
+                      "description": "Accessible learner guide for Conversation Flow Mastery"
+                    }
+                  },
+                  {
                     "source_key": "block-flashcards-slot-14",
                     "type": "flashcard",
-                    "sort_order": 4,
+                    "sort_order": 5,
                     "required": false,
                     "content": {
                       "cards": [
@@ -11306,7 +11968,7 @@
                     "required": true,
                     "content": {
                       "asset_key": "video-slot-15-closing",
-                      "poster_asset_key": "thumbnail-slot-15",
+                      "poster_asset_key": "poster-video-slot-15-closing",
                       "caption_asset_key": "caption-video-slot-15-closing",
                       "transcript_asset_key": "transcript-video-slot-15-closing",
                       "title": "Closing and Deal Engineering",
@@ -11324,9 +11986,22 @@
                     }
                   },
                   {
+                    "source_key": "block-guide-pdf-slot-15",
+                    "type": "download",
+                    "sort_order": 4,
+                    "required": true,
+                    "content": {
+                      "asset_key": "guide-slot-15",
+                      "file_path": "courses/bmh-employee-training/v1/guides/slot-15-learner-guide.pdf",
+                      "filename": "slot-15-learner-guide.pdf",
+                      "size_bytes": null,
+                      "description": "Accessible learner guide for Closing and Deal Engineering"
+                    }
+                  },
+                  {
                     "source_key": "block-flashcards-slot-15",
                     "type": "flashcard",
-                    "sort_order": 4,
+                    "sort_order": 5,
                     "required": false,
                     "content": {
                       "cards": [
@@ -12047,7 +12722,7 @@
                     "required": true,
                     "content": {
                       "asset_key": "video-slot-16-kpis",
-                      "poster_asset_key": "thumbnail-slot-16",
+                      "poster_asset_key": "poster-video-slot-16-kpis",
                       "caption_asset_key": "caption-video-slot-16-kpis",
                       "transcript_asset_key": "transcript-video-slot-16-kpis",
                       "title": "KPIs and Sales Telemetry",
@@ -12065,9 +12740,22 @@
                     }
                   },
                   {
+                    "source_key": "block-guide-pdf-slot-16",
+                    "type": "download",
+                    "sort_order": 4,
+                    "required": true,
+                    "content": {
+                      "asset_key": "guide-slot-16",
+                      "file_path": "courses/bmh-employee-training/v1/guides/slot-16-learner-guide.pdf",
+                      "filename": "slot-16-learner-guide.pdf",
+                      "size_bytes": null,
+                      "description": "Accessible learner guide for KPIs and Sales Telemetry"
+                    }
+                  },
+                  {
                     "source_key": "block-flashcards-slot-16",
                     "type": "flashcard",
-                    "sort_order": 4,
+                    "sort_order": 5,
                     "required": false,
                     "content": {
                       "cards": [
@@ -12738,7 +13426,7 @@
                     "required": true,
                     "content": {
                       "asset_key": "video-slot-17-compensation",
-                      "poster_asset_key": "thumbnail-slot-17",
+                      "poster_asset_key": "poster-video-slot-17-compensation",
                       "caption_asset_key": "caption-video-slot-17-compensation",
                       "transcript_asset_key": "transcript-video-slot-17-compensation",
                       "title": "Compensation Engine",
@@ -12756,9 +13444,22 @@
                     }
                   },
                   {
+                    "source_key": "block-guide-pdf-slot-17",
+                    "type": "download",
+                    "sort_order": 4,
+                    "required": true,
+                    "content": {
+                      "asset_key": "guide-slot-17",
+                      "file_path": "courses/bmh-employee-training/v1/guides/slot-17-learner-guide.pdf",
+                      "filename": "slot-17-learner-guide.pdf",
+                      "size_bytes": null,
+                      "description": "Accessible learner guide for Compensation Engine"
+                    }
+                  },
+                  {
                     "source_key": "block-flashcards-slot-17",
                     "type": "flashcard",
-                    "sort_order": 4,
+                    "sort_order": 5,
                     "required": false,
                     "content": {
                       "cards": [
@@ -13423,7 +14124,7 @@
                     "required": true,
                     "content": {
                       "asset_key": "video-slot-18-operator",
-                      "poster_asset_key": "thumbnail-slot-18",
+                      "poster_asset_key": "poster-video-slot-18-operator",
                       "caption_asset_key": "caption-video-slot-18-operator",
                       "transcript_asset_key": "transcript-video-slot-18-operator",
                       "title": "Operator Playbook",
@@ -13438,7 +14139,7 @@
                     "required": true,
                     "content": {
                       "asset_key": "video-slot-18-mission-control",
-                      "poster_asset_key": "thumbnail-slot-18",
+                      "poster_asset_key": "poster-video-slot-18-mission-control",
                       "caption_asset_key": "caption-video-slot-18-mission-control",
                       "transcript_asset_key": "transcript-video-slot-18-mission-control",
                       "title": "Daily Mission Control",
@@ -13456,9 +14157,22 @@
                     }
                   },
                   {
+                    "source_key": "block-guide-pdf-slot-18",
+                    "type": "download",
+                    "sort_order": 5,
+                    "required": true,
+                    "content": {
+                      "asset_key": "guide-slot-18",
+                      "file_path": "courses/bmh-employee-training/v1/guides/slot-18-learner-guide.pdf",
+                      "filename": "slot-18-learner-guide.pdf",
+                      "size_bytes": null,
+                      "description": "Accessible learner guide for Operator Playbook and Daily Mission Control"
+                    }
+                  },
+                  {
                     "source_key": "block-flashcards-slot-18",
                     "type": "flashcard",
-                    "sort_order": 5,
+                    "sort_order": 6,
                     "required": false,
                     "content": {
                       "cards": [
@@ -14146,7 +14860,7 @@
                     "required": true,
                     "content": {
                       "asset_key": "video-slot-19-career",
-                      "poster_asset_key": "thumbnail-slot-19",
+                      "poster_asset_key": "poster-video-slot-19-career",
                       "caption_asset_key": "caption-video-slot-19-career",
                       "transcript_asset_key": "transcript-video-slot-19-career",
                       "title": "Career Growth Path",
@@ -14164,9 +14878,22 @@
                     }
                   },
                   {
+                    "source_key": "block-guide-pdf-slot-19",
+                    "type": "download",
+                    "sort_order": 4,
+                    "required": true,
+                    "content": {
+                      "asset_key": "guide-slot-19",
+                      "file_path": "courses/bmh-employee-training/v1/guides/slot-19-learner-guide.pdf",
+                      "filename": "slot-19-learner-guide.pdf",
+                      "size_bytes": null,
+                      "description": "Accessible learner guide for Career Growth Path"
+                    }
+                  },
+                  {
                     "source_key": "block-flashcards-slot-19",
                     "type": "flashcard",
-                    "sort_order": 4,
+                    "sort_order": 5,
                     "required": false,
                     "content": {
                       "cards": [

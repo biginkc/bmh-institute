@@ -14,7 +14,9 @@ The unpublished import draft now contains the full authored course shape:
 - 152 flashcards, 8 per topic
 - 6 text assignments with reviewer rubrics
 - 6 required Closer Lab scenario specifications
-- 19 learner summaries, objective sets, and accessible in-app guides
+- 19 learner summaries, objective sets, and accessible in-app text guides
+- 19 required accessible learner-guide PDF placeholders
+- 29 dedicated video-poster placeholders
 
 The machine-readable source is
 `content/course-manifests/bmh-employee-training.v1.json`. It remains a draft.
@@ -69,6 +71,27 @@ files and checksums exist.
 
 Every content topic is followed by its own quiz. Each section ends with one
 required, reviewed assignment.
+
+Each grouped content lesson keeps its accessible in-app text guide as a fallback
+and also references exactly one required learner-guide PDF download. Each video
+references its own poster asset rather than reusing a topic thumbnail. These 19
+PDFs and 29 posters are intentionally missing until Wave 2 produces and approves
+them.
+
+## Asset inventory
+
+The manifest contains 155 assets:
+
+- 29 videos: 23 approved and 6 held
+- 29 exact-cut caption placeholders
+- 29 exact-cut transcript placeholders
+- 20 thumbnail placeholders: one program cover and 19 topic thumbnails
+- 29 video-poster placeholders
+- 19 accessible learner-guide PDF placeholders
+
+There are 126 missing generated assets. Together with the six video holds, six
+pending Closer Lab IDs, and one operating-stack confirmation, the validator
+reports 139 publication blockers and zero manifest errors.
 
 ## Quiz curation
 
@@ -136,6 +159,10 @@ The draft must not be published until all of these are resolved:
 - Jarrad approves the six held corrected videos in `HELD-VIDEO-REVIEW.md`.
 - Exact-cut captions and transcripts are produced and approved for all 29 videos.
 - The course cover and 19 topic thumbnails are produced and approved.
+- All 29 dedicated video posters are produced, approved, and mapped one-to-one.
+- All 19 accessible learner-guide PDFs are produced, approved, and mapped to
+  their required download blocks. The in-app text guides remain available as a
+  fallback.
 - The six Closer Lab scenarios are built, tested, and mapped to production IDs.
 - The current operating stack is rechecked immediately before publication.
   DialPad remains correct for this draft based on the 2026-07-01 Slot 03 audit

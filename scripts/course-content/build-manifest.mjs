@@ -545,6 +545,29 @@ async function buildManifest() {
       approval_status: "missing",
     })),
   ];
+  const posterAssets = videoAssetsWithMetadata.map((asset) => ({
+    source_key: `poster-${asset.source_key}`,
+    kind: "image",
+    local_path: `course-assets/posters/${asset.source_key}.webp`,
+    storage_path: `courses/bmh-employee-training/v1/posters/${asset.source_key}.webp`,
+    mime_type: "image/webp",
+    checksum_sha256: null,
+    size_bytes: null,
+    approval_status: "missing",
+  }));
+  const guideAssets = LESSONS.map((lesson) => {
+    const slotKey = String(lesson.slot).padStart(2, "0");
+    return {
+      source_key: `guide-slot-${slotKey}`,
+      kind: "pdf",
+      local_path: `course-assets/guides/slot-${slotKey}-learner-guide.pdf`,
+      storage_path: `courses/bmh-employee-training/v1/guides/slot-${slotKey}-learner-guide.pdf`,
+      mime_type: "application/pdf",
+      checksum_sha256: null,
+      size_bytes: null,
+      approval_status: "missing",
+    };
+  });
 
   const modules = MODULES.map(([moduleNumber, title, description]) => {
     const topicLessons = LESSONS.filter((lesson) => lesson.module === moduleNumber);
@@ -559,7 +582,7 @@ async function buildManifest() {
         required: true,
         content: {
           asset_key: asset.source_key,
-          poster_asset_key: `thumbnail-slot-${slotKey}`,
+          poster_asset_key: `poster-${asset.source_key}`,
           caption_asset_key: `caption-${asset.source_key}`,
           transcript_asset_key: `transcript-${asset.source_key}`,
           title: asset._title,
@@ -592,7 +615,20 @@ async function buildManifest() {
         { source_key: `block-objectives-slot-${slotKey}`, type: "text", sort_order: 1, required: false, content: { html: textHtml(topic) } },
         ...videoBlocks,
         { source_key: `block-guide-slot-${slotKey}`, type: "text", sort_order: videoBlocks.length + 2, required: false, content: { html: guideHtml(topic) } },
-        { source_key: `block-flashcards-slot-${slotKey}`, type: "flashcard", sort_order: videoBlocks.length + 3, required: false, content: { cards: flashcards } },
+        {
+          source_key: `block-guide-pdf-slot-${slotKey}`,
+          type: "download",
+          sort_order: videoBlocks.length + 3,
+          required: true,
+          content: {
+            asset_key: `guide-slot-${slotKey}`,
+            file_path: `courses/bmh-employee-training/v1/guides/slot-${slotKey}-learner-guide.pdf`,
+            filename: `slot-${slotKey}-learner-guide.pdf`,
+            size_bytes: null,
+            description: `Accessible learner guide for ${topic.title}`,
+          },
+        },
+        { source_key: `block-flashcards-slot-${slotKey}`, type: "flashcard", sort_order: videoBlocks.length + 4, required: false, content: { cards: flashcards } },
         ...rolePlayBlocks,
       ];
       lessons.push({
@@ -664,7 +700,7 @@ async function buildManifest() {
       name: "BMH Content QA",
       description: "Private reviewers for the unpublished BMH employee training program.",
     },
-    assets: [...videoAssets, ...derivativeAssets, ...imageAssets],
+    assets: [...videoAssets, ...derivativeAssets, ...imageAssets, ...posterAssets, ...guideAssets],
     program: {
       source_key: "program-bmh-employee-training",
       title: "BMH Employee Training",

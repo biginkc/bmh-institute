@@ -22,7 +22,52 @@ test("the draft contains the locked course structure", async () => {
     quizQuestions: 342,
     flashcards: 152,
     rolePlays: 6,
+    posterAssets: 29,
+    posterReferences: 29,
+    guideAssets: 19,
+    guideBlocks: 19,
   });
+});
+
+test("every video has its own release-gated poster asset", async () => {
+  const manifest = await loadManifest(MANIFEST_URL);
+  const assetsByKey = new Map(manifest.assets.map((asset) => [asset.source_key, asset]));
+  const videos = manifest.program.courses
+    .flatMap((course) => course.modules)
+    .flatMap((module) => module.lessons)
+    .flatMap((lesson) => lesson.blocks ?? [])
+    .filter((block) => block.type === "video");
+
+  assert.equal(videos.length, 29);
+  assert.equal(new Set(videos.map((block) => block.content.poster_asset_key)).size, 29);
+  for (const video of videos) {
+    const poster = assetsByKey.get(video.content.poster_asset_key);
+    assert.ok(poster, `${video.source_key} poster is inventoried`);
+    assert.equal(poster.kind, "image");
+    assert.match(poster.source_key, /^poster-video-slot-/);
+    assert.ok(["approved", "missing"].includes(poster.approval_status));
+  }
+});
+
+test("every grouped lesson has one required accessible guide download", async () => {
+  const manifest = await loadManifest(MANIFEST_URL);
+  const assetsByKey = new Map(manifest.assets.map((asset) => [asset.source_key, asset]));
+  const contentLessons = manifest.program.courses
+    .flatMap((course) => course.modules)
+    .flatMap((module) => module.lessons)
+    .filter((lesson) => lesson.type === "content");
+
+  assert.equal(contentLessons.length, 19);
+  for (const lesson of contentLessons) {
+    const guides = lesson.blocks.filter((block) => block.type === "download" && /^block-guide-pdf-slot-/.test(block.source_key));
+    assert.equal(guides.length, 1, `${lesson.source_key} has one guide download`);
+    assert.equal(guides[0].required, true);
+    const guide = assetsByKey.get(guides[0].content.asset_key);
+    assert.ok(guide, `${lesson.source_key} guide is inventoried`);
+    assert.equal(guide.kind, "pdf");
+    assert.equal(guides[0].content.file_path, guide.storage_path);
+    assert.ok(["approved", "missing"].includes(guide.approval_status));
+  }
 });
 
 test("the manifest passes structural and semantic content QA", async () => {
