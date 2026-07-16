@@ -49,6 +49,25 @@ that learner captions and transcripts remain pending exact-cut approval.
 
 Watch each video in the page. Record any approval separately with the displayed
 SHA-256, approval date, and approver. A filename by itself is not an approval.
+Use the linked `approvals.json` ledger. It contains exactly one pending record
+for each held `source_key` plus SHA-256. The verifier locks and serves this file
+with the review surface, and stops if it changes while the server is running.
+The transition validator requires approver, date, decision, and notes for a
+decision and prevents a decided checksum from being rewritten.
+
+Validate a proposed ledger change before replacing the current ledger:
+
+```sh
+node scripts/course-content/validate-held-video-approval-transition.mjs \
+  path/to/current-approvals.json \
+  path/to/proposed-approvals.json \
+  content/course-manifests/bmh-employee-training.v1.json
+```
+
+Policy-safe replacement scripts and timecoded edit maps for Compensation
+Engine, Operator Playbook, and Career Growth Path are documented in
+`../held-video-recuts/README.md`. They are preparation artifacts only; they do
+not replace or approve the currently held media.
 
 If the held set intentionally changes, update the manifest and review details,
 then regenerate and verify the page:

@@ -1,0 +1,105 @@
+{
+  "schema_version": "1.0.0",
+  "status": "script_ready_not_rendered",
+  "source": {
+    "source_key": "video-slot-17-compensation",
+    "held_sha256": "cecad85478bb1a8ba5bfed7404dc045440c567ed0eaaa90b11b644e124b27846",
+    "review_transcript_path": "course-assets/held-caption-review/video-slot-17-compensation.md",
+    "review_transcript_sha256": "822f8633a9f077234130d1289493331547254555b066347826d6f8b84a4c5916",
+    "review_vtt_path": "course-assets/held-caption-review/video-slot-17-compensation.vtt",
+    "review_vtt_sha256": "23199d674fd8b3d1176d39aa46dc89814b461bda07f67ffdb7c68e7e60f3e6b4",
+    "duration_seconds": 181.013,
+    "last_spoken_time_seconds": 180.74
+  },
+  "lesson_contract": {
+    "lesson_source_key": "lesson-content-slot-17",
+    "objective": "Understand that compensation depends on the value a role owns and that the current written plan is always the source of truth.",
+    "objective_points": [
+      "Identify the current compensation source of truth",
+      "Connect role outcomes to the role scorecard",
+      "Know where to take compensation questions",
+      "Avoid relying on another person's plan or an old example"
+    ],
+    "next_sequence": [
+      "lesson-quiz-slot-17",
+      "lesson-content-slot-18"
+    ],
+    "transition_spoken_text": "Take the Compensation Engine checkpoint next. Then you'll move into the Operator Playbook and Daily Mission Control."
+  },
+  "production_constraints": {
+    "strategy": "replace_full_spoken_cut",
+    "render_allowed": false,
+    "provider_call_allowed": false,
+    "caption_generation_allowed": false,
+    "approval_status_change_allowed": false
+  },
+  "scenes": [
+    {
+      "scene_id": "comp-source-of-truth",
+      "title": "Start with the written source",
+      "spoken_text": "Let's clear up the most important point first. This training doesn't set your pay or promise a compensation term. Your current offer letter, written compensation plan, and role sheet define what applies to you."
+    },
+    {
+      "scene_id": "comp-scorecard",
+      "title": "Understand what the work owns",
+      "spoken_text": "The useful part of this lesson is understanding what your work owns and how the company measures it right now. A scorecard might focus on qualified conversations, clean handoffs, accurate records, or a team result. Those are examples of business outcomes. They don't define anyone's compensation."
+    },
+    {
+      "scene_id": "comp-visible-work",
+      "title": "Keep performance visible",
+      "spoken_text": "Make your work easy to see. Follow the current process, keep complete notes, and use the scorecard assigned to your work. Scorecards can change as the business changes, so an old video or someone else's agreement can't tell you what applies today."
+    },
+    {
+      "scene_id": "comp-questions",
+      "title": "Ask instead of assuming",
+      "spoken_text": "If anything is unclear, or if two documents seem to conflict, pause and ask your manager. Use the latest offer letter, written plan, and role sheet issued to you. Those written documents control. This lesson gives context, but it isn't a compensation agreement."
+    },
+    {
+      "scene_id": "comp-transition",
+      "title": "Continue into daily operations",
+      "spoken_text": "Take the Compensation Engine checkpoint next. Then you'll move into the Operator Playbook and Daily Mission Control."
+    }
+  ],
+  "edit_operations": [
+    {
+      "operation_id": "comp-edit-01",
+      "source_start": "00:00:00.000",
+      "source_end": "00:00:17.439",
+      "action": "replace",
+      "replacement_scene_ids": ["comp-source-of-truth"],
+      "source_problem": "The opener frames the video as a direct explanation of how performance turns into pay."
+    },
+    {
+      "operation_id": "comp-edit-02",
+      "source_start": "00:00:17.440",
+      "source_end": "00:00:55.439",
+      "action": "replace",
+      "replacement_scene_ids": ["comp-scorecard"],
+      "source_problem": "The source asserts a ramp-up base, performance pay, milestone bonuses, and an automatic transition to another structure."
+    },
+    {
+      "operation_id": "comp-edit-03",
+      "source_start": "00:00:55.440",
+      "source_end": "00:02:02.319",
+      "action": "replace",
+      "replacement_scene_ids": ["comp-visible-work"],
+      "source_problem": "The source names a seat, commissions, bonuses, earnings, and performance-linked pay outcomes."
+    },
+    {
+      "operation_id": "comp-edit-04",
+      "source_start": "00:02:02.320",
+      "source_end": "00:02:29.819",
+      "action": "replace",
+      "replacement_scene_ids": ["comp-questions"],
+      "source_problem": "The source turns pipeline behavior into direct compensation promises before finally pointing to written documents."
+    },
+    {
+      "operation_id": "comp-edit-05",
+      "source_start": "00:02:29.820",
+      "source_end": "00:03:00.740",
+      "action": "replace",
+      "replacement_scene_ids": ["comp-transition"],
+      "source_problem": "The existing close mixes compensation specifics with a broad transition instead of the actual checkpoint and next lesson."
+    }
+  ]
+}

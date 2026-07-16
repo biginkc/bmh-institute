@@ -31,6 +31,7 @@ test("the local review surface is locked to every held manifest video", async ()
   assert.deepEqual(result.sourceKeys, EXPECTED_HELD_SOURCE_KEYS);
   assert.equal(result.videoCount, 9);
   assert.equal(result.evidenceFileCount, 6);
+  assert.equal(result.approvalLedgerRecordCount, 9);
   assert.equal(result.htmlIsCurrent, true);
 });
 
@@ -122,6 +123,8 @@ test("static and verified pages make trust state and caption availability explic
 
   assert.match(staticHtml, /UNVERIFIED STATIC PAGE/);
   assert.match(staticHtml, /verify-held-video-review\.mjs --serve/);
+  assert.match(staticHtml, /approvals\.json/);
+  assert.match(staticHtml, /held-video-recuts\/README\.md/);
   assert.doesNotMatch(staticHtml, /VERIFIED LOCAL SERVER/);
   assert.match(verifiedHtml, /VERIFIED LOCAL SERVER/);
   assert.match(verifiedHtml, /2026-07-16T12:34:56\.000Z/);
@@ -164,6 +167,14 @@ test("the verified server serves only locked routes with no-store and byte range
     const evidenceResponse = await fetch(new URL(evidence.route, url), { method: "HEAD" });
     assert.equal(evidenceResponse.status, 200);
     assert.match(evidenceResponse.headers.get("content-type"), /text\/vtt/);
+
+    const approvalLedger = verification.files.find((file) => file.kind === "approval-ledger");
+    const ledgerResponse = await fetch(new URL(approvalLedger.route, url));
+    assert.equal(ledgerResponse.status, 200);
+    assert.match(ledgerResponse.headers.get("cache-control"), /no-store/);
+    const ledger = await ledgerResponse.json();
+    assert.equal(ledger.records.length, 9);
+    assert.ok(ledger.records.every((record) => record.decision === "pending"));
 
     const unknownResponse = await fetch(new URL("/media/not-locked.mp4", url));
     assert.equal(unknownResponse.status, 404);

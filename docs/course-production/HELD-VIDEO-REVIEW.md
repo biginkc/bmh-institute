@@ -20,6 +20,11 @@ time and held-set SHA lock, and stops if a locked file's stat identity changes.
 The first six cuts intentionally do not have finalized learner captions while
 approval is pending. The final three expose checksum-locked, review-only wording
 evidence and must not be treated as finalized learner captions.
+The machine-readable approval record is
+`held-video-review/approvals.json`; all nine exact cuts remain pending. Prepared
+policy-safe scripts and source-time replacement maps for the final three cuts
+are in `held-video-recuts/`. Those packages do not change the held media or its
+manifest status.
 
 | Slot | Candidate | Duration | Size | SHA-256 | Correction under review |
 |---|---|---:|---:|---|---|

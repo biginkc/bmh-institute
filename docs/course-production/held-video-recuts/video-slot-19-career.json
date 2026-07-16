@@ -1,0 +1,118 @@
+{
+  "schema_version": "1.0.0",
+  "status": "script_ready_not_rendered",
+  "source": {
+    "source_key": "video-slot-19-career",
+    "held_sha256": "1ddcf7b1b0b45bbc90ec14b3660b3d5f5a284b5095dd0d0682164924ce1a3da9",
+    "review_transcript_path": "course-assets/held-caption-review/video-slot-19-career.md",
+    "review_transcript_sha256": "717cff454a9b37383a80bedf705348f2b3759eb32bade9670061a71de5ce88cc",
+    "review_vtt_path": "course-assets/held-caption-review/video-slot-19-career.vtt",
+    "review_vtt_sha256": "70c72c01fe8d18a392dac99633564c01f6505e107e2ca81452dc92e9e56404de",
+    "duration_seconds": 252.949,
+    "last_spoken_time_seconds": 252.1
+  },
+  "lesson_contract": {
+    "lesson_source_key": "lesson-content-slot-19",
+    "objective": "Build readiness for more responsibility through consistent results, clean operations, coachability, and contribution to the team.",
+    "objective_points": [
+      "Describe the foundation for growth",
+      "Recognize readiness signals",
+      "Use feedback without defensiveness",
+      "Discuss a development path with your manager"
+    ],
+    "next_sequence": [
+      "lesson-quiz-slot-19",
+      "lesson-assignment-section-6"
+    ],
+    "transition_spoken_text": "Take the Career Growth Path checkpoint next. Then complete the Mission Control and Growth Capstone."
+  },
+  "production_constraints": {
+    "strategy": "replace_full_spoken_cut",
+    "render_allowed": false,
+    "provider_call_allowed": false,
+    "caption_generation_allowed": false,
+    "approval_status_change_allowed": false
+  },
+  "scenes": [
+    {
+      "scene_id": "career-foundation",
+      "title": "Build capability first",
+      "spoken_text": "Growth starts with getting better at the work in front of you. Learn the process. Understand the people you're helping. Keep the pipeline accurate. Become someone the team can rely on because your work is thoughtful, complete, and ready for the next person."
+    },
+    {
+      "scene_id": "career-readiness",
+      "title": "Make readiness visible",
+      "spoken_text": "Readiness shows up in the way you work. You follow the current process, keep clean records, handle feedback well, and fix gaps when someone points them out. You also help the team without letting your own commitments slip."
+    },
+    {
+      "scene_id": "career-more-responsibility",
+      "title": "Develop for more responsibility",
+      "spoken_text": "As your judgment improves, your manager may help you practice more complex situations or take on broader ownership. That could mean handling a sensitive conversation, supporting a teammate, or learning another part of the process. The next step depends on current business needs and demonstrated readiness."
+    },
+    {
+      "scene_id": "career-current-role",
+      "title": "Use current written expectations",
+      "spoken_text": "Your current role sheet and offer letter define the work assigned to you now. Talk with your manager about the skills you want to build and the opportunities that actually exist. An old example or someone else's path can't promise what your path will be."
+    },
+    {
+      "scene_id": "career-feedback",
+      "title": "Keep the conversation useful",
+      "spoken_text": "Ask for specific feedback. When you hear about a gap, work on it and show the change in your next attempt. Keep notes on what you're learning. That gives you and your manager something real to discuss when you talk about development."
+    },
+    {
+      "scene_id": "career-transition",
+      "title": "Continue into the capstone",
+      "spoken_text": "Take the Career Growth Path checkpoint next. Then complete the Mission Control and Growth Capstone."
+    }
+  ],
+  "edit_operations": [
+    {
+      "operation_id": "career-edit-01",
+      "source_start": "00:00:00.000",
+      "source_end": "00:00:47.579",
+      "action": "replace",
+      "replacement_scene_ids": ["career-foundation"],
+      "source_problem": "The source presents a company-wide role ladder and fixed advancement framing rather than reusable capability growth."
+    },
+    {
+      "operation_id": "career-edit-02",
+      "source_start": "00:00:47.580",
+      "source_end": "00:01:19.179",
+      "action": "replace",
+      "replacement_scene_ids": ["career-readiness"],
+      "source_problem": "The source ties moving up to a fixed performance window and named next level."
+    },
+    {
+      "operation_id": "career-edit-03",
+      "source_start": "00:01:19.180",
+      "source_end": "00:02:23.899",
+      "action": "replace",
+      "replacement_scene_ids": ["career-more-responsibility"],
+      "source_problem": "The source promises higher earnings, commissions, a management path, and compensation tied to team output."
+    },
+    {
+      "operation_id": "career-edit-04",
+      "source_start": "00:02:23.900",
+      "source_end": "00:03:01.419",
+      "action": "replace",
+      "replacement_scene_ids": ["career-current-role"],
+      "source_problem": "The source names example promotion timelines and turns fixed numeric performance into advancement criteria."
+    },
+    {
+      "operation_id": "career-edit-05",
+      "source_start": "00:03:01.420",
+      "source_end": "00:03:48.839",
+      "action": "replace",
+      "replacement_scene_ids": ["career-feedback"],
+      "source_problem": "The source combines useful coachability ideas with revenue tests and first-consideration promises."
+    },
+    {
+      "operation_id": "career-edit-06",
+      "source_start": "00:03:48.840",
+      "source_end": "00:04:12.100",
+      "action": "replace",
+      "replacement_scene_ids": ["career-transition"],
+      "source_problem": "The source closes with a broad growth assurance instead of the actual checkpoint and capstone sequence."
+    }
+  ]
+}

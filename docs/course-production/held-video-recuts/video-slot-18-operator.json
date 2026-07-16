@@ -1,0 +1,150 @@
+{
+  "schema_version": "1.0.0",
+  "status": "script_ready_not_rendered",
+  "source": {
+    "source_key": "video-slot-18-operator",
+    "held_sha256": "6e6a3f257ff8cf3ef201de775de47c6e7833e3abd673e44bb8d4d5ac3aafa048",
+    "review_transcript_path": "course-assets/held-caption-review/video-slot-18-operator.md",
+    "review_transcript_sha256": "14cb8f4ace06322286a0b3fe1b41b83a8f0659ed092f94e3b30017c5e8bb79fe",
+    "review_vtt_path": "course-assets/held-caption-review/video-slot-18-operator.vtt",
+    "review_vtt_sha256": "4517636feec4ae01ddaa7e6d210f999f97ca9345a94cd489544bfb98621c64a2",
+    "duration_seconds": 378.858,
+    "last_spoken_time_seconds": 378.6
+  },
+  "lesson_contract": {
+    "lesson_source_key": "lesson-content-slot-18",
+    "objective": "Run a disciplined workday, keep the pipeline current, and communicate decisions and blockers through the team's operating systems.",
+    "objective_points": [
+      "Prioritize daily lead work",
+      "Maintain notes, stages, and next actions",
+      "Use team communication channels professionally",
+      "Close the day with a clean pipeline and clear plan"
+    ],
+    "next_sequence": [
+      "video-slot-18-mission-control",
+      "lesson-quiz-slot-18",
+      "lesson-content-slot-19"
+    ],
+    "transition_spoken_text": "Next, you'll see how the team stays in sync day to day. After that, complete the checkpoint and move into Career Growth Path."
+  },
+  "production_constraints": {
+    "strategy": "replace_full_spoken_cut",
+    "render_allowed": false,
+    "provider_call_allowed": false,
+    "caption_generation_allowed": false,
+    "approval_status_change_allowed": false
+  },
+  "scenes": [
+    {
+      "scene_id": "operator-whole-day",
+      "title": "Run the whole day",
+      "spoken_text": "You've learned the pieces. Now let's put them together into a workday you can repeat. The goal is simple: keep the right work moving, keep the record current, and make the next action obvious."
+    },
+    {
+      "scene_id": "operator-priorities",
+      "title": "Start with commitments",
+      "spoken_text": "Start by checking the work you've already promised. Look for scheduled follow-ups, active conversations, and anything close to a handoff. Use the current SOP and your role sheet to sort the list. If your manager has given you a different priority, follow that direction."
+    },
+    {
+      "scene_id": "operator-research",
+      "title": "Prepare with purpose",
+      "spoken_text": "Do enough research to make the next conversation useful. Confirm ownership and property details. Check the history in Sandra. Look for facts that help you ask a better question. Stop when you have what you need to move the conversation forward."
+    },
+    {
+      "scene_id": "operator-execution",
+      "title": "Work and document",
+      "spoken_text": "Handle scheduled callbacks first, then work the remaining follow-ups and assigned new activity in the order your current process requires. After meaningful activity, update Sandra while the details are fresh. Record what happened, what changed, and what happens next."
+    },
+    {
+      "scene_id": "operator-current-expectations",
+      "title": "Use the current operating plan",
+      "spoken_text": "Your current scorecard, role sheet, schedule, and manager direction define the activity expected from you. This video doesn't add a number or a schedule. Take the breaks in your current plan, reset when you need to, and return ready to give the next person your full attention."
+    },
+    {
+      "scene_id": "operator-close-day",
+      "title": "Leave a clean pipeline",
+      "spoken_text": "Before you finish, review the pipeline. Every active lead should have useful notes, the right stage, and a dated next action. Complete ready handoffs. Escalate anything blocked. Set up the next work so you can begin without guessing."
+    },
+    {
+      "scene_id": "operator-controlled-work",
+      "title": "Judge the controllable work",
+      "spoken_text": "A disciplined day doesn't guarantee that someone answers or that a deal closes. You can control whether you followed the process, kept your commitments, documented the work, and treated each person with care. That's the standard you can repeat."
+    },
+    {
+      "scene_id": "operator-human-care",
+      "title": "Keep the work human",
+      "spoken_text": "Steady follow-through matters, and so does genuine attention. Listen to the person in front of you. Ask the next useful question. Follow through when you say you will. Busy systems don't change the fact that this work depends on trust."
+    },
+    {
+      "scene_id": "operator-transition",
+      "title": "Continue into mission control",
+      "spoken_text": "Next, you'll see how the team stays in sync day to day. After that, complete the checkpoint and move into Career Growth Path."
+    }
+  ],
+  "edit_operations": [
+    {
+      "operation_id": "operator-edit-01",
+      "source_start": "00:00:00.000",
+      "source_end": "00:00:56.159",
+      "action": "replace",
+      "replacement_scene_ids": ["operator-whole-day"],
+      "source_problem": "The current opener introduces the daily sequence but ties priority to a specific fixed implementation."
+    },
+    {
+      "operation_id": "operator-edit-02",
+      "source_start": "00:00:56.160",
+      "source_end": "00:01:24.379",
+      "action": "replace",
+      "replacement_scene_ids": ["operator-priorities"],
+      "source_problem": "The source mandates a fixed preparation duration and a fixed number of leads."
+    },
+    {
+      "operation_id": "operator-edit-03",
+      "source_start": "00:01:24.380",
+      "source_end": "00:02:28.519",
+      "action": "replace",
+      "replacement_scene_ids": ["operator-research", "operator-execution"],
+      "source_problem": "The source combines a useful work order with a numeric dial quota and a fixed break duration."
+    },
+    {
+      "operation_id": "operator-edit-04",
+      "source_start": "00:02:28.520",
+      "source_end": "00:03:19.099",
+      "action": "replace",
+      "replacement_scene_ids": ["operator-current-expectations"],
+      "source_problem": "The source hard-codes another cumulative dial range and a fixed block schedule."
+    },
+    {
+      "operation_id": "operator-edit-05",
+      "source_start": "00:03:19.100",
+      "source_end": "00:04:27.239",
+      "action": "replace",
+      "replacement_scene_ids": ["operator-close-day"],
+      "source_problem": "The source mixes sound pipeline hygiene with a fixed review duration, dial target, and full-hours test."
+    },
+    {
+      "operation_id": "operator-edit-06",
+      "source_start": "00:04:27.240",
+      "source_end": "00:05:15.819",
+      "action": "replace",
+      "replacement_scene_ids": ["operator-controlled-work"],
+      "source_problem": "The source turns consistency into a fixed daily and weekly calling requirement."
+    },
+    {
+      "operation_id": "operator-edit-07",
+      "source_start": "00:05:15.820",
+      "source_end": "00:06:02.739",
+      "action": "replace",
+      "replacement_scene_ids": ["operator-human-care"],
+      "source_problem": "The human-care message is useful but is framed as a numbers game and repeats source-specific activity language."
+    },
+    {
+      "operation_id": "operator-edit-08",
+      "source_start": "00:06:02.740",
+      "source_end": "00:06:18.600",
+      "action": "replace",
+      "replacement_scene_ids": ["operator-transition"],
+      "source_problem": "The source transition skips the checkpoint and Career Growth Path sequence after Daily Mission Control."
+    }
+  ]
+}

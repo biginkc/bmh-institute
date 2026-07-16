@@ -15,10 +15,14 @@ import {
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
+import { validateHeldVideoApprovalLedger } from "./held-video-approval-ledger.mjs";
+
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = resolve(SCRIPT_DIR, "../..");
 const MANIFEST_PATH = join(REPO_ROOT, "content/course-manifests/bmh-employee-training.v1.json");
 const REVIEW_HTML_PATH = join(REPO_ROOT, "docs/course-production/held-video-review/index.html");
+const APPROVAL_LEDGER_PATH = join(REPO_ROOT, "docs/course-production/held-video-review/approvals.json");
+const APPROVAL_LEDGER_ROUTE = "/approval-ledger.json";
 
 export const CANONICAL_CHECKOUT = "/Users/jarradhenry/Sites/BMH apps/BMH Institute";
 export const MEDIA_ROOT_ENV = "BMH_HELD_VIDEO_MEDIA_ROOT";
@@ -288,6 +292,7 @@ export function renderHeldVideoReview(manifest, {
   const verificationStatus = mode === "verified"
     ? `<div class="verification verified" role="status"><strong>VERIFIED LOCAL SERVER</strong><span>Verified at <time datetime="${escapeHtml(verification.verifiedAt)}">${escapeHtml(verification.verifiedAt)}</time>.</span><span>Held-set SHA-256 lock: <code>${escapeHtml(verification.lockSha256)}</code></span></div>`
     : `<div class="verification unverified" role="alert"><strong>UNVERIFIED STATIC PAGE</strong><span>Do not approve a cut from this file-only view. Run <code>node scripts/course-content/verify-held-video-review.mjs --serve</code> and review the verified local-server page.</span></div>`;
+  const approvalLedgerUrl = mode === "verified" ? APPROVAL_LEDGER_ROUTE : "approvals.json";
 
   return `<!doctype html>
 <html lang="en">
@@ -306,6 +311,8 @@ export function renderHeldVideoReview(manifest, {
     <h1>Held video review</h1>
     ${verificationStatus}
     <p>Review and decide on the exact checksum-locked cut shown; a filename alone is not approval.</p>
+    <p>Record the approver, date, decision, and notes in the <a href="${approvalLedgerUrl}">checksum-keyed approval ledger</a>. Every record is pending until a reviewer decides on that exact source key and SHA-256.</p>
+    <p>Policy-safe replacement scripts and timecoded edit maps for Compensation Engine, Operator Playbook, and Career Growth Path are prepared at <code>docs/course-production/held-video-recuts/README.md</code>. They do not alter the held candidates shown here.</p>
     <p class="warning">This page does not upload, publish, alter, caption, or approve anything.</p>
   </section>
   <section class="grid" aria-label="Held video candidates">
@@ -398,6 +405,32 @@ export async function verifyHeldVideoReview({
     }
   }
 
+  const approvalLedgerBuffer = await readFile(APPROVAL_LEDGER_PATH);
+  let approvalLedger;
+  try {
+    approvalLedger = JSON.parse(approvalLedgerBuffer.toString("utf8"));
+  } catch (error) {
+    throw new Error(`Approval ledger is not valid JSON: ${error.message}`);
+  }
+  const approvalErrors = validateHeldVideoApprovalLedger(approvalLedger, held);
+  if (approvalErrors.length) throw new Error(`Approval ledger is invalid: ${approvalErrors.join("; ")}`);
+  const approvalLedgerSha256 = createHash("sha256").update(approvalLedgerBuffer).digest("hex");
+  const lockedApprovalLedger = await verifyAndSnapshotFile({
+    absolutePath: APPROVAL_LEDGER_PATH,
+    expectedSha256: approvalLedgerSha256,
+    expectedSize: approvalLedgerBuffer.length,
+    label: "held video approval ledger",
+  });
+  files.push({
+    absolutePath: APPROVAL_LEDGER_PATH,
+    contentType: "application/json; charset=utf-8",
+    kind: "approval-ledger",
+    label: "held video approval ledger",
+    route: APPROVAL_LEDGER_ROUTE,
+    sha256: lockedApprovalLedger.sha256,
+    snapshot: lockedApprovalLedger.snapshot,
+  });
+
   if (checkHtml) {
     const expectedHtml = renderHeldVideoReview(manifest, {
       mode: "static",
@@ -420,6 +453,7 @@ export async function verifyHeldVideoReview({
     sourceKeys,
     videoCount: held.length,
     evidenceFileCount,
+    approvalLedgerRecordCount: approvalLedger.records.length,
     htmlIsCurrent: checkHtml,
     files,
     lockSha256,
@@ -489,6 +523,7 @@ export function createHeldVideoReviewServer({
       expectedRoutes.push(evidenceRoute(sourceKey, "vtt"), evidenceRoute(sourceKey, "transcript"));
     }
   }
+  expectedRoutes.push(APPROVAL_LEDGER_ROUTE);
   if (expectedRoutes.some((route) => !routeMap.has(route)) || routeMap.size !== expectedRoutes.length) {
     throw new Error("Review server refuses an incomplete or expanded verified-file route set");
   }
