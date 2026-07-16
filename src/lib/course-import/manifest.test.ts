@@ -67,6 +67,19 @@ describe("validateCourseManifest", () => {
     );
   });
 
+  it("rejects cross-import storage paths before upload or rollback", () => {
+    const input = validCourseManifest();
+    input.assets[0].storage_path = "courses/another-import/video.mp4";
+
+    const result = validateCourseManifest(input);
+
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.errors).toContain(
+      "assets[0].storage_path must be owned by courses/training/v1/.",
+    );
+  });
+
   it("requires a poster asset reference on every release video", () => {
     const input = validCourseManifest();
     const video = input.program.courses[0].modules[0].lessons[0].blocks?.[0];

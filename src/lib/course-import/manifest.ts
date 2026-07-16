@@ -171,6 +171,14 @@ export function validateCourseManifest(
   if (input.schema_version !== 1) errors.push("schema_version must be 1.");
   if (input.status !== "draft") errors.push("status must be draft.");
   requireString(input, "import_id", "import_id", errors);
+  if (
+    typeof input.import_id === "string" &&
+    !SOURCE_KEY_PATTERN.test(input.import_id)
+  ) {
+    errors.push(
+      "import_id must use lowercase letters, numbers, dots, underscores, or hyphens.",
+    );
+  }
   if (!isRecord(input.qa_role_group)) errors.push("qa_role_group must be an object.");
   if (!Array.isArray(input.assets)) errors.push("assets must be an array.");
   if (!isRecord(input.program)) errors.push("program must be an object.");
@@ -211,10 +219,13 @@ export function validateCourseManifest(
     if (!["approved", "hold", "missing"].includes(asset.approval_status)) {
       errors.push(`${path}.approval_status is invalid.`);
     }
+    if (
+      typeof asset.storage_path !== "string" ||
+      !asset.storage_path.startsWith(storagePrefix)
+    ) {
+      errors.push(`${path}.storage_path must be owned by ${storagePrefix}.`);
+    }
     if (gate === "release") {
-      if (!asset.storage_path.startsWith(storagePrefix)) {
-        errors.push(`${path}.storage_path must be owned by ${storagePrefix}.`);
-      }
       if (asset.approval_status === "approved") {
         if (!asset.checksum_sha256) {
           errors.push(`${path}.checksum_sha256 is required for an approved release asset.`);

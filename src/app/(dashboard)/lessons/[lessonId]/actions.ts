@@ -118,7 +118,7 @@ export async function recordVideoProgress(input: {
   const { data: existing } = await learner
     .from("user_video_progress")
     .select(
-      "position_seconds, duration_seconds, watched_ranges, last_observed_at",
+      "position_seconds, duration_seconds, watched_ranges, last_observed_position_seconds, last_observed_at",
     )
     .eq("user_id", user.id)
     .eq("block_id", input.blockId)
@@ -136,6 +136,11 @@ export async function recordVideoProgress(input: {
     observedFrom: input.observedFrom,
     observedTo: input.observedTo,
     duration,
+    previousObservedPosition:
+      existing?.last_observed_at &&
+      typeof existing.last_observed_position_seconds === "number"
+        ? existing.last_observed_position_seconds
+        : null,
     previousObservedAt: existing?.last_observed_at
       ? new Date(existing.last_observed_at)
       : null,

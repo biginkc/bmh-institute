@@ -23,7 +23,7 @@ Production execution also needs `--allow-production`. Rollback additionally need
 - Identifiers are deterministic from `import_id` and `source_key`.
 - Program and course publication are forced off even if input is malformed.
 - The release gate requires approved covers, lesson thumbnails, videos, posters, captions, and transcripts.
-- Release asset paths must stay inside `courses/<import>/v<version>/`. Approved assets require SHA-256-addressed object paths, preventing an import from overwriting mutable shared files.
+- Every manifest asset path must stay inside `courses/<import>/v<version>/`, including draft upload and rollback commands. Approved release assets additionally require SHA-256-addressed object paths, preventing an import from overwriting mutable shared files or deleting another import's objects during rollback.
 - Uploads validate declared size and SHA-256 when present. Large files use resumable TUS transfers and preserve their resume URLs in ignored `.course-import-state/` state across process restarts.
 - Existing storage objects are skipped only when size and stored SHA-256 metadata match the manifest.
 - Apply uses deterministic upserts so reruns do not create duplicates.

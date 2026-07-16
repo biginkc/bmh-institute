@@ -1,13 +1,16 @@
 export type WatchedRange = [number, number];
 
 const MAX_OBSERVATION_SECONDS = 15;
+const MAX_INITIAL_OBSERVATION_SECONDS = 2;
 const RANGE_EPSILON_SECONDS = 0.5;
+const PLAYHEAD_EPSILON_SECONDS = 1;
 
 export function applyPlaybackObservation(input: {
   existingRanges: WatchedRange[];
   observedFrom: number;
   observedTo: number;
   duration: number;
+  previousObservedPosition: number | null;
   previousObservedAt: Date | null;
   observedAt: Date;
 }): { ok: boolean; ranges: WatchedRange[] } {
@@ -21,16 +24,22 @@ export function applyPlaybackObservation(input: {
         (input.observedAt.getTime() - input.previousObservedAt.getTime()) / 1000,
       )
     : MAX_OBSERVATION_SECONDS;
-  const credibleSpan = Math.min(
-    MAX_OBSERVATION_SECONDS,
-    elapsedSeconds * 2.25 + 2,
-  );
+  const credibleSpan = input.previousObservedAt
+    ? Math.min(MAX_OBSERVATION_SECONDS, elapsedSeconds * 2.25)
+    : MAX_INITIAL_OBSERVATION_SECONDS;
+  const continuesStoredPlayhead =
+    input.previousObservedPosition === null
+      ? from <= PLAYHEAD_EPSILON_SECONDS
+      : Number.isFinite(input.previousObservedPosition) &&
+        Math.abs(from - input.previousObservedPosition) <=
+          PLAYHEAD_EPSILON_SECONDS;
   if (
     !Number.isFinite(input.duration) ||
     input.duration <= 0 ||
     !Number.isFinite(span) ||
     span <= 0 ||
-    span > credibleSpan
+    span > credibleSpan ||
+    !continuesStoredPlayhead
   ) {
     return { ok: false, ranges: existing };
   }
