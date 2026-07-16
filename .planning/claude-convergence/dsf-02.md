@@ -16,7 +16,7 @@
 - [x] Unlinked `/design-system` renders all main variants.
 - [x] `npm run verify`, `npm run build`, and diff checks pass.
 - [ ] Manual review and independent Claude review have no unresolved valid findings.
-- [ ] Requested PR is open against `main` and is not merged.
+- [x] Requested PR is open against `main` and is not merged.
 
 ## Preflight
 
@@ -53,3 +53,11 @@
 - Table retains native row semantics. A real named button in the first cell exposes each action to assistive technology while row-wide pointer activation remains. It is visually hidden at rest and reveals an outlined Open control when keyboard-focused.
 - Fallow reported only intentional public export and source-complexity signals. Secret and environment scans were clean.
 - Source-contract, runtime, and interaction re-reviews are clean at `b52359d`.
+
+### PR and Claude gate
+
+- PR 86 is open from `codex/design-system-02-components` to `main` with the exact requested title. It is not merged.
+- GitHub Verify, Seeded Playwright E2E, Vercel, and Vercel Preview Comments checks passed at `64dc871`.
+- Claude Desktop was reached and a fresh conversation was opened. Its main window then rendered blank and could not expose a controllable review surface.
+- The authenticated CLI fallback was attempted in read-only plan mode. It returned HTTP 401 because the stored OAuth access token has expired.
+- No Claude verdict was received. The implementation reviews are clean but the required independent Claude gate remains blocked on re-authentication or a working Desktop surface.
