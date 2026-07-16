@@ -92,17 +92,6 @@ export function Table(props: TableProps) {
               <tr
                 key={row[rowKey] ?? rowIndex}
                 onClick={onRowClick ? () => onRowClick(row) : undefined}
-                tabIndex={onRowClick ? 0 : undefined}
-                onKeyDown={
-                  onRowClick
-                    ? (event) => {
-                        if (event.key === "Enter" || event.key === " ") {
-                          event.preventDefault();
-                          onRowClick(row);
-                        }
-                      }
-                    : undefined
-                }
                 style={{
                   cursor: onRowClick ? "pointer" : "default",
                   transition: "background var(--dur) var(--bmh-ease-out)",
@@ -128,6 +117,27 @@ export function Table(props: TableProps) {
                       color: columnIndex === 0 ? "var(--ink-900)" : "var(--text-body)",
                     }}
                   >
+                    {columnIndex === 0 && onRowClick ? (
+                      <button
+                        type="button"
+                        aria-label={`Open ${String(row[column.key] ?? `row ${rowIndex + 1}`)}`}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          onRowClick(row);
+                        }}
+                        style={{
+                          position: "absolute",
+                          width: 1,
+                          height: 1,
+                          padding: 0,
+                          margin: -1,
+                          overflow: "hidden",
+                          clip: "rect(0, 0, 0, 0)",
+                          whiteSpace: "nowrap",
+                          border: 0,
+                        }}
+                      />
+                    ) : null}
                     {cell[column.key] ? cell[column.key](row) : row[column.key]}
                   </td>
                 ))}
