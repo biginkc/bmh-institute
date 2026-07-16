@@ -125,6 +125,8 @@ test("static and verified pages make trust state and caption availability explic
   assert.match(staticHtml, /verify-held-video-review\.mjs --serve/);
   assert.match(staticHtml, /approvals\.json/);
   assert.match(staticHtml, /held-video-recuts\/README\.md/);
+  assert.equal((staticHtml.match(/REPLACEMENT REQUIRED/g) || []).length, 3);
+  assert.match(staticHtml, /Six corrected candidates await Jarrad review/);
   assert.doesNotMatch(staticHtml, /VERIFIED LOCAL SERVER/);
   assert.match(verifiedHtml, /VERIFIED LOCAL SERVER/);
   assert.match(verifiedHtml, /2026-07-16T12:34:56\.000Z/);
@@ -174,7 +176,8 @@ test("the verified server serves only locked routes with no-store and byte range
     assert.match(ledgerResponse.headers.get("cache-control"), /no-store/);
     const ledger = await ledgerResponse.json();
     assert.equal(ledger.records.length, 9);
-    assert.ok(ledger.records.every((record) => record.decision === "pending"));
+    assert.equal(ledger.records.filter((record) => record.decision === "pending").length, 6);
+    assert.equal(ledger.records.filter((record) => record.decision === "changes_requested").length, 3);
 
     const unknownResponse = await fetch(new URL("/media/not-locked.mp4", url));
     assert.equal(unknownResponse.status, 404);

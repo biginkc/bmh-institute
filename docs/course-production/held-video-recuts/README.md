@@ -37,7 +37,9 @@ its checksum, timecode coverage is gap-free, every scene is mapped, generated
 documents are current, and all production permissions remain false.
 
 The nine-cut approval ledger is
-`../held-video-review/approvals.json`. Every record remains pending. A reviewer
-must key a decision to both `source_key` and SHA-256 and provide approver, date,
-and notes. Decisions are terminal for that checksum, so a revised cut receives
-a new checksum-keyed candidate rather than rewriting review history.
+`../held-video-review/approvals.json`. Six corrected candidates remain pending.
+The three policy-defective source hashes are terminally marked
+`changes_requested` and cannot be approved. A reviewer must key every decision
+to both `source_key` and SHA-256 and provide approver, date, and notes. A revised
+cut receives a new pending checksum-keyed candidate rather than rewriting
+review history.

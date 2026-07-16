@@ -15,7 +15,11 @@ import {
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-import { validateHeldVideoApprovalLedger } from "./held-video-approval-ledger.mjs";
+import {
+  REPLACEMENT_REQUIRED_CUTS,
+  approvalRecordKey,
+  validateHeldVideoApprovalLedger,
+} from "./held-video-approval-ledger.mjs";
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = resolve(SCRIPT_DIR, "../..");
@@ -279,9 +283,17 @@ export function renderHeldVideoReview(manifest, {
       ? "Review-only captions are available for wording verification. They are not approved learner captions."
       : "Captions and a transcript are intentionally not finalized for this cut while exact-file approval is pending.";
     const videoLabel = `${details.title} held video candidate ${index + 1} of ${held.length}`;
+    const replacementRequired = REPLACEMENT_REQUIRED_CUTS.has(approvalRecordKey({
+      source_key: asset.source_key,
+      sha256: asset.checksum_sha256,
+    }));
+    const reviewStatus = replacementRequired
+      ? '<p class="replacement"><strong>REPLACEMENT REQUIRED</strong> — this exact source cut is evidence only and cannot be approved.</p>'
+      : '<p class="candidate"><strong>JARRAD REVIEW REQUIRED</strong> — approve or request changes on this corrected candidate.</p>';
 
     return `<article class="card" data-source-key="${escapeHtml(asset.source_key)}" data-checksum="${asset.checksum_sha256}">
       <header><span class="number">${index + 1}</span><div><h2>${escapeHtml(details.title)}</h2><p class="meta">${details.duration} · ${asset.size_bytes.toLocaleString("en-US")} bytes</p></div></header>
+      ${reviewStatus}
       <video controls preload="metadata" src="${escapeHtml(videoUrl)}" aria-label="${escapeHtml(videoLabel)}" title="${escapeHtml(videoLabel)}">${track}Your browser cannot play this local video.</video>
       <p class="captions-note"><strong>Accessibility:</strong> ${escapeHtml(accessibilityNote)}</p>
       <p class="reason"><strong>Why it is held:</strong> ${escapeHtml(details.reason)}</p>${evidence}
@@ -301,7 +313,7 @@ export function renderHeldVideoReview(manifest, {
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>BMH Institute — Held Video Review</title>
   <style>
-    :root{color-scheme:dark;--bg:#11120f;--panel:#1c1e18;--ink:#f8f5e7;--muted:#b9b8ac;--accent:#f4cf45;--line:#3a3d32;--danger:#ff836f;--safe:#8fe388}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}main{width:min(1040px,calc(100% - 32px));margin:40px auto 80px}.intro{border-left:6px solid var(--accent);padding:4px 0 4px 20px;margin-bottom:30px}.eyebrow{text-transform:uppercase;letter-spacing:.14em;color:var(--accent);font-weight:800;font-size:.76rem}h1{font-size:clamp(2rem,6vw,4rem);line-height:1;margin:.25rem 0 1rem}h2{margin:0;font-size:1.35rem}.intro p{max-width:76ch;color:var(--muted)}.warning{color:var(--danger);font-weight:750}.verification{display:grid;gap:5px;margin:20px 0;padding:14px 16px;border:2px solid;border-radius:10px;overflow-wrap:anywhere}.verification.verified{border-color:var(--safe);color:var(--safe)}.verification.unverified{border-color:var(--danger);color:var(--danger)}.grid{display:grid;gap:22px}.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:0 18px 38px #0005}.card header{display:flex;gap:14px;align-items:center;margin-bottom:16px}.number{display:grid;place-items:center;width:38px;height:38px;border-radius:50%;background:var(--accent);color:#161710;font-weight:900}.meta{margin:2px 0 0;color:var(--muted)}video{display:block;width:100%;max-height:70vh;border-radius:12px;background:#000}.captions-note{margin:10px 0;color:var(--muted)}.reason{margin:18px 0 8px}.evidence{margin:12px 0;padding:12px 14px;border-radius:10px;background:#2a2c24}a{color:var(--accent)}details{margin-top:14px;color:var(--muted)}summary{cursor:pointer;font-weight:700}dl{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:6px 12px}dt{font-weight:800}dd{margin:0;overflow-wrap:anywhere}code{font-size:.78rem}@media(max-width:600px){main{width:min(100% - 20px,1040px);margin-top:22px}.card{padding:14px}dl{grid-template-columns:1fr}.intro{padding-left:14px}}
+    :root{color-scheme:dark;--bg:#11120f;--panel:#1c1e18;--ink:#f8f5e7;--muted:#b9b8ac;--accent:#f4cf45;--line:#3a3d32;--danger:#ff836f;--safe:#8fe388}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}main{width:min(1040px,calc(100% - 32px));margin:40px auto 80px}.intro{border-left:6px solid var(--accent);padding:4px 0 4px 20px;margin-bottom:30px}.eyebrow{text-transform:uppercase;letter-spacing:.14em;color:var(--accent);font-weight:800;font-size:.76rem}h1{font-size:clamp(2rem,6vw,4rem);line-height:1;margin:.25rem 0 1rem}h2{margin:0;font-size:1.35rem}.intro p{max-width:76ch;color:var(--muted)}.warning,.replacement{color:var(--danger);font-weight:750}.candidate{color:var(--safe);font-weight:750}.verification{display:grid;gap:5px;margin:20px 0;padding:14px 16px;border:2px solid;border-radius:10px;overflow-wrap:anywhere}.verification.verified{border-color:var(--safe);color:var(--safe)}.verification.unverified{border-color:var(--danger);color:var(--danger)}.grid{display:grid;gap:22px}.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:0 18px 38px #0005}.card header{display:flex;gap:14px;align-items:center;margin-bottom:16px}.number{display:grid;place-items:center;width:38px;height:38px;border-radius:50%;background:var(--accent);color:#161710;font-weight:900}.meta{margin:2px 0 0;color:var(--muted)}video{display:block;width:100%;max-height:70vh;border-radius:12px;background:#000}.captions-note{margin:10px 0;color:var(--muted)}.reason{margin:18px 0 8px}.evidence{margin:12px 0;padding:12px 14px;border-radius:10px;background:#2a2c24}a{color:var(--accent)}details{margin-top:14px;color:var(--muted)}summary{cursor:pointer;font-weight:700}dl{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:6px 12px}dt{font-weight:800}dd{margin:0;overflow-wrap:anywhere}code{font-size:.78rem}@media(max-width:600px){main{width:min(100% - 20px,1040px);margin-top:22px}.card{padding:14px}dl{grid-template-columns:1fr}.intro{padding-left:14px}}
   </style>
 </head>
 <body>
@@ -310,9 +322,9 @@ export function renderHeldVideoReview(manifest, {
     <div class="eyebrow">Local review only · 9 exact cuts</div>
     <h1>Held video review</h1>
     ${verificationStatus}
-    <p>Review and decide on the exact checksum-locked cut shown; a filename alone is not approval.</p>
-    <p>Record the approver, date, decision, and notes in the <a href="${approvalLedgerUrl}">checksum-keyed approval ledger</a>. Every record is pending until a reviewer decides on that exact source key and SHA-256.</p>
-    <p>Policy-safe replacement scripts and timecoded edit maps for Compensation Engine, Operator Playbook, and Career Growth Path are prepared at <code>docs/course-production/held-video-recuts/README.md</code>. They do not alter the held candidates shown here.</p>
+    <p>Six corrected candidates await Jarrad review. Approve or request changes only on those exact checksum-locked cuts; a filename alone is not approval.</p>
+    <p>Compensation Engine, Operator Playbook, and Career Growth Path are policy-defective source evidence, already marked <strong>changes requested</strong>, and cannot be approved. Their replacements will receive new checksums and a separate review.</p>
+    <p>Record decisions in the <a href="${approvalLedgerUrl}">checksum-keyed approval ledger</a>. Policy-safe replacement scripts and timecoded edit maps for the three blocked sources are prepared at <code>docs/course-production/held-video-recuts/README.md</code>.</p>
     <p class="warning">This page does not upload, publish, alter, caption, or approve anything.</p>
   </section>
   <section class="grid" aria-label="Held video candidates">

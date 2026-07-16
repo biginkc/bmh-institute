@@ -71,30 +71,30 @@
       "sha256": "cecad85478bb1a8ba5bfed7404dc045440c567ed0eaaa90b11b644e124b27846",
       "candidate_local_path": "course-assets/review-lesson17/LESSON-17-v1-QT.mp4",
       "title": "Compensation Engine",
-      "decision": "pending",
-      "approver": null,
-      "date": null,
-      "notes": null
+      "decision": "changes_requested",
+      "approver": "BMH Institute content QA",
+      "date": "2026-07-16",
+      "notes": "Replacement required: the exact source cut contains fixed compensation promises that conflict with the locked role-agnostic current-written-plan policy."
     },
     {
       "source_key": "video-slot-18-operator",
       "sha256": "6e6a3f257ff8cf3ef201de775de47c6e7833e3abd673e44bb8d4d5ac3aafa048",
       "candidate_local_path": "course-assets/review-lesson18A/LESSON-18A-v10.mp4",
       "title": "Operator Playbook",
-      "decision": "pending",
-      "approver": null,
-      "date": null,
-      "notes": null
+      "decision": "changes_requested",
+      "approver": "BMH Institute content QA",
+      "date": "2026-07-16",
+      "notes": "Replacement required: the exact source cut contains fixed activity quotas that conflict with the locked no-fixed-KPI policy."
     },
     {
       "source_key": "video-slot-19-career",
       "sha256": "1ddcf7b1b0b45bbc90ec14b3660b3d5f5a284b5095dd0d0682164924ce1a3da9",
       "candidate_local_path": "course-assets/review-lesson19/LESSON-19-v7.mp4",
       "title": "Career Growth Path",
-      "decision": "pending",
-      "approver": null,
-      "date": null,
-      "notes": null
+      "decision": "changes_requested",
+      "approver": "BMH Institute content QA",
+      "date": "2026-07-16",
+      "notes": "Replacement required: the exact source cut contains role-ladder, timeline, and compensation promises that conflict with the reusable current-role-source-of-truth policy."
     }
   ]
 }

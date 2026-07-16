@@ -4,13 +4,13 @@ Updated: 2026-07-16
 
 ## Review rule
 
-Nine exact cuts are the only candidates for their slots. Six passed technical
-QC but do not have a later explicit Jarrad approval in the inspected records.
-The Compensation Engine, Operator Playbook, and Career Growth cuts were added to this hold
-after exact-cut transcription exposed wording that conflicts with the locked
-course policy. Do not substitute an older known-defective version. Do not change a
-manifest asset from `hold` to `approved` until Jarrad has watched and approved
-that exact file.
+Six exact corrected cuts passed technical QC but do not have a later explicit
+Jarrad approval in the inspected records. Those six are the only approvable
+candidates on this review surface. Exact-cut transcription proved that the
+Compensation Engine, Operator Playbook, and Career Growth source cuts conflict
+with locked course policy. Those three records are terminally marked
+`changes_requested`; they are evidence for replacement production and cannot be
+approved. A replacement must receive a new checksum-keyed ledger record.
 
 All nine use H264 video at 1600 by 900 in yuv420p plus AAC 48 kHz stereo audio.
 Use the fail-closed local review server documented in
@@ -21,7 +21,8 @@ The first six cuts intentionally do not have finalized learner captions while
 approval is pending. The final three expose checksum-locked, review-only wording
 evidence and must not be treated as finalized learner captions.
 The machine-readable approval record is
-`held-video-review/approvals.json`; all nine exact cuts remain pending. Prepared
+`held-video-review/approvals.json`; six corrected candidates remain pending and
+the three policy-defective sources are marked `changes_requested`. Prepared
 policy-safe scripts and source-time replacement maps for the final three cuts
 are in `held-video-recuts/`. Those packages do not change the held media or its
 manifest status.
@@ -40,7 +41,8 @@ manifest status.
 
 ## Approval recording
 
-For each file, record the exact SHA-256, approval date, and approver in the
-course review record. Approval of a filename without a matching checksum is not
-enough because the local course-production folders contain older and rejected
-cuts with similar names.
+For each of the six corrected candidates, record the exact SHA-256, approval
+date, and approver in the course review record. Approval of a filename without a
+matching checksum is not enough because the local course-production folders
+contain older and rejected cuts with similar names. The three replacement-
+required source hashes cannot transition to `approved`.

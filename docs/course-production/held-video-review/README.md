@@ -47,13 +47,15 @@ Compensation Engine, Operator Playbook, and Career Growth Path, and fails if the
 checked-in fallback HTML is stale. The other six videos deliberately explain
 that learner captions and transcripts remain pending exact-cut approval.
 
-Watch each video in the page. Record any approval separately with the displayed
-SHA-256, approval date, and approver. A filename by itself is not an approval.
-Use the linked `approvals.json` ledger. It contains exactly one pending record
-for each held `source_key` plus SHA-256. The verifier locks and serves this file
-with the review surface, and stops if it changes while the server is running.
-The transition validator requires approver, date, decision, and notes for a
-decision and prevents a decided checksum from being rewritten.
+Watch the six cards marked `JARRAD REVIEW REQUIRED`. Record any approval with
+the displayed SHA-256, approval date, and approver. A filename by itself is not
+an approval. The other three cards are marked `REPLACEMENT REQUIRED`; their
+exact policy-defective hashes are already `changes_requested` and the validator
+forbids approving them. Use the linked `approvals.json` ledger. The verifier
+locks and serves this file with the review surface, and stops if it changes
+while the server is running. The transition validator requires approver, date,
+decision, and notes, preserves terminal history, and permits a replacement only
+as a new pending checksum-keyed candidate.
 
 Validate a proposed ledger change before replacing the current ledger:
 

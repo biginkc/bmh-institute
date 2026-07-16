@@ -29,7 +29,7 @@ test("all three policy recuts preserve source, objective, transition, and produc
   const result = await validateHeldVideoRecuts();
   assert.deepEqual(result, {
     approvalRecords: 9,
-    pendingApprovalRecords: 9,
+    pendingApprovalRecords: 6,
     recutPackages: 3,
     errors: [],
   });
@@ -57,16 +57,21 @@ test("the spoken policy rejects money, quotas, timelines, promises, and role tit
   }
 });
 
-test("all nine exact held cuts start pending in the checksum-keyed ledger", async () => {
+test("six review candidates are pending and three proven-defective source cuts require replacement", async () => {
   const [manifest, ledger] = await Promise.all([manifestPromise, ledgerPromise]);
   const held = manifest.assets.filter((asset) => asset.kind === "video" && asset.approval_status === "hold");
   assert.deepEqual(validateHeldVideoApprovalLedger(ledger, held), []);
   assert.equal(ledger.records.length, 9);
-  assert.ok(ledger.records.every((record) =>
+  assert.equal(ledger.records.filter((record) =>
     record.decision === "pending"
     && record.approver === null
     && record.date === null
-    && record.notes === null));
+    && record.notes === null).length, 6);
+  assert.equal(ledger.records.filter((record) =>
+    record.decision === "changes_requested"
+    && record.approver === "BMH Institute content QA"
+    && record.date === "2026-07-16"
+    && record.notes.includes("Replacement required")).length, 3);
 });
 
 test("approval transitions require evidence and keep decided checksums immutable", async () => {
@@ -93,6 +98,16 @@ test("approval transitions require evidence and keep decided checksums immutable
   });
   assert.ok(validateHeldVideoApprovalTransition(approved, rewrittenDecision, held)
     .some((error) => error.includes("decision is terminal")));
+
+  const policyDefectiveApproval = structuredClone(ledger);
+  Object.assign(policyDefectiveApproval.records[6], {
+    approver: "Jarrad Henry",
+    date: "2026-07-16",
+    decision: "approved",
+    notes: "Approve the old source cut.",
+  });
+  assert.ok(validateHeldVideoApprovalTransition(ledger, policyDefectiveApproval, held)
+    .some((error) => error.includes("policy-defective source cut")));
 });
 
 test("generated scripts contain the exact locked final transition", async () => {
