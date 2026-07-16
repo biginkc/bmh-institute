@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import { Table } from "./table";
 
 describe("<Table />", () => {
-  it("activates clickable rows from the keyboard", () => {
+  it("preserves row semantics and activates clickable rows from the keyboard", () => {
     const onRowClick = vi.fn();
     render(
       <Table
@@ -14,9 +14,15 @@ describe("<Table />", () => {
       />,
     );
 
-    fireEvent.keyDown(screen.getByRole("button", { name: "Sofia Ruiz" }), {
+    const row = screen.getByRole("row", { name: "Sofia Ruiz" });
+    expect(row.tagName).toBe("TR");
+
+    fireEvent.keyDown(row, {
       key: "Enter",
     });
     expect(onRowClick).toHaveBeenCalledWith({ id: 1, name: "Sofia Ruiz" });
+
+    fireEvent.keyDown(row, { key: " " });
+    expect(onRowClick).toHaveBeenCalledTimes(2);
   });
 });
