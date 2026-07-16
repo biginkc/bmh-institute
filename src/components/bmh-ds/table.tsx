@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 
 /* eslint-disable @typescript-eslint/no-explicit-any -- Public API copied verbatim from the source declaration. */
 export interface TableColumn {
@@ -28,6 +28,57 @@ export interface TableProps {
 
 type TableRuntimeProps = TableProps &
   Omit<React.HTMLAttributes<HTMLDivElement>, keyof TableProps>;
+
+interface RowActionButtonProps {
+  label: string;
+  onActivate: () => void;
+}
+
+function RowActionButton({ label, onActivate }: RowActionButtonProps) {
+  const [focused, setFocused] = useState(false);
+
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      onFocus={() => setFocused(true)}
+      onBlur={() => setFocused(false)}
+      onClick={(event) => {
+        event.stopPropagation();
+        onActivate();
+      }}
+      style={
+        focused
+          ? {
+              width: "auto",
+              height: "auto",
+              padding: "2px 8px",
+              marginRight: 8,
+              border: "2px solid var(--action)",
+              borderRadius: "var(--bmh-radius-sm)",
+              background: "var(--paper)",
+              color: "var(--action)",
+              font: "800 var(--fs-caption)/1.4 var(--font-body)",
+              outline: "2px solid var(--action)",
+              outlineOffset: 2,
+            }
+          : {
+              position: "absolute",
+              width: 1,
+              height: 1,
+              padding: 0,
+              margin: -1,
+              overflow: "hidden",
+              clip: "rect(0, 0, 0, 0)",
+              whiteSpace: "nowrap",
+              border: 0,
+            }
+      }
+    >
+      Open
+    </button>
+  );
+}
 
 /** Lightweight data table for admin lists and reports. */
 export function Table(props: TableProps) {
@@ -118,24 +169,9 @@ export function Table(props: TableProps) {
                     }}
                   >
                     {columnIndex === 0 && onRowClick ? (
-                      <button
-                        type="button"
-                        aria-label={`Open ${String(row[column.key] ?? `row ${rowIndex + 1}`)}`}
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          onRowClick(row);
-                        }}
-                        style={{
-                          position: "absolute",
-                          width: 1,
-                          height: 1,
-                          padding: 0,
-                          margin: -1,
-                          overflow: "hidden",
-                          clip: "rect(0, 0, 0, 0)",
-                          whiteSpace: "nowrap",
-                          border: 0,
-                        }}
+                      <RowActionButton
+                        label={`Open ${String(row[column.key] ?? `row ${rowIndex + 1}`)}`}
+                        onActivate={() => onRowClick(row)}
                       />
                     ) : null}
                     {cell[column.key] ? cell[column.key](row) : row[column.key]}
