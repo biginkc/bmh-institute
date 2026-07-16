@@ -1,17 +1,10 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { Badge } from "@/components/ui/badge";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Badge, Card } from "@/components/bmh-ds";
 import { createClient } from "@/lib/supabase/server";
 import { getAuthedProfile } from "@/lib/auth/guard";
 
+import { AdminPageHeader, AdminSectionHeading } from "../../../_components/admin-shell";
 import { UserEditForm, type RoleGroupOption } from "./user-edit-form";
 
 export default async function EditUserPage({
@@ -58,52 +51,41 @@ export default async function EditUserPage({
 
   return (
     <main className="mx-auto w-full max-w-2xl flex-1 p-6 md:p-10">
-      <Link
-        href="/admin/users"
-        className="text-muted-foreground hover:text-foreground text-xs"
-      >
-        ← Back to users
-      </Link>
+      <AdminPageHeader
+        eyebrow="Admin · Users"
+        title={profile.full_name}
+        description={profile.email}
+        backHref="/admin/users"
+        backLabel="Back to users"
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge tone={profile.system_role === "owner" ? "solid" : profile.system_role === "admin" ? "blue" : "neutral"} size="sm">
+              {profile.system_role}
+            </Badge>
+            <Badge tone={profile.status === "active" ? "green" : profile.status === "suspended" ? "red" : "yellow"} size="sm">
+              {profile.status}
+            </Badge>
+            <span className="text-xs font-semibold text-[var(--text-muted)]">
+              Joined {new Date(profile.created_at).toLocaleDateString()}
+            </span>
+          </div>
+        }
+      />
 
-      <div className="mt-3 mb-8">
-        <h1 className="text-2xl font-semibold">{profile.full_name}</h1>
-        <p className="text-muted-foreground mt-1 text-sm">{profile.email}</p>
-        <div className="mt-3 flex flex-wrap items-center gap-2">
-          <Badge variant="outline" className="capitalize">
-            {profile.system_role}
-          </Badge>
-          <Badge
-            variant={profile.status === "active" ? "default" : "secondary"}
-            className="capitalize"
-          >
-            {profile.status}
-          </Badge>
-          <span className="text-muted-foreground text-xs">
-            · joined {new Date(profile.created_at).toLocaleDateString()}
-          </span>
-        </div>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Settings</CardTitle>
-          <CardDescription>
-            Role, status, and role-group membership. Changes save together.
-            Adding a role group that unlocks new programs fires an enrollment
-            email to the user.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <UserEditForm
-            userId={profile.id}
-            initialSystemRole={profile.system_role}
-            initialStatus={profile.status}
-            initialRoleGroupIds={currentRoleGroupIds}
-            allRoleGroups={allRoleGroups}
-            canModifyRole={!isEditingSelf}
-            canSuspend={!isEditingSelf}
-          />
-        </CardContent>
+      <Card padding="md">
+        <AdminSectionHeading
+          title="Settings"
+          description="Role, status, and role-group membership. Changes save together. Adding a role group that unlocks new programs sends an enrollment email to the user."
+        />
+        <UserEditForm
+          userId={profile.id}
+          initialSystemRole={profile.system_role}
+          initialStatus={profile.status}
+          initialRoleGroupIds={currentRoleGroupIds}
+          allRoleGroups={allRoleGroups}
+          canModifyRole={!isEditingSelf}
+          canSuspend={!isEditingSelf}
+        />
       </Card>
     </main>
   );

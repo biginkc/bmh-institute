@@ -1,14 +1,13 @@
 import Link from "next/link";
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { PageHeader } from "@/components/page-header";
+import { Card } from "@/components/bmh-ds";
 import { createClient } from "@/lib/supabase/server";
+
+import {
+  AdminMetricCard,
+  AdminPageHeader,
+  AdminSectionHeading,
+} from "./_components/admin-shell";
 
 export default async function AdminOverviewPage() {
   const supabase = await createClient();
@@ -63,52 +62,51 @@ export default async function AdminOverviewPage() {
   });
 
   return (
-    <main className="flex-1 p-6 md:p-10">
-      <div className="mb-6">
-        <PageHeader
-          title="Overview"
-          description="Training activity, content inventory, and submissions that need attention."
-          breadcrumb={[{ label: "Admin" }, { label: "Overview" }]}
-        />
-      </div>
+    <main className="mx-auto w-full max-w-[66.25rem] flex-1 p-6 md:p-10">
+      <AdminPageHeader
+        title="Overview"
+        description="Training activity, content inventory, and submissions that need attention."
+      />
 
-      <section className="border-border bg-card mb-6 rounded-md border p-4">
-        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="text-base font-semibold">Needs attention</h2>
-            <p className="text-muted-foreground text-sm">
-              Current admin follow-ups based on submissions, invites, and draft
-              content.
-            </p>
-          </div>
-          <Link
-            href="/admin/reports"
-            className="text-muted-foreground hover:text-foreground text-sm"
-          >
-            View reports
-          </Link>
-        </div>
+      <Card padding="md" style={{ marginBottom: 24 }}>
+        <AdminSectionHeading
+          title="Needs attention"
+          description="Current admin follow-ups based on submissions, invites, and draft content."
+          action={
+            <Link href="/admin/reports" className="text-sm font-extrabold text-[var(--action)]">
+              View reports
+            </Link>
+          }
+        />
         {attentionItems.length === 0 ? (
-          <p className="text-muted-foreground mt-4 text-sm">
+          <p className="text-sm font-semibold text-[var(--text-muted)]">
             Nothing needs attention right now.
           </p>
         ) : (
-          <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
             {attentionItems.map((item) => (
               <Link
                 key={item.label}
                 href={item.href}
-                className={attentionItemClassName(item.tone)}
+                className="block no-underline"
               >
-                <span className="block text-sm font-medium">{item.label}</span>
-                <span className="text-muted-foreground block text-xs">
-                  {item.detail}
-                </span>
+                <Card
+                  padding="sm"
+                  interactive
+                  style={attentionItemStyle(item.tone)}
+                >
+                  <span className="block text-sm font-extrabold text-[var(--ink-900)]">
+                    {item.label}
+                  </span>
+                  <span className="block text-xs font-semibold text-[var(--text-muted)]">
+                    {item.detail}
+                  </span>
+                </Card>
               </Link>
             ))}
           </div>
         )}
-      </section>
+      </Card>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         <StatCard
@@ -139,20 +137,18 @@ export default async function AdminOverviewPage() {
         />
       </div>
 
-      <div className="mt-10">
-        <h2 className="mb-3 text-lg font-semibold">Quick actions</h2>
+      <div className="mt-8">
+        <AdminSectionHeading title="Quick actions" />
         <div className="flex flex-wrap gap-3">
-          <Link
-            href="/admin/programs/new"
-            className="border-border hover:bg-muted rounded-md border px-3 py-1.5 text-sm"
-          >
-            New program
+          <Link href="/admin/programs/new" className="block no-underline">
+            <Card padding="sm" interactive outline>
+              <span className="font-extrabold text-[var(--ink-900)]">New program</span>
+            </Card>
           </Link>
-          <Link
-            href="/admin/courses/new"
-            className="border-border hover:bg-muted rounded-md border px-3 py-1.5 text-sm"
-          >
-            New course
+          <Link href="/admin/courses/new" className="block no-underline">
+            <Card padding="sm" interactive outline>
+              <span className="font-extrabold text-[var(--ink-900)]">New course</span>
+            </Card>
           </Link>
         </div>
       </div>
@@ -267,16 +263,10 @@ export function getNeedsAttentionItems({
   return items;
 }
 
-function attentionItemClassName(tone: NeedsAttentionItem["tone"]) {
-  const base = "rounded-md border px-3 py-2 transition-colors";
-  if (tone === "urgent") {
-    return [
-      base,
-      "border-amber-300 bg-amber-50 text-amber-950 hover:bg-amber-100",
-      "dark:border-amber-700 dark:bg-amber-950 dark:text-amber-100 dark:hover:bg-amber-900",
-    ].join(" ");
-  }
-  return `${base} border-border hover:bg-muted`;
+function attentionItemStyle(tone: NeedsAttentionItem["tone"]) {
+  return tone === "urgent"
+    ? { borderColor: "var(--yellow-500)", background: "var(--warning-soft)" }
+    : undefined;
 }
 
 function pluralize(
@@ -304,22 +294,8 @@ function StatCard({
   highlight?: boolean;
 }) {
   return (
-    <Link href={href} className="block">
-      <Card
-        className={
-          highlight
-            ? "border-amber-400 bg-amber-50 transition-colors hover:bg-amber-100 dark:border-amber-600 dark:bg-amber-950 dark:hover:bg-amber-900"
-            : "hover:bg-muted/30 transition-colors"
-        }
-      >
-        <CardHeader>
-          <CardDescription>{label}</CardDescription>
-          <CardTitle className="text-3xl font-semibold tabular-nums">
-            {count}
-          </CardTitle>
-        </CardHeader>
-        <CardContent />
-      </Card>
+    <Link href={href} className="block no-underline">
+      <AdminMetricCard label={label} value={count} highlight={highlight} />
     </Link>
   );
 }

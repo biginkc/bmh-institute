@@ -3,7 +3,7 @@
 import { useTransition } from "react";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/bmh-ds";
 
 import { resendInvite } from "./actions";
 
@@ -12,7 +12,7 @@ export function ResendInviteButton({ inviteId }: { inviteId: string }) {
 
   return (
     <Button
-      variant="outline"
+      variant="ghost"
       size="sm"
       disabled={pending}
       onClick={() => {

@@ -1,25 +1,16 @@
 import Link from "next/link";
 
-import { PageHeader } from "@/components/page-header";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Badge, Card } from "@/components/bmh-ds";
 import { requireAdmin } from "@/lib/auth/guard";
 import { summarizePilotMonitoring } from "@/lib/pilot-monitoring/summary";
 import { createClient } from "@/lib/supabase/server";
+
+import { AdminDataTable } from "../_components/admin-data-table";
+import {
+  AdminMetricCard,
+  AdminPageHeader,
+  AdminSectionHeading,
+} from "../_components/admin-shell";
 
 export default async function AdminReportsPage() {
   // HARDEN-01: page-level guard so a direct fetch can't bypass the layout.
@@ -212,13 +203,18 @@ export default async function AdminReportsPage() {
 
   return (
     <main className="mx-auto w-full max-w-5xl flex-1 p-6 md:p-10">
-      <div className="mb-6">
-        <PageHeader
-          title="Reports"
-          description="Rollup view of who's learning what. Click a row to drill in."
-          breadcrumb={[{ label: "Admin" }, { label: "Reports" }]}
-        />
-      </div>
+      <AdminPageHeader
+        title="Reports"
+        description="Rollup view of who's learning what. Click a row to drill in."
+        actions={
+          <Link
+            href="/admin/reports/pilot/export"
+            className="font-extrabold text-[var(--action)] underline-offset-2 hover:underline"
+          >
+            Export CSV
+          </Link>
+        }
+      />
 
       <div className="grid gap-4 md:grid-cols-4">
         <StatCard
@@ -236,167 +232,76 @@ export default async function AdminReportsPage() {
       <PilotMonitoringPanel summary={pilotSummary} />
 
       <section className="mt-8">
-        <h2 className="mb-3 text-lg font-semibold">Learners</h2>
-        <div className="border-border rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead className="text-right">Lessons done</TableHead>
-                <TableHead className="text-right">Course certs</TableHead>
-                <TableHead className="text-right">Program certs</TableHead>
-                <TableHead className="text-right">Quizzes passed</TableHead>
-                <TableHead className="text-right">Submissions</TableHead>
-                <TableHead>Last activity</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {learnerStats.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={8} className="text-muted-foreground text-sm">
-                    No learners yet.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                learnerStats.map((l) => (
-                  <TableRow key={l.id}>
-                    <TableCell className="font-medium">
-                      <Link
-                        href={`/admin/reports/users/${l.id}`}
-                        className="underline-offset-2 hover:underline"
-                      >
-                        {l.fullName}
-                      </Link>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className="capitalize">
-                        {l.systemRole}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {l.lessonsDone}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {l.courseCerts}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {l.programCerts}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {l.quizzesPassed}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {l.submissions}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground text-xs">
-                      {l.lastActivity
-                        ? new Date(l.lastActivity).toLocaleString()
-                        : "-"}
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </div>
+        <AdminSectionHeading title="Learners" />
+        <Card padding="sm">
+          <AdminDataTable
+            rowKey="id"
+            minWidth="64rem"
+            empty="No learners yet."
+            columns={[
+              { key: "fullName", label: "Name", presentation: "link", hrefKey: "href" },
+              { key: "systemRole", label: "Role", presentation: "badge", toneKey: "roleTone" },
+              { key: "lessonsDone", label: "Lessons done", align: "right", tabular: true },
+              { key: "courseCerts", label: "Course certs", align: "right", tabular: true },
+              { key: "programCerts", label: "Program certs", align: "right", tabular: true },
+              { key: "quizzesPassed", label: "Quizzes passed", align: "right", tabular: true },
+              { key: "submissions", label: "Submissions", align: "right", tabular: true },
+              { key: "lastActivityLabel", label: "Last activity", muted: true },
+            ]}
+            rows={learnerStats.map((learner) => ({
+              ...learner,
+              href: `/admin/reports/users/${learner.id}`,
+              roleTone: learner.systemRole === "owner" ? "solid" : learner.systemRole === "admin" ? "blue" : "neutral",
+              lastActivityLabel: learner.lastActivity ? new Date(learner.lastActivity).toLocaleString() : "-",
+            }))}
+          />
+        </Card>
       </section>
 
       <section className="mt-8">
-        <h2 className="mb-3 text-lg font-semibold">Courses</h2>
-        <div className="border-border rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Course</TableHead>
-                <TableHead className="text-right">
-                  Learners with completed lessons
-                </TableHead>
-                <TableHead className="text-right">Certificates issued</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {courseStats.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={3} className="text-muted-foreground text-sm">
-                    No courses yet.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                courseStats.map((c) => (
-                  <TableRow key={c.id}>
-                    <TableCell className="font-medium">
-                      <Link
-                        href={`/admin/reports/courses/${c.id}`}
-                        className="underline-offset-2 hover:underline"
-                      >
-                        {c.title}
-                      </Link>
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {c.activeLearners}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {c.completedCount}
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </div>
+        <AdminSectionHeading title="Courses" />
+        <Card padding="sm">
+          <AdminDataTable
+            empty="No courses yet."
+            columns={[
+              { key: "title", label: "Course", presentation: "link", hrefKey: "href" },
+              { key: "activeLearners", label: "Learners with completed lessons", align: "right", tabular: true },
+              { key: "completedCount", label: "Certificates issued", align: "right", tabular: true },
+            ]}
+            rows={courseStats.map((course) => ({
+              ...course,
+              href: `/admin/reports/courses/${course.id}`,
+            }))}
+          />
+        </Card>
       </section>
 
       <section className="mt-8">
-        <h2 className="mb-3 text-lg font-semibold">Programs</h2>
-        <div className="border-border rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Program</TableHead>
-                <TableHead className="text-right">Certificates issued</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {programStats.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={2} className="text-muted-foreground text-sm">
-                    No programs yet.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                programStats.map((p) => (
-                  <TableRow key={p.id}>
-                    <TableCell className="font-medium">
-                      <Link
-                        href={`/admin/reports/programs/${p.id}`}
-                        className="underline-offset-2 hover:underline"
-                      >
-                        {p.title}
-                      </Link>
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {p.completedCount}
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </div>
+        <AdminSectionHeading title="Programs" />
+        <Card padding="sm">
+          <AdminDataTable
+            empty="No programs yet."
+            columns={[
+              { key: "title", label: "Program", presentation: "link", hrefKey: "href" },
+              { key: "completedCount", label: "Certificates issued", align: "right", tabular: true },
+            ]}
+            rows={programStats.map((program) => ({
+              ...program,
+              href: `/admin/reports/programs/${program.id}`,
+            }))}
+          />
+        </Card>
       </section>
 
       <section className="mt-8">
-        <h2 className="mb-3 text-lg font-semibold">Recent activity</h2>
-        <Card>
-          <CardHeader>
-            <CardTitle>Learning activity</CardTitle>
-            <CardDescription>
-              Learner actions first. System-generated certificate and maintenance
-              events are grouped below.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="p-0">
+        <AdminSectionHeading title="Recent activity" />
+        <Card padding="none">
+          <div className="px-6 pt-6">
+            <AdminSectionHeading
+              title="Learning activity"
+              description="Learner actions first. System-generated certificate and maintenance events are grouped below."
+            />
+          </div>
             {auditRows.length === 0 ? (
               <p className="text-muted-foreground p-6 text-sm">
                 Nothing logged yet.
@@ -420,7 +325,6 @@ export default async function AdminReportsPage() {
                 ) : null}
               </div>
             )}
-          </CardContent>
         </Card>
       </section>
     </main>
@@ -448,7 +352,7 @@ function ActivityList({
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="font-medium">{row.actor}</span>
-                <Badge variant="outline">{row.badge}</Badge>
+                <Badge tone="neutral" size="sm">{row.badge}</Badge>
               </div>
               <p className="text-muted-foreground mt-1 text-xs">
                 <span className="text-foreground font-medium">
@@ -468,17 +372,7 @@ function ActivityList({
 }
 
 function StatCard({ label, value }: { label: string; value: number }) {
-  return (
-    <Card>
-      <CardHeader>
-        <CardDescription>{label}</CardDescription>
-        <CardTitle className="text-3xl font-semibold tabular-nums">
-          {value}
-        </CardTitle>
-      </CardHeader>
-      <CardContent />
-    </Card>
-  );
+  return <AdminMetricCard label={label} value={value} />;
 }
 
 function PilotMonitoringPanel({
@@ -494,20 +388,10 @@ function PilotMonitoringPanel({
 
   return (
     <section className="mt-8">
-      <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h2 className="text-lg font-semibold">Pilot monitoring</h2>
-          <p className="text-muted-foreground text-sm">
-            Watch learner blockers, assignment review, progress, and certificates.
-          </p>
-        </div>
-        <Link
-          href="/admin/reports/pilot/export"
-          className="text-primary text-sm font-medium underline-offset-2 hover:underline"
-        >
-          Export CSV
-        </Link>
-      </div>
+      <AdminSectionHeading
+        title="Pilot monitoring"
+        description="Watch learner blockers, assignment review, progress, and certificates."
+      />
       <div className="grid gap-3 md:grid-cols-5">
         <PilotStat label="Needs access" value={summary.totals.blocked} />
         <PilotStat label="Needs revision" value={summary.totals.needsRevision} />
@@ -515,90 +399,41 @@ function PilotMonitoringPanel({
         <PilotStat label="In progress" value={summary.totals.inProgress} />
         <PilotStat label="Certified" value={summary.totals.certified} />
       </div>
-      <div className="border-border mt-4 rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Learner</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Required</TableHead>
-              <TableHead className="text-right">Submissions</TableHead>
-              <TableHead>Last activity</TableHead>
-              <TableHead>Action</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {actionRows.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} className="text-muted-foreground text-sm">
-                  No pilot learner blockers right now.
-                </TableCell>
-              </TableRow>
-            ) : (
-              actionRows.map((row) => (
-                <TableRow key={row.userId}>
-                  <TableCell>
-                    <div className="font-medium">{row.name}</div>
-                    <div className="text-muted-foreground text-xs">{row.email}</div>
-                  </TableCell>
-                  <TableCell>
-                    <PilotStatusBadge statusKey={row.statusKey} label={row.statusLabel} />
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {row.progressLabel}
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {row.pendingSubmissions + row.needsRevisionSubmissions}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground text-xs">
-                    {row.lastActivity
-                      ? new Date(row.lastActivity).toLocaleString()
-                      : "-"}
-                  </TableCell>
-                  <TableCell>
-                    <Link
-                      href={row.actionHref}
-                      className="text-primary text-sm font-medium underline-offset-2 hover:underline"
-                    >
-                      {row.actionLabel}
-                    </Link>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+      <Card padding="sm" style={{ marginTop: 16 }}>
+        <AdminDataTable
+          rowKey="userId"
+          minWidth="50rem"
+          empty="No pilot learner blockers right now."
+          columns={[
+            { key: "name", label: "Learner", presentation: "stacked", secondaryKey: "email" },
+            { key: "statusLabel", label: "Status", presentation: "badge", toneKey: "tone" },
+            { key: "progressLabel", label: "Required", align: "right", tabular: true },
+            { key: "submissionCount", label: "Submissions", align: "right", tabular: true },
+            { key: "lastActivityLabel", label: "Last activity", muted: true },
+            { key: "actionLabel", label: "Action", presentation: "link", hrefKey: "actionHref" },
+          ]}
+          rows={actionRows.map((row) => ({
+            ...row,
+            tone: pilotStatusTone(row.statusKey),
+            submissionCount: row.pendingSubmissions + row.needsRevisionSubmissions,
+            lastActivityLabel: row.lastActivity ? new Date(row.lastActivity).toLocaleString() : "-",
+          }))}
+        />
+      </Card>
     </section>
   );
 }
 
 function PilotStat({ label, value }: { label: string; value: number }) {
-  return (
-    <Card>
-      <CardHeader className="space-y-1">
-        <CardDescription>{label}</CardDescription>
-        <CardTitle className="text-2xl font-semibold tabular-nums">
-          {value}
-        </CardTitle>
-      </CardHeader>
-      <CardContent />
-    </Card>
-  );
+  return <AdminMetricCard label={label} value={value} />;
 }
 
-function PilotStatusBadge({
-  statusKey,
-  label,
-}: {
-  statusKey: string;
-  label: string;
-}) {
+function pilotStatusTone(statusKey: string) {
   if (statusKey === "blocked" || statusKey === "needs_revision") {
-    return <Badge variant="destructive">{label}</Badge>;
+    return "red";
   }
-  if (statusKey === "needs_review") return <Badge>{label}</Badge>;
-  return <Badge variant="secondary">{label}</Badge>;
+  if (statusKey === "needs_review") return "yellow";
+  return "neutral";
 }
 
 type Profile = {
