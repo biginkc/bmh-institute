@@ -8,22 +8,24 @@ const layoutSource = readFileSync(
 );
 
 describe("DashboardLayout sibling shell contract", () => {
-  it("keeps the Sandra-style fixed header and desktop left rail", () => {
-    expect(layoutSource).toContain("fixed inset-x-0 top-0");
-    expect(layoutSource).toContain("h-16");
+  it("uses the BMH loop-series fixed sidebar and top bar", () => {
+    expect(layoutSource).toContain("Logo");
+    expect(layoutSource).toContain("SearchBar");
+    expect(layoutSource).toContain("Avatar");
     expect(layoutSource).toContain("md:w-64");
-    expect(layoutSource).toContain("top-16");
+    expect(layoutSource).toContain("md:left-64");
     expect(layoutSource).toContain("md:ml-64");
   });
 
-  it("keeps the Stitch topbar identity controls", () => {
+  it("keeps notifications and the signed-in identity visible", () => {
     expect(layoutSource).toContain("Bell");
+    expect(layoutSource).toContain("displayName");
     expect(layoutSource).toContain("roleLabel");
-    expect(layoutSource).toContain("rounded-full px-2 py-0.5");
   });
 
-  it("does not render a separate mobile-only nav strip outside the sibling shell", () => {
-    expect(layoutSource).not.toContain('variant="mobile"');
-    expect(layoutSource).not.toContain("md:hidden print:hidden");
+  it("preserves the native sign-out POST contract", () => {
+    expect(layoutSource).toContain('action="/auth/signout"');
+    expect(layoutSource).toContain('method="post"');
+    expect(layoutSource).toContain("Sign out");
   });
 });

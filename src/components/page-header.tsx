@@ -17,11 +17,11 @@ export function PageHeader({
   actions,
 }: PageHeaderProps) {
   return (
-    <header className="flex flex-col gap-2">
+    <header className="flex flex-col gap-3">
       {breadcrumb && breadcrumb.length > 0 ? (
         <nav
           aria-label="Breadcrumb"
-          className="text-muted-foreground flex flex-wrap items-center gap-2 text-[10px] font-bold tracking-widest uppercase"
+          className="flex flex-wrap items-center gap-2 font-[family-name:var(--font-body)] text-xs font-bold text-[var(--text-muted)]"
         >
           {breadcrumb.map((crumb, i) => {
             const last = i === breadcrumb.length - 1;
@@ -31,12 +31,12 @@ export function PageHeader({
                 {crumb.href && !last ? (
                   <Link
                     href={crumb.href}
-                    className="hover:text-foreground transition-colors"
+                    className="transition-colors hover:text-[var(--action)]"
                   >
                     {crumb.label}
                   </Link>
                 ) : (
-                  <span className={last ? "text-foreground" : ""}>
+                  <span className={last ? "text-[var(--ink-900)]" : ""}>
                     {crumb.label}
                   </span>
                 )}
@@ -45,13 +45,13 @@ export function PageHeader({
           })}
         </nav>
       ) : null}
-      <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between md:gap-6">
-        <div className="flex min-w-0 flex-col gap-1">
-          <h1 className="text-2xl leading-tight font-bold tracking-[-0.02em]">
+      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between md:gap-8">
+        <div className="flex min-w-0 flex-col gap-1.5">
+          <h1 className="font-[family-name:var(--font-display)] text-3xl leading-tight font-extrabold tracking-[-0.02em] text-[var(--ink-900)]">
             {title}
           </h1>
           {description ? (
-            <p className="text-muted-foreground max-w-3xl text-sm">
+            <p className="max-w-3xl font-[family-name:var(--font-body)] text-sm font-semibold leading-relaxed text-[var(--text-muted)]">
               {description}
             </p>
           ) : null}
