@@ -9,6 +9,7 @@ export { Input, type InputProps } from "./input";
 export { LessonCard, type LessonCardProps } from "./lesson-card";
 export { Logo, type LogoProps } from "./logo";
 export { Mascot, type MascotProps } from "./mascot";
+export { OfficialLogoMark } from "./official-logo-mark";
 export { ProgressBar, type ProgressBarProps } from "./progress-bar";
 export { SearchBar, type SearchBarProps } from "./search-bar";
 export { SpeechBubble, type SpeechBubbleProps } from "./speech-bubble";

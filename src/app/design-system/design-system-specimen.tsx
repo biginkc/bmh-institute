@@ -366,7 +366,7 @@ export function DesignSystemSpecimen() {
         <Specimen title="Logo">
           <div style={{ display: "flex", gap: 32, alignItems: "center", flexWrap: "wrap" }}>
             <Logo height={34} />
-            <Logo height={26} mascot={false} />
+            <Logo height={26} official={false} />
           </div>
         </Specimen>
 

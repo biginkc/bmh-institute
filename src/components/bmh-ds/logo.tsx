@@ -3,11 +3,14 @@
 import React from "react";
 
 import { Mascot, type MascotProps } from "./mascot";
+import { OfficialLogoMark } from "./official-logo-mark";
 
 export interface LogoProps {
+  /** Render the official supplied logo SVG (shield crest + script wordmark). Set false for the legacy Andrea-sprite + Baloo lockup. @default true */
+  official?: boolean;
   /** Sprite folder relative to the page. @default "/brand/mascot" */
   base?: string;
-  /** Wordmark font-size / lockup height driver, px. @default 36 */
+  /** Wordmark font-size, px; the head renders at 2x (matches the kit lockup: 42px head / 21px text). @default 36 */
   height?: number;
   /** Show Andrea's headset headshot in the lockup. @default true */
   mascot?: boolean;
@@ -30,6 +33,7 @@ const RuntimeMascot = Mascot as React.ComponentType<RuntimeMascotProps>;
  */
 export function Logo(props: LogoProps) {
   const {
+    official = true,
     base = "/brand/mascot",
     height = 36,
     mascot = true,
@@ -40,12 +44,17 @@ export function Logo(props: LogoProps) {
   } = props as LogoRuntimeProps;
   const ink = mono ? "currentColor" : "var(--ink-900)";
   const blue = mono ? "currentColor" : "var(--blue-500)";
-  const content = (
+  const content = official ? (
+    <OfficialLogoMark
+      height={height * 1.6}
+      style={{ color: mono ? "currentColor" : "var(--ink-900)", flexShrink: 0 }}
+    />
+  ) : (
     <>
       {mascot && (
         <RuntimeMascot
           src={`${base}/logo-head.png`}
-          height={height * 1.34}
+          height={height * 2}
           alt="Andrea"
           style={{ flexShrink: 0 }}
         />
@@ -68,7 +77,7 @@ export function Logo(props: LogoProps) {
   const rootStyle: React.CSSProperties = {
     display: "inline-flex",
     alignItems: "center",
-    gap: height * 0.32,
+    gap: height * 0.48,
     background: "none",
     border: "none",
     padding: 0,
