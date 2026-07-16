@@ -13,12 +13,12 @@
   },
   "lesson_contract": {
     "lesson_source_key": "lesson-content-slot-19",
-    "objective": "Build readiness for more responsibility through consistent results, clean operations, coachability, and contribution to the team.",
+    "objective": "Build capability in your current role through deliberate practice, useful feedback, coachability, and reliable execution.",
     "objective_points": [
-      "Describe the foundation for growth",
-      "Recognize readiness signals",
-      "Use feedback without defensiveness",
-      "Discuss a development path with your manager"
+      "Use a practice and feedback loop",
+      "Respond to coaching without defensiveness",
+      "Connect capability to current role expectations",
+      "Confirm any increase in ownership with your manager and current written role plan"
     ],
     "next_sequence": [
       "lesson-quiz-slot-19",
@@ -37,27 +37,27 @@
     {
       "scene_id": "career-foundation",
       "title": "Build capability first",
-      "spoken_text": "Growth starts with getting better at the work in front of you. Learn the process. Understand the people you're helping. Keep the pipeline accurate. Become someone the team can rely on because your work is thoughtful, complete, and ready for the next person."
+      "spoken_text": "Professional development starts with building capability in your current role. Practice a relevant skill, apply it in the work, and review the result. Reliable execution means using what you know consistently while keeping the work accurate and ready for the next person."
     },
     {
-      "scene_id": "career-readiness",
-      "title": "Make readiness visible",
-      "spoken_text": "Readiness shows up in the way you work. You follow the current process, keep clean records, handle feedback well, and fix gaps when someone points them out. You also help the team without letting your own commitments slip."
+      "scene_id": "career-feedback-loop",
+      "title": "Use a feedback loop",
+      "spoken_text": "Ask for specific feedback and listen without becoming defensive. If the feedback is unclear, ask a clarifying question. Then practice the corrected approach, apply it in the work, and return with evidence of what changed."
     },
     {
-      "scene_id": "career-more-responsibility",
-      "title": "Develop for more responsibility",
-      "spoken_text": "As your judgment improves, your manager may help you practice more complex situations or take on broader ownership. That could mean handling a sensitive conversation, supporting a teammate, or learning another part of the process. The next step depends on current business needs and demonstrated readiness."
+      "scene_id": "career-documented-ownership",
+      "title": "Confirm ownership changes",
+      "spoken_text": "Building capability does not automatically change your assigned responsibilities. Take on increased ownership only after your manager confirms the change and it is documented in your current written role plan. Training examples and another person's duties do not redefine your role."
     },
     {
       "scene_id": "career-current-role",
       "title": "Use current written expectations",
-      "spoken_text": "Your current role sheet and offer letter define the work assigned to you now. Talk with your manager about the skills you want to build and the opportunities that actually exist. An old example or someone else's path can't promise what your path will be."
+      "spoken_text": "Your current role sheet, offer letter, and manager define the work assigned to you now. Use those current written expectations when choosing a capability to practice. If an older training example conflicts with them, the current documents and manager direction control."
     },
     {
       "scene_id": "career-feedback",
-      "title": "Keep the conversation useful",
-      "spoken_text": "Ask for specific feedback. When you hear about a gap, work on it and show the change in your next attempt. Keep notes on what you're learning. That gives you and your manager something real to discuss when you talk about development."
+      "title": "Make development concrete",
+      "spoken_text": "Keep development conversations grounded in current role expectations, one capability to practice, recent feedback to apply, and any proposed ownership that needs written confirmation. This turns development into observable practice and reliable work."
     },
     {
       "scene_id": "career-transition",
@@ -79,7 +79,7 @@
       "source_start": "00:00:47.580",
       "source_end": "00:01:19.179",
       "action": "replace",
-      "replacement_scene_ids": ["career-readiness"],
+      "replacement_scene_ids": ["career-feedback-loop"],
       "source_problem": "The source ties moving up to a fixed performance window and named next level."
     },
     {
@@ -87,7 +87,7 @@
       "source_start": "00:01:19.180",
       "source_end": "00:02:23.899",
       "action": "replace",
-      "replacement_scene_ids": ["career-more-responsibility"],
+      "replacement_scene_ids": ["career-documented-ownership"],
       "source_problem": "The source promises higher earnings, commissions, a management path, and compensation tied to team output."
     },
     {
