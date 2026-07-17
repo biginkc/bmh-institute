@@ -90,7 +90,9 @@ export default defineConfig({
   expect: { timeout: 5_000 },
   use: {
     baseURL: "http://localhost:3200",
-    trace: "retain-on-failure",
+    // Auth setup fills a credential. Trace archives retain input values, so the
+    // seeded suite must never create a credential-bearing trace artifact.
+    trace: "off",
     screenshot: "only-on-failure",
   },
   projects: [

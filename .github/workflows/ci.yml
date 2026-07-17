@@ -50,11 +50,13 @@ jobs:
     name: Seeded Playwright E2E
     runs-on: ubuntu-latest
     needs: verify
+    concurrency:
+      group: bmh-institute-seeded-e2e-shared-test-project
+      cancel-in-progress: false
     env:
       TEST_SUPABASE_URL: ${{ secrets.TEST_SUPABASE_URL }}
       TEST_SUPABASE_ANON_KEY: ${{ secrets.TEST_SUPABASE_ANON_KEY }}
       TEST_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.TEST_SUPABASE_SERVICE_ROLE_KEY }}
-      E2E_SEED_PASSWORD: ${{ secrets.E2E_SEED_PASSWORD }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -68,6 +70,13 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Create one-run E2E credential
+        shell: bash
+        run: |
+          E2E_PASSWORD="$(openssl rand -base64 36 | tr -d '\n')"
+          echo "::add-mask::${E2E_PASSWORD}"
+          echo "E2E_SEED_PASSWORD=${E2E_PASSWORD}" >> "${GITHUB_ENV}"
+
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
 
@@ -76,6 +85,10 @@ jobs:
 
       - name: Run Playwright E2E
         run: npm run test:e2e
+
+      - name: Remove seeded E2E accounts and content
+        if: always()
+        run: npm run cleanup:e2e
 
       - name: Upload Playwright report
         if: always()
