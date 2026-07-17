@@ -14,6 +14,7 @@ import {
   REPLACEMENT_REQUIRED_CUTS,
   REVIEWED_VIDEO_SOURCE_KEYS,
   approvalRecordKey,
+  validateHeldVideoApprovalHistory,
   validateHeldVideoManifestApprovalState,
 } from "./held-video-approval-ledger.mjs";
 import {
@@ -1042,6 +1043,7 @@ export async function buildGuideAsset(lesson) {
 export async function buildManifest({
   artworkLedgerPath = ARTWORK_LEDGER_PATH,
   videoApprovalLedgerPath = VIDEO_APPROVAL_LEDGER_PATH,
+  videoApprovalHistoryRepoRoot = REPO_ROOT,
   captionApprovalLedgerPath = CAPTION_APPROVAL_LEDGER_PATH,
   videoSourceRoot = DEFAULT_VIDEO_SOURCE_ROOT,
   quizSourceRoot = DEFAULT_QUIZ_SOURCE_ROOT,
@@ -1076,11 +1078,19 @@ export async function buildManifest({
   const reviewedVideoAssets = videoAssetsWithMetadata.filter((asset) =>
     REVIEWED_VIDEO_SOURCE_KEYS.has(asset.source_key),
   );
-  const videoApprovalErrors = validateHeldVideoManifestApprovalState(
-    videoApprovalLedger,
-    reviewedVideoAssets,
-    { allowHistoricalPending: true },
-  );
+  const videoApprovalErrors = [
+    ...validateHeldVideoManifestApprovalState(
+      videoApprovalLedger,
+      reviewedVideoAssets,
+      { allowHistoricalPending: true },
+    ),
+    ...await validateHeldVideoApprovalHistory({
+      ledger: videoApprovalLedger,
+      currentReviewAssets: reviewedVideoAssets,
+      repoRoot: videoApprovalHistoryRepoRoot,
+      ledgerPath: videoApprovalLedgerPath,
+    }),
+  ];
   if (videoApprovalErrors.length > 0) {
     throw new Error(`Video approval ledger is invalid: ${videoApprovalErrors.join("; ")}`);
   }

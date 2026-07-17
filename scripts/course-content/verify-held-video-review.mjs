@@ -555,8 +555,10 @@ export function renderHeldVideoReview(manifest, {
     <div class="eyebrow">Local review only · ${approvedCorrectedCount} approved exact cut${approvedCorrectedCount === 1 ? "" : "s"} · ${approvableCount} candidate${approvableCount === 1 ? "" : "s"} · ${replacementCount} source-evidence cut${replacementCount === 1 ? "" : "s"}</div>
     <h1>Video review lifecycle</h1>
     ${verificationStatus}
-    <p>${approvableCount} corrected candidate${approvableCount === 1 ? "" : "s"} ${approvableCount === 1 ? "awaits" : "await"} Jarrad review. Approve or request changes only on those exact checksum-locked cuts; a filename alone is not approval.</p>
-    <p><strong>Exact review question:</strong> ${escapeHtml(EXACT_LOCAL_POLICY_REVIEW_QUESTION)}</p>
+    <p>${approvableCount === 0
+      ? "Both corrected local-policy cuts have exact checksum-bound Jarrad approval. No corrected candidate remains on this page for a new decision."
+      : `${approvableCount} corrected candidate${approvableCount === 1 ? "" : "s"} ${approvableCount === 1 ? "awaits" : "await"} Jarrad review. Approve or request changes only on those exact checksum-locked cuts; a filename alone is not approval.`}</p>
+    <p><strong>Exact review status:</strong> ${escapeHtml(EXACT_LOCAL_POLICY_REVIEW_QUESTION)}</p>
     <p>${replacementCount} policy-defective source-evidence cut${replacementCount === 1 ? " is" : "s are"} marked <strong>changes requested</strong> and cannot be approved. Replacements receive new checksums and a separate review.</p>
     <p>Record decisions in the <a href="${approvalLedgerUrl}">checksum-keyed approval ledger</a>. Policy-safe replacement scripts, shot plans, forbidden-language maps, and timecoded edit maps for the seven full recuts are prepared at <code>docs/course-production/held-video-recuts/README.md</code>.</p>
     <p class="warning">This page does not upload, publish, alter, caption, or approve anything.</p>

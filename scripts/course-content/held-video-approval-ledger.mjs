@@ -1,3 +1,10 @@
+import { execFile } from "node:child_process";
+import { realpath } from "node:fs/promises";
+import path from "node:path";
+import { promisify } from "node:util";
+
+const execFileAsync = promisify(execFile);
+
 const LEDGER_FIELDS = ["key_fields", "records", "schema_version", "updated_at"];
 const RECORD_FIELDS = [
   "approver",
@@ -84,6 +91,39 @@ function validDate(value) {
 
 export function approvalRecordKey(record) {
   return `${record.source_key}:${record.sha256}`;
+}
+
+function isInside(root, candidate) {
+  const relative = path.relative(root, candidate);
+  return relative !== "" && relative !== ".." && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative);
+}
+
+async function readLedgerAtRevision(repoRoot, revision, relativeLedgerPath) {
+  try {
+    const { stdout } = await execFileAsync(
+      "git",
+      ["show", `${revision}:${relativeLedgerPath}`],
+      { cwd: repoRoot, encoding: "utf8", maxBuffer: 16 * 1024 * 1024 },
+    );
+    return JSON.parse(stdout);
+  } catch {
+    return null;
+  }
+}
+
+async function mergeBaseWithMain(repoRoot) {
+  for (const mainRef of ["origin/main", "main"]) {
+    try {
+      const { stdout } = await execFileAsync("git", ["merge-base", "HEAD", mainRef], {
+        cwd: repoRoot,
+        encoding: "utf8",
+      });
+      if (/^[a-f0-9]{40}$/.test(stdout.trim())) return stdout.trim();
+    } catch {
+      // Shallow CI still retains the HEAD/parent comparison below.
+    }
+  }
+  return null;
 }
 
 export function validateHeldVideoApprovalLedger(
@@ -280,4 +320,41 @@ export function validateHeldVideoApprovalTransition(currentLedger, nextLedger, h
     errors.push("approval ledger updated_at cannot predate a recorded decision");
   }
   return errors;
+}
+
+export async function validateHeldVideoApprovalHistory({
+  ledger,
+  currentReviewAssets,
+  repoRoot,
+  ledgerPath,
+}) {
+  const canonicalRoot = await realpath(repoRoot);
+  const canonicalLedgerPath = await realpath(ledgerPath);
+  if (!isInside(canonicalRoot, canonicalLedgerPath)) {
+    return ["Held-video approval ledger must be inside the canonical repository root."];
+  }
+  const relativeLedgerPath = path.relative(canonicalRoot, canonicalLedgerPath).split(path.sep).join("/");
+  const mainBase = await mergeBaseWithMain(canonicalRoot);
+  const [headLedger, parentLedger, mainLedger] = await Promise.all([
+    readLedgerAtRevision(canonicalRoot, "HEAD", relativeLedgerPath),
+    readLedgerAtRevision(canonicalRoot, "HEAD^", relativeLedgerPath),
+    mainBase ? readLedgerAtRevision(canonicalRoot, mainBase, relativeLedgerPath) : null,
+  ]);
+  const errors = [];
+  if (!headLedger) {
+    errors.push("Held-video approval history could not read the committed HEAD ledger.");
+  }
+  if (!parentLedger && !mainLedger) {
+    errors.push("Held-video approval history has no immutable predecessor baseline.");
+  }
+  if (mainLedger) {
+    errors.push(...validateHeldVideoApprovalTransition(mainLedger, ledger, currentReviewAssets));
+  }
+  if (parentLedger) {
+    errors.push(...validateHeldVideoApprovalTransition(parentLedger, ledger, currentReviewAssets));
+  }
+  if (headLedger && JSON.stringify(headLedger) !== JSON.stringify(ledger)) {
+    errors.push(...validateHeldVideoApprovalTransition(headLedger, ledger, currentReviewAssets));
+  }
+  return [...new Set(errors)];
 }

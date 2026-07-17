@@ -16,11 +16,11 @@ test("only approved video cuts have complete caption and transcript assets", asy
   const manifest = await loadManifest(MANIFEST_URL);
   const report = await inspectApprovedCaptionAssets(manifest, REPO_ROOT);
 
-  assert.equal(report.approvedVideos, 21);
-  assert.equal(report.heldVideos, 8);
-  assert.equal(report.approvedCaptions, 21);
-  assert.equal(report.approvedTranscripts, 21);
-  assert.equal(report.heldDerivativeAssetsStillMissing, 16);
+  assert.equal(report.approvedVideos, 22);
+  assert.equal(report.heldVideos, 7);
+  assert.equal(report.approvedCaptions, 22);
+  assert.equal(report.approvedTranscripts, 22);
+  assert.equal(report.heldDerivativeAssetsStillMissing, 14);
   assert.deepEqual(report.errors, []);
 });
 

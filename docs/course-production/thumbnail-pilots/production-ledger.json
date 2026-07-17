@@ -235,7 +235,7 @@
       "id": "video-contact-sheet-slot-16",
       "role": "checksum-bound exact mapped-video contact sheet",
       "path": "docs/course-production/thumbnail-pilots/references/production-video-stills/slot-16-contact-sheet.png",
-      "sha256": "4e68fd96304a6c91c47c3ed152c225670fdd601decd88ac5673a42885b295632",
+      "sha256": "0b62249aa98f629dc676d7184b392aaca3fa8b880f9e844abc13a73c64b2bc56",
       "dimensions": [
         960,
         180
@@ -813,14 +813,20 @@
           "output_sha256": "a3a0b69a48d359d29247e557babdad2bc5a88bc79dc19edb113f885e0ccc22a6",
           "reference_inputs": [
             {
+              "id": "andrea-approved",
+              "role": "checksum-bound approved pilot generation input",
               "path": "docs/course-production/thumbnail-pilots/references/v5-cast/andrea-approved.png",
               "sha256": "ab1c01dfc642f00b2f6df08a20fd231cb47fffb60a3e013a42960ee4fa5e2ca8"
             },
             {
+              "id": "recurring-seller-approved",
+              "role": "checksum-bound approved pilot generation input",
               "path": "docs/course-production/thumbnail-pilots/references/v5-cast/recurring-seller.png",
               "sha256": "b88724ccd840ecf295c2b8607525a76a938349978407a0ba8b92eccd8f2cf4f0"
             },
             {
+              "id": "pilot-input-orientation-1-3",
+              "role": "checksum-bound approved pilot generation input",
               "path": "docs/course-production/thumbnail-pilots/references/v7-video-stills/orientation-contact-sheet.jpg",
               "sha256": "838ef332a6a2b35b13908bc8651df7770979777613fd87fef96d09917fb9ebda"
             }
@@ -4213,18 +4219,26 @@
           "output_sha256": "e18d7b66576f2bf4998e6dfd7a2112f6323374e53df4f926ea7676384548eadd",
           "reference_inputs": [
             {
+              "id": "pilot-parent-opening-the-call",
+              "role": "checksum-bound approved pilot edit parent",
               "path": "course-assets/thumbnails/pilots/revisions/v7/sources/opening-andrea-generated-v7.png",
               "sha256": "cdea83a43f02a6b018306a41720cbd097ba67c849c167cc82ead448488f962c8"
             },
             {
+              "id": "andrea-approved",
+              "role": "checksum-bound approved pilot generation input",
               "path": "docs/course-production/thumbnail-pilots/references/v5-cast/andrea-approved.png",
               "sha256": "ab1c01dfc642f00b2f6df08a20fd231cb47fffb60a3e013a42960ee4fa5e2ca8"
             },
             {
+              "id": "recurring-seller-approved",
+              "role": "checksum-bound approved pilot generation input",
               "path": "docs/course-production/thumbnail-pilots/references/v5-cast/recurring-seller.png",
               "sha256": "b88724ccd840ecf295c2b8607525a76a938349978407a0ba8b92eccd8f2cf4f0"
             },
             {
+              "id": "pilot-input-opening-the-call-1-4",
+              "role": "checksum-bound approved pilot generation input",
               "path": "docs/course-production/thumbnail-pilots/references/v7-video-stills/opening-contact-sheet.jpg",
               "sha256": "f57c71fb9425eed09bd3297690e43617c5737fc579b96bd596ae0ffa168075a5"
             }
@@ -5070,18 +5084,26 @@
           "output_sha256": "88f3513e1f4985ded8bceefc1e11aff60ae97dc934896bee56bd88a1133d9a58",
           "reference_inputs": [
             {
+              "id": "pilot-parent-objection-architecture",
+              "role": "checksum-bound approved pilot edit parent",
               "path": "course-assets/thumbnails/pilots/revisions/v7/sources/objection-seller-generated-v7.png",
               "sha256": "6fbbc49d5251438d6bd3a9a8a3269c328fd4d19804acc6744310ac597f6801d1"
             },
             {
+              "id": "andrea-approved",
+              "role": "checksum-bound approved pilot generation input",
               "path": "docs/course-production/thumbnail-pilots/references/v5-cast/andrea-approved.png",
               "sha256": "ab1c01dfc642f00b2f6df08a20fd231cb47fffb60a3e013a42960ee4fa5e2ca8"
             },
             {
+              "id": "recurring-seller-approved",
+              "role": "checksum-bound approved pilot generation input",
               "path": "docs/course-production/thumbnail-pilots/references/v5-cast/recurring-seller.png",
               "sha256": "b88724ccd840ecf295c2b8607525a76a938349978407a0ba8b92eccd8f2cf4f0"
             },
             {
+              "id": "pilot-input-objection-architecture-1-4",
+              "role": "checksum-bound approved pilot generation input",
               "path": "docs/course-production/thumbnail-pilots/references/v7-video-stills/objection-contact-sheet.jpg",
               "sha256": "31145ddd3485159dbaa298d8ee1958834dca1098bbd86645c43414ccaa8eea7b"
             }
@@ -7474,7 +7496,7 @@
           "id": "video-contact-sheet-slot-16",
           "role": "checksum-bound exact mapped-video contact sheet",
           "path": "docs/course-production/thumbnail-pilots/references/production-video-stills/slot-16-contact-sheet.png",
-          "sha256": "4e68fd96304a6c91c47c3ed152c225670fdd601decd88ac5673a42885b295632",
+          "sha256": "0b62249aa98f629dc676d7184b392aaca3fa8b880f9e844abc13a73c64b2bc56",
           "dimensions": [
             960,
             180
@@ -7512,15 +7534,15 @@
       "video_evidence": [
         {
           "asset_key": "video-slot-16-kpis",
-          "local_path": "course-assets/review-lesson12A/LESSON-12A-v11.mp4",
-          "checksum_sha256": "439f8d06d2e449637509f0f21f9d0b4a5464c65aec1995fca7147e4e4e67310b",
-          "size_bytes": 56052870,
-          "approval_status": "hold",
-          "duration_seconds": 402.154,
+          "local_path": "course-assets/review-lesson12A/LESSON-12A-v12-LOCAL-POLICY-CUT.mp4",
+          "checksum_sha256": "3d50cc79cfe74277ac1311367d5b0bd6fd62d2d38c2c74fff8732ea62203d61a",
+          "size_bytes": 53799917,
+          "approval_status": "approved",
+          "duration_seconds": 400.994,
           "frame_timestamps_seconds": [
-            80.431,
-            201.077,
-            321.723
+            80.199,
+            200.497,
+            320.795
           ]
         }
       ],
@@ -7528,7 +7550,7 @@
         "id": "video-contact-sheet-slot-16",
         "role": "checksum-bound exact mapped-video contact sheet",
         "path": "docs/course-production/thumbnail-pilots/references/production-video-stills/slot-16-contact-sheet.png",
-        "sha256": "4e68fd96304a6c91c47c3ed152c225670fdd601decd88ac5673a42885b295632",
+        "sha256": "0b62249aa98f629dc676d7184b392aaca3fa8b880f9e844abc13a73c64b2bc56",
         "dimensions": [
           960,
           180
@@ -7589,8 +7611,8 @@
             },
             {
               "id": "video-contact-sheet-slot-16",
-              "role": "checksum-bound exact mapped-video contact sheet",
-              "path": "docs/course-production/thumbnail-pilots/references/production-video-stills/slot-16-contact-sheet.png",
+              "role": "checksum-bound historical KPIs v11 contact sheet retained for immutable generation lineage",
+              "path": "docs/course-production/thumbnail-pilots/references/production-video-stills/historical/slot-16-kpis-v11-contact-sheet.png",
               "sha256": "4e68fd96304a6c91c47c3ed152c225670fdd601decd88ac5673a42885b295632",
               "dimensions": [
                 960,
@@ -8802,7 +8824,7 @@
       "provenance": {
         "master_id": "master-program-bmh-employee-training",
         "source_master_id": "master-program-bmh-employee-training",
-        "prompt_sha256": "2c10dbec0650d062ce375b24f0d5b8894d925bfb9639946fe917dc13574d6fed",
+        "prompt_sha256": "19d198afa34108268043eea0bf7f82130c1ef0d930d4a164731920a0fcbe2285",
         "reference_ids": [
           "style-ref-1",
           "style-ref-2",
@@ -8945,7 +8967,7 @@
       "provenance": {
         "master_id": "master-slot-01",
         "source_master_id": "master-slot-01",
-        "prompt_sha256": "84e6ad28f0c973c927612892a2801517836e04428078575ec8fec90932b77a07",
+        "prompt_sha256": "663cadd9946fce23a2a7f8d75a2fc012f489187cc1a9f16895b72b490121d847",
         "reference_ids": [
           "style-ref-1",
           "style-ref-2",
@@ -9096,7 +9118,7 @@
       "provenance": {
         "master_id": "master-slot-01",
         "source_master_id": "master-slot-01",
-        "prompt_sha256": "84e6ad28f0c973c927612892a2801517836e04428078575ec8fec90932b77a07",
+        "prompt_sha256": "663cadd9946fce23a2a7f8d75a2fc012f489187cc1a9f16895b72b490121d847",
         "reference_ids": [
           "style-ref-1",
           "style-ref-2",
@@ -9252,7 +9274,7 @@
       "provenance": {
         "master_id": "master-slot-01",
         "source_master_id": "master-slot-01",
-        "prompt_sha256": "84e6ad28f0c973c927612892a2801517836e04428078575ec8fec90932b77a07",
+        "prompt_sha256": "663cadd9946fce23a2a7f8d75a2fc012f489187cc1a9f16895b72b490121d847",
         "reference_ids": [
           "style-ref-1",
           "style-ref-2",
@@ -9407,7 +9429,7 @@
       "provenance": {
         "master_id": "master-slot-02",
         "source_master_id": "master-slot-02",
-        "prompt_sha256": "9ac1867116c8a604388aee4be9fa1ec55182fd2e74165e244b4442c918e788ab",
+        "prompt_sha256": "7f391eaea0c0a26130c9afaff2efe3196b6c2594e2d37013c28471ab63c1f63e",
         "reference_ids": [
           "style-ref-1",
           "style-ref-2",
@@ -9562,7 +9584,7 @@
       "provenance": {
         "master_id": "master-slot-02",
         "source_master_id": "master-slot-02",
-        "prompt_sha256": "9ac1867116c8a604388aee4be9fa1ec55182fd2e74165e244b4442c918e788ab",
+        "prompt_sha256": "7f391eaea0c0a26130c9afaff2efe3196b6c2594e2d37013c28471ab63c1f63e",
         "reference_ids": [
           "style-ref-1",
           "style-ref-2",
@@ -9722,7 +9744,7 @@
       "provenance": {
         "master_id": "master-slot-03",
         "source_master_id": "master-slot-03",
-        "prompt_sha256": "844c9047f51ba385eed53510c613d04b9a2d4e9f48f60675459e7fafc283f373",
+        "prompt_sha256": "0c4946f67a9568b8face3cec2557fafe2f0d51ac6ef5c2a00aee7d50d4449c6a",
         "reference_ids": [
           "style-ref-1",
           "style-ref-2",
@@ -9877,7 +9899,7 @@
       "provenance": {
         "master_id": "master-slot-03",
         "source_master_id": "master-slot-03",
-        "prompt_sha256": "844c9047f51ba385eed53510c613d04b9a2d4e9f48f60675459e7fafc283f373",
+        "prompt_sha256": "0c4946f67a9568b8face3cec2557fafe2f0d51ac6ef5c2a00aee7d50d4449c6a",
         "reference_ids": [
           "style-ref-1",
           "style-ref-2",
@@ -10028,11 +10050,11 @@
           "recurring-seller-approved",
           "video-contact-sheet-slot-04"
         ],
-        "terminal_source_sha256": "f2257e7d6f4ab9255de200d81e802c544d94fa76ddb36e3d7d4d09ae0908f9c4",
-        "flat_master_sha256": "ec725283484237a9f31ac69dd90201586d3aae7339c634e33dcd5063eb1a9fdd",
+        "terminal_source_sha256": "6317e2756bf7baf9c19c1b6b9471dfa0bd7d7c1c7ce60db6f5cf63c9fa090950",
+        "flat_master_sha256": "8661e536f14b56c0175484c5aecbc925af8d93010f058efff1ada4b71177a67d",
         "derivative_recipe_id": "slot-04-lesson-card-16x10",
         "derivative_recipe_sha256": "6eecabf7c7eab200df46d3e372447223f2bdcca05f2c64619f34deeb7e06bbf7",
-        "lineage_steps": 9,
+        "lineage_steps": 1,
         "reviewed_by": null,
         "reviewed_at": null,
         "review_evidence": null,
@@ -10067,8 +10089,7 @@
             "frame_count": 9
           }
         ],
-        "review_evidence_sha256": null,
-        "preserved_from_flat_master_sha256": "a83f514f31f6081288637807fb3606abd25aa3f6f5b030db8d5329f81c7a88d7"
+        "review_evidence_sha256": null
       },
       "derivative": {
         "source_master_id": "master-slot-04",
@@ -10289,7 +10310,7 @@
       "provenance": {
         "master_id": "master-slot-04",
         "source_master_id": "master-slot-04",
-        "prompt_sha256": "e0a1ac43cfa7da24cac35e8354474320eb0bf75a0e0e3a4341d0ba9373fd698a",
+        "prompt_sha256": "b027d0d45c80c7ec02419c69e36d41914a7407f6aa87d724b0824f93b6dfdcb9",
         "reference_ids": [
           "style-ref-1",
           "style-ref-2",
@@ -10719,7 +10740,7 @@
       "provenance": {
         "master_id": "master-slot-05",
         "source_master_id": "master-slot-05",
-        "prompt_sha256": "dba1470d6faa3ae9f1a815174954bd75dfb9e13f57748f408ad513a24bef4147",
+        "prompt_sha256": "6172c1f8737461f0ab12a73283c85e34814e226ec190ac235f1bbfb4727f6bb1",
         "reference_ids": [
           "style-ref-1",
           "style-ref-2",
@@ -10890,7 +10911,7 @@
       "provenance": {
         "master_id": "master-slot-05",
         "source_master_id": "master-slot-05",
-        "prompt_sha256": "dba1470d6faa3ae9f1a815174954bd75dfb9e13f57748f408ad513a24bef4147",
+        "prompt_sha256": "6172c1f8737461f0ab12a73283c85e34814e226ec190ac235f1bbfb4727f6bb1",
         "reference_ids": [
           "style-ref-1",
           "style-ref-2",
@@ -11168,11 +11189,11 @@
           "andrea-approved",
           "video-contact-sheet-slot-06"
         ],
-        "terminal_source_sha256": "b3620ba1ad61a740bbcb4564645ad12502e5449832c1093826742e6fb0370463",
-        "flat_master_sha256": "f43c54de407b7979691a4ba20a0de7752db927d4832cdb057f3f09b7289f4639",
+        "terminal_source_sha256": "0c1150ff7d24b023194563ee0b4935ba61955219a419b8e5c0cb2a76c4aa4920",
+        "flat_master_sha256": "0c72cb46863e9c2690bf568c7db87c73f60b0da33556b41fb885cb7da38ca4ae",
         "derivative_recipe_id": "slot-06-lesson-card-16x10",
         "derivative_recipe_sha256": "44b3b6af86a0b8879792a3ab644210d5664bb2c65d581c5c8e53f9571913ff1b",
-        "lineage_steps": 5,
+        "lineage_steps": 1,
         "reviewed_by": null,
         "reviewed_at": null,
         "review_evidence": null,
@@ -11207,8 +11228,7 @@
             "frame_count": 6
           }
         ],
-        "review_evidence_sha256": null,
-        "preserved_from_flat_master_sha256": "5f4aeed7b335bacacbad04112fa4c7f39fbbdb864c754109d5d2dbb05497bdc2"
+        "review_evidence_sha256": null
       },
       "derivative": {
         "source_master_id": "master-slot-06",
@@ -11365,7 +11385,7 @@
       "provenance": {
         "master_id": "master-slot-06",
         "source_master_id": "master-slot-06",
-        "prompt_sha256": "0b167928a76fe2065b06299c0e53b62cce883e174f7efe08bbacc9ce8695be82",
+        "prompt_sha256": "3f76d38750711ec19c8da1a2aa7db092319b5cbfa1efbde9c20faf7febf2efbe",
         "reference_ids": [
           "style-ref-1",
           "style-ref-2",
@@ -11621,10 +11641,10 @@
         "source_master_id": "master-slot-07",
         "prompt_sha256": "4e78bd0aafc62b8b7046f8f09ccdea869841d0dcf546c350e768d23a9c2743aa",
         "reference_ids": [
-          "style-ref-1",
-          "style-ref-2",
+          "pilot-parent-opening-the-call",
           "andrea-approved",
-          "v8-opening-the-call-contact-sheet"
+          "recurring-seller-approved",
+          "pilot-input-opening-the-call-1-4"
         ],
         "terminal_source_sha256": "e18d7b66576f2bf4998e6dfd7a2112f6323374e53df4f926ea7676384548eadd",
         "flat_master_sha256": "002aca5936253cf2f22164352634431ed38c139aadd3806de2e190f92f26c506",
@@ -11637,26 +11657,26 @@
         "promoted_pilot_sha256": "3a2f38e2619f5bb33aa69cfcd0712c4e6e4e4c02979ef20ec9313d8e14973c25",
         "reference_inputs": [
           {
-            "id": "style-ref-1",
-            "role": "canonical BMH Sticker System style",
-            "path": "docs/design/style-ref-1.png",
-            "sha256": "d65ce4c3fc84a0a52b08e513d42d978f94d5db2f6e59034aedbbd1e9486c18ca"
-          },
-          {
-            "id": "style-ref-2",
-            "role": "canonical BMH Sticker System style",
-            "path": "docs/design/style-ref-2.png",
-            "sha256": "f1affc2ab6b931be8cfd6920165dff330d49b79e6f4abfe5568e67e70c6934a6"
+            "id": "pilot-parent-opening-the-call",
+            "role": "checksum-bound approved pilot edit parent",
+            "path": "course-assets/thumbnails/pilots/revisions/v7/sources/opening-andrea-generated-v7.png",
+            "sha256": "cdea83a43f02a6b018306a41720cbd097ba67c849c167cc82ead448488f962c8"
           },
           {
             "id": "andrea-approved",
-            "role": "approved Andrea identity root",
+            "role": "checksum-bound approved pilot generation input",
             "path": "docs/course-production/thumbnail-pilots/references/v5-cast/andrea-approved.png",
             "sha256": "ab1c01dfc642f00b2f6df08a20fd231cb47fffb60a3e013a42960ee4fa5e2ca8"
           },
           {
-            "id": "v8-opening-the-call-contact-sheet",
-            "role": "opening-the-call source-video contact sheet",
+            "id": "recurring-seller-approved",
+            "role": "checksum-bound approved pilot generation input",
+            "path": "docs/course-production/thumbnail-pilots/references/v5-cast/recurring-seller.png",
+            "sha256": "b88724ccd840ecf295c2b8607525a76a938349978407a0ba8b92eccd8f2cf4f0"
+          },
+          {
+            "id": "pilot-input-opening-the-call-1-4",
+            "role": "checksum-bound approved pilot generation input",
             "path": "docs/course-production/thumbnail-pilots/references/v7-video-stills/opening-contact-sheet.jpg",
             "sha256": "f57c71fb9425eed09bd3297690e43617c5737fc579b96bd596ae0ffa168075a5"
           }
@@ -11748,10 +11768,10 @@
         "source_master_id": "master-slot-07",
         "prompt_sha256": "4e78bd0aafc62b8b7046f8f09ccdea869841d0dcf546c350e768d23a9c2743aa",
         "reference_ids": [
-          "style-ref-1",
-          "style-ref-2",
+          "pilot-parent-opening-the-call",
           "andrea-approved",
-          "v8-opening-the-call-contact-sheet"
+          "recurring-seller-approved",
+          "pilot-input-opening-the-call-1-4"
         ],
         "terminal_source_sha256": "e18d7b66576f2bf4998e6dfd7a2112f6323374e53df4f926ea7676384548eadd",
         "flat_master_sha256": "002aca5936253cf2f22164352634431ed38c139aadd3806de2e190f92f26c506",
@@ -11764,26 +11784,26 @@
         "promoted_pilot_sha256": "ff1458f6b657f002430df9cb937b0498975f83eaad7a39ec9d800f9d56eea509",
         "reference_inputs": [
           {
-            "id": "style-ref-1",
-            "role": "canonical BMH Sticker System style",
-            "path": "docs/design/style-ref-1.png",
-            "sha256": "d65ce4c3fc84a0a52b08e513d42d978f94d5db2f6e59034aedbbd1e9486c18ca"
-          },
-          {
-            "id": "style-ref-2",
-            "role": "canonical BMH Sticker System style",
-            "path": "docs/design/style-ref-2.png",
-            "sha256": "f1affc2ab6b931be8cfd6920165dff330d49b79e6f4abfe5568e67e70c6934a6"
+            "id": "pilot-parent-opening-the-call",
+            "role": "checksum-bound approved pilot edit parent",
+            "path": "course-assets/thumbnails/pilots/revisions/v7/sources/opening-andrea-generated-v7.png",
+            "sha256": "cdea83a43f02a6b018306a41720cbd097ba67c849c167cc82ead448488f962c8"
           },
           {
             "id": "andrea-approved",
-            "role": "approved Andrea identity root",
+            "role": "checksum-bound approved pilot generation input",
             "path": "docs/course-production/thumbnail-pilots/references/v5-cast/andrea-approved.png",
             "sha256": "ab1c01dfc642f00b2f6df08a20fd231cb47fffb60a3e013a42960ee4fa5e2ca8"
           },
           {
-            "id": "v8-opening-the-call-contact-sheet",
-            "role": "opening-the-call source-video contact sheet",
+            "id": "recurring-seller-approved",
+            "role": "checksum-bound approved pilot generation input",
+            "path": "docs/course-production/thumbnail-pilots/references/v5-cast/recurring-seller.png",
+            "sha256": "b88724ccd840ecf295c2b8607525a76a938349978407a0ba8b92eccd8f2cf4f0"
+          },
+          {
+            "id": "pilot-input-opening-the-call-1-4",
+            "role": "checksum-bound approved pilot generation input",
             "path": "docs/course-production/thumbnail-pilots/references/v7-video-stills/opening-contact-sheet.jpg",
             "sha256": "f57c71fb9425eed09bd3297690e43617c5737fc579b96bd596ae0ffa168075a5"
           }
@@ -12046,11 +12066,11 @@
           "andrea-approved",
           "video-contact-sheet-slot-08"
         ],
-        "terminal_source_sha256": "2f1a18e80d4867852d9d68cfe61996374d6310a7345a066753eb9f8b7babc006",
-        "flat_master_sha256": "b855361ed7b9f0030bc4775fd3a1d0da7fea1f10bfc83d9dfa3ddfc71a9231aa",
+        "terminal_source_sha256": "c974a6688deffce46ae7d5486de8c36050ddb9659d2634176c7d8a5b84975cca",
+        "flat_master_sha256": "7cae1d60eec6cf6178c9076bd5e7aaf99940ba962467202c23d275648f5f336d",
         "derivative_recipe_id": "slot-08-lesson-card-16x10",
         "derivative_recipe_sha256": "16824b402829736ab448b86db4b47ea04ec8f0dbfe4939e2ee81380b4adfa868",
-        "lineage_steps": 2,
+        "lineage_steps": 1,
         "reviewed_by": null,
         "reviewed_at": null,
         "review_evidence": null,
@@ -12085,8 +12105,7 @@
             "frame_count": 6
           }
         ],
-        "review_evidence_sha256": null,
-        "preserved_from_flat_master_sha256": "7cae1d60eec6cf6178c9076bd5e7aaf99940ba962467202c23d275648f5f336d"
+        "review_evidence_sha256": null
       },
       "derivative": {
         "source_master_id": "master-slot-08",
@@ -12195,7 +12214,7 @@
       "provenance": {
         "master_id": "master-slot-08",
         "source_master_id": "master-slot-08",
-        "prompt_sha256": "6b4e11b1459ed054558a52423590fd4da1519d40cdf3fcd5657aa4438ae53632",
+        "prompt_sha256": "3795ce1596e4d3274c90097d9ac6c389fcee780bc0ddc14a8bb6e159486475d9",
         "reference_ids": [
           "style-ref-1",
           "style-ref-2",
@@ -12355,7 +12374,7 @@
       "provenance": {
         "master_id": "master-slot-08",
         "source_master_id": "master-slot-08",
-        "prompt_sha256": "6b4e11b1459ed054558a52423590fd4da1519d40cdf3fcd5657aa4438ae53632",
+        "prompt_sha256": "3795ce1596e4d3274c90097d9ac6c389fcee780bc0ddc14a8bb6e159486475d9",
         "reference_ids": [
           "style-ref-1",
           "style-ref-2",
@@ -12484,10 +12503,10 @@
         "source_master_id": "master-slot-09",
         "prompt_sha256": "c6a3b114e844f4d899d9bc667d118311b4737cd4e0791e65a1657f6eac3e4d3f",
         "reference_ids": [
-          "style-ref-1",
-          "style-ref-2",
+          "pilot-parent-objection-architecture",
+          "andrea-approved",
           "recurring-seller-approved",
-          "v8-objection-architecture-contact-sheet"
+          "pilot-input-objection-architecture-1-4"
         ],
         "terminal_source_sha256": "88f3513e1f4985ded8bceefc1e11aff60ae97dc934896bee56bd88a1133d9a58",
         "flat_master_sha256": "9478035c8c98f287f8d1e0fb9426c70963ad5e4b7f006ba186218fa3b5e45c16",
@@ -12500,26 +12519,26 @@
         "promoted_pilot_sha256": "9ecbea7d29ce43d999161e5ab1eb60607fbc26a0a26b24c0b1f9116c51b2a1c1",
         "reference_inputs": [
           {
-            "id": "style-ref-1",
-            "role": "canonical BMH Sticker System style",
-            "path": "docs/design/style-ref-1.png",
-            "sha256": "d65ce4c3fc84a0a52b08e513d42d978f94d5db2f6e59034aedbbd1e9486c18ca"
+            "id": "pilot-parent-objection-architecture",
+            "role": "checksum-bound approved pilot edit parent",
+            "path": "course-assets/thumbnails/pilots/revisions/v7/sources/objection-seller-generated-v7.png",
+            "sha256": "6fbbc49d5251438d6bd3a9a8a3269c328fd4d19804acc6744310ac597f6801d1"
           },
           {
-            "id": "style-ref-2",
-            "role": "canonical BMH Sticker System style",
-            "path": "docs/design/style-ref-2.png",
-            "sha256": "f1affc2ab6b931be8cfd6920165dff330d49b79e6f4abfe5568e67e70c6934a6"
+            "id": "andrea-approved",
+            "role": "checksum-bound approved pilot generation input",
+            "path": "docs/course-production/thumbnail-pilots/references/v5-cast/andrea-approved.png",
+            "sha256": "ab1c01dfc642f00b2f6df08a20fd231cb47fffb60a3e013a42960ee4fa5e2ca8"
           },
           {
             "id": "recurring-seller-approved",
-            "role": "approved recurring seller identity root",
+            "role": "checksum-bound approved pilot generation input",
             "path": "docs/course-production/thumbnail-pilots/references/v5-cast/recurring-seller.png",
             "sha256": "b88724ccd840ecf295c2b8607525a76a938349978407a0ba8b92eccd8f2cf4f0"
           },
           {
-            "id": "v8-objection-architecture-contact-sheet",
-            "role": "objection-architecture source-video contact sheet",
+            "id": "pilot-input-objection-architecture-1-4",
+            "role": "checksum-bound approved pilot generation input",
             "path": "docs/course-production/thumbnail-pilots/references/v7-video-stills/objection-contact-sheet.jpg",
             "sha256": "31145ddd3485159dbaa298d8ee1958834dca1098bbd86645c43414ccaa8eea7b"
           }
@@ -12611,10 +12630,10 @@
         "source_master_id": "master-slot-09",
         "prompt_sha256": "c6a3b114e844f4d899d9bc667d118311b4737cd4e0791e65a1657f6eac3e4d3f",
         "reference_ids": [
-          "style-ref-1",
-          "style-ref-2",
+          "pilot-parent-objection-architecture",
+          "andrea-approved",
           "recurring-seller-approved",
-          "v8-objection-architecture-contact-sheet"
+          "pilot-input-objection-architecture-1-4"
         ],
         "terminal_source_sha256": "88f3513e1f4985ded8bceefc1e11aff60ae97dc934896bee56bd88a1133d9a58",
         "flat_master_sha256": "9478035c8c98f287f8d1e0fb9426c70963ad5e4b7f006ba186218fa3b5e45c16",
@@ -12627,26 +12646,26 @@
         "promoted_pilot_sha256": "2e08972e271cf6e98e9eaf0dafbf933b2dffe4d114110bed04bf25b233d3e30e",
         "reference_inputs": [
           {
-            "id": "style-ref-1",
-            "role": "canonical BMH Sticker System style",
-            "path": "docs/design/style-ref-1.png",
-            "sha256": "d65ce4c3fc84a0a52b08e513d42d978f94d5db2f6e59034aedbbd1e9486c18ca"
+            "id": "pilot-parent-objection-architecture",
+            "role": "checksum-bound approved pilot edit parent",
+            "path": "course-assets/thumbnails/pilots/revisions/v7/sources/objection-seller-generated-v7.png",
+            "sha256": "6fbbc49d5251438d6bd3a9a8a3269c328fd4d19804acc6744310ac597f6801d1"
           },
           {
-            "id": "style-ref-2",
-            "role": "canonical BMH Sticker System style",
-            "path": "docs/design/style-ref-2.png",
-            "sha256": "f1affc2ab6b931be8cfd6920165dff330d49b79e6f4abfe5568e67e70c6934a6"
+            "id": "andrea-approved",
+            "role": "checksum-bound approved pilot generation input",
+            "path": "docs/course-production/thumbnail-pilots/references/v5-cast/andrea-approved.png",
+            "sha256": "ab1c01dfc642f00b2f6df08a20fd231cb47fffb60a3e013a42960ee4fa5e2ca8"
           },
           {
             "id": "recurring-seller-approved",
-            "role": "approved recurring seller identity root",
+            "role": "checksum-bound approved pilot generation input",
             "path": "docs/course-production/thumbnail-pilots/references/v5-cast/recurring-seller.png",
             "sha256": "b88724ccd840ecf295c2b8607525a76a938349978407a0ba8b92eccd8f2cf4f0"
           },
           {
-            "id": "v8-objection-architecture-contact-sheet",
-            "role": "objection-architecture source-video contact sheet",
+            "id": "pilot-input-objection-architecture-1-4",
+            "role": "checksum-bound approved pilot generation input",
             "path": "docs/course-production/thumbnail-pilots/references/v7-video-stills/objection-contact-sheet.jpg",
             "sha256": "31145ddd3485159dbaa298d8ee1958834dca1098bbd86645c43414ccaa8eea7b"
           }
@@ -12774,7 +12793,7 @@
       "provenance": {
         "master_id": "master-slot-10",
         "source_master_id": "master-slot-10",
-        "prompt_sha256": "4d609f5e12e3c6148e92c607c75ccffbfb8fd0abebcb29bc2d04df538ad6aea9",
+        "prompt_sha256": "3aef589b13d7734c59d794f4b2419fc867aba8e328d95135be0d958babe39c60",
         "reference_ids": [
           "style-ref-1",
           "style-ref-2",
@@ -12929,7 +12948,7 @@
       "provenance": {
         "master_id": "master-slot-10",
         "source_master_id": "master-slot-10",
-        "prompt_sha256": "4d609f5e12e3c6148e92c607c75ccffbfb8fd0abebcb29bc2d04df538ad6aea9",
+        "prompt_sha256": "3aef589b13d7734c59d794f4b2419fc867aba8e328d95135be0d958babe39c60",
         "reference_ids": [
           "style-ref-1",
           "style-ref-2",
@@ -13080,11 +13099,11 @@
           "recurring-seller-approved",
           "video-contact-sheet-slot-11"
         ],
-        "terminal_source_sha256": "651e0c889486d8ecd9da1a8e9f21becdbd04232b4a10b2d9a1f2254319bb5f3d",
-        "flat_master_sha256": "c747370d5a8e5313a2d5e759d8642b1bd8706901aa020bb228e2663bd02bb198",
+        "terminal_source_sha256": "14af916713a14d6c0ec5c7b0c85190370d148c039f6fe289d43eafe34824e388",
+        "flat_master_sha256": "10adde615eb9e7b46f48b08a75f07ed138d516182ddbd3e95d925b71cb41493d",
         "derivative_recipe_id": "slot-11-lesson-card-16x10",
         "derivative_recipe_sha256": "cf2b9849eb75bce7da5e7a53de3bddb255695528295eb46c7ab8253f9ff094cd",
-        "lineage_steps": 3,
+        "lineage_steps": 1,
         "reviewed_by": null,
         "reviewed_at": null,
         "review_evidence": null,
@@ -13119,8 +13138,7 @@
             "frame_count": 6
           }
         ],
-        "review_evidence_sha256": null,
-        "preserved_from_flat_master_sha256": "c8b4cf89ad812ae70ed0204a01d2b8e6c027198540b9743bac7813e2cef901e2"
+        "review_evidence_sha256": null
       },
       "derivative": {
         "source_master_id": "master-slot-11",
@@ -13245,7 +13263,7 @@
       "provenance": {
         "master_id": "master-slot-11",
         "source_master_id": "master-slot-11",
-        "prompt_sha256": "f36abdebecf19b97706116342e48622900bf2152ddeac30e596dfa2d33adc035",
+        "prompt_sha256": "ea69a5ae1f74070e84abdd064f1c2a27d0c005c46bf655dff605add6cd9a3073",
         "reference_ids": [
           "style-ref-1",
           "style-ref-2",
@@ -13523,11 +13541,11 @@
           "recurring-seller-approved",
           "video-contact-sheet-slot-12"
         ],
-        "terminal_source_sha256": "0bdf8fdbf70e8dd231637a9f05cdcf07dfd565756aa0c52146ab300ddc1957f6",
-        "flat_master_sha256": "1a9babdfe155142850f943a29f3ab4c6eb9b6531365b29215781a92c6a083678",
+        "terminal_source_sha256": "80fac45abce17cae0956276b8fea04dde234db77dc706baf559667331a06194f",
+        "flat_master_sha256": "b87fbacda29c75d6483bf7c776cac92ddc0468de7857a7e94e31ec0bc2ab921d",
         "derivative_recipe_id": "slot-12-lesson-card-16x10",
         "derivative_recipe_sha256": "f0041f6eb40bdae75471f17b347af6d1bd207df3016c5105d786aec15e15d138",
-        "lineage_steps": 3,
+        "lineage_steps": 1,
         "reviewed_by": null,
         "reviewed_at": null,
         "review_evidence": null,
@@ -13562,8 +13580,7 @@
             "frame_count": 6
           }
         ],
-        "review_evidence_sha256": null,
-        "preserved_from_flat_master_sha256": "3b64447427faf862ddce0a1ac4b19e1b63969c3261832e8430d14f23f9eb067d"
+        "review_evidence_sha256": null
       },
       "derivative": {
         "source_master_id": "master-slot-12",
@@ -13688,7 +13705,7 @@
       "provenance": {
         "master_id": "master-slot-12",
         "source_master_id": "master-slot-12",
-        "prompt_sha256": "fa12b3d70326fd7b5afafe74fc6429c63aa6cd1a7c503b5d331262f41bf7ea65",
+        "prompt_sha256": "43f039d7aebd84277a587f285285c4a8819ac25416e1002e761eff0f263f6a03",
         "reference_ids": [
           "style-ref-1",
           "style-ref-2",
@@ -13975,7 +13992,7 @@
       "provenance": {
         "master_id": "master-slot-13",
         "source_master_id": "master-slot-13",
-        "prompt_sha256": "6fa5973fff11168da9b32a9a0e0b27cf5c3c95be871b6e3af16ec6b16d666c27",
+        "prompt_sha256": "ab5c59415c389d0f691971e8fe3590df2008e484af0788ba6051bcfdcac7573c",
         "reference_ids": [
           "style-ref-1",
           "style-ref-2",
@@ -14130,7 +14147,7 @@
       "provenance": {
         "master_id": "master-slot-13",
         "source_master_id": "master-slot-13",
-        "prompt_sha256": "6fa5973fff11168da9b32a9a0e0b27cf5c3c95be871b6e3af16ec6b16d666c27",
+        "prompt_sha256": "ab5c59415c389d0f691971e8fe3590df2008e484af0788ba6051bcfdcac7573c",
         "reference_ids": [
           "style-ref-1",
           "style-ref-2",
@@ -14573,7 +14590,7 @@
       "provenance": {
         "master_id": "master-slot-15",
         "source_master_id": "master-slot-15",
-        "prompt_sha256": "a6e976a431fa6282a2d1cff99f1d478d837fadeee0e8087323c98f8484572bd3",
+        "prompt_sha256": "7e9d48c126cf0f816a55c7c063c7091b9558c382ba3b1abe8b24fbf9253c3d9d",
         "reference_ids": [
           "style-ref-1",
           "style-ref-2",
@@ -14728,7 +14745,7 @@
       "provenance": {
         "master_id": "master-slot-15",
         "source_master_id": "master-slot-15",
-        "prompt_sha256": "a6e976a431fa6282a2d1cff99f1d478d837fadeee0e8087323c98f8484572bd3",
+        "prompt_sha256": "7e9d48c126cf0f816a55c7c063c7091b9558c382ba3b1abe8b24fbf9253c3d9d",
         "reference_ids": [
           "style-ref-1",
           "style-ref-2",
@@ -14908,8 +14925,8 @@
           },
           {
             "id": "video-contact-sheet-slot-16",
-            "role": "checksum-bound exact mapped-video contact sheet",
-            "path": "docs/course-production/thumbnail-pilots/references/production-video-stills/slot-16-contact-sheet.png",
+            "role": "checksum-bound historical KPIs v11 contact sheet retained for immutable generation lineage",
+            "path": "docs/course-production/thumbnail-pilots/references/production-video-stills/historical/slot-16-kpis-v11-contact-sheet.png",
             "sha256": "4e68fd96304a6c91c47c3ed152c225670fdd601decd88ac5673a42885b295632",
             "dimensions": [
               960,
@@ -15047,8 +15064,8 @@
           },
           {
             "id": "video-contact-sheet-slot-16",
-            "role": "checksum-bound exact mapped-video contact sheet",
-            "path": "docs/course-production/thumbnail-pilots/references/production-video-stills/slot-16-contact-sheet.png",
+            "role": "checksum-bound historical KPIs v11 contact sheet retained for immutable generation lineage",
+            "path": "docs/course-production/thumbnail-pilots/references/production-video-stills/historical/slot-16-kpis-v11-contact-sheet.png",
             "sha256": "4e68fd96304a6c91c47c3ed152c225670fdd601decd88ac5673a42885b295632",
             "dimensions": [
               960,
@@ -15171,7 +15188,7 @@
       "provenance": {
         "master_id": "master-slot-17",
         "source_master_id": "master-slot-17",
-        "prompt_sha256": "ef5af5620a72b66eefb3394637eb7b5b3d3ee5042a396d01ad3e937086a1ee69",
+        "prompt_sha256": "1d51d11f7959605c43e66210bfe8fc0c149c5186b5242e8b970e591806d8b403",
         "reference_ids": [
           "style-ref-1",
           "style-ref-2",
@@ -15326,7 +15343,7 @@
       "provenance": {
         "master_id": "master-slot-17",
         "source_master_id": "master-slot-17",
-        "prompt_sha256": "ef5af5620a72b66eefb3394637eb7b5b3d3ee5042a396d01ad3e937086a1ee69",
+        "prompt_sha256": "1d51d11f7959605c43e66210bfe8fc0c149c5186b5242e8b970e591806d8b403",
         "reference_ids": [
           "style-ref-1",
           "style-ref-2",
@@ -15486,7 +15503,7 @@
       "provenance": {
         "master_id": "master-slot-18",
         "source_master_id": "master-slot-18",
-        "prompt_sha256": "d6ad131a30cd84b9ebabed8f34743ffcdaf886312e2226e6a84d30ff74fe216a",
+        "prompt_sha256": "9dfde6fdef77841634b489d9f30d4ba2be1378a2045c12eb73a532b0293a8388",
         "reference_ids": [
           "style-ref-1",
           "style-ref-2",
@@ -15641,7 +15658,7 @@
       "provenance": {
         "master_id": "master-slot-18",
         "source_master_id": "master-slot-18",
-        "prompt_sha256": "d6ad131a30cd84b9ebabed8f34743ffcdaf886312e2226e6a84d30ff74fe216a",
+        "prompt_sha256": "9dfde6fdef77841634b489d9f30d4ba2be1378a2045c12eb73a532b0293a8388",
         "reference_ids": [
           "style-ref-1",
           "style-ref-2",

@@ -2,7 +2,7 @@
   "schema_version": "1.0.0",
   "status": "local_review_candidates",
   "updated_at": "2026-07-17",
-  "review_question": "Do you approve the exact KPIs v12 local policy-cut candidate? Terms v10 is already approved, and all seven replacement-video packages remain separately gated from provider generation.",
+  "review_question": "Terms v10 and KPIs v12 are exact-cut approved. All seven replacement-video packages remain separately gated from provider generation.",
   "candidates": [
     {
       "candidate_id": "terms-v10-local-policy-cut",
@@ -36,7 +36,7 @@
       "sha256": "3d50cc79cfe74277ac1311367d5b0bd6fd62d2d38c2c74fff8732ea62203d61a",
       "size_bytes": 53799917,
       "duration_seconds": 400.994,
-      "approval_status": "pending_unapproved",
+      "approval_status": "approved_exact_cut",
       "source_sha256": "439f8d06d2e449637509f0f21f9d0b4a5464c65aec1995fca7147e4e4e67310b",
       "review_reason": "Removes the forbidden compensation-promise phrase while preserving the lesson meaning.",
       "resulting_line": "The people who improve fastest are the ones who actually look at their numbers...",

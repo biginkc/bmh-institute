@@ -1163,13 +1163,14 @@ export async function preparePipelineReprocess({ root, ledger, masterId }) {
       pixel_sha256: output.pixel_sha256,
       archived_path: archive,
       recipe_sha256: output.derivative.recipe_sha256,
-      lineage_sequence: sequence,
+      lineage_sequence: output.provenance.lineage_steps,
     });
     output.replacement_authorized_checksum = output.checksum_sha256;
     output.checksum_sha256 = null;
     output.pixel_sha256 = null;
     output.size_bytes = null;
     output.approval_status = MISSING;
+    clearOutputReviewProvenance(output);
   }
   master.status = "source-ready";
   master.review = baseReview();
@@ -1252,19 +1253,103 @@ export async function recordApprovedTextureExceptions({ root, ledger, evidence }
   return ledger;
 }
 
-function applyOutputProvenance(output, master) {
+function expectedOutputGenerationSequence(master, assetKey) {
+  for (let index = master.lineage.length - 1; index >= 0; index -= 1) {
+    const preserved = new Set(master.lineage[index].preserved_output_keys ?? []);
+    if (!preserved.has(assetKey)) return index + 1;
+  }
+  return null;
+}
+
+function flatMasterChecksumsForOutputSequence(master, sequence) {
+  const checksums = new Set();
+  if (sequence === master.lineage.length && master.flat_master_sha256) {
+    checksums.add(master.flat_master_sha256);
+  }
+  for (const entry of master.flat_history.filter((candidate) => candidate.lineage_sequence === sequence)) {
+    checksums.add(entry.checksum_sha256);
+  }
+  return checksums;
+}
+
+export function validateOutputGenerationProvenance(output, master) {
+  const sequence = expectedOutputGenerationSequence(master, output.asset_key);
+  assert(Number.isInteger(sequence) && sequence > 0, `${output.asset_key} has no producing generation sequence`);
+  assert(output.provenance.lineage_steps === sequence, `${output.asset_key} generation sequence drifted`);
+  const step = master.lineage[sequence - 1];
+  assert(step?.sequence === sequence, `${output.asset_key} generation sequence does not resolve`);
+  assert(output.provenance.prompt_sha256 === step.prompt_sha256, `${output.asset_key} generation prompt provenance drifted`);
+  assert(JSON.stringify(output.provenance.reference_inputs) === JSON.stringify(step.reference_inputs), `${output.asset_key} generation reference provenance drifted`);
+  assert(
+    JSON.stringify(output.provenance.reference_ids) === JSON.stringify(step.reference_inputs.map((input) => input.id)),
+    `${output.asset_key} generation reference ids drifted`,
+  );
+  assert(output.provenance.terminal_source_sha256 === step.output_sha256, `${output.asset_key} generation terminal source provenance drifted`);
+  assert(
+    flatMasterChecksumsForOutputSequence(master, sequence).has(output.provenance.flat_master_sha256),
+    `${output.asset_key} generation flat-master provenance is not bound to sequence ${sequence}`,
+  );
+  return true;
+}
+
+function applyOutputGenerationProvenance(output, master) {
+  const sequence = master.lineage.length;
+  const step = master.lineage[sequence - 1];
+  assert(step?.sequence === sequence, `${output.asset_key} has no current generation sequence`);
   output.provenance = {
     ...output.provenance,
-    prompt_sha256: master.prompt_sha256,
-    reference_ids: clone(master.reference_ids),
-    reference_inputs: clone(master.reference_inputs),
-    terminal_source_sha256: master.terminal_source_sha256,
+    prompt_sha256: step.prompt_sha256,
+    reference_ids: step.reference_inputs.map((input) => input.id),
+    reference_inputs: clone(step.reference_inputs),
+    terminal_source_sha256: step.output_sha256,
     flat_master_sha256: master.flat_master_sha256,
-    lineage_steps: master.lineage.length,
+    lineage_steps: sequence,
+  };
+  delete output.provenance.preserved_from_flat_master_sha256;
+}
+
+function clearOutputReviewProvenance(output) {
+  output.provenance = {
+    ...output.provenance,
+    reviewed_by: null,
+    reviewed_at: null,
+    review_evidence: null,
+    review_evidence_sha256: null,
+  };
+  delete output.review_provenance;
+}
+
+function reviewContextBindings(master) {
+  const values = [];
+  for (const evidence of master.video_evidence) {
+    for (const field of ["asset_key", "local_path", "checksum_sha256"]) {
+      if (evidence[field] !== undefined && evidence[field] !== null) values.push(String(evidence[field]));
+    }
+  }
+  if (master.contact_sheet_input) {
+    for (const field of ["id", "path", "sha256"]) {
+      if (master.contact_sheet_input[field] !== undefined && master.contact_sheet_input[field] !== null) values.push(String(master.contact_sheet_input[field]));
+    }
+  }
+  return values;
+}
+
+function applyOutputReviewProvenance(output, master) {
+  output.provenance = {
+    ...output.provenance,
     reviewed_by: master.review.reviewed_by,
     reviewed_at: master.review.reviewed_at,
     review_evidence: master.review.evidence,
     review_evidence_sha256: master.review.evidence_sha256 ?? null,
+  };
+  output.review_provenance = {
+    lineage_sequence: master.lineage.length,
+    video_evidence: clone(master.video_evidence),
+    contact_sheet_input: master.contact_sheet_input ? clone(master.contact_sheet_input) : null,
+    reviewed_by: master.review.reviewed_by,
+    reviewed_at: master.review.reviewed_at,
+    evidence: master.review.evidence,
+    evidence_sha256: master.review.evidence_sha256 ?? null,
   };
 }
 
@@ -1408,16 +1493,24 @@ export async function validateLedger({ root, inventory, manifest, ledger, inspec
       assert(SHA256.test(asset.pixel_sha256), `${asset.asset_key} produced pixel checksum invalid`);
       assert(SHA256.test(asset.provenance.terminal_source_sha256), `${asset.asset_key} terminal source provenance invalid`);
       assert(SHA256.test(asset.provenance.flat_master_sha256), `${asset.asset_key} flat-master provenance invalid`);
-      assert(asset.provenance.prompt_sha256 === owner.prompt_sha256, `${asset.asset_key} prompt provenance drifted`);
-      assert(JSON.stringify(asset.provenance.reference_ids) === JSON.stringify(owner.reference_ids), `${asset.asset_key} reference ids drifted`);
-      assert(JSON.stringify(asset.provenance.reference_inputs) === JSON.stringify(owner.reference_inputs), `${asset.asset_key} reference inputs drifted`);
-      assert(asset.provenance.terminal_source_sha256 === owner.terminal_source_sha256, `${asset.asset_key} terminal source provenance drifted`);
-      assert(asset.provenance.flat_master_sha256 === owner.flat_master_sha256, `${asset.asset_key} flat-master provenance drifted`);
-      assert(asset.provenance.lineage_steps === owner.lineage.length, `${asset.asset_key} lineage count drifted`);
+      validateOutputGenerationProvenance(asset, owner);
       assert(asset.provenance.reviewed_by === owner.review.reviewed_by, `${asset.asset_key} reviewer provenance drifted`);
       assert(asset.provenance.reviewed_at === owner.review.reviewed_at, `${asset.asset_key} review timestamp provenance drifted`);
       assert(asset.provenance.review_evidence === owner.review.evidence, `${asset.asset_key} review evidence provenance drifted`);
       assert(asset.provenance.review_evidence_sha256 === owner.review.evidence_sha256, `${asset.asset_key} review evidence checksum provenance drifted`);
+      if (owner.review.status === "pending") {
+        assert(asset.review_provenance === undefined, `${asset.asset_key} pending review retains bound review provenance`);
+      } else {
+        assert(JSON.stringify(asset.review_provenance) === JSON.stringify({
+          lineage_sequence: owner.lineage.length,
+          video_evidence: owner.video_evidence,
+          contact_sheet_input: owner.contact_sheet_input,
+          reviewed_by: owner.review.reviewed_by,
+          reviewed_at: owner.review.reviewed_at,
+          evidence: owner.review.evidence,
+          evidence_sha256: owner.review.evidence_sha256,
+        }), `${asset.asset_key} current-context review provenance drifted`);
+      }
     } else {
       assert(asset.pixel_sha256 === null && asset.size_bytes === null, `${asset.asset_key} missing output retains produced metadata`);
     }
@@ -1530,6 +1623,8 @@ export async function validateLedger({ root, inventory, manifest, ledger, inspec
       assertString(step.tool_output_id, `${master.id} lineage tool_output_id`);
       assert(Array.isArray(step.reference_inputs) && step.reference_inputs.length > 0, `${master.id} lineage reference provenance missing`);
       for (const input of step.reference_inputs) {
+        assertString(input.id, `${master.id} lineage input id`);
+        assertString(input.role, `${master.id} lineage input role`);
         assertString(input.path, `${master.id} lineage input path`);
         assert(SHA256.test(input.sha256), `${master.id} lineage input checksum invalid`);
         if (inspectFiles) {
@@ -1646,7 +1741,12 @@ export async function validateLedger({ root, inventory, manifest, ledger, inspec
         assert(Date.parse(master.review.reviewed_at) >= previousCompletedAt, `${master.id} review predates generation`);
       }
       if (inspectFiles) {
-        const bindings = [master.id, master.terminal_source_sha256, master.flat_master_sha256];
+        const bindings = [
+          master.id,
+          master.terminal_source_sha256,
+          master.flat_master_sha256,
+          ...reviewContextBindings(master),
+        ];
         for (const outputRef of master.outputs) {
           const output = ledger.assets.find((asset) => asset.asset_key === outputRef.asset_key);
           bindings.push(output.asset_key, output.checksum_sha256, output.pixel_sha256);
@@ -1806,12 +1906,23 @@ function pilotLineage(master, ledger) {
   if (isTwoIdentityPilotLineage(master.pilot.lineage)) {
     const candidate = master.pilot.lineage;
     const generation = candidate.generation;
-    const referenceInputs = [...(generation.operation === "edit" ? [{ path: generation.parent_path, sha256: generation.parent_sha256 }] : []), ...master.pilot.identity_roots, candidate.contact_sheet_input].map(
-      ({ path: inputPath, sha256: inputSha256 }) => ({
-        path: inputPath,
-        sha256: inputSha256,
-      }),
-    );
+    const referenceInputs = [
+      ...(generation.operation === "edit"
+        ? [{
+            id: `pilot-parent-${candidate.slug}`,
+            role: "checksum-bound approved pilot edit parent",
+            path: generation.parent_path,
+            sha256: generation.parent_sha256,
+          }]
+        : []),
+      ...master.pilot.identity_roots,
+      candidate.contact_sheet_input,
+    ].map((input, index) => ({
+      id: input.id ?? `pilot-input-${candidate.slug}-${index + 1}`,
+      role: input.role ?? "checksum-bound approved pilot generation input",
+      path: input.path,
+      sha256: input.sha256,
+    }));
     return [
       {
         sequence: 1,
@@ -1844,7 +1955,12 @@ function pilotLineage(master, ledger) {
     completed_at: step.tool_evidence.completed_at,
     archived_output_path: step.output.path,
     output_sha256: step.output.sha256,
-    reference_inputs: clone(step.inputs),
+    reference_inputs: step.inputs.map((input, inputIndex) => ({
+      id: input.id ?? `pilot-input-${master.pilot.slug}-${index + 1}-${inputIndex + 1}`,
+      role: input.role ?? "checksum-bound approved pilot generation input",
+      path: input.path,
+      sha256: input.sha256,
+    })),
   }));
 }
 
@@ -1911,7 +2027,8 @@ export async function promotePilots({ root, ledger }) {
       output.size_bytes = copied.size_bytes;
       output.approval_status = MISSING;
       output.provenance.promoted_pilot_sha256 = approvedAsset.sha256;
-      applyOutputProvenance(output, master);
+      applyOutputGenerationProvenance(output, master);
+      clearOutputReviewProvenance(output);
     }
   }
   ledger.status = "production";
@@ -2025,7 +2142,6 @@ export async function ingestGeneration({ root, ledger, masterId, sourceFile, gen
       const actual = await inspectArtworkFile(root, output, ledger.palette_rgb);
       assert(actual.checksum_sha256 === output.checksum_sha256, `${output.asset_key} changed before correction archival`);
       if (preserveOutputKeys.includes(output.asset_key)) {
-        output.provenance.preserved_from_flat_master_sha256 = master.flat_master_sha256;
         continue;
       }
       const archive = path.posix.join(path.posix.dirname(master.source_path), "lineage", master.id, "derivatives", `version-${String(sequence - 1).padStart(3, "0")}-${path.posix.basename(output.manifest_path)}`);
@@ -2034,7 +2150,7 @@ export async function ingestGeneration({ root, ledger, masterId, sourceFile, gen
       }
       output.history.push({
         version: output.history.length + 1,
-        lineage_sequence: sequence - 1,
+        lineage_sequence: output.provenance.lineage_steps,
         archived_path: archive,
         checksum_sha256: output.checksum_sha256,
         pixel_sha256: output.pixel_sha256,
@@ -2082,8 +2198,8 @@ export async function ingestGeneration({ root, ledger, masterId, sourceFile, gen
   master.review = baseReview();
   for (const outputRef of master.outputs) {
     const output = findOutput(ledger, outputRef.asset_key);
+    clearOutputReviewProvenance(output);
     if (preserveOutputKeys.includes(output.asset_key)) {
-      applyOutputProvenance(output, master);
       continue;
     }
     output.checksum_sha256 = null;
@@ -2207,7 +2323,8 @@ export async function deriveMaster({ root, ledger, masterId }) {
     output.size_bytes = record.size_bytes;
     output.approval_status = MISSING;
     output.replacement_authorized_checksum = null;
-    applyOutputProvenance(output, master);
+    if (!candidate.preserved) applyOutputGenerationProvenance(output, master);
+    clearOutputReviewProvenance(output);
   }
   master.status = "derived";
   master.review = baseReview();
@@ -2234,6 +2351,7 @@ export async function reviewMaster({ root, ledger, masterId, decision, reviewedB
     }
     required.push(output.asset_key, output.checksum_sha256, output.pixel_sha256);
   }
+  required.push(...reviewContextBindings(master));
   const evidenceRecord = await validateEvidence(root, evidence, required);
   master.review = {
     status: decision,
@@ -2242,7 +2360,7 @@ export async function reviewMaster({ root, ledger, masterId, decision, reviewedB
     evidence,
     evidence_sha256: evidenceRecord.sha256,
   };
-  for (const outputRef of master.outputs) applyOutputProvenance(findOutput(ledger, outputRef.asset_key), master);
+  for (const outputRef of master.outputs) applyOutputReviewProvenance(findOutput(ledger, outputRef.asset_key), master);
   ledger.updated_at = reviewedAt;
   return ledger;
 }

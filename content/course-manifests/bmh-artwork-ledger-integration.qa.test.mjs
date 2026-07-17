@@ -174,6 +174,14 @@ test("the complete manifest builder is deterministic against portable fixture so
     fixtureApprovalPath,
     `${JSON.stringify({ ...approvalLedger, records: fixtureRecords }, null, 2)}\n`,
   );
+  runGit(fixtureRoot, ["init"]);
+  runGit(fixtureRoot, ["config", "user.name", "BMH Manifest Fixture"]);
+  runGit(fixtureRoot, ["config", "user.email", "manifest-fixture@bmh.invalid"]);
+  runGit(fixtureRoot, ["add", path.basename(fixtureApprovalPath)]);
+  runGit(fixtureRoot, ["commit", "-m", "fixture: bind video approval ledger"]);
+  await writeFile(path.join(fixtureRoot, ".history-baseline"), "committed predecessor\n");
+  runGit(fixtureRoot, ["add", ".history-baseline"]);
+  runGit(fixtureRoot, ["commit", "-m", "fixture: establish immutable head"]);
 
   const quizDirectory = path.join(quizSourceRoot, "_quiz-exports-by-slot");
   await mkdir(quizDirectory, { recursive: true });
@@ -195,6 +203,7 @@ test("the complete manifest builder is deterministic against portable fixture so
     videoSourceRoot,
     quizSourceRoot,
     videoApprovalLedgerPath: fixtureApprovalPath,
+    videoApprovalHistoryRepoRoot: fixtureRoot,
     inspectDuration(fullPath) {
       const duration = durationByPath.get(path.resolve(fullPath));
       assert.ok(duration, `fixture duration missing for ${fullPath}`);
@@ -216,6 +225,15 @@ test("the complete manifest builder is deterministic against portable fixture so
     "Fixture slot 1 question 1",
   );
 });
+
+function runGit(cwd, args) {
+  const result = spawnSync("git", args, { cwd, encoding: "utf8" });
+  assert.equal(
+    result.status,
+    0,
+    `git ${args.join(" ")} failed: ${result.stderr || result.stdout}`,
+  );
+}
 
 test("an approved ledger record supplies verified immutable manifest metadata", async (t) => {
   const root = await mkdtemp(path.join(tmpdir(), "bmh-artwork-ledger-approved-"));
@@ -406,6 +424,8 @@ test("a canonically finalized 49-asset workflow cannot forge held-video release 
       master_id: master.id,
       terminal_source_sha256: master.terminal_source_sha256,
       flat_master_sha256: master.flat_master_sha256,
+      video_evidence: master.video_evidence,
+      contact_sheet_input: master.contact_sheet_input,
       outputs: master.outputs.map(({ asset_key: assetKey }) => {
         const asset = ledger.assets.find((candidate) => candidate.asset_key === assetKey);
         return {

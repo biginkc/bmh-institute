@@ -109,19 +109,19 @@ test("held-video prose stays aligned with the checksum-keyed approval ledger", a
   );
   const approved = ledger.records.filter((record) => record.decision === "approved");
 
-  assert.equal(pending.length, 1);
+  assert.equal(pending.length, 0);
   assert.equal(changesRequested.length, 9);
-  assert.equal(approved.length, 1);
+  assert.equal(approved.length, 2);
   assert.equal(
     candidates.candidates.filter(
       (candidate) => candidate.approval_status === "pending_unapproved",
     ).length,
     pending.length,
   );
-  assert.match(heldReviewDoc, /One exact corrected cut, KPIs v12/);
-  assert.match(heldReviewDoc, /one corrected candidate remains pending/i);
+  assert.match(heldReviewDoc, /Both exact corrected local-policy cuts, Terms v10 and KPIs v12/);
+  assert.match(heldReviewDoc, /no corrected candidate remains pending/i);
   assert.match(heldReviewDoc, /nine historical\/source records are marked `changes_requested`/i);
-  assert.match(recutReadme, /One local policy-cut candidate remains pending/i);
+  assert.match(recutReadme, /none remains pending/i);
   assert.doesNotMatch(heldReviewDoc, /five corrected candidates? remain pending/i);
   assert.doesNotMatch(recutReadme, /Two local policy-cut candidates? remain pending/i);
 });
@@ -150,11 +150,11 @@ test(
     ]);
     assert.equal(result.videoCount, 11);
     assert.equal(result.evidenceFileCount, 12);
-    assert.equal(result.approvedDerivativeFileCount, 2);
+    assert.equal(result.approvedDerivativeFileCount, 4);
     assert.equal(result.approvalLedgerRecordCount, 11);
     assert.equal(result.localPolicyCandidateCount, 2);
-    assert.equal(result.pendingCandidateCount, 1);
-    assert.equal(result.approvedExactCutCount, 1);
+    assert.equal(result.pendingCandidateCount, 0);
+    assert.equal(result.approvedExactCutCount, 2);
     assert.equal(result.htmlIsCurrent, true);
     assert.deepEqual(
       result.files
@@ -194,7 +194,7 @@ async function createSyntheticVerification(manifest) {
   ];
   assert.equal(
     routes.length,
-    27,
+    29,
     "synthetic verification must cover the exact locked route set",
   );
 
@@ -413,12 +413,12 @@ test("static and verified pages make trust state and caption availability explic
     (staticHtml.match(/Checksum-locked QC evidence/g) || []).length,
     6,
   );
-  assert.match(staticHtml, /1 corrected candidate awaits Jarrad review/);
+  assert.match(staticHtml, /Both corrected local-policy cuts have exact checksum-bound Jarrad approval/);
   assert.match(staticHtml, /Terms Glossary v10 local policy cut/);
   assert.match(staticHtml, /KPIs and Sales Telemetry v12 local policy cut/);
   assert.match(staticHtml, /Local edit decision/);
-  assert.match(staticHtml, /Exact review question/);
-  assert.match(staticHtml, /Do you approve the exact KPIs v12 local policy-cut candidate/);
+  assert.match(staticHtml, /Exact review status/);
+  assert.match(staticHtml, /Terms v10 and KPIs v12 are exact-cut approved/);
   assert.match(staticHtml, /APPROVED EXACT CUT/);
   assert.match(staticHtml, /Orientation → Welcome and Mindset/);
   assert.match(
@@ -444,9 +444,9 @@ test("static and verified pages make trust state and caption availability explic
   assert.equal(
     ariaLabels.filter((label) => label.includes("corrected review candidate"))
       .length,
-    1,
+    0,
   );
-  assert.equal(ariaLabels.filter((label) => label.includes("approved exact cut")).length, 1);
+  assert.equal(ariaLabels.filter((label) => label.includes("approved exact cut")).length, 2);
   assert.equal(
     ariaLabels.filter((label) => label.includes("policy-defective source evidence"))
       .length,
@@ -456,22 +456,22 @@ test("static and verified pages make trust state and caption availability explic
   assert.equal(
     (staticHtml.match(/data-review-kind="pending-review-candidate"/g) || [])
       .length,
-    1,
+    0,
   );
-  assert.equal((staticHtml.match(/data-review-kind="approved-exact-cut"/g) || []).length, 1);
+  assert.equal((staticHtml.match(/data-review-kind="approved-exact-cut"/g) || []).length, 2);
   assert.equal(
     (staticHtml.match(/data-review-kind="replacement-source-evidence"/g) || [])
       .length,
     9,
   );
-  assert.equal((staticHtml.match(/<track [^>]* default>/g) || []).length, 4);
+  assert.equal((staticHtml.match(/<track [^>]* default>/g) || []).length, 5);
   assert.equal(
     (
       staticHtml.match(
         /Captions and a transcript are intentionally not finalized/g,
       ) || []
     ).length,
-    1,
+    0,
   );
   assert.match(staticHtml, /Learner captions and transcript are finalized and approved for this exact cut/);
   assert.match(staticHtml, /Why this correction was required:/);
@@ -489,9 +489,10 @@ test("static and verified pages make trust state and caption availability explic
     /<article class="card" data-source-key="video-slot-16-kpis" data-checksum="3d50cc79cfe74277ac1311367d5b0bd6fd62d2d38c2c74fff8732ea62203d61a"[\s\S]*?<\/article>/,
   )?.[0];
   assert.ok(kpiCard);
-  assert.match(kpiCard, /data-review-kind="pending-review-candidate"/);
-  assert.match(kpiCard, /JARRAD REVIEW REQUIRED/);
-  assert.match(kpiCard, /corrected review candidate 1 of 1/);
+  assert.match(kpiCard, /data-review-kind="approved-exact-cut"/);
+  assert.match(kpiCard, /APPROVED EXACT CUT/);
+  assert.match(kpiCard, /Approved learner accessibility/);
+  assert.doesNotMatch(kpiCard, /JARRAD REVIEW REQUIRED|corrected review candidate/);
 });
 
 test("approved exact cuts reject mixed or unlocked learner derivative metadata", async () => {
@@ -515,7 +516,7 @@ test("approved exact cuts reject mixed or unlocked learner derivative metadata",
   );
 });
 
-test("the review surface keeps all originals as evidence and exposes only KPIs v12 for decision", async () => {
+test("the review surface keeps all originals as evidence with both corrected cuts approved", async () => {
   const [manifest, approvalLedger, localPolicyCandidates] = await Promise.all([
     manifestPromise,
     approvalLedgerPromise,
@@ -526,10 +527,10 @@ test("the review surface keeps all originals as evidence and exposes only KPIs v
     localPolicyCandidates,
   });
   assert.equal((html.match(/REPLACEMENT REQUIRED/g) || []).length, 9);
-  assert.equal((html.match(/JARRAD REVIEW REQUIRED/g) || []).length, 1);
-  assert.equal((html.match(/APPROVED EXACT CUT/g) || []).length, 1);
-  assert.equal((html.match(/data-review-kind="pending-review-candidate"/g) || []).length, 1);
-  assert.equal((html.match(/data-review-kind="approved-exact-cut"/g) || []).length, 1);
+  assert.equal((html.match(/JARRAD REVIEW REQUIRED/g) || []).length, 0);
+  assert.equal((html.match(/APPROVED EXACT CUT/g) || []).length, 2);
+  assert.equal((html.match(/data-review-kind="pending-review-candidate"/g) || []).length, 0);
+  assert.equal((html.match(/data-review-kind="approved-exact-cut"/g) || []).length, 2);
   assert.equal((html.match(/data-review-kind="replacement-source-evidence"/g) || []).length, 9);
   assert.doesNotMatch(html, /data-review-kind="corrected-review-candidate"/);
   for (const reason of REPLACEMENT_REQUIRED_CUTS.values()) {
@@ -557,7 +558,7 @@ test("the review surface keeps all originals as evidence and exposes only KPIs v
         /Captions and a transcript are intentionally not finalized for this candidate while exact-file approval is pending\./g,
       ) || []
     ).length,
-    1,
+    0,
   );
 });
 
@@ -632,7 +633,7 @@ test("the verified server serves only locked routes with no-store and byte range
     assert.equal(ledgerResponse.status, 200);
     assert.match(ledgerResponse.headers.get("cache-control"), /no-store/);
     const ledger = await ledgerResponse.json();
-    assert.equal(ledger.records.length, 8);
+    assert.equal(ledger.records.length, 7);
     assert.equal(
       ledger.records.filter((record) => record.decision === "pending").length,
       6,
@@ -640,7 +641,7 @@ test("the verified server serves only locked routes with no-store and byte range
     assert.equal(
       ledger.records.filter((record) => record.decision === "changes_requested")
         .length,
-      2,
+      1,
     );
 
     const unknownResponse = await fetch(new URL("/media/not-locked.mp4", url));

@@ -35,7 +35,7 @@
     },
     {
       "id": "role_title",
-      "pattern": "\\b(?:virtual onboarding specialist|lead sourcing specialist|lead sourcing seat|acquisition manager|acquisitions manager|acquisition team|acquisition responsibilities?|transaction coordinator|follow-up specialist|setter|closer|sales manager|team lead)\\b",
+      "pattern": "\\b(?:navigator|virtual onboarding specialist|lead sourcing specialist|lead sourcing seat|acquisition manager|acquisitions manager|acquisition team|acquisition responsibilities?|transaction coordinator|follow-up specialist|setter|closer|sales manager|team lead)\\b",
       "flags": "i",
       "reason": "Scripts must remain role-agnostic."
     },

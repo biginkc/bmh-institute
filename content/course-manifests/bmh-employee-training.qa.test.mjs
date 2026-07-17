@@ -150,7 +150,7 @@ test("the manifest passes structural and semantic content QA", async () => {
     report.publicationBlockers.filter((blocker) =>
       blocker.includes("requires a policy-safe replacement cut"),
     ).length,
-    8,
+    7,
   );
   assert.ok(
     report.publicationBlockers.some((blocker) =>
@@ -189,6 +189,23 @@ test("Closer Lab publication blockers are trim and case robust", async () => {
 
 test("known held cuts are immutable and never replaced by older files", async () => {
   const manifest = await loadManifest(MANIFEST_URL);
+  const approvedKpis = manifest.assets.find(
+    (asset) => asset.source_key === "video-slot-16-kpis",
+  );
+  assert.deepEqual(
+    {
+      approval_status: approvedKpis?.approval_status,
+      local_path: approvedKpis?.local_path,
+      checksum_sha256: approvedKpis?.checksum_sha256,
+      size_bytes: approvedKpis?.size_bytes,
+    },
+    {
+      approval_status: "approved",
+      local_path: "course-assets/review-lesson12A/LESSON-12A-v12-LOCAL-POLICY-CUT.mp4",
+      checksum_sha256: "3d50cc79cfe74277ac1311367d5b0bd6fd62d2d38c2c74fff8732ea62203d61a",
+      size_bytes: 53799917,
+    },
+  );
   const heldVideos = manifest.assets
     .filter((asset) => asset.kind === "video" && asset.approval_status === "hold")
     .map(({ source_key, local_path, checksum_sha256, size_bytes }) => ({
@@ -222,12 +239,6 @@ test("known held cuts are immutable and never replaced by older files", async ()
       local_path: "course-assets/review-lesson11A/LESSON-11A-v4.mp4",
       checksum_sha256: "6e3aa1b007117b303a05906ca8443a8b9bc38f7c44bd61475c5437b99e7c90d2",
       size_bytes: 55329810,
-    },
-    {
-      source_key: "video-slot-16-kpis",
-      local_path: "course-assets/review-lesson12A/LESSON-12A-v11.mp4",
-      checksum_sha256: "439f8d06d2e449637509f0f21f9d0b4a5464c65aec1995fca7147e4e4e67310b",
-      size_bytes: 56052870,
     },
     {
       source_key: "video-slot-17-compensation",

@@ -111,10 +111,10 @@
       "sha256": "3d50cc79cfe74277ac1311367d5b0bd6fd62d2d38c2c74fff8732ea62203d61a",
       "candidate_local_path": "course-assets/review-lesson12A/LESSON-12A-v12-LOCAL-POLICY-CUT.mp4",
       "title": "KPIs and Sales Telemetry v12 local policy cut",
-      "decision": "pending",
-      "approver": null,
-      "date": null,
-      "notes": null
+      "decision": "approved",
+      "approver": "Jarrad Henry",
+      "date": "2026-07-17",
+      "notes": "Jarrad approved this exact checksum-locked KPIs and Sales Telemetry v12 local policy cut after reviewing it on the verified local review surface."
     }
   ]
 }

@@ -535,7 +535,19 @@
       "evidence_commit_sha": "4af5a5220e60de50fbf28ff283d385c6366e676d",
       "evidence_path": "docs/course-production/caption-evidence/approved-caption-bindings-2026-07-17-v2.json",
       "evidence_sha256": "c1f9b434f49b9335ab5739c22ebf26b2472cacb84bc1c4323497df14e9c9812f"
+    },
+    {
+      "video_source_key": "video-slot-16-kpis",
+      "video_sha256": "3d50cc79cfe74277ac1311367d5b0bd6fd62d2d38c2c74fff8732ea62203d61a",
+      "caption_sha256": "c2ed78ac3e54d5d589e7fbeb7f7a6cd68fb08f68ef1f7c411c74abf39cbd198c",
+      "transcript_sha256": "a2c08ac1daaf8d8950a38aaf46ef36ebc84e1d3f23a40c9fb5692c68bc444feb",
+      "status": "approved",
+      "reviewed_by": "BMH Institute content QA evidence",
+      "decision_source": "content_qa_generation_and_validation",
+      "reviewed_at": "2026-07-17T22:48:20Z",
+      "evidence_commit_sha": "ff02204260f81e0e24e64f3935bbe2d987c4434d",
+      "evidence_path": "docs/course-production/caption-evidence/video-slot-16-kpis-v12-2026-07-17.json",
+      "evidence_sha256": "c32e2083856d418512200a84df8c261b4d166dcfd1dc72ceec7ed2031bc08a1d"
     }
   ]
 }
-

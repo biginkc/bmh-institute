@@ -50,10 +50,11 @@ checked-in fallback HTML is stale. The page distinguishes approved candidates,
 pending candidates, and policy-defective source evidence without changing any
 of those decisions.
 
-Terms Glossary v10 is recorded as `APPROVED EXACT CUT`. KPIs v12 is the only
-card currently marked `JARRAD REVIEW REQUIRED`. Record any further decision with
-the displayed SHA-256, approval date, and approver. A filename by itself is not
-an approval. The nine original cards are marked `REPLACEMENT REQUIRED`; their
+Terms Glossary v10 and KPIs v12 are recorded as `APPROVED EXACT CUT`. No corrected
+candidate remains marked `JARRAD REVIEW REQUIRED`. Any future replacement must
+receive a new checksum-keyed record with the displayed SHA-256, approval date,
+and approver; a filename by itself is not an approval. The nine original cards
+are marked `REPLACEMENT REQUIRED`; their
 exact policy-defective hashes are already `changes_requested` and the validator
 forbids approving them. Use the linked `approvals.json` ledger. The verifier
 locks and serves this file with the review surface, and stops if it changes

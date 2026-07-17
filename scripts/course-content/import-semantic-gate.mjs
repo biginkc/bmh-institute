@@ -8,6 +8,11 @@ import { validateArtworkManifestTrustBoundary } from "./build-manifest.mjs";
 import { inspectApprovedCaptionAssets } from "./validate-caption-assets.mjs";
 import { validateCaptionApprovalHistory, validateCaptionApprovalLedger } from "./caption-approval-ledger.mjs";
 import {
+  REVIEWED_VIDEO_SOURCE_KEYS,
+  validateHeldVideoApprovalHistory,
+} from "./held-video-approval-ledger.mjs";
+import { localPolicyCandidateAssets } from "./held-video-local-policy-candidates.mjs";
+import {
   fetchCloserProductionGraph,
   rolePlayBindings,
   validateScenarioProductionTrust,
@@ -34,6 +39,10 @@ const ARTWORK_INVENTORY_PATH = join(
 const CAPTION_APPROVAL_LEDGER_PATH = join(
   REPO_ROOT,
   "docs/course-production/caption-approvals.json",
+);
+const VIDEO_APPROVAL_LEDGER_PATH = join(
+  REPO_ROOT,
+  "docs/course-production/held-video-review/approvals.json",
 );
 const SCENARIO_MAPPING_LEDGER_PATH = join(
   REPO_ROOT,
@@ -79,6 +88,8 @@ async function validateBmhFileBackedReleaseTrust({
   manifest,
   artworkLedger,
   captionApprovalLedger,
+  videoApprovalLedger,
+  localPolicyCandidates,
 }) {
   const blockers = await validateBmhArtworkReleaseTrust({ manifest, artworkLedger });
   const captionReport = await inspectApprovedCaptionAssets(
@@ -100,6 +111,21 @@ async function validateBmhFileBackedReleaseTrust({
   }));
   blockers.push(...captionApprovalErrors.map(
     (error) => `Caption/transcript approval trust failed: ${error}`,
+  ));
+  const currentReviewAssets = [
+    ...(manifest.assets ?? []).filter((asset) =>
+      asset.kind === "video" && REVIEWED_VIDEO_SOURCE_KEYS.has(asset.source_key),
+    ),
+    ...localPolicyCandidateAssets(localPolicyCandidates),
+  ];
+  const videoHistoryErrors = await validateHeldVideoApprovalHistory({
+    ledger: videoApprovalLedger,
+    currentReviewAssets,
+    repoRoot: REPO_ROOT,
+    ledgerPath: VIDEO_APPROVAL_LEDGER_PATH,
+  });
+  blockers.push(...videoHistoryErrors.map(
+    (error) => `Held-video approval history trust failed: ${error}`,
   ));
   return blockers;
 }
@@ -175,6 +201,8 @@ export async function validateBmhImportSemanticGate({
       manifest,
       artworkLedger,
       captionApprovalLedger,
+      videoApprovalLedger: approvalLedger,
+      localPolicyCandidates,
     });
     const scenarioTrust = await validateScenarioTrust(manifest);
     const identityErrors = isDeepStrictEqual(manifest, canonicalFull)
@@ -204,6 +232,8 @@ export async function validateBmhImportSemanticGate({
     manifest: full,
     artworkLedger,
     captionApprovalLedger,
+    videoApprovalLedger: approvalLedger,
+    localPolicyCandidates,
   });
   const scenarioTrust = rolePlayBindings(manifest).length > 0
     ? await validateScenarioTrust(manifest)

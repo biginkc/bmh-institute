@@ -202,7 +202,7 @@
         "id": "video-contact-sheet-slot-16",
         "role": "checksum-bound exact mapped-video contact sheet",
         "path": "docs/course-production/thumbnail-pilots/references/production-video-stills/slot-16-contact-sheet.png",
-        "sha256": "4e68fd96304a6c91c47c3ed152c225670fdd601decd88ac5673a42885b295632",
+        "sha256": "0b62249aa98f629dc676d7184b392aaca3fa8b880f9e844abc13a73c64b2bc56",
         "dimensions": [
           960,
           180
@@ -6354,15 +6354,15 @@
         "video_evidence": [
           {
             "asset_key": "video-slot-16-kpis",
-            "local_path": "course-assets/review-lesson12A/LESSON-12A-v11.mp4",
-            "checksum_sha256": "439f8d06d2e449637509f0f21f9d0b4a5464c65aec1995fca7147e4e4e67310b",
-            "size_bytes": 56052870,
-            "approval_status": "hold",
-            "duration_seconds": 402.154,
+            "local_path": "course-assets/review-lesson12A/LESSON-12A-v12-LOCAL-POLICY-CUT.mp4",
+            "checksum_sha256": "3d50cc79cfe74277ac1311367d5b0bd6fd62d2d38c2c74fff8732ea62203d61a",
+            "size_bytes": 53799917,
+            "approval_status": "approved",
+            "duration_seconds": 400.994,
             "frame_timestamps_seconds": [
-              80.431,
-              201.077,
-              321.723
+              80.199,
+              200.497,
+              320.795
             ]
           }
         ],
@@ -6370,7 +6370,7 @@
           "id": "video-contact-sheet-slot-16",
           "role": "checksum-bound exact mapped-video contact sheet",
           "path": "docs/course-production/thumbnail-pilots/references/production-video-stills/slot-16-contact-sheet.png",
-          "sha256": "4e68fd96304a6c91c47c3ed152c225670fdd601decd88ac5673a42885b295632",
+          "sha256": "0b62249aa98f629dc676d7184b392aaca3fa8b880f9e844abc13a73c64b2bc56",
           "dimensions": [
             960,
             180

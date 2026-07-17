@@ -34,6 +34,7 @@ import {
   reviewMaster,
   sha256,
   validateLedger,
+  validateOutputGenerationProvenance,
   withWorkflowLock,
   writeJsonAtomic,
 } from "./artwork-production-workflow.mjs";
@@ -289,6 +290,14 @@ test("tracked ledger validates the active fail-closed lifecycle while preserving
   for (const asset of tracked.assets) {
     const manifestAsset = manifest.assets.find((candidate) => candidate.source_key === asset.asset_key);
     assert.equal(asset.base_storage_path, manifestAsset.storage_path, `${asset.asset_key} base storage path must match the preapproval manifest`);
+    if (asset.checksum_sha256) {
+      assert.equal(asset.provenance.reference_ids.every((id) => typeof id === "string" && id.length > 0), true, `${asset.asset_key} has an empty generation reference id`);
+      assert.deepEqual(
+        asset.provenance.reference_ids,
+        asset.provenance.reference_inputs.map((input) => input.id),
+        `${asset.asset_key} generation reference ids do not map to exact inputs`,
+      );
+    }
   }
   assert.deepEqual(
     new Set(tracked.assets.filter((asset) => asset.kind === "video-poster").map((asset) => asset.derivative.recipe.crop_pixels_after_normalize.join(","))),
@@ -328,6 +337,22 @@ test("only a pristine preapproval ledger may be refreshed after inventory eviden
     const candidate = structuredClone(pristine);
     mutate(candidate);
     assert.equal(isPristinePreapprovalLedger(candidate), false);
+  }
+});
+
+test("current video evidence drift cannot rebind immutable output generation provenance", async () => {
+  const tracked = await readJson(resolveRepoPath(REPO_ROOT, DEFAULT_PATHS.ledger));
+  const master = tracked.masters.find((candidate) => candidate.id === "master-slot-16");
+  const outputs = tracked.assets.filter((asset) => asset.provenance.master_id === master.id);
+  assert.equal(master.video_evidence[0].local_path, "course-assets/review-lesson12A/LESSON-12A-v12-LOCAL-POLICY-CUT.mp4");
+  assert.equal(master.contact_sheet_input.sha256, "0b62249aa98f629dc676d7184b392aaca3fa8b880f9e844abc13a73c64b2bc56");
+  for (const output of outputs) {
+    assert.equal(validateOutputGenerationProvenance(output, master), true);
+    assert.equal(output.provenance.reference_inputs.at(-1).path, "docs/course-production/thumbnail-pilots/references/production-video-stills/historical/slot-16-kpis-v11-contact-sheet.png");
+    const forged = structuredClone(output);
+    forged.provenance.reference_inputs = structuredClone(master.reference_inputs);
+    forged.provenance.reference_ids = structuredClone(master.reference_ids);
+    assert.throws(() => validateOutputGenerationProvenance(forged, master), /generation reference provenance drifted/);
   }
 });
 
@@ -1244,6 +1269,11 @@ test("correction archives rejected derivatives and authorizes only their exact r
   assert.equal(output.checksum_sha256, crashedChecksum, "restart must adopt deterministic candidate bytes already published before ledger persistence");
   assert.notEqual(output.checksum_sha256, firstChecksum);
   assert.equal(output.replacement_authorized_checksum, null);
+  assert.equal(output.provenance.lineage_steps, 2);
+  assert.equal(output.provenance.prompt_sha256, master.lineage[1].prompt_sha256);
+  assert.equal(output.provenance.terminal_source_sha256, master.lineage[1].output_sha256);
+  assert.equal(output.provenance.flat_master_sha256, master.flat_master_sha256);
+  assert.equal(validateOutputGenerationProvenance(output, master), true);
   const inspected = await inspectArtworkFile(root, output, ledger.palette_rgb);
   assert.equal(inspected.checksum_sha256, output.checksum_sha256);
 });
@@ -1283,6 +1313,71 @@ test("pipeline reprocess archives exact prior bytes and deterministically rebuil
   assert.equal(output.replacement_authorized_checksum, null);
 });
 
+test("review provenance binds the current video and contact-sheet context without rebinding generation", async (t) => {
+  const root = await tempRoot(t);
+  const ledger = productionLedger();
+  const masterId = "master-slot-16";
+  const master = ledger.masters.find((candidate) => candidate.id === masterId);
+  const source = await writeRepoFile(root, "provider/review-context.png", await rgbPng(master.background_rgb));
+  await ingestGeneration({
+    root,
+    ledger,
+    masterId,
+    sourceFile: source,
+    generationCallId: "call-review-context",
+    toolOutputId: "output-review-context",
+    generatedAt: "2026-07-16T22:03:00.000Z",
+    generatedBy: "test",
+  });
+  await deriveMaster({ root, ledger, masterId });
+  const outputs = ledger.assets.filter((asset) => asset.provenance.master_id === masterId);
+  const generationSnapshots = new Map(outputs.map((asset) => [asset.asset_key, structuredClone(asset.provenance)]));
+  const ordinaryBindings = [master.id, master.terminal_source_sha256, master.flat_master_sha256];
+  for (const output of outputs) ordinaryBindings.push(output.asset_key, output.checksum_sha256, output.pixel_sha256);
+  const missingContextEvidence = "evidence/review-without-video-context.txt";
+  await writeRepoFile(root, missingContextEvidence, ordinaryBindings.join("\n"));
+  await assert.rejects(
+    reviewMaster({
+      root,
+      ledger,
+      masterId,
+      decision: "approved",
+      reviewedBy: "reviewer",
+      reviewedAt: "2026-07-16T22:04:00.000Z",
+      evidence: missingContextEvidence,
+    }),
+    /does not bind/,
+  );
+  const contextBindings = [
+    ...ordinaryBindings,
+    ...master.video_evidence.flatMap((entry) => [entry.asset_key, entry.local_path, entry.checksum_sha256]),
+    master.contact_sheet_input.id,
+    master.contact_sheet_input.path,
+    master.contact_sheet_input.sha256,
+  ];
+  const evidence = "evidence/review-with-video-context.txt";
+  await writeRepoFile(root, evidence, contextBindings.join("\n"));
+  await reviewMaster({
+    root,
+    ledger,
+    masterId,
+    decision: "approved",
+    reviewedBy: "reviewer",
+    reviewedAt: "2026-07-16T22:04:00.000Z",
+    evidence,
+  });
+  for (const output of outputs) {
+    const generation = generationSnapshots.get(output.asset_key);
+    for (const field of ["lineage_steps", "prompt_sha256", "reference_ids", "reference_inputs", "terminal_source_sha256", "flat_master_sha256"]) {
+      assert.deepEqual(output.provenance[field], generation[field], `${output.asset_key} review rebound ${field}`);
+    }
+    assert.deepEqual(output.review_provenance.video_evidence, master.video_evidence);
+    assert.deepEqual(output.review_provenance.contact_sheet_input, master.contact_sheet_input);
+    assert.equal(output.review_provenance.lineage_sequence, master.lineage.length);
+    assert.equal(output.review_provenance.evidence, evidence);
+  }
+});
+
 test("poster-only correction preserves the approved card bytes while replacing every poster from the corrected source", async (t) => {
   const root = await tempRoot(t);
   const ledger = productionLedger();
@@ -1314,6 +1409,7 @@ test("poster-only correction preserves the approved card bytes while replacing e
   const priorCardContents = await readFile(resolveRepoPath(root, card.output_path));
   const priorCardChecksum = card.checksum_sha256;
   const priorFlatChecksum = master.flat_master_sha256;
+  const priorCardGenerationProvenance = structuredClone(card.provenance);
   const priorPosterChecksums = new Map(posters.map((poster) => [poster.asset_key, poster.checksum_sha256]));
   const correctionPromptPath = "evidence/poster-only-correction.txt";
   await writeRepoFile(root, correctionPromptPath, "Recompose the poster-safe subject clusters without changing the passed lesson card.\n");
@@ -1361,12 +1457,25 @@ test("poster-only correction preserves the approved card bytes while replacing e
   assert.equal(sha256(currentCardContents), sha256(priorCardContents));
   assert.equal(card.checksum_sha256, priorCardChecksum);
   assert.equal(currentCardContents.equals(priorCardContents), true, "preserved card bytes must remain exact");
-  assert.equal(card.provenance.preserved_from_flat_master_sha256, priorFlatChecksum);
+  assert.deepEqual(card.provenance, priorCardGenerationProvenance, "preserved card generation provenance must remain exact");
+  assert.equal(card.provenance.flat_master_sha256, priorFlatChecksum);
+  assert.equal(card.provenance.lineage_steps, 1);
+  assert.equal(validateOutputGenerationProvenance(card, master), true);
   assert.notEqual(master.flat_master_sha256, priorFlatChecksum);
   for (const poster of posters) {
     assert.notEqual(poster.checksum_sha256, priorPosterChecksums.get(poster.asset_key));
     assert.equal(poster.history.at(-1).checksum_sha256, priorPosterChecksums.get(poster.asset_key));
+    assert.equal(poster.provenance.lineage_steps, 2);
+    assert.equal(validateOutputGenerationProvenance(poster, master), true);
   }
+  const forgedRebind = structuredClone(card);
+  forgedRebind.provenance.lineage_steps = master.lineage.length;
+  forgedRebind.provenance.prompt_sha256 = master.lineage.at(-1).prompt_sha256;
+  forgedRebind.provenance.reference_inputs = structuredClone(master.lineage.at(-1).reference_inputs);
+  forgedRebind.provenance.reference_ids = master.lineage.at(-1).reference_inputs.map((input) => input.id);
+  forgedRebind.provenance.terminal_source_sha256 = master.lineage.at(-1).output_sha256;
+  forgedRebind.provenance.flat_master_sha256 = master.flat_master_sha256;
+  assert.throws(() => validateOutputGenerationProvenance(forgedRebind, master), /generation sequence drifted/);
 });
 
 test("V8 texture exceptions are exact-checksum scoped and cannot transfer to replacement bytes", async () => {

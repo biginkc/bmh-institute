@@ -11,7 +11,7 @@ export const LOCAL_POLICY_CANDIDATES_PATH = join(
 );
 
 export const EXACT_LOCAL_POLICY_REVIEW_QUESTION =
-  "Do you approve the exact KPIs v12 local policy-cut candidate? Terms v10 is already approved, and all seven replacement-video packages remain separately gated from provider generation.";
+  "Terms v10 and KPIs v12 are exact-cut approved. All seven replacement-video packages remain separately gated from provider generation.";
 
 const EXPECTED_CANDIDATES = new Map([
   [

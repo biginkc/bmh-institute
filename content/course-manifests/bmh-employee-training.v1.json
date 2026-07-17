@@ -251,12 +251,12 @@
     {
       "source_key": "video-slot-16-kpis",
       "kind": "video",
-      "local_path": "course-assets/review-lesson12A/LESSON-12A-v11.mp4",
-      "storage_path": "courses/bmh-employee-training/v1/videos/video-slot-16-kpis.439f8d06d2e449637509f0f21f9d0b4a5464c65aec1995fca7147e4e4e67310b.mp4",
+      "local_path": "course-assets/review-lesson12A/LESSON-12A-v12-LOCAL-POLICY-CUT.mp4",
+      "storage_path": "courses/bmh-employee-training/v1/videos/video-slot-16-kpis.3d50cc79cfe74277ac1311367d5b0bd6fd62d2d38c2c74fff8732ea62203d61a.mp4",
       "mime_type": "video/mp4",
-      "checksum_sha256": "439f8d06d2e449637509f0f21f9d0b4a5464c65aec1995fca7147e4e4e67310b",
-      "size_bytes": 56052870,
-      "approval_status": "hold"
+      "checksum_sha256": "3d50cc79cfe74277ac1311367d5b0bd6fd62d2d38c2c74fff8732ea62203d61a",
+      "size_bytes": 53799917,
+      "approval_status": "approved"
     },
     {
       "source_key": "video-slot-17-compensation",
@@ -782,21 +782,21 @@
       "source_key": "caption-video-slot-16-kpis",
       "kind": "caption",
       "local_path": "course-assets/captions/video-slot-16-kpis.vtt",
-      "storage_path": "courses/bmh-employee-training/v1/captions/video-slot-16-kpis.vtt",
+      "storage_path": "courses/bmh-employee-training/v1/captions/video-slot-16-kpis.c2ed78ac3e54d5d589e7fbeb7f7a6cd68fb08f68ef1f7c411c74abf39cbd198c.vtt",
       "mime_type": "text/vtt",
-      "checksum_sha256": null,
-      "size_bytes": null,
-      "approval_status": "missing"
+      "checksum_sha256": "c2ed78ac3e54d5d589e7fbeb7f7a6cd68fb08f68ef1f7c411c74abf39cbd198c",
+      "size_bytes": 9907,
+      "approval_status": "approved"
     },
     {
       "source_key": "transcript-video-slot-16-kpis",
       "kind": "transcript",
       "local_path": "course-assets/transcripts/video-slot-16-kpis.md",
-      "storage_path": "courses/bmh-employee-training/v1/transcripts/video-slot-16-kpis.md",
+      "storage_path": "courses/bmh-employee-training/v1/transcripts/video-slot-16-kpis.a2c08ac1daaf8d8950a38aaf46ef36ebc84e1d3f23a40c9fb5692c68bc444feb.md",
       "mime_type": "text/markdown",
-      "checksum_sha256": null,
-      "size_bytes": null,
-      "approval_status": "missing"
+      "checksum_sha256": "a2c08ac1daaf8d8950a38aaf46ef36ebc84e1d3f23a40c9fb5692c68bc444feb",
+      "size_bytes": 6152,
+      "approval_status": "approved"
     },
     {
       "source_key": "caption-video-slot-17-compensation",
@@ -12731,7 +12731,7 @@
                       "transcript_asset_key": "transcript-video-slot-16-kpis",
                       "title": "KPIs and Sales Telemetry",
                       "part_label": null,
-                      "duration_seconds": 402.154
+                      "duration_seconds": 400.994
                     }
                   },
                   {
