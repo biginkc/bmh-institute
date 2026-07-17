@@ -101,10 +101,10 @@
       "sha256": "6f57600d6ec3a596f96175052eda997503ab9b72aa5b7e9ec02239fe1a125769",
       "candidate_local_path": "course-assets/review-lessonGLOA/LESSON-GLOA-v10-LOCAL-POLICY-CUT.mp4",
       "title": "Terms Glossary v10 local policy cut",
-      "decision": "pending",
-      "approver": null,
-      "date": null,
-      "notes": null
+      "decision": "approved",
+      "approver": "Jarrad Henry",
+      "date": "2026-07-17",
+      "notes": "Jarrad approved this exact checksum-locked Terms Glossary v10 local policy cut after reviewing it on the verified local review surface."
     },
     {
       "source_key": "video-slot-16-kpis",

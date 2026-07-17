@@ -1,8 +1,8 @@
 {
   "schema_version": "1.0.0",
-  "status": "local_review_candidates_unapproved",
+  "status": "local_review_candidates",
   "updated_at": "2026-07-17",
-  "review_question": "Do you approve the Terms v10 and KPIs v12 local policy-cut candidates and authorize policy-safe replacement recuts for Welcome, Mindset, Objection Scripts Playbook, and Closing and Deal Engineering?",
+  "review_question": "Do you approve the KPIs v12 local policy-cut candidate and authorize policy-safe replacement recuts for Welcome, Mindset, Objection Scripts Playbook, and Closing and Deal Engineering?",
   "candidates": [
     {
       "candidate_id": "terms-v10-local-policy-cut",
@@ -12,7 +12,7 @@
       "sha256": "6f57600d6ec3a596f96175052eda997503ab9b72aa5b7e9ec02239fe1a125769",
       "size_bytes": 104384792,
       "duration_seconds": 449.534,
-      "approval_status": "pending_unapproved",
+      "approval_status": "approved_exact_cut",
       "source_sha256": "17cac99f171edfb773f85eaaa6719e09ffe1295abec5b062554c72958747c0bb",
       "review_reason": "Removes the forbidden acquisition-manager role title while preserving the lesson meaning.",
       "resulting_line": "Don't hang up, but do note it. Sometimes listed properties don't sell...",

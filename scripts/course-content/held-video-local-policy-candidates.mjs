@@ -11,7 +11,7 @@ export const LOCAL_POLICY_CANDIDATES_PATH = join(
 );
 
 export const EXACT_LOCAL_POLICY_REVIEW_QUESTION =
-  "Do you approve the Terms v10 and KPIs v12 local policy-cut candidates and authorize policy-safe replacement recuts for Welcome, Mindset, Objection Scripts Playbook, and Closing and Deal Engineering?";
+  "Do you approve the KPIs v12 local policy-cut candidate and authorize policy-safe replacement recuts for Welcome, Mindset, Objection Scripts Playbook, and Closing and Deal Engineering?";
 
 const EXPECTED_CANDIDATES = new Map([
   [
@@ -50,8 +50,8 @@ export function validateLocalPolicyCandidates(inventory, manifest, approvalLedge
   if (inventory?.schema_version !== "1.0.0") {
     errors.push("local policy candidate inventory schema_version must be 1.0.0");
   }
-  if (inventory?.status !== "local_review_candidates_unapproved") {
-    errors.push("local policy candidate inventory must remain unapproved");
+  if (inventory?.status !== "local_review_candidates") {
+    errors.push("local policy candidate inventory status must be local_review_candidates");
   }
   if (inventory?.review_question !== EXACT_LOCAL_POLICY_REVIEW_QUESTION) {
     errors.push("local policy candidate inventory review question changed");
@@ -90,9 +90,6 @@ export function validateLocalPolicyCandidates(inventory, manifest, approvalLedge
     if (!safeRelativePath(candidate.local_path)) {
       errors.push(`${candidate.candidate_id} local_path must be a safe relative path`);
     }
-    if (candidate.approval_status !== "pending_unapproved") {
-      errors.push(`${candidate.candidate_id} must remain pending_unapproved`);
-    }
     if (!Number.isFinite(candidate.duration_seconds) || candidate.duration_seconds <= 0) {
       errors.push(`${candidate.candidate_id} needs a positive duration_seconds`);
     }
@@ -120,24 +117,39 @@ export function validateLocalPolicyCandidates(inventory, manifest, approvalLedge
     const sourceAsset = manifest?.assets?.find(
       (asset) => asset.source_key === candidate.source_key && asset.kind === "video",
     );
-    if (!sourceAsset || sourceAsset.checksum_sha256 !== candidate.source_sha256) {
-      errors.push(`${candidate.candidate_id} source cut no longer matches the manifest`);
-    }
-    if (sourceAsset?.approval_status !== "hold") {
-      errors.push(`${candidate.candidate_id} source cut must remain held`);
-    }
     const ledgerRecord = approvalLedger?.records?.find(
       (record) => record.source_key === candidate.source_key && record.sha256 === candidate.sha256,
     );
-    if (
-      !ledgerRecord
-      || ledgerRecord.decision !== "pending"
-      || ledgerRecord.approver !== null
-      || ledgerRecord.date !== null
-      || ledgerRecord.notes !== null
-      || ledgerRecord.candidate_local_path !== candidate.local_path
-    ) {
-      errors.push(`${candidate.candidate_id} needs an exact pending unapproved ledger record`);
+    if (!ledgerRecord || ledgerRecord.candidate_local_path !== candidate.local_path) {
+      errors.push(`${candidate.candidate_id} needs an exact checksum-keyed ledger record`);
+      continue;
+    }
+    if (ledgerRecord.decision === "pending") {
+      if (
+        candidate.approval_status !== "pending_unapproved"
+        || ledgerRecord.approver !== null
+        || ledgerRecord.date !== null
+        || ledgerRecord.notes !== null
+      ) {
+        errors.push(`${candidate.candidate_id} pending inventory and ledger state do not match`);
+      }
+      if (!sourceAsset || sourceAsset.checksum_sha256 !== candidate.source_sha256 || sourceAsset.approval_status !== "hold") {
+        errors.push(`${candidate.candidate_id} pending source cut no longer matches the held manifest asset`);
+      }
+    } else if (ledgerRecord.decision === "approved") {
+      if (candidate.approval_status !== "approved_exact_cut") {
+        errors.push(`${candidate.candidate_id} approved inventory and ledger state do not match`);
+      }
+      const manifestIsPrePromotion = sourceAsset?.checksum_sha256 === candidate.source_sha256
+        && sourceAsset?.approval_status === "hold";
+      const manifestIsPromoted = sourceAsset?.checksum_sha256 === candidate.sha256
+        && sourceAsset?.local_path === candidate.local_path
+        && sourceAsset?.approval_status === "approved";
+      if (!manifestIsPrePromotion && !manifestIsPromoted) {
+        errors.push(`${candidate.candidate_id} approved cut is neither awaiting promotion nor exactly promoted`);
+      }
+    } else {
+      errors.push(`${candidate.candidate_id} has unsupported terminal decision ${ledgerRecord.decision}`);
     }
   }
   for (const candidateId of EXPECTED_CANDIDATES.keys()) {
@@ -153,7 +165,7 @@ export function localPolicyCandidateAssets(inventory) {
     local_path: candidate.local_path,
     checksum_sha256: candidate.sha256,
     size_bytes: candidate.size_bytes,
-    approval_status: "hold",
+    approval_status: candidate.approval_status === "approved_exact_cut" ? "approved" : "hold",
     local_policy_candidate: candidate,
   }));
 }

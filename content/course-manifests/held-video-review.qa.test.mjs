@@ -89,7 +89,7 @@ const EXPECTED_QC_ROUTES = [
 }));
 
 test(
-  "the local review surface is locked to every held manifest video",
+  "the local review surface locks both candidates and all nine original source-evidence videos",
   {
     skip: canonicalMediaAvailable
       ? false
@@ -97,12 +97,18 @@ test(
   },
   async () => {
     const result = await verificationPromise;
-    const expectedHeldSourceKeys = await expectedHeldSourceKeysPromise;
-
     assert.deepEqual(result.sourceKeys, [
       "video-slot-02-terms",
       "video-slot-16-kpis",
-      ...expectedHeldSourceKeys,
+      "video-slot-01-welcome",
+      "video-slot-01-mindset",
+      "video-slot-02-terms",
+      "video-slot-10-objection-scripts",
+      "video-slot-15-closing",
+      "video-slot-16-kpis",
+      "video-slot-17-compensation",
+      "video-slot-18-operator",
+      "video-slot-19-career",
     ]);
     assert.equal(result.videoCount, 11);
     assert.equal(result.evidenceFileCount, 12);
@@ -356,12 +362,13 @@ test("static and verified pages make trust state and caption availability explic
     (staticHtml.match(/Checksum-locked QC evidence/g) || []).length,
     6,
   );
-  assert.match(staticHtml, /2 corrected candidates await Jarrad review/);
+  assert.match(staticHtml, /1 corrected candidate awaits Jarrad review/);
   assert.match(staticHtml, /Terms Glossary v10 local policy cut/);
   assert.match(staticHtml, /KPIs and Sales Telemetry v12 local policy cut/);
   assert.match(staticHtml, /Local edit decision/);
   assert.match(staticHtml, /Exact review question/);
-  assert.match(staticHtml, /Do you approve the Terms v10 and KPIs v12 local policy-cut candidates/);
+  assert.match(staticHtml, /Do you approve the KPIs v12 local policy-cut candidate/);
+  assert.match(staticHtml, /APPROVED EXACT CUT/);
   assert.match(staticHtml, /Orientation → Welcome and Mindset/);
   assert.match(
     staticHtml,
@@ -411,11 +418,12 @@ test("static and verified pages make trust state and caption availability explic
         /Captions and a transcript are intentionally not finalized/g,
       ) || []
     ).length,
-    2,
+    1,
   );
+  assert.match(staticHtml, /This exact cut is approved\. Learner captions and the transcript are being finalized/);
 });
 
-test("the review surface keeps all original cuts as evidence and exposes only the two local policy cuts for decision", async () => {
+test("the review surface keeps all originals as evidence and exposes only KPIs v12 for decision", async () => {
   const [manifest, approvalLedger, localPolicyCandidates] = await Promise.all([
     manifestPromise,
     approvalLedgerPromise,
@@ -426,7 +434,8 @@ test("the review surface keeps all original cuts as evidence and exposes only th
     localPolicyCandidates,
   });
   assert.equal((html.match(/REPLACEMENT REQUIRED/g) || []).length, 9);
-  assert.equal((html.match(/JARRAD REVIEW REQUIRED/g) || []).length, 2);
+  assert.equal((html.match(/JARRAD REVIEW REQUIRED/g) || []).length, 1);
+  assert.equal((html.match(/APPROVED EXACT CUT/g) || []).length, 1);
   assert.equal((html.match(/data-review-kind="local-policy-review-candidate"/g) || []).length, 2);
   assert.equal((html.match(/data-review-kind="replacement-source-evidence"/g) || []).length, 9);
   assert.doesNotMatch(html, /data-review-kind="corrected-review-candidate"/);
@@ -455,7 +464,7 @@ test("the review surface keeps all original cuts as evidence and exposes only th
         /Captions and a transcript are intentionally not finalized for this candidate while exact-file approval is pending\./g,
       ) || []
     ).length,
-    2,
+    1,
   );
 });
 
@@ -530,7 +539,7 @@ test("the verified server serves only locked routes with no-store and byte range
     assert.equal(ledgerResponse.status, 200);
     assert.match(ledgerResponse.headers.get("cache-control"), /no-store/);
     const ledger = await ledgerResponse.json();
-    assert.equal(ledger.records.length, 9);
+    assert.equal(ledger.records.length, 8);
     assert.equal(
       ledger.records.filter((record) => record.decision === "pending").length,
       6,
@@ -538,7 +547,7 @@ test("the verified server serves only locked routes with no-store and byte range
     assert.equal(
       ledger.records.filter((record) => record.decision === "changes_requested")
         .length,
-      3,
+      2,
     );
 
     const unknownResponse = await fetch(new URL("/media/not-locked.mp4", url));

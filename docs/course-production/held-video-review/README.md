@@ -46,10 +46,12 @@ approve a cut. The verified local-server page is the review surface.
 The verifier fails unless all nine source files and both candidate files match
 their byte sizes and SHA-256 values. It also checksum-locks the review-only captions and transcripts for
 Compensation Engine, Operator Playbook, and Career Growth Path, and fails if the
-checked-in fallback HTML is stale. The other eight videos deliberately explain
-that learner captions and transcripts remain pending exact-cut approval.
+checked-in fallback HTML is stale. The page distinguishes approved candidates,
+pending candidates, and policy-defective source evidence without changing any
+of those decisions.
 
-Watch the two cards marked `JARRAD REVIEW REQUIRED`. Record any approval with
+Terms Glossary v10 is recorded as `APPROVED EXACT CUT`. KPIs v12 is the only
+card currently marked `JARRAD REVIEW REQUIRED`. Record any further decision with
 the displayed SHA-256, approval date, and approver. A filename by itself is not
 an approval. The nine original cards are marked `REPLACEMENT REQUIRED`; their
 exact policy-defective hashes are already `changes_requested` and the validator
@@ -65,8 +67,14 @@ Validate a proposed ledger change before replacing the current ledger:
 node scripts/course-content/validate-held-video-approval-transition.mjs \
   path/to/current-approvals.json \
   path/to/proposed-approvals.json \
-  content/course-manifests/bmh-employee-training.v1.json
+  content/course-manifests/bmh-employee-training.v1.json \
+  path/to/proposed-local-policy-candidates.json
 ```
+
+The final argument is optional only when the proposed candidate inventory is
+already stored beside the proposed ledger. The command validates that inventory
+before it derives the allowed review assets; an arbitrary source key or checksum
+cannot widen the approval boundary.
 
 ## After a corrected cut is approved
 

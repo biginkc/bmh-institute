@@ -18,6 +18,7 @@ import {
   validateHeldVideoManifestApprovalState,
   validateHeldVideoApprovalTransition,
 } from "../../scripts/course-content/held-video-approval-ledger.mjs";
+import { validateLocalPolicyCandidates } from "../../scripts/course-content/held-video-local-policy-candidates.mjs";
 import { currentReviewedVideoRecord } from "../../scripts/course-content/build-manifest.mjs";
 
 const manifestPromise = readFile(
@@ -59,7 +60,7 @@ async function currentReviewAssets() {
       source_key: candidate.source_key,
       checksum_sha256: candidate.sha256,
       local_path: candidate.local_path,
-      approval_status: "hold",
+      approval_status: candidate.approval_status === "approved_exact_cut" ? "approved" : "hold",
     })),
   ];
 }
@@ -68,7 +69,7 @@ test("all seven policy recuts preserve source, objective, transition, and produc
   const result = await validateHeldVideoRecuts();
   assert.deepEqual(result, {
     approvalRecords: 11,
-    pendingApprovalRecords: 2,
+    pendingApprovalRecords: 1,
     recutPackages: 7,
     errors: [],
   });
@@ -106,7 +107,7 @@ test("the spoken policy rejects money, quotas, timelines, promises, and role tit
   }
 });
 
-test("two local policy cuts are pending and all nine original cuts are preserved as changes requested", async () => {
+test("Terms v10 is exactly approved, KPIs v12 is pending, and all nine originals remain changes requested", async () => {
   const [ledger, held] = await Promise.all([ledgerPromise, currentReviewAssets()]);
   assert.deepEqual(validateHeldVideoApprovalLedger(ledger, held), []);
   assert.equal(ledger.records.length, 11);
@@ -118,7 +119,17 @@ test("two local policy cuts are pending and all nine original cuts are preserved
         record.date === null &&
         record.notes === null,
     ).length,
-    2,
+    1,
+  );
+  assert.equal(
+    ledger.records.filter(
+      (record) =>
+        record.decision === "approved" &&
+        record.approver === "Jarrad Henry" &&
+        record.source_key === "video-slot-02-terms" &&
+        record.sha256 === "6f57600d6ec3a596f96175052eda997503ab9b72aa5b7e9ec02239fe1a125769",
+    ).length,
+    1,
   );
   assert.equal(
     ledger.records.filter(
@@ -132,10 +143,34 @@ test("two local policy cuts are pending and all nine original cuts are preserved
   );
 });
 
+test("forged local candidate inventory cannot widen the approval transition boundary", async () => {
+  const [manifest, ledger, inventory] = await Promise.all([
+    manifestPromise,
+    ledgerPromise,
+    localPolicyCandidatesPromise,
+  ]).then((values) => values.map((value) => structuredClone(value)));
+  inventory.candidates.push({
+    ...inventory.candidates[1],
+    candidate_id: "forged-candidate",
+    source_key: "video-slot-evil",
+    sha256: "e".repeat(64),
+    local_path: "course-assets/review-evil/evil.mp4",
+  });
+  ledger.records.push({
+    ...ledger.records.find((record) => record.decision === "pending"),
+    source_key: "video-slot-evil",
+    sha256: "e".repeat(64),
+    candidate_local_path: "course-assets/review-evil/evil.mp4",
+  });
+  const errors = validateLocalPolicyCandidates(inventory, manifest, ledger);
+  assert.ok(errors.some((error) => error.includes("unexpected local policy candidate")));
+});
+
 test("approval transitions require evidence and keep decided checksums immutable", async () => {
   const [ledger, held] = await Promise.all([ledgerPromise, currentReviewAssets()]);
   const approved = structuredClone(ledger);
-  Object.assign(approved.records[9], {
+  const pendingIndex = approved.records.findIndex((record) => record.decision === "pending");
+  Object.assign(approved.records[pendingIndex], {
     approver: "Jarrad Henry",
     date: "2026-07-17",
     decision: "approved",
@@ -147,7 +182,7 @@ test("approval transitions require evidence and keep decided checksums immutable
   );
 
   const wrongApprover = structuredClone(approved);
-  wrongApprover.records[9].approver = "Not Jarrad";
+  wrongApprover.records[pendingIndex].approver = "Not Jarrad";
   assert.ok(
     validateHeldVideoApprovalTransition(ledger, wrongApprover, held).some(
       (error) => error.includes("require approver Jarrad Henry"),
@@ -155,11 +190,11 @@ test("approval transitions require evidence and keep decided checksums immutable
   );
 
   const approvedAssetWrongApprover = structuredClone(approved);
-  approvedAssetWrongApprover.records[9].approver = "Not Jarrad";
+  approvedAssetWrongApprover.records[pendingIndex].approver = "Not Jarrad";
   const remainingHeld = held.filter(
     (asset) =>
-      asset.source_key !== approvedAssetWrongApprover.records[9].source_key ||
-      asset.checksum_sha256 !== approvedAssetWrongApprover.records[9].sha256,
+      asset.source_key !== approvedAssetWrongApprover.records[pendingIndex].source_key ||
+      asset.checksum_sha256 !== approvedAssetWrongApprover.records[pendingIndex].sha256,
   );
   assert.ok(
     validateHeldVideoApprovalLedger(
@@ -169,7 +204,7 @@ test("approval transitions require evidence and keep decided checksums immutable
   );
 
   const missingEvidence = structuredClone(approved);
-  missingEvidence.records[9].approver = null;
+  missingEvidence.records[pendingIndex].approver = null;
   assert.ok(
     validateHeldVideoApprovalTransition(ledger, missingEvidence, held).some(
       (error) => error.includes("requires an approver"),
@@ -177,7 +212,7 @@ test("approval transitions require evidence and keep decided checksums immutable
   );
 
   const rewrittenDecision = structuredClone(approved);
-  Object.assign(rewrittenDecision.records[9], {
+  Object.assign(rewrittenDecision.records[pendingIndex], {
     decision: "rejected",
     notes: "Rewritten history",
   });
@@ -246,7 +281,7 @@ test("a corrected replacement can enter review as a new checksum-keyed pending c
 
 test("a corrected version can replace a previously pending cut without rewriting history", async () => {
   const [ledger, reviewAssets] = await Promise.all([ledgerPromise, currentReviewAssets()]);
-  const old = ledger.records[9];
+  const old = ledger.records.find((record) => record.decision === "pending");
   const replacementSha256 = "b".repeat(64);
   const replacementPath = "course-assets/review-lessonA/LESSON-1A-v8.mp4";
   const nextAssets = reviewAssets.map((asset) =>
@@ -256,7 +291,7 @@ test("a corrected version can replace a previously pending cut without rewriting
   );
   const next = structuredClone(ledger);
   next.updated_at = "2026-07-17";
-  Object.assign(next.records[9], {
+  Object.assign(next.records.find((record) => record.decision === "pending"), {
     decision: "changes_requested",
     approver: "Jarrad Henry",
     date: "2026-07-17",

@@ -31,12 +31,12 @@
     {
       "source_key": "video-slot-02-terms",
       "kind": "video",
-      "local_path": "course-assets/review-lessonGLOA/LESSON-GLOA-v9.mp4",
-      "storage_path": "courses/bmh-employee-training/v1/videos/video-slot-02-terms.17cac99f171edfb773f85eaaa6719e09ffe1295abec5b062554c72958747c0bb.mp4",
+      "local_path": "course-assets/review-lessonGLOA/LESSON-GLOA-v10-LOCAL-POLICY-CUT.mp4",
+      "storage_path": "courses/bmh-employee-training/v1/videos/video-slot-02-terms.6f57600d6ec3a596f96175052eda997503ab9b72aa5b7e9ec02239fe1a125769.mp4",
       "mime_type": "video/mp4",
-      "checksum_sha256": "17cac99f171edfb773f85eaaa6719e09ffe1295abec5b062554c72958747c0bb",
-      "size_bytes": 110768219,
-      "approval_status": "hold"
+      "checksum_sha256": "6f57600d6ec3a596f96175052eda997503ab9b72aa5b7e9ec02239fe1a125769",
+      "size_bytes": 104384792,
+      "approval_status": "approved"
     },
     {
       "source_key": "video-slot-03-tech-stack",
@@ -2319,7 +2319,7 @@
                       "transcript_asset_key": "transcript-video-slot-02-terms",
                       "title": "Real Estate Terms Glossary",
                       "part_label": null,
-                      "duration_seconds": 451.754
+                      "duration_seconds": 449.534
                     }
                   },
                   {
