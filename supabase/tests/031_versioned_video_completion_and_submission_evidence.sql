@@ -1,6 +1,7 @@
 begin;
 
 select set_config('request.jwt.claim.role', 'service_role', true);
+select set_config('bmh.apply_import_id', 'migration-031-acceptance', true);
 
 do $$
 begin
@@ -139,6 +140,7 @@ insert into public.content_blocks (
     '{"file_path":"courses/migration-031/current-v2.mp4","duration_seconds":100}'::jsonb,
     1
   );
+select set_config('bmh.apply_import_id', '', true);
 
 insert into public.user_video_progress (
   user_id,
