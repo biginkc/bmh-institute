@@ -155,7 +155,7 @@ export async function submitAssignment(input: {
   // the submission.
   if (requiresReview) {
     await notifyAdminsOfNewSubmission({
-      supabase,
+      supabase: admin,
       learnerId: user.id,
       assignmentId: input.assignmentId,
       lessonId: input.lessonId,
@@ -186,7 +186,7 @@ export async function submitAssignment(input: {
 }
 
 async function notifyAdminsOfNewSubmission(input: {
-  supabase: Awaited<ReturnType<typeof createClient>>;
+  supabase: ReturnType<typeof createAdminClient>;
   learnerId: string;
   assignmentId: string;
   lessonId: string;

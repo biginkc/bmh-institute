@@ -26,10 +26,10 @@ describe("lesson learner-state query scope", () => {
     expect(assignmentBody.slice(0, 3000)).toContain('.eq("user_id", userId)');
   });
 
-  it("filters the top-level lesson completion to the signed-in identity", () => {
-    const start = source.indexOf('.from("user_lesson_completions")');
-    const completionQuery = source.slice(start, start + 400);
-    expect(completionQuery).toContain('.eq("user_id", user.id)');
-    expect(completionQuery).toContain('.eq("lesson_id", lessonId)');
+  it("asks the trusted completion function about only the signed-in identity", () => {
+    const start = source.indexOf('supabase.rpc("fn_lesson_is_complete"');
+    const completionQuery = source.slice(start, start + 300);
+    expect(completionQuery).toContain("p_user_id: user.id");
+    expect(completionQuery).toContain("p_lesson_id: lessonId");
   });
 });

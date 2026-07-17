@@ -1,11 +1,12 @@
 import { createHmac } from "node:crypto";
 
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { verifyRolePlayCompletionToken } from "./completion-token";
 
 const SECRET = "a-shared-role-play-secret-that-is-over-32-bytes";
 const NEXT_SECRET = "the-next-completion-proof-secret-over-32-bytes";
+const EMBED_SECRET = "directional-embed-signing-secret-over-32-bytes";
 const NOW_SECONDS = 1_700_000_000;
 const ATTEMPT_ID = "dea00001-0000-4000-a000-000000000001";
 const BASE_URL = "https://lab.example.com";
@@ -59,6 +60,10 @@ function verify(payload = validPayload(), header?: Record<string, unknown>) {
 }
 
 describe("role-play completion token", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
   it("accepts the exact Closer Lab contract and returns only signed result fields", () => {
     expect(verify()).toEqual({
       ok: true,
@@ -66,6 +71,57 @@ describe("role-play completion token", () => {
       summaryUrl: `${BASE_URL}/embed/review/${REVIEW_TOKEN}`,
       goalsMet: { discovery: true, close: false },
     });
+  });
+
+  it("refuses the legacy shared secret as a production completion key", () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("ROLE_PLAY_COMPLETION_VERIFY_SECRET", "");
+    vi.stubEnv("ROLE_PLAY_JWT_SECRET", SECRET);
+
+    const result = verifyRolePlayCompletionToken({
+      token: token(validPayload()),
+      expected: {
+        userId: "user-1",
+        blockId: "block-1",
+        scenarioId: "scenario-1",
+        attemptId: ATTEMPT_ID,
+      },
+      rolePlayBaseUrl: BASE_URL,
+      now: new Date(NOW_SECONDS * 1000),
+    });
+
+    expect(result.ok).toBe(false);
+  });
+
+  it("accepts only the directional completion key in production", () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("ROLE_PLAY_COMPLETION_VERIFY_SECRET", NEXT_SECRET);
+    vi.stubEnv("ROLE_PLAY_JWT_SECRET", SECRET);
+
+    const expected = {
+      userId: "user-1",
+      blockId: "block-1",
+      scenarioId: "scenario-1",
+      attemptId: ATTEMPT_ID,
+    };
+    const options = {
+      expected,
+      rolePlayBaseUrl: BASE_URL,
+      now: new Date(NOW_SECONDS * 1000),
+    };
+
+    expect(
+      verifyRolePlayCompletionToken({
+        ...options,
+        token: token(validPayload(), undefined, NEXT_SECRET),
+      }).ok,
+    ).toBe(true);
+    expect(
+      verifyRolePlayCompletionToken({
+        ...options,
+        token: token(validPayload(), undefined, EMBED_SECRET),
+      }).ok,
+    ).toBe(false);
   });
 
   it("accepts a proof signed by the bounded previous completion key during rotation", () => {

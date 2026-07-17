@@ -16,6 +16,7 @@ const insertSpy = vi.fn(async (row: Record<string, unknown>): Promise<{ error: I
   void row;
   return { error: null };
 });
+const adminFromSpy = vi.fn();
 let insertedRow: Record<string, unknown> | null = null;
 let lessonAssignmentId = "assignment-1";
 let lessonUnlocked = true;
@@ -29,15 +30,53 @@ let activeSubmissionError: { message: string } | null = null;
 vi.mock("@/lib/supabase/admin", () => ({
   createAdminClient: vi.fn(() => ({
     from: (table: string) => {
-      if (table !== "assignment_submissions") {
-        throw new Error(`Unexpected admin table: ${table}`);
+      adminFromSpy(table);
+      if (table === "assignment_submissions") {
+        return {
+          insert: (row: Record<string, unknown>) => {
+            insertedRow = row;
+            return insertSpy(row);
+          },
+        };
       }
-      return {
-        insert: (row: Record<string, unknown>) => {
-          insertedRow = row;
-          return insertSpy(row);
-        },
-      };
+      if (table === "profiles") {
+        return {
+          select: () => ({
+            eq: () => ({
+              maybeSingle: async () => ({
+                data: { full_name: "Learner One", email: "learner@bmh.test" },
+                error: null,
+              }),
+            }),
+            in: async () => ({ data: [], error: null }),
+          }),
+        };
+      }
+      if (table === "assignments") {
+        return {
+          select: () => ({
+            eq: () => ({
+              maybeSingle: async () => ({
+                data: { title: "Upload assignment" },
+                error: null,
+              }),
+            }),
+          }),
+        };
+      }
+      if (table === "lessons") {
+        return {
+          select: () => ({
+            eq: () => ({
+              maybeSingle: async () => ({
+                data: { title: "Lesson one" },
+                error: null,
+              }),
+            }),
+          }),
+        };
+      }
+      throw new Error(`Unexpected admin table: ${table}`);
     },
   })),
 }));
@@ -160,6 +199,7 @@ describe("submitAssignment (INTEG-04 file path validation)", () => {
     activeSubmissionError = null;
     insertSpy.mockReset();
     insertSpy.mockResolvedValue({ error: null });
+    adminFromSpy.mockClear();
   });
 
   afterEach(() => {
@@ -199,6 +239,7 @@ describe("submitAssignment (INTEG-04 file path validation)", () => {
       submission_file_path: "user-1/assignment.pdf",
       status: "submitted",
     });
+    expect(adminFromSpy).toHaveBeenCalledWith("profiles");
   });
 
   it("rejects a user-scoped file path when the exact storage object does not exist", async () => {

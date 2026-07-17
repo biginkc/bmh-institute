@@ -323,11 +323,17 @@ async function authenticatedQuizContext(
     };
   }
 
-  const { data: priorAttempts } = await learner
+  const { data: priorAttempts, error: priorAttemptsError } = await learner
     .from("user_quiz_attempts")
     .select("passed, score, completed_at")
     .eq("user_id", userId)
     .eq("quiz_id", input.quizId);
+  if (priorAttemptsError) {
+    return {
+      ok: false as const,
+      error: "Your quiz eligibility could not be verified. Try again.",
+    };
+  }
   const eligibility = computeQuizEligibility({
     maxAttempts: quiz.max_attempts,
     retakeCooldownHours: quiz.retake_cooldown_hours ?? 0,

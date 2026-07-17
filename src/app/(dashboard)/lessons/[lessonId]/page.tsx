@@ -76,20 +76,18 @@ export default async function LessonPage({
   } = await supabase.auth.getUser();
   if (!user) notFound();
 
-  const [{ data: unlocked }, { data: completion }] = await Promise.all([
+  const [{ data: unlocked }, { data: complete }] = await Promise.all([
     supabase.rpc("fn_lesson_is_unlocked", {
       p_user_id: user.id,
       p_lesson_id: lessonId,
     }),
-    supabase
-      .from("user_lesson_completions")
-      .select("lesson_id")
-      .eq("user_id", user.id)
-      .eq("lesson_id", lessonId)
-      .maybeSingle(),
+    supabase.rpc("fn_lesson_is_complete", {
+      p_user_id: user.id,
+      p_lesson_id: lessonId,
+    }),
   ]);
 
-  const alreadyComplete = Boolean(completion);
+  const alreadyComplete = complete === true;
   const moduleJoin = firstRow(lesson.modules);
   const courseJoin = firstRow(moduleJoin?.courses);
   const courseId = courseJoin?.id;
@@ -216,7 +214,7 @@ async function ContentLessonBody({
     rows.length > 0
       ? supabase
           .from("user_block_progress")
-          .select("block_id")
+          .select("block_id, asset_version")
           .eq("user_id", userId)
           .in("block_id", rows.map((block) => block.id))
       : Promise.resolve({ data: [] }),
@@ -226,10 +224,18 @@ async function ContentLessonBody({
       supabase,
     ),
   ]);
+  const blocksById = new Map(rows.map((block) => [block.id, block]));
   const completedBlockIds = new Set(
-    (completedRows ?? []).flatMap((row) =>
-      typeof row.block_id === "string" ? [row.block_id] : [],
-    ),
+    (completedRows ?? []).flatMap((row) => {
+      if (typeof row.block_id !== "string") return [];
+      const block = blocksById.get(row.block_id);
+      if (!block) return [];
+      if (block.block_type !== "video") return [row.block_id];
+      const currentAssetVersion = videoAssetVersion(block.content);
+      return currentAssetVersion && row.asset_version === currentAssetVersion
+        ? [row.block_id]
+        : [];
+    }),
   );
 
   if (enriched.length === 0) {
@@ -306,6 +312,20 @@ async function ContentLessonBody({
   );
 }
 
+function videoAssetVersion(value: unknown): string {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return "";
+  const content = value as Record<string, unknown>;
+  const filePath = content.file_path;
+  const duration = content.duration_seconds;
+  return typeof filePath === "string" &&
+    filePath.trim().length > 0 &&
+    typeof duration === "number" &&
+    Number.isFinite(duration) &&
+    duration > 0
+    ? `${filePath.trim()}#duration=${duration}`
+    : "";
+}
+
 async function LessonPosition({
   navigationPromise,
 }: {
@@ -371,19 +391,13 @@ async function loadContentLessonNavigation({
   lessonId: string;
   userId: string;
 }): Promise<ContentLessonNavigation | null> {
-  const [modulesResult, completionsResult] = await Promise.all([
-    supabase
-      .from("modules")
-      .select(
-        "id, sort_order, lessons(id, title, lesson_type, sort_order, prerequisite_lesson_id)",
-      )
-      .eq("course_id", courseId)
-      .order("sort_order"),
-    supabase
-      .from("user_lesson_completions")
-      .select("lesson_id")
-      .eq("user_id", userId),
-  ]);
+  const modulesResult = await supabase
+    .from("modules")
+    .select(
+      "id, sort_order, lessons(id, title, lesson_type, sort_order, prerequisite_lesson_id)",
+    )
+    .eq("course_id", courseId)
+    .order("sort_order");
 
   const moduleRows = (modulesResult.data ?? []) as NavigationModuleRow[];
   const lessons = [...moduleRows]
@@ -393,24 +407,34 @@ async function loadContentLessonNavigation({
         (left, right) => left.sort_order - right.sort_order,
       ),
     );
-  const completedLessonIds = new Set(
-    (completionsResult.data ?? []).map((completion) =>
-      String(completion.lesson_id),
-    ),
-  );
-  const unlockResults = await Promise.all(
+  const stateResults = await Promise.all(
     lessons.map(async (lesson) => {
-      const { data } = await supabase.rpc("fn_lesson_is_unlocked", {
-        p_user_id: userId,
-        p_lesson_id: lesson.id,
-      });
-      return [lesson.id, data === true] as const;
+      const [unlockResult, completionResult] = await Promise.all([
+        supabase.rpc("fn_lesson_is_unlocked", {
+          p_user_id: userId,
+          p_lesson_id: lesson.id,
+        }),
+        supabase.rpc("fn_lesson_is_complete", {
+          p_user_id: userId,
+          p_lesson_id: lesson.id,
+        }),
+      ]);
+      return {
+        lessonId: lesson.id,
+        unlocked: unlockResult.data === true,
+        complete: completionResult.data === true,
+      };
     }),
   );
+  const completedLessonIds = new Set(
+    stateResults
+      .filter((result) => result.complete)
+      .map((result) => result.lessonId),
+  );
   const unlockedLessonIds = new Set(
-    unlockResults
-      .filter(([, unlocked]) => unlocked)
-      .map(([unlockedLessonId]) => unlockedLessonId),
+    stateResults
+      .filter((result) => result.unlocked)
+      .map((result) => result.lessonId),
   );
 
   return buildContentLessonNavigation({

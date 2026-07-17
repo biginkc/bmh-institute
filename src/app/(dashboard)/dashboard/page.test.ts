@@ -2,6 +2,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 let tableData: Record<string, unknown[]> = {};
+let completedLessonIds = new Set<string>();
 
 vi.mock("@/lib/supabase/server", () => ({
   createClient: vi.fn(async () => ({
@@ -9,6 +10,15 @@ vi.mock("@/lib/supabase/server", () => ({
       getUser: async () => ({
         data: { user: { id: "learner-1", email: "learner@example.com" } },
       }),
+    },
+    rpc: async (
+      name: string,
+      args: { p_lesson_id: string },
+    ) => {
+      if (name !== "fn_lesson_is_complete") {
+        throw new Error(`Unexpected RPC: ${name}`);
+      }
+      return { data: completedLessonIds.has(args.p_lesson_id), error: null };
     },
     from: (table: string) => {
       const chain = {
@@ -37,6 +47,7 @@ import DashboardPage from "./page";
 describe("DashboardPage learner onboarding", () => {
   beforeEach(() => {
     tableData = {};
+    completedLessonIds = new Set();
   });
 
   it("renders support-oriented copy when no programs are assigned", async () => {
@@ -100,8 +111,8 @@ describe("DashboardPage learner onboarding", () => {
           ],
         },
       ],
-      user_lesson_completions: [{ lesson_id: "lesson-1" }],
     };
+    completedLessonIds = new Set(["lesson-1"]);
 
     const html = renderToStaticMarkup(await DashboardPage());
 

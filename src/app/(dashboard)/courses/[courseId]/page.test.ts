@@ -60,11 +60,19 @@ vi.mock("@/lib/supabase/server", () => ({
         data: { user: { id: "learner-1", email: "learner@example.com" } },
       }),
     },
+    rpc: async (
+      name: string,
+      args: { p_lesson_id: string },
+    ) => {
+      if (name !== "fn_lesson_is_complete") {
+        throw new Error(`Unexpected RPC: ${name}`);
+      }
+      return { data: args.p_lesson_id === "lesson-done", error: null };
+    },
     from: (table: string) => {
-      const result =
-        table === "courses"
-          ? { data: course, error: null }
-          : { data: [{ lesson_id: "lesson-done" }], error: null };
+      const result = table === "courses"
+        ? { data: course, error: null }
+        : { data: [], error: null };
       const chain = {
         select: () => chain,
         eq: () => chain,

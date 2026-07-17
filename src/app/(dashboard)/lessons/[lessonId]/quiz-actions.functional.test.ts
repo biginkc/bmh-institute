@@ -63,6 +63,7 @@ let priorAttempts: Array<{
   score: number | null;
   completed_at: string | null;
 }>;
+let priorAttemptsError: DbError;
 let quizPolicy: "never" | "after_pass" | "always";
 let quizCooldownHours: number;
 let quizQuestionsPerAttempt: number | null;
@@ -96,7 +97,9 @@ const learnerClient = {
         });
       }
       if (table === "user_quiz_attempts") {
-        if (columns.startsWith("passed")) return query(priorAttempts);
+        if (columns.startsWith("passed")) {
+          return query(priorAttemptsError ? null : priorAttempts, priorAttemptsError);
+        }
         if (columns.startsWith("id, question_order")) {
           incompleteReads += 1;
           return query(incompleteReads > 1 && raceWinner ? raceWinner : incompleteAttempt);
@@ -156,6 +159,7 @@ describe("quiz server actions", () => {
     lessonQuizId = "quiz-1";
     unlocked = true;
     priorAttempts = [];
+    priorAttemptsError = null;
     quizPolicy = "after_pass";
     quizCooldownHours = 0;
     quizQuestionsPerAttempt = 1;
@@ -251,6 +255,18 @@ describe("quiz server actions", () => {
 
     expect(result).toMatchObject({ ok: false });
     expect(result.ok ? "" : result.error).toContain("Retake cooldown");
+    expect(insertedAttempt).toBeNull();
+  });
+
+  it("fails closed when prior-attempt eligibility cannot be read", async () => {
+    priorAttemptsError = { message: "read unavailable" };
+
+    await expect(
+      startQuizAttempt({ quizId: "quiz-1", lessonId: "lesson-1" }),
+    ).resolves.toEqual({
+      ok: false,
+      error: "Your quiz eligibility could not be verified. Try again.",
+    });
     expect(insertedAttempt).toBeNull();
   });
 

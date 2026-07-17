@@ -32,9 +32,7 @@ export type RolePlayEmbedTokenPayload = {
 
 export function mintRolePlayEmbedToken(
   input: RolePlayEmbedTokenInput,
-  secret =
-    process.env.ROLE_PLAY_EMBED_SIGNING_SECRET?.trim() ||
-    process.env.ROLE_PLAY_JWT_SECRET,
+  secret = configuredEmbedSecret(process.env),
 ): string {
   assertTokenInput(input);
   assertSecret(secret);
@@ -90,9 +88,17 @@ function assertTokenInput(input: RolePlayEmbedTokenInput) {
 function assertSecret(secret: string | undefined): asserts secret is string {
   if (!secret || Buffer.byteLength(secret, "utf8") < MIN_SECRET_BYTES) {
     throw new Error(
-      "ROLE_PLAY_EMBED_SIGNING_SECRET (or legacy ROLE_PLAY_JWT_SECRET) must be at least 32 bytes.",
+      "ROLE_PLAY_EMBED_SIGNING_SECRET must be at least 32 bytes.",
     );
   }
+}
+
+function configuredEmbedSecret(env: NodeJS.ProcessEnv): string | undefined {
+  const directional = env.ROLE_PLAY_EMBED_SIGNING_SECRET?.trim();
+  if (directional) return directional;
+  return env.NODE_ENV === "production"
+    ? undefined
+    : env.ROLE_PLAY_JWT_SECRET?.trim();
 }
 
 function base64UrlJson(value: unknown): string {

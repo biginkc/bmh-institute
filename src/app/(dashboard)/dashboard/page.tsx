@@ -60,9 +60,9 @@ export default async function DashboardPage() {
     new Set(programs.flatMap((p) => p.courses.map((c) => c.id))),
   );
 
-  // Count required lessons per course and how many the current user finished.
-  // Done as two cheap queries rather than a stored RPC to keep the model
-  // simple — completion volume is low for an internal team.
+  // Count required lessons per course against the trusted dynamic completion
+  // function. A stored completion row alone is not sufficient after a video
+  // asset is replaced and must be watched again.
   const progressByCourse = new Map<string, { done: number; total: number }>();
   const lessonsByCourse = new Map<
     string,
@@ -81,18 +81,12 @@ export default async function DashboardPage() {
   let completedLessonIds = new Set<string>();
 
   if (courseIds.length > 0 && user) {
-    const [lessonsRes, completionsRes] = await Promise.all([
-      supabase
-        .from("modules")
-        .select(
-          "course_id, sort_order, lessons(id, title, thumbnail_path, content_import_id, thumbnail_asset_key, thumbnail_approved_path, thumbnail_approved_sha256, sort_order, is_required_for_completion)",
-        )
-        .in("course_id", courseIds),
-      supabase
-        .from("user_lesson_completions")
-        .select("lesson_id")
-        .eq("user_id", user.id),
-    ]);
+    const lessonsRes = await supabase
+      .from("modules")
+      .select(
+        "course_id, sort_order, lessons(id, title, thumbnail_path, content_import_id, thumbnail_asset_key, thumbnail_approved_path, thumbnail_approved_sha256, sort_order, is_required_for_completion)",
+      )
+      .in("course_id", courseIds);
 
     const requiredLessonsByCourse = new Map<string, Set<string>>();
     const moduleRows = [...(lessonsRes.data ?? [])].sort(
@@ -137,8 +131,26 @@ export default async function DashboardPage() {
       }
     }
 
+    const requiredLessonIds = Array.from(
+      new Set(
+        Array.from(requiredLessonsByCourse.values()).flatMap((required) =>
+          Array.from(required),
+        ),
+      ),
+    );
+    const completionResults = await Promise.all(
+      requiredLessonIds.map(async (lessonId) => ({
+        lessonId,
+        result: await supabase.rpc("fn_lesson_is_complete", {
+          p_user_id: user.id,
+          p_lesson_id: lessonId,
+        }),
+      })),
+    );
     completedLessonIds = new Set(
-      (completionsRes.data ?? []).map((r) => r.lesson_id as string),
+      completionResults
+        .filter(({ result }) => result.data === true)
+        .map(({ lessonId }) => lessonId),
     );
 
     for (const [courseId, required] of requiredLessonsByCourse.entries()) {

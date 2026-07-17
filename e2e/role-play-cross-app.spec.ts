@@ -10,12 +10,19 @@ const closerUrl = process.env.CLOSER_TEST_SUPABASE_URL ?? "";
 const closerAnonKey = process.env.CLOSER_TEST_SUPABASE_ANON_KEY ?? "";
 const closerServiceRoleKey = process.env.CLOSER_TEST_SUPABASE_SERVICE_ROLE_KEY ?? "";
 const rolePlayBaseUrl = process.env.NEXT_PUBLIC_ROLE_PLAY_BASE_URL ?? "";
+const rolePlayEmbedSigningSecret =
+  process.env.ROLE_PLAY_EMBED_SIGNING_SECRET ?? "";
+const rolePlayCompletionVerifySecret =
+  process.env.ROLE_PLAY_COMPLETION_VERIFY_SECRET ?? "";
 
 const hasCrossAppEnv =
   Boolean(closerUrl) &&
   Boolean(closerAnonKey) &&
   Boolean(closerServiceRoleKey) &&
-  Boolean(rolePlayBaseUrl);
+  Boolean(rolePlayBaseUrl) &&
+  rolePlayEmbedSigningSecret.length >= 32 &&
+  rolePlayCompletionVerifySecret.length >= 32 &&
+  rolePlayEmbedSigningSecret !== rolePlayCompletionVerifySecret;
 
 function closerAdmin(): SupabaseClient {
   if (!closerUrl || !closerServiceRoleKey) {

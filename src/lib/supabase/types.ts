@@ -1062,18 +1062,21 @@ export type Database = {
       }
       user_block_progress: {
         Row: {
+          asset_version: string | null
           block_id: string
           completed_at: string
           id: string
           user_id: string
         }
         Insert: {
+          asset_version?: string | null
           block_id: string
           completed_at?: string
           id?: string
           user_id: string
         }
         Update: {
+          asset_version?: string | null
           block_id?: string
           completed_at?: string
           id?: string
@@ -1089,6 +1092,42 @@ export type Database = {
           },
           {
             foreignKeyName: "user_block_progress_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_video_completion_history: {
+        Row: {
+          asset_version: string
+          block_id: string
+          completed_at: string
+          user_id: string
+        }
+        Insert: {
+          asset_version: string
+          block_id: string
+          completed_at?: string
+          user_id: string
+        }
+        Update: {
+          asset_version?: string
+          block_id?: string
+          completed_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_video_completion_history_block_id_fkey"
+            columns: ["block_id"]
+            isOneToOne: false
+            referencedRelation: "content_blocks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_video_completion_history_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"

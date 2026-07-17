@@ -7,7 +7,7 @@ const emitSandraSpy = vi.fn(async (...args: unknown[]) => {
 const rpcSpy = vi.fn();
 const adminUpsertSpy = vi.fn();
 let existingProgress: Record<string, unknown> | null = null;
-let completionExists = false;
+let completionAssetVersion: string | null = null;
 
 vi.mock("@/lib/integrations/sandra/course-completed", () => ({
   emitSandraCourseCompletedForBlock: (...args: unknown[]) => emitSandraSpy(...args),
@@ -49,7 +49,9 @@ vi.mock("@/lib/supabase/server", () => ({
         const query = {
           eq: () => query,
           maybeSingle: async () => ({
-            data: completionExists ? { id: "completion-1" } : null,
+            data: completionAssetVersion
+              ? { id: "completion-1", asset_version: completionAssetVersion }
+              : null,
             error: null,
           }),
         };
@@ -65,7 +67,9 @@ vi.mock("@/lib/supabase/admin", () => ({
     from: (table: string) => ({
       upsert: async (row: Record<string, unknown>) => {
         adminUpsertSpy(table, row);
-        if (table === "user_block_progress") completionExists = true;
+        if (table === "user_block_progress") {
+          completionAssetVersion = String(row.asset_version ?? "");
+        }
         return { error: null };
       },
     }),
@@ -87,7 +91,7 @@ const TRUSTED_STATE = {
 describe("atomic video progress actions", () => {
   beforeEach(() => {
     existingProgress = null;
-    completionExists = false;
+    completionAssetVersion = null;
     rpcSpy.mockReset();
     rpcSpy.mockResolvedValue({ data: TRUSTED_STATE, error: null });
     adminUpsertSpy.mockClear();
@@ -211,5 +215,37 @@ describe("atomic video progress actions", () => {
       completed: false,
     });
     expect(adminUpsertSpy).not.toHaveBeenCalled();
+  });
+
+  it("does not preserve completion credit from a replaced video cut", async () => {
+    completionAssetVersion = "courses/test/video-v1.mp4#duration=100";
+    existingProgress = {
+      position_seconds: 90,
+      duration_seconds: 100,
+      watched_ranges: [[0, 90]],
+      asset_version: "courses/test/video-v2.mp4#duration=100",
+    };
+
+    await expect(loadVideoProgress("video-1")).resolves.toMatchObject({
+      ok: true,
+      watchedPercent: 90,
+      completed: false,
+    });
+  });
+
+  it("reports completion only when progress and credit match the current cut", async () => {
+    completionAssetVersion = "courses/test/video-v2.mp4#duration=100";
+    existingProgress = {
+      position_seconds: 90,
+      duration_seconds: 100,
+      watched_ranges: [[0, 90]],
+      asset_version: "courses/test/video-v2.mp4#duration=100",
+    };
+
+    await expect(loadVideoProgress("video-1")).resolves.toMatchObject({
+      ok: true,
+      watchedPercent: 90,
+      completed: true,
+    });
   });
 });

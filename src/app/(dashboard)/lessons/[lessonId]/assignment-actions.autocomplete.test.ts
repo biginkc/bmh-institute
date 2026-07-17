@@ -20,6 +20,7 @@ const insertSpy = vi.fn(async (row: Record<string, unknown>) => {
   void row;
   return { error: null };
 });
+const adminFromSpy = vi.fn();
 let insertedRow: Record<string, unknown> | null = null;
 
 // Flipped per-test to drive the review policy returned by the assignments row.
@@ -28,15 +29,56 @@ let assignmentRequiresReview = true;
 vi.mock("@/lib/supabase/admin", () => ({
   createAdminClient: vi.fn(() => ({
     from: (table: string) => {
-      if (table !== "assignment_submissions") {
-        throw new Error(`Unexpected admin table: ${table}`);
+      adminFromSpy(table);
+      if (table === "assignment_submissions") {
+        return {
+          insert: (row: Record<string, unknown>) => {
+            insertedRow = row;
+            return insertSpy(row);
+          },
+        };
       }
-      return {
-        insert: (row: Record<string, unknown>) => {
-          insertedRow = row;
-          return insertSpy(row);
-        },
-      };
+      if (table === "profiles") {
+        return {
+          select: () => ({
+            eq: () => ({
+              maybeSingle: async () => ({
+                data: { full_name: "Learner One", email: "learner@bmh.test" },
+                error: null,
+              }),
+            }),
+            in: async () => ({
+              data: [{ email: "admin@bmh.test", full_name: "Admin" }],
+              error: null,
+            }),
+          }),
+        };
+      }
+      if (table === "assignments") {
+        return {
+          select: () => ({
+            eq: () => ({
+              maybeSingle: async () => ({
+                data: { title: "Auto assignment" },
+                error: null,
+              }),
+            }),
+          }),
+        };
+      }
+      if (table === "lessons") {
+        return {
+          select: () => ({
+            eq: () => ({
+              maybeSingle: async () => ({
+                data: { title: "Lesson one" },
+                error: null,
+              }),
+            }),
+          }),
+        };
+      }
+      throw new Error(`Unexpected admin table: ${table}`);
     },
   })),
 }));
@@ -126,6 +168,7 @@ describe("submitAssignment auto-completion (requires_review policy)", () => {
     insertSpy.mockResolvedValue({ error: null });
     sendEmailSpy.mockReset();
     sendEmailSpy.mockResolvedValue(undefined);
+    adminFromSpy.mockClear();
   });
 
   afterEach(() => {
@@ -171,5 +214,6 @@ describe("submitAssignment auto-completion (requires_review policy)", () => {
     expect(insertedRow).toMatchObject({ status: "submitted" });
     expect(insertedRow?.reviewed_at).toBeNull();
     expect(sendEmailSpy).toHaveBeenCalledTimes(1);
+    expect(adminFromSpy).toHaveBeenCalledWith("profiles");
   });
 });

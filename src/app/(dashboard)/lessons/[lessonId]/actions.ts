@@ -71,7 +71,7 @@ export async function loadVideoProgress(
       .maybeSingle(),
     learner
       .from("user_block_progress")
-      .select("id")
+      .select("id, asset_version")
       .eq("user_id", user.id)
       .eq("block_id", blockId)
       .maybeSingle(),
@@ -105,7 +105,10 @@ export async function loadVideoProgress(
       : 0,
     watchedRanges: ranges,
     watchedPercent: Math.round(coverage * 100),
-    completed: Boolean(completionResult.data),
+    completed: Boolean(
+      progressMatchesAsset &&
+        completionResult.data?.asset_version === currentAssetVersion,
+    ),
   };
 }
 

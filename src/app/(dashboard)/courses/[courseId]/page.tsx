@@ -37,10 +37,9 @@ export default async function CoursePage({
     data: { user },
   } = await supabase.auth.getUser();
 
-  const [courseResult, completionsResult] = await Promise.all([
-    supabase
-      .from("courses")
-      .select(
+  const courseResult = await supabase
+    .from("courses")
+    .select(
         `
         id,
         title,
@@ -69,16 +68,9 @@ export default async function CoursePage({
           )
         )
       `,
-      )
-      .eq("id", courseId)
-      .maybeSingle(),
-    user
-      ? supabase
-          .from("user_lesson_completions")
-          .select("lesson_id")
-          .eq("user_id", user.id)
-      : Promise.resolve({ data: [] }),
-  ]);
+    )
+    .eq("id", courseId)
+    .maybeSingle();
 
   if (courseResult.error || !courseResult.data) {
     notFound();
@@ -102,12 +94,23 @@ export default async function CoursePage({
       ).get(artworkRequestKey("course", course.id))
     : undefined;
 
-  const completedLessonIds = new Set(
-    (completionsResult.data ?? []).map((completion) =>
-      String(completion.lesson_id),
-    ),
-  );
   const allLessons = course.modules.flatMap((module) => module.lessons);
+  const completionResults = user
+    ? await Promise.all(
+        allLessons.map(async (lesson) => ({
+          lessonId: lesson.id,
+          result: await supabase.rpc("fn_lesson_is_complete", {
+            p_user_id: user.id,
+            p_lesson_id: lesson.id,
+          }),
+        })),
+      )
+    : [];
+  const completedLessonIds = new Set(
+    completionResults
+      .filter(({ result }) => result.data === true)
+      .map(({ lessonId }) => lessonId),
+  );
   const requiredLessons = allLessons.filter(
     (lesson) => lesson.is_required_for_completion,
   );
