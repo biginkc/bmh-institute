@@ -11,8 +11,10 @@ import {
   isPristinePreapprovalLedger,
   loadWorkflow,
   promotePilots,
+  preparePipelineReprocess,
   readJson,
   reconcileManifestFromLedger,
+  recordApprovedTextureExceptions,
   resolveRepoPath,
   reviewMaster,
   summarizeLedger,
@@ -30,8 +32,11 @@ Commands:
   init
   approve-pilots --approved-by NAME --approved-at ISO --evidence REPO_PATH
   promote-pilots
-  ingest --master-id ID --source FILE --call-id ID --tool-output-id ID --generated-at ISO --generated-by NAME [--correction-prompt REPO_PATH --parent-sha256 SHA]
+  ingest --master-id ID --source FILE --call-id ID --tool-output-id ID --generated-at ISO --generated-by NAME [--correction-prompt REPO_PATH --parent-sha256 SHA --preserve-output KEY[,KEY]]
+  ingest-pilot-remediation --master-id ID --source FILE --call-id ID --tool-output-id ID --generated-at ISO --generated-by NAME --correction-prompt REPO_PATH --parent-sha256 SHA --defect-evidence REPO_PATH
   derive (--master-id ID | --all)
+  reprocess (--master-id ID | --all)
+  record-texture-exceptions --evidence REPO_PATH
   review --master-id ID --decision approved|changes_requested --reviewed-by NAME --reviewed-at ISO --evidence REPO_PATH
   finalize --approved-by NAME --approved-at ISO --evidence REPO_PATH
   reconcile`;
@@ -110,7 +115,7 @@ async function execute(command, options) {
     await promotePilots({ root: REPO_ROOT, ledger: workflow.ledger });
     await validate();
     await persistLedger(workflow.ledger);
-  } else if (command === "ingest") {
+  } else if (command === "ingest" || command === "ingest-pilot-remediation") {
     await validate({ inspectFiles: false });
     await ingestGeneration({
       root: REPO_ROOT,
@@ -123,6 +128,9 @@ async function execute(command, options) {
       generatedBy: required(options, "generated-by"),
       correctionPromptPath: options["correction-prompt"] ?? null,
       parentSha256: options["parent-sha256"] ?? null,
+      allowPilotRemediation: command === "ingest-pilot-remediation",
+      defectEvidencePath: options["defect-evidence"] ?? null,
+      preserveOutputKeys: options["preserve-output"] ? options["preserve-output"].split(",").filter(Boolean) : [],
     });
     await validate();
     await persistLedger(workflow.ledger);
@@ -133,6 +141,26 @@ async function execute(command, options) {
       : [required(options, "master-id")];
     if (options.all && ids.length === 0) throw new Error("No source-ready masters to derive");
     for (const masterId of ids) await deriveMaster({ root: REPO_ROOT, ledger: workflow.ledger, masterId });
+    await validate();
+    await persistLedger(workflow.ledger);
+  } else if (command === "reprocess") {
+    await validate();
+    const ids = options.all
+      ? workflow.ledger.masters.filter((master) => !master.pilot && master.status === "derived").map((master) => master.id)
+      : [required(options, "master-id")];
+    if (ids.length === 0) throw new Error("No derived non-pilot masters to reprocess");
+    for (const masterId of ids) await preparePipelineReprocess({ root: REPO_ROOT, ledger: workflow.ledger, masterId });
+    await validate();
+    for (const masterId of ids) await deriveMaster({ root: REPO_ROOT, ledger: workflow.ledger, masterId });
+    await validate();
+    await persistLedger(workflow.ledger);
+  } else if (command === "record-texture-exceptions") {
+    await validate();
+    await recordApprovedTextureExceptions({
+      root: REPO_ROOT,
+      ledger: workflow.ledger,
+      evidence: required(options, "evidence"),
+    });
     await validate();
     await persistLedger(workflow.ledger);
   } else if (command === "review") {
@@ -183,7 +211,10 @@ async function main() {
     "approve-pilots",
     "promote-pilots",
     "ingest",
+    "ingest-pilot-remediation",
     "derive",
+    "reprocess",
+    "record-texture-exceptions",
     "review",
     "finalize",
     "reconcile",

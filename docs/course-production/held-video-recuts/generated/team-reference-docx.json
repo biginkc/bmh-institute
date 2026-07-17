@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "purpose": "Deterministic team-reference copies; not provider authorization",
+  "provider_call_allowed": false,
+  "documents": [
+    {
+      "source_key": "video-slot-01-welcome",
+      "path": "docs/course-production/held-video-recuts/generated/video-slot-01-welcome-script.docx",
+      "sha256": "32320a5c3352b26ad6e23d309ba5248791b4d430deafd31d4d90fc91c5c165bd",
+      "size_bytes": 39968,
+      "package_path": "docs/course-production/held-video-recuts/video-slot-01-welcome.json",
+      "package_sha256": "b2c91bd2004c3c6de5e931a0f695755937a97bc6573b0ff811cab67d4cefc559",
+      "script_path": "docs/course-production/held-video-recuts/generated/video-slot-01-welcome-script.txt",
+      "script_sha256": "a52dad836a0715542455fb469f5558ed4338434e43209596db93dcef5ba397e0"
+    },
+    {
+      "source_key": "video-slot-01-mindset",
+      "path": "docs/course-production/held-video-recuts/generated/video-slot-01-mindset-script.docx",
+      "sha256": "42a0a72fe3a77046dce93fd1b8d05cf4f5609a9e2648444d09b27c1b5a983b56",
+      "size_bytes": 40608,
+      "package_path": "docs/course-production/held-video-recuts/video-slot-01-mindset.json",
+      "package_sha256": "103ffb9342ca477c851e154b2d9d1bd75a1e2e45e0717dc7a5ed7a247d5f0c16",
+      "script_path": "docs/course-production/held-video-recuts/generated/video-slot-01-mindset-script.txt",
+      "script_sha256": "f58032cfeb6d5d9c83a205908d2408e9dc4f44c64f2906c18a5537f29a275c9a"
+    },
+    {
+      "source_key": "video-slot-10-objection-scripts",
+      "path": "docs/course-production/held-video-recuts/generated/video-slot-10-objection-scripts-script.docx",
+      "sha256": "cc83dcb6beae47ff5b98aa596c9b10c289799c14094b22facf6d1eaf90a3a668",
+      "size_bytes": 41394,
+      "package_path": "docs/course-production/held-video-recuts/video-slot-10-objection-scripts.json",
+      "package_sha256": "2bce34711c57990ce5c42f4f48408773275b123d7f8d4d7865b24d3c7b7656fb",
+      "script_path": "docs/course-production/held-video-recuts/generated/video-slot-10-objection-scripts-script.txt",
+      "script_sha256": "5e7275ae682742c1783583f59c6da9b369fddc54689a0c656e9747ba93653ae2"
+    },
+    {
+      "source_key": "video-slot-15-closing",
+      "path": "docs/course-production/held-video-recuts/generated/video-slot-15-closing-script.docx",
+      "sha256": "fdd87476eb3c77496a560e3c2b79384e3c3ff4ee9a5ff99d46978a8bb2d1eb6c",
+      "size_bytes": 40343,
+      "package_path": "docs/course-production/held-video-recuts/video-slot-15-closing.json",
+      "package_sha256": "84a054152f9082add7e33bca905adf6dfd054b8ded2bb58eb863a245acfdb8fc",
+      "script_path": "docs/course-production/held-video-recuts/generated/video-slot-15-closing-script.txt",
+      "script_sha256": "2a59b698b1626cac93ba114e52aec1d524e80cc96ac98d0844576b5a2423b6be"
+    },
+    {
+      "source_key": "video-slot-17-compensation",
+      "path": "docs/course-production/held-video-recuts/generated/video-slot-17-compensation-script.docx",
+      "sha256": "e3c490f75c0af51bfde2a4b0b964be34e7900b80fcc251a197fc8359561e4538",
+      "size_bytes": 39507,
+      "package_path": "docs/course-production/held-video-recuts/video-slot-17-compensation.json",
+      "package_sha256": "90d620ab0a2847af976cd99a544f29306709e93678ba9f7fc7f184f3df7581ff",
+      "script_path": "docs/course-production/held-video-recuts/generated/video-slot-17-compensation-script.txt",
+      "script_sha256": "10bbaa3a265da525a85881282661245a2a14844b4e595c8c71214b070df1acac"
+    },
+    {
+      "source_key": "video-slot-18-operator",
+      "path": "docs/course-production/held-video-recuts/generated/video-slot-18-operator-script.docx",
+      "sha256": "dbb6d3943d625e9e8fb2b465dee5f9002c39a29eb85de4a0e117261be93353ab",
+      "size_bytes": 40299,
+      "package_path": "docs/course-production/held-video-recuts/video-slot-18-operator.json",
+      "package_sha256": "d1a77a2a7682a17503ea9c075fc86f36de83d73e774d92713fd2af6f6d73e026",
+      "script_path": "docs/course-production/held-video-recuts/generated/video-slot-18-operator-script.txt",
+      "script_sha256": "232b7d4a8417fa4fd9464f5ef55b3ae3f28a010c8f3a0cd62450149c7d755ecf"
+    },
+    {
+      "source_key": "video-slot-19-career",
+      "path": "docs/course-production/held-video-recuts/generated/video-slot-19-career-script.docx",
+      "sha256": "3d3d894ba74b3af6114a9399cd3f85ff47eb78403eb1dc2dca174c18504ff56f",
+      "size_bytes": 39743,
+      "package_path": "docs/course-production/held-video-recuts/video-slot-19-career.json",
+      "package_sha256": "a822c4ef92e5ff36e33691b13c7f26ee16f7bb1954cc6ce99a576af4fca9e965",
+      "script_path": "docs/course-production/held-video-recuts/generated/video-slot-19-career-script.txt",
+      "script_sha256": "7e812bf28628e802d95d074d339870e155585fde66dd29cc83d31fd1e3350b27"
+    }
+  ]
+}

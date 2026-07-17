@@ -231,14 +231,15 @@ async function main() {
         mediaRoot: options.mediaRoot,
         temporaryDirectory,
       });
-      const filename = `${masterId.replace(/^master-/, "")}-contact-sheet.png`;
+      const contactSheetStem = masterId === "master-slot-02" ? "slot-02-v10" : masterId.replace(/^master-/, "");
+      const filename = `${contactSheetStem}-contact-sheet.png`;
       const relativePath = path.posix.join(
         "docs/course-production/thumbnail-pilots/references/production-video-stills",
         filename,
       );
       const outputPath = path.join(outputDirectory, filename);
       const contactSheet = {
-        id: `video-contact-sheet-${masterId.replace(/^master-/, "")}`,
+        id: `video-contact-sheet-${contactSheetStem}`,
         role: "checksum-bound exact mapped-video contact sheet",
         path: relativePath,
         sha256: sha256Buffer(rendered.contents),

@@ -271,8 +271,8 @@ test("every generated master has an exact guarded prompt and provenance record",
   const plannedCalls = generated.map((asset) => asset.provenance.planned_generation_call_id).filter(Boolean);
   const directPosterCalls = inventory.lessons.flatMap((lesson) => lesson.posters.filter((poster) => poster.direct_master).map((poster) => poster.direct_master.provenance.planned_generation_call_id));
   assert.equal(plannedCalls.length, 17);
-  assert.equal(directPosterCalls.length, 1);
-  assert.equal(new Set([...plannedCalls, ...directPosterCalls]).size, 18);
+  assert.equal(directPosterCalls.length, 8);
+  assert.equal(new Set([...plannedCalls, ...directPosterCalls]).size, 25);
 });
 
 test("Opening pilot supplies only its card and Opening poster; Fact Find has a distinct master", () => {
@@ -436,7 +436,7 @@ test("course cover and lesson cards share the exact no-crop contained-card recip
 test("every derivative source master resolves exactly once", () => {
   const masters = [inventory.course_cover, ...inventory.lessons.map((lesson) => lesson.master), ...inventory.lessons.flatMap((lesson) => lesson.posters.flatMap((poster) => (poster.direct_master ? [poster.direct_master] : [])))];
   const masterIds = masters.map((master) => master.id);
-  assert.equal(masters.length, 21);
+  assert.equal(masters.length, 28);
   assert.equal(new Set(masterIds).size, masterIds.length);
   assert.equal(new Set(masters.map((master) => master.source_path)).size, masters.length);
   assert.equal(new Set(masters.map((master) => master.flat_master_path)).size, masters.length);

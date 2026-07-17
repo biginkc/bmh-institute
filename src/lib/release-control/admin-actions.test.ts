@@ -1,6 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { IMPORT_RELEASE_REQUIRED_ERROR } from "./admin-guards";
+import {
+  IMPORT_RELEASE_REQUIRED_ERROR,
+  IMPORT_ROLLBACK_REQUIRED_ERROR,
+} from "./admin-guards";
 
 type CatalogRow = {
   thumbnail_path: string | null;
@@ -16,6 +19,7 @@ const current: Record<"programs" | "courses", CatalogRow> = {
   courses: catalogRow(),
 };
 const updateCalls: Array<{ table: string; value: Record<string, unknown> }> = [];
+const deleteCalls: string[] = [];
 
 vi.mock("@/lib/auth/guard", () => ({
   requireAdmin: vi.fn(async () => ({ id: "admin-1" })),
@@ -33,6 +37,12 @@ vi.mock("@/lib/supabase/server", () => ({
         updateCalls.push({ table, value });
         return { eq: async () => ({ error: null }) };
       },
+      delete: () => ({
+        eq: async () => {
+          deleteCalls.push(table);
+          return { error: null };
+        },
+      }),
     }),
   })),
 }));
@@ -42,6 +52,8 @@ vi.mock("next/navigation", () => ({ redirect: vi.fn() }));
 
 import { updateCourse } from "@/app/(dashboard)/admin/courses/actions";
 import { updateProgram } from "@/app/(dashboard)/admin/programs/actions";
+import { deleteCourse } from "@/app/(dashboard)/admin/courses/actions";
+import { deleteProgram } from "@/app/(dashboard)/admin/programs/actions";
 
 function catalogRow(): CatalogRow {
   return {
@@ -67,6 +79,7 @@ describe("generic admin catalog actions", () => {
     current.programs = catalogRow();
     current.courses = catalogRow();
     updateCalls.length = 0;
+    deleteCalls.length = 0;
   });
 
   it("refuses to publish an imported program", async () => {
@@ -100,5 +113,25 @@ describe("generic admin catalog actions", () => {
       updateCourse("course-1", null, form("course", true)),
     ).resolves.toEqual({ ok: true });
     expect(updateCalls).toHaveLength(2);
+  });
+
+  it("refuses generic deletion of imported programs and courses", async () => {
+    await expect(deleteProgram("program-1")).resolves.toEqual({
+      ok: false,
+      error: IMPORT_ROLLBACK_REQUIRED_ERROR,
+    });
+    await expect(deleteCourse("course-1")).resolves.toEqual({
+      ok: false,
+      error: IMPORT_ROLLBACK_REQUIRED_ERROR,
+    });
+    expect(deleteCalls).toEqual([]);
+  });
+
+  it("preserves generic deletion for reusable non-imported catalog rows", async () => {
+    current.programs.content_import_id = null;
+    current.courses.content_import_id = null;
+    await deleteProgram("program-1");
+    await deleteCourse("course-1");
+    expect(deleteCalls).toEqual(["programs", "courses"]);
   });
 });

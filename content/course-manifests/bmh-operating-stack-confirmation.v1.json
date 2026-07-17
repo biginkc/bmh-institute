@@ -61,7 +61,7 @@
     {
       "source_key": "caption-video-slot-03-tech-stack",
       "local_path": "course-assets/captions/video-slot-03-tech-stack.vtt",
-      "checksum_sha256": "893e88f6126b1ea3476b946aebc19d2decb3370b1a929ec0308141f245bae714",
+      "checksum_sha256": "ea4fc5b7e9103a02fbb0ccde406ad1de90289c95e1e17543e282f5ebfe62ecd3",
       "dialpad_reference_count": 3,
       "audit_result": "all references describe employee outbound calls, recording, coaching, or call metrics"
     },
@@ -82,7 +82,7 @@
     {
       "source_key": "caption-video-slot-18-mission-control",
       "local_path": "course-assets/captions/video-slot-18-mission-control.vtt",
-      "checksum_sha256": "a49e626160322de942de4b46d2715858a3aac9f618129b06f47b05976ccb9505",
+      "checksum_sha256": "9202eceb3fe419c16fcb4f4e0079e0b7547bdb0eb1c33b9581e016b9862d06af",
       "dialpad_reference_count": 2,
       "audit_result": "references distinguish approved DialPad texts and calls from Gmail email and Sandra CRM records"
     },

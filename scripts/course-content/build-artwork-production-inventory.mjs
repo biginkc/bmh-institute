@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 
 import { createEmptyProductionRecord, sha256, validateProductionRecord } from "./artwork-production-contract.mjs";
 import { getArtworkPose, validateArtworkPoseContract } from "./artwork-pose-contract.mjs";
+import { applyDistinctPosterInventoryOverlay } from "./sync-distinct-poster-inventory.mjs";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const manifestPath = path.join(repoRoot, "content/course-manifests/bmh-employee-training.v1.json");
@@ -12,9 +13,12 @@ const pilotChecksumsRecordPath = "docs/course-production/thumbnail-pilots/v8-che
 const pilotGenerationLineageRecordPath = "docs/course-production/thumbnail-pilots/v8-generation-lineage.json";
 const videoContactSheetsRecordPath =
   "docs/course-production/thumbnail-pilots/references/production-video-stills/contact-sheets.json";
+const distinctPosterContactSheetsRecordPath =
+  "docs/course-production/thumbnail-pilots/references/production-video-stills/distinct-posters/contact-sheets.json";
 const pilotChecksumsPath = path.join(repoRoot, pilotChecksumsRecordPath);
 const pilotGenerationLineagePath = path.join(repoRoot, pilotGenerationLineageRecordPath);
 const videoContactSheetsPath = path.join(repoRoot, videoContactSheetsRecordPath);
+const distinctPosterContactSheetsPath = path.join(repoRoot, distinctPosterContactSheetsRecordPath);
 const args = process.argv.slice(2);
 const unknownArgs = args.filter((arg) => arg !== "--check");
 if (unknownArgs.length > 0) {
@@ -22,11 +26,12 @@ if (unknownArgs.length > 0) {
 }
 const checkMode = args.includes("--check");
 
-const [manifest, pilotChecksums, pilotGenerationLineage, videoContactSheets] = await Promise.all([
+const [manifest, pilotChecksums, pilotGenerationLineage, videoContactSheets, distinctPosterContactSheets] = await Promise.all([
   readFile(manifestPath, "utf8").then(JSON.parse),
   readFile(pilotChecksumsPath, "utf8").then(JSON.parse),
   readFile(pilotGenerationLineagePath, "utf8").then(JSON.parse),
   readFile(videoContactSheetsPath, "utf8").then(JSON.parse),
+  readFile(distinctPosterContactSheetsPath, "utf8").then(JSON.parse),
 ]);
 const course = manifest.program.courses[0];
 const lessons = course.modules.flatMap((module) => module.lessons.filter((lesson) => lesson.type === "content"));
@@ -149,8 +154,9 @@ async function validateVideoContactSheets() {
       videoContactSheets.tile_dimensions[1] * Math.ceil(expectedFrameCount / videoContactSheets.columns),
     ];
     const input = record.contact_sheet_input;
+    const contactSheetStem = path.basename(input?.path ?? "", ".png").replace(/-contact-sheet$/, "");
     if (
-      input?.id !== `video-contact-sheet-${record.master_id.replace(/^master-/, "")}` ||
+      input?.id !== `video-contact-sheet-${contactSheetStem}` ||
       input?.role !== "checksum-bound exact mapped-video contact sheet" ||
       !input.path?.startsWith("docs/course-production/thumbnail-pilots/references/production-video-stills/") ||
       !/^[a-f0-9]{64}$/.test(input.sha256 ?? "") ||
@@ -1243,6 +1249,11 @@ Avoid: gradients, texture, lighting, glow, shadows, reflections, depth, realisti
 };
 
 inventory.course_cover.prompt_sha256 = sha256(inventory.course_cover.prompt);
+await applyDistinctPosterInventoryOverlay({
+  inventory,
+  grouped: videoContactSheets,
+  distinct: distinctPosterContactSheets,
+});
 
 const productionRecords = [
   ["course cover", inventory.course_cover.production_record],

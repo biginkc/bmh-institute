@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
+import { readFile, stat } from "node:fs/promises";
 import { test } from "node:test";
+import { inflateRawSync } from "node:zlib";
 
 import {
   HEYGEN_DRAFT_CONTRACT,
@@ -46,6 +48,44 @@ const localPolicyCandidatesPromise = readFile(
   ),
   "utf8",
 ).then(JSON.parse);
+
+const teamReferenceInventoryPromise = readFile(
+  new URL(
+    "../../docs/course-production/held-video-recuts/generated/team-reference-docx.json",
+    import.meta.url,
+  ),
+  "utf8",
+).then(JSON.parse);
+
+function sha256(buffer) {
+  return createHash("sha256").update(buffer).digest("hex");
+}
+
+function readZipEntry(archive, wantedName) {
+  let offset = 0;
+  while (offset + 30 <= archive.length) {
+    if (archive.readUInt32LE(offset) !== 0x04034b50) break;
+    const flags = archive.readUInt16LE(offset + 6);
+    const method = archive.readUInt16LE(offset + 8);
+    const compressedSize = archive.readUInt32LE(offset + 18);
+    const fileNameLength = archive.readUInt16LE(offset + 26);
+    const extraLength = archive.readUInt16LE(offset + 28);
+    assert.equal(flags & 0x08, 0, "DOCX entries must record sizes in local headers");
+    const nameStart = offset + 30;
+    const nameEnd = nameStart + fileNameLength;
+    const dataStart = nameEnd + extraLength;
+    const dataEnd = dataStart + compressedSize;
+    const name = archive.subarray(nameStart, nameEnd).toString("utf8");
+    if (name === wantedName) {
+      const payload = archive.subarray(dataStart, dataEnd);
+      if (method === 0) return payload;
+      if (method === 8) return inflateRawSync(payload);
+      throw new Error(`Unsupported DOCX compression method ${method}`);
+    }
+    offset = dataEnd;
+  }
+  throw new Error(`DOCX entry not found: ${wantedName}`);
+}
 
 async function currentReviewAssets() {
   const [manifest, inventory] = await Promise.all([
@@ -179,6 +219,17 @@ test("approval transitions require evidence and keep decided checksums immutable
   assert.deepEqual(
     validateHeldVideoApprovalTransition(ledger, approved, held),
     [],
+  );
+
+  const reordered = structuredClone(approved);
+  [reordered.records[0], reordered.records[1]] = [
+    reordered.records[1],
+    reordered.records[0],
+  ];
+  assert.ok(
+    validateHeldVideoApprovalTransition(approved, reordered, held).some(
+      (error) => error.includes("cannot reorder or insert"),
+    ),
   );
 
   const wrongApprover = structuredClone(approved);
@@ -406,6 +457,17 @@ test("the real manifest generator selects the latest non-defective checksum reco
     currentReviewedVideoRecord("video-slot-17-compensation", ledger).decision,
     "approved",
   );
+
+  ledger.records.push({
+    ...replacement,
+    sha256: "b".repeat(64),
+    candidate_local_path: "course-assets/review-lesson17/LESSON-17-policy-safe-v3.mp4",
+    title: "Compensation Engine second approved replacement",
+  });
+  assert.throws(
+    () => currentReviewedVideoRecord("video-slot-17-compensation", ledger),
+    /multiple approved corrected cuts.*explicit supersession/,
+  );
 });
 
 test("generated scripts contain the exact locked final transition", async () => {
@@ -506,6 +568,50 @@ test("offline HeyGen draft packages are exact, humanized, and provider-gated", a
       assert.deepEqual(input.background, { type: "color", value: "#ffffff" });
     }
     assert.doesNotMatch(expected, /api[_-]?key|authorization|secret|token/i);
+  }
+});
+
+test("all seven deterministic Word team references match their locked source packages", async () => {
+  const [inventory, packages] = await Promise.all([
+    teamReferenceInventoryPromise,
+    loadRecutPackages(),
+  ]);
+  assert.equal(inventory.schema_version, 1);
+  assert.equal(inventory.provider_call_allowed, false);
+  assert.equal(inventory.documents.length, 7);
+  assert.deepEqual(
+    inventory.documents.map((document) => document.source_key).sort(),
+    packages.map((pkg) => pkg.source.source_key).sort(),
+  );
+
+  for (const document of inventory.documents) {
+    const pkg = packages.find(
+      (candidate) => candidate.source.source_key === document.source_key,
+    );
+    assert.ok(pkg, `${document.source_key} must resolve to a recut package`);
+    assert.match(document.path, new RegExp(`${document.source_key}-script\\.docx$`));
+
+    const [docx, packageBytes, scriptBytes, fileStats] = await Promise.all([
+      readFile(new URL(`../../${document.path}`, import.meta.url)),
+      readFile(new URL(`../../${document.package_path}`, import.meta.url)),
+      readFile(new URL(`../../${document.script_path}`, import.meta.url)),
+      stat(new URL(`../../${document.path}`, import.meta.url)),
+    ]);
+    assert.equal(sha256(docx), document.sha256);
+    assert.equal(fileStats.size, document.size_bytes);
+    assert.equal(sha256(packageBytes), document.package_sha256);
+    assert.equal(sha256(scriptBytes), document.script_sha256);
+
+    const documentXml = readZipEntry(docx, "word/document.xml").toString("utf8");
+    assert.match(documentXml, new RegExp(document.source_key));
+    assert.match(documentXml, new RegExp(pkg.source.held_sha256));
+    assert.match(documentXml, /does not authorize a HeyGen provider call or render/);
+    for (const scene of pkg.scenes) {
+      assert.ok(
+        documentXml.includes(scene.spoken_text.replaceAll("&", "&amp;")),
+        `${document.source_key} Word copy must include ${scene.title}`,
+      );
+    }
   }
 });
 

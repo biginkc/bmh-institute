@@ -11,6 +11,13 @@ export const ALLOWED_ARTWORK_POSTURES = [
   "leaning-side",
   "perched-on-stool",
   "half-turn-standing",
+  "seated-sideways-on-stool-leaning-forward",
+  "kneeling-on-one-knee",
+  "walking-briskly",
+  "seated-at-round-table",
+  "seated-upright-on-sofa-edge",
+  "seated-on-park-bench-with-ankles-crossed",
+  "seated-at-workstation",
 ];
 
 function pose({
@@ -301,16 +308,107 @@ export const ARTWORK_MASTER_POSE_CONTRACT = [
     backgroundRgb: YELLOW_RGB,
     cue: "The Fact Find video with curiosity listening and organized seller facts",
   }),
+  pose({
+    masterId: "master-poster-video-slot-04-humanizing-b",
+    poseId: "poster-humanizing-b-seller-side-stool-story-folder",
+    characterId: "recurring-seller-approved",
+    posture: "seated-sideways-on-stool-leaning-forward",
+    orientation: "three-quarter view facing right",
+    gesture: "both hands holding a blank story folder across his knees",
+    placement: "in the left safe zone",
+    prop: "a blank story folder with house heart and checklist cues",
+    backgroundRgb: YELLOW_RGB,
+    cue: "Humanizing the Seller B video and turning a personal seller story into a clear next step",
+  }),
+  pose({
+    masterId: "master-poster-video-slot-04-ideal-seller",
+    poseId: "poster-ideal-seller-kneeling-key-magnifier",
+    characterId: "recurring-seller-approved",
+    posture: "kneeling-on-one-knee",
+    orientation: "right profile facing left",
+    gesture: "holding a magnifier over a key while steadying a blank checklist",
+    placement: "in the right-center safe zone",
+    prop: "a key magnifier house clock and blank qualification checklist",
+    backgroundRgb: YELLOW_RGB,
+    cue: "Ideal Seller Profile video and recognizing seller-property fit quickly",
+  }),
+  pose({
+    masterId: "master-poster-video-slot-05-offer-b",
+    poseId: "poster-offer-b-seller-walking-offer-folder",
+    characterId: "recurring-seller-approved",
+    posture: "walking-briskly",
+    orientation: "full-body profile facing right",
+    gesture: "carrying a sealed blank offer folder and extending one open hand",
+    placement: "in the left safe zone",
+    prop: "a sealed offer folder distressed house choice path and shield",
+    backgroundRgb: BLUE_RGB,
+    cue: "Offer Presentation B video and moving from property condition to a protected decision",
+  }),
+  pose({
+    masterId: "master-poster-video-slot-06-framework",
+    poseId: "poster-framework-andrea-round-table-five-cards",
+    characterId: "andrea-approved",
+    posture: "seated-at-round-table",
+    orientation: "three-quarter view facing right",
+    gesture: "one hand touching her headset and the other pointing across five blank step cards",
+    placement: "in the left-center safe zone",
+    prop: "a round table five blank framework cards ear question handshake and heart cues",
+    backgroundRgb: YELLOW_RGB,
+    cue: "Call Framework video and listening through a structured five-step conversation",
+  }),
+  pose({
+    masterId: "master-poster-video-slot-11-trust",
+    poseId: "poster-trust-seller-sofa-open-palm",
+    characterId: "recurring-seller-approved",
+    posture: "seated-upright-on-sofa-edge",
+    orientation: "three-quarter view facing left",
+    gesture: "one arm folded and the other palm open in a considered response",
+    placement: "in the right safe zone",
+    prop: "a sofa with ear heart conversation and bridge-shield cues",
+    backgroundRgb: YELLOW_RGB,
+    cue: "Trust and Objections video and listening acknowledging asking and redirecting",
+  }),
+  pose({
+    masterId: "master-poster-video-slot-12-faq-b",
+    poseId: "poster-faq-b-seller-bench-question-folder",
+    characterId: "recurring-seller-approved",
+    posture: "seated-on-park-bench-with-ankles-crossed",
+    orientation: "front three-quarter view facing left",
+    gesture: "holding a blank contract folder on his lap with one questioning hand raised",
+    placement: "in the center safe zone",
+    prop: "a bench blank contract folder house question choice signs and shield",
+    backgroundRgb: BLUE_RGB,
+    cue: "FAQ B video and calmly resolving property and contract questions",
+  }),
+  pose({
+    masterId: "master-poster-video-slot-18-operator",
+    poseId: "poster-operator-andrea-seated-workstation-checklist",
+    characterId: "andrea-approved",
+    posture: "seated-at-workstation",
+    orientation: "three-quarter view facing right",
+    gesture: "one hand typing while the other holds a blank checklist",
+    placement: "in the left safe zone",
+    prop: "a workstation blank checklist phone calendar timer and priority tray",
+    backgroundRgb: BLUE_RGB,
+    cue: "Operator Standards video and disciplined daily preparation and execution",
+  }),
 ];
 
 export function validateArtworkPoseContract(contract = ARTWORK_MASTER_POSE_CONTRACT) {
-  if (!Array.isArray(contract) || contract.length !== 21) {
-    throw new Error("Artwork pose contract must contain the cover, 19 lesson masters, and one distinct Fact Find master");
+  if (!Array.isArray(contract) || contract.length !== 28) {
+    throw new Error("Artwork pose contract must contain the cover, 19 lesson masters, and eight distinct video-poster masters");
   }
   const expectedMasterIds = new Set([
     "master-program-bmh-employee-training",
     ...Array.from({ length: 19 }, (_, index) => `master-slot-${String(index + 1).padStart(2, "0")}`),
     "master-poster-video-slot-07-fact-find",
+    "master-poster-video-slot-04-humanizing-b",
+    "master-poster-video-slot-04-ideal-seller",
+    "master-poster-video-slot-05-offer-b",
+    "master-poster-video-slot-06-framework",
+    "master-poster-video-slot-11-trust",
+    "master-poster-video-slot-12-faq-b",
+    "master-poster-video-slot-18-operator",
   ]);
   const masterIds = new Set();
   const poseIds = new Set();
@@ -453,7 +551,17 @@ export function buildArtworkOutputPosePlan(manifest) {
       lessonOrVideoCue: lesson.title,
     });
     for (const block of lesson.blocks.filter((candidate) => candidate.type === "video")) {
-      const sourceMasterId = block.content.asset_key === "video-slot-07-fact-find" ? "master-poster-video-slot-07-fact-find" : lessonMasterId;
+      const distinctPosterMasterIds = new Set([
+        "video-slot-04-humanizing-b",
+        "video-slot-04-ideal-seller",
+        "video-slot-05-offer-b",
+        "video-slot-06-framework",
+        "video-slot-07-fact-find",
+        "video-slot-11-trust",
+        "video-slot-12-faq-b",
+        "video-slot-18-operator",
+      ]);
+      const sourceMasterId = distinctPosterMasterIds.has(block.content.asset_key) ? `master-poster-${block.content.asset_key}` : lessonMasterId;
       addOutput({
         assetKey: block.content.poster_asset_key,
         kind: "video-poster",

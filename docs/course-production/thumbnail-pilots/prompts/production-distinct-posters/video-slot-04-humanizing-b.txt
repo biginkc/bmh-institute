@@ -1,0 +1,7 @@
+Use case: stylized-concept
+Asset type: BMH Institute Humanizing the Seller B video-poster master, wide 16:9 artwork
+Primary request: Create a focused illustration about hearing the seller's personal story and connecting it to a clear next step. The exact mapped video and its seller-story examples must inform the folder, home, heart, and checklist cues.
+Input images: Image 1 and Image 2 are the canonical BMH Sticker System references. Image 3 is the approved recurring curly-haired seller identity root. Image 4 is the checksum-bound contact sheet from the exact mapped video.
+Character direction: Show exactly one person: the recurring curly-haired seller. Preserve the approved face, curly hair, proportions, clothing language, pure-white skin fill, and thick slightly wobbly black line weight. Seat him sideways on a small yellow stool in the left safe zone, leaning forward with a blank story folder across his knees. This posture must be materially different from every other poster in the lesson.
+Scene: uniform flat golden-yellow background with generous negative space. Use separate house, heart, and blank checklist stickers connected by a simple blue path.
+Constraints: one person only; no Andrea; no words, letters, numbers, logos, watermark, gradients, texture, shadows, realistic room, extra limbs, cropped anatomy, or decorative objects without a teaching purpose. Keep all meaningful content inside the central 80 percent.

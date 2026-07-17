@@ -17,15 +17,19 @@ import {
   DEFAULT_PATHS,
   REPO_ROOT,
   approvePilots,
+  assertPosterSafeEdges,
   createInitialLedger,
   deriveMaster,
+  encodeFlatPng,
   finalizeArtwork,
   ingestGeneration,
   inspectArtworkFile,
   isPristinePreapprovalLedger,
   promotePilots,
+  preparePipelineReprocess,
   readJson,
   reconcileManifestFromLedger,
+  recordApprovedTextureExceptions,
   resolveRepoPath,
   reviewMaster,
   sha256,
@@ -69,6 +73,24 @@ async function rgbPng(color, width = 1280, height = 720) {
   })
     .png()
     .toBuffer();
+}
+
+async function pixelPng(width, height, pixelAt) {
+  const data = Buffer.alloc(width * height * 3);
+  for (let row = 0; row < height; row += 1) {
+    for (let column = 0; column < width; column += 1) {
+      const color = pixelAt(column, row);
+      const offset = (row * width + column) * 3;
+      data[offset] = color[0];
+      data[offset + 1] = color[1];
+      data[offset + 2] = color[2];
+    }
+  }
+  return sharp(data, { raw: { width, height, channels: 3 } }).png().toBuffer();
+}
+
+async function rawPixels(contents) {
+  return sharp(contents).removeAlpha().raw().toBuffer({ resolveWithObject: true });
 }
 
 function productionLedger(sourceInventory = inventory) {
@@ -234,25 +256,43 @@ async function writePilotApprovalArtifact(root, ledger, mutate = () => {}) {
   return { evidence, artifact };
 }
 
-test("tracked ledger is the exact fail-closed preapproval contract", async () => {
+test("tracked ledger validates the active fail-closed lifecycle while preserving the pristine preapproval template", async () => {
   const expected = createInitialLedger(inventory);
-  const tracked = await readJson(resolveRepoPath(REPO_ROOT, DEFAULT_PATHS.ledger));
-  assert.deepEqual(tracked, expected);
-  assert.equal(tracked.status, "preapproval");
-  assert.equal(tracked.masters.length, 21);
-  assert.equal(tracked.assets.length, 49);
-  assert.equal(tracked.masters.filter((master) => master.planned_generation_call_id).length, 18);
+  assert.equal(isPristinePreapprovalLedger(expected), true);
+  assert.equal(expected.status, "preapproval");
+  assert.equal(expected.masters.length, 28);
+  assert.equal(expected.assets.length, 49);
+  assert.equal(expected.masters.filter((master) => master.planned_generation_call_id).length, 25);
   assert.equal(
-    tracked.assets.every((asset) => asset.approval_status === "missing" && asset.checksum_sha256 === null),
+    expected.assets.every((asset) => asset.approval_status === "missing" && asset.checksum_sha256 === null),
     true,
   );
+
+  const tracked = await readJson(resolveRepoPath(REPO_ROOT, DEFAULT_PATHS.ledger));
+  await validateLedger({
+    root: REPO_ROOT,
+    inventory,
+    manifest,
+    ledger: tracked,
+    inspectFiles: true,
+  });
+  assert.equal(tracked.masters.length, 28);
+  assert.equal(tracked.assets.length, 49);
+  assert.equal(tracked.masters.filter((master) => master.planned_generation_call_id).length, 25);
+  if (tracked.status === "preapproval") {
+    assert.deepEqual(tracked, expected);
+  } else {
+    assert.equal(["pilot-approved", "production", "finalized"].includes(tracked.status), true);
+    assert.equal(tracked.pilot_approval.status, "approved");
+    assert.equal(tracked.pilot_approval.approved_by, "Jarrad Henry");
+  }
   for (const asset of tracked.assets) {
     const manifestAsset = manifest.assets.find((candidate) => candidate.source_key === asset.asset_key);
     assert.equal(asset.base_storage_path, manifestAsset.storage_path, `${asset.asset_key} base storage path must match the preapproval manifest`);
   }
   assert.deepEqual(
     new Set(tracked.assets.filter((asset) => asset.kind === "video-poster").map((asset) => asset.derivative.recipe.crop_pixels_after_normalize.join(","))),
-    new Set(["0,0,1280,720", "64,144,768,432", "256,144,768,432", "448,144,768,432"]),
+    new Set(["0,0,1280,720", "64,144,768,432", "448,144,768,432"]),
   );
   await validateLedger({
     root: REPO_ROOT,
@@ -294,9 +334,9 @@ test("only a pristine preapproval ledger may be refreshed after inventory eviden
 test("v4 inventory preserves one-person pose variation across every master and derived output", () => {
   const candidate = poseVariationInventory();
   const ledger = createInitialLedger(candidate);
-  assert.equal(ledger.masters.length, 21);
+  assert.equal(ledger.masters.length, 28);
   assert.equal(ledger.assets.length, 49);
-  assert.equal(new Set(ledger.masters.map((master) => master.art_direction.pose_id)).size, 21);
+  assert.equal(new Set(ledger.masters.map((master) => master.art_direction.pose_id)).size, 28);
   assert.equal(ledger.assets.every((asset) => asset.art_direction.people_count === 1 && asset.art_direction.skin_fill === "pure white"), true);
 
   const pilots = ledger.masters.filter((master) => master.pilot);
@@ -416,6 +456,74 @@ test("recipe-specific yellow normalization and padding are derived and inspected
       .toBuffer(),
   );
   await assert.rejects(inspectArtworkFile(root, cover, ledger.palette_rgb), /does not preserve exact recipe padding/);
+});
+
+test("flat encoding normalizes all four corners and an edge-connected yellow-amber field to one exact background token", async () => {
+  const yellow = [255, 211, 1];
+  const amber = [255, 174, 1];
+  const source = await pixelPng(12, 8, (column, row) => ((column + row) % 3 === 0 ? amber : yellow));
+  const flat = await encodeFlatPng(source, inventory.style_system.palette_rgb, yellow);
+  const { data, info } = await rawPixels(flat);
+  const token = (column, row) => [...data.subarray((row * info.width + column) * 3, (row * info.width + column) * 3 + 3)];
+  assert.deepEqual(token(0, 0), yellow);
+  assert.deepEqual(token(info.width - 1, 0), yellow);
+  assert.deepEqual(token(0, info.height - 1), yellow);
+  assert.deepEqual(token(info.width - 1, info.height - 1), yellow);
+  for (let index = 0; index < data.length; index += 3) assert.deepEqual([...data.subarray(index, index + 3)], yellow);
+});
+
+test("background normalization preserves enclosed same-family fills behind black outlines and unrelated foreground", async () => {
+  const blue = [103, 182, 255];
+  const yellow = [255, 211, 1];
+  const amber = [255, 174, 1];
+  const green = [105, 153, 53];
+  const black = [0, 0, 0];
+  const source = await pixelPng(15, 15, (column, row) => {
+    if (column >= 3 && column <= 11 && row >= 3 && row <= 11) {
+      if (column === 3 || column === 11 || row === 3 || row === 11) return black;
+      if (column === 7 && row === 7) return green;
+      return (column + row) % 5 === 0 ? amber : yellow;
+    }
+    return blue;
+  });
+  const flat = await encodeFlatPng(source, inventory.style_system.palette_rgb, blue);
+  const { data, info } = await rawPixels(flat);
+  const token = (column, row) => [...data.subarray((row * info.width + column) * 3, (row * info.width + column) * 3 + 3)];
+  assert.deepEqual(token(4, 4), yellow, "enclosed yellow family remains foreground rather than becoming background");
+  assert.deepEqual(token(7, 7), green, "non-edge foreground remains unchanged");
+  assert.deepEqual(token(3, 3), black, "black outline remains intact");
+  assert.deepEqual(token(0, 7), blue, "edge-connected background remains exact");
+});
+
+test("enclosed fill cleanup removes same-family texture without crossing black outlines", async () => {
+  const blue = [103, 182, 255];
+  const white = [255, 255, 255];
+  const cream = [254, 255, 198];
+  const black = [0, 0, 0];
+  const source = await pixelPng(15, 15, (column, row) => {
+    if (column >= 3 && column <= 11 && row >= 3 && row <= 11) {
+      if (column === 3 || column === 11 || row === 3 || row === 11) return black;
+      return (column + row) % 4 === 0 ? cream : white;
+    }
+    return blue;
+  });
+  const flat = await encodeFlatPng(source, inventory.style_system.palette_rgb, blue);
+  const { data, info } = await rawPixels(flat);
+  for (let row = 4; row <= 10; row += 1) {
+    for (let column = 4; column <= 10; column += 1) {
+      const offset = (row * info.width + column) * 3;
+      assert.deepEqual([...data.subarray(offset, offset + 3)], white);
+    }
+  }
+});
+
+test("poster review edge gate accepts exact safe borders and rejects edge-contact foreground", async () => {
+  const blue = [103, 182, 255];
+  const black = [0, 0, 0];
+  const safe = await pixelPng(24, 16, (column, row) => (column >= 6 && column <= 17 && row >= 6 && row <= 9 ? black : blue));
+  await assertPosterSafeEdges(safe, blue, "safe synthetic poster", 4);
+  const unsafe = await pixelPng(24, 16, (column, row) => (column === 0 && row === 8 ? black : blue));
+  await assert.rejects(assertPosterSafeEdges(unsafe, blue, "unsafe synthetic poster", 4), /non-background pixels in its 4px safe edge/);
 });
 
 test("artwork recipes fail closed when normalization or padding RGB is not locked", () => {
@@ -943,7 +1051,7 @@ test("writes reject a symlinked repository ancestor before touching the external
 test("duplicate poster candidates are rejected before publication and remain correctable", async (t) => {
   const root = await tempRoot(t);
   const ledger = productionLedger();
-  const masterId = "master-slot-04";
+  const masterId = "master-slot-08";
   const source = await writeRepoFile(root, "provider/uniform.png", await rgbPng([103, 182, 255]));
   await ingestGeneration({
     root,
@@ -1138,6 +1246,142 @@ test("correction archives rejected derivatives and authorizes only their exact r
   assert.equal(output.replacement_authorized_checksum, null);
   const inspected = await inspectArtworkFile(root, output, ledger.palette_rgb);
   assert.equal(inspected.checksum_sha256, output.checksum_sha256);
+});
+
+test("pipeline reprocess archives exact prior bytes and deterministically rebuilds without new generation lineage", async (t) => {
+  const root = await tempRoot(t);
+  const ledger = productionLedger();
+  const masterId = "master-program-bmh-employee-training";
+  const source = await writeRepoFile(root, "provider/reprocess.png", await rgbPng([103, 182, 255]));
+  await ingestGeneration({
+    root,
+    ledger,
+    masterId,
+    sourceFile: source,
+    generationCallId: "call-reprocess",
+    toolOutputId: "output-reprocess",
+    generatedAt: "2026-07-16T22:03:00.000Z",
+    generatedBy: "test",
+  });
+  await deriveMaster({ root, ledger, masterId });
+  const master = ledger.masters.find((candidate) => candidate.id === masterId);
+  const output = ledger.assets.find((asset) => asset.provenance.master_id === masterId);
+  const lineageLength = master.lineage.length;
+  const firstFlat = master.flat_master_sha256;
+  const firstOutput = output.checksum_sha256;
+  await preparePipelineReprocess({ root, ledger, masterId });
+  assert.equal(master.status, "source-ready");
+  assert.equal(master.lineage.length, lineageLength, "pipeline reprocess must not invent image generation lineage");
+  assert.equal(master.flat_history.at(-1).checksum_sha256, firstFlat);
+  assert.equal(output.history.at(-1).checksum_sha256, firstOutput);
+  await deriveMaster({ root, ledger, masterId });
+  assert.equal(master.status, "derived");
+  assert.equal(master.lineage.length, lineageLength);
+  assert.equal(master.flat_master_sha256, firstFlat, "same source and pipeline rebuild deterministically");
+  assert.equal(output.checksum_sha256, firstOutput, "same derivative rebuild deterministically");
+  assert.equal(master.flat_replacement_authorized_checksum, null);
+  assert.equal(output.replacement_authorized_checksum, null);
+});
+
+test("poster-only correction preserves the approved card bytes while replacing every poster from the corrected source", async (t) => {
+  const root = await tempRoot(t);
+  const ledger = productionLedger();
+  const masterId = "master-slot-04";
+  const master = ledger.masters.find((candidate) => candidate.id === masterId);
+  const background = master.background_rgb;
+  const initialSource = await writeRepoFile(
+    root,
+    "provider/poster-only-initial.png",
+    await pixelPng(1280, 720, (column, row) => {
+      if (row >= 250 && row < 350 && ((column >= 150 && column < 250) || (column >= 590 && column < 690) || (column >= 1030 && column < 1130))) return [0, 0, 0];
+      return background;
+    }),
+  );
+  await ingestGeneration({
+    root,
+    ledger,
+    masterId,
+    sourceFile: initialSource,
+    generationCallId: "call-poster-only-initial",
+    toolOutputId: "output-poster-only-initial",
+    generatedAt: "2026-07-16T22:04:00.000Z",
+    generatedBy: "test",
+  });
+  await deriveMaster({ root, ledger, masterId });
+
+  const card = ledger.assets.find((asset) => asset.asset_key === "thumbnail-slot-04");
+  const posters = ledger.assets.filter((asset) => asset.provenance.master_id === masterId && asset.kind === "video-poster");
+  const priorCardContents = await readFile(resolveRepoPath(root, card.output_path));
+  const priorCardChecksum = card.checksum_sha256;
+  const priorFlatChecksum = master.flat_master_sha256;
+  const priorPosterChecksums = new Map(posters.map((poster) => [poster.asset_key, poster.checksum_sha256]));
+  const correctionPromptPath = "evidence/poster-only-correction.txt";
+  await writeRepoFile(root, correctionPromptPath, "Recompose the poster-safe subject clusters without changing the passed lesson card.\n");
+  const correctedSource = await writeRepoFile(
+    root,
+    "provider/poster-only-corrected.png",
+    await pixelPng(1280, 720, (column, row) => {
+      if (row >= 230 && row < 370 && ((column >= 180 && column < 300) || (column >= 580 && column < 720) || (column >= 980 && column < 1120))) return [255, 123, 0];
+      return background;
+    }),
+  );
+  await ingestGeneration({
+    root,
+    ledger,
+    masterId,
+    sourceFile: correctedSource,
+    generationCallId: "call-poster-only-corrected",
+    toolOutputId: "output-poster-only-corrected",
+    generatedAt: "2026-07-16T22:05:00.000Z",
+    generatedBy: "test",
+    correctionPromptPath,
+    parentSha256: master.terminal_source_sha256,
+    preserveOutputKeys: [card.asset_key],
+  });
+  assert.equal(master.lineage.at(-1).preserved_output_keys.join(","), card.asset_key);
+  await assert.rejects(
+    ingestGeneration({
+      root,
+      ledger,
+      masterId,
+      sourceFile: correctedSource,
+      generationCallId: "call-poster-only-corrected",
+      toolOutputId: "output-poster-only-corrected",
+      generatedAt: "2026-07-16T22:05:00.000Z",
+      generatedBy: "test",
+      correctionPromptPath,
+      parentSha256: master.lineage.at(-1).parent_source_sha256,
+      preserveOutputKeys: [],
+    }),
+    /replay preserved output keys differ/,
+  );
+  await deriveMaster({ root, ledger, masterId });
+
+  const currentCardContents = await readFile(resolveRepoPath(root, card.output_path));
+  assert.equal(sha256(currentCardContents), sha256(priorCardContents));
+  assert.equal(card.checksum_sha256, priorCardChecksum);
+  assert.equal(currentCardContents.equals(priorCardContents), true, "preserved card bytes must remain exact");
+  assert.equal(card.provenance.preserved_from_flat_master_sha256, priorFlatChecksum);
+  assert.notEqual(master.flat_master_sha256, priorFlatChecksum);
+  for (const poster of posters) {
+    assert.notEqual(poster.checksum_sha256, priorPosterChecksums.get(poster.asset_key));
+    assert.equal(poster.history.at(-1).checksum_sha256, priorPosterChecksums.get(poster.asset_key));
+  }
+});
+
+test("V8 texture exceptions are exact-checksum scoped and cannot transfer to replacement bytes", async () => {
+  const tracked = await readJson(resolveRepoPath(REPO_ROOT, DEFAULT_PATHS.ledger));
+  const evidence = "docs/course-production/thumbnail-pilots/approvals/v8-approved-texture-exceptions-2026-07-17.json";
+  await recordApprovedTextureExceptions({ root: REPO_ROOT, ledger: tracked, evidence });
+  assert.equal(tracked.approved_texture_exceptions.length, 4);
+  assert.equal(tracked.approved_texture_exceptions.every((entry) => entry.approval_inheritance === "forbidden"), true);
+  await validateLedger({ root: REPO_ROOT, inventory, manifest, ledger: tracked, inspectFiles: true });
+  const replacement = structuredClone(tracked);
+  replacement.approved_texture_exceptions[0].checksum_sha256 = "f".repeat(64);
+  await assert.rejects(
+    validateLedger({ root: REPO_ROOT, inventory, manifest, ledger: replacement, inspectFiles: false }),
+    /no longer matches current bytes/,
+  );
 });
 
 test("finalization requires complete evidence and timing, then reconciles from finalized ledger", async (t) => {

@@ -4,7 +4,7 @@
   "generation_policy": {
     "gate": "Jarrad must approve all three pilots before any new image generation",
     "generator": "built-in image_gen",
-    "call_strategy": "one distinct image_gen call per cover or non-pilot lesson master, plus a separate Fact Find poster-master call",
+    "call_strategy": "one distinct image_gen call per cover or non-pilot lesson master, plus eight separate video-poster master calls",
     "pilot_call_strategy": "three checksum-locked single-character candidates using two honest identity roots, distinct pose labels, and lesson-video evidence",
     "model_native_text": "forbidden",
     "manifest_approval_updates": "forbidden until visual QA and explicit approval",
@@ -57,7 +57,7 @@
       },
       {
         "id": "video-contact-sheet-slot-02",
-        "role": "checksum-bound exact mapped-video contact sheet",
+        "role": "checksum-bound historical Terms v9 contact sheet retained for immutable lineage",
         "path": "docs/course-production/thumbnail-pilots/references/production-video-stills/slot-02-contact-sheet.png",
         "sha256": "d041f8ddc39a73a14acb25c17c6d42b6286b9a45bd2189fdcc732a11e217d783",
         "dimensions": [
@@ -236,6 +236,94 @@
         "role": "checksum-bound exact mapped-video contact sheet",
         "path": "docs/course-production/thumbnail-pilots/references/production-video-stills/slot-19-contact-sheet.png",
         "sha256": "d4225e2b70ad0c58db78df3a71655df04fe2b53b2fd8abecabded8d8296bf01b",
+        "dimensions": [
+          960,
+          180
+        ],
+        "frame_count": 3
+      },
+      {
+        "id": "video-contact-sheet-video-slot-04-humanizing-b",
+        "role": "checksum-bound exact mapped-video contact sheet",
+        "path": "docs/course-production/thumbnail-pilots/references/production-video-stills/distinct-posters/video-slot-04-humanizing-b-contact-sheet.png",
+        "sha256": "d1000f38925457fd9be75fc81fd9fe28be5eab8dae5d1452636be40faafbe7aa",
+        "dimensions": [
+          960,
+          180
+        ],
+        "frame_count": 3
+      },
+      {
+        "id": "video-contact-sheet-video-slot-04-ideal-seller",
+        "role": "checksum-bound exact mapped-video contact sheet",
+        "path": "docs/course-production/thumbnail-pilots/references/production-video-stills/distinct-posters/video-slot-04-ideal-seller-contact-sheet.png",
+        "sha256": "161e0ec7e67f81b9455f1abb9b320ebfc993a5e2e0282b188ac6a9702b1172eb",
+        "dimensions": [
+          960,
+          180
+        ],
+        "frame_count": 3
+      },
+      {
+        "id": "video-contact-sheet-video-slot-05-offer-b",
+        "role": "checksum-bound exact mapped-video contact sheet",
+        "path": "docs/course-production/thumbnail-pilots/references/production-video-stills/distinct-posters/video-slot-05-offer-b-contact-sheet.png",
+        "sha256": "2478f180564f0275d0f6debe9e05693a460515412c5e8a410b60fd6feaed3524",
+        "dimensions": [
+          960,
+          180
+        ],
+        "frame_count": 3
+      },
+      {
+        "id": "video-contact-sheet-video-slot-06-framework",
+        "role": "checksum-bound exact mapped-video contact sheet",
+        "path": "docs/course-production/thumbnail-pilots/references/production-video-stills/distinct-posters/video-slot-06-framework-contact-sheet.png",
+        "sha256": "de9a5e1f3c5f05c1301b867a04668b108f80f2729e2957665cec3150ec706e5f",
+        "dimensions": [
+          960,
+          180
+        ],
+        "frame_count": 3
+      },
+      {
+        "id": "video-contact-sheet-video-slot-11-trust",
+        "role": "checksum-bound exact mapped-video contact sheet",
+        "path": "docs/course-production/thumbnail-pilots/references/production-video-stills/distinct-posters/video-slot-11-trust-contact-sheet.png",
+        "sha256": "46f5ac1032d93d13102595a4f6f2b534b1e7cf4416e5c93b5f3ce8b7f4c85cc2",
+        "dimensions": [
+          960,
+          180
+        ],
+        "frame_count": 3
+      },
+      {
+        "id": "video-contact-sheet-video-slot-12-faq-b",
+        "role": "checksum-bound exact mapped-video contact sheet",
+        "path": "docs/course-production/thumbnail-pilots/references/production-video-stills/distinct-posters/video-slot-12-faq-b-contact-sheet.png",
+        "sha256": "fd1828d31a00d6fc4ad15ac290de7729f8aaae2aee13b71e2a4e4b386f1d9897",
+        "dimensions": [
+          960,
+          180
+        ],
+        "frame_count": 3
+      },
+      {
+        "id": "video-contact-sheet-video-slot-18-operator",
+        "role": "checksum-bound exact mapped-video contact sheet",
+        "path": "docs/course-production/thumbnail-pilots/references/production-video-stills/distinct-posters/video-slot-18-operator-contact-sheet.png",
+        "sha256": "a64731ba34bd05fd87dc34b21db8332971b0360bebcc7edad001da48bca639e9",
+        "dimensions": [
+          960,
+          180
+        ],
+        "frame_count": 3
+      },
+      {
+        "id": "video-contact-sheet-slot-02-v10",
+        "role": "checksum-bound exact mapped-video contact sheet",
+        "path": "docs/course-production/thumbnail-pilots/references/production-video-stills/slot-02-v10-contact-sheet.png",
+        "sha256": "e5e869d33d440ba155dd8f5088f2039f96a2cfb105a5ea9be79911933f2f363c",
         "dimensions": [
           960,
           180
@@ -880,7 +968,7 @@
         "style-ref-1",
         "style-ref-2",
         "recurring-seller-approved",
-        "video-contact-sheet-slot-02"
+        "video-contact-sheet-slot-02-v10"
       ],
       "art_direction": {
         "master_id": "master-slot-02",
@@ -955,23 +1043,23 @@
         "video_evidence": [
           {
             "asset_key": "video-slot-02-terms",
-            "local_path": "course-assets/review-lessonGLOA/LESSON-GLOA-v9.mp4",
-            "checksum_sha256": "17cac99f171edfb773f85eaaa6719e09ffe1295abec5b062554c72958747c0bb",
-            "size_bytes": 110768219,
-            "approval_status": "hold",
-            "duration_seconds": 451.754,
+            "local_path": "course-assets/review-lessonGLOA/LESSON-GLOA-v10-LOCAL-POLICY-CUT.mp4",
+            "checksum_sha256": "6f57600d6ec3a596f96175052eda997503ab9b72aa5b7e9ec02239fe1a125769",
+            "size_bytes": 104384792,
+            "approval_status": "approved",
+            "duration_seconds": 449.534,
             "frame_timestamps_seconds": [
-              90.351,
-              225.877,
-              361.403
+              89.907,
+              224.767,
+              359.627
             ]
           }
         ],
         "contact_sheet_input": {
-          "id": "video-contact-sheet-slot-02",
+          "id": "video-contact-sheet-slot-02-v10",
           "role": "checksum-bound exact mapped-video contact sheet",
-          "path": "docs/course-production/thumbnail-pilots/references/production-video-stills/slot-02-contact-sheet.png",
-          "sha256": "d041f8ddc39a73a14acb25c17c6d42b6286b9a45bd2189fdcc732a11e217d783",
+          "path": "docs/course-production/thumbnail-pilots/references/production-video-stills/slot-02-v10-contact-sheet.png",
+          "sha256": "e5e869d33d440ba155dd8f5088f2039f96a2cfb105a5ea9be79911933f2f363c",
           "dimensions": [
             960,
             180
@@ -1702,31 +1790,118 @@
           "output_path": "course-assets/posters/video-slot-04-humanizing-b.webp",
           "focus_subject": "seller story and situation path",
           "art_direction": {
-            "master_id": "master-slot-04",
-            "pose_id": "slot-04-seller-half-turn-house-story",
+            "master_id": "master-poster-video-slot-04-humanizing-b",
+            "pose_id": "poster-humanizing-b-seller-side-stool-story-folder",
             "people_count": 1,
             "character_id": "recurring-seller-approved",
             "skin_fill": "pure white",
-            "posture": "half-turn-standing",
-            "orientation": "three-quarter back view turning toward the viewer",
-            "gesture": "one hand over his heart and one hand indicating the story path",
-            "placement": "in the left safe zone beside the small house",
-            "prop": "a simple house and unfolding situation path",
+            "posture": "seated-sideways-on-stool-leaning-forward",
+            "orientation": "three-quarter view facing right",
+            "gesture": "both hands holding a blank story folder across his knees",
+            "placement": "in the left safe zone",
+            "prop": "a blank story folder with house heart and checklist cues",
             "background_rgb": [
               255,
               211,
               1
             ],
-            "lesson_or_video_cue": "Humanizing the Lead and seeing the person before the property",
+            "lesson_or_video_cue": "Humanizing the Seller B video and turning a personal seller story into a clear next step",
             "lineage_pose_signature": null,
-            "pose_instruction": "Show exactly one person: the recurring curly-haired seller. Keep the approved face, hair, proportions, clothing language, pure-white skin fill, and line weight consistent. Place the recurring curly-haired seller in the left safe zone beside the small house, half-turn-standing, three-quarter back view turning toward the viewer, one hand over his heart and one hand indicating the story path, using a simple house and unfolding situation path. This pose and placement must be visibly different from every other independently generated master."
+            "pose_instruction": "Show exactly one person: the recurring curly-haired seller. Preserve the approved identity, proportions, clothing language, pure-white skin fill, and line weight. Place the recurring curly-haired seller in the left safe zone, seated-sideways-on-stool-leaning-forward, three-quarter view facing right, both hands holding a blank story folder across his knees, using a blank story folder with house heart and checklist cues. This pose and placement must be visibly different from every other independently generated master."
           },
-          "production_source_mode": "derive-from-lesson-master",
-          "direct_master": null,
+          "production_source_mode": "generate-distinct-after-pilot-approval",
+          "direct_master": {
+            "id": "master-poster-video-slot-04-humanizing-b",
+            "source_path": "course-assets/posters/production/sources/video-slot-04-humanizing-b-generated.png",
+            "flat_master_path": "course-assets/posters/production/flat-masters/video-slot-04-humanizing-b-flat-master.png",
+            "background_rgb": [
+              255,
+              211,
+              1
+            ],
+            "art_direction": {
+              "master_id": "master-poster-video-slot-04-humanizing-b",
+              "pose_id": "poster-humanizing-b-seller-side-stool-story-folder",
+              "people_count": 1,
+              "character_id": "recurring-seller-approved",
+              "skin_fill": "pure white",
+              "posture": "seated-sideways-on-stool-leaning-forward",
+              "orientation": "three-quarter view facing right",
+              "gesture": "both hands holding a blank story folder across his knees",
+              "placement": "in the left safe zone",
+              "prop": "a blank story folder with house heart and checklist cues",
+              "background_rgb": [
+                255,
+                211,
+                1
+              ],
+              "lesson_or_video_cue": "Humanizing the Seller B video and turning a personal seller story into a clear next step",
+              "lineage_pose_signature": null,
+              "pose_instruction": "Show exactly one person: the recurring curly-haired seller. Preserve the approved identity, proportions, clothing language, pure-white skin fill, and line weight. Place the recurring curly-haired seller in the left safe zone, seated-sideways-on-stool-leaning-forward, three-quarter view facing right, both hands holding a blank story folder across his knees, using a blank story folder with house heart and checklist cues. This pose and placement must be visibly different from every other independently generated master."
+            },
+            "expected_aspect_ratio": "16:9",
+            "reference_ids": [
+              "style-ref-1",
+              "style-ref-2",
+              "recurring-seller-approved",
+              "video-contact-sheet-video-slot-04-humanizing-b"
+            ],
+            "video_evidence": [
+              {
+                "asset_key": "video-slot-04-humanizing-b",
+                "local_path": "course-assets/review-lesson2B/LESSON-2B-v3-FULL.mp4",
+                "checksum_sha256": "582125d4d8a2b30f911071e644ebfc2b3e1aa6fb839470f52ef04c2a0c307f4d",
+                "size_bytes": 127585423,
+                "approval_status": "approved",
+                "duration_seconds": 357.824,
+                "frame_timestamps_seconds": [
+                  71.565,
+                  178.912,
+                  286.259
+                ]
+              }
+            ],
+            "contact_sheet_input": {
+              "id": "video-contact-sheet-video-slot-04-humanizing-b",
+              "role": "checksum-bound exact mapped-video contact sheet",
+              "path": "docs/course-production/thumbnail-pilots/references/production-video-stills/distinct-posters/video-slot-04-humanizing-b-contact-sheet.png",
+              "sha256": "d1000f38925457fd9be75fc81fd9fe28be5eab8dae5d1452636be40faafbe7aa",
+              "dimensions": [
+                960,
+                180
+              ],
+              "frame_count": 3
+            },
+            "prompt": "Use case: stylized-concept\nAsset type: BMH Institute Humanizing the Seller B video-poster master, wide 16:9 artwork\nPrimary request: Create a focused illustration about hearing the seller's personal story and connecting it to a clear next step. The exact mapped video and its seller-story examples must inform the folder, home, heart, and checklist cues.\nInput images: Image 1 and Image 2 are the canonical BMH Sticker System references. Image 3 is the approved recurring curly-haired seller identity root. Image 4 is the checksum-bound contact sheet from the exact mapped video.\nCharacter direction: Show exactly one person: the recurring curly-haired seller. Preserve the approved face, curly hair, proportions, clothing language, pure-white skin fill, and thick slightly wobbly black line weight. Seat him sideways on a small yellow stool in the left safe zone, leaning forward with a blank story folder across his knees. This posture must be materially different from every other poster in the lesson.\nScene: uniform flat golden-yellow background with generous negative space. Use separate house, heart, and blank checklist stickers connected by a simple blue path.\nConstraints: one person only; no Andrea; no words, letters, numbers, logos, watermark, gradients, texture, shadows, realistic room, extra limbs, cropped anatomy, or decorative objects without a teaching purpose. Keep all meaningful content inside the central 80 percent.",
+            "prompt_sha256": "7b35dc084cbc848c4485e0bc23211b963c8e3f6709b57933e76af81a80962cee",
+            "provenance": {
+              "generator": "built-in image_gen",
+              "generation_call": "one-distinct-call",
+              "planned_generation_call_id": "imagegen-poster-video-slot-04-humanizing-b",
+              "source_capture_required": true,
+              "prompt_checksum_required": true,
+              "reference_checksums_required": true,
+              "generated_at_required": true,
+              "generated_by_required": true,
+              "model_output_path_required": true
+            },
+            "production_record": {
+              "status": "not-produced",
+              "generated_at": null,
+              "generated_by": null,
+              "generation_call_id": null,
+              "source_sha256": null,
+              "flat_master_sha256": null,
+              "review_decision": null,
+              "reviewed_at": null,
+              "reviewed_by": null,
+              "review_evidence": null
+            }
+          },
           "derivative": {
             "recipe_id": "slot-04-video-slot-04-humanizing-b-center-safe",
-            "source_master_id": "master-slot-04",
-            "crop_profile": "center-safe",
+            "source_master_id": "master-poster-video-slot-04-humanizing-b",
+            "crop_profile": "full-safe",
             "normalize_master_dimensions": [
               1280,
               720
@@ -1738,10 +1913,10 @@
               1
             ],
             "crop_pixels_after_normalize": [
-              256,
-              144,
-              768,
-              432
+              0,
+              0,
+              1280,
+              720
             ],
             "target_dimensions": [
               1280,
@@ -1755,7 +1930,7 @@
           "provenance": {
             "generator": "built-in image_gen",
             "generation_call": "one-distinct-call",
-            "planned_generation_call_id": "imagegen-lesson-slot-04",
+            "planned_generation_call_id": "imagegen-poster-video-slot-04-humanizing-b",
             "source_capture_required": true,
             "prompt_checksum_required": true,
             "reference_checksums_required": true,
@@ -1777,31 +1952,118 @@
           "output_path": "course-assets/posters/video-slot-04-ideal-seller.webp",
           "focus_subject": "ideal seller fit lens",
           "art_direction": {
-            "master_id": "master-slot-04",
-            "pose_id": "slot-04-seller-half-turn-house-story",
+            "master_id": "master-poster-video-slot-04-ideal-seller",
+            "pose_id": "poster-ideal-seller-kneeling-key-magnifier",
             "people_count": 1,
             "character_id": "recurring-seller-approved",
             "skin_fill": "pure white",
-            "posture": "half-turn-standing",
-            "orientation": "three-quarter back view turning toward the viewer",
-            "gesture": "one hand over his heart and one hand indicating the story path",
-            "placement": "in the left safe zone beside the small house",
-            "prop": "a simple house and unfolding situation path",
+            "posture": "kneeling-on-one-knee",
+            "orientation": "right profile facing left",
+            "gesture": "holding a magnifier over a key while steadying a blank checklist",
+            "placement": "in the right-center safe zone",
+            "prop": "a key magnifier house clock and blank qualification checklist",
             "background_rgb": [
               255,
               211,
               1
             ],
-            "lesson_or_video_cue": "Humanizing the Lead and seeing the person before the property",
+            "lesson_or_video_cue": "Ideal Seller Profile video and recognizing seller-property fit quickly",
             "lineage_pose_signature": null,
-            "pose_instruction": "Show exactly one person: the recurring curly-haired seller. Keep the approved face, hair, proportions, clothing language, pure-white skin fill, and line weight consistent. Place the recurring curly-haired seller in the left safe zone beside the small house, half-turn-standing, three-quarter back view turning toward the viewer, one hand over his heart and one hand indicating the story path, using a simple house and unfolding situation path. This pose and placement must be visibly different from every other independently generated master."
+            "pose_instruction": "Show exactly one person: the recurring curly-haired seller. Preserve the approved identity, proportions, clothing language, pure-white skin fill, and line weight. Place the recurring curly-haired seller in the right-center safe zone, kneeling-on-one-knee, right profile facing left, holding a magnifier over a key while steadying a blank checklist, using a key magnifier house clock and blank qualification checklist. This pose and placement must be visibly different from every other independently generated master."
           },
-          "production_source_mode": "derive-from-lesson-master",
-          "direct_master": null,
+          "production_source_mode": "generate-distinct-after-pilot-approval",
+          "direct_master": {
+            "id": "master-poster-video-slot-04-ideal-seller",
+            "source_path": "course-assets/posters/production/sources/video-slot-04-ideal-seller-generated.png",
+            "flat_master_path": "course-assets/posters/production/flat-masters/video-slot-04-ideal-seller-flat-master.png",
+            "background_rgb": [
+              255,
+              211,
+              1
+            ],
+            "art_direction": {
+              "master_id": "master-poster-video-slot-04-ideal-seller",
+              "pose_id": "poster-ideal-seller-kneeling-key-magnifier",
+              "people_count": 1,
+              "character_id": "recurring-seller-approved",
+              "skin_fill": "pure white",
+              "posture": "kneeling-on-one-knee",
+              "orientation": "right profile facing left",
+              "gesture": "holding a magnifier over a key while steadying a blank checklist",
+              "placement": "in the right-center safe zone",
+              "prop": "a key magnifier house clock and blank qualification checklist",
+              "background_rgb": [
+                255,
+                211,
+                1
+              ],
+              "lesson_or_video_cue": "Ideal Seller Profile video and recognizing seller-property fit quickly",
+              "lineage_pose_signature": null,
+              "pose_instruction": "Show exactly one person: the recurring curly-haired seller. Preserve the approved identity, proportions, clothing language, pure-white skin fill, and line weight. Place the recurring curly-haired seller in the right-center safe zone, kneeling-on-one-knee, right profile facing left, holding a magnifier over a key while steadying a blank checklist, using a key magnifier house clock and blank qualification checklist. This pose and placement must be visibly different from every other independently generated master."
+            },
+            "expected_aspect_ratio": "16:9",
+            "reference_ids": [
+              "style-ref-1",
+              "style-ref-2",
+              "recurring-seller-approved",
+              "video-contact-sheet-video-slot-04-ideal-seller"
+            ],
+            "video_evidence": [
+              {
+                "asset_key": "video-slot-04-ideal-seller",
+                "local_path": "course-assets/review-lessonISP/LESSON-ISP-v6.mp4",
+                "checksum_sha256": "f99650628999c4c82c69fd3fe508c7dfc09697198b28ecf8bb7bab8542c800d1",
+                "size_bytes": 62498444,
+                "approval_status": "approved",
+                "duration_seconds": 312.192,
+                "frame_timestamps_seconds": [
+                  62.438,
+                  156.096,
+                  249.754
+                ]
+              }
+            ],
+            "contact_sheet_input": {
+              "id": "video-contact-sheet-video-slot-04-ideal-seller",
+              "role": "checksum-bound exact mapped-video contact sheet",
+              "path": "docs/course-production/thumbnail-pilots/references/production-video-stills/distinct-posters/video-slot-04-ideal-seller-contact-sheet.png",
+              "sha256": "161e0ec7e67f81b9455f1abb9b320ebfc993a5e2e0282b188ac6a9702b1172eb",
+              "dimensions": [
+                960,
+                180
+              ],
+              "frame_count": 3
+            },
+            "prompt": "Use case: stylized-concept\nAsset type: BMH Institute Ideal Seller Profile video-poster master, wide 16:9 artwork\nPrimary request: Create a focused illustration about recognizing the right property and seller fit quickly. The exact mapped video must inform the key, house, clock, and qualification-checklist cues.\nInput images: Image 1 and Image 2 are the canonical BMH Sticker System references. Image 3 is the approved recurring curly-haired seller identity root. Image 4 is the checksum-bound contact sheet from the exact mapped video.\nCharacter direction: Show exactly one person: the recurring curly-haired seller. Preserve the approved face, curly hair, proportions, clothing language, pure-white skin fill, and thick slightly wobbly black line weight. Place him right of center, kneeling on one knee in right profile while holding a magnifier over a key and blank checklist. This posture must be materially different from both Humanizing the Seller posters.\nScene: uniform flat golden-yellow background with a simple house sticker, key, blank checklist, and clock arranged as one readable qualification path.\nConstraints: one person only; no Andrea; no words, letters, numbers, logos, watermark, gradients, texture, shadows, extra limbs, cropped anatomy, or unrelated objects. Keep all meaningful content inside the central 80 percent.",
+            "prompt_sha256": "d4925e4f826e9503044ec057a6e20175fa6b6591448dcc37d29abd6e641aaddc",
+            "provenance": {
+              "generator": "built-in image_gen",
+              "generation_call": "one-distinct-call",
+              "planned_generation_call_id": "imagegen-poster-video-slot-04-ideal-seller",
+              "source_capture_required": true,
+              "prompt_checksum_required": true,
+              "reference_checksums_required": true,
+              "generated_at_required": true,
+              "generated_by_required": true,
+              "model_output_path_required": true
+            },
+            "production_record": {
+              "status": "not-produced",
+              "generated_at": null,
+              "generated_by": null,
+              "generation_call_id": null,
+              "source_sha256": null,
+              "flat_master_sha256": null,
+              "review_decision": null,
+              "reviewed_at": null,
+              "reviewed_by": null,
+              "review_evidence": null
+            }
+          },
           "derivative": {
             "recipe_id": "slot-04-video-slot-04-ideal-seller-right-safe",
-            "source_master_id": "master-slot-04",
-            "crop_profile": "right-safe",
+            "source_master_id": "master-poster-video-slot-04-ideal-seller",
+            "crop_profile": "full-safe",
             "normalize_master_dimensions": [
               1280,
               720
@@ -1813,10 +2075,10 @@
               1
             ],
             "crop_pixels_after_normalize": [
-              448,
-              144,
-              768,
-              432
+              0,
+              0,
+              1280,
+              720
             ],
             "target_dimensions": [
               1280,
@@ -1830,7 +2092,7 @@
           "provenance": {
             "generator": "built-in image_gen",
             "generation_call": "one-distinct-call",
-            "planned_generation_call_id": "imagegen-lesson-slot-04",
+            "planned_generation_call_id": "imagegen-poster-video-slot-04-ideal-seller",
             "source_capture_required": true,
             "prompt_checksum_required": true,
             "reference_checksums_required": true,
@@ -2138,31 +2400,118 @@
           "output_path": "course-assets/posters/video-slot-05-offer-b.webp",
           "focus_subject": "clear choice path and respectful agreement",
           "art_direction": {
-            "master_id": "master-slot-05",
-            "pose_id": "slot-05-seller-table-options",
+            "master_id": "master-poster-video-slot-05-offer-b",
+            "pose_id": "poster-offer-b-seller-walking-offer-folder",
             "people_count": 1,
             "character_id": "recurring-seller-approved",
             "skin_fill": "pure white",
-            "posture": "seated-at-table",
-            "orientation": "profile view facing right",
-            "gesture": "both open hands calmly comparing two option cards",
-            "placement": "in the center-left safe zone",
-            "prop": "two balanced unlabeled option cards",
+            "posture": "walking-briskly",
+            "orientation": "full-body profile facing right",
+            "gesture": "carrying a sealed blank offer folder and extending one open hand",
+            "placement": "in the left safe zone",
+            "prop": "a sealed offer folder distressed house choice path and shield",
             "background_rgb": [
               103,
               182,
               255
             ],
-            "lesson_or_video_cue": "The BMH Offer Playbook and matching a situation to a respectful option",
+            "lesson_or_video_cue": "Offer Presentation B video and moving from property condition to a protected decision",
             "lineage_pose_signature": null,
-            "pose_instruction": "Show exactly one person: the recurring curly-haired seller. Keep the approved face, hair, proportions, clothing language, pure-white skin fill, and line weight consistent. Place the recurring curly-haired seller in the center-left safe zone, seated-at-table, profile view facing right, both open hands calmly comparing two option cards, using two balanced unlabeled option cards. This pose and placement must be visibly different from every other independently generated master."
+            "pose_instruction": "Show exactly one person: the recurring curly-haired seller. Preserve the approved identity, proportions, clothing language, pure-white skin fill, and line weight. Place the recurring curly-haired seller in the left safe zone, walking-briskly, full-body profile facing right, carrying a sealed blank offer folder and extending one open hand, using a sealed offer folder distressed house choice path and shield. This pose and placement must be visibly different from every other independently generated master."
           },
-          "production_source_mode": "derive-from-lesson-master",
-          "direct_master": null,
+          "production_source_mode": "generate-distinct-after-pilot-approval",
+          "direct_master": {
+            "id": "master-poster-video-slot-05-offer-b",
+            "source_path": "course-assets/posters/production/sources/video-slot-05-offer-b-generated.png",
+            "flat_master_path": "course-assets/posters/production/flat-masters/video-slot-05-offer-b-flat-master.png",
+            "background_rgb": [
+              103,
+              182,
+              255
+            ],
+            "art_direction": {
+              "master_id": "master-poster-video-slot-05-offer-b",
+              "pose_id": "poster-offer-b-seller-walking-offer-folder",
+              "people_count": 1,
+              "character_id": "recurring-seller-approved",
+              "skin_fill": "pure white",
+              "posture": "walking-briskly",
+              "orientation": "full-body profile facing right",
+              "gesture": "carrying a sealed blank offer folder and extending one open hand",
+              "placement": "in the left safe zone",
+              "prop": "a sealed offer folder distressed house choice path and shield",
+              "background_rgb": [
+                103,
+                182,
+                255
+              ],
+              "lesson_or_video_cue": "Offer Presentation B video and moving from property condition to a protected decision",
+              "lineage_pose_signature": null,
+              "pose_instruction": "Show exactly one person: the recurring curly-haired seller. Preserve the approved identity, proportions, clothing language, pure-white skin fill, and line weight. Place the recurring curly-haired seller in the left safe zone, walking-briskly, full-body profile facing right, carrying a sealed blank offer folder and extending one open hand, using a sealed offer folder distressed house choice path and shield. This pose and placement must be visibly different from every other independently generated master."
+            },
+            "expected_aspect_ratio": "16:9",
+            "reference_ids": [
+              "style-ref-1",
+              "style-ref-2",
+              "recurring-seller-approved",
+              "video-contact-sheet-video-slot-05-offer-b"
+            ],
+            "video_evidence": [
+              {
+                "asset_key": "video-slot-05-offer-b",
+                "local_path": "course-assets/review-lesson3B/LESSON-3B-v1-FULL.mp4",
+                "checksum_sha256": "a9206ce9907d887c5be95c18755e0793e938bdac8bcb788ab6f2c269b9b9cc83",
+                "size_bytes": 66943724,
+                "approval_status": "approved",
+                "duration_seconds": 231.893,
+                "frame_timestamps_seconds": [
+                  46.379,
+                  115.947,
+                  185.514
+                ]
+              }
+            ],
+            "contact_sheet_input": {
+              "id": "video-contact-sheet-video-slot-05-offer-b",
+              "role": "checksum-bound exact mapped-video contact sheet",
+              "path": "docs/course-production/thumbnail-pilots/references/production-video-stills/distinct-posters/video-slot-05-offer-b-contact-sheet.png",
+              "sha256": "2478f180564f0275d0f6debe9e05693a460515412c5e8a410b60fd6feaed3524",
+              "dimensions": [
+                960,
+                180
+              ],
+              "frame_count": 3
+            },
+            "prompt": "Use case: stylized-concept\nAsset type: BMH Institute Offer Presentation B video-poster master, wide 16:9 artwork\nPrimary request: Create a focused illustration about moving from a distressed property to a clear, protected offer decision. The exact mapped video must inform the fixer house, offer folder, choice path, handshake, and protection cues.\nInput images: Image 1 and Image 2 are the canonical BMH Sticker System references. Image 3 is the approved recurring curly-haired seller identity root. Image 4 is the checksum-bound contact sheet from the exact mapped video.\nCharacter direction: Show exactly one person: the recurring curly-haired seller. Preserve the approved face, curly hair, proportions, clothing language, pure-white skin fill, and thick slightly wobbly black line weight. Put him on the left walking briskly toward the right, carrying a sealed blank offer folder and extending one open hand. This moving stride must be materially different from the seated Offer A poster.\nScene: uniform flat cornflower-blue background. Show a distressed house, blank checklist and handshake nodes leading to a shield check.\nConstraints: one person only; no Andrea; no words, letters, numbers, currency, logos, watermark, gradients, texture, shadows, extra limbs, cropped anatomy, or unrelated objects. Keep all meaningful content inside the central 80 percent.",
+            "prompt_sha256": "0f5a56929201df0abf7af6d310d29bddc39e8928191869f347e416bb21a266c4",
+            "provenance": {
+              "generator": "built-in image_gen",
+              "generation_call": "one-distinct-call",
+              "planned_generation_call_id": "imagegen-poster-video-slot-05-offer-b",
+              "source_capture_required": true,
+              "prompt_checksum_required": true,
+              "reference_checksums_required": true,
+              "generated_at_required": true,
+              "generated_by_required": true,
+              "model_output_path_required": true
+            },
+            "production_record": {
+              "status": "not-produced",
+              "generated_at": null,
+              "generated_by": null,
+              "generation_call_id": null,
+              "source_sha256": null,
+              "flat_master_sha256": null,
+              "review_decision": null,
+              "reviewed_at": null,
+              "reviewed_by": null,
+              "review_evidence": null
+            }
+          },
           "derivative": {
             "recipe_id": "slot-05-video-slot-05-offer-b-right-safe",
-            "source_master_id": "master-slot-05",
-            "crop_profile": "right-safe",
+            "source_master_id": "master-poster-video-slot-05-offer-b",
+            "crop_profile": "full-safe",
             "normalize_master_dimensions": [
               1280,
               720
@@ -2174,10 +2523,10 @@
               255
             ],
             "crop_pixels_after_normalize": [
-              448,
-              144,
-              768,
-              432
+              0,
+              0,
+              1280,
+              720
             ],
             "target_dimensions": [
               1280,
@@ -2191,7 +2540,7 @@
           "provenance": {
             "generator": "built-in image_gen",
             "generation_call": "one-distinct-call",
-            "planned_generation_call_id": "imagegen-lesson-slot-05",
+            "planned_generation_call_id": "imagegen-poster-video-slot-05-offer-b",
             "source_capture_required": true,
             "prompt_checksum_required": true,
             "reference_checksums_required": true,
@@ -2499,31 +2848,118 @@
           "output_path": "course-assets/posters/video-slot-06-framework.webp",
           "focus_subject": "five-step conversation path",
           "art_direction": {
-            "master_id": "master-slot-06",
-            "pose_id": "slot-06-andrea-walking-pipeline-baton",
+            "master_id": "master-poster-video-slot-06-framework",
+            "pose_id": "poster-framework-andrea-round-table-five-cards",
             "people_count": 1,
             "character_id": "andrea-approved",
             "skin_fill": "pure white",
-            "posture": "walking",
-            "orientation": "profile view moving left to right",
-            "gesture": "carrying a baton forward between pipeline stage cards",
-            "placement": "across the lower-center safe zone",
-            "prop": "a simple handoff baton",
+            "posture": "seated-at-round-table",
+            "orientation": "three-quarter view facing right",
+            "gesture": "one hand touching her headset and the other pointing across five blank step cards",
+            "placement": "in the left-center safe zone",
+            "prop": "a round table five blank framework cards ear question handshake and heart cues",
             "background_rgb": [
               255,
               211,
               1
             ],
-            "lesson_or_video_cue": "Sales Pipeline and Stage Ownership plus the five-step conversation framework",
+            "lesson_or_video_cue": "Call Framework video and listening through a structured five-step conversation",
             "lineage_pose_signature": null,
-            "pose_instruction": "Show exactly one person: Andrea. Keep the approved face, hair, proportions, clothing language, pure-white skin fill, and line weight consistent. Place Andrea across the lower-center safe zone, walking, profile view moving left to right, carrying a baton forward between pipeline stage cards, using a simple handoff baton. This pose and placement must be visibly different from every other independently generated master."
+            "pose_instruction": "Show exactly one person: Andrea. Preserve the approved identity, proportions, clothing language, pure-white skin fill, and line weight. Place Andrea in the left-center safe zone, seated-at-round-table, three-quarter view facing right, one hand touching her headset and the other pointing across five blank step cards, using a round table five blank framework cards ear question handshake and heart cues. This pose and placement must be visibly different from every other independently generated master."
           },
-          "production_source_mode": "derive-from-lesson-master",
-          "direct_master": null,
+          "production_source_mode": "generate-distinct-after-pilot-approval",
+          "direct_master": {
+            "id": "master-poster-video-slot-06-framework",
+            "source_path": "course-assets/posters/production/sources/video-slot-06-framework-generated.png",
+            "flat_master_path": "course-assets/posters/production/flat-masters/video-slot-06-framework-flat-master.png",
+            "background_rgb": [
+              255,
+              211,
+              1
+            ],
+            "art_direction": {
+              "master_id": "master-poster-video-slot-06-framework",
+              "pose_id": "poster-framework-andrea-round-table-five-cards",
+              "people_count": 1,
+              "character_id": "andrea-approved",
+              "skin_fill": "pure white",
+              "posture": "seated-at-round-table",
+              "orientation": "three-quarter view facing right",
+              "gesture": "one hand touching her headset and the other pointing across five blank step cards",
+              "placement": "in the left-center safe zone",
+              "prop": "a round table five blank framework cards ear question handshake and heart cues",
+              "background_rgb": [
+                255,
+                211,
+                1
+              ],
+              "lesson_or_video_cue": "Call Framework video and listening through a structured five-step conversation",
+              "lineage_pose_signature": null,
+              "pose_instruction": "Show exactly one person: Andrea. Preserve the approved identity, proportions, clothing language, pure-white skin fill, and line weight. Place Andrea in the left-center safe zone, seated-at-round-table, three-quarter view facing right, one hand touching her headset and the other pointing across five blank step cards, using a round table five blank framework cards ear question handshake and heart cues. This pose and placement must be visibly different from every other independently generated master."
+            },
+            "expected_aspect_ratio": "16:9",
+            "reference_ids": [
+              "style-ref-1",
+              "style-ref-2",
+              "andrea-approved",
+              "video-contact-sheet-video-slot-06-framework"
+            ],
+            "video_evidence": [
+              {
+                "asset_key": "video-slot-06-framework",
+                "local_path": "course-assets/review-lesson4B/LESSON-4B-v1-APPROVED.mp4",
+                "checksum_sha256": "2b66d59b3325ceb4ca8cc5dd8db3edd50f05b583a9705e334f2a40088f8b79ef",
+                "size_bytes": 57684948,
+                "approval_status": "approved",
+                "duration_seconds": 160.661,
+                "frame_timestamps_seconds": [
+                  32.132,
+                  80.331,
+                  128.529
+                ]
+              }
+            ],
+            "contact_sheet_input": {
+              "id": "video-contact-sheet-video-slot-06-framework",
+              "role": "checksum-bound exact mapped-video contact sheet",
+              "path": "docs/course-production/thumbnail-pilots/references/production-video-stills/distinct-posters/video-slot-06-framework-contact-sheet.png",
+              "sha256": "de9a5e1f3c5f05c1301b867a04668b108f80f2729e2957665cec3150ec706e5f",
+              "dimensions": [
+                960,
+                180
+              ],
+              "frame_count": 3
+            },
+            "prompt": "Use case: stylized-concept\nAsset type: BMH Institute Call Framework video-poster master, wide 16:9 artwork\nPrimary request: Create a focused illustration about listening through a structured five-step call framework. The exact mapped video must inform the active-listening headset, table, question, handshake, and relationship cues.\nInput images: Image 1 and Image 2 are the canonical BMH Sticker System references. Image 3 is the approved Andrea identity root. Image 4 is the checksum-bound contact sheet from the exact mapped video.\nCharacter direction: Show exactly one person: Andrea. Preserve Andrea's approved face, hair, proportions, clothing language, pure-white skin fill, and thick slightly wobbly black line weight. Seat her at a round table in the left-center safe zone, one hand touching her headset and the other pointing across five blank step cards. This seated listening posture must be materially different from the walking Pipeline poster.\nScene: uniform flat golden-yellow background. Use five blank cards plus ear, question, handshake and heart cues as one simple framework arc.\nConstraints: one person only; no seller; no words, letters, numbers, logos, watermark, gradients, texture, shadows, extra limbs, cropped anatomy, or realistic room. Keep all meaningful content inside the central 80 percent.",
+            "prompt_sha256": "03a18bcbca39b1be4c17e28405ae4b25b52e34ef16dad9013c8462298068045b",
+            "provenance": {
+              "generator": "built-in image_gen",
+              "generation_call": "one-distinct-call",
+              "planned_generation_call_id": "imagegen-poster-video-slot-06-framework",
+              "source_capture_required": true,
+              "prompt_checksum_required": true,
+              "reference_checksums_required": true,
+              "generated_at_required": true,
+              "generated_by_required": true,
+              "model_output_path_required": true
+            },
+            "production_record": {
+              "status": "not-produced",
+              "generated_at": null,
+              "generated_by": null,
+              "generation_call_id": null,
+              "source_sha256": null,
+              "flat_master_sha256": null,
+              "review_decision": null,
+              "reviewed_at": null,
+              "reviewed_by": null,
+              "review_evidence": null
+            }
+          },
           "derivative": {
             "recipe_id": "slot-06-video-slot-06-framework-right-safe",
-            "source_master_id": "master-slot-06",
-            "crop_profile": "right-safe",
+            "source_master_id": "master-poster-video-slot-06-framework",
+            "crop_profile": "full-safe",
             "normalize_master_dimensions": [
               1280,
               720
@@ -2535,10 +2971,10 @@
               1
             ],
             "crop_pixels_after_normalize": [
-              448,
-              144,
-              768,
-              432
+              0,
+              0,
+              1280,
+              720
             ],
             "target_dimensions": [
               1280,
@@ -2552,7 +2988,7 @@
           "provenance": {
             "generator": "built-in image_gen",
             "generation_call": "one-distinct-call",
-            "planned_generation_call_id": "imagegen-lesson-slot-06",
+            "planned_generation_call_id": "imagegen-poster-video-slot-06-framework",
             "source_capture_required": true,
             "prompt_checksum_required": true,
             "reference_checksums_required": true,
@@ -4391,31 +4827,118 @@
           "output_path": "course-assets/posters/video-slot-11-trust.webp",
           "focus_subject": "trust and people bridge",
           "art_direction": {
-            "master_id": "master-slot-11",
-            "pose_id": "slot-11-seller-leaning-knot",
+            "master_id": "master-poster-video-slot-11-trust",
+            "pose_id": "poster-trust-seller-sofa-open-palm",
             "people_count": 1,
             "character_id": "recurring-seller-approved",
             "skin_fill": "pure white",
-            "posture": "leaning-forward",
-            "orientation": "front-facing with shoulders angled right",
-            "gesture": "both hands carefully loosening one strand of the objection knot",
-            "placement": "in the left-center safe zone",
-            "prop": "a loose knot of house clock contract and price icons",
+            "posture": "seated-upright-on-sofa-edge",
+            "orientation": "three-quarter view facing left",
+            "gesture": "one arm folded and the other palm open in a considered response",
+            "placement": "in the right safe zone",
+            "prop": "a sofa with ear heart conversation and bridge-shield cues",
             "background_rgb": [
               255,
               211,
               1
             ],
-            "lesson_or_video_cue": "Complex Objections and preserving trust while untangling layered concerns",
+            "lesson_or_video_cue": "Trust and Objections video and listening acknowledging asking and redirecting",
             "lineage_pose_signature": null,
-            "pose_instruction": "Show exactly one person: the recurring curly-haired seller. Keep the approved face, hair, proportions, clothing language, pure-white skin fill, and line weight consistent. Place the recurring curly-haired seller in the left-center safe zone, leaning-forward, front-facing with shoulders angled right, both hands carefully loosening one strand of the objection knot, using a loose knot of house clock contract and price icons. This pose and placement must be visibly different from every other independently generated master."
+            "pose_instruction": "Show exactly one person: the recurring curly-haired seller. Preserve the approved identity, proportions, clothing language, pure-white skin fill, and line weight. Place the recurring curly-haired seller in the right safe zone, seated-upright-on-sofa-edge, three-quarter view facing left, one arm folded and the other palm open in a considered response, using a sofa with ear heart conversation and bridge-shield cues. This pose and placement must be visibly different from every other independently generated master."
           },
-          "production_source_mode": "derive-from-lesson-master",
-          "direct_master": null,
+          "production_source_mode": "generate-distinct-after-pilot-approval",
+          "direct_master": {
+            "id": "master-poster-video-slot-11-trust",
+            "source_path": "course-assets/posters/production/sources/video-slot-11-trust-generated.png",
+            "flat_master_path": "course-assets/posters/production/flat-masters/video-slot-11-trust-flat-master.png",
+            "background_rgb": [
+              255,
+              211,
+              1
+            ],
+            "art_direction": {
+              "master_id": "master-poster-video-slot-11-trust",
+              "pose_id": "poster-trust-seller-sofa-open-palm",
+              "people_count": 1,
+              "character_id": "recurring-seller-approved",
+              "skin_fill": "pure white",
+              "posture": "seated-upright-on-sofa-edge",
+              "orientation": "three-quarter view facing left",
+              "gesture": "one arm folded and the other palm open in a considered response",
+              "placement": "in the right safe zone",
+              "prop": "a sofa with ear heart conversation and bridge-shield cues",
+              "background_rgb": [
+                255,
+                211,
+                1
+              ],
+              "lesson_or_video_cue": "Trust and Objections video and listening acknowledging asking and redirecting",
+              "lineage_pose_signature": null,
+              "pose_instruction": "Show exactly one person: the recurring curly-haired seller. Preserve the approved identity, proportions, clothing language, pure-white skin fill, and line weight. Place the recurring curly-haired seller in the right safe zone, seated-upright-on-sofa-edge, three-quarter view facing left, one arm folded and the other palm open in a considered response, using a sofa with ear heart conversation and bridge-shield cues. This pose and placement must be visibly different from every other independently generated master."
+            },
+            "expected_aspect_ratio": "16:9",
+            "reference_ids": [
+              "style-ref-1",
+              "style-ref-2",
+              "recurring-seller-approved",
+              "video-contact-sheet-video-slot-11-trust"
+            ],
+            "video_evidence": [
+              {
+                "asset_key": "video-slot-11-trust",
+                "local_path": "course-assets/review-lesson8B/LESSON-8B-v2.mp4",
+                "checksum_sha256": "470dd69db0884c0724ee863232c3e634ced7caa7cf7c5dcba0e0088c96ee0525",
+                "size_bytes": 51502258,
+                "approval_status": "approved",
+                "duration_seconds": 245.717,
+                "frame_timestamps_seconds": [
+                  49.143,
+                  122.859,
+                  196.574
+                ]
+              }
+            ],
+            "contact_sheet_input": {
+              "id": "video-contact-sheet-video-slot-11-trust",
+              "role": "checksum-bound exact mapped-video contact sheet",
+              "path": "docs/course-production/thumbnail-pilots/references/production-video-stills/distinct-posters/video-slot-11-trust-contact-sheet.png",
+              "sha256": "46f5ac1032d93d13102595a4f6f2b534b1e7cf4416e5c93b5f3ce8b7f4c85cc2",
+              "dimensions": [
+                960,
+                180
+              ],
+              "frame_count": 3
+            },
+            "prompt": "Use case: stylized-concept\nAsset type: BMH Institute Trust and Objections video-poster master, wide 16:9 artwork\nPrimary request: Create a focused illustration about listening, acknowledging, asking, and redirecting to build trust. The exact mapped video must inform the ear, heart, conversation, bridge, and trust-shield cues.\nInput images: Image 1 and Image 2 are the canonical BMH Sticker System references. Image 3 is the approved recurring curly-haired seller identity root. Image 4 is the checksum-bound contact sheet from the exact mapped video.\nCharacter direction: Show exactly one person: the recurring curly-haired seller. Preserve the approved face, curly hair, proportions, clothing language, pure-white skin fill, and thick slightly wobbly black line weight. Seat him upright on the edge of a sofa in the right safe zone, one arm folded and the other palm open in a considered response. This posture must be materially different from the bent-forward Complex Objections poster.\nScene: uniform flat golden-yellow background. Arrange ear, heart, speech bubble and bridge-shield cues as a left-to-right trust path.\nConstraints: one person only; no Andrea; no words, letters, numbers, logos, watermark, gradients, texture, shadows, extra limbs, cropped anatomy, or unrelated objects. Keep all meaningful content inside the central 80 percent.",
+            "prompt_sha256": "561b2d104713f0da6d074115a1ba31892add0147a42951a98789f942ee63bbb0",
+            "provenance": {
+              "generator": "built-in image_gen",
+              "generation_call": "one-distinct-call",
+              "planned_generation_call_id": "imagegen-poster-video-slot-11-trust",
+              "source_capture_required": true,
+              "prompt_checksum_required": true,
+              "reference_checksums_required": true,
+              "generated_at_required": true,
+              "generated_by_required": true,
+              "model_output_path_required": true
+            },
+            "production_record": {
+              "status": "not-produced",
+              "generated_at": null,
+              "generated_by": null,
+              "generation_call_id": null,
+              "source_sha256": null,
+              "flat_master_sha256": null,
+              "review_decision": null,
+              "reviewed_at": null,
+              "reviewed_by": null,
+              "review_evidence": null
+            }
+          },
           "derivative": {
             "recipe_id": "slot-11-video-slot-11-trust-right-safe",
-            "source_master_id": "master-slot-11",
-            "crop_profile": "right-safe",
+            "source_master_id": "master-poster-video-slot-11-trust",
+            "crop_profile": "full-safe",
             "normalize_master_dimensions": [
               1280,
               720
@@ -4427,10 +4950,10 @@
               1
             ],
             "crop_pixels_after_normalize": [
-              448,
-              144,
-              768,
-              432
+              0,
+              0,
+              1280,
+              720
             ],
             "target_dimensions": [
               1280,
@@ -4444,7 +4967,7 @@
           "provenance": {
             "generator": "built-in image_gen",
             "generation_call": "one-distinct-call",
-            "planned_generation_call_id": "imagegen-lesson-slot-11",
+            "planned_generation_call_id": "imagegen-poster-video-slot-11-trust",
             "source_capture_required": true,
             "prompt_checksum_required": true,
             "reference_checksums_required": true,
@@ -4752,31 +5275,118 @@
           "output_path": "course-assets/posters/video-slot-12-faq-b.webp",
           "focus_subject": "property contract and next-step question cluster",
           "art_direction": {
-            "master_id": "master-slot-12",
-            "pose_id": "slot-12-seller-desk-question-cards",
+            "master_id": "master-poster-video-slot-12-faq-b",
+            "pose_id": "poster-faq-b-seller-bench-question-folder",
             "people_count": 1,
             "character_id": "recurring-seller-approved",
             "skin_fill": "pure white",
-            "posture": "seated-at-desk",
-            "orientation": "front-facing with head turned left",
-            "gesture": "one hand lifting a question card and one hand pointing toward the answer lens",
-            "placement": "in the lower-center safe zone",
-            "prop": "one blank question card and a clear answer lens",
+            "posture": "seated-on-park-bench-with-ankles-crossed",
+            "orientation": "front three-quarter view facing left",
+            "gesture": "holding a blank contract folder on his lap with one questioning hand raised",
+            "placement": "in the center safe zone",
+            "prop": "a bench blank contract folder house question choice signs and shield",
             "background_rgb": [
               103,
               182,
               255
             ],
-            "lesson_or_video_cue": "Seller FAQ Decoder questions about process timing property and next steps",
+            "lesson_or_video_cue": "FAQ B video and calmly resolving property and contract questions",
             "lineage_pose_signature": null,
-            "pose_instruction": "Show exactly one person: the recurring curly-haired seller. Keep the approved face, hair, proportions, clothing language, pure-white skin fill, and line weight consistent. Place the recurring curly-haired seller in the lower-center safe zone, seated-at-desk, front-facing with head turned left, one hand lifting a question card and one hand pointing toward the answer lens, using one blank question card and a clear answer lens. This pose and placement must be visibly different from every other independently generated master."
+            "pose_instruction": "Show exactly one person: the recurring curly-haired seller. Preserve the approved identity, proportions, clothing language, pure-white skin fill, and line weight. Place the recurring curly-haired seller in the center safe zone, seated-on-park-bench-with-ankles-crossed, front three-quarter view facing left, holding a blank contract folder on his lap with one questioning hand raised, using a bench blank contract folder house question choice signs and shield. This pose and placement must be visibly different from every other independently generated master."
           },
-          "production_source_mode": "derive-from-lesson-master",
-          "direct_master": null,
+          "production_source_mode": "generate-distinct-after-pilot-approval",
+          "direct_master": {
+            "id": "master-poster-video-slot-12-faq-b",
+            "source_path": "course-assets/posters/production/sources/video-slot-12-faq-b-generated.png",
+            "flat_master_path": "course-assets/posters/production/flat-masters/video-slot-12-faq-b-flat-master.png",
+            "background_rgb": [
+              103,
+              182,
+              255
+            ],
+            "art_direction": {
+              "master_id": "master-poster-video-slot-12-faq-b",
+              "pose_id": "poster-faq-b-seller-bench-question-folder",
+              "people_count": 1,
+              "character_id": "recurring-seller-approved",
+              "skin_fill": "pure white",
+              "posture": "seated-on-park-bench-with-ankles-crossed",
+              "orientation": "front three-quarter view facing left",
+              "gesture": "holding a blank contract folder on his lap with one questioning hand raised",
+              "placement": "in the center safe zone",
+              "prop": "a bench blank contract folder house question choice signs and shield",
+              "background_rgb": [
+                103,
+                182,
+                255
+              ],
+              "lesson_or_video_cue": "FAQ B video and calmly resolving property and contract questions",
+              "lineage_pose_signature": null,
+              "pose_instruction": "Show exactly one person: the recurring curly-haired seller. Preserve the approved identity, proportions, clothing language, pure-white skin fill, and line weight. Place the recurring curly-haired seller in the center safe zone, seated-on-park-bench-with-ankles-crossed, front three-quarter view facing left, holding a blank contract folder on his lap with one questioning hand raised, using a bench blank contract folder house question choice signs and shield. This pose and placement must be visibly different from every other independently generated master."
+            },
+            "expected_aspect_ratio": "16:9",
+            "reference_ids": [
+              "style-ref-1",
+              "style-ref-2",
+              "recurring-seller-approved",
+              "video-contact-sheet-video-slot-12-faq-b"
+            ],
+            "video_evidence": [
+              {
+                "asset_key": "video-slot-12-faq-b",
+                "local_path": "course-assets/review-lesson9B/LESSON-9B-v3.mp4",
+                "checksum_sha256": "b977edbf0438b6cc8c4410e569f6f686fa8f4efbd864828795ac7a89034f919c",
+                "size_bytes": 75665539,
+                "approval_status": "approved",
+                "duration_seconds": 180.778,
+                "frame_timestamps_seconds": [
+                  36.156,
+                  90.389,
+                  144.622
+                ]
+              }
+            ],
+            "contact_sheet_input": {
+              "id": "video-contact-sheet-video-slot-12-faq-b",
+              "role": "checksum-bound exact mapped-video contact sheet",
+              "path": "docs/course-production/thumbnail-pilots/references/production-video-stills/distinct-posters/video-slot-12-faq-b-contact-sheet.png",
+              "sha256": "fd1828d31a00d6fc4ad15ac290de7729f8aaae2aee13b71e2a4e4b386f1d9897",
+              "dimensions": [
+                960,
+                180
+              ],
+              "frame_count": 3
+            },
+            "prompt": "Use case: stylized-concept\nAsset type: BMH Institute FAQ B video-poster master, wide 16:9 artwork\nPrimary request: Create a focused illustration about calmly answering a seller's property and contract questions. The exact mapped video must inform the question, contract, house, choice-path, and protection cues.\nInput images: Image 1 and Image 2 are the canonical BMH Sticker System references. Image 3 is the approved recurring curly-haired seller identity root. Image 4 is the checksum-bound contact sheet from the exact mapped video.\nCharacter direction: Show exactly one person: the recurring curly-haired seller. Preserve the approved face, curly hair, proportions, clothing language, pure-white skin fill, and thick slightly wobbly black line weight. Seat him centered on a park bench with ankles crossed, a blank contract folder on his lap and one questioning hand raised. This posture must be materially different from the desk-seated FAQ A poster.\nScene: uniform flat cornflower-blue background. Use separate house, question bubble, blank contract page, directional signs and shield cues.\nConstraints: one person only; no Andrea; no words, letters, numbers, logos, watermark, gradients, texture, shadows, extra limbs, cropped anatomy, or realistic park. Keep all meaningful content inside the central 80 percent.",
+            "prompt_sha256": "ddf7bfa37235adf190a0dfdfc8901e1acb3623a07a1fc1c43a2879c83e77f38f",
+            "provenance": {
+              "generator": "built-in image_gen",
+              "generation_call": "one-distinct-call",
+              "planned_generation_call_id": "imagegen-poster-video-slot-12-faq-b",
+              "source_capture_required": true,
+              "prompt_checksum_required": true,
+              "reference_checksums_required": true,
+              "generated_at_required": true,
+              "generated_by_required": true,
+              "model_output_path_required": true
+            },
+            "production_record": {
+              "status": "not-produced",
+              "generated_at": null,
+              "generated_by": null,
+              "generation_call_id": null,
+              "source_sha256": null,
+              "flat_master_sha256": null,
+              "review_decision": null,
+              "reviewed_at": null,
+              "reviewed_by": null,
+              "review_evidence": null
+            }
+          },
           "derivative": {
             "recipe_id": "slot-12-video-slot-12-faq-b-right-safe",
-            "source_master_id": "master-slot-12",
-            "crop_profile": "right-safe",
+            "source_master_id": "master-poster-video-slot-12-faq-b",
+            "crop_profile": "full-safe",
             "normalize_master_dimensions": [
               1280,
               720
@@ -4788,10 +5398,10 @@
               255
             ],
             "crop_pixels_after_normalize": [
-              448,
-              144,
-              768,
-              432
+              0,
+              0,
+              1280,
+              720
             ],
             "target_dimensions": [
               1280,
@@ -4805,7 +5415,7 @@
           "provenance": {
             "generator": "built-in image_gen",
             "generation_call": "one-distinct-call",
-            "planned_generation_call_id": "imagegen-lesson-slot-12",
+            "planned_generation_call_id": "imagegen-poster-video-slot-12-faq-b",
             "source_capture_required": true,
             "prompt_checksum_required": true,
             "reference_checksums_required": true,
@@ -6403,31 +7013,118 @@
           "output_path": "course-assets/posters/video-slot-18-operator.webp",
           "focus_subject": "operator ownership checklist",
           "art_direction": {
-            "master_id": "master-slot-18",
-            "pose_id": "slot-18-andrea-half-turn-mission-control",
+            "master_id": "master-poster-video-slot-18-operator",
+            "pose_id": "poster-operator-andrea-seated-workstation-checklist",
             "people_count": 1,
             "character_id": "andrea-approved",
             "skin_fill": "pure white",
-            "posture": "half-turn-standing",
-            "orientation": "back three-quarter view facing the board",
-            "gesture": "one hand moving a priority marker and one hand holding the ownership checklist",
-            "placement": "in the lower-left safe zone facing center",
-            "prop": "an unlabeled ownership checklist and mission-control board",
+            "posture": "seated-at-workstation",
+            "orientation": "three-quarter view facing right",
+            "gesture": "one hand typing while the other holds a blank checklist",
+            "placement": "in the left safe zone",
+            "prop": "a workstation blank checklist phone calendar timer and priority tray",
             "background_rgb": [
               103,
               182,
               255
             ],
-            "lesson_or_video_cue": "Operator Playbook and Daily Mission Control with visible priorities",
+            "lesson_or_video_cue": "Operator Standards video and disciplined daily preparation and execution",
             "lineage_pose_signature": null,
-            "pose_instruction": "Show exactly one person: Andrea. Keep the approved face, hair, proportions, clothing language, pure-white skin fill, and line weight consistent. Place Andrea in the lower-left safe zone facing center, half-turn-standing, back three-quarter view facing the board, one hand moving a priority marker and one hand holding the ownership checklist, using an unlabeled ownership checklist and mission-control board. This pose and placement must be visibly different from every other independently generated master."
+            "pose_instruction": "Show exactly one person: Andrea. Preserve the approved identity, proportions, clothing language, pure-white skin fill, and line weight. Place Andrea in the left safe zone, seated-at-workstation, three-quarter view facing right, one hand typing while the other holds a blank checklist, using a workstation blank checklist phone calendar timer and priority tray. This pose and placement must be visibly different from every other independently generated master."
           },
-          "production_source_mode": "derive-from-lesson-master",
-          "direct_master": null,
+          "production_source_mode": "generate-distinct-after-pilot-approval",
+          "direct_master": {
+            "id": "master-poster-video-slot-18-operator",
+            "source_path": "course-assets/posters/production/sources/video-slot-18-operator-generated.png",
+            "flat_master_path": "course-assets/posters/production/flat-masters/video-slot-18-operator-flat-master.png",
+            "background_rgb": [
+              103,
+              182,
+              255
+            ],
+            "art_direction": {
+              "master_id": "master-poster-video-slot-18-operator",
+              "pose_id": "poster-operator-andrea-seated-workstation-checklist",
+              "people_count": 1,
+              "character_id": "andrea-approved",
+              "skin_fill": "pure white",
+              "posture": "seated-at-workstation",
+              "orientation": "three-quarter view facing right",
+              "gesture": "one hand typing while the other holds a blank checklist",
+              "placement": "in the left safe zone",
+              "prop": "a workstation blank checklist phone calendar timer and priority tray",
+              "background_rgb": [
+                103,
+                182,
+                255
+              ],
+              "lesson_or_video_cue": "Operator Standards video and disciplined daily preparation and execution",
+              "lineage_pose_signature": null,
+              "pose_instruction": "Show exactly one person: Andrea. Preserve the approved identity, proportions, clothing language, pure-white skin fill, and line weight. Place Andrea in the left safe zone, seated-at-workstation, three-quarter view facing right, one hand typing while the other holds a blank checklist, using a workstation blank checklist phone calendar timer and priority tray. This pose and placement must be visibly different from every other independently generated master."
+            },
+            "expected_aspect_ratio": "16:9",
+            "reference_ids": [
+              "style-ref-1",
+              "style-ref-2",
+              "andrea-approved",
+              "video-contact-sheet-video-slot-18-operator"
+            ],
+            "video_evidence": [
+              {
+                "asset_key": "video-slot-18-operator",
+                "local_path": "course-assets/review-lesson18A/LESSON-18A-v10.mp4",
+                "checksum_sha256": "6e6a3f257ff8cf3ef201de775de47c6e7833e3abd673e44bb8d4d5ac3aafa048",
+                "size_bytes": 85657783,
+                "approval_status": "hold",
+                "duration_seconds": 378.858,
+                "frame_timestamps_seconds": [
+                  75.772,
+                  189.429,
+                  303.086
+                ]
+              }
+            ],
+            "contact_sheet_input": {
+              "id": "video-contact-sheet-video-slot-18-operator",
+              "role": "checksum-bound exact mapped-video contact sheet",
+              "path": "docs/course-production/thumbnail-pilots/references/production-video-stills/distinct-posters/video-slot-18-operator-contact-sheet.png",
+              "sha256": "a64731ba34bd05fd87dc34b21db8332971b0360bebcc7edad001da48bca639e9",
+              "dimensions": [
+                960,
+                180
+              ],
+              "frame_count": 3
+            },
+            "prompt": "Use case: stylized-concept\nAsset type: BMH Institute Operator Standards video-poster master, wide 16:9 artwork\nPrimary request: Create a focused illustration about disciplined daily operator preparation and execution. The exact mapped video must inform the workstation, checklist, phone, calendar, timer, and priority-tray cues.\nInput images: Image 1 and Image 2 are the canonical BMH Sticker System references. Image 3 is the approved Andrea identity root. Image 4 is the checksum-bound contact sheet from the exact mapped video.\nCharacter direction: Show exactly one person: Andrea. Preserve Andrea's approved face, hair, proportions, clothing language, pure-white skin fill, and thick slightly wobbly black line weight. Seat her at a workstation on the left, one hand typing while the other holds a blank checklist. This seated operating posture must be materially different from the standing and pointing Mission Control poster.\nScene: uniform flat cornflower-blue background. Arrange phone, calendar, timer and three-color priority tray as separate action cues on the right.\nConstraints: one person only; no seller; no words, letters, numbers, logos, watermark, gradients, texture, shadows, extra limbs, cropped anatomy, or detailed software interface. Keep all meaningful content inside the central 80 percent.",
+            "prompt_sha256": "f83702bed277d289f2a9c334cf52d7b3531fd11bf0dc9b49d0406c55ca18afe2",
+            "provenance": {
+              "generator": "built-in image_gen",
+              "generation_call": "one-distinct-call",
+              "planned_generation_call_id": "imagegen-poster-video-slot-18-operator",
+              "source_capture_required": true,
+              "prompt_checksum_required": true,
+              "reference_checksums_required": true,
+              "generated_at_required": true,
+              "generated_by_required": true,
+              "model_output_path_required": true
+            },
+            "production_record": {
+              "status": "not-produced",
+              "generated_at": null,
+              "generated_by": null,
+              "generation_call_id": null,
+              "source_sha256": null,
+              "flat_master_sha256": null,
+              "review_decision": null,
+              "reviewed_at": null,
+              "reviewed_by": null,
+              "review_evidence": null
+            }
+          },
           "derivative": {
             "recipe_id": "slot-18-video-slot-18-operator-left-safe",
-            "source_master_id": "master-slot-18",
-            "crop_profile": "left-safe",
+            "source_master_id": "master-poster-video-slot-18-operator",
+            "crop_profile": "full-safe",
             "normalize_master_dimensions": [
               1280,
               720
@@ -6439,10 +7136,10 @@
               255
             ],
             "crop_pixels_after_normalize": [
-              64,
-              144,
-              768,
-              432
+              0,
+              0,
+              1280,
+              720
             ],
             "target_dimensions": [
               1280,
@@ -6456,7 +7153,7 @@
           "provenance": {
             "generator": "built-in image_gen",
             "generation_call": "one-distinct-call",
-            "planned_generation_call_id": "imagegen-lesson-slot-18",
+            "planned_generation_call_id": "imagegen-poster-video-slot-18-operator",
             "source_capture_required": true,
             "prompt_checksum_required": true,
             "reference_checksums_required": true,

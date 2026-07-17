@@ -127,7 +127,7 @@ describe.skipIf(!envPresent)("exact reconciliation RPCs on a test project", () =
     }
   });
 
-  it("detects an extra descendant and access edges that escape through the owned QA group", async () => {
+  it("blocks imported descendants and detects access edges that escape through the owned QA group", async () => {
     if (!service) throw new Error("Test-project service client is unavailable.");
     const plan = uniquePlan();
     const adapter = exactAdapter();
@@ -184,15 +184,11 @@ describe.skipIf(!envPresent)("exact reconciliation RPCs on a test project", () =
           prerequisite_lesson_id: operationId(plan, "lessons"),
         },
       ]);
-      if (externalLessonsError) throw externalLessonsError;
+      expect(externalLessonsError?.message).toMatch(/exact apply or release operation/i);
 
       const lessonEdgeReport = await reconcileImportPlanExact(plan, adapter);
-      expect(lessonEdgeReport.unexpected).toEqual(expect.arrayContaining([
-        { table: "lessons", id: externalQuizLessonId },
-        { table: "lessons", id: externalAssignmentLessonId },
-        { table: "lessons", id: externalPrerequisiteLessonId },
-      ]));
-      expect(lessonEdgeReport.catalogSha256).not.toBe(cleanCatalogSha256);
+      expect(lessonEdgeReport.unexpected).toEqual([]);
+      expect(lessonEdgeReport.catalogSha256).toBe(cleanCatalogSha256);
 
       const { error: lessonError } = await service.from("lessons").insert({
         id: rogueLessonId,
@@ -201,7 +197,7 @@ describe.skipIf(!envPresent)("exact reconciliation RPCs on a test project", () =
         lesson_type: "content",
         content_import_id: null,
       });
-      if (lessonError) throw lessonError;
+      expect(lessonError?.message).toMatch(/exact apply or release operation/i);
       const { error: programAccessError } = await service.from("program_access").insert({
         id: externalProgramAccessId,
         program_id: externalProgramId,
@@ -217,23 +213,18 @@ describe.skipIf(!envPresent)("exact reconciliation RPCs on a test project", () =
 
       const report = await reconcileImportPlanExact(plan, adapter);
       expect(report.unexpected).toEqual(expect.arrayContaining([
-        { table: "lessons", id: rogueLessonId },
         { table: "program_access", id: externalProgramAccessId },
         { table: "course_access", id: externalCourseAccessId },
-        { table: "lessons", id: externalQuizLessonId },
-        { table: "lessons", id: externalAssignmentLessonId },
-        { table: "lessons", id: externalPrerequisiteLessonId },
       ]));
 
       await expect(rollbackImportPlan(plan, adapter)).rejects.toThrow(/external program_access references/i);
       await service.from("program_access").delete().eq("id", externalProgramAccessId);
       await expect(rollbackImportPlan(plan, adapter)).rejects.toThrow(/external course_access references/i);
       await service.from("course_access").delete().eq("id", externalCourseAccessId);
-      await expect(rollbackImportPlan(plan, adapter)).rejects.toThrow(/external lessons references/i);
+      await expect(rollbackImportPlan(plan, adapter)).resolves.toBeUndefined();
     } finally {
       await service.from("course_access").delete().eq("id", externalCourseAccessId);
       await service.from("program_access").delete().eq("id", externalProgramAccessId);
-      await service.from("lessons").delete().eq("id", rogueLessonId);
       await service.from("programs").delete().eq("id", externalProgramId);
       await service.from("courses").delete().eq("id", externalCourseId);
       await cleanupPlan(plan);

@@ -238,6 +238,12 @@ export function validateHeldVideoApprovalTransition(currentLedger, nextLedger, h
 
   const currentByKey = new Map(currentLedger.records.map((record) => [approvalRecordKey(record), record]));
   const nextByKey = new Map(nextLedger.records.map((record) => [approvalRecordKey(record), record]));
+  for (const [index, current] of currentLedger.records.entries()) {
+    if (approvalRecordKey(nextLedger.records[index] ?? {}) !== approvalRecordKey(current)) {
+      errors.push("transition cannot reorder or insert within existing approval history; new records must be appended");
+      break;
+    }
+  }
   const heldByKey = new Map((heldAssets ?? []).map((asset) => [
     `${asset.source_key}:${asset.checksum_sha256}`,
     asset,

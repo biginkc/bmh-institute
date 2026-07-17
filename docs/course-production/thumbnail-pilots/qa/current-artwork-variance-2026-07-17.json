@@ -1,0 +1,137 @@
+{
+  "schema_version": "bmh-current-artwork-variance/v1",
+  "poster_count": 29,
+  "safe_edge_width_pixels": 4,
+  "safe_edge_passed": 29,
+  "foreground_mask_dimensions": [
+    32,
+    18
+  ],
+  "perceptual_duplicate_threshold": 24,
+  "closest_pair": {
+    "left": "poster-video-slot-01-welcome",
+    "right": "poster-video-slot-09-objection-architecture",
+    "foreground_mask_hamming": 52,
+    "mirrored_foreground_mask_hamming": 50
+  },
+  "closest_mirrored_pair": {
+    "left": "poster-video-slot-01-welcome",
+    "right": "poster-video-slot-09-objection-architecture",
+    "foreground_mask_hamming": 52,
+    "mirrored_foreground_mask_hamming": 50
+  },
+  "grouped_pose_checks": [
+    {
+      "asset_keys": [
+        "poster-video-slot-04-humanizing-a",
+        "poster-video-slot-04-humanizing-b",
+        "poster-video-slot-04-ideal-seller"
+      ],
+      "source_master_ids": [
+        "master-slot-04",
+        "master-poster-video-slot-04-humanizing-b",
+        "master-poster-video-slot-04-ideal-seller"
+      ],
+      "pose_ids": [
+        "slot-04-seller-half-turn-house-story",
+        "poster-humanizing-b-seller-side-stool-story-folder",
+        "poster-ideal-seller-kneeling-key-magnifier"
+      ],
+      "postures": [
+        "half-turn-standing",
+        "seated-sideways-on-stool-leaning-forward",
+        "kneeling-on-one-knee"
+      ]
+    },
+    {
+      "asset_keys": [
+        "poster-video-slot-05-offer-a",
+        "poster-video-slot-05-offer-b"
+      ],
+      "source_master_ids": [
+        "master-slot-05",
+        "master-poster-video-slot-05-offer-b"
+      ],
+      "pose_ids": [
+        "slot-05-seller-table-options",
+        "poster-offer-b-seller-walking-offer-folder"
+      ],
+      "postures": [
+        "seated-at-table",
+        "walking-briskly"
+      ]
+    },
+    {
+      "asset_keys": [
+        "poster-video-slot-06-pipeline",
+        "poster-video-slot-06-framework"
+      ],
+      "source_master_ids": [
+        "master-slot-06",
+        "master-poster-video-slot-06-framework"
+      ],
+      "pose_ids": [
+        "slot-06-andrea-walking-pipeline-baton",
+        "poster-framework-andrea-round-table-five-cards"
+      ],
+      "postures": [
+        "walking",
+        "seated-at-round-table"
+      ]
+    },
+    {
+      "asset_keys": [
+        "poster-video-slot-11-complex",
+        "poster-video-slot-11-trust"
+      ],
+      "source_master_ids": [
+        "master-slot-11",
+        "master-poster-video-slot-11-trust"
+      ],
+      "pose_ids": [
+        "slot-11-seller-leaning-knot",
+        "poster-trust-seller-sofa-open-palm"
+      ],
+      "postures": [
+        "leaning-forward",
+        "seated-upright-on-sofa-edge"
+      ]
+    },
+    {
+      "asset_keys": [
+        "poster-video-slot-12-faq-a",
+        "poster-video-slot-12-faq-b"
+      ],
+      "source_master_ids": [
+        "master-slot-12",
+        "master-poster-video-slot-12-faq-b"
+      ],
+      "pose_ids": [
+        "slot-12-seller-desk-question-cards",
+        "poster-faq-b-seller-bench-question-folder"
+      ],
+      "postures": [
+        "seated-at-desk",
+        "seated-on-park-bench-with-ankles-crossed"
+      ]
+    },
+    {
+      "asset_keys": [
+        "poster-video-slot-18-mission-control",
+        "poster-video-slot-18-operator"
+      ],
+      "source_master_ids": [
+        "master-slot-18",
+        "master-poster-video-slot-18-operator"
+      ],
+      "pose_ids": [
+        "slot-18-andrea-half-turn-mission-control",
+        "poster-operator-andrea-seated-workstation-checklist"
+      ],
+      "postures": [
+        "half-turn-standing",
+        "seated-at-workstation"
+      ]
+    }
+  ]
+}

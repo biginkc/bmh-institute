@@ -15,10 +15,10 @@
     {
       "master_id": "master-slot-02",
       "contact_sheet_input": {
-        "id": "video-contact-sheet-slot-02",
+        "id": "video-contact-sheet-slot-02-v10",
         "role": "checksum-bound exact mapped-video contact sheet",
-        "path": "docs/course-production/thumbnail-pilots/references/production-video-stills/slot-02-contact-sheet.png",
-        "sha256": "d041f8ddc39a73a14acb25c17c6d42b6286b9a45bd2189fdcc732a11e217d783",
+        "path": "docs/course-production/thumbnail-pilots/references/production-video-stills/slot-02-v10-contact-sheet.png",
+        "sha256": "e5e869d33d440ba155dd8f5088f2039f96a2cfb105a5ea9be79911933f2f363c",
         "dimensions": [
           960,
           180
@@ -28,15 +28,15 @@
       "video_evidence": [
         {
           "asset_key": "video-slot-02-terms",
-          "local_path": "course-assets/review-lessonGLOA/LESSON-GLOA-v9.mp4",
-          "checksum_sha256": "17cac99f171edfb773f85eaaa6719e09ffe1295abec5b062554c72958747c0bb",
-          "size_bytes": 110768219,
-          "approval_status": "hold",
-          "duration_seconds": 451.754,
+          "local_path": "course-assets/review-lessonGLOA/LESSON-GLOA-v10-LOCAL-POLICY-CUT.mp4",
+          "checksum_sha256": "6f57600d6ec3a596f96175052eda997503ab9b72aa5b7e9ec02239fe1a125769",
+          "size_bytes": 104384792,
+          "approval_status": "approved",
+          "duration_seconds": 449.534,
           "frame_timestamps_seconds": [
-            90.351,
-            225.877,
-            361.403
+            89.907,
+            224.767,
+            359.627
           ]
         }
       ]

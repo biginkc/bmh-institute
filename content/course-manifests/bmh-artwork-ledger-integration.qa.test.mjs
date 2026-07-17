@@ -156,7 +156,7 @@ test("the complete manifest builder is deterministic against portable fixture so
     (record) => record.decision === "changes_requested"
       && !approvalLedger.records.some(
         (candidate) => candidate.source_key === record.source_key
-          && candidate.decision === "pending",
+          && candidate.decision !== "changes_requested",
       ),
   )) {
     const fixture = fixtureVideoBySource.get(historical.source_key);
@@ -341,10 +341,50 @@ test("a canonically finalized 49-asset workflow cannot forge held-video release 
   });
   await promotePilots({ root, ledger });
 
+  // The approved V8 orientation card and Welcome poster remain immutable, but the
+  // additional Mindset crop exposed a post-approval edge defect. Reproduce the
+  // explicit remediation lineage before attempting a canonical final review.
+  const orientation = ledger.masters.find((master) => master.id === "master-slot-01");
+  await deriveMaster({ root, ledger, masterId: orientation.id });
+  const remediationPrompt = "docs/course-production/thumbnail-pilots/prompts/production-corrections/slot-01-postapproval-mindset-safe-crop.txt";
+  const remediationEvidence = "docs/course-production/thumbnail-pilots/approvals/slot-01-postapproval-defect-2026-07-17.json";
+  const promptTarget = path.join(root, remediationPrompt);
+  await mkdir(path.dirname(promptTarget), { recursive: true });
+  await copyFile(path.join(repoRoot, remediationPrompt), promptTarget);
+  await writeEvidence(root, remediationEvidence, {
+    master_id: orientation.id,
+    parent_source_sha256: orientation.terminal_source_sha256,
+    defect: "The additional Mindset fixed crop fails the exact safe-edge review gate.",
+    outputs: orientation.outputs.map(({ asset_key: assetKey }) => {
+      const asset = ledger.assets.find((candidate) => candidate.asset_key === assetKey);
+      return { asset_key: asset.asset_key, checksum_sha256: asset.checksum_sha256 };
+    }),
+  });
+  const remediatedOrientationSource = path.join(root, "provider", "master-slot-01-remediated.png");
+  await mkdir(path.dirname(remediatedOrientationSource), { recursive: true });
+  await copyFile(
+    path.join(repoRoot, "course-assets/thumbnails/production/sources/slot-01-generated.png"),
+    remediatedOrientationSource,
+  );
+  await ingestGeneration({
+    root,
+    ledger,
+    masterId: orientation.id,
+    sourceFile: remediatedOrientationSource,
+    generationCallId: "integration-slot-01-postapproval-remediation",
+    toolOutputId: "integration-slot-01-postapproval-remediation-output",
+    generatedAt: "2026-07-16T22:30:00.000Z",
+    generatedBy: "artwork-ledger-integration-test",
+    correctionPromptPath: remediationPrompt,
+    parentSha256: orientation.terminal_source_sha256,
+    allowPilotRemediation: true,
+    defectEvidencePath: remediationEvidence,
+  });
+
   const productionMasters = ledger.masters.filter((master) => !master.pilot);
   for (const [index, master] of productionMasters.entries()) {
     const sourceFile = path.join(root, "provider", `${master.id}.png`);
-    await writeUniqueProviderSource(sourceFile, index + 1);
+    await writeUniqueProviderSource(sourceFile, index + 1, master.background_rgb);
     await ingestGeneration({
       root,
       ledger,
@@ -564,7 +604,7 @@ function sha256Bytes(contents) {
   return createHash("sha256").update(contents).digest("hex");
 }
 
-async function writeUniqueProviderSource(filePath, ordinal) {
+async function writeUniqueProviderSource(filePath, ordinal, background = [103, 182, 255]) {
   const colors = [
     { r: 255, g: 211, b: 1 },
     { r: 0, g: 0, b: 0 },
@@ -587,7 +627,7 @@ async function writeUniqueProviderSource(filePath, ordinal) {
       width: 1280,
       height: 720,
       channels: 3,
-      background: { r: 103, g: 182, b: 255 },
+      background: { r: background[0], g: background[1], b: background[2] },
     },
   })
     .composite(markers)

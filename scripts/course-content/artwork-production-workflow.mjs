@@ -667,18 +667,18 @@ export function createInitialLedger(inventory) {
   assert(counts.covers === EXPECTED_COUNTS.covers, "Expected exactly one course cover");
   assert(counts.cards === EXPECTED_COUNTS.cards, "Expected exactly 19 lesson cards");
   assert(counts.posters === EXPECTED_COUNTS.posters, "Expected exactly 29 video posters");
-  assert(counts.planned_generation_calls === 18, "Expected exactly 18 new generation calls");
+  assert(counts.planned_generation_calls === 25, "Expected exactly 25 new generation calls");
   assert(counts.promoted_pilots === 3, "Expected exactly three promoted pilots");
   assert(new Set(outputs.map((asset) => asset.asset_key)).size === 49, "Artwork keys must be unique");
   assert(new Set(outputs.map((asset) => asset.manifest_path)).size === 49, "Artwork paths must be unique");
   const recipeIds = outputs.map((asset) => asset.derivative.recipe.id);
   assert(new Set(recipeIds).size === 49, "Artwork recipe IDs must be globally unique");
   const masterIds = masters.map((master) => master.id);
-  assert(masters.length === 21 && new Set(masterIds).size === 21, "Expected exactly 21 unique source masters");
+  assert(masters.length === 28 && new Set(masterIds).size === 28, "Expected exactly 28 unique source masters");
   const masterPaths = masters.flatMap((master) => [master.source_path, master.flat_master_path]);
   assert(new Set(masterPaths).size === masterPaths.length, "Source and flat-master paths must be globally unique");
   const plannedCallIds = masters.map((master) => master.planned_generation_call_id).filter(Boolean);
-  assert(new Set(plannedCallIds).size === 18, "Planned generation call IDs must be unique");
+  assert(new Set(plannedCallIds).size === 25, "Planned generation call IDs must be unique");
   assert(
     masters
       .filter((master) => master.pilot)
@@ -933,13 +933,134 @@ async function quantizeBuffer(input, palette, flattenBackground = BLUE) {
   return { data, width: info.width, height: info.height };
 }
 
-async function encodeFlatPng(input, palette, background = BLUE) {
-  const flat = await quantizeBuffer(input, palette, background);
+export function solidifyEdgeConnectedBackground(flat, background) {
+  const { data, width, height } = flat;
+  const pixelCount = width * height;
+  const visited = new Uint8Array(pixelCount);
+  const queue = new Int32Array(pixelCount);
+  let head = 0;
+  let tail = 0;
+  const thresholdSquared = 70 ** 2;
+  const isBackgroundFamily = (pixel) => {
+    const offset = pixel * 3;
+    const distance =
+      (data[offset] - background[0]) ** 2 +
+      (data[offset + 1] - background[1]) ** 2 +
+      (data[offset + 2] - background[2]) ** 2;
+    return distance <= thresholdSquared;
+  };
+  const enqueue = (pixel) => {
+    if (visited[pixel] || !isBackgroundFamily(pixel)) return;
+    visited[pixel] = 1;
+    queue[tail++] = pixel;
+  };
+  for (let column = 0; column < width; column += 1) {
+    enqueue(column);
+    enqueue((height - 1) * width + column);
+  }
+  for (let row = 1; row < height - 1; row += 1) {
+    enqueue(row * width);
+    enqueue(row * width + width - 1);
+  }
+  while (head < tail) {
+    const pixel = queue[head++];
+    const offset = pixel * 3;
+    data[offset] = background[0];
+    data[offset + 1] = background[1];
+    data[offset + 2] = background[2];
+    const row = Math.floor(pixel / width);
+    const column = pixel - row * width;
+    if (column > 0) enqueue(pixel - 1);
+    if (column + 1 < width) enqueue(pixel + 1);
+    if (row > 0) enqueue(pixel - width);
+    if (row + 1 < height) enqueue(pixel + width);
+  }
+  return flat;
+}
+
+function normalizeEnclosedFillTexture(flat, palette) {
+  const { data, width, height } = flat;
+  const pixelCount = width * height;
+  const visited = new Uint8Array(pixelCount);
+  const queue = new Int32Array(pixelCount);
+  const paletteIndex = new Map(palette.map((color, index) => [paletteKey(color), index]));
+  const colorFamilies = [
+    new Set([paletteIndex.get("254,255,198"), paletteIndex.get("255,255,255")].filter(Number.isInteger)),
+    new Set([paletteIndex.get("255,211,1"), paletteIndex.get("255,174,1"), paletteIndex.get("255,110,0")].filter(Number.isInteger)),
+  ];
+  const blackIndex = paletteIndex.get("0,0,0");
+  const indexAt = (pixel) => paletteIndex.get(`${data[pixel * 3]},${data[pixel * 3 + 1]},${data[pixel * 3 + 2]}`);
+
+  for (let start = 0; start < pixelCount; start += 1) {
+    if (visited[start]) continue;
+    const startColor = indexAt(start);
+    const family = colorFamilies.find((candidate) => candidate.has(startColor));
+    if (!family || startColor === blackIndex) {
+      visited[start] = 1;
+      continue;
+    }
+    let head = 0;
+    let tail = 0;
+    let touchesEdge = false;
+    const counts = new Map();
+    visited[start] = 1;
+    queue[tail++] = start;
+    while (head < tail) {
+      const pixel = queue[head++];
+      const row = Math.floor(pixel / width);
+      const column = pixel - row * width;
+      if (row === 0 || column === 0 || row === height - 1 || column === width - 1) touchesEdge = true;
+      const color = indexAt(pixel);
+      counts.set(color, (counts.get(color) ?? 0) + 1);
+      const enqueue = (neighbor) => {
+        if (visited[neighbor] || !family.has(indexAt(neighbor))) return;
+        visited[neighbor] = 1;
+        queue[tail++] = neighbor;
+      };
+      if (column > 0) enqueue(pixel - 1);
+      if (column + 1 < width) enqueue(pixel + 1);
+      if (row > 0) enqueue(pixel - width);
+      if (row + 1 < height) enqueue(pixel + width);
+    }
+    if (touchesEdge || tail < 9 || counts.size < 2) continue;
+    const [dominant, dominantCount] = [...counts.entries()].sort((left, right) => right[1] - left[1])[0];
+    if (dominantCount / tail < 0.55) continue;
+    const replacement = palette[dominant];
+    for (let index = 0; index < tail; index += 1) {
+      const offset = queue[index] * 3;
+      data[offset] = replacement[0];
+      data[offset + 1] = replacement[1];
+      data[offset + 2] = replacement[2];
+    }
+  }
+  return flat;
+}
+
+export async function encodeFlatPng(input, palette, background = BLUE) {
+  const flat = normalizeEnclosedFillTexture(solidifyEdgeConnectedBackground(
+    await quantizeBuffer(input, palette, background),
+    background,
+  ), palette);
   return sharp(flat.data, {
     raw: { width: flat.width, height: flat.height, channels: 3 },
   })
     .png({ compressionLevel: 9, adaptiveFiltering: false })
     .toBuffer();
+}
+
+export async function assertPosterSafeEdges(contents, background, label = "video poster", borderWidth = 4) {
+  const { data, info } = await sharp(contents).removeAlpha().raw().toBuffer({ resolveWithObject: true });
+  assert(info.width > borderWidth * 2 && info.height > borderWidth * 2, `${label} is too small for edge inspection`);
+  const expected = background.join(",");
+  for (let row = 0; row < info.height; row += 1) {
+    for (let column = 0; column < info.width; column += 1) {
+      if (row >= borderWidth && row < info.height - borderWidth && column >= borderWidth && column < info.width - borderWidth) continue;
+      const offset = (row * info.width + column) * 3;
+      const actual = `${data[offset]},${data[offset + 1]},${data[offset + 2]}`;
+      assert(actual === expected, `${label} has non-background pixels in its ${borderWidth}px safe edge at ${column},${row}: ${actual}`);
+    }
+  }
+  return true;
 }
 
 async function encodeDerivedWebp(flatMasterInput, recipe, palette) {
@@ -994,12 +1115,66 @@ async function encodeDerivedWebp(flatMasterInput, recipe, palette) {
     pipeline = sharp(normalized).extract({ left, top, width, height }).resize(1280, 720, { fit: "fill", kernel: sharp.kernel.lanczos3 });
   }
   const intermediate = await pipeline.png().toBuffer();
-  const quantized = await quantizeBuffer(intermediate, palette, normalizeBackground);
+  const quantized = normalizeEnclosedFillTexture(solidifyEdgeConnectedBackground(
+    await quantizeBuffer(intermediate, palette, normalizeBackground),
+    normalizeBackground,
+  ), palette);
   return sharp(quantized.data, {
     raw: { width: quantized.width, height: quantized.height, channels: 3 },
   })
     .webp({ lossless: true, effort: 6 })
     .toBuffer();
+}
+
+export async function preparePipelineReprocess({ root, ledger, masterId }) {
+  const master = findMaster(ledger, masterId);
+  assert(!master.pilot, `${masterId} approved pilot bytes must not be rewritten by pipeline reprocess`);
+  assert(master.status === "derived", `${masterId} must be derived before pipeline reprocess`);
+  assert(SHA256.test(master.flat_master_sha256), `${masterId} has no recorded flat master to reprocess`);
+  const sequence = master.lineage.length;
+  const flat = await fileRecord(root, master.flat_master_path);
+  assert(flat.checksum_sha256 === master.flat_master_sha256, `${masterId} flat master drifted before pipeline reprocess`);
+  const flatVersion = master.flat_history.length + 1;
+  const flatArchive = path.posix.join(path.posix.dirname(master.source_path), "lineage", master.id, "flat-masters", `pipeline-version-${String(flatVersion).padStart(3, "0")}-${path.posix.basename(master.flat_master_path)}`);
+  if (!(await assertAbsentOrExact(root, flatArchive, flat.contents, `${masterId} pipeline historical flat master`))) {
+    await writeBufferAtomic(resolveRepoPath(root, flatArchive), flat.contents, root);
+  }
+  master.flat_history.push({
+    version: flatVersion,
+    checksum_sha256: master.flat_master_sha256,
+    archived_path: flatArchive,
+    lineage_sequence: sequence,
+  });
+  master.flat_replacement_authorized_checksum = master.flat_master_sha256;
+  master.flat_master_sha256 = null;
+
+  for (const outputRef of master.outputs) {
+    const output = findOutput(ledger, outputRef.asset_key);
+    const actual = await inspectArtworkFile(root, output, ledger.palette_rgb);
+    assert(actual.checksum_sha256 === output.checksum_sha256, `${output.asset_key} drifted before pipeline reprocess`);
+    const version = output.history.length + 1;
+    const archive = path.posix.join(path.posix.dirname(master.source_path), "lineage", master.id, "derivatives", `pipeline-version-${String(version).padStart(3, "0")}-${path.posix.basename(output.manifest_path)}`);
+    if (!(await assertAbsentOrExact(root, archive, actual.contents, `${output.asset_key} pipeline historical derivative`))) {
+      await writeBufferAtomic(resolveRepoPath(root, archive), actual.contents, root);
+    }
+    output.history.push({
+      version,
+      checksum_sha256: output.checksum_sha256,
+      pixel_sha256: output.pixel_sha256,
+      archived_path: archive,
+      recipe_sha256: output.derivative.recipe_sha256,
+      lineage_sequence: sequence,
+    });
+    output.replacement_authorized_checksum = output.checksum_sha256;
+    output.checksum_sha256 = null;
+    output.pixel_sha256 = null;
+    output.size_bytes = null;
+    output.approval_status = MISSING;
+  }
+  master.status = "source-ready";
+  master.review = baseReview();
+  ledger.updated_at = new Date().toISOString();
+  return ledger;
 }
 
 async function inspectArtworkBuffer(asset, palette, contents) {
@@ -1037,6 +1212,44 @@ export async function inspectArtworkFile(root, asset, palette) {
     ...record,
     ...(await inspectArtworkBuffer(asset, palette, record.contents)),
   };
+}
+
+export async function recordApprovedTextureExceptions({ root, ledger, evidence }) {
+  assert(ledger.status === "production", "Texture exceptions require active production state");
+  const evidenceRecord = await fileRecord(root, evidence);
+  const artifact = JSON.parse(evidenceRecord.contents.toString("utf8"));
+  assert(artifact.schema_version === "bmh-artwork-approved-texture-exceptions/v1", "Texture exception artifact schema invalid");
+  assert(artifact.scope === "checksum-specific-v8-pilot-bytes-only", "Texture exception scope must remain checksum-specific");
+  assert(artifact.approval_inheritance === "forbidden", "Texture exception approval inheritance must be forbidden");
+  assert(Array.isArray(artifact.assets) && artifact.assets.length === 4, "Texture exception artifact must bind exactly four V8 assets");
+  const allowedMasters = new Set(["master-slot-07", "master-slot-09"]);
+  for (const exception of artifact.assets) {
+    assert(allowedMasters.has(exception.master_id), `${exception.asset_key} is outside the approved texture-exception masters`);
+    const output = findOutput(ledger, exception.asset_key);
+    assert(output.provenance.master_id === exception.master_id, `${exception.asset_key} texture-exception owner drifted`);
+    assert(output.checksum_sha256 === exception.checksum_sha256, `${exception.asset_key} texture-exception checksum drifted`);
+    assert(output.pixel_sha256 === exception.pixel_sha256, `${exception.asset_key} texture-exception pixel checksum drifted`);
+    assert(output.provenance.promoted_pilot_sha256 === exception.checksum_sha256, `${exception.asset_key} is not an exact promoted V8 byte exception`);
+    output.provenance.approved_texture_exception = {
+      scope: artifact.scope,
+      defect: artifact.defect,
+      approval_inheritance: artifact.approval_inheritance,
+      evidence,
+      evidence_sha256: evidenceRecord.checksum_sha256,
+      checksum_sha256: exception.checksum_sha256,
+      pixel_sha256: exception.pixel_sha256,
+    };
+  }
+  ledger.approved_texture_exceptions = artifact.assets.map((exception) => ({
+    ...clone(exception),
+    defect: artifact.defect,
+    scope: artifact.scope,
+    approval_inheritance: artifact.approval_inheritance,
+    evidence,
+    evidence_sha256: evidenceRecord.checksum_sha256,
+  }));
+  ledger.updated_at = new Date().toISOString();
+  return ledger;
 }
 
 function applyOutputProvenance(output, master) {
@@ -1100,8 +1313,9 @@ async function validatePilotApprovalArtifact({ root, ledger, evidence, approvedB
   assert(SHA256.test(artifact.request_binding?.request_sha256), "Pilot approval request checksum is invalid");
   const requestRecord = await fileRecord(root, artifact.request_binding.request_path);
   assert(requestRecord.checksum_sha256 === artifact.request_binding.request_sha256, "Pilot approval request file drifted");
-  const inventoryRecord = await fileRecord(root, ledger.inventory_path);
-  assert(artifact.inventory_sha256 === inventoryRecord.checksum_sha256, "Pilot approval inventory checksum drifted");
+  const approvedInventorySha256 = ledger.pilot_approval?.approved_inventory_sha256 ?? artifact.inventory_sha256;
+  assert(SHA256.test(approvedInventorySha256), "Pilot approval inventory checksum is invalid");
+  assert(artifact.inventory_sha256 === approvedInventorySha256, "Pilot approval inventory checksum drifted from its approval-time snapshot");
   const lineagePaths = new Set(ledger.masters.filter((master) => master.pilot).map((master) => master.pilot.lineage_record_path));
   assert(lineagePaths.size === 1, "Pilot approval requires one exact generation lineage record");
   const lineageRecord = await fileRecord(root, [...lineagePaths][0]);
@@ -1246,6 +1460,40 @@ export async function validateLedger({ root, inventory, manifest, ledger, inspec
       assert(asset.replacement_authorized_checksum && existing.checksum_sha256 === asset.replacement_authorized_checksum, `${asset.asset_key} is an orphan production output not recorded by the ledger`);
     }
   }
+  if (ledger.approved_texture_exceptions !== undefined) {
+    assert(Array.isArray(ledger.approved_texture_exceptions) && ledger.approved_texture_exceptions.length === 4, "Approved texture exceptions must bind exactly four assets");
+    const allowedMasters = new Set(["master-slot-07", "master-slot-09"]);
+    const exceptionKeys = new Set();
+    for (const exception of ledger.approved_texture_exceptions) {
+      assert(!exceptionKeys.has(exception.asset_key), `Duplicate approved texture exception ${exception.asset_key}`);
+      exceptionKeys.add(exception.asset_key);
+      assert(allowedMasters.has(exception.master_id), `${exception.asset_key} approved texture exception is outside slots 07/09`);
+      assert(exception.scope === "checksum-specific-v8-pilot-bytes-only", `${exception.asset_key} approved texture exception scope drifted`);
+      assert(exception.approval_inheritance === "forbidden", `${exception.asset_key} approved texture exception inheritance drifted`);
+      assertString(exception.defect, `${exception.asset_key} approved texture exception defect`);
+      assert(SHA256.test(exception.evidence_sha256), `${exception.asset_key} approved texture exception evidence checksum invalid`);
+      const output = ledger.assets.find((asset) => asset.asset_key === exception.asset_key);
+      assert(output?.provenance.master_id === exception.master_id, `${exception.asset_key} approved texture exception owner drifted`);
+      assert(output.checksum_sha256 === exception.checksum_sha256 && output.pixel_sha256 === exception.pixel_sha256, `${exception.asset_key} approved texture exception no longer matches current bytes`);
+      assert(output.provenance.promoted_pilot_sha256 === exception.checksum_sha256, `${exception.asset_key} approved texture exception is not a promoted V8 checksum`);
+      assert(JSON.stringify(output.provenance.approved_texture_exception) === JSON.stringify({
+        scope: exception.scope,
+        defect: exception.defect,
+        approval_inheritance: exception.approval_inheritance,
+        evidence: exception.evidence,
+        evidence_sha256: exception.evidence_sha256,
+        checksum_sha256: exception.checksum_sha256,
+        pixel_sha256: exception.pixel_sha256,
+      }), `${exception.asset_key} approved texture exception provenance drifted`);
+      if (inspectFiles) {
+        const evidence = await fileRecord(root, exception.evidence);
+        assert(evidence.checksum_sha256 === exception.evidence_sha256, `${exception.asset_key} approved texture exception evidence drifted`);
+        for (const binding of [exception.asset_key, exception.checksum_sha256, exception.pixel_sha256]) {
+          assert(evidence.contents.toString("utf8").includes(binding), `${exception.asset_key} approved texture exception evidence does not bind ${binding}`);
+        }
+      }
+    }
+  }
   const sharedPilotParents = canonicalSharedPilotParents(ledger.masters);
   const invocationIds = sharedPilotParents.map((parent) => parent.tool_evidence.invocation_call_id);
   const toolOutputIds = sharedPilotParents.map((parent) => parent.tool_evidence.tool_output_id);
@@ -1314,6 +1562,23 @@ export async function validateLedger({ root, inventory, manifest, ledger, inspec
           const prompt = await fileRecord(root, step.correction_prompt_path);
           const promptChecksum = step.operation.startsWith("pilot-") && !isTwoIdentityPilotLineage(master.pilot?.lineage) ? sha256(prompt.contents.toString("utf8").replace(/\r?\n$/, "")) : prompt.checksum_sha256;
           assert(promptChecksum === step.correction_prompt_sha256, `${master.id} correction prompt checksum drifted`);
+        }
+      }
+      if (step.preserved_output_keys !== undefined) {
+        assert(Array.isArray(step.preserved_output_keys) && new Set(step.preserved_output_keys).size === step.preserved_output_keys.length, `${master.id} preserved output keys invalid`);
+        for (const assetKey of step.preserved_output_keys) assert(master.outputs.some((output) => output.asset_key === assetKey), `${master.id} preserved unrelated output ${assetKey}`);
+      }
+      if (step.postapproval_defect_remediation === true) {
+        assert(master.pilot, `${master.id} postapproval remediation must belong to a pilot`);
+        assert(step.operation === "correction", `${master.id} postapproval remediation must be explicit correction lineage`);
+        assertString(step.defect_evidence, `${master.id} postapproval defect evidence`);
+        assert(SHA256.test(step.defect_evidence_sha256), `${master.id} postapproval defect evidence checksum invalid`);
+        if (inspectFiles) {
+          const evidence = await fileRecord(root, step.defect_evidence);
+          assert(evidence.checksum_sha256 === step.defect_evidence_sha256, `${master.id} postapproval defect evidence drifted`);
+          for (const binding of [master.id, step.parent_source_sha256]) {
+            assert(evidence.contents.toString("utf8").includes(binding), `${master.id} postapproval defect evidence does not bind ${binding}`);
+          }
         }
       }
       if (inspectFiles) {
@@ -1421,6 +1686,7 @@ export async function validateLedger({ root, inventory, manifest, ledger, inspec
     assert(evidenceRecord.checksum_sha256 === ledger.pilot_approval.evidence_sha256, "Pilot evidence drifted");
     assert(ledger.pilot_approval.request_id === artifact.request_binding.request_id, "Stored pilot approval request_id drifted");
     assert(ledger.pilot_approval.pilot_bindings_sha256 === bindingsSha256, "Stored pilot approval bindings checksum drifted");
+    assert(ledger.pilot_approval.approved_inventory_sha256 === artifact.inventory_sha256, "Stored pilot approval inventory checksum drifted");
     const latestPilotGeneration = Math.max(...ledger.masters.filter((master) => master.pilot).flatMap((master) => (master.pilot.lineage.steps ?? []).map((step) => Date.parse(step.tool_evidence.completed_at))));
     if (Number.isFinite(latestPilotGeneration)) {
       assert(Date.parse(ledger.pilot_approval.approved_at) >= latestPilotGeneration, "Pilot approval predates pilot production");
@@ -1529,6 +1795,7 @@ export async function approvePilots({ root, ledger, approvedBy, approvedAt, evid
     evidence_sha256: evidenceRecord.checksum_sha256,
     request_id: artifact.request_binding.request_id,
     pilot_bindings_sha256: bindingsSha256,
+    approved_inventory_sha256: artifact.inventory_sha256,
   };
   ledger.status = "pilot-approved";
   ledger.updated_at = approvedAt;
@@ -1652,11 +1919,14 @@ export async function promotePilots({ root, ledger }) {
   return ledger;
 }
 
-export async function ingestGeneration({ root, ledger, masterId, sourceFile, generationCallId, toolOutputId, generatedAt, generatedBy, correctionPromptPath = null, parentSha256 = null }) {
+export async function ingestGeneration({ root, ledger, masterId, sourceFile, generationCallId, toolOutputId, generatedAt, generatedBy, correctionPromptPath = null, parentSha256 = null, allowPilotRemediation = false, defectEvidencePath = null, preserveOutputKeys = [] }) {
   assert(ledger.pilot_approval.status === APPROVED, "Generation ingest requires pilot approval");
   assert(ledger.status === "production", "Generation ingest requires promoted pilots");
   const master = findMaster(ledger, masterId);
-  assert(!master.pilot, "Approved pilots must be promoted, not ingested as new generations");
+  assert(Array.isArray(preserveOutputKeys) && new Set(preserveOutputKeys).size === preserveOutputKeys.length, `${masterId} preserved output keys must be a unique array`);
+  for (const assetKey of preserveOutputKeys) assert(master.outputs.some((output) => output.asset_key === assetKey), `${masterId} cannot preserve unrelated output ${assetKey}`);
+  assert(!master.pilot || allowPilotRemediation, "Approved pilots must be promoted, not ingested as new generations");
+  if (allowPilotRemediation) assert(master.pilot, "Pilot remediation flag is only valid for an approved pilot master");
   assertString(sourceFile, "source file");
   assertString(generationCallId, "generation call id");
   assertString(toolOutputId, "tool output id");
@@ -1683,6 +1953,10 @@ export async function ingestGeneration({ root, ledger, masterId, sourceFile, gen
     assert(parentSha256 === replay.parent_source_sha256, `${masterId} replay parent checksum differs from recorded lineage`);
     assert(correctionPromptPath === replay.correction_prompt_path, `${masterId} replay correction prompt path differs from recorded lineage`);
     assert(suppliedCorrectionPromptSha256 === replay.correction_prompt_sha256, `${masterId} replay correction prompt checksum differs from recorded lineage`);
+    assert(
+      JSON.stringify(preserveOutputKeys) === JSON.stringify(replay.preserved_output_keys ?? []),
+      `${masterId} replay preserved output keys differ from recorded lineage`,
+    );
     const terminal = await fileRecord(root, master.source_path);
     const archived = await fileRecord(root, replay.archived_output_path);
     assert(terminal.checksum_sha256 === outputSha256 && archived.checksum_sha256 === outputSha256, `${masterId} replay files drifted`);
@@ -1718,6 +1992,17 @@ export async function ingestGeneration({ root, ledger, masterId, sourceFile, gen
   const extension = path.extname(sourceFile).toLowerCase();
   const archivePath = path.posix.join(path.posix.dirname(master.source_path), "lineage", master.id, `step-${String(sequence).padStart(3, "0")}${extension}`);
   const correctionPromptSha256 = suppliedCorrectionPromptSha256;
+  let defectEvidence = null;
+  if (allowPilotRemediation) {
+    assert(correction, `${masterId} pilot remediation must extend the approved lineage`);
+    assertString(defectEvidencePath, "pilot remediation defect evidence");
+    const defectBindings = [master.id, parentSha256];
+    for (const outputRef of master.outputs) {
+      const output = findOutput(ledger, outputRef.asset_key);
+      if (output.checksum_sha256) defectBindings.push(output.asset_key, output.checksum_sha256);
+    }
+    defectEvidence = await validateEvidence(root, defectEvidencePath, defectBindings);
+  }
   if (correction && master.status === "derived") {
     assert(SHA256.test(master.flat_master_sha256), `${masterId} prior flat master is not recorded`);
     const priorFlat = await fileRecord(root, master.flat_master_path);
@@ -1739,6 +2024,10 @@ export async function ingestGeneration({ root, ledger, masterId, sourceFile, gen
       assert(SHA256.test(output.checksum_sha256), `${output.asset_key} prior derivative is not recorded`);
       const actual = await inspectArtworkFile(root, output, ledger.palette_rgb);
       assert(actual.checksum_sha256 === output.checksum_sha256, `${output.asset_key} changed before correction archival`);
+      if (preserveOutputKeys.includes(output.asset_key)) {
+        output.provenance.preserved_from_flat_master_sha256 = master.flat_master_sha256;
+        continue;
+      }
       const archive = path.posix.join(path.posix.dirname(master.source_path), "lineage", master.id, "derivatives", `version-${String(sequence - 1).padStart(3, "0")}-${path.posix.basename(output.manifest_path)}`);
       if (!(await assertAbsentOrExact(root, archive, actual.contents, `${output.asset_key} historical derivative`))) {
         await writeBufferAtomic(resolveRepoPath(root, archive), actual.contents, root);
@@ -1782,13 +2071,21 @@ export async function ingestGeneration({ root, ledger, masterId, sourceFile, gen
     archived_output_path: archivePath,
     output_sha256: outputSha256,
     reference_inputs: clone(master.reference_inputs),
+    postapproval_defect_remediation: allowPilotRemediation,
+    defect_evidence: defectEvidence?.path ?? null,
+    defect_evidence_sha256: defectEvidence?.sha256 ?? null,
+    preserved_output_keys: clone(preserveOutputKeys),
   });
   master.terminal_source_sha256 = outputSha256;
-  master.flat_master_sha256 = null;
+  master.flat_master_sha256 = preserveOutputKeys.length > 0 ? master.flat_replacement_authorized_checksum : null;
   master.status = "source-ready";
   master.review = baseReview();
   for (const outputRef of master.outputs) {
     const output = findOutput(ledger, outputRef.asset_key);
+    if (preserveOutputKeys.includes(output.asset_key)) {
+      applyOutputProvenance(output, master);
+      continue;
+    }
     output.checksum_sha256 = null;
     output.pixel_sha256 = null;
     output.size_bytes = null;
@@ -1819,7 +2116,8 @@ export async function deriveMaster({ root, ledger, masterId }) {
   let flatBuffer = null;
   let flatInput;
   let flatChecksum;
-  if (master.pilot) {
+  const remediatedPilot = master.pilot && master.lineage.some((step) => step.operation === "correction" && step.postapproval_defect_remediation === true);
+  if (master.pilot && !remediatedPilot) {
     const existingFlat = await fileRecord(root, master.flat_master_path);
     assert(existingFlat.checksum_sha256 === master.pilot.assets.flat_master.sha256, `${masterId} promoted flat master drifted`);
     flatInput = existingFlat.contents;
@@ -1831,8 +2129,14 @@ export async function deriveMaster({ root, ledger, masterId }) {
     flatChecksum = sha256(flatBuffer);
   }
   const candidates = [];
+  const preservedOutputKeys = new Set(master.lineage.at(-1)?.preserved_output_keys ?? []);
   for (const outputRef of master.outputs) {
     const output = findOutput(ledger, outputRef.asset_key);
+    if (preservedOutputKeys.has(output.asset_key)) {
+      const preserved = await inspectArtworkFile(root, output, ledger.palette_rgb);
+      candidates.push({ output, preserved: true, record: preserved, buffer: preserved.contents });
+      continue;
+    }
     if (master.pilot && output.provenance.promoted_pilot_sha256) {
       const promoted = await inspectArtworkFile(root, output, ledger.palette_rgb);
       assert(promoted.checksum_sha256 === output.provenance.promoted_pilot_sha256, `${output.asset_key} promoted pilot derivative drifted`);
@@ -1864,7 +2168,7 @@ export async function deriveMaster({ root, ledger, masterId }) {
   ];
   assert(new Set(posterPixels).size === posterPixels.length, "Derived poster duplicates an existing poster's decoded pixels");
 
-  if (!master.pilot) {
+  if (!master.pilot || remediatedPilot) {
     const flatPath = resolveRepoPath(root, master.flat_master_path);
     if (await pathExists(flatPath)) {
       const existing = await fileRecord(root, master.flat_master_path);
@@ -1883,7 +2187,7 @@ export async function deriveMaster({ root, ledger, masterId }) {
 
   for (const candidate of candidates) {
     const { output, record, buffer } = candidate;
-    if (!candidate.promoted) {
+    if (!candidate.promoted && !candidate.preserved) {
       const candidateSha = record.checksum_sha256;
       const outputPath = resolveRepoPath(root, output.manifest_path);
       if (await pathExists(outputPath)) {
@@ -1924,6 +2228,10 @@ export async function reviewMaster({ root, ledger, masterId, decision, reviewedB
     const output = findOutput(ledger, outputRef.asset_key);
     const actual = await inspectArtworkFile(root, output, ledger.palette_rgb);
     assert(actual.checksum_sha256 === output.checksum_sha256, `${output.asset_key} changed before review`);
+    if (decision === APPROVED && output.kind === "video-poster") {
+      const background = assertRecipeRgb(output.derivative.recipe.normalize_background_rgb, ledger.palette_rgb, `${output.asset_key} review background`);
+      await assertPosterSafeEdges(actual.contents, background, output.asset_key);
+    }
     required.push(output.asset_key, output.checksum_sha256, output.pixel_sha256);
   }
   const evidenceRecord = await validateEvidence(root, evidence, required);

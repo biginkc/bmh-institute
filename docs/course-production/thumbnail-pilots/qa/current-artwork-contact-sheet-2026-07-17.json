@@ -1,0 +1,402 @@
+{
+  "schema_version": "bmh-current-artwork-contact-sheet/v1",
+  "ledger_path": "docs/course-production/thumbnail-pilots/production-ledger.json",
+  "asset_count": 49,
+  "columns": 4,
+  "contact_sheet_path": "docs/course-production/thumbnail-pilots/qa/current-artwork-contact-sheet-2026-07-17.png",
+  "contact_sheet_sha256": "c7e9812d0d279983fc4408ee1d9179017c83c756c0bc3ab3ead08f4fc4facda5",
+  "assets": [
+    {
+      "position": 1,
+      "asset_key": "poster-video-slot-01-mindset",
+      "output_path": "course-assets/posters/video-slot-01-mindset.webp",
+      "ledger_checksum_sha256": "d005d51e569137955a70425c64b21d7bb740af1e0a968e3284aeab41fdd4dadd",
+      "rendered_input_sha256": "d005d51e569137955a70425c64b21d7bb740af1e0a968e3284aeab41fdd4dadd",
+      "approval_status": "missing"
+    },
+    {
+      "position": 2,
+      "asset_key": "poster-video-slot-01-welcome",
+      "output_path": "course-assets/posters/video-slot-01-welcome.webp",
+      "ledger_checksum_sha256": "7da124a20704285fed7b2ed1c2db81fa56be849da4222f22ce1810638ec46d07",
+      "rendered_input_sha256": "7da124a20704285fed7b2ed1c2db81fa56be849da4222f22ce1810638ec46d07",
+      "approval_status": "missing"
+    },
+    {
+      "position": 3,
+      "asset_key": "poster-video-slot-02-terms",
+      "output_path": "course-assets/posters/video-slot-02-terms.webp",
+      "ledger_checksum_sha256": "1613a472e9a082f72e7423119d5633bde8507f904a91aa29b84b0387dca3ec43",
+      "rendered_input_sha256": "1613a472e9a082f72e7423119d5633bde8507f904a91aa29b84b0387dca3ec43",
+      "approval_status": "missing"
+    },
+    {
+      "position": 4,
+      "asset_key": "poster-video-slot-03-tech-stack",
+      "output_path": "course-assets/posters/video-slot-03-tech-stack.webp",
+      "ledger_checksum_sha256": "19c51d0c032c630715d69e5d0ae03623dd05ab13774c9df3ae25026ca046b3c1",
+      "rendered_input_sha256": "19c51d0c032c630715d69e5d0ae03623dd05ab13774c9df3ae25026ca046b3c1",
+      "approval_status": "missing"
+    },
+    {
+      "position": 5,
+      "asset_key": "poster-video-slot-04-humanizing-a",
+      "output_path": "course-assets/posters/video-slot-04-humanizing-a.webp",
+      "ledger_checksum_sha256": "69b616ed9ccad167e6b4183633498c331fc972e8d44f886dfc16209dc0df36f8",
+      "rendered_input_sha256": "69b616ed9ccad167e6b4183633498c331fc972e8d44f886dfc16209dc0df36f8",
+      "approval_status": "missing"
+    },
+    {
+      "position": 6,
+      "asset_key": "poster-video-slot-04-humanizing-b",
+      "output_path": "course-assets/posters/video-slot-04-humanizing-b.webp",
+      "ledger_checksum_sha256": "87c9a83d6dceaa93688c7230fa23ae951c62f24269a873798c8882d502b64949",
+      "rendered_input_sha256": "87c9a83d6dceaa93688c7230fa23ae951c62f24269a873798c8882d502b64949",
+      "approval_status": "missing"
+    },
+    {
+      "position": 7,
+      "asset_key": "poster-video-slot-04-ideal-seller",
+      "output_path": "course-assets/posters/video-slot-04-ideal-seller.webp",
+      "ledger_checksum_sha256": "20079169d51a4412ef5dce221beac8f568548636816637bc746e769b6e256585",
+      "rendered_input_sha256": "20079169d51a4412ef5dce221beac8f568548636816637bc746e769b6e256585",
+      "approval_status": "missing"
+    },
+    {
+      "position": 8,
+      "asset_key": "poster-video-slot-05-offer-a",
+      "output_path": "course-assets/posters/video-slot-05-offer-a.webp",
+      "ledger_checksum_sha256": "5ca9ce93c7db38b7818c905ee3565803240256d82a3dc59d377a5ce320125eb2",
+      "rendered_input_sha256": "5ca9ce93c7db38b7818c905ee3565803240256d82a3dc59d377a5ce320125eb2",
+      "approval_status": "missing"
+    },
+    {
+      "position": 9,
+      "asset_key": "poster-video-slot-05-offer-b",
+      "output_path": "course-assets/posters/video-slot-05-offer-b.webp",
+      "ledger_checksum_sha256": "9935b55c10118b08c466d563ae915e9e5a786a1d1f95563df45159b3b25f4f9d",
+      "rendered_input_sha256": "9935b55c10118b08c466d563ae915e9e5a786a1d1f95563df45159b3b25f4f9d",
+      "approval_status": "missing"
+    },
+    {
+      "position": 10,
+      "asset_key": "poster-video-slot-06-framework",
+      "output_path": "course-assets/posters/video-slot-06-framework.webp",
+      "ledger_checksum_sha256": "19c0b2950bb2ac66f79bbd3401296fd322ea08e114e49f99d2781ef42870b219",
+      "rendered_input_sha256": "19c0b2950bb2ac66f79bbd3401296fd322ea08e114e49f99d2781ef42870b219",
+      "approval_status": "missing"
+    },
+    {
+      "position": 11,
+      "asset_key": "poster-video-slot-06-pipeline",
+      "output_path": "course-assets/posters/video-slot-06-pipeline.webp",
+      "ledger_checksum_sha256": "9fae25bfd165c19c9e70002bbf8a0b4640f78b3c679c75f65582af23f978efd0",
+      "rendered_input_sha256": "9fae25bfd165c19c9e70002bbf8a0b4640f78b3c679c75f65582af23f978efd0",
+      "approval_status": "missing"
+    },
+    {
+      "position": 12,
+      "asset_key": "poster-video-slot-07-fact-find",
+      "output_path": "course-assets/posters/video-slot-07-fact-find.webp",
+      "ledger_checksum_sha256": "d83b32982cbec387dfc567f58b87c1694b80eb50806243fe728bbcb6ca1c533a",
+      "rendered_input_sha256": "d83b32982cbec387dfc567f58b87c1694b80eb50806243fe728bbcb6ca1c533a",
+      "approval_status": "missing"
+    },
+    {
+      "position": 13,
+      "asset_key": "poster-video-slot-07-opening",
+      "output_path": "course-assets/posters/video-slot-07-opening.webp",
+      "ledger_checksum_sha256": "ff1458f6b657f002430df9cb937b0498975f83eaad7a39ec9d800f9d56eea509",
+      "rendered_input_sha256": "ff1458f6b657f002430df9cb937b0498975f83eaad7a39ec9d800f9d56eea509",
+      "approval_status": "missing"
+    },
+    {
+      "position": 14,
+      "asset_key": "poster-video-slot-08-discovery",
+      "output_path": "course-assets/posters/video-slot-08-discovery.webp",
+      "ledger_checksum_sha256": "492f71e63c2f33f20bee6b22f963a9a5430045ee52afbafabcfcceb5a43d655f",
+      "rendered_input_sha256": "492f71e63c2f33f20bee6b22f963a9a5430045ee52afbafabcfcceb5a43d655f",
+      "approval_status": "missing"
+    },
+    {
+      "position": 15,
+      "asset_key": "poster-video-slot-08-handoff",
+      "output_path": "course-assets/posters/video-slot-08-handoff.webp",
+      "ledger_checksum_sha256": "33ed75c11e79309c0e9d36d35e2554910e3782a229765c6ad94cb5c0ffbf6e81",
+      "rendered_input_sha256": "33ed75c11e79309c0e9d36d35e2554910e3782a229765c6ad94cb5c0ffbf6e81",
+      "approval_status": "missing"
+    },
+    {
+      "position": 16,
+      "asset_key": "poster-video-slot-09-objection-architecture",
+      "output_path": "course-assets/posters/video-slot-09-objection-architecture.webp",
+      "ledger_checksum_sha256": "2e08972e271cf6e98e9eaf0dafbf933b2dffe4d114110bed04bf25b233d3e30e",
+      "rendered_input_sha256": "2e08972e271cf6e98e9eaf0dafbf933b2dffe4d114110bed04bf25b233d3e30e",
+      "approval_status": "missing"
+    },
+    {
+      "position": 17,
+      "asset_key": "poster-video-slot-10-objection-scripts",
+      "output_path": "course-assets/posters/video-slot-10-objection-scripts.webp",
+      "ledger_checksum_sha256": "ed4f08ac97f2d04a71fd7927e0652efc64156cbc5138802d97db9113baf89367",
+      "rendered_input_sha256": "ed4f08ac97f2d04a71fd7927e0652efc64156cbc5138802d97db9113baf89367",
+      "approval_status": "missing"
+    },
+    {
+      "position": 18,
+      "asset_key": "poster-video-slot-11-complex",
+      "output_path": "course-assets/posters/video-slot-11-complex.webp",
+      "ledger_checksum_sha256": "8b37c885eed7c153cb3fcb199dd11b61abf78ceda080754929aecef1e38277c8",
+      "rendered_input_sha256": "8b37c885eed7c153cb3fcb199dd11b61abf78ceda080754929aecef1e38277c8",
+      "approval_status": "missing"
+    },
+    {
+      "position": 19,
+      "asset_key": "poster-video-slot-11-trust",
+      "output_path": "course-assets/posters/video-slot-11-trust.webp",
+      "ledger_checksum_sha256": "d8e4551e6b49dc0d45ea65e59879c8669970a0265839e27191a1b317acc63367",
+      "rendered_input_sha256": "d8e4551e6b49dc0d45ea65e59879c8669970a0265839e27191a1b317acc63367",
+      "approval_status": "missing"
+    },
+    {
+      "position": 20,
+      "asset_key": "poster-video-slot-12-faq-a",
+      "output_path": "course-assets/posters/video-slot-12-faq-a.webp",
+      "ledger_checksum_sha256": "6eb3aa7a6c0a30f117641cc14f9c1e1e790283d239edbe5305ea49772f7abb22",
+      "rendered_input_sha256": "6eb3aa7a6c0a30f117641cc14f9c1e1e790283d239edbe5305ea49772f7abb22",
+      "approval_status": "missing"
+    },
+    {
+      "position": 21,
+      "asset_key": "poster-video-slot-12-faq-b",
+      "output_path": "course-assets/posters/video-slot-12-faq-b.webp",
+      "ledger_checksum_sha256": "896c5c91300094f0e060495050477d120977cab41bb415731db578b778737e3d",
+      "rendered_input_sha256": "896c5c91300094f0e060495050477d120977cab41bb415731db578b778737e3d",
+      "approval_status": "missing"
+    },
+    {
+      "position": 22,
+      "asset_key": "poster-video-slot-13-follow-up",
+      "output_path": "course-assets/posters/video-slot-13-follow-up.webp",
+      "ledger_checksum_sha256": "c702d159db8b845c333d9f0a5476776afe27405792502525c603d11000132935",
+      "rendered_input_sha256": "c702d159db8b845c333d9f0a5476776afe27405792502525c603d11000132935",
+      "approval_status": "missing"
+    },
+    {
+      "position": 23,
+      "asset_key": "poster-video-slot-14-flow",
+      "output_path": "course-assets/posters/video-slot-14-flow.webp",
+      "ledger_checksum_sha256": "aca66cfc723611531e39f209c5ee0d514c842d62b9de31f5f70c9f2777f737fb",
+      "rendered_input_sha256": "aca66cfc723611531e39f209c5ee0d514c842d62b9de31f5f70c9f2777f737fb",
+      "approval_status": "missing"
+    },
+    {
+      "position": 24,
+      "asset_key": "poster-video-slot-15-closing",
+      "output_path": "course-assets/posters/video-slot-15-closing.webp",
+      "ledger_checksum_sha256": "703be9e1ce9cc36113cf667a9015ade3a768c0c3216ccfb9e81fb436b1a4dbff",
+      "rendered_input_sha256": "703be9e1ce9cc36113cf667a9015ade3a768c0c3216ccfb9e81fb436b1a4dbff",
+      "approval_status": "missing"
+    },
+    {
+      "position": 25,
+      "asset_key": "poster-video-slot-16-kpis",
+      "output_path": "course-assets/posters/video-slot-16-kpis.webp",
+      "ledger_checksum_sha256": "70bc9739ad295bec0cb95b9c3e000a2289e583aa79a2dc40443af648072bd985",
+      "rendered_input_sha256": "70bc9739ad295bec0cb95b9c3e000a2289e583aa79a2dc40443af648072bd985",
+      "approval_status": "missing"
+    },
+    {
+      "position": 26,
+      "asset_key": "poster-video-slot-17-compensation",
+      "output_path": "course-assets/posters/video-slot-17-compensation.webp",
+      "ledger_checksum_sha256": "e711a56cd1ac9f5b0871cf60e084e4cafdafb5b8ac058e70c5e3d82db52348e0",
+      "rendered_input_sha256": "e711a56cd1ac9f5b0871cf60e084e4cafdafb5b8ac058e70c5e3d82db52348e0",
+      "approval_status": "missing"
+    },
+    {
+      "position": 27,
+      "asset_key": "poster-video-slot-18-mission-control",
+      "output_path": "course-assets/posters/video-slot-18-mission-control.webp",
+      "ledger_checksum_sha256": "0a181f6ba91c52495bfcde80bbe7cc03d87151d9a21f3486a55a8f895bc4a1ce",
+      "rendered_input_sha256": "0a181f6ba91c52495bfcde80bbe7cc03d87151d9a21f3486a55a8f895bc4a1ce",
+      "approval_status": "missing"
+    },
+    {
+      "position": 28,
+      "asset_key": "poster-video-slot-18-operator",
+      "output_path": "course-assets/posters/video-slot-18-operator.webp",
+      "ledger_checksum_sha256": "88f4d72212b6b072a304ccdca004a0c8df7a1c24bb14b8b14ca4aa76eeb7a497",
+      "rendered_input_sha256": "88f4d72212b6b072a304ccdca004a0c8df7a1c24bb14b8b14ca4aa76eeb7a497",
+      "approval_status": "missing"
+    },
+    {
+      "position": 29,
+      "asset_key": "poster-video-slot-19-career",
+      "output_path": "course-assets/posters/video-slot-19-career.webp",
+      "ledger_checksum_sha256": "aaddc502f1df0e1189ddfe65179a8a5adf7fcaf0c7d0ceb1094e02294545a3a5",
+      "rendered_input_sha256": "aaddc502f1df0e1189ddfe65179a8a5adf7fcaf0c7d0ceb1094e02294545a3a5",
+      "approval_status": "missing"
+    },
+    {
+      "position": 30,
+      "asset_key": "thumbnail-program-bmh-employee-training",
+      "output_path": "course-assets/thumbnails/program-bmh-employee-training.webp",
+      "ledger_checksum_sha256": "35b84bffa83a91fb9f4b8cc06774bfaeec0265fb2827478bf6bc8a61cb332449",
+      "rendered_input_sha256": "35b84bffa83a91fb9f4b8cc06774bfaeec0265fb2827478bf6bc8a61cb332449",
+      "approval_status": "missing"
+    },
+    {
+      "position": 31,
+      "asset_key": "thumbnail-slot-01",
+      "output_path": "course-assets/thumbnails/slot-01.webp",
+      "ledger_checksum_sha256": "3a684cd589bf3895e672e43d6a734b35c503f6b3a191e1564c997c93c8c84988",
+      "rendered_input_sha256": "3a684cd589bf3895e672e43d6a734b35c503f6b3a191e1564c997c93c8c84988",
+      "approval_status": "missing"
+    },
+    {
+      "position": 32,
+      "asset_key": "thumbnail-slot-02",
+      "output_path": "course-assets/thumbnails/slot-02.webp",
+      "ledger_checksum_sha256": "9f484d3fb7f324a81b07f196e8e7c7434c06bc01cb8ae229cdba3046329f66ea",
+      "rendered_input_sha256": "9f484d3fb7f324a81b07f196e8e7c7434c06bc01cb8ae229cdba3046329f66ea",
+      "approval_status": "missing"
+    },
+    {
+      "position": 33,
+      "asset_key": "thumbnail-slot-03",
+      "output_path": "course-assets/thumbnails/slot-03.webp",
+      "ledger_checksum_sha256": "f89052943fd149d23d9712be8cb2d50031484eb08c76865726360cd08a2281f9",
+      "rendered_input_sha256": "f89052943fd149d23d9712be8cb2d50031484eb08c76865726360cd08a2281f9",
+      "approval_status": "missing"
+    },
+    {
+      "position": 34,
+      "asset_key": "thumbnail-slot-04",
+      "output_path": "course-assets/thumbnails/slot-04.webp",
+      "ledger_checksum_sha256": "70d7095c65b3003db6cc6eb6ae060f5aee60463a4ab8564e2366f1b613852aa3",
+      "rendered_input_sha256": "70d7095c65b3003db6cc6eb6ae060f5aee60463a4ab8564e2366f1b613852aa3",
+      "approval_status": "missing"
+    },
+    {
+      "position": 35,
+      "asset_key": "thumbnail-slot-05",
+      "output_path": "course-assets/thumbnails/slot-05.webp",
+      "ledger_checksum_sha256": "a886a8f3c5ebc36cac8b7980a1fd399a686fd0613200d4516aca25c6bd5e77b2",
+      "rendered_input_sha256": "a886a8f3c5ebc36cac8b7980a1fd399a686fd0613200d4516aca25c6bd5e77b2",
+      "approval_status": "missing"
+    },
+    {
+      "position": 36,
+      "asset_key": "thumbnail-slot-06",
+      "output_path": "course-assets/thumbnails/slot-06.webp",
+      "ledger_checksum_sha256": "56f9fce2b8e20ec6fdb6cf7da478d6ca0629e1bb158d29af6200886fb66c88f0",
+      "rendered_input_sha256": "56f9fce2b8e20ec6fdb6cf7da478d6ca0629e1bb158d29af6200886fb66c88f0",
+      "approval_status": "missing"
+    },
+    {
+      "position": 37,
+      "asset_key": "thumbnail-slot-07",
+      "output_path": "course-assets/thumbnails/slot-07.webp",
+      "ledger_checksum_sha256": "3a2f38e2619f5bb33aa69cfcd0712c4e6e4e4c02979ef20ec9313d8e14973c25",
+      "rendered_input_sha256": "3a2f38e2619f5bb33aa69cfcd0712c4e6e4e4c02979ef20ec9313d8e14973c25",
+      "approval_status": "missing"
+    },
+    {
+      "position": 38,
+      "asset_key": "thumbnail-slot-08",
+      "output_path": "course-assets/thumbnails/slot-08.webp",
+      "ledger_checksum_sha256": "633780c1bc888dcefb85a46bb22e7621b8034d02c53df68aa40f1313e481a543",
+      "rendered_input_sha256": "633780c1bc888dcefb85a46bb22e7621b8034d02c53df68aa40f1313e481a543",
+      "approval_status": "missing"
+    },
+    {
+      "position": 39,
+      "asset_key": "thumbnail-slot-09",
+      "output_path": "course-assets/thumbnails/slot-09.webp",
+      "ledger_checksum_sha256": "9ecbea7d29ce43d999161e5ab1eb60607fbc26a0a26b24c0b1f9116c51b2a1c1",
+      "rendered_input_sha256": "9ecbea7d29ce43d999161e5ab1eb60607fbc26a0a26b24c0b1f9116c51b2a1c1",
+      "approval_status": "missing"
+    },
+    {
+      "position": 40,
+      "asset_key": "thumbnail-slot-10",
+      "output_path": "course-assets/thumbnails/slot-10.webp",
+      "ledger_checksum_sha256": "2402351798269121a8a51373533101c95c6de4684064529486f392cd1f237105",
+      "rendered_input_sha256": "2402351798269121a8a51373533101c95c6de4684064529486f392cd1f237105",
+      "approval_status": "missing"
+    },
+    {
+      "position": 41,
+      "asset_key": "thumbnail-slot-11",
+      "output_path": "course-assets/thumbnails/slot-11.webp",
+      "ledger_checksum_sha256": "7f52c136cd6b3025406ad73f6e7cec0e602f12aa7b25e16fecd17600a64fa469",
+      "rendered_input_sha256": "7f52c136cd6b3025406ad73f6e7cec0e602f12aa7b25e16fecd17600a64fa469",
+      "approval_status": "missing"
+    },
+    {
+      "position": 42,
+      "asset_key": "thumbnail-slot-12",
+      "output_path": "course-assets/thumbnails/slot-12.webp",
+      "ledger_checksum_sha256": "32b9c1ffca28ffd6debeb721d1a421f7fd7e54ed9a229492cb3e4051ec05710d",
+      "rendered_input_sha256": "32b9c1ffca28ffd6debeb721d1a421f7fd7e54ed9a229492cb3e4051ec05710d",
+      "approval_status": "missing"
+    },
+    {
+      "position": 43,
+      "asset_key": "thumbnail-slot-13",
+      "output_path": "course-assets/thumbnails/slot-13.webp",
+      "ledger_checksum_sha256": "1fc8c89552066b70b1eb004eb5e35e7ed0a4630acad30d9edac992414da64135",
+      "rendered_input_sha256": "1fc8c89552066b70b1eb004eb5e35e7ed0a4630acad30d9edac992414da64135",
+      "approval_status": "missing"
+    },
+    {
+      "position": 44,
+      "asset_key": "thumbnail-slot-14",
+      "output_path": "course-assets/thumbnails/slot-14.webp",
+      "ledger_checksum_sha256": "4e52d9f7996f720d333c3ed5f57f930a966c9d19770bd29c5d52480f79191fcd",
+      "rendered_input_sha256": "4e52d9f7996f720d333c3ed5f57f930a966c9d19770bd29c5d52480f79191fcd",
+      "approval_status": "missing"
+    },
+    {
+      "position": 45,
+      "asset_key": "thumbnail-slot-15",
+      "output_path": "course-assets/thumbnails/slot-15.webp",
+      "ledger_checksum_sha256": "c97c3334788d21096cac4c201e01245815c6e6e10f241408e282b5901df31ccf",
+      "rendered_input_sha256": "c97c3334788d21096cac4c201e01245815c6e6e10f241408e282b5901df31ccf",
+      "approval_status": "missing"
+    },
+    {
+      "position": 46,
+      "asset_key": "thumbnail-slot-16",
+      "output_path": "course-assets/thumbnails/slot-16.webp",
+      "ledger_checksum_sha256": "13a93415758a31dbc7f75b2a385c8899cd76e9abdbb9833fc8cb300255149f41",
+      "rendered_input_sha256": "13a93415758a31dbc7f75b2a385c8899cd76e9abdbb9833fc8cb300255149f41",
+      "approval_status": "missing"
+    },
+    {
+      "position": 47,
+      "asset_key": "thumbnail-slot-17",
+      "output_path": "course-assets/thumbnails/slot-17.webp",
+      "ledger_checksum_sha256": "c92a137c4c2f4367d71f5fe3e4355629a80f836e487de452bfafee2915504103",
+      "rendered_input_sha256": "c92a137c4c2f4367d71f5fe3e4355629a80f836e487de452bfafee2915504103",
+      "approval_status": "missing"
+    },
+    {
+      "position": 48,
+      "asset_key": "thumbnail-slot-18",
+      "output_path": "course-assets/thumbnails/slot-18.webp",
+      "ledger_checksum_sha256": "2c276eb7cb5da6784c5779a335433dd4053d35659540cabf6793617b51546353",
+      "rendered_input_sha256": "2c276eb7cb5da6784c5779a335433dd4053d35659540cabf6793617b51546353",
+      "approval_status": "missing"
+    },
+    {
+      "position": 49,
+      "asset_key": "thumbnail-slot-19",
+      "output_path": "course-assets/thumbnails/slot-19.webp",
+      "ledger_checksum_sha256": "37fcc0375daabb5e8e0bd0e65d064f3129f9fb4158ef7e4f8bdca3b98eb0c81d",
+      "rendered_input_sha256": "37fcc0375daabb5e8e0bd0e65d064f3129f9fb4158ef7e4f8bdca3b98eb0c81d",
+      "approval_status": "missing"
+    }
+  ]
+}

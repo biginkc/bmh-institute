@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth/guard";
 import { validateArtworkChange } from "@/lib/artwork/paths";
 import {
+  importedDeletionError,
   importedPublicationError,
   normalizeReleaseControlError,
 } from "@/lib/release-control/admin-guards";
@@ -129,8 +130,18 @@ export async function updateCourse(
 export async function deleteCourse(courseId: string): Promise<CourseFormState> {
   await requireAdmin();
   const supabase = await createClient();
+  const current = await supabase
+    .from("courses")
+    .select("content_import_id")
+    .eq("id", courseId)
+    .maybeSingle();
+  if (current.error || !current.data) {
+    return { ok: false, error: "Couldn't verify the course before deleting it." };
+  }
+  const deletionError = importedDeletionError(current.data.content_import_id);
+  if (deletionError) return { ok: false, error: deletionError };
   const { error } = await supabase.from("courses").delete().eq("id", courseId);
-  if (error) return { ok: false, error: error.message };
+  if (error) return { ok: false, error: normalizeReleaseControlError(error.message) };
   revalidatePath("/admin/courses");
   revalidatePath("/dashboard");
   redirect("/admin/courses");
@@ -205,7 +216,7 @@ export async function deleteModule(input: {
     .from("modules")
     .delete()
     .eq("id", input.moduleId);
-  if (error) return { ok: false, error: error.message };
+  if (error) return { ok: false, error: normalizeReleaseControlError(error.message) };
   revalidatePath(`/admin/courses/${input.courseId}/edit`);
   revalidatePath("/dashboard");
   return { ok: true };
@@ -334,7 +345,7 @@ export async function deleteLesson(input: {
     .from("lessons")
     .delete()
     .eq("id", input.lessonId);
-  if (error) return { ok: false, error: error.message };
+  if (error) return { ok: false, error: normalizeReleaseControlError(error.message) };
 
   if (lesson?.quiz_id) {
     await supabase.from("quizzes").delete().eq("id", lesson.quiz_id);

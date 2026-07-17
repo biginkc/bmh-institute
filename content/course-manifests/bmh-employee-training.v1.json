@@ -1382,10 +1382,10 @@
       "source_key": "guide-slot-02",
       "kind": "pdf",
       "local_path": "output/pdf/slot-02-learner-guide.pdf",
-      "storage_path": "courses/bmh-employee-training/v1/guides/guide-slot-02.0080cb47689b0d204635bfc42277a485162aa78f37e83f53e4696a0b2c30bb7a.pdf",
+      "storage_path": "courses/bmh-employee-training/v1/guides/guide-slot-02.1400ca97f6c01550c826326b5ea969a857e583ce9c2acebeba654deba39ae9bb.pdf",
       "mime_type": "application/pdf",
-      "checksum_sha256": "0080cb47689b0d204635bfc42277a485162aa78f37e83f53e4696a0b2c30bb7a",
-      "size_bytes": 50938,
+      "checksum_sha256": "1400ca97f6c01550c826326b5ea969a857e583ce9c2acebeba654deba39ae9bb",
+      "size_bytes": 50975,
       "approval_status": "approved"
     },
     {
@@ -2338,9 +2338,9 @@
                     "required": false,
                     "content": {
                       "asset_key": "guide-slot-02",
-                      "file_path": "courses/bmh-employee-training/v1/guides/guide-slot-02.0080cb47689b0d204635bfc42277a485162aa78f37e83f53e4696a0b2c30bb7a.pdf",
+                      "file_path": "courses/bmh-employee-training/v1/guides/guide-slot-02.1400ca97f6c01550c826326b5ea969a857e583ce9c2acebeba654deba39ae9bb.pdf",
                       "filename": "slot-02-learner-guide.pdf",
-                      "size_bytes": 50938,
+                      "size_bytes": 50975,
                       "description": "Accessible learner guide for Real Estate Terms Glossary"
                     }
                   },

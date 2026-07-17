@@ -14,6 +14,8 @@ spoken moment in the held cut.
 Generated reviewer artifacts live under `generated/`:
 
 - seven `*-script.txt` files and seven edit specifications
+- seven deterministic `*-script.docx` team-reference copies plus
+  `team-reference-docx.json`, which locks their paths, sizes, and checksums
 - seven `*-heygen-draft.json` files containing the exact offline Studio API
   request bodies, without credentials or permission to call the provider
 
@@ -45,7 +47,7 @@ its checksum, timecode coverage is gap-free, every scene is mapped, generated
 documents are current, and all production permissions remain false.
 
 The eleven-record approval ledger is
-`../held-video-review/approvals.json`. Two local policy-cut candidates remain pending.
+`../held-video-review/approvals.json`. One local policy-cut candidate remains pending.
 The nine policy-defective source hashes are terminally marked
 `changes_requested` and cannot be approved. A reviewer must key every decision
 to both `source_key` and SHA-256 and provide approver, date, and notes. A revised

@@ -16,9 +16,9 @@ const contentLessons = course.modules.flatMap((module) => module.lessons.filter(
 
 test("the character plan covers every independent artwork master with varied lesson-informed poses", () => {
   assert.doesNotThrow(() => validateArtworkPoseContract());
-  assert.equal(ARTWORK_MASTER_POSE_CONTRACT.length, 21);
-  assert.equal(new Set(ARTWORK_MASTER_POSE_CONTRACT.map((entry) => entry.master_id)).size, 21);
-  assert.equal(new Set(ARTWORK_MASTER_POSE_CONTRACT.map((entry) => entry.pose_id)).size, 21);
+  assert.equal(ARTWORK_MASTER_POSE_CONTRACT.length, 28);
+  assert.equal(new Set(ARTWORK_MASTER_POSE_CONTRACT.map((entry) => entry.master_id)).size, 28);
+  assert.equal(new Set(ARTWORK_MASTER_POSE_CONTRACT.map((entry) => entry.pose_id)).size, 28);
   assert.ok(new Set(ARTWORK_MASTER_POSE_CONTRACT.map((entry) => entry.posture)).size >= 7);
   assert.ok(new Set(ARTWORK_MASTER_POSE_CONTRACT.map((entry) => entry.placement)).size >= 7);
 

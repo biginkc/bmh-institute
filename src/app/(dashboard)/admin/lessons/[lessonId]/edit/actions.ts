@@ -9,6 +9,7 @@ import {
   defaultRequiredForBlock,
   normalizeRequiredForBlock,
 } from "@/lib/content-blocks/completion";
+import { normalizeReleaseControlError } from "@/lib/release-control/admin-guards";
 import { createClient } from "@/lib/supabase/server";
 import type { Json } from "@/lib/supabase/types";
 
@@ -242,7 +243,9 @@ export async function deleteBlock(input: {
     .from("content_blocks")
     .delete()
     .eq("id", input.blockId);
-  if (error) return { ok: false, error: error.message };
+  if (error) {
+    return { ok: false, error: normalizeReleaseControlError(error.message) };
+  }
 
   revalidatePath(`/admin/lessons/${input.lessonId}/edit`);
   revalidatePath(`/lessons/${input.lessonId}`);

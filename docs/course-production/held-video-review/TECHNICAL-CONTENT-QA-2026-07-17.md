@@ -12,8 +12,9 @@ responses and the expected no-store security headers.
 The original six should not be approved. Content review found policy
 language that the earlier targeted correction reports did not assess. Two
 issues were removed locally without changing the teaching content. Terms
-Glossary v10 and KPIs and Sales Telemetry v12 are now checksum-locked on the
-local review surface as explicitly unapproved candidates. Welcome, Mindset,
+Glossary v10 and KPIs and Sales Telemetry v12 are checksum-locked on the local
+review surface. Terms v10 is approved; KPIs v12 remains explicitly unapproved.
+Welcome, Mindset,
 Objection Scripts Playbook, and Closing and Deal Engineering have policy-safe
 replacement packages ready for provider review but still need new cuts.
 
@@ -208,6 +209,6 @@ transcribed, or ready for publication.
 
 ## Exact approval question
 
-Do you approve the Terms v10 and KPIs v12 local policy-cut candidates and
-authorize policy-safe replacement recuts for Welcome, Mindset, Objection
-Scripts Playbook, and Closing and Deal Engineering?
+Do you approve the exact KPIs v12 local policy-cut candidate? Terms v10 is
+already approved. All seven replacement-video packages remain separately gated
+from provider generation.

@@ -1,0 +1,7 @@
+Use case: stylized-concept
+Asset type: BMH Institute Call Framework video-poster master, wide 16:9 artwork
+Primary request: Create a focused illustration about listening through a structured five-step call framework. The exact mapped video must inform the active-listening headset, table, question, handshake, and relationship cues.
+Input images: Image 1 and Image 2 are the canonical BMH Sticker System references. Image 3 is the approved Andrea identity root. Image 4 is the checksum-bound contact sheet from the exact mapped video.
+Character direction: Show exactly one person: Andrea. Preserve Andrea's approved face, hair, proportions, clothing language, pure-white skin fill, and thick slightly wobbly black line weight. Seat her at a round table in the left-center safe zone, one hand touching her headset and the other pointing across five blank step cards. This seated listening posture must be materially different from the walking Pipeline poster.
+Scene: uniform flat golden-yellow background. Use five blank cards plus ear, question, handshake and heart cues as one simple framework arc.
+Constraints: one person only; no seller; no words, letters, numbers, logos, watermark, gradients, texture, shadows, extra limbs, cropped anatomy, or realistic room. Keep all meaningful content inside the central 80 percent.

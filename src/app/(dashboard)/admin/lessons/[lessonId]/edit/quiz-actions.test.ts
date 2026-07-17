@@ -9,6 +9,8 @@ const adminFromCalls: string[] = [];
 let adminFactoryThrows: Error | null = null;
 let createdQuestionId = "question-1";
 let lastOptionSortOrder: number | null = 4;
+let lessonContentImportId: string | null = null;
+let courseContentImportId: string | null = null;
 let insertedAnswerOptions: unknown[] = [];
 let updateCalls: Array<{
   patch: Record<string, unknown>;
@@ -62,17 +64,28 @@ vi.mock("@/lib/supabase/admin", () => ({
     return {
       from: (table: string) => {
         adminFromCalls.push(table);
-        if (table !== "answer_options") {
-          throw new Error(`Unexpected admin-client table: ${table}`);
-        }
         return {
-          select: () => ({
+          select: (columns: string) => ({
             eq: () => ({
+              maybeSingle: async () => {
+                const rows: Record<string, Record<string, unknown>> = {
+                  answer_options: { question_id: "question-1" },
+                  lessons: {
+                    quiz_id: "quiz-1",
+                    module_id: "module-1",
+                    content_import_id: lessonContentImportId,
+                  },
+                  questions: { quiz_id: "quiz-1" },
+                  modules: { course_id: "course-1" },
+                  courses: { content_import_id: courseContentImportId },
+                };
+                return { data: rows[table] ?? null, error: null };
+              },
               order: () => ({
                 limit: () => ({
                   maybeSingle: async () => ({
                     data:
-                      lastOptionSortOrder === null
+                      columns !== "sort_order" || lastOptionSortOrder === null
                         ? null
                         : { sort_order: lastOptionSortOrder },
                     error: null,
@@ -124,6 +137,8 @@ describe("admin quiz answer option actions", () => {
     adminFactoryThrows = null;
     createdQuestionId = "question-1";
     lastOptionSortOrder = 4;
+    lessonContentImportId = null;
+    courseContentImportId = null;
     insertedAnswerOptions = [];
     updateCalls = [];
   });
@@ -210,9 +225,32 @@ describe("admin quiz answer option actions", () => {
     });
 
     expect(result).toEqual({ ok: true });
-    expect(adminFromCalls).toEqual(["answer_options"]);
+    expect(adminFromCalls).toEqual([
+      "answer_options",
+      "lessons",
+      "questions",
+      "modules",
+      "courses",
+      "answer_options",
+    ]);
     expect(learnerFromCalls).not.toContain("answer_options");
     expect(calls).toContain("delete:option-1");
+  });
+
+  it("refuses to delete an answer option owned by an imported course", async () => {
+    courseContentImportId = "bmh-institute-v1";
+
+    const result = await deleteAnswerOption({
+      optionId: "option-1",
+      lessonId: "lesson-1",
+    });
+
+    expect(result).toEqual({
+      ok: false,
+      error:
+        "Imported course content can only be deleted with the exact course-import rollback operation.",
+    });
+    expect(calls).not.toContain("delete:option-1");
   });
 
   it("returns an action error when the service-role client is unavailable", async () => {

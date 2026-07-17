@@ -35,8 +35,8 @@ Implement the approved concurrent completion plan for the reusable BMH Institute
 - [ ] Captions, transcripts, guides, flashcards, objectives and thumbnail assets are complete.
 - [ ] Dummy walkthrough content is removed only after the real draft passes acceptance.
 - [x] Automated tests, manual code review, authorization abuse tests and test-project importer rollback coverage pass for the current foundation.
-- [ ] A final rollback rehearsal passes against the accepted complete unpublished import.
-- [ ] Desktop and mobile Chrome acceptance pass on the deployed surface.
+- [ ] A final rollback rehearsal passes against the exact complete unpublished import before any learner video completion creates immutable history.
+- [ ] The exact import is reapplied and reconciled after rehearsal, then desktop and mobile Chrome learner acceptance pass on the deployed surface.
 - [ ] Sandra completion delivery and program certificate behavior pass.
 - [x] Employee access remains disabled while any content, import or product gate is outstanding.
 
@@ -468,8 +468,15 @@ Implement the approved concurrent completion plan for the reusable BMH Institute
 
 ## Hard gates
 
-- Jarrad must review the six corrected held cuts. The three policy-defective
-  source hashes require replacement files and cannot be approved as-is.
-- Jarrad must approve the three-image thumbnail pilot before batch thumbnail generation.
+- Terms v10 is approved. Jarrad must still review KPIs v12 and the seven new
+  policy-safe replacement cuts after provider production; source-evidence hashes
+  marked `changes_requested` cannot be approved as-is.
+- The V8 thumbnail direction is approved and the 49-asset batch is produced.
+  Jarrad must approve the final checksum-locked contact sheet before artwork is
+  promoted into the release manifest.
+- Rollback rehearsal must precede the learner happy path. After a required video
+  reaches completion, append-only completion history intentionally blocks
+  destructive rollback; the course must therefore be reapplied and reconciled
+  after rehearsal and before final learner acceptance.
 - Billing changes, new paid vendors and uncontrolled external provider use require immediate approval.
 - Publishing and fixture deletion occur only after all acceptance evidence is complete.

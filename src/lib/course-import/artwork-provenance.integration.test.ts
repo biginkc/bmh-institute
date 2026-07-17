@@ -3,6 +3,10 @@ import { randomBytes } from "node:crypto";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { describe, expect, it } from "vitest";
 
+import { atomicImportOperations, buildRollbackOwnedIds } from "./execute";
+import { buildImportPlan } from "./operations";
+import { validCourseManifest } from "./test-fixtures";
+
 const URL = process.env.TEST_SUPABASE_URL;
 const ANON = process.env.TEST_SUPABASE_ANON_KEY;
 const SERVICE_ROLE = process.env.TEST_SUPABASE_SERVICE_ROLE_KEY;
@@ -27,30 +31,61 @@ async function createOwner(): Promise<{ id: string; client: SupabaseClient }> {
 }
 
 describe.skipIf(!envPresent)("catalog artwork provenance migration", () => {
-  it("allows one service-role claim, permits an identical rerun, and blocks later mutation", async () => {
+  it("allows only an exact-import claim and rerun, then blocks direct service mutation", async () => {
     if (!service) throw new Error("Service client unavailable.");
-    const checksum = "a".repeat(64);
-    const path = `courses/integration/v1/thumbnails/course-${checksum}.webp`;
-    let courseId: string | null = null;
+    const suffix = randomBytes(8).toString("hex");
+    const manifest = validCourseManifest();
+    manifest.import_id = `artwork-provenance-${suffix}`;
+    manifest.qa_role_group.name = `Artwork provenance ${suffix}`;
+    const plan = buildImportPlan(manifest);
+    const course = atomicImportOperations(plan).find((operation) => operation.table === "courses");
+    if (!course) throw new Error("Course import fixture is missing its course.");
+    let imported = false;
     try {
-      const inserted = await service.from("courses").insert({ title: "Provenance integration" }).select("id").single();
-      if (inserted.error || !inserted.data) throw inserted.error ?? new Error("Course insert failed.");
-      courseId = inserted.data.id;
+      const inserted = await service.from("courses").insert({
+        id: course.id,
+        title: "Pre-import provenance course",
+      });
+      if (inserted.error) throw inserted.error;
 
-      const claim = {
-        content_import_id: "integration-v1",
-        thumbnail_asset_key: "thumbnail-course",
-        thumbnail_approved_path: path,
-        thumbnail_approved_sha256: checksum,
-        thumbnail_path: path,
-      };
-      expect((await service.from("courses").update(claim).eq("id", courseId)).error).toBeNull();
-      expect((await service.from("courses").upsert({ id: courseId, title: "Provenance integration", ...claim })).error).toBeNull();
+      const forgedClaim = await service
+        .from("courses")
+        .update({ content_import_id: plan.importId })
+        .eq("id", course.id);
+      expect(forgedClaim.error?.message).toMatch(/exact course-import apply operation/i);
 
-      const changedPath = `courses/integration/v1/thumbnails/changed-${checksum}.webp`;
-      expect((await service.from("courses").update({ thumbnail_path: changedPath }).eq("id", courseId)).error).not.toBeNull();
+      for (let attempt = 0; attempt < 2; attempt += 1) {
+        const applied = await service.rpc("fn_apply_course_import", {
+          p_import_id: plan.importId,
+          p_operations: atomicImportOperations(plan),
+        });
+        expect(applied.error).toBeNull();
+        expect(applied.data).toMatchObject({
+          status: "applied",
+          import_id: plan.importId,
+        });
+        imported = true;
+      }
+
+      const directUpsert = await service.from("courses").upsert(course.row);
+      expect(directUpsert.error?.message).toMatch(/exact course-import apply operation/i);
+
+      const changedPath = `courses/${plan.importId}/thumbnails/changed-${"a".repeat(64)}.webp`;
+      const mutation = await service
+        .from("courses")
+        .update({ thumbnail_path: changedPath })
+        .eq("id", course.id);
+      expect(mutation.error).not.toBeNull();
     } finally {
-      if (courseId) await service.from("courses").delete().eq("id", courseId);
+      if (imported) {
+        const rollback = await service.rpc("fn_rollback_course_import", {
+          p_import_id: plan.importId,
+          p_owned: buildRollbackOwnedIds(plan),
+        });
+        if (rollback.error) throw rollback.error;
+      } else {
+        await service.from("courses").delete().eq("id", course.id);
+      }
     }
   });
 

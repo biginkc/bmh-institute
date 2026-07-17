@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth/guard";
 import { validateArtworkChange } from "@/lib/artwork/paths";
 import {
+  importedDeletionError,
   importedPublicationError,
   normalizeReleaseControlError,
 } from "@/lib/release-control/admin-guards";
@@ -132,8 +133,18 @@ export async function updateProgram(
 export async function deleteProgram(programId: string): Promise<FormState> {
   await requireAdmin();
   const supabase = await createClient();
+  const current = await supabase
+    .from("programs")
+    .select("content_import_id")
+    .eq("id", programId)
+    .maybeSingle();
+  if (current.error || !current.data) {
+    return { ok: false, error: "Couldn't verify the program before deleting it." };
+  }
+  const deletionError = importedDeletionError(current.data.content_import_id);
+  if (deletionError) return { ok: false, error: deletionError };
   const { error } = await supabase.from("programs").delete().eq("id", programId);
-  if (error) return { ok: false, error: error.message };
+  if (error) return { ok: false, error: normalizeReleaseControlError(error.message) };
 
   revalidatePath("/admin/programs");
   revalidatePath("/dashboard");
@@ -163,7 +174,9 @@ export async function attachCourseToProgram(input: {
     sort_order: nextOrder,
   });
 
-  if (error) return { ok: false, error: error.message };
+  if (error) {
+    return { ok: false, error: normalizeReleaseControlError(error.message) };
+  }
   revalidatePath(`/admin/programs/${input.programId}/edit`);
   revalidatePath("/dashboard");
   return { ok: true };
@@ -181,7 +194,9 @@ export async function detachCourseFromProgram(input: {
     .eq("program_id", input.programId)
     .eq("course_id", input.courseId);
 
-  if (error) return { ok: false, error: error.message };
+  if (error) {
+    return { ok: false, error: normalizeReleaseControlError(error.message) };
+  }
   revalidatePath(`/admin/programs/${input.programId}/edit`);
   revalidatePath("/dashboard");
   return { ok: true };

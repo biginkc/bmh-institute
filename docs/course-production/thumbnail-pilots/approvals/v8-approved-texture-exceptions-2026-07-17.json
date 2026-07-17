@@ -1,0 +1,14 @@
+{
+  "schema_version": "bmh-artwork-approved-texture-exceptions/v1",
+  "scope": "checksum-specific-v8-pilot-bytes-only",
+  "decision": "preserve-approved-exception",
+  "approval_inheritance": "forbidden",
+  "defect": "Visible cream/white speckling in already-approved V8 pilot bytes.",
+  "excluded_defects": ["crop safety", "semantic mismatch", "replacement art", "new checksum"],
+  "assets": [
+    {"asset_key":"thumbnail-slot-07","master_id":"master-slot-07","checksum_sha256":"3a2f38e2619f5bb33aa69cfcd0712c4e6e4e4c02979ef20ec9313d8e14973c25","pixel_sha256":"c56ebf83f4442a5a8be4f185c91cb2449eab9d4ffcdbe83be8a527400e18e7f1"},
+    {"asset_key":"poster-video-slot-07-opening","master_id":"master-slot-07","checksum_sha256":"ff1458f6b657f002430df9cb937b0498975f83eaad7a39ec9d800f9d56eea509","pixel_sha256":"f72ec067b5347a75d86952d81fb0e43f8a6b1e22005804d18af80510e6b70676"},
+    {"asset_key":"thumbnail-slot-09","master_id":"master-slot-09","checksum_sha256":"9ecbea7d29ce43d999161e5ab1eb60607fbc26a0a26b24c0b1f9116c51b2a1c1","pixel_sha256":"6501793802fdaeede21f048c4071b55b24997c2d99ab4e76dd86252642deeafe"},
+    {"asset_key":"poster-video-slot-09-objection-architecture","master_id":"master-slot-09","checksum_sha256":"2e08972e271cf6e98e9eaf0dafbf933b2dffe4d114110bed04bf25b233d3e30e","pixel_sha256":"6fe15c7753c60f410c426e361fb53d10fdd63daaf33eadd4d4467a7941beb998"}
+  ]
+}

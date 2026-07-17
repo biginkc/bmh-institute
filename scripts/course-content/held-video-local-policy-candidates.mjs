@@ -11,7 +11,7 @@ export const LOCAL_POLICY_CANDIDATES_PATH = join(
 );
 
 export const EXACT_LOCAL_POLICY_REVIEW_QUESTION =
-  "Do you approve the KPIs v12 local policy-cut candidate and authorize policy-safe replacement recuts for Welcome, Mindset, Objection Scripts Playbook, and Closing and Deal Engineering?";
+  "Do you approve the exact KPIs v12 local policy-cut candidate? Terms v10 is already approved, and all seven replacement-video packages remain separately gated from provider generation.";
 
 const EXPECTED_CANDIDATES = new Map([
   [

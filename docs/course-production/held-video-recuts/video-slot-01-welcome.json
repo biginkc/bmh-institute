@@ -5,7 +5,7 @@
     "source_key": "video-slot-01-welcome",
     "held_sha256": "493de8a5e0663ad577ba46d6d5befce33e9640f250677095094978714d22ac72",
     "technical_qa_path": "docs/course-production/held-video-review/TECHNICAL-CONTENT-QA-2026-07-17.md",
-    "technical_qa_sha256": "534718225d693437c53d3e2c5c1662920420f218096dea2acd7203ba2cc14e45",
+    "technical_qa_sha256": "2f77324aaebd2d29fa283c50402c0255eacfb7a40996a49220f97d5019e8a5d0",
     "source_script_reference": "docs/course-production/held-video-recuts/source-evidence/video-slot-01-welcome-source-evidence.md",
     "source_script_sha256": "39dc44f547b4d6a02e818878effe0b673cdf3cb647f0d03f1a338ce70b3212c4",
     "duration_seconds": 246.186,

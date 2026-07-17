@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import {
   IMPORT_RELEASE_REQUIRED_ERROR,
+  IMPORT_ROLLBACK_REQUIRED_ERROR,
+  importedDeletionError,
   importedPublicationError,
   normalizeReleaseControlError,
 } from "./admin-guards";
@@ -50,5 +52,17 @@ describe("imported catalog release controls", () => {
     expect(normalizeReleaseControlError("Network unavailable")).toBe(
       "Network unavailable",
     );
+  });
+
+  it("routes imported catalog deletion through exact rollback", () => {
+    expect(importedDeletionError("bmh-institute-v1")).toBe(
+      IMPORT_ROLLBACK_REQUIRED_ERROR,
+    );
+    expect(importedDeletionError(null)).toBeNull();
+    expect(
+      normalizeReleaseControlError(
+        "Imported catalog graph deletion requires the exact course-import rollback operation.",
+      ),
+    ).toBe(IMPORT_ROLLBACK_REQUIRED_ERROR);
   });
 });

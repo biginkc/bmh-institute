@@ -150,7 +150,7 @@ test("the manifest passes structural and semantic content QA", async () => {
     report.publicationBlockers.filter((blocker) =>
       blocker.includes("requires a policy-safe replacement cut"),
     ).length,
-    9,
+    8,
   );
   assert.ok(
     report.publicationBlockers.some((blocker) =>
@@ -210,12 +210,6 @@ test("known held cuts are immutable and never replaced by older files", async ()
       local_path: "course-assets/review-lessonB/LESSON-1B-v4.mp4",
       checksum_sha256: "b0cad612499dbd2d867c906c1ad8a8e3e13fcded333fa973fa6d19339fa930da",
       size_bytes: 107220021,
-    },
-    {
-      source_key: "video-slot-02-terms",
-      local_path: "course-assets/review-lessonGLOA/LESSON-GLOA-v9.mp4",
-      checksum_sha256: "17cac99f171edfb773f85eaaa6719e09ffe1295abec5b062554c72958747c0bb",
-      size_bytes: 110768219,
     },
     {
       source_key: "video-slot-10-objection-scripts",

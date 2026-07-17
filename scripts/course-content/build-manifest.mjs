@@ -16,6 +16,11 @@ import {
   approvalRecordKey,
   validateHeldVideoManifestApprovalState,
 } from "./held-video-approval-ledger.mjs";
+import {
+  findCaptionApprovalRecord,
+  validateCaptionApprovalEvidence,
+  validateCaptionApprovalHistory,
+} from "./caption-approval-ledger.mjs";
 
 const REPO_ROOT = path.resolve(fileURLToPath(new URL("../..", import.meta.url)));
 const DEFAULT_VIDEO_SOURCE_ROOT = "/Users/jarradhenry/Sites/BMH apps/BMH Institute";
@@ -28,6 +33,10 @@ const ARTWORK_LEDGER_PATH = path.join(
 const VIDEO_APPROVAL_LEDGER_PATH = path.join(
   REPO_ROOT,
   "docs/course-production/held-video-review/approvals.json",
+);
+const CAPTION_APPROVAL_LEDGER_PATH = path.join(
+  REPO_ROOT,
+  "docs/course-production/caption-approvals.json",
 );
 const ARTWORK_LEDGER_SCHEMA = "bmh-artwork-production-ledger/v1";
 const SHA256_PATTERN = /^[a-f0-9]{64}$/;
@@ -79,7 +88,7 @@ const LESSONS = [
     module: 1,
     title: "Real Estate Terms Glossary",
     summary: "Build the vocabulary needed to follow property, title, financing, and transaction conversations without guessing.",
-    objectives: ["Define core property and transaction terms", "Distinguish ARV, MAO, equity, and assignment", "Recognize title and foreclosure concepts", "Ask for clarification when a term affects a seller"],
+    objectives: ["Define distressed, off-market, on-market, MLS, and listing terms", "Distinguish wholesaling, assignment, and double-close concepts", "Recognize subject-to and seller-financing structures", "Ask for clarification when a term affects a seller"],
     guide: ["Terms are tools for understanding, not jargon to impress sellers", "Translate technical language into plain English", "Never guess about legal or title questions", "Use the current deal record as the source for property facts"],
   },
   {
@@ -821,8 +830,11 @@ export function currentReviewedVideoRecord(
   const eligible = records.filter(
     (record) => !REPLACEMENT_REQUIRED_CUTS.has(approvalRecordKey(record)),
   );
-  const approved = eligible.filter((record) => record.decision === "approved").at(-1);
-  if (approved) return approved;
+  const approved = eligible.filter((record) => record.decision === "approved");
+  if (approved.length > 1) {
+    throw new Error(`Approval ledger has multiple approved corrected cuts for ${sourceKey}; explicit supersession is required`);
+  }
+  if (approved[0]) return approved[0];
   const configuredEligible = currentLocalPath
     ? eligible.findLast((record) => record.candidate_local_path === currentLocalPath)
     : null;
@@ -889,44 +901,55 @@ async function buildVideoAsset(
   };
 }
 
-async function buildDerivativeAsset(videoAsset, kind) {
-  const extension = kind === "caption" ? "vtt" : "md";
-  const mimeType = kind === "caption" ? "text/vtt" : "text/markdown";
-  const localPath = `course-assets/${kind === "caption" ? "captions" : "transcripts"}/${videoAsset.source_key}.${extension}`;
-  const fullPath = path.join(REPO_ROOT, localPath);
-  let fileStat = null;
-  try {
-    fileStat = await stat(fullPath);
-  } catch (error) {
-    if (error?.code !== "ENOENT") throw error;
-  }
-
+export async function buildDerivativePair(videoAsset, captionApprovalLedger, repoRoot = REPO_ROOT) {
+  const descriptors = [
+    { kind: "caption", extension: "vtt", directory: "captions", mimeType: "text/vtt" },
+    { kind: "transcript", extension: "md", directory: "transcripts", mimeType: "text/markdown" },
+  ];
+  const files = await Promise.all(descriptors.map(async (descriptor) => {
+    const localPath = `course-assets/${descriptor.directory}/${videoAsset.source_key}.${descriptor.extension}`;
+    const fullPath = path.join(repoRoot, localPath);
+    try {
+      const fileStat = await stat(fullPath);
+      return { ...descriptor, localPath, fileStat, checksum: await sha256(fullPath) };
+    } catch (error) {
+      if (error?.code !== "ENOENT") throw error;
+      return { ...descriptor, localPath, fileStat: null, checksum: null };
+    }
+  }));
+  const missingAsset = (file) => ({
+    source_key: `${file.kind}-${videoAsset.source_key}`,
+    kind: file.kind,
+    local_path: file.localPath,
+    storage_path: `courses/bmh-employee-training/v1/${file.directory}/${videoAsset.source_key}.${file.extension}`,
+    mime_type: file.mimeType,
+    checksum_sha256: null,
+    size_bytes: null,
+    approval_status: "missing",
+  });
   if (videoAsset.approval_status === "hold") {
-    if (fileStat) throw new Error(`${videoAsset.source_key} ${kind} exists before the held cut is approved`);
-    return {
-      source_key: `${kind}-${videoAsset.source_key}`,
-      kind,
-      local_path: localPath,
-      storage_path: `courses/bmh-employee-training/v1/${kind === "caption" ? "captions" : "transcripts"}/${videoAsset.source_key}.${extension}`,
-      mime_type: mimeType,
-      checksum_sha256: null,
-      size_bytes: null,
-      approval_status: "missing",
-    };
+    if (files.some((file) => file.fileStat)) throw new Error(`${videoAsset.source_key} derivatives exist before the held cut is approved`);
+    return files.map(missingAsset);
   }
-
-  if (!fileStat) throw new Error(`${videoAsset.source_key} approved cut is missing its ${kind}`);
-  const checksum = await sha256(fullPath);
-  return {
-    source_key: `${kind}-${videoAsset.source_key}`,
-    kind,
-    local_path: localPath,
-    storage_path: `courses/bmh-employee-training/v1/${kind === "caption" ? "captions" : "transcripts"}/${videoAsset.source_key}.${checksum}.${extension}`,
-    mime_type: mimeType,
-    checksum_sha256: checksum,
-    size_bytes: fileStat.size,
+  if (files.some((file) => !file.fileStat)) return files.map(missingAsset);
+  const [caption, transcript] = files;
+  const approval = findCaptionApprovalRecord(captionApprovalLedger, {
+    video_source_key: videoAsset.source_key,
+    video_sha256: videoAsset.checksum_sha256,
+    caption_sha256: caption.checksum,
+    transcript_sha256: transcript.checksum,
+  });
+  if (!approval) return files.map(missingAsset);
+  return files.map((file) => ({
+    source_key: `${file.kind}-${videoAsset.source_key}`,
+    kind: file.kind,
+    local_path: file.localPath,
+    storage_path: `courses/bmh-employee-training/v1/${file.directory}/${videoAsset.source_key}.${file.checksum}.${file.extension}`,
+    mime_type: file.mimeType,
+    checksum_sha256: file.checksum,
+    size_bytes: file.fileStat.size,
     approval_status: "approved",
-  };
+  }));
 }
 
 function spreadSelect(candidates, count) {
@@ -1019,11 +1042,29 @@ export async function buildGuideAsset(lesson) {
 export async function buildManifest({
   artworkLedgerPath = ARTWORK_LEDGER_PATH,
   videoApprovalLedgerPath = VIDEO_APPROVAL_LEDGER_PATH,
+  captionApprovalLedgerPath = CAPTION_APPROVAL_LEDGER_PATH,
   videoSourceRoot = DEFAULT_VIDEO_SOURCE_ROOT,
   quizSourceRoot = DEFAULT_QUIZ_SOURCE_ROOT,
   inspectDuration = probeVideoDuration,
 } = {}) {
-  const videoApprovalLedger = JSON.parse(await readFile(videoApprovalLedgerPath, "utf8"));
+  const [videoApprovalLedger, captionApprovalLedger] = await Promise.all([
+    readFile(videoApprovalLedgerPath, "utf8").then(JSON.parse),
+    readFile(captionApprovalLedgerPath, "utf8").then(JSON.parse),
+  ]);
+  const captionApprovalErrors = [
+    ...await validateCaptionApprovalEvidence({
+      ledger: captionApprovalLedger,
+      repoRoot: REPO_ROOT,
+    }),
+    ...await validateCaptionApprovalHistory({
+      ledger: captionApprovalLedger,
+      repoRoot: REPO_ROOT,
+      ledgerPath: captionApprovalLedgerPath,
+    }),
+  ];
+  if (captionApprovalErrors.length > 0) {
+    throw new Error(`Caption approval ledger is invalid: ${captionApprovalErrors.join("; ")}`);
+  }
   const videoAssetsWithMetadata = [];
   for (const video of VIDEO_SOURCES) {
     videoAssetsWithMetadata.push(await buildVideoAsset(video, videoApprovalLedger, {
@@ -1064,8 +1105,7 @@ export async function buildManifest({
   });
   const derivativeAssets = [];
   for (const asset of videoAssetsWithMetadata) {
-    derivativeAssets.push(await buildDerivativeAsset(asset, "caption"));
-    derivativeAssets.push(await buildDerivativeAsset(asset, "transcript"));
+    derivativeAssets.push(...await buildDerivativePair(asset, captionApprovalLedger));
   }
   const imageAssets = [
     {
