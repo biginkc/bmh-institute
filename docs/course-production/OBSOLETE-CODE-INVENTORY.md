@@ -27,9 +27,12 @@ deletion boundary.
 - Header lesson search is now access-scoped and keyboard accessible on desktop
   and mobile. The search primitives are active code and are not deletion
   candidates.
-- Admin reports, exports, access setup, and helper modules still use pilot
-  terminology. Rename their user-facing language to learner/cohort terminology
-  without removing the underlying reusable monitoring and access behavior.
+- Admin reports, exports, and access setup now use learner/cohort terminology
+  on every visible surface. Internal `pilot-*` symbols and the legacy
+  `/admin/reports/pilot/export` route remain deliberate compatibility surfaces;
+  the learner export route reuses that implementation. Do not repeat the
+  visible-copy rename or delete those compatibility paths without external-
+  reference proof.
 
 ## Explicit retain decisions
 

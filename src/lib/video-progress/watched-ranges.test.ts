@@ -30,6 +30,39 @@ describe("watched video ranges", () => {
     expect(second).toEqual({ ok: true, ranges: [[0, 12]] });
   });
 
+  it.each([2.01, 2.2, 2.5])(
+    "accepts a first browser sample at %s seconds after the two-second interval",
+    (observedTo) => {
+      const result = applyPlaybackObservation({
+        existingRanges: [],
+        observedFrom: 0,
+        observedTo,
+        duration: 100,
+        previousObservedPosition: null,
+        previousObservedAt: null,
+        observedAt: new Date(
+          `2026-01-01T00:00:${observedTo.toFixed(3).padStart(6, "0")}Z`,
+        ),
+      });
+
+      expect(result).toEqual({ ok: true, ranges: [[0, observedTo]] });
+    },
+  );
+
+  it("keeps the first-observation scheduling tolerance tightly bounded", () => {
+    const result = applyPlaybackObservation({
+      existingRanges: [],
+      observedFrom: 0,
+      observedTo: 3.01,
+      duration: 100,
+      previousObservedPosition: null,
+      previousObservedAt: null,
+      observedAt: new Date("2026-01-01T00:00:03.010Z"),
+    });
+
+    expect(result).toEqual({ ok: false, ranges: [] });
+  });
+
   it("does not credit a seek jump as watched time", () => {
     const result = applyPlaybackObservation({
       existingRanges: [[0, 5]],

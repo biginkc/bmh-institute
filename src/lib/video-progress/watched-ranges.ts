@@ -2,6 +2,7 @@ export type WatchedRange = [number, number];
 
 const MAX_OBSERVATION_SECONDS = 15;
 const MAX_INITIAL_OBSERVATION_SECONDS = 2;
+const INITIAL_OBSERVATION_TOLERANCE_SECONDS = 1;
 const RANGE_EPSILON_SECONDS = 0.5;
 const PLAYHEAD_EPSILON_SECONDS = 1;
 
@@ -26,7 +27,8 @@ export function applyPlaybackObservation(input: {
     : MAX_OBSERVATION_SECONDS;
   const credibleSpan = input.previousObservedAt
     ? Math.min(MAX_OBSERVATION_SECONDS, elapsedSeconds * 2.25)
-    : MAX_INITIAL_OBSERVATION_SECONDS;
+    : MAX_INITIAL_OBSERVATION_SECONDS +
+      INITIAL_OBSERVATION_TOLERANCE_SECONDS;
   const continuesStoredPlayhead =
     input.previousObservedPosition === null
       ? from <= PLAYHEAD_EPSILON_SECONDS
