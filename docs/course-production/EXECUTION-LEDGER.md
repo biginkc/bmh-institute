@@ -378,9 +378,9 @@ Implement the approved concurrent completion plan for the reusable BMH Institute
   idempotent and that hostile manifest paths cannot override ledger-owned
   storage paths.
 - Fresh controller verification passes 555 unit tests, 109 RTL tests, lint,
-  typecheck, the production build, 65 course-production tests, three caption
+  typecheck, the production build, 66 course-production tests, three caption
   tests, two semantic-guide tests, the deterministic rebuild check for all 19
-  guides, and 45 combined artwork contract, workflow, and real-import boundary
+  guides, and 46 combined artwork contract, workflow, and real-import boundary
   tests. CI now runs the artwork workflow suite explicitly. The three pilots
   remain unchanged and unapproved; no new image was generated or uploaded.
 - Dependency inspection confirms the new direct image processor is exactly

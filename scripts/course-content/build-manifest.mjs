@@ -934,7 +934,7 @@ function guideHtml(lesson) {
   return `<h2>Learner guide</h2><ul>${lesson.guide.map((point) => `<li>${point}</li>`).join("")}</ul><p>Use the current written SOP and ask your manager when a live process differs from this lesson.</p>`;
 }
 
-async function buildGuideAsset(lesson) {
+export async function buildGuideAsset(lesson) {
   const slotKey = String(lesson.slot).padStart(2, "0");
   const localPath = `output/pdf/slot-${slotKey}-learner-guide.pdf`;
   const absolutePath = path.join(REPO_ROOT, localPath);

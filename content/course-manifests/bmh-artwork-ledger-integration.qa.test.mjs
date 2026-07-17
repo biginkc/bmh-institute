@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { copyFile, mkdir, mkdtemp, readFile, realpath, writeFile } from "node:fs/promises";
+import { access, copyFile, mkdir, mkdtemp, readFile, realpath, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { test } from "node:test";
@@ -11,6 +11,7 @@ import sharp from "sharp";
 
 import {
   applyArtworkLedger,
+  buildGuideAsset,
   buildManifest,
   loadArtworkLedger,
   validateArtworkManifestTrustBoundary,
@@ -68,7 +69,36 @@ test("a present statusless ledger cannot impersonate an absent optional ledger",
   );
 });
 
-test("the complete preapproval builder reproduces the tracked manifest", async () => {
+test("the guide builder reproduces every approved guide and download binding", async () => {
+  const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
+  const trackedGuides = manifest.assets.filter((asset) => asset.source_key.startsWith("guide-slot-"));
+  const rebuiltGuides = [];
+  for (let slot = 1; slot <= 19; slot += 1) rebuiltGuides.push(await buildGuideAsset({ slot }));
+  assert.deepEqual(rebuiltGuides, trackedGuides);
+
+  const guidesByKey = new Map(rebuiltGuides.map((asset) => [asset.source_key, asset]));
+  for (const courseModule of manifest.program.courses[0].modules) {
+    for (const lesson of courseModule.lessons.filter((candidate) => candidate.type === "content")) {
+      const download = lesson.blocks.find((block) => block.source_key.startsWith("block-guide-pdf-slot-"));
+      const guide = guidesByKey.get(download.content.asset_key);
+      assert.equal(download.content.file_path, guide.storage_path);
+      assert.equal(download.content.size_bytes, guide.size_bytes);
+    }
+  }
+});
+
+test("the complete preapproval builder reproduces the tracked manifest when canonical media is available", async (t) => {
+  try {
+    await access(
+      "/Users/jarradhenry/Sites/BMH apps/BMH Institute/course-assets/review-lessonA/LESSON-1A-v7.mp4",
+    );
+  } catch (error) {
+    if (error?.code === "ENOENT") {
+      t.skip("canonical course media is not present on this runner");
+      return;
+    }
+    throw error;
+  }
   const [tracked, rebuilt] = await Promise.all([
     readFile(manifestPath, "utf8"),
     buildManifest(),
