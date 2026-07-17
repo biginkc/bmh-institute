@@ -1,3 +1,4 @@
+import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
 import { randomBytes, randomUUID } from "node:crypto";
 
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
@@ -15,7 +16,8 @@ import { validCourseManifest } from "@/lib/course-import/test-fixtures";
 const url = process.env.TEST_SUPABASE_URL;
 const anonKey = process.env.TEST_SUPABASE_ANON_KEY;
 const serviceKey = process.env.TEST_SUPABASE_SERVICE_ROLE_KEY;
-const envPresent = Boolean(url && anonKey && serviceKey);
+const databaseUrl = process.env.TEST_SUPABASE_DB_URL;
+const envPresent = Boolean(url && anonKey && serviceKey && databaseUrl);
 const service = envPresent
   ? createClient(url!, serviceKey!, {
       auth: { autoRefreshToken: false, persistSession: false },
@@ -27,6 +29,35 @@ function uniquePlan(): ImportPlan {
   const manifest = validCourseManifest();
   manifest.import_id = `release-control-${suffix}`;
   manifest.qa_role_group.name = `Release QA ${suffix}`;
+  return buildImportPlan(manifest);
+}
+
+function contentionPlan(): ImportPlan {
+  const suffix = randomBytes(8).toString("hex");
+  const manifest = validCourseManifest();
+  manifest.import_id = `release-contention-${suffix}`;
+  manifest.qa_role_group.name = `Release contention QA ${suffix}`;
+  const quizLesson = manifest.program.courses[0]?.modules[0]?.lessons.find(
+    (lesson) => lesson.quiz,
+  );
+  const quiz = quizLesson?.quiz;
+  const template = quiz?.questions[0];
+  if (!quiz || !template) throw new Error("Contention fixture quiz is missing.");
+
+  // A same-manifest replay validates this entire envelope before the legacy
+  // helper takes its broad table locks. That makes the provider test below a
+  // reliable probe for the old row-lock-then-table-lock upgrade deadlock.
+  quiz.questions = Array.from({ length: 240 }, (_, index) => ({
+    ...template,
+    source_key: `contention-question-${index}`,
+    question_text: `Contention question ${index}`,
+    sort_order: index,
+    options: template.options.map((option, optionIndex) => ({
+      ...option,
+      source_key: `contention-question-${index}-option-${optionIndex}`,
+    })),
+  }));
+  quiz.questions_per_attempt = 10;
   return buildImportPlan(manifest);
 }
 
@@ -98,7 +129,230 @@ async function createSignedInUser(
   return { id, client };
 }
 
+async function cleanupContentionPlan(
+  client: SupabaseClient,
+  plan: ImportPlan,
+  programId: string,
+): Promise<Error | null> {
+  const cleanupErrors: Error[] = [];
+  const before = await client
+    .from("programs")
+    .select("id", { count: "exact", head: true })
+    .eq("id", programId);
+  if (before.error) {
+    cleanupErrors.push(new Error(`Contention cleanup lookup failed: ${before.error.message}`));
+  } else if ((before.count ?? 0) > 0) {
+    const rollback = await client.rpc("fn_rollback_course_import", {
+      p_import_id: plan.importId,
+      p_owned: buildRollbackOwnedIds(plan),
+    });
+    if (rollback.error) {
+      cleanupErrors.push(new Error(`Contention cleanup rollback failed: ${rollback.error.message}`));
+    }
+  }
+
+  const after = await client
+    .from("programs")
+    .select("id", { count: "exact", head: true })
+    .eq("id", programId);
+  if (after.error) {
+    cleanupErrors.push(new Error(`Contention cleanup verification failed: ${after.error.message}`));
+  } else if ((after.count ?? 0) !== 0) {
+    cleanupErrors.push(new Error("Contention cleanup left the imported program in the test project."));
+  }
+
+  if (cleanupErrors.length === 0) return null;
+  return new AggregateError(cleanupErrors, "Contention import cleanup was not exact.");
+}
+
+type PsqlSession = {
+  child: ChildProcessWithoutNullStreams;
+  stdout: string;
+  stderr: string;
+};
+
+function startPsql(applicationName: string): PsqlSession {
+  if (!databaseUrl) throw new Error("Test-project Postgres URL is unavailable.");
+  const session: PsqlSession = {
+    child: spawn(
+      "psql",
+      ["-X", "--set", "ON_ERROR_STOP=1", "--no-psqlrc", "--tuples-only", "--no-align", "--quiet"],
+      {
+        env: {
+          ...process.env,
+          PGDATABASE: databaseUrl,
+          PGAPPNAME: applicationName,
+        },
+        stdio: ["pipe", "pipe", "pipe"],
+      },
+    ),
+    stdout: "",
+    stderr: "",
+  };
+  session.child.stdout.on("data", (chunk) => {
+    session.stdout += String(chunk);
+  });
+  session.child.stderr.on("data", (chunk) => {
+    session.stderr += String(chunk);
+  });
+  return session;
+}
+
+async function waitForPsqlOutput(
+  session: PsqlSession,
+  pattern: RegExp,
+  timeoutMs = 15_000,
+): Promise<RegExpMatchArray> {
+  const startedAt = Date.now();
+  while (Date.now() - startedAt < timeoutMs) {
+    const match = session.stdout.match(pattern);
+    if (match) return match;
+    if (session.child.exitCode !== null) {
+      throw new Error(
+        `psql exited before its barrier (${session.child.exitCode}): ${session.stderr}`,
+      );
+    }
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  }
+  throw new Error(`psql barrier timed out: ${session.stderr}`);
+}
+
+async function waitForPsqlExit(session: PsqlSession, timeoutMs = 20_000) {
+  if (session.child.exitCode === null) {
+    await new Promise<void>((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        reject(new Error(`psql exit timed out: ${session.stderr}`));
+      }, timeoutMs);
+      session.child.once("exit", (code) => {
+        clearTimeout(timeout);
+        if (code === 0) resolve();
+        else reject(new Error(`psql failed (${code}): ${session.stderr}`));
+      });
+      session.child.once("error", (error) => {
+        clearTimeout(timeout);
+        reject(error);
+      });
+    });
+  } else if (session.child.exitCode !== 0) {
+    throw new Error(`psql failed (${session.child.exitCode}): ${session.stderr}`);
+  }
+}
+
+async function runPsql(sql: string, applicationName: string) {
+  const session = startPsql(applicationName);
+  session.child.stdin.end(sql);
+  try {
+    await waitForPsqlExit(session);
+  } finally {
+    if (session.child.exitCode === null) session.child.kill("SIGTERM");
+  }
+}
+
+async function terminatePsql(session: PsqlSession | null) {
+  if (!session || session.child.exitCode !== null) return;
+  session.child.kill("SIGTERM");
+  await new Promise<void>((resolve) => {
+    const timeout = setTimeout(resolve, 5_000);
+    session.child.once("exit", () => {
+      clearTimeout(timeout);
+      resolve();
+    });
+  });
+  if (session.child.exitCode === null) session.child.kill("SIGKILL");
+}
+
 describe.skipIf(!envPresent)("imported catalog release control on a test project", () => {
+  it("settles same-manifest apply against ordinary catalog updates without a lock-upgrade deadlock", async () => {
+    if (!service) throw new Error("Test-project service client is unavailable.");
+    const plan = contentionPlan();
+    const program = atomicImportOperations(plan).find(
+      (operation) => operation.table === "programs",
+    );
+    if (!program) throw new Error("Contention import program is missing.");
+    expect(plan.operations.length).toBeGreaterThan(700);
+    let testError: unknown = null;
+    let barrier: PsqlSession | null = null;
+    let writer: PsqlSession | null = null;
+
+    try {
+      await applyImportPlan(plan, adapter());
+
+      const lockKeyA = Number.parseInt(randomBytes(4).toString("hex"), 16) | 0;
+      const lockKeyB = Number.parseInt(randomBytes(4).toString("hex"), 16) | 0;
+      barrier = startPsql("bmh-import-contention-barrier");
+      barrier.child.stdin.write(
+        `select pg_advisory_lock(${lockKeyA}, ${lockKeyB});\nselect 'BARRIER_HELD';\n`,
+      );
+      await waitForPsqlOutput(barrier, /BARRIER_HELD/);
+
+      // The writer takes its table lock before waiting on the advisory barrier.
+      // That exact backend PID lets the observer prove the replay is blocked by
+      // this transaction in Postgres, not merely that two HTTP promises overlap.
+      writer = startPsql("bmh-import-contention-writer");
+      writer.child.stdin.end(`
+        begin;
+        set local statement_timeout = '20s';
+        lock table public.programs in row exclusive mode;
+        select pg_backend_pid()::text || ':WRITER_LOCKED';
+        select pg_advisory_xact_lock(${lockKeyA}, ${lockKeyB});
+        update public.programs
+        set description = 'Deterministic contention writer'
+        where id = '${program.id}';
+        commit;
+      `);
+      const writerBarrier = await waitForPsqlOutput(
+        writer,
+        /([0-9]+):WRITER_LOCKED/,
+      );
+      const writerPid = Number(writerBarrier[1]);
+      expect(writerPid).toBeGreaterThan(0);
+
+      const replay = applyImportPlan(plan, adapter());
+      await runPsql(`
+        do $observer$
+        declare
+          v_deadline timestamptz := clock_timestamp() + interval '15 seconds';
+        begin
+          loop
+            if exists (
+              select 1
+              from pg_stat_activity blocked
+              where blocked.pid <> pg_backend_pid()
+                and blocked.wait_event_type = 'Lock'
+                and ${writerPid} = any(pg_blocking_pids(blocked.pid))
+            ) then
+              return;
+            end if;
+            if clock_timestamp() >= v_deadline then
+              raise exception 'Replay never became blocked by writer backend ${writerPid}';
+            end if;
+            perform pg_sleep(0.025);
+          end loop;
+        end
+        $observer$;
+      `, "bmh-import-contention-observer");
+
+      barrier.child.stdin.end(
+        `select pg_advisory_unlock(${lockKeyA}, ${lockKeyB});\n\\q\n`,
+      );
+      await Promise.all([waitForPsqlExit(barrier), waitForPsqlExit(writer), replay]);
+    } catch (error) {
+      testError = error;
+    } finally {
+      await Promise.all([terminatePsql(writer), terminatePsql(barrier)]);
+    }
+
+    const cleanupError = await cleanupContentionPlan(service, plan, program.id);
+    if (testError && cleanupError) {
+      throw new AggregateError(
+        [testError, cleanupError],
+        "Contention proof failed and its test-project cleanup also failed.",
+      );
+    }
+    if (testError) throw testError;
+    if (cleanupError) throw cleanupError;
+  }, 60_000);
+
   it("denies generic publication and a second role group while preserving rollback", async () => {
     if (!service) throw new Error("Test-project service client is unavailable.");
     const plan = uniquePlan();

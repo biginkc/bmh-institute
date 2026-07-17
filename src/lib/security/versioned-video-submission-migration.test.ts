@@ -16,6 +16,30 @@ const migrateWorkflow = readFileSync(
 );
 
 describe("versioned video completion and submission evidence migration", () => {
+  it("masks both raw and URL-encoded database credentials before either client runs", () => {
+    const applyStep = migrateWorkflow.slice(
+      migrateWorkflow.indexOf("- name: Apply pending migrations"),
+      migrateWorkflow.indexOf("- name: Install dependencies"),
+    );
+    const acceptanceStep = migrateWorkflow.slice(
+      migrateWorkflow.indexOf("- name: Run versioned completion"),
+      migrateWorkflow.indexOf("- name: Run fail-closed provider acceptance"),
+    );
+    for (const [step, command] of [
+      [applyStep, "supabase db push"],
+      [acceptanceStep, 'psql "$DB_URL"'],
+    ]) {
+      expect(step).toContain('echo "::add-mask::$TEST_SUPABASE_DB_PASSWORD"');
+      expect(step).toContain('echo "::add-mask::$ENCODED_PASSWORD"');
+      expect(step.indexOf('::add-mask::$TEST_SUPABASE_DB_PASSWORD')).toBeLessThan(
+        step.indexOf("ENCODED_PASSWORD="),
+      );
+      expect(step.indexOf('::add-mask::$ENCODED_PASSWORD')).toBeLessThan(
+        step.indexOf(command),
+      );
+    }
+  });
+
   it("binds current video credit to one non-null authored asset version", () => {
     expect(sql).toMatch(
       /alter table public\.user_block_progress[\s\S]*add column if not exists asset_version text/i,
@@ -129,7 +153,7 @@ describe("versioned video completion and submission evidence migration", () => {
       /Apply pending migrations[\s\S]*Install dependencies[\s\S]*npm ci[\s\S]*npm run test:course-import-provider/i,
     );
     expect(migrateWorkflow).toMatch(
-      /Run versioned completion Postgres acceptance[\s\S]*031_versioned_video_completion_and_submission_evidence\.sql/i,
+      /Run versioned completion(?: and import guard)? Postgres acceptance[\s\S]*031_versioned_video_completion_and_submission_evidence\.sql/i,
     );
   });
 });

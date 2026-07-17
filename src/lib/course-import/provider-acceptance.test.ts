@@ -9,7 +9,7 @@ import {
 describe("course import provider acceptance preflight", () => {
   it("fails before Vitest when any dedicated test credential is absent", () => {
     expect(() => assertCourseImportProviderAcceptanceEnvironment({})).toThrow(
-      /TEST_SUPABASE_URL.*TEST_SUPABASE_ANON_KEY.*TEST_SUPABASE_SERVICE_ROLE_KEY/,
+      /TEST_SUPABASE_URL.*TEST_SUPABASE_ANON_KEY.*TEST_SUPABASE_SERVICE_ROLE_KEY.*TEST_SUPABASE_DB_URL/,
     );
   });
 
@@ -18,12 +18,20 @@ describe("course import provider acceptance preflight", () => {
       TEST_SUPABASE_URL: COURSE_IMPORT_TEST_URL,
       TEST_SUPABASE_ANON_KEY: "test-anon",
       TEST_SUPABASE_SERVICE_ROLE_KEY: "test-service",
+      TEST_SUPABASE_DB_URL: "postgresql://postgres.jvaabkchkihkjllehmft:test@aws-1-us-west-1.pooler.supabase.com:5432/postgres",
     })).not.toThrow();
     expect(() => assertCourseImportProviderAcceptanceEnvironment({
       TEST_SUPABASE_URL: "https://dhvfsyteqsxagokoerrx.supabase.co",
       TEST_SUPABASE_ANON_KEY: "prod-anon",
       TEST_SUPABASE_SERVICE_ROLE_KEY: "prod-service",
+      TEST_SUPABASE_DB_URL: "postgresql://postgres.jvaabkchkihkjllehmft:test@aws-1-us-west-1.pooler.supabase.com:5432/postgres",
     })).toThrow(/Production writes are blocked/);
+    expect(() => assertCourseImportProviderAcceptanceEnvironment({
+      TEST_SUPABASE_URL: COURSE_IMPORT_TEST_URL,
+      TEST_SUPABASE_ANON_KEY: "test-anon",
+      TEST_SUPABASE_SERVICE_ROLE_KEY: "test-service",
+      TEST_SUPABASE_DB_URL: "postgresql://postgres.dhvfsyteqsxagokoerrx:test@aws-1-us-west-1.pooler.supabase.com:5432/postgres",
+    })).toThrow(/canonical non-production Postgres connection/);
   });
 
   it("requires nonzero executed tests from every provider suite", () => {

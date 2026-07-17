@@ -4,6 +4,7 @@ export const COURSE_IMPORT_PROVIDER_ENV = [
   "TEST_SUPABASE_URL",
   "TEST_SUPABASE_ANON_KEY",
   "TEST_SUPABASE_SERVICE_ROLE_KEY",
+  "TEST_SUPABASE_DB_URL",
 ] as const;
 
 export function assertCourseImportProviderAcceptanceEnvironment(
@@ -16,6 +17,23 @@ export function assertCourseImportProviderAcceptanceEnvironment(
     );
   }
   assertCourseImportEnvironment(env.TEST_SUPABASE_URL!, false);
+  let databaseUrl: URL;
+  try {
+    databaseUrl = new URL(env.TEST_SUPABASE_DB_URL!);
+  } catch {
+    throw new Error(
+      "Course import provider acceptance requires a valid non-production Postgres connection.",
+    );
+  }
+  if (
+    !["postgres:", "postgresql:"].includes(databaseUrl.protocol) ||
+    !databaseUrl.username.endsWith(".jvaabkchkihkjllehmft") ||
+    databaseUrl.hostname !== "aws-1-us-west-1.pooler.supabase.com"
+  ) {
+    throw new Error(
+      "Course import provider acceptance requires the canonical non-production Postgres connection.",
+    );
+  }
 }
 
 export function assertCourseImportProviderAcceptanceResult(

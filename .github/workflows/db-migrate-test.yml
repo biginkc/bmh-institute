@@ -49,25 +49,37 @@ jobs:
         env:
           TEST_SUPABASE_DB_PASSWORD: ${{ secrets.TEST_SUPABASE_DB_PASSWORD }}
         run: |
+          echo "::add-mask::$TEST_SUPABASE_DB_PASSWORD"
           if [ -z "$TEST_SUPABASE_DB_PASSWORD" ]; then
             echo "TEST_SUPABASE_DB_PASSWORD secret is required."
             exit 1
           fi
 
           ENCODED_PASSWORD="$(node -e 'process.stdout.write(encodeURIComponent(process.env.TEST_SUPABASE_DB_PASSWORD))')"
+          echo "::add-mask::$ENCODED_PASSWORD"
           DB_URL="postgresql://postgres.${TEST_PROJECT_REF}:${ENCODED_PASSWORD}@aws-1-us-west-1.pooler.supabase.com:5432/postgres"
           supabase db push --include-all --db-url "$DB_URL" --yes
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Run versioned completion Postgres acceptance
+      - name: Run versioned completion and import guard Postgres acceptance
         env:
           TEST_SUPABASE_DB_PASSWORD: ${{ secrets.TEST_SUPABASE_DB_PASSWORD }}
         run: |
+          echo "::add-mask::$TEST_SUPABASE_DB_PASSWORD"
           ENCODED_PASSWORD="$(node -e 'process.stdout.write(encodeURIComponent(process.env.TEST_SUPABASE_DB_PASSWORD))')"
+          echo "::add-mask::$ENCODED_PASSWORD"
           DB_URL="postgresql://postgres.${TEST_PROJECT_REF}:${ENCODED_PASSWORD}@aws-1-us-west-1.pooler.supabase.com:5432/postgres"
           psql "$DB_URL" --set ON_ERROR_STOP=1 --file supabase/tests/031_versioned_video_completion_and_submission_evidence.sql
+          psql "$DB_URL" --set ON_ERROR_STOP=1 --file supabase/tests/034_import_release_and_fixture_dependency_guards.sql
 
       - name: Run fail-closed provider acceptance against migrated test database
-        run: npm run test:course-import-provider
+        env:
+          TEST_SUPABASE_DB_PASSWORD: ${{ secrets.TEST_SUPABASE_DB_PASSWORD }}
+        run: |
+          echo "::add-mask::$TEST_SUPABASE_DB_PASSWORD"
+          ENCODED_PASSWORD="$(node -e 'process.stdout.write(encodeURIComponent(process.env.TEST_SUPABASE_DB_PASSWORD))')"
+          echo "::add-mask::$ENCODED_PASSWORD"
+          TEST_SUPABASE_DB_URL="postgresql://postgres.${TEST_PROJECT_REF}:${ENCODED_PASSWORD}@aws-1-us-west-1.pooler.supabase.com:5432/postgres" \
+            npm run test:course-import-provider
