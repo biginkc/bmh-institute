@@ -143,7 +143,99 @@ Implement the approved concurrent completion plan for the reusable BMH Institute
   the focused tests passing: two pathname ownership races, incomplete rollback
   dependency coverage/atomicity, cleartext TUS credential targets, under-bound
   resume state, and approved draft uploads without integrity fields. They are
-  active release blockers and are being fixed before any upload or rollback.
+  release blockers resolved and independently retested in the final preapproval
+  hardening pass below.
+
+### 2026-07-16 final preapproval hardening and test-project proof
+
+- Independent red-team passes found and fixed additional failures in the first
+  hardening attempts: rollback confirmation of missing IDs, stale invite
+  references, encoded TUS traversal, identifier-length mismatches, empty
+  rollback graphs, persisted creation-endpoint resumes, raw media-path approval
+  bypasses, shared-folder artwork laundering, non-atomic assignment ownership,
+  partial fixture fingerprints, cross-schema cascade blind spots, and
+  unverifiable cleanup approval/backup records.
+- Migration 019 now binds every rollback entry to the deterministic
+  `import_id + source_key` identity, requires the complete root graph, locks all
+  dependent tables including invites, rejects missing or external rows before
+  deletion, and confirms actual per-table delete counts. Upload failures never
+  delete remote objects, staging cleanup preserves a quarantined tree, and TUS
+  resume state is bound to a canonical HTTPS resource plus the complete asset
+  identity and checksum.
+- Migration 020 persists exact entity-bound artwork provenance
+  (`content_import_id`, asset key, approved path, and checksum), supports one
+  service-role claim and immutable reruns, returns entity-keyed signed URLs,
+  and moves assignment ownership validation plus update into one database
+  function. Direct content paths must resolve to an approved checksum-addressed
+  asset in the same manifest namespace.
+- Migration 021 contains 463 exact fixture identities with complete-row and
+  complete-column fingerprints, including timestamps and all migration 020
+  provenance fields. It fails closed on drift, partial state, future columns,
+  future public or cross-schema foreign keys, stale approval evidence, stale or
+  unverified backup evidence, and a missing restore rehearsal. It exposes no
+  account, profile, or audit-history deletion path and remains unexecuted.
+- The controller caught and corrected a stale production Supabase link before
+  any push. It was relinked to `bmh-institute-test` (`jvaabkchkihkjllehmft`). A
+  guarded dry run listed exactly migrations 019, 020, and 021; those migrations
+  compiled and applied only there. The remote ledger now matches local 001
+  through 021. Database lint has no errors; its two warnings concern the
+  fixture canonicalizer being declared immutable while using stable JSON
+  expressions and are recorded for final review.
+- All 24 test-project integration tests pass: exact atomic rollback, empty and
+  partial rollback rejection, missing-row preservation, invite and external
+  dependency blocking, anonymous/authenticated RPC denial, artwork provenance
+  claim/immutability, atomic assignment ownership, storage isolation, quiz
+  answer isolation, data integrity, certificates, user deletion, and rate
+  limiting. No production migration or data write occurred.
+- Final merged application verification passes 455 unit tests, 91 RTL component
+  tests, lint, typecheck, and the Next.js production build. The 45 course QA
+  tests, three caption tests, two semantic guide tests, and deterministic
+  rebuild of all 19 guides pass. The release validator remains at zero errors
+  and 82 intentional blockers.
+- Fresh staging verification found 79 exact approved assets and 76 held or
+  missing asset blockers with zero errors. A new Tech Stack canary stage copied
+  four independent files, remained blocked only by the program cover, slot 03
+  thumbnail, and Tech Stack poster, and reused all four files on an immediate
+  idempotent rerun. The earlier canary staging tree was preserved because its
+  manifest checksum no longer matched after path hardening.
+
+### 2026-07-16 final manual-review convergence
+
+- Three independent review lanes challenged runtime/database security,
+  import/media atomicity, and learner/admin behavior. Their findings were fixed
+  and re-audited rather than accepted from the implementing agents' reports.
+  The final clean pass covers forged and stranded video progress, completion
+  reconciliation, assignment type/file/URL ownership, access-path locking,
+  atomic import and stale-manifest refusal, fail-closed environment selection,
+  required-block eligibility, rubric approval, persisted learner state,
+  accessible desktop/mobile search, role-play announcements, artwork signing,
+  required video duration, production Closer Lab IDs, and durable Jarrad-only
+  video approval evidence.
+- Migrations 022 and 023 were dry-run and then applied only to
+  `bmh-institute-test` (`jvaabkchkihkjllehmft`). The remote migration ledger now
+  matches local 001 through 023. Database lint has no errors and retains the two
+  previously recorded fixture-canonicalizer volatility warnings. Production
+  received no migration, data, storage, access, or publication change.
+- The complete test-project integration suite passes 31 of 31 tests. This adds
+  real proof for accessible-program lesson locking, atomic apply, late-failure
+  rollback, idempotent reruns, exact reconciliation, stale-manifest refusal,
+  anonymous denial, and full rollback to the earlier authorization, storage,
+  certificate, integrity, deletion, and rate-limit coverage.
+- Final merged verification passes 510 unit tests, 107 RTL component tests,
+  typecheck, lint, and the Next.js production build. Course production QA passes
+  46 Node tests, three caption tests, two semantic guide tests, and a
+  deterministic rebuild check for all 19 accessible guides.
+- Final manifest QA remains at zero structural errors, 82 intentional
+  publication blockers, and one dated DialPad recheck warning. The full asset
+  preflight verifies 79 approved files and reports 76 intentional held/missing
+  blockers with zero integrity errors. The Tech Stack canary reuses all four
+  verified files and remains blocked only by its three missing artwork assets.
+- Fallow's changed-surface audit still reports expected static-analysis leads:
+  direct-run production scripts, deliberate test/public exports, complexity in
+  validators and generators, and the three zero-import drag-and-drop packages.
+  No circular dependency or new proven release defect was found. Package and
+  walkthrough cleanup stays deferred until the real manifest is accepted, as
+  required by the deletion boundary.
 
 ## Hard gates
 

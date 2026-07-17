@@ -201,6 +201,24 @@ The manifest records all missing derivatives as `approval_status: missing` and
 all nine held cuts as `approval_status: hold`. The validator reports these
 as publication blockers rather than silently treating the course as ready.
 
+## Final preapproval verification
+
+- Manifest validation: 0 errors, 82 intentional publication blockers, and one
+  dated DialPad recheck warning.
+- Course shape: 6 modules, 19 content lessons, 19 quiz lessons, 6 assignments,
+  29 videos, 342 questions, 152 flashcards, 6 role plays, 29 poster references,
+  and 19 accessible guides.
+- Caption inventory: 20 approved exact video/caption/transcript sets, 9 held
+  videos, and 18 held-cut derivatives intentionally missing.
+- Full local asset check: 155 declared assets, 79 exact approved files verified,
+  76 held or missing blockers, and 0 errors.
+- Tech Stack canary: 4 approved files copied to an isolated staging tree with
+  independent inodes; 3 expected artwork/poster blockers; 0 errors. A second
+  run reused all four staged files without rewriting them.
+- Test-only database proof: migrations 019 through 023 compile on
+  `bmh-institute-test`, and all 31 database integration tests pass. Production
+  remains unchanged and the fixture cleanup function has not been executed.
+
 ## Verification
 
 Run:

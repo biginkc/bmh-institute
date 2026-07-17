@@ -22,11 +22,11 @@ deletion boundary.
   `input`, `select`, `separator`, `sheet`, `skeleton`, and `table` under
   `src/components/ui` have no imports outside their own files. They are
   candidates for deletion after a full import scan and build.
-- The header notification bell is a button with no action or destination. It
-  should be removed rather than presented as a working feature.
-- The header lesson search is currently visual only. It should be connected to
-  an access-scoped lesson search before acceptance; it is not a deletion
-  candidate.
+- The nonfunctional header notification bell has been removed in the current
+  branch. It is no longer presented as a working learner feature.
+- Header lesson search is now access-scoped and keyboard accessible on desktop
+  and mobile. The search primitives are active code and are not deletion
+  candidates.
 - Admin reports, exports, access setup, and helper modules still use pilot
   terminology. Rename their user-facing language to learner/cohort terminology
   without removing the underlying reusable monitoring and access behavior.
@@ -55,4 +55,3 @@ deletion boundary.
 4. Desktop and mobile Chrome acceptance proves course navigation, authoring,
    reordering, notifications actually removed, and lesson search working.
 5. The fixture ownership preflight finds no unexplained production reference.
-
