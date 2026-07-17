@@ -30,13 +30,18 @@ alter table public.user_block_progress
 update public.user_block_progress progress
 set asset_version = public.fn_video_asset_version(block.content)
 from public.content_blocks block
+join public.user_video_progress video_progress
+  on video_progress.block_id = block.id
 where block.id = progress.block_id
   and block.block_type = 'video'
+  and video_progress.user_id = progress.user_id
+  and video_progress.asset_version =
+    public.fn_video_asset_version(block.content)
   and progress.asset_version is null;
 
 create table if not exists public.user_video_completion_history (
-  user_id uuid not null references public.profiles(id) on delete cascade,
-  block_id uuid not null references public.content_blocks(id) on delete cascade,
+  user_id uuid not null references public.profiles(id) on delete restrict,
+  block_id uuid not null references public.content_blocks(id) on delete restrict,
   asset_version text not null,
   completed_at timestamptz not null default now(),
   primary key (user_id, block_id, asset_version),
@@ -56,9 +61,9 @@ on conflict (user_id, block_id, asset_version) do nothing;
 
 alter table public.user_video_completion_history enable row level security;
 revoke all on table public.user_video_completion_history
-  from public, anon, authenticated;
+  from public, anon, authenticated, service_role;
 grant select on table public.user_video_completion_history to authenticated;
-grant select, insert, update, delete on table public.user_video_completion_history
+grant select, insert on table public.user_video_completion_history
   to service_role;
 
 drop policy if exists user_video_completion_history_self_read
@@ -74,6 +79,102 @@ create policy user_video_completion_history_admin_read
   on public.user_video_completion_history
   for select to authenticated
   using (public.is_admin(auth.uid()));
+
+create or replace function public.trg_preserve_video_completion_history()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  raise exception 'Video completion history is append-only.'
+    using errcode = '55000';
+end;
+$$;
+
+revoke all on function public.trg_preserve_video_completion_history()
+  from public, anon, authenticated, service_role;
+drop trigger if exists preserve_video_completion_history
+  on public.user_video_completion_history;
+create trigger preserve_video_completion_history
+before update or delete on public.user_video_completion_history
+for each row execute function public.trg_preserve_video_completion_history();
+
+-- Migration 019 predates versioned completion history. Preserve its validated,
+-- exact-delete implementation behind an owner-only helper, and keep the public
+-- RPC as a forward guard that locks every completion-bearing video table in the
+-- same order as playback before it delegates to the original rollback.
+alter function public.fn_rollback_course_import(text, jsonb)
+  rename to fn_rollback_course_import_v019_without_video_history_guard;
+alter function public.fn_rollback_course_import_v019_without_video_history_guard(text, jsonb)
+  set schema private;
+revoke all on function
+  private.fn_rollback_course_import_v019_without_video_history_guard(text, jsonb)
+  from public, anon, authenticated, service_role;
+
+create or replace function public.fn_rollback_course_import(
+  p_import_id text,
+  p_owned jsonb
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_content_blocks uuid[];
+begin
+  -- Malformed payloads cannot name a safe history scope. Delegate them to the
+  -- original validator, which rejects every malformed shape before deleting.
+  if p_owned is null
+    or jsonb_typeof(p_owned) <> 'object'
+    or jsonb_typeof(p_owned -> 'content_blocks') <> 'array'
+    or exists (
+      select 1
+      from jsonb_array_elements(p_owned -> 'content_blocks') entry
+      where jsonb_typeof(entry) <> 'object'
+        or jsonb_typeof(entry -> 'id') <> 'string'
+        or entry ->> 'id' !~
+          '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
+    )
+  then
+    return private.fn_rollback_course_import_v019_without_video_history_guard(
+      p_import_id,
+      p_owned
+    );
+  end if;
+
+  select coalesce(array_agg((entry ->> 'id')::uuid), '{}'::uuid[])
+    into v_content_blocks
+  from jsonb_array_elements(p_owned -> 'content_blocks') entry;
+
+  -- fn_record_video_playback writes video progress, history, then block credit.
+  -- Matching that order prevents a lock inversion while closing the preflight
+  -- race for both normal playback and trusted history inserts.
+  lock table
+    public.user_video_progress,
+    public.user_video_completion_history,
+    public.user_block_progress
+  in share row exclusive mode;
+
+  if exists (
+    select 1
+    from public.user_video_completion_history history
+    where history.block_id = any(v_content_blocks)
+  ) then
+    raise exception 'Rollback blocked: immutable video completion history exists.';
+  end if;
+
+  return private.fn_rollback_course_import_v019_without_video_history_guard(
+    p_import_id,
+    p_owned
+  );
+end;
+$$;
+
+revoke all on function public.fn_rollback_course_import(text, jsonb)
+  from public, anon, authenticated;
+grant execute on function public.fn_rollback_course_import(text, jsonb)
+  to service_role;
 
 create or replace function public.fn_lesson_is_complete(
   p_user_id uuid,
@@ -296,6 +397,106 @@ begin
   end if;
 
   return true;
+end;
+$$;
+
+create or replace function public.fn_lesson_states(
+  p_user_id uuid,
+  p_lesson_ids uuid[]
+)
+returns table (
+  lesson_id uuid,
+  is_complete boolean,
+  is_unlocked boolean
+)
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+begin
+  if not public.fn_can_read_user_state(p_user_id) then
+    raise exception 'Lesson states require learner-self or admin access.'
+      using errcode = '42501';
+  end if;
+  if p_lesson_ids is null
+    or cardinality(p_lesson_ids) = 0
+    or cardinality(p_lesson_ids) > 500
+    or array_position(p_lesson_ids, null) is not null
+  then
+    raise exception 'Lesson state request must contain 1 to 500 non-null lesson IDs.'
+      using errcode = '22023';
+  end if;
+
+  return query
+  select requested.lesson_id,
+         public.fn_lesson_is_complete(p_user_id, requested.lesson_id),
+         public.fn_lesson_is_unlocked(p_user_id, requested.lesson_id)
+  from (
+    select distinct requested_id as lesson_id
+    from unnest(p_lesson_ids) requested_id
+  ) requested;
+end;
+$$;
+
+create or replace function public.fn_admin_lesson_completion_states(
+  p_user_ids uuid[],
+  p_lesson_ids uuid[]
+)
+returns table (
+  user_id uuid,
+  lesson_id uuid,
+  is_complete boolean,
+  completed_at timestamptz
+)
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+begin
+  if auth.role() <> 'service_role'
+    and not coalesce(public.is_admin(auth.uid()), false)
+  then
+    raise exception 'Admin lesson completion states require admin access.'
+      using errcode = '42501';
+  end if;
+  if p_user_ids is null
+    or p_lesson_ids is null
+    or cardinality(p_user_ids) = 0
+    or cardinality(p_lesson_ids) = 0
+    or cardinality(p_user_ids) > 500
+    or cardinality(p_lesson_ids) > 500
+    or cardinality(p_user_ids)::bigint * cardinality(p_lesson_ids)::bigint > 5000
+    or array_position(p_user_ids, null) is not null
+    or array_position(p_lesson_ids, null) is not null
+  then
+    raise exception 'Admin lesson state request must contain non-null IDs and at most 5000 user/lesson pairs.'
+      using errcode = '22023';
+  end if;
+
+  return query
+  select requested_user.user_id,
+         requested_lesson.lesson_id,
+         state.is_complete,
+         case when state.is_complete then completion.completed_at else null end
+  from (
+    select distinct requested_id as user_id
+    from unnest(p_user_ids) requested_id
+  ) requested_user
+  cross join (
+    select distinct requested_id as lesson_id
+    from unnest(p_lesson_ids) requested_id
+  ) requested_lesson
+  cross join lateral (
+    select public.fn_lesson_is_complete(
+      requested_user.user_id,
+      requested_lesson.lesson_id
+    ) as is_complete
+  ) state
+  left join public.user_lesson_completions completion
+    on completion.user_id = requested_user.user_id
+   and completion.lesson_id = requested_lesson.lesson_id;
 end;
 $$;
 
@@ -606,6 +807,10 @@ revoke all on function public.fn_course_completion_percent(uuid, uuid)
   from public, anon;
 revoke all on function public.fn_lesson_is_unlocked(uuid, uuid)
   from public, anon;
+revoke all on function public.fn_lesson_states(uuid, uuid[])
+  from public, anon;
+revoke all on function public.fn_admin_lesson_completion_states(uuid[], uuid[])
+  from public, anon, authenticated;
 revoke all on function public.fn_record_video_playback(
   uuid, uuid, text, numeric, numeric, numeric, numeric
 ) from public, anon;
@@ -619,6 +824,10 @@ grant execute on function public.fn_course_is_complete(uuid, uuid)
 grant execute on function public.fn_course_completion_percent(uuid, uuid)
   to authenticated, service_role;
 grant execute on function public.fn_lesson_is_unlocked(uuid, uuid)
+  to authenticated, service_role;
+grant execute on function public.fn_lesson_states(uuid, uuid[])
+  to authenticated, service_role;
+grant execute on function public.fn_admin_lesson_completion_states(uuid[], uuid[])
   to authenticated, service_role;
 grant execute on function public.fn_record_video_playback(
   uuid, uuid, text, numeric, numeric, numeric, numeric

@@ -10,6 +10,10 @@ const sql = readFileSync(
   ),
   "utf8",
 );
+const migrateWorkflow = readFileSync(
+  resolve(process.cwd(), ".github/workflows/db-migrate-test.yml"),
+  "utf8",
+);
 
 describe("versioned video completion and submission evidence migration", () => {
   it("binds current video credit to one non-null authored asset version", () => {
@@ -18,6 +22,9 @@ describe("versioned video completion and submission evidence migration", () => {
     );
     expect(sql).toMatch(
       /public\.fn_video_asset_version\(block\.content\) is not null[\s\S]*progress\.asset_version =[\s\S]*public\.fn_video_asset_version\(block\.content\)/i,
+    );
+    expect(sql).toMatch(
+      /join public\.user_video_progress video_progress[\s\S]*video_progress\.user_id = progress\.user_id[\s\S]*video_progress\.asset_version =[\s\S]*public\.fn_video_asset_version\(block\.content\)/i,
     );
   });
 
@@ -31,6 +38,36 @@ describe("versioned video completion and submission evidence migration", () => {
     );
     expect(sql).not.toMatch(
       /create policy[\s\S]*user_video_completion_history[\s\S]*for (insert|update|delete) to authenticated/i,
+    );
+    expect(sql).toMatch(
+      /user_id uuid not null references public\.profiles\(id\) on delete restrict/i,
+    );
+    expect(sql).toMatch(
+      /block_id uuid not null references public\.content_blocks\(id\) on delete restrict/i,
+    );
+    expect(sql).toMatch(
+      /grant select, insert on table public\.user_video_completion_history[\s\S]*to service_role/i,
+    );
+    expect(sql).not.toMatch(
+      /grant[^;]*(update|delete)[^;]*user_video_completion_history[^;]*service_role/i,
+    );
+    expect(sql).toMatch(
+      /create trigger preserve_video_completion_history[\s\S]*before update or delete on public\.user_video_completion_history/i,
+    );
+  });
+
+  it("guards rollback with a serialized immutable-history preflight", () => {
+    expect(sql).toMatch(
+      /alter function public\.fn_rollback_course_import\(text, jsonb\)[\s\S]*set schema private/i,
+    );
+    expect(sql).toMatch(
+      /lock table[\s\S]*public\.user_video_progress,[\s\S]*public\.user_video_completion_history,[\s\S]*public\.user_block_progress[\s\S]*in share row exclusive mode/i,
+    );
+    expect(sql).toMatch(
+      /from public\.user_video_completion_history history[\s\S]*history\.block_id = any\(v_content_blocks\)[\s\S]*immutable video completion history exists/i,
+    );
+    expect(sql).toMatch(
+      /revoke all on function[\s\S]*private\.fn_rollback_course_import_v019_without_video_history_guard[\s\S]*service_role/i,
     );
   });
 
@@ -67,6 +104,30 @@ describe("versioned video completion and submission evidence migration", () => {
     );
     expect(immutableEvidenceSql).not.toMatch(
       /create policy\s+"submissions_self_delete"/i,
+    );
+  });
+
+  it("provides bounded fail-closed learner and admin batch state RPCs", () => {
+    expect(sql).toMatch(
+      /create or replace function public\.fn_lesson_states\([\s\S]*cardinality\(p_lesson_ids\) > 500[\s\S]*fn_lesson_is_complete[\s\S]*fn_lesson_is_unlocked/i,
+    );
+    expect(sql).toMatch(
+      /create or replace function public\.fn_admin_lesson_completion_states\([\s\S]*cardinality\(p_user_ids\)::bigint \* cardinality\(p_lesson_ids\)::bigint > 5000[\s\S]*case when state\.is_complete then completion\.completed_at else null end/i,
+    );
+    expect(sql).toMatch(
+      /grant execute on function public\.fn_admin_lesson_completion_states\(uuid\[\], uuid\[\]\)[\s\S]*to authenticated, service_role/i,
+    );
+  });
+
+  it("runs migration and integration acceptance serially with seeded E2E", () => {
+    expect(migrateWorkflow).toContain(
+      "group: bmh-institute-seeded-e2e-shared-test-project",
+    );
+    expect(migrateWorkflow).toMatch(
+      /Apply pending migrations[\s\S]*Install dependencies[\s\S]*npm ci[\s\S]*npm run test:integration/i,
+    );
+    expect(migrateWorkflow).toMatch(
+      /Run versioned completion Postgres acceptance[\s\S]*031_versioned_video_completion_and_submission_evidence\.sql/i,
     );
   });
 });

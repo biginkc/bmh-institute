@@ -1418,6 +1418,15 @@ export type Database = {
         Args: { p_course_id: string; p_payload: Json; p_user_id: string }
         Returns: Json
       }
+      fn_admin_lesson_completion_states: {
+        Args: { p_lesson_ids: string[]; p_user_ids: string[] }
+        Returns: {
+          completed_at: string | null
+          is_complete: boolean
+          lesson_id: string
+          user_id: string
+        }[]
+      }
       fn_course_completion_percent: {
         Args: { p_course_id: string; p_user_id: string }
         Returns: number
@@ -1445,6 +1454,14 @@ export type Database = {
       fn_lesson_is_unlocked: {
         Args: { p_lesson_id: string; p_user_id: string }
         Returns: boolean
+      }
+      fn_lesson_states: {
+        Args: { p_lesson_ids: string[]; p_user_id: string }
+        Returns: {
+          is_complete: boolean
+          is_unlocked: boolean
+          lesson_id: string
+        }[]
       }
       fn_move_module: {
         Args: { p_course_id: string; p_direction: string; p_module_id: string }
