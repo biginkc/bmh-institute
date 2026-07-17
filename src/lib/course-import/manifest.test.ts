@@ -143,6 +143,32 @@ describe("validateCourseManifest", () => {
     }
   });
 
+  it("rejects unsafe imported text HTML before planning or apply", () => {
+    const input = validCourseManifest();
+    const lesson = input.program.courses[0].modules[0].lessons[0];
+    lesson.blocks?.push({
+      source_key: "unsafe-text",
+      type: "text",
+      sort_order: 2,
+      required: false,
+      content: {
+        html: '<p onclick="alert(1)">Read</p><script>alert(2)</script><a href="javascript:alert(3)">Open</a>',
+      },
+    });
+
+    const result = validateCourseManifest(input);
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.errors).toEqual(
+        expect.arrayContaining([
+          expect.stringContaining(
+            ".content.html contains markup that is not allowed.",
+          ),
+        ]),
+      );
+    }
+  });
+
   it("requires release assets to use immutable import-owned storage paths", () => {
     const input = validCourseManifest();
     input.assets[0].checksum_sha256 = "a".repeat(64);

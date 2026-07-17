@@ -3,19 +3,11 @@ import { readFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { pathToFileURL } from "node:url";
 
-import { REPLACEMENT_REQUIRED_CUTS } from "./held-video-approval-ledger.mjs";
-
-const REQUIRED_HELD_ASSETS = new Map([
-  ["video-slot-01-welcome", "493de8a5e0663ad577ba46d6d5befce33e9640f250677095094978714d22ac72"],
-  ["video-slot-01-mindset", "b0cad612499dbd2d867c906c1ad8a8e3e13fcded333fa973fa6d19339fa930da"],
-  ["video-slot-02-terms", "17cac99f171edfb773f85eaaa6719e09ffe1295abec5b062554c72958747c0bb"],
-  ["video-slot-10-objection-scripts", "59c745ccca7387f82d0b13eaf95439f9f6a50a8f727ad3c1db4fb839050b1ebb"],
-  ["video-slot-15-closing", "6e3aa1b007117b303a05906ca8443a8b9bc38f7c44bd61475c5437b99e7c90d2"],
-  ["video-slot-16-kpis", "439f8d06d2e449637509f0f21f9d0b4a5464c65aec1995fca7147e4e4e67310b"],
-  ["video-slot-17-compensation", "cecad85478bb1a8ba5bfed7404dc045440c567ed0eaaa90b11b644e124b27846"],
-  ["video-slot-18-operator", "6e6a3f257ff8cf3ef201de775de47c6e7833e3abd673e44bb8d4d5ac3aafa048"],
-  ["video-slot-19-career", "1ddcf7b1b0b45bbc90ec14b3660b3d5f5a284b5095dd0d0682164924ce1a3da9"],
-]);
+import {
+  REPLACEMENT_REQUIRED_CUTS,
+  REVIEWED_VIDEO_SOURCE_KEYS,
+  validateHeldVideoManifestApprovalState,
+} from "./held-video-approval-ledger.mjs";
 
 const STALE_COMPENSATION_PATTERN = /\$\s*\d|hourly base|appointment bonus|commission tier|tiered commission/i;
 const STALE_CAREER_GROWTH_PATTERN = /\b(?:role ladder|career ladder|promotion|promoted|readiness|first consideration|management path|closer path|acquisitions? role|90(?:-plus)? days?|six months?|one year|commission|compensation|salary|pay increase|earning potential|higher earnings?|daily (?:numbers?|targets?|quotas?)|dial quotas?|hit(?:ting)? (?:their )?numbers every day|guarante(?:e|ed|es)|own(?:s|ing)? (?:the )?(?:entire )?team(?:'s)? performance)\b/i;
@@ -366,7 +358,7 @@ export function summarizeManifest(manifest) {
 
 export function validateManifest(
   manifest,
-  { stackConfirmation = null, now = new Date() } = {},
+  { stackConfirmation = null, approvalLedger = null, now = new Date() } = {},
 ) {
   const errors = [];
   const publicationBlockers = [];
@@ -495,17 +487,11 @@ export function validateManifest(
     }
   }
 
-  const heldVideos = assets.filter(
-    (asset) => asset.kind === "video" && asset.approval_status === "hold",
-  );
-  if (heldVideos.length !== REQUIRED_HELD_ASSETS.size) {
-    errors.push(`Expected ${REQUIRED_HELD_ASSETS.size} held videos, found ${heldVideos.length}`);
-  }
-  for (const [sourceKey, checksum] of REQUIRED_HELD_ASSETS) {
-    const asset = assetsByKey.get(sourceKey);
-    if (!asset || asset.approval_status !== "hold" || asset.checksum_sha256 !== checksum) {
-      errors.push(`${sourceKey} does not match the locked held-video record`);
-    }
+  if (approvalLedger) {
+    const currentReviewAssets = assets.filter(
+      (asset) => asset.kind === "video" && REVIEWED_VIDEO_SOURCE_KEYS.has(asset.source_key),
+    );
+    errors.push(...validateHeldVideoManifestApprovalState(approvalLedger, currentReviewAssets));
   }
 
   const questionTexts = [];
@@ -617,16 +603,27 @@ async function main() {
     process.argv[3] ??
     join(dirname(manifestPath), "bmh-operating-stack-confirmation.v1.json");
   let stackConfirmation = null;
+  let approvalLedger = null;
   try {
     stackConfirmation = await loadManifest(confirmationPath);
   } catch (error) {
     if (error?.code !== "ENOENT") throw error;
   }
-  const report = validateManifest(manifest, { stackConfirmation });
+  try {
+    approvalLedger = await loadManifest(
+      join(dirname(manifestPath), "../../docs/course-production/held-video-review/approvals.json"),
+    );
+  } catch (error) {
+    if (error?.code !== "ENOENT") throw error;
+  }
+  const report = validateManifest(manifest, { stackConfirmation, approvalLedger });
   console.log(JSON.stringify(report, null, 2));
   process.exitCode = report.errors.length ? 1 : 0;
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  await main();
+  void main().catch((error) => {
+    console.error(error instanceof Error ? error.message : error);
+    process.exitCode = 1;
+  });
 }

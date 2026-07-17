@@ -11,6 +11,7 @@ import {
   importArtworkNamespace,
   importStoragePrefix,
 } from "@/lib/artwork/paths";
+import { sanitizeTextBlockHtml } from "@/lib/sanitize/text-block";
 
 export type ImportTable =
   | "role_groups"
@@ -128,7 +129,7 @@ export function buildImportPlan(manifest: CourseImportManifest): ImportPlan {
     });
 
     let previousLessonId: string | null = null;
-    for (const courseModule of course.modules) {
+    for (const courseModule of sortedBySortOrder(course.modules, "module")) {
       modules += 1;
       const moduleId = add("modules", courseModule.source_key, {
         course_id: courseId,
@@ -136,7 +137,7 @@ export function buildImportPlan(manifest: CourseImportManifest): ImportPlan {
         description: courseModule.description,
         sort_order: courseModule.sort_order,
       });
-      for (const lesson of courseModule.lessons) {
+      for (const lesson of sortedBySortOrder(courseModule.lessons, "lesson")) {
         lessons += 1;
         const backing = addBackingRecord(lesson, add);
         if (lesson.quiz) quizzes += 1;
@@ -222,6 +223,20 @@ export function buildImportPlan(manifest: CourseImportManifest): ImportPlan {
   };
 }
 
+function sortedBySortOrder<T extends { sort_order: number }>(
+  items: T[],
+  label: "module" | "lesson",
+): T[] {
+  const seen = new Set<number>();
+  for (const item of items) {
+    if (seen.has(item.sort_order)) {
+      throw new Error(`Cannot construct prerequisites with duplicate ${label} sort_order ${item.sort_order}.`);
+    }
+    seen.add(item.sort_order);
+  }
+  return [...items].sort((left, right) => left.sort_order - right.sort_order);
+}
+
 function addBackingRecord(
   lesson: ImportLesson,
   add: (table: ImportTable, sourceKey: string, row: Record<string, unknown>) => string,
@@ -295,6 +310,9 @@ function resolveBlockContent(
   importId: string,
 ) {
   const content = { ...block.content };
+  if (block.type === "text" && typeof content.html === "string") {
+    content.html = sanitizeTextBlockHtml(content.html);
+  }
   const mappings = [
     ["asset_key", "file_path"],
     ["poster_asset_key", "poster_path"],

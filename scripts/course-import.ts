@@ -31,6 +31,10 @@ import {
   uploadReceiptPath,
   writeCompletedUploadReceipt,
 } from "../src/lib/course-import/upload-receipt";
+import {
+  assertBmhImportSemanticGate,
+  validateBmhImportSemanticGate,
+} from "./course-content/import-semantic-gate.mjs";
 
 async function main() {
   const { command, manifestPath, flags } = parseArgs(process.argv.slice(2));
@@ -44,6 +48,18 @@ async function main() {
   if (flags.canary) {
     const canaryErrors = validateCanaryScope(result.value);
     if (canaryErrors.length > 0) throw new Error(canaryErrors.map((error) => `- ${error}`).join("\n"));
+  }
+  const semanticReport = await validateBmhImportSemanticGate({
+    manifest: result.value,
+  });
+  if (semanticReport) {
+    console.log(JSON.stringify({ phase: "bmh_semantic_validation", report: semanticReport }, null, 2));
+    if (command !== "rollback" && command !== "inspect-rollback-storage") {
+      assertBmhImportSemanticGate(semanticReport, {
+        enforcePublicationBlockers:
+          manifestGateForCommand(command, flags.canary) === "release",
+      });
+    }
   }
   const plan = buildImportPlan(result.value);
   if (command === "upload") assertApprovedUploadIntegrity(plan.assets);
@@ -94,6 +110,7 @@ async function main() {
       adapter,
       receiptPath,
       uploadExpectation,
+      verifyRemoteAssets: () => findAssetProblems(supabase, plan.assets),
     });
     return;
   }

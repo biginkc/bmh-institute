@@ -10,6 +10,7 @@ import { fileURLToPath } from "node:url";
 import sharp from "sharp";
 
 import { applyArtworkLedger, buildGuideAsset, buildManifest, loadArtworkLedger, validateArtworkManifestTrustBoundary } from "../../scripts/course-content/build-manifest.mjs";
+import { validateBmhArtworkReleaseTrust } from "../../scripts/course-content/import-semantic-gate.mjs";
 import { approvePilots, createInitialLedger, deriveMaster, finalizeArtwork, ingestGeneration, promotePilots, reviewMaster } from "../../scripts/course-content/artwork-production-workflow.mjs";
 
 const LEDGER_SCHEMA = "bmh-artwork-production-ledger/v1";
@@ -186,7 +187,7 @@ test("manifest_path-keyed ledgers must map uniquely to expected artwork", async 
   );
 });
 
-test("a canonically finalized 49-asset workflow satisfies release and upload-integrity gates", async () => {
+test("a canonically finalized 49-asset workflow cannot forge held-video release approval", async () => {
   const root = await mkdtemp(path.join(await realpath(tmpdir()), "bmh-artwork-ledger-release-"));
   const inventoryPath = path.join(repoRoot, "docs/course-production/thumbnail-pilots/production-inventory.json");
   const [inventory, baseManifest] = await Promise.all([readJson(inventoryPath), readJson(manifestPath)]);
@@ -267,6 +268,15 @@ test("a canonically finalized 49-asset workflow satisfies release and upload-int
     evidence: finalEvidence,
   });
   const trustedManifest = await validateArtworkManifestTrustBoundary(finalized.manifest, finalized.ledger, { repoRoot: root, inventoryPath });
+  assert.deepEqual(
+    await validateBmhArtworkReleaseTrust({
+      manifest: trustedManifest,
+      artworkLedger: finalized.ledger,
+      repoRoot: root,
+      inventoryPath,
+    }),
+    [],
+  );
   const artwork = trustedManifest.assets.filter((asset) => asset.kind === "image");
   assert.equal(artwork.length, 49);
   assert.ok(
@@ -286,6 +296,19 @@ test("a canonically finalized 49-asset workflow satisfies release and upload-int
       inventoryPath,
     }),
     /pixel checksum drifted|pixel checksum/i,
+  );
+
+  const forgedManifest = structuredClone(trustedManifest);
+  const forgedArtwork = forgedManifest.assets.find((asset) => asset.kind === "image");
+  forgedArtwork.checksum_sha256 = "f".repeat(64);
+  forgedArtwork.storage_path = `${forgedArtwork.storage_path}.forged`;
+  assert.ok(
+    (await validateBmhArtworkReleaseTrust({
+      manifest: forgedManifest,
+      artworkLedger: finalized.ledger,
+      repoRoot: root,
+      inventoryPath,
+    })).some((blocker) => blocker.includes("does not exactly match")),
   );
 
   const releaseManifest = structuredClone(trustedManifest);
@@ -314,8 +337,8 @@ test("a canonically finalized 49-asset workflow satisfies release and upload-int
 
   for (const command of ["upload", "apply"]) {
     const result = spawnSync(path.join(repoRoot, "node_modules/.bin/tsx"), ["scripts/course-import.ts", command, releaseManifestPath], { cwd: repoRoot, encoding: "utf8" });
-    assert.equal(result.status, 0, `${command} dry-run rejected the approved artwork manifest:\n${result.stdout}\n${result.stderr}`);
-    assert.match(result.stdout, /"dryRun": true/);
+    assert.equal(result.status, 1, `${command} dry-run accepted synthetic video approvals without ledger decisions:\n${result.stdout}\n${result.stderr}`);
+    assert.match(result.stderr, /approved in the manifest without an exact approved ledger decision/);
   }
 });
 

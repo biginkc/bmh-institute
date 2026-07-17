@@ -9,6 +9,7 @@ import {
   isAssignmentSubmissionType,
 } from "@/lib/assignments/validation";
 import { parseAssignmentRubric } from "@/lib/assignments/rubric";
+import { sanitizeTextBlockHtml } from "@/lib/sanitize/text-block";
 
 export type ApprovalStatus = "approved" | "hold" | "missing";
 export type AssetKind =
@@ -446,6 +447,16 @@ function validateLesson(
       if (!isRecord(block.content)) {
         errors.push(`${blockPath}.content must be an object.`);
         continue;
+      }
+      if (block.type === "text") {
+        const html = block.content.html;
+        if (typeof html !== "string") {
+          errors.push(`${blockPath}.content.html must be a string.`);
+        } else if (sanitizeTextBlockHtml(html) !== html) {
+          errors.push(
+            `${blockPath}.content.html contains markup that is not allowed.`,
+          );
+        }
       }
       if (block.required === true) {
         if (block.type === "video") {

@@ -32,6 +32,18 @@ export const REPLACEMENT_REQUIRED_CUTS = new Map([
   ],
 ]);
 
+export const REVIEWED_VIDEO_SOURCE_KEYS = new Set([
+  "video-slot-01-welcome",
+  "video-slot-01-mindset",
+  "video-slot-02-terms",
+  "video-slot-10-objection-scripts",
+  "video-slot-15-closing",
+  "video-slot-16-kpis",
+  "video-slot-17-compensation",
+  "video-slot-18-operator",
+  "video-slot-19-career",
+]);
+
 function exactFields(value, expected, label, errors) {
   const actual = Object.keys(value ?? {}).sort();
   const wanted = [...expected].sort();
@@ -52,8 +64,8 @@ export function approvalRecordKey(record) {
 
 export function validateHeldVideoApprovalLedger(
   ledger,
-  heldAssets,
-  { requireCurrentRecords = true } = {},
+  currentReviewAssets,
+  { requireCurrentRecords = true, allowHistoricalPending = false } = {},
 ) {
   const errors = [];
   exactFields(ledger, LEDGER_FIELDS, "approval ledger", errors);
@@ -67,7 +79,7 @@ export function validateHeldVideoApprovalLedger(
     return errors;
   }
 
-  const expected = new Map((heldAssets ?? []).map((asset) => [
+  const expected = new Map((currentReviewAssets ?? []).map((asset) => [
     `${asset.source_key}:${asset.checksum_sha256}`,
     asset,
   ]));
@@ -105,7 +117,7 @@ export function validateHeldVideoApprovalLedger(
       errors.push(`${label} decision must be one of ${APPROVAL_DECISIONS.join(", ")}`);
       continue;
     }
-    if (!asset && record.decision === "pending") {
+    if (!asset && record.decision === "pending" && !allowHistoricalPending) {
       errors.push(`${label} is historical and cannot remain pending after its manifest cut changes`);
     }
     if (REPLACEMENT_REQUIRED_CUTS.has(key) && record.decision !== "changes_requested") {
@@ -136,6 +148,12 @@ export function validateHeldVideoApprovalLedger(
     }
   }
 
+  for (const requiredKey of REPLACEMENT_REQUIRED_CUTS.keys()) {
+    if (!seen.has(requiredKey)) {
+      errors.push(`approval ledger must preserve policy-defective source-cut history: ${requiredKey}`);
+    }
+  }
+
   if (
     requireCurrentRecords
     && (currentSeen.size !== expected.size
@@ -146,10 +164,45 @@ export function validateHeldVideoApprovalLedger(
   return errors;
 }
 
+export function validateHeldVideoManifestApprovalState(ledger, currentReviewAssets) {
+  const errors = validateHeldVideoApprovalLedger(ledger, currentReviewAssets);
+  if (errors.length > 0) return errors;
+  const currentByKey = new Map(
+    ledger.records.map((record) => [approvalRecordKey(record), record]),
+  );
+  const sources = new Set();
+  for (const asset of currentReviewAssets ?? []) {
+    sources.add(asset.source_key);
+    if (!REVIEWED_VIDEO_SOURCE_KEYS.has(asset.source_key)) {
+      errors.push(`unexpected reviewed video source_key: ${asset.source_key}`);
+      continue;
+    }
+    const key = `${asset.source_key}:${asset.checksum_sha256}`;
+    const record = currentByKey.get(key);
+    if (!record) continue;
+    if (asset.approval_status === "approved" && record.decision !== "approved") {
+      errors.push(`${key} is approved in the manifest without an exact approved ledger decision`);
+    }
+    if (asset.approval_status === "hold" && record.decision === "approved") {
+      errors.push(`${key} is approved in the ledger but remains held in the manifest`);
+    }
+    if (!["approved", "hold"].includes(asset.approval_status)) {
+      errors.push(`${key} reviewed video must be held or approved, not ${asset.approval_status}`);
+    }
+  }
+  for (const sourceKey of REVIEWED_VIDEO_SOURCE_KEYS) {
+    if (!sources.has(sourceKey)) {
+      errors.push(`reviewed video is missing from the manifest: ${sourceKey}`);
+    }
+  }
+  return errors;
+}
+
 export function validateHeldVideoApprovalTransition(currentLedger, nextLedger, heldAssets) {
   const errors = [
     ...validateHeldVideoApprovalLedger(currentLedger, heldAssets, {
       requireCurrentRecords: false,
+      allowHistoricalPending: true,
     }).map((error) => `current: ${error}`),
     ...validateHeldVideoApprovalLedger(nextLedger, heldAssets).map((error) => `next: ${error}`),
   ];

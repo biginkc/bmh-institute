@@ -14,8 +14,10 @@ import {
 } from "../../scripts/course-content/validate-held-video-recuts.mjs";
 import {
   validateHeldVideoApprovalLedger,
+  validateHeldVideoManifestApprovalState,
   validateHeldVideoApprovalTransition,
 } from "../../scripts/course-content/held-video-approval-ledger.mjs";
+import { currentReviewedVideoRecord } from "../../scripts/course-content/build-manifest.mjs";
 
 const manifestPromise = readFile(
   new URL("./bmh-employee-training.v1.json", import.meta.url),
@@ -227,6 +229,121 @@ test("a corrected replacement can enter review as a new checksum-keyed pending c
   assert.deepEqual(
     validateHeldVideoApprovalTransition(ledger, next, replacementHeld),
     [],
+  );
+});
+
+test("a corrected version can replace a previously pending cut without rewriting history", async () => {
+  const [manifest, ledger] = await Promise.all([manifestPromise, ledgerPromise]);
+  const reviewAssets = manifest.assets.filter((asset) =>
+    asset.kind === "video" && ledger.records.some((record) => record.source_key === asset.source_key),
+  );
+  const old = ledger.records[0];
+  const replacementSha256 = "b".repeat(64);
+  const replacementPath = "course-assets/review-lessonA/LESSON-1A-v8.mp4";
+  const nextAssets = reviewAssets.map((asset) => asset.source_key === old.source_key
+    ? { ...asset, checksum_sha256: replacementSha256, local_path: replacementPath }
+    : asset);
+  const next = structuredClone(ledger);
+  next.updated_at = "2026-07-17";
+  Object.assign(next.records[0], {
+    decision: "changes_requested",
+    approver: "Jarrad Henry",
+    date: "2026-07-17",
+    notes: "Exact checksum-locked cut needs a correction.",
+  });
+  next.records.push({
+    source_key: old.source_key,
+    sha256: replacementSha256,
+    candidate_local_path: replacementPath,
+    title: `${old.title} corrected candidate`,
+    decision: "pending",
+    approver: null,
+    date: null,
+    notes: null,
+  });
+
+  assert.deepEqual(validateHeldVideoApprovalTransition(ledger, next, nextAssets), []);
+});
+
+test("the immutable ledger supports a final manifest with all 29 videos approved and zero held", async () => {
+  const [manifest, ledger] = await Promise.all([manifestPromise, ledgerPromise]);
+  const finalLedger = structuredClone(ledger);
+  finalLedger.updated_at = "2026-07-17";
+  const reviewedKeys = new Set(finalLedger.records.map((record) => record.source_key));
+  const finalReviewAssets = manifest.assets
+    .filter((asset) => asset.kind === "video" && reviewedKeys.has(asset.source_key))
+    .map((asset, index) => {
+      if (index < 6) {
+        Object.assign(finalLedger.records[index], {
+          decision: "approved",
+          approver: "Jarrad Henry",
+          date: "2026-07-17",
+          notes: "Watched and approved this exact checksum-locked cut.",
+        });
+        return { ...asset, approval_status: "approved" };
+      }
+      const checksum = String(index + 1).repeat(64).slice(0, 64);
+      const localPath = `course-assets/review-final/${asset.source_key}.mp4`;
+      finalLedger.records.push({
+        source_key: asset.source_key,
+        sha256: checksum,
+        candidate_local_path: localPath,
+        title: `${asset.source_key} policy-safe replacement`,
+        decision: "approved",
+        approver: "Jarrad Henry",
+        date: "2026-07-17",
+        notes: "Watched and approved this exact checksum-locked replacement.",
+      });
+      return {
+        ...asset,
+        checksum_sha256: checksum,
+        local_path: localPath,
+        approval_status: "approved",
+      };
+    });
+
+  const finalBySource = new Map(finalReviewAssets.map((asset) => [asset.source_key, asset]));
+  const finalVideoAssets = manifest.assets
+    .filter((asset) => asset.kind === "video")
+    .map((asset) => finalBySource.get(asset.source_key) ?? asset);
+  assert.equal(finalVideoAssets.length, 29);
+  assert.equal(finalVideoAssets.filter((asset) => asset.approval_status === "hold").length, 0);
+  assert.ok(finalVideoAssets.every((asset) => asset.approval_status === "approved"));
+  assert.deepEqual(validateHeldVideoApprovalLedger(finalLedger, finalReviewAssets), []);
+  assert.deepEqual(validateHeldVideoManifestApprovalState(finalLedger, finalReviewAssets), []);
+});
+
+test("the real manifest generator selects the latest non-defective checksum record and preserves defective history", async () => {
+  const ledger = structuredClone(await ledgerPromise);
+  const replacement = {
+    source_key: "video-slot-17-compensation",
+    sha256: "a".repeat(64),
+    candidate_local_path: "course-assets/review-lesson17/LESSON-17-policy-safe-v2.mp4",
+    title: "Compensation Engine policy-safe replacement",
+    decision: "pending",
+    approver: null,
+    date: null,
+    notes: null,
+  };
+  ledger.records.push(replacement);
+
+  assert.deepEqual(
+    currentReviewedVideoRecord("video-slot-17-compensation", ledger),
+    replacement,
+  );
+  assert.ok(
+    ledger.records.some((record) =>
+      record.sha256 === "cecad85478bb1a8ba5bfed7404dc045440c567ed0eaaa90b11b644e124b27846"
+      && record.decision === "changes_requested"),
+  );
+
+  replacement.decision = "approved";
+  replacement.approver = "Jarrad Henry";
+  replacement.date = "2026-07-17";
+  replacement.notes = "Watched and approved the exact checksum-locked replacement.";
+  assert.equal(
+    currentReviewedVideoRecord("video-slot-17-compensation", ledger).decision,
+    "approved",
   );
 });
 

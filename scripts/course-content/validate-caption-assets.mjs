@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { readFile, stat } from "node:fs/promises";
+import { readFile, realpath, stat } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
@@ -71,7 +71,39 @@ function allVideoBlocks(manifest) {
 }
 
 async function inspectFile(asset, repoRoot, expectedKind, errors) {
-  const fullPath = path.resolve(repoRoot, asset.local_path);
+  const candidatePath = path.resolve(repoRoot, asset.local_path);
+  const relativeCandidate = path.relative(repoRoot, candidatePath);
+  if (
+    path.isAbsolute(asset.local_path)
+    || relativeCandidate === ""
+    || relativeCandidate === ".."
+    || relativeCandidate.startsWith(`..${path.sep}`)
+    || path.isAbsolute(relativeCandidate)
+  ) {
+    errors.push(`${asset.source_key} local path escapes the repository trust root`);
+    return null;
+  }
+  let fullPath;
+  try {
+    const [canonicalRoot, canonicalFile] = await Promise.all([
+      realpath(repoRoot),
+      realpath(candidatePath),
+    ]);
+    const relativeCanonical = path.relative(canonicalRoot, canonicalFile);
+    if (
+      relativeCanonical === ""
+      || relativeCanonical === ".."
+      || relativeCanonical.startsWith(`..${path.sep}`)
+      || path.isAbsolute(relativeCanonical)
+    ) {
+      errors.push(`${asset.source_key} local path resolves outside the repository trust root`);
+      return null;
+    }
+    fullPath = canonicalFile;
+  } catch {
+    errors.push(`${asset.source_key} file is missing`);
+    return null;
+  }
   let buffer;
   try {
     buffer = await readFile(fullPath);
@@ -187,5 +219,8 @@ async function main() {
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  await main();
+  void main().catch((error) => {
+    console.error(error instanceof Error ? error.message : error);
+    process.exitCode = 1;
+  });
 }

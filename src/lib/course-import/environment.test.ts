@@ -22,6 +22,7 @@ describe("assertCourseImportEnvironment", () => {
     "https://dhvfsyteqsxagokoerrx.supabase.co.evil.example",
     "https://unknown.supabase.co",
     "https://user:password@jvaabkchkihkjllehmft.supabase.co",
+    "https://jvaabkchkihkjllehmft.supabase.co:443",
     "https://jvaabkchkihkjllehmft.supabase.co/storage/v1",
     "https://jvaabkchkihkjllehmft.supabase.co?write=true",
     "https://jvaabkchkihkjllehmft.supabase.co#fragment",

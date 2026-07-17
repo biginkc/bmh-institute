@@ -36,6 +36,58 @@ describe("buildImportPlan", () => {
     expect(one).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-5[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
   });
 
+  it("builds the prerequisite chain from module and lesson sort_order, not JSON array order", () => {
+    const manifest = validCourseManifest();
+    const originalModule = manifest.program.courses[0].modules[0];
+    const laterModule = structuredClone(originalModule);
+    laterModule.source_key = "module-later";
+    laterModule.sort_order = 20;
+    laterModule.lessons = laterModule.lessons.map((lesson, index) => ({
+      ...lesson,
+      source_key: `${lesson.source_key}-later`,
+      sort_order: index + 10,
+      blocks: lesson.blocks?.map((block) => ({ ...block, source_key: `${block.source_key}-later` })),
+      quiz: lesson.quiz ? {
+        ...lesson.quiz,
+        source_key: `${lesson.quiz.source_key}-later`,
+        questions: lesson.quiz.questions.map((question) => ({
+          ...question,
+          source_key: `${question.source_key}-later`,
+          options: question.options.map((option) => ({ ...option, source_key: `${option.source_key}-later` })),
+        })),
+      } : undefined,
+      assignment: lesson.assignment ? { ...lesson.assignment, source_key: `${lesson.assignment.source_key}-later` } : undefined,
+    }));
+    originalModule.sort_order = 10;
+    originalModule.lessons.reverse();
+    manifest.program.courses[0].modules = [laterModule, originalModule];
+
+    const plan = buildImportPlan(manifest);
+    const lessonRows = plan.operations.filter((operation) => operation.table === "lessons");
+    const expectedSourceOrder = [
+      ...originalModule.lessons.slice().sort((a, b) => a.sort_order - b.sort_order),
+      ...laterModule.lessons.slice().sort((a, b) => a.sort_order - b.sort_order),
+    ].map((lesson) => lesson.source_key);
+    expect(lessonRows.map((row) => row.sourceKey)).toEqual(expectedSourceOrder);
+    expect(lessonRows.map((row) => row.row.prerequisite_lesson_id)).toEqual([
+      null,
+      ...lessonRows.slice(0, -1).map((row) => row.id),
+    ]);
+  });
+
+  it("rejects ambiguous duplicate sort_order values when constructing prerequisites", () => {
+    const manifest = validCourseManifest();
+    manifest.program.courses[0].modules[0].lessons[1].sort_order =
+      manifest.program.courses[0].modules[0].lessons[0].sort_order;
+    expect(() => buildImportPlan(manifest)).toThrow(/duplicate lesson sort_order/i);
+
+    const duplicateModuleManifest = validCourseManifest();
+    duplicateModuleManifest.program.courses[0].modules.push(
+      structuredClone(duplicateModuleManifest.program.courses[0].modules[0]),
+    );
+    expect(() => buildImportPlan(duplicateModuleManifest)).toThrow(/duplicate module sort_order/i);
+  });
+
   it("never persists an unproven direct storage path", () => {
     const manifest = validCourseManifest();
     manifest.program.courses[0].modules[0].lessons[0].blocks?.push({
@@ -48,6 +100,23 @@ describe("buildImportPlan", () => {
     expect(() => buildImportPlan(manifest)).toThrow(
       "raw-held-guide.file_path must exactly match one approved immutable asset in this import",
     );
+  });
+
+  it("sanitizes imported text again when constructing database operations", () => {
+    const manifest = validCourseManifest();
+    manifest.program.courses[0].modules[0].lessons[0].blocks?.push({
+      source_key: "defense-in-depth-text",
+      type: "text",
+      sort_order: 2,
+      required: false,
+      content: { html: '<p onclick="alert(1)">Safe words</p><script>bad()</script>' },
+    });
+
+    const plan = buildImportPlan(manifest);
+    const row = plan.operations.find(
+      (operation) => operation.sourceKey === "defense-in-depth-text",
+    );
+    expect(row?.row.content).toEqual({ html: "<p>Safe words</p>" });
   });
 
   it("rejects a direct path even when it matches a held asset key", () => {

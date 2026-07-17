@@ -145,6 +145,9 @@ describe("course import upload receipts", () => {
         adapter,
         receiptPath: path,
         uploadExpectation: expectation,
+        verifyRemoteAssets: async () => {
+          throw new Error("remote verification must not run before receipt validation");
+        },
       }),
     ).rejects.toThrow(/no readable completed upload receipt/i);
     expect(applyCalls).toBe(0);
@@ -178,9 +181,73 @@ describe("course import upload receipts", () => {
         adapter,
         receiptPath: path,
         uploadExpectation: expectation,
+        verifyRemoteAssets: async () => [],
       }),
     ).resolves.toBeUndefined();
     expect(applyCalls).toBe(1);
+  });
+
+  it("reverifies exact remote object bytes after the receipt and immediately before database apply", async () => {
+    const { path, expectation } = await fixture();
+    await writeCompletedUploadReceipt(path, expectation);
+    const plan = buildImportPlan(validCourseManifest());
+    const order: string[] = [];
+    const adapter: CourseImportAdapter = {
+      async applyAtomically(importId, operations) {
+        order.push("apply");
+        return { status: "applied", import_id: importId, operation_count: operations.length };
+      },
+      async readRows() {
+        throw new Error("readRows must not be called");
+      },
+      async rollbackAtomically() {
+        throw new Error("rollbackAtomically must not be called");
+      },
+    };
+
+    await applyImportPlanWithUploadReceipt({
+      plan,
+      adapter,
+      receiptPath: path,
+      uploadExpectation: expectation,
+      verifyRemoteAssets: async () => {
+        order.push("remote-byte-verification");
+        return [];
+      },
+    });
+
+    expect(order).toEqual(["remote-byte-verification", "apply"]);
+  });
+
+  it("never calls the database when final remote-byte verification reports drift", async () => {
+    const { path, expectation } = await fixture();
+    await writeCompletedUploadReceipt(path, expectation);
+    const plan = buildImportPlan(validCourseManifest());
+    let applyCalls = 0;
+    const adapter: CourseImportAdapter = {
+      async applyAtomically() {
+        applyCalls += 1;
+        throw new Error("apply must not be called");
+      },
+      async readRows() {
+        throw new Error("readRows must not be called");
+      },
+      async rollbackAtomically() {
+        throw new Error("rollbackAtomically must not be called");
+      },
+    };
+
+    await expect(applyImportPlanWithUploadReceipt({
+      plan,
+      adapter,
+      receiptPath: path,
+      uploadExpectation: expectation,
+      verifyRemoteAssets: async () => [{
+        path: plan.assets[0].storage_path,
+        problem: "remote bytes SHA-256 does not match",
+      }],
+    })).rejects.toThrow(/remote asset verification failed immediately before database apply/i);
+    expect(applyCalls).toBe(0);
   });
 });
 

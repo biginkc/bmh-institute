@@ -10,6 +10,12 @@ import {
   reconcileManifestFromLedger,
   validateLedger as validateArtworkWorkflowLedger,
 } from "./artwork-production-workflow.mjs";
+import {
+  REPLACEMENT_REQUIRED_CUTS,
+  REVIEWED_VIDEO_SOURCE_KEYS,
+  approvalRecordKey,
+  validateHeldVideoManifestApprovalState,
+} from "./held-video-approval-ledger.mjs";
 
 const REPO_ROOT = path.resolve(fileURLToPath(new URL("../..", import.meta.url)));
 const ASSET_ROOT = "/Users/jarradhenry/Sites/BMH apps/BMH Institute";
@@ -19,21 +25,13 @@ const ARTWORK_LEDGER_PATH = path.join(
   REPO_ROOT,
   "docs/course-production/thumbnail-pilots/production-ledger.json",
 );
+const VIDEO_APPROVAL_LEDGER_PATH = path.join(
+  REPO_ROOT,
+  "docs/course-production/held-video-review/approvals.json",
+);
 const ARTWORK_LEDGER_SCHEMA = "bmh-artwork-production-ledger/v1";
 const SHA256_PATTERN = /^[a-f0-9]{64}$/;
 const ISO_TIMESTAMP_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/;
-
-const HELD_METADATA = {
-  "video-slot-01-welcome": [246.186, 35190296, "493de8a5e0663ad577ba46d6d5befce33e9640f250677095094978714d22ac72"],
-  "video-slot-01-mindset": [362.688, 107220021, "b0cad612499dbd2d867c906c1ad8a8e3e13fcded333fa973fa6d19339fa930da"],
-  "video-slot-02-terms": [451.754, 110768219, "17cac99f171edfb773f85eaaa6719e09ffe1295abec5b062554c72958747c0bb"],
-  "video-slot-10-objection-scripts": [1508.757, 572011027, "59c745ccca7387f82d0b13eaf95439f9f6a50a8f727ad3c1db4fb839050b1ebb"],
-  "video-slot-15-closing": [329.429, 55329810, "6e3aa1b007117b303a05906ca8443a8b9bc38f7c44bd61475c5437b99e7c90d2"],
-  "video-slot-16-kpis": [402.154, 56052870, "439f8d06d2e449637509f0f21f9d0b4a5464c65aec1995fca7147e4e4e67310b"],
-  "video-slot-17-compensation": [181.013, 45346253, "cecad85478bb1a8ba5bfed7404dc045440c567ed0eaaa90b11b644e124b27846"],
-  "video-slot-18-operator": [378.858, 85657783, "6e6a3f257ff8cf3ef201de775de47c6e7833e3abd673e44bb8d4d5ac3aafa048"],
-  "video-slot-19-career": [252.949, 77199756, "1ddcf7b1b0b45bbc90ec14b3660b3d5f5a284b5095dd0d0682164924ce1a3da9"],
-};
 
 const VIDEO_SOURCES = [
   ["video-slot-01-welcome", 1, "Welcome and the Navigator's Playbook", "Part A", "course-assets/review-lessonA/LESSON-1A-v7.mp4"],
@@ -808,13 +806,34 @@ export async function validateArtworkManifestTrustBoundary(
   return reconciled;
 }
 
-async function buildVideoAsset([sourceKey, slot, title, partLabel, localPath]) {
+export function currentReviewedVideoRecord(sourceKey, approvalLedger) {
+  if (!REVIEWED_VIDEO_SOURCE_KEYS.has(sourceKey)) return null;
+  const records = approvalLedger?.records?.filter(
+    (record) => record.source_key === sourceKey,
+  ) ?? [];
+  if (records.length === 0) {
+    throw new Error(`Approval ledger is missing reviewed video ${sourceKey}`);
+  }
+  const eligible = records.filter(
+    (record) => !REPLACEMENT_REQUIRED_CUTS.has(approvalRecordKey(record)),
+  );
+  // The three known defective source cuts remain current evidence only until a
+  // newly checksum-keyed replacement is appended. Thereafter the last appended
+  // non-defective record is the current candidate; older records remain history.
+  return eligible.at(-1) ?? records.at(-1);
+}
+
+async function buildVideoAsset([sourceKey, slot, title, partLabel, defaultLocalPath], approvalLedger) {
+  const reviewRecord = currentReviewedVideoRecord(sourceKey, approvalLedger);
+  const localPath = reviewRecord?.candidate_local_path ?? defaultLocalPath;
   const fullPath = path.join(ASSET_ROOT, localPath);
-  const held = HELD_METADATA[sourceKey];
   const fileStat = await stat(fullPath);
-  const duration = held?.[0] ?? Number(execFileSync("ffprobe", ["-v", "error", "-show_entries", "format=duration", "-of", "default=noprint_wrappers=1:nokey=1", fullPath], { encoding: "utf8" }).trim());
-  const checksum = held?.[2] ?? await sha256(fullPath);
-  if (held && (fileStat.size !== held[1] || checksum !== held[2])) throw new Error(`${sourceKey} does not match locked hold metadata`);
+  const duration = Number(execFileSync("ffprobe", ["-v", "error", "-show_entries", "format=duration", "-of", "default=noprint_wrappers=1:nokey=1", fullPath], { encoding: "utf8" }).trim());
+  const checksum = await sha256(fullPath);
+  if (reviewRecord && checksum !== reviewRecord.sha256) {
+    throw new Error(`${sourceKey} does not match its checksum-keyed approval ledger record`);
+  }
+  const approvalStatus = reviewRecord?.decision === "approved" ? "approved" : reviewRecord ? "hold" : "approved";
   return {
     source_key: sourceKey,
     kind: "video",
@@ -823,7 +842,7 @@ async function buildVideoAsset([sourceKey, slot, title, partLabel, localPath]) {
     mime_type: "video/mp4",
     checksum_sha256: checksum,
     size_bytes: fileStat.size,
-    approval_status: held ? "hold" : "approved",
+    approval_status: approvalStatus,
     _slot: slot,
     _title: title,
     _partLabel: partLabel,
@@ -951,9 +970,26 @@ export async function buildGuideAsset(lesson) {
   };
 }
 
-export async function buildManifest({ artworkLedgerPath = ARTWORK_LEDGER_PATH } = {}) {
+export async function buildManifest({
+  artworkLedgerPath = ARTWORK_LEDGER_PATH,
+  videoApprovalLedgerPath = VIDEO_APPROVAL_LEDGER_PATH,
+} = {}) {
+  const videoApprovalLedger = JSON.parse(await readFile(videoApprovalLedgerPath, "utf8"));
   const videoAssetsWithMetadata = [];
-  for (const video of VIDEO_SOURCES) videoAssetsWithMetadata.push(await buildVideoAsset(video));
+  for (const video of VIDEO_SOURCES) {
+    videoAssetsWithMetadata.push(await buildVideoAsset(video, videoApprovalLedger));
+  }
+
+  const reviewedVideoAssets = videoAssetsWithMetadata.filter((asset) =>
+    REVIEWED_VIDEO_SOURCE_KEYS.has(asset.source_key),
+  );
+  const videoApprovalErrors = validateHeldVideoManifestApprovalState(
+    videoApprovalLedger,
+    reviewedVideoAssets,
+  );
+  if (videoApprovalErrors.length > 0) {
+    throw new Error(`Video approval ledger is invalid: ${videoApprovalErrors.join("; ")}`);
+  }
 
   const videosBySlot = Map.groupBy(videoAssetsWithMetadata, (asset) => asset._slot);
   const quizQuestionsBySlot = new Map();
@@ -1178,9 +1214,16 @@ export async function buildManifest({ artworkLedgerPath = ARTWORK_LEDGER_PATH } 
   return validateArtworkManifestTrustBoundary(manifest, artworkLedger);
 }
 
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+async function main() {
   const manifest = await buildManifest();
   await mkdir(path.dirname(OUTPUT_PATH), { recursive: true });
   await writeFile(OUTPUT_PATH, `${JSON.stringify(manifest, null, 2).replaceAll("\u2014", "-")}\n`);
   console.log(`Wrote ${OUTPUT_PATH}`);
+}
+
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  void main().catch((error) => {
+    console.error(error instanceof Error ? error.message : error);
+    process.exitCode = 1;
+  });
 }

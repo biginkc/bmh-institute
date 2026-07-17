@@ -14,7 +14,6 @@ import { test } from "node:test";
 
 import {
   CANONICAL_CHECKOUT,
-  EXPECTED_HELD_SOURCE_KEYS,
   MEDIA_ROOT_ENV,
   assertLockedFileUnchanged,
   assertHeldAssetMatchesLock,
@@ -32,6 +31,15 @@ const manifestPromise = readFile(
   new URL("./bmh-employee-training.v1.json", import.meta.url),
   "utf8",
 ).then(JSON.parse);
+const approvalLedgerPromise = readFile(
+  new URL("../../docs/course-production/held-video-review/approvals.json", import.meta.url),
+  "utf8",
+).then(JSON.parse);
+const expectedHeldSourceKeysPromise = manifestPromise.then((manifest) =>
+  manifest.assets
+    .filter((asset) => asset.kind === "video" && asset.approval_status === "hold")
+    .map((asset) => asset.source_key),
+);
 const configuredMediaRoot = resolveMediaRoot();
 let canonicalMediaAvailable = true;
 try {
@@ -82,8 +90,9 @@ test(
   },
   async () => {
     const result = await verificationPromise;
+    const expectedHeldSourceKeys = await expectedHeldSourceKeysPromise;
 
-    assert.deepEqual(result.sourceKeys, EXPECTED_HELD_SOURCE_KEYS);
+    assert.deepEqual(result.sourceKeys, expectedHeldSourceKeys);
     assert.equal(result.videoCount, 9);
     assert.equal(result.evidenceFileCount, 12);
     assert.equal(result.approvalLedgerRecordCount, 9);
@@ -98,6 +107,7 @@ test(
 );
 
 async function createSyntheticVerification(manifest) {
+  const approvalLedger = await approvalLedgerPromise;
   const fixtureRoot = await mkdtemp(join(tmpdir(), "held-review-server-"));
   const reviewHtml = renderHeldVideoReview(manifest, {
     mode: "verified",
@@ -106,6 +116,7 @@ async function createSyntheticVerification(manifest) {
       lockSha256: "a".repeat(64),
       verifiedAt: "2026-07-16T12:34:56.000Z",
     },
+    approvalLedger,
   });
   const routes = [
     ...new Set([
@@ -123,7 +134,8 @@ async function createSyntheticVerification(manifest) {
     "synthetic verification must cover the exact locked route set",
   );
 
-  const records = EXPECTED_HELD_SOURCE_KEYS.map((sourceKey, index) => ({
+  const expectedHeldSourceKeys = await expectedHeldSourceKeysPromise;
+  const records = expectedHeldSourceKeys.map((sourceKey, index) => ({
     source_key: sourceKey,
     decision: index < 6 ? "pending" : "changes_requested",
   }));
@@ -164,7 +176,7 @@ async function createSyntheticVerification(manifest) {
   return {
     cleanup: () => rm(fixtureRoot, { force: true, recursive: true }),
     verification: {
-      sourceKeys: EXPECTED_HELD_SOURCE_KEYS,
+      sourceKeys: expectedHeldSourceKeys,
       videoCount: 9,
       evidenceFileCount: 12,
       approvalLedgerRecordCount: 9,
@@ -173,6 +185,7 @@ async function createSyntheticVerification(manifest) {
       lockSha256: "b".repeat(64),
       mediaRoot: fixtureRoot,
       verifiedAt: "2026-07-16T12:34:56.000Z",
+      approvalLedger,
     },
   };
 }
@@ -210,6 +223,14 @@ test("the file-handle closer invokes close exactly once across competing complet
 });
 
 test("the review lock fails closed when a held cut changes", () => {
+  const approvalLedger = {
+    records: [{
+      source_key: "video-slot-01-welcome",
+      sha256: "1".repeat(64),
+      candidate_local_path: "course-assets/review-lessonA/LESSON-1A-v7.mp4",
+      decision: "pending",
+    }],
+  };
   assert.throws(
     () =>
       assertHeldAssetMatchesLock({
@@ -217,7 +238,7 @@ test("the review lock fails closed when a held cut changes", () => {
         local_path: "course-assets/review-lessonA/LESSON-1A-v8.mp4",
         checksum_sha256: "0".repeat(64),
         size_bytes: 1,
-      }),
+      }, approvalLedger),
     /Held cut changed in the manifest/,
   );
 });
@@ -295,14 +316,15 @@ test("a locked file is refused after its stat identity changes", async () => {
 });
 
 test("static and verified pages make trust state and caption availability explicit", async () => {
-  const manifest = await manifestPromise;
-  const staticHtml = renderHeldVideoReview(manifest);
+  const [manifest, approvalLedger] = await Promise.all([manifestPromise, approvalLedgerPromise]);
+  const staticHtml = renderHeldVideoReview(manifest, { approvalLedger });
   const verifiedHtml = renderHeldVideoReview(manifest, {
     mode: "verified",
     verification: {
       lockSha256: "a".repeat(64),
       verifiedAt: "2026-07-16T12:34:56.000Z",
     },
+    approvalLedger,
   });
 
   assert.match(staticHtml, /UNVERIFIED STATIC PAGE/);
@@ -314,7 +336,7 @@ test("static and verified pages make trust state and caption availability explic
     (staticHtml.match(/Checksum-locked QC evidence/g) || []).length,
     6,
   );
-  assert.match(staticHtml, /Six corrected candidates await Jarrad review/);
+  assert.match(staticHtml, /6 corrected candidates await Jarrad review/);
   assert.match(staticHtml, /Orientation → Welcome and Mindset/);
   assert.match(
     staticHtml,
@@ -368,6 +390,78 @@ test("static and verified pages make trust state and caption availability explic
     ).length,
     6,
   );
+});
+
+test("the review surface advances from original holds through replacement candidates to zero held", async () => {
+  const [baseManifest, baseLedger] = await Promise.all([manifestPromise, approvalLedgerPromise]);
+  const manifest = structuredClone(baseManifest);
+  const ledger = structuredClone(baseLedger);
+
+  for (const record of ledger.records.slice(0, 6)) {
+    Object.assign(record, {
+      decision: "approved",
+      approver: "Jarrad Henry",
+      date: "2026-07-17",
+      notes: "Watched and approved the exact checksum-locked cut.",
+    });
+    const asset = manifest.assets.find((candidate) =>
+      candidate.source_key === record.source_key && candidate.kind === "video",
+    );
+    asset.approval_status = "approved";
+  }
+
+  const sourceEvidenceHtml = renderHeldVideoReview(manifest, { approvalLedger: ledger });
+  assert.match(sourceEvidenceHtml, /0 corrected candidates await Jarrad review/);
+  assert.equal((sourceEvidenceHtml.match(/REPLACEMENT REQUIRED/g) || []).length, 3);
+
+  for (const [index, sourceKey] of [
+    "video-slot-17-compensation",
+    "video-slot-18-operator",
+    "video-slot-19-career",
+  ].entries()) {
+    const sha256 = String(index + 7).repeat(64);
+    const localPath = `course-assets/review-final/${sourceKey}.mp4`;
+    ledger.records.push({
+      source_key: sourceKey,
+      sha256,
+      candidate_local_path: localPath,
+      title: `${sourceKey} policy-safe replacement`,
+      decision: "pending",
+      approver: null,
+      date: null,
+      notes: null,
+    });
+    const asset = manifest.assets.find((candidate) =>
+      candidate.source_key === sourceKey && candidate.kind === "video",
+    );
+    Object.assign(asset, {
+      local_path: localPath,
+      checksum_sha256: sha256,
+      size_bytes: 1,
+      approval_status: "hold",
+    });
+  }
+
+  const replacementHtml = renderHeldVideoReview(manifest, { approvalLedger: ledger });
+  assert.match(replacementHtml, /3 corrected candidates await Jarrad review/);
+  assert.equal((replacementHtml.match(/REPLACEMENT REQUIRED/g) || []).length, 0);
+  assert.equal((replacementHtml.match(/JARRAD REVIEW REQUIRED/g) || []).length, 3);
+  assert.doesNotMatch(replacementHtml, /Review-only wording evidence/);
+
+  for (const record of ledger.records.slice(-3)) {
+    Object.assign(record, {
+      decision: "approved",
+      approver: "Jarrad Henry",
+      date: "2026-07-17",
+      notes: "Watched and approved the exact checksum-locked replacement.",
+    });
+    manifest.assets.find((candidate) =>
+      candidate.source_key === record.source_key && candidate.kind === "video",
+    ).approval_status = "approved";
+  }
+  const finalHtml = renderHeldVideoReview(manifest, { approvalLedger: ledger });
+  assert.match(finalHtml, /0 corrected candidates await Jarrad review/);
+  assert.doesNotMatch(finalHtml, /<article class="card"/);
 });
 
 test("the verified server serves only locked routes with no-store and byte ranges", async () => {

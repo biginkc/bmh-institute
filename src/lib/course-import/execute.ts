@@ -1,4 +1,5 @@
 import type { ImportPlan, ImportTable } from "./operations";
+import type { RemoteAssetProblem } from "./asset-transfer";
 import {
   assertCompletedUploadReceipt,
   type UploadReceiptExpectation,
@@ -60,8 +61,17 @@ export async function applyImportPlanWithUploadReceipt(options: {
   adapter: CourseImportAdapter;
   receiptPath: string;
   uploadExpectation: UploadReceiptExpectation;
+  verifyRemoteAssets: () => Promise<RemoteAssetProblem[]>;
 }) {
   await assertCompletedUploadReceipt(options.receiptPath, options.uploadExpectation);
+  const remoteProblems = await options.verifyRemoteAssets();
+  if (remoteProblems.length > 0) {
+    throw new Error(
+      `Remote asset verification failed immediately before database apply: ${remoteProblems
+        .map((problem) => `${problem.path}: ${problem.problem}`)
+        .join("; ")}`,
+    );
+  }
   await applyImportPlan(options.plan, options.adapter);
 }
 

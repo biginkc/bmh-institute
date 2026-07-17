@@ -23,6 +23,20 @@ test("only approved video cuts have complete caption and transcript assets", asy
   assert.deepEqual(report.errors, []);
 });
 
+test("file-backed release QA refuses absolute, traversal, and escaping caption paths", async () => {
+  for (const localPath of ["/etc/passwd", "../../outside.md"]) {
+    const manifest = await loadManifest(MANIFEST_URL);
+    const transcript = manifest.assets.find((asset) =>
+      asset.source_key === "transcript-video-slot-04-humanizing-a",
+    );
+    transcript.local_path = localPath;
+    const report = await inspectApprovedCaptionAssets(manifest, REPO_ROOT);
+    assert.ok(report.errors.some((error) =>
+      error.includes("local path escapes the repository trust root"),
+    ));
+  }
+});
+
 test("approved captions do not split punctuation or disagree with their transcripts", async () => {
   const manifest = await loadManifest(MANIFEST_URL);
   const approvedVideos = manifest.assets.filter(

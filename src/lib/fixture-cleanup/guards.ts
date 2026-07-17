@@ -1,5 +1,7 @@
 import { readFile } from "node:fs/promises";
 
+import { assertCanonicalSupabaseProjectUrl } from "@/lib/supabase/canonical-project-url";
+
 const PROJECT_REF = "dhvfsyteqsxagokoerrx";
 const MAX_ROLLBACK_AGE_MS = 24 * 60 * 60 * 1000;
 const MAX_APPROVAL_AGE_MS = 24 * 60 * 60 * 1000;
@@ -41,8 +43,9 @@ export function expectedProductionConfirmation(manifestSha256: string) {
 }
 
 export function assertProductionEnvironment(url: string) {
-  const parsed = new URL(url);
-  if (parsed.protocol !== "https:" || parsed.hostname !== `${PROJECT_REF}.supabase.co`) {
+  try {
+    assertCanonicalSupabaseProjectUrl(url, [PROJECT_REF]);
+  } catch {
     throw new Error(`Refusing unexpected production URL. Expected ${PROJECT_REF}.supabase.co.`);
   }
 }

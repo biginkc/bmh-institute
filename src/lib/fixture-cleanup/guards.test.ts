@@ -22,6 +22,18 @@ describe("fixture cleanup execution guards", () => {
     ).toThrow(/unexpected production URL/i);
   });
 
+  it.each([
+    "http://dhvfsyteqsxagokoerrx.supabase.co",
+    "https://user:password@dhvfsyteqsxagokoerrx.supabase.co",
+    "https://dhvfsyteqsxagokoerrx.supabase.co:443",
+    "https://dhvfsyteqsxagokoerrx.supabase.co/storage/v1",
+    "https://dhvfsyteqsxagokoerrx.supabase.co?execute=true",
+    "https://dhvfsyteqsxagokoerrx.supabase.co#production",
+    "not-a-url",
+  ])("rejects a non-canonical cleanup URL %s", (url) => {
+    expect(() => assertProductionEnvironment(url)).toThrow(/unexpected production URL/i);
+  });
+
   it("requires an exact separate human approval record", () => {
     expect(() =>
       validateExecutionApproval(

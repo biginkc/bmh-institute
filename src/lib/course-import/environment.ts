@@ -1,3 +1,5 @@
+import { assertCanonicalSupabaseProjectUrl } from "../supabase/canonical-project-url";
+
 const TEST_PROJECT_REF = "jvaabkchkihkjllehmft";
 const PRODUCTION_PROJECT_REF = "dhvfsyteqsxagokoerrx";
 
@@ -8,26 +10,18 @@ export function assertCourseImportEnvironment(
   rawUrl: string,
   allowProduction: boolean,
 ): "test" | "production" {
-  let url: URL;
+  let projectRef: string;
   try {
-    url = new URL(rawUrl);
+    projectRef = assertCanonicalSupabaseProjectUrl(rawUrl, [
+      TEST_PROJECT_REF,
+      PRODUCTION_PROJECT_REF,
+    ]);
   } catch {
-    throw new Error("Course import writes require a canonical Supabase project URL.");
-  }
-  if (
-    url.protocol !== "https:" ||
-    url.username !== "" ||
-    url.password !== "" ||
-    url.port !== "" ||
-    url.pathname !== "/" ||
-    url.search !== "" ||
-    url.hash !== ""
-  ) {
-    throw new Error("Course import writes require a canonical HTTPS Supabase project URL with no credentials, port, path, query, or fragment.");
+    throw new Error("Course import writes require the canonical BMH Institute test or production Supabase project URL with no credentials, port, path, query, or fragment.");
   }
 
-  if (url.hostname === `${TEST_PROJECT_REF}.supabase.co`) return "test";
-  if (url.hostname === `${PRODUCTION_PROJECT_REF}.supabase.co`) {
+  if (projectRef === TEST_PROJECT_REF) return "test";
+  if (projectRef === PRODUCTION_PROJECT_REF) {
     if (!allowProduction) {
       throw new Error("Production writes are blocked. Review the dry run and add --allow-production only at an approved gate.");
     }
