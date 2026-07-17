@@ -23,9 +23,20 @@ const manifestPromise = readFile(
   new URL("./bmh-employee-training.v1.json", import.meta.url),
   "utf8",
 ).then(JSON.parse);
-const verificationPromise = verifyHeldVideoReview();
+const configuredMediaRoot = resolveMediaRoot();
+let canonicalMediaAvailable = true;
+try {
+  await realpath(configuredMediaRoot);
+} catch {
+  canonicalMediaAvailable = false;
+}
+const verificationPromise = canonicalMediaAvailable
+  ? verifyHeldVideoReview({ mediaRoot: configuredMediaRoot })
+  : null;
 
-test("the local review surface is locked to every held manifest video", async () => {
+test("the local review surface is locked to every held manifest video", {
+  skip: canonicalMediaAvailable ? false : "canonical held-video files are not present on this runner",
+}, async () => {
   const result = await verificationPromise;
 
   assert.deepEqual(result.sourceKeys, EXPECTED_HELD_SOURCE_KEYS);
@@ -34,6 +45,76 @@ test("the local review surface is locked to every held manifest video", async ()
   assert.equal(result.approvalLedgerRecordCount, 9);
   assert.equal(result.htmlIsCurrent, true);
 });
+
+async function createSyntheticVerification(manifest) {
+  const fixtureRoot = await mkdtemp(join(tmpdir(), "held-review-server-"));
+  const reviewHtml = renderHeldVideoReview(manifest, {
+    mode: "verified",
+    mediaRoot: fixtureRoot,
+    verification: {
+      lockSha256: "a".repeat(64),
+      verifiedAt: "2026-07-16T12:34:56.000Z",
+    },
+  });
+  const routes = [...new Set(
+    [
+      ...[...reviewHtml.matchAll(/(?:src|href)="(\/(?:media|evidence|review)\/[^\"]+)"/g)]
+        .map((match) => match[1]),
+      "/approval-ledger.json",
+    ],
+  )];
+  assert.equal(routes.length, 16, "synthetic verification must cover the exact locked route set");
+
+  const records = EXPECTED_HELD_SOURCE_KEYS.map((sourceKey, index) => ({
+    source_key: sourceKey,
+    decision: index < 6 ? "pending" : "changes_requested",
+  }));
+  const files = [];
+  for (const [index, route] of routes.entries()) {
+    const absolutePath = join(fixtureRoot, `locked-${index}`);
+    let contents = "synthetic held-video review evidence\n";
+    let contentType = "text/markdown; charset=utf-8";
+    let kind = "transcript";
+    if (route.startsWith("/media/")) {
+      contents = "0123456789abcdef0123456789abcdef";
+      contentType = "video/mp4";
+      kind = "video";
+    } else if (route.endsWith(".vtt")) {
+      contents = "WEBVTT\n\n00:00.000 --> 00:01.000\nSynthetic caption.\n";
+      contentType = "text/vtt; charset=utf-8";
+      kind = "vtt";
+    } else if (route === "/approval-ledger.json") {
+      contents = `${JSON.stringify({ records })}\n`;
+      contentType = "application/json; charset=utf-8";
+      kind = "approval-ledger";
+    }
+    await writeFile(absolutePath, contents, "utf8");
+    files.push({
+      absolutePath,
+      contentType,
+      kind,
+      label: route,
+      route,
+      sha256: "b".repeat(64),
+      snapshot: await captureFileSnapshot(absolutePath),
+    });
+  }
+
+  return {
+    cleanup: () => rm(fixtureRoot, { force: true, recursive: true }),
+    verification: {
+      sourceKeys: EXPECTED_HELD_SOURCE_KEYS,
+      videoCount: 9,
+      evidenceFileCount: 6,
+      approvalLedgerRecordCount: 9,
+      htmlIsCurrent: true,
+      files,
+      lockSha256: "b".repeat(64),
+      mediaRoot: fixtureRoot,
+      verifiedAt: "2026-07-16T12:34:56.000Z",
+    },
+  };
+}
 
 test("the review lock fails closed when a held cut changes", () => {
   assert.throws(
@@ -150,7 +231,9 @@ test("static and verified pages make trust state and caption availability explic
 });
 
 test("the verified server serves only locked routes with no-store and byte ranges", async () => {
-  const [manifest, verification] = await Promise.all([manifestPromise, verificationPromise]);
+  const manifest = await manifestPromise;
+  const fixture = await createSyntheticVerification(manifest);
+  const { verification } = fixture;
   const runtime = createHeldVideoReviewServer({
     manifest,
     verification,
@@ -191,11 +274,14 @@ test("the verified server serves only locked routes with no-store and byte range
     assert.match(unknownResponse.headers.get("cache-control"), /no-store/);
   } finally {
     await runtime.close();
+    await fixture.cleanup();
   }
 });
 
 test("the verified server returns an integrity failure and stops for a stale stat lock", async () => {
-  const [manifest, verification] = await Promise.all([manifestPromise, verificationPromise]);
+  const manifest = await manifestPromise;
+  const fixture = await createSyntheticVerification(manifest);
+  const { verification } = fixture;
   const staleVerification = {
     ...verification,
     files: verification.files.map((file, index) => index === 0
@@ -221,5 +307,6 @@ test("the verified server returns an integrity failure and stops for a stale sta
     assert.match(await response.text(), /Integrity lock failed/);
   } finally {
     await runtime.close();
+    await fixture.cleanup();
   }
 });
