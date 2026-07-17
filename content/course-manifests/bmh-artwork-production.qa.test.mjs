@@ -8,14 +8,18 @@ import { createEmptyProductionRecord, sha256, validateProductionRecord } from ".
 
 const manifestPath = new URL("./bmh-employee-training.v1.json", import.meta.url);
 const inventoryPath = new URL("../../docs/course-production/thumbnail-pilots/production-inventory.json", import.meta.url);
-const pilotChecksumsPath = new URL("../../docs/course-production/thumbnail-pilots/v7-checksums.json", import.meta.url);
-const pilotGenerationLineagePath = new URL("../../docs/course-production/thumbnail-pilots/v7-generation-lineage.json", import.meta.url);
+const pilotChecksumsPath = new URL("../../docs/course-production/thumbnail-pilots/v8-checksums.json", import.meta.url);
+const pilotGenerationLineagePath = new URL("../../docs/course-production/thumbnail-pilots/v8-generation-lineage.json", import.meta.url);
+const pilotDerivativeConfigPath = new URL("../../docs/course-production/thumbnail-pilots/v8-derivative-config.json", import.meta.url);
+const pilotDerivativeReportPath = new URL("../../docs/course-production/thumbnail-pilots/v8-derivative-report.json", import.meta.url);
 
-const [manifest, inventory, pilotChecksums, pilotGenerationLineage] = await Promise.all([
+const [manifest, inventory, pilotChecksums, pilotGenerationLineage, pilotDerivativeConfig, pilotDerivativeReport] = await Promise.all([
   readFile(manifestPath, "utf8").then(JSON.parse),
   readFile(inventoryPath, "utf8").then(JSON.parse),
   readFile(pilotChecksumsPath, "utf8").then(JSON.parse),
   readFile(pilotGenerationLineagePath, "utf8").then(JSON.parse),
+  readFile(pilotDerivativeConfigPath, "utf8").then(JSON.parse),
+  readFile(pilotDerivativeReportPath, "utf8").then(JSON.parse),
 ]);
 
 const course = manifest.program.courses[0];
@@ -23,7 +27,7 @@ const contentLessons = course.modules.flatMap((module) => module.lessons.filter(
 const videoBlocks = contentLessons.flatMap((lesson) => lesson.blocks.filter((block) => block.type === "video"));
 
 test("artwork inventory is gated and contains the locked production counts", () => {
-  assert.equal(inventory.schema_version, "bmh-artwork-production/v3-candidate");
+  assert.equal(inventory.schema_version, "bmh-artwork-production/v4-candidate");
   assert.equal(inventory.status, "blocked-pending-pilot-approval");
   assert.equal(inventory.course_cover.asset_key, course.thumbnail_asset_key);
   assert.equal(inventory.lessons.length, 19);
@@ -108,8 +112,8 @@ test("three pilots map to their intended manifest topics and stay unapproved", (
   }
 });
 
-test("V7 pilots retain exact two-root single-character image_gen lineage", async () => {
-  assert.equal(pilotGenerationLineage.schema_version, "bmh-thumbnail-pilot-lineage/v3-candidate");
+test("V8 pilots retain exact two-root, single-character, pose-varied image_gen lineage", async () => {
+  assert.equal(pilotGenerationLineage.schema_version, "bmh-thumbnail-pilot-lineage/v4-candidate");
   assert.equal(pilotGenerationLineage.status, "awaiting-jarrad-approval");
   assert.equal(pilotGenerationLineage.contract.people_per_thumbnail, 1);
   assert.deepEqual(pilotGenerationLineage.contract.allowed_characters, ["andrea", "recurring-seller"]);
@@ -131,7 +135,7 @@ test("V7 pilots retain exact two-root single-character image_gen lineage", async
     const record = pilotGenerationLineage.records.find((candidate) => candidate.slug === lesson.pilot_review.slug);
     assert.ok(record, lesson.slot);
     assert.deepEqual(lesson.pilot_review.generation_lineage, record);
-    assert.equal(lesson.pilot_review.generation_lineage_record_path, "docs/course-production/thumbnail-pilots/v7-generation-lineage.json");
+    assert.equal(lesson.pilot_review.generation_lineage_record_path, "docs/course-production/thumbnail-pilots/v8-generation-lineage.json");
     assert.equal(lesson.pilot_review.lineage_schema_version, pilotGenerationLineage.schema_version);
     assert.deepEqual(lesson.pilot_review.identity_roots, pilotGenerationLineage.identity_roots);
 
@@ -147,9 +151,33 @@ test("V7 pilots retain exact two-root single-character image_gen lineage", async
       assert.equal(sha256(await readFile(new URL(`../../${locked.path}`, import.meta.url))), locked.sha256, locked.path);
     }
   }
-  const openingLock = pilotGenerationLineage.records.find((record) => record.slug === "opening-the-call").deterministic_character_lock;
-  assert.equal(openingLock.drift_pixels_flat_master, 0);
-  assert.equal(openingLock.drift_pixels_lesson_card, 0);
+  assert.equal(new Set(pilotGenerationLineage.records.map((record) => record.pose_label)).size, 3);
+  assert.equal(new Set(pilotGenerationLineage.records.map((record) => record.pose_signature)).size, 3);
+  const [orientation, opening] = pilotGenerationLineage.records.filter((record) => record.character_id === "andrea-approved");
+  assert.notEqual(orientation.pose_signature, opening.pose_signature);
+  assert.equal(opening.pose_label, "seated-desk-call");
+  assert.equal("deterministic_character_lock" in opening, false);
+});
+
+test("V8 contour normalization is explicit, mutually exclusive, and checksum bound", () => {
+  for (const pilot of pilotDerivativeConfig.pilots) {
+    assert.equal(
+      Boolean(pilot.black_contour_erosion_radius && pilot.black_contour_dilation_radius),
+      false,
+      pilot.slug,
+    );
+  }
+  const openingConfig = pilotDerivativeConfig.pilots.find((pilot) => pilot.slug === "opening-the-call");
+  const openingReport = pilotDerivativeReport.records.find((pilot) => pilot.slug === "opening-the-call");
+  const openingLineage = pilotGenerationLineage.records.find((pilot) => pilot.slug === "opening-the-call");
+  assert.equal(openingConfig.black_contour_erosion_radius, 1);
+  assert.deepEqual(openingReport.black_contour_erosion, {
+    radius: 1,
+    neighborhood: "eight-connected-majority-color",
+    removed_pixels: 18799,
+  });
+  assert.equal(openingLineage.deterministic_contour_normalization.removed_source_pixels, 18799);
+  assert.equal(openingReport.flat_master.sha256, pilotChecksums.assets.find((asset) => asset.slug === "opening-the-call").flat_master.sha256);
 });
 
 test("every generated master has an exact guarded prompt and provenance record", () => {
@@ -195,7 +223,7 @@ test("Opening pilot supplies only its card and Opening poster; Fact Find has a d
   assert.equal(factFindPoster.direct_master.id, "master-poster-video-slot-07-fact-find");
   assert.equal(factFindPoster.direct_master.source_path, "course-assets/posters/production/sources/video-slot-07-fact-find-generated.png");
   assert.equal(factFindPoster.direct_master.flat_master_path, "course-assets/posters/production/flat-masters/video-slot-07-fact-find-flat-master.png");
-  assert.deepEqual(factFindPoster.direct_master.reference_ids, ["style-ref-1", "style-ref-2"]);
+  assert.deepEqual(factFindPoster.direct_master.reference_ids, ["style-ref-1", "style-ref-2", "andrea-approved"]);
   assert.equal(factFindPoster.direct_master.prompt_sha256, sha256(factFindPoster.direct_master.prompt));
   assert.equal(factFindPoster.direct_master.provenance.planned_generation_call_id, "imagegen-poster-video-slot-07-fact-find");
   assert.equal(factFindPoster.derivative.source_master_id, factFindPoster.direct_master.id);
@@ -293,7 +321,10 @@ test("poster recipes are distinct, subject matched, and safely derived", () => {
       assert.equal(poster.derivative.target_dimensions.join("x"), "1280x720");
       assert.deepEqual(poster.derivative.normalize_master_dimensions, [1280, 720]);
       assert.equal(poster.derivative.normalize_method, "contain-with-padding");
-      assert.deepEqual(poster.derivative.normalize_background_rgb, lesson.master.background_rgb);
+      assert.deepEqual(
+        poster.derivative.normalize_background_rgb,
+        poster.direct_master?.background_rgb ?? lesson.master.background_rgb,
+      );
       assert.deepEqual(
         poster.derivative.crop_pixels_after_normalize,
         {

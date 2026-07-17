@@ -30,7 +30,7 @@ recurring characters.
 The active source order is:
 
 1. The checksum-locked Andrea and recurring-seller references control identity,
-   wardrobe, skin, line weight, scale, and placement.
+   wardrobe language, skin, proportions, and line weight.
 2. The bottom thumbnail cards in the supplied website screenshot control the
    minimal composition and blue/yellow background system.
 3. The mapped lesson video and objectives control one compact teaching cue.
@@ -45,17 +45,20 @@ V6 incorrectly interpreted “Andrea or the seller” as “Andrea and the selle
 It placed both people on every thumbnail and is retained only as rejected
 generation evidence.
 
-## Active v7 single-character direction
+## Active v8 single-character, pose-varied direction
 
 Every thumbnail must contain exactly one recurring character: Andrea or the
 recurring unnamed curly-haired seller, never both. The mapped lesson and video
 determine which character is appropriate. A minimal lesson cue and the locked
-blue/yellow backgrounds provide the remaining variation.
+blue/yellow backgrounds provide additional variation. Character identity is
+stable, but posture, position, angle, gesture, and lesson-appropriate props must
+vary between independently generated masters.
 
 The binding identities are the approved Andrea headset asset and the approved
 Fact Find seller anchor. The seller is the compact-curled man in an orange
 long-sleeve sweater and cream pants; he must not be replaced by Jim, Ray, Mark,
-David, or the yellow-shirt Lesson 7B drill seller. V7 uses Andrea for Orientation,
+David, or the yellow-shirt Lesson 7B drill seller. V8 uses Andrea for Orientation,
 Andrea for Opening the Call, and the recurring seller for Objection Architecture.
-Andrea's character pixels, proportions, dimensions, and placement are locked
-identically between her two cards.
+Orientation shows Andrea standing; Opening shows Andrea seated at a desk in a
+three-quarter call posture. Her identity and proportions remain recognizable,
+but her stance and placement are intentionally not pixel-locked.

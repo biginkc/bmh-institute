@@ -1,0 +1,11 @@
+Use case: style-transfer
+Asset type: BMH Institute Opening the Call lesson-thumbnail pilot, wide 16:9 master with safe 16:10 card framing
+Primary request: Edit Image 1 into a posture-varied Andrea composition. Andrea is now seated at a small simple desk in a natural three-quarter angle, actively opening a phone call through her headset. Change her pose and body arrangement substantially from the standing front-facing version while preserving her recognizable identity.
+Input images: Image 1 is the edit target and supplies the existing phone cue and wardrobe. Image 2 is the approved Andrea identity reference. Images 3 and 4 are the canonical BMH flat Sticker System style references. Image 5 is lesson-video evidence for the phone-call topic only.
+Scene/backdrop: perfectly uniform flat cornflower blue #67B6FF field; floating sticker composition, not a room
+Subject: exactly one person, Andrea only. Preserve her black curly hair silhouette, friendly minimal face, pure-white skin fill on face and hands, yellow long-sleeve top, orange pants, simple yellow shoes, and orange headset. Seat her behind a minimal flat cream or white desktop with two simple black legs or one compact pedestal. Show her torso angled slightly to one side, one forearm resting on the desk and the other hand gesturing naturally as she speaks. Keep the orange telephone handset and three black sound marks as the only floating lesson cue.
+Style/medium: hand-drawn flat sticker illustration; thick slightly wobbly black outlines; rounded imperfect primitive geometry; locked flat palette only
+Composition/framing: Andrea and the desk centered slightly right, desk fully visible and contained, telephone cue above-left, generous negative space, all meaningful content within the central 80%
+Color palette: cornflower blue, golden yellow, orange, cream, pure white, and black; flat fills only
+Constraints: exactly one person; Andrea OR seller rule means no seller here; preserve Andrea identity but explicitly do not preserve the old standing pose; pure-white skin; no text, logo, watermark, room, wall, floor, scenery, laptop, extra chair, second person, gradient, texture, lighting, shadow, reflection, or depth
+Avoid: same front-facing standing stance, duplicated character, photorealism, 3D rendering, detailed furniture, busy office scene, cropped desk or body

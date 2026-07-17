@@ -7,8 +7,8 @@ the pilots, generate new images, update manifest approvals, upload files, or
 publish course content.
 
 The canonical production inventory and still-pending ledger now bind the exact
-V7 pilot bytes through `v7-generation-lineage.json` and the honest
-`bmh-thumbnail-pilot-lineage/v3-candidate` contract. It supports exactly two
+V8 pilot bytes through `v8-generation-lineage.json` and the honest
+`bmh-thumbnail-pilot-lineage/v4-candidate` contract. It supports exactly two
 identity roots while requiring one person per thumbnail: Andrea or the recurring
 seller, never both. Superseded V1/V2 bytes remain only as rejection history and
 legacy regression fixtures.
@@ -161,11 +161,13 @@ master. If a focused poster depicts another video's subject, reject it. If two
 posters have the same final pixel SHA-256, reject both until the duplicate is
 resolved.
 
-## Version 2 lineage and color contract
+## Lineage versions and color contract
 
-The inventory builder accepts canonical pilot lineage versions 1 and 2. It does
-not infer version 2 from filenames, candidate ledgers, dates, or image contents.
-Version 2 uses this shape (irrelevant fields omitted here only for readability):
+The inventory builder retains versions 1 and 2 as legacy regression contracts,
+accepts the V7 two-identity `v3-candidate`, and binds the current pose-varied V8
+set through `v4-candidate`. It does not infer a version from filenames,
+candidate ledgers, dates, or image contents. Version 2 uses this legacy shape
+(irrelevant fields omitted here only for readability):
 
 ```json
 {
@@ -320,7 +322,7 @@ The approval artifact uses this exact schema:
     "pilot_bindings_sha256": "<SHA-256 defined below>"
   },
   "inventory_sha256": "<SHA-256 of exact production-inventory.json bytes>",
-  "generation_lineage_sha256": "<SHA-256 of exact v7-generation-lineage.json bytes>",
+  "generation_lineage_sha256": "<SHA-256 of exact v8-generation-lineage.json bytes>",
   "pilot_bindings": [
     {
       "slug": "orientation",
@@ -405,10 +407,10 @@ npm run artwork:production -- verify
 npm run test:artwork-production
 ```
 
-The V7 migration is already staged in the canonical preapproval inventory and
-ledger. Re-run the V7 derivative check, inventory builder check, artwork contract
+The V8 migration is staged in the canonical preapproval inventory and ledger.
+Re-run the V8 derivative check, inventory builder check, artwork contract
 tests, and ledger verification before recording approval. Only the exact
-deterministic V7 cards and posters may appear in the checksum-bound review
+deterministic V8 cards and posters may appear in the checksum-bound review
 request. Approval of an earlier preview does not approve these bytes. The
 `init` command's refusal to overwrite a non-identical ledger remains a safety
 gate, not an error to bypass by hand-editing mutable production state.

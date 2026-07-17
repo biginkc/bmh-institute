@@ -7,6 +7,8 @@ import test from "node:test";
 
 import sharp from "sharp";
 
+import { getArtworkPose } from "./artwork-pose-contract.mjs";
+
 import {
   DEFAULT_PATHS,
   REPO_ROOT,
@@ -145,6 +147,44 @@ function sharedParentInventory() {
   return candidate;
 }
 
+function poseVariationInventory() {
+  const candidate = structuredClone(inventory);
+  candidate.schema_version = "bmh-artwork-production/v4-candidate";
+  const applyDirection = (target, masterId) => {
+    const direction = structuredClone(getArtworkPose(masterId));
+    target.art_direction = direction;
+    if ("background_rgb" in target) target.background_rgb = structuredClone(direction.background_rgb);
+    return direction;
+  };
+
+  const coverDirection = applyDirection(candidate.course_cover, candidate.course_cover.id);
+  candidate.course_cover.derivative.normalize_background_rgb = structuredClone(coverDirection.background_rgb);
+  candidate.course_cover.derivative.padding_color_rgb = structuredClone(coverDirection.background_rgb);
+
+  for (const lesson of candidate.lessons) {
+    const lessonDirection = applyDirection(lesson.master, lesson.master.id);
+    lesson.art_direction = structuredClone(lessonDirection);
+    lesson.lesson_card.art_direction = structuredClone(lessonDirection);
+    lesson.lesson_card.derivative.normalize_background_rgb = structuredClone(lessonDirection.background_rgb);
+    lesson.lesson_card.derivative.padding_color_rgb = structuredClone(lessonDirection.background_rgb);
+    for (const poster of lesson.posters) {
+      const masterId = poster.direct_master?.id ?? lesson.master.id;
+      const posterDirection = structuredClone(getArtworkPose(masterId));
+      poster.art_direction = posterDirection;
+      poster.derivative.normalize_background_rgb = structuredClone(posterDirection.background_rgb);
+      if (poster.direct_master) applyDirection(poster.direct_master, masterId);
+    }
+    if (lesson.pilot) {
+      lesson.pilot_review.lineage_schema_version = "bmh-thumbnail-pilot-lineage/v4-candidate";
+      const lineage = lesson.pilot_review.generation_lineage;
+      lineage.pose_label = lessonDirection.pose_id;
+      lineage.pose_signature = lessonDirection.lineage_pose_signature;
+      delete lineage.deterministic_character_lock;
+    }
+  }
+  return candidate;
+}
+
 function pilotBindings(ledger) {
   const bySlug = new Map(ledger.masters.filter((master) => master.pilot).map((master) => [master.pilot.slug, master]));
   return ["orientation", "opening-the-call", "objection-architecture"].map((slug) => {
@@ -215,6 +255,36 @@ test("tracked ledger is the exact fail-closed preapproval contract", async () =>
     manifest,
     ledger: tracked,
   });
+});
+
+test("v4 inventory preserves one-person pose variation across every master and derived output", () => {
+  const candidate = poseVariationInventory();
+  const ledger = createInitialLedger(candidate);
+  assert.equal(ledger.masters.length, 21);
+  assert.equal(ledger.assets.length, 49);
+  assert.equal(new Set(ledger.masters.map((master) => master.art_direction.pose_id)).size, 21);
+  assert.equal(ledger.assets.every((asset) => asset.art_direction.people_count === 1 && asset.art_direction.skin_fill === "pure white"), true);
+
+  const pilots = ledger.masters.filter((master) => master.pilot);
+  assert.deepEqual(
+    pilots.map((master) => [master.pilot.slug, master.pilot.lineage.pose_label]),
+    [
+      ["orientation", "standing-welcome"],
+      ["opening-the-call", "seated-desk-call"],
+      ["objection-architecture", "standing-reframe-gesture"],
+    ],
+  );
+  assert.notEqual(pilots[0].pilot.lineage.pose_signature, pilots[1].pilot.lineage.pose_signature);
+
+  const duplicateAndrea = poseVariationInventory();
+  const orientation = duplicateAndrea.lessons.find((lesson) => lesson.pilot_review?.slug === "orientation");
+  const opening = duplicateAndrea.lessons.find((lesson) => lesson.pilot_review?.slug === "opening-the-call");
+  opening.pilot_review.generation_lineage.pose_signature = orientation.pilot_review.generation_lineage.pose_signature;
+  assert.throws(() => createInitialLedger(duplicateAndrea), /pose signature|globally unique|drifts/i);
+
+  const twoPeople = poseVariationInventory();
+  twoPeople.lessons[1].master.art_direction.people_count = 2;
+  assert.throws(() => createInitialLedger(twoPeople), /exactly one person/i);
 });
 
 test("validator rejects immutable palette, counts, pilot, and output-plan drift", async () => {

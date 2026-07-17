@@ -55,6 +55,20 @@ function assertRecipeRgb(value, palette, label) {
   return clone(value);
 }
 
+function assertArtDirection(value, palette, label) {
+  assert(value && typeof value === "object" && !Array.isArray(value), `${label} art direction is required`);
+  assertString(value.pose_id, `${label} pose_id`);
+  assert(value.people_count === 1, `${label} must depict exactly one person`);
+  assert(["andrea-approved", "recurring-seller-approved"].includes(value.character_id), `${label} character must be Andrea or the recurring seller`);
+  assert(value.skin_fill === "pure white", `${label} skin fill must be pure white`);
+  for (const field of ["posture", "orientation", "gesture", "placement", "prop", "lesson_or_video_cue", "pose_instruction"]) {
+    assertString(value[field], `${label} ${field}`);
+  }
+  assert(/exactly one person/i.test(value.pose_instruction), `${label} pose instruction must state the one-person rule`);
+  assertRecipeRgb(value.background_rgb, palette, `${label} background`);
+  return clone(value);
+}
+
 export function resolveRepoPath(root, relativePath) {
   assertString(relativePath, "repository path");
   assert(!path.isAbsolute(relativePath), `Path must be repository-relative: ${relativePath}`);
@@ -216,6 +230,7 @@ function baseOutput(asset, masterId, recipe) {
     history: [],
     dimensions: recipe.target_dimensions,
     kind: recipe.kind,
+    ...(asset.art_direction ? { art_direction: clone(asset.art_direction) } : {}),
     provenance: {
       master_id: masterId,
       source_master_id: masterId,
@@ -283,7 +298,7 @@ function posterRecipe(poster, palette) {
   };
 }
 
-function baseMaster({ id, kind, sourceMode, plannedCallId, promptSha256, referenceIds, referenceInputs, sourcePath, flatMasterPath, backgroundRgb, pilot, outputs }) {
+function baseMaster({ id, kind, sourceMode, plannedCallId, promptSha256, referenceIds, referenceInputs, sourcePath, flatMasterPath, backgroundRgb, artDirection, pilot, outputs }) {
   return {
     id,
     kind,
@@ -295,6 +310,7 @@ function baseMaster({ id, kind, sourceMode, plannedCallId, promptSha256, referen
     source_path: sourcePath,
     flat_master_path: flatMasterPath,
     ...(backgroundRgb ? { background_rgb: clone(backgroundRgb) } : {}),
+    ...(artDirection ? { art_direction: clone(artDirection) } : {}),
     pilot,
     status: "missing",
     terminal_source_sha256: null,
@@ -315,14 +331,15 @@ function isTwoIdentityPilotLineage(lineage) {
   return typeof lineage?.character_id === "string" && lineage?.generation && !Array.isArray(lineage.character_id);
 }
 
-const V3_PILOT_CHARACTERS = Object.freeze({
+const TWO_IDENTITY_PILOT_CHARACTERS = Object.freeze({
   orientation: "andrea-approved",
   "opening-the-call": "andrea-approved",
   "objection-architecture": "recurring-seller-approved",
 });
 
-function assertV3IdentityContract(pilotReview, label) {
-  assert(pilotReview.lineage_schema_version === "bmh-thumbnail-pilot-lineage/v3-candidate", `${label} v3 lineage schema is invalid`);
+function assertTwoIdentityContract(pilotReview, label, poseVariation = false) {
+  const expectedSchema = poseVariation ? "bmh-thumbnail-pilot-lineage/v4-candidate" : "bmh-thumbnail-pilot-lineage/v3-candidate";
+  assert(pilotReview.lineage_schema_version === expectedSchema, `${label} ${poseVariation ? "v4" : "v3"} lineage schema is invalid`);
   assert(pilotReview.identity_contract?.people_per_thumbnail === 1, `${label} must depict exactly one person`);
   assert(JSON.stringify(pilotReview.identity_contract?.allowed_characters) === JSON.stringify(["andrea", "recurring-seller"]), `${label} allowed character ids drifted`);
   assert(pilotReview.identity_contract?.selection_rule === "Andrea or the recurring seller, never both; the lesson and exact source video determine the character and cue", `${label} Andrea-or-seller selection rule drifted`);
@@ -338,7 +355,7 @@ function assertV3IdentityContract(pilotReview, label) {
     assert(root?.path === expectedPath && SHA256.test(root?.sha256), `${label} identity root ${id} is invalid`);
   }
   const lineage = pilotReview.generation_lineage;
-  const expectedCharacter = V3_PILOT_CHARACTERS[lineage.slug];
+  const expectedCharacter = TWO_IDENTITY_PILOT_CHARACTERS[lineage.slug];
   assert(expectedCharacter && lineage.character_id === expectedCharacter, `${label} exact character id drifted`);
   assert(!("character_ids" in lineage), `${label} violates the one-person character contract`);
   assert(rootsById.has(lineage.character_id), `${label} character does not resolve to an identity root`);
@@ -363,6 +380,11 @@ function assertV3IdentityContract(pilotReview, label) {
   } else {
     assert(lineage.generation.parent_path === undefined && lineage.generation.parent_sha256 === undefined, `${label} generation cannot have an edit parent`);
   }
+  if (poseVariation) {
+    assertString(lineage.pose_label, `${label} pose_label`);
+    assertString(lineage.pose_signature, `${label} pose_signature`);
+    assert(!("deterministic_character_lock" in lineage), `${label} v4 cannot use an identical-pixel character lock`);
+  }
 }
 
 function assertPilotToolEvidence(evidence, label) {
@@ -385,8 +407,8 @@ function pilotPlan(pilotReview) {
     checksum_record_path: pilotReview.checksum_record_path,
     lineage_record_path: pilotReview.generation_lineage_record_path,
   };
-  if (pilotReview.lineage_schema_version === "bmh-thumbnail-pilot-lineage/v3-candidate") {
-    assertV3IdentityContract(pilotReview, plan.slug);
+  if (pilotReview.lineage_schema_version === "bmh-thumbnail-pilot-lineage/v3-candidate" || pilotReview.lineage_schema_version === "bmh-thumbnail-pilot-lineage/v4-candidate") {
+    assertTwoIdentityContract(pilotReview, plan.slug, pilotReview.lineage_schema_version === "bmh-thumbnail-pilot-lineage/v4-candidate");
     plan.lineage_schema_version = pilotReview.lineage_schema_version;
     plan.identity_contract = clone(pilotReview.identity_contract);
     plan.identity_roots = clone(pilotReview.identity_roots);
@@ -461,10 +483,17 @@ function assertPilotV2GlobalUniqueness(masters) {
 }
 
 export function createInitialLedger(inventory) {
-  assert(inventory.schema_version === "bmh-artwork-production/v1" || inventory.schema_version === "bmh-artwork-production/v2" || inventory.schema_version === "bmh-artwork-production/v3-candidate", "Unsupported artwork inventory");
+  assert(
+    inventory.schema_version === "bmh-artwork-production/v1" ||
+      inventory.schema_version === "bmh-artwork-production/v2" ||
+      inventory.schema_version === "bmh-artwork-production/v3-candidate" ||
+      inventory.schema_version === "bmh-artwork-production/v4-candidate",
+    "Unsupported artwork inventory",
+  );
   const inventoryV2 = inventory.schema_version === "bmh-artwork-production/v2";
   const inventoryV3 = inventory.schema_version === "bmh-artwork-production/v3-candidate";
-  const inventoryHasLockedBackgrounds = inventoryV2 || inventoryV3;
+  const inventoryV4 = inventory.schema_version === "bmh-artwork-production/v4-candidate";
+  const inventoryHasLockedBackgrounds = inventoryV2 || inventoryV3 || inventoryV4;
   const palette = inventory.style_system?.palette_rgb;
   const referencesById = new Map(inventory.style_system.reference_inputs.map((reference) => [reference.id, reference]));
   const resolveReferences = (ids) =>
@@ -479,6 +508,7 @@ export function createInitialLedger(inventory) {
 
   const coverMasterId = inventory.course_cover.id ?? "master-program-bmh-employee-training";
   const coverBackground = inventoryHasLockedBackgrounds ? assertRecipeRgb(inventory.course_cover.background_rgb, palette, "course-cover master background") : null;
+  const coverArtDirection = inventoryV4 ? assertArtDirection(inventory.course_cover.art_direction, palette, "course-cover") : null;
   const coverRecipe = cardRecipe(inventory.course_cover.derivative, palette, "course-cover");
   const coverOutput = baseOutput(inventory.course_cover, coverMasterId, coverRecipe);
   outputs.push(coverOutput);
@@ -494,6 +524,7 @@ export function createInitialLedger(inventory) {
       sourcePath: inventory.course_cover.source_path,
       flatMasterPath: inventory.course_cover.flat_master_path,
       backgroundRgb: coverBackground,
+      artDirection: coverArtDirection,
       pilot: null,
       outputs: [
         {
@@ -509,6 +540,7 @@ export function createInitialLedger(inventory) {
     const masterId = lesson.master.id;
     const lessonRecipe = cardRecipe(lesson.lesson_card.derivative, palette);
     const lessonBackground = inventoryHasLockedBackgrounds ? assertRecipeRgb(lesson.master.background_rgb, palette, `${lesson.master.id} background`) : null;
+    const lessonArtDirection = inventoryV4 ? assertArtDirection(lesson.master.art_direction, palette, lesson.master.id) : null;
     const lessonOutput = baseOutput(lesson.lesson_card, masterId, lessonRecipe);
     outputs.push(lessonOutput);
     const masterOutputs = [
@@ -540,6 +572,7 @@ export function createInitialLedger(inventory) {
         sourcePath: lesson.master.source_path,
         flatMasterPath: lesson.master.flat_master_path,
         backgroundRgb: lessonBackground,
+        artDirection: lessonArtDirection,
         pilot: lesson.pilot ? pilotPlan(lesson.pilot_review) : null,
         outputs: masterOutputs,
       }),
@@ -549,6 +582,7 @@ export function createInitialLedger(inventory) {
       const direct = poster.direct_master;
       const directId = direct.id;
       const directBackground = inventoryHasLockedBackgrounds ? assertRecipeRgb(direct.background_rgb, palette, `${directId} background`) : null;
+      const directArtDirection = inventoryV4 ? assertArtDirection(direct.art_direction, palette, directId) : null;
       const recipe = posterRecipe(poster, palette);
       const output = baseOutput(poster, directId, recipe);
       outputs.push(output);
@@ -564,6 +598,7 @@ export function createInitialLedger(inventory) {
           sourcePath: direct.source_path,
           flatMasterPath: direct.flat_master_path,
           backgroundRgb: directBackground,
+          artDirection: directArtDirection,
           pilot: null,
           outputs: [
             {
@@ -601,10 +636,16 @@ export function createInitialLedger(inventory) {
   const plannedCallIds = masters.map((master) => master.planned_generation_call_id).filter(Boolean);
   assert(new Set(plannedCallIds).size === 18, "Planned generation call IDs must be unique");
   assert(
-    masters.filter((master) => master.pilot).every((master) => isSharedPilotLineage(master.pilot.lineage) === inventoryV2 && isTwoIdentityPilotLineage(master.pilot.lineage) === inventoryV3),
+    masters
+      .filter((master) => master.pilot)
+      .every(
+        (master) =>
+          isSharedPilotLineage(master.pilot.lineage) === inventoryV2 &&
+          isTwoIdentityPilotLineage(master.pilot.lineage) === (inventoryV3 || inventoryV4),
+      ),
     `Artwork inventory ${inventory.schema_version} has an incompatible pilot lineage schema`,
   );
-  if (inventoryV3) {
+  if (inventoryV3 || inventoryV4) {
     const pilots = masters.filter((master) => master.pilot);
     assert(
       JSON.stringify(pilots.map((master) => [master.pilot.slug, master.pilot.lineage.character_id])) ===
@@ -613,9 +654,31 @@ export function createInitialLedger(inventory) {
           ["opening-the-call", "andrea-approved"],
           ["objection-architecture", "recurring-seller-approved"],
         ]),
-      "Artwork inventory v3 mixed the exact pilot character identities",
+      `Artwork inventory ${inventoryV4 ? "v4" : "v3"} mixed the exact pilot character identities`,
     );
-    assert(new Set(pilots.flatMap((master) => master.pilot.identity_roots.map((root) => root.id))).size === 2, "Artwork inventory v3 identity roots drifted");
+    assert(new Set(pilots.flatMap((master) => master.pilot.identity_roots.map((root) => root.id))).size === 2, `Artwork inventory ${inventoryV4 ? "v4" : "v3"} identity roots drifted`);
+  }
+  if (inventoryV4) {
+    const poseIds = masters.map((master) => master.art_direction.pose_id);
+    assert(new Set(poseIds).size === masters.length, "Artwork inventory v4 repeats an independently generated pose_id");
+    for (const master of masters) {
+      assert(JSON.stringify(master.art_direction.background_rgb) === JSON.stringify(master.background_rgb), `${master.id} art direction background drifts from its render background`);
+      for (const outputBinding of master.outputs) {
+        const output = outputs.find((candidate) => candidate.asset_key === outputBinding.asset_key);
+        assert(JSON.stringify(output?.art_direction) === JSON.stringify(master.art_direction), `${outputBinding.asset_key} must inherit its source master's exact art direction`);
+      }
+    }
+    const pilots = masters.filter((master) => master.pilot);
+    const poseLabels = pilots.map((master) => master.pilot.lineage.pose_label);
+    const poseSignatures = pilots.map((master) => master.pilot.lineage.pose_signature);
+    assert(new Set(poseLabels).size === pilots.length, "Artwork inventory v4 pilot pose labels must be globally unique");
+    assert(new Set(poseSignatures).size === pilots.length, "Artwork inventory v4 pilot pose signatures must be globally unique");
+    for (const master of pilots) {
+      assert(master.art_direction.pose_id === master.pilot.lineage.pose_label, `${master.pilot.slug} pose label drifts from production art direction`);
+      assert(master.art_direction.lineage_pose_signature === master.pilot.lineage.pose_signature, `${master.pilot.slug} pose signature drifts from production art direction`);
+    }
+    const andreaPilots = pilots.filter((master) => master.pilot.lineage.character_id === "andrea-approved");
+    assert(andreaPilots.length === 2 && andreaPilots[0].pilot.lineage.pose_signature !== andreaPilots[1].pilot.lineage.pose_signature, "Artwork inventory v4 must vary Andrea's pose between pilots");
   }
   assertPilotV2GlobalUniqueness(masters);
 
@@ -1390,7 +1453,7 @@ function pilotLineage(master, ledger) {
         correction_prompt_path: generation.operation === "edit" ? generation.prompt_path : null,
         correction_prompt_sha256: generation.operation === "edit" ? generation.prompt_sha256 : null,
         parent_source_sha256: generation.operation === "edit" ? generation.parent_sha256 : null,
-        generation_call_id: `v7-candidate-${candidate.slug}`,
+        generation_call_id: `${master.pilot.lineage_schema_version === "bmh-thumbnail-pilot-lineage/v4-candidate" ? "v8" : "v7"}-candidate-${candidate.slug}`,
         tool_output_id: generation.tool_output_id,
         generated_by: "built-in image_gen candidate admitted by Jarrad approval",
         completed_at: ledger.pilot_approval.approved_at,

@@ -254,6 +254,15 @@ function dilateBlackContours(flat, radius) {
     for (let column = 0; column < flat.width; column += 1) {
       const offset = (row * flat.width + column) * 3;
       if (!matchesRgb(original, offset, [0, 0, 0])) continue;
+
+      // Generated contours were one source pixel heavier than the approved
+      // references. Remove only the north/west-exposed edge so a five-pixel
+      // stroke becomes four pixels instead of shrinking on both sides to three.
+      const northOffset = row > 0 ? ((row - 1) * flat.width + column) * 3 : null;
+      const westOffset = column > 0 ? (row * flat.width + column - 1) * 3 : null;
+      const northExposed = northOffset === null || !matchesRgb(original, northOffset, [0, 0, 0]);
+      const westExposed = westOffset === null || !matchesRgb(original, westOffset, [0, 0, 0]);
+      if (!northExposed && !westExposed) continue;
       for (
         let targetRow = Math.max(0, row - radius);
         targetRow <= Math.min(flat.height - 1, row + radius);
@@ -291,6 +300,63 @@ function dilateBlackContours(flat, radius) {
     radius,
     pattern: "cross-plus-checkerboard-diagonals",
     added_pixels: addedPixels,
+  };
+}
+
+function erodeBlackContours(flat, radius) {
+  assert(
+    Number.isInteger(radius) && radius === 1,
+    "Black contour erosion radius must be exactly one pixel",
+  );
+  const original = Buffer.from(flat.data);
+  let removedPixels = 0;
+
+  for (let row = 0; row < flat.height; row += 1) {
+    for (let column = 0; column < flat.width; column += 1) {
+      const offset = (row * flat.width + column) * 3;
+      if (!matchesRgb(original, offset, [0, 0, 0])) continue;
+
+      const neighboringColors = new Map();
+      for (
+        let targetRow = Math.max(0, row - radius);
+        targetRow <= Math.min(flat.height - 1, row + radius);
+        targetRow += 1
+      ) {
+        for (
+          let targetColumn = Math.max(0, column - radius);
+          targetColumn <= Math.min(flat.width - 1, column + radius);
+          targetColumn += 1
+        ) {
+          if (targetRow === row && targetColumn === column) continue;
+          const targetOffset = (targetRow * flat.width + targetColumn) * 3;
+          if (matchesRgb(original, targetOffset, [0, 0, 0])) continue;
+          const key = `${original[targetOffset]},${original[targetOffset + 1]},${original[targetOffset + 2]}`;
+          neighboringColors.set(key, (neighboringColors.get(key) ?? 0) + 1);
+        }
+      }
+      if (neighboringColors.size === 0) continue;
+
+      const [replacement] = [...neighboringColors.entries()].sort(
+        ([leftColor, leftCount], [rightColor, rightCount]) =>
+          rightCount - leftCount || leftColor.localeCompare(rightColor),
+      )[0];
+      const [red, green, blue] = replacement.split(",").map(Number);
+      flat.data[offset] = red;
+      flat.data[offset + 1] = green;
+      flat.data[offset + 2] = blue;
+      removedPixels += 1;
+    }
+  }
+
+  assert(
+    removedPixels > 0,
+    "Black contour erosion did not change the illustration",
+  );
+  return {
+    radius,
+    exposure: "north-or-west-boundary",
+    replacement: "eight-connected-majority-color",
+    removed_pixels: removedPixels,
   };
 }
 
@@ -469,6 +535,13 @@ for (const pilot of config.pilots) {
   const backgroundClear = pilot.clear_exterior_background
     ? clearExteriorBackground(flat, background)
     : null;
+  assert(
+    !(pilot.black_contour_erosion_radius && pilot.black_contour_dilation_radius),
+    `${pilot.slug} cannot erode and dilate black contours in the same derivative`,
+  );
+  const contourErosion = pilot.black_contour_erosion_radius
+    ? erodeBlackContours(flat, pilot.black_contour_erosion_radius)
+    : null;
   const contourDilation = pilot.black_contour_dilation_radius
     ? dilateBlackContours(flat, pilot.black_contour_dilation_radius)
     : null;
@@ -566,6 +639,7 @@ for (const pilot of config.pilots) {
       sha256: sha256(source),
     },
     ...(backgroundClear ? { exterior_background_clear: backgroundClear } : {}),
+    ...(contourErosion ? { black_contour_erosion: contourErosion } : {}),
     ...(contourDilation ? { black_contour_dilation: contourDilation } : {}),
     ...(characterLock ? { character_lock: characterLock } : {}),
     flat_master: {

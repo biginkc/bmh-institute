@@ -3,12 +3,13 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { createEmptyProductionRecord, sha256, validateProductionRecord } from "./artwork-production-contract.mjs";
+import { getArtworkPose, validateArtworkPoseContract } from "./artwork-pose-contract.mjs";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const manifestPath = path.join(repoRoot, "content/course-manifests/bmh-employee-training.v1.json");
 const outputPath = path.join(repoRoot, "docs/course-production/thumbnail-pilots/production-inventory.json");
-const pilotChecksumsRecordPath = "docs/course-production/thumbnail-pilots/v7-checksums.json";
-const pilotGenerationLineageRecordPath = "docs/course-production/thumbnail-pilots/v7-generation-lineage.json";
+const pilotChecksumsRecordPath = "docs/course-production/thumbnail-pilots/v8-checksums.json";
+const pilotGenerationLineageRecordPath = "docs/course-production/thumbnail-pilots/v8-generation-lineage.json";
 const pilotChecksumsPath = path.join(repoRoot, pilotChecksumsRecordPath);
 const pilotGenerationLineagePath = path.join(repoRoot, pilotGenerationLineageRecordPath);
 const args = process.argv.slice(2);
@@ -30,6 +31,8 @@ const manifestAssets = new Map(manifest.assets.map((asset) => [asset.source_key,
 const BLUE_RGB = [103, 182, 255];
 const YELLOW_RGB = [255, 211, 1];
 const ALLOWED_BACKGROUND_RGB = new Set([BLUE_RGB.join(","), YELLOW_RGB.join(",")]);
+
+validateArtworkPoseContract();
 
 const baseReferences = [
   {
@@ -132,10 +135,15 @@ async function readAndValidatePrompt(promptPath, promptSha256, label, { exactByt
 
 async function validatePilotGenerationLineage() {
   const schemaVersion = pilotGenerationLineage.schema_version;
-  if (schemaVersion !== "bmh-thumbnail-pilot-lineage/v1" && schemaVersion !== "bmh-thumbnail-pilot-lineage/v2" && schemaVersion !== "bmh-thumbnail-pilot-lineage/v3-candidate") {
+  if (
+    schemaVersion !== "bmh-thumbnail-pilot-lineage/v1" &&
+    schemaVersion !== "bmh-thumbnail-pilot-lineage/v2" &&
+    schemaVersion !== "bmh-thumbnail-pilot-lineage/v3-candidate" &&
+    schemaVersion !== "bmh-thumbnail-pilot-lineage/v4-candidate"
+  ) {
     throw new Error("Pilot generation lineage schema is invalid");
   }
-  const version = schemaVersion.endsWith("/v3-candidate") ? 3 : schemaVersion.endsWith("/v2") ? 2 : 1;
+  const version = schemaVersion.endsWith("/v4-candidate") ? 4 : schemaVersion.endsWith("/v3-candidate") ? 3 : schemaVersion.endsWith("/v2") ? 2 : 1;
   if (pilotGenerationLineage.status !== "awaiting-jarrad-approval") {
     throw new Error("Pilot generation lineage must remain awaiting Jarrad approval");
   }
@@ -157,7 +165,7 @@ async function validatePilotGenerationLineage() {
   const promptBySlug = new Map();
   const referenceIdsBySlug = new Map();
   const additionalReferences = [];
-  if (version === 3) {
+  if (version >= 3) {
     const expectedIdentityRoots = new Map([
       ["andrea-approved", "docs/course-production/thumbnail-pilots/references/v5-cast/andrea-approved.png"],
       ["recurring-seller-approved", "docs/course-production/thumbnail-pilots/references/v5-cast/recurring-seller.png"],
@@ -174,10 +182,10 @@ async function validatePilotGenerationLineage() {
       pilotGenerationLineage.contract?.selection_rule !== "Andrea or the recurring seller, never both; the lesson and exact source video determine the character and cue" ||
       pilotGenerationLineage.contract?.skin_fill !== "pure white"
     ) {
-      throw new Error("Pilot lineage v3 single-character identity contract drifted");
+      throw new Error(`Pilot lineage v${version} single-character identity contract drifted`);
     }
     if (!Array.isArray(pilotGenerationLineage.identity_roots) || pilotGenerationLineage.identity_roots.length !== 2 || new Set(pilotGenerationLineage.identity_roots.map((root) => root.id)).size !== 2) {
-      throw new Error("Pilot lineage v3 requires exactly two honest identity roots");
+      throw new Error(`Pilot lineage v${version} requires exactly two honest identity roots`);
     }
     for (const root of pilotGenerationLineage.identity_roots) {
       if (expectedIdentityRoots.get(root.id) !== root.path) {
@@ -193,6 +201,8 @@ async function validatePilotGenerationLineage() {
     }
     const identityRootsById = new Map(pilotGenerationLineage.identity_roots.map((root) => [root.id, root]));
     const usedIdentityRoots = new Set();
+    const poseLabels = new Set();
+    const poseSignatures = new Set();
     for (const record of pilotGenerationLineage.records) {
       const expectedCharacterId = expectedCharacters.get(record.slug);
       const checksumRecord = pilotChecksums.assets.find((asset) => asset.slug === record.slug);
@@ -201,6 +211,19 @@ async function validatePilotGenerationLineage() {
       }
       if ("character_ids" in record || Array.isArray(record.character_id)) {
         throw new Error(`${record.slug} violates the one-person character contract`);
+      }
+      if (version === 4) {
+        if (typeof record.pose_label !== "string" || record.pose_label.length < 5 || poseLabels.has(record.pose_label)) {
+          throw new Error(`${record.slug} must have a globally unique pose_label`);
+        }
+        if (typeof record.pose_signature !== "string" || record.pose_signature.length < 12 || poseSignatures.has(record.pose_signature)) {
+          throw new Error(`${record.slug} must have a globally unique pose_signature`);
+        }
+        if (record.deterministic_character_lock !== undefined) {
+          throw new Error(`${record.slug} v4 cannot use an identical-pixel character lock`);
+        }
+        poseLabels.add(record.pose_label);
+        poseSignatures.add(record.pose_signature);
       }
       usedIdentityRoots.add(record.character_id);
       const expectedChecksumCharacter = expectedCharacterId === "andrea-approved" ? "andrea" : "recurring-seller";
@@ -219,7 +242,7 @@ async function validatePilotGenerationLineage() {
       }
       await validateLineageInput(record.contact_sheet_input, `${record.slug} contact sheet`);
       additionalReferences.push({
-        id: `v7-${record.slug}-contact-sheet`,
+        id: `v${version + 4}-${record.slug}-contact-sheet`,
         role: `${record.slug} source-video contact sheet`,
         path: record.contact_sheet_input.path,
         sha256: record.contact_sheet_input.sha256,
@@ -229,7 +252,7 @@ async function validatePilotGenerationLineage() {
       if (generation?.operation !== expectedOperation || !generation.tool_output_id?.startsWith("exec-")) {
         throw new Error(`${record.slug} generation record is invalid`);
       }
-      const prompt = await readAndValidatePrompt(generation.prompt_path, generation.prompt_sha256, `${record.slug} v7 generation`, {
+      const prompt = await readAndValidatePrompt(generation.prompt_path, generation.prompt_sha256, `${record.slug} v${version + 4} generation`, {
         exactBytes: true,
       });
       const outputContents = await readFile(repoPath(generation.output_path));
@@ -239,7 +262,7 @@ async function validatePilotGenerationLineage() {
         generation.output_sha256 !== checksumRecord?.source?.sha256 ||
         JSON.stringify(pngDimensions(outputContents, generation.output_path)) !== JSON.stringify(checksumRecord?.source?.dimensions)
       ) {
-        throw new Error(`${record.slug} v7 generation output does not match the checksum-locked source`);
+        throw new Error(`${record.slug} v${version + 4} generation output does not match the checksum-locked source`);
       }
       if (expectedOperation === "edit") {
         const parentBytes = await readFile(repoPath(generation.parent_path));
@@ -249,7 +272,7 @@ async function validatePilotGenerationLineage() {
       } else if (generation.parent_path !== undefined || generation.parent_sha256 !== undefined) {
         throw new Error(`${record.slug} initial generation cannot declare an edit parent`);
       }
-      if (record.slug === "opening-the-call") {
+      if (version === 3 && record.slug === "opening-the-call") {
         const lock = record.deterministic_character_lock;
         const orientation = pilotGenerationLineage.records.find((candidate) => candidate.slug === "orientation");
         if (
@@ -265,14 +288,32 @@ async function validatePilotGenerationLineage() {
           throw new Error("Opening v7 Andrea pixel lock drifted");
         }
       }
-      if (record.slug === "objection-architecture" && record.deterministic_contour_normalization?.source_pixel_radius !== 1) {
+      if (version === 3 && record.slug === "objection-architecture" && record.deterministic_contour_normalization?.source_pixel_radius !== 1) {
         throw new Error("Objection v7 contour normalization drifted");
       }
+      if (version === 4 && record.slug === "opening-the-call") {
+        const normalization = record.deterministic_contour_normalization;
+        if (
+          normalization?.operation !== "erode black contours" ||
+          normalization?.source_pixel_radius !== 1 ||
+          normalization?.neighborhood !== "eight-connected-majority-color" ||
+          normalization?.removed_source_pixels !== 18799
+        ) {
+          throw new Error("Opening v8 contour normalization drifted");
+        }
+      }
       promptBySlug.set(record.slug, prompt);
-      referenceIdsBySlug.set(record.slug, ["style-ref-1", "style-ref-2", record.character_id, `v7-${record.slug}-contact-sheet`]);
+      referenceIdsBySlug.set(record.slug, ["style-ref-1", "style-ref-2", record.character_id, `v${version + 4}-${record.slug}-contact-sheet`]);
     }
     if (usedIdentityRoots.size !== 2) {
-      throw new Error("Pilot lineage v3 must keep both identity roots in honest use");
+      throw new Error(`Pilot lineage v${version} must keep both identity roots in honest use`);
+    }
+    if (version === 4) {
+      const orientation = pilotGenerationLineage.records.find((record) => record.slug === "orientation");
+      const opening = pilotGenerationLineage.records.find((record) => record.slug === "opening-the-call");
+      if (orientation?.character_id !== "andrea-approved" || opening?.character_id !== "andrea-approved" || orientation.pose_signature === opening.pose_signature) {
+        throw new Error("Pilot lineage v4 must keep Andrea's identity while changing her pose");
+      }
     }
     return {
       version,
@@ -424,7 +465,8 @@ const pilotSlugBySlot = {
 const pilotLineageContract = await validatePilotGenerationLineage();
 const usesSharedPilotLineage = pilotLineageContract.version === 2;
 const usesLockedPilotContract = pilotLineageContract.version >= 2;
-const usesTwoIdentityPilotLineage = pilotLineageContract.version === 3;
+const usesTwoIdentityPilotLineage = pilotLineageContract.version >= 3;
+const usesPoseVariationPilotLineage = pilotLineageContract.version === 4;
 
 const references = usesTwoIdentityPilotLineage
   ? [...baseReferences.filter((reference) => reference.id === "style-ref-1" || reference.id === "style-ref-2"), ...pilotLineageContract.additionalReferences]
@@ -524,16 +566,19 @@ Constraints: no title, no words, no letters, no numbers, no logos, no watermark;
 Avoid: any gradient, texture, lighting, glow, shadow, reflection, depth, realistic perspective, photorealism, 3D rendering, complex diagrams, busy masonry, detailed interiors, edge-cropped key objects`,
 };
 
+const factFindArtDirection = getArtworkPose("master-poster-video-slot-07-fact-find");
 const factFindPosterPrompt = `Use case: stylized-concept
 Asset type: BMH Institute Fact Find video-poster master, wide 16:9 artwork generated independently from the Opening the Call lesson-card master
-Primary request: Create a focused Fact Find illustration. The five-second read must be “ask with curiosity, listen carefully, and organize the seller facts.” Show one calm employee and one homeowner connected by a simple speech bubble, with a large listening ear, a magnifier, and a clean fact checklist made only from unlabeled lines and check marks. This image must stand on its own as the Fact Find video poster and must not reuse the Opening the Call pilot composition.
-Input images: Image 1 and Image 2 are the canonical BMH Sticker System style references. Use them only for flat visual language, line quality, palette, character simplicity, and sticker spacing. Do not copy their subjects or layouts. No subject reference is authorized for this call.
-Scene/backdrop: perfectly uniform flat cornflower-blue field with generous active negative space; a floating sticker composition, never a continuous room or realistic environment
+Primary request: Create a focused Fact Find illustration. The five-second read must be “ask with curiosity, listen carefully, and organize the seller facts.” Show a large listening ear, a magnifier, and a clean fact checklist made only from unlabeled lines and check marks. This image must stand on its own as the Fact Find video poster and must not reuse the Opening the Call pilot composition.
+Input images: Image 1 and Image 2 are the canonical BMH Sticker System style references. Image 3 is the approved Andrea identity root. Use it to preserve Andrea's exact face, hair, proportions, clothing language, pure-white skin fill, and line weight while changing her pose. Do not copy another asset's stance or layout.
+Character direction: ${factFindArtDirection.pose_instruction}
+Lesson/video cue: ${factFindArtDirection.lesson_or_video_cue}.
+Scene/backdrop: perfectly uniform flat golden-yellow field with generous active negative space; a floating sticker composition, never a continuous room or realistic environment
 Style/medium: hand-drawn flat sticker-sheet illustration; thick slightly wobbly black outlines; rounded imperfect primitive geometry; strong simple silhouettes; every object independently croppable
 Composition/framing: center the listening conversation, keep the ear and magnifier as clearly separate supporting stickers, and place the fact checklist to the right; keep every meaningful object inside the central 80% so the complete 16:9 master can be used without a crop
 Color palette: cornflower blue, golden yellow, amber, orange, cream, white, black, and at most one muted green; exactly the locked eight-color palette after deterministic flattening; no extra colors
-Characters: two tiny people with dot eyes, minimal faces, cylindrical limbs, and simple hair and clothing silhouettes
-Constraints: no title, no words, no letters, no numbers, no currency amounts, no logos, no watermark; absolutely uniform flat fills; no white sticker border; no invented software interface; no fixed performance promises; no reuse of the Opening the Call hero handset composition
+Characters: exactly one person, Andrea, with pure-white skin fill; no seller and no second person
+Constraints: no title, no words, no letters, no numbers, no currency amounts, no logos, no watermark; absolutely uniform flat fills; no white sticker border; no invented software interface; no fixed performance promises; no reuse of the Opening the Call hero handset composition or seated desk stance
 Avoid: gradients, texture, lighting, glow, shadows, reflections, depth, realistic perspective, photorealism, 3D rendering, detailed screens, tiny unreadable symbols, busy backgrounds, edge-cropped key objects, sales-pressure imagery, and unrelated lesson subjects`;
 
 const lessonSpecs = [
@@ -713,6 +758,8 @@ function buildPrompt(spec) {
     return prompt;
   }
   if (pilotPrompts[spec.slot]) return pilotPrompts[spec.slot];
+  const artDirection = getArtworkPose(`master-${spec.slot}`);
+  const characterName = artDirection.character_id === "andrea-approved" ? "Andrea" : "the recurring curly-haired seller";
   const anchorSentence = spec.anchors
     .map(([subject, crop], index) => {
       const placement = crop.startsWith("left") ? "left" : crop.startsWith("right") ? "right" : "center";
@@ -723,14 +770,16 @@ function buildPrompt(spec) {
   return `Use case: stylized-concept
 Asset type: BMH Institute ${spec.title} lesson master, wide 16:9 artwork designed for one 16:10 lesson card and distinct 16:9 video posters
 Primary request: Create the ${spec.title} lesson illustration. The five-second read must be “${spec.fiveSecondRead}.” Build the visual around ${spec.scene}. Each requested poster anchor must be visually independent and recognizable without labels.
-Input images: Image 1 and Image 2 are the canonical BMH Sticker System style references. Use them only for the flat visual language, line quality, palette, character simplicity, and sticker spacing. Do not copy their subjects or layouts.
-Scene/backdrop: perfectly uniform flat cornflower-blue field with generous active negative space; a floating sticker composition, never a continuous room, landscape, or realistic environment
+Input images: Image 1 and Image 2 are the canonical BMH Sticker System style references. Image 3 is the approved ${characterName} identity root. Use it to preserve the exact face, hair, proportions, clothing language, pure-white skin fill, and line weight while changing pose, posture, and placement. Do not copy another asset's stance or layout.
+Character direction: ${artDirection.pose_instruction}
+Lesson/video cue: ${artDirection.lesson_or_video_cue}.
+Scene/backdrop: perfectly uniform flat ${artDirection.background_rgb.join(",") === YELLOW_RGB.join(",") ? "golden-yellow" : "cornflower-blue"} field with generous active negative space; a floating sticker composition, never a continuous room, landscape, or realistic environment
 Style/medium: hand-drawn flat sticker-sheet illustration; thick slightly wobbly black outlines; rounded imperfect primitive geometry; strong silhouettes; every object independently croppable
 Composition/framing: ${anchorSentence}; balance the anchors as one coherent lesson composition; keep all meaningful content inside the central 80% and each named anchor fully inside its assigned safe zone so the 16:10 padded card and focused 16:9 poster crops stay intact
 Color palette: cornflower blue, golden yellow, amber, orange, cream, white, black, and at most one muted green; exactly the locked eight-color palette after deterministic flattening; no extra colors
-Characters: tiny scale, dot eyes, minimal faces, cylindrical limbs, simple hair and clothing silhouettes; use only the minimum people needed to explain the subject
+Characters: exactly one person, ${characterName}, with pure-white skin fill; no second person, crowd, duplicate, background figure, or partial extra person
 Constraints: no title, no words, no letters, no numbers, no currency amounts, no logos, no watermark; absolutely uniform flat fills; no white sticker border; no invented software interface; no fixed performance promises; no decorative object without a teaching purpose
-Avoid: gradients, texture, lighting, glow, shadows, reflections, depth, realistic perspective, photorealism, 3D rendering, detailed screens, tiny unreadable symbols, busy backgrounds, edge-cropped key objects, duplicated poster anchors, and subject matter from another lesson`;
+Avoid: repeated stance or repeated character placement from another master, gradients, texture, lighting, glow, shadows, reflections, depth, realistic perspective, photorealism, 3D rendering, detailed screens, tiny unreadable symbols, busy backgrounds, edge-cropped key objects, duplicated poster anchors, and subject matter from another lesson`;
 }
 
 function assertAsset(assetKey, localPath) {
@@ -769,6 +818,10 @@ const inventoryLessons = lessonSpecs.map((spec, index) => {
   assertAsset(lesson.thumbnail_asset_key, cardPath);
   const pilotSlug = spec.pilot ? pilotSlugBySlot[spec.slot] : null;
   const pilotLineage = pilotSlug ? pilotGenerationLineage.records.find((record) => record.slug === pilotSlug) : null;
+  const artDirection = getArtworkPose(`master-${spec.slot}`);
+  if (usesPoseVariationPilotLineage && pilotLineage && (pilotLineage.pose_label !== artDirection.pose_id || pilotLineage.pose_signature !== artDirection.lineage_pose_signature)) {
+    throw new Error(`${spec.slot} pilot pose does not match the production pose contract`);
+  }
   const renderContract =
     usesSharedPilotLineage && pilotLineage
       ? pilotLineage.render_contract
@@ -784,14 +837,17 @@ const inventoryLessons = lessonSpecs.map((spec, index) => {
             },
           }
         : {
-            master_background_rgb: BLUE_RGB,
+            master_background_rgb: artDirection.background_rgb,
             lesson_card: {
-              normalize_background_rgb: BLUE_RGB,
-              padding_color_rgb: BLUE_RGB,
+              normalize_background_rgb: artDirection.background_rgb,
+              padding_color_rgb: artDirection.background_rgb,
             },
-            video_poster: { normalize_background_rgb: BLUE_RGB },
+            video_poster: { normalize_background_rgb: artDirection.background_rgb },
           };
-  const lessonReferenceIds = usesLockedPilotContract && pilotSlug ? pilotLineageContract.referenceIdsBySlug.get(pilotSlug) : (spec.references ?? ["style-ref-1", "style-ref-2"]);
+  const lessonReferenceIds =
+    usesLockedPilotContract && pilotSlug
+      ? pilotLineageContract.referenceIdsBySlug.get(pilotSlug)
+      : [...new Set([...(spec.references ?? ["style-ref-1", "style-ref-2"]), artDirection.character_id])];
   const prompt = buildPrompt(spec);
   const plannedGenerationCallId = spec.pilot ? null : `imagegen-lesson-${spec.slot}`;
   const lessonProvenance = buildProvenance(plannedGenerationCallId, spec.pilot ? "promote-existing-pilot-call" : "one-distinct-call");
@@ -801,6 +857,7 @@ const inventoryLessons = lessonSpecs.map((spec, index) => {
     source_path: `course-assets/thumbnails/production/sources/${spec.slot}-generated.png`,
     flat_master_path: `course-assets/thumbnails/production/flat-masters/${spec.slot}-flat-master.png`,
     ...(usesLockedPilotContract ? { background_rgb: renderContract.master_background_rgb } : {}),
+    art_direction: artDirection,
     expected_aspect_ratio: "16:9",
     meaningful_content_bounds: {
       x_min_percent: 10,
@@ -817,14 +874,16 @@ const inventoryLessons = lessonSpecs.map((spec, index) => {
     const outputPath = `course-assets/posters/${block.content.asset_key}.webp`;
     assertAsset(assetKey, outputPath);
     const isFactFind = assetKey === "poster-video-slot-07-fact-find";
+    const posterArtDirection = getArtworkPose(isFactFind ? "master-poster-video-slot-07-fact-find" : master.id);
     const directMaster = isFactFind
       ? {
           id: "master-poster-video-slot-07-fact-find",
           source_path: "course-assets/posters/production/sources/video-slot-07-fact-find-generated.png",
           flat_master_path: "course-assets/posters/production/flat-masters/video-slot-07-fact-find-flat-master.png",
-          ...(usesLockedPilotContract ? { background_rgb: BLUE_RGB } : {}),
+          ...(usesLockedPilotContract ? { background_rgb: posterArtDirection.background_rgb } : {}),
+          art_direction: posterArtDirection,
           expected_aspect_ratio: "16:9",
-          reference_ids: ["style-ref-1", "style-ref-2"],
+          reference_ids: ["style-ref-1", "style-ref-2", posterArtDirection.character_id],
           prompt: factFindPosterPrompt,
           prompt_sha256: sha256(factFindPosterPrompt),
           provenance: buildProvenance("imagegen-poster-video-slot-07-fact-find", "one-distinct-call"),
@@ -839,6 +898,7 @@ const inventoryLessons = lessonSpecs.map((spec, index) => {
       video_title: block.content.title,
       output_path: outputPath,
       focus_subject: focusSubject,
+      art_direction: posterArtDirection,
       production_source_mode: directMaster ? "generate-distinct-after-pilot-approval" : "derive-from-lesson-master",
       direct_master: directMaster,
       derivative: {
@@ -847,7 +907,7 @@ const inventoryLessons = lessonSpecs.map((spec, index) => {
         crop_profile: effectiveCropProfile,
         normalize_master_dimensions: [1280, 720],
         normalize_method: "contain-with-padding",
-        normalize_background_rgb: directMaster ? BLUE_RGB : renderContract.video_poster.normalize_background_rgb,
+        normalize_background_rgb: directMaster ? posterArtDirection.background_rgb : renderContract.video_poster.normalize_background_rgb,
         crop_pixels_after_normalize: {
           "full-safe": [0, 0, 1280, 720],
           "left-safe": [64, 144, 768, 432],
@@ -872,12 +932,14 @@ const inventoryLessons = lessonSpecs.map((spec, index) => {
     pilot: Boolean(spec.pilot),
     production_source_mode: spec.pilot ? "promote-approved-pilot-flat-master" : "generate-after-pilot-approval",
     reference_ids: lessonReferenceIds,
+    art_direction: artDirection,
     prompt,
     prompt_sha256: sha256(prompt),
     master,
     lesson_card: {
       asset_key: lesson.thumbnail_asset_key,
       output_path: cardPath,
+      art_direction: artDirection,
       derivative: {
         recipe_id: `${spec.slot}-lesson-card-16x10`,
         source_master_id: master.id,
@@ -925,9 +987,16 @@ const inventoryLessons = lessonSpecs.map((spec, index) => {
 
 const coverPath = "course-assets/thumbnails/program-bmh-employee-training.webp";
 assertAsset(course.thumbnail_asset_key, coverPath);
+const courseCoverArtDirection = getArtworkPose("master-program-bmh-employee-training");
 
 const inventory = {
-  schema_version: usesTwoIdentityPilotLineage ? "bmh-artwork-production/v3-candidate" : usesSharedPilotLineage ? "bmh-artwork-production/v2" : "bmh-artwork-production/v1",
+  schema_version: usesPoseVariationPilotLineage
+    ? "bmh-artwork-production/v4-candidate"
+    : usesTwoIdentityPilotLineage
+      ? "bmh-artwork-production/v3-candidate"
+      : usesSharedPilotLineage
+        ? "bmh-artwork-production/v2"
+        : "bmh-artwork-production/v1",
   status: "blocked-pending-pilot-approval",
   generation_policy: {
     gate: "Jarrad must approve all three pilots before any new image generation",
@@ -939,7 +1008,9 @@ const inventory = {
         }
       : usesTwoIdentityPilotLineage
         ? {
-            pilot_call_strategy: "three checksum-locked single-character candidates using exactly one of two honest identity roots, with lesson-video evidence",
+            pilot_call_strategy: usesPoseVariationPilotLineage
+              ? "three checksum-locked single-character candidates using two honest identity roots, distinct pose labels, and lesson-video evidence"
+              : "three checksum-locked single-character candidates using exactly one of two honest identity roots, with lesson-video evidence",
           }
         : {}),
     model_native_text: "forbidden",
@@ -990,7 +1061,8 @@ const inventory = {
     output_path: coverPath,
     source_path: "course-assets/thumbnails/production/sources/program-bmh-employee-training-generated.png",
     flat_master_path: "course-assets/thumbnails/production/flat-masters/program-bmh-employee-training-flat-master.png",
-    ...(usesLockedPilotContract ? { background_rgb: BLUE_RGB } : {}),
+    ...(usesLockedPilotContract ? { background_rgb: courseCoverArtDirection.background_rgb } : {}),
+    art_direction: courseCoverArtDirection,
     derivative: {
       recipe_id: "course-cover-card-16x10",
       source_master_id: "master-program-bmh-employee-training",
@@ -998,22 +1070,24 @@ const inventory = {
       method: "contain-master-in-1280x720-and-pad-40px-top-and-bottom",
       normalize_master_dimensions: [1280, 720],
       normalize_method: "contain-with-padding",
-      normalize_background_rgb: [103, 182, 255],
-      padding_color_rgb: [103, 182, 255],
+      normalize_background_rgb: courseCoverArtDirection.background_rgb,
+      padding_color_rgb: courseCoverArtDirection.background_rgb,
       crop_allowed: false,
       resample: "lanczos",
       output_format: "lossless-webp",
     },
-    reference_ids: ["style-ref-1", "style-ref-2"],
+    reference_ids: ["style-ref-1", "style-ref-2", courseCoverArtDirection.character_id],
     prompt: `Use case: stylized-concept
 Asset type: BMH Institute BMH Employee Training course cover, wide 16:9 master designed to crop safely to 16:10
 Primary request: Create the course cover for BMH Employee Training. The five-second read must be “one clear path from orientation through confident service and career growth.” Use a welcoming training doorway as the central hero sticker. Arrange six small supporting stickers around it for the six course sections: compass and checklist, homeowner and heart, connected speech bubbles, ear and reframe arrow, calendar and handshake, and a clean dashboard leading to broad growth steps.
-Input images: Image 1 and Image 2 are the canonical BMH Sticker System style references. Use them only for the flat visual language, line quality, palette, character simplicity, and sticker spacing. Do not copy their subjects or layouts.
+Input images: Image 1 and Image 2 are the canonical BMH Sticker System style references. Image 3 is the approved Andrea identity root. Use it to preserve Andrea's exact face, hair, proportions, clothing language, pure-white skin fill, and line weight while giving her this course-cover-specific pose.
+Character direction: ${courseCoverArtDirection.pose_instruction}
+Lesson/course cue: ${courseCoverArtDirection.lesson_or_video_cue}.
 Scene/backdrop: perfectly uniform flat cornflower-blue field with generous active negative space; a floating sticker composition, never a continuous building interior, landscape, or realistic environment
 Style/medium: hand-drawn flat sticker-sheet illustration; thick slightly wobbly black outlines; rounded imperfect primitive geometry; strong simple silhouettes; every object independently croppable
 Composition/framing: large welcoming doorway centered with a tiny learner moving toward it; six supporting course-section stickers form a loose balanced path around the doorway; keep all meaningful content inside the central 80% so the 16:9 source and 16:10 contained card remain intact
 Color palette: cornflower blue, golden yellow, amber, orange, cream, white, black, and one muted green; exactly the locked eight-color palette after deterministic flattening; no extra colors
-Characters: one tiny learner with dot eyes, minimal face, cylindrical limbs, and a simple silhouette
+Characters: exactly one person, Andrea, with pure-white skin fill; no seller, second person, crowd, duplicate, background figure, or partial extra person
 Constraints: no title, no words, no letters, no numbers, no currency amounts, no logos, no watermark; absolutely uniform flat fills; no white sticker border; no fixed performance promises; the six section motifs must read as one learning journey rather than six disconnected scenes
 Avoid: gradients, texture, lighting, glow, shadows, reflections, depth, realistic perspective, photorealism, 3D rendering, detailed architecture, tiny unreadable symbols, busy backgrounds, edge-cropped key objects, and lesson-specific subject dominance`,
     provenance: buildProvenance("imagegen-course-cover", "one-distinct-call"),
