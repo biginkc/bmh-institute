@@ -64,13 +64,13 @@ export async function uploadApprovedAssets(options: {
   sourceRoot: string;
   assets: CourseImportAsset[];
   bucket: CourseImportUploadBucket;
-  stateRoot?: string;
+  stateRoot: string;
   startTusUpload?: (request: TusUploadRequest) => Promise<string>;
   log?: (message: string) => void;
 }) {
   const startTusUpload = options.startTusUpload ?? uploadTus;
   const log = options.log ?? console.log;
-  const stateRoot = resolve(options.stateRoot ?? join(process.cwd(), ".course-import-state"));
+  const stateRoot = resolve(options.stateRoot);
 
   assertApprovedUploadIntegrity(options.assets);
   for (const asset of options.assets.filter(
@@ -376,10 +376,8 @@ export class JsonTusUrlStorage {
       const entries = await this.read();
       let changed = false;
       for (const [key, upload] of Object.entries(entries)) {
-        if (!this.hasSafeUrlAndOwner(upload)) {
-          delete entries[key];
-          changed = true;
-        } else if (upload.fingerprint === this.scope.fingerprint && !this.matchesScope(upload)) {
+        if (upload.fingerprint !== this.scope.fingerprint) continue;
+        if (!this.hasSafeUrlAndOwner(upload) || !this.matchesScope(upload)) {
           delete entries[key];
           changed = true;
         }
@@ -404,7 +402,7 @@ export class JsonTusUrlStorage {
     }
     return this.withStateLock(async () => {
       const entries = await this.read();
-      const key = `${fingerprint}:${upload.creationTime}`;
+      const key = `${fingerprint}:${upload.creationTime}:${randomUUID()}`;
       entries[key] = { ...stored, urlStorageKey: key };
       await this.write(entries);
       return key;

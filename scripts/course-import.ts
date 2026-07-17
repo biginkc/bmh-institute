@@ -24,7 +24,7 @@ import {
   manifestGateForCommand,
   type CourseImportCommand,
 } from "../src/lib/course-import/command-policy";
-import { settleDatabaseRollback } from "../src/lib/course-import/rollback-settlement";
+import { runRestartableRollback } from "../src/lib/course-import/rollback-command";
 
 async function main() {
   const { command, manifestPath, flags } = parseArgs(process.argv.slice(2));
@@ -64,6 +64,9 @@ async function main() {
       sourceRoot: flags.sourceRoot ? resolve(flags.sourceRoot) : process.cwd(),
       assets: plan.assets,
       bucket: supabase.storage.from("content") as unknown as CourseImportUploadBucket,
+      stateRoot: resolve(
+        flags.stateRoot ?? join(process.cwd(), ".course-import-state"),
+      ),
     });
     return;
   }
@@ -88,15 +91,18 @@ async function main() {
     if (flags.confirm !== plan.importId) {
       throw new Error(`${command} requires --confirm=${plan.importId}.`);
     }
-    const storageRollback = await inspectStorageRollbackAssets({
+    const inspectStorage = () => inspectStorageRollbackAssets({
       importId: plan.importId,
       assets: plan.assets,
       bucket: supabase.storage.from("content"),
     });
-    console.log(JSON.stringify({ phase: "storage_inspection", storageRollback }, null, 2));
-    if (command === "inspect-rollback-storage") return;
+    if (command === "inspect-rollback-storage") {
+      const storageRollback = await inspectStorage();
+      console.log(JSON.stringify({ phase: "storage_inspection", storageRollback }, null, 2));
+      return;
+    }
 
-    const databaseRollback = await settleDatabaseRollback({
+    const { storageRollback } = await runRestartableRollback({
       plan,
       adapter,
       receiptPath: resolve(
@@ -104,8 +110,12 @@ async function main() {
         "rollback-receipts",
         `${plan.importId}.json`,
       ),
+      inspectStorage,
+      onDatabaseSettled(databaseRollback) {
+        console.log(JSON.stringify({ phase: "rollback_settled", databaseRollback }, null, 2));
+      },
     });
-    console.log(JSON.stringify({ phase: "rollback_settled", databaseRollback, storageRollback }, null, 2));
+    console.log(JSON.stringify({ phase: "storage_inspection", storageRollback }, null, 2));
   }
 }
 

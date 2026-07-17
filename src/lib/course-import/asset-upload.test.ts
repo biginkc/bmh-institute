@@ -166,9 +166,45 @@ describe("course import approved asset uploads", () => {
             return { error: null };
           },
         },
+        stateRoot: join(root, "state"),
       }),
     ).rejects.toThrow(/approved asset.*size_bytes.*checksum_sha256/i);
     expect(storageCalls).toBe(0);
+  });
+
+  it("places TUS resume state under the explicitly supplied state root", async () => {
+    const root = await makeTempRoot();
+    const stateRoot = join(root, "isolated-state");
+    const bytes = Buffer.from("approved");
+    const approved = asset(bytes);
+    await mkdir(join(root, "assets"));
+    await writeFile(join(root, approved.local_path), bytes);
+    const remote = remoteBucket();
+    let observedStatePath = "";
+
+    await uploadApprovedAssets({
+      endpoint: ENDPOINT,
+      serviceKey: "test-only",
+      importId: "import-v1",
+      sourceRoot: root,
+      assets: [approved],
+      bucket: remote.bucket,
+      stateRoot,
+      async startTusUpload(request) {
+        observedStatePath = request.statePath;
+        remote.set({
+          bytes,
+          metadata: {
+            sha256: request.checksum,
+            course_import_id: request.importId,
+            course_import_upload_id: request.ownershipToken,
+          },
+        });
+        return request.ownershipToken;
+      },
+    });
+
+    expect(observedStatePath).toBe(join(stateRoot, "tus-uploads.json"));
   });
 });
 
@@ -411,6 +447,82 @@ describe("TUS resume isolation", () => {
     expect(await left.storage.findUploadsByFingerprint(left.fingerprint)).toHaveLength(1);
     expect(await right.storage.findUploadsByFingerprint(right.fingerprint)).toHaveLength(1);
     expect((await readdir(root)).filter((entry) => entry.includes(".tmp-"))).toEqual([]);
+  });
+
+  it("keeps same-fingerprint uploads created in the same second independently resumable", async () => {
+    const root = await makeTempRoot();
+    const statePath = join(root, "tus.json");
+    const scoped = resumeStorage(statePath, "same", "d".repeat(64));
+    const left = resumableUpload(scoped, "Thu Jul 16 2026 21:00:00 GMT-0500");
+    const right = {
+      ...resumableUpload(scoped, "Thu Jul 16 2026 21:00:00 GMT-0500"),
+      uploadUrl: `${ENDPOINT}/same-second-right`,
+    };
+
+    const [leftKey, rightKey] = await Promise.all([
+      scoped.storage.addUpload(scoped.fingerprint, left),
+      scoped.storage.addUpload(scoped.fingerprint, right),
+    ]);
+
+    expect(leftKey).not.toBe(rightKey);
+    expect(await scoped.storage.findUploadsByFingerprint(scoped.fingerprint)).toHaveLength(2);
+    await scoped.storage.removeUpload(leftKey);
+    expect(await scoped.storage.findUploadsByFingerprint(scoped.fingerprint)).toEqual([
+      expect.objectContaining({ uploadUrl: right.uploadUrl }),
+    ]);
+  });
+
+  it("preserves valid resume entries owned by another endpoint and fingerprint", async () => {
+    const root = await makeTempRoot();
+    const statePath = join(root, "tus.json");
+    const current = resumeStorage(statePath, "current", "e".repeat(64));
+    const otherEndpoint = "https://other.storage.supabase.co/storage/v1/upload/resumable";
+    const otherPath = "courses/import/v1/other.bin";
+    const otherChecksum = "f".repeat(64);
+    const otherFingerprint = createTusResumeFingerprint({
+      endpoint: otherEndpoint,
+      bucket: COURSE_IMPORT_BUCKET,
+      checksum: otherChecksum,
+      storagePath: otherPath,
+    });
+    const other = new JsonTusUrlStorage(statePath, {
+      endpoint: otherEndpoint,
+      fingerprint: otherFingerprint,
+      size: 1,
+      bucket: COURSE_IMPORT_BUCKET,
+      storagePath: otherPath,
+      checksum: otherChecksum,
+      contentType: "application/octet-stream",
+      importId: "import-v1",
+    });
+    await current.storage.addUpload(
+      current.fingerprint,
+      resumableUpload(current, "current"),
+    );
+    await other.addUpload(otherFingerprint, {
+      size: 1,
+      metadata: {
+        bucketName: COURSE_IMPORT_BUCKET,
+        objectName: otherPath,
+        contentType: "application/octet-stream",
+        metadata: JSON.stringify({
+          sha256: otherChecksum,
+          course_import_id: "import-v1",
+          course_import_upload_id: "00000000-0000-4000-8000-000000000000",
+        }),
+      },
+      creationTime: "other",
+      urlStorageKey: "other",
+      uploadUrl: `${otherEndpoint}/other`,
+      parallelUploadUrls: null,
+    });
+
+    await expect(current.storage.findAllUploads()).resolves.toHaveLength(1);
+    const persisted = JSON.parse(await readFile(statePath, "utf8")) as Record<string, unknown>;
+    expect(Object.keys(persisted)).toHaveLength(2);
+    await expect(other.findUploadsByFingerprint(otherFingerprint)).resolves.toEqual([
+      expect.objectContaining({ uploadUrl: `${otherEndpoint}/other` }),
+    ]);
   });
 
   it("recovers a stale lock left by a crashed writer and fails closed on corrupt JSON", async () => {
