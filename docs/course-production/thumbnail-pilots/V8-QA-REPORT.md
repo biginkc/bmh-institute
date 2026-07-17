@@ -29,9 +29,10 @@ not reuse an identical character pixel layer or stance.
 
 - Orientation reuses the still-unapproved V7 source candidate and is re-derived into
   V8 paths.
-- Opening clears the exterior field and erodes one source pixel of black contour
-  using deterministic eight-neighbor majority-color replacement because the
-  generated edit had a heavier pen than the reference set.
+- Opening clears the exterior field and erodes one north- or west-exposed source
+  pixel of black contour using deterministic eight-neighbor majority-color
+  replacement because the generated edit had a heavier pen than the reference
+  set.
 - Objection Architecture clears the exterior field and retains its deterministic
   one-pixel contour normalization.
 - All review cards are 1280x800 lossless WebP; posters are 1280x720 lossless
