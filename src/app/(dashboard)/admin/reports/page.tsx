@@ -12,6 +12,7 @@ import {
   AdminSectionHeading,
 } from "../_components/admin-shell";
 import { loadAdminLessonCompletions } from "../../lesson-state-rpc";
+import { loadAllReportRowsById } from "./report-source-pagination";
 
 export default async function AdminReportsPage() {
   // HARDEN-01: page-level guard so a direct fetch can't bypass the layout.
@@ -19,7 +20,7 @@ export default async function AdminReportsPage() {
   const supabase = await createClient();
 
   const [
-    profilesRes,
+    profilesResult,
     programsRes,
     coursesRes,
     courseCertsRes,
@@ -27,13 +28,17 @@ export default async function AdminReportsPage() {
     auditRes,
     quizAttemptsRes,
     submissionsRes,
-    lessonCourseRes,
+    lessonCourseResult,
     userRoleGroupsRes,
-    requiredLessonsRes,
   ] = await Promise.all([
-    supabase
-      .from("profiles")
-      .select("id, email, full_name, system_role, status"),
+    loadAllReportRowsById(({ afterId, limit }) => {
+      const query = supabase
+        .from("profiles")
+        .select("id, email, full_name, system_role, status", { count: "exact" })
+        .order("id", { ascending: true })
+        .limit(limit);
+      return afterId === null ? query : query.gt("id", afterId);
+    }),
     supabase.from("programs").select("id, title"),
     supabase.from("courses").select("id, title"),
     supabase.from("certificates").select("user_id, course_id, issued_at"),
@@ -54,17 +59,35 @@ export default async function AdminReportsPage() {
     // WR-03: lesson -> module -> course mapping so the per-course "active
     // learners" count is scoped to the course rather than the org-wide
     // distinct-user total.
-    supabase
-      .from("lessons")
-      .select("id, title, modules!inner(course_id, courses(id, title))"),
+    loadAllReportRowsById<LessonCourseRow>(({ afterId, limit }) => {
+      const query = supabase
+        .from("lessons")
+        .select(
+          "id, title, is_required_for_completion, modules!inner(course_id, courses(id, title))",
+          { count: "exact" },
+        )
+        .order("id", { ascending: true })
+        .limit(limit);
+      return afterId === null ? query : query.gt("id", afterId);
+    }),
     supabase.from("user_role_groups").select("user_id, role_group_id"),
-    supabase
-      .from("lessons")
-      .select("id, title, is_required_for_completion, modules!inner(course_id)")
-      .eq("is_required_for_completion", true),
   ]);
 
-  const profiles = (profilesRes.data ?? []) as Profile[];
+  if (!profilesResult.ok || !lessonCourseResult.ok) {
+    return (
+      <main className="w-full flex-1 p-6 md:p-10">
+        <AdminPageHeader
+          title="Reports"
+          description="Rollup view of who's learning what."
+        />
+        <div className="rounded-[var(--bmh-radius-md)] border border-[var(--danger)] bg-[var(--danger-soft)] px-4 py-3 text-sm font-semibold text-[var(--danger)]">
+          Report source data could not be verified. Refresh the page to try again.
+        </div>
+      </main>
+    );
+  }
+
+  const profiles = profilesResult.rows as Profile[];
   const programs = (programsRes.data ?? []) as Entity[];
   const courses = (coursesRes.data ?? []) as Entity[];
   const courseCerts = (courseCertsRes.data ?? []) as CourseCert[];
@@ -73,31 +96,14 @@ export default async function AdminReportsPage() {
   const quizAttempts = (quizAttemptsRes.data ?? []) as QuizAttempt[];
   const submissions = (submissionsRes.data ?? []) as Submission[];
   const userRoleGroups = (userRoleGroupsRes.data ?? []) as UserRoleGroup[];
-  const requiredLessons = (requiredLessonsRes.data ?? []) as RequiredLessonRow[];
+  const requiredLessons = lessonCourseResult.rows.filter(
+    (lesson) => lesson.is_required_for_completion,
+  );
 
   // WR-03: build a lesson_id -> course_id index. PostgREST returns the inner
   // join either as a scalar object or a one-element array depending on
   // server version, so handle both shapes.
-  const lessonCourseRows = (lessonCourseRes.data ?? []) as Array<{
-    id: string;
-    title: string;
-    modules:
-      | {
-          course_id: string;
-          courses:
-            | { id: string; title: string }
-            | Array<{ id: string; title: string }>
-            | null;
-        }
-      | Array<{
-          course_id: string;
-          courses:
-            | { id: string; title: string }
-            | Array<{ id: string; title: string }>
-            | null;
-        }>
-      | null;
-  }>;
+  const lessonCourseRows = lessonCourseResult.rows;
   const completionResult = await loadAdminLessonCompletions(supabase, {
     userIds: profiles.map((profile) => profile.id),
     lessonIds: lessonCourseRows.map((lesson) => lesson.id),
@@ -499,11 +505,26 @@ type UserRoleGroup = {
   role_group_id: string;
 };
 
-type RequiredLessonRow = {
+type LessonCourseRow = {
   id: string;
   title: string;
   is_required_for_completion: boolean;
-  modules: { course_id: string } | Array<{ course_id: string }> | null;
+  modules:
+    | {
+        course_id: string;
+        courses:
+          | { id: string; title: string }
+          | Array<{ id: string; title: string }>
+          | null;
+      }
+    | Array<{
+        course_id: string;
+        courses:
+          | { id: string; title: string }
+          | Array<{ id: string; title: string }>
+          | null;
+      }>
+    | null;
 };
 
 type AuditRow = {

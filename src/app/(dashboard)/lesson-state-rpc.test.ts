@@ -140,4 +140,15 @@ describe("lesson state batch RPC readers", () => {
       );
     }
   });
+
+  it("fails closed before issuing an unbounded report cross-product", async () => {
+    const rpc = vi.fn();
+    const userIds = Array.from({ length: 2_001 }, (_, index) => `user-${index}`);
+    const lessonIds = Array.from({ length: 500 }, (_, index) => `lesson-${index}`);
+
+    await expect(
+      loadAdminLessonCompletions({ rpc } as never, { userIds, lessonIds }),
+    ).resolves.toEqual({ ok: false });
+    expect(rpc).not.toHaveBeenCalled();
+  });
 });

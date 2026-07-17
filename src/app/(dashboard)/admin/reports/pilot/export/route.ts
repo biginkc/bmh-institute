@@ -7,28 +7,42 @@ import {
 } from "@/lib/pilot-monitoring/summary";
 import { createClient } from "@/lib/supabase/server";
 import { loadAdminLessonCompletions } from "../../../../lesson-state-rpc";
+import { loadAllReportRowsById } from "../../report-source-pagination";
 
 export async function GET() {
   await requireAdmin();
   const supabase = await createClient();
 
   const [
-    profilesRes,
+    profilesResult,
     userRoleGroupsRes,
-    requiredLessonsRes,
+    requiredLessonsResult,
     quizAttemptsRes,
     submissionsRes,
     courseCertsRes,
     programCertsRes,
   ] = await Promise.all([
-    supabase
-      .from("profiles")
-      .select("id, email, full_name, system_role, status"),
+    loadAllReportRowsById(({ afterId, limit }) => {
+      const query = supabase
+        .from("profiles")
+        .select("id, email, full_name, system_role, status", { count: "exact" })
+        .order("id", { ascending: true })
+        .limit(limit);
+      return afterId === null ? query : query.gt("id", afterId);
+    }),
     supabase.from("user_role_groups").select("user_id, role_group_id"),
-    supabase
-      .from("lessons")
-      .select("id, title, is_required_for_completion, modules!inner(course_id)")
-      .eq("is_required_for_completion", true),
+    loadAllReportRowsById<RequiredLessonRow>(({ afterId, limit }) => {
+      let query = supabase
+        .from("lessons")
+        .select("id, title, is_required_for_completion, modules!inner(course_id)", {
+          count: "exact",
+        })
+        .eq("is_required_for_completion", true)
+        .order("id", { ascending: true })
+        .limit(limit);
+      if (afterId !== null) query = query.gt("id", afterId);
+      return query;
+    }),
     supabase
       .from("user_quiz_attempts")
       .select("user_id, passed, score, completed_at"),
@@ -41,9 +55,18 @@ export async function GET() {
       .select("user_id, program_id, issued_at"),
   ]);
 
-  const profiles = (profilesRes.data ?? []) as Profile[];
+  if (!profilesResult.ok || !requiredLessonsResult.ok) {
+    return NextResponse.json(
+      {
+        error: "Report source data could not be verified. Try the export again.",
+      },
+      { status: 503, headers: { "retry-after": "5" } },
+    );
+  }
+
+  const profiles = profilesResult.rows as Profile[];
   const userRoleGroups = (userRoleGroupsRes.data ?? []) as UserRoleGroup[];
-  const requiredLessons = (requiredLessonsRes.data ?? []) as RequiredLessonRow[];
+  const requiredLessons = requiredLessonsResult.rows;
   const quizAttempts = (quizAttemptsRes.data ?? []) as QuizAttempt[];
   const submissions = (submissionsRes.data ?? []) as Submission[];
   const courseCerts = (courseCertsRes.data ?? []) as CourseCert[];

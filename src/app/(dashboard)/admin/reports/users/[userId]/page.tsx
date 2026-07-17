@@ -10,6 +10,7 @@ import {
   AdminPageHeader,
   AdminSectionHeading,
 } from "../../../_components/admin-shell";
+import { loadAllReportRowsById } from "../../report-source-pagination";
 
 export default async function UserReportPage({
   params,
@@ -26,7 +27,7 @@ export default async function UserReportPage({
     roleGroupsRes,
     programsRes,
     courseAccessRes,
-    modulesLessonsRes,
+    lessonsResult,
     certificatesRes,
     programCertsRes,
     attemptsRes,
@@ -65,9 +66,16 @@ export default async function UserReportPage({
          courses( id, title, is_published )`,
       )
       .eq("role_groups.user_role_groups.user_id", userId),
-    supabase
-      .from("modules")
-      .select("id, course_id, lessons(id, is_required_for_completion)"),
+    loadAllReportRowsById<UserReportLessonRow>(({ afterId, limit }) => {
+      const query = supabase
+        .from("lessons")
+        .select("id, is_required_for_completion, modules!inner(course_id)", {
+          count: "exact",
+        })
+        .order("id", { ascending: true })
+        .limit(limit);
+      return afterId === null ? query : query.gt("id", afterId);
+    }),
     supabase
       .from("certificates")
       .select("course_id, issued_at, certificate_number")
@@ -106,6 +114,19 @@ export default async function UserReportPage({
 
   const profile = profileRes.data as Profile | null;
   if (!profile) notFound();
+  if (!lessonsResult.ok) {
+    return (
+      <main className="w-full flex-1 p-6 md:p-10">
+        <AdminPageHeader
+          eyebrow="Admin · Learner report"
+          title={profile.full_name || profile.email}
+          description="Report source data could not be verified. Refresh the page to try again."
+          backHref="/admin/reports"
+          backLabel="Back to reports"
+        />
+      </main>
+    );
+  }
 
   const roleGroups = (roleGroupsRes.data ?? [])
     .map((r) => firstRow(r.role_groups))
@@ -125,16 +146,12 @@ export default async function UserReportPage({
 
   // Index required lessons per course.
   const requiredByCourse = new Map<string, Set<string>>();
-  for (const m of modulesLessonsRes.data ?? []) {
-    const lessons = m.lessons as
-      | { id: string; is_required_for_completion: boolean }[]
-      | null;
-    if (!lessons) continue;
-    const bucket = requiredByCourse.get(m.course_id) ?? new Set();
-    for (const l of lessons) {
-      if (l.is_required_for_completion) bucket.add(l.id);
-    }
-    requiredByCourse.set(m.course_id, bucket);
+  for (const lesson of lessonsResult.rows) {
+    const courseId = firstRow(lesson.modules)?.course_id;
+    if (!courseId) continue;
+    const bucket = requiredByCourse.get(courseId) ?? new Set<string>();
+    if (lesson.is_required_for_completion) bucket.add(lesson.id);
+    requiredByCourse.set(courseId, bucket);
   }
   const requiredLessonIds = Array.from(
     new Set(Array.from(requiredByCourse.values()).flatMap((ids) => Array.from(ids))),
@@ -430,6 +447,12 @@ type Profile = {
   system_role: "owner" | "admin" | "learner";
   status: "active" | "invited" | "suspended";
   created_at: string;
+};
+
+type UserReportLessonRow = {
+  id: string;
+  is_required_for_completion: boolean;
+  modules: { course_id: string } | Array<{ course_id: string }> | null;
 };
 
 type AccessibleProgram = {

@@ -11,6 +11,7 @@ import {
   AdminPageHeader,
   AdminSectionHeading,
 } from "../../../_components/admin-shell";
+import { loadAllReportRowsById } from "../../report-source-pagination";
 
 export default async function CourseReportPage({
   params,
@@ -24,56 +25,70 @@ export default async function CourseReportPage({
 
   const [
     courseRes,
-    modulesRes,
+    courseLessonsResult,
     certsRes,
-    accessibleUserRes,
+    accessibleUsersResult,
   ] = await Promise.all([
     supabase
       .from("courses")
       .select("id, title, description, is_published")
       .eq("id", courseId)
       .maybeSingle(),
-    supabase
-      .from("modules")
-      .select("id, title, lessons(id, is_required_for_completion)")
-      .eq("course_id", courseId),
+    loadAllReportRowsById<CourseLessonRow>(({ afterId, limit }) => {
+      let query = supabase
+        .from("lessons")
+        .select("id, is_required_for_completion, modules!inner(course_id)", {
+          count: "exact",
+        })
+        .eq("modules.course_id", courseId)
+        .order("id", { ascending: true })
+        .limit(limit);
+      if (afterId !== null) query = query.gt("id", afterId);
+      return query;
+    }),
     supabase
       .from("certificates")
       .select("user_id, issued_at, certificate_number")
       .eq("course_id", courseId),
     // Learners with potential access: anyone whose role_group has access to
     // a program containing this course OR to this course directly.
-    supabase
-      .from("profiles")
-      .select("id, full_name, email, system_role")
-      .order("full_name"),
+    loadAllReportRowsById(({ afterId, limit }) => {
+      const query = supabase
+        .from("profiles")
+        .select("id, full_name, email, system_role", { count: "exact" })
+        .order("id", { ascending: true })
+        .limit(limit);
+      return afterId === null ? query : query.gt("id", afterId);
+    }),
   ]);
 
   const course = courseRes.data as
     | { id: string; title: string; description: string | null; is_published: boolean }
     | null;
   if (!course) notFound();
+  if (!courseLessonsResult.ok || !accessibleUsersResult.ok) {
+    return (
+      <main className="w-full flex-1 p-6 md:p-10">
+        <AdminPageHeader
+          eyebrow="Admin · Report"
+          title={course.title}
+          description="Report source data could not be verified. Refresh the page to try again."
+          backHref="/admin/reports"
+          backLabel="Back to reports"
+        />
+      </main>
+    );
+  }
 
   // Required lessons in this course.
-  const requiredLessonIds = new Set<string>();
-  const modules = (modulesRes.data ?? []) as Array<{
-    id: string;
-    title: string;
-    lessons: Array<{ id: string; is_required_for_completion: boolean }> | null;
-  }>;
-  for (const m of modules) {
-    for (const l of m.lessons ?? []) {
-      if (l.is_required_for_completion) requiredLessonIds.add(l.id);
-    }
-  }
+  const requiredLessonIds = new Set(
+    courseLessonsResult.rows
+      .filter((lesson) => lesson.is_required_for_completion)
+      .map((lesson) => lesson.id),
+  );
   const totalRequired = requiredLessonIds.size;
 
-  const profiles = (accessibleUserRes.data ?? []) as Array<{
-    id: string;
-    full_name: string;
-    email: string;
-    system_role: "owner" | "admin" | "learner";
-  }>;
+  const profiles = accessibleUsersResult.rows as ReportProfile[];
   const completionResult = await loadAdminLessonCompletions(supabase, {
     userIds: profiles.map((profile) => profile.id),
     lessonIds: Array.from(requiredLessonIds),
@@ -208,3 +223,16 @@ export default async function CourseReportPage({
 function StatCard({ label, value }: { label: string; value: number }) {
   return <AdminMetricCard label={label} value={value} />;
 }
+
+type CourseLessonRow = {
+  id: string;
+  is_required_for_completion: boolean;
+  modules: { course_id: string } | Array<{ course_id: string }> | null;
+};
+
+type ReportProfile = {
+  id: string;
+  full_name: string;
+  email: string;
+  system_role: "owner" | "admin" | "learner";
+};

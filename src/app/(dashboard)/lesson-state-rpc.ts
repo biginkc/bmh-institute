@@ -27,6 +27,7 @@ const MAX_IDS_PER_AXIS = 500;
 // default. Keep each cross-product below that response ceiling so the strict
 // cardinality check below distinguishes real omissions from API truncation.
 const MAX_ADMIN_PAIRS_PER_CALL = 1_000;
+const MAX_ADMIN_TOTAL_PAIRS = 1_000_000;
 
 export async function loadLearnerLessonStates(
   supabase: SupabaseClient<Database>,
@@ -79,6 +80,12 @@ export async function loadAdminLessonCompletions(
   }
 
   const expectedPairCount = userIds.length * lessonIds.length;
+  if (
+    !Number.isSafeInteger(expectedPairCount) ||
+    expectedPairCount > MAX_ADMIN_TOTAL_PAIRS
+  ) {
+    return { ok: false };
+  }
   const seenPairs = new Set<string>();
   const completions: VerifiedLessonCompletion[] = [];
 

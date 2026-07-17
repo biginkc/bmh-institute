@@ -11,6 +11,7 @@ import {
   AdminPageHeader,
   AdminSectionHeading,
 } from "../../../_components/admin-shell";
+import { loadAllReportRowsById } from "../../report-source-pagination";
 
 export default async function ProgramReportPage({
   params,
@@ -25,10 +26,10 @@ export default async function ProgramReportPage({
   const [
     programRes,
     programCoursesRes,
-    modulesRes,
+    lessonsResult,
     courseCertsRes,
     programCertsRes,
-    profilesRes,
+    profilesResult,
   ] = await Promise.all([
     supabase
       .from("programs")
@@ -40,9 +41,16 @@ export default async function ProgramReportPage({
       .select("course_id, sort_order, courses(id, title, is_published)")
       .eq("program_id", programId)
       .order("sort_order"),
-    supabase
-      .from("modules")
-      .select("id, course_id, lessons(id, is_required_for_completion)"),
+    loadAllReportRowsById<ProgramLessonRow>(({ afterId, limit }) => {
+      const query = supabase
+        .from("lessons")
+        .select("id, is_required_for_completion, modules!inner(course_id)", {
+          count: "exact",
+        })
+        .order("id", { ascending: true })
+        .limit(limit);
+      return afterId === null ? query : query.gt("id", afterId);
+    }),
     supabase
       .from("certificates")
       .select("user_id, course_id"),
@@ -50,10 +58,14 @@ export default async function ProgramReportPage({
       .from("program_certificates")
       .select("user_id, certificate_number, issued_at")
       .eq("program_id", programId),
-    supabase
-      .from("profiles")
-      .select("id, full_name, email, system_role")
-      .order("full_name"),
+    loadAllReportRowsById(({ afterId, limit }) => {
+      const query = supabase
+        .from("profiles")
+        .select("id, full_name, email, system_role", { count: "exact" })
+        .order("id", { ascending: true })
+        .limit(limit);
+      return afterId === null ? query : query.gt("id", afterId);
+    }),
   ]);
 
   const program = programRes.data as
@@ -66,6 +78,19 @@ export default async function ProgramReportPage({
       }
     | null;
   if (!program) notFound();
+  if (!lessonsResult.ok || !profilesResult.ok) {
+    return (
+      <main className="w-full flex-1 p-6 md:p-10">
+        <AdminPageHeader
+          eyebrow="Admin · Report"
+          title={program.title}
+          description="Report source data could not be verified. Refresh the page to try again."
+          backHref="/admin/reports"
+          backLabel="Back to reports"
+        />
+      </main>
+    );
+  }
 
   // Courses in this program, ordered.
   const programCourses = ((programCoursesRes.data ?? []) as Array<{
@@ -83,18 +108,12 @@ export default async function ProgramReportPage({
 
   // Required lessons per course in this program.
   const requiredByCourse = new Map<string, Set<string>>();
-  for (const m of modulesRes.data ?? []) {
-    if (!programCourseIds.has(m.course_id)) continue;
-    const lessons = m.lessons as
-      | { id: string; is_required_for_completion: boolean }[]
-      | null;
-    if (!lessons) continue;
-    const bucket =
-      requiredByCourse.get(m.course_id) ?? new Set<string>();
-    for (const l of lessons) {
-      if (l.is_required_for_completion) bucket.add(l.id);
-    }
-    requiredByCourse.set(m.course_id, bucket);
+  for (const lesson of lessonsResult.rows) {
+    const courseId = firstRow(lesson.modules)?.course_id;
+    if (!courseId || !programCourseIds.has(courseId)) continue;
+    const bucket = requiredByCourse.get(courseId) ?? new Set<string>();
+    if (lesson.is_required_for_completion) bucket.add(lesson.id);
+    requiredByCourse.set(courseId, bucket);
   }
 
   const programRequiredLessonIds = new Set<string>();
@@ -102,12 +121,7 @@ export default async function ProgramReportPage({
     for (const id of set) programRequiredLessonIds.add(id);
   }
 
-  const profiles = (profilesRes.data ?? []) as Array<{
-    id: string;
-    full_name: string;
-    email: string;
-    system_role: "owner" | "admin" | "learner";
-  }>;
+  const profiles = profilesResult.rows as ReportProfile[];
   const completionResult = await loadAdminLessonCompletions(supabase, {
     userIds: profiles.map((profile) => profile.id),
     lessonIds: Array.from(programRequiredLessonIds),
@@ -296,3 +310,16 @@ function firstRow<T>(value: T | T[] | null | undefined): T | null {
   if (Array.isArray(value)) return value[0] ?? null;
   return value;
 }
+
+type ProgramLessonRow = {
+  id: string;
+  is_required_for_completion: boolean;
+  modules: { course_id: string } | Array<{ course_id: string }> | null;
+};
+
+type ReportProfile = {
+  id: string;
+  full_name: string;
+  email: string;
+  system_role: "owner" | "admin" | "learner";
+};
