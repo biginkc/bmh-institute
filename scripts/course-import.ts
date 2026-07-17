@@ -3,7 +3,11 @@ import { join, resolve } from "node:path";
 
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
-import { findRemoteAssetProblems } from "../src/lib/course-import/asset-transfer";
+import {
+  findRemoteAssetProblems,
+  findUnexpectedRemoteAssetPaths,
+  type RemoteAssetListingBucket,
+} from "../src/lib/course-import/asset-transfer";
 import {
   assertApprovedUploadIntegrity,
   resumableEndpoint,
@@ -12,12 +16,20 @@ import {
 } from "../src/lib/course-import/asset-upload";
 import {
   applyImportPlanWithUploadReceipt,
-  reconcileImportPlan,
-  type CourseImportAdapter,
 } from "../src/lib/course-import/execute";
+import {
+  assertExactReconciliationClean,
+  reconcileImportPlanExact,
+  type ExactCourseImportAdapter,
+  type ManagedIdInventory,
+} from "../src/lib/course-import/exact-reconciliation";
+import { importStoragePrefix } from "../src/lib/artwork/paths";
 import { validateCanaryScope, validateCourseManifest } from "../src/lib/course-import/manifest";
 import { buildImportPlan } from "../src/lib/course-import/operations";
-import { inspectStorageRollbackAssets } from "../src/lib/course-import/storage-rollback";
+import {
+  assertStorageRollbackInspectionClean,
+  inspectStorageRollbackAssets,
+} from "../src/lib/course-import/storage-rollback";
 import type { Database } from "../src/lib/supabase/types";
 import { assertCourseImportEnvironment } from "../src/lib/course-import/environment";
 import {
@@ -115,16 +127,18 @@ async function main() {
     return;
   }
   if (command === "verify") {
-    const reconciliation = await reconcileImportPlan(plan, adapter);
+    const reconciliation = await reconcileImportPlanExact(plan, adapter);
     const assetProblems = await findAssetProblems(supabase, plan.assets);
-    console.log(JSON.stringify({ ...reconciliation, assetProblems }, null, 2));
-    if (
-      reconciliation.missing.length > 0 ||
-      reconciliation.mismatches.length > 0 ||
-      assetProblems.length > 0
-    ) {
-      process.exitCode = 1;
-    }
+    const prefix = importStoragePrefix(plan.importId);
+    if (!prefix) throw new Error("Import has no canonical storage prefix.");
+    const unexpectedStorage = await findUnexpectedRemoteAssetPaths(
+      supabase.storage.from("content") as unknown as RemoteAssetListingBucket,
+      plan.importId,
+      prefix,
+      plan.assets,
+    );
+    console.log(JSON.stringify({ ...reconciliation, assetProblems, unexpectedStorage }, null, 2));
+    assertExactReconciliationClean({ database: reconciliation, assetProblems, unexpectedStorage });
     return;
   }
   if (command === "inspect-rollback-storage" || command === "rollback") {
@@ -139,6 +153,7 @@ async function main() {
     if (command === "inspect-rollback-storage") {
       const storageRollback = await inspectStorage();
       console.log(JSON.stringify({ phase: "storage_inspection", storageRollback }, null, 2));
+      assertStorageRollbackInspectionClean(storageRollback);
       return;
     }
 
@@ -156,6 +171,7 @@ async function main() {
       },
     });
     console.log(JSON.stringify({ phase: "storage_inspection", storageRollback }, null, 2));
+    assertStorageRollbackInspectionClean(storageRollback);
   }
 }
 
@@ -168,7 +184,7 @@ async function findAssetProblems(
 
 function createSupabaseAdapter(
   supabase: SupabaseClient<Database>,
-): CourseImportAdapter {
+): ExactCourseImportAdapter {
   return {
     async applyAtomically(importId, operations) {
       const client = supabase as unknown as {
@@ -210,6 +226,32 @@ function createSupabaseAdapter(
       });
       if (error) throw new Error(`Atomic course import rollback failed: ${error.message}`);
       return data;
+    },
+    async readManagedIds(importId) {
+      const client = supabase as unknown as {
+        rpc(name: string, args: Record<string, unknown>): PromiseLike<{
+          data: unknown;
+          error: { message: string } | null;
+        }>;
+      };
+      const { data, error } = await client.rpc("fn_course_import_managed_ids", {
+        p_import_id: importId,
+      });
+      if (error) throw new Error(`Managed inventory failed: ${error.message}`);
+      return data as ManagedIdInventory;
+    },
+    async readCatalogSha256(importId) {
+      const client = supabase as unknown as {
+        rpc(name: string, args: Record<string, unknown>): PromiseLike<{
+          data: unknown;
+          error: { message: string } | null;
+        }>;
+      };
+      const { data, error } = await client.rpc("fn_course_import_catalog_sha256", {
+        p_import_id: importId,
+      });
+      if (error) throw new Error(`Catalog checksum failed: ${error.message}`);
+      return String(data);
     },
   };
 }

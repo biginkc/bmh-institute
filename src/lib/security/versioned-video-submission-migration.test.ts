@@ -121,12 +121,12 @@ describe("versioned video completion and submission evidence migration", () => {
     expect(sql).not.toMatch(/if not public\.fn_can_read_user_state\(p_user_id\)/i);
   });
 
-  it("runs migration and integration acceptance serially with seeded E2E", () => {
+  it("runs migration and fail-closed provider acceptance serially with seeded E2E", () => {
     expect(migrateWorkflow).toContain(
       "group: bmh-institute-seeded-e2e-shared-test-project",
     );
     expect(migrateWorkflow).toMatch(
-      /Apply pending migrations[\s\S]*Install dependencies[\s\S]*npm ci[\s\S]*npm run test:integration/i,
+      /Apply pending migrations[\s\S]*Install dependencies[\s\S]*npm ci[\s\S]*npm run test:course-import-provider/i,
     );
     expect(migrateWorkflow).toMatch(
       /Run versioned completion Postgres acceptance[\s\S]*031_versioned_video_completion_and_submission_evidence\.sql/i,

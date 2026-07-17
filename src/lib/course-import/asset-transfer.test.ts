@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { describe, expect, it } from "vitest";
 
 import type { CourseImportAsset } from "./manifest";
-import { findRemoteAssetProblems } from "./asset-transfer";
+import { findRemoteAssetProblems, findUnexpectedRemoteAssetPaths } from "./asset-transfer";
 
 describe("course import remote asset verification", () => {
   it("makes no storage calls for assets that are not approved", async () => {
@@ -109,6 +109,47 @@ describe("course import remote asset verification", () => {
     await expect(findRemoteAssetProblems(bucket, [asset])).resolves.toEqual([]);
     expect(blobFallbackAwaited).toBe(false);
   });
+});
+
+it("reports unexpected objects anywhere below the immutable import prefix", async () => {
+  const listings = new Map([
+    ["courses/import/v1", [{ name: "videos", id: null }, { name: "stale.bin", id: "extra" }]],
+    ["courses/import/v1/videos", [{ name: "approved.bin", id: "expected" }]],
+  ]);
+  const bucket = {
+    async info() { return { data: null, error: { status: 404, message: "missing" } }; },
+    download() { return Promise.resolve({ data: null, error: { message: "unused" } }); },
+    async list(path: string) { return { data: listings.get(path) ?? [], error: null }; },
+  };
+  await expect(findUnexpectedRemoteAssetPaths(
+    bucket,
+    "import-v1",
+    "courses/import/v1/",
+    [{
+      source_key: "approved",
+      kind: "video",
+      local_path: "approved.bin",
+      storage_path: "courses/import/v1/videos/approved.bin",
+      mime_type: "application/octet-stream",
+      checksum_sha256: "a".repeat(64),
+      size_bytes: 1,
+      approval_status: "approved",
+    }],
+  )).resolves.toEqual(["courses/import/v1/stale.bin"]);
+});
+
+it("rejects empty, malformed, mismatched, and asset-escaping storage prefixes", async () => {
+  const bucket = {
+    async info() { return { data: null, error: { status: 404, message: "missing" } }; },
+    download() { return Promise.resolve({ data: null, error: { message: "unused" } }); },
+    async list() { return { data: [], error: null }; },
+  };
+  const asset = approvedAsset(Buffer.from("approved"));
+  for (const prefix of ["", "courses/", "/courses/test/v1/", "courses/test/../v1/"]) {
+    await expect(findUnexpectedRemoteAssetPaths(bucket, "test-v1", prefix, [asset])).rejects.toThrow(/prefix/);
+  }
+  await expect(findUnexpectedRemoteAssetPaths(bucket, "test-v1", "courses/other/v1/", [asset])).rejects.toThrow(/exact managed prefix/);
+  await expect(findUnexpectedRemoteAssetPaths(bucket, "test-v1", "courses/test/v1/", [{ ...asset, storage_path: "courses/elsewhere/file.bin" }])).rejects.toThrow(/escapes/);
 });
 
 function approvedAsset(bytes: Buffer): CourseImportAsset {

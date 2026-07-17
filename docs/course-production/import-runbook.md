@@ -24,6 +24,59 @@ canary/full scope being applied. Always pass the same `--state-root` to upload
 and apply. An interrupted upload, stale manifest, or receipt from another scope
 or environment must be resumed or uploaded again before apply can proceed.
 
+### Checksum-bound release evidence
+
+Caption and transcript approval is one atomic decision per video cut. The
+immutable history in `caption-approvals.json` binds the exact video, VTT, and
+transcript SHA-256 values plus its review evidence. A new video or derivative
+checksum requires a new record; never rewrite or remove a prior decision. The
+manifest builder approves both derivatives only when one exact composite
+record matches, otherwise both remain missing.
+
+The six production Closer Lab IDs remain deliberately null in
+`closer-lab-production-mapping.json` until the canonical service-role-only
+production RPC proves the exact 6-role-play, 6-persona, 24-goal, and 24-link
+graph. After the ledger is populated from that authenticated response and
+marked `finalized`, set `CLOSER_LAB_PRODUCTION_SUPABASE_URL` and
+`CLOSER_LAB_PRODUCTION_SERVICE_ROLE_KEY` from the write-enabled secret runtime,
+then create the checked evidence file without editing its output:
+
+```bash
+npm run course:reconcile:closer-lab -- \
+  --manifest=content/course-manifests/bmh-employee-training.v1.json \
+  --mapping-ledger=docs/course-production/closer-lab-production-mapping.json \
+  --production-catalog=docs/course-production/closer-lab-production-catalog.json \
+  --output=docs/course-production/closer-lab-production-mapping-reconciliation.json
+```
+
+The semantic release gate rejects placeholder IDs, stale manifest or ledger
+bytes, duplicate keys, altered evidence bindings, missing production checksums,
+and any evidence that is not reproduced by a fresh authenticated read from the
+signed canonical Closer Lab production project.
+
+After an applied import, create exact read-only database/storage evidence. This
+requires service-role credentials because it inventories the closed managed
+graph and downloads approved objects for exact-byte verification, but it does
+not write to Supabase:
+
+```bash
+npm run course:reconcile -- \
+  content/course-manifests/bmh-employee-training.v1.json \
+  --execute \
+  --output=.course-import-state/reconciliation/bmh-employee-training-v1.json
+```
+
+Add `--canary` for the deterministic Tech Stack manifest and
+`--allow-production` only for the canonical production project. Evidence is
+emitted only when planned fields match, all thirteen managed table inventories
+(including direct `course_access`) have exact closed-graph keys and no extras,
+the catalog checksum is valid, every approved object matches its size,
+metadata, and bytes, and no unexpected object exists below the exact import
+storage prefix. The evidence checksum is deterministic for identical observed
+state. The regular `course:import -- verify ... --execute` command enforces the
+same no-drift rule and exits with an error on any extra database row or storage
+object.
+
 Manifest asset paths are relative to the repository root by default. If the approved source files live in another checkout, add `--source-root=/absolute/path/to/that/repository-root` to `upload`—the directory must contain the manifest's `course-assets/...` paths, not be the `course-assets` directory itself. The importer resolves real paths and rejects files that escape that root.
 
 ### Composite asset staging
@@ -119,6 +172,14 @@ the database mutation and repeat only the storage inspection. If the database
 rows are already completely absent, the receipt records `already_absent`
 without claiming that a new database rollback occurred.
 
+The receipt is a controller-exclusive snapshot, not a cross-controller lock or
+deletion authorization. Do not run another apply, rollback, or catalog writer
+for the same import until the rehearsal and its final exact verification have
+finished. Receipt reuse rechecks the live database before trusting the snapshot.
+Storage `manual_review_candidates` are advisory only: no object is deleted, and
+the report must be re-verified immediately before any separately approved
+cleanup because the provider does not expose a conditional version-bound delete.
+
 Quarantine the local composite tree with the ownership-checked cleanup command.
 It refuses to move a directory that lacks the tool's marker. This does not
 touch source files, storage, or the database. Inspect and separately remove the
@@ -134,7 +195,9 @@ Production execution also needs `--allow-production`. Rollback additionally need
 
 The complete migration list must match the disposable project. In particular,
 `018_storage_content_markdown.sql`, `019_atomic_course_import_rollback.sql`,
-`020_catalog_artwork_provenance.sql`, and `023_atomic_course_import_apply.sql`
+`020_catalog_artwork_provenance.sql`, `023_atomic_course_import_apply.sql`,
+`027_import_release_control.sql` through
+`032_exact_import_reconciliation.sql`
 must be verified before any production migration. Do not use the production
 project ref. With test-project environment variables loaded, run:
 

@@ -1,10 +1,10 @@
-import type { CourseImportAdapter } from "./execute";
+import type { ExactCourseImportAdapter } from "./exact-reconciliation";
 import type { ImportPlan } from "./operations";
 import { settleDatabaseRollback } from "./rollback-settlement";
 
 export async function runRestartableRollback<TStorageInspection>(options: {
   plan: ImportPlan;
-  adapter: CourseImportAdapter;
+  adapter: ExactCourseImportAdapter;
   receiptPath: string;
   inspectStorage: () => Promise<TStorageInspection>;
   onDatabaseSettled?: (

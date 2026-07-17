@@ -12,6 +12,7 @@ const integrationFiles = [
   "src/lib/course-import/atomic-apply.integration.test.ts",
   "src/lib/course-import/atomic-rollback.integration.test.ts",
   "src/lib/course-import/artwork-provenance.integration.test.ts",
+  "src/lib/course-import/exact-reconciliation.integration.test.ts",
 ];
 
 process.exitCode = main();

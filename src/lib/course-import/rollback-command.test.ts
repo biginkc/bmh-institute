@@ -4,7 +4,11 @@ import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-import type { CourseImportAdapter } from "./execute";
+import {
+  MANAGED_IMPORT_TABLES,
+  type ExactCourseImportAdapter,
+  type ManagedIdInventory,
+} from "./exact-reconciliation";
 import { buildImportPlan } from "./operations";
 import { runRestartableRollback } from "./rollback-command";
 import { validCourseManifest } from "./test-fixtures";
@@ -53,7 +57,7 @@ describe("restartable rollback command sequencing", () => {
   });
 });
 
-function adapterFor(events: string[] = []): CourseImportAdapter {
+function adapterFor(events: string[] = []): ExactCourseImportAdapter {
   return {
     async applyAtomically() {
       throw new Error("not used");
@@ -71,6 +75,14 @@ function adapterFor(events: string[] = []): CourseImportAdapter {
           0,
         ),
       };
+    },
+    async readManagedIds() {
+      return Object.fromEntries(
+        MANAGED_IMPORT_TABLES.map((table) => [table, []]),
+      ) as unknown as ManagedIdInventory;
+    },
+    async readCatalogSha256() {
+      return "a".repeat(64);
     },
   };
 }

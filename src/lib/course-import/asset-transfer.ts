@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 
 import type { CourseImportAsset } from "./manifest";
+import { importStoragePrefix } from "../artwork/paths";
 
 export type RemoteAssetProblem = { path: string; problem: string };
 export type RemoteStorageError = {
@@ -24,6 +25,13 @@ export type RemoteAssetBucket = {
     error: RemoteStorageError | null;
   }>;
   download(path: string): RemoteDownloadRequest;
+};
+
+export type RemoteAssetListingBucket = RemoteAssetBucket & {
+  list(path: string, options: { limit: number; offset: number; sortBy: { column: "name"; order: "asc" } }): Promise<{
+    data: Array<{ name: string; id?: string | null; metadata?: Record<string, unknown> | null }> | null;
+    error: RemoteStorageError | null;
+  }>;
 };
 
 export async function findRemoteAssetProblems(
@@ -81,6 +89,68 @@ export async function findRemoteAssetProblems(
     }
   }
   return problems;
+}
+
+export async function listRemoteAssetPaths(
+  bucket: RemoteAssetListingBucket,
+  prefix: string,
+  maximumEntries = 10_000,
+) {
+  if (
+    !/^courses\/[a-z0-9][a-z0-9._-]*(?:\/v[0-9]+)?\/$/.test(prefix) ||
+    prefix.includes("..") || prefix.includes("//") || prefix.includes("\\")
+  ) {
+    throw new Error("Storage inventory requires an exact canonical import prefix.");
+  }
+  const normalized = prefix.slice(0, -1);
+  const pending = [normalized];
+  const files: string[] = [];
+  let inspected = 0;
+  while (pending.length > 0) {
+    const directory = pending.shift()!;
+    for (let offset = 0; ; offset += 100) {
+      const { data, error } = await bucket.list(directory, {
+        limit: 100,
+        offset,
+        sortBy: { column: "name", order: "asc" },
+      });
+      if (error || !data) throw new Error(`Storage inventory failed at ${directory}: ${error?.message ?? "empty response"}`);
+      for (const entry of data) {
+        inspected += 1;
+        if (inspected > maximumEntries) throw new Error(`Storage inventory exceeded ${maximumEntries} entries.`);
+        if (!entry.name || entry.name.includes("/") || entry.name === "." || entry.name === "..") {
+          throw new Error(`Storage inventory returned an unsafe object name at ${directory}.`);
+        }
+        const itemPath = `${directory}/${entry.name}`;
+        if (entry.id === null || entry.id === undefined) pending.push(itemPath);
+        else files.push(itemPath);
+      }
+      if (data.length < 100) break;
+    }
+  }
+  return files.sort();
+}
+
+export async function findUnexpectedRemoteAssetPaths(
+  bucket: RemoteAssetListingBucket,
+  importId: string,
+  prefix: string,
+  assets: CourseImportAsset[],
+) {
+  const expectedPrefix = importStoragePrefix(importId);
+  if (!expectedPrefix || prefix !== expectedPrefix) {
+    throw new Error("Storage inventory prefix does not match the import's exact managed prefix.");
+  }
+  for (const asset of assets) {
+    if (!asset.storage_path.startsWith(expectedPrefix)) {
+      throw new Error(`${asset.source_key} escapes the import's exact managed storage prefix.`);
+    }
+  }
+  const expected = new Set(
+    assets.filter((asset) => asset.approval_status === "approved").map((asset) => asset.storage_path),
+  );
+  const actual = await listRemoteAssetPaths(bucket, prefix);
+  return actual.filter((item) => !expected.has(item));
 }
 
 async function sha256RemoteBytes(data: Blob | ReadableStream<Uint8Array>) {

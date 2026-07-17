@@ -1,13 +1,15 @@
 import type { CourseImportAsset } from "./manifest";
-import type { RemoteStorageError } from "./asset-transfer";
+import {
+  findRemoteAssetProblems,
+  findUnexpectedRemoteAssetPaths,
+  type RemoteAssetListingBucket,
+  type RemoteStorageError,
+} from "./asset-transfer";
+import { importStoragePrefix } from "../artwork/paths";
 
 const UPLOAD_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-type StorageRollbackBucket = {
-  info(path: string): Promise<{
-    data: { size?: number; metadata?: Record<string, unknown> | null } | null;
-    error: RemoteStorageError | null;
-  }>;
+type StorageRollbackBucket = RemoteAssetListingBucket & {
   remove?(paths: string[]): Promise<{ data?: unknown; error: RemoteStorageError | null }>;
 };
 
@@ -16,7 +18,19 @@ export async function inspectStorageRollbackAssets(options: {
   assets: CourseImportAsset[];
   bucket: StorageRollbackBucket;
 }) {
-  const manual_cleanup_candidates: Array<{
+  const storagePrefix = importStoragePrefix(options.importId);
+  if (!storagePrefix) throw new Error("Rollback storage inspection has no canonical import prefix.");
+  const [integrity_problems, unexpected_storage] = await Promise.all([
+    findRemoteAssetProblems(options.bucket, options.assets),
+    findUnexpectedRemoteAssetPaths(
+      options.bucket,
+      options.importId,
+      storagePrefix,
+      options.assets,
+    ),
+  ]);
+  const pathsWithIntegrityProblems = new Set(integrity_problems.map((problem) => problem.path));
+  const manual_review_candidates: Array<{
     source_key: string;
     storage_path: string;
     ownership_token: string;
@@ -63,10 +77,11 @@ export async function inspectStorageRollbackAssets(options: {
       typeof ownershipToken === "string" &&
       UPLOAD_ID_PATTERN.test(ownershipToken) &&
       current.data.size === asset.size_bytes &&
-      metadata.sha256 === asset.checksum_sha256;
+      metadata.sha256 === asset.checksum_sha256 &&
+      !pathsWithIntegrityProblems.has(asset.storage_path);
 
     if (owned) {
-      manual_cleanup_candidates.push({
+      manual_review_candidates.push({
         source_key: asset.source_key,
         storage_path: asset.storage_path,
         ownership_token: ownershipToken,
@@ -80,16 +95,41 @@ export async function inspectStorageRollbackAssets(options: {
     }
   }
 
+  const absentPaths = new Set(absent.map((asset) => asset.storage_path));
+  const unresolved_integrity_problems = integrity_problems.filter(
+    (problem) => !absentPaths.has(problem.path),
+  );
+  const closureIsExact =
+    unexpected_storage.length === 0 && unresolved_integrity_problems.length === 0;
+
   return {
     schema_version: 1 as const,
     import_id: options.importId,
     automatic_deletes: [] as string[],
-    manual_cleanup_candidates,
+    evidence_semantics: "advisory_non_deletion_authorization" as const,
+    manual_review_candidates,
     preserved,
     absent,
+    storage_prefix: storagePrefix,
+    integrity_problems,
+    unresolved_integrity_problems,
+    unexpected_storage,
+    closure_status: closureIsExact ? "exact" as const : "blocked" as const,
     message:
-      "Storage objects were preserved because the Storage API has no conditional delete. Only proven approved objects are listed for separate manual cleanup.",
+      "Storage objects were preserved because the Storage API has no conditional delete. Review candidates are advisory only and never authorize deletion; re-verify exact bytes and ownership immediately before any separately approved cleanup.",
   };
+}
+
+export function assertStorageRollbackInspectionClean(
+  report: Awaited<ReturnType<typeof inspectStorageRollbackAssets>>,
+) {
+  if (report.unexpected_storage.length > 0 || report.unresolved_integrity_problems.length > 0) {
+    throw new Error(
+      "Storage rollback inspection could not prove exact prefix closure. " +
+      `Unexpected objects: ${report.unexpected_storage.join(", ") || "none"}. ` +
+      `Unresolved integrity problems: ${report.unresolved_integrity_problems.map((problem) => `${problem.path} (${problem.problem})`).join(", ") || "none"}.`,
+    );
+  }
 }
 
 function metadataValue(

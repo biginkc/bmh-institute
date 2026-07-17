@@ -31,7 +31,9 @@
     "cleanup:prod-dryrun": "tsx scripts/cleanup-production-readiness.ts --prefix PILOT-DRYRUN-",
     "cleanup:fixtures": "tsx scripts/cleanup-fixture-catalog.ts",
     "course:import": "tsx scripts/course-import.ts",
-    "course:assets:stage": "tsx scripts/course-assets-stage.ts"
+    "course:assets:stage": "tsx scripts/course-assets-stage.ts",
+    "course:reconcile": "tsx scripts/course-content/build-import-reconciliation-evidence.ts",
+    "course:reconcile:closer-lab": "node scripts/course-content/reconcile-closer-lab-production-mapping.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",
