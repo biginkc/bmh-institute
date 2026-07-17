@@ -1,6 +1,8 @@
 # Paired pilot v6 QA report
 
-Status: awaiting Jarrad approval; not promoted to the canonical artwork ledger.
+Status: rejected after Jarrad clarified that each card must contain Andrea or
+the seller, never both together. V6 was not promoted to the canonical artwork
+ledger.
 
 ## Locked cast
 
@@ -37,7 +39,11 @@ visible and does not shift between card and poster formats.
 
 ## Promotion gate
 
-Approval of these exact checksum-locked learner cards is required before:
+V6 is retained only as rejected generation evidence. It cannot be approved or
+promoted. The replacement v7 pilot uses exactly one recurring character per
+card.
+
+The active pilot approval is required before:
 
 1. replacing the canonical pilot lineage and checksum files;
 2. rebuilding the production artwork inventory under lineage v2;

@@ -1,5 +1,12 @@
 import assert from "node:assert/strict";
-import { mkdtemp, readFile, realpath, rm, symlink, writeFile } from "node:fs/promises";
+import {
+  mkdtemp,
+  readFile,
+  realpath,
+  rm,
+  symlink,
+  writeFile,
+} from "node:fs/promises";
 import { get } from "node:http";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
@@ -36,17 +43,59 @@ const verificationPromise = canonicalMediaAvailable
   ? verifyHeldVideoReview({ mediaRoot: configuredMediaRoot })
   : null;
 
-test("the local review surface is locked to every held manifest video", {
-  skip: canonicalMediaAvailable ? false : "canonical held-video files are not present on this runner",
-}, async () => {
-  const result = await verificationPromise;
+const EXPECTED_QC_ROUTES = [
+  [
+    "video-slot-01-welcome",
+    "29249f2093ae76daf8e4c6425398b6708b3252539c66fc059cdc6f0bf49bf901",
+  ],
+  [
+    "video-slot-01-mindset",
+    "8184b9dcf4e424294843523a7480fd8afef215d627dffa46ef3a3a257c910ee1",
+  ],
+  [
+    "video-slot-02-terms",
+    "e5b41f3003d45eb5ddfc0a43234965c4a0fab4ec547b830abed9bc6db58f535a",
+  ],
+  [
+    "video-slot-10-objection-scripts",
+    "2ab1372ebb65592326403a5df78b8aefeb7d29f90a0f8d743096b359c8b32368",
+  ],
+  [
+    "video-slot-15-closing",
+    "4bdb2786b9b5565a259c66df3ff0aa3af2a6ad6c7ae7d909af437309090bf5ac",
+  ],
+  [
+    "video-slot-16-kpis",
+    "1caee68cd969142939138676d66494a16cfd4ab67682535ac445fdccd1100ee2",
+  ],
+].map(([sourceKey, sha256]) => ({
+  route: `/evidence/${sourceKey}/qc-report.md`,
+  sha256,
+}));
 
-  assert.deepEqual(result.sourceKeys, EXPECTED_HELD_SOURCE_KEYS);
-  assert.equal(result.videoCount, 9);
-  assert.equal(result.evidenceFileCount, 6);
-  assert.equal(result.approvalLedgerRecordCount, 9);
-  assert.equal(result.htmlIsCurrent, true);
-});
+test(
+  "the local review surface is locked to every held manifest video",
+  {
+    skip: canonicalMediaAvailable
+      ? false
+      : "canonical held-video files are not present on this runner",
+  },
+  async () => {
+    const result = await verificationPromise;
+
+    assert.deepEqual(result.sourceKeys, EXPECTED_HELD_SOURCE_KEYS);
+    assert.equal(result.videoCount, 9);
+    assert.equal(result.evidenceFileCount, 12);
+    assert.equal(result.approvalLedgerRecordCount, 9);
+    assert.equal(result.htmlIsCurrent, true);
+    assert.deepEqual(
+      result.files
+        .filter((file) => file.kind === "qc-report")
+        .map(({ route, sha256 }) => ({ route, sha256 })),
+      EXPECTED_QC_ROUTES,
+    );
+  },
+);
 
 async function createSyntheticVerification(manifest) {
   const fixtureRoot = await mkdtemp(join(tmpdir(), "held-review-server-"));
@@ -58,14 +107,21 @@ async function createSyntheticVerification(manifest) {
       verifiedAt: "2026-07-16T12:34:56.000Z",
     },
   });
-  const routes = [...new Set(
-    [
-      ...[...reviewHtml.matchAll(/(?:src|href)="(\/(?:media|evidence|review)\/[^\"]+)"/g)]
-        .map((match) => match[1]),
+  const routes = [
+    ...new Set([
+      ...[
+        ...reviewHtml.matchAll(
+          /(?:src|href)="(\/(?:media|evidence|review)\/[^\"]+)"/g,
+        ),
+      ].map((match) => match[1]),
       "/approval-ledger.json",
-    ],
-  )];
-  assert.equal(routes.length, 16, "synthetic verification must cover the exact locked route set");
+    ]),
+  ];
+  assert.equal(
+    routes.length,
+    22,
+    "synthetic verification must cover the exact locked route set",
+  );
 
   const records = EXPECTED_HELD_SOURCE_KEYS.map((sourceKey, index) => ({
     source_key: sourceKey,
@@ -85,6 +141,9 @@ async function createSyntheticVerification(manifest) {
       contents = "WEBVTT\n\n00:00.000 --> 00:01.000\nSynthetic caption.\n";
       contentType = "text/vtt; charset=utf-8";
       kind = "vtt";
+    } else if (route.endsWith("/qc-report.md")) {
+      contents = "# Synthetic QC report\n\nQC: PASS\n";
+      kind = "qc-report";
     } else if (route === "/approval-ledger.json") {
       contents = `${JSON.stringify({ records })}\n`;
       contentType = "application/json; charset=utf-8";
@@ -107,7 +166,7 @@ async function createSyntheticVerification(manifest) {
     verification: {
       sourceKeys: EXPECTED_HELD_SOURCE_KEYS,
       videoCount: 9,
-      evidenceFileCount: 6,
+      evidenceFileCount: 12,
       approvalLedgerRecordCount: 9,
       htmlIsCurrent: true,
       files,
@@ -152,19 +211,23 @@ test("the file-handle closer invokes close exactly once across competing complet
 
 test("the review lock fails closed when a held cut changes", () => {
   assert.throws(
-    () => assertHeldAssetMatchesLock({
-      source_key: "video-slot-01-welcome",
-      local_path: "course-assets/review-lessonA/LESSON-1A-v8.mp4",
-      checksum_sha256: "0".repeat(64),
-      size_bytes: 1,
-    }),
+    () =>
+      assertHeldAssetMatchesLock({
+        source_key: "video-slot-01-welcome",
+        local_path: "course-assets/review-lessonA/LESSON-1A-v8.mp4",
+        checksum_sha256: "0".repeat(64),
+        size_bytes: 1,
+      }),
     /Held cut changed in the manifest/,
   );
 });
 
 test("media-root selection honors CLI override, then environment, then the documented default", () => {
   assert.equal(
-    resolveMediaRoot({ cliValue: "/tmp/held-cli", env: { [MEDIA_ROOT_ENV]: "/tmp/held-env" } }),
+    resolveMediaRoot({
+      cliValue: "/tmp/held-cli",
+      env: { [MEDIA_ROOT_ENV]: "/tmp/held-env" },
+    }),
     resolve("/tmp/held-cli"),
   );
   assert.equal(
@@ -184,8 +247,14 @@ test("media paths reject traversal, absolute paths, and symlinks outside the con
     await writeFile(outsidePath, "outside", "utf8");
     await symlink(outsidePath, join(fixtureRoot, "escaped.mp4"));
 
-    assert.equal(resolveManifestMediaPath(fixtureRoot, "inside.mp4"), insidePath);
-    assert.equal(await resolveVerifiedMediaPath(fixtureRoot, "inside.mp4"), await realpath(insidePath));
+    assert.equal(
+      resolveManifestMediaPath(fixtureRoot, "inside.mp4"),
+      insidePath,
+    );
+    assert.equal(
+      await resolveVerifiedMediaPath(fixtureRoot, "inside.mp4"),
+      await realpath(insidePath),
+    );
     assert.throws(
       () => resolveManifestMediaPath(fixtureRoot, "../outside.mp4"),
       /escapes the configured media root/,
@@ -241,10 +310,20 @@ test("static and verified pages make trust state and caption availability explic
   assert.match(staticHtml, /approvals\.json/);
   assert.match(staticHtml, /held-video-recuts\/README\.md/);
   assert.equal((staticHtml.match(/REPLACEMENT REQUIRED/g) || []).length, 3);
+  assert.equal(
+    (staticHtml.match(/Checksum-locked QC evidence/g) || []).length,
+    6,
+  );
   assert.match(staticHtml, /Six corrected candidates await Jarrad review/);
   assert.match(staticHtml, /Orientation → Welcome and Mindset/);
-  assert.match(staticHtml, /Objections and Questions → Objection Scripts Playbook/);
-  assert.match(staticHtml, /Cadence, Scripts, and Close → Closing and Deal Engineering/);
+  assert.match(
+    staticHtml,
+    /Objections and Questions → Objection Scripts Playbook/,
+  );
+  assert.match(
+    staticHtml,
+    /Cadence, Scripts, and Close → Closing and Deal Engineering/,
+  );
   assert.match(staticHtml, /Performance and Career → KPIs and Sales Telemetry/);
   assert.match(staticHtml, /block-video-video-slot-16-kpis/);
   assert.doesNotMatch(staticHtml, /Uses the approved non-finale closer/);
@@ -254,12 +333,18 @@ test("static and verified pages make trust state and caption availability explic
   assert.match(verifiedHtml, /2026-07-16T12:34:56\.000Z/);
   assert.match(verifiedHtml, new RegExp("a{64}"));
 
-  const ariaLabels = [...staticHtml.matchAll(/<video [^>]*aria-label="([^"]+)"/g)].map((match) => match[1]);
+  const ariaLabels = [
+    ...staticHtml.matchAll(/<video [^>]*aria-label="([^"]+)"/g),
+  ].map((match) => match[1]);
   assert.equal(ariaLabels.length, 9);
   assert.equal(new Set(ariaLabels).size, 9);
   assert.equal((staticHtml.match(/<track [^>]* default>/g) || []).length, 3);
   assert.equal(
-    (staticHtml.match(/Captions and a transcript are intentionally not finalized/g) || []).length,
+    (
+      staticHtml.match(
+        /Captions and a transcript are intentionally not finalized/g,
+      ) || []
+    ).length,
     6,
   );
 });
@@ -285,23 +370,49 @@ test("the verified server serves only locked routes with no-store and byte range
       headers: { Range: "bytes=0-15" },
     });
     assert.equal(rangeResponse.status, 206);
-    assert.equal(rangeResponse.headers.get("content-range"), `bytes 0-15/${video.snapshot.size}`);
+    assert.equal(
+      rangeResponse.headers.get("content-range"),
+      `bytes 0-15/${video.snapshot.size}`,
+    );
     assert.match(rangeResponse.headers.get("cache-control"), /no-store/);
     assert.equal((await rangeResponse.arrayBuffer()).byteLength, 16);
 
     const evidence = verification.files.find((file) => file.kind === "vtt");
-    const evidenceResponse = await fetch(new URL(evidence.route, url), { method: "HEAD" });
+    const evidenceResponse = await fetch(new URL(evidence.route, url), {
+      method: "HEAD",
+    });
     assert.equal(evidenceResponse.status, 200);
     assert.match(evidenceResponse.headers.get("content-type"), /text\/vtt/);
 
-    const approvalLedger = verification.files.find((file) => file.kind === "approval-ledger");
+    const qcReports = verification.files.filter(
+      (file) => file.kind === "qc-report",
+    );
+    assert.equal(qcReports.length, 6);
+    for (const qcReport of qcReports) {
+      const qcResponse = await fetch(new URL(qcReport.route, url));
+      assert.equal(qcResponse.status, 200);
+      assert.match(qcResponse.headers.get("content-type"), /text\/markdown/);
+      assert.match(qcResponse.headers.get("cache-control"), /no-store/);
+      assert.match(await qcResponse.text(), /Synthetic QC report/);
+    }
+
+    const approvalLedger = verification.files.find(
+      (file) => file.kind === "approval-ledger",
+    );
     const ledgerResponse = await fetch(new URL(approvalLedger.route, url));
     assert.equal(ledgerResponse.status, 200);
     assert.match(ledgerResponse.headers.get("cache-control"), /no-store/);
     const ledger = await ledgerResponse.json();
     assert.equal(ledger.records.length, 9);
-    assert.equal(ledger.records.filter((record) => record.decision === "pending").length, 6);
-    assert.equal(ledger.records.filter((record) => record.decision === "changes_requested").length, 3);
+    assert.equal(
+      ledger.records.filter((record) => record.decision === "pending").length,
+      6,
+    );
+    assert.equal(
+      ledger.records.filter((record) => record.decision === "changes_requested")
+        .length,
+      3,
+    );
 
     const unknownResponse = await fetch(new URL("/media/not-locked.mp4", url));
     assert.equal(unknownResponse.status, 404);
@@ -328,7 +439,9 @@ test("concurrent aborted media ranges do not prevent a second desktop or mobile-
       .map((file) => file.route);
     assert.equal(videoRoutes.length, 9);
 
-    await Promise.all(videoRoutes.map((route) => abortRangeRequest(url, route)));
+    await Promise.all(
+      videoRoutes.map((route) => abortRangeRequest(url, route)),
+    );
 
     const desktopResponse = await fetch(url, {
       headers: { "User-Agent": "Desktop Chrome held-video review" },
@@ -381,7 +494,10 @@ test("runtime close terminates a paused media client and waits for its file hand
       runtime.close(),
       new Promise((_, rejectTimeout) => {
         timeout = setTimeout(
-          () => rejectTimeout(new Error("runtime.close() hung on a paused media response")),
+          () =>
+            rejectTimeout(
+              new Error("runtime.close() hung on a paused media response"),
+            ),
           2_000,
         );
       }),
@@ -396,7 +512,10 @@ test("runtime close terminates a paused media client and waits for its file hand
       fileHandles: 0,
       pendingFileHandleCloses: 0,
     });
-    await assert.doesNotReject(runtime.close(), "runtime close remains idempotent");
+    await assert.doesNotReject(
+      runtime.close(),
+      "runtime close remains idempotent",
+    );
   } finally {
     pausedResponse?.destroy();
     request?.destroy();
@@ -420,7 +539,10 @@ test("the review runtime is one-shot when closed before listening", async () => 
       runtime.listen(),
       /cannot listen after shutdown has started/,
     );
-    await assert.doesNotReject(runtime.close(), "a pre-listen close remains idempotent");
+    await assert.doesNotReject(
+      runtime.close(),
+      "a pre-listen close remains idempotent",
+    );
     assert.equal(runtime.server.listening, false);
   } finally {
     await runtime.close();
@@ -440,11 +562,25 @@ test("concurrent startup and shutdown never leave a listening review server", as
       });
       const listen = runtime.listen();
       const close = runtime.close();
-      const [listenResult, closeResult] = await Promise.allSettled([listen, close]);
-      assert.equal(closeResult.status, "fulfilled", `close failed in iteration ${iteration}`);
-      assert.equal(runtime.server.listening, false, `server leaked in iteration ${iteration}`);
+      const [listenResult, closeResult] = await Promise.allSettled([
+        listen,
+        close,
+      ]);
+      assert.equal(
+        closeResult.status,
+        "fulfilled",
+        `close failed in iteration ${iteration}`,
+      );
+      assert.equal(
+        runtime.server.listening,
+        false,
+        `server leaked in iteration ${iteration}`,
+      );
       if (listenResult.status === "fulfilled") {
-        assert.match(listenResult.value, /^http:\/\/(?:127\.0\.0\.1|\[::1\]):\d+\/$/);
+        assert.match(
+          listenResult.value,
+          /^http:\/\/(?:127\.0\.0\.1|\[::1\]):\d+\/$/,
+        );
       } else {
         assert.match(listenResult.reason.message, /shut down while starting/);
       }
@@ -468,18 +604,31 @@ test("integrity-watch shutdown during startup never leaves a listening server", 
         watchIntervalMs: 1,
       });
       const listenResult = Promise.allSettled([runtime.listen()]);
-      await writeFile(watchedFile.absolutePath, `integrity-startup-${iteration}\n`, "utf8");
+      await writeFile(
+        watchedFile.absolutePath,
+        `integrity-startup-${iteration}\n`,
+        "utf8",
+      );
 
       const integrityDeadline = Date.now() + 500;
       while (!runtime.integrityError && Date.now() < integrityDeadline) {
         await new Promise((resolveWait) => setTimeout(resolveWait, 1));
       }
-      assert.ok(runtime.integrityError, `watcher did not observe mutation in iteration ${iteration}`);
+      assert.ok(
+        runtime.integrityError,
+        `watcher did not observe mutation in iteration ${iteration}`,
+      );
       await listenResult;
       await runtime.close();
-      assert.equal(runtime.server.listening, false, `server leaked in iteration ${iteration}`);
+      assert.equal(
+        runtime.server.listening,
+        false,
+        `server leaked in iteration ${iteration}`,
+      );
 
-      watchedFile.snapshot = await captureFileSnapshot(watchedFile.absolutePath);
+      watchedFile.snapshot = await captureFileSnapshot(
+        watchedFile.absolutePath,
+      );
     }
   } finally {
     await fixture.cleanup();
@@ -492,15 +641,17 @@ test("the verified server returns an integrity failure and stops for a stale sta
   const { verification } = fixture;
   const staleVerification = {
     ...verification,
-    files: verification.files.map((file, index) => index === 0
-      ? {
-          ...file,
-          snapshot: {
-            ...file.snapshot,
-            mtimeNs: String(BigInt(file.snapshot.mtimeNs) + 1n),
-          },
-        }
-      : file),
+    files: verification.files.map((file, index) =>
+      index === 0
+        ? {
+            ...file,
+            snapshot: {
+              ...file.snapshot,
+              mtimeNs: String(BigInt(file.snapshot.mtimeNs) + 1n),
+            },
+          }
+        : file,
+    ),
   };
   const runtime = createHeldVideoReviewServer({
     manifest,

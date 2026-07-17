@@ -1,6 +1,6 @@
 {
   "schema_version": "bmh-thumbnail-pilot-lineage/v2",
-  "status": "awaiting-jarrad-approval",
+  "status": "rejected-superseded-by-single-character-v7",
   "evidence_source": "Codex session event log and retained built-in image_gen outputs",
   "generator": "built-in image_gen",
   "evidence_precision_note": "Retained transcript cell ids identify each invocation. Observed completion timestamps are also used as the conservative invocation timestamps because the transcript did not retain a separate invocation timestamp.",

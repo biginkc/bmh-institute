@@ -1,0 +1,47 @@
+{
+  "schema_version": "bmh-thumbnail-pilot-derivatives/v3",
+  "palette_rgb": [
+    [103, 182, 255],
+    [255, 211, 1],
+    [255, 174, 1],
+    [255, 110, 0],
+    [254, 255, 198],
+    [255, 255, 255],
+    [0, 0, 0],
+    [105, 153, 53]
+  ],
+  "pilots": [
+    {
+      "slug": "orientation",
+      "source_path": "course-assets/thumbnails/pilots/revisions/v7/sources/orientation-andrea-generated-v7.png",
+      "background_rgb": [103, 182, 255],
+      "flat_master_path": "course-assets/thumbnails/pilots/revisions/v7/flat-masters/orientation-andrea-flat-master-v7.png",
+      "lesson_card_path": "course-assets/thumbnails/pilots/revisions/v7/lesson-cards/orientation-andrea-lesson-card-v7-16x10.webp",
+      "video_poster_path": "course-assets/thumbnails/pilots/revisions/v7/video-posters/orientation-andrea-video-poster-v7-16x9.webp"
+    },
+    {
+      "slug": "opening-the-call",
+      "source_path": "course-assets/thumbnails/pilots/revisions/v7/sources/opening-andrea-generated-v7.png",
+      "background_rgb": [103, 182, 255],
+      "clear_exterior_background": true,
+      "character_lock": {
+        "source_path": "course-assets/thumbnails/pilots/revisions/v7/sources/orientation-andrea-generated-v7.png",
+        "source_background_rgb": [103, 182, 255],
+        "box": [700, 280, 260, 660]
+      },
+      "flat_master_path": "course-assets/thumbnails/pilots/revisions/v7/flat-masters/opening-andrea-flat-master-v7.png",
+      "lesson_card_path": "course-assets/thumbnails/pilots/revisions/v7/lesson-cards/opening-andrea-lesson-card-v7-16x10.webp",
+      "video_poster_path": "course-assets/thumbnails/pilots/revisions/v7/video-posters/opening-andrea-video-poster-v7-16x9.webp"
+    },
+    {
+      "slug": "objection-architecture",
+      "source_path": "course-assets/thumbnails/pilots/revisions/v7/sources/objection-seller-generated-v7b.png",
+      "background_rgb": [255, 211, 1],
+      "clear_exterior_background": true,
+      "black_contour_dilation_radius": 1,
+      "flat_master_path": "course-assets/thumbnails/pilots/revisions/v7/flat-masters/objection-seller-flat-master-v7.png",
+      "lesson_card_path": "course-assets/thumbnails/pilots/revisions/v7/lesson-cards/objection-seller-lesson-card-v7-16x10.webp",
+      "video_poster_path": "course-assets/thumbnails/pilots/revisions/v7/video-posters/objection-seller-video-poster-v7-16x9.webp"
+    }
+  ]
+}

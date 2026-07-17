@@ -21,10 +21,11 @@ The first replacement attempt was also rejected. It used the website screenshot
 as the only generation reference, so its generic characters, heavier line work,
 and cream skin did not match the training videos.
 
-V3 required each card to copy a still from that lesson. Jarrad later superseded
-that character direction with one reusable paired cast. The lesson stills remain
-useful only for choosing the small teaching cue; they do not replace or redraw
-the approved recurring characters.
+V3 required each card to copy a still from that lesson. Jarrad later locked two
+reusable character identities while retaining the one-person composition. The
+lesson stills remain useful for selecting Andrea or the recurring seller and
+choosing the small teaching cue; they do not replace or redraw the approved
+recurring characters.
 
 The active source order is:
 
@@ -38,17 +39,23 @@ Skin and hands must always be a flat pure or near white, never cream, beige, or
 peach. A production card may not enter the canonical artwork ledger without the
 approved cast checksums and a recorded lesson/video mapping for its teaching cue.
 
-## Active v6 cast direction
+## Rejected v6 paired-cast direction
 
-Jarrad superseded the single-character direction with a consistent two-character
-cast: Andrea plus the recurring unnamed curly-haired seller. Every card must keep
-the pair's identities, proportions, visual scale, eye line, line weight, wardrobe,
-and relative placement consistent. Only the background color and one small lesson
-cue may change.
+V6 incorrectly interpreted “Andrea or the seller” as “Andrea and the seller.”
+It placed both people on every thumbnail and is retained only as rejected
+generation evidence.
+
+## Active v7 single-character direction
+
+Every thumbnail must contain exactly one recurring character: Andrea or the
+recurring unnamed curly-haired seller, never both. The mapped lesson and video
+determine which character is appropriate. A minimal lesson cue and the locked
+blue/yellow backgrounds provide the remaining variation.
 
 The binding identities are the approved Andrea headset asset and the approved
 Fact Find seller anchor. The seller is the compact-curled man in an orange
 long-sleeve sweater and cream pants; he must not be replaced by Jim, Ray, Mark,
-David, or the yellow-shirt Lesson 7B drill seller. V6 uses a blue/yellow/blue
-pilot sequence and keeps the exact paired composition while changing only the
-cue above them.
+David, or the yellow-shirt Lesson 7B drill seller. V7 uses Andrea for Orientation,
+Andrea for Opening the Call, and the recurring seller for Objection Architecture.
+Andrea's character pixels, proportions, dimensions, and placement are locked
+identically between her two cards.

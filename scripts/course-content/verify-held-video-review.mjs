@@ -60,31 +60,55 @@ const REVIEW_DETAILS = {
     title: "Welcome",
     duration: "4:06",
     reason: "Restores the missing cash-as-is paragraph and the training-starts-now line.",
+    qcReport: {
+      path: "course-assets/review-lessonA/QC-REPORT-v7.md",
+      sha256: "29249f2093ae76daf8e4c6425398b6708b3252539c66fc059cdc6f0bf49bf901",
+    },
   },
   "video-slot-01-mindset": {
     title: "Mindset",
     duration: "6:03",
     reason: "Repairs the stranded opener line.",
+    qcReport: {
+      path: "course-assets/review-lessonB/QC-REPORT-v4.md",
+      sha256: "8184b9dcf4e424294843523a7480fd8afef215d627dffa46ef3a3a257c910ee1",
+    },
   },
   "video-slot-02-terms": {
     title: "Terms Glossary",
     duration: "7:32",
     reason: "Corrects the DOM pronunciation and the broken tease or sign-off.",
+    qcReport: {
+      path: "course-assets/review-lessonGLOA/QC-REPORT-v9.md",
+      sha256: "e5b41f3003d45eb5ddfc0a43234965c4a0fab4ec547b830abed9bc6db58f535a",
+    },
   },
   "video-slot-10-objection-scripts": {
     title: "Objection Scripts Playbook",
     duration: "25:09",
     reason: "Restores missing seller prompts and the tail word.",
+    qcReport: {
+      path: "course-assets/review-lesson7B/QC-REPORT-v5.md",
+      sha256: "2ab1372ebb65592326403a5df78b8aefeb7d29f90a0f8d743096b359c8b32368",
+    },
   },
   "video-slot-15-closing": {
     title: "Closing and Deal Engineering",
     duration: "5:29",
     reason: "Removes the spoken dollar-X placeholder defect.",
+    qcReport: {
+      path: "course-assets/review-lesson11A/QC-REPORT-v4.md",
+      sha256: "4bdb2786b9b5565a259c66df3ff0aa3af2a6ad6c7ae7d909af437309090bf5ac",
+    },
   },
   "video-slot-16-kpis": {
     title: "KPIs and Sales Telemetry",
     duration: "6:42",
     reason: "Uses the selected non-finale closer after discarded hand-garbled takes.",
+    qcReport: {
+      path: "course-assets/review-lesson12A/QC-REPORT-v11.md",
+      sha256: "1caee68cd969142939138676d66494a16cfd4ab67682535ac445fdccd1100ee2",
+    },
   },
   "video-slot-17-compensation": {
     title: "Compensation Engine",
@@ -238,6 +262,10 @@ function evidenceRoute(sourceKey, kind) {
   return `/evidence/${encodeURIComponent(sourceKey)}/${kind === "vtt" ? "review-captions.vtt" : "review-transcript.md"}`;
 }
 
+function qcReportRoute(sourceKey) {
+  return `/evidence/${encodeURIComponent(sourceKey)}/qc-report.md`;
+}
+
 export function assertHeldAssetMatchesLock(asset) {
   const locked = EXPECTED_ASSETS[asset.source_key];
   const actual = [asset.local_path, asset.checksum_sha256, asset.size_bytes];
@@ -303,6 +331,14 @@ export function renderHeldVideoReview(manifest, {
     const evidence = details.evidence
       ? `\n      <div class="evidence"><strong>Review-only wording evidence:</strong> <a href="${escapeHtml(vttUrl)}">VTT captions</a> · <a href="${escapeHtml(transcriptUrl)}">transcript</a></div>`
       : "";
+    const qcReportUrl = details.qcReport
+      ? (mode === "verified"
+          ? qcReportRoute(asset.source_key)
+          : pathToFileURL(resolveManifestMediaPath(mediaRoot, details.qcReport.path)).href)
+      : null;
+    const qcEvidence = details.qcReport
+      ? `\n      <div class="evidence"><strong>Checksum-locked QC evidence:</strong> <a href="${escapeHtml(qcReportUrl)}">open QC report</a> · <code>${details.qcReport.sha256}</code></div>`
+      : "";
     const track = details.evidence
       ? `<track kind="captions" srclang="en" label="Review-only English captions for ${escapeHtml(details.title)}" src="${escapeHtml(vttUrl)}" default>`
       : "";
@@ -326,7 +362,7 @@ export function renderHeldVideoReview(manifest, {
       <div class="course-location"><strong>Course location</strong><span>${escapeHtml(location.moduleTitle)} → ${escapeHtml(location.lessonTitle)}</span><code>${escapeHtml(location.lessonSourceKey)} · ${escapeHtml(location.blockSourceKey)}</code></div>
       <video controls preload="metadata" src="${escapeHtml(videoUrl)}" aria-label="${escapeHtml(videoLabel)}" title="${escapeHtml(videoLabel)}">${track}Your browser cannot play this local video.</video>
       <p class="captions-note"><strong>Accessibility:</strong> ${escapeHtml(accessibilityNote)}</p>
-      <p class="reason"><strong>Why it is held:</strong> ${escapeHtml(details.reason)}</p>${evidence}
+      <p class="reason"><strong>Why it is held:</strong> ${escapeHtml(details.reason)}</p>${qcEvidence}${evidence}
       <details><summary>Exact-file lock</summary><dl><dt>SHA-256</dt><dd><code>${asset.checksum_sha256}</code></dd><dt>Absolute source</dt><dd><code>${escapeHtml(absoluteVideoPath)}</code></dd><dt>Manifest key</dt><dd><code>${escapeHtml(asset.source_key)}</code></dd></dl></details>
     </article>`;
   }).join("\n");
@@ -416,6 +452,25 @@ export async function verifyHeldVideoReview({
       sha256: lockedVideo.sha256,
       snapshot: lockedVideo.snapshot,
     });
+
+    if (details.qcReport) {
+      const absoluteQcReportPath = await resolveVerifiedMediaPath(mediaRoot, details.qcReport.path);
+      const lockedQcReport = await verifyAndSnapshotFile({
+        absolutePath: absoluteQcReportPath,
+        expectedSha256: details.qcReport.sha256,
+        label: `${asset.source_key} QC report`,
+      });
+      files.push({
+        absolutePath: absoluteQcReportPath,
+        contentType: "text/markdown; charset=utf-8",
+        kind: "qc-report",
+        label: `${asset.source_key} QC report`,
+        route: qcReportRoute(asset.source_key),
+        sha256: lockedQcReport.sha256,
+        snapshot: lockedQcReport.snapshot,
+      });
+      evidenceFileCount += 1;
+    }
 
     if (details.evidence) {
       for (const [kind, expectedSha256] of [
@@ -569,6 +624,7 @@ export function createHeldVideoReviewServer({
   for (const sourceKey of EXPECTED_HELD_SOURCE_KEYS) {
     expectedRoutes.push(mediaRoute(sourceKey));
     const details = REVIEW_DETAILS[sourceKey];
+    if (details.qcReport) expectedRoutes.push(qcReportRoute(sourceKey));
     if (details.evidence) {
       expectedRoutes.push(evidenceRoute(sourceKey, "vtt"), evidenceRoute(sourceKey, "transcript"));
     }

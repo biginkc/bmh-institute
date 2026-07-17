@@ -1,5 +1,5 @@
 {
-  "status": "pilot-awaiting-jarrad-approval",
+  "status": "rejected-superseded-by-single-character-v7",
   "generator": "built-in image_gen",
   "post_processing": "locked eight-color palette, no dithering, contain normalization, lossless WebP",
   "palette_rgb": [
