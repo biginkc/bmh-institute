@@ -9,6 +9,7 @@ const NEXT_SECRET = "the-next-completion-proof-secret-over-32-bytes";
 const NOW_SECONDS = 1_700_000_000;
 const ATTEMPT_ID = "dea00001-0000-4000-a000-000000000001";
 const BASE_URL = "https://lab.example.com";
+const REVIEW_TOKEN = "A".repeat(43);
 
 function validPayload(): Record<string, unknown> {
   return {
@@ -20,7 +21,7 @@ function validPayload(): Record<string, unknown> {
     scenario_id: "scenario-1",
     attempt_id: ATTEMPT_ID,
     score: 87,
-    summary_url: `${BASE_URL}/recordings/${ATTEMPT_ID}`,
+    summary_url: `${BASE_URL}/embed/review/${REVIEW_TOKEN}`,
     goals_met: { discovery: true, close: false },
     iat: NOW_SECONDS,
     exp: NOW_SECONDS + 120,
@@ -32,7 +33,9 @@ function token(
   header: Record<string, unknown> = { alg: "HS256", typ: "JWT" },
   secret = SECRET,
 ) {
-  const encodedHeader = Buffer.from(JSON.stringify(header)).toString("base64url");
+  const encodedHeader = Buffer.from(JSON.stringify(header)).toString(
+    "base64url",
+  );
   const body = Buffer.from(JSON.stringify(payload)).toString("base64url");
   const signature = createHmac("sha256", secret)
     .update(`${encodedHeader}.${body}`)
@@ -60,7 +63,7 @@ describe("role-play completion token", () => {
     expect(verify()).toEqual({
       ok: true,
       score: 87,
-      summaryUrl: `${BASE_URL}/recordings/${ATTEMPT_ID}`,
+      summaryUrl: `${BASE_URL}/embed/review/${REVIEW_TOKEN}`,
       goalsMet: { discovery: true, close: false },
     });
   });
@@ -76,7 +79,9 @@ describe("role-play completion token", () => {
       },
       secret: NEXT_SECRET,
       previousSecret: SECRET,
-      previousSecretValidUntil: new Date((NOW_SECONDS + 60) * 1000).toISOString(),
+      previousSecretValidUntil: new Date(
+        (NOW_SECONDS + 60) * 1000,
+      ).toISOString(),
       rolePlayBaseUrl: BASE_URL,
       now: new Date(NOW_SECONDS * 1000),
     });
@@ -95,19 +100,25 @@ describe("role-play completion token", () => {
       expected,
       secret: NEXT_SECRET,
       previousSecret: SECRET,
-      previousSecretValidUntil: new Date((NOW_SECONDS + 60) * 1000).toISOString(),
+      previousSecretValidUntil: new Date(
+        (NOW_SECONDS + 60) * 1000,
+      ).toISOString(),
       rolePlayBaseUrl: BASE_URL,
       now: new Date(NOW_SECONDS * 1000),
     };
 
-    expect(verifyRolePlayCompletionToken({
-      ...options,
-      token: token(validPayload(), undefined, SECRET),
-    }).ok).toBe(true);
-    expect(verifyRolePlayCompletionToken({
-      ...options,
-      token: token(validPayload(), undefined, NEXT_SECRET),
-    }).ok).toBe(true);
+    expect(
+      verifyRolePlayCompletionToken({
+        ...options,
+        token: token(validPayload(), undefined, SECRET),
+      }).ok,
+    ).toBe(true);
+    expect(
+      verifyRolePlayCompletionToken({
+        ...options,
+        token: token(validPayload(), undefined, NEXT_SECRET),
+      }).ok,
+    ).toBe(true);
   });
 
   it("rejects the previous completion key after its cutoff", () => {
@@ -121,7 +132,9 @@ describe("role-play completion token", () => {
       },
       secret: NEXT_SECRET,
       previousSecret: SECRET,
-      previousSecretValidUntil: new Date((NOW_SECONDS - 1) * 1000).toISOString(),
+      previousSecretValidUntil: new Date(
+        (NOW_SECONDS - 1) * 1000,
+      ).toISOString(),
       rolePlayBaseUrl: BASE_URL,
       now: new Date(NOW_SECONDS * 1000),
     });
@@ -159,7 +172,9 @@ describe("role-play completion token", () => {
       },
       secret: NEXT_SECRET,
       previousSecret: SECRET,
-      previousSecretValidUntil: new Date((NOW_SECONDS + 901) * 1000).toISOString(),
+      previousSecretValidUntil: new Date(
+        (NOW_SECONDS + 901) * 1000,
+      ).toISOString(),
       rolePlayBaseUrl: BASE_URL,
       now: new Date(NOW_SECONDS * 1000),
     });
@@ -217,13 +232,19 @@ describe("role-play completion token", () => {
   });
 
   it.each([
-    ["wrong origin", `https://evil.example/recordings/${ATTEMPT_ID}`],
-    ["credentials", `https://user@lab.example.com/recordings/${ATTEMPT_ID}`],
-    ["wrong attempt path", `${BASE_URL}/recordings/another-attempt`],
-    ["query", `${BASE_URL}/recordings/${ATTEMPT_ID}?download=1`],
-    ["fragment", `${BASE_URL}/recordings/${ATTEMPT_ID}#result`],
+    ["wrong origin", `https://evil.example/embed/review/${REVIEW_TOKEN}`],
+    [
+      "credentials",
+      `https://user@lab.example.com/embed/review/${REVIEW_TOKEN}`,
+    ],
+    ["member-only recording path", `${BASE_URL}/recordings/${ATTEMPT_ID}`],
+    ["short review token", `${BASE_URL}/embed/review/short`],
+    ["query", `${BASE_URL}/embed/review/${REVIEW_TOKEN}?download=1`],
+    ["fragment", `${BASE_URL}/embed/review/${REVIEW_TOKEN}#result`],
   ])("rejects an invalid summary URL: %s", (_name, summaryUrl) => {
-    expect(verify({ ...validPayload(), summary_url: summaryUrl }).ok).toBe(false);
+    expect(verify({ ...validPayload(), summary_url: summaryUrl }).ok).toBe(
+      false,
+    );
   });
 
   it("rejects a summary URL when the trusted Closer Lab URL is unavailable", () => {
@@ -243,7 +264,12 @@ describe("role-play completion token", () => {
   });
 
   it.each([
-    ["too many goals", Object.fromEntries(Array.from({ length: 9 }, (_, index) => [`goal-${index}`, true]))],
+    [
+      "too many goals",
+      Object.fromEntries(
+        Array.from({ length: 9 }, (_, index) => [`goal-${index}`, true]),
+      ),
+    ],
     ["invalid goal key", { "bad key": true }],
     ["long goal key", { ["x".repeat(129)]: true }],
     ["non-boolean result", { discovery: "yes" }],

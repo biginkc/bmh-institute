@@ -82,7 +82,6 @@ function parseGoals(value: unknown): Record<string, boolean> | null {
 function parseSummaryUrl(
   value: unknown,
   rolePlayBaseUrl: string | undefined,
-  attemptId: string,
 ): string | null | false {
   if (value === undefined) return null;
   if (typeof value !== "string" || !rolePlayBaseUrl) return false;
@@ -97,7 +96,7 @@ function parseSummaryUrl(
       candidate.origin !== configured.origin ||
       candidate.username ||
       candidate.password ||
-      candidate.pathname !== `/recordings/${attemptId}` ||
+      !/^\/embed\/review\/[A-Za-z0-9_-]{43}$/.test(candidate.pathname) ||
       candidate.search ||
       candidate.hash
     ) {
@@ -111,7 +110,8 @@ function parseSummaryUrl(
 
 function parseClaims(value: unknown): CompletionPayload | null {
   if (!isRecord(value)) return null;
-  const goalsMet = value.goals_met === undefined ? {} : parseGoals(value.goals_met);
+  const goalsMet =
+    value.goals_met === undefined ? {} : parseGoals(value.goals_met);
   if (
     value.iss !== COMPLETION_TOKEN_ISSUER ||
     value.aud !== COMPLETION_TOKEN_AUDIENCE ||
@@ -160,13 +160,21 @@ export function verifyRolePlayCompletionToken(input: {
   }
   if (input.token.length > MAX_TOKEN_CHARS) return FAILURE;
   const parts = input.token.split(".");
-  if (parts.length !== 3 || parts.some((part) => !/^[A-Za-z0-9_-]+$/.test(part))) {
+  if (
+    parts.length !== 3 ||
+    parts.some((part) => !/^[A-Za-z0-9_-]+$/.test(part))
+  ) {
     return FAILURE;
   }
 
   const header = decodeJson(parts[0]);
   const payload = parseClaims(decodeJson(parts[1]));
-  if (!isRecord(header) || header.alg !== "HS256" || header.typ !== "JWT" || !payload) {
+  if (
+    !isRecord(header) ||
+    header.alg !== "HS256" ||
+    header.typ !== "JWT" ||
+    !payload
+  ) {
     return FAILURE;
   }
 
@@ -182,7 +190,8 @@ export function verifyRolePlayCompletionToken(input: {
     if (
       Buffer.byteLength(previousSecret, "utf8") < MIN_SECRET_BYTES ||
       !Number.isFinite(cutoffMs) ||
-      Math.floor(cutoffMs / 1000) > nowSeconds + MAX_PREVIOUS_KEY_OVERLAP_SECONDS
+      Math.floor(cutoffMs / 1000) >
+        nowSeconds + MAX_PREVIOUS_KEY_OVERLAP_SECONDS
     ) {
       return FAILURE;
     }
@@ -219,7 +228,6 @@ export function verifyRolePlayCompletionToken(input: {
   const summaryUrl = parseSummaryUrl(
     payload.summary_url,
     input.rolePlayBaseUrl ?? process.env.NEXT_PUBLIC_ROLE_PLAY_BASE_URL,
-    payload.attempt_id,
   );
   if (summaryUrl === false) return FAILURE;
 

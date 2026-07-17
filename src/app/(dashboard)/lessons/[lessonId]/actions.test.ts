@@ -20,7 +20,7 @@ let mockVerification:
   | { ok: false; error: string } = {
   ok: true,
   score: 87,
-  summaryUrl: "http://localhost:3200/recordings/attempt-1",
+  summaryUrl: `http://localhost:3200/embed/review/${"A".repeat(43)}`,
   goalsMet: { discovery: true, close: false },
 };
 
@@ -89,7 +89,7 @@ describe("completeRolePlayBlock", () => {
     mockVerification = {
       ok: true,
       score: 87,
-      summaryUrl: "http://localhost:3200/recordings/attempt-1",
+      summaryUrl: `http://localhost:3200/embed/review/${"A".repeat(43)}`,
       goalsMet: { discovery: true, close: false },
     };
   });
@@ -110,7 +110,9 @@ describe("completeRolePlayBlock", () => {
       p_attempt_id: "attempt-1",
       p_score: 87,
       p_goals_met: { discovery: true, close: false },
-      p_summary: { summary_url: "http://localhost:3200/recordings/attempt-1" },
+      p_summary: {
+        summary_url: `http://localhost:3200/embed/review/${"A".repeat(43)}`,
+      },
     });
   });
 

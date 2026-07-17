@@ -303,7 +303,7 @@ async function createSeedUsers(client: SupabaseClient) {
       user_metadata: { full_name: user.fullName },
     });
     if (error || !data.user) {
-      throw error ?? new Error(`Failed to create ${user.email}`);
+      throw error ?? new Error(`Failed to create ${key} seed user`);
     }
     ids[key] = data.user.id;
     await client
