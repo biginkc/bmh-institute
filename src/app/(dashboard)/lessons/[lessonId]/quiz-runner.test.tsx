@@ -56,6 +56,35 @@ function renderRunner() {
       backHref="/courses/course-1"
       attemptsUsed={1}
       attemptsLeft={2}
+      retakeCooldownHours={0}
+    />,
+  );
+}
+
+function renderFinalAttemptRunner() {
+  return render(
+    <QuizRunner
+      quizId="quiz-1"
+      lessonId="lesson-1"
+      passingScore={80}
+      backHref="/courses/course-1"
+      attemptsUsed={2}
+      attemptsLeft={1}
+      retakeCooldownHours={0}
+    />,
+  );
+}
+
+function renderCooldownRunner() {
+  return render(
+    <QuizRunner
+      quizId="quiz-1"
+      lessonId="lesson-1"
+      passingScore={80}
+      backHref="/courses/course-1"
+      attemptsUsed={1}
+      attemptsLeft={2}
+      retakeCooldownHours={24}
     />,
   );
 }
@@ -178,6 +207,9 @@ describe("<QuizRunner />", () => {
     expect(
       screen.getByRole("heading", { name: "Ready for the checkpoint?" }),
     ).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Start quiz" }));
+    expect(await screen.findByText("Attempt 3 of 3")).toBeInTheDocument();
   });
 
   it("shows the server error when an attempt cannot start", async () => {
@@ -196,5 +228,75 @@ describe("<QuizRunner />", () => {
         "This quiz does not have any questions yet.",
       ),
     );
+  });
+
+  it("does not offer an in-page retake after the final allowed attempt", async () => {
+    const user = userEvent.setup();
+    vi.mocked(submitQuizAttempt).mockResolvedValue({
+      ok: true,
+      score: 50,
+      passed: false,
+      earnedPoints: 1,
+      totalPoints: 2,
+      attemptId: "attempt-final",
+      review: null,
+    });
+    vi.mocked(startQuizAttempt).mockResolvedValue({
+      ok: true,
+      attemptId: "attempt-final",
+      questions: [{
+        ...questions[0],
+        sort_order: 1,
+        options: questions[0].options.map((option, index) => ({
+          ...option,
+          sort_order: index + 1,
+        })),
+      }],
+      resumed: false,
+    });
+    renderFinalAttemptRunner();
+
+    await user.click(screen.getByRole("button", { name: "Start quiz" }));
+    expect(await screen.findByText("Attempt 3 of 3")).toBeInTheDocument();
+    await user.click(screen.getByLabelText("Lead with the offer"));
+    await user.click(screen.getByRole("button", { name: "Submit quiz" }));
+
+    expect(await screen.findByRole("heading", { name: "Attempts complete" })).toBeVisible();
+    expect(screen.queryByRole("button", { name: "Retake quiz" })).toBeNull();
+    expect(screen.getByText(/no more attempts are available/i)).toBeVisible();
+  });
+
+  it("returns cooldown retakes to the server gate instead of offering an immediate retry", async () => {
+    const user = userEvent.setup();
+    vi.mocked(submitQuizAttempt).mockResolvedValue({
+      ok: true,
+      score: 50,
+      passed: false,
+      earnedPoints: 1,
+      totalPoints: 2,
+      attemptId: "attempt-cooldown",
+      review: null,
+    });
+    vi.mocked(startQuizAttempt).mockResolvedValue({
+      ok: true,
+      attemptId: "attempt-cooldown",
+      questions: [{
+        ...questions[0],
+        sort_order: 1,
+        options: questions[0].options.map((option, index) => ({
+          ...option,
+          sort_order: index + 1,
+        })),
+      }],
+      resumed: false,
+    });
+    renderCooldownRunner();
+
+    await user.click(screen.getByRole("button", { name: "Start quiz" }));
+    await user.click(await screen.findByLabelText("Lead with the offer"));
+    await user.click(screen.getByRole("button", { name: "Submit quiz" }));
+
+    expect(await screen.findByText(/return when the retake cooldown ends/i)).toBeVisible();
+    expect(screen.queryByRole("button", { name: "Retake quiz" })).toBeNull();
   });
 });

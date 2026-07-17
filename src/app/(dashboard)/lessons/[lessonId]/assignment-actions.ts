@@ -98,6 +98,27 @@ export async function submitAssignment(input: {
   const requiresReview = assignmentRow.requires_review;
   const status = requiresReview ? "submitted" : "approved";
 
+  const { data: activeSubmission, error: activeSubmissionError } = await supabase
+    .from("assignment_submissions")
+    .select("id, status")
+    .eq("user_id", user.id)
+    .eq("assignment_id", input.assignmentId)
+    .in("status", ["submitted", "approved"])
+    .limit(1)
+    .maybeSingle();
+  if (activeSubmissionError) {
+    return { ok: false, error: activeSubmissionError.message };
+  }
+  if (activeSubmission?.status === "submitted") {
+    return {
+      ok: false,
+      error: "This assignment is already awaiting review.",
+    };
+  }
+  if (activeSubmission?.status === "approved") {
+    return { ok: false, error: "This assignment is already approved." };
+  }
+
   let admin;
   try {
     admin = createAdminClient();
@@ -119,7 +140,15 @@ export async function submitAssignment(input: {
     // don't read as "pending" in admin views.
     reviewed_at: requiresReview ? null : new Date().toISOString(),
   });
-  if (error) return { ok: false, error: error.message };
+  if (error) {
+    return {
+      ok: false,
+      error:
+        error.code === "23505"
+          ? "This assignment already has an active submission."
+          : error.message,
+    };
+  }
 
   // Only ping admins when there's actually something to review. Auto-completed
   // submissions need no action. Fire-and-forget so SMTP hiccups don't roll back

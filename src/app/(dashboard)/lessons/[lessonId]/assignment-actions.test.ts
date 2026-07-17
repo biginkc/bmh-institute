@@ -10,7 +10,9 @@ vi.mock("@/lib/email/send", () => ({
   sendEmail: vi.fn(async () => undefined),
 }));
 
-const insertSpy = vi.fn(async (row: Record<string, unknown>) => {
+type InsertError = { message: string; code?: string } | null;
+
+const insertSpy = vi.fn(async (row: Record<string, unknown>): Promise<{ error: InsertError }> => {
   void row;
   return { error: null };
 });
@@ -21,6 +23,8 @@ let assignmentRequiresReview = true;
 let assignmentSubmissionType: "text" | "url" | "file_upload" = "file_upload";
 let storageObjectExists = true;
 let storageListError: { message: string } | null = null;
+let activeSubmission: { id: string; status: "submitted" | "approved" } | null = null;
+let activeSubmissionError: { message: string } | null = null;
 
 vi.mock("@/lib/supabase/admin", () => ({
   createAdminClient: vi.fn(() => ({
@@ -74,6 +78,18 @@ vi.mock("@/lib/supabase/server", () => ({
       },
     },
     from: (table: string) => {
+      if (table === "assignment_submissions") {
+        const query = {
+          eq: () => query,
+          in: () => query,
+          limit: () => query,
+          maybeSingle: async () => ({
+            data: activeSubmission,
+            error: activeSubmissionError,
+          }),
+        };
+        return { select: () => query };
+      }
       if (table === "profiles") {
         return {
           select: () => ({
@@ -140,6 +156,8 @@ describe("submitAssignment (INTEG-04 file path validation)", () => {
     assignmentSubmissionType = "file_upload";
     storageObjectExists = true;
     storageListError = null;
+    activeSubmission = null;
+    activeSubmissionError = null;
     insertSpy.mockReset();
     insertSpy.mockResolvedValue({ error: null });
   });
@@ -278,6 +296,43 @@ describe("submitAssignment (INTEG-04 file path validation)", () => {
       submission_text: null,
       submission_url: "https://example.com/work?id=1",
       submission_file_path: null,
+    });
+  });
+
+  it("refuses a second submission while review is pending", async () => {
+    assignmentSubmissionType = "text";
+    activeSubmission = { id: "submission-1", status: "submitted" };
+
+    const result = await submitAssignment({
+      assignmentId: "assignment-1",
+      lessonId: "lesson-1",
+      submission_type: "text",
+      submission_text: "Duplicate answer",
+    });
+
+    expect(result).toEqual({
+      ok: false,
+      error: "This assignment is already awaiting review.",
+    });
+    expect(insertSpy).not.toHaveBeenCalled();
+  });
+
+  it("turns a concurrent active-submission conflict into a stable learner error", async () => {
+    assignmentSubmissionType = "text";
+    insertSpy.mockResolvedValue({
+      error: { code: "23505", message: "duplicate key" },
+    });
+
+    const result = await submitAssignment({
+      assignmentId: "assignment-1",
+      lessonId: "lesson-1",
+      submission_type: "text",
+      submission_text: "Racing answer",
+    });
+
+    expect(result).toEqual({
+      ok: false,
+      error: "This assignment already has an active submission.",
     });
   });
 

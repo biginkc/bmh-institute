@@ -11,6 +11,7 @@ let reviewRubric: unknown = [
 ];
 let requiresReview = true;
 let reviewSelectSql = "";
+let updateMatched = true;
 
 const sendEmailSpy = vi.fn(async (input: Record<string, unknown>) => {
   void input;
@@ -52,9 +53,15 @@ vi.mock("@/lib/supabase/server", () => ({
       return {
         update: (patch: Record<string, unknown>) => {
           updatePatch = patch;
-          return {
-            eq: async () => ({ error: updateError }),
+          const query = {
+            eq: () => query,
+            select: () => query,
+            maybeSingle: async () => ({
+              data: updateMatched ? { id: "submission-1" } : null,
+              error: updateError,
+            }),
           };
+          return query;
         },
         select: (sql: string) => {
           selectSql = sql;
@@ -106,6 +113,7 @@ describe("admin submission review actions (TEST-01)", () => {
     ];
     requiresReview = true;
     reviewSelectSql = "";
+    updateMatched = true;
     sendEmailSpy.mockClear();
   });
 
@@ -207,6 +215,21 @@ describe("admin submission review actions (TEST-01)", () => {
     });
 
     expect(result).toEqual({ ok: false, error: "update failed" });
+    expect(sendEmailSpy).not.toHaveBeenCalled();
+  });
+
+  it("refuses to rewrite a submission that another reviewer already decided", async () => {
+    updateMatched = false;
+
+    const result = await requestRevision({
+      submissionId: "submission-1",
+      note: "Please revise this.",
+    });
+
+    expect(result).toEqual({
+      ok: false,
+      error: "This submission was already reviewed.",
+    });
     expect(sendEmailSpy).not.toHaveBeenCalled();
   });
 

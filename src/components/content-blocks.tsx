@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { sanitizeTextBlockHtml } from "@/lib/sanitize/text-block";
 import { RolePlayBlock } from "./role-play-block";
 import { VideoBlockPlayer } from "./video-block-player";
 import { FlashcardBlock, type Flashcard } from "./flashcard-block";
@@ -189,10 +190,11 @@ function numberOr(value: unknown, fallback: number): number {
 }
 
 function TextBlock({ html }: { html: string }) {
+  const safeHtml = sanitizeTextBlockHtml(html);
   return (
     <div
       className="prose prose-neutral max-w-none font-[family-name:var(--font-body)] text-[15px] leading-relaxed font-semibold text-[var(--text-body)] [&_a]:font-extrabold [&_a]:text-[var(--action)] [&_blockquote]:rounded-r-[var(--bmh-radius-md)] [&_blockquote]:border-l-4 [&_blockquote]:border-[var(--action)] [&_blockquote]:bg-[var(--surface-tint)] [&_blockquote]:px-5 [&_blockquote]:py-3 [&_blockquote]:text-[var(--ink-700)] [&_h2]:mb-3 [&_h2]:mt-5 [&_h2]:font-[family-name:var(--font-display)] [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:text-[var(--ink-900)] [&_h3]:mb-2 [&_h3]:mt-4 [&_h3]:font-[family-name:var(--font-display)] [&_h3]:text-xl [&_h3]:font-bold [&_h3]:text-[var(--ink-900)] [&_li]:my-1 [&_p]:mb-4 [&_strong]:font-extrabold [&_strong]:text-[var(--ink-900)]"
-      dangerouslySetInnerHTML={{ __html: html }}
+      dangerouslySetInnerHTML={{ __html: safeHtml }}
     />
   );
 }

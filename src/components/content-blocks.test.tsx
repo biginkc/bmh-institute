@@ -154,6 +154,20 @@ describe("ContentBlockRenderer BMH treatments", () => {
     expect(screen.getByText("certainty")).toBeVisible();
   });
 
+  it("sanitizes stored text again at the learner rendering boundary", () => {
+    const { container } = renderBlock("text", {
+      html: '<p onclick="alert(1)">Visible</p><script>bad()</script><a href="javascript:bad()">Unsafe link</a>',
+    });
+
+    expect(screen.getByText("Visible")).toBeVisible();
+    expect(container.querySelector("script")).toBeNull();
+    expect(container.querySelector("[onclick]")).toBeNull();
+    expect(screen.getByText("Unsafe link")).not.toHaveAttribute(
+      "href",
+      expect.stringContaining("javascript:"),
+    );
+  });
+
   it("preserves locked embed sandbox and media permissions", () => {
     renderBlock("embed", {
       iframe_src: "https://www.loom.com/embed/abc",

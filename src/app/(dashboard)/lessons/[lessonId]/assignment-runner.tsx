@@ -134,7 +134,7 @@ export function AssignmentRunner({
         />
       ) : null}
 
-      {approved ? null : (
+      {approved || awaitingReview ? null : (
         <Card padding="md">
           <h2 className="mb-5 font-[family-name:var(--font-display)] text-xl font-extrabold text-[var(--ink-900)]">
             Your submission

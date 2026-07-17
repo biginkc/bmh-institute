@@ -46,7 +46,7 @@ export async function approveSubmission(input: {
     };
   }
 
-  const { error } = await supabase
+  const { data: updated, error } = await supabase
     .from("assignment_submissions")
     .update({
       status: "approved",
@@ -54,8 +54,14 @@ export async function approveSubmission(input: {
       reviewed_by: reviewer.id,
       reviewed_at: new Date().toISOString(),
     })
-    .eq("id", input.submissionId);
+    .eq("id", input.submissionId)
+    .eq("status", "submitted")
+    .select("id")
+    .maybeSingle();
   if (error) return { ok: false, error: error.message };
+  if (!updated) {
+    return { ok: false, error: "This submission was already reviewed." };
+  }
 
   await emitCompletionForApprovedSubmission(supabase, input.submissionId);
 
@@ -97,7 +103,7 @@ export async function requestRevision(input: {
     return { ok: false, error: "Leave a note explaining what to fix." };
   }
   const supabase = await createClient();
-  const { error } = await supabase
+  const { data: updated, error } = await supabase
     .from("assignment_submissions")
     .update({
       status: "needs_revision",
@@ -105,8 +111,14 @@ export async function requestRevision(input: {
       reviewed_by: reviewer.id,
       reviewed_at: new Date().toISOString(),
     })
-    .eq("id", input.submissionId);
+    .eq("id", input.submissionId)
+    .eq("status", "submitted")
+    .select("id")
+    .maybeSingle();
   if (error) return { ok: false, error: error.message };
+  if (!updated) {
+    return { ok: false, error: "This submission was already reviewed." };
+  }
 
   await notifyReview({
     submissionId: input.submissionId,

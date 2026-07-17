@@ -74,15 +74,17 @@ export default async function LessonPage({
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  if (!user) notFound();
 
   const [{ data: unlocked }, { data: completion }] = await Promise.all([
     supabase.rpc("fn_lesson_is_unlocked", {
-      p_user_id: user?.id ?? "",
+      p_user_id: user.id,
       p_lesson_id: lessonId,
     }),
     supabase
       .from("user_lesson_completions")
       .select("lesson_id")
+      .eq("user_id", user.id)
       .eq("lesson_id", lessonId)
       .maybeSingle(),
   ]);
@@ -92,7 +94,7 @@ export default async function LessonPage({
   const courseJoin = firstRow(moduleJoin?.courses);
   const courseId = courseJoin?.id;
   const contentNavigationPromise =
-    lesson.lesson_type === "content" && courseId && user
+    lesson.lesson_type === "content" && courseId
       ? loadContentLessonNavigation({
           supabase,
           courseId,
@@ -162,7 +164,7 @@ export default async function LessonPage({
       ) : lesson.lesson_type === "content" ? (
         <ContentLessonBody
           lessonId={lessonId}
-          userId={user?.id ?? ""}
+          userId={user.id}
           alreadyComplete={alreadyComplete}
           navigationPromise={contentNavigationPromise}
         />
@@ -171,6 +173,7 @@ export default async function LessonPage({
           <QuizLessonBody
             quizId={lesson.quiz_id}
             lessonId={lessonId}
+            userId={user.id}
             backHref={courseId ? `/courses/${courseId}` : "/dashboard"}
           />
         </div>
@@ -179,6 +182,7 @@ export default async function LessonPage({
           <AssignmentLessonBody
             assignmentId={lesson.assignment_id}
             lessonId={lessonId}
+            userId={user.id}
           />
         </div>
       )}
@@ -488,10 +492,12 @@ function getRolePlayBaseUrl(): string | null {
 async function QuizLessonBody({
   quizId,
   lessonId,
+  userId,
   backHref,
 }: {
   quizId: string | null;
   lessonId: string;
+  userId: string;
   backHref: string;
 }) {
   if (!quizId) {
@@ -515,6 +521,7 @@ async function QuizLessonBody({
       supabase
         .from("user_quiz_attempts")
         .select("passed, score, completed_at")
+        .eq("user_id", userId)
         .eq("quiz_id", quizId)
         .order("completed_at", { ascending: false }),
     ]);
@@ -568,6 +575,7 @@ async function QuizLessonBody({
       backHref={backHref}
       attemptsUsed={eligibility.attemptsUsed}
       attemptsLeft={eligibility.attemptsLeft}
+      retakeCooldownHours={quiz.retake_cooldown_hours ?? 0}
     />
   );
 }
@@ -575,9 +583,11 @@ async function QuizLessonBody({
 async function AssignmentLessonBody({
   assignmentId,
   lessonId,
+  userId,
 }: {
   assignmentId: string | null;
   lessonId: string;
+  userId: string;
 }) {
   if (!assignmentId) {
     return (
@@ -602,6 +612,7 @@ async function AssignmentLessonBody({
     supabase
       .from("assignment_submissions")
       .select("id, status, submitted_at, reviewer_notes")
+      .eq("user_id", userId)
       .eq("lesson_id", lessonId)
       .order("submitted_at", { ascending: false }),
   ]);

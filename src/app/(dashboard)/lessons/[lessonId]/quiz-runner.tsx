@@ -33,6 +33,7 @@ export function QuizRunner({
   backHref,
   attemptsUsed,
   attemptsLeft,
+  retakeCooldownHours,
 }: {
   quizId: string;
   lessonId: string;
@@ -40,11 +41,13 @@ export function QuizRunner({
   backHref: string;
   attemptsUsed: number;
   attemptsLeft: number | null;
+  retakeCooldownHours: number;
 }) {
   const [responses, setResponses] = useState<Record<string, string[]>>({});
   const [result, setResult] = useState<QuizSubmitResult | null>(null);
   const [attemptId, setAttemptId] = useState<string | null>(null);
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
+  const [completedAttempts, setCompletedAttempts] = useState(attemptsUsed);
   const [pending, startTransition] = useTransition();
 
   function beginAttempt() {
@@ -86,12 +89,26 @@ export function QuizRunner({
   }
 
   if (result && result.ok) {
+    const totalAttempts =
+      attemptsLeft === null ? null : attemptsUsed + attemptsLeft;
+    const canRetake =
+      !result.passed &&
+      retakeCooldownHours <= 0 &&
+      (totalAttempts === null || completedAttempts + 1 < totalAttempts);
+    const attemptsExhausted =
+      totalAttempts !== null && completedAttempts + 1 >= totalAttempts;
     return (
       <QuizResultCard
         result={result}
         passingScore={passingScore}
         backHref={backHref}
+        canRetake={canRetake}
+        cooldownRequired={
+          !result.passed && retakeCooldownHours > 0 && !attemptsExhausted
+        }
+        attemptsExhausted={!result.passed && attemptsExhausted}
         onRetake={() => {
+          setCompletedAttempts((count) => count + 1);
           setAttemptId(null);
           setQuestions([]);
           setResponses({});
@@ -135,10 +152,8 @@ export function QuizRunner({
 
   const attemptLabel =
     attemptsLeft !== null
-      ? `Attempt ${attemptsUsed + 1} of ${attemptsUsed + attemptsLeft}`
-      : attemptsUsed > 0
-        ? `Attempt ${attemptsUsed + 1}`
-        : "Retakes available";
+      ? `Attempt ${completedAttempts + 1} of ${attemptsUsed + attemptsLeft}`
+      : `Attempt ${completedAttempts + 1}`;
 
   return (
     <div className="flex flex-col gap-5">
@@ -233,11 +248,17 @@ function QuizResultCard({
   result,
   passingScore,
   backHref,
+  canRetake,
+  cooldownRequired,
+  attemptsExhausted,
   onRetake,
 }: {
   result: Extract<QuizSubmitResult, { ok: true }>;
   passingScore: number;
   backHref: string;
+  canRetake: boolean;
+  cooldownRequired: boolean;
+  attemptsExhausted: boolean;
   onRetake: () => void;
 }) {
   return (
@@ -247,7 +268,11 @@ function QuizResultCard({
           {result.score}% score
         </Badge>
         <h2 className="mt-3 font-[family-name:var(--font-display)] text-3xl font-extrabold text-[var(--ink-900)]">
-          {result.passed ? "Passed" : "Keep going"}
+          {result.passed
+            ? "Passed"
+            : attemptsExhausted
+              ? "Attempts complete"
+              : "Keep going"}
         </h2>
         <p className="mt-1 font-[family-name:var(--font-body)] text-sm font-semibold text-[var(--text-muted)]">
           {result.earnedPoints} of {result.totalPoints} points
@@ -262,7 +287,11 @@ function QuizResultCard({
           message={
             result.passed
               ? `You scored ${result.score}% and passed. On to the next lesson.`
-              : `You scored ${result.score}%. You need ${passingScore}%. Review the lesson and try again.`
+              : attemptsExhausted
+                ? `You scored ${result.score}%. You need ${passingScore}%. Review the lesson; no more attempts are available.`
+                : cooldownRequired
+                  ? `You scored ${result.score}%. You need ${passingScore}%. Review the lesson and return when the retake cooldown ends.`
+                  : `You scored ${result.score}%. You need ${passingScore}%. Review the lesson and try again.`
           }
         />
       </div>
@@ -294,7 +323,7 @@ function QuizResultCard({
         <Link href={backHref} className={linkButtonClass}>
           Back to course
         </Link>
-        {!result.passed ? (
+        {canRetake ? (
           <Button
             onClick={onRetake}
             iconLeft={<RotateCcw aria-hidden="true" className="size-4" />}

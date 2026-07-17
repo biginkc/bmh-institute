@@ -126,7 +126,7 @@ describe("<AssignmentRunner />", () => {
     );
   });
 
-  it("shows pending review with the content expression and keeps resubmission available", () => {
+  it("shows pending review and hides resubmission until a decision", () => {
     renderRunner(baseAssignment, [
       {
         id: "submission-1",
@@ -143,7 +143,8 @@ describe("<AssignmentRunner />", () => {
       "src",
       "/brand/mascot/face-content.png",
     );
-    expect(screen.getByRole("button", { name: "Submit for review" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Submit for review" })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Response")).not.toBeInTheDocument();
   });
 
   it("celebrates approval and hides the submission form", () => {

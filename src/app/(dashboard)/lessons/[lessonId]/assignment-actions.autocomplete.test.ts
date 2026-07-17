@@ -57,6 +57,15 @@ vi.mock("@/lib/supabase/server", () => ({
       return { data: true, error: null };
     },
     from: (table: string) => {
+      if (table === "assignment_submissions") {
+        const query = {
+          eq: () => query,
+          in: () => query,
+          limit: () => query,
+          maybeSingle: async () => ({ data: null, error: null }),
+        };
+        return { select: () => query };
+      }
       if (table === "assignments") {
         return {
           select: () => ({
