@@ -297,6 +297,37 @@ function validateSortOrder(items, context, errors) {
   }
 }
 
+function validateRolePlaySpec(block, assignmentKeys, errors) {
+  const spec = block.content?.scenario_spec;
+  if (!spec || typeof spec !== "object" || Array.isArray(spec)) {
+    errors.push(`${block.source_key} needs a substantive scenario_spec`);
+    return;
+  }
+  for (const field of ["assignment_source_key", "context", "learner_goal"]) {
+    if (typeof spec[field] !== "string" || !spec[field].trim()) {
+      errors.push(`${block.source_key} scenario_spec.${field} must be a non-empty string`);
+    }
+  }
+  if (
+    typeof spec.assignment_source_key === "string"
+    && spec.assignment_source_key.trim()
+    && !assignmentKeys.has(spec.assignment_source_key)
+  ) {
+    errors.push(`${block.source_key} maps to unknown assignment ${spec.assignment_source_key}`);
+  }
+  for (const field of ["success_criteria", "fail_conditions"]) {
+    const entries = spec[field];
+    if (
+      !Array.isArray(entries)
+      || entries.length < 3
+      || entries.length > 8
+      || entries.some((entry) => typeof entry !== "string" || !entry.trim())
+    ) {
+      errors.push(`${block.source_key} scenario_spec.${field} must contain 3 to 8 non-empty strings`);
+    }
+  }
+}
+
 export async function loadManifest(urlOrPath) {
   const raw = await readFile(urlOrPath, "utf8");
   return JSON.parse(raw);
@@ -391,6 +422,12 @@ export function validateManifest(
   pushDuplicateErrors(allSourceKeyItems, (item) => item.source_key, "source_key", errors);
 
   const assetsByKey = new Map(assets.map((asset) => [asset.source_key, asset]));
+  const assignmentKeys = new Set(
+    lessons
+      .filter((lesson) => lesson.type === "assignment")
+      .map((lesson) => lesson.assignment?.source_key)
+      .filter(Boolean),
+  );
   const referencedAssets = new Set([
     manifest.program.thumbnail_asset_key,
     ...courses.map((course) => course.thumbnail_asset_key),
@@ -421,6 +458,9 @@ export function validateManifest(
       }
     }
     const scenarioId = block.content?.scenario_id;
+    if (block.type === "role_play" && block.required === true) {
+      validateRolePlaySpec(block, assignmentKeys, errors);
+    }
     if (
       block.type === "role_play"
       && block.required === true

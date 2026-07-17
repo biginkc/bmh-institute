@@ -1,6 +1,7 @@
 import { createHmac } from "node:crypto";
 
 const ISSUER = "sandra-university";
+export const ROLE_PLAY_EMBED_AUDIENCE = "closer-lab";
 const DEFAULT_TTL_SECONDS = 5 * 60;
 const MIN_SECRET_BYTES = 32;
 
@@ -16,6 +17,7 @@ export type RolePlayEmbedTokenInput = {
 
 export type RolePlayEmbedTokenPayload = {
   iss: typeof ISSUER;
+  aud: typeof ROLE_PLAY_EMBED_AUDIENCE;
   sub: string;
   lesson_id: string;
   block_id: string;
@@ -36,6 +38,7 @@ export function mintRolePlayEmbedToken(
   const ttlSeconds = input.ttlSeconds ?? DEFAULT_TTL_SECONDS;
   const payload: RolePlayEmbedTokenPayload = {
     iss: ISSUER,
+    aud: ROLE_PLAY_EMBED_AUDIENCE,
     sub: input.userId,
     lesson_id: input.lessonId,
     block_id: input.blockId,

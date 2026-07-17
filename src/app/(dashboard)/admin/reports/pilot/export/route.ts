@@ -111,7 +111,7 @@ export async function GET() {
   return new NextResponse(toPilotMonitoringCsv(summary), {
     headers: {
       "content-type": "text/csv; charset=utf-8",
-      "content-disposition": `attachment; filename="bmh-institute-pilot-status-${new Date().toISOString().slice(0, 10)}.csv"`,
+      "content-disposition": `attachment; filename="bmh-institute-learner-status-${new Date().toISOString().slice(0, 10)}.csv"`,
     },
   });
 }
@@ -148,6 +148,8 @@ export function toPilotMonitoringCsv(summary: PilotMonitoringSummary): string {
 
   return `${rows.map((row) => row.map(csvCell).join(",")).join("\n")}\n`;
 }
+
+export const toLearnerMonitoringCsv = toPilotMonitoringCsv;
 
 function csvCell(value: string): string {
   if (!/[",\n]/.test(value)) return value;
@@ -196,4 +198,3 @@ type ProgramCert = {
   program_id: string;
   issued_at: string;
 };
-

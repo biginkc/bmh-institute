@@ -41,7 +41,7 @@ export function PilotSetupTable({ rows }: { rows: PilotCohortRow[] }) {
         { key: "action", label: "Action", align: "right" },
       ]}
       rows={rows}
-      empty="No learners yet. Send the first pilot invite when the cohort is ready."
+      empty="No learners yet. Send the first invite when the learning group is ready."
       cell={{
         email: (row) => muted(row.email),
         statusLabel: (row) => (

@@ -178,7 +178,7 @@ export function UserEditForm({
         <p className="text-sm font-bold text-[var(--ink-800)]">Role groups</p>
         {allRoleGroups.length === 0 ? (
           <p className="text-muted-foreground text-xs">
-            No role groups defined. Create role groups before inviting pilot
+            No role groups defined. Create a role group before inviting
             learners.
           </p>
         ) : (
@@ -201,7 +201,7 @@ export function UserEditForm({
           </div>
         )}
         <p className="text-muted-foreground text-xs">
-          Role groups control pilot program and course access. Adding a group
+          Role groups control program and course access. Adding a group
           that grants a new program triggers an enrollment email.
         </p>
       </div>

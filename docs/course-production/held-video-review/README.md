@@ -66,6 +66,45 @@ node scripts/course-content/validate-held-video-approval-transition.mjs \
   content/course-manifests/bmh-employee-training.v1.json
 ```
 
+## After a corrected cut is approved
+
+Approval is keyed to the exact checksum; it does not silently promote the
+manifest or manufacture learner derivatives. Process each approved candidate
+through this controlled sequence:
+
+1. Validate the proposed checksum-keyed ledger transition with the command
+   above. The approver must be `Jarrad Henry`, with a date and decision notes.
+2. Promote only that exact video checksum from `hold` to `approved` in the
+   manifest builder source, then rebuild the manifest. Do not reuse an approval
+   for a different file or checksum.
+3. Generate captions and a transcript for the newly approved exact cut:
+
+   ```sh
+   python3 scripts/course-content/generate-approved-captions.py \
+     --manifest content/course-manifests/bmh-employee-training.v1.json
+   ```
+
+   The generator checksum-verifies every source and skips every video that is
+   still held. Existing approved derivatives remain unchanged on an idempotent
+   rerun.
+4. Review and correct the new VTT timing, names, terminology, and policy
+   wording against the exact approved cut. Record the final derivative paths,
+   checksums, sizes, and approval statuses in the manifest builder source, then
+   rebuild again.
+5. Rebuild and verify this review surface and the caption inventory:
+
+   ```sh
+   node scripts/course-content/verify-held-video-review.mjs --write
+   node scripts/course-content/verify-held-video-review.mjs
+   node scripts/course-content/validate-caption-assets.mjs \
+     content/course-manifests/bmh-employee-training.v1.json
+   node --test content/course-manifests/held-video-review.qa.test.mjs
+   ```
+
+Do not treat the ledger decision alone as course-ready. The video remains a
+publication blocker until its exact learner captions and transcript are
+reviewed, checksum-recorded, and approved.
+
 Policy-safe replacement scripts and timecoded edit maps for Compensation
 Engine, Operator Playbook, and Career Growth Path are documented in
 `../held-video-recuts/README.md`. They are preparation artifacts only; they do

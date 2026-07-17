@@ -84,7 +84,7 @@ const REVIEW_DETAILS = {
   "video-slot-16-kpis": {
     title: "KPIs and Sales Telemetry",
     duration: "6:42",
-    reason: "Uses the approved non-finale closer after discarded hand-garbled takes.",
+    reason: "Uses the selected non-finale closer after discarded hand-garbled takes.",
   },
   "video-slot-17-compensation": {
     title: "Compensation Engine",
@@ -246,6 +246,32 @@ export function assertHeldAssetMatchesLock(asset) {
   }
 }
 
+function buildVideoCourseLocations(manifest) {
+  const locations = new Map();
+  for (const course of manifest.program?.courses ?? []) {
+    for (const courseModule of course.modules ?? []) {
+      for (const lesson of courseModule.lessons ?? []) {
+        for (const block of lesson.blocks ?? []) {
+          if (block.type !== "video") continue;
+          const assetKey = block.content?.asset_key;
+          if (typeof assetKey !== "string" || !assetKey) continue;
+          if (locations.has(assetKey)) {
+            throw new Error(`Video asset is mapped to more than one course block: ${assetKey}`);
+          }
+          locations.set(assetKey, {
+            courseTitle: course.title,
+            moduleTitle: courseModule.title,
+            lessonTitle: lesson.title,
+            lessonSourceKey: lesson.source_key,
+            blockSourceKey: block.source_key,
+          });
+        }
+      }
+    }
+  }
+  return locations;
+}
+
 export function renderHeldVideoReview(manifest, {
   mode = "static",
   mediaRoot = CANONICAL_CHECKOUT,
@@ -258,6 +284,7 @@ export function renderHeldVideoReview(manifest, {
   const held = manifest.assets.filter(
     (asset) => asset.kind === "video" && asset.approval_status === "hold",
   );
+  const videoCourseLocations = buildVideoCourseLocations(manifest);
 
   const cards = held.map((asset, index) => {
     const details = REVIEW_DETAILS[asset.source_key];
@@ -290,10 +317,13 @@ export function renderHeldVideoReview(manifest, {
     const reviewStatus = replacementRequired
       ? '<p class="replacement"><strong>REPLACEMENT REQUIRED</strong> — this exact source cut is evidence only and cannot be approved.</p>'
       : '<p class="candidate"><strong>JARRAD REVIEW REQUIRED</strong> — approve or request changes on this corrected candidate.</p>';
+    const location = videoCourseLocations.get(asset.source_key);
+    if (!location) throw new Error(`Held video is not mapped to a course block: ${asset.source_key}`);
 
     return `<article class="card" data-source-key="${escapeHtml(asset.source_key)}" data-checksum="${asset.checksum_sha256}">
       <header><span class="number">${index + 1}</span><div><h2>${escapeHtml(details.title)}</h2><p class="meta">${details.duration} · ${asset.size_bytes.toLocaleString("en-US")} bytes</p></div></header>
       ${reviewStatus}
+      <div class="course-location"><strong>Course location</strong><span>${escapeHtml(location.moduleTitle)} → ${escapeHtml(location.lessonTitle)}</span><code>${escapeHtml(location.lessonSourceKey)} · ${escapeHtml(location.blockSourceKey)}</code></div>
       <video controls preload="metadata" src="${escapeHtml(videoUrl)}" aria-label="${escapeHtml(videoLabel)}" title="${escapeHtml(videoLabel)}">${track}Your browser cannot play this local video.</video>
       <p class="captions-note"><strong>Accessibility:</strong> ${escapeHtml(accessibilityNote)}</p>
       <p class="reason"><strong>Why it is held:</strong> ${escapeHtml(details.reason)}</p>${evidence}
@@ -313,7 +343,7 @@ export function renderHeldVideoReview(manifest, {
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>BMH Institute — Held Video Review</title>
   <style>
-    :root{color-scheme:dark;--bg:#11120f;--panel:#1c1e18;--ink:#f8f5e7;--muted:#b9b8ac;--accent:#f4cf45;--line:#3a3d32;--danger:#ff836f;--safe:#8fe388}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}main{width:min(1040px,calc(100% - 32px));margin:40px auto 80px}.intro{border-left:6px solid var(--accent);padding:4px 0 4px 20px;margin-bottom:30px}.eyebrow{text-transform:uppercase;letter-spacing:.14em;color:var(--accent);font-weight:800;font-size:.76rem}h1{font-size:clamp(2rem,6vw,4rem);line-height:1;margin:.25rem 0 1rem}h2{margin:0;font-size:1.35rem}.intro p{max-width:76ch;color:var(--muted)}.warning,.replacement{color:var(--danger);font-weight:750}.candidate{color:var(--safe);font-weight:750}.verification{display:grid;gap:5px;margin:20px 0;padding:14px 16px;border:2px solid;border-radius:10px;overflow-wrap:anywhere}.verification.verified{border-color:var(--safe);color:var(--safe)}.verification.unverified{border-color:var(--danger);color:var(--danger)}.grid{display:grid;gap:22px}.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:0 18px 38px #0005}.card header{display:flex;gap:14px;align-items:center;margin-bottom:16px}.number{display:grid;place-items:center;width:38px;height:38px;border-radius:50%;background:var(--accent);color:#161710;font-weight:900}.meta{margin:2px 0 0;color:var(--muted)}video{display:block;width:100%;max-height:70vh;border-radius:12px;background:#000}.captions-note{margin:10px 0;color:var(--muted)}.reason{margin:18px 0 8px}.evidence{margin:12px 0;padding:12px 14px;border-radius:10px;background:#2a2c24}a{color:var(--accent)}details{margin-top:14px;color:var(--muted)}summary{cursor:pointer;font-weight:700}dl{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:6px 12px}dt{font-weight:800}dd{margin:0;overflow-wrap:anywhere}code{font-size:.78rem}@media(max-width:600px){main{width:min(100% - 20px,1040px);margin-top:22px}.card{padding:14px}dl{grid-template-columns:1fr}.intro{padding-left:14px}}
+    :root{color-scheme:dark;--bg:#11120f;--panel:#1c1e18;--ink:#f8f5e7;--muted:#b9b8ac;--accent:#f4cf45;--line:#3a3d32;--danger:#ff836f;--safe:#8fe388}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}main{width:min(1040px,calc(100% - 32px));margin:40px auto 80px}.intro{border-left:6px solid var(--accent);padding:4px 0 4px 20px;margin-bottom:30px}.eyebrow{text-transform:uppercase;letter-spacing:.14em;color:var(--accent);font-weight:800;font-size:.76rem}h1{font-size:clamp(2rem,6vw,4rem);line-height:1;margin:.25rem 0 1rem}h2{margin:0;font-size:1.35rem}.intro p{max-width:76ch;color:var(--muted)}.warning,.replacement{color:var(--danger);font-weight:750}.candidate{color:var(--safe);font-weight:750}.verification{display:grid;gap:5px;margin:20px 0;padding:14px 16px;border:2px solid;border-radius:10px;overflow-wrap:anywhere}.verification.verified{border-color:var(--safe);color:var(--safe)}.verification.unverified{border-color:var(--danger);color:var(--danger)}.grid{display:grid;gap:22px}.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:0 18px 38px #0005}.card header{display:flex;gap:14px;align-items:center;margin-bottom:16px}.number{display:grid;place-items:center;width:38px;height:38px;border-radius:50%;background:var(--accent);color:#161710;font-weight:900}.meta{margin:2px 0 0;color:var(--muted)}.course-location{display:grid;gap:2px;margin:12px 0 16px;padding:10px 12px;border-left:3px solid var(--accent);background:#24261f}.course-location span{color:var(--ink)}.course-location code{color:var(--muted);overflow-wrap:anywhere}video{display:block;width:100%;max-height:70vh;border-radius:12px;background:#000}.captions-note{margin:10px 0;color:var(--muted)}.reason{margin:18px 0 8px}.evidence{margin:12px 0;padding:12px 14px;border-radius:10px;background:#2a2c24}a{color:var(--accent)}details{margin-top:14px;color:var(--muted)}summary{cursor:pointer;font-weight:700}dl{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:6px 12px}dt{font-weight:800}dd{margin:0;overflow-wrap:anywhere}code{font-size:.78rem}@media(max-width:600px){main{width:min(100% - 20px,1040px);margin-top:22px}.card{padding:14px}dl{grid-template-columns:1fr}.intro{padding-left:14px}}
   </style>
 </head>
 <body>

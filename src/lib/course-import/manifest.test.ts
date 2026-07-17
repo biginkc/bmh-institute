@@ -229,7 +229,16 @@ describe("validateCourseManifest", () => {
       type: "role_play",
       sort_order: 2,
       required: true,
-      content: { scenario_id: "  PeNdInG :closer-lab-scenario  " },
+      content: {
+        scenario_id: "  PeNdInG :closer-lab-scenario  ",
+        scenario_spec: {
+          assignment_source_key: "assignment-section-1",
+          context: "A guarded seller wants to understand the process.",
+          learner_goal: "Earn permission and agree on a next step.",
+          success_criteria: ["States purpose", "Acknowledges concern", "Agrees on next step"],
+          fail_conditions: ["Applies pressure", "Invents facts", "Skips consent"],
+        },
+      },
     });
 
     expect(validateCourseManifest(input).ok).toBe(true);
@@ -239,6 +248,37 @@ describe("validateCourseManifest", () => {
     expect(result.errors).toContain(
       "program.courses[0].modules[0].lessons[0].blocks[2].content.scenario_id must be a production Closer Lab scenario ID for a required release role play.",
     );
+  });
+
+  it("rejects shallow specifications on required role plays", () => {
+    const input = validCourseManifest();
+    input.program.courses[0].modules[0].lessons[0].blocks?.push({
+      source_key: "block-role-play",
+      type: "role_play",
+      sort_order: 2,
+      required: true,
+      content: {
+        scenario_id: "scenario-1",
+        scenario_spec: {
+          assignment_source_key: "",
+          context: "",
+          learner_goal: "",
+          success_criteria: ["Only one"],
+          fail_conditions: [],
+        },
+      },
+    });
+
+    const result = validateCourseManifest(input);
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.errors).toEqual(expect.arrayContaining([
+      "program.courses[0].modules[0].lessons[0].blocks[2].content.scenario_spec.assignment_source_key is required.",
+      "program.courses[0].modules[0].lessons[0].blocks[2].content.scenario_spec.context is required.",
+      "program.courses[0].modules[0].lessons[0].blocks[2].content.scenario_spec.learner_goal is required.",
+      "program.courses[0].modules[0].lessons[0].blocks[2].content.scenario_spec.success_criteria must contain 3 to 8 non-empty strings.",
+      "program.courses[0].modules[0].lessons[0].blocks[2].content.scenario_spec.fail_conditions must contain 3 to 8 non-empty strings.",
+    ]));
   });
 
   it("requires optional learner resources to be approved for release", () => {

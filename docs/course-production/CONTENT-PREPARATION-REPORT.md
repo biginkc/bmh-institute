@@ -156,20 +156,25 @@ the submission-review screen.
 
 ## Closer Lab specifications
 
-The manifest includes authored specifications for:
+The manifest includes authored specifications with explicit reviewed-assignment
+alignment:
 
-- Guarded inbound seller
-- Tired landlord discovery and handoff
-- Scam-suspicious pre-foreclosure seller
-- Probate follow-up
-- Family dynamics seller
-- Full-cycle seller conversation
+| Closer Lab scenario | Reviewed assignment |
+|---|---|
+| Guarded inbound seller | Conversation and Handoff Plan (section 3) |
+| Tired landlord discovery and handoff | Conversation and Handoff Plan (section 3) |
+| Scam-suspicious pre-foreclosure seller | Objection Response Plan (section 4) |
+| Probate follow-up | Follow-Up and Closing Plan (section 5) |
+| Family dynamics seller | Mission Control and Growth Capstone (section 6) |
+| Full-cycle seller conversation | Mission Control and Growth Capstone (section 6) |
 
-Each specification includes context, learner goal, success criteria, and fail
-conditions. Six corresponding scenarios and personas have been applied and
-verified in `closer-lab-test`, but their production IDs intentionally remain
-`pending:`. They cannot be accepted as production mappings until the production
-scenarios exist and their real IDs replace those placeholders.
+Each specification includes its assignment source key, context, learner goal,
+success criteria, and fail conditions. The manifest validators reject missing,
+shallow, or unknown assignment alignment. Six corresponding scenarios and
+personas have been applied and verified in `closer-lab-test`, but their
+production IDs intentionally remain `pending:`. They cannot be accepted as
+production mappings until the production scenarios exist and their real IDs
+replace those placeholders.
 
 ## Publication gates
 

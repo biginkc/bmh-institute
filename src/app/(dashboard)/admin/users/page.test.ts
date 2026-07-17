@@ -137,7 +137,7 @@ describe("AdminUsersPage (WR-05)", () => {
 
     const html = renderToStaticMarkup(await AdminUsersPage());
 
-    expect(html).toContain("Pilot setup");
+    expect(html).toContain("Learner access");
     expect(html).toContain("No role group assigned");
     expect(html).toContain("Expired");
     expect(html).toContain("Role group assigned");

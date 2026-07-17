@@ -208,7 +208,7 @@ export default async function AdminReportsPage() {
         description="Rollup view of who's learning what. Click a row to drill in."
         actions={
           <Link
-            href="/admin/reports/pilot/export"
+            href="/admin/reports/learners/export"
             className="font-extrabold text-[var(--action)] underline-offset-2 hover:underline"
           >
             Export CSV
@@ -389,7 +389,7 @@ function PilotMonitoringPanel({
   return (
     <section className="mt-8">
       <AdminSectionHeading
-        title="Pilot monitoring"
+        title="Learner monitoring"
         description="Watch learner blockers, assignment review, progress, and certificates."
       />
       <div className="grid gap-3 md:grid-cols-5">
@@ -403,7 +403,7 @@ function PilotMonitoringPanel({
         <AdminDataTable
           rowKey="userId"
           minWidth="50rem"
-          empty="No pilot learner blockers right now."
+          empty="No learner blockers right now."
           columns={[
             { key: "name", label: "Learner", presentation: "stacked", secondaryKey: "email" },
             { key: "statusLabel", label: "Status", presentation: "badge", toneKey: "tone" },

@@ -93,6 +93,44 @@ test("all six reviewed assignments carry usable reviewer rubrics", async () => {
   }
 });
 
+test("all six Closer Lab scenarios have substantive specs and explicit assignment alignment", async () => {
+  const manifest = await loadManifest(MANIFEST_URL);
+  const modules = manifest.program.courses.flatMap((course) => course.modules);
+  const assignments = new Set(
+    modules
+      .flatMap((module) => module.lessons)
+      .filter((lesson) => lesson.type === "assignment")
+      .map((lesson) => lesson.assignment.source_key),
+  );
+  const rolePlays = modules
+    .flatMap((module) => module.lessons)
+    .flatMap((lesson) => lesson.blocks ?? [])
+    .filter((block) => block.type === "role_play");
+
+  assert.equal(rolePlays.length, 6);
+  assert.deepEqual(
+    rolePlays.map((block) => block.content.scenario_spec.assignment_source_key),
+    [
+      "assignment-section-3",
+      "assignment-section-3",
+      "assignment-section-4",
+      "assignment-section-5",
+      "assignment-section-6",
+      "assignment-section-6",
+    ],
+  );
+  for (const block of rolePlays) {
+    const spec = block.content.scenario_spec;
+    assert.ok(assignments.has(spec.assignment_source_key));
+    assert.ok(spec.context.trim());
+    assert.ok(spec.learner_goal.trim());
+    assert.equal(spec.success_criteria.length, 4);
+    assert.ok(spec.fail_conditions.length >= 3);
+    assert.ok(spec.success_criteria.every((criterion) => criterion.trim()));
+    assert.ok(spec.fail_conditions.every((condition) => condition.trim()));
+  }
+});
+
 test("the manifest passes structural and semantic content QA", async () => {
   const [manifest, stackConfirmation] = await Promise.all([
     loadManifest(MANIFEST_URL),

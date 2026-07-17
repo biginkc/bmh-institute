@@ -108,7 +108,7 @@ export const walkthroughModules: WalkthroughModule[] = [
           { type: "divider", required: false },
           {
             type: "external_link",
-            label: "Open the internal pilot runbook",
+            label: "Open the learner operations runbook",
             url: "/admin/reports",
             description:
               "Admins use reports to monitor learner progress during walkthroughs and pilot runs.",

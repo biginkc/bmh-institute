@@ -469,6 +469,13 @@ function validateLesson(
           );
         }
       }
+      if (block.type === "role_play" && block.required === true) {
+        validateRequiredRolePlaySpec(
+          block.content.scenario_spec,
+          `${blockPath}.content.scenario_spec`,
+          errors,
+        );
+      }
       for (const field of ASSET_REFERENCE_FIELDS) {
         const value = block.content[field];
         if (value !== undefined && value !== null) {
@@ -760,6 +767,30 @@ function requireString(value: Record<string, unknown>, key: string, path: string
 
 function requireNonEmpty(value: unknown, path: string, errors: string[]) {
   if (typeof value !== "string" || value.trim() === "") errors.push(`${path} is required.`);
+}
+
+function validateRequiredRolePlaySpec(
+  value: unknown,
+  path: string,
+  errors: string[],
+) {
+  if (!isRecord(value)) {
+    errors.push(`${path} must be an object for a required role play.`);
+    return;
+  }
+  for (const field of ["assignment_source_key", "context", "learner_goal"] as const) {
+    requireNonEmpty(value[field], `${path}.${field}`, errors);
+  }
+  for (const field of ["success_criteria", "fail_conditions"] as const) {
+    const entries = value[field];
+    if (!Array.isArray(entries) || entries.length < 3 || entries.length > 8) {
+      errors.push(`${path}.${field} must contain 3 to 8 non-empty strings.`);
+      continue;
+    }
+    entries.forEach((entry, index) =>
+      requireNonEmpty(entry, `${path}.${field}[${index}]`, errors),
+    );
+  }
 }
 
 function validateBoundedString(value: unknown, path: string, maxLength: number, errors: string[]) {

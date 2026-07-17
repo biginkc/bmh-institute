@@ -71,14 +71,14 @@ export default async function AdminUsersPage() {
     <main className="w-full flex-1 p-6 md:p-10">
       <AdminPageHeader
         title="Users"
-        description="Pilot learner access, invite status, and role groups."
+        description="Learner access, invite status, and role groups."
       />
 
       <Card padding="sm" style={{ marginBottom: 24 }}>
         <div style={{ padding: "6px 12px 12px" }}>
           <AdminSectionHeading
-            title="Pilot setup"
-            description="Learner access, invite status, and next actions for the internal pilot."
+            title="Learner access"
+            description="Access, invite status, and next actions for assigned learning groups."
           />
         </div>
         <PilotSetupTable rows={pilotRows} />

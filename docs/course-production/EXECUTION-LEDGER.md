@@ -237,6 +237,36 @@ Implement the approved concurrent completion plan for the reusable BMH Institute
   walkthrough cleanup stays deferred until the real manifest is accepted, as
   required by the deletion boundary.
 
+### 2026-07-16 approval-surface and cross-app contract hardening
+
+- The held-video review cards now identify each exact cut by course, module,
+  lesson, lesson source key, and video-block source key. The verifier rejects
+  duplicate or unmapped assets, and the reviewer runbook now carries an
+  approval through checksum promotion, caption/transcript generation, review,
+  manifest rebuild, and release validation. This closes the handoff gap without
+  approving or altering any held file.
+- Every required Closer Lab block now names its reviewed assignment explicitly:
+  the two conversation scenarios map to section 3, scam-suspicious to section
+  4, probate to section 5, and the two capstone scenarios to section 6. Both the
+  source-manifest validator and runtime import validator reject shallow or
+  unknown required scenario specifications.
+- `closer-lab-test` was re-read and matched all six expected BMH role keys,
+  personas, goals, rubric items, and link records. The companion Closer Lab
+  branch records the same assignment mapping. Production IDs remain deliberately
+  absent, so this does not satisfy the production-mapping publication gate.
+- Institute-minted Closer Lab embed tokens now carry `aud: closer-lab`; the
+  companion Closer Lab branch verifies that audience when present while
+  retaining its existing rotation and completion-proof behavior.
+- Current admin copy now uses learner terminology for access, monitoring,
+  exports, and the operations runbook. The old export path remains as a
+  compatibility route; the visible UI and generated filename use learner
+  terminology. Walkthrough fixtures remain intact until real-course acceptance,
+  consistent with the deletion boundary.
+- Fresh combined verification passes 511 unit tests, 107 RTL component tests,
+  47 course-production tests, lint, typecheck, both application production
+  builds, and manifest validation. The manifest still reports zero errors, 82
+  intentional publication blockers, and the dated DialPad recheck warning.
+
 ## Hard gates
 
 - Jarrad must review the six corrected held cuts. The three policy-defective

@@ -127,6 +127,13 @@ test("static and verified pages make trust state and caption availability explic
   assert.match(staticHtml, /held-video-recuts\/README\.md/);
   assert.equal((staticHtml.match(/REPLACEMENT REQUIRED/g) || []).length, 3);
   assert.match(staticHtml, /Six corrected candidates await Jarrad review/);
+  assert.match(staticHtml, /Orientation → Welcome and Mindset/);
+  assert.match(staticHtml, /Objections and Questions → Objection Scripts Playbook/);
+  assert.match(staticHtml, /Cadence, Scripts, and Close → Closing and Deal Engineering/);
+  assert.match(staticHtml, /Performance and Career → KPIs and Sales Telemetry/);
+  assert.match(staticHtml, /block-video-video-slot-16-kpis/);
+  assert.doesNotMatch(staticHtml, /Uses the approved non-finale closer/);
+  assert.match(staticHtml, /Uses the selected non-finale closer/);
   assert.doesNotMatch(staticHtml, /VERIFIED LOCAL SERVER/);
   assert.match(verifiedHtml, /VERIFIED LOCAL SERVER/);
   assert.match(verifiedHtml, /2026-07-16T12:34:56\.000Z/);

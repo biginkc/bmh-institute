@@ -239,7 +239,7 @@ const ASSIGNMENTS = {
   },
   3: {
     title: "Conversation and Handoff Plan",
-    instructions: "Draft an opening, five discovery questions, and a handoff summary for a fictional tired-landlord lead. Include the pipeline stage, known facts, missing facts, motivation, timeline, decision-makers, and next action.",
+    instructions: "Use both Section 3 practice situations. For the guarded inbound seller, draft a permission-based opening and the first five fact-find questions. For the tired-landlord lead, draft five discovery questions and a handoff summary. Include the pipeline stage, known facts, missing facts, motivation, timeline, decision-makers, and next action.",
     rubric: [
       ["Conversation flow", "Moves naturally from permission and facts into discovery."],
       ["Discovery", "Questions surface consequences, timing, priorities, and decision process."],
@@ -248,7 +248,7 @@ const ASSIGNMENTS = {
   },
   4: {
     title: "Objection Response Plan",
-    instructions: "Choose three objections from the lesson. For each one, write a Listen, Acknowledge, Ask, Redirect response and identify when you would stop, escalate, or seek specialist guidance.",
+    instructions: "Choose three objections from the lesson, including the scam-suspicious pre-foreclosure practice situation. For each one, write a Listen, Acknowledge, Ask, Redirect response and identify when you would stop, escalate, or seek specialist guidance.",
     rubric: [
       ["Framework", "Each response includes all four steps in the correct order."],
       ["Fit", "Questions and redirects match the concern instead of using a generic rebuttal."],
@@ -257,7 +257,7 @@ const ASSIGNMENTS = {
   },
   5: {
     title: "Follow-Up and Closing Plan",
-    instructions: "Create a 30-day follow-up plan for a fictional seller who is interested but not ready. Include purpose, channel, message angle, stop conditions, CRM note, and next action for each touch. Finish with the conditions required for a clean offer conversation.",
+    instructions: "Create a 30-day follow-up plan for the probate practice situation. Include purpose, channel, message angle, stop conditions, CRM note, and next action for each touch. Finish with the conditions required for a clean offer conversation without rushing the estate process.",
     rubric: [
       ["Cadence", "Touches are intentional, spaced, and tied to a relevant reason."],
       ["Compliance", "The plan honors preferences, opt-outs, and approved channels."],
@@ -266,11 +266,12 @@ const ASSIGNMENTS = {
   },
   6: {
     title: "Mission Control and Growth Capstone",
-    instructions: "Build a one-day operating plan with priorities, checkpoints, metrics, pipeline hygiene, team communication, and end-of-day review. Add a short reflection on one skill to improve, how you will measure it, and how you will use coaching.",
+    instructions: "Build a one-day operating plan with priorities, checkpoints, metrics, pipeline hygiene, team communication, and end-of-day review. Add a short reflection on one skill to improve, how you will measure it, and how you will use coaching. Finish with two practice debriefs: how you preserved authority and neutrality in the family-dynamics situation, and what you would carry forward from the full-cycle seller conversation.",
     rubric: [
       ["Operating discipline", "The day protects follow-ups, documentation, communication, breaks, and review."],
       ["Measurement", "Chooses metrics that reveal a specific process gap without inventing targets."],
       ["Growth", "Names a concrete practice and feedback loop tied to the current role."],
+      ["Applied practice", "Uses specific evidence from both required Section 6 role plays to identify a safe behavior to repeat or improve."],
     ],
   },
 };
@@ -279,6 +280,7 @@ const ROLE_PLAYS = {
   7: [
     {
       key: "guarded-inbound",
+      assignment_source_key: "assignment-section-3",
       title: "Guarded inbound seller",
       context: "A warm inbound homeowner is willing to talk but gives short answers and wants to know why BMH Group needs personal details.",
       learner_goal: "Earn permission, complete the opening frame, and gather core facts without rushing into a pitch.",
@@ -289,6 +291,7 @@ const ROLE_PLAYS = {
   8: [
     {
       key: "tired-landlord",
+      assignment_source_key: "assignment-section-3",
       title: "Tired landlord discovery and handoff",
       context: "A landlord is exhausted by repairs and tenant problems but has not decided when to sell.",
       learner_goal: "Discover the real impact, clarify timing and decision-makers, then frame a clean handoff.",
@@ -299,6 +302,7 @@ const ROLE_PLAYS = {
   11: [
     {
       key: "scam-suspicious-preforeclosure",
+      assignment_source_key: "assignment-section-4",
       title: "Scam-suspicious pre-foreclosure seller",
       context: "During an initial seller conversation, a homeowner facing a possible foreclosure believes the contact may be a scam and refuses to share information.",
       learner_goal: "Lower pressure, explain the process, offer verifiable next steps, and respect the seller's boundaries.",
@@ -309,6 +313,7 @@ const ROLE_PLAYS = {
   13: [
     {
       key: "probate-follow-up",
+      assignment_source_key: "assignment-section-5",
       title: "Probate follow-up",
       context: "A seller handling a relative's estate asked for time and has not responded to two prior contacts.",
       learner_goal: "Use a respectful follow-up reason, acknowledge grief and process complexity, and create a low-pressure next step.",
@@ -319,6 +324,7 @@ const ROLE_PLAYS = {
   18: [
     {
       key: "family-dynamics-dayton",
+      assignment_source_key: "assignment-section-6",
       title: "Family dynamics seller",
       context: "An older Dayton homeowner wants to sell but an adult child strongly opposes the decision.",
       learner_goal: "Identify who can decide, hear both concerns, preserve the homeowner's agency, and seek guidance when needed.",
@@ -327,6 +333,7 @@ const ROLE_PLAYS = {
     },
     {
       key: "full-cycle-capstone",
+      assignment_source_key: "assignment-section-6",
       title: "Full-cycle seller conversation",
       context: "A seller moves from a first conversation through qualification, discovery, an objection, and readiness for handoff.",
       learner_goal: "Run the full conversation from opening through a documented handoff while maintaining clarity and consent.",
@@ -651,6 +658,7 @@ async function buildManifest() {
           title: scenario.title,
           height_px: 760,
           scenario_spec: {
+            assignment_source_key: scenario.assignment_source_key,
             context: scenario.context,
             learner_goal: scenario.learner_goal,
             success_criteria: scenario.success_criteria,
