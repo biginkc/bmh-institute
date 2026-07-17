@@ -13,7 +13,14 @@ vi.mock("@/lib/supabase/server", () => ({
       const result =
         table === "content_blocks"
           ? {
-              data: { id: "video-1", block_type: "video" },
+              data: {
+                id: "video-1",
+                block_type: "video",
+                content: {
+                  duration_seconds: 100,
+                  file_path: "courses/test/video.mp4",
+                },
+              },
               error: blockError,
             }
           : table === "user_video_progress"
@@ -22,6 +29,7 @@ vi.mock("@/lib/supabase/server", () => ({
                   position_seconds: 12,
                   duration_seconds: 100,
                   watched_ranges: [[0, 12]],
+                  asset_version: "courses/test/video.mp4#duration=100",
                 },
                 error: progressError,
               }

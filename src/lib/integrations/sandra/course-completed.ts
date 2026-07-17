@@ -1,6 +1,13 @@
 import { createHmac } from "node:crypto";
 
 import { getAppUrl } from "@/lib/app-url";
+import { createAdminClient } from "@/lib/supabase/admin";
+
+import {
+  SANDRA_DELIVERY_MAX_ATTEMPTS,
+  SANDRA_DELIVERY_REQUEST_TIMEOUT_MS,
+  SANDRA_DELIVERY_SWEEP_BATCH_SIZE,
+} from "./delivery-policy";
 
 type SupabaseLike = {
   // Supabase's fluent PostgREST builder varies by table and selected relation.
@@ -24,9 +31,7 @@ export type SandraCourseCompletedInput = {
 
 export type SandraCourseCompletedResult =
   | { ok: true; id?: string }
-  | { ok: false; reason: "not_configured" | "not_complete" | "lookup_failed" | "request_failed" | "http_error" };
-
-const DEFAULT_TIMEOUT_MS = 3_000;
+  | { ok: false; reason: "not_configured" | "not_complete" | "lookup_failed" | "persistence_failed" | "delivery_in_progress" | "request_failed" | "http_error" };
 
 function sign(body: string, token: string): string {
   return "sha256=" + createHmac("sha256", token).update(body).digest("hex");
@@ -46,11 +51,15 @@ function idempotencyKey(input: Pick<SandraCourseCompletedInput, "userId" | "cour
 
 function timeoutMs(env: NodeJS.ProcessEnv): number {
   const raw = Number(env.SANDRA_REQUEST_TIMEOUT_MS);
-  return Number.isFinite(raw) && raw > 0 ? raw : DEFAULT_TIMEOUT_MS;
+  return Number.isFinite(raw) && raw > 0
+    ? Math.min(raw, SANDRA_DELIVERY_REQUEST_TIMEOUT_MS)
+    : SANDRA_DELIVERY_REQUEST_TIMEOUT_MS;
 }
 
 function isConfigured(env: NodeJS.ProcessEnv = process.env): boolean {
-  return Boolean(env.SANDRA_API_BASE_URL && env.SANDRA_SERVICE_TOKEN && env.SANDRA_ORG_ID);
+  return Boolean(
+    env.SANDRA_API_BASE_URL && env.SANDRA_SERVICE_TOKEN && env.SANDRA_ORG_ID,
+  );
 }
 
 export function buildSandraCourseCompletedRequest(
@@ -122,6 +131,9 @@ export async function emitSandraCourseCompletedForLesson(
   supabase: SupabaseLike,
   args: { userId: string; lessonId: string },
 ): Promise<SandraCourseCompletedResult> {
+  // The completion trigger has already persisted a pending delivery. Avoid
+  // lookup work until a provider is configured; reconciliation can claim it
+  // later without losing the original completion timestamp.
   if (!isConfigured()) return { ok: false, reason: "not_configured" };
   const courseId = await courseIdForLesson(supabase, args.lessonId);
   if (!courseId) return { ok: false, reason: "lookup_failed" };
@@ -152,8 +164,15 @@ export async function emitSandraCourseCompletedForBlock(
 export async function emitSandraCourseCompletedIfNeeded(
   supabase: SupabaseLike,
   args: { userId: string; courseId: string },
+  deps: {
+    fetch?: typeof fetch;
+    env?: NodeJS.ProcessEnv;
+    deliveryClient?: SupabaseLike;
+  } = {},
 ): Promise<SandraCourseCompletedResult> {
-  if (!isConfigured()) return { ok: false, reason: "not_configured" };
+  if (!isConfigured(deps.env ?? process.env)) {
+    return { ok: false, reason: "not_configured" };
+  }
   const { data: complete, error: completeError } = await supabase.rpc(
     "fn_course_is_complete",
     { p_user_id: args.userId, p_course_id: args.courseId },
@@ -163,15 +182,238 @@ export async function emitSandraCourseCompletedIfNeeded(
 
   const details = await courseCompletionDetails(supabase, args);
   if (!details) return { ok: false, reason: "lookup_failed" };
-  const result = await sendSandraCourseCompleted(details);
-  if (!result.ok) {
-    console.warn("[emitSandraCourseCompletedIfNeeded] Sandra writeback failed", {
-      userId: args.userId,
-      courseId: args.courseId,
-      reason: result.reason,
-    });
+  let deliveryClient: SupabaseLike;
+  try {
+    deliveryClient = deps.deliveryClient ?? createAdminClient();
+  } catch {
+    return { ok: false, reason: "persistence_failed" };
   }
-  return result;
+  const { data: delivery, error: deliveryError } = await deliveryClient.rpc(
+    "fn_claim_sandra_course_completion_delivery",
+    {
+      p_user_id: args.userId,
+      p_course_id: args.courseId,
+      p_payload: details,
+    },
+  );
+  let claimed = parseClaimedDelivery(delivery);
+  if (deliveryError || !claimed) {
+    return { ok: false, reason: "persistence_failed" };
+  }
+  if (claimed.status === "acknowledged") {
+    return { ok: true, id: claimed.remoteOutcomeId ?? undefined };
+  }
+  if (!claimed.claimed) {
+    return { ok: false, reason: "delivery_in_progress" };
+  }
+
+  // The durable claim is committed before any network request begins. Retry a
+  // single transient failure immediately; if both attempts fail, a later call
+  // to this reconciliation path claims the still-pending delivery again.
+  let lastFailure: Extract<SandraCourseCompletedResult, { ok: false }> = {
+    ok: false,
+    reason: "request_failed",
+  };
+  for (let attempt = 0; attempt < SANDRA_DELIVERY_MAX_ATTEMPTS; attempt += 1) {
+    const result = await sendSandraCourseCompleted(claimed.payload, deps);
+    const { error: settleError } = await deliveryClient.rpc(
+      "fn_settle_sandra_course_completion_delivery",
+      {
+        p_user_id: args.userId,
+        p_course_id: args.courseId,
+        p_attempt_count: claimed.attemptCount,
+        p_acknowledged: result.ok,
+        p_error: result.ok ? null : result.reason,
+        p_remote_outcome_id: result.ok ? result.id ?? null : null,
+      },
+    );
+    if (settleError) return { ok: false, reason: "persistence_failed" };
+    if (result.ok) return result;
+    lastFailure = result;
+    if (attempt < SANDRA_DELIVERY_MAX_ATTEMPTS - 1) {
+      const { data: retry, error: retryError } = await deliveryClient.rpc(
+        "fn_claim_sandra_course_completion_delivery",
+        {
+          p_user_id: args.userId,
+          p_course_id: args.courseId,
+          p_payload: details,
+        },
+      );
+      claimed = parseClaimedDelivery(retry);
+      if (retryError || !claimed) {
+        return { ok: false, reason: "persistence_failed" };
+      }
+      if (claimed.status === "acknowledged") {
+        return { ok: true, id: claimed.remoteOutcomeId ?? undefined };
+      }
+      if (!claimed.claimed) {
+        return { ok: false, reason: "delivery_in_progress" };
+      }
+    }
+  }
+  console.warn("[emitSandraCourseCompletedIfNeeded] Sandra writeback failed", {
+    userId: args.userId,
+    courseId: args.courseId,
+    reason: lastFailure.reason,
+  });
+  return lastFailure;
+}
+
+/**
+ * Safe repair entrypoint for a course that completed before Sandra was
+ * configured or while Sandra was unavailable. The database refuses to claim a
+ * delivery without current completion evidence and makes repeated calls
+ * idempotent by learner/course.
+ */
+export async function reconcileSandraCourseCompleted(
+  supabase: SupabaseLike,
+  args: { userId: string; courseId: string },
+  deps: {
+    fetch?: typeof fetch;
+    env?: NodeJS.ProcessEnv;
+    deliveryClient?: SupabaseLike;
+  } = {},
+): Promise<SandraCourseCompletedResult> {
+  return emitSandraCourseCompletedIfNeeded(supabase, args, deps);
+}
+
+export type SandraDeliverySweepResult =
+  | {
+      ok: true;
+      selected: number;
+      acknowledged: number;
+      stillPending: number;
+      failures: Array<{ userId: string; courseId: string; reason: string }>;
+    }
+  | { ok: false; reason: "not_configured" | "persistence_failed" };
+
+/**
+ * Bounded operational sweep used by the scheduled route. Pending deliveries
+ * are always eligible; a delivering row is reclaimed only after five minutes
+ * so overlapping cron invocations do not immediately duplicate an in-flight
+ * request. Each row is isolated so one malformed or unavailable course cannot
+ * stop the rest of the batch.
+ */
+export async function reconcilePendingSandraCourseCompletions(
+  deps: {
+    fetch?: typeof fetch;
+    env?: NodeJS.ProcessEnv;
+    deliveryClient?: SupabaseLike;
+    batchSize?: number;
+    now?: Date;
+  } = {},
+): Promise<SandraDeliverySweepResult> {
+  const env = deps.env ?? process.env;
+  if (!isConfigured(env)) return { ok: false, reason: "not_configured" };
+  let deliveryClient: SupabaseLike;
+  try {
+    deliveryClient = deps.deliveryClient ?? createAdminClient();
+  } catch {
+    return { ok: false, reason: "persistence_failed" };
+  }
+  const requestedBatchSize =
+    deps.batchSize ?? SANDRA_DELIVERY_SWEEP_BATCH_SIZE;
+  const batchSize = Math.max(1, Math.min(100, Math.floor(requestedBatchSize)));
+  const staleBefore = new Date(
+    (deps.now ?? new Date()).getTime() - 5 * 60 * 1_000,
+  ).toISOString();
+  const { data, error } = await deliveryClient
+    .from("sandra_course_completion_deliveries")
+    .select("user_id, course_id, status, last_attempt_at, updated_at")
+    .or(
+      `status.eq.pending,and(status.eq.delivering,last_attempt_at.lt.${staleBefore})`,
+    )
+    .order("updated_at", { ascending: true })
+    .limit(batchSize);
+  if (error) return { ok: false, reason: "persistence_failed" };
+
+  const rows = (data ?? []) as Array<{
+    user_id: string;
+    course_id: string;
+    status: string;
+  }>;
+  let acknowledged = 0;
+  let stillPending = 0;
+  const failures: Array<{ userId: string; courseId: string; reason: string }> = [];
+  for (const row of rows) {
+    // The query excludes acknowledged rows; keep a defensive check in case a
+    // test double or a concurrent snapshot supplies one anyway.
+    if (row.status === "acknowledged") continue;
+    try {
+      const result = await reconcileSandraCourseCompleted(
+        deliveryClient,
+        { userId: row.user_id, courseId: row.course_id },
+        {
+          env,
+          fetch: deps.fetch,
+          deliveryClient,
+        },
+      );
+      if (result.ok) {
+        acknowledged += 1;
+      } else {
+        stillPending += 1;
+        failures.push({
+          userId: row.user_id,
+          courseId: row.course_id,
+          reason: result.reason,
+        });
+      }
+    } catch {
+      stillPending += 1;
+      failures.push({
+        userId: row.user_id,
+        courseId: row.course_id,
+        reason: "unexpected_error",
+      });
+    }
+  }
+  return {
+    ok: true,
+    selected: rows.filter((row) => row.status !== "acknowledged").length,
+    acknowledged,
+    stillPending,
+    failures,
+  };
+}
+
+function parseClaimedDelivery(value: unknown): {
+  payload: SandraCourseCompletedInput;
+  status: "pending" | "delivering" | "acknowledged";
+  claimed: boolean;
+  attemptCount: number;
+  remoteOutcomeId: string | null;
+} | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const row = value as Record<string, unknown>;
+  if (
+    !row.payload ||
+    typeof row.payload !== "object" ||
+    Array.isArray(row.payload) ||
+    !["pending", "delivering", "acknowledged"].includes(String(row.status)) ||
+    typeof row.claimed !== "boolean" ||
+    typeof row.attemptCount !== "number" ||
+    !Number.isInteger(row.attemptCount) ||
+    row.attemptCount < 0
+  ) {
+    return null;
+  }
+  const payload = row.payload as Record<string, unknown>;
+  if (
+    typeof payload.userId !== "string" ||
+    typeof payload.courseId !== "string" ||
+    typeof payload.completedAt !== "string"
+  ) {
+    return null;
+  }
+  return {
+    payload: payload as SandraCourseCompletedInput,
+    status: row.status as "pending" | "delivering" | "acknowledged",
+    claimed: row.claimed,
+    attemptCount: row.attemptCount,
+    remoteOutcomeId:
+      typeof row.remoteOutcomeId === "string" ? row.remoteOutcomeId : null,
+  };
 }
 
 async function courseIdForLesson(

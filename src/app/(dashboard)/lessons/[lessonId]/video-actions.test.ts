@@ -1,26 +1,22 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const emitSandraSpy = vi.fn(async (client: unknown, input: unknown) => {
-  void client;
-  void input;
+const emitSandraSpy = vi.fn(async (...args: unknown[]) => {
+  void args;
+  return { ok: true };
 });
+const rpcSpy = vi.fn();
+const adminUpsertSpy = vi.fn();
 let existingProgress: Record<string, unknown> | null = null;
-let progressUpsert: Record<string, unknown> | null = null;
-let completionUpsert: Record<string, unknown> | null = null;
-let completionError: { message: string } | null = null;
 let completionExists = false;
 
 vi.mock("@/lib/integrations/sandra/course-completed", () => ({
-  emitSandraCourseCompletedForBlock: (client: unknown, input: unknown) =>
-    emitSandraSpy(client, input),
+  emitSandraCourseCompletedForBlock: (...args: unknown[]) => emitSandraSpy(...args),
 }));
 
 vi.mock("@/lib/supabase/server", () => ({
   createClient: vi.fn(async () => ({
-    auth: {
-      getUser: async () => ({ data: { user: { id: "user-1" } } }),
-    },
-    rpc: async () => ({ data: true, error: null }),
+    auth: { getUser: async () => ({ data: { user: { id: "user-1" } } }) },
+    rpc: (...args: unknown[]) => rpcSpy(...args),
     from: (table: string) => {
       if (table === "content_blocks") {
         return {
@@ -31,7 +27,10 @@ vi.mock("@/lib/supabase/server", () => ({
                   id: "video-1",
                   lesson_id: "lesson-1",
                   block_type: "video",
-                  content: { duration_seconds: 100 },
+                  content: {
+                    duration_seconds: 100,
+                    file_path: "courses/test/video-v2.mp4",
+                  },
                 },
                 error: null,
               }),
@@ -63,177 +62,154 @@ vi.mock("@/lib/supabase/server", () => ({
 
 vi.mock("@/lib/supabase/admin", () => ({
   createAdminClient: vi.fn(() => ({
-    from: (table: string) => {
-      if (table === "user_video_progress") {
-        return {
-          upsert: async (row: Record<string, unknown>) => {
-            progressUpsert = row;
-            existingProgress = row;
-            return { error: null };
-          },
-        };
-      }
-      if (table === "user_block_progress") {
-        return {
-          upsert: async (row: Record<string, unknown>) => {
-            completionUpsert = row;
-            if (!completionError) completionExists = true;
-            return { error: completionError };
-          },
-        };
-      }
-      throw new Error(`Unexpected admin table ${table}`);
-    },
+    from: (table: string) => ({
+      upsert: async (row: Record<string, unknown>) => {
+        adminUpsertSpy(table, row);
+        if (table === "user_block_progress") completionExists = true;
+        return { error: null };
+      },
+    }),
   })),
 }));
 
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
-import {
-  loadVideoProgress,
-  recordVideoProgress,
-  recordVideoSeek,
-} from "./actions";
+import { loadVideoProgress, recordVideoProgress, recordVideoSeek } from "./actions";
 
-describe("recordVideoProgress server validation", () => {
+const TRUSTED_STATE = {
+  lessonId: "lesson-1",
+  positionSeconds: 10,
+  watchedRanges: [[0, 10]],
+  watchedPercent: 10,
+  completed: false,
+};
+
+describe("atomic video progress actions", () => {
   beforeEach(() => {
     existingProgress = null;
-    progressUpsert = null;
-    completionUpsert = null;
-    completionError = null;
     completionExists = false;
+    rpcSpy.mockReset();
+    rpcSpy.mockResolvedValue({ data: TRUSTED_STATE, error: null });
+    adminUpsertSpy.mockClear();
     emitSandraSpy.mockClear();
   });
 
-  it("rejects a client position that disagrees with the observed range", async () => {
-    const result = await recordVideoProgress({
-      blockId: "video-1",
-      positionSeconds: 40,
-      durationSeconds: 100,
-      observedFrom: 0,
-      observedTo: 2,
-    });
-
-    expect(result).toEqual({
-      ok: false,
-      error: "Video position does not match the observed playback range.",
-    });
-    expect(progressUpsert).toBeNull();
-  });
-
-  it("rejects an invalid observation instead of advancing the trusted playhead", async () => {
-    const result = await recordVideoProgress({
-      blockId: "video-1",
-      positionSeconds: 51,
-      durationSeconds: 100,
-      observedFrom: 50,
-      observedTo: 51,
-    });
-
-    expect(result).toEqual({
-      ok: false,
-      error: "Video playback observation could not be verified.",
-    });
-    expect(progressUpsert).toBeNull();
-  });
-
-  it("persists the validated observed endpoint rather than the client position", async () => {
-    existingProgress = {
-      position_seconds: 5,
-      duration_seconds: 100,
-      watched_ranges: [[0, 5]],
-      last_observed_position_seconds: 5,
-      last_observed_at: new Date(Date.now() - 5_000).toISOString(),
-    };
-
-    const result = await recordVideoProgress({
+  it("sends the complete observation to the transactional database function", async () => {
+    await expect(recordVideoProgress({
       blockId: "video-1",
       positionSeconds: 10.5,
       durationSeconds: 100,
       observedFrom: 5,
       observedTo: 10,
-    });
+    })).resolves.toMatchObject({ ok: true, positionSeconds: 10 });
 
-    expect(result).toMatchObject({ ok: true, positionSeconds: 10 });
-    expect(progressUpsert).toMatchObject({
-      position_seconds: 10,
-      last_observed_position_seconds: 10,
+    expect(rpcSpy).toHaveBeenCalledWith("fn_record_video_playback", {
+      p_user_id: "user-1",
+      p_block_id: "video-1",
+      p_operation: "observe",
+      p_position_seconds: 10.5,
+      p_duration_seconds: 100,
+      p_observed_from: 5,
+      p_observed_to: 10,
     });
+    expect(adminUpsertSpy).not.toHaveBeenCalled();
   });
 
-  it("moves the trusted resume anchor without adding skipped coverage", async () => {
-    existingProgress = {
-      position_seconds: 10,
-      duration_seconds: 100,
-      watched_ranges: [[0, 10]],
-      last_observed_position_seconds: 10,
-      last_observed_at: new Date(Date.now() - 5_000).toISOString(),
-    };
-
-    const result = await recordVideoSeek({
+  it("uses the same locked function for seek without adding a watched range", async () => {
+    rpcSpy.mockResolvedValue({
+      data: { ...TRUSTED_STATE, positionSeconds: 50 },
+      error: null,
+    });
+    await expect(recordVideoSeek({
       blockId: "video-1",
       positionSeconds: 50,
       durationSeconds: 100,
-    });
+    })).resolves.toEqual({ ok: true, positionSeconds: 50 });
 
-    expect(result).toEqual({ ok: true, positionSeconds: 50 });
-    expect(progressUpsert).toMatchObject({
-      position_seconds: 50,
-      watched_ranges: [[0, 10]],
-      last_observed_position_seconds: 50,
-    });
-    expect(completionUpsert).toBeNull();
-    expect(emitSandraSpy).not.toHaveBeenCalled();
+    expect(rpcSpy).toHaveBeenCalledWith("fn_record_video_playback", expect.objectContaining({
+      p_operation: "seek",
+      p_observed_from: null,
+      p_observed_to: null,
+    }));
+  });
 
-    const forgedImmediatePlayback = await recordVideoProgress({
+  it("does not call the database for structurally invalid browser timing", async () => {
+    await expect(recordVideoProgress({
+      blockId: "video-1",
+      positionSeconds: Number.NaN,
+      durationSeconds: 100,
+      observedFrom: 0,
+      observedTo: 2,
+    })).resolves.toEqual({
+      ok: false,
+      error: "Video progress contains invalid timing data.",
+    });
+    expect(rpcSpy).not.toHaveBeenCalled();
+  });
+
+  it("returns database validation failures without attempting a fallback write", async () => {
+    rpcSpy.mockResolvedValue({
+      data: null,
+      error: { message: "Video playback observation could not be verified." },
+    });
+    await expect(recordVideoProgress({
       blockId: "video-1",
       positionSeconds: 52,
       durationSeconds: 100,
       observedFrom: 50,
       observedTo: 52,
-    });
-    expect(forgedImmediatePlayback).toEqual({
+    })).resolves.toEqual({
       ok: false,
       error: "Video playback observation could not be verified.",
     });
-    expect(progressUpsert).toMatchObject({ watched_ranges: [[0, 10]] });
+    expect(adminUpsertSpy).not.toHaveBeenCalled();
   });
 
-  it("reconciles qualified stored coverage after completion persistence fails", async () => {
-    existingProgress = {
-      position_seconds: 89,
-      duration_seconds: 100,
-      watched_ranges: [[0, 89]],
-      last_observed_position_seconds: 89,
-      last_observed_at: new Date(Date.now() - 5_000).toISOString(),
-    };
-    completionError = { message: "completion write failed" };
-
-    const result = await recordVideoProgress({
+  it("emits course completion only from the trusted completed state", async () => {
+    rpcSpy.mockResolvedValue({
+      data: { ...TRUSTED_STATE, watchedPercent: 90, completed: true },
+      error: null,
+    });
+    await recordVideoProgress({
       blockId: "video-1",
       positionSeconds: 90,
       durationSeconds: 100,
       observedFrom: 89,
       observedTo: 90,
     });
+    expect(emitSandraSpy).toHaveBeenCalledTimes(1);
+  });
 
-    expect(result).toEqual({ ok: false, error: "completion write failed" });
-    expect(completionUpsert).toEqual({
-      user_id: "user-1",
-      block_id: "video-1",
-    });
-    expect(emitSandraSpy).not.toHaveBeenCalled();
-
-    completionError = null;
-    const retry = await loadVideoProgress("video-1");
-
-    expect(retry).toMatchObject({
+  it("does not grant completion from a read-only legacy progress load", async () => {
+    existingProgress = {
+      position_seconds: 90,
+      duration_seconds: 100,
+      watched_ranges: [[0, 90]],
+      asset_version: "courses/test/video-v2.mp4#duration=100",
+    };
+    const result = await loadVideoProgress("video-1");
+    expect(result).toMatchObject({
       ok: true,
       watchedPercent: 90,
-      completed: true,
-      reconciled: true,
+      completed: false,
     });
-    expect(completionExists).toBe(true);
-    expect(emitSandraSpy).toHaveBeenCalledTimes(1);
+    expect(adminUpsertSpy).not.toHaveBeenCalled();
+  });
+
+  it("discards watched ranges and resume position from a replaced video cut", async () => {
+    existingProgress = {
+      position_seconds: 90,
+      duration_seconds: 100,
+      watched_ranges: [[0, 90]],
+      asset_version: "courses/test/video-v1.mp4#duration=100",
+    };
+    await expect(loadVideoProgress("video-1")).resolves.toMatchObject({
+      ok: true,
+      positionSeconds: 0,
+      watchedRanges: [],
+      watchedPercent: 0,
+      completed: false,
+    });
+    expect(adminUpsertSpy).not.toHaveBeenCalled();
   });
 });

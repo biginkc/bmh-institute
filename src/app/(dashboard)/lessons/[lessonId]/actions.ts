@@ -7,7 +7,6 @@ import { verifyRolePlayCompletionToken } from "@/lib/role-plays/completion-token
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import {
-  applyPlaybackObservation,
   parseWatchedRanges,
   watchedCoverageRatio,
   type WatchedRange,
@@ -39,8 +38,6 @@ export type VideoSeekResult =
   | { ok: true; positionSeconds: number }
   | { ok: false; error: string };
 
-const VIDEO_POSITION_EPSILON_SECONDS = 1;
-
 export async function loadVideoProgress(
   blockId: string,
 ): Promise<VideoProgressResult> {
@@ -68,7 +65,7 @@ export async function loadVideoProgress(
   const [progressResult, completionResult] = await Promise.all([
     learner
       .from("user_video_progress")
-      .select("position_seconds, duration_seconds, watched_ranges")
+      .select("position_seconds, duration_seconds, watched_ranges, asset_version")
       .eq("user_id", user.id)
       .eq("block_id", blockId)
       .maybeSingle(),
@@ -89,45 +86,26 @@ export async function loadVideoProgress(
     };
   }
   const progress = progressResult.data;
-  const ranges = parseWatchedRanges(progress?.watched_ranges);
   const authoredDuration = durationFromContent(block.content);
-  const duration = authoredDuration || numberOrZero(progress?.duration_seconds);
+  const currentAssetVersion = assetVersionFromContent(block.content);
+  const progressMatchesAsset = Boolean(
+    currentAssetVersion && progress?.asset_version === currentAssetVersion,
+  );
+  const ranges = progressMatchesAsset
+    ? parseWatchedRanges(progress?.watched_ranges)
+    : [];
+  const duration = authoredDuration || (
+    progressMatchesAsset ? numberOrZero(progress?.duration_seconds) : 0
+  );
   const coverage = watchedCoverageRatio(ranges, duration);
-  let completed = Boolean(completionResult.data);
-  let reconciled = false;
-  if (!completed && authoredDuration > 0 && coverage >= 0.9) {
-    let admin;
-    try {
-      admin = createAdminClient();
-    } catch (error) {
-      return {
-        ok: false,
-        error: error instanceof Error ? error.message : "Admin client unavailable.",
-      };
-    }
-    const { error: completionError } = await admin
-      .from("user_block_progress")
-      .upsert(
-        { user_id: user.id, block_id: blockId },
-        { onConflict: "user_id,block_id", ignoreDuplicates: true },
-      );
-    if (completionError) {
-      return { ok: false, error: completionError.message };
-    }
-    await emitSandraCourseCompletedForBlock(learner, {
-      userId: user.id,
-      blockId,
-    });
-    completed = true;
-    reconciled = true;
-  }
   return {
     ok: true,
-    positionSeconds: numberOrZero(progress?.position_seconds),
+    positionSeconds: progressMatchesAsset
+      ? numberOrZero(progress?.position_seconds)
+      : 0,
     watchedRanges: ranges,
     watchedPercent: Math.round(coverage * 100),
-    completed,
-    reconciled,
+    completed: Boolean(completionResult.data),
   };
 }
 
@@ -149,69 +127,19 @@ export async function recordVideoSeek(input: {
     return { ok: false, error: "Video seek contains invalid timing data." };
   }
 
-  const { data: block } = await learner
-    .from("content_blocks")
-    .select("id, lesson_id, block_type, content")
-    .eq("id", input.blockId)
-    .maybeSingle();
-  if (!block || block.block_type !== "video") {
-    return { ok: false, error: "Video block not found." };
-  }
-  const { data: unlocked } = await learner.rpc("fn_lesson_is_unlocked", {
+  const { data, error } = await learner.rpc("fn_record_video_playback", {
     p_user_id: user.id,
-    p_lesson_id: block.lesson_id,
+    p_block_id: input.blockId,
+    p_operation: "seek",
+    p_position_seconds: input.positionSeconds,
+    p_duration_seconds: input.durationSeconds,
+    p_observed_from: null,
+    p_observed_to: null,
   });
-  if (unlocked !== true) {
-    return { ok: false, error: "Complete the prerequisite lessons first." };
-  }
-
-  const { data: existing, error: existingError } = await learner
-    .from("user_video_progress")
-    .select("duration_seconds, watched_ranges")
-    .eq("user_id", user.id)
-    .eq("block_id", input.blockId)
-    .maybeSingle();
-  if (existingError) return { ok: false, error: existingError.message };
-
-  const authoredDuration = durationFromContent(block.content);
-  const storedDuration = numberOrZero(existing?.duration_seconds);
-  const duration = authoredDuration || storedDuration || input.durationSeconds;
-  if (
-    Math.abs(duration - input.durationSeconds) > 2 ||
-    input.positionSeconds > duration + VIDEO_POSITION_EPSILON_SECONDS
-  ) {
-    return { ok: false, error: "Video seek does not match the lesson asset." };
-  }
-
-  let admin;
-  try {
-    admin = createAdminClient();
-  } catch (error) {
-    return {
-      ok: false,
-      error: error instanceof Error ? error.message : "Admin client unavailable.",
-    };
-  }
-  const trustedPosition = Math.min(input.positionSeconds, duration);
-  const now = new Date().toISOString();
-  const { error: progressError } = await admin
-    .from("user_video_progress")
-    .upsert(
-      {
-        user_id: user.id,
-        block_id: input.blockId,
-        position_seconds: trustedPosition,
-        duration_seconds: duration,
-        watched_ranges: parseWatchedRanges(existing?.watched_ranges),
-        last_observed_position_seconds: trustedPosition,
-        last_observed_at: now,
-        updated_at: now,
-      },
-      { onConflict: "user_id,block_id" },
-    );
-  if (progressError) return { ok: false, error: progressError.message };
-
-  return { ok: true, positionSeconds: trustedPosition };
+  if (error) return { ok: false, error: error.message };
+  const trusted = parseTrustedVideoState(data);
+  if (!trusted) return { ok: false, error: "Video progress could not be saved." };
+  return { ok: true, positionSeconds: trusted.positionSeconds };
 }
 
 export async function recordVideoProgress(input: {
@@ -236,128 +164,34 @@ export async function recordVideoProgress(input: {
     return { ok: false, error: "Video progress contains invalid timing data." };
   }
 
-  const { data: block } = await learner
-    .from("content_blocks")
-    .select("id, lesson_id, block_type, content")
-    .eq("id", input.blockId)
-    .maybeSingle();
-  if (!block || block.block_type !== "video") {
-    return { ok: false, error: "Video block not found." };
-  }
-  const { data: unlocked } = await learner.rpc("fn_lesson_is_unlocked", {
+  const { data, error } = await learner.rpc("fn_record_video_playback", {
     p_user_id: user.id,
-    p_lesson_id: block.lesson_id,
+    p_block_id: input.blockId,
+    p_operation: "observe",
+    p_position_seconds: input.positionSeconds,
+    p_duration_seconds: input.durationSeconds,
+    p_observed_from: input.observedFrom,
+    p_observed_to: input.observedTo,
   });
-  if (unlocked !== true) {
-    return { ok: false, error: "Complete the prerequisite lessons first." };
-  }
+  if (error) return { ok: false, error: error.message };
+  const trusted = parseTrustedVideoState(data);
+  if (!trusted) return { ok: false, error: "Video progress could not be saved." };
 
-  const { data: existing, error: existingError } = await learner
-    .from("user_video_progress")
-    .select(
-      "position_seconds, duration_seconds, watched_ranges, last_observed_position_seconds, last_observed_at",
-    )
-    .eq("user_id", user.id)
-    .eq("block_id", input.blockId)
-    .maybeSingle();
-  if (existingError) return { ok: false, error: existingError.message };
-  const authoredDuration = durationFromContent(block.content);
-  const storedDuration = numberOrZero(existing?.duration_seconds);
-  const duration = authoredDuration || storedDuration || input.durationSeconds;
-  if (Math.abs(duration - input.durationSeconds) > 2) {
-    return { ok: false, error: "Video duration does not match the lesson asset." };
-  }
-  if (
-    input.observedTo > duration + VIDEO_POSITION_EPSILON_SECONDS ||
-    input.positionSeconds > duration + VIDEO_POSITION_EPSILON_SECONDS ||
-    Math.abs(input.positionSeconds - input.observedTo) >
-      VIDEO_POSITION_EPSILON_SECONDS
-  ) {
-    return {
-      ok: false,
-      error: "Video position does not match the observed playback range.",
-    };
-  }
-
-  const now = new Date();
-  const observation = applyPlaybackObservation({
-    existingRanges: parseWatchedRanges(existing?.watched_ranges),
-    observedFrom: input.observedFrom,
-    observedTo: input.observedTo,
-    duration,
-    previousObservedPosition:
-      existing?.last_observed_at &&
-      typeof existing.last_observed_position_seconds === "number"
-        ? existing.last_observed_position_seconds
-        : null,
-    previousObservedAt: existing?.last_observed_at
-      ? new Date(existing.last_observed_at)
-      : null,
-    observedAt: now,
-  });
-  if (!observation.ok) {
-    return {
-      ok: false,
-      error: "Video playback observation could not be verified.",
-    };
-  }
-  const ranges = observation.ranges;
-  const trustedPosition = Math.min(input.observedTo, duration);
-  const coverage = watchedCoverageRatio(ranges, duration);
-  // Only authoring/import metadata can establish the completion denominator.
-  // Browser-reported duration is useful for resume but cannot award completion.
-  const completed = authoredDuration > 0 && coverage >= 0.9;
-
-  let admin;
-  try {
-    admin = createAdminClient();
-  } catch (error) {
-    return {
-      ok: false,
-      error: error instanceof Error ? error.message : "Admin client unavailable.",
-    };
-  }
-  const { error: progressError } = await admin
-    .from("user_video_progress")
-    .upsert(
-      {
-        user_id: user.id,
-        block_id: input.blockId,
-        position_seconds: trustedPosition,
-        duration_seconds: duration,
-        watched_ranges: ranges,
-        last_observed_position_seconds: trustedPosition,
-        last_observed_at: now.toISOString(),
-        updated_at: now.toISOString(),
-      },
-      { onConflict: "user_id,block_id" },
-    );
-  if (progressError) return { ok: false, error: progressError.message };
-
-  if (completed) {
-    const { error: completionError } = await admin
-      .from("user_block_progress")
-      .upsert(
-        { user_id: user.id, block_id: input.blockId },
-        { onConflict: "user_id,block_id", ignoreDuplicates: true },
-      );
-    if (completionError) {
-      return { ok: false, error: completionError.message };
-    }
+  if (trusted.completed) {
     await emitSandraCourseCompletedForBlock(learner, {
       userId: user.id,
       blockId: input.blockId,
     });
   }
 
-  revalidatePath(`/lessons/${block.lesson_id}`);
+  revalidatePath(`/lessons/${trusted.lessonId}`);
   revalidatePath("/dashboard");
   return {
     ok: true,
-    positionSeconds: trustedPosition,
-    watchedRanges: ranges,
-    watchedPercent: Math.round(coverage * 100),
-    completed,
+    positionSeconds: trusted.positionSeconds,
+    watchedRanges: trusted.watchedRanges,
+    watchedPercent: trusted.watchedPercent,
+    completed: trusted.completed,
   };
 }
 
@@ -455,6 +289,46 @@ function numberOrZero(value: unknown) {
 function durationFromContent(value: unknown) {
   if (!value || typeof value !== "object" || Array.isArray(value)) return 0;
   return numberOrZero((value as Record<string, unknown>).duration_seconds);
+}
+
+function assetVersionFromContent(value: unknown) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return "";
+  const content = value as Record<string, unknown>;
+  const filePath = content.file_path;
+  const duration = content.duration_seconds;
+  return typeof filePath === "string" && filePath.trim() &&
+      typeof duration === "number" && Number.isFinite(duration) && duration > 0
+    ? `${filePath.trim()}#duration=${duration}`
+    : "";
+}
+
+function parseTrustedVideoState(value: unknown): {
+  lessonId: string;
+  positionSeconds: number;
+  watchedRanges: WatchedRange[];
+  watchedPercent: number;
+  completed: boolean;
+} | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const state = value as Record<string, unknown>;
+  const ranges = parseWatchedRanges(state.watchedRanges);
+  if (
+    typeof state.lessonId !== "string" ||
+    typeof state.positionSeconds !== "number" ||
+    !Number.isFinite(state.positionSeconds) ||
+    typeof state.watchedPercent !== "number" ||
+    !Number.isFinite(state.watchedPercent) ||
+    typeof state.completed !== "boolean"
+  ) {
+    return null;
+  }
+  return {
+    lessonId: state.lessonId,
+    positionSeconds: state.positionSeconds,
+    watchedRanges: ranges,
+    watchedPercent: state.watchedPercent,
+    completed: state.completed,
+  };
 }
 
 function scenarioFromContent(value: unknown) {

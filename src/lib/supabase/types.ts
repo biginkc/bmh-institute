@@ -997,6 +997,69 @@ export type Database = {
           },
         ]
       }
+      sandra_course_completion_deliveries: {
+        Row: {
+          acknowledged_at: string | null
+          attempt_count: number
+          completed_at: string
+          course_id: string
+          created_at: string
+          id: string
+          last_attempt_at: string | null
+          last_error: string | null
+          payload: Json
+          remote_outcome_id: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          attempt_count?: number
+          completed_at: string
+          course_id: string
+          created_at?: string
+          id?: string
+          last_attempt_at?: string | null
+          last_error?: string | null
+          payload: Json
+          remote_outcome_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          acknowledged_at?: string | null
+          attempt_count?: number
+          completed_at?: string
+          course_id?: string
+          created_at?: string
+          id?: string
+          last_attempt_at?: string | null
+          last_error?: string | null
+          payload?: Json
+          remote_outcome_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sandra_course_completion_deliveries_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sandra_course_completion_deliveries_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_block_progress: {
         Row: {
           block_id: string
@@ -1188,6 +1251,7 @@ export type Database = {
       }
       user_video_progress: {
         Row: {
+          asset_version: string
           block_id: string
           duration_seconds: number
           last_observed_at: string | null
@@ -1198,6 +1262,7 @@ export type Database = {
           watched_ranges: Json
         }
         Insert: {
+          asset_version: string
           block_id: string
           duration_seconds: number
           last_observed_at?: string | null
@@ -1208,6 +1273,7 @@ export type Database = {
           watched_ranges?: Json
         }
         Update: {
+          asset_version?: string
           block_id?: string
           duration_seconds?: number
           last_observed_at?: string | null
@@ -1309,6 +1375,10 @@ export type Database = {
           retry_after_seconds: number
         }[]
       }
+      fn_claim_sandra_course_completion_delivery: {
+        Args: { p_course_id: string; p_payload: Json; p_user_id: string }
+        Returns: Json
+      }
       fn_course_completion_percent: {
         Args: { p_course_id: string; p_user_id: string }
         Returns: number
@@ -1349,6 +1419,18 @@ export type Database = {
         Args: { p_program_id: string; p_user_id: string }
         Returns: number
       }
+      fn_record_video_playback: {
+        Args: {
+          p_block_id: string
+          p_duration_seconds: number
+          p_observed_from?: number | null
+          p_observed_to?: number | null
+          p_operation: string
+          p_position_seconds: number
+          p_user_id: string
+        }
+        Returns: Json
+      }
       fn_save_user_settings: {
         Args: {
           p_role_group_ids: string[]
@@ -1361,6 +1443,17 @@ export type Database = {
       fn_set_user_role_groups: {
         Args: { p_role_group_ids: string[]; p_user_id: string }
         Returns: undefined
+      }
+      fn_settle_sandra_course_completion_delivery: {
+        Args: {
+          p_acknowledged: boolean
+          p_attempt_count: number
+          p_course_id: string
+          p_error?: string | null
+          p_remote_outcome_id?: string | null
+          p_user_id: string
+        }
+        Returns: boolean
       }
       fn_update_assignment_for_lesson: {
         Args: {
