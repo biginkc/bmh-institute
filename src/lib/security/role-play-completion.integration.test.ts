@@ -174,6 +174,12 @@ describe.skipIf(!envPresent)("atomic role-play completion", () => {
             content: { scenario_id: `locked-${suffix}` },
             is_required_for_completion: true,
           },
+          {
+            lesson_id: prerequisiteId,
+            block_type: "text",
+            content: { html: "<p>Required prerequisite work</p>" },
+            is_required_for_completion: true,
+          },
         ])
         .select("id, lesson_id");
       if (blocks.error || !blocks.data) throw blocks.error;
@@ -186,6 +192,23 @@ describe.skipIf(!envPresent)("atomic role-play completion", () => {
       if (!blockId || !lockedBlockId) {
         throw new Error("Role-play blocks were not created.");
       }
+
+      // A content lesson with no required blocks is complete by definition.
+      // Keep this prerequisite genuinely incomplete so the test exercises the
+      // role-play RPC's unlock enforcement rather than a vacuously complete
+      // fixture.
+      const prerequisiteCompletion = await admin.rpc("fn_lesson_is_complete", {
+        p_user_id: userId,
+        p_lesson_id: prerequisiteId,
+      });
+      expect(prerequisiteCompletion.error).toBeNull();
+      expect(prerequisiteCompletion.data).toBe(false);
+      const lockedState = await admin.rpc("fn_lesson_is_unlocked", {
+        p_user_id: userId,
+        p_lesson_id: lockedLesson.data.id,
+      });
+      expect(lockedState.error).toBeNull();
+      expect(lockedState.data).toBe(false);
 
       const directWrite = await learner.from("role_play_results").insert({
         user_id: userId,
