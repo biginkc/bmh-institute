@@ -382,6 +382,7 @@ begin
   exception
     when sqlstate '55000' then null;
   end;
+  perform set_config('bmh.rollback_import_id', 'migration-031-acceptance', true);
   begin
     delete from public.content_blocks
     where id = '93c6e93e-a62c-5c23-a667-157c2ad7f9b5';
@@ -389,6 +390,7 @@ begin
   exception
     when foreign_key_violation then null;
   end;
+  perform set_config('bmh.rollback_import_id', '', true);
   if (
     select count(*)
     from public.user_video_completion_history
