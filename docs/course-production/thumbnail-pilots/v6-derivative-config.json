@@ -1,0 +1,39 @@
+{
+  "schema_version": "bmh-thumbnail-pilot-derivatives/v2",
+  "palette_rgb": [
+    [103, 182, 255],
+    [255, 211, 1],
+    [255, 174, 1],
+    [255, 110, 0],
+    [254, 255, 198],
+    [255, 255, 255],
+    [0, 0, 0],
+    [105, 153, 53]
+  ],
+  "pilots": [
+    {
+      "slug": "orientation",
+      "source_path": "course-assets/thumbnails/pilots/revisions/v6/sources/orientation-generated-v6.png",
+      "background_rgb": [103, 182, 255],
+      "flat_master_path": "course-assets/thumbnails/pilots/revisions/v6/flat-masters/orientation-flat-master-v6.png",
+      "lesson_card_path": "course-assets/thumbnails/pilots/revisions/v6/lesson-cards/orientation-lesson-card-v6-16x10.webp",
+      "video_poster_path": "course-assets/thumbnails/pilots/revisions/v6/video-posters/orientation-video-poster-v6-16x9.webp"
+    },
+    {
+      "slug": "opening-the-call",
+      "source_path": "course-assets/thumbnails/pilots/revisions/v6/sources/opening-the-call-generated-v5.png",
+      "background_rgb": [255, 211, 1],
+      "flat_master_path": "course-assets/thumbnails/pilots/revisions/v6/flat-masters/opening-the-call-flat-master-v6.png",
+      "lesson_card_path": "course-assets/thumbnails/pilots/revisions/v6/lesson-cards/opening-the-call-lesson-card-v6-16x10.webp",
+      "video_poster_path": "course-assets/thumbnails/pilots/revisions/v6/video-posters/opening-the-call-video-poster-v6-16x9.webp"
+    },
+    {
+      "slug": "objection-architecture",
+      "source_path": "course-assets/thumbnails/pilots/revisions/v6/sources/objection-architecture-generated-v6.png",
+      "background_rgb": [103, 182, 255],
+      "flat_master_path": "course-assets/thumbnails/pilots/revisions/v6/flat-masters/objection-architecture-flat-master-v6.png",
+      "lesson_card_path": "course-assets/thumbnails/pilots/revisions/v6/lesson-cards/objection-architecture-lesson-card-v6-16x10.webp",
+      "video_poster_path": "course-assets/thumbnails/pilots/revisions/v6/video-posters/objection-architecture-video-poster-v6-16x9.webp"
+    }
+  ]
+}

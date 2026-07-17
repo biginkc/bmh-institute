@@ -2,29 +2,13 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import {
-  createEmptyProductionRecord,
-  sha256,
-  validateProductionRecord,
-} from "./artwork-production-contract.mjs";
+import { createEmptyProductionRecord, sha256, validateProductionRecord } from "./artwork-production-contract.mjs";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
-const manifestPath = path.join(
-  repoRoot,
-  "content/course-manifests/bmh-employee-training.v1.json",
-);
-const outputPath = path.join(
-  repoRoot,
-  "docs/course-production/thumbnail-pilots/production-inventory.json",
-);
-const pilotChecksumsPath = path.join(
-  repoRoot,
-  "docs/course-production/thumbnail-pilots/checksums.json",
-);
-const pilotGenerationLineagePath = path.join(
-  repoRoot,
-  "docs/course-production/thumbnail-pilots/generation-lineage.json",
-);
+const manifestPath = path.join(repoRoot, "content/course-manifests/bmh-employee-training.v1.json");
+const outputPath = path.join(repoRoot, "docs/course-production/thumbnail-pilots/production-inventory.json");
+const pilotChecksumsPath = path.join(repoRoot, "docs/course-production/thumbnail-pilots/checksums.json");
+const pilotGenerationLineagePath = path.join(repoRoot, "docs/course-production/thumbnail-pilots/generation-lineage.json");
 const args = process.argv.slice(2);
 const unknownArgs = args.filter((arg) => arg !== "--check");
 if (unknownArgs.length > 0) {
@@ -38,14 +22,14 @@ const [manifest, pilotChecksums, pilotGenerationLineage] = await Promise.all([
   readFile(pilotGenerationLineagePath, "utf8").then(JSON.parse),
 ]);
 const course = manifest.program.courses[0];
-const lessons = course.modules.flatMap((module) =>
-  module.lessons.filter((lesson) => lesson.type === "content"),
-);
-const manifestAssets = new Map(
-  manifest.assets.map((asset) => [asset.source_key, asset]),
-);
+const lessons = course.modules.flatMap((module) => module.lessons.filter((lesson) => lesson.type === "content"));
+const manifestAssets = new Map(manifest.assets.map((asset) => [asset.source_key, asset]));
 
-const references = [
+const BLUE_RGB = [103, 182, 255];
+const YELLOW_RGB = [255, 211, 1];
+const ALLOWED_BACKGROUND_RGB = new Set([BLUE_RGB.join(","), YELLOW_RGB.join(",")]);
+
+const baseReferences = [
   {
     id: "style-ref-1",
     role: "canonical BMH Sticker System style",
@@ -78,16 +62,6 @@ const references = [
   },
 ];
 
-for (const reference of references) {
-  const contents = await readFile(path.join(repoRoot, reference.path));
-  const actualSha256 = sha256(contents);
-  if (actualSha256 !== reference.sha256) {
-    throw new Error(
-      `Reference ${reference.id} SHA-256 mismatch: ${actualSha256} != ${reference.sha256}`,
-    );
-  }
-}
-
 function repoPath(localPath) {
   const candidate = path.resolve(repoRoot, localPath);
   if (candidate !== repoRoot && !candidate.startsWith(`${repoRoot}${path.sep}`)) {
@@ -104,10 +78,71 @@ function pngDimensions(contents, localPath) {
   return [contents.readUInt32BE(16), contents.readUInt32BE(20)];
 }
 
+function validateBackgroundRgb(value, label) {
+  if (
+    !Array.isArray(value) ||
+    value.length !== 3 ||
+    value.some((channel) => !Number.isInteger(channel) || channel < 0 || channel > 255) ||
+    !ALLOWED_BACKGROUND_RGB.has(value.join(","))
+  ) {
+    throw new Error(`${label} must be the locked blue or yellow RGB value`);
+  }
+  return value;
+}
+
+function validateToolEvidence(evidence, label) {
+  const invokedAt = Date.parse(evidence?.invoked_at ?? "");
+  const completedAt = Date.parse(evidence?.completed_at ?? "");
+  if (
+    !evidence?.thread_id ||
+    !evidence?.agent_path ||
+    !evidence?.invocation_call_id ||
+    !evidence?.tool_output_call_id ||
+    !evidence?.tool_output_id ||
+    !Number.isFinite(invokedAt) ||
+    !Number.isFinite(completedAt) ||
+    completedAt < invokedAt
+  ) {
+    throw new Error(`${label} tool evidence is incomplete`);
+  }
+}
+
+async function validateLineageInput(input, label, { requireId = false } = {}) {
+  if (requireId && (!input?.id || !input?.role)) {
+    throw new Error(`${label} must have a stable id and role`);
+  }
+  const contents = await readFile(repoPath(input.path));
+  if (sha256(contents) !== input.sha256) {
+    throw new Error(`${label} checksum changed: ${input.path}`);
+  }
+}
+
+async function validateLineageOutput(output, label) {
+  const outputContents = await readFile(repoPath(output.path));
+  if (
+    sha256(outputContents) !== output.sha256 ||
+    outputContents.length !== output.size_bytes ||
+    JSON.stringify(pngDimensions(outputContents, output.path)) !== JSON.stringify(output.dimensions)
+  ) {
+    throw new Error(`${label} output checksum, size, or dimensions changed`);
+  }
+}
+
+async function readAndValidatePrompt(promptPath, promptSha256, label) {
+  const promptBytes = await readFile(repoPath(promptPath), "utf8");
+  const prompt = promptBytes.replace(/\r?\n$/, "");
+  if (sha256(prompt) !== promptSha256) {
+    throw new Error(`${label} prompt checksum changed`);
+  }
+  return prompt;
+}
+
 async function validatePilotGenerationLineage() {
-  if (pilotGenerationLineage.schema_version !== "bmh-thumbnail-pilot-lineage/v1") {
+  const schemaVersion = pilotGenerationLineage.schema_version;
+  if (schemaVersion !== "bmh-thumbnail-pilot-lineage/v1" && schemaVersion !== "bmh-thumbnail-pilot-lineage/v2") {
     throw new Error("Pilot generation lineage schema is invalid");
   }
+  const version = schemaVersion.endsWith("/v2") ? 2 : 1;
   if (pilotGenerationLineage.status !== "awaiting-jarrad-approval") {
     throw new Error("Pilot generation lineage must remain awaiting Jarrad approval");
   }
@@ -117,86 +152,121 @@ async function validatePilotGenerationLineage() {
   const expectedSlugs = Object.values(pilotSlugBySlot);
   if (
     pilotGenerationLineage.records.length !== expectedSlugs.length ||
-    new Set(pilotGenerationLineage.records.map((record) => record.slug)).size !==
-      expectedSlugs.length ||
-    expectedSlugs.some(
-      (slug) => !pilotGenerationLineage.records.some((record) => record.slug === slug),
-    )
+    new Set(pilotGenerationLineage.records.map((record) => record.slug)).size !== expectedSlugs.length ||
+    expectedSlugs.some((slug) => !pilotGenerationLineage.records.some((record) => record.slug === slug))
   ) {
     throw new Error("Pilot generation lineage must cover each pilot exactly once");
   }
 
+  const sharedParentsById = new Map();
+  const v2InvocationIds = new Set();
+  const v2ToolOutputIds = new Set();
+  if (version === 2) {
+    if (!Array.isArray(pilotGenerationLineage.shared_parents) || pilotGenerationLineage.shared_parents.length !== 1) {
+      throw new Error("Pilot lineage v2 requires exactly one shared generated cast parent");
+    }
+    for (const parent of pilotGenerationLineage.shared_parents) {
+      if (!parent?.id || sharedParentsById.has(parent.id)) {
+        throw new Error("Pilot lineage v2 shared parent ids must be present and unique");
+      }
+      if (parent.operation !== "generate") {
+        throw new Error(`${parent.id} shared parent operation must be generate`);
+      }
+      if (!Array.isArray(parent.inputs) || parent.inputs.length === 0) {
+        throw new Error(`${parent.id} shared parent inputs are missing`);
+      }
+      await readAndValidatePrompt(parent.prompt_path, parent.prompt_sha256, parent.id);
+      for (const input of parent.inputs) {
+        await validateLineageInput(input, `${parent.id} shared parent input`, {
+          requireId: true,
+        });
+      }
+      validateToolEvidence(parent.tool_evidence, parent.id);
+      v2InvocationIds.add(parent.tool_evidence.invocation_call_id);
+      v2ToolOutputIds.add(parent.tool_evidence.tool_output_id);
+      await validateLineageOutput(parent.output, parent.id);
+      sharedParentsById.set(parent.id, parent);
+    }
+    if (new Set(pilotGenerationLineage.shared_parents.map((parent) => parent.output.sha256)).size !== pilotGenerationLineage.shared_parents.length) {
+      throw new Error("Pilot lineage v2 shared parent outputs must be unique");
+    }
+  } else if (pilotGenerationLineage.shared_parents !== undefined) {
+    throw new Error("Pilot lineage v1 cannot declare shared generated parents");
+  }
+
+  const promptBySlug = new Map();
+  const referenceIdsBySlug = new Map();
   for (const record of pilotGenerationLineage.records) {
-    const checksumRecord = pilotChecksums.assets.find(
-      (asset) => asset.slug === record.slug,
-    );
+    const checksumRecord = pilotChecksums.assets.find((asset) => asset.slug === record.slug);
     if (!checksumRecord || !Array.isArray(record.steps) || record.steps.length === 0) {
       throw new Error(`Pilot generation lineage is incomplete for ${record.slug}`);
     }
 
-    let priorOutput = null;
+    const sharedParent = version === 2 ? sharedParentsById.get(record.shared_parent_id) : null;
+    if (version === 2 && !sharedParent) {
+      throw new Error(`${record.slug} does not resolve a shared generated parent`);
+    }
+    const renderContract = version === 2 ? record.render_contract : null;
+    if (version === 2) {
+      validateBackgroundRgb(renderContract?.master_background_rgb, `${record.slug} master background`);
+      validateBackgroundRgb(renderContract?.lesson_card?.normalize_background_rgb, `${record.slug} lesson-card normalization background`);
+      validateBackgroundRgb(renderContract?.lesson_card?.padding_color_rgb, `${record.slug} lesson-card padding`);
+      validateBackgroundRgb(renderContract?.video_poster?.normalize_background_rgb, `${record.slug} video-poster normalization background`);
+    }
+
+    let priorOutput = version === 2 ? sharedParent.output : null;
     for (const [index, step] of record.steps.entries()) {
       if (step.step !== index + 1) {
         throw new Error(`${record.slug} generation lineage is out of order`);
       }
-      if (step.operation !== (index === 0 ? "generate" : "edit")) {
+      const expectedOperation = version === 2 ? "edit" : index === 0 ? "generate" : "edit";
+      if (step.operation !== expectedOperation) {
         throw new Error(`${record.slug} generation lineage operation is invalid`);
       }
-      const promptBytes = await readFile(repoPath(step.prompt_path), "utf8");
-      const prompt = promptBytes.replace(/\r?\n$/, "");
-      if (sha256(prompt) !== step.prompt_sha256) {
-        throw new Error(`${record.slug} generation prompt checksum changed`);
-      }
+      const prompt = await readAndValidatePrompt(step.prompt_path, step.prompt_sha256, `${record.slug} generation`);
       if (!Array.isArray(step.inputs) || step.inputs.length === 0) {
         throw new Error(`${record.slug} generation inputs are missing`);
       }
       for (const input of step.inputs) {
-        const contents = await readFile(repoPath(input.path));
-        if (sha256(contents) !== input.sha256) {
-          throw new Error(`${record.slug} generation input checksum changed: ${input.path}`);
-        }
+        await validateLineageInput(input, `${record.slug} generation input`, {
+          requireId: version === 2,
+        });
       }
-      if (index > 0 && step.inputs[0]?.sha256 !== priorOutput?.sha256) {
+      if ((version === 2 || index > 0) && (step.inputs[0]?.sha256 !== priorOutput?.sha256 || step.inputs[0]?.path !== priorOutput?.path)) {
         throw new Error(`${record.slug} edit step is not tied to the prior output`);
       }
-
-      const evidence = step.tool_evidence;
-      const invokedAt = Date.parse(evidence?.invoked_at ?? "");
-      const completedAt = Date.parse(evidence?.completed_at ?? "");
-      if (
-        !evidence?.thread_id ||
-        !evidence?.agent_path ||
-        !evidence?.invocation_call_id ||
-        !evidence?.tool_output_call_id ||
-        !evidence?.tool_output_id ||
-        !Number.isFinite(invokedAt) ||
-        !Number.isFinite(completedAt) ||
-        completedAt < invokedAt
-      ) {
-        throw new Error(`${record.slug} generation tool evidence is incomplete`);
+      if (version === 2 && index === 0 && (step.parent_source_sha256 !== sharedParent.output.sha256 || step.inputs[0]?.id !== record.shared_parent_id)) {
+        throw new Error(`${record.slug} first edit is not bound to its shared generated parent`);
+      }
+      if (version === 2 && index > 0 && step.parent_source_sha256 !== priorOutput.sha256) {
+        throw new Error(`${record.slug} edit parent checksum is out of order`);
       }
 
-      const outputContents = await readFile(repoPath(step.output.path));
-      if (
-        sha256(outputContents) !== step.output.sha256 ||
-        outputContents.length !== step.output.size_bytes ||
-        JSON.stringify(pngDimensions(outputContents, step.output.path)) !==
-          JSON.stringify(step.output.dimensions)
-      ) {
-        throw new Error(`${record.slug} generation output checksum, size, or dimensions changed`);
+      validateToolEvidence(step.tool_evidence, `${record.slug} generation`);
+      if (version === 2 && (v2InvocationIds.has(step.tool_evidence.invocation_call_id) || v2ToolOutputIds.has(step.tool_evidence.tool_output_id))) {
+        throw new Error(`${record.slug} reuses image-generation tool evidence`);
       }
+      if (version === 2) {
+        v2InvocationIds.add(step.tool_evidence.invocation_call_id);
+        v2ToolOutputIds.add(step.tool_evidence.tool_output_id);
+      }
+      await validateLineageOutput(step.output, `${record.slug} generation`);
       priorOutput = step.output;
+      if (index === 0) {
+        promptBySlug.set(record.slug, prompt);
+        referenceIdsBySlug.set(
+          record.slug,
+          step.inputs.map((input) => input.id),
+        );
+      }
     }
 
     const terminal = record.steps.at(-1).output;
-    if (
-      record.terminal_output_sha256 !== terminal.sha256 ||
-      terminal.sha256 !== checksumRecord.source.sha256 ||
-      terminal.path !== checksumRecord.source.path
-    ) {
+    if (record.terminal_output_sha256 !== terminal.sha256 || terminal.sha256 !== checksumRecord.source.sha256 || terminal.path !== checksumRecord.source.path) {
       throw new Error(`${record.slug} terminal generation output does not match the review source`);
     }
   }
+  return { version, sharedParentsById, promptBySlug, referenceIdsBySlug };
 }
 
 function buildProvenance(plannedGenerationCallId, generationCall) {
@@ -226,7 +296,63 @@ const pilotSlugBySlot = {
   "slot-09": "objection-architecture",
 };
 
-await validatePilotGenerationLineage();
+const pilotLineageContract = await validatePilotGenerationLineage();
+const usesSharedPilotLineage = pilotLineageContract.version === 2;
+
+const references = usesSharedPilotLineage
+  ? (() => {
+      const collected = new Map(
+        baseReferences.filter((reference) => reference.id === "style-ref-1" || reference.id === "style-ref-2").map((reference) => [reference.id, reference]),
+      );
+      for (const parent of pilotLineageContract.sharedParentsById.values()) {
+        for (const input of parent.inputs) {
+          const existing = collected.get(input.id);
+          if (existing && (existing.path !== input.path || existing.sha256 !== input.sha256)) {
+            throw new Error(`Pilot lineage v2 reference id drifted: ${input.id}`);
+          }
+          collected.set(input.id, {
+            id: input.id,
+            role: input.role,
+            path: input.path,
+            sha256: input.sha256,
+          });
+        }
+        collected.set(parent.id, {
+          id: parent.id,
+          role: "shared generated cast parent",
+          path: parent.output.path,
+          sha256: parent.output.sha256,
+        });
+      }
+      for (const record of pilotGenerationLineage.records) {
+        for (const step of record.steps) {
+          for (const input of step.inputs) {
+            const existing = collected.get(input.id);
+            if (existing && (existing.path !== input.path || existing.sha256 !== input.sha256)) {
+              throw new Error(`Pilot lineage v2 reference id drifted: ${input.id}`);
+            }
+            if (!existing) {
+              collected.set(input.id, {
+                id: input.id,
+                role: input.role,
+                path: input.path,
+                sha256: input.sha256,
+              });
+            }
+          }
+        }
+      }
+      return [...collected.values()];
+    })()
+  : baseReferences;
+
+for (const reference of references) {
+  const contents = await readFile(path.join(repoRoot, reference.path));
+  const actualSha256 = sha256(contents);
+  if (actualSha256 !== reference.sha256) {
+    throw new Error(`Reference ${reference.id} SHA-256 mismatch: ${actualSha256} != ${reference.sha256}`);
+  }
+}
 
 const pilotApproval = {
   status: "awaiting-jarrad-approval",
@@ -314,7 +440,8 @@ const lessonSpecs = [
     slot: "slot-04",
     title: "Humanizing the Lead",
     fiveSecondRead: "see the person and situation before the property",
-    scene: "three separate human-first stickers: a homeowner beside a small house, an unfolding story path, and a calm fit lens aligning person, property, and timing",
+    scene:
+      "three separate human-first stickers: a homeowner beside a small house, an unfolding story path, and a calm fit lens aligning person, property, and timing",
     anchors: [
       ["homeowner before property details", "left-safe"],
       ["seller story and situation path", "center-safe"],
@@ -454,14 +581,15 @@ const lessonSpecs = [
 ];
 
 function buildPrompt(spec) {
+  if (usesSharedPilotLineage && spec.pilot) {
+    const prompt = pilotLineageContract.promptBySlug.get(pilotSlugBySlot[spec.slot]);
+    if (!prompt) throw new Error(`${spec.slot} pilot edit prompt is missing from lineage v2`);
+    return prompt;
+  }
   if (pilotPrompts[spec.slot]) return pilotPrompts[spec.slot];
   const anchorSentence = spec.anchors
     .map(([subject, crop], index) => {
-      const placement = crop.startsWith("left")
-        ? "left"
-        : crop.startsWith("right")
-          ? "right"
-          : "center";
+      const placement = crop.startsWith("left") ? "left" : crop.startsWith("right") ? "right" : "center";
       return `poster anchor ${index + 1} is ${subject} in the ${placement} safe zone`;
     })
     .join("; ");
@@ -486,9 +614,7 @@ function assertAsset(assetKey, localPath) {
     throw new Error(`${assetKey} path mismatch: ${asset.local_path} != ${localPath}`);
   }
   if (!["missing", "approved"].includes(asset.approval_status)) {
-    throw new Error(
-      `${assetKey} has unsupported artwork approval status ${asset.approval_status}`,
-    );
+    throw new Error(`${assetKey} has unsupported artwork approval status ${asset.approval_status}`);
   }
   if (asset.approval_status === "approved") {
     if (!/^[a-f0-9]{64}$/.test(asset.checksum_sha256 ?? "")) {
@@ -498,9 +624,7 @@ function assertAsset(assetKey, localPath) {
       throw new Error(`${assetKey} approved artwork is missing a valid size`);
     }
     if (!asset.storage_path.includes(asset.checksum_sha256)) {
-      throw new Error(
-        `${assetKey} approved artwork storage path is not checksum-addressed`,
-      );
+      throw new Error(`${assetKey} approved artwork storage path is not checksum-addressed`);
     }
   }
 }
@@ -508,9 +632,7 @@ function assertAsset(assetKey, localPath) {
 const inventoryLessons = lessonSpecs.map((spec, index) => {
   const lesson = lessons[index];
   if (!lesson || lesson.title !== spec.title) {
-    throw new Error(
-      `${spec.slot} title mismatch: expected ${spec.title}, got ${lesson?.title}`,
-    );
+    throw new Error(`${spec.slot} title mismatch: expected ${spec.title}, got ${lesson?.title}`);
   }
   const videoBlocks = lesson.blocks.filter((block) => block.type === "video");
   if (videoBlocks.length !== spec.anchors.length) {
@@ -519,19 +641,30 @@ const inventoryLessons = lessonSpecs.map((spec, index) => {
 
   const cardPath = `course-assets/thumbnails/${spec.slot}.webp`;
   assertAsset(lesson.thumbnail_asset_key, cardPath);
+  const pilotSlug = spec.pilot ? pilotSlugBySlot[spec.slot] : null;
+  const pilotLineage = pilotSlug ? pilotGenerationLineage.records.find((record) => record.slug === pilotSlug) : null;
+  const renderContract =
+    usesSharedPilotLineage && pilotLineage
+      ? pilotLineage.render_contract
+      : {
+          master_background_rgb: BLUE_RGB,
+          lesson_card: {
+            normalize_background_rgb: BLUE_RGB,
+            padding_color_rgb: BLUE_RGB,
+          },
+          video_poster: { normalize_background_rgb: BLUE_RGB },
+        };
+  const lessonReferenceIds =
+    usesSharedPilotLineage && pilotSlug ? pilotLineageContract.referenceIdsBySlug.get(pilotSlug) : (spec.references ?? ["style-ref-1", "style-ref-2"]);
   const prompt = buildPrompt(spec);
-  const plannedGenerationCallId = spec.pilot
-    ? null
-    : `imagegen-lesson-${spec.slot}`;
-  const lessonProvenance = buildProvenance(
-    plannedGenerationCallId,
-    spec.pilot ? "promote-existing-pilot-call" : "one-distinct-call",
-  );
+  const plannedGenerationCallId = spec.pilot ? null : `imagegen-lesson-${spec.slot}`;
+  const lessonProvenance = buildProvenance(plannedGenerationCallId, spec.pilot ? "promote-existing-pilot-call" : "one-distinct-call");
 
   const master = {
     id: `master-${spec.slot}`,
     source_path: `course-assets/thumbnails/production/sources/${spec.slot}-generated.png`,
     flat_master_path: `course-assets/thumbnails/production/flat-masters/${spec.slot}-flat-master.png`,
+    ...(usesSharedPilotLineage ? { background_rgb: renderContract.master_background_rgb } : {}),
     expected_aspect_ratio: "16:9",
     meaningful_content_bounds: {
       x_min_percent: 10,
@@ -551,18 +684,14 @@ const inventoryLessons = lessonSpecs.map((spec, index) => {
     const directMaster = isFactFind
       ? {
           id: "master-poster-video-slot-07-fact-find",
-          source_path:
-            "course-assets/posters/production/sources/video-slot-07-fact-find-generated.png",
-          flat_master_path:
-            "course-assets/posters/production/flat-masters/video-slot-07-fact-find-flat-master.png",
+          source_path: "course-assets/posters/production/sources/video-slot-07-fact-find-generated.png",
+          flat_master_path: "course-assets/posters/production/flat-masters/video-slot-07-fact-find-flat-master.png",
+          ...(usesSharedPilotLineage ? { background_rgb: BLUE_RGB } : {}),
           expected_aspect_ratio: "16:9",
           reference_ids: ["style-ref-1", "style-ref-2"],
           prompt: factFindPosterPrompt,
           prompt_sha256: sha256(factFindPosterPrompt),
-          provenance: buildProvenance(
-            "imagegen-poster-video-slot-07-fact-find",
-            "one-distinct-call",
-          ),
+          provenance: buildProvenance("imagegen-poster-video-slot-07-fact-find", "one-distinct-call"),
           production_record: createEmptyProductionRecord(),
         }
       : null;
@@ -574,9 +703,7 @@ const inventoryLessons = lessonSpecs.map((spec, index) => {
       video_title: block.content.title,
       output_path: outputPath,
       focus_subject: focusSubject,
-      production_source_mode: directMaster
-        ? "generate-distinct-after-pilot-approval"
-        : "derive-from-lesson-master",
+      production_source_mode: directMaster ? "generate-distinct-after-pilot-approval" : "derive-from-lesson-master",
       direct_master: directMaster,
       derivative: {
         recipe_id: `${spec.slot}-${block.content.asset_key}-${effectiveCropProfile}`,
@@ -584,7 +711,7 @@ const inventoryLessons = lessonSpecs.map((spec, index) => {
         crop_profile: effectiveCropProfile,
         normalize_master_dimensions: [1280, 720],
         normalize_method: "contain-with-padding",
-        normalize_background_rgb: [103, 182, 255],
+        normalize_background_rgb: directMaster ? BLUE_RGB : renderContract.video_poster.normalize_background_rgb,
         crop_pixels_after_normalize: {
           "full-safe": [0, 0, 1280, 720],
           "left-safe": [64, 144, 768, 432],
@@ -607,10 +734,8 @@ const inventoryLessons = lessonSpecs.map((spec, index) => {
     lesson_source_key: lesson.source_key,
     title: spec.title,
     pilot: Boolean(spec.pilot),
-    production_source_mode: spec.pilot
-      ? "promote-approved-pilot-flat-master"
-      : "generate-after-pilot-approval",
-    reference_ids: spec.references ?? ["style-ref-1", "style-ref-2"],
+    production_source_mode: spec.pilot ? "promote-approved-pilot-flat-master" : "generate-after-pilot-approval",
+    reference_ids: lessonReferenceIds,
     prompt,
     prompt_sha256: sha256(prompt),
     master,
@@ -624,8 +749,8 @@ const inventoryLessons = lessonSpecs.map((spec, index) => {
         method: "contain-master-in-1280x720-and-pad-40px-top-and-bottom",
         normalize_master_dimensions: [1280, 720],
         normalize_method: "contain-with-padding",
-        normalize_background_rgb: [103, 182, 255],
-        padding_color_rgb: [103, 182, 255],
+        normalize_background_rgb: renderContract.lesson_card.normalize_background_rgb,
+        padding_color_rgb: renderContract.lesson_card.padding_color_rgb,
         crop_allowed: false,
         resample: "lanczos",
         output_format: "lossless-webp",
@@ -636,18 +761,18 @@ const inventoryLessons = lessonSpecs.map((spec, index) => {
     posters,
     pilot_review: spec.pilot
       ? {
-          slug: pilotSlugBySlot[spec.slot],
+          slug: pilotSlug,
           status: pilotChecksums.status,
-          assets: pilotChecksums.assets.find(
-            (asset) => asset.slug === pilotSlugBySlot[spec.slot],
-          ),
-          checksum_record_path:
-            "docs/course-production/thumbnail-pilots/checksums.json",
-          generation_lineage_record_path:
-            "docs/course-production/thumbnail-pilots/generation-lineage.json",
-          generation_lineage: pilotGenerationLineage.records.find(
-            (record) => record.slug === pilotSlugBySlot[spec.slot],
-          ),
+          assets: pilotChecksums.assets.find((asset) => asset.slug === pilotSlug),
+          checksum_record_path: "docs/course-production/thumbnail-pilots/checksums.json",
+          generation_lineage_record_path: "docs/course-production/thumbnail-pilots/generation-lineage.json",
+          generation_lineage: pilotLineage,
+          ...(usesSharedPilotLineage
+            ? {
+                lineage_schema_version: pilotGenerationLineage.schema_version,
+                shared_generation_parent: pilotLineageContract.sharedParentsById.get(pilotLineage.shared_parent_id),
+              }
+            : {}),
         }
       : null,
     provenance: lessonProvenance,
@@ -659,13 +784,17 @@ const coverPath = "course-assets/thumbnails/program-bmh-employee-training.webp";
 assertAsset(course.thumbnail_asset_key, coverPath);
 
 const inventory = {
-  schema_version: "bmh-artwork-production/v1",
+  schema_version: usesSharedPilotLineage ? "bmh-artwork-production/v2" : "bmh-artwork-production/v1",
   status: "blocked-pending-pilot-approval",
   generation_policy: {
     gate: "Jarrad must approve all three pilots before any new image generation",
     generator: "built-in image_gen",
-    call_strategy:
-      "one distinct image_gen call per cover or non-pilot lesson master, plus a separate Fact Find poster-master call",
+    call_strategy: "one distinct image_gen call per cover or non-pilot lesson master, plus a separate Fact Find poster-master call",
+    ...(usesSharedPilotLineage
+      ? {
+          pilot_call_strategy: "one checksum-locked shared cast generation followed by one independently evidenced edit chain per pilot",
+        }
+      : {}),
     model_native_text: "forbidden",
     manifest_approval_updates: "forbidden until visual QA and explicit approval",
     upload_or_publish: "forbidden in artwork production",
@@ -683,6 +812,16 @@ const inventory = {
       [0, 0, 0],
       [105, 153, 53],
     ],
+    ...(usesSharedPilotLineage
+      ? {
+          background_contract: {
+            allowed_rgb: [BLUE_RGB, YELLOW_RGB],
+            master_field: "background_rgb",
+            derivative_normalization_field: "normalize_background_rgb",
+            lesson_card_padding_field: "padding_color_rgb",
+          },
+        }
+      : {}),
     crop_profiles: {
       "full-safe": { x: 0, y: 0, width: 1, height: 1 },
       "left-safe": { x: 0.05, y: 0.2, width: 0.6, height: 0.6 },
@@ -702,10 +841,9 @@ const inventory = {
     id: "master-program-bmh-employee-training",
     asset_key: course.thumbnail_asset_key,
     output_path: coverPath,
-    source_path:
-      "course-assets/thumbnails/production/sources/program-bmh-employee-training-generated.png",
-    flat_master_path:
-      "course-assets/thumbnails/production/flat-masters/program-bmh-employee-training-flat-master.png",
+    source_path: "course-assets/thumbnails/production/sources/program-bmh-employee-training-generated.png",
+    flat_master_path: "course-assets/thumbnails/production/flat-masters/program-bmh-employee-training-flat-master.png",
+    ...(usesSharedPilotLineage ? { background_rgb: BLUE_RGB } : {}),
     derivative: {
       recipe_id: "course-cover-card-16x10",
       source_master_id: "master-program-bmh-employee-training",
@@ -744,12 +882,7 @@ const productionRecords = [
   ["course cover", inventory.course_cover.production_record],
   ...inventory.lessons.flatMap((lesson) => [
     [`${lesson.slot} lesson master`, lesson.master.production_record],
-    ...lesson.posters
-      .filter((poster) => poster.direct_master)
-      .map((poster) => [
-        `${poster.asset_key} direct master`,
-        poster.direct_master.production_record,
-      ]),
+    ...lesson.posters.filter((poster) => poster.direct_master).map((poster) => [`${poster.asset_key} direct master`, poster.direct_master.production_record]),
   ]),
 ];
 for (const [label, record] of productionRecords) {
@@ -760,9 +893,7 @@ const serializedInventory = `${JSON.stringify(inventory, null, 2)}\n`;
 if (checkMode) {
   const currentInventory = await readFile(outputPath, "utf8");
   if (currentInventory !== serializedInventory) {
-    throw new Error(
-      `${path.relative(repoRoot, outputPath)} is stale; run the builder without --check`,
-    );
+    throw new Error(`${path.relative(repoRoot, outputPath)} is stale; run the builder without --check`);
   }
   console.log(`Verified ${path.relative(repoRoot, outputPath)}`);
 } else {

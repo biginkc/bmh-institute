@@ -1,0 +1,187 @@
+{
+  "schema_version": "bmh-thumbnail-pilot-lineage/v2",
+  "status": "awaiting-jarrad-approval",
+  "evidence_source": "Codex session event log and retained built-in image_gen outputs",
+  "generator": "built-in image_gen",
+  "evidence_precision_note": "Retained transcript cell ids identify each invocation. Observed completion timestamps are also used as the conservative invocation timestamps because the transcript did not retain a separate invocation timestamp.",
+  "shared_parents": [
+    {
+      "id": "andrea-seller-canonical-v5",
+      "operation": "generate",
+      "prompt_path": "docs/course-production/thumbnail-pilots/prompts/v5/canonical-pair.txt",
+      "prompt_sha256": "b601a9d09775ea7e00346eab0dfb062ff6e4d6d39ebfd04610c67544d56c6976",
+      "inputs": [
+        {
+          "id": "andrea-approved",
+          "role": "approved Andrea identity",
+          "path": "docs/course-production/thumbnail-pilots/references/v5-cast/andrea-approved.png",
+          "sha256": "ab1c01dfc642f00b2f6df08a20fd231cb47fffb60a3e013a42960ee4fa5e2ca8"
+        },
+        {
+          "id": "recurring-seller-approved",
+          "role": "approved recurring seller identity",
+          "path": "docs/course-production/thumbnail-pilots/references/v5-cast/recurring-seller.png",
+          "sha256": "b88724ccd840ecf295c2b8607525a76a938349978407a0ba8b92eccd8f2cf4f0"
+        }
+      ],
+      "tool_evidence": {
+        "thread_id": "019f6bec-4d36-7711-b205-e2042030e970",
+        "agent_path": "/root",
+        "invocation_call_id": "codex-exec-cell-1751",
+        "tool_output_call_id": "exec-77b4880e-33e0-4475-aacf-ebfbb4e00848",
+        "tool_output_id": "exec-77b4880e-33e0-4475-aacf-ebfbb4e00848",
+        "invoked_at": "2026-07-17T06:07:03.000Z",
+        "completed_at": "2026-07-17T06:07:03.000Z"
+      },
+      "output": {
+        "path": "course-assets/thumbnails/pilots/revisions/v6/sources/andrea-seller-canonical-master-v5.png",
+        "sha256": "073b6a3a1d4ed6d82fdf23d4c2888f55bce63ee16ce83964f1adb5a9846b16a3",
+        "size_bytes": 1059129,
+        "dimensions": [1672, 941]
+      }
+    }
+  ],
+  "records": [
+    {
+      "slug": "orientation",
+      "shared_parent_id": "andrea-seller-canonical-v5",
+      "render_contract": {
+        "master_background_rgb": [103, 182, 255],
+        "lesson_card": {
+          "normalize_background_rgb": [103, 182, 255],
+          "padding_color_rgb": [103, 182, 255]
+        },
+        "video_poster": {
+          "normalize_background_rgb": [103, 182, 255]
+        }
+      },
+      "terminal_output_sha256": "091f61e047ee21c6e7ea0069581feab52c827f1e9c832d80f8617031f1bf30a5",
+      "steps": [
+        {
+          "step": 1,
+          "operation": "edit",
+          "parent_source_sha256": "073b6a3a1d4ed6d82fdf23d4c2888f55bce63ee16ce83964f1adb5a9846b16a3",
+          "prompt_path": "docs/course-production/thumbnail-pilots/prompts/v6/orientation.txt",
+          "prompt_sha256": "6fce8b70dc19395f2ad5d66d321c7fb9a4111284c8f3bd4ca5b89a692d5e9b30",
+          "inputs": [
+            {
+              "id": "andrea-seller-canonical-v5",
+              "role": "shared generated cast parent",
+              "path": "course-assets/thumbnails/pilots/revisions/v6/sources/andrea-seller-canonical-master-v5.png",
+              "sha256": "073b6a3a1d4ed6d82fdf23d4c2888f55bce63ee16ce83964f1adb5a9846b16a3"
+            }
+          ],
+          "tool_evidence": {
+            "thread_id": "019f6bec-4d36-7711-b205-e2042030e970",
+            "agent_path": "/root",
+            "invocation_call_id": "codex-exec-cell-1769:orientation",
+            "tool_output_call_id": "exec-bd20f287-2693-4c08-a4e7-eec41dbc0b02",
+            "tool_output_id": "exec-bd20f287-2693-4c08-a4e7-eec41dbc0b02",
+            "invoked_at": "2026-07-17T06:28:06.000Z",
+            "completed_at": "2026-07-17T06:28:06.000Z"
+          },
+          "output": {
+            "path": "course-assets/thumbnails/pilots/revisions/v6/sources/orientation-generated-v6.png",
+            "sha256": "091f61e047ee21c6e7ea0069581feab52c827f1e9c832d80f8617031f1bf30a5",
+            "size_bytes": 1092047,
+            "dimensions": [1672, 941]
+          }
+        }
+      ]
+    },
+    {
+      "slug": "opening-the-call",
+      "shared_parent_id": "andrea-seller-canonical-v5",
+      "render_contract": {
+        "master_background_rgb": [255, 211, 1],
+        "lesson_card": {
+          "normalize_background_rgb": [255, 211, 1],
+          "padding_color_rgb": [255, 211, 1]
+        },
+        "video_poster": {
+          "normalize_background_rgb": [255, 211, 1]
+        }
+      },
+      "terminal_output_sha256": "24df5d8cebe5395075c20dc83b22554a649a2a973b80dccd0040b53ccd50c9e4",
+      "steps": [
+        {
+          "step": 1,
+          "operation": "edit",
+          "parent_source_sha256": "073b6a3a1d4ed6d82fdf23d4c2888f55bce63ee16ce83964f1adb5a9846b16a3",
+          "prompt_path": "docs/course-production/thumbnail-pilots/prompts/v5/opening-the-call.txt",
+          "prompt_sha256": "228d17ee1d7527525b96d1f579410946bce1fa139f337bcacc25395a7fa5bf3d",
+          "inputs": [
+            {
+              "id": "andrea-seller-canonical-v5",
+              "role": "shared generated cast parent",
+              "path": "course-assets/thumbnails/pilots/revisions/v6/sources/andrea-seller-canonical-master-v5.png",
+              "sha256": "073b6a3a1d4ed6d82fdf23d4c2888f55bce63ee16ce83964f1adb5a9846b16a3"
+            }
+          ],
+          "tool_evidence": {
+            "thread_id": "019f6bec-4d36-7711-b205-e2042030e970",
+            "agent_path": "/root",
+            "invocation_call_id": "codex-exec-cell-1752",
+            "tool_output_call_id": "exec-c731eb24-45ef-459c-b93f-80fa4d5b5521",
+            "tool_output_id": "exec-c731eb24-45ef-459c-b93f-80fa4d5b5521",
+            "invoked_at": "2026-07-17T06:09:52.000Z",
+            "completed_at": "2026-07-17T06:09:52.000Z"
+          },
+          "output": {
+            "path": "course-assets/thumbnails/pilots/revisions/v6/sources/opening-the-call-generated-v5.png",
+            "sha256": "24df5d8cebe5395075c20dc83b22554a649a2a973b80dccd0040b53ccd50c9e4",
+            "size_bytes": 1090410,
+            "dimensions": [1672, 941]
+          }
+        }
+      ]
+    },
+    {
+      "slug": "objection-architecture",
+      "shared_parent_id": "andrea-seller-canonical-v5",
+      "render_contract": {
+        "master_background_rgb": [103, 182, 255],
+        "lesson_card": {
+          "normalize_background_rgb": [103, 182, 255],
+          "padding_color_rgb": [103, 182, 255]
+        },
+        "video_poster": {
+          "normalize_background_rgb": [103, 182, 255]
+        }
+      },
+      "terminal_output_sha256": "fa2ec9eef64cc171f8afb43c1ebeeea6f8f4460445ce94f79dd9da53b3485a54",
+      "steps": [
+        {
+          "step": 1,
+          "operation": "edit",
+          "parent_source_sha256": "073b6a3a1d4ed6d82fdf23d4c2888f55bce63ee16ce83964f1adb5a9846b16a3",
+          "prompt_path": "docs/course-production/thumbnail-pilots/prompts/v6/objection-architecture.txt",
+          "prompt_sha256": "d7c9d13a3efe4b48a313393fb9cde72beb119d3cc0fdf81b12c71453a36bd321",
+          "inputs": [
+            {
+              "id": "andrea-seller-canonical-v5",
+              "role": "shared generated cast parent",
+              "path": "course-assets/thumbnails/pilots/revisions/v6/sources/andrea-seller-canonical-master-v5.png",
+              "sha256": "073b6a3a1d4ed6d82fdf23d4c2888f55bce63ee16ce83964f1adb5a9846b16a3"
+            }
+          ],
+          "tool_evidence": {
+            "thread_id": "019f6bec-4d36-7711-b205-e2042030e970",
+            "agent_path": "/root",
+            "invocation_call_id": "codex-exec-cell-1769:objection-architecture",
+            "tool_output_call_id": "exec-8e2c9587-8e28-47c4-b2fb-0427af0ce3d1",
+            "tool_output_id": "exec-8e2c9587-8e28-47c4-b2fb-0427af0ce3d1",
+            "invoked_at": "2026-07-17T06:28:58.000Z",
+            "completed_at": "2026-07-17T06:28:58.000Z"
+          },
+          "output": {
+            "path": "course-assets/thumbnails/pilots/revisions/v6/sources/objection-architecture-generated-v6.png",
+            "sha256": "fa2ec9eef64cc171f8afb43c1ebeeea6f8f4460445ce94f79dd9da53b3485a54",
+            "size_bytes": 1304998,
+            "dimensions": [1672, 941]
+          }
+        }
+      ]
+    }
+  ]
+}

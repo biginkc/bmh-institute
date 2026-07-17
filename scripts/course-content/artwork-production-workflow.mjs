@@ -1,13 +1,5 @@
 import { createHash, randomUUID } from "node:crypto";
-import {
-  copyFile,
-  lstat,
-  mkdir,
-  open,
-  readFile,
-  realpath,
-  rename,
-} from "node:fs/promises";
+import { copyFile, lstat, mkdir, open, readFile, realpath, rename } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -15,7 +7,11 @@ import sharp from "sharp";
 import lockfile from "proper-lockfile";
 
 export const SCHEMA_VERSION = "bmh-artwork-production-ledger/v1";
-export const EXPECTED_COUNTS = Object.freeze({ covers: 1, cards: 19, posters: 29 });
+export const EXPECTED_COUNTS = Object.freeze({
+  covers: 1,
+  cards: 19,
+  posters: 29,
+});
 export const DEFAULT_PATHS = Object.freeze({
   inventory: "docs/course-production/thumbnail-pilots/production-inventory.json",
   ledger: "docs/course-production/thumbnail-pilots/production-ledger.json",
@@ -27,6 +23,8 @@ const MISSING = "missing";
 const SHA256 = /^[a-f0-9]{64}$/;
 const ISO_TIMESTAMP = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/;
 const BLUE = [103, 182, 255];
+const YELLOW = [255, 211, 1];
+const LOCKED_BACKGROUND_RGB = new Set([BLUE.join(","), YELLOW.join(",")]);
 
 function clone(value) {
   return structuredClone(value);
@@ -49,14 +47,25 @@ function assertIso(value, label) {
   assert(ISO_TIMESTAMP.test(value) && Number.isFinite(Date.parse(value)), `${label} must be an ISO UTC timestamp`);
 }
 
+function assertRecipeRgb(value, palette, label) {
+  assert(
+    Array.isArray(value) && value.length === 3 && value.every((channel) => Number.isInteger(channel) && channel >= 0 && channel <= 255),
+    `${label} must be an RGB triplet`,
+  );
+  const key = value.join(",");
+  assert(LOCKED_BACKGROUND_RGB.has(key), `${label} must be locked blue or yellow`);
+  assert(
+    Array.isArray(palette) && palette.some((color) => Array.isArray(color) && color.join(",") === key),
+    `${label} must belong to the locked artwork palette`,
+  );
+  return clone(value);
+}
+
 export function resolveRepoPath(root, relativePath) {
   assertString(relativePath, "repository path");
   assert(!path.isAbsolute(relativePath), `Path must be repository-relative: ${relativePath}`);
   const resolved = path.resolve(root, relativePath);
-  assert(
-    resolved === root || resolved.startsWith(`${root}${path.sep}`),
-    `Path escapes repository: ${relativePath}`,
-  );
+  assert(resolved === root || resolved.startsWith(`${root}${path.sep}`), `Path escapes repository: ${relativePath}`);
   return resolved;
 }
 
@@ -81,10 +90,7 @@ async function prepareSafeWriteParent(root, filePath) {
   const absoluteRoot = path.resolve(root);
   const rootRealPath = await realpath(absoluteRoot);
   const absoluteTarget = path.resolve(filePath);
-  assert(
-    absoluteTarget.startsWith(`${absoluteRoot}${path.sep}`),
-    `Write path escapes repository: ${filePath}`,
-  );
+  assert(absoluteTarget.startsWith(`${absoluteRoot}${path.sep}`), `Write path escapes repository: ${filePath}`);
   const relativeParent = path.relative(absoluteRoot, path.dirname(absoluteTarget));
   let current = absoluteRoot;
   const traversed = [];
@@ -99,10 +105,7 @@ async function prepareSafeWriteParent(root, filePath) {
       await mkdir(current);
       await syncDirectory(path.dirname(current));
     }
-    assert(
-      await realpath(current) === path.join(rootRealPath, ...traversed),
-      `Write ancestor contains a symlink: ${current}`,
-    );
+    assert((await realpath(current)) === path.join(rootRealPath, ...traversed), `Write ancestor contains a symlink: ${current}`);
   }
 }
 
@@ -113,7 +116,11 @@ export async function withWorkflowLock(root, callback, options = {}) {
     realpath: false,
     stale: options.stale ?? 120_000,
     update: options.update ?? 20_000,
-    retries: options.retries ?? { retries: 100, minTimeout: 20, maxTimeout: 250 },
+    retries: options.retries ?? {
+      retries: 100,
+      minTimeout: 20,
+      maxTimeout: 250,
+    },
   });
   try {
     return await callback();
@@ -124,10 +131,7 @@ export async function withWorkflowLock(root, callback, options = {}) {
 
 export async function writeJsonAtomic(filePath, value, { root = null } = {}) {
   await prepareSafeWriteParent(root, filePath);
-  const temporary = path.join(
-    path.dirname(filePath),
-    `.${path.basename(filePath)}.${process.pid}.${randomUUID()}.tmp`,
-  );
+  const temporary = path.join(path.dirname(filePath), `.${path.basename(filePath)}.${process.pid}.${randomUUID()}.tmp`);
   const handle = await open(temporary, "wx", 0o600);
   try {
     await handle.writeFile(`${JSON.stringify(value, null, 2)}\n`, "utf8");
@@ -141,10 +145,7 @@ export async function writeJsonAtomic(filePath, value, { root = null } = {}) {
 
 async function writeBufferAtomic(filePath, buffer, root) {
   await prepareSafeWriteParent(root, filePath);
-  const temporary = path.join(
-    path.dirname(filePath),
-    `.${path.basename(filePath)}.${process.pid}.${randomUUID()}.tmp`,
-  );
+  const temporary = path.join(path.dirname(filePath), `.${path.basename(filePath)}.${process.pid}.${randomUUID()}.tmp`);
   const handle = await open(temporary, "wx", 0o600);
   try {
     await handle.writeFile(buffer);
@@ -158,10 +159,7 @@ async function writeBufferAtomic(filePath, buffer, root) {
 
 async function copyFileAtomic(source, destination, root) {
   await prepareSafeWriteParent(root, destination);
-  const temporary = path.join(
-    path.dirname(destination),
-    `.${path.basename(destination)}.${process.pid}.${randomUUID()}.tmp`,
-  );
+  const temporary = path.join(path.dirname(destination), `.${path.basename(destination)}.${process.pid}.${randomUUID()}.tmp`);
   await copyFile(source, temporary);
   const handle = await open(temporary, "r");
   try {
@@ -246,7 +244,7 @@ function baseOutput(asset, masterId, recipe) {
   };
 }
 
-function cardRecipe(derivative, kind = "lesson-card") {
+function cardRecipe(derivative, palette, kind = "lesson-card") {
   assert(derivative?.recipe_id, `${kind} recipe_id is required`);
   assert(derivative?.source_master_id, `${kind} source_master_id is required`);
   return {
@@ -256,26 +254,22 @@ function cardRecipe(derivative, kind = "lesson-card") {
     operation: derivative.method,
     normalize_master_dimensions: clone(derivative.normalize_master_dimensions),
     normalize_method: derivative.normalize_method,
-    normalize_background_rgb: clone(derivative.normalize_background_rgb),
+    normalize_background_rgb: assertRecipeRgb(derivative.normalize_background_rgb, palette, `${kind} normalization background`),
     target_dimensions: clone(derivative.target_dimensions),
-    padding_rgb: clone(derivative.padding_color_rgb),
+    padding_rgb: assertRecipeRgb(derivative.padding_color_rgb, palette, `${kind} padding`),
     resample: derivative.resample,
     crop_allowed: derivative.crop_allowed,
     output_format: derivative.output_format,
   };
 }
 
-function posterRecipe(poster) {
+function posterRecipe(poster, palette) {
   const derivative = poster.derivative;
   assert(derivative?.recipe_id, `${poster.asset_key} recipe_id is required`);
   assert(derivative?.source_master_id, `${poster.asset_key} source_master_id is required`);
+  assert(derivative.normalize_master_dimensions?.join("x") === "1280x720", `${poster.asset_key} must normalize to 1280x720`);
   assert(
-    derivative.normalize_master_dimensions?.join("x") === "1280x720",
-    `${poster.asset_key} must normalize to 1280x720`,
-  );
-  assert(
-    Array.isArray(derivative.crop_pixels_after_normalize) &&
-      derivative.crop_pixels_after_normalize.length === 4,
+    Array.isArray(derivative.crop_pixels_after_normalize) && derivative.crop_pixels_after_normalize.length === 4,
     `${poster.asset_key} fixed pixel crop is required`,
   );
   return {
@@ -285,7 +279,7 @@ function posterRecipe(poster) {
     operation: "normalize-1280x720-then-fixed-safe-crop",
     normalize_master_dimensions: clone(derivative.normalize_master_dimensions),
     normalize_method: derivative.normalize_method,
-    normalize_background_rgb: clone(derivative.normalize_background_rgb),
+    normalize_background_rgb: assertRecipeRgb(derivative.normalize_background_rgb, palette, `${poster.asset_key} normalization background`),
     crop_profile: derivative.crop_profile,
     crop_pixels_after_normalize: clone(derivative.crop_pixels_after_normalize),
     target_dimensions: clone(derivative.target_dimensions),
@@ -308,6 +302,7 @@ function baseMaster({
   referenceInputs,
   sourcePath,
   flatMasterPath,
+  backgroundRgb,
   pilot,
   outputs,
 }) {
@@ -321,6 +316,7 @@ function baseMaster({
     reference_inputs: clone(referenceInputs),
     source_path: sourcePath,
     flat_master_path: flatMasterPath,
+    ...(backgroundRgb ? { background_rgb: clone(backgroundRgb) } : {}),
     pilot,
     status: "missing",
     terminal_source_sha256: null,
@@ -333,11 +329,104 @@ function baseMaster({
   };
 }
 
-export function createInitialLedger(inventory) {
-  assert(inventory.schema_version === "bmh-artwork-production/v1", "Unsupported artwork inventory");
-  const referencesById = new Map(
-    inventory.style_system.reference_inputs.map((reference) => [reference.id, reference]),
+function isSharedPilotLineage(lineage) {
+  return typeof lineage?.shared_parent_id === "string" && lineage.shared_parent_id.length > 0;
+}
+
+function assertPilotToolEvidence(evidence, label) {
+  assertString(evidence?.invocation_call_id, `${label} invocation_call_id`);
+  assertString(evidence?.tool_output_id, `${label} tool_output_id`);
+  assertString(evidence?.agent_path, `${label} agent_path`);
+  assertIso(evidence?.completed_at, `${label} completed_at`);
+}
+
+function assertPilotOutput(output, label) {
+  assertString(output?.path, `${label} output path`);
+  assert(SHA256.test(output?.sha256), `${label} output checksum is invalid`);
+}
+
+function pilotPlan(pilotReview) {
+  const plan = {
+    slug: pilotReview.slug,
+    assets: clone(pilotReview.assets),
+    lineage: clone(pilotReview.generation_lineage),
+  };
+  if (!isSharedPilotLineage(plan.lineage)) return plan;
+
+  assert(pilotReview.lineage_schema_version === "bmh-thumbnail-pilot-lineage/v2", `${plan.slug} shared-parent lineage schema is invalid`);
+  const sharedParent = pilotReview.shared_generation_parent;
+  assert(sharedParent?.id === plan.lineage.shared_parent_id, `${plan.slug} shared parent does not resolve`);
+  assert(sharedParent.operation === "generate", `${plan.slug} shared parent must be a generation`);
+  assertString(sharedParent.prompt_path, `${plan.slug} shared parent prompt path`);
+  assert(SHA256.test(sharedParent.prompt_sha256), `${plan.slug} shared parent prompt checksum is invalid`);
+  assert(Array.isArray(sharedParent.inputs) && sharedParent.inputs.length > 0, `${plan.slug} shared parent inputs are missing`);
+  assert(
+    sharedParent.inputs.every((input) => input?.id && input?.role && input?.path && SHA256.test(input.sha256)),
+    `${plan.slug} shared parent input provenance is incomplete`,
   );
+  assertPilotToolEvidence(sharedParent.tool_evidence, `${plan.slug} shared parent`);
+  assertPilotOutput(sharedParent.output, `${plan.slug} shared parent`);
+  assert(Array.isArray(plan.lineage.steps) && plan.lineage.steps.length > 0, `${plan.slug} pilot lineage is empty`);
+  let parentOutput = sharedParent.output;
+  let parentCompletedAt = Date.parse(sharedParent.tool_evidence.completed_at);
+  for (const [index, step] of plan.lineage.steps.entries()) {
+    assert(step.operation === "edit", `${plan.slug} shared-parent lineage step ${index + 1} must be an edit`);
+    assert(step.parent_source_sha256 === parentOutput.sha256, `${plan.slug} shared-parent lineage is disconnected`);
+    assert(
+      Array.isArray(step.inputs) &&
+        (index > 0 || step.inputs[0]?.id === sharedParent.id) &&
+        step.inputs[0]?.path === parentOutput.path &&
+        step.inputs[0]?.sha256 === parentOutput.sha256,
+      `${plan.slug} edit input does not bind its parent`,
+    );
+    assertPilotToolEvidence(step.tool_evidence, `${plan.slug} pilot step ${index + 1}`);
+    assertPilotOutput(step.output, `${plan.slug} pilot step ${index + 1}`);
+    assert(Date.parse(step.tool_evidence.completed_at) >= parentCompletedAt, `${plan.slug} shared-parent lineage timestamps are out of order`);
+    parentOutput = step.output;
+    parentCompletedAt = Date.parse(step.tool_evidence.completed_at);
+  }
+  assert(plan.lineage.terminal_output_sha256 === parentOutput.sha256, `${plan.slug} pilot terminal checksum drifted`);
+  assert(plan.assets?.source?.sha256 === parentOutput.sha256, `${plan.slug} pilot source does not match lineage terminal`);
+  plan.lineage_schema_version = pilotReview.lineage_schema_version;
+  plan.shared_generation_parent = clone(sharedParent);
+  return plan;
+}
+
+function canonicalSharedPilotParents(masters) {
+  const parents = new Map();
+  for (const master of masters) {
+    if (!master.pilot || !isSharedPilotLineage(master.pilot.lineage)) continue;
+    const parent = master.pilot.shared_generation_parent;
+    assert(parent?.id === master.pilot.lineage.shared_parent_id, `${master.id} shared parent does not resolve`);
+    const existing = parents.get(parent.id);
+    if (existing) {
+      assert(JSON.stringify(existing) === JSON.stringify(parent), `Shared pilot parent ${parent.id} has conflicting definitions`);
+    } else {
+      parents.set(parent.id, parent);
+    }
+  }
+  return [...parents.values()];
+}
+
+function assertPilotV2GlobalUniqueness(masters) {
+  const v2Pilots = masters.filter((master) => master.pilot && isSharedPilotLineage(master.pilot.lineage));
+  if (v2Pilots.length === 0) return;
+  const parents = canonicalSharedPilotParents(masters);
+  assert(parents.length === 1, "Pilot lineage v2 must have exactly one canonical shared parent");
+  const steps = [...parents, ...v2Pilots.flatMap((master) => master.pilot.lineage.steps)];
+  const invocationIds = steps.map((step) => step.tool_evidence.invocation_call_id);
+  const toolOutputIds = steps.map((step) => step.tool_evidence.tool_output_id);
+  const outputHashes = steps.map((step) => step.output.sha256);
+  assert(new Set(invocationIds).size === invocationIds.length, "Pilot generation invocation ids must be globally unique");
+  assert(new Set(toolOutputIds).size === toolOutputIds.length, "Pilot generation tool output ids must be globally unique");
+  assert(new Set(outputHashes).size === outputHashes.length, "Pilot generation output checksums must be globally unique");
+}
+
+export function createInitialLedger(inventory) {
+  assert(inventory.schema_version === "bmh-artwork-production/v1" || inventory.schema_version === "bmh-artwork-production/v2", "Unsupported artwork inventory");
+  const inventoryV2 = inventory.schema_version === "bmh-artwork-production/v2";
+  const palette = inventory.style_system?.palette_rgb;
+  const referencesById = new Map(inventory.style_system.reference_inputs.map((reference) => [reference.id, reference]));
   const resolveReferences = (ids) =>
     ids.map((id) => {
       const reference = referencesById.get(id);
@@ -348,9 +437,9 @@ export function createInitialLedger(inventory) {
   const masters = [];
   const outputs = [];
 
-  const coverMasterId =
-    inventory.course_cover.id ?? "master-program-bmh-employee-training";
-  const coverRecipe = cardRecipe(inventory.course_cover.derivative, "course-cover");
+  const coverMasterId = inventory.course_cover.id ?? "master-program-bmh-employee-training";
+  const coverBackground = inventoryV2 ? assertRecipeRgb(inventory.course_cover.background_rgb, palette, "course-cover master background") : null;
+  const coverRecipe = cardRecipe(inventory.course_cover.derivative, palette, "course-cover");
   const coverOutput = baseOutput(inventory.course_cover, coverMasterId, coverRecipe);
   outputs.push(coverOutput);
   masters.push(
@@ -364,24 +453,40 @@ export function createInitialLedger(inventory) {
       referenceInputs: resolveReferences(inventory.course_cover.reference_ids),
       sourcePath: inventory.course_cover.source_path,
       flatMasterPath: inventory.course_cover.flat_master_path,
+      backgroundRgb: coverBackground,
       pilot: null,
-      outputs: [{ asset_key: coverOutput.asset_key, manifest_path: coverOutput.manifest_path, recipe: coverRecipe }],
+      outputs: [
+        {
+          asset_key: coverOutput.asset_key,
+          manifest_path: coverOutput.manifest_path,
+          recipe: coverRecipe,
+        },
+      ],
     }),
   );
 
   for (const lesson of inventory.lessons) {
     const masterId = lesson.master.id;
-    const lessonRecipe = cardRecipe(lesson.lesson_card.derivative);
+    const lessonRecipe = cardRecipe(lesson.lesson_card.derivative, palette);
+    const lessonBackground = inventoryV2 ? assertRecipeRgb(lesson.master.background_rgb, palette, `${lesson.master.id} background`) : null;
     const lessonOutput = baseOutput(lesson.lesson_card, masterId, lessonRecipe);
     outputs.push(lessonOutput);
     const masterOutputs = [
-      { asset_key: lessonOutput.asset_key, manifest_path: lessonOutput.manifest_path, recipe: lessonRecipe },
+      {
+        asset_key: lessonOutput.asset_key,
+        manifest_path: lessonOutput.manifest_path,
+        recipe: lessonRecipe,
+      },
     ];
     for (const poster of lesson.posters.filter((entry) => !entry.direct_master)) {
-      const recipe = posterRecipe(poster);
+      const recipe = posterRecipe(poster, palette);
       const output = baseOutput(poster, masterId, recipe);
       outputs.push(output);
-      masterOutputs.push({ asset_key: output.asset_key, manifest_path: output.manifest_path, recipe });
+      masterOutputs.push({
+        asset_key: output.asset_key,
+        manifest_path: output.manifest_path,
+        recipe,
+      });
     }
     masters.push(
       baseMaster({
@@ -394,13 +499,8 @@ export function createInitialLedger(inventory) {
         referenceInputs: resolveReferences(lesson.reference_ids),
         sourcePath: lesson.master.source_path,
         flatMasterPath: lesson.master.flat_master_path,
-        pilot: lesson.pilot
-          ? {
-              slug: lesson.pilot_review.slug,
-              assets: clone(lesson.pilot_review.assets),
-              lineage: clone(lesson.pilot_review.generation_lineage),
-            }
-          : null,
+        backgroundRgb: lessonBackground,
+        pilot: lesson.pilot ? pilotPlan(lesson.pilot_review) : null,
         outputs: masterOutputs,
       }),
     );
@@ -408,7 +508,8 @@ export function createInitialLedger(inventory) {
     for (const poster of lesson.posters.filter((entry) => entry.direct_master)) {
       const direct = poster.direct_master;
       const directId = direct.id;
-      const recipe = posterRecipe(poster);
+      const directBackground = inventoryV2 ? assertRecipeRgb(direct.background_rgb, palette, `${directId} background`) : null;
+      const recipe = posterRecipe(poster, palette);
       const output = baseOutput(poster, directId, recipe);
       outputs.push(output);
       masters.push(
@@ -422,8 +523,15 @@ export function createInitialLedger(inventory) {
           referenceInputs: resolveReferences(direct.reference_ids),
           sourcePath: direct.source_path,
           flatMasterPath: direct.flat_master_path,
+          backgroundRgb: directBackground,
           pilot: null,
-          outputs: [{ asset_key: output.asset_key, manifest_path: output.manifest_path, recipe }],
+          outputs: [
+            {
+              asset_key: output.asset_key,
+              manifest_path: output.manifest_path,
+              recipe,
+            },
+          ],
         }),
       );
     }
@@ -452,6 +560,11 @@ export function createInitialLedger(inventory) {
   assert(new Set(masterPaths).size === masterPaths.length, "Source and flat-master paths must be globally unique");
   const plannedCallIds = masters.map((master) => master.planned_generation_call_id).filter(Boolean);
   assert(new Set(plannedCallIds).size === 18, "Planned generation call IDs must be unique");
+  assert(
+    masters.filter((master) => master.pilot).every((master) => isSharedPilotLineage(master.pilot.lineage) === inventoryV2),
+    `Artwork inventory ${inventory.schema_version} has an incompatible pilot lineage schema`,
+  );
+  assertPilotV2GlobalUniqueness(masters);
 
   return {
     schema_version: SCHEMA_VERSION,
@@ -489,10 +602,7 @@ function findOutput(ledger, assetKey) {
 async function fileRecord(root, relativePath) {
   const fullPath = resolveRepoPath(root, relativePath);
   const [realRoot, realFile] = await Promise.all([realpath(root), realpath(fullPath)]);
-  assert(
-    realFile === realRoot || realFile.startsWith(`${realRoot}${path.sep}`),
-    `File resolves outside repository: ${relativePath}`,
-  );
+  assert(realFile === realRoot || realFile.startsWith(`${realRoot}${path.sep}`), `File resolves outside repository: ${relativePath}`);
   assert(realFile === fullPath, `File path contains a symlink: ${relativePath}`);
   const info = await lstat(fullPath);
   assert(info.isFile() && !info.isSymbolicLink(), `File must be a regular non-symlink: ${relativePath}`);
@@ -536,8 +646,7 @@ function nearestPaletteColor(red, green, blue, palette) {
   let best = palette[0];
   let distance = Number.POSITIVE_INFINITY;
   for (const color of palette) {
-    const candidate =
-      (red - color[0]) ** 2 + (green - color[1]) ** 2 + (blue - color[2]) ** 2;
+    const candidate = (red - color[0]) ** 2 + (green - color[1]) ** 2 + (blue - color[2]) ** 2;
     if (candidate < distance) {
       best = color;
       distance = candidate;
@@ -546,9 +655,15 @@ function nearestPaletteColor(red, green, blue, palette) {
   return best;
 }
 
-async function quantizeBuffer(input, palette) {
+async function quantizeBuffer(input, palette, flattenBackground = BLUE) {
   const { data, info } = await sharp(input)
-    .flatten({ background: { r: BLUE[0], g: BLUE[1], b: BLUE[2] } })
+    .flatten({
+      background: {
+        r: flattenBackground[0],
+        g: flattenBackground[1],
+        b: flattenBackground[2],
+      },
+    })
     .removeAlpha()
     .raw()
     .toBuffer({ resolveWithObject: true });
@@ -561,9 +676,11 @@ async function quantizeBuffer(input, palette) {
   return { data, width: info.width, height: info.height };
 }
 
-async function encodeFlatPng(input, palette) {
-  const flat = await quantizeBuffer(input, palette);
-  return sharp(flat.data, { raw: { width: flat.width, height: flat.height, channels: 3 } })
+async function encodeFlatPng(input, palette, background = BLUE) {
+  const flat = await quantizeBuffer(input, palette, background);
+  return sharp(flat.data, {
+    raw: { width: flat.width, height: flat.height, channels: 3 },
+  })
     .png({ compressionLevel: 9, adaptiveFiltering: false })
     .toBuffer();
 }
@@ -573,45 +690,54 @@ async function encodeDerivedWebp(flatMasterInput, recipe, palette) {
   assert(metadata.width && metadata.height, "Cannot read flat-master dimensions");
   assert(recipe.normalize_master_dimensions?.join("x") === "1280x720", `${recipe.id} normalization dimensions drifted`);
   assert(recipe.normalize_method === "contain-with-padding", `${recipe.id} normalization method drifted`);
-  assert(recipe.normalize_background_rgb?.join(",") === BLUE.join(","), `${recipe.id} normalization background drifted`);
+  const normalizeBackground = assertRecipeRgb(recipe.normalize_background_rgb, palette, `${recipe.id} normalization background`);
   let pipeline = sharp(flatMasterInput).removeAlpha();
   if (recipe.kind === "course-cover" || recipe.kind === "lesson-card") {
+    const padding = assertRecipeRgb(recipe.padding_rgb, palette, `${recipe.id} padding`);
     const resized = await pipeline
       .resize(1280, 720, {
         fit: "contain",
         position: "centre",
-        background: { r: BLUE[0], g: BLUE[1], b: BLUE[2] },
+        background: {
+          r: normalizeBackground[0],
+          g: normalizeBackground[1],
+          b: normalizeBackground[2],
+        },
         kernel: sharp.kernel.lanczos3,
       })
       .raw()
       .toBuffer();
     const canvas = Buffer.alloc(1280 * 800 * 3);
     for (let index = 0; index < canvas.length; index += 3) {
-      canvas[index] = BLUE[0];
-      canvas[index + 1] = BLUE[1];
-      canvas[index + 2] = BLUE[2];
+      canvas[index] = padding[0];
+      canvas[index + 1] = padding[1];
+      canvas[index + 2] = padding[2];
     }
     for (let row = 0; row < 720; row += 1) {
       resized.copy(canvas, (row + 40) * 1280 * 3, row * 1280 * 3, (row + 1) * 1280 * 3);
     }
-    pipeline = sharp(canvas, { raw: { width: 1280, height: 800, channels: 3 } });
+    pipeline = sharp(canvas, {
+      raw: { width: 1280, height: 800, channels: 3 },
+    });
   } else {
     const [left, top, width, height] = recipe.crop_pixels_after_normalize;
     const normalized = await pipeline
       .resize(1280, 720, {
         fit: "contain",
         position: "centre",
-        background: { r: BLUE[0], g: BLUE[1], b: BLUE[2] },
+        background: {
+          r: normalizeBackground[0],
+          g: normalizeBackground[1],
+          b: normalizeBackground[2],
+        },
         kernel: sharp.kernel.lanczos3,
       })
       .png()
       .toBuffer();
-    pipeline = sharp(normalized)
-      .extract({ left, top, width, height })
-      .resize(1280, 720, { fit: "fill", kernel: sharp.kernel.lanczos3 });
+    pipeline = sharp(normalized).extract({ left, top, width, height }).resize(1280, 720, { fit: "fill", kernel: sharp.kernel.lanczos3 });
   }
   const intermediate = await pipeline.png().toBuffer();
-  const quantized = await quantizeBuffer(intermediate, palette);
+  const quantized = await quantizeBuffer(intermediate, palette, normalizeBackground);
   return sharp(quantized.data, {
     raw: { width: quantized.width, height: quantized.height, channels: 3 },
   })
@@ -637,12 +763,13 @@ async function inspectArtworkBuffer(asset, palette, contents) {
     assert(allowed.has(key), `${asset.asset_key} contains color outside the locked palette: ${key}`);
   }
   if (asset.kind === "lesson-card" || asset.kind === "course-cover") {
+    const padding = assertRecipeRgb(asset.derivative?.recipe?.padding_rgb, palette, `${asset.asset_key} padding`);
     for (const row of [...Array(40).keys(), ...Array.from({ length: 40 }, (_, index) => 760 + index)]) {
       for (let column = 0; column < 1280; column += 1) {
         const offset = (row * info.width + column) * 3;
         assert(
-          data[offset] === BLUE[0] && data[offset + 1] === BLUE[1] && data[offset + 2] === BLUE[2],
-          `${asset.asset_key} does not preserve exact blue padding`,
+          data[offset] === padding[0] && data[offset + 1] === padding[1] && data[offset + 2] === padding[2],
+          `${asset.asset_key} does not preserve exact recipe padding`,
         );
       }
     }
@@ -655,7 +782,10 @@ export async function inspectArtworkFile(root, asset, palette) {
   const fileInfo = await lstat(fullPath);
   assert(fileInfo.isFile() && !fileInfo.isSymbolicLink(), `${asset.asset_key} must be a regular non-symlink file`);
   const record = await fileRecord(root, asset.manifest_path);
-  return { ...record, ...await inspectArtworkBuffer(asset, palette, record.contents) };
+  return {
+    ...record,
+    ...(await inspectArtworkBuffer(asset, palette, record.contents)),
+  };
 }
 
 function applyOutputProvenance(output, master) {
@@ -675,9 +805,7 @@ function applyOutputProvenance(output, master) {
 }
 
 function lockedPilotBindings(ledger) {
-  const bySlug = new Map(
-    ledger.masters.filter((master) => master.pilot).map((master) => [master.pilot.slug, master]),
-  );
+  const bySlug = new Map(ledger.masters.filter((master) => master.pilot).map((master) => [master.pilot.slug, master]));
   return ["orientation", "opening-the-call", "objection-architecture"].map((slug) => {
     const master = bySlug.get(slug);
     assert(master, `Missing locked pilot ${slug}`);
@@ -692,9 +820,14 @@ function lockedPilotBindings(ledger) {
 }
 
 function pilotBindingsSha256(bindings) {
-  return sha256(bindings.map((binding) =>
-    `${binding.slug}|${binding.terminal_output_sha256}|${binding.flat_master_sha256}|${binding.lesson_card_sha256}|${binding.video_poster_sha256}\n`
-  ).join(""));
+  return sha256(
+    bindings
+      .map(
+        (binding) =>
+          `${binding.slug}|${binding.terminal_output_sha256}|${binding.flat_master_sha256}|${binding.lesson_card_sha256}|${binding.video_poster_sha256}\n`,
+      )
+      .join(""),
+  );
 }
 
 async function validatePilotApprovalArtifact({ root, ledger, evidence, approvedBy, approvedAt }) {
@@ -704,7 +837,9 @@ async function validatePilotApprovalArtifact({ root, ledger, evidence, approvedB
   try {
     artifact = JSON.parse(evidenceRecord.contents.toString("utf8"));
   } catch (error) {
-    throw new Error("Pilot approval evidence must be structured JSON", { cause: error });
+    throw new Error("Pilot approval evidence must be structured JSON", {
+      cause: error,
+    });
   }
   assert(artifact?.schema_version === "bmh-artwork-pilot-approval/v1", "Pilot approval schema is invalid");
   assert(artifact.decision === APPROVED, "Pilot approval decision must be approved");
@@ -723,21 +858,12 @@ async function validatePilotApprovalArtifact({ root, ledger, evidence, approvedB
   assert(requestRecord.checksum_sha256 === artifact.request_binding.request_sha256, "Pilot approval request file drifted");
   const inventoryRecord = await fileRecord(root, ledger.inventory_path);
   assert(artifact.inventory_sha256 === inventoryRecord.checksum_sha256, "Pilot approval inventory checksum drifted");
-  const lineageRecord = await fileRecord(
-    root,
-    "docs/course-production/thumbnail-pilots/generation-lineage.json",
-  );
+  const lineageRecord = await fileRecord(root, "docs/course-production/thumbnail-pilots/generation-lineage.json");
   assert(artifact.generation_lineage_sha256 === lineageRecord.checksum_sha256, "Pilot approval lineage checksum drifted");
   return { evidenceRecord, artifact, bindingsSha256 };
 }
 
-export async function validateLedger({
-  root,
-  inventory,
-  manifest,
-  ledger,
-  inspectFiles = true,
-}) {
+export async function validateLedger({ root, inventory, manifest, ledger, inspectFiles = true }) {
   assert(ledger.schema_version === SCHEMA_VERSION, "Unsupported production ledger");
   const expected = createInitialLedger(inventory);
   assert(ledger.inventory_path === expected.inventory_path, "Ledger inventory path drifted");
@@ -756,8 +882,7 @@ export async function validateLedger({
     );
   }
   assert(
-    ledger.derivative_runtime?.sharp_version === sharp.versions.sharp &&
-      ledger.derivative_runtime?.libvips_version === sharp.versions.vips,
+    ledger.derivative_runtime?.sharp_version === sharp.versions.sharp && ledger.derivative_runtime?.libvips_version === sharp.versions.vips,
     `Derivative runtime changed: expected sharp ${ledger.derivative_runtime?.sharp_version}/libvips ${ledger.derivative_runtime?.libvips_version}, got sharp ${sharp.versions.sharp}/libvips ${sharp.versions.vips}`,
   );
   assert(ledger.masters.length === expected.masters.length, "Ledger master count drifted");
@@ -792,12 +917,13 @@ export async function validateLedger({
         source_master_id: asset.provenance.source_master_id,
         derivative_recipe_id: asset.provenance.derivative_recipe_id,
         derivative_recipe_sha256: asset.provenance.derivative_recipe_sha256,
-      }) === JSON.stringify({
-        master_id: planned.provenance.master_id,
-        source_master_id: planned.provenance.source_master_id,
-        derivative_recipe_id: planned.provenance.derivative_recipe_id,
-        derivative_recipe_sha256: planned.provenance.derivative_recipe_sha256,
-      }),
+      }) ===
+        JSON.stringify({
+          master_id: planned.provenance.master_id,
+          source_master_id: planned.provenance.source_master_id,
+          derivative_recipe_id: planned.provenance.derivative_recipe_id,
+          derivative_recipe_sha256: planned.provenance.derivative_recipe_sha256,
+        }),
       `${asset.asset_key} immutable provenance drifted`,
     );
     assert(asset.derivative?.source_master_id === planned.derivative.source_master_id, `${asset.asset_key} source master drifted`);
@@ -806,10 +932,7 @@ export async function validateLedger({
     if (asset.pixel_sha256 !== undefined && asset.pixel_sha256 !== null) {
       assert(SHA256.test(asset.pixel_sha256), `${asset.asset_key} pixel checksum invalid`);
     }
-    assert(
-      asset.derivative?.recipe_sha256 === sha256(JSON.stringify(asset.derivative?.recipe)),
-      `${asset.asset_key} derivative recipe checksum drifted`,
-    );
+    assert(asset.derivative?.recipe_sha256 === sha256(JSON.stringify(asset.derivative?.recipe)), `${asset.asset_key} derivative recipe checksum drifted`);
     assertString(asset.provenance?.master_id, `${asset.asset_key} provenance master_id`);
     assertString(asset.provenance?.source_master_id, `${asset.asset_key} provenance source_master_id`);
     if (asset.checksum_sha256) {
@@ -853,7 +976,10 @@ export async function validateLedger({
       const owner = masterById.get(asset.provenance.master_id);
       assert(owner?.status === "source-ready", `${asset.asset_key} replacement authorization requires source-ready master`);
       assert(SHA256.test(asset.replacement_authorized_checksum), `${asset.asset_key} replacement authorization invalid`);
-      assert(asset.history.at(-1)?.checksum_sha256 === asset.replacement_authorized_checksum, `${asset.asset_key} replacement authorization is not tied to history`);
+      assert(
+        asset.history.at(-1)?.checksum_sha256 === asset.replacement_authorized_checksum,
+        `${asset.asset_key} replacement authorization is not tied to history`,
+      );
       assert(asset.checksum_sha256 === null, `${asset.asset_key} replacement authorization conflicts with produced metadata`);
     }
     const lifecycleOwner = masterById.get(asset.provenance.master_id);
@@ -866,7 +992,7 @@ export async function validateLedger({
       assert(actual.checksum_sha256 === asset.checksum_sha256, `${asset.asset_key} checksum drifted`);
       assert(actual.size_bytes === asset.size_bytes, `${asset.asset_key} size drifted`);
       assert(actual.pixel_sha256 === asset.pixel_sha256, `${asset.asset_key} pixel checksum drifted`);
-    } else if (inspectFiles && await pathExists(resolveRepoPath(root, asset.manifest_path))) {
+    } else if (inspectFiles && (await pathExists(resolveRepoPath(root, asset.manifest_path)))) {
       const existing = await fileRecord(root, asset.manifest_path);
       assert(
         asset.replacement_authorized_checksum && existing.checksum_sha256 === asset.replacement_authorized_checksum,
@@ -874,13 +1000,16 @@ export async function validateLedger({
       );
     }
   }
-  const invocationIds = [];
-  const toolOutputIds = [];
+  const sharedPilotParents = canonicalSharedPilotParents(ledger.masters);
+  const invocationIds = sharedPilotParents.map((parent) => parent.tool_evidence.invocation_call_id);
+  const toolOutputIds = sharedPilotParents.map((parent) => parent.tool_evidence.tool_output_id);
+  const lineageOutputHashes = sharedPilotParents.map((parent) => parent.output.sha256);
   for (const master of ledger.masters) {
     const planned = expected.masters.find((candidate) => candidate.id === master.id);
     assert(planned, `Unexpected ledger master ${master.id}`);
     assert(master.source_path === planned.source_path, `${master.id} source path drifted`);
     assert(master.flat_master_path === planned.flat_master_path, `${master.id} flat-master path drifted`);
+    assert(JSON.stringify(master.background_rgb) === JSON.stringify(planned.background_rgb), `${master.id} background drifted`);
     assert(master.prompt_sha256 === planned.prompt_sha256, `${master.id} prompt checksum drifted`);
     assert(JSON.stringify(master.reference_ids) === JSON.stringify(planned.reference_ids), `${master.id} references drifted`);
     assert(JSON.stringify(master.reference_inputs) === JSON.stringify(planned.reference_inputs), `${master.id} reference provenance drifted`);
@@ -890,8 +1019,9 @@ export async function validateLedger({
     assert(JSON.stringify(master.pilot) === JSON.stringify(planned.pilot), `${master.id} pilot plan drifted`);
     assert(JSON.stringify(master.outputs) === JSON.stringify(planned.outputs), `${master.id} output/recipe plan drifted`);
     assert(["missing", "source-ready", "derived"].includes(master.status), `${master.id} status is invalid`);
-    let previous = null;
-    let previousCompletedAt = null;
+    const sharedPilotParent = master.pilot && isSharedPilotLineage(master.pilot.lineage) ? master.pilot.shared_generation_parent : null;
+    let previous = sharedPilotParent?.output.sha256 ?? null;
+    let previousCompletedAt = sharedPilotParent ? Date.parse(sharedPilotParent.tool_evidence.completed_at) : null;
     for (const [index, step] of master.lineage.entries()) {
       assert(step.sequence === index + 1, `${master.id} lineage order is invalid`);
       assert(["generate", "correction", "pilot-generate", "pilot-correction"].includes(step.operation), `${master.id} lineage operation invalid`);
@@ -914,16 +1044,21 @@ export async function validateLedger({
       if (previousCompletedAt) {
         assert(Date.parse(step.completed_at) >= previousCompletedAt, `${master.id} lineage timestamps are out of order`);
       }
-      if (index > 0) assert(step.parent_source_sha256 === previous, `${master.id} correction parent checksum mismatch`);
-      else assert(step.parent_source_sha256 === null, `${master.id} initial generation cannot have a parent`);
+      if (index > 0 || sharedPilotParent) {
+        assert(step.parent_source_sha256 === previous, `${master.id} correction parent checksum mismatch`);
+      } else {
+        assert(step.parent_source_sha256 === null, `${master.id} initial generation cannot have a parent`);
+      }
+      if (index === 0 && sharedPilotParent) {
+        assert(step.operation === "pilot-correction", `${master.id} shared-parent pilot must begin with an edit`);
+        assert(step.reference_inputs[0]?.sha256 === sharedPilotParent.output.sha256, `${master.id} shared-parent pilot input is disconnected`);
+      }
       if (step.operation.includes("correction")) {
         assertString(step.correction_prompt_path, `${master.id} correction prompt path`);
         assert(SHA256.test(step.correction_prompt_sha256), `${master.id} correction prompt checksum invalid`);
         if (inspectFiles) {
           const prompt = await fileRecord(root, step.correction_prompt_path);
-          const promptChecksum = step.operation.startsWith("pilot-")
-            ? sha256(prompt.contents.toString("utf8").replace(/\r?\n$/, ""))
-            : prompt.checksum_sha256;
+          const promptChecksum = step.operation.startsWith("pilot-") ? sha256(prompt.contents.toString("utf8").replace(/\r?\n$/, "")) : prompt.checksum_sha256;
           assert(promptChecksum === step.correction_prompt_sha256, `${master.id} correction prompt checksum drifted`);
         }
       }
@@ -932,15 +1067,13 @@ export async function validateLedger({
         assert(archived.checksum_sha256 === step.output_sha256, `${master.id} archived lineage output drifted`);
       }
       previous = step.output_sha256;
+      lineageOutputHashes.push(step.output_sha256);
       previousCompletedAt = Date.parse(step.completed_at);
     }
     if (master.lineage.length > 0) {
       assert(master.terminal_source_sha256 === previous, `${master.id} terminal checksum drifted`);
       if (!master.pilot && ledger.pilot_approval.status === APPROVED) {
-        assert(
-          Date.parse(master.lineage[0].completed_at) >= Date.parse(ledger.pilot_approval.approved_at),
-          `${master.id} generation predates pilot approval`,
-        );
+        assert(Date.parse(master.lineage[0].completed_at) >= Date.parse(ledger.pilot_approval.approved_at), `${master.id} generation predates pilot approval`);
       }
       if (inspectFiles) {
         const source = await fileRecord(root, master.source_path);
@@ -951,7 +1084,10 @@ export async function validateLedger({
     }
     if (master.status === "missing") {
       assert(master.lineage.length === 0 && master.terminal_source_sha256 === null, `${master.id} missing state retains lineage`);
-      assert(master.flat_master_sha256 === null && master.flat_replacement_authorized_checksum === null, `${master.id} missing state retains flat-master state`);
+      assert(
+        master.flat_master_sha256 === null && master.flat_replacement_authorized_checksum === null,
+        `${master.id} missing state retains flat-master state`,
+      );
       assert(master.flat_history.length === 0, `${master.id} missing state retains flat history`);
       assert(master.review.status === "pending", `${master.id} missing state retains review`);
     } else {
@@ -960,7 +1096,10 @@ export async function validateLedger({
     if (master.status === "derived") {
       assert(SHA256.test(master.flat_master_sha256), `${master.id} derived state lacks flat master`);
       for (const outputRef of master.outputs) {
-        assert(SHA256.test(ledger.assets.find((asset) => asset.asset_key === outputRef.asset_key)?.checksum_sha256), `${master.id} derived state lacks output ${outputRef.asset_key}`);
+        assert(
+          SHA256.test(ledger.assets.find((asset) => asset.asset_key === outputRef.asset_key)?.checksum_sha256),
+          `${master.id} derived state lacks output ${outputRef.asset_key}`,
+        );
       }
       assert(master.flat_replacement_authorized_checksum === null, `${master.id} derived state retains flat replacement authorization`);
     }
@@ -970,7 +1109,7 @@ export async function validateLedger({
         const flat = await fileRecord(root, master.flat_master_path);
         assert(flat.checksum_sha256 === master.flat_master_sha256, `${master.id} flat master drifted`);
       }
-    } else if (inspectFiles && await pathExists(resolveRepoPath(root, master.flat_master_path))) {
+    } else if (inspectFiles && (await pathExists(resolveRepoPath(root, master.flat_master_path)))) {
       assert(master.flat_replacement_authorized_checksum, `${master.id} has an orphan flat master`);
       const flat = await fileRecord(root, master.flat_master_path);
       assert(flat.checksum_sha256 === master.flat_replacement_authorized_checksum, `${master.id} flat replacement authorization drifted`);
@@ -1008,7 +1147,6 @@ export async function validateLedger({
   }
   assert(new Set(invocationIds).size === invocationIds.length, "Generation invocation ids must be globally unique");
   assert(new Set(toolOutputIds).size === toolOutputIds.length, "Generation tool output ids must be globally unique");
-  const lineageOutputHashes = ledger.masters.flatMap((master) => master.lineage.map((step) => step.output_sha256));
   assert(new Set(lineageOutputHashes).size === lineageOutputHashes.length, "Generation output checksums must be globally unique");
   const sourceHashes = ledger.masters.map((master) => master.terminal_source_sha256).filter(Boolean);
   const flatHashes = ledger.masters.map((master) => master.flat_master_sha256).filter(Boolean);
@@ -1022,9 +1160,7 @@ export async function validateLedger({
       `${asset.asset_key} derivative source_master_id must resolve exactly once`,
     );
   }
-  const posterHashes = ledger.assets
-    .filter((asset) => asset.kind === "video-poster" && asset.checksum_sha256)
-    .map((asset) => asset.pixel_sha256);
+  const posterHashes = ledger.assets.filter((asset) => asset.kind === "video-poster" && asset.checksum_sha256).map((asset) => asset.pixel_sha256);
   assert(new Set(posterHashes).size === posterHashes.length, "Two video posters have identical pixels");
   if (ledger.pilot_approval.status === APPROVED) {
     assertIso(ledger.pilot_approval.approved_at, "pilot approved_at");
@@ -1038,14 +1174,8 @@ export async function validateLedger({
       approvedAt: ledger.pilot_approval.approved_at,
     });
     assert(evidenceRecord.checksum_sha256 === ledger.pilot_approval.evidence_sha256, "Pilot evidence drifted");
-    assert(
-      ledger.pilot_approval.request_id === artifact.request_binding.request_id,
-      "Stored pilot approval request_id drifted",
-    );
-    assert(
-      ledger.pilot_approval.pilot_bindings_sha256 === bindingsSha256,
-      "Stored pilot approval bindings checksum drifted",
-    );
+    assert(ledger.pilot_approval.request_id === artifact.request_binding.request_id, "Stored pilot approval request_id drifted");
+    assert(ledger.pilot_approval.pilot_bindings_sha256 === bindingsSha256, "Stored pilot approval bindings checksum drifted");
     const latestPilotGeneration = Math.max(
       ...ledger.masters
         .filter((master) => master.pilot)
@@ -1059,10 +1189,16 @@ export async function validateLedger({
   }
   if (ledger.status === "preapproval") {
     assert(ledger.pilot_approval.status === "pending", "Preapproval ledger cannot contain pilot approval");
-    assert(ledger.masters.every((master) => master.status === "missing"), "Preapproval ledger cannot contain active masters");
+    assert(
+      ledger.masters.every((master) => master.status === "missing"),
+      "Preapproval ledger cannot contain active masters",
+    );
   } else if (ledger.status === "pilot-approved") {
     assert(ledger.pilot_approval.status === APPROVED, "Pilot-approved ledger lacks approval");
-    assert(ledger.masters.every((master) => master.status === "missing"), "Pilot-approved ledger cannot contain promoted masters");
+    assert(
+      ledger.masters.every((master) => master.status === "missing"),
+      "Pilot-approved ledger cannot contain promoted masters",
+    );
   } else {
     assert(ledger.pilot_approval.status === APPROVED, `${ledger.status} ledger lacks pilot approval`);
     assert(
@@ -1082,7 +1218,10 @@ export async function validateLedger({
       ledger.masters.every((master) => master.review.status === APPROVED),
       "Finalized ledger requires every artwork master review to be approved",
     );
-    assert(ledger.assets.every((asset) => asset.approval_status === APPROVED), "Finalized ledger contains unapproved artwork");
+    assert(
+      ledger.assets.every((asset) => asset.approval_status === APPROVED),
+      "Finalized ledger contains unapproved artwork",
+    );
     for (const asset of ledger.assets) {
       const manifestAsset = manifestByKey.get(asset.asset_key);
       const extension = path.posix.extname(asset.base_storage_path);
@@ -1099,7 +1238,10 @@ export async function validateLedger({
     assertString(ledger.final_approval.approved_by, "final approved_by");
     assert(SHA256.test(ledger.final_approval.evidence_sha256), "Final evidence checksum invalid");
     assert(new Set(ledger.assets.map((asset) => asset.checksum_sha256)).size === 49, "Final artwork file checksums must be unique");
-    assert(new Set(ledger.assets.filter((asset) => asset.kind === "video-poster").map((asset) => asset.pixel_sha256)).size === 29, "Final poster pixels must be unique");
+    assert(
+      new Set(ledger.assets.filter((asset) => asset.kind === "video-poster").map((asset) => asset.pixel_sha256)).size === 29,
+      "Final poster pixels must be unique",
+    );
     if (inspectFiles) {
       const evidence = await validateEvidence(
         root,
@@ -1153,13 +1295,14 @@ export async function approvePilots({ root, ledger, approvedBy, approvedAt, evid
 }
 
 function pilotLineage(master) {
+  const sharedParent = isSharedPilotLineage(master.pilot.lineage) ? master.pilot.shared_generation_parent : null;
   return master.pilot.lineage.steps.map((step, index) => ({
     sequence: index + 1,
     operation: step.operation === "generate" ? "pilot-generate" : "pilot-correction",
     prompt_sha256: step.prompt_sha256,
-    correction_prompt_path: index === 0 ? null : step.prompt_path,
-    correction_prompt_sha256: index === 0 ? null : step.prompt_sha256,
-    parent_source_sha256: index === 0 ? null : master.pilot.lineage.steps[index - 1].output.sha256,
+    correction_prompt_path: index === 0 && !sharedParent ? null : step.prompt_path,
+    correction_prompt_sha256: index === 0 && !sharedParent ? null : step.prompt_sha256,
+    parent_source_sha256: index === 0 ? (sharedParent?.output.sha256 ?? null) : master.pilot.lineage.steps[index - 1].output.sha256,
     generation_call_id: step.tool_evidence.invocation_call_id,
     tool_output_id: step.tool_evidence.tool_output_id,
     generated_by: step.tool_evidence.agent_path,
@@ -1184,7 +1327,10 @@ export async function promotePilots({ root, ledger }) {
       assert(flat.checksum_sha256 === master.pilot.assets.flat_master.sha256, `${master.id} promoted flat master drifted`);
       const card = findOutput(ledger, master.outputs.find((entry) => entry.recipe.kind === "lesson-card").asset_key);
       const poster = findOutput(ledger, master.outputs.find((entry) => entry.recipe.kind === "video-poster").asset_key);
-      for (const [output, pilotAsset] of [[card, master.pilot.assets.lesson_card], [poster, master.pilot.assets.video_poster]]) {
+      for (const [output, pilotAsset] of [
+        [card, master.pilot.assets.lesson_card],
+        [poster, master.pilot.assets.video_poster],
+      ]) {
         const actual = await inspectArtworkFile(root, output, ledger.palette_rgb);
         assert(actual.checksum_sha256 === pilotAsset.sha256, `${output.asset_key} promoted bytes drifted`);
       }
@@ -1221,23 +1367,13 @@ export async function promotePilots({ root, ledger }) {
     ];
     for (const [outputRef, approvedAsset] of promoted) {
       const approvedRecord = await fileRecord(root, approvedAsset.path);
-      assert(
-        approvedRecord.checksum_sha256 === approvedAsset.sha256,
-        `${master.id} approved pilot derivative checksum drifted`,
-      );
+      assert(approvedRecord.checksum_sha256 === approvedAsset.sha256, `${master.id} approved pilot derivative checksum drifted`);
       const output = findOutput(ledger, outputRef.asset_key);
       if (!(await assertAbsentOrExact(root, output.manifest_path, approvedRecord.contents, `${master.id} promoted derivative`))) {
-        await copyFileAtomic(
-          resolveRepoPath(root, approvedAsset.path),
-          resolveRepoPath(root, output.manifest_path),
-          root,
-        );
+        await copyFileAtomic(resolveRepoPath(root, approvedAsset.path), resolveRepoPath(root, output.manifest_path), root);
       }
       const copied = await inspectArtworkFile(root, output, ledger.palette_rgb);
-      assert(
-        copied.checksum_sha256 === approvedAsset.sha256,
-        `${master.id} promoted derivative was not copied byte-for-byte`,
-      );
+      assert(copied.checksum_sha256 === approvedAsset.sha256, `${master.id} promoted derivative was not copied byte-for-byte`);
       output.checksum_sha256 = copied.checksum_sha256;
       output.pixel_sha256 = copied.pixel_sha256;
       output.size_bytes = copied.size_bytes;
@@ -1273,7 +1409,7 @@ export async function ingestGeneration({
   assertIso(generatedAt, "generated_at");
   assertString(generatedBy, "generated_by");
   const providerPath = path.resolve(sourceFile);
-  assert(await realpath(providerPath) === providerPath, `${masterId} provider source path contains a symlink`);
+  assert((await realpath(providerPath)) === providerPath, `${masterId} provider source path contains a symlink`);
   const providerInfo = await lstat(providerPath);
   assert(providerInfo.isFile() && !providerInfo.isSymbolicLink(), `${masterId} provider source must be a regular non-symlink file`);
   const sourceBuffer = await readFile(providerPath);
@@ -1299,10 +1435,7 @@ export async function ingestGeneration({
   ) {
     assert(parentSha256 === replay.parent_source_sha256, `${masterId} replay parent checksum differs from recorded lineage`);
     assert(correctionPromptPath === replay.correction_prompt_path, `${masterId} replay correction prompt path differs from recorded lineage`);
-    assert(
-      suppliedCorrectionPromptSha256 === replay.correction_prompt_sha256,
-      `${masterId} replay correction prompt checksum differs from recorded lineage`,
-    );
+    assert(suppliedCorrectionPromptSha256 === replay.correction_prompt_sha256, `${masterId} replay correction prompt checksum differs from recorded lineage`);
     const terminal = await fileRecord(root, master.source_path);
     const archived = await fileRecord(root, replay.archived_output_path);
     assert(terminal.checksum_sha256 === outputSha256 && archived.checksum_sha256 === outputSha256, `${masterId} replay files drifted`);
@@ -1317,10 +1450,7 @@ export async function ingestGeneration({
   const sequence = master.lineage.length + 1;
   const correction = sequence > 1;
   if (master.lineage.length > 0) {
-    assert(
-      Date.parse(generatedAt) >= Date.parse(master.lineage.at(-1).completed_at),
-      `${masterId} generation timestamp predates its lineage tail`,
-    );
+    assert(Date.parse(generatedAt) >= Date.parse(master.lineage.at(-1).completed_at), `${masterId} generation timestamp predates its lineage tail`);
   } else {
     assert(Date.parse(generatedAt) >= Date.parse(ledger.pilot_approval.approved_at), `${masterId} generation predates pilot approval`);
   }
@@ -1339,12 +1469,7 @@ export async function ingestGeneration({
     assert(master.status === "missing", `${masterId} first ingest requires missing state`);
   }
   const extension = path.extname(sourceFile).toLowerCase();
-  const archivePath = path.posix.join(
-    path.posix.dirname(master.source_path),
-    "lineage",
-    master.id,
-    `step-${String(sequence).padStart(3, "0")}${extension}`,
-  );
+  const archivePath = path.posix.join(path.posix.dirname(master.source_path), "lineage", master.id, `step-${String(sequence).padStart(3, "0")}${extension}`);
   const correctionPromptSha256 = suppliedCorrectionPromptSha256;
   if (correction && master.status === "derived") {
     assert(SHA256.test(master.flat_master_sha256), `${masterId} prior flat master is not recorded`);
@@ -1403,9 +1528,7 @@ export async function ingestGeneration({
   let sourceAlreadyExact = false;
   if (await pathExists(sourceDestination)) {
     const current = await fileRecord(root, master.source_path);
-    const allowed = correction
-      ? [master.terminal_source_sha256, outputSha256]
-      : [outputSha256];
+    const allowed = correction ? [master.terminal_source_sha256, outputSha256] : [outputSha256];
     assert(allowed.includes(current.checksum_sha256), `${masterId} source destination is an orphan or mismatched restart artifact`);
     sourceAlreadyExact = current.checksum_sha256 === outputSha256;
   }
@@ -1467,7 +1590,8 @@ export async function deriveMaster({ root, ledger, masterId }) {
     flatInput = existingFlat.contents;
     flatChecksum = existingFlat.checksum_sha256;
   } else {
-    flatBuffer = await encodeFlatPng(sourceRecord.contents, ledger.palette_rgb);
+    const masterBackground = master.background_rgb ? assertRecipeRgb(master.background_rgb, ledger.palette_rgb, `${master.id} background`) : BLUE;
+    flatBuffer = await encodeFlatPng(sourceRecord.contents, ledger.palette_rgb, masterBackground);
     flatInput = flatBuffer;
     flatChecksum = sha256(flatBuffer);
   }
@@ -1476,18 +1600,16 @@ export async function deriveMaster({ root, ledger, masterId }) {
     const output = findOutput(ledger, outputRef.asset_key);
     if (master.pilot && output.provenance.promoted_pilot_sha256) {
       const promoted = await inspectArtworkFile(root, output, ledger.palette_rgb);
-      assert(
-        promoted.checksum_sha256 === output.provenance.promoted_pilot_sha256,
-        `${output.asset_key} promoted pilot derivative drifted`,
-      );
-      candidates.push({ output, promoted: true, record: promoted, buffer: promoted.contents });
+      assert(promoted.checksum_sha256 === output.provenance.promoted_pilot_sha256, `${output.asset_key} promoted pilot derivative drifted`);
+      candidates.push({
+        output,
+        promoted: true,
+        record: promoted,
+        buffer: promoted.contents,
+      });
       continue;
     }
-    const buffer = await encodeDerivedWebp(
-      flatInput,
-      outputRef.recipe,
-      ledger.palette_rgb,
-    );
+    const buffer = await encodeDerivedWebp(flatInput, outputRef.recipe, ledger.palette_rgb);
     const inspected = await inspectArtworkBuffer(output, ledger.palette_rgb, buffer);
     candidates.push({
       output,
@@ -1556,25 +1678,14 @@ export async function deriveMaster({ root, ledger, masterId }) {
   return ledger;
 }
 
-export async function reviewMaster({
-  root,
-  ledger,
-  masterId,
-  decision,
-  reviewedBy,
-  reviewedAt,
-  evidence,
-}) {
+export async function reviewMaster({ root, ledger, masterId, decision, reviewedBy, reviewedAt, evidence }) {
   const master = findMaster(ledger, masterId);
   assert(master.status === "derived", `${masterId} must be derived before review`);
   assertString(reviewedBy, "reviewed_by");
   assertIso(reviewedAt, "reviewed_at");
   assertString(evidence, "review evidence");
   assert([APPROVED, "changes_requested"].includes(decision), "review decision must be approved or changes_requested");
-  assert(
-    Date.parse(reviewedAt) >= Date.parse(master.lineage.at(-1).completed_at),
-    `${masterId} review predates generation`,
-  );
+  assert(Date.parse(reviewedAt) >= Date.parse(master.lineage.at(-1).completed_at), `${masterId} review predates generation`);
   const required = [master.id, master.terminal_source_sha256, master.flat_master_sha256];
   for (const outputRef of master.outputs) {
     const output = findOutput(ledger, outputRef.asset_key);
@@ -1623,8 +1734,14 @@ export async function finalizeArtwork({ root, ledger, manifest, approvedBy, appr
   assertString(approvedBy, "approved_by");
   assertIso(approvedAt, "approved_at");
   assertString(evidence, "final approval evidence");
-  assert(ledger.masters.every((master) => master.status === "derived"), "Every artwork master must be derived");
-  assert(ledger.masters.every((master) => master.review.status === APPROVED), "Every artwork master requires human review");
+  assert(
+    ledger.masters.every((master) => master.status === "derived"),
+    "Every artwork master must be derived",
+  );
+  assert(
+    ledger.masters.every((master) => master.review.status === APPROVED),
+    "Every artwork master requires human review",
+  );
   for (const asset of ledger.assets) {
     const actual = await inspectArtworkFile(root, asset, ledger.palette_rgb);
     assert(actual.checksum_sha256 === asset.checksum_sha256, `${asset.asset_key} checksum changed before finalization`);
@@ -1693,7 +1810,4 @@ export function summarizeLedger(ledger) {
   };
 }
 
-export const REPO_ROOT = path.resolve(
-  path.dirname(fileURLToPath(import.meta.url)),
-  "../..",
-);
+export const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
