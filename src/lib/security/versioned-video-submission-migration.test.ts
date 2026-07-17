@@ -117,6 +117,8 @@ describe("versioned video completion and submission evidence migration", () => {
     expect(sql).toMatch(
       /grant execute on function public\.fn_admin_lesson_completion_states\(uuid\[\], uuid\[\]\)[\s\S]*to authenticated, service_role/i,
     );
+    expect(sql).not.toMatch(/if auth\.role\(\) <> 'service_role'/i);
+    expect(sql).not.toMatch(/if not public\.fn_can_read_user_state\(p_user_id\)/i);
   });
 
   it("runs migration and integration acceptance serially with seeded E2E", () => {

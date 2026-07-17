@@ -141,11 +141,11 @@ describe.skipIf(!envPresent)("versioned video and submission evidence", () => {
         );
       expect(upload.error).toBeNull();
 
-      const learnerDelete = await learner.storage
-        .from("submissions")
-        .remove([submissionPath]);
-      expect(learnerDelete.error).not.toBeNull();
+      await learner.storage.from("submissions").remove([submissionPath]);
 
+      // Storage may report an RLS-filtered zero-row delete as either a denial or
+      // an empty success. The durable acceptance condition is that evidence is
+      // still readable after the learner's delete attempt.
       const stillPresent = await learner.storage
         .from("submissions")
         .download(submissionPath);

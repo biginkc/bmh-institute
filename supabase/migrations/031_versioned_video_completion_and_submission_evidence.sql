@@ -189,7 +189,7 @@ as $$
 declare
   v_type text;
 begin
-  if not public.fn_can_read_user_state(p_user_id) then
+  if not coalesce(public.fn_can_read_user_state(p_user_id), false) then
     return false;
   end if;
   select lesson_type into v_type
@@ -310,14 +310,14 @@ declare
   v_has_direct_access boolean;
   v_has_eligible_program_path boolean;
 begin
-  if auth.role() <> 'service_role'
+  if coalesce(auth.role(), '') <> 'service_role'
     and p_user_id is distinct from auth.uid()
     and not coalesce(public.is_admin(auth.uid()), false)
   then
     return false;
   end if;
 
-  if not public.fn_can_read_user_state(p_user_id) then
+  if not coalesce(public.fn_can_read_user_state(p_user_id), false) then
     return false;
   end if;
 
@@ -415,7 +415,7 @@ security definer
 set search_path = ''
 as $$
 begin
-  if not public.fn_can_read_user_state(p_user_id) then
+  if not coalesce(public.fn_can_read_user_state(p_user_id), false) then
     raise exception 'Lesson states require learner-self or admin access.'
       using errcode = '42501';
   end if;
@@ -455,7 +455,7 @@ security definer
 set search_path = ''
 as $$
 begin
-  if auth.role() <> 'service_role'
+  if coalesce(auth.role(), '') <> 'service_role'
     and not coalesce(public.is_admin(auth.uid()), false)
   then
     raise exception 'Admin lesson completion states require admin access.'
@@ -620,7 +620,7 @@ declare
   v_watched numeric := 0;
   v_completed boolean := false;
 begin
-  if auth.role() <> 'service_role' then
+  if coalesce(auth.role(), '') <> 'service_role' then
     if p_user_id is distinct from auth.uid()
       or not exists (
         select 1 from public.profiles
