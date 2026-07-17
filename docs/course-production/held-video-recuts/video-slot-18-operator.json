@@ -34,51 +34,82 @@
     "caption_generation_allowed": false,
     "approval_status_change_allowed": false
   },
+  "forbidden_language_removals": [
+    {
+      "source_time": "00:01:45.020",
+      "exact_source_language": "You're aiming for 60 to 80 dials in this first block",
+      "replacement_rule": "The current SOP, role sheet, schedule, and manager set activity expectations."
+    },
+    {
+      "source_time": "00:03:13.340",
+      "exact_source_language": "150 to 200 total dials",
+      "replacement_rule": "Remove fixed activity quotas from reusable training."
+    },
+    {
+      "source_time": "source transcript paragraph 8",
+      "exact_source_language": "You're making 150-plus calls a day, five days a week",
+      "replacement_rule": "Use current written expectations and avoid fixed quotas or weekly schedules."
+    },
+    {
+      "source_time": "source transcript paragraphs 4 and 7",
+      "exact_source_language": "Sandra",
+      "replacement_rule": "Use provider-neutral wording such as the current system."
+    }
+  ],
   "scenes": [
     {
       "scene_id": "operator-whole-day",
       "title": "Run the whole day",
-      "spoken_text": "You have seen the individual parts. Now put them together into a day you can repeat. Keep the right work moving, and keep the record and next step current."
+      "spoken_text": "You have seen the individual parts. Now put them together into a day you can repeat. Keep the right work moving, and keep the record and next step current.",
+      "visual_plan": {"mode": "avatar_on_camera", "shot": "Andrea standing in a medium-wide shot", "editor_note": "Open with a clear day-at-a-glance posture and no schedule numbers."}
     },
     {
       "scene_id": "operator-priorities",
       "title": "Start with commitments",
-      "spoken_text": "Begin with the work you already promised. Check scheduled follow-ups and active conversations, especially anything close to a handoff. Sort the list using the current SOP and your role sheet. If your manager changes the priority, follow that direction."
+      "spoken_text": "Begin with the work you already promised. Check scheduled follow-ups and active conversations, especially anything close to a handoff. Sort the list using the current SOP and your role sheet. If your manager changes the priority, follow that direction.",
+      "visual_plan": {"mode": "avatar_with_optional_cutaway", "shot": "Andrea seated beside a short generic priority list", "editor_note": "Optional list shows commitments and active conversations without quotas."}
     },
     {
       "scene_id": "operator-research",
       "title": "Prepare with purpose",
-      "spoken_text": "Research until you can make the next conversation useful. Confirm the ownership and property details, then read the history in Sandra. Look for details that help you ask a better question. When you are ready, move the conversation forward."
+      "spoken_text": "Research until you can make the next conversation useful. Confirm the ownership and property details, then read the history in the current system. Look for details that help you ask a better question. When you are ready, move the conversation forward.",
+      "visual_plan": {"mode": "avatar_with_optional_cutaway", "shot": "Andrea at a desk reviewing a generic property file", "editor_note": "Use no software interface or provider branding."}
     },
     {
       "scene_id": "operator-execution",
       "title": "Work and document",
-      "spoken_text": "Handle callbacks when they are due. Then move through the follow-ups and new activity assigned to you in the order the current process requires. Update Sandra while the details are fresh so the next person knows what happened and what comes next."
+      "spoken_text": "Handle callbacks when they are due. Then move through the follow-ups and new activity assigned to you in the order the current process requires. Update the current system while the details are fresh so the next person knows what happened and what comes next.",
+      "visual_plan": {"mode": "avatar_on_camera", "shot": "Andrea seated with one callback card and one note card", "editor_note": "Keep the workflow generic and free of activity counts."}
     },
     {
       "scene_id": "operator-current-expectations",
       "title": "Use the current operating plan",
-      "spoken_text": "Your current scorecard, role sheet, schedule, and manager direction define the activity expected from you. This video does not add a number or change that schedule. Take breaks as the current schedule directs. When you return, give the next person your full attention."
+      "spoken_text": "Your current scorecard, role sheet, schedule, and manager direction define the activity expected from you. This video does not add a number or change that schedule. Take breaks as the current schedule directs. When you return, give the next person your full attention.",
+      "visual_plan": {"mode": "avatar_on_camera", "shot": "Andrea standing beside a closed role-sheet folder", "editor_note": "Do not show a clock, quota, or fixed schedule."}
     },
     {
       "scene_id": "operator-close-day",
       "title": "Leave a clean pipeline",
-      "spoken_text": "Before you finish, review the pipeline. An active lead should have useful notes, the right stage, and a dated next action. Complete any handoff that is ready. Escalate blocked work, then leave yourself a clear place to begin."
+      "spoken_text": "Before you finish, review the pipeline. An active lead should have useful notes, the right stage, and a dated next action. Complete any handoff that is ready. Escalate blocked work, then leave yourself a clear place to begin.",
+      "visual_plan": {"mode": "avatar_with_optional_cutaway", "shot": "Andrea reviewing three generic pipeline cards", "editor_note": "Cards show notes, stage, and next action only."}
     },
     {
       "scene_id": "operator-controlled-work",
       "title": "Judge the controllable work",
-      "spoken_text": "A disciplined day cannot make someone answer or make a deal close. You can control how well you followed the process and whether you kept your commitments. You can also leave an accurate record and treat each person with care. That is work you can repeat tomorrow."
+      "spoken_text": "A disciplined day cannot make someone answer or make a deal close. You can control how well you followed the process and whether you kept your commitments. You can also leave an accurate record and treat each person with care. That is work you can repeat tomorrow.",
+      "visual_plan": {"mode": "avatar_on_camera", "shot": "Andrea standing in a steady medium shot", "editor_note": "Use a measured accountability tone with no results chart."}
     },
     {
       "scene_id": "operator-human-care",
       "title": "Keep the work human",
-      "spoken_text": "Follow-through matters. So does paying attention to the person in front of you. Listen, ask the next useful question, and do what you said you would do. That is how you earn trust one conversation at a time."
+      "spoken_text": "Follow-through matters. So does paying attention to the person in front of you. Listen, ask the next useful question, and do what you said you would do. That is how you earn trust one conversation at a time.",
+      "visual_plan": {"mode": "avatar_on_camera", "shot": "Andrea seated with open listening posture", "editor_note": "Leave a natural pause after the first sentence."}
     },
     {
       "scene_id": "operator-transition",
       "title": "Continue into mission control",
-      "spoken_text": "Next, you'll see how the team stays in sync day to day. After that, complete the checkpoint and move into Career Growth Path."
+      "spoken_text": "Next, you'll see how the team stays in sync day to day. After that, complete the checkpoint and move into Career Growth Path.",
+      "visual_plan": {"mode": "avatar_on_camera", "shot": "Andrea centered in a medium shot", "editor_note": "End without viewer-facing chapter numbering."}
     }
   ],
   "edit_operations": [

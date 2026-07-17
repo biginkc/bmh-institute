@@ -153,7 +153,11 @@ test("the complete manifest builder is deterministic against portable fixture so
     };
   });
   for (const historical of approvalLedger.records.filter(
-    (record) => record.decision === "changes_requested",
+    (record) => record.decision === "changes_requested"
+      && !approvalLedger.records.some(
+        (candidate) => candidate.source_key === record.source_key
+          && candidate.decision === "pending",
+      ),
   )) {
     const fixture = fixtureVideoBySource.get(historical.source_key);
     fixtureRecords.push({

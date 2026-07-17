@@ -29,3 +29,22 @@ Run a disciplined workday, keep the pipeline current, and communicate decisions 
 Next sequence: `video-slot-18-mission-control` -> `lesson-quiz-slot-18` -> `lesson-content-slot-19`
 
 Spoken transition: Next, you'll see how the team stays in sync day to day. After that, complete the checkpoint and move into Career Growth Path.
+
+## Exact forbidden-language removals
+
+- 00:01:45.020: remove `You're aiming for 60 to 80 dials in this first block`. The current SOP, role sheet, schedule, and manager set activity expectations.
+- 00:03:13.340: remove `150 to 200 total dials`. Remove fixed activity quotas from reusable training.
+- source transcript paragraph 8: remove `You're making 150-plus calls a day, five days a week`. Use current written expectations and avoid fixed quotas or weekly schedules.
+- source transcript paragraphs 4 and 7: remove `Sandra`. Use provider-neutral wording such as the current system.
+
+## Scene and shot plan
+
+- `operator-whole-day` avatar_on_camera: Andrea standing in a medium-wide shot. Open with a clear day-at-a-glance posture and no schedule numbers.
+- `operator-priorities` avatar_with_optional_cutaway: Andrea seated beside a short generic priority list. Optional list shows commitments and active conversations without quotas.
+- `operator-research` avatar_with_optional_cutaway: Andrea at a desk reviewing a generic property file. Use no software interface or provider branding.
+- `operator-execution` avatar_on_camera: Andrea seated with one callback card and one note card. Keep the workflow generic and free of activity counts.
+- `operator-current-expectations` avatar_on_camera: Andrea standing beside a closed role-sheet folder. Do not show a clock, quota, or fixed schedule.
+- `operator-close-day` avatar_with_optional_cutaway: Andrea reviewing three generic pipeline cards. Cards show notes, stage, and next action only.
+- `operator-controlled-work` avatar_on_camera: Andrea standing in a steady medium shot. Use a measured accountability tone with no results chart.
+- `operator-human-care` avatar_on_camera: Andrea seated with open listening posture. Leave a natural pause after the first sentence.
+- `operator-transition` avatar_on_camera: Andrea centered in a medium shot. End without viewer-facing chapter numbering.

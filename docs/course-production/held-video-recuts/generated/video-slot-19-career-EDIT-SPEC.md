@@ -27,3 +27,19 @@ Build capability in your current role through deliberate practice, useful feedba
 Next sequence: `lesson-quiz-slot-19` -> `lesson-assignment-section-6`
 
 Spoken transition: Take the Career Growth Path checkpoint next. Then complete the Mission Control and Growth Capstone.
+
+## Exact forbidden-language removals
+
+- 00:00:47.580: remove `hitting your numbers for 90-plus days, you move up`. Use current written role expectations and never promise advancement on a fixed timeline.
+- source transcript paragraph 4: remove `The earning potential is significantly higher because you're earning commission`. Remove compensation comparisons and point learners to current written sources.
+- source transcript paragraph 5: remove `Some people advance in six months. Some take a year.`. Remove example promotion timelines from reusable training.
+- source transcript paragraph 4: remove `there's a management path`. Do not promise a role ladder or named advancement path.
+
+## Scene and shot plan
+
+- `career-foundation` avatar_on_camera: Andrea standing in a medium shot. Open on current capability rather than a career ladder.
+- `career-feedback-loop` avatar_with_optional_cutaway: Andrea seated with a single feedback card. Optional cutaway shows practice, application, and review without time promises.
+- `career-documented-ownership` avatar_on_camera: Andrea beside a closed written-plan folder. Do not show a promotion arrow, hierarchy, or title.
+- `career-current-role` avatar_with_optional_cutaway: Andrea at a desk with two generic current-document folders. Keep the documents free of pay figures and role titles.
+- `career-feedback` avatar_on_camera: Andrea seated in a conversational medium shot. Use a calm coaching posture with no advancement promise.
+- `career-transition` avatar_on_camera: Andrea centered in a medium shot. End without viewer-facing chapter numbering.

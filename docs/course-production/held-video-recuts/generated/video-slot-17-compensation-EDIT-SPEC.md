@@ -26,3 +26,17 @@ Understand that compensation depends on the value a role owns and that the curre
 Next sequence: `lesson-quiz-slot-17` -> `lesson-content-slot-18`
 
 Spoken transition: Take the Compensation Engine checkpoint next. Then you'll move into the Operator Playbook and Daily Mission Control.
+
+## Exact forbidden-language removals
+
+- 00:00:22.460: remove `A base while you ramp up`. Point to the current offer letter, written compensation plan, and role sheet instead of describing a pay structure.
+- 00:00:56.740: remove `You earn a commission on every deal that closes`. Do not promise commissions or any other pay term in training.
+- source transcript paragraph 4: remove `Every thorough handoff is money you're putting in your own pocket`. Connect good records to reliable work without making a compensation promise.
+
+## Scene and shot plan
+
+- `comp-source-of-truth` avatar_on_camera: Andrea standing in a direct medium shot. Open plainly with no pay figures or benefit icons.
+- `comp-scorecard` avatar_with_optional_cutaway: Andrea seated beside a blank scorecard. Optional cutaway shows work categories without numbers or compensation language.
+- `comp-visible-work` avatar_on_camera: Andrea at a desk with a closed notebook. Keep the record visual provider neutral.
+- `comp-questions` avatar_on_camera: Andrea holding two generic document folders. Use clear current-document emphasis with no logos or amounts.
+- `comp-transition` avatar_on_camera: Andrea centered in a medium shot. End without viewer-facing chapter numbering.

@@ -1,0 +1,51 @@
+{
+  "schema_version": "1.0.0",
+  "status": "script_ready_not_rendered",
+  "source": {
+    "source_key": "video-slot-01-mindset",
+    "held_sha256": "b0cad612499dbd2d867c906c1ad8a8e3e13fcded333fa973fa6d19339fa930da",
+    "technical_qa_path": "docs/course-production/held-video-review/TECHNICAL-CONTENT-QA-2026-07-17.md",
+    "technical_qa_sha256": "534718225d693437c53d3e2c5c1662920420f218096dea2acd7203ba2cc14e45",
+    "source_script_reference": "docs/course-production/held-video-recuts/source-evidence/video-slot-01-mindset-source-evidence.md",
+    "source_script_sha256": "1b4a4511f95b56b15489f7618910dbc5a75062a9e4a7c44beba56f91ddab0ef6",
+    "duration_seconds": 362.688,
+    "last_spoken_time_seconds": 362.687
+  },
+  "lesson_contract": {
+    "lesson_source_key": "lesson-content-slot-01",
+    "objective": "Learn the BMH Group service standard and the mindset that keeps seller conversations clear, calm, and human.",
+    "objective_points": ["Explain the Navigator role", "Put service before pressure", "Use curiosity and clarity in seller conversations", "Detach from outcomes while staying accountable"],
+    "next_sequence": ["lesson-quiz-slot-01", "lesson-content-slot-02"],
+    "transition_spoken_text": "Take the Welcome and Mindset checkpoint next. Then move into Terms Glossary."
+  },
+  "production_constraints": {"strategy": "replace_full_spoken_cut", "render_allowed": false, "provider_call_allowed": false, "caption_generation_allowed": false, "approval_status_change_allowed": false},
+  "forbidden_language_removals": [
+    {
+      "source_time": "approximately 04:22.533",
+      "exact_source_language": "week one",
+      "replacement_rule": "Use decision-stage language with no fixed seller progression."
+    },
+    {
+      "source_time": "approximately 04:24.193",
+      "exact_source_language": "week six",
+      "replacement_rule": "Use decision-stage language with no fixed seller progression."
+    }
+  ],
+  "scenes": [
+    {"scene_id": "mindset-open", "title": "How you enter the conversation", "spoken_text": "Before you start a conversation, settle your attention. You are there to understand the situation, help the seller see the available next step, and keep the record accurate. You do not need to force an outcome.", "visual_plan": {"mode": "avatar_on_camera", "shot": "Andrea standing in a medium shot", "editor_note": "Open with a calm breath and grounded posture."}},
+    {"scene_id": "mindset-service", "title": "Service over self", "spoken_text": "Start with service. Assume the conversation should be useful even when the seller chooses another path. When you stop chasing the result, you can listen for what would actually help.", "visual_plan": {"mode": "avatar_with_optional_cutaway", "shot": "Andrea with an open-hand gesture", "editor_note": "Optional cutaway may show a seller sorting inherited-property paperwork."}},
+    {"scene_id": "mindset-alignment", "title": "Get on their side of the table", "spoken_text": "Try to see the situation from the seller's side. A property problem can also be a time problem, a family problem, or a stress problem. Name what you heard before you ask the next question.", "visual_plan": {"mode": "avatar_on_camera", "shot": "Andrea seated at a desk", "editor_note": "Use a listening posture and a small nod."}},
+    {"scene_id": "mindset-clarity", "title": "Clarity before pressure", "spoken_text": "When someone is unsure, help them make the decision clearer. Ask what a workable outcome would look like, what needs to happen first, and what information is missing. A visible path is easier to evaluate than a rushed decision.", "visual_plan": {"mode": "avatar_with_optional_cutaway", "shot": "Andrea beside a simple two-path diagram", "editor_note": "Keep the diagram generic and free of promised outcomes."}},
+    {"scene_id": "mindset-actions", "title": "Own your actions", "spoken_text": "You cannot control whether someone answers, agrees, or changes their mind. You can control your preparation, your tone, the quality of your notes, and whether you complete the next action you promised.", "visual_plan": {"mode": "avatar_on_camera", "shot": "Andrea in a closer medium frame", "editor_note": "Shift to a more direct posture for accountability."}},
+    {"scene_id": "mindset-curiosity", "title": "Curiosity over cleverness", "spoken_text": "Simple questions work. Ask one, then give the person room to answer. If you are planning your next line while they are still talking, you are likely to miss the useful detail.", "visual_plan": {"mode": "avatar_on_camera", "shot": "Andrea seated with hands relaxed", "editor_note": "Hold a natural pause after the second sentence."}},
+    {"scene_id": "mindset-equal", "title": "Use equal status", "spoken_text": "Speak peer to peer. Do not beg for agreement, and do not lecture. If something does not fit, say so respectfully. Direct language and a steady tone make the conversation easier to trust.", "visual_plan": {"mode": "avatar_on_camera", "shot": "Andrea standing square to camera", "editor_note": "Use a neutral, confident stance."}},
+    {"scene_id": "mindset-long-game", "title": "Let decisions mature", "spoken_text": "A seller who is not ready now may become ready after the situation changes or the options become clearer. Follow up with a useful reason. Bring new information when you have it. Let the seller's decision stage guide the conversation instead of assuming a fixed timeline.", "visual_plan": {"mode": "avatar_with_optional_cutaway", "shot": "Andrea walking slowly across frame", "editor_note": "Optional cutaway may show a neutral sequence of follow-up notes with no dates."}},
+    {"scene_id": "mindset-puzzles", "title": "Treat problems as missing information", "spoken_text": "An objection is often a missing piece. If someone says they need more money, ask what the money needs to cover. If they need more time, ask what has to happen before they can move. The answer tells you whether there is a responsible next step.", "visual_plan": {"mode": "avatar_on_camera", "shot": "Andrea beside a small tabletop card", "editor_note": "Use one simple puzzle-piece prop if desired. No floating icon montage."}},
+    {"scene_id": "mindset-reps", "title": "Practice creates calm", "spoken_text": "Calm comes from practice and review. Listen back when that is part of the current process. Notice where you rushed, filled silence, or missed a question. Apply one correction in the next conversation.", "visual_plan": {"mode": "avatar_on_camera", "shot": "Andrea at a desk reviewing notes", "editor_note": "Keep any review screen generic and unbranded."}},
+    {"scene_id": "mindset-understand", "title": "Understand before you argue", "spoken_text": "If you feel yourself trying to win the point, slow down. Restate what the seller is concerned about and check that you have it right. Understanding creates more movement than an argument.", "visual_plan": {"mode": "avatar_on_camera", "shot": "Andrea in a centered medium shot", "editor_note": "Use a small reset gesture at the opening."}},
+    {"scene_id": "mindset-transition", "title": "Continue to the checkpoint", "spoken_text": "Take the Welcome and Mindset checkpoint next. Then move into Terms Glossary.", "visual_plan": {"mode": "avatar_on_camera", "shot": "Andrea centered in a medium shot", "editor_note": "End without viewer-facing chapter numbering."}}
+  ],
+  "edit_operations": [
+    {"operation_id": "mindset-edit-01", "source_start": "00:00:00.000", "source_end": "00:06:02.687", "action": "replace", "replacement_scene_ids": ["mindset-open", "mindset-service", "mindset-alignment", "mindset-clarity", "mindset-actions", "mindset-curiosity", "mindset-equal", "mindset-long-game", "mindset-puzzles", "mindset-reps", "mindset-understand", "mindset-transition"], "source_problem": "Fixed week progression is embedded in the long-game principle. A clean full narration keeps all ten principles while removing the timeline claim."}
+  ]
+}

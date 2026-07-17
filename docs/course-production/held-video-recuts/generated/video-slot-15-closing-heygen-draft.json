@@ -1,8 +1,8 @@
 {
   "schema_version": "bmh-held-video-heygen-draft/v1",
   "status": "offline_payload_only_provider_call_forbidden",
-  "source_key": "video-slot-18-operator",
-  "held_source_sha256": "6e6a3f257ff8cf3ef201de775de47c6e7833e3abd673e44bb8d4d5ac3aafa048",
+  "source_key": "video-slot-15-closing",
+  "held_source_sha256": "6e3aa1b007117b303a05906ca8443a8b9bc38f7c44bd61475c5437b99e7c90d2",
   "humanizer_review": {
     "skill": "humanizer",
     "skill_version": "2.5.1",
@@ -25,7 +25,7 @@
   },
   "api_endpoint": "https://api.heygen.com/v2/video/generate",
   "request_body": {
-    "title": "Chapter 18 - Draft",
+    "title": "Chapter 11A - Draft",
     "folder_id": "3d837f4e9fb84b8294785fc060a342c0",
     "dimension": {
       "width": 1920,
@@ -40,7 +40,7 @@
         "voice": {
           "type": "text",
           "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
-          "input_text": "You have seen the individual parts. Now put them together into a day you can repeat. Keep the right work moving, and keep the record and next step current."
+          "input_text": "A clean close starts with a clean record. Before an offer is prepared, confirm the property facts, the seller's priorities, the people whose consent matters, and the questions that are still open. Missing information creates confusion later."
         },
         "background": {
           "type": "color",
@@ -55,7 +55,7 @@
         "voice": {
           "type": "text",
           "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
-          "input_text": "Begin with the work you already promised. Check scheduled follow-ups and active conversations, especially anything close to a handoff. Sort the list using the current SOP and your role sheet. If your manager changes the priority, follow that direction."
+          "input_text": "Bring together the condition notes, ownership information, comparable information used by the current process, price expectations, timing needs, and any special request. Mark what is confirmed and what still needs review. Do not turn an assumption into a term."
         },
         "background": {
           "type": "color",
@@ -70,7 +70,7 @@
         "voice": {
           "type": "text",
           "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
-          "input_text": "Research until you can make the next conversation useful. Confirm the ownership and property details, then read the history in the current system. Look for details that help you ask a better question. When you are ready, move the conversation forward."
+          "input_text": "Know what you are allowed to explain and what needs approval. A draft number, an estimated date, or a possible structure is not a commitment. Use the current written process. If a seller asks for an exception, document it and get it reviewed before you say it is available."
         },
         "background": {
           "type": "color",
@@ -85,7 +85,7 @@
         "voice": {
           "type": "text",
           "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
-          "input_text": "Handle callbacks when they are due. Then move through the follow-ups and new activity assigned to you in the order the current process requires. Update the current system while the details are fresh so the next person knows what happened and what comes next."
+          "input_text": "When the written offer is ready, explain the terms in plain language. Walk through price, timing, conditions, costs, and responsibilities. Ask the seller to stop you when something is unclear. The goal is understanding, not speed."
         },
         "background": {
           "type": "color",
@@ -100,7 +100,7 @@
         "voice": {
           "type": "text",
           "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
-          "input_text": "Your current scorecard, role sheet, schedule, and manager direction define the activity expected from you. This video does not add a number or change that schedule. Take breaks as the current schedule directs. When you return, give the next person your full attention."
+          "input_text": "If the seller hesitates, do not repeat the pitch. Ask what still feels unresolved. It may be the money, the move, another person, a document, or a condition. Restate the concern and separate what can be answered now from what needs review."
         },
         "background": {
           "type": "color",
@@ -115,7 +115,7 @@
         "voice": {
           "type": "text",
           "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
-          "input_text": "Before you finish, review the pipeline. An active lead should have useful notes, the right stage, and a dated next action. Complete any handoff that is ready. Escalate blocked work, then leave yourself a clear place to begin."
+          "input_text": "A valid next step needs informed agreement. Give the seller room to read the document and ask questions. Confirm who needs to sign and whether anyone else should be part of the conversation. Never use urgency that is not real and documented."
         },
         "background": {
           "type": "color",
@@ -130,7 +130,7 @@
         "voice": {
           "type": "text",
           "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
-          "input_text": "A disciplined day cannot make someone answer or make a deal close. You can control how well you followed the process and whether you kept your commitments. You can also leave an accurate record and treat each person with care. That is work you can repeat tomorrow."
+          "input_text": "Whether the answer is yes, no, or not yet, document what happened. Record the open question, the owner of the next action, and when the seller expects to hear back. Send the complete record through the current process so the next person has the same facts."
         },
         "background": {
           "type": "color",
@@ -145,7 +145,7 @@
         "voice": {
           "type": "text",
           "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
-          "input_text": "Follow-through matters. So does paying attention to the person in front of you. Listen, ask the next useful question, and do what you said you would do. That is how you earn trust one conversation at a time."
+          "input_text": "After written agreement, the work continues through ownership review, required documents, condition or access items, and closing logistics. Responsibilities vary by transaction. Follow the current written process and escalate any mismatch instead of guessing."
         },
         "background": {
           "type": "color",
@@ -160,7 +160,7 @@
         "voice": {
           "type": "text",
           "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
-          "input_text": "Next, you'll see how the team stays in sync day to day. After that, complete the checkpoint and move into Career Growth Path."
+          "input_text": "Take the Closing and Deal Engineering checkpoint next. Then complete the Cadence and Close Capstone."
         },
         "background": {
           "type": "color",

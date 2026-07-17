@@ -9,6 +9,7 @@ import {
   renderHeygenDraftPackage,
 } from "../../scripts/course-content/build-held-video-recut-docs.mjs";
 import {
+  validateRecutPackage,
   validateHeldVideoRecuts,
   validateSpokenPolicy,
 } from "../../scripts/course-content/validate-held-video-recuts.mjs";
@@ -37,13 +38,38 @@ const ledgerPromise = readFile(
   ),
   "utf8",
 ).then(JSON.parse);
+const localPolicyCandidatesPromise = readFile(
+  new URL(
+    "../../docs/course-production/held-video-review/local-policy-candidates.json",
+    import.meta.url,
+  ),
+  "utf8",
+).then(JSON.parse);
 
-test("all three policy recuts preserve source, objective, transition, and production gates", async () => {
+async function currentReviewAssets() {
+  const [manifest, inventory] = await Promise.all([
+    manifestPromise,
+    localPolicyCandidatesPromise,
+  ]);
+  return [
+    ...manifest.assets.filter(
+      (asset) => asset.kind === "video" && asset.approval_status === "hold",
+    ),
+    ...inventory.candidates.map((candidate) => ({
+      source_key: candidate.source_key,
+      checksum_sha256: candidate.sha256,
+      local_path: candidate.local_path,
+      approval_status: "hold",
+    })),
+  ];
+}
+
+test("all seven policy recuts preserve source, objective, transition, and production gates", async () => {
   const result = await validateHeldVideoRecuts();
   assert.deepEqual(result, {
-    approvalRecords: 9,
-    pendingApprovalRecords: 6,
-    recutPackages: 3,
+    approvalRecords: 11,
+    pendingApprovalRecords: 2,
+    recutPackages: 7,
     errors: [],
   });
 });
@@ -62,6 +88,10 @@ test("the spoken policy rejects money, quotas, timelines, promises, and role tit
       "compensation_promise",
     ],
     ["The Acquisition Manager takes over.", "role_title"],
+    ["Andrea works with the acquisition team.", "role_title"],
+    ["A seller who says no in week one may agree in week six.", "fixed_stage_progression"],
+    ["I can guarantee your net.", "outcome_guarantee"],
+    ["Update Sandra after every call.", "provider_specific_claim"],
     ["Take a 15 minute break.", "fixed_daily_schedule"],
   ];
   for (const [spokenText, expectedRule] of cases) {
@@ -76,16 +106,10 @@ test("the spoken policy rejects money, quotas, timelines, promises, and role tit
   }
 });
 
-test("six review candidates are pending and three proven-defective source cuts require replacement", async () => {
-  const [manifest, ledger] = await Promise.all([
-    manifestPromise,
-    ledgerPromise,
-  ]);
-  const held = manifest.assets.filter(
-    (asset) => asset.kind === "video" && asset.approval_status === "hold",
-  );
+test("two local policy cuts are pending and all nine original cuts are preserved as changes requested", async () => {
+  const [ledger, held] = await Promise.all([ledgerPromise, currentReviewAssets()]);
   assert.deepEqual(validateHeldVideoApprovalLedger(ledger, held), []);
-  assert.equal(ledger.records.length, 9);
+  assert.equal(ledger.records.length, 11);
   assert.equal(
     ledger.records.filter(
       (record) =>
@@ -94,32 +118,26 @@ test("six review candidates are pending and three proven-defective source cuts r
         record.date === null &&
         record.notes === null,
     ).length,
-    6,
+    2,
   );
   assert.equal(
     ledger.records.filter(
       (record) =>
         record.decision === "changes_requested" &&
         record.approver === "BMH Institute content QA" &&
-        record.date === "2026-07-16" &&
+        ["2026-07-16", "2026-07-17"].includes(record.date) &&
         record.notes.includes("Replacement required"),
     ).length,
-    3,
+    9,
   );
 });
 
 test("approval transitions require evidence and keep decided checksums immutable", async () => {
-  const [manifest, ledger] = await Promise.all([
-    manifestPromise,
-    ledgerPromise,
-  ]);
-  const held = manifest.assets.filter(
-    (asset) => asset.kind === "video" && asset.approval_status === "hold",
-  );
+  const [ledger, held] = await Promise.all([ledgerPromise, currentReviewAssets()]);
   const approved = structuredClone(ledger);
-  Object.assign(approved.records[0], {
+  Object.assign(approved.records[9], {
     approver: "Jarrad Henry",
-    date: "2026-07-16",
+    date: "2026-07-17",
     decision: "approved",
     notes: "Watched the exact checksum-locked cut.",
   });
@@ -129,7 +147,7 @@ test("approval transitions require evidence and keep decided checksums immutable
   );
 
   const wrongApprover = structuredClone(approved);
-  wrongApprover.records[0].approver = "Not Jarrad";
+  wrongApprover.records[9].approver = "Not Jarrad";
   assert.ok(
     validateHeldVideoApprovalTransition(ledger, wrongApprover, held).some(
       (error) => error.includes("require approver Jarrad Henry"),
@@ -137,11 +155,11 @@ test("approval transitions require evidence and keep decided checksums immutable
   );
 
   const approvedAssetWrongApprover = structuredClone(approved);
-  approvedAssetWrongApprover.records[0].approver = "Not Jarrad";
+  approvedAssetWrongApprover.records[9].approver = "Not Jarrad";
   const remainingHeld = held.filter(
     (asset) =>
-      asset.source_key !== approvedAssetWrongApprover.records[0].source_key ||
-      asset.checksum_sha256 !== approvedAssetWrongApprover.records[0].sha256,
+      asset.source_key !== approvedAssetWrongApprover.records[9].source_key ||
+      asset.checksum_sha256 !== approvedAssetWrongApprover.records[9].sha256,
   );
   assert.ok(
     validateHeldVideoApprovalLedger(
@@ -151,7 +169,7 @@ test("approval transitions require evidence and keep decided checksums immutable
   );
 
   const missingEvidence = structuredClone(approved);
-  missingEvidence.records[0].approver = null;
+  missingEvidence.records[9].approver = null;
   assert.ok(
     validateHeldVideoApprovalTransition(ledger, missingEvidence, held).some(
       (error) => error.includes("requires an approver"),
@@ -159,7 +177,7 @@ test("approval transitions require evidence and keep decided checksums immutable
   );
 
   const rewrittenDecision = structuredClone(approved);
-  Object.assign(rewrittenDecision.records[0], {
+  Object.assign(rewrittenDecision.records[9], {
     decision: "rejected",
     notes: "Rewritten history",
   });
@@ -170,7 +188,7 @@ test("approval transitions require evidence and keep decided checksums immutable
   );
 
   const policyDefectiveApproval = structuredClone(ledger);
-  Object.assign(policyDefectiveApproval.records[6], {
+  Object.assign(policyDefectiveApproval.records[0], {
     approver: "Jarrad Henry",
     date: "2026-07-16",
     decision: "approved",
@@ -185,7 +203,7 @@ test("approval transitions require evidence and keep decided checksums immutable
   );
 
   const rewrittenPolicyOwner = structuredClone(ledger);
-  rewrittenPolicyOwner.records[6].approver = "Jarrad Henry";
+  rewrittenPolicyOwner.records[0].approver = "Jarrad Henry";
   assert.ok(
     validateHeldVideoApprovalLedger(rewrittenPolicyOwner, held).some((error) =>
       error.includes("must retain the BMH Institute content QA decision"),
@@ -194,13 +212,7 @@ test("approval transitions require evidence and keep decided checksums immutable
 });
 
 test("a corrected replacement can enter review as a new checksum-keyed pending candidate", async () => {
-  const [manifest, ledger] = await Promise.all([
-    manifestPromise,
-    ledgerPromise,
-  ]);
-  const held = manifest.assets.filter(
-    (asset) => asset.kind === "video" && asset.approval_status === "hold",
-  );
+  const [ledger, held] = await Promise.all([ledgerPromise, currentReviewAssets()]);
   const replacementSha256 = "a".repeat(64);
   const replacementPath =
     "course-assets/review-lesson17/LESSON-17-policy-safe-v2.mp4";
@@ -233,19 +245,18 @@ test("a corrected replacement can enter review as a new checksum-keyed pending c
 });
 
 test("a corrected version can replace a previously pending cut without rewriting history", async () => {
-  const [manifest, ledger] = await Promise.all([manifestPromise, ledgerPromise]);
-  const reviewAssets = manifest.assets.filter((asset) =>
-    asset.kind === "video" && ledger.records.some((record) => record.source_key === asset.source_key),
-  );
-  const old = ledger.records[0];
+  const [ledger, reviewAssets] = await Promise.all([ledgerPromise, currentReviewAssets()]);
+  const old = ledger.records[9];
   const replacementSha256 = "b".repeat(64);
   const replacementPath = "course-assets/review-lessonA/LESSON-1A-v8.mp4";
-  const nextAssets = reviewAssets.map((asset) => asset.source_key === old.source_key
+  const nextAssets = reviewAssets.map((asset) =>
+    asset.source_key === old.source_key && asset.checksum_sha256 === old.sha256
     ? { ...asset, checksum_sha256: replacementSha256, local_path: replacementPath }
-    : asset);
+    : asset,
+  );
   const next = structuredClone(ledger);
   next.updated_at = "2026-07-17";
-  Object.assign(next.records[0], {
+  Object.assign(next.records[9], {
     decision: "changes_requested",
     approver: "Jarrad Henry",
     date: "2026-07-17",
@@ -269,18 +280,33 @@ test("the immutable ledger supports a final manifest with all 29 videos approved
   const [manifest, ledger] = await Promise.all([manifestPromise, ledgerPromise]);
   const finalLedger = structuredClone(ledger);
   finalLedger.updated_at = "2026-07-17";
-  const reviewedKeys = new Set(finalLedger.records.map((record) => record.source_key));
+  for (const record of finalLedger.records.filter((candidate) => candidate.decision === "pending")) {
+    Object.assign(record, {
+      decision: "approved",
+      approver: "Jarrad Henry",
+      date: "2026-07-17",
+      notes: "Watched and approved this exact checksum-locked local policy cut.",
+    });
+  }
+  const existingCandidatesBySource = new Map(
+    finalLedger.records
+      .filter((record) => record.decision === "approved")
+      .map((record) => [record.source_key, record]),
+  );
+  const reviewedKeys = new Set(
+    finalLedger.records.map((record) => record.source_key),
+  );
   const finalReviewAssets = manifest.assets
     .filter((asset) => asset.kind === "video" && reviewedKeys.has(asset.source_key))
     .map((asset, index) => {
-      if (index < 6) {
-        Object.assign(finalLedger.records[index], {
-          decision: "approved",
-          approver: "Jarrad Henry",
-          date: "2026-07-17",
-          notes: "Watched and approved this exact checksum-locked cut.",
-        });
-        return { ...asset, approval_status: "approved" };
+      const existing = existingCandidatesBySource.get(asset.source_key);
+      if (existing) {
+        return {
+          ...asset,
+          checksum_sha256: existing.sha256,
+          local_path: existing.candidate_local_path,
+          approval_status: "approved",
+        };
       }
       const checksum = String(index + 1).repeat(64).slice(0, 64);
       const localPath = `course-assets/review-final/${asset.source_key}.mp4`;
@@ -354,6 +380,49 @@ test("generated scripts contain the exact locked final transition", async () => 
       pkg.lesson_contract.transition_spoken_text,
     );
   }
+});
+
+test("source evidence fails closed when its file is missing or its checksum is tampered", async () => {
+  const [manifest, policy, packages] = await Promise.all([
+    manifestPromise,
+    policyPromise,
+    loadRecutPackages(),
+  ]);
+  const original = packages.find(
+    (pkg) => pkg.source.source_key === "video-slot-01-welcome",
+  );
+
+  const missing = structuredClone(original);
+  missing.source.source_script_reference =
+    "docs/course-production/held-video-recuts/source-evidence/missing.md";
+  assert.ok(
+    (await validateRecutPackage(missing, manifest, policy)).some((error) =>
+      error.includes("source script reference cannot be read"),
+    ),
+  );
+
+  const tampered = structuredClone(original);
+  tampered.source.source_script_sha256 = "0".repeat(64);
+  assert.ok(
+    (await validateRecutPackage(tampered, manifest, policy)).some((error) =>
+      error.includes("source script reference checksum changed"),
+    ),
+  );
+});
+
+test("every recut scene requires a complete visual plan", async () => {
+  const [manifest, policy, packages] = await Promise.all([
+    manifestPromise,
+    policyPromise,
+    loadRecutPackages(),
+  ]);
+  const missingPlan = structuredClone(packages[0]);
+  delete missingPlan.scenes[0].visual_plan.editor_note;
+  assert.ok(
+    (await validateRecutPackage(missingPlan, manifest, policy)).some((error) =>
+      error.includes("needs a complete visual plan"),
+    ),
+  );
 });
 
 test("offline HeyGen draft packages are exact, humanized, and provider-gated", async () => {

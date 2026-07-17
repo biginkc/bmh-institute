@@ -67,14 +67,20 @@ export async function validateBmhImportSemanticGate({
   if (![BMH_FULL_IMPORT_ID, BMH_CANARY_IMPORT_ID].includes(manifest.import_id)) {
     return null;
   }
-  const [stackConfirmation, approvalLedger, artworkLedger] = await Promise.all([
+  const [stackConfirmation, approvalLedger, localPolicyCandidates, artworkLedger] = await Promise.all([
     loadManifest(join(CANONICAL_MANIFEST_DIRECTORY, "bmh-operating-stack-confirmation.v1.json")),
     loadManifest(join(REPO_ROOT, "docs/course-production/held-video-review/approvals.json")),
+    loadManifest(join(REPO_ROOT, "docs/course-production/held-video-review/local-policy-candidates.json")),
     loadManifest(ARTWORK_LEDGER_PATH),
   ]);
 
   if (manifest.import_id === BMH_FULL_IMPORT_ID) {
-    const report = validateManifest(manifest, { stackConfirmation, approvalLedger, now });
+    const report = validateManifest(manifest, {
+      stackConfirmation,
+      approvalLedger,
+      localPolicyCandidates,
+      now,
+    });
     const trustBlockers = await validateBmhFileBackedReleaseTrust({
       manifest,
       artworkLedger,
@@ -88,7 +94,12 @@ export async function validateBmhImportSemanticGate({
 
   const full = await loadManifest(join(CANONICAL_MANIFEST_DIRECTORY, "bmh-employee-training.v1.json"));
   const expectedCanary = buildTechStackCanary(full);
-  const fullReport = validateManifest(full, { stackConfirmation, approvalLedger, now });
+  const fullReport = validateManifest(full, {
+    stackConfirmation,
+    approvalLedger,
+    localPolicyCandidates,
+    now,
+  });
   const fullTrustBlockers = await validateBmhFileBackedReleaseTrust({
     manifest: full,
     artworkLedger,

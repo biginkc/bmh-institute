@@ -1,6 +1,7 @@
 # Held video review surface
 
-This is a local, read-only review surface for the nine exact cuts still on hold.
+This is a local, read-only review surface for nine exact source-evidence cuts
+and two exact local policy-cut candidates.
 It does not copy, transcode, upload, publish, caption, or approve them.
 
 From the BMH Institute integration checkout:
@@ -9,8 +10,9 @@ From the BMH Institute integration checkout:
 node scripts/course-content/verify-held-video-review.mjs --serve
 ```
 
-Open the loopback URL printed by the command. The server hashes all nine exact
-videos plus the six review-only evidence files before it listens. The page
+Open the loopback URL printed by the command. The server hashes all eleven
+exact videos plus the twelve review-only evidence files and candidate inventory
+before it listens. The page
 displays the verification time and a SHA-256 lock for the complete file set.
 Every response is `no-store`, and only the verified videos, evidence, and page
 have routes. If any locked file's device, inode, size, modification time, or
@@ -41,15 +43,15 @@ The checked-in `index.html` is an explicitly **unverified** fallback. It exists
 so the inventory can be inspected in source control, but it must not be used to
 approve a cut. The verified local-server page is the review surface.
 
-The verifier fails unless all nine source files match the manifest's byte size
-and SHA-256. It also checksum-locks the review-only captions and transcripts for
+The verifier fails unless all nine source files and both candidate files match
+their byte sizes and SHA-256 values. It also checksum-locks the review-only captions and transcripts for
 Compensation Engine, Operator Playbook, and Career Growth Path, and fails if the
-checked-in fallback HTML is stale. The other six videos deliberately explain
+checked-in fallback HTML is stale. The other eight videos deliberately explain
 that learner captions and transcripts remain pending exact-cut approval.
 
-Watch the six cards marked `JARRAD REVIEW REQUIRED`. Record any approval with
+Watch the two cards marked `JARRAD REVIEW REQUIRED`. Record any approval with
 the displayed SHA-256, approval date, and approver. A filename by itself is not
-an approval. The other three cards are marked `REPLACEMENT REQUIRED`; their
+an approval. The nine original cards are marked `REPLACEMENT REQUIRED`; their
 exact policy-defective hashes are already `changes_requested` and the validator
 forbids approving them. Use the linked `approvals.json` ledger. The verifier
 locks and serves this file with the review surface, and stops if it changes
@@ -105,8 +107,8 @@ Do not treat the ledger decision alone as course-ready. The video remains a
 publication blocker until its exact learner captions and transcript are
 reviewed, checksum-recorded, and approved.
 
-Policy-safe replacement scripts and timecoded edit maps for Compensation
-Engine, Operator Playbook, and Career Growth Path are documented in
+Policy-safe replacement scripts, shot plans, forbidden-language maps, and
+timecoded edit maps for seven full recuts are documented in
 `../held-video-recuts/README.md`. They are preparation artifacts only; they do
 not replace or approve the currently held media.
 

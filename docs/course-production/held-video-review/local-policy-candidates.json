@@ -1,0 +1,56 @@
+{
+  "schema_version": "1.0.0",
+  "status": "local_review_candidates_unapproved",
+  "updated_at": "2026-07-17",
+  "review_question": "Do you approve the Terms v10 and KPIs v12 local policy-cut candidates and authorize policy-safe replacement recuts for Welcome, Mindset, Objection Scripts Playbook, and Closing and Deal Engineering?",
+  "candidates": [
+    {
+      "candidate_id": "terms-v10-local-policy-cut",
+      "source_key": "video-slot-02-terms",
+      "title": "Terms Glossary v10 local policy cut",
+      "local_path": "course-assets/review-lessonGLOA/LESSON-GLOA-v10-LOCAL-POLICY-CUT.mp4",
+      "sha256": "6f57600d6ec3a596f96175052eda997503ab9b72aa5b7e9ec02239fe1a125769",
+      "size_bytes": 104384792,
+      "duration_seconds": 449.534,
+      "approval_status": "pending_unapproved",
+      "source_sha256": "17cac99f171edfb773f85eaaa6719e09ffe1295abec5b062554c72958747c0bb",
+      "review_reason": "Removes the forbidden acquisition-manager role title while preserving the lesson meaning.",
+      "resulting_line": "Don't hang up, but do note it. Sometimes listed properties don't sell...",
+      "edit_decision_list": [
+        {
+          "source_start_seconds": 216.612333,
+          "source_end_seconds": 218.772333,
+          "action": "remove",
+          "removed_language": "and let the acquisition manager know"
+        }
+      ],
+      "crossfade_seconds": 0.06,
+      "technical_result": "Full decode pass; zero black segments; 22 expected silence segments; H.264 1600x900 yuv420p at 30 fps with complete BT.709 tags; AAC 48 kHz stereo.",
+      "human_review_required": "Listen through the edit seam and watch the exact checksum-locked candidate before deciding."
+    },
+    {
+      "candidate_id": "kpis-v12-local-policy-cut",
+      "source_key": "video-slot-16-kpis",
+      "title": "KPIs and Sales Telemetry v12 local policy cut",
+      "local_path": "course-assets/review-lesson12A/LESSON-12A-v12-LOCAL-POLICY-CUT.mp4",
+      "sha256": "3d50cc79cfe74277ac1311367d5b0bd6fd62d2d38c2c74fff8732ea62203d61a",
+      "size_bytes": 53799917,
+      "duration_seconds": 400.994,
+      "approval_status": "pending_unapproved",
+      "source_sha256": "439f8d06d2e449637509f0f21f9d0b4a5464c65aec1995fca7147e4e4e67310b",
+      "review_reason": "Removes the forbidden compensation-promise phrase while preserving the lesson meaning.",
+      "resulting_line": "The people who improve fastest are the ones who actually look at their numbers...",
+      "edit_decision_list": [
+        {
+          "source_start_seconds": 27.139,
+          "source_end_seconds": 28.279,
+          "action": "remove",
+          "removed_language": "and earn the most"
+        }
+      ],
+      "crossfade_seconds": 0.02,
+      "technical_result": "Full decode pass; zero black segments; 16 expected silence segments; H.264 1600x900 yuv420p at 30 fps with complete BT.709 tags; AAC 48 kHz stereo.",
+      "human_review_required": "Listen through the edit seam and watch the exact checksum-locked candidate before deciding."
+    }
+  ]
+}

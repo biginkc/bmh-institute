@@ -1,8 +1,8 @@
 {
   "schema_version": "bmh-held-video-heygen-draft/v1",
   "status": "offline_payload_only_provider_call_forbidden",
-  "source_key": "video-slot-18-operator",
-  "held_source_sha256": "6e6a3f257ff8cf3ef201de775de47c6e7833e3abd673e44bb8d4d5ac3aafa048",
+  "source_key": "video-slot-01-welcome",
+  "held_source_sha256": "493de8a5e0663ad577ba46d6d5befce33e9640f250677095094978714d22ac72",
   "humanizer_review": {
     "skill": "humanizer",
     "skill_version": "2.5.1",
@@ -25,7 +25,7 @@
   },
   "api_endpoint": "https://api.heygen.com/v2/video/generate",
   "request_body": {
-    "title": "Chapter 18 - Draft",
+    "title": "Chapter 1A - Draft",
     "folder_id": "3d837f4e9fb84b8294785fc060a342c0",
     "dimension": {
       "width": 1920,
@@ -40,7 +40,7 @@
         "voice": {
           "type": "text",
           "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
-          "input_text": "You have seen the individual parts. Now put them together into a day you can repeat. Keep the right work moving, and keep the record and next step current."
+          "input_text": "Hi, I'm Andrea. Welcome to BMH Group. This training is here to help you understand how we serve people, how the work moves, and what good judgment sounds like in a real conversation."
         },
         "background": {
           "type": "color",
@@ -55,7 +55,7 @@
         "voice": {
           "type": "text",
           "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
-          "input_text": "Begin with the work you already promised. Check scheduled follow-ups and active conversations, especially anything close to a handoff. Sort the list using the current SOP and your role sheet. If your manager changes the priority, follow that direction."
+          "input_text": "Most people who speak with us are trying to solve something. The property may need work. A move may be stalled. A family may be carrying a problem they did not expect. Start with the person and the situation before you start talking about a solution."
         },
         "background": {
           "type": "color",
@@ -70,7 +70,7 @@
         "voice": {
           "type": "text",
           "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
-          "input_text": "Research until you can make the next conversation useful. Confirm the ownership and property details, then read the history in the current system. Look for details that help you ask a better question. When you are ready, move the conversation forward."
+          "input_text": "Ask clear questions. Listen all the way through the answer. A seller may mention price first, then reveal that timing, repairs, or a difficult family decision is the real concern. You cannot help with what you have not understood."
         },
         "background": {
           "type": "color",
@@ -85,7 +85,7 @@
         "voice": {
           "type": "text",
           "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
-          "input_text": "Handle callbacks when they are due. Then move through the follow-ups and new activity assigned to you in the order the current process requires. Update the current system while the details are fresh so the next person knows what happened and what comes next."
+          "input_text": "A cash, as-is path can remove some of the work that comes with preparing a property for a traditional sale. The exact price, timing, fees, and responsibilities depend on the written offer and the facts of that property. Explain only what has been confirmed. If you are unsure, pause and get the right answer."
         },
         "background": {
           "type": "color",
@@ -100,7 +100,7 @@
         "voice": {
           "type": "text",
           "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
-          "input_text": "Your current scorecard, role sheet, schedule, and manager direction define the activity expected from you. This video does not add a number or change that schedule. Take breaks as the current schedule directs. When you return, give the next person your full attention."
+          "input_text": "The goal is not to push someone toward a yes. Help them understand the available path, answer what you can, and be honest about what still needs review. A clear no is more useful than a pressured maybe."
         },
         "background": {
           "type": "color",
@@ -115,7 +115,7 @@
         "voice": {
           "type": "text",
           "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
-          "input_text": "Before you finish, review the pipeline. An active lead should have useful notes, the right stage, and a dated next action. Complete any handoff that is ready. Escalate blocked work, then leave yourself a clear place to begin."
+          "input_text": "Good service also means doing what you said you would do. Keep the record current. Set the next action. Follow through, or tell the right person when something is blocked. Care and accountability belong together."
         },
         "background": {
           "type": "color",
@@ -130,37 +130,7 @@
         "voice": {
           "type": "text",
           "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
-          "input_text": "A disciplined day cannot make someone answer or make a deal close. You can control how well you followed the process and whether you kept your commitments. You can also leave an accurate record and treat each person with care. That is work you can repeat tomorrow."
-        },
-        "background": {
-          "type": "color",
-          "value": "#ffffff"
-        }
-      },
-      {
-        "character": {
-          "type": "talking_photo",
-          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
-        },
-        "voice": {
-          "type": "text",
-          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
-          "input_text": "Follow-through matters. So does paying attention to the person in front of you. Listen, ask the next useful question, and do what you said you would do. That is how you earn trust one conversation at a time."
-        },
-        "background": {
-          "type": "color",
-          "value": "#ffffff"
-        }
-      },
-      {
-        "character": {
-          "type": "talking_photo",
-          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
-        },
-        "voice": {
-          "type": "text",
-          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
-          "input_text": "Next, you'll see how the team stays in sync day to day. After that, complete the checkpoint and move into Career Growth Path."
+          "input_text": "Continue into Mindset next. After that, take the Welcome and Mindset checkpoint and move into Terms Glossary."
         },
         "background": {
           "type": "color",

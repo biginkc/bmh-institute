@@ -11,6 +11,10 @@ export const RECUT_DIR = join(
   "docs/course-production/held-video-recuts",
 );
 export const RECUT_SOURCE_KEYS = [
+  "video-slot-01-welcome",
+  "video-slot-01-mindset",
+  "video-slot-10-objection-scripts",
+  "video-slot-15-closing",
   "video-slot-17-compensation",
   "video-slot-18-operator",
   "video-slot-19-career",
@@ -23,6 +27,10 @@ export const HEYGEN_DRAFT_CONTRACT = Object.freeze({
   folderId: "3d837f4e9fb84b8294785fc060a342c0",
   dimension: Object.freeze({ width: 1920, height: 1080 }),
   titles: Object.freeze({
+    "video-slot-01-welcome": "Chapter 1A - Draft",
+    "video-slot-01-mindset": "Chapter 1B - Draft",
+    "video-slot-10-objection-scripts": "Chapter 7B - Draft",
+    "video-slot-15-closing": "Chapter 11A - Draft",
     "video-slot-17-compensation": "Chapter 17 - Draft",
     "video-slot-18-operator": "Chapter 18 - Draft",
     "video-slot-19-career": "Chapter 19 - Draft",
@@ -57,8 +65,16 @@ export function renderRecutEditSpec(pkg) {
     `# ${pkg.source.source_key} recut edit specification`,
     "",
     `Held source SHA-256: \`${pkg.source.held_sha256}\``,
-    `Review transcript: \`${pkg.source.review_transcript_path}\``,
-    `Review VTT: \`${pkg.source.review_vtt_path}\``,
+    ...(pkg.source.review_transcript_path
+      ? [
+          `Review transcript: \`${pkg.source.review_transcript_path}\``,
+          `Review VTT: \`${pkg.source.review_vtt_path}\``,
+        ]
+      : [
+          `Technical QA: \`${pkg.source.technical_qa_path}\``,
+          `Source script reference: \`${pkg.source.source_script_reference}\``,
+          `Source script SHA-256: \`${pkg.source.source_script_sha256}\``,
+        ]),
     "",
     "This specification maps every spoken moment in the held cut to replacement scenes. It does not authorize rendering, caption generation, approval, upload, or publication.",
     "",
@@ -83,6 +99,21 @@ export function renderRecutEditSpec(pkg) {
     "",
     `Spoken transition: ${pkg.lesson_contract.transition_spoken_text}`,
   );
+  lines.push("", "## Exact forbidden-language removals", "");
+  for (const removal of pkg.forbidden_language_removals ?? []) {
+    lines.push(
+      `- ${removal.source_time}: remove \`${removal.exact_source_language}\`. ${removal.replacement_rule}`,
+    );
+  }
+  lines.push("", "## Scene and shot plan", "");
+  for (const scene of pkg.scenes) {
+    const visualPlan = scene.visual_plan ?? {
+      mode: "avatar_on_camera",
+      shot: "Andrea in a medium shot",
+      editor_note: "Jarrad may choose an optional cutaway during editor assembly.",
+    };
+    lines.push(`- \`${scene.scene_id}\` ${visualPlan.mode}: ${visualPlan.shot}. ${visualPlan.editor_note}`);
+  }
   return `${lines.join("\n").trimEnd()}\n`;
 }
 

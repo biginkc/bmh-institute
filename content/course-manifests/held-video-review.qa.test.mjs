@@ -26,6 +26,9 @@ import {
   resolveVerifiedMediaPath,
   verifyHeldVideoReview,
 } from "../../scripts/course-content/verify-held-video-review.mjs";
+import {
+  REPLACEMENT_REQUIRED_CUTS,
+} from "../../scripts/course-content/held-video-approval-ledger.mjs";
 
 const manifestPromise = readFile(
   new URL("./bmh-employee-training.v1.json", import.meta.url),
@@ -33,6 +36,10 @@ const manifestPromise = readFile(
 ).then(JSON.parse);
 const approvalLedgerPromise = readFile(
   new URL("../../docs/course-production/held-video-review/approvals.json", import.meta.url),
+  "utf8",
+).then(JSON.parse);
+const localPolicyCandidatesPromise = readFile(
+  new URL("../../docs/course-production/held-video-review/local-policy-candidates.json", import.meta.url),
   "utf8",
 ).then(JSON.parse);
 const expectedHeldSourceKeysPromise = manifestPromise.then((manifest) =>
@@ -92,10 +99,15 @@ test(
     const result = await verificationPromise;
     const expectedHeldSourceKeys = await expectedHeldSourceKeysPromise;
 
-    assert.deepEqual(result.sourceKeys, expectedHeldSourceKeys);
-    assert.equal(result.videoCount, 9);
+    assert.deepEqual(result.sourceKeys, [
+      "video-slot-02-terms",
+      "video-slot-16-kpis",
+      ...expectedHeldSourceKeys,
+    ]);
+    assert.equal(result.videoCount, 11);
     assert.equal(result.evidenceFileCount, 12);
-    assert.equal(result.approvalLedgerRecordCount, 9);
+    assert.equal(result.approvalLedgerRecordCount, 11);
+    assert.equal(result.localPolicyCandidateCount, 2);
     assert.equal(result.htmlIsCurrent, true);
     assert.deepEqual(
       result.files
@@ -316,8 +328,15 @@ test("a locked file is refused after its stat identity changes", async () => {
 });
 
 test("static and verified pages make trust state and caption availability explicit", async () => {
-  const [manifest, approvalLedger] = await Promise.all([manifestPromise, approvalLedgerPromise]);
-  const staticHtml = renderHeldVideoReview(manifest, { approvalLedger });
+  const [manifest, approvalLedger, localPolicyCandidates] = await Promise.all([
+    manifestPromise,
+    approvalLedgerPromise,
+    localPolicyCandidatesPromise,
+  ]);
+  const staticHtml = renderHeldVideoReview(manifest, {
+    approvalLedger,
+    localPolicyCandidates,
+  });
   const verifiedHtml = renderHeldVideoReview(manifest, {
     mode: "verified",
     verification: {
@@ -325,18 +344,24 @@ test("static and verified pages make trust state and caption availability explic
       verifiedAt: "2026-07-16T12:34:56.000Z",
     },
     approvalLedger,
+    localPolicyCandidates,
   });
 
   assert.match(staticHtml, /UNVERIFIED STATIC PAGE/);
   assert.match(staticHtml, /verify-held-video-review\.mjs --serve/);
   assert.match(staticHtml, /approvals\.json/);
   assert.match(staticHtml, /held-video-recuts\/README\.md/);
-  assert.equal((staticHtml.match(/REPLACEMENT REQUIRED/g) || []).length, 3);
+  assert.equal((staticHtml.match(/REPLACEMENT REQUIRED/g) || []).length, 9);
   assert.equal(
     (staticHtml.match(/Checksum-locked QC evidence/g) || []).length,
     6,
   );
-  assert.match(staticHtml, /6 corrected candidates await Jarrad review/);
+  assert.match(staticHtml, /2 corrected candidates await Jarrad review/);
+  assert.match(staticHtml, /Terms Glossary v10 local policy cut/);
+  assert.match(staticHtml, /KPIs and Sales Telemetry v12 local policy cut/);
+  assert.match(staticHtml, /Local edit decision/);
+  assert.match(staticHtml, /Exact review question/);
+  assert.match(staticHtml, /Do you approve the Terms v10 and KPIs v12 local policy-cut candidates/);
   assert.match(staticHtml, /Orientation → Welcome and Mindset/);
   assert.match(
     staticHtml,
@@ -348,8 +373,6 @@ test("static and verified pages make trust state and caption availability explic
   );
   assert.match(staticHtml, /Performance and Career → KPIs and Sales Telemetry/);
   assert.match(staticHtml, /block-video-video-slot-16-kpis/);
-  assert.doesNotMatch(staticHtml, /Uses the approved non-finale closer/);
-  assert.match(staticHtml, /Uses the selected non-finale closer/);
   assert.doesNotMatch(staticHtml, /VERIFIED LOCAL SERVER/);
   assert.match(verifiedHtml, /VERIFIED LOCAL SERVER/);
   assert.match(verifiedHtml, /2026-07-16T12:34:56\.000Z/);
@@ -358,28 +381,28 @@ test("static and verified pages make trust state and caption availability explic
   const ariaLabels = [
     ...staticHtml.matchAll(/<video [^>]*aria-label="([^"]+)"/g),
   ].map((match) => match[1]);
-  assert.equal(ariaLabels.length, 9);
-  assert.equal(new Set(ariaLabels).size, 9);
+  assert.equal(ariaLabels.length, 11);
+  assert.equal(new Set(ariaLabels).size, 11);
   assert.equal(
     ariaLabels.filter((label) => label.includes("corrected review candidate"))
       .length,
-    6,
+    2,
   );
   assert.equal(
     ariaLabels.filter((label) => label.includes("policy-defective source evidence"))
       .length,
-    3,
+    9,
   );
   assert.doesNotMatch(staticHtml, /held video candidate 7 of 9/);
   assert.equal(
-    (staticHtml.match(/data-review-kind="corrected-review-candidate"/g) || [])
+    (staticHtml.match(/data-review-kind="local-policy-review-candidate"/g) || [])
       .length,
-    6,
+    2,
   );
   assert.equal(
     (staticHtml.match(/data-review-kind="replacement-source-evidence"/g) || [])
       .length,
-    3,
+    9,
   );
   assert.equal((staticHtml.match(/<track [^>]* default>/g) || []).length, 3);
   assert.equal(
@@ -388,80 +411,69 @@ test("static and verified pages make trust state and caption availability explic
         /Captions and a transcript are intentionally not finalized/g,
       ) || []
     ).length,
-    6,
+    2,
   );
 });
 
-test("the review surface advances from original holds through replacement candidates to zero held", async () => {
-  const [baseManifest, baseLedger] = await Promise.all([manifestPromise, approvalLedgerPromise]);
-  const manifest = structuredClone(baseManifest);
-  const ledger = structuredClone(baseLedger);
-
-  for (const record of ledger.records.slice(0, 6)) {
-    Object.assign(record, {
-      decision: "approved",
-      approver: "Jarrad Henry",
-      date: "2026-07-17",
-      notes: "Watched and approved the exact checksum-locked cut.",
-    });
-    const asset = manifest.assets.find((candidate) =>
-      candidate.source_key === record.source_key && candidate.kind === "video",
-    );
-    asset.approval_status = "approved";
+test("the review surface keeps all original cuts as evidence and exposes only the two local policy cuts for decision", async () => {
+  const [manifest, approvalLedger, localPolicyCandidates] = await Promise.all([
+    manifestPromise,
+    approvalLedgerPromise,
+    localPolicyCandidatesPromise,
+  ]);
+  const html = renderHeldVideoReview(manifest, {
+    approvalLedger,
+    localPolicyCandidates,
+  });
+  assert.equal((html.match(/REPLACEMENT REQUIRED/g) || []).length, 9);
+  assert.equal((html.match(/JARRAD REVIEW REQUIRED/g) || []).length, 2);
+  assert.equal((html.match(/data-review-kind="local-policy-review-candidate"/g) || []).length, 2);
+  assert.equal((html.match(/data-review-kind="replacement-source-evidence"/g) || []).length, 9);
+  assert.doesNotMatch(html, /data-review-kind="corrected-review-candidate"/);
+  for (const reason of REPLACEMENT_REQUIRED_CUTS.values()) {
+    assert.ok(html.includes(reason), `missing exact policy-defect reason: ${reason}`);
   }
+  assert.doesNotMatch(
+    html,
+    /Restores the missing cash-as-is paragraph|Restores missing seller prompts|Removes the spoken dollar-X placeholder defect/,
+  );
+  assert.equal(
+    (
+      html.match(
+        /This cut is source evidence only and cannot be approved\. Learner captions and a transcript wait for the replacement cut\./g,
+      ) || []
+    ).length,
+    6,
+  );
+  assert.match(
+    html,
+    /This cut is source evidence only\. Learner captions and a transcript wait for the replacement cut\./,
+  );
+  assert.equal(
+    (
+      html.match(
+        /Captions and a transcript are intentionally not finalized for this candidate while exact-file approval is pending\./g,
+      ) || []
+    ).length,
+    2,
+  );
+});
 
-  const sourceEvidenceHtml = renderHeldVideoReview(manifest, { approvalLedger: ledger });
-  assert.match(sourceEvidenceHtml, /0 corrected candidates await Jarrad review/);
-  assert.equal((sourceEvidenceHtml.match(/REPLACEMENT REQUIRED/g) || []).length, 3);
-
-  for (const [index, sourceKey] of [
-    "video-slot-17-compensation",
-    "video-slot-18-operator",
-    "video-slot-19-career",
-  ].entries()) {
-    const sha256 = String(index + 7).repeat(64);
-    const localPath = `course-assets/review-final/${sourceKey}.mp4`;
-    ledger.records.push({
-      source_key: sourceKey,
-      sha256,
-      candidate_local_path: localPath,
-      title: `${sourceKey} policy-safe replacement`,
-      decision: "pending",
-      approver: null,
-      date: null,
-      notes: null,
-    });
-    const asset = manifest.assets.find((candidate) =>
-      candidate.source_key === sourceKey && candidate.kind === "video",
-    );
-    Object.assign(asset, {
-      local_path: localPath,
-      checksum_sha256: sha256,
-      size_bytes: 1,
-      approval_status: "hold",
-    });
-  }
-
-  const replacementHtml = renderHeldVideoReview(manifest, { approvalLedger: ledger });
-  assert.match(replacementHtml, /3 corrected candidates await Jarrad review/);
-  assert.equal((replacementHtml.match(/REPLACEMENT REQUIRED/g) || []).length, 0);
-  assert.equal((replacementHtml.match(/JARRAD REVIEW REQUIRED/g) || []).length, 3);
-  assert.doesNotMatch(replacementHtml, /Review-only wording evidence/);
-
-  for (const record of ledger.records.slice(-3)) {
-    Object.assign(record, {
-      decision: "approved",
-      approver: "Jarrad Henry",
-      date: "2026-07-17",
-      notes: "Watched and approved the exact checksum-locked replacement.",
-    });
-    manifest.assets.find((candidate) =>
-      candidate.source_key === record.source_key && candidate.kind === "video",
-    ).approval_status = "approved";
-  }
-  const finalHtml = renderHeldVideoReview(manifest, { approvalLedger: ledger });
-  assert.match(finalHtml, /0 corrected candidates await Jarrad review/);
-  assert.doesNotMatch(finalHtml, /<article class="card"/);
+test("candidate edit language is HTML-escaped on the local review surface", async () => {
+  const [manifest, approvalLedger, baseCandidates] = await Promise.all([
+    manifestPromise,
+    approvalLedgerPromise,
+    localPolicyCandidatesPromise,
+  ]);
+  const localPolicyCandidates = structuredClone(baseCandidates);
+  localPolicyCandidates.candidates[0].edit_decision_list[0].removed_language =
+    '<img src=x onerror="alert(1)">';
+  const html = renderHeldVideoReview(manifest, {
+    approvalLedger,
+    localPolicyCandidates,
+  });
+  assert.doesNotMatch(html, /<img src=x/);
+  assert.match(html, /&lt;img src=x onerror=&quot;alert\(1\)&quot;&gt;/);
 });
 
 test("the verified server serves only locked routes with no-store and byte ranges", async () => {

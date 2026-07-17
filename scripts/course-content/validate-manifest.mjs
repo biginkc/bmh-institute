@@ -8,6 +8,10 @@ import {
   REVIEWED_VIDEO_SOURCE_KEYS,
   validateHeldVideoManifestApprovalState,
 } from "./held-video-approval-ledger.mjs";
+import {
+  localPolicyCandidateAssets,
+  validateLocalPolicyCandidates,
+} from "./held-video-local-policy-candidates.mjs";
 
 const STALE_COMPENSATION_PATTERN = /\$\s*\d|hourly base|appointment bonus|commission tier|tiered commission/i;
 const STALE_CAREER_GROWTH_PATTERN = /\b(?:role ladder|career ladder|promotion|promoted|readiness|first consideration|management path|closer path|acquisitions? role|90(?:-plus)? days?|six months?|one year|commission|compensation|salary|pay increase|earning potential|higher earnings?|daily (?:numbers?|targets?|quotas?)|dial quotas?|hit(?:ting)? (?:their )?numbers every day|guarante(?:e|ed|es)|own(?:s|ing)? (?:the )?(?:entire )?team(?:'s)? performance)\b/i;
@@ -358,7 +362,12 @@ export function summarizeManifest(manifest) {
 
 export function validateManifest(
   manifest,
-  { stackConfirmation = null, approvalLedger = null, now = new Date() } = {},
+  {
+    stackConfirmation = null,
+    approvalLedger = null,
+    localPolicyCandidates = null,
+    now = new Date(),
+  } = {},
 ) {
   const errors = [];
   const publicationBlockers = [];
@@ -488,9 +497,18 @@ export function validateManifest(
   }
 
   if (approvalLedger) {
-    const currentReviewAssets = assets.filter(
-      (asset) => asset.kind === "video" && REVIEWED_VIDEO_SOURCE_KEYS.has(asset.source_key),
-    );
+    const candidateErrors = localPolicyCandidates
+      ? validateLocalPolicyCandidates(localPolicyCandidates, manifest, approvalLedger)
+      : [];
+    errors.push(...candidateErrors);
+    const currentReviewAssets = [
+      ...assets.filter(
+        (asset) => asset.kind === "video" && REVIEWED_VIDEO_SOURCE_KEYS.has(asset.source_key),
+      ),
+      ...(localPolicyCandidates
+        ? localPolicyCandidateAssets(localPolicyCandidates)
+        : []),
+    ];
     errors.push(...validateHeldVideoManifestApprovalState(approvalLedger, currentReviewAssets));
   }
 
@@ -604,6 +622,7 @@ async function main() {
     join(dirname(manifestPath), "bmh-operating-stack-confirmation.v1.json");
   let stackConfirmation = null;
   let approvalLedger = null;
+  let localPolicyCandidates = null;
   try {
     stackConfirmation = await loadManifest(confirmationPath);
   } catch (error) {
@@ -616,7 +635,18 @@ async function main() {
   } catch (error) {
     if (error?.code !== "ENOENT") throw error;
   }
-  const report = validateManifest(manifest, { stackConfirmation, approvalLedger });
+  try {
+    localPolicyCandidates = await loadManifest(
+      join(dirname(manifestPath), "../../docs/course-production/held-video-review/local-policy-candidates.json"),
+    );
+  } catch (error) {
+    if (error?.code !== "ENOENT") throw error;
+  }
+  const report = validateManifest(manifest, {
+    stackConfirmation,
+    approvalLedger,
+    localPolicyCandidates,
+  });
   console.log(JSON.stringify(report, null, 2));
   process.exitCode = report.errors.length ? 1 : 0;
 }

@@ -21,6 +21,13 @@ import {
   approvalRecordKey,
   validateHeldVideoManifestApprovalState,
 } from "./held-video-approval-ledger.mjs";
+import {
+  EXACT_LOCAL_POLICY_REVIEW_QUESTION,
+  LOCAL_POLICY_CANDIDATES_PATH,
+  localPolicyCandidateAssets,
+  readLocalPolicyCandidates,
+  validateLocalPolicyCandidates,
+} from "./held-video-local-policy-candidates.mjs";
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = resolve(SCRIPT_DIR, "../..");
@@ -28,6 +35,7 @@ const MANIFEST_PATH = join(REPO_ROOT, "content/course-manifests/bmh-employee-tra
 const REVIEW_HTML_PATH = join(REPO_ROOT, "docs/course-production/held-video-review/index.html");
 const APPROVAL_LEDGER_PATH = join(REPO_ROOT, "docs/course-production/held-video-review/approvals.json");
 const APPROVAL_LEDGER_ROUTE = "/approval-ledger.json";
+const LOCAL_POLICY_CANDIDATES_ROUTE = "/local-policy-candidates.json";
 
 export const CANONICAL_CHECKOUT = "/Users/jarradhenry/Sites/BMH apps/BMH Institute";
 export const MEDIA_ROOT_ENV = "BMH_HELD_VIDEO_MEDIA_ROOT";
@@ -243,8 +251,8 @@ function evidenceStaticUrl(path) {
   return relative(dirname(REVIEW_HTML_PATH), join(REPO_ROOT, path)).split("\\").join("/");
 }
 
-function mediaRoute(sourceKey) {
-  return `/media/${encodeURIComponent(sourceKey)}.mp4`;
+function mediaRoute(asset) {
+  return `/media/${encodeURIComponent(asset.source_key)}-${asset.checksum_sha256.slice(0, 12)}.mp4`;
 }
 
 function evidenceRoute(sourceKey, kind) {
@@ -315,18 +323,28 @@ export function renderHeldVideoReview(manifest, {
   mediaRoot = CANONICAL_CHECKOUT,
   verification,
   approvalLedger,
+  localPolicyCandidates,
 } = {}) {
   if (mode === "verified" && (!verification?.verifiedAt || !verification?.lockSha256)) {
     throw new Error("Verified review rendering requires a verification timestamp and held-set SHA lock");
   }
 
-  const held = manifest.assets.filter(
+  const manifestHeld = manifest.assets.filter(
     (asset) => asset.kind === "video" && asset.approval_status === "hold",
   );
-  const reviewed = manifest.assets.filter(
+  const candidateAssets = localPolicyCandidates
+    ? localPolicyCandidateAssets(localPolicyCandidates)
+    : [];
+  const held = [...candidateAssets, ...manifestHeld];
+  const reviewed = [
+    ...manifest.assets.filter(
     (asset) => asset.kind === "video" && REVIEWED_VIDEO_SOURCE_KEYS.has(asset.source_key),
-  );
-  const approvalErrors = validateHeldVideoManifestApprovalState(approvalLedger, reviewed);
+    ),
+    ...candidateAssets,
+  ];
+  const approvalErrors = validateHeldVideoManifestApprovalState(approvalLedger, reviewed, {
+    allowHistoricalPending: !localPolicyCandidates,
+  });
   if (approvalErrors.length > 0) {
     throw new Error(`Approval ledger is invalid: ${approvalErrors.join("; ")}`);
   }
@@ -338,13 +356,14 @@ export function renderHeldVideoReview(manifest, {
   let replacementIndex = 0;
 
   const cards = held.map((asset, assetIndex) => {
+    const candidate = asset.local_policy_candidate;
     const details = REVIEW_DETAILS[asset.source_key];
     if (!details) throw new Error(`No review details for ${asset.source_key}`);
     const record = reviewRecords[assetIndex];
     const originalEvidence = originalReviewEvidence(asset);
     const absoluteVideoPath = resolveManifestMediaPath(mediaRoot, asset.local_path);
     const videoUrl = mode === "verified"
-      ? mediaRoute(asset.source_key)
+      ? mediaRoute(asset)
       : pathToFileURL(absoluteVideoPath).href;
     const vttUrl = originalEvidence?.evidence
       ? (mode === "verified" ? evidenceRoute(asset.source_key, "vtt") : evidenceStaticUrl(details.evidence.vtt))
@@ -366,19 +385,25 @@ export function renderHeldVideoReview(manifest, {
     const track = originalEvidence?.evidence
       ? `<track kind="captions" srclang="en" label="Review-only English captions for ${escapeHtml(details.title)}" src="${escapeHtml(vttUrl)}" default>`
       : "";
-    const accessibilityNote = originalEvidence?.evidence
-      ? "Review-only captions are available for wording verification. They are not approved learner captions."
-      : "Captions and a transcript are intentionally not finalized for this cut while exact-file approval is pending.";
     const replacementRequired = isPolicyDefectiveSource(asset);
+    const accessibilityNote = candidate
+      ? "Captions and a transcript are intentionally not finalized for this candidate while exact-file approval is pending."
+      : replacementRequired
+        ? originalEvidence?.evidence
+          ? "Review-only captions are available for wording verification. This cut is source evidence only. Learner captions and a transcript wait for the replacement cut."
+          : "This cut is source evidence only and cannot be approved. Learner captions and a transcript wait for the replacement cut."
+        : "Captions and a transcript are intentionally not finalized for this cut while exact-file approval is pending.";
     const reviewIndex = replacementRequired
       ? ++replacementIndex
       : ++approvableIndex;
-    const reviewKind = replacementRequired
+    const reviewKind = candidate
+      ? "local-policy-review-candidate"
+      : replacementRequired
       ? "replacement-source-evidence"
       : "corrected-review-candidate";
     const videoLabel = replacementRequired
       ? `${details.title} policy-defective source evidence ${reviewIndex} of ${replacementCount}`
-      : `${details.title} corrected review candidate ${reviewIndex} of ${approvableCount}`;
+      : `${candidate?.title ?? details.title} corrected review candidate ${reviewIndex} of ${approvableCount}`;
     const reviewStatus = replacementRequired
       ? '<p class="replacement"><strong>REPLACEMENT REQUIRED</strong> — this exact source cut is evidence only and cannot be approved.</p>'
       : record.decision === "pending"
@@ -387,13 +412,27 @@ export function renderHeldVideoReview(manifest, {
     const location = videoCourseLocations.get(asset.source_key);
     if (!location) throw new Error(`Held video is not mapped to a course block: ${asset.source_key}`);
 
+    const candidateEvidence = candidate
+      ? `\n      <div class="evidence"><strong>Local edit decision:</strong> remove ${candidate.edit_decision_list.map((operation) => `${operation.source_start_seconds.toFixed(3)}s to ${operation.source_end_seconds.toFixed(3)}s: ${escapeHtml(operation.removed_language)}`).join("; ")} · ${candidate.crossfade_seconds.toFixed(2)}s crossfade<br><strong>Resulting line:</strong> ${escapeHtml(candidate.resulting_line)}<br><strong>Technical QA:</strong> ${escapeHtml(candidate.technical_result)}<br><strong>Human gate:</strong> ${escapeHtml(candidate.human_review_required)}</div>`
+      : "";
+    const displayDuration = candidate
+      ? `${Math.floor(candidate.duration_seconds / 60)}:${String(Math.floor(candidate.duration_seconds % 60)).padStart(2, "0")}`
+      : details.duration;
+    const displayTitle = candidate?.title ?? details.title;
+    const heldReason = candidate?.review_reason
+      ?? (replacementRequired
+        ? REPLACEMENT_REQUIRED_CUTS.get(`${asset.source_key}:${asset.checksum_sha256}`)
+        : originalEvidence
+          ? details.reason
+        : `A new checksum-keyed ${record.title} candidate is awaiting exact-file review.`);
+
     return `<article class="card" data-source-key="${escapeHtml(asset.source_key)}" data-checksum="${asset.checksum_sha256}" data-review-kind="${reviewKind}">
-      <header><span class="number">${replacementRequired ? `E${reviewIndex}` : reviewIndex}</span><div><h2>${escapeHtml(details.title)}</h2><p class="meta">${details.duration} · ${asset.size_bytes.toLocaleString("en-US")} bytes</p></div></header>
+      <header><span class="number">${replacementRequired ? `E${reviewIndex}` : reviewIndex}</span><div><h2>${escapeHtml(displayTitle)}</h2><p class="meta">${displayDuration} · ${asset.size_bytes.toLocaleString("en-US")} bytes</p></div></header>
       ${reviewStatus}
       <div class="course-location"><strong>Course location</strong><span>${escapeHtml(location.moduleTitle)} → ${escapeHtml(location.lessonTitle)}</span><code>${escapeHtml(location.lessonSourceKey)} · ${escapeHtml(location.blockSourceKey)}</code></div>
       <video controls preload="metadata" src="${escapeHtml(videoUrl)}" aria-label="${escapeHtml(videoLabel)}" title="${escapeHtml(videoLabel)}">${track}Your browser cannot play this local video.</video>
       <p class="captions-note"><strong>Accessibility:</strong> ${escapeHtml(accessibilityNote)}</p>
-      <p class="reason"><strong>Why it is held:</strong> ${escapeHtml(replacementRequired || originalEvidence ? details.reason : `A new checksum-keyed ${record.title} candidate is awaiting exact-file review.`)}</p>${qcEvidence}${evidence}
+      <p class="reason"><strong>Why it is held:</strong> ${escapeHtml(heldReason)}</p>${candidateEvidence}${qcEvidence}${evidence}
       <details><summary>Exact-file lock</summary><dl><dt>SHA-256</dt><dd><code>${asset.checksum_sha256}</code></dd><dt>Absolute source</dt><dd><code>${escapeHtml(absoluteVideoPath)}</code></dd><dt>Manifest key</dt><dd><code>${escapeHtml(asset.source_key)}</code></dd></dl></details>
     </article>`;
   }).join("\n");
@@ -420,8 +459,9 @@ export function renderHeldVideoReview(manifest, {
     <h1>Held video review</h1>
     ${verificationStatus}
     <p>${approvableCount} corrected candidate${approvableCount === 1 ? "" : "s"} await Jarrad review. Approve or request changes only on those exact checksum-locked cuts; a filename alone is not approval.</p>
+    <p><strong>Exact review question:</strong> ${escapeHtml(EXACT_LOCAL_POLICY_REVIEW_QUESTION)}</p>
     <p>${replacementCount} policy-defective source-evidence cut${replacementCount === 1 ? " is" : "s are"} marked <strong>changes requested</strong> and cannot be approved. Replacements receive new checksums and a separate review.</p>
-    <p>Record decisions in the <a href="${approvalLedgerUrl}">checksum-keyed approval ledger</a>. Policy-safe replacement scripts and timecoded edit maps for the three blocked sources are prepared at <code>docs/course-production/held-video-recuts/README.md</code>.</p>
+    <p>Record decisions in the <a href="${approvalLedgerUrl}">checksum-keyed approval ledger</a>. Policy-safe replacement scripts, shot plans, forbidden-language maps, and timecoded edit maps for the seven full recuts are prepared at <code>docs/course-production/held-video-recuts/README.md</code>.</p>
     <p class="warning">This page does not upload, publish, alter, caption, or approve anything.</p>
   </section>
   <section class="grid" aria-label="Held video review records">
@@ -447,10 +487,19 @@ async function readApprovalLedger() {
 }
 
 export async function writeHeldVideoReview() {
-  const [manifest, { ledger: approvalLedger }] = await Promise.all([
+  const [manifest, { ledger: approvalLedger }, { inventory: localPolicyCandidates }] = await Promise.all([
     readManifest(),
     readApprovalLedger(),
+    readLocalPolicyCandidates(),
   ]);
+  const candidateErrors = validateLocalPolicyCandidates(
+    localPolicyCandidates,
+    manifest,
+    approvalLedger,
+  );
+  if (candidateErrors.length) {
+    throw new Error(`Local policy candidates are invalid: ${candidateErrors.join("; ")}`);
+  }
   await mkdir(dirname(REVIEW_HTML_PATH), { recursive: true });
   await writeFile(
     REVIEW_HTML_PATH,
@@ -458,6 +507,7 @@ export async function writeHeldVideoReview() {
       mode: "static",
       mediaRoot: CANONICAL_CHECKOUT,
       approvalLedger,
+      localPolicyCandidates,
     }),
     "utf8",
   );
@@ -467,18 +517,36 @@ export async function verifyHeldVideoReview({
   mediaRoot = resolveMediaRoot(),
   checkHtml = true,
 } = {}) {
-  const [manifest, approval] = await Promise.all([
+  const [manifest, approval, localPolicy] = await Promise.all([
     readManifest(),
     readApprovalLedger(),
+    readLocalPolicyCandidates(),
   ]);
   const { buffer: approvalLedgerBuffer, ledger: approvalLedger } = approval;
-  const held = manifest.assets.filter(
+  const {
+    buffer: localPolicyCandidatesBuffer,
+    inventory: localPolicyCandidates,
+  } = localPolicy;
+  const candidateErrors = validateLocalPolicyCandidates(
+    localPolicyCandidates,
+    manifest,
+    approvalLedger,
+  );
+  if (candidateErrors.length) {
+    throw new Error(`Local policy candidates are invalid: ${candidateErrors.join("; ")}`);
+  }
+  const manifestHeld = manifest.assets.filter(
     (asset) => asset.kind === "video" && asset.approval_status === "hold",
   );
+  const candidateAssets = localPolicyCandidateAssets(localPolicyCandidates);
+  const held = [...candidateAssets, ...manifestHeld];
   const sourceKeys = held.map((asset) => asset.source_key);
-  const reviewed = manifest.assets.filter(
-    (asset) => asset.kind === "video" && REVIEWED_VIDEO_SOURCE_KEYS.has(asset.source_key),
-  );
+  const reviewed = [
+    ...manifest.assets.filter(
+      (asset) => asset.kind === "video" && REVIEWED_VIDEO_SOURCE_KEYS.has(asset.source_key),
+    ),
+    ...candidateAssets,
+  ];
   const approvalErrors = validateHeldVideoManifestApprovalState(approvalLedger, reviewed);
   if (approvalErrors.length) throw new Error(`Approval ledger is invalid: ${approvalErrors.join("; ")}`);
 
@@ -501,7 +569,7 @@ export async function verifyHeldVideoReview({
       contentType: "video/mp4",
       kind: "video",
       label: asset.source_key,
-      route: mediaRoute(asset.source_key),
+      route: mediaRoute(asset),
       sha256: lockedVideo.sha256,
       snapshot: lockedVideo.snapshot,
     });
@@ -573,11 +641,31 @@ export async function verifyHeldVideoReview({
     snapshot: lockedApprovalLedger.snapshot,
   });
 
+  const localPolicyCandidatesSha256 = createHash("sha256")
+    .update(localPolicyCandidatesBuffer)
+    .digest("hex");
+  const lockedLocalPolicyCandidates = await verifyAndSnapshotFile({
+    absolutePath: LOCAL_POLICY_CANDIDATES_PATH,
+    expectedSha256: localPolicyCandidatesSha256,
+    expectedSize: localPolicyCandidatesBuffer.length,
+    label: "held video local policy candidate inventory",
+  });
+  files.push({
+    absolutePath: LOCAL_POLICY_CANDIDATES_PATH,
+    contentType: "application/json; charset=utf-8",
+    kind: "local-policy-candidate-inventory",
+    label: "held video local policy candidate inventory",
+    route: LOCAL_POLICY_CANDIDATES_ROUTE,
+    sha256: lockedLocalPolicyCandidates.sha256,
+    snapshot: lockedLocalPolicyCandidates.snapshot,
+  });
+
   if (checkHtml) {
     const expectedHtml = renderHeldVideoReview(manifest, {
       mode: "static",
       mediaRoot: CANONICAL_CHECKOUT,
       approvalLedger,
+      localPolicyCandidates,
     });
     const currentHtml = await readFile(REVIEW_HTML_PATH, "utf8");
     if (currentHtml !== expectedHtml) {
@@ -598,6 +686,8 @@ export async function verifyHeldVideoReview({
     evidenceFileCount,
     approvalLedgerRecordCount: approvalLedger.records.length,
     approvalLedger,
+    localPolicyCandidateCount: candidateAssets.length,
+    localPolicyCandidates,
     htmlIsCurrent: checkHtml,
     files,
     lockSha256,
@@ -668,12 +758,15 @@ export function createHeldVideoReviewServer({
 
   const routeMap = new Map(verification.files.map((file) => [file.route, file]));
   const expectedRoutes = [];
-  const held = manifest.assets.filter(
+  const held = [
+    ...localPolicyCandidateAssets(verification.localPolicyCandidates),
+    ...manifest.assets.filter(
     (asset) => asset.kind === "video" && asset.approval_status === "hold",
-  );
+    ),
+  ];
   for (const asset of held) {
     assertHeldAssetMatchesLock(asset, verification.approvalLedger);
-    expectedRoutes.push(mediaRoute(asset.source_key));
+    expectedRoutes.push(mediaRoute(asset));
     const originalEvidence = originalReviewEvidence(asset);
     if (originalEvidence?.qcReport) expectedRoutes.push(qcReportRoute(asset.source_key));
     if (originalEvidence?.evidence) {
@@ -684,6 +777,9 @@ export function createHeldVideoReviewServer({
     }
   }
   expectedRoutes.push(APPROVAL_LEDGER_ROUTE);
+  if (verification.localPolicyCandidates) {
+    expectedRoutes.push(LOCAL_POLICY_CANDIDATES_ROUTE);
+  }
   if (expectedRoutes.some((route) => !routeMap.has(route)) || routeMap.size !== expectedRoutes.length) {
     throw new Error("Review server refuses an incomplete or expanded verified-file route set");
   }
@@ -775,6 +871,7 @@ export function createHeldVideoReviewServer({
           mediaRoot: verification.mediaRoot,
           verification,
           approvalLedger: verification.approvalLedger,
+          localPolicyCandidates: verification.localPolicyCandidates,
         });
         response.writeHead(200, {
           ...commonResponseHeaders(),

@@ -806,7 +806,11 @@ export async function validateArtworkManifestTrustBoundary(
   return reconciled;
 }
 
-export function currentReviewedVideoRecord(sourceKey, approvalLedger) {
+export function currentReviewedVideoRecord(
+  sourceKey,
+  approvalLedger,
+  { currentLocalPath } = {},
+) {
   if (!REVIEWED_VIDEO_SOURCE_KEYS.has(sourceKey)) return null;
   const records = approvalLedger?.records?.filter(
     (record) => record.source_key === sourceKey,
@@ -817,10 +821,19 @@ export function currentReviewedVideoRecord(sourceKey, approvalLedger) {
   const eligible = records.filter(
     (record) => !REPLACEMENT_REQUIRED_CUTS.has(approvalRecordKey(record)),
   );
-  // The three known defective source cuts remain current evidence only until a
-  // newly checksum-keyed replacement is appended. Thereafter the last appended
-  // non-defective record is the current candidate; older records remain history.
-  return eligible.at(-1) ?? records.at(-1);
+  const approved = eligible.filter((record) => record.decision === "approved").at(-1);
+  if (approved) return approved;
+  const configuredEligible = currentLocalPath
+    ? eligible.findLast((record) => record.candidate_local_path === currentLocalPath)
+    : null;
+  if (configuredEligible) return configuredEligible;
+  const configured = currentLocalPath
+    ? records.find((record) => record.candidate_local_path === currentLocalPath)
+    : null;
+  // Pending review candidates stay outside the course manifest until Jarrad
+  // approves their exact checksum. The configured source remains the held
+  // source-evidence cut during review. Older records remain immutable history.
+  return configured ?? eligible.at(-1) ?? records.at(-1);
 }
 
 function resolveSourcePath(root, relativePath, label) {
@@ -845,7 +858,9 @@ async function buildVideoAsset(
   approvalLedger,
   { videoSourceRoot, inspectDuration },
 ) {
-  const reviewRecord = currentReviewedVideoRecord(sourceKey, approvalLedger);
+  const reviewRecord = currentReviewedVideoRecord(sourceKey, approvalLedger, {
+    currentLocalPath: defaultLocalPath,
+  });
   const localPath = reviewRecord?.candidate_local_path ?? defaultLocalPath;
   const fullPath = resolveSourcePath(videoSourceRoot, localPath, `${sourceKey} video path`);
   const fileStat = await stat(fullPath);
@@ -1023,6 +1038,7 @@ export async function buildManifest({
   const videoApprovalErrors = validateHeldVideoManifestApprovalState(
     videoApprovalLedger,
     reviewedVideoAssets,
+    { allowHistoricalPending: true },
   );
   if (videoApprovalErrors.length > 0) {
     throw new Error(`Video approval ledger is invalid: ${videoApprovalErrors.join("; ")}`);

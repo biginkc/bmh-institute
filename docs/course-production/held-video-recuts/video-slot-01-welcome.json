@@ -1,0 +1,100 @@
+{
+  "schema_version": "1.0.0",
+  "status": "script_ready_not_rendered",
+  "source": {
+    "source_key": "video-slot-01-welcome",
+    "held_sha256": "493de8a5e0663ad577ba46d6d5befce33e9640f250677095094978714d22ac72",
+    "technical_qa_path": "docs/course-production/held-video-review/TECHNICAL-CONTENT-QA-2026-07-17.md",
+    "technical_qa_sha256": "534718225d693437c53d3e2c5c1662920420f218096dea2acd7203ba2cc14e45",
+    "source_script_reference": "docs/course-production/held-video-recuts/source-evidence/video-slot-01-welcome-source-evidence.md",
+    "source_script_sha256": "39dc44f547b4d6a02e818878effe0b673cdf3cb647f0d03f1a338ce70b3212c4",
+    "duration_seconds": 246.186,
+    "last_spoken_time_seconds": 246.185
+  },
+  "lesson_contract": {
+    "lesson_source_key": "lesson-content-slot-01",
+    "objective": "Learn the BMH Group service standard and the mindset that keeps seller conversations clear, calm, and human.",
+    "objective_points": [
+      "Explain the Navigator role",
+      "Put service before pressure",
+      "Use curiosity and clarity in seller conversations",
+      "Detach from outcomes while staying accountable"
+    ],
+    "next_sequence": ["video-slot-01-mindset", "lesson-quiz-slot-01", "lesson-content-slot-02"],
+    "transition_spoken_text": "Continue into Mindset next. After that, take the Welcome and Mindset checkpoint and move into Terms Glossary."
+  },
+  "production_constraints": {
+    "strategy": "replace_full_spoken_cut",
+    "render_allowed": false,
+    "provider_call_allowed": false,
+    "caption_generation_allowed": false,
+    "approval_status_change_allowed": false
+  },
+  "forbidden_language_removals": [
+    {
+      "source_time": "00:00",
+      "exact_source_language": "Your virtual onboarding specialist",
+      "replacement_rule": "Andrea introduces herself without a role title."
+    },
+    {
+      "source_time": "approximately 02:48",
+      "exact_source_language": "the best closers at BMH Group",
+      "replacement_rule": "Describe the service behavior without naming a role or ranking people."
+    }
+  ],
+  "scenes": [
+    {
+      "scene_id": "welcome-intro",
+      "title": "Welcome",
+      "spoken_text": "Hi, I'm Andrea. Welcome to BMH Group. This training is here to help you understand how we serve people, how the work moves, and what good judgment sounds like in a real conversation.",
+      "visual_plan": {"mode": "avatar_on_camera", "shot": "Andrea in a relaxed medium shot", "editor_note": "Keep the introduction direct and uncluttered."}
+    },
+    {
+      "scene_id": "welcome-people-first",
+      "title": "Start with the person",
+      "spoken_text": "Most people who speak with us are trying to solve something. The property may need work. A move may be stalled. A family may be carrying a problem they did not expect. Start with the person and the situation before you start talking about a solution.",
+      "visual_plan": {"mode": "avatar_with_optional_cutaway", "shot": "Andrea standing with open posture", "editor_note": "Optional cutaway may show a seller reviewing property papers."
+      }
+    },
+    {
+      "scene_id": "welcome-listen",
+      "title": "Listen for the real need",
+      "spoken_text": "Ask clear questions. Listen all the way through the answer. A seller may mention price first, then reveal that timing, repairs, or a difficult family decision is the real concern. You cannot help with what you have not understood.",
+      "visual_plan": {"mode": "avatar_on_camera", "shot": "Andrea seated at a desk in a medium-wide frame", "editor_note": "Use a calm listening gesture and leave room for a brief pause."}
+    },
+    {
+      "scene_id": "welcome-cash-as-is",
+      "title": "Explain cash as is accurately",
+      "spoken_text": "A cash, as-is path can remove some of the work that comes with preparing a property for a traditional sale. The exact price, timing, fees, and responsibilities depend on the written offer and the facts of that property. Explain only what has been confirmed. If you are unsure, pause and get the right answer.",
+      "visual_plan": {"mode": "avatar_with_optional_cutaway", "shot": "Andrea beside a simple property folder", "editor_note": "Optional cutaway can compare repair preparation with an as-is review. Do not show promised numbers or dates."}
+    },
+    {
+      "scene_id": "welcome-no-pressure",
+      "title": "Serve without pressure",
+      "spoken_text": "The goal is not to push someone toward a yes. Help them understand the available path, answer what you can, and be honest about what still needs review. A clear no is more useful than a pressured maybe.",
+      "visual_plan": {"mode": "avatar_on_camera", "shot": "Andrea standing in a three-quarter frame", "editor_note": "Use a small open-hand gesture. Keep the tone steady, not promotional."}
+    },
+    {
+      "scene_id": "welcome-accountability",
+      "title": "Own the next step",
+      "spoken_text": "Good service also means doing what you said you would do. Keep the record current. Set the next action. Follow through, or tell the right person when something is blocked. Care and accountability belong together.",
+      "visual_plan": {"mode": "avatar_with_optional_cutaway", "shot": "Andrea at a desk with a closed notebook", "editor_note": "Optional cutaway can show a clean next-action checklist without product branding."}
+    },
+    {
+      "scene_id": "welcome-transition",
+      "title": "Continue into mindset",
+      "spoken_text": "Continue into Mindset next. After that, take the Welcome and Mindset checkpoint and move into Terms Glossary.",
+      "visual_plan": {"mode": "avatar_on_camera", "shot": "Andrea centered in a medium shot", "editor_note": "End cleanly with no chapter number on screen."}
+    }
+  ],
+  "edit_operations": [
+    {
+      "operation_id": "welcome-edit-01",
+      "source_start": "00:00:00.000",
+      "source_end": "00:04:06.185",
+      "action": "replace",
+      "replacement_scene_ids": ["welcome-intro", "welcome-people-first", "welcome-listen", "welcome-cash-as-is", "welcome-no-pressure", "welcome-accountability", "welcome-transition"],
+      "source_problem": "Role-title wording is embedded in the opener and later service principle, so the full spoken cut is replaced while preserving the lesson objective and cash-as-is explanation."
+    }
+  ]
+}

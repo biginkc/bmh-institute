@@ -19,6 +19,30 @@ export const APPROVAL_DECISIONS = [
 
 export const REPLACEMENT_REQUIRED_CUTS = new Map([
   [
+    "video-slot-01-welcome:493de8a5e0663ad577ba46d6d5befce33e9640f250677095094978714d22ac72",
+    "The exact source cut contains role-title language and must be replaced.",
+  ],
+  [
+    "video-slot-01-mindset:b0cad612499dbd2d867c906c1ad8a8e3e13fcded333fa973fa6d19339fa930da",
+    "The exact source cut contains fixed week progression and must be replaced.",
+  ],
+  [
+    "video-slot-02-terms:17cac99f171edfb773f85eaaa6719e09ffe1295abec5b062554c72958747c0bb",
+    "The exact source cut contains a role title. Review the checksum-keyed local policy cut instead.",
+  ],
+  [
+    "video-slot-10-objection-scripts:59c745ccca7387f82d0b13eaf95439f9f6a50a8f727ad3c1db4fb839050b1ebb",
+    "The exact source cut contains direct outcome guarantees and must be replaced.",
+  ],
+  [
+    "video-slot-15-closing:6e3aa1b007117b303a05906ca8443a8b9bc38f7c44bd61475c5437b99e7c90d2",
+    "The exact source cut contains role-bound narration and visuals and must be replaced.",
+  ],
+  [
+    "video-slot-16-kpis:439f8d06d2e449637509f0f21f9d0b4a5464c65aec1995fca7147e4e4e67310b",
+    "The exact source cut contains a compensation promise. Review the checksum-keyed local policy cut instead.",
+  ],
+  [
     "video-slot-17-compensation:cecad85478bb1a8ba5bfed7404dc045440c567ed0eaaa90b11b644e124b27846",
     "The exact source cut contains fixed compensation promises and must be replaced.",
   ],
@@ -164,8 +188,12 @@ export function validateHeldVideoApprovalLedger(
   return errors;
 }
 
-export function validateHeldVideoManifestApprovalState(ledger, currentReviewAssets) {
-  const errors = validateHeldVideoApprovalLedger(ledger, currentReviewAssets);
+export function validateHeldVideoManifestApprovalState(
+  ledger,
+  currentReviewAssets,
+  options = {},
+) {
+  const errors = validateHeldVideoApprovalLedger(ledger, currentReviewAssets, options);
   if (errors.length > 0) return errors;
   const currentByKey = new Map(
     ledger.records.map((record) => [approvalRecordKey(record), record]),

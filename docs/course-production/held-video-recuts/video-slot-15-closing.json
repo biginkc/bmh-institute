@@ -1,0 +1,45 @@
+{
+  "schema_version": "1.0.0",
+  "status": "script_ready_not_rendered",
+  "source": {
+    "source_key": "video-slot-15-closing",
+    "held_sha256": "6e3aa1b007117b303a05906ca8443a8b9bc38f7c44bd61475c5437b99e7c90d2",
+    "technical_qa_path": "docs/course-production/held-video-review/TECHNICAL-CONTENT-QA-2026-07-17.md",
+    "technical_qa_sha256": "534718225d693437c53d3e2c5c1662920420f218096dea2acd7203ba2cc14e45",
+    "source_script_reference": "docs/course-production/held-video-recuts/source-evidence/video-slot-15-closing-source-evidence.md",
+    "source_script_sha256": "fd7d7b4efa96121b47fa795faffe58aac742f788bf6894b7349872372c3470a2",
+    "duration_seconds": 329.429,
+    "last_spoken_time_seconds": 329.428
+  },
+  "lesson_contract": {
+    "lesson_source_key": "lesson-content-slot-15",
+    "objective": "Prepare and present an offer as a clear next step while protecting accuracy, consent, and handoff quality.",
+    "objective_points": ["Prepare the information needed for an offer", "Present terms cleanly", "Identify unresolved decision barriers", "Confirm the next action without pressure"],
+    "next_sequence": ["lesson-quiz-slot-15", "lesson-assignment-section-5"],
+    "transition_spoken_text": "Take the Closing and Deal Engineering checkpoint next. Then complete the Cadence and Close Capstone."
+  },
+  "production_constraints": {"strategy": "replace_full_spoken_cut", "render_allowed": false, "provider_call_allowed": false, "caption_generation_allowed": false, "approval_status_change_allowed": false},
+  "forbidden_language_removals": [
+    {"source_time": "00:40.000", "exact_source_language": "you're not the person presenting the offer or negotiating the final terms", "replacement_rule": "Teach the work without assigning it to or excluding a named role."},
+    {"source_time": "00:40.000", "exact_source_language": "That's the acquisition team's job", "replacement_rule": "Use current-process ownership language with no role title."},
+    {"source_time": "00:57.467", "exact_source_language": "the acquisition team actually needs", "replacement_rule": "Describe the information the next step needs, not a named team."},
+    {"source_time": "01:23.533", "exact_source_language": "the acquisition team reviews your notes", "replacement_rule": "Describe review of the complete record without a named team."},
+    {"source_time": "02:18.600", "exact_source_language": "ACQUISITION", "replacement_rule": "Remove role-bound shirt text from replacement visuals."},
+    {"source_time": "03:00.700", "exact_source_language": "Transaction Coordinator", "replacement_rule": "Use a generic closing-logistics visual with no role title."
+    }
+  ],
+  "scenes": [
+    {"scene_id": "closing-open", "title": "Closing begins before the offer", "spoken_text": "A clean close starts with a clean record. Before an offer is prepared, confirm the property facts, the seller's priorities, the people whose consent matters, and the questions that are still open. Missing information creates confusion later.", "visual_plan": {"mode": "avatar_on_camera", "shot": "Andrea standing in a medium shot", "editor_note": "Use a simple folder as the only prop."}},
+    {"scene_id": "closing-prepare", "title": "Prepare the offer inputs", "spoken_text": "Bring together the condition notes, ownership information, comparable information used by the current process, price expectations, timing needs, and any special request. Mark what is confirmed and what still needs review. Do not turn an assumption into a term.", "visual_plan": {"mode": "avatar_with_optional_cutaway", "shot": "Andrea seated at a desk", "editor_note": "Optional cutaway shows a generic offer-preparation checklist with no job labels."}},
+    {"scene_id": "closing-authority", "title": "Protect accuracy and authority", "spoken_text": "Know what you are allowed to explain and what needs approval. A draft number, an estimated date, or a possible structure is not a commitment. Use the current written process. If a seller asks for an exception, document it and get it reviewed before you say it is available.", "visual_plan": {"mode": "avatar_on_camera", "shot": "Andrea in a closer medium frame", "editor_note": "Keep the delivery firm and free of urgency."}},
+    {"scene_id": "closing-present", "title": "Present the written terms cleanly", "spoken_text": "When the written offer is ready, explain the terms in plain language. Walk through price, timing, conditions, costs, and responsibilities. Ask the seller to stop you when something is unclear. The goal is understanding, not speed.", "visual_plan": {"mode": "avatar_with_optional_cutaway", "shot": "Andrea beside a blank offer folder", "editor_note": "Show no invented amount, date, signature, or provider branding."}},
+    {"scene_id": "closing-barrier", "title": "Find the unresolved barrier", "spoken_text": "If the seller hesitates, do not repeat the pitch. Ask what still feels unresolved. It may be the money, the move, another person, a document, or a condition. Restate the concern and separate what can be answered now from what needs review.", "visual_plan": {"mode": "avatar_on_camera", "shot": "Andrea seated across from an empty chair", "editor_note": "Use a listening posture and a natural pause."}},
+    {"scene_id": "closing-consent", "title": "Confirm consent without pressure", "spoken_text": "A valid next step needs informed agreement. Give the seller room to read the document and ask questions. Confirm who needs to sign and whether anyone else should be part of the conversation. Never use urgency that is not real and documented.", "visual_plan": {"mode": "avatar_on_camera", "shot": "Andrea standing at a slight angle", "editor_note": "No countdown, handshake, or implied signature."}},
+    {"scene_id": "closing-next-action", "title": "Document the next action", "spoken_text": "Whether the answer is yes, no, or not yet, document what happened. Record the open question, the owner of the next action, and when the seller expects to hear back. Send the complete record through the current process so the next person has the same facts.", "visual_plan": {"mode": "avatar_with_optional_cutaway", "shot": "Andrea at a desk closing a notebook", "editor_note": "Optional cutaway can show a generic next-action card. No system names."}},
+    {"scene_id": "closing-logistics", "title": "Keep closing logistics clear", "spoken_text": "After written agreement, the work continues through ownership review, required documents, condition or access items, and closing logistics. Responsibilities vary by transaction. Follow the current written process and escalate any mismatch instead of guessing.", "visual_plan": {"mode": "avatar_with_optional_cutaway", "shot": "Andrea walking past a generic office doorway", "editor_note": "Remove ACQUISITION shirts and Transaction Coordinator door text. Use no role labels."}},
+    {"scene_id": "closing-transition", "title": "Continue to the checkpoint", "spoken_text": "Take the Closing and Deal Engineering checkpoint next. Then complete the Cadence and Close Capstone.", "visual_plan": {"mode": "avatar_on_camera", "shot": "Andrea centered in a medium shot", "editor_note": "End without viewer-facing chapter numbering."}}
+  ],
+  "edit_operations": [
+    {"operation_id": "closing-edit-01", "source_start": "00:00:00.000", "source_end": "00:05:29.428", "action": "replace", "replacement_scene_ids": ["closing-open", "closing-prepare", "closing-authority", "closing-present", "closing-barrier", "closing-consent", "closing-next-action", "closing-logistics", "closing-transition"], "source_problem": "Role-bound narration and labels appear throughout the lesson spine. The full recut preserves offer preparation, presentation, consent, and logistics while making ownership reusable and role agnostic."}
+  ]
+}

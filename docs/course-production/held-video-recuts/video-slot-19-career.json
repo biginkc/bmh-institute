@@ -33,36 +33,64 @@
     "caption_generation_allowed": false,
     "approval_status_change_allowed": false
   },
+  "forbidden_language_removals": [
+    {
+      "source_time": "00:00:47.580",
+      "exact_source_language": "hitting your numbers for 90-plus days, you move up",
+      "replacement_rule": "Use current written role expectations and never promise advancement on a fixed timeline."
+    },
+    {
+      "source_time": "source transcript paragraph 4",
+      "exact_source_language": "The earning potential is significantly higher because you're earning commission",
+      "replacement_rule": "Remove compensation comparisons and point learners to current written sources."
+    },
+    {
+      "source_time": "source transcript paragraph 5",
+      "exact_source_language": "Some people advance in six months. Some take a year.",
+      "replacement_rule": "Remove example promotion timelines from reusable training."
+    },
+    {
+      "source_time": "source transcript paragraph 4",
+      "exact_source_language": "there's a management path",
+      "replacement_rule": "Do not promise a role ladder or named advancement path."
+    }
+  ],
   "scenes": [
     {
       "scene_id": "career-foundation",
       "title": "Build capability first",
-      "spoken_text": "Development starts with getting better at the work assigned to you now. Choose a skill that matters, practice it, and use it in real work. Then look at the result. The aim is to work reliably and leave the record or handoff ready for the next person."
+      "spoken_text": "Development starts with getting better at the work assigned to you now. Choose a skill that matters, practice it, and use it in real work. Then look at the result. The aim is to work reliably and leave the record or handoff ready for the next person.",
+      "visual_plan": {"mode": "avatar_on_camera", "shot": "Andrea standing in a medium shot", "editor_note": "Open on current capability rather than a career ladder."}
     },
     {
       "scene_id": "career-feedback-loop",
       "title": "Use a feedback loop",
-      "spoken_text": "Ask for specific feedback and listen before you defend your first approach. If you do not understand the feedback, ask a direct question. Practice the new approach, use it in the work, and bring back an example of what changed."
+      "spoken_text": "Ask for specific feedback and listen before you defend your first approach. If you do not understand the feedback, ask a direct question. Practice the new approach, use it in the work, and bring back an example of what changed.",
+      "visual_plan": {"mode": "avatar_with_optional_cutaway", "shot": "Andrea seated with a single feedback card", "editor_note": "Optional cutaway shows practice, application, and review without time promises."}
     },
     {
       "scene_id": "career-documented-ownership",
       "title": "Confirm ownership changes",
-      "spoken_text": "Getting better at the work does not automatically change your responsibilities. Take on more ownership after your manager confirms it and the change appears in your current written role plan. A training example or another person's duties cannot redefine your work."
+      "spoken_text": "Getting better at the work does not automatically change your responsibilities. Take on more ownership after your manager confirms it and the change appears in your current written role plan. A training example or another person's duties cannot redefine your work.",
+      "visual_plan": {"mode": "avatar_on_camera", "shot": "Andrea beside a closed written-plan folder", "editor_note": "Do not show a promotion arrow, hierarchy, or title."}
     },
     {
       "scene_id": "career-current-role",
       "title": "Use current written expectations",
-      "spoken_text": "Use your current role sheet, offer letter, and manager direction to understand the work assigned to you. Pick a skill that supports those expectations. If an older training example says something different, follow the current documents and ask your manager."
+      "spoken_text": "Use your current role sheet, offer letter, and manager direction to understand the work assigned to you. Pick a skill that supports those expectations. If an older training example says something different, follow the current documents and ask your manager.",
+      "visual_plan": {"mode": "avatar_with_optional_cutaway", "shot": "Andrea at a desk with two generic current-document folders", "editor_note": "Keep the documents free of pay figures and role titles."}
     },
     {
       "scene_id": "career-feedback",
       "title": "Make development concrete",
-      "spoken_text": "A useful development conversation stays close to the work. Talk about the expectation you are working toward, the skill you are practicing, and the feedback you are applying. If the conversation includes new ownership, get that change confirmed in writing."
+      "spoken_text": "A useful development conversation stays close to the work. Talk about the expectation you are working toward, the skill you are practicing, and the feedback you are applying. If the conversation includes new ownership, get that change confirmed in writing.",
+      "visual_plan": {"mode": "avatar_on_camera", "shot": "Andrea seated in a conversational medium shot", "editor_note": "Use a calm coaching posture with no advancement promise."}
     },
     {
       "scene_id": "career-transition",
       "title": "Continue into the capstone",
-      "spoken_text": "Take the Career Growth Path checkpoint next. Then complete the Mission Control and Growth Capstone."
+      "spoken_text": "Take the Career Growth Path checkpoint next. Then complete the Mission Control and Growth Capstone.",
+      "visual_plan": {"mode": "avatar_on_camera", "shot": "Andrea centered in a medium shot", "editor_note": "End without viewer-facing chapter numbering."}
     }
   ],
   "edit_operations": [

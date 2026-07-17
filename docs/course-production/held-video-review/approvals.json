@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "updated_at": "2026-07-16",
+  "updated_at": "2026-07-17",
   "key_fields": [
     "source_key",
     "sha256"
@@ -11,60 +11,60 @@
       "sha256": "493de8a5e0663ad577ba46d6d5befce33e9640f250677095094978714d22ac72",
       "candidate_local_path": "course-assets/review-lessonA/LESSON-1A-v7.mp4",
       "title": "Welcome",
-      "decision": "pending",
-      "approver": null,
-      "date": null,
-      "notes": null
+      "decision": "changes_requested",
+      "approver": "BMH Institute content QA",
+      "date": "2026-07-17",
+      "notes": "Replacement required: the exact source cut uses role-title language that conflicts with the reusable role-agnostic policy."
     },
     {
       "source_key": "video-slot-01-mindset",
       "sha256": "b0cad612499dbd2d867c906c1ad8a8e3e13fcded333fa973fa6d19339fa930da",
       "candidate_local_path": "course-assets/review-lessonB/LESSON-1B-v4.mp4",
       "title": "Mindset",
-      "decision": "pending",
-      "approver": null,
-      "date": null,
-      "notes": null
+      "decision": "changes_requested",
+      "approver": "BMH Institute content QA",
+      "date": "2026-07-17",
+      "notes": "Replacement required: the exact source cut hard-codes week-one and week-six progression that conflicts with the no-fixed-timeline policy."
     },
     {
       "source_key": "video-slot-02-terms",
       "sha256": "17cac99f171edfb773f85eaaa6719e09ffe1295abec5b062554c72958747c0bb",
       "candidate_local_path": "course-assets/review-lessonGLOA/LESSON-GLOA-v9.mp4",
       "title": "Terms Glossary",
-      "decision": "pending",
-      "approver": null,
-      "date": null,
-      "notes": null
+      "decision": "changes_requested",
+      "approver": "BMH Institute content QA",
+      "date": "2026-07-17",
+      "notes": "Replacement required: the exact source cut contains a forbidden acquisition-manager role title. Review the new v10 local policy-cut candidate instead."
     },
     {
       "source_key": "video-slot-10-objection-scripts",
       "sha256": "59c745ccca7387f82d0b13eaf95439f9f6a50a8f727ad3c1db4fb839050b1ebb",
       "candidate_local_path": "course-assets/review-lesson7B/LESSON-7B-v5.mp4",
       "title": "Objection Scripts Playbook",
-      "decision": "pending",
-      "approver": null,
-      "date": null,
-      "notes": null
+      "decision": "changes_requested",
+      "approver": "BMH Institute content QA",
+      "date": "2026-07-17",
+      "notes": "Replacement required: the exact source cut teaches direct outcome and certainty guarantees that conflict with the conditional policy-safe script rule."
     },
     {
       "source_key": "video-slot-15-closing",
       "sha256": "6e3aa1b007117b303a05906ca8443a8b9bc38f7c44bd61475c5437b99e7c90d2",
       "candidate_local_path": "course-assets/review-lesson11A/LESSON-11A-v4.mp4",
       "title": "Closing and Deal Engineering",
-      "decision": "pending",
-      "approver": null,
-      "date": null,
-      "notes": null
+      "decision": "changes_requested",
+      "approver": "BMH Institute content QA",
+      "date": "2026-07-17",
+      "notes": "Replacement required: the exact source cut assigns responsibilities to named roles and shows role-bound labels that conflict with reusable training."
     },
     {
       "source_key": "video-slot-16-kpis",
       "sha256": "439f8d06d2e449637509f0f21f9d0b4a5464c65aec1995fca7147e4e4e67310b",
       "candidate_local_path": "course-assets/review-lesson12A/LESSON-12A-v11.mp4",
       "title": "KPIs and Sales Telemetry",
-      "decision": "pending",
-      "approver": null,
-      "date": null,
-      "notes": null
+      "decision": "changes_requested",
+      "approver": "BMH Institute content QA",
+      "date": "2026-07-17",
+      "notes": "Replacement required: the exact source cut contains a compensation-promise phrase. Review the new v12 local policy-cut candidate instead."
     },
     {
       "source_key": "video-slot-17-compensation",
@@ -95,6 +95,26 @@
       "approver": "BMH Institute content QA",
       "date": "2026-07-16",
       "notes": "Replacement required: the exact source cut contains role-ladder, timeline, and compensation promises that conflict with the reusable current-role-source-of-truth policy."
+    },
+    {
+      "source_key": "video-slot-02-terms",
+      "sha256": "6f57600d6ec3a596f96175052eda997503ab9b72aa5b7e9ec02239fe1a125769",
+      "candidate_local_path": "course-assets/review-lessonGLOA/LESSON-GLOA-v10-LOCAL-POLICY-CUT.mp4",
+      "title": "Terms Glossary v10 local policy cut",
+      "decision": "pending",
+      "approver": null,
+      "date": null,
+      "notes": null
+    },
+    {
+      "source_key": "video-slot-16-kpis",
+      "sha256": "3d50cc79cfe74277ac1311367d5b0bd6fd62d2d38c2c74fff8732ea62203d61a",
+      "candidate_local_path": "course-assets/review-lesson12A/LESSON-12A-v12-LOCAL-POLICY-CUT.mp4",
+      "title": "KPIs and Sales Telemetry v12 local policy cut",
+      "decision": "pending",
+      "approver": null,
+      "date": null,
+      "notes": null
     }
   ]
 }
