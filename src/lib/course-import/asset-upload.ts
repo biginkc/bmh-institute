@@ -1,9 +1,10 @@
 import { createHash, randomUUID } from "node:crypto";
 import { constants as fsConstants } from "node:fs";
-import { mkdir, mkdtemp, open, readFile, realpath, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, open, readFile, realpath, rename, rm } from "node:fs/promises";
 import { basename, dirname, join, relative, resolve } from "node:path";
 
 import { Upload as TusUpload } from "tus-js-client";
+import { lock as acquireFileLock } from "proper-lockfile";
 
 import {
   findRemoteAssetProblems,
@@ -371,19 +372,21 @@ export class JsonTusUrlStorage {
   }
 
   async findAllUploads() {
-    const entries = await this.read();
-    let changed = false;
-    for (const [key, upload] of Object.entries(entries)) {
-      if (!this.hasSafeUrlAndOwner(upload)) {
-        delete entries[key];
-        changed = true;
-      } else if (upload.fingerprint === this.scope.fingerprint && !this.matchesScope(upload)) {
-        delete entries[key];
-        changed = true;
+    return this.withStateLock(async () => {
+      const entries = await this.read();
+      let changed = false;
+      for (const [key, upload] of Object.entries(entries)) {
+        if (!this.hasSafeUrlAndOwner(upload)) {
+          delete entries[key];
+          changed = true;
+        } else if (upload.fingerprint === this.scope.fingerprint && !this.matchesScope(upload)) {
+          delete entries[key];
+          changed = true;
+        }
       }
-    }
-    if (changed) await this.write(entries);
-    return Object.values(entries).filter((upload) => this.matchesScope(upload));
+      if (changed) await this.write(entries);
+      return Object.values(entries).filter((upload) => this.matchesScope(upload));
+    });
   }
 
   async findUploadsByFingerprint(fingerprint: string) {
@@ -399,17 +402,21 @@ export class JsonTusUrlStorage {
     ) {
       throw new Error("Refusing to persist an unsafe TUS upload URL.");
     }
-    const entries = await this.read();
-    const key = `${fingerprint}:${upload.creationTime}`;
-    entries[key] = { ...stored, urlStorageKey: key };
-    await this.write(entries);
-    return key;
+    return this.withStateLock(async () => {
+      const entries = await this.read();
+      const key = `${fingerprint}:${upload.creationTime}`;
+      entries[key] = { ...stored, urlStorageKey: key };
+      await this.write(entries);
+      return key;
+    });
   }
 
   async removeUpload(key: string) {
-    const entries = await this.read();
-    delete entries[key];
-    await this.write(entries);
+    await this.withStateLock(async () => {
+      const entries = await this.read();
+      delete entries[key];
+      await this.write(entries);
+    });
   }
 
   private hasSafeUrlAndOwner(upload: StoredTusUpload) {
@@ -442,17 +449,68 @@ export class JsonTusUrlStorage {
   private async read(): Promise<Record<string, StoredTusUpload>> {
     try {
       const parsed = JSON.parse(await readFile(this.filePath, "utf8")) as unknown;
-      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
+      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+        throw new Error("TUS resume state must be a JSON object.");
+      }
       return parsed as Record<string, StoredTusUpload>;
-    } catch {
-      return {};
+    } catch (error) {
+      if (isNodeError(error) && error.code === "ENOENT") return {};
+      throw new Error(`TUS resume state is unreadable or malformed: ${this.filePath}`, {
+        cause: error,
+      });
     }
   }
 
   private async write(entries: Record<string, StoredTusUpload>) {
-    await mkdir(dirname(this.filePath), { recursive: true });
-    await writeFile(this.filePath, JSON.stringify(entries, null, 2), "utf8");
+    const parent = dirname(this.filePath);
+    await mkdir(parent, { recursive: true });
+    const temporary = `${this.filePath}.tmp-${process.pid}-${randomUUID()}`;
+    const handle = await open(temporary, "wx", 0o600);
+    try {
+      await handle.writeFile(JSON.stringify(entries, null, 2), "utf8");
+      await handle.sync();
+    } finally {
+      await handle.close();
+    }
+    try {
+      await rename(temporary, this.filePath);
+      await syncDirectory(parent);
+    } finally {
+      await rm(temporary, { force: true });
+    }
   }
+
+  private async withStateLock<T>(work: () => Promise<T>) {
+    await mkdir(dirname(this.filePath), { recursive: true });
+    const release = await acquireFileLock(this.filePath, {
+      realpath: false,
+      stale: 30_000,
+      update: 10_000,
+      retries: { retries: 200, minTimeout: 5, maxTimeout: 50, factor: 1.2 },
+    });
+    try {
+      return await work();
+    } finally {
+      await release();
+    }
+  }
+}
+
+async function syncDirectory(path: string) {
+  const directory = await open(path, fsConstants.O_RDONLY);
+  try {
+    await directory.sync();
+  } catch (error) {
+    if (!isNodeError(error) || !["EINVAL", "ENOTSUP", "EPERM"].includes(error.code ?? "")) {
+      throw error;
+    }
+  } finally {
+    await directory.close();
+  }
+}
+
+function isNodeError(error: unknown): error is NodeJS.ErrnoException {
+  return error instanceof Error && "code" in error;
 }
 
 function ownershipTokenFromMetadata(metadata: Record<string, string>) {

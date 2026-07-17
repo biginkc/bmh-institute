@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { createClient } from "@supabase/supabase-js";
 
 import { inspectStorageRollbackAssets } from "./storage-rollback";
 import type { CourseImportAsset } from "./manifest";
@@ -33,6 +34,36 @@ describe("storage rollback preservation", () => {
     expect(removes).toBe(0);
     expect(report.manual_cleanup_candidates).toEqual([expect.objectContaining({ source_key: "asset" })]);
     expect(report.automatic_deletes).toEqual([]);
+  });
+
+  it("recognizes the camel-cased custom metadata returned by Supabase info()", async () => {
+    const fetchMock: typeof fetch = async () => new Response(JSON.stringify({
+      id: "object-id",
+      version: "version-id",
+      name: "asset.mp4",
+      bucket_id: "content",
+      created_at: "2026-07-16T00:00:00.000Z",
+      size: 8,
+      metadata: {
+        sha256: "a".repeat(64),
+        course_import_id: "training-v1",
+        course_import_upload_id: "00000000-0000-4000-8000-000000000000",
+      },
+    }), { status: 200, headers: { "content-type": "application/json" } });
+    const supabase = createClient("https://provider-shape.supabase.co", "test-key", {
+      global: { fetch: fetchMock },
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+
+    const report = await inspectStorageRollbackAssets({
+      importId: "training-v1",
+      assets: [asset("approved")],
+      bucket: supabase.storage.from("content"),
+    });
+
+    expect(report.manual_cleanup_candidates).toEqual([
+      expect.objectContaining({ source_key: "asset" }),
+    ]);
   });
 
   it("makes no storage calls for held or missing assets", async () => {

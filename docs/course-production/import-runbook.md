@@ -9,6 +9,7 @@ npm run course:import -- validate content/course-manifests/bmh-employee-training
 npm run course:import -- upload content/course-manifests/bmh-employee-training.v1.json
 npm run course:import -- apply content/course-manifests/bmh-employee-training.v1.json
 npm run course:import -- verify content/course-manifests/bmh-employee-training.v1.json
+npm run course:import -- inspect-rollback-storage content/course-manifests/bmh-employee-training.v1.json
 npm run course:import -- rollback content/course-manifests/bmh-employee-training.v1.json
 ```
 
@@ -75,8 +76,39 @@ root:
 npm run course:import -- upload \
   content/course-manifests/bmh-employee-training-canary.v1.json \
   --canary \
-  --source-root="$STAGING_ROOT"
+  --source-root="$STAGING_ROOT" \
+  --execute
+
+npm run course:import -- apply \
+  content/course-manifests/bmh-employee-training-canary.v1.json \
+  --canary \
+  --execute
+
+npm run course:import -- verify \
+  content/course-manifests/bmh-employee-training-canary.v1.json \
+  --canary \
+  --execute
+
+npm run course:import -- inspect-rollback-storage \
+  content/course-manifests/bmh-employee-training-canary.v1.json \
+  --canary \
+  --execute \
+  --confirm=bmh-employee-training-canary-v1
+
+npm run course:import -- rollback \
+  content/course-manifests/bmh-employee-training-canary.v1.json \
+  --canary \
+  --execute \
+  --confirm=bmh-employee-training-canary-v1
 ```
+
+Run this exact sequence only against the canonical disposable test project.
+`inspect-rollback-storage` is read-only and can be rerun before or after database
+rollback. Database rollback writes an atomic receipt under
+`.course-import-state/rollback-receipts/`; a matching receipt makes retries skip
+the database mutation and repeat only the storage inspection. If the database
+rows are already completely absent, the receipt records `already_absent`
+without claiming that a new database rollback occurred.
 
 Quarantine the local composite tree with the ownership-checked cleanup command.
 It refuses to move a directory that lacks the tool's marker. This does not
@@ -91,24 +123,28 @@ Production execution also needs `--allow-production`. Rollback additionally need
 
 ### Test-project migration verification
 
-Migrations `018_storage_content_markdown.sql` and
-`019_atomic_course_import_rollback.sql` must be verified against a disposable
-test Supabase project before any production migration. Do not use the production
+The complete migration list must match the disposable project. In particular,
+`018_storage_content_markdown.sql`, `019_atomic_course_import_rollback.sql`,
+`020_catalog_artwork_provenance.sql`, and `023_atomic_course_import_apply.sql`
+must be verified before any production migration. Do not use the production
 project ref. With test-project environment variables loaded, run:
 
 ```bash
 supabase link --project-ref=<TEST_PROJECT_REF>
 supabase db push --dry-run
 supabase db push
-npm run test:integration -- src/lib/course-import/atomic-rollback.integration.test.ts
+npm run test:course-import-provider
 ```
 
-The rollback integration suite uses only `TEST_SUPABASE_*` credentials. It
-proves every independent synthetic catalog row is deleted, unknown IDs and
-external dependents abort with zero partial deletion, QA-group invite overlap
-blocks rollback, and anonymous and authenticated clients cannot execute the
-service-role-only function. A skipped suite is not acceptance evidence; all
-rollback tests must run and pass on the disposable project.
+The provider acceptance wrapper refuses to start unless all three
+`TEST_SUPABASE_*` values are present and the URL is the canonical non-production
+project. It runs atomic apply, atomic rollback, and artwork provenance suites.
+Together they prove idempotent apply, exact reconciliation, complete rollback,
+unknown-ID and external-dependent refusal, QA-group invite blocking, provenance
+immutability, and service-role-only function access. The wrapper parses Vitest's
+machine report and fails unless all three files contain nonzero executed tests
+with zero skips, todos, or failures. A skipped suite is not acceptance evidence;
+all provider tests must execute and pass.
 
 Then confirm the bucket kept its prior allowlist and added Markdown exactly once:
 
@@ -131,6 +167,7 @@ any production migration.
 - The release gate requires approved covers, lesson thumbnails, videos, posters, captions, and transcripts.
 - Every manifest asset path must stay inside `courses/<import>/v<version>/`, including draft upload and rollback commands. Approved release assets additionally require SHA-256-addressed object paths, preventing an import from overwriting mutable shared files or deleting another import's objects during rollback.
 - Every approved upload requires an exact size, lowercase SHA-256, and checksum-addressed storage path, including draft upload commands. Large files use resumable TUS transfers and preserve their resume URLs in ignored `.course-import-state/` state across process restarts.
+- TUS resume-state updates use a cross-process lock and an fsynced temporary-file rename. Concurrent import processes cannot overwrite one another's resume URLs, stale crash locks are recovered, and malformed state fails closed instead of silently starting over.
 - Upload considers only assets whose `approval_status` is `approved`. Held and missing assets make no storage or TUS calls.
 - Resume fingerprints include the normalized active Supabase resumable endpoint, bucket, checksum, and storage path. Stored resume state must also match the current size, bucket, path, checksum, content type, and import when applicable. Endpoints require HTTPS except for explicit loopback development hosts. Stored resume URLs are accepted only on that exact origin and under its resumable route. Every outgoing TUS request is checked again before authorization can be sent.
 - Each upload reads every chunk from one verified open inode. The snapshot pathname is removed after pinning so source mutation or a replacement file between chunks cannot change uploaded bytes.
@@ -142,4 +179,5 @@ any production migration.
 - Verify reads use bounded ID batches so large manifests do not create oversized PostgREST filters.
 - Database rollback sends each deterministic ID together with its source key to one service-role-only database function. Migration 019 predates the explicit `content_import_id` columns in migration 020, so it proves provenance by recomputing every UUID from `import_id + source_key` and requiring a complete closed catalog graph. This assumes the import was applied through the deterministic importer; hand-created rows that deliberately reuse those exact derived IDs are outside the rollback contract. The function locks every catalog and dependent table, rejects missing IDs and QA-group invite overlap, checks learner activity, certificates, memberships, and unexplained dependents, then verifies every actual per-table delete count in the same transaction.
 - Storage rollback automatically deletes nothing because the storage API has no conditional delete. It inspects approved objects only and reports exact import-owned, size-matched, checksum-matched objects as manual cleanup candidates; uncertain, raced, held, missing, or unrelated objects are preserved.
+- Storage inspection is an independent read-only command. Database rollback records an atomic plan-bound receipt and verifies the rows remain absent before reusing it, so retries do not repeat a completed mutation or trust a stale receipt blindly.
 - Authentication accounts, audit history, learner activity, and unrelated storage objects are never rollback targets.

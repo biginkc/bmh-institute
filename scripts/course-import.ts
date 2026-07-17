@@ -1,5 +1,5 @@
 import { readFile } from "node:fs/promises";
-import { resolve } from "node:path";
+import { join, resolve } from "node:path";
 
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
@@ -13,7 +13,6 @@ import {
 import {
   applyImportPlan,
   reconcileImportPlan,
-  rollbackImportPlan,
   type CourseImportAdapter,
 } from "../src/lib/course-import/execute";
 import { validateCanaryScope, validateCourseManifest } from "../src/lib/course-import/manifest";
@@ -21,13 +20,19 @@ import { buildImportPlan } from "../src/lib/course-import/operations";
 import { inspectStorageRollbackAssets } from "../src/lib/course-import/storage-rollback";
 import type { Database } from "../src/lib/supabase/types";
 import { assertCourseImportEnvironment } from "../src/lib/course-import/environment";
+import {
+  manifestGateForCommand,
+  type CourseImportCommand,
+} from "../src/lib/course-import/command-policy";
+import { settleDatabaseRollback } from "../src/lib/course-import/rollback-settlement";
 
 async function main() {
   const { command, manifestPath, flags } = parseArgs(process.argv.slice(2));
   const absoluteManifestPath = resolve(manifestPath);
   const raw = JSON.parse(await readFile(absoluteManifestPath, "utf8")) as unknown;
-  const releaseGate = command === "apply" || command === "verify" || flags.canary;
-  const result = validateCourseManifest(raw, { gate: releaseGate ? "release" : "draft" });
+  const result = validateCourseManifest(raw, {
+    gate: manifestGateForCommand(command, flags.canary),
+  });
   if (!result.ok) throw new Error(result.errors.map((error) => `- ${error}`).join("\n"));
   if (flags.canary) {
     const canaryErrors = validateCanaryScope(result.value);
@@ -79,17 +84,28 @@ async function main() {
     }
     return;
   }
-  if (command === "rollback") {
+  if (command === "inspect-rollback-storage" || command === "rollback") {
     if (flags.confirm !== plan.importId) {
-      throw new Error(`Rollback requires --confirm=${plan.importId}.`);
+      throw new Error(`${command} requires --confirm=${plan.importId}.`);
     }
-    await rollbackImportPlan(plan, adapter);
     const storageRollback = await inspectStorageRollbackAssets({
       importId: plan.importId,
       assets: plan.assets,
       bucket: supabase.storage.from("content"),
     });
-    console.log(JSON.stringify({ storageRollback }, null, 2));
+    console.log(JSON.stringify({ phase: "storage_inspection", storageRollback }, null, 2));
+    if (command === "inspect-rollback-storage") return;
+
+    const databaseRollback = await settleDatabaseRollback({
+      plan,
+      adapter,
+      receiptPath: resolve(
+        flags.stateRoot ?? join(process.cwd(), ".course-import-state"),
+        "rollback-receipts",
+        `${plan.importId}.json`,
+      ),
+    });
+    console.log(JSON.stringify({ phase: "rollback_settled", databaseRollback, storageRollback }, null, 2));
   }
 }
 
@@ -151,11 +167,11 @@ function createSupabaseAdapter(
 function parseArgs(args: string[]) {
   const command = args[0];
   const manifestPath = args[1];
-  if (!["validate", "upload", "apply", "verify", "rollback"].includes(command) || !manifestPath) {
-    throw new Error("Usage: npm run course:import -- <validate|upload|apply|verify|rollback> <manifest.json> [--execute] [--canary] [--source-root=<path>] [--allow-production] [--confirm=<import_id>]");
+  if (!["validate", "upload", "apply", "verify", "rollback", "inspect-rollback-storage"].includes(command) || !manifestPath) {
+    throw new Error("Usage: npm run course:import -- <validate|upload|apply|verify|rollback|inspect-rollback-storage> <manifest.json> [--execute] [--canary] [--source-root=<path>] [--state-root=<path>] [--allow-production] [--confirm=<import_id>]");
   }
   return {
-    command: command as "validate" | "upload" | "apply" | "verify" | "rollback",
+    command: command as CourseImportCommand,
     manifestPath,
     flags: {
       execute: args.includes("--execute"),
@@ -163,6 +179,7 @@ function parseArgs(args: string[]) {
       allowProduction: args.includes("--allow-production"),
       confirm: args.find((arg) => arg.startsWith("--confirm="))?.slice("--confirm=".length),
       sourceRoot: args.find((arg) => arg.startsWith("--source-root="))?.slice("--source-root=".length),
+      stateRoot: args.find((arg) => arg.startsWith("--state-root="))?.slice("--state-root=".length),
     },
   };
 }

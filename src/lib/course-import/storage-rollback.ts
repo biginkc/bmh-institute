@@ -53,9 +53,13 @@ export async function inspectStorageRollbackAssets(options: {
     }
 
     const metadata = current.data.metadata ?? {};
-    const ownershipToken = metadata.course_import_upload_id;
+    const ownershipToken = metadataValue(
+      metadata,
+      "courseImportUploadId",
+      "course_import_upload_id",
+    );
     const owned =
-      metadata.course_import_id === options.importId &&
+      metadataValue(metadata, "courseImportId", "course_import_id") === options.importId &&
       typeof ownershipToken === "string" &&
       UPLOAD_ID_PATTERN.test(ownershipToken) &&
       current.data.size === asset.size_bytes &&
@@ -86,6 +90,14 @@ export async function inspectStorageRollbackAssets(options: {
     message:
       "Storage objects were preserved because the Storage API has no conditional delete. Only proven approved objects are listed for separate manual cleanup.",
   };
+}
+
+function metadataValue(
+  metadata: Record<string, unknown>,
+  providerKey: string,
+  compatibilityKey: string,
+) {
+  return metadata[providerKey] ?? metadata[compatibilityKey];
 }
 
 function isExplicitNotFound(error: RemoteStorageError | null) {
