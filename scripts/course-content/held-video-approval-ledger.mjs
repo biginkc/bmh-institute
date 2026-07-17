@@ -107,6 +107,13 @@ export function validateHeldVideoApprovalLedger(ledger, heldAssets) {
     if (REPLACEMENT_REQUIRED_CUTS.has(key) && record.decision !== "changes_requested") {
       errors.push(`${label} is a policy-defective source cut and must be changes_requested, never pending or approved`);
     }
+    if (
+      REPLACEMENT_REQUIRED_CUTS.has(key)
+      && record.decision === "changes_requested"
+      && record.approver !== "BMH Institute content QA"
+    ) {
+      errors.push(`${label} policy-defective source cut must retain the BMH Institute content QA decision`);
+    }
     if (record.decision === "pending") {
       if (record.approver !== null || record.date !== null || record.notes !== null) {
         errors.push(`${label} pending decision must keep approver, date, and notes null`);
@@ -114,6 +121,9 @@ export function validateHeldVideoApprovalLedger(ledger, heldAssets) {
     } else {
       if (typeof record.approver !== "string" || record.approver.trim().length === 0) {
         errors.push(`${label} decided record requires an approver`);
+      }
+      if (asset && !REPLACEMENT_REQUIRED_CUTS.has(key) && record.approver !== "Jarrad Henry") {
+        errors.push(`${label} corrected candidate decisions require approver Jarrad Henry`);
       }
       if (!validDate(record.date)) errors.push(`${label} decided record requires a real YYYY-MM-DD date`);
       if (typeof record.notes !== "string" || record.notes.trim().length === 0) {

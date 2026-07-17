@@ -6,10 +6,18 @@ export type RollbackOwnedEntry = { id: string; source_key: string };
 export type RollbackOwnedIds = Record<ImportTable, RollbackOwnedEntry[]>;
 
 export interface CourseImportAdapter {
-  upsert(table: ImportTable, row: Record<string, unknown>): Promise<void>;
+  applyAtomically(importId: string, operations: AtomicImportOperation[]): Promise<unknown>;
   readRows(table: ImportTable, ids: string[]): Promise<Map<string, Record<string, unknown>>>;
   rollbackAtomically(importId: string, ownedIds: RollbackOwnedIds): Promise<unknown>;
 }
+
+export type AtomicImportOperation = {
+  action: "upsert";
+  table: ImportTable;
+  source_key: string;
+  id: string;
+  row: Record<string, unknown>;
+};
 
 const ROLLBACK_ORDER: ImportTable[] = [
   "answer_options",
@@ -27,9 +35,30 @@ const ROLLBACK_ORDER: ImportTable[] = [
 ];
 
 export async function applyImportPlan(plan: ImportPlan, adapter: CourseImportAdapter) {
-  for (const operation of plan.operations) {
-    await adapter.upsert(operation.table, operation.row);
+  const response = await adapter.applyAtomically(
+    plan.importId,
+    atomicImportOperations(plan),
+  );
+  if (
+    !response ||
+    typeof response !== "object" ||
+    Array.isArray(response) ||
+    (response as Record<string, unknown>).status !== "applied" ||
+    (response as Record<string, unknown>).import_id !== plan.importId ||
+    (response as Record<string, unknown>).operation_count !== plan.operations.length
+  ) {
+    throw new Error("Atomic course import apply returned an invalid confirmation payload.");
   }
+}
+
+export function atomicImportOperations(plan: ImportPlan): AtomicImportOperation[] {
+  return plan.operations.map((operation) => ({
+    action: operation.action,
+    table: operation.table,
+    source_key: operation.sourceKey,
+    id: operation.id,
+    row: operation.row,
+  }));
 }
 
 export async function reconcileImportPlan(plan: ImportPlan, adapter: CourseImportAdapter) {

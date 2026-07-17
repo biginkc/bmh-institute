@@ -131,6 +131,46 @@ describe("fixture cleanup boundary", () => {
     manifest.authorization_boundary.deletion_is_authorized_now = true;
     expect(() => parseFixtureManifest(manifest)).toThrow(/not currently authorized/i);
   });
+
+  it("reports storage counts and safely retries a partial exact-object deletion", async () => {
+    const manifest = fixtureManifest();
+    manifest.storage_objects = {
+      content: ["fixtures/one.pdf", "fixtures/two.pdf"],
+      submissions: [],
+    };
+    const adapter = fakeAdapter();
+    adapter.storageNames.content = ["fixtures/one.pdf", "fixtures/two.pdf"];
+    adapter.rejectStorageDeleteOnce = true;
+
+    const firstPlan = await buildFixtureCleanupPlan({
+      manifest,
+      manifestSha256: "a".repeat(64),
+      adapter,
+    });
+    expect(firstPlan.storageDeleteCounts).toEqual({ content: 2, submissions: 0 });
+    await expect(
+      executeFixtureCleanup({ manifest, plan: firstPlan, adapter, confirmation: "confirm" }),
+    ).rejects.toThrow(/interrupted storage delete/i);
+    expect(adapter.storageNames.content).toEqual(["fixtures/two.pdf"]);
+
+    const retryPlan = await buildFixtureCleanupPlan({
+      manifest,
+      manifestSha256: "a".repeat(64),
+      adapter,
+    });
+    expect(retryPlan.problems.map((problem) => problem.code)).toEqual([
+      "missing_fixture_row",
+      "storage_drift",
+    ]);
+    await expect(
+      executeFixtureCleanup({ manifest, plan: retryPlan, adapter, confirmation: "confirm" }),
+    ).resolves.toEqual({ status: "deleted", deleted: { courses: 1 } });
+    expect(adapter.storageNames.content).toEqual([]);
+    expect(adapter.storageDeleteCalls).toEqual([
+      { bucket: "content", names: ["fixtures/one.pdf", "fixtures/two.pdf"] },
+      { bucket: "content", names: ["fixtures/one.pdf", "fixtures/two.pdf"] },
+    ]);
+  });
 });
 
 function fixtureManifest(): FixtureBoundaryManifest {
@@ -211,24 +251,32 @@ function fakeAdapter() {
   rows.profiles = [{ id: "retained-profile" }];
   rows.audit_log = [{ id: "retained-audit" }];
   const atomicCalls: Array<{ manifestSha256: string; confirmation: string }> = [];
+  const storageNames: Record<string, string[]> = { content: [], submissions: [] };
+  const storageDeleteCalls: Array<{ bucket: string; names: string[] }> = [];
   const adapter: FixtureCleanupAdapter & {
     rows: typeof rows;
     authUserIds: string[];
     atomicCalls: typeof atomicCalls;
     rejectLateDependents: boolean;
+    storageNames: typeof storageNames;
+    storageDeleteCalls: typeof storageDeleteCalls;
+    rejectStorageDeleteOnce: boolean;
   } = {
     rows,
     authUserIds: ["retained-auth"],
     atomicCalls,
     rejectLateDependents: false,
+    storageNames,
+    storageDeleteCalls,
+    rejectStorageDeleteOnce: false,
     async listRows(table) {
       return rows[table] ?? [];
     },
     async listAuthUserIds() {
       return adapter.authUserIds;
     },
-    async listStorageObjectNames() {
-      return [];
+    async listStorageObjectNames(bucket) {
+      return [...(storageNames[bucket] ?? [])];
     },
     async executeAtomicCleanup(input) {
       atomicCalls.push(input);
@@ -240,7 +288,15 @@ function fakeAdapter() {
       Object.assign(rows, transaction);
       return { status: "deleted", deleted: { courses: 1 } };
     },
-    async deleteStorageObjects() {},
+    async deleteStorageObjects(bucket, names) {
+      storageDeleteCalls.push({ bucket, names: [...names] });
+      if (adapter.rejectStorageDeleteOnce) {
+        adapter.rejectStorageDeleteOnce = false;
+        storageNames[bucket] = storageNames[bucket].filter((name) => name !== names[0]);
+        throw new Error("interrupted storage delete");
+      }
+      storageNames[bucket] = storageNames[bucket].filter((name) => !names.includes(name));
+    },
   };
   return adapter;
 }

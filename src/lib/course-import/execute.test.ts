@@ -12,10 +12,16 @@ import { buildImportPlan, deterministicImportId } from "./operations";
 import { validCourseManifest } from "./test-fixtures";
 
 function recordingAdapter(plan = buildImportPlan(validCourseManifest())) {
-  const writes: Array<{ table: string; row: Record<string, unknown> }> = [];
+  const applies: Array<{
+    importId: string;
+    operations: Parameters<CourseImportAdapter["applyAtomically"]>[1];
+  }> = [];
   const rollbacks: Array<{ importId: string; ownedIds: RollbackOwnedIds }> = [];
   const adapter: CourseImportAdapter = {
-    async upsert(table, row) { writes.push({ table, row }); },
+    async applyAtomically(importId, operations) {
+      applies.push({ importId, operations });
+      return { status: "applied", import_id: importId, operation_count: operations.length };
+    },
     async readRows(table, ids) {
       return new Map(
         plan.operations
@@ -32,16 +38,24 @@ function recordingAdapter(plan = buildImportPlan(validCourseManifest())) {
       };
     },
   };
-  return { adapter, writes, rollbacks };
+  return { adapter, applies, rollbacks };
 }
 
 describe("course import execution", () => {
-  it("applies every planned row in dependency order", async () => {
+  it("sends the exact plan to one atomic apply call", async () => {
     const plan = buildImportPlan(validCourseManifest());
     const recorder = recordingAdapter();
     await applyImportPlan(plan, recorder.adapter);
-    expect(recorder.writes).toHaveLength(plan.operations.length);
-    expect(recorder.writes[0].table).toBe("role_groups");
+    expect(recorder.applies).toHaveLength(1);
+    expect(recorder.applies[0].importId).toBe(plan.importId);
+    expect(recorder.applies[0].operations).toHaveLength(plan.operations.length);
+    expect(recorder.applies[0].operations[0]).toEqual({
+      action: "upsert",
+      table: "role_groups",
+      source_key: plan.operations[0].sourceKey,
+      id: plan.operations[0].id,
+      row: plan.operations[0].row,
+    });
   });
 
   it("reconciles exact manifest-owned identifiers", async () => {
@@ -83,7 +97,9 @@ describe("course import execution", () => {
     const readBatches: number[] = [];
     const rollbackCalls: number[] = [];
     const adapter: CourseImportAdapter = {
-      async upsert() {},
+      async applyAtomically(importId, atomicOperations) {
+        return { status: "applied", import_id: importId, operation_count: atomicOperations.length };
+      },
       async readRows(_table, ids) {
         readBatches.push(ids.length);
         return new Map(ids.map((id) => [id, { id }]));
@@ -120,6 +136,20 @@ describe("course import execution", () => {
     });
 
     await expect(rollbackImportPlan(plan, adapter)).rejects.toThrow(
+      /invalid confirmation payload/i,
+    );
+  });
+
+  it("rejects an apply RPC response that does not confirm the exact plan", async () => {
+    const plan = buildImportPlan(validCourseManifest());
+    const adapter = recordingAdapter(plan).adapter;
+    adapter.applyAtomically = async () => ({
+      status: "applied",
+      import_id: plan.importId,
+      operation_count: plan.operations.length - 1,
+    });
+
+    await expect(applyImportPlan(plan, adapter)).rejects.toThrow(
       /invalid confirmation payload/i,
     );
   });

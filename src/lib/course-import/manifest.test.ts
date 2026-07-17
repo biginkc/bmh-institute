@@ -299,6 +299,86 @@ describe("validateCourseManifest", () => {
       ]),
     );
   });
+
+  it("never throws for null or primitive nested catalog entries", () => {
+    const cases = [
+      (manifest: Record<string, unknown>) => {
+        programFrom(manifest).courses = [null];
+      },
+      (manifest: Record<string, unknown>) => {
+        courseFrom(manifest).modules = ["module"];
+      },
+      (manifest: Record<string, unknown>) => {
+        moduleFrom(manifest).lessons = [null];
+      },
+      (manifest: Record<string, unknown>) => {
+        lessonFrom(manifest).blocks = [false];
+      },
+      (manifest: Record<string, unknown>) => {
+        quizFrom(manifest).questions = [null];
+      },
+      (manifest: Record<string, unknown>) => {
+        questionFrom(manifest).options = [42];
+      },
+    ];
+
+    for (const mutate of cases) {
+      const raw = structuredClone(validCourseManifest()) as unknown as Record<string, unknown>;
+      mutate(raw);
+      expect(() => validateCourseManifest(raw)).not.toThrow();
+      expect(validateCourseManifest(raw).ok).toBe(false);
+    }
+  });
+
+  it("validates asset and block enums, booleans, and integer contracts before apply", () => {
+    const raw = validCourseManifest() as unknown as Record<string, unknown>;
+    const program = programFrom(raw);
+    program.course_order_mode = "shuffle";
+    program.certificate_enabled = "yes";
+    const course = courseFrom(raw);
+    course.certificate_enabled = 1;
+    const courseModule = moduleFrom(raw);
+    courseModule.sort_order = -1;
+    const lesson = lessonFrom(raw);
+    lesson.required = "yes";
+    const block = blockFrom(raw);
+    block.type = "bogus";
+    block.required = "yes";
+    block.sort_order = 0.5;
+    const assets = raw.assets as Array<Record<string, unknown>>;
+    assets[0].kind = "executable";
+
+    const result = validateCourseManifest(raw);
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.errors).toEqual(expect.arrayContaining([
+      "program.course_order_mode is invalid.",
+      "program.certificate_enabled must be boolean.",
+      "program.courses[0].certificate_enabled must be boolean.",
+      "program.courses[0].modules[0].sort_order must be a non-negative integer.",
+      "program.courses[0].modules[0].lessons[0].required must be boolean.",
+      "program.courses[0].modules[0].lessons[0].blocks[0].type is invalid.",
+      "program.courses[0].modules[0].lessons[0].blocks[0].required must be boolean.",
+      "program.courses[0].modules[0].lessons[0].blocks[0].sort_order must be a non-negative integer.",
+      "assets[0].kind is invalid.",
+    ]));
+  });
+
+  it("rejects referenced assets with the wrong kind or MIME contract", () => {
+    const input = validCourseManifest();
+    const block = input.program.courses[0].modules[0].lessons[0].blocks?.[0];
+    if (!block) throw new Error("Fixture video block is missing.");
+    input.assets[0].kind = "pdf";
+    input.assets[0].mime_type = "application/pdf";
+    block.content.poster_asset_key = "video-1";
+    block.content.caption_asset_key = "thumb-1";
+    block.content.transcript_asset_key = "thumb-1";
+
+    const result = validateCourseManifest(input);
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.errors.filter((error) => error.includes("incompatible kind or MIME"))).toHaveLength(4);
+  });
 });
 
 function assignmentFrom(manifest: Record<string, unknown>) {
@@ -308,4 +388,35 @@ function assignmentFrom(manifest: Record<string, unknown>) {
     throw new Error("Fixture assignment is missing.");
   }
   return lesson.assignment as Record<string, unknown>;
+}
+
+function programFrom(manifest: Record<string, unknown>) {
+  return manifest.program as Record<string, unknown>;
+}
+
+function courseFrom(manifest: Record<string, unknown>) {
+  return (programFrom(manifest).courses as Array<Record<string, unknown>>)[0];
+}
+
+function moduleFrom(manifest: Record<string, unknown>) {
+  return (courseFrom(manifest).modules as Array<Record<string, unknown>>)[0];
+}
+
+function lessonFrom(manifest: Record<string, unknown>) {
+  return (moduleFrom(manifest).lessons as Array<Record<string, unknown>>)[0];
+}
+
+function blockFrom(manifest: Record<string, unknown>) {
+  return (lessonFrom(manifest).blocks as Array<Record<string, unknown>>)[0];
+}
+
+function quizFrom(manifest: Record<string, unknown>) {
+  const lesson = (moduleFrom(manifest).lessons as Array<Record<string, unknown>>)
+    .find((item) => item.type === "quiz");
+  if (!lesson || !lesson.quiz || typeof lesson.quiz !== "object") throw new Error("Fixture quiz is missing.");
+  return lesson.quiz as Record<string, unknown>;
+}
+
+function questionFrom(manifest: Record<string, unknown>) {
+  return (quizFrom(manifest).questions as Array<Record<string, unknown>>)[0];
 }

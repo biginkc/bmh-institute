@@ -167,6 +167,14 @@ const MAX_IMPORT_ID_LENGTH = 128;
 const MAX_SOURCE_KEY_LENGTH = 512;
 const SOURCE_KEY_PATTERN = /^[a-z0-9][a-z0-9._-]*$/;
 const SHA256_PATTERN = /^[a-f0-9]{64}$/;
+const ASSET_KINDS: readonly AssetKind[] = [
+  "video", "audio", "image", "thumbnail", "poster", "caption",
+  "transcript", "pdf", "download",
+];
+const BLOCK_TYPES: readonly ImportBlock["type"][] = [
+  "video", "text", "pdf", "image", "audio", "download", "external_link",
+  "embed", "role_play", "divider", "callout", "flashcard",
+];
 const ASSET_REFERENCE_FIELDS = [
   "asset_key",
   "poster_asset_key",
@@ -224,6 +232,7 @@ export function validateCourseManifest(
 
   registerKey(manifest.qa_role_group.source_key, "qa_role_group");
   requireNonEmpty(manifest.qa_role_group.name, "qa_role_group.name", errors);
+  requireNonEmpty(manifest.qa_role_group.description, "qa_role_group.description", errors);
   const assets = new Map<string, CourseImportAsset>();
   const assetPaths = new Map<string, CourseImportAsset[]>();
   for (const [index, asset] of manifest.assets.entries()) {
@@ -233,10 +242,16 @@ export function validateCourseManifest(
       continue;
     }
     registerKey(asset.source_key, path);
+    if (!ASSET_KINDS.includes(asset.kind as AssetKind)) {
+      errors.push(`${path}.kind is invalid.`);
+    }
     requireNonEmpty(asset.local_path, `${path}.local_path`, errors);
     validateStoragePath(asset.storage_path, `${path}.storage_path`, errors);
     requireNonEmpty(asset.mime_type, `${path}.mime_type`, errors);
-    if (asset.checksum_sha256 !== null && !SHA256_PATTERN.test(asset.checksum_sha256)) {
+    if (
+      asset.checksum_sha256 !== null &&
+      (typeof asset.checksum_sha256 !== "string" || !SHA256_PATTERN.test(asset.checksum_sha256))
+    ) {
       errors.push(`${path}.checksum_sha256 must be a lowercase SHA-256 hex digest or null.`);
     }
     if (asset.size_bytes !== null && (!Number.isInteger(asset.size_bytes) || asset.size_bytes < 0)) {
@@ -285,7 +300,14 @@ export function validateCourseManifest(
     errors,
   );
   requireNonEmpty(program.title, "program.title", errors);
+  validateNullableString(program.description, "program.description", errors);
   if (program.is_published !== false) errors.push("program.is_published must be false for a safe import.");
+  if (!["sequential", "free"].includes(program.course_order_mode)) {
+    errors.push("program.course_order_mode is invalid.");
+  }
+  if (typeof program.certificate_enabled !== "boolean") {
+    errors.push("program.certificate_enabled must be boolean.");
+  }
   validateArtworkReference(
     program.thumbnail_asset_key,
     "program.thumbnail_asset_key",
@@ -299,6 +321,10 @@ export function validateCourseManifest(
   } else {
     for (const [courseIndex, course] of program.courses.entries()) {
       const coursePath = `program.courses[${courseIndex}]`;
+      if (!isRecord(course)) {
+        errors.push(`${coursePath} must be an object.`);
+        continue;
+      }
       registerKey(course.source_key, coursePath);
       validateDerivedSourceKey(
         `${program.source_key}:${course.source_key}`,
@@ -306,7 +332,11 @@ export function validateCourseManifest(
         errors,
       );
       requireNonEmpty(course.title, `${coursePath}.title`, errors);
+      validateNullableString(course.description, `${coursePath}.description`, errors);
       if (course.is_published !== false) errors.push(`${coursePath}.is_published must be false for a safe import.`);
+      if (typeof course.certificate_enabled !== "boolean") {
+        errors.push(`${coursePath}.certificate_enabled must be boolean.`);
+      }
       validateArtworkReference(
         course.thumbnail_asset_key,
         `${coursePath}.thumbnail_asset_key`,
@@ -315,13 +345,27 @@ export function validateCourseManifest(
         gate,
         errors,
       );
+      if (!Array.isArray(course.modules) || course.modules.length === 0) {
+        errors.push(`${coursePath}.modules must contain at least one module.`);
+        continue;
+      }
       validateSiblingSortOrders(course.modules, `${coursePath}.modules`, errors);
-      for (const [moduleIndex, module] of (course.modules ?? []).entries()) {
+      for (const [moduleIndex, module] of course.modules.entries()) {
         const modulePath = `${coursePath}.modules[${moduleIndex}]`;
+        if (!isRecord(module)) {
+          errors.push(`${modulePath} must be an object.`);
+          continue;
+        }
         registerKey(module.source_key, modulePath);
         requireNonEmpty(module.title, `${modulePath}.title`, errors);
+        validateNullableString(module.description, `${modulePath}.description`, errors);
+        validateNonNegativeInteger(module.sort_order, `${modulePath}.sort_order`, errors);
+        if (!Array.isArray(module.lessons) || module.lessons.length === 0) {
+          errors.push(`${modulePath}.lessons must contain at least one lesson.`);
+          continue;
+        }
         validateSiblingSortOrders(module.lessons, `${modulePath}.lessons`, errors);
-        for (const [lessonIndex, lesson] of (module.lessons ?? []).entries()) {
+        for (const [lessonIndex, lesson] of module.lessons.entries()) {
           validateLesson(
             lesson,
             `${modulePath}.lessons[${lessonIndex}]`,
@@ -366,6 +410,9 @@ function validateLesson(
   }
   registerKey(lesson.source_key, path);
   requireNonEmpty(lesson.title, `${path}.title`, errors);
+  validateNullableString(lesson.description, `${path}.description`, errors);
+  validateNonNegativeInteger(lesson.sort_order, `${path}.sort_order`, errors);
+  if (typeof lesson.required !== "boolean") errors.push(`${path}.required must be boolean.`);
   validateArtworkReference(
     lesson.thumbnail_asset_key,
     `${path}.thumbnail_asset_key`,
@@ -377,22 +424,39 @@ function validateLesson(
 
   if (lesson.type === "content") {
     if (lesson.quiz || lesson.assignment) errors.push(`${path} content lesson cannot include quiz or assignment data.`);
-    if (!Array.isArray(lesson.blocks) || lesson.blocks.length === 0) errors.push(`${path}.blocks must contain at least one block.`);
-    validateSiblingSortOrders(lesson.blocks ?? [], `${path}.blocks`, errors);
-    for (const [index, block] of (lesson.blocks ?? []).entries()) {
+    if (!Array.isArray(lesson.blocks) || lesson.blocks.length === 0) {
+      errors.push(`${path}.blocks must contain at least one block.`);
+      return;
+    }
+    validateSiblingSortOrders(lesson.blocks, `${path}.blocks`, errors);
+    for (const [index, block] of lesson.blocks.entries()) {
       const blockPath = `${path}.blocks[${index}]`;
+      if (!isRecord(block)) {
+        errors.push(`${blockPath} must be an object.`);
+        continue;
+      }
       registerKey(block.source_key, blockPath);
-      if (!isRecord(block.content)) errors.push(`${blockPath}.content must be an object.`);
+      if (!BLOCK_TYPES.includes(block.type as ImportBlock["type"])) {
+        errors.push(`${blockPath}.type is invalid.`);
+      }
+      validateNonNegativeInteger(block.sort_order, `${blockPath}.sort_order`, errors);
+      if (typeof block.required !== "boolean") {
+        errors.push(`${blockPath}.required must be boolean.`);
+      }
+      if (!isRecord(block.content)) {
+        errors.push(`${blockPath}.content must be an object.`);
+        continue;
+      }
       if (block.required === true) {
         if (block.type === "video") {
-          if (typeof block.content?.asset_key !== "string" || !block.content.asset_key.trim()) {
+          if (typeof block.content.asset_key !== "string" || !block.content.asset_key.trim()) {
             errors.push(
               `${blockPath} requires an uploaded video asset before it can be required.`,
             );
           }
         } else if (block.type === "role_play") {
           if (
-            typeof block.content?.scenario_id !== "string" ||
+            typeof block.content.scenario_id !== "string" ||
             !block.content.scenario_id.trim()
           ) {
             errors.push(
@@ -406,17 +470,26 @@ function validateLesson(
         }
       }
       for (const field of ASSET_REFERENCE_FIELDS) {
-        const value = block.content?.[field];
+        const value = block.content[field];
         if (value !== undefined && value !== null) {
           validateAssetReference(value, `${blockPath}.content.${field}`, assets, errors);
           const asset = typeof value === "string" ? assets.get(value) : undefined;
+          if (asset) {
+            validateBlockAssetContract(
+              block.type,
+              field,
+              asset,
+              `${blockPath}.content.${field}`,
+              errors,
+            );
+          }
           if (gate === "release" && asset && asset.approval_status !== "approved") {
             errors.push(`${blockPath} referenced asset ${value} is not approved.`);
           }
         }
       }
       for (const [keyField, pathField] of RESOLVED_ASSET_REFERENCE_FIELDS) {
-        const rawPath = block.content?.[pathField];
+        const rawPath = block.content[pathField];
         if (rawPath === undefined || rawPath === null) continue;
         if (typeof rawPath !== "string") {
           errors.push(`${blockPath}.content.${pathField} must be a string.`);
@@ -430,10 +503,19 @@ function validateLesson(
           continue;
         }
         const asset = matches[0];
-        const key = block.content?.[keyField];
+        const key = block.content[keyField];
         if (typeof key === "string" && key !== asset.source_key) {
           errors.push(
             `${blockPath}.content.${pathField} does not match ${keyField} ${key}.`,
+          );
+        }
+        if (typeof key !== "string") {
+          validateBlockAssetContract(
+            block.type,
+            keyField,
+            asset,
+            `${blockPath}.content.${pathField}`,
+            errors,
           );
         }
         if (gate === "release" && !isApprovedImmutableAsset(asset, storagePrefixForImportFromNamespace(artworkNamespace))) {
@@ -444,19 +526,34 @@ function validateLesson(
       }
       if (gate === "release" && block.type === "video") {
         for (const field of ["asset_key", "poster_asset_key", "caption_asset_key", "transcript_asset_key"] as const) {
-          const value = block.content?.[field];
+          const value = block.content[field];
           if (typeof value !== "string") errors.push(`${blockPath}.content.${field} is required for release.`);
           else requireApprovedAsset(value, `${blockPath}.content.${field}`, assets, errors);
         }
       }
       if (block.type === "flashcard") {
-        const cards = block.content?.cards;
-        if (!Array.isArray(cards) || cards.length === 0) errors.push(`${blockPath}.content.cards must contain at least one card.`);
+        const cards = block.content.cards;
+        if (!Array.isArray(cards) || cards.length === 0) {
+          errors.push(`${blockPath}.content.cards must contain at least one card.`);
+        } else {
+          for (const [cardIndex, card] of cards.entries()) {
+            if (!isRecord(card)) {
+              errors.push(`${blockPath}.content.cards[${cardIndex}] must be an object.`);
+              continue;
+            }
+            requireNonEmpty(card.front, `${blockPath}.content.cards[${cardIndex}].front`, errors);
+            requireNonEmpty(card.back, `${blockPath}.content.cards[${cardIndex}].back`, errors);
+          }
+        }
       }
     }
   } else if (lesson.type === "quiz") {
     if (lesson.blocks || lesson.assignment || !lesson.quiz) errors.push(`${path} quiz lesson must contain only quiz data.`);
-    if (lesson.quiz) validateQuiz(lesson.quiz, `${path}.quiz`, registerKey, gate, errors);
+    if (lesson.quiz !== undefined && lesson.quiz !== null && !isRecord(lesson.quiz)) {
+      errors.push(`${path}.quiz must be an object.`);
+    } else if (isRecord(lesson.quiz)) {
+      validateQuiz(lesson.quiz as unknown as ImportQuiz, `${path}.quiz`, registerKey, gate, errors);
+    }
   } else if (lesson.type === "assignment") {
     if (lesson.blocks || lesson.quiz || !lesson.assignment) errors.push(`${path} assignment lesson must contain only assignment data.`);
     const assignment = lesson.assignment as unknown;
@@ -521,18 +618,20 @@ function validateQuiz(
 ) {
   registerKey(quiz.source_key, path);
   requireNonEmpty(quiz.title, `${path}.title`, errors);
+  validateNullableString(quiz.description, `${path}.description`, errors);
   if (typeof quiz.randomize_questions !== "boolean") errors.push(`${path}.randomize_questions must be boolean.`);
   if (typeof quiz.randomize_answers !== "boolean") errors.push(`${path}.randomize_answers must be boolean.`);
   if (!Number.isInteger(quiz.passing_score) || quiz.passing_score < 0 || quiz.passing_score > 100) {
     errors.push(`${path}.passing_score must be an integer from 0 to 100.`);
   }
-  if (!Array.isArray(quiz.questions) || quiz.questions.length === 0) errors.push(`${path}.questions must contain at least one question.`);
-  if (gate === "release" && (quiz.questions?.length ?? 0) < 15) errors.push(`${path}.questions must contain at least 15 questions for release.`);
+  const questions = Array.isArray(quiz.questions) ? quiz.questions : [];
+  if (questions.length === 0) errors.push(`${path}.questions must contain at least one question.`);
+  if (gate === "release" && questions.length < 15) errors.push(`${path}.questions must contain at least 15 questions for release.`);
   if (
     quiz.questions_per_attempt !== null &&
     (!Number.isInteger(quiz.questions_per_attempt) ||
       quiz.questions_per_attempt < 1 ||
-      quiz.questions_per_attempt > (quiz.questions?.length ?? 0))
+      quiz.questions_per_attempt > questions.length)
   ) {
     errors.push(`${path}.questions_per_attempt must be positive and no larger than the question pool.`);
   }
@@ -545,22 +644,32 @@ function validateQuiz(
   if (!["never", "after_pass", "always"].includes(quiz.show_correct_answers_after)) {
     errors.push(`${path}.show_correct_answers_after is invalid.`);
   }
-  validateSiblingSortOrders(quiz.questions ?? [], `${path}.questions`, errors);
-  for (const [index, question] of (quiz.questions ?? []).entries()) {
+  validateSiblingSortOrders(questions, `${path}.questions`, errors);
+  for (const [index, question] of questions.entries()) {
     const questionPath = `${path}.questions[${index}]`;
+    if (!isRecord(question)) {
+      errors.push(`${questionPath} must be an object.`);
+      continue;
+    }
     registerKey(question.source_key, questionPath);
     requireNonEmpty(question.question_text, `${questionPath}.question_text`, errors);
+    validateNullableString(question.explanation, `${questionPath}.explanation`, errors);
     if (!["true_false", "single_choice", "multi_select"].includes(question.question_type)) {
       errors.push(`${questionPath}.question_type is invalid.`);
     }
     if (!Number.isInteger(question.points) || question.points < 0) {
       errors.push(`${questionPath}.points must be a non-negative integer.`);
     }
-    if (!Array.isArray(question.options) || question.options.length < 2) errors.push(`${questionPath}.options must contain at least two options.`);
-    validateSiblingSortOrders(question.options ?? [], `${questionPath}.options`, errors);
+    const options = Array.isArray(question.options) ? question.options : [];
+    if (options.length < 2) errors.push(`${questionPath}.options must contain at least two options.`);
+    validateSiblingSortOrders(options, `${questionPath}.options`, errors);
     let correct = 0;
-    for (const [optionIndex, option] of (question.options ?? []).entries()) {
+    for (const [optionIndex, option] of options.entries()) {
       const optionPath = `${questionPath}.options[${optionIndex}]`;
+      if (!isRecord(option)) {
+        errors.push(`${optionPath} must be an object.`);
+        continue;
+      }
       registerKey(option.source_key, optionPath);
       requireNonEmpty(option.option_text, `${optionPath}.option_text`, errors);
       if (typeof option.is_correct !== "boolean") errors.push(`${optionPath}.is_correct must be boolean.`);
@@ -638,6 +747,55 @@ function validateBoundedString(value: unknown, path: string, maxLength: number, 
   }
 }
 
+function validateNullableString(value: unknown, path: string, errors: string[]) {
+  if (value !== null && typeof value !== "string") {
+    errors.push(`${path} must be a string or null.`);
+  }
+}
+
+function validateNonNegativeInteger(value: unknown, path: string, errors: string[]) {
+  if (!Number.isInteger(value) || Number(value) < 0) {
+    errors.push(`${path} must be a non-negative integer.`);
+  }
+}
+
+function validateBlockAssetContract(
+  blockType: unknown,
+  field: (typeof ASSET_REFERENCE_FIELDS)[number],
+  asset: CourseImportAsset,
+  path: string,
+  errors: string[],
+) {
+  const mime = asset.mime_type;
+  const accepted = (() => {
+    if (field === "poster_asset_key") {
+      return blockType === "video" &&
+        ["poster", "image", "thumbnail"].includes(asset.kind) &&
+        typeof mime === "string" && mime.startsWith("image/");
+    }
+    if (field === "caption_asset_key") {
+      return blockType === "video" && asset.kind === "caption" && mime === "text/vtt";
+    }
+    if (field === "transcript_asset_key") {
+      return blockType === "video" && asset.kind === "transcript" &&
+        (mime === "text/markdown" || mime === "text/plain");
+    }
+    if (field !== "asset_key") return false;
+    if (blockType === "video") return asset.kind === "video" && typeof mime === "string" && mime.startsWith("video/");
+    if (blockType === "pdf") return asset.kind === "pdf" && mime === "application/pdf";
+    if (blockType === "image") {
+      return ["image", "thumbnail", "poster"].includes(asset.kind) &&
+        typeof mime === "string" && mime.startsWith("image/");
+    }
+    if (blockType === "audio") return asset.kind === "audio" && typeof mime === "string" && mime.startsWith("audio/");
+    if (blockType === "download") return asset.kind === "download" || asset.kind === "pdf";
+    return false;
+  })();
+  if (!accepted) {
+    errors.push(`${path} asset ${asset.source_key} has incompatible kind or MIME type for ${String(blockType)}.${field}.`);
+  }
+}
+
 function validateArtworkReference(
   value: unknown,
   path: string,
@@ -646,6 +804,10 @@ function validateArtworkReference(
   gate: "draft" | "release",
   errors: string[],
 ) {
+  if (value !== null && typeof value !== "string") {
+    errors.push(`${path} must be a source_key string or null.`);
+    return;
+  }
   validateAssetReference(value, path, assets, errors);
   if (value === null) return;
   const asset = typeof value === "string" ? assets.get(value) : undefined;

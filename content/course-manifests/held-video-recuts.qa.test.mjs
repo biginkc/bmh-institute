@@ -86,6 +86,11 @@ test("approval transitions require evidence and keep decided checksums immutable
   });
   assert.deepEqual(validateHeldVideoApprovalTransition(ledger, approved, held), []);
 
+  const wrongApprover = structuredClone(approved);
+  wrongApprover.records[0].approver = "Not Jarrad";
+  assert.ok(validateHeldVideoApprovalTransition(ledger, wrongApprover, held)
+    .some((error) => error.includes("require approver Jarrad Henry")));
+
   const missingEvidence = structuredClone(approved);
   missingEvidence.records[0].approver = null;
   assert.ok(validateHeldVideoApprovalTransition(ledger, missingEvidence, held)
@@ -108,6 +113,11 @@ test("approval transitions require evidence and keep decided checksums immutable
   });
   assert.ok(validateHeldVideoApprovalTransition(ledger, policyDefectiveApproval, held)
     .some((error) => error.includes("policy-defective source cut")));
+
+  const rewrittenPolicyOwner = structuredClone(ledger);
+  rewrittenPolicyOwner.records[6].approver = "Jarrad Henry";
+  assert.ok(validateHeldVideoApprovalLedger(rewrittenPolicyOwner, held)
+    .some((error) => error.includes("must retain the BMH Institute content QA decision")));
 });
 
 test("generated scripts contain the exact locked final transition", async () => {

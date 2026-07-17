@@ -20,8 +20,7 @@ import { validateCanaryScope, validateCourseManifest } from "../src/lib/course-i
 import { buildImportPlan } from "../src/lib/course-import/operations";
 import { inspectStorageRollbackAssets } from "../src/lib/course-import/storage-rollback";
 import type { Database } from "../src/lib/supabase/types";
-
-const PRODUCTION_PROJECT_REF = "dhvfsyteqsxagokoerrx";
+import { assertCourseImportEnvironment } from "../src/lib/course-import/environment";
 
 async function main() {
   const { command, manifestPath, flags } = parseArgs(process.argv.slice(2));
@@ -46,7 +45,7 @@ async function main() {
 
   const url = requiredEnv("NEXT_PUBLIC_SUPABASE_URL");
   const serviceKey = requiredEnv("SUPABASE_SERVICE_ROLE_KEY");
-  guardEnvironment(url, flags.allowProduction);
+  assertCourseImportEnvironment(url, flags.allowProduction);
   const supabase = createClient<Database>(url, serviceKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
@@ -105,12 +104,19 @@ function createSupabaseAdapter(
   supabase: SupabaseClient<Database>,
 ): CourseImportAdapter {
   return {
-    async upsert(table, row) {
-      const tableApi = supabase.from(table) as unknown as {
-        upsert(value: Record<string, unknown>): PromiseLike<{ error: { message: string } | null }>;
+    async applyAtomically(importId, operations) {
+      const client = supabase as unknown as {
+        rpc(name: string, args: Record<string, unknown>): PromiseLike<{
+          data: unknown;
+          error: { message: string } | null;
+        }>;
       };
-      const { error } = await tableApi.upsert(row);
-      if (error) throw new Error(`${table} upsert failed: ${error.message}`);
+      const { data, error } = await client.rpc("fn_apply_course_import", {
+        p_import_id: importId,
+        p_operations: operations,
+      });
+      if (error) throw new Error(`Atomic course import apply failed: ${error.message}`);
+      return data;
     },
     async readRows(table, ids) {
       const tableApi = supabase.from(table) as unknown as {
@@ -159,12 +165,6 @@ function parseArgs(args: string[]) {
       sourceRoot: args.find((arg) => arg.startsWith("--source-root="))?.slice("--source-root=".length),
     },
   };
-}
-
-function guardEnvironment(url: string, allowProduction: boolean) {
-  if (url.includes(PRODUCTION_PROJECT_REF) && !allowProduction) {
-    throw new Error("Production writes are blocked. Review the dry run and add --allow-production only at an approved gate.");
-  }
 }
 
 function requiredEnv(name: string) {

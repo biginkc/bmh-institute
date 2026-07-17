@@ -249,7 +249,13 @@ export async function buildFixtureCleanupPlan({
     deleteCounts: Object.fromEntries(
       DELETE_ORDER.map((table) => [table, manifest.fixture_tables[table].rows.length]),
     ),
-    storageDeleteCounts: { content: 0, submissions: 0 },
+    storageDeleteCounts: Object.fromEntries(
+      ["content", "submissions"].map((bucket) => {
+        const objects = manifest.storage_objects[bucket];
+        if (!Array.isArray(objects)) throw new Error(`Invalid storage manifest for ${bucket}.`);
+        return [bucket, objects.length];
+      }),
+    ),
     problems,
   };
 }
@@ -291,10 +297,13 @@ function isAlreadyDeletedCandidate(
     (total, table) => total + table.rows.length,
     0,
   );
+  const missingRows = plan.problems.filter((problem) => problem.code === "missing_fixture_row");
   return (
     expectedRows > 0 &&
-    plan.problems.length === expectedRows &&
-    plan.problems.every((problem) => problem.code === "missing_fixture_row")
+    missingRows.length === expectedRows &&
+    plan.problems.every(
+      (problem) => problem.code === "missing_fixture_row" || problem.code === "storage_drift",
+    )
   );
 }
 
