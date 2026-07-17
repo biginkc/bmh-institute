@@ -1,5 +1,7 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
+import { requireE2eSeedPassword } from "../src/lib/testing/e2e-seed-password";
+
 type SeedUser = {
   email: string;
   password: string;
@@ -14,8 +16,7 @@ const PROD_PROJECT_REF = "dhvfsyteqsxagokoerrx";
 const SUPABASE_URL = process.env.TEST_SUPABASE_URL;
 const SERVICE_ROLE = process.env.TEST_SUPABASE_SERVICE_ROLE_KEY;
 
-const E2E_PASSWORD =
-  process.env.E2E_SEED_PASSWORD?.trim() || "BMHInstituteTest123!";
+const E2E_PASSWORD = requireE2eSeedPassword();
 const SEED = {
   roleGroup: "E2E Appointment Setters",
   program: "E2E VA Onboarding",
@@ -208,12 +209,7 @@ async function main() {
           objectionsCourseId,
           standaloneCourseId,
         },
-        users: Object.fromEntries(
-          Object.entries(SEED.users).map(([key, user]) => [
-            key,
-            { email: user.email, password: user.password },
-          ]),
-        ),
+        seededUserCount: Object.keys(SEED.users).length,
       },
       null,
       2,

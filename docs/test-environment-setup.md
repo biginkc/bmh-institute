@@ -60,7 +60,7 @@ The HARDEN-01 learner-context spec (`e2e-prod/admin-route-guard-learner.spec.ts`
 
 ## BMH Institute test Supabase project
 
-The durable Playwright suite uses the existing `bmh-institute-test` Supabase project. Run `npm run seed:e2e` before `npm run test:e2e`; CI does this automatically with the `TEST_SUPABASE_*` secrets.
+The durable Playwright suite uses the existing `bmh-institute-test` Supabase project. Run `npm run seed:e2e` before `npm run test:e2e`; CI does this automatically with the `TEST_SUPABASE_*` secrets. `E2E_SEED_PASSWORD` is also required, must be at least 24 characters, and has no repository fallback. The seed rotates durable test accounts to that injected value without printing emails or passwords.
 
 The fixture guard is intentionally strict. If you see a production-ref refusal, switch `TEST_SUPABASE_URL` away from `dhvfsyteqsxagokoerrx`. If you see an unexpected-ref refusal, point it at `jvaabkchkihkjllehmft`.
 

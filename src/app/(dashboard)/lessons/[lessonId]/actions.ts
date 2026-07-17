@@ -13,8 +13,7 @@ import {
 } from "@/lib/video-progress/watched-ranges";
 
 export type MarkBlockResult =
-  | { ok: true; alreadyMarked: boolean }
-  | { ok: false; error: string };
+  { ok: true; alreadyMarked: boolean } | { ok: false; error: string };
 
 export type CompleteRolePlayBlockInput = {
   blockId: string;
@@ -35,8 +34,7 @@ export type VideoProgressResult =
   | { ok: false; error: string };
 
 export type VideoSeekResult =
-  | { ok: true; positionSeconds: number }
-  | { ok: false; error: string };
+  { ok: true; positionSeconds: number } | { ok: false; error: string };
 
 export async function loadVideoProgress(
   blockId: string,
@@ -65,7 +63,9 @@ export async function loadVideoProgress(
   const [progressResult, completionResult] = await Promise.all([
     learner
       .from("user_video_progress")
-      .select("position_seconds, duration_seconds, watched_ranges, asset_version")
+      .select(
+        "position_seconds, duration_seconds, watched_ranges, asset_version",
+      )
       .eq("user_id", user.id)
       .eq("block_id", blockId)
       .maybeSingle(),
@@ -94,9 +94,9 @@ export async function loadVideoProgress(
   const ranges = progressMatchesAsset
     ? parseWatchedRanges(progress?.watched_ranges)
     : [];
-  const duration = authoredDuration || (
-    progressMatchesAsset ? numberOrZero(progress?.duration_seconds) : 0
-  );
+  const duration =
+    authoredDuration ||
+    (progressMatchesAsset ? numberOrZero(progress?.duration_seconds) : 0);
   const coverage = watchedCoverageRatio(ranges, duration);
   return {
     ok: true,
@@ -138,7 +138,8 @@ export async function recordVideoSeek(input: {
   });
   if (error) return { ok: false, error: error.message };
   const trusted = parseTrustedVideoState(data);
-  if (!trusted) return { ok: false, error: "Video progress could not be saved." };
+  if (!trusted)
+    return { ok: false, error: "Video progress could not be saved." };
   return { ok: true, positionSeconds: trusted.positionSeconds };
 }
 
@@ -175,7 +176,8 @@ export async function recordVideoProgress(input: {
   });
   if (error) return { ok: false, error: error.message };
   const trusted = parseTrustedVideoState(data);
-  if (!trusted) return { ok: false, error: "Video progress could not be saved." };
+  if (!trusted)
+    return { ok: false, error: "Video progress could not be saved." };
 
   if (trusted.completed) {
     await emitSandraCourseCompletedForBlock(learner, {
@@ -208,7 +210,10 @@ export async function completeRolePlayBlock(
   const scenarioId = input.scenarioId.trim();
   const attemptId = input.attemptId.trim();
   if (!blockId || !scenarioId || !attemptId || !input.completionToken.trim()) {
-    return { ok: false, error: "Role play completion is missing required data." };
+    return {
+      ok: false,
+      error: "Role play completion is missing required data.",
+    };
   }
   const { data: block } = await learner
     .from("content_blocks")
@@ -220,7 +225,10 @@ export async function completeRolePlayBlock(
     block.block_type !== "role_play" ||
     scenarioFromContent(block.content) !== scenarioId
   ) {
-    return { ok: false, error: "This role play does not belong to the lesson." };
+    return {
+      ok: false,
+      error: "This role play does not belong to the lesson.",
+    };
   }
   const { data: unlocked } = await learner.rpc("fn_lesson_is_unlocked", {
     p_user_id: user.id,
@@ -241,33 +249,48 @@ export async function completeRolePlayBlock(
   } catch (error) {
     return {
       ok: false,
-      error: error instanceof Error ? error.message : "Admin client unavailable.",
+      error:
+        error instanceof Error ? error.message : "Admin client unavailable.",
     };
   }
-  const { error: resultError } = await admin.from("role_play_results").upsert(
+  const completeRolePlay = admin.rpc as unknown as (
+    name: "fn_complete_role_play_block",
+    args: {
+      p_user_id: string;
+      p_block_id: string;
+      p_scenario_id: string;
+      p_attempt_id: string;
+      p_score: number;
+      p_goals_met: Record<string, boolean>;
+      p_summary: Record<string, string>;
+    },
+  ) => Promise<{
+    data: { lessonId?: unknown; alreadyMarked?: unknown } | null;
+    error: { message: string } | null;
+  }>;
+  const { data, error } = await completeRolePlay(
+    "fn_complete_role_play_block",
     {
-      user_id: user.id,
-      block_id: blockId,
-      scenario_id: scenarioId,
-      attempt_id: attemptId,
-      score: verified.score,
-      goals_met: verified.goalsMet,
-      summary: verified.summaryUrl
+      p_user_id: user.id,
+      p_block_id: blockId,
+      p_scenario_id: scenarioId,
+      p_attempt_id: attemptId,
+      p_score: verified.score,
+      p_goals_met: verified.goalsMet,
+      p_summary: verified.summaryUrl
         ? { summary_url: verified.summaryUrl }
         : {},
     },
-    { onConflict: "user_id,attempt_id" },
   );
-  if (resultError) return { ok: false, error: resultError.message };
-
-  const { data, error } = await admin
-    .from("user_block_progress")
-    .upsert(
-      { user_id: user.id, block_id: blockId },
-      { onConflict: "user_id,block_id", ignoreDuplicates: true },
-    )
-    .select("id");
   if (error) return { ok: false, error: error.message };
+  if (
+    !data ||
+    typeof data.lessonId !== "string" ||
+    typeof data.alreadyMarked !== "boolean" ||
+    data.lessonId !== block.lesson_id
+  ) {
+    return { ok: false, error: "Role play completion could not be saved." };
+  }
 
   await emitSandraCourseCompletedForBlock(learner, {
     userId: user.id,
@@ -275,7 +298,7 @@ export async function completeRolePlayBlock(
   });
   revalidatePath(`/lessons/${block.lesson_id}`);
   revalidatePath("/dashboard");
-  return { ok: true, alreadyMarked: (data ?? []).length === 0 };
+  return { ok: true, alreadyMarked: data.alreadyMarked };
 }
 
 function validMediaNumber(value: number) {
@@ -296,8 +319,11 @@ function assetVersionFromContent(value: unknown) {
   const content = value as Record<string, unknown>;
   const filePath = content.file_path;
   const duration = content.duration_seconds;
-  return typeof filePath === "string" && filePath.trim() &&
-      typeof duration === "number" && Number.isFinite(duration) && duration > 0
+  return typeof filePath === "string" &&
+    filePath.trim() &&
+    typeof duration === "number" &&
+    Number.isFinite(duration) &&
+    duration > 0
     ? `${filePath.trim()}#duration=${duration}`
     : "";
 }

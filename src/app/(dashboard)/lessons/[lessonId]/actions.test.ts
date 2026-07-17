@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-let resultUpsert: Record<string, unknown> | null = null;
-let progressUpsert: Record<string, unknown> | null = null;
+let completionRpc: Record<string, unknown> | null = null;
 let adminClientCalls = 0;
 let mockUser: { id: string } | null = { id: "user-1" };
 let mockUnlocked = true;
@@ -11,7 +10,14 @@ let mockBlock = {
   block_type: "role_play",
   content: { scenario_id: "scenario-1" },
 };
-let mockVerification: { ok: true; score: number; summaryUrl: string; goalsMet: Record<string, boolean> } | { ok: false; error: string } = {
+let mockVerification:
+  | {
+      ok: true;
+      score: number;
+      summaryUrl: string;
+      goalsMet: Record<string, boolean>;
+    }
+  | { ok: false; error: string } = {
   ok: true,
   score: 87,
   summaryUrl: "http://localhost:3200/recordings/attempt-1",
@@ -50,31 +56,17 @@ vi.mock("@/lib/supabase/admin", () => ({
   createAdminClient: vi.fn(() => {
     adminClientCalls += 1;
     return {
-    from: (table: string) => {
-      if (table === "role_play_results") {
+      rpc: async (name: string, args: Record<string, unknown>) => {
+        if (name !== "fn_complete_role_play_block") {
+          throw new Error(`Unexpected admin RPC ${name}`);
+        }
+        completionRpc = args;
         return {
-          upsert: async (row: Record<string, unknown>) => {
-            resultUpsert = row;
-            return { error: null };
-          },
+          data: { lessonId: "lesson-1", alreadyMarked: false },
+          error: null,
         };
-      }
-      if (table === "user_block_progress") {
-        return {
-          upsert: (row: Record<string, unknown>) => {
-            progressUpsert = row;
-            return {
-              select: async () => ({
-                data: [{ id: "progress-1" }],
-                error: null,
-              }),
-            };
-          },
-        };
-      }
-      throw new Error(`Unexpected admin table ${table}`);
-    },
-  };
+      },
+    };
   }),
 }));
 
@@ -84,8 +76,7 @@ import { completeRolePlayBlock } from "./actions";
 
 describe("completeRolePlayBlock", () => {
   beforeEach(() => {
-    resultUpsert = null;
-    progressUpsert = null;
+    completionRpc = null;
     adminClientCalls = 0;
     mockUser = { id: "user-1" };
     mockUnlocked = true;
@@ -112,30 +103,28 @@ describe("completeRolePlayBlock", () => {
     });
 
     expect(result).toEqual({ ok: true, alreadyMarked: false });
-    expect(resultUpsert).toEqual({
-      user_id: "user-1",
-      block_id: "block-1",
-      scenario_id: "scenario-1",
-      attempt_id: "attempt-1",
-      score: 87,
-      goals_met: { discovery: true, close: false },
-      summary: { summary_url: "http://localhost:3200/recordings/attempt-1" },
-    });
-    expect(progressUpsert).toEqual({
-      user_id: "user-1",
-      block_id: "block-1",
+    expect(completionRpc).toEqual({
+      p_user_id: "user-1",
+      p_block_id: "block-1",
+      p_scenario_id: "scenario-1",
+      p_attempt_id: "attempt-1",
+      p_score: 87,
+      p_goals_met: { discovery: true, close: false },
+      p_summary: { summary_url: "http://localhost:3200/recordings/attempt-1" },
     });
   });
 
   it("rejects an unauthenticated forged completion without privileged writes", async () => {
     mockUser = null;
 
-    await expect(completeRolePlayBlock({
-      blockId: "block-1",
-      scenarioId: "scenario-1",
-      attemptId: "attempt-1",
-      completionToken: "forged-result",
-    })).resolves.toEqual({ ok: false, error: "You must be signed in." });
+    await expect(
+      completeRolePlayBlock({
+        blockId: "block-1",
+        scenarioId: "scenario-1",
+        attemptId: "attempt-1",
+        completionToken: "forged-result",
+      }),
+    ).resolves.toEqual({ ok: false, error: "You must be signed in." });
     expect(adminClientCalls).toBe(0);
   });
 
@@ -168,7 +157,10 @@ describe("completeRolePlayBlock", () => {
   });
 
   it("rejects a forged completion proof without privileged writes", async () => {
-    mockVerification = { ok: false, error: "Role play completion proof is invalid." };
+    mockVerification = {
+      ok: false,
+      error: "Role play completion proof is invalid.",
+    };
 
     const result = await completeRolePlayBlock({
       blockId: "block-1",
@@ -179,7 +171,6 @@ describe("completeRolePlayBlock", () => {
 
     expect(result.ok).toBe(false);
     expect(adminClientCalls).toBe(0);
-    expect(resultUpsert).toBeNull();
-    expect(progressUpsert).toBeNull();
+    expect(completionRpc).toBeNull();
   });
 });
