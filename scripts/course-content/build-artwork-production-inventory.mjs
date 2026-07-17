@@ -296,8 +296,9 @@ async function validatePilotGenerationLineage() {
         if (
           normalization?.operation !== "erode black contours" ||
           normalization?.source_pixel_radius !== 1 ||
-          normalization?.neighborhood !== "eight-connected-majority-color" ||
-          normalization?.removed_source_pixels !== 18799
+          normalization?.exposure !== "north-or-west-boundary" ||
+          normalization?.replacement !== "eight-connected-majority-color" ||
+          normalization?.removed_source_pixels !== 8331
         ) {
           throw new Error("Opening v8 contour normalization drifted");
         }

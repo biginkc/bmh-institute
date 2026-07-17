@@ -1462,7 +1462,7 @@
               1672,
               941
             ],
-            "sha256": "df945d0eabba46a886f77d959b00f9af33f93d39ae355945220a63ce5e6568a2"
+            "sha256": "002aca5936253cf2f22164352634431ed38c139aadd3806de2e190f92f26c506"
           },
           "lesson_card": {
             "path": "course-assets/thumbnails/pilots/revisions/v8/lesson-cards/opening-andrea-seated-lesson-card-v8-16x10.webp",
@@ -1470,7 +1470,7 @@
               1280,
               800
             ],
-            "sha256": "d7e992495dd9e0702c9d9836dcd41710a7214f6170fcdab8fdf75158e83b1f37"
+            "sha256": "3a2f38e2619f5bb33aa69cfcd0712c4e6e4e4c02979ef20ec9313d8e14973c25"
           },
           "video_poster": {
             "path": "course-assets/thumbnails/pilots/revisions/v8/video-posters/opening-andrea-seated-video-poster-v8-16x9.webp",
@@ -1478,7 +1478,7 @@
               1280,
               720
             ],
-            "sha256": "9e7d852e8f49911c35cb7ba048e13f26816e59b6f0391b1177d9d3a46cd96e9b"
+            "sha256": "ff1458f6b657f002430df9cb937b0498975f83eaad7a39ec9d800f9d56eea509"
           }
         },
         "lineage": {
@@ -1519,8 +1519,9 @@
           "deterministic_contour_normalization": {
             "operation": "erode black contours",
             "source_pixel_radius": 1,
-            "neighborhood": "eight-connected-majority-color",
-            "removed_source_pixels": 18799,
+            "exposure": "north-or-west-boundary",
+            "replacement": "eight-connected-majority-color",
+            "removed_source_pixels": 8331,
             "reason": "match the approved BMH Sticker System line weight after the pose edit produced a visibly heavier pen"
           }
         },

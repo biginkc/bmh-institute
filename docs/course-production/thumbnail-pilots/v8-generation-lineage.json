@@ -87,8 +87,9 @@
       "deterministic_contour_normalization": {
         "operation": "erode black contours",
         "source_pixel_radius": 1,
-        "neighborhood": "eight-connected-majority-color",
-        "removed_source_pixels": 18799,
+        "exposure": "north-or-west-boundary",
+        "replacement": "eight-connected-majority-color",
+        "removed_source_pixels": 8331,
         "reason": "match the approved BMH Sticker System line weight after the pose edit produced a visibly heavier pen"
       }
     },

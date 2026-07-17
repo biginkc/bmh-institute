@@ -173,10 +173,11 @@ test("V8 contour normalization is explicit, mutually exclusive, and checksum bou
   assert.equal(openingConfig.black_contour_erosion_radius, 1);
   assert.deepEqual(openingReport.black_contour_erosion, {
     radius: 1,
-    neighborhood: "eight-connected-majority-color",
-    removed_pixels: 18799,
+    exposure: "north-or-west-boundary",
+    replacement: "eight-connected-majority-color",
+    removed_pixels: 8331,
   });
-  assert.equal(openingLineage.deterministic_contour_normalization.removed_source_pixels, 18799);
+  assert.equal(openingLineage.deterministic_contour_normalization.removed_source_pixels, 8331);
   assert.equal(openingReport.flat_master.sha256, pilotChecksums.assets.find((asset) => asset.slug === "opening-the-call").flat_master.sha256);
 });
 

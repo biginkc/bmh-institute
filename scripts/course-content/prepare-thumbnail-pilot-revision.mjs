@@ -255,14 +255,6 @@ function dilateBlackContours(flat, radius) {
       const offset = (row * flat.width + column) * 3;
       if (!matchesRgb(original, offset, [0, 0, 0])) continue;
 
-      // Generated contours were one source pixel heavier than the approved
-      // references. Remove only the north/west-exposed edge so a five-pixel
-      // stroke becomes four pixels instead of shrinking on both sides to three.
-      const northOffset = row > 0 ? ((row - 1) * flat.width + column) * 3 : null;
-      const westOffset = column > 0 ? (row * flat.width + column - 1) * 3 : null;
-      const northExposed = northOffset === null || !matchesRgb(original, northOffset, [0, 0, 0]);
-      const westExposed = westOffset === null || !matchesRgb(original, westOffset, [0, 0, 0]);
-      if (!northExposed && !westExposed) continue;
       for (
         let targetRow = Math.max(0, row - radius);
         targetRow <= Math.min(flat.height - 1, row + radius);
@@ -315,6 +307,15 @@ function erodeBlackContours(flat, radius) {
     for (let column = 0; column < flat.width; column += 1) {
       const offset = (row * flat.width + column) * 3;
       if (!matchesRgb(original, offset, [0, 0, 0])) continue;
+
+      // Generated contours were one source pixel heavier than the approved
+      // references. Remove only the north/west-exposed boundary so the stroke
+      // is not eroded on both sides in one pass.
+      const northOffset = row > 0 ? ((row - 1) * flat.width + column) * 3 : null;
+      const westOffset = column > 0 ? (row * flat.width + column - 1) * 3 : null;
+      const northExposed = northOffset === null || !matchesRgb(original, northOffset, [0, 0, 0]);
+      const westExposed = westOffset === null || !matchesRgb(original, westOffset, [0, 0, 0]);
+      if (!northExposed && !westExposed) continue;
 
       const neighboringColors = new Map();
       for (

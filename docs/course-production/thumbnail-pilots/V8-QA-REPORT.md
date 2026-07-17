@@ -37,7 +37,7 @@ not reuse an identical character pixel layer or stance.
 - All review cards are 1280x800 lossless WebP; posters are 1280x720 lossless
   WebP; masters and outputs use only the locked eight-color palette.
 
-The current 16:10 exact-black run medians are 4 pixels for Orientation, 3 pixels
+The current 16:10 exact-black run medians are 4 pixels for Orientation, 4 pixels
 for Opening, and 4 pixels for Objection Architecture. Visual inspection is still
 required because this numeric check cannot decide whether facial details or
 character proportions feel on-brand.
