@@ -86,9 +86,12 @@ of the three-image visual pilot.
 
 The manifest contains 155 assets:
 
-- 29 videos: 20 approved and 9 held
-- 29 exact-cut caption assets: 20 approved and 9 missing pending held-cut approval
-- 29 exact-cut transcript assets: 20 approved and 9 missing pending held-cut approval
+- 29 videos: 20 approved, 6 corrected cuts pending Jarrad review, and 3
+  policy-defective source cuts requiring replacement
+- 29 exact-cut caption assets: 20 approved and 9 missing until the six held
+  cuts are approved and the three replacements exist
+- 29 exact-cut transcript assets: 20 approved and 9 missing until the six held
+  cuts are approved and the three replacements exist
 - 20 thumbnail placeholders: one program cover and 19 topic thumbnails
 - 29 video-poster placeholders
 - 19 approved accessible learner-guide PDFs
@@ -203,8 +206,9 @@ The draft must not be published until all of these are resolved:
   quizzes, flashcards, and confirmation record.
 
 The manifest records all missing derivatives as `approval_status: missing` and
-all nine held cuts as `approval_status: hold`. The validator reports these
-as publication blockers rather than silently treating the course as ready.
+all nine unavailable cuts as `approval_status: hold`. The validator reports six
+as pending Jarrad approval and the three policy-defective hashes as requiring a
+policy-safe replacement. It cannot misrepresent a known-bad cut as reviewable.
 
 ## Final preapproval verification
 
@@ -213,8 +217,9 @@ as publication blockers rather than silently treating the course as ready.
 - Course shape: 6 modules, 19 content lessons, 19 quiz lessons, 6 assignments,
   29 videos, 342 questions, 152 flashcards, 6 role plays, 29 poster references,
   and 19 accessible guides.
-- Caption inventory: 20 approved exact video/caption/transcript sets, 9 held
-  videos, and 18 held-cut derivatives intentionally missing.
+- Caption inventory: 20 approved exact video/caption/transcript sets, 6
+  corrected cuts pending review, 3 source cuts requiring replacement, and 18
+  derivatives intentionally missing until their final video hashes exist.
 - Full local asset check: 155 declared assets, 79 exact approved files verified,
   76 held or missing blockers, and 0 errors.
 - Tech Stack canary: 4 approved files copied to an isolated staging tree with

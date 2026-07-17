@@ -3,6 +3,8 @@ import { readFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { pathToFileURL } from "node:url";
 
+import { REPLACEMENT_REQUIRED_CUTS } from "./held-video-approval-ledger.mjs";
+
 const REQUIRED_HELD_ASSETS = new Map([
   ["video-slot-01-welcome", "493de8a5e0663ad577ba46d6d5befce33e9640f250677095094978714d22ac72"],
   ["video-slot-01-mindset", "b0cad612499dbd2d867c906c1ad8a8e3e13fcded333fa973fa6d19339fa930da"],
@@ -482,7 +484,12 @@ export function validateManifest(
       errors.push(`${asset.source_key} storage path is not checksum-derived`);
     }
     if (asset.approval_status === "hold") {
-      publicationBlockers.push(`${asset.source_key} is pending Jarrad approval`);
+      const heldKey = `${asset.source_key}:${asset.checksum_sha256}`;
+      if (REPLACEMENT_REQUIRED_CUTS.has(heldKey)) {
+        publicationBlockers.push(`${asset.source_key} requires a policy-safe replacement cut`);
+      } else {
+        publicationBlockers.push(`${asset.source_key} is pending Jarrad approval`);
+      }
     } else if (asset.approval_status === "missing") {
       publicationBlockers.push(`${asset.source_key} has not been produced`);
     }

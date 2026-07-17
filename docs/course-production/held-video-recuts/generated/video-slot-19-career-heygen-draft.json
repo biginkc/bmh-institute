@@ -1,0 +1,127 @@
+{
+  "schema_version": "bmh-held-video-heygen-draft/v1",
+  "status": "offline_payload_only_provider_call_forbidden",
+  "source_key": "video-slot-19-career",
+  "held_source_sha256": "1ddcf7b1b0b45bbc90ec14b3660b3d5f5a284b5095dd0d0682164924ce1a3da9",
+  "humanizer_review": {
+    "skill": "humanizer",
+    "skill_version": "2.5.1",
+    "reviewed_on": "2026-07-17",
+    "result": "passed",
+    "checks": [
+      "role-agnostic spoken language",
+      "no viewer-facing chapter numbers or timelines",
+      "no em dashes, curly quotes, promotional filler, or chatbot phrasing",
+      "natural sentence rhythm retained without shortening the lesson contract"
+    ]
+  },
+  "provider_gate": {
+    "provider_call_allowed": false,
+    "render_allowed": false,
+    "generate_button_allowed_for_codex": false,
+    "required_approval": "Jarrad Henry",
+    "provider_call_executor_after_approval": "Codex parent agent only",
+    "final_generate_button_actor": "Jarrad Henry"
+  },
+  "api_endpoint": "https://api.heygen.com/v2/video/generate",
+  "request_body": {
+    "title": "Chapter 19 - Draft",
+    "folder_id": "3d837f4e9fb84b8294785fc060a342c0",
+    "dimension": {
+      "width": 1920,
+      "height": 1080
+    },
+    "video_inputs": [
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "Development starts with getting better at the work assigned to you now. Choose a skill that matters, practice it, and use it in real work. Then look at the result. The aim is to work reliably and leave the record or handoff ready for the next person."
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "Ask for specific feedback and listen before you defend your first approach. If you do not understand the feedback, ask a direct question. Practice the new approach, use it in the work, and bring back an example of what changed."
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "Getting better at the work does not automatically change your responsibilities. Take on more ownership after your manager confirms it and the change appears in your current written role plan. A training example or another person's duties cannot redefine your work."
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "Use your current role sheet, offer letter, and manager direction to understand the work assigned to you. Pick a skill that supports those expectations. If an older training example says something different, follow the current documents and ask your manager."
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "A useful development conversation stays close to the work. Talk about the expectation you are working toward, the skill you are practicing, and the feedback you are applying. If the conversation includes new ownership, get that change confirmed in writing."
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "Take the Career Growth Path checkpoint next. Then complete the Mission Control and Growth Capstone."
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      }
+    ]
+  }
+}

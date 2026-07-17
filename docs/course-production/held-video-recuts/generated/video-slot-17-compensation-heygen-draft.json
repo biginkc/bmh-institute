@@ -1,0 +1,112 @@
+{
+  "schema_version": "bmh-held-video-heygen-draft/v1",
+  "status": "offline_payload_only_provider_call_forbidden",
+  "source_key": "video-slot-17-compensation",
+  "held_source_sha256": "cecad85478bb1a8ba5bfed7404dc045440c567ed0eaaa90b11b644e124b27846",
+  "humanizer_review": {
+    "skill": "humanizer",
+    "skill_version": "2.5.1",
+    "reviewed_on": "2026-07-17",
+    "result": "passed",
+    "checks": [
+      "role-agnostic spoken language",
+      "no viewer-facing chapter numbers or timelines",
+      "no em dashes, curly quotes, promotional filler, or chatbot phrasing",
+      "natural sentence rhythm retained without shortening the lesson contract"
+    ]
+  },
+  "provider_gate": {
+    "provider_call_allowed": false,
+    "render_allowed": false,
+    "generate_button_allowed_for_codex": false,
+    "required_approval": "Jarrad Henry",
+    "provider_call_executor_after_approval": "Codex parent agent only",
+    "final_generate_button_actor": "Jarrad Henry"
+  },
+  "api_endpoint": "https://api.heygen.com/v2/video/generate",
+  "request_body": {
+    "title": "Chapter 17 - Draft",
+    "folder_id": "3d837f4e9fb84b8294785fc060a342c0",
+    "dimension": {
+      "width": 1920,
+      "height": 1080
+    },
+    "video_inputs": [
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "One thing needs to be clear up front. This course does not set your pay. The offer letter, current written compensation plan, and role sheet issued to you tell you what applies."
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "This lesson is about the work you own and how the company measures it today. Your scorecard may track conversations, handoffs, record quality, or a team result. It describes the work. It does not create a pay term."
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "Keep a clear record of your work. Use the current process and the scorecard assigned to you. Plans change. An old video or another person's agreement cannot tell you what applies to you now."
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "If the documents are unclear or seem to disagree, stop and ask your manager. Check the latest versions issued to you. Those documents control. This lesson is only context. It is not a compensation agreement."
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "Take the Compensation Engine checkpoint next. Then you'll move into the Operator Playbook and Daily Mission Control."
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      }
+    ]
+  }
+}

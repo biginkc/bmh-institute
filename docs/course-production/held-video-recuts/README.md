@@ -15,6 +15,14 @@ Generated reviewer artifacts live under `generated/`:
 - `video-slot-17-compensation-script.txt` and its edit specification
 - `video-slot-18-operator-script.txt` and its edit specification
 - `video-slot-19-career-script.txt` and its edit specification
+- three `*-heygen-draft.json` files containing the exact offline Studio API
+  request bodies, without credentials or permission to call the provider
+
+The three spoken scripts passed the BMH `humanizer` review on 2026-07-17. The
+offline draft artifacts lock the existing Sandra/Andrea avatar, Hope voice,
+Drafts folder, scene order, and 1920x1080 canvas. They deliberately keep
+`provider_call_allowed`, `render_allowed`, and Codex's Generate permission
+false. Building or validating these JSON files does not contact HeyGen.
 
 The scripts are role-agnostic. They contain no dollar figures, call quotas,
 fixed promotion timelines, pay formulas, or advancement promises. They point
