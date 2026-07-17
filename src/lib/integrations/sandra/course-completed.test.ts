@@ -130,6 +130,136 @@ describe("sendSandraCourseCompleted", () => {
 });
 
 describe("durable Sandra course completion reconciliation", () => {
+  it("binds a program certificate to the one exact program containing the course", async () => {
+    const state = {
+      payload: null as typeof INPUT | null,
+      status: "pending" as "pending" | "delivering" | "acknowledged",
+      attempts: 0,
+      remoteOutcomeId: null as string | null,
+      settlements: [] as Array<Record<string, unknown>>,
+    };
+    const programLinkQuery: { count?: string; limit?: number } = {};
+    const supabase = createCompletionSupabase(state, {
+      programIds: ["program-exact"],
+      programLinkQuery,
+      programCertificate: {
+        id: "program-cert-exact",
+        program_id: "program-exact",
+        certificate_number: "BMH-P-2026-0001",
+        issued_at: INPUT.completedAt,
+      },
+    });
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ course_outcome: { id: "course-outcome-program" } }),
+    });
+
+    await expect(reconcileSandraCourseCompleted(
+      supabase,
+      { userId: INPUT.userId, courseId: INPUT.courseId },
+      { env: ENV, fetch: fetchMock as unknown as typeof fetch, deliveryClient: supabase },
+    )).resolves.toEqual({ ok: true, id: "course-outcome-program" });
+
+    const [, request] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(JSON.parse(String(request.body))).toMatchObject({
+      certificate_number: "BMH-P-2026-0001",
+      certificate_url: expect.stringContaining("/certificates/program/program-cert-exact"),
+    });
+    expect(programLinkQuery).toEqual({ count: "exact", limit: 2 });
+  });
+
+  it("never guesses between certificates when a reusable course belongs to multiple programs", async () => {
+    const state = {
+      payload: null as typeof INPUT | null,
+      status: "pending" as "pending" | "delivering" | "acknowledged",
+      attempts: 0,
+      remoteOutcomeId: null as string | null,
+      settlements: [] as Array<Record<string, unknown>>,
+    };
+    const supabase = createCompletionSupabase(state, {
+      programIds: ["program-a", "program-b"],
+      forbidProgramCertificateLookup: true,
+    });
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ course_outcome: { id: "course-outcome-course-cert" } }),
+    });
+
+    await reconcileSandraCourseCompleted(
+      supabase,
+      { userId: INPUT.userId, courseId: INPUT.courseId },
+      { env: ENV, fetch: fetchMock as unknown as typeof fetch, deliveryClient: supabase },
+    );
+
+    const [, request] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(JSON.parse(String(request.body))).toMatchObject({
+      certificate_number: INPUT.certificateNumber,
+      certificate_url: expect.stringContaining("/certificates/course/cert-123"),
+    });
+  });
+
+  it("rejects inconsistent exact-count evidence instead of binding an arbitrary program", async () => {
+    const state = {
+      payload: null as typeof INPUT | null,
+      status: "pending" as "pending" | "delivering" | "acknowledged",
+      attempts: 0,
+      remoteOutcomeId: null as string | null,
+      settlements: [] as Array<Record<string, unknown>>,
+    };
+    const supabase = createCompletionSupabase(state, {
+      programIds: ["program-a", "program-b"],
+      programCount: 1,
+      forbidProgramCertificateLookup: true,
+    });
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ course_outcome: { id: "course-outcome-count-mismatch" } }),
+    });
+
+    await reconcileSandraCourseCompleted(
+      supabase,
+      { userId: INPUT.userId, courseId: INPUT.courseId },
+      { env: ENV, fetch: fetchMock as unknown as typeof fetch, deliveryClient: supabase },
+    );
+
+    const [, request] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(JSON.parse(String(request.body))).toMatchObject({
+      certificate_number: INPUT.certificateNumber,
+      certificate_url: expect.stringContaining("/certificates/course/cert-123"),
+    });
+  });
+
+  it("does not bind a program certificate when the exact count is unavailable", async () => {
+    const state = {
+      payload: null as typeof INPUT | null,
+      status: "pending" as "pending" | "delivering" | "acknowledged",
+      attempts: 0,
+      remoteOutcomeId: null as string | null,
+      settlements: [] as Array<Record<string, unknown>>,
+    };
+    const supabase = createCompletionSupabase(state, {
+      programIds: ["program-apparently-unique"],
+      programCount: null,
+      forbidProgramCertificateLookup: true,
+    });
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ course_outcome: { id: "course-outcome-no-count" } }),
+    });
+
+    await reconcileSandraCourseCompleted(
+      supabase,
+      { userId: INPUT.userId, courseId: INPUT.courseId },
+      { env: ENV, fetch: fetchMock as unknown as typeof fetch, deliveryClient: supabase },
+    );
+
+    const [, request] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(JSON.parse(String(request.body))).toMatchObject({
+      certificate_number: INPUT.certificateNumber,
+      certificate_url: expect.stringContaining("/certificates/course/cert-123"),
+    });
+  });
+
   it("does not send while another caller owns a fresh delivery lease", async () => {
     const state = {
       payload: null as typeof INPUT | null,
@@ -394,7 +524,18 @@ function createCompletionSupabase(state: {
   attempts: number;
   remoteOutcomeId: string | null;
   settlements: Array<Record<string, unknown>>;
-}) {
+}, options: {
+  programIds?: string[];
+  programCount?: number | null;
+  programLinkQuery?: { count?: string; limit?: number };
+  programCertificate?: {
+    id: string;
+    program_id: string;
+    certificate_number: string;
+    issued_at: string;
+  };
+  forbidProgramCertificateLookup?: boolean;
+} = {}) {
   const maybeSingle = (data: unknown) => ({ data, error: null });
   return {
     from: (table: string) => {
@@ -411,8 +552,44 @@ function createCompletionSupabase(state: {
             : null;
       if (table === "program_courses") {
         return {
-          select: () => ({ eq: async () => ({ data: [], error: null }) }),
+          select: (_columns: string, queryOptions?: { count?: string }) => {
+            if (options.programLinkQuery) options.programLinkQuery.count = queryOptions?.count;
+            return {
+              eq: () => ({
+                limit: async (limit: number) => {
+                  if (options.programLinkQuery) options.programLinkQuery.limit = limit;
+                  const programIds = options.programIds ?? [];
+                  return {
+                    data: programIds.slice(0, limit).map((program_id) => ({ program_id })),
+                    count: options.programCount === undefined
+                      ? programIds.length
+                      : options.programCount,
+                    error: null,
+                  };
+                },
+              }),
+            };
+          },
         };
+      }
+      if (table === "program_certificates") {
+        if (options.forbidProgramCertificateLookup) {
+          throw new Error("ambiguous program certificate lookup");
+        }
+        const filters = new Map<string, unknown>();
+        const chain = {
+          eq: (field: string, value: unknown) => {
+            filters.set(field, value);
+            return chain;
+          },
+          maybeSingle: async () => ({
+            data: options.programCertificate?.program_id === filters.get("program_id")
+              ? options.programCertificate
+              : null,
+            error: null,
+          }),
+        };
+        return { select: () => chain };
       }
       const chain = {
         eq: () => chain,
@@ -503,7 +680,11 @@ function createSweepSupabase(
       }
       if (table === "program_courses") {
         return {
-          select: () => ({ eq: async () => ({ data: [], error: null }) }),
+          select: () => ({
+            eq: () => ({
+              limit: async () => ({ data: [], count: 0, error: null }),
+            }),
+          }),
         };
       }
       const data = table === "profiles"

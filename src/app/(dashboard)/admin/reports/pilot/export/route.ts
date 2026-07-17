@@ -7,7 +7,10 @@ import {
 } from "@/lib/pilot-monitoring/summary";
 import { createClient } from "@/lib/supabase/server";
 import { loadAdminLessonCompletions } from "../../../../lesson-state-rpc";
-import { loadAllReportRowsById } from "../../report-source-pagination";
+import {
+  loadAllReportRowsByCursor,
+  loadAllReportRowsById,
+} from "../../report-source-pagination";
 
 export async function GET() {
   await requireAdmin();
@@ -15,12 +18,12 @@ export async function GET() {
 
   const [
     profilesResult,
-    userRoleGroupsRes,
+    userRoleGroupsResult,
     requiredLessonsResult,
-    quizAttemptsRes,
-    submissionsRes,
-    courseCertsRes,
-    programCertsRes,
+    quizAttemptsResult,
+    submissionsResult,
+    courseCertsResult,
+    programCertsResult,
   ] = await Promise.all([
     loadAllReportRowsById(({ afterId, limit }) => {
       const query = supabase
@@ -30,47 +33,97 @@ export async function GET() {
         .limit(limit);
       return afterId === null ? query : query.gt("id", afterId);
     }),
-    supabase.from("user_role_groups").select("user_id, role_group_id"),
+    loadAllReportRowsByCursor(
+      ({ after, limit }) => {
+        let query = supabase
+          .from("user_role_groups")
+          .select("user_id, role_group_id", { count: "exact" })
+          .order("user_id", { ascending: true })
+          .order("role_group_id", { ascending: true })
+          .limit(limit);
+        if (after !== null) {
+          query = query.or(
+            `user_id.gt.${after[0]},and(user_id.eq.${after[0]},role_group_id.gt.${after[1]})`,
+          );
+        }
+        return query;
+      },
+      (row) => [row.user_id, row.role_group_id] as const,
+    ),
     loadAllReportRowsById<RequiredLessonRow>(({ afterId, limit }) => {
       let query = supabase
         .from("lessons")
-        .select("id, title, is_required_for_completion, modules!inner(course_id)", {
-          count: "exact",
-        })
+        .select(
+          "id, title, is_required_for_completion, modules!inner(course_id)",
+          {
+            count: "exact",
+          },
+        )
         .eq("is_required_for_completion", true)
         .order("id", { ascending: true })
         .limit(limit);
       if (afterId !== null) query = query.gt("id", afterId);
       return query;
     }),
-    supabase
-      .from("user_quiz_attempts")
-      .select("user_id, passed, score, completed_at"),
-    supabase
-      .from("assignment_submissions")
-      .select("user_id, status, submitted_at"),
-    supabase.from("certificates").select("user_id, course_id, issued_at"),
-    supabase
-      .from("program_certificates")
-      .select("user_id, program_id, issued_at"),
+    loadAllReportRowsById(({ afterId, limit }) => {
+      const query = supabase
+        .from("user_quiz_attempts")
+        .select("id, user_id, passed, score, completed_at", { count: "exact" })
+        .order("id", { ascending: true })
+        .limit(limit);
+      return afterId === null ? query : query.gt("id", afterId);
+    }),
+    loadAllReportRowsById(({ afterId, limit }) => {
+      const query = supabase
+        .from("assignment_submissions")
+        .select("id, user_id, status, submitted_at", { count: "exact" })
+        .order("id", { ascending: true })
+        .limit(limit);
+      return afterId === null ? query : query.gt("id", afterId);
+    }),
+    loadAllReportRowsById(({ afterId, limit }) => {
+      const query = supabase
+        .from("certificates")
+        .select("id, user_id, course_id, issued_at", { count: "exact" })
+        .order("id", { ascending: true })
+        .limit(limit);
+      return afterId === null ? query : query.gt("id", afterId);
+    }),
+    loadAllReportRowsById(({ afterId, limit }) => {
+      const query = supabase
+        .from("program_certificates")
+        .select("id, user_id, program_id, issued_at", { count: "exact" })
+        .order("id", { ascending: true })
+        .limit(limit);
+      return afterId === null ? query : query.gt("id", afterId);
+    }),
   ]);
 
-  if (!profilesResult.ok || !requiredLessonsResult.ok) {
+  if (
+    !profilesResult.ok ||
+    !userRoleGroupsResult.ok ||
+    !requiredLessonsResult.ok ||
+    !quizAttemptsResult.ok ||
+    !submissionsResult.ok ||
+    !courseCertsResult.ok ||
+    !programCertsResult.ok
+  ) {
     return NextResponse.json(
       {
-        error: "Report source data could not be verified. Try the export again.",
+        error:
+          "Report source data could not be verified. Try the export again.",
       },
       { status: 503, headers: { "retry-after": "5" } },
     );
   }
 
   const profiles = profilesResult.rows as Profile[];
-  const userRoleGroups = (userRoleGroupsRes.data ?? []) as UserRoleGroup[];
+  const userRoleGroups = userRoleGroupsResult.rows as UserRoleGroup[];
   const requiredLessons = requiredLessonsResult.rows;
-  const quizAttempts = (quizAttemptsRes.data ?? []) as QuizAttempt[];
-  const submissions = (submissionsRes.data ?? []) as Submission[];
-  const courseCerts = (courseCertsRes.data ?? []) as CourseCert[];
-  const programCerts = (programCertsRes.data ?? []) as ProgramCert[];
+  const quizAttempts = quizAttemptsResult.rows as QuizAttempt[];
+  const submissions = submissionsResult.rows as Submission[];
+  const courseCerts = courseCertsResult.rows as CourseCert[];
+  const programCerts = programCertsResult.rows as ProgramCert[];
   const completionResult = await loadAdminLessonCompletions(supabase, {
     userIds: profiles.map((profile) => profile.id),
     lessonIds: requiredLessons.map((lesson) => lesson.id),

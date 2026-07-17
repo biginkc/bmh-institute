@@ -1,6 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { loadAllReportRowsById } from "./report-source-pagination";
+import {
+  loadAllReportRowsByCursor,
+  loadAllReportRowsById,
+} from "./report-source-pagination";
 
 function sourceRows(count: number) {
   return Array.from({ length: count }, (_, index) => ({
@@ -124,6 +127,91 @@ describe("report source pagination", () => {
       loadAllReportRowsById(
         async () => ({ data: sourceRows(3), error: null, count: 3 }),
         { pageSize: 2 },
+      ),
+    ).resolves.toEqual({ ok: false });
+  });
+
+  it("loads more than 1,000 composite membership keys", async () => {
+    const source = Array.from({ length: 1_237 }, (_, index) => ({
+      user_id: `00000000-0000-4000-8000-${String(Math.floor(index / 3)).padStart(12, "0")}`,
+      role_group_id: `10000000-0000-4000-8000-${String(index).padStart(12, "0")}`,
+    }));
+    const queryPage = vi.fn(
+      async ({
+        after,
+        limit,
+      }: {
+        after: readonly [string, string] | null;
+        limit: number;
+      }) => {
+        const remaining = source.filter(
+          (row) =>
+            after === null ||
+            row.user_id > after[0] ||
+            (row.user_id === after[0] && row.role_group_id > after[1]),
+        );
+        return {
+          data: remaining.slice(0, limit),
+          error: null,
+          count: remaining.length,
+        };
+      },
+    );
+
+    const result = await loadAllReportRowsByCursor(
+      queryPage,
+      (row) => [row.user_id, row.role_group_id] as const,
+    );
+
+    expect(result).toEqual({ ok: true, rows: source });
+    expect(queryPage).toHaveBeenCalledTimes(2);
+    expect(queryPage).toHaveBeenNthCalledWith(2, {
+      after: [source[999].user_id, source[999].role_group_id],
+      limit: 1_000,
+    });
+  });
+
+  it("fails closed on malformed, mismatched, duplicate, or out-of-order composite keys", async () => {
+    const valid = { user_id: "a", role_group_id: "a" };
+    for (const rows of [
+      [valid, valid],
+      [
+        { user_id: "b", role_group_id: "a" },
+        { user_id: "a", role_group_id: "z" },
+      ],
+    ]) {
+      await expect(
+        loadAllReportRowsByCursor(
+          async () => ({ data: rows, error: null, count: rows.length }),
+          (row) => [row.user_id, row.role_group_id] as const,
+          { pageSize: 2 },
+        ),
+      ).resolves.toEqual({ ok: false });
+    }
+
+    await expect(
+      loadAllReportRowsByCursor(
+        async () => ({
+          data: [valid, { user_id: "b", role_group_id: "b" }],
+          error: null,
+          count: 2,
+        }),
+        (row) =>
+          row.user_id === "a"
+            ? ([row.user_id, row.role_group_id] as const)
+            : ([row.user_id] as const),
+      ),
+    ).resolves.toEqual({ ok: false });
+    await expect(
+      loadAllReportRowsByCursor(
+        async () => ({ data: [valid], error: null, count: 1 }),
+        () => [] as const,
+      ),
+    ).resolves.toEqual({ ok: false });
+    await expect(
+      loadAllReportRowsByCursor(
+        async () => ({ data: [valid], error: null, count: 1 }),
+        () => [Number.NaN] as const,
       ),
     ).resolves.toEqual({ ok: false });
   });

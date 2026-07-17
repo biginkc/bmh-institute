@@ -463,8 +463,9 @@ async function courseCompletionDetails(
     }),
     supabase
       .from("program_courses")
-      .select("program_id")
-      .eq("course_id", args.courseId),
+      .select("program_id", { count: "exact" })
+      .eq("course_id", args.courseId)
+      .limit(2),
   ]);
 
   if (
@@ -477,17 +478,25 @@ async function courseCompletionDetails(
     return null;
   }
 
-  const programIds = (programLinksResult.data ?? []).map(
+  const programLinks = (programLinksResult.data ?? []) as Array<{ program_id: string }>;
+  const programIds = [...new Set(programLinks.map(
     (row: { program_id: string }) => row.program_id,
-  );
-  const programCertificateResult = programIds.length
+  ))];
+  // A reusable course may belong to more than one program. Without program
+  // context on the completion event, selecting the newest certificate across
+  // all linked programs can attach the wrong credential. Bind a program
+  // certificate only when the course has exactly one unambiguous program.
+  const exactProgramId = programLinksResult.count === 1
+    && programLinks.length === 1
+    && programIds.length === 1
+    ? programIds[0]
+    : null;
+  const programCertificateResult = exactProgramId
     ? await supabase
         .from("program_certificates")
-        .select("id, certificate_number, issued_at")
+        .select("id, program_id, certificate_number, issued_at")
         .eq("user_id", args.userId)
-        .in("program_id", programIds)
-        .order("issued_at", { ascending: false })
-        .limit(1)
+        .eq("program_id", exactProgramId)
         .maybeSingle()
     : { data: null, error: null };
   if (programCertificateResult.error) return null;
@@ -500,8 +509,9 @@ async function courseCompletionDetails(
     | { id?: string | null; certificate_number?: string | null; issued_at?: string | null }
     | null;
   const programCertificate = programCertificateResult.data as
-    | { id?: string | null; certificate_number?: string | null; issued_at?: string | null }
+    | { id?: string | null; program_id?: string | null; certificate_number?: string | null; issued_at?: string | null }
     | null;
+  if (programCertificate && programCertificate.program_id !== exactProgramId) return null;
   const finalCertificate = programCertificate ?? certificate;
   const certificatePath = programCertificate?.id
     ? `/certificates/program/${programCertificate.id}`

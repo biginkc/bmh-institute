@@ -38,8 +38,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Install PDF inspection tools
-        run: sudo apt-get update && sudo apt-get install --yes poppler-utils
+      - name: Install media and PDF inspection tools
+        run: sudo apt-get update && sudo apt-get install --yes ffmpeg poppler-utils
 
       - name: Run typecheck, unit, and RTL tests
         run: npm run verify

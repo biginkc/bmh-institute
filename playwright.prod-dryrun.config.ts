@@ -3,6 +3,10 @@ import path from "node:path";
 
 import { defineConfig, devices } from "@playwright/test";
 
+import {
+  CREDENTIAL_SAFE_PLAYWRIGHT_USE,
+} from "./src/lib/testing/credential-artifact-policy";
+
 function loadEnvFile(filename: string): Record<string, string> {
   const filepath = path.resolve(__dirname, filename);
   if (!fs.existsSync(filepath)) return {};
@@ -75,8 +79,7 @@ export default defineConfig({
   expect: { timeout: 10_000 },
   use: {
     baseURL,
-    trace: "retain-on-failure",
-    screenshot: "only-on-failure",
     ...devices["Desktop Chrome"],
+    ...CREDENTIAL_SAFE_PLAYWRIGHT_USE,
   },
 });

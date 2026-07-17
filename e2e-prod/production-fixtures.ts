@@ -1,5 +1,7 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
+import { PRODUCTION_READINESS_VIDEO_BASE64 } from "../src/lib/testing/production-readiness-media";
+
 export type ProductionReadinessFixture = {
   prefix: string;
   password: string;
@@ -10,6 +12,7 @@ export type ProductionReadinessFixture = {
   contentLessonId: string;
   contentBlockId: string;
   embedBlockId: string;
+  videoPath: string;
   quizId: string;
   quizLessonId: string;
   correctOptionText: string;
@@ -198,7 +201,7 @@ export async function createProductionReadinessFixture(
       html: `<h2>${prefix} Operating standard</h2><p>Disposable production-readiness content.</p>`,
     },
     sort_order: 10,
-    is_required_for_completion: true,
+    is_required_for_completion: false,
   });
   const embedBlockId = await insertOne(admin, "content_blocks", {
     lesson_id: contentLessonId,
@@ -209,6 +212,26 @@ export async function createProductionReadinessFixture(
     },
     sort_order: 20,
     is_required_for_completion: false,
+  });
+  const videoPath = `production-readiness/${prefix}/required-video.webm`;
+  const { error: videoUploadError } = await admin.storage
+    .from("content")
+    .upload(videoPath, Buffer.from(PRODUCTION_READINESS_VIDEO_BASE64, "base64"), {
+      contentType: "video/webm",
+      upsert: false,
+    });
+  if (videoUploadError) throw videoUploadError;
+  await insertOne(admin, "content_blocks", {
+    lesson_id: contentLessonId,
+    block_type: "video",
+    content: {
+      source: "upload",
+      file_path: videoPath,
+      duration_seconds: 1,
+      title: `${prefix} Required video`,
+    },
+    sort_order: 30,
+    is_required_for_completion: true,
   });
 
   const quizId = await insertOne(admin, "quizzes", {
@@ -299,6 +322,7 @@ export async function createProductionReadinessFixture(
     contentLessonId,
     contentBlockId,
     embedBlockId,
+    videoPath,
     quizId,
     quizLessonId,
     correctOptionText,
@@ -318,7 +342,7 @@ export async function cleanupProductionReadinessFixture(
 ): Promise<void> {
   if (!fixture) return;
 
-  await cleanupProductionReadinessStorage(admin, fixture.learner.id);
+  await cleanupProductionReadinessStorage(admin, fixture);
   await admin.from("programs").delete().eq("id", fixture.programId);
   await admin.from("courses").delete().eq("id", fixture.courseId);
   await admin
@@ -722,8 +746,9 @@ export async function countProductionPilotDryRunArtifacts(
 
 async function cleanupProductionReadinessStorage(
   admin: SupabaseClient,
-  learnerId: string,
+  fixture: ProductionReadinessFixture,
 ) {
+  const learnerId = fixture.learner.id;
   const { data, error } = await admin.storage
     .from("submissions")
     .list(learnerId, { limit: 1000 });
@@ -743,6 +768,11 @@ async function cleanupProductionReadinessStorage(
       .remove(paths);
     if (removeError) throw removeError;
   }
+
+  const { error: removeVideoError } = await admin.storage
+    .from("content")
+    .remove([fixture.videoPath]);
+  if (removeVideoError) throw removeVideoError;
 }
 
 async function seedPilotDryRunStates(

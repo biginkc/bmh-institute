@@ -81,10 +81,19 @@ test.describe("production readiness lifecycle", () => {
       await expect(
         learner.getByRole("heading", { name: `${fixture.prefix} Content Lesson` }),
       ).toBeVisible();
-      await learner.getByRole("button", { name: /mark lesson complete/i }).click();
-      await expect(learner.getByText(/lesson complete/i)).toBeVisible();
+      await expect(
+        learner.getByLabel(`${fixture.prefix} Required video`),
+      ).toBeVisible();
+      await learner.getByRole("button", { name: /play lesson video/i }).click();
+      await expect(learner.getByRole("status")).toHaveText("Complete", {
+        timeout: 15_000,
+      });
+      await expect(
+        learner.getByText(/this lesson is complete/i),
+      ).toBeVisible();
 
       await learner.goto(`/lessons/${fixture.quizLessonId}`);
+      await learner.getByRole("button", { name: /start quiz/i }).click();
       await learner.getByText(fixture.correctOptionText).click();
       await learner.getByRole("button", { name: /submit quiz/i }).click();
       await expect(learner.getByText(/^Passed$/)).toBeVisible();

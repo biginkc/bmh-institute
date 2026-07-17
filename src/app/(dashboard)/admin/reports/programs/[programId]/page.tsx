@@ -25,10 +25,10 @@ export default async function ProgramReportPage({
 
   const [
     programRes,
-    programCoursesRes,
+    programCoursesResult,
     lessonsResult,
-    courseCertsRes,
-    programCertsRes,
+    courseCertsResult,
+    programCertsResult,
     profilesResult,
   ] = await Promise.all([
     supabase
@@ -36,11 +36,18 @@ export default async function ProgramReportPage({
       .select("id, title, description, course_order_mode, is_published")
       .eq("id", programId)
       .maybeSingle(),
-    supabase
-      .from("program_courses")
-      .select("course_id, sort_order, courses(id, title, is_published)")
-      .eq("program_id", programId)
-      .order("sort_order"),
+    loadAllReportRowsById(({ afterId, limit }) => {
+      let query = supabase
+        .from("program_courses")
+        .select("id, course_id, sort_order, courses(id, title, is_published)", {
+          count: "exact",
+        })
+        .eq("program_id", programId)
+        .order("id", { ascending: true })
+        .limit(limit);
+      if (afterId !== null) query = query.gt("id", afterId);
+      return query;
+    }),
     loadAllReportRowsById<ProgramLessonRow>(({ afterId, limit }) => {
       const query = supabase
         .from("lessons")
@@ -51,13 +58,26 @@ export default async function ProgramReportPage({
         .limit(limit);
       return afterId === null ? query : query.gt("id", afterId);
     }),
-    supabase
-      .from("certificates")
-      .select("user_id, course_id"),
-    supabase
-      .from("program_certificates")
-      .select("user_id, certificate_number, issued_at")
-      .eq("program_id", programId),
+    loadAllReportRowsById(({ afterId, limit }) => {
+      const query = supabase
+        .from("certificates")
+        .select("id, user_id, course_id", { count: "exact" })
+        .order("id", { ascending: true })
+        .limit(limit);
+      return afterId === null ? query : query.gt("id", afterId);
+    }),
+    loadAllReportRowsById(({ afterId, limit }) => {
+      let query = supabase
+        .from("program_certificates")
+        .select("id, user_id, certificate_number, issued_at", {
+          count: "exact",
+        })
+        .eq("program_id", programId)
+        .order("id", { ascending: true })
+        .limit(limit);
+      if (afterId !== null) query = query.gt("id", afterId);
+      return query;
+    }),
     loadAllReportRowsById(({ afterId, limit }) => {
       const query = supabase
         .from("profiles")
@@ -68,17 +88,35 @@ export default async function ProgramReportPage({
     }),
   ]);
 
-  const program = programRes.data as
-    | {
-        id: string;
-        title: string;
-        description: string | null;
-        course_order_mode: "sequential" | "free";
-        is_published: boolean;
-      }
-    | null;
+  if (programRes.error) {
+    return (
+      <main className="w-full flex-1 p-6 md:p-10">
+        <AdminPageHeader
+          eyebrow="Admin · Report"
+          title="Program report"
+          description="Report source data could not be verified. Refresh the page to try again."
+          backHref="/admin/reports"
+          backLabel="Back to reports"
+        />
+      </main>
+    );
+  }
+
+  const program = programRes.data as {
+    id: string;
+    title: string;
+    description: string | null;
+    course_order_mode: "sequential" | "free";
+    is_published: boolean;
+  } | null;
   if (!program) notFound();
-  if (!lessonsResult.ok || !profilesResult.ok) {
+  if (
+    !programCoursesResult.ok ||
+    !lessonsResult.ok ||
+    !courseCertsResult.ok ||
+    !programCertsResult.ok ||
+    !profilesResult.ok
+  ) {
     return (
       <main className="w-full flex-1 p-6 md:p-10">
         <AdminPageHeader
@@ -93,18 +131,28 @@ export default async function ProgramReportPage({
   }
 
   // Courses in this program, ordered.
-  const programCourses = ((programCoursesRes.data ?? []) as Array<{
-    course_id: string;
-    sort_order: number;
-    courses: { id: string; title: string; is_published: boolean } | { id: string; title: string; is_published: boolean }[] | null;
-  }>).map((row) => ({
-    course_id: row.course_id,
-    sort_order: row.sort_order,
-    course: firstRow(row.courses),
-  }));
-  const programCourseIds = new Set(
-    programCourses.map((pc) => pc.course_id),
-  );
+  const programCourses = (
+    programCoursesResult.rows as Array<{
+      id: string;
+      course_id: string;
+      sort_order: number;
+      courses:
+        | { id: string; title: string; is_published: boolean }
+        | { id: string; title: string; is_published: boolean }[]
+        | null;
+    }>
+  )
+    .map((row) => ({
+      course_id: row.course_id,
+      sort_order: row.sort_order,
+      course: firstRow(row.courses),
+    }))
+    .sort(
+      (left, right) =>
+        left.sort_order - right.sort_order ||
+        left.course_id.localeCompare(right.course_id),
+    );
+  const programCourseIds = new Set(programCourses.map((pc) => pc.course_id));
 
   // Required lessons per course in this program.
   const requiredByCourse = new Map<string, Set<string>>();
@@ -158,7 +206,7 @@ export default async function ProgramReportPage({
 
   // Course certificates filtered to this program's courses.
   const courseCertsByUser = new Map<string, Set<string>>();
-  for (const cert of courseCertsRes.data ?? []) {
+  for (const cert of courseCertsResult.rows) {
     const cid = cert.course_id;
     if (!programCourseIds.has(cid)) continue;
     const uid = cert.user_id;
@@ -171,7 +219,7 @@ export default async function ProgramReportPage({
     string,
     { certificate_number: string; issued_at: string }
   >();
-  for (const pc of programCertsRes.data ?? []) {
+  for (const pc of programCertsResult.rows) {
     programCertByUser.set(pc.user_id, {
       certificate_number: pc.certificate_number,
       issued_at: pc.issued_at,
@@ -225,7 +273,9 @@ export default async function ProgramReportPage({
         actions={
           <div className="flex gap-2">
             <Badge tone="blue" size="sm">
-              {program.course_order_mode === "sequential" ? "Sequential" : "Any order"}
+              {program.course_order_mode === "sequential"
+                ? "Sequential"
+                : "Any order"}
             </Badge>
             <Badge tone={program.is_published ? "green" : "neutral"} size="sm">
               {program.is_published ? "Published" : "Draft"}
@@ -240,7 +290,7 @@ export default async function ProgramReportPage({
         <StatCard label="Learners engaged" value={rows.length} />
         <StatCard
           label="Program certs issued"
-          value={(programCertsRes.data ?? []).length}
+          value={programCertsResult.rows.length}
         />
       </div>
 
@@ -248,23 +298,45 @@ export default async function ProgramReportPage({
         <div style={{ padding: "6px 12px 12px" }}>
           <AdminSectionHeading
             title="Courses in order"
-            description={program.course_order_mode === "sequential" ? "Sequential: each course unlocks after the prior one completes." : "Free: learners pick any order."}
+            description={
+              program.course_order_mode === "sequential"
+                ? "Sequential: each course unlocks after the prior one completes."
+                : "Free: learners pick any order."
+            }
           />
         </div>
         <AdminDataTable
           rowKey="id"
           columns={[
-            { key: "position", label: "#", width: "4rem", muted: true, tabular: true },
+            {
+              key: "position",
+              label: "#",
+              width: "4rem",
+              muted: true,
+              tabular: true,
+            },
             { key: "title", label: "Course" },
-            { key: "action", label: "Drill in", align: "right", presentation: "link", hrefKey: "href" },
+            {
+              key: "action",
+              label: "Drill in",
+              align: "right",
+              presentation: "link",
+              hrefKey: "href",
+            },
           ]}
-          rows={programCourses.flatMap((programCourse, index) => programCourse.course ? [{
-            id: programCourse.course.id,
-            position: index + 1,
-            title: programCourse.course.title,
-            action: "View →",
-            href: `/admin/reports/courses/${programCourse.course.id}`,
-          }] : [])}
+          rows={programCourses.flatMap((programCourse, index) =>
+            programCourse.course
+              ? [
+                  {
+                    id: programCourse.course.id,
+                    position: index + 1,
+                    title: programCourse.course.title,
+                    action: "View →",
+                    href: `/admin/reports/courses/${programCourse.course.id}`,
+                  },
+                ]
+              : [],
+          )}
           empty="No courses in this program yet."
         />
       </Card>
@@ -280,10 +352,26 @@ export default async function ProgramReportPage({
           minWidth="52rem"
           empty="Nobody's started the program yet."
           columns={[
-            { key: "name", label: "Name", presentation: "link", hrefKey: "href" },
+            {
+              key: "name",
+              label: "Name",
+              presentation: "link",
+              hrefKey: "href",
+            },
             { key: "lessons", label: "Lessons", align: "right", tabular: true },
-            { key: "pct", label: "%", align: "right", tabular: true, suffix: "%" },
-            { key: "coursesDone", label: "Courses done", align: "right", tabular: true },
+            {
+              key: "pct",
+              label: "%",
+              align: "right",
+              tabular: true,
+              suffix: "%",
+            },
+            {
+              key: "coursesDone",
+              label: "Courses done",
+              align: "right",
+              tabular: true,
+            },
             { key: "certificate", label: "Program cert", muted: true },
             { key: "latestLabel", label: "Last activity", muted: true },
           ]}
@@ -293,7 +381,9 @@ export default async function ProgramReportPage({
             lessons: `${row.doneCount} / ${row.total}`,
             coursesDone: `${row.coursesComplete} / ${row.totalCourses}`,
             certificate: row.programCert?.certificate_number ?? "-",
-            latestLabel: row.latest ? new Date(row.latest).toLocaleString() : "-",
+            latestLabel: row.latest
+              ? new Date(row.latest).toLocaleString()
+              : "-",
           }))}
         />
       </Card>

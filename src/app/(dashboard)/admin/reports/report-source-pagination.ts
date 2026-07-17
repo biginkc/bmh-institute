@@ -13,6 +13,13 @@ type PageRequest = {
   limit: number;
 };
 
+export type ReportCursorValue = string | number;
+
+type CursorPageRequest<TCursor extends readonly ReportCursorValue[]> = {
+  after: TCursor | null;
+  limit: number;
+};
+
 const DEFAULT_PAGE_SIZE = 1_000;
 const DEFAULT_MAX_ROWS = 20_000;
 
@@ -31,6 +38,36 @@ export async function loadAllReportRowsById<T extends { id: string }>(
   ) => PromiseLike<ReportSourcePage<T>>,
   options: { pageSize?: number; maxRows?: number } = {},
 ): Promise<ReportSourceResult<T>> {
+  return loadAllReportRowsByCursor<T, readonly [string]>(
+    ({ after, limit }) =>
+      queryPage({ afterId: after === null ? null : after[0], limit }),
+    (row) => {
+      if (typeof row?.id !== "string" || row.id.length === 0) {
+        throw new TypeError("Report source ID must be a non-empty string.");
+      }
+      return [row.id] as const;
+    },
+    options,
+  );
+}
+
+/**
+ * Cursor-paginate a source whose stable unique key spans multiple columns.
+ * The callback must apply the cursor filter to the database query before
+ * requesting an exact count, so every page reports the number of rows still
+ * available from that cursor. Invalid, repeated, shifted, or server-capped
+ * pages fail closed.
+ */
+export async function loadAllReportRowsByCursor<
+  T,
+  TCursor extends readonly ReportCursorValue[],
+>(
+  queryPage: (
+    request: CursorPageRequest<TCursor>,
+  ) => PromiseLike<ReportSourcePage<T>>,
+  cursorFor: (row: T) => TCursor,
+  options: { pageSize?: number; maxRows?: number } = {},
+): Promise<ReportSourceResult<T>> {
   const pageSize = options.pageSize ?? DEFAULT_PAGE_SIZE;
   const maxRows = options.maxRows ?? DEFAULT_MAX_ROWS;
   if (
@@ -44,7 +81,7 @@ export async function loadAllReportRowsById<T extends { id: string }>(
   }
 
   const rows: T[] = [];
-  let afterId: string | null = null;
+  let after: TCursor | null = null;
   let expectedTotal: number | null = null;
   const maxCalls = Math.ceil(maxRows / pageSize) + 1;
 
@@ -52,7 +89,7 @@ export async function loadAllReportRowsById<T extends { id: string }>(
     const limit = Math.min(pageSize, maxRows - rows.length + 1);
     let page: ReportSourcePage<T>;
     try {
-      page = await queryPage({ afterId, limit });
+      page = await queryPage({ after, limit });
     } catch {
       return { ok: false };
     }
@@ -82,16 +119,18 @@ export async function loadAllReportRowsById<T extends { id: string }>(
     }
 
     for (const row of page.data) {
-      if (
-        !row ||
-        typeof row.id !== "string" ||
-        row.id.length === 0 ||
-        (afterId !== null && row.id <= afterId)
-      ) {
+      let cursor: TCursor;
+      try {
+        cursor = cursorFor(row);
+      } catch {
+        return { ok: false };
+      }
+      const comparison = after === null ? 1 : compareCursor(cursor, after);
+      if (!isValidCursor(cursor) || !Number.isFinite(comparison) || comparison <= 0) {
         return { ok: false };
       }
       rows.push(row);
-      afterId = row.id;
+      after = cursor;
       if (rows.length > expectedTotal) return { ok: false };
     }
 
@@ -101,4 +140,33 @@ export async function loadAllReportRowsById<T extends { id: string }>(
   }
 
   return { ok: false };
+}
+
+function isValidCursor(
+  cursor: readonly ReportCursorValue[],
+): cursor is readonly ReportCursorValue[] {
+  return (
+    Array.isArray(cursor) &&
+    cursor.length > 0 &&
+    cursor.every(
+      (value) =>
+        (typeof value === "string" && value.length > 0) ||
+        (typeof value === "number" && Number.isFinite(value)),
+    )
+  );
+}
+
+function compareCursor(
+  left: readonly ReportCursorValue[],
+  right: readonly ReportCursorValue[],
+): number {
+  if (left.length !== right.length) return Number.NaN;
+  for (let index = 0; index < left.length; index++) {
+    const leftValue = left[index];
+    const rightValue = right[index];
+    if (typeof leftValue !== typeof rightValue) return Number.NaN;
+    if (leftValue < rightValue) return -1;
+    if (leftValue > rightValue) return 1;
+  }
+  return 0;
 }
