@@ -122,7 +122,7 @@ export function validateHeldVideoApprovalLedger(ledger, heldAssets) {
       if (typeof record.approver !== "string" || record.approver.trim().length === 0) {
         errors.push(`${label} decided record requires an approver`);
       }
-      if (asset && !REPLACEMENT_REQUIRED_CUTS.has(key) && record.approver !== "Jarrad Henry") {
+      if (!REPLACEMENT_REQUIRED_CUTS.has(key) && record.approver !== "Jarrad Henry") {
         errors.push(`${label} corrected candidate decisions require approver Jarrad Henry`);
       }
       if (!validDate(record.date)) errors.push(`${label} decided record requires a real YYYY-MM-DD date`);

@@ -124,6 +124,24 @@ test("the manifest passes structural and semantic content QA", async () => {
   );
 });
 
+test("Closer Lab publication blockers are trim and case robust", async () => {
+  const manifest = await loadManifest(MANIFEST_URL);
+  const rolePlay = manifest.program.courses
+    .flatMap((course) => course.modules)
+    .flatMap((courseModule) => courseModule.lessons)
+    .flatMap((lesson) => lesson.blocks ?? [])
+    .find((block) => block.type === "role_play" && block.required === true);
+  assert.ok(rolePlay);
+  rolePlay.content.scenario_id = "  PeNdInG :replacement  ";
+
+  const report = validateManifest(manifest);
+  assert.ok(
+    report.publicationBlockers.includes(
+      `${rolePlay.source_key} needs a production Closer Lab scenario ID`,
+    ),
+  );
+});
+
 test("known held cuts are immutable and never replaced by older files", async () => {
   const manifest = await loadManifest(MANIFEST_URL);
   const heldVideos = manifest.assets

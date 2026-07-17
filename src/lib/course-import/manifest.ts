@@ -530,6 +530,28 @@ function validateLesson(
           if (typeof value !== "string") errors.push(`${blockPath}.content.${field} is required for release.`);
           else requireApprovedAsset(value, `${blockPath}.content.${field}`, assets, errors);
         }
+        if (
+          block.required === true &&
+          (typeof block.content.duration_seconds !== "number" ||
+            !Number.isFinite(block.content.duration_seconds) ||
+            block.content.duration_seconds <= 0)
+        ) {
+          errors.push(
+            `${blockPath}.content.duration_seconds must be a finite positive number for a required release video.`,
+          );
+        }
+      }
+      if (gate === "release" && block.type === "role_play" && block.required === true) {
+        const scenarioId = block.content.scenario_id;
+        if (
+          typeof scenarioId !== "string" ||
+          scenarioId.trim().length === 0 ||
+          /^pending\s*:/i.test(scenarioId.trim())
+        ) {
+          errors.push(
+            `${blockPath}.content.scenario_id must be a production Closer Lab scenario ID for a required release role play.`,
+          );
+        }
       }
       if (block.type === "flashcard") {
         const cards = block.content.cards;

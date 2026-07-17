@@ -188,6 +188,59 @@ describe("validateCourseManifest", () => {
     );
   });
 
+  it.each([undefined, 0, -1, Number.NaN, Number.POSITIVE_INFINITY, "120"])(
+    "rejects required release video duration %s",
+    (duration) => {
+      const input = validCourseManifest();
+      const video = input.program.courses[0].modules[0].lessons[0].blocks?.[0];
+      if (!video) throw new Error("Fixture video block is missing.");
+      video.content.duration_seconds = duration;
+
+      const result = validateCourseManifest(input, { gate: "release" });
+
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.errors).toContain(
+        "program.courses[0].modules[0].lessons[0].blocks[0].content.duration_seconds must be a finite positive number for a required release video.",
+      );
+    },
+  );
+
+  it("requires both the media asset and authored duration on a required release video", () => {
+    const input = validCourseManifest();
+    const video = input.program.courses[0].modules[0].lessons[0].blocks?.[0];
+    if (!video) throw new Error("Fixture video block is missing.");
+    delete video.content.asset_key;
+    delete video.content.duration_seconds;
+
+    const result = validateCourseManifest(input, { gate: "release" });
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.errors).toEqual(expect.arrayContaining([
+      "program.courses[0].modules[0].lessons[0].blocks[0].content.asset_key is required for release.",
+      "program.courses[0].modules[0].lessons[0].blocks[0].content.duration_seconds must be a finite positive number for a required release video.",
+    ]));
+  });
+
+  it("rejects placeholder Closer Lab IDs on required release role plays", () => {
+    const input = validCourseManifest();
+    input.program.courses[0].modules[0].lessons[0].blocks?.push({
+      source_key: "block-role-play",
+      type: "role_play",
+      sort_order: 2,
+      required: true,
+      content: { scenario_id: "  PeNdInG :closer-lab-scenario  " },
+    });
+
+    expect(validateCourseManifest(input).ok).toBe(true);
+    const result = validateCourseManifest(input, { gate: "release" });
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.errors).toContain(
+      "program.courses[0].modules[0].lessons[0].blocks[2].content.scenario_id must be a production Closer Lab scenario ID for a required release role play.",
+    );
+  });
+
   it("requires optional learner resources to be approved for release", () => {
     const input = validCourseManifest();
     input.assets.push({

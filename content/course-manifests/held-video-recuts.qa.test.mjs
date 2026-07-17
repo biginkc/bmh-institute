@@ -91,6 +91,14 @@ test("approval transitions require evidence and keep decided checksums immutable
   assert.ok(validateHeldVideoApprovalTransition(ledger, wrongApprover, held)
     .some((error) => error.includes("require approver Jarrad Henry")));
 
+  const approvedAssetWrongApprover = structuredClone(approved);
+  approvedAssetWrongApprover.records[0].approver = "Not Jarrad";
+  const remainingHeld = held.filter((asset) =>
+    asset.source_key !== approvedAssetWrongApprover.records[0].source_key
+    || asset.checksum_sha256 !== approvedAssetWrongApprover.records[0].sha256);
+  assert.ok(validateHeldVideoApprovalLedger(approvedAssetWrongApprover, remainingHeld)
+    .some((error) => error.includes("require approver Jarrad Henry")));
+
   const missingEvidence = structuredClone(approved);
   missingEvidence.records[0].approver = null;
   assert.ok(validateHeldVideoApprovalTransition(ledger, missingEvidence, held)

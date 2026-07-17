@@ -420,7 +420,16 @@ export function validateManifest(
         }
       }
     }
-    if (block.type === "role_play" && /^pending:/i.test(block.content.scenario_id)) {
+    const scenarioId = block.content?.scenario_id;
+    if (
+      block.type === "role_play"
+      && block.required === true
+      && (
+        typeof scenarioId !== "string"
+        || scenarioId.trim().length === 0
+        || /^pending\s*:/i.test(scenarioId.trim())
+      )
+    ) {
       publicationBlockers.push(`${block.source_key} needs a production Closer Lab scenario ID`);
     }
   }

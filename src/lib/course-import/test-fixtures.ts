@@ -69,7 +69,7 @@ export function validCourseManifest(): CourseImportManifest {
                       type: "video",
                       sort_order: 0,
                       required: true,
-                      content: { asset_key: "video-1" },
+                      content: { asset_key: "video-1", duration_seconds: 120 },
                     },
                     {
                       source_key: "block-cards",
