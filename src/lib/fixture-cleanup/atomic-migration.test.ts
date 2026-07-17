@@ -7,15 +7,23 @@ import { describe, expect, it } from "vitest";
 const root = process.cwd();
 const manifestPath = resolve(root, "docs/course-production/fixture-boundary-manifest.json");
 const migrationPath = resolve(root, "supabase/migrations/021_atomic_fixture_catalog_cleanup.sql");
+const ownershipPath = resolve(root, "docs/course-production/FIXTURE-OWNERSHIP.md");
 const volatilityFixPath = resolve(
   root,
   "supabase/migrations/024_fixture_cleanup_canonicalizer_stable.sql",
 );
 const manifestRaw = readFileSync(manifestPath, "utf8");
 const manifest = JSON.parse(manifestRaw) as {
-  fixture_tables: Record<string, { fingerprint_fields: string[] }>;
+  fixture_tables: Record<
+    string,
+    {
+      fingerprint_fields: string[];
+      rows: Array<{ identity: { id: string }; row_sha256: string }>;
+    }
+  >;
 };
 const migration = readFileSync(migrationPath, "utf8");
+const ownership = readFileSync(ownershipPath, "utf8");
 const volatilityFix = readFileSync(volatilityFixPath, "utf8");
 const manifestHash = createHash("sha256").update(manifestRaw).digest("hex");
 
@@ -51,6 +59,26 @@ describe("atomic fixture cleanup migration", () => {
     expect(migration).toContain("thumbnail_path");
     expect(migration).toContain("content_import_id");
     expect(migration).toContain("rubric");
+  });
+
+  it("documents only the six checksum-locked fixture invites as deletion candidates", () => {
+    const invites = manifest.fixture_tables.invites.rows;
+    const sectionStart = ownership.indexOf("## Fixture-owned invites");
+    const sectionEnd = ownership.indexOf("## Execution guard", sectionStart);
+    const inviteSection = ownership.slice(sectionStart, sectionEnd);
+    const documentedIds = [...inviteSection.matchAll(/`([0-9a-f-]{36})`/g)].map(
+      ([, id]) => id,
+    );
+
+    expect(invites).toHaveLength(6);
+    expect(documentedIds).toEqual(invites.map((row) => row.identity.id));
+    for (const invite of invites) {
+      expect(inviteSection).toContain(`\`${invite.row_sha256}\``);
+      expect(migration).toContain(`('invites', '{"id":"${invite.identity.id}"}'::jsonb`);
+      expect(migration).toContain(`'${invite.row_sha256}'`);
+    }
+    expect(inviteSection).toContain("Every other existing or future invite is retained.");
+    expect(inviteSection).toContain("only an exact ID above");
   });
 
   it("locks and revalidates dependents inside one transaction before deleting", () => {

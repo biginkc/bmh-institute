@@ -59,7 +59,7 @@ test.describe("production pilot dry run", () => {
 
       await adminPage.goto("/admin/reports");
       await expect(
-        adminPage.getByRole("heading", { name: "Pilot monitoring" }),
+        adminPage.getByRole("heading", { name: "Learner monitoring" }),
       ).toBeVisible();
       await expectPilotRow(adminPage, fixture.needsAccess.email, "Needs access");
       await expectPilotRow(adminPage, fixture.accessCorrection.email, "Needs access");
@@ -67,9 +67,9 @@ test.describe("production pilot dry run", () => {
       await expectPilotRow(adminPage, fixture.needsRevision.email, "Needs revision");
       await expectPilotRow(adminPage, fixture.needsReview.email, "Needs review");
       await expectPilotRow(adminPage, fixture.notStarted.email, "Not started");
-      recordStep(manifest, "verified pilot monitoring action states");
+      recordStep(manifest, "verified learner monitoring action states");
 
-      const csv = await downloadPilotCsv(adminPage);
+      const csv = await downloadLearnerCsv(adminPage);
       expect(csv).toContain(fixture.certified.email);
       expect(csv).toContain(`${fixture.certified.email},Certified`);
       expect(csv).toContain(`${fixture.needsReview.email},Needs review`);
@@ -78,7 +78,7 @@ test.describe("production pilot dry run", () => {
       expect(csv).toContain(`${fixture.needsAccess.email},Needs access`);
       expect(csv).toContain(`${fixture.accessCorrection.email},Needs access`);
       expect(csv).toContain(`${fixture.suspended.email},Needs access`);
-      recordStep(manifest, "verified pilot CSV export");
+      recordStep(manifest, "verified learner CSV export");
 
       await adminPage.goto(`/admin/users/${fixture.accessCorrection.id}/edit`);
       await expect(adminPage.getByLabel(`${fixture.prefix} Pilot Cohort`)).toBeVisible();
@@ -133,13 +133,15 @@ async function expectPilotRow(page: Page, email: string, status: string) {
   await expect(row).toContainText(status);
 }
 
-async function downloadPilotCsv(page: Page): Promise<string> {
+async function downloadLearnerCsv(page: Page): Promise<string> {
+  const exportLink = page.getByRole("link", { name: /^export csv$/i });
+  await expect(exportLink).toHaveAttribute("href", "/admin/reports/learners/export");
   const [download] = await Promise.all([
     page.waitForEvent("download"),
-    page.getByRole("link", { name: /^export csv$/i }).click(),
+    exportLink.click(),
   ]);
   const filepath = await download.path();
-  if (!filepath) throw new Error("Pilot CSV download path was not available.");
+  if (!filepath) throw new Error("Learner CSV download path was not available.");
   return fs.readFileSync(filepath, "utf8");
 }
 

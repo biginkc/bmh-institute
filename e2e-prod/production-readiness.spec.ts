@@ -102,11 +102,11 @@ test.describe("production readiness lifecycle", () => {
 
       await adminPage.goto("/admin/reports");
       await expect(
-        adminPage.getByRole("heading", { name: "Pilot monitoring" }),
+        adminPage.getByRole("heading", { name: "Learner monitoring" }),
       ).toBeVisible();
       await expect(
         adminPage.getByRole("link", { name: /^export csv$/i }),
-      ).toHaveAttribute("href", "/admin/reports/pilot/export");
+      ).toHaveAttribute("href", "/admin/reports/learners/export");
       const monitoringReviewRow = adminPage
         .getByRole("row")
         .filter({ hasText: fixture.learner.email });
