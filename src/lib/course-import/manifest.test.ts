@@ -115,6 +115,34 @@ describe("validateCourseManifest", () => {
     );
   });
 
+  it("rejects required blocks that cannot report completion", () => {
+    const nonTrackable = validCourseManifest();
+    const block = nonTrackable.program.courses[0].modules[0].lessons[0].blocks?.[0];
+    if (!block) throw new Error("Fixture video block is missing.");
+    block.type = "text";
+    block.content = { html: "<p>Read this.</p>" };
+
+    const nonTrackableResult = validateCourseManifest(nonTrackable);
+    expect(nonTrackableResult.ok).toBe(false);
+    if (!nonTrackableResult.ok) {
+      expect(nonTrackableResult.errors).toContain(
+        "program.courses[0].modules[0].lessons[0].blocks[0] cannot be required because text blocks do not report completion.",
+      );
+    }
+
+    const missingVideo = validCourseManifest();
+    const video = missingVideo.program.courses[0].modules[0].lessons[0].blocks?.[0];
+    if (!video) throw new Error("Fixture video block is missing.");
+    video.content = {};
+    const missingVideoResult = validateCourseManifest(missingVideo);
+    expect(missingVideoResult.ok).toBe(false);
+    if (!missingVideoResult.ok) {
+      expect(missingVideoResult.errors).toContain(
+        "program.courses[0].modules[0].lessons[0].blocks[0] requires an uploaded video asset before it can be required.",
+      );
+    }
+  });
+
   it("requires release assets to use immutable import-owned storage paths", () => {
     const input = validCourseManifest();
     input.assets[0].checksum_sha256 = "a".repeat(64);

@@ -7,6 +7,7 @@ import { getAppUrl } from "@/lib/app-url";
 import { createClient } from "@/lib/supabase/server";
 import { sendEmail } from "@/lib/email/send";
 import { emitSandraCourseCompletedForLesson } from "@/lib/integrations/sandra/course-completed";
+import { parseAssignmentRubric } from "@/lib/assignments/rubric";
 import {
   renderApprovedEmail,
   renderRevisionEmail,
@@ -21,6 +22,24 @@ export async function approveSubmission(input: {
 }): Promise<ActionResult> {
   const reviewer = await requireAdmin();
   const supabase = await createClient();
+
+  const { data: reviewRow, error: reviewLookupError } = await supabase
+    .from("assignment_submissions")
+    .select("assignments ( rubric )")
+    .eq("id", input.submissionId)
+    .maybeSingle();
+  if (reviewLookupError || !reviewRow) {
+    return { ok: false, error: "Submission not found." };
+  }
+  const assignment = firstRow(reviewRow.assignments) as
+    | { rubric: unknown }
+    | null;
+  if (!assignment || !parseAssignmentRubric(assignment.rubric).ok) {
+    return {
+      ok: false,
+      error: "Repair this assignment's review rubric before approving submissions.",
+    };
+  }
 
   const { error } = await supabase
     .from("assignment_submissions")

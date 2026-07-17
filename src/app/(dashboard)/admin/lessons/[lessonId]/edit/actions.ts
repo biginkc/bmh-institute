@@ -5,6 +5,10 @@ import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth/guard";
 import { validateArtworkChange } from "@/lib/artwork/paths";
 import { sanitizeTextBlockHtml } from "@/lib/sanitize/text-block";
+import {
+  defaultRequiredForBlock,
+  normalizeRequiredForBlock,
+} from "@/lib/content-blocks/completion";
 import { createClient } from "@/lib/supabase/server";
 import type { Json } from "@/lib/supabase/types";
 
@@ -115,7 +119,7 @@ export async function createBlock(input: {
     block_type: input.block_type,
     content: DEFAULT_CONTENT[input.block_type],
     sort_order: nextOrder,
-    is_required_for_completion: input.block_type !== "divider",
+    is_required_for_completion: defaultRequiredForBlock(),
   });
   if (error) return { ok: false, error: error.message };
 
@@ -134,7 +138,7 @@ export async function updateBlock(input: {
   const supabase = await createClient();
   const { data: existing, error: lookupError } = await supabase
     .from("content_blocks")
-    .select("block_type")
+    .select("block_type, is_required_for_completion")
     .eq("id", input.blockId)
     .maybeSingle();
   if (lookupError) return { ok: false, error: lookupError.message };
@@ -177,12 +181,18 @@ export async function updateBlock(input: {
     } as Json;
   }
 
-  const patch: { content: Json; is_required_for_completion?: boolean } = {
+  const requestedRequired =
+    typeof input.is_required_for_completion === "boolean"
+      ? input.is_required_for_completion
+      : Boolean(existing.is_required_for_completion);
+  const patch: { content: Json; is_required_for_completion: boolean } = {
     content: safeContent,
+    is_required_for_completion: normalizeRequiredForBlock(
+      existing.block_type,
+      safeContent,
+      requestedRequired,
+    ),
   };
-  if (typeof input.is_required_for_completion === "boolean") {
-    patch.is_required_for_completion = input.is_required_for_completion;
-  }
   const { error } = await supabase
     .from("content_blocks")
     .update(patch)

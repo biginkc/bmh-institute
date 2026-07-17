@@ -81,6 +81,8 @@ describe("AdminSubmissionsPage assignment rubric", () => {
     );
     expect(html).toContain("review rubric is invalid");
     expect(html).not.toContain("Review rubric</h3>");
+    expect(html).not.toContain(">Approve</button>");
+    expect(html).not.toContain(">Request revision</button>");
   });
 
   it("does not describe a failed submissions query as an empty queue", async () => {

@@ -162,6 +162,7 @@ export default async function LessonPage({
       ) : lesson.lesson_type === "content" ? (
         <ContentLessonBody
           lessonId={lessonId}
+          userId={user?.id ?? ""}
           alreadyComplete={alreadyComplete}
           navigationPromise={contentNavigationPromise}
         />
@@ -187,10 +188,12 @@ export default async function LessonPage({
 
 async function ContentLessonBody({
   lessonId,
+  userId,
   alreadyComplete,
   navigationPromise,
 }: {
   lessonId: string;
+  userId: string;
   alreadyComplete: boolean;
   navigationPromise: Promise<ContentLessonNavigation | null>;
 }) {
@@ -205,10 +208,24 @@ async function ContentLessonBody({
   ]);
 
   const rows = (blocks ?? []) as ContentBlock[];
-  const enriched = await attachRolePlayEmbeds(
-    await enrichBlocksWithSignedUrls(rows),
-    lessonId,
-    supabase,
+  const [{ data: completedRows }, enriched] = await Promise.all([
+    rows.length > 0
+      ? supabase
+          .from("user_block_progress")
+          .select("block_id")
+          .eq("user_id", userId)
+          .in("block_id", rows.map((block) => block.id))
+      : Promise.resolve({ data: [] }),
+    attachRolePlayEmbeds(
+      await enrichBlocksWithSignedUrls(rows),
+      lessonId,
+      supabase,
+    ),
+  ]);
+  const completedBlockIds = new Set(
+    (completedRows ?? []).flatMap((row) =>
+      typeof row.block_id === "string" ? [row.block_id] : [],
+    ),
   );
 
   if (enriched.length === 0) {
@@ -237,7 +254,11 @@ async function ContentLessonBody({
       <div className="min-w-0">
         <div className="flex flex-col gap-5">
           {enriched.map((block) => (
-            <ContentBlockRenderer key={block.id} block={block} />
+            <ContentBlockRenderer
+              key={block.id}
+              block={block}
+              completed={completedBlockIds.has(block.id)}
+            />
           ))}
         </div>
 

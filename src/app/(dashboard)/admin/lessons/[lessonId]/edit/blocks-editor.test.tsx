@@ -30,10 +30,11 @@ const paletteLabels = [
   "Embed (iframe)",
   "Role play",
   "Divider",
+  "Flashcards",
 ];
 
 describe("<BlocksEditor />", () => {
-  it("renders the complete 11-type palette and preserves block creation payloads", async () => {
+  it("renders the complete 12-type palette and preserves block creation payloads", async () => {
     const user = userEvent.setup();
     render(<BlocksEditor lessonId="lesson-1" initialBlocks={[]} />);
 
@@ -111,5 +112,79 @@ describe("<BlocksEditor />", () => {
       }),
     );
     confirm.mockRestore();
+  });
+
+  it("exposes required completion only for trackable block configurations", async () => {
+    const user = userEvent.setup();
+    render(
+      <BlocksEditor
+        lessonId="lesson-1"
+        initialBlocks={[
+          {
+            id: "video-upload",
+            block_type: "video",
+            content: {
+              source: "upload",
+              file_path: "courses/test/video.mp4",
+              title: "Welcome",
+            },
+            sort_order: 0,
+            is_required_for_completion: true,
+          },
+          {
+            id: "video-external",
+            block_type: "video",
+            content: { source: "youtube", url: "https://youtu.be/example" },
+            sort_order: 1,
+            is_required_for_completion: false,
+          },
+          {
+            id: "role-play",
+            block_type: "role_play",
+            content: { scenario_id: "scenario-1", title: "Practice" },
+            sort_order: 2,
+            is_required_for_completion: true,
+          },
+        ]}
+      />,
+    );
+
+    expect(screen.getAllByRole("checkbox", { name: "Required for lesson completion" })).toHaveLength(2);
+    expect(screen.getByText("External videos cannot track completion and are always optional.")).toBeVisible();
+
+    const uploadedVideoRequired = screen.getAllByRole("checkbox", {
+      name: "Required for lesson completion",
+    })[0];
+    await user.click(uploadedVideoRequired);
+    await user.click(screen.getAllByRole("button", { name: "Save block" })[0]);
+
+    await waitFor(() =>
+      expect(updateBlock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          blockId: "video-upload",
+          is_required_for_completion: false,
+        }),
+      ),
+    );
+  });
+
+  it("accepts Markdown transcripts", () => {
+    const { container } = render(
+      <BlocksEditor
+        lessonId="lesson-1"
+        initialBlocks={[
+          {
+            id: "video-upload",
+            block_type: "video",
+            content: { source: "upload" },
+            sort_order: 0,
+            is_required_for_completion: false,
+          },
+        ]}
+      />,
+    );
+
+    expect(container.querySelector('input[accept*="text/markdown"]')).not.toBeNull();
+    expect(container.querySelector('input[accept*=".md"]')).not.toBeNull();
   });
 });

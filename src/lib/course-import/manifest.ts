@@ -383,6 +383,28 @@ function validateLesson(
       const blockPath = `${path}.blocks[${index}]`;
       registerKey(block.source_key, blockPath);
       if (!isRecord(block.content)) errors.push(`${blockPath}.content must be an object.`);
+      if (block.required === true) {
+        if (block.type === "video") {
+          if (typeof block.content?.asset_key !== "string" || !block.content.asset_key.trim()) {
+            errors.push(
+              `${blockPath} requires an uploaded video asset before it can be required.`,
+            );
+          }
+        } else if (block.type === "role_play") {
+          if (
+            typeof block.content?.scenario_id !== "string" ||
+            !block.content.scenario_id.trim()
+          ) {
+            errors.push(
+              `${blockPath} requires a scenario ID before it can be required.`,
+            );
+          }
+        } else {
+          errors.push(
+            `${blockPath} cannot be required because ${String(block.type)} blocks do not report completion.`,
+          );
+        }
+      }
       for (const field of ASSET_REFERENCE_FIELDS) {
         const value = block.content?.[field];
         if (value !== undefined && value !== null) {

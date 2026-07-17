@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Play } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 import {
   loadVideoProgress,
@@ -20,24 +21,32 @@ export function VideoBlockPlayer({
   posterSrc,
   captionsSrc,
   transcriptSrc,
+  title = "Lesson video",
 }: {
   blockId: string;
   src: string;
   posterSrc?: string;
   captionsSrc?: string;
   transcriptSrc?: string;
+  title?: string;
 }) {
+  const router = useRouter();
   const videoRef = useRef<HTMLVideoElement>(null);
   const sampleStartRef = useRef<number | null>(null);
   const resumePositionRef = useRef(0);
   const writeQueueRef = useRef<Promise<void>>(Promise.resolve());
   const mountedRef = useRef(true);
+  const completedRef = useRef(false);
+  const hasRecordedProgressRef = useRef(false);
   const [playing, setPlaying] = useState(false);
   const [duration, setDuration] = useState(0);
   const [progressError, setProgressError] = useState<string | null>(null);
+  const [watchedPercent, setWatchedPercent] = useState(0);
+  const [completed, setCompleted] = useState(false);
 
   const enqueueProgress = useCallback(
     (progress: Parameters<typeof recordVideoProgress>[0]) => {
+      hasRecordedProgressRef.current = true;
       writeQueueRef.current = writeQueueRef.current.then(async () => {
         let result: Awaited<ReturnType<typeof recordVideoProgress>> | null = null;
         for (let attempt = 0; attempt < 2; attempt += 1) {
@@ -49,6 +58,14 @@ export function VideoBlockPlayer({
           if (result?.ok) break;
         }
         if (!mountedRef.current) return;
+        if (result?.ok) {
+          setWatchedPercent(result.watchedPercent);
+          setCompleted(result.completed);
+          if (result.completed && !completedRef.current) {
+            completedRef.current = true;
+            router.refresh();
+          }
+        }
         setProgressError(
           result?.ok
             ? null
@@ -56,7 +73,7 @@ export function VideoBlockPlayer({
         );
       });
     },
-    [],
+    [router],
   );
 
   const flushProgress = useCallback(
@@ -83,6 +100,13 @@ export function VideoBlockPlayer({
     void loadVideoProgress(blockId).then((result) => {
       if (!active || !result.ok) return;
       resumePositionRef.current = result.positionSeconds;
+      if (!hasRecordedProgressRef.current) {
+        completedRef.current = result.completed;
+        if (result.watchedPercent !== 0) {
+          setWatchedPercent(result.watchedPercent);
+        }
+        if (result.completed) setCompleted(true);
+      }
       if (video?.readyState && result.positionSeconds > 0) {
         video.currentTime = result.positionSeconds;
       }
@@ -131,7 +155,7 @@ export function VideoBlockPlayer({
           poster={posterSrc}
           controls
           preload="metadata"
-          aria-label="Lesson video"
+          aria-label={title}
           className="h-full w-full bg-[var(--ink-900)] object-contain"
           onLoadedMetadata={(event) => {
             const nextDuration = event.currentTarget.duration;
@@ -191,8 +215,15 @@ export function VideoBlockPlayer({
           </div>
         ) : null}
       </div>
+      <p
+        role="status"
+        aria-live="polite"
+        className="text-sm font-extrabold text-[var(--text-muted)]"
+      >
+        {completed ? "Complete" : `${watchedPercent}% watched`}
+      </p>
       {progressError ? (
-        <p role="status" className="text-sm font-bold text-[var(--danger)]">
+        <p role="alert" className="text-sm font-bold text-[var(--danger)]">
           {progressError}
         </p>
       ) : null}

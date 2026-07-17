@@ -1,15 +1,13 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Bell } from "lucide-react";
 
 import { Avatar } from "@/components/bmh-ds/avatar";
 import { Button } from "@/components/bmh-ds/button";
-import { IconButton } from "@/components/bmh-ds/icon-button";
 import { Logo } from "@/components/bmh-ds/logo";
-import { SearchBar } from "@/components/bmh-ds/search-bar";
 import { createClient } from "@/lib/supabase/server";
 
 import { SidebarNav } from "./sidebar-nav";
+import { LessonSearch, type LessonSearchItem } from "./lesson-search";
 
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
@@ -42,14 +40,21 @@ export default async function DashboardLayout({
   const isAdmin =
     profile?.system_role === "owner" || profile?.system_role === "admin";
 
-  const pendingSubmissions = isAdmin
-    ? (
-        await supabase
+  const [pendingResult, lessonResult] = await Promise.all([
+    isAdmin
+      ? supabase
           .from("assignment_submissions")
           .select("id", { count: "exact", head: true })
           .eq("status", "submitted")
-      ).count ?? 0
-    : 0;
+      : Promise.resolve({ count: 0 }),
+    supabase.from("lessons").select("id, title").order("title").limit(500),
+  ]);
+  const pendingSubmissions = pendingResult.count ?? 0;
+  const searchableLessons = (lessonResult.data ?? []).flatMap((lesson) =>
+    typeof lesson.id === "string" && typeof lesson.title === "string"
+      ? [{ id: lesson.id, title: lesson.title } satisfies LessonSearchItem]
+      : [],
+  );
 
   const displayName = profile?.full_name || user.email || "BMH Institute user";
   const roleLabel = profile?.system_role ?? "learner";
@@ -118,12 +123,9 @@ export default async function DashboardLayout({
           </span>
         </Link>
         <div className="hidden w-full max-w-[360px] sm:block">
-          <SearchBar placeholder="Search lessons…" />
+          <LessonSearch lessons={searchableLessons} />
         </div>
         <span className="flex-1" />
-        <IconButton label="Notifications" variant="plain">
-          <Bell aria-hidden="true" size={20} />
-        </IconButton>
         <Link
           href="/profile"
           className="md:hidden"

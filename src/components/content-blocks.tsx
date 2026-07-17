@@ -35,15 +35,21 @@ export type ContentBlock = {
   is_required_for_completion: boolean;
 };
 
-export function ContentBlockRenderer({ block }: { block: ContentBlock }) {
+export function ContentBlockRenderer({
+  block,
+  completed = false,
+}: {
+  block: ContentBlock;
+  completed?: boolean;
+}) {
   return (
     <div data-content-block={block.block_type} className="w-full">
-      {renderContentBlock(block)}
+      {renderContentBlock(block, completed)}
     </div>
   );
 }
 
-function renderContentBlock(block: ContentBlock) {
+function renderContentBlock(block: ContentBlock, completed: boolean) {
   switch (block.block_type) {
     case "text":
       return <TextBlock html={stringOr(block.content.html, "")} />;
@@ -117,6 +123,8 @@ function renderContentBlock(block: ContentBlock) {
           posterSignedUrl={stringOr(block.content.poster_signed_url, null)}
           captionSignedUrl={stringOr(block.content.caption_signed_url, null)}
           transcriptSignedUrl={stringOr(block.content.transcript_signed_url, null)}
+          title={stringOr(block.content.title, "")}
+          partLabel={stringOr(block.content.part_label, "")}
         />
       );
     case "embed":
@@ -134,6 +142,7 @@ function renderContentBlock(block: ContentBlock) {
           title={stringOr(block.content.title, "Role play")}
           iframeSrc={stringOr(block.content.iframe_src, "")}
           initialHeightPx={numberOr(block.content.height_px, 720)}
+          initialComplete={completed}
         />
       );
     case "flashcard":
@@ -455,6 +464,8 @@ function VideoBlock({
   posterSignedUrl,
   captionSignedUrl,
   transcriptSignedUrl,
+  title,
+  partLabel,
 }: {
   blockId: string;
   source: string;
@@ -464,9 +475,11 @@ function VideoBlock({
   posterSignedUrl: string | null;
   captionSignedUrl: string | null;
   transcriptSignedUrl: string | null;
+  title: string;
+  partLabel: string;
 }) {
-  // Uploaded video: prefer the signed URL the server attached.
-  if (source === "upload") {
+  const accessibleName = [partLabel, title].filter(Boolean).join(": ") || "Lesson video";
+  const player = source === "upload" ? (() => {
     const src = signedUrl ?? filePath;
     if (!src) {
       return (
@@ -479,33 +492,56 @@ function VideoBlock({
       <VideoBlockPlayer
         blockId={blockId}
         src={src}
+        title={accessibleName}
         posterSrc={posterSignedUrl ?? undefined}
         captionsSrc={captionSignedUrl ?? undefined}
         transcriptSrc={transcriptSignedUrl ?? undefined}
       />
     );
-  }
-
-  if (!url) {
+  })() : (() => {
+    if (!url) {
+      return (
+        <div className="rounded-[var(--bmh-radius-md)] border border-dashed border-[var(--ink-300)] bg-[var(--ink-050)] p-6 text-center text-sm font-semibold text-[var(--text-muted)]">
+          Video URL not set.
+        </div>
+      );
+    }
     return (
-      <div className="rounded-[var(--bmh-radius-md)] border border-dashed border-[var(--ink-300)] bg-[var(--ink-050)] p-6 text-center text-sm font-semibold text-[var(--text-muted)]">
-        Video URL not set.
+      <div className="aspect-video overflow-hidden rounded-[var(--bmh-radius-lg)] border-[2.5px] border-[var(--ink-900)] bg-[var(--ink-900)] shadow-[var(--bmh-shadow-sm)]">
+        <iframe
+          src={toEmbedSrc(source, url)}
+          title={accessibleName}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+          className="h-full w-full"
+        />
       </div>
     );
-  }
+  })();
 
-  const embedSrc = toEmbedSrc(source, url);
   return (
-    <div className="aspect-video overflow-hidden rounded-[var(--bmh-radius-lg)] border-[2.5px] border-[var(--ink-900)] bg-[var(--ink-900)] shadow-[var(--bmh-shadow-sm)]">
-      <iframe
-        src={embedSrc}
-        title="Video"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-        allowFullScreen
-        className="h-full w-full"
-      />
-    </div>
+    <section aria-labelledby={title ? `video-title-${blockId}` : undefined} className="space-y-3">
+      {title || partLabel ? (
+        <header>
+          {partLabel ? (
+            <p className="text-xs font-extrabold uppercase tracking-[0.08em] text-[var(--action)]">
+              {partLabel}
+            </p>
+          ) : null}
+          {title ? (
+            <h2
+              id={`video-title-${blockId}`}
+              className="font-[family-name:var(--font-display)] text-xl font-extrabold text-[var(--ink-900)]"
+            >
+              {title}
+            </h2>
+          ) : null}
+        </header>
+      ) : null}
+      {player}
+    </section>
   );
+
 }
 
 function toEmbedSrc(source: string, url: string): string {

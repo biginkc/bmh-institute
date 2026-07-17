@@ -303,6 +303,7 @@ export async function completeRolePlayBlock(
     userId: user.id,
     blockId,
   });
+  revalidatePath(`/lessons/${block.lesson_id}`);
   revalidatePath("/dashboard");
   return { ok: true, alreadyMarked: (data ?? []).length === 0 };
 }

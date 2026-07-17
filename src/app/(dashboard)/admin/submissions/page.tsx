@@ -175,7 +175,7 @@ function SubmissionCard({ row }: { row: Row }) {
           </div>
         ) : null}
 
-        {row.status === "submitted" ? (
+        {row.status === "submitted" && rubric.ok ? (
           <ReviewControls
             submissionId={row.id}
             filePath={row.submission_file_path}

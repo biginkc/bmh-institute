@@ -2,6 +2,11 @@ import { act, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const completeRolePlayBlock = vi.fn();
+const refresh = vi.fn();
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh }),
+}));
 
 vi.mock("@/app/(dashboard)/lessons/[lessonId]/actions", () => ({
   completeRolePlayBlock: (...args: unknown[]) => completeRolePlayBlock(...args),
@@ -11,6 +16,7 @@ import { RolePlayBlock } from "./role-play-block";
 
 describe("<RolePlayBlock /> completion messages", () => {
   beforeEach(() => {
+    refresh.mockReset();
     completeRolePlayBlock.mockReset();
     completeRolePlayBlock.mockResolvedValue({ ok: true, alreadyMarked: false });
   });
@@ -22,7 +28,8 @@ describe("<RolePlayBlock /> completion messages", () => {
         scenarioId="scenario-1"
         title="Opening practice"
         iframeSrc="https://lab.example.com/embed/role-play/scenario-1?token=secret"
-        initialHeightPx={720}
+      initialHeightPx={720}
+        initialComplete={false}
       />,
     );
     const iframe = screen.getByTitle("Opening practice") as HTMLIFrameElement;
@@ -65,5 +72,22 @@ describe("<RolePlayBlock /> completion messages", () => {
       });
     });
     expect(screen.getByText("Complete")).toBeVisible();
+    expect(refresh).toHaveBeenCalledTimes(1);
+  });
+
+  it("renders persisted completion immediately after reload", () => {
+    render(
+      <RolePlayBlock
+        blockId="block-1"
+        scenarioId="scenario-1"
+        title="Opening practice"
+        iframeSrc="https://lab.example.com/embed/role-play/scenario-1?token=secret"
+        initialHeightPx={720}
+        initialComplete
+      />,
+    );
+
+    expect(screen.getByText("Complete")).toBeVisible();
+    expect(refresh).not.toHaveBeenCalled();
   });
 });

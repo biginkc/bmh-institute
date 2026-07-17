@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { CheckCircle2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 import { completeRolePlayBlock } from "@/app/(dashboard)/lessons/[lessonId]/actions";
 import {
@@ -18,6 +19,7 @@ type RolePlayBlockProps = {
   title: string;
   iframeSrc: string;
   initialHeightPx: number;
+  initialComplete: boolean;
 };
 
 export function RolePlayBlock({
@@ -26,13 +28,16 @@ export function RolePlayBlock({
   title,
   iframeSrc,
   initialHeightPx,
+  initialComplete,
 }: RolePlayBlockProps) {
+  const router = useRouter();
   const [ready, setReady] = useState(false);
-  const [complete, setComplete] = useState(false);
+  const [complete, setComplete] = useState(initialComplete);
   const [error, setError] = useState<string | null>(null);
   const [heightPx, setHeightPx] = useState(clampRolePlayHeight(initialHeightPx));
   const [pending, startTransition] = useTransition();
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const completedRef = useRef(initialComplete);
   const trustedOrigin = useMemo(() => getTrustedOrigin(iframeSrc), [iframeSrc]);
 
   useEffect(() => {
@@ -71,6 +76,10 @@ export function RolePlayBlock({
           if (result.ok) {
             setComplete(true);
             setError(null);
+            if (!completedRef.current) {
+              completedRef.current = true;
+              router.refresh();
+            }
           } else {
             setError(result.error);
           }
@@ -80,7 +89,7 @@ export function RolePlayBlock({
 
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
-  }, [blockId, scenarioId, trustedOrigin]);
+  }, [blockId, router, scenarioId, trustedOrigin]);
 
   if (!iframeSrc || !trustedOrigin) {
     return (
@@ -122,7 +131,7 @@ export function RolePlayBlock({
         style={{ height: `${heightPx}px` }}
       />
       {error ? (
-        <p className="border-t border-[var(--danger)] bg-[var(--danger-soft)] px-4 py-3 font-[family-name:var(--font-body)] text-sm font-bold text-[var(--danger)]">
+        <p role="alert" className="border-t border-[var(--danger)] bg-[var(--danger-soft)] px-4 py-3 font-[family-name:var(--font-body)] text-sm font-bold text-[var(--danger)]">
           {error}
         </p>
       ) : null}

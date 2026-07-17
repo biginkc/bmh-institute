@@ -9,6 +9,7 @@ import {
 } from "@/lib/artwork/paths";
 
 const SIGNED_URL_TTL_SECONDS = 60 * 60; // 1 hour
+const ARTWORK_METADATA_CONCURRENCY = 6;
 
 /**
  * For any block whose content references a `file_path` in the `content`
@@ -94,18 +95,28 @@ export async function signAuthorizedArtworkPaths(
   if (authorized.length === 0) return new Map();
 
   const bucket = createAdminClient().storage.from("content");
-  const verifiedRequests: Array<ArtworkSignRequest & { path: string }> = [];
-  for (const request of authorized) {
-    const { data, error } = await bucket.info(request.path);
-    const metadata = data?.metadata as Record<string, unknown> | undefined;
-    const mime =
-      (typeof metadata?.mimetype === "string" && metadata.mimetype) ||
-      (typeof metadata?.contentType === "string" && metadata.contentType) ||
-      null;
-    if (!error && mime && artworkMimeMatchesPath(request.path, mime)) {
-      verifiedRequests.push(request);
-    }
-  }
+  const checks = await mapWithConcurrency(
+    authorized,
+    ARTWORK_METADATA_CONCURRENCY,
+    async (request) => {
+      try {
+        const { data, error } = await bucket.info(request.path);
+        const metadata = data?.metadata as Record<string, unknown> | undefined;
+        const mime =
+          (typeof metadata?.mimetype === "string" && metadata.mimetype) ||
+          (typeof metadata?.contentType === "string" && metadata.contentType) ||
+          null;
+        return !error && mime && artworkMimeMatchesPath(request.path, mime)
+          ? request
+          : null;
+      } catch {
+        return null;
+      }
+    },
+  );
+  const verifiedRequests = checks.filter(
+    (request): request is ArtworkSignRequest & { path: string } => request !== null,
+  );
   if (verifiedRequests.length === 0) return new Map();
 
   const { data, error } = await bucket.createSignedUrls(
@@ -125,4 +136,24 @@ export async function signAuthorizedArtworkPaths(
         : [];
     }),
   );
+}
+
+async function mapWithConcurrency<T, R>(
+  items: T[],
+  concurrency: number,
+  map: (item: T) => Promise<R>,
+): Promise<R[]> {
+  const results = new Array<R>(items.length);
+  let nextIndex = 0;
+  const workerCount = Math.min(concurrency, items.length);
+  await Promise.all(
+    Array.from({ length: workerCount }, async () => {
+      while (nextIndex < items.length) {
+        const index = nextIndex;
+        nextIndex += 1;
+        results[index] = await map(items[index]);
+      }
+    }),
+  );
+  return results;
 }

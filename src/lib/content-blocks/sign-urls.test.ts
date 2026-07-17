@@ -162,4 +162,38 @@ describe("signAuthorizedArtworkPaths", () => {
     expect(result.get(artworkRequestKey("course", "11111111-1111-4111-8111-111111111111"))).toBe("signed-cover");
     expect(result.has(artworkRequestKey("course", "22222222-2222-4222-8222-222222222222"))).toBe(false);
   });
+
+  it("checks artwork metadata concurrently with a safe upper bound", async () => {
+    let active = 0;
+    let maxActive = 0;
+    info.mockImplementation(async () => {
+      active += 1;
+      maxActive = Math.max(maxActive, active);
+      await new Promise((resolve) => setTimeout(resolve, 2));
+      active -= 1;
+      return { data: { metadata: { mimetype: "image/webp" } }, error: null };
+    });
+    createSignedUrls.mockImplementation(async (paths: string[]) => ({
+      data: paths.map((path) => ({ path, signedUrl: `signed:${path}` })),
+      error: null,
+    }));
+    const requests = Array.from({ length: 14 }, (_, index) => {
+      const id = `00000000-0000-4000-8000-${String(index).padStart(12, "0")}`;
+      return {
+        entityType: "course" as const,
+        entityId: id,
+        contentImportId: null,
+        thumbnailAssetKey: null,
+        thumbnailApprovedPath: null,
+        thumbnailApprovedSha256: null,
+        path: `catalog/courses/${id}/thumbnails/cover.webp`,
+      };
+    });
+
+    const result = await signAuthorizedArtworkPaths(requests);
+
+    expect(result.size).toBe(14);
+    expect(maxActive).toBeGreaterThan(1);
+    expect(maxActive).toBeLessThanOrEqual(6);
+  });
 });

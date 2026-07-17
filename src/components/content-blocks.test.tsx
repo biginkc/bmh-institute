@@ -1,6 +1,10 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh: vi.fn() }),
+}));
+
 vi.mock("@/app/(dashboard)/lessons/[lessonId]/actions", () => ({
   completeRolePlayBlock: vi.fn(),
   loadVideoProgress: vi.fn(async () => ({
@@ -83,6 +87,40 @@ describe("ContentBlockRenderer BMH treatments", () => {
     );
     expect(container.querySelector('track[kind="captions"]')).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Open video transcript" })).toBeVisible();
+  });
+
+  it("renders authored video titles and part labels with distinct accessible names", () => {
+    renderBlock("video", {
+      source: "upload",
+      signed_url: "https://example.com/video.mp4",
+      title: "The five-part opening",
+      part_label: "Part B",
+    });
+
+    expect(screen.getByText("Part B")).toBeVisible();
+    expect(screen.getByRole("heading", { name: "The five-part opening" })).toBeVisible();
+    expect(screen.getByLabelText("Part B: The five-part opening")).toBeVisible();
+  });
+
+  it("passes persisted completion into role play blocks", () => {
+    render(
+      <ContentBlockRenderer
+        completed
+        block={{
+          id: "role-play-1",
+          block_type: "role_play",
+          content: {
+            iframe_src: "https://practice.example.com/embed/role-play/scenario-1",
+            scenario_id: "scenario-1",
+            title: "Opening practice",
+          },
+          sort_order: 0,
+          is_required_for_completion: true,
+        }}
+      />,
+    );
+
+    expect(screen.getByText("Complete")).toBeVisible();
   });
 
   it("keeps authored text HTML intact at the trusted rendering boundary", () => {

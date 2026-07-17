@@ -1,6 +1,12 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+const refresh = vi.fn();
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh }),
+}));
+
 const loadVideoProgress = vi.fn();
 const recordVideoProgress = vi.fn();
 
@@ -13,11 +19,13 @@ import { VideoBlockPlayer } from "./video-block-player";
 
 describe("<VideoBlockPlayer />", () => {
   beforeEach(() => {
+    refresh.mockReset();
     loadVideoProgress.mockReset();
     loadVideoProgress.mockResolvedValue({
       ok: true,
       positionSeconds: 0,
       watchedRanges: [],
+      watchedPercent: 0,
       completed: false,
     });
     recordVideoProgress.mockReset();
@@ -26,6 +34,55 @@ describe("<VideoBlockPlayer />", () => {
       watchedPercent: 0,
       completed: false,
     });
+  });
+
+  it("restores and announces persisted watched progress", async () => {
+    loadVideoProgress.mockResolvedValue({
+      ok: true,
+      positionSeconds: 42,
+      watchedRanges: [[0, 42]],
+      watchedPercent: 42,
+      completed: false,
+    });
+
+    render(
+      <VideoBlockPlayer
+        blockId="block-1"
+        src="https://example.com/video.mp4"
+        title="Opening the call"
+      />,
+    );
+
+    expect(await screen.findByRole("status")).toHaveTextContent("42% watched");
+    expect(screen.getByLabelText("Opening the call")).toBeVisible();
+  });
+
+  it("announces completion and refreshes the lesson once on transition", async () => {
+    recordVideoProgress.mockResolvedValue({
+      ok: true,
+      positionSeconds: 95,
+      watchedRanges: [[0, 95]],
+      watchedPercent: 95,
+      completed: true,
+    });
+    render(<VideoBlockPlayer blockId="block-1" src="https://example.com/video.mp4" />);
+    const video = screen.getByLabelText("Lesson video") as HTMLVideoElement;
+    Object.defineProperties(video, {
+      duration: { configurable: true, value: 100 },
+      currentTime: { configurable: true, writable: true, value: 0 },
+    });
+
+    fireEvent.play(video);
+    video.currentTime = 95;
+    fireEvent.timeUpdate(video);
+
+    expect(await screen.findByText("Complete")).toBeVisible();
+    expect(refresh).toHaveBeenCalledTimes(1);
+
+    video.currentTime = 100;
+    fireEvent.timeUpdate(video);
+    await waitFor(() => expect(recordVideoProgress).toHaveBeenCalledTimes(2));
+    expect(refresh).toHaveBeenCalledTimes(1);
   });
 
   it("uses the real media duration in the branded play overlay", () => {
@@ -155,7 +212,7 @@ describe("<VideoBlockPlayer />", () => {
     fireEvent.timeUpdate(video);
 
     await waitFor(() => expect(recordVideoProgress).toHaveBeenCalledTimes(2));
-    expect(await screen.findByRole("status")).toHaveTextContent(
+    expect(await screen.findByRole("alert")).toHaveTextContent(
       "Video progress could not be saved",
     );
   });

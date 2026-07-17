@@ -6,6 +6,9 @@ let updatePatch: Record<string, unknown> | null = null;
 let updateError: { message: string } | null = null;
 let selectSql = "";
 let signedUrlError: { message: string } | null = null;
+let reviewRubric: unknown = [
+  { criterion: "Complete", description: "The learner completed the assignment." },
+];
 
 const sendEmailSpy = vi.fn(async (input: Record<string, unknown>) => {
   void input;
@@ -64,7 +67,7 @@ vi.mock("@/lib/supabase/server", () => ({
                     email: "learner@bmh.test",
                     full_name: "Learner One",
                   },
-                  assignments: { title: "Upload proof" },
+                  assignments: { title: "Upload proof", rubric: reviewRubric },
                   lessons: { title: "Lesson one" },
                 },
                 error: null,
@@ -91,6 +94,9 @@ describe("admin submission review actions (TEST-01)", () => {
     updateError = null;
     selectSql = "";
     signedUrlError = null;
+    reviewRubric = [
+      { criterion: "Complete", description: "The learner completed the assignment." },
+    ];
     sendEmailSpy.mockClear();
   });
 
@@ -115,6 +121,19 @@ describe("admin submission review actions (TEST-01)", () => {
       "profiles!assignment_submissions_user_id_fkey",
     );
     expect(sendEmailSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it("refuses approval when the stored assignment rubric is invalid", async () => {
+    reviewRubric = [{ criterion: "Incomplete", description: null }];
+
+    const result = await approveSubmission({ submissionId: "submission-1" });
+
+    expect(result).toEqual({
+      ok: false,
+      error: "Repair this assignment's review rubric before approving submissions.",
+    });
+    expect(updatePatch).toBeNull();
+    expect(sendEmailSpy).not.toHaveBeenCalled();
   });
 
   it("requires a revision note before writing", async () => {
