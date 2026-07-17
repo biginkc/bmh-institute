@@ -5,6 +5,7 @@ import { test } from "node:test";
 import {
   inspectApprovedCaptionAssets,
   loadManifest,
+  MAX_CAPTION_CHARACTERS_PER_SECOND,
   parseWebVtt,
 } from "../../scripts/course-content/validate-caption-assets.mjs";
 
@@ -15,11 +16,11 @@ test("only approved video cuts have complete caption and transcript assets", asy
   const manifest = await loadManifest(MANIFEST_URL);
   const report = await inspectApprovedCaptionAssets(manifest, REPO_ROOT);
 
-  assert.equal(report.approvedVideos, 20);
-  assert.equal(report.heldVideos, 9);
-  assert.equal(report.approvedCaptions, 20);
-  assert.equal(report.approvedTranscripts, 20);
-  assert.equal(report.heldDerivativeAssetsStillMissing, 18);
+  assert.equal(report.approvedVideos, 21);
+  assert.equal(report.heldVideos, 8);
+  assert.equal(report.approvedCaptions, 21);
+  assert.equal(report.approvedTranscripts, 21);
+  assert.equal(report.heldDerivativeAssetsStillMissing, 16);
   assert.deepEqual(report.errors, []);
 });
 
@@ -61,8 +62,17 @@ test("approved captions do not split punctuation or disagree with their transcri
       false,
       `${video.source_key} starts a cue with detached punctuation`,
     );
+    assert.ok(
+      parsed.cues.every((cue) => cue.charactersPerSecond <= MAX_CAPTION_CHARACTERS_PER_SECOND + 0.000001),
+      `${video.source_key} exceeds ${MAX_CAPTION_CHARACTERS_PER_SECOND} characters per second`,
+    );
     assert.equal(captionProse, transcriptProse, `${video.source_key} caption and transcript disagree`);
   }
+});
+
+test("caption parsing rejects unreadably fast cues", () => {
+  const parsed = parseWebVtt("WEBVTT\n\n00:00:00.000 --> 00:00:01.000\n1234567890123456789012\n");
+  assert.ok(parsed.errors.some((error) => error.includes("exceeds 21 characters per second")));
 });
 
 test("approved transcripts do not hard-code learner dial quotas", async () => {

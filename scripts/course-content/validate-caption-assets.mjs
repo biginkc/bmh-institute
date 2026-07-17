@@ -5,6 +5,8 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 const STALE_COMPENSATION_PATTERN = /\$\s*\d|hourly base|ramp(?:-up|ing up) base|performance pay|milestone bonus|commission on (?:every|the) deal|earning potential|earnings can grow|compensation .* tied to .* output|guaranteed pay|fixed pay promise/i;
 const FIXED_DIAL_QUOTA_PATTERN = /\b(?:\d{2,3}(?:\s*(?:to|-|plus|\+))\s*\d{2,3}|\d{2,3}\s*(?:plus|\+))\s+(?:total\s+)?dials?\b|\bdial target\b/i;
+export const MAX_CAPTION_CHARACTERS_PER_SECOND = 21;
+const CAPTION_RATE_EPSILON = 0.000001;
 
 function sha256(buffer) {
   return createHash("sha256").update(buffer).digest("hex");
@@ -46,7 +48,15 @@ export function parseWebVtt(raw) {
     if (!text) errors.push(`cue ${index + 1} is empty`);
     if (textLines.length > 2) errors.push(`cue ${index + 1} has more than two lines`);
     if (textLines.some((line) => line.length > 50)) errors.push(`cue ${index + 1} has a line longer than 50 characters`);
-    if (start !== null && end !== null) cues.push({ start, end, text });
+    if (start !== null && end !== null) {
+      const charactersPerSecond = text.length / (end - start);
+      if (charactersPerSecond > MAX_CAPTION_CHARACTERS_PER_SECOND + CAPTION_RATE_EPSILON) {
+        errors.push(
+          `cue ${index + 1} exceeds ${MAX_CAPTION_CHARACTERS_PER_SECOND} characters per second (${charactersPerSecond.toFixed(3)})`,
+        );
+      }
+      cues.push({ start, end, text, charactersPerSecond });
+    }
   }
 
   for (let index = 1; index < cues.length; index += 1) {
