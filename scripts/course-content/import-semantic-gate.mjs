@@ -7,7 +7,11 @@ import { buildTechStackCanary } from "./build-canary-manifest.mjs";
 import { validateArtworkManifestTrustBoundary } from "./build-manifest.mjs";
 import { inspectApprovedCaptionAssets } from "./validate-caption-assets.mjs";
 import { validateCaptionApprovalHistory, validateCaptionApprovalLedger } from "./caption-approval-ledger.mjs";
-import { fetchCloserProductionGraph, validateScenarioProductionTrust } from "./closer-lab-production-mapping.mjs";
+import {
+  fetchCloserProductionGraph,
+  rolePlayBindings,
+  validateScenarioProductionTrust,
+} from "./closer-lab-production-mapping.mjs";
 import {
   collectDialPadReferences,
   loadManifest,
@@ -201,9 +205,11 @@ export async function validateBmhImportSemanticGate({
     artworkLedger,
     captionApprovalLedger,
   });
-  const scenarioTrust = await validateScenarioTrust(full);
+  const scenarioTrust = rolePlayBindings(manifest).length > 0
+    ? await validateScenarioTrust(manifest)
+    : { errors: [], blockers: [] };
   const errors = fullReport.errors.map((error) => `full-source semantic QA: ${error}`);
-  errors.push(...scenarioTrust.errors.map((error) => `full-source scenario trust: ${error}`));
+  errors.push(...scenarioTrust.errors.map((error) => `canary scenario trust: ${error}`));
   if (!isDeepStrictEqual(manifest, expectedCanary)) {
     errors.push("Canary manifest is not the exact deterministic Tech Stack slice derived from the full BMH manifest.");
   }
@@ -212,7 +218,7 @@ export async function validateBmhImportSemanticGate({
     `full-source release trust: ${blocker}`,
   ));
   publicationBlockers.push(...scenarioTrust.blockers.map((blocker) =>
-    `full-source scenario trust: ${blocker}`,
+    `canary scenario trust: ${blocker}`,
   ));
   for (const asset of manifest.assets ?? []) {
     if (asset.approval_status === "hold") {

@@ -67,6 +67,9 @@ test("canary semantic validation cross-checks exact deterministic identity", asy
     now: CURRENT_TIME,
   });
   assert.deepEqual(valid.errors, []);
+  assert.ok(valid.publicationBlockers.every((blocker) =>
+    !blocker.includes("scenario trust") && !blocker.includes("Closer Lab production"),
+  ));
 
   const swapped = structuredClone(canary);
   swapped.program.courses[0].modules[0].lessons.reverse();
@@ -75,6 +78,32 @@ test("canary semantic validation cross-checks exact deterministic identity", asy
     now: CURRENT_TIME,
   });
   assert.ok(invalid.errors.some((error) => error.includes("exact deterministic Tech Stack slice")));
+});
+
+test("a canary cannot add role-play without entering the scenario trust boundary", async () => {
+  const [canary, full] = await Promise.all([
+    loadManifest(CANARY_URL),
+    loadManifest(FULL_URL),
+  ]);
+  const requiredRolePlay = full.program.courses
+    .flatMap((course) => course.modules)
+    .flatMap((courseModule) => courseModule.lessons)
+    .flatMap((lesson) => lesson.blocks ?? [])
+    .find((block) => block.type === "role_play" && block.required === true);
+  assert.ok(requiredRolePlay);
+  canary.program.courses[0].modules[0].lessons[0].blocks.push(
+    structuredClone(requiredRolePlay),
+  );
+
+  const report = await validateBmhImportSemanticGate({
+    manifest: canary,
+    now: CURRENT_TIME,
+  });
+  assert.ok(report.errors.some((error) => error.includes("exact deterministic Tech Stack slice")));
+  assert.ok([
+    ...report.errors,
+    ...report.publicationBlockers,
+  ].some((message) => message.includes("canary scenario trust")));
 });
 
 test("semantic errors fail closed even in report-only draft mode", () => {
