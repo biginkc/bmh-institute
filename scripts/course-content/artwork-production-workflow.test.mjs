@@ -7,7 +7,11 @@ import test from "node:test";
 
 import sharp from "sharp";
 
-import { getArtworkPose } from "./artwork-pose-contract.mjs";
+import {
+  ARTWORK_MASTER_POSE_CONTRACT,
+  getArtworkPose,
+  validateArtworkPoseContract,
+} from "./artwork-pose-contract.mjs";
 
 import {
   DEFAULT_PATHS,
@@ -315,6 +319,28 @@ test("v4 inventory preserves one-person pose variation across every master and d
   const twoPeople = poseVariationInventory();
   twoPeople.lessons[1].master.art_direction.people_count = 2;
   assert.throws(() => createInitialLedger(twoPeople), /exactly one person/i);
+});
+
+test("pose contract requires seated and upright variance for both recurring characters", () => {
+  assert.equal(validateArtworkPoseContract(), true);
+
+  const adjacentRepeat = structuredClone(ARTWORK_MASTER_POSE_CONTRACT);
+  adjacentRepeat[7].posture = adjacentRepeat[6].posture;
+  assert.throws(
+    () => validateArtworkPoseContract(adjacentRepeat),
+    /repeats the previous .* posture/i,
+  );
+
+  const sellerWithoutSeatedVariance = structuredClone(ARTWORK_MASTER_POSE_CONTRACT);
+  for (const entry of sellerWithoutSeatedVariance) {
+    if (entry.character_id === "recurring-seller-approved") {
+      entry.posture = "leaning-forward";
+    }
+  }
+  assert.throws(
+    () => validateArtworkPoseContract(sellerWithoutSeatedVariance),
+    /repeats an existing pose|repeats the previous|at least five posture categories/i,
+  );
 });
 
 test("validator rejects immutable palette, counts, pilot, and output-plan drift", async () => {

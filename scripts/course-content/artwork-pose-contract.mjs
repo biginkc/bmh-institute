@@ -316,8 +316,11 @@ export function validateArtworkPoseContract(contract = ARTWORK_MASTER_POSE_CONTR
   const poseIds = new Set();
   const signatures = new Set();
   const postureCounts = new Map();
+  const posturesByCharacter = new Map();
+  const placementsByCharacter = new Map();
   const characters = new Set();
   const backgrounds = new Set();
+  let previousMaster = null;
 
   for (const entry of contract) {
     if (!expectedMasterIds.has(entry.master_id) || masterIds.has(entry.master_id)) {
@@ -356,6 +359,17 @@ export function validateArtworkPoseContract(contract = ARTWORK_MASTER_POSE_CONTR
     characters.add(entry.character_id);
     backgrounds.add(entry.background_rgb.join(","));
     postureCounts.set(entry.posture, (postureCounts.get(entry.posture) ?? 0) + 1);
+    if (!posturesByCharacter.has(entry.character_id)) posturesByCharacter.set(entry.character_id, new Set());
+    if (!placementsByCharacter.has(entry.character_id)) placementsByCharacter.set(entry.character_id, new Set());
+    posturesByCharacter.get(entry.character_id).add(entry.posture);
+    placementsByCharacter.get(entry.character_id).add(entry.placement);
+    if (
+      previousMaster?.character_id === entry.character_id &&
+      previousMaster.posture === entry.posture
+    ) {
+      throw new Error(`${entry.master_id} repeats the previous ${entry.character_id} posture`);
+    }
+    previousMaster = entry;
   }
 
   if (masterIds.size !== expectedMasterIds.size || [...expectedMasterIds].some((id) => !masterIds.has(id))) {
@@ -369,6 +383,18 @@ export function validateArtworkPoseContract(contract = ARTWORK_MASTER_POSE_CONTR
   }
   if (postureCounts.size < 7 || [...postureCounts.values()].some((count) => count > 4)) {
     throw new Error("Artwork pose contract must vary posture and may not use one posture more than four times");
+  }
+  for (const characterId of ALLOWED_ARTWORK_CHARACTERS) {
+    const characterPostures = posturesByCharacter.get(characterId) ?? new Set();
+    const characterPlacements = placementsByCharacter.get(characterId) ?? new Set();
+    const hasSeatedPose = ["seated-at-desk", "seated-at-table", "perched-on-stool"].some((posture) => characterPostures.has(posture));
+    const hasUprightPose = ["standing", "half-turn-standing", "walking"].some((posture) => characterPostures.has(posture));
+    if (characterPostures.size < 5 || !hasSeatedPose || !hasUprightPose) {
+      throw new Error(`${characterId} must have at least five posture categories including seated and upright poses`);
+    }
+    if (characterPlacements.size < 5) {
+      throw new Error(`${characterId} must move through at least five distinct placements`);
+    }
   }
   for (const masterId of ["master-slot-01", "master-slot-07", "master-slot-09"]) {
     const pilot = contract.find((entry) => entry.master_id === masterId);

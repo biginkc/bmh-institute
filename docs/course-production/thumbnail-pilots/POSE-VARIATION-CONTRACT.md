@@ -17,6 +17,10 @@ The machine-readable source is `scripts/course-content/artwork-pose-contract.mjs
 - Every non-cover master must include a checksum-bound contact sheet extracted from all exact manifest-mapped source videos before image generation. The contact sheet is a required generation input, not optional inspiration.
 - No independently generated master may reuse another master's full pose signature.
 - No posture category may appear on more than four independently generated masters.
+- Andrea and the seller must each use at least five posture categories, including both a seated/perched pose and an upright/moving pose.
+- Andrea and the seller must each move through at least five distinct placements across the canvas.
+- Consecutive masters using the same character may not repeat that character's posture.
+- A mirrored, shifted, or recropped duplicate does not count as a new pose. The body arrangement and lesson-specific action must visibly change.
 
 ## Independent master plan
 
