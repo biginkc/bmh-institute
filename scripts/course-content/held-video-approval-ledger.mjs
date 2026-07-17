@@ -50,7 +50,11 @@ export function approvalRecordKey(record) {
   return `${record.source_key}:${record.sha256}`;
 }
 
-export function validateHeldVideoApprovalLedger(ledger, heldAssets) {
+export function validateHeldVideoApprovalLedger(
+  ledger,
+  heldAssets,
+  { requireCurrentRecords = true } = {},
+) {
   const errors = [];
   exactFields(ledger, LEDGER_FIELDS, "approval ledger", errors);
   if (ledger?.schema_version !== "1.0.0") errors.push("approval ledger schema_version must be 1.0.0");
@@ -132,7 +136,11 @@ export function validateHeldVideoApprovalLedger(ledger, heldAssets) {
     }
   }
 
-  if (currentSeen.size !== expected.size || [...expected.keys()].some((key) => !currentSeen.has(key))) {
+  if (
+    requireCurrentRecords
+    && (currentSeen.size !== expected.size
+      || [...expected.keys()].some((key) => !currentSeen.has(key)))
+  ) {
     errors.push("approval ledger must contain a current record for every held source_key plus SHA-256");
   }
   return errors;
@@ -140,7 +148,9 @@ export function validateHeldVideoApprovalLedger(ledger, heldAssets) {
 
 export function validateHeldVideoApprovalTransition(currentLedger, nextLedger, heldAssets) {
   const errors = [
-    ...validateHeldVideoApprovalLedger(currentLedger, heldAssets).map((error) => `current: ${error}`),
+    ...validateHeldVideoApprovalLedger(currentLedger, heldAssets, {
+      requireCurrentRecords: false,
+    }).map((error) => `current: ${error}`),
     ...validateHeldVideoApprovalLedger(nextLedger, heldAssets).map((error) => `next: ${error}`),
   ];
   if (errors.length) return errors;

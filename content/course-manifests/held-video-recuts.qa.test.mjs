@@ -191,6 +191,45 @@ test("approval transitions require evidence and keep decided checksums immutable
   );
 });
 
+test("a corrected replacement can enter review as a new checksum-keyed pending candidate", async () => {
+  const [manifest, ledger] = await Promise.all([
+    manifestPromise,
+    ledgerPromise,
+  ]);
+  const held = manifest.assets.filter(
+    (asset) => asset.kind === "video" && asset.approval_status === "hold",
+  );
+  const replacementSha256 = "a".repeat(64);
+  const replacementPath =
+    "course-assets/review-lesson17/LESSON-17-policy-safe-v2.mp4";
+  const replacementHeld = held.map((asset) =>
+    asset.source_key === "video-slot-17-compensation"
+      ? {
+          ...asset,
+          checksum_sha256: replacementSha256,
+          local_path: replacementPath,
+        }
+      : asset,
+  );
+  const next = structuredClone(ledger);
+  next.updated_at = "2026-07-17";
+  next.records.push({
+    source_key: "video-slot-17-compensation",
+    sha256: replacementSha256,
+    candidate_local_path: replacementPath,
+    title: "Compensation Engine policy-safe replacement",
+    decision: "pending",
+    approver: null,
+    date: null,
+    notes: null,
+  });
+
+  assert.deepEqual(
+    validateHeldVideoApprovalTransition(ledger, next, replacementHeld),
+    [],
+  );
+});
+
 test("generated scripts contain the exact locked final transition", async () => {
   for (const pkg of await loadRecutPackages()) {
     assert.equal(
@@ -246,5 +285,36 @@ test("offline HeyGen draft packages are exact, humanized, and provider-gated", a
       assert.deepEqual(input.background, { type: "color", value: "#ffffff" });
     }
     assert.doesNotMatch(expected, /api[_-]?key|authorization|secret|token/i);
+  }
+});
+
+test("offline package preparation has no executable provider-call path", async () => {
+  const implementation = await Promise.all(
+    [
+      "../../scripts/course-content/build-held-video-recut-docs.mjs",
+      "../../scripts/course-content/validate-held-video-recuts.mjs",
+    ].map((path) => readFile(new URL(path, import.meta.url), "utf8")),
+  ).then((parts) => parts.join("\n"));
+
+  assert.doesNotMatch(implementation, /\bfetch\s*\(/);
+  assert.doesNotMatch(implementation, /from\s+["']node:https?["']/);
+  assert.doesNotMatch(implementation, /from\s+["']node:child_process["']/);
+  assert.doesNotMatch(implementation, /\bHEYGEN_API_KEY\b|\bX-Api-Key\b/);
+});
+
+test("the offline payload builder refuses every pre-approval production permission", async () => {
+  const [pkg] = await loadRecutPackages();
+  for (const field of [
+    "provider_call_allowed",
+    "render_allowed",
+    "caption_generation_allowed",
+    "approval_status_change_allowed",
+  ]) {
+    const unsafe = structuredClone(pkg);
+    unsafe.production_constraints[field] = true;
+    assert.throws(
+      () => renderHeygenDraftPackage(unsafe),
+      new RegExp(`${field} must remain false`),
+    );
   }
 });

@@ -338,6 +338,27 @@ test("static and verified pages make trust state and caption availability explic
   ].map((match) => match[1]);
   assert.equal(ariaLabels.length, 9);
   assert.equal(new Set(ariaLabels).size, 9);
+  assert.equal(
+    ariaLabels.filter((label) => label.includes("corrected review candidate"))
+      .length,
+    6,
+  );
+  assert.equal(
+    ariaLabels.filter((label) => label.includes("policy-defective source evidence"))
+      .length,
+    3,
+  );
+  assert.doesNotMatch(staticHtml, /held video candidate 7 of 9/);
+  assert.equal(
+    (staticHtml.match(/data-review-kind="corrected-review-candidate"/g) || [])
+      .length,
+    6,
+  );
+  assert.equal(
+    (staticHtml.match(/data-review-kind="replacement-source-evidence"/g) || [])
+      .length,
+    3,
+  );
   assert.equal((staticHtml.match(/<track [^>]* default>/g) || []).length, 3);
   assert.equal(
     (

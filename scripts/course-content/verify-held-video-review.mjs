@@ -313,8 +313,17 @@ export function renderHeldVideoReview(manifest, {
     (asset) => asset.kind === "video" && asset.approval_status === "hold",
   );
   const videoCourseLocations = buildVideoCourseLocations(manifest);
+  const approvableCount = held.filter((asset) => !REPLACEMENT_REQUIRED_CUTS.has(
+    approvalRecordKey({
+      source_key: asset.source_key,
+      sha256: asset.checksum_sha256,
+    }),
+  )).length;
+  const replacementCount = held.length - approvableCount;
+  let approvableIndex = 0;
+  let replacementIndex = 0;
 
-  const cards = held.map((asset, index) => {
+  const cards = held.map((asset) => {
     const details = REVIEW_DETAILS[asset.source_key];
     if (!details) throw new Error(`No review details for ${asset.source_key}`);
     assertHeldAssetMatchesLock(asset);
@@ -345,19 +354,27 @@ export function renderHeldVideoReview(manifest, {
     const accessibilityNote = details.evidence
       ? "Review-only captions are available for wording verification. They are not approved learner captions."
       : "Captions and a transcript are intentionally not finalized for this cut while exact-file approval is pending.";
-    const videoLabel = `${details.title} held video candidate ${index + 1} of ${held.length}`;
     const replacementRequired = REPLACEMENT_REQUIRED_CUTS.has(approvalRecordKey({
       source_key: asset.source_key,
       sha256: asset.checksum_sha256,
     }));
+    const reviewIndex = replacementRequired
+      ? ++replacementIndex
+      : ++approvableIndex;
+    const reviewKind = replacementRequired
+      ? "replacement-source-evidence"
+      : "corrected-review-candidate";
+    const videoLabel = replacementRequired
+      ? `${details.title} policy-defective source evidence ${reviewIndex} of ${replacementCount}`
+      : `${details.title} corrected review candidate ${reviewIndex} of ${approvableCount}`;
     const reviewStatus = replacementRequired
       ? '<p class="replacement"><strong>REPLACEMENT REQUIRED</strong> — this exact source cut is evidence only and cannot be approved.</p>'
       : '<p class="candidate"><strong>JARRAD REVIEW REQUIRED</strong> — approve or request changes on this corrected candidate.</p>';
     const location = videoCourseLocations.get(asset.source_key);
     if (!location) throw new Error(`Held video is not mapped to a course block: ${asset.source_key}`);
 
-    return `<article class="card" data-source-key="${escapeHtml(asset.source_key)}" data-checksum="${asset.checksum_sha256}">
-      <header><span class="number">${index + 1}</span><div><h2>${escapeHtml(details.title)}</h2><p class="meta">${details.duration} · ${asset.size_bytes.toLocaleString("en-US")} bytes</p></div></header>
+    return `<article class="card" data-source-key="${escapeHtml(asset.source_key)}" data-checksum="${asset.checksum_sha256}" data-review-kind="${reviewKind}">
+      <header><span class="number">${replacementRequired ? `E${reviewIndex}` : reviewIndex}</span><div><h2>${escapeHtml(details.title)}</h2><p class="meta">${details.duration} · ${asset.size_bytes.toLocaleString("en-US")} bytes</p></div></header>
       ${reviewStatus}
       <div class="course-location"><strong>Course location</strong><span>${escapeHtml(location.moduleTitle)} → ${escapeHtml(location.lessonTitle)}</span><code>${escapeHtml(location.lessonSourceKey)} · ${escapeHtml(location.blockSourceKey)}</code></div>
       <video controls preload="metadata" src="${escapeHtml(videoUrl)}" aria-label="${escapeHtml(videoLabel)}" title="${escapeHtml(videoLabel)}">${track}Your browser cannot play this local video.</video>
@@ -385,7 +402,7 @@ export function renderHeldVideoReview(manifest, {
 <body>
 <main>
   <section class="intro">
-    <div class="eyebrow">Local review only · 9 exact cuts</div>
+    <div class="eyebrow">Local review only · 6 candidates · 3 source-evidence cuts</div>
     <h1>Held video review</h1>
     ${verificationStatus}
     <p>Six corrected candidates await Jarrad review. Approve or request changes only on those exact checksum-locked cuts; a filename alone is not approval.</p>
@@ -393,7 +410,7 @@ export function renderHeldVideoReview(manifest, {
     <p>Record decisions in the <a href="${approvalLedgerUrl}">checksum-keyed approval ledger</a>. Policy-safe replacement scripts and timecoded edit maps for the three blocked sources are prepared at <code>docs/course-production/held-video-recuts/README.md</code>.</p>
     <p class="warning">This page does not upload, publish, alter, caption, or approve anything.</p>
   </section>
-  <section class="grid" aria-label="Held video candidates">
+  <section class="grid" aria-label="Held video review records">
 ${cards}
   </section>
 </main>

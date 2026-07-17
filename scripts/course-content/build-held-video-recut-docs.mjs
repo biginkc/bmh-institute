@@ -90,8 +90,15 @@ export function renderHeygenDraftPackage(pkg) {
   const sourceKey = pkg.source.source_key;
   const title = HEYGEN_DRAFT_CONTRACT.titles[sourceKey];
   if (!title) throw new Error(`Missing HeyGen draft title for ${sourceKey}`);
-  if (pkg.production_constraints.provider_call_allowed !== false) {
-    throw new Error(`${sourceKey} provider_call_allowed must remain false`);
+  for (const field of [
+    "provider_call_allowed",
+    "render_allowed",
+    "caption_generation_allowed",
+    "approval_status_change_allowed",
+  ]) {
+    if (pkg.production_constraints?.[field] !== false) {
+      throw new Error(`${sourceKey} ${field} must remain false`);
+    }
   }
   for (const scene of pkg.scenes) {
     if (scene.spoken_text.length > 1_800) {
