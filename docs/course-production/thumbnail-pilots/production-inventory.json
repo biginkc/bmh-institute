@@ -121,10 +121,38 @@
     ]
   },
   "course_cover": {
+    "id": "master-program-bmh-employee-training",
     "asset_key": "thumbnail-program-bmh-employee-training",
     "output_path": "course-assets/thumbnails/program-bmh-employee-training.webp",
     "source_path": "course-assets/thumbnails/production/sources/program-bmh-employee-training-generated.png",
     "flat_master_path": "course-assets/thumbnails/production/flat-masters/program-bmh-employee-training-flat-master.png",
+    "derivative": {
+      "recipe_id": "course-cover-card-16x10",
+      "source_master_id": "master-program-bmh-employee-training",
+      "target_dimensions": [
+        1280,
+        800
+      ],
+      "method": "contain-master-in-1280x720-and-pad-40px-top-and-bottom",
+      "normalize_master_dimensions": [
+        1280,
+        720
+      ],
+      "normalize_method": "contain-with-padding",
+      "normalize_background_rgb": [
+        103,
+        182,
+        255
+      ],
+      "padding_color_rgb": [
+        103,
+        182,
+        255
+      ],
+      "crop_allowed": false,
+      "resample": "lanczos",
+      "output_format": "lossless-webp"
+    },
     "reference_ids": [
       "style-ref-1",
       "style-ref-2"
@@ -148,6 +176,7 @@
       "generation_call_id": null,
       "source_sha256": null,
       "flat_master_sha256": null,
+      "review_decision": null,
       "reviewed_at": null,
       "reviewed_by": null,
       "review_evidence": null
@@ -192,6 +221,7 @@
           "generation_call_id": null,
           "source_sha256": null,
           "flat_master_sha256": null,
+          "review_decision": null,
           "reviewed_at": null,
           "reviewed_by": null,
           "review_evidence": null
@@ -201,12 +231,23 @@
         "asset_key": "thumbnail-slot-01",
         "output_path": "course-assets/thumbnails/slot-01.webp",
         "derivative": {
+          "recipe_id": "slot-01-lesson-card-16x10",
           "source_master_id": "master-slot-01",
           "target_dimensions": [
             1280,
             800
           ],
-          "method": "contain-master-at-1280x720-and-pad-40px-top-and-bottom",
+          "method": "contain-master-in-1280x720-and-pad-40px-top-and-bottom",
+          "normalize_master_dimensions": [
+            1280,
+            720
+          ],
+          "normalize_method": "contain-with-padding",
+          "normalize_background_rgb": [
+            103,
+            182,
+            255
+          ],
           "padding_color_rgb": [
             103,
             182,
@@ -247,6 +288,22 @@
             "recipe_id": "slot-01-video-slot-01-welcome-full-safe",
             "source_master_id": "master-slot-01",
             "crop_profile": "full-safe",
+            "normalize_master_dimensions": [
+              1280,
+              720
+            ],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [
+              103,
+              182,
+              255
+            ],
+            "crop_pixels_after_normalize": [
+              0,
+              0,
+              1280,
+              720
+            ],
             "target_dimensions": [
               1280,
               720
@@ -286,6 +343,22 @@
             "recipe_id": "slot-01-video-slot-01-mindset-left-safe",
             "source_master_id": "master-slot-01",
             "crop_profile": "left-safe",
+            "normalize_master_dimensions": [
+              1280,
+              720
+            ],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [
+              103,
+              182,
+              255
+            ],
+            "crop_pixels_after_normalize": [
+              64,
+              144,
+              768,
+              432
+            ],
             "target_dimensions": [
               1280,
               720
@@ -485,6 +558,7 @@
           "generation_call_id": null,
           "source_sha256": null,
           "flat_master_sha256": null,
+          "review_decision": null,
           "reviewed_at": null,
           "reviewed_by": null,
           "review_evidence": null
@@ -494,12 +568,23 @@
         "asset_key": "thumbnail-slot-02",
         "output_path": "course-assets/thumbnails/slot-02.webp",
         "derivative": {
+          "recipe_id": "slot-02-lesson-card-16x10",
           "source_master_id": "master-slot-02",
           "target_dimensions": [
             1280,
             800
           ],
-          "method": "contain-master-at-1280x720-and-pad-40px-top-and-bottom",
+          "method": "contain-master-in-1280x720-and-pad-40px-top-and-bottom",
+          "normalize_master_dimensions": [
+            1280,
+            720
+          ],
+          "normalize_method": "contain-with-padding",
+          "normalize_background_rgb": [
+            103,
+            182,
+            255
+          ],
           "padding_color_rgb": [
             103,
             182,
@@ -540,6 +625,22 @@
             "recipe_id": "slot-02-video-slot-02-terms-full-safe",
             "source_master_id": "master-slot-02",
             "crop_profile": "full-safe",
+            "normalize_master_dimensions": [
+              1280,
+              720
+            ],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [
+              103,
+              182,
+              255
+            ],
+            "crop_pixels_after_normalize": [
+              0,
+              0,
+              1280,
+              720
+            ],
             "target_dimensions": [
               1280,
               720
@@ -617,6 +718,7 @@
           "generation_call_id": null,
           "source_sha256": null,
           "flat_master_sha256": null,
+          "review_decision": null,
           "reviewed_at": null,
           "reviewed_by": null,
           "review_evidence": null
@@ -626,12 +728,23 @@
         "asset_key": "thumbnail-slot-03",
         "output_path": "course-assets/thumbnails/slot-03.webp",
         "derivative": {
+          "recipe_id": "slot-03-lesson-card-16x10",
           "source_master_id": "master-slot-03",
           "target_dimensions": [
             1280,
             800
           ],
-          "method": "contain-master-at-1280x720-and-pad-40px-top-and-bottom",
+          "method": "contain-master-in-1280x720-and-pad-40px-top-and-bottom",
+          "normalize_master_dimensions": [
+            1280,
+            720
+          ],
+          "normalize_method": "contain-with-padding",
+          "normalize_background_rgb": [
+            103,
+            182,
+            255
+          ],
           "padding_color_rgb": [
             103,
             182,
@@ -672,6 +785,22 @@
             "recipe_id": "slot-03-video-slot-03-tech-stack-full-safe",
             "source_master_id": "master-slot-03",
             "crop_profile": "full-safe",
+            "normalize_master_dimensions": [
+              1280,
+              720
+            ],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [
+              103,
+              182,
+              255
+            ],
+            "crop_pixels_after_normalize": [
+              0,
+              0,
+              1280,
+              720
+            ],
             "target_dimensions": [
               1280,
               720
@@ -749,6 +878,7 @@
           "generation_call_id": null,
           "source_sha256": null,
           "flat_master_sha256": null,
+          "review_decision": null,
           "reviewed_at": null,
           "reviewed_by": null,
           "review_evidence": null
@@ -758,12 +888,23 @@
         "asset_key": "thumbnail-slot-04",
         "output_path": "course-assets/thumbnails/slot-04.webp",
         "derivative": {
+          "recipe_id": "slot-04-lesson-card-16x10",
           "source_master_id": "master-slot-04",
           "target_dimensions": [
             1280,
             800
           ],
-          "method": "contain-master-at-1280x720-and-pad-40px-top-and-bottom",
+          "method": "contain-master-in-1280x720-and-pad-40px-top-and-bottom",
+          "normalize_master_dimensions": [
+            1280,
+            720
+          ],
+          "normalize_method": "contain-with-padding",
+          "normalize_background_rgb": [
+            103,
+            182,
+            255
+          ],
           "padding_color_rgb": [
             103,
             182,
@@ -804,6 +945,22 @@
             "recipe_id": "slot-04-video-slot-04-humanizing-a-left-safe",
             "source_master_id": "master-slot-04",
             "crop_profile": "left-safe",
+            "normalize_master_dimensions": [
+              1280,
+              720
+            ],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [
+              103,
+              182,
+              255
+            ],
+            "crop_pixels_after_normalize": [
+              64,
+              144,
+              768,
+              432
+            ],
             "target_dimensions": [
               1280,
               720
@@ -843,6 +1000,22 @@
             "recipe_id": "slot-04-video-slot-04-humanizing-b-center-safe",
             "source_master_id": "master-slot-04",
             "crop_profile": "center-safe",
+            "normalize_master_dimensions": [
+              1280,
+              720
+            ],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [
+              103,
+              182,
+              255
+            ],
+            "crop_pixels_after_normalize": [
+              256,
+              144,
+              768,
+              432
+            ],
             "target_dimensions": [
               1280,
               720
@@ -882,6 +1055,22 @@
             "recipe_id": "slot-04-video-slot-04-ideal-seller-right-safe",
             "source_master_id": "master-slot-04",
             "crop_profile": "right-safe",
+            "normalize_master_dimensions": [
+              1280,
+              720
+            ],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [
+              103,
+              182,
+              255
+            ],
+            "crop_pixels_after_normalize": [
+              448,
+              144,
+              768,
+              432
+            ],
             "target_dimensions": [
               1280,
               720
@@ -959,6 +1148,7 @@
           "generation_call_id": null,
           "source_sha256": null,
           "flat_master_sha256": null,
+          "review_decision": null,
           "reviewed_at": null,
           "reviewed_by": null,
           "review_evidence": null
@@ -968,12 +1158,23 @@
         "asset_key": "thumbnail-slot-05",
         "output_path": "course-assets/thumbnails/slot-05.webp",
         "derivative": {
+          "recipe_id": "slot-05-lesson-card-16x10",
           "source_master_id": "master-slot-05",
           "target_dimensions": [
             1280,
             800
           ],
-          "method": "contain-master-at-1280x720-and-pad-40px-top-and-bottom",
+          "method": "contain-master-in-1280x720-and-pad-40px-top-and-bottom",
+          "normalize_master_dimensions": [
+            1280,
+            720
+          ],
+          "normalize_method": "contain-with-padding",
+          "normalize_background_rgb": [
+            103,
+            182,
+            255
+          ],
           "padding_color_rgb": [
             103,
             182,
@@ -1014,6 +1215,22 @@
             "recipe_id": "slot-05-video-slot-05-offer-a-left-safe",
             "source_master_id": "master-slot-05",
             "crop_profile": "left-safe",
+            "normalize_master_dimensions": [
+              1280,
+              720
+            ],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [
+              103,
+              182,
+              255
+            ],
+            "crop_pixels_after_normalize": [
+              64,
+              144,
+              768,
+              432
+            ],
             "target_dimensions": [
               1280,
               720
@@ -1053,6 +1270,22 @@
             "recipe_id": "slot-05-video-slot-05-offer-b-right-safe",
             "source_master_id": "master-slot-05",
             "crop_profile": "right-safe",
+            "normalize_master_dimensions": [
+              1280,
+              720
+            ],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [
+              103,
+              182,
+              255
+            ],
+            "crop_pixels_after_normalize": [
+              448,
+              144,
+              768,
+              432
+            ],
             "target_dimensions": [
               1280,
               720
@@ -1130,6 +1363,7 @@
           "generation_call_id": null,
           "source_sha256": null,
           "flat_master_sha256": null,
+          "review_decision": null,
           "reviewed_at": null,
           "reviewed_by": null,
           "review_evidence": null
@@ -1139,12 +1373,23 @@
         "asset_key": "thumbnail-slot-06",
         "output_path": "course-assets/thumbnails/slot-06.webp",
         "derivative": {
+          "recipe_id": "slot-06-lesson-card-16x10",
           "source_master_id": "master-slot-06",
           "target_dimensions": [
             1280,
             800
           ],
-          "method": "contain-master-at-1280x720-and-pad-40px-top-and-bottom",
+          "method": "contain-master-in-1280x720-and-pad-40px-top-and-bottom",
+          "normalize_master_dimensions": [
+            1280,
+            720
+          ],
+          "normalize_method": "contain-with-padding",
+          "normalize_background_rgb": [
+            103,
+            182,
+            255
+          ],
           "padding_color_rgb": [
             103,
             182,
@@ -1185,6 +1430,22 @@
             "recipe_id": "slot-06-video-slot-06-pipeline-left-safe",
             "source_master_id": "master-slot-06",
             "crop_profile": "left-safe",
+            "normalize_master_dimensions": [
+              1280,
+              720
+            ],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [
+              103,
+              182,
+              255
+            ],
+            "crop_pixels_after_normalize": [
+              64,
+              144,
+              768,
+              432
+            ],
             "target_dimensions": [
               1280,
               720
@@ -1224,6 +1485,22 @@
             "recipe_id": "slot-06-video-slot-06-framework-right-safe",
             "source_master_id": "master-slot-06",
             "crop_profile": "right-safe",
+            "normalize_master_dimensions": [
+              1280,
+              720
+            ],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [
+              103,
+              182,
+              255
+            ],
+            "crop_pixels_after_normalize": [
+              448,
+              144,
+              768,
+              432
+            ],
             "target_dimensions": [
               1280,
               720
@@ -1302,6 +1579,7 @@
           "generation_call_id": null,
           "source_sha256": null,
           "flat_master_sha256": null,
+          "review_decision": null,
           "reviewed_at": null,
           "reviewed_by": null,
           "review_evidence": null
@@ -1311,12 +1589,23 @@
         "asset_key": "thumbnail-slot-07",
         "output_path": "course-assets/thumbnails/slot-07.webp",
         "derivative": {
+          "recipe_id": "slot-07-lesson-card-16x10",
           "source_master_id": "master-slot-07",
           "target_dimensions": [
             1280,
             800
           ],
-          "method": "contain-master-at-1280x720-and-pad-40px-top-and-bottom",
+          "method": "contain-master-in-1280x720-and-pad-40px-top-and-bottom",
+          "normalize_master_dimensions": [
+            1280,
+            720
+          ],
+          "normalize_method": "contain-with-padding",
+          "normalize_background_rgb": [
+            103,
+            182,
+            255
+          ],
           "padding_color_rgb": [
             103,
             182,
@@ -1357,6 +1646,22 @@
             "recipe_id": "slot-07-video-slot-07-opening-full-safe",
             "source_master_id": "master-slot-07",
             "crop_profile": "full-safe",
+            "normalize_master_dimensions": [
+              1280,
+              720
+            ],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [
+              103,
+              182,
+              255
+            ],
+            "crop_pixels_after_normalize": [
+              0,
+              0,
+              1280,
+              720
+            ],
             "target_dimensions": [
               1280,
               720
@@ -1420,6 +1725,7 @@
               "generation_call_id": null,
               "source_sha256": null,
               "flat_master_sha256": null,
+              "review_decision": null,
               "reviewed_at": null,
               "reviewed_by": null,
               "review_evidence": null
@@ -1429,6 +1735,22 @@
             "recipe_id": "slot-07-video-slot-07-fact-find-full-safe",
             "source_master_id": "master-poster-video-slot-07-fact-find",
             "crop_profile": "full-safe",
+            "normalize_master_dimensions": [
+              1280,
+              720
+            ],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [
+              103,
+              182,
+              255
+            ],
+            "crop_pixels_after_normalize": [
+              0,
+              0,
+              1280,
+              720
+            ],
             "target_dimensions": [
               1280,
               720
@@ -1590,6 +1912,7 @@
           "generation_call_id": null,
           "source_sha256": null,
           "flat_master_sha256": null,
+          "review_decision": null,
           "reviewed_at": null,
           "reviewed_by": null,
           "review_evidence": null
@@ -1599,12 +1922,23 @@
         "asset_key": "thumbnail-slot-08",
         "output_path": "course-assets/thumbnails/slot-08.webp",
         "derivative": {
+          "recipe_id": "slot-08-lesson-card-16x10",
           "source_master_id": "master-slot-08",
           "target_dimensions": [
             1280,
             800
           ],
-          "method": "contain-master-at-1280x720-and-pad-40px-top-and-bottom",
+          "method": "contain-master-in-1280x720-and-pad-40px-top-and-bottom",
+          "normalize_master_dimensions": [
+            1280,
+            720
+          ],
+          "normalize_method": "contain-with-padding",
+          "normalize_background_rgb": [
+            103,
+            182,
+            255
+          ],
           "padding_color_rgb": [
             103,
             182,
@@ -1645,6 +1979,22 @@
             "recipe_id": "slot-08-video-slot-08-discovery-left-safe",
             "source_master_id": "master-slot-08",
             "crop_profile": "left-safe",
+            "normalize_master_dimensions": [
+              1280,
+              720
+            ],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [
+              103,
+              182,
+              255
+            ],
+            "crop_pixels_after_normalize": [
+              64,
+              144,
+              768,
+              432
+            ],
             "target_dimensions": [
               1280,
               720
@@ -1684,6 +2034,22 @@
             "recipe_id": "slot-08-video-slot-08-handoff-right-safe",
             "source_master_id": "master-slot-08",
             "crop_profile": "right-safe",
+            "normalize_master_dimensions": [
+              1280,
+              720
+            ],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [
+              103,
+              182,
+              255
+            ],
+            "crop_pixels_after_normalize": [
+              448,
+              144,
+              768,
+              432
+            ],
             "target_dimensions": [
               1280,
               720
@@ -1762,6 +2128,7 @@
           "generation_call_id": null,
           "source_sha256": null,
           "flat_master_sha256": null,
+          "review_decision": null,
           "reviewed_at": null,
           "reviewed_by": null,
           "review_evidence": null
@@ -1771,12 +2138,23 @@
         "asset_key": "thumbnail-slot-09",
         "output_path": "course-assets/thumbnails/slot-09.webp",
         "derivative": {
+          "recipe_id": "slot-09-lesson-card-16x10",
           "source_master_id": "master-slot-09",
           "target_dimensions": [
             1280,
             800
           ],
-          "method": "contain-master-at-1280x720-and-pad-40px-top-and-bottom",
+          "method": "contain-master-in-1280x720-and-pad-40px-top-and-bottom",
+          "normalize_master_dimensions": [
+            1280,
+            720
+          ],
+          "normalize_method": "contain-with-padding",
+          "normalize_background_rgb": [
+            103,
+            182,
+            255
+          ],
           "padding_color_rgb": [
             103,
             182,
@@ -1817,6 +2195,22 @@
             "recipe_id": "slot-09-video-slot-09-objection-architecture-full-safe",
             "source_master_id": "master-slot-09",
             "crop_profile": "full-safe",
+            "normalize_master_dimensions": [
+              1280,
+              720
+            ],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [
+              103,
+              182,
+              255
+            ],
+            "crop_pixels_after_normalize": [
+              0,
+              0,
+              1280,
+              720
+            ],
             "target_dimensions": [
               1280,
               720
@@ -1978,6 +2372,7 @@
           "generation_call_id": null,
           "source_sha256": null,
           "flat_master_sha256": null,
+          "review_decision": null,
           "reviewed_at": null,
           "reviewed_by": null,
           "review_evidence": null
@@ -1987,12 +2382,23 @@
         "asset_key": "thumbnail-slot-10",
         "output_path": "course-assets/thumbnails/slot-10.webp",
         "derivative": {
+          "recipe_id": "slot-10-lesson-card-16x10",
           "source_master_id": "master-slot-10",
           "target_dimensions": [
             1280,
             800
           ],
-          "method": "contain-master-at-1280x720-and-pad-40px-top-and-bottom",
+          "method": "contain-master-in-1280x720-and-pad-40px-top-and-bottom",
+          "normalize_master_dimensions": [
+            1280,
+            720
+          ],
+          "normalize_method": "contain-with-padding",
+          "normalize_background_rgb": [
+            103,
+            182,
+            255
+          ],
           "padding_color_rgb": [
             103,
             182,
@@ -2033,6 +2439,22 @@
             "recipe_id": "slot-10-video-slot-10-objection-scripts-full-safe",
             "source_master_id": "master-slot-10",
             "crop_profile": "full-safe",
+            "normalize_master_dimensions": [
+              1280,
+              720
+            ],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [
+              103,
+              182,
+              255
+            ],
+            "crop_pixels_after_normalize": [
+              0,
+              0,
+              1280,
+              720
+            ],
             "target_dimensions": [
               1280,
               720
@@ -2110,6 +2532,7 @@
           "generation_call_id": null,
           "source_sha256": null,
           "flat_master_sha256": null,
+          "review_decision": null,
           "reviewed_at": null,
           "reviewed_by": null,
           "review_evidence": null
@@ -2119,12 +2542,23 @@
         "asset_key": "thumbnail-slot-11",
         "output_path": "course-assets/thumbnails/slot-11.webp",
         "derivative": {
+          "recipe_id": "slot-11-lesson-card-16x10",
           "source_master_id": "master-slot-11",
           "target_dimensions": [
             1280,
             800
           ],
-          "method": "contain-master-at-1280x720-and-pad-40px-top-and-bottom",
+          "method": "contain-master-in-1280x720-and-pad-40px-top-and-bottom",
+          "normalize_master_dimensions": [
+            1280,
+            720
+          ],
+          "normalize_method": "contain-with-padding",
+          "normalize_background_rgb": [
+            103,
+            182,
+            255
+          ],
           "padding_color_rgb": [
             103,
             182,
@@ -2165,6 +2599,22 @@
             "recipe_id": "slot-11-video-slot-11-complex-left-safe",
             "source_master_id": "master-slot-11",
             "crop_profile": "left-safe",
+            "normalize_master_dimensions": [
+              1280,
+              720
+            ],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [
+              103,
+              182,
+              255
+            ],
+            "crop_pixels_after_normalize": [
+              64,
+              144,
+              768,
+              432
+            ],
             "target_dimensions": [
               1280,
               720
@@ -2204,6 +2654,22 @@
             "recipe_id": "slot-11-video-slot-11-trust-right-safe",
             "source_master_id": "master-slot-11",
             "crop_profile": "right-safe",
+            "normalize_master_dimensions": [
+              1280,
+              720
+            ],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [
+              103,
+              182,
+              255
+            ],
+            "crop_pixels_after_normalize": [
+              448,
+              144,
+              768,
+              432
+            ],
             "target_dimensions": [
               1280,
               720
@@ -2281,6 +2747,7 @@
           "generation_call_id": null,
           "source_sha256": null,
           "flat_master_sha256": null,
+          "review_decision": null,
           "reviewed_at": null,
           "reviewed_by": null,
           "review_evidence": null
@@ -2290,12 +2757,23 @@
         "asset_key": "thumbnail-slot-12",
         "output_path": "course-assets/thumbnails/slot-12.webp",
         "derivative": {
+          "recipe_id": "slot-12-lesson-card-16x10",
           "source_master_id": "master-slot-12",
           "target_dimensions": [
             1280,
             800
           ],
-          "method": "contain-master-at-1280x720-and-pad-40px-top-and-bottom",
+          "method": "contain-master-in-1280x720-and-pad-40px-top-and-bottom",
+          "normalize_master_dimensions": [
+            1280,
+            720
+          ],
+          "normalize_method": "contain-with-padding",
+          "normalize_background_rgb": [
+            103,
+            182,
+            255
+          ],
           "padding_color_rgb": [
             103,
             182,
@@ -2336,6 +2814,22 @@
             "recipe_id": "slot-12-video-slot-12-faq-a-left-safe",
             "source_master_id": "master-slot-12",
             "crop_profile": "left-safe",
+            "normalize_master_dimensions": [
+              1280,
+              720
+            ],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [
+              103,
+              182,
+              255
+            ],
+            "crop_pixels_after_normalize": [
+              64,
+              144,
+              768,
+              432
+            ],
             "target_dimensions": [
               1280,
               720
@@ -2375,6 +2869,22 @@
             "recipe_id": "slot-12-video-slot-12-faq-b-right-safe",
             "source_master_id": "master-slot-12",
             "crop_profile": "right-safe",
+            "normalize_master_dimensions": [
+              1280,
+              720
+            ],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [
+              103,
+              182,
+              255
+            ],
+            "crop_pixels_after_normalize": [
+              448,
+              144,
+              768,
+              432
+            ],
             "target_dimensions": [
               1280,
               720
@@ -2452,6 +2962,7 @@
           "generation_call_id": null,
           "source_sha256": null,
           "flat_master_sha256": null,
+          "review_decision": null,
           "reviewed_at": null,
           "reviewed_by": null,
           "review_evidence": null
@@ -2461,12 +2972,23 @@
         "asset_key": "thumbnail-slot-13",
         "output_path": "course-assets/thumbnails/slot-13.webp",
         "derivative": {
+          "recipe_id": "slot-13-lesson-card-16x10",
           "source_master_id": "master-slot-13",
           "target_dimensions": [
             1280,
             800
           ],
-          "method": "contain-master-at-1280x720-and-pad-40px-top-and-bottom",
+          "method": "contain-master-in-1280x720-and-pad-40px-top-and-bottom",
+          "normalize_master_dimensions": [
+            1280,
+            720
+          ],
+          "normalize_method": "contain-with-padding",
+          "normalize_background_rgb": [
+            103,
+            182,
+            255
+          ],
           "padding_color_rgb": [
             103,
             182,
@@ -2507,6 +3029,22 @@
             "recipe_id": "slot-13-video-slot-13-follow-up-full-safe",
             "source_master_id": "master-slot-13",
             "crop_profile": "full-safe",
+            "normalize_master_dimensions": [
+              1280,
+              720
+            ],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [
+              103,
+              182,
+              255
+            ],
+            "crop_pixels_after_normalize": [
+              0,
+              0,
+              1280,
+              720
+            ],
             "target_dimensions": [
               1280,
               720
@@ -2584,6 +3122,7 @@
           "generation_call_id": null,
           "source_sha256": null,
           "flat_master_sha256": null,
+          "review_decision": null,
           "reviewed_at": null,
           "reviewed_by": null,
           "review_evidence": null
@@ -2593,12 +3132,23 @@
         "asset_key": "thumbnail-slot-14",
         "output_path": "course-assets/thumbnails/slot-14.webp",
         "derivative": {
+          "recipe_id": "slot-14-lesson-card-16x10",
           "source_master_id": "master-slot-14",
           "target_dimensions": [
             1280,
             800
           ],
-          "method": "contain-master-at-1280x720-and-pad-40px-top-and-bottom",
+          "method": "contain-master-in-1280x720-and-pad-40px-top-and-bottom",
+          "normalize_master_dimensions": [
+            1280,
+            720
+          ],
+          "normalize_method": "contain-with-padding",
+          "normalize_background_rgb": [
+            103,
+            182,
+            255
+          ],
           "padding_color_rgb": [
             103,
             182,
@@ -2639,6 +3189,22 @@
             "recipe_id": "slot-14-video-slot-14-flow-full-safe",
             "source_master_id": "master-slot-14",
             "crop_profile": "full-safe",
+            "normalize_master_dimensions": [
+              1280,
+              720
+            ],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [
+              103,
+              182,
+              255
+            ],
+            "crop_pixels_after_normalize": [
+              0,
+              0,
+              1280,
+              720
+            ],
             "target_dimensions": [
               1280,
               720
@@ -2716,6 +3282,7 @@
           "generation_call_id": null,
           "source_sha256": null,
           "flat_master_sha256": null,
+          "review_decision": null,
           "reviewed_at": null,
           "reviewed_by": null,
           "review_evidence": null
@@ -2725,12 +3292,23 @@
         "asset_key": "thumbnail-slot-15",
         "output_path": "course-assets/thumbnails/slot-15.webp",
         "derivative": {
+          "recipe_id": "slot-15-lesson-card-16x10",
           "source_master_id": "master-slot-15",
           "target_dimensions": [
             1280,
             800
           ],
-          "method": "contain-master-at-1280x720-and-pad-40px-top-and-bottom",
+          "method": "contain-master-in-1280x720-and-pad-40px-top-and-bottom",
+          "normalize_master_dimensions": [
+            1280,
+            720
+          ],
+          "normalize_method": "contain-with-padding",
+          "normalize_background_rgb": [
+            103,
+            182,
+            255
+          ],
           "padding_color_rgb": [
             103,
             182,
@@ -2771,6 +3349,22 @@
             "recipe_id": "slot-15-video-slot-15-closing-full-safe",
             "source_master_id": "master-slot-15",
             "crop_profile": "full-safe",
+            "normalize_master_dimensions": [
+              1280,
+              720
+            ],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [
+              103,
+              182,
+              255
+            ],
+            "crop_pixels_after_normalize": [
+              0,
+              0,
+              1280,
+              720
+            ],
             "target_dimensions": [
               1280,
               720
@@ -2848,6 +3442,7 @@
           "generation_call_id": null,
           "source_sha256": null,
           "flat_master_sha256": null,
+          "review_decision": null,
           "reviewed_at": null,
           "reviewed_by": null,
           "review_evidence": null
@@ -2857,12 +3452,23 @@
         "asset_key": "thumbnail-slot-16",
         "output_path": "course-assets/thumbnails/slot-16.webp",
         "derivative": {
+          "recipe_id": "slot-16-lesson-card-16x10",
           "source_master_id": "master-slot-16",
           "target_dimensions": [
             1280,
             800
           ],
-          "method": "contain-master-at-1280x720-and-pad-40px-top-and-bottom",
+          "method": "contain-master-in-1280x720-and-pad-40px-top-and-bottom",
+          "normalize_master_dimensions": [
+            1280,
+            720
+          ],
+          "normalize_method": "contain-with-padding",
+          "normalize_background_rgb": [
+            103,
+            182,
+            255
+          ],
           "padding_color_rgb": [
             103,
             182,
@@ -2903,6 +3509,22 @@
             "recipe_id": "slot-16-video-slot-16-kpis-full-safe",
             "source_master_id": "master-slot-16",
             "crop_profile": "full-safe",
+            "normalize_master_dimensions": [
+              1280,
+              720
+            ],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [
+              103,
+              182,
+              255
+            ],
+            "crop_pixels_after_normalize": [
+              0,
+              0,
+              1280,
+              720
+            ],
             "target_dimensions": [
               1280,
               720
@@ -2980,6 +3602,7 @@
           "generation_call_id": null,
           "source_sha256": null,
           "flat_master_sha256": null,
+          "review_decision": null,
           "reviewed_at": null,
           "reviewed_by": null,
           "review_evidence": null
@@ -2989,12 +3612,23 @@
         "asset_key": "thumbnail-slot-17",
         "output_path": "course-assets/thumbnails/slot-17.webp",
         "derivative": {
+          "recipe_id": "slot-17-lesson-card-16x10",
           "source_master_id": "master-slot-17",
           "target_dimensions": [
             1280,
             800
           ],
-          "method": "contain-master-at-1280x720-and-pad-40px-top-and-bottom",
+          "method": "contain-master-in-1280x720-and-pad-40px-top-and-bottom",
+          "normalize_master_dimensions": [
+            1280,
+            720
+          ],
+          "normalize_method": "contain-with-padding",
+          "normalize_background_rgb": [
+            103,
+            182,
+            255
+          ],
           "padding_color_rgb": [
             103,
             182,
@@ -3035,6 +3669,22 @@
             "recipe_id": "slot-17-video-slot-17-compensation-full-safe",
             "source_master_id": "master-slot-17",
             "crop_profile": "full-safe",
+            "normalize_master_dimensions": [
+              1280,
+              720
+            ],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [
+              103,
+              182,
+              255
+            ],
+            "crop_pixels_after_normalize": [
+              0,
+              0,
+              1280,
+              720
+            ],
             "target_dimensions": [
               1280,
               720
@@ -3112,6 +3762,7 @@
           "generation_call_id": null,
           "source_sha256": null,
           "flat_master_sha256": null,
+          "review_decision": null,
           "reviewed_at": null,
           "reviewed_by": null,
           "review_evidence": null
@@ -3121,12 +3772,23 @@
         "asset_key": "thumbnail-slot-18",
         "output_path": "course-assets/thumbnails/slot-18.webp",
         "derivative": {
+          "recipe_id": "slot-18-lesson-card-16x10",
           "source_master_id": "master-slot-18",
           "target_dimensions": [
             1280,
             800
           ],
-          "method": "contain-master-at-1280x720-and-pad-40px-top-and-bottom",
+          "method": "contain-master-in-1280x720-and-pad-40px-top-and-bottom",
+          "normalize_master_dimensions": [
+            1280,
+            720
+          ],
+          "normalize_method": "contain-with-padding",
+          "normalize_background_rgb": [
+            103,
+            182,
+            255
+          ],
           "padding_color_rgb": [
             103,
             182,
@@ -3167,6 +3829,22 @@
             "recipe_id": "slot-18-video-slot-18-operator-left-safe",
             "source_master_id": "master-slot-18",
             "crop_profile": "left-safe",
+            "normalize_master_dimensions": [
+              1280,
+              720
+            ],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [
+              103,
+              182,
+              255
+            ],
+            "crop_pixels_after_normalize": [
+              64,
+              144,
+              768,
+              432
+            ],
             "target_dimensions": [
               1280,
               720
@@ -3206,6 +3884,22 @@
             "recipe_id": "slot-18-video-slot-18-mission-control-right-safe",
             "source_master_id": "master-slot-18",
             "crop_profile": "right-safe",
+            "normalize_master_dimensions": [
+              1280,
+              720
+            ],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [
+              103,
+              182,
+              255
+            ],
+            "crop_pixels_after_normalize": [
+              448,
+              144,
+              768,
+              432
+            ],
             "target_dimensions": [
               1280,
               720
@@ -3283,6 +3977,7 @@
           "generation_call_id": null,
           "source_sha256": null,
           "flat_master_sha256": null,
+          "review_decision": null,
           "reviewed_at": null,
           "reviewed_by": null,
           "review_evidence": null
@@ -3292,12 +3987,23 @@
         "asset_key": "thumbnail-slot-19",
         "output_path": "course-assets/thumbnails/slot-19.webp",
         "derivative": {
+          "recipe_id": "slot-19-lesson-card-16x10",
           "source_master_id": "master-slot-19",
           "target_dimensions": [
             1280,
             800
           ],
-          "method": "contain-master-at-1280x720-and-pad-40px-top-and-bottom",
+          "method": "contain-master-in-1280x720-and-pad-40px-top-and-bottom",
+          "normalize_master_dimensions": [
+            1280,
+            720
+          ],
+          "normalize_method": "contain-with-padding",
+          "normalize_background_rgb": [
+            103,
+            182,
+            255
+          ],
           "padding_color_rgb": [
             103,
             182,
@@ -3338,6 +4044,22 @@
             "recipe_id": "slot-19-video-slot-19-career-full-safe",
             "source_master_id": "master-slot-19",
             "crop_profile": "full-safe",
+            "normalize_master_dimensions": [
+              1280,
+              720
+            ],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [
+              103,
+              182,
+              255
+            ],
+            "crop_pixels_after_normalize": [
+              0,
+              0,
+              1280,
+              720
+            ],
             "target_dimensions": [
               1280,
               720

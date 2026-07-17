@@ -485,8 +485,23 @@ function assertAsset(assetKey, localPath) {
   if (asset.local_path !== localPath) {
     throw new Error(`${assetKey} path mismatch: ${asset.local_path} != ${localPath}`);
   }
-  if (asset.approval_status !== "missing") {
-    throw new Error(`${assetKey} is no longer missing. Reconcile approvals first.`);
+  if (!["missing", "approved"].includes(asset.approval_status)) {
+    throw new Error(
+      `${assetKey} has unsupported artwork approval status ${asset.approval_status}`,
+    );
+  }
+  if (asset.approval_status === "approved") {
+    if (!/^[a-f0-9]{64}$/.test(asset.checksum_sha256 ?? "")) {
+      throw new Error(`${assetKey} approved artwork is missing a valid SHA-256`);
+    }
+    if (!Number.isSafeInteger(asset.size_bytes) || asset.size_bytes <= 0) {
+      throw new Error(`${assetKey} approved artwork is missing a valid size`);
+    }
+    if (!asset.storage_path.includes(asset.checksum_sha256)) {
+      throw new Error(
+        `${assetKey} approved artwork storage path is not checksum-addressed`,
+      );
+    }
   }
 }
 
@@ -567,6 +582,15 @@ const inventoryLessons = lessonSpecs.map((spec, index) => {
         recipe_id: `${spec.slot}-${block.content.asset_key}-${effectiveCropProfile}`,
         source_master_id: directMaster?.id ?? master.id,
         crop_profile: effectiveCropProfile,
+        normalize_master_dimensions: [1280, 720],
+        normalize_method: "contain-with-padding",
+        normalize_background_rgb: [103, 182, 255],
+        crop_pixels_after_normalize: {
+          "full-safe": [0, 0, 1280, 720],
+          "left-safe": [64, 144, 768, 432],
+          "center-safe": [256, 144, 768, 432],
+          "right-safe": [448, 144, 768, 432],
+        }[effectiveCropProfile],
         target_dimensions: [1280, 720],
         resample: "lanczos",
         output_format: "lossless-webp",
@@ -594,9 +618,13 @@ const inventoryLessons = lessonSpecs.map((spec, index) => {
       asset_key: lesson.thumbnail_asset_key,
       output_path: cardPath,
       derivative: {
+        recipe_id: `${spec.slot}-lesson-card-16x10`,
         source_master_id: master.id,
         target_dimensions: [1280, 800],
-        method: "contain-master-at-1280x720-and-pad-40px-top-and-bottom",
+        method: "contain-master-in-1280x720-and-pad-40px-top-and-bottom",
+        normalize_master_dimensions: [1280, 720],
+        normalize_method: "contain-with-padding",
+        normalize_background_rgb: [103, 182, 255],
         padding_color_rgb: [103, 182, 255],
         crop_allowed: false,
         resample: "lanczos",
@@ -671,12 +699,26 @@ const inventory = {
     ],
   },
   course_cover: {
+    id: "master-program-bmh-employee-training",
     asset_key: course.thumbnail_asset_key,
     output_path: coverPath,
     source_path:
       "course-assets/thumbnails/production/sources/program-bmh-employee-training-generated.png",
     flat_master_path:
       "course-assets/thumbnails/production/flat-masters/program-bmh-employee-training-flat-master.png",
+    derivative: {
+      recipe_id: "course-cover-card-16x10",
+      source_master_id: "master-program-bmh-employee-training",
+      target_dimensions: [1280, 800],
+      method: "contain-master-in-1280x720-and-pad-40px-top-and-bottom",
+      normalize_master_dimensions: [1280, 720],
+      normalize_method: "contain-with-padding",
+      normalize_background_rgb: [103, 182, 255],
+      padding_color_rgb: [103, 182, 255],
+      crop_allowed: false,
+      resample: "lanczos",
+      output_format: "lossless-webp",
+    },
     reference_ids: ["style-ref-1", "style-ref-2"],
     prompt: `Use case: stylized-concept
 Asset type: BMH Institute BMH Employee Training course cover, wide 16:9 master designed to crop safely to 16:10

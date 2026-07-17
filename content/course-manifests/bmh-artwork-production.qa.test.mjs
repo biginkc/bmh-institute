@@ -99,7 +99,15 @@ test("all manifest artwork keys and output paths are mapped exactly once", () =>
     const asset = manifestArtwork.get(planned.asset_key);
     assert.ok(asset, `missing manifest asset ${planned.asset_key}`);
     assert.equal(planned.output_path, asset.local_path);
-    assert.equal(asset.approval_status, "missing");
+    assert.ok(
+      ["missing", "approved"].includes(asset.approval_status),
+      `${asset.source_key} has unsupported artwork approval ${asset.approval_status}`,
+    );
+    if (asset.approval_status === "approved") {
+      assert.match(asset.checksum_sha256, /^[a-f0-9]{64}$/);
+      assert.ok(Number.isSafeInteger(asset.size_bytes) && asset.size_bytes > 0);
+      assert.ok(asset.storage_path.includes(asset.checksum_sha256));
+    }
   }
 
   const outputPaths = [
@@ -367,16 +375,57 @@ test("production records reject partial transitions and preserve nulls until pro
   assert.doesNotThrow(() => validateProductionRecord(produced));
   assert.throws(
     () => validateProductionRecord({ ...produced, status: "reviewed" }),
-    /reviewed_at must be a non-empty string/,
+    /review_decision must be a non-empty string/,
   );
   assert.doesNotThrow(() =>
     validateProductionRecord({
       ...produced,
       status: "reviewed",
+      review_decision: "approved",
       reviewed_at: "2026-07-16T01:00:00.000Z",
       reviewed_by: "reviewer",
       review_evidence: "docs/course-production/reviews/example.md",
     }),
+  );
+  assert.throws(
+    () => validateProductionRecord({ ...produced, typo: true }),
+    /exactly the production record fields/,
+  );
+  assert.throws(
+    () => validateProductionRecord({ ...produced, generated_at: "not-a-date" }),
+    /ISO UTC timestamp/,
+  );
+  assert.throws(
+    () =>
+      validateProductionRecord({
+        ...produced,
+        flat_master_sha256: produced.source_sha256,
+      }),
+    /must differ/,
+  );
+  const reviewed = {
+    ...produced,
+    status: "reviewed",
+    review_decision: "approved",
+    reviewed_at: "2026-07-15T23:59:59.000Z",
+    reviewed_by: "reviewer",
+    review_evidence: "../../outside.md",
+  };
+  assert.throws(() => validateProductionRecord(reviewed), /cannot precede/);
+  assert.throws(
+    () =>
+      validateProductionRecord({
+        ...reviewed,
+        reviewed_at: "2026-07-16T01:00:00.000Z",
+      }),
+    /safe repository-relative path/,
+  );
+  assert.throws(
+    () =>
+      validateProductionRecord(produced, "production record", {
+        expectedGenerationCallId: "different-call",
+      }),
+    /does not match the planned call/,
   );
 });
 
@@ -393,10 +442,88 @@ test("poster recipes are distinct, subject matched, and safely derived", () => {
         poster.direct_master?.id ?? lesson.master.id,
       );
       assert.equal(poster.derivative.target_dimensions.join("x"), "1280x720");
+      assert.deepEqual(poster.derivative.normalize_master_dimensions, [1280, 720]);
+      assert.equal(poster.derivative.normalize_method, "contain-with-padding");
+      assert.deepEqual(poster.derivative.normalize_background_rgb, [103, 182, 255]);
+      assert.deepEqual(
+        poster.derivative.crop_pixels_after_normalize,
+        {
+          "full-safe": [0, 0, 1280, 720],
+          "left-safe": [64, 144, 768, 432],
+          "center-safe": [256, 144, 768, 432],
+          "right-safe": [448, 144, 768, 432],
+        }[poster.derivative.crop_profile],
+      );
       assert.match(poster.derivative.crop_profile, /^(full|left|center|right)-safe$/);
       assert.ok(poster.focus_subject.length >= 12);
       assert.equal(poster.approval.status, "blocked-pending-pilot-approval");
     }
+  }
+});
+
+test("course cover and lesson cards share the exact no-crop contained-card recipe", () => {
+  const expectedRecipe = (recipeId, sourceMasterId) => ({
+    recipe_id: recipeId,
+    source_master_id: sourceMasterId,
+    target_dimensions: [1280, 800],
+    method: "contain-master-in-1280x720-and-pad-40px-top-and-bottom",
+    normalize_master_dimensions: [1280, 720],
+    normalize_method: "contain-with-padding",
+    normalize_background_rgb: [103, 182, 255],
+    padding_color_rgb: [103, 182, 255],
+    crop_allowed: false,
+    resample: "lanczos",
+    output_format: "lossless-webp",
+  });
+
+  assert.equal(inventory.course_cover.id, "master-program-bmh-employee-training");
+  assert.deepEqual(
+    inventory.course_cover.derivative,
+    expectedRecipe("course-cover-card-16x10", "master-program-bmh-employee-training"),
+  );
+  for (const lesson of inventory.lessons) {
+    assert.deepEqual(
+      lesson.lesson_card.derivative,
+      expectedRecipe(`${lesson.slot}-lesson-card-16x10`, lesson.master.id),
+      lesson.slot,
+    );
+  }
+});
+
+test("every derivative source master resolves exactly once", () => {
+  const masters = [
+    inventory.course_cover,
+    ...inventory.lessons.map((lesson) => lesson.master),
+    ...inventory.lessons.flatMap((lesson) =>
+      lesson.posters.flatMap((poster) => (poster.direct_master ? [poster.direct_master] : [])),
+    ),
+  ];
+  const masterIds = masters.map((master) => master.id);
+  assert.equal(masters.length, 21);
+  assert.equal(new Set(masterIds).size, masterIds.length);
+  assert.equal(new Set(masters.map((master) => master.source_path)).size, masters.length);
+  assert.equal(
+    new Set(masters.map((master) => master.flat_master_path)).size,
+    masters.length,
+  );
+
+  const derivatives = [
+    inventory.course_cover.derivative,
+    ...inventory.lessons.flatMap((lesson) => [
+      lesson.lesson_card.derivative,
+      ...lesson.posters.map((poster) => poster.derivative),
+    ]),
+  ];
+  const recipeIds = derivatives.map((derivative) => derivative.recipe_id);
+  assert.ok(recipeIds.every(Boolean));
+  assert.equal(new Set(recipeIds).size, recipeIds.length);
+  for (const derivative of derivatives) {
+    assert.equal(
+      masterIds.filter((masterId) => masterId === derivative.source_master_id)
+        .length,
+      1,
+      derivative.source_master_id,
+    );
   }
 });
 

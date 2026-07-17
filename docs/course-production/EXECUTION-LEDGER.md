@@ -332,6 +332,65 @@ Implement the approved concurrent completion plan for the reusable BMH Institute
   employee access change, publication, billing change, or shared-data cleanup
   occurred during this convergence pass.
 
+### 2026-07-16 artwork production ledger and reconciliation hardening
+
+- The preapproval artwork plan is now an immutable, machine-checked production
+  ledger: 21 masters, 49 final outputs, 18 new generation calls, and three
+  existing pilot promotions. It records exact prompts, references, generation
+  lineage, derivative recipes, file and pixel checksums, review evidence, and
+  checksum-addressed storage paths without treating any pilot as approved.
+- The artwork CLI supports initialization, verification, pilot approval and
+  byte-preserving promotion, generated-master ingestion, deterministic
+  derivatives, review, finalization, and manifest reconciliation. Writes are
+  atomic, durable, and serialized across concurrent CLI processes; reruns
+  preserve approved review state; corrections archive the rejected lineage;
+  path traversal, symlinked write ancestors, transparency, animation, lossy
+  WebP output, stale artifacts, impossible lifecycle states, incomplete
+  evidence, and backdated transitions fail closed. Derivatives are staged and
+  checked for duplicate poster pixels before publication, so a rejected master
+  remains correctable.
+- Manifest generation consumes only a completely finalized 49-record ledger.
+  It independently verifies the real artwork bytes, dimensions, checksums,
+  source and derivative provenance, review evidence, storage namespace, and
+  canonical path before replacing a missing artwork record. It then runs the
+  complete canonical workflow validator against the locked inventory, ledger,
+  files, evidence, lineage, palette, and reconciled manifest before returning.
+  A missing or preapproval ledger leaves the current manifest artwork
+  byte-identical.
+- The manifest builder now includes the 19 already-generated accessible guides
+  with their exact approved paths, checksums, sizes, and download metadata. A
+  one-step manifest build reproduces the tracked manifest byte-for-byte instead
+  of temporarily downgrading guides to missing; an explicitly present malformed
+  artwork ledger can no longer impersonate the optional-absent state.
+- Card and poster normalization now contains the complete generated master in a
+  1280 x 720 exact-blue frame before any intentional poster focus crop. Cards
+  add 40 pixels of exact blue above and below to reach 1280 x 800; no card or
+  cover recipe can crop the source.
+- Pilot approval requires a structured affirmative artifact bound to the exact
+  review request, production inventory, generation lineage, and ordered pilot
+  checksums. The validator requires Jarrad Henry and an `approved` decision,
+  while the runbook states plainly that the controller must obtain the real
+  human response because local evidence is auditable rather than cryptographic
+  identity proof.
+- A synthetic finalized ledger reconciled all 49 assets into the real manifest,
+  then passed the real importer validate, upload dry run, and apply dry run.
+  Independent replay testing also proved that promotion and derivation are
+  idempotent and that hostile manifest paths cannot override ledger-owned
+  storage paths.
+- Fresh controller verification passes 555 unit tests, 109 RTL tests, lint,
+  typecheck, the production build, 65 course-production tests, three caption
+  tests, two semantic-guide tests, the deterministic rebuild check for all 19
+  guides, and 45 combined artwork contract, workflow, and real-import boundary
+  tests. CI now runs the artwork workflow suite explicitly. The three pilots
+  remain unchanged and unapproved; no new image was generated or uploaded.
+- Dependency inspection confirms the new direct image processor is exactly
+  `sharp@0.34.5`. The production audit has no high or critical advisory; one
+  low development-tool advisory and two existing moderate framework advisories
+  remain. No secret-bearing configuration was introduced.
+- No production migration, provider call, upload, import, storage deletion,
+  employee access change, publication, billing change, held-video mutation, or
+  batch artwork generation occurred during this pass.
+
 ## Hard gates
 
 - Jarrad must review the six corrected held cuts. The three policy-defective

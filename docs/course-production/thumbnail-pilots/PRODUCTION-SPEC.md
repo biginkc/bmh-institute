@@ -8,9 +8,12 @@ publish course content.
 
 ## Locked output inventory
 
-The machine-readable source is `production-inventory.json`. It is regenerated
-from the course manifest and fails if the manifest artwork keys, lesson order,
-video order, titles, paths, or missing approval state have drifted.
+The immutable machine-readable plan is `production-inventory.json`. It is
+regenerated from the course manifest and fails if the artwork keys, lesson
+order, video order, titles, paths, dimensions, or immutable-storage metadata
+have drifted. Mutable production state lives separately in
+`production-ledger.json`; rebuilding the plan never erases lineage, reviews,
+approvals, or checksums.
 
 | Output class | Count | Final dimensions |
 | --- | ---: | --- |
@@ -106,7 +109,9 @@ Generate a 16:9 lesson master. Preserve the entire master when producing the
 16:10 lesson card:
 
 1. Flatten the source to the exact eight-color palette with no dithering.
-2. Scale it to 1280 x 720 with Lanczos resampling.
+2. Contain the entire master inside a 1280 x 720 cornflower-blue frame with
+   Lanczos resampling. Center it and fill any unused horizontal or vertical
+   space with exact RGB `103, 182, 255`; neither axis may exceed the frame.
 3. Place it on a 1280 x 800 solid cornflower-blue canvas.
 4. Add 40 pixels of blue padding above and below.
 5. Do not crop or stretch the master.
@@ -118,16 +123,15 @@ removing a teaching sticker.
 ## Poster derivation
 
 Each lesson master contains one independently framed anchor for each video in
-that lesson. The inventory maps every video to its named anchor and one safe crop
-profile:
+that lesson. First contain the entire master in a 1280 x 720 frame, centered,
+with exact cornflower-blue RGB `103, 182, 255` filling any unused space. This
+normalization never crops the source. The inventory then maps every video to its
+named anchor and one exact pixel crop profile:
 
-- `full-safe`: use the complete 16:9 master.
-- `left-safe`: use the normalized window x 0.05, y 0.20, width 0.60,
-  height 0.60.
-- `center-safe`: use the normalized window x 0.20, y 0.20, width 0.60,
-  height 0.60.
-- `right-safe`: use the normalized window x 0.35, y 0.20, width 0.60,
-  height 0.60.
+- `full-safe`: `0, 0, 1280, 720`.
+- `left-safe`: `64, 144, 768, 432`.
+- `center-safe`: `256, 144, 768, 432`.
+- `right-safe`: `448, 144, 768, 432`.
 
 The crop ratios are expressed against a 16:9 source. Equal normalized width and
 height therefore retain a 16:9 pixel aspect ratio. Resize the selected window to
@@ -158,6 +162,58 @@ decision, record the pilot decision separately before generating the rest of the
 batch. Do not rewrite historical prompt, reference, or checksum fields when an
 asset receives approval.
 
+### Pilot approval artifact
+
+Pilot approval requires a structured JSON artifact created from Jarrad Henry's
+affirmative response to a checksum-locked review request. The controller must
+present the three pilots, record the human response, and preserve both the
+request and response. An agent must not manufacture or infer approval from the
+fact that the files exist or pass automated QA.
+
+The approval artifact uses this exact schema:
+
+```json
+{
+  "schema_version": "bmh-artwork-pilot-approval/v1",
+  "decision": "approved",
+  "approver": "Jarrad Henry",
+  "approved_at": "<ISO-8601 UTC timestamp>",
+  "request_binding": {
+    "request_id": "<unique review request id>",
+    "request_path": "<safe repo-relative path>",
+    "request_sha256": "<SHA-256 of exact request-file bytes>",
+    "pilot_bindings_sha256": "<SHA-256 defined below>"
+  },
+  "inventory_sha256": "<SHA-256 of exact production-inventory.json bytes>",
+  "generation_lineage_sha256": "<SHA-256 of exact generation-lineage.json bytes>",
+  "pilot_bindings": [
+    {
+      "slug": "orientation",
+      "terminal_output_sha256": "<generated source SHA-256>",
+      "flat_master_sha256": "<flat-master SHA-256>",
+      "lesson_card_sha256": "<pilot card SHA-256>",
+      "video_poster_sha256": "<pilot poster SHA-256>"
+    }
+  ]
+}
+```
+
+`pilot_bindings` must contain exactly `orientation`, `opening-the-call`, and
+`objection-architecture` in that order, with the corresponding fields above.
+Compute `request_binding.pilot_bindings_sha256` as the SHA-256 of these UTF-8
+lines in that exact order, including the final newline:
+
+```text
+<slug>|<terminal_output_sha256>|<flat_master_sha256>|<lesson_card_sha256>|<video_poster_sha256>\n
+```
+
+Any other decision, approver, timestamp shape, request checksum, inventory
+checksum, generation-lineage checksum, pilot set/order, binding checksum, or
+pilot checksum fails closed. The CLI can validate this structure and its
+repository bindings, but it does not cryptographically establish human
+identity. The controller remains responsible for obtaining Jarrad's actual
+response and must never substitute an agent-authored artifact for it.
+
 Every planned generated master also has a guarded `production_record`. Before a
 source is produced, all evidence fields are null:
 
@@ -169,6 +225,7 @@ source is produced, all evidence fields are null:
   "generation_call_id": null,
   "source_sha256": null,
   "flat_master_sha256": null,
+  "review_decision": null,
   "reviewed_at": null,
   "reviewed_by": null,
   "review_evidence": null
@@ -177,7 +234,11 @@ source is produced, all evidence fields are null:
 
 `produced-awaiting-review` requires all generation fields and valid source/flat
 SHA-256 values while review fields remain null. `reviewed` additionally requires
-reviewer, review time, and evidence. Partial state transitions fail validation.
+an explicit `approved` or `changes_requested` decision, reviewer, review time,
+and safe evidence path. Unknown fields, invalid or backward timestamps,
+identical source/master hashes, and partial transitions fail validation. The
+durable ledger additionally binds every output's encoded checksum, decoded-pixel
+checksum, dimensions, derivative recipe, lineage, and review evidence.
 
 ## Commands and checks
 
@@ -199,6 +260,28 @@ Run the inventory contract tests:
 ```bash
 node --test content/course-manifests/bmh-artwork-production.qa.test.mjs
 ```
+
+Verify the initialized, still-unapproved durable ledger:
+
+```bash
+npm run artwork:production -- init
+npm run artwork:production -- status
+npm run artwork:production -- verify
+npm run test:artwork-production
+```
+
+After Jarrad explicitly approves all three pilots, record the structured,
+checksum-bound approval artifact above and promote the exact pilot bytes before
+any new generation:
+
+```bash
+npm run artwork:production -- approve-pilots --approved-by "Jarrad Henry" --approved-at <ISO-UTC> --evidence <repo-path>
+npm run artwork:production -- promote-pilots
+```
+
+The same CLI provides `ingest`, `derive`, `review`, `finalize`, and `reconcile`.
+It writes the finalized ledger first and reconciles the manifest second, so a
+crash can be recovered with `reconcile`. It never uploads or publishes assets.
 
 Run the existing pilot derivative reproduction and checksum check before pilot
 review:

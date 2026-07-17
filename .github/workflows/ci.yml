@@ -43,6 +43,9 @@ jobs:
       - name: Run course-content tests and deterministic guide rebuild
         run: npm run test:course-content
 
+      - name: Run artwork production workflow tests
+        run: npm run test:artwork-production
+
   e2e:
     name: Seeded Playwright E2E
     runs-on: ubuntu-latest

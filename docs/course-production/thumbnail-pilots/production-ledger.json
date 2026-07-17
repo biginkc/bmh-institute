@@ -1,0 +1,4637 @@
+{
+  "schema_version": "bmh-artwork-production-ledger/v1",
+  "status": "preapproval",
+  "inventory_path": "docs/course-production/thumbnail-pilots/production-inventory.json",
+  "manifest_path": "content/course-manifests/bmh-employee-training.v1.json",
+  "palette_rgb": [
+    [103, 182, 255],
+    [255, 211, 1],
+    [255, 174, 1],
+    [255, 110, 0],
+    [254, 255, 198],
+    [255, 255, 255],
+    [0, 0, 0],
+    [105, 153, 53]
+  ],
+  "references": [
+    {
+      "id": "style-ref-1",
+      "role": "canonical BMH Sticker System style",
+      "path": "docs/design/style-ref-1.png",
+      "sha256": "d65ce4c3fc84a0a52b08e513d42d978f94d5db2f6e59034aedbbd1e9486c18ca"
+    },
+    {
+      "id": "style-ref-2",
+      "role": "canonical BMH Sticker System style",
+      "path": "docs/design/style-ref-2.png",
+      "sha256": "f1affc2ab6b931be8cfd6920165dff330d49b79e6f4abfe5568e67e70c6934a6"
+    },
+    {
+      "id": "orientation-building",
+      "role": "Orientation subject reference only",
+      "path": "docs/course-production/thumbnail-pilots/references/mV0_LV0_s10_bmh-lowangle.png",
+      "sha256": "438bab4f68f7b71e5daec17def6ea1ceb091e010b57c135968746fba92ba42dc"
+    },
+    {
+      "id": "opening-phone-shapes",
+      "role": "Opening the Call subject reference only",
+      "path": "docs/course-production/thumbnail-pilots/references/m05_L5A_phones.png",
+      "sha256": "2d59d64e913c43b1fba45080b0bf59c9e51356f1d4b057c5d2831bfa0f7af6e8"
+    },
+    {
+      "id": "objection-character",
+      "role": "Objection Architecture character reference only",
+      "path": "docs/course-production/thumbnail-pilots/references/m07_L7A_b03_reframe.png",
+      "sha256": "57fe03b31eca46336c664c2ca78cf877b8db3138443964e7976ce70eb91db311"
+    }
+  ],
+  "derivative_runtime": {
+    "engine": "sharp",
+    "sharp_version": "0.34.5",
+    "libvips_version": "8.17.3"
+  },
+  "counts": {
+    "covers": 1,
+    "cards": 19,
+    "posters": 29,
+    "masters": 21,
+    "planned_generation_calls": 18,
+    "promoted_pilots": 3
+  },
+  "pilot_approval": {
+    "status": "pending",
+    "approved_by": null,
+    "approved_at": null,
+    "evidence": null,
+    "evidence_sha256": null
+  },
+  "final_approval": {
+    "status": "pending",
+    "approved_by": null,
+    "approved_at": null,
+    "evidence": null,
+    "evidence_sha256": null
+  },
+  "masters": [
+    {
+      "id": "master-program-bmh-employee-training",
+      "kind": "course-cover-master",
+      "source_mode": "generate-after-pilot-approval",
+      "planned_generation_call_id": "imagegen-course-cover",
+      "prompt_sha256": "4f4f356eef760b965ed4789408828f5d6ceea6e5a8cf0799e7fe95677fa35974",
+      "reference_ids": ["style-ref-1", "style-ref-2"],
+      "reference_inputs": [
+        {
+          "id": "style-ref-1",
+          "role": "canonical BMH Sticker System style",
+          "path": "docs/design/style-ref-1.png",
+          "sha256": "d65ce4c3fc84a0a52b08e513d42d978f94d5db2f6e59034aedbbd1e9486c18ca"
+        },
+        {
+          "id": "style-ref-2",
+          "role": "canonical BMH Sticker System style",
+          "path": "docs/design/style-ref-2.png",
+          "sha256": "f1affc2ab6b931be8cfd6920165dff330d49b79e6f4abfe5568e67e70c6934a6"
+        }
+      ],
+      "source_path": "course-assets/thumbnails/production/sources/program-bmh-employee-training-generated.png",
+      "flat_master_path": "course-assets/thumbnails/production/flat-masters/program-bmh-employee-training-flat-master.png",
+      "pilot": null,
+      "status": "missing",
+      "terminal_source_sha256": null,
+      "flat_master_sha256": null,
+      "flat_replacement_authorized_checksum": null,
+      "flat_history": [],
+      "lineage": [],
+      "review": {
+        "status": "pending",
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "evidence": null,
+        "evidence_sha256": null
+      },
+      "outputs": [
+        {
+          "asset_key": "thumbnail-program-bmh-employee-training",
+          "manifest_path": "course-assets/thumbnails/program-bmh-employee-training.webp",
+          "recipe": {
+            "id": "course-cover-card-16x10",
+            "kind": "course-cover",
+            "source_master_id": "master-program-bmh-employee-training",
+            "operation": "contain-master-in-1280x720-and-pad-40px-top-and-bottom",
+            "normalize_master_dimensions": [1280, 720],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [103, 182, 255],
+            "target_dimensions": [1280, 800],
+            "padding_rgb": [103, 182, 255],
+            "resample": "lanczos",
+            "crop_allowed": false,
+            "output_format": "lossless-webp"
+          }
+        }
+      ]
+    },
+    {
+      "id": "master-slot-01",
+      "kind": "lesson-master",
+      "source_mode": "promote-approved-pilot-flat-master",
+      "planned_generation_call_id": null,
+      "prompt_sha256": "f1f17b066b59af4a1803b99b02687f4ec8b77aba45e15d289669a5e6d13ff79f",
+      "reference_ids": ["style-ref-1", "style-ref-2", "orientation-building"],
+      "reference_inputs": [
+        {
+          "id": "style-ref-1",
+          "role": "canonical BMH Sticker System style",
+          "path": "docs/design/style-ref-1.png",
+          "sha256": "d65ce4c3fc84a0a52b08e513d42d978f94d5db2f6e59034aedbbd1e9486c18ca"
+        },
+        {
+          "id": "style-ref-2",
+          "role": "canonical BMH Sticker System style",
+          "path": "docs/design/style-ref-2.png",
+          "sha256": "f1affc2ab6b931be8cfd6920165dff330d49b79e6f4abfe5568e67e70c6934a6"
+        },
+        {
+          "id": "orientation-building",
+          "role": "Orientation subject reference only",
+          "path": "docs/course-production/thumbnail-pilots/references/mV0_LV0_s10_bmh-lowangle.png",
+          "sha256": "438bab4f68f7b71e5daec17def6ea1ceb091e010b57c135968746fba92ba42dc"
+        }
+      ],
+      "source_path": "course-assets/thumbnails/production/sources/slot-01-generated.png",
+      "flat_master_path": "course-assets/thumbnails/production/flat-masters/slot-01-flat-master.png",
+      "pilot": {
+        "slug": "orientation",
+        "assets": {
+          "slug": "orientation",
+          "source": {
+            "path": "course-assets/thumbnails/pilots/sources/orientation-generated.png",
+            "dimensions": [1672, 941],
+            "sha256": "25307aedf8d8ac0f60181e9e0d2bbad4eb76b0548af254de12fa9f9451ad99a5"
+          },
+          "flat_master": {
+            "path": "course-assets/thumbnails/pilots/flat-masters/orientation-flat-master.png",
+            "dimensions": [1672, 941],
+            "sha256": "0c26f841a92a4253692e36f851b10d090ecca78874054f8fc4e64738b116288c"
+          },
+          "lesson_card": {
+            "path": "course-assets/thumbnails/pilots/lesson-cards/orientation-lesson-card-16x10.webp",
+            "dimensions": [1280, 800],
+            "sha256": "2f18cc10daca3ec29c9005feacb8b4b6167f60720786dffabaa66071f7105c02"
+          },
+          "video_poster": {
+            "path": "course-assets/posters/pilots/orientation-video-poster-16x9.webp",
+            "dimensions": [1280, 720],
+            "sha256": "71094a3f54b908963ab44096b4a9af3ce2ba7b1212c73f19a1f92fc5aaf49b20"
+          }
+        },
+        "lineage": {
+          "slug": "orientation",
+          "terminal_output_sha256": "25307aedf8d8ac0f60181e9e0d2bbad4eb76b0548af254de12fa9f9451ad99a5",
+          "steps": [
+            {
+              "step": 1,
+              "operation": "generate",
+              "prompt_path": "docs/course-production/thumbnail-pilots/prompts/orientation-initial.txt",
+              "prompt_sha256": "f1f17b066b59af4a1803b99b02687f4ec8b77aba45e15d289669a5e6d13ff79f",
+              "inputs": [
+                {
+                  "path": "docs/design/style-ref-1.png",
+                  "sha256": "d65ce4c3fc84a0a52b08e513d42d978f94d5db2f6e59034aedbbd1e9486c18ca"
+                },
+                {
+                  "path": "docs/design/style-ref-2.png",
+                  "sha256": "f1affc2ab6b931be8cfd6920165dff330d49b79e6f4abfe5568e67e70c6934a6"
+                },
+                {
+                  "path": "docs/course-production/thumbnail-pilots/references/mV0_LV0_s10_bmh-lowangle.png",
+                  "sha256": "438bab4f68f7b71e5daec17def6ea1ceb091e010b57c135968746fba92ba42dc"
+                }
+              ],
+              "tool_evidence": {
+                "thread_id": "019f6cb9-c3ed-74e0-975f-a5d0d8154c59",
+                "agent_path": "/root/thumbnail_pilots",
+                "invocation_call_id": "call_jkg32a9D7R5P4x0wi6NHt816",
+                "tool_output_call_id": "call_fb5x1aAbLV8XnFx0FPsnVnup",
+                "tool_output_id": "exec-1da1fab0-8b0b-4983-98e7-589893bbaab3",
+                "invoked_at": "2026-07-16T21:00:33.602Z",
+                "completed_at": "2026-07-16T21:01:21.122Z"
+              },
+              "output": {
+                "path": "course-assets/thumbnails/pilots/sources/orientation-initial-generated.png",
+                "dimensions": [1672, 941],
+                "size_bytes": 1349670,
+                "sha256": "0dd1dc48fbb52bc3ed4c640b24d63dcf7e7da8650e9e7e2ac2d18ae1f9d1fc2f"
+              }
+            },
+            {
+              "step": 2,
+              "operation": "edit",
+              "prompt_path": "docs/course-production/thumbnail-pilots/prompts/orientation-correction.txt",
+              "prompt_sha256": "ede30dc1dc4d3b500a8b6b629780780b47882600afba74570a08844c82a6009a",
+              "inputs": [
+                {
+                  "path": "course-assets/thumbnails/pilots/sources/orientation-initial-generated.png",
+                  "sha256": "0dd1dc48fbb52bc3ed4c640b24d63dcf7e7da8650e9e7e2ac2d18ae1f9d1fc2f"
+                },
+                {
+                  "path": "docs/design/style-ref-1.png",
+                  "sha256": "d65ce4c3fc84a0a52b08e513d42d978f94d5db2f6e59034aedbbd1e9486c18ca"
+                },
+                {
+                  "path": "docs/design/style-ref-2.png",
+                  "sha256": "f1affc2ab6b931be8cfd6920165dff330d49b79e6f4abfe5568e67e70c6934a6"
+                }
+              ],
+              "tool_evidence": {
+                "thread_id": "019f6cb9-c3ed-74e0-975f-a5d0d8154c59",
+                "agent_path": "/root/thumbnail_pilots",
+                "invocation_call_id": "call_ymsG97sLazIVMEU4mKDZaA5J",
+                "tool_output_call_id": "call_SIlavtTJpymL19x1xdAXAV17",
+                "tool_output_id": "exec-7e24e498-2c35-4b30-8b08-9ce116051118",
+                "invoked_at": "2026-07-16T21:03:58.189Z",
+                "completed_at": "2026-07-16T21:04:47.870Z"
+              },
+              "output": {
+                "path": "course-assets/thumbnails/pilots/sources/orientation-generated.png",
+                "dimensions": [1672, 941],
+                "size_bytes": 1303833,
+                "sha256": "25307aedf8d8ac0f60181e9e0d2bbad4eb76b0548af254de12fa9f9451ad99a5"
+              }
+            }
+          ]
+        }
+      },
+      "status": "missing",
+      "terminal_source_sha256": null,
+      "flat_master_sha256": null,
+      "flat_replacement_authorized_checksum": null,
+      "flat_history": [],
+      "lineage": [],
+      "review": {
+        "status": "pending",
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "evidence": null,
+        "evidence_sha256": null
+      },
+      "outputs": [
+        {
+          "asset_key": "thumbnail-slot-01",
+          "manifest_path": "course-assets/thumbnails/slot-01.webp",
+          "recipe": {
+            "id": "slot-01-lesson-card-16x10",
+            "kind": "lesson-card",
+            "source_master_id": "master-slot-01",
+            "operation": "contain-master-in-1280x720-and-pad-40px-top-and-bottom",
+            "normalize_master_dimensions": [1280, 720],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [103, 182, 255],
+            "target_dimensions": [1280, 800],
+            "padding_rgb": [103, 182, 255],
+            "resample": "lanczos",
+            "crop_allowed": false,
+            "output_format": "lossless-webp"
+          }
+        },
+        {
+          "asset_key": "poster-video-slot-01-welcome",
+          "manifest_path": "course-assets/posters/video-slot-01-welcome.webp",
+          "recipe": {
+            "id": "slot-01-video-slot-01-welcome-full-safe",
+            "kind": "video-poster",
+            "source_master_id": "master-slot-01",
+            "operation": "normalize-1280x720-then-fixed-safe-crop",
+            "normalize_master_dimensions": [1280, 720],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [103, 182, 255],
+            "crop_profile": "full-safe",
+            "crop_pixels_after_normalize": [0, 0, 1280, 720],
+            "target_dimensions": [1280, 720],
+            "resample": "lanczos",
+            "output_format": "lossless-webp",
+            "duplicate_pixel_sha256_forbidden": true,
+            "visual_subject_confirmation_required": true,
+            "focus_subject": "welcome at the open training doorway",
+            "video_title": "Welcome and the Navigator's Playbook"
+          }
+        },
+        {
+          "asset_key": "poster-video-slot-01-mindset",
+          "manifest_path": "course-assets/posters/video-slot-01-mindset.webp",
+          "recipe": {
+            "id": "slot-01-video-slot-01-mindset-left-safe",
+            "kind": "video-poster",
+            "source_master_id": "master-slot-01",
+            "operation": "normalize-1280x720-then-fixed-safe-crop",
+            "normalize_master_dimensions": [1280, 720],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [103, 182, 255],
+            "crop_profile": "left-safe",
+            "crop_pixels_after_normalize": [64, 144, 768, 432],
+            "target_dimensions": [1280, 720],
+            "resample": "lanczos",
+            "output_format": "lossless-webp",
+            "duplicate_pixel_sha256_forbidden": true,
+            "visual_subject_confirmation_required": true,
+            "focus_subject": "learner choosing a steady compass-led path",
+            "video_title": "Mindset"
+          }
+        }
+      ]
+    },
+    {
+      "id": "master-slot-02",
+      "kind": "lesson-master",
+      "source_mode": "generate-after-pilot-approval",
+      "planned_generation_call_id": "imagegen-lesson-slot-02",
+      "prompt_sha256": "bcd4be7939aae10cfb3729da0ea0508ecd32503ac6aa6497870a7bdbd1510db3",
+      "reference_ids": ["style-ref-1", "style-ref-2"],
+      "reference_inputs": [
+        {
+          "id": "style-ref-1",
+          "role": "canonical BMH Sticker System style",
+          "path": "docs/design/style-ref-1.png",
+          "sha256": "d65ce4c3fc84a0a52b08e513d42d978f94d5db2f6e59034aedbbd1e9486c18ca"
+        },
+        {
+          "id": "style-ref-2",
+          "role": "canonical BMH Sticker System style",
+          "path": "docs/design/style-ref-2.png",
+          "sha256": "f1affc2ab6b931be8cfd6920165dff330d49b79e6f4abfe5568e67e70c6934a6"
+        }
+      ],
+      "source_path": "course-assets/thumbnails/production/sources/slot-02-generated.png",
+      "flat_master_path": "course-assets/thumbnails/production/flat-masters/slot-02-flat-master.png",
+      "pilot": null,
+      "status": "missing",
+      "terminal_source_sha256": null,
+      "flat_master_sha256": null,
+      "flat_replacement_authorized_checksum": null,
+      "flat_history": [],
+      "lineage": [],
+      "review": {
+        "status": "pending",
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "evidence": null,
+        "evidence_sha256": null
+      },
+      "outputs": [
+        {
+          "asset_key": "thumbnail-slot-02",
+          "manifest_path": "course-assets/thumbnails/slot-02.webp",
+          "recipe": {
+            "id": "slot-02-lesson-card-16x10",
+            "kind": "lesson-card",
+            "source_master_id": "master-slot-02",
+            "operation": "contain-master-in-1280x720-and-pad-40px-top-and-bottom",
+            "normalize_master_dimensions": [1280, 720],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [103, 182, 255],
+            "target_dimensions": [1280, 800],
+            "padding_rgb": [103, 182, 255],
+            "resample": "lanczos",
+            "crop_allowed": false,
+            "output_format": "lossless-webp"
+          }
+        },
+        {
+          "asset_key": "poster-video-slot-02-terms",
+          "manifest_path": "course-assets/posters/video-slot-02-terms.webp",
+          "recipe": {
+            "id": "slot-02-video-slot-02-terms-full-safe",
+            "kind": "video-poster",
+            "source_master_id": "master-slot-02",
+            "operation": "normalize-1280x720-then-fixed-safe-crop",
+            "normalize_master_dimensions": [1280, 720],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [103, 182, 255],
+            "crop_profile": "full-safe",
+            "crop_pixels_after_normalize": [0, 0, 1280, 720],
+            "target_dimensions": [1280, 720],
+            "resample": "lanczos",
+            "output_format": "lossless-webp",
+            "duplicate_pixel_sha256_forbidden": true,
+            "visual_subject_confirmation_required": true,
+            "focus_subject": "plain-language real estate reference kit",
+            "video_title": "Real Estate Terms Glossary"
+          }
+        }
+      ]
+    },
+    {
+      "id": "master-slot-03",
+      "kind": "lesson-master",
+      "source_mode": "generate-after-pilot-approval",
+      "planned_generation_call_id": "imagegen-lesson-slot-03",
+      "prompt_sha256": "30c37a4e3e23cd3a62655bee511f50b6a25282f9974c65fd614577425fc548d1",
+      "reference_ids": ["style-ref-1", "style-ref-2"],
+      "reference_inputs": [
+        {
+          "id": "style-ref-1",
+          "role": "canonical BMH Sticker System style",
+          "path": "docs/design/style-ref-1.png",
+          "sha256": "d65ce4c3fc84a0a52b08e513d42d978f94d5db2f6e59034aedbbd1e9486c18ca"
+        },
+        {
+          "id": "style-ref-2",
+          "role": "canonical BMH Sticker System style",
+          "path": "docs/design/style-ref-2.png",
+          "sha256": "f1affc2ab6b931be8cfd6920165dff330d49b79e6f4abfe5568e67e70c6934a6"
+        }
+      ],
+      "source_path": "course-assets/thumbnails/production/sources/slot-03-generated.png",
+      "flat_master_path": "course-assets/thumbnails/production/flat-masters/slot-03-flat-master.png",
+      "pilot": null,
+      "status": "missing",
+      "terminal_source_sha256": null,
+      "flat_master_sha256": null,
+      "flat_replacement_authorized_checksum": null,
+      "flat_history": [],
+      "lineage": [],
+      "review": {
+        "status": "pending",
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "evidence": null,
+        "evidence_sha256": null
+      },
+      "outputs": [
+        {
+          "asset_key": "thumbnail-slot-03",
+          "manifest_path": "course-assets/thumbnails/slot-03.webp",
+          "recipe": {
+            "id": "slot-03-lesson-card-16x10",
+            "kind": "lesson-card",
+            "source_master_id": "master-slot-03",
+            "operation": "contain-master-in-1280x720-and-pad-40px-top-and-bottom",
+            "normalize_master_dimensions": [1280, 720],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [103, 182, 255],
+            "target_dimensions": [1280, 800],
+            "padding_rgb": [103, 182, 255],
+            "resample": "lanczos",
+            "crop_allowed": false,
+            "output_format": "lossless-webp"
+          }
+        },
+        {
+          "asset_key": "poster-video-slot-03-tech-stack",
+          "manifest_path": "course-assets/posters/video-slot-03-tech-stack.webp",
+          "recipe": {
+            "id": "slot-03-video-slot-03-tech-stack-full-safe",
+            "kind": "video-poster",
+            "source_master_id": "master-slot-03",
+            "operation": "normalize-1280x720-then-fixed-safe-crop",
+            "normalize_master_dimensions": [1280, 720],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [103, 182, 255],
+            "crop_profile": "full-safe",
+            "crop_pixels_after_normalize": [0, 0, 1280, 720],
+            "target_dimensions": [1280, 720],
+            "resample": "lanczos",
+            "output_format": "lossless-webp",
+            "duplicate_pixel_sha256_forbidden": true,
+            "visual_subject_confirmation_required": true,
+            "focus_subject": "connected tool hub and reliable handoffs",
+            "video_title": "Tech Stack and Systems"
+          }
+        }
+      ]
+    },
+    {
+      "id": "master-slot-04",
+      "kind": "lesson-master",
+      "source_mode": "generate-after-pilot-approval",
+      "planned_generation_call_id": "imagegen-lesson-slot-04",
+      "prompt_sha256": "2a882f398d4831e39375baf011ce5969e94b9b0a190de5f41eb16cecdc739ef1",
+      "reference_ids": ["style-ref-1", "style-ref-2"],
+      "reference_inputs": [
+        {
+          "id": "style-ref-1",
+          "role": "canonical BMH Sticker System style",
+          "path": "docs/design/style-ref-1.png",
+          "sha256": "d65ce4c3fc84a0a52b08e513d42d978f94d5db2f6e59034aedbbd1e9486c18ca"
+        },
+        {
+          "id": "style-ref-2",
+          "role": "canonical BMH Sticker System style",
+          "path": "docs/design/style-ref-2.png",
+          "sha256": "f1affc2ab6b931be8cfd6920165dff330d49b79e6f4abfe5568e67e70c6934a6"
+        }
+      ],
+      "source_path": "course-assets/thumbnails/production/sources/slot-04-generated.png",
+      "flat_master_path": "course-assets/thumbnails/production/flat-masters/slot-04-flat-master.png",
+      "pilot": null,
+      "status": "missing",
+      "terminal_source_sha256": null,
+      "flat_master_sha256": null,
+      "flat_replacement_authorized_checksum": null,
+      "flat_history": [],
+      "lineage": [],
+      "review": {
+        "status": "pending",
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "evidence": null,
+        "evidence_sha256": null
+      },
+      "outputs": [
+        {
+          "asset_key": "thumbnail-slot-04",
+          "manifest_path": "course-assets/thumbnails/slot-04.webp",
+          "recipe": {
+            "id": "slot-04-lesson-card-16x10",
+            "kind": "lesson-card",
+            "source_master_id": "master-slot-04",
+            "operation": "contain-master-in-1280x720-and-pad-40px-top-and-bottom",
+            "normalize_master_dimensions": [1280, 720],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [103, 182, 255],
+            "target_dimensions": [1280, 800],
+            "padding_rgb": [103, 182, 255],
+            "resample": "lanczos",
+            "crop_allowed": false,
+            "output_format": "lossless-webp"
+          }
+        },
+        {
+          "asset_key": "poster-video-slot-04-humanizing-a",
+          "manifest_path": "course-assets/posters/video-slot-04-humanizing-a.webp",
+          "recipe": {
+            "id": "slot-04-video-slot-04-humanizing-a-left-safe",
+            "kind": "video-poster",
+            "source_master_id": "master-slot-04",
+            "operation": "normalize-1280x720-then-fixed-safe-crop",
+            "normalize_master_dimensions": [1280, 720],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [103, 182, 255],
+            "crop_profile": "left-safe",
+            "crop_pixels_after_normalize": [64, 144, 768, 432],
+            "target_dimensions": [1280, 720],
+            "resample": "lanczos",
+            "output_format": "lossless-webp",
+            "duplicate_pixel_sha256_forbidden": true,
+            "visual_subject_confirmation_required": true,
+            "focus_subject": "homeowner before property details",
+            "video_title": "Humanizing the Lead"
+          }
+        },
+        {
+          "asset_key": "poster-video-slot-04-humanizing-b",
+          "manifest_path": "course-assets/posters/video-slot-04-humanizing-b.webp",
+          "recipe": {
+            "id": "slot-04-video-slot-04-humanizing-b-center-safe",
+            "kind": "video-poster",
+            "source_master_id": "master-slot-04",
+            "operation": "normalize-1280x720-then-fixed-safe-crop",
+            "normalize_master_dimensions": [1280, 720],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [103, 182, 255],
+            "crop_profile": "center-safe",
+            "crop_pixels_after_normalize": [256, 144, 768, 432],
+            "target_dimensions": [1280, 720],
+            "resample": "lanczos",
+            "output_format": "lossless-webp",
+            "duplicate_pixel_sha256_forbidden": true,
+            "visual_subject_confirmation_required": true,
+            "focus_subject": "seller story and situation path",
+            "video_title": "Humanizing the Lead"
+          }
+        },
+        {
+          "asset_key": "poster-video-slot-04-ideal-seller",
+          "manifest_path": "course-assets/posters/video-slot-04-ideal-seller.webp",
+          "recipe": {
+            "id": "slot-04-video-slot-04-ideal-seller-right-safe",
+            "kind": "video-poster",
+            "source_master_id": "master-slot-04",
+            "operation": "normalize-1280x720-then-fixed-safe-crop",
+            "normalize_master_dimensions": [1280, 720],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [103, 182, 255],
+            "crop_profile": "right-safe",
+            "crop_pixels_after_normalize": [448, 144, 768, 432],
+            "target_dimensions": [1280, 720],
+            "resample": "lanczos",
+            "output_format": "lossless-webp",
+            "duplicate_pixel_sha256_forbidden": true,
+            "visual_subject_confirmation_required": true,
+            "focus_subject": "ideal seller fit lens",
+            "video_title": "Ideal Seller Profile"
+          }
+        }
+      ]
+    },
+    {
+      "id": "master-slot-05",
+      "kind": "lesson-master",
+      "source_mode": "generate-after-pilot-approval",
+      "planned_generation_call_id": "imagegen-lesson-slot-05",
+      "prompt_sha256": "4af9d203c0ccbde303252fb9b16ca825a4c327c2bbc911af5e6cc24dad96ff33",
+      "reference_ids": ["style-ref-1", "style-ref-2"],
+      "reference_inputs": [
+        {
+          "id": "style-ref-1",
+          "role": "canonical BMH Sticker System style",
+          "path": "docs/design/style-ref-1.png",
+          "sha256": "d65ce4c3fc84a0a52b08e513d42d978f94d5db2f6e59034aedbbd1e9486c18ca"
+        },
+        {
+          "id": "style-ref-2",
+          "role": "canonical BMH Sticker System style",
+          "path": "docs/design/style-ref-2.png",
+          "sha256": "f1affc2ab6b931be8cfd6920165dff330d49b79e6f4abfe5568e67e70c6934a6"
+        }
+      ],
+      "source_path": "course-assets/thumbnails/production/sources/slot-05-generated.png",
+      "flat_master_path": "course-assets/thumbnails/production/flat-masters/slot-05-flat-master.png",
+      "pilot": null,
+      "status": "missing",
+      "terminal_source_sha256": null,
+      "flat_master_sha256": null,
+      "flat_replacement_authorized_checksum": null,
+      "flat_history": [],
+      "lineage": [],
+      "review": {
+        "status": "pending",
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "evidence": null,
+        "evidence_sha256": null
+      },
+      "outputs": [
+        {
+          "asset_key": "thumbnail-slot-05",
+          "manifest_path": "course-assets/thumbnails/slot-05.webp",
+          "recipe": {
+            "id": "slot-05-lesson-card-16x10",
+            "kind": "lesson-card",
+            "source_master_id": "master-slot-05",
+            "operation": "contain-master-in-1280x720-and-pad-40px-top-and-bottom",
+            "normalize_master_dimensions": [1280, 720],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [103, 182, 255],
+            "target_dimensions": [1280, 800],
+            "padding_rgb": [103, 182, 255],
+            "resample": "lanczos",
+            "crop_allowed": false,
+            "output_format": "lossless-webp"
+          }
+        },
+        {
+          "asset_key": "poster-video-slot-05-offer-a",
+          "manifest_path": "course-assets/posters/video-slot-05-offer-a.webp",
+          "recipe": {
+            "id": "slot-05-video-slot-05-offer-a-left-safe",
+            "kind": "video-poster",
+            "source_master_id": "master-slot-05",
+            "operation": "normalize-1280x720-then-fixed-safe-crop",
+            "normalize_master_dimensions": [1280, 720],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [103, 182, 255],
+            "crop_profile": "left-safe",
+            "crop_pixels_after_normalize": [64, 144, 768, 432],
+            "target_dimensions": [1280, 720],
+            "resample": "lanczos",
+            "output_format": "lossless-webp",
+            "duplicate_pixel_sha256_forbidden": true,
+            "visual_subject_confirmation_required": true,
+            "focus_subject": "situation-to-option balance",
+            "video_title": "The BMH Offer Playbook"
+          }
+        },
+        {
+          "asset_key": "poster-video-slot-05-offer-b",
+          "manifest_path": "course-assets/posters/video-slot-05-offer-b.webp",
+          "recipe": {
+            "id": "slot-05-video-slot-05-offer-b-right-safe",
+            "kind": "video-poster",
+            "source_master_id": "master-slot-05",
+            "operation": "normalize-1280x720-then-fixed-safe-crop",
+            "normalize_master_dimensions": [1280, 720],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [103, 182, 255],
+            "crop_profile": "right-safe",
+            "crop_pixels_after_normalize": [448, 144, 768, 432],
+            "target_dimensions": [1280, 720],
+            "resample": "lanczos",
+            "output_format": "lossless-webp",
+            "duplicate_pixel_sha256_forbidden": true,
+            "visual_subject_confirmation_required": true,
+            "focus_subject": "clear choice path and respectful agreement",
+            "video_title": "The BMH Offer Playbook"
+          }
+        }
+      ]
+    },
+    {
+      "id": "master-slot-06",
+      "kind": "lesson-master",
+      "source_mode": "generate-after-pilot-approval",
+      "planned_generation_call_id": "imagegen-lesson-slot-06",
+      "prompt_sha256": "fecc422edaf59906ff3ea915c2f0be8dec0b95fe3341b97793b898316d39e6fe",
+      "reference_ids": ["style-ref-1", "style-ref-2"],
+      "reference_inputs": [
+        {
+          "id": "style-ref-1",
+          "role": "canonical BMH Sticker System style",
+          "path": "docs/design/style-ref-1.png",
+          "sha256": "d65ce4c3fc84a0a52b08e513d42d978f94d5db2f6e59034aedbbd1e9486c18ca"
+        },
+        {
+          "id": "style-ref-2",
+          "role": "canonical BMH Sticker System style",
+          "path": "docs/design/style-ref-2.png",
+          "sha256": "f1affc2ab6b931be8cfd6920165dff330d49b79e6f4abfe5568e67e70c6934a6"
+        }
+      ],
+      "source_path": "course-assets/thumbnails/production/sources/slot-06-generated.png",
+      "flat_master_path": "course-assets/thumbnails/production/flat-masters/slot-06-flat-master.png",
+      "pilot": null,
+      "status": "missing",
+      "terminal_source_sha256": null,
+      "flat_master_sha256": null,
+      "flat_replacement_authorized_checksum": null,
+      "flat_history": [],
+      "lineage": [],
+      "review": {
+        "status": "pending",
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "evidence": null,
+        "evidence_sha256": null
+      },
+      "outputs": [
+        {
+          "asset_key": "thumbnail-slot-06",
+          "manifest_path": "course-assets/thumbnails/slot-06.webp",
+          "recipe": {
+            "id": "slot-06-lesson-card-16x10",
+            "kind": "lesson-card",
+            "source_master_id": "master-slot-06",
+            "operation": "contain-master-in-1280x720-and-pad-40px-top-and-bottom",
+            "normalize_master_dimensions": [1280, 720],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [103, 182, 255],
+            "target_dimensions": [1280, 800],
+            "padding_rgb": [103, 182, 255],
+            "resample": "lanczos",
+            "crop_allowed": false,
+            "output_format": "lossless-webp"
+          }
+        },
+        {
+          "asset_key": "poster-video-slot-06-pipeline",
+          "manifest_path": "course-assets/posters/video-slot-06-pipeline.webp",
+          "recipe": {
+            "id": "slot-06-video-slot-06-pipeline-left-safe",
+            "kind": "video-poster",
+            "source_master_id": "master-slot-06",
+            "operation": "normalize-1280x720-then-fixed-safe-crop",
+            "normalize_master_dimensions": [1280, 720],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [103, 182, 255],
+            "crop_profile": "left-safe",
+            "crop_pixels_after_normalize": [64, 144, 768, 432],
+            "target_dimensions": [1280, 720],
+            "resample": "lanczos",
+            "output_format": "lossless-webp",
+            "duplicate_pixel_sha256_forbidden": true,
+            "visual_subject_confirmation_required": true,
+            "focus_subject": "owned pipeline stages and baton handoff",
+            "video_title": "Sales Pipeline and Stage Ownership"
+          }
+        },
+        {
+          "asset_key": "poster-video-slot-06-framework",
+          "manifest_path": "course-assets/posters/video-slot-06-framework.webp",
+          "recipe": {
+            "id": "slot-06-video-slot-06-framework-right-safe",
+            "kind": "video-poster",
+            "source_master_id": "master-slot-06",
+            "operation": "normalize-1280x720-then-fixed-safe-crop",
+            "normalize_master_dimensions": [1280, 720],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [103, 182, 255],
+            "crop_profile": "right-safe",
+            "crop_pixels_after_normalize": [448, 144, 768, 432],
+            "target_dimensions": [1280, 720],
+            "resample": "lanczos",
+            "output_format": "lossless-webp",
+            "duplicate_pixel_sha256_forbidden": true,
+            "visual_subject_confirmation_required": true,
+            "focus_subject": "five-step conversation path",
+            "video_title": "The Five-Step Conversation Framework"
+          }
+        }
+      ]
+    },
+    {
+      "id": "master-slot-07",
+      "kind": "lesson-master",
+      "source_mode": "promote-approved-pilot-flat-master",
+      "planned_generation_call_id": null,
+      "prompt_sha256": "b1dd0fda35d7c63e482e30f0a5c79ed0abf8c5bf4320b1e66fe6ca341a820119",
+      "reference_ids": ["style-ref-1", "style-ref-2", "opening-phone-shapes"],
+      "reference_inputs": [
+        {
+          "id": "style-ref-1",
+          "role": "canonical BMH Sticker System style",
+          "path": "docs/design/style-ref-1.png",
+          "sha256": "d65ce4c3fc84a0a52b08e513d42d978f94d5db2f6e59034aedbbd1e9486c18ca"
+        },
+        {
+          "id": "style-ref-2",
+          "role": "canonical BMH Sticker System style",
+          "path": "docs/design/style-ref-2.png",
+          "sha256": "f1affc2ab6b931be8cfd6920165dff330d49b79e6f4abfe5568e67e70c6934a6"
+        },
+        {
+          "id": "opening-phone-shapes",
+          "role": "Opening the Call subject reference only",
+          "path": "docs/course-production/thumbnail-pilots/references/m05_L5A_phones.png",
+          "sha256": "2d59d64e913c43b1fba45080b0bf59c9e51356f1d4b057c5d2831bfa0f7af6e8"
+        }
+      ],
+      "source_path": "course-assets/thumbnails/production/sources/slot-07-generated.png",
+      "flat_master_path": "course-assets/thumbnails/production/flat-masters/slot-07-flat-master.png",
+      "pilot": {
+        "slug": "opening-the-call",
+        "assets": {
+          "slug": "opening-the-call",
+          "source": {
+            "path": "course-assets/thumbnails/pilots/sources/opening-the-call-generated.png",
+            "dimensions": [1672, 941],
+            "sha256": "024256e8af219b185de73bbbd8274dfda67c40d28dd2692f861345dc68b0518b"
+          },
+          "flat_master": {
+            "path": "course-assets/thumbnails/pilots/flat-masters/opening-the-call-flat-master.png",
+            "dimensions": [1672, 941],
+            "sha256": "98ce86bdb4dfaeb4906aca4ed287b80d78920df4f02f0c8b89bae1b33a7cfbf8"
+          },
+          "lesson_card": {
+            "path": "course-assets/thumbnails/pilots/lesson-cards/opening-the-call-lesson-card-16x10.webp",
+            "dimensions": [1280, 800],
+            "sha256": "4c71982ce2f43660ae07076e3f3613264cfca2a1b097d5657e2d15383d473f55"
+          },
+          "video_poster": {
+            "path": "course-assets/posters/pilots/opening-the-call-video-poster-16x9.webp",
+            "dimensions": [1280, 720],
+            "sha256": "ef6d25c3a00d8582bc1daf8149a51672848e5358b66e9d54cef0c90d4c9611ae"
+          }
+        },
+        "lineage": {
+          "slug": "opening-the-call",
+          "terminal_output_sha256": "024256e8af219b185de73bbbd8274dfda67c40d28dd2692f861345dc68b0518b",
+          "steps": [
+            {
+              "step": 1,
+              "operation": "generate",
+              "prompt_path": "docs/course-production/thumbnail-pilots/prompts/opening-the-call.txt",
+              "prompt_sha256": "b1dd0fda35d7c63e482e30f0a5c79ed0abf8c5bf4320b1e66fe6ca341a820119",
+              "inputs": [
+                {
+                  "path": "docs/design/style-ref-1.png",
+                  "sha256": "d65ce4c3fc84a0a52b08e513d42d978f94d5db2f6e59034aedbbd1e9486c18ca"
+                },
+                {
+                  "path": "docs/design/style-ref-2.png",
+                  "sha256": "f1affc2ab6b931be8cfd6920165dff330d49b79e6f4abfe5568e67e70c6934a6"
+                },
+                {
+                  "path": "docs/course-production/thumbnail-pilots/references/m05_L5A_phones.png",
+                  "sha256": "2d59d64e913c43b1fba45080b0bf59c9e51356f1d4b057c5d2831bfa0f7af6e8"
+                }
+              ],
+              "tool_evidence": {
+                "thread_id": "019f6cb9-c3ed-74e0-975f-a5d0d8154c59",
+                "agent_path": "/root/thumbnail_pilots",
+                "invocation_call_id": "call_omiyboB188f8BVoSkgEcUkJv",
+                "tool_output_call_id": "call_PzBae3aVHUak2VLrWBviwtvA",
+                "tool_output_id": "exec-bcc12c1a-207b-44d8-8e45-644698774fa6",
+                "invoked_at": "2026-07-16T21:01:41.299Z",
+                "completed_at": "2026-07-16T21:02:28.218Z"
+              },
+              "output": {
+                "path": "course-assets/thumbnails/pilots/sources/opening-the-call-generated.png",
+                "dimensions": [1672, 941],
+                "size_bytes": 1172023,
+                "sha256": "024256e8af219b185de73bbbd8274dfda67c40d28dd2692f861345dc68b0518b"
+              }
+            }
+          ]
+        }
+      },
+      "status": "missing",
+      "terminal_source_sha256": null,
+      "flat_master_sha256": null,
+      "flat_replacement_authorized_checksum": null,
+      "flat_history": [],
+      "lineage": [],
+      "review": {
+        "status": "pending",
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "evidence": null,
+        "evidence_sha256": null
+      },
+      "outputs": [
+        {
+          "asset_key": "thumbnail-slot-07",
+          "manifest_path": "course-assets/thumbnails/slot-07.webp",
+          "recipe": {
+            "id": "slot-07-lesson-card-16x10",
+            "kind": "lesson-card",
+            "source_master_id": "master-slot-07",
+            "operation": "contain-master-in-1280x720-and-pad-40px-top-and-bottom",
+            "normalize_master_dimensions": [1280, 720],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [103, 182, 255],
+            "target_dimensions": [1280, 800],
+            "padding_rgb": [103, 182, 255],
+            "resample": "lanczos",
+            "crop_allowed": false,
+            "output_format": "lossless-webp"
+          }
+        },
+        {
+          "asset_key": "poster-video-slot-07-opening",
+          "manifest_path": "course-assets/posters/video-slot-07-opening.webp",
+          "recipe": {
+            "id": "slot-07-video-slot-07-opening-full-safe",
+            "kind": "video-poster",
+            "source_master_id": "master-slot-07",
+            "operation": "normalize-1280x720-then-fixed-safe-crop",
+            "normalize_master_dimensions": [1280, 720],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [103, 182, 255],
+            "crop_profile": "full-safe",
+            "crop_pixels_after_normalize": [0, 0, 1280, 720],
+            "target_dimensions": [1280, 720],
+            "resample": "lanczos",
+            "output_format": "lossless-webp",
+            "duplicate_pixel_sha256_forbidden": true,
+            "visual_subject_confirmation_required": true,
+            "focus_subject": "confident human call opening",
+            "video_title": "Opening the Call"
+          }
+        }
+      ]
+    },
+    {
+      "id": "master-poster-video-slot-07-fact-find",
+      "kind": "direct-poster-master",
+      "source_mode": "generate-distinct-after-pilot-approval",
+      "planned_generation_call_id": "imagegen-poster-video-slot-07-fact-find",
+      "prompt_sha256": "e0413183fede95ac3a4ce445936b1032ea8c36667b927cb3a7d905d575c140b4",
+      "reference_ids": ["style-ref-1", "style-ref-2"],
+      "reference_inputs": [
+        {
+          "id": "style-ref-1",
+          "role": "canonical BMH Sticker System style",
+          "path": "docs/design/style-ref-1.png",
+          "sha256": "d65ce4c3fc84a0a52b08e513d42d978f94d5db2f6e59034aedbbd1e9486c18ca"
+        },
+        {
+          "id": "style-ref-2",
+          "role": "canonical BMH Sticker System style",
+          "path": "docs/design/style-ref-2.png",
+          "sha256": "f1affc2ab6b931be8cfd6920165dff330d49b79e6f4abfe5568e67e70c6934a6"
+        }
+      ],
+      "source_path": "course-assets/posters/production/sources/video-slot-07-fact-find-generated.png",
+      "flat_master_path": "course-assets/posters/production/flat-masters/video-slot-07-fact-find-flat-master.png",
+      "pilot": null,
+      "status": "missing",
+      "terminal_source_sha256": null,
+      "flat_master_sha256": null,
+      "flat_replacement_authorized_checksum": null,
+      "flat_history": [],
+      "lineage": [],
+      "review": {
+        "status": "pending",
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "evidence": null,
+        "evidence_sha256": null
+      },
+      "outputs": [
+        {
+          "asset_key": "poster-video-slot-07-fact-find",
+          "manifest_path": "course-assets/posters/video-slot-07-fact-find.webp",
+          "recipe": {
+            "id": "slot-07-video-slot-07-fact-find-full-safe",
+            "kind": "video-poster",
+            "source_master_id": "master-poster-video-slot-07-fact-find",
+            "operation": "normalize-1280x720-then-fixed-safe-crop",
+            "normalize_master_dimensions": [1280, 720],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [103, 182, 255],
+            "crop_profile": "full-safe",
+            "crop_pixels_after_normalize": [0, 0, 1280, 720],
+            "target_dimensions": [1280, 720],
+            "resample": "lanczos",
+            "output_format": "lossless-webp",
+            "duplicate_pixel_sha256_forbidden": true,
+            "visual_subject_confirmation_required": true,
+            "focus_subject": "curious fact-finding conversation",
+            "video_title": "The Fact Find"
+          }
+        }
+      ]
+    },
+    {
+      "id": "master-slot-08",
+      "kind": "lesson-master",
+      "source_mode": "generate-after-pilot-approval",
+      "planned_generation_call_id": "imagegen-lesson-slot-08",
+      "prompt_sha256": "c69a6be1c9553a2bfcb9ba4353a5c4ab9c09e7ef52905017e8d3d0e4bbea8f7f",
+      "reference_ids": ["style-ref-1", "style-ref-2"],
+      "reference_inputs": [
+        {
+          "id": "style-ref-1",
+          "role": "canonical BMH Sticker System style",
+          "path": "docs/design/style-ref-1.png",
+          "sha256": "d65ce4c3fc84a0a52b08e513d42d978f94d5db2f6e59034aedbbd1e9486c18ca"
+        },
+        {
+          "id": "style-ref-2",
+          "role": "canonical BMH Sticker System style",
+          "path": "docs/design/style-ref-2.png",
+          "sha256": "f1affc2ab6b931be8cfd6920165dff330d49b79e6f4abfe5568e67e70c6934a6"
+        }
+      ],
+      "source_path": "course-assets/thumbnails/production/sources/slot-08-generated.png",
+      "flat_master_path": "course-assets/thumbnails/production/flat-masters/slot-08-flat-master.png",
+      "pilot": null,
+      "status": "missing",
+      "terminal_source_sha256": null,
+      "flat_master_sha256": null,
+      "flat_replacement_authorized_checksum": null,
+      "flat_history": [],
+      "lineage": [],
+      "review": {
+        "status": "pending",
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "evidence": null,
+        "evidence_sha256": null
+      },
+      "outputs": [
+        {
+          "asset_key": "thumbnail-slot-08",
+          "manifest_path": "course-assets/thumbnails/slot-08.webp",
+          "recipe": {
+            "id": "slot-08-lesson-card-16x10",
+            "kind": "lesson-card",
+            "source_master_id": "master-slot-08",
+            "operation": "contain-master-in-1280x720-and-pad-40px-top-and-bottom",
+            "normalize_master_dimensions": [1280, 720],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [103, 182, 255],
+            "target_dimensions": [1280, 800],
+            "padding_rgb": [103, 182, 255],
+            "resample": "lanczos",
+            "crop_allowed": false,
+            "output_format": "lossless-webp"
+          }
+        },
+        {
+          "asset_key": "poster-video-slot-08-discovery",
+          "manifest_path": "course-assets/posters/video-slot-08-discovery.webp",
+          "recipe": {
+            "id": "slot-08-video-slot-08-discovery-left-safe",
+            "kind": "video-poster",
+            "source_master_id": "master-slot-08",
+            "operation": "normalize-1280x720-then-fixed-safe-crop",
+            "normalize_master_dimensions": [1280, 720],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [103, 182, 255],
+            "crop_profile": "left-safe",
+            "crop_pixels_after_normalize": [64, 144, 768, 432],
+            "target_dimensions": [1280, 720],
+            "resample": "lanczos",
+            "output_format": "lossless-webp",
+            "duplicate_pixel_sha256_forbidden": true,
+            "visual_subject_confirmation_required": true,
+            "focus_subject": "listening-led discovery",
+            "video_title": "Discovery"
+          }
+        },
+        {
+          "asset_key": "poster-video-slot-08-handoff",
+          "manifest_path": "course-assets/posters/video-slot-08-handoff.webp",
+          "recipe": {
+            "id": "slot-08-video-slot-08-handoff-right-safe",
+            "kind": "video-poster",
+            "source_master_id": "master-slot-08",
+            "operation": "normalize-1280x720-then-fixed-safe-crop",
+            "normalize_master_dimensions": [1280, 720],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [103, 182, 255],
+            "crop_profile": "right-safe",
+            "crop_pixels_after_normalize": [448, 144, 768, 432],
+            "target_dimensions": [1280, 720],
+            "resample": "lanczos",
+            "output_format": "lossless-webp",
+            "duplicate_pixel_sha256_forbidden": true,
+            "visual_subject_confirmation_required": true,
+            "focus_subject": "complete context handoff",
+            "video_title": "The Handoff"
+          }
+        }
+      ]
+    },
+    {
+      "id": "master-slot-09",
+      "kind": "lesson-master",
+      "source_mode": "promote-approved-pilot-flat-master",
+      "planned_generation_call_id": null,
+      "prompt_sha256": "586ebac39db2c79f4a728b569ebcc46d01820cf642f9a207cba795145cdada9b",
+      "reference_ids": ["style-ref-1", "style-ref-2", "objection-character"],
+      "reference_inputs": [
+        {
+          "id": "style-ref-1",
+          "role": "canonical BMH Sticker System style",
+          "path": "docs/design/style-ref-1.png",
+          "sha256": "d65ce4c3fc84a0a52b08e513d42d978f94d5db2f6e59034aedbbd1e9486c18ca"
+        },
+        {
+          "id": "style-ref-2",
+          "role": "canonical BMH Sticker System style",
+          "path": "docs/design/style-ref-2.png",
+          "sha256": "f1affc2ab6b931be8cfd6920165dff330d49b79e6f4abfe5568e67e70c6934a6"
+        },
+        {
+          "id": "objection-character",
+          "role": "Objection Architecture character reference only",
+          "path": "docs/course-production/thumbnail-pilots/references/m07_L7A_b03_reframe.png",
+          "sha256": "57fe03b31eca46336c664c2ca78cf877b8db3138443964e7976ce70eb91db311"
+        }
+      ],
+      "source_path": "course-assets/thumbnails/production/sources/slot-09-generated.png",
+      "flat_master_path": "course-assets/thumbnails/production/flat-masters/slot-09-flat-master.png",
+      "pilot": {
+        "slug": "objection-architecture",
+        "assets": {
+          "slug": "objection-architecture",
+          "source": {
+            "path": "course-assets/thumbnails/pilots/sources/objection-architecture-generated.png",
+            "dimensions": [1672, 941],
+            "sha256": "b0d30bbb17d89f6141251a7fa0541a162d543d70706a1cdacdfe0c71aab9cfd1"
+          },
+          "flat_master": {
+            "path": "course-assets/thumbnails/pilots/flat-masters/objection-architecture-flat-master.png",
+            "dimensions": [1672, 941],
+            "sha256": "445d7bc6a714a2f35e0dec13cf0ade52c0cabdf3232ffc379cfe2c7f613040e2"
+          },
+          "lesson_card": {
+            "path": "course-assets/thumbnails/pilots/lesson-cards/objection-architecture-lesson-card-16x10.webp",
+            "dimensions": [1280, 800],
+            "sha256": "f585ff79241da17bf4fb513680cd98bb2ec9d5986aba53711112c0cf6f157fd9"
+          },
+          "video_poster": {
+            "path": "course-assets/posters/pilots/objection-architecture-video-poster-16x9.webp",
+            "dimensions": [1280, 720],
+            "sha256": "ef478ca179f9b410bf60811bef1a4ff9ca8fae5b5e0587812f0c7912789a1fd8"
+          }
+        },
+        "lineage": {
+          "slug": "objection-architecture",
+          "terminal_output_sha256": "b0d30bbb17d89f6141251a7fa0541a162d543d70706a1cdacdfe0c71aab9cfd1",
+          "steps": [
+            {
+              "step": 1,
+              "operation": "generate",
+              "prompt_path": "docs/course-production/thumbnail-pilots/prompts/objection-architecture.txt",
+              "prompt_sha256": "586ebac39db2c79f4a728b569ebcc46d01820cf642f9a207cba795145cdada9b",
+              "inputs": [
+                {
+                  "path": "docs/design/style-ref-1.png",
+                  "sha256": "d65ce4c3fc84a0a52b08e513d42d978f94d5db2f6e59034aedbbd1e9486c18ca"
+                },
+                {
+                  "path": "docs/design/style-ref-2.png",
+                  "sha256": "f1affc2ab6b931be8cfd6920165dff330d49b79e6f4abfe5568e67e70c6934a6"
+                },
+                {
+                  "path": "docs/course-production/thumbnail-pilots/references/m07_L7A_b03_reframe.png",
+                  "sha256": "57fe03b31eca46336c664c2ca78cf877b8db3138443964e7976ce70eb91db311"
+                }
+              ],
+              "tool_evidence": {
+                "thread_id": "019f6cb9-c3ed-74e0-975f-a5d0d8154c59",
+                "agent_path": "/root/thumbnail_pilots",
+                "invocation_call_id": "call_k4q5g4ye6DDeIMyUPBP0KdUi",
+                "tool_output_call_id": "call_982qVPUL25T8cfbQBfC9xXcM",
+                "tool_output_id": "exec-5df58555-c80c-4526-8d1e-aab528034a60",
+                "invoked_at": "2026-07-16T21:02:45.451Z",
+                "completed_at": "2026-07-16T21:03:37.134Z"
+              },
+              "output": {
+                "path": "course-assets/thumbnails/pilots/sources/objection-architecture-generated.png",
+                "dimensions": [1672, 941],
+                "size_bytes": 1239107,
+                "sha256": "b0d30bbb17d89f6141251a7fa0541a162d543d70706a1cdacdfe0c71aab9cfd1"
+              }
+            }
+          ]
+        }
+      },
+      "status": "missing",
+      "terminal_source_sha256": null,
+      "flat_master_sha256": null,
+      "flat_replacement_authorized_checksum": null,
+      "flat_history": [],
+      "lineage": [],
+      "review": {
+        "status": "pending",
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "evidence": null,
+        "evidence_sha256": null
+      },
+      "outputs": [
+        {
+          "asset_key": "thumbnail-slot-09",
+          "manifest_path": "course-assets/thumbnails/slot-09.webp",
+          "recipe": {
+            "id": "slot-09-lesson-card-16x10",
+            "kind": "lesson-card",
+            "source_master_id": "master-slot-09",
+            "operation": "contain-master-in-1280x720-and-pad-40px-top-and-bottom",
+            "normalize_master_dimensions": [1280, 720],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [103, 182, 255],
+            "target_dimensions": [1280, 800],
+            "padding_rgb": [103, 182, 255],
+            "resample": "lanczos",
+            "crop_allowed": false,
+            "output_format": "lossless-webp"
+          }
+        },
+        {
+          "asset_key": "poster-video-slot-09-objection-architecture",
+          "manifest_path": "course-assets/posters/video-slot-09-objection-architecture.webp",
+          "recipe": {
+            "id": "slot-09-video-slot-09-objection-architecture-full-safe",
+            "kind": "video-poster",
+            "source_master_id": "master-slot-09",
+            "operation": "normalize-1280x720-then-fixed-safe-crop",
+            "normalize_master_dimensions": [1280, 720],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [103, 182, 255],
+            "crop_profile": "full-safe",
+            "crop_pixels_after_normalize": [0, 0, 1280, 720],
+            "target_dimensions": [1280, 720],
+            "resample": "lanczos",
+            "output_format": "lossless-webp",
+            "duplicate_pixel_sha256_forbidden": true,
+            "visual_subject_confirmation_required": true,
+            "focus_subject": "hear reframe and respond architecture",
+            "video_title": "Objection Architecture"
+          }
+        }
+      ]
+    },
+    {
+      "id": "master-slot-10",
+      "kind": "lesson-master",
+      "source_mode": "generate-after-pilot-approval",
+      "planned_generation_call_id": "imagegen-lesson-slot-10",
+      "prompt_sha256": "b2241233cd559d6a1e2a3db379b7978ec344b86b46427a26caf1c2aa5e987dc8",
+      "reference_ids": ["style-ref-1", "style-ref-2"],
+      "reference_inputs": [
+        {
+          "id": "style-ref-1",
+          "role": "canonical BMH Sticker System style",
+          "path": "docs/design/style-ref-1.png",
+          "sha256": "d65ce4c3fc84a0a52b08e513d42d978f94d5db2f6e59034aedbbd1e9486c18ca"
+        },
+        {
+          "id": "style-ref-2",
+          "role": "canonical BMH Sticker System style",
+          "path": "docs/design/style-ref-2.png",
+          "sha256": "f1affc2ab6b931be8cfd6920165dff330d49b79e6f4abfe5568e67e70c6934a6"
+        }
+      ],
+      "source_path": "course-assets/thumbnails/production/sources/slot-10-generated.png",
+      "flat_master_path": "course-assets/thumbnails/production/flat-masters/slot-10-flat-master.png",
+      "pilot": null,
+      "status": "missing",
+      "terminal_source_sha256": null,
+      "flat_master_sha256": null,
+      "flat_replacement_authorized_checksum": null,
+      "flat_history": [],
+      "lineage": [],
+      "review": {
+        "status": "pending",
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "evidence": null,
+        "evidence_sha256": null
+      },
+      "outputs": [
+        {
+          "asset_key": "thumbnail-slot-10",
+          "manifest_path": "course-assets/thumbnails/slot-10.webp",
+          "recipe": {
+            "id": "slot-10-lesson-card-16x10",
+            "kind": "lesson-card",
+            "source_master_id": "master-slot-10",
+            "operation": "contain-master-in-1280x720-and-pad-40px-top-and-bottom",
+            "normalize_master_dimensions": [1280, 720],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [103, 182, 255],
+            "target_dimensions": [1280, 800],
+            "padding_rgb": [103, 182, 255],
+            "resample": "lanczos",
+            "crop_allowed": false,
+            "output_format": "lossless-webp"
+          }
+        },
+        {
+          "asset_key": "poster-video-slot-10-objection-scripts",
+          "manifest_path": "course-assets/posters/video-slot-10-objection-scripts.webp",
+          "recipe": {
+            "id": "slot-10-video-slot-10-objection-scripts-full-safe",
+            "kind": "video-poster",
+            "source_master_id": "master-slot-10",
+            "operation": "normalize-1280x720-then-fixed-safe-crop",
+            "normalize_master_dimensions": [1280, 720],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [103, 182, 255],
+            "crop_profile": "full-safe",
+            "crop_pixels_after_normalize": [0, 0, 1280, 720],
+            "target_dimensions": [1280, 720],
+            "resample": "lanczos",
+            "output_format": "lossless-webp",
+            "duplicate_pixel_sha256_forbidden": true,
+            "visual_subject_confirmation_required": true,
+            "focus_subject": "flexible objection response toolbox",
+            "video_title": "Objection Scripts Playbook"
+          }
+        }
+      ]
+    },
+    {
+      "id": "master-slot-11",
+      "kind": "lesson-master",
+      "source_mode": "generate-after-pilot-approval",
+      "planned_generation_call_id": "imagegen-lesson-slot-11",
+      "prompt_sha256": "0ae4b472f5c3ac48f75d578f5714754d7925f7b4de7ee84673847741ca65735f",
+      "reference_ids": ["style-ref-1", "style-ref-2"],
+      "reference_inputs": [
+        {
+          "id": "style-ref-1",
+          "role": "canonical BMH Sticker System style",
+          "path": "docs/design/style-ref-1.png",
+          "sha256": "d65ce4c3fc84a0a52b08e513d42d978f94d5db2f6e59034aedbbd1e9486c18ca"
+        },
+        {
+          "id": "style-ref-2",
+          "role": "canonical BMH Sticker System style",
+          "path": "docs/design/style-ref-2.png",
+          "sha256": "f1affc2ab6b931be8cfd6920165dff330d49b79e6f4abfe5568e67e70c6934a6"
+        }
+      ],
+      "source_path": "course-assets/thumbnails/production/sources/slot-11-generated.png",
+      "flat_master_path": "course-assets/thumbnails/production/flat-masters/slot-11-flat-master.png",
+      "pilot": null,
+      "status": "missing",
+      "terminal_source_sha256": null,
+      "flat_master_sha256": null,
+      "flat_replacement_authorized_checksum": null,
+      "flat_history": [],
+      "lineage": [],
+      "review": {
+        "status": "pending",
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "evidence": null,
+        "evidence_sha256": null
+      },
+      "outputs": [
+        {
+          "asset_key": "thumbnail-slot-11",
+          "manifest_path": "course-assets/thumbnails/slot-11.webp",
+          "recipe": {
+            "id": "slot-11-lesson-card-16x10",
+            "kind": "lesson-card",
+            "source_master_id": "master-slot-11",
+            "operation": "contain-master-in-1280x720-and-pad-40px-top-and-bottom",
+            "normalize_master_dimensions": [1280, 720],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [103, 182, 255],
+            "target_dimensions": [1280, 800],
+            "padding_rgb": [103, 182, 255],
+            "resample": "lanczos",
+            "crop_allowed": false,
+            "output_format": "lossless-webp"
+          }
+        },
+        {
+          "asset_key": "poster-video-slot-11-complex",
+          "manifest_path": "course-assets/posters/video-slot-11-complex.webp",
+          "recipe": {
+            "id": "slot-11-video-slot-11-complex-left-safe",
+            "kind": "video-poster",
+            "source_master_id": "master-slot-11",
+            "operation": "normalize-1280x720-then-fixed-safe-crop",
+            "normalize_master_dimensions": [1280, 720],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [103, 182, 255],
+            "crop_profile": "left-safe",
+            "crop_pixels_after_normalize": [64, 144, 768, 432],
+            "target_dimensions": [1280, 720],
+            "resample": "lanczos",
+            "output_format": "lossless-webp",
+            "duplicate_pixel_sha256_forbidden": true,
+            "visual_subject_confirmation_required": true,
+            "focus_subject": "untangling layered objections",
+            "video_title": "Complex Objections"
+          }
+        },
+        {
+          "asset_key": "poster-video-slot-11-trust",
+          "manifest_path": "course-assets/posters/video-slot-11-trust.webp",
+          "recipe": {
+            "id": "slot-11-video-slot-11-trust-right-safe",
+            "kind": "video-poster",
+            "source_master_id": "master-slot-11",
+            "operation": "normalize-1280x720-then-fixed-safe-crop",
+            "normalize_master_dimensions": [1280, 720],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [103, 182, 255],
+            "crop_profile": "right-safe",
+            "crop_pixels_after_normalize": [448, 144, 768, 432],
+            "target_dimensions": [1280, 720],
+            "resample": "lanczos",
+            "output_format": "lossless-webp",
+            "duplicate_pixel_sha256_forbidden": true,
+            "visual_subject_confirmation_required": true,
+            "focus_subject": "trust and people bridge",
+            "video_title": "Trust and People Objections"
+          }
+        }
+      ]
+    },
+    {
+      "id": "master-slot-12",
+      "kind": "lesson-master",
+      "source_mode": "generate-after-pilot-approval",
+      "planned_generation_call_id": "imagegen-lesson-slot-12",
+      "prompt_sha256": "d6940390047228b63428f24c3f3a5f822522fe735aae8f64d64f27162a41aaf0",
+      "reference_ids": ["style-ref-1", "style-ref-2"],
+      "reference_inputs": [
+        {
+          "id": "style-ref-1",
+          "role": "canonical BMH Sticker System style",
+          "path": "docs/design/style-ref-1.png",
+          "sha256": "d65ce4c3fc84a0a52b08e513d42d978f94d5db2f6e59034aedbbd1e9486c18ca"
+        },
+        {
+          "id": "style-ref-2",
+          "role": "canonical BMH Sticker System style",
+          "path": "docs/design/style-ref-2.png",
+          "sha256": "f1affc2ab6b931be8cfd6920165dff330d49b79e6f4abfe5568e67e70c6934a6"
+        }
+      ],
+      "source_path": "course-assets/thumbnails/production/sources/slot-12-generated.png",
+      "flat_master_path": "course-assets/thumbnails/production/flat-masters/slot-12-flat-master.png",
+      "pilot": null,
+      "status": "missing",
+      "terminal_source_sha256": null,
+      "flat_master_sha256": null,
+      "flat_replacement_authorized_checksum": null,
+      "flat_history": [],
+      "lineage": [],
+      "review": {
+        "status": "pending",
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "evidence": null,
+        "evidence_sha256": null
+      },
+      "outputs": [
+        {
+          "asset_key": "thumbnail-slot-12",
+          "manifest_path": "course-assets/thumbnails/slot-12.webp",
+          "recipe": {
+            "id": "slot-12-lesson-card-16x10",
+            "kind": "lesson-card",
+            "source_master_id": "master-slot-12",
+            "operation": "contain-master-in-1280x720-and-pad-40px-top-and-bottom",
+            "normalize_master_dimensions": [1280, 720],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [103, 182, 255],
+            "target_dimensions": [1280, 800],
+            "padding_rgb": [103, 182, 255],
+            "resample": "lanczos",
+            "crop_allowed": false,
+            "output_format": "lossless-webp"
+          }
+        },
+        {
+          "asset_key": "poster-video-slot-12-faq-a",
+          "manifest_path": "course-assets/posters/video-slot-12-faq-a.webp",
+          "recipe": {
+            "id": "slot-12-video-slot-12-faq-a-left-safe",
+            "kind": "video-poster",
+            "source_master_id": "master-slot-12",
+            "operation": "normalize-1280x720-then-fixed-safe-crop",
+            "normalize_master_dimensions": [1280, 720],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [103, 182, 255],
+            "crop_profile": "left-safe",
+            "crop_pixels_after_normalize": [64, 144, 768, 432],
+            "target_dimensions": [1280, 720],
+            "resample": "lanczos",
+            "output_format": "lossless-webp",
+            "duplicate_pixel_sha256_forbidden": true,
+            "visual_subject_confirmation_required": true,
+            "focus_subject": "process and timing question cluster",
+            "video_title": "Seller FAQ Decoder Questions 1 through 5"
+          }
+        },
+        {
+          "asset_key": "poster-video-slot-12-faq-b",
+          "manifest_path": "course-assets/posters/video-slot-12-faq-b.webp",
+          "recipe": {
+            "id": "slot-12-video-slot-12-faq-b-right-safe",
+            "kind": "video-poster",
+            "source_master_id": "master-slot-12",
+            "operation": "normalize-1280x720-then-fixed-safe-crop",
+            "normalize_master_dimensions": [1280, 720],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [103, 182, 255],
+            "crop_profile": "right-safe",
+            "crop_pixels_after_normalize": [448, 144, 768, 432],
+            "target_dimensions": [1280, 720],
+            "resample": "lanczos",
+            "output_format": "lossless-webp",
+            "duplicate_pixel_sha256_forbidden": true,
+            "visual_subject_confirmation_required": true,
+            "focus_subject": "property contract and next-step question cluster",
+            "video_title": "Seller FAQ Decoder Questions 6 through 10"
+          }
+        }
+      ]
+    },
+    {
+      "id": "master-slot-13",
+      "kind": "lesson-master",
+      "source_mode": "generate-after-pilot-approval",
+      "planned_generation_call_id": "imagegen-lesson-slot-13",
+      "prompt_sha256": "ead8dcda2a0f7b2d665ea3bfca302d888ab8fc78d8df74e6d39af078c59312d6",
+      "reference_ids": ["style-ref-1", "style-ref-2"],
+      "reference_inputs": [
+        {
+          "id": "style-ref-1",
+          "role": "canonical BMH Sticker System style",
+          "path": "docs/design/style-ref-1.png",
+          "sha256": "d65ce4c3fc84a0a52b08e513d42d978f94d5db2f6e59034aedbbd1e9486c18ca"
+        },
+        {
+          "id": "style-ref-2",
+          "role": "canonical BMH Sticker System style",
+          "path": "docs/design/style-ref-2.png",
+          "sha256": "f1affc2ab6b931be8cfd6920165dff330d49b79e6f4abfe5568e67e70c6934a6"
+        }
+      ],
+      "source_path": "course-assets/thumbnails/production/sources/slot-13-generated.png",
+      "flat_master_path": "course-assets/thumbnails/production/flat-masters/slot-13-flat-master.png",
+      "pilot": null,
+      "status": "missing",
+      "terminal_source_sha256": null,
+      "flat_master_sha256": null,
+      "flat_replacement_authorized_checksum": null,
+      "flat_history": [],
+      "lineage": [],
+      "review": {
+        "status": "pending",
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "evidence": null,
+        "evidence_sha256": null
+      },
+      "outputs": [
+        {
+          "asset_key": "thumbnail-slot-13",
+          "manifest_path": "course-assets/thumbnails/slot-13.webp",
+          "recipe": {
+            "id": "slot-13-lesson-card-16x10",
+            "kind": "lesson-card",
+            "source_master_id": "master-slot-13",
+            "operation": "contain-master-in-1280x720-and-pad-40px-top-and-bottom",
+            "normalize_master_dimensions": [1280, 720],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [103, 182, 255],
+            "target_dimensions": [1280, 800],
+            "padding_rgb": [103, 182, 255],
+            "resample": "lanczos",
+            "crop_allowed": false,
+            "output_format": "lossless-webp"
+          }
+        },
+        {
+          "asset_key": "poster-video-slot-13-follow-up",
+          "manifest_path": "course-assets/posters/video-slot-13-follow-up.webp",
+          "recipe": {
+            "id": "slot-13-video-slot-13-follow-up-full-safe",
+            "kind": "video-poster",
+            "source_master_id": "master-slot-13",
+            "operation": "normalize-1280x720-then-fixed-safe-crop",
+            "normalize_master_dimensions": [1280, 720],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [103, 182, 255],
+            "crop_profile": "full-safe",
+            "crop_pixels_after_normalize": [0, 0, 1280, 720],
+            "target_dimensions": [1280, 720],
+            "resample": "lanczos",
+            "output_format": "lossless-webp",
+            "duplicate_pixel_sha256_forbidden": true,
+            "visual_subject_confirmation_required": true,
+            "focus_subject": "purposeful respectful follow-up loop",
+            "video_title": "Follow-Up Cadence"
+          }
+        }
+      ]
+    },
+    {
+      "id": "master-slot-14",
+      "kind": "lesson-master",
+      "source_mode": "generate-after-pilot-approval",
+      "planned_generation_call_id": "imagegen-lesson-slot-14",
+      "prompt_sha256": "b1f26537e0bd98903ee077f39188e74134fc4536f128a6e3407b1ebbd11430dd",
+      "reference_ids": ["style-ref-1", "style-ref-2"],
+      "reference_inputs": [
+        {
+          "id": "style-ref-1",
+          "role": "canonical BMH Sticker System style",
+          "path": "docs/design/style-ref-1.png",
+          "sha256": "d65ce4c3fc84a0a52b08e513d42d978f94d5db2f6e59034aedbbd1e9486c18ca"
+        },
+        {
+          "id": "style-ref-2",
+          "role": "canonical BMH Sticker System style",
+          "path": "docs/design/style-ref-2.png",
+          "sha256": "f1affc2ab6b931be8cfd6920165dff330d49b79e6f4abfe5568e67e70c6934a6"
+        }
+      ],
+      "source_path": "course-assets/thumbnails/production/sources/slot-14-generated.png",
+      "flat_master_path": "course-assets/thumbnails/production/flat-masters/slot-14-flat-master.png",
+      "pilot": null,
+      "status": "missing",
+      "terminal_source_sha256": null,
+      "flat_master_sha256": null,
+      "flat_replacement_authorized_checksum": null,
+      "flat_history": [],
+      "lineage": [],
+      "review": {
+        "status": "pending",
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "evidence": null,
+        "evidence_sha256": null
+      },
+      "outputs": [
+        {
+          "asset_key": "thumbnail-slot-14",
+          "manifest_path": "course-assets/thumbnails/slot-14.webp",
+          "recipe": {
+            "id": "slot-14-lesson-card-16x10",
+            "kind": "lesson-card",
+            "source_master_id": "master-slot-14",
+            "operation": "contain-master-in-1280x720-and-pad-40px-top-and-bottom",
+            "normalize_master_dimensions": [1280, 720],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [103, 182, 255],
+            "target_dimensions": [1280, 800],
+            "padding_rgb": [103, 182, 255],
+            "resample": "lanczos",
+            "crop_allowed": false,
+            "output_format": "lossless-webp"
+          }
+        },
+        {
+          "asset_key": "poster-video-slot-14-flow",
+          "manifest_path": "course-assets/posters/video-slot-14-flow.webp",
+          "recipe": {
+            "id": "slot-14-video-slot-14-flow-full-safe",
+            "kind": "video-poster",
+            "source_master_id": "master-slot-14",
+            "operation": "normalize-1280x720-then-fixed-safe-crop",
+            "normalize_master_dimensions": [1280, 720],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [103, 182, 255],
+            "crop_profile": "full-safe",
+            "crop_pixels_after_normalize": [0, 0, 1280, 720],
+            "target_dimensions": [1280, 720],
+            "resample": "lanczos",
+            "output_format": "lossless-webp",
+            "duplicate_pixel_sha256_forbidden": true,
+            "visual_subject_confirmation_required": true,
+            "focus_subject": "natural conversation flow from listen to next step",
+            "video_title": "Conversation Flow Mastery"
+          }
+        }
+      ]
+    },
+    {
+      "id": "master-slot-15",
+      "kind": "lesson-master",
+      "source_mode": "generate-after-pilot-approval",
+      "planned_generation_call_id": "imagegen-lesson-slot-15",
+      "prompt_sha256": "59e41719b900a0f3f4dc371d818b1891f7b19656bbd72986da62b51f3591aee2",
+      "reference_ids": ["style-ref-1", "style-ref-2"],
+      "reference_inputs": [
+        {
+          "id": "style-ref-1",
+          "role": "canonical BMH Sticker System style",
+          "path": "docs/design/style-ref-1.png",
+          "sha256": "d65ce4c3fc84a0a52b08e513d42d978f94d5db2f6e59034aedbbd1e9486c18ca"
+        },
+        {
+          "id": "style-ref-2",
+          "role": "canonical BMH Sticker System style",
+          "path": "docs/design/style-ref-2.png",
+          "sha256": "f1affc2ab6b931be8cfd6920165dff330d49b79e6f4abfe5568e67e70c6934a6"
+        }
+      ],
+      "source_path": "course-assets/thumbnails/production/sources/slot-15-generated.png",
+      "flat_master_path": "course-assets/thumbnails/production/flat-masters/slot-15-flat-master.png",
+      "pilot": null,
+      "status": "missing",
+      "terminal_source_sha256": null,
+      "flat_master_sha256": null,
+      "flat_replacement_authorized_checksum": null,
+      "flat_history": [],
+      "lineage": [],
+      "review": {
+        "status": "pending",
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "evidence": null,
+        "evidence_sha256": null
+      },
+      "outputs": [
+        {
+          "asset_key": "thumbnail-slot-15",
+          "manifest_path": "course-assets/thumbnails/slot-15.webp",
+          "recipe": {
+            "id": "slot-15-lesson-card-16x10",
+            "kind": "lesson-card",
+            "source_master_id": "master-slot-15",
+            "operation": "contain-master-in-1280x720-and-pad-40px-top-and-bottom",
+            "normalize_master_dimensions": [1280, 720],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [103, 182, 255],
+            "target_dimensions": [1280, 800],
+            "padding_rgb": [103, 182, 255],
+            "resample": "lanczos",
+            "crop_allowed": false,
+            "output_format": "lossless-webp"
+          }
+        },
+        {
+          "asset_key": "poster-video-slot-15-closing",
+          "manifest_path": "course-assets/posters/video-slot-15-closing.webp",
+          "recipe": {
+            "id": "slot-15-video-slot-15-closing-full-safe",
+            "kind": "video-poster",
+            "source_master_id": "master-slot-15",
+            "operation": "normalize-1280x720-then-fixed-safe-crop",
+            "normalize_master_dimensions": [1280, 720],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [103, 182, 255],
+            "crop_profile": "full-safe",
+            "crop_pixels_after_normalize": [0, 0, 1280, 720],
+            "target_dimensions": [1280, 720],
+            "resample": "lanczos",
+            "output_format": "lossless-webp",
+            "duplicate_pixel_sha256_forbidden": true,
+            "visual_subject_confirmation_required": true,
+            "focus_subject": "sound agreement and deal-fit bridge",
+            "video_title": "Closing and Deal Engineering"
+          }
+        }
+      ]
+    },
+    {
+      "id": "master-slot-16",
+      "kind": "lesson-master",
+      "source_mode": "generate-after-pilot-approval",
+      "planned_generation_call_id": "imagegen-lesson-slot-16",
+      "prompt_sha256": "78c7259192e7bfa11a38c56edebbaf1be4d7da57e750b6afbdf7b5f21f44d0be",
+      "reference_ids": ["style-ref-1", "style-ref-2"],
+      "reference_inputs": [
+        {
+          "id": "style-ref-1",
+          "role": "canonical BMH Sticker System style",
+          "path": "docs/design/style-ref-1.png",
+          "sha256": "d65ce4c3fc84a0a52b08e513d42d978f94d5db2f6e59034aedbbd1e9486c18ca"
+        },
+        {
+          "id": "style-ref-2",
+          "role": "canonical BMH Sticker System style",
+          "path": "docs/design/style-ref-2.png",
+          "sha256": "f1affc2ab6b931be8cfd6920165dff330d49b79e6f4abfe5568e67e70c6934a6"
+        }
+      ],
+      "source_path": "course-assets/thumbnails/production/sources/slot-16-generated.png",
+      "flat_master_path": "course-assets/thumbnails/production/flat-masters/slot-16-flat-master.png",
+      "pilot": null,
+      "status": "missing",
+      "terminal_source_sha256": null,
+      "flat_master_sha256": null,
+      "flat_replacement_authorized_checksum": null,
+      "flat_history": [],
+      "lineage": [],
+      "review": {
+        "status": "pending",
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "evidence": null,
+        "evidence_sha256": null
+      },
+      "outputs": [
+        {
+          "asset_key": "thumbnail-slot-16",
+          "manifest_path": "course-assets/thumbnails/slot-16.webp",
+          "recipe": {
+            "id": "slot-16-lesson-card-16x10",
+            "kind": "lesson-card",
+            "source_master_id": "master-slot-16",
+            "operation": "contain-master-in-1280x720-and-pad-40px-top-and-bottom",
+            "normalize_master_dimensions": [1280, 720],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [103, 182, 255],
+            "target_dimensions": [1280, 800],
+            "padding_rgb": [103, 182, 255],
+            "resample": "lanczos",
+            "crop_allowed": false,
+            "output_format": "lossless-webp"
+          }
+        },
+        {
+          "asset_key": "poster-video-slot-16-kpis",
+          "manifest_path": "course-assets/posters/video-slot-16-kpis.webp",
+          "recipe": {
+            "id": "slot-16-video-slot-16-kpis-full-safe",
+            "kind": "video-poster",
+            "source_master_id": "master-slot-16",
+            "operation": "normalize-1280x720-then-fixed-safe-crop",
+            "normalize_master_dimensions": [1280, 720],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [103, 182, 255],
+            "crop_profile": "full-safe",
+            "crop_pixels_after_normalize": [0, 0, 1280, 720],
+            "target_dimensions": [1280, 720],
+            "resample": "lanczos",
+            "output_format": "lossless-webp",
+            "duplicate_pixel_sha256_forbidden": true,
+            "visual_subject_confirmation_required": true,
+            "focus_subject": "quality signals coaching and improvement",
+            "video_title": "KPIs and Sales Telemetry"
+          }
+        }
+      ]
+    },
+    {
+      "id": "master-slot-17",
+      "kind": "lesson-master",
+      "source_mode": "generate-after-pilot-approval",
+      "planned_generation_call_id": "imagegen-lesson-slot-17",
+      "prompt_sha256": "0943d74c293d7943a3ed8c43363003389a1faf05be7f92ebeb897968378c6936",
+      "reference_ids": ["style-ref-1", "style-ref-2"],
+      "reference_inputs": [
+        {
+          "id": "style-ref-1",
+          "role": "canonical BMH Sticker System style",
+          "path": "docs/design/style-ref-1.png",
+          "sha256": "d65ce4c3fc84a0a52b08e513d42d978f94d5db2f6e59034aedbbd1e9486c18ca"
+        },
+        {
+          "id": "style-ref-2",
+          "role": "canonical BMH Sticker System style",
+          "path": "docs/design/style-ref-2.png",
+          "sha256": "f1affc2ab6b931be8cfd6920165dff330d49b79e6f4abfe5568e67e70c6934a6"
+        }
+      ],
+      "source_path": "course-assets/thumbnails/production/sources/slot-17-generated.png",
+      "flat_master_path": "course-assets/thumbnails/production/flat-masters/slot-17-flat-master.png",
+      "pilot": null,
+      "status": "missing",
+      "terminal_source_sha256": null,
+      "flat_master_sha256": null,
+      "flat_replacement_authorized_checksum": null,
+      "flat_history": [],
+      "lineage": [],
+      "review": {
+        "status": "pending",
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "evidence": null,
+        "evidence_sha256": null
+      },
+      "outputs": [
+        {
+          "asset_key": "thumbnail-slot-17",
+          "manifest_path": "course-assets/thumbnails/slot-17.webp",
+          "recipe": {
+            "id": "slot-17-lesson-card-16x10",
+            "kind": "lesson-card",
+            "source_master_id": "master-slot-17",
+            "operation": "contain-master-in-1280x720-and-pad-40px-top-and-bottom",
+            "normalize_master_dimensions": [1280, 720],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [103, 182, 255],
+            "target_dimensions": [1280, 800],
+            "padding_rgb": [103, 182, 255],
+            "resample": "lanczos",
+            "crop_allowed": false,
+            "output_format": "lossless-webp"
+          }
+        },
+        {
+          "asset_key": "poster-video-slot-17-compensation",
+          "manifest_path": "course-assets/posters/video-slot-17-compensation.webp",
+          "recipe": {
+            "id": "slot-17-video-slot-17-compensation-full-safe",
+            "kind": "video-poster",
+            "source_master_id": "master-slot-17",
+            "operation": "normalize-1280x720-then-fixed-safe-crop",
+            "normalize_master_dimensions": [1280, 720],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [103, 182, 255],
+            "crop_profile": "full-safe",
+            "crop_pixels_after_normalize": [0, 0, 1280, 720],
+            "target_dimensions": [1280, 720],
+            "resample": "lanczos",
+            "output_format": "lossless-webp",
+            "duplicate_pixel_sha256_forbidden": true,
+            "visual_subject_confirmation_required": true,
+            "focus_subject": "written role plan linked to verified outcomes",
+            "video_title": "Compensation Engine"
+          }
+        }
+      ]
+    },
+    {
+      "id": "master-slot-18",
+      "kind": "lesson-master",
+      "source_mode": "generate-after-pilot-approval",
+      "planned_generation_call_id": "imagegen-lesson-slot-18",
+      "prompt_sha256": "6e4ff9f5e24e04600e3a87b449ae76272acbc19fa5c6014a418f20b39d9c7a20",
+      "reference_ids": ["style-ref-1", "style-ref-2"],
+      "reference_inputs": [
+        {
+          "id": "style-ref-1",
+          "role": "canonical BMH Sticker System style",
+          "path": "docs/design/style-ref-1.png",
+          "sha256": "d65ce4c3fc84a0a52b08e513d42d978f94d5db2f6e59034aedbbd1e9486c18ca"
+        },
+        {
+          "id": "style-ref-2",
+          "role": "canonical BMH Sticker System style",
+          "path": "docs/design/style-ref-2.png",
+          "sha256": "f1affc2ab6b931be8cfd6920165dff330d49b79e6f4abfe5568e67e70c6934a6"
+        }
+      ],
+      "source_path": "course-assets/thumbnails/production/sources/slot-18-generated.png",
+      "flat_master_path": "course-assets/thumbnails/production/flat-masters/slot-18-flat-master.png",
+      "pilot": null,
+      "status": "missing",
+      "terminal_source_sha256": null,
+      "flat_master_sha256": null,
+      "flat_replacement_authorized_checksum": null,
+      "flat_history": [],
+      "lineage": [],
+      "review": {
+        "status": "pending",
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "evidence": null,
+        "evidence_sha256": null
+      },
+      "outputs": [
+        {
+          "asset_key": "thumbnail-slot-18",
+          "manifest_path": "course-assets/thumbnails/slot-18.webp",
+          "recipe": {
+            "id": "slot-18-lesson-card-16x10",
+            "kind": "lesson-card",
+            "source_master_id": "master-slot-18",
+            "operation": "contain-master-in-1280x720-and-pad-40px-top-and-bottom",
+            "normalize_master_dimensions": [1280, 720],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [103, 182, 255],
+            "target_dimensions": [1280, 800],
+            "padding_rgb": [103, 182, 255],
+            "resample": "lanczos",
+            "crop_allowed": false,
+            "output_format": "lossless-webp"
+          }
+        },
+        {
+          "asset_key": "poster-video-slot-18-operator",
+          "manifest_path": "course-assets/posters/video-slot-18-operator.webp",
+          "recipe": {
+            "id": "slot-18-video-slot-18-operator-left-safe",
+            "kind": "video-poster",
+            "source_master_id": "master-slot-18",
+            "operation": "normalize-1280x720-then-fixed-safe-crop",
+            "normalize_master_dimensions": [1280, 720],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [103, 182, 255],
+            "crop_profile": "left-safe",
+            "crop_pixels_after_normalize": [64, 144, 768, 432],
+            "target_dimensions": [1280, 720],
+            "resample": "lanczos",
+            "output_format": "lossless-webp",
+            "duplicate_pixel_sha256_forbidden": true,
+            "visual_subject_confirmation_required": true,
+            "focus_subject": "operator ownership checklist",
+            "video_title": "Operator Playbook"
+          }
+        },
+        {
+          "asset_key": "poster-video-slot-18-mission-control",
+          "manifest_path": "course-assets/posters/video-slot-18-mission-control.webp",
+          "recipe": {
+            "id": "slot-18-video-slot-18-mission-control-right-safe",
+            "kind": "video-poster",
+            "source_master_id": "master-slot-18",
+            "operation": "normalize-1280x720-then-fixed-safe-crop",
+            "normalize_master_dimensions": [1280, 720],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [103, 182, 255],
+            "crop_profile": "right-safe",
+            "crop_pixels_after_normalize": [448, 144, 768, 432],
+            "target_dimensions": [1280, 720],
+            "resample": "lanczos",
+            "output_format": "lossless-webp",
+            "duplicate_pixel_sha256_forbidden": true,
+            "visual_subject_confirmation_required": true,
+            "focus_subject": "daily mission-control board",
+            "video_title": "Daily Mission Control"
+          }
+        }
+      ]
+    },
+    {
+      "id": "master-slot-19",
+      "kind": "lesson-master",
+      "source_mode": "generate-after-pilot-approval",
+      "planned_generation_call_id": "imagegen-lesson-slot-19",
+      "prompt_sha256": "8d02832064b080770cd0f780f49d44b99aa41782e97dd1ab079bd15ea66b4aac",
+      "reference_ids": ["style-ref-1", "style-ref-2"],
+      "reference_inputs": [
+        {
+          "id": "style-ref-1",
+          "role": "canonical BMH Sticker System style",
+          "path": "docs/design/style-ref-1.png",
+          "sha256": "d65ce4c3fc84a0a52b08e513d42d978f94d5db2f6e59034aedbbd1e9486c18ca"
+        },
+        {
+          "id": "style-ref-2",
+          "role": "canonical BMH Sticker System style",
+          "path": "docs/design/style-ref-2.png",
+          "sha256": "f1affc2ab6b931be8cfd6920165dff330d49b79e6f4abfe5568e67e70c6934a6"
+        }
+      ],
+      "source_path": "course-assets/thumbnails/production/sources/slot-19-generated.png",
+      "flat_master_path": "course-assets/thumbnails/production/flat-masters/slot-19-flat-master.png",
+      "pilot": null,
+      "status": "missing",
+      "terminal_source_sha256": null,
+      "flat_master_sha256": null,
+      "flat_replacement_authorized_checksum": null,
+      "flat_history": [],
+      "lineage": [],
+      "review": {
+        "status": "pending",
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "evidence": null,
+        "evidence_sha256": null
+      },
+      "outputs": [
+        {
+          "asset_key": "thumbnail-slot-19",
+          "manifest_path": "course-assets/thumbnails/slot-19.webp",
+          "recipe": {
+            "id": "slot-19-lesson-card-16x10",
+            "kind": "lesson-card",
+            "source_master_id": "master-slot-19",
+            "operation": "contain-master-in-1280x720-and-pad-40px-top-and-bottom",
+            "normalize_master_dimensions": [1280, 720],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [103, 182, 255],
+            "target_dimensions": [1280, 800],
+            "padding_rgb": [103, 182, 255],
+            "resample": "lanczos",
+            "crop_allowed": false,
+            "output_format": "lossless-webp"
+          }
+        },
+        {
+          "asset_key": "poster-video-slot-19-career",
+          "manifest_path": "course-assets/posters/video-slot-19-career.webp",
+          "recipe": {
+            "id": "slot-19-video-slot-19-career-full-safe",
+            "kind": "video-poster",
+            "source_master_id": "master-slot-19",
+            "operation": "normalize-1280x720-then-fixed-safe-crop",
+            "normalize_master_dimensions": [1280, 720],
+            "normalize_method": "contain-with-padding",
+            "normalize_background_rgb": [103, 182, 255],
+            "crop_profile": "full-safe",
+            "crop_pixels_after_normalize": [0, 0, 1280, 720],
+            "target_dimensions": [1280, 720],
+            "resample": "lanczos",
+            "output_format": "lossless-webp",
+            "duplicate_pixel_sha256_forbidden": true,
+            "visual_subject_confirmation_required": true,
+            "focus_subject": "practice coaching capability and ownership path",
+            "video_title": "Career Growth Path"
+          }
+        }
+      ]
+    }
+  ],
+  "assets": [
+    {
+      "asset_key": "thumbnail-program-bmh-employee-training",
+      "source_key": "thumbnail-program-bmh-employee-training",
+      "manifest_path": "course-assets/thumbnails/program-bmh-employee-training.webp",
+      "output_path": "course-assets/thumbnails/program-bmh-employee-training.webp",
+      "checksum_sha256": null,
+      "pixel_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing",
+      "base_storage_path": "courses/bmh-employee-training/v1/thumbnails/program-bmh-employee-training.webp",
+      "storage_path": null,
+      "replacement_authorized_checksum": null,
+      "history": [],
+      "dimensions": [1280, 800],
+      "kind": "course-cover",
+      "provenance": {
+        "master_id": "master-program-bmh-employee-training",
+        "source_master_id": "master-program-bmh-employee-training",
+        "prompt_sha256": null,
+        "reference_ids": [],
+        "terminal_source_sha256": null,
+        "flat_master_sha256": null,
+        "derivative_recipe_id": "course-cover-card-16x10",
+        "derivative_recipe_sha256": "a4c5733b172d260c1f3baf103a8b66821798cc3e90f1028f63edc53985f6322a",
+        "lineage_steps": 0,
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "review_evidence": null
+      },
+      "derivative": {
+        "source_master_id": "master-program-bmh-employee-training",
+        "recipe": {
+          "id": "course-cover-card-16x10",
+          "kind": "course-cover",
+          "source_master_id": "master-program-bmh-employee-training",
+          "operation": "contain-master-in-1280x720-and-pad-40px-top-and-bottom",
+          "normalize_master_dimensions": [1280, 720],
+          "normalize_method": "contain-with-padding",
+          "normalize_background_rgb": [103, 182, 255],
+          "target_dimensions": [1280, 800],
+          "padding_rgb": [103, 182, 255],
+          "resample": "lanczos",
+          "crop_allowed": false,
+          "output_format": "lossless-webp"
+        },
+        "recipe_sha256": "a4c5733b172d260c1f3baf103a8b66821798cc3e90f1028f63edc53985f6322a"
+      }
+    },
+    {
+      "asset_key": "thumbnail-slot-01",
+      "source_key": "thumbnail-slot-01",
+      "manifest_path": "course-assets/thumbnails/slot-01.webp",
+      "output_path": "course-assets/thumbnails/slot-01.webp",
+      "checksum_sha256": null,
+      "pixel_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing",
+      "base_storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-01.webp",
+      "storage_path": null,
+      "replacement_authorized_checksum": null,
+      "history": [],
+      "dimensions": [1280, 800],
+      "kind": "lesson-card",
+      "provenance": {
+        "master_id": "master-slot-01",
+        "source_master_id": "master-slot-01",
+        "prompt_sha256": null,
+        "reference_ids": [],
+        "terminal_source_sha256": null,
+        "flat_master_sha256": null,
+        "derivative_recipe_id": "slot-01-lesson-card-16x10",
+        "derivative_recipe_sha256": "a1b83163cf06c7b1a6bb864fd2dbbeaac756b72fc5a644563f46c8bfe0286572",
+        "lineage_steps": 0,
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "review_evidence": null
+      },
+      "derivative": {
+        "source_master_id": "master-slot-01",
+        "recipe": {
+          "id": "slot-01-lesson-card-16x10",
+          "kind": "lesson-card",
+          "source_master_id": "master-slot-01",
+          "operation": "contain-master-in-1280x720-and-pad-40px-top-and-bottom",
+          "normalize_master_dimensions": [1280, 720],
+          "normalize_method": "contain-with-padding",
+          "normalize_background_rgb": [103, 182, 255],
+          "target_dimensions": [1280, 800],
+          "padding_rgb": [103, 182, 255],
+          "resample": "lanczos",
+          "crop_allowed": false,
+          "output_format": "lossless-webp"
+        },
+        "recipe_sha256": "a1b83163cf06c7b1a6bb864fd2dbbeaac756b72fc5a644563f46c8bfe0286572"
+      }
+    },
+    {
+      "asset_key": "poster-video-slot-01-welcome",
+      "source_key": "poster-video-slot-01-welcome",
+      "manifest_path": "course-assets/posters/video-slot-01-welcome.webp",
+      "output_path": "course-assets/posters/video-slot-01-welcome.webp",
+      "checksum_sha256": null,
+      "pixel_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing",
+      "base_storage_path": "courses/bmh-employee-training/v1/posters/video-slot-01-welcome.webp",
+      "storage_path": null,
+      "replacement_authorized_checksum": null,
+      "history": [],
+      "dimensions": [1280, 720],
+      "kind": "video-poster",
+      "provenance": {
+        "master_id": "master-slot-01",
+        "source_master_id": "master-slot-01",
+        "prompt_sha256": null,
+        "reference_ids": [],
+        "terminal_source_sha256": null,
+        "flat_master_sha256": null,
+        "derivative_recipe_id": "slot-01-video-slot-01-welcome-full-safe",
+        "derivative_recipe_sha256": "c4d1732debfbb898f9065966b1e3cf1df2e5b8be4626597574e96a72248761c5",
+        "lineage_steps": 0,
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "review_evidence": null
+      },
+      "derivative": {
+        "source_master_id": "master-slot-01",
+        "recipe": {
+          "id": "slot-01-video-slot-01-welcome-full-safe",
+          "kind": "video-poster",
+          "source_master_id": "master-slot-01",
+          "operation": "normalize-1280x720-then-fixed-safe-crop",
+          "normalize_master_dimensions": [1280, 720],
+          "normalize_method": "contain-with-padding",
+          "normalize_background_rgb": [103, 182, 255],
+          "crop_profile": "full-safe",
+          "crop_pixels_after_normalize": [0, 0, 1280, 720],
+          "target_dimensions": [1280, 720],
+          "resample": "lanczos",
+          "output_format": "lossless-webp",
+          "duplicate_pixel_sha256_forbidden": true,
+          "visual_subject_confirmation_required": true,
+          "focus_subject": "welcome at the open training doorway",
+          "video_title": "Welcome and the Navigator's Playbook"
+        },
+        "recipe_sha256": "c4d1732debfbb898f9065966b1e3cf1df2e5b8be4626597574e96a72248761c5"
+      }
+    },
+    {
+      "asset_key": "poster-video-slot-01-mindset",
+      "source_key": "poster-video-slot-01-mindset",
+      "manifest_path": "course-assets/posters/video-slot-01-mindset.webp",
+      "output_path": "course-assets/posters/video-slot-01-mindset.webp",
+      "checksum_sha256": null,
+      "pixel_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing",
+      "base_storage_path": "courses/bmh-employee-training/v1/posters/video-slot-01-mindset.webp",
+      "storage_path": null,
+      "replacement_authorized_checksum": null,
+      "history": [],
+      "dimensions": [1280, 720],
+      "kind": "video-poster",
+      "provenance": {
+        "master_id": "master-slot-01",
+        "source_master_id": "master-slot-01",
+        "prompt_sha256": null,
+        "reference_ids": [],
+        "terminal_source_sha256": null,
+        "flat_master_sha256": null,
+        "derivative_recipe_id": "slot-01-video-slot-01-mindset-left-safe",
+        "derivative_recipe_sha256": "f2372446c77400809c9317e1740aed890a7925a06f2342bc37abb3269c39d652",
+        "lineage_steps": 0,
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "review_evidence": null
+      },
+      "derivative": {
+        "source_master_id": "master-slot-01",
+        "recipe": {
+          "id": "slot-01-video-slot-01-mindset-left-safe",
+          "kind": "video-poster",
+          "source_master_id": "master-slot-01",
+          "operation": "normalize-1280x720-then-fixed-safe-crop",
+          "normalize_master_dimensions": [1280, 720],
+          "normalize_method": "contain-with-padding",
+          "normalize_background_rgb": [103, 182, 255],
+          "crop_profile": "left-safe",
+          "crop_pixels_after_normalize": [64, 144, 768, 432],
+          "target_dimensions": [1280, 720],
+          "resample": "lanczos",
+          "output_format": "lossless-webp",
+          "duplicate_pixel_sha256_forbidden": true,
+          "visual_subject_confirmation_required": true,
+          "focus_subject": "learner choosing a steady compass-led path",
+          "video_title": "Mindset"
+        },
+        "recipe_sha256": "f2372446c77400809c9317e1740aed890a7925a06f2342bc37abb3269c39d652"
+      }
+    },
+    {
+      "asset_key": "thumbnail-slot-02",
+      "source_key": "thumbnail-slot-02",
+      "manifest_path": "course-assets/thumbnails/slot-02.webp",
+      "output_path": "course-assets/thumbnails/slot-02.webp",
+      "checksum_sha256": null,
+      "pixel_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing",
+      "base_storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-02.webp",
+      "storage_path": null,
+      "replacement_authorized_checksum": null,
+      "history": [],
+      "dimensions": [1280, 800],
+      "kind": "lesson-card",
+      "provenance": {
+        "master_id": "master-slot-02",
+        "source_master_id": "master-slot-02",
+        "prompt_sha256": null,
+        "reference_ids": [],
+        "terminal_source_sha256": null,
+        "flat_master_sha256": null,
+        "derivative_recipe_id": "slot-02-lesson-card-16x10",
+        "derivative_recipe_sha256": "d5aa35fc73b36e3267afba9d76c80a5a89449ca33a3d79f6c7fc4e0386513f59",
+        "lineage_steps": 0,
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "review_evidence": null
+      },
+      "derivative": {
+        "source_master_id": "master-slot-02",
+        "recipe": {
+          "id": "slot-02-lesson-card-16x10",
+          "kind": "lesson-card",
+          "source_master_id": "master-slot-02",
+          "operation": "contain-master-in-1280x720-and-pad-40px-top-and-bottom",
+          "normalize_master_dimensions": [1280, 720],
+          "normalize_method": "contain-with-padding",
+          "normalize_background_rgb": [103, 182, 255],
+          "target_dimensions": [1280, 800],
+          "padding_rgb": [103, 182, 255],
+          "resample": "lanczos",
+          "crop_allowed": false,
+          "output_format": "lossless-webp"
+        },
+        "recipe_sha256": "d5aa35fc73b36e3267afba9d76c80a5a89449ca33a3d79f6c7fc4e0386513f59"
+      }
+    },
+    {
+      "asset_key": "poster-video-slot-02-terms",
+      "source_key": "poster-video-slot-02-terms",
+      "manifest_path": "course-assets/posters/video-slot-02-terms.webp",
+      "output_path": "course-assets/posters/video-slot-02-terms.webp",
+      "checksum_sha256": null,
+      "pixel_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing",
+      "base_storage_path": "courses/bmh-employee-training/v1/posters/video-slot-02-terms.webp",
+      "storage_path": null,
+      "replacement_authorized_checksum": null,
+      "history": [],
+      "dimensions": [1280, 720],
+      "kind": "video-poster",
+      "provenance": {
+        "master_id": "master-slot-02",
+        "source_master_id": "master-slot-02",
+        "prompt_sha256": null,
+        "reference_ids": [],
+        "terminal_source_sha256": null,
+        "flat_master_sha256": null,
+        "derivative_recipe_id": "slot-02-video-slot-02-terms-full-safe",
+        "derivative_recipe_sha256": "49c0dd51bc7cfa680d262971a4304bbef0e2717d80df9173c68c515c54e297e7",
+        "lineage_steps": 0,
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "review_evidence": null
+      },
+      "derivative": {
+        "source_master_id": "master-slot-02",
+        "recipe": {
+          "id": "slot-02-video-slot-02-terms-full-safe",
+          "kind": "video-poster",
+          "source_master_id": "master-slot-02",
+          "operation": "normalize-1280x720-then-fixed-safe-crop",
+          "normalize_master_dimensions": [1280, 720],
+          "normalize_method": "contain-with-padding",
+          "normalize_background_rgb": [103, 182, 255],
+          "crop_profile": "full-safe",
+          "crop_pixels_after_normalize": [0, 0, 1280, 720],
+          "target_dimensions": [1280, 720],
+          "resample": "lanczos",
+          "output_format": "lossless-webp",
+          "duplicate_pixel_sha256_forbidden": true,
+          "visual_subject_confirmation_required": true,
+          "focus_subject": "plain-language real estate reference kit",
+          "video_title": "Real Estate Terms Glossary"
+        },
+        "recipe_sha256": "49c0dd51bc7cfa680d262971a4304bbef0e2717d80df9173c68c515c54e297e7"
+      }
+    },
+    {
+      "asset_key": "thumbnail-slot-03",
+      "source_key": "thumbnail-slot-03",
+      "manifest_path": "course-assets/thumbnails/slot-03.webp",
+      "output_path": "course-assets/thumbnails/slot-03.webp",
+      "checksum_sha256": null,
+      "pixel_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing",
+      "base_storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-03.webp",
+      "storage_path": null,
+      "replacement_authorized_checksum": null,
+      "history": [],
+      "dimensions": [1280, 800],
+      "kind": "lesson-card",
+      "provenance": {
+        "master_id": "master-slot-03",
+        "source_master_id": "master-slot-03",
+        "prompt_sha256": null,
+        "reference_ids": [],
+        "terminal_source_sha256": null,
+        "flat_master_sha256": null,
+        "derivative_recipe_id": "slot-03-lesson-card-16x10",
+        "derivative_recipe_sha256": "ba2363067e8d8fc06d6a8cdbed13366815c965c34c0e3ad09c98296d38c97f75",
+        "lineage_steps": 0,
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "review_evidence": null
+      },
+      "derivative": {
+        "source_master_id": "master-slot-03",
+        "recipe": {
+          "id": "slot-03-lesson-card-16x10",
+          "kind": "lesson-card",
+          "source_master_id": "master-slot-03",
+          "operation": "contain-master-in-1280x720-and-pad-40px-top-and-bottom",
+          "normalize_master_dimensions": [1280, 720],
+          "normalize_method": "contain-with-padding",
+          "normalize_background_rgb": [103, 182, 255],
+          "target_dimensions": [1280, 800],
+          "padding_rgb": [103, 182, 255],
+          "resample": "lanczos",
+          "crop_allowed": false,
+          "output_format": "lossless-webp"
+        },
+        "recipe_sha256": "ba2363067e8d8fc06d6a8cdbed13366815c965c34c0e3ad09c98296d38c97f75"
+      }
+    },
+    {
+      "asset_key": "poster-video-slot-03-tech-stack",
+      "source_key": "poster-video-slot-03-tech-stack",
+      "manifest_path": "course-assets/posters/video-slot-03-tech-stack.webp",
+      "output_path": "course-assets/posters/video-slot-03-tech-stack.webp",
+      "checksum_sha256": null,
+      "pixel_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing",
+      "base_storage_path": "courses/bmh-employee-training/v1/posters/video-slot-03-tech-stack.webp",
+      "storage_path": null,
+      "replacement_authorized_checksum": null,
+      "history": [],
+      "dimensions": [1280, 720],
+      "kind": "video-poster",
+      "provenance": {
+        "master_id": "master-slot-03",
+        "source_master_id": "master-slot-03",
+        "prompt_sha256": null,
+        "reference_ids": [],
+        "terminal_source_sha256": null,
+        "flat_master_sha256": null,
+        "derivative_recipe_id": "slot-03-video-slot-03-tech-stack-full-safe",
+        "derivative_recipe_sha256": "72b2920815c24bde481cebc3f3cb3268c1ca752a5a65f704878efc158b02df86",
+        "lineage_steps": 0,
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "review_evidence": null
+      },
+      "derivative": {
+        "source_master_id": "master-slot-03",
+        "recipe": {
+          "id": "slot-03-video-slot-03-tech-stack-full-safe",
+          "kind": "video-poster",
+          "source_master_id": "master-slot-03",
+          "operation": "normalize-1280x720-then-fixed-safe-crop",
+          "normalize_master_dimensions": [1280, 720],
+          "normalize_method": "contain-with-padding",
+          "normalize_background_rgb": [103, 182, 255],
+          "crop_profile": "full-safe",
+          "crop_pixels_after_normalize": [0, 0, 1280, 720],
+          "target_dimensions": [1280, 720],
+          "resample": "lanczos",
+          "output_format": "lossless-webp",
+          "duplicate_pixel_sha256_forbidden": true,
+          "visual_subject_confirmation_required": true,
+          "focus_subject": "connected tool hub and reliable handoffs",
+          "video_title": "Tech Stack and Systems"
+        },
+        "recipe_sha256": "72b2920815c24bde481cebc3f3cb3268c1ca752a5a65f704878efc158b02df86"
+      }
+    },
+    {
+      "asset_key": "thumbnail-slot-04",
+      "source_key": "thumbnail-slot-04",
+      "manifest_path": "course-assets/thumbnails/slot-04.webp",
+      "output_path": "course-assets/thumbnails/slot-04.webp",
+      "checksum_sha256": null,
+      "pixel_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing",
+      "base_storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-04.webp",
+      "storage_path": null,
+      "replacement_authorized_checksum": null,
+      "history": [],
+      "dimensions": [1280, 800],
+      "kind": "lesson-card",
+      "provenance": {
+        "master_id": "master-slot-04",
+        "source_master_id": "master-slot-04",
+        "prompt_sha256": null,
+        "reference_ids": [],
+        "terminal_source_sha256": null,
+        "flat_master_sha256": null,
+        "derivative_recipe_id": "slot-04-lesson-card-16x10",
+        "derivative_recipe_sha256": "3c1b2ea7ab99353bd2bcb314be2ba695036e3baad0fd47fd9e8c9bc56131f0bc",
+        "lineage_steps": 0,
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "review_evidence": null
+      },
+      "derivative": {
+        "source_master_id": "master-slot-04",
+        "recipe": {
+          "id": "slot-04-lesson-card-16x10",
+          "kind": "lesson-card",
+          "source_master_id": "master-slot-04",
+          "operation": "contain-master-in-1280x720-and-pad-40px-top-and-bottom",
+          "normalize_master_dimensions": [1280, 720],
+          "normalize_method": "contain-with-padding",
+          "normalize_background_rgb": [103, 182, 255],
+          "target_dimensions": [1280, 800],
+          "padding_rgb": [103, 182, 255],
+          "resample": "lanczos",
+          "crop_allowed": false,
+          "output_format": "lossless-webp"
+        },
+        "recipe_sha256": "3c1b2ea7ab99353bd2bcb314be2ba695036e3baad0fd47fd9e8c9bc56131f0bc"
+      }
+    },
+    {
+      "asset_key": "poster-video-slot-04-humanizing-a",
+      "source_key": "poster-video-slot-04-humanizing-a",
+      "manifest_path": "course-assets/posters/video-slot-04-humanizing-a.webp",
+      "output_path": "course-assets/posters/video-slot-04-humanizing-a.webp",
+      "checksum_sha256": null,
+      "pixel_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing",
+      "base_storage_path": "courses/bmh-employee-training/v1/posters/video-slot-04-humanizing-a.webp",
+      "storage_path": null,
+      "replacement_authorized_checksum": null,
+      "history": [],
+      "dimensions": [1280, 720],
+      "kind": "video-poster",
+      "provenance": {
+        "master_id": "master-slot-04",
+        "source_master_id": "master-slot-04",
+        "prompt_sha256": null,
+        "reference_ids": [],
+        "terminal_source_sha256": null,
+        "flat_master_sha256": null,
+        "derivative_recipe_id": "slot-04-video-slot-04-humanizing-a-left-safe",
+        "derivative_recipe_sha256": "bd10cbaf01cf62cdbd6df3265e44a688e80bb00a19987c190cc72092c93105ba",
+        "lineage_steps": 0,
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "review_evidence": null
+      },
+      "derivative": {
+        "source_master_id": "master-slot-04",
+        "recipe": {
+          "id": "slot-04-video-slot-04-humanizing-a-left-safe",
+          "kind": "video-poster",
+          "source_master_id": "master-slot-04",
+          "operation": "normalize-1280x720-then-fixed-safe-crop",
+          "normalize_master_dimensions": [1280, 720],
+          "normalize_method": "contain-with-padding",
+          "normalize_background_rgb": [103, 182, 255],
+          "crop_profile": "left-safe",
+          "crop_pixels_after_normalize": [64, 144, 768, 432],
+          "target_dimensions": [1280, 720],
+          "resample": "lanczos",
+          "output_format": "lossless-webp",
+          "duplicate_pixel_sha256_forbidden": true,
+          "visual_subject_confirmation_required": true,
+          "focus_subject": "homeowner before property details",
+          "video_title": "Humanizing the Lead"
+        },
+        "recipe_sha256": "bd10cbaf01cf62cdbd6df3265e44a688e80bb00a19987c190cc72092c93105ba"
+      }
+    },
+    {
+      "asset_key": "poster-video-slot-04-humanizing-b",
+      "source_key": "poster-video-slot-04-humanizing-b",
+      "manifest_path": "course-assets/posters/video-slot-04-humanizing-b.webp",
+      "output_path": "course-assets/posters/video-slot-04-humanizing-b.webp",
+      "checksum_sha256": null,
+      "pixel_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing",
+      "base_storage_path": "courses/bmh-employee-training/v1/posters/video-slot-04-humanizing-b.webp",
+      "storage_path": null,
+      "replacement_authorized_checksum": null,
+      "history": [],
+      "dimensions": [1280, 720],
+      "kind": "video-poster",
+      "provenance": {
+        "master_id": "master-slot-04",
+        "source_master_id": "master-slot-04",
+        "prompt_sha256": null,
+        "reference_ids": [],
+        "terminal_source_sha256": null,
+        "flat_master_sha256": null,
+        "derivative_recipe_id": "slot-04-video-slot-04-humanizing-b-center-safe",
+        "derivative_recipe_sha256": "0ced2f22bc4697040b79765ca2c4b603bdba2de3803581d5c4207a95d57e86af",
+        "lineage_steps": 0,
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "review_evidence": null
+      },
+      "derivative": {
+        "source_master_id": "master-slot-04",
+        "recipe": {
+          "id": "slot-04-video-slot-04-humanizing-b-center-safe",
+          "kind": "video-poster",
+          "source_master_id": "master-slot-04",
+          "operation": "normalize-1280x720-then-fixed-safe-crop",
+          "normalize_master_dimensions": [1280, 720],
+          "normalize_method": "contain-with-padding",
+          "normalize_background_rgb": [103, 182, 255],
+          "crop_profile": "center-safe",
+          "crop_pixels_after_normalize": [256, 144, 768, 432],
+          "target_dimensions": [1280, 720],
+          "resample": "lanczos",
+          "output_format": "lossless-webp",
+          "duplicate_pixel_sha256_forbidden": true,
+          "visual_subject_confirmation_required": true,
+          "focus_subject": "seller story and situation path",
+          "video_title": "Humanizing the Lead"
+        },
+        "recipe_sha256": "0ced2f22bc4697040b79765ca2c4b603bdba2de3803581d5c4207a95d57e86af"
+      }
+    },
+    {
+      "asset_key": "poster-video-slot-04-ideal-seller",
+      "source_key": "poster-video-slot-04-ideal-seller",
+      "manifest_path": "course-assets/posters/video-slot-04-ideal-seller.webp",
+      "output_path": "course-assets/posters/video-slot-04-ideal-seller.webp",
+      "checksum_sha256": null,
+      "pixel_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing",
+      "base_storage_path": "courses/bmh-employee-training/v1/posters/video-slot-04-ideal-seller.webp",
+      "storage_path": null,
+      "replacement_authorized_checksum": null,
+      "history": [],
+      "dimensions": [1280, 720],
+      "kind": "video-poster",
+      "provenance": {
+        "master_id": "master-slot-04",
+        "source_master_id": "master-slot-04",
+        "prompt_sha256": null,
+        "reference_ids": [],
+        "terminal_source_sha256": null,
+        "flat_master_sha256": null,
+        "derivative_recipe_id": "slot-04-video-slot-04-ideal-seller-right-safe",
+        "derivative_recipe_sha256": "600023756869b713b44a1f72f5140b5156f5f20f274352a7a7e211a8ce471d18",
+        "lineage_steps": 0,
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "review_evidence": null
+      },
+      "derivative": {
+        "source_master_id": "master-slot-04",
+        "recipe": {
+          "id": "slot-04-video-slot-04-ideal-seller-right-safe",
+          "kind": "video-poster",
+          "source_master_id": "master-slot-04",
+          "operation": "normalize-1280x720-then-fixed-safe-crop",
+          "normalize_master_dimensions": [1280, 720],
+          "normalize_method": "contain-with-padding",
+          "normalize_background_rgb": [103, 182, 255],
+          "crop_profile": "right-safe",
+          "crop_pixels_after_normalize": [448, 144, 768, 432],
+          "target_dimensions": [1280, 720],
+          "resample": "lanczos",
+          "output_format": "lossless-webp",
+          "duplicate_pixel_sha256_forbidden": true,
+          "visual_subject_confirmation_required": true,
+          "focus_subject": "ideal seller fit lens",
+          "video_title": "Ideal Seller Profile"
+        },
+        "recipe_sha256": "600023756869b713b44a1f72f5140b5156f5f20f274352a7a7e211a8ce471d18"
+      }
+    },
+    {
+      "asset_key": "thumbnail-slot-05",
+      "source_key": "thumbnail-slot-05",
+      "manifest_path": "course-assets/thumbnails/slot-05.webp",
+      "output_path": "course-assets/thumbnails/slot-05.webp",
+      "checksum_sha256": null,
+      "pixel_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing",
+      "base_storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-05.webp",
+      "storage_path": null,
+      "replacement_authorized_checksum": null,
+      "history": [],
+      "dimensions": [1280, 800],
+      "kind": "lesson-card",
+      "provenance": {
+        "master_id": "master-slot-05",
+        "source_master_id": "master-slot-05",
+        "prompt_sha256": null,
+        "reference_ids": [],
+        "terminal_source_sha256": null,
+        "flat_master_sha256": null,
+        "derivative_recipe_id": "slot-05-lesson-card-16x10",
+        "derivative_recipe_sha256": "ae36442fc6e7170821a7a6245492f0b7e86324408ae52a945b25331cf95930fc",
+        "lineage_steps": 0,
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "review_evidence": null
+      },
+      "derivative": {
+        "source_master_id": "master-slot-05",
+        "recipe": {
+          "id": "slot-05-lesson-card-16x10",
+          "kind": "lesson-card",
+          "source_master_id": "master-slot-05",
+          "operation": "contain-master-in-1280x720-and-pad-40px-top-and-bottom",
+          "normalize_master_dimensions": [1280, 720],
+          "normalize_method": "contain-with-padding",
+          "normalize_background_rgb": [103, 182, 255],
+          "target_dimensions": [1280, 800],
+          "padding_rgb": [103, 182, 255],
+          "resample": "lanczos",
+          "crop_allowed": false,
+          "output_format": "lossless-webp"
+        },
+        "recipe_sha256": "ae36442fc6e7170821a7a6245492f0b7e86324408ae52a945b25331cf95930fc"
+      }
+    },
+    {
+      "asset_key": "poster-video-slot-05-offer-a",
+      "source_key": "poster-video-slot-05-offer-a",
+      "manifest_path": "course-assets/posters/video-slot-05-offer-a.webp",
+      "output_path": "course-assets/posters/video-slot-05-offer-a.webp",
+      "checksum_sha256": null,
+      "pixel_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing",
+      "base_storage_path": "courses/bmh-employee-training/v1/posters/video-slot-05-offer-a.webp",
+      "storage_path": null,
+      "replacement_authorized_checksum": null,
+      "history": [],
+      "dimensions": [1280, 720],
+      "kind": "video-poster",
+      "provenance": {
+        "master_id": "master-slot-05",
+        "source_master_id": "master-slot-05",
+        "prompt_sha256": null,
+        "reference_ids": [],
+        "terminal_source_sha256": null,
+        "flat_master_sha256": null,
+        "derivative_recipe_id": "slot-05-video-slot-05-offer-a-left-safe",
+        "derivative_recipe_sha256": "5172525b01d6ae11d2dfd1b0258ef48ba7c3547e143dd3540b8f8acea15ebeaa",
+        "lineage_steps": 0,
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "review_evidence": null
+      },
+      "derivative": {
+        "source_master_id": "master-slot-05",
+        "recipe": {
+          "id": "slot-05-video-slot-05-offer-a-left-safe",
+          "kind": "video-poster",
+          "source_master_id": "master-slot-05",
+          "operation": "normalize-1280x720-then-fixed-safe-crop",
+          "normalize_master_dimensions": [1280, 720],
+          "normalize_method": "contain-with-padding",
+          "normalize_background_rgb": [103, 182, 255],
+          "crop_profile": "left-safe",
+          "crop_pixels_after_normalize": [64, 144, 768, 432],
+          "target_dimensions": [1280, 720],
+          "resample": "lanczos",
+          "output_format": "lossless-webp",
+          "duplicate_pixel_sha256_forbidden": true,
+          "visual_subject_confirmation_required": true,
+          "focus_subject": "situation-to-option balance",
+          "video_title": "The BMH Offer Playbook"
+        },
+        "recipe_sha256": "5172525b01d6ae11d2dfd1b0258ef48ba7c3547e143dd3540b8f8acea15ebeaa"
+      }
+    },
+    {
+      "asset_key": "poster-video-slot-05-offer-b",
+      "source_key": "poster-video-slot-05-offer-b",
+      "manifest_path": "course-assets/posters/video-slot-05-offer-b.webp",
+      "output_path": "course-assets/posters/video-slot-05-offer-b.webp",
+      "checksum_sha256": null,
+      "pixel_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing",
+      "base_storage_path": "courses/bmh-employee-training/v1/posters/video-slot-05-offer-b.webp",
+      "storage_path": null,
+      "replacement_authorized_checksum": null,
+      "history": [],
+      "dimensions": [1280, 720],
+      "kind": "video-poster",
+      "provenance": {
+        "master_id": "master-slot-05",
+        "source_master_id": "master-slot-05",
+        "prompt_sha256": null,
+        "reference_ids": [],
+        "terminal_source_sha256": null,
+        "flat_master_sha256": null,
+        "derivative_recipe_id": "slot-05-video-slot-05-offer-b-right-safe",
+        "derivative_recipe_sha256": "a646757f3fb5e5e49739e2c9563c60b1fc09b4592ef9297eb69fa40e6adbaf9d",
+        "lineage_steps": 0,
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "review_evidence": null
+      },
+      "derivative": {
+        "source_master_id": "master-slot-05",
+        "recipe": {
+          "id": "slot-05-video-slot-05-offer-b-right-safe",
+          "kind": "video-poster",
+          "source_master_id": "master-slot-05",
+          "operation": "normalize-1280x720-then-fixed-safe-crop",
+          "normalize_master_dimensions": [1280, 720],
+          "normalize_method": "contain-with-padding",
+          "normalize_background_rgb": [103, 182, 255],
+          "crop_profile": "right-safe",
+          "crop_pixels_after_normalize": [448, 144, 768, 432],
+          "target_dimensions": [1280, 720],
+          "resample": "lanczos",
+          "output_format": "lossless-webp",
+          "duplicate_pixel_sha256_forbidden": true,
+          "visual_subject_confirmation_required": true,
+          "focus_subject": "clear choice path and respectful agreement",
+          "video_title": "The BMH Offer Playbook"
+        },
+        "recipe_sha256": "a646757f3fb5e5e49739e2c9563c60b1fc09b4592ef9297eb69fa40e6adbaf9d"
+      }
+    },
+    {
+      "asset_key": "thumbnail-slot-06",
+      "source_key": "thumbnail-slot-06",
+      "manifest_path": "course-assets/thumbnails/slot-06.webp",
+      "output_path": "course-assets/thumbnails/slot-06.webp",
+      "checksum_sha256": null,
+      "pixel_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing",
+      "base_storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-06.webp",
+      "storage_path": null,
+      "replacement_authorized_checksum": null,
+      "history": [],
+      "dimensions": [1280, 800],
+      "kind": "lesson-card",
+      "provenance": {
+        "master_id": "master-slot-06",
+        "source_master_id": "master-slot-06",
+        "prompt_sha256": null,
+        "reference_ids": [],
+        "terminal_source_sha256": null,
+        "flat_master_sha256": null,
+        "derivative_recipe_id": "slot-06-lesson-card-16x10",
+        "derivative_recipe_sha256": "2cc6e5b415b32774216e222215c02dba6f984585d83473e2a370e5995bad8a14",
+        "lineage_steps": 0,
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "review_evidence": null
+      },
+      "derivative": {
+        "source_master_id": "master-slot-06",
+        "recipe": {
+          "id": "slot-06-lesson-card-16x10",
+          "kind": "lesson-card",
+          "source_master_id": "master-slot-06",
+          "operation": "contain-master-in-1280x720-and-pad-40px-top-and-bottom",
+          "normalize_master_dimensions": [1280, 720],
+          "normalize_method": "contain-with-padding",
+          "normalize_background_rgb": [103, 182, 255],
+          "target_dimensions": [1280, 800],
+          "padding_rgb": [103, 182, 255],
+          "resample": "lanczos",
+          "crop_allowed": false,
+          "output_format": "lossless-webp"
+        },
+        "recipe_sha256": "2cc6e5b415b32774216e222215c02dba6f984585d83473e2a370e5995bad8a14"
+      }
+    },
+    {
+      "asset_key": "poster-video-slot-06-pipeline",
+      "source_key": "poster-video-slot-06-pipeline",
+      "manifest_path": "course-assets/posters/video-slot-06-pipeline.webp",
+      "output_path": "course-assets/posters/video-slot-06-pipeline.webp",
+      "checksum_sha256": null,
+      "pixel_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing",
+      "base_storage_path": "courses/bmh-employee-training/v1/posters/video-slot-06-pipeline.webp",
+      "storage_path": null,
+      "replacement_authorized_checksum": null,
+      "history": [],
+      "dimensions": [1280, 720],
+      "kind": "video-poster",
+      "provenance": {
+        "master_id": "master-slot-06",
+        "source_master_id": "master-slot-06",
+        "prompt_sha256": null,
+        "reference_ids": [],
+        "terminal_source_sha256": null,
+        "flat_master_sha256": null,
+        "derivative_recipe_id": "slot-06-video-slot-06-pipeline-left-safe",
+        "derivative_recipe_sha256": "e7cb697e296fc1a822c6b9a046ee8bf671cda54559c4926994e6cbbc45a13480",
+        "lineage_steps": 0,
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "review_evidence": null
+      },
+      "derivative": {
+        "source_master_id": "master-slot-06",
+        "recipe": {
+          "id": "slot-06-video-slot-06-pipeline-left-safe",
+          "kind": "video-poster",
+          "source_master_id": "master-slot-06",
+          "operation": "normalize-1280x720-then-fixed-safe-crop",
+          "normalize_master_dimensions": [1280, 720],
+          "normalize_method": "contain-with-padding",
+          "normalize_background_rgb": [103, 182, 255],
+          "crop_profile": "left-safe",
+          "crop_pixels_after_normalize": [64, 144, 768, 432],
+          "target_dimensions": [1280, 720],
+          "resample": "lanczos",
+          "output_format": "lossless-webp",
+          "duplicate_pixel_sha256_forbidden": true,
+          "visual_subject_confirmation_required": true,
+          "focus_subject": "owned pipeline stages and baton handoff",
+          "video_title": "Sales Pipeline and Stage Ownership"
+        },
+        "recipe_sha256": "e7cb697e296fc1a822c6b9a046ee8bf671cda54559c4926994e6cbbc45a13480"
+      }
+    },
+    {
+      "asset_key": "poster-video-slot-06-framework",
+      "source_key": "poster-video-slot-06-framework",
+      "manifest_path": "course-assets/posters/video-slot-06-framework.webp",
+      "output_path": "course-assets/posters/video-slot-06-framework.webp",
+      "checksum_sha256": null,
+      "pixel_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing",
+      "base_storage_path": "courses/bmh-employee-training/v1/posters/video-slot-06-framework.webp",
+      "storage_path": null,
+      "replacement_authorized_checksum": null,
+      "history": [],
+      "dimensions": [1280, 720],
+      "kind": "video-poster",
+      "provenance": {
+        "master_id": "master-slot-06",
+        "source_master_id": "master-slot-06",
+        "prompt_sha256": null,
+        "reference_ids": [],
+        "terminal_source_sha256": null,
+        "flat_master_sha256": null,
+        "derivative_recipe_id": "slot-06-video-slot-06-framework-right-safe",
+        "derivative_recipe_sha256": "716278fff87a286b64d26185dcb016659a4fa2e8288118cbb431dfcff33fa0ea",
+        "lineage_steps": 0,
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "review_evidence": null
+      },
+      "derivative": {
+        "source_master_id": "master-slot-06",
+        "recipe": {
+          "id": "slot-06-video-slot-06-framework-right-safe",
+          "kind": "video-poster",
+          "source_master_id": "master-slot-06",
+          "operation": "normalize-1280x720-then-fixed-safe-crop",
+          "normalize_master_dimensions": [1280, 720],
+          "normalize_method": "contain-with-padding",
+          "normalize_background_rgb": [103, 182, 255],
+          "crop_profile": "right-safe",
+          "crop_pixels_after_normalize": [448, 144, 768, 432],
+          "target_dimensions": [1280, 720],
+          "resample": "lanczos",
+          "output_format": "lossless-webp",
+          "duplicate_pixel_sha256_forbidden": true,
+          "visual_subject_confirmation_required": true,
+          "focus_subject": "five-step conversation path",
+          "video_title": "The Five-Step Conversation Framework"
+        },
+        "recipe_sha256": "716278fff87a286b64d26185dcb016659a4fa2e8288118cbb431dfcff33fa0ea"
+      }
+    },
+    {
+      "asset_key": "thumbnail-slot-07",
+      "source_key": "thumbnail-slot-07",
+      "manifest_path": "course-assets/thumbnails/slot-07.webp",
+      "output_path": "course-assets/thumbnails/slot-07.webp",
+      "checksum_sha256": null,
+      "pixel_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing",
+      "base_storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-07.webp",
+      "storage_path": null,
+      "replacement_authorized_checksum": null,
+      "history": [],
+      "dimensions": [1280, 800],
+      "kind": "lesson-card",
+      "provenance": {
+        "master_id": "master-slot-07",
+        "source_master_id": "master-slot-07",
+        "prompt_sha256": null,
+        "reference_ids": [],
+        "terminal_source_sha256": null,
+        "flat_master_sha256": null,
+        "derivative_recipe_id": "slot-07-lesson-card-16x10",
+        "derivative_recipe_sha256": "9e4d99ad2e5f2eb1306d791b242b17ce9b6bf31d62303c426ae2752c6a4cbe92",
+        "lineage_steps": 0,
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "review_evidence": null
+      },
+      "derivative": {
+        "source_master_id": "master-slot-07",
+        "recipe": {
+          "id": "slot-07-lesson-card-16x10",
+          "kind": "lesson-card",
+          "source_master_id": "master-slot-07",
+          "operation": "contain-master-in-1280x720-and-pad-40px-top-and-bottom",
+          "normalize_master_dimensions": [1280, 720],
+          "normalize_method": "contain-with-padding",
+          "normalize_background_rgb": [103, 182, 255],
+          "target_dimensions": [1280, 800],
+          "padding_rgb": [103, 182, 255],
+          "resample": "lanczos",
+          "crop_allowed": false,
+          "output_format": "lossless-webp"
+        },
+        "recipe_sha256": "9e4d99ad2e5f2eb1306d791b242b17ce9b6bf31d62303c426ae2752c6a4cbe92"
+      }
+    },
+    {
+      "asset_key": "poster-video-slot-07-opening",
+      "source_key": "poster-video-slot-07-opening",
+      "manifest_path": "course-assets/posters/video-slot-07-opening.webp",
+      "output_path": "course-assets/posters/video-slot-07-opening.webp",
+      "checksum_sha256": null,
+      "pixel_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing",
+      "base_storage_path": "courses/bmh-employee-training/v1/posters/video-slot-07-opening.webp",
+      "storage_path": null,
+      "replacement_authorized_checksum": null,
+      "history": [],
+      "dimensions": [1280, 720],
+      "kind": "video-poster",
+      "provenance": {
+        "master_id": "master-slot-07",
+        "source_master_id": "master-slot-07",
+        "prompt_sha256": null,
+        "reference_ids": [],
+        "terminal_source_sha256": null,
+        "flat_master_sha256": null,
+        "derivative_recipe_id": "slot-07-video-slot-07-opening-full-safe",
+        "derivative_recipe_sha256": "c2c8dcc86cccc5c912536bc373a01aecc75613ddd07452383ff0a323fb198da4",
+        "lineage_steps": 0,
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "review_evidence": null
+      },
+      "derivative": {
+        "source_master_id": "master-slot-07",
+        "recipe": {
+          "id": "slot-07-video-slot-07-opening-full-safe",
+          "kind": "video-poster",
+          "source_master_id": "master-slot-07",
+          "operation": "normalize-1280x720-then-fixed-safe-crop",
+          "normalize_master_dimensions": [1280, 720],
+          "normalize_method": "contain-with-padding",
+          "normalize_background_rgb": [103, 182, 255],
+          "crop_profile": "full-safe",
+          "crop_pixels_after_normalize": [0, 0, 1280, 720],
+          "target_dimensions": [1280, 720],
+          "resample": "lanczos",
+          "output_format": "lossless-webp",
+          "duplicate_pixel_sha256_forbidden": true,
+          "visual_subject_confirmation_required": true,
+          "focus_subject": "confident human call opening",
+          "video_title": "Opening the Call"
+        },
+        "recipe_sha256": "c2c8dcc86cccc5c912536bc373a01aecc75613ddd07452383ff0a323fb198da4"
+      }
+    },
+    {
+      "asset_key": "poster-video-slot-07-fact-find",
+      "source_key": "poster-video-slot-07-fact-find",
+      "manifest_path": "course-assets/posters/video-slot-07-fact-find.webp",
+      "output_path": "course-assets/posters/video-slot-07-fact-find.webp",
+      "checksum_sha256": null,
+      "pixel_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing",
+      "base_storage_path": "courses/bmh-employee-training/v1/posters/video-slot-07-fact-find.webp",
+      "storage_path": null,
+      "replacement_authorized_checksum": null,
+      "history": [],
+      "dimensions": [1280, 720],
+      "kind": "video-poster",
+      "provenance": {
+        "master_id": "master-poster-video-slot-07-fact-find",
+        "source_master_id": "master-poster-video-slot-07-fact-find",
+        "prompt_sha256": null,
+        "reference_ids": [],
+        "terminal_source_sha256": null,
+        "flat_master_sha256": null,
+        "derivative_recipe_id": "slot-07-video-slot-07-fact-find-full-safe",
+        "derivative_recipe_sha256": "0496d417c7662f24f21b4a2f5babd57c24b264be6255f0d9eaf5080b53394474",
+        "lineage_steps": 0,
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "review_evidence": null
+      },
+      "derivative": {
+        "source_master_id": "master-poster-video-slot-07-fact-find",
+        "recipe": {
+          "id": "slot-07-video-slot-07-fact-find-full-safe",
+          "kind": "video-poster",
+          "source_master_id": "master-poster-video-slot-07-fact-find",
+          "operation": "normalize-1280x720-then-fixed-safe-crop",
+          "normalize_master_dimensions": [1280, 720],
+          "normalize_method": "contain-with-padding",
+          "normalize_background_rgb": [103, 182, 255],
+          "crop_profile": "full-safe",
+          "crop_pixels_after_normalize": [0, 0, 1280, 720],
+          "target_dimensions": [1280, 720],
+          "resample": "lanczos",
+          "output_format": "lossless-webp",
+          "duplicate_pixel_sha256_forbidden": true,
+          "visual_subject_confirmation_required": true,
+          "focus_subject": "curious fact-finding conversation",
+          "video_title": "The Fact Find"
+        },
+        "recipe_sha256": "0496d417c7662f24f21b4a2f5babd57c24b264be6255f0d9eaf5080b53394474"
+      }
+    },
+    {
+      "asset_key": "thumbnail-slot-08",
+      "source_key": "thumbnail-slot-08",
+      "manifest_path": "course-assets/thumbnails/slot-08.webp",
+      "output_path": "course-assets/thumbnails/slot-08.webp",
+      "checksum_sha256": null,
+      "pixel_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing",
+      "base_storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-08.webp",
+      "storage_path": null,
+      "replacement_authorized_checksum": null,
+      "history": [],
+      "dimensions": [1280, 800],
+      "kind": "lesson-card",
+      "provenance": {
+        "master_id": "master-slot-08",
+        "source_master_id": "master-slot-08",
+        "prompt_sha256": null,
+        "reference_ids": [],
+        "terminal_source_sha256": null,
+        "flat_master_sha256": null,
+        "derivative_recipe_id": "slot-08-lesson-card-16x10",
+        "derivative_recipe_sha256": "16824b402829736ab448b86db4b47ea04ec8f0dbfe4939e2ee81380b4adfa868",
+        "lineage_steps": 0,
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "review_evidence": null
+      },
+      "derivative": {
+        "source_master_id": "master-slot-08",
+        "recipe": {
+          "id": "slot-08-lesson-card-16x10",
+          "kind": "lesson-card",
+          "source_master_id": "master-slot-08",
+          "operation": "contain-master-in-1280x720-and-pad-40px-top-and-bottom",
+          "normalize_master_dimensions": [1280, 720],
+          "normalize_method": "contain-with-padding",
+          "normalize_background_rgb": [103, 182, 255],
+          "target_dimensions": [1280, 800],
+          "padding_rgb": [103, 182, 255],
+          "resample": "lanczos",
+          "crop_allowed": false,
+          "output_format": "lossless-webp"
+        },
+        "recipe_sha256": "16824b402829736ab448b86db4b47ea04ec8f0dbfe4939e2ee81380b4adfa868"
+      }
+    },
+    {
+      "asset_key": "poster-video-slot-08-discovery",
+      "source_key": "poster-video-slot-08-discovery",
+      "manifest_path": "course-assets/posters/video-slot-08-discovery.webp",
+      "output_path": "course-assets/posters/video-slot-08-discovery.webp",
+      "checksum_sha256": null,
+      "pixel_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing",
+      "base_storage_path": "courses/bmh-employee-training/v1/posters/video-slot-08-discovery.webp",
+      "storage_path": null,
+      "replacement_authorized_checksum": null,
+      "history": [],
+      "dimensions": [1280, 720],
+      "kind": "video-poster",
+      "provenance": {
+        "master_id": "master-slot-08",
+        "source_master_id": "master-slot-08",
+        "prompt_sha256": null,
+        "reference_ids": [],
+        "terminal_source_sha256": null,
+        "flat_master_sha256": null,
+        "derivative_recipe_id": "slot-08-video-slot-08-discovery-left-safe",
+        "derivative_recipe_sha256": "9f5c4f2ae54c10d0a9521a520fea5a50fa3a080724fc010efbc52364e9c64c7e",
+        "lineage_steps": 0,
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "review_evidence": null
+      },
+      "derivative": {
+        "source_master_id": "master-slot-08",
+        "recipe": {
+          "id": "slot-08-video-slot-08-discovery-left-safe",
+          "kind": "video-poster",
+          "source_master_id": "master-slot-08",
+          "operation": "normalize-1280x720-then-fixed-safe-crop",
+          "normalize_master_dimensions": [1280, 720],
+          "normalize_method": "contain-with-padding",
+          "normalize_background_rgb": [103, 182, 255],
+          "crop_profile": "left-safe",
+          "crop_pixels_after_normalize": [64, 144, 768, 432],
+          "target_dimensions": [1280, 720],
+          "resample": "lanczos",
+          "output_format": "lossless-webp",
+          "duplicate_pixel_sha256_forbidden": true,
+          "visual_subject_confirmation_required": true,
+          "focus_subject": "listening-led discovery",
+          "video_title": "Discovery"
+        },
+        "recipe_sha256": "9f5c4f2ae54c10d0a9521a520fea5a50fa3a080724fc010efbc52364e9c64c7e"
+      }
+    },
+    {
+      "asset_key": "poster-video-slot-08-handoff",
+      "source_key": "poster-video-slot-08-handoff",
+      "manifest_path": "course-assets/posters/video-slot-08-handoff.webp",
+      "output_path": "course-assets/posters/video-slot-08-handoff.webp",
+      "checksum_sha256": null,
+      "pixel_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing",
+      "base_storage_path": "courses/bmh-employee-training/v1/posters/video-slot-08-handoff.webp",
+      "storage_path": null,
+      "replacement_authorized_checksum": null,
+      "history": [],
+      "dimensions": [1280, 720],
+      "kind": "video-poster",
+      "provenance": {
+        "master_id": "master-slot-08",
+        "source_master_id": "master-slot-08",
+        "prompt_sha256": null,
+        "reference_ids": [],
+        "terminal_source_sha256": null,
+        "flat_master_sha256": null,
+        "derivative_recipe_id": "slot-08-video-slot-08-handoff-right-safe",
+        "derivative_recipe_sha256": "73cdf370f9968767af7c5bcafb3f675e66de30a5da0d135a2e4ce6c6c798c203",
+        "lineage_steps": 0,
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "review_evidence": null
+      },
+      "derivative": {
+        "source_master_id": "master-slot-08",
+        "recipe": {
+          "id": "slot-08-video-slot-08-handoff-right-safe",
+          "kind": "video-poster",
+          "source_master_id": "master-slot-08",
+          "operation": "normalize-1280x720-then-fixed-safe-crop",
+          "normalize_master_dimensions": [1280, 720],
+          "normalize_method": "contain-with-padding",
+          "normalize_background_rgb": [103, 182, 255],
+          "crop_profile": "right-safe",
+          "crop_pixels_after_normalize": [448, 144, 768, 432],
+          "target_dimensions": [1280, 720],
+          "resample": "lanczos",
+          "output_format": "lossless-webp",
+          "duplicate_pixel_sha256_forbidden": true,
+          "visual_subject_confirmation_required": true,
+          "focus_subject": "complete context handoff",
+          "video_title": "The Handoff"
+        },
+        "recipe_sha256": "73cdf370f9968767af7c5bcafb3f675e66de30a5da0d135a2e4ce6c6c798c203"
+      }
+    },
+    {
+      "asset_key": "thumbnail-slot-09",
+      "source_key": "thumbnail-slot-09",
+      "manifest_path": "course-assets/thumbnails/slot-09.webp",
+      "output_path": "course-assets/thumbnails/slot-09.webp",
+      "checksum_sha256": null,
+      "pixel_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing",
+      "base_storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-09.webp",
+      "storage_path": null,
+      "replacement_authorized_checksum": null,
+      "history": [],
+      "dimensions": [1280, 800],
+      "kind": "lesson-card",
+      "provenance": {
+        "master_id": "master-slot-09",
+        "source_master_id": "master-slot-09",
+        "prompt_sha256": null,
+        "reference_ids": [],
+        "terminal_source_sha256": null,
+        "flat_master_sha256": null,
+        "derivative_recipe_id": "slot-09-lesson-card-16x10",
+        "derivative_recipe_sha256": "cd7b44327361f0a7f02b2eb82c84e3336d1c18c3ea0f25598d861154b7bc9a86",
+        "lineage_steps": 0,
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "review_evidence": null
+      },
+      "derivative": {
+        "source_master_id": "master-slot-09",
+        "recipe": {
+          "id": "slot-09-lesson-card-16x10",
+          "kind": "lesson-card",
+          "source_master_id": "master-slot-09",
+          "operation": "contain-master-in-1280x720-and-pad-40px-top-and-bottom",
+          "normalize_master_dimensions": [1280, 720],
+          "normalize_method": "contain-with-padding",
+          "normalize_background_rgb": [103, 182, 255],
+          "target_dimensions": [1280, 800],
+          "padding_rgb": [103, 182, 255],
+          "resample": "lanczos",
+          "crop_allowed": false,
+          "output_format": "lossless-webp"
+        },
+        "recipe_sha256": "cd7b44327361f0a7f02b2eb82c84e3336d1c18c3ea0f25598d861154b7bc9a86"
+      }
+    },
+    {
+      "asset_key": "poster-video-slot-09-objection-architecture",
+      "source_key": "poster-video-slot-09-objection-architecture",
+      "manifest_path": "course-assets/posters/video-slot-09-objection-architecture.webp",
+      "output_path": "course-assets/posters/video-slot-09-objection-architecture.webp",
+      "checksum_sha256": null,
+      "pixel_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing",
+      "base_storage_path": "courses/bmh-employee-training/v1/posters/video-slot-09-objection-architecture.webp",
+      "storage_path": null,
+      "replacement_authorized_checksum": null,
+      "history": [],
+      "dimensions": [1280, 720],
+      "kind": "video-poster",
+      "provenance": {
+        "master_id": "master-slot-09",
+        "source_master_id": "master-slot-09",
+        "prompt_sha256": null,
+        "reference_ids": [],
+        "terminal_source_sha256": null,
+        "flat_master_sha256": null,
+        "derivative_recipe_id": "slot-09-video-slot-09-objection-architecture-full-safe",
+        "derivative_recipe_sha256": "300eb0c05c88071bad6a2294e9e1d8cf9ecc172412a8b5e2a14c9a2ea9cbd49f",
+        "lineage_steps": 0,
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "review_evidence": null
+      },
+      "derivative": {
+        "source_master_id": "master-slot-09",
+        "recipe": {
+          "id": "slot-09-video-slot-09-objection-architecture-full-safe",
+          "kind": "video-poster",
+          "source_master_id": "master-slot-09",
+          "operation": "normalize-1280x720-then-fixed-safe-crop",
+          "normalize_master_dimensions": [1280, 720],
+          "normalize_method": "contain-with-padding",
+          "normalize_background_rgb": [103, 182, 255],
+          "crop_profile": "full-safe",
+          "crop_pixels_after_normalize": [0, 0, 1280, 720],
+          "target_dimensions": [1280, 720],
+          "resample": "lanczos",
+          "output_format": "lossless-webp",
+          "duplicate_pixel_sha256_forbidden": true,
+          "visual_subject_confirmation_required": true,
+          "focus_subject": "hear reframe and respond architecture",
+          "video_title": "Objection Architecture"
+        },
+        "recipe_sha256": "300eb0c05c88071bad6a2294e9e1d8cf9ecc172412a8b5e2a14c9a2ea9cbd49f"
+      }
+    },
+    {
+      "asset_key": "thumbnail-slot-10",
+      "source_key": "thumbnail-slot-10",
+      "manifest_path": "course-assets/thumbnails/slot-10.webp",
+      "output_path": "course-assets/thumbnails/slot-10.webp",
+      "checksum_sha256": null,
+      "pixel_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing",
+      "base_storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-10.webp",
+      "storage_path": null,
+      "replacement_authorized_checksum": null,
+      "history": [],
+      "dimensions": [1280, 800],
+      "kind": "lesson-card",
+      "provenance": {
+        "master_id": "master-slot-10",
+        "source_master_id": "master-slot-10",
+        "prompt_sha256": null,
+        "reference_ids": [],
+        "terminal_source_sha256": null,
+        "flat_master_sha256": null,
+        "derivative_recipe_id": "slot-10-lesson-card-16x10",
+        "derivative_recipe_sha256": "a954a69d74ab7c5c49f53fa8105fbf3b1c3f0178b4692351f3ae71f26384f6d8",
+        "lineage_steps": 0,
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "review_evidence": null
+      },
+      "derivative": {
+        "source_master_id": "master-slot-10",
+        "recipe": {
+          "id": "slot-10-lesson-card-16x10",
+          "kind": "lesson-card",
+          "source_master_id": "master-slot-10",
+          "operation": "contain-master-in-1280x720-and-pad-40px-top-and-bottom",
+          "normalize_master_dimensions": [1280, 720],
+          "normalize_method": "contain-with-padding",
+          "normalize_background_rgb": [103, 182, 255],
+          "target_dimensions": [1280, 800],
+          "padding_rgb": [103, 182, 255],
+          "resample": "lanczos",
+          "crop_allowed": false,
+          "output_format": "lossless-webp"
+        },
+        "recipe_sha256": "a954a69d74ab7c5c49f53fa8105fbf3b1c3f0178b4692351f3ae71f26384f6d8"
+      }
+    },
+    {
+      "asset_key": "poster-video-slot-10-objection-scripts",
+      "source_key": "poster-video-slot-10-objection-scripts",
+      "manifest_path": "course-assets/posters/video-slot-10-objection-scripts.webp",
+      "output_path": "course-assets/posters/video-slot-10-objection-scripts.webp",
+      "checksum_sha256": null,
+      "pixel_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing",
+      "base_storage_path": "courses/bmh-employee-training/v1/posters/video-slot-10-objection-scripts.webp",
+      "storage_path": null,
+      "replacement_authorized_checksum": null,
+      "history": [],
+      "dimensions": [1280, 720],
+      "kind": "video-poster",
+      "provenance": {
+        "master_id": "master-slot-10",
+        "source_master_id": "master-slot-10",
+        "prompt_sha256": null,
+        "reference_ids": [],
+        "terminal_source_sha256": null,
+        "flat_master_sha256": null,
+        "derivative_recipe_id": "slot-10-video-slot-10-objection-scripts-full-safe",
+        "derivative_recipe_sha256": "33477d49cf34a836c5cb7c94abc51d5c0e7f17509e4573948c0a2c0f520d0809",
+        "lineage_steps": 0,
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "review_evidence": null
+      },
+      "derivative": {
+        "source_master_id": "master-slot-10",
+        "recipe": {
+          "id": "slot-10-video-slot-10-objection-scripts-full-safe",
+          "kind": "video-poster",
+          "source_master_id": "master-slot-10",
+          "operation": "normalize-1280x720-then-fixed-safe-crop",
+          "normalize_master_dimensions": [1280, 720],
+          "normalize_method": "contain-with-padding",
+          "normalize_background_rgb": [103, 182, 255],
+          "crop_profile": "full-safe",
+          "crop_pixels_after_normalize": [0, 0, 1280, 720],
+          "target_dimensions": [1280, 720],
+          "resample": "lanczos",
+          "output_format": "lossless-webp",
+          "duplicate_pixel_sha256_forbidden": true,
+          "visual_subject_confirmation_required": true,
+          "focus_subject": "flexible objection response toolbox",
+          "video_title": "Objection Scripts Playbook"
+        },
+        "recipe_sha256": "33477d49cf34a836c5cb7c94abc51d5c0e7f17509e4573948c0a2c0f520d0809"
+      }
+    },
+    {
+      "asset_key": "thumbnail-slot-11",
+      "source_key": "thumbnail-slot-11",
+      "manifest_path": "course-assets/thumbnails/slot-11.webp",
+      "output_path": "course-assets/thumbnails/slot-11.webp",
+      "checksum_sha256": null,
+      "pixel_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing",
+      "base_storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-11.webp",
+      "storage_path": null,
+      "replacement_authorized_checksum": null,
+      "history": [],
+      "dimensions": [1280, 800],
+      "kind": "lesson-card",
+      "provenance": {
+        "master_id": "master-slot-11",
+        "source_master_id": "master-slot-11",
+        "prompt_sha256": null,
+        "reference_ids": [],
+        "terminal_source_sha256": null,
+        "flat_master_sha256": null,
+        "derivative_recipe_id": "slot-11-lesson-card-16x10",
+        "derivative_recipe_sha256": "b41193f6d64636dc25af5c587abf3df34eefc7a8de241c63ebb1cbdada73670f",
+        "lineage_steps": 0,
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "review_evidence": null
+      },
+      "derivative": {
+        "source_master_id": "master-slot-11",
+        "recipe": {
+          "id": "slot-11-lesson-card-16x10",
+          "kind": "lesson-card",
+          "source_master_id": "master-slot-11",
+          "operation": "contain-master-in-1280x720-and-pad-40px-top-and-bottom",
+          "normalize_master_dimensions": [1280, 720],
+          "normalize_method": "contain-with-padding",
+          "normalize_background_rgb": [103, 182, 255],
+          "target_dimensions": [1280, 800],
+          "padding_rgb": [103, 182, 255],
+          "resample": "lanczos",
+          "crop_allowed": false,
+          "output_format": "lossless-webp"
+        },
+        "recipe_sha256": "b41193f6d64636dc25af5c587abf3df34eefc7a8de241c63ebb1cbdada73670f"
+      }
+    },
+    {
+      "asset_key": "poster-video-slot-11-complex",
+      "source_key": "poster-video-slot-11-complex",
+      "manifest_path": "course-assets/posters/video-slot-11-complex.webp",
+      "output_path": "course-assets/posters/video-slot-11-complex.webp",
+      "checksum_sha256": null,
+      "pixel_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing",
+      "base_storage_path": "courses/bmh-employee-training/v1/posters/video-slot-11-complex.webp",
+      "storage_path": null,
+      "replacement_authorized_checksum": null,
+      "history": [],
+      "dimensions": [1280, 720],
+      "kind": "video-poster",
+      "provenance": {
+        "master_id": "master-slot-11",
+        "source_master_id": "master-slot-11",
+        "prompt_sha256": null,
+        "reference_ids": [],
+        "terminal_source_sha256": null,
+        "flat_master_sha256": null,
+        "derivative_recipe_id": "slot-11-video-slot-11-complex-left-safe",
+        "derivative_recipe_sha256": "30e025ce7f96b056d810521f09d2f71daf8e6a81601f878a8318d6717835b933",
+        "lineage_steps": 0,
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "review_evidence": null
+      },
+      "derivative": {
+        "source_master_id": "master-slot-11",
+        "recipe": {
+          "id": "slot-11-video-slot-11-complex-left-safe",
+          "kind": "video-poster",
+          "source_master_id": "master-slot-11",
+          "operation": "normalize-1280x720-then-fixed-safe-crop",
+          "normalize_master_dimensions": [1280, 720],
+          "normalize_method": "contain-with-padding",
+          "normalize_background_rgb": [103, 182, 255],
+          "crop_profile": "left-safe",
+          "crop_pixels_after_normalize": [64, 144, 768, 432],
+          "target_dimensions": [1280, 720],
+          "resample": "lanczos",
+          "output_format": "lossless-webp",
+          "duplicate_pixel_sha256_forbidden": true,
+          "visual_subject_confirmation_required": true,
+          "focus_subject": "untangling layered objections",
+          "video_title": "Complex Objections"
+        },
+        "recipe_sha256": "30e025ce7f96b056d810521f09d2f71daf8e6a81601f878a8318d6717835b933"
+      }
+    },
+    {
+      "asset_key": "poster-video-slot-11-trust",
+      "source_key": "poster-video-slot-11-trust",
+      "manifest_path": "course-assets/posters/video-slot-11-trust.webp",
+      "output_path": "course-assets/posters/video-slot-11-trust.webp",
+      "checksum_sha256": null,
+      "pixel_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing",
+      "base_storage_path": "courses/bmh-employee-training/v1/posters/video-slot-11-trust.webp",
+      "storage_path": null,
+      "replacement_authorized_checksum": null,
+      "history": [],
+      "dimensions": [1280, 720],
+      "kind": "video-poster",
+      "provenance": {
+        "master_id": "master-slot-11",
+        "source_master_id": "master-slot-11",
+        "prompt_sha256": null,
+        "reference_ids": [],
+        "terminal_source_sha256": null,
+        "flat_master_sha256": null,
+        "derivative_recipe_id": "slot-11-video-slot-11-trust-right-safe",
+        "derivative_recipe_sha256": "4966e8c7d5e24dcae7d7f9aa94b26424e1113bd351489e5d42d837e137cd92c5",
+        "lineage_steps": 0,
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "review_evidence": null
+      },
+      "derivative": {
+        "source_master_id": "master-slot-11",
+        "recipe": {
+          "id": "slot-11-video-slot-11-trust-right-safe",
+          "kind": "video-poster",
+          "source_master_id": "master-slot-11",
+          "operation": "normalize-1280x720-then-fixed-safe-crop",
+          "normalize_master_dimensions": [1280, 720],
+          "normalize_method": "contain-with-padding",
+          "normalize_background_rgb": [103, 182, 255],
+          "crop_profile": "right-safe",
+          "crop_pixels_after_normalize": [448, 144, 768, 432],
+          "target_dimensions": [1280, 720],
+          "resample": "lanczos",
+          "output_format": "lossless-webp",
+          "duplicate_pixel_sha256_forbidden": true,
+          "visual_subject_confirmation_required": true,
+          "focus_subject": "trust and people bridge",
+          "video_title": "Trust and People Objections"
+        },
+        "recipe_sha256": "4966e8c7d5e24dcae7d7f9aa94b26424e1113bd351489e5d42d837e137cd92c5"
+      }
+    },
+    {
+      "asset_key": "thumbnail-slot-12",
+      "source_key": "thumbnail-slot-12",
+      "manifest_path": "course-assets/thumbnails/slot-12.webp",
+      "output_path": "course-assets/thumbnails/slot-12.webp",
+      "checksum_sha256": null,
+      "pixel_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing",
+      "base_storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-12.webp",
+      "storage_path": null,
+      "replacement_authorized_checksum": null,
+      "history": [],
+      "dimensions": [1280, 800],
+      "kind": "lesson-card",
+      "provenance": {
+        "master_id": "master-slot-12",
+        "source_master_id": "master-slot-12",
+        "prompt_sha256": null,
+        "reference_ids": [],
+        "terminal_source_sha256": null,
+        "flat_master_sha256": null,
+        "derivative_recipe_id": "slot-12-lesson-card-16x10",
+        "derivative_recipe_sha256": "f0041f6eb40bdae75471f17b347af6d1bd207df3016c5105d786aec15e15d138",
+        "lineage_steps": 0,
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "review_evidence": null
+      },
+      "derivative": {
+        "source_master_id": "master-slot-12",
+        "recipe": {
+          "id": "slot-12-lesson-card-16x10",
+          "kind": "lesson-card",
+          "source_master_id": "master-slot-12",
+          "operation": "contain-master-in-1280x720-and-pad-40px-top-and-bottom",
+          "normalize_master_dimensions": [1280, 720],
+          "normalize_method": "contain-with-padding",
+          "normalize_background_rgb": [103, 182, 255],
+          "target_dimensions": [1280, 800],
+          "padding_rgb": [103, 182, 255],
+          "resample": "lanczos",
+          "crop_allowed": false,
+          "output_format": "lossless-webp"
+        },
+        "recipe_sha256": "f0041f6eb40bdae75471f17b347af6d1bd207df3016c5105d786aec15e15d138"
+      }
+    },
+    {
+      "asset_key": "poster-video-slot-12-faq-a",
+      "source_key": "poster-video-slot-12-faq-a",
+      "manifest_path": "course-assets/posters/video-slot-12-faq-a.webp",
+      "output_path": "course-assets/posters/video-slot-12-faq-a.webp",
+      "checksum_sha256": null,
+      "pixel_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing",
+      "base_storage_path": "courses/bmh-employee-training/v1/posters/video-slot-12-faq-a.webp",
+      "storage_path": null,
+      "replacement_authorized_checksum": null,
+      "history": [],
+      "dimensions": [1280, 720],
+      "kind": "video-poster",
+      "provenance": {
+        "master_id": "master-slot-12",
+        "source_master_id": "master-slot-12",
+        "prompt_sha256": null,
+        "reference_ids": [],
+        "terminal_source_sha256": null,
+        "flat_master_sha256": null,
+        "derivative_recipe_id": "slot-12-video-slot-12-faq-a-left-safe",
+        "derivative_recipe_sha256": "d0d3ae877351f356d3b755813ac0f3628a032578224bbbdea6c39e45caeea155",
+        "lineage_steps": 0,
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "review_evidence": null
+      },
+      "derivative": {
+        "source_master_id": "master-slot-12",
+        "recipe": {
+          "id": "slot-12-video-slot-12-faq-a-left-safe",
+          "kind": "video-poster",
+          "source_master_id": "master-slot-12",
+          "operation": "normalize-1280x720-then-fixed-safe-crop",
+          "normalize_master_dimensions": [1280, 720],
+          "normalize_method": "contain-with-padding",
+          "normalize_background_rgb": [103, 182, 255],
+          "crop_profile": "left-safe",
+          "crop_pixels_after_normalize": [64, 144, 768, 432],
+          "target_dimensions": [1280, 720],
+          "resample": "lanczos",
+          "output_format": "lossless-webp",
+          "duplicate_pixel_sha256_forbidden": true,
+          "visual_subject_confirmation_required": true,
+          "focus_subject": "process and timing question cluster",
+          "video_title": "Seller FAQ Decoder Questions 1 through 5"
+        },
+        "recipe_sha256": "d0d3ae877351f356d3b755813ac0f3628a032578224bbbdea6c39e45caeea155"
+      }
+    },
+    {
+      "asset_key": "poster-video-slot-12-faq-b",
+      "source_key": "poster-video-slot-12-faq-b",
+      "manifest_path": "course-assets/posters/video-slot-12-faq-b.webp",
+      "output_path": "course-assets/posters/video-slot-12-faq-b.webp",
+      "checksum_sha256": null,
+      "pixel_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing",
+      "base_storage_path": "courses/bmh-employee-training/v1/posters/video-slot-12-faq-b.webp",
+      "storage_path": null,
+      "replacement_authorized_checksum": null,
+      "history": [],
+      "dimensions": [1280, 720],
+      "kind": "video-poster",
+      "provenance": {
+        "master_id": "master-slot-12",
+        "source_master_id": "master-slot-12",
+        "prompt_sha256": null,
+        "reference_ids": [],
+        "terminal_source_sha256": null,
+        "flat_master_sha256": null,
+        "derivative_recipe_id": "slot-12-video-slot-12-faq-b-right-safe",
+        "derivative_recipe_sha256": "6b5719534a423ef299020eb5fe44f2cab6a4d5e13a5609b3488f186116d159fe",
+        "lineage_steps": 0,
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "review_evidence": null
+      },
+      "derivative": {
+        "source_master_id": "master-slot-12",
+        "recipe": {
+          "id": "slot-12-video-slot-12-faq-b-right-safe",
+          "kind": "video-poster",
+          "source_master_id": "master-slot-12",
+          "operation": "normalize-1280x720-then-fixed-safe-crop",
+          "normalize_master_dimensions": [1280, 720],
+          "normalize_method": "contain-with-padding",
+          "normalize_background_rgb": [103, 182, 255],
+          "crop_profile": "right-safe",
+          "crop_pixels_after_normalize": [448, 144, 768, 432],
+          "target_dimensions": [1280, 720],
+          "resample": "lanczos",
+          "output_format": "lossless-webp",
+          "duplicate_pixel_sha256_forbidden": true,
+          "visual_subject_confirmation_required": true,
+          "focus_subject": "property contract and next-step question cluster",
+          "video_title": "Seller FAQ Decoder Questions 6 through 10"
+        },
+        "recipe_sha256": "6b5719534a423ef299020eb5fe44f2cab6a4d5e13a5609b3488f186116d159fe"
+      }
+    },
+    {
+      "asset_key": "thumbnail-slot-13",
+      "source_key": "thumbnail-slot-13",
+      "manifest_path": "course-assets/thumbnails/slot-13.webp",
+      "output_path": "course-assets/thumbnails/slot-13.webp",
+      "checksum_sha256": null,
+      "pixel_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing",
+      "base_storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-13.webp",
+      "storage_path": null,
+      "replacement_authorized_checksum": null,
+      "history": [],
+      "dimensions": [1280, 800],
+      "kind": "lesson-card",
+      "provenance": {
+        "master_id": "master-slot-13",
+        "source_master_id": "master-slot-13",
+        "prompt_sha256": null,
+        "reference_ids": [],
+        "terminal_source_sha256": null,
+        "flat_master_sha256": null,
+        "derivative_recipe_id": "slot-13-lesson-card-16x10",
+        "derivative_recipe_sha256": "0bf8fc82fa55c010123de245220bb52063b53776861b5200dc03acac4ab62b4e",
+        "lineage_steps": 0,
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "review_evidence": null
+      },
+      "derivative": {
+        "source_master_id": "master-slot-13",
+        "recipe": {
+          "id": "slot-13-lesson-card-16x10",
+          "kind": "lesson-card",
+          "source_master_id": "master-slot-13",
+          "operation": "contain-master-in-1280x720-and-pad-40px-top-and-bottom",
+          "normalize_master_dimensions": [1280, 720],
+          "normalize_method": "contain-with-padding",
+          "normalize_background_rgb": [103, 182, 255],
+          "target_dimensions": [1280, 800],
+          "padding_rgb": [103, 182, 255],
+          "resample": "lanczos",
+          "crop_allowed": false,
+          "output_format": "lossless-webp"
+        },
+        "recipe_sha256": "0bf8fc82fa55c010123de245220bb52063b53776861b5200dc03acac4ab62b4e"
+      }
+    },
+    {
+      "asset_key": "poster-video-slot-13-follow-up",
+      "source_key": "poster-video-slot-13-follow-up",
+      "manifest_path": "course-assets/posters/video-slot-13-follow-up.webp",
+      "output_path": "course-assets/posters/video-slot-13-follow-up.webp",
+      "checksum_sha256": null,
+      "pixel_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing",
+      "base_storage_path": "courses/bmh-employee-training/v1/posters/video-slot-13-follow-up.webp",
+      "storage_path": null,
+      "replacement_authorized_checksum": null,
+      "history": [],
+      "dimensions": [1280, 720],
+      "kind": "video-poster",
+      "provenance": {
+        "master_id": "master-slot-13",
+        "source_master_id": "master-slot-13",
+        "prompt_sha256": null,
+        "reference_ids": [],
+        "terminal_source_sha256": null,
+        "flat_master_sha256": null,
+        "derivative_recipe_id": "slot-13-video-slot-13-follow-up-full-safe",
+        "derivative_recipe_sha256": "e6f5bc30c8917c75acd51f27c23166d17045628fa88602bca61ea489f9459015",
+        "lineage_steps": 0,
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "review_evidence": null
+      },
+      "derivative": {
+        "source_master_id": "master-slot-13",
+        "recipe": {
+          "id": "slot-13-video-slot-13-follow-up-full-safe",
+          "kind": "video-poster",
+          "source_master_id": "master-slot-13",
+          "operation": "normalize-1280x720-then-fixed-safe-crop",
+          "normalize_master_dimensions": [1280, 720],
+          "normalize_method": "contain-with-padding",
+          "normalize_background_rgb": [103, 182, 255],
+          "crop_profile": "full-safe",
+          "crop_pixels_after_normalize": [0, 0, 1280, 720],
+          "target_dimensions": [1280, 720],
+          "resample": "lanczos",
+          "output_format": "lossless-webp",
+          "duplicate_pixel_sha256_forbidden": true,
+          "visual_subject_confirmation_required": true,
+          "focus_subject": "purposeful respectful follow-up loop",
+          "video_title": "Follow-Up Cadence"
+        },
+        "recipe_sha256": "e6f5bc30c8917c75acd51f27c23166d17045628fa88602bca61ea489f9459015"
+      }
+    },
+    {
+      "asset_key": "thumbnail-slot-14",
+      "source_key": "thumbnail-slot-14",
+      "manifest_path": "course-assets/thumbnails/slot-14.webp",
+      "output_path": "course-assets/thumbnails/slot-14.webp",
+      "checksum_sha256": null,
+      "pixel_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing",
+      "base_storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-14.webp",
+      "storage_path": null,
+      "replacement_authorized_checksum": null,
+      "history": [],
+      "dimensions": [1280, 800],
+      "kind": "lesson-card",
+      "provenance": {
+        "master_id": "master-slot-14",
+        "source_master_id": "master-slot-14",
+        "prompt_sha256": null,
+        "reference_ids": [],
+        "terminal_source_sha256": null,
+        "flat_master_sha256": null,
+        "derivative_recipe_id": "slot-14-lesson-card-16x10",
+        "derivative_recipe_sha256": "36b9495237ab0d5220dae86a9bbb301d96cfe3e7da73d19d412f3763294c6d80",
+        "lineage_steps": 0,
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "review_evidence": null
+      },
+      "derivative": {
+        "source_master_id": "master-slot-14",
+        "recipe": {
+          "id": "slot-14-lesson-card-16x10",
+          "kind": "lesson-card",
+          "source_master_id": "master-slot-14",
+          "operation": "contain-master-in-1280x720-and-pad-40px-top-and-bottom",
+          "normalize_master_dimensions": [1280, 720],
+          "normalize_method": "contain-with-padding",
+          "normalize_background_rgb": [103, 182, 255],
+          "target_dimensions": [1280, 800],
+          "padding_rgb": [103, 182, 255],
+          "resample": "lanczos",
+          "crop_allowed": false,
+          "output_format": "lossless-webp"
+        },
+        "recipe_sha256": "36b9495237ab0d5220dae86a9bbb301d96cfe3e7da73d19d412f3763294c6d80"
+      }
+    },
+    {
+      "asset_key": "poster-video-slot-14-flow",
+      "source_key": "poster-video-slot-14-flow",
+      "manifest_path": "course-assets/posters/video-slot-14-flow.webp",
+      "output_path": "course-assets/posters/video-slot-14-flow.webp",
+      "checksum_sha256": null,
+      "pixel_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing",
+      "base_storage_path": "courses/bmh-employee-training/v1/posters/video-slot-14-flow.webp",
+      "storage_path": null,
+      "replacement_authorized_checksum": null,
+      "history": [],
+      "dimensions": [1280, 720],
+      "kind": "video-poster",
+      "provenance": {
+        "master_id": "master-slot-14",
+        "source_master_id": "master-slot-14",
+        "prompt_sha256": null,
+        "reference_ids": [],
+        "terminal_source_sha256": null,
+        "flat_master_sha256": null,
+        "derivative_recipe_id": "slot-14-video-slot-14-flow-full-safe",
+        "derivative_recipe_sha256": "feafb10e5e0cded65ce9553462ba75950df9dc0cb978c140fc8525ee05c8f9d6",
+        "lineage_steps": 0,
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "review_evidence": null
+      },
+      "derivative": {
+        "source_master_id": "master-slot-14",
+        "recipe": {
+          "id": "slot-14-video-slot-14-flow-full-safe",
+          "kind": "video-poster",
+          "source_master_id": "master-slot-14",
+          "operation": "normalize-1280x720-then-fixed-safe-crop",
+          "normalize_master_dimensions": [1280, 720],
+          "normalize_method": "contain-with-padding",
+          "normalize_background_rgb": [103, 182, 255],
+          "crop_profile": "full-safe",
+          "crop_pixels_after_normalize": [0, 0, 1280, 720],
+          "target_dimensions": [1280, 720],
+          "resample": "lanczos",
+          "output_format": "lossless-webp",
+          "duplicate_pixel_sha256_forbidden": true,
+          "visual_subject_confirmation_required": true,
+          "focus_subject": "natural conversation flow from listen to next step",
+          "video_title": "Conversation Flow Mastery"
+        },
+        "recipe_sha256": "feafb10e5e0cded65ce9553462ba75950df9dc0cb978c140fc8525ee05c8f9d6"
+      }
+    },
+    {
+      "asset_key": "thumbnail-slot-15",
+      "source_key": "thumbnail-slot-15",
+      "manifest_path": "course-assets/thumbnails/slot-15.webp",
+      "output_path": "course-assets/thumbnails/slot-15.webp",
+      "checksum_sha256": null,
+      "pixel_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing",
+      "base_storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-15.webp",
+      "storage_path": null,
+      "replacement_authorized_checksum": null,
+      "history": [],
+      "dimensions": [1280, 800],
+      "kind": "lesson-card",
+      "provenance": {
+        "master_id": "master-slot-15",
+        "source_master_id": "master-slot-15",
+        "prompt_sha256": null,
+        "reference_ids": [],
+        "terminal_source_sha256": null,
+        "flat_master_sha256": null,
+        "derivative_recipe_id": "slot-15-lesson-card-16x10",
+        "derivative_recipe_sha256": "862f3ae2e17f7d1f558f0a0a29c354a77d40686903288fa24667d4ba998dab3a",
+        "lineage_steps": 0,
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "review_evidence": null
+      },
+      "derivative": {
+        "source_master_id": "master-slot-15",
+        "recipe": {
+          "id": "slot-15-lesson-card-16x10",
+          "kind": "lesson-card",
+          "source_master_id": "master-slot-15",
+          "operation": "contain-master-in-1280x720-and-pad-40px-top-and-bottom",
+          "normalize_master_dimensions": [1280, 720],
+          "normalize_method": "contain-with-padding",
+          "normalize_background_rgb": [103, 182, 255],
+          "target_dimensions": [1280, 800],
+          "padding_rgb": [103, 182, 255],
+          "resample": "lanczos",
+          "crop_allowed": false,
+          "output_format": "lossless-webp"
+        },
+        "recipe_sha256": "862f3ae2e17f7d1f558f0a0a29c354a77d40686903288fa24667d4ba998dab3a"
+      }
+    },
+    {
+      "asset_key": "poster-video-slot-15-closing",
+      "source_key": "poster-video-slot-15-closing",
+      "manifest_path": "course-assets/posters/video-slot-15-closing.webp",
+      "output_path": "course-assets/posters/video-slot-15-closing.webp",
+      "checksum_sha256": null,
+      "pixel_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing",
+      "base_storage_path": "courses/bmh-employee-training/v1/posters/video-slot-15-closing.webp",
+      "storage_path": null,
+      "replacement_authorized_checksum": null,
+      "history": [],
+      "dimensions": [1280, 720],
+      "kind": "video-poster",
+      "provenance": {
+        "master_id": "master-slot-15",
+        "source_master_id": "master-slot-15",
+        "prompt_sha256": null,
+        "reference_ids": [],
+        "terminal_source_sha256": null,
+        "flat_master_sha256": null,
+        "derivative_recipe_id": "slot-15-video-slot-15-closing-full-safe",
+        "derivative_recipe_sha256": "06630d749c18ec521c4575e3e02dd460c9178c80894eb415e17d93f4648b0c7e",
+        "lineage_steps": 0,
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "review_evidence": null
+      },
+      "derivative": {
+        "source_master_id": "master-slot-15",
+        "recipe": {
+          "id": "slot-15-video-slot-15-closing-full-safe",
+          "kind": "video-poster",
+          "source_master_id": "master-slot-15",
+          "operation": "normalize-1280x720-then-fixed-safe-crop",
+          "normalize_master_dimensions": [1280, 720],
+          "normalize_method": "contain-with-padding",
+          "normalize_background_rgb": [103, 182, 255],
+          "crop_profile": "full-safe",
+          "crop_pixels_after_normalize": [0, 0, 1280, 720],
+          "target_dimensions": [1280, 720],
+          "resample": "lanczos",
+          "output_format": "lossless-webp",
+          "duplicate_pixel_sha256_forbidden": true,
+          "visual_subject_confirmation_required": true,
+          "focus_subject": "sound agreement and deal-fit bridge",
+          "video_title": "Closing and Deal Engineering"
+        },
+        "recipe_sha256": "06630d749c18ec521c4575e3e02dd460c9178c80894eb415e17d93f4648b0c7e"
+      }
+    },
+    {
+      "asset_key": "thumbnail-slot-16",
+      "source_key": "thumbnail-slot-16",
+      "manifest_path": "course-assets/thumbnails/slot-16.webp",
+      "output_path": "course-assets/thumbnails/slot-16.webp",
+      "checksum_sha256": null,
+      "pixel_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing",
+      "base_storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-16.webp",
+      "storage_path": null,
+      "replacement_authorized_checksum": null,
+      "history": [],
+      "dimensions": [1280, 800],
+      "kind": "lesson-card",
+      "provenance": {
+        "master_id": "master-slot-16",
+        "source_master_id": "master-slot-16",
+        "prompt_sha256": null,
+        "reference_ids": [],
+        "terminal_source_sha256": null,
+        "flat_master_sha256": null,
+        "derivative_recipe_id": "slot-16-lesson-card-16x10",
+        "derivative_recipe_sha256": "2cd0ce7d0c6414c03e24866e6a4b0070cd7d5fa3dd91b4c5c69350f4f3eb7035",
+        "lineage_steps": 0,
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "review_evidence": null
+      },
+      "derivative": {
+        "source_master_id": "master-slot-16",
+        "recipe": {
+          "id": "slot-16-lesson-card-16x10",
+          "kind": "lesson-card",
+          "source_master_id": "master-slot-16",
+          "operation": "contain-master-in-1280x720-and-pad-40px-top-and-bottom",
+          "normalize_master_dimensions": [1280, 720],
+          "normalize_method": "contain-with-padding",
+          "normalize_background_rgb": [103, 182, 255],
+          "target_dimensions": [1280, 800],
+          "padding_rgb": [103, 182, 255],
+          "resample": "lanczos",
+          "crop_allowed": false,
+          "output_format": "lossless-webp"
+        },
+        "recipe_sha256": "2cd0ce7d0c6414c03e24866e6a4b0070cd7d5fa3dd91b4c5c69350f4f3eb7035"
+      }
+    },
+    {
+      "asset_key": "poster-video-slot-16-kpis",
+      "source_key": "poster-video-slot-16-kpis",
+      "manifest_path": "course-assets/posters/video-slot-16-kpis.webp",
+      "output_path": "course-assets/posters/video-slot-16-kpis.webp",
+      "checksum_sha256": null,
+      "pixel_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing",
+      "base_storage_path": "courses/bmh-employee-training/v1/posters/video-slot-16-kpis.webp",
+      "storage_path": null,
+      "replacement_authorized_checksum": null,
+      "history": [],
+      "dimensions": [1280, 720],
+      "kind": "video-poster",
+      "provenance": {
+        "master_id": "master-slot-16",
+        "source_master_id": "master-slot-16",
+        "prompt_sha256": null,
+        "reference_ids": [],
+        "terminal_source_sha256": null,
+        "flat_master_sha256": null,
+        "derivative_recipe_id": "slot-16-video-slot-16-kpis-full-safe",
+        "derivative_recipe_sha256": "2813f275e3fc377add7ba3cb45758bcf39d42fc22c0e23babb298c4931a82df7",
+        "lineage_steps": 0,
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "review_evidence": null
+      },
+      "derivative": {
+        "source_master_id": "master-slot-16",
+        "recipe": {
+          "id": "slot-16-video-slot-16-kpis-full-safe",
+          "kind": "video-poster",
+          "source_master_id": "master-slot-16",
+          "operation": "normalize-1280x720-then-fixed-safe-crop",
+          "normalize_master_dimensions": [1280, 720],
+          "normalize_method": "contain-with-padding",
+          "normalize_background_rgb": [103, 182, 255],
+          "crop_profile": "full-safe",
+          "crop_pixels_after_normalize": [0, 0, 1280, 720],
+          "target_dimensions": [1280, 720],
+          "resample": "lanczos",
+          "output_format": "lossless-webp",
+          "duplicate_pixel_sha256_forbidden": true,
+          "visual_subject_confirmation_required": true,
+          "focus_subject": "quality signals coaching and improvement",
+          "video_title": "KPIs and Sales Telemetry"
+        },
+        "recipe_sha256": "2813f275e3fc377add7ba3cb45758bcf39d42fc22c0e23babb298c4931a82df7"
+      }
+    },
+    {
+      "asset_key": "thumbnail-slot-17",
+      "source_key": "thumbnail-slot-17",
+      "manifest_path": "course-assets/thumbnails/slot-17.webp",
+      "output_path": "course-assets/thumbnails/slot-17.webp",
+      "checksum_sha256": null,
+      "pixel_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing",
+      "base_storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-17.webp",
+      "storage_path": null,
+      "replacement_authorized_checksum": null,
+      "history": [],
+      "dimensions": [1280, 800],
+      "kind": "lesson-card",
+      "provenance": {
+        "master_id": "master-slot-17",
+        "source_master_id": "master-slot-17",
+        "prompt_sha256": null,
+        "reference_ids": [],
+        "terminal_source_sha256": null,
+        "flat_master_sha256": null,
+        "derivative_recipe_id": "slot-17-lesson-card-16x10",
+        "derivative_recipe_sha256": "50298996046619486de92b7702e16d9e3115a0b1f5358359c119f230f9eaca76",
+        "lineage_steps": 0,
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "review_evidence": null
+      },
+      "derivative": {
+        "source_master_id": "master-slot-17",
+        "recipe": {
+          "id": "slot-17-lesson-card-16x10",
+          "kind": "lesson-card",
+          "source_master_id": "master-slot-17",
+          "operation": "contain-master-in-1280x720-and-pad-40px-top-and-bottom",
+          "normalize_master_dimensions": [1280, 720],
+          "normalize_method": "contain-with-padding",
+          "normalize_background_rgb": [103, 182, 255],
+          "target_dimensions": [1280, 800],
+          "padding_rgb": [103, 182, 255],
+          "resample": "lanczos",
+          "crop_allowed": false,
+          "output_format": "lossless-webp"
+        },
+        "recipe_sha256": "50298996046619486de92b7702e16d9e3115a0b1f5358359c119f230f9eaca76"
+      }
+    },
+    {
+      "asset_key": "poster-video-slot-17-compensation",
+      "source_key": "poster-video-slot-17-compensation",
+      "manifest_path": "course-assets/posters/video-slot-17-compensation.webp",
+      "output_path": "course-assets/posters/video-slot-17-compensation.webp",
+      "checksum_sha256": null,
+      "pixel_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing",
+      "base_storage_path": "courses/bmh-employee-training/v1/posters/video-slot-17-compensation.webp",
+      "storage_path": null,
+      "replacement_authorized_checksum": null,
+      "history": [],
+      "dimensions": [1280, 720],
+      "kind": "video-poster",
+      "provenance": {
+        "master_id": "master-slot-17",
+        "source_master_id": "master-slot-17",
+        "prompt_sha256": null,
+        "reference_ids": [],
+        "terminal_source_sha256": null,
+        "flat_master_sha256": null,
+        "derivative_recipe_id": "slot-17-video-slot-17-compensation-full-safe",
+        "derivative_recipe_sha256": "e02c74edbfad43adedfa30bd399bef2c26db3a2dec1b3d5ab476b0f824f870dd",
+        "lineage_steps": 0,
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "review_evidence": null
+      },
+      "derivative": {
+        "source_master_id": "master-slot-17",
+        "recipe": {
+          "id": "slot-17-video-slot-17-compensation-full-safe",
+          "kind": "video-poster",
+          "source_master_id": "master-slot-17",
+          "operation": "normalize-1280x720-then-fixed-safe-crop",
+          "normalize_master_dimensions": [1280, 720],
+          "normalize_method": "contain-with-padding",
+          "normalize_background_rgb": [103, 182, 255],
+          "crop_profile": "full-safe",
+          "crop_pixels_after_normalize": [0, 0, 1280, 720],
+          "target_dimensions": [1280, 720],
+          "resample": "lanczos",
+          "output_format": "lossless-webp",
+          "duplicate_pixel_sha256_forbidden": true,
+          "visual_subject_confirmation_required": true,
+          "focus_subject": "written role plan linked to verified outcomes",
+          "video_title": "Compensation Engine"
+        },
+        "recipe_sha256": "e02c74edbfad43adedfa30bd399bef2c26db3a2dec1b3d5ab476b0f824f870dd"
+      }
+    },
+    {
+      "asset_key": "thumbnail-slot-18",
+      "source_key": "thumbnail-slot-18",
+      "manifest_path": "course-assets/thumbnails/slot-18.webp",
+      "output_path": "course-assets/thumbnails/slot-18.webp",
+      "checksum_sha256": null,
+      "pixel_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing",
+      "base_storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-18.webp",
+      "storage_path": null,
+      "replacement_authorized_checksum": null,
+      "history": [],
+      "dimensions": [1280, 800],
+      "kind": "lesson-card",
+      "provenance": {
+        "master_id": "master-slot-18",
+        "source_master_id": "master-slot-18",
+        "prompt_sha256": null,
+        "reference_ids": [],
+        "terminal_source_sha256": null,
+        "flat_master_sha256": null,
+        "derivative_recipe_id": "slot-18-lesson-card-16x10",
+        "derivative_recipe_sha256": "5d379be4f7f0bb687411f73ee28ac62bccca14fee9de8d51e2e05b579eae233c",
+        "lineage_steps": 0,
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "review_evidence": null
+      },
+      "derivative": {
+        "source_master_id": "master-slot-18",
+        "recipe": {
+          "id": "slot-18-lesson-card-16x10",
+          "kind": "lesson-card",
+          "source_master_id": "master-slot-18",
+          "operation": "contain-master-in-1280x720-and-pad-40px-top-and-bottom",
+          "normalize_master_dimensions": [1280, 720],
+          "normalize_method": "contain-with-padding",
+          "normalize_background_rgb": [103, 182, 255],
+          "target_dimensions": [1280, 800],
+          "padding_rgb": [103, 182, 255],
+          "resample": "lanczos",
+          "crop_allowed": false,
+          "output_format": "lossless-webp"
+        },
+        "recipe_sha256": "5d379be4f7f0bb687411f73ee28ac62bccca14fee9de8d51e2e05b579eae233c"
+      }
+    },
+    {
+      "asset_key": "poster-video-slot-18-operator",
+      "source_key": "poster-video-slot-18-operator",
+      "manifest_path": "course-assets/posters/video-slot-18-operator.webp",
+      "output_path": "course-assets/posters/video-slot-18-operator.webp",
+      "checksum_sha256": null,
+      "pixel_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing",
+      "base_storage_path": "courses/bmh-employee-training/v1/posters/video-slot-18-operator.webp",
+      "storage_path": null,
+      "replacement_authorized_checksum": null,
+      "history": [],
+      "dimensions": [1280, 720],
+      "kind": "video-poster",
+      "provenance": {
+        "master_id": "master-slot-18",
+        "source_master_id": "master-slot-18",
+        "prompt_sha256": null,
+        "reference_ids": [],
+        "terminal_source_sha256": null,
+        "flat_master_sha256": null,
+        "derivative_recipe_id": "slot-18-video-slot-18-operator-left-safe",
+        "derivative_recipe_sha256": "87e0a7e5d9ef24b5f38eb256364676921c9bb824ab39939d0ed28dceffd51909",
+        "lineage_steps": 0,
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "review_evidence": null
+      },
+      "derivative": {
+        "source_master_id": "master-slot-18",
+        "recipe": {
+          "id": "slot-18-video-slot-18-operator-left-safe",
+          "kind": "video-poster",
+          "source_master_id": "master-slot-18",
+          "operation": "normalize-1280x720-then-fixed-safe-crop",
+          "normalize_master_dimensions": [1280, 720],
+          "normalize_method": "contain-with-padding",
+          "normalize_background_rgb": [103, 182, 255],
+          "crop_profile": "left-safe",
+          "crop_pixels_after_normalize": [64, 144, 768, 432],
+          "target_dimensions": [1280, 720],
+          "resample": "lanczos",
+          "output_format": "lossless-webp",
+          "duplicate_pixel_sha256_forbidden": true,
+          "visual_subject_confirmation_required": true,
+          "focus_subject": "operator ownership checklist",
+          "video_title": "Operator Playbook"
+        },
+        "recipe_sha256": "87e0a7e5d9ef24b5f38eb256364676921c9bb824ab39939d0ed28dceffd51909"
+      }
+    },
+    {
+      "asset_key": "poster-video-slot-18-mission-control",
+      "source_key": "poster-video-slot-18-mission-control",
+      "manifest_path": "course-assets/posters/video-slot-18-mission-control.webp",
+      "output_path": "course-assets/posters/video-slot-18-mission-control.webp",
+      "checksum_sha256": null,
+      "pixel_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing",
+      "base_storage_path": "courses/bmh-employee-training/v1/posters/video-slot-18-mission-control.webp",
+      "storage_path": null,
+      "replacement_authorized_checksum": null,
+      "history": [],
+      "dimensions": [1280, 720],
+      "kind": "video-poster",
+      "provenance": {
+        "master_id": "master-slot-18",
+        "source_master_id": "master-slot-18",
+        "prompt_sha256": null,
+        "reference_ids": [],
+        "terminal_source_sha256": null,
+        "flat_master_sha256": null,
+        "derivative_recipe_id": "slot-18-video-slot-18-mission-control-right-safe",
+        "derivative_recipe_sha256": "94fc14ed3a8a39c6572523952f8e05b54dc7abecb4cc83a2a917b2e2c4c72ae8",
+        "lineage_steps": 0,
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "review_evidence": null
+      },
+      "derivative": {
+        "source_master_id": "master-slot-18",
+        "recipe": {
+          "id": "slot-18-video-slot-18-mission-control-right-safe",
+          "kind": "video-poster",
+          "source_master_id": "master-slot-18",
+          "operation": "normalize-1280x720-then-fixed-safe-crop",
+          "normalize_master_dimensions": [1280, 720],
+          "normalize_method": "contain-with-padding",
+          "normalize_background_rgb": [103, 182, 255],
+          "crop_profile": "right-safe",
+          "crop_pixels_after_normalize": [448, 144, 768, 432],
+          "target_dimensions": [1280, 720],
+          "resample": "lanczos",
+          "output_format": "lossless-webp",
+          "duplicate_pixel_sha256_forbidden": true,
+          "visual_subject_confirmation_required": true,
+          "focus_subject": "daily mission-control board",
+          "video_title": "Daily Mission Control"
+        },
+        "recipe_sha256": "94fc14ed3a8a39c6572523952f8e05b54dc7abecb4cc83a2a917b2e2c4c72ae8"
+      }
+    },
+    {
+      "asset_key": "thumbnail-slot-19",
+      "source_key": "thumbnail-slot-19",
+      "manifest_path": "course-assets/thumbnails/slot-19.webp",
+      "output_path": "course-assets/thumbnails/slot-19.webp",
+      "checksum_sha256": null,
+      "pixel_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing",
+      "base_storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-19.webp",
+      "storage_path": null,
+      "replacement_authorized_checksum": null,
+      "history": [],
+      "dimensions": [1280, 800],
+      "kind": "lesson-card",
+      "provenance": {
+        "master_id": "master-slot-19",
+        "source_master_id": "master-slot-19",
+        "prompt_sha256": null,
+        "reference_ids": [],
+        "terminal_source_sha256": null,
+        "flat_master_sha256": null,
+        "derivative_recipe_id": "slot-19-lesson-card-16x10",
+        "derivative_recipe_sha256": "922fd6609d523736f4285068297c8fc38c919305f87f6bdd77ed627b23166c86",
+        "lineage_steps": 0,
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "review_evidence": null
+      },
+      "derivative": {
+        "source_master_id": "master-slot-19",
+        "recipe": {
+          "id": "slot-19-lesson-card-16x10",
+          "kind": "lesson-card",
+          "source_master_id": "master-slot-19",
+          "operation": "contain-master-in-1280x720-and-pad-40px-top-and-bottom",
+          "normalize_master_dimensions": [1280, 720],
+          "normalize_method": "contain-with-padding",
+          "normalize_background_rgb": [103, 182, 255],
+          "target_dimensions": [1280, 800],
+          "padding_rgb": [103, 182, 255],
+          "resample": "lanczos",
+          "crop_allowed": false,
+          "output_format": "lossless-webp"
+        },
+        "recipe_sha256": "922fd6609d523736f4285068297c8fc38c919305f87f6bdd77ed627b23166c86"
+      }
+    },
+    {
+      "asset_key": "poster-video-slot-19-career",
+      "source_key": "poster-video-slot-19-career",
+      "manifest_path": "course-assets/posters/video-slot-19-career.webp",
+      "output_path": "course-assets/posters/video-slot-19-career.webp",
+      "checksum_sha256": null,
+      "pixel_sha256": null,
+      "size_bytes": null,
+      "approval_status": "missing",
+      "base_storage_path": "courses/bmh-employee-training/v1/posters/video-slot-19-career.webp",
+      "storage_path": null,
+      "replacement_authorized_checksum": null,
+      "history": [],
+      "dimensions": [1280, 720],
+      "kind": "video-poster",
+      "provenance": {
+        "master_id": "master-slot-19",
+        "source_master_id": "master-slot-19",
+        "prompt_sha256": null,
+        "reference_ids": [],
+        "terminal_source_sha256": null,
+        "flat_master_sha256": null,
+        "derivative_recipe_id": "slot-19-video-slot-19-career-full-safe",
+        "derivative_recipe_sha256": "882512f21fe026ee5270ce4c8ad334e9552a641ffd8f0e087ec28cdcb24ed432",
+        "lineage_steps": 0,
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "review_evidence": null
+      },
+      "derivative": {
+        "source_master_id": "master-slot-19",
+        "recipe": {
+          "id": "slot-19-video-slot-19-career-full-safe",
+          "kind": "video-poster",
+          "source_master_id": "master-slot-19",
+          "operation": "normalize-1280x720-then-fixed-safe-crop",
+          "normalize_master_dimensions": [1280, 720],
+          "normalize_method": "contain-with-padding",
+          "normalize_background_rgb": [103, 182, 255],
+          "crop_profile": "full-safe",
+          "crop_pixels_after_normalize": [0, 0, 1280, 720],
+          "target_dimensions": [1280, 720],
+          "resample": "lanczos",
+          "output_format": "lossless-webp",
+          "duplicate_pixel_sha256_forbidden": true,
+          "visual_subject_confirmation_required": true,
+          "focus_subject": "practice coaching capability and ownership path",
+          "video_title": "Career Growth Path"
+        },
+        "recipe_sha256": "882512f21fe026ee5270ce4c8ad334e9552a641ffd8f0e087ec28cdcb24ed432"
+      }
+    }
+  ],
+  "updated_at": null
+}

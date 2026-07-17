@@ -125,7 +125,13 @@ Avoid: any gradient, texture, lighting, glow, shadow, reflection, depth, realist
 - No production manifest entry or storage path was changed.
 
 Batch generation remains gated on Jarrad's explicit approval of these three
-pilots.
+pilots. Approval must be captured as the structured, checksum-bound JSON
+artifact defined in `PRODUCTION-SPEC.md`, including an affirmative `approved`
+decision, Jarrad Henry as approver, an ISO-UTC timestamp, the exact review
+request binding, the inventory and generation-lineage checksums, and all three
+pilot bindings. The CLI can validate those fields but cannot cryptographically
+prove human identity; the controller must obtain Jarrad's real response and
+must not fabricate or infer it.
 
 The locked post-approval prompts, manifest mappings, derivative rules, and
 machine-verifiable count checks are in `PRODUCTION-SPEC.md` and
@@ -133,3 +139,10 @@ machine-verifiable count checks are in `PRODUCTION-SPEC.md` and
 any additional artwork. The Opening pilot is evidence only for its lesson card
 and Opening poster; Fact Find has a separate post-approval master and generation
 call in the production inventory.
+
+Durable post-approval state is initialized in `production-ledger.json`. It
+contains 21 source masters and 49 final outputs, all still missing and
+unapproved. `npm run artwork:production -- verify` checks that ledger, the
+inventory, the manifest, the exact pilot evidence, the locked references, and
+the pinned Sharp/libvips derivative runtime without generating, uploading, or
+publishing anything.

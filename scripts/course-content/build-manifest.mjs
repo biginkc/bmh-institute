@@ -1,14 +1,27 @@
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { createReadStream } from "node:fs";
-import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
+import { lstat, mkdir, readFile, realpath, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+
+import {
+  DEFAULT_PATHS as ARTWORK_WORKFLOW_PATHS,
+  reconcileManifestFromLedger,
+  validateLedger as validateArtworkWorkflowLedger,
+} from "./artwork-production-workflow.mjs";
 
 const REPO_ROOT = path.resolve(fileURLToPath(new URL("../..", import.meta.url)));
 const ASSET_ROOT = "/Users/jarradhenry/Sites/BMH apps/BMH Institute";
 const SOURCE_ROOT = "/Users/jarradhenry/BMH-OS/BMH Training Course/Thinkific";
 const OUTPUT_PATH = path.join(REPO_ROOT, "content/course-manifests/bmh-employee-training.v1.json");
+const ARTWORK_LEDGER_PATH = path.join(
+  REPO_ROOT,
+  "docs/course-production/thumbnail-pilots/production-ledger.json",
+);
+const ARTWORK_LEDGER_SCHEMA = "bmh-artwork-production-ledger/v1";
+const SHA256_PATTERN = /^[a-f0-9]{64}$/;
+const ISO_TIMESTAMP_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/;
 
 const HELD_METADATA = {
   "video-slot-01-welcome": [246.186, 35190296, "493de8a5e0663ad577ba46d6d5befce33e9640f250677095094978714d22ac72"],
@@ -428,6 +441,373 @@ async function sha256(filePath) {
   });
 }
 
+function isRecord(value) {
+  return Boolean(value && typeof value === "object" && !Array.isArray(value));
+}
+
+function artworkLedgerRecords(ledger) {
+  if (!isRecord(ledger) || ledger.schema_version !== ARTWORK_LEDGER_SCHEMA) {
+    throw new Error(`Artwork ledger schema_version must be ${ARTWORK_LEDGER_SCHEMA}`);
+  }
+  if (Array.isArray(ledger.assets)) return ledger.assets;
+  if (isRecord(ledger.assets)) {
+    return Object.entries(ledger.assets).map(([manifestPath, value]) => {
+      if (!isRecord(value)) return value;
+      if (value.manifest_path !== undefined && value.manifest_path !== manifestPath) {
+        throw new Error(`Artwork ledger key ${manifestPath} conflicts with manifest_path`);
+      }
+      return { ...value, manifest_path: manifestPath };
+    });
+  }
+  throw new Error("Artwork ledger assets must be an array or manifest_path-keyed object");
+}
+
+export async function loadArtworkLedger(
+  ledgerPath = ARTWORK_LEDGER_PATH,
+) {
+  let raw;
+  try {
+    raw = await readFile(ledgerPath, "utf8");
+  } catch (error) {
+    if (error?.code === "ENOENT") return null;
+    throw error;
+  }
+  let parsed;
+  try {
+    parsed = JSON.parse(raw);
+  } catch (error) {
+    throw new Error(`Artwork ledger is not valid JSON: ${ledgerPath}`, { cause: error });
+  }
+  artworkLedgerRecords(parsed);
+  return parsed;
+}
+
+function checksumAddressedStoragePath(storagePath, checksum) {
+  const extension = path.posix.extname(storagePath);
+  if (!extension) throw new Error(`Artwork storage path has no extension: ${storagePath}`);
+  return `${storagePath.slice(0, -extension.length)}-${checksum}${extension}`;
+}
+
+function webpDimensions(contents, label) {
+  if (
+    contents.length < 30 ||
+    contents.subarray(0, 4).toString("ascii") !== "RIFF" ||
+    contents.subarray(8, 12).toString("ascii") !== "WEBP"
+  ) {
+    throw new Error(`Approved artwork is not a WebP file: ${label}`);
+  }
+  let offset = 12;
+  while (offset + 8 <= contents.length) {
+    const chunkType = contents.subarray(offset, offset + 4).toString("ascii");
+    const chunkSize = contents.readUInt32LE(offset + 4);
+    const dataOffset = offset + 8;
+    if (dataOffset + chunkSize > contents.length) {
+      throw new Error(`Approved artwork has a truncated WebP chunk: ${label}`);
+    }
+    if (chunkType === "VP8X" && chunkSize >= 10) {
+      return [
+        contents.readUIntLE(dataOffset + 4, 3) + 1,
+        contents.readUIntLE(dataOffset + 7, 3) + 1,
+      ];
+    }
+    if (chunkType === "VP8L" && chunkSize >= 5 && contents[dataOffset] === 0x2f) {
+      const bits = contents.readUInt32LE(dataOffset + 1);
+      return [(bits & 0x3fff) + 1, ((bits >>> 14) & 0x3fff) + 1];
+    }
+    if (
+      chunkType === "VP8 " &&
+      chunkSize >= 10 &&
+      contents.subarray(dataOffset + 3, dataOffset + 6).toString("hex") === "9d012a"
+    ) {
+      return [
+        contents.readUInt16LE(dataOffset + 6) & 0x3fff,
+        contents.readUInt16LE(dataOffset + 8) & 0x3fff,
+      ];
+    }
+    offset = dataOffset + chunkSize + (chunkSize % 2);
+  }
+  throw new Error(`Approved artwork WebP dimensions are unreadable: ${label}`);
+}
+
+function validateLedgerProvenance(provenance, manifestPath) {
+  if (!isRecord(provenance)) {
+    throw new Error(`Approved artwork ${manifestPath} requires workflow provenance`);
+  }
+  const requiredStrings = [
+    "master_id",
+    "source_master_id",
+    "prompt_sha256",
+    "terminal_source_sha256",
+    "flat_master_sha256",
+    "derivative_recipe_id",
+    "derivative_recipe_sha256",
+    "reviewed_by",
+    "reviewed_at",
+    "review_evidence",
+    "review_evidence_sha256",
+  ];
+  for (const field of requiredStrings) {
+    if (typeof provenance[field] !== "string" || provenance[field].trim().length === 0) {
+      throw new Error(`Approved artwork ${manifestPath} provenance ${field} is required`);
+    }
+  }
+  if (provenance.master_id !== provenance.source_master_id) {
+    throw new Error(`Approved artwork ${manifestPath} provenance master mapping is inconsistent`);
+  }
+  for (const field of [
+    "prompt_sha256",
+    "terminal_source_sha256",
+    "flat_master_sha256",
+    "derivative_recipe_sha256",
+    "review_evidence_sha256",
+  ]) {
+    if (!SHA256_PATTERN.test(provenance[field])) {
+      throw new Error(`Approved artwork ${manifestPath} provenance ${field} is invalid`);
+    }
+  }
+  if (
+    !Array.isArray(provenance.reference_ids) ||
+    provenance.reference_ids.length === 0 ||
+    !provenance.reference_ids.every((value) => typeof value === "string" && value.length > 0)
+  ) {
+    throw new Error(`Approved artwork ${manifestPath} provenance reference_ids are required`);
+  }
+  if (
+    !Array.isArray(provenance.reference_inputs) ||
+    provenance.reference_inputs.length === 0 ||
+    !provenance.reference_inputs.every((reference) =>
+      isRecord(reference) &&
+      typeof reference.id === "string" && reference.id.length > 0 &&
+      typeof reference.role === "string" && reference.role.length > 0 &&
+      typeof reference.path === "string" && reference.path.length > 0 &&
+      SHA256_PATTERN.test(reference.sha256 ?? ""))
+  ) {
+    throw new Error(`Approved artwork ${manifestPath} provenance reference_inputs are invalid`);
+  }
+  if (
+    JSON.stringify(provenance.reference_ids) !==
+    JSON.stringify(provenance.reference_inputs.map((reference) => reference.id))
+  ) {
+    throw new Error(`Approved artwork ${manifestPath} provenance reference mapping is inconsistent`);
+  }
+  if (!Number.isSafeInteger(provenance.lineage_steps) || provenance.lineage_steps <= 0) {
+    throw new Error(`Approved artwork ${manifestPath} provenance lineage_steps is invalid`);
+  }
+  if (
+    !ISO_TIMESTAMP_PATTERN.test(provenance.reviewed_at) ||
+    !Number.isFinite(Date.parse(provenance.reviewed_at))
+  ) {
+    throw new Error(`Approved artwork ${manifestPath} provenance reviewed_at is invalid`);
+  }
+  if (
+    provenance.promoted_pilot_sha256 !== undefined &&
+    !SHA256_PATTERN.test(provenance.promoted_pilot_sha256)
+  ) {
+    throw new Error(`Approved artwork ${manifestPath} promoted pilot checksum is invalid`);
+  }
+}
+
+function expectedArtworkDimensions(asset) {
+  if (asset.local_path.startsWith("course-assets/posters/")) return [1280, 720];
+  if (asset.local_path.startsWith("course-assets/thumbnails/")) return [1280, 800];
+  throw new Error(`Artwork asset is outside the production inventory paths: ${asset.local_path}`);
+}
+
+function validateFinalizedArtworkLedger(ledger, records, expectedAssetCount) {
+  const approved = records.filter((record) => record?.approval_status === "approved");
+  if (approved.length === 0) return;
+  if (
+    ledger.status !== "finalized" ||
+    approved.length !== records.length ||
+    records.length !== expectedAssetCount
+  ) {
+    throw new Error("Approved artwork requires one complete finalized ledger");
+  }
+  for (const [label, approval] of [
+    ["pilot_approval", ledger.pilot_approval],
+    ["final_approval", ledger.final_approval],
+  ]) {
+    if (
+      !isRecord(approval) ||
+      approval.status !== "approved" ||
+      typeof approval.approved_by !== "string" ||
+      approval.approved_by.trim().length === 0 ||
+      !ISO_TIMESTAMP_PATTERN.test(approval.approved_at ?? "") ||
+      !Number.isFinite(Date.parse(approval.approved_at ?? "")) ||
+      typeof approval.evidence !== "string" ||
+      approval.evidence.trim().length === 0 ||
+      !SHA256_PATTERN.test(approval.evidence_sha256 ?? "")
+    ) {
+      throw new Error(`Approved artwork ledger ${label} is incomplete`);
+    }
+  }
+}
+
+async function approvedArtworkAsset(asset, record, repoRoot) {
+  const manifestPath = record.manifest_path;
+  if (record.output_path !== manifestPath || manifestPath !== asset.local_path) {
+    throw new Error(`Approved artwork path mismatch for ${manifestPath}`);
+  }
+  if (
+    record.asset_key !== asset.source_key ||
+    record.source_key !== asset.source_key
+  ) {
+    throw new Error(`Approved artwork source key mismatch for ${manifestPath}`);
+  }
+  if (!SHA256_PATTERN.test(record.checksum_sha256 ?? "")) {
+    throw new Error(`Approved artwork ${manifestPath} requires a lowercase SHA-256`);
+  }
+  if (!Number.isSafeInteger(record.size_bytes) || record.size_bytes <= 0) {
+    throw new Error(`Approved artwork ${manifestPath} requires a positive size_bytes`);
+  }
+  if (
+    !Array.isArray(record.dimensions) ||
+    record.dimensions.length !== 2 ||
+    !record.dimensions.every((value) => Number.isSafeInteger(value) && value > 0)
+  ) {
+    throw new Error(`Approved artwork ${manifestPath} requires positive integer dimensions`);
+  }
+  if (
+    JSON.stringify(record.dimensions) !==
+    JSON.stringify(expectedArtworkDimensions(asset))
+  ) {
+    throw new Error(`Approved artwork dimensions violate the production inventory for ${manifestPath}`);
+  }
+  validateLedgerProvenance(record.provenance, manifestPath);
+  const expectedKind = asset.local_path.startsWith("course-assets/posters/")
+    ? "video-poster"
+    : asset.source_key === "thumbnail-program-bmh-employee-training"
+      ? "course-cover"
+      : "lesson-card";
+  if (record.kind !== expectedKind) {
+    throw new Error(`Approved artwork kind mismatch for ${manifestPath}`);
+  }
+  if (!SHA256_PATTERN.test(record.pixel_sha256 ?? "")) {
+    throw new Error(`Approved artwork ${manifestPath} requires a decoded pixel SHA-256`);
+  }
+  if (
+    !isRecord(record.derivative) ||
+    !isRecord(record.derivative.recipe) ||
+    record.derivative.source_master_id !== record.provenance.source_master_id ||
+    record.derivative.recipe.source_master_id !== record.provenance.source_master_id ||
+    record.derivative.recipe.id !== record.provenance.derivative_recipe_id ||
+    record.derivative.recipe.kind !== record.kind ||
+    !SHA256_PATTERN.test(record.derivative.recipe_sha256 ?? "") ||
+    record.derivative.recipe_sha256 !== record.provenance.derivative_recipe_sha256 ||
+    record.derivative.recipe_sha256 !== createHash("sha256")
+      .update(JSON.stringify(record.derivative.recipe))
+      .digest("hex")
+  ) {
+    throw new Error(`Approved artwork derivative provenance mismatch for ${manifestPath}`);
+  }
+
+  const absoluteRoot = await realpath(repoRoot);
+  const candidate = path.resolve(absoluteRoot, manifestPath);
+  if (candidate === absoluteRoot || !candidate.startsWith(`${absoluteRoot}${path.sep}`)) {
+    throw new Error(`Approved artwork path escapes the repository: ${manifestPath}`);
+  }
+  const fileInfo = await lstat(candidate);
+  if (!fileInfo.isFile() || fileInfo.isSymbolicLink()) {
+    throw new Error(`Approved artwork is not a regular file: ${manifestPath}`);
+  }
+  const resolvedCandidate = await realpath(candidate);
+  if (!resolvedCandidate.startsWith(`${absoluteRoot}${path.sep}`)) {
+    throw new Error(`Approved artwork resolves outside the repository: ${manifestPath}`);
+  }
+  const contents = await readFile(resolvedCandidate);
+  const actualChecksum = createHash("sha256").update(contents).digest("hex");
+  if (actualChecksum !== record.checksum_sha256 || contents.length !== record.size_bytes) {
+    throw new Error(`Approved artwork checksum or size mismatch for ${manifestPath}`);
+  }
+  const actualDimensions = webpDimensions(contents, manifestPath);
+  if (JSON.stringify(actualDimensions) !== JSON.stringify(record.dimensions)) {
+    throw new Error(`Approved artwork dimensions mismatch for ${manifestPath}`);
+  }
+
+  const storagePath = checksumAddressedStoragePath(
+    asset.storage_path,
+    record.checksum_sha256,
+  );
+  if (record.storage_path !== undefined && record.storage_path !== storagePath) {
+    throw new Error(`Approved artwork storage path mismatch for ${manifestPath}`);
+  }
+
+  return {
+    ...asset,
+    storage_path: storagePath,
+    checksum_sha256: record.checksum_sha256,
+    size_bytes: record.size_bytes,
+    approval_status: "approved",
+  };
+}
+
+export async function applyArtworkLedger(
+  artworkAssets,
+  ledger,
+  { repoRoot = REPO_ROOT } = {},
+) {
+  const records = artworkLedgerRecords(ledger);
+  const expected = new Map(artworkAssets.map((asset) => [asset.local_path, asset]));
+  if (expected.size !== artworkAssets.length) {
+    throw new Error("Artwork manifest paths must be unique");
+  }
+  validateFinalizedArtworkLedger(ledger, records, artworkAssets.length);
+  const recordsByPath = new Map();
+  for (const record of records) {
+    if (!isRecord(record) || typeof record.manifest_path !== "string") {
+      throw new Error("Artwork ledger record requires manifest_path");
+    }
+    if (recordsByPath.has(record.manifest_path)) {
+      throw new Error(`Duplicate artwork ledger manifest_path: ${record.manifest_path}`);
+    }
+    if (!expected.has(record.manifest_path)) {
+      throw new Error(`Artwork ledger path is not present in the manifest: ${record.manifest_path}`);
+    }
+    if (!["missing", "approved"].includes(record.approval_status)) {
+      throw new Error(`Artwork ledger ${record.manifest_path} has invalid approval_status`);
+    }
+    recordsByPath.set(record.manifest_path, record);
+  }
+
+  const merged = [];
+  for (const asset of artworkAssets) {
+    const record = recordsByPath.get(asset.local_path);
+    merged.push(
+      record?.approval_status === "approved"
+        ? await approvedArtworkAsset(asset, record, repoRoot)
+        : { ...asset },
+    );
+  }
+  return merged;
+}
+
+export async function validateArtworkManifestTrustBoundary(
+  manifest,
+  ledger,
+  {
+    repoRoot = REPO_ROOT,
+    inventoryPath = path.join(repoRoot, ARTWORK_WORKFLOW_PATHS.inventory),
+  } = {},
+) {
+  // A missing optional ledger keeps the draft portable during pre-production.
+  // Any real workflow ledger must pass the canonical inventory, evidence, file,
+  // lineage, palette, uniqueness, and lifecycle checks before it can affect the
+  // manifest's approval state.
+  if (ledger === null) return manifest;
+
+  const inventory = JSON.parse(await readFile(inventoryPath, "utf8"));
+  const reconciled = ledger.status === "finalized"
+    ? reconcileManifestFromLedger(ledger, manifest)
+    : manifest;
+  await validateArtworkWorkflowLedger({
+    root: repoRoot,
+    inventory,
+    manifest: reconciled,
+    ledger,
+  });
+  return reconciled;
+}
+
 async function buildVideoAsset([sourceKey, slot, title, partLabel, localPath]) {
   const fullPath = path.join(ASSET_ROOT, localPath);
   const held = HELD_METADATA[sourceKey];
@@ -554,7 +934,24 @@ function guideHtml(lesson) {
   return `<h2>Learner guide</h2><ul>${lesson.guide.map((point) => `<li>${point}</li>`).join("")}</ul><p>Use the current written SOP and ask your manager when a live process differs from this lesson.</p>`;
 }
 
-async function buildManifest() {
+async function buildGuideAsset(lesson) {
+  const slotKey = String(lesson.slot).padStart(2, "0");
+  const localPath = `output/pdf/slot-${slotKey}-learner-guide.pdf`;
+  const absolutePath = path.join(REPO_ROOT, localPath);
+  const [checksum, fileInfo] = await Promise.all([sha256(absolutePath), stat(absolutePath)]);
+  return {
+    source_key: `guide-slot-${slotKey}`,
+    kind: "pdf",
+    local_path: localPath,
+    storage_path: `courses/bmh-employee-training/v1/guides/guide-slot-${slotKey}.${checksum}.pdf`,
+    mime_type: "application/pdf",
+    checksum_sha256: checksum,
+    size_bytes: fileInfo.size,
+    approval_status: "approved",
+  };
+}
+
+export async function buildManifest({ artworkLedgerPath = ARTWORK_LEDGER_PATH } = {}) {
   const videoAssetsWithMetadata = [];
   for (const video of VIDEO_SOURCES) videoAssetsWithMetadata.push(await buildVideoAsset(video));
 
@@ -609,25 +1006,23 @@ async function buildManifest() {
     size_bytes: null,
     approval_status: "missing",
   }));
-  const guideAssets = LESSONS.map((lesson) => {
-    const slotKey = String(lesson.slot).padStart(2, "0");
-    return {
-      source_key: `guide-slot-${slotKey}`,
-      kind: "pdf",
-      local_path: `course-assets/guides/slot-${slotKey}-learner-guide.pdf`,
-      storage_path: `courses/bmh-employee-training/v1/guides/slot-${slotKey}-learner-guide.pdf`,
-      mime_type: "application/pdf",
-      checksum_sha256: null,
-      size_bytes: null,
-      approval_status: "missing",
-    };
-  });
+  const artworkLedger = await loadArtworkLedger(artworkLedgerPath);
+  const artworkAssets = await applyArtworkLedger(
+    [...imageAssets, ...posterAssets],
+    artworkLedger ?? { schema_version: ARTWORK_LEDGER_SCHEMA, assets: [] },
+  );
+  const guideAssets = [];
+  for (const lesson of LESSONS) guideAssets.push(await buildGuideAsset(lesson));
+  const guidesBySlot = new Map(
+    LESSONS.map((lesson, index) => [lesson.slot, guideAssets[index]]),
+  );
 
   const modules = MODULES.map(([moduleNumber, title, description]) => {
     const topicLessons = LESSONS.filter((lesson) => lesson.module === moduleNumber);
     const lessons = [];
     for (const topic of topicLessons) {
       const slotKey = String(topic.slot).padStart(2, "0");
+      const guideAsset = guidesBySlot.get(topic.slot);
       const questions = quizQuestionsBySlot.get(topic.slot);
       const videoBlocks = videosBySlot.get(topic.slot).map((asset, index) => ({
         source_key: `block-video-${asset.source_key}`,
@@ -680,9 +1075,9 @@ async function buildManifest() {
           required: false,
           content: {
             asset_key: `guide-slot-${slotKey}`,
-            file_path: `courses/bmh-employee-training/v1/guides/slot-${slotKey}-learner-guide.pdf`,
+            file_path: guideAsset.storage_path,
             filename: `slot-${slotKey}-learner-guide.pdf`,
-            size_bytes: null,
+            size_bytes: guideAsset.size_bytes,
             description: `Accessible learner guide for ${topic.title}`,
           },
         },
@@ -749,7 +1144,7 @@ async function buildManifest() {
     };
   });
 
-  return {
+  const manifest = {
     schema_version: 1,
     import_id: "bmh-employee-training-v1",
     status: "draft",
@@ -758,7 +1153,7 @@ async function buildManifest() {
       name: "BMH Content QA",
       description: "Private reviewers for the unpublished BMH employee training program.",
     },
-    assets: [...videoAssets, ...derivativeAssets, ...imageAssets, ...posterAssets, ...guideAssets],
+    assets: [...videoAssets, ...derivativeAssets, ...artworkAssets, ...guideAssets],
     program: {
       source_key: "program-bmh-employee-training",
       title: "BMH Employee Training",
@@ -780,9 +1175,12 @@ async function buildManifest() {
       ],
     },
   };
+  return validateArtworkManifestTrustBoundary(manifest, artworkLedger);
 }
 
-const manifest = await buildManifest();
-await mkdir(path.dirname(OUTPUT_PATH), { recursive: true });
-await writeFile(OUTPUT_PATH, `${JSON.stringify(manifest, null, 2).replaceAll("\u2014", "-")}\n`);
-console.log(`Wrote ${OUTPUT_PATH}`);
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  const manifest = await buildManifest();
+  await mkdir(path.dirname(OUTPUT_PATH), { recursive: true });
+  await writeFile(OUTPUT_PATH, `${JSON.stringify(manifest, null, 2).replaceAll("\u2014", "-")}\n`);
+  console.log(`Wrote ${OUTPUT_PATH}`);
+}
