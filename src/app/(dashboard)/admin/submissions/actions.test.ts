@@ -9,6 +9,8 @@ let signedUrlError: { message: string } | null = null;
 let reviewRubric: unknown = [
   { criterion: "Complete", description: "The learner completed the assignment." },
 ];
+let requiresReview = true;
+let reviewSelectSql = "";
 
 const sendEmailSpy = vi.fn(async (input: Record<string, unknown>) => {
   void input;
@@ -56,6 +58,7 @@ vi.mock("@/lib/supabase/server", () => ({
         },
         select: (sql: string) => {
           selectSql = sql;
+          if (sql.includes("rubric")) reviewSelectSql = sql;
           return {
             eq: () => ({
               maybeSingle: async () => ({
@@ -67,7 +70,11 @@ vi.mock("@/lib/supabase/server", () => ({
                     email: "learner@bmh.test",
                     full_name: "Learner One",
                   },
-                  assignments: { title: "Upload proof", rubric: reviewRubric },
+                  assignments: {
+                    title: "Upload proof",
+                    rubric: reviewRubric,
+                    requires_review: requiresReview,
+                  },
                   lessons: { title: "Lesson one" },
                 },
                 error: null,
@@ -97,6 +104,8 @@ describe("admin submission review actions (TEST-01)", () => {
     reviewRubric = [
       { criterion: "Complete", description: "The learner completed the assignment." },
     ];
+    requiresReview = true;
+    reviewSelectSql = "";
     sendEmailSpy.mockClear();
   });
 
@@ -134,6 +143,28 @@ describe("admin submission review actions (TEST-01)", () => {
     });
     expect(updatePatch).toBeNull();
     expect(sendEmailSpy).not.toHaveBeenCalled();
+  });
+
+  it("refuses a reviewed assignment when the stored rubric is empty", async () => {
+    reviewRubric = [];
+
+    const result = await approveSubmission({ submissionId: "submission-1" });
+
+    expect(reviewSelectSql).toContain("requires_review");
+    expect(result).toEqual({
+      ok: false,
+      error: "Repair this assignment's review rubric before approving submissions.",
+    });
+    expect(updatePatch).toBeNull();
+  });
+
+  it("does not require rubric items for an assignment configured without review", async () => {
+    reviewRubric = [];
+    requiresReview = false;
+
+    const result = await approveSubmission({ submissionId: "submission-1" });
+
+    expect(result).toEqual({ ok: true });
   });
 
   it("requires a revision note before writing", async () => {

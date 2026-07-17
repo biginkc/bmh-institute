@@ -43,4 +43,35 @@ describe("<LessonSearch />", () => {
     await user.keyboard("{Escape}");
     expect(search).toHaveAttribute("aria-expanded", "false");
   });
+
+  it("opens a compact mobile search control", async () => {
+    const user = userEvent.setup();
+    render(<LessonSearch lessons={lessons} instanceId="mobile" compact />);
+
+    const trigger = screen.getByRole("button", { name: "Search lessons" });
+    expect(trigger).toHaveAttribute("aria-expanded", "false");
+    await user.click(trigger);
+
+    expect(trigger).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByRole("combobox", { name: "Search lessons" })).toBeVisible();
+  });
+
+  it("uses unique combobox and listbox IDs for multiple header placements", async () => {
+    const user = userEvent.setup();
+    const { container } = render(
+      <>
+        <LessonSearch lessons={lessons} instanceId="desktop" />
+        <LessonSearch lessons={lessons} instanceId="mobile-open" />
+      </>,
+    );
+    const searches = screen.getAllByRole("combobox", { name: "Search lessons" });
+    await user.type(searches[0], "open");
+    await user.type(searches[1], "tech");
+
+    const ids = Array.from(container.querySelectorAll("[id]"), (node) => node.id);
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(searches[0].getAttribute("aria-controls")).not.toBe(
+      searches[1].getAttribute("aria-controls"),
+    );
+  });
 });

@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const loadVideoProgress = vi.fn();
@@ -60,6 +60,62 @@ describe("<VideoBlockPlayer />", () => {
     expect(screen.getByLabelText("Opening the call")).toBeVisible();
   });
 
+  it("keeps server-rendered completion when the client load fails", async () => {
+    loadVideoProgress.mockResolvedValue({
+      ok: false,
+      error: "Video progress could not be loaded.",
+    });
+
+    render(
+      <VideoBlockPlayer
+        blockId="block-1"
+        src="https://example.com/video.mp4"
+        initialComplete
+      />,
+    );
+
+    expect(screen.getByRole("status")).toHaveTextContent("Complete");
+    await waitFor(() => expect(loadVideoProgress).toHaveBeenCalled());
+    expect(screen.getByRole("status")).toHaveTextContent("Complete");
+    expect(refresh).not.toHaveBeenCalled();
+  });
+
+  it("does not apply a stale resume position after playback starts", async () => {
+    let resolveLoad: (value: {
+      ok: true;
+      positionSeconds: number;
+      watchedRanges: [];
+      watchedPercent: number;
+      completed: boolean;
+    }) => void = () => undefined;
+    loadVideoProgress.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveLoad = resolve;
+        }),
+    );
+    render(<VideoBlockPlayer blockId="block-1" src="https://example.com/video.mp4" />);
+    const video = screen.getByLabelText("Lesson video") as HTMLVideoElement;
+    Object.defineProperties(video, {
+      readyState: { configurable: true, value: 4 },
+      duration: { configurable: true, value: 100 },
+      currentTime: { configurable: true, writable: true, value: 15 },
+    });
+
+    fireEvent.play(video);
+    await act(async () => {
+      resolveLoad({
+        ok: true,
+        positionSeconds: 3,
+        watchedRanges: [],
+        watchedPercent: 3,
+        completed: false,
+      });
+    });
+
+    expect(video.currentTime).toBe(15);
+  });
+
   it("announces completion and refreshes the lesson once on transition", async () => {
     recordVideoProgress.mockResolvedValue({
       ok: true,
@@ -88,8 +144,12 @@ describe("<VideoBlockPlayer />", () => {
     expect(refresh).toHaveBeenCalledTimes(1);
   });
 
-  it("uses the real media duration in the branded play overlay", () => {
+  it("uses the real media duration in the branded play overlay", async () => {
     render(<VideoBlockPlayer blockId="block-1" src="https://example.com/video.mp4" />);
+
+    await act(async () => {
+      await Promise.resolve();
+    });
 
     const video = screen.getByLabelText("Lesson video") as HTMLVideoElement;
     Object.defineProperty(video, "duration", { configurable: true, value: 100 });

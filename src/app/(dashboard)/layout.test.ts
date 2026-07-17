@@ -24,6 +24,13 @@ describe("DashboardLayout sibling shell contract", () => {
     expect(layoutSource).toContain("roleLabel");
   });
 
+  it("keeps a compact lesson search reachable below the small breakpoint", () => {
+    expect(layoutSource).toContain('instanceId="mobile"');
+    expect(layoutSource).toContain("compact");
+    expect(layoutSource).toContain("sm:hidden");
+    expect(layoutSource).toContain('instanceId="desktop"');
+  });
+
   it("preserves the native sign-out POST contract", () => {
     expect(layoutSource).toContain('action="/auth/signout"');
     expect(layoutSource).toContain('method="post"');

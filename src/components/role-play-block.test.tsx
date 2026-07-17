@@ -72,6 +72,7 @@ describe("<RolePlayBlock /> completion messages", () => {
       });
     });
     expect(screen.getByText("Complete")).toBeVisible();
+    expect(screen.getByRole("status")).toHaveTextContent("Completed");
     expect(refresh).toHaveBeenCalledTimes(1);
   });
 
@@ -88,6 +89,7 @@ describe("<RolePlayBlock /> completion messages", () => {
     );
 
     expect(screen.getByText("Complete")).toBeVisible();
+    expect(screen.getByRole("status")).toHaveTextContent("Completed");
     expect(refresh).not.toHaveBeenCalled();
   });
 });

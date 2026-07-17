@@ -123,9 +123,12 @@ export default async function DashboardLayout({
           </span>
         </Link>
         <div className="hidden w-full max-w-[360px] sm:block">
-          <LessonSearch lessons={searchableLessons} />
+          <LessonSearch lessons={searchableLessons} instanceId="desktop" />
         </div>
         <span className="flex-1" />
+        <div className="sm:hidden">
+          <LessonSearch lessons={searchableLessons} instanceId="mobile" compact />
+        </div>
         <Link
           href="/profile"
           className="md:hidden"

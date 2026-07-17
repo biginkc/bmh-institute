@@ -23,6 +23,7 @@ export function VideoBlockPlayer({
   captionsSrc,
   transcriptSrc,
   title = "Lesson video",
+  initialComplete = false,
 }: {
   blockId: string;
   src: string;
@@ -30,6 +31,7 @@ export function VideoBlockPlayer({
   captionsSrc?: string;
   transcriptSrc?: string;
   title?: string;
+  initialComplete?: boolean;
 }) {
   const { refresh } = useRouter();
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -37,13 +39,27 @@ export function VideoBlockPlayer({
   const resumePositionRef = useRef(0);
   const writeQueueRef = useRef<Promise<void>>(Promise.resolve());
   const mountedRef = useRef(true);
-  const completedRef = useRef(false);
+  const completedRef = useRef(initialComplete);
   const hasRecordedProgressRef = useRef(false);
+  const playbackStartedRef = useRef(false);
+  const refreshRequestedRef = useRef(false);
   const [playing, setPlaying] = useState(false);
   const [duration, setDuration] = useState(0);
   const [progressError, setProgressError] = useState<string | null>(null);
   const [watchedPercent, setWatchedPercent] = useState(0);
-  const [completed, setCompleted] = useState(false);
+  const [completed, setCompleted] = useState(initialComplete);
+
+  useEffect(() => {
+    if (!initialComplete || completedRef.current) return;
+    completedRef.current = true;
+    setCompleted(true);
+  }, [initialComplete]);
+
+  const requestRefresh = useCallback(() => {
+    if (refreshRequestedRef.current) return;
+    refreshRequestedRef.current = true;
+    refresh();
+  }, [refresh]);
 
   const resynchronizeProgress = useCallback(async () => {
     let result: Awaited<ReturnType<typeof loadVideoProgress>> | null = null;
@@ -57,15 +73,18 @@ export function VideoBlockPlayer({
     resumePositionRef.current = result.positionSeconds;
     sampleStartRef.current = result.positionSeconds;
     setWatchedPercent(result.watchedPercent);
-    setCompleted(result.completed);
-    completedRef.current = result.completed;
+    const transitionedToComplete = result.completed && !completedRef.current;
+    if (result.completed) {
+      completedRef.current = true;
+      setCompleted(true);
+    }
     const video = videoRef.current;
     if (video && Number.isFinite(result.positionSeconds)) {
       video.currentTime = result.positionSeconds;
     }
-    if (result.reconciled) refresh();
+    if (transitionedToComplete || result.reconciled) requestRefresh();
     return true;
-  }, [blockId, refresh]);
+  }, [blockId, requestRefresh]);
 
   const enqueueProgress = useCallback(
     (progress: Parameters<typeof recordVideoProgress>[0]) => {
@@ -83,10 +102,10 @@ export function VideoBlockPlayer({
         if (!mountedRef.current) return;
         if (result?.ok) {
           setWatchedPercent(result.watchedPercent);
-          setCompleted(result.completed);
           if (result.completed && !completedRef.current) {
             completedRef.current = true;
-            refresh();
+            setCompleted(true);
+            requestRefresh();
           }
         }
         const recovered = result?.ok ? true : await resynchronizeProgress();
@@ -98,7 +117,7 @@ export function VideoBlockPlayer({
         );
       });
     },
-    [refresh, resynchronizeProgress],
+    [requestRefresh, resynchronizeProgress],
   );
 
   const enqueueSeek = useCallback(
@@ -149,24 +168,31 @@ export function VideoBlockPlayer({
     mountedRef.current = true;
     void loadVideoProgress(blockId).then((result) => {
       if (!active || !result.ok) return;
-      resumePositionRef.current = result.positionSeconds;
+      const canRestorePosition =
+        !playbackStartedRef.current && !hasRecordedProgressRef.current;
+      if (canRestorePosition) {
+        resumePositionRef.current = result.positionSeconds;
+      }
+      const transitionedToComplete = result.completed && !completedRef.current;
       if (!hasRecordedProgressRef.current) {
-        sampleStartRef.current = result.positionSeconds;
-        completedRef.current = result.completed;
         setWatchedPercent(result.watchedPercent);
-        setCompleted(result.completed);
-        if (video?.readyState && result.positionSeconds > 0) {
-          video.currentTime = result.positionSeconds;
+        if (result.completed) {
+          completedRef.current = true;
+          setCompleted(true);
         }
       }
-      if (result.reconciled) refresh();
+      if (canRestorePosition && video?.readyState && result.positionSeconds > 0) {
+        sampleStartRef.current = result.positionSeconds;
+        video.currentTime = result.positionSeconds;
+      }
+      if (transitionedToComplete || result.reconciled) requestRefresh();
     });
     return () => {
       active = false;
       mountedRef.current = false;
       if (video && !video.paused) flushProgress(video);
     };
-  }, [blockId, flushProgress, refresh]);
+  }, [blockId, flushProgress, requestRefresh]);
 
   useEffect(() => {
     function flushWhenHidden() {
@@ -210,7 +236,10 @@ export function VideoBlockPlayer({
           onLoadedMetadata={(event) => {
             const nextDuration = event.currentTarget.duration;
             setDuration(Number.isFinite(nextDuration) ? nextDuration : 0);
-            if (resumePositionRef.current > 0) {
+            if (
+              !playbackStartedRef.current &&
+              resumePositionRef.current > 0
+            ) {
               event.currentTarget.currentTime = Math.min(
                 resumePositionRef.current,
                 nextDuration,
@@ -218,10 +247,12 @@ export function VideoBlockPlayer({
             }
           }}
           onPlay={(event) => {
+            playbackStartedRef.current = true;
             setPlaying(true);
             sampleStartRef.current = event.currentTarget.currentTime;
           }}
           onSeeking={() => {
+            playbackStartedRef.current = true;
             sampleStartRef.current = null;
           }}
           onSeeked={(event) => {

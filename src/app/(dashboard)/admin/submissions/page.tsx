@@ -31,7 +31,7 @@ export default async function AdminSubmissionsPage({
       lesson_id,
       assignment_id,
       profiles!assignment_submissions_user_id_fkey ( email, full_name ),
-      assignments ( title, rubric ),
+      assignments ( title, rubric, requires_review ),
       lessons ( title )
     `,
     )
@@ -96,7 +96,7 @@ type Row = {
   submission_url: string | null;
   submission_file_path: string | null;
   profiles: { email: string; full_name: string } | { email: string; full_name: string }[] | null;
-  assignments: { title: string; rubric: unknown } | { title: string; rubric: unknown }[] | null;
+  assignments: { title: string; rubric: unknown; requires_review: boolean } | { title: string; rubric: unknown; requires_review: boolean }[] | null;
   lessons: { title: string } | { title: string }[] | null;
 };
 
@@ -105,6 +105,8 @@ function SubmissionCard({ row }: { row: Row }) {
   const assignment = firstRow(row.assignments);
   const lesson = firstRow(row.lessons);
   const rubric = parseAssignmentRubric(assignment?.rubric);
+  const rubricReady =
+    rubric.ok && (!assignment?.requires_review || rubric.items.length > 0);
 
   return (
     <Card padding="md">
@@ -128,6 +130,10 @@ function SubmissionCard({ row }: { row: Row }) {
         {!rubric.ok ? (
           <div role="alert" className="rounded-[var(--bmh-radius-md)] border border-[var(--danger)] bg-[var(--danger-soft)] p-3 text-sm font-semibold text-[var(--danger)]">
             This assignment&apos;s review rubric is invalid. Repair it before making a review decision.
+          </div>
+        ) : assignment?.requires_review && rubric.items.length === 0 ? (
+          <div role="alert" className="rounded-[var(--bmh-radius-md)] border border-[var(--danger)] bg-[var(--danger-soft)] p-3 text-sm font-semibold text-[var(--danger)]">
+            This assignment&apos;s review rubric is missing. Add at least one item before making a review decision.
           </div>
         ) : rubric.items.length > 0 ? (
           <section
@@ -175,7 +181,7 @@ function SubmissionCard({ row }: { row: Row }) {
           </div>
         ) : null}
 
-        {row.status === "submitted" && rubric.ok ? (
+        {row.status === "submitted" && rubricReady ? (
           <ReviewControls
             submissionId={row.id}
             filePath={row.submission_file_path}

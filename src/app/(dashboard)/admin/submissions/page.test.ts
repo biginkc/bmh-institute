@@ -7,6 +7,7 @@ let rubric: unknown = [
   { criterion: "Systems readiness", description: "Confirms access to every required system." },
   { criterion: "Service mindset", description: "Explains how the learner will serve sellers respectfully." },
 ];
+let requiresReview = true;
 
 vi.mock("@/lib/supabase/server", () => ({
   createClient: vi.fn(async () => ({
@@ -28,6 +29,7 @@ vi.mock("@/lib/supabase/server", () => ({
             assignments: {
               title: "Orientation Readiness Check",
               rubric,
+              requires_review: requiresReview,
             },
             lessons: { title: "Orientation assignment" },
           },
@@ -59,6 +61,18 @@ describe("AdminSubmissionsPage assignment rubric", () => {
       { criterion: "Systems readiness", description: "Confirms access to every required system." },
       { criterion: "Service mindset", description: "Explains how the learner will serve sellers respectfully." },
     ];
+    requiresReview = true;
+  });
+
+  it("blocks review controls when a reviewed assignment has no rubric items", async () => {
+    rubric = [];
+    const html = renderToStaticMarkup(
+      await AdminSubmissionsPage({ searchParams: Promise.resolve({}) }),
+    );
+
+    expect(selectSql).toContain("requires_review");
+    expect(html).toContain("review rubric is missing");
+    expect(html).not.toContain(">Approve</button>");
   });
 
   it("puts the imported reviewer rubric beside the learner submission", async () => {
@@ -66,7 +80,9 @@ describe("AdminSubmissionsPage assignment rubric", () => {
       await AdminSubmissionsPage({ searchParams: Promise.resolve({}) }),
     );
 
-    expect(selectSql).toContain("assignments ( title, rubric )");
+    expect(selectSql).toContain(
+      "assignments ( title, rubric, requires_review )",
+    );
     expect(html).toContain("Review rubric");
     expect(html).toContain("Systems readiness");
     expect(html).toContain("Confirms access to every required system.");

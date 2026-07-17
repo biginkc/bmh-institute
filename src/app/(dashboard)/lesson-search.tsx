@@ -1,8 +1,9 @@
 "use client";
 
+import { Search } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 
 import { SearchBar } from "@/components/bmh-ds/search-bar";
 
@@ -13,10 +14,23 @@ export type LessonSearchItem = {
 
 const MAX_RESULTS = 8;
 
-export function LessonSearch({ lessons }: { lessons: LessonSearchItem[] }) {
+export function LessonSearch({
+  lessons,
+  instanceId,
+  compact = false,
+}: {
+  lessons: LessonSearchItem[];
+  instanceId?: string;
+  compact?: boolean;
+}) {
   const router = useRouter();
+  const generatedId = useId().replaceAll(":", "");
+  const idPrefix = instanceId ?? `lesson-search-${generatedId}`;
+  const resultsId = `${idPrefix}-results`;
+  const panelId = `${idPrefix}-panel`;
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
+  const [compactOpen, setCompactOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
   const normalizedQuery = query.trim().toLocaleLowerCase();
   const results = useMemo(
@@ -32,20 +46,21 @@ export function LessonSearch({ lessons }: { lessons: LessonSearchItem[] }) {
   );
   const expanded = open && normalizedQuery.length > 0;
 
+  function closeSearch() {
+    setOpen(false);
+    setCompactOpen(false);
+    setActiveIndex(-1);
+  }
+
   function navigateTo(index: number) {
     const lesson = results[index];
     if (!lesson) return;
-    setOpen(false);
+    closeSearch();
     router.push(lessonHref(lesson.id));
   }
 
-  return (
-    <div
-      className="relative"
-      onBlur={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false);
-      }}
-    >
+  const searchSurface = (
+    <div className="relative">
       <SearchBar
         placeholder="Search lessons"
         value={query}
@@ -57,18 +72,18 @@ export function LessonSearch({ lessons }: { lessons: LessonSearchItem[] }) {
         inputProps={{
           role: "combobox",
           "aria-autocomplete": "list",
-          "aria-controls": "lesson-search-results",
+          "aria-controls": resultsId,
           "aria-expanded": expanded,
           "aria-activedescendant":
             expanded && activeIndex >= 0
-              ? `lesson-search-option-${activeIndex}`
+              ? `${idPrefix}-option-${activeIndex}`
               : undefined,
           autoComplete: "off",
+          autoFocus: compact,
           onFocus: () => setOpen(true),
           onKeyDown: (event) => {
             if (event.key === "Escape") {
-              setOpen(false);
-              setActiveIndex(-1);
+              closeSearch();
               return;
             }
             if (!expanded || results.length === 0) return;
@@ -91,7 +106,7 @@ export function LessonSearch({ lessons }: { lessons: LessonSearchItem[] }) {
       />
       {expanded ? (
         <div
-          id="lesson-search-results"
+          id={resultsId}
           role="listbox"
           aria-label="Lesson search results"
           className="absolute left-0 right-0 top-[calc(100%+8px)] z-50 max-h-80 overflow-y-auto rounded-[var(--bmh-radius-md)] border border-[var(--border-card)] bg-[var(--paper)] p-1 shadow-[var(--bmh-shadow-md)]"
@@ -100,12 +115,12 @@ export function LessonSearch({ lessons }: { lessons: LessonSearchItem[] }) {
             results.map((lesson, index) => (
               <Link
                 key={lesson.id}
-                id={`lesson-search-option-${index}`}
+                id={`${idPrefix}-option-${index}`}
                 role="option"
                 aria-selected={index === activeIndex}
                 href={lessonHref(lesson.id)}
                 onMouseEnter={() => setActiveIndex(index)}
-                onClick={() => setOpen(false)}
+                onClick={closeSearch}
                 className="block rounded-[var(--bmh-radius-sm)] px-3 py-2 text-sm font-extrabold text-[var(--ink-900)] no-underline hover:bg-[var(--action-soft)] focus-visible:bg-[var(--action-soft)] focus-visible:outline-2 focus-visible:outline-[var(--action)] aria-selected:bg-[var(--action-soft)]"
               >
                 {lesson.title}
@@ -118,6 +133,40 @@ export function LessonSearch({ lessons }: { lessons: LessonSearchItem[] }) {
           )}
         </div>
       ) : null}
+    </div>
+  );
+
+  return (
+    <div
+      className="relative"
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) closeSearch();
+      }}
+    >
+      {compact ? (
+        <>
+          <button
+            type="button"
+            aria-label="Search lessons"
+            aria-expanded={compactOpen}
+            aria-controls={panelId}
+            onClick={() => setCompactOpen((current) => !current)}
+            className="flex size-10 items-center justify-center rounded-full border-2 border-[var(--ink-200)] bg-[var(--paper)] text-[var(--ink-700)] shadow-[var(--bmh-shadow-xs)] hover:border-[var(--action)] hover:text-[var(--action)] focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)]"
+          >
+            <Search aria-hidden="true" className="size-5" />
+          </button>
+          {compactOpen ? (
+            <div
+              id={panelId}
+              className="fixed left-4 right-4 top-[84px] z-50 rounded-[var(--bmh-radius-lg)] border border-[var(--border-card)] bg-[var(--paper)] p-2 shadow-[var(--bmh-shadow-md)]"
+            >
+              {searchSurface}
+            </div>
+          ) : null}
+        </>
+      ) : (
+        searchSurface
+      )}
     </div>
   );
 }

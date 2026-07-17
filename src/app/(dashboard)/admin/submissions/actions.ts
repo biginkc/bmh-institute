@@ -25,16 +25,21 @@ export async function approveSubmission(input: {
 
   const { data: reviewRow, error: reviewLookupError } = await supabase
     .from("assignment_submissions")
-    .select("assignments ( rubric )")
+    .select("assignments ( rubric, requires_review )")
     .eq("id", input.submissionId)
     .maybeSingle();
   if (reviewLookupError || !reviewRow) {
     return { ok: false, error: "Submission not found." };
   }
   const assignment = firstRow(reviewRow.assignments) as
-    | { rubric: unknown }
+    | { rubric: unknown; requires_review: boolean }
     | null;
-  if (!assignment || !parseAssignmentRubric(assignment.rubric).ok) {
+  const rubric = parseAssignmentRubric(assignment?.rubric);
+  if (
+    !assignment ||
+    !rubric.ok ||
+    (assignment.requires_review && rubric.items.length === 0)
+  ) {
     return {
       ok: false,
       error: "Repair this assignment's review rubric before approving submissions.",

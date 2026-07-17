@@ -106,7 +106,12 @@ export function RolePlayBlock({
           <h2 className="font-[family-name:var(--font-display)] text-lg font-bold text-[var(--ink-900)]">
             {title || "Role play"}
           </h2>
-          <p className="mt-0.5 text-xs font-bold text-[var(--text-muted)]">
+          <p
+            role="status"
+            aria-live="polite"
+            aria-atomic="true"
+            className="mt-0.5 text-xs font-bold text-[var(--text-muted)]"
+          >
             {complete
               ? "Completed"
               : ready

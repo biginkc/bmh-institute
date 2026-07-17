@@ -50,11 +50,17 @@ export async function loadVideoProgress(
   } = await learner.auth.getUser();
   if (!user) return { ok: false, error: "You must be signed in." };
 
-  const { data: block } = await learner
+  const { data: block, error: blockError } = await learner
     .from("content_blocks")
     .select("id, block_type, content")
     .eq("id", blockId)
     .maybeSingle();
+  if (blockError) {
+    return {
+      ok: false,
+      error: blockError.message || "Video progress could not be loaded.",
+    };
+  }
   if (!block || block.block_type !== "video") {
     return { ok: false, error: "Video block not found." };
   }

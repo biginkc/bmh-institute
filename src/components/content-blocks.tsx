@@ -116,6 +116,7 @@ function renderContentBlock(block: ContentBlock, completed: boolean) {
       return (
         <VideoBlock
           blockId={block.id}
+          initialComplete={completed}
           source={stringOr(block.content.source, "upload")}
           signedUrl={stringOr(block.content.signed_url, null)}
           url={stringOr(block.content.url, null)}
@@ -457,6 +458,7 @@ function formatBytes(bytes: number): string {
 
 function VideoBlock({
   blockId,
+  initialComplete,
   source,
   signedUrl,
   url,
@@ -468,6 +470,7 @@ function VideoBlock({
   partLabel,
 }: {
   blockId: string;
+  initialComplete: boolean;
   source: string;
   signedUrl: string | null;
   url: string | null;
@@ -492,6 +495,7 @@ function VideoBlock({
       <VideoBlockPlayer
         blockId={blockId}
         src={src}
+        initialComplete={initialComplete}
         title={accessibleName}
         posterSrc={posterSignedUrl ?? undefined}
         captionsSrc={captionSignedUrl ?? undefined}

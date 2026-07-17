@@ -124,6 +124,27 @@ describe("ContentBlockRenderer BMH treatments", () => {
     expect(screen.getByText("Complete")).toBeVisible();
   });
 
+  it("passes persisted completion into uploaded video blocks", () => {
+    render(
+      <ContentBlockRenderer
+        completed
+        block={{
+          id: "video-1",
+          block_type: "video",
+          content: {
+            source: "upload",
+            signed_url: "https://example.com/video.mp4",
+            title: "Opening the call",
+          },
+          sort_order: 0,
+          is_required_for_completion: true,
+        }}
+      />,
+    );
+
+    expect(screen.getByRole("status")).toHaveTextContent("Complete");
+  });
+
   it("keeps authored text HTML intact at the trusted rendering boundary", () => {
     renderBlock("text", {
       html: "<h2>Opening standard</h2><p>Lead with <strong>certainty</strong>.</p>",
