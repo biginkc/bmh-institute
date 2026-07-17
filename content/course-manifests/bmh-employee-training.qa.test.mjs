@@ -140,22 +140,17 @@ test("the manifest passes structural and semantic content QA", async () => {
 
   assert.deepEqual(report.errors, []);
   assert.ok(report.publicationBlockers.length > 0);
-  assert.ok(
-    report.publicationBlockers.some((blocker) =>
-      blocker.includes("pending Jarrad approval"),
-    ),
-  );
   assert.equal(
     report.publicationBlockers.filter((blocker) =>
       blocker.includes("pending Jarrad approval"),
     ).length,
-    6,
+    0,
   );
   assert.equal(
     report.publicationBlockers.filter((blocker) =>
       blocker.includes("requires a policy-safe replacement cut"),
     ).length,
-    3,
+    9,
   );
   assert.ok(
     report.publicationBlockers.some((blocker) =>
