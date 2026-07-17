@@ -19,75 +19,82 @@ import {
 } from "../src/lib/fixture-cleanup/guards";
 
 const DEFAULT_MANIFEST = "docs/course-production/fixture-boundary-manifest.json";
-const args = parseArgs(process.argv.slice(2));
-const execute = args.flags.has("execute");
-const manifestPath = resolve(args.values.get("manifest") ?? DEFAULT_MANIFEST);
-const rawManifest = await readFile(manifestPath, "utf8");
-const manifestSha256 = sha256(rawManifest);
-const expectedSidecar = `${manifestSha256}  ${manifestPath.split("/").at(-1)}\n`;
-const sidecar = await readFile(`${manifestPath}.sha256`, "utf8");
-if (sidecar !== expectedSidecar) throw new Error("Fixture manifest checksum sidecar does not match.");
-const manifest = parseFixtureManifest(JSON.parse(rawManifest));
 
-const url = requiredEnv("PROD_SUPABASE_URL");
-const serviceRole = requiredEnv("PROD_SUPABASE_SERVICE_ROLE_KEY");
-assertProductionEnvironment(url);
+async function main() {
+  const args = parseArgs(process.argv.slice(2));
+  const execute = args.flags.has("execute");
+  const manifestPath = resolve(args.values.get("manifest") ?? DEFAULT_MANIFEST);
+  const rawManifest = await readFile(manifestPath, "utf8");
+  const manifestSha256 = sha256(rawManifest);
+  const expectedSidecar = `${manifestSha256}  ${manifestPath.split("/").at(-1)}\n`;
+  const sidecar = await readFile(`${manifestPath}.sha256`, "utf8");
+  if (sidecar !== expectedSidecar) {
+    throw new Error("Fixture manifest checksum sidecar does not match.");
+  }
+  const manifest = parseFixtureManifest(JSON.parse(rawManifest));
 
-if (execute) {
-  const confirmation = args.values.get("confirm-production-fixture-cleanup");
-  if (confirmation !== expectedProductionConfirmation(manifestSha256)) {
-    throw new Error(
-      "Execution requires the exact --confirm-production-fixture-cleanup value printed by dry-run.",
+  const url = requiredEnv("PROD_SUPABASE_URL");
+  const serviceRole = requiredEnv("PROD_SUPABASE_SERVICE_ROLE_KEY");
+  assertProductionEnvironment(url);
+
+  if (execute) {
+    const confirmation = args.values.get("confirm-production-fixture-cleanup");
+    if (confirmation !== expectedProductionConfirmation(manifestSha256)) {
+      throw new Error(
+        "Execution requires the exact --confirm-production-fixture-cleanup value printed by dry-run.",
+      );
+    }
+    const approvalPath = args.values.get("approval-record");
+    const rollbackPath = args.values.get("rollback-record");
+    if (!approvalPath || !rollbackPath) {
+      throw new Error("Execution requires separate --approval-record and --rollback-record JSON files.");
+    }
+    const resolvedApprovalPath = resolve(approvalPath);
+    const resolvedRollbackPath = resolve(rollbackPath);
+    if (resolvedApprovalPath === resolvedRollbackPath) {
+      throw new Error("Approval and rollback proof must be distinct controller-supplied records.");
+    }
+    validateExecutionApproval(await readJsonFile(resolvedApprovalPath), manifestSha256);
+    validateFreshRollbackRecord(await readJsonFile(resolvedRollbackPath), manifestSha256);
+  }
+
+  const client = createClient(url, serviceRole, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+  const adapter = createSupabaseAdapter(client);
+  const plan = await buildFixtureCleanupPlan({ manifest, manifestSha256, adapter });
+
+  console.log(
+    JSON.stringify(
+      {
+        mode: execute ? "execute" : "dry-run",
+        project_ref: manifest.project.ref,
+        manifest_sha256: manifestSha256,
+        delete_counts: plan.deleteCounts,
+        storage_delete_counts: plan.storageDeleteCounts,
+        blockers: plan.problems,
+        execution_confirmation: expectedProductionConfirmation(manifestSha256),
+        authorization_notice:
+          "The confirmation value is only a typo guard. It is not authorization to execute. A new Jarrad approval record and fresh rollback record are also required.",
+      },
+      null,
+      2,
+    ),
+  );
+
+  if (!execute && plan.problems.length > 0) {
+    process.exitCode = 1;
+  } else if (execute) {
+    await executeFixtureCleanup({
+      manifest,
+      plan,
+      adapter,
+      confirmation: expectedProductionConfirmation(manifestSha256),
+    });
+    console.log(
+      "Exact fixture manifest rows deleted. Auth users, profiles and audit rows were not deletion targets.",
     );
   }
-  const approvalPath = args.values.get("approval-record");
-  const rollbackPath = args.values.get("rollback-record");
-  if (!approvalPath || !rollbackPath) {
-    throw new Error("Execution requires separate --approval-record and --rollback-record JSON files.");
-  }
-  const resolvedApprovalPath = resolve(approvalPath);
-  const resolvedRollbackPath = resolve(rollbackPath);
-  if (resolvedApprovalPath === resolvedRollbackPath) {
-    throw new Error("Approval and rollback proof must be distinct controller-supplied records.");
-  }
-  validateExecutionApproval(await readJsonFile(resolvedApprovalPath), manifestSha256);
-  validateFreshRollbackRecord(await readJsonFile(resolvedRollbackPath), manifestSha256);
-}
-
-const client = createClient(url, serviceRole, {
-  auth: { persistSession: false, autoRefreshToken: false },
-});
-const adapter = createSupabaseAdapter(client);
-const plan = await buildFixtureCleanupPlan({ manifest, manifestSha256, adapter });
-
-console.log(
-  JSON.stringify(
-    {
-      mode: execute ? "execute" : "dry-run",
-      project_ref: manifest.project.ref,
-      manifest_sha256: manifestSha256,
-      delete_counts: plan.deleteCounts,
-      storage_delete_counts: plan.storageDeleteCounts,
-      blockers: plan.problems,
-      execution_confirmation: expectedProductionConfirmation(manifestSha256),
-      authorization_notice:
-        "The confirmation value is only a typo guard. It is not authorization to execute. A new Jarrad approval record and fresh rollback record are also required.",
-    },
-    null,
-    2,
-  ),
-);
-
-if (!execute && plan.problems.length > 0) {
-  process.exitCode = 1;
-} else if (execute) {
-  await executeFixtureCleanup({
-    manifest,
-    plan,
-    adapter,
-    confirmation: expectedProductionConfirmation(manifestSha256),
-  });
-  console.log("Exact fixture manifest rows deleted. Auth users, profiles and audit rows were not deletion targets.");
 }
 
 function createSupabaseAdapter(client: SupabaseClient): FixtureCleanupAdapter {
@@ -199,3 +206,8 @@ function requiredEnv(name: string) {
   if (!value) throw new Error(`Set ${name}.`);
   return value;
 }
+
+main().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});
