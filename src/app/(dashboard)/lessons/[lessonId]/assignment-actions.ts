@@ -13,6 +13,12 @@ export type SubmitResult =
   | { ok: true }
   | { ok: false; error: string };
 
+type SubmissionType = "text" | "url" | "file_upload";
+
+const MAX_SUBMISSION_TEXT_LENGTH = 20_000;
+const MAX_SUBMISSION_URL_LENGTH = 2_048;
+const MAX_SUBMISSION_FILE_PATH_LENGTH = 1_024;
+
 export async function submitAssignment(input: {
   assignmentId: string;
   lessonId: string;
@@ -27,45 +33,12 @@ export async function submitAssignment(input: {
   } = await supabase.auth.getUser();
   if (!user) return { ok: false, error: "You must be signed in." };
 
-  if (input.submission_type === "text") {
-    const text = (input.submission_text ?? "").trim();
-    if (!text) return { ok: false, error: "Write your response before submitting." };
-  } else if (input.submission_type === "url") {
-    const url = (input.submission_url ?? "").trim();
-    if (!url || !/^https?:\/\//i.test(url)) {
-      return { ok: false, error: "Enter a valid http(s) URL." };
-    }
-  } else if (input.submission_type === "file_upload") {
-    if (!input.submission_file_path) {
-      return { ok: false, error: "Upload a file before submitting." };
-    }
-    if (!pathBelongsToUser(input.submission_file_path, user.id)) {
-      return {
-        ok: false,
-        error: "Upload a file from your account before submitting.",
-      };
-    }
-  }
-
-  const normalizedText =
-    input.submission_type === "text"
-      ? (input.submission_text ?? "").trim()
-      : null;
-  const normalizedUrl =
-    input.submission_type === "url"
-      ? (input.submission_url ?? "").trim()
-      : null;
-  const normalizedFilePath =
-    input.submission_type === "file_upload"
-      ? (input.submission_file_path ?? null)
-      : null;
-
-  const { data: lessonRow } = await supabase
+  const { data: lessonRow, error: lessonError } = await supabase
     .from("lessons")
     .select("assignment_id")
     .eq("id", input.lessonId)
     .maybeSingle();
-  if (lessonRow?.assignment_id !== input.assignmentId) {
+  if (lessonError || lessonRow?.assignment_id !== input.assignmentId) {
     return { ok: false, error: "This assignment does not belong to the lesson." };
   }
 
@@ -77,19 +50,52 @@ export async function submitAssignment(input: {
     return { ok: false, error: "Complete the prerequisite lessons first." };
   }
 
-  // Resolve review policy from the assignment itself after proving it is bound
-  // to the submitted lesson. Never trust client-supplied lesson/assignment ids.
-  // When an assignment doesn't require review, the submission is auto-approved
-  // so the existing `trg_after_assignment_approved` trigger marks the lesson
-  // complete. Default to requiring review if the row can't be read.
-  const { data: assignmentRow } = await supabase
+  // Resolve the authored submission type and review policy only after proving
+  // that the assignment is bound to the submitted lesson.
+  const { data: assignmentRow, error: assignmentError } = await supabase
     .from("assignments")
-    .select("requires_review")
+    .select("submission_type, requires_review")
     .eq("id", input.assignmentId)
     .maybeSingle();
-  const requiresReview =
-    (assignmentRow as { requires_review?: boolean } | null)?.requires_review ??
-    true;
+  const authoredType = assignmentRow?.submission_type;
+  if (
+    assignmentError ||
+    !assignmentRow ||
+    !isSubmissionType(authoredType) ||
+    input.submission_type !== authoredType
+  ) {
+    return {
+      ok: false,
+      error: "Submission type does not match this assignment.",
+    };
+  }
+
+  const normalized = normalizeSubmission(input, authoredType, user.id);
+  if (!normalized.ok) return normalized;
+
+  if (authoredType === "file_upload") {
+    const filePath = normalized.submission_file_path;
+    if (!filePath) {
+      return { ok: false, error: "Upload a file before submitting." };
+    }
+    const fileName = filePath.split("/")[1];
+    const { data: objects, error: storageError } = await supabase.storage
+      .from("submissions")
+      .list(user.id, { limit: 100, search: fileName });
+    if (
+      storageError ||
+      !(objects ?? []).some(
+        (object) => object.name === fileName && Boolean(object.id),
+      )
+    ) {
+      return {
+        ok: false,
+        error: "The uploaded file could not be verified. Upload it again.",
+      };
+    }
+  }
+
+  const requiresReview = assignmentRow.requires_review;
   const status = requiresReview ? "submitted" : "approved";
 
   let admin;
@@ -105,9 +111,9 @@ export async function submitAssignment(input: {
     assignment_id: input.assignmentId,
     lesson_id: input.lessonId,
     user_id: user.id,
-    submission_text: normalizedText,
-    submission_url: normalizedUrl,
-    submission_file_path: normalizedFilePath,
+    submission_text: normalized.submission_text,
+    submission_url: normalized.submission_url,
+    submission_file_path: normalized.submission_file_path,
     status,
     // Auto-approved submissions have no human reviewer; stamp the time so they
     // don't read as "pending" in admin views.
@@ -131,11 +137,11 @@ export async function submitAssignment(input: {
             ? "url"
             : "file",
       preview:
-        input.submission_type === "text"
-          ? (normalizedText ?? "")
-          : input.submission_type === "url"
-            ? (normalizedUrl ?? "")
-            : filenameFromPath(normalizedFilePath),
+        authoredType === "text"
+          ? (normalized.submission_text ?? "")
+          : authoredType === "url"
+            ? (normalized.submission_url ?? "")
+            : filenameFromPath(normalized.submission_file_path),
     });
   } else {
     await emitSandraCourseCompletedForLesson(supabase, {
@@ -221,6 +227,97 @@ function filenameFromPath(p: string | null): string {
   return last.replace(/^\d+-/, "");
 }
 
+function normalizeSubmission(
+  input: {
+    submission_text?: string;
+    submission_url?: string;
+    submission_file_path?: string;
+  },
+  authoredType: SubmissionType,
+  userId: string,
+):
+  | {
+      ok: true;
+      submission_text: string | null;
+      submission_url: string | null;
+      submission_file_path: string | null;
+    }
+  | { ok: false; error: string } {
+  const text = typeof input.submission_text === "string"
+    ? input.submission_text.trim()
+    : "";
+  const url = typeof input.submission_url === "string"
+    ? input.submission_url.trim()
+    : "";
+  const filePath = typeof input.submission_file_path === "string"
+    ? input.submission_file_path.trim()
+    : "";
+  const suppliedPayloads = [text, url, filePath].filter(Boolean).length;
+  if (suppliedPayloads !== 1) {
+    return { ok: false, error: "Submit exactly one response for this assignment." };
+  }
+
+  if (authoredType === "text") {
+    if (!text) {
+      return { ok: false, error: "Write your response before submitting." };
+    }
+    if (text.length > MAX_SUBMISSION_TEXT_LENGTH) {
+      return { ok: false, error: "Your response is too long." };
+    }
+    return {
+      ok: true,
+      submission_text: text,
+      submission_url: null,
+      submission_file_path: null,
+    };
+  }
+
+  if (authoredType === "url") {
+    if (
+      !url ||
+      url.length > MAX_SUBMISSION_URL_LENGTH ||
+      !/^https?:\/\//i.test(url)
+    ) {
+      return { ok: false, error: "Enter a valid http(s) URL." };
+    }
+    return {
+      ok: true,
+      submission_text: null,
+      submission_url: url,
+      submission_file_path: null,
+    };
+  }
+
+  if (
+    !filePath ||
+    filePath.length > MAX_SUBMISSION_FILE_PATH_LENGTH ||
+    !pathBelongsToUser(filePath, userId)
+  ) {
+    return {
+      ok: false,
+      error: "Upload a file from your account before submitting.",
+    };
+  }
+  return {
+    ok: true,
+    submission_text: null,
+    submission_url: null,
+    submission_file_path: filePath,
+  };
+}
+
+function isSubmissionType(value: unknown): value is SubmissionType {
+  return value === "text" || value === "url" || value === "file_upload";
+}
+
 function pathBelongsToUser(path: string, userId: string): boolean {
-  return path.startsWith(`${userId}/`);
+  const parts = path.split("/");
+  return (
+    parts.length === 2 &&
+    parts[0] === userId &&
+    Boolean(parts[1]) &&
+    parts[1] !== "." &&
+    parts[1] !== ".." &&
+    !parts[1].includes("\\")
+  );
 }

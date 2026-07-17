@@ -65,6 +65,7 @@ vi.mock("@/lib/supabase/server", () => ({
                 data: {
                   title: "Auto assignment",
                   requires_review: assignmentRequiresReview,
+                  submission_type: "text",
                 },
                 error: null,
               }),

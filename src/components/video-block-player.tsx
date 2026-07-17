@@ -8,6 +8,8 @@ import {
   recordVideoProgress,
 } from "@/app/(dashboard)/lessons/[lessonId]/actions";
 
+const PROGRESS_SAMPLE_SECONDS = 2;
+
 /**
  * HTML5 video player that records short contiguous playback observations.
  * Seeking moves the resume point but does not add watched coverage.
@@ -109,7 +111,7 @@ export function VideoBlockPlayer({
       sampleStartRef.current = el.currentTime;
       return;
     }
-    if (el.currentTime - sampleStartRef.current < 5) return;
+    if (el.currentTime - sampleStartRef.current < PROGRESS_SAMPLE_SECONDS) return;
     flushProgress(el);
   }
 

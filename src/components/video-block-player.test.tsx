@@ -94,17 +94,17 @@ describe("<VideoBlockPlayer />", () => {
     });
 
     fireEvent.play(video);
-    video.currentTime = 5;
+    video.currentTime = 2;
     fireEvent.timeUpdate(video);
-    video.currentTime = 10;
+    video.currentTime = 4;
     fireEvent.timeUpdate(video);
 
     await waitFor(() => expect(recordVideoProgress).toHaveBeenCalledTimes(1));
     resolveFirst({
       ok: true,
-      positionSeconds: 5,
+      positionSeconds: 2,
       watchedRanges: [],
-      watchedPercent: 5,
+      watchedPercent: 2,
       completed: false,
     });
     await waitFor(() => expect(recordVideoProgress).toHaveBeenCalledTimes(2));
@@ -122,6 +122,8 @@ describe("<VideoBlockPlayer />", () => {
     });
 
     fireEvent.play(video);
+    video.currentTime = 2;
+    fireEvent.timeUpdate(video);
     video.currentTime = 4;
     unmount();
 
@@ -130,7 +132,7 @@ describe("<VideoBlockPlayer />", () => {
         blockId: "block-1",
         positionSeconds: 4,
         durationSeconds: 100,
-        observedFrom: 0,
+        observedFrom: 2,
         observedTo: 4,
       }),
     );
@@ -149,7 +151,7 @@ describe("<VideoBlockPlayer />", () => {
     });
 
     fireEvent.play(video);
-    video.currentTime = 5;
+    video.currentTime = 2;
     fireEvent.timeUpdate(video);
 
     await waitFor(() => expect(recordVideoProgress).toHaveBeenCalledTimes(2));

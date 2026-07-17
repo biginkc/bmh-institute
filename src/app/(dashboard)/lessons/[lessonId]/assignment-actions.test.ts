@@ -18,6 +18,9 @@ let insertedRow: Record<string, unknown> | null = null;
 let lessonAssignmentId = "assignment-1";
 let lessonUnlocked = true;
 let assignmentRequiresReview = true;
+let assignmentSubmissionType: "text" | "url" | "file_upload" = "file_upload";
+let storageObjectExists = true;
+let storageListError: { message: string } | null = null;
 
 vi.mock("@/lib/supabase/admin", () => ({
   createAdminClient: vi.fn(() => ({
@@ -50,6 +53,26 @@ vi.mock("@/lib/supabase/server", () => ({
       }
       return { data: lessonUnlocked, error: null };
     },
+    storage: {
+      from: (bucket: string) => {
+        if (bucket !== "submissions") {
+          throw new Error(`Unexpected storage bucket: ${bucket}`);
+        }
+        return {
+          list: async (folder: string, options: { search?: string }) => {
+            if (folder !== "user-1") {
+              throw new Error(`Unexpected storage folder: ${folder}`);
+            }
+            return {
+              data: storageObjectExists
+                ? [{ id: "object-1", name: options.search }]
+                : [],
+              error: storageListError,
+            };
+          },
+        };
+      },
+    },
     from: (table: string) => {
       if (table === "profiles") {
         return {
@@ -78,6 +101,7 @@ vi.mock("@/lib/supabase/server", () => ({
                 data: {
                   title: "Upload assignment",
                   requires_review: assignmentRequiresReview,
+                  submission_type: assignmentSubmissionType,
                 },
                 error: null,
               }),
@@ -113,6 +137,9 @@ describe("submitAssignment (INTEG-04 file path validation)", () => {
     lessonAssignmentId = "assignment-1";
     lessonUnlocked = true;
     assignmentRequiresReview = true;
+    assignmentSubmissionType = "file_upload";
+    storageObjectExists = true;
+    storageListError = null;
     insertSpy.mockReset();
     insertSpy.mockResolvedValue({ error: null });
   });
@@ -156,7 +183,74 @@ describe("submitAssignment (INTEG-04 file path validation)", () => {
     });
   });
 
+  it("rejects a user-scoped file path when the exact storage object does not exist", async () => {
+    storageObjectExists = false;
+
+    const result = await submitAssignment({
+      assignmentId: "assignment-1",
+      lessonId: "lesson-1",
+      submission_type: "file_upload",
+      submission_file_path: "user-1/missing.pdf",
+    });
+
+    expect(result).toEqual({
+      ok: false,
+      error: "The uploaded file could not be verified. Upload it again.",
+    });
+    expect(insertSpy).not.toHaveBeenCalled();
+  });
+
+  it("rejects a client submission type that differs from the authored assignment", async () => {
+    assignmentSubmissionType = "text";
+
+    const result = await submitAssignment({
+      assignmentId: "assignment-1",
+      lessonId: "lesson-1",
+      submission_type: "url",
+      submission_url: "https://example.com/work",
+    });
+
+    expect(result).toEqual({
+      ok: false,
+      error: "Submission type does not match this assignment.",
+    });
+    expect(insertSpy).not.toHaveBeenCalled();
+  });
+
+  it("rejects multiple supplied payloads", async () => {
+    assignmentSubmissionType = "text";
+
+    const result = await submitAssignment({
+      assignmentId: "assignment-1",
+      lessonId: "lesson-1",
+      submission_type: "text",
+      submission_text: "My answer",
+      submission_url: "https://example.com/extra",
+    });
+
+    expect(result).toEqual({
+      ok: false,
+      error: "Submit exactly one response for this assignment.",
+    });
+    expect(insertSpy).not.toHaveBeenCalled();
+  });
+
+  it("rejects text beyond the server-side payload limit", async () => {
+    assignmentSubmissionType = "text";
+
+    const result = await submitAssignment({
+      assignmentId: "assignment-1",
+      lessonId: "lesson-1",
+      submission_type: "text",
+      submission_text: "x".repeat(20_001),
+    });
+
+    expect(result).toEqual({ ok: false, error: "Your response is too long." });
+    expect(insertSpy).not.toHaveBeenCalled();
+  });
+
   it("rejects a client-supplied assignment id that is not attached to the lesson", async () => {
+    assignmentSubmissionType = "text";
     lessonAssignmentId = "assignment-2";
 
     const result = await submitAssignment({
@@ -176,6 +270,7 @@ describe("submitAssignment (INTEG-04 file path validation)", () => {
 
   it("rejects submissions for locked lessons before insert", async () => {
     lessonUnlocked = false;
+    assignmentSubmissionType = "text";
 
     const result = await submitAssignment({
       assignmentId: "assignment-1",
@@ -194,6 +289,7 @@ describe("submitAssignment (INTEG-04 file path validation)", () => {
 
   it("auto-approves a bound unlocked assignment that does not require review", async () => {
     assignmentRequiresReview = false;
+    assignmentSubmissionType = "text";
 
     const result = await submitAssignment({
       assignmentId: "assignment-1",

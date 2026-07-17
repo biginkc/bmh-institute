@@ -34,6 +34,8 @@ export type VideoProgressResult =
     }
   | { ok: false; error: string };
 
+const VIDEO_POSITION_EPSILON_SECONDS = 1;
+
 export async function loadVideoProgress(
   blockId: string,
 ): Promise<VideoProgressResult> {
@@ -129,6 +131,17 @@ export async function recordVideoProgress(input: {
   if (Math.abs(duration - input.durationSeconds) > 2) {
     return { ok: false, error: "Video duration does not match the lesson asset." };
   }
+  if (
+    input.observedTo > duration + VIDEO_POSITION_EPSILON_SECONDS ||
+    input.positionSeconds > duration + VIDEO_POSITION_EPSILON_SECONDS ||
+    Math.abs(input.positionSeconds - input.observedTo) >
+      VIDEO_POSITION_EPSILON_SECONDS
+  ) {
+    return {
+      ok: false,
+      error: "Video position does not match the observed playback range.",
+    };
+  }
 
   const now = new Date();
   const observation = applyPlaybackObservation({
@@ -146,7 +159,14 @@ export async function recordVideoProgress(input: {
       : null,
     observedAt: now,
   });
+  if (!observation.ok) {
+    return {
+      ok: false,
+      error: "Video playback observation could not be verified.",
+    };
+  }
   const ranges = observation.ranges;
+  const trustedPosition = Math.min(input.observedTo, duration);
   const coverage = watchedCoverageRatio(ranges, duration);
   // Only authoring/import metadata can establish the completion denominator.
   // Browser-reported duration is useful for resume but cannot award completion.
@@ -167,10 +187,10 @@ export async function recordVideoProgress(input: {
       {
         user_id: user.id,
         block_id: input.blockId,
-        position_seconds: Math.min(input.positionSeconds, duration),
+        position_seconds: trustedPosition,
         duration_seconds: duration,
         watched_ranges: ranges,
-        last_observed_position_seconds: input.positionSeconds,
+        last_observed_position_seconds: trustedPosition,
         last_observed_at: now.toISOString(),
         updated_at: now.toISOString(),
       },
@@ -179,10 +199,15 @@ export async function recordVideoProgress(input: {
   if (progressError) return { ok: false, error: progressError.message };
 
   if (completed) {
-    await admin.from("user_block_progress").upsert(
+    const { error: completionError } = await admin
+      .from("user_block_progress")
+      .upsert(
       { user_id: user.id, block_id: input.blockId },
       { onConflict: "user_id,block_id", ignoreDuplicates: true },
     );
+    if (completionError) {
+      return { ok: false, error: completionError.message };
+    }
     await emitSandraCourseCompletedForBlock(learner, {
       userId: user.id,
       blockId: input.blockId,
@@ -193,7 +218,7 @@ export async function recordVideoProgress(input: {
   revalidatePath("/dashboard");
   return {
     ok: true,
-    positionSeconds: Math.min(input.positionSeconds, duration),
+    positionSeconds: trustedPosition,
     watchedRanges: ranges,
     watchedPercent: Math.round(coverage * 100),
     completed,
