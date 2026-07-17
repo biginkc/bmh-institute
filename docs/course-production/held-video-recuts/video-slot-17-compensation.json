@@ -37,22 +37,22 @@
     {
       "scene_id": "comp-source-of-truth",
       "title": "Start with the written source",
-      "spoken_text": "Let's clear up the most important point first. This training doesn't set your pay or promise a compensation term. Your current offer letter, written compensation plan, and role sheet define what applies to you."
+      "spoken_text": "One thing needs to be clear up front. This course does not set your pay. The offer letter, current written compensation plan, and role sheet issued to you tell you what applies."
     },
     {
       "scene_id": "comp-scorecard",
       "title": "Understand what the work owns",
-      "spoken_text": "The useful part of this lesson is understanding what your work owns and how the company measures it right now. A scorecard might focus on qualified conversations, clean handoffs, accurate records, or a team result. Those are examples of business outcomes. They don't define anyone's compensation."
+      "spoken_text": "This lesson is about the work you own and how the company measures it today. Your scorecard may track conversations, handoffs, record quality, or a team result. It describes the work. It does not create a pay term."
     },
     {
       "scene_id": "comp-visible-work",
       "title": "Keep performance visible",
-      "spoken_text": "Make your work easy to see. Follow the current process, keep complete notes, and use the scorecard assigned to your work. Scorecards can change as the business changes, so an old video or someone else's agreement can't tell you what applies today."
+      "spoken_text": "Keep a clear record of your work. Use the current process and the scorecard assigned to you. Plans change. An old video or another person's agreement cannot tell you what applies to you now."
     },
     {
       "scene_id": "comp-questions",
       "title": "Ask instead of assuming",
-      "spoken_text": "If anything is unclear, or if two documents seem to conflict, pause and ask your manager. Use the latest offer letter, written plan, and role sheet issued to you. Those written documents control. This lesson gives context, but it isn't a compensation agreement."
+      "spoken_text": "If the documents are unclear or seem to disagree, stop and ask your manager. Check the latest versions issued to you. Those documents control. This lesson is only context. It is not a compensation agreement."
     },
     {
       "scene_id": "comp-transition",

@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/server";
 
 import { SidebarNav } from "./sidebar-nav";
 import { LessonSearch, type LessonSearchItem } from "./lesson-search";
+import { MobileNav } from "./mobile-nav";
 
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
@@ -112,7 +113,7 @@ export default async function DashboardLayout({
         </div>
       </aside>
 
-      <header className="fixed inset-x-0 top-0 z-30 flex h-[76px] items-center gap-4 border-b border-[var(--border-hairline)] bg-[var(--paper)] px-4 md:left-64 md:px-7 print:hidden">
+      <header className="fixed inset-x-0 top-0 z-30 flex h-[76px] items-center gap-2 border-b border-[var(--border-hairline)] bg-[var(--paper)] px-2 sm:gap-4 sm:px-4 md:left-64 md:px-7 print:hidden">
         <Link
           href="/dashboard"
           className="shrink-0 md:hidden"
@@ -126,12 +127,16 @@ export default async function DashboardLayout({
           <LessonSearch lessons={searchableLessons} instanceId="desktop" />
         </div>
         <span className="flex-1" />
-        <div className="sm:hidden">
+        <div className="shrink-0 sm:hidden">
           <LessonSearch lessons={searchableLessons} instanceId="mobile" compact />
         </div>
+        <MobileNav
+          isAdmin={isAdmin}
+          pendingSubmissionsCount={pendingSubmissions}
+        />
         <Link
           href="/profile"
-          className="md:hidden"
+          className="flex size-10 shrink-0 items-center justify-center md:hidden"
           aria-label={`${displayName} profile`}
         >
           <Avatar name={displayName} size={36} />

@@ -3,9 +3,11 @@
 import { Search } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useId, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 
 import { SearchBar } from "@/components/bmh-ds/search-bar";
+
+import { CLOSE_LESSON_SEARCH_EVENT } from "./dashboard-events";
 
 export type LessonSearchItem = {
   id: string;
@@ -51,6 +53,16 @@ export function LessonSearch({
     setCompactOpen(false);
     setActiveIndex(-1);
   }
+
+  useEffect(() => {
+    const closeForModalNavigation = () => {
+      setOpen(false);
+      setCompactOpen(false);
+      setActiveIndex(-1);
+    };
+    window.addEventListener(CLOSE_LESSON_SEARCH_EVENT, closeForModalNavigation);
+    return () => window.removeEventListener(CLOSE_LESSON_SEARCH_EVENT, closeForModalNavigation);
+  }, []);
 
   function navigateTo(index: number) {
     const lesson = results[index];

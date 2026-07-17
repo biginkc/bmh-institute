@@ -391,6 +391,79 @@ Implement the approved concurrent completion plan for the reusable BMH Institute
   employee access change, publication, billing change, held-video mutation, or
   batch artwork generation occurred during this pass.
 
+### 2026-07-17 continuation audit and preapproval fixes
+
+- Draft PR checks on controller head `c875529` passed the test-project migration,
+  Verify, seeded Playwright, and Vercel preview gates. A fresh full-manifest
+  source preflight verified all 79 approved files and reported only the expected
+  nine held videos plus 67 missing derivatives: 18 held-video caption/transcript
+  records and 49 approval-gated artwork records. No integrity error was found.
+- A real desktop-to-mobile replay exposed a Node 26 file-handle crash in the
+  verified held-video server when a browser aborted range requests. The server
+  now owns every media handle explicitly and closes it exactly once across
+  completion, error, abort, response close, invalid range, HEAD, and integrity
+  failure paths. Regression coverage aborts concurrent ranges for all nine
+  videos and proves later desktop- and mobile-style loads still succeed. The
+  real nine-video surface then rendered at 1440 by 900 and 390 by 844 with the
+  expected six review-required and three replacement-required cards, no
+  overflow or console errors, and the unchanged held-set lock
+  `5fdbd88dd07aef9f8f3fde6502a07ac9169cca36440d8629dff00442640c2411`.
+- The mobile dashboard had no reachable primary navigation despite its browser
+  contract. A portal-backed modal drawer now exposes the complete learner/admin
+  navigation below the desktop breakpoint with initial focus, background
+  isolation, focus trapping, Escape/backdrop close, focus restoration, and
+  body-scroll locking. Opening it closes compact lesson search, it releases its
+  lock when the viewport crosses the desktop breakpoint, and browser coverage
+  follows a drawer link through a real route transition. The
+  production-readiness browser lifecycle now exercises exact lesson-search
+  selection on desktop and at 390 pixels before continuing its existing flow.
+- Fresh test-project scenario verification matched all six BMH role plays with
+  no reconciliation issue. Fresh Institute integration execution initially
+  exposed a harness-only environment alias gap in five server-action tests.
+  The integration configuration now requires all three `TEST_SUPABASE_*`
+  credentials, accepts only the exact durable Institute test project, and
+  fails during configuration instead of returning green with skipped tests or
+  falling through to a developer's production environment. With only the test
+  variables supplied, all 31 live integration tests passed with zero skips,
+  including atomic import/rollback, artwork provenance, answer isolation,
+  storage authorization, data integrity, user deletion, certificates, access
+  paths, and rate limiting.
+- The checksum-backed July 16 database snapshot passed an isolated local
+  PostgreSQL restore rehearsal. All application `public` catalog, activity,
+  access, profile, and audit counts matched the captured fixture boundary;
+  five lesson prerequisite references restored without an orphan, and the
+  reconciliation evidence hash is
+  `c74670492fb9870ddfa3e1b62ebea2c3f953e9500c89972faa0db95ea67fe3de`.
+  The rehearsal used local compatibility shells for Supabase-managed auth and
+  publication objects, so it clears the recorded lesson-circularity risk but
+  does not replace the required fresh pre-cleanup backup or a managed
+  auth/storage disaster rehearsal.
+- The three replacement-only narration packages were passed through the BMH
+  script humanization rules and independently reviewed. Their generated scripts
+  remain role-agnostic and contain no pay promise, dollar figure, quota, fixed
+  timeline, advancement guarantee, or visible chapter reference; all five
+  recut contract tests pass. Validation proves that the packages remain marked
+  with provider and render permission set to false; it does not prove provider
+  inactivity. Independently, no provider command or API was invoked in this
+  execution, and no render, caption, approval transition, or media mutation was
+  performed. Any future rendering entrypoint must consume a checksum-bound
+  human approval artifact and refuse execution while either permission remains
+  false.
+- Final adversarial review also found that the held-video runtime could be
+  reopened after shutdown and then evade later cleanup. The runtime is now
+  explicitly one-shot, rejects listening after shutdown begins, and covers the
+  close-before-listen lifecycle alongside the abort and paused-client cases.
+  Both explicit shutdown and file-integrity shutdown during startup passed
+  100-iteration adversarial stress with no listening socket left behind.
+- Final local acceptance after these repairs passed 563 unit tests, 114 RTL
+  interface tests, 31 live test-project integration tests with zero skips, 72
+  course-content checks, 17 artwork-workflow checks, lint, typecheck, and the
+  production build. A local Chromium support run passed the admin shell, the
+  320-pixel search-to-drawer-to-Certificates route, and the 390-to-1024-pixel
+  breakpoint cleanup flow. This automated browser run remains supporting
+  evidence; it does not replace the required final Chrome/DevTools acceptance
+  on the deployed application.
+
 ## Hard gates
 
 - Jarrad must review the six corrected held cuts. The three policy-defective

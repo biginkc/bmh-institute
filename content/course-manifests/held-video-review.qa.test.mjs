@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { mkdtemp, readFile, realpath, rm, symlink, writeFile } from "node:fs/promises";
+import { get } from "node:http";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { test } from "node:test";
@@ -11,6 +12,7 @@ import {
   assertLockedFileUnchanged,
   assertHeldAssetMatchesLock,
   captureFileSnapshot,
+  createExactlyOnceFileHandleCloser,
   createHeldVideoReviewServer,
   renderHeldVideoReview,
   resolveManifestMediaPath,
@@ -76,7 +78,7 @@ async function createSyntheticVerification(manifest) {
     let contentType = "text/markdown; charset=utf-8";
     let kind = "transcript";
     if (route.startsWith("/media/")) {
-      contents = "0123456789abcdef0123456789abcdef";
+      contents = Buffer.alloc(512 * 1024, index);
       contentType = "video/mp4";
       kind = "video";
     } else if (route.endsWith(".vtt")) {
@@ -115,6 +117,38 @@ async function createSyntheticVerification(manifest) {
     },
   };
 }
+
+function abortRangeRequest(url, route) {
+  return new Promise((resolveRequest, rejectRequest) => {
+    const request = get(new URL(route, url), {
+      headers: { Range: "bytes=0-524287" },
+    });
+    request.once("error", (error) => {
+      if (error.code === "ECONNRESET") resolveRequest();
+      else rejectRequest(error);
+    });
+    request.once("response", (response) => {
+      response.once("error", (error) => {
+        if (error.code === "ECONNRESET") resolveRequest();
+        else rejectRequest(error);
+      });
+      response.once("close", resolveRequest);
+      response.destroy();
+    });
+  });
+}
+
+test("the file-handle closer invokes close exactly once across competing completion paths", async () => {
+  let closeCalls = 0;
+  const close = createExactlyOnceFileHandleCloser({
+    async close() {
+      closeCalls += 1;
+    },
+  });
+
+  await Promise.all([close(), close(), close()]);
+  assert.equal(closeCalls, 1);
+});
 
 test("the review lock fails closed when a held cut changes", () => {
   assert.throws(
@@ -274,6 +308,180 @@ test("the verified server serves only locked routes with no-store and byte range
     assert.match(unknownResponse.headers.get("cache-control"), /no-store/);
   } finally {
     await runtime.close();
+    await fixture.cleanup();
+  }
+});
+
+test("concurrent aborted media ranges do not prevent a second desktop or mobile-style page load", async () => {
+  const manifest = await manifestPromise;
+  const fixture = await createSyntheticVerification(manifest);
+  const { verification } = fixture;
+  const runtime = createHeldVideoReviewServer({
+    manifest,
+    verification,
+    watchIntervalMs: 60_000,
+  });
+  const url = await runtime.listen();
+  try {
+    const videoRoutes = verification.files
+      .filter((file) => file.kind === "video")
+      .map((file) => file.route);
+    assert.equal(videoRoutes.length, 9);
+
+    await Promise.all(videoRoutes.map((route) => abortRangeRequest(url, route)));
+
+    const desktopResponse = await fetch(url, {
+      headers: { "User-Agent": "Desktop Chrome held-video review" },
+    });
+    assert.equal(desktopResponse.status, 200);
+    assert.match(await desktopResponse.text(), /VERIFIED LOCAL SERVER/);
+
+    const mobileResponse = await fetch(url, {
+      headers: { "User-Agent": "Mobile Safari held-video review" },
+    });
+    assert.equal(mobileResponse.status, 200);
+    assert.match(await mobileResponse.text(), /VERIFIED LOCAL SERVER/);
+    assert.equal(runtime.integrityError, null);
+  } finally {
+    await runtime.close();
+    await fixture.cleanup();
+  }
+});
+
+test("runtime close terminates a paused media client and waits for its file handle", async () => {
+  const manifest = await manifestPromise;
+  const fixture = await createSyntheticVerification(manifest);
+  const { verification } = fixture;
+  const video = verification.files.find((file) => file.kind === "video");
+  await writeFile(video.absolutePath, Buffer.alloc(32 * 1024 * 1024, 7));
+  video.snapshot = await captureFileSnapshot(video.absolutePath);
+
+  const runtime = createHeldVideoReviewServer({
+    manifest,
+    verification,
+    watchIntervalMs: 60_000,
+  });
+  const url = await runtime.listen();
+  let request;
+  let pausedResponse;
+  try {
+    pausedResponse = await new Promise((resolveResponse, rejectResponse) => {
+      request = get(new URL(video.route, url));
+      request.once("error", rejectResponse);
+      request.once("response", (response) => {
+        response.pause();
+        resolveResponse(response);
+      });
+    });
+    request.removeAllListeners("error");
+    request.on("error", () => {});
+
+    let timeout;
+    await Promise.race([
+      runtime.close(),
+      new Promise((_, rejectTimeout) => {
+        timeout = setTimeout(
+          () => rejectTimeout(new Error("runtime.close() hung on a paused media response")),
+          2_000,
+        );
+      }),
+    ]).finally(() => clearTimeout(timeout));
+
+    assert.equal(runtime.server.listening, false);
+    assert.equal(pausedResponse.complete, false);
+    assert.deepEqual(runtime.activeResourceCounts, {
+      requests: 0,
+      responses: 0,
+      streams: 0,
+      fileHandles: 0,
+      pendingFileHandleCloses: 0,
+    });
+    await assert.doesNotReject(runtime.close(), "runtime close remains idempotent");
+  } finally {
+    pausedResponse?.destroy();
+    request?.destroy();
+    await runtime.close();
+    await fixture.cleanup();
+  }
+});
+
+test("the review runtime is one-shot when closed before listening", async () => {
+  const manifest = await manifestPromise;
+  const fixture = await createSyntheticVerification(manifest);
+  const runtime = createHeldVideoReviewServer({
+    manifest,
+    verification: fixture.verification,
+    watchIntervalMs: 60_000,
+  });
+  try {
+    await runtime.close();
+    assert.equal(runtime.server.listening, false);
+    await assert.rejects(
+      runtime.listen(),
+      /cannot listen after shutdown has started/,
+    );
+    await assert.doesNotReject(runtime.close(), "a pre-listen close remains idempotent");
+    assert.equal(runtime.server.listening, false);
+  } finally {
+    await runtime.close();
+    await fixture.cleanup();
+  }
+});
+
+test("concurrent startup and shutdown never leave a listening review server", async () => {
+  const manifest = await manifestPromise;
+  const fixture = await createSyntheticVerification(manifest);
+  try {
+    for (let iteration = 0; iteration < 50; iteration += 1) {
+      const runtime = createHeldVideoReviewServer({
+        manifest,
+        verification: fixture.verification,
+        watchIntervalMs: 60_000,
+      });
+      const listen = runtime.listen();
+      const close = runtime.close();
+      const [listenResult, closeResult] = await Promise.allSettled([listen, close]);
+      assert.equal(closeResult.status, "fulfilled", `close failed in iteration ${iteration}`);
+      assert.equal(runtime.server.listening, false, `server leaked in iteration ${iteration}`);
+      if (listenResult.status === "fulfilled") {
+        assert.match(listenResult.value, /^http:\/\/(?:127\.0\.0\.1|\[::1\]):\d+\/$/);
+      } else {
+        assert.match(listenResult.reason.message, /shut down while starting/);
+      }
+      await assert.doesNotReject(runtime.close());
+    }
+  } finally {
+    await fixture.cleanup();
+  }
+});
+
+test("integrity-watch shutdown during startup never leaves a listening server", async () => {
+  const manifest = await manifestPromise;
+  const fixture = await createSyntheticVerification(manifest);
+  const watchedFile = fixture.verification.files[0];
+  try {
+    for (let iteration = 0; iteration < 100; iteration += 1) {
+      const runtime = createHeldVideoReviewServer({
+        manifest,
+        verification: fixture.verification,
+        host: "localhost",
+        watchIntervalMs: 1,
+      });
+      const listenResult = Promise.allSettled([runtime.listen()]);
+      await writeFile(watchedFile.absolutePath, `integrity-startup-${iteration}\n`, "utf8");
+
+      const integrityDeadline = Date.now() + 500;
+      while (!runtime.integrityError && Date.now() < integrityDeadline) {
+        await new Promise((resolveWait) => setTimeout(resolveWait, 1));
+      }
+      assert.ok(runtime.integrityError, `watcher did not observe mutation in iteration ${iteration}`);
+      await listenResult;
+      await runtime.close();
+      assert.equal(runtime.server.listening, false, `server leaked in iteration ${iteration}`);
+
+      watchedFile.snapshot = await captureFileSnapshot(watchedFile.absolutePath);
+    }
+  } finally {
     await fixture.cleanup();
   }
 });

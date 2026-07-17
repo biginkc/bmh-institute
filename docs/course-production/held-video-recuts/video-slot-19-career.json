@@ -37,27 +37,27 @@
     {
       "scene_id": "career-foundation",
       "title": "Build capability first",
-      "spoken_text": "Professional development starts with building capability in your current role. Practice a relevant skill, apply it in the work, and review the result. Reliable execution means using what you know consistently while keeping the work accurate and ready for the next person."
+      "spoken_text": "Development starts with getting better at the work assigned to you now. Choose a skill that matters, practice it, and use it in real work. Then look at the result. The aim is to work reliably and leave the record or handoff ready for the next person."
     },
     {
       "scene_id": "career-feedback-loop",
       "title": "Use a feedback loop",
-      "spoken_text": "Ask for specific feedback and listen without becoming defensive. If the feedback is unclear, ask a clarifying question. Then practice the corrected approach, apply it in the work, and return with evidence of what changed."
+      "spoken_text": "Ask for specific feedback and listen before you defend your first approach. If you do not understand the feedback, ask a direct question. Practice the new approach, use it in the work, and bring back an example of what changed."
     },
     {
       "scene_id": "career-documented-ownership",
       "title": "Confirm ownership changes",
-      "spoken_text": "Building capability does not automatically change your assigned responsibilities. Take on increased ownership only after your manager confirms the change and it is documented in your current written role plan. Training examples and another person's duties do not redefine your role."
+      "spoken_text": "Getting better at the work does not automatically change your responsibilities. Take on more ownership after your manager confirms it and the change appears in your current written role plan. A training example or another person's duties cannot redefine your work."
     },
     {
       "scene_id": "career-current-role",
       "title": "Use current written expectations",
-      "spoken_text": "Your current role sheet, offer letter, and manager define the work assigned to you now. Use those current written expectations when choosing a capability to practice. If an older training example conflicts with them, the current documents and manager direction control."
+      "spoken_text": "Use your current role sheet, offer letter, and manager direction to understand the work assigned to you. Pick a skill that supports those expectations. If an older training example says something different, follow the current documents and ask your manager."
     },
     {
       "scene_id": "career-feedback",
       "title": "Make development concrete",
-      "spoken_text": "Keep development conversations grounded in current role expectations, one capability to practice, recent feedback to apply, and any proposed ownership that needs written confirmation. This turns development into observable practice and reliable work."
+      "spoken_text": "A useful development conversation stays close to the work. Talk about the expectation you are working toward, the skill you are practicing, and the feedback you are applying. If the conversation includes new ownership, get that change confirmed in writing."
     },
     {
       "scene_id": "career-transition",

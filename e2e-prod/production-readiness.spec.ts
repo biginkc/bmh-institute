@@ -26,6 +26,30 @@ async function signIn(page: Page, email: string, password: string) {
   await page.waitForURL(/\/dashboard/, { timeout: 20_000 });
 }
 
+async function verifyLessonSearchSelection(
+  page: Page,
+  fixture: ProductionReadinessFixture,
+  viewport: { width: number; height: number },
+) {
+  await page.setViewportSize(viewport);
+  await page.goto("/dashboard");
+  if (viewport.width < 640) {
+    await page.getByRole("button", { name: "Search lessons" }).click();
+  }
+
+  const search = page.getByRole("combobox", { name: "Search lessons" });
+  await search.fill(fixture.prefix);
+  const result = page.getByRole("option", {
+    name: `${fixture.prefix} Content Lesson`,
+  });
+  await expect(result).toHaveAttribute("href", `/lessons/${fixture.contentLessonId}`);
+  await result.click();
+  await expect(page).toHaveURL(new RegExp(`/lessons/${fixture.contentLessonId}$`));
+  await expect(
+    page.getByRole("heading", { name: `${fixture.prefix} Content Lesson` }),
+  ).toBeVisible();
+}
+
 test.describe("production readiness lifecycle", () => {
   test("validates real production auth, DB writes, storage, review, certificates, and cleanup", async ({
     browser,
@@ -39,6 +63,11 @@ test.describe("production readiness lifecycle", () => {
       const learnerContext = await browser.newContext();
       const learner = await learnerContext.newPage();
       await signIn(learner, fixture.learner.email, fixture.password);
+
+      await verifyLessonSearchSelection(learner, fixture, { width: 1280, height: 900 });
+      await verifyLessonSearchSelection(learner, fixture, { width: 390, height: 844 });
+      await learner.setViewportSize({ width: 1280, height: 900 });
+      await learner.goto("/dashboard");
 
       await expect(
         learner.getByText(`${fixture.prefix} Program`),

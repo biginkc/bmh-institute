@@ -38,42 +38,42 @@
     {
       "scene_id": "operator-whole-day",
       "title": "Run the whole day",
-      "spoken_text": "You've learned the pieces. Now let's put them together into a workday you can repeat. The goal is simple: keep the right work moving, keep the record current, and make the next action obvious."
+      "spoken_text": "You have seen the individual parts. Now put them together into a day you can repeat. Keep the right work moving, and keep the record and next step current."
     },
     {
       "scene_id": "operator-priorities",
       "title": "Start with commitments",
-      "spoken_text": "Start by checking the work you've already promised. Look for scheduled follow-ups, active conversations, and anything close to a handoff. Use the current SOP and your role sheet to sort the list. If your manager has given you a different priority, follow that direction."
+      "spoken_text": "Begin with the work you already promised. Check scheduled follow-ups and active conversations, especially anything close to a handoff. Sort the list using the current SOP and your role sheet. If your manager changes the priority, follow that direction."
     },
     {
       "scene_id": "operator-research",
       "title": "Prepare with purpose",
-      "spoken_text": "Do enough research to make the next conversation useful. Confirm ownership and property details. Check the history in Sandra. Look for facts that help you ask a better question. Stop when you have what you need to move the conversation forward."
+      "spoken_text": "Research until you can make the next conversation useful. Confirm the ownership and property details, then read the history in Sandra. Look for details that help you ask a better question. When you are ready, move the conversation forward."
     },
     {
       "scene_id": "operator-execution",
       "title": "Work and document",
-      "spoken_text": "Handle scheduled callbacks first, then work the remaining follow-ups and assigned new activity in the order your current process requires. After meaningful activity, update Sandra while the details are fresh. Record what happened, what changed, and what happens next."
+      "spoken_text": "Handle callbacks when they are due. Then move through the follow-ups and new activity assigned to you in the order the current process requires. Update Sandra while the details are fresh so the next person knows what happened and what comes next."
     },
     {
       "scene_id": "operator-current-expectations",
       "title": "Use the current operating plan",
-      "spoken_text": "Your current scorecard, role sheet, schedule, and manager direction define the activity expected from you. This video doesn't add a number or a schedule. Take the breaks in your current plan, reset when you need to, and return ready to give the next person your full attention."
+      "spoken_text": "Your current scorecard, role sheet, schedule, and manager direction define the activity expected from you. This video does not add a number or change that schedule. Take breaks as the current schedule directs. When you return, give the next person your full attention."
     },
     {
       "scene_id": "operator-close-day",
       "title": "Leave a clean pipeline",
-      "spoken_text": "Before you finish, review the pipeline. Every active lead should have useful notes, the right stage, and a dated next action. Complete ready handoffs. Escalate anything blocked. Set up the next work so you can begin without guessing."
+      "spoken_text": "Before you finish, review the pipeline. An active lead should have useful notes, the right stage, and a dated next action. Complete any handoff that is ready. Escalate blocked work, then leave yourself a clear place to begin."
     },
     {
       "scene_id": "operator-controlled-work",
       "title": "Judge the controllable work",
-      "spoken_text": "A disciplined day doesn't guarantee that someone answers or that a deal closes. You can control whether you followed the process, kept your commitments, documented the work, and treated each person with care. That's the standard you can repeat."
+      "spoken_text": "A disciplined day cannot make someone answer or make a deal close. You can control how well you followed the process and whether you kept your commitments. You can also leave an accurate record and treat each person with care. That is work you can repeat tomorrow."
     },
     {
       "scene_id": "operator-human-care",
       "title": "Keep the work human",
-      "spoken_text": "Steady follow-through matters, and so does genuine attention. Listen to the person in front of you. Ask the next useful question. Follow through when you say you will. Busy systems don't change the fact that this work depends on trust."
+      "spoken_text": "Follow-through matters. So does paying attention to the person in front of you. Listen, ask the next useful question, and do what you said you would do. That is how you earn trust one conversation at a time."
     },
     {
       "scene_id": "operator-transition",

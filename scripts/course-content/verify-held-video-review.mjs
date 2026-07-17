@@ -546,6 +546,14 @@ function isLoopbackHost(host) {
   return host === "127.0.0.1" || host === "::1" || host === "localhost";
 }
 
+export function createExactlyOnceFileHandleCloser(fileHandle) {
+  let closePromise;
+  return () => {
+    closePromise ??= fileHandle.close();
+    return closePromise;
+  };
+}
+
 export function createHeldVideoReviewServer({
   manifest,
   verification,
@@ -573,12 +581,32 @@ export function createHeldVideoReviewServer({
   let integrityError = null;
   let stopping = false;
   const activeResponses = new Set();
+  const activeRequestCompletions = new Set();
+  const activeMediaStreams = new Set();
+  const activeFileHandleClosers = new Set();
+  const pendingFileHandleCloses = new Set();
   const watchedPaths = verification.files.map((file) => file.absolutePath);
   const stopWatching = () => {
     for (const path of watchedPaths) unwatchFile(path);
   };
 
   let server;
+  let serverListenPromise;
+  let serverClosePromise;
+  let runtimeClosePromise;
+  const beginServerClose = () => {
+    serverClosePromise ??= (async () => {
+      if (serverListenPromise) {
+        await serverListenPromise.catch(() => {});
+      }
+      if (server.listening) {
+        await new Promise((resolveClose, rejectClose) => {
+          server.close((error) => error ? rejectClose(error) : resolveClose());
+        });
+      }
+    })();
+    return serverClosePromise;
+  };
   const stopAfterResponse = (error, responseToFinish) => {
     if (stopping) return;
     stopping = true;
@@ -586,7 +614,7 @@ export function createHeldVideoReviewServer({
     for (const activeResponse of activeResponses) {
       if (activeResponse !== responseToFinish) activeResponse.destroy(error);
     }
-    setImmediate(() => server.close());
+    setImmediate(() => void beginServerClose().catch(() => {}));
   };
   const failIntegrity = (response, error) => {
     integrityError = error;
@@ -599,13 +627,27 @@ export function createHeldVideoReviewServer({
   };
 
   server = createServer(async (request, response) => {
+    let resolveRequestCompletion;
+    const requestCompletion = new Promise((resolveCompletion) => {
+      resolveRequestCompletion = resolveCompletion;
+    });
+    activeRequestCompletions.add(requestCompletion);
     activeResponses.add(response);
     const forgetResponse = () => activeResponses.delete(response);
     response.once("close", forgetResponse);
     response.once("finish", forgetResponse);
+    let closeFileHandle;
     try {
+      if (stopping) {
+        response.destroy();
+        return;
+      }
       if (integrityError) return failIntegrity(response, integrityError);
       await assertVerificationFilesUnchanged(verification);
+      if (stopping) {
+        response.destroy();
+        return;
+      }
       if (request.method !== "GET" && request.method !== "HEAD") {
         response.writeHead(405, {
           ...commonResponseHeaders(),
@@ -643,9 +685,31 @@ export function createHeldVideoReviewServer({
       }
 
       const fileHandle = await open(file.absolutePath, "r");
+      const closeFileHandleOnce = createExactlyOnceFileHandleCloser(fileHandle);
+      closeFileHandle = () => {
+        const closePromise = closeFileHandleOnce();
+        if (!pendingFileHandleCloses.has(closePromise)) {
+          pendingFileHandleCloses.add(closePromise);
+          const forgetClose = () => {
+            pendingFileHandleCloses.delete(closePromise);
+            activeFileHandleClosers.delete(closeFileHandle);
+          };
+          closePromise.then(forgetClose, forgetClose);
+        }
+        return closePromise;
+      };
+      activeFileHandleClosers.add(closeFileHandle);
+      if (stopping || response.destroyed) {
+        await closeFileHandle();
+        return;
+      }
       const handleSnapshot = fileSnapshot(await fileHandle.stat({ bigint: true }));
+      if (stopping || response.destroyed) {
+        await closeFileHandle();
+        return;
+      }
       if (!snapshotsMatch(file.snapshot, handleSnapshot)) {
-        await fileHandle.close();
+        await closeFileHandle();
         return failIntegrity(response, new Error(`Locked file changed before streaming: ${file.label}`));
       }
       const size = Number(handleSnapshot.size);
@@ -653,7 +717,7 @@ export function createHeldVideoReviewServer({
       try {
         range = parseRange(request.headers.range, size);
       } catch {
-        await fileHandle.close();
+        await closeFileHandle();
         response.writeHead(416, {
           ...commonResponseHeaders(),
           "Content-Range": `bytes */${size}`,
@@ -673,23 +737,54 @@ export function createHeldVideoReviewServer({
         ...(range ? { "Content-Range": `bytes ${start}-${end}/${size}` } : {}),
       });
       if (request.method === "HEAD") {
-        await fileHandle.close();
+        await closeFileHandle();
         response.end();
         return;
       }
-      const stream = fileHandle.createReadStream({ autoClose: true, start, end });
-      response.once("close", () => stream.destroy());
+      if (stopping || response.destroyed) {
+        await closeFileHandle();
+        return;
+      }
+      const stream = fileHandle.createReadStream({ autoClose: false, start, end });
+      activeMediaStreams.add(stream);
+      stream.once("close", () => activeMediaStreams.delete(stream));
+      const finishStreaming = () => {
+        void closeFileHandle().catch((error) => {
+          if (!response.destroyed) response.destroy(error);
+          stopAfterResponse(error);
+        });
+      };
+      const abortStreaming = () => {
+        if (!stream.destroyed) stream.destroy();
+        else finishStreaming();
+      };
+      request.once("aborted", abortStreaming);
+      response.once("close", abortStreaming);
+      stream.once("end", finishStreaming);
+      stream.once("close", finishStreaming);
       stream.on("error", (error) => {
+        finishStreaming();
         response.destroy(error);
         stopAfterResponse(error);
       });
       stream.pipe(response);
     } catch (error) {
-      if (!response.headersSent) failIntegrity(response, error);
-      else {
-        response.destroy(error);
-        stopAfterResponse(error);
+      let failure = error;
+      if (closeFileHandle) {
+        try {
+          await closeFileHandle();
+        } catch (closeError) {
+          failure = new AggregateError([error, closeError], "Review file failed and its handle could not be closed");
+        }
       }
+      if (!response.headersSent) failIntegrity(response, failure);
+      else {
+        response.destroy(failure);
+        stopAfterResponse(failure);
+      }
+    } finally {
+      activeRequestCompletions.delete(requestCompletion);
+      resolveRequestCompletion();
     }
   });
 
@@ -706,24 +801,70 @@ export function createHeldVideoReviewServer({
   return {
     server,
     async listen() {
-      await new Promise((resolveListen, rejectListen) => {
+      if (stopping || runtimeClosePromise) {
+        throw new Error("Held-video review runtime cannot listen after shutdown has started");
+      }
+      serverListenPromise ??= new Promise((resolveListen, rejectListen) => {
         server.once("error", rejectListen);
         server.listen(port, host, () => {
           server.off("error", rejectListen);
-          resolveListen();
+          if (stopping) {
+            rejectListen(new Error("Held-video review runtime shut down while starting"));
+          } else {
+            resolveListen();
+          }
         });
       });
+      await serverListenPromise;
       const address = server.address();
       const displayHost = host === "::1" ? "[::1]" : host;
       return `http://${displayHost}:${address.port}/`;
     },
     async close() {
-      stopWatching();
-      if (!server.listening) return;
-      await new Promise((resolveClose, rejectClose) => server.close((error) => error ? rejectClose(error) : resolveClose()));
+      runtimeClosePromise ??= (async () => {
+        stopping = true;
+        stopWatching();
+        if (serverListenPromise) {
+          await serverListenPromise.catch(() => {});
+        }
+        const closingServer = beginServerClose();
+
+        for (const stream of activeMediaStreams) stream.destroy();
+        for (const response of activeResponses) response.destroy();
+        server.closeAllConnections?.();
+
+        while (activeRequestCompletions.size > 0) {
+          await Promise.all([...activeRequestCompletions]);
+        }
+        for (const stream of activeMediaStreams) stream.destroy();
+        for (const response of activeResponses) response.destroy();
+
+        const closeResults = await Promise.allSettled(
+          [...activeFileHandleClosers].map((closeFileHandle) => closeFileHandle()),
+        );
+        const pendingResults = await Promise.allSettled([...pendingFileHandleCloses]);
+        await closingServer;
+
+        const closeErrors = [...closeResults, ...pendingResults]
+          .filter((result) => result.status === "rejected")
+          .map((result) => result.reason);
+        if (closeErrors.length > 0) {
+          throw new AggregateError(closeErrors, "One or more held-video file handles could not be closed");
+        }
+      })();
+      await runtimeClosePromise;
     },
     get integrityError() {
       return integrityError;
+    },
+    get activeResourceCounts() {
+      return {
+        requests: activeRequestCompletions.size,
+        responses: activeResponses.size,
+        streams: activeMediaStreams.size,
+        fileHandles: activeFileHandleClosers.size,
+        pendingFileHandleCloses: pendingFileHandleCloses.size,
+      };
     },
   };
 }

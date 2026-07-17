@@ -2,6 +2,8 @@ import { defineConfig } from "vitest/config";
 import fs from "node:fs";
 import path from "node:path";
 
+import { assertIntegrationTestEnvironment } from "./src/lib/testing/integration-environment";
+
 /**
  * Integration suite — hits a real Supabase Postgres so coverage includes
  * RLS, Realtime publications, pg_* extensions, and SECURITY DEFINER
@@ -36,6 +38,22 @@ function loadTestEnv(): Record<string, string> {
 }
 
 const env = loadTestEnv();
+const testSupabaseUrl =
+  process.env.TEST_SUPABASE_URL ?? env.TEST_SUPABASE_URL ?? "";
+const testSupabaseAnonKey =
+  process.env.TEST_SUPABASE_ANON_KEY ?? env.TEST_SUPABASE_ANON_KEY ?? "";
+const testSupabaseServiceRoleKey =
+  process.env.TEST_SUPABASE_SERVICE_ROLE_KEY ??
+  env.TEST_SUPABASE_SERVICE_ROLE_KEY ??
+  "";
+
+// Fail during config loading, before Vitest can expose a service-role key to
+// destructive server-action tests under the application's normal env names.
+assertIntegrationTestEnvironment({
+  TEST_SUPABASE_URL: testSupabaseUrl,
+  TEST_SUPABASE_ANON_KEY: testSupabaseAnonKey,
+  TEST_SUPABASE_SERVICE_ROLE_KEY: testSupabaseServiceRoleKey,
+});
 
 export default defineConfig({
   test: {
@@ -47,14 +65,15 @@ export default defineConfig({
     // Sequential — tests TRUNCATE shared tables in beforeEach; parallel would race.
     fileParallelism: false,
     env: {
-      TEST_SUPABASE_URL:
-        process.env.TEST_SUPABASE_URL ?? env.TEST_SUPABASE_URL ?? "",
-      TEST_SUPABASE_ANON_KEY:
-        process.env.TEST_SUPABASE_ANON_KEY ?? env.TEST_SUPABASE_ANON_KEY ?? "",
-      TEST_SUPABASE_SERVICE_ROLE_KEY:
-        process.env.TEST_SUPABASE_SERVICE_ROLE_KEY ??
-        env.TEST_SUPABASE_SERVICE_ROLE_KEY ??
-        "",
+      TEST_SUPABASE_URL: testSupabaseUrl,
+      TEST_SUPABASE_ANON_KEY: testSupabaseAnonKey,
+      TEST_SUPABASE_SERVICE_ROLE_KEY: testSupabaseServiceRoleKey,
+      // Server actions exercise the application's normal environment contract.
+      // Bind those names to the same guarded TEST_* target so an integration
+      // run cannot fall through to a developer's production env.
+      NEXT_PUBLIC_SUPABASE_URL: testSupabaseUrl,
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: testSupabaseAnonKey,
+      SUPABASE_SERVICE_ROLE_KEY: testSupabaseServiceRoleKey,
     },
   },
   resolve: {
