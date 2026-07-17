@@ -253,7 +253,7 @@ export async function completeRolePlayBlock(
         error instanceof Error ? error.message : "Admin client unavailable.",
     };
   }
-  const completeRolePlay = admin.rpc as unknown as (
+  const completeRolePlay = admin.rpc.bind(admin) as unknown as (
     name: "fn_complete_role_play_block",
     args: {
       p_user_id: string;

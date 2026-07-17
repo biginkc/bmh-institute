@@ -29,7 +29,7 @@ function completeRolePlay(
     score?: number;
   },
 ): Promise<RpcResult> {
-  const rpc = client.rpc as unknown as (
+  const rpc = client.rpc.bind(client) as unknown as (
     name: string,
     input: Record<string, unknown>,
   ) => Promise<RpcResult>;

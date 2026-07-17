@@ -55,8 +55,15 @@ vi.mock("@/lib/supabase/server", () => ({
 vi.mock("@/lib/supabase/admin", () => ({
   createAdminClient: vi.fn(() => {
     adminClientCalls += 1;
-    return {
-      rpc: async (name: string, args: Record<string, unknown>) => {
+    const client = {
+      rpc: async function (
+        this: unknown,
+        name: string,
+        args: Record<string, unknown>,
+      ) {
+        if (this !== client) {
+          throw new Error("Admin RPC lost its Supabase client binding");
+        }
         if (name !== "fn_complete_role_play_block") {
           throw new Error(`Unexpected admin RPC ${name}`);
         }
@@ -67,6 +74,7 @@ vi.mock("@/lib/supabase/admin", () => ({
         };
       },
     };
+    return client;
   }),
 }));
 
