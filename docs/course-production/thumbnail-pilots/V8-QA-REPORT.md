@@ -1,6 +1,6 @@
 # V8 thumbnail pilot QA
 
-Status: **automated QA pending completion; Jarrad approval not granted**.
+Status: **automated QA passed; Jarrad approval not granted**.
 
 ## Review set
 

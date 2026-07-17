@@ -35,7 +35,7 @@ Required environment:
 
 - `TEST_SUPABASE_URL`
 - `TEST_SUPABASE_SERVICE_ROLE_KEY`
-- optional `E2E_SEED_PASSWORD`
+- `E2E_SEED_PASSWORD` with at least 24 characters for local seeding
 
 The seed creates these reusable users:
 
@@ -43,7 +43,10 @@ The seed creates these reusable users:
 - `e2e.learner@bmh-institute.test`
 - `e2e.unassigned@bmh-institute.test`
 
-The default password is `BMHInstituteTest123!` when `E2E_SEED_PASSWORD` is unset.
+There is no repository password fallback. CI generates a masked one-run password,
+serializes access to the shared test project, and runs `npm run cleanup:e2e` before
+uploading its non-trace Playwright report. Local runs must also clean up when they
+finish.
 
 The seed creates these content records:
 
@@ -70,6 +73,7 @@ Before promoting this into durable Playwright coverage, verify:
 3. Assigned learner sees `E2E VA Onboarding`, opens the fundamentals course, and sees the seeded content, quiz, and assignment lessons.
 4. Unassigned learner sees `No training assigned yet`.
 5. `npm run verify` passes after any code changes.
+6. `npm run cleanup:e2e` removes the seeded users and content after the browser run.
 
 ## Follow-up
 
@@ -86,6 +90,9 @@ TEST-03 durable Playwright coverage now includes:
 
 Invite acceptance uses Supabase Admin `generateLink` against `bmh-institute-test`, so it does not need an inbox for the non-production E2E suite.
 
-The seed content remains the baseline CI substrate. The write-path spec creates its own disposable users and content for mutable flows.
+The seed shape remains the baseline CI substrate, but its users and records are
+ephemeral. The write-path spec creates its own disposable users and content for
+mutable flows, and the CI cleanup step removes all seeded fixtures even after a
+failed run.
 
 Current branch status: `npm run verify` passes locally, PR #39 CI passed the durable LMS write-path suite, and PR #40 CI passed invite acceptance through generated Supabase invite action links using the `TEST_SUPABASE_*` secrets for `bmh-institute-test`.
