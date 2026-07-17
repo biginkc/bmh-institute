@@ -19,7 +19,7 @@ deletion boundary.
   imports. Current module and lesson ordering uses explicit up/down controls.
   They are candidates for package removal after a clean install and editor UAT.
 - The legacy UI primitives `badge`, `brand-lockup`, `dialog`, `dropdown-menu`,
-  `input`, `select`, `separator`, `sheet`, `skeleton`, and `table` under
+  `input`, `select`, `separator`, `skeleton`, and `table` under
   `src/components/ui` have no imports outside their own files. They are
   candidates for deletion after a full import scan and build.
 - The nonfunctional header notification bell has been removed in the current
@@ -38,6 +38,8 @@ deletion boundary.
 
 - Avatar UI is active in desktop and mobile dashboard navigation. Retain it and
   the profile field unless a separate data migration proves the field unused.
+- `sheet` is active in `src/app/(dashboard)/mobile-nav.tsx`. Retain it; the prior
+  zero-import claim was stale.
 - `passing_score` is active in authoring, import, learner rendering, and
   server-side scoring. Retain it.
 - Sonner notifications are active across learner and admin forms. Its theme

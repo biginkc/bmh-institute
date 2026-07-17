@@ -5,6 +5,10 @@ import { revalidatePath } from "next/cache";
 
 import { requireAdmin } from "@/lib/auth/guard";
 import { validateArtworkChange } from "@/lib/artwork/paths";
+import {
+  importedPublicationError,
+  normalizeReleaseControlError,
+} from "@/lib/release-control/admin-guards";
 import { createClient } from "@/lib/supabase/server";
 import {
   parseProgramInput,
@@ -72,11 +76,19 @@ export async function updateProgram(
   const supabase = await createClient();
   const current = await supabase
     .from("programs")
-    .select("thumbnail_path, content_import_id, thumbnail_asset_key, thumbnail_approved_path, thumbnail_approved_sha256")
+    .select("thumbnail_path, content_import_id, thumbnail_asset_key, thumbnail_approved_path, thumbnail_approved_sha256, is_published")
     .eq("id", programId)
     .maybeSingle();
   if (current.error || !current.data) {
     return { ok: false, error: "Couldn't verify the program artwork." };
+  }
+  const releaseError = importedPublicationError({
+    contentImportId: current.data.content_import_id,
+    currentlyPublished: current.data.is_published,
+    requestedPublished: parsed.value.is_published,
+  });
+  if (releaseError) {
+    return { ok: false, error: releaseError, values: parsed.value };
   }
   const artworkError = validateArtworkChange({
     entityType: "program",
@@ -107,7 +119,9 @@ export async function updateProgram(
     })
     .eq("id", programId);
 
-  if (error) return { ok: false, error: error.message };
+  if (error) {
+    return { ok: false, error: normalizeReleaseControlError(error.message) };
+  }
 
   revalidatePath(`/admin/programs/${programId}/edit`);
   revalidatePath("/admin/programs");

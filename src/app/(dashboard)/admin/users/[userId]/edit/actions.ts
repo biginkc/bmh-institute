@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendEmail } from "@/lib/email/send";
 import { renderEnrollmentEmail } from "@/lib/email/enrollment";
+import { normalizeReleaseControlError } from "@/lib/release-control/admin-guards";
 
 export type SaveResult =
   | { ok: true; newProgramTitles: string[] }
@@ -68,7 +69,9 @@ export async function saveUserSettings(input: {
     p_status: input.status,
     p_role_group_ids: input.role_group_ids,
   });
-  if (saveErr) return { ok: false, error: saveErr.message };
+  if (saveErr) {
+    return { ok: false, error: normalizeReleaseControlError(saveErr.message) };
+  }
 
   let newProgramTitles: string[] = [];
 
@@ -117,11 +120,15 @@ async function accessibleProgramIdsFor(
   if (roleGroupIds.length === 0) return [];
   const { data } = await supabase
     .from("program_access")
-    .select("program_id")
+    .select("program_id, programs(is_published)")
     .in("role_group_id", roleGroupIds);
   const seen = new Set<string>();
   const out: string[] = [];
   for (const row of data ?? []) {
+    const program = Array.isArray(row.programs)
+      ? row.programs[0]
+      : row.programs;
+    if (program?.is_published !== true) continue;
     const id = row.program_id as string;
     if (!seen.has(id)) {
       seen.add(id);

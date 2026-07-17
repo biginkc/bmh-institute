@@ -9,7 +9,11 @@ let profileEmailRow: { email: string } | null = null;
 let ownerCount = 0;
 let adminFactoryThrows: Error | null = null;
 let userRoleGroupsRows: Array<{ role_group_id: string }> = [];
-let programAccessRows: Array<{ role_group_id: string; program_id: string }> = [];
+let programAccessRows: Array<{
+  role_group_id: string;
+  program_id: string;
+  is_published?: boolean;
+}> = [];
 let programRows: Array<{ id: string; title: string }> = [];
 let rpcError: { message: string } | null = null;
 const rpcCalls: Array<{ name: string; args: Record<string, unknown> }> = [];
@@ -45,7 +49,10 @@ vi.mock("@/lib/supabase/server", () => ({
               in: async (_col: string, ids: string[]) => ({
                 data: programAccessRows
                   .filter((row) => ids.includes(row.role_group_id))
-                  .map((row) => ({ program_id: row.program_id })),
+                  .map((row) => ({
+                    program_id: row.program_id,
+                    programs: { is_published: row.is_published ?? true },
+                  })),
                 error: null,
               }),
             };
@@ -262,6 +269,28 @@ describe("saveUserSettings", () => {
       subject: "Enrollment",
       html: "<p>Enrollment</p>",
     });
+  });
+
+  it("does not claim an unpublished imported program in enrollment email", async () => {
+    programAccessRows = [
+      {
+        role_group_id: "qa-group",
+        program_id: "unreleased-program",
+        is_published: false,
+      },
+    ];
+    programRows = [{ id: "unreleased-program", title: "Unreleased Program" }];
+    profileEmailRow = { email: "learner@example.com" };
+
+    const result = await saveUserSettings({
+      userId: "learner-1",
+      system_role: "learner",
+      status: "active",
+      role_group_ids: ["qa-group"],
+    });
+
+    expect(result).toEqual({ ok: true, newProgramTitles: [] });
+    expect(sendEmail).not.toHaveBeenCalled();
   });
 
   it("prevents an owner from downgrading their own role", async () => {
