@@ -281,8 +281,8 @@ Implement the approved concurrent completion plan for the reusable BMH Institute
   affected local browser suites pass 6 of 6 tests. The full seeded suite passes
   8 tests; the cross-app Closer Lab case remains environment-gated and skipped
   in this local run.
-- This is local convergence evidence only. GitHub CI is not recorded as green
-  until the controller confirms the remote checks.
+- GitHub checks for commit `87d569c` passed: Verify in 2m 6s, Seeded Playwright
+  E2E in 2m 14s, test-project migrations in 11s, and the Vercel preview.
 
 ## Hard gates
 
