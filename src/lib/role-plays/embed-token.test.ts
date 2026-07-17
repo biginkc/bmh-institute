@@ -27,6 +27,7 @@ describe("mintRolePlayEmbedToken", () => {
     expect(payload).toMatchObject({
       iss: "sandra-university",
       sub: "user-1",
+      aud: "closer-lab",
       lesson_id: "lesson-1",
       block_id: "block-1",
       learner_name: "Test Learner",

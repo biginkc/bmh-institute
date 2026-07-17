@@ -1,6 +1,9 @@
 import { createHmac } from "node:crypto";
 
 const ISSUER = "sandra-university";
+// Closer Lab verifies this audience claim (tolerantly for now; it will become
+// required once both apps are deployed with the claim).
+export const ROLE_PLAY_EMBED_AUDIENCE = "closer-lab";
 const DEFAULT_TTL_SECONDS = 5 * 60;
 const MIN_SECRET_BYTES = 32;
 
@@ -17,6 +20,7 @@ export type RolePlayEmbedTokenInput = {
 export type RolePlayEmbedTokenPayload = {
   iss: typeof ISSUER;
   sub: string;
+  aud: typeof ROLE_PLAY_EMBED_AUDIENCE;
   lesson_id: string;
   block_id: string;
   learner_name: string;
@@ -37,6 +41,7 @@ export function mintRolePlayEmbedToken(
   const payload: RolePlayEmbedTokenPayload = {
     iss: ISSUER,
     sub: input.userId,
+    aud: ROLE_PLAY_EMBED_AUDIENCE,
     lesson_id: input.lessonId,
     block_id: input.blockId,
     learner_name: input.learnerName,
