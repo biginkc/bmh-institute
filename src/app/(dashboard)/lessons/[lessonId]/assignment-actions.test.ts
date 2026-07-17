@@ -249,6 +249,38 @@ describe("submitAssignment (INTEG-04 file path validation)", () => {
     expect(insertSpy).not.toHaveBeenCalled();
   });
 
+  it("rejects an http(s) prefix without a hostname", async () => {
+    assignmentSubmissionType = "url";
+
+    const result = await submitAssignment({
+      assignmentId: "assignment-1",
+      lessonId: "lesson-1",
+      submission_type: "url",
+      submission_url: "https://",
+    });
+
+    expect(result).toEqual({ ok: false, error: "Enter a valid http(s) URL." });
+    expect(insertSpy).not.toHaveBeenCalled();
+  });
+
+  it("accepts a parsed http(s) URL with a hostname", async () => {
+    assignmentSubmissionType = "url";
+
+    const result = await submitAssignment({
+      assignmentId: "assignment-1",
+      lessonId: "lesson-1",
+      submission_type: "url",
+      submission_url: "https://example.com/work?id=1",
+    });
+
+    expect(result).toEqual({ ok: true });
+    expect(insertedRow).toMatchObject({
+      submission_text: null,
+      submission_url: "https://example.com/work?id=1",
+      submission_file_path: null,
+    });
+  });
+
   it("rejects a client-supplied assignment id that is not attached to the lesson", async () => {
     assignmentSubmissionType = "text";
     lessonAssignmentId = "assignment-2";

@@ -31,7 +31,12 @@ export type VideoProgressResult =
       watchedRanges: WatchedRange[];
       watchedPercent: number;
       completed: boolean;
+      reconciled?: boolean;
     }
+  | { ok: false; error: string };
+
+export type VideoSeekResult =
+  | { ok: true; positionSeconds: number }
   | { ok: false; error: string };
 
 const VIDEO_POSITION_EPSILON_SECONDS = 1;
@@ -47,14 +52,14 @@ export async function loadVideoProgress(
 
   const { data: block } = await learner
     .from("content_blocks")
-    .select("id, block_type")
+    .select("id, block_type, content")
     .eq("id", blockId)
     .maybeSingle();
   if (!block || block.block_type !== "video") {
     return { ok: false, error: "Video block not found." };
   }
 
-  const [{ data: progress }, { data: completion }] = await Promise.all([
+  const [progressResult, completionResult] = await Promise.all([
     learner
       .from("user_video_progress")
       .select("position_seconds, duration_seconds, watched_ranges")
@@ -68,15 +73,139 @@ export async function loadVideoProgress(
       .eq("block_id", blockId)
       .maybeSingle(),
   ]);
+  if (progressResult.error || completionResult.error) {
+    return {
+      ok: false,
+      error:
+        progressResult.error?.message ??
+        completionResult.error?.message ??
+        "Video progress could not be loaded.",
+    };
+  }
+  const progress = progressResult.data;
   const ranges = parseWatchedRanges(progress?.watched_ranges);
-  const duration = numberOrZero(progress?.duration_seconds);
+  const authoredDuration = durationFromContent(block.content);
+  const duration = authoredDuration || numberOrZero(progress?.duration_seconds);
+  const coverage = watchedCoverageRatio(ranges, duration);
+  let completed = Boolean(completionResult.data);
+  let reconciled = false;
+  if (!completed && authoredDuration > 0 && coverage >= 0.9) {
+    let admin;
+    try {
+      admin = createAdminClient();
+    } catch (error) {
+      return {
+        ok: false,
+        error: error instanceof Error ? error.message : "Admin client unavailable.",
+      };
+    }
+    const { error: completionError } = await admin
+      .from("user_block_progress")
+      .upsert(
+        { user_id: user.id, block_id: blockId },
+        { onConflict: "user_id,block_id", ignoreDuplicates: true },
+      );
+    if (completionError) {
+      return { ok: false, error: completionError.message };
+    }
+    await emitSandraCourseCompletedForBlock(learner, {
+      userId: user.id,
+      blockId,
+    });
+    completed = true;
+    reconciled = true;
+  }
   return {
     ok: true,
     positionSeconds: numberOrZero(progress?.position_seconds),
     watchedRanges: ranges,
-    watchedPercent: Math.round(watchedCoverageRatio(ranges, duration) * 100),
-    completed: Boolean(completion),
+    watchedPercent: Math.round(coverage * 100),
+    completed,
+    reconciled,
   };
+}
+
+export async function recordVideoSeek(input: {
+  blockId: string;
+  positionSeconds: number;
+  durationSeconds: number;
+}): Promise<VideoSeekResult> {
+  const learner = await createClient();
+  const {
+    data: { user },
+  } = await learner.auth.getUser();
+  if (!user) return { ok: false, error: "You must be signed in." };
+  if (
+    !validMediaNumber(input.positionSeconds) ||
+    !validMediaNumber(input.durationSeconds) ||
+    input.durationSeconds <= 0
+  ) {
+    return { ok: false, error: "Video seek contains invalid timing data." };
+  }
+
+  const { data: block } = await learner
+    .from("content_blocks")
+    .select("id, lesson_id, block_type, content")
+    .eq("id", input.blockId)
+    .maybeSingle();
+  if (!block || block.block_type !== "video") {
+    return { ok: false, error: "Video block not found." };
+  }
+  const { data: unlocked } = await learner.rpc("fn_lesson_is_unlocked", {
+    p_user_id: user.id,
+    p_lesson_id: block.lesson_id,
+  });
+  if (unlocked !== true) {
+    return { ok: false, error: "Complete the prerequisite lessons first." };
+  }
+
+  const { data: existing, error: existingError } = await learner
+    .from("user_video_progress")
+    .select("duration_seconds, watched_ranges")
+    .eq("user_id", user.id)
+    .eq("block_id", input.blockId)
+    .maybeSingle();
+  if (existingError) return { ok: false, error: existingError.message };
+
+  const authoredDuration = durationFromContent(block.content);
+  const storedDuration = numberOrZero(existing?.duration_seconds);
+  const duration = authoredDuration || storedDuration || input.durationSeconds;
+  if (
+    Math.abs(duration - input.durationSeconds) > 2 ||
+    input.positionSeconds > duration + VIDEO_POSITION_EPSILON_SECONDS
+  ) {
+    return { ok: false, error: "Video seek does not match the lesson asset." };
+  }
+
+  let admin;
+  try {
+    admin = createAdminClient();
+  } catch (error) {
+    return {
+      ok: false,
+      error: error instanceof Error ? error.message : "Admin client unavailable.",
+    };
+  }
+  const trustedPosition = Math.min(input.positionSeconds, duration);
+  const now = new Date().toISOString();
+  const { error: progressError } = await admin
+    .from("user_video_progress")
+    .upsert(
+      {
+        user_id: user.id,
+        block_id: input.blockId,
+        position_seconds: trustedPosition,
+        duration_seconds: duration,
+        watched_ranges: parseWatchedRanges(existing?.watched_ranges),
+        last_observed_position_seconds: trustedPosition,
+        last_observed_at: now,
+        updated_at: now,
+      },
+      { onConflict: "user_id,block_id" },
+    );
+  if (progressError) return { ok: false, error: progressError.message };
+
+  return { ok: true, positionSeconds: trustedPosition };
 }
 
 export async function recordVideoProgress(input: {
@@ -117,7 +246,7 @@ export async function recordVideoProgress(input: {
     return { ok: false, error: "Complete the prerequisite lessons first." };
   }
 
-  const { data: existing } = await learner
+  const { data: existing, error: existingError } = await learner
     .from("user_video_progress")
     .select(
       "position_seconds, duration_seconds, watched_ranges, last_observed_position_seconds, last_observed_at",
@@ -125,6 +254,7 @@ export async function recordVideoProgress(input: {
     .eq("user_id", user.id)
     .eq("block_id", input.blockId)
     .maybeSingle();
+  if (existingError) return { ok: false, error: existingError.message };
   const authoredDuration = durationFromContent(block.content);
   const storedDuration = numberOrZero(existing?.duration_seconds);
   const duration = authoredDuration || storedDuration || input.durationSeconds;
@@ -202,9 +332,9 @@ export async function recordVideoProgress(input: {
     const { error: completionError } = await admin
       .from("user_block_progress")
       .upsert(
-      { user_id: user.id, block_id: input.blockId },
-      { onConflict: "user_id,block_id", ignoreDuplicates: true },
-    );
+        { user_id: user.id, block_id: input.blockId },
+        { onConflict: "user_id,block_id", ignoreDuplicates: true },
+      );
     if (completionError) {
       return { ok: false, error: completionError.message };
     }

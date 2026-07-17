@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import {
   loadVideoProgress,
   recordVideoProgress,
+  recordVideoSeek,
 } from "@/app/(dashboard)/lessons/[lessonId]/actions";
 
 const PROGRESS_SAMPLE_SECONDS = 2;
@@ -30,7 +31,7 @@ export function VideoBlockPlayer({
   transcriptSrc?: string;
   title?: string;
 }) {
-  const router = useRouter();
+  const { refresh } = useRouter();
   const videoRef = useRef<HTMLVideoElement>(null);
   const sampleStartRef = useRef<number | null>(null);
   const resumePositionRef = useRef(0);
@@ -43,6 +44,28 @@ export function VideoBlockPlayer({
   const [progressError, setProgressError] = useState<string | null>(null);
   const [watchedPercent, setWatchedPercent] = useState(0);
   const [completed, setCompleted] = useState(false);
+
+  const resynchronizeProgress = useCallback(async () => {
+    let result: Awaited<ReturnType<typeof loadVideoProgress>> | null = null;
+    try {
+      result = await loadVideoProgress(blockId);
+    } catch {
+      result = null;
+    }
+    if (!result?.ok) return false;
+
+    resumePositionRef.current = result.positionSeconds;
+    sampleStartRef.current = result.positionSeconds;
+    setWatchedPercent(result.watchedPercent);
+    setCompleted(result.completed);
+    completedRef.current = result.completed;
+    const video = videoRef.current;
+    if (video && Number.isFinite(result.positionSeconds)) {
+      video.currentTime = result.positionSeconds;
+    }
+    if (result.reconciled) refresh();
+    return true;
+  }, [blockId, refresh]);
 
   const enqueueProgress = useCallback(
     (progress: Parameters<typeof recordVideoProgress>[0]) => {
@@ -63,17 +86,44 @@ export function VideoBlockPlayer({
           setCompleted(result.completed);
           if (result.completed && !completedRef.current) {
             completedRef.current = true;
-            router.refresh();
+            refresh();
           }
         }
+        const recovered = result?.ok ? true : await resynchronizeProgress();
+        if (!mountedRef.current) return;
         setProgressError(
-          result?.ok
+          recovered
             ? null
             : "Video progress could not be saved. Pause and resume playback to retry.",
         );
       });
     },
-    [router],
+    [refresh, resynchronizeProgress],
+  );
+
+  const enqueueSeek = useCallback(
+    (seek: Parameters<typeof recordVideoSeek>[0]) => {
+      writeQueueRef.current = writeQueueRef.current.then(async () => {
+        let result: Awaited<ReturnType<typeof recordVideoSeek>> | null = null;
+        for (let attempt = 0; attempt < 2; attempt += 1) {
+          try {
+            result = await recordVideoSeek(seek);
+          } catch {
+            result = null;
+          }
+          if (result?.ok) break;
+        }
+        if (!mountedRef.current) return;
+        const recovered = result?.ok ? true : await resynchronizeProgress();
+        if (!mountedRef.current) return;
+        setProgressError(
+          recovered
+            ? null
+            : "Video progress could not be saved. Pause and resume playback to retry.",
+        );
+      });
+    },
+    [resynchronizeProgress],
   );
 
   const flushProgress = useCallback(
@@ -101,22 +151,22 @@ export function VideoBlockPlayer({
       if (!active || !result.ok) return;
       resumePositionRef.current = result.positionSeconds;
       if (!hasRecordedProgressRef.current) {
+        sampleStartRef.current = result.positionSeconds;
         completedRef.current = result.completed;
-        if (result.watchedPercent !== 0) {
-          setWatchedPercent(result.watchedPercent);
+        setWatchedPercent(result.watchedPercent);
+        setCompleted(result.completed);
+        if (video?.readyState && result.positionSeconds > 0) {
+          video.currentTime = result.positionSeconds;
         }
-        if (result.completed) setCompleted(true);
       }
-      if (video?.readyState && result.positionSeconds > 0) {
-        video.currentTime = result.positionSeconds;
-      }
+      if (result.reconciled) refresh();
     });
     return () => {
       active = false;
       mountedRef.current = false;
       if (video && !video.paused) flushProgress(video);
     };
-  }, [blockId, flushProgress]);
+  }, [blockId, flushProgress, refresh]);
 
   useEffect(() => {
     function flushWhenHidden() {
@@ -175,7 +225,13 @@ export function VideoBlockPlayer({
             sampleStartRef.current = null;
           }}
           onSeeked={(event) => {
-            sampleStartRef.current = event.currentTarget.currentTime;
+            const seekPosition = event.currentTarget.currentTime;
+            sampleStartRef.current = seekPosition;
+            enqueueSeek({
+              blockId,
+              positionSeconds: seekPosition,
+              durationSeconds: event.currentTarget.duration,
+            });
           }}
           onPause={(event) => {
             flushProgress(event.currentTarget);

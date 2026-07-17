@@ -15,6 +15,7 @@ vi.mock("@/app/(dashboard)/lessons/[lessonId]/actions", () => ({
     completed: false,
   })),
   recordVideoProgress: vi.fn(),
+  recordVideoSeek: vi.fn(),
 }));
 
 import { ContentBlockRenderer, type ContentBlock } from "./content-blocks";

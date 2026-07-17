@@ -276,7 +276,7 @@ function normalizeSubmission(
     if (
       !url ||
       url.length > MAX_SUBMISSION_URL_LENGTH ||
-      !/^https?:\/\//i.test(url)
+      !isValidHttpUrl(url)
     ) {
       return { ok: false, error: "Enter a valid http(s) URL." };
     }
@@ -308,6 +308,18 @@ function normalizeSubmission(
 
 function isSubmissionType(value: unknown): value is SubmissionType {
   return value === "text" || value === "url" || value === "file_upload";
+}
+
+function isValidHttpUrl(value: string): boolean {
+  try {
+    const parsed = new URL(value);
+    return (
+      (parsed.protocol === "http:" || parsed.protocol === "https:") &&
+      parsed.hostname.length > 0
+    );
+  } catch {
+    return false;
+  }
 }
 
 function pathBelongsToUser(path: string, userId: string): boolean {

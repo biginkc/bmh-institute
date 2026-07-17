@@ -8,6 +8,7 @@ let existingProgress: Record<string, unknown> | null = null;
 let progressUpsert: Record<string, unknown> | null = null;
 let completionUpsert: Record<string, unknown> | null = null;
 let completionError: { message: string } | null = null;
+let completionExists = false;
 
 vi.mock("@/lib/integrations/sandra/course-completed", () => ({
   emitSandraCourseCompletedForBlock: (client: unknown, input: unknown) =>
@@ -45,6 +46,16 @@ vi.mock("@/lib/supabase/server", () => ({
         };
         return { select: () => query };
       }
+      if (table === "user_block_progress") {
+        const query = {
+          eq: () => query,
+          maybeSingle: async () => ({
+            data: completionExists ? { id: "completion-1" } : null,
+            error: null,
+          }),
+        };
+        return { select: () => query };
+      }
       throw new Error(`Unexpected learner table ${table}`);
     },
   })),
@@ -57,6 +68,7 @@ vi.mock("@/lib/supabase/admin", () => ({
         return {
           upsert: async (row: Record<string, unknown>) => {
             progressUpsert = row;
+            existingProgress = row;
             return { error: null };
           },
         };
@@ -65,6 +77,7 @@ vi.mock("@/lib/supabase/admin", () => ({
         return {
           upsert: async (row: Record<string, unknown>) => {
             completionUpsert = row;
+            if (!completionError) completionExists = true;
             return { error: completionError };
           },
         };
@@ -76,7 +89,11 @@ vi.mock("@/lib/supabase/admin", () => ({
 
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
-import { recordVideoProgress } from "./actions";
+import {
+  loadVideoProgress,
+  recordVideoProgress,
+  recordVideoSeek,
+} from "./actions";
 
 describe("recordVideoProgress server validation", () => {
   beforeEach(() => {
@@ -84,6 +101,7 @@ describe("recordVideoProgress server validation", () => {
     progressUpsert = null;
     completionUpsert = null;
     completionError = null;
+    completionExists = false;
     emitSandraSpy.mockClear();
   });
 
@@ -143,7 +161,45 @@ describe("recordVideoProgress server validation", () => {
     });
   });
 
-  it("does not report completion or call Sandra when completion persistence fails", async () => {
+  it("moves the trusted resume anchor without adding skipped coverage", async () => {
+    existingProgress = {
+      position_seconds: 10,
+      duration_seconds: 100,
+      watched_ranges: [[0, 10]],
+      last_observed_position_seconds: 10,
+      last_observed_at: new Date(Date.now() - 5_000).toISOString(),
+    };
+
+    const result = await recordVideoSeek({
+      blockId: "video-1",
+      positionSeconds: 50,
+      durationSeconds: 100,
+    });
+
+    expect(result).toEqual({ ok: true, positionSeconds: 50 });
+    expect(progressUpsert).toMatchObject({
+      position_seconds: 50,
+      watched_ranges: [[0, 10]],
+      last_observed_position_seconds: 50,
+    });
+    expect(completionUpsert).toBeNull();
+    expect(emitSandraSpy).not.toHaveBeenCalled();
+
+    const forgedImmediatePlayback = await recordVideoProgress({
+      blockId: "video-1",
+      positionSeconds: 52,
+      durationSeconds: 100,
+      observedFrom: 50,
+      observedTo: 52,
+    });
+    expect(forgedImmediatePlayback).toEqual({
+      ok: false,
+      error: "Video playback observation could not be verified.",
+    });
+    expect(progressUpsert).toMatchObject({ watched_ranges: [[0, 10]] });
+  });
+
+  it("reconciles qualified stored coverage after completion persistence fails", async () => {
     existingProgress = {
       position_seconds: 89,
       duration_seconds: 100,
@@ -167,5 +223,17 @@ describe("recordVideoProgress server validation", () => {
       block_id: "video-1",
     });
     expect(emitSandraSpy).not.toHaveBeenCalled();
+
+    completionError = null;
+    const retry = await loadVideoProgress("video-1");
+
+    expect(retry).toMatchObject({
+      ok: true,
+      watchedPercent: 90,
+      completed: true,
+      reconciled: true,
+    });
+    expect(completionExists).toBe(true);
+    expect(emitSandraSpy).toHaveBeenCalledTimes(1);
   });
 });
