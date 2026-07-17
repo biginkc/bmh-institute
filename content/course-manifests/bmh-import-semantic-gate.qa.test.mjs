@@ -32,7 +32,7 @@ test("draft validation reports BMH publication blockers without treating the rep
   );
 });
 
-test("file-backed caption and transcript drift remains report-only for draft but blocks release", async () => {
+test("file-backed caption and transcript drift cannot borrow canonical release evidence", async () => {
   const manifest = await loadManifest(FULL_URL);
   const transcript = manifest.assets.find((asset) =>
     asset.source_key === "transcript-video-slot-04-humanizing-a",
@@ -49,12 +49,14 @@ test("file-backed caption and transcript drift remains report-only for draft but
     blocker.includes("Caption/transcript file trust failed")
       && blocker.includes("checksum does not match"),
   ));
-  assert.doesNotThrow(() =>
+  assert.ok(report.errors.some((error) => error.includes("canonical release manifest")));
+  assert.throws(() =>
     assertBmhImportSemanticGate(report, { enforcePublicationBlockers: false }),
+    /BMH semantic validation failed/,
   );
   assert.throws(
     () => assertBmhImportSemanticGate(report, { enforcePublicationBlockers: true }),
-    /Caption\/transcript file trust failed/,
+    /BMH semantic validation failed/,
   );
 });
 
@@ -83,4 +85,14 @@ test("semantic errors fail closed even in report-only draft mode", () => {
     }, { enforcePublicationBlockers: false }),
     /BMH semantic validation failed/,
   );
+});
+
+test("a mutated full manifest cannot inherit canonical reconciliation evidence", async () => {
+  const manifest = await loadManifest(FULL_URL);
+  manifest.program.title = `${manifest.program.title} forged`;
+  const report = await validateBmhImportSemanticGate({
+    manifest,
+    now: CURRENT_TIME,
+  });
+  assert.ok(report.errors.some((error) => error.includes("canonical release manifest")));
 });

@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "status": "pending",
+  "updated_at": "2026-07-17",
+  "records": [
+    { "block_source_key": "block-role-play-guarded-inbound", "scenario_source_key": "guarded-inbound", "assignment_source_key": "assignment-section-3", "production_scenario_id": null, "scenario_sha256": null },
+    { "block_source_key": "block-role-play-tired-landlord", "scenario_source_key": "tired-landlord", "assignment_source_key": "assignment-section-3", "production_scenario_id": null, "scenario_sha256": null },
+    { "block_source_key": "block-role-play-scam-suspicious-preforeclosure", "scenario_source_key": "scam-suspicious-preforeclosure", "assignment_source_key": "assignment-section-4", "production_scenario_id": null, "scenario_sha256": null },
+    { "block_source_key": "block-role-play-probate-follow-up", "scenario_source_key": "probate-follow-up", "assignment_source_key": "assignment-section-5", "production_scenario_id": null, "scenario_sha256": null },
+    { "block_source_key": "block-role-play-family-dynamics-dayton", "scenario_source_key": "family-dynamics-dayton", "assignment_source_key": "assignment-section-6", "production_scenario_id": null, "scenario_sha256": null },
+    { "block_source_key": "block-role-play-full-cycle-capstone", "scenario_source_key": "full-cycle-capstone", "assignment_source_key": "assignment-section-6", "production_scenario_id": null, "scenario_sha256": null }
+  ]
+}

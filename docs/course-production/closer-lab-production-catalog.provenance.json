@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "source_repository": "biginkc/closer",
+  "source_commit": "6343fe4c2b72524457b758e23d77b944fcb7ead4",
+  "source_module": "scripts/bmh-institute-scenarios/scenario-data.ts",
+  "catalog_path": "docs/course-production/closer-lab-production-catalog.json",
+  "catalog_sha256": "919a99bea1d0cba1d64933f575a548c1c682ebac628e58e1e3d46f731b2b73cc",
+  "production_rpc": "export_bmh_institute_production_graph",
+  "production_project_ref": "xqrkugdxpwhjscrheuqo"
+}
