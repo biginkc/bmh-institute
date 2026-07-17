@@ -6,8 +6,14 @@ vi.mock("next/cache", () => ({
   revalidatePath: vi.fn(),
 }));
 
+const { sendEmailSpy } = vi.hoisted(() => ({
+  sendEmailSpy: vi.fn(async (message: { to: string; html: string }) => {
+    void message;
+  }),
+}));
+
 vi.mock("@/lib/email/send", () => ({
-  sendEmail: vi.fn(async () => undefined),
+  sendEmail: sendEmailSpy,
 }));
 
 type InsertError = { message: string; code?: string } | null;
@@ -26,6 +32,12 @@ let storageObjectExists = true;
 let storageListError: { message: string } | null = null;
 let activeSubmission: { id: string; status: "submitted" | "approved" } | null = null;
 let activeSubmissionError: { message: string } | null = null;
+let adminRecipients: Array<{
+  email: string;
+  full_name: string;
+  system_role: "owner" | "admin";
+  status: "active" | "invited" | "suspended";
+}> = [];
 
 vi.mock("@/lib/supabase/admin", () => ({
   createAdminClient: vi.fn(() => ({
@@ -48,7 +60,15 @@ vi.mock("@/lib/supabase/admin", () => ({
                 error: null,
               }),
             }),
-            in: async () => ({ data: [], error: null }),
+            in: () => ({
+              eq: async (field: string, value: string) => ({
+                data:
+                  field === "status"
+                    ? adminRecipients.filter((profile) => profile.status === value)
+                    : [],
+                error: null,
+              }),
+            }),
           }),
         };
       }
@@ -197,9 +217,11 @@ describe("submitAssignment (INTEG-04 file path validation)", () => {
     storageListError = null;
     activeSubmission = null;
     activeSubmissionError = null;
+    adminRecipients = [];
     insertSpy.mockReset();
     insertSpy.mockResolvedValue({ error: null });
     adminFromSpy.mockClear();
+    sendEmailSpy.mockClear();
   });
 
   afterEach(() => {
@@ -240,6 +262,53 @@ describe("submitAssignment (INTEG-04 file path validation)", () => {
       status: "submitted",
     });
     expect(adminFromSpy).toHaveBeenCalledWith("profiles");
+  });
+
+  it("emails submission content only to active administrators", async () => {
+    assignmentSubmissionType = "text";
+    adminRecipients = [
+      {
+        email: "active-admin@bmh.test",
+        full_name: "Active Admin",
+        system_role: "admin",
+        status: "active",
+      },
+      {
+        email: "suspended-owner@bmh.test",
+        full_name: "Suspended Owner",
+        system_role: "owner",
+        status: "suspended",
+      },
+      {
+        email: "invited-admin@bmh.test",
+        full_name: "Invited Admin",
+        system_role: "admin",
+        status: "invited",
+      },
+    ];
+
+    await expect(
+      submitAssignment({
+        assignmentId: "assignment-1",
+        lessonId: "lesson-1",
+        submission_type: "text",
+        submission_text: "Sensitive learner response",
+      }),
+    ).resolves.toEqual({ ok: true });
+
+    expect(sendEmailSpy).toHaveBeenCalledTimes(1);
+    expect(sendEmailSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: "active-admin@bmh.test",
+        html: expect.stringContaining("Sensitive learner response"),
+      }),
+    );
+    expect(sendEmailSpy.mock.calls.flatMap(([message]) => [message.to])).not.toContain(
+      "suspended-owner@bmh.test",
+    );
+    expect(sendEmailSpy.mock.calls.flatMap(([message]) => [message.to])).not.toContain(
+      "invited-admin@bmh.test",
+    );
   });
 
   it("rejects a user-scoped file path when the exact storage object does not exist", async () => {

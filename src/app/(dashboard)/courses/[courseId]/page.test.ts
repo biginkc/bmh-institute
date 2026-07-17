@@ -1,5 +1,5 @@
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const course = {
   id: "course-1",
@@ -52,6 +52,10 @@ const course = {
     },
   ],
 };
+const baseLessons = course.modules[0].lessons;
+let courseLessons = baseLessons;
+let lessonStatesError: { message: string } | null = null;
+const rpcSpy = vi.fn();
 
 vi.mock("@/lib/supabase/server", () => ({
   createClient: vi.fn(async () => ({
@@ -62,16 +66,32 @@ vi.mock("@/lib/supabase/server", () => ({
     },
     rpc: async (
       name: string,
-      args: { p_lesson_id: string },
+      args: { p_lesson_ids: string[] },
     ) => {
-      if (name !== "fn_lesson_is_complete") {
+      rpcSpy(name, args);
+      if (name !== "fn_lesson_states") {
         throw new Error(`Unexpected RPC: ${name}`);
       }
-      return { data: args.p_lesson_id === "lesson-done", error: null };
+      return {
+        data: lessonStatesError
+          ? null
+          : args.p_lesson_ids.map((lessonId) => ({
+              lesson_id: lessonId,
+              is_complete: lessonId === "lesson-done",
+              is_unlocked: lessonId !== "lesson-locked",
+            })),
+        error: lessonStatesError,
+      };
     },
     from: (table: string) => {
       const result = table === "courses"
-        ? { data: course, error: null }
+        ? {
+            data: {
+              ...course,
+              modules: [{ ...course.modules[0], lessons: courseLessons }],
+            },
+            error: null,
+          }
         : { data: [], error: null };
       const chain = {
         select: () => chain,
@@ -94,6 +114,12 @@ vi.mock("@/lib/content-blocks/sign-urls", () => ({
 import CoursePage from "./page";
 
 describe("CoursePage BMH learner presentation", () => {
+  beforeEach(() => {
+    courseLessons = baseLessons;
+    lessonStatesError = null;
+    rpcSpy.mockClear();
+  });
+
   it("renders real progress plus completed, current, and locked lesson states", async () => {
     const html = renderToStaticMarkup(
       await CoursePage({ params: Promise.resolve({ courseId: "course-1" }) }),
@@ -112,5 +138,38 @@ describe("CoursePage BMH learner presentation", () => {
     expect(html).toContain("Assignment");
     expect(html).toContain("https://signed.example/courses/calls-and-objections/v1/thumbnails/cover.webp");
     expect(html).toContain("Calls and objections course cover");
+    expect(rpcSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it("loads dozens of course lesson states with one RPC call", async () => {
+    courseLessons = Array.from({ length: 48 }, (_, index) => ({
+      ...baseLessons[0],
+      id: `lesson-${index + 1}`,
+      title: `Lesson ${index + 1}`,
+      sort_order: index,
+      prerequisite_lesson_id: null,
+    })) as typeof baseLessons;
+
+    await CoursePage({ params: Promise.resolve({ courseId: "course-1" }) });
+
+    expect(rpcSpy).toHaveBeenCalledTimes(1);
+    expect(rpcSpy).toHaveBeenCalledWith(
+      "fn_lesson_states",
+      expect.objectContaining({
+        p_lesson_ids: courseLessons.map((lesson) => lesson.id),
+      }),
+    );
+  });
+
+  it("renders a retry state instead of false progress when state verification fails", async () => {
+    lessonStatesError = { message: "database unavailable" };
+
+    const html = renderToStaticMarkup(
+      await CoursePage({ params: Promise.resolve({ courseId: "course-1" }) }),
+    );
+
+    expect(html).toContain("We couldn&#x27;t verify your lesson progress");
+    expect(html).not.toContain("0 of 3 required lessons complete");
+    expect(rpcSpy).toHaveBeenCalledTimes(1);
   });
 });

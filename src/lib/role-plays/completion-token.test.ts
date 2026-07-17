@@ -96,6 +96,7 @@ describe("role-play completion token", () => {
   it("accepts only the directional completion key in production", () => {
     vi.stubEnv("NODE_ENV", "production");
     vi.stubEnv("ROLE_PLAY_COMPLETION_VERIFY_SECRET", NEXT_SECRET);
+    vi.stubEnv("ROLE_PLAY_EMBED_SIGNING_SECRET", EMBED_SECRET);
     vi.stubEnv("ROLE_PLAY_JWT_SECRET", SECRET);
 
     const expected = {
@@ -122,6 +123,47 @@ describe("role-play completion token", () => {
         token: token(validPayload(), undefined, EMBED_SECRET),
       }).ok,
     ).toBe(false);
+  });
+
+  it("refuses production verification when the embed secret is missing", () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("ROLE_PLAY_COMPLETION_VERIFY_SECRET", NEXT_SECRET);
+    vi.stubEnv("ROLE_PLAY_EMBED_SIGNING_SECRET", "");
+
+    const result = verifyRolePlayCompletionToken({
+      token: token(validPayload(), undefined, NEXT_SECRET),
+      expected: {
+        userId: "user-1",
+        blockId: "block-1",
+        scenarioId: "scenario-1",
+        attemptId: ATTEMPT_ID,
+      },
+      rolePlayBaseUrl: BASE_URL,
+      now: new Date(NOW_SECONDS * 1000),
+      secret: NEXT_SECRET,
+    });
+
+    expect(result.ok).toBe(false);
+  });
+
+  it("refuses production verification when directional secrets are identical", () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("ROLE_PLAY_COMPLETION_VERIFY_SECRET", NEXT_SECRET);
+    vi.stubEnv("ROLE_PLAY_EMBED_SIGNING_SECRET", NEXT_SECRET);
+
+    const result = verifyRolePlayCompletionToken({
+      token: token(validPayload(), undefined, NEXT_SECRET),
+      expected: {
+        userId: "user-1",
+        blockId: "block-1",
+        scenarioId: "scenario-1",
+        attemptId: ATTEMPT_ID,
+      },
+      rolePlayBaseUrl: BASE_URL,
+      now: new Date(NOW_SECONDS * 1000),
+    });
+
+    expect(result.ok).toBe(false);
   });
 
   it("accepts a proof signed by the bounded previous completion key during rotation", () => {

@@ -75,6 +75,10 @@ describe("mintRolePlayEmbedToken", () => {
   it("uses the directional embed key in production", () => {
     vi.stubEnv("NODE_ENV", "production");
     vi.stubEnv("ROLE_PLAY_EMBED_SIGNING_SECRET", SECRET);
+    vi.stubEnv(
+      "ROLE_PLAY_COMPLETION_VERIFY_SECRET",
+      "completion-verification-secret-over-32-bytes",
+    );
     vi.stubEnv("ROLE_PLAY_JWT_SECRET", "legacy-secret-that-is-long-enough-to-use");
 
     expect(
@@ -86,6 +90,41 @@ describe("mintRolePlayEmbedToken", () => {
         scenarioId: "scenario-1",
       }).split("."),
     ).toHaveLength(3);
+  });
+
+  it("refuses production minting when the completion secret is missing", () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("ROLE_PLAY_EMBED_SIGNING_SECRET", SECRET);
+    vi.stubEnv("ROLE_PLAY_COMPLETION_VERIFY_SECRET", "");
+
+    expect(() =>
+      mintRolePlayEmbedToken(
+        {
+          userId: "user-1",
+          lessonId: "lesson-1",
+          blockId: "block-1",
+          learnerName: "Test Learner",
+          scenarioId: "scenario-1",
+        },
+        SECRET,
+      ),
+    ).toThrow(/ROLE_PLAY_EMBED_SIGNING_SECRET/);
+  });
+
+  it("refuses production minting when directional secrets are identical", () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("ROLE_PLAY_EMBED_SIGNING_SECRET", SECRET);
+    vi.stubEnv("ROLE_PLAY_COMPLETION_VERIFY_SECRET", SECRET);
+
+    expect(() =>
+      mintRolePlayEmbedToken({
+        userId: "user-1",
+        lessonId: "lesson-1",
+        blockId: "block-1",
+        learnerName: "Test Learner",
+        scenarioId: "scenario-1",
+      }),
+    ).toThrow(/ROLE_PLAY_EMBED_SIGNING_SECRET/);
   });
 
   it.each([0, -1, 301, 1.5, Number.NaN])(

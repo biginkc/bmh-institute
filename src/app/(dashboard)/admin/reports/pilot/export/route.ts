@@ -6,6 +6,7 @@ import {
   type PilotMonitoringSummary,
 } from "@/lib/pilot-monitoring/summary";
 import { createClient } from "@/lib/supabase/server";
+import { loadAdminLessonCompletions } from "../../../../lesson-state-rpc";
 
 export async function GET() {
   await requireAdmin();
@@ -15,7 +16,6 @@ export async function GET() {
     profilesRes,
     userRoleGroupsRes,
     requiredLessonsRes,
-    completionsRes,
     quizAttemptsRes,
     submissionsRes,
     courseCertsRes,
@@ -29,9 +29,6 @@ export async function GET() {
       .from("lessons")
       .select("id, title, is_required_for_completion, modules!inner(course_id)")
       .eq("is_required_for_completion", true),
-    supabase
-      .from("user_lesson_completions")
-      .select("user_id, lesson_id, completed_at"),
     supabase
       .from("user_quiz_attempts")
       .select("user_id, passed, score, completed_at"),
@@ -47,11 +44,30 @@ export async function GET() {
   const profiles = (profilesRes.data ?? []) as Profile[];
   const userRoleGroups = (userRoleGroupsRes.data ?? []) as UserRoleGroup[];
   const requiredLessons = (requiredLessonsRes.data ?? []) as RequiredLessonRow[];
-  const completions = (completionsRes.data ?? []) as Completion[];
   const quizAttempts = (quizAttemptsRes.data ?? []) as QuizAttempt[];
   const submissions = (submissionsRes.data ?? []) as Submission[];
   const courseCerts = (courseCertsRes.data ?? []) as CourseCert[];
   const programCerts = (programCertsRes.data ?? []) as ProgramCert[];
+  const completionResult = await loadAdminLessonCompletions(supabase, {
+    userIds: profiles.map((profile) => profile.id),
+    lessonIds: requiredLessons.map((lesson) => lesson.id),
+  });
+  if (!completionResult.ok) {
+    return NextResponse.json(
+      {
+        error:
+          "Current learner completion could not be verified. Try the export again.",
+      },
+      { status: 503, headers: { "retry-after": "5" } },
+    );
+  }
+  const completions: Completion[] = completionResult.completions.map(
+    (completion) => ({
+      user_id: completion.userId,
+      lesson_id: completion.lessonId,
+      completed_at: completion.completedAt,
+    }),
+  );
   const roleGroupIdsByUserId = new Map<string, string[]>();
 
   for (const row of userRoleGroups) {
@@ -176,7 +192,11 @@ type RequiredLessonRow = {
   modules: { course_id: string } | Array<{ course_id: string }> | null;
 };
 
-type Completion = { user_id: string; lesson_id: string; completed_at: string };
+type Completion = {
+  user_id: string;
+  lesson_id: string;
+  completed_at: string | null;
+};
 
 type QuizAttempt = {
   user_id: string;

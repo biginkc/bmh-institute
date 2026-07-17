@@ -32,10 +32,14 @@ export type RolePlayEmbedTokenPayload = {
 
 export function mintRolePlayEmbedToken(
   input: RolePlayEmbedTokenInput,
-  secret = configuredEmbedSecret(process.env),
+  secret?: string,
 ): string {
   assertTokenInput(input);
-  assertSecret(secret);
+  const signingSecret =
+    process.env.NODE_ENV === "production"
+      ? configuredEmbedSecret(process.env)
+      : secret ?? configuredEmbedSecret(process.env);
+  assertSecret(signingSecret);
 
   const nowSeconds = Math.floor((input.now ?? new Date()).getTime() / 1000);
   const ttlSeconds = input.ttlSeconds ?? DEFAULT_TTL_SECONDS;
@@ -56,7 +60,7 @@ export function mintRolePlayEmbedToken(
 
   const header = base64UrlJson({ alg: "HS256", typ: "JWT" });
   const body = base64UrlJson(payload);
-  const signature = createHmac("sha256", secret)
+  const signature = createHmac("sha256", signingSecret)
     .update(`${header}.${body}`)
     .digest("base64url");
 
@@ -94,11 +98,18 @@ function assertSecret(secret: string | undefined): asserts secret is string {
 }
 
 function configuredEmbedSecret(env: NodeJS.ProcessEnv): string | undefined {
-  const directional = env.ROLE_PLAY_EMBED_SIGNING_SECRET?.trim();
-  if (directional) return directional;
-  return env.NODE_ENV === "production"
-    ? undefined
-    : env.ROLE_PLAY_JWT_SECRET?.trim();
+  const embedSecret = env.ROLE_PLAY_EMBED_SIGNING_SECRET?.trim();
+  if (env.NODE_ENV === "production") {
+    const completionSecret = env.ROLE_PLAY_COMPLETION_VERIFY_SECRET?.trim();
+    return embedSecret &&
+      completionSecret &&
+      Buffer.byteLength(embedSecret, "utf8") >= MIN_SECRET_BYTES &&
+      Buffer.byteLength(completionSecret, "utf8") >= MIN_SECRET_BYTES &&
+      embedSecret !== completionSecret
+      ? embedSecret
+      : undefined;
+  }
+  return embedSecret || env.ROLE_PLAY_JWT_SECRET?.trim();
 }
 
 function base64UrlJson(value: unknown): string {

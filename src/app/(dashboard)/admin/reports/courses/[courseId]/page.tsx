@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Badge, Card } from "@/components/bmh-ds";
 import { requireAdmin } from "@/lib/auth/guard";
 import { createClient } from "@/lib/supabase/server";
+import { loadAdminLessonCompletions } from "../../../../lesson-state-rpc";
 
 import { AdminDataTable } from "../../../_components/admin-data-table";
 import {
@@ -24,7 +25,6 @@ export default async function CourseReportPage({
   const [
     courseRes,
     modulesRes,
-    completionsRes,
     certsRes,
     accessibleUserRes,
   ] = await Promise.all([
@@ -37,15 +37,6 @@ export default async function CourseReportPage({
       .from("modules")
       .select("id, title, lessons(id, is_required_for_completion)")
       .eq("course_id", courseId),
-    supabase
-      .from("user_lesson_completions")
-      .select(
-        `lesson_id, user_id, completed_at,
-         lessons!inner(module_id,
-           modules!inner(course_id)
-         )`,
-      )
-      .eq("lessons.modules.course_id", courseId),
     supabase
       .from("certificates")
       .select("user_id, issued_at, certificate_number")
@@ -77,6 +68,30 @@ export default async function CourseReportPage({
   }
   const totalRequired = requiredLessonIds.size;
 
+  const profiles = (accessibleUserRes.data ?? []) as Array<{
+    id: string;
+    full_name: string;
+    email: string;
+    system_role: "owner" | "admin" | "learner";
+  }>;
+  const completionResult = await loadAdminLessonCompletions(supabase, {
+    userIds: profiles.map((profile) => profile.id),
+    lessonIds: Array.from(requiredLessonIds),
+  });
+  if (!completionResult.ok) {
+    return (
+      <main className="w-full flex-1 p-6 md:p-10">
+        <AdminPageHeader
+          eyebrow="Admin · Report"
+          title={course.title}
+          description="Current learner completion could not be verified. Refresh the page to try again."
+          backHref="/admin/reports"
+          backLabel="Back to reports"
+        />
+      </main>
+    );
+  }
+
   // Per-user completion counts and latest activity.
   type Row = {
     userId: string;
@@ -84,14 +99,14 @@ export default async function CourseReportPage({
     latest: string | null;
   };
   const byUser = new Map<string, Row>();
-  for (const c of completionsRes.data ?? []) {
-    const uid = c.user_id;
-    const lid = c.lesson_id;
+  for (const completion of completionResult.completions) {
+    const uid = completion.userId;
+    const lid = completion.lessonId;
     if (!requiredLessonIds.has(lid)) continue;
     const row = byUser.get(uid) ?? { userId: uid, doneCount: 0, latest: null };
     row.doneCount++;
-    const ts = c.completed_at;
-    if (!row.latest || ts > row.latest) row.latest = ts;
+    const ts = completion.completedAt;
+    if (ts && (!row.latest || ts > row.latest)) row.latest = ts;
     byUser.set(uid, row);
   }
 
@@ -105,13 +120,6 @@ export default async function CourseReportPage({
       certificate_number: cert.certificate_number,
     });
   }
-
-  const profiles = (accessibleUserRes.data ?? []) as Array<{
-    id: string;
-    full_name: string;
-    email: string;
-    system_role: "owner" | "admin" | "learner";
-  }>;
 
   // Only show profiles that have at least one completion OR a cert — keeps
   // the table relevant to actual progress instead of listing every auth user.

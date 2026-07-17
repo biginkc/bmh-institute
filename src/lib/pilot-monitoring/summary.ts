@@ -24,7 +24,7 @@ export type PilotMonitoringRequiredLessonInput = {
 export type PilotMonitoringCompletionInput = {
   userId: string;
   lessonId: string;
-  completedAt: string;
+  completedAt: string | null;
 };
 
 export type PilotMonitoringQuizAttemptInput = {
@@ -145,7 +145,9 @@ export function summarizePilotMonitoring({
       ).length;
       const certificatesIssued = userCourseCerts.length + userProgramCerts.length;
       const lastActivity = latest([
-        ...userCompletions.map((completion) => completion.completedAt),
+        ...userCompletions
+          .map((completion) => completion.completedAt)
+          .filter((value): value is string => !!value),
         ...userAttempts
           .map((attempt) => attempt.completedAt)
           .filter((value): value is string => !!value),
@@ -302,4 +304,3 @@ function groupBy<T>(items: T[], key: (item: T) => string): Map<string, T[]> {
 function latest(values: string[]): string | null {
   return values.sort((a, b) => b.localeCompare(a))[0] ?? null;
 }
-

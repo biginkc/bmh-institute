@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Badge, Card } from "@/components/bmh-ds";
 import { requireAdmin } from "@/lib/auth/guard";
 import { createClient } from "@/lib/supabase/server";
+import { loadAdminLessonCompletions } from "../../../../lesson-state-rpc";
 
 import { AdminDataTable } from "../../../_components/admin-data-table";
 import {
@@ -25,7 +26,6 @@ export default async function ProgramReportPage({
     programRes,
     programCoursesRes,
     modulesRes,
-    completionsRes,
     courseCertsRes,
     programCertsRes,
     profilesRes,
@@ -43,9 +43,6 @@ export default async function ProgramReportPage({
     supabase
       .from("modules")
       .select("id, course_id, lessons(id, is_required_for_completion)"),
-    supabase
-      .from("user_lesson_completions")
-      .select("lesson_id, user_id, completed_at"),
     supabase
       .from("certificates")
       .select("user_id, course_id"),
@@ -105,19 +102,43 @@ export default async function ProgramReportPage({
     for (const id of set) programRequiredLessonIds.add(id);
   }
 
+  const profiles = (profilesRes.data ?? []) as Array<{
+    id: string;
+    full_name: string;
+    email: string;
+    system_role: "owner" | "admin" | "learner";
+  }>;
+  const completionResult = await loadAdminLessonCompletions(supabase, {
+    userIds: profiles.map((profile) => profile.id),
+    lessonIds: Array.from(programRequiredLessonIds),
+  });
+  if (!completionResult.ok) {
+    return (
+      <main className="w-full flex-1 p-6 md:p-10">
+        <AdminPageHeader
+          eyebrow="Admin · Report"
+          title={program.title}
+          description="Current learner completion could not be verified. Refresh the page to try again."
+          backHref="/admin/reports"
+          backLabel="Back to reports"
+        />
+      </main>
+    );
+  }
+
   // Completions filtered to this program's lessons + latest activity.
   const completionsByUser = new Map<
     string,
     { total: number; latest: string | null }
   >();
-  for (const c of completionsRes.data ?? []) {
-    const lid = c.lesson_id;
+  for (const completion of completionResult.completions) {
+    const lid = completion.lessonId;
     if (!programRequiredLessonIds.has(lid)) continue;
-    const uid = c.user_id;
-    const ts = c.completed_at;
+    const uid = completion.userId;
+    const ts = completion.completedAt;
     const row = completionsByUser.get(uid) ?? { total: 0, latest: null };
     row.total++;
-    if (!row.latest || ts > row.latest) row.latest = ts;
+    if (ts && (!row.latest || ts > row.latest)) row.latest = ts;
     completionsByUser.set(uid, row);
   }
 
@@ -142,13 +163,6 @@ export default async function ProgramReportPage({
       issued_at: pc.issued_at,
     });
   }
-
-  const profiles = (profilesRes.data ?? []) as Array<{
-    id: string;
-    full_name: string;
-    email: string;
-    system_role: "owner" | "admin" | "learner";
-  }>;
 
   const totalRequired = programRequiredLessonIds.size;
   const totalCourses = programCourseIds.size;

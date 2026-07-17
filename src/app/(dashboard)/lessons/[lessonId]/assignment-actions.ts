@@ -212,7 +212,8 @@ async function notifyAdminsOfNewSubmission(input: {
     input.supabase
       .from("profiles")
       .select("email, full_name")
-      .in("system_role", ["owner", "admin"]),
+      .in("system_role", ["owner", "admin"])
+      .eq("status", "active"),
   ]);
 
   const learner = learnerRes.data as

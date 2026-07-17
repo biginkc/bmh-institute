@@ -24,6 +24,7 @@ import {
   shapeCourseResponse,
   type LessonSummary,
 } from "@/lib/courses/shape";
+import { loadLearnerLessonStates } from "../../lesson-state-rpc";
 
 export default async function CoursePage({
   params,
@@ -95,21 +96,35 @@ export default async function CoursePage({
     : undefined;
 
   const allLessons = course.modules.flatMap((module) => module.lessons);
-  const completionResults = user
-    ? await Promise.all(
-        allLessons.map(async (lesson) => ({
-          lessonId: lesson.id,
-          result: await supabase.rpc("fn_lesson_is_complete", {
-            p_user_id: user.id,
-            p_lesson_id: lesson.id,
-          }),
-        })),
-      )
-    : [];
+  const stateResult = user
+    ? await loadLearnerLessonStates(supabase, {
+        userId: user.id,
+        lessonIds: allLessons.map((lesson) => lesson.id),
+      })
+    : { ok: true as const, states: new Map() };
+  if (!stateResult.ok) {
+    return (
+      <div className="w-full flex-1 p-5 font-[family-name:var(--font-body)] md:p-8 lg:p-10">
+        <Link
+          href="/dashboard"
+          className="inline-flex items-center gap-1.5 text-sm font-extrabold text-[var(--action)] underline-offset-4 hover:underline"
+        >
+          <ArrowLeft aria-hidden="true" className="size-4" />
+          Back to dashboard
+        </Link>
+        <h1 className="mt-6 font-[family-name:var(--font-display)] text-4xl font-extrabold text-[var(--ink-900)]">
+          {course.title}
+        </h1>
+        <div className="mt-6 rounded-[var(--bmh-radius-md)] border border-[var(--danger)] bg-[var(--danger-soft)] px-4 py-3 text-sm font-semibold text-[var(--danger)]">
+          We couldn&apos;t verify your lesson progress. Refresh the page to try again.
+        </div>
+      </div>
+    );
+  }
   const completedLessonIds = new Set(
-    completionResults
-      .filter(({ result }) => result.data === true)
-      .map(({ lessonId }) => lessonId),
+    Array.from(stateResult.states.values())
+      .filter((state) => state.isComplete)
+      .map((state) => state.lessonId),
   );
   const requiredLessons = allLessons.filter(
     (lesson) => lesson.is_required_for_completion,

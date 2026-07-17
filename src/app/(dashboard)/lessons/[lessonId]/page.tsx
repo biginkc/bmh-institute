@@ -33,6 +33,11 @@ import {
   type ContentLessonNavigation,
   type NavigationLessonRow,
 } from "./lesson-navigation";
+import { loadLearnerLessonStates } from "../../lesson-state-rpc";
+
+type ContentNavigationResult =
+  | { ok: true; navigation: ContentLessonNavigation | null }
+  | { ok: false };
 
 export default async function LessonPage({
   params,
@@ -76,30 +81,30 @@ export default async function LessonPage({
   } = await supabase.auth.getUser();
   if (!user) notFound();
 
-  const [{ data: unlocked }, { data: complete }] = await Promise.all([
-    supabase.rpc("fn_lesson_is_unlocked", {
-      p_user_id: user.id,
-      p_lesson_id: lessonId,
-    }),
-    supabase.rpc("fn_lesson_is_complete", {
-      p_user_id: user.id,
-      p_lesson_id: lessonId,
-    }),
-  ]);
-
-  const alreadyComplete = complete === true;
+  const stateResult = await loadLearnerLessonStates(supabase, {
+    userId: user.id,
+    lessonIds: [lessonId],
+  });
+  const currentState = stateResult.ok ? stateResult.states.get(lessonId) : null;
+  const stateVerificationFailed = !currentState;
+  const unlocked = currentState?.isUnlocked === true;
+  const alreadyComplete = currentState?.isComplete === true;
   const moduleJoin = firstRow(lesson.modules);
   const courseJoin = firstRow(moduleJoin?.courses);
   const courseId = courseJoin?.id;
   const contentNavigationPromise =
-    lesson.lesson_type === "content" && courseId
+    lesson.lesson_type === "content" && courseId && !stateVerificationFailed
       ? loadContentLessonNavigation({
           supabase,
           courseId,
           lessonId,
           userId: user.id,
         })
-      : Promise.resolve(null);
+      : Promise.resolve(
+          stateVerificationFailed
+            ? ({ ok: false } as const)
+            : ({ ok: true, navigation: null } as const),
+        );
 
   return (
     <div
@@ -148,7 +153,11 @@ export default async function LessonPage({
         </div>
       </header>
 
-      {!unlocked ? (
+      {stateVerificationFailed ? (
+        <div className="max-w-3xl rounded-[var(--bmh-radius-md)] border border-[var(--danger)] bg-[var(--danger-soft)] px-4 py-3 text-sm font-semibold text-[var(--danger)]">
+          We couldn&apos;t verify your lesson access or progress. Refresh the page to try again.
+        </div>
+      ) : !unlocked ? (
         <div className="max-w-3xl">
           <BmhCard padding="lg" tint>
             <h2 className="font-[family-name:var(--font-display)] text-2xl font-bold text-[var(--ink-900)]">
@@ -197,10 +206,10 @@ async function ContentLessonBody({
   lessonId: string;
   userId: string;
   alreadyComplete: boolean;
-  navigationPromise: Promise<ContentLessonNavigation | null>;
+  navigationPromise: Promise<ContentNavigationResult>;
 }) {
   const supabase = await createClient();
-  const [{ data: blocks }, navigation] = await Promise.all([
+  const [{ data: blocks }, navigationResult] = await Promise.all([
     supabase
       .from("content_blocks")
       .select("id, block_type, content, sort_order, is_required_for_completion")
@@ -208,6 +217,7 @@ async function ContentLessonBody({
       .order("sort_order"),
     navigationPromise,
   ]);
+  const navigation = navigationResult.ok ? navigationResult.navigation : null;
 
   const rows = (blocks ?? []) as ContentBlock[];
   const [{ data: completedRows }, enriched] = await Promise.all([
@@ -293,6 +303,12 @@ async function ContentLessonBody({
           </nav>
         ) : null}
 
+        {!navigationResult.ok ? (
+          <div className="mt-8 rounded-[var(--bmh-radius-md)] border border-[var(--danger)] bg-[var(--danger-soft)] px-4 py-3 text-sm font-semibold text-[var(--danger)]">
+            We couldn&apos;t verify the next lesson. Refresh the page to try again.
+          </div>
+        ) : null}
+
         <div className="mt-8 flex flex-col gap-4 border-t border-[var(--border-hairline)] pt-6 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm font-bold text-[var(--text-muted)]">
             {alreadyComplete
@@ -329,14 +345,21 @@ function videoAssetVersion(value: unknown): string {
 async function LessonPosition({
   navigationPromise,
 }: {
-  navigationPromise: Promise<ContentLessonNavigation | null>;
+  navigationPromise: Promise<ContentNavigationResult>;
 }) {
-  const navigation = await navigationPromise;
-  if (!navigation) return null;
+  const result = await navigationPromise;
+  if (!result.ok) {
+    return (
+      <span className="ml-1 text-xs font-extrabold text-[var(--danger)]">
+        Progress unavailable
+      </span>
+    );
+  }
+  if (!result.navigation) return null;
 
   return (
     <span className="ml-1 text-xs font-extrabold text-[var(--text-muted)]">
-      Chapter {navigation.chapterIndex} of {navigation.chapters.length}
+      Chapter {result.navigation.chapterIndex} of {result.navigation.chapters.length}
     </span>
   );
 }
@@ -380,7 +403,7 @@ type NavigationModuleRow = {
   lessons: NavigationLessonRow[] | null;
 };
 
-async function loadContentLessonNavigation({
+export async function loadContentLessonNavigation({
   supabase,
   courseId,
   lessonId,
@@ -390,7 +413,7 @@ async function loadContentLessonNavigation({
   courseId: string;
   lessonId: string;
   userId: string;
-}): Promise<ContentLessonNavigation | null> {
+}): Promise<ContentNavigationResult> {
   const modulesResult = await supabase
     .from("modules")
     .select(
@@ -398,6 +421,7 @@ async function loadContentLessonNavigation({
     )
     .eq("course_id", courseId)
     .order("sort_order");
+  if (modulesResult.error) return { ok: false };
 
   const moduleRows = (modulesResult.data ?? []) as NavigationModuleRow[];
   const lessons = [...moduleRows]
@@ -407,42 +431,31 @@ async function loadContentLessonNavigation({
         (left, right) => left.sort_order - right.sort_order,
       ),
     );
-  const stateResults = await Promise.all(
-    lessons.map(async (lesson) => {
-      const [unlockResult, completionResult] = await Promise.all([
-        supabase.rpc("fn_lesson_is_unlocked", {
-          p_user_id: userId,
-          p_lesson_id: lesson.id,
-        }),
-        supabase.rpc("fn_lesson_is_complete", {
-          p_user_id: userId,
-          p_lesson_id: lesson.id,
-        }),
-      ]);
-      return {
-        lessonId: lesson.id,
-        unlocked: unlockResult.data === true,
-        complete: completionResult.data === true,
-      };
-    }),
-  );
+  const stateResult = await loadLearnerLessonStates(supabase, {
+    userId,
+    lessonIds: lessons.map((lesson) => lesson.id),
+  });
+  if (!stateResult.ok) return { ok: false };
   const completedLessonIds = new Set(
-    stateResults
-      .filter((result) => result.complete)
-      .map((result) => result.lessonId),
+    Array.from(stateResult.states.values())
+      .filter((state) => state.isComplete)
+      .map((state) => state.lessonId),
   );
   const unlockedLessonIds = new Set(
-    stateResults
-      .filter((result) => result.unlocked)
-      .map((result) => result.lessonId),
+    Array.from(stateResult.states.values())
+      .filter((state) => state.isUnlocked)
+      .map((state) => state.lessonId),
   );
 
-  return buildContentLessonNavigation({
-    lessons,
-    lessonId,
-    completedLessonIds,
-    unlockedLessonIds,
-  });
+  return {
+    ok: true,
+    navigation: buildContentLessonNavigation({
+      lessons,
+      lessonId,
+      completedLessonIds,
+      unlockedLessonIds,
+    }),
+  };
 }
 
 async function attachRolePlayEmbeds(

@@ -3,6 +3,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 let tableData: Record<string, unknown[]> = {};
 let completedLessonIds = new Set<string>();
+let lessonStatesError: { message: string } | null = null;
+const rpcSpy = vi.fn();
 
 vi.mock("@/lib/supabase/server", () => ({
   createClient: vi.fn(async () => ({
@@ -13,12 +15,22 @@ vi.mock("@/lib/supabase/server", () => ({
     },
     rpc: async (
       name: string,
-      args: { p_lesson_id: string },
+      args: { p_lesson_ids: string[] },
     ) => {
-      if (name !== "fn_lesson_is_complete") {
+      rpcSpy(name, args);
+      if (name !== "fn_lesson_states") {
         throw new Error(`Unexpected RPC: ${name}`);
       }
-      return { data: completedLessonIds.has(args.p_lesson_id), error: null };
+      return {
+        data: lessonStatesError
+          ? null
+          : args.p_lesson_ids.map((lessonId) => ({
+              lesson_id: lessonId,
+              is_complete: completedLessonIds.has(lessonId),
+              is_unlocked: true,
+            })),
+        error: lessonStatesError,
+      };
     },
     from: (table: string) => {
       const chain = {
@@ -48,6 +60,8 @@ describe("DashboardPage learner onboarding", () => {
   beforeEach(() => {
     tableData = {};
     completedLessonIds = new Set();
+    lessonStatesError = null;
+    rpcSpy.mockClear();
   });
 
   it("renders support-oriented copy when no programs are assigned", async () => {
@@ -132,5 +146,100 @@ describe("DashboardPage learner onboarding", () => {
     expect(html).toContain("https://signed.example/courses/va-foundations/v1/thumbnails/program.webp");
     expect(html).toContain("VA Foundations program cover");
     expect(html).toContain("https://signed.example/courses/va-foundations/v1/thumbnails/first-task.webp");
+    expect(rpcSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it("loads dozens of lesson states with one RPC call", async () => {
+    const lessons = Array.from({ length: 48 }, (_, index) => ({
+      id: `lesson-${index + 1}`,
+      title: `Lesson ${index + 1}`,
+      sort_order: index,
+      is_required_for_completion: true,
+      thumbnail_path: null,
+      content_import_id: "va-foundations-v1",
+    }));
+    tableData = {
+      programs: [
+        {
+          id: "program-1",
+          title: "VA Foundations",
+          description: null,
+          thumbnail_path: null,
+          content_import_id: "va-foundations-v1",
+          course_order_mode: "sequential",
+          is_published: true,
+          sort_order: 0,
+          program_courses: [
+            {
+              sort_order: 0,
+              courses: {
+                id: "course-1",
+                title: "Getting Started",
+                description: null,
+                thumbnail_path: null,
+                content_import_id: "va-foundations-v1",
+                is_published: true,
+              },
+            },
+          ],
+        },
+      ],
+      modules: [{ course_id: "course-1", sort_order: 0, lessons }],
+    };
+
+    await DashboardPage();
+
+    expect(rpcSpy).toHaveBeenCalledTimes(1);
+    expect(rpcSpy).toHaveBeenCalledWith(
+      "fn_lesson_states",
+      expect.objectContaining({ p_lesson_ids: lessons.map((lesson) => lesson.id) }),
+    );
+  });
+
+  it("renders a retry state instead of false progress when state verification fails", async () => {
+    tableData = {
+      programs: [
+        {
+          id: "program-1",
+          title: "VA Foundations",
+          description: null,
+          thumbnail_path: null,
+          content_import_id: "va-foundations-v1",
+          course_order_mode: "sequential",
+          is_published: true,
+          sort_order: 0,
+          program_courses: [{
+            sort_order: 0,
+            courses: {
+              id: "course-1",
+              title: "Getting Started",
+              description: null,
+              thumbnail_path: null,
+              content_import_id: "va-foundations-v1",
+              is_published: true,
+            },
+          }],
+        },
+      ],
+      modules: [{
+        course_id: "course-1",
+        sort_order: 0,
+        lessons: [{
+          id: "lesson-1",
+          title: "Lesson one",
+          sort_order: 0,
+          is_required_for_completion: true,
+          thumbnail_path: null,
+          content_import_id: "va-foundations-v1",
+        }],
+      }],
+    };
+    lessonStatesError = { message: "database unavailable" };
+
+    const html = renderToStaticMarkup(await DashboardPage());
+
+    expect(html).toContain("We couldn&#x27;t verify your lesson progress");
+    expect(html).not.toContain("0/1");
+    expect(rpcSpy).toHaveBeenCalledTimes(1);
   });
 });

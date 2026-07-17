@@ -47,9 +47,11 @@ vi.mock("@/lib/supabase/admin", () => ({
                 error: null,
               }),
             }),
-            in: async () => ({
-              data: [{ email: "admin@bmh.test", full_name: "Admin" }],
-              error: null,
+            in: () => ({
+              eq: async () => ({
+                data: [{ email: "admin@bmh.test", full_name: "Admin" }],
+                error: null,
+              }),
             }),
           }),
         };
@@ -135,9 +137,11 @@ vi.mock("@/lib/supabase/server", () => ({
             }),
             // Admins list — kept non-empty so we can prove the notify email is
             // suppressed by policy, not just by an empty recipient list.
-            in: async () => ({
-              data: [{ email: "admin@bmh.test", full_name: "Admin" }],
-              error: null,
+            in: () => ({
+              eq: async () => ({
+                data: [{ email: "admin@bmh.test", full_name: "Admin" }],
+                error: null,
+              }),
             }),
           }),
         };

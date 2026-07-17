@@ -11,6 +11,7 @@ import {
   AdminPageHeader,
   AdminSectionHeading,
 } from "../_components/admin-shell";
+import { loadAdminLessonCompletions } from "../../lesson-state-rpc";
 
 export default async function AdminReportsPage() {
   // HARDEN-01: page-level guard so a direct fetch can't bypass the layout.
@@ -23,7 +24,6 @@ export default async function AdminReportsPage() {
     coursesRes,
     courseCertsRes,
     programCertsRes,
-    completionsRes,
     auditRes,
     quizAttemptsRes,
     submissionsRes,
@@ -40,9 +40,6 @@ export default async function AdminReportsPage() {
     supabase
       .from("program_certificates")
       .select("user_id, program_id, issued_at"),
-    supabase
-      .from("user_lesson_completions")
-      .select("user_id, lesson_id, completed_at"),
     supabase
       .from("audit_log")
       .select("id, user_id, action, entity_type, entity_id, metadata, created_at")
@@ -72,7 +69,6 @@ export default async function AdminReportsPage() {
   const courses = (coursesRes.data ?? []) as Entity[];
   const courseCerts = (courseCertsRes.data ?? []) as CourseCert[];
   const programCerts = (programCertsRes.data ?? []) as ProgramCert[];
-  const completions = (completionsRes.data ?? []) as Completion[];
   const auditRows = (auditRes.data ?? []) as AuditRow[];
   const quizAttempts = (quizAttemptsRes.data ?? []) as QuizAttempt[];
   const submissions = (submissionsRes.data ?? []) as Submission[];
@@ -102,6 +98,30 @@ export default async function AdminReportsPage() {
         }>
       | null;
   }>;
+  const completionResult = await loadAdminLessonCompletions(supabase, {
+    userIds: profiles.map((profile) => profile.id),
+    lessonIds: lessonCourseRows.map((lesson) => lesson.id),
+  });
+  if (!completionResult.ok) {
+    return (
+      <main className="w-full flex-1 p-6 md:p-10">
+        <AdminPageHeader
+          title="Reports"
+          description="Rollup view of who's learning what."
+        />
+        <div className="rounded-[var(--bmh-radius-md)] border border-[var(--danger)] bg-[var(--danger-soft)] px-4 py-3 text-sm font-semibold text-[var(--danger)]">
+          Current learner completion could not be verified. Refresh the page to try again.
+        </div>
+      </main>
+    );
+  }
+  const completions: Completion[] = completionResult.completions.map(
+    (completion) => ({
+      user_id: completion.userId,
+      lesson_id: completion.lessonId,
+      completed_at: completion.completedAt,
+    }),
+  );
   const courseIdByLessonId = new Map<string, string>();
   const lessonTitlesById = new Map<string, string>();
   const courseTitlesByLessonId = new Map<string, string>();
@@ -446,7 +466,11 @@ type Profile = {
 
 type Entity = { id: string; title: string };
 
-type Completion = { user_id: string; lesson_id: string; completed_at: string };
+type Completion = {
+  user_id: string;
+  lesson_id: string;
+  completed_at: string | null;
+};
 
 type CourseCert = { user_id: string; course_id: string; issued_at: string };
 
@@ -563,6 +587,7 @@ function summarizeLearners({
 
   const lastActivityByUser = new Map<string, string>();
   for (const c of completions) {
+    if (!c.completed_at) continue;
     const existing = lastActivityByUser.get(c.user_id);
     if (!existing || c.completed_at > existing) {
       lastActivityByUser.set(c.user_id, c.completed_at);

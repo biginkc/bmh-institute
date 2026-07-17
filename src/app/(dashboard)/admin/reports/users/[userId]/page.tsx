@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Badge, Card } from "@/components/bmh-ds";
 import { requireAdmin } from "@/lib/auth/guard";
 import { createClient } from "@/lib/supabase/server";
+import { loadAdminLessonCompletions } from "../../../../lesson-state-rpc";
 
 import { AdminDataTable } from "../../../_components/admin-data-table";
 import {
@@ -26,7 +27,6 @@ export default async function UserReportPage({
     programsRes,
     courseAccessRes,
     modulesLessonsRes,
-    completionsRes,
     certificatesRes,
     programCertsRes,
     attemptsRes,
@@ -68,10 +68,6 @@ export default async function UserReportPage({
     supabase
       .from("modules")
       .select("id, course_id, lessons(id, is_required_for_completion)"),
-    supabase
-      .from("user_lesson_completions")
-      .select("lesson_id, completed_at")
-      .eq("user_id", userId),
     supabase
       .from("certificates")
       .select("course_id, issued_at, certificate_number")
@@ -127,10 +123,6 @@ export default async function UserReportPage({
         !!c && typeof c.id === "string",
     );
 
-  const completedLessonIds = new Set(
-    (completionsRes.data ?? []).map((c) => c.lesson_id),
-  );
-
   // Index required lessons per course.
   const requiredByCourse = new Map<string, Set<string>>();
   for (const m of modulesLessonsRes.data ?? []) {
@@ -144,6 +136,29 @@ export default async function UserReportPage({
     }
     requiredByCourse.set(m.course_id, bucket);
   }
+  const requiredLessonIds = Array.from(
+    new Set(Array.from(requiredByCourse.values()).flatMap((ids) => Array.from(ids))),
+  );
+  const completionResult = await loadAdminLessonCompletions(supabase, {
+    userIds: [userId],
+    lessonIds: requiredLessonIds,
+  });
+  if (!completionResult.ok) {
+    return (
+      <main className="w-full flex-1 p-6 md:p-10">
+        <AdminPageHeader
+          eyebrow="Admin · Learner report"
+          title={profile.full_name || profile.email}
+          description="Current learner completion could not be verified. Refresh the page to try again."
+          backHref="/admin/reports"
+          backLabel="Back to reports"
+        />
+      </main>
+    );
+  }
+  const completedLessonIds = new Set(
+    completionResult.completions.map((completion) => completion.lessonId),
+  );
 
   function percentForCourse(courseId: string): {
     total: number;

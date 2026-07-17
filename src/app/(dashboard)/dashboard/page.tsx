@@ -12,6 +12,7 @@ import { shapeProgramsResponse } from "@/lib/programs/shape";
 import { summarizeLearnerOnboarding } from "@/lib/learner-onboarding/summary";
 import { signAuthorizedArtworkPaths } from "@/lib/content-blocks/sign-urls";
 import { artworkRequestKey } from "@/lib/artwork/paths";
+import { loadLearnerLessonStates } from "../lesson-state-rpc";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -79,6 +80,7 @@ export default async function DashboardPage() {
     }>
   >();
   let completedLessonIds = new Set<string>();
+  let progressLoadFailed = false;
 
   if (courseIds.length > 0 && user) {
     const lessonsRes = await supabase
@@ -138,20 +140,18 @@ export default async function DashboardPage() {
         ),
       ),
     );
-    const completionResults = await Promise.all(
-      requiredLessonIds.map(async (lessonId) => ({
-        lessonId,
-        result: await supabase.rpc("fn_lesson_is_complete", {
-          p_user_id: user.id,
-          p_lesson_id: lessonId,
-        }),
-      })),
-    );
-    completedLessonIds = new Set(
-      completionResults
-        .filter(({ result }) => result.data === true)
-        .map(({ lessonId }) => lessonId),
-    );
+    const stateResult = await loadLearnerLessonStates(supabase, {
+      userId: user.id,
+      lessonIds: requiredLessonIds,
+    });
+    progressLoadFailed = !stateResult.ok;
+    if (stateResult.ok) {
+      completedLessonIds = new Set(
+        Array.from(stateResult.states.values())
+          .filter((state) => state.isComplete)
+          .map((state) => state.lessonId),
+      );
+    }
 
     for (const [courseId, required] of requiredLessonsByCourse.entries()) {
       let done = 0;
@@ -233,9 +233,11 @@ export default async function DashboardPage() {
 
   return (
     <main className="w-full flex-1 p-5 md:p-8 lg:p-10">
-      {error ? (
+      {error || progressLoadFailed ? (
         <div className="rounded-[var(--bmh-radius-md)] border border-[var(--danger)] bg-[var(--danger-soft)] px-4 py-3 font-[family-name:var(--font-body)] text-sm font-semibold text-[var(--danger)]">
-          We couldn&apos;t load your programs. Try refreshing. ({error.message})
+          {error
+            ? `We couldn't load your programs. Refresh the page to try again. (${error.message})`
+            : "We couldn't verify your lesson progress. Refresh the page to try again."}
         </div>
       ) : programs.length === 0 ? (
         <NoAssignments />

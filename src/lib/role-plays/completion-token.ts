@@ -152,8 +152,9 @@ export function verifyRolePlayCompletionToken(input: {
   now?: Date;
 }): VerificationSuccess | { ok: false; error: string } {
   const secret =
-    input.secret ??
-    configuredCompletionSecret(process.env);
+    process.env.NODE_ENV === "production"
+      ? configuredCompletionSecret(process.env)
+      : input.secret ?? configuredCompletionSecret(process.env);
   if (!secret || Buffer.byteLength(secret, "utf8") < MIN_SECRET_BYTES) {
     return FAILURE;
   }
@@ -241,9 +242,16 @@ export function verifyRolePlayCompletionToken(input: {
 function configuredCompletionSecret(
   env: NodeJS.ProcessEnv,
 ): string | undefined {
-  const directional = env.ROLE_PLAY_COMPLETION_VERIFY_SECRET?.trim();
-  if (directional) return directional;
-  return env.NODE_ENV === "production"
-    ? undefined
-    : env.ROLE_PLAY_JWT_SECRET?.trim();
+  const completionSecret = env.ROLE_PLAY_COMPLETION_VERIFY_SECRET?.trim();
+  if (env.NODE_ENV === "production") {
+    const embedSecret = env.ROLE_PLAY_EMBED_SIGNING_SECRET?.trim();
+    return embedSecret &&
+      completionSecret &&
+      Buffer.byteLength(embedSecret, "utf8") >= MIN_SECRET_BYTES &&
+      Buffer.byteLength(completionSecret, "utf8") >= MIN_SECRET_BYTES &&
+      embedSecret !== completionSecret
+      ? completionSecret
+      : undefined;
+  }
+  return completionSecret || env.ROLE_PLAY_JWT_SECRET?.trim();
 }
