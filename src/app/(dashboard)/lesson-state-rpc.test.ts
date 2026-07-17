@@ -101,22 +101,26 @@ describe("lesson state batch RPC readers", () => {
     ).resolves.toEqual({ ok: false });
   });
 
-  it("chunks large admin reports below the RPC pair limit", async () => {
-    const userIds = Array.from({ length: 120 }, (_, index) => `user-${index}`);
-    const lessonIds = Array.from({ length: 48 }, (_, index) => `lesson-${index}`);
+  it("chunks large admin reports below the hosted Data API row limit", async () => {
+    const userIds = Array.from({ length: 121 }, (_, index) => `user-${index}`);
+    const lessonIds = Array.from({ length: 50 }, (_, index) => `lesson-${index}`);
     const rpc = vi.fn(
       async (
         _name: string,
         args: { p_user_ids: string[]; p_lesson_ids: string[] },
       ) => ({
-        data: args.p_user_ids.flatMap((userId) =>
-          args.p_lesson_ids.map((lessonId) => ({
-            user_id: userId,
-            lesson_id: lessonId,
-            is_complete: false,
-            completed_at: null,
-          })),
-        ),
+        // Mirror hosted PostgREST's default response ceiling. A request over
+        // 1,000 pairs is silently truncated rather than returned as an error.
+        data: args.p_user_ids
+          .flatMap((userId) =>
+            args.p_lesson_ids.map((lessonId) => ({
+              user_id: userId,
+              lesson_id: lessonId,
+              is_complete: false,
+              completed_at: null,
+            })),
+          )
+          .slice(0, 1_000),
         error: null,
       }),
     );
@@ -124,10 +128,15 @@ describe("lesson state batch RPC readers", () => {
     await expect(
       loadAdminLessonCompletions({ rpc } as never, { userIds, lessonIds }),
     ).resolves.toEqual({ ok: true, completions: [] });
-    expect(rpc).toHaveBeenCalledTimes(2);
+    expect(rpc).toHaveBeenCalledTimes(7);
+    expect(
+      rpc.mock.calls.some(
+        ([, args]) => args.p_user_ids.length * args.p_lesson_ids.length === 1_000,
+      ),
+    ).toBe(true);
     for (const [, args] of rpc.mock.calls) {
       expect(args.p_user_ids.length * args.p_lesson_ids.length).toBeLessThanOrEqual(
-        5_000,
+        1_000,
       );
     }
   });

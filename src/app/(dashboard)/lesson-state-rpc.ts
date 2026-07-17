@@ -23,7 +23,10 @@ type AdminCompletionResult =
   | { ok: false };
 
 const MAX_IDS_PER_AXIS = 500;
-const MAX_ADMIN_PAIRS_PER_CALL = 5_000;
+// Hosted Supabase projects return at most 1,000 rows from the Data API by
+// default. Keep each cross-product below that response ceiling so the strict
+// cardinality check below distinguishes real omissions from API truncation.
+const MAX_ADMIN_PAIRS_PER_CALL = 1_000;
 
 export async function loadLearnerLessonStates(
   supabase: SupabaseClient<Database>,
