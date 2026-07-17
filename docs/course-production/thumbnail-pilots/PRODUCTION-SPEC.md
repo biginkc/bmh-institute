@@ -6,12 +6,12 @@ This specification prepares the post-approval artwork lane. It does not approve
 the pilots, generate new images, update manifest approvals, upload files, or
 publish course content.
 
-The currently tracked pilot lineage and production inventory remain version 1.
-That contract is intentionally compatible and blue-only so the existing
-preapproval ledger continues to validate byte-for-byte. Version 2 is activated
-only by deliberately replacing the canonical `generation-lineage.json` with a
-valid `bmh-thumbnail-pilot-lineage/v2` artifact and rebuilding the inventory.
-Candidate or revision files do not activate the migration.
+The canonical production inventory and still-pending ledger now bind the exact
+V7 pilot bytes through `v7-generation-lineage.json` and the honest
+`bmh-thumbnail-pilot-lineage/v3-candidate` contract. It supports exactly two
+identity roots while requiring one person per thumbnail: Andrea or the recurring
+seller, never both. Superseded V1/V2 bytes remain only as rejection history and
+legacy regression fixtures.
 
 ## Locked output inventory
 
@@ -320,7 +320,7 @@ The approval artifact uses this exact schema:
     "pilot_bindings_sha256": "<SHA-256 defined below>"
   },
   "inventory_sha256": "<SHA-256 of exact production-inventory.json bytes>",
-  "generation_lineage_sha256": "<SHA-256 of exact generation-lineage.json bytes>",
+  "generation_lineage_sha256": "<SHA-256 of exact v7-generation-lineage.json bytes>",
   "pilot_bindings": [
     {
       "slug": "orientation",
@@ -405,19 +405,13 @@ npm run artwork:production -- verify
 npm run test:artwork-production
 ```
 
-For a version 2 migration, first stage and verify the exact shared parent,
-three pilot edit chains, deterministic flat masters, cards, posters, checksums,
-and portable references. Then replace the canonical lineage intentionally,
-rebuild the inventory, and migrate the still-preapproval ledger using the
-workflow's version-aware migration path. Do not run `approve-pilots` while the
-inventory and ledger schema versions differ. The existing `init` command's
-refusal to overwrite a non-identical ledger is a safety gate, not an error to
-bypass by hand-editing mutable production state.
-
-Re-run the builder check, artwork contract tests, and ledger verification after
-that migration. Only the exact deterministic v2 cards and posters may appear in
-the checksum-bound review request. Approval of earlier unconstrained previews
-does not approve the migrated bytes.
+The V7 migration is already staged in the canonical preapproval inventory and
+ledger. Re-run the V7 derivative check, inventory builder check, artwork contract
+tests, and ledger verification before recording approval. Only the exact
+deterministic V7 cards and posters may appear in the checksum-bound review
+request. Approval of an earlier preview does not approve these bytes. The
+`init` command's refusal to overwrite a non-identical ledger remains a safety
+gate, not an error to bypass by hand-editing mutable production state.
 
 After Jarrad explicitly approves all three pilots, record the structured,
 checksum-bound approval artifact above and promote the exact pilot bytes before

@@ -1,10 +1,11 @@
 {
-  "schema_version": "bmh-artwork-production/v1",
+  "schema_version": "bmh-artwork-production/v3-candidate",
   "status": "blocked-pending-pilot-approval",
   "generation_policy": {
     "gate": "Jarrad must approve all three pilots before any new image generation",
     "generator": "built-in image_gen",
     "call_strategy": "one distinct image_gen call per cover or non-pilot lesson master, plus a separate Fact Find poster-master call",
+    "pilot_call_strategy": "three checksum-locked single-character candidates using exactly one of two honest identity roots, with lesson-video evidence",
     "model_native_text": "forbidden",
     "manifest_approval_updates": "forbidden until visual QA and explicit approval",
     "upload_or_publish": "forbidden in artwork production"
@@ -25,22 +26,34 @@
         "sha256": "f1affc2ab6b931be8cfd6920165dff330d49b79e6f4abfe5568e67e70c6934a6"
       },
       {
-        "id": "orientation-building",
-        "role": "Orientation subject reference only",
-        "path": "docs/course-production/thumbnail-pilots/references/mV0_LV0_s10_bmh-lowangle.png",
-        "sha256": "438bab4f68f7b71e5daec17def6ea1ceb091e010b57c135968746fba92ba42dc"
+        "id": "andrea-approved",
+        "role": "approved Andrea identity root",
+        "path": "docs/course-production/thumbnail-pilots/references/v5-cast/andrea-approved.png",
+        "sha256": "ab1c01dfc642f00b2f6df08a20fd231cb47fffb60a3e013a42960ee4fa5e2ca8"
       },
       {
-        "id": "opening-phone-shapes",
-        "role": "Opening the Call subject reference only",
-        "path": "docs/course-production/thumbnail-pilots/references/m05_L5A_phones.png",
-        "sha256": "2d59d64e913c43b1fba45080b0bf59c9e51356f1d4b057c5d2831bfa0f7af6e8"
+        "id": "recurring-seller-approved",
+        "role": "approved recurring seller identity root",
+        "path": "docs/course-production/thumbnail-pilots/references/v5-cast/recurring-seller.png",
+        "sha256": "b88724ccd840ecf295c2b8607525a76a938349978407a0ba8b92eccd8f2cf4f0"
       },
       {
-        "id": "objection-character",
-        "role": "Objection Architecture character reference only",
-        "path": "docs/course-production/thumbnail-pilots/references/m07_L7A_b03_reframe.png",
-        "sha256": "57fe03b31eca46336c664c2ca78cf877b8db3138443964e7976ce70eb91db311"
+        "id": "v7-orientation-contact-sheet",
+        "role": "orientation source-video contact sheet",
+        "path": "docs/course-production/thumbnail-pilots/references/v7-video-stills/orientation-contact-sheet.jpg",
+        "sha256": "838ef332a6a2b35b13908bc8651df7770979777613fd87fef96d09917fb9ebda"
+      },
+      {
+        "id": "v7-opening-the-call-contact-sheet",
+        "role": "opening-the-call source-video contact sheet",
+        "path": "docs/course-production/thumbnail-pilots/references/v7-video-stills/opening-contact-sheet.jpg",
+        "sha256": "f57c71fb9425eed09bd3297690e43617c5737fc579b96bd596ae0ffa168075a5"
+      },
+      {
+        "id": "v7-objection-architecture-contact-sheet",
+        "role": "objection-architecture source-video contact sheet",
+        "path": "docs/course-production/thumbnail-pilots/references/v7-video-stills/objection-contact-sheet.jpg",
+        "sha256": "31145ddd3485159dbaa298d8ee1958834dca1098bbd86645c43414ccaa8eea7b"
       }
     ],
     "palette_rgb": [
@@ -85,6 +98,23 @@
         53
       ]
     ],
+    "background_contract": {
+      "allowed_rgb": [
+        [
+          103,
+          182,
+          255
+        ],
+        [
+          255,
+          211,
+          1
+        ]
+      ],
+      "master_field": "background_rgb",
+      "derivative_normalization_field": "normalize_background_rgb",
+      "lesson_card_padding_field": "padding_color_rgb"
+    },
     "crop_profiles": {
       "full-safe": {
         "x": 0,
@@ -126,6 +156,11 @@
     "output_path": "course-assets/thumbnails/program-bmh-employee-training.webp",
     "source_path": "course-assets/thumbnails/production/sources/program-bmh-employee-training-generated.png",
     "flat_master_path": "course-assets/thumbnails/production/flat-masters/program-bmh-employee-training-flat-master.png",
+    "background_rgb": [
+      103,
+      182,
+      255
+    ],
     "derivative": {
       "recipe_id": "course-cover-card-16x10",
       "source_master_id": "master-program-bmh-employee-training",
@@ -199,14 +234,20 @@
       "reference_ids": [
         "style-ref-1",
         "style-ref-2",
-        "orientation-building"
+        "andrea-approved",
+        "v7-orientation-contact-sheet"
       ],
-      "prompt": "Use case: stylized-concept\nAsset type: BMH Institute lesson-thumbnail pilot, wide 16:9 master designed to crop safely to 16:10\nPrimary request: Create the Orientation thumbnail for a new employee beginning BMH Institute. Show an iconic welcoming BMH training building as one large central sticker, with a simple open doorway, a tiny new learner approaching, a small compass, checklist, and upward path markers floating as separate supporting stickers. The five-second read should be “welcome, direction, begin training.”\nInput images: Image 1 and Image 2 are the canonical BMH Sticker System style references; Image 3 is a subject reference for the recognizable BMH building only. Preserve the flat sticker language from Images 1–2 and simplify the building from Image 3 into an icon rather than a realistic scene.\nScene/backdrop: uninterrupted flat cornflower-blue field with generous active negative space; floating sticker composition, never a continuous environment\nStyle/medium: hand-drawn flat sticker-sheet illustration; thick slightly wobbly black outlines; rounded imperfect primitive geometry; every object is an individually croppable sticker\nComposition/framing: large building sticker centered slightly right, tiny learner and open-door cue lower left, small compass/checklist/path marks balanced around it; keep all meaningful content inside the central 80% so both 16:9 and 16:10 crops remain intact\nColor palette: cornflower blue, golden yellow, orange, cream, white, black, and at most one muted green; 6–8 flat colors maximum\nCharacters: tiny scale, dot eyes, minimal face, cylindrical limbs, simple silhouette\nConstraints: no title, no words, no letters, no logos, no watermark; flat fills only; strong silhouettes; uniform complexity; decorative doodles limited to a few purposeful sparkles and motion marks\nAvoid: gradients, texture, lighting, shadows, reflections, depth, realistic perspective, photorealism, 3D rendering, detailed architecture, busy interiors, edge-cropped key objects",
-      "prompt_sha256": "f1f17b066b59af4a1803b99b02687f4ec8b77aba45e15d289669a5e6d13ff79f",
+      "prompt": "Create one 16:9 BMH Institute lesson-thumbnail master for Orientation / Welcome and Mindset. Use exactly one person: approved Andrea, full-body and centered in the fixed lower character zone. Preserve her black curly hair halo, orange headset, yellow top, orange pants, yellow shoes, pure-white face and hands, minimal features, and BMH black contour. Use a cornflower-blue background and one compact cue above her: an orange open doorway, three rising steps, and a yellow flag. No seller, second person, text, room, scenery, gradients, texture, or watermark.\n",
+      "prompt_sha256": "84e6ad28f0c973c927612892a2801517836e04428078575ec8fec90932b77a07",
       "master": {
         "id": "master-slot-01",
         "source_path": "course-assets/thumbnails/production/sources/slot-01-generated.png",
         "flat_master_path": "course-assets/thumbnails/production/flat-masters/slot-01-flat-master.png",
+        "background_rgb": [
+          103,
+          182,
+          255
+        ],
         "expected_aspect_ratio": "16:9",
         "meaningful_content_bounds": {
           "x_min_percent": 10,
@@ -392,123 +433,101 @@
         "status": "pilot-awaiting-jarrad-approval",
         "assets": {
           "slug": "orientation",
+          "character": "andrea",
           "source": {
-            "path": "course-assets/thumbnails/pilots/sources/orientation-generated.png",
+            "path": "course-assets/thumbnails/pilots/revisions/v7/sources/orientation-andrea-generated-v7.png",
             "dimensions": [
               1672,
               941
             ],
-            "sha256": "25307aedf8d8ac0f60181e9e0d2bbad4eb76b0548af254de12fa9f9451ad99a5"
+            "sha256": "a3a0b69a48d359d29247e557babdad2bc5a88bc79dc19edb113f885e0ccc22a6"
           },
           "flat_master": {
-            "path": "course-assets/thumbnails/pilots/flat-masters/orientation-flat-master.png",
+            "path": "course-assets/thumbnails/pilots/revisions/v7/flat-masters/orientation-andrea-flat-master-v7.png",
             "dimensions": [
               1672,
               941
             ],
-            "sha256": "0c26f841a92a4253692e36f851b10d090ecca78874054f8fc4e64738b116288c"
+            "sha256": "e8f17f745865e69631517c94ab1110f5767f64f5c2de1e80531d9f2a7fa31f94"
           },
           "lesson_card": {
-            "path": "course-assets/thumbnails/pilots/lesson-cards/orientation-lesson-card-16x10.webp",
+            "path": "course-assets/thumbnails/pilots/revisions/v7/lesson-cards/orientation-andrea-lesson-card-v7-16x10.webp",
             "dimensions": [
               1280,
               800
             ],
-            "sha256": "2f18cc10daca3ec29c9005feacb8b4b6167f60720786dffabaa66071f7105c02"
+            "sha256": "3a684cd589bf3895e672e43d6a734b35c503f6b3a191e1564c997c93c8c84988"
           },
           "video_poster": {
-            "path": "course-assets/posters/pilots/orientation-video-poster-16x9.webp",
+            "path": "course-assets/thumbnails/pilots/revisions/v7/video-posters/orientation-andrea-video-poster-v7-16x9.webp",
             "dimensions": [
               1280,
               720
             ],
-            "sha256": "71094a3f54b908963ab44096b4a9af3ce2ba7b1212c73f19a1f92fc5aaf49b20"
+            "sha256": "7da124a20704285fed7b2ed1c2db81fa56be849da4222f22ce1810638ec46d07"
           }
         },
-        "checksum_record_path": "docs/course-production/thumbnail-pilots/checksums.json",
-        "generation_lineage_record_path": "docs/course-production/thumbnail-pilots/generation-lineage.json",
+        "checksum_record_path": "docs/course-production/thumbnail-pilots/v7-checksums.json",
+        "generation_lineage_record_path": "docs/course-production/thumbnail-pilots/v7-generation-lineage.json",
         "generation_lineage": {
           "slug": "orientation",
-          "terminal_output_sha256": "25307aedf8d8ac0f60181e9e0d2bbad4eb76b0548af254de12fa9f9451ad99a5",
-          "steps": [
+          "character_id": "andrea-approved",
+          "background_rgb": [
+            103,
+            182,
+            255
+          ],
+          "lesson_cue": "open doorway, rising steps, and flag",
+          "video_evidence": [
             {
-              "step": 1,
-              "operation": "generate",
-              "prompt_path": "docs/course-production/thumbnail-pilots/prompts/orientation-initial.txt",
-              "prompt_sha256": "f1f17b066b59af4a1803b99b02687f4ec8b77aba45e15d289669a5e6d13ff79f",
-              "inputs": [
-                {
-                  "path": "docs/design/style-ref-1.png",
-                  "sha256": "d65ce4c3fc84a0a52b08e513d42d978f94d5db2f6e59034aedbbd1e9486c18ca"
-                },
-                {
-                  "path": "docs/design/style-ref-2.png",
-                  "sha256": "f1affc2ab6b931be8cfd6920165dff330d49b79e6f4abfe5568e67e70c6934a6"
-                },
-                {
-                  "path": "docs/course-production/thumbnail-pilots/references/mV0_LV0_s10_bmh-lowangle.png",
-                  "sha256": "438bab4f68f7b71e5daec17def6ea1ceb091e010b57c135968746fba92ba42dc"
-                }
-              ],
-              "tool_evidence": {
-                "thread_id": "019f6cb9-c3ed-74e0-975f-a5d0d8154c59",
-                "agent_path": "/root/thumbnail_pilots",
-                "invocation_call_id": "call_jkg32a9D7R5P4x0wi6NHt816",
-                "tool_output_call_id": "call_fb5x1aAbLV8XnFx0FPsnVnup",
-                "tool_output_id": "exec-1da1fab0-8b0b-4983-98e7-589893bbaab3",
-                "invoked_at": "2026-07-16T21:00:33.602Z",
-                "completed_at": "2026-07-16T21:01:21.122Z"
-              },
-              "output": {
-                "path": "course-assets/thumbnails/pilots/sources/orientation-initial-generated.png",
-                "dimensions": [
-                  1672,
-                  941
-                ],
-                "size_bytes": 1349670,
-                "sha256": "0dd1dc48fbb52bc3ed4c640b24d63dcf7e7da8650e9e7e2ac2d18ae1f9d1fc2f"
-              }
+              "path": "course-assets/review-lessonA/LESSON-1A-v7.mp4",
+              "sha256": "493de8a5e0663ad577ba46d6d5befce33e9640f250677095094978714d22ac72"
             },
             {
-              "step": 2,
-              "operation": "edit",
-              "prompt_path": "docs/course-production/thumbnail-pilots/prompts/orientation-correction.txt",
-              "prompt_sha256": "ede30dc1dc4d3b500a8b6b629780780b47882600afba74570a08844c82a6009a",
-              "inputs": [
-                {
-                  "path": "course-assets/thumbnails/pilots/sources/orientation-initial-generated.png",
-                  "sha256": "0dd1dc48fbb52bc3ed4c640b24d63dcf7e7da8650e9e7e2ac2d18ae1f9d1fc2f"
-                },
-                {
-                  "path": "docs/design/style-ref-1.png",
-                  "sha256": "d65ce4c3fc84a0a52b08e513d42d978f94d5db2f6e59034aedbbd1e9486c18ca"
-                },
-                {
-                  "path": "docs/design/style-ref-2.png",
-                  "sha256": "f1affc2ab6b931be8cfd6920165dff330d49b79e6f4abfe5568e67e70c6934a6"
-                }
-              ],
-              "tool_evidence": {
-                "thread_id": "019f6cb9-c3ed-74e0-975f-a5d0d8154c59",
-                "agent_path": "/root/thumbnail_pilots",
-                "invocation_call_id": "call_ymsG97sLazIVMEU4mKDZaA5J",
-                "tool_output_call_id": "call_SIlavtTJpymL19x1xdAXAV17",
-                "tool_output_id": "exec-7e24e498-2c35-4b30-8b08-9ce116051118",
-                "invoked_at": "2026-07-16T21:03:58.189Z",
-                "completed_at": "2026-07-16T21:04:47.870Z"
-              },
-              "output": {
-                "path": "course-assets/thumbnails/pilots/sources/orientation-generated.png",
-                "dimensions": [
-                  1672,
-                  941
-                ],
-                "size_bytes": 1303833,
-                "sha256": "25307aedf8d8ac0f60181e9e0d2bbad4eb76b0548af254de12fa9f9451ad99a5"
-              }
+              "path": "course-assets/review-lessonB/LESSON-1B-v4.mp4",
+              "sha256": "b0cad612499dbd2d867c906c1ad8a8e3e13fcded333fa973fa6d19339fa930da"
             }
-          ]
-        }
+          ],
+          "contact_sheet_input": {
+            "path": "docs/course-production/thumbnail-pilots/references/v7-video-stills/orientation-contact-sheet.jpg",
+            "sha256": "838ef332a6a2b35b13908bc8651df7770979777613fd87fef96d09917fb9ebda"
+          },
+          "generation": {
+            "operation": "generate",
+            "prompt_path": "docs/course-production/thumbnail-pilots/prompts/v7/orientation.txt",
+            "prompt_sha256": "84e6ad28f0c973c927612892a2801517836e04428078575ec8fec90932b77a07",
+            "tool_output_id": "exec-3185de1f-c9f1-459a-9785-a83f2fd30e16",
+            "output_path": "course-assets/thumbnails/pilots/revisions/v7/sources/orientation-andrea-generated-v7.png",
+            "output_sha256": "a3a0b69a48d359d29247e557babdad2bc5a88bc79dc19edb113f885e0ccc22a6"
+          }
+        },
+        "lineage_schema_version": "bmh-thumbnail-pilot-lineage/v3-candidate",
+        "identity_contract": {
+          "people_per_thumbnail": 1,
+          "allowed_characters": [
+            "andrea",
+            "recurring-seller"
+          ],
+          "selection_rule": "Andrea or the recurring seller, never both; the lesson and exact source video determine the character and cue",
+          "skin_fill": "pure white",
+          "backgrounds": [
+            "cornflower blue",
+            "golden yellow"
+          ],
+          "character_consistency": "Andrea uses one checksum-locked pixel layer at one fixed coordinate box in both Andrea pilots"
+        },
+        "identity_roots": [
+          {
+            "id": "andrea-approved",
+            "path": "docs/course-production/thumbnail-pilots/references/v5-cast/andrea-approved.png",
+            "sha256": "ab1c01dfc642f00b2f6df08a20fd231cb47fffb60a3e013a42960ee4fa5e2ca8"
+          },
+          {
+            "id": "recurring-seller-approved",
+            "path": "docs/course-production/thumbnail-pilots/references/v5-cast/recurring-seller.png",
+            "sha256": "b88724ccd840ecf295c2b8607525a76a938349978407a0ba8b92eccd8f2cf4f0"
+          }
+        ]
       },
       "provenance": {
         "generator": "built-in image_gen",
@@ -544,6 +563,11 @@
         "id": "master-slot-02",
         "source_path": "course-assets/thumbnails/production/sources/slot-02-generated.png",
         "flat_master_path": "course-assets/thumbnails/production/flat-masters/slot-02-flat-master.png",
+        "background_rgb": [
+          103,
+          182,
+          255
+        ],
         "expected_aspect_ratio": "16:9",
         "meaningful_content_bounds": {
           "x_min_percent": 10,
@@ -704,6 +728,11 @@
         "id": "master-slot-03",
         "source_path": "course-assets/thumbnails/production/sources/slot-03-generated.png",
         "flat_master_path": "course-assets/thumbnails/production/flat-masters/slot-03-flat-master.png",
+        "background_rgb": [
+          103,
+          182,
+          255
+        ],
         "expected_aspect_ratio": "16:9",
         "meaningful_content_bounds": {
           "x_min_percent": 10,
@@ -864,6 +893,11 @@
         "id": "master-slot-04",
         "source_path": "course-assets/thumbnails/production/sources/slot-04-generated.png",
         "flat_master_path": "course-assets/thumbnails/production/flat-masters/slot-04-flat-master.png",
+        "background_rgb": [
+          103,
+          182,
+          255
+        ],
         "expected_aspect_ratio": "16:9",
         "meaningful_content_bounds": {
           "x_min_percent": 10,
@@ -1134,6 +1168,11 @@
         "id": "master-slot-05",
         "source_path": "course-assets/thumbnails/production/sources/slot-05-generated.png",
         "flat_master_path": "course-assets/thumbnails/production/flat-masters/slot-05-flat-master.png",
+        "background_rgb": [
+          103,
+          182,
+          255
+        ],
         "expected_aspect_ratio": "16:9",
         "meaningful_content_bounds": {
           "x_min_percent": 10,
@@ -1349,6 +1388,11 @@
         "id": "master-slot-06",
         "source_path": "course-assets/thumbnails/production/sources/slot-06-generated.png",
         "flat_master_path": "course-assets/thumbnails/production/flat-masters/slot-06-flat-master.png",
+        "background_rgb": [
+          103,
+          182,
+          255
+        ],
         "expected_aspect_ratio": "16:9",
         "meaningful_content_bounds": {
           "x_min_percent": 10,
@@ -1557,14 +1601,20 @@
       "reference_ids": [
         "style-ref-1",
         "style-ref-2",
-        "opening-phone-shapes"
+        "andrea-approved",
+        "v7-opening-the-call-contact-sheet"
       ],
-      "prompt": "Use case: stylized-concept\nAsset type: BMH Institute lesson-thumbnail pilot, wide 16:9 master designed to crop safely to 16:10\nPrimary request: Create the Opening the Call thumbnail. The five-second read must be “start a confident, human phone conversation.” Use a large friendly telephone handset as the hero sticker bridging two simple speech bubbles, with a tiny headset-wearing employee on one side and a tiny homeowner on the other. Add a small open-door icon and a few purposeful sound-wave marks as supporting stickers.\nInput images: Image 1 and Image 2 are the canonical BMH Sticker System style references; Image 3 is a subject reference for phone icon shapes only. Match the loose flat sticker-sheet language of Images 1–2; simplify the phones from Image 3 and do not reproduce a scene.\nScene/backdrop: perfectly uniform flat cornflower-blue field with generous active negative space; floating sticker composition, never a continuous room or environment\nStyle/medium: hand-drawn flat sticker-sheet illustration; thick slightly wobbly black outlines; rounded imperfect primitive geometry; every object is independently croppable\nComposition/framing: large curved handset near center linking left and right speech bubbles; tiny employee and homeowner separated but visibly connected through the call; open-door icon and sound marks balanced around the hero; keep meaningful content inside the central 80% for safe 16:9 and 16:10 crops\nColor palette: cornflower blue, golden yellow, orange, cream, white, and black only; 6 flat colors maximum\nCharacters: tiny scale, dot eyes, minimal faces, cylindrical limbs, simple hair silhouettes, one headset prop\nConstraints: no title, no words, no letters, no numbers, no logos, no watermark; absolutely uniform flat fills; no white sticker border; strong silhouettes; uniform complexity; decorative rhythm limited to speech bubbles, sound marks, and two sparkles\nAvoid: any gradient, texture, lighting, glow, shadow, reflection, depth, realistic perspective, photorealism, 3D rendering, detailed smartphone interface, busy interiors, edge-cropped key objects",
-      "prompt_sha256": "b1dd0fda35d7c63e482e30f0a5c79ed0abf8c5bf4320b1e66fe6ca341a820119",
+      "prompt": "Edit the exact Orientation thumbnail into Opening the Call. Keep the single Andrea character consistent in identity, proportions, dimensions, scale, wardrobe, pure-white skin, and centered placement. Replace the doorway cue with one orange telephone handset and three black sound marks. Change the background to golden yellow. No seller, second person, text, room, scenery, gradients, texture, or watermark.\n",
+      "prompt_sha256": "f00e41b8e499c53cb2beb22a99b78c20764ea674b3962036dffb3ba8437a1870",
       "master": {
         "id": "master-slot-07",
         "source_path": "course-assets/thumbnails/production/sources/slot-07-generated.png",
         "flat_master_path": "course-assets/thumbnails/production/flat-masters/slot-07-flat-master.png",
+        "background_rgb": [
+          103,
+          182,
+          255
+        ],
         "expected_aspect_ratio": "16:9",
         "meaningful_content_bounds": {
           "x_min_percent": 10,
@@ -1700,6 +1750,11 @@
             "id": "master-poster-video-slot-07-fact-find",
             "source_path": "course-assets/posters/production/sources/video-slot-07-fact-find-generated.png",
             "flat_master_path": "course-assets/posters/production/flat-masters/video-slot-07-fact-find-flat-master.png",
+            "background_rgb": [
+              103,
+              182,
+              255
+            ],
             "expected_aspect_ratio": "16:9",
             "reference_ids": [
               "style-ref-1",
@@ -1784,85 +1839,117 @@
         "status": "pilot-awaiting-jarrad-approval",
         "assets": {
           "slug": "opening-the-call",
+          "character": "andrea",
           "source": {
-            "path": "course-assets/thumbnails/pilots/sources/opening-the-call-generated.png",
+            "path": "course-assets/thumbnails/pilots/revisions/v7/sources/opening-andrea-generated-v7.png",
             "dimensions": [
               1672,
               941
             ],
-            "sha256": "024256e8af219b185de73bbbd8274dfda67c40d28dd2692f861345dc68b0518b"
+            "sha256": "cdea83a43f02a6b018306a41720cbd097ba67c849c167cc82ead448488f962c8"
           },
           "flat_master": {
-            "path": "course-assets/thumbnails/pilots/flat-masters/opening-the-call-flat-master.png",
+            "path": "course-assets/thumbnails/pilots/revisions/v7/flat-masters/opening-andrea-flat-master-v7.png",
             "dimensions": [
               1672,
               941
             ],
-            "sha256": "98ce86bdb4dfaeb4906aca4ed287b80d78920df4f02f0c8b89bae1b33a7cfbf8"
+            "sha256": "1ce3cba4134f18743b3f137b835e6109d527a07f4ebf10a8cce3499489ed59c3"
           },
           "lesson_card": {
-            "path": "course-assets/thumbnails/pilots/lesson-cards/opening-the-call-lesson-card-16x10.webp",
+            "path": "course-assets/thumbnails/pilots/revisions/v7/lesson-cards/opening-andrea-lesson-card-v7-16x10.webp",
             "dimensions": [
               1280,
               800
             ],
-            "sha256": "4c71982ce2f43660ae07076e3f3613264cfca2a1b097d5657e2d15383d473f55"
+            "sha256": "6765cb0a3dffb2a03af26ba6b4c2ab6919b1fbae4a949df81e34e0b972197b6b"
           },
           "video_poster": {
-            "path": "course-assets/posters/pilots/opening-the-call-video-poster-16x9.webp",
+            "path": "course-assets/thumbnails/pilots/revisions/v7/video-posters/opening-andrea-video-poster-v7-16x9.webp",
             "dimensions": [
               1280,
               720
             ],
-            "sha256": "ef6d25c3a00d8582bc1daf8149a51672848e5358b66e9d54cef0c90d4c9611ae"
+            "sha256": "6735eb46f282ea0c94faf2d9ca4ae4e0cebaea56972861c60ac29bd446a54bc1"
           }
         },
-        "checksum_record_path": "docs/course-production/thumbnail-pilots/checksums.json",
-        "generation_lineage_record_path": "docs/course-production/thumbnail-pilots/generation-lineage.json",
+        "checksum_record_path": "docs/course-production/thumbnail-pilots/v7-checksums.json",
+        "generation_lineage_record_path": "docs/course-production/thumbnail-pilots/v7-generation-lineage.json",
         "generation_lineage": {
           "slug": "opening-the-call",
-          "terminal_output_sha256": "024256e8af219b185de73bbbd8274dfda67c40d28dd2692f861345dc68b0518b",
-          "steps": [
+          "character_id": "andrea-approved",
+          "background_rgb": [
+            103,
+            182,
+            255
+          ],
+          "lesson_cue": "telephone handset and sound marks",
+          "video_evidence": [
             {
-              "step": 1,
-              "operation": "generate",
-              "prompt_path": "docs/course-production/thumbnail-pilots/prompts/opening-the-call.txt",
-              "prompt_sha256": "b1dd0fda35d7c63e482e30f0a5c79ed0abf8c5bf4320b1e66fe6ca341a820119",
-              "inputs": [
-                {
-                  "path": "docs/design/style-ref-1.png",
-                  "sha256": "d65ce4c3fc84a0a52b08e513d42d978f94d5db2f6e59034aedbbd1e9486c18ca"
-                },
-                {
-                  "path": "docs/design/style-ref-2.png",
-                  "sha256": "f1affc2ab6b931be8cfd6920165dff330d49b79e6f4abfe5568e67e70c6934a6"
-                },
-                {
-                  "path": "docs/course-production/thumbnail-pilots/references/m05_L5A_phones.png",
-                  "sha256": "2d59d64e913c43b1fba45080b0bf59c9e51356f1d4b057c5d2831bfa0f7af6e8"
-                }
-              ],
-              "tool_evidence": {
-                "thread_id": "019f6cb9-c3ed-74e0-975f-a5d0d8154c59",
-                "agent_path": "/root/thumbnail_pilots",
-                "invocation_call_id": "call_omiyboB188f8BVoSkgEcUkJv",
-                "tool_output_call_id": "call_PzBae3aVHUak2VLrWBviwtvA",
-                "tool_output_id": "exec-bcc12c1a-207b-44d8-8e45-644698774fa6",
-                "invoked_at": "2026-07-16T21:01:41.299Z",
-                "completed_at": "2026-07-16T21:02:28.218Z"
-              },
-              "output": {
-                "path": "course-assets/thumbnails/pilots/sources/opening-the-call-generated.png",
-                "dimensions": [
-                  1672,
-                  941
-                ],
-                "size_bytes": 1172023,
-                "sha256": "024256e8af219b185de73bbbd8274dfda67c40d28dd2692f861345dc68b0518b"
-              }
+              "path": "course-assets/review-lesson5A/LESSON-5A-v3-FINAL.mp4",
+              "sha256": "1a6a2256651d6b55e7548982387508579c7330000ab01095a0c1bc81cf7c7961"
+            },
+            {
+              "path": "course-assets/review-lesson5B/LESSON-5B-v1-FINAL.mp4",
+              "sha256": "71e1f962af3a42d1e6f6e2da50c94a8ee74b40896873d557f74a23dd50d15870"
             }
-          ]
-        }
+          ],
+          "contact_sheet_input": {
+            "path": "docs/course-production/thumbnail-pilots/references/v7-video-stills/opening-contact-sheet.jpg",
+            "sha256": "f57c71fb9425eed09bd3297690e43617c5737fc579b96bd596ae0ffa168075a5"
+          },
+          "generation": {
+            "operation": "edit",
+            "parent_path": "course-assets/thumbnails/pilots/revisions/v7/sources/orientation-andrea-generated-v7.png",
+            "parent_sha256": "a3a0b69a48d359d29247e557babdad2bc5a88bc79dc19edb113f885e0ccc22a6",
+            "prompt_path": "docs/course-production/thumbnail-pilots/prompts/v7/opening-the-call.txt",
+            "prompt_sha256": "f00e41b8e499c53cb2beb22a99b78c20764ea674b3962036dffb3ba8437a1870",
+            "tool_output_id": "exec-5442ba82-c232-4629-a911-75d3c90d1378",
+            "output_path": "course-assets/thumbnails/pilots/revisions/v7/sources/opening-andrea-generated-v7.png",
+            "output_sha256": "cdea83a43f02a6b018306a41720cbd097ba67c849c167cc82ead448488f962c8"
+          },
+          "deterministic_character_lock": {
+            "source_path": "course-assets/thumbnails/pilots/revisions/v7/sources/orientation-andrea-generated-v7.png",
+            "source_sha256": "a3a0b69a48d359d29247e557babdad2bc5a88bc79dc19edb113f885e0ccc22a6",
+            "box": [
+              700,
+              280,
+              260,
+              660
+            ],
+            "copied_character_pixels": 94006,
+            "pixel_sha256": "60f03180512c6825c5f90a0bf3d5ef7d7699cc45c69acd66dc2622a0b26babf5",
+            "drift_pixels_flat_master": 0,
+            "drift_pixels_lesson_card": 0
+          }
+        },
+        "lineage_schema_version": "bmh-thumbnail-pilot-lineage/v3-candidate",
+        "identity_contract": {
+          "people_per_thumbnail": 1,
+          "allowed_characters": [
+            "andrea",
+            "recurring-seller"
+          ],
+          "selection_rule": "Andrea or the recurring seller, never both; the lesson and exact source video determine the character and cue",
+          "skin_fill": "pure white",
+          "backgrounds": [
+            "cornflower blue",
+            "golden yellow"
+          ],
+          "character_consistency": "Andrea uses one checksum-locked pixel layer at one fixed coordinate box in both Andrea pilots"
+        },
+        "identity_roots": [
+          {
+            "id": "andrea-approved",
+            "path": "docs/course-production/thumbnail-pilots/references/v5-cast/andrea-approved.png",
+            "sha256": "ab1c01dfc642f00b2f6df08a20fd231cb47fffb60a3e013a42960ee4fa5e2ca8"
+          },
+          {
+            "id": "recurring-seller-approved",
+            "path": "docs/course-production/thumbnail-pilots/references/v5-cast/recurring-seller.png",
+            "sha256": "b88724ccd840ecf295c2b8607525a76a938349978407a0ba8b92eccd8f2cf4f0"
+          }
+        ]
       },
       "provenance": {
         "generator": "built-in image_gen",
@@ -1898,6 +1985,11 @@
         "id": "master-slot-08",
         "source_path": "course-assets/thumbnails/production/sources/slot-08-generated.png",
         "flat_master_path": "course-assets/thumbnails/production/flat-masters/slot-08-flat-master.png",
+        "background_rgb": [
+          103,
+          182,
+          255
+        ],
         "expected_aspect_ratio": "16:9",
         "meaningful_content_bounds": {
           "x_min_percent": 10,
@@ -2106,14 +2198,20 @@
       "reference_ids": [
         "style-ref-1",
         "style-ref-2",
-        "objection-character"
+        "recurring-seller-approved",
+        "v7-objection-architecture-contact-sheet"
       ],
-      "prompt": "Use case: stylized-concept\nAsset type: BMH Institute lesson-thumbnail pilot, wide 16:9 master designed to crop safely to 16:10\nPrimary request: Create the Objection Architecture thumbnail. The five-second read must be “hear an objection, reframe it, build a calm response.” Use a large central bridge or modular arch assembled from three chunky sticker blocks: an ear icon on the left block, a curved reframe arrow on the center block, and a calm speech bubble with a check mark on the right block. Include a tiny thoughtful phone rep below the arch and two small floating puzzle-piece/support-beam icons.\nInput images: Image 1 and Image 2 are the canonical BMH Sticker System style references; Image 3 is a subject reference for the thoughtful phone-rep character only. Preserve the flat, loose sticker-sheet language of Images 1–2, simplify the character from Image 3, and do not reproduce a scene.\nScene/backdrop: perfectly uniform flat cornflower-blue field with generous active negative space; floating sticker composition, never a continuous room, construction site, or environment\nStyle/medium: hand-drawn flat sticker-sheet illustration; thick slightly wobbly black outlines; rounded imperfect primitive geometry; every object independently croppable\nComposition/framing: three-block arch centered and instantly legible left-to-right; small rep below but not touching an edge; support icons and a few purposeful doodle marks around it; keep all meaningful content inside central 80% for safe 16:9 and 16:10 crops\nColor palette: cornflower blue, golden yellow, orange, cream, white, and black only; 6 flat colors maximum\nCharacters: one tiny rep with dot eyes, minimal facial features, cylindrical limbs, light hair, orange goggles resting on head, phone prop\nConstraints: no title, no words, no letters, no numbers, no logos, no watermark; absolutely uniform flat fills; no white sticker border; strong silhouettes; uniform complexity; the three-step visual logic must be obvious without labels\nAvoid: any gradient, texture, lighting, glow, shadow, reflection, depth, realistic perspective, photorealism, 3D rendering, complex diagrams, busy masonry, detailed interiors, edge-cropped key objects",
-      "prompt_sha256": "586ebac39db2c79f4a728b569ebcc46d01820cf642f9a207cba795145cdada9b",
+      "prompt": "Edit the target Objection Architecture thumbnail into a stricter BMH Institute brand master. Keep exactly one person: the same approved recurring curly-haired seller, with the same identity, full-body proportions, centered placement, pose, compact black curls, tiny facial features, orange sweater, and cream pants. Change the entire background to a perfectly flat golden yellow. Change his shoes to cream so no clothing fill disappears into the yellow background. Preserve pure-white face and hands. Critically reduce and regularize every black contour so it matches the thinner Andrea reference line weight: clean consistent thin black strokes, never bold, chunky, doubled, or variable; the seller must look drawn by the same artist as Andrea. Keep one compact lesson cue above: orange objection burst, curved black arrow, white checked speech bubble. Preserve strong separation from the background. No Andrea, no second person, no text, no room, no scenery, no gradients, no texture, no shadows, no watermark. Output one opaque 16:9 illustration.\n",
+      "prompt_sha256": "c6a3b114e844f4d899d9bc667d118311b4737cd4e0791e65a1657f6eac3e4d3f",
       "master": {
         "id": "master-slot-09",
         "source_path": "course-assets/thumbnails/production/sources/slot-09-generated.png",
         "flat_master_path": "course-assets/thumbnails/production/flat-masters/slot-09-flat-master.png",
+        "background_rgb": [
+          255,
+          211,
+          1
+        ],
         "expected_aspect_ratio": "16:9",
         "meaningful_content_bounds": {
           "x_min_percent": 10,
@@ -2151,14 +2249,14 @@
           ],
           "normalize_method": "contain-with-padding",
           "normalize_background_rgb": [
-            103,
-            182,
-            255
+            255,
+            211,
+            1
           ],
           "padding_color_rgb": [
-            103,
-            182,
-            255
+            255,
+            211,
+            1
           ],
           "crop_allowed": false,
           "resample": "lanczos",
@@ -2201,9 +2299,9 @@
             ],
             "normalize_method": "contain-with-padding",
             "normalize_background_rgb": [
-              103,
-              182,
-              255
+              255,
+              211,
+              1
             ],
             "crop_pixels_after_normalize": [
               0,
@@ -2244,85 +2342,106 @@
         "status": "pilot-awaiting-jarrad-approval",
         "assets": {
           "slug": "objection-architecture",
+          "character": "recurring-seller",
           "source": {
-            "path": "course-assets/thumbnails/pilots/sources/objection-architecture-generated.png",
+            "path": "course-assets/thumbnails/pilots/revisions/v7/sources/objection-seller-generated-v7b.png",
             "dimensions": [
               1672,
               941
             ],
-            "sha256": "b0d30bbb17d89f6141251a7fa0541a162d543d70706a1cdacdfe0c71aab9cfd1"
+            "sha256": "88f3513e1f4985ded8bceefc1e11aff60ae97dc934896bee56bd88a1133d9a58"
           },
           "flat_master": {
-            "path": "course-assets/thumbnails/pilots/flat-masters/objection-architecture-flat-master.png",
+            "path": "course-assets/thumbnails/pilots/revisions/v7/flat-masters/objection-seller-flat-master-v7.png",
             "dimensions": [
               1672,
               941
             ],
-            "sha256": "445d7bc6a714a2f35e0dec13cf0ade52c0cabdf3232ffc379cfe2c7f613040e2"
+            "sha256": "9478035c8c98f287f8d1e0fb9426c70963ad5e4b7f006ba186218fa3b5e45c16"
           },
           "lesson_card": {
-            "path": "course-assets/thumbnails/pilots/lesson-cards/objection-architecture-lesson-card-16x10.webp",
+            "path": "course-assets/thumbnails/pilots/revisions/v7/lesson-cards/objection-seller-lesson-card-v7-16x10.webp",
             "dimensions": [
               1280,
               800
             ],
-            "sha256": "f585ff79241da17bf4fb513680cd98bb2ec9d5986aba53711112c0cf6f157fd9"
+            "sha256": "9ecbea7d29ce43d999161e5ab1eb60607fbc26a0a26b24c0b1f9116c51b2a1c1"
           },
           "video_poster": {
-            "path": "course-assets/posters/pilots/objection-architecture-video-poster-16x9.webp",
+            "path": "course-assets/thumbnails/pilots/revisions/v7/video-posters/objection-seller-video-poster-v7-16x9.webp",
             "dimensions": [
               1280,
               720
             ],
-            "sha256": "ef478ca179f9b410bf60811bef1a4ff9ca8fae5b5e0587812f0c7912789a1fd8"
+            "sha256": "2e08972e271cf6e98e9eaf0dafbf933b2dffe4d114110bed04bf25b233d3e30e"
           }
         },
-        "checksum_record_path": "docs/course-production/thumbnail-pilots/checksums.json",
-        "generation_lineage_record_path": "docs/course-production/thumbnail-pilots/generation-lineage.json",
+        "checksum_record_path": "docs/course-production/thumbnail-pilots/v7-checksums.json",
+        "generation_lineage_record_path": "docs/course-production/thumbnail-pilots/v7-generation-lineage.json",
         "generation_lineage": {
           "slug": "objection-architecture",
-          "terminal_output_sha256": "b0d30bbb17d89f6141251a7fa0541a162d543d70706a1cdacdfe0c71aab9cfd1",
-          "steps": [
+          "character_id": "recurring-seller-approved",
+          "background_rgb": [
+            255,
+            211,
+            1
+          ],
+          "lesson_cue": "objection burst, response arrow, and checked speech bubble",
+          "video_evidence": [
             {
-              "step": 1,
-              "operation": "generate",
-              "prompt_path": "docs/course-production/thumbnail-pilots/prompts/objection-architecture.txt",
-              "prompt_sha256": "586ebac39db2c79f4a728b569ebcc46d01820cf642f9a207cba795145cdada9b",
-              "inputs": [
-                {
-                  "path": "docs/design/style-ref-1.png",
-                  "sha256": "d65ce4c3fc84a0a52b08e513d42d978f94d5db2f6e59034aedbbd1e9486c18ca"
-                },
-                {
-                  "path": "docs/design/style-ref-2.png",
-                  "sha256": "f1affc2ab6b931be8cfd6920165dff330d49b79e6f4abfe5568e67e70c6934a6"
-                },
-                {
-                  "path": "docs/course-production/thumbnail-pilots/references/m07_L7A_b03_reframe.png",
-                  "sha256": "57fe03b31eca46336c664c2ca78cf877b8db3138443964e7976ce70eb91db311"
-                }
-              ],
-              "tool_evidence": {
-                "thread_id": "019f6cb9-c3ed-74e0-975f-a5d0d8154c59",
-                "agent_path": "/root/thumbnail_pilots",
-                "invocation_call_id": "call_k4q5g4ye6DDeIMyUPBP0KdUi",
-                "tool_output_call_id": "call_982qVPUL25T8cfbQBfC9xXcM",
-                "tool_output_id": "exec-5df58555-c80c-4526-8d1e-aab528034a60",
-                "invoked_at": "2026-07-16T21:02:45.451Z",
-                "completed_at": "2026-07-16T21:03:37.134Z"
-              },
-              "output": {
-                "path": "course-assets/thumbnails/pilots/sources/objection-architecture-generated.png",
-                "dimensions": [
-                  1672,
-                  941
-                ],
-                "size_bytes": 1239107,
-                "sha256": "b0d30bbb17d89f6141251a7fa0541a162d543d70706a1cdacdfe0c71aab9cfd1"
-              }
+              "path": "course-assets/review-lesson7A/LESSON-7A-v1-FULL.mp4",
+              "sha256": "b8f4669b7039d531fadd332f65bd6f8f09e924dec1de858558ab4d52c4921bb9"
             }
-          ]
-        }
+          ],
+          "contact_sheet_input": {
+            "path": "docs/course-production/thumbnail-pilots/references/v7-video-stills/objection-contact-sheet.jpg",
+            "sha256": "31145ddd3485159dbaa298d8ee1958834dca1098bbd86645c43414ccaa8eea7b"
+          },
+          "generation": {
+            "operation": "edit",
+            "parent_path": "course-assets/thumbnails/pilots/revisions/v7/sources/objection-seller-generated-v7.png",
+            "parent_sha256": "6fbbc49d5251438d6bd3a9a8a3269c328fd4d19804acc6744310ac597f6801d1",
+            "prompt_path": "docs/course-production/thumbnail-pilots/prompts/v7/objection-architecture.txt",
+            "prompt_sha256": "c6a3b114e844f4d899d9bc667d118311b4737cd4e0791e65a1657f6eac3e4d3f",
+            "tool_output_id": "exec-efda88ec-b6ab-4559-8187-f30f38c5810c",
+            "output_path": "course-assets/thumbnails/pilots/revisions/v7/sources/objection-seller-generated-v7b.png",
+            "output_sha256": "88f3513e1f4985ded8bceefc1e11aff60ae97dc934896bee56bd88a1133d9a58"
+          },
+          "deterministic_contour_normalization": {
+            "operation": "dilate black contours",
+            "source_pixel_radius": 1,
+            "pattern": "cross-plus-checkerboard-diagonals",
+            "added_source_pixels": 10590,
+            "reason": "match the recurring seller contour weight to Andrea after the image edit produced a visibly thinner pen"
+          }
+        },
+        "lineage_schema_version": "bmh-thumbnail-pilot-lineage/v3-candidate",
+        "identity_contract": {
+          "people_per_thumbnail": 1,
+          "allowed_characters": [
+            "andrea",
+            "recurring-seller"
+          ],
+          "selection_rule": "Andrea or the recurring seller, never both; the lesson and exact source video determine the character and cue",
+          "skin_fill": "pure white",
+          "backgrounds": [
+            "cornflower blue",
+            "golden yellow"
+          ],
+          "character_consistency": "Andrea uses one checksum-locked pixel layer at one fixed coordinate box in both Andrea pilots"
+        },
+        "identity_roots": [
+          {
+            "id": "andrea-approved",
+            "path": "docs/course-production/thumbnail-pilots/references/v5-cast/andrea-approved.png",
+            "sha256": "ab1c01dfc642f00b2f6df08a20fd231cb47fffb60a3e013a42960ee4fa5e2ca8"
+          },
+          {
+            "id": "recurring-seller-approved",
+            "path": "docs/course-production/thumbnail-pilots/references/v5-cast/recurring-seller.png",
+            "sha256": "b88724ccd840ecf295c2b8607525a76a938349978407a0ba8b92eccd8f2cf4f0"
+          }
+        ]
       },
       "provenance": {
         "generator": "built-in image_gen",
@@ -2358,6 +2477,11 @@
         "id": "master-slot-10",
         "source_path": "course-assets/thumbnails/production/sources/slot-10-generated.png",
         "flat_master_path": "course-assets/thumbnails/production/flat-masters/slot-10-flat-master.png",
+        "background_rgb": [
+          103,
+          182,
+          255
+        ],
         "expected_aspect_ratio": "16:9",
         "meaningful_content_bounds": {
           "x_min_percent": 10,
@@ -2518,6 +2642,11 @@
         "id": "master-slot-11",
         "source_path": "course-assets/thumbnails/production/sources/slot-11-generated.png",
         "flat_master_path": "course-assets/thumbnails/production/flat-masters/slot-11-flat-master.png",
+        "background_rgb": [
+          103,
+          182,
+          255
+        ],
         "expected_aspect_ratio": "16:9",
         "meaningful_content_bounds": {
           "x_min_percent": 10,
@@ -2733,6 +2862,11 @@
         "id": "master-slot-12",
         "source_path": "course-assets/thumbnails/production/sources/slot-12-generated.png",
         "flat_master_path": "course-assets/thumbnails/production/flat-masters/slot-12-flat-master.png",
+        "background_rgb": [
+          103,
+          182,
+          255
+        ],
         "expected_aspect_ratio": "16:9",
         "meaningful_content_bounds": {
           "x_min_percent": 10,
@@ -2948,6 +3082,11 @@
         "id": "master-slot-13",
         "source_path": "course-assets/thumbnails/production/sources/slot-13-generated.png",
         "flat_master_path": "course-assets/thumbnails/production/flat-masters/slot-13-flat-master.png",
+        "background_rgb": [
+          103,
+          182,
+          255
+        ],
         "expected_aspect_ratio": "16:9",
         "meaningful_content_bounds": {
           "x_min_percent": 10,
@@ -3108,6 +3247,11 @@
         "id": "master-slot-14",
         "source_path": "course-assets/thumbnails/production/sources/slot-14-generated.png",
         "flat_master_path": "course-assets/thumbnails/production/flat-masters/slot-14-flat-master.png",
+        "background_rgb": [
+          103,
+          182,
+          255
+        ],
         "expected_aspect_ratio": "16:9",
         "meaningful_content_bounds": {
           "x_min_percent": 10,
@@ -3268,6 +3412,11 @@
         "id": "master-slot-15",
         "source_path": "course-assets/thumbnails/production/sources/slot-15-generated.png",
         "flat_master_path": "course-assets/thumbnails/production/flat-masters/slot-15-flat-master.png",
+        "background_rgb": [
+          103,
+          182,
+          255
+        ],
         "expected_aspect_ratio": "16:9",
         "meaningful_content_bounds": {
           "x_min_percent": 10,
@@ -3428,6 +3577,11 @@
         "id": "master-slot-16",
         "source_path": "course-assets/thumbnails/production/sources/slot-16-generated.png",
         "flat_master_path": "course-assets/thumbnails/production/flat-masters/slot-16-flat-master.png",
+        "background_rgb": [
+          103,
+          182,
+          255
+        ],
         "expected_aspect_ratio": "16:9",
         "meaningful_content_bounds": {
           "x_min_percent": 10,
@@ -3588,6 +3742,11 @@
         "id": "master-slot-17",
         "source_path": "course-assets/thumbnails/production/sources/slot-17-generated.png",
         "flat_master_path": "course-assets/thumbnails/production/flat-masters/slot-17-flat-master.png",
+        "background_rgb": [
+          103,
+          182,
+          255
+        ],
         "expected_aspect_ratio": "16:9",
         "meaningful_content_bounds": {
           "x_min_percent": 10,
@@ -3748,6 +3907,11 @@
         "id": "master-slot-18",
         "source_path": "course-assets/thumbnails/production/sources/slot-18-generated.png",
         "flat_master_path": "course-assets/thumbnails/production/flat-masters/slot-18-flat-master.png",
+        "background_rgb": [
+          103,
+          182,
+          255
+        ],
         "expected_aspect_ratio": "16:9",
         "meaningful_content_bounds": {
           "x_min_percent": 10,
@@ -3963,6 +4127,11 @@
         "id": "master-slot-19",
         "source_path": "course-assets/thumbnails/production/sources/slot-19-generated.png",
         "flat_master_path": "course-assets/thumbnails/production/flat-masters/slot-19-flat-master.png",
+        "background_rgb": [
+          103,
+          182,
+          255
+        ],
         "expected_aspect_ratio": "16:9",
         "meaningful_content_bounds": {
           "x_min_percent": 10,

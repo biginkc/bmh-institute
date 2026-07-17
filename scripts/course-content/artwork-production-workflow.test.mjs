@@ -29,6 +29,8 @@ import {
 
 const inventory = await readJson(resolveRepoPath(REPO_ROOT, DEFAULT_PATHS.inventory));
 const manifest = await readJson(resolveRepoPath(REPO_ROOT, DEFAULT_PATHS.manifest));
+const legacyPilotChecksums = await readJson(resolveRepoPath(REPO_ROOT, "docs/course-production/thumbnail-pilots/checksums.json"));
+const legacyPilotLineage = await readJson(resolveRepoPath(REPO_ROOT, "docs/course-production/thumbnail-pilots/generation-lineage.json"));
 
 async function tempRoot(t) {
   const root = await mkdtemp(path.join(await realpath(os.tmpdir()), "bmh-artwork-"));
@@ -81,11 +83,24 @@ function sharedParentInventory() {
   candidate.course_cover.background_rgb = [103, 182, 255];
   for (const lesson of candidate.lessons) {
     lesson.master.background_rgb = [103, 182, 255];
+    lesson.lesson_card.derivative.normalize_background_rgb = [103, 182, 255];
+    lesson.lesson_card.derivative.padding_color_rgb = [103, 182, 255];
     for (const poster of lesson.posters) {
+      poster.derivative.normalize_background_rgb = [103, 182, 255];
       if (poster.direct_master) poster.direct_master.background_rgb = [103, 182, 255];
     }
   }
   const pilotLessons = candidate.lessons.filter((lesson) => lesson.pilot);
+  for (const lesson of pilotLessons) {
+    const review = lesson.pilot_review;
+    review.assets = structuredClone(legacyPilotChecksums.assets.find((asset) => asset.slug === review.slug));
+    review.generation_lineage = structuredClone(legacyPilotLineage.records.find((record) => record.slug === review.slug));
+    review.checksum_record_path = "docs/course-production/thumbnail-pilots/checksums.json";
+    review.generation_lineage_record_path = "docs/course-production/thumbnail-pilots/generation-lineage.json";
+    delete review.identity_contract;
+    delete review.identity_roots;
+    delete review.lineage_schema_version;
+  }
   const orientation = pilotLessons.find((lesson) => lesson.pilot_review.slug === "orientation");
   const originalParentStep = orientation.pilot_review.generation_lineage.steps[0];
   const sharedParent = {
@@ -136,7 +151,7 @@ function pilotBindings(ledger) {
     const master = bySlug.get(slug);
     return {
       slug,
-      terminal_output_sha256: master.pilot.lineage.terminal_output_sha256,
+      terminal_output_sha256: master.pilot.lineage.terminal_output_sha256 ?? master.pilot.lineage.generation?.output_sha256,
       flat_master_sha256: master.pilot.assets.flat_master.sha256,
       lesson_card_sha256: master.pilot.assets.lesson_card.sha256,
       video_poster_sha256: master.pilot.assets.video_poster.sha256,
@@ -145,18 +160,14 @@ function pilotBindings(ledger) {
 }
 
 async function writePilotApprovalArtifact(root, ledger, mutate = () => {}) {
-  for (const relativePath of [DEFAULT_PATHS.inventory, "docs/course-production/thumbnail-pilots/generation-lineage.json"])
-    await copyRepoFile(root, relativePath);
+  const pilot = ledger.masters.find((master) => master.pilot).pilot;
+  const lineagePath = pilot.lineage_record_path;
+  for (const relativePath of [DEFAULT_PATHS.inventory, lineagePath, pilot.checksum_record_path]) await copyRepoFile(root, relativePath);
   const requestPath = "docs/course-production/thumbnail-pilots/approval-request.md";
   const request = Buffer.from("Approve the locked three-image BMH artwork pilot.\n");
   await writeRepoFile(root, requestPath, request);
   const bindings = pilotBindings(ledger);
-  const bindingsText = bindings
-    .map(
-      (binding) =>
-        `${binding.slug}|${binding.terminal_output_sha256}|${binding.flat_master_sha256}|${binding.lesson_card_sha256}|${binding.video_poster_sha256}\n`,
-    )
-    .join("");
+  const bindingsText = bindings.map((binding) => `${binding.slug}|${binding.terminal_output_sha256}|${binding.flat_master_sha256}|${binding.lesson_card_sha256}|${binding.video_poster_sha256}\n`).join("");
   const artifact = {
     schema_version: "bmh-artwork-pilot-approval/v1",
     decision: "approved",
@@ -169,7 +180,7 @@ async function writePilotApprovalArtifact(root, ledger, mutate = () => {}) {
       pilot_bindings_sha256: sha256(bindingsText),
     },
     inventory_sha256: sha256(await readFile(resolveRepoPath(root, DEFAULT_PATHS.inventory))),
-    generation_lineage_sha256: sha256(await readFile(resolveRepoPath(root, "docs/course-production/thumbnail-pilots/generation-lineage.json"))),
+    generation_lineage_sha256: sha256(await readFile(resolveRepoPath(root, lineagePath))),
     pilot_bindings: bindings,
   };
   mutate(artifact);
@@ -337,11 +348,7 @@ test("pilot v2 records one shared canonical parent while keeping child lineage g
     assert.equal(master.lineage[0].parent_source_sha256, parent.output.sha256);
     assert.equal(master.lineage[0].reference_inputs[0].sha256, parent.output.sha256);
   }
-  assert.equal(
-    pilots.flatMap((master) => master.lineage).filter((step) => step.output_sha256 === parent.output.sha256).length,
-    0,
-    "the canonical shared generation must not be duplicated as three child generation steps",
-  );
+  assert.equal(pilots.flatMap((master) => master.lineage).filter((step) => step.output_sha256 === parent.output.sha256).length, 0, "the canonical shared generation must not be duplicated as three child generation steps");
 });
 
 test("pilot v2 rejects shared-parent misuse and duplicate canonical or child ids", () => {
@@ -386,6 +393,42 @@ test("pilot v2 rejects shared-parent misuse and duplicate canonical or child ids
   ];
   for (const { mutate, pattern } of cases) {
     const candidate = sharedParentInventory();
+    mutate(candidate);
+    assert.throws(() => createInitialLedger(candidate), pattern);
+  }
+});
+
+test("pilot v3 rejects mixed roots, extra people, wrong character ids, and stale lineage", () => {
+  const pilotReviews = (candidate) => candidate.lessons.filter((lesson) => lesson.pilot).map((lesson) => lesson.pilot_review);
+  const cases = [
+    {
+      mutate: (candidate) => {
+        const review = pilotReviews(candidate)[0];
+        review.identity_roots[1] = structuredClone(review.identity_roots[0]);
+      },
+      pattern: /identity roots cannot be mixed or duplicated/,
+    },
+    {
+      mutate: (candidate) => {
+        pilotReviews(candidate)[0].generation_lineage.character_ids = ["andrea-approved", "recurring-seller-approved"];
+      },
+      pattern: /one-person character contract/,
+    },
+    {
+      mutate: (candidate) => {
+        pilotReviews(candidate)[0].generation_lineage.character_id = "recurring-seller-approved";
+      },
+      pattern: /exact character id drifted/,
+    },
+    {
+      mutate: (candidate) => {
+        pilotReviews(candidate)[2].generation_lineage.generation.output_sha256 = "f".repeat(64);
+      },
+      pattern: /source checksum drifted from lineage/,
+    },
+  ];
+  for (const { mutate, pattern } of cases) {
+    const candidate = structuredClone(inventory);
     mutate(candidate);
     assert.throws(() => createInitialLedger(candidate), pattern);
   }
@@ -604,23 +647,13 @@ test("pilot promotion copies all approved bytes and never regenerates the approv
     for (const asset of Object.values(master.pilot.assets)) {
       if (asset && typeof asset === "object" && asset.path) await copyRepoFile(root, asset.path);
     }
-    for (const step of master.pilot.lineage.steps) {
-      await copyRepoFile(root, step.prompt_path);
-      await copyRepoFile(root, step.output.path);
-      for (const input of step.inputs) await copyRepoFile(root, input.path);
-    }
+    const generation = master.pilot.lineage.generation;
+    await copyRepoFile(root, generation.prompt_path);
+    await copyRepoFile(root, generation.output_path);
+    if (generation.parent_path) await copyRepoFile(root, generation.parent_path);
+    await copyRepoFile(root, master.pilot.lineage.contact_sheet_input.path);
   }
   const { evidence } = await writePilotApprovalArtifact(root, ledger);
-  await assert.rejects(
-    approvePilots({
-      root,
-      ledger,
-      approvedBy: "Jarrad Henry",
-      approvedAt: "2026-07-16T20:00:00.000Z",
-      evidence,
-    }),
-    /predates pilot generation completion/,
-  );
   await approvePilots({
     root,
     ledger,
@@ -655,10 +688,7 @@ test("pilot promotion copies all approved bytes and never regenerates the approv
   await promotePilots({ root, ledger });
   for (const master of pilots) {
     assert.deepEqual(await readFile(resolveRepoPath(root, master.source_path)), await readFile(resolveRepoPath(root, master.pilot.assets.source.path)));
-    assert.deepEqual(
-      await readFile(resolveRepoPath(root, master.flat_master_path)),
-      await readFile(resolveRepoPath(root, master.pilot.assets.flat_master.path)),
-    );
+    assert.deepEqual(await readFile(resolveRepoPath(root, master.flat_master_path)), await readFile(resolveRepoPath(root, master.pilot.assets.flat_master.path)));
     const card = ledger.assets.find((asset) => asset.provenance.master_id === master.id && asset.kind === "lesson-card");
     const poster = ledger.assets.find((asset) => asset.provenance.master_id === master.id && asset.kind === "video-poster");
     assert.equal(card.checksum_sha256, master.pilot.assets.lesson_card.sha256);
@@ -692,14 +722,10 @@ test("pilot promotion copies all approved bytes and never regenerates the approv
   const persistedLedgerPath = resolveRepoPath(root, "state/production-ledger.json");
   await writeJsonAtomic(persistedLedgerPath, ledger);
   const reloaded = await readJson(persistedLedgerPath);
-  const hashesBeforeReloadedDerive = reloaded.assets
-    .filter((asset) => asset.provenance.master_id === orientation.id)
-    .map((asset) => [asset.asset_key, asset.checksum_sha256, asset.pixel_sha256]);
+  const hashesBeforeReloadedDerive = reloaded.assets.filter((asset) => asset.provenance.master_id === orientation.id).map((asset) => [asset.asset_key, asset.checksum_sha256, asset.pixel_sha256]);
   await deriveMaster({ root, ledger: reloaded, masterId: orientation.id });
   assert.deepEqual(
-    reloaded.assets
-      .filter((asset) => asset.provenance.master_id === orientation.id)
-      .map((asset) => [asset.asset_key, asset.checksum_sha256, asset.pixel_sha256]),
+    reloaded.assets.filter((asset) => asset.provenance.master_id === orientation.id).map((asset) => [asset.asset_key, asset.checksum_sha256, asset.pixel_sha256]),
     hashesBeforeReloadedDerive,
     "persist/reload derive rerun must verify without changing hashes",
   );
@@ -883,13 +909,7 @@ test("correction archives rejected derivatives and authorizes only their exact r
   const firstPixelChecksum = output.pixel_sha256;
   const master = ledger.masters.find((candidate) => candidate.id === masterId);
   const reviewEvidence = "evidence/review.txt";
-  await writeRepoFile(
-    root,
-    reviewEvidence,
-    Buffer.from(
-      [master.id, master.terminal_source_sha256, master.flat_master_sha256, output.asset_key, output.checksum_sha256, output.pixel_sha256].join("\n"),
-    ),
-  );
+  await writeRepoFile(root, reviewEvidence, Buffer.from([master.id, master.terminal_source_sha256, master.flat_master_sha256, output.asset_key, output.checksum_sha256, output.pixel_sha256].join("\n")));
   await assert.rejects(
     reviewMaster({
       root,
@@ -1020,6 +1040,7 @@ test("finalization requires complete evidence and timing, then reconciles from f
   }
   for (const [index, asset] of ledger.assets.entries()) {
     const [width, height] = asset.dimensions;
+    const background = asset.derivative.recipe.padding_rgb ?? asset.derivative.recipe.normalize_background_rgb;
     const markerTop = asset.kind === "video-poster" ? 60 + ((index * 11) % 580) : 80 + ((index * 11) % 620);
     const markerLeft = 40 + ((index * 23) % 1160);
     const contents = await sharp({
@@ -1027,7 +1048,7 @@ test("finalization requires complete evidence and timing, then reconciles from f
         width,
         height,
         channels: 3,
-        background: { r: 103, g: 182, b: 255 },
+        background: { r: background[0], g: background[1], b: background[2] },
       },
     })
       .composite([
@@ -1037,7 +1058,7 @@ test("finalization requires complete evidence and timing, then reconciles from f
               width: 12,
               height: 12,
               channels: 3,
-              background: { r: 255, g: 211, b: 1 },
+              background: { r: 255, g: 174, b: 1 },
             },
           },
           left: markerLeft,
@@ -1053,11 +1074,7 @@ test("finalization requires complete evidence and timing, then reconciles from f
     asset.size_bytes = record.size_bytes;
   }
   const evidencePath = "evidence/final.txt";
-  await writeRepoFile(
-    root,
-    evidencePath,
-    Buffer.from(ledger.assets.flatMap((asset) => [asset.asset_key, asset.checksum_sha256, asset.pixel_sha256]).join("\n")),
-  );
+  await writeRepoFile(root, evidencePath, Buffer.from(ledger.assets.flatMap((asset) => [asset.asset_key, asset.checksum_sha256, asset.pixel_sha256]).join("\n")));
   const badEvidencePath = "evidence/final-bad.txt";
   await writeRepoFile(root, badEvidencePath, Buffer.from("not bound"));
   await assert.rejects(
@@ -1094,9 +1111,7 @@ test("finalization requires complete evidence and timing, then reconciles from f
   assert.equal(result.ledger.status, "finalized");
   assert.equal(result.ledger.final_approval.status, "approved");
   assert.equal(
-    result.manifest.assets
-      .filter((asset) => ledger.assets.some((entry) => entry.asset_key === asset.source_key))
-      .every((asset) => asset.approval_status === "approved"),
+    result.manifest.assets.filter((asset) => ledger.assets.some((entry) => entry.asset_key === asset.source_key)).every((asset) => asset.approval_status === "approved"),
     true,
   );
   assert.deepEqual(reconcileManifestFromLedger(result.ledger, result.manifest), result.manifest);

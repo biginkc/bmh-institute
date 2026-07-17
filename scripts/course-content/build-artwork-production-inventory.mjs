@@ -7,8 +7,10 @@ import { createEmptyProductionRecord, sha256, validateProductionRecord } from ".
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const manifestPath = path.join(repoRoot, "content/course-manifests/bmh-employee-training.v1.json");
 const outputPath = path.join(repoRoot, "docs/course-production/thumbnail-pilots/production-inventory.json");
-const pilotChecksumsPath = path.join(repoRoot, "docs/course-production/thumbnail-pilots/checksums.json");
-const pilotGenerationLineagePath = path.join(repoRoot, "docs/course-production/thumbnail-pilots/generation-lineage.json");
+const pilotChecksumsRecordPath = "docs/course-production/thumbnail-pilots/v7-checksums.json";
+const pilotGenerationLineageRecordPath = "docs/course-production/thumbnail-pilots/v7-generation-lineage.json";
+const pilotChecksumsPath = path.join(repoRoot, pilotChecksumsRecordPath);
+const pilotGenerationLineagePath = path.join(repoRoot, pilotGenerationLineageRecordPath);
 const args = process.argv.slice(2);
 const unknownArgs = args.filter((arg) => arg !== "--check");
 if (unknownArgs.length > 0) {
@@ -79,12 +81,7 @@ function pngDimensions(contents, localPath) {
 }
 
 function validateBackgroundRgb(value, label) {
-  if (
-    !Array.isArray(value) ||
-    value.length !== 3 ||
-    value.some((channel) => !Number.isInteger(channel) || channel < 0 || channel > 255) ||
-    !ALLOWED_BACKGROUND_RGB.has(value.join(","))
-  ) {
+  if (!Array.isArray(value) || value.length !== 3 || value.some((channel) => !Number.isInteger(channel) || channel < 0 || channel > 255) || !ALLOWED_BACKGROUND_RGB.has(value.join(","))) {
     throw new Error(`${label} must be the locked blue or yellow RGB value`);
   }
   return value;
@@ -119,18 +116,14 @@ async function validateLineageInput(input, label, { requireId = false } = {}) {
 
 async function validateLineageOutput(output, label) {
   const outputContents = await readFile(repoPath(output.path));
-  if (
-    sha256(outputContents) !== output.sha256 ||
-    outputContents.length !== output.size_bytes ||
-    JSON.stringify(pngDimensions(outputContents, output.path)) !== JSON.stringify(output.dimensions)
-  ) {
+  if (sha256(outputContents) !== output.sha256 || outputContents.length !== output.size_bytes || JSON.stringify(pngDimensions(outputContents, output.path)) !== JSON.stringify(output.dimensions)) {
     throw new Error(`${label} output checksum, size, or dimensions changed`);
   }
 }
 
-async function readAndValidatePrompt(promptPath, promptSha256, label) {
+async function readAndValidatePrompt(promptPath, promptSha256, label, { exactBytes = false } = {}) {
   const promptBytes = await readFile(repoPath(promptPath), "utf8");
-  const prompt = promptBytes.replace(/\r?\n$/, "");
+  const prompt = exactBytes ? promptBytes : promptBytes.replace(/\r?\n$/, "");
   if (sha256(prompt) !== promptSha256) {
     throw new Error(`${label} prompt checksum changed`);
   }
@@ -139,10 +132,10 @@ async function readAndValidatePrompt(promptPath, promptSha256, label) {
 
 async function validatePilotGenerationLineage() {
   const schemaVersion = pilotGenerationLineage.schema_version;
-  if (schemaVersion !== "bmh-thumbnail-pilot-lineage/v1" && schemaVersion !== "bmh-thumbnail-pilot-lineage/v2") {
+  if (schemaVersion !== "bmh-thumbnail-pilot-lineage/v1" && schemaVersion !== "bmh-thumbnail-pilot-lineage/v2" && schemaVersion !== "bmh-thumbnail-pilot-lineage/v3-candidate") {
     throw new Error("Pilot generation lineage schema is invalid");
   }
-  const version = schemaVersion.endsWith("/v2") ? 2 : 1;
+  const version = schemaVersion.endsWith("/v3-candidate") ? 3 : schemaVersion.endsWith("/v2") ? 2 : 1;
   if (pilotGenerationLineage.status !== "awaiting-jarrad-approval") {
     throw new Error("Pilot generation lineage must remain awaiting Jarrad approval");
   }
@@ -161,6 +154,134 @@ async function validatePilotGenerationLineage() {
   const sharedParentsById = new Map();
   const v2InvocationIds = new Set();
   const v2ToolOutputIds = new Set();
+  const promptBySlug = new Map();
+  const referenceIdsBySlug = new Map();
+  const additionalReferences = [];
+  if (version === 3) {
+    const expectedIdentityRoots = new Map([
+      ["andrea-approved", "docs/course-production/thumbnail-pilots/references/v5-cast/andrea-approved.png"],
+      ["recurring-seller-approved", "docs/course-production/thumbnail-pilots/references/v5-cast/recurring-seller.png"],
+    ]);
+    const expectedCharacters = new Map([
+      ["orientation", "andrea-approved"],
+      ["opening-the-call", "andrea-approved"],
+      ["objection-architecture", "recurring-seller-approved"],
+    ]);
+    if (
+      pilotGenerationLineage.generator !== "built-in image_gen" ||
+      pilotGenerationLineage.contract?.people_per_thumbnail !== 1 ||
+      JSON.stringify(pilotGenerationLineage.contract?.allowed_characters) !== JSON.stringify(["andrea", "recurring-seller"]) ||
+      pilotGenerationLineage.contract?.selection_rule !== "Andrea or the recurring seller, never both; the lesson and exact source video determine the character and cue" ||
+      pilotGenerationLineage.contract?.skin_fill !== "pure white"
+    ) {
+      throw new Error("Pilot lineage v3 single-character identity contract drifted");
+    }
+    if (!Array.isArray(pilotGenerationLineage.identity_roots) || pilotGenerationLineage.identity_roots.length !== 2 || new Set(pilotGenerationLineage.identity_roots.map((root) => root.id)).size !== 2) {
+      throw new Error("Pilot lineage v3 requires exactly two honest identity roots");
+    }
+    for (const root of pilotGenerationLineage.identity_roots) {
+      if (expectedIdentityRoots.get(root.id) !== root.path) {
+        throw new Error(`Pilot lineage v3 identity root is invalid: ${root.id}`);
+      }
+      await validateLineageInput(root, `Pilot identity root ${root.id}`);
+      additionalReferences.push({
+        id: root.id,
+        role: root.id === "andrea-approved" ? "approved Andrea identity root" : "approved recurring seller identity root",
+        path: root.path,
+        sha256: root.sha256,
+      });
+    }
+    const identityRootsById = new Map(pilotGenerationLineage.identity_roots.map((root) => [root.id, root]));
+    const usedIdentityRoots = new Set();
+    for (const record of pilotGenerationLineage.records) {
+      const expectedCharacterId = expectedCharacters.get(record.slug);
+      const checksumRecord = pilotChecksums.assets.find((asset) => asset.slug === record.slug);
+      if (!expectedCharacterId || record.character_id !== expectedCharacterId || !identityRootsById.has(record.character_id)) {
+        throw new Error(`${record.slug} must use its exact approved character id`);
+      }
+      if ("character_ids" in record || Array.isArray(record.character_id)) {
+        throw new Error(`${record.slug} violates the one-person character contract`);
+      }
+      usedIdentityRoots.add(record.character_id);
+      const expectedChecksumCharacter = expectedCharacterId === "andrea-approved" ? "andrea" : "recurring-seller";
+      if (checksumRecord?.character !== expectedChecksumCharacter) {
+        throw new Error(`${record.slug} checksum character binding drifted`);
+      }
+      validateBackgroundRgb(record.background_rgb, `${record.slug} background`);
+      if (!Array.isArray(record.video_evidence) || record.video_evidence.length === 0) {
+        throw new Error(`${record.slug} must retain exact source-video evidence`);
+      }
+      for (const [index, evidence] of record.video_evidence.entries()) {
+        if (typeof evidence?.path !== "string" || !evidence.path.startsWith("course-assets/review-") || !/^[a-f0-9]{64}$/.test(evidence.sha256 ?? "")) {
+          throw new Error(`${record.slug} video evidence ${index + 1} is invalid`);
+        }
+        repoPath(evidence.path);
+      }
+      await validateLineageInput(record.contact_sheet_input, `${record.slug} contact sheet`);
+      additionalReferences.push({
+        id: `v7-${record.slug}-contact-sheet`,
+        role: `${record.slug} source-video contact sheet`,
+        path: record.contact_sheet_input.path,
+        sha256: record.contact_sheet_input.sha256,
+      });
+      const generation = record.generation;
+      const expectedOperation = record.slug === "orientation" ? "generate" : "edit";
+      if (generation?.operation !== expectedOperation || !generation.tool_output_id?.startsWith("exec-")) {
+        throw new Error(`${record.slug} generation record is invalid`);
+      }
+      const prompt = await readAndValidatePrompt(generation.prompt_path, generation.prompt_sha256, `${record.slug} v7 generation`, {
+        exactBytes: true,
+      });
+      const outputContents = await readFile(repoPath(generation.output_path));
+      if (
+        sha256(outputContents) !== generation.output_sha256 ||
+        generation.output_path !== checksumRecord?.source?.path ||
+        generation.output_sha256 !== checksumRecord?.source?.sha256 ||
+        JSON.stringify(pngDimensions(outputContents, generation.output_path)) !== JSON.stringify(checksumRecord?.source?.dimensions)
+      ) {
+        throw new Error(`${record.slug} v7 generation output does not match the checksum-locked source`);
+      }
+      if (expectedOperation === "edit") {
+        const parentBytes = await readFile(repoPath(generation.parent_path));
+        if (sha256(parentBytes) !== generation.parent_sha256 || generation.parent_sha256 === generation.output_sha256) {
+          throw new Error(`${record.slug} edit parent lineage drifted`);
+        }
+      } else if (generation.parent_path !== undefined || generation.parent_sha256 !== undefined) {
+        throw new Error(`${record.slug} initial generation cannot declare an edit parent`);
+      }
+      if (record.slug === "opening-the-call") {
+        const lock = record.deterministic_character_lock;
+        const orientation = pilotGenerationLineage.records.find((candidate) => candidate.slug === "orientation");
+        if (
+          lock?.source_path !== orientation?.generation?.output_path ||
+          lock?.source_sha256 !== orientation?.generation?.output_sha256 ||
+          !Array.isArray(lock.box) ||
+          lock.box.length !== 4 ||
+          lock.copied_character_pixels !== 94006 ||
+          !/^[a-f0-9]{64}$/.test(lock.pixel_sha256 ?? "") ||
+          lock.drift_pixels_flat_master !== 0 ||
+          lock.drift_pixels_lesson_card !== 0
+        ) {
+          throw new Error("Opening v7 Andrea pixel lock drifted");
+        }
+      }
+      if (record.slug === "objection-architecture" && record.deterministic_contour_normalization?.source_pixel_radius !== 1) {
+        throw new Error("Objection v7 contour normalization drifted");
+      }
+      promptBySlug.set(record.slug, prompt);
+      referenceIdsBySlug.set(record.slug, ["style-ref-1", "style-ref-2", record.character_id, `v7-${record.slug}-contact-sheet`]);
+    }
+    if (usedIdentityRoots.size !== 2) {
+      throw new Error("Pilot lineage v3 must keep both identity roots in honest use");
+    }
+    return {
+      version,
+      sharedParentsById,
+      promptBySlug,
+      referenceIdsBySlug,
+      additionalReferences,
+    };
+  }
   if (version === 2) {
     if (!Array.isArray(pilotGenerationLineage.shared_parents) || pilotGenerationLineage.shared_parents.length !== 1) {
       throw new Error("Pilot lineage v2 requires exactly one shared generated cast parent");
@@ -194,8 +315,6 @@ async function validatePilotGenerationLineage() {
     throw new Error("Pilot lineage v1 cannot declare shared generated parents");
   }
 
-  const promptBySlug = new Map();
-  const referenceIdsBySlug = new Map();
   for (const record of pilotGenerationLineage.records) {
     const checksumRecord = pilotChecksums.assets.find((asset) => asset.slug === record.slug);
     if (!checksumRecord || !Array.isArray(record.steps) || record.steps.length === 0) {
@@ -266,7 +385,13 @@ async function validatePilotGenerationLineage() {
       throw new Error(`${record.slug} terminal generation output does not match the review source`);
     }
   }
-  return { version, sharedParentsById, promptBySlug, referenceIdsBySlug };
+  return {
+    version,
+    sharedParentsById,
+    promptBySlug,
+    referenceIdsBySlug,
+    additionalReferences,
+  };
 }
 
 function buildProvenance(plannedGenerationCallId, generationCall) {
@@ -298,53 +423,55 @@ const pilotSlugBySlot = {
 
 const pilotLineageContract = await validatePilotGenerationLineage();
 const usesSharedPilotLineage = pilotLineageContract.version === 2;
+const usesLockedPilotContract = pilotLineageContract.version >= 2;
+const usesTwoIdentityPilotLineage = pilotLineageContract.version === 3;
 
-const references = usesSharedPilotLineage
-  ? (() => {
-      const collected = new Map(
-        baseReferences.filter((reference) => reference.id === "style-ref-1" || reference.id === "style-ref-2").map((reference) => [reference.id, reference]),
-      );
-      for (const parent of pilotLineageContract.sharedParentsById.values()) {
-        for (const input of parent.inputs) {
-          const existing = collected.get(input.id);
-          if (existing && (existing.path !== input.path || existing.sha256 !== input.sha256)) {
-            throw new Error(`Pilot lineage v2 reference id drifted: ${input.id}`);
-          }
-          collected.set(input.id, {
-            id: input.id,
-            role: input.role,
-            path: input.path,
-            sha256: input.sha256,
-          });
-        }
-        collected.set(parent.id, {
-          id: parent.id,
-          role: "shared generated cast parent",
-          path: parent.output.path,
-          sha256: parent.output.sha256,
-        });
-      }
-      for (const record of pilotGenerationLineage.records) {
-        for (const step of record.steps) {
-          for (const input of step.inputs) {
+const references = usesTwoIdentityPilotLineage
+  ? [...baseReferences.filter((reference) => reference.id === "style-ref-1" || reference.id === "style-ref-2"), ...pilotLineageContract.additionalReferences]
+  : usesSharedPilotLineage
+    ? (() => {
+        const collected = new Map(baseReferences.filter((reference) => reference.id === "style-ref-1" || reference.id === "style-ref-2").map((reference) => [reference.id, reference]));
+        for (const parent of pilotLineageContract.sharedParentsById.values()) {
+          for (const input of parent.inputs) {
             const existing = collected.get(input.id);
             if (existing && (existing.path !== input.path || existing.sha256 !== input.sha256)) {
               throw new Error(`Pilot lineage v2 reference id drifted: ${input.id}`);
             }
-            if (!existing) {
-              collected.set(input.id, {
-                id: input.id,
-                role: input.role,
-                path: input.path,
-                sha256: input.sha256,
-              });
+            collected.set(input.id, {
+              id: input.id,
+              role: input.role,
+              path: input.path,
+              sha256: input.sha256,
+            });
+          }
+          collected.set(parent.id, {
+            id: parent.id,
+            role: "shared generated cast parent",
+            path: parent.output.path,
+            sha256: parent.output.sha256,
+          });
+        }
+        for (const record of pilotGenerationLineage.records) {
+          for (const step of record.steps) {
+            for (const input of step.inputs) {
+              const existing = collected.get(input.id);
+              if (existing && (existing.path !== input.path || existing.sha256 !== input.sha256)) {
+                throw new Error(`Pilot lineage v2 reference id drifted: ${input.id}`);
+              }
+              if (!existing) {
+                collected.set(input.id, {
+                  id: input.id,
+                  role: input.role,
+                  path: input.path,
+                  sha256: input.sha256,
+                });
+              }
             }
           }
         }
-      }
-      return [...collected.values()];
-    })()
-  : baseReferences;
+        return [...collected.values()];
+      })()
+    : baseReferences;
 
 for (const reference of references) {
   const contents = await readFile(path.join(repoRoot, reference.path));
@@ -440,8 +567,7 @@ const lessonSpecs = [
     slot: "slot-04",
     title: "Humanizing the Lead",
     fiveSecondRead: "see the person and situation before the property",
-    scene:
-      "three separate human-first stickers: a homeowner beside a small house, an unfolding story path, and a calm fit lens aligning person, property, and timing",
+    scene: "three separate human-first stickers: a homeowner beside a small house, an unfolding story path, and a calm fit lens aligning person, property, and timing",
     anchors: [
       ["homeowner before property details", "left-safe"],
       ["seller story and situation path", "center-safe"],
@@ -581,9 +707,9 @@ const lessonSpecs = [
 ];
 
 function buildPrompt(spec) {
-  if (usesSharedPilotLineage && spec.pilot) {
+  if (usesLockedPilotContract && spec.pilot) {
     const prompt = pilotLineageContract.promptBySlug.get(pilotSlugBySlot[spec.slot]);
-    if (!prompt) throw new Error(`${spec.slot} pilot edit prompt is missing from lineage v2`);
+    if (!prompt) throw new Error(`${spec.slot} pilot prompt is missing from locked lineage`);
     return prompt;
   }
   if (pilotPrompts[spec.slot]) return pilotPrompts[spec.slot];
@@ -646,16 +772,26 @@ const inventoryLessons = lessonSpecs.map((spec, index) => {
   const renderContract =
     usesSharedPilotLineage && pilotLineage
       ? pilotLineage.render_contract
-      : {
-          master_background_rgb: BLUE_RGB,
-          lesson_card: {
-            normalize_background_rgb: BLUE_RGB,
-            padding_color_rgb: BLUE_RGB,
-          },
-          video_poster: { normalize_background_rgb: BLUE_RGB },
-        };
-  const lessonReferenceIds =
-    usesSharedPilotLineage && pilotSlug ? pilotLineageContract.referenceIdsBySlug.get(pilotSlug) : (spec.references ?? ["style-ref-1", "style-ref-2"]);
+      : usesTwoIdentityPilotLineage && pilotLineage
+        ? {
+            master_background_rgb: pilotLineage.background_rgb,
+            lesson_card: {
+              normalize_background_rgb: pilotLineage.background_rgb,
+              padding_color_rgb: pilotLineage.background_rgb,
+            },
+            video_poster: {
+              normalize_background_rgb: pilotLineage.background_rgb,
+            },
+          }
+        : {
+            master_background_rgb: BLUE_RGB,
+            lesson_card: {
+              normalize_background_rgb: BLUE_RGB,
+              padding_color_rgb: BLUE_RGB,
+            },
+            video_poster: { normalize_background_rgb: BLUE_RGB },
+          };
+  const lessonReferenceIds = usesLockedPilotContract && pilotSlug ? pilotLineageContract.referenceIdsBySlug.get(pilotSlug) : (spec.references ?? ["style-ref-1", "style-ref-2"]);
   const prompt = buildPrompt(spec);
   const plannedGenerationCallId = spec.pilot ? null : `imagegen-lesson-${spec.slot}`;
   const lessonProvenance = buildProvenance(plannedGenerationCallId, spec.pilot ? "promote-existing-pilot-call" : "one-distinct-call");
@@ -664,7 +800,7 @@ const inventoryLessons = lessonSpecs.map((spec, index) => {
     id: `master-${spec.slot}`,
     source_path: `course-assets/thumbnails/production/sources/${spec.slot}-generated.png`,
     flat_master_path: `course-assets/thumbnails/production/flat-masters/${spec.slot}-flat-master.png`,
-    ...(usesSharedPilotLineage ? { background_rgb: renderContract.master_background_rgb } : {}),
+    ...(usesLockedPilotContract ? { background_rgb: renderContract.master_background_rgb } : {}),
     expected_aspect_ratio: "16:9",
     meaningful_content_bounds: {
       x_min_percent: 10,
@@ -686,7 +822,7 @@ const inventoryLessons = lessonSpecs.map((spec, index) => {
           id: "master-poster-video-slot-07-fact-find",
           source_path: "course-assets/posters/production/sources/video-slot-07-fact-find-generated.png",
           flat_master_path: "course-assets/posters/production/flat-masters/video-slot-07-fact-find-flat-master.png",
-          ...(usesSharedPilotLineage ? { background_rgb: BLUE_RGB } : {}),
+          ...(usesLockedPilotContract ? { background_rgb: BLUE_RGB } : {}),
           expected_aspect_ratio: "16:9",
           reference_ids: ["style-ref-1", "style-ref-2"],
           prompt: factFindPosterPrompt,
@@ -764,13 +900,20 @@ const inventoryLessons = lessonSpecs.map((spec, index) => {
           slug: pilotSlug,
           status: pilotChecksums.status,
           assets: pilotChecksums.assets.find((asset) => asset.slug === pilotSlug),
-          checksum_record_path: "docs/course-production/thumbnail-pilots/checksums.json",
-          generation_lineage_record_path: "docs/course-production/thumbnail-pilots/generation-lineage.json",
+          checksum_record_path: pilotChecksumsRecordPath,
+          generation_lineage_record_path: pilotGenerationLineageRecordPath,
           generation_lineage: pilotLineage,
-          ...(usesSharedPilotLineage
+          ...(usesLockedPilotContract
             ? {
                 lineage_schema_version: pilotGenerationLineage.schema_version,
-                shared_generation_parent: pilotLineageContract.sharedParentsById.get(pilotLineage.shared_parent_id),
+                ...(usesSharedPilotLineage
+                  ? {
+                      shared_generation_parent: pilotLineageContract.sharedParentsById.get(pilotLineage.shared_parent_id),
+                    }
+                  : {
+                      identity_contract: pilotGenerationLineage.contract,
+                      identity_roots: pilotGenerationLineage.identity_roots,
+                    }),
               }
             : {}),
         }
@@ -784,7 +927,7 @@ const coverPath = "course-assets/thumbnails/program-bmh-employee-training.webp";
 assertAsset(course.thumbnail_asset_key, coverPath);
 
 const inventory = {
-  schema_version: usesSharedPilotLineage ? "bmh-artwork-production/v2" : "bmh-artwork-production/v1",
+  schema_version: usesTwoIdentityPilotLineage ? "bmh-artwork-production/v3-candidate" : usesSharedPilotLineage ? "bmh-artwork-production/v2" : "bmh-artwork-production/v1",
   status: "blocked-pending-pilot-approval",
   generation_policy: {
     gate: "Jarrad must approve all three pilots before any new image generation",
@@ -794,7 +937,11 @@ const inventory = {
       ? {
           pilot_call_strategy: "one checksum-locked shared cast generation followed by one independently evidenced edit chain per pilot",
         }
-      : {}),
+      : usesTwoIdentityPilotLineage
+        ? {
+            pilot_call_strategy: "three checksum-locked single-character candidates using exactly one of two honest identity roots, with lesson-video evidence",
+          }
+        : {}),
     model_native_text: "forbidden",
     manifest_approval_updates: "forbidden until visual QA and explicit approval",
     upload_or_publish: "forbidden in artwork production",
@@ -812,7 +959,7 @@ const inventory = {
       [0, 0, 0],
       [105, 153, 53],
     ],
-    ...(usesSharedPilotLineage
+    ...(usesLockedPilotContract
       ? {
           background_contract: {
             allowed_rgb: [BLUE_RGB, YELLOW_RGB],
@@ -843,7 +990,7 @@ const inventory = {
     output_path: coverPath,
     source_path: "course-assets/thumbnails/production/sources/program-bmh-employee-training-generated.png",
     flat_master_path: "course-assets/thumbnails/production/flat-masters/program-bmh-employee-training-flat-master.png",
-    ...(usesSharedPilotLineage ? { background_rgb: BLUE_RGB } : {}),
+    ...(usesLockedPilotContract ? { background_rgb: BLUE_RGB } : {}),
     derivative: {
       recipe_id: "course-cover-card-16x10",
       source_master_id: "master-program-bmh-employee-training",

@@ -9,30 +9,13 @@ import { fileURLToPath } from "node:url";
 
 import sharp from "sharp";
 
-import {
-  applyArtworkLedger,
-  buildGuideAsset,
-  buildManifest,
-  loadArtworkLedger,
-  validateArtworkManifestTrustBoundary,
-} from "../../scripts/course-content/build-manifest.mjs";
-import {
-  approvePilots,
-  createInitialLedger,
-  deriveMaster,
-  finalizeArtwork,
-  ingestGeneration,
-  promotePilots,
-  reviewMaster,
-} from "../../scripts/course-content/artwork-production-workflow.mjs";
+import { applyArtworkLedger, buildGuideAsset, buildManifest, loadArtworkLedger, validateArtworkManifestTrustBoundary } from "../../scripts/course-content/build-manifest.mjs";
+import { approvePilots, createInitialLedger, deriveMaster, finalizeArtwork, ingestGeneration, promotePilots, reviewMaster } from "../../scripts/course-content/artwork-production-workflow.mjs";
 
 const LEDGER_SCHEMA = "bmh-artwork-production-ledger/v1";
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const manifestPath = new URL("./bmh-employee-training.v1.json", import.meta.url);
-const pilotPath = new URL(
-  "../../course-assets/thumbnails/pilots/lesson-cards/orientation-lesson-card-16x10.webp",
-  import.meta.url,
-);
+const pilotPath = new URL("../../course-assets/thumbnails/pilots/lesson-cards/orientation-lesson-card-16x10.webp", import.meta.url);
 
 test("an absent artwork ledger leaves the current preapproval artwork records byte-identical", async () => {
   const root = await mkdtemp(path.join(tmpdir(), "bmh-artwork-ledger-missing-"));
@@ -42,19 +25,11 @@ test("an absent artwork ledger leaves the current preapproval artwork records by
 
   const ledger = await loadArtworkLedger(path.join(root, "does-not-exist.json"));
   assert.equal(ledger, null);
-  const merged = await applyArtworkLedger(
-    artwork,
-    { schema_version: LEDGER_SCHEMA, assets: [] },
-    { repoRoot: root },
-  );
+  const merged = await applyArtworkLedger(artwork, { schema_version: LEDGER_SCHEMA, assets: [] }, { repoRoot: root });
 
   assert.equal(JSON.stringify(merged), before);
   assert.equal(merged.length, 49);
-  assert.ok(merged.every((asset) =>
-    asset.approval_status === "missing"
-    && asset.checksum_sha256 === null
-    && asset.size_bytes === null
-    && !/[a-f0-9]{64}\.webp$/.test(asset.storage_path)));
+  assert.ok(merged.every((asset) => asset.approval_status === "missing" && asset.checksum_sha256 === null && asset.size_bytes === null && !/[a-f0-9]{64}\.webp$/.test(asset.storage_path)));
 });
 
 test("a present statusless ledger cannot impersonate an absent optional ledger", async () => {
@@ -63,7 +38,10 @@ test("a present statusless ledger cannot impersonate an absent optional ledger",
     validateArtworkManifestTrustBoundary(
       manifest,
       { schema_version: LEDGER_SCHEMA, assets: [] },
-      { repoRoot, inventoryPath: path.join(repoRoot, "docs/course-production/thumbnail-pilots/production-inventory.json") },
+      {
+        repoRoot,
+        inventoryPath: path.join(repoRoot, "docs/course-production/thumbnail-pilots/production-inventory.json"),
+      },
     ),
     /ledger (?:inventory path drifted|lifecycle status is invalid)/i,
   );
@@ -89,9 +67,7 @@ test("the guide builder reproduces every approved guide and download binding", a
 
 test("the complete preapproval builder reproduces the tracked manifest when canonical media is available", async (t) => {
   try {
-    await access(
-      "/Users/jarradhenry/Sites/BMH apps/BMH Institute/course-assets/review-lessonA/LESSON-1A-v7.mp4",
-    );
+    await access("/Users/jarradhenry/Sites/BMH apps/BMH Institute/course-assets/review-lessonA/LESSON-1A-v7.mp4");
   } catch (error) {
     if (error?.code === "ENOENT") {
       t.skip("canonical course media is not present on this runner");
@@ -99,14 +75,8 @@ test("the complete preapproval builder reproduces the tracked manifest when cano
     }
     throw error;
   }
-  const [tracked, rebuilt] = await Promise.all([
-    readFile(manifestPath, "utf8"),
-    buildManifest(),
-  ]);
-  assert.equal(
-    `${JSON.stringify(rebuilt, null, 2).replaceAll("\u2014", "-")}\n`,
-    tracked,
-  );
+  const [tracked, rebuilt] = await Promise.all([readFile(manifestPath, "utf8"), buildManifest()]);
+  assert.equal(`${JSON.stringify(rebuilt, null, 2).replaceAll("\u2014", "-")}\n`, tracked);
 });
 
 test("an approved ledger record supplies verified immutable manifest metadata", async (t) => {
@@ -127,7 +97,9 @@ test("an approved ledger record supplies verified immutable manifest metadata", 
     }),
   ]);
 
-  const [result] = await applyArtworkLedger([template], approved, { repoRoot: root });
+  const [result] = await applyArtworkLedger([template], approved, {
+    repoRoot: root,
+  });
 
   assert.deepEqual(result, {
     ...template,
@@ -144,9 +116,12 @@ test("an approved ledger record supplies verified immutable manifest metadata", 
     ["size", { size_bytes: contents.length + 1 }],
     ["dimensions", { dimensions: [1280, 720] }],
     ["provenance", { provenance: {} }],
-    ["reference provenance", {
-      provenance: { ...approved.assets[0].provenance, reference_inputs: [] },
-    }],
+    [
+      "reference provenance",
+      {
+        provenance: { ...approved.assets[0].provenance, reference_inputs: [] },
+      },
+    ],
     ["pixel checksum", { pixel_sha256: null }],
     ["derivative provenance", { derivative: {} }],
     ["artwork kind", { kind: "video-poster" }],
@@ -156,24 +131,20 @@ test("an approved ledger record supplies verified immutable manifest metadata", 
     await t.test(`fails closed on approved ${label} drift`, async () => {
       const ledger = structuredClone(approved);
       Object.assign(ledger.assets[0], override);
-      await assert.rejects(
-        applyArtworkLedger([template], ledger, { repoRoot: root }),
-        /approved artwork/i,
-      );
+      await assert.rejects(applyArtworkLedger([template], ledger, { repoRoot: root }), /approved artwork/i);
     });
   }
 
   const incompleteApproval = structuredClone(approved);
   incompleteApproval.status = "production";
-  await assert.rejects(
-    applyArtworkLedger([template], incompleteApproval, { repoRoot: root }),
-    /complete finalized ledger/i,
-  );
+  await assert.rejects(applyArtworkLedger([template], incompleteApproval, { repoRoot: root }), /complete finalized ledger/i);
 
   const approvalWithoutEvidenceChecksum = structuredClone(approved);
   approvalWithoutEvidenceChecksum.final_approval.evidence_sha256 = null;
   await assert.rejects(
-    applyArtworkLedger([template], approvalWithoutEvidenceChecksum, { repoRoot: root }),
+    applyArtworkLedger([template], approvalWithoutEvidenceChecksum, {
+      repoRoot: root,
+    }),
     /final_approval is incomplete/i,
   );
 });
@@ -192,31 +163,33 @@ test("manifest_path-keyed ledgers must map uniquely to expected artwork", async 
     provenance: { status: "not-produced" },
   };
 
-  const merged = await applyArtworkLedger([template], {
-    schema_version: LEDGER_SCHEMA,
-    assets: { [localPath]: missingRecord },
-  }, { repoRoot: root });
+  const merged = await applyArtworkLedger(
+    [template],
+    {
+      schema_version: LEDGER_SCHEMA,
+      assets: { [localPath]: missingRecord },
+    },
+    { repoRoot: root },
+  );
   assert.deepEqual(merged, [template]);
 
   await assert.rejects(
-    applyArtworkLedger([template], {
-      schema_version: LEDGER_SCHEMA,
-      assets: { "course-assets/posters/not-in-manifest.webp": missingRecord },
-    }, { repoRoot: root }),
+    applyArtworkLedger(
+      [template],
+      {
+        schema_version: LEDGER_SCHEMA,
+        assets: { "course-assets/posters/not-in-manifest.webp": missingRecord },
+      },
+      { repoRoot: root },
+    ),
     /conflicts with manifest_path|not present in the manifest/i,
   );
 });
 
 test("a canonically finalized 49-asset workflow satisfies release and upload-integrity gates", async () => {
   const root = await mkdtemp(path.join(await realpath(tmpdir()), "bmh-artwork-ledger-release-"));
-  const inventoryPath = path.join(
-    repoRoot,
-    "docs/course-production/thumbnail-pilots/production-inventory.json",
-  );
-  const [inventory, baseManifest] = await Promise.all([
-    readJson(inventoryPath),
-    readJson(manifestPath),
-  ]);
+  const inventoryPath = path.join(repoRoot, "docs/course-production/thumbnail-pilots/production-inventory.json");
+  const [inventory, baseManifest] = await Promise.all([readJson(inventoryPath), readJson(manifestPath)]);
   const ledger = createInitialLedger(inventory);
   await copyLockedPilotInputs(root, ledger);
 
@@ -276,11 +249,15 @@ test("a canonically finalized 49-asset workflow satisfies release and upload-int
   }
 
   const finalEvidence = "evidence/final-artwork-approval.json";
-  await writeEvidence(root, finalEvidence, ledger.assets.map((asset) => ({
-    asset_key: asset.asset_key,
-    checksum_sha256: asset.checksum_sha256,
-    pixel_sha256: asset.pixel_sha256,
-  })));
+  await writeEvidence(
+    root,
+    finalEvidence,
+    ledger.assets.map((asset) => ({
+      asset_key: asset.asset_key,
+      checksum_sha256: asset.checksum_sha256,
+      pixel_sha256: asset.pixel_sha256,
+    })),
+  );
   const finalized = await finalizeArtwork({
     root,
     ledger,
@@ -289,20 +266,17 @@ test("a canonically finalized 49-asset workflow satisfies release and upload-int
     approvedAt: "2026-07-17T02:00:00.000Z",
     evidence: finalEvidence,
   });
-  const trustedManifest = await validateArtworkManifestTrustBoundary(
-    finalized.manifest,
-    finalized.ledger,
-    { repoRoot: root, inventoryPath },
-  );
+  const trustedManifest = await validateArtworkManifestTrustBoundary(finalized.manifest, finalized.ledger, { repoRoot: root, inventoryPath });
   const artwork = trustedManifest.assets.filter((asset) => asset.kind === "image");
   assert.equal(artwork.length, 49);
-  assert.ok(artwork.every((asset) =>
-    asset.approval_status === "approved"
-    && asset.storage_path === immutableStoragePath(
-      ledger.assets.find((candidate) => candidate.asset_key === asset.source_key).base_storage_path,
-      asset.checksum_sha256,
-    )
-    && asset.storage_path.includes(asset.checksum_sha256)));
+  assert.ok(
+    artwork.every(
+      (asset) =>
+        asset.approval_status === "approved" &&
+        asset.storage_path === immutableStoragePath(ledger.assets.find((candidate) => candidate.asset_key === asset.source_key).base_storage_path, asset.checksum_sha256) &&
+        asset.storage_path.includes(asset.checksum_sha256),
+    ),
+  );
 
   const forgedLedger = structuredClone(finalized.ledger);
   forgedLedger.assets[0].pixel_sha256 = "f".repeat(64);
@@ -317,14 +291,10 @@ test("a canonically finalized 49-asset workflow satisfies release and upload-int
   const releaseManifest = structuredClone(trustedManifest);
   releaseManifest.assets = releaseManifest.assets.map((asset) => {
     if (asset.approval_status !== "hold" && asset.approval_status !== "missing") return asset;
-    const checksum = asset.checksum_sha256 ?? createHash("sha256")
-      .update(`synthetic-release:${asset.source_key}`)
-      .digest("hex");
+    const checksum = asset.checksum_sha256 ?? createHash("sha256").update(`synthetic-release:${asset.source_key}`).digest("hex");
     return {
       ...asset,
-      storage_path: asset.storage_path.includes(checksum)
-        ? asset.storage_path
-        : immutableStoragePath(asset.storage_path, checksum),
+      storage_path: asset.storage_path.includes(checksum) ? asset.storage_path : immutableStoragePath(asset.storage_path, checksum),
       checksum_sha256: checksum,
       size_bytes: asset.size_bytes ?? 1,
       approval_status: "approved",
@@ -343,34 +313,32 @@ test("a canonically finalized 49-asset workflow satisfies release and upload-int
   await writeFile(releaseManifestPath, `${JSON.stringify(releaseManifest, null, 2)}\n`);
 
   for (const command of ["upload", "apply"]) {
-    const result = spawnSync(
-      path.join(repoRoot, "node_modules/.bin/tsx"),
-      ["scripts/course-import.ts", command, releaseManifestPath],
-      { cwd: repoRoot, encoding: "utf8" },
-    );
-    assert.equal(
-      result.status,
-      0,
-      `${command} dry-run rejected the approved artwork manifest:\n${result.stdout}\n${result.stderr}`,
-    );
+    const result = spawnSync(path.join(repoRoot, "node_modules/.bin/tsx"), ["scripts/course-import.ts", command, releaseManifestPath], { cwd: repoRoot, encoding: "utf8" });
+    assert.equal(result.status, 0, `${command} dry-run rejected the approved artwork manifest:\n${result.stdout}\n${result.stderr}`);
     assert.match(result.stdout, /"dryRun": true/);
   }
 });
 
 async function copyLockedPilotInputs(root, ledger) {
-  const paths = new Set([
-    ledger.inventory_path,
-    "docs/course-production/thumbnail-pilots/generation-lineage.json",
-    ...ledger.references.map((reference) => reference.path),
-  ]);
+  const paths = new Set([ledger.inventory_path, ...ledger.references.map((reference) => reference.path)]);
   for (const master of ledger.masters.filter((candidate) => candidate.pilot)) {
+    paths.add(master.pilot.lineage_record_path);
+    paths.add(master.pilot.checksum_record_path);
     for (const asset of Object.values(master.pilot.assets)) {
       if (asset && typeof asset === "object" && asset.path) paths.add(asset.path);
     }
-    for (const step of master.pilot.lineage.steps) {
-      paths.add(step.prompt_path);
-      paths.add(step.output.path);
-      for (const input of step.inputs) paths.add(input.path);
+    if (master.pilot.lineage.generation) {
+      const generation = master.pilot.lineage.generation;
+      paths.add(generation.prompt_path);
+      paths.add(generation.output_path);
+      if (generation.parent_path) paths.add(generation.parent_path);
+      paths.add(master.pilot.lineage.contact_sheet_input.path);
+    } else {
+      for (const step of master.pilot.lineage.steps) {
+        paths.add(step.prompt_path);
+        paths.add(step.output.path);
+        for (const input of step.inputs) paths.add(input.path);
+      }
     }
   }
   for (const relativePath of paths) {
@@ -387,10 +355,10 @@ async function writePilotApprovalArtifact(root, ledger) {
   await writeRepoFile(root, requestPath, request);
 
   const pilotBindings = lockedPilotBindings(ledger);
-  const bindingBytes = Buffer.from(pilotBindings.map((binding) =>
-    `${binding.slug}|${binding.terminal_output_sha256}|${binding.flat_master_sha256}|${binding.lesson_card_sha256}|${binding.video_poster_sha256}\n`
-  ).join(""));
-  const generationLineagePath = "docs/course-production/thumbnail-pilots/generation-lineage.json";
+  const bindingBytes = Buffer.from(pilotBindings.map((binding) => `${binding.slug}|${binding.terminal_output_sha256}|${binding.flat_master_sha256}|${binding.lesson_card_sha256}|${binding.video_poster_sha256}\n`).join(""));
+  const generationLineagePaths = new Set(ledger.masters.filter((master) => master.pilot).map((master) => master.pilot.lineage_record_path));
+  assert.equal(generationLineagePaths.size, 1);
+  const generationLineagePath = [...generationLineagePaths][0];
   const artifact = {
     schema_version: "bmh-artwork-pilot-approval/v1",
     decision: "approved",
@@ -403,9 +371,7 @@ async function writePilotApprovalArtifact(root, ledger) {
       pilot_bindings_sha256: sha256Bytes(bindingBytes),
     },
     inventory_sha256: sha256Bytes(await readFile(path.join(root, ledger.inventory_path))),
-    generation_lineage_sha256: sha256Bytes(
-      await readFile(path.join(root, generationLineagePath)),
-    ),
+    generation_lineage_sha256: sha256Bytes(await readFile(path.join(root, generationLineagePath))),
     pilot_bindings: pilotBindings,
   };
   const evidence = "evidence/pilot-approval.json";
@@ -414,17 +380,13 @@ async function writePilotApprovalArtifact(root, ledger) {
 }
 
 function lockedPilotBindings(ledger) {
-  const bySlug = new Map(
-    ledger.masters
-      .filter((master) => master.pilot)
-      .map((master) => [master.pilot.slug, master]),
-  );
+  const bySlug = new Map(ledger.masters.filter((master) => master.pilot).map((master) => [master.pilot.slug, master]));
   return ["orientation", "opening-the-call", "objection-architecture"].map((slug) => {
     const master = bySlug.get(slug);
     assert(master, `Missing locked pilot ${slug}`);
     return {
       slug,
-      terminal_output_sha256: master.pilot.lineage.terminal_output_sha256,
+      terminal_output_sha256: master.pilot.lineage.terminal_output_sha256 ?? master.pilot.lineage.generation?.output_sha256,
       flat_master_sha256: master.pilot.assets.flat_master.sha256,
       lesson_card_sha256: master.pilot.assets.lesson_card.sha256,
       video_poster_sha256: master.pilot.assets.video_poster.sha256,
@@ -456,7 +418,7 @@ async function writeUniqueProviderSource(filePath, ordinal) {
         background: colors[(ordinal >> bit) & 1],
       },
     },
-    left: 500 + (bit * 60),
+    left: 500 + bit * 60,
     top: 260,
   }));
   await mkdir(path.dirname(filePath), { recursive: true });
@@ -467,7 +429,11 @@ async function writeUniqueProviderSource(filePath, ordinal) {
       channels: 3,
       background: { r: 103, g: 182, b: 255 },
     },
-  }).composite(markers).removeAlpha().png().toFile(filePath);
+  })
+    .composite(markers)
+    .removeAlpha()
+    .png()
+    .toFile(filePath);
 }
 
 async function writeEvidence(root, relativePath, bindings) {
@@ -493,20 +459,8 @@ function artworkTemplate(localPath) {
   };
 }
 
-function approvedRecord({
-  localPath,
-  checksum,
-  size,
-  dimensions = [1280, 800],
-  sourceKey = "thumbnail-slot-01",
-  index = 1,
-  storagePath,
-}) {
-  const kind = localPath.startsWith("course-assets/posters/")
-    ? "video-poster"
-    : sourceKey === "thumbnail-program-bmh-employee-training"
-      ? "course-cover"
-      : "lesson-card";
+function approvedRecord({ localPath, checksum, size, dimensions = [1280, 800], sourceKey = "thumbnail-slot-01", index = 1, storagePath }) {
+  const kind = localPath.startsWith("course-assets/posters/") ? "video-poster" : sourceKey === "thumbnail-program-bmh-employee-training" ? "course-cover" : "lesson-card";
   const masterId = `master-${index}`;
   const recipe = {
     id: `recipe-${index}`,
@@ -515,9 +469,7 @@ function approvedRecord({
     operation: "locked-bmh-sticker-derivative",
     target_dimensions: dimensions,
   };
-  const recipeSha256 = createHash("sha256")
-    .update(JSON.stringify(recipe))
-    .digest("hex");
+  const recipeSha256 = createHash("sha256").update(JSON.stringify(recipe)).digest("hex");
   return {
     asset_key: sourceKey,
     source_key: sourceKey,
@@ -535,12 +487,14 @@ function approvedRecord({
       source_master_id: masterId,
       prompt_sha256: "1".repeat(64),
       reference_ids: ["style-ref-1"],
-      reference_inputs: [{
-        id: "style-ref-1",
-        role: "locked-style-reference",
-        path: "docs/course-production/style-reference.webp",
-        sha256: "4".repeat(64),
-      }],
+      reference_inputs: [
+        {
+          id: "style-ref-1",
+          role: "locked-style-reference",
+          path: "docs/course-production/style-reference.webp",
+          sha256: "4".repeat(64),
+        },
+      ],
       terminal_source_sha256: "2".repeat(64),
       flat_master_sha256: "3".repeat(64),
       derivative_recipe_id: `recipe-${index}`,
