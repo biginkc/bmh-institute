@@ -1,4 +1,8 @@
 import type { ImportPlan, ImportTable } from "./operations";
+import {
+  assertCompletedUploadReceipt,
+  type UploadReceiptExpectation,
+} from "./upload-receipt";
 
 export const POSTGREST_ID_BATCH_SIZE = 100;
 
@@ -49,6 +53,16 @@ export async function applyImportPlan(plan: ImportPlan, adapter: CourseImportAda
   ) {
     throw new Error("Atomic course import apply returned an invalid confirmation payload.");
   }
+}
+
+export async function applyImportPlanWithUploadReceipt(options: {
+  plan: ImportPlan;
+  adapter: CourseImportAdapter;
+  receiptPath: string;
+  uploadExpectation: UploadReceiptExpectation;
+}) {
+  await assertCompletedUploadReceipt(options.receiptPath, options.uploadExpectation);
+  await applyImportPlan(options.plan, options.adapter);
 }
 
 export function atomicImportOperations(plan: ImportPlan): AtomicImportOperation[] {

@@ -11,7 +11,7 @@ import {
   type CourseImportUploadBucket,
 } from "../src/lib/course-import/asset-upload";
 import {
-  applyImportPlan,
+  applyImportPlanWithUploadReceipt,
   reconcileImportPlan,
   type CourseImportAdapter,
 } from "../src/lib/course-import/execute";
@@ -25,11 +25,18 @@ import {
   type CourseImportCommand,
 } from "../src/lib/course-import/command-policy";
 import { runRestartableRollback } from "../src/lib/course-import/rollback-command";
+import {
+  buildUploadReceiptExpectation,
+  invalidateUploadReceipt,
+  uploadReceiptPath,
+  writeCompletedUploadReceipt,
+} from "../src/lib/course-import/upload-receipt";
 
 async function main() {
   const { command, manifestPath, flags } = parseArgs(process.argv.slice(2));
   const absoluteManifestPath = resolve(manifestPath);
-  const raw = JSON.parse(await readFile(absoluteManifestPath, "utf8")) as unknown;
+  const manifestBytes = await readFile(absoluteManifestPath);
+  const raw = JSON.parse(manifestBytes.toString("utf8")) as unknown;
   const result = validateCourseManifest(raw, {
     gate: manifestGateForCommand(command, flags.canary),
   });
@@ -50,13 +57,24 @@ async function main() {
 
   const url = requiredEnv("NEXT_PUBLIC_SUPABASE_URL");
   const serviceKey = requiredEnv("SUPABASE_SERVICE_ROLE_KEY");
-  assertCourseImportEnvironment(url, flags.allowProduction);
+  const environment = assertCourseImportEnvironment(url, flags.allowProduction);
+  const stateRoot = resolve(flags.stateRoot ?? join(process.cwd(), ".course-import-state"));
+  const uploadExpectation = buildUploadReceiptExpectation({
+    manifestBytes,
+    importId: plan.importId,
+    scope: flags.canary ? "canary" : "full",
+    environment,
+    environmentUrl: url,
+    assets: plan.assets,
+  });
+  const receiptPath = uploadReceiptPath(stateRoot, uploadExpectation);
   const supabase = createClient<Database>(url, serviceKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
   const adapter = createSupabaseAdapter(supabase);
 
   if (command === "upload") {
+    await invalidateUploadReceipt(receiptPath);
     await uploadApprovedAssets({
       endpoint: resumableEndpoint(url),
       serviceKey,
@@ -64,14 +82,19 @@ async function main() {
       sourceRoot: flags.sourceRoot ? resolve(flags.sourceRoot) : process.cwd(),
       assets: plan.assets,
       bucket: supabase.storage.from("content") as unknown as CourseImportUploadBucket,
-      stateRoot: resolve(
-        flags.stateRoot ?? join(process.cwd(), ".course-import-state"),
-      ),
+      stateRoot,
     });
+    const receipt = await writeCompletedUploadReceipt(receiptPath, uploadExpectation);
+    console.log(JSON.stringify({ phase: "upload_settled", receipt }, null, 2));
     return;
   }
   if (command === "apply") {
-    await applyImportPlan(plan, adapter);
+    await applyImportPlanWithUploadReceipt({
+      plan,
+      adapter,
+      receiptPath,
+      uploadExpectation,
+    });
     return;
   }
   if (command === "verify") {

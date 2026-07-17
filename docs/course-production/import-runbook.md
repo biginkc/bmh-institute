@@ -15,6 +15,15 @@ npm run course:import -- rollback content/course-manifests/bmh-employee-training
 
 These commands print a plan without changing storage or the database. Add `--execute` only after reviewing the manifest and the printed counts. `apply` and `verify` enforce the release gate. `--canary` requires a separate approved manifest containing only the unpublished Tech Stack slice: one course, one module, one content lesson, optionally its quiz, and no more than ten referenced assets. It cannot relax the full manifest into a draft import.
 
+`upload --execute` writes a completion receipt under
+`.course-import-state/upload-receipts/` only after every approved object has
+passed exact remote byte and checksum verification. `apply --execute` refuses
+to call the database unless that receipt checksum matches the exact manifest
+bytes, approved-asset inventory, canonical test/production environment, and
+canary/full scope being applied. Always pass the same `--state-root` to upload
+and apply. An interrupted upload, stale manifest, or receipt from another scope
+or environment must be resumed or uploaded again before apply can proceed.
+
 Manifest asset paths are relative to the repository root by default. If the approved source files live in another checkout, add `--source-root=/absolute/path/to/that/repository-root` to `upload`—the directory must contain the manifest's `course-assets/...` paths, not be the `course-assets` directory itself. The importer resolves real paths and rejects files that escape that root.
 
 ### Composite asset staging
