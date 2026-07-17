@@ -1,7 +1,7 @@
 # Obsolete-code cleanup audit
 
 Audited: 2026-07-17  
-Repository head: `e988dc91aea76e4601c1cd4db0574939acaa5ca9`  
+Repository evidence refreshed at head: `90fdbf7624e7cedd070ca101bdd02feb95307038`
 Mode: read-only audit; no package, source, schema, fixture, storage, or production deletion was performed.
 
 ## Verdict

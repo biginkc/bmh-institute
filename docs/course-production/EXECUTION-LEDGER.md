@@ -27,16 +27,18 @@ Implement the approved concurrent completion plan for the reusable BMH Institute
 
 - [x] Runtime and database writes enforce ownership, access, prerequisites and server-side scoring.
 - [x] Required videos persist watched ranges and require at least 90 percent watched coverage.
-- [ ] The deterministic importer validates, uploads, applies, verifies and rolls back only manifest-owned records.
+- [x] The deterministic importer validates, uploads, applies, verifies and rolls back only manifest-owned records in test-project and adversarial recovery coverage.
+- [ ] The Tech Stack canary and complete real draft pass upload, apply, exact reconciliation and rollback against the unpublished QA hierarchy.
 - [ ] Nineteen grouped lessons map to 29 approved videos across six sections.
 - [x] Nineteen quizzes contain audited current questions with role-agnostic compensation content.
 - [ ] Six assignments and six verified Closer Lab scenarios are mapped.
 - [ ] Captions, transcripts, guides, flashcards, objectives and thumbnail assets are complete.
 - [ ] Dummy walkthrough content is removed only after the real draft passes acceptance.
-- [ ] Automated tests, manual review, authorization abuse tests and rollback rehearsal pass.
+- [x] Automated tests, manual code review, authorization abuse tests and test-project importer rollback coverage pass for the current foundation.
+- [ ] A final rollback rehearsal passes against the accepted complete unpublished import.
 - [ ] Desktop and mobile Chrome acceptance pass on the deployed surface.
 - [ ] Sandra completion delivery and program certificate behavior pass.
-- [ ] Employee access remains disabled until every content and product gate passes.
+- [x] Employee access remains disabled while any content, import or product gate is outstanding.
 
 ## Evidence log
 
