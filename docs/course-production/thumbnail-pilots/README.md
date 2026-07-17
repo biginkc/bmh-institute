@@ -40,6 +40,10 @@ people in one card.
 - Video-informed inputs: the three exact contact sheets under
   `references/v7-video-stills/`; their source-video paths and SHA-256 values are
   recorded in `v8-generation-lineage.json`.
+- Post-pilot video-informed inputs: 17 deterministic contact sheets under
+  `references/production-video-stills/`, with exact source-video paths,
+  checksums, sizes, approval states, durations, and frame timestamps recorded in
+  `references/production-video-stills/contact-sheets.json`.
 - Exact prompts: `prompts/v7/` for retained V7 sources and `prompts/v8/` for the
   pose-varied Opening edit.
 - Generated sources, deterministic character/contour operations, and tool output
@@ -56,6 +60,7 @@ longer bind the superseded V1/V2 pilot bytes.
 ## Verification and approval gate
 
 ```bash
+node scripts/course-content/build-artwork-video-contact-sheets.mjs --check --media-root='/Users/jarradhenry/Sites/BMH apps/BMH Institute'
 node scripts/course-content/prepare-thumbnail-pilot-revision.mjs docs/course-production/thumbnail-pilots/v8-derivative-config.json --check
 node scripts/course-content/build-artwork-production-inventory.mjs --check
 npm run artwork:production -- verify
@@ -66,6 +71,11 @@ The workflow verifies the exact identity roots, contact sheets, prompts,
 generated sources, derivatives, checksums, backgrounds, one-person character
 assignments, and pending approval state. It rejects mixed roots, an additional
 person, a wrong character assignment, or stale lineage.
+
+All 20 non-cover masters (three pilots plus 17 post-pilot masters) now require
+exact mapped-video evidence. If either held Orientation source changes, its
+contact sheet and V8 lineage must be rebuilt and the Orientation pilot must be
+reviewed again; a stale pilot cannot pass the inventory builder.
 
 Batch generation remains gated on Jarrad's explicit approval of all three exact
 cards. Approval must be recorded in the checksum-bound artifact described in

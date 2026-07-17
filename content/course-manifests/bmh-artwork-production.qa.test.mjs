@@ -5,6 +5,7 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { createEmptyProductionRecord, sha256, validateProductionRecord } from "../../scripts/course-content/artwork-production-contract.mjs";
+import { createInitialLedger } from "../../scripts/course-content/artwork-production-workflow.mjs";
 
 const manifestPath = new URL("./bmh-employee-training.v1.json", import.meta.url);
 const inventoryPath = new URL("../../docs/course-production/thumbnail-pilots/production-inventory.json", import.meta.url);
@@ -12,14 +13,19 @@ const pilotChecksumsPath = new URL("../../docs/course-production/thumbnail-pilot
 const pilotGenerationLineagePath = new URL("../../docs/course-production/thumbnail-pilots/v8-generation-lineage.json", import.meta.url);
 const pilotDerivativeConfigPath = new URL("../../docs/course-production/thumbnail-pilots/v8-derivative-config.json", import.meta.url);
 const pilotDerivativeReportPath = new URL("../../docs/course-production/thumbnail-pilots/v8-derivative-report.json", import.meta.url);
+const videoContactSheetsPath = new URL(
+  "../../docs/course-production/thumbnail-pilots/references/production-video-stills/contact-sheets.json",
+  import.meta.url,
+);
 
-const [manifest, inventory, pilotChecksums, pilotGenerationLineage, pilotDerivativeConfig, pilotDerivativeReport] = await Promise.all([
+const [manifest, inventory, pilotChecksums, pilotGenerationLineage, pilotDerivativeConfig, pilotDerivativeReport, videoContactSheets] = await Promise.all([
   readFile(manifestPath, "utf8").then(JSON.parse),
   readFile(inventoryPath, "utf8").then(JSON.parse),
   readFile(pilotChecksumsPath, "utf8").then(JSON.parse),
   readFile(pilotGenerationLineagePath, "utf8").then(JSON.parse),
   readFile(pilotDerivativeConfigPath, "utf8").then(JSON.parse),
   readFile(pilotDerivativeReportPath, "utf8").then(JSON.parse),
+  readFile(videoContactSheetsPath, "utf8").then(JSON.parse),
 ]);
 
 const course = manifest.program.courses[0];
@@ -39,6 +45,64 @@ test("every declared reference is portable and checksum locked", async () => {
     const contents = await readFile(new URL(`../../${reference.path}`, import.meta.url));
     assert.equal(sha256(contents), reference.sha256, reference.id);
   }
+});
+
+test("every non-cover master is bound to exact mapped-video evidence and a checksum-locked contact sheet", async () => {
+  assert.equal(videoContactSheets.schema_version, "bmh-artwork-video-contact-sheets/v1");
+  assert.equal(videoContactSheets.records.length, 17);
+  const recordsByMaster = new Map(videoContactSheets.records.map((record) => [record.master_id, record]));
+  const expectedNonPilotIds = inventory.lessons
+    .filter((lesson) => !lesson.pilot)
+    .map((lesson) => lesson.master.id);
+  expectedNonPilotIds.splice(5, 0, "master-poster-video-slot-07-fact-find");
+  assert.deepEqual(videoContactSheets.records.map((record) => record.master_id), expectedNonPilotIds);
+
+  const masterPlans = [
+    ...inventory.lessons.map((lesson) => ({ master: lesson.master, reference_ids: lesson.reference_ids })),
+    ...inventory.lessons.flatMap((lesson) =>
+      lesson.posters.flatMap((poster) => (poster.direct_master ? [{ master: poster.direct_master, reference_ids: poster.direct_master.reference_ids }] : [])),
+    ),
+  ];
+  for (const { master, reference_ids: referenceIds } of masterPlans) {
+    assert.ok(master.video_evidence.length > 0, master.id);
+    assert.ok(master.contact_sheet_input?.id, master.id);
+    assert.ok(referenceIds.includes(master.contact_sheet_input.id), master.id);
+    const reference = inventory.style_system.reference_inputs.find((candidate) => candidate.id === master.contact_sheet_input.id);
+    assert.equal(reference?.path, master.contact_sheet_input.path, master.id);
+    assert.equal(reference?.sha256, master.contact_sheet_input.sha256, master.id);
+    assert.equal(sha256(await readFile(new URL(`../../${master.contact_sheet_input.path}`, import.meta.url))), master.contact_sheet_input.sha256, master.id);
+  }
+
+  for (const record of videoContactSheets.records) {
+    const master = masterPlans.find((candidate) => candidate.master.id === record.master_id).master;
+    assert.deepEqual(master.video_evidence, record.video_evidence);
+    assert.deepEqual(master.contact_sheet_input, record.contact_sheet_input);
+    const mappedKeys =
+      record.master_id === "master-poster-video-slot-07-fact-find"
+        ? ["video-slot-07-fact-find"]
+        : contentLessons
+            .find((lesson) => record.master_id.endsWith(lesson.source_key.match(/slot-\d{2}$/)[0]))
+            .blocks.filter((block) => block.type === "video")
+            .map((block) => block.content.asset_key);
+    assert.deepEqual(record.video_evidence.map((evidence) => evidence.asset_key), mappedKeys, record.master_id);
+    assert.equal(recordsByMaster.get(record.master_id), record);
+  }
+  for (const lesson of inventory.lessons.filter((candidate) => !candidate.pilot)) {
+    assert.match(lesson.prompt, /Image 4 is the checksum-bound contact sheet extracted from every exact video mapped to this lesson/);
+  }
+  const factFind = inventory.lessons
+    .find((lesson) => lesson.slot === "slot-07")
+    .posters.find((poster) => poster.direct_master)
+    .direct_master;
+  assert.match(factFind.prompt, /Image 4 is the checksum-bound contact sheet extracted from the exact mapped Fact Find video/);
+
+  const missingEvidence = structuredClone(inventory);
+  const target = missingEvidence.lessons.find((lesson) => lesson.slot === "slot-02");
+  target.master.video_evidence = [];
+  assert.throws(() => createInitialLedger(missingEvidence), /requires exact mapped source-video evidence/);
+  const missingReference = structuredClone(inventory);
+  missingReference.lessons.find((lesson) => lesson.slot === "slot-02").reference_ids.pop();
+  assert.throws(() => createInitialLedger(missingReference), /contact-sheet input is not a required generation reference/);
 });
 
 test("all manifest artwork keys and output paths are mapped exactly once", () => {
@@ -224,7 +288,12 @@ test("Opening pilot supplies only its card and Opening poster; Fact Find has a d
   assert.equal(factFindPoster.direct_master.id, "master-poster-video-slot-07-fact-find");
   assert.equal(factFindPoster.direct_master.source_path, "course-assets/posters/production/sources/video-slot-07-fact-find-generated.png");
   assert.equal(factFindPoster.direct_master.flat_master_path, "course-assets/posters/production/flat-masters/video-slot-07-fact-find-flat-master.png");
-  assert.deepEqual(factFindPoster.direct_master.reference_ids, ["style-ref-1", "style-ref-2", "andrea-approved"]);
+  assert.deepEqual(factFindPoster.direct_master.reference_ids, [
+    "style-ref-1",
+    "style-ref-2",
+    "andrea-approved",
+    "video-contact-sheet-poster-video-slot-07-fact-find",
+  ]);
   assert.equal(factFindPoster.direct_master.prompt_sha256, sha256(factFindPoster.direct_master.prompt));
   assert.equal(factFindPoster.direct_master.provenance.planned_generation_call_id, "imagegen-poster-video-slot-07-fact-find");
   assert.equal(factFindPoster.derivative.source_master_id, factFindPoster.direct_master.id);

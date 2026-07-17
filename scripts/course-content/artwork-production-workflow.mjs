@@ -298,7 +298,42 @@ function posterRecipe(poster, palette) {
   };
 }
 
-function baseMaster({ id, kind, sourceMode, plannedCallId, promptSha256, referenceIds, referenceInputs, sourcePath, flatMasterPath, backgroundRgb, artDirection, pilot, outputs }) {
+function baseMaster({
+  id,
+  kind,
+  sourceMode,
+  plannedCallId,
+  promptSha256,
+  referenceIds,
+  referenceInputs,
+  sourcePath,
+  flatMasterPath,
+  backgroundRgb,
+  artDirection,
+  videoEvidence,
+  contactSheetInput,
+  requireVideoEvidence = false,
+  pilot,
+  outputs,
+}) {
+  if (requireVideoEvidence && kind !== "course-cover-master") {
+    assert(Array.isArray(videoEvidence) && videoEvidence.length > 0, `${id} requires exact mapped source-video evidence`);
+    assert(
+      videoEvidence.every(
+        (evidence) =>
+          (evidence?.path && SHA256.test(evidence.sha256)) ||
+          (evidence?.asset_key && evidence?.local_path && SHA256.test(evidence.checksum_sha256)),
+      ),
+      `${id} source-video evidence is invalid`,
+    );
+    assert(contactSheetInput?.id && contactSheetInput?.path && SHA256.test(contactSheetInput.sha256), `${id} contact-sheet input is invalid`);
+    assert(referenceIds.includes(contactSheetInput.id), `${id} contact-sheet input is not a required generation reference`);
+    const lockedReference = referenceInputs.find((reference) => reference.id === contactSheetInput.id);
+    assert(
+      lockedReference?.path === contactSheetInput.path && lockedReference?.sha256 === contactSheetInput.sha256,
+      `${id} contact-sheet reference provenance drifted`,
+    );
+  }
   return {
     id,
     kind,
@@ -311,6 +346,8 @@ function baseMaster({ id, kind, sourceMode, plannedCallId, promptSha256, referen
     flat_master_path: flatMasterPath,
     ...(backgroundRgb ? { background_rgb: clone(backgroundRgb) } : {}),
     ...(artDirection ? { art_direction: clone(artDirection) } : {}),
+    video_evidence: clone(videoEvidence ?? []),
+    contact_sheet_input: contactSheetInput ? clone(contactSheetInput) : null,
     pilot,
     status: "missing",
     terminal_source_sha256: null,
@@ -525,6 +562,7 @@ export function createInitialLedger(inventory) {
       flatMasterPath: inventory.course_cover.flat_master_path,
       backgroundRgb: coverBackground,
       artDirection: coverArtDirection,
+      requireVideoEvidence: inventoryV4,
       pilot: null,
       outputs: [
         {
@@ -573,6 +611,9 @@ export function createInitialLedger(inventory) {
         flatMasterPath: lesson.master.flat_master_path,
         backgroundRgb: lessonBackground,
         artDirection: lessonArtDirection,
+        videoEvidence: lesson.master.video_evidence,
+        contactSheetInput: lesson.master.contact_sheet_input,
+        requireVideoEvidence: inventoryV4,
         pilot: lesson.pilot ? pilotPlan(lesson.pilot_review) : null,
         outputs: masterOutputs,
       }),
@@ -599,6 +640,9 @@ export function createInitialLedger(inventory) {
           flatMasterPath: direct.flat_master_path,
           backgroundRgb: directBackground,
           artDirection: directArtDirection,
+          videoEvidence: direct.video_evidence,
+          contactSheetInput: direct.contact_sheet_input,
+          requireVideoEvidence: inventoryV4,
           pilot: null,
           outputs: [
             {
@@ -701,6 +745,50 @@ export function createInitialLedger(inventory) {
     assets: outputs,
     updated_at: null,
   };
+}
+
+export function isPristinePreapprovalLedger(ledger) {
+  const pendingApproval = (approval) =>
+    approval?.status === "pending" &&
+    approval.approved_by === null &&
+    approval.approved_at === null &&
+    approval.evidence === null &&
+    approval.evidence_sha256 === null;
+  return (
+    ledger?.schema_version === SCHEMA_VERSION &&
+    ledger.status === "preapproval" &&
+    pendingApproval(ledger.pilot_approval) &&
+    pendingApproval(ledger.final_approval) &&
+    Array.isArray(ledger.masters) &&
+    ledger.masters.every(
+      (master) =>
+        master.status === "missing" &&
+        master.terminal_source_sha256 === null &&
+        master.flat_master_sha256 === null &&
+        master.flat_replacement_authorized_checksum === null &&
+        Array.isArray(master.flat_history) &&
+        master.flat_history.length === 0 &&
+        Array.isArray(master.lineage) &&
+        master.lineage.length === 0 &&
+        master.review?.status === "pending" &&
+        master.review.reviewed_by === null &&
+        master.review.reviewed_at === null &&
+        master.review.evidence === null &&
+        master.review.evidence_sha256 === null,
+    ) &&
+    Array.isArray(ledger.assets) &&
+    ledger.assets.every(
+      (asset) =>
+        asset.checksum_sha256 === null &&
+        asset.pixel_sha256 === null &&
+        asset.size_bytes === null &&
+        asset.approval_status === "missing" &&
+        asset.storage_path === null &&
+        asset.replacement_authorized_checksum === null &&
+        Array.isArray(asset.history) &&
+        asset.history.length === 0,
+    )
+  );
 }
 
 function findMaster(ledger, masterId) {
@@ -1165,6 +1253,8 @@ export async function validateLedger({ root, inventory, manifest, ledger, inspec
     assert(master.prompt_sha256 === planned.prompt_sha256, `${master.id} prompt checksum drifted`);
     assert(JSON.stringify(master.reference_ids) === JSON.stringify(planned.reference_ids), `${master.id} references drifted`);
     assert(JSON.stringify(master.reference_inputs) === JSON.stringify(planned.reference_inputs), `${master.id} reference provenance drifted`);
+    assert(JSON.stringify(master.video_evidence) === JSON.stringify(planned.video_evidence), `${master.id} source-video evidence drifted`);
+    assert(JSON.stringify(master.contact_sheet_input) === JSON.stringify(planned.contact_sheet_input), `${master.id} contact-sheet input drifted`);
     assert(master.kind === planned.kind, `${master.id} kind drifted`);
     assert(master.source_mode === planned.source_mode, `${master.id} source mode drifted`);
     assert(master.planned_generation_call_id === planned.planned_generation_call_id, `${master.id} planned call drifted`);

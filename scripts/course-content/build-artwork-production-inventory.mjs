@@ -10,8 +10,11 @@ const manifestPath = path.join(repoRoot, "content/course-manifests/bmh-employee-
 const outputPath = path.join(repoRoot, "docs/course-production/thumbnail-pilots/production-inventory.json");
 const pilotChecksumsRecordPath = "docs/course-production/thumbnail-pilots/v8-checksums.json";
 const pilotGenerationLineageRecordPath = "docs/course-production/thumbnail-pilots/v8-generation-lineage.json";
+const videoContactSheetsRecordPath =
+  "docs/course-production/thumbnail-pilots/references/production-video-stills/contact-sheets.json";
 const pilotChecksumsPath = path.join(repoRoot, pilotChecksumsRecordPath);
 const pilotGenerationLineagePath = path.join(repoRoot, pilotGenerationLineageRecordPath);
+const videoContactSheetsPath = path.join(repoRoot, videoContactSheetsRecordPath);
 const args = process.argv.slice(2);
 const unknownArgs = args.filter((arg) => arg !== "--check");
 if (unknownArgs.length > 0) {
@@ -19,10 +22,11 @@ if (unknownArgs.length > 0) {
 }
 const checkMode = args.includes("--check");
 
-const [manifest, pilotChecksums, pilotGenerationLineage] = await Promise.all([
+const [manifest, pilotChecksums, pilotGenerationLineage, videoContactSheets] = await Promise.all([
   readFile(manifestPath, "utf8").then(JSON.parse),
   readFile(pilotChecksumsPath, "utf8").then(JSON.parse),
   readFile(pilotGenerationLineagePath, "utf8").then(JSON.parse),
+  readFile(videoContactSheetsPath, "utf8").then(JSON.parse),
 ]);
 const course = manifest.program.courses[0];
 const lessons = course.modules.flatMap((module) => module.lessons.filter((lesson) => lesson.type === "content"));
@@ -88,6 +92,104 @@ function validateBackgroundRgb(value, label) {
     throw new Error(`${label} must be the locked blue or yellow RGB value`);
   }
   return value;
+}
+
+function lessonVideoBlocks(slot) {
+  const lesson = lessons.find((candidate) => candidate.source_key === `lesson-content-${slot}`);
+  if (!lesson) throw new Error(`Manifest content lesson is missing for ${slot}`);
+  return lesson.blocks.filter((block) => block.type === "video");
+}
+
+function mappedVideoBlocksForMaster(masterId) {
+  if (masterId === "master-poster-video-slot-07-fact-find") {
+    return lessonVideoBlocks("slot-07").filter((block) => block.content.asset_key === "video-slot-07-fact-find");
+  }
+  const slot = masterId.match(/^master-(slot-\d{2})$/)?.[1];
+  if (!slot) throw new Error(`Unsupported video-evidence master id: ${masterId}`);
+  return lessonVideoBlocks(slot);
+}
+
+function expectedNonPilotMasterIds() {
+  const ids = lessons
+    .map((lesson) => lesson.source_key.match(/(slot-\d{2})$/)?.[1])
+    .filter((slot) => slot && !["slot-01", "slot-07", "slot-09"].includes(slot))
+    .map((slot) => `master-${slot}`);
+  ids.splice(5, 0, "master-poster-video-slot-07-fact-find");
+  return ids;
+}
+
+async function validateVideoContactSheets() {
+  if (
+    videoContactSheets.schema_version !== "bmh-artwork-video-contact-sheets/v1" ||
+    videoContactSheets.generator !== "ffmpeg fixed-ratio frames plus sharp lossless PNG tiling" ||
+    JSON.stringify(videoContactSheets.frame_positions) !== JSON.stringify([0.2, 0.5, 0.8]) ||
+    JSON.stringify(videoContactSheets.tile_dimensions) !== JSON.stringify([320, 180]) ||
+    videoContactSheets.columns !== 3
+  ) {
+    throw new Error("Production video contact-sheet contract drifted");
+  }
+  const expectedIds = expectedNonPilotMasterIds();
+  const records = videoContactSheets.records;
+  if (
+    !Array.isArray(records) ||
+    records.length !== expectedIds.length ||
+    JSON.stringify(records.map((record) => record.master_id)) !== JSON.stringify(expectedIds) ||
+    new Set(records.map((record) => record.master_id)).size !== records.length
+  ) {
+    throw new Error("Production video contact sheets must cover all 17 non-pilot masters exactly once and in course order");
+  }
+
+  const byMasterId = new Map();
+  const references = [];
+  for (const record of records) {
+    const expectedBlocks = mappedVideoBlocksForMaster(record.master_id);
+    const expectedFrameCount = expectedBlocks.length * videoContactSheets.frame_positions.length;
+    const expectedDimensions = [
+      videoContactSheets.tile_dimensions[0] * videoContactSheets.columns,
+      videoContactSheets.tile_dimensions[1] * Math.ceil(expectedFrameCount / videoContactSheets.columns),
+    ];
+    const input = record.contact_sheet_input;
+    if (
+      input?.id !== `video-contact-sheet-${record.master_id.replace(/^master-/, "")}` ||
+      input?.role !== "checksum-bound exact mapped-video contact sheet" ||
+      !input.path?.startsWith("docs/course-production/thumbnail-pilots/references/production-video-stills/") ||
+      !/^[a-f0-9]{64}$/.test(input.sha256 ?? "") ||
+      JSON.stringify(input.dimensions) !== JSON.stringify(expectedDimensions) ||
+      input.frame_count !== expectedFrameCount
+    ) {
+      throw new Error(`${record.master_id} contact-sheet metadata is invalid`);
+    }
+    const contactSheetBytes = await readFile(repoPath(input.path));
+    if (
+      sha256(contactSheetBytes) !== input.sha256 ||
+      JSON.stringify(pngDimensions(contactSheetBytes, input.path)) !== JSON.stringify(expectedDimensions)
+    ) {
+      throw new Error(`${record.master_id} contact-sheet bytes do not match their checksum and dimensions`);
+    }
+    if (!Array.isArray(record.video_evidence) || record.video_evidence.length !== expectedBlocks.length) {
+      throw new Error(`${record.master_id} source-video evidence does not match its mapped videos`);
+    }
+    for (const [index, block] of expectedBlocks.entries()) {
+      const evidence = record.video_evidence[index];
+      const asset = manifestAssets.get(block.content.asset_key);
+      const expectedTimestamps = videoContactSheets.frame_positions.map((ratio) => Number((block.content.duration_seconds * ratio).toFixed(3)));
+      if (
+        !asset ||
+        evidence?.asset_key !== asset.source_key ||
+        evidence?.local_path !== asset.local_path ||
+        evidence?.checksum_sha256 !== asset.checksum_sha256 ||
+        evidence?.size_bytes !== asset.size_bytes ||
+        evidence?.approval_status !== asset.approval_status ||
+        evidence?.duration_seconds !== block.content.duration_seconds ||
+        JSON.stringify(evidence?.frame_timestamps_seconds) !== JSON.stringify(expectedTimestamps)
+      ) {
+        throw new Error(`${record.master_id} video evidence ${index + 1} drifted from the exact mapped manifest source`);
+      }
+    }
+    byMasterId.set(record.master_id, record);
+    references.push(input);
+  }
+  return { byMasterId, references };
 }
 
 function validateToolEvidence(evidence, label) {
@@ -175,6 +277,11 @@ async function validatePilotGenerationLineage() {
       ["opening-the-call", "andrea-approved"],
       ["objection-architecture", "recurring-seller-approved"],
     ]);
+    const expectedVideoKeys = new Map([
+      ["orientation", ["video-slot-01-welcome", "video-slot-01-mindset"]],
+      ["opening-the-call", ["video-slot-07-opening", "video-slot-07-fact-find"]],
+      ["objection-architecture", ["video-slot-09-objection-architecture"]],
+    ]);
     if (
       pilotGenerationLineage.generator !== "built-in image_gen" ||
       pilotGenerationLineage.contract?.people_per_thumbnail !== 1 ||
@@ -234,9 +341,19 @@ async function validatePilotGenerationLineage() {
       if (!Array.isArray(record.video_evidence) || record.video_evidence.length === 0) {
         throw new Error(`${record.slug} must retain exact source-video evidence`);
       }
+      const expectedEvidence = expectedVideoKeys.get(record.slug).map((assetKey) => manifestAssets.get(assetKey));
+      if (record.video_evidence.length !== expectedEvidence.length || expectedEvidence.some((asset) => !asset)) {
+        throw new Error(`${record.slug} source-video evidence count drifted from the mapped lesson`);
+      }
       for (const [index, evidence] of record.video_evidence.entries()) {
-        if (typeof evidence?.path !== "string" || !evidence.path.startsWith("course-assets/review-") || !/^[a-f0-9]{64}$/.test(evidence.sha256 ?? "")) {
-          throw new Error(`${record.slug} video evidence ${index + 1} is invalid`);
+        const expectedAsset = expectedEvidence[index];
+        if (
+          evidence?.path !== expectedAsset.local_path ||
+          evidence?.sha256 !== expectedAsset.checksum_sha256 ||
+          !evidence.path.startsWith("course-assets/review-") ||
+          !/^[a-f0-9]{64}$/.test(evidence.sha256 ?? "")
+        ) {
+          throw new Error(`${record.slug} video evidence ${index + 1} drifted from the exact mapped manifest source`);
         }
         repoPath(evidence.path);
       }
@@ -469,7 +586,7 @@ const usesLockedPilotContract = pilotLineageContract.version >= 2;
 const usesTwoIdentityPilotLineage = pilotLineageContract.version >= 3;
 const usesPoseVariationPilotLineage = pilotLineageContract.version === 4;
 
-const references = usesTwoIdentityPilotLineage
+const pilotReferences = usesTwoIdentityPilotLineage
   ? [...baseReferences.filter((reference) => reference.id === "style-ref-1" || reference.id === "style-ref-2"), ...pilotLineageContract.additionalReferences]
   : usesSharedPilotLineage
     ? (() => {
@@ -515,6 +632,12 @@ const references = usesTwoIdentityPilotLineage
         return [...collected.values()];
       })()
     : baseReferences;
+
+const videoContactSheetContract = await validateVideoContactSheets();
+const references = [...pilotReferences, ...videoContactSheetContract.references];
+if (new Set(references.map((reference) => reference.id)).size !== references.length) {
+  throw new Error("Artwork reference ids must be globally unique");
+}
 
 for (const reference of references) {
   const contents = await readFile(path.join(repoRoot, reference.path));
@@ -571,7 +694,7 @@ const factFindArtDirection = getArtworkPose("master-poster-video-slot-07-fact-fi
 const factFindPosterPrompt = `Use case: stylized-concept
 Asset type: BMH Institute Fact Find video-poster master, wide 16:9 artwork generated independently from the Opening the Call lesson-card master
 Primary request: Create a focused Fact Find illustration. The five-second read must be “ask with curiosity, listen carefully, and organize the seller facts.” Show a large listening ear, a magnifier, and a clean fact checklist made only from unlabeled lines and check marks. This image must stand on its own as the Fact Find video poster and must not reuse the Opening the Call pilot composition.
-Input images: Image 1 and Image 2 are the canonical BMH Sticker System style references. Image 3 is the approved Andrea identity root. Use it to preserve Andrea's exact face, hair, proportions, clothing language, pure-white skin fill, and line weight while changing her pose. Do not copy another asset's stance or layout.
+Input images: Image 1 and Image 2 are the canonical BMH Sticker System style references. Image 3 is the approved Andrea identity root. Use it to preserve Andrea's exact face, hair, proportions, clothing language, pure-white skin fill, and line weight while changing her pose. Image 4 is the checksum-bound contact sheet extracted from the exact mapped Fact Find video; use its lesson-specific setting, props, action, and visual emphasis as the content source without copying a still literally. Do not copy another asset's stance or layout.
 Character direction: ${factFindArtDirection.pose_instruction}
 Lesson/video cue: ${factFindArtDirection.lesson_or_video_cue}.
 Scene/backdrop: perfectly uniform flat golden-yellow field with generous active negative space; a floating sticker composition, never a continuous room or realistic environment
@@ -771,7 +894,7 @@ function buildPrompt(spec) {
   return `Use case: stylized-concept
 Asset type: BMH Institute ${spec.title} lesson master, wide 16:9 artwork designed for one 16:10 lesson card and distinct 16:9 video posters
 Primary request: Create the ${spec.title} lesson illustration. The five-second read must be “${spec.fiveSecondRead}.” Build the visual around ${spec.scene}. Each requested poster anchor must be visually independent and recognizable without labels.
-Input images: Image 1 and Image 2 are the canonical BMH Sticker System style references. Image 3 is the approved ${characterName} identity root. Use it to preserve the exact face, hair, proportions, clothing language, pure-white skin fill, and line weight while changing pose, posture, and placement. Do not copy another asset's stance or layout.
+Input images: Image 1 and Image 2 are the canonical BMH Sticker System style references. Image 3 is the approved ${characterName} identity root. Use it to preserve the exact face, hair, proportions, clothing language, pure-white skin fill, and line weight while changing pose, posture, and placement. Image 4 is the checksum-bound contact sheet extracted from every exact video mapped to this lesson; use its lesson-specific setting, props, action, and visual emphasis as the content source without copying a still literally. Do not copy another asset's stance or layout.
 Character direction: ${artDirection.pose_instruction}
 Lesson/video cue: ${artDirection.lesson_or_video_cue}.
 Scene/backdrop: perfectly uniform flat ${artDirection.background_rgb.join(",") === YELLOW_RGB.join(",") ? "golden-yellow" : "cornflower-blue"} field with generous active negative space; a floating sticker composition, never a continuous room, landscape, or realistic environment
@@ -819,6 +942,20 @@ const inventoryLessons = lessonSpecs.map((spec, index) => {
   assertAsset(lesson.thumbnail_asset_key, cardPath);
   const pilotSlug = spec.pilot ? pilotSlugBySlot[spec.slot] : null;
   const pilotLineage = pilotSlug ? pilotGenerationLineage.records.find((record) => record.slug === pilotSlug) : null;
+  const productionVideoEvidence = videoContactSheetContract.byMasterId.get(`master-${spec.slot}`);
+  const pilotContactSheetInput =
+    usesLockedPilotContract && pilotLineage
+      ? {
+          id: `v${pilotLineageContract.version + 4}-${pilotSlug}-contact-sheet`,
+          role: `${pilotSlug} source-video contact sheet`,
+          ...pilotLineage.contact_sheet_input,
+        }
+      : null;
+  const videoEvidence = pilotLineage?.video_evidence ?? productionVideoEvidence?.video_evidence;
+  const contactSheetInput = pilotContactSheetInput ?? productionVideoEvidence?.contact_sheet_input;
+  if (!videoEvidence?.length || !contactSheetInput) {
+    throw new Error(`master-${spec.slot} lacks required exact source-video evidence`);
+  }
   const artDirection = getArtworkPose(`master-${spec.slot}`);
   if (usesPoseVariationPilotLineage && pilotLineage && (pilotLineage.pose_label !== artDirection.pose_id || pilotLineage.pose_signature !== artDirection.lineage_pose_signature)) {
     throw new Error(`${spec.slot} pilot pose does not match the production pose contract`);
@@ -848,7 +985,7 @@ const inventoryLessons = lessonSpecs.map((spec, index) => {
   const lessonReferenceIds =
     usesLockedPilotContract && pilotSlug
       ? pilotLineageContract.referenceIdsBySlug.get(pilotSlug)
-      : [...new Set([...(spec.references ?? ["style-ref-1", "style-ref-2"]), artDirection.character_id])];
+      : [...new Set([...(spec.references ?? ["style-ref-1", "style-ref-2"]), artDirection.character_id, contactSheetInput.id])];
   const prompt = buildPrompt(spec);
   const plannedGenerationCallId = spec.pilot ? null : `imagegen-lesson-${spec.slot}`;
   const lessonProvenance = buildProvenance(plannedGenerationCallId, spec.pilot ? "promote-existing-pilot-call" : "one-distinct-call");
@@ -867,6 +1004,8 @@ const inventoryLessons = lessonSpecs.map((spec, index) => {
       y_max_percent: 90,
     },
     production_record: createEmptyProductionRecord(),
+    video_evidence: videoEvidence,
+    contact_sheet_input: contactSheetInput,
   };
 
   const posters = videoBlocks.map((block, posterIndex) => {
@@ -876,6 +1015,9 @@ const inventoryLessons = lessonSpecs.map((spec, index) => {
     assertAsset(assetKey, outputPath);
     const isFactFind = assetKey === "poster-video-slot-07-fact-find";
     const posterArtDirection = getArtworkPose(isFactFind ? "master-poster-video-slot-07-fact-find" : master.id);
+    const factFindVideoEvidence = isFactFind
+      ? videoContactSheetContract.byMasterId.get("master-poster-video-slot-07-fact-find")
+      : null;
     const directMaster = isFactFind
       ? {
           id: "master-poster-video-slot-07-fact-find",
@@ -884,7 +1026,9 @@ const inventoryLessons = lessonSpecs.map((spec, index) => {
           ...(usesLockedPilotContract ? { background_rgb: posterArtDirection.background_rgb } : {}),
           art_direction: posterArtDirection,
           expected_aspect_ratio: "16:9",
-          reference_ids: ["style-ref-1", "style-ref-2", posterArtDirection.character_id],
+          reference_ids: ["style-ref-1", "style-ref-2", posterArtDirection.character_id, factFindVideoEvidence.contact_sheet_input.id],
+          video_evidence: factFindVideoEvidence.video_evidence,
+          contact_sheet_input: factFindVideoEvidence.contact_sheet_input,
           prompt: factFindPosterPrompt,
           prompt_sha256: sha256(factFindPosterPrompt),
           provenance: buildProvenance("imagegen-poster-video-slot-07-fact-find", "one-distinct-call"),

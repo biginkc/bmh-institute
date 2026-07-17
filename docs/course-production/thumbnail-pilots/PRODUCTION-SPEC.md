@@ -22,6 +22,13 @@ have drifted. Mutable production state lives separately in
 `production-ledger.json`; rebuilding the plan never erases lineage, reviews,
 approvals, or checksums.
 
+The video-frame-first record is
+`references/production-video-stills/contact-sheets.json`. It deterministically
+binds the 17 post-pilot masters to 25 exact mapped videos and 75 extracted
+frames. Together with the three existing pilot contact sheets, every non-cover
+master has required source-video evidence. The course cover is the sole
+exemption because it represents the full program rather than one mapped video.
+
 | Output class  | Count | Final dimensions |
 | ------------- | ----: | ---------------- |
 | Course cover  |     1 | 1280 x 800       |
@@ -90,6 +97,13 @@ its own fields. Keep the following production record for every call:
 - Flat-master path, dimensions, palette result, and checksum.
 - Visual review status, reviewer, timestamp, and evidence path.
 
+For every non-pilot lesson master and the Fact Find direct master, the fourth
+generation input is the checksum-bound contact sheet extracted at 20, 50, and
+80 percent of every exact mapped video. Use those stills to choose the
+lesson-specific setting, props, action, and emphasis. Keep exactly one approved
+character—Andrea or the recurring seller—and vary posture and placement; do not
+copy the same stance across the set or reproduce a video still literally.
+
 All declared references are repo-relative, tracked, and checksum verified by
 both the builder and QA test before the inventory is accepted. The three pilot
 subject references are portable copies of the exact checksum-locked inputs used
@@ -99,6 +113,11 @@ non-pilot prompts use them for visual language, not subject matter.
 No generated source is approved merely because it exists. The manifest remains
 `missing` until the source, flat master, card, and all mapped posters pass QA and
 receive the required approval.
+
+Orientation is derived from two held cuts, `video-slot-01-welcome` and
+`video-slot-01-mindset`. A changed path or checksum for either cut invalidates
+the Orientation evidence binding and requires a new contact sheet, refreshed
+pilot lineage, and fresh Jarrad review before approval or promotion.
 
 ## BMH Sticker System rules
 

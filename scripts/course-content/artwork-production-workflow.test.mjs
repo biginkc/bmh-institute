@@ -18,6 +18,7 @@ import {
   finalizeArtwork,
   ingestGeneration,
   inspectArtworkFile,
+  isPristinePreapprovalLedger,
   promotePilots,
   readJson,
   reconcileManifestFromLedger,
@@ -255,6 +256,35 @@ test("tracked ledger is the exact fail-closed preapproval contract", async () =>
     manifest,
     ledger: tracked,
   });
+});
+
+test("only a pristine preapproval ledger may be refreshed after inventory evidence changes", () => {
+  const pristine = createInitialLedger(inventory);
+  assert.equal(isPristinePreapprovalLedger(pristine), true);
+  for (const mutate of [
+    (ledger) => {
+      ledger.status = "pilot-approved";
+    },
+    (ledger) => {
+      ledger.pilot_approval.status = "approved";
+    },
+    (ledger) => {
+      ledger.masters[0].lineage.push({ output_sha256: "a".repeat(64) });
+    },
+    (ledger) => {
+      ledger.masters[0].review.status = "approved";
+    },
+    (ledger) => {
+      ledger.assets[0].checksum_sha256 = "a".repeat(64);
+    },
+    (ledger) => {
+      ledger.assets[0].history.push({ checksum_sha256: "a".repeat(64) });
+    },
+  ]) {
+    const candidate = structuredClone(pristine);
+    mutate(candidate);
+    assert.equal(isPristinePreapprovalLedger(candidate), false);
+  }
 });
 
 test("v4 inventory preserves one-person pose variation across every master and derived output", () => {

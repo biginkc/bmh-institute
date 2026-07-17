@@ -11,8 +11,10 @@ The machine-readable source is `scripts/course-content/artwork-pose-contract.mjs
 - Skin fill is pure white in every pose.
 - Face, hair, proportions, clothing language, and line weight stay consistent with the approved identity root.
 - Identity consistency does not mean pose consistency. Posture, viewing angle, gesture, prop, and placement must vary.
+- Andrea and the seller may each appear standing, seated at a desk or table, walking, leaning, or perched when the mapped lesson supports it. Their stance is not a reusable template.
 - Blue and yellow backgrounds are both required across the production set.
 - Lesson content and the exact mapped video title determine the gesture, prop, and supporting stickers.
+- Every non-cover master must include a checksum-bound contact sheet extracted from all exact manifest-mapped source videos before image generation. The contact sheet is a required generation input, not optional inspiration.
 - No independently generated master may reuse another master's full pose signature.
 - No posture category may appear on more than four independently generated masters.
 
@@ -59,6 +61,8 @@ The pilot lineage uses three globally unique labels and signatures:
 | Objection Architecture | `standing-reframe-gesture` | `standing-three-quarter-left-hand-open-right-arm-relaxed` |
 
 V8 rejects the prior identical-pixel Andrea stance lock. It keeps the same approved Andrea identity root while requiring Orientation and Opening the Call to have different pose signatures.
+
+Orientation is bound to both held sources: `video-slot-01-welcome` and `video-slot-01-mindset`. If either source path or SHA-256 changes after Jarrad's cut review, the Orientation video evidence, contact sheet, pilot lineage, and approval candidate must be regenerated and revalidated before the pilot can be approved or promoted.
 
 ## Approval boundary
 

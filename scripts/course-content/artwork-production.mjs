@@ -8,6 +8,7 @@ import {
   deriveMaster,
   finalizeArtwork,
   ingestGeneration,
+  isPristinePreapprovalLedger,
   loadWorkflow,
   promotePilots,
   readJson,
@@ -73,7 +74,10 @@ async function execute(command, options) {
     try {
       const existing = await readJson(ledgerPath);
       if (JSON.stringify(existing) !== JSON.stringify(expected)) {
-        throw new Error("Existing production ledger is not the exact initialized preapproval ledger; refusing to overwrite it");
+        if (!isPristinePreapprovalLedger(existing)) {
+          throw new Error("Existing production ledger contains approval, generation, review, or output state; refusing to overwrite it");
+        }
+        await writeJsonAtomic(ledgerPath, expected, { root: REPO_ROOT });
       }
     } catch (error) {
       if (error?.code !== "ENOENT") throw error;

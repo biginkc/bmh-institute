@@ -18,6 +18,7 @@
     "test:prod:dryrun": "playwright test --config playwright.prod-dryrun.config.ts",
     "test:course-content": "node --test content/course-manifests/*.qa.test.mjs && python3 scripts/course-content/generate-approved-captions.test.py && uv run --with reportlab==4.4.9 --with pypdf==6.8.0 python scripts/course-content/generate-guides.semantic.test.py && uv run --with reportlab==4.4.9 --with pypdf==6.8.0 python scripts/course-content/generate-guides.py --check",
     "test:artwork-production": "node --test scripts/course-content/artwork-production-workflow.test.mjs",
+    "artwork:video-stills": "node scripts/course-content/build-artwork-video-contact-sheets.mjs",
     "artwork:production": "node scripts/course-content/artwork-production.mjs",
     "seed:e2e": "tsx scripts/seed-e2e-test-content.ts",
     "seed:walkthrough": "tsx scripts/seed-walkthrough-onboarding.ts",
