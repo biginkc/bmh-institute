@@ -29,7 +29,7 @@ type InviteRow = {
 
 export function PilotSetupTable({ rows }: { rows: PilotCohortRow[] }) {
   return (
-    <div data-testid="pilot-setup-table-scroll" style={{ width: "100%", overflowX: "auto" }}>
+    <div data-testid="learner-access-table-scroll" style={{ width: "100%", overflowX: "auto" }}>
       <div style={{ minWidth: "52rem" }}>
       <Table
       rowKey="id"

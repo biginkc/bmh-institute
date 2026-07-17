@@ -95,6 +95,7 @@ type Row = {
   submission_text: string | null;
   submission_url: string | null;
   submission_file_path: string | null;
+  assignment_id: string;
   profiles: { email: string; full_name: string } | { email: string; full_name: string }[] | null;
   assignments: { title: string; rubric: unknown; requires_review: boolean } | { title: string; rubric: unknown; requires_review: boolean }[] | null;
   lessons: { title: string } | { title: string }[] | null;
@@ -109,7 +110,7 @@ function SubmissionCard({ row }: { row: Row }) {
     rubric.ok && (!assignment?.requires_review || rubric.items.length > 0);
 
   return (
-    <Card padding="md">
+    <Card padding="md" data-assignment-id={row.assignment_id}>
       <div className="flex items-start justify-between gap-3">
         <div>
           <h2 className="font-[var(--font-display)] text-lg font-bold text-[var(--ink-900)]">

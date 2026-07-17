@@ -267,6 +267,23 @@ Implement the approved concurrent completion plan for the reusable BMH Institute
   builds, and manifest validation. The manifest still reports zero errors, 82
   intentional publication blockers, and the dated DialPad recheck warning.
 
+### 2026-07-16 CI convergence evidence
+
+- CI treats the private canonical held-video directory as optional. When it is
+  unavailable, only the explicit media-only verification is skipped; the held
+  review security, integrity, and local-server tests still run.
+- Learner-facing pilot terminology and the export-route end-to-end selectors
+  now match the current monitoring and export surfaces.
+- The manual lesson-completion bypass is absent. The disposable text lesson is
+  optional, and quiz and assignment completions are earned through learner and
+  admin server operations rather than direct completion inserts.
+- Disposable reviewed-assignment fixtures now include valid rubrics. The three
+  affected local browser suites pass 6 of 6 tests. The full seeded suite passes
+  8 tests; the cross-app Closer Lab case remains environment-gated and skipped
+  in this local run.
+- This is local convergence evidence only. GitHub CI is not recorded as green
+  until the controller confirms the remote checks.
+
 ## Hard gates
 
 - Jarrad must review the six corrected held cuts. The three policy-defective

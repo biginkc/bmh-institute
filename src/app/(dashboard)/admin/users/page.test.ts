@@ -177,7 +177,7 @@ describe("AdminUsersPage (WR-05)", () => {
     const html = renderToStaticMarkup(await AdminUsersPage());
 
     expect(html).toMatch(
-      /data-testid="pilot-setup-table-scroll" style="[^"]*overflow-x:auto/,
+      /data-testid="learner-access-table-scroll" style="[^"]*overflow-x:auto/,
     );
     expect(html).toMatch(
       /data-testid="active-members-table-scroll" style="[^"]*overflow-x:auto/,

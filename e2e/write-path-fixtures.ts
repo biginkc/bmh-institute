@@ -134,7 +134,7 @@ export async function createWritePathFixture(
     title: `${prefix} Content Lesson`,
     description: "Disposable content lesson.",
     lesson_type: "content",
-    is_required_for_completion: true,
+    is_required_for_completion: false,
     sort_order: 10,
   });
   await insertOne(admin, "content_blocks", {
@@ -144,7 +144,7 @@ export async function createWritePathFixture(
       html: `<h2>${prefix} Operating standard</h2><p>Keep notes concise and confirm next steps.</p>`,
     },
     sort_order: 10,
-    is_required_for_completion: true,
+    is_required_for_completion: false,
   });
 
   const quizId = await insertOne(admin, "quizzes", {
@@ -191,7 +191,6 @@ export async function createWritePathFixture(
     lesson_type: "quiz",
     quiz_id: quizId,
     is_required_for_completion: true,
-    prerequisite_lesson_id: contentLessonId,
     sort_order: 20,
   });
 
@@ -200,6 +199,12 @@ export async function createWritePathFixture(
     instructions: "Submit a brief call-note summary.",
     submission_type: "text",
     requires_review: true,
+    rubric: [
+      {
+        criterion: "Clarity",
+        description: "The response is concise and confirms the next action.",
+      },
+    ],
   });
   const textAssignmentLessonId = await insertOne(admin, "lessons", {
     module_id: moduleId,
@@ -217,6 +222,12 @@ export async function createWritePathFixture(
     instructions: "Upload a short call-note file.",
     submission_type: "file_upload",
     requires_review: true,
+    rubric: [
+      {
+        criterion: "Completeness",
+        description: "The uploaded note contains the required evidence.",
+      },
+    ],
   });
   const fileAssignmentLessonId = await insertOne(admin, "lessons", {
     module_id: moduleId,
