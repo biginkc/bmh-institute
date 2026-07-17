@@ -23,14 +23,22 @@ describe("content block completion eligibility", () => {
     expect(
       normalizeRequiredForBlock(
         "video",
-        { source: "upload", file_path: "course/video.mp4" },
+        {
+          source: "upload",
+          file_path: "course/video.mp4",
+          duration_seconds: 90.5,
+        },
         true,
       ),
     ).toBe(true);
     expect(
       normalizeRequiredForBlock(
         "video",
-        { source: "upload", file_path: "course/video.mp4" },
+        {
+          source: "upload",
+          file_path: "course/video.mp4",
+          duration_seconds: 90.5,
+        },
         false,
       ),
     ).toBe(false);
@@ -46,6 +54,13 @@ describe("content block completion eligibility", () => {
   it("keeps incomplete video and role-play configurations optional", () => {
     expect(
       normalizeRequiredForBlock("video", { source: "upload", file_path: "" }, true),
+    ).toBe(false);
+    expect(
+      normalizeRequiredForBlock(
+        "video",
+        { source: "upload", file_path: "course/video.mp4" },
+        true,
+      ),
     ).toBe(false);
     expect(
       normalizeRequiredForBlock("role_play", { scenario_id: "" }, true),

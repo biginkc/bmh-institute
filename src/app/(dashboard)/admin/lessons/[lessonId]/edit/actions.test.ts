@@ -1,6 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-let blockTypeRow: { block_type: string } | null = { block_type: "text" };
+let blockTypeRow: {
+  block_type: string;
+  is_required_for_completion?: boolean;
+} | null = { block_type: "text" };
 let updatePatch: Record<string, unknown> | null = null;
 let updateError: { message: string } | null = null;
 
@@ -263,6 +266,72 @@ describe("updateBlock role_play branch", () => {
 
     expect(result).toEqual({ ok: true });
     expect(updatePatch).toMatchObject({ is_required_for_completion: false });
+  });
+
+  it("allows an uploaded video with authored duration to be required", async () => {
+    blockTypeRow = { block_type: "video" };
+
+    const result = await updateBlock({
+      blockId: "block-1",
+      lessonId: "lesson-1",
+      content: {
+        source: "upload",
+        file_path: "courses/test/video.mp4",
+        duration_seconds: 412.096,
+      },
+      is_required_for_completion: true,
+    });
+
+    expect(result).toEqual({ ok: true });
+    expect(updatePatch).toEqual({
+      content: {
+        source: "upload",
+        file_path: "courses/test/video.mp4",
+        duration_seconds: 412.096,
+      },
+      is_required_for_completion: true,
+    });
+  });
+
+  it("rejects a required uploaded video without authored duration", async () => {
+    blockTypeRow = { block_type: "video" };
+
+    const result = await updateBlock({
+      blockId: "block-1",
+      lessonId: "lesson-1",
+      content: {
+        source: "upload",
+        file_path: "courses/test/video.mp4",
+      },
+      is_required_for_completion: true,
+    });
+
+    expect(result).toEqual({
+      ok: false,
+      error: "Add a valid video duration before requiring completion.",
+    });
+    expect(updatePatch).toBeNull();
+  });
+
+  it("rejects an invalid authored duration even when the video is optional", async () => {
+    blockTypeRow = { block_type: "video" };
+
+    const result = await updateBlock({
+      blockId: "block-1",
+      lessonId: "lesson-1",
+      content: {
+        source: "upload",
+        file_path: "courses/test/video.mp4",
+        duration_seconds: 0,
+      },
+      is_required_for_completion: false,
+    });
+
+    expect(result).toEqual({
+      ok: false,
+      error: "Video duration must be a positive number of seconds.",
+    });
+    expect(updatePatch).toBeNull();
   });
 
   it("rejects an empty scenario id without updating", async () => {

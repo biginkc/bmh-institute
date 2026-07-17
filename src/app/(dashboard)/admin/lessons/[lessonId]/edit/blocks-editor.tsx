@@ -299,6 +299,18 @@ function numberOr(value: unknown, fallback: number): number {
   return typeof value === "number" ? value : fallback;
 }
 
+function positiveNumber(value: string): number | null {
+  if (value.trim() === "") return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+}
+
+function positiveNumberString(value: unknown): string {
+  return typeof value === "number" && Number.isFinite(value) && value > 0
+    ? String(value)
+    : "";
+}
+
 function TextBlockEditor({
   block,
   lessonId,
@@ -499,9 +511,13 @@ function VideoBlockEditor({
   const [posterPath, setPosterPath] = useState(stringOr(block.content.poster_path, ""));
   const [captionPath, setCaptionPath] = useState(stringOr(block.content.caption_path, ""));
   const [transcriptPath, setTranscriptPath] = useState(stringOr(block.content.transcript_path, ""));
+  const [durationSeconds, setDurationSeconds] = useState(() =>
+    positiveNumberString(block.content.duration_seconds),
+  );
   const [required, setRequired] = useState(block.is_required_for_completion);
 
   function onSave(overrides: Record<string, unknown> = {}) {
+    const duration = positiveNumber(durationSeconds);
     save({
       source,
       file_path: source === "upload" ? filePath : "",
@@ -511,6 +527,7 @@ function VideoBlockEditor({
       poster_path: posterPath,
       caption_path: captionPath,
       transcript_path: transcriptPath,
+      ...(duration === null ? {} : { duration_seconds: duration }),
       ...overrides,
     }, source === "upload" ? required : false);
   }
@@ -552,23 +569,45 @@ function VideoBlockEditor({
       )}
 
       {source === "upload" ? (
-        <div className="flex flex-col gap-1.5">
-          <Label>Video file</Label>
-          <FileUpload
-            accept="video/mp4,video/quicktime,video/webm,video/x-m4v"
-            maxMb={2048}
-            currentPath={filePath || null}
-            onUploaded={(f) => {
-              setFilePath(f.file_path);
-              onSave({
-                file_path: f.file_path,
-                filename: f.filename,
-                size_bytes: f.size_bytes,
-                mime_type: f.mime_type,
-              });
-            }}
-            label="Upload video"
-          />
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="flex flex-col gap-1.5">
+            <Label>Video file</Label>
+            <FileUpload
+              accept="video/mp4,video/quicktime,video/webm,video/x-m4v"
+              maxMb={2048}
+              currentPath={filePath || null}
+              onUploaded={(f) => {
+                setFilePath(f.file_path);
+                onSave({
+                  file_path: f.file_path,
+                  filename: f.filename,
+                  size_bytes: f.size_bytes,
+                  mime_type: f.mime_type,
+                });
+              }}
+              label="Upload video"
+            />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor={`duration-${block.id}`}>Video duration (seconds)</Label>
+            <Input
+              id={`duration-${block.id}`}
+              type="number"
+              min="0.001"
+              step="0.001"
+              inputMode="decimal"
+              value={durationSeconds}
+              onChange={(event) => {
+                const nextDuration = event.target.value;
+                setDurationSeconds(nextDuration);
+                if (positiveNumber(nextDuration) === null) setRequired(false);
+              }}
+              placeholder="412.096"
+            />
+            <p className="text-xs font-semibold text-[var(--text-muted)]">
+              Required videos use this authored duration to verify 90% watched.
+            </p>
+          </div>
         </div>
       ) : (
         <div className="flex flex-col gap-1.5">

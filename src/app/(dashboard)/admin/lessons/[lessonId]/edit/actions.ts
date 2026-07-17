@@ -179,12 +179,40 @@ export async function updateBlock(input: {
           ? input.content.height_px
           : 720,
     } as Json;
+  } else if (existing.block_type === "video") {
+    const duration = input.content.duration_seconds;
+    if (
+      duration !== undefined &&
+      (typeof duration !== "number" ||
+        !Number.isFinite(duration) ||
+        duration <= 0)
+    ) {
+      return {
+        ok: false,
+        error: "Video duration must be a positive number of seconds.",
+      };
+    }
   }
 
   const requestedRequired =
     typeof input.is_required_for_completion === "boolean"
       ? input.is_required_for_completion
       : Boolean(existing.is_required_for_completion);
+  if (
+    existing.block_type === "video" &&
+    requestedRequired &&
+    input.content.source === "upload" &&
+    typeof input.content.file_path === "string" &&
+    input.content.file_path.trim().length > 0 &&
+    (typeof input.content.duration_seconds !== "number" ||
+      !Number.isFinite(input.content.duration_seconds) ||
+      input.content.duration_seconds <= 0)
+  ) {
+    return {
+      ok: false,
+      error: "Add a valid video duration before requiring completion.",
+    };
+  }
   const patch: { content: Json; is_required_for_completion: boolean } = {
     content: safeContent,
     is_required_for_completion: normalizeRequiredForBlock(

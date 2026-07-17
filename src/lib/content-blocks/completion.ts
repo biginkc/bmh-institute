@@ -23,6 +23,9 @@ export function normalizeRequiredForBlock(
     row.source === "upload" &&
     typeof row.file_path === "string" &&
     row.file_path.trim().length > 0 &&
+    typeof row.duration_seconds === "number" &&
+    Number.isFinite(row.duration_seconds) &&
+    row.duration_seconds > 0 &&
     requested
   );
 }

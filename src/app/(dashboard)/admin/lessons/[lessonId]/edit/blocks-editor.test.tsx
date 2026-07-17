@@ -18,6 +18,40 @@ vi.mock("./actions", () => ({
   updateBlock: vi.fn(async () => ({ ok: true })),
 }));
 
+vi.mock("@/components/file-upload", () => ({
+  FileUpload: ({
+    accept,
+    label = "Upload file",
+    onUploaded,
+  }: {
+    accept: string;
+    label?: string;
+    onUploaded: (file: {
+      file_path: string;
+      filename: string;
+      size_bytes: number;
+      mime_type: string;
+    }) => void;
+  }) => (
+    <div>
+      <input aria-label={`${label} chooser`} accept={accept} />
+      <button
+        type="button"
+        onClick={() =>
+          onUploaded({
+            file_path: `courses/test/${label.toLowerCase().replaceAll(" ", "-")}`,
+            filename: "asset.bin",
+            size_bytes: 100,
+            mime_type: "application/octet-stream",
+          })
+        }
+      >
+        {label}
+      </button>
+    </div>
+  ),
+}));
+
 const paletteLabels = [
   "Text",
   "Video",
@@ -127,6 +161,7 @@ describe("<BlocksEditor />", () => {
               source: "upload",
               file_path: "courses/test/video.mp4",
               title: "Welcome",
+              duration_seconds: 412.096,
             },
             sort_order: 0,
             is_required_for_completion: true,
@@ -162,7 +197,86 @@ describe("<BlocksEditor />", () => {
       expect(updateBlock).toHaveBeenCalledWith(
         expect.objectContaining({
           blockId: "video-upload",
+          content: expect.objectContaining({ duration_seconds: 412.096 }),
           is_required_for_completion: false,
+        }),
+      ),
+    );
+  });
+
+  it("authors duration before requiring a manually uploaded video", async () => {
+    const user = userEvent.setup();
+    render(
+      <BlocksEditor
+        lessonId="lesson-1"
+        initialBlocks={[
+          {
+            id: "video-manual",
+            block_type: "video",
+            content: {
+              source: "upload",
+              file_path: "courses/test/manual-video.mp4",
+              title: "Manual video",
+            },
+            sort_order: 0,
+            is_required_for_completion: false,
+          },
+        ]}
+      />,
+    );
+
+    await user.type(screen.getByLabelText("Video duration (seconds)"), "125.5");
+    await user.click(
+      screen.getByRole("checkbox", {
+        name: "Required for lesson completion",
+      }),
+    );
+    await user.click(screen.getByRole("button", { name: "Save block" }));
+
+    await waitFor(() =>
+      expect(updateBlock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          blockId: "video-manual",
+          content: expect.objectContaining({ duration_seconds: 125.5 }),
+          is_required_for_completion: true,
+        }),
+      ),
+    );
+  });
+
+  it("preserves imported duration when a support asset upload saves the video", async () => {
+    const user = userEvent.setup();
+    render(
+      <BlocksEditor
+        lessonId="lesson-1"
+        initialBlocks={[
+          {
+            id: "video-imported",
+            block_type: "video",
+            content: {
+              source: "upload",
+              file_path: "courses/import/video.mp4",
+              poster_path: "courses/import/poster.png",
+              duration_seconds: 362.688,
+            },
+            sort_order: 0,
+            is_required_for_completion: true,
+          },
+        ]}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Upload poster" }));
+
+    await waitFor(() =>
+      expect(updateBlock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          blockId: "video-imported",
+          content: expect.objectContaining({
+            duration_seconds: 362.688,
+            poster_path: "courses/test/upload-poster",
+          }),
+          is_required_for_completion: true,
         }),
       ),
     );
