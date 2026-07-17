@@ -18,8 +18,8 @@ import {
 } from "./held-video-approval-ledger.mjs";
 
 const REPO_ROOT = path.resolve(fileURLToPath(new URL("../..", import.meta.url)));
-const ASSET_ROOT = "/Users/jarradhenry/Sites/BMH apps/BMH Institute";
-const SOURCE_ROOT = "/Users/jarradhenry/BMH-OS/BMH Training Course/Thinkific";
+const DEFAULT_VIDEO_SOURCE_ROOT = "/Users/jarradhenry/Sites/BMH apps/BMH Institute";
+const DEFAULT_QUIZ_SOURCE_ROOT = "/Users/jarradhenry/BMH-OS/BMH Training Course/Thinkific";
 const OUTPUT_PATH = path.join(REPO_ROOT, "content/course-manifests/bmh-employee-training.v1.json");
 const ARTWORK_LEDGER_PATH = path.join(
   REPO_ROOT,
@@ -354,7 +354,7 @@ const ROLE_PLAYS = {
   ],
 };
 
-const QUIZ_FILE_NAMES = [
+export const QUIZ_SOURCE_FILE_NAMES = [
   "01 - Welcome & Mindset - quiz.json",
   "02 - Real Estate Terms Glossary - quiz.json",
   "03 - Tech Stack & Systems - quiz.json",
@@ -823,12 +823,36 @@ export function currentReviewedVideoRecord(sourceKey, approvalLedger) {
   return eligible.at(-1) ?? records.at(-1);
 }
 
-async function buildVideoAsset([sourceKey, slot, title, partLabel, defaultLocalPath], approvalLedger) {
+function resolveSourcePath(root, relativePath, label) {
+  const absoluteRoot = path.resolve(root);
+  const candidate = path.resolve(absoluteRoot, relativePath);
+  if (candidate === absoluteRoot || !candidate.startsWith(`${absoluteRoot}${path.sep}`)) {
+    throw new Error(`${label} escapes its configured source root: ${relativePath}`);
+  }
+  return candidate;
+}
+
+function probeVideoDuration(fullPath) {
+  return Number(execFileSync(
+    "ffprobe",
+    ["-v", "error", "-show_entries", "format=duration", "-of", "default=noprint_wrappers=1:nokey=1", fullPath],
+    { encoding: "utf8" },
+  ).trim());
+}
+
+async function buildVideoAsset(
+  [sourceKey, slot, title, partLabel, defaultLocalPath],
+  approvalLedger,
+  { videoSourceRoot, inspectDuration },
+) {
   const reviewRecord = currentReviewedVideoRecord(sourceKey, approvalLedger);
   const localPath = reviewRecord?.candidate_local_path ?? defaultLocalPath;
-  const fullPath = path.join(ASSET_ROOT, localPath);
+  const fullPath = resolveSourcePath(videoSourceRoot, localPath, `${sourceKey} video path`);
   const fileStat = await stat(fullPath);
-  const duration = Number(execFileSync("ffprobe", ["-v", "error", "-show_entries", "format=duration", "-of", "default=noprint_wrappers=1:nokey=1", fullPath], { encoding: "utf8" }).trim());
+  const duration = Number(await inspectDuration(fullPath));
+  if (!Number.isFinite(duration) || duration <= 0) {
+    throw new Error(`${sourceKey} has an invalid video duration`);
+  }
   const checksum = await sha256(fullPath);
   if (reviewRecord && checksum !== reviewRecord.sha256) {
     throw new Error(`${sourceKey} does not match its checksum-keyed approval ledger record`);
@@ -903,11 +927,18 @@ function spreadSelect(candidates, count) {
   return selected;
 }
 
-async function sourceQuestions(slot) {
+async function sourceQuestions(slot, quizSourceRoot) {
   if (slot === 17) return COMPENSATION_QUESTIONS;
   if (slot === 19) return CAREER_GROWTH_QUESTIONS;
-  const fileName = QUIZ_FILE_NAMES[slot - 1];
-  const raw = JSON.parse(await readFile(path.join(SOURCE_ROOT, "_quiz-exports-by-slot", fileName), "utf8"));
+  const fileName = QUIZ_SOURCE_FILE_NAMES[slot - 1];
+  const raw = JSON.parse(await readFile(
+    resolveSourcePath(
+      quizSourceRoot,
+      path.join("_quiz-exports-by-slot", fileName),
+      `slot ${slot} quiz path`,
+    ),
+    "utf8",
+  ));
   const excluded = EXCLUDED_QUESTION_PATTERNS[slot] ?? [];
   const candidates = raw.questions.filter((question) => {
     const searchable = `${question.questionText} ${question.choices.join(" ")}`;
@@ -973,11 +1004,17 @@ export async function buildGuideAsset(lesson) {
 export async function buildManifest({
   artworkLedgerPath = ARTWORK_LEDGER_PATH,
   videoApprovalLedgerPath = VIDEO_APPROVAL_LEDGER_PATH,
+  videoSourceRoot = DEFAULT_VIDEO_SOURCE_ROOT,
+  quizSourceRoot = DEFAULT_QUIZ_SOURCE_ROOT,
+  inspectDuration = probeVideoDuration,
 } = {}) {
   const videoApprovalLedger = JSON.parse(await readFile(videoApprovalLedgerPath, "utf8"));
   const videoAssetsWithMetadata = [];
   for (const video of VIDEO_SOURCES) {
-    videoAssetsWithMetadata.push(await buildVideoAsset(video, videoApprovalLedger));
+    videoAssetsWithMetadata.push(await buildVideoAsset(video, videoApprovalLedger, {
+      videoSourceRoot,
+      inspectDuration,
+    }));
   }
 
   const reviewedVideoAssets = videoAssetsWithMetadata.filter((asset) =>
@@ -994,7 +1031,11 @@ export async function buildManifest({
   const videosBySlot = Map.groupBy(videoAssetsWithMetadata, (asset) => asset._slot);
   const quizQuestionsBySlot = new Map();
   for (const lesson of LESSONS) {
-    quizQuestionsBySlot.set(lesson.slot, (await sourceQuestions(lesson.slot)).map((question, index) => shapeQuestion(lesson.slot, question, index)));
+    quizQuestionsBySlot.set(
+      lesson.slot,
+      (await sourceQuestions(lesson.slot, quizSourceRoot))
+        .map((question, index) => shapeQuestion(lesson.slot, question, index)),
+    );
   }
 
   const videoAssets = videoAssetsWithMetadata.map((assetWithMetadata) => {
@@ -1214,8 +1255,53 @@ export async function buildManifest({
   return validateArtworkManifestTrustBoundary(manifest, artworkLedger);
 }
 
+function manifestBuilderUsage() {
+  return `Usage: node scripts/course-content/build-manifest.mjs [--video-root PATH] [--quiz-root PATH]
+
+Source root precedence:
+  --video-root PATH  > BMH_COURSE_VIDEO_ROOT > ${DEFAULT_VIDEO_SOURCE_ROOT}
+  --quiz-root PATH   > BMH_COURSE_QUIZ_ROOT  > ${DEFAULT_QUIZ_SOURCE_ROOT}`;
+}
+
+export function resolveManifestSourceRoots(argv = [], env = process.env) {
+  const options = new Map();
+  for (let index = 0; index < argv.length; index += 1) {
+    const token = argv[index];
+    const equals = token.match(/^--(video-root|quiz-root)=(.+)$/);
+    if (equals) {
+      options.set(equals[1], equals[2]);
+      continue;
+    }
+    const split = token.match(/^--(video-root|quiz-root)$/);
+    if (split && argv[index + 1] && !argv[index + 1].startsWith("--")) {
+      options.set(split[1], argv[index + 1]);
+      index += 1;
+      continue;
+    }
+    throw new Error(`Unknown or incomplete manifest-builder argument: ${token}\n\n${manifestBuilderUsage()}`);
+  }
+  const videoSourceRoot = options.get("video-root")
+    ?? env.BMH_COURSE_VIDEO_ROOT
+    ?? DEFAULT_VIDEO_SOURCE_ROOT;
+  const quizSourceRoot = options.get("quiz-root")
+    ?? env.BMH_COURSE_QUIZ_ROOT
+    ?? DEFAULT_QUIZ_SOURCE_ROOT;
+  if (typeof videoSourceRoot !== "string" || videoSourceRoot.trim().length === 0) {
+    throw new Error("The configured video source root must be nonempty.");
+  }
+  if (typeof quizSourceRoot !== "string" || quizSourceRoot.trim().length === 0) {
+    throw new Error("The configured quiz source root must be nonempty.");
+  }
+  return {
+    videoSourceRoot: path.resolve(videoSourceRoot),
+    quizSourceRoot: path.resolve(quizSourceRoot),
+  };
+}
+
 async function main() {
-  const manifest = await buildManifest();
+  const manifest = await buildManifest(
+    resolveManifestSourceRoots(process.argv.slice(2), process.env),
+  );
   await mkdir(path.dirname(OUTPUT_PATH), { recursive: true });
   await writeFile(OUTPUT_PATH, `${JSON.stringify(manifest, null, 2).replaceAll("\u2014", "-")}\n`);
   console.log(`Wrote ${OUTPUT_PATH}`);

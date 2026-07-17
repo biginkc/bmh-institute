@@ -1203,6 +1203,23 @@ test("finalization requires complete evidence and timing, then reconciles from f
   await writeRepoFile(root, evidencePath, Buffer.from(ledger.assets.flatMap((asset) => [asset.asset_key, asset.checksum_sha256, asset.pixel_sha256]).join("\n")));
   const badEvidencePath = "evidence/final-bad.txt";
   await writeRepoFile(root, badEvidencePath, Buffer.from("not bound"));
+  const untrustedLedger = structuredClone(ledger);
+  const untrustedManifest = structuredClone(manifest);
+  const untrustedLedgerBefore = structuredClone(untrustedLedger);
+  const untrustedManifestBefore = structuredClone(untrustedManifest);
+  await assert.rejects(
+    finalizeArtwork({
+      root,
+      ledger: untrustedLedger,
+      manifest: untrustedManifest,
+      approvedBy: "Generic Reviewer",
+      approvedAt: "2026-07-16T22:30:00.000Z",
+      evidence: evidencePath,
+    }),
+    /Final approval requires approver Jarrad Henry/,
+  );
+  assert.deepEqual(untrustedLedger, untrustedLedgerBefore, "rejected final approval must not mutate the ledger");
+  assert.deepEqual(untrustedManifest, untrustedManifestBefore, "rejected final approval must not mutate the manifest");
   await assert.rejects(
     finalizeArtwork({
       root,
@@ -1241,6 +1258,18 @@ test("finalization requires complete evidence and timing, then reconciles from f
     true,
   );
   assert.deepEqual(reconcileManifestFromLedger(result.ledger, result.manifest), result.manifest);
+  const finalApproverTamper = structuredClone(result.ledger);
+  finalApproverTamper.final_approval.approved_by = "Generic Reviewer";
+  await assert.rejects(
+    validateLedger({
+      root,
+      inventory,
+      manifest: result.manifest,
+      ledger: finalApproverTamper,
+      inspectFiles: false,
+    }),
+    /Final approval requires approver Jarrad Henry/,
+  );
   const sourceReadyTamper = structuredClone(result.ledger);
   sourceReadyTamper.masters[0].status = "source-ready";
   await assert.rejects(

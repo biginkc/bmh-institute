@@ -1118,6 +1118,12 @@ export async function validateLedger({ root, inventory, manifest, ledger, inspec
   assert(JSON.stringify(ledger.counts) === JSON.stringify(expected.counts), "Locked artwork counts drifted");
   assert(["preapproval", "pilot-approved", "production", "finalized"].includes(ledger.status), "Ledger lifecycle status is invalid");
   if (ledger.status === "finalized") {
+    if (ledger.final_approval?.status === APPROVED) {
+      assert(
+        ledger.final_approval.approved_by === "Jarrad Henry",
+        "Final approval requires approver Jarrad Henry",
+      );
+    }
     assert(
       ledger.masters.every((master) => master.status === "derived"),
       "Finalized ledger requires every artwork master to be derived",
@@ -1471,6 +1477,10 @@ export async function validateLedger({ root, inventory, manifest, ledger, inspec
     assert(ledger.final_approval.status === APPROVED, "Final approval is missing");
     assertIso(ledger.final_approval.approved_at, "final approved_at");
     assertString(ledger.final_approval.approved_by, "final approved_by");
+    assert(
+      ledger.final_approval.approved_by === "Jarrad Henry",
+      "Final approval requires approver Jarrad Henry",
+    );
     assert(SHA256.test(ledger.final_approval.evidence_sha256), "Final evidence checksum invalid");
     assert(new Set(ledger.assets.map((asset) => asset.checksum_sha256)).size === 49, "Final artwork file checksums must be unique");
     assert(new Set(ledger.assets.filter((asset) => asset.kind === "video-poster").map((asset) => asset.pixel_sha256)).size === 29, "Final poster pixels must be unique");
@@ -1955,6 +1965,7 @@ export async function finalizeArtwork({ root, ledger, manifest, approvedBy, appr
   assert(ledger.status !== "finalized", "Artwork ledger is already finalized");
   assert(ledger.pilot_approval.status === APPROVED, "Finalization requires pilot approval");
   assertString(approvedBy, "approved_by");
+  assert(approvedBy === "Jarrad Henry", "Final approval requires approver Jarrad Henry");
   assertIso(approvedAt, "approved_at");
   assertString(evidence, "final approval evidence");
   assert(

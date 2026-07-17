@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { access, copyFile, mkdir, mkdtemp, readFile, realpath, writeFile } from "node:fs/promises";
+import { access, copyFile, mkdir, mkdtemp, readFile, realpath, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { test } from "node:test";
@@ -9,7 +9,15 @@ import { fileURLToPath } from "node:url";
 
 import sharp from "sharp";
 
-import { applyArtworkLedger, buildGuideAsset, buildManifest, loadArtworkLedger, validateArtworkManifestTrustBoundary } from "../../scripts/course-content/build-manifest.mjs";
+import {
+  QUIZ_SOURCE_FILE_NAMES,
+  applyArtworkLedger,
+  buildGuideAsset,
+  buildManifest,
+  loadArtworkLedger,
+  resolveManifestSourceRoots,
+  validateArtworkManifestTrustBoundary,
+} from "../../scripts/course-content/build-manifest.mjs";
 import { validateBmhArtworkReleaseTrust } from "../../scripts/course-content/import-semantic-gate.mjs";
 import { approvePilots, createInitialLedger, deriveMaster, finalizeArtwork, ingestGeneration, promotePilots, reviewMaster } from "../../scripts/course-content/artwork-production-workflow.mjs";
 
@@ -78,6 +86,131 @@ test("the complete preapproval builder reproduces the tracked manifest when cano
   }
   const [tracked, rebuilt] = await Promise.all([readFile(manifestPath, "utf8"), buildManifest()]);
   assert.equal(`${JSON.stringify(rebuilt, null, 2).replaceAll("\u2014", "-")}\n`, tracked);
+});
+
+test("manifest source roots are portable with CLI precedence over environment defaults", () => {
+  const fromEnvironment = resolveManifestSourceRoots([], {
+    BMH_COURSE_VIDEO_ROOT: "/fixture/environment/videos",
+    BMH_COURSE_QUIZ_ROOT: "/fixture/environment/quizzes",
+  });
+  assert.deepEqual(fromEnvironment, {
+    videoSourceRoot: path.resolve("/fixture/environment/videos"),
+    quizSourceRoot: path.resolve("/fixture/environment/quizzes"),
+  });
+
+  const fromCli = resolveManifestSourceRoots(
+    ["--video-root", "/fixture/cli/videos", "--quiz-root=/fixture/cli/quizzes"],
+    {
+      BMH_COURSE_VIDEO_ROOT: "/fixture/environment/videos",
+      BMH_COURSE_QUIZ_ROOT: "/fixture/environment/quizzes",
+    },
+  );
+  assert.deepEqual(fromCli, {
+    videoSourceRoot: path.resolve("/fixture/cli/videos"),
+    quizSourceRoot: path.resolve("/fixture/cli/quizzes"),
+  });
+  assert.throws(
+    () => resolveManifestSourceRoots(["--video-root"], {}),
+    /Unknown or incomplete manifest-builder argument/,
+  );
+});
+
+test("the complete manifest builder is deterministic against portable fixture source roots", async (t) => {
+  const fixtureRoot = await mkdtemp(path.join(tmpdir(), "bmh-manifest-sources-"));
+  t.after(() => rm(fixtureRoot, { recursive: true, force: true }));
+  const videoSourceRoot = path.join(fixtureRoot, "videos");
+  const quizSourceRoot = path.join(fixtureRoot, "quizzes");
+  const fixtureApprovalPath = path.join(fixtureRoot, "held-video-approvals.json");
+  const trackedManifest = JSON.parse(await readFile(manifestPath, "utf8"));
+  const trackedVideos = trackedManifest.assets.filter((asset) => asset.kind === "video");
+  const fixtureVideoBySource = new Map();
+  const durationByPath = new Map();
+
+  for (const [index, video] of trackedVideos.entries()) {
+    const contents = Buffer.from(`deterministic fixture video ${video.source_key}\n`);
+    const target = path.join(videoSourceRoot, video.local_path);
+    await mkdir(path.dirname(target), { recursive: true });
+    await writeFile(target, contents);
+    fixtureVideoBySource.set(video.source_key, {
+      checksum: createHash("sha256").update(contents).digest("hex"),
+      localPath: video.local_path,
+    });
+    durationByPath.set(path.resolve(target), 60 + index / 10);
+  }
+
+  const canonicalApprovalPath = new URL(
+    "../../docs/course-production/held-video-review/approvals.json",
+    import.meta.url,
+  );
+  const approvalLedger = JSON.parse(await readFile(canonicalApprovalPath, "utf8"));
+  const fixtureRecords = approvalLedger.records.map((record) => {
+    if (record.decision === "changes_requested") return record;
+    const fixture = fixtureVideoBySource.get(record.source_key);
+    return {
+      ...record,
+      sha256: fixture.checksum,
+      candidate_local_path: fixture.localPath,
+    };
+  });
+  for (const historical of approvalLedger.records.filter(
+    (record) => record.decision === "changes_requested",
+  )) {
+    const fixture = fixtureVideoBySource.get(historical.source_key);
+    fixtureRecords.push({
+      ...historical,
+      sha256: fixture.checksum,
+      candidate_local_path: fixture.localPath,
+      decision: "pending",
+      approver: null,
+      date: null,
+      notes: null,
+    });
+  }
+  await writeFile(
+    fixtureApprovalPath,
+    `${JSON.stringify({ ...approvalLedger, records: fixtureRecords }, null, 2)}\n`,
+  );
+
+  const quizDirectory = path.join(quizSourceRoot, "_quiz-exports-by-slot");
+  await mkdir(quizDirectory, { recursive: true });
+  for (const [index, fileName] of QUIZ_SOURCE_FILE_NAMES.entries()) {
+    const slot = index + 1;
+    const questions = Array.from({ length: 18 }, (_, questionIndex) => ({
+      questionType: "SA",
+      questionText: `Fixture slot ${slot} question ${questionIndex + 1}`,
+      explanation: `Fixture explanation ${slot}-${questionIndex + 1}`,
+      choices: ["*Correct fixture answer", "Incorrect fixture answer"],
+    }));
+    await writeFile(
+      path.join(quizDirectory, fileName),
+      `${JSON.stringify({ questions }, null, 2)}\n`,
+    );
+  }
+
+  const options = {
+    videoSourceRoot,
+    quizSourceRoot,
+    videoApprovalLedgerPath: fixtureApprovalPath,
+    inspectDuration(fullPath) {
+      const duration = durationByPath.get(path.resolve(fullPath));
+      assert.ok(duration, `fixture duration missing for ${fullPath}`);
+      return duration;
+    },
+  };
+  const first = await buildManifest(options);
+  const second = await buildManifest(options);
+  assert.deepEqual(second, first);
+  for (const video of first.assets.filter((asset) => asset.kind === "video")) {
+    assert.equal(
+      video.checksum_sha256,
+      fixtureVideoBySource.get(video.source_key).checksum,
+      `${video.source_key} did not come from the injected video root`,
+    );
+  }
+  assert.equal(
+    first.program.courses[0].modules[0].lessons[1].quiz.questions[0].question_text,
+    "Fixture slot 1 question 1",
+  );
 });
 
 test("an approved ledger record supplies verified immutable manifest metadata", async (t) => {
