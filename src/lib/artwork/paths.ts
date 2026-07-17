@@ -1,5 +1,12 @@
 export type ArtworkEntityType = "program" | "course" | "lesson";
 
+export type ArtworkProvenance = {
+  contentImportId: string | null;
+  thumbnailAssetKey: string | null;
+  thumbnailApprovedPath: string | null;
+  thumbnailApprovedSha256: string | null;
+};
+
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const IMPORT_ARTWORK_PATTERN = /^(courses\/[a-z0-9][a-z0-9._-]*\/v[0-9]+\/thumbnails\/)([^/]+\.(?:avif|jpe?g|png|webp))$/i;
 const MANUAL_ARTWORK_PATTERN = /^(catalog\/(programs|courses|lessons)\/([0-9a-f-]+)\/thumbnails\/)([^/]+\.(?:avif|jpe?g|png|webp))$/i;
@@ -70,18 +77,31 @@ export function manualArtworkNamespace(entityType: ArtworkEntityType, entityId: 
 export function isAuthorizedArtworkPath(input: {
   entityType: ArtworkEntityType;
   entityId: string;
-  contentImportId: string | null;
   path: unknown;
-}): boolean {
+} & ArtworkProvenance): boolean {
   const parsed = parseArtworkPath(input.path);
   if (!parsed || !UUID_PATTERN.test(input.entityId)) return false;
   if (parsed.ownership.kind === "import") {
-    if (!input.contentImportId) return false;
+    if (
+      !input.contentImportId ||
+      typeof input.path !== "string" ||
+      !input.thumbnailAssetKey ||
+      !SOURCE_KEY_PATTERN.test(input.thumbnailAssetKey) ||
+      !input.thumbnailApprovedSha256 ||
+      !SHA256_PATTERN.test(input.thumbnailApprovedSha256) ||
+      input.thumbnailApprovedPath !== input.path ||
+      !input.path.includes(input.thumbnailApprovedSha256)
+    ) {
+      return false;
+    }
     const prefix = importStoragePrefix(input.contentImportId);
     return prefix !== null && parsed.namespace === importArtworkNamespace(prefix);
   }
   return (
     input.contentImportId === null &&
+    input.thumbnailAssetKey === null &&
+    input.thumbnailApprovedPath === null &&
+    input.thumbnailApprovedSha256 === null &&
     parsed.ownership.entityType === input.entityType &&
     parsed.ownership.entityId === input.entityId.toLowerCase()
   );
@@ -90,12 +110,14 @@ export function isAuthorizedArtworkPath(input: {
 export function validateArtworkChange(input: {
   entityType: ArtworkEntityType;
   entityId: string;
-  contentImportId: string | null;
   currentPath: string | null;
   nextPath: string | null;
-}): string | null {
-  if (input.nextPath === null) return null;
-  if (input.nextPath === input.currentPath) return null;
+} & ArtworkProvenance): string | null {
+  if (input.nextPath === null) {
+    return input.contentImportId === null
+      ? null
+      : "Imported artwork can only be changed through an approved course manifest.";
+  }
 
   const next = parseArtworkPath(input.nextPath);
   if (!next) return "Use an image in an approved artwork thumbnail namespace.";
@@ -104,6 +126,9 @@ export function validateArtworkChange(input: {
       entityType: input.entityType,
       entityId: input.entityId,
       contentImportId: input.contentImportId,
+      thumbnailAssetKey: input.thumbnailAssetKey,
+      thumbnailApprovedPath: input.thumbnailApprovedPath,
+      thumbnailApprovedSha256: input.thumbnailApprovedSha256,
       path: input.nextPath,
     })
       ? null
@@ -114,10 +139,17 @@ export function validateArtworkChange(input: {
     entityType: input.entityType,
     entityId: input.entityId,
     contentImportId: input.contentImportId,
+    thumbnailAssetKey: input.thumbnailAssetKey,
+    thumbnailApprovedPath: input.thumbnailApprovedPath,
+    thumbnailApprovedSha256: input.thumbnailApprovedSha256,
     path: input.nextPath,
   })
     ? null
     : "Imported artwork must stay inside this record's authorized import namespace.";
+}
+
+export function artworkRequestKey(entityType: ArtworkEntityType, entityId: string): string {
+  return `${entityType}:${entityId.toLowerCase()}`;
 }
 
 function extensionOf(filename: string): keyof typeof MIME_BY_EXTENSION {
@@ -131,3 +163,6 @@ function pluralEntityType(value: ArtworkEntityType) {
 function singularEntityType(value: string): ArtworkEntityType {
   return value === "programs" ? "program" : value === "courses" ? "course" : "lesson";
 }
+
+const SOURCE_KEY_PATTERN = /^[a-z0-9][a-z0-9._-]*$/;
+const SHA256_PATTERN = /^[a-f0-9]{64}$/;

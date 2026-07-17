@@ -72,7 +72,7 @@ export async function updateProgram(
   const supabase = await createClient();
   const current = await supabase
     .from("programs")
-    .select("thumbnail_path, content_import_id")
+    .select("thumbnail_path, content_import_id, thumbnail_asset_key, thumbnail_approved_path, thumbnail_approved_sha256")
     .eq("id", programId)
     .maybeSingle();
   if (current.error || !current.data) {
@@ -82,6 +82,9 @@ export async function updateProgram(
     entityType: "program",
     entityId: programId,
     contentImportId: current.data.content_import_id,
+    thumbnailAssetKey: current.data.thumbnail_asset_key,
+    thumbnailApprovedPath: current.data.thumbnail_approved_path,
+    thumbnailApprovedSha256: current.data.thumbnail_approved_sha256,
     currentPath: current.data.thumbnail_path,
     nextPath: parsed.value.thumbnail_path,
   });

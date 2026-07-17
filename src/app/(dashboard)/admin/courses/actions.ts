@@ -71,7 +71,7 @@ export async function updateCourse(
   const supabase = await createClient();
   const current = await supabase
     .from("courses")
-    .select("thumbnail_path, content_import_id")
+    .select("thumbnail_path, content_import_id, thumbnail_asset_key, thumbnail_approved_path, thumbnail_approved_sha256")
     .eq("id", courseId)
     .maybeSingle();
   if (current.error || !current.data) {
@@ -81,6 +81,9 @@ export async function updateCourse(
     entityType: "course",
     entityId: courseId,
     contentImportId: current.data.content_import_id,
+    thumbnailAssetKey: current.data.thumbnail_asset_key,
+    thumbnailApprovedPath: current.data.thumbnail_approved_path,
+    thumbnailApprovedSha256: current.data.thumbnail_approved_sha256,
     currentPath: current.data.thumbnail_path,
     nextPath: parsed.value.thumbnail_path,
   });

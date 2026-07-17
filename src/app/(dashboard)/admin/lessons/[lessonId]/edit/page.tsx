@@ -39,6 +39,9 @@ export default async function EditLessonPage({
       is_required_for_completion,
       thumbnail_path,
       content_import_id,
+      thumbnail_asset_key,
+      thumbnail_approved_path,
+      thumbnail_approved_sha256,
       module_id,
       modules ( id, title, course_id )
     `,

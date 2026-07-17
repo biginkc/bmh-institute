@@ -15,6 +15,12 @@ const ASSET_REFERENCE_FIELDS = [
   "caption_asset_key",
   "transcript_asset_key",
 ];
+const RESOLVED_ASSET_REFERENCE_FIELDS = [
+  ["asset_key", "file_path"],
+  ["poster_asset_key", "poster_path"],
+  ["caption_asset_key", "caption_path"],
+  ["transcript_asset_key", "transcript_path"],
+];
 
 export function buildTechStackCanary(fullManifest) {
   if (fullManifest.import_id !== FULL_IMPORT_ID) {
@@ -67,6 +73,20 @@ export function buildTechStackCanary(fullManifest) {
   const foundAssetKeys = new Set(manifest.assets.map((asset) => asset.source_key));
   const missing = [...requiredAssetKeys].filter((key) => !foundAssetKeys.has(key));
   if (missing.length > 0) throw new Error(`Canary references missing assets: ${missing.join(", ")}`);
+  const assetsByKey = new Map(manifest.assets.map((asset) => [asset.source_key, asset]));
+  for (const courseModule of manifest.program.courses[0].modules) {
+    for (const lesson of courseModule.lessons) {
+      for (const block of lesson.blocks ?? []) {
+        for (const [keyField, pathField] of RESOLVED_ASSET_REFERENCE_FIELDS) {
+          const key = block.content?.[keyField];
+          if (typeof key !== "string" || block.content?.[pathField] === undefined) continue;
+          const asset = assetsByKey.get(key);
+          if (!asset) throw new Error(`Canary block ${block.source_key} references missing asset ${key}.`);
+          block.content[pathField] = asset.storage_path;
+        }
+      }
+    }
+  }
   return manifest;
 }
 

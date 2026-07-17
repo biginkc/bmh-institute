@@ -2,9 +2,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const ASSIGNMENT_ID = "11111111-1111-4111-8111-111111111111";
 const LESSON_ID = "22222222-2222-4222-8222-222222222222";
-let lessonResult: unknown;
-let updateResult: unknown;
-let updatePatch: Record<string, unknown> | null;
+let rpcResult: { data: boolean | null; error: { message: string } | null };
+let rpcArgs: Record<string, unknown> | null;
 
 vi.mock("@/lib/auth/guard", () => ({
   requireAdmin: vi.fn(async () => ({ id: "admin-1" })),
@@ -12,24 +11,9 @@ vi.mock("@/lib/auth/guard", () => ({
 
 vi.mock("@/lib/supabase/server", () => ({
   createClient: vi.fn(async () => ({
-    from: (table: string) => {
-      if (table === "lessons") {
-        return {
-          select: () => ({
-            eq: () => ({ maybeSingle: async () => lessonResult }),
-          }),
-        };
-      }
-      return {
-        update: (patch: Record<string, unknown>) => {
-          updatePatch = patch;
-          return {
-            eq: () => ({
-              select: () => ({ maybeSingle: async () => updateResult }),
-            }),
-          };
-        },
-      };
+    rpc: async (_name: string, args: Record<string, unknown>) => {
+      rpcArgs = args;
+      return rpcResult;
     },
   })),
 }));
@@ -57,20 +41,18 @@ function validInput() {
 
 describe("updateAssignment", () => {
   beforeEach(() => {
-    lessonResult = {
-      data: { lesson_type: "assignment", assignment_id: ASSIGNMENT_ID },
-      error: null,
-    };
-    updateResult = { data: { id: ASSIGNMENT_ID }, error: null };
-    updatePatch = null;
+    rpcResult = { data: true, error: null };
+    rpcArgs = null;
   });
 
   it("proves lesson ownership and persists normalized settings", async () => {
     expect(await updateAssignment(validInput())).toEqual({ ok: true });
-    expect(updatePatch).toMatchObject({
-      title: "Readiness check",
-      instructions: "Describe your setup.",
-      rubric: [
+    expect(rpcArgs).toMatchObject({
+      p_assignment_id: ASSIGNMENT_ID,
+      p_lesson_id: LESSON_ID,
+      p_title: "Readiness check",
+      p_instructions: "Describe your setup.",
+      p_rubric: [
         {
           criterion: "Systems readiness",
           description: "Confirms access to every required system.",
@@ -84,28 +66,28 @@ describe("updateAssignment", () => {
       ok: false,
       error: "The assignment request is malformed.",
     });
-    expect(updatePatch).toBeNull();
+    expect(rpcArgs).toBeNull();
   });
 
   it("rejects a different or non-assignment lesson", async () => {
-    lessonResult = { data: { lesson_type: "content", assignment_id: ASSIGNMENT_ID }, error: null };
+    rpcResult = { data: false, error: null };
     expect(await updateAssignment(validInput())).toEqual({
       ok: false,
       error: "This assignment does not belong to the lesson.",
     });
-    expect(updatePatch).toBeNull();
+    expect(rpcArgs).not.toBeNull();
   });
 
   it("does not report success when the update matched no row", async () => {
-    updateResult = { data: null, error: null };
+    rpcResult = { data: false, error: null };
     expect(await updateAssignment(validInput())).toEqual({
       ok: false,
-      error: "Assignment not found.",
+      error: "This assignment does not belong to the lesson.",
     });
   });
 
   it("returns a stable error instead of leaking database detail", async () => {
-    updateResult = { data: null, error: { message: "sensitive database detail" } };
+    rpcResult = { data: null, error: { message: "sensitive database detail" } };
     expect(await updateAssignment(validInput())).toEqual({
       ok: false,
       error: "Couldn't save the assignment.",

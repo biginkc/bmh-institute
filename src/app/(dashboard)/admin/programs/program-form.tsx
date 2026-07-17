@@ -4,7 +4,7 @@ import { useActionState, useState } from "react";
 
 import { Button, Input } from "@/components/bmh-ds";
 import { FileUpload } from "@/components/file-upload";
-import { importArtworkNamespace, importStoragePrefix, manualArtworkNamespace } from "@/lib/artwork/paths";
+import { manualArtworkNamespace } from "@/lib/artwork/paths";
 import type { FormState } from "./actions";
 
 type Action = (state: FormState, formData: FormData) => Promise<FormState>;
@@ -16,6 +16,9 @@ type Defaults = {
   is_published?: boolean | null;
   thumbnail_path?: string | null;
   content_import_id?: string | null;
+  thumbnail_asset_key?: string | null;
+  thumbnail_approved_path?: string | null;
+  thumbnail_approved_sha256?: string | null;
 };
 
 export function ProgramForm({
@@ -36,14 +39,9 @@ export function ProgramForm({
   const fieldError = (name: string): string | undefined =>
     state && !state.ok ? state.fieldErrors?.[name] : undefined;
   const [thumbnailPath, setThumbnailPath] = useState(defaults?.thumbnail_path ?? "");
-  const importPrefix = defaults?.content_import_id
-    ? importStoragePrefix(defaults.content_import_id)
+  const artworkPrefix = !defaults?.content_import_id && entityId
+    ? manualArtworkNamespace("program", entityId)
     : null;
-  const artworkPrefix = importPrefix
-    ? importArtworkNamespace(importPrefix)
-    : entityId
-      ? manualArtworkNamespace("program", entityId)
-      : null;
 
   return (
     <form action={formAction} className="flex flex-col gap-5">
@@ -78,7 +76,11 @@ export function ProgramForm({
       >
         <input type="hidden" name="thumbnail_path" value={thumbnailPath} />
         <Input id="thumbnail_path_display" value={thumbnailPath} readOnly />
-        {artworkPrefix ? (
+        {defaults?.content_import_id ? (
+          <p className="text-xs font-semibold text-[var(--text-muted)]">
+            Imported artwork is managed through the approved course manifest.
+          </p>
+        ) : artworkPrefix ? (
           <FileUpload
             accept="image/png,image/jpeg,image/webp,image/avif"
             maxMb={20}

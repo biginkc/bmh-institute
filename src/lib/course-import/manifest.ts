@@ -173,6 +173,12 @@ const ASSET_REFERENCE_FIELDS = [
   "caption_asset_key",
   "transcript_asset_key",
 ] as const;
+const RESOLVED_ASSET_REFERENCE_FIELDS = [
+  ["asset_key", "file_path"],
+  ["poster_asset_key", "poster_path"],
+  ["caption_asset_key", "caption_path"],
+  ["transcript_asset_key", "transcript_path"],
+] as const;
 
 export function validateCourseManifest(
   input: unknown,
@@ -219,6 +225,7 @@ export function validateCourseManifest(
   registerKey(manifest.qa_role_group.source_key, "qa_role_group");
   requireNonEmpty(manifest.qa_role_group.name, "qa_role_group.name", errors);
   const assets = new Map<string, CourseImportAsset>();
+  const assetPaths = new Map<string, CourseImportAsset[]>();
   for (const [index, asset] of manifest.assets.entries()) {
     const path = `assets[${index}]`;
     if (!isRecord(asset)) {
@@ -251,9 +258,23 @@ export function validateCourseManifest(
         } else if (!asset.storage_path.includes(asset.checksum_sha256)) {
           errors.push(`${path}.storage_path must include its SHA-256 checksum for immutable release storage.`);
         }
+        if (!Number.isInteger(asset.size_bytes) || Number(asset.size_bytes) < 0) {
+          errors.push(`${path}.size_bytes is required for an approved release asset.`);
+        }
       }
     }
     if (typeof asset.source_key === "string") assets.set(asset.source_key, asset as CourseImportAsset);
+    if (typeof asset.storage_path === "string") {
+      assetPaths.set(asset.storage_path, [
+        ...(assetPaths.get(asset.storage_path) ?? []),
+        asset as CourseImportAsset,
+      ]);
+    }
+  }
+  for (const [storagePath, matches] of assetPaths) {
+    if (matches.length > 1) {
+      errors.push(`Asset storage_path ${storagePath} is used by more than one asset.`);
+    }
   }
 
   const program = manifest.program;
@@ -305,6 +326,7 @@ export function validateCourseManifest(
             lesson,
             `${modulePath}.lessons[${lessonIndex}]`,
             assets,
+            assetPaths,
             artworkNamespace,
             registerKey,
             gate,
@@ -332,6 +354,7 @@ function validateLesson(
   lesson: ImportLesson,
   path: string,
   assets: Map<string, CourseImportAsset>,
+  assetPaths: Map<string, CourseImportAsset[]>,
   artworkNamespace: string,
   registerKey: (value: unknown, path: string) => void,
   gate: "draft" | "release",
@@ -368,6 +391,33 @@ function validateLesson(
           if (gate === "release" && asset && asset.approval_status !== "approved") {
             errors.push(`${blockPath} referenced asset ${value} is not approved.`);
           }
+        }
+      }
+      for (const [keyField, pathField] of RESOLVED_ASSET_REFERENCE_FIELDS) {
+        const rawPath = block.content?.[pathField];
+        if (rawPath === undefined || rawPath === null) continue;
+        if (typeof rawPath !== "string") {
+          errors.push(`${blockPath}.content.${pathField} must be a string.`);
+          continue;
+        }
+        const matches = assetPaths.get(rawPath) ?? [];
+        if (matches.length !== 1) {
+          errors.push(
+            `${blockPath}.content.${pathField} must exactly match one manifest asset.`,
+          );
+          continue;
+        }
+        const asset = matches[0];
+        const key = block.content?.[keyField];
+        if (typeof key === "string" && key !== asset.source_key) {
+          errors.push(
+            `${blockPath}.content.${pathField} does not match ${keyField} ${key}.`,
+          );
+        }
+        if (gate === "release" && !isApprovedImmutableAsset(asset, storagePrefixForImportFromNamespace(artworkNamespace))) {
+          errors.push(
+            `${blockPath}.content.${pathField} must reference an approved immutable asset in this import.`,
+          );
         }
       }
       if (gate === "release" && block.type === "video") {
@@ -420,6 +470,24 @@ function validateLesson(
   } else {
     errors.push(`${path}.type is invalid.`);
   }
+}
+
+function storagePrefixForImportFromNamespace(artworkNamespace: string): string {
+  return artworkNamespace.endsWith("thumbnails/")
+    ? artworkNamespace.slice(0, -"thumbnails/".length)
+    : artworkNamespace;
+}
+
+function isApprovedImmutableAsset(asset: CourseImportAsset, storagePrefix: string): boolean {
+  return (
+    asset.approval_status === "approved" &&
+    typeof asset.checksum_sha256 === "string" &&
+    SHA256_PATTERN.test(asset.checksum_sha256) &&
+    Number.isInteger(asset.size_bytes) &&
+    Number(asset.size_bytes) >= 0 &&
+    asset.storage_path.startsWith(storagePrefix) &&
+    asset.storage_path.includes(asset.checksum_sha256)
+  );
 }
 
 function validateQuiz(

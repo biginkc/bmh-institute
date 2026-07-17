@@ -6,6 +6,11 @@ import type {
   ImportBlock,
   ImportLesson,
 } from "./manifest";
+import {
+  artworkMimeMatchesPath,
+  importArtworkNamespace,
+  importStoragePrefix,
+} from "@/lib/artwork/paths";
 
 export type ImportTable =
   | "role_groups"
@@ -55,6 +60,13 @@ export function buildImportPlan(manifest: CourseImportManifest): ImportPlan {
   const operations: ImportOperation[] = [];
   const id = (key: string) => deterministicImportId(manifest.import_id, key);
   const assets = new Map(manifest.assets.map((asset) => [asset.source_key, asset]));
+  const assetsByPath = new Map<string, CourseImportAsset[]>();
+  for (const asset of manifest.assets) {
+    assetsByPath.set(asset.storage_path, [
+      ...(assetsByPath.get(asset.storage_path) ?? []),
+      asset,
+    ]);
+  }
   const add = (table: ImportTable, sourceKey: string, row: Record<string, unknown>) => {
     const rowId = id(sourceKey);
     operations.push({
@@ -72,11 +84,16 @@ export function buildImportPlan(manifest: CourseImportManifest): ImportPlan {
     description: manifest.qa_role_group.description,
   });
   const program = manifest.program;
+  const programArtwork = resolveThumbnailProvenance(
+    program.thumbnail_asset_key,
+    assets,
+    manifest.import_id,
+  );
   const programId = add("programs", program.source_key, {
     title: program.title,
     description: program.description,
     content_import_id: manifest.import_id,
-    thumbnail_path: resolveThumbnail(program.thumbnail_asset_key, assets),
+    ...programArtwork,
     is_published: false,
     course_order_mode: program.course_order_mode,
     certificate_enabled: program.certificate_enabled,
@@ -90,11 +107,16 @@ export function buildImportPlan(manifest: CourseImportManifest): ImportPlan {
   let assignments = 0;
 
   for (const [courseIndex, course] of program.courses.entries()) {
+    const courseArtwork = resolveThumbnailProvenance(
+      course.thumbnail_asset_key,
+      assets,
+      manifest.import_id,
+    );
     const courseId = add("courses", course.source_key, {
       title: course.title,
       description: course.description,
       content_import_id: manifest.import_id,
-      thumbnail_path: resolveThumbnail(course.thumbnail_asset_key, assets),
+      ...courseArtwork,
       is_published: false,
       certificate_enabled: course.certificate_enabled,
       sort_order: courseIndex,
@@ -119,6 +141,11 @@ export function buildImportPlan(manifest: CourseImportManifest): ImportPlan {
         const backing = addBackingRecord(lesson, add);
         if (lesson.quiz) quizzes += 1;
         if (lesson.assignment) assignments += 1;
+        const lessonArtwork = resolveThumbnailProvenance(
+          lesson.thumbnail_asset_key,
+          assets,
+          manifest.import_id,
+        );
         const lessonId = add("lessons", lesson.source_key, {
           module_id: moduleId,
           title: lesson.title,
@@ -130,7 +157,7 @@ export function buildImportPlan(manifest: CourseImportManifest): ImportPlan {
           prerequisite_lesson_id: previousLessonId,
           is_required_for_completion: lesson.required,
           sort_order: lesson.sort_order,
-          thumbnail_path: resolveThumbnail(lesson.thumbnail_asset_key, assets),
+          ...lessonArtwork,
         });
         previousLessonId = lessonId;
 
@@ -139,7 +166,12 @@ export function buildImportPlan(manifest: CourseImportManifest): ImportPlan {
           add("content_blocks", block.source_key, {
             lesson_id: lessonId,
             block_type: block.type,
-            content: resolveBlockContent(block, assets),
+            content: resolveBlockContent(
+              block,
+              assets,
+              assetsByPath,
+              manifest.import_id,
+            ),
             sort_order: block.sort_order,
             is_required_for_completion: block.required,
           });
@@ -223,11 +255,45 @@ function addBackingRecord(
   return { quizId, assignmentId };
 }
 
-function resolveThumbnail(key: string | null, assets: Map<string, CourseImportAsset>) {
-  return key ? assets.get(key)?.storage_path ?? null : null;
+function resolveThumbnailProvenance(
+  key: string | null,
+  assets: Map<string, CourseImportAsset>,
+  importId: string,
+) {
+  const empty = {
+    thumbnail_path: null,
+    thumbnail_asset_key: null,
+    thumbnail_approved_path: null,
+    thumbnail_approved_sha256: null,
+  };
+  if (!key) return empty;
+  const asset = assets.get(key);
+  const prefix = importStoragePrefix(importId);
+  if (
+    !asset ||
+    !prefix ||
+    asset.approval_status !== "approved" ||
+    !isImmutableApprovedAsset(asset, prefix) ||
+    (asset.kind !== "image" && asset.kind !== "thumbnail") ||
+    !artworkMimeMatchesPath(asset.storage_path, asset.mime_type) ||
+    !asset.storage_path.startsWith(importArtworkNamespace(prefix))
+  ) {
+    return empty;
+  }
+  return {
+    thumbnail_path: asset.storage_path,
+    thumbnail_asset_key: asset.source_key,
+    thumbnail_approved_path: asset.storage_path,
+    thumbnail_approved_sha256: asset.checksum_sha256,
+  };
 }
 
-function resolveBlockContent(block: ImportBlock, assets: Map<string, CourseImportAsset>) {
+function resolveBlockContent(
+  block: ImportBlock,
+  assets: Map<string, CourseImportAsset>,
+  assetsByPath: Map<string, CourseImportAsset[]>,
+  importId: string,
+) {
   const content = { ...block.content };
   const mappings = [
     ["asset_key", "file_path"],
@@ -237,8 +303,50 @@ function resolveBlockContent(block: ImportBlock, assets: Map<string, CourseImpor
   ] as const;
   for (const [keyField, pathField] of mappings) {
     const key = content[keyField];
-    if (typeof key === "string") content[pathField] = assets.get(key)?.storage_path ?? null;
+    const rawPath = content[pathField];
+    if (typeof key === "string") {
+      const asset = assets.get(key);
+      if (typeof rawPath === "string" && rawPath !== asset?.storage_path) {
+        throw new Error(`${block.source_key}.${pathField} does not match ${keyField} ${key}.`);
+      }
+      if (typeof rawPath === "string") {
+        const prefix = importStoragePrefix(importId);
+        if (!asset || !prefix || !isImmutableApprovedAsset(asset, prefix)) {
+          throw new Error(
+            `${block.source_key}.${pathField} must exactly match one approved immutable asset in this import.`,
+          );
+        }
+      }
+      content[pathField] = asset?.storage_path ?? null;
+    } else if (typeof rawPath === "string") {
+      const matches = assetsByPath.get(rawPath) ?? [];
+      const prefix = importStoragePrefix(importId);
+      if (
+        matches.length !== 1 ||
+        !prefix ||
+        !isImmutableApprovedAsset(matches[0], prefix)
+      ) {
+        throw new Error(
+          `${block.source_key}.${pathField} must exactly match one approved immutable asset in this import.`,
+        );
+      }
+      content[pathField] = matches[0].storage_path;
+    } else if (rawPath !== undefined && rawPath !== null) {
+      throw new Error(`${block.source_key}.${pathField} must be a string.`);
+    }
     delete content[keyField];
   }
   return content;
+}
+
+function isImmutableApprovedAsset(asset: CourseImportAsset, prefix: string): boolean {
+  return (
+    asset.approval_status === "approved" &&
+    typeof asset.checksum_sha256 === "string" &&
+    /^[a-f0-9]{64}$/.test(asset.checksum_sha256) &&
+    Number.isInteger(asset.size_bytes) &&
+    Number(asset.size_bytes) >= 0 &&
+    asset.storage_path.startsWith(prefix) &&
+    asset.storage_path.includes(asset.checksum_sha256)
+  );
 }

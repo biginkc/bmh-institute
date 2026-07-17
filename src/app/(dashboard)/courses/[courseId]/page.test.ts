@@ -78,8 +78,8 @@ vi.mock("@/lib/supabase/server", () => ({
 }));
 
 vi.mock("@/lib/content-blocks/sign-urls", () => ({
-  signAuthorizedArtworkPaths: vi.fn(async (requests: Array<{ path: string | null }>) =>
-    new Map(requests.flatMap(({ path }) => path ? [[path, `https://signed.example/${path}`] as const] : [])),
+  signAuthorizedArtworkPaths: vi.fn(async (requests: Array<{ entityType: string; entityId: string; path: string | null }>) =>
+    new Map(requests.flatMap(({ entityType, entityId, path }) => path ? [[`${entityType}:${entityId}`, `https://signed.example/${path}`] as const] : [])),
   ),
 }));
 

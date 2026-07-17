@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { Button, Input } from "@/components/bmh-ds";
 import { FileUpload } from "@/components/file-upload";
 import { Label } from "@/components/ui/label";
-import { importArtworkNamespace, importStoragePrefix, manualArtworkNamespace } from "@/lib/artwork/paths";
+import { manualArtworkNamespace } from "@/lib/artwork/paths";
 
 import { updateLessonDetails } from "./actions";
 
@@ -30,9 +30,8 @@ export function LessonDetailsForm({
   const [required, setRequired] = useState(defaultRequired);
   const [thumbnailPath, setThumbnailPath] = useState(defaultThumbnailPath ?? "");
   const [pending, startTransition] = useTransition();
-  const importPrefix = contentImportId ? importStoragePrefix(contentImportId) : null;
-  const artworkPrefix = importPrefix
-    ? importArtworkNamespace(importPrefix)
+  const artworkPrefix = contentImportId
+    ? null
     : manualArtworkNamespace("lesson", lessonId);
 
   function onSave() {
@@ -88,14 +87,20 @@ export function LessonDetailsForm({
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="lesson-thumbnail-path">Lesson thumbnail path</Label>
         <Input id="lesson-thumbnail-path" value={thumbnailPath} readOnly />
-        <FileUpload
-          accept="image/png,image/jpeg,image/webp,image/avif"
-          maxMb={20}
-          label="Upload lesson thumbnail"
-          currentPath={thumbnailPath || null}
-          pathPrefix={artworkPrefix}
-          onUploaded={(file) => setThumbnailPath(file.file_path)}
-        />
+        {contentImportId ? (
+          <p className="text-xs font-semibold text-[var(--text-muted)]">
+            Imported artwork is managed through the approved course manifest.
+          </p>
+        ) : (
+          <FileUpload
+            accept="image/png,image/jpeg,image/webp,image/avif"
+            maxMb={20}
+            label="Upload lesson thumbnail"
+            currentPath={thumbnailPath || null}
+            pathPrefix={artworkPrefix!}
+            onUploaded={(file) => setThumbnailPath(file.file_path)}
+          />
+        )}
       </div>
 
       <div>

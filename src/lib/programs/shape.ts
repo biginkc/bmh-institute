@@ -4,6 +4,9 @@ export type ProgramSummary = {
   description: string | null;
   thumbnail_path: string | null;
   content_import_id: string | null;
+  thumbnail_asset_key: string | null;
+  thumbnail_approved_path: string | null;
+  thumbnail_approved_sha256: string | null;
   thumbnailUrl?: string;
   course_order_mode: "sequential" | "free";
   is_published: boolean;
@@ -16,6 +19,9 @@ export type CourseSummary = {
   description: string | null;
   thumbnail_path: string | null;
   content_import_id: string | null;
+  thumbnail_asset_key: string | null;
+  thumbnail_approved_path: string | null;
+  thumbnail_approved_sha256: string | null;
   thumbnailUrl?: string;
   is_published: boolean;
 };
@@ -32,13 +38,25 @@ type RawProgramCourse = {
   courses: RawCourseSummary | RawCourseSummary[] | null;
 };
 
-type RawCourseSummary = Omit<CourseSummary, "content_import_id"> & {
+type RawCourseSummary = Omit<
+  CourseSummary,
+  "content_import_id" | "thumbnail_asset_key" | "thumbnail_approved_path" | "thumbnail_approved_sha256"
+> & {
   content_import_id?: string | null;
+  thumbnail_asset_key?: string | null;
+  thumbnail_approved_path?: string | null;
+  thumbnail_approved_sha256?: string | null;
 };
 
-type RawProgram = Omit<ProgramSummary, "course_order_mode" | "content_import_id"> & {
+type RawProgram = Omit<
+  ProgramSummary,
+  "course_order_mode" | "content_import_id" | "thumbnail_asset_key" | "thumbnail_approved_path" | "thumbnail_approved_sha256"
+> & {
   course_order_mode: string;
   content_import_id?: string | null;
+  thumbnail_asset_key?: string | null;
+  thumbnail_approved_path?: string | null;
+  thumbnail_approved_sha256?: string | null;
   program_courses: RawProgramCourse[] | null;
 };
 
@@ -61,7 +79,13 @@ export function shapeProgramsResponse(
         .sort((a, b) => a.sort_order - b.sort_order)
         .map((row) => firstCourse(row.courses))
         .filter((course): course is RawCourseSummary => course !== null)
-        .map((course) => ({ ...course, content_import_id: course.content_import_id ?? null }));
+        .map((course) => ({
+          ...course,
+          content_import_id: course.content_import_id ?? null,
+          thumbnail_asset_key: course.thumbnail_asset_key ?? null,
+          thumbnail_approved_path: course.thumbnail_approved_path ?? null,
+          thumbnail_approved_sha256: course.thumbnail_approved_sha256 ?? null,
+        }));
 
       return {
         id: program.id,
@@ -69,6 +93,9 @@ export function shapeProgramsResponse(
         description: program.description,
         thumbnail_path: program.thumbnail_path,
         content_import_id: program.content_import_id ?? null,
+        thumbnail_asset_key: program.thumbnail_asset_key ?? null,
+        thumbnail_approved_path: program.thumbnail_approved_path ?? null,
+        thumbnail_approved_sha256: program.thumbnail_approved_sha256 ?? null,
         course_order_mode: parseCourseOrderMode(program.course_order_mode),
         is_published: program.is_published,
         sort_order: program.sort_order,

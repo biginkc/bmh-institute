@@ -19,6 +19,7 @@ import {
 } from "@/components/bmh-ds/progress-bar";
 import { createClient } from "@/lib/supabase/server";
 import { signAuthorizedArtworkPaths } from "@/lib/content-blocks/sign-urls";
+import { artworkRequestKey } from "@/lib/artwork/paths";
 import {
   shapeCourseResponse,
   type LessonSummary,
@@ -46,6 +47,9 @@ export default async function CoursePage({
         description,
         thumbnail_path,
         content_import_id,
+        thumbnail_asset_key,
+        thumbnail_approved_path,
+        thumbnail_approved_sha256,
         is_published,
         modules (
           id,
@@ -89,10 +93,13 @@ export default async function CoursePage({
             entityType: "course",
             entityId: course.id,
             contentImportId: course.content_import_id,
+            thumbnailAssetKey: course.thumbnail_asset_key,
+            thumbnailApprovedPath: course.thumbnail_approved_path,
+            thumbnailApprovedSha256: course.thumbnail_approved_sha256,
             path: course.thumbnail_path,
           },
         ])
-      ).get(course.thumbnail_path)
+      ).get(artworkRequestKey("course", course.id))
     : undefined;
 
   const completedLessonIds = new Set(

@@ -11,6 +11,7 @@ import { createClient } from "@/lib/supabase/server";
 import { shapeProgramsResponse } from "@/lib/programs/shape";
 import { summarizeLearnerOnboarding } from "@/lib/learner-onboarding/summary";
 import { signAuthorizedArtworkPaths } from "@/lib/content-blocks/sign-urls";
+import { artworkRequestKey } from "@/lib/artwork/paths";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -28,6 +29,9 @@ export default async function DashboardPage() {
       description,
       thumbnail_path,
       content_import_id,
+      thumbnail_asset_key,
+      thumbnail_approved_path,
+      thumbnail_approved_sha256,
       course_order_mode,
       is_published,
       sort_order,
@@ -39,6 +43,9 @@ export default async function DashboardPage() {
           description,
           thumbnail_path,
           content_import_id,
+          thumbnail_asset_key,
+          thumbnail_approved_path,
+          thumbnail_approved_sha256,
           is_published
         )
       )
@@ -65,6 +72,9 @@ export default async function DashboardPage() {
       isRequiredForCompletion: boolean;
       thumbnailPath: string | null;
       contentImportId: string | null;
+      thumbnailAssetKey: string | null;
+      thumbnailApprovedPath: string | null;
+      thumbnailApprovedSha256: string | null;
       thumbnailUrl?: string;
     }>
   >();
@@ -75,7 +85,7 @@ export default async function DashboardPage() {
       supabase
         .from("modules")
         .select(
-          "course_id, sort_order, lessons(id, title, thumbnail_path, content_import_id, sort_order, is_required_for_completion)",
+          "course_id, sort_order, lessons(id, title, thumbnail_path, content_import_id, thumbnail_asset_key, thumbnail_approved_path, thumbnail_approved_sha256, sort_order, is_required_for_completion)",
         )
         .in("course_id", courseIds),
       supabase
@@ -97,6 +107,9 @@ export default async function DashboardPage() {
         is_required_for_completion: boolean;
         thumbnail_path: string | null;
         content_import_id: string | null;
+        thumbnail_asset_key: string | null;
+        thumbnail_approved_path: string | null;
+        thumbnail_approved_sha256: string | null;
       }>;
       if (!requiredLessonsByCourse.has(courseId)) {
         requiredLessonsByCourse.set(courseId, new Set());
@@ -115,6 +128,9 @@ export default async function DashboardPage() {
             isRequiredForCompletion: true,
             thumbnailPath: lesson.thumbnail_path,
             contentImportId: lesson.content_import_id,
+            thumbnailAssetKey: lesson.thumbnail_asset_key,
+            thumbnailApprovedPath: lesson.thumbnail_approved_path,
+            thumbnailApprovedSha256: lesson.thumbnail_approved_sha256,
           });
           lessonsByCourse.set(courseId, courseLessons);
         }
@@ -140,12 +156,18 @@ export default async function DashboardPage() {
         entityType: "program" as const,
         entityId: program.id,
         contentImportId: program.content_import_id,
+        thumbnailAssetKey: program.thumbnail_asset_key,
+        thumbnailApprovedPath: program.thumbnail_approved_path,
+        thumbnailApprovedSha256: program.thumbnail_approved_sha256,
         path: program.thumbnail_path,
       },
       ...program.courses.map((course) => ({
         entityType: "course" as const,
         entityId: course.id,
         contentImportId: course.content_import_id,
+        thumbnailAssetKey: course.thumbnail_asset_key,
+        thumbnailApprovedPath: course.thumbnail_approved_path,
+        thumbnailApprovedSha256: course.thumbnail_approved_sha256,
         path: course.thumbnail_path,
       })),
     ]),
@@ -153,22 +175,25 @@ export default async function DashboardPage() {
       entityType: "lesson" as const,
       entityId: lesson.id,
       contentImportId: lesson.contentImportId,
+      thumbnailAssetKey: lesson.thumbnailAssetKey,
+      thumbnailApprovedPath: lesson.thumbnailApprovedPath,
+      thumbnailApprovedSha256: lesson.thumbnailApprovedSha256,
       path: lesson.thumbnailPath,
     })),
   ]);
   for (const program of programs) {
     if (program.thumbnail_path) {
-      program.thumbnailUrl = thumbnailSignedByPath.get(program.thumbnail_path);
+      program.thumbnailUrl = thumbnailSignedByPath.get(artworkRequestKey("program", program.id));
     }
     for (const course of program.courses) {
       if (course.thumbnail_path) {
-        course.thumbnailUrl = thumbnailSignedByPath.get(course.thumbnail_path);
+        course.thumbnailUrl = thumbnailSignedByPath.get(artworkRequestKey("course", course.id));
       }
     }
   }
   for (const lessons of lessonsByCourse.values()) {
     for (const lesson of lessons) {
-      if (lesson.thumbnailPath) lesson.thumbnailUrl = thumbnailSignedByPath.get(lesson.thumbnailPath);
+      if (lesson.thumbnailPath) lesson.thumbnailUrl = thumbnailSignedByPath.get(artworkRequestKey("lesson", lesson.id));
     }
   }
 

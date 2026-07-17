@@ -10,6 +10,15 @@ vi.mock("@/lib/supabase/admin", () => ({
 }));
 
 import { enrichBlocksWithSignedUrls, signAuthorizedArtworkPaths } from "./sign-urls";
+import { artworkRequestKey } from "@/lib/artwork/paths";
+
+const SHA = "a".repeat(64);
+const APPROVED_PATH = `courses/bmh/v1/thumbnails/cover-${SHA}.webp`;
+const imported = {
+  thumbnailAssetKey: "thumbnail-course",
+  thumbnailApprovedPath: APPROVED_PATH,
+  thumbnailApprovedSha256: SHA,
+};
 
 describe("enrichBlocksWithSignedUrls", () => {
   beforeEach(() => {
@@ -88,7 +97,7 @@ describe("signAuthorizedArtworkPaths", () => {
   it("signs only provenance-matched image objects with matching MIME", async () => {
     info.mockResolvedValue({ data: { metadata: { mimetype: "image/webp" } }, error: null });
     createSignedUrls.mockResolvedValue({
-      data: [{ path: "courses/bmh/v1/thumbnails/cover.webp", signedUrl: "signed-cover" }],
+      data: [{ path: APPROVED_PATH, signedUrl: "signed-cover" }],
       error: null,
     });
 
@@ -97,18 +106,20 @@ describe("signAuthorizedArtworkPaths", () => {
         entityType: "course",
         entityId: "11111111-1111-4111-8111-111111111111",
         contentImportId: "bmh-v1",
-        path: "courses/bmh/v1/thumbnails/cover.webp",
+        ...imported,
+        path: APPROVED_PATH,
       },
       {
         entityType: "course",
         entityId: "22222222-2222-4222-8222-222222222222",
         contentImportId: "other-v1",
+        ...imported,
         path: "courses/bmh/v1/thumbnails/forged.webp",
       },
     ]);
 
     expect(info).toHaveBeenCalledTimes(1);
-    expect(result.get("courses/bmh/v1/thumbnails/cover.webp")).toBe("signed-cover");
+    expect(result.get(artworkRequestKey("course", "11111111-1111-4111-8111-111111111111"))).toBe("signed-cover");
   });
 
   it("fails closed when the stored MIME is not artwork", async () => {
@@ -118,10 +129,37 @@ describe("signAuthorizedArtworkPaths", () => {
         entityType: "course",
         entityId: "11111111-1111-4111-8111-111111111111",
         contentImportId: "bmh-v1",
-        path: "courses/bmh/v1/thumbnails/cover.webp",
+        ...imported,
+        path: APPROVED_PATH,
       },
     ]);
     expect(createSignedUrls).not.toHaveBeenCalled();
     expect(result.size).toBe(0);
+  });
+
+  it("does not launder one authorized path onto a different entity request", async () => {
+    info.mockResolvedValue({ data: { metadata: { mimetype: "image/webp" } }, error: null });
+    createSignedUrls.mockResolvedValue({
+      data: [{ path: APPROVED_PATH, signedUrl: "signed-cover" }],
+      error: null,
+    });
+    const result = await signAuthorizedArtworkPaths([
+      {
+        entityType: "course",
+        entityId: "11111111-1111-4111-8111-111111111111",
+        contentImportId: "bmh-v1",
+        ...imported,
+        path: APPROVED_PATH,
+      },
+      {
+        entityType: "course",
+        entityId: "22222222-2222-4222-8222-222222222222",
+        contentImportId: "other-v1",
+        ...imported,
+        path: APPROVED_PATH,
+      },
+    ]);
+    expect(result.get(artworkRequestKey("course", "11111111-1111-4111-8111-111111111111"))).toBe("signed-cover");
+    expect(result.has(artworkRequestKey("course", "22222222-2222-4222-8222-222222222222"))).toBe(false);
   });
 });

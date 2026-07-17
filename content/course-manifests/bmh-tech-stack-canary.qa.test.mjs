@@ -32,4 +32,18 @@ test("the canary is an exact isolated Tech Stack content and quiz slice", async 
   for (const asset of canary.assets.filter((item) => item.approval_status === "approved")) {
     assert.ok(asset.storage_path.includes(asset.checksum_sha256));
   }
+  const assetsByKey = new Map(canary.assets.map((asset) => [asset.source_key, asset]));
+  for (const lesson of canary.program.courses[0].modules[0].lessons) {
+    for (const block of lesson.blocks ?? []) {
+      for (const [keyField, pathField] of [
+        ["asset_key", "file_path"],
+        ["poster_asset_key", "poster_path"],
+        ["caption_asset_key", "caption_path"],
+        ["transcript_asset_key", "transcript_path"],
+      ]) {
+        if (block.content?.[pathField] === undefined) continue;
+        assert.equal(block.content[pathField], assetsByKey.get(block.content[keyField])?.storage_path);
+      }
+    }
+  }
 });

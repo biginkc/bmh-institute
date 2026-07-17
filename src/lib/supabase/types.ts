@@ -398,6 +398,9 @@ export type Database = {
           id: string
           is_published: boolean
           sort_order: number
+          thumbnail_approved_path: string | null
+          thumbnail_approved_sha256: string | null
+          thumbnail_asset_key: string | null
           thumbnail_url: string | null
           thumbnail_path: string | null
           title: string
@@ -412,6 +415,9 @@ export type Database = {
           id?: string
           is_published?: boolean
           sort_order?: number
+          thumbnail_approved_path?: string | null
+          thumbnail_approved_sha256?: string | null
+          thumbnail_asset_key?: string | null
           thumbnail_url?: string | null
           thumbnail_path?: string | null
           title: string
@@ -426,6 +432,9 @@ export type Database = {
           id?: string
           is_published?: boolean
           sort_order?: number
+          thumbnail_approved_path?: string | null
+          thumbnail_approved_sha256?: string | null
+          thumbnail_asset_key?: string | null
           thumbnail_url?: string | null
           thumbnail_path?: string | null
           title?: string
@@ -499,6 +508,9 @@ export type Database = {
           prerequisite_quiz_min_score: number | null
           quiz_id: string | null
           sort_order: number
+          thumbnail_approved_path: string | null
+          thumbnail_approved_sha256: string | null
+          thumbnail_asset_key: string | null
           thumbnail_path: string | null
           title: string
           updated_at: string
@@ -516,6 +528,9 @@ export type Database = {
           prerequisite_quiz_min_score?: number | null
           quiz_id?: string | null
           sort_order?: number
+          thumbnail_approved_path?: string | null
+          thumbnail_approved_sha256?: string | null
+          thumbnail_asset_key?: string | null
           thumbnail_path?: string | null
           title: string
           updated_at?: string
@@ -533,6 +548,9 @@ export type Database = {
           prerequisite_quiz_min_score?: number | null
           quiz_id?: string | null
           sort_order?: number
+          thumbnail_approved_path?: string | null
+          thumbnail_approved_sha256?: string | null
+          thumbnail_asset_key?: string | null
           thumbnail_path?: string | null
           title?: string
           updated_at?: string
@@ -761,6 +779,9 @@ export type Database = {
           id: string
           is_published: boolean
           sort_order: number
+          thumbnail_approved_path: string | null
+          thumbnail_approved_sha256: string | null
+          thumbnail_asset_key: string | null
           thumbnail_url: string | null
           thumbnail_path: string | null
           title: string
@@ -776,6 +797,9 @@ export type Database = {
           id?: string
           is_published?: boolean
           sort_order?: number
+          thumbnail_approved_path?: string | null
+          thumbnail_approved_sha256?: string | null
+          thumbnail_asset_key?: string | null
           thumbnail_url?: string | null
           thumbnail_path?: string | null
           title: string
@@ -791,6 +815,9 @@ export type Database = {
           id?: string
           is_published?: boolean
           sort_order?: number
+          thumbnail_approved_path?: string | null
+          thumbnail_approved_sha256?: string | null
+          thumbnail_asset_key?: string | null
           thumbnail_url?: string | null
           thumbnail_path?: string | null
           title?: string
@@ -1334,6 +1361,18 @@ export type Database = {
       fn_set_user_role_groups: {
         Args: { p_role_group_ids: string[]; p_user_id: string }
         Returns: undefined
+      }
+      fn_update_assignment_for_lesson: {
+        Args: {
+          p_assignment_id: string
+          p_instructions: string
+          p_lesson_id: string
+          p_requires_review: boolean
+          p_rubric: Json
+          p_submission_type: string
+          p_title: string
+        }
+        Returns: boolean
       }
       fn_user_has_course_access: {
         Args: { p_course_id: string; p_user_id: string }

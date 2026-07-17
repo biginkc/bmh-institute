@@ -18,36 +18,19 @@ export async function updateAssignment(input: unknown): Promise<ActionResult> {
   try {
     const value = parsed.value;
     const supabase = await createClient();
-    const lessonResult = await supabase
-      .from("lessons")
-      .select("lesson_type, assignment_id")
-      .eq("id", value.lessonId)
-      .maybeSingle();
-    if (lessonResult.error) {
-      return { ok: false, error: "Couldn't verify the assignment lesson." };
-    }
-    if (
-      !lessonResult.data ||
-      lessonResult.data.lesson_type !== "assignment" ||
-      lessonResult.data.assignment_id !== value.assignmentId
-    ) {
+    const updateResult = await supabase.rpc("fn_update_assignment_for_lesson", {
+      p_lesson_id: value.lessonId,
+      p_assignment_id: value.assignmentId,
+      p_title: value.title,
+      p_instructions: value.instructions,
+      p_submission_type: value.submission_type,
+      p_requires_review: value.requires_review,
+      p_rubric: value.rubric,
+    });
+    if (updateResult.error) return { ok: false, error: "Couldn't save the assignment." };
+    if (updateResult.data !== true) {
       return { ok: false, error: "This assignment does not belong to the lesson." };
     }
-
-    const updateResult = await supabase
-      .from("assignments")
-      .update({
-        title: value.title,
-        instructions: value.instructions,
-        submission_type: value.submission_type,
-        requires_review: value.requires_review,
-        rubric: value.rubric,
-      })
-      .eq("id", value.assignmentId)
-      .select("id")
-      .maybeSingle();
-    if (updateResult.error) return { ok: false, error: "Couldn't save the assignment." };
-    if (!updateResult.data) return { ok: false, error: "Assignment not found." };
 
     revalidatePath(`/admin/lessons/${value.lessonId}/edit`);
     revalidatePath(`/lessons/${value.lessonId}`);

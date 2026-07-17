@@ -9,6 +9,20 @@ import {
 } from "./paths";
 
 const COURSE_ID = "11111111-1111-4111-8111-111111111111";
+const SHA = "a".repeat(64);
+const APPROVED_PATH = `courses/training/v1/thumbnails/course-${SHA}.webp`;
+const manualProvenance = {
+  contentImportId: null,
+  thumbnailAssetKey: null,
+  thumbnailApprovedPath: null,
+  thumbnailApprovedSha256: null,
+} as const;
+const importedProvenance = {
+  contentImportId: "training-v1",
+  thumbnailAssetKey: "thumbnail-course",
+  thumbnailApprovedPath: APPROVED_PATH,
+  thumbnailApprovedSha256: SHA,
+} as const;
 
 describe("artwork path authorization", () => {
   it("accepts image artwork in import and record-owned namespaces", () => {
@@ -17,7 +31,7 @@ describe("artwork path authorization", () => {
     );
     const manual = `${manualArtworkNamespace("course", COURSE_ID)}cover.jpg`;
     expect(
-      isAuthorizedArtworkPath({ entityType: "course", entityId: COURSE_ID, contentImportId: null, path: manual }),
+      isAuthorizedArtworkPath({ entityType: "course", entityId: COURSE_ID, ...manualProvenance, path: manual }),
     ).toBe(true);
     expect(artworkMimeMatchesPath(manual, "image/jpeg")).toBe(true);
   });
@@ -35,7 +49,7 @@ describe("artwork path authorization", () => {
     const other = `${manualArtworkNamespace("course", "22222222-2222-4222-8222-222222222222")}cover.webp`;
     expect(artworkMimeMatchesPath(other, "video/mp4")).toBe(false);
     expect(
-      isAuthorizedArtworkPath({ entityType: "course", entityId: COURSE_ID, contentImportId: null, path: other }),
+      isAuthorizedArtworkPath({ entityType: "course", entityId: COURSE_ID, ...manualProvenance, path: other }),
     ).toBe(false);
   });
 
@@ -44,8 +58,8 @@ describe("artwork path authorization", () => {
       validateArtworkChange({
         entityType: "course",
         entityId: COURSE_ID,
-        contentImportId: "training-v1",
-        currentPath: "courses/training/v1/thumbnails/cover.webp",
+        ...importedProvenance,
+        currentPath: APPROVED_PATH,
         nextPath: "courses/other/v1/thumbnails/cover.webp",
       }),
     ).toContain("authorized import namespace");
@@ -56,9 +70,41 @@ describe("artwork path authorization", () => {
       isAuthorizedArtworkPath({
         entityType: "course",
         entityId: COURSE_ID,
-        contentImportId: "training-v1",
+        ...importedProvenance,
         path: "courses/other/v1/thumbnails/cover.webp",
       }),
     ).toBe(false);
+  });
+
+  it("binds imported artwork to the exact approved path for this entity", () => {
+    expect(
+      isAuthorizedArtworkPath({
+        entityType: "course",
+        entityId: COURSE_ID,
+        ...importedProvenance,
+        path: APPROVED_PATH,
+      }),
+    ).toBe(true);
+    expect(
+      isAuthorizedArtworkPath({
+        entityType: "course",
+        entityId: COURSE_ID,
+        ...importedProvenance,
+        path: `courses/training/v1/thumbnails/another-entity-${SHA}.webp`,
+      }),
+    ).toBe(false);
+  });
+
+  it("revalidates an unchanged current path instead of preserving tampering", () => {
+    const forged = "courses/other/v1/thumbnails/forged.webp";
+    expect(
+      validateArtworkChange({
+        entityType: "course",
+        entityId: COURSE_ID,
+        ...importedProvenance,
+        currentPath: forged,
+        nextPath: forged,
+      }),
+    ).toContain("authorized import namespace");
   });
 });

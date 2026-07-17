@@ -1,8 +1,10 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { ContentBlock } from "@/components/content-blocks";
 import {
+  artworkRequestKey,
   artworkMimeMatchesPath,
   isAuthorizedArtworkPath,
+  type ArtworkProvenance,
   type ArtworkEntityType,
 } from "@/lib/artwork/paths";
 
@@ -69,9 +71,8 @@ export async function signContentPaths(paths: string[]): Promise<Map<string, str
 export type ArtworkSignRequest = {
   entityType: ArtworkEntityType;
   entityId: string;
-  contentImportId: string | null;
   path: string | null;
-};
+} & ArtworkProvenance;
 
 /** Signs catalog artwork only when its ownership and stored MIME both match. */
 export async function signAuthorizedArtworkPaths(
@@ -84,13 +85,16 @@ export async function signAuthorizedArtworkPaths(
         entityType: request.entityType,
         entityId: request.entityId,
         contentImportId: request.contentImportId,
+        thumbnailAssetKey: request.thumbnailAssetKey,
+        thumbnailApprovedPath: request.thumbnailApprovedPath,
+        thumbnailApprovedSha256: request.thumbnailApprovedSha256,
         path: request.path,
       }),
   );
   if (authorized.length === 0) return new Map();
 
   const bucket = createAdminClient().storage.from("content");
-  const verifiedPaths: string[] = [];
+  const verifiedRequests: Array<ArtworkSignRequest & { path: string }> = [];
   for (const request of authorized) {
     const { data, error } = await bucket.info(request.path);
     const metadata = data?.metadata as Record<string, unknown> | undefined;
@@ -99,19 +103,26 @@ export async function signAuthorizedArtworkPaths(
       (typeof metadata?.contentType === "string" && metadata.contentType) ||
       null;
     if (!error && mime && artworkMimeMatchesPath(request.path, mime)) {
-      verifiedPaths.push(request.path);
+      verifiedRequests.push(request);
     }
   }
-  if (verifiedPaths.length === 0) return new Map();
+  if (verifiedRequests.length === 0) return new Map();
 
   const { data, error } = await bucket.createSignedUrls(
-    Array.from(new Set(verifiedPaths)),
+    Array.from(new Set(verifiedRequests.map((request) => request.path))),
     SIGNED_URL_TTL_SECONDS,
   );
-  const signedByPath = new Map<string, string>();
-  if (error || !data) return signedByPath;
+  const signedUrlByPath = new Map<string, string>();
+  if (error || !data) return signedUrlByPath;
   for (const row of data) {
-    if (row.path && row.signedUrl) signedByPath.set(row.path, row.signedUrl);
+    if (row.path && row.signedUrl) signedUrlByPath.set(row.path, row.signedUrl);
   }
-  return signedByPath;
+  return new Map(
+    verifiedRequests.flatMap((request) => {
+      const signedUrl = signedUrlByPath.get(request.path);
+      return signedUrl
+        ? [[artworkRequestKey(request.entityType, request.entityId), signedUrl] as const]
+        : [];
+    }),
+  );
 }

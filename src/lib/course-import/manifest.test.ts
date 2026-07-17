@@ -188,6 +188,39 @@ describe("validateCourseManifest", () => {
     );
   });
 
+  it("rejects direct resolved paths that bypass the manifest asset map", () => {
+    const input = validCourseManifest();
+    input.program.courses[0].modules[0].lessons[0].blocks?.push({
+      source_key: "raw-held-guide",
+      type: "download",
+      sort_order: 2,
+      required: false,
+      content: {
+        file_path: "courses/other-private/v1/guides/held.pdf",
+        filename: "held.pdf",
+      },
+    });
+    const result = validateCourseManifest(input, { gate: "release" });
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.errors).toContain(
+      "program.courses[0].modules[0].lessons[0].blocks[2].content.file_path must exactly match one manifest asset.",
+    );
+  });
+
+  it("rejects a resolved path that disagrees with its asset key", () => {
+    const input = validCourseManifest();
+    const block = input.program.courses[0].modules[0].lessons[0].blocks?.[0];
+    if (!block) throw new Error("Fixture video block is missing.");
+    block.content.file_path = input.assets[1].storage_path;
+    const result = validateCourseManifest(input);
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.errors).toContain(
+      "program.courses[0].modules[0].lessons[0].blocks[0].content.file_path does not match asset_key video-1.",
+    );
+  });
+
   it("returns validation errors for malformed and oversized assignment rubrics", () => {
     const malformed = validCourseManifest() as unknown as Record<string, unknown>;
     const assignment = assignmentFrom(malformed);
