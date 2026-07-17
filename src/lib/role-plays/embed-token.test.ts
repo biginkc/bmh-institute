@@ -51,4 +51,44 @@ describe("mintRolePlayEmbedToken", () => {
       ),
     ).toThrow(/32 bytes/);
   });
+
+  it.each([0, -1, 301, 1.5, Number.NaN])(
+    "rejects an invalid embed token lifetime: %s",
+    (ttlSeconds) => {
+      expect(() =>
+        mintRolePlayEmbedToken(
+          {
+            userId: "user-1",
+            lessonId: "lesson-1",
+            blockId: "block-1",
+            learnerName: "Test Learner",
+            scenarioId: "scenario-1",
+            ttlSeconds,
+          },
+          SECRET,
+        ),
+      ).toThrow(/lifetime/i);
+    },
+  );
+
+  it.each([
+    ["oversized learner id", { userId: "x".repeat(257) }],
+    ["oversized learner name", { learnerName: "x".repeat(257) }],
+    ["control character in learner name", { learnerName: "Learner\nInjected" }],
+    ["control character in block id", { blockId: "block\u0000id" }],
+  ])("rejects %s", (_name, mutation) => {
+    expect(() =>
+      mintRolePlayEmbedToken(
+        {
+          userId: "user-1",
+          lessonId: "lesson-1",
+          blockId: "block-1",
+          learnerName: "Test Learner",
+          scenarioId: "scenario-1",
+          ...mutation,
+        },
+        SECRET,
+      ),
+    ).toThrow(/requires user/i);
+  });
 });

@@ -9,6 +9,7 @@ const MIN_SECRET_BYTES = 32;
 const MAX_ID_CHARS = 256;
 const MAX_GOALS = 8;
 const MAX_GOAL_ID_CHARS = 128;
+const MAX_PREVIOUS_KEY_OVERLAP_SECONDS = 15 * 60;
 const MAX_TOKEN_CHARS = 16_384;
 
 type CompletionPayload = {
@@ -145,10 +146,15 @@ export function verifyRolePlayCompletionToken(input: {
     attemptId: string;
   };
   secret?: string;
+  previousSecret?: string;
+  previousSecretValidUntil?: string;
   rolePlayBaseUrl?: string;
   now?: Date;
 }): VerificationSuccess | { ok: false; error: string } {
-  const secret = input.secret ?? process.env.ROLE_PLAY_JWT_SECRET;
+  const secret =
+    input.secret ??
+    (process.env.ROLE_PLAY_COMPLETION_VERIFY_SECRET?.trim() ||
+      process.env.ROLE_PLAY_JWT_SECRET);
   if (!secret || Buffer.byteLength(secret, "utf8") < MIN_SECRET_BYTES) {
     return FAILURE;
   }
@@ -164,19 +170,41 @@ export function verifyRolePlayCompletionToken(input: {
     return FAILURE;
   }
 
-  const expectedSignature = createHmac("sha256", secret)
-    .update(`${parts[0]}.${parts[1]}`)
-    .digest("base64url");
-  const expectedBytes = Buffer.from(expectedSignature);
+  const nowSeconds = Math.floor((input.now ?? new Date()).getTime() / 1000);
+  const previousSecret =
+    input.previousSecret ?? process.env.ROLE_PLAY_COMPLETION_PREVIOUS_SECRET;
+  const previousSecretValidUntil =
+    input.previousSecretValidUntil ??
+    process.env.ROLE_PLAY_COMPLETION_PREVIOUS_SECRET_VALID_UNTIL;
+  const verificationSecrets = [secret];
+  if (previousSecret) {
+    const cutoffMs = Date.parse(previousSecretValidUntil ?? "");
+    if (
+      Buffer.byteLength(previousSecret, "utf8") < MIN_SECRET_BYTES ||
+      !Number.isFinite(cutoffMs) ||
+      Math.floor(cutoffMs / 1000) > nowSeconds + MAX_PREVIOUS_KEY_OVERLAP_SECONDS
+    ) {
+      return FAILURE;
+    }
+    if (nowSeconds <= Math.floor(cutoffMs / 1000)) {
+      verificationSecrets.push(previousSecret);
+    }
+  }
   const actualBytes = Buffer.from(parts[2]);
-  if (
-    expectedBytes.length !== actualBytes.length ||
-    !timingSafeEqual(expectedBytes, actualBytes)
-  ) {
+  const signatureMatches = verificationSecrets.some((verificationSecret) => {
+    const expectedSignature = createHmac("sha256", verificationSecret)
+      .update(`${parts[0]}.${parts[1]}`)
+      .digest("base64url");
+    const expectedBytes = Buffer.from(expectedSignature);
+    return (
+      expectedBytes.length === actualBytes.length &&
+      timingSafeEqual(expectedBytes, actualBytes)
+    );
+  });
+  if (!signatureMatches) {
     return FAILURE;
   }
 
-  const nowSeconds = Math.floor((input.now ?? new Date()).getTime() / 1000);
   if (
     payload.sub !== input.expected.userId ||
     payload.block_id !== input.expected.blockId ||

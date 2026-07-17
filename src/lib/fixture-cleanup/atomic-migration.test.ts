@@ -7,11 +7,16 @@ import { describe, expect, it } from "vitest";
 const root = process.cwd();
 const manifestPath = resolve(root, "docs/course-production/fixture-boundary-manifest.json");
 const migrationPath = resolve(root, "supabase/migrations/021_atomic_fixture_catalog_cleanup.sql");
+const volatilityFixPath = resolve(
+  root,
+  "supabase/migrations/024_fixture_cleanup_canonicalizer_stable.sql",
+);
 const manifestRaw = readFileSync(manifestPath, "utf8");
 const manifest = JSON.parse(manifestRaw) as {
   fixture_tables: Record<string, { fingerprint_fields: string[] }>;
 };
 const migration = readFileSync(migrationPath, "utf8");
+const volatilityFix = readFileSync(volatilityFixPath, "utf8");
 const manifestHash = createHash("sha256").update(manifestRaw).digest("hex");
 
 describe("atomic fixture cleanup migration", () => {
@@ -84,5 +89,13 @@ describe("atomic fixture cleanup migration", () => {
   it("does not delete storage in the database transaction", () => {
     expect(migration).not.toMatch(/delete from storage\./i);
     expect(migration).not.toMatch(/storage\.objects/i);
+  });
+
+  it("corrects the canonicalizer volatility without rewriting the applied cleanup migration", () => {
+    expect(volatilityFix).toContain(
+      "alter function private.fixture_cleanup_canonical_jsonb_v1(jsonb) stable;",
+    );
+    expect(readFileSync(resolve(root, "scripts/fixture-boundary/build-atomic-migration.mjs"), "utf8"))
+      .toMatch(/language plpgsql\s+stable\s+strict/);
   });
 });

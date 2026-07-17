@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import { verifyRolePlayCompletionToken } from "./completion-token";
 
 const SECRET = "a-shared-role-play-secret-that-is-over-32-bytes";
+const NEXT_SECRET = "the-next-completion-proof-secret-over-32-bytes";
 const NOW_SECONDS = 1_700_000_000;
 const ATTEMPT_ID = "dea00001-0000-4000-a000-000000000001";
 const BASE_URL = "https://lab.example.com";
@@ -29,10 +30,11 @@ function validPayload(): Record<string, unknown> {
 function token(
   payload: Record<string, unknown>,
   header: Record<string, unknown> = { alg: "HS256", typ: "JWT" },
+  secret = SECRET,
 ) {
   const encodedHeader = Buffer.from(JSON.stringify(header)).toString("base64url");
   const body = Buffer.from(JSON.stringify(payload)).toString("base64url");
-  const signature = createHmac("sha256", SECRET)
+  const signature = createHmac("sha256", secret)
     .update(`${encodedHeader}.${body}`)
     .digest("base64url");
   return `${encodedHeader}.${body}.${signature}`;
@@ -61,6 +63,108 @@ describe("role-play completion token", () => {
       summaryUrl: `${BASE_URL}/recordings/${ATTEMPT_ID}`,
       goalsMet: { discovery: true, close: false },
     });
+  });
+
+  it("accepts a proof signed by the bounded previous completion key during rotation", () => {
+    const result = verifyRolePlayCompletionToken({
+      token: token(validPayload()),
+      expected: {
+        userId: "user-1",
+        blockId: "block-1",
+        scenarioId: "scenario-1",
+        attemptId: ATTEMPT_ID,
+      },
+      secret: NEXT_SECRET,
+      previousSecret: SECRET,
+      previousSecretValidUntil: new Date((NOW_SECONDS + 60) * 1000).toISOString(),
+      rolePlayBaseUrl: BASE_URL,
+      now: new Date(NOW_SECONDS * 1000),
+    });
+
+    expect(result.ok).toBe(true);
+  });
+
+  it("accepts both old in-flight and new completion proofs during receiver-first rotation", () => {
+    const expected = {
+      userId: "user-1",
+      blockId: "block-1",
+      scenarioId: "scenario-1",
+      attemptId: ATTEMPT_ID,
+    };
+    const options = {
+      expected,
+      secret: NEXT_SECRET,
+      previousSecret: SECRET,
+      previousSecretValidUntil: new Date((NOW_SECONDS + 60) * 1000).toISOString(),
+      rolePlayBaseUrl: BASE_URL,
+      now: new Date(NOW_SECONDS * 1000),
+    };
+
+    expect(verifyRolePlayCompletionToken({
+      ...options,
+      token: token(validPayload(), undefined, SECRET),
+    }).ok).toBe(true);
+    expect(verifyRolePlayCompletionToken({
+      ...options,
+      token: token(validPayload(), undefined, NEXT_SECRET),
+    }).ok).toBe(true);
+  });
+
+  it("rejects the previous completion key after its cutoff", () => {
+    const result = verifyRolePlayCompletionToken({
+      token: token(validPayload()),
+      expected: {
+        userId: "user-1",
+        blockId: "block-1",
+        scenarioId: "scenario-1",
+        attemptId: ATTEMPT_ID,
+      },
+      secret: NEXT_SECRET,
+      previousSecret: SECRET,
+      previousSecretValidUntil: new Date((NOW_SECONDS - 1) * 1000).toISOString(),
+      rolePlayBaseUrl: BASE_URL,
+      now: new Date(NOW_SECONDS * 1000),
+    });
+
+    expect(result.ok).toBe(false);
+  });
+
+  it("fails closed when a previous completion key has no valid cutoff", () => {
+    const result = verifyRolePlayCompletionToken({
+      token: token(validPayload()),
+      expected: {
+        userId: "user-1",
+        blockId: "block-1",
+        scenarioId: "scenario-1",
+        attemptId: ATTEMPT_ID,
+      },
+      secret: NEXT_SECRET,
+      previousSecret: SECRET,
+      previousSecretValidUntil: "not-a-date",
+      rolePlayBaseUrl: BASE_URL,
+      now: new Date(NOW_SECONDS * 1000),
+    });
+
+    expect(result.ok).toBe(false);
+  });
+
+  it("rejects a previous completion key cutoff beyond the 15-minute overlap", () => {
+    const result = verifyRolePlayCompletionToken({
+      token: token(validPayload()),
+      expected: {
+        userId: "user-1",
+        blockId: "block-1",
+        scenarioId: "scenario-1",
+        attemptId: ATTEMPT_ID,
+      },
+      secret: NEXT_SECRET,
+      previousSecret: SECRET,
+      previousSecretValidUntil: new Date((NOW_SECONDS + 901) * 1000).toISOString(),
+      rolePlayBaseUrl: BASE_URL,
+      now: new Date(NOW_SECONDS * 1000),
+    });
+
+    expect(result.ok).toBe(false);
   });
 
   it.each([

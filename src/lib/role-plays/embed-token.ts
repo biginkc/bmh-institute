@@ -3,7 +3,10 @@ import { createHmac } from "node:crypto";
 const ISSUER = "sandra-university";
 export const ROLE_PLAY_EMBED_AUDIENCE = "closer-lab";
 const DEFAULT_TTL_SECONDS = 5 * 60;
+const MAX_TTL_SECONDS = 5 * 60;
 const MIN_SECRET_BYTES = 32;
+const MAX_ID_CHARS = 256;
+const MAX_LEARNER_NAME_CHARS = 256;
 
 export type RolePlayEmbedTokenInput = {
   userId: string;
@@ -29,13 +32,18 @@ export type RolePlayEmbedTokenPayload = {
 
 export function mintRolePlayEmbedToken(
   input: RolePlayEmbedTokenInput,
-  secret = process.env.ROLE_PLAY_JWT_SECRET,
+  secret =
+    process.env.ROLE_PLAY_EMBED_SIGNING_SECRET?.trim() ||
+    process.env.ROLE_PLAY_JWT_SECRET,
 ): string {
   assertTokenInput(input);
   assertSecret(secret);
 
   const nowSeconds = Math.floor((input.now ?? new Date()).getTime() / 1000);
   const ttlSeconds = input.ttlSeconds ?? DEFAULT_TTL_SECONDS;
+  if (!Number.isInteger(ttlSeconds) || ttlSeconds < 1 || ttlSeconds > MAX_TTL_SECONDS) {
+    throw new Error("Role play embed token lifetime must be an integer from 1 to 300 seconds.");
+  }
   const payload: RolePlayEmbedTokenPayload = {
     iss: ISSUER,
     aud: ROLE_PLAY_EMBED_AUDIENCE,
@@ -58,21 +66,32 @@ export function mintRolePlayEmbedToken(
 }
 
 function assertTokenInput(input: RolePlayEmbedTokenInput) {
-  const required = [
+  const ids = [
     input.userId,
     input.lessonId,
     input.blockId,
-    input.learnerName,
     input.scenarioId,
   ];
-  if (required.some((value) => !value.trim())) {
+  if (
+    ids.some(
+      (value) =>
+        !value.trim() ||
+        value.length > MAX_ID_CHARS ||
+        /[\u0000-\u001f\u007f]/.test(value),
+    ) ||
+    !input.learnerName.trim() ||
+    input.learnerName.length > MAX_LEARNER_NAME_CHARS ||
+    /[\u0000-\u001f\u007f]/.test(input.learnerName)
+  ) {
     throw new Error("Role play embed token requires user, lesson, block, learner, and scenario.");
   }
 }
 
 function assertSecret(secret: string | undefined): asserts secret is string {
   if (!secret || Buffer.byteLength(secret, "utf8") < MIN_SECRET_BYTES) {
-    throw new Error("ROLE_PLAY_JWT_SECRET must be at least 32 bytes.");
+    throw new Error(
+      "ROLE_PLAY_EMBED_SIGNING_SECRET (or legacy ROLE_PLAY_JWT_SECRET) must be at least 32 bytes.",
+    );
   }
 }
 

@@ -144,7 +144,7 @@ ${retainedValues.join(",\n")};
 create or replace function private.fixture_cleanup_canonical_jsonb_v1(p_value jsonb)
 returns text
 language plpgsql
-immutable
+stable
 strict
 set search_path = pg_catalog
 as $$
