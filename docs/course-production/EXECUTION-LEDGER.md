@@ -284,6 +284,54 @@ Implement the approved concurrent completion plan for the reusable BMH Institute
 - GitHub checks for commit `87d569c` passed: Verify in 2m 6s, Seeded Playwright
   E2E in 2m 14s, test-project migrations in 11s, and the Vercel preview.
 
+### 2026-07-16 post-review recovery and cross-app hardening
+
+- A second import/media review reproduced four recovery defects that the first
+  restartability pass had missed: same-asset TUS entries could collide within
+  one second, inspecting one Supabase endpoint could erase another endpoint's
+  resume entry, a Storage outage could prevent database rollback, and
+  `--state-root` was not reaching upload state. Resume entries now have unique
+  keys, unrelated endpoint state is preserved, database settlement is receipted
+  before independent storage inspection, and the CLI uses the requested state
+  root for both upload and rollback state.
+- The combined import regression suite passes 113 tests. Controller verification
+  passes 555 unit tests, 109 RTL component tests, typecheck, lint, the production
+  build, 47 course-production tests, three caption tests, two semantic guide
+  tests, and the deterministic rebuild of all 19 accessible guides. A canary
+  rollback with a custom state root produces the expected dry-run plan without
+  touching a provider, database, or storage.
+- The complete manifest still validates with zero structural errors and exactly
+  one program, one course, six modules, 44 total lessons, 111 blocks, 19
+  randomized quizzes, 342 questions, six assignments, and 155 assets. Its
+  learner-content summary remains 19 grouped lessons, 29 videos, 152 flashcards,
+  six Closer Lab scenarios, 19 guides, and 29 distinct posters. Publication
+  blockers remain intentional approval or production-mapping gates.
+- Closer Lab now uses directional current/previous secrets, rejects malformed or
+  overlong learner claims, binds completion to the exact admitted token and
+  unexpired 45-minute attempt capability, and preserves long-running legacy
+  attempts without permitting new missing-audience admissions after cutoff. The
+  legacy audience cutoff itself fails closed when configured more than 60
+  minutes ahead. Independent review could not forge, renew, or extend this path.
+- Closer Lab verification passes 595 unit tests with three provider-gated skips,
+  276 RTL component tests, typecheck, and the production build. Its production
+  dependency audit has no high or critical advisory; one low and two moderate
+  transitive advisories remain.
+- The earlier red Closer Lab Playwright run overlapped another run against the
+  same persistent test project and shared test user. The competing run changed
+  the profile from owner to member while the failing run exercised admin pages;
+  screenshots, timestamps, the RLS denial, and a clean non-overlapping rerun
+  confirm the collision. The E2E workflow now serializes all branches through a
+  constant repository-wide concurrency group and never cancels the active
+  cleanup path.
+- Final changed-surface Fallow audits report no circular dependency or new
+  proven release defect. Their remaining dead-code, dependency, duplication,
+  and complexity leads stay in the acceptance-gated cleanup inventory; fixture
+  and compatibility removal still waits for the real manifest to prove its
+  references.
+- No production migration, provider call, upload, import, storage deletion,
+  employee access change, publication, billing change, or shared-data cleanup
+  occurred during this convergence pass.
+
 ## Hard gates
 
 - Jarrad must review the six corrected held cuts. The three policy-defective
