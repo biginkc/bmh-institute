@@ -46,7 +46,7 @@
     "render_allowed": false,
     "generate_button_allowed_for_codex": false,
     "required_approval": "Jarrad Henry",
-    "provider_call_executor_after_approval": "Codex parent agent only",
+    "provider_call_executor_after_approval": "Codex controller only",
     "final_generate_button_actor": "Jarrad Henry"
   },
   "provider_preparation": {
@@ -171,7 +171,8 @@
       {
         "character": {
           "type": "talking_photo",
-          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+          "talking_photo_id": "7c00b3e0ad8b4a6a97115243aff056bb",
+          "use_avatar_iv_model": true
         },
         "voice": {
           "type": "text",
@@ -186,7 +187,8 @@
       {
         "character": {
           "type": "talking_photo",
-          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+          "talking_photo_id": "7c00b3e0ad8b4a6a97115243aff056bb",
+          "use_avatar_iv_model": true
         },
         "voice": {
           "type": "text",
@@ -201,7 +203,8 @@
       {
         "character": {
           "type": "talking_photo",
-          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+          "talking_photo_id": "7c00b3e0ad8b4a6a97115243aff056bb",
+          "use_avatar_iv_model": true
         },
         "voice": {
           "type": "text",
@@ -216,7 +219,8 @@
       {
         "character": {
           "type": "talking_photo",
-          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+          "talking_photo_id": "7c00b3e0ad8b4a6a97115243aff056bb",
+          "use_avatar_iv_model": true
         },
         "voice": {
           "type": "text",
@@ -231,7 +235,8 @@
       {
         "character": {
           "type": "talking_photo",
-          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+          "talking_photo_id": "7c00b3e0ad8b4a6a97115243aff056bb",
+          "use_avatar_iv_model": true
         },
         "voice": {
           "type": "text",
@@ -246,7 +251,8 @@
       {
         "character": {
           "type": "talking_photo",
-          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+          "talking_photo_id": "7c00b3e0ad8b4a6a97115243aff056bb",
+          "use_avatar_iv_model": true
         },
         "voice": {
           "type": "text",
@@ -261,7 +267,8 @@
       {
         "character": {
           "type": "talking_photo",
-          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+          "talking_photo_id": "7c00b3e0ad8b4a6a97115243aff056bb",
+          "use_avatar_iv_model": true
         },
         "voice": {
           "type": "text",
@@ -276,7 +283,8 @@
       {
         "character": {
           "type": "talking_photo",
-          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+          "talking_photo_id": "7c00b3e0ad8b4a6a97115243aff056bb",
+          "use_avatar_iv_model": true
         },
         "voice": {
           "type": "text",
@@ -291,7 +299,8 @@
       {
         "character": {
           "type": "talking_photo",
-          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+          "talking_photo_id": "7c00b3e0ad8b4a6a97115243aff056bb",
+          "use_avatar_iv_model": true
         },
         "voice": {
           "type": "text",
@@ -306,7 +315,8 @@
       {
         "character": {
           "type": "talking_photo",
-          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+          "talking_photo_id": "7c00b3e0ad8b4a6a97115243aff056bb",
+          "use_avatar_iv_model": true
         },
         "voice": {
           "type": "text",
@@ -321,7 +331,8 @@
       {
         "character": {
           "type": "talking_photo",
-          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+          "talking_photo_id": "7c00b3e0ad8b4a6a97115243aff056bb",
+          "use_avatar_iv_model": true
         },
         "voice": {
           "type": "text",

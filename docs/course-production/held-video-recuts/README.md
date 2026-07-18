@@ -13,6 +13,17 @@ spoken moment in the held cut.
 
 Generated reviewer artifacts live under `generated/`:
 
+- one consolidated `held-video-script-review.md` surface and its exact
+  checksum-bound `held-video-script-review-request.v1.json`
+- the validated manual setup ledger under
+  `approvals/held-video-studio-draft-setup.v1.json`, which preserves all seven
+  exact Studio draft IDs and links as setup evidence. Script approval is still
+  pending: no approval response artifact exists, and setup evidence does not
+  authorize manual setup, generation, release, captions, or a status change.
+  The canonical browser rollout proves only that 128 of 128 scene selections
+  displayed the labels `Doodle Andrea cafe (course)`, `Hope`, and `Avatar IV`.
+  It does not prove exact provider IDs, Auto-enhance, pause values, voice speed,
+  or any other Studio setting.
 - seven `*-script.txt` files and seven edit specifications
 - seven deterministic `*-script.docx` team-reference copies plus
   `team-reference-docx.json`, which locks their paths, sizes, and checksums
@@ -39,9 +50,13 @@ requiring provider preparation in Studio and forbids collapsing the scenes to
 bypass the gaps. The clean import and sidecar support manual Studio preparation;
 neither is a one-shot executable API request.
 
-The seven spoken scripts passed the BMH `humanizer` review on 2026-07-18. The
-offline draft artifacts lock the existing Sandra/Andrea avatar, Hope voice,
-Drafts folder, scene order, and 1920x1080 canvas. They deliberately keep
+The seven spoken scripts passed the BMH `humanizer` review on 2026-07-18. In
+the offline configuration contract, `b2cd05454d284058ad8d7303545821e6`
+identifies the `Doodle Andrea` avatar group, while
+`7c00b3e0ad8b4a6a97115243aff056bb` identifies the selected `cafe (course)`
+generation look. Those IDs come from the offline contract, not from the
+visible-label browser audit. The offline draft artifacts also lock the Hope
+voice, Drafts folder, scene order, and 1920x1080 canvas. They deliberately keep
 `provider_call_allowed`, `render_allowed`, and Codex's Generate permission
 false. Building or validating these JSON files does not contact HeyGen.
 

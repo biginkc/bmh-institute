@@ -6,12 +6,16 @@ import { fileURLToPath } from "node:url";
 import { inflateRawSync } from "node:zlib";
 
 import {
+  HELD_VIDEO_SCRIPT_REVIEW_PATHS,
+  HELD_VIDEO_SCRIPT_REVIEW_QUESTION,
   HEYGEN_DRAFT_CONTRACT,
   HEYGEN_MAX_VIDEO_INPUTS,
   LEARNER_THINK_GAP_SECONDS,
   STUDIO_IMPORT_MAX_CHARS,
   assertCleanStudioNarrationLine,
+  buildHeldVideoScriptReviewArtifacts,
   generatedRecutPaths,
+  heldVideoScriptReviewBindingPayload,
   humanizerNegativeParallelismViolations,
   loadRecutPackages,
   providerSceneSequence,
@@ -22,6 +26,7 @@ import {
   renderStudioImportText,
   sceneDeliverySegments,
   spokenDeliveryText,
+  validateHeldVideoScriptReviewResponse,
 } from "../../scripts/course-content/build-held-video-recut-docs.mjs";
 import {
   validateRecutPackage,
@@ -35,6 +40,10 @@ import {
   validateHeldVideoApprovalTransition,
 } from "../../scripts/course-content/held-video-approval-ledger.mjs";
 import { validateLocalPolicyCandidates } from "../../scripts/course-content/held-video-local-policy-candidates.mjs";
+import {
+  HELD_VIDEO_STUDIO_SETUP_PATH,
+  validateHeldVideoStudioSetup,
+} from "../../scripts/course-content/held-video-studio-setup.mjs";
 import { currentReviewedVideoRecord } from "../../scripts/course-content/build-manifest.mjs";
 
 const manifestPromise = readFile(
@@ -133,6 +142,10 @@ test("all seven policy recuts preserve source, objective, transition, and produc
     approvalRecords: 11,
     pendingApprovalRecords: 0,
     recutPackages: 7,
+    scriptReviewStatus: "pending-human-script-and-scene-approval",
+    studioSettingsVerificationAuthorized: false,
+    releaseQaStatus: "pending-script-approval",
+    heldVideoReleaseReady: false,
     errors: [],
   });
 });
@@ -747,7 +760,7 @@ test("offline HeyGen draft packages are exact, humanized, and provider-gated", a
       render_allowed: false,
       generate_button_allowed_for_codex: false,
       required_approval: "Jarrad Henry",
-      provider_call_executor_after_approval: "Codex parent agent only",
+      provider_call_executor_after_approval: "Codex controller only",
       final_generate_button_actor: "Jarrad Henry",
     });
     assert.equal(artifact.api_endpoint, HEYGEN_DRAFT_CONTRACT.apiEndpoint);
@@ -790,8 +803,9 @@ test("offline HeyGen draft packages are exact, humanized, and provider-gated", a
     for (const input of artifact.request_body.video_inputs) {
       assert.equal(
         input.character.talking_photo_id,
-        HEYGEN_DRAFT_CONTRACT.avatarId,
+        HEYGEN_DRAFT_CONTRACT.avatarLookId,
       );
+      assert.equal(input.character.use_avatar_iv_model, true);
       assert.equal(input.voice.type, "text");
       assert.equal(input.voice.voice_id, HEYGEN_DRAFT_CONTRACT.voiceId);
       assert.ok(input.voice.input_text.trim().length > 0);
@@ -804,6 +818,299 @@ test("offline HeyGen draft packages are exact, humanized, and provider-gated", a
     }
     assert.doesNotMatch(expected, /api[_-]?key|authorization|secret|token/i);
   }
+});
+
+test("one checksum-bound review surface covers all seven scripts and scene plans without authorizing generation", async () => {
+  const packages = await loadRecutPackages();
+  const expected = await buildHeldVideoScriptReviewArtifacts(packages);
+  const [requestText, surface] = await Promise.all([
+    readFile(HELD_VIDEO_SCRIPT_REVIEW_PATHS.request, "utf8"),
+    readFile(HELD_VIDEO_SCRIPT_REVIEW_PATHS.surface, "utf8"),
+  ]);
+  assert.equal(requestText, expected.request);
+  assert.equal(surface, expected.surface);
+
+  const request = JSON.parse(requestText);
+  assert.equal(
+    request.schema_version,
+    "bmh-held-video-script-review-request/v1",
+  );
+  assert.equal(request.status, "pending-human-script-and-scene-approval");
+  assert.equal(request.question, HELD_VIDEO_SCRIPT_REVIEW_QUESTION);
+  assert.equal(request.scope.replacement_video_count, 7);
+  assert.deepEqual(request.scope.source_keys, packages.map((pkg) =>
+    pkg.source.source_key
+  ));
+  assert.match(request.scope.bindings_sha256, /^[a-f0-9]{64}$/);
+  assert.equal(request.records.length, 7);
+  assert.equal(
+    request.approval_effect.exact_rendered_cut_review_required_after_generation,
+    true,
+  );
+  assert.ok(request.approval_effect.does_not_authorize.includes("Codex clicking Generate"));
+  assert.ok(request.approval_effect.does_not_authorize.includes("any HeyGen or provider API call"));
+  assert.ok(request.approval_effect.does_not_authorize.includes("POST https://api.heygen.com/v2/video/generate"));
+  assert.equal(request.response_contract.literal_response_required, true);
+  assert.equal(
+    request.response_contract.complete_request_sha256_binding_required,
+    true,
+  );
+  assert.equal(
+    request.response_contract.external_action_allowed_before_valid_response,
+    false,
+  );
+  assert.equal(
+    sha256(Buffer.from(JSON.stringify(heldVideoScriptReviewBindingPayload(request)))),
+    request.scope.bindings_sha256,
+  );
+  for (const [index, record] of request.records.entries()) {
+    const pkg = packages[index];
+    assert.equal(record.source_key, pkg.source.source_key);
+    assert.equal(record.held_source_sha256, pkg.source.held_sha256);
+    assert.match(record.package_sha256, /^[a-f0-9]{64}$/);
+    assert.match(record.script_sha256, /^[a-f0-9]{64}$/);
+    assert.match(record.edit_spec_sha256, /^[a-f0-9]{64}$/);
+    assert.deepEqual(record.production_constraints, {
+      provider_call_allowed: false,
+      render_allowed: false,
+      caption_generation_allowed: false,
+      approval_status_change_allowed: false,
+      generate_button_allowed_for_codex: false,
+    });
+    assert.match(surface, new RegExp(record.source_key));
+    assert.match(surface, new RegExp(record.package_sha256));
+    assert.match(surface, new RegExp(record.script_sha256));
+    assert.match(
+      surface,
+      new RegExp(`${record.replacement_scene_count} / ${record.provider_scene_count}`),
+    );
+    for (const scene of pkg.scenes) assert.match(surface, new RegExp(scene.scene_id));
+  }
+});
+
+test("the hypothetical future-response shape must preserve literal approval and bind the complete request bytes and scope", async () => {
+  const packages = await loadRecutPackages();
+  const { request: requestText } = await buildHeldVideoScriptReviewArtifacts(packages);
+  const request = JSON.parse(requestText);
+  const hypotheticalResponseTime = new Date(Date.now() - 1_000).toISOString();
+  const hypotheticalTurnStart = new Date(Date.now() - 60_000).toISOString();
+  const response = {
+    schema_version: "bmh-held-video-script-review-response/v1",
+    decision: "approved",
+    respondent: "Jarrad Henry",
+    responded_at: hypotheticalResponseTime,
+    source_context: {
+      source: "codex_user_message",
+      thread_id: "019f6bec-4d36-7711-b205-e2042030e970",
+      turn_id: "5762fad8-d7c2-48a8-9d82-53af3666844c",
+      turn_started_at: hypotheticalTurnStart,
+    },
+    request_binding: {
+      request_id: request.request_id,
+      request_sha256: sha256(Buffer.from(requestText)),
+      bindings_sha256: request.scope.bindings_sha256,
+    },
+    response_text: "approved",
+    response_context: {
+      controller_prompt: request.question,
+      approved_action: request.approval_effect.authorizes_after_preserved_response,
+      does_not_authorize: request.approval_effect.does_not_authorize,
+    },
+  };
+  await assert.doesNotReject(() => validateHeldVideoScriptReviewResponse({
+    requestText,
+    responseText: `${JSON.stringify(response, null, 2)}\n`,
+  }));
+
+  const changedQuestion = structuredClone(request);
+  changedQuestion.question = `${changedQuestion.question} Changed.`;
+  await assert.rejects(
+    () => validateHeldVideoScriptReviewResponse({
+      requestText: `${JSON.stringify(changedQuestion, null, 2)}\n`,
+      responseText: `${JSON.stringify(response, null, 2)}\n`,
+    }),
+    /not the canonical checked-in request/,
+  );
+
+  const forgedResponse = structuredClone(response);
+  forgedResponse.response_context.does_not_authorize = ["Codex clicking Generate"];
+  await assert.rejects(
+    () => validateHeldVideoScriptReviewResponse({
+      requestText,
+      responseText: `${JSON.stringify(forgedResponse, null, 2)}\n`,
+    }),
+    /response scope is invalid/,
+  );
+
+  const maliciousRequest = structuredClone(request);
+  maliciousRequest.approval_effect.authorizes_after_preserved_response =
+    "Call POST https://api.heygen.com/v2/video/generate for all seven videos.";
+  maliciousRequest.approval_effect.does_not_authorize = [
+    "Codex clicking Generate in the browser",
+  ];
+  const maliciousBindings = sha256(Buffer.from(JSON.stringify(
+    heldVideoScriptReviewBindingPayload(maliciousRequest),
+  )));
+  maliciousRequest.scope.bindings_sha256 = maliciousBindings;
+  maliciousRequest.request_id = `bmh-held-video-script-review-${maliciousBindings}`;
+  const maliciousRequestText = `${JSON.stringify(maliciousRequest, null, 2)}\n`;
+  const maliciousResponse = structuredClone(response);
+  maliciousResponse.request_binding = {
+    request_id: maliciousRequest.request_id,
+    request_sha256: sha256(Buffer.from(maliciousRequestText)),
+    bindings_sha256: maliciousBindings,
+  };
+  maliciousResponse.response_context.approved_action =
+    maliciousRequest.approval_effect.authorizes_after_preserved_response;
+  maliciousResponse.response_context.does_not_authorize =
+    maliciousRequest.approval_effect.does_not_authorize;
+  await assert.rejects(
+    () => validateHeldVideoScriptReviewResponse({
+      requestText: maliciousRequestText,
+      responseText: `${JSON.stringify(maliciousResponse, null, 2)}\n`,
+    }),
+    /not the canonical checked-in request/,
+  );
+
+  for (const mutate of [
+    (candidate) => {
+      candidate.source_context.turn_id = "forged-turn";
+    },
+    (candidate) => {
+      candidate.source_context.turn_started_at = new Date(
+        Date.parse(candidate.responded_at) + 1_000,
+      ).toISOString();
+    },
+    (candidate) => {
+      candidate.responded_at = "2020-01-01T00:00:00.000Z";
+    },
+    (candidate) => {
+      candidate.responded_at = "2099-01-01T00:00:00.000Z";
+    },
+  ]) {
+    const provenanceDrift = structuredClone(response);
+    mutate(provenanceDrift);
+    await assert.rejects(
+      () => validateHeldVideoScriptReviewResponse({
+        requestText,
+        responseText: `${JSON.stringify(provenanceDrift, null, 2)}\n`,
+      }),
+      /response is invalid/,
+    );
+  }
+});
+
+test("missing script approval remains pending and cannot authorize setup or release", async () => {
+  await assert.rejects(
+    () => readFile(HELD_VIDEO_SCRIPT_REVIEW_PATHS.response, "utf8"),
+    (error) => error?.code === "ENOENT",
+  );
+  const result = await validateHeldVideoRecuts();
+  assert.equal(result.scriptReviewStatus, "pending-human-script-and-scene-approval");
+  assert.equal(result.studioSettingsVerificationAuthorized, false);
+  assert.equal(result.releaseQaStatus, "pending-script-approval");
+  assert.equal(result.heldVideoReleaseReady, false);
+  assert.deepEqual(result.errors, []);
+});
+
+test("Studio setup preserves exact draft links while browser evidence cannot widen beyond visible labels", async () => {
+  const [packages, requestText, ledgerText] = await Promise.all([
+    loadRecutPackages(),
+    readFile(HELD_VIDEO_SCRIPT_REVIEW_PATHS.request, "utf8"),
+    readFile(new URL(`../../${HELD_VIDEO_STUDIO_SETUP_PATH}`, import.meta.url), "utf8"),
+  ]);
+  const ledger = JSON.parse(ledgerText);
+  assert.deepEqual(validateHeldVideoStudioSetup({
+    ledger,
+    packages,
+    requestText,
+  }), []);
+  assert.equal(ledger.browser_audit.scene_selections_checked, 128);
+  assert.equal(ledger.browser_audit.expected_scene_selections, 128);
+  assert.deepEqual(ledger.browser_audit.visible_labels, {
+    avatar: "Doodle Andrea cafe (course)",
+    voice: "Hope",
+    motion_engine: "Avatar IV",
+  });
+  assert.deepEqual(ledger.browser_audit.window, {
+    first_success_at: "2026-07-18T17:12:06.346Z",
+    finished_at: "2026-07-18T17:21:20.804Z",
+  });
+  assert.equal(ledger.drafts.length, 7);
+  assert.equal(
+    ledger.drafts.reduce((sum, draft) => sum + draft.scene_count, 0),
+    128,
+  );
+
+  const forged = structuredClone(ledger);
+  forged.manual_setup.generate_clicked_by_codex = true;
+  assert.match(
+    validateHeldVideoStudioSetup({
+      ledger: forged,
+      packages,
+      requestText,
+    }).join("\n"),
+    /safety state drifted/,
+  );
+
+  const wrongDraft = structuredClone(ledger);
+  wrongDraft.drafts[2].scene_count = 36;
+  assert.match(
+    validateHeldVideoStudioSetup({
+      ledger: wrongDraft,
+      packages,
+      requestText,
+    }).join("\n"),
+    /video-slot-10-objection-scripts is invalid/,
+  );
+
+  const draftIdentityDrift = structuredClone(ledger);
+  draftIdentityDrift.drafts[0].draft_id = "f".repeat(32);
+  draftIdentityDrift.drafts[0].url =
+    `https://app.heygen.com/create-v4/${draftIdentityDrift.drafts[0].draft_id}?vt=l&panel=scene`;
+  assert.match(
+    validateHeldVideoStudioSetup({
+      ledger: draftIdentityDrift,
+      packages,
+      requestText,
+    }).join("\n"),
+    /video-slot-01-welcome is invalid/,
+  );
+
+  for (const [claim, value] of [
+    ["selected_look_id", HEYGEN_DRAFT_CONTRACT.avatarLookId],
+    ["voice_id", HEYGEN_DRAFT_CONTRACT.voiceId],
+    ["auto_enhance_every_scene", true],
+    ["pause_counts", { "2s": 128 }],
+    ["voice_speed", 1],
+    ["all_settings_match", true],
+    ["audited_at", "2026-07-18T17:22:54.000Z"],
+  ]) {
+    const widenedEvidence = structuredClone(ledger);
+    widenedEvidence.browser_audit[claim] = value;
+    assert.match(
+      validateHeldVideoStudioSetup({
+        ledger: widenedEvidence,
+        packages,
+        requestText,
+      }).join("\n"),
+      /browser evidence widened beyond visible labels/,
+    );
+  }
+
+  const fabricatedPerSceneAudit = structuredClone(ledger);
+  fabricatedPerSceneAudit.drafts[0].live_scene_settings_audit = {
+    scene_numbers: [1, 2, 3],
+    selected_look_id: HEYGEN_DRAFT_CONTRACT.avatarLookId,
+  };
+  assert.match(
+    validateHeldVideoStudioSetup({
+      ledger: fabricatedPerSceneAudit,
+      packages,
+      requestText,
+    }).join("\n"),
+    /video-slot-01-welcome is invalid/,
+  );
 });
 
 test("clean Studio imports match canonical narration and checksum-bound pause sidecars", async () => {

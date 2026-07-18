@@ -20,10 +20,35 @@ export const RECUT_SOURCE_KEYS = [
   "video-slot-18-operator",
   "video-slot-19-career",
 ];
+export const HELD_VIDEO_SCRIPT_REVIEW_QUESTION =
+  "Do you approve all seven checksum-bound replacement scripts and scene plans—Welcome, Mindset, Objection Scripts Playbook, Closing and Deal Engineering, Compensation Engine, Operator Playbook, and Career Growth Path—as the content for the seven already-prepared, unrendered HeyGen Studio drafts and authorize only independent Studio-settings verification plus preparation of their eventual Jarrad-only Generate handoff, or which source keys need revision?";
+export const HELD_VIDEO_SCRIPT_REVIEW_PATHS = Object.freeze({
+  request: join(
+    RECUT_DIR,
+    "generated/held-video-script-review-request.v1.json",
+  ),
+  surface: join(RECUT_DIR, "generated/held-video-script-review.md"),
+  response: join(
+    RECUT_DIR,
+    "approvals/held-video-script-review-response.v1.json",
+  ),
+});
+
+const HELD_VIDEO_REVIEW_TITLES = Object.freeze({
+  "video-slot-01-welcome": "Welcome",
+  "video-slot-01-mindset": "Mindset",
+  "video-slot-10-objection-scripts": "Objection Scripts Playbook",
+  "video-slot-15-closing": "Closing and Deal Engineering",
+  "video-slot-17-compensation": "Compensation Engine",
+  "video-slot-18-operator": "Operator Playbook",
+  "video-slot-19-career": "Career Growth Path",
+});
 
 export const HEYGEN_DRAFT_CONTRACT = Object.freeze({
   apiEndpoint: "https://api.heygen.com/v2/video/generate",
-  avatarId: "bf22f09d624f4616b427fb6461ec7fdf",
+  avatarGroupId: "b2cd05454d284058ad8d7303545821e6",
+  avatarName: "Doodle Andrea cafe (course)",
+  avatarLookId: "7c00b3e0ad8b4a6a97115243aff056bb",
   voiceId: "42d00d4aac5441279d8536cd6b52c53c",
   folderId: "3d837f4e9fb84b8294785fc060a342c0",
   dimension: Object.freeze({ width: 1920, height: 1080 }),
@@ -134,6 +159,10 @@ export function providerSceneSequence(pkg) {
 
 function sha256Text(value) {
   return createHash("sha256").update(value, "utf8").digest("hex");
+}
+
+function sha256Bytes(value) {
+  return createHash("sha256").update(value).digest("hex");
 }
 
 export function assertCleanStudioNarrationLine(line, sourceKey, inputIndex) {
@@ -435,7 +464,7 @@ export function renderHeygenDraftPackage(pkg) {
       render_allowed: false,
       generate_button_allowed_for_codex: false,
       required_approval: "Jarrad Henry",
-      provider_call_executor_after_approval: "Codex parent agent only",
+      provider_call_executor_after_approval: "Codex controller only",
       final_generate_button_actor: "Jarrad Henry",
     },
     provider_preparation: {
@@ -474,7 +503,8 @@ export function renderHeygenDraftPackage(pkg) {
       video_inputs: providerScenes.map((scene) => ({
         character: {
           type: "talking_photo",
-          talking_photo_id: HEYGEN_DRAFT_CONTRACT.avatarId,
+          talking_photo_id: HEYGEN_DRAFT_CONTRACT.avatarLookId,
+          use_avatar_iv_model: true,
         },
         voice: {
           type: "text",
@@ -502,6 +532,269 @@ export function generatedRecutPaths(sourceKey) {
   };
 }
 
+export async function buildHeldVideoScriptReviewArtifacts(packages) {
+  const records = await Promise.all(packages.map(async (pkg) => {
+    const sourceKey = pkg.source.source_key;
+    const title = HELD_VIDEO_REVIEW_TITLES[sourceKey];
+    if (!title) throw new Error(`Missing held-video review title for ${sourceKey}`);
+    const paths = generatedRecutPaths(sourceKey);
+    const packagePath = join(RECUT_DIR, `${sourceKey}.json`);
+    const packageBytes = await readFile(packagePath);
+    const script = renderRecutScript(pkg);
+    const editSpec = renderRecutEditSpec(pkg);
+    const providerScenes = providerSceneSequence(pkg);
+    return {
+      source_key: sourceKey,
+      title,
+      held_source_sha256: pkg.source.held_sha256,
+      package_path: relative(REPO_ROOT, packagePath).replaceAll("\\", "/"),
+      package_sha256: sha256Bytes(packageBytes),
+      script_path: relative(REPO_ROOT, paths.script).replaceAll("\\", "/"),
+      script_sha256: sha256Text(script),
+      edit_spec_path: relative(REPO_ROOT, paths.editSpec).replaceAll("\\", "/"),
+      edit_spec_sha256: sha256Text(editSpec),
+      replacement_scene_count: pkg.scenes.length,
+      provider_scene_count: providerScenes.length,
+      replacement_spoken_word_count: recutSpokenWordCount(pkg),
+      forbidden_language_removal_count:
+        (pkg.forbidden_language_removals ?? []).length,
+      production_constraints: {
+        provider_call_allowed: false,
+        render_allowed: false,
+        caption_generation_allowed: false,
+        approval_status_change_allowed: false,
+        generate_button_allowed_for_codex: false,
+      },
+    };
+  }));
+  const approvalEffect = {
+    authorizes_after_preserved_response:
+      "Independently verify Studio settings for the seven already-prepared, unrendered draft projects against the exact checksum-bound scripts and scene plans, then prepare their links for an eventual Jarrad-only Generate handoff.",
+    does_not_authorize: [
+      "retroactive approval of draft setup",
+      "creating additional Studio drafts",
+      "any HeyGen or provider API call",
+      "POST https://api.heygen.com/v2/video/generate",
+      "Codex clicking Generate",
+      "rendering or paid generation",
+      "caption or transcript generation",
+      "video approval or manifest promotion",
+      "asset upload",
+      "course publication",
+      "employee access",
+    ],
+    exact_rendered_cut_review_required_after_generation: true,
+  };
+  const responseContract = {
+    schema_version: "bmh-held-video-script-review-response/v1",
+    exact_full_approval_response: "approved",
+    literal_response_required: true,
+    complete_request_sha256_binding_required: true,
+    external_action_allowed_before_valid_response: false,
+  };
+  const bindingScope = {
+    replacement_video_count: records.length,
+    source_keys: records.map((record) => record.source_key),
+  };
+  const bindingsSha256 = sha256Text(JSON.stringify({
+    question: HELD_VIDEO_SCRIPT_REVIEW_QUESTION,
+    scope: bindingScope,
+    approval_effect: approvalEffect,
+    response_contract: responseContract,
+    records,
+  }));
+  const request = {
+    schema_version: "bmh-held-video-script-review-request/v1",
+    status: "pending-human-script-and-scene-approval",
+    request_id: `bmh-held-video-script-review-${bindingsSha256}`,
+    question: HELD_VIDEO_SCRIPT_REVIEW_QUESTION,
+    scope: {
+      ...bindingScope,
+      bindings_sha256: bindingsSha256,
+    },
+    approval_effect: approvalEffect,
+    response_contract: responseContract,
+    records,
+  };
+
+  const lines = [
+    "# Seven replacement-video scripts and scene plans",
+    "",
+    "> No replacement video has been rendered. This surface reviews the exact spoken scripts and scene plans only.",
+    "",
+    `**Approval question:** ${HELD_VIDEO_SCRIPT_REVIEW_QUESTION}`,
+    "",
+    "The seven unrendered Studio drafts already exist as setup evidence. Approval is not retroactive setup approval. After the literal response is preserved against the complete request-file checksum, it authorizes only independent Studio-settings verification and preparation of the exact draft links for an eventual Jarrad-only Generate handoff. It does not authorize creating more drafts, any HeyGen/provider API call (including POST /v2/video/generate), Codex clicking Generate, rendering or paid generation, captions, video approval, upload, publication, or employee access. Every resulting exact cut requires a second checksum-bound review.",
+    "",
+    `Request ID: \`${request.request_id}\``,
+    "",
+    `Bindings SHA-256: \`${bindingsSha256}\``,
+    "",
+    "| # | Replacement | Source key | Package SHA-256 | Lesson / Studio scenes | Words | Exact files |",
+    "|---:|---|---|---|---:|---:|---|",
+  ];
+
+  for (const [index, record] of records.entries()) {
+    lines.push(
+      `| ${index + 1} | ${record.title} | \`${record.source_key}\` | \`${record.package_sha256}\` | ${record.replacement_scene_count} / ${record.provider_scene_count} | ${record.replacement_spoken_word_count} | [script](./${record.source_key}-script.txt) · [scene/edit plan](./${record.source_key}-EDIT-SPEC.md) |`,
+    );
+  }
+
+  for (const [index, pkg] of packages.entries()) {
+    const record = records[index];
+    lines.push(
+      "",
+      `## ${index + 1}. ${record.title}`,
+      "",
+      `Source key: \`${record.source_key}\`  `,
+      `Held source SHA-256: \`${record.held_source_sha256}\`  `,
+      `Package SHA-256: \`${record.package_sha256}\`  `,
+      `Script SHA-256: \`${record.script_sha256}\`  `,
+      `Scene/edit-plan SHA-256: \`${record.edit_spec_sha256}\``,
+      "",
+      `**Lesson objective:** ${pkg.lesson_contract.objective}`,
+      "",
+      "### Exact source-language changes",
+      "",
+    );
+    for (const removal of pkg.forbidden_language_removals ?? []) {
+      lines.push(
+        `- ${removal.source_time}: remove \`${removal.exact_source_language}\`. ${removal.replacement_rule}`,
+      );
+    }
+    if ((pkg.forbidden_language_removals ?? []).length === 0) {
+      lines.push("- Full-cut replacement follows the package's source-problem and policy map; no short exact-phrase removal is used.");
+    }
+    lines.push("", "### Scene plan", "");
+    for (const scene of pkg.scenes) {
+      const visual = scene.visual_plan;
+      lines.push(
+        `- \`${scene.scene_id}\` — ${scene.title}: ${visual?.shot ?? "Andrea in a medium shot"}. ${visual?.editor_note ?? "Use the approved BMH training visual language."}`,
+      );
+    }
+    lines.push(
+      "",
+      "<details>",
+      `<summary>Read the exact spoken script for ${record.title}</summary>`,
+      "",
+      "```text",
+      renderRecutScript(pkg).trimEnd(),
+      "```",
+      "",
+      "</details>",
+    );
+  }
+
+  return {
+    request: `${JSON.stringify(request, null, 2)}\n`,
+    surface: `${lines.join("\n").trimEnd()}\n`,
+  };
+}
+
+export function heldVideoScriptReviewBindingPayload(request) {
+  return {
+    question: request.question,
+    scope: {
+      replacement_video_count: request.scope?.replacement_video_count,
+      source_keys: request.scope?.source_keys,
+    },
+    approval_effect: request.approval_effect,
+    response_contract: request.response_contract,
+    records: request.records,
+  };
+}
+
+export async function validateHeldVideoScriptReviewResponse({
+  requestText,
+  responseText,
+}) {
+  const canonical = await buildHeldVideoScriptReviewArtifacts(
+    await loadRecutPackages(),
+  );
+  if (requestText !== canonical.request) {
+    throw new Error("Held-video script review request is not the canonical checked-in request");
+  }
+  const request = JSON.parse(requestText);
+  const response = JSON.parse(responseText);
+  const expectedBindings = sha256Text(
+    JSON.stringify(heldVideoScriptReviewBindingPayload(request)),
+  );
+  if (
+    request.schema_version !== "bmh-held-video-script-review-request/v1"
+    || request.status !== "pending-human-script-and-scene-approval"
+    || request.question !== HELD_VIDEO_SCRIPT_REVIEW_QUESTION
+    || request.scope?.bindings_sha256 !== expectedBindings
+    || request.request_id !== `bmh-held-video-script-review-${expectedBindings}`
+  ) {
+    throw new Error("Held-video script review request binding is invalid");
+  }
+  const responseKeys = [
+    "decision",
+    "request_binding",
+    "responded_at",
+    "respondent",
+    "response_context",
+    "response_text",
+    "schema_version",
+    "source_context",
+  ];
+  const sourceKeys = ["source", "thread_id", "turn_id", "turn_started_at"];
+  const isUuid = (value) =>
+    typeof value === "string"
+    && /^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/.test(value);
+  const isExactIsoTimestamp = (value) =>
+    typeof value === "string"
+    && !Number.isNaN(Date.parse(value))
+    && new Date(value).toISOString() === value;
+  if (
+    !response
+    || typeof response !== "object"
+    || JSON.stringify(Object.keys(response).sort()) !== JSON.stringify(responseKeys)
+    || response.schema_version !== request.response_contract.schema_version
+    || response.decision !== "approved"
+    || response.respondent !== "Jarrad Henry"
+    || response.response_text !== request.response_contract.exact_full_approval_response
+    || !isExactIsoTimestamp(response.responded_at)
+    || Date.parse(response.responded_at) > Date.now()
+    || !response.source_context
+    || JSON.stringify(Object.keys(response.source_context).sort())
+      !== JSON.stringify(sourceKeys)
+    || response.source_context.source !== "codex_user_message"
+    || !isUuid(response.source_context.thread_id)
+    || !isUuid(response.source_context.turn_id)
+    || !isExactIsoTimestamp(response.source_context.turn_started_at)
+    || Date.parse(response.responded_at)
+      < Date.parse(response.source_context.turn_started_at)
+  ) {
+    throw new Error("Held-video script review response is invalid");
+  }
+  const bindingKeys = ["bindings_sha256", "request_id", "request_sha256"];
+  if (
+    !response.request_binding
+    || JSON.stringify(Object.keys(response.request_binding).sort())
+      !== JSON.stringify(bindingKeys)
+    || response.request_binding.request_id !== request.request_id
+    || response.request_binding.bindings_sha256 !== expectedBindings
+    || response.request_binding.request_sha256 !== sha256Text(requestText)
+  ) {
+    throw new Error("Held-video script review response targets a different request");
+  }
+  const contextKeys = ["approved_action", "controller_prompt", "does_not_authorize"];
+  if (
+    !response.response_context
+    || JSON.stringify(Object.keys(response.response_context).sort())
+      !== JSON.stringify(contextKeys)
+    || response.response_context.controller_prompt !== request.question
+    || response.response_context.approved_action
+      !== request.approval_effect.authorizes_after_preserved_response
+    || JSON.stringify(response.response_context.does_not_authorize)
+      !== JSON.stringify(request.approval_effect.does_not_authorize)
+  ) {
+    throw new Error("Held-video script review response scope is invalid");
+  }
+  return { request, response };
+}
+
 export async function writeRecutDocs() {
   const packages = await loadRecutPackages();
   await mkdir(join(RECUT_DIR, "generated"), { recursive: true });
@@ -520,6 +813,17 @@ export async function writeRecutDocs() {
   await writeFile(
     join(RECUT_DIR, "generated", "studio-import-inventory.json"),
     renderStudioImportInventory(packages),
+    "utf8",
+  );
+  const reviewArtifacts = await buildHeldVideoScriptReviewArtifacts(packages);
+  await writeFile(
+    HELD_VIDEO_SCRIPT_REVIEW_PATHS.request,
+    reviewArtifacts.request,
+    "utf8",
+  );
+  await writeFile(
+    HELD_VIDEO_SCRIPT_REVIEW_PATHS.surface,
+    reviewArtifacts.surface,
     "utf8",
   );
   return packages.length;

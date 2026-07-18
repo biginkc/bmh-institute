@@ -6,9 +6,11 @@ import { isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import {
+  HELD_VIDEO_SCRIPT_REVIEW_PATHS,
   RECUT_DIR,
   RECUT_SOURCE_KEYS,
   REPO_ROOT,
+  buildHeldVideoScriptReviewArtifacts,
   generatedRecutPaths,
   humanizerNegativeParallelismViolations,
   loadRecutPackages,
@@ -21,8 +23,13 @@ import {
   renderStudioImportSidecar,
   renderStudioImportText,
   spokenDeliveryText,
+  validateHeldVideoScriptReviewResponse,
 } from "./build-held-video-recut-docs.mjs";
 import { validateHeldVideoApprovalLedger } from "./held-video-approval-ledger.mjs";
+import {
+  HELD_VIDEO_STUDIO_SETUP_PATH,
+  validateHeldVideoStudioSetup,
+} from "./held-video-studio-setup.mjs";
 
 const MANIFEST_PATH = join(
   REPO_ROOT,
@@ -538,12 +545,61 @@ export async function validateHeldVideoRecuts() {
   ) {
     errors.push("held-video Studio import inventory is stale");
   }
+  const reviewArtifacts = await buildHeldVideoScriptReviewArtifacts(packages);
+  if (
+    (await readFile(HELD_VIDEO_SCRIPT_REVIEW_PATHS.request, "utf8"))
+    !== reviewArtifacts.request
+  ) {
+    errors.push("held-video consolidated script review request is stale");
+  }
+  if (
+    (await readFile(HELD_VIDEO_SCRIPT_REVIEW_PATHS.surface, "utf8"))
+    !== reviewArtifacts.surface
+  ) {
+    errors.push("held-video consolidated script review surface is stale");
+  }
+  let scriptReviewStatus = "pending-human-script-and-scene-approval";
+  try {
+    await validateHeldVideoScriptReviewResponse({
+      requestText: reviewArtifacts.request,
+      responseText: await readFile(
+        HELD_VIDEO_SCRIPT_REVIEW_PATHS.response,
+        "utf8",
+      ),
+    });
+    scriptReviewStatus = "approved";
+  } catch (error) {
+    if (error?.code !== "ENOENT") {
+      scriptReviewStatus = "invalid-response";
+      errors.push(`held-video script review approval is invalid: ${error.message}`);
+    }
+  }
+  try {
+    const [requestText, setupLedger] = await Promise.all([
+      readFile(HELD_VIDEO_SCRIPT_REVIEW_PATHS.request, "utf8"),
+      readFile(join(REPO_ROOT, HELD_VIDEO_STUDIO_SETUP_PATH), "utf8")
+        .then(JSON.parse),
+    ]);
+    errors.push(...validateHeldVideoStudioSetup({
+      ledger: setupLedger,
+      packages,
+      requestText,
+    }));
+  } catch (error) {
+    errors.push(`held-video Studio setup ledger is invalid: ${error.message}`);
+  }
   return {
     approvalRecords: ledger.records.length,
     pendingApprovalRecords: ledger.records.filter(
       (record) => record.decision === "pending",
     ).length,
     recutPackages: packages.length,
+    scriptReviewStatus,
+    studioSettingsVerificationAuthorized: scriptReviewStatus === "approved",
+    releaseQaStatus: scriptReviewStatus === "approved"
+      ? "pending-rendered-cut-review"
+      : "pending-script-approval",
+    heldVideoReleaseReady: false,
     errors,
   };
 }
