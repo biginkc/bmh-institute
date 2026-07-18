@@ -39,7 +39,7 @@ const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../
 const manifestPath = new URL("./bmh-employee-training.v1.json", import.meta.url);
 const pilotPath = new URL("../../course-assets/thumbnails/pilots/lesson-cards/orientation-lesson-card-16x10.webp", import.meta.url);
 
-test("an absent artwork ledger leaves the current preapproval artwork records byte-identical", async () => {
+test("an absent optional artwork ledger leaves the current tracked artwork records byte-identical", async () => {
   const root = await mkdtemp(path.join(tmpdir(), "bmh-artwork-ledger-missing-"));
   const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
   const artwork = manifest.assets.filter((asset) => asset.kind === "image");
@@ -51,7 +51,7 @@ test("an absent artwork ledger leaves the current preapproval artwork records by
 
   assert.equal(JSON.stringify(merged), before);
   assert.equal(merged.length, 49);
-  assert.ok(merged.every((asset) => asset.approval_status === "missing" && asset.checksum_sha256 === null && asset.size_bytes === null && !/[a-f0-9]{64}\.webp$/.test(asset.storage_path)));
+  assert.ok(merged.every((asset) => asset.approval_status === "approved" && /^[a-f0-9]{64}$/.test(asset.checksum_sha256) && asset.size_bytes > 0 && asset.storage_path.includes(asset.checksum_sha256)));
 });
 
 test("a present statusless ledger cannot impersonate an absent optional ledger", async () => {

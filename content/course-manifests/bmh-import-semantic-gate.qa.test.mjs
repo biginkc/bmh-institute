@@ -12,7 +12,7 @@ const FULL_URL = new URL("./bmh-employee-training.v1.json", import.meta.url);
 const CANARY_URL = new URL("./bmh-employee-training-canary.v1.json", import.meta.url);
 const CURRENT_TIME = new Date("2026-07-17T12:00:00-05:00");
 
-test("draft validation reports BMH publication blockers without treating the report as approval", async () => {
+test("draft validation accepts finalized artwork while reporting remaining release blockers without treating the report as approval", async () => {
   const manifest = await loadManifest(FULL_URL);
   const report = await validateBmhImportSemanticGate({
     manifest,
@@ -21,8 +21,14 @@ test("draft validation reports BMH publication blockers without treating the rep
   assert.equal(report.scope, "full");
   assert.deepEqual(report.errors, []);
   assert.ok(report.publicationBlockers.length > 0);
+  assert.ok(report.publicationBlockers.every((blocker) =>
+    !blocker.includes("Artwork production ledger is not finalized"),
+  ));
   assert.ok(report.publicationBlockers.some((blocker) =>
-    blocker.includes("Artwork production ledger is not finalized"),
+    blocker.includes("requires a policy-safe replacement cut"),
+  ));
+  assert.ok(report.publicationBlockers.some((blocker) =>
+    blocker.includes("production Closer Lab scenario ID"),
   ));
   assert.doesNotThrow(() =>
     assertBmhImportSemanticGate(report, { enforcePublicationBlockers: false }),

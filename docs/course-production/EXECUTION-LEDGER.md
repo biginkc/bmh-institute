@@ -537,14 +537,47 @@ in the latest reconciliation entry.
   framing is forbidden, while descriptive acquisition and transaction roles
   are intentional course content.
 
+### 2026-07-18 final artwork approval and Tech Stack canary rehearsal
+
+- Jarrad responded `approved` to the exact controller prompt asking whether all
+  28 checksum-bound artwork masters were approved. The preserved response does
+  not attribute the earlier, longer 49-derivative approval sentence to him. The
+  ledger promotes the 49 artwork outputs only as deterministic derivatives of
+  those approved masters, and binds the request, literal response, approval,
+  28 master reviews, and 49 asset records to one immutable approval evidence
+  hash: `8db531f1becc859109b39df076d4ed82a983dd2a49c044582134c209ccf9f1ee`.
+- The rebuilt unpublished Tech Stack canary contains one program, one course,
+  one module, two lessons, five blocks, one 18-question quiz, and seven approved
+  assets. It validates with zero semantic errors and zero publication blockers.
+  No learner or employee access is attached.
+- All seven canary assets were uploaded to the disposable
+  `bmh-institute-test` project and the deterministic database graph was applied.
+  Exact verification checked 103 owned rows and seven storage objects with no
+  missing, mismatched, unexpected, or unauthorized objects. The reconciliation
+  evidence hash is
+  `9f40c27bdc1a391e9136b156e49531a7ca86e0d7ca8f8be11385e7e2a7d2ccec`.
+- The rollback rehearsal then removed all 103 owned database records. It
+  deliberately preserved the seven checksum-addressed storage objects because
+  the importer does not perform an unsafe unconditional object delete. The
+  unpublished database graph was reapplied and passed exact verification again.
+- Current local acceptance passes 768 unit tests, 118 RTL tests, all 147
+  course-content checks, all 46 artwork-production checks, typecheck, and the
+  production build. Final Chrome learner/admin acceptance is still required;
+  these automated results do not replace it.
+- The full release manifest now has zero artwork blockers. Its remaining
+  intentional publication holds are seven policy-safe replacement video cuts,
+  the corresponding seven caption/transcript pairs, and six production Closer
+  Lab scenario bindings. Production publication and employee access remain
+  prohibited until those exact artifacts and bindings pass their gates.
+
 ## Hard gates
 
 - Terms v10 and KPIs v12 are approved. Jarrad must still review the seven new
   policy-safe replacement cuts after provider production; source-evidence
   hashes marked `changes_requested` cannot be approved as-is.
-- The V8 thumbnail direction is approved and the 49-asset batch is produced.
-  Jarrad must approve the final checksum-locked contact sheet before artwork is
-  promoted into the release manifest.
+- The 28 checksum-bound artwork masters are approved and the 49 deterministic
+  artwork derivatives are promoted into the release manifest. Any future byte
+  change requires new checksum-bound review evidence.
 - Rollback rehearsal must precede the learner happy path. After a required video
   reaches completion, append-only completion history intentionally blocks
   destructive rollback; the course must therefore be reapplied and reconciled

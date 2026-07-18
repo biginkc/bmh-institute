@@ -42,31 +42,31 @@
       "source_key": "thumbnail-program-bmh-employee-training",
       "kind": "image",
       "local_path": "course-assets/thumbnails/program-bmh-employee-training.webp",
-      "storage_path": "courses/bmh-employee-training-canary/v1/thumbnails/program-bmh-employee-training.webp",
+      "storage_path": "courses/bmh-employee-training-canary/v1/thumbnails/program-bmh-employee-training-a302125e318aee333dd07b882a0be0ea65e282d38cacb412230e1ea94b25534a.webp",
       "mime_type": "image/webp",
-      "checksum_sha256": null,
-      "size_bytes": null,
-      "approval_status": "missing"
+      "checksum_sha256": "a302125e318aee333dd07b882a0be0ea65e282d38cacb412230e1ea94b25534a",
+      "size_bytes": 14154,
+      "approval_status": "approved"
     },
     {
       "source_key": "thumbnail-slot-03",
       "kind": "image",
       "local_path": "course-assets/thumbnails/slot-03.webp",
-      "storage_path": "courses/bmh-employee-training-canary/v1/thumbnails/slot-03.webp",
+      "storage_path": "courses/bmh-employee-training-canary/v1/thumbnails/slot-03-f89052943fd149d23d9712be8cb2d50031484eb08c76865726360cd08a2281f9.webp",
       "mime_type": "image/webp",
-      "checksum_sha256": null,
-      "size_bytes": null,
-      "approval_status": "missing"
+      "checksum_sha256": "f89052943fd149d23d9712be8cb2d50031484eb08c76865726360cd08a2281f9",
+      "size_bytes": 14260,
+      "approval_status": "approved"
     },
     {
       "source_key": "poster-video-slot-03-tech-stack",
       "kind": "image",
       "local_path": "course-assets/posters/video-slot-03-tech-stack.webp",
-      "storage_path": "courses/bmh-employee-training-canary/v1/posters/video-slot-03-tech-stack.webp",
+      "storage_path": "courses/bmh-employee-training-canary/v1/posters/video-slot-03-tech-stack-19c51d0c032c630715d69e5d0ae03623dd05ab13774c9df3ae25026ca046b3c1.webp",
       "mime_type": "image/webp",
-      "checksum_sha256": null,
-      "size_bytes": null,
-      "approval_status": "missing"
+      "checksum_sha256": "19c51d0c032c630715d69e5d0ae03623dd05ab13774c9df3ae25026ca046b3c1",
+      "size_bytes": 14228,
+      "approval_status": "approved"
     },
     {
       "source_key": "guide-slot-03",

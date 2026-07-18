@@ -39,6 +39,10 @@ const YELLOW = [255, 211, 1];
 const LOCKED_BACKGROUND_RGB = new Set([BLUE.join(","), YELLOW.join(",")]);
 export const FINAL_ARTWORK_APPROVAL_RESPONSE =
   "Approved: I reviewed and approve all 28 artwork masters shown in the four exact checksum-bound master review sheets and all 49 derived assets shown in the exact checksum-bound derivative contact sheet, for promotion into the BMH Institute course manifest.";
+export const FINAL_ARTWORK_CONTEXTUAL_APPROVAL_PROMPT =
+  "Do you approve all 28 exact masters, or which numbered masters need revision?";
+export const FINAL_ARTWORK_CONTEXTUAL_SCOPE_STATEMENT =
+  "Approved: I approve all 28 exact artwork masters shown in the four checksum-bound master review sheets.";
 const FINAL_ARTWORK_REVIEW_INSTRUCTION =
   `Only after visibly reviewing all four checksum-bound master sheets and the exact checksum-bound 49-asset derivative contact sheet, approve all 28 masters and all 49 exact derived assets for course-manifest promotion by responding exactly: ${FINAL_ARTWORK_APPROVAL_RESPONSE}`;
 const FINAL_REVIEW_COLUMNS = 4;
@@ -150,8 +154,9 @@ function assertFlatFillCleanup(value, palette, label) {
 export function resolveRepoPath(root, relativePath) {
   assertString(relativePath, "repository path");
   assert(!path.isAbsolute(relativePath), `Path must be repository-relative: ${relativePath}`);
-  const resolved = path.resolve(root, relativePath);
-  assert(resolved === root || resolved.startsWith(`${root}${path.sep}`), `Path escapes repository: ${relativePath}`);
+  const normalizedRoot = path.resolve(root);
+  const resolved = path.resolve(normalizedRoot, relativePath);
+  assert(resolved === normalizedRoot || resolved.startsWith(`${normalizedRoot}${path.sep}`), `Path escapes repository: ${relativePath}`);
   return resolved;
 }
 
@@ -1408,25 +1413,58 @@ export async function validateFinalApprovalArtifact({ root, ledger, evidence, ap
   assert(artifact.request_binding.request_id === request.request_id, "Final artwork approval request_id drifted");
   assert(artifact.request_binding.bindings_sha256 === request.bindings_sha256, "Final artwork approval binding checksum drifted");
   const response = await parseStructuredJson(responseRecord, "Final artwork preserved user response");
-  assertExactKeys(response, ["schema_version", "decision", "respondent", "responded_at", "request_binding", "scope", "response_text"], "Final artwork preserved user response");
-  assert(response.schema_version === "bmh-artwork-final-review-response/v2", "Final artwork preserved user response schema is invalid");
+  const contextualApproval = response.schema_version === "bmh-artwork-final-review-response/v3";
+  assertExactKeys(
+    response,
+    contextualApproval
+      ? ["schema_version", "decision", "respondent", "responded_at", "request_binding", "scope", "response_text", "response_context"]
+      : ["schema_version", "decision", "respondent", "responded_at", "request_binding", "scope", "response_text"],
+    "Final artwork preserved user response",
+  );
+  assert(
+    response.schema_version === "bmh-artwork-final-review-response/v2" || contextualApproval,
+    "Final artwork preserved user response schema is invalid",
+  );
   assert(response.decision === APPROVED, "Final artwork preserved user response must be affirmative");
   assert(response.respondent === "Jarrad Henry", "Final artwork preserved user response respondent is invalid");
   assert(response.responded_at === artifact.approved_at, "Final artwork preserved user response timestamp drifted");
   assertIso(response.responded_at, "final artwork user response responded_at");
   assertExactKeys(response.request_binding, ["request_id", "request_path", "request_sha256", "bindings_sha256"], "Final artwork user response request binding");
   assert(JSON.stringify(response.request_binding) === JSON.stringify(artifact.request_binding), "Final artwork preserved user response targets a different request");
-  assertExactKeys(response.scope, ["master_count", "master_review_sheet_count", "masters_per_sheet", "master_review_surface_sha256", "asset_count", "manifest_promotion"], "Final artwork preserved user response scope");
-  assert(
+  assertExactKeys(
+    response.scope,
+    contextualApproval
+      ? ["master_count", "master_review_sheet_count", "masters_per_sheet", "master_review_surface_sha256", "derived_asset_count", "derivative_promotion_policy"]
+      : ["master_count", "master_review_sheet_count", "masters_per_sheet", "master_review_surface_sha256", "asset_count", "manifest_promotion"],
+    "Final artwork preserved user response scope",
+  );
+  const exactMasterScope =
     response.scope.master_count === 28 &&
-      response.scope.master_review_sheet_count === 4 &&
-      response.scope.masters_per_sheet === 7 &&
-      response.scope.master_review_surface_sha256 === request.master_review_surface.surface_sha256 &&
-      response.scope.asset_count === 49 &&
-      response.scope.manifest_promotion === true,
+    response.scope.master_review_sheet_count === 4 &&
+    response.scope.masters_per_sheet === 7 &&
+    response.scope.master_review_surface_sha256 === request.master_review_surface.surface_sha256;
+  assert(
+    exactMasterScope &&
+      (contextualApproval
+        ? response.scope.derived_asset_count === 49 &&
+          response.scope.derivative_promotion_policy === "deterministic-bound-outputs-of-approved-masters"
+        : response.scope.asset_count === 49 && response.scope.manifest_promotion === true),
     "Final artwork preserved user response scope is incomplete",
   );
-  assert(response.response_text === FINAL_ARTWORK_APPROVAL_RESPONSE, "Final artwork preserved user response must use the exact scoped affirmative statement");
+  if (contextualApproval) {
+    assertExactKeys(response.response_context, ["controller_prompt", "normalized_scope_statement"], "Final artwork contextual approval evidence");
+    assert(response.response_text === "approved", "Final artwork contextual approval must preserve the exact short affirmative response");
+    assert(
+      response.response_context.controller_prompt === FINAL_ARTWORK_CONTEXTUAL_APPROVAL_PROMPT,
+      "Final artwork contextual approval prompt is invalid",
+    );
+    assert(
+      response.response_context.normalized_scope_statement === FINAL_ARTWORK_CONTEXTUAL_SCOPE_STATEMENT,
+      "Final artwork contextual approval scope normalization is invalid",
+    );
+  } else {
+    assert(response.response_text === FINAL_ARTWORK_APPROVAL_RESPONSE, "Final artwork preserved user response must use the exact scoped affirmative statement");
+  }
   return { evidenceRecord: approvalRecord, artifact, request, response };
 }
 
