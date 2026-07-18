@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { summarizePilotMonitoring } from "./summary";
+import { summarizeLearnerMonitoring } from "./summary";
 
 const NOW = new Date("2026-05-09T12:00:00.000Z");
 
-describe("summarizePilotMonitoring", () => {
+describe("summarizeLearnerMonitoring", () => {
   it("marks learners without role groups as blocked before progress states", () => {
-    const summary = summarizePilotMonitoring({
+    const summary = summarizeLearnerMonitoring({
       now: NOW,
       learners: [learner({ id: "learner-1", roleGroupIds: [] })],
       requiredLessons: [lesson({ courseId: "course-1" })],
@@ -28,7 +28,7 @@ describe("summarizePilotMonitoring", () => {
   });
 
   it("marks assigned learners with no activity as not started", () => {
-    const summary = summarizePilotMonitoring({
+    const summary = summarizeLearnerMonitoring({
       now: NOW,
       learners: [learner()],
       requiredLessons: [lesson()],
@@ -50,7 +50,7 @@ describe("summarizePilotMonitoring", () => {
   });
 
   it("marks learners with partial required lesson progress as in progress", () => {
-    const summary = summarizePilotMonitoring({
+    const summary = summarizeLearnerMonitoring({
       now: NOW,
       learners: [learner()],
       requiredLessons: [lesson(), lesson({ id: "lesson-2" })],
@@ -78,7 +78,7 @@ describe("summarizePilotMonitoring", () => {
   });
 
   it("prioritizes pending review over passive progress", () => {
-    const summary = summarizePilotMonitoring({
+    const summary = summarizeLearnerMonitoring({
       now: NOW,
       learners: [learner()],
       requiredLessons: [lesson()],
@@ -113,7 +113,7 @@ describe("summarizePilotMonitoring", () => {
   });
 
   it("prioritizes needs revision over pending review", () => {
-    const summary = summarizePilotMonitoring({
+    const summary = summarizeLearnerMonitoring({
       now: NOW,
       learners: [learner()],
       requiredLessons: [lesson()],
@@ -148,7 +148,7 @@ describe("summarizePilotMonitoring", () => {
   });
 
   it("marks completed required lessons with certificates as certified", () => {
-    const summary = summarizePilotMonitoring({
+    const summary = summarizeLearnerMonitoring({
       now: NOW,
       learners: [learner()],
       requiredLessons: [lesson()],

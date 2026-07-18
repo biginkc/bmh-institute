@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { shapePilotCohortRows } from "./status";
+import { shapeLearnerAccessRows } from "./status";
 
 const NOW = new Date("2026-05-09T12:00:00.000Z");
 
-describe("shapePilotCohortRows", () => {
+describe("shapeLearnerAccessRows", () => {
   it("marks active learners with role groups as ready", () => {
-    const rows = shapePilotCohortRows({
+    const rows = shapeLearnerAccessRows({
       now: NOW,
       profiles: [
         profile({
@@ -34,7 +34,7 @@ describe("shapePilotCohortRows", () => {
   });
 
   it("marks active learners with no role group as missing access", () => {
-    const rows = shapePilotCohortRows({
+    const rows = shapeLearnerAccessRows({
       now: NOW,
       profiles: [
         profile({
@@ -58,7 +58,7 @@ describe("shapePilotCohortRows", () => {
   });
 
   it("marks suspended learners separately", () => {
-    const rows = shapePilotCohortRows({
+    const rows = shapeLearnerAccessRows({
       now: NOW,
       profiles: [
         profile({
@@ -80,7 +80,7 @@ describe("shapePilotCohortRows", () => {
   });
 
   it("marks future pending invites as pending invite", () => {
-    const rows = shapePilotCohortRows({
+    const rows = shapeLearnerAccessRows({
       now: NOW,
       profiles: [],
       invites: [
@@ -106,7 +106,7 @@ describe("shapePilotCohortRows", () => {
   });
 
   it("marks past pending invites as expired", () => {
-    const rows = shapePilotCohortRows({
+    const rows = shapeLearnerAccessRows({
       now: NOW,
       profiles: [],
       invites: [
@@ -128,7 +128,7 @@ describe("shapePilotCohortRows", () => {
   });
 
   it("excludes accepted invites from pending setup rows", () => {
-    const rows = shapePilotCohortRows({
+    const rows = shapeLearnerAccessRows({
       now: NOW,
       profiles: [],
       invites: [

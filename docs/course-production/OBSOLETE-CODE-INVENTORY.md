@@ -1,6 +1,6 @@
 # Obsolete-code inventory and deletion gates
 
-Updated: 2026-07-16
+Updated: 2026-07-18
 
 This is an evidence inventory, not deletion authorization. The walkthrough and
 compatibility cleanup may land only after the real manifest passes the draft
@@ -15,24 +15,22 @@ deletion boundary.
   `src/lib/walkthrough/bmh-demo.ts`, the walkthrough caption overlay and its
   root-layout mount. These references are isolated from the real manifest
   importer. Remove them only after the real draft proves the replacement path.
-- `@dnd-kit/core`, `@dnd-kit/sortable`, and `@dnd-kit/utilities` have no source
-  imports. Current module and lesson ordering uses explicit up/down controls.
-  They are candidates for package removal after a clean install and editor UAT.
-- The legacy UI primitives `badge`, `brand-lockup`, `dialog`, `dropdown-menu`,
-  `input`, `select`, `separator`, `skeleton`, and `table` under
-  `src/components/ui` have no imports outside their own files. They are
-  candidates for deletion after a full import scan and build.
+- The unused `@dnd-kit/core`, `@dnd-kit/sortable`, and `@dnd-kit/utilities`
+  packages have been removed. Current module and lesson ordering continues to
+  use explicit up and down controls.
+- The zero-import legacy UI primitives `badge`, `brand-lockup`, `dialog`,
+  `dropdown-menu`, `input`, `select`, `separator`, `skeleton`, and `table`
+  under `src/components/ui` have been deleted. The active BMH design-system
+  components and the still-imported shadcn primitives remain.
 - The nonfunctional header notification bell has been removed in the current
   branch. It is no longer presented as a working learner feature.
 - Header lesson search is now access-scoped and keyboard accessible on desktop
   and mobile. The search primitives are active code and are not deletion
   candidates.
-- Admin reports, exports, and access setup now use learner/cohort terminology
-  on every visible surface. Internal `pilot-*` symbols and the legacy
-  `/admin/reports/pilot/export` route remain deliberate compatibility surfaces;
-  the learner export route reuses that implementation. Do not repeat the
-  visible-copy rename or delete those compatibility paths without external-
-  reference proof.
+- Admin reports, exports, access setup, internal modules, and TypeScript symbols
+  now use learner terminology. The legacy `/admin/reports/pilot/export` URL is
+  retained only as a compatibility re-export of the learner export route. Do
+  not delete that URL without external-reference proof.
 
 ## Explicit retain decisions
 

@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { Badge, Card } from "@/components/bmh-ds";
 import { requireAdmin } from "@/lib/auth/guard";
-import { summarizePilotMonitoring } from "@/lib/pilot-monitoring/summary";
+import { summarizeLearnerMonitoring } from "@/lib/learner-monitoring/summary";
 import { createClient } from "@/lib/supabase/server";
 
 import { AdminDataTable } from "../_components/admin-data-table";
@@ -251,7 +251,7 @@ export default async function AdminReportsPage() {
     values.push(row.role_group_id);
     roleGroupIdsByUserId.set(row.user_id, values);
   }
-  const pilotSummary = summarizePilotMonitoring({
+  const learnerSummary = summarizeLearnerMonitoring({
     now: new Date(),
     learners: profiles.map((profile) => ({
       id: profile.id,
@@ -324,7 +324,7 @@ export default async function AdminReportsPage() {
         <StatCard label="Program certs" value={programCerts.length} />
       </div>
 
-      <PilotMonitoringPanel summary={pilotSummary} />
+      <LearnerMonitoringPanel summary={learnerSummary} />
 
       <section className="mt-8">
         <AdminSectionHeading title="Learners" />
@@ -537,10 +537,10 @@ function StatCard({ label, value }: { label: string; value: number }) {
   return <AdminMetricCard label={label} value={value} />;
 }
 
-function PilotMonitoringPanel({
+function LearnerMonitoringPanel({
   summary,
 }: {
-  summary: ReturnType<typeof summarizePilotMonitoring>;
+  summary: ReturnType<typeof summarizeLearnerMonitoring>;
 }) {
   const actionRows = summary.rows.filter((row) =>
     ["blocked", "needs_revision", "needs_review", "not_started"].includes(
@@ -555,14 +555,26 @@ function PilotMonitoringPanel({
         description="Watch learner blockers, assignment review, progress, and certificates."
       />
       <div className="grid gap-3 md:grid-cols-5">
-        <PilotStat label="Needs access" value={summary.totals.blocked} />
-        <PilotStat
+        <LearnerMonitoringStat
+          label="Needs access"
+          value={summary.totals.blocked}
+        />
+        <LearnerMonitoringStat
           label="Needs revision"
           value={summary.totals.needsRevision}
         />
-        <PilotStat label="Needs review" value={summary.totals.needsReview} />
-        <PilotStat label="In progress" value={summary.totals.inProgress} />
-        <PilotStat label="Certified" value={summary.totals.certified} />
+        <LearnerMonitoringStat
+          label="Needs review"
+          value={summary.totals.needsReview}
+        />
+        <LearnerMonitoringStat
+          label="In progress"
+          value={summary.totals.inProgress}
+        />
+        <LearnerMonitoringStat
+          label="Certified"
+          value={summary.totals.certified}
+        />
       </div>
       <Card padding="sm" style={{ marginTop: 16 }}>
         <AdminDataTable
@@ -604,7 +616,7 @@ function PilotMonitoringPanel({
           ]}
           rows={actionRows.map((row) => ({
             ...row,
-            tone: pilotStatusTone(row.statusKey),
+            tone: learnerStatusTone(row.statusKey),
             submissionCount:
               row.pendingSubmissions + row.needsRevisionSubmissions,
             lastActivityLabel: row.lastActivity
@@ -617,11 +629,17 @@ function PilotMonitoringPanel({
   );
 }
 
-function PilotStat({ label, value }: { label: string; value: number }) {
+function LearnerMonitoringStat({
+  label,
+  value,
+}: {
+  label: string;
+  value: number;
+}) {
   return <AdminMetricCard label={label} value={value} />;
 }
 
-function pilotStatusTone(statusKey: string) {
+function learnerStatusTone(statusKey: string) {
   if (statusKey === "blocked" || statusKey === "needs_revision") {
     return "red";
   }

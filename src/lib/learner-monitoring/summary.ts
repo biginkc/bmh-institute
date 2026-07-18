@@ -1,4 +1,4 @@
-export type PilotMonitoringStatusKey =
+export type LearnerMonitoringStatusKey =
   | "blocked"
   | "needs_revision"
   | "needs_review"
@@ -6,7 +6,7 @@ export type PilotMonitoringStatusKey =
   | "in_progress"
   | "certified";
 
-export type PilotMonitoringLearnerInput = {
+export type LearnerMonitoringLearnerInput = {
   id: string;
   email: string;
   fullName: string;
@@ -15,48 +15,48 @@ export type PilotMonitoringLearnerInput = {
   roleGroupIds: string[];
 };
 
-export type PilotMonitoringRequiredLessonInput = {
+export type LearnerMonitoringRequiredLessonInput = {
   id: string;
   courseId: string;
   title: string;
 };
 
-export type PilotMonitoringCompletionInput = {
+export type LearnerMonitoringCompletionInput = {
   userId: string;
   lessonId: string;
   completedAt: string | null;
 };
 
-export type PilotMonitoringQuizAttemptInput = {
+export type LearnerMonitoringQuizAttemptInput = {
   userId: string;
   passed: boolean | null;
   score: number | null;
   completedAt: string | null;
 };
 
-export type PilotMonitoringSubmissionInput = {
+export type LearnerMonitoringSubmissionInput = {
   userId: string;
   status: "submitted" | "approved" | "needs_revision";
   submittedAt: string;
 };
 
-export type PilotMonitoringCourseCertificateInput = {
+export type LearnerMonitoringCourseCertificateInput = {
   userId: string;
   courseId: string;
   issuedAt: string;
 };
 
-export type PilotMonitoringProgramCertificateInput = {
+export type LearnerMonitoringProgramCertificateInput = {
   userId: string;
   programId: string;
   issuedAt: string;
 };
 
-export type PilotMonitoringRow = {
+export type LearnerMonitoringRow = {
   userId: string;
   name: string;
   email: string;
-  statusKey: PilotMonitoringStatusKey;
+  statusKey: LearnerMonitoringStatusKey;
   statusLabel: string;
   progressLabel: string;
   progressPercent: number;
@@ -71,7 +71,7 @@ export type PilotMonitoringRow = {
   actionHref: string;
 };
 
-export type PilotMonitoringSummary = {
+export type LearnerMonitoringSummary = {
   totals: {
     learners: number;
     blocked: number;
@@ -81,10 +81,10 @@ export type PilotMonitoringSummary = {
     inProgress: number;
     certified: number;
   };
-  rows: PilotMonitoringRow[];
+  rows: LearnerMonitoringRow[];
 };
 
-export function summarizePilotMonitoring({
+export function summarizeLearnerMonitoring({
   learners,
   requiredLessons,
   completions,
@@ -94,14 +94,14 @@ export function summarizePilotMonitoring({
   programCertificates,
 }: {
   now: Date;
-  learners: PilotMonitoringLearnerInput[];
-  requiredLessons: PilotMonitoringRequiredLessonInput[];
-  completions: PilotMonitoringCompletionInput[];
-  quizAttempts: PilotMonitoringQuizAttemptInput[];
-  submissions: PilotMonitoringSubmissionInput[];
-  courseCertificates: PilotMonitoringCourseCertificateInput[];
-  programCertificates: PilotMonitoringProgramCertificateInput[];
-}): PilotMonitoringSummary {
+  learners: LearnerMonitoringLearnerInput[];
+  requiredLessons: LearnerMonitoringRequiredLessonInput[];
+  completions: LearnerMonitoringCompletionInput[];
+  quizAttempts: LearnerMonitoringQuizAttemptInput[];
+  submissions: LearnerMonitoringSubmissionInput[];
+  courseCertificates: LearnerMonitoringCourseCertificateInput[];
+  programCertificates: LearnerMonitoringProgramCertificateInput[];
+}): LearnerMonitoringSummary {
   const requiredLessonIds = new Set(requiredLessons.map((lesson) => lesson.id));
   const completionsByUser = groupBy(completions, (completion) => completion.userId);
   const attemptsByUser = groupBy(quizAttempts, (attempt) => attempt.userId);
@@ -207,14 +207,14 @@ function pickStatus({
   needsRevisionSubmissions,
   certificatesIssued,
 }: {
-  learner: PilotMonitoringLearnerInput;
+  learner: LearnerMonitoringLearnerInput;
   requiredLessonsDone: number;
   requiredLessonsTotal: number;
   pendingSubmissions: number;
   needsRevisionSubmissions: number;
   certificatesIssued: number;
 }): {
-  key: PilotMonitoringStatusKey;
+  key: LearnerMonitoringStatusKey;
   label: string;
   actionLabel: string;
   actionHref: (userId: string) => string;
@@ -271,8 +271,8 @@ function pickStatus({
   };
 }
 
-function compareRows(a: PilotMonitoringRow, b: PilotMonitoringRow): number {
-  const priority: Record<PilotMonitoringStatusKey, number> = {
+function compareRows(a: LearnerMonitoringRow, b: LearnerMonitoringRow): number {
+  const priority: Record<LearnerMonitoringStatusKey, number> = {
     blocked: 0,
     needs_revision: 1,
     needs_review: 2,

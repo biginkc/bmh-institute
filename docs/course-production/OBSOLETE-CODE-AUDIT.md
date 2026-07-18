@@ -1,18 +1,18 @@
 # Obsolete-code cleanup audit
 
-Audited: 2026-07-17
-Repository evidence refreshed at head: `90fdbf7624e7cedd070ca101bdd02feb95307038`
-Mode: read-only audit; no package, source, schema, fixture, storage, or production deletion was performed.
+Audited: 2026-07-18
+Mode: source-only cleanup. No schema, fixture, storage, provider, or production
+deletion was performed.
 
 ## Verdict
 
-Cleanup must remain deferred. The Tech Stack canary and complete real manifest
-have not passed unpublished import plus learner/admin acceptance, and the real
-catalog has not replaced the fixture catalog. The only deletion set that is
-already exact enough for eventual execution is the checksum-locked 463-row
-fixture graph, but even that command is deliberately unauthorized until the
-real course passes acceptance, a fresh backup and restore rehearsal exist, and
-Jarrad supplies a separate current approval record.
+Data and walkthrough cleanup must remain deferred. The unused drag-and-drop
+packages and nine zero-import UI primitives were statically independent of the
+manifest and have now been removed. Active monitoring and access modules now
+use learner terminology while the historical pilot export URL remains as a
+compatibility re-export. The fixture graph remains deliberately unauthorized
+until the real course passes acceptance, a fresh backup and restore rehearsal
+exist, and Jarrad supplies a separate current approval record.
 
 The current full manifest is the relevant product boundary: one draft program,
 one reusable course, six modules, 19 grouped content lessons, 19 randomized
@@ -27,8 +27,8 @@ product is a reusable internal learning platform.
 | Candidate | Classification | Current evidence and required sequencing |
 | --- | --- | --- |
 | Hard-coded walkthrough/demo system | **Proven-delete-after-acceptance** | `package.json` exposes `seed:walkthrough`; `scripts/seed-walkthrough-onboarding.ts` consumes only `src/lib/walkthrough/curriculum.ts`; `src/components/walkthrough-caption-overlay.tsx` consumes `src/lib/walkthrough/bmh-demo.ts`; and `src/app/layout.tsx` is the only production mount. No E2E or real-manifest source consumes the walkthrough query contract. Delete the command, seed script, both walkthrough modules, overlay, their tests, the root-layout mount, and update walkthrough-only documentation only after the real course replaces the onboarding/demo path. |
-| Drag-and-drop packages | **Proven-delete-after-acceptance** | Repository source has zero imports of `@dnd-kit/core`, `@dnd-kit/sortable`, or `@dnd-kit/utilities`. Current admin ordering uses explicit move operations and `fn_move_module`. Remove all three together, refresh the lockfile with a clean install, and repeat editor ordering UAT. Spec and `AGENTS.md` mentions are documentation, not runtime imports. |
-| Zero-import legacy UI primitives | **Proven-delete-after-acceptance** | These files have zero imports outside themselves: `src/components/ui/badge.tsx`, `brand-lockup.tsx`, `dialog.tsx`, `dropdown-menu.tsx`, `input.tsx`, `select.tsx`, `separator.tsx`, `skeleton.tsx`, and `table.tsx`. Delete only after a fresh import scan, clean build, and desktop/mobile acceptance. The similarly named BMH design-system components are active and are not part of this set. |
+| Drag-and-drop packages | **Removed** | Repository source had zero imports of `@dnd-kit/core`, `@dnd-kit/sortable`, or `@dnd-kit/utilities`. Current admin ordering continues to use explicit move operations and `fn_move_module`. The package and lock files now omit all three. |
+| Zero-import legacy UI primitives | **Removed** | The zero-import `badge`, `brand-lockup`, `dialog`, `dropdown-menu`, `input`, `select`, `separator`, `skeleton`, and `table` files under `src/components/ui` were deleted. The similarly named BMH design-system components remain active. |
 | Exact fixture catalog graph | **Proven-delete-after-acceptance** | `fixture-boundary-manifest.json` and migration 021 lock 463 identities: 9 programs, 12 program-course links, 15 courses, 20 modules, 40 lessons, 79 blocks, 10 quizzes, 17 questions, 45 options, 14 assignments, access/role links, exactly six invites, and fixture activity/certificates/resume rows. Storage deletion count is zero. Profiles, auth users, audit history, certificate templates, counters, reusable role groups, all unlisted invites, all real-import rows, and testing infrastructure are excluded. Use only the guarded atomic cleanup after canary/full acceptance and the separate backup/approval gates. |
 | `certificates.pdf_path` and `program_certificates.pdf_path` | **Unresolved until after fixture cleanup** | No application certificate page or Sandra delivery path reads these fields; certificates are rendered as HTML and linked to scoped routes. The fields remain in the E2E write-path probe and, critically, in the exact fixture fingerprints. Dropping them before fixture cleanup would invalidate the cleanup column-set guard. Re-audit database dependencies and live values after fixture cleanup; if still unused, remove via a new migration and update types/tests. |
 
@@ -38,6 +38,7 @@ product is a reusable internal learning platform.
 | --- | --- | --- |
 | Manual lesson/block completion bypass | **Already removed** | Current server exports are video observation/resume, signed Closer Lab completion, quiz submission, and reviewed assignment operations. Git history shows `markLessonComplete` and `markBlockComplete` were deleted by the runtime-hardening change. Required video completion now depends on authored duration and 90% watched-range coverage. There is no current manual-complete action or button to delete. |
 | Nonfunctional notification bell | **Already removed** | Current source contains no `Bell` import or notification button. Git history shows it was removed when working lesson search replaced the inert header control. Sonner toasts are unrelated and active. |
+| Internal pilot monitoring and access names | **Renamed** | Active modules, types, functions, components, tests, and the canonical export implementation now use learner terminology. `/admin/reports/pilot/export` remains a compatibility re-export and is not presented as the canonical route. |
 
 ## Retain
 
@@ -61,7 +62,7 @@ product is a reusable internal learning platform.
 
 | Candidate | Classification | Why unresolved |
 | --- | --- | --- |
-| `/admin/reports/pilot/export` and `src/lib/pilot-monitoring/*` / `pilot-cohort/*` names | **Unresolved; retain now** | Visible UI and E2E use `/admin/reports/learners/export`, but that route currently re-exports the implementation from the pilot path, and current reports/users pages import the internally named libraries. Refactoring names may be worthwhile, but deleting the old route first would break the live route. External bookmarks/API callers have not been disproved. |
+| `/admin/reports/pilot/export` | **Compatibility route; retain now** | The canonical implementation lives at `/admin/reports/learners/export`. The old URL re-exports it so saved bookmarks continue to work. External references have not been disproved, so deleting the URL is not yet safe. |
 | `profiles.avatar_url` | **Unresolved; retain now** | The active Avatar UI currently renders initials and no application source reads `avatar_url`; however, no production-value, external-consumer, or future-profile contract audit has proved the schema field disposable. Removing it requires a separate data/dependency migration review. |
 | `next-themes` simplification | **Unresolved; retain now** | It has one direct runtime import through the active Sonner adapter. Prove toaster behavior under system/dark/light settings before changing it. |
 | Direct dev dependencies with no literal import, such as `@testing-library/dom` and `@types/*` | **Retain** | Literal-import counts are not proof for peer dependencies or ambient type packages. `npm ls` shows `@testing-library/dom` is a peer used by React Testing Library and user-event; the `@types/*` packages participate through TypeScript resolution. |
@@ -139,7 +140,7 @@ full import, or Chrome acceptance.
 5. Take a fresh production backup, perform the isolated restore rehearsal, and
    obtain the exact current cleanup approval record.
 6. Execute only the exact 463-row fixture cleanup and reconcile retained rows.
-7. Remove the proven source/package candidates, then clean-install, test,
-   typecheck, build, and repeat Chrome acceptance.
+7. Reconfirm the completed package and zero-import cleanup during final Chrome
+   acceptance.
 8. Re-audit unresolved schema and compatibility candidates. Do not infer their
    deletion from the first course's content mix.

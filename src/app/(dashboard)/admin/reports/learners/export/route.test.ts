@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { toPilotMonitoringCsv } from "./route";
+import { toLearnerMonitoringCsv } from "./route";
 
-describe("toPilotMonitoringCsv", () => {
+describe("toLearnerMonitoringCsv", () => {
   it("exports pilot monitoring rows with escaped csv cells", () => {
-    const csv = toPilotMonitoringCsv({
+    const csv = toLearnerMonitoringCsv({
       totals: {
         learners: 1,
         blocked: 0,
@@ -56,7 +56,7 @@ describe("toPilotMonitoringCsv", () => {
       "\uFF0D",
       "\uFF20",
     ];
-    const csv = toPilotMonitoringCsv({
+    const csv = toLearnerMonitoringCsv({
       totals: {
         learners: prefixes.length,
         blocked: 0,

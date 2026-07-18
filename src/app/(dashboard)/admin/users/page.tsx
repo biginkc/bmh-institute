@@ -1,16 +1,14 @@
 import { Card } from "@/components/bmh-ds";
 import { requireAdmin } from "@/lib/auth/guard";
 import { createClient } from "@/lib/supabase/server";
-import {
-  shapePilotCohortRows,
-} from "@/lib/pilot-cohort/status";
+import { shapeLearnerAccessRows } from "@/lib/learner-access/status";
 
 import { AdminPageHeader, AdminSectionHeading } from "../_components/admin-shell";
 import { InviteForm } from "./invite-form";
 import {
   ActiveMembersTable,
   PendingInvitesTable,
-  PilotSetupTable,
+  LearnerAccessTable,
 } from "./users-tables";
 
 export default async function AdminUsersPage() {
@@ -45,7 +43,7 @@ export default async function AdminUsersPage() {
     acc[userId] = [...(acc[userId] ?? []), roleGroupId];
     return acc;
   }, {});
-  const pilotRows = shapePilotCohortRows({
+  const learnerAccessRows = shapeLearnerAccessRows({
     profiles: (profiles.data ?? []).map((p) => ({
       id: p.id as string,
       email: p.email as string | null,
@@ -81,7 +79,7 @@ export default async function AdminUsersPage() {
             description="Access, invite status, and next actions for assigned learning groups."
           />
         </div>
-        <PilotSetupTable rows={pilotRows} />
+        <LearnerAccessTable rows={learnerAccessRows} />
       </Card>
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(20rem,1fr)]">

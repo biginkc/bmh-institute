@@ -5,9 +5,9 @@ import Link from "next/link";
 
 import { Badge, Table, type BadgeProps } from "@/components/bmh-ds";
 import type {
-  PilotCohortRow,
-  PilotStatusKey,
-} from "@/lib/pilot-cohort/status";
+  LearnerAccessRow,
+  LearnerAccessStatusKey,
+} from "@/lib/learner-access/status";
 
 import { ResendInviteButton } from "./resend-invite-button";
 import { RevokeInviteButton } from "./revoke-invite-button";
@@ -27,7 +27,7 @@ type InviteRow = {
   expiresAt: string;
 };
 
-export function PilotSetupTable({ rows }: { rows: PilotCohortRow[] }) {
+export function LearnerAccessTable({ rows }: { rows: LearnerAccessRow[] }) {
   return (
     <div data-testid="learner-access-table-scroll" style={{ width: "100%", overflowX: "auto" }}>
       <div style={{ minWidth: "52rem" }}>
@@ -45,7 +45,7 @@ export function PilotSetupTable({ rows }: { rows: PilotCohortRow[] }) {
       cell={{
         email: (row) => muted(row.email),
         statusLabel: (row) => (
-          <Badge tone={pilotTone(row.statusKey)} size="sm">
+          <Badge tone={learnerAccessTone(row.statusKey)} size="sm">
             {row.statusLabel}
           </Badge>
         ),
@@ -148,7 +148,7 @@ function muted(value: string) {
   return <span style={{ color: "var(--text-muted)", fontSize: 12 }}>{value}</span>;
 }
 
-function pilotTone(status: PilotStatusKey): BadgeProps["tone"] {
+function learnerAccessTone(status: LearnerAccessStatusKey): BadgeProps["tone"] {
   if (status === "expired_invite" || status === "suspended") return "red";
   if (status === "missing_access") return "yellow";
   if (status === "ready") return "green";

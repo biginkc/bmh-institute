@@ -1,17 +1,17 @@
-export type PilotStatusKey =
+export type LearnerAccessStatusKey =
   | "ready"
   | "missing_access"
   | "suspended"
   | "pending_invite"
   | "expired_invite";
 
-export type PilotCohortRow = {
+export type LearnerAccessRow = {
   kind: "profile" | "invite";
   id: string;
   email: string;
   name: string;
   systemRole: "owner" | "admin" | "learner";
-  statusKey: PilotStatusKey;
+  statusKey: LearnerAccessStatusKey;
   statusLabel: string;
   accessLabel: string;
   createdAt: string;
@@ -19,7 +19,7 @@ export type PilotCohortRow = {
   roleGroupIds: string[];
 };
 
-export type PilotProfileInput = {
+export type LearnerAccessProfileInput = {
   id: string;
   email: string | null;
   full_name: string | null;
@@ -28,7 +28,7 @@ export type PilotProfileInput = {
   created_at: string;
 };
 
-export type PilotInviteInput = {
+export type LearnerAccessInviteInput = {
   id: string;
   email: string;
   system_role: "owner" | "admin" | "learner";
@@ -38,17 +38,17 @@ export type PilotInviteInput = {
   expires_at: string;
 };
 
-export function shapePilotCohortRows({
+export function shapeLearnerAccessRows({
   profiles,
   invites,
   userRoleGroupsByUserId,
   now,
 }: {
-  profiles: PilotProfileInput[];
-  invites: PilotInviteInput[];
+  profiles: LearnerAccessProfileInput[];
+  invites: LearnerAccessInviteInput[];
   userRoleGroupsByUserId: Record<string, string[]>;
   now: Date;
-}): PilotCohortRow[] {
+}): LearnerAccessRow[] {
   const profileRows = profiles.map((profile) => {
     const roleGroupIds = userRoleGroupsByUserId[profile.id] ?? [];
     const accessLabel =
@@ -100,9 +100,9 @@ export function shapePilotCohortRows({
 }
 
 function getProfileStatus(
-  status: PilotProfileInput["status"],
+  status: LearnerAccessProfileInput["status"],
   roleGroupIds: string[],
-): { key: PilotStatusKey; label: string } {
+): { key: LearnerAccessStatusKey; label: string } {
   if (status === "suspended") {
     return { key: "suspended", label: "Suspended" };
   }

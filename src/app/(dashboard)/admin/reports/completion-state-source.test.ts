@@ -8,7 +8,7 @@ const reportFiles = [
   "src/app/(dashboard)/admin/reports/courses/[courseId]/page.tsx",
   "src/app/(dashboard)/admin/reports/programs/[programId]/page.tsx",
   "src/app/(dashboard)/admin/reports/users/[userId]/page.tsx",
-  "src/app/(dashboard)/admin/reports/pilot/export/route.ts",
+  "src/app/(dashboard)/admin/reports/learners/export/route.ts",
 ];
 
 type SourceMode = "id" | "composite" | "bounded" | "single";
@@ -103,7 +103,7 @@ const sourceInventory: Record<string, SourceSpec[]> = {
     },
     { table: "audit_log", result: "auditRes", mode: "bounded" },
   ],
-  "src/app/(dashboard)/admin/reports/pilot/export/route.ts": [
+  "src/app/(dashboard)/admin/reports/learners/export/route.ts": [
     { table: "profiles", result: "profilesResult", mode: "id" },
     {
       table: "user_role_groups",
