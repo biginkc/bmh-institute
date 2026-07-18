@@ -36,10 +36,26 @@ record matches, otherwise both remain missing.
 The six production Closer Lab IDs remain deliberately null in
 `closer-lab-production-mapping.json` until the canonical service-role-only
 production RPC proves the exact 6-role-play, 6-persona, 24-goal, and 24-link
-graph. After the ledger is populated from that authenticated response and
-marked `finalized`, set `CLOSER_LAB_PRODUCTION_SUPABASE_URL` and
+graph. Set `CLOSER_LAB_PRODUCTION_SUPABASE_URL` and
 `CLOSER_LAB_PRODUCTION_SERVICE_ROLE_KEY` from the write-enabled secret runtime,
-then create the checked evidence file without editing its output:
+then deterministically derive all six manifest and ledger UUID bindings from that live
+attestation. Never hand-copy UUIDs from CLI output:
+
+```bash
+npm run course:finalize:closer-lab -- \
+  --manifest=content/course-manifests/bmh-employee-training.v1.json \
+  --mapping-ledger=docs/course-production/closer-lab-production-mapping.json \
+  --production-catalog=docs/course-production/closer-lab-production-catalog.json \
+  --attestation-output=docs/course-production/closer-lab-production-attestation.json
+```
+
+The finalizer validates the complete result before either canonical file is
+replaced. Each replacement is atomic, and the command is safely rerunnable if
+the process stops between the manifest and ledger renames; its tests cover both
+partial-write recovery directions.
+
+After reviewing the exact changed IDs and graph checksum, create the checked
+reconciliation evidence without editing its output:
 
 ```bash
 npm run course:reconcile:closer-lab -- \

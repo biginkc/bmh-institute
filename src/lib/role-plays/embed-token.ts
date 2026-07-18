@@ -14,6 +14,7 @@ export type RolePlayEmbedTokenInput = {
   blockId: string;
   learnerName: string;
   scenarioId: string;
+  parentOrigin: string;
   ttlSeconds?: number;
   now?: Date;
 };
@@ -26,6 +27,7 @@ export type RolePlayEmbedTokenPayload = {
   block_id: string;
   learner_name: string;
   scenario_id: string;
+  parent_origin: string;
   iat: number;
   exp: number;
 };
@@ -54,6 +56,7 @@ export function mintRolePlayEmbedToken(
     block_id: input.blockId,
     learner_name: input.learnerName,
     scenario_id: input.scenarioId,
+    parent_origin: normalizeParentOrigin(input.parentOrigin),
     iat: nowSeconds,
     exp: nowSeconds + ttlSeconds,
   };
@@ -87,6 +90,24 @@ function assertTokenInput(input: RolePlayEmbedTokenInput) {
   ) {
     throw new Error("Role play embed token requires user, lesson, block, learner, and scenario.");
   }
+  normalizeParentOrigin(input.parentOrigin);
+}
+
+function normalizeParentOrigin(value: string): string {
+  let url: URL;
+  try {
+    url = new URL(value);
+  } catch {
+    throw new Error("Role play embed token requires an exact parent origin.");
+  }
+  if (
+    url.origin !== value || url.username || url.password || url.pathname !== "/" ||
+    url.search || url.hash ||
+    (url.protocol !== "https:" && !(url.protocol === "http:" && ["localhost", "127.0.0.1"].includes(url.hostname)))
+  ) {
+    throw new Error("Role play embed token requires an exact parent origin.");
+  }
+  return url.origin;
 }
 
 function assertSecret(secret: string | undefined): asserts secret is string {

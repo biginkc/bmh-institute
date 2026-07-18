@@ -18,6 +18,7 @@ import {
 import { enrichBlocksWithSignedUrls } from "@/lib/content-blocks/sign-urls";
 import { computeQuizEligibility } from "@/lib/quizzes/attempts";
 import { mintRolePlayEmbedToken } from "@/lib/role-plays/embed-token";
+import { getAppUrl } from "@/lib/app-url";
 import { QuizGateCard } from "./quiz-gate-card";
 import { QuizRunner } from "./quiz-runner";
 import {
@@ -496,6 +497,7 @@ async function attachRolePlayEmbeds(
         blockId: block.id,
         learnerName,
         scenarioId,
+        parentOrigin: new URL(getAppUrl()).origin,
       });
       const iframeUrl = new URL(
         `/embed/role-play/${encodeURIComponent(scenarioId)}`,

@@ -9,6 +9,7 @@ import {
   buildScenarioReconciliationEvidence,
   clientStableJsonSha256,
   fetchCloserProductionGraph,
+  finalizeScenarioProductionMapping,
   postgresJsonbSha256,
   sha256,
   validateCloserCatalogProvenance,
@@ -16,6 +17,7 @@ import {
   validateScenarioMappingLedgerShape,
   validateScenarioProductionTrust,
 } from "../../scripts/course-content/closer-lab-production-mapping.mjs";
+import { assertDistinctFinalizationPaths } from "../../scripts/course-content/finalize-closer-lab-production-mapping.mjs";
 
 const MANIFEST_URL = new URL("./bmh-employee-training.v1.json", import.meta.url);
 const LEDGER_URL = new URL("../../docs/course-production/closer-lab-production-mapping.json", import.meta.url);
@@ -134,6 +136,86 @@ function mockResponse(payload, url = RPC_URL, status = 200) {
 test("pending mapping scaffold covers the exact six authored scenario and assignment keys", async () => {
   const { manifest, ledger } = await base();
   assert.deepEqual(validateScenarioMappingLedgerShape(manifest, ledger), []);
+});
+
+test("production attestation finalizes the manifest and ledger without hand-copied UUIDs", async () => {
+  const { manifest, ledger, catalog } = await base();
+  const expectedManifest = structuredClone(manifest);
+  const expectedLedger = structuredClone(ledger);
+  attachProductionIds(expectedManifest, expectedLedger);
+  const attestation = productionAttestation(expectedLedger, catalog);
+
+  const result = finalizeScenarioProductionMapping({ manifest, ledger, catalog, closerExport: attestation });
+
+  assert.equal(ledger.status, "pending");
+  assert.equal(result.ledger.status, "finalized");
+  assert.deepEqual(validateScenarioMappingLedgerShape(result.manifest, result.ledger), []);
+  assert.deepEqual(
+    result.ledger.records.map((record) => record.production_scenario_id),
+    expectedLedger.records.map((record) => record.production_scenario_id),
+  );
+  assert.ok(result.ledger.records.every((record) =>
+    record.scenario_sha256 === clientStableJsonSha256(attestation.checksum_binding),
+  ));
+
+  const repairedAfterManifestOnly = finalizeScenarioProductionMapping({
+    manifest: result.manifest,
+    ledger,
+    catalog,
+    closerExport: attestation,
+  });
+  const repairedAfterLedgerOnly = finalizeScenarioProductionMapping({
+    manifest,
+    ledger: result.ledger,
+    catalog,
+    closerExport: attestation,
+  });
+  assert.deepEqual(repairedAfterManifestOnly.manifest, result.manifest);
+  assert.deepEqual(repairedAfterManifestOnly.ledger, result.ledger);
+  assert.deepEqual(repairedAfterLedgerOnly.manifest, result.manifest);
+  assert.deepEqual(repairedAfterLedgerOnly.ledger, result.ledger);
+});
+
+test("finalization refuses to replace an existing production binding", async () => {
+  const { manifest, ledger, catalog } = await base();
+  const expectedManifest = structuredClone(manifest);
+  const expectedLedger = structuredClone(ledger);
+  attachProductionIds(expectedManifest, expectedLedger);
+  const attestation = productionAttestation(expectedLedger, catalog);
+  const finalized = finalizeScenarioProductionMapping({ manifest, ledger, catalog, closerExport: attestation });
+
+  const changedLedger = structuredClone(finalized.ledger);
+  changedLedger.records[0].production_scenario_id = "ffffffff-ffff-4fff-8fff-ffffffffffff";
+  assert.throws(() => finalizeScenarioProductionMapping({
+    manifest: finalized.manifest,
+    ledger: changedLedger,
+    catalog,
+    closerExport: attestation,
+  }), /binding changed after finalization/);
+
+  const changedManifest = structuredClone(finalized.manifest);
+  const changedBlock = changedManifest.program.courses
+    .flatMap((course) => course.modules)
+    .flatMap((module) => module.lessons)
+    .flatMap((lesson) => lesson.blocks ?? [])
+    .find((block) => block.type === "role_play");
+  changedBlock.content.scenario_id = "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee";
+  assert.throws(() => finalizeScenarioProductionMapping({
+    manifest: changedManifest,
+    ledger: finalized.ledger,
+    catalog,
+    closerExport: attestation,
+  }), /manifest UUID changed after production binding/);
+});
+
+test("finalization rejects aliased input and output paths before any live request", async () => {
+  await assert.rejects(
+    assertDistinctFinalizationPaths([
+      new URL("./bmh-employee-training.v1.json", import.meta.url).pathname,
+      new URL("./bmh-employee-training.v1.json", import.meta.url).pathname,
+    ]),
+    /must all be distinct/,
+  );
 });
 
 test("the authenticated RPC catalog is byte-bound to the exact reviewed Closer commit", async () => {

@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { mintRolePlayEmbedToken } from "./embed-token";
 
 const SECRET = "0123456789abcdef0123456789abcdef";
+const PARENT_ORIGIN = "https://institute.bmhgroupkc.com";
 
 describe("mintRolePlayEmbedToken", () => {
   afterEach(() => {
@@ -17,6 +18,7 @@ describe("mintRolePlayEmbedToken", () => {
         blockId: "block-1",
         learnerName: "Test Learner",
         scenarioId: "scenario-1",
+        parentOrigin: PARENT_ORIGIN,
         now: new Date("2026-05-08T18:00:00.000Z"),
       },
       SECRET,
@@ -36,6 +38,7 @@ describe("mintRolePlayEmbedToken", () => {
       block_id: "block-1",
       learner_name: "Test Learner",
       scenario_id: "scenario-1",
+      parent_origin: PARENT_ORIGIN,
       iat: 1778263200,
       exp: 1778263500,
     });
@@ -50,6 +53,7 @@ describe("mintRolePlayEmbedToken", () => {
           blockId: "block-1",
           learnerName: "Test Learner",
           scenarioId: "scenario-1",
+          parentOrigin: PARENT_ORIGIN,
         },
         "short",
       ),
@@ -68,6 +72,7 @@ describe("mintRolePlayEmbedToken", () => {
         blockId: "block-1",
         learnerName: "Test Learner",
         scenarioId: "scenario-1",
+        parentOrigin: PARENT_ORIGIN,
       }),
     ).toThrow(/ROLE_PLAY_EMBED_SIGNING_SECRET/);
   });
@@ -88,6 +93,7 @@ describe("mintRolePlayEmbedToken", () => {
         blockId: "block-1",
         learnerName: "Test Learner",
         scenarioId: "scenario-1",
+        parentOrigin: PARENT_ORIGIN,
       }).split("."),
     ).toHaveLength(3);
   });
@@ -105,6 +111,7 @@ describe("mintRolePlayEmbedToken", () => {
           blockId: "block-1",
           learnerName: "Test Learner",
           scenarioId: "scenario-1",
+          parentOrigin: PARENT_ORIGIN,
         },
         SECRET,
       ),
@@ -123,6 +130,7 @@ describe("mintRolePlayEmbedToken", () => {
         blockId: "block-1",
         learnerName: "Test Learner",
         scenarioId: "scenario-1",
+        parentOrigin: PARENT_ORIGIN,
       }),
     ).toThrow(/ROLE_PLAY_EMBED_SIGNING_SECRET/);
   });
@@ -138,6 +146,7 @@ describe("mintRolePlayEmbedToken", () => {
             blockId: "block-1",
             learnerName: "Test Learner",
             scenarioId: "scenario-1",
+            parentOrigin: PARENT_ORIGIN,
             ttlSeconds,
           },
           SECRET,
@@ -160,6 +169,7 @@ describe("mintRolePlayEmbedToken", () => {
           blockId: "block-1",
           learnerName: "Test Learner",
           scenarioId: "scenario-1",
+          parentOrigin: PARENT_ORIGIN,
           ...mutation,
         },
         SECRET,

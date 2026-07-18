@@ -54,7 +54,7 @@ export function clientStableJsonSha256(value) {
 export function validateCloserCatalogProvenance({ catalogBytes, provenance }) {
   const expected = {
     schema_version: 1,
-    source_repository: "biginkc/closer",
+    source_repository: "biginkc/closer-lab",
     source_commit: CLOSER_LAB_CATALOG_SOURCE_COMMIT,
     source_module: "scripts/bmh-institute-scenarios/scenario-data.ts",
     catalog_path: "docs/course-production/closer-lab-production-catalog.json",
@@ -251,6 +251,78 @@ export function validateScenarioMappingLedgerShape(manifest, ledger) {
   return errors;
 }
 
+export function finalizeScenarioProductionMapping({ manifest, ledger, catalog, closerExport }) {
+  const attestation = validateProductionGraphAttestation(closerExport, catalog);
+  const pendingErrors = validateScenarioMappingLedgerShape(manifest, ledger);
+  if (pendingErrors.length > 0) throw new Error(pendingErrors.join("; "));
+
+  const finalizedManifest = structuredClone(manifest);
+  const finalizedLedger = structuredClone(ledger);
+  const exported = new Map(attestation.role_plays.map((record) => [record.source_key, record]));
+  if (exported.size !== 6 || attestation.role_plays.length !== 6) {
+    throw new Error("Closer Lab production export must contain exactly six unique scenario bindings.");
+  }
+  const ledgerRecords = new Map(
+    finalizedLedger.records.map((record) => [record.block_source_key, record]),
+  );
+  const graphBindingSha256 = clientStableJsonSha256(attestation.checksum_binding);
+  let finalizedCount = 0;
+
+  for (const course of finalizedManifest.program.courses) {
+    for (const module of course.modules) {
+      for (const lesson of module.lessons) {
+        for (const block of lesson.blocks ?? []) {
+          if (block.type !== "role_play" || block.required !== true) continue;
+          const live = exported.get(block.source_key);
+          const record = ledgerRecords.get(block.source_key);
+          if (
+            !live || !record || live.active !== true ||
+            live.assignment_source_key !== record.assignment_source_key ||
+            live.managed_source_key !== `bmh-institute-v1:role-play:${record.scenario_source_key}` ||
+            !UUID_PATTERN.test(live.scenario_id ?? "")
+          ) {
+            throw new Error(`${block.source_key} is not an exact active production mapping.`);
+          }
+          const currentScenarioId = block.content.scenario_id;
+          if (
+            !/^pending\s*:/i.test(currentScenarioId ?? "") &&
+            currentScenarioId !== live.scenario_id
+          ) {
+            throw new Error(`${block.source_key} manifest UUID changed after production binding.`);
+          }
+          if (
+            (record.production_scenario_id !== null &&
+              record.production_scenario_id !== live.scenario_id) ||
+            (record.scenario_sha256 !== null &&
+              record.scenario_sha256 !== graphBindingSha256)
+          ) {
+            throw new Error(`${block.source_key} ledger binding changed after finalization.`);
+          }
+          block.content.scenario_id = live.scenario_id;
+          record.production_scenario_id = live.scenario_id;
+          record.scenario_sha256 = graphBindingSha256;
+          finalizedCount += 1;
+        }
+      }
+    }
+  }
+
+  if (finalizedCount !== 6) {
+    throw new Error(`Expected to finalize six role-play blocks, found ${finalizedCount}.`);
+  }
+  finalizedLedger.status = "finalized";
+  const finalizedErrors = validateScenarioMappingLedgerShape(finalizedManifest, finalizedLedger);
+  if (finalizedErrors.length > 0) throw new Error(finalizedErrors.join("; "));
+  const finalizedBindings = rolePlayBindings(finalizedManifest);
+  for (const binding of finalizedBindings) {
+    const record = ledgerRecords.get(binding.block_source_key);
+    if (binding.production_scenario_id !== record?.production_scenario_id) {
+      throw new Error(`${binding.block_source_key} manifest and ledger IDs do not match.`);
+    }
+  }
+  return { manifest: finalizedManifest, ledger: finalizedLedger, attestation };
+}
+
 export function buildScenarioReconciliationEvidence({ manifestBytes, ledgerBytes, catalogBytes, closerExportBytes }) {
   const manifest = JSON.parse(manifestBytes.toString());
   const ledger = JSON.parse(ledgerBytes.toString());
@@ -345,9 +417,9 @@ export async function validateScenarioProductionTrust({
   return { errors, blockers };
 }
 
-export async function writeJsonAtomically(outputPath, value) {
+export async function writeJsonAtomically(outputPath, value, { mode = 0o600 } = {}) {
   await mkdir(path.dirname(outputPath), { recursive: true });
   const temporary = `${outputPath}.${process.pid}.${randomUUID()}.tmp`;
-  await writeFile(temporary, `${JSON.stringify(value, null, 2)}\n`, { encoding: "utf8", mode: 0o600 });
+  await writeFile(temporary, `${JSON.stringify(value, null, 2)}\n`, { encoding: "utf8", mode });
   await rename(temporary, outputPath);
 }
