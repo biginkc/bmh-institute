@@ -67,6 +67,33 @@ learners to the current offer letter, written plan, role sheet, SOP, and manager
 where each source is relevant. The spoken transitions match the current course
 manifest rather than an assumed sequence.
 
+## Post-approval Studio handoff checklist
+
+This checklist applies only after an exact, checksum-bound script approval is
+preserved. It does not authorize setup, generation, rendering, or billing.
+
+- Open each existing draft through the BMH Training project
+  (`5eb17fe1b67d4de6a010519fd367ca73`). Keep working drafts in Drafts
+  (`3d837f4e9fb84b8294785fc060a342c0`) and move an approved final render to
+  Final (`a095b4f712264847bf7c7ec358e2c101`).
+- Verify every scene uses the selected Doodle Andrea `cafe (course)` look
+  (`7c00b3e0ad8b4a6a97115243aff056bb`), Hope
+  (`42d00d4aac5441279d8536cd6b52c53c`), Avatar IV (Premium), and
+  Auto-enhance on a 1920x1080 canvas.
+- Verify the narration and scene order against the clean import plus its
+  checksum-bound JSON sidecar. Apply the sidecar pause after every scene:
+  two seconds normally and three seconds after each Objection seller prompt.
+- Before the Jarrad-only Generate handoff, rename the existing drafts to:
+  `Lesson 01 - Welcome - Draft`, `Lesson 01 - Mindset - Draft`,
+  `Lesson 10 - Objection Scripts Playbook - Draft`,
+  `Lesson 15 - Closing and Deal Engineering - Draft`,
+  `Lesson 17 - Compensation Engine - Draft`,
+  `Lesson 18 - Operator Playbook - Draft`, and
+  `Lesson 19 - Career Growth Path - Draft`.
+- Jarrad Henry is the only person who clicks Generate. A rendered cut still
+  requires exact-cut review before captions, transcripts, manifest promotion,
+  upload, publication, or employee access.
+
 Rebuild and validate the human-readable files:
 
 ```sh

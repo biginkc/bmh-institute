@@ -51,6 +51,10 @@ export const HEYGEN_DRAFT_CONTRACT = Object.freeze({
   avatarLookId: "7c00b3e0ad8b4a6a97115243aff056bb",
   voiceId: "42d00d4aac5441279d8536cd6b52c53c",
   folderId: "3d837f4e9fb84b8294785fc060a342c0",
+  finalFolderId: "a095b4f712264847bf7c7ec358e2c101",
+  projectFolderId: "5eb17fe1b67d4de6a010519fd367ca73",
+  motionEngine: "Avatar IV",
+  autoEnhance: true,
   dimension: Object.freeze({ width: 1920, height: 1080 }),
   titles: Object.freeze({
     "video-slot-01-welcome": "Chapter 1A - Draft",
@@ -60,6 +64,17 @@ export const HEYGEN_DRAFT_CONTRACT = Object.freeze({
     "video-slot-17-compensation": "Chapter 17 - Draft",
     "video-slot-18-operator": "Chapter 18 - Draft",
     "video-slot-19-career": "Chapter 19 - Draft",
+  }),
+  handoffTitles: Object.freeze({
+    "video-slot-01-welcome": "Lesson 01 - Welcome - Draft",
+    "video-slot-01-mindset": "Lesson 01 - Mindset - Draft",
+    "video-slot-10-objection-scripts":
+      "Lesson 10 - Objection Scripts Playbook - Draft",
+    "video-slot-15-closing":
+      "Lesson 15 - Closing and Deal Engineering - Draft",
+    "video-slot-17-compensation": "Lesson 17 - Compensation Engine - Draft",
+    "video-slot-18-operator": "Lesson 18 - Operator Playbook - Draft",
+    "video-slot-19-career": "Lesson 19 - Career Growth Path - Draft",
   }),
 });
 

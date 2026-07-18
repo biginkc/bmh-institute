@@ -820,6 +820,30 @@ test("offline HeyGen draft packages are exact, humanized, and provider-gated", a
   }
 });
 
+test("the post-approval Studio handoff contract locks folders, settings, and titles", () => {
+  assert.equal(
+    HEYGEN_DRAFT_CONTRACT.projectFolderId,
+    "5eb17fe1b67d4de6a010519fd367ca73",
+  );
+  assert.equal(
+    HEYGEN_DRAFT_CONTRACT.finalFolderId,
+    "a095b4f712264847bf7c7ec358e2c101",
+  );
+  assert.equal(HEYGEN_DRAFT_CONTRACT.motionEngine, "Avatar IV");
+  assert.equal(HEYGEN_DRAFT_CONTRACT.autoEnhance, true);
+  assert.deepEqual(HEYGEN_DRAFT_CONTRACT.handoffTitles, {
+    "video-slot-01-welcome": "Lesson 01 - Welcome - Draft",
+    "video-slot-01-mindset": "Lesson 01 - Mindset - Draft",
+    "video-slot-10-objection-scripts":
+      "Lesson 10 - Objection Scripts Playbook - Draft",
+    "video-slot-15-closing":
+      "Lesson 15 - Closing and Deal Engineering - Draft",
+    "video-slot-17-compensation": "Lesson 17 - Compensation Engine - Draft",
+    "video-slot-18-operator": "Lesson 18 - Operator Playbook - Draft",
+    "video-slot-19-career": "Lesson 19 - Career Growth Path - Draft",
+  });
+});
+
 test("one checksum-bound review surface covers all seven scripts and scene plans without authorizing generation", async () => {
   const packages = await loadRecutPackages();
   const expected = await buildHeldVideoScriptReviewArtifacts(packages);
