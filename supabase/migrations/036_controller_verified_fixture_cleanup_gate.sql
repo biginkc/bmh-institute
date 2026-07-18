@@ -580,7 +580,9 @@ begin
   );
   if jsonb_typeof(v_result) is distinct from 'object'
     or array(
-      select key from jsonb_object_keys(v_result) key order by key
+      select key
+      from jsonb_object_keys(v_result) key
+      order by key collate "C"
     ) <> array['deleted', 'status']::text[]
     or v_result ->> 'status' not in ('deleted', 'already_deleted')
     or jsonb_typeof(v_result -> 'deleted') is distinct from 'object'
@@ -593,7 +595,7 @@ begin
       and (
         array(
           select key from jsonb_object_keys(v_result -> 'deleted') key
-          order by key
+          order by key collate "C"
         ) <> array[
           'answer_options',
           'assignment_submissions',
@@ -1223,7 +1225,7 @@ insert into private.fixture_cleanup_expected_function_contracts_v1 (
   (
     'controller_wrapper',
     'public.admin_cleanup_fixture_catalog_v1(text,text,jsonb,jsonb)',
-    '8a8506b3abcaa9a4d77c0c9873e3fa72903d8d07fe462e039109d7e850e459f0', true, '["search_path=pg_catalog"]',
+    'f5574da2efc5aaaa9c9e063d380aed273a7e14be0d6de78ad46bffd178a5d141', true, '["search_path=pg_catalog"]',
     'plpgsql', 'volatile', false,
     '[{"grantee":"owner","grantable":false},{"grantee":"service_role","grantable":false}]'
   ),

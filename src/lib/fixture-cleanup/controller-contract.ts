@@ -136,7 +136,7 @@ export const REVIEWED_CONTROLLER_FUNCTION_CONTRACTS: Record<
   },
   controller_wrapper: {
     definition_sha256:
-      "8a8506b3abcaa9a4d77c0c9873e3fa72903d8d07fe462e039109d7e850e459f0",
+      "f5574da2efc5aaaa9c9e063d380aed273a7e14be0d6de78ad46bffd178a5d141",
     owner_exact: true,
     security_definer: true,
     search_path: ["search_path=pg_catalog"],

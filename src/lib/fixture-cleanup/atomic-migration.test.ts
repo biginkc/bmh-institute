@@ -254,6 +254,7 @@ describe("atomic fixture cleanup migration", () => {
     expect(controllerGate).toContain("search_path");
     expect(controllerGate).toContain("execute_acl");
     expect(controllerGate).toContain("destructive result contract mismatch");
+    expect(controllerGate).toContain('order by key collate "C"');
     expect(controllerGate).toContain(
       "outcome in ('deleted', 'already_deleted')",
     );
@@ -465,7 +466,7 @@ describe("atomic fixture cleanup migration", () => {
       "6db0a612dc15cb21e0fd39317d87e4e103d0953f2ab5e8d759da39431fa5ad8d",
       "fed40391a8ac6902110fcd62c36c8c14615ce9a437390316f05a591759a8fe74",
       "9631a9eb83cb21f3c84faddc02c5cd08a33db51be410228590e02df99b4c6380",
-      "8a8506b3abcaa9a4d77c0c9873e3fa72903d8d07fe462e039109d7e850e459f0",
+      "f5574da2efc5aaaa9c9e063d380aed273a7e14be0d6de78ad46bffd178a5d141",
       "c2830bd8f872ae71a94325295e35d7c6283df405f9d65feaff7192dc578203ad",
       "1f20fcb5390b85bd1ba3d45166e204bdc947e0ef3ea3f3214a16a1c6aef08b30",
       "6a286ad85ab3b904675a0c1a86306bf3c389a30323d09c4f48dca06ef926181b",
