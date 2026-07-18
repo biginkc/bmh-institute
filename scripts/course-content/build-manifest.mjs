@@ -1225,7 +1225,30 @@ export async function validateQuizApprovalLedger(ledger, repoRoot = REPO_ROOT) {
       }
       reviewRequest = JSON.parse(await readFile(requestPath, "utf8"));
     } catch {
-      errors.push("Quiz approval review request is missing");
+      errors.push("Quiz approval review request is missing or invalid");
+    }
+  }
+  if (reviewRequest) {
+    if (reviewRequest.schema_version !== "bmh-quiz-content-review-request/v1") {
+      errors.push("Quiz approval review request schema is invalid");
+    }
+    const reviewSurface = reviewRequest.review_surface;
+    if (
+      !isRecord(reviewSurface)
+      || reviewSurface.path !== "docs/course-production/quiz-content-review.v1.md"
+    ) {
+      errors.push("Quiz approval review surface path is not canonical");
+    } else if (!SHA256_PATTERN.test(reviewSurface.sha256 ?? "")) {
+      errors.push("Quiz approval review surface checksum is invalid");
+    } else {
+      try {
+        const actualReviewChecksum = await sha256(path.join(repoRoot, reviewSurface.path));
+        if (actualReviewChecksum !== reviewSurface.sha256) {
+          errors.push("Quiz approval review surface is not bound to the exact review packet");
+        }
+      } catch {
+        errors.push("Quiz approval review surface is missing");
+      }
     }
   }
   if (!Array.isArray(ledger.records)) {

@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { manifestGateForCommand } from "./command-policy";
+import {
+  enforcePublicationBlockersForGate,
+  manifestGateForCommand,
+} from "./command-policy";
 
 describe("course import command policy", () => {
   it("keeps canary apply, verify, and upload behind the isolated canary gate", () => {
@@ -12,5 +15,11 @@ describe("course import command policy", () => {
   it("allows canary rollback and storage inspection to survive approval drift", () => {
     expect(manifestGateForCommand("rollback", true)).toBe("draft");
     expect(manifestGateForCommand("inspect-rollback-storage", true)).toBe("draft");
+  });
+
+  it("enforces every non-quiz publication blocker during canary verification", () => {
+    expect(enforcePublicationBlockersForGate("canary")).toBe(true);
+    expect(enforcePublicationBlockersForGate("release")).toBe(true);
+    expect(enforcePublicationBlockersForGate("draft")).toBe(false);
   });
 });

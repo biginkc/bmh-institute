@@ -87,6 +87,22 @@ test("canary semantic validation cross-checks exact deterministic identity", asy
   assert.ok(invalid.errors.some((error) => error.includes("exact deterministic Tech Stack slice")));
 });
 
+test("an expired operating-stack confirmation remains a canary publication blocker", async () => {
+  const canary = await loadManifest(CANARY_URL);
+  const report = await validateBmhImportSemanticGate({
+    manifest: canary,
+    now: new Date("2026-07-24T12:00:00-05:00"),
+  });
+  assert.deepEqual(report.errors, []);
+  assert.ok(report.publicationBlockers.some((blocker) =>
+    blocker.includes("DialPad references require a valid current-stack confirmation"),
+  ));
+  assert.throws(
+    () => assertBmhImportSemanticGate(report, { enforcePublicationBlockers: true }),
+    /BMH publication gate failed/,
+  );
+});
+
 test("a canary cannot add role-play without entering the scenario trust boundary", async () => {
   const [canary, full] = await Promise.all([
     loadManifest(CANARY_URL),

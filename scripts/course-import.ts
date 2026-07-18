@@ -33,6 +33,7 @@ import {
 import type { Database } from "../src/lib/supabase/types";
 import { assertCourseImportEnvironment } from "../src/lib/course-import/environment";
 import {
+  enforcePublicationBlockersForGate,
   manifestGateForCommand,
   type CourseImportCommand,
 } from "../src/lib/course-import/command-policy";
@@ -71,8 +72,9 @@ async function main() {
     assertBmhImportInvocationScope(semanticReport, flags.canary);
     if (command !== "rollback" && command !== "inspect-rollback-storage") {
       assertBmhImportSemanticGate(semanticReport, {
-        enforcePublicationBlockers:
-          manifestGateForCommand(command, flags.canary) === "release",
+        enforcePublicationBlockers: enforcePublicationBlockersForGate(
+          manifestGateForCommand(command, flags.canary),
+        ),
       });
     }
   }

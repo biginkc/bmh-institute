@@ -667,6 +667,13 @@ function validateQuiz(
   ) {
     errors.push(`${path}.approval_status is invalid.`);
   }
+  if (
+    gate === "canary" &&
+    quiz.approval_status !== "pending_human_review" &&
+    quiz.approval_status !== "approved"
+  ) {
+    errors.push(`${path}.approval_status must explicitly be pending human review or approved for a canary.`);
+  }
   if (gate === "release" && quiz.approval_status !== "approved") {
     errors.push(`${path}.approval_status requires explicit human content approval before release.`);
   }

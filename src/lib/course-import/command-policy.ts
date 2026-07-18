@@ -14,3 +14,9 @@ export function manifestGateForCommand(
   if (canary) return "canary";
   return command === "apply" || command === "verify" ? "release" : "draft";
 }
+
+export function enforcePublicationBlockersForGate(
+  gate: ReturnType<typeof manifestGateForCommand>,
+): boolean {
+  return gate !== "draft";
+}

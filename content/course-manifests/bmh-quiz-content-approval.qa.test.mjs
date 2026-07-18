@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { readFile, stat } from "node:fs/promises";
-import { resolve } from "node:path";
+import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
 import { test } from "node:test";
 
 import {
@@ -103,12 +104,35 @@ test("only an exact checksum-bound response can flip a quiz to approved", async 
   assert.equal(quizApprovalStatus(approved, quiz), "pending_human_review");
 });
 
-test("release validation cannot treat a missing quiz approval status as approved", async () => {
+test("a forged review-request checksum cannot validate the approval ledger", async () => {
   const ledger = await readFile(LEDGER_PATH, "utf8").then(JSON.parse);
   const forged = structuredClone(ledger);
   forged.request_sha256 = "0".repeat(64);
   assert.match(
     (await validateQuizApprovalLedger(forged)).join("\n"),
     /not bound to the exact review request/i,
+  );
+});
+
+test("the approval ledger fails closed when its exact review packet is missing or changed", async (t) => {
+  const root = await mkdtemp(join(tmpdir(), "bmh-quiz-review-packet-"));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const productionDocs = resolve(root, "docs/course-production");
+  await mkdir(productionDocs, { recursive: true });
+  const [requestBytes, ledger] = await Promise.all([
+    readFile(REQUEST_PATH),
+    readFile(LEDGER_PATH, "utf8").then(JSON.parse),
+  ]);
+  await writeFile(resolve(productionDocs, "quiz-content-review-request.v1.json"), requestBytes);
+
+  assert.match(
+    (await validateQuizApprovalLedger(ledger, root)).join("\n"),
+    /review surface is missing/i,
+  );
+
+  await writeFile(resolve(productionDocs, "quiz-content-review.v1.md"), "changed review packet\n");
+  assert.match(
+    (await validateQuizApprovalLedger(ledger, root)).join("\n"),
+    /not bound to the exact review packet/i,
   );
 });

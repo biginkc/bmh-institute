@@ -156,6 +156,17 @@ describe("validateCourseManifest", () => {
     const release = validateCourseManifest(canary, { gate: "release" });
     expect(release.ok).toBe(false);
     if (!release.ok) expect(release.errors.join("\n")).toMatch(/human content approval/i);
+
+    const missingApproval = structuredClone(canary);
+    const quiz = missingApproval.program.courses[0].modules[0].lessons.find(
+      (lesson: { type: string }) => lesson.type === "quiz",
+    ).quiz;
+    delete quiz.approval_status;
+    const missingResult = validateCourseManifest(missingApproval, { gate: "canary" });
+    expect(missingResult.ok).toBe(false);
+    if (!missingResult.ok) {
+      expect(missingResult.errors.join("\n")).toMatch(/must explicitly be pending human review or approved/i);
+    }
   });
 
   it("rejects invalid lesson payloads and unapproved required media", () => {
