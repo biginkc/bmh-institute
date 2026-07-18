@@ -1,0 +1,145 @@
+{
+  "schema_version": "bmh-held-video-studio-import/v1",
+  "status": "manual_studio_preparation_only",
+  "source_key": "video-slot-18-operator",
+  "provider_call_allowed": false,
+  "render_allowed": false,
+  "generate_button_allowed_for_codex": false,
+  "narration": {
+    "path": "docs/course-production/held-video-recuts/generated/video-slot-18-operator-studio-import.txt",
+    "sha256": "03d23cbbb48667e0e79db60b93b9ccc9bfadd70e1e19406c7412deac1175f82c",
+    "size_bytes": 5140,
+    "line_count": 12,
+    "format": "one UTF-8 narration line per canonical provider scene; no blank lines"
+  },
+  "studio_preparation": {
+    "manual_only": true,
+    "canonical_video_input_count": 12,
+    "narration_line_character_limit": 1000,
+    "studio_api_single_request_video_input_limit": 50,
+    "canonical_sequence_fits_single_api_request": true,
+    "instruction": "Create one Studio scene per narration line, then apply the sidecar pause at that scene boundary."
+  },
+  "scene_map": [
+    {
+      "line_number": 1,
+      "input_index": 0,
+      "source_scene_id": "operator-whole-day",
+      "segment_id": "operator-whole-day",
+      "segment_kind": "andrea_narration",
+      "input_text_sha256": "59bac019a55f56ac39e1525edd9cd8e64526aa5320d624f4545172b8351dd271",
+      "pause_after_seconds": 2,
+      "pause_kind": "standard_scene_end"
+    },
+    {
+      "line_number": 2,
+      "input_index": 1,
+      "source_scene_id": "operator-priorities",
+      "segment_id": "operator-priorities",
+      "segment_kind": "andrea_narration",
+      "input_text_sha256": "e0d7f3b19fb7e7a83e1a00ea3282a29c82e344a843083b69e084b7e3346d2bc3",
+      "pause_after_seconds": 2,
+      "pause_kind": "standard_scene_end"
+    },
+    {
+      "line_number": 3,
+      "input_index": 2,
+      "source_scene_id": "operator-research",
+      "segment_id": "operator-research",
+      "segment_kind": "andrea_narration",
+      "input_text_sha256": "34e5137a8508138dc5a3956731df359108b48c44af99fba23c1cfc9cd708a7a9",
+      "pause_after_seconds": 2,
+      "pause_kind": "standard_scene_end"
+    },
+    {
+      "line_number": 4,
+      "input_index": 3,
+      "source_scene_id": "operator-execution",
+      "segment_id": "operator-execution",
+      "segment_kind": "andrea_narration",
+      "input_text_sha256": "945d3bbeda41be0ce76d72aa1b864304757af7a2eb4fc649b2cdadaf3b96ce24",
+      "pause_after_seconds": 2,
+      "pause_kind": "standard_scene_end"
+    },
+    {
+      "line_number": 5,
+      "input_index": 4,
+      "source_scene_id": "operator-document",
+      "segment_id": "operator-document",
+      "segment_kind": "andrea_narration",
+      "input_text_sha256": "ecec5b3c97cec0e8b208ab617e8688ad5ebf32c4d89eb7800bfe5e4f78ab5c8c",
+      "pause_after_seconds": 2,
+      "pause_kind": "standard_scene_end"
+    },
+    {
+      "line_number": 6,
+      "input_index": 5,
+      "source_scene_id": "operator-energy",
+      "segment_id": "operator-energy",
+      "segment_kind": "andrea_narration",
+      "input_text_sha256": "4be40f3a53bb02291b176ddf4ff5f23e979e4ede5076fef6a754615c85158d4b",
+      "pause_after_seconds": 2,
+      "pause_kind": "standard_scene_end"
+    },
+    {
+      "line_number": 7,
+      "input_index": 6,
+      "source_scene_id": "operator-admin",
+      "segment_id": "operator-admin",
+      "segment_kind": "andrea_narration",
+      "input_text_sha256": "acd6bd09195e8eb7166ac6c0139e339708d4d44663cf89529891dcb1f2a7cecb",
+      "pause_after_seconds": 2,
+      "pause_kind": "standard_scene_end"
+    },
+    {
+      "line_number": 8,
+      "input_index": 7,
+      "source_scene_id": "operator-communication",
+      "segment_id": "operator-communication",
+      "segment_kind": "andrea_narration",
+      "input_text_sha256": "da35ab67afcfe8b9282bd52c4f98d3d8113c06b2eeabbf2730de24a5ed2ae2bb",
+      "pause_after_seconds": 2,
+      "pause_kind": "standard_scene_end"
+    },
+    {
+      "line_number": 9,
+      "input_index": 8,
+      "source_scene_id": "operator-close-day",
+      "segment_id": "operator-close-day",
+      "segment_kind": "andrea_narration",
+      "input_text_sha256": "9cfd6e8f7561de8bae0a94d4806cdf5b28068d5ee986ff9d45a7ebba4712c10d",
+      "pause_after_seconds": 2,
+      "pause_kind": "standard_scene_end"
+    },
+    {
+      "line_number": 10,
+      "input_index": 9,
+      "source_scene_id": "operator-controlled-work",
+      "segment_id": "operator-controlled-work",
+      "segment_kind": "andrea_narration",
+      "input_text_sha256": "8938702157945838f4365a00719bc247fb1071020b21b3b906b477ae478d48b2",
+      "pause_after_seconds": 2,
+      "pause_kind": "standard_scene_end"
+    },
+    {
+      "line_number": 11,
+      "input_index": 10,
+      "source_scene_id": "operator-human-care",
+      "segment_id": "operator-human-care",
+      "segment_kind": "andrea_narration",
+      "input_text_sha256": "d2582b177d238d9a42e2553b82ac980430973aa7431ec5918a312418c03442a2",
+      "pause_after_seconds": 2,
+      "pause_kind": "standard_scene_end"
+    },
+    {
+      "line_number": 12,
+      "input_index": 11,
+      "source_scene_id": "operator-transition",
+      "segment_id": "operator-transition",
+      "segment_kind": "andrea_narration",
+      "input_text_sha256": "80ddcab98b3806fc095d0d9a36098c65b4031ed37fe52f44c5a87c590259d384",
+      "pause_after_seconds": 2,
+      "pause_kind": "standard_scene_end"
+    }
+  ]
+}

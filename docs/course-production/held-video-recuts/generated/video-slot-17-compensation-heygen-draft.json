@@ -1,18 +1,39 @@
 {
-  "schema_version": "bmh-held-video-heygen-draft/v1",
+  "schema_version": "bmh-held-video-heygen-draft/v2",
   "status": "offline_payload_only_provider_call_forbidden",
   "source_key": "video-slot-17-compensation",
   "held_source_sha256": "cecad85478bb1a8ba5bfed7404dc045440c567ed0eaaa90b11b644e124b27846",
   "humanizer_review": {
     "skill": "humanizer",
     "skill_version": "2.5.1",
-    "reviewed_on": "2026-07-17",
+    "reviewed_on": "2026-07-18",
     "result": "passed",
     "checks": [
       "role-agnostic spoken language",
       "no viewer-facing chapter numbers or timelines",
       "no em dashes, curly quotes, promotional filler, or chatbot phrasing",
-      "natural sentence rhythm retained without shortening the lesson contract"
+      "natural sentence rhythm retained without shortening the lesson contract",
+      "source-depth minimum and every locked teaching example preserved",
+      "no negative parallelism or tailing negation"
+    ]
+  },
+  "source_depth": {
+    "source_spoken_word_count": 461,
+    "minimum_replacement_word_count": 420,
+    "replacement_word_count": 434,
+    "teaching_beat_ids": [
+      "written-source-controls",
+      "course-not-agreement",
+      "scorecard-describes-work",
+      "evidence-of-work",
+      "plans-change",
+      "resolve-conflict",
+      "checkpoint-transition"
+    ],
+    "example_ids": [
+      "another-person-plan",
+      "old-training-example",
+      "documents-conflict"
     ]
   },
   "provider_gate": {
@@ -22,6 +43,80 @@
     "required_approval": "Jarrad Henry",
     "provider_call_executor_after_approval": "Codex parent agent only",
     "final_generate_button_actor": "Jarrad Henry"
+  },
+  "provider_preparation": {
+    "every_scene_andrea_speaks": true,
+    "standard_scene_end_pause_seconds": 2,
+    "learner_think_gap_seconds": 3,
+    "canonical_video_input_count": 7,
+    "studio_api_single_request_video_input_limit": 50,
+    "canonical_sequence_fits_single_api_request": true,
+    "preflight_requirement": "Apply every recorded scene-end pause in Studio before Jarrad generates.",
+    "scene_boundaries": [
+      {
+        "input_index": 0,
+        "source_scene_id": "comp-source",
+        "segment_id": "comp-source",
+        "segment_kind": "andrea_narration",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end"
+      },
+      {
+        "input_index": 1,
+        "source_scene_id": "comp-scorecard",
+        "segment_id": "comp-scorecard",
+        "segment_kind": "andrea_narration",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end"
+      },
+      {
+        "input_index": 2,
+        "source_scene_id": "comp-evidence",
+        "segment_id": "comp-evidence",
+        "segment_kind": "andrea_narration",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end"
+      },
+      {
+        "input_index": 3,
+        "source_scene_id": "comp-other-plan",
+        "segment_id": "comp-other-plan",
+        "segment_kind": "andrea_narration",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end"
+      },
+      {
+        "input_index": 4,
+        "source_scene_id": "comp-old-example",
+        "segment_id": "comp-old-example",
+        "segment_kind": "andrea_narration",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end"
+      },
+      {
+        "input_index": 5,
+        "source_scene_id": "comp-questions",
+        "segment_id": "comp-questions",
+        "segment_kind": "andrea_narration",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end"
+      },
+      {
+        "input_index": 6,
+        "source_scene_id": "comp-transition",
+        "segment_id": "comp-transition",
+        "segment_kind": "andrea_narration",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end"
+      }
+    ]
   },
   "api_endpoint": "https://api.heygen.com/v2/video/generate",
   "request_body": {
@@ -40,7 +135,7 @@
         "voice": {
           "type": "text",
           "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
-          "input_text": "One thing needs to be clear up front. This course does not set your pay. The offer letter, current written compensation plan, and role sheet issued to you tell you what applies."
+          "input_text": "Pay questions deserve a precise answer, so begin with the documents issued to you. Your current offer letter, written compensation plan, and role sheet tell you what applies. Read them together. Check the effective version and keep the current copies where you can find them. This course can explain how BMH thinks about work and measurement, but it does not create or change a pay term."
         },
         "background": {
           "type": "color",
@@ -55,7 +150,7 @@
         "voice": {
           "type": "text",
           "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
-          "input_text": "This lesson is about the work you own and how the company measures it today. Your scorecard may track conversations, handoffs, record quality, or a team result. It describes the work. It does not create a pay term."
+          "input_text": "The current scorecard describes the work assigned to you today. It may track conversation quality, record quality, completed handoffs, follow-through, or a team outcome. Those measures help you and your manager see where the work is strong and where coaching is needed. A scorecard does not add language to your written compensation plan. Use it to understand the work, then use the controlling documents for pay questions."
         },
         "background": {
           "type": "color",
@@ -70,7 +165,7 @@
         "voice": {
           "type": "text",
           "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
-          "input_text": "Keep a clear record of your work. Use the current process and the scorecard assigned to you. Plans change. An old video or another person's agreement cannot tell you what applies to you now."
+          "input_text": "Good records make the work visible. Write useful notes while the details are fresh. Keep the stage and next action current. Complete the handoff with the facts the next step needs. When the scorecard points to a result, make sure the supporting record is accurate enough to review. That discipline helps coaching and accountability. It still does not turn a course example into a term of your agreement."
         },
         "background": {
           "type": "color",
@@ -85,7 +180,37 @@
         "voice": {
           "type": "text",
           "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
-          "input_text": "If the documents are unclear or seem to disagree, stop and ask your manager. Check the latest versions issued to you. Those documents control. This lesson is only context. It is not a compensation agreement."
+          "input_text": "You may hear someone describe a document that was issued to them. That document belongs to their situation. The work, effective date, and written terms may differ from yours. Use the conversation as a reminder to check your own current documents, not as evidence that the same language applies to you. If you cannot locate the documents issued to you, ask your manager for the current copies instead of filling the gap with someone else's answer."
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "A training video, slide, or note can become outdated when the written plan changes. Imagine finding an old example that describes the work differently from your current role sheet. Do not average the two together. Follow the documents issued to you now and raise the mismatch. Training should help you understand the work. It should never become a substitute agreement simply because the example sounds familiar."
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "Suppose your role sheet and another current document seem to disagree about the work being measured. Stop and ask your manager. Bring the exact documents and point to the language that conflicts. Ask which version controls and request the answer in the proper written source. Do not rely on memory or a hallway explanation for something this important. Once the documents are clear, use the current scorecard to track the work they describe."
         },
         "background": {
           "type": "color",

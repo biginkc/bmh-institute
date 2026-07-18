@@ -1,18 +1,46 @@
 {
-  "schema_version": "bmh-held-video-heygen-draft/v1",
+  "schema_version": "bmh-held-video-heygen-draft/v2",
   "status": "offline_payload_only_provider_call_forbidden",
   "source_key": "video-slot-18-operator",
   "held_source_sha256": "6e6a3f257ff8cf3ef201de775de47c6e7833e3abd673e44bb8d4d5ac3aafa048",
   "humanizer_review": {
     "skill": "humanizer",
     "skill_version": "2.5.1",
-    "reviewed_on": "2026-07-17",
+    "reviewed_on": "2026-07-18",
     "result": "passed",
     "checks": [
       "role-agnostic spoken language",
       "no viewer-facing chapter numbers or timelines",
       "no em dashes, curly quotes, promotional filler, or chatbot phrasing",
-      "natural sentence rhythm retained without shortening the lesson contract"
+      "natural sentence rhythm retained without shortening the lesson contract",
+      "source-depth minimum and every locked teaching example preserved",
+      "no negative parallelism or tailing negation"
+    ]
+  },
+  "source_depth": {
+    "source_spoken_word_count": 937,
+    "minimum_replacement_word_count": 840,
+    "replacement_word_count": 844,
+    "teaching_beat_ids": [
+      "whole-day",
+      "prioritize-commitments",
+      "research",
+      "execute-order",
+      "document-immediately",
+      "energy-management",
+      "admin-and-handoffs",
+      "pipeline-review",
+      "controllable-work",
+      "communicate-blockers",
+      "human-care",
+      "checkpoint-transition"
+    ],
+    "example_ids": [
+      "expected-callback",
+      "research-detail",
+      "blocked-handoff",
+      "stale-lead",
+      "rough-stretch-reset"
     ]
   },
   "provider_gate": {
@@ -22,6 +50,125 @@
     "required_approval": "Jarrad Henry",
     "provider_call_executor_after_approval": "Codex parent agent only",
     "final_generate_button_actor": "Jarrad Henry"
+  },
+  "provider_preparation": {
+    "every_scene_andrea_speaks": true,
+    "standard_scene_end_pause_seconds": 2,
+    "learner_think_gap_seconds": 3,
+    "canonical_video_input_count": 12,
+    "studio_api_single_request_video_input_limit": 50,
+    "canonical_sequence_fits_single_api_request": true,
+    "preflight_requirement": "Apply every recorded scene-end pause in Studio before Jarrad generates.",
+    "scene_boundaries": [
+      {
+        "input_index": 0,
+        "source_scene_id": "operator-whole-day",
+        "segment_id": "operator-whole-day",
+        "segment_kind": "andrea_narration",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end"
+      },
+      {
+        "input_index": 1,
+        "source_scene_id": "operator-priorities",
+        "segment_id": "operator-priorities",
+        "segment_kind": "andrea_narration",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end"
+      },
+      {
+        "input_index": 2,
+        "source_scene_id": "operator-research",
+        "segment_id": "operator-research",
+        "segment_kind": "andrea_narration",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end"
+      },
+      {
+        "input_index": 3,
+        "source_scene_id": "operator-execution",
+        "segment_id": "operator-execution",
+        "segment_kind": "andrea_narration",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end"
+      },
+      {
+        "input_index": 4,
+        "source_scene_id": "operator-document",
+        "segment_id": "operator-document",
+        "segment_kind": "andrea_narration",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end"
+      },
+      {
+        "input_index": 5,
+        "source_scene_id": "operator-energy",
+        "segment_id": "operator-energy",
+        "segment_kind": "andrea_narration",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end"
+      },
+      {
+        "input_index": 6,
+        "source_scene_id": "operator-admin",
+        "segment_id": "operator-admin",
+        "segment_kind": "andrea_narration",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end"
+      },
+      {
+        "input_index": 7,
+        "source_scene_id": "operator-communication",
+        "segment_id": "operator-communication",
+        "segment_kind": "andrea_narration",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end"
+      },
+      {
+        "input_index": 8,
+        "source_scene_id": "operator-close-day",
+        "segment_id": "operator-close-day",
+        "segment_kind": "andrea_narration",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end"
+      },
+      {
+        "input_index": 9,
+        "source_scene_id": "operator-controlled-work",
+        "segment_id": "operator-controlled-work",
+        "segment_kind": "andrea_narration",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end"
+      },
+      {
+        "input_index": 10,
+        "source_scene_id": "operator-human-care",
+        "segment_id": "operator-human-care",
+        "segment_kind": "andrea_narration",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end"
+      },
+      {
+        "input_index": 11,
+        "source_scene_id": "operator-transition",
+        "segment_id": "operator-transition",
+        "segment_kind": "andrea_narration",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end"
+      }
+    ]
   },
   "api_endpoint": "https://api.heygen.com/v2/video/generate",
   "request_body": {
@@ -40,7 +187,7 @@
         "voice": {
           "type": "text",
           "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
-          "input_text": "You have seen the individual parts. Now put them together into a day you can repeat. Keep the right work moving, and keep the record and next step current."
+          "input_text": "You have learned the individual pieces: seller conversations, property facts, the pipeline, scripts, objections, written offers, follow-through, and scorecards. Now put them together into a workday you can repeat. A disciplined day keeps the right conversations moving, gives each person full attention, and leaves an accurate record behind. The current SOP, role sheet, schedule, and manager direction define the exact activity. This lesson explains how the pieces support each other."
         },
         "background": {
           "type": "color",
@@ -55,7 +202,7 @@
         "voice": {
           "type": "text",
           "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
-          "input_text": "Begin with the work you already promised. Check scheduled follow-ups and active conversations, especially anything close to a handoff. Sort the list using the current SOP and your role sheet. If your manager changes the priority, follow that direction."
+          "input_text": "Begin with the work you already promised. Check scheduled follow-ups and active conversations. A seller who expects to hear from you should not be buried beneath newer activity just because the newer list is easier to open. Look for conversations close to a handoff, questions waiting on an answer, and commitments tied to a real seller need. Sort the work using the current SOP. If your manager changes the priority, follow that direction and update the record."
         },
         "background": {
           "type": "color",
@@ -70,7 +217,7 @@
         "voice": {
           "type": "text",
           "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
-          "input_text": "Research until you can make the next conversation useful. Confirm the ownership and property details, then read the history in the current system. Look for details that help you ask a better question. When you are ready, move the conversation forward."
+          "input_text": "Research should make the next conversation more useful. Confirm ownership and the property details available through the current process. Read the history before asking the seller to repeat it. A tax notice, a listed owner, a condition note, or an unresolved family question may change the next thing you ask. Research until you can enter the conversation prepared, then move. Do not use preparation as a hiding place from the actual work."
         },
         "background": {
           "type": "color",
@@ -85,7 +232,7 @@
         "voice": {
           "type": "text",
           "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
-          "input_text": "Handle callbacks when they are due. Then move through the follow-ups and new activity assigned to you in the order the current process requires. Update the current system while the details are fresh so the next person knows what happened and what comes next."
+          "input_text": "Handle callbacks when they are due. Then move through follow-ups, recontacts, and new assigned activity in the order the current process requires. Give each person enough attention to hear the answer and choose the next useful question. The scorecard and role sheet tell you what activity applies. This video does not add a number. The aim is a steady process you can explain, repeat, and adjust when your manager gives new direction."
         },
         "background": {
           "type": "color",
@@ -100,7 +247,7 @@
         "voice": {
           "type": "text",
           "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
-          "input_text": "Your current scorecard, role sheet, schedule, and manager direction define the activity expected from you. This video does not add a number or change that schedule. Take breaks as the current schedule directs. When you return, give the next person your full attention."
+          "input_text": "Update the current system after each meaningful conversation while you still remember the exact words. Capture the seller's situation, the concern that matters, what was confirmed, and what you promised to do next. Set the correct stage and a dated next action. If the contact ended, record why. If another person needs the information, write enough that they can continue without making the seller repeat the whole story."
         },
         "background": {
           "type": "color",
@@ -115,7 +262,7 @@
         "voice": {
           "type": "text",
           "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
-          "input_text": "Before you finish, review the pipeline. An active lead should have useful notes, the right stage, and a dated next action. Complete any handoff that is ready. Escalate blocked work, then leave yourself a clear place to begin."
+          "input_text": "Use the breaks and schedule in your current operating plan. Step away when that plan calls for it. Get water, eat, stretch, and return ready to listen. If a rough stretch leaves you tense or rushing, use an approved reset and tell your manager when support is needed. A reset is useful because the next seller should hear steady attention, not the frustration left over from the last conversation."
         },
         "background": {
           "type": "color",
@@ -130,7 +277,7 @@
         "voice": {
           "type": "text",
           "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
-          "input_text": "A disciplined day cannot make someone answer or make a deal close. You can control how well you followed the process and whether you kept your commitments. You can also leave an accurate record and treat each person with care. That is work you can repeat tomorrow."
+          "input_text": "Conversation work and administrative work belong to the same process. Send the approved follow-up material you promised. Update stages and tasks. Clean up notes that are too thin to support the next step. Finish any handoff that has the required facts. If a handoff is blocked because ownership, condition, consent, or another answer is missing, do not push it through. Name the blocker, route it through the current team channel, and say what is needed next."
         },
         "background": {
           "type": "color",
@@ -145,7 +292,52 @@
         "voice": {
           "type": "text",
           "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
-          "input_text": "Follow-through matters. So does paying attention to the person in front of you. Listen, ask the next useful question, and do what you said you would do. That is how you earn trust one conversation at a time."
+          "input_text": "A useful team message gives context. State the seller or record involved, the decision already made, the fact that is missing, and the next owner according to the current process. Keep private information in the approved system and channel. Avoid vague notes such as needs help. Say what happened and what response is needed. When the question is urgent, use the escalation path in the current SOP instead of hoping someone notices the record."
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "Before you finish, step back and review the pipeline. Every active record should have useful notes, the correct stage, and a dated next action. Look for a seller who has gone stale because the record still shows an old stage or an action that already passed. Correct it. Complete ready handoffs, escalate blocked work, and make the next starting point obvious. The pipeline should tell the truth about what needs attention when work resumes."
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "A disciplined day cannot make a seller answer or force a transaction to move. You can control preparation, attention, accurate notes, useful follow-up, and whether you kept the commitments you made. Review those things honestly. If the result was weak because the process slipped, name the slip and correct it. If the process was sound and the seller still chose another path, keep the record accurate and move to the next assigned action without carrying desperation into it."
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "Consistency matters because people notice whether you follow through. Genuine care matters because every record belongs to someone dealing with a real situation. Smile if it helps your voice feel warmer. Listen through the answer. Ask the useful question. If you promised information, send it. A conversation can be productive without becoming a deal. The standard is that the person was heard, the facts were handled responsibly, and the next step is clear. Clear coordination across the team protects that standard when the work changes hands."
         },
         "background": {
           "type": "color",

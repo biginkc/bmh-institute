@@ -41,6 +41,47 @@ def sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def spoken_word_count(package: dict) -> int:
+    pattern = re.compile(r"[A-Za-z0-9]+(?:'[A-Za-z0-9]+)*")
+    return sum(
+        len(pattern.findall(segment["input_text"]))
+        for scene in package["scenes"]
+        for segment in delivery_segments(scene)
+    )
+
+
+def delivery_segments(scene: dict) -> list[dict]:
+    match = re.fullmatch(r"Seller:\s*(.+?)\s+Response:\s+(.+)", scene["spoken_text"])
+    if not match:
+        return [
+            {
+                "segment_kind": "andrea_narration",
+                "input_text": scene["spoken_text"],
+                "pause_after_seconds": 2,
+                "pause_kind": "standard_scene_end",
+            }
+        ]
+    seller_turn, response = match.groups()
+    return [
+        {
+            "segment_kind": "seller_pushback",
+            "input_text": f'A seller says, "{seller_turn}"',
+            "pause_after_seconds": 3,
+            "pause_kind": "learner_think_gap",
+        },
+        {
+            "segment_kind": "andrea_response",
+            "input_text": response,
+            "pause_after_seconds": 2,
+            "pause_kind": "standard_scene_end",
+        },
+    ]
+
+
+def delivery_text(scene: dict) -> str:
+    return " ".join(segment["input_text"] for segment in delivery_segments(scene))
+
+
 def set_run_font(run, *, size=None, bold=None, color=None, italic=None):
     run.font.name = "Calibri"
     run._element.get_or_add_rPr().rFonts.set(qn("w:ascii"), "Calibri")
@@ -169,6 +210,10 @@ def build_document(package_path: Path) -> Path:
         ("Held-source SHA-256", source["held_sha256"]),
         ("Status", "Script ready; provider call, render, captions, approval, and publication remain gated"),
         ("Authorization", "This document does not authorize a HeyGen provider call or render"),
+        (
+            "Source depth",
+            f"{spoken_word_count(package)} spoken words; minimum {package['source_depth_contract']['minimum_replacement_word_count']}",
+        ),
     )
     for label, value in metadata:
         paragraph = doc.add_paragraph()
@@ -184,11 +229,38 @@ def build_document(package_path: Path) -> Path:
     doc.add_heading("Spoken script", level=1)
     for index, scene in enumerate(package["scenes"], start=1):
         scene_title = re.sub(r"\s+", " ", scene["title"].strip())
-        scene_heading = doc.add_heading(f"Scene {index}: {scene_title}", level=2)
-        scene_heading.paragraph_format.keep_with_next = True
-        spoken = doc.add_paragraph(scene["spoken_text"].strip())
-        spoken.paragraph_format.keep_together = True
-        spoken.paragraph_format.keep_with_next = True
+        segments = delivery_segments(scene)
+        for segment_index, segment in enumerate(segments):
+            if len(segments) == 1:
+                heading = f"Scene {index}: {scene_title}"
+            elif segment_index == 0:
+                heading = f"Scene {index}A: {scene_title} - seller pushback"
+            else:
+                heading = f"Scene {index}B: {scene_title} - Andrea response"
+            scene_heading = doc.add_heading(heading, level=2)
+            scene_heading.paragraph_format.keep_with_next = True
+            spoken = doc.add_paragraph(segment["input_text"].strip())
+            spoken.paragraph_format.keep_together = True
+            spoken.paragraph_format.keep_with_next = True
+            if segment["pause_kind"] == "learner_think_gap":
+                pause = doc.add_paragraph()
+                pause.paragraph_format.keep_together = True
+                pause.paragraph_format.keep_with_next = True
+                set_run_font(
+                    pause.add_run(
+                        "Editor gap: 3 seconds of silence at this scene boundary for the learner to think. Do not narrate this instruction."
+                    ),
+                    bold=True,
+                    color=DARK_BLUE,
+                )
+
+        coverage = doc.add_paragraph()
+        coverage.paragraph_format.space_after = Pt(3)
+        coverage.paragraph_format.keep_together = True
+        coverage.paragraph_format.keep_with_next = True
+        set_run_font(coverage.add_run("Coverage: "), bold=True, color=DARK_BLUE)
+        labels = list(scene.get("teaching_beat_ids", [])) + list(scene.get("example_ids", []))
+        set_run_font(coverage.add_run(", ".join(labels)))
 
         visual = scene["visual_plan"]
         visual_paragraph = doc.add_paragraph()

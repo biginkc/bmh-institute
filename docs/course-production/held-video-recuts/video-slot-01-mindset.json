@@ -7,7 +7,7 @@
     "technical_qa_path": "docs/course-production/held-video-review/TECHNICAL-CONTENT-QA-2026-07-17.md",
     "technical_qa_sha256": "2f77324aaebd2d29fa283c50402c0255eacfb7a40996a49220f97d5019e8a5d0",
     "source_script_reference": "docs/course-production/held-video-recuts/source-evidence/video-slot-01-mindset-source-evidence.md",
-    "source_script_sha256": "1b4a4511f95b56b15489f7618910dbc5a75062a9e4a7c44beba56f91ddab0ef6",
+    "source_script_sha256": "42c94a3d1ae956d748268e447fe2e97502a73e5ab1d76a7c820f1c287c184cd0",
     "duration_seconds": 362.688,
     "last_spoken_time_seconds": 362.687
   },
@@ -18,34 +18,147 @@
     "next_sequence": ["lesson-quiz-slot-01", "lesson-content-slot-02"],
     "transition_spoken_text": "Take the Welcome and Mindset checkpoint next. Then move into Terms Glossary."
   },
+  "source_depth_contract": {
+    "source_spoken_word_count": 867,
+    "minimum_replacement_word_count": 780,
+    "required_teaching_beats": [
+      {"beat_id": "service-over-self", "description": "Help even when BMH is not the right solution."},
+      {"beat_id": "alignment", "description": "Understand the seller's burden before discussing property data."},
+      {"beat_id": "clarity", "description": "Help the seller picture a workable result and path."},
+      {"beat_id": "controllable-actions", "description": "Own preparation, tone, notes, and follow-through."},
+      {"beat_id": "curiosity", "description": "Ask a simple question and leave room for the answer."},
+      {"beat_id": "equal-status", "description": "Speak peer to peer without pleading or lecturing."},
+      {"beat_id": "long-game", "description": "Follow up usefully as the seller's situation changes."},
+      {"beat_id": "problems-as-puzzles", "description": "Treat objections as missing information."},
+      {"beat_id": "practice", "description": "Review work, practice, and apply a correction."},
+      {"beat_id": "understand-before-argument", "description": "Restate the concern accurately before proposing a next step."},
+      {"beat_id": "operating-system", "description": "The ten principles work together as a conversation mindset."},
+      {"beat_id": "checkpoint-transition", "description": "The close directs the learner to the checkpoint and Terms Glossary."}
+    ],
+    "required_examples": [
+      {"example_id": "inherited-distance", "description": "An inherited property far from the seller shows service over self."},
+      {"example_id": "tired-landlord", "description": "A tired landlord shows why the burden matters before property data."},
+      {"example_id": "blurry-path", "description": "A seller who needs to think may be missing a visible path."},
+      {"example_id": "unreturned-contact", "description": "An unanswered contact separates controllable actions from outcomes."},
+      {"example_id": "silence-reveals-detail", "description": "Leaving silence gives the seller room to reveal the useful detail."},
+      {"example_id": "unworkable-number", "description": "A number that does not fit can be discussed directly and respectfully."},
+      {"example_id": "situation-changes", "description": "A seller's situation can change without following a fixed timeline."},
+      {"example_id": "money-needs-purpose", "description": "A money objection becomes clearer when its purpose is understood."},
+      {"example_id": "review-rushed-moment", "description": "Reviewing a rushed moment turns practice into a correction."},
+      {"example_id": "restate-concern", "description": "Restating a concern prevents an argument over the wrong issue."}
+    ]
+  },
   "production_constraints": {"strategy": "replace_full_spoken_cut", "render_allowed": false, "provider_call_allowed": false, "caption_generation_allowed": false, "approval_status_change_allowed": false},
   "forbidden_language_removals": [
-    {
-      "source_time": "approximately 04:22.533",
-      "exact_source_language": "week one",
-      "replacement_rule": "Use decision-stage language with no fixed seller progression."
-    },
-    {
-      "source_time": "approximately 04:24.193",
-      "exact_source_language": "week six",
-      "replacement_rule": "Use decision-stage language with no fixed seller progression."
-    }
+    {"source_time": "approximately 04:22.533", "exact_source_language": "week one", "replacement_rule": "Use decision-stage language with no fixed seller progression."},
+    {"source_time": "approximately 04:24.193", "exact_source_language": "week six", "replacement_rule": "Use decision-stage language with no fixed seller progression."}
   ],
   "scenes": [
-    {"scene_id": "mindset-open", "title": "How you enter the conversation", "spoken_text": "Before you start a conversation, settle your attention. You are there to understand the situation, help the seller see the available next step, and keep the record accurate. You do not need to force an outcome.", "visual_plan": {"mode": "avatar_on_camera", "shot": "Andrea standing in a medium shot", "editor_note": "Open with a calm breath and grounded posture."}},
-    {"scene_id": "mindset-service", "title": "Service over self", "spoken_text": "Start with service. Assume the conversation should be useful even when the seller chooses another path. When you stop chasing the result, you can listen for what would actually help.", "visual_plan": {"mode": "avatar_with_optional_cutaway", "shot": "Andrea with an open-hand gesture", "editor_note": "Optional cutaway may show a seller sorting inherited-property paperwork."}},
-    {"scene_id": "mindset-alignment", "title": "Get on their side of the table", "spoken_text": "Try to see the situation from the seller's side. A property problem can also be a time problem, a family problem, or a stress problem. Name what you heard before you ask the next question.", "visual_plan": {"mode": "avatar_on_camera", "shot": "Andrea seated at a desk", "editor_note": "Use a listening posture and a small nod."}},
-    {"scene_id": "mindset-clarity", "title": "Clarity before pressure", "spoken_text": "When someone is unsure, help them make the decision clearer. Ask what a workable outcome would look like, what needs to happen first, and what information is missing. A visible path is easier to evaluate than a rushed decision.", "visual_plan": {"mode": "avatar_with_optional_cutaway", "shot": "Andrea beside a simple two-path diagram", "editor_note": "Keep the diagram generic and free of promised outcomes."}},
-    {"scene_id": "mindset-actions", "title": "Own your actions", "spoken_text": "You cannot control whether someone answers, agrees, or changes their mind. You can control your preparation, your tone, the quality of your notes, and whether you complete the next action you promised.", "visual_plan": {"mode": "avatar_on_camera", "shot": "Andrea in a closer medium frame", "editor_note": "Shift to a more direct posture for accountability."}},
-    {"scene_id": "mindset-curiosity", "title": "Curiosity over cleverness", "spoken_text": "Simple questions work. Ask one, then give the person room to answer. If you are planning your next line while they are still talking, you are likely to miss the useful detail.", "visual_plan": {"mode": "avatar_on_camera", "shot": "Andrea seated with hands relaxed", "editor_note": "Hold a natural pause after the second sentence."}},
-    {"scene_id": "mindset-equal", "title": "Use equal status", "spoken_text": "Speak peer to peer. Do not beg for agreement, and do not lecture. If something does not fit, say so respectfully. Direct language and a steady tone make the conversation easier to trust.", "visual_plan": {"mode": "avatar_on_camera", "shot": "Andrea standing square to camera", "editor_note": "Use a neutral, confident stance."}},
-    {"scene_id": "mindset-long-game", "title": "Let decisions mature", "spoken_text": "A seller who is not ready now may become ready after the situation changes or the options become clearer. Follow up with a useful reason. Bring new information when you have it. Let the seller's decision stage guide the conversation instead of assuming a fixed timeline.", "visual_plan": {"mode": "avatar_with_optional_cutaway", "shot": "Andrea walking slowly across frame", "editor_note": "Optional cutaway may show a neutral sequence of follow-up notes with no dates."}},
-    {"scene_id": "mindset-puzzles", "title": "Treat problems as missing information", "spoken_text": "An objection is often a missing piece. If someone says they need more money, ask what the money needs to cover. If they need more time, ask what has to happen before they can move. The answer tells you whether there is a responsible next step.", "visual_plan": {"mode": "avatar_on_camera", "shot": "Andrea beside a small tabletop card", "editor_note": "Use one simple puzzle-piece prop if desired. No floating icon montage."}},
-    {"scene_id": "mindset-reps", "title": "Practice creates calm", "spoken_text": "Calm comes from practice and review. Listen back when that is part of the current process. Notice where you rushed, filled silence, or missed a question. Apply one correction in the next conversation.", "visual_plan": {"mode": "avatar_on_camera", "shot": "Andrea at a desk reviewing notes", "editor_note": "Keep any review screen generic and unbranded."}},
-    {"scene_id": "mindset-understand", "title": "Understand before you argue", "spoken_text": "If you feel yourself trying to win the point, slow down. Restate what the seller is concerned about and check that you have it right. Understanding creates more movement than an argument.", "visual_plan": {"mode": "avatar_on_camera", "shot": "Andrea in a centered medium shot", "editor_note": "Use a small reset gesture at the opening."}},
-    {"scene_id": "mindset-transition", "title": "Continue to the checkpoint", "spoken_text": "Take the Welcome and Mindset checkpoint next. Then move into Terms Glossary.", "visual_plan": {"mode": "avatar_on_camera", "shot": "Andrea centered in a medium shot", "editor_note": "End without viewer-facing chapter numbering."}}
+    {
+      "scene_id": "mindset-open",
+      "title": "How you enter the conversation",
+      "spoken_text": "Before you begin a seller conversation, settle your attention. You are there to understand the situation, make the available next step clearer, and leave an accurate record. The words matter, but the mindset underneath them will shape how those words land. These ten principles give you something steady to return to when a conversation moves away from the script or starts to feel tense.",
+      "teaching_beat_ids": ["operating-system"],
+      "example_ids": [],
+      "visual_plan": {"mode": "avatar_on_camera", "shot": "Andrea in a calm medium shot", "editor_note": "Open with a quiet reset before the principles begin."}
+    },
+    {
+      "scene_id": "mindset-service",
+      "title": "Service over self",
+      "spoken_text": "First, start with service. Imagine someone inherited a house far from home. They may care less about squeezing out the last possible dollar than finding a path they can understand and manage. Ask what would make the situation easier. If BMH is not the right fit, say that plainly and help the person identify a responsible next step. The conversation can still be useful even when it does not become a deal.",
+      "teaching_beat_ids": ["service-over-self"],
+      "example_ids": ["inherited-distance"],
+      "visual_plan": {"mode": "avatar_with_optional_cutaway", "shot": "Andrea beside a seller looking at a distant property on a simple map", "editor_note": "Use no named market or fixed travel distance."}
+    },
+    {
+      "scene_id": "mindset-alignment",
+      "title": "Get on the seller's side of the table",
+      "spoken_text": "Second, understand the burden before you study the property. A tired landlord may mention a roof, a tenant, or a repair bill, while the deeper issue is that the property has been consuming attention for too long. Say back what you heard. You might say, It sounds like you want your time back and you need a path that does not create another project. That tells the seller you are listening to the life around the house.",
+      "teaching_beat_ids": ["alignment"],
+      "example_ids": ["tired-landlord"],
+      "visual_plan": {"mode": "avatar_with_optional_cutaway", "shot": "Andrea listening to a seller beside a worn property folder", "editor_note": "Keep the emphasis on the seller's burden rather than the repair list."}
+    },
+    {
+      "scene_id": "mindset-clarity",
+      "title": "Clarity before pressure",
+      "spoken_text": "Third, help the seller see the path. When someone says they need to think, the decision may still feel blurry. Ask what part is unresolved. Where would they live next? Which responsibility worries them? What would they need to verify before a decision felt responsible? Do not push for an answer while the picture is incomplete. Turn the vague hesitation into a specific question the seller can examine.",
+      "teaching_beat_ids": ["clarity"],
+      "example_ids": ["blurry-path"],
+      "visual_plan": {"mode": "avatar_with_optional_cutaway", "shot": "Andrea beside a seller sorting a few unlabeled decision cards", "editor_note": "The path becomes clearer without a countdown or urgency device."}
+    },
+    {
+      "scene_id": "mindset-actions",
+      "title": "Own the actions you control",
+      "spoken_text": "Fourth, separate your work from the seller's choice. Someone may not answer, may choose another path, or may change their mind. You still control your preparation, your tone, the accuracy of your notes, and whether you complete the follow-up you promised. If a contact goes unanswered, leave the record ready for the next attempt and move to the next assigned action. Accountability stays useful even when the outcome does not cooperate.",
+      "teaching_beat_ids": ["controllable-actions"],
+      "example_ids": ["unreturned-contact"],
+      "visual_plan": {"mode": "avatar_on_camera", "shot": "Andrea beside a simple preparation, notes, and follow-through loop", "editor_note": "Use no call count, quota, or results chart."}
+    },
+    {
+      "scene_id": "mindset-curiosity",
+      "title": "Curiosity over cleverness",
+      "spoken_text": "Fifth, ask a simple question and wait. Suppose the seller says, The house has become too much. You could jump into a solution, or you could ask, What part has become hardest to manage? Then leave enough silence for the real answer. The seller may reveal a repair, a family disagreement, or an approaching move. You did not need a clever line. You needed enough curiosity to hear the detail that changes the conversation.",
+      "teaching_beat_ids": ["curiosity"],
+      "example_ids": ["silence-reveals-detail"],
+      "visual_plan": {"mode": "avatar_with_optional_cutaway", "shot": "Andrea seated with open listening posture and an uncluttered speech bubble", "editor_note": "Leave a natural beat after the question."}
+    },
+    {
+      "scene_id": "mindset-equal",
+      "title": "Use equal status",
+      "spoken_text": "Sixth, speak peer to peer. You do not need to beg for agreement, and you do not need to lecture. If a number does not fit the current written process, say that respectfully. Ask how the seller arrived at it and what the money needs to accomplish. Direct language can stay warm. The seller should feel that you are taking the concern seriously without pretending that every request is available.",
+      "teaching_beat_ids": ["equal-status"],
+      "example_ids": ["unworkable-number"],
+      "visual_plan": {"mode": "avatar_on_camera", "shot": "Andrea in an even eye-level conversational frame", "editor_note": "Avoid dominant or pleading body language."}
+    },
+    {
+      "scene_id": "mindset-long-game",
+      "title": "Let decisions mature",
+      "spoken_text": "Seventh, respect the seller's decision stage. A person who is not ready may become ready after a repair estimate arrives, another option falls through, or the family reaches agreement. Follow up with a useful reason. Bring new information when you have it. Ask what changed instead of replaying the same pitch. There is no fixed progression to memorize. The facts in the seller's life tell you whether the conversation has moved.",
+      "teaching_beat_ids": ["long-game"],
+      "example_ids": ["situation-changes"],
+      "visual_plan": {"mode": "avatar_with_optional_cutaway", "shot": "Andrea beside a seller whose situation cards change", "editor_note": "Show changing facts without a calendar, clock, or fixed stage timeline."}
+    },
+    {
+      "scene_id": "mindset-puzzles",
+      "title": "Treat objections as missing information",
+      "spoken_text": "Eighth, look for the missing piece inside the objection. If someone says they need more money, ask what that money needs to cover. It may be a loan balance, moving costs, another commitment, or simply an expectation they have not explained yet. Once you know the purpose, you can tell whether the current process has a responsible option or whether the gap remains. The objection becomes a fact-finding problem instead of a wall.",
+      "teaching_beat_ids": ["problems-as-puzzles"],
+      "example_ids": ["money-needs-purpose"],
+      "visual_plan": {"mode": "avatar_with_optional_cutaway", "shot": "Andrea beside a simple missing-piece diagram and property folder", "editor_note": "Use no currency figures or promise language."}
+    },
+    {
+      "scene_id": "mindset-reps",
+      "title": "Practice creates calm",
+      "spoken_text": "Ninth, use repetition to become steadier. Review a conversation when the current process allows it. Find the place where you rushed, filled the silence, or missed a useful question. Choose a small correction and practice it out loud. In the next conversation, focus on that correction rather than trying to sound perfect. Calm grows when you have heard the situation before and know what you want to do differently.",
+      "teaching_beat_ids": ["practice"],
+      "example_ids": ["review-rushed-moment"],
+      "visual_plan": {"mode": "avatar_with_optional_cutaway", "shot": "Andrea reviewing a generic conversation note and practicing a calmer response", "editor_note": "Show reflection and retry without a score or activity counter."}
+    },
+    {
+      "scene_id": "mindset-understand",
+      "title": "Understand before you argue",
+      "spoken_text": "Tenth, check that you understand before you defend a position. A seller may say the offer feels unfair when the deeper concern is that a family member will question the decision. Restate the concern: It sounds like you need everyone involved to understand how the terms were reached. Then ask if you have it right. That short check can keep you from arguing about price when the real need is shared understanding.",
+      "teaching_beat_ids": ["understand-before-argument", "operating-system"],
+      "example_ids": ["restate-concern"],
+      "visual_plan": {"mode": "avatar_on_camera", "shot": "Andrea in a steady medium shot with a simple listen, restate, check sequence", "editor_note": "Keep the sequence conversational rather than instructional on screen."}
+    },
+    {
+      "scene_id": "mindset-transition",
+      "title": "Continue to the checkpoint",
+      "spoken_text": "Take the Welcome and Mindset checkpoint next. Then move into Terms Glossary.",
+      "teaching_beat_ids": ["checkpoint-transition"],
+      "example_ids": [],
+      "visual_plan": {"mode": "avatar_on_camera", "shot": "Andrea centered in a medium shot", "editor_note": "End without viewer-facing chapter numbering."}
+    }
   ],
   "edit_operations": [
-    {"operation_id": "mindset-edit-01", "source_start": "00:00:00.000", "source_end": "00:06:02.687", "action": "replace", "replacement_scene_ids": ["mindset-open", "mindset-service", "mindset-alignment", "mindset-clarity", "mindset-actions", "mindset-curiosity", "mindset-equal", "mindset-long-game", "mindset-puzzles", "mindset-reps", "mindset-understand", "mindset-transition"], "source_problem": "Fixed week progression is embedded in the long-game principle. A clean full narration keeps all ten principles while removing the timeline claim."}
+    {
+      "operation_id": "mindset-edit-01",
+      "source_start": "00:00:00.000",
+      "source_end": "00:06:02.687",
+      "action": "replace",
+      "replacement_scene_ids": ["mindset-open", "mindset-service", "mindset-alignment", "mindset-clarity", "mindset-actions", "mindset-curiosity", "mindset-equal", "mindset-long-game", "mindset-puzzles", "mindset-reps", "mindset-understand", "mindset-transition"],
+      "source_problem": "Fixed week progression is embedded in the long-game principle. A clean full narration keeps all ten principles and their examples while removing the timeline claim."
+    }
   ]
 }

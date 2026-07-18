@@ -1,0 +1,63 @@
+{
+  "schema_version": "bmh-held-video-studio-import-inventory/v1",
+  "purpose": "Checksum-bound manual Studio preparation artifacts; never provider authorization",
+  "provider_call_allowed": false,
+  "records": [
+    {
+      "source_key": "video-slot-01-welcome",
+      "narration_path": "docs/course-production/held-video-recuts/generated/video-slot-01-welcome-studio-import.txt",
+      "narration_sha256": "b13b41dd87d5b4c8f06f237f2ce4e118b6f05acf32df8e5f0514173b31e5e761",
+      "narration_line_count": 10,
+      "sidecar_path": "docs/course-production/held-video-recuts/generated/video-slot-01-welcome-studio-import.json",
+      "sidecar_sha256": "6e22c8fd8c9f6840bb3a549296fc33a3e6951bed859902e5408d6c0bcc5c2baa"
+    },
+    {
+      "source_key": "video-slot-01-mindset",
+      "narration_path": "docs/course-production/held-video-recuts/generated/video-slot-01-mindset-studio-import.txt",
+      "narration_sha256": "12d315c15b239f32a776f66c8d9c28130cdfb0e092c6f52f434aee7eb348cc94",
+      "narration_line_count": 12,
+      "sidecar_path": "docs/course-production/held-video-recuts/generated/video-slot-01-mindset-studio-import.json",
+      "sidecar_sha256": "8a6c29870621693a2a9aaa72a21e7acea741051e0860ae2adfe4ba8974011ed0"
+    },
+    {
+      "source_key": "video-slot-10-objection-scripts",
+      "narration_path": "docs/course-production/held-video-recuts/generated/video-slot-10-objection-scripts-studio-import.txt",
+      "narration_sha256": "73b6f9a6f071ea9104324627fcbd7d7a1e04e9f1c09e2df73f3440d5eb68d115",
+      "narration_line_count": 68,
+      "sidecar_path": "docs/course-production/held-video-recuts/generated/video-slot-10-objection-scripts-studio-import.json",
+      "sidecar_sha256": "fe308f5d0b43d1b764c0353a64bb63c4453323b3cc6a17c52297c69a046337fe"
+    },
+    {
+      "source_key": "video-slot-15-closing",
+      "narration_path": "docs/course-production/held-video-recuts/generated/video-slot-15-closing-studio-import.txt",
+      "narration_sha256": "d28850b9b8c6a847b02c552d27fc19a60dd4da0011e93519c7c2cdb0f9317738",
+      "narration_line_count": 11,
+      "sidecar_path": "docs/course-production/held-video-recuts/generated/video-slot-15-closing-studio-import.json",
+      "sidecar_sha256": "b51521db8db6b3c69f885c42b430f0630205767f7c9e218db5bd178bd280323b"
+    },
+    {
+      "source_key": "video-slot-17-compensation",
+      "narration_path": "docs/course-production/held-video-recuts/generated/video-slot-17-compensation-studio-import.txt",
+      "narration_sha256": "fab26fb8d3e8386fb37fadcddd9240f9aa2ebe58c9249eb34de1fe798abd6817",
+      "narration_line_count": 7,
+      "sidecar_path": "docs/course-production/held-video-recuts/generated/video-slot-17-compensation-studio-import.json",
+      "sidecar_sha256": "c3079324753e6a402a3ebf5634ea3afe94bf6becef15a375e51f2866adeb8753"
+    },
+    {
+      "source_key": "video-slot-18-operator",
+      "narration_path": "docs/course-production/held-video-recuts/generated/video-slot-18-operator-studio-import.txt",
+      "narration_sha256": "03d23cbbb48667e0e79db60b93b9ccc9bfadd70e1e19406c7412deac1175f82c",
+      "narration_line_count": 12,
+      "sidecar_path": "docs/course-production/held-video-recuts/generated/video-slot-18-operator-studio-import.json",
+      "sidecar_sha256": "f76a7c8dc9787d6805b11fa20b7d5661da5ed72826f4af23aae1f468b93de2cc"
+    },
+    {
+      "source_key": "video-slot-19-career",
+      "narration_path": "docs/course-production/held-video-recuts/generated/video-slot-19-career-studio-import.txt",
+      "narration_sha256": "deecf8de1d6fbc29d2b05767e6b44064a4054f577e997036648a8c85dbbd752f",
+      "narration_line_count": 8,
+      "sidecar_path": "docs/course-production/held-video-recuts/generated/video-slot-19-career-studio-import.json",
+      "sidecar_sha256": "af4a460785e86dd1aa50202c45ba1ea85a0af67e25945a22ad64abee617670db"
+    }
+  ]
+}

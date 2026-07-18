@@ -1,0 +1,105 @@
+{
+  "schema_version": "bmh-held-video-studio-import/v1",
+  "status": "manual_studio_preparation_only",
+  "source_key": "video-slot-19-career",
+  "provider_call_allowed": false,
+  "render_allowed": false,
+  "generate_button_allowed_for_codex": false,
+  "narration": {
+    "path": "docs/course-production/held-video-recuts/generated/video-slot-19-career-studio-import.txt",
+    "sha256": "deecf8de1d6fbc29d2b05767e6b44064a4054f577e997036648a8c85dbbd752f",
+    "size_bytes": 3498,
+    "line_count": 8,
+    "format": "one UTF-8 narration line per canonical provider scene; no blank lines"
+  },
+  "studio_preparation": {
+    "manual_only": true,
+    "canonical_video_input_count": 8,
+    "narration_line_character_limit": 1000,
+    "studio_api_single_request_video_input_limit": 50,
+    "canonical_sequence_fits_single_api_request": true,
+    "instruction": "Create one Studio scene per narration line, then apply the sidecar pause at that scene boundary."
+  },
+  "scene_map": [
+    {
+      "line_number": 1,
+      "input_index": 0,
+      "source_scene_id": "career-foundation",
+      "segment_id": "career-foundation",
+      "segment_kind": "andrea_narration",
+      "input_text_sha256": "124e77f75f10e8b5f3f260c7c8460b57b24896a339b5ac14330bd1e2e0ac8760",
+      "pause_after_seconds": 2,
+      "pause_kind": "standard_scene_end"
+    },
+    {
+      "line_number": 2,
+      "input_index": 1,
+      "source_scene_id": "career-clean-output",
+      "segment_id": "career-clean-output",
+      "segment_kind": "andrea_narration",
+      "input_text_sha256": "3729b433f5b4638f43d49f3a8c776f1cffba7c2471bc0ac6c61280ce9ee5fbc1",
+      "pause_after_seconds": 2,
+      "pause_kind": "standard_scene_end"
+    },
+    {
+      "line_number": 3,
+      "input_index": 2,
+      "source_scene_id": "career-complexity",
+      "segment_id": "career-complexity",
+      "segment_kind": "andrea_narration",
+      "input_text_sha256": "633c072fa092bceeea47bd6c04e599ca370a912c00996683cc794b360c4905fb",
+      "pause_after_seconds": 2,
+      "pause_kind": "standard_scene_end"
+    },
+    {
+      "line_number": 4,
+      "input_index": 3,
+      "source_scene_id": "career-feedback-loop",
+      "segment_id": "career-feedback-loop",
+      "segment_kind": "andrea_narration",
+      "input_text_sha256": "b0be6f995a0bbd45814a17f5095843c59a976883bb575950e5ceb25e6f2f7383",
+      "pause_after_seconds": 2,
+      "pause_kind": "standard_scene_end"
+    },
+    {
+      "line_number": 5,
+      "input_index": 4,
+      "source_scene_id": "career-coachability",
+      "segment_id": "career-coachability",
+      "segment_kind": "andrea_narration",
+      "input_text_sha256": "1a6d88b7175ed9810fffde32bbab5b633e5431c08866fe53dba3e4306d397cb5",
+      "pause_after_seconds": 2,
+      "pause_kind": "standard_scene_end"
+    },
+    {
+      "line_number": 6,
+      "input_index": 5,
+      "source_scene_id": "career-team",
+      "segment_id": "career-team",
+      "segment_kind": "andrea_narration",
+      "input_text_sha256": "965293dee08ed4620cae2358c46831e6dbcdb93f154063dce097450bce40c6aa",
+      "pause_after_seconds": 2,
+      "pause_kind": "standard_scene_end"
+    },
+    {
+      "line_number": 7,
+      "input_index": 6,
+      "source_scene_id": "career-ownership",
+      "segment_id": "career-ownership",
+      "segment_kind": "andrea_narration",
+      "input_text_sha256": "91f6f8beb4e43e5de359a784146cda80a7d4c8036b22a56d106b548dbd0ddc30",
+      "pause_after_seconds": 2,
+      "pause_kind": "standard_scene_end"
+    },
+    {
+      "line_number": 8,
+      "input_index": 7,
+      "source_scene_id": "career-transition",
+      "segment_id": "career-transition",
+      "segment_kind": "andrea_narration",
+      "input_text_sha256": "d9bd0115aae7ae4968a8efb23aadf9cf4155c6bf6022bddf44bc4c428f1c84bb",
+      "pause_after_seconds": 2,
+      "pause_kind": "standard_scene_end"
+    }
+  ]
+}

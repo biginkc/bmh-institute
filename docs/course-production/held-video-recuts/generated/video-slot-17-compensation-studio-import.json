@@ -1,0 +1,95 @@
+{
+  "schema_version": "bmh-held-video-studio-import/v1",
+  "status": "manual_studio_preparation_only",
+  "source_key": "video-slot-17-compensation",
+  "provider_call_allowed": false,
+  "render_allowed": false,
+  "generate_button_allowed_for_codex": false,
+  "narration": {
+    "path": "docs/course-production/held-video-recuts/generated/video-slot-17-compensation-studio-import.txt",
+    "sha256": "fab26fb8d3e8386fb37fadcddd9240f9aa2ebe58c9249eb34de1fe798abd6817",
+    "size_bytes": 2635,
+    "line_count": 7,
+    "format": "one UTF-8 narration line per canonical provider scene; no blank lines"
+  },
+  "studio_preparation": {
+    "manual_only": true,
+    "canonical_video_input_count": 7,
+    "narration_line_character_limit": 1000,
+    "studio_api_single_request_video_input_limit": 50,
+    "canonical_sequence_fits_single_api_request": true,
+    "instruction": "Create one Studio scene per narration line, then apply the sidecar pause at that scene boundary."
+  },
+  "scene_map": [
+    {
+      "line_number": 1,
+      "input_index": 0,
+      "source_scene_id": "comp-source",
+      "segment_id": "comp-source",
+      "segment_kind": "andrea_narration",
+      "input_text_sha256": "2b1b58752e8ea9fb767854a58bfe444dc3b6540ab8208da15744ad2f501ca435",
+      "pause_after_seconds": 2,
+      "pause_kind": "standard_scene_end"
+    },
+    {
+      "line_number": 2,
+      "input_index": 1,
+      "source_scene_id": "comp-scorecard",
+      "segment_id": "comp-scorecard",
+      "segment_kind": "andrea_narration",
+      "input_text_sha256": "37d4f6a0a3374d6470f15d9fd9d960ba42def056be62777202e94c397eda530d",
+      "pause_after_seconds": 2,
+      "pause_kind": "standard_scene_end"
+    },
+    {
+      "line_number": 3,
+      "input_index": 2,
+      "source_scene_id": "comp-evidence",
+      "segment_id": "comp-evidence",
+      "segment_kind": "andrea_narration",
+      "input_text_sha256": "d5efe04c1a5ef4c80d8ce1b93f349f4fefc5fbddf5206e95d4d059d31a0352fb",
+      "pause_after_seconds": 2,
+      "pause_kind": "standard_scene_end"
+    },
+    {
+      "line_number": 4,
+      "input_index": 3,
+      "source_scene_id": "comp-other-plan",
+      "segment_id": "comp-other-plan",
+      "segment_kind": "andrea_narration",
+      "input_text_sha256": "de7492304a215ac3bb014f85a1bd487dac03e3bf014a74724dd19b0f025ac810",
+      "pause_after_seconds": 2,
+      "pause_kind": "standard_scene_end"
+    },
+    {
+      "line_number": 5,
+      "input_index": 4,
+      "source_scene_id": "comp-old-example",
+      "segment_id": "comp-old-example",
+      "segment_kind": "andrea_narration",
+      "input_text_sha256": "6b1008226664cd5d9d42323f881d1c962e6b9d7a58a81cf5086f42ea1702d842",
+      "pause_after_seconds": 2,
+      "pause_kind": "standard_scene_end"
+    },
+    {
+      "line_number": 6,
+      "input_index": 5,
+      "source_scene_id": "comp-questions",
+      "segment_id": "comp-questions",
+      "segment_kind": "andrea_narration",
+      "input_text_sha256": "2516b65e762809951df137285a2a13482eb0746ae11af39327d752a88cb9ee1a",
+      "pause_after_seconds": 2,
+      "pause_kind": "standard_scene_end"
+    },
+    {
+      "line_number": 7,
+      "input_index": 6,
+      "source_scene_id": "comp-transition",
+      "segment_id": "comp-transition",
+      "segment_kind": "andrea_narration",
+      "input_text_sha256": "e279e42931f6701fbdc6af80b8d43a2b1355392c5f5e392def99b51ef752dcc0",
+      "pause_after_seconds": 2,
+      "pause_kind": "standard_scene_end"
+    }
+  ]
+}

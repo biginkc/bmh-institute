@@ -10,10 +10,17 @@ import {
   RECUT_SOURCE_KEYS,
   REPO_ROOT,
   generatedRecutPaths,
+  humanizerNegativeParallelismViolations,
   loadRecutPackages,
+  providerSceneSequence,
+  recutSpokenWordCount,
   renderHeygenDraftPackage,
   renderRecutEditSpec,
   renderRecutScript,
+  renderStudioImportInventory,
+  renderStudioImportSidecar,
+  renderStudioImportText,
+  spokenDeliveryText,
 } from "./build-held-video-recut-docs.mjs";
 import { validateHeldVideoApprovalLedger } from "./held-video-approval-ledger.mjs";
 
@@ -29,6 +36,10 @@ const APPROVAL_LEDGER_PATH = join(
 const LOCAL_POLICY_CANDIDATES_PATH = join(
   REPO_ROOT,
   "docs/course-production/held-video-review/local-policy-candidates.json",
+);
+const STUDIO_IMPORT_INVENTORY_PATH = join(
+  RECUT_DIR,
+  "generated/studio-import-inventory.json",
 );
 
 function sha256(buffer) {
@@ -215,6 +226,63 @@ export async function validateRecutPackage(pkg, manifest, policy) {
       errors.push(`${label} full-cut edit boundary must match the authored duration`);
     }
   }
+
+  const sourceDepth = pkg.source_depth_contract;
+  if (!sourceDepth || typeof sourceDepth !== "object") {
+    errors.push(`${label} needs a source-depth contract`);
+  }
+  if (
+    !Number.isInteger(sourceDepth?.source_spoken_word_count)
+    || sourceDepth.source_spoken_word_count <= 0
+  ) {
+    errors.push(`${label} source-depth baseline must be a positive word count`);
+  }
+  if (
+    !Number.isInteger(sourceDepth?.minimum_replacement_word_count)
+    || sourceDepth.minimum_replacement_word_count <= 0
+  ) {
+    errors.push(`${label} source-depth minimum must be a positive word count`);
+  }
+  const replacementWordCount = recutSpokenWordCount(pkg);
+  if (
+    Number.isInteger(sourceDepth?.minimum_replacement_word_count)
+    && replacementWordCount < sourceDepth.minimum_replacement_word_count
+  ) {
+    errors.push(
+      `${label} replacement is materially compressed: ${replacementWordCount} words is below the ${sourceDepth.minimum_replacement_word_count}-word source-depth minimum`,
+    );
+  }
+
+  const requiredBeats = sourceDepth?.required_teaching_beats;
+  const requiredExamples = sourceDepth?.required_examples;
+  if (!Array.isArray(requiredBeats) || requiredBeats.length === 0) {
+    errors.push(`${label} needs required source teaching beats`);
+  }
+  if (!Array.isArray(requiredExamples)) {
+    errors.push(`${label} required examples must be an array`);
+  }
+  const requiredBeatIds = new Set();
+  for (const beat of requiredBeats ?? []) {
+    if (!beat?.beat_id || !beat?.description) {
+      errors.push(`${label} has an incomplete required teaching beat`);
+      continue;
+    }
+    if (requiredBeatIds.has(beat.beat_id)) {
+      errors.push(`${label} repeats teaching beat ${beat.beat_id}`);
+    }
+    requiredBeatIds.add(beat.beat_id);
+  }
+  const requiredExampleIds = new Set();
+  for (const example of requiredExamples ?? []) {
+    if (!example?.example_id || !example?.description) {
+      errors.push(`${label} has an incomplete required example`);
+      continue;
+    }
+    if (requiredExampleIds.has(example.example_id)) {
+      errors.push(`${label} repeats required example ${example.example_id}`);
+    }
+    requiredExampleIds.add(example.example_id);
+  }
   const videoBlock = contentLessons(manifest)
     .flatMap((candidate) => candidate.blocks ?? [])
     .find(
@@ -254,16 +322,22 @@ export async function validateRecutPackage(pkg, manifest, policy) {
   if (!Array.isArray(pkg.scenes) || pkg.scenes.length === 0)
     errors.push(`${label} needs scripted scenes`);
   const sceneIds = new Set();
+  const coveredBeatIds = new Set();
+  const coveredExampleIds = new Set();
   for (const scene of pkg.scenes ?? []) {
+    const deliveredText = spokenDeliveryText(scene);
     if (!scene.scene_id || sceneIds.has(scene.scene_id))
       errors.push(`${label} has a missing or duplicate scene_id`);
     sceneIds.add(scene.scene_id);
     if (!scene.title || !scene.spoken_text)
       errors.push(`${label} scene ${scene.scene_id} is incomplete`);
-    if ((scene.spoken_text ?? "").length > 1800)
+    if (deliveredText.length > 1800)
       errors.push(
         `${label} scene ${scene.scene_id} exceeds the HeyGen scene limit`,
       );
+    if ((scene.spoken_text ?? "").includes("\n")) {
+      errors.push(`${label} scene ${scene.scene_id} must be one spoken paragraph`);
+    }
     if (/[“”]/.test(scene.spoken_text ?? ""))
       errors.push(`${label} scene ${scene.scene_id} contains curly quotes`);
     if (
@@ -273,11 +347,75 @@ export async function validateRecutPackage(pkg, manifest, policy) {
     ) {
       errors.push(`${label} scene ${scene.scene_id} needs a complete visual plan`);
     }
+    if (
+      !Array.isArray(scene.teaching_beat_ids)
+      || scene.teaching_beat_ids.length === 0
+    ) {
+      errors.push(`${label} scene ${scene.scene_id} needs teaching-beat coverage`);
+    }
+    if (!Array.isArray(scene.example_ids)) {
+      errors.push(`${label} scene ${scene.scene_id} example_ids must be an array`);
+    }
+    for (const beatId of scene.teaching_beat_ids ?? []) {
+      if (!requiredBeatIds.has(beatId)) {
+        errors.push(`${label} scene ${scene.scene_id} maps unknown teaching beat ${beatId}`);
+      }
+      coveredBeatIds.add(beatId);
+    }
+    for (const exampleId of scene.example_ids ?? []) {
+      if (!requiredExampleIds.has(exampleId)) {
+        errors.push(`${label} scene ${scene.scene_id} maps unknown example ${exampleId}`);
+      }
+      if (coveredExampleIds.has(exampleId)) {
+        errors.push(`${label} maps required example ${exampleId} more than once`);
+      }
+      coveredExampleIds.add(exampleId);
+    }
+  }
+  for (const beatId of requiredBeatIds) {
+    if (!coveredBeatIds.has(beatId)) {
+      errors.push(`${label} does not cover required teaching beat ${beatId}`);
+    }
+  }
+  for (const exampleId of requiredExampleIds) {
+    if (!coveredExampleIds.has(exampleId)) {
+      errors.push(`${label} does not cover required example ${exampleId}`);
+    }
   }
   const fullSpokenText = (pkg.scenes ?? [])
-    .map((scene) => scene.spoken_text)
+    .map(spokenDeliveryText)
     .join(" ");
   errors.push(...validateSpokenPolicy(label, fullSpokenText, policy));
+  for (const patternId of humanizerNegativeParallelismViolations(fullSpokenText)) {
+    errors.push(
+      `${label} violates humanizer negative parallelism: ${patternId}`,
+    );
+  }
+  if (label === "video-slot-10-objection-scripts") {
+    const providerScenes = providerSceneSequence(pkg);
+    const thinkGaps = providerScenes.filter(
+      (scene) => scene.pause_kind === "learner_think_gap",
+    );
+    if (thinkGaps.length !== 32) {
+      errors.push(`${label} must preserve exactly 32 learner think gaps`);
+    }
+    for (const gap of thinkGaps) {
+      const response = providerScenes[gap.input_index + 1];
+      if (
+        gap.segment_kind !== "seller_pushback"
+        || gap.pause_after_seconds !== 3
+        || !response
+        || response.segment_kind !== "andrea_response"
+        || response.segment_id !== gap.response_segment_id
+        || response.responds_to_segment_id !== gap.segment_id
+        || response.source_scene_id !== gap.source_scene_id
+      ) {
+        errors.push(
+          `${label} ${gap.segment_id} must be followed by its separate Andrea response after a 3-second learner think gap`,
+        );
+      }
+    }
+  }
   if (!Array.isArray(pkg.forbidden_language_removals) || pkg.forbidden_language_removals.length === 0) {
     errors.push(`${label} needs exact forbidden-language removals`);
   }
@@ -335,11 +473,38 @@ export async function validateRecutPackage(pkg, manifest, policy) {
     errors.push(`${label} generated script is stale`);
   if ((await readFile(paths.editSpec, "utf8")) !== renderRecutEditSpec(pkg))
     errors.push(`${label} generated edit specification is stale`);
+  try {
+    if (
+      (await readFile(paths.heygenDraft, "utf8")) !==
+      renderHeygenDraftPackage(pkg)
+    ) {
+      errors.push(`${label} generated offline HeyGen draft payload is stale`);
+    }
+  } catch (error) {
+    errors.push(`${label} cannot build offline HeyGen draft payload: ${error.message}`);
+  }
+  const expectedStudioImport = renderStudioImportText(pkg);
+  const actualStudioImport = await readFile(paths.studioImport, "utf8");
+  if (actualStudioImport !== expectedStudioImport) {
+    errors.push(`${label} generated clean Studio import is stale`);
+  }
+  const studioImportLines = actualStudioImport.slice(0, -1).split("\n");
+  const providerScenes = providerSceneSequence(pkg);
   if (
-    (await readFile(paths.heygenDraft, "utf8")) !==
-    renderHeygenDraftPackage(pkg)
+    !actualStudioImport.endsWith("\n")
+    || studioImportLines.some((line) => line.length === 0)
+    || JSON.stringify(studioImportLines)
+      !== JSON.stringify(providerScenes.map((scene) => scene.input_text))
   ) {
-    errors.push(`${label} generated offline HeyGen draft payload is stale`);
+    errors.push(
+      `${label} clean Studio import must contain one exact nonblank narration line per canonical provider scene`,
+    );
+  }
+  if (
+    (await readFile(paths.studioImportSidecar, "utf8"))
+    !== renderStudioImportSidecar(pkg)
+  ) {
+    errors.push(`${label} generated Studio import sidecar is stale`);
   }
   return errors;
 }
@@ -367,6 +532,12 @@ export async function validateHeldVideoRecuts() {
   ]);
   for (const pkg of packages)
     errors.push(...(await validateRecutPackage(pkg, manifest, policy)));
+  if (
+    (await readFile(STUDIO_IMPORT_INVENTORY_PATH, "utf8"))
+    !== renderStudioImportInventory(packages)
+  ) {
+    errors.push("held-video Studio import inventory is stale");
+  }
   return {
     approvalRecords: ledger.records.length,
     pendingApprovalRecords: ledger.records.filter(

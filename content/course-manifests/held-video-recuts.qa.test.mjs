@@ -7,9 +7,21 @@ import { inflateRawSync } from "node:zlib";
 
 import {
   HEYGEN_DRAFT_CONTRACT,
+  HEYGEN_MAX_VIDEO_INPUTS,
+  LEARNER_THINK_GAP_SECONDS,
+  STUDIO_IMPORT_MAX_CHARS,
+  assertCleanStudioNarrationLine,
   generatedRecutPaths,
+  humanizerNegativeParallelismViolations,
   loadRecutPackages,
+  providerSceneSequence,
+  recutSpokenWordCount,
   renderHeygenDraftPackage,
+  renderStudioImportInventory,
+  renderStudioImportSidecar,
+  renderStudioImportText,
+  sceneDeliverySegments,
+  spokenDeliveryText,
 } from "../../scripts/course-content/build-held-video-recut-docs.mjs";
 import {
   validateRecutPackage,
@@ -54,6 +66,14 @@ const localPolicyCandidatesPromise = readFile(
 const teamReferenceInventoryPromise = readFile(
   new URL(
     "../../docs/course-production/held-video-recuts/generated/team-reference-docx.json",
+    import.meta.url,
+  ),
+  "utf8",
+).then(JSON.parse);
+
+const studioImportInventoryPromise = readFile(
+  new URL(
+    "../../docs/course-production/held-video-recuts/generated/studio-import-inventory.json",
     import.meta.url,
   ),
   "utf8",
@@ -587,6 +607,127 @@ test("every recut scene requires a complete visual plan", async () => {
   );
 });
 
+test("source-depth contracts reject compressed scripts and missing teaching coverage", async () => {
+  const [manifest, policy, packages] = await Promise.all([
+    manifestPromise,
+    policyPromise,
+    loadRecutPackages(),
+  ]);
+  for (const pkg of packages) {
+    assert.ok(
+      recutSpokenWordCount(pkg) >=
+        pkg.source_depth_contract.minimum_replacement_word_count,
+      `${pkg.source.source_key} must retain substantive source depth`,
+    );
+    const compressed = structuredClone(pkg);
+    for (const scene of compressed.scenes.slice(0, -1)) {
+      scene.spoken_text = "Short placeholder.";
+    }
+    assert.ok(
+      (await validateRecutPackage(compressed, manifest, policy)).some((error) =>
+        error.includes("replacement is materially compressed"),
+      ),
+      `${pkg.source.source_key} compression must fail closed`,
+    );
+
+    const missingBeat = structuredClone(pkg);
+    const removedBeat = missingBeat.source_depth_contract.required_teaching_beats[0].beat_id;
+    for (const scene of missingBeat.scenes) {
+      scene.teaching_beat_ids = scene.teaching_beat_ids.filter(
+        (beatId) => beatId !== removedBeat,
+      );
+    }
+    assert.ok(
+      (await validateRecutPackage(missingBeat, manifest, policy)).some((error) =>
+        error.includes(`does not cover required teaching beat ${removedBeat}`),
+      ),
+      `${pkg.source.source_key} missing beat must fail closed`,
+    );
+  }
+});
+
+test("the objection replacement retains 32 ordered seller-gap-response drills without narrated labels", async () => {
+  const pkg = (await loadRecutPackages()).find(
+    (candidate) => candidate.source.source_key === "video-slot-10-objection-scripts",
+  );
+  assert.equal(pkg.source_depth_contract.required_examples.length, 32);
+  assert.equal(
+    pkg.scenes.flatMap((scene) => scene.example_ids).filter((id) => id.startsWith("d")).length,
+    32,
+  );
+  const delivered = pkg.scenes.map(spokenDeliveryText).join("\n");
+  assert.doesNotMatch(delivered, /(?:^|\n)Seller:|\bResponse:/);
+  assert.equal(
+    pkg.scenes.filter((scene) => scene.spoken_text.startsWith("Seller:")).length,
+    32,
+  );
+  const providerScenes = providerSceneSequence(pkg);
+  const thinkGaps = providerScenes.filter(
+    (scene) => scene.pause_kind === "learner_think_gap",
+  );
+  const artifact = JSON.parse(renderHeygenDraftPackage(pkg));
+  const payloadThinkGaps = artifact.provider_preparation.scene_boundaries.filter(
+    (boundary) => boundary.pause_kind === "learner_think_gap",
+  );
+  assert.equal(providerScenes.length, pkg.scenes.length + 32);
+  assert.equal(thinkGaps.length, 32);
+  assert.equal(payloadThinkGaps.length, 32);
+  for (const gap of thinkGaps) {
+    const response = providerScenes[gap.input_index + 1];
+    const payloadGap = payloadThinkGaps.find(
+      (boundary) => boundary.segment_id === gap.segment_id,
+    );
+    const payloadPushback =
+      artifact.request_body.video_inputs[gap.input_index].voice.input_text;
+    const payloadResponse =
+      artifact.request_body.video_inputs[gap.input_index + 1].voice.input_text;
+    assert.equal(gap.segment_kind, "seller_pushback");
+    assert.equal(gap.pause_after_seconds, LEARNER_THINK_GAP_SECONDS);
+    assert.equal(payloadGap.pause_after_seconds, LEARNER_THINK_GAP_SECONDS);
+    assert.equal(response.segment_kind, "andrea_response");
+    assert.equal(response.segment_id, gap.response_segment_id);
+    assert.equal(response.responds_to_segment_id, gap.segment_id);
+    assert.equal(response.source_scene_id, gap.source_scene_id);
+    assert.equal(payloadGap.response_segment_id, response.segment_id);
+    assert.equal(payloadPushback, gap.input_text);
+    assert.equal(payloadResponse, response.input_text);
+    assert.doesNotMatch(gap.input_text, /\bResponse:/);
+    assert.doesNotMatch(response.input_text, /(?:^|\s)Seller:|\bResponse:/);
+  }
+});
+
+test("humanizer validation rejects negative parallelism before payload preparation", async () => {
+  const [manifest, policy, packages] = await Promise.all([
+    manifestPromise,
+    policyPromise,
+    loadRecutPackages(),
+  ]);
+  const career = structuredClone(
+    packages.find(
+      (pkg) => pkg.source.source_key === "video-slot-19-career",
+    ),
+  );
+  const scene = career.scenes.find(
+    (candidate) => candidate.scene_id === "career-clean-output",
+  );
+  scene.spoken_text = `${scene.spoken_text} The point is not to fill the page. The point is to make the record useful.`;
+  assert.deepEqual(
+    humanizerNegativeParallelismViolations(
+      career.scenes.map(spokenDeliveryText).join(" "),
+    ),
+    ["the-point-is-not-the-point-is"],
+  );
+  assert.ok(
+    (await validateRecutPackage(career, manifest, policy)).some((error) =>
+      error.includes("violates humanizer negative parallelism"),
+    ),
+  );
+  assert.throws(
+    () => renderHeygenDraftPackage(career),
+    /violates humanizer negative parallelism/,
+  );
+});
+
 test("offline HeyGen draft packages are exact, humanized, and provider-gated", async () => {
   for (const pkg of await loadRecutPackages()) {
     const sourceKey = pkg.source.source_key;
@@ -618,22 +759,189 @@ test("offline HeyGen draft packages are exact, humanized, and provider-gated", a
       artifact.request_body.dimension,
       HEYGEN_DRAFT_CONTRACT.dimension,
     );
-    assert.equal(artifact.request_body.video_inputs.length, pkg.scenes.length);
+    const providerScenes = providerSceneSequence(pkg);
+    assert.equal(
+      artifact.request_body.video_inputs.length,
+      providerScenes.length,
+    );
     assert.deepEqual(
       artifact.request_body.video_inputs.map((input) => input.voice.input_text),
-      pkg.scenes.map((scene) => scene.spoken_text),
+      providerScenes.map((scene) => scene.input_text),
+    );
+    assert.equal(artifact.provider_preparation.every_scene_andrea_speaks, true);
+    assert.equal(
+      artifact.provider_preparation.canonical_video_input_count,
+      providerScenes.length,
+    );
+    assert.equal(
+      artifact.provider_preparation.studio_api_single_request_video_input_limit,
+      HEYGEN_MAX_VIDEO_INPUTS,
+    );
+    assert.equal(
+      artifact.provider_preparation.canonical_sequence_fits_single_api_request,
+      providerScenes.length <= HEYGEN_MAX_VIDEO_INPUTS,
+    );
+    assert.deepEqual(
+      artifact.provider_preparation.scene_boundaries.map((boundary) =>
+        boundary.input_index
+      ),
+      providerScenes.map((scene) => scene.input_index),
     );
     for (const input of artifact.request_body.video_inputs) {
       assert.equal(
         input.character.talking_photo_id,
         HEYGEN_DRAFT_CONTRACT.avatarId,
       );
+      assert.equal(input.voice.type, "text");
       assert.equal(input.voice.voice_id, HEYGEN_DRAFT_CONTRACT.voiceId);
+      assert.ok(input.voice.input_text.trim().length > 0);
       assert.ok(input.voice.input_text.length <= 1_800);
       assert.deepEqual(input.background, { type: "color", value: "#ffffff" });
     }
+    for (const boundary of artifact.provider_preparation.scene_boundaries) {
+      assert.equal(boundary.andrea_speaks, true);
+      assert.ok(boundary.pause_after_seconds >= 2);
+    }
     assert.doesNotMatch(expected, /api[_-]?key|authorization|secret|token/i);
   }
+});
+
+test("clean Studio imports match canonical narration and checksum-bound pause sidecars", async () => {
+  const [packages, inventory] = await Promise.all([
+    loadRecutPackages(),
+    studioImportInventoryPromise,
+  ]);
+  assert.equal(inventory.schema_version, "bmh-held-video-studio-import-inventory/v1");
+  assert.equal(inventory.provider_call_allowed, false);
+  assert.equal(inventory.records.length, packages.length);
+  assert.equal(
+    await readFile(
+      new URL(
+        "../../docs/course-production/held-video-recuts/generated/studio-import-inventory.json",
+        import.meta.url,
+      ),
+      "utf8",
+    ),
+    renderStudioImportInventory(packages),
+  );
+
+  for (const pkg of packages) {
+    const sourceKey = pkg.source.source_key;
+    const paths = generatedRecutPaths(sourceKey);
+    const [narration, sidecarText] = await Promise.all([
+      readFile(paths.studioImport, "utf8"),
+      readFile(paths.studioImportSidecar, "utf8"),
+    ]);
+    const providerScenes = providerSceneSequence(pkg);
+    const lines = narration.slice(0, -1).split("\n");
+    assert.equal(narration, renderStudioImportText(pkg));
+    assert.ok(narration.endsWith("\n"));
+    assert.equal(lines.length, providerScenes.length);
+    assert.deepEqual(
+      lines,
+      providerScenes.map((scene) => scene.input_text),
+    );
+    for (const line of lines) {
+      assert.ok(line.length > 0);
+      assert.doesNotMatch(
+        line,
+        /^(?:SCENE(?:\s|\d|:)|\[?EDITOR\b|Seller:|Response:)/i,
+      );
+      assert.doesNotMatch(
+        line,
+        /\b(?:Do not narrate this instruction|seconds of silence at this scene boundary)\b/i,
+      );
+    }
+
+    assert.equal(sidecarText, renderStudioImportSidecar(pkg));
+    const sidecar = JSON.parse(sidecarText);
+    assert.equal(sidecar.status, "manual_studio_preparation_only");
+    assert.equal(sidecar.provider_call_allowed, false);
+    assert.equal(sidecar.render_allowed, false);
+    assert.equal(sidecar.generate_button_allowed_for_codex, false);
+    assert.equal(sidecar.narration.sha256, sha256(Buffer.from(narration)));
+    assert.equal(sidecar.narration.line_count, lines.length);
+    assert.equal(sidecar.studio_preparation.manual_only, true);
+    assert.equal(
+      sidecar.studio_preparation.narration_line_character_limit,
+      STUDIO_IMPORT_MAX_CHARS,
+    );
+    assert.equal(
+      sidecar.studio_preparation.canonical_sequence_fits_single_api_request,
+      lines.length <= HEYGEN_MAX_VIDEO_INPUTS,
+    );
+    assert.deepEqual(
+      sidecar.scene_map.map((entry) => entry.input_index),
+      providerScenes.map((scene) => scene.input_index),
+    );
+    for (const [index, entry] of sidecar.scene_map.entries()) {
+      assert.equal(entry.line_number, index + 1);
+      assert.equal(entry.input_text_sha256, sha256(Buffer.from(lines[index])));
+      assert.equal(entry.pause_after_seconds, providerScenes[index].pause_after_seconds);
+    }
+
+    const record = inventory.records.find(
+      (candidate) => candidate.source_key === sourceKey,
+    );
+    assert.ok(record);
+    assert.equal(record.narration_sha256, sha256(Buffer.from(narration)));
+    assert.equal(record.narration_line_count, lines.length);
+    assert.equal(record.sidecar_sha256, sha256(Buffer.from(sidecarText)));
+
+    if (sourceKey === "video-slot-10-objection-scripts") {
+      assert.equal(lines.length, 68);
+      assert.equal(
+        sidecar.scene_map.filter(
+          (entry) => entry.pause_kind === "learner_think_gap",
+        ).length,
+        32,
+      );
+      assert.equal(
+        sidecar.studio_preparation.canonical_sequence_fits_single_api_request,
+        false,
+      );
+      assert.match(
+        sidecar.studio_preparation.instruction,
+        /manually.*not a one-shot API request/i,
+      );
+      for (const gap of sidecar.scene_map.filter(
+        (entry) => entry.pause_kind === "learner_think_gap",
+      )) {
+        const response = sidecar.scene_map[gap.input_index + 1];
+        assert.equal(gap.pause_after_seconds, LEARNER_THINK_GAP_SECONDS);
+        assert.equal(response.segment_kind, "andrea_response");
+        assert.equal(response.segment_id, gap.response_segment_id);
+        assert.equal(response.responds_to_segment_id, gap.segment_id);
+      }
+    }
+  }
+});
+
+test("Studio import rendering rejects narratable structural and gap instructions", () => {
+  for (const unsafe of [
+    "SCENE 1: Welcome",
+    "Editor gap: add three seconds here.",
+    "[EDITOR GAP: 3 seconds]",
+    "Seller: I want more money.",
+    "Response: Ask what the number needs to cover.",
+    "Do not narrate this instruction.",
+    "Add three seconds of silence at this scene boundary.",
+    "",
+    "Narration with\na structural break",
+    "x".repeat(STUDIO_IMPORT_MAX_CHARS + 1),
+  ]) {
+    assert.throws(
+      () => assertCleanStudioNarrationLine(unsafe, "test-source", 0),
+      /Studio import input 0/,
+    );
+  }
+  assert.doesNotThrow(() =>
+    assertCleanStudioNarrationLine(
+      "x".repeat(STUDIO_IMPORT_MAX_CHARS),
+      "test-source",
+      0,
+    )
+  );
 });
 
 test("all seven deterministic Word team references match their locked source packages", async () => {
@@ -672,10 +980,12 @@ test("all seven deterministic Word team references match their locked source pac
     assert.match(documentXml, new RegExp(pkg.source.held_sha256));
     assert.match(documentXml, /does not authorize a HeyGen provider call or render/);
     for (const scene of pkg.scenes) {
-      assert.ok(
-        documentXml.includes(scene.spoken_text.replaceAll("&", "&amp;")),
-        `${document.source_key} Word copy must include ${scene.title}`,
-      );
+      for (const segment of sceneDeliverySegments(scene)) {
+        assert.ok(
+          documentXml.includes(segment.input_text.replaceAll("&", "&amp;")),
+          `${document.source_key} Word copy must include ${scene.title} ${segment.segment_kind}`,
+        );
+      }
     }
   }
 });

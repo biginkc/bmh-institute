@@ -1,38 +1,11 @@
-video-slot-15-closing
-Held source SHA-256: 6e3aa1b007117b303a05906ca8443a8b9bc38f7c44bd61475c5437b99e7c90d2
-Status: script ready; not rendered, captioned, approved, or published
-Spoken depth: 758 words; required minimum 740
-Teaching coverage: 11 locked beats; 4 locked examples
-
-SCENE 1: Closing begins earlier
 Closing should feel like the formal next step in a conversation that has already been handled well. Rapport matters. Thorough discovery matters. So does the way you answered objections and followed through after the seller shared something difficult. If those pieces are solid, the written agreement does not arrive out of nowhere. It gives shape to a decision the seller has been considering throughout the process. That is why a rushed discovery question or a forgotten follow-up can show up again at the closing table. The formal document carries the facts and trust built before it.
-
-SCENE 2: Build a complete handoff
 A clean offer review starts with a complete record. Confirm the property facts, the seller's priorities, every person whose consent matters, and the questions still waiting for an answer. Write down the condition details and the reason the seller is considering a change. A thin note forces the next conversation to start over. A complete handoff lets the current process review the same situation the seller described.
-
-SCENE 3: Prepare the offer inputs
 Bring together ownership information, property condition, comparable information used by the current process, the seller's price expectation, timing needs, and any special request. Mark what is confirmed and what still needs review. If a roof age is unknown, say that. If another person may have an ownership interest, flag it. An assumption should never drift into a draft number, a date, or a written responsibility.
-
-SCENE 4: Protect accuracy and authority
 Know which parts of the process you can explain and which parts need review. A draft number is not a commitment. An estimated closing date is not the written date. A structure that worked somewhere else is not automatically available here. When the seller asks for an exception, document the request in their words. Explain what will happen next, and wait for the current written process to confirm the answer.
-
-SCENE 5: Present the written terms cleanly
 When the written offer is ready, explain it in plain language. Walk through price, timing, conditions, costs, access, and the responsibilities assigned to each side. Ask the seller to stop whenever something is unclear. Do not rush past a clause because it feels familiar to you. The seller needs enough space to read, ask questions, and seek outside advice when appropriate. Understanding is the standard for the conversation.
-
-SCENE 6: Work the price gap with questions
 The seller may say, I was hoping for more. Start by acknowledging it: I hear you. What number were you expecting, and what does that number need to accomplish? Listen for the reason behind the gap. Then separate what the written offer already addresses from what may need another review. Do not argue that the seller is wrong. Find out whether there is a responsible path both sides can understand.
-
-SCENE 7: Confirm consent without pressure
 A seller's yes needs to be informed and voluntary. Confirm who needs to sign and whether another person should hear the same explanation. Give the seller room to read the document. If the answer is no or not yet, record the unresolved issue and agree on the next action. Urgency belongs in the conversation only when a real, documented deadline exists. Pressure cannot substitute for consent.
-
-SCENE 8: Understand what follows agreement
 After verbal agreement, the terms move into the written document and signatures. Then ownership, liens, access, condition items, required documents, and closing logistics still have to be coordinated. Responsibilities vary by transaction, so follow the current process and escalate a mismatch instead of guessing. Keep the seller informed about confirmed next steps. A signed document begins another part of the work; it does not erase open facts.
-
-SCENE 9: Prevent seller remorse by listening
 Sometimes a seller signs and then starts second-guessing the decision. That often traces back to a concern that never felt heard. Maybe the seller worried about the move and everyone kept talking about price. Before agreement, ask what still feels unsettled and say the concern back in plain words. After agreement, keep the record current and route new questions quickly. Listening early is stronger than trying to calm a preventable surprise later.
-
-SCENE 10: Identify closing risks early
 Other problems can surface late. A family member may question the decision because they never heard the facts. A lien or unclear ownership may interrupt the closing review. Another buyer may appear with different terms. You cannot remove every risk, but you can ask about decision makers, ownership, notices, and competing options during discovery. Accurate notes and early escalation give the current process time to address what is real. When a new issue appears, update the seller rather than disappearing while it is reviewed. Clear communication keeps an open question from becoming a new reason to doubt the whole process.
-
-SCENE 11: Continue to the capstone
 Take the Closing and Deal Engineering checkpoint next. Then complete the Cadence and Close Capstone.

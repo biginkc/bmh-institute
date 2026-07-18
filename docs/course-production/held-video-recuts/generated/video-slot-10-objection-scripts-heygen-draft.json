@@ -1,18 +1,71 @@
 {
-  "schema_version": "bmh-held-video-heygen-draft/v1",
+  "schema_version": "bmh-held-video-heygen-draft/v2",
   "status": "offline_payload_only_provider_call_forbidden",
   "source_key": "video-slot-10-objection-scripts",
   "held_source_sha256": "59c745ccca7387f82d0b13eaf95439f9f6a50a8f727ad3c1db4fb839050b1ebb",
   "humanizer_review": {
     "skill": "humanizer",
     "skill_version": "2.5.1",
-    "reviewed_on": "2026-07-17",
+    "reviewed_on": "2026-07-18",
     "result": "passed",
     "checks": [
       "role-agnostic spoken language",
       "no viewer-facing chapter numbers or timelines",
       "no em dashes, curly quotes, promotional filler, or chatbot phrasing",
-      "natural sentence rhythm retained without shortening the lesson contract"
+      "natural sentence rhythm retained without shortening the lesson contract",
+      "source-depth minimum and every locked teaching example preserved",
+      "no negative parallelism or tailing negation"
+    ]
+  },
+  "source_depth": {
+    "source_spoken_word_count": 2400,
+    "minimum_replacement_word_count": 1900,
+    "replacement_word_count": 2483,
+    "teaching_beat_ids": [
+      "practice-pattern",
+      "price",
+      "competition",
+      "delay",
+      "trust",
+      "condition",
+      "financial-distress",
+      "written-terms",
+      "pause-and-escalate",
+      "checkpoint-transition"
+    ],
+    "example_ids": [
+      "d01-more-money",
+      "d02-price-first",
+      "d03-list-agent",
+      "d04-other-investors",
+      "d05-spouse",
+      "d06-company-name",
+      "d07-more-time",
+      "d08-proof-of-funds",
+      "d09-phone-source",
+      "d10-attorney",
+      "d11-fix-it",
+      "d12-too-busy",
+      "d13-highest-best",
+      "d14-handled",
+      "d15-rent",
+      "d16-walkthrough-first",
+      "d17-buy-yourself",
+      "d18-wholesale",
+      "d19-repairs-inspections",
+      "d20-unknown-payoff",
+      "d21-tenants",
+      "d22-underwater",
+      "d23-foreclosure",
+      "d24-net-number",
+      "d25-occupancy",
+      "d26-retrade",
+      "d27-terms-trust",
+      "d28-privacy",
+      "d29-cash-no-contingencies",
+      "d30-send-writing",
+      "d31-think",
+      "d32-not-interested"
     ]
   },
   "provider_gate": {
@@ -22,6 +75,693 @@
     "required_approval": "Jarrad Henry",
     "provider_call_executor_after_approval": "Codex parent agent only",
     "final_generate_button_actor": "Jarrad Henry"
+  },
+  "provider_preparation": {
+    "every_scene_andrea_speaks": true,
+    "standard_scene_end_pause_seconds": 2,
+    "learner_think_gap_seconds": 3,
+    "canonical_video_input_count": 68,
+    "studio_api_single_request_video_input_limit": 50,
+    "canonical_sequence_fits_single_api_request": false,
+    "preflight_requirement": "Preserve this canonical scene order while preparing the draft in Studio; the sequence exceeds the single-request API input limit and must never be collapsed to bypass the learner think gaps.",
+    "scene_boundaries": [
+      {
+        "input_index": 0,
+        "source_scene_id": "objection-open",
+        "segment_id": "objection-open",
+        "segment_kind": "andrea_narration",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end"
+      },
+      {
+        "input_index": 1,
+        "source_scene_id": "objection-d01",
+        "segment_id": "objection-d01-seller-pushback",
+        "segment_kind": "seller_pushback",
+        "andrea_speaks": true,
+        "pause_after_seconds": 3,
+        "pause_kind": "learner_think_gap",
+        "response_segment_id": "objection-d01-andrea-response"
+      },
+      {
+        "input_index": 2,
+        "source_scene_id": "objection-d01",
+        "segment_id": "objection-d01-andrea-response",
+        "segment_kind": "andrea_response",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end",
+        "responds_to_segment_id": "objection-d01-seller-pushback"
+      },
+      {
+        "input_index": 3,
+        "source_scene_id": "objection-d02",
+        "segment_id": "objection-d02-seller-pushback",
+        "segment_kind": "seller_pushback",
+        "andrea_speaks": true,
+        "pause_after_seconds": 3,
+        "pause_kind": "learner_think_gap",
+        "response_segment_id": "objection-d02-andrea-response"
+      },
+      {
+        "input_index": 4,
+        "source_scene_id": "objection-d02",
+        "segment_id": "objection-d02-andrea-response",
+        "segment_kind": "andrea_response",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end",
+        "responds_to_segment_id": "objection-d02-seller-pushback"
+      },
+      {
+        "input_index": 5,
+        "source_scene_id": "objection-d03",
+        "segment_id": "objection-d03-seller-pushback",
+        "segment_kind": "seller_pushback",
+        "andrea_speaks": true,
+        "pause_after_seconds": 3,
+        "pause_kind": "learner_think_gap",
+        "response_segment_id": "objection-d03-andrea-response"
+      },
+      {
+        "input_index": 6,
+        "source_scene_id": "objection-d03",
+        "segment_id": "objection-d03-andrea-response",
+        "segment_kind": "andrea_response",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end",
+        "responds_to_segment_id": "objection-d03-seller-pushback"
+      },
+      {
+        "input_index": 7,
+        "source_scene_id": "objection-d04",
+        "segment_id": "objection-d04-seller-pushback",
+        "segment_kind": "seller_pushback",
+        "andrea_speaks": true,
+        "pause_after_seconds": 3,
+        "pause_kind": "learner_think_gap",
+        "response_segment_id": "objection-d04-andrea-response"
+      },
+      {
+        "input_index": 8,
+        "source_scene_id": "objection-d04",
+        "segment_id": "objection-d04-andrea-response",
+        "segment_kind": "andrea_response",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end",
+        "responds_to_segment_id": "objection-d04-seller-pushback"
+      },
+      {
+        "input_index": 9,
+        "source_scene_id": "objection-d05",
+        "segment_id": "objection-d05-seller-pushback",
+        "segment_kind": "seller_pushback",
+        "andrea_speaks": true,
+        "pause_after_seconds": 3,
+        "pause_kind": "learner_think_gap",
+        "response_segment_id": "objection-d05-andrea-response"
+      },
+      {
+        "input_index": 10,
+        "source_scene_id": "objection-d05",
+        "segment_id": "objection-d05-andrea-response",
+        "segment_kind": "andrea_response",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end",
+        "responds_to_segment_id": "objection-d05-seller-pushback"
+      },
+      {
+        "input_index": 11,
+        "source_scene_id": "objection-d06",
+        "segment_id": "objection-d06-seller-pushback",
+        "segment_kind": "seller_pushback",
+        "andrea_speaks": true,
+        "pause_after_seconds": 3,
+        "pause_kind": "learner_think_gap",
+        "response_segment_id": "objection-d06-andrea-response"
+      },
+      {
+        "input_index": 12,
+        "source_scene_id": "objection-d06",
+        "segment_id": "objection-d06-andrea-response",
+        "segment_kind": "andrea_response",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end",
+        "responds_to_segment_id": "objection-d06-seller-pushback"
+      },
+      {
+        "input_index": 13,
+        "source_scene_id": "objection-d07",
+        "segment_id": "objection-d07-seller-pushback",
+        "segment_kind": "seller_pushback",
+        "andrea_speaks": true,
+        "pause_after_seconds": 3,
+        "pause_kind": "learner_think_gap",
+        "response_segment_id": "objection-d07-andrea-response"
+      },
+      {
+        "input_index": 14,
+        "source_scene_id": "objection-d07",
+        "segment_id": "objection-d07-andrea-response",
+        "segment_kind": "andrea_response",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end",
+        "responds_to_segment_id": "objection-d07-seller-pushback"
+      },
+      {
+        "input_index": 15,
+        "source_scene_id": "objection-d08",
+        "segment_id": "objection-d08-seller-pushback",
+        "segment_kind": "seller_pushback",
+        "andrea_speaks": true,
+        "pause_after_seconds": 3,
+        "pause_kind": "learner_think_gap",
+        "response_segment_id": "objection-d08-andrea-response"
+      },
+      {
+        "input_index": 16,
+        "source_scene_id": "objection-d08",
+        "segment_id": "objection-d08-andrea-response",
+        "segment_kind": "andrea_response",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end",
+        "responds_to_segment_id": "objection-d08-seller-pushback"
+      },
+      {
+        "input_index": 17,
+        "source_scene_id": "objection-d09",
+        "segment_id": "objection-d09-seller-pushback",
+        "segment_kind": "seller_pushback",
+        "andrea_speaks": true,
+        "pause_after_seconds": 3,
+        "pause_kind": "learner_think_gap",
+        "response_segment_id": "objection-d09-andrea-response"
+      },
+      {
+        "input_index": 18,
+        "source_scene_id": "objection-d09",
+        "segment_id": "objection-d09-andrea-response",
+        "segment_kind": "andrea_response",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end",
+        "responds_to_segment_id": "objection-d09-seller-pushback"
+      },
+      {
+        "input_index": 19,
+        "source_scene_id": "objection-d10",
+        "segment_id": "objection-d10-seller-pushback",
+        "segment_kind": "seller_pushback",
+        "andrea_speaks": true,
+        "pause_after_seconds": 3,
+        "pause_kind": "learner_think_gap",
+        "response_segment_id": "objection-d10-andrea-response"
+      },
+      {
+        "input_index": 20,
+        "source_scene_id": "objection-d10",
+        "segment_id": "objection-d10-andrea-response",
+        "segment_kind": "andrea_response",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end",
+        "responds_to_segment_id": "objection-d10-seller-pushback"
+      },
+      {
+        "input_index": 21,
+        "source_scene_id": "objection-d11",
+        "segment_id": "objection-d11-seller-pushback",
+        "segment_kind": "seller_pushback",
+        "andrea_speaks": true,
+        "pause_after_seconds": 3,
+        "pause_kind": "learner_think_gap",
+        "response_segment_id": "objection-d11-andrea-response"
+      },
+      {
+        "input_index": 22,
+        "source_scene_id": "objection-d11",
+        "segment_id": "objection-d11-andrea-response",
+        "segment_kind": "andrea_response",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end",
+        "responds_to_segment_id": "objection-d11-seller-pushback"
+      },
+      {
+        "input_index": 23,
+        "source_scene_id": "objection-d12",
+        "segment_id": "objection-d12-seller-pushback",
+        "segment_kind": "seller_pushback",
+        "andrea_speaks": true,
+        "pause_after_seconds": 3,
+        "pause_kind": "learner_think_gap",
+        "response_segment_id": "objection-d12-andrea-response"
+      },
+      {
+        "input_index": 24,
+        "source_scene_id": "objection-d12",
+        "segment_id": "objection-d12-andrea-response",
+        "segment_kind": "andrea_response",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end",
+        "responds_to_segment_id": "objection-d12-seller-pushback"
+      },
+      {
+        "input_index": 25,
+        "source_scene_id": "objection-d13",
+        "segment_id": "objection-d13-seller-pushback",
+        "segment_kind": "seller_pushback",
+        "andrea_speaks": true,
+        "pause_after_seconds": 3,
+        "pause_kind": "learner_think_gap",
+        "response_segment_id": "objection-d13-andrea-response"
+      },
+      {
+        "input_index": 26,
+        "source_scene_id": "objection-d13",
+        "segment_id": "objection-d13-andrea-response",
+        "segment_kind": "andrea_response",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end",
+        "responds_to_segment_id": "objection-d13-seller-pushback"
+      },
+      {
+        "input_index": 27,
+        "source_scene_id": "objection-d14",
+        "segment_id": "objection-d14-seller-pushback",
+        "segment_kind": "seller_pushback",
+        "andrea_speaks": true,
+        "pause_after_seconds": 3,
+        "pause_kind": "learner_think_gap",
+        "response_segment_id": "objection-d14-andrea-response"
+      },
+      {
+        "input_index": 28,
+        "source_scene_id": "objection-d14",
+        "segment_id": "objection-d14-andrea-response",
+        "segment_kind": "andrea_response",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end",
+        "responds_to_segment_id": "objection-d14-seller-pushback"
+      },
+      {
+        "input_index": 29,
+        "source_scene_id": "objection-d15",
+        "segment_id": "objection-d15-seller-pushback",
+        "segment_kind": "seller_pushback",
+        "andrea_speaks": true,
+        "pause_after_seconds": 3,
+        "pause_kind": "learner_think_gap",
+        "response_segment_id": "objection-d15-andrea-response"
+      },
+      {
+        "input_index": 30,
+        "source_scene_id": "objection-d15",
+        "segment_id": "objection-d15-andrea-response",
+        "segment_kind": "andrea_response",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end",
+        "responds_to_segment_id": "objection-d15-seller-pushback"
+      },
+      {
+        "input_index": 31,
+        "source_scene_id": "objection-d16",
+        "segment_id": "objection-d16-seller-pushback",
+        "segment_kind": "seller_pushback",
+        "andrea_speaks": true,
+        "pause_after_seconds": 3,
+        "pause_kind": "learner_think_gap",
+        "response_segment_id": "objection-d16-andrea-response"
+      },
+      {
+        "input_index": 32,
+        "source_scene_id": "objection-d16",
+        "segment_id": "objection-d16-andrea-response",
+        "segment_kind": "andrea_response",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end",
+        "responds_to_segment_id": "objection-d16-seller-pushback"
+      },
+      {
+        "input_index": 33,
+        "source_scene_id": "objection-d17",
+        "segment_id": "objection-d17-seller-pushback",
+        "segment_kind": "seller_pushback",
+        "andrea_speaks": true,
+        "pause_after_seconds": 3,
+        "pause_kind": "learner_think_gap",
+        "response_segment_id": "objection-d17-andrea-response"
+      },
+      {
+        "input_index": 34,
+        "source_scene_id": "objection-d17",
+        "segment_id": "objection-d17-andrea-response",
+        "segment_kind": "andrea_response",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end",
+        "responds_to_segment_id": "objection-d17-seller-pushback"
+      },
+      {
+        "input_index": 35,
+        "source_scene_id": "objection-d18",
+        "segment_id": "objection-d18-seller-pushback",
+        "segment_kind": "seller_pushback",
+        "andrea_speaks": true,
+        "pause_after_seconds": 3,
+        "pause_kind": "learner_think_gap",
+        "response_segment_id": "objection-d18-andrea-response"
+      },
+      {
+        "input_index": 36,
+        "source_scene_id": "objection-d18",
+        "segment_id": "objection-d18-andrea-response",
+        "segment_kind": "andrea_response",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end",
+        "responds_to_segment_id": "objection-d18-seller-pushback"
+      },
+      {
+        "input_index": 37,
+        "source_scene_id": "objection-d19",
+        "segment_id": "objection-d19-seller-pushback",
+        "segment_kind": "seller_pushback",
+        "andrea_speaks": true,
+        "pause_after_seconds": 3,
+        "pause_kind": "learner_think_gap",
+        "response_segment_id": "objection-d19-andrea-response"
+      },
+      {
+        "input_index": 38,
+        "source_scene_id": "objection-d19",
+        "segment_id": "objection-d19-andrea-response",
+        "segment_kind": "andrea_response",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end",
+        "responds_to_segment_id": "objection-d19-seller-pushback"
+      },
+      {
+        "input_index": 39,
+        "source_scene_id": "objection-d20",
+        "segment_id": "objection-d20-seller-pushback",
+        "segment_kind": "seller_pushback",
+        "andrea_speaks": true,
+        "pause_after_seconds": 3,
+        "pause_kind": "learner_think_gap",
+        "response_segment_id": "objection-d20-andrea-response"
+      },
+      {
+        "input_index": 40,
+        "source_scene_id": "objection-d20",
+        "segment_id": "objection-d20-andrea-response",
+        "segment_kind": "andrea_response",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end",
+        "responds_to_segment_id": "objection-d20-seller-pushback"
+      },
+      {
+        "input_index": 41,
+        "source_scene_id": "objection-d21",
+        "segment_id": "objection-d21-seller-pushback",
+        "segment_kind": "seller_pushback",
+        "andrea_speaks": true,
+        "pause_after_seconds": 3,
+        "pause_kind": "learner_think_gap",
+        "response_segment_id": "objection-d21-andrea-response"
+      },
+      {
+        "input_index": 42,
+        "source_scene_id": "objection-d21",
+        "segment_id": "objection-d21-andrea-response",
+        "segment_kind": "andrea_response",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end",
+        "responds_to_segment_id": "objection-d21-seller-pushback"
+      },
+      {
+        "input_index": 43,
+        "source_scene_id": "objection-d22",
+        "segment_id": "objection-d22-seller-pushback",
+        "segment_kind": "seller_pushback",
+        "andrea_speaks": true,
+        "pause_after_seconds": 3,
+        "pause_kind": "learner_think_gap",
+        "response_segment_id": "objection-d22-andrea-response"
+      },
+      {
+        "input_index": 44,
+        "source_scene_id": "objection-d22",
+        "segment_id": "objection-d22-andrea-response",
+        "segment_kind": "andrea_response",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end",
+        "responds_to_segment_id": "objection-d22-seller-pushback"
+      },
+      {
+        "input_index": 45,
+        "source_scene_id": "objection-d23",
+        "segment_id": "objection-d23-seller-pushback",
+        "segment_kind": "seller_pushback",
+        "andrea_speaks": true,
+        "pause_after_seconds": 3,
+        "pause_kind": "learner_think_gap",
+        "response_segment_id": "objection-d23-andrea-response"
+      },
+      {
+        "input_index": 46,
+        "source_scene_id": "objection-d23",
+        "segment_id": "objection-d23-andrea-response",
+        "segment_kind": "andrea_response",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end",
+        "responds_to_segment_id": "objection-d23-seller-pushback"
+      },
+      {
+        "input_index": 47,
+        "source_scene_id": "objection-d24",
+        "segment_id": "objection-d24-seller-pushback",
+        "segment_kind": "seller_pushback",
+        "andrea_speaks": true,
+        "pause_after_seconds": 3,
+        "pause_kind": "learner_think_gap",
+        "response_segment_id": "objection-d24-andrea-response"
+      },
+      {
+        "input_index": 48,
+        "source_scene_id": "objection-d24",
+        "segment_id": "objection-d24-andrea-response",
+        "segment_kind": "andrea_response",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end",
+        "responds_to_segment_id": "objection-d24-seller-pushback"
+      },
+      {
+        "input_index": 49,
+        "source_scene_id": "objection-d25",
+        "segment_id": "objection-d25-seller-pushback",
+        "segment_kind": "seller_pushback",
+        "andrea_speaks": true,
+        "pause_after_seconds": 3,
+        "pause_kind": "learner_think_gap",
+        "response_segment_id": "objection-d25-andrea-response"
+      },
+      {
+        "input_index": 50,
+        "source_scene_id": "objection-d25",
+        "segment_id": "objection-d25-andrea-response",
+        "segment_kind": "andrea_response",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end",
+        "responds_to_segment_id": "objection-d25-seller-pushback"
+      },
+      {
+        "input_index": 51,
+        "source_scene_id": "objection-d26",
+        "segment_id": "objection-d26-seller-pushback",
+        "segment_kind": "seller_pushback",
+        "andrea_speaks": true,
+        "pause_after_seconds": 3,
+        "pause_kind": "learner_think_gap",
+        "response_segment_id": "objection-d26-andrea-response"
+      },
+      {
+        "input_index": 52,
+        "source_scene_id": "objection-d26",
+        "segment_id": "objection-d26-andrea-response",
+        "segment_kind": "andrea_response",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end",
+        "responds_to_segment_id": "objection-d26-seller-pushback"
+      },
+      {
+        "input_index": 53,
+        "source_scene_id": "objection-d27",
+        "segment_id": "objection-d27-seller-pushback",
+        "segment_kind": "seller_pushback",
+        "andrea_speaks": true,
+        "pause_after_seconds": 3,
+        "pause_kind": "learner_think_gap",
+        "response_segment_id": "objection-d27-andrea-response"
+      },
+      {
+        "input_index": 54,
+        "source_scene_id": "objection-d27",
+        "segment_id": "objection-d27-andrea-response",
+        "segment_kind": "andrea_response",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end",
+        "responds_to_segment_id": "objection-d27-seller-pushback"
+      },
+      {
+        "input_index": 55,
+        "source_scene_id": "objection-d28",
+        "segment_id": "objection-d28-seller-pushback",
+        "segment_kind": "seller_pushback",
+        "andrea_speaks": true,
+        "pause_after_seconds": 3,
+        "pause_kind": "learner_think_gap",
+        "response_segment_id": "objection-d28-andrea-response"
+      },
+      {
+        "input_index": 56,
+        "source_scene_id": "objection-d28",
+        "segment_id": "objection-d28-andrea-response",
+        "segment_kind": "andrea_response",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end",
+        "responds_to_segment_id": "objection-d28-seller-pushback"
+      },
+      {
+        "input_index": 57,
+        "source_scene_id": "objection-d29",
+        "segment_id": "objection-d29-seller-pushback",
+        "segment_kind": "seller_pushback",
+        "andrea_speaks": true,
+        "pause_after_seconds": 3,
+        "pause_kind": "learner_think_gap",
+        "response_segment_id": "objection-d29-andrea-response"
+      },
+      {
+        "input_index": 58,
+        "source_scene_id": "objection-d29",
+        "segment_id": "objection-d29-andrea-response",
+        "segment_kind": "andrea_response",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end",
+        "responds_to_segment_id": "objection-d29-seller-pushback"
+      },
+      {
+        "input_index": 59,
+        "source_scene_id": "objection-d30",
+        "segment_id": "objection-d30-seller-pushback",
+        "segment_kind": "seller_pushback",
+        "andrea_speaks": true,
+        "pause_after_seconds": 3,
+        "pause_kind": "learner_think_gap",
+        "response_segment_id": "objection-d30-andrea-response"
+      },
+      {
+        "input_index": 60,
+        "source_scene_id": "objection-d30",
+        "segment_id": "objection-d30-andrea-response",
+        "segment_kind": "andrea_response",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end",
+        "responds_to_segment_id": "objection-d30-seller-pushback"
+      },
+      {
+        "input_index": 61,
+        "source_scene_id": "objection-d31",
+        "segment_id": "objection-d31-seller-pushback",
+        "segment_kind": "seller_pushback",
+        "andrea_speaks": true,
+        "pause_after_seconds": 3,
+        "pause_kind": "learner_think_gap",
+        "response_segment_id": "objection-d31-andrea-response"
+      },
+      {
+        "input_index": 62,
+        "source_scene_id": "objection-d31",
+        "segment_id": "objection-d31-andrea-response",
+        "segment_kind": "andrea_response",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end",
+        "responds_to_segment_id": "objection-d31-seller-pushback"
+      },
+      {
+        "input_index": 63,
+        "source_scene_id": "objection-d32",
+        "segment_id": "objection-d32-seller-pushback",
+        "segment_kind": "seller_pushback",
+        "andrea_speaks": true,
+        "pause_after_seconds": 3,
+        "pause_kind": "learner_think_gap",
+        "response_segment_id": "objection-d32-andrea-response"
+      },
+      {
+        "input_index": 64,
+        "source_scene_id": "objection-d32",
+        "segment_id": "objection-d32-andrea-response",
+        "segment_kind": "andrea_response",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end",
+        "responds_to_segment_id": "objection-d32-seller-pushback"
+      },
+      {
+        "input_index": 65,
+        "source_scene_id": "objection-pause",
+        "segment_id": "objection-pause",
+        "segment_kind": "andrea_narration",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end"
+      },
+      {
+        "input_index": 66,
+        "source_scene_id": "objection-drill",
+        "segment_id": "objection-drill",
+        "segment_kind": "andrea_narration",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end"
+      },
+      {
+        "input_index": 67,
+        "source_scene_id": "objection-transition",
+        "segment_id": "objection-transition",
+        "segment_kind": "andrea_narration",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end"
+      }
+    ]
   },
   "api_endpoint": "https://api.heygen.com/v2/video/generate",
   "request_body": {
@@ -40,7 +780,7 @@
         "voice": {
           "type": "text",
           "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
-          "input_text": "An objection is not a cue to talk faster. It is a cue to find out what the seller is protecting. Use these responses as patterns. Adapt the words to the facts, and do not promise a price, date, approval, legal result, or financial result that has not been confirmed in writing."
+          "input_text": "Objections are easier to handle when you stop hunting for a perfect comeback. Listen to the words, acknowledge the concern, ask what sits underneath it, and redirect toward a responsible next step. The responses in this lesson are practice patterns. Adapt them to the facts. Do not state that a price, date, structure, legal result, credit result, or exception is available until the current written process confirms it."
         },
         "background": {
           "type": "color",
@@ -55,7 +795,7 @@
         "voice": {
           "type": "text",
           "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
-          "input_text": "Seller: That number is too low. Response: I hear you. What number were you expecting, and what does that number need to cover? Let them answer. Then ask whether price is the only concern or whether timing, repairs, and fees matter too. If a different structure may fit, collect the facts and have it reviewed before you describe it as available."
+          "input_text": "A seller says, \"I want more money.\""
         },
         "background": {
           "type": "color",
@@ -70,7 +810,7 @@
         "voice": {
           "type": "text",
           "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
-          "input_text": "Seller: I need to think about it. Response: Of course. What part feels unresolved right now? It may be the price, the timing, another person who needs to weigh in, or a question we have not answered. Find the missing piece, agree on the next action, and give the seller room to decide."
+          "input_text": "I hear you. What number were you expecting, and what does that number need to cover? Let the seller explain. Then ask whether price is the only concern or whether timing, condition, costs, and convenience also matter. If the current process may support another written option, collect the facts and have it reviewed before you describe it as available."
         },
         "background": {
           "type": "color",
@@ -85,7 +825,7 @@
         "voice": {
           "type": "text",
           "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
-          "input_text": "Seller: I have another offer. Response: That makes sense. What matters most as you compare them? Ask about the written price, deductions, conditions, timing, and who is responsible for each cost. Do not attack the other offer. Help the seller compare the documents and the tradeoffs they can verify."
+          "input_text": "A seller says, \"You give your price first.\""
         },
         "background": {
           "type": "color",
@@ -100,7 +840,7 @@
         "voice": {
           "type": "text",
           "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
-          "input_text": "Seller: I may put it on the market. Response: That may be a good fit. What would need to be true for that path to work for you? Ask about preparation, access, timing, fees, and the seller's tolerance for uncertainty. If they want professional advice outside your scope, say so and let them get it."
+          "input_text": "I can explain how the current process reaches a written number. Before that review, I need enough context to avoid giving you a guess. What are you hoping the property can do for you, and what facts should the review account for? Ask about condition, timing, and the seller's priorities. Record the answer, then explain the confirmed next step without inventing a number."
         },
         "background": {
           "type": "color",
@@ -115,7 +855,7 @@
         "voice": {
           "type": "text",
           "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
-          "input_text": "Seller: How do I know this is legitimate? Response: You should verify who you are dealing with. I can share the company information and written documents available for this conversation. Take the time you need to review them. If you have a specific concern, tell me what it is so I can answer it or find the right answer."
+          "input_text": "A seller says, \"I am going to list it with an agent.\""
         },
         "background": {
           "type": "color",
@@ -130,7 +870,7 @@
         "voice": {
           "type": "text",
           "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
-          "input_text": "Seller: I need to talk to someone else. Response: That makes sense. What will they want to understand before the conversation can move forward? If it helps, we can schedule a time when everyone can hear the same information and ask questions. Do not try to work around a person whose consent matters."
+          "input_text": "That may be a good path. What would need to be true for listing to work well for you? Ask about preparation, access, timing, expected costs, and the seller's comfort with the process. Do not criticize another path. Help the seller compare what is documented. If professional advice is needed, encourage the seller to get it before deciding."
         },
         "background": {
           "type": "color",
@@ -145,7 +885,7 @@
         "voice": {
           "type": "text",
           "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
-          "input_text": "Seller: I cannot move that fast. Response: What needs to happen before a move is workable? Ask about housing, belongings, family coordination, and any outside deadline. Record the facts. Discuss only timing that the written process can support, and confirm the final date in the agreement."
+          "input_text": "A seller says, \"I am talking to other investors.\""
         },
         "background": {
           "type": "color",
@@ -160,7 +900,7 @@
         "voice": {
           "type": "text",
           "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
-          "input_text": "Seller: What will I have to pay or fix? Response: Let's separate what is known from what still needs review. We can go through the written terms, the condition information, and the costs assigned to each side. If a cost is not confirmed, do not guess. Mark the question and get a written answer."
+          "input_text": "That makes sense. What matters most as you compare the options? Ask about the written price, deductions, conditions, timing, and who is responsible for each cost or task. Keep the tone neutral. Another conversation may reveal a better fit. Your job is to make the BMH path clear enough to compare without attacking anyone else or claiming an advantage you cannot verify."
         },
         "background": {
           "type": "color",
@@ -175,7 +915,7 @@
         "voice": {
           "type": "text",
           "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
-          "input_text": "Seller: I am behind and I need this stopped. Response: I am sorry you are dealing with that. I need to be careful not to promise a legal, loan, or credit result. Let me collect the deadline, the notices you received, and the contact information on them. We can route the facts for qualified review. You should also seek independent advice when the situation calls for it."
+          "input_text": "A seller says, \"I will get back to you after I talk to my spouse.\""
         },
         "background": {
           "type": "color",
@@ -190,7 +930,7 @@
         "voice": {
           "type": "text",
           "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
-          "input_text": "Seller: I need time in the property afterward. Response: Thank you for saying that now. Any stay after the transaction would need a written occupancy agreement and approval before anyone relies on it. Tell me how much flexibility you need and why. I will document the request so the available options can be reviewed."
+          "input_text": "That makes sense. What questions do you expect your spouse to have? If it would help, offer a conversation where everyone can hear the same information and ask questions directly. Do not work around a person whose consent matters. Agree on a specific next action that respects the seller's pace and leaves room for the other decision maker."
         },
         "background": {
           "type": "color",
@@ -205,7 +945,7 @@
         "voice": {
           "type": "text",
           "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
-          "input_text": "Pause when the question crosses into legal advice, credit advice, tax advice, lending, title, a special contract term, or an exception to the current process. Write down the exact question. Tell the seller you are getting it reviewed. Then follow through with a confirmed answer."
+          "input_text": "A seller says, \"What is your company name?\""
         },
         "background": {
           "type": "color",
@@ -220,7 +960,817 @@
         "voice": {
           "type": "text",
           "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
-          "input_text": "For each objection, practice the same sequence. Acknowledge the concern. Ask one question that reveals what sits underneath it. Separate confirmed facts from assumptions. Offer only a next step that the current process supports. Then check that the seller understands what happens next."
+          "input_text": "We are BMH Group. You should verify who you are dealing with before you rely on anything. Share the current company information and the written materials approved for the conversation. Ask what the seller wants to confirm. If you do not know an answer, record the question and get it from the right source. Trust grows from information the seller can check, not from a confident tone alone."
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "A seller says, \"I cannot sell right now. I need more time.\""
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "I understand. What has to happen before selling becomes workable? Ask about housing, belongings, family coordination, repairs, or another outside event. Then ask how the seller would like you to follow up and what information would be useful then. Do not create urgency that is not real. Let the seller's actual situation define the next conversation."
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "A seller says, \"Do you have proof of funds?\""
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "That is a fair thing to ask for. I can provide the current verification material that the process authorizes for this conversation. Tell me what you need to verify and who will review it. Do not send an old document or describe financing beyond what the document proves. If the request needs additional review, say so and follow through with the confirmed material."
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "A seller says, \"How did you get my number?\""
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "Answer with the exact source documented for that contact. Do not guess. Then respect the person's communication preference. If they do not want further contact, follow the current suppression process. If they are open to talking, ask whether the property is something they would consider discussing and what prompted their interest. Privacy and consent come before continuing the script."
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "A seller says, \"I want my attorney to review it.\""
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "That is reasonable. Take the time you need to get independent advice. Ask which document the attorney needs and where the seller wants it sent through the approved process. Do not interpret legal language beyond your authority or discourage outside review. Agree on how the seller will raise any questions that come back so the current written terms can be addressed accurately."
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "A seller says, \"I will fix it myself.\""
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "That could be a workable path. What work do you expect to complete, and what would you need in order to finish it? Ask about the seller's plan, access to help, and tolerance for the disruption. Understand the tradeoff the seller is making and let them evaluate the repair plan on its own facts. If they want another option later, leave the door open without predicting what will happen."
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "A seller says, \"I am too busy.\""
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "I hear you. Would you rather pause the conversation, choose a better time, or answer a short question that helps me know whether following up makes sense? Respect the answer. If the seller continues, ask what part of the property situation is taking the most attention. Keep the exchange brief and useful. A busy person should not have to fight the script to end the conversation."
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "A seller says, \"We are doing highest and best.\""
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "Thanks for explaining the process. Ask what must be included, how the seller will compare the written offers, and whether condition, costs, timing, or execution risk matter alongside price. Do not promise to win a bidding process. Submit only what the current review authorizes, and make sure the written terms say exactly what BMH can support."
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "A seller says, \"I have it taken care of already.\""
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "Good. What path did you choose, and is there anything still unresolved? The answer may confirm that no follow-up is needed. It may also reveal a timing, condition, or document question the seller still wants help with. Do not manufacture a gap. If the situation is handled, respect that and update the record so the next action matches the seller's answer."
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "A seller says, \"I am going to rent it instead.\""
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "That may fit. What would make renting workable for you? Ask about property condition, management, occupants, reserves, and the seller's willingness to handle the ongoing responsibility. Stay within your scope. The goal is to understand the comparison the seller is making. If the seller wants another path reviewed, collect the facts and explain the confirmed next step."
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "A seller says, \"You go first on the walkthrough, then I will decide.\""
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "That is fine. I still want to understand what matters to you before the review begins. What condition issues should we expect, what timing are you considering, and what would a workable result need to address? The walkthrough adds property facts. It does not replace the seller's priorities. Record both and avoid naming an unreviewed number."
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "A seller says, \"If this is such a good deal, why do you not buy it yourself?\""
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "That is a fair question. Explain only the transaction path and company relationship that the current written process confirms for this property. Do not hide a possible assignment, partnership, or other approved structure. Ask what the seller is concerned might change. Then point back to the written terms, responsibilities, and disclosures that control the agreement."
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "A seller says, \"Are you wholesaling this?\""
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "Answer directly using the disclosures and transaction options approved for the situation. If the agreement may be assigned, do not dodge the question. Explain what the seller's written terms say and what could change only through another written agreement. Ask which part worries them: who performs, whether the terms move, or who communicates next. Get any uncertain point reviewed before answering."
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "A seller says, \"I do not want to deal with repairs or inspections.\""
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "Tell me which part you want to avoid. A cash, as-is path may reduce preparation, while access, condition verification, and other terms still depend on the written agreement. Walk through what is confirmed and what remains subject to review. Do not say that nothing can change. Ask the seller to point out any condition issue they already know so the record starts complete."
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "A seller says, \"I do not know what I owe.\""
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "That is common. Do not guess at the payoff. Ask what documents or lender information the seller has and explain that the exact amount must come from an authorized statement or closing review. You can still collect the property facts and seller priorities while that amount is being confirmed. Any net discussion waits until the relevant costs and payoff are documented."
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "A seller says, \"I cannot get rid of my tenants.\""
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "I am sorry this has become difficult. Ask whether there is a written lease, who occupies the property, what notices have been given, and whether any legal process has started. Do not offer legal advice or promise an occupant outcome. Route the facts for qualified review. The seller may also want independent advice before relying on any transaction or occupancy plan."
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "A seller says, \"I owe too much. I may be underwater.\""
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "Thank you for saying that. We need the exact payoff, any other liens, expected costs, and the written terms before anyone can know what is possible. Collect the documents the current process requires and route the situation for review. Do not promise that a structure will solve the gap. Explain what will be checked and when the seller can expect a confirmed answer."
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "A seller says, \"I am in foreclosure and I do not think there is time.\""
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "I am sorry you are carrying that pressure. Ask for the deadline, the notices received, and the contact information on those documents. Do not promise a legal, lending, title, or credit result. Route the facts immediately through the qualified review path, and tell the seller to seek independent professional advice when the situation calls for it."
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "A seller says, \"I need to net my number after everything.\""
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "Understood. What does that amount need to cover, and which costs are you including? Separate the seller's target from facts that still need verification, such as payoff, liens, fees, taxes, or other written obligations. Do not promise proceeds. Once the required facts are documented, the current review can show which written option, if any, addresses the seller's goal."
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "A seller says, \"I need to stay in the property after the transaction.\""
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "Thank you for raising that before anyone relies on a date. Ask how much flexibility the seller needs and what is driving the request. Any post-transaction occupancy requires a written agreement and approval. It may involve conditions, costs, insurance, access, or a holdback that must be reviewed. Document the request without stating that it is available."
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "A seller says, \"I am worried you will change the price after the inspection.\""
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "I understand why that would worry you. Walk through what the written agreement says about access, condition, review, and any right to request a change or end the agreement. Do not claim that a change can never happen. Ask which past experience or clause created the concern, then get a precise written answer if anything remains unclear."
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "A seller says, \"I do not trust creative financing or terms.\""
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "That is worth slowing down for. Ask what part feels risky or unclear. Explain only the structure that has been reviewed for the property, using the actual written documents. Do not make lending, tax, credit, or legal claims. Encourage independent advice where appropriate. If the seller only wants a cash path, respect that preference and have the available option reviewed on that basis."
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "A seller says, \"I do not want people knowing my business.\""
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "I understand. Ask what privacy means to the seller and who may need to be involved for the current process to work. Explain the approved communication and access steps without promising secrecy beyond the written policy and transaction requirements. Record the preference. If the seller wants contact limited to a particular channel, follow the current process for honoring that request."
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "A seller says, \"I only want cash with no contingencies.\""
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "Thank you for being clear. Ask what the seller means by no contingencies and which terms matter most. The current review must confirm the price, proof, condition language, title requirements, timing, and every responsibility in the agreement. Do not remove or describe a term before it has been approved in writing. Bring back the exact option the process can support."
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "A seller says, \"Send your best offer in writing. I do not want to talk.\""
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "Respect the communication preference. Explain that an accurate written review still needs the property condition, timing, ownership, and seller priorities required by the current process. Ask whether the seller is willing to provide those facts in the preferred channel. If not, document the limitation and do not invent missing information just to send a number."
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "A seller says, \"I need to think about it.\""
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "Of course. What part feels unresolved right now? It may be price, timing, another person, a document, or a question that has not been answered. Listen for the real issue. Offer to provide the confirmed information the seller needs, then agree on a next action that gives them room to decide. Do not turn the request for space into pressure."
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "A seller says, \"I am not interested.\""
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "Understood. Before ending, you may ask whether something changed or whether the person wants no further contact, as long as the current process allows that question. Respect the answer immediately. If they explain a concern, listen without arguing. If they want the conversation to end, update the record and follow the suppression or follow-up rule that applies. A clean ending is part of good service."
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "Pause whenever the question crosses into legal advice, lending, credit, taxes, title, an unusual contract term, post-transaction occupancy, or an exception to the current process. Write down the exact question and the facts already confirmed. Tell the seller you are getting it reviewed. Then follow through with the verified answer. A quick unsupported answer creates more risk than an honest pause."
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "bf22f09d624f4616b427fb6461ec7fdf"
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "Run each drill the same way. Hear the seller's words. Acknowledge the concern without pretending you agree with every assumption. Ask a question that reveals the missing fact. Separate what the current documents confirm from what still needs review. Offer the next step that the process supports, then check that the seller understands it. The exact language will change. The judgment behind it should stay steady."
         },
         "background": {
           "type": "color",

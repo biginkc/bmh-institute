@@ -14,168 +14,57 @@
   "lesson_contract": {
     "lesson_source_key": "lesson-content-slot-18",
     "objective": "Run a disciplined workday, keep the pipeline current, and communicate decisions and blockers through the team's operating systems.",
-    "objective_points": [
-      "Prioritize daily lead work",
-      "Maintain notes, stages, and next actions",
-      "Use team communication channels professionally",
-      "Close the day with a clean pipeline and clear plan"
-    ],
-    "next_sequence": [
-      "video-slot-18-mission-control",
-      "lesson-quiz-slot-18",
-      "lesson-content-slot-19"
-    ],
+    "objective_points": ["Prioritize daily lead work", "Maintain notes, stages, and next actions", "Use team communication channels professionally", "Close the day with a clean pipeline and clear plan"],
+    "next_sequence": ["video-slot-18-mission-control", "lesson-quiz-slot-18", "lesson-content-slot-19"],
     "transition_spoken_text": "Next, you'll see how the team stays in sync day to day. After that, complete the checkpoint and move into Career Growth Path."
   },
-  "production_constraints": {
-    "strategy": "replace_full_spoken_cut",
-    "render_allowed": false,
-    "provider_call_allowed": false,
-    "caption_generation_allowed": false,
-    "approval_status_change_allowed": false
+  "source_depth_contract": {
+    "source_spoken_word_count": 937,
+    "minimum_replacement_word_count": 840,
+    "required_teaching_beats": [
+      {"beat_id": "whole-day", "description": "The lesson connects the individual skills into a repeatable workday."},
+      {"beat_id": "prioritize-commitments", "description": "Scheduled follow-ups and active conversations receive deliberate priority."},
+      {"beat_id": "research", "description": "Property and conversation research prepares a useful next contact."},
+      {"beat_id": "execute-order", "description": "The learner follows the current work order rather than an invented quota."},
+      {"beat_id": "document-immediately", "description": "Notes, stages, and next actions stay current while details are fresh."},
+      {"beat_id": "energy-management", "description": "The learner uses the current schedule and healthy resets to sustain attention."},
+      {"beat_id": "admin-and-handoffs", "description": "Administrative work and complete handoffs protect the rest of the process."},
+      {"beat_id": "pipeline-review", "description": "The workday closes with a clean pipeline and dated next actions."},
+      {"beat_id": "controllable-work", "description": "The learner judges preparation, follow-through, and record quality rather than uncontrollable results."},
+      {"beat_id": "communicate-blockers", "description": "Decisions and blockers move through the current team channel with enough context."},
+      {"beat_id": "human-care", "description": "Consistency remains grounded in genuine care for the seller."},
+      {"beat_id": "checkpoint-transition", "description": "The close points to Daily Mission Control, the checkpoint, and Career Growth Path."}
+    ],
+    "required_examples": [
+      {"example_id": "expected-callback", "description": "A seller expecting a callback is honored before less urgent work."},
+      {"example_id": "research-detail", "description": "Ownership or property information improves the next question."},
+      {"example_id": "blocked-handoff", "description": "A handoff blocked by missing information is escalated with context."},
+      {"example_id": "stale-lead", "description": "A stale record receives a correct stage and next action."},
+      {"example_id": "rough-stretch-reset", "description": "A difficult stretch is handled with a healthy reset under the current schedule."}
+    ]
   },
+  "production_constraints": {"strategy": "replace_full_spoken_cut", "render_allowed": false, "provider_call_allowed": false, "caption_generation_allowed": false, "approval_status_change_allowed": false},
   "forbidden_language_removals": [
-    {
-      "source_time": "00:01:45.020",
-      "exact_source_language": "You're aiming for 60 to 80 dials in this first block",
-      "replacement_rule": "The current SOP, role sheet, schedule, and manager set activity expectations."
-    },
-    {
-      "source_time": "00:03:13.340",
-      "exact_source_language": "150 to 200 total dials",
-      "replacement_rule": "Remove fixed activity quotas from reusable training."
-    },
-    {
-      "source_time": "source transcript paragraph 8",
-      "exact_source_language": "You're making 150-plus calls a day, five days a week",
-      "replacement_rule": "Use current written expectations and avoid fixed quotas or weekly schedules."
-    },
-    {
-      "source_time": "source transcript paragraphs 4 and 7",
-      "exact_source_language": "Sandra",
-      "replacement_rule": "Use provider-neutral wording such as the current system."
-    }
+    {"source_time": "00:01:45.020", "exact_source_language": "You're aiming for 60 to 80 dials in this first block", "replacement_rule": "The current SOP, role sheet, schedule, and manager set activity expectations."},
+    {"source_time": "00:03:13.340", "exact_source_language": "150 to 200 total dials", "replacement_rule": "Remove fixed activity quotas from reusable training."},
+    {"source_time": "source transcript paragraph 8", "exact_source_language": "You're making 150-plus calls a day, five days a week", "replacement_rule": "Use current written expectations and avoid fixed quotas or weekly schedules."},
+    {"source_time": "source transcript paragraphs 4 and 7", "exact_source_language": "Sandra", "replacement_rule": "Use provider-neutral wording such as the current system."}
   ],
   "scenes": [
-    {
-      "scene_id": "operator-whole-day",
-      "title": "Run the whole day",
-      "spoken_text": "You have seen the individual parts. Now put them together into a day you can repeat. Keep the right work moving, and keep the record and next step current.",
-      "visual_plan": {"mode": "avatar_on_camera", "shot": "Andrea standing in a medium-wide shot", "editor_note": "Open with a clear day-at-a-glance posture and no schedule numbers."}
-    },
-    {
-      "scene_id": "operator-priorities",
-      "title": "Start with commitments",
-      "spoken_text": "Begin with the work you already promised. Check scheduled follow-ups and active conversations, especially anything close to a handoff. Sort the list using the current SOP and your role sheet. If your manager changes the priority, follow that direction.",
-      "visual_plan": {"mode": "avatar_with_optional_cutaway", "shot": "Andrea seated beside a short generic priority list", "editor_note": "Optional list shows commitments and active conversations without quotas."}
-    },
-    {
-      "scene_id": "operator-research",
-      "title": "Prepare with purpose",
-      "spoken_text": "Research until you can make the next conversation useful. Confirm the ownership and property details, then read the history in the current system. Look for details that help you ask a better question. When you are ready, move the conversation forward.",
-      "visual_plan": {"mode": "avatar_with_optional_cutaway", "shot": "Andrea at a desk reviewing a generic property file", "editor_note": "Use no software interface or provider branding."}
-    },
-    {
-      "scene_id": "operator-execution",
-      "title": "Work and document",
-      "spoken_text": "Handle callbacks when they are due. Then move through the follow-ups and new activity assigned to you in the order the current process requires. Update the current system while the details are fresh so the next person knows what happened and what comes next.",
-      "visual_plan": {"mode": "avatar_on_camera", "shot": "Andrea seated with one callback card and one note card", "editor_note": "Keep the workflow generic and free of activity counts."}
-    },
-    {
-      "scene_id": "operator-current-expectations",
-      "title": "Use the current operating plan",
-      "spoken_text": "Your current scorecard, role sheet, schedule, and manager direction define the activity expected from you. This video does not add a number or change that schedule. Take breaks as the current schedule directs. When you return, give the next person your full attention.",
-      "visual_plan": {"mode": "avatar_on_camera", "shot": "Andrea standing beside a closed role-sheet folder", "editor_note": "Do not show a clock, quota, or fixed schedule."}
-    },
-    {
-      "scene_id": "operator-close-day",
-      "title": "Leave a clean pipeline",
-      "spoken_text": "Before you finish, review the pipeline. An active lead should have useful notes, the right stage, and a dated next action. Complete any handoff that is ready. Escalate blocked work, then leave yourself a clear place to begin.",
-      "visual_plan": {"mode": "avatar_with_optional_cutaway", "shot": "Andrea reviewing three generic pipeline cards", "editor_note": "Cards show notes, stage, and next action only."}
-    },
-    {
-      "scene_id": "operator-controlled-work",
-      "title": "Judge the controllable work",
-      "spoken_text": "A disciplined day cannot make someone answer or make a deal close. You can control how well you followed the process and whether you kept your commitments. You can also leave an accurate record and treat each person with care. That is work you can repeat tomorrow.",
-      "visual_plan": {"mode": "avatar_on_camera", "shot": "Andrea standing in a steady medium shot", "editor_note": "Use a measured accountability tone with no results chart."}
-    },
-    {
-      "scene_id": "operator-human-care",
-      "title": "Keep the work human",
-      "spoken_text": "Follow-through matters. So does paying attention to the person in front of you. Listen, ask the next useful question, and do what you said you would do. That is how you earn trust one conversation at a time.",
-      "visual_plan": {"mode": "avatar_on_camera", "shot": "Andrea seated with open listening posture", "editor_note": "Leave a natural pause after the first sentence."}
-    },
-    {
-      "scene_id": "operator-transition",
-      "title": "Continue into mission control",
-      "spoken_text": "Next, you'll see how the team stays in sync day to day. After that, complete the checkpoint and move into Career Growth Path.",
-      "visual_plan": {"mode": "avatar_on_camera", "shot": "Andrea centered in a medium shot", "editor_note": "End without viewer-facing chapter numbering."}
-    }
+    {"scene_id": "operator-whole-day", "title": "Run the whole day", "spoken_text": "You have learned the individual pieces: seller conversations, property facts, the pipeline, scripts, objections, written offers, follow-through, and scorecards. Now put them together into a workday you can repeat. A disciplined day keeps the right conversations moving, gives each person full attention, and leaves an accurate record behind. The current SOP, role sheet, schedule, and manager direction define the exact activity. This lesson explains how the pieces support each other.", "teaching_beat_ids": ["whole-day", "execute-order"], "example_ids": [], "visual_plan": {"mode": "avatar_on_camera", "shot": "Andrea standing beside a generic day-at-a-glance board", "editor_note": "Use no clock, quota, software name, or fixed schedule."}},
+    {"scene_id": "operator-priorities", "title": "Start with commitments", "spoken_text": "Begin with the work you already promised. Check scheduled follow-ups and active conversations. A seller who expects to hear from you should not be buried beneath newer activity just because the newer list is easier to open. Look for conversations close to a handoff, questions waiting on an answer, and commitments tied to a real seller need. Sort the work using the current SOP. If your manager changes the priority, follow that direction and update the record.", "teaching_beat_ids": ["prioritize-commitments", "execute-order"], "example_ids": ["expected-callback"], "visual_plan": {"mode": "avatar_with_optional_cutaway", "shot": "Andrea sorting expected follow-up and active-conversation cards", "editor_note": "Use no stage number or activity count."}},
+    {"scene_id": "operator-research", "title": "Prepare with purpose", "spoken_text": "Research should make the next conversation more useful. Confirm ownership and the property details available through the current process. Read the history before asking the seller to repeat it. A tax notice, a listed owner, a condition note, or an unresolved family question may change the next thing you ask. Research until you can enter the conversation prepared, then move. Do not use preparation as a hiding place from the actual work.", "teaching_beat_ids": ["research", "execute-order"], "example_ids": ["research-detail"], "visual_plan": {"mode": "avatar_with_optional_cutaway", "shot": "Andrea reviewing a generic property and conversation history", "editor_note": "Use no data provider, address, or personal information."}},
+    {"scene_id": "operator-execution", "title": "Follow the current work order", "spoken_text": "Handle callbacks when they are due. Then move through follow-ups, recontacts, and new assigned activity in the order the current process requires. Give each person enough attention to hear the answer and choose the next useful question. The scorecard and role sheet tell you what activity applies. This video does not add a number. The aim is a steady process you can explain, repeat, and adjust when your manager gives new direction.", "teaching_beat_ids": ["execute-order", "prioritize-commitments"], "example_ids": [], "visual_plan": {"mode": "avatar_on_camera", "shot": "Andrea beside a generic ordered work queue", "editor_note": "Use words such as due, follow-up, and assigned with no counts."}},
+    {"scene_id": "operator-document", "title": "Document while the details are fresh", "spoken_text": "Update the current system after each meaningful conversation while you still remember the exact words. Capture the seller's situation, the concern that matters, what was confirmed, and what you promised to do next. Set the correct stage and a dated next action. If the contact ended, record why. If another person needs the information, write enough that they can continue without making the seller repeat the whole story.", "teaching_beat_ids": ["document-immediately", "admin-and-handoffs"], "example_ids": [], "visual_plan": {"mode": "avatar_with_optional_cutaway", "shot": "Andrea completing a generic conversation record", "editor_note": "Show notes, stage, and next action without provider branding."}},
+    {"scene_id": "operator-energy", "title": "Protect the quality of your attention", "spoken_text": "Use the breaks and schedule in your current operating plan. Step away when that plan calls for it. Get water, eat, stretch, and return ready to listen. If a rough stretch leaves you tense or rushing, use an approved reset and tell your manager when support is needed. A reset is useful because the next seller should hear steady attention, not the frustration left over from the last conversation.", "teaching_beat_ids": ["energy-management", "human-care"], "example_ids": ["rough-stretch-reset"], "visual_plan": {"mode": "avatar_on_camera", "shot": "Andrea returning refreshed to a clean workspace", "editor_note": "Use no fixed break length, clock, or weekly schedule."}},
+    {"scene_id": "operator-admin", "title": "Complete the administrative work", "spoken_text": "Conversation work and administrative work belong to the same process. Send the approved follow-up material you promised. Update stages and tasks. Clean up notes that are too thin to support the next step. Finish any handoff that has the required facts. If a handoff is blocked because ownership, condition, consent, or another answer is missing, do not push it through. Name the blocker, route it through the current team channel, and say what is needed next.", "teaching_beat_ids": ["admin-and-handoffs", "communicate-blockers", "document-immediately"], "example_ids": ["blocked-handoff"], "visual_plan": {"mode": "avatar_with_optional_cutaway", "shot": "Andrea beside complete, pending, and blocked work cards", "editor_note": "Use no team or job title on the routing path."}},
+    {"scene_id": "operator-communication", "title": "Communicate decisions and blockers clearly", "spoken_text": "A useful team message gives context. State the seller or record involved, the decision already made, the fact that is missing, and the next owner according to the current process. Keep private information in the approved system and channel. Avoid vague notes such as needs help. Say what happened and what response is needed. When the question is urgent, use the escalation path in the current SOP instead of hoping someone notices the record.", "teaching_beat_ids": ["communicate-blockers", "admin-and-handoffs"], "example_ids": [], "visual_plan": {"mode": "avatar_on_camera", "shot": "Andrea beside a generic context, blocker, next-step message", "editor_note": "Use no communication provider or role labels."}},
+    {"scene_id": "operator-close-day", "title": "Leave a clean pipeline", "spoken_text": "Before you finish, step back and review the pipeline. Every active record should have useful notes, the correct stage, and a dated next action. Look for a seller who has gone stale because the record still shows an old stage or an action that already passed. Correct it. Complete ready handoffs, escalate blocked work, and make the next starting point obvious. The pipeline should tell the truth about what needs attention when work resumes.", "teaching_beat_ids": ["pipeline-review", "document-immediately"], "example_ids": ["stale-lead"], "visual_plan": {"mode": "avatar_with_optional_cutaway", "shot": "Andrea reviewing a clean generic pipeline", "editor_note": "Use no stage numbers, counts, or branded interface."}},
+    {"scene_id": "operator-controlled-work", "title": "Judge the work you can control", "spoken_text": "A disciplined day cannot make a seller answer or force a transaction to move. You can control preparation, attention, accurate notes, useful follow-up, and whether you kept the commitments you made. Review those things honestly. If the result was weak because the process slipped, name the slip and correct it. If the process was sound and the seller still chose another path, keep the record accurate and move to the next assigned action without carrying desperation into it.", "teaching_beat_ids": ["controllable-work", "whole-day"], "example_ids": [], "visual_plan": {"mode": "avatar_on_camera", "shot": "Andrea beside a preparation, attention, record, and follow-through loop", "editor_note": "Use no results score or quota."}},
+    {"scene_id": "operator-human-care", "title": "Keep the work human", "spoken_text": "Consistency matters because people notice whether you follow through. Genuine care matters because every record belongs to someone dealing with a real situation. Smile if it helps your voice feel warmer. Listen through the answer. Ask the useful question. If you promised information, send it. A conversation can be productive without becoming a deal. The standard is that the person was heard, the facts were handled responsibly, and the next step is clear. Clear coordination across the team protects that standard when the work changes hands.", "teaching_beat_ids": ["human-care", "controllable-work"], "example_ids": [], "visual_plan": {"mode": "avatar_on_camera", "shot": "Andrea seated with open listening posture", "editor_note": "Keep the tone grounded rather than motivational."}},
+    {"scene_id": "operator-transition", "title": "Continue into mission control", "spoken_text": "Next, you'll see how the team stays in sync day to day. After that, complete the checkpoint and move into Career Growth Path.", "teaching_beat_ids": ["checkpoint-transition"], "example_ids": [], "visual_plan": {"mode": "avatar_on_camera", "shot": "Andrea centered in a medium shot", "editor_note": "End without viewer-facing chapter numbering."}}
   ],
   "edit_operations": [
-    {
-      "operation_id": "operator-edit-01",
-      "source_start": "00:00:00.000",
-      "source_end": "00:00:56.159",
-      "action": "replace",
-      "replacement_scene_ids": ["operator-whole-day"],
-      "source_problem": "The current opener introduces the daily sequence but ties priority to a specific fixed implementation."
-    },
-    {
-      "operation_id": "operator-edit-02",
-      "source_start": "00:00:56.160",
-      "source_end": "00:01:24.379",
-      "action": "replace",
-      "replacement_scene_ids": ["operator-priorities"],
-      "source_problem": "The source mandates a fixed preparation duration and a fixed number of leads."
-    },
-    {
-      "operation_id": "operator-edit-03",
-      "source_start": "00:01:24.380",
-      "source_end": "00:02:28.519",
-      "action": "replace",
-      "replacement_scene_ids": ["operator-research", "operator-execution"],
-      "source_problem": "The source combines a useful work order with a numeric dial quota and a fixed break duration."
-    },
-    {
-      "operation_id": "operator-edit-04",
-      "source_start": "00:02:28.520",
-      "source_end": "00:03:19.099",
-      "action": "replace",
-      "replacement_scene_ids": ["operator-current-expectations"],
-      "source_problem": "The source hard-codes another cumulative dial range and a fixed block schedule."
-    },
-    {
-      "operation_id": "operator-edit-05",
-      "source_start": "00:03:19.100",
-      "source_end": "00:04:27.239",
-      "action": "replace",
-      "replacement_scene_ids": ["operator-close-day"],
-      "source_problem": "The source mixes sound pipeline hygiene with a fixed review duration, dial target, and full-hours test."
-    },
-    {
-      "operation_id": "operator-edit-06",
-      "source_start": "00:04:27.240",
-      "source_end": "00:05:15.819",
-      "action": "replace",
-      "replacement_scene_ids": ["operator-controlled-work"],
-      "source_problem": "The source turns consistency into a fixed daily and weekly calling requirement."
-    },
-    {
-      "operation_id": "operator-edit-07",
-      "source_start": "00:05:15.820",
-      "source_end": "00:06:02.739",
-      "action": "replace",
-      "replacement_scene_ids": ["operator-human-care"],
-      "source_problem": "The human-care message is useful but is framed as a numbers game and repeats source-specific activity language."
-    },
-    {
-      "operation_id": "operator-edit-08",
-      "source_start": "00:06:02.740",
-      "source_end": "00:06:18.600",
-      "action": "replace",
-      "replacement_scene_ids": ["operator-transition"],
-      "source_problem": "The source transition skips the checkpoint and Career Growth Path sequence after Daily Mission Control."
-    }
+    {"operation_id": "operator-edit-01", "source_start": "00:00:00.000", "source_end": "00:06:18.600", "action": "replace", "replacement_scene_ids": ["operator-whole-day", "operator-priorities", "operator-research", "operator-execution", "operator-document", "operator-energy", "operator-admin", "operator-communication", "operator-close-day", "operator-controlled-work", "operator-human-care", "operator-transition"], "source_problem": "The source combines sound daily operating discipline with fixed quotas, fixed schedule details, and provider-specific language. The replacement retains the complete operating lesson while deferring exact expectations to current written sources."}
   ]
 }

@@ -1,18 +1,51 @@
 {
-  "schema_version": "bmh-held-video-heygen-draft/v1",
+  "schema_version": "bmh-held-video-heygen-draft/v2",
   "status": "offline_payload_only_provider_call_forbidden",
   "source_key": "video-slot-01-mindset",
   "held_source_sha256": "b0cad612499dbd2d867c906c1ad8a8e3e13fcded333fa973fa6d19339fa930da",
   "humanizer_review": {
     "skill": "humanizer",
     "skill_version": "2.5.1",
-    "reviewed_on": "2026-07-17",
+    "reviewed_on": "2026-07-18",
     "result": "passed",
     "checks": [
       "role-agnostic spoken language",
       "no viewer-facing chapter numbers or timelines",
       "no em dashes, curly quotes, promotional filler, or chatbot phrasing",
-      "natural sentence rhythm retained without shortening the lesson contract"
+      "natural sentence rhythm retained without shortening the lesson contract",
+      "source-depth minimum and every locked teaching example preserved",
+      "no negative parallelism or tailing negation"
+    ]
+  },
+  "source_depth": {
+    "source_spoken_word_count": 867,
+    "minimum_replacement_word_count": 780,
+    "replacement_word_count": 795,
+    "teaching_beat_ids": [
+      "service-over-self",
+      "alignment",
+      "clarity",
+      "controllable-actions",
+      "curiosity",
+      "equal-status",
+      "long-game",
+      "problems-as-puzzles",
+      "practice",
+      "understand-before-argument",
+      "operating-system",
+      "checkpoint-transition"
+    ],
+    "example_ids": [
+      "inherited-distance",
+      "tired-landlord",
+      "blurry-path",
+      "unreturned-contact",
+      "silence-reveals-detail",
+      "unworkable-number",
+      "situation-changes",
+      "money-needs-purpose",
+      "review-rushed-moment",
+      "restate-concern"
     ]
   },
   "provider_gate": {
@@ -22,6 +55,125 @@
     "required_approval": "Jarrad Henry",
     "provider_call_executor_after_approval": "Codex parent agent only",
     "final_generate_button_actor": "Jarrad Henry"
+  },
+  "provider_preparation": {
+    "every_scene_andrea_speaks": true,
+    "standard_scene_end_pause_seconds": 2,
+    "learner_think_gap_seconds": 3,
+    "canonical_video_input_count": 12,
+    "studio_api_single_request_video_input_limit": 50,
+    "canonical_sequence_fits_single_api_request": true,
+    "preflight_requirement": "Apply every recorded scene-end pause in Studio before Jarrad generates.",
+    "scene_boundaries": [
+      {
+        "input_index": 0,
+        "source_scene_id": "mindset-open",
+        "segment_id": "mindset-open",
+        "segment_kind": "andrea_narration",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end"
+      },
+      {
+        "input_index": 1,
+        "source_scene_id": "mindset-service",
+        "segment_id": "mindset-service",
+        "segment_kind": "andrea_narration",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end"
+      },
+      {
+        "input_index": 2,
+        "source_scene_id": "mindset-alignment",
+        "segment_id": "mindset-alignment",
+        "segment_kind": "andrea_narration",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end"
+      },
+      {
+        "input_index": 3,
+        "source_scene_id": "mindset-clarity",
+        "segment_id": "mindset-clarity",
+        "segment_kind": "andrea_narration",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end"
+      },
+      {
+        "input_index": 4,
+        "source_scene_id": "mindset-actions",
+        "segment_id": "mindset-actions",
+        "segment_kind": "andrea_narration",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end"
+      },
+      {
+        "input_index": 5,
+        "source_scene_id": "mindset-curiosity",
+        "segment_id": "mindset-curiosity",
+        "segment_kind": "andrea_narration",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end"
+      },
+      {
+        "input_index": 6,
+        "source_scene_id": "mindset-equal",
+        "segment_id": "mindset-equal",
+        "segment_kind": "andrea_narration",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end"
+      },
+      {
+        "input_index": 7,
+        "source_scene_id": "mindset-long-game",
+        "segment_id": "mindset-long-game",
+        "segment_kind": "andrea_narration",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end"
+      },
+      {
+        "input_index": 8,
+        "source_scene_id": "mindset-puzzles",
+        "segment_id": "mindset-puzzles",
+        "segment_kind": "andrea_narration",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end"
+      },
+      {
+        "input_index": 9,
+        "source_scene_id": "mindset-reps",
+        "segment_id": "mindset-reps",
+        "segment_kind": "andrea_narration",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end"
+      },
+      {
+        "input_index": 10,
+        "source_scene_id": "mindset-understand",
+        "segment_id": "mindset-understand",
+        "segment_kind": "andrea_narration",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end"
+      },
+      {
+        "input_index": 11,
+        "source_scene_id": "mindset-transition",
+        "segment_id": "mindset-transition",
+        "segment_kind": "andrea_narration",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end"
+      }
+    ]
   },
   "api_endpoint": "https://api.heygen.com/v2/video/generate",
   "request_body": {
@@ -40,7 +192,7 @@
         "voice": {
           "type": "text",
           "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
-          "input_text": "Before you start a conversation, settle your attention. You are there to understand the situation, help the seller see the available next step, and keep the record accurate. You do not need to force an outcome."
+          "input_text": "Before you begin a seller conversation, settle your attention. You are there to understand the situation, make the available next step clearer, and leave an accurate record. The words matter, but the mindset underneath them will shape how those words land. These ten principles give you something steady to return to when a conversation moves away from the script or starts to feel tense."
         },
         "background": {
           "type": "color",
@@ -55,7 +207,7 @@
         "voice": {
           "type": "text",
           "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
-          "input_text": "Start with service. Assume the conversation should be useful even when the seller chooses another path. When you stop chasing the result, you can listen for what would actually help."
+          "input_text": "First, start with service. Imagine someone inherited a house far from home. They may care less about squeezing out the last possible dollar than finding a path they can understand and manage. Ask what would make the situation easier. If BMH is not the right fit, say that plainly and help the person identify a responsible next step. The conversation can still be useful even when it does not become a deal."
         },
         "background": {
           "type": "color",
@@ -70,7 +222,7 @@
         "voice": {
           "type": "text",
           "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
-          "input_text": "Try to see the situation from the seller's side. A property problem can also be a time problem, a family problem, or a stress problem. Name what you heard before you ask the next question."
+          "input_text": "Second, understand the burden before you study the property. A tired landlord may mention a roof, a tenant, or a repair bill, while the deeper issue is that the property has been consuming attention for too long. Say back what you heard. You might say, It sounds like you want your time back and you need a path that does not create another project. That tells the seller you are listening to the life around the house."
         },
         "background": {
           "type": "color",
@@ -85,7 +237,7 @@
         "voice": {
           "type": "text",
           "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
-          "input_text": "When someone is unsure, help them make the decision clearer. Ask what a workable outcome would look like, what needs to happen first, and what information is missing. A visible path is easier to evaluate than a rushed decision."
+          "input_text": "Third, help the seller see the path. When someone says they need to think, the decision may still feel blurry. Ask what part is unresolved. Where would they live next? Which responsibility worries them? What would they need to verify before a decision felt responsible? Do not push for an answer while the picture is incomplete. Turn the vague hesitation into a specific question the seller can examine."
         },
         "background": {
           "type": "color",
@@ -100,7 +252,7 @@
         "voice": {
           "type": "text",
           "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
-          "input_text": "You cannot control whether someone answers, agrees, or changes their mind. You can control your preparation, your tone, the quality of your notes, and whether you complete the next action you promised."
+          "input_text": "Fourth, separate your work from the seller's choice. Someone may not answer, may choose another path, or may change their mind. You still control your preparation, your tone, the accuracy of your notes, and whether you complete the follow-up you promised. If a contact goes unanswered, leave the record ready for the next attempt and move to the next assigned action. Accountability stays useful even when the outcome does not cooperate."
         },
         "background": {
           "type": "color",
@@ -115,7 +267,7 @@
         "voice": {
           "type": "text",
           "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
-          "input_text": "Simple questions work. Ask one, then give the person room to answer. If you are planning your next line while they are still talking, you are likely to miss the useful detail."
+          "input_text": "Fifth, ask a simple question and wait. Suppose the seller says, The house has become too much. You could jump into a solution, or you could ask, What part has become hardest to manage? Then leave enough silence for the real answer. The seller may reveal a repair, a family disagreement, or an approaching move. You did not need a clever line. You needed enough curiosity to hear the detail that changes the conversation."
         },
         "background": {
           "type": "color",
@@ -130,7 +282,7 @@
         "voice": {
           "type": "text",
           "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
-          "input_text": "Speak peer to peer. Do not beg for agreement, and do not lecture. If something does not fit, say so respectfully. Direct language and a steady tone make the conversation easier to trust."
+          "input_text": "Sixth, speak peer to peer. You do not need to beg for agreement, and you do not need to lecture. If a number does not fit the current written process, say that respectfully. Ask how the seller arrived at it and what the money needs to accomplish. Direct language can stay warm. The seller should feel that you are taking the concern seriously without pretending that every request is available."
         },
         "background": {
           "type": "color",
@@ -145,7 +297,7 @@
         "voice": {
           "type": "text",
           "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
-          "input_text": "A seller who is not ready now may become ready after the situation changes or the options become clearer. Follow up with a useful reason. Bring new information when you have it. Let the seller's decision stage guide the conversation instead of assuming a fixed timeline."
+          "input_text": "Seventh, respect the seller's decision stage. A person who is not ready may become ready after a repair estimate arrives, another option falls through, or the family reaches agreement. Follow up with a useful reason. Bring new information when you have it. Ask what changed instead of replaying the same pitch. There is no fixed progression to memorize. The facts in the seller's life tell you whether the conversation has moved."
         },
         "background": {
           "type": "color",
@@ -160,7 +312,7 @@
         "voice": {
           "type": "text",
           "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
-          "input_text": "An objection is often a missing piece. If someone says they need more money, ask what the money needs to cover. If they need more time, ask what has to happen before they can move. The answer tells you whether there is a responsible next step."
+          "input_text": "Eighth, look for the missing piece inside the objection. If someone says they need more money, ask what that money needs to cover. It may be a loan balance, moving costs, another commitment, or simply an expectation they have not explained yet. Once you know the purpose, you can tell whether the current process has a responsible option or whether the gap remains. The objection becomes a fact-finding problem instead of a wall."
         },
         "background": {
           "type": "color",
@@ -175,7 +327,7 @@
         "voice": {
           "type": "text",
           "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
-          "input_text": "Calm comes from practice and review. Listen back when that is part of the current process. Notice where you rushed, filled silence, or missed a question. Apply one correction in the next conversation."
+          "input_text": "Ninth, use repetition to become steadier. Review a conversation when the current process allows it. Find the place where you rushed, filled the silence, or missed a useful question. Choose a small correction and practice it out loud. In the next conversation, focus on that correction rather than trying to sound perfect. Calm grows when you have heard the situation before and know what you want to do differently."
         },
         "background": {
           "type": "color",
@@ -190,7 +342,7 @@
         "voice": {
           "type": "text",
           "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
-          "input_text": "If you feel yourself trying to win the point, slow down. Restate what the seller is concerned about and check that you have it right. Understanding creates more movement than an argument."
+          "input_text": "Tenth, check that you understand before you defend a position. A seller may say the offer feels unfair when the deeper concern is that a family member will question the decision. Restate the concern: It sounds like you need everyone involved to understand how the terms were reached. Then ask if you have it right. That short check can keep you from arguing about price when the real need is shared understanding."
         },
         "background": {
           "type": "color",
