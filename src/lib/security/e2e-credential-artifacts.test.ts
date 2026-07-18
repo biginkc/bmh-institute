@@ -62,5 +62,8 @@ describe("seeded E2E credential containment", () => {
     expect(workflow.slice(driftCheck, seedContent)).toMatch(
       /course:import -- verify[\s\S]*bmh-employee-training-canary\.v1\.json[\s\S]*--canary --execute/,
     );
+    expect(workflow.slice(driftCheck, seedContent)).not.toContain(
+      "--allow-production",
+    );
   });
 });
