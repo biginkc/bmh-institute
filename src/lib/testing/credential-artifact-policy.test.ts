@@ -12,6 +12,16 @@ const PRODUCTION_CONFIGS = [
 ] as const;
 
 describe("credential-bearing Playwright artifact policy", () => {
+  it("captures provider-test output before emitting a redacted summary", () => {
+    const source = fs.readFileSync(
+      path.resolve(process.cwd(), "scripts/test-course-import-provider.ts"),
+      "utf8",
+    );
+    expect(source).not.toContain('stdio: "inherit"');
+    expect(source).toContain('stdio: ["ignore", "pipe", "pipe"]');
+    expect(source).not.toMatch(/console\.(?:log|error)\([^\n]*(?:stdout|stderr)/);
+  });
+
   it("disables every browser recording surface", () => {
     expect(CREDENTIAL_SAFE_PLAYWRIGHT_USE).toEqual({
       trace: "off",

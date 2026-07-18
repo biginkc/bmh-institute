@@ -7,6 +7,48 @@ export const COURSE_IMPORT_PROVIDER_ENV = [
   "TEST_SUPABASE_DB_URL",
 ] as const;
 
+type ProviderAcceptanceReport = {
+  testResults?: Array<{
+    name?: string;
+    status?: string;
+    message?: string;
+    assertionResults?: Array<{
+      title?: string;
+      status?: string;
+      failureMessages?: string[];
+    }>;
+  }>;
+};
+
+export function providerAcceptanceFailureLines(
+  report: ProviderAcceptanceReport,
+  configuredSecrets: Array<string | undefined>,
+) {
+  const secrets = configuredSecrets
+    .filter((value): value is string => Boolean(value))
+    .flatMap((value) => [value, encodeURIComponent(value)])
+    .filter((value, index, values) => values.indexOf(value) === index)
+    .sort((left, right) => right.length - left.length);
+  const redact = (value: string) => secrets.reduce(
+    (safe, secret) => safe.split(secret).join("[REDACTED]"),
+    value,
+  );
+  const lines: string[] = [];
+
+  for (const testFile of report.testResults ?? []) {
+    if (testFile.status !== "failed") continue;
+    lines.push(`Provider acceptance failed: ${redact(testFile.name ?? "unknown test file")}`);
+    if (testFile.message) lines.push(redact(testFile.message));
+    for (const assertion of testFile.assertionResults ?? []) {
+      if (assertion.status !== "failed") continue;
+      lines.push(`- ${redact(assertion.title ?? "unnamed assertion")}`);
+      for (const message of assertion.failureMessages ?? []) lines.push(redact(message));
+    }
+  }
+
+  return lines;
+}
+
 export function assertCourseImportProviderAcceptanceEnvironment(
   env: Readonly<Record<string, string | undefined>>,
 ) {
@@ -34,6 +76,18 @@ export function assertCourseImportProviderAcceptanceEnvironment(
       "Course import provider acceptance requires the canonical non-production Postgres connection.",
     );
   }
+}
+
+export function courseImportProviderPsqlEnvironment(databaseUrlValue: string) {
+  const databaseUrl = new URL(databaseUrlValue);
+  return {
+    PGHOST: databaseUrl.hostname,
+    PGPORT: databaseUrl.port || "5432",
+    PGDATABASE: decodeURIComponent(databaseUrl.pathname.replace(/^\//, "")),
+    PGUSER: decodeURIComponent(databaseUrl.username),
+    PGPASSWORD: decodeURIComponent(databaseUrl.password),
+    PGSSLMODE: "require",
+  };
 }
 
 export function assertCourseImportProviderAcceptanceResult(

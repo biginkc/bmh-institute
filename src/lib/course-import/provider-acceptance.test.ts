@@ -4,6 +4,8 @@ import { COURSE_IMPORT_TEST_URL } from "./environment";
 import {
   assertCourseImportProviderAcceptanceEnvironment,
   assertCourseImportProviderAcceptanceResult,
+  courseImportProviderPsqlEnvironment,
+  providerAcceptanceFailureLines,
 } from "./provider-acceptance";
 
 describe("course import provider acceptance preflight", () => {
@@ -67,6 +69,40 @@ describe("course import provider acceptance preflight", () => {
       numTodoTests: 0,
       testResults: [...providerFiles(2), { status: "passed", assertionResults: [] }],
     }, 3)).toThrow(/fully executed/);
+  });
+
+  it("redacts raw and URL-encoded credentials from every report-derived field", () => {
+    const rawSecret = "s3cret+/with spaces";
+    const encodedSecret = encodeURIComponent(rawSecret);
+    const lines = providerAcceptanceFailureLines({
+      testResults: [{
+        name: `/tmp/${rawSecret}/provider.test.ts`,
+        status: "failed",
+        message: `file message ${encodedSecret}`,
+        assertionResults: [{
+          title: `assertion ${rawSecret}`,
+          status: "failed",
+          failureMessages: [`failure ${encodedSecret}`],
+        }],
+      }],
+    }, [rawSecret]);
+    const output = lines.join("\n");
+    expect(output).not.toContain(rawSecret);
+    expect(output).not.toContain(encodedSecret);
+    expect(output.match(/\[REDACTED\]/g)?.length).toBe(4);
+  });
+
+  it("maps the canonical URI to libpq fields without putting its password in arguments", () => {
+    expect(courseImportProviderPsqlEnvironment(
+      "postgresql://postgres.jvaabkchkihkjllehmft:p%40ss%2Fword@aws-1-us-west-1.pooler.supabase.com:5432/postgres",
+    )).toEqual({
+      PGHOST: "aws-1-us-west-1.pooler.supabase.com",
+      PGPORT: "5432",
+      PGDATABASE: "postgres",
+      PGUSER: "postgres.jvaabkchkihkjllehmft",
+      PGPASSWORD: "p@ss/word",
+      PGSSLMODE: "require",
+    });
   });
 });
 

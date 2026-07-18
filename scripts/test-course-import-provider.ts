@@ -6,6 +6,7 @@ import { join, resolve } from "node:path";
 import {
   assertCourseImportProviderAcceptanceEnvironment,
   assertCourseImportProviderAcceptanceResult,
+  providerAcceptanceFailureLines,
 } from "../src/lib/course-import/provider-acceptance";
 
 const integrationFiles = [
@@ -40,7 +41,13 @@ function main() {
         "--reporter=json",
         `--outputFile=${reportPath}`,
       ],
-      { cwd: process.cwd(), env, stdio: "inherit" },
+      {
+        cwd: process.cwd(),
+        env,
+        encoding: "utf8",
+        maxBuffer: 16 * 1024 * 1024,
+        stdio: ["ignore", "pipe", "pipe"],
+      },
     );
     if (result.error) throw result.error;
     if (result.status !== 0) {
@@ -62,18 +69,7 @@ function printProviderFailureSummary(
   reportPath: string,
   env: Record<string, string | undefined>,
 ) {
-  let report: {
-    testResults?: Array<{
-      name?: string;
-      status?: string;
-      message?: string;
-      assertionResults?: Array<{
-        title?: string;
-        status?: string;
-        failureMessages?: string[];
-      }>;
-    }>;
-  };
+  let report: Parameters<typeof providerAcceptanceFailureLines>[0];
   try {
     report = JSON.parse(readFileSync(reportPath, "utf8"));
   } catch {
@@ -81,32 +77,17 @@ function printProviderFailureSummary(
     return;
   }
 
-  const secrets = [
+  const lines = providerAcceptanceFailureLines(report, [
     env.TEST_SUPABASE_DB_URL,
     env.TEST_SUPABASE_DB_PASSWORD,
     env.TEST_SUPABASE_SERVICE_ROLE_KEY,
     env.TEST_SUPABASE_ANON_KEY,
-  ].filter((value): value is string => Boolean(value));
-  if (env.TEST_SUPABASE_DB_PASSWORD) {
-    secrets.push(encodeURIComponent(env.TEST_SUPABASE_DB_PASSWORD));
+  ]);
+  if (lines.length === 0) {
+    console.error("Provider acceptance failed without a failed assertion in its report.");
+    return;
   }
-  const redact = (value: string) => secrets.reduce(
-    (safe, secret) => safe.split(secret).join("[REDACTED]"),
-    value,
-  );
-
-  for (const testFile of report.testResults ?? []) {
-    if (testFile.status !== "failed") continue;
-    console.error(`Provider acceptance failed: ${testFile.name ?? "unknown test file"}`);
-    if (testFile.message) console.error(redact(testFile.message));
-    for (const assertion of testFile.assertionResults ?? []) {
-      if (assertion.status !== "failed") continue;
-      console.error(`- ${assertion.title ?? "unnamed assertion"}`);
-      for (const message of assertion.failureMessages ?? []) {
-        console.error(redact(message));
-      }
-    }
-  }
+  for (const line of lines) console.error(line);
 }
 
 function readLocalTestEnvironment() {

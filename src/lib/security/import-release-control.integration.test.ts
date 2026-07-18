@@ -12,6 +12,7 @@ import {
 } from "@/lib/course-import/execute";
 import { buildImportPlan, type ImportPlan } from "@/lib/course-import/operations";
 import { validCourseManifest } from "@/lib/course-import/test-fixtures";
+import { courseImportProviderPsqlEnvironment } from "@/lib/course-import/provider-acceptance";
 
 const url = process.env.TEST_SUPABASE_URL;
 const anonKey = process.env.TEST_SUPABASE_ANON_KEY;
@@ -180,7 +181,7 @@ function startPsql(applicationName: string): PsqlSession {
       {
         env: {
           ...process.env,
-          PGDATABASE: databaseUrl,
+          ...courseImportProviderPsqlEnvironment(databaseUrl),
           PGAPPNAME: applicationName,
         },
         stdio: ["pipe", "pipe", "pipe"],

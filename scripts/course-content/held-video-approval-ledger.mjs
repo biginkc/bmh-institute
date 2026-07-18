@@ -126,6 +126,40 @@ async function mergeBaseWithMain(repoRoot) {
   return null;
 }
 
+async function featurePredecessorRevision(repoRoot) {
+  try {
+    const { stdout } = await execFileAsync(
+      "git",
+      ["rev-list", "--parents", "-n", "1", "HEAD"],
+      { cwd: repoRoot, encoding: "utf8" },
+    );
+    const [, ...parents] = stdout.trim().split(/\s+/);
+    if (parents.length === 1) return parents[0];
+    if (parents.length === 2) {
+      // GitHub tests a pull request at a synthetic merge commit whose first
+      // parent is the base branch and whose second parent is the feature tip.
+      // Approval transitions belong to the feature history, so the feature
+      // tip's parent is the immutable predecessor. The feature tip itself may
+      // contain the change under test and cannot serve as its own baseline.
+      try {
+        const { stdout: predecessor } = await execFileAsync(
+          "git",
+          ["rev-parse", `${parents[1]}^`],
+          { cwd: repoRoot, encoding: "utf8" },
+        );
+        return /^[a-f0-9]{40}$/.test(predecessor.trim())
+          ? predecessor.trim()
+          : null;
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 export function validateHeldVideoApprovalLedger(
   ledger,
   currentReviewAssets,
@@ -334,10 +368,15 @@ export async function validateHeldVideoApprovalHistory({
     return ["Held-video approval ledger must be inside the canonical repository root."];
   }
   const relativeLedgerPath = path.relative(canonicalRoot, canonicalLedgerPath).split(path.sep).join("/");
-  const mainBase = await mergeBaseWithMain(canonicalRoot);
+  const [mainBase, featurePredecessor] = await Promise.all([
+    mergeBaseWithMain(canonicalRoot),
+    featurePredecessorRevision(canonicalRoot),
+  ]);
   const [headLedger, parentLedger, mainLedger] = await Promise.all([
     readLedgerAtRevision(canonicalRoot, "HEAD", relativeLedgerPath),
-    readLedgerAtRevision(canonicalRoot, "HEAD^", relativeLedgerPath),
+    featurePredecessor
+      ? readLedgerAtRevision(canonicalRoot, featurePredecessor, relativeLedgerPath)
+      : null,
     mainBase ? readLedgerAtRevision(canonicalRoot, mainBase, relativeLedgerPath) : null,
   ]);
   const errors = [];
