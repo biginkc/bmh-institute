@@ -7,6 +7,11 @@ import sharp from "sharp";
 import lockfile from "proper-lockfile";
 
 import { compareArtworkAssetKeys, deterministicArtworkLabelSvg } from "./deterministic-artwork-label.mjs";
+import {
+  DEFAULT_MASTER_REVIEW_INDEX_PATH,
+  DEFAULT_MASTER_REVIEW_SHEET_PATHS,
+  validateMasterReviewSurface,
+} from "../../docs/course-production/thumbnail-pilots/qa/master-review/build-master-review.mjs";
 
 export const SCHEMA_VERSION = "bmh-artwork-production-ledger/v1";
 export const EXPECTED_COUNTS = Object.freeze({
@@ -20,7 +25,9 @@ export const DEFAULT_PATHS = Object.freeze({
   manifest: "content/course-manifests/bmh-employee-training.v1.json",
   contactSheet: "docs/course-production/thumbnail-pilots/qa/current-artwork-contact-sheet-2026-07-17.png",
   contactSheetIndex: "docs/course-production/thumbnail-pilots/qa/current-artwork-contact-sheet-2026-07-17.json",
-  finalReviewRequest: "docs/course-production/thumbnail-pilots/approvals/final-artwork-review-request-v1.json",
+  masterReviewIndex: DEFAULT_MASTER_REVIEW_INDEX_PATH,
+  masterReviewSheets: DEFAULT_MASTER_REVIEW_SHEET_PATHS,
+  finalReviewRequest: "docs/course-production/thumbnail-pilots/approvals/final-artwork-review-request-v2.json",
 });
 
 const APPROVED = "approved";
@@ -31,7 +38,9 @@ const BLUE = [103, 182, 255];
 const YELLOW = [255, 211, 1];
 const LOCKED_BACKGROUND_RGB = new Set([BLUE.join(","), YELLOW.join(",")]);
 export const FINAL_ARTWORK_APPROVAL_RESPONSE =
-  "Approved: I approve all 28 artwork masters and all 49 exact checksum-bound assets in this request for promotion into the BMH Institute course manifest.";
+  "Approved: I reviewed and approve all 28 artwork masters shown in the four exact checksum-bound master review sheets and all 49 derived assets shown in the exact checksum-bound derivative contact sheet, for promotion into the BMH Institute course manifest.";
+const FINAL_ARTWORK_REVIEW_INSTRUCTION =
+  `Only after visibly reviewing all four checksum-bound master sheets and the exact checksum-bound 49-asset derivative contact sheet, approve all 28 masters and all 49 exact derived assets for course-manifest promotion by responding exactly: ${FINAL_ARTWORK_APPROVAL_RESPONSE}`;
 const FINAL_REVIEW_COLUMNS = 4;
 const FINAL_REVIEW_TILE_WIDTH = 320;
 const FINAL_REVIEW_ARTWORK_HEIGHT = 200;
@@ -1122,17 +1131,63 @@ async function validateContactSheetIndex({ root, ledger, contactSheetPath, conta
   return { contactSheet, indexRecord };
 }
 
+async function validateMasterReviewBinding({
+  root,
+  masterReviewIndexPath = DEFAULT_PATHS.masterReviewIndex,
+  masterReviewSheetPaths = DEFAULT_PATHS.masterReviewSheets,
+}) {
+  const rebuilt = await validateMasterReviewSurface({
+    root,
+    indexPath: masterReviewIndexPath,
+    sheetPaths: masterReviewSheetPaths,
+  });
+  assert(rebuilt.index.counts.masters === 28, "Final artwork master review must show exactly 28 masters");
+  assert(rebuilt.sheets.length === 4, "Final artwork master review must use exactly four sheets");
+  assert(rebuilt.sheets.every((sheet) => sheet.positions.length === 7), "Final artwork master review must show exactly seven masters per sheet");
+  const indexRecord = await fileRecord(root, masterReviewIndexPath);
+  const sheets = await Promise.all(rebuilt.sheets.map(async (sheet, position) => {
+    const record = await fileRecord(root, sheet.path);
+    assert(record.checksum_sha256 === sheet.sha256, `Final artwork master review sheet ${position + 1} checksum drifted`);
+    return {
+      sheet_number: position + 1,
+      path: sheet.path,
+      sha256: record.checksum_sha256,
+      master_count: sheet.positions.length,
+      first_position: sheet.positions[0],
+      last_position: sheet.positions.at(-1),
+    };
+  }));
+  const surfaceSha256 = sha256(JSON.stringify({
+    index_path: masterReviewIndexPath,
+    index_sha256: indexRecord.checksum_sha256,
+    sheets,
+  }));
+  return {
+    schema_version: "bmh-artwork-master-review-surface/v1",
+    index_path: masterReviewIndexPath,
+    index_sha256: indexRecord.checksum_sha256,
+    surface_sha256: surfaceSha256,
+    master_count: 28,
+    sheet_count: 4,
+    masters_per_sheet: 7,
+    sheets,
+  };
+}
+
 export async function buildFinalReviewRequest({
   root,
   ledger,
   contactSheetPath = DEFAULT_PATHS.contactSheet,
   contactSheetIndexPath = DEFAULT_PATHS.contactSheetIndex,
+  masterReviewIndexPath = DEFAULT_PATHS.masterReviewIndex,
+  masterReviewSheetPaths = DEFAULT_PATHS.masterReviewSheets,
 }) {
   assertFinalReviewLedgerReady(ledger);
   assert(ledger.status === "production", "Final artwork review request requires the production ledger state");
   assert(ledger.masters.every((master) => master.review.status === "pending"), "Final artwork review request must be prepared before any master review is recorded");
-  const [{ contactSheet: contactSheetRecord, indexRecord }, inventoryRecord, ledgerRecord] = await Promise.all([
+  const [{ contactSheet: contactSheetRecord, indexRecord }, masterReviewSurface, inventoryRecord, ledgerRecord] = await Promise.all([
     validateContactSheetIndex({ root, ledger, contactSheetPath, contactSheetIndexPath }),
+    validateMasterReviewBinding({ root, masterReviewIndexPath, masterReviewSheetPaths }),
     fileRecord(root, DEFAULT_PATHS.inventory),
     fileRecord(root, DEFAULT_PATHS.ledger),
   ]);
@@ -1152,6 +1207,10 @@ export async function buildFinalReviewRequest({
     sha256: ledgerRecord.checksum_sha256,
   };
   const bindingsSha256 = sha256(JSON.stringify({
+    schema_version: "bmh-artwork-final-review-request/v2",
+    status: "pending-human-review",
+    review_instruction: FINAL_ARTWORK_REVIEW_INSTRUCTION,
+    master_review_surface: masterReviewSurface,
     contact_sheet: contactSheet,
     inventory_snapshot: inventorySnapshot,
     ledger_snapshot: ledgerSnapshot,
@@ -1159,10 +1218,11 @@ export async function buildFinalReviewRequest({
     assets: bindings.assets,
   }));
   return {
-    schema_version: "bmh-artwork-final-review-request/v1",
+    schema_version: "bmh-artwork-final-review-request/v2",
     status: "pending-human-review",
     request_id: `bmh-artwork-final-review-${bindingsSha256}`,
-    review_instruction: `To approve all 28 masters and all 49 exact assets for course-manifest promotion, respond exactly: ${FINAL_ARTWORK_APPROVAL_RESPONSE}`,
+    review_instruction: FINAL_ARTWORK_REVIEW_INSTRUCTION,
+    master_review_surface: masterReviewSurface,
     contact_sheet: contactSheet,
     inventory_snapshot: inventorySnapshot,
     ledger_snapshot: ledgerSnapshot,
@@ -1175,14 +1235,31 @@ export async function buildFinalReviewRequest({
 export async function validateFinalReviewRequest({ root, ledger, request, requireLedgerSnapshot = false }) {
   assertFinalReviewLedgerReady(ledger);
   assertExactKeys(request, [
-    "schema_version", "status", "request_id", "review_instruction", "contact_sheet",
+    "schema_version", "status", "request_id", "review_instruction", "master_review_surface", "contact_sheet",
     "inventory_snapshot", "ledger_snapshot", "bindings_sha256", "masters", "assets",
   ], "Final artwork review request");
-  assert(request.schema_version === "bmh-artwork-final-review-request/v1", "Final artwork review request schema is invalid");
+  assert(request.schema_version === "bmh-artwork-final-review-request/v2", "Final artwork review request schema is invalid");
   assert(request.status === "pending-human-review", "Final artwork review request must remain pending");
   assertString(request.request_id, "final artwork review request_id");
   assert(/^bmh-artwork-final-review-[a-f0-9]{64}$/.test(request.request_id), "Final artwork review request_id is invalid");
-  assertString(request.review_instruction, "final artwork review instruction");
+  assert(request.review_instruction === FINAL_ARTWORK_REVIEW_INSTRUCTION, "Final artwork review instruction drifted");
+  assertExactKeys(request.master_review_surface, [
+    "schema_version", "index_path", "index_sha256", "surface_sha256", "master_count",
+    "sheet_count", "masters_per_sheet", "sheets",
+  ], "Final artwork master review surface binding");
+  assert(request.master_review_surface.schema_version === "bmh-artwork-master-review-surface/v1", "Final artwork master review surface schema is invalid");
+  assert(request.master_review_surface.master_count === 28, "Final artwork master review surface must bind 28 masters");
+  assert(request.master_review_surface.sheet_count === 4, "Final artwork master review surface must bind four sheets");
+  assert(request.master_review_surface.masters_per_sheet === 7, "Final artwork master review surface must bind seven masters per sheet");
+  assert(Array.isArray(request.master_review_surface.sheets) && request.master_review_surface.sheets.length === 4, "Final artwork master review sheet bindings are incomplete");
+  for (const [position, sheet] of request.master_review_surface.sheets.entries()) {
+    assertExactKeys(sheet, ["sheet_number", "path", "sha256", "master_count", "first_position", "last_position"], `Final artwork master review sheet ${position + 1}`);
+    assert(sheet.sheet_number === position + 1, `Final artwork master review sheet ${position + 1} number drifted`);
+    assertString(sheet.path, `Final artwork master review sheet ${position + 1} path`);
+    assert(SHA256.test(sheet.sha256), `Final artwork master review sheet ${position + 1} checksum is invalid`);
+    assert(sheet.master_count === 7, `Final artwork master review sheet ${position + 1} must bind seven masters`);
+    assert(sheet.first_position === position * 7 + 1 && sheet.last_position === position * 7 + 7, `Final artwork master review sheet ${position + 1} position range drifted`);
+  }
   assertExactKeys(request.contact_sheet, ["path", "sha256", "index_path", "index_sha256"], "Final artwork contact-sheet binding");
   assertExactKeys(request.inventory_snapshot, ["path", "sha256"], "Final artwork inventory snapshot");
   assertExactKeys(request.ledger_snapshot, ["path", "sha256"], "Final artwork ledger snapshot");
@@ -1191,26 +1268,38 @@ export async function validateFinalReviewRequest({ root, ledger, request, requir
   for (const [label, value] of [
     ["contact-sheet", request.contact_sheet.sha256],
     ["contact-sheet index", request.contact_sheet.index_sha256],
+    ["master review index", request.master_review_surface.index_sha256],
+    ["master review surface", request.master_review_surface.surface_sha256],
     ["inventory snapshot", request.inventory_snapshot.sha256],
     ["ledger snapshot", request.ledger_snapshot.sha256],
     ["binding", request.bindings_sha256],
   ]) assert(SHA256.test(value), `Final artwork ${label} checksum is invalid`);
-  const [{ contactSheet, indexRecord }, inventoryRecord] = await Promise.all([
+  const [{ contactSheet, indexRecord }, masterReviewSurface, inventoryRecord] = await Promise.all([
     validateContactSheetIndex({
       root,
       ledger,
       contactSheetPath: request.contact_sheet.path,
       contactSheetIndexPath: request.contact_sheet.index_path,
     }),
+    validateMasterReviewBinding({
+      root,
+      masterReviewIndexPath: request.master_review_surface.index_path,
+      masterReviewSheetPaths: request.master_review_surface.sheets.map((sheet) => sheet.path),
+    }),
     fileRecord(root, DEFAULT_PATHS.inventory),
   ]);
   assert(contactSheet.checksum_sha256 === request.contact_sheet.sha256, "Final artwork contact-sheet request binding drifted");
   assert(indexRecord.checksum_sha256 === request.contact_sheet.index_sha256, "Final artwork contact-sheet index request binding drifted");
+  assert(JSON.stringify(masterReviewSurface) === JSON.stringify(request.master_review_surface), "Final artwork master review surface request binding drifted");
   assert(inventoryRecord.checksum_sha256 === request.inventory_snapshot.sha256, "Final artwork inventory snapshot drifted");
   const bindings = finalReviewBindings(ledger);
   assert(JSON.stringify(request.masters) === JSON.stringify(bindings.masters), "Final artwork master bindings drifted");
   assert(JSON.stringify(request.assets) === JSON.stringify(bindings.assets), "Final artwork asset bindings drifted");
   const bindingsSha256 = sha256(JSON.stringify({
+    schema_version: request.schema_version,
+    status: request.status,
+    review_instruction: request.review_instruction,
+    master_review_surface: request.master_review_surface,
     contact_sheet: request.contact_sheet,
     inventory_snapshot: request.inventory_snapshot,
     ledger_snapshot: request.ledger_snapshot,
@@ -1232,7 +1321,7 @@ export async function validateFinalApprovalArtifact({ root, ledger, evidence, ap
   const approvalRecord = await fileRecord(root, evidence);
   const artifact = await parseStructuredJson(approvalRecord, "Final artwork approval evidence");
   assertExactKeys(artifact, ["schema_version", "decision", "approver", "approved_at", "request_binding", "response_binding"], "Final artwork approval artifact");
-  assert(artifact.schema_version === "bmh-artwork-final-approval/v1", "Final artwork approval schema is invalid");
+  assert(artifact.schema_version === "bmh-artwork-final-approval/v2", "Final artwork approval schema is invalid");
   assert(artifact.decision === APPROVED, "Final artwork approval decision must be approved");
   assert(artifact.approver === "Jarrad Henry" && artifact.approver === approvedBy, "Final artwork approval approver is invalid");
   assert(artifact.approved_at === approvedAt, "Final artwork approval timestamp does not match the controller request");
@@ -1260,15 +1349,23 @@ export async function validateFinalApprovalArtifact({ root, ledger, evidence, ap
   assert(artifact.request_binding.bindings_sha256 === request.bindings_sha256, "Final artwork approval binding checksum drifted");
   const response = await parseStructuredJson(responseRecord, "Final artwork preserved user response");
   assertExactKeys(response, ["schema_version", "decision", "respondent", "responded_at", "request_binding", "scope", "response_text"], "Final artwork preserved user response");
-  assert(response.schema_version === "bmh-artwork-final-review-response/v1", "Final artwork preserved user response schema is invalid");
+  assert(response.schema_version === "bmh-artwork-final-review-response/v2", "Final artwork preserved user response schema is invalid");
   assert(response.decision === APPROVED, "Final artwork preserved user response must be affirmative");
   assert(response.respondent === "Jarrad Henry", "Final artwork preserved user response respondent is invalid");
   assert(response.responded_at === artifact.approved_at, "Final artwork preserved user response timestamp drifted");
   assertIso(response.responded_at, "final artwork user response responded_at");
   assertExactKeys(response.request_binding, ["request_id", "request_path", "request_sha256", "bindings_sha256"], "Final artwork user response request binding");
   assert(JSON.stringify(response.request_binding) === JSON.stringify(artifact.request_binding), "Final artwork preserved user response targets a different request");
-  assertExactKeys(response.scope, ["master_count", "asset_count", "manifest_promotion"], "Final artwork preserved user response scope");
-  assert(response.scope.master_count === 28 && response.scope.asset_count === 49 && response.scope.manifest_promotion === true, "Final artwork preserved user response scope is incomplete");
+  assertExactKeys(response.scope, ["master_count", "master_review_sheet_count", "masters_per_sheet", "master_review_surface_sha256", "asset_count", "manifest_promotion"], "Final artwork preserved user response scope");
+  assert(
+    response.scope.master_count === 28 &&
+      response.scope.master_review_sheet_count === 4 &&
+      response.scope.masters_per_sheet === 7 &&
+      response.scope.master_review_surface_sha256 === request.master_review_surface.surface_sha256 &&
+      response.scope.asset_count === 49 &&
+      response.scope.manifest_promotion === true,
+    "Final artwork preserved user response scope is incomplete",
+  );
   assert(response.response_text === FINAL_ARTWORK_APPROVAL_RESPONSE, "Final artwork preserved user response must use the exact scoped affirmative statement");
   return { evidenceRecord: approvalRecord, artifact, request, response };
 }

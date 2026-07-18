@@ -8,6 +8,7 @@ import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 
 import sharp from "sharp";
+import { writeMasterReviewSurface } from "../../docs/course-production/thumbnail-pilots/qa/master-review/build-master-review.mjs";
 
 import {
   QUIZ_SOURCE_FILE_NAMES,
@@ -603,12 +604,17 @@ async function writeFinalArtworkApprovalPackage(root, ledger) {
     ...rebuilt.index,
     contact_sheet_path: contactSheetPath,
   });
+  const masterReviewIndexPath = "evidence/master-review-index.json";
+  const masterReviewSheetPaths = Array.from({ length: 4 }, (_, index) => `evidence/master-review-sheet-${index + 1}.png`);
+  await writeMasterReviewSurface({ root, indexPath: masterReviewIndexPath, sheetPaths: masterReviewSheetPaths });
 
   const request = await buildFinalReviewRequest({
     root,
     ledger,
     contactSheetPath,
     contactSheetIndexPath,
+    masterReviewIndexPath,
+    masterReviewSheetPaths,
   });
   const requestPath = "evidence/final-artwork-review-request.json";
   const requestBytes = Buffer.from(`${JSON.stringify(request, null, 2)}\n`);
@@ -622,13 +628,16 @@ async function writeFinalArtworkApprovalPackage(root, ledger) {
 
   const responsePath = "evidence/final-artwork-review-response.json";
   const response = {
-    schema_version: "bmh-artwork-final-review-response/v1",
+    schema_version: "bmh-artwork-final-review-response/v2",
     decision: "approved",
     respondent: "Jarrad Henry",
     responded_at: approvedAt,
     request_binding: requestBinding,
     scope: {
       master_count: 28,
+      master_review_sheet_count: 4,
+      masters_per_sheet: 7,
+      master_review_surface_sha256: request.master_review_surface.surface_sha256,
       asset_count: 49,
       manifest_promotion: true,
     },
@@ -639,7 +648,7 @@ async function writeFinalArtworkApprovalPackage(root, ledger) {
 
   const evidence = "evidence/final-artwork-approval.json";
   await writeEvidence(root, evidence, {
-    schema_version: "bmh-artwork-final-approval/v1",
+    schema_version: "bmh-artwork-final-approval/v2",
     decision: "approved",
     approver: "Jarrad Henry",
     approved_at: approvedAt,

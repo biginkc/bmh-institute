@@ -8,6 +8,7 @@ import test from "node:test";
 import sharp from "sharp";
 
 import { compareArtworkAssetKeys, deterministicArtworkLabelSvg } from "./deterministic-artwork-label.mjs";
+import { writeMasterReviewSurface } from "../../docs/course-production/thumbnail-pilots/qa/master-review/build-master-review.mjs";
 
 import {
   ARTWORK_MASTER_POSE_CONTRACT,
@@ -282,6 +283,7 @@ async function writeFinalApprovalArtifact(root, ledger, {
       await copyRepoFile(root, asset.output_path);
     }
   }
+  for (const master of ledger.masters) await copyRepoFile(root, master.flat_master_path);
   for (const reference of ledger.references ?? []) await copyRepoFile(root, reference.path);
   if (ledger.pilot_approval?.status === "approved") {
     await copyRepoFile(root, ledger.pilot_approval.evidence);
@@ -296,7 +298,17 @@ async function writeFinalApprovalArtifact(root, ledger, {
   const contactSheetIndexPath = "evidence/final-contact-sheet.json";
   const contactSheetIndex = { ...rebuilt.index, contact_sheet_path: contactSheetPath };
   await writeRepoFile(root, contactSheetIndexPath, Buffer.from(`${JSON.stringify(contactSheetIndex, null, 2)}\n`));
-  const request = await buildFinalReviewRequest({ root, ledger, contactSheetPath, contactSheetIndexPath });
+  const masterReviewIndexPath = "evidence/master-review-index.json";
+  const masterReviewSheetPaths = Array.from({ length: 4 }, (_, index) => `evidence/master-review-sheet-${index + 1}.png`);
+  await writeMasterReviewSurface({ root, indexPath: masterReviewIndexPath, sheetPaths: masterReviewSheetPaths });
+  const request = await buildFinalReviewRequest({
+    root,
+    ledger,
+    contactSheetPath,
+    contactSheetIndexPath,
+    masterReviewIndexPath,
+    masterReviewSheetPaths,
+  });
   mutateRequest(request);
   const requestPath = "evidence/final-review-request.json";
   const requestBytes = Buffer.from(`${JSON.stringify(request, null, 2)}\n`);
@@ -308,13 +320,16 @@ async function writeFinalApprovalArtifact(root, ledger, {
     bindings_sha256: request.bindings_sha256,
   };
   const response = {
-    schema_version: "bmh-artwork-final-review-response/v1",
+    schema_version: "bmh-artwork-final-review-response/v2",
     decision: "approved",
     respondent: "Jarrad Henry",
     responded_at: approvedAt,
     request_binding: structuredClone(requestBinding),
     scope: {
       master_count: 28,
+      master_review_sheet_count: 4,
+      masters_per_sheet: 7,
+      master_review_surface_sha256: request.master_review_surface.surface_sha256,
       asset_count: 49,
       manifest_promotion: true,
     },
@@ -325,7 +340,7 @@ async function writeFinalApprovalArtifact(root, ledger, {
   const responseBytes = Buffer.from(`${JSON.stringify(response, null, 2)}\n`);
   await writeRepoFile(root, responsePath, responseBytes);
   const approval = {
-    schema_version: "bmh-artwork-final-approval/v1",
+    schema_version: "bmh-artwork-final-approval/v2",
     decision: "approved",
     approver: "Jarrad Henry",
     approved_at: approvedAt,
@@ -1510,12 +1525,17 @@ test("V8 texture exceptions are exact-checksum scoped and cannot transfer to rep
   );
 });
 
-test("final artwork review request deterministically binds the exact 4-column contact sheet and every nonempty review input", async () => {
+test("final artwork review request binds four exact master sheets, the 4-column derivative sheet, and every nonempty review input", async () => {
   const ledger = await readJson(resolveRepoPath(REPO_ROOT, DEFAULT_PATHS.ledger));
   const request = await buildFinalReviewRequest({ root: REPO_ROOT, ledger });
   await validateFinalReviewRequest({ root: REPO_ROOT, ledger, request, requireLedgerSnapshot: true });
   assert.equal(request.request_id, `bmh-artwork-final-review-${request.bindings_sha256}`);
   assert.equal(request.contact_sheet.sha256, "493d35528ebc8d739f9d77d86d139fd996eff9bb84700e50908b37c7d2f7385e");
+  assert.equal(request.schema_version, "bmh-artwork-final-review-request/v2");
+  assert.equal(request.master_review_surface.master_count, 28);
+  assert.equal(request.master_review_surface.sheet_count, 4);
+  assert.equal(request.master_review_surface.masters_per_sheet, 7);
+  assert.deepEqual(request.master_review_surface.sheets.map((sheet) => sheet.master_count), [7, 7, 7, 7]);
   assert.equal(request.masters.length, 28);
   assert.equal(request.assets.length, 49);
   assert.equal(request.masters.flatMap((master) => master.video_evidence).every((entry) => {
@@ -1524,6 +1544,12 @@ test("final artwork review request deterministically binds the exact 4-column co
       /^[a-f0-9]{64}$/.test(entry.sha256);
   }), true, "final request contains empty or unnormalized video evidence");
   assert.equal(JSON.stringify(request).includes('"video_evidence":[{}]'), false);
+  const hostileInstruction = structuredClone(request);
+  hostileInstruction.review_instruction = `DO NOT REVIEW OR OPEN THE SHEETS. ${hostileInstruction.review_instruction}`;
+  await assert.rejects(
+    validateFinalReviewRequest({ root: REPO_ROOT, ledger, request: hostileInstruction }),
+    /review instruction drifted/,
+  );
 });
 
 test("final artwork labels use only deterministic in-repo glyph paths", () => {
@@ -1564,8 +1590,61 @@ test("final artwork contact sheet cannot be forged together with a self-consiste
       ledger,
       contactSheetPath: request.contact_sheet.path,
       contactSheetIndexPath: request.contact_sheet.index_path,
+      masterReviewIndexPath: request.master_review_surface.index_path,
+      masterReviewSheetPaths: request.master_review_surface.sheets.map((sheet) => sheet.path),
     }),
     /deterministic (?:49-position index|rebuild)/,
+  );
+});
+
+test("final artwork approval rejects a changed master sheet and all legacy v1 approval artifacts", async (t) => {
+  const root = await tempRoot(t);
+  const ledger = structuredClone(await readJson(resolveRepoPath(REPO_ROOT, DEFAULT_PATHS.ledger)));
+  const valid = await writeFinalApprovalArtifact(root, ledger);
+  const sheetPath = valid.request.master_review_surface.sheets[0].path;
+  await writeRepoFile(root, sheetPath, await rgbPng([103, 182, 255], 1360, 1992));
+  await assert.rejects(
+    validateFinalApprovalArtifact({
+      root,
+      ledger,
+      evidence: valid.approvalPath,
+      approvedBy: "Jarrad Henry",
+      approvedAt: "2026-07-18T00:00:00.000Z",
+    }),
+    /master review surface is missing or stale/i,
+  );
+
+  const freshRoot = await tempRoot(t);
+  const fresh = await writeFinalApprovalArtifact(freshRoot, structuredClone(ledger));
+  const legacyApproval = structuredClone(fresh.approval);
+  legacyApproval.schema_version = "bmh-artwork-final-approval/v1";
+  await writeRepoFile(freshRoot, fresh.approvalPath, Buffer.from(`${JSON.stringify(legacyApproval, null, 2)}\n`));
+  await assert.rejects(
+    validateFinalApprovalArtifact({
+      root: freshRoot,
+      ledger,
+      evidence: fresh.approvalPath,
+      approvedBy: "Jarrad Henry",
+      approvedAt: "2026-07-18T00:00:00.000Z",
+    }),
+    /approval schema is invalid/,
+  );
+  const legacyResponse = structuredClone(fresh.response);
+  legacyResponse.schema_version = "bmh-artwork-final-review-response/v1";
+  const legacyResponseBytes = Buffer.from(`${JSON.stringify(legacyResponse, null, 2)}\n`);
+  await writeRepoFile(freshRoot, fresh.responsePath, legacyResponseBytes);
+  const v2Approval = structuredClone(fresh.approval);
+  v2Approval.response_binding.response_sha256 = sha256(legacyResponseBytes);
+  await writeRepoFile(freshRoot, fresh.approvalPath, Buffer.from(`${JSON.stringify(v2Approval, null, 2)}\n`));
+  await assert.rejects(
+    validateFinalApprovalArtifact({
+      root: freshRoot,
+      ledger,
+      evidence: fresh.approvalPath,
+      approvedBy: "Jarrad Henry",
+      approvedAt: "2026-07-18T00:00:00.000Z",
+    }),
+    /response schema is invalid/,
   );
 });
 
@@ -1651,6 +1730,16 @@ test("a partial structured review leaves every asset and manifest record unappro
     reviewedAt: "2026-07-18T00:00:00.000Z",
     evidence: valid.approvalPath,
   });
+  await writeRepoFile(root, DEFAULT_PATHS.ledger, Buffer.from(`${JSON.stringify(ledger, null, 2)}\n`));
+  await reviewMaster({
+    root,
+    ledger,
+    masterId: ledger.masters[1].id,
+    decision: "approved",
+    reviewedBy: "Jarrad Henry",
+    reviewedAt: "2026-07-18T00:00:00.000Z",
+    evidence: valid.approvalPath,
+  });
   assert.equal(ledger.assets.every((asset) => asset.approval_status === "missing" && asset.storage_path === null), true);
   assert.deepEqual(manifest, manifestSnapshot);
   await validateLedger({ root, inventory, manifest, ledger, inspectFiles: false });
@@ -1660,7 +1749,7 @@ test("a partial structured review leaves every asset and manifest record unappro
     reviewMaster({
       root,
       ledger,
-      masterId: ledger.masters[1].id,
+      masterId: ledger.masters[2].id,
       decision: "approved",
       reviewedBy: "Jarrad Henry",
       reviewedAt: "2026-07-18T00:00:00.000Z",
@@ -1683,11 +1772,13 @@ test("finalization requires complete evidence and timing, then reconciles from f
   const tracked = await readJson(resolveRepoPath(REPO_ROOT, DEFAULT_PATHS.ledger));
   ledger.status = "production";
   ledger.pilot_approval = structuredClone(tracked.pilot_approval);
-  for (const [index, master] of ledger.masters.entries()) {
+  for (const master of ledger.masters) {
+    const trackedMaster = tracked.masters.find((candidate) => candidate.id === master.id);
+    assert(trackedMaster, `missing tracked master fixture ${master.id}`);
     master.status = "derived";
-    master.terminal_source_sha256 = (index + 1).toString(16).padStart(64, "0");
-    master.flat_master_sha256 = (index + 101).toString(16).padStart(64, "0");
-    master.lineage = [{ completed_at: "2026-07-16T22:10:00.000Z" }];
+    master.terminal_source_sha256 = trackedMaster.terminal_source_sha256;
+    master.flat_master_sha256 = trackedMaster.flat_master_sha256;
+    master.lineage = structuredClone(trackedMaster.lineage);
     master.review = {
       status: "pending",
       reviewed_by: null,
