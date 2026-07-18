@@ -156,6 +156,7 @@ async function validateScenarioTrust(manifest) {
         catalogProvenance: productionCatalogProvenance,
         url: process.env.CLOSER_LAB_PRODUCTION_SUPABASE_URL,
         serviceRoleKey: process.env.CLOSER_LAB_PRODUCTION_SERVICE_ROLE_KEY,
+        approvedVoiceId: process.env.BMH_INSTITUTE_SCENARIOS_ELEVENLABS_VOICE_ID,
       });
     } catch {
       liveAttestationBytes = null;
@@ -169,6 +170,7 @@ async function validateScenarioTrust(manifest) {
     evidence,
     catalogBytes: productionCatalogBytes,
     liveAttestationBytes,
+    approvedVoiceId: process.env.BMH_INSTITUTE_SCENARIOS_ELEVENLABS_VOICE_ID,
   });
 }
 

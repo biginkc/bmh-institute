@@ -6,6 +6,7 @@ import {
   CLOSER_LAB_CATALOG_RAW_SHA256,
   CLOSER_LAB_CATALOG_SOURCE_COMMIT,
   CLOSER_LAB_PRODUCTION_PROJECT_REF,
+  buildCloserServiceHeaders,
   buildScenarioReconciliationEvidence,
   clientStableJsonSha256,
   fetchCloserProductionGraph,
@@ -25,6 +26,16 @@ const CATALOG_URL = new URL("../../docs/course-production/closer-lab-production-
 const CATALOG_PROVENANCE_URL = new URL("../../docs/course-production/closer-lab-production-catalog.provenance.json", import.meta.url);
 const CANONICAL_URL = `https://${CLOSER_LAB_PRODUCTION_PROJECT_REF}.supabase.co`;
 const RPC_URL = `${CANONICAL_URL}/rest/v1/rpc/export_bmh_institute_production_graph`;
+const APPROVED_VOICE_ID = "elevenlabs-approved-production-voice";
+const OPAQUE_SERVICE_KEY = `sb_secret_${"A".repeat(32)}`;
+
+function legacyServiceJwt(ref = CLOSER_LAB_PRODUCTION_PROJECT_REF) {
+  return [
+    Buffer.from(JSON.stringify({ alg: "HS256", typ: "JWT" })).toString("base64url"),
+    Buffer.from(JSON.stringify({ role: "service_role", ref })).toString("base64url"),
+    "signature",
+  ].join(".");
+}
 
 async function base() {
   const [manifestBytes, ledgerBytes, catalogBytes, provenanceBytes] = await Promise.all([
@@ -75,6 +86,7 @@ function productionAttestation(ledger, catalog) {
       persona_id: `10000000-0000-4000-8000-${String(rolePlayIndex + 1).padStart(12, "0")}`,
       persona_key: `bmh-institute-v1:persona:${scenario.persona.key}`,
       persona_active: true,
+      voice_id: APPROVED_VOICE_ID,
       goals: scenario.goals.map((entry, goalIndex) => ({
         goal_id: `20000000-0000-4000-8000-${String(rolePlayIndex * 4 + goalIndex + 1).padStart(12, "0")}`,
         goal_key: `bmh-institute-v1:goal:${entry.goal.key}`,
@@ -87,6 +99,7 @@ function productionAttestation(ledger, catalog) {
   const checksumBinding = {
     attestation_version: 1,
     project_ref: CLOSER_LAB_PRODUCTION_PROJECT_REF,
+    approved_voice_id: APPROVED_VOICE_ID,
     catalog_sha256: postgresJsonbSha256(catalog),
     catalog_binding: catalog,
     counts: { role_plays: 6, personas: 6, goals: 24, role_play_goal_links: 24 },
@@ -113,6 +126,7 @@ function resignAttestation(attestation) {
   attestation.checksum_binding = {
     attestation_version: attestation.attestation_version,
     project_ref: attestation.project_ref,
+    approved_voice_id: attestation.approved_voice_id,
     catalog_sha256: attestation.catalog_sha256,
     catalog_binding: structuredClone(attestation.catalog_binding),
     counts: structuredClone(attestation.counts),
@@ -145,7 +159,7 @@ test("production attestation finalizes the manifest and ledger without hand-copi
   attachProductionIds(expectedManifest, expectedLedger);
   const attestation = productionAttestation(expectedLedger, catalog);
 
-  const result = finalizeScenarioProductionMapping({ manifest, ledger, catalog, closerExport: attestation });
+  const result = finalizeScenarioProductionMapping({ manifest, ledger, catalog, closerExport: attestation, approvedVoiceId: APPROVED_VOICE_ID });
 
   assert.equal(ledger.status, "pending");
   assert.equal(result.ledger.status, "finalized");
@@ -163,12 +177,14 @@ test("production attestation finalizes the manifest and ledger without hand-copi
     ledger,
     catalog,
     closerExport: attestation,
+    approvedVoiceId: APPROVED_VOICE_ID,
   });
   const repairedAfterLedgerOnly = finalizeScenarioProductionMapping({
     manifest,
     ledger: result.ledger,
     catalog,
     closerExport: attestation,
+    approvedVoiceId: APPROVED_VOICE_ID,
   });
   assert.deepEqual(repairedAfterManifestOnly.manifest, result.manifest);
   assert.deepEqual(repairedAfterManifestOnly.ledger, result.ledger);
@@ -182,7 +198,7 @@ test("finalization refuses to replace an existing production binding", async () 
   const expectedLedger = structuredClone(ledger);
   attachProductionIds(expectedManifest, expectedLedger);
   const attestation = productionAttestation(expectedLedger, catalog);
-  const finalized = finalizeScenarioProductionMapping({ manifest, ledger, catalog, closerExport: attestation });
+  const finalized = finalizeScenarioProductionMapping({ manifest, ledger, catalog, closerExport: attestation, approvedVoiceId: APPROVED_VOICE_ID });
 
   const changedLedger = structuredClone(finalized.ledger);
   changedLedger.records[0].production_scenario_id = "ffffffff-ffff-4fff-8fff-ffffffffffff";
@@ -191,6 +207,7 @@ test("finalization refuses to replace an existing production binding", async () 
     ledger: changedLedger,
     catalog,
     closerExport: attestation,
+    approvedVoiceId: APPROVED_VOICE_ID,
   }), /binding changed after finalization/);
 
   const changedManifest = structuredClone(finalized.manifest);
@@ -205,6 +222,7 @@ test("finalization refuses to replace an existing production binding", async () 
     ledger: finalized.ledger,
     catalog,
     closerExport: attestation,
+    approvedVoiceId: APPROVED_VOICE_ID,
   }), /manifest UUID changed after production binding/);
 });
 
@@ -236,7 +254,15 @@ test("arbitrary non-pending scenario strings cannot clear production trust", asy
   for (const course of manifest.program.courses) for (const module of course.modules) for (const lesson of module.lessons) for (const block of lesson.blocks ?? []) {
     if (block.type === "role_play") block.content.scenario_id = "definitely-not-production";
   }
-  const report = await validateScenarioProductionTrust({ manifest, manifestBytes, ledger, ledgerBytes, catalogBytes, evidence: null });
+  const report = await validateScenarioProductionTrust({
+    manifest,
+    manifestBytes,
+    ledger,
+    ledgerBytes,
+    catalogBytes,
+    evidence: null,
+    approvedVoiceId: APPROVED_VOICE_ID,
+  });
   assert.ok(report.blockers.some((blocker) => blocker.includes("not finalized")));
 });
 
@@ -248,7 +274,8 @@ test("live attestation uses only the canonical final RPC response and exact serv
     catalogBytes,
     catalogProvenance: provenance,
     url: CANONICAL_URL,
-    serviceRoleKey: "test-service-credential",
+    serviceRoleKey: OPAQUE_SERVICE_KEY,
+    approvedVoiceId: APPROVED_VOICE_ID,
     fetchImpl: async (url, init) => {
       request = { url: String(url), init };
       return mockResponse(attestation);
@@ -257,14 +284,19 @@ test("live attestation uses only the canonical final RPC response and exact serv
   assert.deepEqual(JSON.parse(result), attestation);
   assert.equal(request.url, RPC_URL);
   assert.equal(request.init.redirect, "error");
-  assert.equal(request.init.headers.Authorization, "Bearer test-service-credential");
-  assert.deepEqual(JSON.parse(request.init.body), { p_catalog: catalog });
+  assert.equal(request.init.headers.apikey, OPAQUE_SERVICE_KEY);
+  assert.equal("Authorization" in request.init.headers, false);
+  assert.deepEqual(JSON.parse(request.init.body), {
+    p_catalog: catalog,
+    p_approved_voice_id: APPROVED_VOICE_ID,
+  });
 
   await assert.rejects(fetchCloserProductionGraph({
     catalogBytes,
     catalogProvenance: provenance,
     url: CANONICAL_URL,
-    serviceRoleKey: "test-service-credential",
+    serviceRoleKey: OPAQUE_SERVICE_KEY,
+    approvedVoiceId: APPROVED_VOICE_ID,
     fetchImpl: async () => mockResponse(attestation, `${CANONICAL_URL}/rest/v1/forged`),
   }), /did not originate from the exact canonical RPC/);
 
@@ -272,9 +304,32 @@ test("live attestation uses only the canonical final RPC response and exact serv
     catalogBytes,
     catalogProvenance: provenance,
     url: "https://wrong-project.supabase.co",
-    serviceRoleKey: "test-service-credential",
+    serviceRoleKey: OPAQUE_SERVICE_KEY,
+    approvedVoiceId: APPROVED_VOICE_ID,
     fetchImpl: async () => mockResponse(attestation),
   }), /outside the canonical production project boundary/);
+});
+
+test("service headers never send an opaque Supabase secret as bearer authentication", () => {
+  assert.deepEqual(buildCloserServiceHeaders(OPAQUE_SERVICE_KEY), {
+    apikey: OPAQUE_SERVICE_KEY,
+    "Content-Type": "application/json",
+  });
+
+  const legacy = legacyServiceJwt();
+  assert.deepEqual(buildCloserServiceHeaders(legacy), {
+    apikey: legacy,
+    Authorization: `Bearer ${legacy}`,
+    "Content-Type": "application/json",
+  });
+  assert.throws(
+    () => buildCloserServiceHeaders(legacyServiceJwt("moocmsisaopnznppqvsq")),
+    /not bound to the canonical production project/,
+  );
+  assert.throws(
+    () => buildCloserServiceHeaders("not-a-service-key"),
+    /not bound to the canonical production project/,
+  );
 });
 
 test("fabricated catalogs and changed provenance cannot reach production attestation", async () => {
@@ -287,7 +342,8 @@ test("fabricated catalogs and changed provenance cannot reach production attesta
     catalogBytes: fabricatedBytes,
     catalogProvenance: { ...provenance, catalog_sha256: sha256(fabricatedBytes) },
     url: CANONICAL_URL,
-    serviceRoleKey: "test-service-credential",
+    serviceRoleKey: OPAQUE_SERVICE_KEY,
+    approvedVoiceId: APPROVED_VOICE_ID,
     fetchImpl: async () => { calls += 1; return mockResponse({}); },
   }), /provenance is missing, stale, or not exact/);
   assert.equal(calls, 0);
@@ -296,7 +352,8 @@ test("fabricated catalogs and changed provenance cannot reach production attesta
     catalogBytes,
     catalogProvenance: { ...provenance, source_commit: "171b2228be70c19d1a707407d26f16de201793a0" },
     url: CANONICAL_URL,
-    serviceRoleKey: "test-service-credential",
+    serviceRoleKey: OPAQUE_SERVICE_KEY,
+    approvedVoiceId: APPROVED_VOICE_ID,
     fetchImpl: async () => { calls += 1; return mockResponse({}); },
   }), /provenance is missing, stale, or not exact/);
   assert.equal(calls, 0);
@@ -305,21 +362,52 @@ test("fabricated catalogs and changed provenance cannot reach production attesta
 test("server checksum claims are independently recomputed by the consumer", async () => {
   const { manifest, ledger, catalog } = await base();
   const attestation = finalize(manifest, ledger, catalog);
-  assert.equal(validateProductionGraphAttestation(attestation, catalog), attestation);
+  assert.equal(validateProductionGraphAttestation(attestation, catalog, APPROVED_VOICE_ID), attestation);
 
   const forgedCatalogHash = structuredClone(attestation);
   forgedCatalogHash.catalog_sha256 = "a".repeat(64);
   forgedCatalogHash.checksum_binding.catalog_sha256 = "a".repeat(64);
   forgedCatalogHash.graph_checksum_sha256 = postgresJsonbSha256(forgedCatalogHash.checksum_binding);
   assert.throws(
-    () => validateProductionGraphAttestation(forgedCatalogHash, catalog),
+    () => validateProductionGraphAttestation(forgedCatalogHash, catalog, APPROVED_VOICE_ID),
     /invalid or incomplete exact-graph shape/,
   );
 
   const forgedGraphHash = structuredClone(attestation);
   forgedGraphHash.graph_checksum_sha256 = "b".repeat(64);
   assert.throws(
-    () => validateProductionGraphAttestation(forgedGraphHash, catalog),
+    () => validateProductionGraphAttestation(forgedGraphHash, catalog, APPROVED_VOICE_ID),
+    /invalid or incomplete exact-graph shape/,
+  );
+});
+
+test("voice and integral goal weights remain externally bound after a valid re-sign", async () => {
+  const { manifest, ledger, catalog } = await base();
+  const attestation = finalize(manifest, ledger, catalog);
+
+  const voiceDrift = structuredClone(attestation);
+  voiceDrift.approved_voice_id = "different-approved-voice";
+  voiceDrift.graph[0].voice_id = "different-approved-voice";
+  resignAttestation(voiceDrift);
+  assert.throws(
+    () => validateProductionGraphAttestation(voiceDrift, catalog, APPROVED_VOICE_ID),
+    /invalid or incomplete exact-graph shape/,
+  );
+
+  const fractionalWeight = structuredClone(attestation);
+  fractionalWeight.graph[0].goals[0].weight = 24.5;
+  fractionalWeight.graph[0].goals[1].weight = 25.5;
+  resignAttestation(fractionalWeight);
+  assert.throws(
+    () => validateProductionGraphAttestation(fractionalWeight, catalog, APPROVED_VOICE_ID),
+    /invalid or incomplete exact-graph shape/,
+  );
+
+  const stringWeight = structuredClone(attestation);
+  stringWeight.graph[0].goals[0].weight = "25";
+  resignAttestation(stringWeight);
+  assert.throws(
+    () => validateProductionGraphAttestation(stringWeight, catalog, APPROVED_VOICE_ID),
     /invalid or incomplete exact-graph shape/,
   );
 });
@@ -332,7 +420,7 @@ test("unrelated graph UUIDs or managed keys cannot attest a well-shaped export",
   wrongId.graph[0].role_play_id = "90000000-0000-4000-8000-000000000001";
   resignAttestation(wrongId);
   assert.throws(
-    () => validateProductionGraphAttestation(wrongId, catalog),
+    () => validateProductionGraphAttestation(wrongId, catalog, APPROVED_VOICE_ID),
     /invalid or incomplete exact-graph shape/,
   );
 
@@ -340,7 +428,7 @@ test("unrelated graph UUIDs or managed keys cannot attest a well-shaped export",
   wrongKey.graph[0].goals[0].goal_key = "bmh-institute-v1:goal:unrelated-but-well-shaped";
   resignAttestation(wrongKey);
   assert.throws(
-    () => validateProductionGraphAttestation(wrongKey, catalog),
+    () => validateProductionGraphAttestation(wrongKey, catalog, APPROVED_VOICE_ID),
     /invalid or incomplete exact-graph shape/,
   );
 });
@@ -356,6 +444,7 @@ test("reconciliation binds finalized mappings to client-recomputed exact product
     ledgerBytes,
     catalogBytes,
     closerExportBytes: liveAttestationBytes,
+    approvedVoiceId: APPROVED_VOICE_ID,
   });
   assert.equal(evidence.client_catalog_sha256, clientStableJsonSha256(catalog));
   assert.equal(evidence.client_graph_binding_sha256, clientStableJsonSha256(closerExport.checksum_binding));
@@ -368,6 +457,7 @@ test("reconciliation binds finalized mappings to client-recomputed exact product
     catalogBytes,
     evidence,
     liveAttestationBytes,
+    approvedVoiceId: APPROVED_VOICE_ID,
   });
   assert.deepEqual(report, { errors: [], blockers: [] });
 
@@ -378,6 +468,7 @@ test("reconciliation binds finalized mappings to client-recomputed exact product
     ledgerBytes,
     catalogBytes,
     evidence,
+    approvedVoiceId: APPROVED_VOICE_ID,
   });
   assert.ok(localOnlyReport.blockers.some((blocker) => blocker.includes("missing, stale, or not exact")));
 
@@ -391,6 +482,7 @@ test("reconciliation binds finalized mappings to client-recomputed exact product
     catalogBytes,
     evidence: forgedEvidence,
     liveAttestationBytes,
+    approvedVoiceId: APPROVED_VOICE_ID,
   });
   assert.ok(forgedReport.blockers.some((blocker) => blocker.includes("missing, stale, or not exact")));
 
@@ -404,6 +496,7 @@ test("reconciliation binds finalized mappings to client-recomputed exact product
     catalogBytes,
     evidence: duplicateEvidence,
     liveAttestationBytes,
+    approvedVoiceId: APPROVED_VOICE_ID,
   });
   assert.ok(duplicateReport.blockers.some((blocker) => blocker.includes("missing, stale, or not exact")));
 });

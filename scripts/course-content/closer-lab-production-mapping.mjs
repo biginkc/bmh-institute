@@ -84,8 +84,46 @@ export function assertCloserProductionUrl(rawUrl) {
   return url;
 }
 
-export async function fetchCloserProductionGraph({ catalogBytes, catalogProvenance, url, serviceRoleKey, fetchImpl = fetch }) {
+function decodeLegacyServiceJwt(key) {
+  const parts = key.split(".");
+  if (parts.length !== 3) return null;
+  try {
+    const value = JSON.parse(Buffer.from(parts[1], "base64url").toString("utf8"));
+    return value && typeof value === "object" && !Array.isArray(value) ? value : null;
+  } catch {
+    return null;
+  }
+}
+
+export function buildCloserServiceHeaders(serviceRoleKey) {
+  if (typeof serviceRoleKey !== "string") {
+    throw new Error("Closer Lab production service credential is required for live attestation.");
+  }
+  const key = serviceRoleKey.trim();
+  if (/^sb_secret_[A-Za-z0-9_-]{20,}$/.test(key)) {
+    return { apikey: key, "Content-Type": "application/json" };
+  }
+  const claims = decodeLegacyServiceJwt(key);
+  if (claims?.role !== "service_role" || claims.ref !== CLOSER_LAB_PRODUCTION_PROJECT_REF) {
+    throw new Error("Closer Lab production service credential is not bound to the canonical production project.");
+  }
+  return {
+    apikey: key,
+    Authorization: `Bearer ${key}`,
+    "Content-Type": "application/json",
+  };
+}
+
+function assertApprovedVoiceId(approvedVoiceId) {
+  if (typeof approvedVoiceId !== "string" || !approvedVoiceId.trim()) {
+    throw new Error("Closer Lab production approved voice ID is required for live attestation.");
+  }
+  return approvedVoiceId.trim();
+}
+
+export async function fetchCloserProductionGraph({ catalogBytes, catalogProvenance, url, serviceRoleKey, approvedVoiceId, fetchImpl = fetch }) {
   const canonicalUrl = assertCloserProductionUrl(url);
+  const canonicalVoiceId = assertApprovedVoiceId(approvedVoiceId);
   validateCloserCatalogProvenance({ catalogBytes, provenance: catalogProvenance });
   const catalog = JSON.parse(catalogBytes.toString());
   if (
@@ -96,21 +134,17 @@ export async function fetchCloserProductionGraph({ catalogBytes, catalogProvenan
   ) {
     throw new Error("Closer Lab production catalog does not contain the exact 6/24 authored contract.");
   }
-  if (typeof serviceRoleKey !== "string" || !serviceRoleKey.trim()) {
-    throw new Error("Closer Lab production service credential is required for live attestation.");
-  }
   const endpoint = new URL("/rest/v1/rpc/export_bmh_institute_production_graph", canonicalUrl);
   const response = await fetchImpl(
     endpoint,
     {
       method: "POST",
       redirect: "error",
-      headers: {
-        apikey: serviceRoleKey,
-        Authorization: `Bearer ${serviceRoleKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ p_catalog: catalog }),
+      headers: buildCloserServiceHeaders(serviceRoleKey),
+      body: JSON.stringify({
+        p_catalog: catalog,
+        p_approved_voice_id: canonicalVoiceId,
+      }),
     },
   );
   if (response.url !== endpoint.href) {
@@ -121,11 +155,12 @@ export async function fetchCloserProductionGraph({ catalogBytes, catalogProvenan
   }
   const bytes = Buffer.from(await response.arrayBuffer());
   const attestation = JSON.parse(bytes.toString());
-  validateProductionGraphAttestation(attestation, catalog);
+  validateProductionGraphAttestation(attestation, catalog, canonicalVoiceId);
   return bytes;
 }
 
-export function validateProductionGraphAttestation(attestation, catalog) {
+export function validateProductionGraphAttestation(attestation, catalog, approvedVoiceId) {
+  const canonicalVoiceId = assertApprovedVoiceId(approvedVoiceId);
   if (clientStableJsonSha256(catalog) !== CLOSER_LAB_CATALOG_STABLE_SHA256) {
     throw new Error("Closer Lab production catalog is not the exact reviewed authored contract.");
   }
@@ -154,12 +189,15 @@ export function validateProductionGraphAttestation(attestation, catalog) {
       UUID_PATTERN.test(record?.role_play_id ?? "") && record.role_play_active === true &&
       UUID_PATTERN.test(record.persona_id ?? "") && record.persona_active === true &&
       record.persona_key === `bmh-institute-v1:persona:${scenario.persona.key}` &&
+      record.voice_id === canonicalVoiceId &&
       Array.isArray(record.goals) && record.goals.length === 4 &&
       record.goals.reduce((total, goal) => total + Number(goal.weight), 0) === 100 &&
       record.goals.every((goal, index) =>
         UUID_PATTERN.test(goal?.goal_id ?? "") && goal.goal_active === true &&
         goal.goal_key === `bmh-institute-v1:goal:${expectedGoals[index]?.goal?.key}` &&
-        Number(goal.weight) === Number(expectedGoals[index]?.weight) && goal.sort_order === index,
+        typeof goal.weight === "number" && Number.isInteger(goal.weight) &&
+        goal.weight === expectedGoals[index]?.weight &&
+        Number.isInteger(goal.sort_order) && goal.sort_order === index,
       );
     });
   const graphRolePlayIds = graphIsExact ? attestation.graph.map((record) => record.role_play_id) : [];
@@ -172,6 +210,7 @@ export function validateProductionGraphAttestation(attestation, catalog) {
   const expectedChecksumBinding = {
     attestation_version: attestation?.attestation_version,
     project_ref: attestation?.project_ref,
+    approved_voice_id: attestation?.approved_voice_id,
     catalog_sha256: attestation?.catalog_sha256,
     catalog_binding: attestation?.catalog_binding,
     counts: attestation?.counts,
@@ -185,6 +224,7 @@ export function validateProductionGraphAttestation(attestation, catalog) {
   if (
     attestation?.attestation_version !== 1 ||
     attestation.project_ref !== CLOSER_LAB_PRODUCTION_PROJECT_REF ||
+    attestation.approved_voice_id !== canonicalVoiceId ||
     attestation.checksum_algorithm !== "sha256-jsonb-text-v1" ||
     !SHA256_PATTERN.test(attestation.catalog_sha256 ?? "") || !catalogChecksumIsExact ||
     !SHA256_PATTERN.test(attestation.graph_checksum_sha256 ?? "") || !graphChecksumIsExact ||
@@ -251,8 +291,8 @@ export function validateScenarioMappingLedgerShape(manifest, ledger) {
   return errors;
 }
 
-export function finalizeScenarioProductionMapping({ manifest, ledger, catalog, closerExport }) {
-  const attestation = validateProductionGraphAttestation(closerExport, catalog);
+export function finalizeScenarioProductionMapping({ manifest, ledger, catalog, closerExport, approvedVoiceId }) {
+  const attestation = validateProductionGraphAttestation(closerExport, catalog, approvedVoiceId);
   const pendingErrors = validateScenarioMappingLedgerShape(manifest, ledger);
   if (pendingErrors.length > 0) throw new Error(pendingErrors.join("; "));
 
@@ -323,11 +363,15 @@ export function finalizeScenarioProductionMapping({ manifest, ledger, catalog, c
   return { manifest: finalizedManifest, ledger: finalizedLedger, attestation };
 }
 
-export function buildScenarioReconciliationEvidence({ manifestBytes, ledgerBytes, catalogBytes, closerExportBytes }) {
+export function buildScenarioReconciliationEvidence({ manifestBytes, ledgerBytes, catalogBytes, closerExportBytes, approvedVoiceId }) {
   const manifest = JSON.parse(manifestBytes.toString());
   const ledger = JSON.parse(ledgerBytes.toString());
   const catalog = JSON.parse(catalogBytes.toString());
-  const closerExport = validateProductionGraphAttestation(JSON.parse(closerExportBytes.toString()), catalog);
+  const closerExport = validateProductionGraphAttestation(
+    JSON.parse(closerExportBytes.toString()),
+    catalog,
+    approvedVoiceId,
+  );
   const clientCatalogSha256 = clientStableJsonSha256(catalog);
   const clientGraphBindingSha256 = clientStableJsonSha256(closerExport.checksum_binding);
   const shapeErrors = validateScenarioMappingLedgerShape(manifest, ledger);
@@ -361,6 +405,7 @@ export function buildScenarioReconciliationEvidence({ manifestBytes, ledgerBytes
     exact: true,
     environment: "production",
     closer_lab_project_ref: closerExport.project_ref,
+    approved_voice_id: closerExport.approved_voice_id,
     production_graph_checksum_sha256: closerExport.graph_checksum_sha256,
     client_catalog_sha256: clientCatalogSha256,
     client_graph_binding_sha256: clientGraphBindingSha256,
@@ -379,6 +424,7 @@ export async function validateScenarioProductionTrust({
   evidence,
   catalogBytes,
   liveAttestationBytes,
+  approvedVoiceId,
 }) {
   const errors = validateScenarioMappingLedgerShape(manifest, ledger);
   const blockers = [];
@@ -406,6 +452,7 @@ export async function validateScenarioProductionTrust({
         ledgerBytes,
         catalogBytes,
         closerExportBytes: liveAttestationBytes,
+        approvedVoiceId,
       });
     }
   } catch {

@@ -38,8 +38,13 @@ The six production Closer Lab IDs remain deliberately null in
 production RPC proves the exact 6-role-play, 6-persona, 24-goal, and 24-link
 graph. Set `CLOSER_LAB_PRODUCTION_SUPABASE_URL` and
 `CLOSER_LAB_PRODUCTION_SERVICE_ROLE_KEY` from the write-enabled secret runtime,
-then deterministically derive all six manifest and ledger UUID bindings from that live
-attestation. Never hand-copy UUIDs from CLI output:
+and set `BMH_INSTITUTE_SCENARIOS_ELEVENLABS_VOICE_ID` to the exact approved
+production voice used by all six Closer Lab personas. The finalizer sends a
+modern `sb_secret_...` credential only as the Supabase `apikey`; it never sends
+an opaque key as a bearer token. Legacy service-role JWTs remain supported only
+when their embedded project reference matches the canonical production project.
+Then deterministically derive all six manifest and ledger UUID bindings from
+that live attestation. Never hand-copy UUIDs from CLI output:
 
 ```bash
 npm run course:finalize:closer-lab -- \

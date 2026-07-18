@@ -62,12 +62,14 @@ async function main() {
     catalogProvenance: JSON.parse(provenanceBytes.toString()),
     url: process.env.CLOSER_LAB_PRODUCTION_SUPABASE_URL,
     serviceRoleKey: process.env.CLOSER_LAB_PRODUCTION_SERVICE_ROLE_KEY,
+    approvedVoiceId: process.env.BMH_INSTITUTE_SCENARIOS_ELEVENLABS_VOICE_ID,
   });
   const result = finalizeScenarioProductionMapping({
     manifest: JSON.parse(manifestBytes.toString()),
     ledger: JSON.parse(ledgerBytes.toString()),
     catalog,
     closerExport: JSON.parse(attestationBytes.toString()),
+    approvedVoiceId: process.env.BMH_INSTITUTE_SCENARIOS_ELEVENLABS_VOICE_ID,
   });
 
   await writeJsonAtomically(resolvedManifestPath, result.manifest, { mode: 0o644 });
