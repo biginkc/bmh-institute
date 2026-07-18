@@ -16,7 +16,7 @@ const migrateWorkflow = readFileSync(
 );
 
 describe("versioned video completion and submission evidence migration", () => {
-  it("masks both raw and URL-encoded database credentials before either client runs", () => {
+  it("masks credentials before clients run and keeps direct psql secrets out of argv", () => {
     const applyStep = migrateWorkflow.slice(
       migrateWorkflow.indexOf("- name: Apply pending migrations"),
       migrateWorkflow.indexOf("- name: Install dependencies"),
@@ -25,9 +25,12 @@ describe("versioned video completion and submission evidence migration", () => {
       migrateWorkflow.indexOf("- name: Run versioned completion"),
       migrateWorkflow.indexOf("- name: Run fail-closed provider acceptance"),
     );
+    const providerStep = migrateWorkflow.slice(
+      migrateWorkflow.indexOf("- name: Run fail-closed provider acceptance"),
+    );
     for (const [step, command] of [
       [applyStep, "supabase db push"],
-      [acceptanceStep, 'psql "$DB_URL"'],
+      [providerStep, "npm run test:course-import-provider"],
     ]) {
       expect(step).toContain('echo "::add-mask::$TEST_SUPABASE_DB_PASSWORD"');
       expect(step).toContain('echo "::add-mask::$ENCODED_PASSWORD"');
@@ -38,6 +41,11 @@ describe("versioned video completion and submission evidence migration", () => {
         step.indexOf(command),
       );
     }
+    expect(acceptanceStep).toContain('echo "::add-mask::$TEST_SUPABASE_DB_PASSWORD"');
+    expect(acceptanceStep).toContain('export PGPASSWORD="$TEST_SUPABASE_DB_PASSWORD"');
+    expect(acceptanceStep).not.toContain("ENCODED_PASSWORD=");
+    expect(acceptanceStep).not.toContain("DB_URL=");
+    expect(acceptanceStep).not.toMatch(/psql\s+["']?\$/);
   });
 
   it("binds current video credit to one non-null authored asset version", () => {

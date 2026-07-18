@@ -22,6 +22,15 @@ describe("credential-bearing Playwright artifact policy", () => {
     expect(source).not.toMatch(/console\.(?:log|error)\([^\n]*(?:stdout|stderr)/);
   });
 
+  it("keeps direct psql acceptance credentials out of process arguments", () => {
+    const source = fs.readFileSync(
+      path.resolve(process.cwd(), ".github/workflows/db-migrate-test.yml"),
+      "utf8",
+    );
+    expect(source).not.toMatch(/psql\s+["']?\$DB_URL/);
+    expect(source).toContain('export PGPASSWORD="$TEST_SUPABASE_DB_PASSWORD"');
+  });
+
   it("disables every browser recording surface", () => {
     expect(CREDENTIAL_SAFE_PLAYWRIGHT_USE).toEqual({
       trace: "off",

@@ -68,11 +68,14 @@ jobs:
           TEST_SUPABASE_DB_PASSWORD: ${{ secrets.TEST_SUPABASE_DB_PASSWORD }}
         run: |
           echo "::add-mask::$TEST_SUPABASE_DB_PASSWORD"
-          ENCODED_PASSWORD="$(node -e 'process.stdout.write(encodeURIComponent(process.env.TEST_SUPABASE_DB_PASSWORD))')"
-          echo "::add-mask::$ENCODED_PASSWORD"
-          DB_URL="postgresql://postgres.${TEST_PROJECT_REF}:${ENCODED_PASSWORD}@aws-1-us-west-1.pooler.supabase.com:5432/postgres"
-          psql "$DB_URL" --set ON_ERROR_STOP=1 --file supabase/tests/031_versioned_video_completion_and_submission_evidence.sql
-          psql "$DB_URL" --set ON_ERROR_STOP=1 --file supabase/tests/034_import_release_and_fixture_dependency_guards.sql
+          export PGHOST="aws-1-us-west-1.pooler.supabase.com"
+          export PGPORT="5432"
+          export PGDATABASE="postgres"
+          export PGUSER="postgres.${TEST_PROJECT_REF}"
+          export PGPASSWORD="$TEST_SUPABASE_DB_PASSWORD"
+          export PGSSLMODE="require"
+          psql --set ON_ERROR_STOP=1 --file supabase/tests/031_versioned_video_completion_and_submission_evidence.sql
+          psql --set ON_ERROR_STOP=1 --file supabase/tests/034_import_release_and_fixture_dependency_guards.sql
 
       - name: Run fail-closed provider acceptance against migrated test database
         env:
