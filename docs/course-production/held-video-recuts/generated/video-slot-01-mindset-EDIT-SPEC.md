@@ -15,7 +15,7 @@ This specification maps every spoken moment in the held cut to replacement scene
 
 Learn the BMH Group service standard and the mindset that keeps seller conversations clear, calm, and human.
 
-- Explain the Navigator role
+- Explain the BMH service standard
 - Put service before pressure
 - Use curiosity and clarity in seller conversations
 - Detach from outcomes while staying accountable

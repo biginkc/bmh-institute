@@ -15,6 +15,7 @@ import {
 
 const STALE_COMPENSATION_PATTERN = /\$\s*\d|hourly base|appointment bonus|commission tier|tiered commission/i;
 const STALE_CAREER_GROWTH_PATTERN = /\b(?:role ladder|career ladder|promotion|promoted|readiness|first consideration|management path|closer path|acquisitions? role|90(?:-plus)? days?|six months?|one year|commission|compensation|salary|pay increase|earning potential|higher earnings?|daily (?:numbers?|targets?|quotas?)|dial quotas?|hit(?:ting)? (?:their )?numbers every day|guarante(?:e|ed|es)|own(?:s|ing)? (?:the )?(?:entire )?team(?:'s)? performance)\b/i;
+export const STALE_ROLE_BOUND_COURSE_PATTERN = /\b(?:navigator|virtual onboarding specialist|lead sourcing specialist|lead sourcing seat|lead generator|acquisition manager|acquisitions manager|acquisitions? team|acquisition handoff|transaction coordinator|transaction teams?|follow-up specialist|setter|sales manager|team lead|SDR)\b/i;
 const CAREER_GROWTH_GROUNDING = new Map([
   ["practice", /\b(?:practic(?:e|ing)|repetition|development loop)\b/i],
   ["feedback", /\b(?:feedback|coach(?:ing|ability|able)|defensive)\b/i],
@@ -569,6 +570,11 @@ export function validateManifest(
 
   const serialized = JSON.stringify(manifest);
   if (/Cold Call Blueprint/i.test(serialized)) errors.push("Wrong-track Cold Call Blueprint is referenced");
+  const roleBoundCourseText = JSON.stringify(manifest.program);
+  const staleRole = roleBoundCourseText.match(STALE_ROLE_BOUND_COURSE_PATTERN)?.[0];
+  if (staleRole) {
+    errors.push(`Stale named-role wording detected in learner-authored course content: ${staleRole}`);
+  }
   const compensationAndCareer = lessons
     .filter((lesson) => /slot-(?:17|19)$/.test(lesson.source_key))
     .map((lesson) => JSON.stringify(lesson))

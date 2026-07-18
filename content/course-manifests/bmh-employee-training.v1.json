@@ -1372,10 +1372,10 @@
       "source_key": "guide-slot-01",
       "kind": "pdf",
       "local_path": "output/pdf/slot-01-learner-guide.pdf",
-      "storage_path": "courses/bmh-employee-training/v1/guides/guide-slot-01.58eb5978febd4cc417cab3fec18439752dea305ab82980841039abaa80e26808.pdf",
+      "storage_path": "courses/bmh-employee-training/v1/guides/guide-slot-01.afe28d718cf5458ae9ad3b8bada9b970312eb5d039ef1903a9ef530bae6f4b73.pdf",
       "mime_type": "application/pdf",
-      "checksum_sha256": "58eb5978febd4cc417cab3fec18439752dea305ab82980841039abaa80e26808",
-      "size_bytes": 50776,
+      "checksum_sha256": "afe28d718cf5458ae9ad3b8bada9b970312eb5d039ef1903a9ef530bae6f4b73",
+      "size_bytes": 50769,
       "approval_status": "approved"
     },
     {
@@ -1422,9 +1422,9 @@
       "source_key": "guide-slot-06",
       "kind": "pdf",
       "local_path": "output/pdf/slot-06-learner-guide.pdf",
-      "storage_path": "courses/bmh-employee-training/v1/guides/guide-slot-06.4f72846e5ac89395d4df98fa6f82246022b7f91b3ca98d88f1a0accef3ede935.pdf",
+      "storage_path": "courses/bmh-employee-training/v1/guides/guide-slot-06.eaf4f5f582c6e0bce7c05de1537eb8a2b1c6b5ac65fb331885c46271300656d7.pdf",
       "mime_type": "application/pdf",
-      "checksum_sha256": "4f72846e5ac89395d4df98fa6f82246022b7f91b3ca98d88f1a0accef3ede935",
+      "checksum_sha256": "eaf4f5f582c6e0bce7c05de1537eb8a2b1c6b5ac65fb331885c46271300656d7",
       "size_bytes": 50739,
       "approval_status": "approved"
     },
@@ -1442,10 +1442,10 @@
       "source_key": "guide-slot-08",
       "kind": "pdf",
       "local_path": "output/pdf/slot-08-learner-guide.pdf",
-      "storage_path": "courses/bmh-employee-training/v1/guides/guide-slot-08.e65db332fdae925fc202fd17af637454ed31b6a66f002ac5da68df0ff5813798.pdf",
+      "storage_path": "courses/bmh-employee-training/v1/guides/guide-slot-08.dfb55f84d1651fa0a005852f2a76c3888ce7dd4fd0b45840effb4032ed677074.pdf",
       "mime_type": "application/pdf",
-      "checksum_sha256": "e65db332fdae925fc202fd17af637454ed31b6a66f002ac5da68df0ff5813798",
-      "size_bytes": 50840,
+      "checksum_sha256": "dfb55f84d1651fa0a005852f2a76c3888ce7dd4fd0b45840effb4032ed677074",
+      "size_bytes": 50841,
       "approval_status": "approved"
     },
     {
@@ -1512,10 +1512,10 @@
       "source_key": "guide-slot-15",
       "kind": "pdf",
       "local_path": "output/pdf/slot-15-learner-guide.pdf",
-      "storage_path": "courses/bmh-employee-training/v1/guides/guide-slot-15.d0e48a60f7587f8b26b69416c8c61ca8799a2ce4799e1c09146fc0d984d3dea3.pdf",
+      "storage_path": "courses/bmh-employee-training/v1/guides/guide-slot-15.892c2f03db3a1ef5549fc16c825b202203bb046812a27f509ad62552e4bdb3e8.pdf",
       "mime_type": "application/pdf",
-      "checksum_sha256": "d0e48a60f7587f8b26b69416c8c61ca8799a2ce4799e1c09146fc0d984d3dea3",
-      "size_bytes": 50887,
+      "checksum_sha256": "892c2f03db3a1ef5549fc16c825b202203bb046812a27f509ad62552e4bdb3e8",
+      "size_bytes": 50912,
       "approval_status": "approved"
     },
     {
@@ -1597,7 +1597,7 @@
                     "sort_order": 1,
                     "required": false,
                     "content": {
-                      "html": "<h2>What you will learn</h2><p>Learn the BMH Group service standard and the mindset that keeps seller conversations clear, calm, and human.</p><ul><li>Explain the Navigator role</li><li>Put service before pressure</li><li>Use curiosity and clarity in seller conversations</li><li>Detach from outcomes while staying accountable</li></ul>"
+                      "html": "<h2>What you will learn</h2><p>Learn the BMH Group service standard and the mindset that keeps seller conversations clear, calm, and human.</p><ul><li>Explain the BMH service standard</li><li>Put service before pressure</li><li>Use curiosity and clarity in seller conversations</li><li>Detach from outcomes while staying accountable</li></ul>"
                     }
                   },
                   {
@@ -1610,7 +1610,7 @@
                       "poster_asset_key": "poster-video-slot-01-welcome",
                       "caption_asset_key": "caption-video-slot-01-welcome",
                       "transcript_asset_key": "transcript-video-slot-01-welcome",
-                      "title": "Welcome and the Navigator's Playbook",
+                      "title": "Welcome and the Service Playbook",
                       "part_label": "Part A",
                       "duration_seconds": 246.186
                     }
@@ -1646,9 +1646,9 @@
                     "required": false,
                     "content": {
                       "asset_key": "guide-slot-01",
-                      "file_path": "courses/bmh-employee-training/v1/guides/guide-slot-01.58eb5978febd4cc417cab3fec18439752dea305ab82980841039abaa80e26808.pdf",
+                      "file_path": "courses/bmh-employee-training/v1/guides/guide-slot-01.afe28d718cf5458ae9ad3b8bada9b970312eb5d039ef1903a9ef530bae6f4b73.pdf",
                       "filename": "slot-01-learner-guide.pdf",
-                      "size_bytes": 50776,
+                      "size_bytes": 50769,
                       "description": "Accessible learner guide for Welcome and Mindset"
                     }
                   },
@@ -2586,7 +2586,7 @@
                       "source_key": "question-slot-02-07",
                       "question_text": "A Notice of Default is the formal legal document that officially starts the foreclosure process.",
                       "question_type": "true_false",
-                      "explanation": "It's the lender putting 'we've been patient enough' in writing - flag any seller who mentions an official notice for your acquisition manager immediately.",
+                      "explanation": "It's the lender putting 'we've been patient enough' in writing - document any official notice promptly and alert your manager.",
                       "points": 1,
                       "sort_order": 7,
                       "options": [
@@ -2880,7 +2880,7 @@
                         },
                         {
                           "source_key": "option-slot-02-16-3",
-                          "option_text": "The company's virtual onboarding specialist",
+                          "option_text": "The company's onboarding support",
                           "is_correct": false,
                           "sort_order": 3
                         },
@@ -2896,13 +2896,13 @@
                       "source_key": "question-slot-02-17",
                       "question_text": "What is the goal of every early-stage call?",
                       "question_type": "single_choice",
-                      "explanation": "You're not there to make the offer or close the deal - a scheduled next step with the acquisition manager is the win.",
+                      "explanation": "You're not there to make the offer or close the deal - a scheduled next step with the next person in the process is the win.",
                       "points": 1,
                       "sort_order": 17,
                       "options": [
                         {
                           "source_key": "option-slot-02-17-1",
-                          "option_text": "Set an appointment for the acquisition manager to have a deeper conversation",
+                          "option_text": "Set an appointment for the next person in the process to have a deeper conversation",
                           "is_correct": true,
                           "sort_order": 1
                         },
@@ -3596,13 +3596,13 @@
                       "source_key": "question-slot-03-16",
                       "question_text": "You can't find a specific SOP. Who do you ask?",
                       "question_type": "single_choice",
-                      "explanation": "The lesson says to ask your team lead how to locate specific SOPs.",
+                      "explanation": "The lesson says to ask your manager how to locate specific SOPs.",
                       "points": 1,
                       "sort_order": 16,
                       "options": [
                         {
                           "source_key": "option-slot-03-16-1",
-                          "option_text": "Your team lead",
+                          "option_text": "Your manager",
                           "is_correct": true,
                           "sort_order": 1
                         },
@@ -5350,7 +5350,7 @@
                     "required": false,
                     "content": {
                       "asset_key": "guide-slot-06",
-                      "file_path": "courses/bmh-employee-training/v1/guides/guide-slot-06.4f72846e5ac89395d4df98fa6f82246022b7f91b3ca98d88f1a0accef3ede935.pdf",
+                      "file_path": "courses/bmh-employee-training/v1/guides/guide-slot-06.eaf4f5f582c6e0bce7c05de1537eb8a2b1c6b5ac65fb331885c46271300656d7.pdf",
                       "filename": "slot-06-learner-guide.pdf",
                       "size_bytes": 50739,
                       "description": "Accessible learner guide for Sales Pipeline and Stage Ownership"
@@ -5368,7 +5368,7 @@
                           "back": "Six"
                         },
                         {
-                          "front": "True or False: The acquisition and transaction teams handle Stage 5 (Offer Review) and Stage 6 (Contract).",
+                          "front": "True or False: The next-step and closing processes handle Stage 5 (Offer Review) and Stage 6 (Contract).",
                           "back": "True"
                         },
                         {
@@ -5456,9 +5456,9 @@
                     },
                     {
                       "source_key": "question-slot-06-02",
-                      "question_text": "True or False: The acquisition and transaction teams handle Stage 5 (Offer Review) and Stage 6 (Contract).",
+                      "question_text": "True or False: The next-step and closing processes handle Stage 5 (Offer Review) and Stage 6 (Contract).",
                       "question_type": "true_false",
-                      "explanation": "Stages 5 and 6 are managed by the acquisition and transaction teams, not the sellers.",
+                      "explanation": "Stages 5 and 6 are managed after the handoff, not during seller-facing intake.",
                       "points": 1,
                       "sort_order": 2,
                       "options": [
@@ -5690,7 +5690,7 @@
                       "source_key": "question-slot-06-09",
                       "question_text": "What is Pipeline Stage 4?",
                       "question_type": "single_choice",
-                      "explanation": "Stage 4 is Handoff, where the lead is passed to the acquisition team for evaluation and an offer.",
+                      "explanation": "Stage 4 is Handoff, where the lead is passed to the next-step process for evaluation and an offer.",
                       "points": 1,
                       "sort_order": 9,
                       "options": [
@@ -5722,7 +5722,7 @@
                     },
                     {
                       "source_key": "question-slot-06-10",
-                      "question_text": "What must the seller brief the acquisition manager on during Stage 4?",
+                      "question_text": "What information must be documented before the Stage 4 handoff?",
                       "question_type": "multi_select",
                       "explanation": "The seller must communicate the seller's situation, expectations, and emotional triggers (hot buttons).",
                       "points": 1,
@@ -5764,7 +5764,7 @@
                       "source_key": "question-slot-06-11",
                       "question_text": "What is Pipeline Stage 5?",
                       "question_type": "single_choice",
-                      "explanation": "Stage 5 is Offer Review, handled by the acquisition team.",
+                      "explanation": "Stage 5 is Offer Review, handled by the next-step process.",
                       "points": 1,
                       "sort_order": 11,
                       "options": [
@@ -5798,7 +5798,7 @@
                       "source_key": "question-slot-06-12",
                       "question_text": "What happens once a deal reaches Stage 6?",
                       "question_type": "multi_select",
-                      "explanation": "At Stage 6, the offer is accepted, the contract is signed, and the deal moves to the transaction team for closing.",
+                      "explanation": "At Stage 6, the offer is accepted, the contract is signed, and the deal moves to the closing process.",
                       "points": 1,
                       "sort_order": 12,
                       "options": [
@@ -5816,7 +5816,7 @@
                         },
                         {
                           "source_key": "option-slot-06-12-3",
-                          "option_text": "It moves to the transaction team for closing",
+                          "option_text": "It moves to the closing process",
                           "is_correct": true,
                           "sort_order": 3
                         },
@@ -5928,7 +5928,7 @@
                       "source_key": "question-slot-06-16",
                       "question_text": "For a seller in the pipeline, what does 'The Offer' step usually involve?",
                       "question_type": "single_choice",
-                      "explanation": "Rather than providing a financial figure, The Offer step involves teeing up the handoff to the acquisition team.",
+                      "explanation": "Rather than providing a financial figure, The Offer step involves teeing up the handoff to the next-step process.",
                       "points": 1,
                       "sort_order": 16,
                       "options": [
@@ -6778,7 +6778,7 @@
               {
                 "source_key": "lesson-content-slot-08",
                 "title": "Discovery and Handoff",
-                "description": "Uncover the seller's situation, consequences, timeline, and decision process then deliver a clean acquisition handoff.",
+                "description": "Uncover the seller's situation, consequences, timeline, and decision process then deliver a clean next-step handoff.",
                 "type": "content",
                 "sort_order": 5,
                 "required": true,
@@ -6790,7 +6790,7 @@
                     "sort_order": 1,
                     "required": false,
                     "content": {
-                      "html": "<h2>What you will learn</h2><p>Uncover the seller's situation, consequences, timeline, and decision process then deliver a clean acquisition handoff.</p><ul><li>Distinguish qualification from discovery</li><li>Ask consequence and future-state questions</li><li>Confirm decision-makers and expectations</li><li>Complete a concise handoff with all required context</li></ul>"
+                      "html": "<h2>What you will learn</h2><p>Uncover the seller's situation, consequences, timeline, and decision process then deliver a clean next-step handoff.</p><ul><li>Distinguish qualification from discovery</li><li>Ask consequence and future-state questions</li><li>Confirm decision-makers and expectations</li><li>Complete a concise handoff with all required context</li></ul>"
                     }
                   },
                   {
@@ -6839,9 +6839,9 @@
                     "required": false,
                     "content": {
                       "asset_key": "guide-slot-08",
-                      "file_path": "courses/bmh-employee-training/v1/guides/guide-slot-08.e65db332fdae925fc202fd17af637454ed31b6a66f002ac5da68df0ff5813798.pdf",
+                      "file_path": "courses/bmh-employee-training/v1/guides/guide-slot-08.dfb55f84d1651fa0a005852f2a76c3888ce7dd4fd0b45840effb4032ed677074.pdf",
                       "filename": "slot-08-learner-guide.pdf",
-                      "size_bytes": 50840,
+                      "size_bytes": 50841,
                       "description": "Accessible learner guide for Discovery and Handoff"
                     }
                   },
@@ -6869,7 +6869,7 @@
                           "back": "The deeper layers of seller motivation"
                         },
                         {
-                          "front": "Why must a lead generator create 'safety' when asking about financial pressure?",
+                          "front": "Why must a representative create 'safety' when asking about financial pressure?",
                           "back": "Because sellers are often embarrassed about financial strain and need to feel safe to reveal it"
                         },
                         {
@@ -7068,7 +7068,7 @@
                     },
                     {
                       "source_key": "question-slot-08-05",
-                      "question_text": "Why must a lead generator create 'safety' when asking about financial pressure?",
+                      "question_text": "Why must a representative create 'safety' when asking about financial pressure?",
                       "question_type": "single_choice",
                       "explanation": "Sellers are often embarrassed about financial strain and need to feel safe and non-judged to reveal it.",
                       "points": 1,
@@ -7210,7 +7210,7 @@
                     },
                     {
                       "source_key": "question-slot-08-09",
-                      "question_text": "What is the first step in the acquisition handoff process?",
+                      "question_text": "What is the first step in the next-step handoff process?",
                       "question_type": "single_choice",
                       "explanation": "Before anything else, all CRM notes must be completed with every detail from discovery documented.",
                       "points": 1,
@@ -7218,7 +7218,7 @@
                       "options": [
                         {
                           "source_key": "option-slot-08-09-1",
-                          "option_text": "Briefing the acquisition manager",
+                          "option_text": "Briefing the next person in the process",
                           "is_correct": false,
                           "sort_order": 1
                         },
@@ -7244,9 +7244,9 @@
                     },
                     {
                       "source_key": "question-slot-08-10",
-                      "question_text": "What is the second step in the acquisition handoff process?",
+                      "question_text": "What is the second step in the next-step handoff process?",
                       "question_type": "single_choice",
-                      "explanation": "After completing CRM notes, you brief the acquisition manager with real context and the seller's story.",
+                      "explanation": "After completing CRM notes, you brief the next person in the process with real context and the seller's story.",
                       "points": 1,
                       "sort_order": 10,
                       "options": [
@@ -7264,7 +7264,7 @@
                         },
                         {
                           "source_key": "option-slot-08-10-3",
-                          "option_text": "Briefing the acquisition manager with real context and the seller's story",
+                          "option_text": "Briefing the next person in the process with real context and the seller's story",
                           "is_correct": true,
                           "sort_order": 3
                         },
@@ -7278,7 +7278,7 @@
                     },
                     {
                       "source_key": "question-slot-08-11",
-                      "question_text": "What is the third step in the acquisition handoff process?",
+                      "question_text": "What is the third step in the next-step handoff process?",
                       "question_type": "single_choice",
                       "explanation": "Step three is performing a warm transfer or setting a specific appointment for the next call.",
                       "points": 1,
@@ -7292,7 +7292,7 @@
                         },
                         {
                           "source_key": "option-slot-08-11-2",
-                          "option_text": "Briefing the acquisition manager",
+                          "option_text": "Briefing the next person in the process",
                           "is_correct": false,
                           "sort_order": 2
                         },
@@ -7312,7 +7312,7 @@
                     },
                     {
                       "source_key": "question-slot-08-12",
-                      "question_text": "What is the fourth step in the acquisition handoff process?",
+                      "question_text": "What is the fourth step in the next-step handoff process?",
                       "question_type": "single_choice",
                       "explanation": "The final step is framing the handoff for the seller so they know exactly what to expect next.",
                       "points": 1,
@@ -7332,7 +7332,7 @@
                         },
                         {
                           "source_key": "option-slot-08-12-3",
-                          "option_text": "Briefing the acquisition manager",
+                          "option_text": "Briefing the next person in the process",
                           "is_correct": false,
                           "sort_order": 3
                         },
@@ -7382,7 +7382,7 @@
                       "source_key": "question-slot-08-14",
                       "question_text": "What are 'hot buttons' in the context of a seller handoff?",
                       "question_type": "single_choice",
-                      "explanation": "Hot buttons are the sensitivities or specific emotional drivers that the acquisition manager needs to be aware of to avoid missteps.",
+                      "explanation": "Hot buttons are the sensitivities or specific emotional drivers that the next person in the process needs to be aware of to avoid missteps.",
                       "points": 1,
                       "sort_order": 14,
                       "options": [
@@ -7400,7 +7400,7 @@
                         },
                         {
                           "source_key": "option-slot-08-14-3",
-                          "option_text": "Sensitivities or specific emotional drivers that the acquisition manager needs to be aware of",
+                          "option_text": "Sensitivities or specific emotional drivers that the next person in the process needs to be aware of",
                           "is_correct": true,
                           "sort_order": 3
                         },
@@ -7414,7 +7414,7 @@
                     },
                     {
                       "source_key": "question-slot-08-15",
-                      "question_text": "What happens if an acquisition manager lacks context on a seller's motivation?",
+                      "question_text": "What happens if the next person in the process lacks context on a seller's motivation?",
                       "question_type": "single_choice",
                       "explanation": "Without context, they risk stepping on an emotional 'landmine' that causes the seller to shut down.",
                       "points": 1,
@@ -7484,7 +7484,7 @@
                       "source_key": "question-slot-08-17",
                       "question_text": "What property-specific information is required for a complete Stage 4 handoff?",
                       "question_type": "single_choice",
-                      "explanation": "A description of the property condition is required so the acquisition team knows what they are evaluating.",
+                      "explanation": "A description of the property condition gives the next step the information needed for evaluation.",
                       "points": 1,
                       "sort_order": 17,
                       "options": [
@@ -7518,7 +7518,7 @@
                       "source_key": "question-slot-08-18",
                       "question_text": "Before moving a lead to Stage 4, what must you confirm about the seller's price?",
                       "question_type": "single_choice",
-                      "explanation": "Confirming price expectations ensures the acquisition team has realistic parameters for their offer.",
+                      "explanation": "Confirming price expectations gives the next step realistic parameters for review.",
                       "points": 1,
                       "sort_order": 18,
                       "options": [
@@ -9652,9 +9652,9 @@
                     },
                     {
                       "source_key": "question-slot-11-16",
-                      "question_text": "What does the acquisition team handle specifically in a leaseback scenario?",
+                      "question_text": "What does the next-step process handle specifically in a leaseback scenario?",
                       "question_type": "single_choice",
-                      "explanation": "The acquisition team manages the specific terms and details of the leaseback arrangement.",
+                      "explanation": "The next-step process manages the specific terms and details of the leaseback arrangement.",
                       "points": 1,
                       "sort_order": 16,
                       "options": [
@@ -10183,9 +10183,9 @@
                     },
                     {
                       "source_key": "question-slot-12-11",
-                      "question_text": "What three logistics are handled by the transaction team after the initial agreement?",
+                      "question_text": "What three logistics are handled by the closing process after the initial agreement?",
                       "question_type": "multi_select",
-                      "explanation": "The transaction team manages title work, inspections, and closing logistics to ensure a smooth process.",
+                      "explanation": "The closing process manages title work, inspections, and closing logistics to ensure a smooth process.",
                       "points": 1,
                       "sort_order": 11,
                       "options": [
@@ -11996,9 +11996,9 @@
                     "required": false,
                     "content": {
                       "asset_key": "guide-slot-15",
-                      "file_path": "courses/bmh-employee-training/v1/guides/guide-slot-15.d0e48a60f7587f8b26b69416c8c61ca8799a2ce4799e1c09146fc0d984d3dea3.pdf",
+                      "file_path": "courses/bmh-employee-training/v1/guides/guide-slot-15.892c2f03db3a1ef5549fc16c825b202203bb046812a27f509ad62552e4bdb3e8.pdf",
                       "filename": "slot-15-learner-guide.pdf",
-                      "size_bytes": 50887,
+                      "size_bytes": 50912,
                       "description": "Accessible learner guide for Closing and Deal Engineering"
                     }
                   },
@@ -12018,19 +12018,19 @@
                           "back": "Formal agreement"
                         },
                         {
-                          "front": "How does an SDR's discovery work directly support the acquisition team during the close?",
+                          "front": "How does a representative's discovery work directly support the next-step process during the close?",
                           "back": "It provides the specific information and documentation the team needs to structure the offer"
                         },
                         {
-                          "front": "Why is it important for an SDR to understand how the closing process works? (Select all that apply)",
-                          "back": "It allows them to help with follow-ups; It helps them perform better discovery for the acquisition team"
+                          "front": "Why is it important for a representative to understand how the closing process works? (Select all that apply)",
+                          "back": "It allows them to help with follow-ups; It helps them perform better discovery for the next-step process"
                         },
                         {
                           "front": "What specific benefits are typically included in a cash offer presentation? (Select all that apply)",
                           "back": "Closing on the seller's timeline; Handling paperwork; Requiring no repairs or fees"
                         },
                         {
-                          "front": "What is the first step the acquisition team takes when a seller objects to the offer price?",
+                          "front": "What is the first step the next-step process takes when a seller objects to the offer price?",
                           "back": "Acknowledging the seller's concern with empathy"
                         },
                         {
@@ -12088,7 +12088,7 @@
                         },
                         {
                           "source_key": "option-slot-15-01-3",
-                          "option_text": "Because the acquisition team applies heavy pressure to finalize the deal",
+                          "option_text": "Because the next-step process applies heavy pressure to finalize the deal",
                           "is_correct": false,
                           "sort_order": 3
                         },
@@ -12136,9 +12136,9 @@
                     },
                     {
                       "source_key": "question-slot-15-03",
-                      "question_text": "How does an SDR's discovery work directly support the acquisition team during the close?",
+                      "question_text": "How does a representative's discovery work directly support the next-step process during the close?",
                       "question_type": "single_choice",
-                      "explanation": "Thorough discovery gives the acquisition team the specific details they need to structure an accurate and compelling offer.",
+                      "explanation": "Thorough discovery gives the next-step process the specific details they need to structure an accurate and compelling offer.",
                       "points": 1,
                       "sort_order": 3,
                       "options": [
@@ -12156,7 +12156,7 @@
                         },
                         {
                           "source_key": "option-slot-15-03-3",
-                          "option_text": "It allows the SDR to close the deal themselves",
+                          "option_text": "It allows the representative to close the deal themselves",
                           "is_correct": false,
                           "sort_order": 3
                         },
@@ -12170,9 +12170,9 @@
                     },
                     {
                       "source_key": "question-slot-15-04",
-                      "question_text": "Why is it important for an SDR to understand how the closing process works? (Select all that apply)",
+                      "question_text": "Why is it important for a representative to understand how the closing process works? (Select all that apply)",
                       "question_type": "multi_select",
-                      "explanation": "Understanding the close helps SDRs contribute to follow-ups and conduct better discovery that serves the acquisition team.",
+                      "explanation": "Understanding the close helps representatives contribute to follow-ups and conduct better discovery that serves the next-step process.",
                       "points": 1,
                       "sort_order": 4,
                       "options": [
@@ -12184,7 +12184,7 @@
                         },
                         {
                           "source_key": "option-slot-15-04-2",
-                          "option_text": "It helps them perform better discovery for the acquisition team",
+                          "option_text": "It helps them perform better discovery for the next-step process",
                           "is_correct": true,
                           "sort_order": 2
                         },
@@ -12196,7 +12196,7 @@
                         },
                         {
                           "source_key": "option-slot-15-04-4",
-                          "option_text": "It replaces the need for an acquisition team",
+                          "option_text": "It replaces the need for a next-step process",
                           "is_correct": false,
                           "sort_order": 4
                         }
@@ -12244,7 +12244,7 @@
                     },
                     {
                       "source_key": "question-slot-15-06",
-                      "question_text": "What is the first step the acquisition team takes when a seller objects to the offer price?",
+                      "question_text": "What is the first step the next-step process takes when a seller objects to the offer price?",
                       "question_type": "single_choice",
                       "explanation": "Acknowledging the concern with empathy validates the seller's feelings before attempting to reframe.",
                       "points": 1,
@@ -12338,7 +12338,7 @@
                         },
                         {
                           "source_key": "option-slot-15-08-4",
-                          "option_text": "The acquisition team will need to renegotiate",
+                          "option_text": "The next-step process will need to renegotiate",
                           "is_correct": false,
                           "sort_order": 4
                         }
@@ -12370,25 +12370,25 @@
                       "source_key": "question-slot-15-10",
                       "question_text": "Which team manages the deal once the contract has been signed?",
                       "question_type": "single_choice",
-                      "explanation": "After signing, the transaction team takes over to handle all logistics through closing.",
+                      "explanation": "After signing, the closing process takes over to handle all logistics through closing.",
                       "points": 1,
                       "sort_order": 10,
                       "options": [
                         {
                           "source_key": "option-slot-15-10-1",
-                          "option_text": "The transaction team",
+                          "option_text": "The closing process",
                           "is_correct": true,
                           "sort_order": 1
                         },
                         {
                           "source_key": "option-slot-15-10-2",
-                          "option_text": "The acquisition team",
+                          "option_text": "The next-step process",
                           "is_correct": false,
                           "sort_order": 2
                         },
                         {
                           "source_key": "option-slot-15-10-3",
-                          "option_text": "The SDR team",
+                          "option_text": "The current team",
                           "is_correct": false,
                           "sort_order": 3
                         },
@@ -12402,9 +12402,9 @@
                     },
                     {
                       "source_key": "question-slot-15-11",
-                      "question_text": "What responsibilities does the transaction coordinator handle? (Select all that apply)",
+                      "question_text": "What responsibilities does the person coordinating closing logistics handle? (Select all that apply)",
                       "question_type": "multi_select",
-                      "explanation": "The transaction coordinator manages all post-contract logistics to ensure a smooth closing.",
+                      "explanation": "The person coordinating closing logistics manages all post-contract logistics to ensure a smooth closing.",
                       "points": 1,
                       "sort_order": 11,
                       "options": [
@@ -12468,7 +12468,7 @@
                         },
                         {
                           "source_key": "option-slot-15-12-4",
-                          "option_text": "The transaction coordinator being unresponsive",
+                          "option_text": "The person coordinating closing logistics being unresponsive",
                           "is_correct": false,
                           "sort_order": 4
                         }
@@ -12540,7 +12540,7 @@
                       "source_key": "question-slot-15-15",
                       "question_text": "A 'well-documented' lead contains thorough notes and property data necessary for making an accurate offer.",
                       "question_type": "true_false",
-                      "explanation": "Complete documentation allows the acquisition team to structure offers without needing to go back for missing information.",
+                      "explanation": "Complete documentation allows the next-step process to structure offers without needing to go back for missing information.",
                       "points": 1,
                       "sort_order": 15,
                       "options": [
@@ -12630,13 +12630,13 @@
                       "source_key": "question-slot-15-18",
                       "question_text": "What is the final stage for a deal before it generates revenue?",
                       "question_type": "single_choice",
-                      "explanation": "The closing and funds transfer, managed by the transaction team, is the last step before the deal produces revenue.",
+                      "explanation": "The closing and funds transfer, managed by the closing process, is the last step before the deal produces revenue.",
                       "points": 1,
                       "sort_order": 18,
                       "options": [
                         {
                           "source_key": "option-slot-15-18-1",
-                          "option_text": "The closing/funds transfer managed by the transaction team",
+                          "option_text": "The closing/funds transfer managed by the closing process",
                           "is_correct": true,
                           "sort_order": 1
                         },
@@ -13250,7 +13250,7 @@
                         },
                         {
                           "source_key": "option-slot-16-13-4",
-                          "option_text": "The acquisition team is not making offers",
+                          "option_text": "The next-step process is not making offers",
                           "is_correct": false,
                           "sort_order": 4
                         }
@@ -14632,7 +14632,7 @@
                     },
                     {
                       "source_key": "question-slot-18-12",
-                      "question_text": "Which stage triggers the official handoff to the acquisitions team?",
+                      "question_text": "Which stage triggers the official handoff to the next-step process?",
                       "question_type": "single_choice",
                       "explanation": "A move to Stage 4 kicks off the handoff process.",
                       "points": 1,

@@ -44,7 +44,7 @@ const SHA256_PATTERN = /^[a-f0-9]{64}$/;
 const ISO_TIMESTAMP_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/;
 
 const VIDEO_SOURCES = [
-  ["video-slot-01-welcome", 1, "Welcome and the Navigator's Playbook", "Part A", "course-assets/review-lessonA/LESSON-1A-v7.mp4"],
+  ["video-slot-01-welcome", 1, "Welcome and the Service Playbook", "Part A", "course-assets/review-lessonA/LESSON-1A-v7.mp4"],
   ["video-slot-01-mindset", 1, "Mindset", "Part B", "course-assets/review-lessonB/LESSON-1B-v4.mp4"],
   ["video-slot-02-terms", 2, "Real Estate Terms Glossary", null, "course-assets/review-lessonGLOA/LESSON-GLOA-v9.mp4"],
   ["video-slot-03-tech-stack", 3, "Tech Stack and Systems", null, "course-assets/review-lessonTECHA/LESSON-TECHA-v5.mp4"],
@@ -81,7 +81,7 @@ const LESSONS = [
     module: 1,
     title: "Welcome and Mindset",
     summary: "Learn the BMH Group service standard and the mindset that keeps seller conversations clear, calm, and human.",
-    objectives: ["Explain the Navigator role", "Put service before pressure", "Use curiosity and clarity in seller conversations", "Detach from outcomes while staying accountable"],
+    objectives: ["Explain the BMH service standard", "Put service before pressure", "Use curiosity and clarity in seller conversations", "Detach from outcomes while staying accountable"],
     guide: ["The goal is an aligned decision, not a forced yes", "Listen for the seller's real problem before discussing a solution", "Treat repetition as practice that creates calm", "A respectful no is better than a pressured agreement"],
   },
   {
@@ -136,7 +136,7 @@ const LESSONS = [
     slot: 8,
     module: 3,
     title: "Discovery and Handoff",
-    summary: "Uncover the seller's situation, consequences, timeline, and decision process then deliver a clean acquisition handoff.",
+    summary: "Uncover the seller's situation, consequences, timeline, and decision process then deliver a clean next-step handoff.",
     objectives: ["Distinguish qualification from discovery", "Ask consequence and future-state questions", "Confirm decision-makers and expectations", "Complete a concise handoff with all required context"],
     guide: ["Discovery explains why the seller may act", "Ask one question at a time and listen to the full answer", "Do not diagnose or advise outside your role", "A clean handoff lets the next person continue without making the seller repeat everything"],
   },
@@ -987,6 +987,51 @@ async function sourceQuestions(slot, quizSourceRoot) {
   return spreadSelect(candidates, 18);
 }
 
+const ROLE_AGNOSTIC_COURSE_TEXT_REPLACEMENTS = [
+  [/\bflag any seller who mentions an official notice for your acquisition manager immediately\b/gi, "document any official notice promptly and alert your manager"],
+  [/\bWhat must the seller brief the acquisition manager on during Stage 4\?/gi, "What information must be documented before the Stage 4 handoff?"],
+  [/\bA description of the property condition is required so the acquisition team knows what they are evaluating\b/gi, "A description of the property condition gives the next step the information needed for evaluation"],
+  [/\bConfirming price expectations ensures the acquisition team has realistic parameters for their offer\b/gi, "Confirming price expectations gives the next step realistic parameters for review"],
+  [/\bTrue or False: The acquisition and transaction teams handle Stage 5 \(Offer Review\) and Stage 6 \(Contract\)\./gi, "True or False: The next-step and closing processes handle Stage 5 (Offer Review) and Stage 6 (Contract)."],
+  [/\bStages 5 and 6 are managed by the acquisition and transaction teams, not the sellers\./gi, "Stages 5 and 6 are managed after the handoff, not during seller-facing intake."],
+  [/\bNavigator role\b/gi, "BMH service standard"],
+  [/\bNavigator\b/gi, "representative"],
+  [/\bvirtual onboarding specialist\b/gi, "onboarding support"],
+  [/\blead generator\b/gi, "representative"],
+  [/\byour acquisition manager\b/gi, "the next person in the process"],
+  [/\bthe acquisition manager\b/gi, "the next person in the process"],
+  [/\ban acquisition manager\b/gi, "the next person in the process"],
+  [/\bacquisition manager\b/gi, "the next person in the process"],
+  [/\bthe acquisitions? team\b/gi, "the next-step process"],
+  [/\ban acquisitions? team\b/gi, "a next-step process"],
+  [/\bacquisitions? team\b/gi, "next-step process"],
+  [/\bacquisition handoff\b/gi, "next-step handoff"],
+  [/\btransaction coordinator\b/gi, "person coordinating closing logistics"],
+  [/\btransaction teams\b/gi, "closing processes"],
+  [/\bthe transaction team for closing\b/gi, "the closing process"],
+  [/\bthe transaction team\b/gi, "the closing process"],
+  [/\btransaction team\b/gi, "closing process"],
+  [/\bteam lead\b/gi, "manager"],
+  [/\bSDR team\b/g, "current team", false],
+  [/\ban SDR's\b/gi, "a representative's", false],
+  [/\ban SDR\b/gi, "a representative", false],
+  [/\bSDR's\b/g, "representative's", false],
+  [/\bSDRs\b/g, "representatives", false],
+  [/\bSDR\b/g, "representative", false],
+];
+
+export function normalizeRoleAgnosticCourseText(value) {
+  return ROLE_AGNOSTIC_COURSE_TEXT_REPLACEMENTS.reduce(
+    (text, [pattern, replacement, preserveInitialCase = true]) => text.replace(
+      pattern,
+      (match) => preserveInitialCase && /^[A-Z]/.test(match)
+        ? `${replacement[0].toUpperCase()}${replacement.slice(1)}`
+        : replacement,
+    ),
+    String(value),
+  );
+}
+
 function shapeQuestion(slot, question, index) {
   const correctCount = question.choices.filter((choice) => choice.startsWith("*")).length;
   const strippedChoices = question.choices.map((choice) => choice.replace(/^\*/, ""));
@@ -1001,14 +1046,17 @@ function shapeQuestion(slot, question, index) {
   }
   return {
     source_key: `question-slot-${String(slot).padStart(2, "0")}-${String(index + 1).padStart(2, "0")}`,
-    question_text: question.questionText.trim(),
+    question_text: normalizeRoleAgnosticCourseText(question.questionText.trim()),
     question_type: questionType,
-    explanation: question.explanation?.trim() || "Review the lesson and compare each choice with the process described there.",
+    explanation: normalizeRoleAgnosticCourseText(
+      question.explanation?.trim()
+        || "Review the lesson and compare each choice with the process described there.",
+    ),
     points: 1,
     sort_order: index + 1,
     options: question.choices.map((choice, optionIndex) => ({
       source_key: `option-slot-${String(slot).padStart(2, "0")}-${String(index + 1).padStart(2, "0")}-${optionIndex + 1}`,
-      option_text: choice.replace(/^\*/, "").trim(),
+      option_text: normalizeRoleAgnosticCourseText(choice.replace(/^\*/, "").trim()),
       is_correct: choice.startsWith("*"),
       sort_order: optionIndex + 1,
     })),

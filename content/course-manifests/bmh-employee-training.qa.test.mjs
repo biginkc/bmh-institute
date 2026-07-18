@@ -3,9 +3,11 @@ import { test } from "node:test";
 
 import {
   loadManifest,
+  STALE_ROLE_BOUND_COURSE_PATTERN,
   summarizeManifest,
   validateManifest,
 } from "../../scripts/course-content/validate-manifest.mjs";
+import { normalizeRoleAgnosticCourseText } from "../../scripts/course-content/build-manifest.mjs";
 
 const MANIFEST_URL = new URL("./bmh-employee-training.v1.json", import.meta.url);
 const STACK_CONFIRMATION_URL = new URL(
@@ -31,6 +33,29 @@ test("the draft contains the locked course structure", async () => {
     guideAssets: 19,
     guideBlocks: 19,
   });
+});
+
+test("learner-authored course text is role-agnostic without rewriting product or scenario identity", async () => {
+  const manifest = await loadManifest(MANIFEST_URL);
+  assert.doesNotMatch(JSON.stringify(manifest.program), STALE_ROLE_BOUND_COURSE_PATTERN);
+  assert.match(JSON.stringify(manifest.program), /Closer Lab/);
+  assert.match(JSON.stringify(manifest.program), /Guarded inbound seller/);
+
+  assert.equal(
+    normalizeRoleAgnosticCourseText("The Navigator briefs the acquisition manager and the transaction coordinator."),
+    "The Representative briefs the next person in the process and the person coordinating closing logistics.",
+  );
+  assert.equal(
+    normalizeRoleAgnosticCourseText("How does an SDR's work support Closer Lab?"),
+    "How does a representative's work support Closer Lab?",
+  );
+
+  const stale = structuredClone(manifest);
+  stale.program.courses[0].modules[0].lessons[0].blocks[0].content.html +=
+    "<p>The Navigator owns this step.</p>";
+  assert.ok(validateManifest(stale).errors.some((error) =>
+    error.includes("Stale named-role wording detected") && error.includes("Navigator"),
+  ));
 });
 
 test("every video has its own release-gated poster asset", async () => {

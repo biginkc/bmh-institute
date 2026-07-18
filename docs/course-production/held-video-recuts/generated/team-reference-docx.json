@@ -9,7 +9,7 @@
       "sha256": "32320a5c3352b26ad6e23d309ba5248791b4d430deafd31d4d90fc91c5c165bd",
       "size_bytes": 39968,
       "package_path": "docs/course-production/held-video-recuts/video-slot-01-welcome.json",
-      "package_sha256": "b2c91bd2004c3c6de5e931a0f695755937a97bc6573b0ff811cab67d4cefc559",
+      "package_sha256": "32dc5d7e7e0a30fc484c890445ad7dbcd3f2a9c946a48c1d081301171a691ccb",
       "script_path": "docs/course-production/held-video-recuts/generated/video-slot-01-welcome-script.txt",
       "script_sha256": "a52dad836a0715542455fb469f5558ed4338434e43209596db93dcef5ba397e0"
     },
@@ -19,7 +19,7 @@
       "sha256": "42a0a72fe3a77046dce93fd1b8d05cf4f5609a9e2648444d09b27c1b5a983b56",
       "size_bytes": 40608,
       "package_path": "docs/course-production/held-video-recuts/video-slot-01-mindset.json",
-      "package_sha256": "103ffb9342ca477c851e154b2d9d1bd75a1e2e45e0717dc7a5ed7a247d5f0c16",
+      "package_sha256": "71913569b19d62a25745c043c1d5e384c8dc1eb91207554502d27a5aeaa13e51",
       "script_path": "docs/course-production/held-video-recuts/generated/video-slot-01-mindset-script.txt",
       "script_sha256": "f58032cfeb6d5d9c83a205908d2408e9dc4f44c64f2906c18a5537f29a275c9a"
     },

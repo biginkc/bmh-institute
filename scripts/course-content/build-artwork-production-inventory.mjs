@@ -1046,7 +1046,12 @@ const inventoryLessons = lessonSpecs.map((spec, index) => {
     return {
       asset_key: assetKey,
       video_asset_key: block.content.asset_key,
-      video_title: block.content.title,
+      // The approved welcome poster recipe is checksum-bound to its historical
+      // production title. Keep that lineage label stable while the learner-facing
+      // course title remains free to use the role-agnostic service wording.
+      video_title: block.content.asset_key === "video-slot-01-welcome"
+        ? "Welcome and the Navigator's Playbook"
+        : block.content.title,
       output_path: outputPath,
       focus_subject: focusSubject,
       art_direction: posterArtDirection,

@@ -14,7 +14,7 @@
   "lesson_contract": {
     "lesson_source_key": "lesson-content-slot-01",
     "objective": "Learn the BMH Group service standard and the mindset that keeps seller conversations clear, calm, and human.",
-    "objective_points": ["Explain the Navigator role", "Put service before pressure", "Use curiosity and clarity in seller conversations", "Detach from outcomes while staying accountable"],
+    "objective_points": ["Explain the BMH service standard", "Put service before pressure", "Use curiosity and clarity in seller conversations", "Detach from outcomes while staying accountable"],
     "next_sequence": ["lesson-quiz-slot-01", "lesson-content-slot-02"],
     "transition_spoken_text": "Take the Welcome and Mindset checkpoint next. Then move into Terms Glossary."
   },
