@@ -90,10 +90,13 @@ jobs:
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.TEST_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.TEST_SUPABASE_SERVICE_ROLE_KEY }}
-        run: >-
-          npm run course:import -- apply
-          content/course-manifests/bmh-employee-training-canary.v1.json
-          --canary --execute
+        run: |
+          npm run course:import -- upload \
+            content/course-manifests/bmh-employee-training-canary.v1.json \
+            --canary --execute
+          npm run course:import -- apply \
+            content/course-manifests/bmh-employee-training-canary.v1.json \
+            --canary --execute
 
       - name: Verify Tech Stack canary has no remote drift
         env:
