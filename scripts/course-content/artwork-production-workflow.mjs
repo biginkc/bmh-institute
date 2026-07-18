@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from "node:crypto";
-import { copyFile, lstat, mkdir, open, readFile, realpath, rename } from "node:fs/promises";
+import { copyFile, link, lstat, mkdir, open, readFile, realpath, rename, rm } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -16,6 +16,9 @@ export const DEFAULT_PATHS = Object.freeze({
   inventory: "docs/course-production/thumbnail-pilots/production-inventory.json",
   ledger: "docs/course-production/thumbnail-pilots/production-ledger.json",
   manifest: "content/course-manifests/bmh-employee-training.v1.json",
+  contactSheet: "docs/course-production/thumbnail-pilots/qa/current-artwork-contact-sheet-2026-07-17.png",
+  contactSheetIndex: "docs/course-production/thumbnail-pilots/qa/current-artwork-contact-sheet-2026-07-17.json",
+  finalReviewRequest: "docs/course-production/thumbnail-pilots/approvals/final-artwork-review-request-v1.json",
 });
 
 const APPROVED = "approved";
@@ -25,6 +28,14 @@ const ISO_TIMESTAMP = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/;
 const BLUE = [103, 182, 255];
 const YELLOW = [255, 211, 1];
 const LOCKED_BACKGROUND_RGB = new Set([BLUE.join(","), YELLOW.join(",")]);
+export const FINAL_ARTWORK_APPROVAL_RESPONSE =
+  "Approved: I approve all 28 artwork masters and all 49 exact checksum-bound assets in this request for promotion into the BMH Institute course manifest.";
+const FINAL_REVIEW_COLUMNS = 4;
+const FINAL_REVIEW_TILE_WIDTH = 320;
+const FINAL_REVIEW_ARTWORK_HEIGHT = 200;
+const FINAL_REVIEW_LABEL_HEIGHT = 44;
+const FINAL_REVIEW_GUTTER = 12;
+const FINAL_REVIEW_MARGIN = 20;
 
 function clone(value) {
   return structuredClone(value);
@@ -149,6 +160,38 @@ export async function writeJsonAtomic(filePath, value, { root = null } = {}) {
   }
   await rename(temporary, filePath);
   await syncDirectory(path.dirname(filePath));
+}
+
+export async function writeJsonAtomicCreateOrExact(filePath, value, { root = null } = {}) {
+  await prepareSafeWriteParent(root, filePath);
+  const expected = Buffer.from(`${JSON.stringify(value, null, 2)}\n`);
+  try {
+    const existing = await readFile(filePath);
+    assert(existing.equals(expected), `Write-once artifact already exists with different bytes: ${filePath}`);
+    return { status: "reused", checksum_sha256: sha256(existing) };
+  } catch (error) {
+    if (error?.code !== "ENOENT") throw error;
+  }
+  const temporary = path.join(path.dirname(filePath), `.${path.basename(filePath)}.${process.pid}.${randomUUID()}.tmp`);
+  const handle = await open(temporary, "wx", 0o600);
+  try {
+    await handle.writeFile(expected);
+    await handle.sync();
+  } finally {
+    await handle.close();
+  }
+  try {
+    await link(temporary, filePath);
+    await syncDirectory(path.dirname(filePath));
+    return { status: "created", checksum_sha256: sha256(expected) };
+  } catch (error) {
+    if (error?.code !== "EEXIST") throw error;
+    const existing = await readFile(filePath);
+    assert(existing.equals(expected), `Write-once artifact concurrently appeared with different bytes: ${filePath}`);
+    return { status: "reused", checksum_sha256: sha256(existing) };
+  } finally {
+    await rm(temporary, { force: true });
+  }
 }
 
 async function writeBufferAtomic(filePath, buffer, root) {
@@ -895,6 +938,347 @@ async function validateEvidence(root, relativePath, requiredValues) {
   return { path: relativePath, sha256: record.checksum_sha256 };
 }
 
+function assertExactKeys(value, expected, label) {
+  assert(value && typeof value === "object" && !Array.isArray(value), `${label} must be an object`);
+  const actual = Object.keys(value).sort();
+  const wanted = [...expected].sort();
+  assert(JSON.stringify(actual) === JSON.stringify(wanted), `${label} fields are invalid`);
+}
+
+function finalReviewMasterBindings(ledger) {
+  return ledger.masters.map((master) => {
+    let contactSheetInput = null;
+    if (master.contact_sheet_input) {
+      assertString(master.contact_sheet_input.id, `${master.id} contact-sheet input id`);
+      assertString(master.contact_sheet_input.path, `${master.id} contact-sheet input path`);
+      assert(!path.isAbsolute(master.contact_sheet_input.path) && !master.contact_sheet_input.path.split("/").includes(".."), `${master.id} contact-sheet input path is unsafe`);
+      assert(SHA256.test(master.contact_sheet_input.sha256), `${master.id} contact-sheet input checksum is invalid`);
+      contactSheetInput = {
+        id: master.contact_sheet_input.id,
+        path: master.contact_sheet_input.path,
+        sha256: master.contact_sheet_input.sha256,
+      };
+    }
+    return {
+      master_id: master.id,
+      terminal_source_sha256: master.terminal_source_sha256,
+      flat_master_sha256: master.flat_master_sha256,
+      video_evidence: master.video_evidence.map((entry, index) => {
+      const evidencePath = entry.local_path ?? entry.path;
+      const evidenceSha256 = entry.checksum_sha256 ?? entry.sha256;
+      assertString(evidencePath, `${master.id} video evidence ${index + 1} path`);
+      assert(!path.isAbsolute(evidencePath) && !evidencePath.split("/").includes(".."), `${master.id} video evidence ${index + 1} path is unsafe`);
+      assert(SHA256.test(evidenceSha256), `${master.id} video evidence ${index + 1} checksum is invalid`);
+      return {
+        asset_key: entry.asset_key ?? null,
+        path: evidencePath,
+        sha256: evidenceSha256,
+      };
+    }),
+      contact_sheet_input: contactSheetInput,
+    };
+  });
+}
+
+function finalReviewAssetBindings(ledger) {
+  return ledger.assets.map((asset) => ({
+    asset_key: asset.asset_key,
+    output_path: asset.output_path,
+    checksum_sha256: asset.checksum_sha256,
+    pixel_sha256: asset.pixel_sha256,
+  }));
+}
+
+function finalReviewBindings(ledger) {
+  const masters = finalReviewMasterBindings(ledger);
+  const assets = finalReviewAssetBindings(ledger);
+  return { masters, assets };
+}
+
+async function parseStructuredJson(record, label) {
+  try {
+    return JSON.parse(record.contents.toString("utf8"));
+  } catch (error) {
+    throw new Error(`${label} must be structured JSON`, { cause: error });
+  }
+}
+
+function assertFinalReviewLedgerReady(ledger) {
+  assert(["production", "finalized"].includes(ledger.status), "Final artwork review requires the production or finalized ledger state");
+  assert(ledger.masters.length === 28, "Final artwork review request requires exactly 28 masters");
+  assert(ledger.assets.length === 49, "Final artwork review request requires exactly 49 assets");
+  assert(ledger.masters.every((master) => master.status === "derived"), "Final artwork review request requires every master to be derived");
+  for (const master of ledger.masters) {
+    assert(SHA256.test(master.terminal_source_sha256), `${master.id} terminal source checksum is missing from final review`);
+    assert(SHA256.test(master.flat_master_sha256), `${master.id} flat-master checksum is missing from final review`);
+  }
+  for (const asset of ledger.assets) {
+    assert(SHA256.test(asset.checksum_sha256), `${asset.asset_key} encoded checksum is missing from final review`);
+    assert(SHA256.test(asset.pixel_sha256), `${asset.asset_key} pixel checksum is missing from final review`);
+  }
+}
+
+function escapeFinalReviewXml(value) {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
+}
+
+function finalReviewLabelSvg(label) {
+  const safeLabel = escapeFinalReviewXml(label);
+  return Buffer.from(
+    `<svg width="${FINAL_REVIEW_TILE_WIDTH}" height="${FINAL_REVIEW_LABEL_HEIGHT}" xmlns="http://www.w3.org/2000/svg">` +
+      `<rect width="100%" height="100%" fill="#ffffff"/>` +
+      `<text x="10" y="17" font-family="Arial, sans-serif" font-size="12" font-weight="700" fill="#111111">${safeLabel}</text>` +
+      `<text x="10" y="34" font-family="Arial, sans-serif" font-size="10" fill="#555555">current ledger bytes - review pending</text>` +
+      `</svg>`,
+  );
+}
+
+export async function buildDeterministicFinalContactSheet({ root, ledger }) {
+  const assets = [...ledger.assets].sort((left, right) =>
+    left.asset_key.localeCompare(right.asset_key, "en", { numeric: true }),
+  );
+  assert(assets.length === 49, "Final contact sheet requires exactly 49 assets");
+  const rows = Math.ceil(assets.length / FINAL_REVIEW_COLUMNS);
+  const cellHeight = FINAL_REVIEW_ARTWORK_HEIGHT + FINAL_REVIEW_LABEL_HEIGHT;
+  const canvasWidth = FINAL_REVIEW_MARGIN * 2 + FINAL_REVIEW_COLUMNS * FINAL_REVIEW_TILE_WIDTH + (FINAL_REVIEW_COLUMNS - 1) * FINAL_REVIEW_GUTTER;
+  const canvasHeight = FINAL_REVIEW_MARGIN * 2 + rows * cellHeight + (rows - 1) * FINAL_REVIEW_GUTTER;
+  const composites = [];
+  const indexAssets = [];
+  for (const [position, asset] of assets.entries()) {
+    const source = await readFile(resolveRepoPath(root, asset.output_path));
+    assert(sha256(source) === asset.checksum_sha256, `${asset.asset_key} source bytes drifted before contact-sheet review`);
+    const image = await sharp(source)
+      .resize(FINAL_REVIEW_TILE_WIDTH, FINAL_REVIEW_ARTWORK_HEIGHT, {
+        fit: "contain",
+        background: { r: 245, g: 245, b: 245, alpha: 1 },
+        kernel: sharp.kernel.lanczos3,
+      })
+      .png()
+      .toBuffer();
+    const column = position % FINAL_REVIEW_COLUMNS;
+    const row = Math.floor(position / FINAL_REVIEW_COLUMNS);
+    const left = FINAL_REVIEW_MARGIN + column * (FINAL_REVIEW_TILE_WIDTH + FINAL_REVIEW_GUTTER);
+    const top = FINAL_REVIEW_MARGIN + row * (cellHeight + FINAL_REVIEW_GUTTER);
+    composites.push({ input: image, left, top });
+    composites.push({ input: finalReviewLabelSvg(asset.asset_key), left, top: top + FINAL_REVIEW_ARTWORK_HEIGHT });
+    indexAssets.push({
+      position: position + 1,
+      asset_key: asset.asset_key,
+      output_path: asset.output_path,
+      ledger_checksum_sha256: asset.checksum_sha256,
+      rendered_input_sha256: sha256(source),
+      approval_status: MISSING,
+    });
+  }
+  const contents = await sharp({
+    create: {
+      width: canvasWidth,
+      height: canvasHeight,
+      channels: 3,
+      background: { r: 229, g: 231, b: 235 },
+    },
+  })
+    .composite(composites)
+    .png({ compressionLevel: 9, adaptiveFiltering: false })
+    .toBuffer();
+  return {
+    contents,
+    index: {
+      schema_version: "bmh-current-artwork-contact-sheet/v1",
+      ledger_path: DEFAULT_PATHS.ledger,
+      asset_count: indexAssets.length,
+      columns: FINAL_REVIEW_COLUMNS,
+      contact_sheet_path: null,
+      contact_sheet_sha256: sha256(contents),
+      assets: indexAssets,
+    },
+  };
+}
+
+async function validateContactSheetIndex({ root, ledger, contactSheetPath, contactSheetIndexPath }) {
+  const [contactSheet, indexRecord, rebuilt] = await Promise.all([
+    fileRecord(root, contactSheetPath),
+    fileRecord(root, contactSheetIndexPath),
+    buildDeterministicFinalContactSheet({ root, ledger }),
+  ]);
+  const index = await parseStructuredJson(indexRecord, "Final artwork contact-sheet index");
+  assertExactKeys(index, ["schema_version", "ledger_path", "asset_count", "columns", "contact_sheet_path", "contact_sheet_sha256", "assets"], "Final artwork contact-sheet index");
+  assert(index?.schema_version === "bmh-current-artwork-contact-sheet/v1", "Final artwork contact-sheet index schema is invalid");
+  assert(index.contact_sheet_path === contactSheetPath, "Final artwork contact-sheet path drifted");
+  assert(index.contact_sheet_sha256 === contactSheet.checksum_sha256, "Final artwork contact-sheet checksum drifted");
+  assert(index.ledger_path === DEFAULT_PATHS.ledger, "Final artwork contact-sheet ledger path drifted");
+  assert(index.columns === FINAL_REVIEW_COLUMNS, "Final artwork contact-sheet must use exactly four columns");
+  assert(index.asset_count === 49 && Array.isArray(index.assets) && index.assets.length === 49, "Final artwork contact-sheet index must bind 49 assets");
+  for (const [position, item] of index.assets.entries()) {
+    assertExactKeys(item, ["position", "asset_key", "output_path", "ledger_checksum_sha256", "rendered_input_sha256", "approval_status"], `Final artwork contact-sheet index asset ${position + 1}`);
+    assert(item.position === position + 1, `Final artwork contact-sheet position ${position + 1} drifted`);
+  }
+  const expectedIndex = { ...rebuilt.index, contact_sheet_path: contactSheetPath };
+  assert(JSON.stringify(index) === JSON.stringify(expectedIndex), "Final artwork contact-sheet index is not the deterministic 49-position index");
+  assert(contactSheet.contents.equals(rebuilt.contents), "Final artwork contact-sheet bytes are not the deterministic rebuild");
+  const [actualPixels, expectedPixels] = await Promise.all([
+    sharp(contactSheet.contents).removeAlpha().raw().toBuffer(),
+    sharp(rebuilt.contents).removeAlpha().raw().toBuffer(),
+  ]);
+  assert(actualPixels.equals(expectedPixels), "Final artwork contact-sheet pixels are not the deterministic rebuild");
+  return { contactSheet, indexRecord };
+}
+
+export async function buildFinalReviewRequest({
+  root,
+  ledger,
+  contactSheetPath = DEFAULT_PATHS.contactSheet,
+  contactSheetIndexPath = DEFAULT_PATHS.contactSheetIndex,
+}) {
+  assertFinalReviewLedgerReady(ledger);
+  assert(ledger.status === "production", "Final artwork review request requires the production ledger state");
+  assert(ledger.masters.every((master) => master.review.status === "pending"), "Final artwork review request must be prepared before any master review is recorded");
+  const [{ contactSheet: contactSheetRecord, indexRecord }, inventoryRecord, ledgerRecord] = await Promise.all([
+    validateContactSheetIndex({ root, ledger, contactSheetPath, contactSheetIndexPath }),
+    fileRecord(root, DEFAULT_PATHS.inventory),
+    fileRecord(root, DEFAULT_PATHS.ledger),
+  ]);
+  const bindings = finalReviewBindings(ledger);
+  const contactSheet = {
+    path: contactSheetPath,
+    sha256: contactSheetRecord.checksum_sha256,
+    index_path: contactSheetIndexPath,
+    index_sha256: indexRecord.checksum_sha256,
+  };
+  const inventorySnapshot = {
+    path: DEFAULT_PATHS.inventory,
+    sha256: inventoryRecord.checksum_sha256,
+  };
+  const ledgerSnapshot = {
+    path: DEFAULT_PATHS.ledger,
+    sha256: ledgerRecord.checksum_sha256,
+  };
+  const bindingsSha256 = sha256(JSON.stringify({
+    contact_sheet: contactSheet,
+    inventory_snapshot: inventorySnapshot,
+    ledger_snapshot: ledgerSnapshot,
+    masters: bindings.masters,
+    assets: bindings.assets,
+  }));
+  return {
+    schema_version: "bmh-artwork-final-review-request/v1",
+    status: "pending-human-review",
+    request_id: `bmh-artwork-final-review-${bindingsSha256}`,
+    review_instruction: `To approve all 28 masters and all 49 exact assets for course-manifest promotion, respond exactly: ${FINAL_ARTWORK_APPROVAL_RESPONSE}`,
+    contact_sheet: contactSheet,
+    inventory_snapshot: inventorySnapshot,
+    ledger_snapshot: ledgerSnapshot,
+    bindings_sha256: bindingsSha256,
+    masters: bindings.masters,
+    assets: bindings.assets,
+  };
+}
+
+export async function validateFinalReviewRequest({ root, ledger, request, requireLedgerSnapshot = false }) {
+  assertFinalReviewLedgerReady(ledger);
+  assertExactKeys(request, [
+    "schema_version", "status", "request_id", "review_instruction", "contact_sheet",
+    "inventory_snapshot", "ledger_snapshot", "bindings_sha256", "masters", "assets",
+  ], "Final artwork review request");
+  assert(request.schema_version === "bmh-artwork-final-review-request/v1", "Final artwork review request schema is invalid");
+  assert(request.status === "pending-human-review", "Final artwork review request must remain pending");
+  assertString(request.request_id, "final artwork review request_id");
+  assert(/^bmh-artwork-final-review-[a-f0-9]{64}$/.test(request.request_id), "Final artwork review request_id is invalid");
+  assertString(request.review_instruction, "final artwork review instruction");
+  assertExactKeys(request.contact_sheet, ["path", "sha256", "index_path", "index_sha256"], "Final artwork contact-sheet binding");
+  assertExactKeys(request.inventory_snapshot, ["path", "sha256"], "Final artwork inventory snapshot");
+  assertExactKeys(request.ledger_snapshot, ["path", "sha256"], "Final artwork ledger snapshot");
+  assert(request.inventory_snapshot.path === DEFAULT_PATHS.inventory, "Final artwork inventory path drifted");
+  assert(request.ledger_snapshot.path === DEFAULT_PATHS.ledger, "Final artwork ledger path drifted");
+  for (const [label, value] of [
+    ["contact-sheet", request.contact_sheet.sha256],
+    ["contact-sheet index", request.contact_sheet.index_sha256],
+    ["inventory snapshot", request.inventory_snapshot.sha256],
+    ["ledger snapshot", request.ledger_snapshot.sha256],
+    ["binding", request.bindings_sha256],
+  ]) assert(SHA256.test(value), `Final artwork ${label} checksum is invalid`);
+  const [{ contactSheet, indexRecord }, inventoryRecord] = await Promise.all([
+    validateContactSheetIndex({
+      root,
+      ledger,
+      contactSheetPath: request.contact_sheet.path,
+      contactSheetIndexPath: request.contact_sheet.index_path,
+    }),
+    fileRecord(root, DEFAULT_PATHS.inventory),
+  ]);
+  assert(contactSheet.checksum_sha256 === request.contact_sheet.sha256, "Final artwork contact-sheet request binding drifted");
+  assert(indexRecord.checksum_sha256 === request.contact_sheet.index_sha256, "Final artwork contact-sheet index request binding drifted");
+  assert(inventoryRecord.checksum_sha256 === request.inventory_snapshot.sha256, "Final artwork inventory snapshot drifted");
+  const bindings = finalReviewBindings(ledger);
+  assert(JSON.stringify(request.masters) === JSON.stringify(bindings.masters), "Final artwork master bindings drifted");
+  assert(JSON.stringify(request.assets) === JSON.stringify(bindings.assets), "Final artwork asset bindings drifted");
+  const bindingsSha256 = sha256(JSON.stringify({
+    contact_sheet: request.contact_sheet,
+    inventory_snapshot: request.inventory_snapshot,
+    ledger_snapshot: request.ledger_snapshot,
+    masters: bindings.masters,
+    assets: bindings.assets,
+  }));
+  assert(request.bindings_sha256 === bindingsSha256, "Final artwork binding checksum drifted");
+  assert(request.request_id === `bmh-artwork-final-review-${bindingsSha256}`, "Final artwork request_id no longer matches its full bindings");
+  if (requireLedgerSnapshot || ledger.masters.every((master) => master.review.status === "pending")) {
+    const ledgerRecord = await fileRecord(root, DEFAULT_PATHS.ledger);
+    assert(ledgerRecord.checksum_sha256 === request.ledger_snapshot.sha256, "Final artwork ledger snapshot drifted before review began");
+  }
+  return request;
+}
+
+export async function validateFinalApprovalArtifact({ root, ledger, evidence, approvedBy, approvedAt }) {
+  assert(approvedBy === "Jarrad Henry", "Final approval requires approver Jarrad Henry");
+  assertIso(approvedAt, "final approval timestamp");
+  const approvalRecord = await fileRecord(root, evidence);
+  const artifact = await parseStructuredJson(approvalRecord, "Final artwork approval evidence");
+  assertExactKeys(artifact, ["schema_version", "decision", "approver", "approved_at", "request_binding", "response_binding"], "Final artwork approval artifact");
+  assert(artifact.schema_version === "bmh-artwork-final-approval/v1", "Final artwork approval schema is invalid");
+  assert(artifact.decision === APPROVED, "Final artwork approval decision must be approved");
+  assert(artifact.approver === "Jarrad Henry" && artifact.approver === approvedBy, "Final artwork approval approver is invalid");
+  assert(artifact.approved_at === approvedAt, "Final artwork approval timestamp does not match the controller request");
+  assertIso(artifact.approved_at, "final artwork approval approved_at");
+  assertExactKeys(artifact.request_binding, ["request_id", "request_path", "request_sha256", "bindings_sha256"], "Final artwork approval request binding");
+  assertExactKeys(artifact.response_binding, ["response_path", "response_sha256"], "Final artwork approval response binding");
+  for (const [label, value] of [
+    ["request", artifact.request_binding.request_sha256],
+    ["bindings", artifact.request_binding.bindings_sha256],
+    ["response", artifact.response_binding.response_sha256],
+  ]) assert(SHA256.test(value), `Final artwork approval ${label} checksum is invalid`);
+  assertString(artifact.request_binding.request_path, "final artwork approval request path");
+  assertString(artifact.response_binding.response_path, "final artwork approval response path");
+  assert(evidence !== artifact.request_binding.request_path && evidence !== artifact.response_binding.response_path, "Final artwork approval, request, and response artifacts must be distinct");
+  assert(artifact.request_binding.request_path !== artifact.response_binding.response_path, "Final artwork request and response artifacts must be distinct");
+  const [requestRecord, responseRecord] = await Promise.all([
+    fileRecord(root, artifact.request_binding.request_path),
+    fileRecord(root, artifact.response_binding.response_path),
+  ]);
+  assert(requestRecord.checksum_sha256 === artifact.request_binding.request_sha256, "Final artwork approval request file drifted");
+  assert(responseRecord.checksum_sha256 === artifact.response_binding.response_sha256, "Final artwork preserved user response drifted");
+  const request = await parseStructuredJson(requestRecord, "Final artwork review request");
+  await validateFinalReviewRequest({ root, ledger, request });
+  assert(artifact.request_binding.request_id === request.request_id, "Final artwork approval request_id drifted");
+  assert(artifact.request_binding.bindings_sha256 === request.bindings_sha256, "Final artwork approval binding checksum drifted");
+  const response = await parseStructuredJson(responseRecord, "Final artwork preserved user response");
+  assertExactKeys(response, ["schema_version", "decision", "respondent", "responded_at", "request_binding", "scope", "response_text"], "Final artwork preserved user response");
+  assert(response.schema_version === "bmh-artwork-final-review-response/v1", "Final artwork preserved user response schema is invalid");
+  assert(response.decision === APPROVED, "Final artwork preserved user response must be affirmative");
+  assert(response.respondent === "Jarrad Henry", "Final artwork preserved user response respondent is invalid");
+  assert(response.responded_at === artifact.approved_at, "Final artwork preserved user response timestamp drifted");
+  assertIso(response.responded_at, "final artwork user response responded_at");
+  assertExactKeys(response.request_binding, ["request_id", "request_path", "request_sha256", "bindings_sha256"], "Final artwork user response request binding");
+  assert(JSON.stringify(response.request_binding) === JSON.stringify(artifact.request_binding), "Final artwork preserved user response targets a different request");
+  assertExactKeys(response.scope, ["master_count", "asset_count", "manifest_promotion"], "Final artwork preserved user response scope");
+  assert(response.scope.master_count === 28 && response.scope.asset_count === 49 && response.scope.manifest_promotion === true, "Final artwork preserved user response scope is incomplete");
+  assert(response.response_text === FINAL_ARTWORK_APPROVAL_RESPONSE, "Final artwork preserved user response must use the exact scoped affirmative statement");
+  return { evidenceRecord: approvalRecord, artifact, request, response };
+}
+
 function paletteKey(color) {
   return color.join(",");
 }
@@ -1319,21 +1703,6 @@ function clearOutputReviewProvenance(output) {
   delete output.review_provenance;
 }
 
-function reviewContextBindings(master) {
-  const values = [];
-  for (const evidence of master.video_evidence) {
-    for (const field of ["asset_key", "local_path", "checksum_sha256"]) {
-      if (evidence[field] !== undefined && evidence[field] !== null) values.push(String(evidence[field]));
-    }
-  }
-  if (master.contact_sheet_input) {
-    for (const field of ["id", "path", "sha256"]) {
-      if (master.contact_sheet_input[field] !== undefined && master.contact_sheet_input[field] !== null) values.push(String(master.contact_sheet_input[field]));
-    }
-  }
-  return values;
-}
-
 function applyOutputReviewProvenance(output, master) {
   output.provenance = {
     ...output.provenance,
@@ -1591,6 +1960,25 @@ export async function validateLedger({ root, inventory, manifest, ledger, inspec
   const invocationIds = sharedPilotParents.map((parent) => parent.tool_evidence.invocation_call_id);
   const toolOutputIds = sharedPilotParents.map((parent) => parent.tool_evidence.tool_output_id);
   const lineageOutputHashes = sharedPilotParents.map((parent) => parent.output.sha256);
+  const recordedReviews = ledger.masters.filter((master) => master.review.status !== "pending");
+  let recordedFinalApproval = null;
+  if (recordedReviews.length > 0) {
+    const first = recordedReviews[0].review;
+    assert(first.status === APPROVED, "Final artwork batch contains a non-approved master review");
+    for (const master of recordedReviews) {
+      assert(master.review.status === APPROVED, "Final artwork batch contains a non-approved master review");
+      assert(master.review.evidence === first.evidence, "Every recorded final artwork review must use one approval artifact path");
+      assert(master.review.evidence_sha256 === first.evidence_sha256, "Every recorded final artwork review must use one approval artifact checksum");
+      assert(master.review.reviewed_by === first.reviewed_by && master.review.reviewed_at === first.reviewed_at, "Every recorded final artwork review must use one approver and timestamp");
+    }
+    recordedFinalApproval = await validateFinalApprovalArtifact({
+      root,
+      ledger,
+      evidence: first.evidence,
+      approvedBy: first.reviewed_by,
+      approvedAt: first.reviewed_at,
+    });
+  }
   for (const master of ledger.masters) {
     const planned = expected.masters.find((candidate) => candidate.id === master.id);
     assert(planned, `Unexpected ledger master ${master.id}`);
@@ -1740,20 +2128,8 @@ export async function validateLedger({ root, inventory, manifest, ledger, inspec
       if (previousCompletedAt) {
         assert(Date.parse(master.review.reviewed_at) >= previousCompletedAt, `${master.id} review predates generation`);
       }
-      if (inspectFiles) {
-        const bindings = [
-          master.id,
-          master.terminal_source_sha256,
-          master.flat_master_sha256,
-          ...reviewContextBindings(master),
-        ];
-        for (const outputRef of master.outputs) {
-          const output = ledger.assets.find((asset) => asset.asset_key === outputRef.asset_key);
-          bindings.push(output.asset_key, output.checksum_sha256, output.pixel_sha256);
-        }
-        const evidence = await validateEvidence(root, master.review.evidence, bindings);
-        assert(evidence.sha256 === master.review.evidence_sha256, `${master.id} review evidence drifted`);
-      }
+      assert(recordedFinalApproval, `${master.id} structured final approval was not validated`);
+      assert(recordedFinalApproval.evidenceRecord.checksum_sha256 === master.review.evidence_sha256, `${master.id} review evidence drifted`);
     } else {
       assert(master.review.status === "pending", `${master.id} review decision is invalid`);
     }
@@ -1850,14 +2226,14 @@ export async function validateLedger({ root, inventory, manifest, ledger, inspec
     assert(SHA256.test(ledger.final_approval.evidence_sha256), "Final evidence checksum invalid");
     assert(new Set(ledger.assets.map((asset) => asset.checksum_sha256)).size === 49, "Final artwork file checksums must be unique");
     assert(new Set(ledger.assets.filter((asset) => asset.kind === "video-poster").map((asset) => asset.pixel_sha256)).size === 29, "Final poster pixels must be unique");
-    if (inspectFiles) {
-      const evidence = await validateEvidence(
-        root,
-        ledger.final_approval.evidence,
-        ledger.assets.flatMap((asset) => [asset.asset_key, asset.checksum_sha256, asset.pixel_sha256]),
-      );
-      assert(evidence.sha256 === ledger.final_approval.evidence_sha256, "Final evidence drifted");
-    }
+    const approval = await validateFinalApprovalArtifact({
+      root,
+      ledger,
+      evidence: ledger.final_approval.evidence,
+      approvedBy: ledger.final_approval.approved_by,
+      approvedAt: ledger.final_approval.approved_at,
+    });
+    assert(approval.evidenceRecord.checksum_sha256 === ledger.final_approval.evidence_sha256, "Final evidence drifted");
   } else {
     for (const asset of ledger.assets) {
       assert(asset.storage_path === null, `${asset.asset_key} storage path populated before finalization`);
@@ -2338,9 +2714,21 @@ export async function reviewMaster({ root, ledger, masterId, decision, reviewedB
   assertString(reviewedBy, "reviewed_by");
   assertIso(reviewedAt, "reviewed_at");
   assertString(evidence, "review evidence");
-  assert([APPROVED, "changes_requested"].includes(decision), "review decision must be approved or changes_requested");
+  assert(decision === APPROVED, "Final batch review requires an affirmative approved decision");
   assert(Date.parse(reviewedAt) >= Date.parse(master.lineage.at(-1).completed_at), `${masterId} review predates generation`);
-  const required = [master.id, master.terminal_source_sha256, master.flat_master_sha256];
+  const approval = await validateFinalApprovalArtifact({
+    root,
+    ledger,
+    evidence,
+    approvedBy: reviewedBy,
+    approvedAt: reviewedAt,
+  });
+  for (const reviewed of ledger.masters.filter((candidate) => candidate.review.status !== "pending")) {
+    assert(reviewed.review.status === APPROVED, "Final artwork batch contains a non-approved master review");
+    assert(reviewed.review.evidence === evidence, "Every final artwork master review must use the same approval artifact path");
+    assert(reviewed.review.evidence_sha256 === approval.evidenceRecord.checksum_sha256, "Every final artwork master review must use the same approval artifact bytes");
+    assert(reviewed.review.reviewed_by === reviewedBy && reviewed.review.reviewed_at === reviewedAt, "Every final artwork master review must use the same approver and timestamp");
+  }
   for (const outputRef of master.outputs) {
     const output = findOutput(ledger, outputRef.asset_key);
     const actual = await inspectArtworkFile(root, output, ledger.palette_rgb);
@@ -2349,16 +2737,13 @@ export async function reviewMaster({ root, ledger, masterId, decision, reviewedB
       const background = assertRecipeRgb(output.derivative.recipe.normalize_background_rgb, ledger.palette_rgb, `${output.asset_key} review background`);
       await assertPosterSafeEdges(actual.contents, background, output.asset_key);
     }
-    required.push(output.asset_key, output.checksum_sha256, output.pixel_sha256);
   }
-  required.push(...reviewContextBindings(master));
-  const evidenceRecord = await validateEvidence(root, evidence, required);
   master.review = {
     status: decision,
     reviewed_by: reviewedBy,
     reviewed_at: reviewedAt,
     evidence,
-    evidence_sha256: evidenceRecord.sha256,
+    evidence_sha256: approval.evidenceRecord.checksum_sha256,
   };
   for (const outputRef of master.outputs) applyOutputReviewProvenance(findOutput(ledger, outputRef.asset_key), master);
   ledger.updated_at = reviewedAt;
@@ -2411,11 +2796,18 @@ export async function finalizeArtwork({ root, ledger, manifest, approvedBy, appr
   assert(new Set(posterHashes).size === EXPECTED_COUNTS.posters, "Every video poster must have unique pixels");
   assert(new Set(ledger.assets.map((asset) => asset.checksum_sha256)).size === 49, "Every final artwork file must have a unique SHA-256");
   assert(new Set(ledger.assets.filter((asset) => asset.kind === "video-poster").map((asset) => asset.pixel_sha256)).size === 29, "Every decoded poster pixel checksum must be unique");
-  const evidenceRecord = await validateEvidence(
+  const approval = await validateFinalApprovalArtifact({
     root,
+    ledger,
     evidence,
-    ledger.assets.flatMap((asset) => [asset.asset_key, asset.checksum_sha256, asset.pixel_sha256]),
-  );
+    approvedBy,
+    approvedAt,
+  });
+  for (const master of ledger.masters) {
+    assert(master.review.evidence === evidence, "Finalization requires one approval artifact path for every master review");
+    assert(master.review.evidence_sha256 === approval.evidenceRecord.checksum_sha256, "Finalization requires one approval artifact checksum for every master review");
+    assert(master.review.reviewed_by === approvedBy && master.review.reviewed_at === approvedAt, "Finalization requires one approver and timestamp for every master review");
+  }
   const latestReview = Math.max(...ledger.masters.map((master) => Date.parse(master.review.reviewed_at)));
   assert(Date.parse(approvedAt) >= latestReview, "Final approval predates an artwork review");
   for (const asset of ledger.assets) {
@@ -2429,7 +2821,7 @@ export async function finalizeArtwork({ root, ledger, manifest, approvedBy, appr
     approved_by: approvedBy,
     approved_at: approvedAt,
     evidence,
-    evidence_sha256: evidenceRecord.sha256,
+    evidence_sha256: approval.evidenceRecord.checksum_sha256,
   };
   ledger.status = "finalized";
   ledger.updated_at = approvedAt;

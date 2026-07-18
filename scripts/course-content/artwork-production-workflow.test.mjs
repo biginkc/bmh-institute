@@ -15,8 +15,11 @@ import {
 
 import {
   DEFAULT_PATHS,
+  FINAL_ARTWORK_APPROVAL_RESPONSE,
   REPO_ROOT,
   approvePilots,
+  buildFinalReviewRequest,
+  buildDeterministicFinalContactSheet,
   assertPosterSafeEdges,
   createInitialLedger,
   deriveMaster,
@@ -34,9 +37,12 @@ import {
   reviewMaster,
   sha256,
   validateLedger,
+  validateFinalApprovalArtifact,
+  validateFinalReviewRequest,
   validateOutputGenerationProvenance,
   withWorkflowLock,
   writeJsonAtomic,
+  writeJsonAtomicCreateOrExact,
 } from "./artwork-production-workflow.mjs";
 
 const inventory = await readJson(resolveRepoPath(REPO_ROOT, DEFAULT_PATHS.inventory));
@@ -255,6 +261,82 @@ async function writePilotApprovalArtifact(root, ledger, mutate = () => {}) {
   const evidence = "evidence/pilot-approval.json";
   await writeRepoFile(root, evidence, Buffer.from(`${JSON.stringify(artifact, null, 2)}\n`));
   return { evidence, artifact };
+}
+
+async function writeFinalApprovalArtifact(root, ledger, {
+  approvedAt = "2026-07-18T00:00:00.000Z",
+  responseText = FINAL_ARTWORK_APPROVAL_RESPONSE,
+  mutateRequest = () => {},
+  mutateResponse = () => {},
+  mutateApproval = () => {},
+} = {}) {
+  await writeRepoFile(root, DEFAULT_PATHS.inventory, Buffer.from(`${JSON.stringify(inventory, null, 2)}\n`));
+  await writeRepoFile(root, DEFAULT_PATHS.ledger, Buffer.from(`${JSON.stringify(ledger, null, 2)}\n`));
+  for (const asset of ledger.assets) {
+    try {
+      await lstat(resolveRepoPath(root, asset.output_path));
+    } catch (error) {
+      if (error?.code !== "ENOENT") throw error;
+      await copyRepoFile(root, asset.output_path);
+    }
+  }
+  for (const reference of ledger.references ?? []) await copyRepoFile(root, reference.path);
+  if (ledger.pilot_approval?.status === "approved") {
+    await copyRepoFile(root, ledger.pilot_approval.evidence);
+    const pilotArtifact = await readJson(resolveRepoPath(REPO_ROOT, ledger.pilot_approval.evidence));
+    await copyRepoFile(root, pilotArtifact.request_binding.request_path);
+    const lineagePaths = new Set(ledger.masters.filter((master) => master.pilot).map((master) => master.pilot.lineage_record_path));
+    for (const lineagePath of lineagePaths) await copyRepoFile(root, lineagePath);
+  }
+  const contactSheetPath = "evidence/final-contact-sheet.png";
+  const rebuilt = await buildDeterministicFinalContactSheet({ root, ledger });
+  await writeRepoFile(root, contactSheetPath, rebuilt.contents);
+  const contactSheetIndexPath = "evidence/final-contact-sheet.json";
+  const contactSheetIndex = { ...rebuilt.index, contact_sheet_path: contactSheetPath };
+  await writeRepoFile(root, contactSheetIndexPath, Buffer.from(`${JSON.stringify(contactSheetIndex, null, 2)}\n`));
+  const request = await buildFinalReviewRequest({ root, ledger, contactSheetPath, contactSheetIndexPath });
+  mutateRequest(request);
+  const requestPath = "evidence/final-review-request.json";
+  const requestBytes = Buffer.from(`${JSON.stringify(request, null, 2)}\n`);
+  await writeRepoFile(root, requestPath, requestBytes);
+  const requestBinding = {
+    request_id: request.request_id,
+    request_path: requestPath,
+    request_sha256: sha256(requestBytes),
+    bindings_sha256: request.bindings_sha256,
+  };
+  const response = {
+    schema_version: "bmh-artwork-final-review-response/v1",
+    decision: "approved",
+    respondent: "Jarrad Henry",
+    responded_at: approvedAt,
+    request_binding: structuredClone(requestBinding),
+    scope: {
+      master_count: 28,
+      asset_count: 49,
+      manifest_promotion: true,
+    },
+    response_text: responseText,
+  };
+  mutateResponse(response);
+  const responsePath = "evidence/final-review-response.json";
+  const responseBytes = Buffer.from(`${JSON.stringify(response, null, 2)}\n`);
+  await writeRepoFile(root, responsePath, responseBytes);
+  const approval = {
+    schema_version: "bmh-artwork-final-approval/v1",
+    decision: "approved",
+    approver: "Jarrad Henry",
+    approved_at: approvedAt,
+    request_binding: structuredClone(requestBinding),
+    response_binding: {
+      response_path: responsePath,
+      response_sha256: sha256(responseBytes),
+    },
+  };
+  mutateApproval(approval);
+  const approvalPath = "evidence/final-approval.json";
+  await writeRepoFile(root, approvalPath, Buffer.from(`${JSON.stringify(approval, null, 2)}\n`));
+  return { approvalPath, approval, requestPath, request, responsePath, response };
 }
 
 test("tracked ledger validates the active fail-closed lifecycle while preserving the pristine preapproval template", async () => {
@@ -1167,44 +1249,13 @@ test("correction archives rejected derivatives and authorizes only their exact r
   const firstChecksum = output.checksum_sha256;
   const firstPixelChecksum = output.pixel_sha256;
   const master = ledger.masters.find((candidate) => candidate.id === masterId);
-  const reviewEvidence = "evidence/review.txt";
-  await writeRepoFile(root, reviewEvidence, Buffer.from([master.id, master.terminal_source_sha256, master.flat_master_sha256, output.asset_key, output.checksum_sha256, output.pixel_sha256].join("\n")));
-  await assert.rejects(
-    reviewMaster({
-      root,
-      ledger,
-      masterId,
-      decision: "approved",
-      reviewedBy: "reviewer",
-      reviewedAt: "2026-07-16T22:02:59.000Z",
-      evidence: reviewEvidence,
-    }),
-    /review predates generation/,
-  );
-  const badReviewEvidence = "evidence/bad-review.txt";
-  await writeRepoFile(root, badReviewEvidence, Buffer.from(master.id));
-  await assert.rejects(
-    reviewMaster({
-      root,
-      ledger,
-      masterId,
-      decision: "approved",
-      reviewedBy: "reviewer",
-      reviewedAt: "2026-07-16T22:03:30.000Z",
-      evidence: badReviewEvidence,
-    }),
-    /does not bind/,
-  );
-  await reviewMaster({
-    root,
-    ledger,
-    masterId,
-    decision: "approved",
-    reviewedBy: "reviewer",
-    reviewedAt: "2026-07-16T22:03:30.000Z",
-    evidence: reviewEvidence,
-  });
-  assert.equal(output.provenance.review_evidence, reviewEvidence);
+  master.review = {
+    status: "approved",
+    reviewed_by: "test setup",
+    reviewed_at: "2026-07-16T22:03:30.000Z",
+    evidence: "test-only-structured-review-placeholder",
+    evidence_sha256: "b".repeat(64),
+  };
   const reviewedSnapshot = structuredClone(master.review);
   await deriveMaster({ root, ledger, masterId });
   assert.equal(output.checksum_sha256, firstChecksum, "same runtime rerun must be deterministic");
@@ -1315,55 +1366,19 @@ test("pipeline reprocess archives exact prior bytes and deterministically rebuil
 
 test("review provenance binds the current video and contact-sheet context without rebinding generation", async (t) => {
   const root = await tempRoot(t);
-  const ledger = productionLedger();
+  const ledger = structuredClone(await readJson(resolveRepoPath(REPO_ROOT, DEFAULT_PATHS.ledger)));
   const masterId = "master-slot-16";
   const master = ledger.masters.find((candidate) => candidate.id === masterId);
-  const source = await writeRepoFile(root, "provider/review-context.png", await rgbPng(master.background_rgb));
-  await ingestGeneration({
-    root,
-    ledger,
-    masterId,
-    sourceFile: source,
-    generationCallId: "call-review-context",
-    toolOutputId: "output-review-context",
-    generatedAt: "2026-07-16T22:03:00.000Z",
-    generatedBy: "test",
-  });
-  await deriveMaster({ root, ledger, masterId });
   const outputs = ledger.assets.filter((asset) => asset.provenance.master_id === masterId);
   const generationSnapshots = new Map(outputs.map((asset) => [asset.asset_key, structuredClone(asset.provenance)]));
-  const ordinaryBindings = [master.id, master.terminal_source_sha256, master.flat_master_sha256];
-  for (const output of outputs) ordinaryBindings.push(output.asset_key, output.checksum_sha256, output.pixel_sha256);
-  const missingContextEvidence = "evidence/review-without-video-context.txt";
-  await writeRepoFile(root, missingContextEvidence, ordinaryBindings.join("\n"));
-  await assert.rejects(
-    reviewMaster({
-      root,
-      ledger,
-      masterId,
-      decision: "approved",
-      reviewedBy: "reviewer",
-      reviewedAt: "2026-07-16T22:04:00.000Z",
-      evidence: missingContextEvidence,
-    }),
-    /does not bind/,
-  );
-  const contextBindings = [
-    ...ordinaryBindings,
-    ...master.video_evidence.flatMap((entry) => [entry.asset_key, entry.local_path, entry.checksum_sha256]),
-    master.contact_sheet_input.id,
-    master.contact_sheet_input.path,
-    master.contact_sheet_input.sha256,
-  ];
-  const evidence = "evidence/review-with-video-context.txt";
-  await writeRepoFile(root, evidence, contextBindings.join("\n"));
+  const { approvalPath: evidence } = await writeFinalApprovalArtifact(root, ledger);
   await reviewMaster({
     root,
     ledger,
     masterId,
     decision: "approved",
-    reviewedBy: "reviewer",
-    reviewedAt: "2026-07-16T22:04:00.000Z",
+    reviewedBy: "Jarrad Henry",
+    reviewedAt: "2026-07-18T00:00:00.000Z",
     evidence,
   });
   for (const output of outputs) {
@@ -1493,28 +1508,168 @@ test("V8 texture exceptions are exact-checksum scoped and cannot transfer to rep
   );
 });
 
+test("final artwork review request deterministically binds the exact 4-column contact sheet and every nonempty review input", async () => {
+  const ledger = await readJson(resolveRepoPath(REPO_ROOT, DEFAULT_PATHS.ledger));
+  const request = await buildFinalReviewRequest({ root: REPO_ROOT, ledger });
+  await validateFinalReviewRequest({ root: REPO_ROOT, ledger, request, requireLedgerSnapshot: true });
+  assert.equal(request.request_id, `bmh-artwork-final-review-${request.bindings_sha256}`);
+  assert.equal(request.contact_sheet.sha256, "c7e9812d0d279983fc4408ee1d9179017c83c756c0bc3ab3ead08f4fc4facda5");
+  assert.equal(request.masters.length, 28);
+  assert.equal(request.assets.length, 49);
+  assert.equal(request.masters.flatMap((master) => master.video_evidence).every((entry) => {
+    return Object.keys(entry).sort().join(",") === "asset_key,path,sha256" &&
+      typeof entry.path === "string" && entry.path.length > 0 &&
+      /^[a-f0-9]{64}$/.test(entry.sha256);
+  }), true, "final request contains empty or unnormalized video evidence");
+  assert.equal(JSON.stringify(request).includes('"video_evidence":[{}]'), false);
+});
+
+test("final artwork contact sheet cannot be forged together with a self-consistent index", async (t) => {
+  const root = await tempRoot(t);
+  const ledger = structuredClone(await readJson(resolveRepoPath(REPO_ROOT, DEFAULT_PATHS.ledger)));
+  const { request } = await writeFinalApprovalArtifact(root, ledger);
+  const forged = await rgbPng([255, 211, 1], 160, 90);
+  await writeRepoFile(root, request.contact_sheet.path, forged);
+  const indexPath = resolveRepoPath(root, request.contact_sheet.index_path);
+  const index = await readJson(indexPath);
+  index.contact_sheet_sha256 = sha256(forged);
+  await writeRepoFile(root, request.contact_sheet.index_path, Buffer.from(`${JSON.stringify(index, null, 2)}\n`));
+  await assert.rejects(
+    buildFinalReviewRequest({
+      root,
+      ledger,
+      contactSheetPath: request.contact_sheet.path,
+      contactSheetIndexPath: request.contact_sheet.index_path,
+    }),
+    /deterministic (?:49-position index|rebuild)/,
+  );
+});
+
+test("structured final approval rejects arbitrary dumps, pending decisions, video-only replies, negation, and request mismatch", async (t) => {
+  const root = await tempRoot(t);
+  const ledger = structuredClone(await readJson(resolveRepoPath(REPO_ROOT, DEFAULT_PATHS.ledger)));
+  const valid = await writeFinalApprovalArtifact(root, ledger);
+  await validateFinalApprovalArtifact({
+    root,
+    ledger,
+    evidence: valid.approvalPath,
+    approvedBy: "Jarrad Henry",
+    approvedAt: "2026-07-18T00:00:00.000Z",
+  });
+  const hashDump = "evidence/arbitrary-hash-dump.txt";
+  await writeRepoFile(root, hashDump, ledger.assets.flatMap((asset) => [asset.asset_key, asset.checksum_sha256, asset.pixel_sha256]).join("\n"));
+  await assert.rejects(
+    validateFinalApprovalArtifact({ root, ledger, evidence: hashDump, approvedBy: "Jarrad Henry", approvedAt: "2026-07-18T00:00:00.000Z" }),
+    /structured JSON/,
+  );
+
+  const approvalPath = resolveRepoPath(root, valid.approvalPath);
+  const responsePath = resolveRepoPath(root, valid.responsePath);
+  const originalApproval = await readJson(approvalPath);
+  const originalResponse = await readJson(responsePath);
+  const replaceResponse = async (responseText, mutate = () => {}) => {
+    const response = structuredClone(originalResponse);
+    response.response_text = responseText;
+    mutate(response);
+    const bytes = Buffer.from(`${JSON.stringify(response, null, 2)}\n`);
+    await writeRepoFile(root, valid.responsePath, bytes);
+    const approval = structuredClone(originalApproval);
+    approval.response_binding.response_sha256 = sha256(bytes);
+    await writeRepoFile(root, valid.approvalPath, Buffer.from(`${JSON.stringify(approval, null, 2)}\n`));
+  };
+  for (const rejectedText of ["Yes the video is approved", "The artwork is not approved"]) {
+    await replaceResponse(rejectedText);
+    await assert.rejects(
+      validateFinalApprovalArtifact({ root, ledger, evidence: valid.approvalPath, approvedBy: "Jarrad Henry", approvedAt: "2026-07-18T00:00:00.000Z" }),
+      /exact scoped affirmative statement/,
+    );
+  }
+  await replaceResponse(FINAL_ARTWORK_APPROVAL_RESPONSE, (response) => {
+    response.request_binding.request_id = "bmh-artwork-final-review-" + "0".repeat(64);
+  });
+  await assert.rejects(
+    validateFinalApprovalArtifact({ root, ledger, evidence: valid.approvalPath, approvedBy: "Jarrad Henry", approvedAt: "2026-07-18T00:00:00.000Z" }),
+    /targets a different request/,
+  );
+  await writeRepoFile(root, valid.responsePath, Buffer.from(`${JSON.stringify(originalResponse, null, 2)}\n`));
+  const pending = structuredClone(originalApproval);
+  pending.decision = "pending";
+  await writeRepoFile(root, valid.approvalPath, Buffer.from(`${JSON.stringify(pending, null, 2)}\n`));
+  await assert.rejects(
+    validateFinalApprovalArtifact({ root, ledger, evidence: valid.approvalPath, approvedBy: "Jarrad Henry", approvedAt: "2026-07-18T00:00:00.000Z" }),
+    /decision must be approved/,
+  );
+});
+
+test("pending final request is write-once, exact-rerunnable, and cannot be overwritten", async (t) => {
+  const root = await tempRoot(t);
+  const target = resolveRepoPath(root, "evidence/request.json");
+  const request = { schema_version: "test", value: 1 };
+  assert.equal((await writeJsonAtomicCreateOrExact(target, request, { root })).status, "created");
+  assert.equal((await writeJsonAtomicCreateOrExact(target, request, { root })).status, "reused");
+  await assert.rejects(
+    writeJsonAtomicCreateOrExact(target, { ...request, value: 2 }, { root }),
+    /already exists with different bytes/,
+  );
+});
+
+test("a partial structured review leaves every asset and manifest record unapproved and refuses a second artifact", async (t) => {
+  const root = await tempRoot(t);
+  const ledger = structuredClone(await readJson(resolveRepoPath(REPO_ROOT, DEFAULT_PATHS.ledger)));
+  const manifestSnapshot = structuredClone(manifest);
+  const valid = await writeFinalApprovalArtifact(root, ledger);
+  await reviewMaster({
+    root,
+    ledger,
+    masterId: ledger.masters[0].id,
+    decision: "approved",
+    reviewedBy: "Jarrad Henry",
+    reviewedAt: "2026-07-18T00:00:00.000Z",
+    evidence: valid.approvalPath,
+  });
+  assert.equal(ledger.assets.every((asset) => asset.approval_status === "missing" && asset.storage_path === null), true);
+  assert.deepEqual(manifest, manifestSnapshot);
+  await validateLedger({ root, inventory, manifest, ledger, inspectFiles: false });
+  const alternate = "evidence/alternate-final-approval.json";
+  await copyFile(resolveRepoPath(root, valid.approvalPath), resolveRepoPath(root, alternate));
+  await assert.rejects(
+    reviewMaster({
+      root,
+      ledger,
+      masterId: ledger.masters[1].id,
+      decision: "approved",
+      reviewedBy: "Jarrad Henry",
+      reviewedAt: "2026-07-18T00:00:00.000Z",
+      evidence: alternate,
+    }),
+    /same approval artifact path/,
+  );
+  const approval = await readJson(resolveRepoPath(root, valid.approvalPath));
+  approval.decision = "pending";
+  await writeRepoFile(root, valid.approvalPath, Buffer.from(`${JSON.stringify(approval, null, 2)}\n`));
+  await assert.rejects(
+    validateLedger({ root, inventory, manifest, ledger, inspectFiles: false }),
+    /decision must be approved/,
+  );
+});
+
 test("finalization requires complete evidence and timing, then reconciles from finalized ledger", async (t) => {
   const root = await tempRoot(t);
   const ledger = createInitialLedger(inventory);
+  const tracked = await readJson(resolveRepoPath(REPO_ROOT, DEFAULT_PATHS.ledger));
   ledger.status = "production";
-  ledger.pilot_approval = {
-    status: "approved",
-    approved_by: "Jarrad Henry",
-    approved_at: "2026-07-16T22:00:00.000Z",
-    evidence: "evidence/pilot.json",
-    evidence_sha256: "1".repeat(64),
-  };
+  ledger.pilot_approval = structuredClone(tracked.pilot_approval);
   for (const [index, master] of ledger.masters.entries()) {
     master.status = "derived";
     master.terminal_source_sha256 = (index + 1).toString(16).padStart(64, "0");
     master.flat_master_sha256 = (index + 101).toString(16).padStart(64, "0");
     master.lineage = [{ completed_at: "2026-07-16T22:10:00.000Z" }];
     master.review = {
-      status: "approved",
-      reviewed_by: "reviewer",
-      reviewed_at: "2026-07-16T22:20:00.000Z",
-      evidence: `evidence/review-${index}.txt`,
-      evidence_sha256: (index + 201).toString(16).padStart(64, "0"),
+      status: "pending",
+      reviewed_by: null,
+      reviewed_at: null,
+      evidence: null,
+      evidence_sha256: null,
     };
   }
   for (const [index, asset] of ledger.assets.entries()) {
@@ -1552,10 +1707,20 @@ test("finalization requires complete evidence and timing, then reconciles from f
     asset.pixel_sha256 = record.pixel_sha256;
     asset.size_bytes = record.size_bytes;
   }
-  const evidencePath = "evidence/final.txt";
-  await writeRepoFile(root, evidencePath, Buffer.from(ledger.assets.flatMap((asset) => [asset.asset_key, asset.checksum_sha256, asset.pixel_sha256]).join("\n")));
+  const { approvalPath: evidencePath } = await writeFinalApprovalArtifact(root, ledger);
   const badEvidencePath = "evidence/final-bad.txt";
-  await writeRepoFile(root, badEvidencePath, Buffer.from("not bound"));
+  await writeRepoFile(root, badEvidencePath, Buffer.from(ledger.assets.flatMap((asset) => [asset.asset_key, asset.checksum_sha256, asset.pixel_sha256]).join("\n")));
+  for (const master of ledger.masters) {
+    await reviewMaster({
+      root,
+      ledger,
+      masterId: master.id,
+      decision: "approved",
+      reviewedBy: "Jarrad Henry",
+      reviewedAt: "2026-07-18T00:00:00.000Z",
+      evidence: evidencePath,
+    });
+  }
   const untrustedLedger = structuredClone(ledger);
   const untrustedManifest = structuredClone(manifest);
   const untrustedLedgerBefore = structuredClone(untrustedLedger);
@@ -1566,7 +1731,7 @@ test("finalization requires complete evidence and timing, then reconciles from f
       ledger: untrustedLedger,
       manifest: untrustedManifest,
       approvedBy: "Generic Reviewer",
-      approvedAt: "2026-07-16T22:30:00.000Z",
+      approvedAt: "2026-07-18T00:00:00.000Z",
       evidence: evidencePath,
     }),
     /Final approval requires approver Jarrad Henry/,
@@ -1579,10 +1744,10 @@ test("finalization requires complete evidence and timing, then reconciles from f
       ledger: structuredClone(ledger),
       manifest,
       approvedBy: "Jarrad Henry",
-      approvedAt: "2026-07-16T22:30:00.000Z",
+      approvedAt: "2026-07-18T00:00:00.000Z",
       evidence: badEvidencePath,
     }),
-    /does not bind/,
+    /structured JSON/,
   );
   await assert.rejects(
     finalizeArtwork({
@@ -1593,7 +1758,7 @@ test("finalization requires complete evidence and timing, then reconciles from f
       approvedAt: "2026-07-16T22:19:59.000Z",
       evidence: evidencePath,
     }),
-    /predates an artwork review/,
+    /timestamp does not match/,
   );
   assert.throws(() => reconcileManifestFromLedger(createInitialLedger(inventory), manifest), /requires a finalized ledger/);
   const result = await finalizeArtwork({
@@ -1601,7 +1766,7 @@ test("finalization requires complete evidence and timing, then reconciles from f
     ledger,
     manifest,
     approvedBy: "Jarrad Henry",
-    approvedAt: "2026-07-16T22:30:00.000Z",
+    approvedAt: "2026-07-18T00:00:00.000Z",
     evidence: evidencePath,
   });
   assert.equal(result.ledger.status, "finalized");

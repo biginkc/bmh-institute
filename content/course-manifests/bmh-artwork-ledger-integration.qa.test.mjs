@@ -19,7 +19,19 @@ import {
   validateArtworkManifestTrustBoundary,
 } from "../../scripts/course-content/build-manifest.mjs";
 import { validateBmhArtworkReleaseTrust } from "../../scripts/course-content/import-semantic-gate.mjs";
-import { approvePilots, createInitialLedger, deriveMaster, finalizeArtwork, ingestGeneration, promotePilots, reviewMaster } from "../../scripts/course-content/artwork-production-workflow.mjs";
+import {
+  DEFAULT_PATHS,
+  FINAL_ARTWORK_APPROVAL_RESPONSE,
+  approvePilots,
+  buildDeterministicFinalContactSheet,
+  buildFinalReviewRequest,
+  createInitialLedger,
+  deriveMaster,
+  finalizeArtwork,
+  ingestGeneration,
+  promotePilots,
+  reviewMaster,
+} from "../../scripts/course-content/artwork-production-workflow.mjs";
 
 const LEDGER_SCHEMA = "bmh-artwork-production-ledger/v1";
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
@@ -423,51 +435,26 @@ test("a canonically finalized 49-asset workflow cannot forge held-video release 
   for (const master of ledger.masters) {
     await deriveMaster({ root, ledger, masterId: master.id });
   }
-  for (const [index, master] of ledger.masters.entries()) {
-    const reviewEvidence = `evidence/reviews/${master.id}.json`;
-    await writeEvidence(root, reviewEvidence, {
-      master_id: master.id,
-      terminal_source_sha256: master.terminal_source_sha256,
-      flat_master_sha256: master.flat_master_sha256,
-      video_evidence: master.video_evidence,
-      contact_sheet_input: master.contact_sheet_input,
-      outputs: master.outputs.map(({ asset_key: assetKey }) => {
-        const asset = ledger.assets.find((candidate) => candidate.asset_key === assetKey);
-        return {
-          asset_key: asset.asset_key,
-          checksum_sha256: asset.checksum_sha256,
-          pixel_sha256: asset.pixel_sha256,
-        };
-      }),
-    });
+  const finalApproval = await writeFinalArtworkApprovalPackage(root, ledger);
+  for (const master of ledger.masters) {
     await reviewMaster({
       root,
       ledger,
       masterId: master.id,
       decision: "approved",
       reviewedBy: "Jarrad Henry",
-      reviewedAt: new Date(Date.UTC(2026, 6, 17, 1, index)).toISOString(),
-      evidence: reviewEvidence,
+      reviewedAt: finalApproval.approvedAt,
+      evidence: finalApproval.evidence,
     });
   }
 
-  const finalEvidence = "evidence/final-artwork-approval.json";
-  await writeEvidence(
-    root,
-    finalEvidence,
-    ledger.assets.map((asset) => ({
-      asset_key: asset.asset_key,
-      checksum_sha256: asset.checksum_sha256,
-      pixel_sha256: asset.pixel_sha256,
-    })),
-  );
   const finalized = await finalizeArtwork({
     root,
     ledger,
     manifest: baseManifest,
     approvedBy: "Jarrad Henry",
-    approvedAt: "2026-07-17T02:00:00.000Z",
-    evidence: finalEvidence,
+    approvedAt: finalApproval.approvedAt,
+    evidence: finalApproval.evidence,
   });
   const trustedManifest = await validateArtworkManifestTrustBoundary(finalized.manifest, finalized.ledger, { repoRoot: root, inventoryPath });
   assert.deepEqual(
@@ -601,6 +588,67 @@ async function writePilotApprovalArtifact(root, ledger) {
   };
   const evidence = "evidence/pilot-approval.json";
   await writeEvidence(root, evidence, artifact);
+  return { approvedAt, evidence };
+}
+
+async function writeFinalArtworkApprovalPackage(root, ledger) {
+  const approvedAt = "2026-07-17T02:00:00.000Z";
+  await writeEvidence(root, DEFAULT_PATHS.ledger, ledger);
+
+  const contactSheetPath = "evidence/final-artwork-contact-sheet.png";
+  const contactSheetIndexPath = "evidence/final-artwork-contact-sheet.json";
+  const rebuilt = await buildDeterministicFinalContactSheet({ root, ledger });
+  await writeRepoFile(root, contactSheetPath, rebuilt.contents);
+  await writeEvidence(root, contactSheetIndexPath, {
+    ...rebuilt.index,
+    contact_sheet_path: contactSheetPath,
+  });
+
+  const request = await buildFinalReviewRequest({
+    root,
+    ledger,
+    contactSheetPath,
+    contactSheetIndexPath,
+  });
+  const requestPath = "evidence/final-artwork-review-request.json";
+  const requestBytes = Buffer.from(`${JSON.stringify(request, null, 2)}\n`);
+  await writeRepoFile(root, requestPath, requestBytes);
+  const requestBinding = {
+    request_id: request.request_id,
+    request_path: requestPath,
+    request_sha256: sha256Bytes(requestBytes),
+    bindings_sha256: request.bindings_sha256,
+  };
+
+  const responsePath = "evidence/final-artwork-review-response.json";
+  const response = {
+    schema_version: "bmh-artwork-final-review-response/v1",
+    decision: "approved",
+    respondent: "Jarrad Henry",
+    responded_at: approvedAt,
+    request_binding: requestBinding,
+    scope: {
+      master_count: 28,
+      asset_count: 49,
+      manifest_promotion: true,
+    },
+    response_text: FINAL_ARTWORK_APPROVAL_RESPONSE,
+  };
+  const responseBytes = Buffer.from(`${JSON.stringify(response, null, 2)}\n`);
+  await writeRepoFile(root, responsePath, responseBytes);
+
+  const evidence = "evidence/final-artwork-approval.json";
+  await writeEvidence(root, evidence, {
+    schema_version: "bmh-artwork-final-approval/v1",
+    decision: "approved",
+    approver: "Jarrad Henry",
+    approved_at: approvedAt,
+    request_binding: requestBinding,
+    response_binding: {
+      response_path: responsePath,
+      response_sha256: sha256Bytes(responseBytes),
+    },
+  });
   return { approvedAt, evidence };
 }
 

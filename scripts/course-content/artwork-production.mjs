@@ -4,6 +4,7 @@ import {
   DEFAULT_PATHS,
   REPO_ROOT,
   approvePilots,
+  buildFinalReviewRequest,
   createInitialLedger,
   deriveMaster,
   finalizeArtwork,
@@ -21,6 +22,7 @@ import {
   validateLedger,
   withWorkflowLock,
   writeJsonAtomic,
+  writeJsonAtomicCreateOrExact,
 } from "./artwork-production-workflow.mjs";
 
 function usage() {
@@ -37,7 +39,8 @@ Commands:
   derive (--master-id ID | --all)
   reprocess (--master-id ID | --all)
   record-texture-exceptions --evidence REPO_PATH
-  review --master-id ID --decision approved|changes_requested --reviewed-by NAME --reviewed-at ISO --evidence REPO_PATH
+  prepare-final-review-request [--output REPO_PATH] [--contact-sheet REPO_PATH] [--contact-sheet-index REPO_PATH]
+  review --master-id ID --decision approved --reviewed-by "Jarrad Henry" --reviewed-at ISO --evidence APPROVAL_JSON
   finalize --approved-by NAME --approved-at ISO --evidence REPO_PATH
   reconcile`;
 }
@@ -163,6 +166,28 @@ async function execute(command, options) {
     });
     await validate();
     await persistLedger(workflow.ledger);
+  } else if (command === "prepare-final-review-request") {
+    await validate();
+    const request = await buildFinalReviewRequest({
+      root: REPO_ROOT,
+      ledger: workflow.ledger,
+      contactSheetPath: options["contact-sheet"] ?? DEFAULT_PATHS.contactSheet,
+      contactSheetIndexPath: options["contact-sheet-index"] ?? DEFAULT_PATHS.contactSheetIndex,
+    });
+    const output = options.output ?? DEFAULT_PATHS.finalReviewRequest;
+    const write = await writeJsonAtomicCreateOrExact(resolveRepoPath(REPO_ROOT, output), request, { root: REPO_ROOT });
+    process.stdout.write(`${JSON.stringify({
+      status: request.status,
+      write_status: write.status,
+      output,
+      request_id: request.request_id,
+      request_sha256: write.checksum_sha256,
+      bindings_sha256: request.bindings_sha256,
+      contact_sheet_sha256: request.contact_sheet.sha256,
+      masters: request.masters.length,
+      assets: request.assets.length,
+    }, null, 2)}\n`);
+    return;
   } else if (command === "review") {
     await validate();
     await reviewMaster({
@@ -215,6 +240,7 @@ async function main() {
     "derive",
     "reprocess",
     "record-texture-exceptions",
+    "prepare-final-review-request",
     "review",
     "finalize",
     "reconcile",
