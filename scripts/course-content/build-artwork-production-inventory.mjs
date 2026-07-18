@@ -1144,6 +1144,27 @@ const inventoryLessons = lessonSpecs.map((spec, index) => {
 const coverPath = "course-assets/thumbnails/program-bmh-employee-training.webp";
 assertAsset(course.thumbnail_asset_key, coverPath);
 const courseCoverArtDirection = getArtworkPose("master-program-bmh-employee-training");
+const courseCoverFlatFillCleanup = {
+  id: "lower-left-house-facade",
+  seed_xy: [250, 450],
+  accepted_rgb: [YELLOW_RGB, [254, 255, 198], [105, 153, 53], [255, 174, 1]],
+  replacement_rgb: YELLOW_RGB,
+  expected_pixel_count: 6282,
+  expected_changed_pixel_count: 1277,
+  source_pixel_baseline_path: "course-assets/thumbnails/production/sources/lineage/master-program-bmh-employee-training/step-002.png",
+  source_pixel_baseline_sha256: "1f8caa9a9985e4a76ba6590eb8d6fb7078c7e8f4d5128bfbab91f2f2af4e94e1",
+  flat_pixel_baseline_path: "course-assets/thumbnails/production/sources/lineage/master-program-bmh-employee-training/flat-masters/version-002.png",
+  flat_pixel_baseline_sha256: "4e68c2aef5557a6ea677fa541697542d71f829ef79e3c0ad51d4e7550140c8b5",
+  expected_bounds: [229, 392, 310, 510],
+};
+await validateLineageInput(
+  { path: courseCoverFlatFillCleanup.source_pixel_baseline_path, sha256: courseCoverFlatFillCleanup.source_pixel_baseline_sha256 },
+  "course-cover source-pixel baseline",
+);
+await validateLineageInput(
+  { path: courseCoverFlatFillCleanup.flat_pixel_baseline_path, sha256: courseCoverFlatFillCleanup.flat_pixel_baseline_sha256 },
+  "course-cover flat-pixel baseline",
+);
 
 const inventory = {
   schema_version: usesPoseVariationPilotLineage
@@ -1218,6 +1239,7 @@ const inventory = {
     source_path: "course-assets/thumbnails/production/sources/program-bmh-employee-training-generated.png",
     flat_master_path: "course-assets/thumbnails/production/flat-masters/program-bmh-employee-training-flat-master.png",
     ...(usesLockedPilotContract ? { background_rgb: courseCoverArtDirection.background_rgb } : {}),
+    flat_fill_cleanup: [courseCoverFlatFillCleanup],
     art_direction: courseCoverArtDirection,
     derivative: {
       recipe_id: "course-cover-card-16x10",
