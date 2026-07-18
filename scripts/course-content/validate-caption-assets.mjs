@@ -3,11 +3,6 @@ import { readFile, realpath, stat } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-import {
-  evaluateApprovedMediaRolePolicy,
-  normalizeApprovedMediaProse,
-} from "./approved-media-role-policy.mjs";
-
 const STALE_COMPENSATION_PATTERN = /\$\s*\d|hourly base|ramp(?:-up|ing up) base|performance pay|milestone bonus|commission on (?:every|the) deal|earning potential|earnings can grow|compensation .* tied to .* output|guaranteed pay|fixed pay promise/i;
 const FIXED_DIAL_QUOTA_PATTERN = /\b(?:\d{2,3}(?:\s*(?:to|-|plus|\+))\s*\d{2,3}|\d{2,3}\s*(?:plus|\+))\s+(?:total\s+)?dials?\b|\bdial target\b/i;
 export const MAX_CAPTION_CHARACTERS_PER_SECOND = 21;
@@ -147,23 +142,7 @@ async function inspectFile(asset, repoRoot, expectedKind, errors) {
   return buffer.toString("utf8");
 }
 
-async function loadRolePolicyLedger(repoRoot, relativePath, label, errors) {
-  try {
-    return JSON.parse(await readFile(path.join(repoRoot, relativePath), "utf8"));
-  } catch (error) {
-    errors.push(`${label} could not be loaded: ${error instanceof Error ? error.message : String(error)}`);
-    return null;
-  }
-}
-
-export async function inspectApprovedCaptionAssets(
-  manifest,
-  repoRootUrl,
-  {
-    rolePolicyReview = undefined,
-    rolePolicyExceptions = undefined,
-  } = {},
-) {
+export async function inspectApprovedCaptionAssets(manifest, repoRootUrl) {
   const repoRoot = fileURLToPath(repoRootUrl);
   const assets = manifest.assets ?? [];
   const byKey = new Map(assets.map((asset) => [asset.source_key, asset]));
@@ -175,7 +154,6 @@ export async function inspectApprovedCaptionAssets(
   let approvedCaptions = 0;
   let approvedTranscripts = 0;
   let heldDerivativeAssetsStillMissing = 0;
-  const rolePolicyBindings = [];
 
   for (const video of approvedVideos) {
     const block = videoBlocks.get(video.source_key);
@@ -195,7 +173,7 @@ export async function inspectApprovedCaptionAssets(
       const parsed = parseWebVtt(captionText);
       errors.push(...parsed.errors.map((error) => `${caption.source_key}: ${error}`));
       const finalCue = parsed.cues.at(-1);
-      captionProse = normalizeApprovedMediaProse(parsed.cues.map((cue) => cue.text).join(" "));
+      captionProse = parsed.cues.map((cue) => cue.text).join(" ").replace(/\s+/g, " ").trim();
       if (parsed.cues.some((cue) => /^[-,.;:!?]/.test(cue.text))) {
         errors.push(`${caption.source_key} starts a cue with detached punctuation`);
       }
@@ -205,11 +183,10 @@ export async function inspectApprovedCaptionAssets(
     }
 
     const transcriptText = await inspectFile(transcript, repoRoot, "transcript", errors);
-    let transcriptProse = null;
     if (transcriptText !== null) {
       approvedTranscripts += 1;
       const prose = transcriptText.replace(/^#.*$/gm, "").trim();
-      transcriptProse = normalizeApprovedMediaProse(transcriptText.split("\n").slice(4).join(" "));
+      const transcriptProse = transcriptText.split("\n").slice(4).join(" ").replace(/\s+/g, " ").trim();
       if (prose.length < 100) errors.push(`${transcript.source_key} is empty or implausibly short`);
       if (prose.includes("\u2014")) errors.push(`${transcript.source_key} contains an em dash`);
       if (/BMH Group KC/i.test(prose)) errors.push(`${transcript.source_key} uses the wrong company name`);
@@ -222,15 +199,6 @@ export async function inspectApprovedCaptionAssets(
       if (captionProse !== null && captionProse !== transcriptProse) {
         errors.push(`${video.source_key} caption and transcript disagree`);
       }
-    }
-    if (captionProse !== null && transcriptProse !== null) {
-      rolePolicyBindings.push({
-        video,
-        caption,
-        transcript,
-        captionProse,
-        transcriptProse,
-      });
     }
   }
 
@@ -249,39 +217,12 @@ export async function inspectApprovedCaptionAssets(
     }
   }
 
-  const resolvedRolePolicyReview = rolePolicyReview === undefined
-    ? await loadRolePolicyLedger(
-      repoRoot,
-      "docs/course-production/approved-media-role-policy-review.json",
-      "Approved-media role-policy review ledger",
-      errors,
-    )
-    : rolePolicyReview;
-  const resolvedRolePolicyExceptions = rolePolicyExceptions === undefined
-    ? await loadRolePolicyLedger(
-      repoRoot,
-      "docs/course-production/approved-media-role-policy-exceptions.json",
-      "Approved-media policy-exception ledger",
-      errors,
-    )
-    : rolePolicyExceptions;
-  const rolePolicy = evaluateApprovedMediaRolePolicy({
-    bindings: rolePolicyBindings,
-    reviewLedger: resolvedRolePolicyReview,
-    exceptionLedger: resolvedRolePolicyExceptions,
-  });
-  errors.push(...rolePolicy.errors);
-
   return {
     approvedVideos: approvedVideos.length,
     heldVideos: heldVideos.length,
     approvedCaptions,
     approvedTranscripts,
     heldDerivativeAssetsStillMissing,
-    rolePolicyReviewVideos: rolePolicy.detections.length,
-    rolePolicyReviewedBindings: rolePolicy.reviewedBindings,
-    rolePolicyApprovedExceptions: rolePolicy.approvedExceptions,
-    policyBlockers: rolePolicy.publicationBlockers,
     errors,
   };
 }

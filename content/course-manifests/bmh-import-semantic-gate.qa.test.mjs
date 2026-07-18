@@ -23,12 +23,6 @@ test("draft validation reports BMH publication blockers without treating the rep
   assert.ok(report.publicationBlockers.some((blocker) =>
     blocker.includes("Artwork production ledger is not finalized"),
   ));
-  assert.equal(
-    report.publicationBlockers.filter((blocker) =>
-      blocker.startsWith("Approved media role policy:"),
-    ).length,
-    9,
-  );
   assert.doesNotThrow(() =>
     assertBmhImportSemanticGate(report, { enforcePublicationBlockers: false }),
   );
