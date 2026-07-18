@@ -43,12 +43,16 @@ describe("seeded E2E credential containment", () => {
   });
 
   it("checks the checksum-bound Tech Stack canary for remote drift before seeding", () => {
+    const e2eJob = workflow.slice(workflow.indexOf("  e2e:"));
     const driftCheck = workflow.indexOf(
       "- name: Verify Tech Stack canary has no remote drift",
     );
     const seedContent = workflow.indexOf("- name: Seed E2E content");
     expect(driftCheck).toBeGreaterThan(0);
     expect(seedContent).toBeGreaterThan(driftCheck);
+    expect(e2eJob).toMatch(
+      /Check out repository[\s\S]*fetch-depth: 0[\s\S]*Verify Tech Stack canary has no remote drift/,
+    );
     expect(workflow.slice(driftCheck, seedContent)).toContain(
       "NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.TEST_SUPABASE_URL }}",
     );

@@ -64,6 +64,10 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+        with:
+          # The canary gate verifies immutable caption and held-video approval
+          # transitions before it reads the remote test project.
+          fetch-depth: 0
 
       - name: Set up Node
         uses: actions/setup-node@v4
