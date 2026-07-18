@@ -499,11 +499,53 @@ in the latest reconciliation entry.
   post-import write-path happy path, rollback rehearsal, artwork approval,
   seven replacement-video approvals, or six production Closer Lab mappings.
 
+### 2026-07-18 provider and paired-schema readiness
+
+- The disposable `bmh-institute-test` migration ledger matches local migrations
+  001 through 035. The current Postgres acceptance scripts for versioned video
+  evidence and import/fixture release guards passed inside rollback-only
+  transactions (39 and 73 statements respectively). The live fail-closed
+  provider suite executed 24 tests across five files with zero skip.
+- Fresh asset staging checked all 155 manifest assets: 85 are approved and
+  checksum-verified, seven held, and 63 missing, with zero integrity error. The
+  Tech Stack canary independently staged its approved video, caption,
+  transcript, and learner guide. Upload and apply still refuse exactly three
+  unique artwork assets: the program cover, slot-03 lesson card, and slot-03
+  poster.
+- Closer Lab production received only the nine additive schema migrations from
+  `20260717052000` through `20260717180000`. The remote ledger reconciles, the
+  live fingerprint is
+  `28789182db3795b077ee4e3892c50f32db01406bf8f49c5d0b6c1f732abd7a97`, and
+  production still contains zero managed BMH personas, rubric goals, or role
+  plays. No scenario apply, app deployment, learner access, or publication
+  occurred.
+- The two distinct directional role-play credentials were refreshed from the
+  write-enabled 1Password service-account source into Institute Vercel,
+  Closer GitHub Actions, and Closer Railway. Railway variable changes used
+  `--skip-deploys`. The short-lived legacy-claim cutoff remains deliberately
+  unset until the controlled paired deployment window.
+- Closer PR #96 now preserves the exact deployed legacy token shape only inside
+  the bounded cutoff and exact configured Institute origin. Its Railway
+  workflow also blocks deployment until the live production schema fingerprint,
+  required columns, service RPCs, and anonymous review RPC all pass read-only
+  checks.
+- The full import gate currently reports zero semantic errors and 87 publication
+  blockers. Nine of those bind exact already-approved video, caption, and
+  transcript checksums to a separate named-role wording review; the empty
+  exception ledger prevents cut approval from being misread as policy approval.
+  No video, caption, transcript, or existing approval status changed. KPI v12
+  remains exact-cut approved at
+  `3d50cc79cfe74277ac1311367d5b0bd6fd62d2d38c2c74fff8732ea62203d61a`.
+
 ## Hard gates
 
 - Terms v10 and KPIs v12 are approved. Jarrad must still review the seven new
   policy-safe replacement cuts after provider production; source-evidence
   hashes marked `changes_requested` cannot be approved as-is.
+- Nine exact approved cuts still require one explicit named-role policy decision:
+  approve their checksum-bound downstream role references as an exception or
+  move the affected cuts to replacement. This does not revoke exact-cut approval,
+  including KPI v12.
 - The V8 thumbnail direction is approved and the 49-asset batch is produced.
   Jarrad must approve the final checksum-locked contact sheet before artwork is
   promoted into the release manifest.
