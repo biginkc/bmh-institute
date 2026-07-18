@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 
 import { validateCanaryScope, validateCourseManifest } from "./manifest";
 import { validCourseManifest } from "./test-fixtures";
@@ -95,6 +97,65 @@ describe("validateCourseManifest", () => {
         expect.stringContaining("missing-thumbnail"),
       ]),
     );
+  });
+
+  it("requires explicit quiz content approval at the release gate", () => {
+    const pending = validCourseManifest();
+    const quiz = pending.program.courses[0].modules[0].lessons[1].quiz;
+    if (!quiz) throw new Error("Fixture quiz is missing.");
+    quiz.approval_status = "pending_human_review";
+    const pendingResult = validateCourseManifest(pending, { gate: "release" });
+    expect(pendingResult.ok).toBe(false);
+    if (!pendingResult.ok) {
+      expect(pendingResult.errors).toContain(
+        "program.courses[0].modules[0].lessons[1].quiz.approval_status requires explicit human content approval before release.",
+      );
+    }
+
+    const missing = validCourseManifest();
+    const missingQuiz = missing.program.courses[0].modules[0].lessons[1].quiz;
+    if (!missingQuiz) throw new Error("Fixture quiz is missing.");
+    delete missingQuiz.approval_status;
+    const missingResult = validateCourseManifest(missing, { gate: "release" });
+    expect(missingResult.ok).toBe(false);
+    if (!missingResult.ok) {
+      expect(missingResult.errors).toContain(
+        "program.courses[0].modules[0].lessons[1].quiz.approval_status requires explicit human content approval before release.",
+      );
+    }
+  });
+
+  it("allows a pending quiz only at the unpublished canary gate", () => {
+    const input = validCourseManifest();
+    const quiz = input.program.courses[0].modules[0].lessons[1].quiz;
+    if (!quiz) throw new Error("Fixture quiz is missing.");
+    quiz.approval_status = "pending_human_review";
+
+    const canary = validateCourseManifest(input, { gate: "canary" });
+    expect(canary.ok).toBe(false);
+    if (!canary.ok) {
+      expect(canary.errors.join("\n")).not.toMatch(/human content approval/i);
+      expect(canary.errors.join("\n")).toMatch(/required for release/i);
+    }
+    expect(validateCourseManifest(input, { gate: "release" }).ok).toBe(false);
+
+    input.assets[0].approval_status = "hold";
+    const unsafeCanary = validateCourseManifest(input, { gate: "canary" });
+    expect(unsafeCanary.ok).toBe(false);
+    if (!unsafeCanary.ok) {
+      expect(unsafeCanary.errors.join("\n")).toMatch(/not approved/i);
+    }
+  });
+
+  it("accepts the exact pending-review Tech Stack canary but rejects it as a full release", () => {
+    const canary = JSON.parse(readFileSync(resolve(
+      process.cwd(),
+      "content/course-manifests/bmh-employee-training-canary.v1.json",
+    ), "utf8"));
+    expect(validateCourseManifest(canary, { gate: "canary" }).ok).toBe(true);
+    const release = validateCourseManifest(canary, { gate: "release" });
+    expect(release.ok).toBe(false);
+    if (!release.ok) expect(release.errors.join("\n")).toMatch(/human content approval/i);
   });
 
   it("rejects invalid lesson payloads and unapproved required media", () => {

@@ -1,8 +1,9 @@
 # BMH Institute thumbnail pilots
 
-Status: **V8 awaiting Jarrad approval**. These exact files are isolated review
-pilots. They are not approved, uploaded, published, or referenced as approved
-course assets.
+Status: **final artwork approved and promoted**. Jarrad's checksum-bound V4
+approval covers the 28 masters and 49 manifest artwork assets recorded in
+`approvals/final-artwork-approval-v4.json`. Earlier pilots remain review
+history; this approval does not itself upload or publish course assets.
 
 ## Locked creative rule
 

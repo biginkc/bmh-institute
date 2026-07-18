@@ -1,6 +1,6 @@
 # BMH employee training content preparation
 
-Updated: 2026-07-16
+Updated: 2026-07-18
 
 ## Outcome
 
@@ -9,15 +9,17 @@ The unpublished import draft now contains the full authored course shape:
 - 6 sequential sections
 - 19 grouped content lessons
 - 29 selected video cuts
-- 19 required quizzes with 18 curated questions each
+- 19 required quizzes with 18 curated questions each; checksum-bound human
+  content approval is still pending
 - 10 randomized questions per attempt with an 80 percent passing score
 - 152 flashcards, 8 per topic
 - 6 text assignments with reviewer rubrics
 - 6 required Closer Lab scenario specifications
 - 19 learner summaries, objective sets, and accessible in-app text guides
-- 19 approved, checksum-addressed accessible learner-guide PDFs whose downloads
-  remain available without blocking lesson completion
-- 49 artwork placeholders: one program cover, 19 lesson thumbnails, and 29
+- 18 approved, checksum-addressed accessible learner-guide PDFs plus the
+  regenerated Slot 16 guide awaiting course-QA reacceptance; downloads remain
+  available without blocking lesson completion
+- 49 approved artwork assets: one program cover, 19 lesson thumbnails, and 29
   dedicated video posters
 
 The machine-readable source is
@@ -78,10 +80,10 @@ required, reviewed assignment.
 Each grouped content lesson keeps its accessible in-app text guide as a fallback
 and also references exactly one learner-guide PDF download. The downloads are
 not completion-required because the runtime has no trustworthy download-
-progress operation. All 19 PDFs are produced, machine-checked, rendered,
-visually inspected, and approved. Each video references its own poster asset
-rather than reusing a topic thumbnail; the 29 posters remain gated on approval
-of the three-image visual pilot.
+progress operation. All 19 PDFs are produced and machine-checked; 18 retain
+their checksum-bound course-QA acceptance, while the changed Slot 16 PDF is
+explicitly pending reacceptance. Each video references its own approved poster
+asset rather than reusing a topic thumbnail.
 
 ## Asset inventory
 
@@ -90,17 +92,17 @@ The manifest contains 155 assets:
 - 29 videos: 22 approved and 7 held for policy-safe replacement cuts
 - 29 exact-cut caption assets: 22 approved and 7 missing
 - 29 exact-cut transcript assets: 22 approved and 7 missing
-- 49 artwork placeholders: one program cover, 19 topic thumbnails, and 29
-  video posters; all final files have been produced but remain unapproved and
-  therefore deliberately unreconciled
-- 19 approved accessible learner-guide PDFs
+- 49 approved artwork assets: one program cover, 19 topic thumbnails, and 29
+  video posters
+- 18 approved accessible learner-guide PDFs and one changed Slot 16 guide
+  pending course-QA reacceptance
 
-There are 63 missing manifest assets: 14 held-cut caption/transcript
-derivatives and 49 approval-gated artwork records. Together with the seven
-video holds and six pending production Closer Lab IDs, the validator reports
-76 publication blockers and zero manifest errors. The dated operating-stack
-confirmation is a warning that must be refreshed immediately before
-publication, not an additional blocker in the current validator result.
+There are 15 missing manifest assets: 14 held-cut caption/transcript
+derivatives and the changed Slot 16 guide. Together with seven video holds, six
+pending production Closer Lab IDs, and 19 quiz pools awaiting explicit human
+content approval, the validator reports 47 publication blockers and zero
+manifest errors. The dated operating-stack confirmation is a warning that must
+be refreshed immediately before publication, not an additional blocker.
 
 ## Quiz curation
 
@@ -115,6 +117,13 @@ approved import. The draft selects 342 questions and enforces these rules:
 - exactly one correct answer for single-choice and true-or-false items
 - at least two correct answers for multi-select items
 - no duplicate normalized question text
+
+All 19 pools remain `pending_human_review`. The exact pools and the changed
+Slot 16 guide are bound in
+`docs/course-production/quiz-content-review-request.v1.json`; the empty
+`docs/course-production/quiz-approvals.json` response ledger is intentional and
+does not fabricate Jarrad approval. A pool becomes approved only when a human
+response binds its exact content checksum to that request.
 
 The Compensation Engine bank was replaced in full. Its 18 new questions teach
 role ownership, current scorecards, the current written agreement, and manager
@@ -133,9 +142,14 @@ question whose explanation and correct answer are not grounded in the locked
 lesson concepts.
 
 KPI questions that relied on numeric target ranges removed from the shipped
-lesson were also excluded. The duplicate leaseback question was retained only
-in Seller FAQ Decoder. A question claiming a specific credit effect from
-bringing a loan current was excluded from the Objection Scripts Playbook.
+lesson are excluded. The prior selected items prescribing 200 dials with a
+15-20 percent connection rate and a 50 percent offer-to-contract benchmark were
+replaced with diagnostic questions grounded in the approved policy-safe KPI
+cut. The corresponding Slot 16 flashcard and learner-guide wording now direct
+learners to the current role-and-market scorecard rather than one universal
+numeric target. The duplicate leaseback question was retained only in Seller
+FAQ Decoder. A question claiming a specific credit effect from bringing a loan
+current was excluded from the Objection Scripts Playbook.
 
 The wrong-track `The Cold Call Blueprint.pdf` is not referenced anywhere in the
 manifest.
@@ -211,7 +225,7 @@ reviewable.
 
 ## Final preapproval verification
 
-- Manifest validation: 0 errors, 76 intentional publication blockers, and one
+- Manifest validation: 0 errors, 47 intentional publication blockers, and one
   dated DialPad recheck warning.
 - Course shape: 6 modules, 19 content lessons, 19 quiz lessons, 6 assignments,
   29 videos, 342 questions, 152 flashcards, 6 role plays, 29 poster references,
@@ -219,12 +233,12 @@ reviewable.
 - Caption inventory: 22 approved exact video/caption/transcript sets, 7 held
   videos requiring policy-safe replacement cuts, and 14 derivatives
   intentionally missing until their final video hashes exist.
-- Full local asset check: 155 declared assets, 85 exact approved files verified,
-  70 held or missing asset blockers, and 0 errors. Six pending production
-  Closer Lab IDs bring the publication-blocker total to 76.
-- Tech Stack canary: 4 approved files copied to an isolated staging tree with
-  independent inodes; 3 expected artwork/poster blockers; 0 errors. A second
-  run reused all four staged files without rewriting them.
+- Full local asset check: 155 declared assets, 141 existing source files
+  checksum verified, 14 not-yet-produced held-cut derivatives, and 0 integrity
+  errors. Release state is 133 approved, 7 held, and 15 missing assets.
+- Tech Stack canary remains unpublished. Its quiz is explicitly pending human
+  content approval; prior canary storage and rollback evidence does not clear
+  that content gate.
 - Test-only database proof: migrations 019 through 023 compile on
   `bmh-institute-test`, and all 31 database integration tests pass. Production
   remains unchanged and the fixture cleanup function has not been executed.

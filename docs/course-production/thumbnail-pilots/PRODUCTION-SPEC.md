@@ -1,10 +1,10 @@
 # BMH Institute artwork production specification
 
-Status: blocked pending Jarrad's approval of all three thumbnail pilots.
+Status: fulfilled for the current V1 artwork set. Jarrad's checksum-bound
+approval is recorded in `approvals/final-artwork-approval-v4.json`.
 
-This specification prepares the post-approval artwork lane. It does not approve
-the pilots, generate new images, update manifest approvals, upload files, or
-publish course content.
+This remains the production contract and historical lineage record. It does not
+upload files or publish course content.
 
 The canonical production inventory and still-pending ledger now bind the exact
 V8 pilot bytes through `v8-generation-lineage.json` and the honest

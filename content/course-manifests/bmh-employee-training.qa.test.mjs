@@ -3,6 +3,7 @@ import { test } from "node:test";
 
 import {
   loadManifest,
+  STALE_FIXED_KPI_PATTERN,
   STALE_ROLE_BOUND_COURSE_PATTERN,
   summarizeManifest,
   validateManifest,
@@ -348,4 +349,40 @@ test("wrong-track and stale compensation content cannot enter the learner draft"
   assert.doesNotMatch(serialized, /Cold Call Blueprint/i);
   assert.doesNotMatch(compensationAndCareer, /\$\s*\d/);
   assert.doesNotMatch(compensationAndCareer, /\b(?:hourly base|appointment bonus|commission tier|tiered commission)\b/i);
+});
+
+test("KPI assessment content stays diagnostic and carries explicit pending approval", async () => {
+  const manifest = await loadManifest(MANIFEST_URL);
+  const lessons = manifest.program.courses
+    .flatMap((course) => course.modules)
+    .flatMap((module) => module.lessons);
+  const quizzes = lessons.filter((lesson) => lesson.type === "quiz");
+  const kpiQuiz = quizzes.find((lesson) => lesson.source_key === "lesson-quiz-slot-16")?.quiz;
+  const kpiLesson = lessons.find((lesson) => lesson.source_key === "lesson-content-slot-16");
+
+  assert.equal(quizzes.length, 19);
+  assert.ok(quizzes.every((lesson) => lesson.quiz.approval_status === "pending_human_review"));
+  assert.ok(quizzes.every((lesson) => lesson.quiz.description === "Each attempt draws 10 questions from the curated lesson pool."));
+  assert.ok(kpiQuiz);
+  assert.doesNotMatch(JSON.stringify(kpiQuiz.questions), STALE_FIXED_KPI_PATTERN);
+  assert.ok(kpiQuiz.questions.some((question) =>
+    question.question_text === "What should happen when connection rate falls below the normal range for the current role and market?"
+  ));
+  assert.ok(kpiQuiz.questions.some((question) =>
+    question.question_text === "Why are the six KPI metrics read from left to right?"
+  ));
+  assert.equal(
+    kpiLesson.blocks.find((block) => block.source_key === "block-flashcards-slot-16")
+      .content.cards[6].front,
+    "What should happen when connection rate falls below the normal range for the current role and market?",
+  );
+
+  const stale = structuredClone(manifest);
+  const staleKpiQuiz = stale.program.courses
+    .flatMap((course) => course.modules)
+    .flatMap((module) => module.lessons)
+    .find((lesson) => lesson.source_key === "lesson-quiz-slot-16")
+    .quiz;
+  staleKpiQuiz.questions[0].explanation = "At a 15-20% connection rate on 200 dials, a rep should connect with 30-40 people.";
+  assert.ok(validateManifest(stale).errors.includes("Removed KPI numeric target content is present"));
 });

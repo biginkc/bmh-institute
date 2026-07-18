@@ -25,6 +25,8 @@ test("the canary is an exact isolated Tech Stack content and quiz slice", async 
       ["lesson-quiz-slot-03", "quiz"],
     ],
   );
+  const canaryQuiz = canary.program.courses[0].modules[0].lessons.find((lesson) => lesson.type === "quiz").quiz;
+  assert.equal(canaryQuiz.approval_status, "pending_human_review");
   assert.ok(canary.assets.length <= 10);
   assert.ok(canary.assets.every((asset) =>
     asset.storage_path.startsWith("courses/bmh-employee-training-canary/v1/"),

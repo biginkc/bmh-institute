@@ -14,6 +14,7 @@ import {
 } from "./held-video-local-policy-candidates.mjs";
 
 const STALE_COMPENSATION_PATTERN = /\$\s*\d|hourly base|appointment bonus|commission tier|tiered commission/i;
+export const STALE_FIXED_KPI_PATTERN = /\b(?:dials?\s+\d+|\d+\s+dials?|connection rate[^.]{0,80}\d+\s*%|\d+\s*(?:-|to)\s*\d+\s*people|benchmark ratio|target benchmark|offer-to-contract conversion rate[^.]{0,40}\d+\s*%|one out of every \d+ offers)\b/i;
 const STALE_CAREER_GROWTH_PATTERN = /\b(?:role ladder|career ladder|promotion|promoted|readiness|first consideration|management path|closer path|acquisitions? role|90(?:-plus)? days?|six months?|one year|commission|compensation|salary|pay increase|earning potential|higher earnings?|daily (?:numbers?|targets?|quotas?)|dial quotas?|hit(?:ting)? (?:their )?numbers every day|guarante(?:e|ed|es)|own(?:s|ing)? (?:the )?(?:entire )?team(?:'s)? performance)\b/i;
 export const STALE_ROLE_BOUND_COURSE_PATTERN = /\b(?:navigators?|virtual onboarding specialists?|lead sourcing specialists?|lead sourcing seats?|lead generators?|SDRs?)\b/i;
 const CAREER_GROWTH_GROUNDING = new Map([
@@ -537,6 +538,11 @@ export function validateManifest(
         continue;
       }
       const quiz = lesson.quiz;
+      if (quiz.approval_status !== "approved" && quiz.approval_status !== "pending_human_review") {
+        errors.push(`${quiz.source_key} needs an explicit content approval status`);
+      } else if (quiz.approval_status === "pending_human_review") {
+        publicationBlockers.push(`${quiz.source_key} needs human content approval`);
+      }
       if (quiz.questions.length < 15 || quiz.questions.length > 20) {
         errors.push(`${quiz.source_key} must contain 15 to 20 curated questions`);
       }
@@ -585,7 +591,7 @@ export function validateManifest(
   }
   const kpiLesson = lessons.find((lesson) => lesson.source_key === "lesson-quiz-slot-16");
   const kpiQuestions = JSON.stringify(kpiLesson?.quiz?.questions ?? []);
-  if (/target percentage|drops below what percentage|daily target range/i.test(kpiQuestions)) {
+  if (/target percentage|drops below what percentage|daily target range/i.test(kpiQuestions) || STALE_FIXED_KPI_PATTERN.test(kpiQuestions)) {
     errors.push("Removed KPI numeric target content is present");
   }
   const missionControlLesson = lessons.find((lesson) => lesson.source_key === "lesson-quiz-slot-18");

@@ -76,7 +76,7 @@ test("changed guide bytes and a matching record cannot inherit the prior accepta
   assert.equal(asset.approval_status, "missing");
 });
 
-test("all 19 learner guides are approved, deterministic, and structurally accessible", async () => {
+test("all 19 learner guides are deterministic and the changed Slot 16 guide fails closed", async () => {
   const manifest = JSON.parse(await readFile(MANIFEST_PATH, "utf8"));
   const lessons = manifest.program.courses
     .flatMap((course) => course.modules)
@@ -92,7 +92,10 @@ test("all 19 learner guides are approved, deterministic, and structurally access
     assert.ok(guideBlock, `${lesson.source_key} has a guide block`);
     const asset = assets.get(guideBlock.content.asset_key);
     assert.ok(asset, `${lesson.source_key} has a guide asset`);
-    assert.equal(asset.approval_status, "approved");
+    assert.equal(
+      asset.approval_status,
+      lesson.source_key === "lesson-content-slot-16" ? "missing" : "approved",
+    );
     assert.match(asset.local_path, /^output\/pdf\/slot-[0-9]{2}-learner-guide\.pdf$/);
 
     const assetPath = resolve(ROOT, asset.local_path);

@@ -58,6 +58,7 @@ export type ImportQuiz = {
   source_key: string;
   title: string;
   description: string | null;
+  approval_status?: "pending_human_review" | "approved";
   passing_score: number;
   randomize_questions: boolean;
   randomize_answers: boolean;
@@ -143,7 +144,8 @@ export type ManifestValidationResult =
   | { ok: true; value: CourseImportManifest }
   | { ok: false; errors: string[] };
 
-export type ManifestValidationOptions = { gate?: "draft" | "release" };
+export type ManifestValidationGate = "draft" | "canary" | "release";
+export type ManifestValidationOptions = { gate?: ManifestValidationGate };
 
 export function validateCanaryScope(manifest: CourseImportManifest): string[] {
   const errors: string[] = [];
@@ -267,7 +269,7 @@ export function validateCourseManifest(
     ) {
       errors.push(`${path}.storage_path must be owned by ${storagePrefix}.`);
     }
-    if (gate === "release") {
+    if (gate !== "draft") {
       if (asset.approval_status === "approved") {
         if (!asset.checksum_sha256) {
           errors.push(`${path}.checksum_sha256 is required for an approved release asset.`);
@@ -402,7 +404,7 @@ function validateLesson(
   assetPaths: Map<string, CourseImportAsset[]>,
   artworkNamespace: string,
   registerKey: (value: unknown, path: string) => void,
-  gate: "draft" | "release",
+  gate: ManifestValidationGate,
   errors: string[],
 ) {
   if (!isRecord(lesson)) {
@@ -501,7 +503,7 @@ function validateLesson(
               errors,
             );
           }
-          if (gate === "release" && asset && asset.approval_status !== "approved") {
+          if (gate !== "draft" && asset && asset.approval_status !== "approved") {
             errors.push(`${blockPath} referenced asset ${value} is not approved.`);
           }
         }
@@ -536,13 +538,13 @@ function validateLesson(
             errors,
           );
         }
-        if (gate === "release" && !isApprovedImmutableAsset(asset, storagePrefixForImportFromNamespace(artworkNamespace))) {
+        if (gate !== "draft" && !isApprovedImmutableAsset(asset, storagePrefixForImportFromNamespace(artworkNamespace))) {
           errors.push(
             `${blockPath}.content.${pathField} must reference an approved immutable asset in this import.`,
           );
         }
       }
-      if (gate === "release" && block.type === "video") {
+      if (gate !== "draft" && block.type === "video") {
         for (const field of ["asset_key", "poster_asset_key", "caption_asset_key", "transcript_asset_key"] as const) {
           const value = block.content[field];
           if (typeof value !== "string") errors.push(`${blockPath}.content.${field} is required for release.`);
@@ -559,7 +561,7 @@ function validateLesson(
           );
         }
       }
-      if (gate === "release" && block.type === "role_play" && block.required === true) {
+      if (gate !== "draft" && block.type === "role_play" && block.required === true) {
         const scenarioId = block.content.scenario_id;
         if (
           typeof scenarioId !== "string" ||
@@ -653,12 +655,21 @@ function validateQuiz(
   quiz: ImportQuiz,
   path: string,
   registerKey: (value: unknown, path: string) => void,
-  gate: "draft" | "release",
+  gate: ManifestValidationGate,
   errors: string[],
 ) {
   registerKey(quiz.source_key, path);
   requireNonEmpty(quiz.title, `${path}.title`, errors);
   validateNullableString(quiz.description, `${path}.description`, errors);
+  if (
+    quiz.approval_status !== undefined &&
+    !["pending_human_review", "approved"].includes(quiz.approval_status)
+  ) {
+    errors.push(`${path}.approval_status is invalid.`);
+  }
+  if (gate === "release" && quiz.approval_status !== "approved") {
+    errors.push(`${path}.approval_status requires explicit human content approval before release.`);
+  }
   if (typeof quiz.randomize_questions !== "boolean") errors.push(`${path}.randomize_questions must be boolean.`);
   if (typeof quiz.randomize_answers !== "boolean") errors.push(`${path}.randomize_answers must be boolean.`);
   if (!Number.isInteger(quiz.passing_score) || quiz.passing_score < 0 || quiz.passing_score > 100) {
@@ -666,7 +677,7 @@ function validateQuiz(
   }
   const questions = Array.isArray(quiz.questions) ? quiz.questions : [];
   if (questions.length === 0) errors.push(`${path}.questions must contain at least one question.`);
-  if (gate === "release" && questions.length < 15) errors.push(`${path}.questions must contain at least 15 questions for release.`);
+  if (gate !== "draft" && questions.length < 15) errors.push(`${path}.questions must contain at least 15 questions for release.`);
   if (
     quiz.questions_per_attempt !== null &&
     (!Number.isInteger(quiz.questions_per_attempt) ||
@@ -865,7 +876,7 @@ function validateArtworkReference(
   path: string,
   assets: Map<string, CourseImportAsset>,
   expectedNamespace: string,
-  gate: "draft" | "release",
+  gate: ManifestValidationGate,
   errors: string[],
 ) {
   if (value !== null && typeof value !== "string") {
@@ -884,7 +895,7 @@ function validateArtworkReference(
   ) {
     errors.push(`${path} must reference an image in ${expectedNamespace}.`);
   }
-  if (gate === "release") requireApprovedAsset(value, path, assets, errors);
+  if (gate !== "draft") requireApprovedAsset(value, path, assets, errors);
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

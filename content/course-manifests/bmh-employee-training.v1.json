@@ -1522,11 +1522,11 @@
       "source_key": "guide-slot-16",
       "kind": "pdf",
       "local_path": "output/pdf/slot-16-learner-guide.pdf",
-      "storage_path": "courses/bmh-employee-training/v1/guides/guide-slot-16.52fba6bfab15ec9b91cf5814b0ab2a04d03189387f96574056852fb778aeaae6.pdf",
+      "storage_path": "courses/bmh-employee-training/v1/guides/guide-slot-16.1ea291e1190ba6f990407cff53160ef90c1acf787e5e66ed6686a2d9984d7c5d.pdf",
       "mime_type": "application/pdf",
-      "checksum_sha256": "52fba6bfab15ec9b91cf5814b0ab2a04d03189387f96574056852fb778aeaae6",
-      "size_bytes": 50633,
-      "approval_status": "approved"
+      "checksum_sha256": "1ea291e1190ba6f990407cff53160ef90c1acf787e5e66ed6686a2d9984d7c5d",
+      "size_bytes": 50676,
+      "approval_status": "missing"
     },
     {
       "source_key": "guide-slot-17",
@@ -1707,7 +1707,8 @@
                 "quiz": {
                   "source_key": "quiz-slot-01",
                   "title": "Welcome and Mindset Checkpoint",
-                  "description": "Each attempt draws 10 questions from the approved lesson pool.",
+                  "description": "Each attempt draws 10 questions from the curated lesson pool.",
+                  "approval_status": "pending_human_review",
                   "passing_score": 80,
                   "randomize_questions": true,
                   "randomize_answers": true,
@@ -2399,7 +2400,8 @@
                 "quiz": {
                   "source_key": "quiz-slot-02",
                   "title": "Real Estate Terms Glossary Checkpoint",
-                  "description": "Each attempt draws 10 questions from the approved lesson pool.",
+                  "description": "Each attempt draws 10 questions from the curated lesson pool.",
+                  "approval_status": "pending_human_review",
                   "passing_score": 80,
                   "randomize_questions": true,
                   "randomize_answers": true,
@@ -3079,7 +3081,8 @@
                 "quiz": {
                   "source_key": "quiz-slot-03",
                   "title": "Tech Stack and Systems Checkpoint",
-                  "description": "Each attempt draws 10 questions from the approved lesson pool.",
+                  "description": "Each attempt draws 10 questions from the curated lesson pool.",
+                  "approval_status": "pending_human_review",
                   "passing_score": 80,
                   "randomize_questions": true,
                   "randomize_answers": true,
@@ -3875,7 +3878,8 @@
                 "quiz": {
                   "source_key": "quiz-slot-04",
                   "title": "Humanizing the Lead Checkpoint",
-                  "description": "Each attempt draws 10 questions from the approved lesson pool.",
+                  "description": "Each attempt draws 10 questions from the curated lesson pool.",
+                  "approval_status": "pending_human_review",
                   "passing_score": 80,
                   "randomize_questions": true,
                   "randomize_answers": true,
@@ -4642,7 +4646,8 @@
                 "quiz": {
                   "source_key": "quiz-slot-05",
                   "title": "The BMH Offer Playbook Checkpoint",
-                  "description": "Each attempt draws 10 questions from the approved lesson pool.",
+                  "description": "Each attempt draws 10 questions from the curated lesson pool.",
+                  "approval_status": "pending_human_review",
                   "passing_score": 80,
                   "randomize_questions": true,
                   "randomize_answers": true,
@@ -5411,7 +5416,8 @@
                 "quiz": {
                   "source_key": "quiz-slot-06",
                   "title": "Sales Pipeline and Stage Ownership Checkpoint",
-                  "description": "Each attempt draws 10 questions from the approved lesson pool.",
+                  "description": "Each attempt draws 10 questions from the curated lesson pool.",
+                  "approval_status": "pending_human_review",
                   "passing_score": 80,
                   "randomize_questions": true,
                   "randomize_answers": true,
@@ -6181,7 +6187,8 @@
                 "quiz": {
                   "source_key": "quiz-slot-07",
                   "title": "Opening the Call Checkpoint",
-                  "description": "Each attempt draws 10 questions from the approved lesson pool.",
+                  "description": "Each attempt draws 10 questions from the curated lesson pool.",
+                  "approval_status": "pending_human_review",
                   "passing_score": 80,
                   "randomize_questions": true,
                   "randomize_answers": true,
@@ -6927,7 +6934,8 @@
                 "quiz": {
                   "source_key": "quiz-slot-08",
                   "title": "Discovery and Handoff Checkpoint",
-                  "description": "Each attempt draws 10 questions from the approved lesson pool.",
+                  "description": "Each attempt draws 10 questions from the curated lesson pool.",
+                  "approval_status": "pending_human_review",
                   "passing_score": 80,
                   "randomize_questions": true,
                   "randomize_answers": true,
@@ -7699,7 +7707,8 @@
                 "quiz": {
                   "source_key": "quiz-slot-09",
                   "title": "Objection Architecture Checkpoint",
-                  "description": "Each attempt draws 10 questions from the approved lesson pool.",
+                  "description": "Each attempt draws 10 questions from the curated lesson pool.",
+                  "approval_status": "pending_human_review",
                   "passing_score": 80,
                   "randomize_questions": true,
                   "randomize_answers": true,
@@ -8403,7 +8412,8 @@
                 "quiz": {
                   "source_key": "quiz-slot-10",
                   "title": "Objection Scripts Playbook Checkpoint",
-                  "description": "Each attempt draws 10 questions from the approved lesson pool.",
+                  "description": "Each attempt draws 10 questions from the curated lesson pool.",
+                  "approval_status": "pending_human_review",
                   "passing_score": 80,
                   "randomize_questions": true,
                   "randomize_answers": true,
@@ -9149,7 +9159,8 @@
                 "quiz": {
                   "source_key": "quiz-slot-11",
                   "title": "Complex Objections Checkpoint",
-                  "description": "Each attempt draws 10 questions from the approved lesson pool.",
+                  "description": "Each attempt draws 10 questions from the curated lesson pool.",
+                  "approval_status": "pending_human_review",
                   "passing_score": 80,
                   "randomize_questions": true,
                   "randomize_answers": true,
@@ -9868,7 +9879,8 @@
                 "quiz": {
                   "source_key": "quiz-slot-12",
                   "title": "Seller FAQ Decoder Checkpoint",
-                  "description": "Each attempt draws 10 questions from the approved lesson pool.",
+                  "description": "Each attempt draws 10 questions from the curated lesson pool.",
+                  "approval_status": "pending_human_review",
                   "passing_score": 80,
                   "randomize_questions": true,
                   "randomize_answers": true,
@@ -10625,7 +10637,8 @@
                 "quiz": {
                   "source_key": "quiz-slot-13",
                   "title": "Follow-Up Cadence Checkpoint",
-                  "description": "Each attempt draws 10 questions from the approved lesson pool.",
+                  "description": "Each attempt draws 10 questions from the curated lesson pool.",
+                  "approval_status": "pending_human_review",
                   "passing_score": 80,
                   "randomize_questions": true,
                   "randomize_answers": true,
@@ -11323,7 +11336,8 @@
                 "quiz": {
                   "source_key": "quiz-slot-14",
                   "title": "Conversation Flow Mastery Checkpoint",
-                  "description": "Each attempt draws 10 questions from the approved lesson pool.",
+                  "description": "Each attempt draws 10 questions from the curated lesson pool.",
+                  "approval_status": "pending_human_review",
                   "passing_score": 80,
                   "randomize_questions": true,
                   "randomize_answers": true,
@@ -12057,7 +12071,8 @@
                 "quiz": {
                   "source_key": "quiz-slot-15",
                   "title": "Closing and Deal Engineering Checkpoint",
-                  "description": "Each attempt draws 10 questions from the approved lesson pool.",
+                  "description": "Each attempt draws 10 questions from the curated lesson pool.",
+                  "approval_status": "pending_human_review",
                   "passing_score": 80,
                   "randomize_questions": true,
                   "randomize_answers": true,
@@ -12740,7 +12755,7 @@
                     "sort_order": 3,
                     "required": false,
                     "content": {
-                      "html": "<h2>Learner guide</h2><ul><li>Metrics show where to investigate. They do not explain everything by themselves</li><li>Use the current role scorecard for targets</li><li>Check conversion between adjacent stages</li><li>Pair numbers with notes and call review before deciding on a fix</li></ul><p>Use the current written SOP and ask your manager when a live process differs from this lesson.</p>"
+                      "html": "<h2>Learner guide</h2><ul><li>Metrics show where to investigate. They do not explain everything by themselves</li><li>Use the current role-and-market scorecard. Training does not set one universal numeric target</li><li>Check conversion between adjacent stages</li><li>Pair numbers with notes and call review before deciding on a fix</li></ul><p>Use the current written SOP and ask your manager when a live process differs from this lesson.</p>"
                     }
                   },
                   {
@@ -12750,9 +12765,9 @@
                     "required": false,
                     "content": {
                       "asset_key": "guide-slot-16",
-                      "file_path": "courses/bmh-employee-training/v1/guides/guide-slot-16.52fba6bfab15ec9b91cf5814b0ab2a04d03189387f96574056852fb778aeaae6.pdf",
+                      "file_path": "courses/bmh-employee-training/v1/guides/guide-slot-16.1ea291e1190ba6f990407cff53160ef90c1acf787e5e66ed6686a2d9984d7c5d.pdf",
                       "filename": "slot-16-learner-guide.pdf",
-                      "size_bytes": 50633,
+                      "size_bytes": 50676,
                       "description": "Accessible learner guide for KPIs and Sales Telemetry"
                     }
                   },
@@ -12788,8 +12803,8 @@
                           "back": "Effort"
                         },
                         {
-                          "front": "If a caller dials 200 times, approximately how many connections should they ideally achieve?",
-                          "back": "30 to 40 people"
+                          "front": "What should happen when connection rate falls below the normal range for the current role and market?",
+                          "back": "Flag it to the manager and check number reputation, list quality, and call timing"
                         },
                         {
                           "front": "What is a common technical cause for a sudden drop in connection rates?",
@@ -12811,7 +12826,8 @@
                 "quiz": {
                   "source_key": "quiz-slot-16",
                   "title": "KPIs and Sales Telemetry Checkpoint",
-                  "description": "Each attempt draws 10 questions from the approved lesson pool.",
+                  "description": "Each attempt draws 10 questions from the curated lesson pool.",
+                  "approval_status": "pending_human_review",
                   "passing_score": 80,
                   "randomize_questions": true,
                   "randomize_answers": true,
@@ -13014,33 +13030,33 @@
                     },
                     {
                       "source_key": "question-slot-16-07",
-                      "question_text": "If a caller dials 200 times, approximately how many connections should they ideally achieve?",
+                      "question_text": "What should happen when connection rate falls below the normal range for the current role and market?",
                       "question_type": "single_choice",
-                      "explanation": "At a 15-20% connection rate on 200 dials, a rep should connect with 30-40 people.",
+                      "explanation": "The current KPI lesson treats a connection-rate change as a diagnostic signal: check number reputation, list quality, and call timing with the manager.",
                       "points": 1,
                       "sort_order": 7,
                       "options": [
                         {
                           "source_key": "option-slot-16-07-1",
-                          "option_text": "30 to 40 people",
+                          "option_text": "Flag it to the manager and check number reputation, list quality, and call timing",
                           "is_correct": true,
                           "sort_order": 1
                         },
                         {
                           "source_key": "option-slot-16-07-2",
-                          "option_text": "10 to 20 people",
+                          "option_text": "Treat the change as proof that the representative is not working",
                           "is_correct": false,
                           "sort_order": 2
                         },
                         {
                           "source_key": "option-slot-16-07-3",
-                          "option_text": "50 to 60 people",
+                          "option_text": "Speed-dial until the connection rate returns to normal",
                           "is_correct": false,
                           "sort_order": 3
                         },
                         {
                           "source_key": "option-slot-16-07-4",
-                          "option_text": "80 to 100 people",
+                          "option_text": "Ignore it because connection rate cannot reveal an operating issue",
                           "is_correct": false,
                           "sort_order": 4
                         }
@@ -13190,33 +13206,33 @@
                     },
                     {
                       "source_key": "question-slot-16-12",
-                      "question_text": "What is the benchmark ratio for converting offers into signed contracts?",
+                      "question_text": "Why are the six KPI metrics read from left to right?",
                       "question_type": "single_choice",
-                      "explanation": "A 50% offer-to-contract conversion rate is the target benchmark for healthy deal flow.",
+                      "explanation": "Reading the funnel from left to right helps the team locate the actual gap and respond with the relevant operational check or coaching.",
                       "points": 1,
                       "sort_order": 12,
                       "options": [
                         {
                           "source_key": "option-slot-16-12-1",
-                          "option_text": "One out of every two offers",
+                          "option_text": "To pinpoint the stage where the process is breaking and choose the right response",
                           "is_correct": true,
                           "sort_order": 1
                         },
                         {
                           "source_key": "option-slot-16-12-2",
-                          "option_text": "One out of every three offers",
+                          "option_text": "To assign one universal activity target to every role and market",
                           "is_correct": false,
                           "sort_order": 2
                         },
                         {
                           "source_key": "option-slot-16-12-3",
-                          "option_text": "One out of every five offers",
+                          "option_text": "To rank representatives without reviewing the underlying work",
                           "is_correct": false,
                           "sort_order": 3
                         },
                         {
                           "source_key": "option-slot-16-12-4",
-                          "option_text": "Three out of every four offers",
+                          "option_text": "To replace coaching and call review with a single number",
                           "is_correct": false,
                           "sort_order": 4
                         }
@@ -13515,7 +13531,8 @@
                 "quiz": {
                   "source_key": "quiz-slot-17",
                   "title": "Compensation Engine Checkpoint",
-                  "description": "Each attempt draws 10 questions from the approved lesson pool.",
+                  "description": "Each attempt draws 10 questions from the curated lesson pool.",
+                  "approval_status": "pending_human_review",
                   "passing_score": 80,
                   "randomize_questions": true,
                   "randomize_answers": true,
@@ -14283,7 +14300,8 @@
                 "quiz": {
                   "source_key": "quiz-slot-18",
                   "title": "Operator Playbook and Daily Mission Control Checkpoint",
-                  "description": "Each attempt draws 10 questions from the approved lesson pool.",
+                  "description": "Each attempt draws 10 questions from the curated lesson pool.",
+                  "approval_status": "pending_human_review",
                   "passing_score": 80,
                   "randomize_questions": true,
                   "randomize_answers": true,
@@ -14951,7 +14969,8 @@
                 "quiz": {
                   "source_key": "quiz-slot-19",
                   "title": "Career Growth Path Checkpoint",
-                  "description": "Each attempt draws 10 questions from the approved lesson pool.",
+                  "description": "Each attempt draws 10 questions from the curated lesson pool.",
+                  "approval_status": "pending_human_review",
                   "passing_score": 80,
                   "randomize_questions": true,
                   "randomize_answers": true,

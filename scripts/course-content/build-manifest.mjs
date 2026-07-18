@@ -43,8 +43,13 @@ const GUIDE_APPROVAL_LEDGER_PATH = path.join(
   REPO_ROOT,
   "docs/course-production/guide-approvals.json",
 );
+const QUIZ_APPROVAL_LEDGER_PATH = path.join(
+  REPO_ROOT,
+  "docs/course-production/quiz-approvals.json",
+);
 const ARTWORK_LEDGER_SCHEMA = "bmh-artwork-production-ledger/v1";
 export const GUIDE_APPROVAL_LEDGER_SCHEMA = "bmh-guide-approval-ledger/v1";
+export const QUIZ_APPROVAL_LEDGER_SCHEMA = "bmh-quiz-content-approval-ledger/v1";
 const SHA256_PATTERN = /^[a-f0-9]{64}$/;
 const ISO_TIMESTAMP_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/;
 
@@ -207,7 +212,7 @@ const LESSONS = [
     title: "KPIs and Sales Telemetry",
     summary: "Read the funnel from left to right to locate process gaps and choose the right coaching response.",
     objectives: ["Define the six core metrics", "Separate activity from productive progress", "Diagnose where a funnel breaks", "Use metrics for coaching rather than punishment"],
-    guide: ["Metrics show where to investigate. They do not explain everything by themselves", "Use the current role scorecard for targets", "Check conversion between adjacent stages", "Pair numbers with notes and call review before deciding on a fix"],
+    guide: ["Metrics show where to investigate. They do not explain everything by themselves", "Use the current role-and-market scorecard. Training does not set one universal numeric target", "Check conversion between adjacent stages", "Pair numbers with notes and call review before deciding on a fix"],
   },
   {
     slot: 17,
@@ -422,6 +427,37 @@ const COMPENSATION_QUESTIONS = [
   manualQuestion("Which item is not a reliable compensation source?", ["An informal hallway conversation", "Your current offer letter", "Your current written plan", "Your current role sheet"], [0], "Informal conversations do not replace the written terms for your role."),
   manualQuestion("What is your responsibility within the compensation engine?", ["Understand your role, follow the current scorecard, and make work visible", "Set your own terms", "Memorize another role's examples", "Treat training as a written agreement"], [0], "Professional execution starts with the current role, scorecard, and written plan."),
 ];
+
+const KPI_POLICY_SAFE_REPLACEMENTS = new Map([
+  [
+    "If a caller dials 200 times, approximately how many connections should they ideally achieve?",
+    manualQuestion(
+      "What should happen when connection rate falls below the normal range for the current role and market?",
+      [
+        "Flag it to the manager and check number reputation, list quality, and call timing",
+        "Treat the change as proof that the representative is not working",
+        "Speed-dial until the connection rate returns to normal",
+        "Ignore it because connection rate cannot reveal an operating issue",
+      ],
+      [0],
+      "The current KPI lesson treats a connection-rate change as a diagnostic signal: check number reputation, list quality, and call timing with the manager.",
+    ),
+  ],
+  [
+    "What is the benchmark ratio for converting offers into signed contracts?",
+    manualQuestion(
+      "Why are the six KPI metrics read from left to right?",
+      [
+        "To pinpoint the stage where the process is breaking and choose the right response",
+        "To assign one universal activity target to every role and market",
+        "To rank representatives without reviewing the underlying work",
+        "To replace coaching and call review with a single number",
+      ],
+      [0],
+      "Reading the funnel from left to right helps the team locate the actual gap and respond with the relevant operational check or coaching.",
+    ),
+  ],
+]);
 
 const CAREER_GROWTH_QUESTIONS = [
   manualQuestion("What is the practical focus of career growth in this lesson?", ["Strengthening capability in your current role", "Choosing a new title for yourself", "Taking over a coworker's duties", "Waiting for expectations to change"], [0], "Career growth starts by building capability in the work assigned to your current role."),
@@ -989,7 +1025,11 @@ async function sourceQuestions(slot, quizSourceRoot) {
     return !excluded.some((pattern) => pattern.test(searchable));
   });
   if (candidates.length < 18) throw new Error(`Slot ${slot} has fewer than 18 eligible questions`);
-  return spreadSelect(candidates, 18);
+  const selected = spreadSelect(candidates, 18);
+  if (slot !== 16) return selected;
+  return selected.map((question) =>
+    KPI_POLICY_SAFE_REPLACEMENTS.get(question.questionText) ?? question
+  );
 }
 
 const ROLE_AGNOSTIC_COURSE_TEXT_REPLACEMENTS = [
@@ -1158,24 +1198,99 @@ export async function buildGuideAsset(lesson, guideApprovalLedger, repoRoot = RE
   };
 }
 
+export function quizContentSha256({ source_key, title, questions }) {
+  return createHash("sha256")
+    .update(JSON.stringify({ source_key, title, questions }))
+    .digest("hex");
+}
+
+export async function validateQuizApprovalLedger(ledger, repoRoot = REPO_ROOT) {
+  const errors = [];
+  let reviewRequest;
+  if (!isRecord(ledger) || ledger.schema_version !== QUIZ_APPROVAL_LEDGER_SCHEMA) {
+    return [`Quiz approval ledger schema_version must be ${QUIZ_APPROVAL_LEDGER_SCHEMA}`];
+  }
+  if (ledger.status !== "active") errors.push("Quiz approval ledger must be active");
+  if (ledger.request_path !== "docs/course-production/quiz-content-review-request.v1.json") {
+    errors.push("Quiz approval ledger request path is not canonical");
+  }
+  if (!SHA256_PATTERN.test(ledger.request_sha256 ?? "")) {
+    errors.push("Quiz approval ledger request checksum is invalid");
+  } else {
+    try {
+      const requestPath = path.join(repoRoot, ledger.request_path);
+      const requestChecksum = await sha256(requestPath);
+      if (requestChecksum !== ledger.request_sha256) {
+        errors.push("Quiz approval ledger is not bound to the exact review request");
+      }
+      reviewRequest = JSON.parse(await readFile(requestPath, "utf8"));
+    } catch {
+      errors.push("Quiz approval review request is missing");
+    }
+  }
+  if (!Array.isArray(ledger.records)) {
+    errors.push("Quiz approval ledger records must be an array");
+    return errors;
+  }
+  const seen = new Set();
+  for (const record of ledger.records) {
+    const label = record?.quiz_source_key ?? "unknown quiz";
+    if (!isRecord(record) || !/^quiz-slot-[0-9]{2}$/.test(record.quiz_source_key ?? "")) {
+      errors.push(`${label} approval record has an invalid quiz source key`);
+      continue;
+    }
+    if (seen.has(record.quiz_source_key)) errors.push(`Duplicate quiz approval record ${record.quiz_source_key}`);
+    seen.add(record.quiz_source_key);
+    if (record.decision !== "approved") errors.push(`${label} approval record decision must be approved`);
+    if (!SHA256_PATTERN.test(record.content_sha256 ?? "")) errors.push(`${label} approval checksum is invalid`);
+    const requestedPool = reviewRequest?.quiz_pools?.find((pool) =>
+      pool.quiz_source_key === record.quiz_source_key
+    );
+    if (!requestedPool || requestedPool.content_sha256 !== record.content_sha256) {
+      errors.push(`${label} approval does not match an exact pool in the current review request`);
+    }
+    if (record.request_sha256 !== ledger.request_sha256) errors.push(`${label} is not bound to the current review request`);
+    if (typeof record.approved_by !== "string" || !record.approved_by.trim()) errors.push(`${label} needs an approver`);
+    if (!ISO_TIMESTAMP_PATTERN.test(record.approved_at ?? "")) errors.push(`${label} approval timestamp is invalid`);
+  }
+  return errors;
+}
+
+export function quizApprovalStatus(ledger, quiz) {
+  const checksum = quizContentSha256(quiz);
+  const approved = ledger.records.some((record) =>
+    record.quiz_source_key === quiz.source_key
+    && record.content_sha256 === checksum
+    && record.decision === "approved"
+    && record.request_sha256 === ledger.request_sha256
+  );
+  return approved ? "approved" : "pending_human_review";
+}
+
 export async function buildManifest({
   artworkLedgerPath = ARTWORK_LEDGER_PATH,
   videoApprovalLedgerPath = VIDEO_APPROVAL_LEDGER_PATH,
   videoApprovalHistoryRepoRoot = REPO_ROOT,
   captionApprovalLedgerPath = CAPTION_APPROVAL_LEDGER_PATH,
   guideApprovalLedgerPath = GUIDE_APPROVAL_LEDGER_PATH,
+  quizApprovalLedgerPath = QUIZ_APPROVAL_LEDGER_PATH,
   videoSourceRoot = DEFAULT_VIDEO_SOURCE_ROOT,
   quizSourceRoot = DEFAULT_QUIZ_SOURCE_ROOT,
   inspectDuration = probeVideoDuration,
 } = {}) {
-  const [videoApprovalLedger, captionApprovalLedger, guideApprovalLedger] = await Promise.all([
+  const [videoApprovalLedger, captionApprovalLedger, guideApprovalLedger, quizApprovalLedger] = await Promise.all([
     readFile(videoApprovalLedgerPath, "utf8").then(JSON.parse),
     readFile(captionApprovalLedgerPath, "utf8").then(JSON.parse),
     readFile(guideApprovalLedgerPath, "utf8").then(JSON.parse),
+    readFile(quizApprovalLedgerPath, "utf8").then(JSON.parse),
   ]);
   const guideApprovalErrors = validateGuideApprovalLedger(guideApprovalLedger);
   if (guideApprovalErrors.length > 0) {
     throw new Error(`Guide approval ledger is invalid: ${guideApprovalErrors.join("; ")}`);
+  }
+  const quizApprovalErrors = await validateQuizApprovalLedger(quizApprovalLedger);
+  if (quizApprovalErrors.length > 0) {
+    throw new Error(`Quiz approval ledger is invalid: ${quizApprovalErrors.join("; ")}`);
   }
   const captionApprovalErrors = [
     ...await validateCaptionApprovalEvidence({
@@ -1293,6 +1408,11 @@ export async function buildManifest({
       const slotKey = String(topic.slot).padStart(2, "0");
       const guideAsset = guidesBySlot.get(topic.slot);
       const questions = quizQuestionsBySlot.get(topic.slot);
+      const quizIdentity = {
+        source_key: `quiz-slot-${slotKey}`,
+        title: `${topic.title} Checkpoint`,
+        questions,
+      };
       const videoBlocks = videosBySlot.get(topic.slot).map((asset, index) => ({
         source_key: `block-video-${asset.source_key}`,
         type: "video",
@@ -1374,7 +1494,8 @@ export async function buildManifest({
         quiz: {
           source_key: `quiz-slot-${slotKey}`,
           title: `${topic.title} Checkpoint`,
-          description: "Each attempt draws 10 questions from the approved lesson pool.",
+          description: "Each attempt draws 10 questions from the curated lesson pool.",
+          approval_status: quizApprovalStatus(quizApprovalLedger, quizIdentity),
           passing_score: 80,
           randomize_questions: true,
           randomize_answers: true,

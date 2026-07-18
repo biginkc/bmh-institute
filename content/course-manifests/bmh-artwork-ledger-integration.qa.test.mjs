@@ -527,6 +527,9 @@ test("a canonically finalized 49-asset workflow cannot forge held-video release 
   });
   for (const courseModule of releaseManifest.program.courses[0].modules) {
     for (const lesson of courseModule.lessons) {
+      if (lesson.type === "quiz") {
+        lesson.quiz.approval_status = "approved";
+      }
       for (const block of lesson.blocks ?? []) {
         if (block.type === "role_play") {
           block.content.scenario_id = `production:${block.source_key}`;

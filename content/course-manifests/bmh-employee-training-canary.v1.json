@@ -212,7 +212,8 @@
                 "quiz": {
                   "source_key": "quiz-slot-03",
                   "title": "Tech Stack and Systems Checkpoint",
-                  "description": "Each attempt draws 10 questions from the approved lesson pool.",
+                  "description": "Each attempt draws 10 questions from the curated lesson pool.",
+                  "approval_status": "pending_human_review",
                   "passing_score": 80,
                   "randomize_questions": true,
                   "randomize_answers": true,

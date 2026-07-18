@@ -92,6 +92,7 @@ export function validCourseManifest(): CourseImportManifest {
                     source_key: "quiz",
                     title: "Orientation quiz",
                     description: null,
+                    approval_status: "approved",
                     passing_score: 80,
                     randomize_questions: true,
                     randomize_answers: true,
