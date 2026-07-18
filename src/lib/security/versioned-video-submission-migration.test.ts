@@ -17,16 +17,19 @@ const migrateWorkflow = readFileSync(
 
 describe("versioned video completion and submission evidence migration", () => {
   it("masks credentials before clients run and keeps direct psql secrets out of argv", () => {
-    const applyStep = migrateWorkflow.slice(
-      migrateWorkflow.indexOf("- name: Apply pending migrations"),
-      migrateWorkflow.indexOf("- name: Install dependencies"),
+    const remoteJob = migrateWorkflow.slice(
+      migrateWorkflow.indexOf("  migrate-test:"),
     );
-    const acceptanceStep = migrateWorkflow.slice(
-      migrateWorkflow.indexOf("- name: Run versioned completion"),
-      migrateWorkflow.indexOf("- name: Run fail-closed provider acceptance"),
+    const applyStep = remoteJob.slice(
+      remoteJob.indexOf("- name: Apply pending migrations"),
+      remoteJob.indexOf("- name: Install dependencies"),
     );
-    const providerStep = migrateWorkflow.slice(
-      migrateWorkflow.indexOf("- name: Run fail-closed provider acceptance"),
+    const acceptanceStep = remoteJob.slice(
+      remoteJob.indexOf("- name: Run versioned completion"),
+      remoteJob.indexOf("- name: Run fail-closed provider acceptance"),
+    );
+    const providerStep = remoteJob.slice(
+      remoteJob.indexOf("- name: Run fail-closed provider acceptance"),
     );
     for (const [step, command] of [
       [applyStep, "supabase db push"],

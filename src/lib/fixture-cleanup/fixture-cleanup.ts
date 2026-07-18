@@ -1,5 +1,7 @@
 import { createHash } from "node:crypto";
 
+import type { ExecutionApproval, FreshRollbackRecord } from "./guards";
+
 export type RowIdentity = Record<string, string>;
 
 export type FixtureRow = {
@@ -51,7 +53,12 @@ export type FixtureCleanupAdapter = {
   executeAtomicCleanup(input: {
     manifestSha256: string;
     confirmation: string;
-  }): Promise<{ status: "deleted" | "already_deleted"; deleted: Record<string, number> }>;
+    approval: ExecutionApproval;
+    rollback: FreshRollbackRecord;
+  }): Promise<{
+    status: "deleted" | "already_deleted";
+    deleted: Record<string, number>;
+  }>;
   deleteStorageObjects(bucket: string, names: string[]): Promise<void>;
 };
 
@@ -105,9 +112,18 @@ export const DELETE_ORDER = [
 ] as const;
 
 const REFERENCE_FIELDS: Record<string, Array<[string, string]>> = {
-  program_courses: [["program_id", "programs"], ["course_id", "courses"]],
-  program_access: [["program_id", "programs"], ["role_group_id", "role_groups"]],
-  course_access: [["course_id", "courses"], ["role_group_id", "role_groups"]],
+  program_courses: [
+    ["program_id", "programs"],
+    ["course_id", "courses"],
+  ],
+  program_access: [
+    ["program_id", "programs"],
+    ["role_group_id", "role_groups"],
+  ],
+  course_access: [
+    ["course_id", "courses"],
+    ["role_group_id", "role_groups"],
+  ],
   user_role_groups: [["role_group_id", "role_groups"]],
   modules: [["course_id", "courses"]],
   lessons: [
@@ -119,12 +135,18 @@ const REFERENCE_FIELDS: Record<string, Array<[string, string]>> = {
   content_blocks: [["lesson_id", "lessons"]],
   questions: [["quiz_id", "quizzes"]],
   answer_options: [["question_id", "questions"]],
-  assignment_submissions: [["assignment_id", "assignments"], ["lesson_id", "lessons"]],
+  assignment_submissions: [
+    ["assignment_id", "assignments"],
+    ["lesson_id", "lessons"],
+  ],
   role_play_results: [["block_id", "content_blocks"]],
   user_block_progress: [["block_id", "content_blocks"]],
   user_video_progress: [["block_id", "content_blocks"]],
   user_lesson_completions: [["lesson_id", "lessons"]],
-  user_quiz_attempts: [["quiz_id", "quizzes"], ["lesson_id", "lessons"]],
+  user_quiz_attempts: [
+    ["quiz_id", "quizzes"],
+    ["lesson_id", "lessons"],
+  ],
   user_course_resume: [
     ["course_id", "courses"],
     ["last_lesson_id", "lessons"],
@@ -135,33 +157,53 @@ const REFERENCE_FIELDS: Record<string, Array<[string, string]>> = {
 };
 
 export function parseFixtureManifest(raw: unknown): FixtureBoundaryManifest {
-  if (!raw || typeof raw !== "object") throw new Error("Fixture manifest must be an object.");
+  if (!raw || typeof raw !== "object")
+    throw new Error("Fixture manifest must be an object.");
   const value = raw as Partial<FixtureBoundaryManifest>;
-  if (value.manifest_version !== 1) throw new Error("Unsupported fixture manifest version.");
-  if (value.project?.ref !== "dhvfsyteqsxagokoerrx") throw new Error("Unexpected production project ref.");
+  if (value.manifest_version !== 1)
+    throw new Error("Unsupported fixture manifest version.");
+  if (value.project?.ref !== "dhvfsyteqsxagokoerrx")
+    throw new Error("Unexpected production project ref.");
   if (value.authorization_boundary?.deletion_is_authorized_now !== false) {
-    throw new Error("Manifest must state that deletion is not currently authorized.");
+    throw new Error(
+      "Manifest must state that deletion is not currently authorized.",
+    );
   }
-  if (!value.fixture_tables || !value.retained_entities || !value.reference_classification) {
+  if (
+    !value.fixture_tables ||
+    !value.retained_entities ||
+    !value.reference_classification
+  ) {
     throw new Error("Fixture manifest is missing required sections.");
   }
   for (const table of DELETE_ORDER) {
     const section = value.fixture_tables[table];
-    if (!section || !Array.isArray(section.rows) || !Array.isArray(section.identity_fields)) {
+    if (
+      !section ||
+      !Array.isArray(section.rows) ||
+      !Array.isArray(section.identity_fields)
+    ) {
       throw new Error(`Fixture manifest is missing ${table}.`);
     }
     if (!Array.isArray(section.fingerprint_fields)) {
-      throw new Error(`Fixture manifest is missing ${table} fingerprint fields.`);
+      throw new Error(
+        `Fixture manifest is missing ${table} fingerprint fields.`,
+      );
     }
     if (
       section.rows.length > 0 &&
       (section.fingerprint_fields.length === 0 ||
-        new Set(section.fingerprint_fields).size !== section.fingerprint_fields.length)
+        new Set(section.fingerprint_fields).size !==
+          section.fingerprint_fields.length)
     ) {
-      throw new Error(`Fixture manifest has an invalid ${table} complete-row field set.`);
+      throw new Error(
+        `Fixture manifest has an invalid ${table} complete-row field set.`,
+      );
     }
   }
-  if (value.reference_classification.unexplained_database_references.length > 0) {
+  if (
+    value.reference_classification.unexplained_database_references.length > 0
+  ) {
     throw new Error("Manifest contains unexplained database references.");
   }
   if (value.reference_classification.unexplained_storage_objects.length > 0) {
@@ -235,11 +277,16 @@ export async function buildFixtureCleanupPlan({
     for (const row of liveRows) {
       const key = identityKey(section.identity_fields, row);
       if (expectedKeys.has(key)) continue;
-      if (referencesFixture(table, row, fixtureIds) || inviteReferencesFixture(table, row, fixtureIds)) {
+      if (
+        referencesFixture(table, row, fixtureIds) ||
+        inviteReferencesFixture(table, row, fixtureIds)
+      ) {
         problems.push({
           code: "unexplained_reference",
           table,
-          identity: Object.fromEntries(section.identity_fields.map((field) => [field, String(row[field])])),
+          identity: Object.fromEntries(
+            section.identity_fields.map((field) => [field, String(row[field])]),
+          ),
           message: `${table} row ${key} references fixture content but is not in the exact manifest.`,
         });
       }
@@ -252,12 +299,16 @@ export async function buildFixtureCleanupPlan({
   return {
     manifestSha256,
     deleteCounts: Object.fromEntries(
-      DELETE_ORDER.map((table) => [table, manifest.fixture_tables[table].rows.length]),
+      DELETE_ORDER.map((table) => [
+        table,
+        manifest.fixture_tables[table].rows.length,
+      ]),
     ),
     storageDeleteCounts: Object.fromEntries(
       ["content", "submissions"].map((bucket) => {
         const objects = manifest.storage_objects[bucket];
-        if (!Array.isArray(objects)) throw new Error(`Invalid storage manifest for ${bucket}.`);
+        if (!Array.isArray(objects))
+          throw new Error(`Invalid storage manifest for ${bucket}.`);
         return [bucket, objects.length];
       }),
     ),
@@ -270,11 +321,15 @@ export async function executeFixtureCleanup({
   plan,
   adapter,
   confirmation,
+  approval,
+  rollback,
 }: {
   manifest: FixtureBoundaryManifest;
   plan: FixtureCleanupPlan;
   adapter: FixtureCleanupAdapter;
   confirmation: string;
+  approval: ExecutionApproval;
+  rollback: FreshRollbackRecord;
 }) {
   if (plan.problems.length > 0 && !isAlreadyDeletedCandidate(manifest, plan)) {
     throw new Error("Fixture cleanup preflight has blocking problems.");
@@ -282,10 +337,13 @@ export async function executeFixtureCleanup({
   const database = await adapter.executeAtomicCleanup({
     manifestSha256: plan.manifestSha256,
     confirmation,
+    approval,
+    rollback,
   });
   for (const bucket of ["content", "submissions"]) {
     const objects = manifest.storage_objects[bucket];
-    if (!Array.isArray(objects)) throw new Error(`Invalid storage manifest for ${bucket}.`);
+    if (!Array.isArray(objects))
+      throw new Error(`Invalid storage manifest for ${bucket}.`);
     const names = objects.map((item) =>
       typeof item === "string" ? item : String((item as { name: string }).name),
     );
@@ -296,10 +354,13 @@ export async function executeFixtureCleanup({
     if (namesToDelete.length > 0) {
       await adapter.deleteStorageObjects(bucket, namesToDelete);
     }
-    const remaining = (await adapter.listStorageObjectNames(bucket))
-      .filter((name) => targetNames.has(name));
+    const remaining = (await adapter.listStorageObjectNames(bucket)).filter(
+      (name) => targetNames.has(name),
+    );
     if (remaining.length > 0) {
-      throw new Error(`${bucket} fixture storage objects are still present: ${remaining.join(", ")}`);
+      throw new Error(
+        `${bucket} fixture storage objects are still present: ${remaining.join(", ")}`,
+      );
     }
   }
   return database;
@@ -313,12 +374,16 @@ function isAlreadyDeletedCandidate(
     (total, table) => total + table.rows.length,
     0,
   );
-  const missingRows = plan.problems.filter((problem) => problem.code === "missing_fixture_row");
+  const missingRows = plan.problems.filter(
+    (problem) => problem.code === "missing_fixture_row",
+  );
   return (
     expectedRows > 0 &&
     missingRows.length === expectedRows &&
     plan.problems.every(
-      (problem) => problem.code === "missing_fixture_row" || problem.code === "storage_drift",
+      (problem) =>
+        problem.code === "missing_fixture_row" ||
+        problem.code === "storage_drift",
     )
   );
 }
@@ -366,7 +431,12 @@ function addMissingRetained(
   const live = new Set(current);
   for (const id of expected) {
     if (!live.has(id)) {
-      problems.push({ code, table, identity: { id }, message: `Retained ${table} row ${id} is missing.` });
+      problems.push({
+        code,
+        table,
+        identity: { id },
+        message: `Retained ${table} row ${id} is missing.`,
+      });
     }
   }
 }
@@ -378,14 +448,22 @@ async function assertStorage(
 ) {
   for (const bucket of ["content", "submissions"]) {
     const expected = manifest.storage_objects[bucket];
-    if (!Array.isArray(expected)) throw new Error(`Invalid storage manifest for ${bucket}.`);
+    if (!Array.isArray(expected))
+      throw new Error(`Invalid storage manifest for ${bucket}.`);
     const current = await adapter.listStorageObjectNames(bucket);
     const expectedNames = new Set(
-      expected.map((item) => typeof item === "string" ? item : String((item as { name: string }).name)),
+      expected.map((item) =>
+        typeof item === "string"
+          ? item
+          : String((item as { name: string }).name),
+      ),
     );
     for (const name of expectedNames) {
       if (!current.includes(name)) {
-        problems.push({ code: "storage_drift", message: `${bucket}/${name} is missing.` });
+        problems.push({
+          code: "storage_drift",
+          message: `${bucket}/${name} is missing.`,
+        });
       }
     }
   }
@@ -436,7 +514,10 @@ function normalize(value: unknown): unknown {
     return Object.fromEntries(
       Object.keys(value)
         .sort()
-        .map((key) => [key, normalize((value as Record<string, unknown>)[key])]),
+        .map((key) => [
+          key,
+          normalize((value as Record<string, unknown>)[key]),
+        ]),
     );
   }
   if (typeof value === "string" && /^\d{4}-\d\d-\d\d(?:T| )/.test(value)) {

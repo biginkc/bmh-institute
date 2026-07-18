@@ -6,27 +6,55 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
 const root = resolve(import.meta.dirname, "../..");
-const backupRoot = resolve(root, "../../_codex_backups/bmh-institute-2026-07-16");
+const backupRoot = resolve(
+  root,
+  "../../_codex_backups/bmh-institute-2026-07-16",
+);
 const manifest = JSON.parse(
-  await readFile(resolve(root, "docs/course-production/fixture-boundary-manifest.json"), "utf8"),
+  await readFile(
+    resolve(root, "docs/course-production/fixture-boundary-manifest.json"),
+    "utf8",
+  ),
 );
 const manifestSha = (
-  await readFile(resolve(root, "docs/course-production/fixture-boundary-manifest.json.sha256"), "utf8")
+  await readFile(
+    resolve(
+      root,
+      "docs/course-production/fixture-boundary-manifest.json.sha256",
+    ),
+    "utf8",
+  )
 ).split(" ")[0];
 const confirmation = `DELETE-EXACT-BMH-INSTITUTE-FIXTURES:${manifest.project.ref}:${manifestSha}`;
 const cluster = await mkdtemp(join(tmpdir(), "bmh-fixture-pg-"));
 const socket = join(cluster, "socket");
 const filteredData = join(cluster, "fixture-data.sql");
 const port = String(54000 + (process.pid % 1000));
-const pgEnv = { ...process.env, PGHOST: socket, PGPORT: port, PGDATABASE: "postgres" };
+const pgEnv = {
+  ...process.env,
+  PGHOST: socket,
+  PGPORT: port,
+  PGDATABASE: "postgres",
+};
 
 try {
-  exec("initdb", ["-D", cluster, "-A", "trust", "--no-locale", "--encoding=UTF8"]);
+  exec("initdb", [
+    "-D",
+    cluster,
+    "-A",
+    "trust",
+    "--no-locale",
+    "--encoding=UTF8",
+  ]);
   exec("mkdir", ["-p", socket]);
-  execFileSync("pg_ctl", ["-D", cluster, "-o", `-F -p ${port} -k ${socket}`, "-w", "start"], {
-    env: pgEnv,
-    stdio: "ignore",
-  });
+  execFileSync(
+    "pg_ctl",
+    ["-D", cluster, "-o", `-F -p ${port} -k ${socket}`, "-w", "start"],
+    {
+      env: pgEnv,
+      stdio: "ignore",
+    },
+  );
 
   psqlText(`
     create role anon nologin;
@@ -35,7 +63,9 @@ try {
     create schema auth;
     create table auth.users (id uuid primary key);
     create function auth.uid() returns uuid language sql stable as $$ select null::uuid $$;
-    create function auth.role() returns text language sql stable as $$ select current_user::text $$;
+    create function auth.role() returns text language sql stable as $$
+      select coalesce(nullif(current_setting('request.jwt.claim.role', true), ''), current_user::text)
+    $$;
     create schema storage;
     create table storage.buckets (
       id text primary key,
@@ -75,7 +105,8 @@ try {
     "016_runtime_progress_security.sql",
     "017_revoke_quiz_explanations.sql",
   ];
-  for (const file of migrationFiles) psqlFile(resolve(root, "supabase/migrations", file));
+  for (const file of migrationFiles)
+    psqlFile(resolve(root, "supabase/migrations", file));
 
   psqlText(`
     alter table public.programs
@@ -98,7 +129,9 @@ try {
   const authValues = manifest.retained_entities.auth_users_from_snapshot
     .map((id) => `('${sqlLiteral(id)}'::uuid)`)
     .join(",");
-  psqlText(`set session_replication_role = replica; insert into auth.users (id) values ${authValues}; set session_replication_role = origin;`);
+  psqlText(
+    `set session_replication_role = replica; insert into auth.users (id) values ${authValues}; set session_replication_role = origin;`,
+  );
 
   const selected = new Set([
     ...Object.keys(manifest.fixture_tables).map((table) => `public.${table}`),
@@ -111,12 +144,48 @@ try {
   const dataRaw = await readFile(resolve(backupRoot, "data.sql"), "utf8");
   await writeFile(filteredData, filterCopyBlocks(dataRaw, selected));
   psqlFile(filteredData);
-  psqlFile(resolve(root, "supabase/migrations/021_atomic_fixture_catalog_cleanup.sql"));
-  psqlFile(resolve(root, "scripts/fixture-boundary/atomic-cleanup-local-test.sql"), {
-    manifest_sha: manifestSha,
-    confirmation,
-  });
-  console.log(JSON.stringify({ status: "passed", postgres: 17, manifest_sha256: manifestSha }));
+  psqlFile(
+    resolve(root, "supabase/migrations/021_atomic_fixture_catalog_cleanup.sql"),
+  );
+  psqlFile(
+    resolve(
+      root,
+      "supabase/migrations/024_fixture_cleanup_canonicalizer_stable.sql",
+    ),
+  );
+  psqlFile(
+    resolve(
+      root,
+      "supabase/migrations/035_refresh_fixture_cleanup_manifest_contract.sql",
+    ),
+  );
+  psqlFile(
+    resolve(
+      root,
+      "supabase/migrations/036_controller_verified_fixture_cleanup_gate.sql",
+    ),
+  );
+  psqlFile(
+    resolve(root, "scripts/fixture-boundary/atomic-cleanup-local-test.sql"),
+    {
+      manifest_sha: manifestSha,
+      confirmation,
+    },
+  );
+  psqlFile(
+    resolve(
+      root,
+      "supabase/tests/036_controller_verified_fixture_cleanup_gate.sql",
+    ),
+    { fixture_cleanup_isolated_superuser: "on" },
+  );
+  console.log(
+    JSON.stringify({
+      status: "passed",
+      postgres: 17,
+      manifest_sha256: manifestSha,
+    }),
+  );
 } finally {
   try {
     execFileSync("pg_ctl", ["-D", cluster, "-m", "fast", "-w", "stop"], {
@@ -133,7 +202,8 @@ function psqlText(sql) {
 
 function psqlFile(path, variables = {}) {
   const args = ["-v", "ON_ERROR_STOP=1"];
-  for (const [key, value] of Object.entries(variables)) args.push("-v", `${key}=${value}`);
+  for (const [key, value] of Object.entries(variables))
+    args.push("-v", `${key}=${value}`);
   args.push("-f", path);
   exec("psql", args);
 }

@@ -12,33 +12,107 @@ import {
   type FixtureBoundaryManifest,
   type FixtureCleanupAdapter,
 } from "./fixture-cleanup";
+import type { ExecutionApproval, FreshRollbackRecord } from "./guards";
+
+const cleanupEvidence = {
+  approval: {
+    project_ref: "dhvfsyteqsxagokoerrx",
+    manifest_sha256: "a".repeat(64),
+    approved_by: "Jarrad Henry",
+    approved_at: "2026-07-16T19:50:00Z",
+    recorded_by: "controller",
+    evidence_sha256: "b".repeat(64),
+    scope: "fixture_cleanup_after_real_course_acceptance",
+    authorization: "execute",
+    signature_version: "hmac-sha256-v1",
+    execution_id: "00000000-0000-4000-8000-000000000036",
+    controller_key_id: "controller-v1",
+    controller_signature: "c".repeat(64),
+  } satisfies ExecutionApproval,
+  rollback: {
+    project_ref: "dhvfsyteqsxagokoerrx",
+    manifest_sha256: "a".repeat(64),
+    captured_at: "2026-07-16T19:00:00Z",
+    backup_id: "backup-v1",
+    schema_sha256: "d".repeat(64),
+    data_sha256: "e".repeat(64),
+    storage_inventory_sha256: "f".repeat(64),
+    backup_provider: "supabase",
+    backup_project_ref: "dhvfsyteqsxagokoerrx",
+    backup_status: "COMPLETED",
+    backup_verified_live_at: "2026-07-16T19:30:00Z",
+    backup_verified_by: "controller",
+    backup_verification_evidence_sha256: "1".repeat(64),
+    restore_rehearsal_status: "passed",
+    restore_rehearsal_backup_id: "backup-v1",
+    restore_rehearsed_at: "2026-07-16T19:40:00Z",
+    restore_rehearsal_evidence_sha256: "2".repeat(64),
+    signature_version: "hmac-sha256-v1",
+    execution_id: "00000000-0000-4000-8000-000000000036",
+    controller_key_id: "controller-v1",
+    controller_signature: "3".repeat(64),
+  } satisfies FreshRollbackRecord,
+};
 
 describe("fixture cleanup boundary", () => {
   it("stores only identifier-free authentication rate-limit aggregates in committed evidence", () => {
-    const committed = JSON.parse(readFileSync(
-      resolve(process.cwd(), "docs/course-production/fixture-boundary-manifest.json"),
-      "utf8",
-    )) as { retained_entities: { auth_rate_limits_from_snapshot: Array<Record<string, string>> } };
-    for (const record of committed.retained_entities.auth_rate_limits_from_snapshot) {
-      expect(Object.keys(record).sort()).toEqual(["key_type", "record_count", "window_start"]);
+    const committed = JSON.parse(
+      readFileSync(
+        resolve(
+          process.cwd(),
+          "docs/course-production/fixture-boundary-manifest.json",
+        ),
+        "utf8",
+      ),
+    ) as {
+      retained_entities: {
+        auth_rate_limits_from_snapshot: Array<Record<string, string>>;
+      };
+    };
+    for (const record of committed.retained_entities
+      .auth_rate_limits_from_snapshot) {
+      expect(Object.keys(record).sort()).toEqual([
+        "key_type",
+        "record_count",
+        "window_start",
+      ]);
       expect(record.record_count).toBeGreaterThan(0);
       expect(Number.isInteger(record.record_count)).toBe(true);
-      expect(JSON.stringify(record)).not.toMatch(/(?:@|(?:^|[^\d])(?:\d{1,3}\.){3}\d{1,3}(?:[^\d]|$))/);
+      expect(JSON.stringify(record)).not.toMatch(
+        /(?:@|(?:^|[^\d])(?:\d{1,3}\.){3}\d{1,3}(?:[^\d]|$))/,
+      );
     }
   });
 
   it("deletes only exact manifest identities and has no auth deletion surface", async () => {
     const manifest = fixtureManifest();
     const adapter = fakeAdapter();
-    const plan = await buildFixtureCleanupPlan({ manifest, manifestSha256: "a".repeat(64), adapter });
+    const plan = await buildFixtureCleanupPlan({
+      manifest,
+      manifestSha256: "a".repeat(64),
+      adapter,
+    });
 
     expect(plan.problems).toEqual([]);
-    await executeFixtureCleanup({ manifest, plan, adapter, confirmation: "confirm" });
+    await executeFixtureCleanup({
+      manifest,
+      plan,
+      adapter,
+      confirmation: "confirm",
+      ...cleanupEvidence,
+    });
 
     expect(adapter.atomicCalls).toEqual([
-      { manifestSha256: "a".repeat(64), confirmation: "confirm" },
+      {
+        manifestSha256: "a".repeat(64),
+        confirmation: "confirm",
+        ...cleanupEvidence,
+      },
     ]);
-    expect(adapter.rows.courses).toContainEqual({ id: "real-course", title: "Real course" });
+    expect(adapter.rows.courses).toContainEqual({
+      id: "real-course",
+      title: "Real course",
+    });
     expect(adapter.rows.profiles).toEqual([{ id: "retained-profile" }]);
     expect(adapter.rows.audit_log).toEqual([{ id: "retained-audit" }]);
     expect("deleteAuthUsers" in adapter).toBe(false);
@@ -47,14 +121,27 @@ describe("fixture cleanup boundary", () => {
   it("prevents a late dependent from causing a partial cleanup", async () => {
     const manifest = fixtureManifest();
     const adapter = fakeAdapter();
-    const plan = await buildFixtureCleanupPlan({ manifest, manifestSha256: "a".repeat(64), adapter });
+    const plan = await buildFixtureCleanupPlan({
+      manifest,
+      manifestSha256: "a".repeat(64),
+      adapter,
+    });
     expect(plan.problems).toEqual([]);
-    adapter.rows.modules.push({ id: "late-module", course_id: "fixture-course" });
+    adapter.rows.modules.push({
+      id: "late-module",
+      course_id: "fixture-course",
+    });
     adapter.rejectLateDependents = true;
     const before = structuredClone(adapter.rows);
 
     await expect(
-      executeFixtureCleanup({ manifest, plan, adapter, confirmation: "confirm" }),
+      executeFixtureCleanup({
+        manifest,
+        plan,
+        adapter,
+        confirmation: "confirm",
+        ...cleanupEvidence,
+      }),
     ).rejects.toThrow(/late dependent/i);
 
     expect(adapter.rows).toEqual(before);
@@ -108,7 +195,10 @@ describe("fixture cleanup boundary", () => {
 
   it("fails closed on an unmanifested dependent reference", async () => {
     const adapter = fakeAdapter();
-    adapter.rows.modules.push({ id: "surprise-module", course_id: "fixture-course" });
+    adapter.rows.modules.push({
+      id: "surprise-module",
+      course_id: "fixture-course",
+    });
 
     const plan = await buildFixtureCleanupPlan({
       manifest: fixtureManifest(),
@@ -117,7 +207,10 @@ describe("fixture cleanup boundary", () => {
     });
 
     expect(plan.problems).toContainEqual(
-      expect.objectContaining({ code: "unexplained_reference", table: "modules" }),
+      expect.objectContaining({
+        code: "unexplained_reference",
+        table: "modules",
+      }),
     );
   });
 
@@ -145,7 +238,9 @@ describe("fixture cleanup boundary", () => {
   it("rejects a manifest that claims deletion is already authorized", () => {
     const manifest = fixtureManifest();
     manifest.authorization_boundary.deletion_is_authorized_now = true;
-    expect(() => parseFixtureManifest(manifest)).toThrow(/not currently authorized/i);
+    expect(() => parseFixtureManifest(manifest)).toThrow(
+      /not currently authorized/i,
+    );
   });
 
   it("reports storage counts and safely retries a partial exact-object deletion", async () => {
@@ -163,9 +258,18 @@ describe("fixture cleanup boundary", () => {
       manifestSha256: "a".repeat(64),
       adapter,
     });
-    expect(firstPlan.storageDeleteCounts).toEqual({ content: 2, submissions: 0 });
+    expect(firstPlan.storageDeleteCounts).toEqual({
+      content: 2,
+      submissions: 0,
+    });
     await expect(
-      executeFixtureCleanup({ manifest, plan: firstPlan, adapter, confirmation: "confirm" }),
+      executeFixtureCleanup({
+        manifest,
+        plan: firstPlan,
+        adapter,
+        confirmation: "confirm",
+        ...cleanupEvidence,
+      }),
     ).rejects.toThrow(/interrupted storage delete/i);
     expect(adapter.storageNames.content).toEqual(["fixtures/two.pdf"]);
 
@@ -179,7 +283,13 @@ describe("fixture cleanup boundary", () => {
       "storage_drift",
     ]);
     await expect(
-      executeFixtureCleanup({ manifest, plan: retryPlan, adapter, confirmation: "confirm" }),
+      executeFixtureCleanup({
+        manifest,
+        plan: retryPlan,
+        adapter,
+        confirmation: "confirm",
+        ...cleanupEvidence,
+      }),
     ).resolves.toEqual({ status: "deleted", deleted: { courses: 1 } });
     expect(adapter.storageNames.content).toEqual([]);
     expect(adapter.storageDeleteCalls).toEqual([
@@ -204,26 +314,33 @@ describe("fixture cleanup boundary", () => {
     });
 
     await expect(
-      executeFixtureCleanup({ manifest, plan, adapter, confirmation: "confirm" }),
+      executeFixtureCleanup({
+        manifest,
+        plan,
+        adapter,
+        confirmation: "confirm",
+        ...cleanupEvidence,
+      }),
     ).rejects.toThrow(/still present/i);
     expect(adapter.storageNames.content).toEqual(["fixtures/two.pdf"]);
   });
 });
 
 function fixtureManifest(): FixtureBoundaryManifest {
-  const fixtureTables: FixtureBoundaryManifest["fixture_tables"] = Object.fromEntries(
-    DELETE_ORDER.map((table) => [
-      table,
-      {
-        identity_fields: ["id"],
-        fingerprint_fields: ["id"],
-        current_row_count: 0,
-        snapshot_row_count: 0,
-        current_read_surface: `public.${table}`,
-        rows: [],
-      },
-    ]),
-  );
+  const fixtureTables: FixtureBoundaryManifest["fixture_tables"] =
+    Object.fromEntries(
+      DELETE_ORDER.map((table) => [
+        table,
+        {
+          identity_fields: ["id"],
+          fingerprint_fields: ["id"],
+          current_row_count: 0,
+          snapshot_row_count: 0,
+          current_read_surface: `public.${table}`,
+          rows: [],
+        },
+      ]),
+    );
   fixtureTables.courses = {
     identity_fields: ["id"],
     fingerprint_fields: ["content_import_id", "id", "thumbnail_path", "title"],
@@ -273,9 +390,10 @@ function fixtureManifest(): FixtureBoundaryManifest {
 }
 
 function fakeAdapter() {
-  const rows: Record<string, Array<Record<string, unknown>>> = Object.fromEntries(
-    DELETE_ORDER.map((table) => [table, []]),
-  );
+  const rows: Record<
+    string,
+    Array<Record<string, unknown>>
+  > = Object.fromEntries(DELETE_ORDER.map((table) => [table, []]));
   rows.courses = [
     {
       content_import_id: null,
@@ -287,8 +405,16 @@ function fakeAdapter() {
   ];
   rows.profiles = [{ id: "retained-profile" }];
   rows.audit_log = [{ id: "retained-audit" }];
-  const atomicCalls: Array<{ manifestSha256: string; confirmation: string }> = [];
-  const storageNames: Record<string, string[]> = { content: [], submissions: [] };
+  const atomicCalls: Array<{
+    manifestSha256: string;
+    confirmation: string;
+    approval: ExecutionApproval;
+    rollback: FreshRollbackRecord;
+  }> = [];
+  const storageNames: Record<string, string[]> = {
+    content: [],
+    submissions: [],
+  };
   const storageDeleteCalls: Array<{ bucket: string; names: string[] }> = [];
   const adapter: FixtureCleanupAdapter & {
     rows: typeof rows;
@@ -323,7 +449,9 @@ function fakeAdapter() {
       if (adapter.rejectLateDependents && transaction.modules.length > 0) {
         throw new Error("late dependent detected inside transaction");
       }
-      transaction.courses = transaction.courses.filter((row) => row.id !== "fixture-course");
+      transaction.courses = transaction.courses.filter(
+        (row) => row.id !== "fixture-course",
+      );
       Object.assign(rows, transaction);
       return { status: "deleted", deleted: { courses: 1 } };
     },
@@ -331,14 +459,20 @@ function fakeAdapter() {
       storageDeleteCalls.push({ bucket, names: [...names] });
       if (adapter.rejectStorageDeleteOnce) {
         adapter.rejectStorageDeleteOnce = false;
-        storageNames[bucket] = storageNames[bucket].filter((name) => name !== names[0]);
+        storageNames[bucket] = storageNames[bucket].filter(
+          (name) => name !== names[0],
+        );
         throw new Error("interrupted storage delete");
       }
       if (adapter.partialStorageDeleteWithoutError) {
-        storageNames[bucket] = storageNames[bucket].filter((name) => name !== names[0]);
+        storageNames[bucket] = storageNames[bucket].filter(
+          (name) => name !== names[0],
+        );
         return;
       }
-      storageNames[bucket] = storageNames[bucket].filter((name) => !names.includes(name));
+      storageNames[bucket] = storageNames[bucket].filter(
+        (name) => !names.includes(name),
+      );
     },
   };
   return adapter;

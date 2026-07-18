@@ -51,3 +51,11 @@ Every other existing or future invite is retained. Cleanup may not select invite
 ## Execution guard
 
 The cleanup command must consume an exact manifest of the pre-import IDs, verify that every dependent row points only into that graph, print a dry-run reconciliation, and stop if counts or references differ. Cascades must be previewed. The production apply remains blocked until the draft import, browser acceptance and rollback rehearsal pass.
+
+Controller-key provisioning, retirement, and gate disablement must run through
+the `cleanup:fixtures:key:provision`, `cleanup:fixtures:key:retire`, and
+`cleanup:fixtures:disable` package commands. Those commands parse the database
+URL and refuse before starting `psql` unless its host, project-scoped user,
+port, database, and TLS mode exactly match the production BMH Institute
+Supabase target. The SQL files are defense-in-depth implementations, not direct
+operator entrypoints.

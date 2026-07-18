@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 import {
   buildFixtureCleanupPlan,
@@ -14,11 +14,14 @@ import {
   assertProductionEnvironment,
   expectedProductionConfirmation,
   readJsonFile,
-  validateExecutionApproval,
-  validateFreshRollbackRecord,
+  validateControllerVerifiedCleanupEvidence,
+  type ControllerVerifiedCleanupEvidence,
 } from "../src/lib/fixture-cleanup/guards";
+import { createFixtureCleanupSupabaseClient } from "../src/lib/fixture-cleanup/supabase-client";
+import { assertFixtureCleanupTransportContract } from "../src/lib/fixture-cleanup/controller-contract";
 
-const DEFAULT_MANIFEST = "docs/course-production/fixture-boundary-manifest.json";
+const DEFAULT_MANIFEST =
+  "docs/course-production/fixture-boundary-manifest.json";
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
@@ -37,6 +40,8 @@ async function main() {
   const serviceRole = requiredEnv("PROD_SUPABASE_SERVICE_ROLE_KEY");
   assertProductionEnvironment(url);
 
+  let executionEvidence: ControllerVerifiedCleanupEvidence | null = null;
+
   if (execute) {
     const confirmation = args.values.get("confirm-production-fixture-cleanup");
     if (confirmation !== expectedProductionConfirmation(manifestSha256)) {
@@ -47,22 +52,32 @@ async function main() {
     const approvalPath = args.values.get("approval-record");
     const rollbackPath = args.values.get("rollback-record");
     if (!approvalPath || !rollbackPath) {
-      throw new Error("Execution requires separate --approval-record and --rollback-record JSON files.");
+      throw new Error(
+        "Execution requires separate --approval-record and --rollback-record JSON files.",
+      );
     }
     const resolvedApprovalPath = resolve(approvalPath);
     const resolvedRollbackPath = resolve(rollbackPath);
     if (resolvedApprovalPath === resolvedRollbackPath) {
-      throw new Error("Approval and rollback proof must be distinct controller-supplied records.");
+      throw new Error(
+        "Approval and rollback proof must be distinct controller-supplied records.",
+      );
     }
-    validateExecutionApproval(await readJsonFile(resolvedApprovalPath), manifestSha256);
-    validateFreshRollbackRecord(await readJsonFile(resolvedRollbackPath), manifestSha256);
+    executionEvidence = validateControllerVerifiedCleanupEvidence(
+      await readJsonFile(resolvedApprovalPath),
+      await readJsonFile(resolvedRollbackPath),
+      manifestSha256,
+    );
   }
 
-  const client = createClient(url, serviceRole, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
+  const client = createFixtureCleanupSupabaseClient(url, serviceRole);
+  await assertFixtureCleanupTransport(client);
   const adapter = createSupabaseAdapter(client);
-  const plan = await buildFixtureCleanupPlan({ manifest, manifestSha256, adapter });
+  const plan = await buildFixtureCleanupPlan({
+    manifest,
+    manifestSha256,
+    adapter,
+  });
 
   console.log(
     JSON.stringify(
@@ -85,16 +100,37 @@ async function main() {
   if (!execute && plan.problems.length > 0) {
     process.exitCode = 1;
   } else if (execute) {
+    if (!executionEvidence) {
+      throw new Error("Controller-verified cleanup evidence was not loaded.");
+    }
     await executeFixtureCleanup({
       manifest,
       plan,
       adapter,
       confirmation: expectedProductionConfirmation(manifestSha256),
+      approval: executionEvidence.approval,
+      rollback: executionEvidence.rollback,
     });
     console.log(
       "Exact fixture manifest rows deleted. Auth users, profiles and audit rows were not deletion targets.",
     );
   }
+}
+
+async function assertFixtureCleanupTransport(client: SupabaseClient) {
+  const rpcClient = client as unknown as {
+    rpc(name: string): PromiseLike<{
+      data: Record<string, unknown> | null;
+      error: { message: string } | null;
+    }>;
+  };
+  const { data, error } = await rpcClient.rpc(
+    "fixture_cleanup_transport_probe_v1",
+  );
+  if (error) {
+    throw new Error(`Fixture cleanup transport probe failed: ${error.message}`);
+  }
+  assertFixtureCleanupTransportContract(data);
 }
 
 function createSupabaseAdapter(client: SupabaseClient): FixtureCleanupAdapter {
@@ -105,7 +141,10 @@ function createSupabaseAdapter(client: SupabaseClient): FixtureCleanupAdapter {
     async listAuthUserIds() {
       const ids: string[] = [];
       for (let page = 1; ; page += 1) {
-        const { data, error } = await client.auth.admin.listUsers({ page, perPage: 1000 });
+        const { data, error } = await client.auth.admin.listUsers({
+          page,
+          perPage: 1000,
+        });
         if (error) throw new Error(`auth.users read failed: ${error.message}`);
         ids.push(...data.users.map((user) => user.id));
         if (data.users.length < 1000) break;
@@ -117,21 +156,37 @@ function createSupabaseAdapter(client: SupabaseClient): FixtureCleanupAdapter {
       await walkStorage(client, bucket, "", names);
       return names.sort();
     },
-    async executeAtomicCleanup({ manifestSha256, confirmation }) {
+    async executeAtomicCleanup({
+      manifestSha256,
+      confirmation,
+      approval,
+      rollback,
+    }) {
       const rpcClient = client as unknown as {
         rpc(
           name: string,
           args: Record<string, unknown>,
         ): PromiseLike<{ data: unknown; error: { message: string } | null }>;
       };
-      const { data, error } = await rpcClient.rpc("admin_cleanup_fixture_catalog_v1", {
-        p_manifest_sha256: manifestSha256,
-        p_confirmation: confirmation,
-      });
-      if (error) throw new Error(`Atomic fixture cleanup failed: ${error.message}`);
-      const result = data as { status?: string; deleted?: Record<string, number> };
+      const { data, error } = await rpcClient.rpc(
+        "admin_cleanup_fixture_catalog_v1",
+        {
+          p_manifest_sha256: manifestSha256,
+          p_confirmation: confirmation,
+          p_approval: approval,
+          p_rollback: rollback,
+        },
+      );
+      if (error)
+        throw new Error(`Atomic fixture cleanup failed: ${error.message}`);
+      const result = data as {
+        status?: string;
+        deleted?: Record<string, number>;
+      };
       if (result.status !== "deleted" && result.status !== "already_deleted") {
-        throw new Error("Atomic fixture cleanup returned an unexpected status.");
+        throw new Error(
+          "Atomic fixture cleanup returned an unexpected status.",
+        );
       }
       return { status: result.status, deleted: result.deleted ?? {} };
     },
@@ -139,7 +194,8 @@ function createSupabaseAdapter(client: SupabaseClient): FixtureCleanupAdapter {
       for (let index = 0; index < names.length; index += 1000) {
         const batch = names.slice(index, index + 1000);
         const { error } = await client.storage.from(bucket).remove(batch);
-        if (error) throw new Error(`${bucket} storage delete failed: ${error.message}`);
+        if (error)
+          throw new Error(`${bucket} storage delete failed: ${error.message}`);
       }
     },
   };
@@ -148,7 +204,9 @@ function createSupabaseAdapter(client: SupabaseClient): FixtureCleanupAdapter {
 async function listAllRows(client: SupabaseClient, table: string) {
   const rows: Array<Record<string, unknown>> = [];
   for (let from = 0; ; from += 1000) {
-    const { data, error } = await dynamicTable(client, table).select("*").range(from, from + 999);
+    const { data, error } = await dynamicTable(client, table)
+      .select("*")
+      .range(from, from + 999);
     if (error) throw new Error(`${table} read failed: ${error.message}`);
     rows.push(...(data ?? []));
     if ((data ?? []).length < 1000) break;
@@ -168,7 +226,8 @@ async function walkStorage(
       offset,
       sortBy: { column: "name", order: "asc" },
     });
-    if (error) throw new Error(`${bucket} storage inventory failed: ${error.message}`);
+    if (error)
+      throw new Error(`${bucket} storage inventory failed: ${error.message}`);
     for (const item of data ?? []) {
       const path = prefix ? `${prefix}/${item.name}` : item.name;
       if (item.id) names.push(path);
@@ -181,7 +240,10 @@ async function walkStorage(
 function dynamicTable(client: SupabaseClient, table: string) {
   return client.from(table) as unknown as {
     select(columns: string): {
-      range(from: number, to: number): PromiseLike<{
+      range(
+        from: number,
+        to: number,
+      ): PromiseLike<{
         data: Array<Record<string, unknown>> | null;
         error: { message: string } | null;
       }>;
@@ -195,7 +257,11 @@ function parseArgs(raw: string[]) {
   for (let index = 0; index < raw.length; index += 1) {
     const match = raw[index].match(/^--([^=]+)=(.*)$/);
     if (match) values.set(match[1], match[2]);
-    else if (raw[index].startsWith("--") && raw[index + 1] && !raw[index + 1].startsWith("--")) {
+    else if (
+      raw[index].startsWith("--") &&
+      raw[index + 1] &&
+      !raw[index + 1].startsWith("--")
+    ) {
       values.set(raw[index].slice(2), raw[++index]);
     } else if (raw[index].startsWith("--")) flags.add(raw[index].slice(2));
     else throw new Error(`Unexpected argument ${raw[index]}.`);
