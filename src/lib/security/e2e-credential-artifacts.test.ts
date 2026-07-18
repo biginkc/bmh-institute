@@ -41,4 +41,22 @@ describe("seeded E2E credential containment", () => {
     expect(upload).toBeGreaterThan(cleanup);
     expect(workflow.slice(cleanup, upload)).toContain("if: always()");
   });
+
+  it("checks the checksum-bound Tech Stack canary for remote drift before seeding", () => {
+    const driftCheck = workflow.indexOf(
+      "- name: Verify Tech Stack canary has no remote drift",
+    );
+    const seedContent = workflow.indexOf("- name: Seed E2E content");
+    expect(driftCheck).toBeGreaterThan(0);
+    expect(seedContent).toBeGreaterThan(driftCheck);
+    expect(workflow.slice(driftCheck, seedContent)).toContain(
+      "NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.TEST_SUPABASE_URL }}",
+    );
+    expect(workflow.slice(driftCheck, seedContent)).toContain(
+      "SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.TEST_SUPABASE_SERVICE_ROLE_KEY }}",
+    );
+    expect(workflow.slice(driftCheck, seedContent)).toMatch(
+      /course:import -- verify[\s\S]*bmh-employee-training-canary\.v1\.json[\s\S]*--canary --execute/,
+    );
+  });
 });

@@ -74,6 +74,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Verify Tech Stack canary has no remote drift
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.TEST_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.TEST_SUPABASE_SERVICE_ROLE_KEY }}
+        run: >-
+          npm run course:import -- verify
+          content/course-manifests/bmh-employee-training-canary.v1.json
+          --canary --execute
+
       - name: Create one-run E2E credential
         shell: bash
         run: |
