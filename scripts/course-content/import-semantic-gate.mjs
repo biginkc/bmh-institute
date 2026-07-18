@@ -99,6 +99,9 @@ async function validateBmhFileBackedReleaseTrust({
   blockers.push(...captionReport.errors.map(
     (error) => `Caption/transcript file trust failed: ${error}`,
   ));
+  blockers.push(...captionReport.policyBlockers.map(
+    (blocker) => `Approved media role policy: ${blocker}`,
+  ));
   const captionApprovalErrors = await validateCaptionApprovalLedger({
     ledger: captionApprovalLedger,
     manifest,
