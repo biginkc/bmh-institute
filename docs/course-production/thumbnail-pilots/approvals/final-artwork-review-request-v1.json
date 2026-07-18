@@ -1,13 +1,13 @@
 {
   "schema_version": "bmh-artwork-final-review-request/v1",
   "status": "pending-human-review",
-  "request_id": "bmh-artwork-final-review-ba307e7f38c627098c53bd0ff110feb0c1bb5fa999d43358ca5ebe12663bd0cb",
+  "request_id": "bmh-artwork-final-review-a5585a82657602c16521c364786f7e5ffdf1cd60c92167c588fe31cb6f7c0f5f",
   "review_instruction": "To approve all 28 masters and all 49 exact assets for course-manifest promotion, respond exactly: Approved: I approve all 28 artwork masters and all 49 exact checksum-bound assets in this request for promotion into the BMH Institute course manifest.",
   "contact_sheet": {
     "path": "docs/course-production/thumbnail-pilots/qa/current-artwork-contact-sheet-2026-07-17.png",
-    "sha256": "c7e9812d0d279983fc4408ee1d9179017c83c756c0bc3ab3ead08f4fc4facda5",
+    "sha256": "493d35528ebc8d739f9d77d86d139fd996eff9bb84700e50908b37c7d2f7385e",
     "index_path": "docs/course-production/thumbnail-pilots/qa/current-artwork-contact-sheet-2026-07-17.json",
-    "index_sha256": "3b13376194aac59b32e910046bbaa05a8d1b6b21b567f1b8ab0cc59c1ffd41d1"
+    "index_sha256": "814c38c3027c6a51dd93feaa78caf9e58e9196388e5beab012d17a4c80a81e64"
   },
   "inventory_snapshot": {
     "path": "docs/course-production/thumbnail-pilots/production-inventory.json",
@@ -17,7 +17,7 @@
     "path": "docs/course-production/thumbnail-pilots/production-ledger.json",
     "sha256": "b4eee51fb61d9f7e1185e836e166670f5ef2006abe77f626af24f449efd46fb5"
   },
-  "bindings_sha256": "ba307e7f38c627098c53bd0ff110feb0c1bb5fa999d43358ca5ebe12663bd0cb",
+  "bindings_sha256": "a5585a82657602c16521c364786f7e5ffdf1cd60c92167c588fe31cb6f7c0f5f",
   "masters": [
     {
       "master_id": "master-program-bmh-employee-training",

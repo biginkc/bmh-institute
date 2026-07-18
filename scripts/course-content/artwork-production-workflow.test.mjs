@@ -7,6 +7,8 @@ import test from "node:test";
 
 import sharp from "sharp";
 
+import { compareArtworkAssetKeys, deterministicArtworkLabelSvg } from "./deterministic-artwork-label.mjs";
+
 import {
   ARTWORK_MASTER_POSE_CONTRACT,
   getArtworkPose,
@@ -1513,7 +1515,7 @@ test("final artwork review request deterministically binds the exact 4-column co
   const request = await buildFinalReviewRequest({ root: REPO_ROOT, ledger });
   await validateFinalReviewRequest({ root: REPO_ROOT, ledger, request, requireLedgerSnapshot: true });
   assert.equal(request.request_id, `bmh-artwork-final-review-${request.bindings_sha256}`);
-  assert.equal(request.contact_sheet.sha256, "c7e9812d0d279983fc4408ee1d9179017c83c756c0bc3ab3ead08f4fc4facda5");
+  assert.equal(request.contact_sheet.sha256, "493d35528ebc8d739f9d77d86d139fd996eff9bb84700e50908b37c7d2f7385e");
   assert.equal(request.masters.length, 28);
   assert.equal(request.assets.length, 49);
   assert.equal(request.masters.flatMap((master) => master.video_evidence).every((entry) => {
@@ -1522,6 +1524,28 @@ test("final artwork review request deterministically binds the exact 4-column co
       /^[a-f0-9]{64}$/.test(entry.sha256);
   }), true, "final request contains empty or unnormalized video evidence");
   assert.equal(JSON.stringify(request).includes('"video_evidence":[{}]'), false);
+});
+
+test("final artwork labels use only deterministic in-repo glyph paths", () => {
+  const first = deterministicArtworkLabelSvg("poster-video-slot-09-objection-architecture");
+  const previousFontConfig = process.env.FONTCONFIG_FILE;
+  process.env.FONTCONFIG_FILE = "/definitely-not-a-system-font-config";
+  try {
+    const withoutFontConfig = deterministicArtworkLabelSvg("poster-video-slot-09-objection-architecture");
+    assert.equal(first.equals(withoutFontConfig), true);
+  } finally {
+    if (previousFontConfig === undefined) delete process.env.FONTCONFIG_FILE;
+    else process.env.FONTCONFIG_FILE = previousFontConfig;
+  }
+  const svg = first.toString("utf8");
+  assert.match(svg, /<path fill="#111111"/);
+  assert.match(svg, /<path fill="#555555"/);
+  assert.doesNotMatch(svg, /<(?:text|style)\b|font(?:-family|-face)?/i);
+  assert.deepEqual(
+    ["thumbnail-slot-02", "poster-video-slot-19-career", "thumbnail-slot-01"]
+      .sort(compareArtworkAssetKeys),
+    ["poster-video-slot-19-career", "thumbnail-slot-01", "thumbnail-slot-02"],
+  );
 });
 
 test("final artwork contact sheet cannot be forged together with a self-consistent index", async (t) => {

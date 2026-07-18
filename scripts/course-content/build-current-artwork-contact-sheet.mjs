@@ -5,6 +5,8 @@ import { fileURLToPath } from "node:url";
 
 import sharp from "sharp";
 
+import { compareArtworkAssetKeys, deterministicArtworkLabelSvg } from "./deterministic-artwork-label.mjs";
+
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const ledgerPath = path.join(
   repoRoot,
@@ -28,30 +30,9 @@ function sha256(contents) {
   return createHash("sha256").update(contents).digest("hex");
 }
 
-function escapeXml(value) {
-  return value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;");
-}
-
-function labelSvg(label, width, height) {
-  const safeLabel = escapeXml(label);
-  return Buffer.from(
-    `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">` +
-      `<rect width="100%" height="100%" fill="#ffffff"/>` +
-      `<text x="10" y="17" font-family="Arial, sans-serif" font-size="12" font-weight="700" fill="#111111">${safeLabel}</text>` +
-      `<text x="10" y="34" font-family="Arial, sans-serif" font-size="10" fill="#555555">current ledger bytes - review pending</text>` +
-      `</svg>`,
-  );
-}
-
 async function main() {
   const ledger = JSON.parse(await readFile(ledgerPath, "utf8"));
-  const assets = [...ledger.assets].sort((left, right) =>
-    left.asset_key.localeCompare(right.asset_key, "en", { numeric: true }),
-  );
+  const assets = [...ledger.assets].sort((left, right) => compareArtworkAssetKeys(left.asset_key, right.asset_key));
   const rows = Math.ceil(assets.length / columns);
   const cellHeight = artworkHeight + labelHeight;
   const canvasWidth = margin * 2 + columns * tileWidth + (columns - 1) * gutter;
@@ -75,7 +56,7 @@ async function main() {
     const left = margin + column * (tileWidth + gutter);
     const top = margin + row * (cellHeight + gutter);
     composites.push({ input: image, left, top });
-    composites.push({ input: labelSvg(asset.asset_key, tileWidth, labelHeight), left, top: top + artworkHeight });
+    composites.push({ input: deterministicArtworkLabelSvg(asset.asset_key, { width: tileWidth, height: labelHeight }), left, top: top + artworkHeight });
     index.push({
       position: position + 1,
       asset_key: asset.asset_key,

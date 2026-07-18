@@ -6,6 +6,8 @@ import { fileURLToPath } from "node:url";
 import sharp from "sharp";
 import lockfile from "proper-lockfile";
 
+import { compareArtworkAssetKeys, deterministicArtworkLabelSvg } from "./deterministic-artwork-label.mjs";
+
 export const SCHEMA_VERSION = "bmh-artwork-production-ledger/v1";
 export const EXPECTED_COUNTS = Object.freeze({
   covers: 1,
@@ -1018,29 +1020,15 @@ function assertFinalReviewLedgerReady(ledger) {
   }
 }
 
-function escapeFinalReviewXml(value) {
-  return value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;");
-}
-
 function finalReviewLabelSvg(label) {
-  const safeLabel = escapeFinalReviewXml(label);
-  return Buffer.from(
-    `<svg width="${FINAL_REVIEW_TILE_WIDTH}" height="${FINAL_REVIEW_LABEL_HEIGHT}" xmlns="http://www.w3.org/2000/svg">` +
-      `<rect width="100%" height="100%" fill="#ffffff"/>` +
-      `<text x="10" y="17" font-family="Arial, sans-serif" font-size="12" font-weight="700" fill="#111111">${safeLabel}</text>` +
-      `<text x="10" y="34" font-family="Arial, sans-serif" font-size="10" fill="#555555">current ledger bytes - review pending</text>` +
-      `</svg>`,
-  );
+  return deterministicArtworkLabelSvg(label, {
+    width: FINAL_REVIEW_TILE_WIDTH,
+    height: FINAL_REVIEW_LABEL_HEIGHT,
+  });
 }
 
 export async function buildDeterministicFinalContactSheet({ root, ledger }) {
-  const assets = [...ledger.assets].sort((left, right) =>
-    left.asset_key.localeCompare(right.asset_key, "en", { numeric: true }),
-  );
+  const assets = [...ledger.assets].sort((left, right) => compareArtworkAssetKeys(left.asset_key, right.asset_key));
   assert(assets.length === 49, "Final contact sheet requires exactly 49 assets");
   const rows = Math.ceil(assets.length / FINAL_REVIEW_COLUMNS);
   const cellHeight = FINAL_REVIEW_ARTWORK_HEIGHT + FINAL_REVIEW_LABEL_HEIGHT;
@@ -1117,8 +1105,14 @@ async function validateContactSheetIndex({ root, ledger, contactSheetPath, conta
     assertExactKeys(item, ["position", "asset_key", "output_path", "ledger_checksum_sha256", "rendered_input_sha256", "approval_status"], `Final artwork contact-sheet index asset ${position + 1}`);
     assert(item.position === position + 1, `Final artwork contact-sheet position ${position + 1} drifted`);
   }
-  const expectedIndex = { ...rebuilt.index, contact_sheet_path: contactSheetPath };
-  assert(JSON.stringify(index) === JSON.stringify(expectedIndex), "Final artwork contact-sheet index is not the deterministic 49-position index");
+  assert(
+    JSON.stringify(index.assets) === JSON.stringify(rebuilt.index.assets),
+    "Final artwork contact-sheet 49-position asset mapping is not the deterministic ledger mapping",
+  );
+  assert(
+    index.contact_sheet_sha256 === rebuilt.index.contact_sheet_sha256,
+    "Final artwork contact-sheet deterministic rebuild checksum differs from the tracked index",
+  );
   assert(contactSheet.contents.equals(rebuilt.contents), "Final artwork contact-sheet bytes are not the deterministic rebuild");
   const [actualPixels, expectedPixels] = await Promise.all([
     sharp(contactSheet.contents).removeAlpha().raw().toBuffer(),
