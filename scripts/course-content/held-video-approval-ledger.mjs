@@ -105,9 +105,23 @@ async function readLedgerAtRevision(repoRoot, revision, relativeLedgerPath) {
       ["show", `${revision}:${relativeLedgerPath}`],
       { cwd: repoRoot, encoding: "utf8", maxBuffer: 16 * 1024 * 1024 },
     );
-    return JSON.parse(stdout);
+    return { status: "ok", ledger: JSON.parse(stdout) };
   } catch {
-    return null;
+    try {
+      await execFileAsync("git", ["cat-file", "-e", `${revision}^{commit}`], {
+        cwd: repoRoot,
+      });
+    } catch {
+      return { status: "unavailable", ledger: null };
+    }
+    try {
+      await execFileAsync("git", ["cat-file", "-e", `${revision}:${relativeLedgerPath}`], {
+        cwd: repoRoot,
+      });
+    } catch {
+      return { status: "missing", ledger: null };
+    }
+    return { status: "invalid", ledger: null };
   }
 }
 
@@ -126,38 +140,103 @@ async function mergeBaseWithMain(repoRoot) {
   return null;
 }
 
-async function featurePredecessorRevision(repoRoot) {
+async function commitParents(repoRoot, revision) {
   try {
-    const { stdout } = await execFileAsync(
+    const { stdout: resolved } = await execFileAsync(
       "git",
-      ["rev-list", "--parents", "-n", "1", "HEAD"],
+      ["rev-parse", "--verify", `${revision}^{commit}`],
       { cwd: repoRoot, encoding: "utf8" },
     );
-    const [, ...parents] = stdout.trim().split(/\s+/);
-    if (parents.length === 1) return parents[0];
-    if (parents.length === 2) {
-      // GitHub tests a pull request at a synthetic merge commit whose first
-      // parent is the base branch and whose second parent is the feature tip.
-      // Approval transitions belong to the feature history, so the feature
-      // tip's parent is the immutable predecessor. The feature tip itself may
-      // contain the change under test and cannot serve as its own baseline.
-      try {
-        const { stdout: predecessor } = await execFileAsync(
-          "git",
-          ["rev-parse", `${parents[1]}^`],
-          { cwd: repoRoot, encoding: "utf8" },
-        );
-        return /^[a-f0-9]{40}$/.test(predecessor.trim())
-          ? predecessor.trim()
-          : null;
-      } catch {
-        return null;
-      }
-    }
-    return null;
+    const commit = resolved.trim();
+    if (!/^[a-f0-9]{40}$/.test(commit)) return null;
+    const { stdout: rawCommit } = await execFileAsync(
+      "git",
+      ["cat-file", "-p", commit],
+      { cwd: repoRoot, encoding: "utf8" },
+    );
+    const parents = [...rawCommit.matchAll(/^parent ([a-f0-9]{40})$/gm)]
+      .map((match) => match[1]);
+    return { commit, parents };
   } catch {
     return null;
   }
+}
+
+async function approvalBaselineRevisions(repoRoot) {
+  const errors = [];
+  const head = await commitParents(repoRoot, "HEAD");
+  if (!head) {
+    return {
+      revisions: [],
+      errors: ["Held-video approval history could not inspect committed HEAD ancestry."],
+    };
+  }
+
+  const revisions = [];
+  if (head.parents.length === 0) {
+    errors.push("Held-video approval history has no committed parent ancestry.");
+  } else if (head.parents.length === 1) {
+    revisions.push(head.parents[0]);
+  } else {
+    revisions.push(head.parents[0]);
+    const secondParent = await commitParents(repoRoot, head.parents[1]);
+    if (!secondParent) {
+      errors.push("Held-video approval history could not inspect the second-parent history.");
+    } else if (secondParent.parents.length > 0) {
+      revisions.push(secondParent.parents[0]);
+    }
+  }
+
+  const mainBase = await mergeBaseWithMain(repoRoot);
+  if (mainBase) revisions.push(mainBase);
+  return {
+    revisions: [...new Set(revisions.filter((revision) => revision && revision !== head.commit))],
+    errors,
+  };
+}
+
+async function validateHeldVideoApprovalCommitHistory(
+  repoRoot,
+  relativeLedgerPath,
+) {
+  let revisions;
+  try {
+    const { stdout } = await execFileAsync(
+      "git",
+      ["rev-list", "--full-history", "--topo-order", "--reverse", "HEAD", "--", relativeLedgerPath],
+      { cwd: repoRoot, encoding: "utf8", maxBuffer: 16 * 1024 * 1024 },
+    );
+    revisions = stdout.trim() ? stdout.trim().split(/\s+/) : [];
+  } catch {
+    return ["Held-video approval history could not enumerate committed ledger transitions."];
+  }
+
+  const errors = [];
+  for (const revision of revisions) {
+    const ancestry = await commitParents(repoRoot, revision);
+    if (!ancestry) {
+      errors.push("Held-video approval history could not inspect a ledger-changing commit.");
+      continue;
+    }
+    const next = await readLedgerAtRevision(repoRoot, revision, relativeLedgerPath);
+    if (next.status === "unavailable" || next.status === "invalid") {
+      errors.push("Held-video approval history could not read a ledger-changing commit.");
+      continue;
+    }
+    for (const parent of ancestry.parents) {
+      const previous = await readLedgerAtRevision(repoRoot, parent, relativeLedgerPath);
+      if (previous.status === "unavailable" || previous.status === "invalid") {
+        errors.push("Held-video approval history could not read a ledger transition parent.");
+        continue;
+      }
+      if (previous.status === "ok" && next.status === "missing") {
+        errors.push("Held-video approval history has a committed transition that removed approval history.");
+      } else if (previous.status === "ok" && next.status === "ok") {
+        errors.push(...validateHeldVideoApprovalImmutability(previous.ledger, next.ledger));
+      }
+    }
+  }
+  return errors;
 }
 
 export function validateHeldVideoApprovalLedger(
@@ -300,37 +379,26 @@ export function validateHeldVideoManifestApprovalState(
   return errors;
 }
 
-export function validateHeldVideoApprovalTransition(currentLedger, nextLedger, heldAssets) {
-  const errors = [
-    ...validateHeldVideoApprovalLedger(currentLedger, heldAssets, {
-      requireCurrentRecords: false,
-      allowHistoricalPending: true,
-    }).map((error) => `current: ${error}`),
-    ...validateHeldVideoApprovalLedger(nextLedger, heldAssets).map((error) => `next: ${error}`),
-  ];
-  if (errors.length) return errors;
-
+function validateHeldVideoApprovalImmutability(currentLedger, nextLedger) {
+  const errors = [];
+  if (!Array.isArray(currentLedger?.records) || !Array.isArray(nextLedger?.records)) {
+    return ["transition requires readable approval-ledger record arrays"];
+  }
   const currentByKey = new Map(currentLedger.records.map((record) => [approvalRecordKey(record), record]));
   const nextByKey = new Map(nextLedger.records.map((record) => [approvalRecordKey(record), record]));
+  if (nextByKey.size !== nextLedger.records.length) {
+    errors.push("transition cannot introduce duplicate approval-history keys");
+  }
   for (const [index, current] of currentLedger.records.entries()) {
     if (approvalRecordKey(nextLedger.records[index] ?? {}) !== approvalRecordKey(current)) {
       errors.push("transition cannot reorder or insert within existing approval history; new records must be appended");
       break;
     }
   }
-  const heldByKey = new Map((heldAssets ?? []).map((asset) => [
-    `${asset.source_key}:${asset.checksum_sha256}`,
-    asset,
-  ]));
   for (const next of nextLedger.records) {
     const key = approvalRecordKey(next);
     const current = currentByKey.get(key);
-    if (!current) {
-      if (!heldByKey.has(key) || next.decision !== "pending") {
-        errors.push(`transition can add only a new pending candidate keyed to the current held manifest: ${key}`);
-      }
-      continue;
-    }
+    if (!current) continue;
     for (const field of ["source_key", "sha256", "candidate_local_path", "title"]) {
       if (next[field] !== current[field]) errors.push(`${key} cannot change immutable field ${field}`);
     }
@@ -356,6 +424,34 @@ export function validateHeldVideoApprovalTransition(currentLedger, nextLedger, h
   return errors;
 }
 
+export function validateHeldVideoApprovalTransition(currentLedger, nextLedger, heldAssets) {
+  const errors = [
+    ...validateHeldVideoApprovalLedger(currentLedger, heldAssets, {
+      requireCurrentRecords: false,
+      allowHistoricalPending: true,
+    }).map((error) => `current: ${error}`),
+    ...validateHeldVideoApprovalLedger(nextLedger, heldAssets).map((error) => `next: ${error}`),
+  ];
+  if (errors.length) return errors;
+
+  const currentByKey = new Map(currentLedger.records.map((record) => [approvalRecordKey(record), record]));
+  const heldByKey = new Map((heldAssets ?? []).map((asset) => [
+    `${asset.source_key}:${asset.checksum_sha256}`,
+    asset,
+  ]));
+  for (const next of nextLedger.records) {
+    const key = approvalRecordKey(next);
+    const current = currentByKey.get(key);
+    if (!current) {
+      if (!heldByKey.has(key) || next.decision !== "pending") {
+        errors.push(`transition can add only a new pending candidate keyed to the current held manifest: ${key}`);
+      }
+    }
+  }
+  errors.push(...validateHeldVideoApprovalImmutability(currentLedger, nextLedger));
+  return errors;
+}
+
 export async function validateHeldVideoApprovalHistory({
   ledger,
   currentReviewAssets,
@@ -368,32 +464,36 @@ export async function validateHeldVideoApprovalHistory({
     return ["Held-video approval ledger must be inside the canonical repository root."];
   }
   const relativeLedgerPath = path.relative(canonicalRoot, canonicalLedgerPath).split(path.sep).join("/");
-  const [mainBase, featurePredecessor] = await Promise.all([
-    mergeBaseWithMain(canonicalRoot),
-    featurePredecessorRevision(canonicalRoot),
-  ]);
-  const [headLedger, parentLedger, mainLedger] = await Promise.all([
+  const baselines = await approvalBaselineRevisions(canonicalRoot);
+  const [headResult, ...baselineResults] = await Promise.all([
     readLedgerAtRevision(canonicalRoot, "HEAD", relativeLedgerPath),
-    featurePredecessor
-      ? readLedgerAtRevision(canonicalRoot, featurePredecessor, relativeLedgerPath)
-      : null,
-    mainBase ? readLedgerAtRevision(canonicalRoot, mainBase, relativeLedgerPath) : null,
+    ...baselines.revisions.map((revision) =>
+      readLedgerAtRevision(canonicalRoot, revision, relativeLedgerPath)),
   ]);
-  const errors = [];
-  if (!headLedger) {
+  const errors = [...baselines.errors];
+  if (headResult.status !== "ok") {
     errors.push("Held-video approval history could not read the committed HEAD ledger.");
   }
-  if (!parentLedger && !mainLedger) {
+  let readableBaselineCount = 0;
+  for (const result of baselineResults) {
+    if (result.status === "unavailable" || result.status === "invalid") {
+      errors.push("Held-video approval history could not read an immutable predecessor revision.");
+      continue;
+    }
+    if (result.status === "ok") {
+      readableBaselineCount += 1;
+      errors.push(...validateHeldVideoApprovalTransition(result.ledger, ledger, currentReviewAssets));
+    }
+  }
+  if (readableBaselineCount === 0) {
     errors.push("Held-video approval history has no immutable predecessor baseline.");
   }
-  if (mainLedger) {
-    errors.push(...validateHeldVideoApprovalTransition(mainLedger, ledger, currentReviewAssets));
+  if (headResult.status === "ok" && JSON.stringify(headResult.ledger) !== JSON.stringify(ledger)) {
+    errors.push(...validateHeldVideoApprovalTransition(headResult.ledger, ledger, currentReviewAssets));
   }
-  if (parentLedger) {
-    errors.push(...validateHeldVideoApprovalTransition(parentLedger, ledger, currentReviewAssets));
-  }
-  if (headLedger && JSON.stringify(headLedger) !== JSON.stringify(ledger)) {
-    errors.push(...validateHeldVideoApprovalTransition(headLedger, ledger, currentReviewAssets));
-  }
+  errors.push(...await validateHeldVideoApprovalCommitHistory(
+    canonicalRoot,
+    relativeLedgerPath,
+  ));
   return [...new Set(errors)];
 }

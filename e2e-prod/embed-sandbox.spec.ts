@@ -32,6 +32,8 @@ async function adminClient(): Promise<SupabaseClient> {
 
 async function createEmbedFixture(admin: SupabaseClient): Promise<Fixture> {
   const suffix = crypto.randomUUID();
+  let courseId: string | null = null;
+  try {
   const { data: course, error: courseError } = await admin
     .from("courses")
     .insert({
@@ -44,6 +46,7 @@ async function createEmbedFixture(admin: SupabaseClient): Promise<Fixture> {
   if (courseError || !course) {
     throw courseError ?? new Error("Failed to create course fixture");
   }
+  courseId = course.id as string;
 
   const { data: moduleRow, error: moduleError } = await admin
     .from("modules")
@@ -91,7 +94,21 @@ async function createEmbedFixture(admin: SupabaseClient): Promise<Fixture> {
     throw blockError ?? new Error("Failed to create embed block fixture");
   }
 
-  return { courseId: course.id as string, lessonId: lesson.id as string, blockId: block.id as string };
+  return { courseId, lessonId: lesson.id as string, blockId: block.id as string };
+  } catch (error) {
+    const originalError = error;
+    if (courseId) {
+      const { error: cleanupError } = await admin.from("courses").delete().eq("id", courseId);
+      if (cleanupError) {
+        throw new AggregateError(
+          [originalError, cleanupError],
+          "Embed fixture construction failed and its rollback was incomplete.",
+          { cause: originalError },
+        );
+      }
+    }
+    throw originalError;
+  }
 }
 
 async function readIframeSrc(
@@ -110,7 +127,8 @@ async function readIframeSrc(
 
 async function cleanupFixture(admin: SupabaseClient, fixture: Fixture | null) {
   if (!fixture) return;
-  await admin.from("courses").delete().eq("id", fixture.courseId);
+  const { error } = await admin.from("courses").delete().eq("id", fixture.courseId);
+  if (error) throw error;
 }
 
 test.describe("embed iframe sandbox prod smoke", () => {

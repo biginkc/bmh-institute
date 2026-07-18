@@ -59,9 +59,23 @@ async function readLedgerAtRevision(repoRoot, revision, relativeLedgerPath) {
       ["show", `${revision}:${relativeLedgerPath}`],
       { cwd: repoRoot, encoding: "utf8", maxBuffer: 16 * 1024 * 1024 },
     );
-    return JSON.parse(stdout);
+    return { status: "ok", ledger: JSON.parse(stdout) };
   } catch {
-    return null;
+    try {
+      await execFileAsync("git", ["cat-file", "-e", `${revision}^{commit}`], {
+        cwd: repoRoot,
+      });
+    } catch {
+      return { status: "unavailable", ledger: null };
+    }
+    try {
+      await execFileAsync("git", ["cat-file", "-e", `${revision}:${relativeLedgerPath}`], {
+        cwd: repoRoot,
+      });
+    } catch {
+      return { status: "missing", ledger: null };
+    }
+    return { status: "invalid", ledger: null };
   }
 }
 
@@ -81,23 +95,141 @@ async function mergeBaseWithMain(repoRoot) {
   return null;
 }
 
+async function commitParents(repoRoot, revision) {
+  try {
+    const { stdout: resolved } = await execFileAsync(
+      "git",
+      ["rev-parse", "--verify", `${revision}^{commit}`],
+      { cwd: repoRoot, encoding: "utf8" },
+    );
+    const commit = resolved.trim();
+    if (!/^[a-f0-9]{40}$/.test(commit)) return null;
+    const { stdout: rawCommit } = await execFileAsync(
+      "git",
+      ["cat-file", "-p", commit],
+      { cwd: repoRoot, encoding: "utf8" },
+    );
+    const parents = [...rawCommit.matchAll(/^parent ([a-f0-9]{40})$/gm)]
+      .map((match) => match[1]);
+    return { commit, parents };
+  } catch {
+    return null;
+  }
+}
+
+async function approvalBaselineRevisions(repoRoot) {
+  const errors = [];
+  const head = await commitParents(repoRoot, "HEAD");
+  if (!head) {
+    return {
+      revisions: [],
+      errors: ["Caption approval history could not inspect committed HEAD ancestry."],
+    };
+  }
+
+  const revisions = [];
+  if (head.parents.length === 0) {
+    errors.push("Caption approval history has no committed parent ancestry.");
+  } else if (head.parents.length === 1) {
+    revisions.push(head.parents[0]);
+  } else {
+    // The first parent is the feature history for an ordinary merge and the
+    // base history for GitHub's synthetic merge. Validate it in either case.
+    revisions.push(head.parents[0]);
+
+    // The second parent is the feature tip in GitHub's synthetic merge. Its
+    // own parent is the immutable history before the change under test. For
+    // an ordinary feature merge this also preserves the other prior history.
+    const secondParent = await commitParents(repoRoot, head.parents[1]);
+    if (!secondParent) {
+      errors.push("Caption approval history could not inspect the second-parent history.");
+    } else if (secondParent.parents.length > 0) {
+      revisions.push(secondParent.parents[0]);
+    }
+  }
+
+  const mainBase = await mergeBaseWithMain(repoRoot);
+  if (mainBase) revisions.push(mainBase);
+  return {
+    revisions: [...new Set(revisions.filter((revision) => revision && revision !== head.commit))],
+    errors,
+  };
+}
+
+async function validateCaptionApprovalCommitHistory(repoRoot, relativeLedgerPath) {
+  let revisions;
+  try {
+    const { stdout } = await execFileAsync(
+      "git",
+      ["rev-list", "--full-history", "--topo-order", "--reverse", "HEAD", "--", relativeLedgerPath],
+      { cwd: repoRoot, encoding: "utf8", maxBuffer: 16 * 1024 * 1024 },
+    );
+    revisions = stdout.trim() ? stdout.trim().split(/\s+/) : [];
+  } catch {
+    return ["Caption approval history could not enumerate committed ledger transitions."];
+  }
+
+  const errors = [];
+  for (const revision of revisions) {
+    const ancestry = await commitParents(repoRoot, revision);
+    if (!ancestry) {
+      errors.push("Caption approval history could not inspect a ledger-changing commit.");
+      continue;
+    }
+    const next = await readLedgerAtRevision(repoRoot, revision, relativeLedgerPath);
+    if (next.status === "unavailable" || next.status === "invalid") {
+      errors.push("Caption approval history could not read a ledger-changing commit.");
+      continue;
+    }
+    for (const parent of ancestry.parents) {
+      const previous = await readLedgerAtRevision(repoRoot, parent, relativeLedgerPath);
+      if (previous.status === "unavailable" || previous.status === "invalid") {
+        errors.push("Caption approval history could not read a ledger transition parent.");
+        continue;
+      }
+      if (previous.status === "ok" && next.status === "missing") {
+        errors.push("Caption approval history was removed by a committed transition.");
+      } else if (previous.status === "ok" && next.status === "ok") {
+        errors.push(...validateCaptionApprovalTransition(previous.ledger, next.ledger));
+      }
+    }
+  }
+  return errors;
+}
+
 export async function validateCaptionApprovalHistory({ ledger, repoRoot, ledgerPath }) {
   const canonicalRoot = await realpath(repoRoot);
   const canonicalLedgerPath = await realpath(ledgerPath);
   if (!isInside(canonicalRoot, canonicalLedgerPath)) return [];
   const relativeLedgerPath = path.relative(canonicalRoot, canonicalLedgerPath).split(path.sep).join("/");
-  const mainBase = await mergeBaseWithMain(canonicalRoot);
-  const [headLedger, parentLedger, mainLedger] = await Promise.all([
+  const baselines = await approvalBaselineRevisions(canonicalRoot);
+  const [headResult, ...baselineResults] = await Promise.all([
     readLedgerAtRevision(canonicalRoot, "HEAD", relativeLedgerPath),
-    readLedgerAtRevision(canonicalRoot, "HEAD^", relativeLedgerPath),
-    mainBase ? readLedgerAtRevision(canonicalRoot, mainBase, relativeLedgerPath) : null,
+    ...baselines.revisions.map((revision) =>
+      readLedgerAtRevision(canonicalRoot, revision, relativeLedgerPath)),
   ]);
-  const errors = [];
-  if (mainLedger) errors.push(...validateCaptionApprovalTransition(mainLedger, ledger));
-  if (parentLedger) errors.push(...validateCaptionApprovalTransition(parentLedger, ledger));
-  if (headLedger && JSON.stringify(headLedger) !== JSON.stringify(ledger)) {
-    errors.push(...validateCaptionApprovalTransition(headLedger, ledger));
+  const errors = [...baselines.errors];
+  if (headResult.status !== "ok") {
+    errors.push("Caption approval history could not read the committed HEAD ledger.");
   }
+  let readableBaselineCount = 0;
+  for (const result of baselineResults) {
+    if (result.status === "unavailable" || result.status === "invalid") {
+      errors.push("Caption approval history could not read an immutable predecessor revision.");
+      continue;
+    }
+    if (result.status === "ok") {
+      readableBaselineCount += 1;
+      errors.push(...validateCaptionApprovalTransition(result.ledger, ledger));
+    }
+  }
+  if (readableBaselineCount === 0) {
+    errors.push("Caption approval history has no immutable predecessor baseline.");
+  }
+  if (headResult.status === "ok" && JSON.stringify(headResult.ledger) !== JSON.stringify(ledger)) {
+    errors.push(...validateCaptionApprovalTransition(headResult.ledger, ledger));
+  }
+  errors.push(...await validateCaptionApprovalCommitHistory(canonicalRoot, relativeLedgerPath));
   return [...new Set(errors)];
 }
 

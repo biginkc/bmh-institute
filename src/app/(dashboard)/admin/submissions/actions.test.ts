@@ -12,10 +12,33 @@ let reviewRubric: unknown = [
 let requiresReview = true;
 let reviewSelectSql = "";
 let updateMatched = true;
+let currentReviewStatus = "submitted";
+let currentReviewerNotes: string | null = null;
+let currentReviewedBy: string | null = null;
+let committedReviewAfterUpdate: {
+  status: string;
+  reviewerNotes: string | null;
+  reviewedBy: string | null;
+} | null = null;
 
-const sendEmailSpy = vi.fn(async (input: Record<string, unknown>) => {
-  void input;
-});
+const { afterEffects, sendEmailSpy } = vi.hoisted(() => ({
+  afterEffects: [] as Array<Promise<unknown>>,
+  sendEmailSpy: vi.fn(async (input: Record<string, unknown>): Promise<{
+    ok: boolean;
+    messageId?: string;
+    skipped?: boolean;
+    error?: string;
+  }> => {
+    void input;
+    return { ok: true, messageId: "test-message" };
+  }),
+}));
+
+vi.mock("next/server", () => ({
+  after: (effect: () => Promise<unknown>) => {
+    afterEffects.push(Promise.resolve().then(effect));
+  },
+}));
 
 vi.mock("@/lib/auth/guard", () => ({
   requireAdmin: vi.fn(async () => ({
@@ -56,10 +79,17 @@ vi.mock("@/lib/supabase/server", () => ({
           const query = {
             eq: () => query,
             select: () => query,
-            maybeSingle: async () => ({
-              data: updateMatched ? { id: "submission-1" } : null,
-              error: updateError,
-            }),
+            maybeSingle: async () => {
+              if (!updateMatched && committedReviewAfterUpdate) {
+                currentReviewStatus = committedReviewAfterUpdate.status;
+                currentReviewerNotes = committedReviewAfterUpdate.reviewerNotes;
+                currentReviewedBy = committedReviewAfterUpdate.reviewedBy;
+              }
+              return {
+                data: updateMatched ? { id: "submission-1" } : null,
+                error: updateError,
+              };
+            },
           };
           return query;
         },
@@ -71,6 +101,9 @@ vi.mock("@/lib/supabase/server", () => ({
               maybeSingle: async () => ({
                 data: {
                   id: "submission-1",
+                  status: currentReviewStatus,
+                  reviewer_notes: currentReviewerNotes,
+                  reviewed_by: currentReviewedBy,
                   lesson_id: "lesson-1",
                   user_id: "learner-1",
                   profiles: {
@@ -114,7 +147,12 @@ describe("admin submission review actions (TEST-01)", () => {
     requiresReview = true;
     reviewSelectSql = "";
     updateMatched = true;
+    currentReviewStatus = "submitted";
+    currentReviewerNotes = null;
+    currentReviewedBy = null;
+    committedReviewAfterUpdate = null;
     sendEmailSpy.mockClear();
+    afterEffects.length = 0;
   });
 
   afterEach(() => {
@@ -126,6 +164,7 @@ describe("admin submission review actions (TEST-01)", () => {
       submissionId: "submission-1",
       note: "Looks good.",
     });
+    await flushAfterEffects();
 
     expect(result).toEqual({ ok: true });
     expect(updatePatch).toMatchObject({
@@ -138,6 +177,21 @@ describe("admin submission review actions (TEST-01)", () => {
       "profiles!assignment_submissions_user_id_fkey",
     );
     expect(sendEmailSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it("returns approval success after commit when learner email fails", async () => {
+    sendEmailSpy.mockResolvedValueOnce({
+      ok: false,
+      skipped: false,
+      error: "SMTP unavailable",
+    });
+
+    await expect(approveSubmission({
+      submissionId: "submission-1",
+      note: "Looks good.",
+    })).resolves.toEqual({ ok: true });
+    await flushAfterEffects();
+    expect(updatePatch).toMatchObject({ status: "approved" });
   });
 
   it("refuses approval when the stored assignment rubric is invalid", async () => {
@@ -194,6 +248,7 @@ describe("admin submission review actions (TEST-01)", () => {
       submissionId: "submission-1",
       note: "  Please add a clearer file.  ",
     });
+    await flushAfterEffects();
 
     expect(result).toEqual({ ok: true });
     expect(updatePatch).toMatchObject({
@@ -205,6 +260,21 @@ describe("admin submission review actions (TEST-01)", () => {
       "profiles!assignment_submissions_user_id_fkey",
     );
     expect(sendEmailSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it("returns revision success after commit when learner email fails", async () => {
+    sendEmailSpy.mockResolvedValueOnce({
+      ok: false,
+      skipped: false,
+      error: "SMTP unavailable",
+    });
+
+    await expect(requestRevision({
+      submissionId: "submission-1",
+      note: "Please add more detail.",
+    })).resolves.toEqual({ ok: true });
+    await flushAfterEffects();
+    expect(updatePatch).toMatchObject({ status: "needs_revision" });
   });
 
   it("surfaces database update errors", async () => {
@@ -233,6 +303,52 @@ describe("admin submission review actions (TEST-01)", () => {
     expect(sendEmailSpy).not.toHaveBeenCalled();
   });
 
+  it("accepts an exact approval retry after the original response was lost", async () => {
+    updateMatched = false;
+    currentReviewStatus = "approved";
+    currentReviewerNotes = "Looks good.";
+    currentReviewedBy = "admin-1";
+
+    await expect(approveSubmission({
+      submissionId: "submission-1",
+      note: "Looks good.",
+    })).resolves.toEqual({ ok: true });
+    expect(sendEmailSpy).not.toHaveBeenCalled();
+  });
+
+  it("accepts an exact approval committed by a concurrent request after lookup", async () => {
+    updateMatched = false;
+    committedReviewAfterUpdate = {
+      status: "approved",
+      reviewerNotes: "Looks good.",
+      reviewedBy: "admin-1",
+    };
+
+    await expect(approveSubmission({
+      submissionId: "submission-1",
+      note: "Looks good.",
+    })).resolves.toEqual({ ok: true });
+  });
+
+  it("accepts an exact revision retry but rejects a different decision", async () => {
+    updateMatched = false;
+    currentReviewStatus = "needs_revision";
+    currentReviewerNotes = "Add detail.";
+    currentReviewedBy = "admin-1";
+
+    await expect(requestRevision({
+      submissionId: "submission-1",
+      note: "  Add detail.  ",
+    })).resolves.toEqual({ ok: true });
+    await expect(approveSubmission({
+      submissionId: "submission-1",
+      note: "Looks good.",
+    })).resolves.toEqual({
+      ok: false,
+      error: "This submission was already reviewed.",
+    });
+  });
+
   it("creates a signed download URL for admins", async () => {
     const result = await createSubmissionDownloadUrl("learner-1/file.pdf");
 
@@ -242,3 +358,7 @@ describe("admin submission review actions (TEST-01)", () => {
     });
   });
 });
+
+async function flushAfterEffects(): Promise<void> {
+  await Promise.all(afterEffects.splice(0));
+}

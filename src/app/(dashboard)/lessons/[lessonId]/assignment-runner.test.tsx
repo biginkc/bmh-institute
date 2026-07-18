@@ -1,6 +1,7 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { toast } from "sonner";
 
 import {
   AssignmentRunner,
@@ -8,6 +9,12 @@ import {
   type PriorSubmission,
 } from "./assignment-runner";
 import { submitAssignment } from "./assignment-actions";
+
+const refreshSpy = vi.fn();
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh: refreshSpy }),
+}));
 
 vi.mock("sonner", () => ({
   toast: {
@@ -71,6 +78,7 @@ function renderRunner(
 describe("<AssignmentRunner />", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    refreshSpy.mockClear();
     vi.mocked(submitAssignment).mockResolvedValue({ ok: true });
   });
 
@@ -91,6 +99,18 @@ describe("<AssignmentRunner />", () => {
         submission_file_path: undefined,
       }),
     );
+  });
+
+  it("shows a stable error when the server action rejects unexpectedly", async () => {
+    vi.mocked(submitAssignment).mockRejectedValueOnce(new Error("network failure"));
+    const user = userEvent.setup();
+    renderRunner();
+    await user.type(screen.getByLabelText("Response"), "My practice response");
+    await user.click(screen.getByRole("button", { name: "Submit for review" }));
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith(
+      "Submission could not be confirmed. Check your connection and try again.",
+    ));
+    expect(refreshSpy).toHaveBeenCalledTimes(1);
   });
 
   it("preserves URL and file submission payloads", async () => {

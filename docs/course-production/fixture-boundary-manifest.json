@@ -4729,8 +4729,16 @@
       "BMH-P|2026"
     ],
     "auth_rate_limits_from_snapshot": [
-      "email|[redacted-fixture-identifier]|2026-06-02 16:00:00+00",
-      "ip|[redacted-fixture-identifier]|2026-06-02 16:30:00+00"
+      {
+        "key_type": "email",
+        "window_start": "2026-06-02 16:00:00+00",
+        "record_count": 1
+      },
+      {
+        "key_type": "ip",
+        "window_start": "2026-06-02 16:30:00+00",
+        "record_count": 1
+      }
     ]
   },
   "reference_classification": {

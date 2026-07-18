@@ -9,9 +9,19 @@ vi.mock("next/cache", () => ({
   revalidatePath: vi.fn(),
 }));
 
-const sendEmailSpy = vi.fn(async (args: unknown) => {
-  void args;
-});
+const { afterEffects, sendEmailSpy } = vi.hoisted(() => ({
+  afterEffects: [] as Array<Promise<unknown>>,
+  sendEmailSpy: vi.fn(async (args: unknown) => {
+    void args;
+    return { ok: true as const, messageId: "test-message" };
+  }),
+}));
+
+vi.mock("next/server", () => ({
+  after: (effect: () => Promise<unknown>) => {
+    afterEffects.push(Promise.resolve().then(effect));
+  },
+}));
 vi.mock("@/lib/email/send", () => ({
   sendEmail: (args: unknown) => sendEmailSpy(args),
 }));
@@ -171,7 +181,8 @@ describe("submitAssignment auto-completion (requires_review policy)", () => {
     insertSpy.mockReset();
     insertSpy.mockResolvedValue({ error: null });
     sendEmailSpy.mockReset();
-    sendEmailSpy.mockResolvedValue(undefined);
+    sendEmailSpy.mockResolvedValue({ ok: true, messageId: "test-message" });
+    afterEffects.length = 0;
     adminFromSpy.mockClear();
   });
 
@@ -188,6 +199,7 @@ describe("submitAssignment auto-completion (requires_review policy)", () => {
       submission_type: "text",
       submission_text: "My answer",
     });
+    await Promise.all(afterEffects.splice(0));
 
     expect(result).toEqual({ ok: true });
     expect(insertSpy).toHaveBeenCalledTimes(1);
@@ -213,6 +225,7 @@ describe("submitAssignment auto-completion (requires_review policy)", () => {
       submission_type: "text",
       submission_text: "My answer",
     });
+    await Promise.all(afterEffects.splice(0));
 
     expect(result).toEqual({ ok: true });
     expect(insertedRow).toMatchObject({ status: "submitted" });

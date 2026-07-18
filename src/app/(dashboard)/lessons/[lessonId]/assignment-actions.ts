@@ -8,6 +8,7 @@ import { sendEmail } from "@/lib/email/send";
 import { renderNewSubmissionEmail } from "@/lib/email/new-submission";
 import { getAppUrl } from "@/lib/app-url";
 import { emitSandraCourseCompletedForLesson } from "@/lib/integrations/sandra/course-completed";
+import { schedulePostCommitEffect } from "@/lib/actions/post-commit-effect";
 
 export type SubmitResult =
   | { ok: true }
@@ -100,7 +101,7 @@ export async function submitAssignment(input: {
 
   const { data: activeSubmission, error: activeSubmissionError } = await supabase
     .from("assignment_submissions")
-    .select("id, status")
+    .select("id, status, lesson_id, submission_text, submission_url, submission_file_path")
     .eq("user_id", user.id)
     .eq("assignment_id", input.assignmentId)
     .in("status", ["submitted", "approved"])
@@ -108,6 +109,17 @@ export async function submitAssignment(input: {
     .maybeSingle();
   if (activeSubmissionError) {
     return { ok: false, error: activeSubmissionError.message };
+  }
+  if (
+    activeSubmission &&
+    activeSubmission.status === status &&
+    activeSubmission.lesson_id === input.lessonId &&
+    activeSubmission.submission_text === normalized.submission_text &&
+    activeSubmission.submission_url === normalized.submission_url &&
+    activeSubmission.submission_file_path === normalized.submission_file_path
+  ) {
+    revalidateAssignmentPaths(input.lessonId);
+    return { ok: true };
   }
   if (activeSubmission?.status === "submitted") {
     return {
@@ -141,6 +153,27 @@ export async function submitAssignment(input: {
     reviewed_at: requiresReview ? null : new Date().toISOString(),
   });
   if (error) {
+    if (error.code === "23505") {
+      const { data: concurrentSubmission, error: concurrentLookupError } = await supabase
+        .from("assignment_submissions")
+        .select("id, status, lesson_id, submission_text, submission_url, submission_file_path")
+        .eq("user_id", user.id)
+        .eq("assignment_id", input.assignmentId)
+        .in("status", ["submitted", "approved"])
+        .limit(1)
+        .maybeSingle();
+      if (
+        !concurrentLookupError &&
+        submissionMatches(concurrentSubmission, {
+          status,
+          lessonId: input.lessonId,
+          ...normalized,
+        })
+      ) {
+        revalidateAssignmentPaths(input.lessonId);
+        return { ok: true };
+      }
+    }
     return {
       ok: false,
       error:
@@ -154,7 +187,7 @@ export async function submitAssignment(input: {
   // submissions need no action. Fire-and-forget so SMTP hiccups don't roll back
   // the submission.
   if (requiresReview) {
-    await notifyAdminsOfNewSubmission({
+    schedulePostCommitEffect("assignment admin notification", () => notifyAdminsOfNewSubmission({
       supabase: admin,
       learnerId: user.id,
       assignmentId: input.assignmentId,
@@ -171,18 +204,48 @@ export async function submitAssignment(input: {
           : authoredType === "url"
             ? (normalized.submission_url ?? "")
             : filenameFromPath(normalized.submission_file_path),
-    });
+    }));
   } else {
-    await emitSandraCourseCompletedForLesson(supabase, {
+    schedulePostCommitEffect("assignment Sandra completion", () => emitSandraCourseCompletedForLesson(supabase, {
       userId: user.id,
       lessonId: input.lessonId,
-    });
+    }));
   }
 
-  revalidatePath(`/lessons/${input.lessonId}`);
-  revalidatePath(`/dashboard`);
-  revalidatePath(`/admin/submissions`);
+  revalidateAssignmentPaths(input.lessonId);
   return { ok: true };
+}
+
+function submissionMatches(
+  submission: {
+    status: string;
+    lesson_id: string;
+    submission_text: string | null;
+    submission_url: string | null;
+    submission_file_path: string | null;
+  } | null,
+  expected: {
+    status: string;
+    lessonId: string;
+    submission_text: string | null;
+    submission_url: string | null;
+    submission_file_path: string | null;
+  },
+): boolean {
+  return Boolean(
+    submission &&
+    submission.status === expected.status &&
+    submission.lesson_id === expected.lessonId &&
+    submission.submission_text === expected.submission_text &&
+    submission.submission_url === expected.submission_url &&
+    submission.submission_file_path === expected.submission_file_path,
+  );
+}
+
+function revalidateAssignmentPaths(lessonId: string): void {
+  revalidatePath(`/lessons/${lessonId}`);
+  revalidatePath("/dashboard");
+  revalidatePath("/admin/submissions");
 }
 
 async function notifyAdminsOfNewSubmission(input: {
@@ -240,7 +303,7 @@ async function notifyAdminsOfNewSubmission(input: {
     submissionsUrl,
   });
 
-  await Promise.all(
+  const results = await Promise.all(
     admins.map((a) =>
       sendEmail({
         to: a.email,
@@ -249,6 +312,9 @@ async function notifyAdminsOfNewSubmission(input: {
       }),
     ),
   );
+  if (results.some((result) => !result.ok)) {
+    throw new Error("One or more assignment notifications were not delivered.");
+  }
 }
 
 function filenameFromPath(p: string | null): string {

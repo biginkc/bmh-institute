@@ -244,8 +244,11 @@ export function toPilotMonitoringCsv(summary: PilotMonitoringSummary): string {
 export const toLearnerMonitoringCsv = toPilotMonitoringCsv;
 
 function csvCell(value: string): string {
-  if (!/[",\n]/.test(value)) return value;
-  return `"${value.replaceAll('"', '""')}"`;
+  const dangerousPrefix = /^[=+\-@\t\r\n\0\uFF1D\uFF0B\uFF0D\uFF20]/.test(value);
+  const withoutNul = value.replaceAll("\0", "\uFFFD");
+  const neutralized = dangerousPrefix ? `'${withoutNul}` : withoutNul;
+  if (!/[",\n\r]/.test(neutralized)) return neutralized;
+  return `"${neutralized.replaceAll('"', '""')}"`;
 }
 
 type Profile = {

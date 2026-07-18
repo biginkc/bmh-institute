@@ -1,3 +1,6 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+
 import { describe, expect, it } from "vitest";
 
 import {
@@ -11,6 +14,19 @@ import {
 } from "./fixture-cleanup";
 
 describe("fixture cleanup boundary", () => {
+  it("stores only identifier-free authentication rate-limit aggregates in committed evidence", () => {
+    const committed = JSON.parse(readFileSync(
+      resolve(process.cwd(), "docs/course-production/fixture-boundary-manifest.json"),
+      "utf8",
+    )) as { retained_entities: { auth_rate_limits_from_snapshot: Array<Record<string, string>> } };
+    for (const record of committed.retained_entities.auth_rate_limits_from_snapshot) {
+      expect(Object.keys(record).sort()).toEqual(["key_type", "record_count", "window_start"]);
+      expect(record.record_count).toBeGreaterThan(0);
+      expect(Number.isInteger(record.record_count)).toBe(true);
+      expect(JSON.stringify(record)).not.toMatch(/(?:@|(?:^|[^\d])(?:\d{1,3}\.){3}\d{1,3}(?:[^\d]|$))/);
+    }
+  });
+
   it("deletes only exact manifest identities and has no auth deletion surface", async () => {
     const manifest = fixtureManifest();
     const adapter = fakeAdapter();
@@ -168,8 +184,29 @@ describe("fixture cleanup boundary", () => {
     expect(adapter.storageNames.content).toEqual([]);
     expect(adapter.storageDeleteCalls).toEqual([
       { bucket: "content", names: ["fixtures/one.pdf", "fixtures/two.pdf"] },
-      { bucket: "content", names: ["fixtures/one.pdf", "fixtures/two.pdf"] },
+      { bucket: "content", names: ["fixtures/two.pdf"] },
     ]);
+  });
+
+  it("fails when storage reports partial success without an API error", async () => {
+    const manifest = fixtureManifest();
+    manifest.storage_objects = {
+      content: ["fixtures/one.pdf", "fixtures/two.pdf"],
+      submissions: [],
+    };
+    const adapter = fakeAdapter();
+    adapter.storageNames.content = ["fixtures/one.pdf", "fixtures/two.pdf"];
+    adapter.partialStorageDeleteWithoutError = true;
+    const plan = await buildFixtureCleanupPlan({
+      manifest,
+      manifestSha256: "a".repeat(64),
+      adapter,
+    });
+
+    await expect(
+      executeFixtureCleanup({ manifest, plan, adapter, confirmation: "confirm" }),
+    ).rejects.toThrow(/still present/i);
+    expect(adapter.storageNames.content).toEqual(["fixtures/two.pdf"]);
   });
 });
 
@@ -261,6 +298,7 @@ function fakeAdapter() {
     storageNames: typeof storageNames;
     storageDeleteCalls: typeof storageDeleteCalls;
     rejectStorageDeleteOnce: boolean;
+    partialStorageDeleteWithoutError: boolean;
   } = {
     rows,
     authUserIds: ["retained-auth"],
@@ -269,6 +307,7 @@ function fakeAdapter() {
     storageNames,
     storageDeleteCalls,
     rejectStorageDeleteOnce: false,
+    partialStorageDeleteWithoutError: false,
     async listRows(table) {
       return rows[table] ?? [];
     },
@@ -294,6 +333,10 @@ function fakeAdapter() {
         adapter.rejectStorageDeleteOnce = false;
         storageNames[bucket] = storageNames[bucket].filter((name) => name !== names[0]);
         throw new Error("interrupted storage delete");
+      }
+      if (adapter.partialStorageDeleteWithoutError) {
+        storageNames[bucket] = storageNames[bucket].filter((name) => name !== names[0]);
+        return;
       }
       storageNames[bucket] = storageNames[bucket].filter((name) => !names.includes(name));
     },

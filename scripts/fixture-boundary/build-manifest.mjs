@@ -152,9 +152,9 @@ const manifest = {
     certificate_number_counters_from_snapshot: (snapshot["public.certificate_number_counters"] ?? [])
       .map((row) => `${row.prefix}|${row.certificate_year}`)
       .sort(),
-    auth_rate_limits_from_snapshot: (snapshot["public.auth_rate_limits"] ?? [])
-      .map((row) => `${row.key_type}|${row.key_value}|${row.window_start}`)
-      .sort(),
+    auth_rate_limits_from_snapshot: summarizeRateLimitWindows(
+      snapshot["public.auth_rate_limits"] ?? [],
+    ),
   },
   reference_classification: {
     expected_retained_profile_references: referencedProfileIds(live.tables).sort(),
@@ -345,6 +345,26 @@ function findExternalPayloadReferences(blocks) {
   }
   return references.sort((left, right) =>
     `${left.block_id}:${left.field}`.localeCompare(`${right.block_id}:${right.field}`),
+  );
+}
+
+function summarizeRateLimitWindows(rows) {
+  const windows = new Map();
+  for (const row of rows) {
+    const key = canonicalJson({
+      key_type: row.key_type,
+      window_start: row.window_start,
+    });
+    const current = windows.get(key) ?? {
+      key_type: row.key_type,
+      window_start: row.window_start,
+      record_count: 0,
+    };
+    current.record_count += 1;
+    windows.set(key, current);
+  }
+  return [...windows.values()].sort((left, right) =>
+    canonicalJson(left).localeCompare(canonicalJson(right)),
   );
 }
 

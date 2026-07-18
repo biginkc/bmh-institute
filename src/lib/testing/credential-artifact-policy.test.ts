@@ -31,6 +31,33 @@ describe("credential-bearing Playwright artifact policy", () => {
     expect(source).toContain('export PGPASSWORD="$TEST_SUPABASE_DB_PASSWORD"');
   });
 
+  it("keeps secret-bearing migration acceptance manual and pins every action", () => {
+    const source = fs.readFileSync(
+      path.resolve(process.cwd(), ".github/workflows/db-migrate-test.yml"),
+      "utf8",
+    );
+    expect(source).toContain("permissions:\n  contents: read");
+    const triggerBlock = source.match(/^on:\n([\s\S]*?)\nenv:/m)?.[1] ?? "";
+    expect(triggerBlock).toContain("workflow_dispatch");
+    expect(triggerBlock).not.toContain("pull_request");
+    expect(source).toContain("if: github.ref == 'refs/heads/main'");
+    expect(source).not.toMatch(/uses:\s+[^\n]+@(?![a-f0-9]{40}(?:\s|#|$))[^\n]+/);
+    const checkoutStep = source.match(
+      /- uses: actions\/checkout@[a-f0-9]{40}[\s\S]*?(?=\n\s{6}- uses:|\n\s{6}- name:|$)/,
+    )?.[0] ?? "";
+    expect(checkoutStep).toContain("ref: refs/heads/main");
+    expect(checkoutStep).toContain("persist-credentials: false");
+    expect(checkoutStep).not.toContain("github.ref");
+    expect(checkoutStep).not.toContain("github.sha");
+    expect(checkoutStep).not.toContain("github.event.inputs");
+    const jobEnv = source.match(/\n    env:\n([\s\S]*?)\n    steps:/)?.[1] ?? "";
+    expect(jobEnv).not.toContain("TEST_SUPABASE_SERVICE_ROLE_KEY");
+    const providerStep = source.match(
+      /- name: Run fail-closed provider acceptance[\s\S]*?(?=\n\s{6}- name:|$)/,
+    )?.[0] ?? "";
+    expect(providerStep).toContain("TEST_SUPABASE_SERVICE_ROLE_KEY");
+  });
+
   it("disables every browser recording surface", () => {
     expect(CREDENTIAL_SAFE_PLAYWRIGHT_USE).toEqual({
       trace: "off",

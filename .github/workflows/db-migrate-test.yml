@@ -2,23 +2,17 @@ name: Apply Supabase migrations to test
 
 on:
   workflow_dispatch: {}
-  pull_request:
-    branches: [main]
-    paths:
-      - "supabase/migrations/**"
-      - "supabase/tests/**"
-      - "src/**/*.integration.test.ts"
-      - "src/lib/course-import/provider-acceptance.ts"
-      - "scripts/test-course-import-provider.ts"
-      - "package.json"
-      - ".github/workflows/db-migrate-test.yml"
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
+permissions:
+  contents: read
+
 jobs:
   migrate-test:
     name: Apply migrations to BMH test
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     concurrency:
@@ -27,18 +21,18 @@ jobs:
 
     env:
       TEST_PROJECT_REF: jvaabkchkihkjllehmft
-      TEST_SUPABASE_URL: ${{ secrets.TEST_SUPABASE_URL }}
-      TEST_SUPABASE_ANON_KEY: ${{ secrets.TEST_SUPABASE_ANON_KEY }}
-      TEST_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.TEST_SUPABASE_SERVICE_ROLE_KEY }}
 
     steps:
-      - uses: actions/checkout@v5
-
-      - uses: supabase/setup-cli@v1
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
         with:
-          version: latest
+          ref: refs/heads/main
+          persist-credentials: false
 
-      - uses: actions/setup-node@v5
+      - uses: supabase/setup-cli@ab058987d8d6c725971f6cf9d0b5c98467e30bd1 # v1
+        with:
+          version: 2.109.1
+
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
           node-version: "24"
 
@@ -79,6 +73,9 @@ jobs:
 
       - name: Run fail-closed provider acceptance against migrated test database
         env:
+          TEST_SUPABASE_URL: ${{ secrets.TEST_SUPABASE_URL }}
+          TEST_SUPABASE_ANON_KEY: ${{ secrets.TEST_SUPABASE_ANON_KEY }}
+          TEST_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.TEST_SUPABASE_SERVICE_ROLE_KEY }}
           TEST_SUPABASE_DB_PASSWORD: ${{ secrets.TEST_SUPABASE_DB_PASSWORD }}
         run: |
           echo "::add-mask::$TEST_SUPABASE_DB_PASSWORD"

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { test } from "node:test";
@@ -92,9 +92,14 @@ test("held-video approval history follows the feature parent of a GitHub-style s
     await writeFile(ledgerPath, `${JSON.stringify(canonicalLedger, null, 2)}\n`);
     git("add", "approvals.json");
     git("commit", "-m", "add approval ledger on feature branch");
-    await writeFile(path.join(repoRoot, "feature.txt"), "feature tip after the approval baseline\n");
+    const rewritten = structuredClone(canonicalLedger);
+    rewritten.records.find((record) => record.decision === "approved").notes += " rewritten";
+    await writeFile(ledgerPath, `${JSON.stringify(rewritten, null, 2)}\n`);
+    git("add", "approvals.json");
+    git("commit", "-m", "rewrite terminal approval at feature tip");
+    await writeFile(path.join(repoRoot, "feature.txt"), "unrelated commit after the rewrite\n");
     git("add", "feature.txt");
-    git("commit", "-m", "advance feature after approval baseline");
+    git("commit", "-m", "unrelated feature work after rewrite");
 
     git("switch", "-c", "synthetic-merge", "main");
     git("merge", "--no-ff", "feature", "-m", "GitHub-style pull request merge");
@@ -106,21 +111,13 @@ test("held-video approval history follows the feature parent of a GitHub-style s
     );
     assert.equal(
       git("show", "HEAD^2^:approvals.json"),
-      `${JSON.stringify(canonicalLedger, null, 2)}\n`,
-      "the feature tip parent must provide the immutable approval baseline",
+      `${JSON.stringify(rewritten, null, 2)}\n`,
+      "the immediate feature predecessor is already compromised in this attack",
     );
 
-    assert.deepEqual(await validateHeldVideoApprovalHistory({
-      ledger: canonicalLedger,
-      currentReviewAssets,
-      repoRoot,
-      ledgerPath,
-    }), []);
-
-    const rewritten = structuredClone(canonicalLedger);
-    rewritten.records.find((record) => record.decision === "approved").notes += " rewritten";
+    const mergeLedger = JSON.parse(await readFile(ledgerPath, "utf8"));
     const errors = await validateHeldVideoApprovalHistory({
-      ledger: rewritten,
+      ledger: mergeLedger,
       currentReviewAssets,
       repoRoot,
       ledgerPath,
@@ -131,6 +128,126 @@ test("held-video approval history follows the feature parent of a GitHub-style s
     );
   } finally {
     await rm(repoRoot, { recursive: true, force: true });
+  }
+});
+
+test("held-video approval history rejects a rewrite committed by an ordinary feature merge", async () => {
+  const repoRoot = await mkdtemp(path.join(tmpdir(), "bmh-held-video-feature-merge-"));
+  const ledgerPath = path.join(repoRoot, "approvals.json");
+  const canonicalLedger = JSON.parse(await readFile(new URL(
+    "../../docs/course-production/held-video-review/approvals.json",
+    import.meta.url,
+  ), "utf8"));
+  const currentReviewAssets = canonicalLedger.records.map((record) => ({
+    source_key: record.source_key,
+    checksum_sha256: record.sha256,
+    local_path: record.candidate_local_path,
+    approval_status: record.decision === "approved" ? "approved" : "hold",
+  }));
+  const git = (...args) => execFileSync("git", args, {
+    cwd: repoRoot,
+    encoding: "utf8",
+    stdio: "pipe",
+  });
+
+  try {
+    git("init", "--initial-branch=main");
+    git("config", "user.name", "BMH Course QA");
+    git("config", "user.email", "course-qa@example.invalid");
+    await writeFile(path.join(repoRoot, "base.txt"), "base branch predates the approval ledger\n");
+    git("add", "base.txt");
+    git("commit", "-m", "base without approval ledger");
+
+    git("switch", "-c", "feature");
+    await writeFile(ledgerPath, `${JSON.stringify(canonicalLedger, null, 2)}\n`);
+    git("add", "approvals.json");
+    git("commit", "-m", "add immutable approval ledger");
+    const rewritten = structuredClone(canonicalLedger);
+    rewritten.records.find((record) => record.decision === "approved").notes += " rewritten";
+    await writeFile(ledgerPath, `${JSON.stringify(rewritten, null, 2)}\n`);
+    git("add", "approvals.json");
+    git("commit", "-m", "rewrite held-video approval history");
+    await writeFile(path.join(repoRoot, "feature.txt"), "unrelated commit after the rewrite\n");
+    git("add", "feature.txt");
+    git("commit", "-m", "unrelated feature work after rewrite");
+
+    git("switch", "main");
+    await writeFile(path.join(repoRoot, "main.txt"), "main advanced\n");
+    git("add", "main.txt");
+    git("commit", "-m", "advance main");
+
+    git("switch", "feature");
+    git("merge", "--no-ff", "main", "-m", "merge main after held-video rewrite");
+    assert.equal(git("rev-list", "--parents", "-n", "1", "HEAD").trim().split(/\s+/).length, 3);
+    assert.equal(
+      git("show", "HEAD^1:approvals.json"),
+      `${JSON.stringify(rewritten, null, 2)}\n`,
+      "the ordinary merge first parent is already compromised in this attack",
+    );
+
+    const mergeLedger = JSON.parse(await readFile(ledgerPath, "utf8"));
+    const errors = await validateHeldVideoApprovalHistory({
+      ledger: mergeLedger,
+      currentReviewAssets,
+      repoRoot,
+      ledgerPath,
+    });
+    assert.ok(
+      errors.some((error) => error.includes("decision is terminal")),
+      `ordinary merge must reject held-video approval rewrites: ${errors.join("; ")}`,
+    );
+  } finally {
+    await rm(repoRoot, { recursive: true, force: true });
+  }
+});
+
+test("held-video approval history fails closed when a shallow checkout hides its predecessor", async () => {
+  const canonicalLedger = JSON.parse(await readFile(new URL(
+    "../../docs/course-production/held-video-review/approvals.json",
+    import.meta.url,
+  ), "utf8"));
+  const currentReviewAssets = canonicalLedger.records.map((record) => ({
+    source_key: record.source_key,
+    checksum_sha256: record.sha256,
+    local_path: record.candidate_local_path,
+    approval_status: record.decision === "approved" ? "approved" : "hold",
+  }));
+  const parent = await mkdtemp(path.join(tmpdir(), "bmh-held-video-shallow-"));
+  const source = path.join(parent, "source");
+  const checkout = path.join(parent, "checkout");
+  const git = (cwd, ...args) => execFileSync("git", args, {
+    cwd,
+    encoding: "utf8",
+    stdio: "pipe",
+  });
+
+  try {
+    await mkdir(source);
+    git(source, "init", "--initial-branch=main");
+    git(source, "config", "user.name", "BMH Course QA");
+    git(source, "config", "user.email", "course-qa@example.invalid");
+    await writeFile(path.join(source, "approvals.json"), `${JSON.stringify(canonicalLedger, null, 2)}\n`);
+    git(source, "add", "approvals.json");
+    git(source, "commit", "-m", "add immutable approval ledger");
+    const rewritten = structuredClone(canonicalLedger);
+    rewritten.records.find((record) => record.decision === "approved").notes += " rewritten";
+    await writeFile(path.join(source, "approvals.json"), `${JSON.stringify(rewritten, null, 2)}\n`);
+    git(source, "add", "approvals.json");
+    git(source, "commit", "-m", "rewrite held-video approval");
+
+    git(parent, "clone", "--depth", "1", `file://${source}`, checkout);
+    assert.equal(git(checkout, "rev-parse", "--is-shallow-repository").trim(), "true");
+    const ledgerPath = path.join(checkout, "approvals.json");
+    const shallowLedger = JSON.parse(await readFile(ledgerPath, "utf8"));
+    const errors = await validateHeldVideoApprovalHistory({
+      ledger: shallowLedger,
+      currentReviewAssets,
+      repoRoot: checkout,
+      ledgerPath,
+    });
+    assert.ok(errors.some((error) => error.includes("immutable predecessor baseline")));
+  } finally {
+    await rm(parent, { recursive: true, force: true });
   }
 });
 

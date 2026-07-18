@@ -6,10 +6,23 @@ vi.mock("next/cache", () => ({
   revalidatePath: vi.fn(),
 }));
 
-const { sendEmailSpy } = vi.hoisted(() => ({
-  sendEmailSpy: vi.fn(async (message: { to: string; html: string }) => {
+const { afterEffects, sendEmailSpy } = vi.hoisted(() => ({
+  afterEffects: [] as Array<Promise<unknown>>,
+  sendEmailSpy: vi.fn(async (message: { to: string; html: string }): Promise<{
+    ok: boolean;
+    messageId?: string;
+    skipped?: boolean;
+    error?: string;
+  }> => {
     void message;
+    return { ok: true, messageId: "test-message" };
   }),
+}));
+
+vi.mock("next/server", () => ({
+  after: (effect: () => Promise<unknown>) => {
+    afterEffects.push(Promise.resolve().then(effect));
+  },
 }));
 
 vi.mock("@/lib/email/send", () => ({
@@ -30,7 +43,14 @@ let assignmentRequiresReview = true;
 let assignmentSubmissionType: "text" | "url" | "file_upload" = "file_upload";
 let storageObjectExists = true;
 let storageListError: { message: string } | null = null;
-let activeSubmission: { id: string; status: "submitted" | "approved" } | null = null;
+let activeSubmission: {
+  id: string;
+  status: "submitted" | "approved";
+  lesson_id: string;
+  submission_text: string | null;
+  submission_url: string | null;
+  submission_file_path: string | null;
+} | null = null;
 let activeSubmissionError: { message: string } | null = null;
 let adminRecipients: Array<{
   email: string;
@@ -222,6 +242,7 @@ describe("submitAssignment (INTEG-04 file path validation)", () => {
     insertSpy.mockResolvedValue({ error: null });
     adminFromSpy.mockClear();
     sendEmailSpy.mockClear();
+    afterEffects.length = 0;
   });
 
   afterEach(() => {
@@ -295,6 +316,7 @@ describe("submitAssignment (INTEG-04 file path validation)", () => {
         submission_text: "Sensitive learner response",
       }),
     ).resolves.toEqual({ ok: true });
+    await flushAfterEffects();
 
     expect(sendEmailSpy).toHaveBeenCalledTimes(1);
     expect(sendEmailSpy).toHaveBeenCalledWith(
@@ -309,6 +331,30 @@ describe("submitAssignment (INTEG-04 file path validation)", () => {
     expect(sendEmailSpy.mock.calls.flatMap(([message]) => [message.to])).not.toContain(
       "invited-admin@bmh.test",
     );
+  });
+
+  it("returns success after commit when the admin notification email fails", async () => {
+    assignmentSubmissionType = "text";
+    adminRecipients = [{
+      email: "active-admin@bmh.test",
+      full_name: "Active Admin",
+      system_role: "admin",
+      status: "active",
+    }];
+    sendEmailSpy.mockResolvedValueOnce({
+      ok: false,
+      skipped: false,
+      error: "SMTP unavailable",
+    });
+
+    await expect(submitAssignment({
+      assignmentId: "assignment-1",
+      lessonId: "lesson-1",
+      submission_type: "text",
+      submission_text: "Committed learner response",
+    })).resolves.toEqual({ ok: true });
+    await flushAfterEffects();
+    expect(insertSpy).toHaveBeenCalledTimes(1);
   });
 
   it("rejects a user-scoped file path when the exact storage object does not exist", async () => {
@@ -411,7 +457,14 @@ describe("submitAssignment (INTEG-04 file path validation)", () => {
 
   it("refuses a second submission while review is pending", async () => {
     assignmentSubmissionType = "text";
-    activeSubmission = { id: "submission-1", status: "submitted" };
+    activeSubmission = {
+      id: "submission-1",
+      status: "submitted",
+      lesson_id: "lesson-1",
+      submission_text: "Original answer",
+      submission_url: null,
+      submission_file_path: null,
+    };
 
     const result = await submitAssignment({
       assignmentId: "assignment-1",
@@ -424,6 +477,26 @@ describe("submitAssignment (INTEG-04 file path validation)", () => {
       ok: false,
       error: "This assignment is already awaiting review.",
     });
+    expect(insertSpy).not.toHaveBeenCalled();
+  });
+
+  it("accepts an exact retry after the original response was lost", async () => {
+    assignmentSubmissionType = "text";
+    activeSubmission = {
+      id: "submission-1",
+      status: "submitted",
+      lesson_id: "lesson-1",
+      submission_text: "Same answer",
+      submission_url: null,
+      submission_file_path: null,
+    };
+
+    await expect(submitAssignment({
+      assignmentId: "assignment-1",
+      lessonId: "lesson-1",
+      submission_type: "text",
+      submission_text: "  Same answer  ",
+    })).resolves.toEqual({ ok: true });
     expect(insertSpy).not.toHaveBeenCalled();
   });
 
@@ -444,6 +517,28 @@ describe("submitAssignment (INTEG-04 file path validation)", () => {
       ok: false,
       error: "This assignment already has an active submission.",
     });
+  });
+
+  it("accepts a concurrent exact insert that committed after the initial lookup", async () => {
+    assignmentSubmissionType = "text";
+    insertSpy.mockImplementationOnce(async () => {
+      activeSubmission = {
+        id: "submission-race",
+        status: "submitted",
+        lesson_id: "lesson-1",
+        submission_text: "Racing answer",
+        submission_url: null,
+        submission_file_path: null,
+      };
+      return { error: { code: "23505", message: "duplicate key" } };
+    });
+
+    await expect(submitAssignment({
+      assignmentId: "assignment-1",
+      lessonId: "lesson-1",
+      submission_type: "text",
+      submission_text: "Racing answer",
+    })).resolves.toEqual({ ok: true });
   });
 
   it("rejects a client-supplied assignment id that is not attached to the lesson", async () => {
@@ -506,3 +601,7 @@ describe("submitAssignment (INTEG-04 file path validation)", () => {
     expect(insertedRow?.reviewed_at).toEqual(expect.any(String));
   });
 });
+
+async function flushAfterEffects(): Promise<void> {
+  await Promise.all(afterEffects.splice(0));
+}

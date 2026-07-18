@@ -17,7 +17,8 @@ The unpublished import draft now contains the full authored course shape:
 - 19 learner summaries, objective sets, and accessible in-app text guides
 - 19 approved, checksum-addressed accessible learner-guide PDFs whose downloads
   remain available without blocking lesson completion
-- 29 dedicated video-poster placeholders
+- 49 artwork placeholders: one program cover, 19 lesson thumbnails, and 29
+  dedicated video posters
 
 The machine-readable source is
 `content/course-manifests/bmh-employee-training.v1.json`. It remains a draft.
@@ -86,22 +87,20 @@ of the three-image visual pilot.
 
 The manifest contains 155 assets:
 
-- 29 videos: 20 approved, 6 corrected cuts pending Jarrad review, and 3
-  policy-defective source cuts requiring replacement
-- 29 exact-cut caption assets: 20 approved and 9 missing until the six held
-  cuts are approved and the three replacements exist
-- 29 exact-cut transcript assets: 20 approved and 9 missing until the six held
-  cuts are approved and the three replacements exist
-- 20 thumbnail placeholders: one program cover and 19 topic thumbnails
-- 29 video-poster placeholders
+- 29 videos: 22 approved and 7 held for policy-safe replacement cuts
+- 29 exact-cut caption assets: 22 approved and 7 missing
+- 29 exact-cut transcript assets: 22 approved and 7 missing
+- 49 artwork placeholders: one program cover, 19 topic thumbnails, and 29
+  video posters; all final files have been produced but remain unapproved and
+  therefore deliberately unreconciled
 - 19 approved accessible learner-guide PDFs
 
-There are 67 missing generated assets: 18 held-cut caption/transcript
-derivatives, 20 thumbnails, and 29 posters. Together with the nine video holds
-and six pending production Closer Lab IDs, the validator reports 82 publication
-blockers and zero manifest errors. The dated operating-stack confirmation is a
-warning that must be refreshed immediately before publication, not an
-additional blocker in the current validator result.
+There are 63 missing manifest assets: 14 held-cut caption/transcript
+derivatives and 49 approval-gated artwork records. Together with the seven
+video holds and six pending production Closer Lab IDs, the validator reports
+76 publication blockers and zero manifest errors. The dated operating-stack
+confirmation is a warning that must be refreshed immediately before
+publication, not an additional blocker in the current validator result.
 
 ## Quiz curation
 
@@ -183,13 +182,13 @@ replace those placeholders.
 
 The draft must not be published until all of these are resolved:
 
-- Jarrad reviews the six corrected cuts in `HELD-VIDEO-REVIEW.md`. The exact
-  Compensation Engine, Operator Playbook, and Career Growth source hashes are
-  terminal `changes_requested`; replacement files must be produced from their
-  prepared scripts/edit specifications before those three can enter review.
+- Seven policy-safe replacement cuts are produced, checksum-bound, reviewed by
+  Jarrad, and approved through `HELD-VIDEO-REVIEW.md`.
 - Exact-cut captions and transcripts are produced and approved for all 29 videos.
-- The course cover and 19 topic thumbnails are produced and approved.
-- All 29 dedicated video posters are produced, approved, and mapped one-to-one.
+- The produced course cover and 19 topic thumbnails receive final batch
+  approval and are reconciled into the manifest.
+- All 29 produced dedicated video posters receive final batch approval and are
+  mapped one-to-one.
 - The 19 approved accessible learner-guide PDFs remain checksum-matched to
   their non-blocking download blocks. The in-app text guides remain available
   as a fallback.
@@ -206,22 +205,23 @@ The draft must not be published until all of these are resolved:
   quizzes, flashcards, and confirmation record.
 
 The manifest records all missing derivatives as `approval_status: missing` and
-all nine unavailable cuts as `approval_status: hold`. The validator reports six
-as pending Jarrad approval and the three policy-defective hashes as requiring a
-policy-safe replacement. It cannot misrepresent a known-bad cut as reviewable.
+all seven unavailable cuts as `approval_status: hold`. Each held record requires
+a policy-safe replacement cut. It cannot misrepresent a known-bad cut as
+reviewable.
 
 ## Final preapproval verification
 
-- Manifest validation: 0 errors, 82 intentional publication blockers, and one
+- Manifest validation: 0 errors, 76 intentional publication blockers, and one
   dated DialPad recheck warning.
 - Course shape: 6 modules, 19 content lessons, 19 quiz lessons, 6 assignments,
   29 videos, 342 questions, 152 flashcards, 6 role plays, 29 poster references,
   and 19 accessible guides.
-- Caption inventory: 20 approved exact video/caption/transcript sets, 6
-  corrected cuts pending review, 3 source cuts requiring replacement, and 18
-  derivatives intentionally missing until their final video hashes exist.
-- Full local asset check: 155 declared assets, 79 exact approved files verified,
-  76 held or missing blockers, and 0 errors.
+- Caption inventory: 22 approved exact video/caption/transcript sets, 7 held
+  videos requiring policy-safe replacement cuts, and 14 derivatives
+  intentionally missing until their final video hashes exist.
+- Full local asset check: 155 declared assets, 85 exact approved files verified,
+  70 held or missing asset blockers, and 0 errors. Six pending production
+  Closer Lab IDs bring the publication-blocker total to 76.
 - Tech Stack canary: 4 approved files copied to an isolated staging tree with
   independent inodes; 3 expected artwork/poster blockers; 0 errors. A second
   run reused all four staged files without rewriting them.

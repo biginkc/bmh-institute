@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
-import { execFile } from "node:child_process";
-import { mkdtemp, mkdir, readFile, writeFile } from "node:fs/promises";
+import { execFile, execFileSync } from "node:child_process";
+import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { test } from "node:test";
@@ -114,6 +114,176 @@ test("the end-to-end history gate rejects deletion from the checked-in ledger", 
     ledgerPath,
   });
   assert.ok(errors.some((error) => error.includes("removed or rewritten")));
+});
+
+test("caption approval history fails closed without an immutable committed baseline", async () => {
+  const { ledger } = await fixtures();
+  const root = await mkdtemp(path.join(tmpdir(), "bmh-caption-no-baseline-"));
+  const ledgerPath = path.join(root, "caption-approvals.json");
+  await writeFile(ledgerPath, `${JSON.stringify(ledger)}\n`);
+  try {
+    const errors = await validateCaptionApprovalHistory({ ledger, repoRoot: root, ledgerPath });
+    assert.ok(errors.some((error) => error.includes("committed HEAD ledger")));
+    assert.ok(errors.some((error) => error.includes("immutable predecessor baseline")));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("caption approval history rejects a rewrite committed at a GitHub synthetic merge feature tip", async () => {
+  const { ledger } = await fixtures();
+  const root = await mkdtemp(path.join(tmpdir(), "bmh-caption-merge-"));
+  const ledgerPath = path.join(root, "caption-approvals.json");
+  const git = (...args) => execFileSync("git", args, {
+    cwd: root,
+    encoding: "utf8",
+    stdio: "pipe",
+  });
+
+  try {
+    git("init", "--initial-branch=main");
+    git("config", "user.name", "Caption QA");
+    git("config", "user.email", "caption-qa@example.invalid");
+    await writeFile(path.join(root, "base.txt"), "base branch predates caption approvals\n");
+    git("add", "base.txt");
+    git("commit", "-m", "base without caption approvals");
+
+    git("switch", "-c", "feature");
+    await writeFile(ledgerPath, `${JSON.stringify(ledger, null, 2)}\n`);
+    git("add", "caption-approvals.json");
+    git("commit", "-m", "add immutable caption approvals");
+
+    const rewritten = structuredClone(ledger);
+    rewritten.records.shift();
+    await writeFile(ledgerPath, `${JSON.stringify(rewritten, null, 2)}\n`);
+    git("add", "caption-approvals.json");
+    git("commit", "-m", "rewrite caption approval history");
+    await writeFile(path.join(root, "feature.txt"), "unrelated commit after the rewrite\n");
+    git("add", "feature.txt");
+    git("commit", "-m", "unrelated feature work after rewrite");
+
+    git("switch", "-c", "synthetic-merge", "main");
+    git("merge", "--no-ff", "feature", "-m", "GitHub-style pull request merge");
+    assert.equal(git("rev-list", "--parents", "-n", "1", "HEAD").trim().split(/\s+/).length, 3);
+    assert.equal(
+      git("show", "HEAD^2^:caption-approvals.json"),
+      `${JSON.stringify(rewritten, null, 2)}\n`,
+      "the immediate feature predecessor is already compromised in this attack",
+    );
+
+    const mergeLedger = JSON.parse(await readFile(ledgerPath, "utf8"));
+    const errors = await validateCaptionApprovalHistory({
+      ledger: mergeLedger,
+      repoRoot: root,
+      ledgerPath,
+    });
+    assert.ok(
+      errors.some((error) => error.includes("removed or rewritten")),
+      `synthetic merge must reject committed caption-history rewrites: ${errors.join("; ")}`,
+    );
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("caption approval history rejects a rewrite committed by an ordinary feature merge", async () => {
+  const { ledger } = await fixtures();
+  const root = await mkdtemp(path.join(tmpdir(), "bmh-caption-feature-merge-"));
+  const ledgerPath = path.join(root, "caption-approvals.json");
+  const git = (...args) => execFileSync("git", args, {
+    cwd: root,
+    encoding: "utf8",
+    stdio: "pipe",
+  });
+
+  try {
+    git("init", "--initial-branch=main");
+    git("config", "user.name", "Caption QA");
+    git("config", "user.email", "caption-qa@example.invalid");
+    await writeFile(path.join(root, "base.txt"), "base branch predates caption approvals\n");
+    git("add", "base.txt");
+    git("commit", "-m", "base without caption approvals");
+
+    git("switch", "-c", "feature");
+    await writeFile(ledgerPath, `${JSON.stringify(ledger, null, 2)}\n`);
+    git("add", "caption-approvals.json");
+    git("commit", "-m", "add immutable caption approvals");
+    const rewritten = structuredClone(ledger);
+    rewritten.records.shift();
+    await writeFile(ledgerPath, `${JSON.stringify(rewritten, null, 2)}\n`);
+    git("add", "caption-approvals.json");
+    git("commit", "-m", "rewrite caption approval history");
+    await writeFile(path.join(root, "feature.txt"), "unrelated commit after the rewrite\n");
+    git("add", "feature.txt");
+    git("commit", "-m", "unrelated feature work after rewrite");
+
+    git("switch", "main");
+    await writeFile(path.join(root, "main.txt"), "main advanced\n");
+    git("add", "main.txt");
+    git("commit", "-m", "advance main");
+
+    git("switch", "feature");
+    git("merge", "--no-ff", "main", "-m", "merge main after caption rewrite");
+    assert.equal(git("rev-list", "--parents", "-n", "1", "HEAD").trim().split(/\s+/).length, 3);
+    assert.equal(
+      git("show", "HEAD^1:caption-approvals.json"),
+      `${JSON.stringify(rewritten, null, 2)}\n`,
+      "the ordinary merge first parent is already compromised in this attack",
+    );
+
+    const mergeLedger = JSON.parse(await readFile(ledgerPath, "utf8"));
+    const errors = await validateCaptionApprovalHistory({
+      ledger: mergeLedger,
+      repoRoot: root,
+      ledgerPath,
+    });
+    assert.ok(
+      errors.some((error) => error.includes("removed or rewritten")),
+      `ordinary merge must reject caption-history rewrites: ${errors.join("; ")}`,
+    );
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("caption approval history fails closed when a shallow checkout hides its predecessor", async () => {
+  const { ledger } = await fixtures();
+  const parent = await mkdtemp(path.join(tmpdir(), "bmh-caption-shallow-"));
+  const source = path.join(parent, "source");
+  const checkout = path.join(parent, "checkout");
+  const git = (cwd, ...args) => execFileSync("git", args, {
+    cwd,
+    encoding: "utf8",
+    stdio: "pipe",
+  });
+
+  try {
+    await mkdir(source);
+    git(source, "init", "--initial-branch=main");
+    git(source, "config", "user.name", "Caption QA");
+    git(source, "config", "user.email", "caption-qa@example.invalid");
+    await writeFile(path.join(source, "caption-approvals.json"), `${JSON.stringify(ledger, null, 2)}\n`);
+    git(source, "add", "caption-approvals.json");
+    git(source, "commit", "-m", "add immutable caption approvals");
+    const rewritten = structuredClone(ledger);
+    rewritten.records.shift();
+    await writeFile(path.join(source, "caption-approvals.json"), `${JSON.stringify(rewritten, null, 2)}\n`);
+    git(source, "add", "caption-approvals.json");
+    git(source, "commit", "-m", "rewrite caption approvals");
+
+    git(parent, "clone", "--depth", "1", `file://${source}`, checkout);
+    assert.equal(git(checkout, "rev-parse", "--is-shallow-repository").trim(), "true");
+    const ledgerPath = path.join(checkout, "caption-approvals.json");
+    const shallowLedger = JSON.parse(await readFile(ledgerPath, "utf8"));
+    const errors = await validateCaptionApprovalHistory({
+      ledger: shallowLedger,
+      repoRoot: checkout,
+      ledgerPath,
+    });
+    assert.ok(errors.some((error) => error.includes("immutable predecessor baseline")));
+  } finally {
+    await rm(parent, { recursive: true, force: true });
+  }
 });
 
 test("the builder approves a caption and transcript only from one composite record", async () => {

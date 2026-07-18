@@ -31,6 +31,11 @@ export type FixtureBoundaryManifest = {
     profiles: string[];
     auth_users_from_snapshot: string[];
     audit_log: string[];
+    auth_rate_limits_from_snapshot?: Array<{
+      key_type: string;
+      window_start: string;
+      record_count: number;
+    }>;
   };
   reference_classification: {
     unexplained_database_references: unknown[];
@@ -284,7 +289,18 @@ export async function executeFixtureCleanup({
     const names = objects.map((item) =>
       typeof item === "string" ? item : String((item as { name: string }).name),
     );
-    if (names.length > 0) await adapter.deleteStorageObjects(bucket, names);
+    if (names.length === 0) continue;
+    const targetNames = new Set(names);
+    const liveBefore = await adapter.listStorageObjectNames(bucket);
+    const namesToDelete = liveBefore.filter((name) => targetNames.has(name));
+    if (namesToDelete.length > 0) {
+      await adapter.deleteStorageObjects(bucket, namesToDelete);
+    }
+    const remaining = (await adapter.listStorageObjectNames(bucket))
+      .filter((name) => targetNames.has(name));
+    if (remaining.length > 0) {
+      throw new Error(`${bucket} fixture storage objects are still present: ${remaining.join(", ")}`);
+    }
   }
   return database;
 }

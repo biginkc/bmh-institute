@@ -15,6 +15,11 @@ import {
   sha256Blob,
   supabaseResumableEndpoint,
 } from "@/lib/storage/tus-safety";
+import {
+  clearUploadGeneration,
+  getOrCreateUploadGeneration,
+} from "@/lib/storage/upload-generation";
+import { uploadSmallBrowserObject } from "@/lib/storage/browser-upload";
 import { cn } from "@/lib/utils";
 
 export type UploadedFile = {
@@ -89,13 +94,20 @@ export function FileUpload({
       const normalizedPrefix = pathPrefix
         ? `${pathPrefix.replace(/^\/+|\/+$/g, "")}/`
         : `${session.user.id}/`;
-      const path = `${normalizedPrefix}${file.size}-${file.lastModified}-${safeName}`;
+      const uploadGeneration = getOrCreateUploadGeneration({
+        bucket,
+        ownerId: session.user.id,
+        pathPrefix: normalizedPrefix,
+        file,
+      });
+      const path = `${normalizedPrefix}${uploadGeneration.generationId}-${file.size}-${file.lastModified}-${safeName}`;
 
       const contentType = file.type || "application/octet-stream";
       if (pathPrefix && !artworkMimeMatchesPath(path, contentType)) {
         toast.error("Choose a supported image whose file extension matches its type.");
         return;
       }
+      const checksum = await sha256Blob(file);
       if (file.size > RESUMABLE_THRESHOLD_BYTES) {
         await uploadResumably({
           file,
@@ -103,17 +115,21 @@ export function FileUpload({
           path,
           contentType,
           accessToken: session.access_token,
+          checksum,
           onProgress: setProgress,
         });
       } else {
-        const { error } = await supabase.storage.from(bucket).upload(path, file, {
+        await uploadSmallBrowserObject({
+          bucket: supabase.storage.from(bucket),
+          path,
+          file,
           contentType,
-          upsert: false,
+          checksum,
         });
-        if (error) throw error;
         setProgress(100);
       }
 
+      clearUploadGeneration(uploadGeneration.storageKey);
       onUploaded({
         file_path: path,
         filename: file.name,
@@ -180,6 +196,7 @@ async function uploadResumably({
   path,
   contentType,
   accessToken,
+  checksum,
   onProgress,
 }: {
   file: File;
@@ -187,12 +204,12 @@ async function uploadResumably({
   path: string;
   contentType: string;
   accessToken: string;
+  checksum: string;
   onProgress: (progress: number) => void;
 }) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   if (!supabaseUrl) return Promise.reject(new Error("NEXT_PUBLIC_SUPABASE_URL is not configured."));
   const endpoint = supabaseResumableEndpoint(supabaseUrl);
-  const checksum = await sha256Blob(file);
   const fingerprint = createScopedTusFingerprint({ endpoint, bucket, path, checksum });
   const urlStorage = new ValidatingTusUrlStorage(tusDefaultOptions.urlStorage, {
     endpoint,

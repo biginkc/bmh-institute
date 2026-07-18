@@ -29,7 +29,8 @@ Implement the approved concurrent completion plan for the reusable BMH Institute
 - [x] Required videos persist watched ranges and require at least 90 percent watched coverage.
 - [x] The deterministic importer validates, uploads, applies, verifies and rolls back only manifest-owned records in test-project and adversarial recovery coverage.
 - [ ] The Tech Stack canary and complete real draft pass upload, apply, exact reconciliation and rollback against the unpublished QA hierarchy.
-- [ ] Nineteen grouped lessons map to 29 approved videos across six sections.
+- [ ] Nineteen grouped lessons map to 29 approved videos across six sections
+  (currently 22 approved and seven held).
 - [x] Nineteen quizzes contain audited current questions with role-agnostic compensation content.
 - [ ] Six assignments and six verified Closer Lab scenarios are mapped.
 - [ ] Captions, transcripts, guides, flashcards, objectives and thumbnail assets are complete.
@@ -41,6 +42,10 @@ Implement the approved concurrent completion plan for the reusable BMH Institute
 - [x] Employee access remains disabled while any content, import or product gate is outstanding.
 
 ## Evidence log
+
+Each subsection below is a dated historical snapshot. Counts in older entries
+describe the manifest at that checkpoint; the current manifest truth is recorded
+in the latest reconciliation entry.
 
 ### 2026-07-16 opening preflight
 
@@ -466,11 +471,26 @@ Implement the approved concurrent completion plan for the reusable BMH Institute
   evidence; it does not replace the required final Chrome/DevTools acceptance
   on the deployed application.
 
+### 2026-07-17 current manifest reconciliation
+
+- The canonical manifest and caption validator now agree on 22 approved exact
+  video/caption/transcript sets, seven held videos, and 14 missing caption or
+  transcript derivatives.
+- All 49 artwork outputs have been produced, but their manifest records remain
+  missing placeholders until Jarrad approves the checksum-locked contact sheet.
+  The six Closer Lab blocks still use pending production scenario IDs.
+- The validator reports zero errors and 76 intentional publication blockers:
+  seven held videos, 14 missing media derivatives, 49 artwork placeholders, and
+  six pending production scenario IDs. It verifies 85 approved asset files;
+  70 asset-level blockers plus the six scenario mappings make up the 76 total.
+- Terms v10 and KPIs v12 are approved. Neither approval changes the seven held
+  replacement-video records or promotes unapproved artwork.
+
 ## Hard gates
 
-- Terms v10 is approved. Jarrad must still review KPIs v12 and the seven new
-  policy-safe replacement cuts after provider production; source-evidence hashes
-  marked `changes_requested` cannot be approved as-is.
+- Terms v10 and KPIs v12 are approved. Jarrad must still review the seven new
+  policy-safe replacement cuts after provider production; source-evidence
+  hashes marked `changes_requested` cannot be approved as-is.
 - The V8 thumbnail direction is approved and the 49-asset batch is produced.
   Jarrad must approve the final checksum-locked contact sheet before artwork is
   promoted into the release manifest.

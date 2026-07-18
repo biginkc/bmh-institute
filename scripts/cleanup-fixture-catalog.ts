@@ -136,9 +136,11 @@ function createSupabaseAdapter(client: SupabaseClient): FixtureCleanupAdapter {
       return { status: result.status, deleted: result.deleted ?? {} };
     },
     async deleteStorageObjects(bucket, names) {
-      if (names.length === 0) return;
-      const { error } = await client.storage.from(bucket).remove(names);
-      if (error) throw new Error(`${bucket} storage delete failed: ${error.message}`);
+      for (let index = 0; index < names.length; index += 1000) {
+        const batch = names.slice(index, index + 1000);
+        const { error } = await client.storage.from(bucket).remove(batch);
+        if (error) throw new Error(`${bucket} storage delete failed: ${error.message}`);
+      }
     },
   };
 }

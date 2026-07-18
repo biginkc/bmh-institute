@@ -40,5 +40,57 @@ describe("toPilotMonitoringCsv", () => {
       '"Learner, One",learner@example.com,Needs review,1/2,50,1,0,1,0,2026-05-09T11:00:00.000Z,Review submissions',
     );
   });
-});
 
+  it("neutralizes every spreadsheet formula prefix in learner-controlled cells", () => {
+    const prefixes = [
+      "=",
+      "+",
+      "-",
+      "@",
+      "\t",
+      "\r",
+      "\n",
+      "\0",
+      "\uFF1D",
+      "\uFF0B",
+      "\uFF0D",
+      "\uFF20",
+    ];
+    const csv = toPilotMonitoringCsv({
+      totals: {
+        learners: prefixes.length,
+        blocked: 0,
+        needsRevision: 0,
+        needsReview: 0,
+        notStarted: prefixes.length,
+        inProgress: 0,
+        certified: 0,
+      },
+      rows: prefixes.map((prefix, index) => ({
+        userId: `learner-${index}`,
+        name: `${prefix}DANGEROUS()`,
+        email: `learner-${index}@example.com`,
+        statusKey: "not_started" as const,
+        statusLabel: "Not started",
+        progressLabel: "0/1",
+        progressPercent: 0,
+        requiredLessonsDone: 0,
+        requiredLessonsTotal: 1,
+        pendingSubmissions: 0,
+        needsRevisionSubmissions: 0,
+        quizzesPassed: 0,
+        certificatesIssued: 0,
+        lastActivity: null,
+        actionLabel: "Start course",
+        actionHref: "/dashboard",
+      })),
+    });
+
+    for (const prefix of prefixes) {
+      const exportedPrefix = prefix === "\0" ? "\uFFFD" : prefix;
+      expect(csv).toContain(`'${exportedPrefix}DANGEROUS()`);
+      expect(csv).not.toContain(`\n${prefix}DANGEROUS()`);
+    }
+    expect(csv).not.toContain("\0");
+  });
+});

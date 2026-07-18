@@ -6,6 +6,7 @@ import { defineConfig, devices } from "@playwright/test";
 import {
   CREDENTIAL_SAFE_PLAYWRIGHT_USE,
 } from "./src/lib/testing/credential-artifact-policy";
+import { requireInstituteProductionBaseUrl } from "./src/lib/testing/production-base-url";
 
 function loadEnvFile(filename: string): Record<string, string> {
   const filepath = path.resolve(__dirname, filename);
@@ -35,10 +36,10 @@ const env = {
   ...loadEnvFile(".env.test.local"),
 };
 
-const baseURL =
+const baseURL = requireInstituteProductionBaseUrl(
   process.env.E2E_PROD_BASE_URL ??
-  env.E2E_PROD_BASE_URL ??
-  "https://sandra-university.vercel.app";
+  env.E2E_PROD_BASE_URL,
+);
 
 process.env.E2E_PROD_BASE_URL = baseURL;
 process.env.TEST_SUPABASE_URL =

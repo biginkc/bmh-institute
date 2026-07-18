@@ -14,7 +14,7 @@ The private rollback snapshot and a fresh read-only production inventory were co
 - Snapshot and production identity comparison: no missing or added IDs in any catalog, access or activity table
 - Storage comparison: zero objects in both `content` and `submissions` in the snapshot and live capture
 - Machine manifest: `fixture-boundary-manifest.json`
-- Current manifest SHA-256: `d08e3f36e876f1345a2218560879335d11c8ccebce4aa3cc6490a14913698d5b`
+- Current manifest SHA-256: `80a4e2cac5e11e28c65605be1f22acccb708670095d0f46d5c14219feafca9a1`
 
 The live inventory used the approved 1Password service-account path to read a Browser V1 owner fixture. Owner-scoped production reads verified every current ID and every owner-readable field. `answer_options.is_correct` is intentionally not owner-readable. Those protected values came from the rollback snapshot and the service-role-only atomic RPC must recheck them before deletion.
 
@@ -64,7 +64,7 @@ Cleanup never targets:
 - 427 captured `audit_log` rows and all later audit history
 - two certificate templates
 - certificate number counters
-- auth rate-limit history
+- identifier-free auth rate-limit window counts; no email, IP address or reversible identifier is committed
 - any row imported for the real course
 - any unrelated storage object
 
@@ -78,7 +78,7 @@ The fixture blocks contain 37 external URL, scenario or file references. They ar
 
 Production credentials must come only from an approved `BMH Secrets` item read with the 1Password service account. Do not use cached CLI credentials, a browser session, desktop authorization or a GUI prompt. If the required service-role item is not available to the service account, stop.
 
-The mutation path is migration `021_atomic_fixture_catalog_cleanup.sql`. The migration only installs a dormant RPC. Calling the RPC:
+Migration `021_atomic_fixture_catalog_cleanup.sql` installs the dormant RPC. Because that migration is already applied, migration `035_refresh_fixture_cleanup_manifest_contract.sql` advances the installed checksum binding to this sanitized manifest without rewriting migration history. Calling the RPC:
 
 1. Takes a transaction advisory lock.
 2. Locks every catalog, public dependent, profile, audit and auth table against concurrent writes.
@@ -98,7 +98,7 @@ The confirmation string printed by dry-run is only a typo guard. It is not autho
 - a fresh rollback JSON record captured within the previous 24 hours
 - a controller-supplied live provider verification, no older than one hour, proving that exact backup is complete in this production project
 - a passed isolated restore rehearsal from the previous 24 hours, with an evidence checksum
-- migration 020 to be present before migration 021
+- migrations 020 and 021 to be present, followed by the forward-only manifest-contract refresh in migration 035
 - an explicit `--execute` invocation
 
 Approval record shape:
@@ -106,7 +106,7 @@ Approval record shape:
 ```json
 {
   "project_ref": "dhvfsyteqsxagokoerrx",
-  "manifest_sha256": "d08e3f36e876f1345a2218560879335d11c8ccebce4aa3cc6490a14913698d5b",
+  "manifest_sha256": "80a4e2cac5e11e28c65605be1f22acccb708670095d0f46d5c14219feafca9a1",
   "approved_by": "Jarrad Henry",
   "approved_at": "<ISO timestamp within 24 hours>",
   "recorded_by": "controller",
@@ -121,7 +121,7 @@ Fresh rollback record shape:
 ```json
 {
   "project_ref": "dhvfsyteqsxagokoerrx",
-  "manifest_sha256": "d08e3f36e876f1345a2218560879335d11c8ccebce4aa3cc6490a14913698d5b",
+  "manifest_sha256": "80a4e2cac5e11e28c65605be1f22acccb708670095d0f46d5c14219feafca9a1",
   "captured_at": "<ISO timestamp within 24 hours>",
   "backup_id": "<new backup identifier>",
   "backup_provider": "supabase",

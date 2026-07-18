@@ -12,6 +12,10 @@ const volatilityFixPath = resolve(
   root,
   "supabase/migrations/024_fixture_cleanup_canonicalizer_stable.sql",
 );
+const contractRefreshPath = resolve(
+  root,
+  "supabase/migrations/035_refresh_fixture_cleanup_manifest_contract.sql",
+);
 const manifestRaw = readFileSync(manifestPath, "utf8");
 const manifest = JSON.parse(manifestRaw) as {
   fixture_tables: Record<
@@ -25,6 +29,7 @@ const manifest = JSON.parse(manifestRaw) as {
 const migration = readFileSync(migrationPath, "utf8");
 const ownership = readFileSync(ownershipPath, "utf8");
 const volatilityFix = readFileSync(volatilityFixPath, "utf8");
+const contractRefresh = readFileSync(contractRefreshPath, "utf8");
 const manifestHash = createHash("sha256").update(manifestRaw).digest("hex");
 
 describe("atomic fixture cleanup migration", () => {
@@ -32,8 +37,13 @@ describe("atomic fixture cleanup migration", () => {
     expect(readFileSync(`${manifestPath}.sha256`, "utf8")).toBe(
       `${manifestHash}  fixture-boundary-manifest.json\n`,
     );
-    expect(migration).toContain(`Manifest SHA-256: ${manifestHash}`);
-    expect(migration).toContain(`p_manifest_sha256 <> '${manifestHash}'`);
+    expect(contractRefresh).toContain(`v_new_sha constant text :=\n    '${manifestHash}'`);
+    expect(contractRefresh).toContain("Migration 021 is already applied");
+    expect(contractRefresh).toContain("v_old_occurrences <> 2 or v_new_occurrences <> 0");
+    expect(contractRefresh).toContain("v_old_occurrences <> 0 or v_new_occurrences <> 2");
+    expect(contractRefresh).toContain(
+      "grant execute on function public.admin_cleanup_fixture_catalog_v1(text, text)\n  to service_role;",
+    );
   });
 
   it("guards fields added after the production capture", () => {

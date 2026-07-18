@@ -5,7 +5,7 @@ Updated: 2026-07-17
 ## Outcome
 
 Local transcription produced WebVTT captions and accessible Markdown
-transcripts for 21 exact video cuts that are approved. No paid or remote
+transcripts for 22 exact video cuts that are approved. No paid or remote
 transcription provider was used. The generation used the locally cached
 `mlx-community/whisper-medium.en-mlx` model on the source files identified by
 the manifest.
@@ -32,8 +32,8 @@ course assets.
 
 The caption validator proves:
 
-- 21 approved videos have 21 approved VTT files and 21 approved transcripts.
-- 8 held videos retain 16 missing derivative records.
+- 22 approved videos have 22 approved VTT files and 22 approved transcripts.
+- 7 held videos retain 14 missing derivative records.
 - Each VTT starts with `WEBVTT` and contains nonempty timed cues.
 - Cue timestamps advance, do not overlap, and do not exceed video duration.
 - Each cue uses no more than two lines and no line exceeds 50 characters.
