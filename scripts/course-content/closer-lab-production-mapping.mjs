@@ -244,7 +244,7 @@ export function validateProductionGraphAttestation(attestation, catalog, approve
 export function rolePlayBindings(manifest) {
   return manifest.program.courses
     .flatMap((course) => course.modules)
-    .flatMap((module) => module.lessons)
+    .flatMap((courseModule) => courseModule.lessons)
     .flatMap((lesson) => lesson.blocks ?? [])
     .filter((block) => block.type === "role_play" && block.required === true)
     .map((block) => ({
@@ -309,8 +309,8 @@ export function finalizeScenarioProductionMapping({ manifest, ledger, catalog, c
   let finalizedCount = 0;
 
   for (const course of finalizedManifest.program.courses) {
-    for (const module of course.modules) {
-      for (const lesson of module.lessons) {
+    for (const courseModule of course.modules) {
+      for (const lesson of courseModule.lessons) {
         for (const block of lesson.blocks ?? []) {
           if (block.type !== "role_play" || block.required !== true) continue;
           const live = exported.get(block.source_key);

@@ -59,7 +59,7 @@ function attachProductionIds(manifest, ledger) {
   ledger.status = "finalized";
   const records = new Map(ledger.records.map((record) => [record.block_source_key, record]));
   let ordinal = 1;
-  for (const course of manifest.program.courses) for (const module of course.modules) for (const lesson of module.lessons) for (const block of lesson.blocks ?? []) {
+  for (const course of manifest.program.courses) for (const courseModule of course.modules) for (const lesson of courseModule.lessons) for (const block of lesson.blocks ?? []) {
     if (block.type !== "role_play") continue;
     const id = `00000000-0000-4000-8000-${String(ordinal).padStart(12, "0")}`;
     records.get(block.source_key).production_scenario_id = id;
@@ -213,7 +213,7 @@ test("finalization refuses to replace an existing production binding", async () 
   const changedManifest = structuredClone(finalized.manifest);
   const changedBlock = changedManifest.program.courses
     .flatMap((course) => course.modules)
-    .flatMap((module) => module.lessons)
+    .flatMap((courseModule) => courseModule.lessons)
     .flatMap((lesson) => lesson.blocks ?? [])
     .find((block) => block.type === "role_play");
   changedBlock.content.scenario_id = "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee";
@@ -251,7 +251,7 @@ test("the authenticated RPC catalog is byte-bound to the exact reviewed Closer c
 
 test("arbitrary non-pending scenario strings cannot clear production trust", async () => {
   const { manifest, ledger, manifestBytes, ledgerBytes, catalogBytes } = await base();
-  for (const course of manifest.program.courses) for (const module of course.modules) for (const lesson of module.lessons) for (const block of lesson.blocks ?? []) {
+  for (const course of manifest.program.courses) for (const courseModule of course.modules) for (const lesson of courseModule.lessons) for (const block of lesson.blocks ?? []) {
     if (block.type === "role_play") block.content.scenario_id = "definitely-not-production";
   }
   const report = await validateScenarioProductionTrust({
