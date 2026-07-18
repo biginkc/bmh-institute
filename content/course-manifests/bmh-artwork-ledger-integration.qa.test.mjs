@@ -420,7 +420,19 @@ test("a canonically finalized 49-asset workflow cannot forge held-video release 
   const productionMasters = ledger.masters.filter((master) => !master.pilot);
   for (const [index, master] of productionMasters.entries()) {
     const sourceFile = path.join(root, "provider", `${master.id}.png`);
-    await writeUniqueProviderSource(sourceFile, index + 1, master.background_rgb);
+    if (master.flat_fill_cleanup?.length > 0) {
+      await mkdir(path.dirname(sourceFile), { recursive: true });
+      await copyFile(path.join(repoRoot, master.source_path), sourceFile);
+      for (const cleanup of master.flat_fill_cleanup) {
+        for (const relativePath of [cleanup.source_pixel_baseline_path, cleanup.flat_pixel_baseline_path]) {
+          const destination = path.join(root, relativePath);
+          await mkdir(path.dirname(destination), { recursive: true });
+          await copyFile(path.join(repoRoot, relativePath), destination);
+        }
+      }
+    } else {
+      await writeUniqueProviderSource(sourceFile, index + 1, master.background_rgb);
+    }
     await ingestGeneration({
       root,
       ledger,

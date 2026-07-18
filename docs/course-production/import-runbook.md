@@ -183,7 +183,8 @@ npm run course:import -- rollback \
 Run this exact sequence only against the canonical disposable test project.
 `inspect-rollback-storage` is read-only and can be rerun before or after database
 rollback. Database rollback writes an atomic receipt under
-`.course-import-state/rollback-receipts/`; a matching receipt makes retries skip
+`.course-import-state/rollback-receipts/` keyed by import, canary or full scope,
+and the exact test or production environment. A matching receipt makes retries skip
 the database mutation and repeat only the storage inspection. If the database
 rows are already completely absent, the receipt records `already_absent`
 without claiming that a new database rollback occurred.

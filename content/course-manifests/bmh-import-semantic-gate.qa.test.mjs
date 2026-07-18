@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import {
+  assertBmhImportInvocationScope,
   assertBmhImportSemanticGate,
   validateBmhImportSemanticGate,
 } from "../../scripts/course-content/import-semantic-gate.mjs";
@@ -114,6 +115,24 @@ test("semantic errors fail closed even in report-only draft mode", () => {
     }, { enforcePublicationBlockers: false }),
     /BMH semantic validation failed/,
   );
+});
+
+test("the CLI canary flag must match the canonical BMH manifest scope", () => {
+  assert.doesNotThrow(() =>
+    assertBmhImportInvocationScope({ scope: "canary" }, true),
+  );
+  assert.doesNotThrow(() =>
+    assertBmhImportInvocationScope({ scope: "full" }, false),
+  );
+  assert.throws(
+    () => assertBmhImportInvocationScope({ scope: "canary" }, false),
+    /requires --canary/,
+  );
+  assert.throws(
+    () => assertBmhImportInvocationScope({ scope: "full" }, true),
+    /cannot use --canary/,
+  );
+  assert.doesNotThrow(() => assertBmhImportInvocationScope(null, false));
 });
 
 test("a mutated full manifest cannot inherit canonical reconciliation evidence", async () => {

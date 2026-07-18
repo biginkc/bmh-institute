@@ -4,7 +4,7 @@
   "asset_count": 49,
   "columns": 4,
   "contact_sheet_path": "docs/course-production/thumbnail-pilots/qa/current-artwork-contact-sheet-2026-07-17.png",
-  "contact_sheet_sha256": "493d35528ebc8d739f9d77d86d139fd996eff9bb84700e50908b37c7d2f7385e",
+  "contact_sheet_sha256": "a6aa3ee0d2bc1ae3ed6c9b2f691fa9bc86247f025ca54a15cb3e5788e238505d",
   "assets": [
     {
       "position": 1,
@@ -242,8 +242,8 @@
       "position": 30,
       "asset_key": "thumbnail-program-bmh-employee-training",
       "output_path": "course-assets/thumbnails/program-bmh-employee-training.webp",
-      "ledger_checksum_sha256": "35b84bffa83a91fb9f4b8cc06774bfaeec0265fb2827478bf6bc8a61cb332449",
-      "rendered_input_sha256": "35b84bffa83a91fb9f4b8cc06774bfaeec0265fb2827478bf6bc8a61cb332449",
+      "ledger_checksum_sha256": "a302125e318aee333dd07b882a0be0ea65e282d38cacb412230e1ea94b25534a",
+      "rendered_input_sha256": "a302125e318aee333dd07b882a0be0ea65e282d38cacb412230e1ea94b25534a",
       "approval_status": "missing"
     },
     {

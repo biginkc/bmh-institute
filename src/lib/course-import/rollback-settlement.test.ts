@@ -6,18 +6,64 @@ import { describe, expect, it } from "vitest";
 
 import type { CourseImportAdapter } from "./execute";
 import {
+  COURSE_IMPORT_PRODUCTION_URL,
+  COURSE_IMPORT_TEST_URL,
+} from "./environment";
+import {
   MANAGED_IMPORT_TABLES,
   type ExactCourseImportAdapter,
   type ManagedIdInventory,
 } from "./exact-reconciliation";
 import { buildImportPlan } from "./operations";
 import {
+  databaseRollbackReceiptPath,
   readDatabaseRollbackReceipt,
   settleDatabaseRollback,
 } from "./rollback-settlement";
 import { validCourseManifest } from "./test-fixtures";
 
+const TEST_CONTEXT = {
+  scope: "canary" as const,
+  environment: "test" as const,
+  environmentUrl: COURSE_IMPORT_TEST_URL,
+};
+
 describe("database rollback settlement", () => {
+  it("isolates rollback receipts by import scope and exact environment", () => {
+    const stateRoot = "/tmp/bmh-course-import-state";
+    expect(databaseRollbackReceiptPath(stateRoot, {
+      importId: "bmh-employee-training-canary-v1",
+      scope: "canary",
+      environment: "test",
+    })).toBe("/tmp/bmh-course-import-state/rollback-receipts/bmh-employee-training-canary-v1.canary.test.json");
+    expect(databaseRollbackReceiptPath(stateRoot, {
+      importId: "bmh-employee-training-canary-v1",
+      scope: "canary",
+      environment: "production",
+    })).not.toBe(databaseRollbackReceiptPath(stateRoot, {
+      importId: "bmh-employee-training-canary-v1",
+      scope: "canary",
+      environment: "test",
+    }));
+    expect(() => databaseRollbackReceiptPath(stateRoot, {
+      importId: "../../escape",
+      scope: "canary",
+      environment: "test",
+    })).toThrow(/import ID is invalid/);
+    expect(() => databaseRollbackReceiptPath(stateRoot, {
+      importId: "escape\\windows",
+      scope: "canary",
+      environment: "test",
+    })).toThrow(/import ID is invalid/);
+    for (const importId of [".hidden", "..", "-leading", "_leading"]) {
+      expect(() => databaseRollbackReceiptPath(stateRoot, {
+        importId,
+        scope: "canary",
+        environment: "test",
+      })).toThrow(/import ID is invalid/);
+    }
+  });
+
   it("persists a successful receipt and reuses it without a second mutation", async () => {
     const plan = buildImportPlan(validCourseManifest());
     const receiptPath = await temporaryReceiptPath();
@@ -37,13 +83,17 @@ describe("database rollback settlement", () => {
       plan,
       adapter,
       receiptPath,
+      context: TEST_CONTEXT,
       now: () => new Date("2026-07-16T00:00:00.000Z"),
     });
-    const second = await settleDatabaseRollback({ plan, adapter, receiptPath });
+    const second = await settleDatabaseRollback({ plan, adapter, receiptPath, context: TEST_CONTEXT });
 
     expect(first).toMatchObject({ reused: false, receipt: { database_state: "rolled_back" } });
     expect(first.receipt).toMatchObject({
-      schema_version: 2,
+      schema_version: 3,
+      scope: "canary",
+      environment: "test",
+      environment_url: COURSE_IMPORT_TEST_URL,
       absence_inventory_sha256: expect.stringMatching(/^[a-f0-9]{64}$/),
       absence_catalog_sha256: expect.stringMatching(/^[a-f0-9]{64}$/),
     });
@@ -62,6 +112,7 @@ describe("database rollback settlement", () => {
         },
       }),
       receiptPath: await temporaryReceiptPath(),
+      context: TEST_CONTEXT,
     });
 
     expect(result.receipt.database_state).toBe("already_absent");
@@ -82,7 +133,7 @@ describe("database rollback settlement", () => {
     });
 
     await expect(
-      settleDatabaseRollback({ plan, adapter, receiptPath: await temporaryReceiptPath() }),
+      settleDatabaseRollback({ plan, adapter, receiptPath: await temporaryReceiptPath(), context: TEST_CONTEXT }),
     ).rejects.toThrow("blocked by learner activity");
   });
 
@@ -96,16 +147,18 @@ describe("database rollback settlement", () => {
     await expect(settleDatabaseRollback({
       plan,
       receiptPath,
+      context: TEST_CONTEXT,
       adapter: adapterFor({
         rollback: async () => { throw new Error("rollback blocked"); },
         managedInventory: rogueInventory,
       }),
     })).rejects.toThrow("rollback blocked");
 
-    await settleDatabaseRollback({ plan, receiptPath, adapter: adapterFor() });
+    await settleDatabaseRollback({ plan, receiptPath, adapter: adapterFor(), context: TEST_CONTEXT });
     await expect(settleDatabaseRollback({
       plan,
       receiptPath,
+      context: TEST_CONTEXT,
       adapter: adapterFor({ managedInventory: rogueInventory }),
     })).rejects.toThrow(/receipt exists.*unexpected managed database rows/i);
   });
@@ -118,6 +171,7 @@ describe("database rollback settlement", () => {
     await expect(settleDatabaseRollback({
       plan,
       receiptPath: await temporaryReceiptPath(),
+      context: TEST_CONTEXT,
       adapter: adapterFor({ managedInventory: rogueInventory }),
     })).rejects.toThrow(/rollback returned success.*unexpected managed database rows/i);
   });
@@ -125,10 +179,10 @@ describe("database rollback settlement", () => {
   it("fails closed on a receipt for a different plan", async () => {
     const plan = buildImportPlan(validCourseManifest());
     const receiptPath = await temporaryReceiptPath();
-    await settleDatabaseRollback({ plan, adapter: adapterFor(), receiptPath });
+    await settleDatabaseRollback({ plan, adapter: adapterFor(), receiptPath, context: TEST_CONTEXT });
     const changed = buildImportPlan({ ...validCourseManifest(), import_id: "different-v1" });
 
-    await expect(readDatabaseRollbackReceipt(receiptPath, changed)).rejects.toThrow(
+    await expect(readDatabaseRollbackReceipt(receiptPath, changed, TEST_CONTEXT)).rejects.toThrow(
       /does not match/,
     );
   });
@@ -136,12 +190,13 @@ describe("database rollback settlement", () => {
   it("fails closed when a row reappears after a receipt was recorded", async () => {
     const plan = buildImportPlan(validCourseManifest());
     const receiptPath = await temporaryReceiptPath();
-    await settleDatabaseRollback({ plan, adapter: adapterFor(), receiptPath });
+    await settleDatabaseRollback({ plan, adapter: adapterFor(), receiptPath, context: TEST_CONTEXT });
     const remaining = plan.operations[0];
 
     await expect(settleDatabaseRollback({
       plan,
       receiptPath,
+      context: TEST_CONTEXT,
       adapter: adapterFor({
         readRows: async (table, ids) =>
           table === remaining.table && ids.includes(remaining.id)
@@ -154,13 +209,36 @@ describe("database rollback settlement", () => {
   it("fails closed when the absence snapshot changes without a planned row reappearing", async () => {
     const plan = buildImportPlan(validCourseManifest());
     const receiptPath = await temporaryReceiptPath();
-    await settleDatabaseRollback({ plan, adapter: adapterFor(), receiptPath });
+    await settleDatabaseRollback({ plan, adapter: adapterFor(), receiptPath, context: TEST_CONTEXT });
 
     await expect(settleDatabaseRollback({
       plan,
       receiptPath,
+      context: TEST_CONTEXT,
       adapter: adapterFor({ catalogSha256: "b".repeat(64) }),
     })).rejects.toThrow(/absence snapshot no longer matches/i);
+  });
+
+  it("rejects a valid receipt copied across environments", async () => {
+    const plan = buildImportPlan(validCourseManifest());
+    const receiptPath = await temporaryReceiptPath();
+    await settleDatabaseRollback({
+      plan,
+      adapter: adapterFor(),
+      receiptPath,
+      context: TEST_CONTEXT,
+    });
+
+    await expect(settleDatabaseRollback({
+      plan,
+      adapter: adapterFor(),
+      receiptPath,
+      context: {
+        scope: "canary",
+        environment: "production",
+        environmentUrl: COURSE_IMPORT_PRODUCTION_URL,
+      },
+    })).rejects.toThrow(/does not match the current import plan/);
   });
 });
 

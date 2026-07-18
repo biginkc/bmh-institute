@@ -23,6 +23,7 @@ import {
   approvePilots,
   buildFinalReviewRequest,
   buildDeterministicFinalContactSheet,
+  assertFlatFillCleanupDelta,
   assertPosterSafeEdges,
   createInitialLedger,
   deriveMaster,
@@ -114,6 +115,12 @@ function productionLedger(sourceInventory = inventory) {
     evidence_sha256: "a".repeat(64),
   };
   return ledger;
+}
+
+function inventoryWithoutCourseCoverFlatFillCleanup(sourceInventory = inventory) {
+  const candidate = structuredClone(sourceInventory);
+  delete candidate.course_cover.flat_fill_cleanup;
+  return candidate;
 }
 
 function sharedParentInventory() {
@@ -267,7 +274,7 @@ async function writePilotApprovalArtifact(root, ledger, mutate = () => {}) {
 }
 
 async function writeFinalApprovalArtifact(root, ledger, {
-  approvedAt = "2026-07-18T00:00:00.000Z",
+  approvedAt = "2026-07-18T12:00:00.000Z",
   responseText = FINAL_ARTWORK_APPROVAL_RESPONSE,
   mutateRequest = () => {},
   mutateResponse = () => {},
@@ -540,7 +547,7 @@ test("validator rejects immutable palette, counts, pilot, and output-plan drift"
 
 test("recipe-specific yellow normalization and padding are derived and inspected exactly", async (t) => {
   const root = await tempRoot(t);
-  const yellowInventory = structuredClone(inventory);
+  const yellowInventory = inventoryWithoutCourseCoverFlatFillCleanup();
   yellowInventory.course_cover.derivative.normalize_background_rgb = [255, 211, 1];
   yellowInventory.course_cover.derivative.padding_color_rgb = [255, 211, 1];
   const ledger = productionLedger(yellowInventory);
@@ -641,6 +648,58 @@ test("enclosed fill cleanup removes same-family texture without crossing black o
   }
 });
 
+test("course-cover flat-fill cleanup is exact-mask bounded and cannot redraw outlines", async () => {
+  const ledger = createInitialLedger(inventory);
+  const master = ledger.masters.find((candidate) => candidate.id === "master-program-bmh-employee-training");
+  const source = await readFile(resolveRepoPath(
+    REPO_ROOT,
+    "course-assets/thumbnails/production/sources/lineage/master-program-bmh-employee-training/step-002.png",
+  ));
+  const before = await readFile(resolveRepoPath(
+    REPO_ROOT,
+    "course-assets/thumbnails/production/sources/lineage/master-program-bmh-employee-training/flat-masters/version-002.png",
+  ));
+  const after = await encodeFlatPng(source, ledger.palette_rgb, master.background_rgb, master.flat_fill_cleanup);
+  await assertFlatFillCleanupDelta(before, after, master.flat_fill_cleanup);
+
+  const outside = await sharp(after).removeAlpha().raw().toBuffer({ resolveWithObject: true });
+  outside.data[0] = 255;
+  outside.data[1] = 211;
+  outside.data[2] = 1;
+  const outsideForgery = await sharp(outside.data, { raw: { width: outside.info.width, height: outside.info.height, channels: 3 } }).png().toBuffer();
+  await assert.rejects(
+    assertFlatFillCleanupDelta(before, outsideForgery, master.flat_fill_cleanup),
+    /out-of-mask/,
+  );
+
+  const swapped = await sharp(after).removeAlpha().raw().toBuffer({ resolveWithObject: true });
+  const outsideMaskInsideBounds = (509 * swapped.info.width + 259) * 3;
+  swapped.data[outsideMaskInsideBounds] = 255;
+  swapped.data[outsideMaskInsideBounds + 1] = 211;
+  swapped.data[outsideMaskInsideBounds + 2] = 1;
+  const changedInsideMask = (510 * swapped.info.width + 308) * 3;
+  swapped.data[changedInsideMask] = 105;
+  swapped.data[changedInsideMask + 1] = 153;
+  swapped.data[changedInsideMask + 2] = 53;
+  const swappedForgery = await sharp(swapped.data, { raw: { width: swapped.info.width, height: swapped.info.height, channels: 3 } }).png().toBuffer();
+  await assert.rejects(
+    assertFlatFillCleanupDelta(before, swappedForgery, master.flat_fill_cleanup),
+    /out-of-mask/,
+  );
+
+  const outline = await sharp(after).removeAlpha().raw().toBuffer({ resolveWithObject: true });
+  const blackPixel = (430 * outline.info.width + 230) * 3;
+  assert.deepEqual([...outline.data.subarray(blackPixel, blackPixel + 3)], [0, 0, 0]);
+  outline.data[blackPixel] = 255;
+  outline.data[blackPixel + 1] = 211;
+  outline.data[blackPixel + 2] = 1;
+  const outlineForgery = await sharp(outline.data, { raw: { width: outline.info.width, height: outline.info.height, channels: 3 } }).png().toBuffer();
+  await assert.rejects(
+    assertFlatFillCleanupDelta(before, outlineForgery, master.flat_fill_cleanup),
+    /changed a black outline/,
+  );
+});
+
 test("poster review edge gate accepts exact safe borders and rejects edge-contact foreground", async () => {
   const blue = [103, 182, 255];
   const black = [0, 0, 0];
@@ -664,7 +723,7 @@ test("artwork recipes fail closed when normalization or padding RGB is not locke
   ]) {
     const candidate = structuredClone(inventory);
     mutate(candidate);
-    assert.throws(() => createInitialLedger(candidate), /RGB triplet|locked blue or yellow/);
+    assert.throws(() => createInitialLedger(candidate), /RGB triplet|locked blue or yellow|locked artwork palette/);
   }
 });
 
@@ -1234,7 +1293,7 @@ test("output inspection rejects lossy WebP even when dimensions and palette look
 
 test("correction archives rejected derivatives and authorizes only their exact replacement", async (t) => {
   const root = await tempRoot(t);
-  const ledger = productionLedger();
+  const ledger = productionLedger(inventoryWithoutCourseCoverFlatFillCleanup());
   const masterId = "master-program-bmh-employee-training";
   const firstPath = await writeRepoFile(root, "provider/first.png", await rgbPng([103, 182, 255]));
   const firstIngest = {
@@ -1348,7 +1407,7 @@ test("correction archives rejected derivatives and authorizes only their exact r
 
 test("pipeline reprocess archives exact prior bytes and deterministically rebuilds without new generation lineage", async (t) => {
   const root = await tempRoot(t);
-  const ledger = productionLedger();
+  const ledger = productionLedger(inventoryWithoutCourseCoverFlatFillCleanup());
   const masterId = "master-program-bmh-employee-training";
   const source = await writeRepoFile(root, "provider/reprocess.png", await rgbPng([103, 182, 255]));
   await ingestGeneration({
@@ -1395,7 +1454,7 @@ test("review provenance binds the current video and contact-sheet context withou
     masterId,
     decision: "approved",
     reviewedBy: "Jarrad Henry",
-    reviewedAt: "2026-07-18T00:00:00.000Z",
+    reviewedAt: "2026-07-18T12:00:00.000Z",
     evidence,
   });
   for (const output of outputs) {
@@ -1530,7 +1589,7 @@ test("final artwork review request binds four exact master sheets, the 4-column 
   const request = await buildFinalReviewRequest({ root: REPO_ROOT, ledger });
   await validateFinalReviewRequest({ root: REPO_ROOT, ledger, request, requireLedgerSnapshot: true });
   assert.equal(request.request_id, `bmh-artwork-final-review-${request.bindings_sha256}`);
-  assert.equal(request.contact_sheet.sha256, "493d35528ebc8d739f9d77d86d139fd996eff9bb84700e50908b37c7d2f7385e");
+  assert.equal(request.contact_sheet.sha256, "a6aa3ee0d2bc1ae3ed6c9b2f691fa9bc86247f025ca54a15cb3e5788e238505d");
   assert.equal(request.schema_version, "bmh-artwork-final-review-request/v2");
   assert.equal(request.master_review_surface.master_count, 28);
   assert.equal(request.master_review_surface.sheet_count, 4);
@@ -1609,7 +1668,7 @@ test("final artwork approval rejects a changed master sheet and all legacy v1 ap
       ledger,
       evidence: valid.approvalPath,
       approvedBy: "Jarrad Henry",
-      approvedAt: "2026-07-18T00:00:00.000Z",
+      approvedAt: "2026-07-18T12:00:00.000Z",
     }),
     /master review surface is missing or stale/i,
   );
@@ -1625,7 +1684,7 @@ test("final artwork approval rejects a changed master sheet and all legacy v1 ap
       ledger,
       evidence: fresh.approvalPath,
       approvedBy: "Jarrad Henry",
-      approvedAt: "2026-07-18T00:00:00.000Z",
+      approvedAt: "2026-07-18T12:00:00.000Z",
     }),
     /approval schema is invalid/,
   );
@@ -1642,7 +1701,7 @@ test("final artwork approval rejects a changed master sheet and all legacy v1 ap
       ledger,
       evidence: fresh.approvalPath,
       approvedBy: "Jarrad Henry",
-      approvedAt: "2026-07-18T00:00:00.000Z",
+      approvedAt: "2026-07-18T12:00:00.000Z",
     }),
     /response schema is invalid/,
   );
@@ -1657,12 +1716,12 @@ test("structured final approval rejects arbitrary dumps, pending decisions, vide
     ledger,
     evidence: valid.approvalPath,
     approvedBy: "Jarrad Henry",
-    approvedAt: "2026-07-18T00:00:00.000Z",
+    approvedAt: "2026-07-18T12:00:00.000Z",
   });
   const hashDump = "evidence/arbitrary-hash-dump.txt";
   await writeRepoFile(root, hashDump, ledger.assets.flatMap((asset) => [asset.asset_key, asset.checksum_sha256, asset.pixel_sha256]).join("\n"));
   await assert.rejects(
-    validateFinalApprovalArtifact({ root, ledger, evidence: hashDump, approvedBy: "Jarrad Henry", approvedAt: "2026-07-18T00:00:00.000Z" }),
+    validateFinalApprovalArtifact({ root, ledger, evidence: hashDump, approvedBy: "Jarrad Henry", approvedAt: "2026-07-18T12:00:00.000Z" }),
     /structured JSON/,
   );
 
@@ -1683,7 +1742,7 @@ test("structured final approval rejects arbitrary dumps, pending decisions, vide
   for (const rejectedText of ["Yes the video is approved", "The artwork is not approved"]) {
     await replaceResponse(rejectedText);
     await assert.rejects(
-      validateFinalApprovalArtifact({ root, ledger, evidence: valid.approvalPath, approvedBy: "Jarrad Henry", approvedAt: "2026-07-18T00:00:00.000Z" }),
+      validateFinalApprovalArtifact({ root, ledger, evidence: valid.approvalPath, approvedBy: "Jarrad Henry", approvedAt: "2026-07-18T12:00:00.000Z" }),
       /exact scoped affirmative statement/,
     );
   }
@@ -1691,7 +1750,7 @@ test("structured final approval rejects arbitrary dumps, pending decisions, vide
     response.request_binding.request_id = "bmh-artwork-final-review-" + "0".repeat(64);
   });
   await assert.rejects(
-    validateFinalApprovalArtifact({ root, ledger, evidence: valid.approvalPath, approvedBy: "Jarrad Henry", approvedAt: "2026-07-18T00:00:00.000Z" }),
+    validateFinalApprovalArtifact({ root, ledger, evidence: valid.approvalPath, approvedBy: "Jarrad Henry", approvedAt: "2026-07-18T12:00:00.000Z" }),
     /targets a different request/,
   );
   await writeRepoFile(root, valid.responsePath, Buffer.from(`${JSON.stringify(originalResponse, null, 2)}\n`));
@@ -1699,12 +1758,16 @@ test("structured final approval rejects arbitrary dumps, pending decisions, vide
   pending.decision = "pending";
   await writeRepoFile(root, valid.approvalPath, Buffer.from(`${JSON.stringify(pending, null, 2)}\n`));
   await assert.rejects(
-    validateFinalApprovalArtifact({ root, ledger, evidence: valid.approvalPath, approvedBy: "Jarrad Henry", approvedAt: "2026-07-18T00:00:00.000Z" }),
+    validateFinalApprovalArtifact({ root, ledger, evidence: valid.approvalPath, approvedBy: "Jarrad Henry", approvedAt: "2026-07-18T12:00:00.000Z" }),
     /decision must be approved/,
   );
 });
 
 test("pending final request is write-once, exact-rerunnable, and cannot be overwritten", async (t) => {
+  assert.equal(
+    DEFAULT_PATHS.finalReviewRequest,
+    "docs/course-production/thumbnail-pilots/approvals/final-artwork-review-request-v4.json",
+  );
   const root = await tempRoot(t);
   const target = resolveRepoPath(root, "evidence/request.json");
   const request = { schema_version: "test", value: 1 };
@@ -1727,7 +1790,7 @@ test("a partial structured review leaves every asset and manifest record unappro
     masterId: ledger.masters[0].id,
     decision: "approved",
     reviewedBy: "Jarrad Henry",
-    reviewedAt: "2026-07-18T00:00:00.000Z",
+    reviewedAt: "2026-07-18T12:00:00.000Z",
     evidence: valid.approvalPath,
   });
   await writeRepoFile(root, DEFAULT_PATHS.ledger, Buffer.from(`${JSON.stringify(ledger, null, 2)}\n`));
@@ -1737,7 +1800,7 @@ test("a partial structured review leaves every asset and manifest record unappro
     masterId: ledger.masters[1].id,
     decision: "approved",
     reviewedBy: "Jarrad Henry",
-    reviewedAt: "2026-07-18T00:00:00.000Z",
+    reviewedAt: "2026-07-18T12:00:00.000Z",
     evidence: valid.approvalPath,
   });
   assert.equal(ledger.assets.every((asset) => asset.approval_status === "missing" && asset.storage_path === null), true);
@@ -1752,7 +1815,7 @@ test("a partial structured review leaves every asset and manifest record unappro
       masterId: ledger.masters[2].id,
       decision: "approved",
       reviewedBy: "Jarrad Henry",
-      reviewedAt: "2026-07-18T00:00:00.000Z",
+      reviewedAt: "2026-07-18T12:00:00.000Z",
       evidence: alternate,
     }),
     /same approval artifact path/,
@@ -1832,7 +1895,7 @@ test("finalization requires complete evidence and timing, then reconciles from f
       masterId: master.id,
       decision: "approved",
       reviewedBy: "Jarrad Henry",
-      reviewedAt: "2026-07-18T00:00:00.000Z",
+      reviewedAt: "2026-07-18T12:00:00.000Z",
       evidence: evidencePath,
     });
   }
@@ -1846,7 +1909,7 @@ test("finalization requires complete evidence and timing, then reconciles from f
       ledger: untrustedLedger,
       manifest: untrustedManifest,
       approvedBy: "Generic Reviewer",
-      approvedAt: "2026-07-18T00:00:00.000Z",
+      approvedAt: "2026-07-18T12:00:00.000Z",
       evidence: evidencePath,
     }),
     /Final approval requires approver Jarrad Henry/,
@@ -1859,7 +1922,7 @@ test("finalization requires complete evidence and timing, then reconciles from f
       ledger: structuredClone(ledger),
       manifest,
       approvedBy: "Jarrad Henry",
-      approvedAt: "2026-07-18T00:00:00.000Z",
+      approvedAt: "2026-07-18T12:00:00.000Z",
       evidence: badEvidencePath,
     }),
     /structured JSON/,
@@ -1881,7 +1944,7 @@ test("finalization requires complete evidence and timing, then reconciles from f
     ledger,
     manifest,
     approvedBy: "Jarrad Henry",
-    approvedAt: "2026-07-18T00:00:00.000Z",
+    approvedAt: "2026-07-18T12:00:00.000Z",
     evidence: evidencePath,
   });
   assert.equal(result.ledger.status, "finalized");

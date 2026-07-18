@@ -27,7 +27,7 @@ export const DEFAULT_PATHS = Object.freeze({
   contactSheetIndex: "docs/course-production/thumbnail-pilots/qa/current-artwork-contact-sheet-2026-07-17.json",
   masterReviewIndex: DEFAULT_MASTER_REVIEW_INDEX_PATH,
   masterReviewSheets: DEFAULT_MASTER_REVIEW_SHEET_PATHS,
-  finalReviewRequest: "docs/course-production/thumbnail-pilots/approvals/final-artwork-review-request-v2.json",
+  finalReviewRequest: "docs/course-production/thumbnail-pilots/approvals/final-artwork-review-request-v4.json",
 });
 
 const APPROVED = "approved";
@@ -69,12 +69,17 @@ function assertIso(value, label) {
   assert(ISO_TIMESTAMP.test(value) && Number.isFinite(Date.parse(value)), `${label} must be an ISO UTC timestamp`);
 }
 
-function assertRecipeRgb(value, palette, label) {
+function assertPaletteRgb(value, palette, label) {
   assert(Array.isArray(value) && value.length === 3 && value.every((channel) => Number.isInteger(channel) && channel >= 0 && channel <= 255), `${label} must be an RGB triplet`);
   const key = value.join(",");
-  assert(LOCKED_BACKGROUND_RGB.has(key), `${label} must be locked blue or yellow`);
   assert(Array.isArray(palette) && palette.some((color) => Array.isArray(color) && color.join(",") === key), `${label} must belong to the locked artwork palette`);
   return clone(value);
+}
+
+function assertRecipeRgb(value, palette, label) {
+  const color = assertPaletteRgb(value, palette, label);
+  assert(LOCKED_BACKGROUND_RGB.has(color.join(",")), `${label} must be locked blue or yellow`);
+  return color;
 }
 
 function assertArtDirection(value, palette, label) {
@@ -89,6 +94,57 @@ function assertArtDirection(value, palette, label) {
   assert(/exactly one person/i.test(value.pose_instruction), `${label} pose instruction must state the one-person rule`);
   assertRecipeRgb(value.background_rgb, palette, `${label} background`);
   return clone(value);
+}
+
+function assertFlatFillCleanup(value, palette, label) {
+  if (value === undefined) return [];
+  assert(Array.isArray(value) && value.length > 0, `${label} flat-fill cleanup must be a nonempty array`);
+  const ids = new Set();
+  return value.map((cleanup, index) => {
+    const cleanupLabel = `${label} flat-fill cleanup ${index + 1}`;
+    assertString(cleanup?.id, `${cleanupLabel} id`);
+    assert(!ids.has(cleanup.id), `${label} flat-fill cleanup ids must be unique`);
+    ids.add(cleanup.id);
+    assert(
+      Array.isArray(cleanup.seed_xy) && cleanup.seed_xy.length === 2 && cleanup.seed_xy.every((coordinate) => Number.isInteger(coordinate) && coordinate >= 0),
+      `${cleanupLabel} seed_xy must be two nonnegative integers`,
+    );
+    assert(
+      Array.isArray(cleanup.accepted_rgb) && cleanup.accepted_rgb.length >= 2,
+      `${cleanupLabel} accepted_rgb must contain at least two colors`,
+    );
+    const accepted = cleanup.accepted_rgb.map((color, colorIndex) =>
+      assertPaletteRgb(color, palette, `${cleanupLabel} accepted color ${colorIndex + 1}`));
+    assert(new Set(accepted.map(paletteKey)).size === accepted.length, `${cleanupLabel} accepted colors must be unique`);
+    const replacement = assertPaletteRgb(cleanup.replacement_rgb, palette, `${cleanupLabel} replacement`);
+    assert(accepted.some((color) => paletteKey(color) === paletteKey(replacement)), `${cleanupLabel} replacement must be accepted`);
+    assert(Number.isInteger(cleanup.expected_pixel_count) && cleanup.expected_pixel_count > 0, `${cleanupLabel} expected_pixel_count is invalid`);
+    assert(Number.isInteger(cleanup.expected_changed_pixel_count) && cleanup.expected_changed_pixel_count > 0, `${cleanupLabel} expected_changed_pixel_count is invalid`);
+    assert(cleanup.expected_changed_pixel_count < cleanup.expected_pixel_count, `${cleanupLabel} changed pixels must be a strict subset of the cleaned region`);
+    assertString(cleanup.source_pixel_baseline_path, `${cleanupLabel} source_pixel_baseline_path`);
+    assert(SHA256.test(cleanup.source_pixel_baseline_sha256), `${cleanupLabel} source_pixel_baseline_sha256 is invalid`);
+    assertString(cleanup.flat_pixel_baseline_path, `${cleanupLabel} flat_pixel_baseline_path`);
+    assert(SHA256.test(cleanup.flat_pixel_baseline_sha256), `${cleanupLabel} flat_pixel_baseline_sha256 is invalid`);
+    assert(
+      Array.isArray(cleanup.expected_bounds) && cleanup.expected_bounds.length === 4 &&
+        cleanup.expected_bounds.every((coordinate) => Number.isInteger(coordinate) && coordinate >= 0) &&
+        cleanup.expected_bounds[0] <= cleanup.expected_bounds[2] && cleanup.expected_bounds[1] <= cleanup.expected_bounds[3],
+      `${cleanupLabel} expected_bounds is invalid`,
+    );
+    return {
+      id: cleanup.id,
+      seed_xy: clone(cleanup.seed_xy),
+      accepted_rgb: accepted,
+      replacement_rgb: replacement,
+      expected_pixel_count: cleanup.expected_pixel_count,
+      expected_changed_pixel_count: cleanup.expected_changed_pixel_count,
+      source_pixel_baseline_path: cleanup.source_pixel_baseline_path,
+      source_pixel_baseline_sha256: cleanup.source_pixel_baseline_sha256,
+      flat_pixel_baseline_path: cleanup.flat_pixel_baseline_path,
+      flat_pixel_baseline_sha256: cleanup.flat_pixel_baseline_sha256,
+      expected_bounds: clone(cleanup.expected_bounds),
+    };
+  });
 }
 
 export function resolveRepoPath(root, relativePath) {
@@ -364,6 +420,7 @@ function baseMaster({
   flatMasterPath,
   backgroundRgb,
   artDirection,
+  flatFillCleanup,
   videoEvidence,
   contactSheetInput,
   requireVideoEvidence = false,
@@ -400,6 +457,7 @@ function baseMaster({
     flat_master_path: flatMasterPath,
     ...(backgroundRgb ? { background_rgb: clone(backgroundRgb) } : {}),
     ...(artDirection ? { art_direction: clone(artDirection) } : {}),
+    ...(flatFillCleanup?.length ? { flat_fill_cleanup: clone(flatFillCleanup) } : {}),
     video_evidence: clone(videoEvidence ?? []),
     contact_sheet_input: contactSheetInput ? clone(contactSheetInput) : null,
     pilot,
@@ -600,6 +658,7 @@ export function createInitialLedger(inventory) {
   const coverMasterId = inventory.course_cover.id ?? "master-program-bmh-employee-training";
   const coverBackground = inventoryHasLockedBackgrounds ? assertRecipeRgb(inventory.course_cover.background_rgb, palette, "course-cover master background") : null;
   const coverArtDirection = inventoryV4 ? assertArtDirection(inventory.course_cover.art_direction, palette, "course-cover") : null;
+  const coverFlatFillCleanup = assertFlatFillCleanup(inventory.course_cover.flat_fill_cleanup, palette, "course-cover");
   const coverRecipe = cardRecipe(inventory.course_cover.derivative, palette, "course-cover");
   const coverOutput = baseOutput(inventory.course_cover, coverMasterId, coverRecipe);
   outputs.push(coverOutput);
@@ -616,6 +675,7 @@ export function createInitialLedger(inventory) {
       flatMasterPath: inventory.course_cover.flat_master_path,
       backgroundRgb: coverBackground,
       artDirection: coverArtDirection,
+      flatFillCleanup: coverFlatFillCleanup,
       requireVideoEvidence: inventoryV4,
       pilot: null,
       outputs: [
@@ -1511,16 +1571,129 @@ function normalizeEnclosedFillTexture(flat, palette) {
   return flat;
 }
 
-export async function encodeFlatPng(input, palette, background = BLUE) {
-  const flat = normalizeEnclosedFillTexture(solidifyEdgeConnectedBackground(
+function seededFlatFillComponent(flat, cleanup) {
+  const { data, width, height } = flat;
+  const colorAt = (pixel) => `${data[pixel * 3]},${data[pixel * 3 + 1]},${data[pixel * 3 + 2]}`;
+  const [seedX, seedY] = cleanup.seed_xy;
+  assert(seedX < width && seedY < height, `${cleanup.id} flat-fill cleanup seed is outside the image`);
+  const accepted = new Set(cleanup.accepted_rgb.map(paletteKey));
+  const start = seedY * width + seedX;
+  assert(accepted.has(colorAt(start)), `${cleanup.id} flat-fill cleanup seed color drifted`);
+  const visited = new Uint8Array(width * height);
+  const queue = new Int32Array(width * height);
+  let head = 0;
+  let tail = 0;
+  let minX = width;
+  let minY = height;
+  let maxX = -1;
+  let maxY = -1;
+  visited[start] = 1;
+  queue[tail++] = start;
+  while (head < tail) {
+    const pixel = queue[head++];
+    const row = Math.floor(pixel / width);
+    const column = pixel - row * width;
+    minX = Math.min(minX, column);
+    maxX = Math.max(maxX, column);
+    minY = Math.min(minY, row);
+    maxY = Math.max(maxY, row);
+    const enqueue = (neighbor) => {
+      if (visited[neighbor] || !accepted.has(colorAt(neighbor))) return;
+      visited[neighbor] = 1;
+      queue[tail++] = neighbor;
+    };
+    if (column > 0) enqueue(pixel - 1);
+    if (column + 1 < width) enqueue(pixel + 1);
+    if (row > 0) enqueue(pixel - width);
+    if (row + 1 < height) enqueue(pixel + width);
+  }
+  assert(tail === cleanup.expected_pixel_count, `${cleanup.id} flat-fill cleanup pixel count drifted`);
+  assert(
+    JSON.stringify([minX, minY, maxX, maxY]) === JSON.stringify(cleanup.expected_bounds),
+    `${cleanup.id} flat-fill cleanup bounds drifted`,
+  );
+  return { visited, pixels: queue.subarray(0, tail) };
+}
+
+export function normalizeSeededFlatFillCleanup(flat, cleanups = []) {
+  const { data } = flat;
+  for (const cleanup of cleanups) {
+    const component = seededFlatFillComponent(flat, cleanup);
+    const replacement = cleanup.replacement_rgb;
+    for (const pixel of component.pixels) {
+      const offset = pixel * 3;
+      data[offset] = replacement[0];
+      data[offset + 1] = replacement[1];
+      data[offset + 2] = replacement[2];
+    }
+  }
+  return flat;
+}
+
+export async function encodeFlatPng(input, palette, background = BLUE, cleanups = []) {
+  const flat = normalizeSeededFlatFillCleanup(normalizeEnclosedFillTexture(solidifyEdgeConnectedBackground(
     await quantizeBuffer(input, palette, background),
     background,
-  ), palette);
+  ), palette), cleanups);
   return sharp(flat.data, {
     raw: { width: flat.width, height: flat.height, channels: 3 },
   })
     .png({ compressionLevel: 9, adaptiveFiltering: false })
     .toBuffer();
+}
+
+export async function assertFlatFillCleanupDelta(before, after, cleanups) {
+  const [previous, next] = await Promise.all([
+    sharp(before).removeAlpha().raw().toBuffer({ resolveWithObject: true }),
+    sharp(after).removeAlpha().raw().toBuffer({ resolveWithObject: true }),
+  ]);
+  assert(
+    previous.info.width === next.info.width && previous.info.height === next.info.height,
+    "Flat-fill cleanup cannot change image dimensions",
+  );
+  const components = cleanups.map((cleanup) => ({
+    cleanup,
+    visited: seededFlatFillComponent({
+      data: previous.data,
+      width: previous.info.width,
+      height: previous.info.height,
+    }, cleanup).visited,
+  }));
+  const changedByCleanup = new Map(cleanups.map((cleanup) => [cleanup.id, 0]));
+  for (let pixel = 0; pixel < previous.info.width * previous.info.height; pixel += 1) {
+    const offset = pixel * 3;
+    const prior = [previous.data[offset], previous.data[offset + 1], previous.data[offset + 2]];
+    const current = [next.data[offset], next.data[offset + 1], next.data[offset + 2]];
+    if (paletteKey(prior) === paletteKey(current)) continue;
+    const row = Math.floor(pixel / previous.info.width);
+    const column = pixel - row * previous.info.width;
+    assert(
+      paletteKey(prior) !== "0,0,0" && paletteKey(current) !== "0,0,0",
+      `Flat-fill cleanup changed a black outline at ${column},${row}`,
+    );
+    const owners = components.filter((component) => component.visited[pixel]).map((component) => component.cleanup);
+    assert(owners.length === 1, `Flat-fill cleanup changed an out-of-mask or overlapping pixel at ${column},${row}`);
+    const owner = owners[0];
+    assert(paletteKey(current) === paletteKey(owner.replacement_rgb), `${owner.id} flat-fill cleanup introduced an unexpected color at ${column},${row}`);
+    changedByCleanup.set(owner.id, changedByCleanup.get(owner.id) + 1);
+  }
+  for (const cleanup of cleanups) {
+    assert(
+      changedByCleanup.get(cleanup.id) === cleanup.expected_changed_pixel_count,
+      `${cleanup.id} flat-fill cleanup changed-pixel count drifted`,
+    );
+  }
+}
+
+export async function assertDecodedArtworkPixelsEqual(left, right, label) {
+  const [first, second] = await Promise.all([
+    sharp(left).ensureAlpha().raw().toBuffer({ resolveWithObject: true }),
+    sharp(right).ensureAlpha().raw().toBuffer({ resolveWithObject: true }),
+  ]);
+  assert(
+    first.info.width === second.info.width && first.info.height === second.info.height && first.data.equals(second.data),
+    `${label} decoded pixels drifted`,
+  );
 }
 
 export async function assertPosterSafeEdges(contents, background, label = "video poster", borderWidth = 4) {
@@ -2076,6 +2249,7 @@ export async function validateLedger({ root, inventory, manifest, ledger, inspec
     assert(master.source_path === planned.source_path, `${master.id} source path drifted`);
     assert(master.flat_master_path === planned.flat_master_path, `${master.id} flat-master path drifted`);
     assert(JSON.stringify(master.background_rgb) === JSON.stringify(planned.background_rgb), `${master.id} background drifted`);
+    assert(JSON.stringify(master.flat_fill_cleanup ?? []) === JSON.stringify(planned.flat_fill_cleanup ?? []), `${master.id} flat-fill cleanup drifted`);
     assert(master.prompt_sha256 === planned.prompt_sha256, `${master.id} prompt checksum drifted`);
     assert(JSON.stringify(master.reference_ids) === JSON.stringify(planned.reference_ids), `${master.id} references drifted`);
     assert(JSON.stringify(master.reference_inputs) === JSON.stringify(planned.reference_inputs), `${master.id} reference provenance drifted`);
@@ -2086,6 +2260,19 @@ export async function validateLedger({ root, inventory, manifest, ledger, inspec
     assert(master.planned_generation_call_id === planned.planned_generation_call_id, `${master.id} planned call drifted`);
     assert(JSON.stringify(master.pilot) === JSON.stringify(planned.pilot), `${master.id} pilot plan drifted`);
     assert(JSON.stringify(master.outputs) === JSON.stringify(planned.outputs), `${master.id} output/recipe plan drifted`);
+    if (inspectFiles && master.status !== "missing" && master.flat_fill_cleanup?.length > 0) {
+      const cleanup = master.flat_fill_cleanup[0];
+      const baselineSource = await fileRecord(root, cleanup.source_pixel_baseline_path);
+      const baselineFlat = await fileRecord(root, cleanup.flat_pixel_baseline_path);
+      assert(baselineSource.checksum_sha256 === cleanup.source_pixel_baseline_sha256, `${master.id} source-pixel baseline checksum drifted`);
+      assert(baselineFlat.checksum_sha256 === cleanup.flat_pixel_baseline_sha256, `${master.id} flat-pixel baseline checksum drifted`);
+      const currentSource = await fileRecord(root, master.source_path);
+      await assertDecodedArtworkPixelsEqual(currentSource.contents, baselineSource.contents, `${master.id} restored source`);
+      if (master.status === "derived") {
+        const currentFlat = await fileRecord(root, master.flat_master_path);
+        await assertFlatFillCleanupDelta(baselineFlat.contents, currentFlat.contents, master.flat_fill_cleanup);
+      }
+    }
     if (inspectFiles && master.pilot) await validateTwoIdentityPilotFiles(root, master.pilot);
     assert(["missing", "source-ready", "derived"].includes(master.status), `${master.id} status is invalid`);
     const sharedPilotParent = master.pilot && isSharedPilotLineage(master.pilot.lineage) ? master.pilot.shared_generation_parent : null;
@@ -2707,7 +2894,18 @@ export async function deriveMaster({ root, ledger, masterId }) {
     flatChecksum = existingFlat.checksum_sha256;
   } else {
     const masterBackground = master.background_rgb ? assertRecipeRgb(master.background_rgb, ledger.palette_rgb, `${master.id} background`) : BLUE;
-    flatBuffer = await encodeFlatPng(sourceRecord.contents, ledger.palette_rgb, masterBackground);
+    if (master.flat_fill_cleanup?.length > 0) {
+      const sourceBaselines = new Map(master.flat_fill_cleanup.map((cleanup) => [
+        `${cleanup.source_pixel_baseline_path}|${cleanup.source_pixel_baseline_sha256}`,
+        cleanup,
+      ]));
+      assert(sourceBaselines.size === 1, `${master.id} flat-fill cleanups must share one source-pixel baseline`);
+      const baseline = master.flat_fill_cleanup[0];
+      const baselineSource = await fileRecord(root, baseline.source_pixel_baseline_path);
+      assert(baselineSource.checksum_sha256 === baseline.source_pixel_baseline_sha256, `${master.id} source-pixel baseline checksum drifted`);
+      await assertDecodedArtworkPixelsEqual(sourceRecord.contents, baselineSource.contents, `${master.id} restored source`);
+    }
+    flatBuffer = await encodeFlatPng(sourceRecord.contents, ledger.palette_rgb, masterBackground, master.flat_fill_cleanup);
     flatInput = flatBuffer;
     flatChecksum = sha256(flatBuffer);
   }
@@ -2759,6 +2957,17 @@ export async function deriveMaster({ root, ledger, masterId }) {
       assert(allowed.includes(existing.checksum_sha256), `${masterId} flat master is an orphan or mismatched restart artifact`);
       if (existing.checksum_sha256 !== flatChecksum) {
         assert(existing.checksum_sha256 === master.flat_replacement_authorized_checksum, `${masterId} flat replacement was not explicitly authorized`);
+        if (master.flat_fill_cleanup?.length > 0) {
+          const flatBaselines = new Map(master.flat_fill_cleanup.map((cleanup) => [
+            `${cleanup.flat_pixel_baseline_path}|${cleanup.flat_pixel_baseline_sha256}`,
+            cleanup,
+          ]));
+          assert(flatBaselines.size === 1, `${master.id} flat-fill cleanups must share one flat-pixel baseline`);
+          const baseline = master.flat_fill_cleanup[0];
+          const baselineFlat = await fileRecord(root, baseline.flat_pixel_baseline_path);
+          assert(baselineFlat.checksum_sha256 === baseline.flat_pixel_baseline_sha256, `${master.id} flat-pixel baseline checksum drifted`);
+          await assertFlatFillCleanupDelta(baselineFlat.contents, flatBuffer, master.flat_fill_cleanup);
+        }
         await writeBufferAtomic(flatPath, flatBuffer, root);
       }
     } else {

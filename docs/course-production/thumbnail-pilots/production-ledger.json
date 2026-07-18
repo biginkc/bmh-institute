@@ -433,6 +433,54 @@
         182,
         255
       ],
+      "flat_fill_cleanup": [
+        {
+          "id": "lower-left-house-facade",
+          "seed_xy": [
+            250,
+            450
+          ],
+          "accepted_rgb": [
+            [
+              255,
+              211,
+              1
+            ],
+            [
+              254,
+              255,
+              198
+            ],
+            [
+              105,
+              153,
+              53
+            ],
+            [
+              255,
+              174,
+              1
+            ]
+          ],
+          "replacement_rgb": [
+            255,
+            211,
+            1
+          ],
+          "expected_pixel_count": 6282,
+          "expected_changed_pixel_count": 1277,
+          "source_pixel_baseline_path": "course-assets/thumbnails/production/sources/lineage/master-program-bmh-employee-training/step-002.png",
+          "source_pixel_baseline_sha256": "1f8caa9a9985e4a76ba6590eb8d6fb7078c7e8f4d5128bfbab91f2f2af4e94e1",
+          "flat_pixel_baseline_path": "course-assets/thumbnails/production/sources/lineage/master-program-bmh-employee-training/flat-masters/version-002.png",
+          "flat_pixel_baseline_sha256": "4e68c2aef5557a6ea677fa541697542d71f829ef79e3c0ad51d4e7550140c8b5",
+          "expected_bounds": [
+            229,
+            392,
+            310,
+            510
+          ]
+        }
+      ],
       "art_direction": {
         "master_id": "master-program-bmh-employee-training",
         "pose_id": "cover-andrea-walking-right-doorway",
@@ -457,8 +505,8 @@
       "contact_sheet_input": null,
       "pilot": null,
       "status": "derived",
-      "terminal_source_sha256": "1f8caa9a9985e4a76ba6590eb8d6fb7078c7e8f4d5128bfbab91f2f2af4e94e1",
-      "flat_master_sha256": "4e68c2aef5557a6ea677fa541697542d71f829ef79e3c0ad51d4e7550140c8b5",
+      "terminal_source_sha256": "f78ef004b923c34544315633bf041e3ca05741a4d5e05f81412aff1d77d571b2",
+      "flat_master_sha256": "aabb6bc5e38bbc5a62539e5415ce0f387adbb4b1396db97d678b27ea5fae99be",
       "flat_replacement_authorized_checksum": null,
       "flat_history": [
         {
@@ -479,6 +527,20 @@
           "archived_path": "course-assets/thumbnails/production/sources/lineage/master-program-bmh-employee-training/flat-masters/version-001.png",
           "checksum_sha256": "c1823db4780faf0ea22972103cf5ff644760c0a221a7fae5b3c6261b6565578a",
           "size_bytes": 37149
+        },
+        {
+          "version": 4,
+          "lineage_sequence": 2,
+          "archived_path": "course-assets/thumbnails/production/sources/lineage/master-program-bmh-employee-training/flat-masters/version-002.png",
+          "checksum_sha256": "4e68c2aef5557a6ea677fa541697542d71f829ef79e3c0ad51d4e7550140c8b5",
+          "size_bytes": 33902
+        },
+        {
+          "version": 5,
+          "lineage_sequence": 3,
+          "archived_path": "course-assets/thumbnails/production/sources/lineage/master-program-bmh-employee-training/flat-masters/version-003.png",
+          "checksum_sha256": "11be04e174fb918defcf0fb06bfd300ee8507751e40208f415e4cc6ea2051f91",
+          "size_bytes": 33095
         }
       ],
       "lineage": [
@@ -529,6 +591,82 @@
           "completed_at": "2026-07-17T19:57:01.000Z",
           "archived_output_path": "course-assets/thumbnails/production/sources/lineage/master-program-bmh-employee-training/step-002.png",
           "output_sha256": "1f8caa9a9985e4a76ba6590eb8d6fb7078c7e8f4d5128bfbab91f2f2af4e94e1",
+          "reference_inputs": [
+            {
+              "id": "style-ref-1",
+              "role": "canonical BMH Sticker System style",
+              "path": "docs/design/style-ref-1.png",
+              "sha256": "d65ce4c3fc84a0a52b08e513d42d978f94d5db2f6e59034aedbbd1e9486c18ca"
+            },
+            {
+              "id": "style-ref-2",
+              "role": "canonical BMH Sticker System style",
+              "path": "docs/design/style-ref-2.png",
+              "sha256": "f1affc2ab6b931be8cfd6920165dff330d49b79e6f4abfe5568e67e70c6934a6"
+            },
+            {
+              "id": "andrea-approved",
+              "role": "approved Andrea identity root",
+              "path": "docs/course-production/thumbnail-pilots/references/v5-cast/andrea-approved.png",
+              "sha256": "ab1c01dfc642f00b2f6df08a20fd231cb47fffb60a3e013a42960ee4fa5e2ca8"
+            }
+          ],
+          "postapproval_defect_remediation": false,
+          "defect_evidence": null,
+          "defect_evidence_sha256": null,
+          "preserved_output_keys": []
+        },
+        {
+          "sequence": 3,
+          "operation": "correction",
+          "prompt_sha256": "1a60935d08b892d7c3931fbf56c73451de48abb1e38357b6d65a63eac427ddb2",
+          "correction_prompt_path": "docs/course-production/thumbnail-pilots/prompts/production-corrections/cover-flat-fill-clean-v2.txt",
+          "correction_prompt_sha256": "1a60935d08b892d7c3931fbf56c73451de48abb1e38357b6d65a63eac427ddb2",
+          "parent_source_sha256": "1f8caa9a9985e4a76ba6590eb8d6fb7078c7e8f4d5128bfbab91f2f2af4e94e1",
+          "generation_call_id": "imagegen-cover-flat-fill-v2",
+          "tool_output_id": "exec-1c3667b1-ae95-4162-9415-6518efd4b016",
+          "generated_by": "/root",
+          "completed_at": "2026-07-18T07:10:00.000Z",
+          "archived_output_path": "course-assets/thumbnails/production/sources/lineage/master-program-bmh-employee-training/step-003.png",
+          "output_sha256": "e5ebb0d0c14cbab24b5997d124c62474108604d5689da81ab7071ccfc8cff4a0",
+          "reference_inputs": [
+            {
+              "id": "style-ref-1",
+              "role": "canonical BMH Sticker System style",
+              "path": "docs/design/style-ref-1.png",
+              "sha256": "d65ce4c3fc84a0a52b08e513d42d978f94d5db2f6e59034aedbbd1e9486c18ca"
+            },
+            {
+              "id": "style-ref-2",
+              "role": "canonical BMH Sticker System style",
+              "path": "docs/design/style-ref-2.png",
+              "sha256": "f1affc2ab6b931be8cfd6920165dff330d49b79e6f4abfe5568e67e70c6934a6"
+            },
+            {
+              "id": "andrea-approved",
+              "role": "approved Andrea identity root",
+              "path": "docs/course-production/thumbnail-pilots/references/v5-cast/andrea-approved.png",
+              "sha256": "ab1c01dfc642f00b2f6df08a20fd231cb47fffb60a3e013a42960ee4fa5e2ca8"
+            }
+          ],
+          "postapproval_defect_remediation": false,
+          "defect_evidence": null,
+          "defect_evidence_sha256": null,
+          "preserved_output_keys": []
+        },
+        {
+          "sequence": 4,
+          "operation": "correction",
+          "prompt_sha256": "55fd9880a891fb8a65e1d69c45ab9426bdf4a3b400a8c93a7caf28dd9d0db043",
+          "correction_prompt_path": "docs/course-production/thumbnail-pilots/prompts/production-corrections/cover-exact-composition-restore-v3.txt",
+          "correction_prompt_sha256": "55fd9880a891fb8a65e1d69c45ab9426bdf4a3b400a8c93a7caf28dd9d0db043",
+          "parent_source_sha256": "e5ebb0d0c14cbab24b5997d124c62474108604d5689da81ab7071ccfc8cff4a0",
+          "generation_call_id": "deterministic-cover-source-restore-v3",
+          "tool_output_id": "exact-pixel-restore-lineage-step-002",
+          "generated_by": "/root",
+          "completed_at": "2026-07-18T07:17:52.000Z",
+          "archived_output_path": "course-assets/thumbnails/production/sources/lineage/master-program-bmh-employee-training/step-004.png",
+          "output_sha256": "f78ef004b923c34544315633bf041e3ca05741a4d5e05f81412aff1d77d571b2",
           "reference_inputs": [
             {
               "id": "style-ref-1",
@@ -8755,9 +8893,9 @@
       "source_key": "thumbnail-program-bmh-employee-training",
       "manifest_path": "course-assets/thumbnails/program-bmh-employee-training.webp",
       "output_path": "course-assets/thumbnails/program-bmh-employee-training.webp",
-      "checksum_sha256": "35b84bffa83a91fb9f4b8cc06774bfaeec0265fb2827478bf6bc8a61cb332449",
-      "pixel_sha256": "3c5f7f215fdc5e88b159e9b7e627fd884d47e7855dc414bc9582bba8c578ad55",
-      "size_bytes": 14400,
+      "checksum_sha256": "a302125e318aee333dd07b882a0be0ea65e282d38cacb412230e1ea94b25534a",
+      "pixel_sha256": "f52256aae0a7413ed70e101c66a86b7b4ffd065e2dee0dd895890071e57b7ad7",
+      "size_bytes": 14154,
       "approval_status": "missing",
       "base_storage_path": "courses/bmh-employee-training/v1/thumbnails/program-bmh-employee-training.webp",
       "storage_path": null,
@@ -8786,6 +8924,38 @@
           "checksum_sha256": "8e91ee7996223ba82fff76546d07d3c855cc7d19f92e1f799e8605d6acef95db",
           "pixel_sha256": "66b00120f44ab7d18324a481aece1d2c601b98854b1c2371e4264d88760ffb74",
           "size_bytes": 16052,
+          "recipe_sha256": "a4c5733b172d260c1f3baf103a8b66821798cc3e90f1028f63edc53985f6322a",
+          "review": {
+            "status": "pending",
+            "reviewed_by": null,
+            "reviewed_at": null,
+            "evidence": null,
+            "evidence_sha256": null
+          }
+        },
+        {
+          "version": 4,
+          "lineage_sequence": 2,
+          "archived_path": "course-assets/thumbnails/production/sources/lineage/master-program-bmh-employee-training/derivatives/version-002-program-bmh-employee-training.webp",
+          "checksum_sha256": "35b84bffa83a91fb9f4b8cc06774bfaeec0265fb2827478bf6bc8a61cb332449",
+          "pixel_sha256": "3c5f7f215fdc5e88b159e9b7e627fd884d47e7855dc414bc9582bba8c578ad55",
+          "size_bytes": 14400,
+          "recipe_sha256": "a4c5733b172d260c1f3baf103a8b66821798cc3e90f1028f63edc53985f6322a",
+          "review": {
+            "status": "pending",
+            "reviewed_by": null,
+            "reviewed_at": null,
+            "evidence": null,
+            "evidence_sha256": null
+          }
+        },
+        {
+          "version": 5,
+          "lineage_sequence": 3,
+          "archived_path": "course-assets/thumbnails/production/sources/lineage/master-program-bmh-employee-training/derivatives/version-003-program-bmh-employee-training.webp",
+          "checksum_sha256": "b0a6d18877c264badbedabf16e366875f6a0ff03ea1b52d0fd2cad82b62360a6",
+          "pixel_sha256": "c892a5958cce9d8736bad6470ae6c963048d8ad76ded1c4746bf792be4bafebd",
+          "size_bytes": 14116,
           "recipe_sha256": "a4c5733b172d260c1f3baf103a8b66821798cc3e90f1028f63edc53985f6322a",
           "review": {
             "status": "pending",
@@ -8824,17 +8994,17 @@
       "provenance": {
         "master_id": "master-program-bmh-employee-training",
         "source_master_id": "master-program-bmh-employee-training",
-        "prompt_sha256": "19d198afa34108268043eea0bf7f82130c1ef0d930d4a164731920a0fcbe2285",
+        "prompt_sha256": "55fd9880a891fb8a65e1d69c45ab9426bdf4a3b400a8c93a7caf28dd9d0db043",
         "reference_ids": [
           "style-ref-1",
           "style-ref-2",
           "andrea-approved"
         ],
-        "terminal_source_sha256": "1f8caa9a9985e4a76ba6590eb8d6fb7078c7e8f4d5128bfbab91f2f2af4e94e1",
-        "flat_master_sha256": "4e68c2aef5557a6ea677fa541697542d71f829ef79e3c0ad51d4e7550140c8b5",
+        "terminal_source_sha256": "f78ef004b923c34544315633bf041e3ca05741a4d5e05f81412aff1d77d571b2",
+        "flat_master_sha256": "aabb6bc5e38bbc5a62539e5415ce0f387adbb4b1396db97d678b27ea5fae99be",
         "derivative_recipe_id": "course-cover-card-16x10",
         "derivative_recipe_sha256": "a4c5733b172d260c1f3baf103a8b66821798cc3e90f1028f63edc53985f6322a",
-        "lineage_steps": 2,
+        "lineage_steps": 4,
         "reviewed_by": null,
         "reviewed_at": null,
         "review_evidence": null,
@@ -16155,7 +16325,7 @@
       }
     }
   ],
-  "updated_at": "2026-07-17T21:08:53.200Z",
+  "updated_at": "2026-07-18T07:20:44.171Z",
   "approved_texture_exceptions": [
     {
       "asset_key": "thumbnail-slot-07",

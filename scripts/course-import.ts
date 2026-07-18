@@ -37,6 +37,7 @@ import {
   type CourseImportCommand,
 } from "../src/lib/course-import/command-policy";
 import { runRestartableRollback } from "../src/lib/course-import/rollback-command";
+import { databaseRollbackReceiptPath } from "../src/lib/course-import/rollback-settlement";
 import {
   buildUploadReceiptExpectation,
   invalidateUploadReceipt,
@@ -44,6 +45,7 @@ import {
   writeCompletedUploadReceipt,
 } from "../src/lib/course-import/upload-receipt";
 import {
+  assertBmhImportInvocationScope,
   assertBmhImportSemanticGate,
   validateBmhImportSemanticGate,
 } from "./course-content/import-semantic-gate.mjs";
@@ -66,6 +68,7 @@ async function main() {
   });
   if (semanticReport) {
     console.log(JSON.stringify({ phase: "bmh_semantic_validation", report: semanticReport }, null, 2));
+    assertBmhImportInvocationScope(semanticReport, flags.canary);
     if (command !== "rollback" && command !== "inspect-rollback-storage") {
       assertBmhImportSemanticGate(semanticReport, {
         enforcePublicationBlockers:
@@ -160,11 +163,16 @@ async function main() {
     const { storageRollback } = await runRestartableRollback({
       plan,
       adapter,
-      receiptPath: resolve(
-        flags.stateRoot ?? join(process.cwd(), ".course-import-state"),
-        "rollback-receipts",
-        `${plan.importId}.json`,
-      ),
+      receiptPath: databaseRollbackReceiptPath(stateRoot, {
+        importId: plan.importId,
+        scope: flags.canary ? "canary" : "full",
+        environment,
+      }),
+      context: {
+        scope: flags.canary ? "canary" : "full",
+        environment,
+        environmentUrl: url,
+      },
       inspectStorage,
       onDatabaseSettled(databaseRollback) {
         console.log(JSON.stringify({ phase: "rollback_settled", databaseRollback }, null, 2));

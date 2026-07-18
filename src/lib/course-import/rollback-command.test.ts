@@ -10,6 +10,7 @@ import {
   type ManagedIdInventory,
 } from "./exact-reconciliation";
 import { buildImportPlan } from "./operations";
+import { COURSE_IMPORT_TEST_URL } from "./environment";
 import { runRestartableRollback } from "./rollback-command";
 import { validCourseManifest } from "./test-fixtures";
 
@@ -23,6 +24,11 @@ describe("restartable rollback command sequencing", () => {
       plan,
       adapter: adapterFor(events),
       receiptPath,
+      context: {
+        scope: "canary",
+        environment: "test",
+        environmentUrl: COURSE_IMPORT_TEST_URL,
+      },
       async onDatabaseSettled() {
         events.push("database-settled");
       },
@@ -48,6 +54,11 @@ describe("restartable rollback command sequencing", () => {
       plan,
       adapter: adapterFor(),
       receiptPath,
+      context: {
+        scope: "canary",
+        environment: "test",
+        environmentUrl: COURSE_IMPORT_TEST_URL,
+      },
       async inspectStorage() {
         throw new Error("storage unavailable");
       },

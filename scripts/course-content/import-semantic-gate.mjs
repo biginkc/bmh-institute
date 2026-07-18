@@ -292,3 +292,13 @@ export function assertBmhImportSemanticGate(
     );
   }
 }
+
+export function assertBmhImportInvocationScope(report, canary) {
+  if (!report) return;
+  if (report.scope === "canary" && !canary) {
+    throw new Error("The canonical BMH Tech Stack canary manifest requires --canary.");
+  }
+  if (report.scope === "full" && canary) {
+    throw new Error("The canonical full BMH manifest cannot use --canary.");
+  }
+}

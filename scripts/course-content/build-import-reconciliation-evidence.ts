@@ -11,7 +11,13 @@ import { assertExactReconciliationClean, reconcileImportPlanExact, type ExactCou
 import { validateCanaryScope, validateCourseManifest } from "../../src/lib/course-import/manifest";
 import { buildImportPlan, type ImportTable } from "../../src/lib/course-import/operations";
 import type { Database } from "../../src/lib/supabase/types";
-import { assertBmhImportSemanticGate, validateBmhImportSemanticGate } from "./import-semantic-gate.mjs";
+import {
+  assertBmhImportInvocationScope,
+  assertBmhImportSemanticGate,
+  BMH_CANARY_IMPORT_ID,
+  BMH_FULL_IMPORT_ID,
+  validateBmhImportSemanticGate,
+} from "./import-semantic-gate.mjs";
 
 function sha256(value: string | Buffer) {
   return createHash("sha256").update(value).digest("hex");
@@ -23,11 +29,32 @@ function stableJson(value: unknown): string {
   return JSON.stringify(value) ?? "null";
 }
 
+function assertCanonicalStorageObjectPath(storagePath: string, canonicalPrefix: string) {
+  if (
+    typeof storagePath !== "string" ||
+    storagePath.length === 0 ||
+    !/^[A-Za-z0-9._/-]+$/.test(storagePath) ||
+    storagePath.includes("\\") ||
+    path.posix.isAbsolute(storagePath) ||
+    path.posix.normalize(storagePath) !== storagePath
+  ) {
+    throw new Error("Exact reconciliation evidence found a noncanonical storage path.");
+  }
+  const segments = storagePath.split("/");
+  if (segments.some((segment) => segment === "" || segment === "." || segment === "..")) {
+    throw new Error("Exact reconciliation evidence found a noncanonical storage path.");
+  }
+  if (!storagePath.startsWith(canonicalPrefix)) {
+    throw new Error("Exact reconciliation evidence found an asset outside the canonical storage prefix.");
+  }
+}
+
 export function buildReconciliationEvidence(options: {
   manifestBytes: Buffer;
   importId: string;
   scope: "canary" | "full";
   environment: "test" | "production";
+  environmentUrl: string;
   database: Awaited<ReturnType<typeof reconcileImportPlanExact>>;
   assetProblems: Array<{ path: string; problem: string }>;
   unexpectedStorage: string[];
@@ -35,16 +62,27 @@ export function buildReconciliationEvidence(options: {
   storagePrefix: string;
 }) {
   assertExactReconciliationClean(options);
+  if (options.importId === BMH_CANARY_IMPORT_ID && options.scope !== "canary") {
+    throw new Error("Exact reconciliation evidence for the BMH Tech Stack canary requires canary scope.");
+  }
+  if (options.importId === BMH_FULL_IMPORT_ID && options.scope !== "full") {
+    throw new Error("Exact reconciliation evidence for the full BMH import requires full scope.");
+  }
+  const actualEnvironment = assertCourseImportEnvironment(options.environmentUrl, true);
+  const environmentUrl = new URL(options.environmentUrl).origin;
+  if (actualEnvironment !== options.environment) {
+    throw new Error("Exact reconciliation evidence environment URL does not match its environment.");
+  }
   const canonicalPrefix = importStoragePrefix(options.importId);
   if (!canonicalPrefix || options.storagePrefix !== canonicalPrefix) {
     throw new Error("Exact reconciliation evidence requires the import's canonical storage prefix.");
   }
   const expectedStoragePaths = [...options.expectedStoragePaths].sort();
+  for (const storagePath of expectedStoragePaths) {
+    assertCanonicalStorageObjectPath(storagePath, canonicalPrefix);
+  }
   if (new Set(expectedStoragePaths).size !== expectedStoragePaths.length) {
     throw new Error("Exact reconciliation evidence found duplicate expected storage paths.");
-  }
-  if (expectedStoragePaths.some((storagePath) => !storagePath.startsWith(canonicalPrefix))) {
-    throw new Error("Exact reconciliation evidence found an asset outside the canonical storage prefix.");
   }
   const payload = {
     schema_version: 1,
@@ -53,6 +91,7 @@ export function buildReconciliationEvidence(options: {
     import_id: options.importId,
     scope: options.scope,
     environment: options.environment,
+    environment_url: environmentUrl,
     manifest_sha256: sha256(options.manifestBytes),
     plan_checked_rows: options.database.checked,
     catalog_sha256: options.database.catalogSha256,
@@ -115,6 +154,7 @@ async function main() {
     if (errors.length) throw new Error(errors.join("\n"));
   }
   const semantic = await validateBmhImportSemanticGate({ manifest: validated.value });
+  assertBmhImportInvocationScope(semantic, flags.canary);
   assertBmhImportSemanticGate(semantic, { enforcePublicationBlockers: true });
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -135,6 +175,7 @@ async function main() {
     importId: plan.importId,
     scope: flags.canary ? "canary" : "full",
     environment,
+    environmentUrl: url,
     database,
     assetProblems,
     unexpectedStorage,

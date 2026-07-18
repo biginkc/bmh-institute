@@ -3,9 +3,9 @@
   "purpose": "human review of the 28 exact flat artwork masters before manifest promotion",
   "source_bindings": {
     "ledger_path": "docs/course-production/thumbnail-pilots/production-ledger.json",
-    "ledger_master_inputs_sha256": "a67b9fdf222fef1e85537a054dfdd69c466a365271cd3156777ab281822acb06",
+    "ledger_master_inputs_sha256": "f15a09577d7e4aaf8345aa90dc6fb1919ed46946af2c12966133497846d9fffa",
     "inventory_path": "docs/course-production/thumbnail-pilots/production-inventory.json",
-    "inventory_sha256": "a8a2b720e110b779e126733b801f2a2d2d00fb5b03501ada6bbbdbb9613f06eb"
+    "inventory_sha256": "8c887d069c47dd5425fb5023261ed8f6219f8ba01d32639728ecd75f45dfb7ad"
   },
   "layout": {
     "sheet_count": 4,
@@ -34,7 +34,7 @@
     {
       "sheet_number": 1,
       "path": "docs/course-production/thumbnail-pilots/qa/master-review/master-review-sheet-01.png",
-      "sha256": "2ae683ffedb3ea65d88c3e20dcf9ca36327ef646a22eb45c019acec883a41798",
+      "sha256": "796e6c9a3883101b505ef6f96458a426e7dbcfa67c3733e2f0cfc3e5ee31561e",
       "positions": [
         1,
         2,
@@ -101,7 +101,7 @@
       "character": "Andrea",
       "inventory_source": "course_cover",
       "flat_master_path": "course-assets/thumbnails/production/flat-masters/program-bmh-employee-training-flat-master.png",
-      "flat_master_sha256": "4e68c2aef5557a6ea677fa541697542d71f829ef79e3c0ad51d4e7550140c8b5",
+      "flat_master_sha256": "aabb6bc5e38bbc5a62539e5415ce0f387adbb4b1396db97d678b27ea5fae99be",
       "sheet_path": "docs/course-production/thumbnail-pilots/qa/master-review/master-review-sheet-01.png"
     },
     {

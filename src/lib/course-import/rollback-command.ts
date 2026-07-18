@@ -1,11 +1,15 @@
 import type { ExactCourseImportAdapter } from "./exact-reconciliation";
 import type { ImportPlan } from "./operations";
-import { settleDatabaseRollback } from "./rollback-settlement";
+import {
+  settleDatabaseRollback,
+  type DatabaseRollbackContext,
+} from "./rollback-settlement";
 
 export async function runRestartableRollback<TStorageInspection>(options: {
   plan: ImportPlan;
   adapter: ExactCourseImportAdapter;
   receiptPath: string;
+  context: DatabaseRollbackContext;
   inspectStorage: () => Promise<TStorageInspection>;
   onDatabaseSettled?: (
     result: Awaited<ReturnType<typeof settleDatabaseRollback>>,
@@ -15,6 +19,7 @@ export async function runRestartableRollback<TStorageInspection>(options: {
     plan: options.plan,
     adapter: options.adapter,
     receiptPath: options.receiptPath,
+    context: options.context,
   });
   await options.onDatabaseSettled?.(databaseRollback);
   const storageRollback = await options.inspectStorage();

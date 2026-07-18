@@ -1,6 +1,6 @@
 import { createHash, randomUUID } from "node:crypto";
 import { mkdir, open, readFile, rename, rm } from "node:fs/promises";
-import { dirname } from "node:path";
+import { dirname, resolve } from "node:path";
 
 import {
   buildRollbackOwnedIds,
@@ -11,10 +11,24 @@ import {
   type ExactCourseImportAdapter,
 } from "./exact-reconciliation";
 import type { ImportPlan } from "./operations";
+import type {
+  CourseImportEnvironment,
+  CourseImportScope,
+} from "./upload-receipt";
+import { assertCourseImportEnvironment } from "./environment";
+
+export type DatabaseRollbackContext = {
+  scope: CourseImportScope;
+  environment: CourseImportEnvironment;
+  environmentUrl: string;
+};
 
 export type DatabaseRollbackReceipt = {
-  schema_version: 2;
+  schema_version: 3;
   import_id: string;
+  scope: CourseImportScope;
+  environment: CourseImportEnvironment;
+  environment_url: string;
   plan_fingerprint: string;
   owned_id_count: number;
   database_state: "rolled_back" | "already_absent";
@@ -22,6 +36,28 @@ export type DatabaseRollbackReceipt = {
   absence_catalog_sha256: string;
   recorded_at: string;
 };
+
+export function databaseRollbackReceiptPath(
+  stateRoot: string,
+  options: {
+    importId: string;
+    scope: CourseImportScope;
+    environment: CourseImportEnvironment;
+  },
+) {
+  if (!/^[a-z0-9][a-z0-9._-]{0,127}$/.test(options.importId)) {
+    throw new Error("Rollback receipt import ID is invalid.");
+  }
+  const receiptRoot = resolve(stateRoot, "rollback-receipts");
+  const receiptPath = resolve(
+    receiptRoot,
+    `${options.importId}.${options.scope}.${options.environment}.json`,
+  );
+  if (dirname(receiptPath) !== receiptRoot) {
+    throw new Error("Rollback receipt path escapes its state directory.");
+  }
+  return receiptPath;
+}
 
 export function rollbackPlanFingerprint(plan: ImportPlan) {
   return createHash("sha256")
@@ -33,9 +69,15 @@ export async function settleDatabaseRollback(options: {
   plan: ImportPlan;
   adapter: ExactCourseImportAdapter;
   receiptPath: string;
+  context: DatabaseRollbackContext;
   now?: () => Date;
 }): Promise<{ receipt: DatabaseRollbackReceipt; reused: boolean }> {
-  const existing = await readDatabaseRollbackReceipt(options.receiptPath, options.plan);
+  const context = normalizeDatabaseRollbackContext(options.context);
+  const existing = await readDatabaseRollbackReceipt(
+    options.receiptPath,
+    options.plan,
+    context,
+  );
   if (existing) {
     const reconciliation = await reconcileImportPlanExact(options.plan, options.adapter);
     assertManagedGraphAbsent(options.plan, reconciliation, "Rollback receipt exists");
@@ -68,8 +110,11 @@ export async function settleDatabaseRollback(options: {
   }
 
   const receipt: DatabaseRollbackReceipt = {
-    schema_version: 2,
+    schema_version: 3,
     import_id: options.plan.importId,
+    scope: context.scope,
+    environment: context.environment,
+    environment_url: context.environmentUrl,
     plan_fingerprint: rollbackPlanFingerprint(options.plan),
     owned_id_count: options.plan.operations.length,
     database_state: databaseState,
@@ -98,7 +143,9 @@ function assertManagedGraphAbsent(
 export async function readDatabaseRollbackReceipt(
   receiptPath: string,
   plan: ImportPlan,
+  contextInput: DatabaseRollbackContext,
 ): Promise<DatabaseRollbackReceipt | null> {
+  const context = normalizeDatabaseRollbackContext(contextInput);
   let parsed: unknown;
   try {
     parsed = JSON.parse(await readFile(receiptPath, "utf8"));
@@ -112,8 +159,11 @@ export async function readDatabaseRollbackReceipt(
     !parsed ||
     typeof parsed !== "object" ||
     Array.isArray(parsed) ||
-    (parsed as DatabaseRollbackReceipt).schema_version !== 2 ||
+    (parsed as DatabaseRollbackReceipt).schema_version !== 3 ||
     (parsed as DatabaseRollbackReceipt).import_id !== plan.importId ||
+    (parsed as DatabaseRollbackReceipt).scope !== context.scope ||
+    (parsed as DatabaseRollbackReceipt).environment !== context.environment ||
+    (parsed as DatabaseRollbackReceipt).environment_url !== context.environmentUrl ||
     (parsed as DatabaseRollbackReceipt).plan_fingerprint !== expectedFingerprint ||
     (parsed as DatabaseRollbackReceipt).owned_id_count !== expectedCount ||
     !["rolled_back", "already_absent"].includes(
@@ -126,6 +176,17 @@ export async function readDatabaseRollbackReceipt(
     throw new Error(`Rollback receipt does not match the current import plan: ${receiptPath}`);
   }
   return parsed as DatabaseRollbackReceipt;
+}
+
+function normalizeDatabaseRollbackContext(
+  context: DatabaseRollbackContext,
+): DatabaseRollbackContext {
+  const actualEnvironment = assertCourseImportEnvironment(context.environmentUrl, true);
+  const environmentUrl = new URL(context.environmentUrl).origin;
+  if (actualEnvironment !== context.environment) {
+    throw new Error("Rollback receipt environment URL does not match its environment.");
+  }
+  return { ...context, environmentUrl };
 }
 
 async function writeJsonAtomically(path: string, value: unknown) {
