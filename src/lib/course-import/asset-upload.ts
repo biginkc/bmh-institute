@@ -57,6 +57,21 @@ export type TusUploadRequest = {
   statePath: string;
 };
 
+export function supabaseTusHeaders(serviceKey: string) {
+  const headers: Record<string, string> = {
+    apikey: serviceKey,
+    "x-upsert": "false",
+  };
+
+  // Supabase's modern secret keys are API keys, not JWT bearer tokens. Legacy
+  // service-role JWTs still need the Authorization header for Storage/TUS.
+  if (!serviceKey.startsWith("sb_secret_")) {
+    headers.authorization = `Bearer ${serviceKey}`;
+  }
+
+  return headers;
+}
+
 export async function uploadApprovedAssets(options: {
   endpoint: string;
   serviceKey: string;
@@ -261,7 +276,7 @@ function uploadTus(request: TusUploadRequest) {
       uploadSize: request.size,
       chunkSize: TUS_CHUNK_BYTES,
       retryDelays: [0, 3_000, 5_000, 10_000, 20_000],
-      headers: { authorization: `Bearer ${request.serviceKey}`, "x-upsert": "false" },
+      headers: supabaseTusHeaders(request.serviceKey),
       metadata: {
         bucketName: COURSE_IMPORT_BUCKET,
         objectName: request.storagePath,

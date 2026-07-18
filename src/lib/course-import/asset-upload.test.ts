@@ -12,6 +12,7 @@ import {
   createTusResumeFingerprint,
   openPinnedVerifiedFile,
   resumableEndpoint,
+  supabaseTusHeaders,
   uploadApprovedAssets,
   type CourseImportUploadBucket,
 } from "./asset-upload";
@@ -24,6 +25,27 @@ afterEach(async () => {
   await Promise.all(
     tempRoots.splice(0).map((root) => rm(root, { recursive: true, force: true })),
   );
+});
+
+describe("Supabase TUS credential headers", () => {
+  it("uses modern secret keys only as API keys", () => {
+    const secretKey = `sb_secret_${"s".repeat(32)}`;
+
+    expect(supabaseTusHeaders(secretKey)).toEqual({
+      apikey: secretKey,
+      "x-upsert": "false",
+    });
+  });
+
+  it("keeps legacy service-role JWT uploads compatible", () => {
+    const legacyJwt = "header.payload.signature";
+
+    expect(supabaseTusHeaders(legacyJwt)).toEqual({
+      apikey: legacyJwt,
+      authorization: `Bearer ${legacyJwt}`,
+      "x-upsert": "false",
+    });
+  });
 });
 
 describe("course import approved asset uploads", () => {
