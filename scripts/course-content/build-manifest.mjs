@@ -39,7 +39,12 @@ const CAPTION_APPROVAL_LEDGER_PATH = path.join(
   REPO_ROOT,
   "docs/course-production/caption-approvals.json",
 );
+const GUIDE_APPROVAL_LEDGER_PATH = path.join(
+  REPO_ROOT,
+  "docs/course-production/guide-approvals.json",
+);
 const ARTWORK_LEDGER_SCHEMA = "bmh-artwork-production-ledger/v1";
+export const GUIDE_APPROVAL_LEDGER_SCHEMA = "bmh-guide-approval-ledger/v1";
 const SHA256_PATTERN = /^[a-f0-9]{64}$/;
 const ISO_TIMESTAMP_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/;
 
@@ -136,7 +141,7 @@ const LESSONS = [
     slot: 8,
     module: 3,
     title: "Discovery and Handoff",
-    summary: "Uncover the seller's situation, consequences, timeline, and decision process then deliver a clean next-step handoff.",
+    summary: "Uncover the seller's situation, consequences, timeline, and decision process then deliver a clean acquisition handoff.",
     objectives: ["Distinguish qualification from discovery", "Ask consequence and future-state questions", "Confirm decision-makers and expectations", "Complete a concise handoff with all required context"],
     guide: ["Discovery explains why the seller may act", "Ask one question at a time and listen to the full answer", "Do not diagnose or advise outside your role", "A clean handoff lets the next person continue without making the seller repeat everything"],
   },
@@ -988,31 +993,17 @@ async function sourceQuestions(slot, quizSourceRoot) {
 }
 
 const ROLE_AGNOSTIC_COURSE_TEXT_REPLACEMENTS = [
-  [/\bflag any seller who mentions an official notice for your acquisition manager immediately\b/gi, "document any official notice promptly and alert your manager"],
-  [/\bWhat must the seller brief the acquisition manager on during Stage 4\?/gi, "What information must be documented before the Stage 4 handoff?"],
-  [/\bA description of the property condition is required so the acquisition team knows what they are evaluating\b/gi, "A description of the property condition gives the next step the information needed for evaluation"],
-  [/\bConfirming price expectations ensures the acquisition team has realistic parameters for their offer\b/gi, "Confirming price expectations gives the next step realistic parameters for review"],
-  [/\bTrue or False: The acquisition and transaction teams handle Stage 5 \(Offer Review\) and Stage 6 \(Contract\)\./gi, "True or False: The next-step and closing processes handle Stage 5 (Offer Review) and Stage 6 (Contract)."],
-  [/\bStages 5 and 6 are managed by the acquisition and transaction teams, not the sellers\./gi, "Stages 5 and 6 are managed after the handoff, not during seller-facing intake."],
+  [/\bSellers are responsible for Stages 1 through 4\b/gi, "The representative is responsible for Stages 1 through 4"],
+  [/\bStages 5 and 6 are managed by the acquisition and transaction teams, not the sellers\./gi, "Stages 5 and 6 are managed by the acquisition and transaction teams, not the seller-facing representatives."],
+  [/\bWhat must the seller brief the acquisition manager on during Stage 4\?/gi, "What must the representative brief the acquisition manager on during Stage 4?"],
+  [/\bThe seller must communicate the seller's situation, expectations, and emotional triggers \(hot buttons\)\./gi, "The representative briefs the acquisition manager on the seller's situation, expectations, and emotional triggers (hot buttons)."],
   [/\bNavigator role\b/gi, "BMH service standard"],
   [/\bNavigator\b/gi, "representative"],
   [/\bvirtual onboarding specialist\b/gi, "onboarding support"],
+  [/\blead sourcing specialist\b/gi, "representative"],
+  [/\blead sourcing seat\b/gi, "representative role"],
   [/\blead generator\b/gi, "representative"],
-  [/\byour acquisition manager\b/gi, "the next person in the process"],
-  [/\bthe acquisition manager\b/gi, "the next person in the process"],
-  [/\ban acquisition manager\b/gi, "the next person in the process"],
-  [/\bacquisition manager\b/gi, "the next person in the process"],
-  [/\bthe acquisitions? team\b/gi, "the next-step process"],
-  [/\ban acquisitions? team\b/gi, "a next-step process"],
-  [/\bacquisitions? team\b/gi, "next-step process"],
-  [/\bacquisition handoff\b/gi, "next-step handoff"],
-  [/\btransaction coordinator\b/gi, "person coordinating closing logistics"],
-  [/\btransaction teams\b/gi, "closing processes"],
-  [/\bthe transaction team for closing\b/gi, "the closing process"],
-  [/\bthe transaction team\b/gi, "the closing process"],
-  [/\btransaction team\b/gi, "closing process"],
-  [/\bteam lead\b/gi, "manager"],
-  [/\bSDR team\b/g, "current team", false],
+  [/\bSDR team\b/g, "seller-facing team", false],
   [/\ban SDR's\b/gi, "a representative's", false],
   [/\ban SDR\b/gi, "a representative", false],
   [/\bSDR's\b/g, "representative's", false],
@@ -1071,11 +1062,65 @@ function guideHtml(lesson) {
   return `<h2>Learner guide</h2><ul>${lesson.guide.map((point) => `<li>${point}</li>`).join("")}</ul><p>Use the current written SOP and ask your manager when a live process differs from this lesson.</p>`;
 }
 
-export async function buildGuideAsset(lesson) {
+export function validateGuideApprovalLedger(ledger) {
+  const errors = [];
+  if (!isRecord(ledger) || ledger.schema_version !== GUIDE_APPROVAL_LEDGER_SCHEMA) {
+    return [`Guide approval ledger schema_version must be ${GUIDE_APPROVAL_LEDGER_SCHEMA}`];
+  }
+  const acceptance = ledger.acceptance;
+  if (
+    !isRecord(acceptance)
+    || acceptance.decision !== "accepted"
+    || acceptance.accepted_by !== "codex-course-qa-controller"
+    || acceptance.human_approval !== false
+    || !ISO_TIMESTAMP_PATTERN.test(acceptance.accepted_at ?? "")
+    || typeof acceptance.evidence !== "string"
+    || !/deterministic rebuild/i.test(acceptance.evidence)
+    || !/semantic tests/i.test(acceptance.evidence)
+    || !/visual review/i.test(acceptance.evidence)
+    || !/not Jarrad human approval/i.test(acceptance.evidence)
+  ) {
+    errors.push("Guide approval ledger requires explicit course-QA controller acceptance evidence, not Jarrad human approval");
+  }
+  if (!Array.isArray(ledger.records) || ledger.records.length !== LESSONS.length) {
+    errors.push(`Guide approval ledger must contain exactly ${LESSONS.length} records`);
+    return errors;
+  }
+  const expected = new Map(LESSONS.map((lesson) => {
+    const slotKey = String(lesson.slot).padStart(2, "0");
+    return [`guide-slot-${slotKey}`, `output/pdf/slot-${slotKey}-learner-guide.pdf`];
+  }));
+  const seen = new Set();
+  for (const record of ledger.records) {
+    if (!isRecord(record) || typeof record.source_key !== "string") {
+      errors.push("Guide approval ledger record requires source_key");
+      continue;
+    }
+    if (seen.has(record.source_key)) errors.push(`Duplicate guide approval record ${record.source_key}`);
+    seen.add(record.source_key);
+    const expectedPath = expected.get(record.source_key);
+    if (!expectedPath) errors.push(`Unexpected guide approval record ${record.source_key}`);
+    if (record.local_path !== expectedPath) errors.push(`${record.source_key} guide approval path drifted`);
+    if (!SHA256_PATTERN.test(record.checksum_sha256 ?? "")) errors.push(`${record.source_key} guide approval checksum is invalid`);
+    if (!Number.isInteger(record.size_bytes) || record.size_bytes <= 0) errors.push(`${record.source_key} guide approval size is invalid`);
+  }
+  for (const sourceKey of expected.keys()) {
+    if (!seen.has(sourceKey)) errors.push(`Guide approval ledger is missing ${sourceKey}`);
+  }
+  return errors;
+}
+
+export async function buildGuideAsset(lesson, guideApprovalLedger, repoRoot = REPO_ROOT) {
   const slotKey = String(lesson.slot).padStart(2, "0");
   const localPath = `output/pdf/slot-${slotKey}-learner-guide.pdf`;
-  const absolutePath = path.join(REPO_ROOT, localPath);
+  const absolutePath = path.join(repoRoot, localPath);
   const [checksum, fileInfo] = await Promise.all([sha256(absolutePath), stat(absolutePath)]);
+  const approvalRecord = guideApprovalLedger?.records?.find((record) =>
+    record.source_key === `guide-slot-${slotKey}`
+    && record.local_path === localPath
+    && record.checksum_sha256 === checksum
+    && record.size_bytes === fileInfo.size
+  );
   return {
     source_key: `guide-slot-${slotKey}`,
     kind: "pdf",
@@ -1084,7 +1129,7 @@ export async function buildGuideAsset(lesson) {
     mime_type: "application/pdf",
     checksum_sha256: checksum,
     size_bytes: fileInfo.size,
-    approval_status: "approved",
+    approval_status: approvalRecord ? "approved" : "missing",
   };
 }
 
@@ -1093,14 +1138,20 @@ export async function buildManifest({
   videoApprovalLedgerPath = VIDEO_APPROVAL_LEDGER_PATH,
   videoApprovalHistoryRepoRoot = REPO_ROOT,
   captionApprovalLedgerPath = CAPTION_APPROVAL_LEDGER_PATH,
+  guideApprovalLedgerPath = GUIDE_APPROVAL_LEDGER_PATH,
   videoSourceRoot = DEFAULT_VIDEO_SOURCE_ROOT,
   quizSourceRoot = DEFAULT_QUIZ_SOURCE_ROOT,
   inspectDuration = probeVideoDuration,
 } = {}) {
-  const [videoApprovalLedger, captionApprovalLedger] = await Promise.all([
+  const [videoApprovalLedger, captionApprovalLedger, guideApprovalLedger] = await Promise.all([
     readFile(videoApprovalLedgerPath, "utf8").then(JSON.parse),
     readFile(captionApprovalLedgerPath, "utf8").then(JSON.parse),
+    readFile(guideApprovalLedgerPath, "utf8").then(JSON.parse),
   ]);
+  const guideApprovalErrors = validateGuideApprovalLedger(guideApprovalLedger);
+  if (guideApprovalErrors.length > 0) {
+    throw new Error(`Guide approval ledger is invalid: ${guideApprovalErrors.join("; ")}`);
+  }
   const captionApprovalErrors = [
     ...await validateCaptionApprovalEvidence({
       ledger: captionApprovalLedger,
@@ -1203,7 +1254,9 @@ export async function buildManifest({
     artworkLedger ?? { schema_version: ARTWORK_LEDGER_SCHEMA, assets: [] },
   );
   const guideAssets = [];
-  for (const lesson of LESSONS) guideAssets.push(await buildGuideAsset(lesson));
+  for (const lesson of LESSONS) {
+    guideAssets.push(await buildGuideAsset(lesson, guideApprovalLedger));
+  }
   const guidesBySlot = new Map(
     LESSONS.map((lesson, index) => [lesson.slot, guideAssets[index]]),
   );

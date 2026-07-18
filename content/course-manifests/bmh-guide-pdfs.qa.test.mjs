@@ -6,9 +6,47 @@ import { resolve } from "node:path";
 import { promisify } from "node:util";
 import { test } from "node:test";
 
+import {
+  buildGuideAsset,
+  GUIDE_APPROVAL_LEDGER_SCHEMA,
+  validateGuideApprovalLedger,
+} from "../../scripts/course-content/build-manifest.mjs";
+
 const execFileAsync = promisify(execFile);
 const ROOT = resolve(import.meta.dirname, "../..");
 const MANIFEST_PATH = resolve(import.meta.dirname, "bmh-employee-training.v1.json");
+const GUIDE_APPROVAL_LEDGER_PATH = resolve(ROOT, "docs/course-production/guide-approvals.json");
+
+test("course-QA guide acceptance is checksum-bound and fails closed on changed bytes", async () => {
+  const ledger = JSON.parse(await readFile(GUIDE_APPROVAL_LEDGER_PATH, "utf8"));
+  assert.equal(ledger.schema_version, GUIDE_APPROVAL_LEDGER_SCHEMA);
+  assert.equal(ledger.acceptance.accepted_by, "codex-course-qa-controller");
+  assert.equal(ledger.acceptance.human_approval, false);
+  assert.match(ledger.acceptance.evidence, /not Jarrad human approval/i);
+  assert.deepEqual(validateGuideApprovalLedger(ledger), []);
+
+  const accepted = await buildGuideAsset({ slot: 1 }, ledger);
+  assert.equal(accepted.approval_status, "approved");
+
+  const stale = structuredClone(ledger);
+  stale.records.find((record) => record.source_key === "guide-slot-01").checksum_sha256 = "0".repeat(64);
+  assert.deepEqual(validateGuideApprovalLedger(stale), []);
+  const changedBytes = await buildGuideAsset({ slot: 1 }, stale);
+  assert.equal(changedBytes.approval_status, "missing");
+  assert.equal(changedBytes.checksum_sha256, accepted.checksum_sha256);
+
+  for (const field of ["size_bytes", "local_path"]) {
+    const drifted = structuredClone(ledger);
+    const record = drifted.records.find((candidate) => candidate.source_key === "guide-slot-01");
+    record[field] = field === "size_bytes" ? record.size_bytes + 1 : "output/pdf/slot-02-learner-guide.pdf";
+    const driftedAsset = await buildGuideAsset({ slot: 1 }, drifted);
+    assert.equal(driftedAsset.approval_status, "missing");
+  }
+
+  const invalidAcceptance = structuredClone(ledger);
+  invalidAcceptance.acceptance.human_approval = true;
+  assert.match(validateGuideApprovalLedger(invalidAcceptance).join("\n"), /not Jarrad human approval/i);
+});
 
 test("all 19 learner guides are approved, deterministic, and structurally accessible", async () => {
   const manifest = JSON.parse(await readFile(MANIFEST_PATH, "utf8"));

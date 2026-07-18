@@ -729,13 +729,13 @@
                       "source_key": "question-slot-03-16",
                       "question_text": "You can't find a specific SOP. Who do you ask?",
                       "question_type": "single_choice",
-                      "explanation": "The lesson says to ask your manager how to locate specific SOPs.",
+                      "explanation": "The lesson says to ask your team lead how to locate specific SOPs.",
                       "points": 1,
                       "sort_order": 16,
                       "options": [
                         {
                           "source_key": "option-slot-03-16-1",
-                          "option_text": "Your manager",
+                          "option_text": "Your team lead",
                           "is_correct": true,
                           "sort_order": 1
                         },

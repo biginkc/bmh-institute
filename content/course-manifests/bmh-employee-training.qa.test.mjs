@@ -35,19 +35,44 @@ test("the draft contains the locked course structure", async () => {
   });
 });
 
-test("learner-authored course text is role-agnostic without rewriting product or scenario identity", async () => {
+test("learner-authored course text removes stale learner seats without rewriting real pipeline roles", async () => {
   const manifest = await loadManifest(MANIFEST_URL);
-  assert.doesNotMatch(JSON.stringify(manifest.program), STALE_ROLE_BOUND_COURSE_PATTERN);
-  assert.match(JSON.stringify(manifest.program), /Closer Lab/);
-  assert.match(JSON.stringify(manifest.program), /Guarded inbound seller/);
+  const serializedProgram = JSON.stringify(manifest.program);
+  assert.doesNotMatch(serializedProgram, STALE_ROLE_BOUND_COURSE_PATTERN);
+  assert.match(serializedProgram, /Closer Lab/);
+  assert.match(serializedProgram, /Guarded inbound seller/);
+  assert.match(serializedProgram, /acquisition manager/i);
+  assert.match(serializedProgram, /transaction team/i);
 
   assert.equal(
     normalizeRoleAgnosticCourseText("The Navigator briefs the acquisition manager and the transaction coordinator."),
-    "The Representative briefs the next person in the process and the person coordinating closing logistics.",
+    "The Representative briefs the acquisition manager and the transaction coordinator.",
   );
   assert.equal(
     normalizeRoleAgnosticCourseText("How does an SDR's work support Closer Lab?"),
     "How does a representative's work support Closer Lab?",
+  );
+
+  const questions = manifest.program.courses
+    .flatMap((course) => course.modules)
+    .flatMap((module) => module.lessons)
+    .flatMap((lesson) => lesson.quiz?.questions ?? []);
+  const stageFourBrief = questions.find((question) =>
+    question.question_text === "What must the representative brief the acquisition manager on during Stage 4?"
+  );
+  assert.ok(stageFourBrief, "the Stage 4 brief names the representative as the actor");
+  assert.equal(
+    stageFourBrief.explanation,
+    "The representative briefs the acquisition manager on the seller's situation, expectations, and emotional triggers (hot buttons).",
+  );
+
+  const postContractOwner = questions.find((question) =>
+    question.question_text === "Which team manages the deal once the contract has been signed?"
+  );
+  assert.ok(postContractOwner, "the post-contract team question remains in the quiz pool");
+  assert.deepEqual(
+    postContractOwner.options.filter((option) => option.is_correct).map((option) => option.option_text),
+    ["The transaction team"],
   );
 
   const stale = structuredClone(manifest);

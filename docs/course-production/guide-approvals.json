@@ -1,0 +1,126 @@
+{
+  "schema_version": "bmh-guide-approval-ledger/v1",
+  "acceptance": {
+    "decision": "accepted",
+    "accepted_by": "codex-course-qa-controller",
+    "accepted_at": "2026-07-18T03:59:36Z",
+    "human_approval": false,
+    "evidence": "Course-QA controller acceptance after deterministic rebuild, full semantic tests, and visual review of all 38 pages; not Jarrad human approval."
+  },
+  "records": [
+    {
+      "source_key": "guide-slot-01",
+      "local_path": "output/pdf/slot-01-learner-guide.pdf",
+      "checksum_sha256": "afe28d718cf5458ae9ad3b8bada9b970312eb5d039ef1903a9ef530bae6f4b73",
+      "size_bytes": 50769
+    },
+    {
+      "source_key": "guide-slot-02",
+      "local_path": "output/pdf/slot-02-learner-guide.pdf",
+      "checksum_sha256": "1400ca97f6c01550c826326b5ea969a857e583ce9c2acebeba654deba39ae9bb",
+      "size_bytes": 50975
+    },
+    {
+      "source_key": "guide-slot-03",
+      "local_path": "output/pdf/slot-03-learner-guide.pdf",
+      "checksum_sha256": "e084f864dc2a2d7fa443b8969881d9b5e521f47de83aceea1575a7bc9d63ffc0",
+      "size_bytes": 50905
+    },
+    {
+      "source_key": "guide-slot-04",
+      "local_path": "output/pdf/slot-04-learner-guide.pdf",
+      "checksum_sha256": "c5dcee93c1813527654a7c19553b60de573f6bc6f23b0a3e4b5f606f30fa0f69",
+      "size_bytes": 50973
+    },
+    {
+      "source_key": "guide-slot-05",
+      "local_path": "output/pdf/slot-05-learner-guide.pdf",
+      "checksum_sha256": "0b5d752c5c900c04e8052fd50d6fc5f7191ec69f3f0e6880682c86e5b312ac90",
+      "size_bytes": 50780
+    },
+    {
+      "source_key": "guide-slot-06",
+      "local_path": "output/pdf/slot-06-learner-guide.pdf",
+      "checksum_sha256": "4f72846e5ac89395d4df98fa6f82246022b7f91b3ca98d88f1a0accef3ede935",
+      "size_bytes": 50739
+    },
+    {
+      "source_key": "guide-slot-07",
+      "local_path": "output/pdf/slot-07-learner-guide.pdf",
+      "checksum_sha256": "30bb781a1c07a7c8b2354f431a96acc803959801b83d09c69a9624bd947d61f7",
+      "size_bytes": 50799
+    },
+    {
+      "source_key": "guide-slot-08",
+      "local_path": "output/pdf/slot-08-learner-guide.pdf",
+      "checksum_sha256": "a8a3dcc3760dcb68918b74b482f182b7fc9893744dbca09ffc930ff12a577c5f",
+      "size_bytes": 50840
+    },
+    {
+      "source_key": "guide-slot-09",
+      "local_path": "output/pdf/slot-09-learner-guide.pdf",
+      "checksum_sha256": "8a643d823a1bd4e9aac0d63824260c330471a642dbefcb1bed3a6240f454dbcb",
+      "size_bytes": 50783
+    },
+    {
+      "source_key": "guide-slot-10",
+      "local_path": "output/pdf/slot-10-learner-guide.pdf",
+      "checksum_sha256": "c1e380c5f31d8cd825fc8b66de9195146ba79a2319f9d10eb65d33680eb87612",
+      "size_bytes": 51161
+    },
+    {
+      "source_key": "guide-slot-11",
+      "local_path": "output/pdf/slot-11-learner-guide.pdf",
+      "checksum_sha256": "8345650eee0ce8e24df206e883a55475cf4e0b3b7b44b23097da590b86f3c97e",
+      "size_bytes": 50827
+    },
+    {
+      "source_key": "guide-slot-12",
+      "local_path": "output/pdf/slot-12-learner-guide.pdf",
+      "checksum_sha256": "58cac14b8bfb1ea60b13782b2ec32c218f7c60b993855e39e06d6661504500da",
+      "size_bytes": 50748
+    },
+    {
+      "source_key": "guide-slot-13",
+      "local_path": "output/pdf/slot-13-learner-guide.pdf",
+      "checksum_sha256": "254efdbcc9d64008dcc40d6f7b04224f643901e6ce303997f8083ae7fd531fc8",
+      "size_bytes": 50607
+    },
+    {
+      "source_key": "guide-slot-14",
+      "local_path": "output/pdf/slot-14-learner-guide.pdf",
+      "checksum_sha256": "70b15d9e29fee2e45fc61e35b4395d34482354b0ab9b2192e61cc53a0c8673d7",
+      "size_bytes": 50803
+    },
+    {
+      "source_key": "guide-slot-15",
+      "local_path": "output/pdf/slot-15-learner-guide.pdf",
+      "checksum_sha256": "186eae0683deba6c4ed6b0705c313263da60f72ee637258e51cb4ca4f688d554",
+      "size_bytes": 50888
+    },
+    {
+      "source_key": "guide-slot-16",
+      "local_path": "output/pdf/slot-16-learner-guide.pdf",
+      "checksum_sha256": "52fba6bfab15ec9b91cf5814b0ab2a04d03189387f96574056852fb778aeaae6",
+      "size_bytes": 50633
+    },
+    {
+      "source_key": "guide-slot-17",
+      "local_path": "output/pdf/slot-17-learner-guide.pdf",
+      "checksum_sha256": "d609cb8b5f0a0e2b8e814f9c8870e3ce227342b2bb3382d72d33c51b9488c6f5",
+      "size_bytes": 50577
+    },
+    {
+      "source_key": "guide-slot-18",
+      "local_path": "output/pdf/slot-18-learner-guide.pdf",
+      "checksum_sha256": "ac1afbe4f1284639de206ff2c2075e46d6e3b13e3b9b44a77e5bc173236de5ae",
+      "size_bytes": 50806
+    },
+    {
+      "source_key": "guide-slot-19",
+      "local_path": "output/pdf/slot-19-learner-guide.pdf",
+      "checksum_sha256": "5fb287b0a30120071b289446e4d222a75169a34a2a8f239389490dd0d575ba6a",
+      "size_bytes": 50740
+    }
+  ]
+}

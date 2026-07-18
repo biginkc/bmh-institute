@@ -58,9 +58,14 @@ test("a present statusless ledger cannot impersonate an absent optional ledger",
 
 test("the guide builder reproduces every approved guide and download binding", async () => {
   const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
+  const guideApprovalLedger = JSON.parse(
+    await readFile(path.join(repoRoot, "docs/course-production/guide-approvals.json"), "utf8"),
+  );
   const trackedGuides = manifest.assets.filter((asset) => asset.source_key.startsWith("guide-slot-"));
   const rebuiltGuides = [];
-  for (let slot = 1; slot <= 19; slot += 1) rebuiltGuides.push(await buildGuideAsset({ slot }));
+  for (let slot = 1; slot <= 19; slot += 1) {
+    rebuiltGuides.push(await buildGuideAsset({ slot }, guideApprovalLedger));
+  }
   assert.deepEqual(rebuiltGuides, trackedGuides);
 
   const guidesByKey = new Map(rebuiltGuides.map((asset) => [asset.source_key, asset]));

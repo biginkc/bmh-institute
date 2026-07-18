@@ -1014,7 +1014,9 @@ def build_all(*, check: bool) -> None:
                 "storage_path": storage_path,
                 "checksum_sha256": checksum,
                 "size_bytes": len(payload),
-                "approval_status": "approved",
+                # A deterministic rebuild is not approval. The manifest builder
+                # promotes only bytes accepted by the checksum-bound course-QA ledger.
+                "approval_status": "missing",
             })
             guide_block["content"].update({
                 "file_path": storage_path,
