@@ -486,6 +486,19 @@ in the latest reconciliation entry.
 - Terms v10 and KPIs v12 are approved. Neither approval changes the seven held
   replacement-video records or promotes unapproved artwork.
 
+### 2026-07-17 deployed Chrome acceptance
+
+- Deployed Chrome acceptance is recorded in
+  `BROWSER-ACCEPTANCE-2026-07-17.md`. The checksum-bound branch revision passed
+  desktop and exact 390-pixel learner/admin navigation against a dedicated QA
+  Supabase backend with no horizontal overflow or browser-console errors.
+- The temporary QA seed completed and was removed after acceptance. Production
+  SMTP, Sandra, Closer Lab, cron, learner data, and publication state were not
+  used or changed.
+- This clears the deployed responsive/navigation gate. It does not clear the
+  post-import write-path happy path, rollback rehearsal, artwork approval,
+  seven replacement-video approvals, or six production Closer Lab mappings.
+
 ## Hard gates
 
 - Terms v10 and KPIs v12 are approved. Jarrad must still review the seven new
