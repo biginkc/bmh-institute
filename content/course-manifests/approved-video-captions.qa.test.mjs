@@ -6,6 +6,7 @@ import {
   inspectApprovedCaptionAssets,
   loadManifest,
   MAX_CAPTION_CHARACTERS_PER_SECOND,
+  MIN_CAPTION_DURATION_SECONDS,
   parseWebVtt,
 } from "../../scripts/course-content/validate-caption-assets.mjs";
 
@@ -66,6 +67,10 @@ test("approved captions do not split punctuation or disagree with their transcri
       parsed.cues.every((cue) => cue.charactersPerSecond <= MAX_CAPTION_CHARACTERS_PER_SECOND + 0.000001),
       `${video.source_key} exceeds ${MAX_CAPTION_CHARACTERS_PER_SECOND} characters per second`,
     );
+    assert.ok(
+      parsed.cues.every((cue) => cue.durationSeconds >= MIN_CAPTION_DURATION_SECONDS - 0.000001),
+      `${video.source_key} contains a cue shorter than ${MIN_CAPTION_DURATION_SECONDS.toFixed(1)} seconds`,
+    );
     assert.equal(captionProse, transcriptProse, `${video.source_key} caption and transcript disagree`);
   }
 });
@@ -73,6 +78,12 @@ test("approved captions do not split punctuation or disagree with their transcri
 test("caption parsing rejects unreadably fast cues", () => {
   const parsed = parseWebVtt("WEBVTT\n\n00:00:00.000 --> 00:00:01.000\n1234567890123456789012\n");
   assert.ok(parsed.errors.some((error) => error.includes("exceeds 21 characters per second")));
+});
+
+test("caption parsing rejects unreadably short and orphaned one-word cues", () => {
+  const parsed = parseWebVtt("WEBVTT\n\n00:00:00.000 --> 00:00:00.500\nword\n");
+  assert.ok(parsed.errors.some((error) => error.includes("shorter than 0.8 seconds")));
+  assert.ok(parsed.errors.some((error) => error.includes("orphan one-word segment")));
 });
 
 test("approved transcripts do not hard-code learner dial quotas", async () => {

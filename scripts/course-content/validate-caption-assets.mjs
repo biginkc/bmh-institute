@@ -6,7 +6,9 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 const STALE_COMPENSATION_PATTERN = /\$\s*\d|hourly base|ramp(?:-up|ing up) base|performance pay|milestone bonus|commission on (?:every|the) deal|earning potential|earnings can grow|compensation .* tied to .* output|guaranteed pay|fixed pay promise/i;
 const FIXED_DIAL_QUOTA_PATTERN = /\b(?:\d{2,3}(?:\s*(?:to|-|plus|\+))\s*\d{2,3}|\d{2,3}\s*(?:plus|\+))\s+(?:total\s+)?dials?\b|\bdial target\b/i;
 export const MAX_CAPTION_CHARACTERS_PER_SECOND = 21;
+export const MIN_CAPTION_DURATION_SECONDS = 0.8;
 const CAPTION_RATE_EPSILON = 0.000001;
+const CAPTION_DURATION_EPSILON = 0.000001;
 
 function sha256(buffer) {
   return createHash("sha256").update(buffer).digest("hex");
@@ -49,13 +51,22 @@ export function parseWebVtt(raw) {
     if (textLines.length > 2) errors.push(`cue ${index + 1} has more than two lines`);
     if (textLines.some((line) => line.length > 50)) errors.push(`cue ${index + 1} has a line longer than 50 characters`);
     if (start !== null && end !== null) {
-      const charactersPerSecond = text.length / (end - start);
+      const durationSeconds = end - start;
+      const charactersPerSecond = text.length / durationSeconds;
+      if (durationSeconds < MIN_CAPTION_DURATION_SECONDS - CAPTION_DURATION_EPSILON) {
+        errors.push(
+          `cue ${index + 1} is shorter than ${MIN_CAPTION_DURATION_SECONDS.toFixed(1)} seconds (${durationSeconds.toFixed(3)})`,
+        );
+        if (text.trim().split(/\s+/).length === 1) {
+          errors.push(`cue ${index + 1} is an orphan one-word segment`);
+        }
+      }
       if (charactersPerSecond > MAX_CAPTION_CHARACTERS_PER_SECOND + CAPTION_RATE_EPSILON) {
         errors.push(
           `cue ${index + 1} exceeds ${MAX_CAPTION_CHARACTERS_PER_SECOND} characters per second (${charactersPerSecond.toFixed(3)})`,
         );
       }
-      cues.push({ start, end, text, charactersPerSecond });
+      cues.push({ start, end, text, durationSeconds, charactersPerSecond });
     }
   }
 
