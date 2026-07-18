@@ -529,23 +529,19 @@ in the latest reconciliation entry.
   workflow also blocks deployment until the live production schema fingerprint,
   required columns, service RPCs, and anonymous review RPC all pass read-only
   checks.
-- The full import gate currently reports zero semantic errors and 87 publication
-  blockers. Nine of those bind exact already-approved video, caption, and
-  transcript checksums to a separate named-role wording review; the empty
-  exception ledger prevents cut approval from being misread as policy approval.
-  No video, caption, transcript, or existing approval status changed. KPI v12
-  remains exact-cut approved at
+- The full import gate currently reports zero semantic errors and 78 publication
+  blockers. KPI v12 remains exact-cut approved at
   `3d50cc79cfe74277ac1311367d5b0bd6fd62d2d38c2c74fff8732ea62203d61a`.
+  A broader agent-created named-role phrase gate was removed after independent
+  review proved it contradicted the locked course policy: stale learner-seat
+  framing is forbidden, while descriptive acquisition and transaction roles
+  are intentional course content.
 
 ## Hard gates
 
 - Terms v10 and KPIs v12 are approved. Jarrad must still review the seven new
   policy-safe replacement cuts after provider production; source-evidence
   hashes marked `changes_requested` cannot be approved as-is.
-- Nine exact approved cuts still require one explicit named-role policy decision:
-  approve their checksum-bound downstream role references as an exception or
-  move the affected cuts to replacement. This does not revoke exact-cut approval,
-  including KPI v12.
 - The V8 thumbnail direction is approved and the 49-asset batch is produced.
   Jarrad must approve the final checksum-locked contact sheet before artwork is
   promoted into the release manifest.

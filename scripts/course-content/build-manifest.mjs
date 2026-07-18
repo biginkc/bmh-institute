@@ -997,12 +997,19 @@ const ROLE_AGNOSTIC_COURSE_TEXT_REPLACEMENTS = [
   [/\bStages 5 and 6 are managed by the acquisition and transaction teams, not the sellers\./gi, "Stages 5 and 6 are managed by the acquisition and transaction teams, not the seller-facing representatives."],
   [/\bWhat must the seller brief the acquisition manager on during Stage 4\?/gi, "What must the representative brief the acquisition manager on during Stage 4?"],
   [/\bThe seller must communicate the seller's situation, expectations, and emotional triggers \(hot buttons\)\./gi, "The representative briefs the acquisition manager on the seller's situation, expectations, and emotional triggers (hot buttons)."],
+  [/\bNavigator roles\b/gi, "representative roles"],
   [/\bNavigator role\b/gi, "BMH service standard"],
+  [/\bNavigators\b/gi, "representatives"],
   [/\bNavigator\b/gi, "representative"],
+  [/\bvirtual onboarding specialists\b/gi, "onboarding support"],
   [/\bvirtual onboarding specialist\b/gi, "onboarding support"],
+  [/\blead sourcing specialists\b/gi, "representatives"],
   [/\blead sourcing specialist\b/gi, "representative"],
+  [/\blead sourcing seats\b/gi, "representative roles"],
   [/\blead sourcing seat\b/gi, "representative role"],
+  [/\blead generators\b/gi, "representatives"],
   [/\blead generator\b/gi, "representative"],
+  [/\bSDR teams\b/g, "seller-facing teams", false],
   [/\bSDR team\b/g, "seller-facing team", false],
   [/\ban SDR's\b/gi, "a representative's", false],
   [/\ban SDR\b/gi, "a representative", false],
@@ -1107,7 +1114,24 @@ export function validateGuideApprovalLedger(ledger) {
   for (const sourceKey of expected.keys()) {
     if (!seen.has(sourceKey)) errors.push(`Guide approval ledger is missing ${sourceKey}`);
   }
+  const recordsSha256 = guideApprovalRecordsSha256(ledger.records);
+  if (acceptance?.records_sha256 !== recordsSha256) {
+    errors.push("Guide approval acceptance is not bound to the exact ordered record set");
+  }
   return errors;
+}
+
+export function guideApprovalRecordsSha256(records) {
+  if (!Array.isArray(records)) return null;
+  const canonicalRecords = records
+    .map((record) => ({
+      source_key: record?.source_key ?? null,
+      local_path: record?.local_path ?? null,
+      checksum_sha256: record?.checksum_sha256 ?? null,
+      size_bytes: record?.size_bytes ?? null,
+    }))
+    .sort((left, right) => String(left.source_key).localeCompare(String(right.source_key)));
+  return createHash("sha256").update(JSON.stringify(canonicalRecords)).digest("hex");
 }
 
 export async function buildGuideAsset(lesson, guideApprovalLedger, repoRoot = REPO_ROOT) {
@@ -1115,7 +1139,8 @@ export async function buildGuideAsset(lesson, guideApprovalLedger, repoRoot = RE
   const localPath = `output/pdf/slot-${slotKey}-learner-guide.pdf`;
   const absolutePath = path.join(repoRoot, localPath);
   const [checksum, fileInfo] = await Promise.all([sha256(absolutePath), stat(absolutePath)]);
-  const approvalRecord = guideApprovalLedger?.records?.find((record) =>
+  const ledgerIsAccepted = validateGuideApprovalLedger(guideApprovalLedger).length === 0;
+  const approvalRecord = ledgerIsAccepted && guideApprovalLedger.records.find((record) =>
     record.source_key === `guide-slot-${slotKey}`
     && record.local_path === localPath
     && record.checksum_sha256 === checksum

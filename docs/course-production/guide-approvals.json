@@ -5,6 +5,7 @@
     "accepted_by": "codex-course-qa-controller",
     "accepted_at": "2026-07-18T03:59:36Z",
     "human_approval": false,
+    "records_sha256": "e974037d1755ca7818bbd810db60b1c00291f831912118037e78c986a0cd2ca0",
     "evidence": "Course-QA controller acceptance after deterministic rebuild, full semantic tests, and visual review of all 38 pages; not Jarrad human approval."
   },
   "records": [

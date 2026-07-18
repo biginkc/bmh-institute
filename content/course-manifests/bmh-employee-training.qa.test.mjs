@@ -52,6 +52,10 @@ test("learner-authored course text removes stale learner seats without rewriting
     normalizeRoleAgnosticCourseText("How does an SDR's work support Closer Lab?"),
     "How does a representative's work support Closer Lab?",
   );
+  assert.equal(
+    normalizeRoleAgnosticCourseText("Navigators, virtual onboarding specialists, lead sourcing specialists, lead generators, and SDRs follow the current SOP."),
+    "Representatives, onboarding support, representatives, representatives, and representatives follow the current SOP.",
+  );
 
   const questions = manifest.program.courses
     .flatMap((course) => course.modules)
@@ -81,6 +85,23 @@ test("learner-authored course text removes stale learner seats without rewriting
   assert.ok(validateManifest(stale).errors.some((error) =>
     error.includes("Stale named-role wording detected") && error.includes("Navigator"),
   ));
+
+  for (const stalePlural of [
+    "Navigators",
+    "virtual onboarding specialists",
+    "lead sourcing specialists",
+    "lead sourcing seats",
+    "lead generators",
+    "SDRs",
+  ]) {
+    const pluralManifest = structuredClone(manifest);
+    pluralManifest.program.courses[0].modules[0].lessons[0].blocks[0].content.html +=
+      `<p>${stalePlural} own this step.</p>`;
+    assert.ok(
+      validateManifest(pluralManifest).errors.some((error) => error.includes("Stale named-role wording detected")),
+      `${stalePlural} must remain publication-invalid`,
+    );
+  }
 });
 
 test("every video has its own release-gated poster asset", async () => {

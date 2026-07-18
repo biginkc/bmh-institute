@@ -1,14 +1,16 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { execFile } from "node:child_process";
-import { readFile, stat } from "node:fs/promises";
-import { resolve } from "node:path";
+import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
 import { promisify } from "node:util";
 import { test } from "node:test";
 
 import {
   buildGuideAsset,
   GUIDE_APPROVAL_LEDGER_SCHEMA,
+  guideApprovalRecordsSha256,
   validateGuideApprovalLedger,
 } from "../../scripts/course-content/build-manifest.mjs";
 
@@ -22,6 +24,7 @@ test("course-QA guide acceptance is checksum-bound and fails closed on changed b
   assert.equal(ledger.schema_version, GUIDE_APPROVAL_LEDGER_SCHEMA);
   assert.equal(ledger.acceptance.accepted_by, "codex-course-qa-controller");
   assert.equal(ledger.acceptance.human_approval, false);
+  assert.equal(ledger.acceptance.records_sha256, guideApprovalRecordsSha256(ledger.records));
   assert.match(ledger.acceptance.evidence, /not Jarrad human approval/i);
   assert.deepEqual(validateGuideApprovalLedger(ledger), []);
 
@@ -30,7 +33,7 @@ test("course-QA guide acceptance is checksum-bound and fails closed on changed b
 
   const stale = structuredClone(ledger);
   stale.records.find((record) => record.source_key === "guide-slot-01").checksum_sha256 = "0".repeat(64);
-  assert.deepEqual(validateGuideApprovalLedger(stale), []);
+  assert.match(validateGuideApprovalLedger(stale).join("\n"), /not bound to the exact ordered record set/i);
   const changedBytes = await buildGuideAsset({ slot: 1 }, stale);
   assert.equal(changedBytes.approval_status, "missing");
   assert.equal(changedBytes.checksum_sha256, accepted.checksum_sha256);
@@ -46,6 +49,31 @@ test("course-QA guide acceptance is checksum-bound and fails closed on changed b
   const invalidAcceptance = structuredClone(ledger);
   invalidAcceptance.acceptance.human_approval = true;
   assert.match(validateGuideApprovalLedger(invalidAcceptance).join("\n"), /not Jarrad human approval/i);
+});
+
+test("changed guide bytes and a matching record cannot inherit the prior acceptance", async (t) => {
+  const ledger = JSON.parse(await readFile(GUIDE_APPROVAL_LEDGER_PATH, "utf8"));
+  const root = await mkdtemp(join(tmpdir(), "bmh-guide-reapproval-"));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const guideDirectory = resolve(root, "output/pdf");
+  await mkdir(guideDirectory, { recursive: true });
+
+  const changedBytes = Buffer.concat([
+    await readFile(resolve(ROOT, "output/pdf/slot-01-learner-guide.pdf")),
+    Buffer.from("\nchanged after acceptance\n"),
+  ]);
+  await writeFile(resolve(guideDirectory, "slot-01-learner-guide.pdf"), changedBytes);
+
+  const rebound = structuredClone(ledger);
+  const record = rebound.records.find((candidate) => candidate.source_key === "guide-slot-01");
+  record.checksum_sha256 = createHash("sha256").update(changedBytes).digest("hex");
+  record.size_bytes = changedBytes.length;
+
+  assert.match(validateGuideApprovalLedger(rebound).join("\n"), /not bound to the exact ordered record set/i);
+  const asset = await buildGuideAsset({ slot: 1 }, rebound, root);
+  assert.equal(asset.checksum_sha256, record.checksum_sha256);
+  assert.equal(asset.size_bytes, record.size_bytes);
+  assert.equal(asset.approval_status, "missing");
 });
 
 test("all 19 learner guides are approved, deterministic, and structurally accessible", async () => {
