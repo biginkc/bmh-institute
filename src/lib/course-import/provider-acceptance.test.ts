@@ -36,6 +36,22 @@ describe("course import provider acceptance preflight", () => {
     })).toThrow(/canonical non-production Postgres connection/);
   });
 
+  it.each([
+    "postgresql://readonly.jvaabkchkihkjllehmft:test@aws-1-us-west-1.pooler.supabase.com:5432/postgres",
+    "postgresql://postgres.jvaabkchkihkjllehmft@aws-1-us-west-1.pooler.supabase.com:5432/postgres",
+    "postgresql://postgres.jvaabkchkihkjllehmft:test@aws-1-us-west-1.pooler.supabase.com:6543/postgres",
+    "postgresql://postgres.jvaabkchkihkjllehmft:test@aws-1-us-west-1.pooler.supabase.com:5432/template1",
+    "postgresql://postgres.jvaabkchkihkjllehmft:test@aws-1-us-west-1.pooler.supabase.com:5432/postgres?sslmode=require",
+    "postgresql://postgres.jvaabkchkihkjllehmft:test@aws-1-us-west-1.pooler.supabase.com:5432/postgres#unexpected",
+  ])("rejects a noncanonical TEST database URL field: %s", (databaseUrl) => {
+    expect(() => assertCourseImportProviderAcceptanceEnvironment({
+      TEST_SUPABASE_URL: COURSE_IMPORT_TEST_URL,
+      TEST_SUPABASE_ANON_KEY: "test-anon",
+      TEST_SUPABASE_SERVICE_ROLE_KEY: "test-service",
+      TEST_SUPABASE_DB_URL: databaseUrl,
+    })).toThrow(/canonical non-production Postgres connection/);
+  });
+
   it("requires nonzero executed tests from every provider suite", () => {
     expect(assertCourseImportProviderAcceptanceResult({
       numTotalTests: 14,

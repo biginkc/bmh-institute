@@ -69,8 +69,13 @@ export function assertCourseImportProviderAcceptanceEnvironment(
   }
   if (
     !["postgres:", "postgresql:"].includes(databaseUrl.protocol) ||
-    !databaseUrl.username.endsWith(".jvaabkchkihkjllehmft") ||
-    databaseUrl.hostname !== "aws-1-us-west-1.pooler.supabase.com"
+    databaseUrl.username !== "postgres.jvaabkchkihkjllehmft" ||
+    databaseUrl.password.length === 0 ||
+    databaseUrl.hostname !== "aws-1-us-west-1.pooler.supabase.com" ||
+    databaseUrl.port !== "5432" ||
+    databaseUrl.pathname !== "/postgres" ||
+    databaseUrl.search !== "" ||
+    databaseUrl.hash !== ""
   ) {
     throw new Error(
       "Course import provider acceptance requires the canonical non-production Postgres connection.",
