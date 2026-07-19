@@ -69,11 +69,11 @@ try {
   assertVersions(numberedVersions(1, 14), "repaired history");
   writeHistory("history-after-repair.txt");
 
-  for (const migration of numberedMigrations(15, 39)) {
+  for (const migration of numberedMigrations(15, 47)) {
     psqlFile(resolve(root, "supabase/migrations", migration));
     recordMigration(migration);
   }
-  assertVersions(numberedVersions(1, 39), "final history");
+  assertVersions(numberedVersions(1, 47), "final history");
   writeHistory("history-final.txt");
   dumpSchema("schema-full.sql", []);
   dumpSchema("schema-app.sql", ["public", "private", "supabase_migrations"]);
@@ -86,7 +86,7 @@ try {
     }).trim(),
     evidenceDirectory,
     outputDirectory,
-    history: "001-039",
+    history: "001-047",
     artifacts: [
       "legacy-equivalence-report.json",
       "history-before-repair.txt",
