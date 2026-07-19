@@ -1,0 +1,82 @@
+[
+  {
+    "legacy_version": "20260423204031",
+    "legacy_name": "initial_schema",
+    "legacy_file": "20260423204031_initial_schema.sql",
+    "numbered_version": "001",
+    "numbered_name": "initial_schema",
+    "numbered_file": "001_initial_schema.sql"
+  },
+  {
+    "legacy_version": "20260423204130",
+    "legacy_name": "functions_and_triggers",
+    "legacy_file": "20260423204130_functions_and_triggers.sql",
+    "numbered_version": "002",
+    "numbered_name": "functions_and_triggers",
+    "numbered_file": "002_functions_and_triggers.sql"
+  },
+  {
+    "legacy_version": "20260423204205",
+    "legacy_name": "rls_policies",
+    "legacy_file": "20260423204205_rls_policies.sql",
+    "numbered_version": "003",
+    "numbered_name": "rls_policies",
+    "numbered_file": "003_rls_policies.sql"
+  },
+  {
+    "legacy_version": "20260423204222",
+    "legacy_name": "indexes",
+    "legacy_file": "20260423204222_indexes.sql",
+    "numbered_version": "004",
+    "numbered_name": "indexes",
+    "numbered_file": "004_indexes.sql"
+  },
+  {
+    "legacy_version": "20260423204234",
+    "legacy_name": "seed_dev",
+    "legacy_file": "20260423204234_seed_dev.sql",
+    "numbered_version": "005",
+    "numbered_name": "seed_dev",
+    "numbered_file": "005_seed_dev.sql"
+  },
+  {
+    "legacy_version": "20260423224651",
+    "legacy_name": "storage_content_bucket",
+    "legacy_file": "20260423224651_storage_content_bucket.sql",
+    "numbered_version": "006",
+    "numbered_name": "storage_content_bucket",
+    "numbered_file": "006_storage_content_bucket.sql"
+  },
+  {
+    "legacy_version": "20260423231622",
+    "legacy_name": "storage_submissions_bucket",
+    "legacy_file": "20260423231622_storage_submissions_bucket.sql",
+    "numbered_version": "007",
+    "numbered_name": "storage_submissions_bucket",
+    "numbered_file": "007_storage_submissions_bucket.sql"
+  },
+  {
+    "legacy_version": "20260501012728",
+    "legacy_name": "answer_options_public_view",
+    "legacy_file": "20260501012728_answer_options_public_view.sql",
+    "numbered_version": "008",
+    "numbered_name": "answer_options_public_view",
+    "numbered_file": "008_answer_options_public_view.sql"
+  },
+  {
+    "legacy_version": "20260501020518",
+    "legacy_name": "answer_options_public_row_filter",
+    "legacy_file": "20260501020518_answer_options_public_row_filter.sql",
+    "numbered_version": "009",
+    "numbered_name": "answer_options_public_row_filter",
+    "numbered_file": "009_answer_options_public_row_filter.sql"
+  },
+  {
+    "legacy_version": "20260501020537",
+    "legacy_name": "prevent_last_owner_deletion",
+    "legacy_file": "20260501020537_prevent_last_owner_deletion.sql",
+    "numbered_version": "010",
+    "numbered_name": "prevent_last_owner_deletion",
+    "numbered_file": "010_prevent_last_owner_deletion.sql"
+  }
+]
