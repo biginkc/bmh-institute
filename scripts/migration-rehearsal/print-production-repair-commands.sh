@@ -14,7 +14,7 @@ supabase migration list --linked
 supabase db push --linked --include-all --dry-run
 
 # STOP. The list must show exactly 001-014 on both sides. The dry run must list
-# exactly 015-045 in order. The historical run-002 rehearsal proves 015-039.
+# exactly 015-047 in order. The historical run-002 rehearsal proves 015-039.
 # Canonical TEST verification proves 040-045. Capture both outputs and both
 # evidence sets before the real push.
 supabase db push --linked --include-all --yes
