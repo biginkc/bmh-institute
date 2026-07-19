@@ -180,6 +180,10 @@ export default async function AdminReportsPage() {
     lessonIds: lessonCourseRows.map((lesson) => lesson.id),
   });
   if (!completionResult.ok) {
+    console.error(
+      "Admin reports completion RPC failed closed.",
+      completionResult.error,
+    );
     return (
       <main className="w-full flex-1 p-6 md:p-10">
         <AdminPageHeader

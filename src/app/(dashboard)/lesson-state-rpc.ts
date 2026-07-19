@@ -20,7 +20,7 @@ type LessonStateResult =
 
 type AdminCompletionResult =
   | { ok: true; completions: VerifiedLessonCompletion[] }
-  | { ok: false };
+  | { ok: false; error?: unknown };
 
 const MAX_IDS_PER_AXIS = 500;
 // Hosted Supabase projects return at most 1,000 rows from the Data API by
@@ -102,7 +102,8 @@ export async function loadAdminLessonCompletions(
           p_lesson_ids: lessonBatch,
         },
       );
-      if (error || !Array.isArray(data)) return { ok: false };
+      if (error) return { ok: false, error };
+      if (!Array.isArray(data)) return { ok: false };
 
       const requestedUsers = new Set(userBatch);
       const requestedLessons = new Set(lessonBatch);

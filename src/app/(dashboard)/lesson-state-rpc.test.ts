@@ -88,9 +88,13 @@ describe("lesson state batch RPC readers", () => {
   });
 
   it("fails closed when the admin completion RPC returns an error", async () => {
+    const underlyingError = {
+      code: "PGRST202",
+      message: "Could not find fn_admin_lesson_completion_states",
+    };
     const rpc = vi.fn(async () => ({
       data: null,
-      error: { message: "database unavailable" },
+      error: underlyingError,
     }));
 
     await expect(
@@ -98,7 +102,7 @@ describe("lesson state batch RPC readers", () => {
         userIds: ["learner-1"],
         lessonIds: ["lesson-1"],
       }),
-    ).resolves.toEqual({ ok: false });
+    ).resolves.toEqual({ ok: false, error: underlyingError });
   });
 
   it("chunks large admin reports below the hosted Data API row limit", async () => {
