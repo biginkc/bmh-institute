@@ -1,9 +1,11 @@
 import { render, screen } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import userEvent from "@testing-library/user-event";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   useActionState: vi.fn(),
   useSearchParams: vi.fn(),
+  createClient: vi.fn(),
 }));
 
 vi.mock("react", async (importOriginal) => {
@@ -16,7 +18,7 @@ vi.mock("next/navigation", () => ({
 }));
 
 vi.mock("@/lib/supabase/client", () => ({
-  createClient: vi.fn(),
+  createClient: mocks.createClient,
 }));
 
 import LoginPage from "./page";
@@ -26,6 +28,10 @@ describe("LoginPage", () => {
     mocks.useActionState.mockReturnValue([null, vi.fn(), false]);
     mocks.useSearchParams.mockReturnValue(new URLSearchParams());
     window.history.replaceState(null, "", "/login");
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
   it("renders the split brand panel and accessible sign-in form", () => {
@@ -79,5 +85,62 @@ describe("LoginPage", () => {
     ).toBeVisible();
     expect(screen.getByText(/access is currently suspended/i)).toBeVisible();
     expect(screen.queryByLabelText("Work email")).not.toBeInTheDocument();
+  });
+
+  it("hides the BMH ID button while the rollout flag is unset", () => {
+    render(<LoginPage />);
+
+    expect(
+      screen.queryByRole("button", { name: "Continue with BMH ID" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("starts the custom:bmh OAuth flow when the flag is on", async () => {
+    vi.stubEnv("NEXT_PUBLIC_BMH_ID_SSO", "1");
+    mocks.useSearchParams.mockReturnValue(
+      new URLSearchParams({ next: "/lessons/abc" }),
+    );
+    const signInWithOAuth = vi.fn().mockResolvedValue({ error: null });
+    mocks.createClient.mockReturnValue({ auth: { signInWithOAuth } });
+
+    render(<LoginPage />);
+
+    // Password form stays fully intact alongside the SSO button.
+    expect(screen.getByLabelText("Work email")).toBeVisible();
+    expect(screen.getByLabelText("Password")).toBeVisible();
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "Continue with BMH ID" }),
+    );
+
+    expect(signInWithOAuth).toHaveBeenCalledWith({
+      provider: "custom:bmh",
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(
+          "/lessons/abc",
+        )}`,
+      },
+    });
+  });
+
+  it("surfaces an error when the BMH ID flow fails to start", async () => {
+    vi.stubEnv("NEXT_PUBLIC_BMH_ID_SSO", "1");
+    const signInWithOAuth = vi
+      .fn()
+      .mockResolvedValue({ error: { message: "provider not enabled" } });
+    mocks.createClient.mockReturnValue({ auth: { signInWithOAuth } });
+
+    render(<LoginPage />);
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "Continue with BMH ID" }),
+    );
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "BMH ID sign-in couldn't start. Try again or use your password.",
+    );
+    expect(
+      screen.getByRole("button", { name: "Continue with BMH ID" }),
+    ).toBeEnabled();
   });
 });

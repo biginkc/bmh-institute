@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useActionState, useEffect, useState } from "react";
-import { ArrowRight, LockKeyhole, Mail } from "lucide-react";
+import { ArrowRight, KeyRound, LockKeyhole, Mail } from "lucide-react";
+import type { Provider } from "@supabase/supabase-js";
 
 import { Button, Card, Input, Mascot } from "@/components/bmh-ds";
 import { createClient } from "@/lib/supabase/client";
@@ -13,6 +14,19 @@ import { signIn } from "./actions";
 
 const SUSPENDED_ERROR =
   "Your account has been suspended. Contact your administrator.";
+
+const SSO_ERROR =
+  "BMH ID sign-in couldn't start. Try again or use your password.";
+
+/**
+ * BMH ID single sign-on rollout flag. The button only renders when
+ * NEXT_PUBLIC_BMH_ID_SSO=1 (set in Vercel at flip time), so merging this
+ * code is decoupled from enabling the dashboard's custom:bmh OIDC provider.
+ * Read at render time so tests can stub the env.
+ */
+function bmhIdSsoEnabled() {
+  return process.env.NEXT_PUBLIC_BMH_ID_SSO === "1";
+}
 
 /**
  * Next 16 requires `useSearchParams` to live inside a Suspense boundary so
@@ -31,11 +45,35 @@ function LoginForm() {
   const [hashAuthState, setHashAuthState] = useState<
     "idle" | "processing" | "failed"
   >("idle");
+  const [ssoPending, setSsoPending] = useState(false);
+  const [ssoError, setSsoError] = useState<string | null>(null);
   const actionError = state && !state.ok ? state.error : null;
   const searchParams = useSearchParams();
   const next = searchParams.get("next") ?? "";
   const urlError = searchParams.get("error");
   const inviteToken = searchParams.get("invite_token");
+
+  async function signInWithBmhId() {
+    setSsoPending(true);
+    setSsoError(null);
+
+    const redirectTo = new URL("/auth/callback", window.location.origin);
+    if (next) redirectTo.searchParams.set("next", next);
+
+    const supabase = createClient();
+    const { error } = await supabase.auth.signInWithOAuth({
+      // Custom OIDC providers use the custom: prefix, which predates the
+      // supabase-js Provider type union — hence the narrow cast.
+      provider: "custom:bmh" as Provider,
+      options: { redirectTo: redirectTo.toString() },
+    });
+
+    // On success the browser client navigates away; only errors land here.
+    if (error) {
+      setSsoError(SSO_ERROR);
+      setSsoPending(false);
+    }
+  }
 
   useEffect(() => {
     if (hashAuthState !== "idle") return;
@@ -104,6 +142,7 @@ function LoginForm() {
 
   const errorMessage =
     actionError ??
+    ssoError ??
     (hashAuthState === "failed"
       ? "Invite link couldn't be verified. Ask an admin to resend it."
       : urlError === "invite_failed"
@@ -142,6 +181,29 @@ function LoginForm() {
       <h2 className="font-[family-name:var(--font-display)] text-[30px] leading-tight font-bold text-[var(--ink-900)]">
         Sign in
       </h2>
+      {bmhIdSsoEnabled() ? (
+        <div className="flex flex-col gap-[18px]">
+          <Button
+            type="button"
+            variant="secondary"
+            size="lg"
+            block
+            disabled={ssoPending}
+            iconLeft={<KeyRound aria-hidden size={20} />}
+            onClick={() => void signInWithBmhId()}
+          >
+            {ssoPending ? "Redirecting..." : "Continue with BMH ID"}
+          </Button>
+          <div
+            aria-hidden
+            className="flex items-center gap-3 font-[family-name:var(--font-body)] text-sm font-bold text-[var(--text-muted)]"
+          >
+            <span className="h-[2px] flex-1 rounded-full bg-[var(--ink-100)]" />
+            or
+            <span className="h-[2px] flex-1 rounded-full bg-[var(--ink-100)]" />
+          </div>
+        </div>
+      ) : null}
       <form action={formAction} className="flex flex-col gap-[18px]">
         <input type="hidden" name="next" value={next} />
         <Input
