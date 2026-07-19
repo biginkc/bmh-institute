@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { Badge, Card, Coach } from "@/components/bmh-ds";
 import { parseAssignmentRubric } from "@/lib/assignments/rubric";
+import { requireAdmin } from "@/lib/auth/guard";
 import { createClient } from "@/lib/supabase/server";
 
 import { AdminPageHeader } from "../_components/admin-shell";
@@ -12,6 +13,7 @@ export default async function AdminSubmissionsPage({
 }: {
   searchParams: Promise<{ status?: string }>;
 }) {
+  await requireAdmin();
   const sp = await searchParams;
   const filterStatus = sp.status ?? "submitted";
 

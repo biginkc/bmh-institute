@@ -11,6 +11,7 @@ let reviewRubric: unknown = [
 ];
 let requiresReview = true;
 let reviewSelectSql = "";
+let reviewLookupError: { message: string } | null = null;
 let updateMatched = true;
 let currentReviewStatus = "submitted";
 let currentReviewerNotes: string | null = null;
@@ -99,7 +100,7 @@ vi.mock("@/lib/supabase/server", () => ({
           return {
             eq: () => ({
               maybeSingle: async () => ({
-                data: {
+                data: reviewLookupError ? null : {
                   id: "submission-1",
                   status: currentReviewStatus,
                   reviewer_notes: currentReviewerNotes,
@@ -117,7 +118,7 @@ vi.mock("@/lib/supabase/server", () => ({
                   },
                   lessons: { title: "Lesson one" },
                 },
-                error: null,
+                error: reviewLookupError,
               }),
             }),
           };
@@ -146,6 +147,7 @@ describe("admin submission review actions (TEST-01)", () => {
     ];
     requiresReview = true;
     reviewSelectSql = "";
+    reviewLookupError = null;
     updateMatched = true;
     currentReviewStatus = "submitted";
     currentReviewerNotes = null;
@@ -207,6 +209,16 @@ describe("admin submission review actions (TEST-01)", () => {
     expect(sendEmailSpy).not.toHaveBeenCalled();
   });
 
+  it("denies approval when catalog-aware RLS hides a private imported submission", async () => {
+    reviewLookupError = { message: "permission denied" };
+
+    await expect(approveSubmission({ submissionId: "private-submission" })).resolves.toEqual({
+      ok: false,
+      error: "Submission not found.",
+    });
+    expect(updatePatch).toBeNull();
+  });
+
   it("refuses a reviewed assignment when the stored rubric is empty", async () => {
     reviewRubric = [];
 
@@ -260,6 +272,16 @@ describe("admin submission review actions (TEST-01)", () => {
       "profiles!assignment_submissions_user_id_fkey",
     );
     expect(sendEmailSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it("denies revision when catalog-aware RLS hides a private imported submission", async () => {
+    reviewLookupError = { message: "permission denied" };
+
+    await expect(requestRevision({
+      submissionId: "private-submission",
+      note: "Please revise.",
+    })).resolves.toEqual({ ok: false, error: "Submission not found." });
+    expect(updatePatch).toBeNull();
   });
 
   it("returns revision success after commit when learner email fails", async () => {
@@ -356,6 +378,14 @@ describe("admin submission review actions (TEST-01)", () => {
       ok: true,
       url: "https://signed.example/learner-1/file.pdf",
     });
+  });
+
+  it("does not sign a private imported submission file hidden by storage RLS", async () => {
+    signedUrlError = { message: "Object not found" };
+
+    await expect(
+      createSubmissionDownloadUrl("private-reviewer/private-evidence.pdf"),
+    ).resolves.toEqual({ ok: false, error: "Object not found" });
   });
 });
 

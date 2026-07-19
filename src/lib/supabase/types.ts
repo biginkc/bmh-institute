@@ -1402,6 +1402,14 @@ export type Database = {
       }
     }
     Functions: {
+      fn_create_answer_option_for_reviewer_v1: {
+        Args: {
+          p_lesson_id: string
+          p_option_text: string
+          p_question_id: string
+        }
+        Returns: boolean
+      }
       fn_check_and_consume_rate_limit: {
         Args: {
           p_key_type: Database["public"]["Enums"]["auth_rate_limit_key_type"]
@@ -1453,6 +1461,16 @@ export type Database = {
       }
       fn_lesson_is_unlocked: {
         Args: { p_lesson_id: string; p_user_id: string }
+        Returns: boolean
+      }
+      fn_update_answer_option_for_reviewer_v1: {
+        Args: {
+          p_exclusive_peer_option_ids?: string[]
+          p_is_correct: boolean
+          p_lesson_id: string
+          p_option_id: string
+          p_option_text: string
+        }
         Returns: boolean
       }
       fn_lesson_states: {

@@ -9,6 +9,10 @@ let rubric: unknown = [
 ];
 let requiresReview = true;
 
+vi.mock("@/lib/auth/guard", () => ({
+  requireAdmin: vi.fn(async () => undefined),
+}));
+
 vi.mock("@/lib/supabase/server", () => ({
   createClient: vi.fn(async () => ({
     from: () => {

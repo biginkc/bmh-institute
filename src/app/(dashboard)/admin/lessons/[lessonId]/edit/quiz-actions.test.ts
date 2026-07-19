@@ -1,11 +1,15 @@
-// HARDEN-04 follow-up: answer_options.is_correct is not selectable by normal
-// authenticated sessions, so admin answer option authoring must use the
-// service-role client after requireAdmin.
+// Answer option create and update use authenticated atomic RPCs. The database
+// proves lesson ownership and the private import reviewer boundary.
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const calls: string[] = [];
 const learnerFromCalls: string[] = [];
 const adminFromCalls: string[] = [];
+const authenticatedRpcCalls: Array<{
+  name: string;
+  args: Record<string, unknown>;
+}> = [];
+let authenticatedRpcError: { message: string } | null = null;
 let adminFactoryThrows: Error | null = null;
 let createdQuestionId = "question-1";
 let lastOptionSortOrder: number | null = 4;
@@ -27,6 +31,10 @@ vi.mock("@/lib/auth/guard", () => ({
 
 vi.mock("@/lib/supabase/server", () => ({
   createClient: vi.fn(async () => ({
+    rpc: async (name: string, args: Record<string, unknown>) => {
+      authenticatedRpcCalls.push({ name, args });
+      return { data: authenticatedRpcError ? null : true, error: authenticatedRpcError };
+    },
     from: (table: string) => {
       learnerFromCalls.push(table);
       if (table !== "questions") {
@@ -141,13 +149,15 @@ describe("admin quiz answer option actions", () => {
     courseContentImportId = null;
     insertedAnswerOptions = [];
     updateCalls = [];
+    authenticatedRpcCalls.length = 0;
+    authenticatedRpcError = null;
   });
 
   afterEach(() => {
     vi.clearAllMocks();
   });
 
-  it("creates answer options through the admin client", async () => {
+  it("creates answer options through one authenticated atomic RPC", async () => {
     const result = await createAnswerOption({
       questionId: "question-1",
       lessonId: "lesson-1",
@@ -155,14 +165,16 @@ describe("admin quiz answer option actions", () => {
     });
 
     expect(result).toEqual({ ok: true });
-    expect(adminFromCalls).toContain("answer_options");
+    expect(adminFromCalls).toEqual([]);
     expect(learnerFromCalls).not.toContain("answer_options");
-    expect(insertedAnswerOptions[0]).toMatchObject({
-      question_id: "question-1",
-      option_text: "New option",
-      is_correct: false,
-      sort_order: 5,
-    });
+    expect(authenticatedRpcCalls).toEqual([{
+      name: "fn_create_answer_option_for_reviewer_v1",
+      args: {
+        p_lesson_id: "lesson-1",
+        p_question_id: "question-1",
+        p_option_text: "New option",
+      },
+    }]);
   });
 
   it("seeds true false answer options through the admin client", async () => {
@@ -192,7 +204,7 @@ describe("admin quiz answer option actions", () => {
     );
   });
 
-  it("updates answer correctness through the admin client", async () => {
+  it("updates answer correctness through one authenticated atomic RPC", async () => {
     const result = await updateAnswerOption({
       optionId: "option-1",
       lessonId: "lesson-1",
@@ -202,20 +214,40 @@ describe("admin quiz answer option actions", () => {
     });
 
     expect(result).toEqual({ ok: true });
-    expect(adminFromCalls).toEqual(["answer_options", "answer_options"]);
+    expect(adminFromCalls).toEqual([]);
     expect(learnerFromCalls).not.toContain("answer_options");
-    expect(updateCalls).toEqual([
+    expect(updateCalls).toEqual([]);
+    expect(authenticatedRpcCalls).toEqual([
       {
-        patch: { is_correct: false },
-        method: "in",
-        value: ["option-2"],
-      },
-      {
-        patch: { option_text: "Correct option", is_correct: true },
-        method: "eq",
-        value: "option-1",
+        name: "fn_update_answer_option_for_reviewer_v1",
+        args: {
+          p_lesson_id: "lesson-1",
+          p_option_id: "option-1",
+          p_option_text: "Correct option",
+          p_is_correct: true,
+          p_exclusive_peer_option_ids: ["option-2"],
+        },
       },
     ]);
+  });
+
+  it("surfaces a denied private-import answer option update", async () => {
+    authenticatedRpcError = {
+      message: "Admin reviewer access required for this imported answer option.",
+    };
+
+    const result = await updateAnswerOption({
+      optionId: "private-option",
+      lessonId: "private-lesson",
+      text: "Attempted edit",
+      is_correct: false,
+    });
+
+    expect(result).toEqual({
+      ok: false,
+      error: "Admin reviewer access required for this imported answer option.",
+    });
+    expect(adminFromCalls).toEqual([]);
   });
 
   it("deletes answer options through the admin client", async () => {
@@ -253,8 +285,10 @@ describe("admin quiz answer option actions", () => {
     expect(calls).not.toContain("delete:option-1");
   });
 
-  it("returns an action error when the service-role client is unavailable", async () => {
-    adminFactoryThrows = new Error("service role missing");
+  it("surfaces a denied private-import answer option create", async () => {
+    authenticatedRpcError = {
+      message: "Admin reviewer access required for this imported question.",
+    };
 
     const result = await createAnswerOption({
       questionId: "question-1",
@@ -262,7 +296,11 @@ describe("admin quiz answer option actions", () => {
       text: "New option",
     });
 
-    expect(result).toEqual({ ok: false, error: "service role missing" });
+    expect(result).toEqual({
+      ok: false,
+      error: "Admin reviewer access required for this imported question.",
+    });
+    expect(adminFromCalls).toEqual([]);
     expect(learnerFromCalls).not.toContain("answer_options");
   });
 });
