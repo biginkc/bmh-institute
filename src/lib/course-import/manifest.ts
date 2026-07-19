@@ -32,6 +32,13 @@ export type CourseImportAsset = {
   checksum_sha256: string | null;
   size_bytes: number | null;
   approval_status: ApprovalStatus;
+  delivery_provenance?: {
+    schema_version: "bmh-video-delivery-derivative/v1";
+    approved_source_sha256: string;
+    approved_source_size_bytes: number;
+    transcode_contract_sha256: string;
+    qc_evidence_sha256: string;
+  };
 };
 
 export type ImportBlock = {
@@ -262,6 +269,35 @@ export function validateCourseManifest(
     }
     if (!["approved", "hold", "missing"].includes(asset.approval_status)) {
       errors.push(`${path}.approval_status is invalid.`);
+    }
+    if (asset.delivery_provenance !== undefined) {
+      const provenance = asset.delivery_provenance;
+      if (asset.kind !== "video" || asset.approval_status !== "approved") {
+        errors.push(`${path}.delivery_provenance is only valid for an approved video.`);
+      }
+      if (
+        !isRecord(provenance) ||
+        provenance.schema_version !== "bmh-video-delivery-derivative/v1" ||
+        !SHA256_PATTERN.test(String(provenance.approved_source_sha256 ?? "")) ||
+        !Number.isInteger(provenance.approved_source_size_bytes) ||
+        Number(provenance.approved_source_size_bytes) < 50_000_000 ||
+        !SHA256_PATTERN.test(String(provenance.transcode_contract_sha256 ?? "")) ||
+        !SHA256_PATTERN.test(String(provenance.qc_evidence_sha256 ?? ""))
+      ) {
+        errors.push(`${path}.delivery_provenance must bind an oversized checksum-approved source to exact transcode and QC evidence.`);
+      }
+      if (provenance.approved_source_sha256 === asset.checksum_sha256) {
+        errors.push(`${path}.delivery_provenance must identify source bytes distinct from the delivery derivative.`);
+      }
+      if (!Number.isInteger(asset.size_bytes) || Number(asset.size_bytes) >= 50_000_000) {
+        errors.push(`${path} delivery derivative must be below 50,000,000 bytes.`);
+      }
+    } else if (
+      asset.kind === "video" &&
+      asset.approval_status === "approved" &&
+      Number(asset.size_bytes) >= 50_000_000
+    ) {
+      errors.push(`${path} exceeds the 50,000,000-byte delivery limit without checksum-bound delivery provenance.`);
     }
     if (
       typeof asset.storage_path !== "string" ||

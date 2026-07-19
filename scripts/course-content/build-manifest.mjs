@@ -22,6 +22,7 @@ import {
   validateCaptionApprovalEvidence,
   validateCaptionApprovalHistory,
 } from "./caption-approval-ledger.mjs";
+import { applyVideoDeliveryLedger } from "./video-delivery.mjs";
 
 const REPO_ROOT = path.resolve(fileURLToPath(new URL("../..", import.meta.url)));
 const DEFAULT_VIDEO_SOURCE_ROOT = "/Users/jarradhenry/Sites/BMH apps/BMH Institute";
@@ -46,6 +47,10 @@ const GUIDE_APPROVAL_LEDGER_PATH = path.join(
 const QUIZ_APPROVAL_LEDGER_PATH = path.join(
   REPO_ROOT,
   "docs/course-production/quiz-approvals.json",
+);
+const VIDEO_DELIVERY_LEDGER_PATH = path.join(
+  REPO_ROOT,
+  "docs/course-production/video-delivery-ledger.json",
 );
 const ARTWORK_LEDGER_SCHEMA = "bmh-artwork-production-ledger/v1";
 export const GUIDE_APPROVAL_LEDGER_SCHEMA = "bmh-guide-approval-ledger/v1";
@@ -977,7 +982,7 @@ export async function buildDerivativePair(videoAsset, captionApprovalLedger, rep
   const [caption, transcript] = files;
   const approval = findCaptionApprovalRecord(captionApprovalLedger, {
     video_source_key: videoAsset.source_key,
-    video_sha256: videoAsset.checksum_sha256,
+    video_sha256: videoAsset._approvedSourceSha256 ?? videoAsset.checksum_sha256,
     caption_sha256: caption.checksum,
     transcript_sha256: transcript.checksum,
   });
@@ -1297,15 +1302,17 @@ export async function buildManifest({
   captionApprovalLedgerPath = CAPTION_APPROVAL_LEDGER_PATH,
   guideApprovalLedgerPath = GUIDE_APPROVAL_LEDGER_PATH,
   quizApprovalLedgerPath = QUIZ_APPROVAL_LEDGER_PATH,
+  videoDeliveryLedgerPath = VIDEO_DELIVERY_LEDGER_PATH,
   videoSourceRoot = DEFAULT_VIDEO_SOURCE_ROOT,
   quizSourceRoot = DEFAULT_QUIZ_SOURCE_ROOT,
   inspectDuration = probeVideoDuration,
 } = {}) {
-  const [videoApprovalLedger, captionApprovalLedger, guideApprovalLedger, quizApprovalLedger] = await Promise.all([
+  const [videoApprovalLedger, captionApprovalLedger, guideApprovalLedger, quizApprovalLedger, videoDeliveryLedger] = await Promise.all([
     readFile(videoApprovalLedgerPath, "utf8").then(JSON.parse),
     readFile(captionApprovalLedgerPath, "utf8").then(JSON.parse),
     readFile(guideApprovalLedgerPath, "utf8").then(JSON.parse),
     readFile(quizApprovalLedgerPath, "utf8").then(JSON.parse),
+    readFile(videoDeliveryLedgerPath, "utf8").then(JSON.parse),
   ]);
   const guideApprovalErrors = validateGuideApprovalLedger(guideApprovalLedger);
   if (guideApprovalErrors.length > 0) {
@@ -1336,6 +1343,10 @@ export async function buildManifest({
       inspectDuration,
     }));
   }
+  const deliveryVideoAssets = applyVideoDeliveryLedger(
+    videoAssetsWithMetadata,
+    videoDeliveryLedger,
+  );
 
   const reviewedVideoAssets = videoAssetsWithMetadata.filter((asset) =>
     REVIEWED_VIDEO_SOURCE_KEYS.has(asset.source_key),
@@ -1357,7 +1368,7 @@ export async function buildManifest({
     throw new Error(`Video approval ledger is invalid: ${videoApprovalErrors.join("; ")}`);
   }
 
-  const videosBySlot = Map.groupBy(videoAssetsWithMetadata, (asset) => asset._slot);
+  const videosBySlot = Map.groupBy(deliveryVideoAssets, (asset) => asset._slot);
   const quizQuestionsBySlot = new Map();
   for (const lesson of LESSONS) {
     quizQuestionsBySlot.set(
@@ -1367,16 +1378,17 @@ export async function buildManifest({
     );
   }
 
-  const videoAssets = videoAssetsWithMetadata.map((assetWithMetadata) => {
+  const videoAssets = deliveryVideoAssets.map((assetWithMetadata) => {
     const asset = { ...assetWithMetadata };
     delete asset._slot;
     delete asset._title;
     delete asset._partLabel;
     delete asset._duration;
+    delete asset._approvedSourceSha256;
     return asset;
   });
   const derivativeAssets = [];
-  for (const asset of videoAssetsWithMetadata) {
+  for (const asset of deliveryVideoAssets) {
     derivativeAssets.push(...await buildDerivativePair(asset, captionApprovalLedger));
   }
   const imageAssets = [
@@ -1401,7 +1413,7 @@ export async function buildManifest({
       approval_status: "missing",
     })),
   ];
-  const posterAssets = videoAssetsWithMetadata.map((asset) => ({
+  const posterAssets = deliveryVideoAssets.map((asset) => ({
     source_key: `poster-${asset.source_key}`,
     kind: "image",
     local_path: `course-assets/posters/${asset.source_key}.webp`,

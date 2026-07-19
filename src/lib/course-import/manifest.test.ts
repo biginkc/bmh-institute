@@ -258,6 +258,40 @@ describe("validateCourseManifest", () => {
     );
   });
 
+  it("requires oversized approved videos to carry an exact delivery provenance chain", () => {
+    const missing = validCourseManifest();
+    missing.assets[0].size_bytes = 80_000_000;
+    const missingResult = validateCourseManifest(missing);
+    expect(missingResult.ok).toBe(false);
+    if (!missingResult.ok) {
+      expect(missingResult.errors).toContain(
+        "assets[0] exceeds the 50,000,000-byte delivery limit without checksum-bound delivery provenance.",
+      );
+    }
+
+    const valid = validCourseManifest();
+    valid.assets[0].checksum_sha256 = "b".repeat(64);
+    valid.assets[0].size_bytes = 47_000_000;
+    valid.assets[0].storage_path = `courses/training/v1/videos/video-1.${"b".repeat(64)}.mp4`;
+    valid.assets[0].delivery_provenance = {
+      schema_version: "bmh-video-delivery-derivative/v1",
+      approved_source_sha256: "a".repeat(64),
+      approved_source_size_bytes: 80_000_000,
+      transcode_contract_sha256: "c".repeat(64),
+      qc_evidence_sha256: "d".repeat(64),
+    };
+    expect(validateCourseManifest(valid).ok).toBe(true);
+
+    valid.assets[0].delivery_provenance.approved_source_sha256 = valid.assets[0].checksum_sha256;
+    const relabeled = validateCourseManifest(valid);
+    expect(relabeled.ok).toBe(false);
+    if (!relabeled.ok) {
+      expect(relabeled.errors).toContain(
+        "assets[0].delivery_provenance must identify source bytes distinct from the delivery derivative.",
+      );
+    }
+  });
+
   it("rejects cross-import storage paths before upload or rollback", () => {
     const input = validCourseManifest();
     input.assets[0].storage_path = "courses/another-import/video.mp4";

@@ -1,0 +1,1175 @@
+{
+  "schema_version": "bmh-video-delivery-ledger/v1",
+  "target_max_bytes": 47500000,
+  "transcode_contract": {
+    "video_codec": "libx264",
+    "preset": "medium",
+    "pixel_format": "yuv420p",
+    "audio": "copy",
+    "fps_mode": "passthrough",
+    "metadata": "stripped",
+    "passes": 2
+  },
+  "transcode_contract_sha256": "91aad66868b9d36395c354a0da0ec4212d35d3d8b397ec4e5001279acea867e6",
+  "records": [
+    {
+      "source_key": "video-slot-02-terms",
+      "approved_source": {
+        "local_path": "course-assets/review-lessonGLOA/LESSON-GLOA-v10-LOCAL-POLICY-CUT.mp4",
+        "sha256": "6f57600d6ec3a596f96175052eda997503ab9b72aa5b7e9ec02239fe1a125769",
+        "size_bytes": 104384792
+      },
+      "delivery": {
+        "local_path": "course-assets/delivery-v1/video-slot-02-terms.from-6f57600d6ec3a596.mp4",
+        "sha256": "72e0d2d9ff7e9f53c2c97af2d3d50e3482ac76d765ec98e8c82baea70f0ff1ba",
+        "size_bytes": 46031019
+      },
+      "video_bitrate": 628804,
+      "source_probe": {
+        "format_duration_seconds": 449.534,
+        "video": {
+          "codec": "h264",
+          "width": 1600,
+          "height": 900,
+          "sample_aspect_ratio": "1:1",
+          "display_aspect_ratio": "16:9",
+          "average_frame_rate": "30/1",
+          "start_seconds": 0,
+          "duration_seconds": 449.466667,
+          "frames": 13484,
+          "packets": 13484
+        },
+        "audio": {
+          "codec": "aac",
+          "start_seconds": 0,
+          "duration_seconds": 449.534,
+          "bitrate": 182703,
+          "frames": 21073,
+          "packets": 21073
+        }
+      },
+      "delivery_probe": {
+        "format_duration_seconds": 449.534,
+        "video": {
+          "codec": "h264",
+          "width": 1600,
+          "height": 900,
+          "sample_aspect_ratio": "1:1",
+          "display_aspect_ratio": "16:9",
+          "average_frame_rate": "30/1",
+          "start_seconds": 0,
+          "duration_seconds": 449.466667,
+          "frames": 13484,
+          "packets": 13484
+        },
+        "audio": {
+          "codec": "aac",
+          "start_seconds": 0,
+          "duration_seconds": 449.534,
+          "bitrate": 182703,
+          "frames": 21073,
+          "packets": 21073
+        }
+      },
+      "qc_evidence_sha256": "b8fe2a5c396cf3800ed6d218b9ba95fa4f0ee558523656cef947ec14ed2710a9"
+    },
+    {
+      "source_key": "video-slot-03-tech-stack",
+      "approved_source": {
+        "local_path": "course-assets/review-lessonTECHA/LESSON-TECHA-v5.mp4",
+        "sha256": "e13490f789dc30fe7d8680fb49de9dc2f4d2b1a066bc0de2ad68be79fe7d6a6e",
+        "size_bytes": 88691948
+      },
+      "delivery": {
+        "local_path": "course-assets/delivery-v1/video-slot-03-tech-stack.from-e13490f789dc30fe.mp4",
+        "sha256": "88b1258ca4cbcf89f674e5b33344fd6bc2cb79f07f04266dc364db5ba9b68cd5",
+        "size_bytes": 45929749
+      },
+      "video_bitrate": 701081,
+      "source_probe": {
+        "format_duration_seconds": 412.096,
+        "video": {
+          "codec": "h264",
+          "width": 1600,
+          "height": 900,
+          "sample_aspect_ratio": "1:1",
+          "display_aspect_ratio": "16:9",
+          "average_frame_rate": "30/1",
+          "start_seconds": 0,
+          "duration_seconds": 412.033333,
+          "frames": 12361,
+          "packets": 12361
+        },
+        "audio": {
+          "codec": "aac",
+          "start_seconds": 0,
+          "duration_seconds": 412.096,
+          "bitrate": 184149,
+          "frames": 19318,
+          "packets": 19318
+        }
+      },
+      "delivery_probe": {
+        "format_duration_seconds": 412.096,
+        "video": {
+          "codec": "h264",
+          "width": 1600,
+          "height": 900,
+          "sample_aspect_ratio": "1:1",
+          "display_aspect_ratio": "16:9",
+          "average_frame_rate": "30/1",
+          "start_seconds": 0,
+          "duration_seconds": 412.033333,
+          "frames": 12361,
+          "packets": 12361
+        },
+        "audio": {
+          "codec": "aac",
+          "start_seconds": 0,
+          "duration_seconds": 412.096,
+          "bitrate": 184149,
+          "frames": 19318,
+          "packets": 19318
+        }
+      },
+      "qc_evidence_sha256": "d34cb3a60a59f0cbd2991c051f39163e1f945a88efe01b0447565b3339328130"
+    },
+    {
+      "source_key": "video-slot-04-humanizing-a",
+      "approved_source": {
+        "local_path": "course-assets/review-lesson2A/LESSON-2A-v1-FINAL.mp4",
+        "sha256": "12731e0143a53a4221bb9592c57dc4ccde312b70b74d367ea783a8cfcac845c9",
+        "size_bytes": 77793822
+      },
+      "delivery": {
+        "local_path": "course-assets/delivery-v1/video-slot-04-humanizing-a.from-12731e0143a53a42.mp4",
+        "sha256": "da3d5e0638034c999b7dbf35542432e0cf0a84a51f0576043d42ee7c43fadb75",
+        "size_bytes": 46047167
+      },
+      "video_bitrate": 511635,
+      "source_probe": {
+        "format_duration_seconds": 440.042667,
+        "video": {
+          "codec": "h264",
+          "width": 1600,
+          "height": 900,
+          "sample_aspect_ratio": "1:1",
+          "display_aspect_ratio": "16:9",
+          "average_frame_rate": "30/1",
+          "start_seconds": 0,
+          "duration_seconds": 440,
+          "frames": 13200,
+          "packets": 13200
+        },
+        "audio": {
+          "codec": "aac",
+          "start_seconds": 0,
+          "duration_seconds": 440.042667,
+          "bitrate": 317375,
+          "frames": 20627,
+          "packets": 20627
+        }
+      },
+      "delivery_probe": {
+        "format_duration_seconds": 440.042667,
+        "video": {
+          "codec": "h264",
+          "width": 1600,
+          "height": 900,
+          "sample_aspect_ratio": "1:1",
+          "display_aspect_ratio": "16:9",
+          "average_frame_rate": "30/1",
+          "start_seconds": 0,
+          "duration_seconds": 440,
+          "frames": 13200,
+          "packets": 13200
+        },
+        "audio": {
+          "codec": "aac",
+          "start_seconds": 0,
+          "duration_seconds": 440.042667,
+          "bitrate": 317375,
+          "frames": 20627,
+          "packets": 20627
+        }
+      },
+      "qc_evidence_sha256": "cad12b26f72cba3c5c930aa2e79e45f4ee4572910a63f6f35a38a0cfc2cfb92b"
+    },
+    {
+      "source_key": "video-slot-04-humanizing-b",
+      "approved_source": {
+        "local_path": "course-assets/review-lesson2B/LESSON-2B-v3-FULL.mp4",
+        "sha256": "582125d4d8a2b30f911071e644ebfc2b3e1aa6fb839470f52ef04c2a0c307f4d",
+        "size_bytes": 127585423
+      },
+      "delivery": {
+        "local_path": "course-assets/delivery-v1/video-slot-04-humanizing-b.from-582125d4d8a2b30f.mp4",
+        "sha256": "4414f7a780b361a80afc0625e735d03b2ca74a26167e5cf803d4955645f51dd4",
+        "size_bytes": 46076201
+      },
+      "video_bitrate": 702120,
+      "source_probe": {
+        "format_duration_seconds": 357.824,
+        "video": {
+          "codec": "h264",
+          "width": 1600,
+          "height": 900,
+          "sample_aspect_ratio": "1:1",
+          "display_aspect_ratio": "16:9",
+          "average_frame_rate": "30/1",
+          "start_seconds": 0,
+          "duration_seconds": 357.766667,
+          "frames": 10733,
+          "packets": 10733
+        },
+        "audio": {
+          "codec": "aac",
+          "start_seconds": 0,
+          "duration_seconds": 357.824,
+          "bitrate": 317375,
+          "frames": 16773,
+          "packets": 16773
+        }
+      },
+      "delivery_probe": {
+        "format_duration_seconds": 357.824,
+        "video": {
+          "codec": "h264",
+          "width": 1600,
+          "height": 900,
+          "sample_aspect_ratio": "1:1",
+          "display_aspect_ratio": "16:9",
+          "average_frame_rate": "30/1",
+          "start_seconds": 0,
+          "duration_seconds": 357.766016,
+          "frames": 10733,
+          "packets": 10733
+        },
+        "audio": {
+          "codec": "aac",
+          "start_seconds": 0,
+          "duration_seconds": 357.824,
+          "bitrate": 317375,
+          "frames": 16773,
+          "packets": 16773
+        }
+      },
+      "qc_evidence_sha256": "f2ab78404098298a09ab1a9e42efcc22f9110eb1ecc82d3f2520a4fa055496c8"
+    },
+    {
+      "source_key": "video-slot-04-ideal-seller",
+      "approved_source": {
+        "local_path": "course-assets/review-lessonISP/LESSON-ISP-v6.mp4",
+        "sha256": "f99650628999c4c82c69fd3fe508c7dfc09697198b28ecf8bb7bab8542c800d1",
+        "size_bytes": 62498444
+      },
+      "delivery": {
+        "local_path": "course-assets/delivery-v1/video-slot-04-ideal-seller.from-f99650628999c4c8.mp4",
+        "sha256": "a14cdfa85589afed5aee968caf8201362f71db5a1da0cc18451aa1d0f4b68bae",
+        "size_bytes": 45854822
+      },
+      "video_bitrate": 851136,
+      "source_probe": {
+        "format_duration_seconds": 312.192,
+        "video": {
+          "codec": "h264",
+          "width": 1600,
+          "height": 900,
+          "sample_aspect_ratio": "1:1",
+          "display_aspect_ratio": "16:9",
+          "average_frame_rate": "30/1",
+          "start_seconds": 0,
+          "duration_seconds": 312.133008,
+          "frames": 9364,
+          "packets": 9364
+        },
+        "audio": {
+          "codec": "aac",
+          "start_seconds": 0,
+          "duration_seconds": 312.192,
+          "bitrate": 317375,
+          "frames": 14634,
+          "packets": 14634
+        }
+      },
+      "delivery_probe": {
+        "format_duration_seconds": 312.192,
+        "video": {
+          "codec": "h264",
+          "width": 1600,
+          "height": 900,
+          "sample_aspect_ratio": "1:1",
+          "display_aspect_ratio": "16:9",
+          "average_frame_rate": "30/1",
+          "start_seconds": 0,
+          "duration_seconds": 312.133008,
+          "frames": 9364,
+          "packets": 9364
+        },
+        "audio": {
+          "codec": "aac",
+          "start_seconds": 0,
+          "duration_seconds": 312.192,
+          "bitrate": 317375,
+          "frames": 14634,
+          "packets": 14634
+        }
+      },
+      "qc_evidence_sha256": "3b286cb6655b4a37ee71b209eb20b9d8a5c1499612c07169208862c3f3aecae4"
+    },
+    {
+      "source_key": "video-slot-05-offer-a",
+      "approved_source": {
+        "local_path": "course-assets/review-lesson3A/LESSON-3A-rev1-FULL.mp4",
+        "sha256": "8f718cf332b898ea33e513d5dc93d3ab159b1c629be94805c727d7dec1abb5bf",
+        "size_bytes": 83210975
+      },
+      "delivery": {
+        "local_path": "course-assets/delivery-v1/video-slot-05-offer-a.from-8f718cf332b898ea.mp4",
+        "sha256": "dff69d1676f8a6f6531db95b9404113a21847306bd8e9d2ff9bc2976e913aadf",
+        "size_bytes": 46167606
+      },
+      "video_bitrate": 469591,
+      "source_probe": {
+        "format_duration_seconds": 463.552,
+        "video": {
+          "codec": "h264",
+          "width": 1600,
+          "height": 900,
+          "sample_aspect_ratio": "1:1",
+          "display_aspect_ratio": "16:9",
+          "average_frame_rate": "30/1",
+          "start_seconds": 0,
+          "duration_seconds": 463.5,
+          "frames": 13905,
+          "packets": 13905
+        },
+        "audio": {
+          "codec": "aac",
+          "start_seconds": 0,
+          "duration_seconds": 463.552,
+          "bitrate": 317375,
+          "frames": 21729,
+          "packets": 21729
+        }
+      },
+      "delivery_probe": {
+        "format_duration_seconds": 463.552,
+        "video": {
+          "codec": "h264",
+          "width": 1600,
+          "height": 900,
+          "sample_aspect_ratio": "1:1",
+          "display_aspect_ratio": "16:9",
+          "average_frame_rate": "30/1",
+          "start_seconds": 0,
+          "duration_seconds": 463.5,
+          "frames": 13905,
+          "packets": 13905
+        },
+        "audio": {
+          "codec": "aac",
+          "start_seconds": 0,
+          "duration_seconds": 463.552,
+          "bitrate": 317375,
+          "frames": 21729,
+          "packets": 21729
+        }
+      },
+      "qc_evidence_sha256": "3b545fc62b6be566a7c55ce9031fe9f8405398ce802f8d77394cb9671a00362f"
+    },
+    {
+      "source_key": "video-slot-05-offer-b",
+      "approved_source": {
+        "local_path": "course-assets/review-lesson3B/LESSON-3B-v1-FULL.mp4",
+        "sha256": "a9206ce9907d887c5be95c18755e0793e938bdac8bcb788ab6f2c269b9b9cc83",
+        "size_bytes": 66943724
+      },
+      "delivery": {
+        "local_path": "course-assets/delivery-v1/video-slot-05-offer-b.from-a9206ce9907d887c.mp4",
+        "sha256": "0ebca25db9a154e0c8adc8c06c1225235f10b474e6f87c8993077ab7fe0138ef",
+        "size_bytes": 45930975
+      },
+      "video_bitrate": 1386088,
+      "source_probe": {
+        "format_duration_seconds": 231.893,
+        "video": {
+          "codec": "h264",
+          "width": 1600,
+          "height": 900,
+          "sample_aspect_ratio": "1:1",
+          "display_aspect_ratio": "16:9",
+          "average_frame_rate": "30/1",
+          "start_seconds": 0,
+          "duration_seconds": 231.833333,
+          "frames": 6955,
+          "packets": 6955
+        },
+        "audio": {
+          "codec": "aac",
+          "start_seconds": 0,
+          "duration_seconds": 231.893,
+          "bitrate": 187051,
+          "frames": 10871,
+          "packets": 10871
+        }
+      },
+      "delivery_probe": {
+        "format_duration_seconds": 231.893,
+        "video": {
+          "codec": "h264",
+          "width": 1600,
+          "height": 900,
+          "sample_aspect_ratio": "1:1",
+          "display_aspect_ratio": "16:9",
+          "average_frame_rate": "30/1",
+          "start_seconds": 0,
+          "duration_seconds": 231.833333,
+          "frames": 6955,
+          "packets": 6955
+        },
+        "audio": {
+          "codec": "aac",
+          "start_seconds": 0,
+          "duration_seconds": 231.893,
+          "bitrate": 187051,
+          "frames": 10871,
+          "packets": 10871
+        }
+      },
+      "qc_evidence_sha256": "2314879d14603aaaabd16262b8a2d12751463bd6491e78287312603d3d479a0b"
+    },
+    {
+      "source_key": "video-slot-06-pipeline",
+      "approved_source": {
+        "local_path": "course-assets/review-lesson4A/LESSON-4A-v3.mp4",
+        "sha256": "f682a66c83b66d7abe6cffba17b00939b9d8e085a10c4664827c986584fbf179",
+        "size_bytes": 70181056
+      },
+      "delivery": {
+        "local_path": "course-assets/delivery-v1/video-slot-06-pipeline.from-f682a66c83b66d7a.mp4",
+        "sha256": "55d0fcbae2ec0de4f1384d9c9a0a379fcdb7faa2630a9961d67cbfb59f968386",
+        "size_bytes": 46160470
+      },
+      "video_bitrate": 683809,
+      "source_probe": {
+        "format_duration_seconds": 418.88,
+        "video": {
+          "codec": "h264",
+          "width": 1600,
+          "height": 900,
+          "sample_aspect_ratio": "1:1",
+          "display_aspect_ratio": "16:9",
+          "average_frame_rate": "30/1",
+          "start_seconds": 0,
+          "duration_seconds": 418.833333,
+          "frames": 12565,
+          "packets": 12565
+        },
+        "audio": {
+          "codec": "aac",
+          "start_seconds": 0,
+          "duration_seconds": 418.88,
+          "bitrate": 187084,
+          "frames": 19636,
+          "packets": 19636
+        }
+      },
+      "delivery_probe": {
+        "format_duration_seconds": 418.88,
+        "video": {
+          "codec": "h264",
+          "width": 1600,
+          "height": 900,
+          "sample_aspect_ratio": "1:1",
+          "display_aspect_ratio": "16:9",
+          "average_frame_rate": "30/1",
+          "start_seconds": 0,
+          "duration_seconds": 418.833333,
+          "frames": 12565,
+          "packets": 12565
+        },
+        "audio": {
+          "codec": "aac",
+          "start_seconds": 0,
+          "duration_seconds": 418.88,
+          "bitrate": 187084,
+          "frames": 19636,
+          "packets": 19636
+        }
+      },
+      "qc_evidence_sha256": "479cabe989eaa56602c7e6875b20b648b41fd370899eafd64aabaa24c770aed2"
+    },
+    {
+      "source_key": "video-slot-06-framework",
+      "approved_source": {
+        "local_path": "course-assets/review-lesson4B/LESSON-4B-v1-APPROVED.mp4",
+        "sha256": "2b66d59b3325ceb4ca8cc5dd8db3edd50f05b583a9705e334f2a40088f8b79ef",
+        "size_bytes": 57684948
+      },
+      "delivery": {
+        "local_path": "course-assets/delivery-v1/video-slot-06-framework.from-2b66d59b3325ceb4.mp4",
+        "sha256": "3a696531f740de76fb12abe9a52b82a357c59a0969be6f00a33dc2cafc2f7050",
+        "size_bytes": 45892806
+      },
+      "video_bitrate": 1953239,
+      "source_probe": {
+        "format_duration_seconds": 160.661333,
+        "video": {
+          "codec": "h264",
+          "width": 1600,
+          "height": 900,
+          "sample_aspect_ratio": "1:1",
+          "display_aspect_ratio": "16:9",
+          "average_frame_rate": "30/1",
+          "start_seconds": 0,
+          "duration_seconds": 160.6,
+          "frames": 4818,
+          "packets": 4818
+        },
+        "audio": {
+          "codec": "aac",
+          "start_seconds": 0,
+          "duration_seconds": 160.661333,
+          "bitrate": 317375,
+          "frames": 7531,
+          "packets": 7531
+        }
+      },
+      "delivery_probe": {
+        "format_duration_seconds": 160.661333,
+        "video": {
+          "codec": "h264",
+          "width": 1600,
+          "height": 900,
+          "sample_aspect_ratio": "1:1",
+          "display_aspect_ratio": "16:9",
+          "average_frame_rate": "30/1",
+          "start_seconds": 0,
+          "duration_seconds": 160.6,
+          "frames": 4818,
+          "packets": 4818
+        },
+        "audio": {
+          "codec": "aac",
+          "start_seconds": 0,
+          "duration_seconds": 160.661333,
+          "bitrate": 317375,
+          "frames": 7531,
+          "packets": 7531
+        }
+      },
+      "qc_evidence_sha256": "c224e513f0fb30296289b60a87a719c6358f79f3a364b296a17367e90eb0ac80"
+    },
+    {
+      "source_key": "video-slot-07-opening",
+      "approved_source": {
+        "local_path": "course-assets/review-lesson5A/LESSON-5A-v3-FINAL.mp4",
+        "sha256": "1a6a2256651d6b55e7548982387508579c7330000ab01095a0c1bc81cf7c7961",
+        "size_bytes": 77433566
+      },
+      "delivery": {
+        "local_path": "course-assets/delivery-v1/video-slot-07-opening.from-1a6a2256651d6b55.mp4",
+        "sha256": "b1a2b9792fae2b213965469bcc625e83db3653be22a081124b4082c3a1594710",
+        "size_bytes": 45979968
+      },
+      "video_bitrate": 1004551,
+      "source_probe": {
+        "format_duration_seconds": 306.816,
+        "video": {
+          "codec": "h264",
+          "width": 1600,
+          "height": 900,
+          "sample_aspect_ratio": "1:1",
+          "display_aspect_ratio": "16:9",
+          "average_frame_rate": "30/1",
+          "start_seconds": 0,
+          "duration_seconds": 306.766016,
+          "frames": 9203,
+          "packets": 9203
+        },
+        "audio": {
+          "codec": "aac",
+          "start_seconds": 0,
+          "duration_seconds": 306.816,
+          "bitrate": 184435,
+          "frames": 14383,
+          "packets": 14383
+        }
+      },
+      "delivery_probe": {
+        "format_duration_seconds": 306.816,
+        "video": {
+          "codec": "h264",
+          "width": 1600,
+          "height": 900,
+          "sample_aspect_ratio": "1:1",
+          "display_aspect_ratio": "16:9",
+          "average_frame_rate": "30/1",
+          "start_seconds": 0,
+          "duration_seconds": 306.766016,
+          "frames": 9203,
+          "packets": 9203
+        },
+        "audio": {
+          "codec": "aac",
+          "start_seconds": 0,
+          "duration_seconds": 306.816,
+          "bitrate": 184435,
+          "frames": 14383,
+          "packets": 14383
+        }
+      },
+      "qc_evidence_sha256": "d24c8255e707133e76dafce65b54127e2b5fafeeef88c4bbfdabf8d95ef45757"
+    },
+    {
+      "source_key": "video-slot-08-discovery",
+      "approved_source": {
+        "local_path": "course-assets/review-lesson6A/LESSON-6A-v2-FULL.mp4",
+        "sha256": "fd0bcbefbaf71962629f1296c1f5c546ab9e805d423047a98c4b4c36e8ac5500",
+        "size_bytes": 119581211
+      },
+      "delivery": {
+        "local_path": "course-assets/delivery-v1/video-slot-08-discovery.from-fd0bcbefbaf71962.mp4",
+        "sha256": "80cf8bb7b0f685ce3354867f29684c2600ae6484eaf132a18a2fd5d6d91dcd7f",
+        "size_bytes": 46051807
+      },
+      "video_bitrate": 979834,
+      "source_probe": {
+        "format_duration_seconds": 312.512,
+        "video": {
+          "codec": "h264",
+          "width": 1600,
+          "height": 900,
+          "sample_aspect_ratio": "1:1",
+          "display_aspect_ratio": "16:9",
+          "average_frame_rate": "30/1",
+          "start_seconds": 0,
+          "duration_seconds": 312.466016,
+          "frames": 9374,
+          "packets": 9374
+        },
+        "audio": {
+          "codec": "aac",
+          "start_seconds": 0,
+          "duration_seconds": 312.512,
+          "bitrate": 187481,
+          "frames": 14650,
+          "packets": 14650
+        }
+      },
+      "delivery_probe": {
+        "format_duration_seconds": 312.512,
+        "video": {
+          "codec": "h264",
+          "width": 1600,
+          "height": 900,
+          "sample_aspect_ratio": "1:1",
+          "display_aspect_ratio": "16:9",
+          "average_frame_rate": "30/1",
+          "start_seconds": 0,
+          "duration_seconds": 312.466016,
+          "frames": 9374,
+          "packets": 9374
+        },
+        "audio": {
+          "codec": "aac",
+          "start_seconds": 0,
+          "duration_seconds": 312.512,
+          "bitrate": 187481,
+          "frames": 14650,
+          "packets": 14650
+        }
+      },
+      "qc_evidence_sha256": "c5f7778f3be7cd6a05e6da4c90321448571ccd189ca441790144afa2206f81bb"
+    },
+    {
+      "source_key": "video-slot-09-objection-architecture",
+      "approved_source": {
+        "local_path": "course-assets/review-lesson7A/LESSON-7A-v1-FULL.mp4",
+        "sha256": "b8f4669b7039d531fadd332f65bd6f8f09e924dec1de858558ab4d52c4921bb9",
+        "size_bytes": 51603293
+      },
+      "delivery": {
+        "local_path": "course-assets/delivery-v1/video-slot-09-objection-architecture.from-b8f4669b7039d531.mp4",
+        "sha256": "d852975b378a5db3d700bfbdeafbba46ee939fb5e0579aa17f3ccdac447f3d83",
+        "size_bytes": 45566961
+      },
+      "video_bitrate": 700118,
+      "source_probe": {
+        "format_duration_seconds": 358.528,
+        "video": {
+          "codec": "h264",
+          "width": 1600,
+          "height": 900,
+          "sample_aspect_ratio": "1:1",
+          "display_aspect_ratio": "16:9",
+          "average_frame_rate": "30/1",
+          "start_seconds": 0,
+          "duration_seconds": 358.466667,
+          "frames": 10754,
+          "packets": 10754
+        },
+        "audio": {
+          "codec": "aac",
+          "start_seconds": 0,
+          "duration_seconds": 358.528,
+          "bitrate": 317375,
+          "frames": 16806,
+          "packets": 16806
+        }
+      },
+      "delivery_probe": {
+        "format_duration_seconds": 358.528,
+        "video": {
+          "codec": "h264",
+          "width": 1600,
+          "height": 900,
+          "sample_aspect_ratio": "1:1",
+          "display_aspect_ratio": "16:9",
+          "average_frame_rate": "30/1",
+          "start_seconds": 0,
+          "duration_seconds": 358.466016,
+          "frames": 10754,
+          "packets": 10754
+        },
+        "audio": {
+          "codec": "aac",
+          "start_seconds": 0,
+          "duration_seconds": 358.528,
+          "bitrate": 317375,
+          "frames": 16806,
+          "packets": 16806
+        }
+      },
+      "qc_evidence_sha256": "9ce8f7e4b22b162bfee81dd174deb28228aaa27753cbb0891367c0189f0620cc"
+    },
+    {
+      "source_key": "video-slot-11-complex",
+      "approved_source": {
+        "local_path": "course-assets/review-lesson8A/LESSON-8A-v1-FULL.mp4",
+        "sha256": "0bde903ec396bb5f2291421b92fe44d03724f4b2e6ba59a455dfeb5675efaec2",
+        "size_bytes": 52920282
+      },
+      "delivery": {
+        "local_path": "course-assets/delivery-v1/video-slot-11-complex.from-0bde903ec396bb5f.mp4",
+        "sha256": "809d52409d402514076260141e36fe36b88a28133fbf4bc93d6581e1724a387b",
+        "size_bytes": 45802599
+      },
+      "video_bitrate": 1412034,
+      "source_probe": {
+        "format_duration_seconds": 228.416,
+        "video": {
+          "codec": "h264",
+          "width": 1600,
+          "height": 900,
+          "sample_aspect_ratio": "1:1",
+          "display_aspect_ratio": "16:9",
+          "average_frame_rate": "30/1",
+          "start_seconds": 0,
+          "duration_seconds": 228.366667,
+          "frames": 6851,
+          "packets": 6851
+        },
+        "audio": {
+          "codec": "aac",
+          "start_seconds": 0,
+          "duration_seconds": 228.416,
+          "bitrate": 185052,
+          "frames": 10708,
+          "packets": 10708
+        }
+      },
+      "delivery_probe": {
+        "format_duration_seconds": 228.416,
+        "video": {
+          "codec": "h264",
+          "width": 1600,
+          "height": 900,
+          "sample_aspect_ratio": "1:1",
+          "display_aspect_ratio": "16:9",
+          "average_frame_rate": "30/1",
+          "start_seconds": 0,
+          "duration_seconds": 228.366667,
+          "frames": 6851,
+          "packets": 6851
+        },
+        "audio": {
+          "codec": "aac",
+          "start_seconds": 0,
+          "duration_seconds": 228.416,
+          "bitrate": 185052,
+          "frames": 10708,
+          "packets": 10708
+        }
+      },
+      "qc_evidence_sha256": "87dd1ea1551dc804df640dc1d96e5492affb2d605c16f2aa60ccf1455290875f"
+    },
+    {
+      "source_key": "video-slot-11-trust",
+      "approved_source": {
+        "local_path": "course-assets/review-lesson8B/LESSON-8B-v2.mp4",
+        "sha256": "470dd69db0884c0724ee863232c3e634ced7caa7cf7c5dcba0e0088c96ee0525",
+        "size_bytes": 51502258
+      },
+      "delivery": {
+        "local_path": "course-assets/delivery-v1/video-slot-11-trust.from-470dd69db0884c07.mp4",
+        "sha256": "7aeea05efb4f604f21faf51193f55b6eed7ce96aa4ad288d81058880015fb1b7",
+        "size_bytes": 45572955
+      },
+      "video_bitrate": 1299870,
+      "source_probe": {
+        "format_duration_seconds": 245.717,
+        "video": {
+          "codec": "h264",
+          "width": 1600,
+          "height": 900,
+          "sample_aspect_ratio": "1:1",
+          "display_aspect_ratio": "16:9",
+          "average_frame_rate": "30/1",
+          "start_seconds": 0,
+          "duration_seconds": 245.666667,
+          "frames": 7370,
+          "packets": 7370
+        },
+        "audio": {
+          "codec": "aac",
+          "start_seconds": 0,
+          "duration_seconds": 245.717,
+          "bitrate": 184764,
+          "frames": 11519,
+          "packets": 11519
+        }
+      },
+      "delivery_probe": {
+        "format_duration_seconds": 245.717,
+        "video": {
+          "codec": "h264",
+          "width": 1600,
+          "height": 900,
+          "sample_aspect_ratio": "1:1",
+          "display_aspect_ratio": "16:9",
+          "average_frame_rate": "30/1",
+          "start_seconds": 0,
+          "duration_seconds": 245.666667,
+          "frames": 7370,
+          "packets": 7370
+        },
+        "audio": {
+          "codec": "aac",
+          "start_seconds": 0,
+          "duration_seconds": 245.717,
+          "bitrate": 184764,
+          "frames": 11519,
+          "packets": 11519
+        }
+      },
+      "qc_evidence_sha256": "20c2f907d087b4fe0448ab92a896063181eb37f6b2805153d9eb7d763460e2d0"
+    },
+    {
+      "source_key": "video-slot-12-faq-b",
+      "approved_source": {
+        "local_path": "course-assets/review-lesson9B/LESSON-9B-v3.mp4",
+        "sha256": "b977edbf0438b6cc8c4410e569f6f686fa8f4efbd864828795ac7a89034f919c",
+        "size_bytes": 75665539
+      },
+      "delivery": {
+        "local_path": "course-assets/delivery-v1/video-slot-12-faq-b.from-b977edbf0438b6cc.mp4",
+        "sha256": "4c3c26ce69784ee5075ae16fcfa7f8056b22a9b6605d0ee215192a8e72f5a256",
+        "size_bytes": 45848320
+      },
+      "video_bitrate": 1843676,
+      "source_probe": {
+        "format_duration_seconds": 180.778,
+        "video": {
+          "codec": "h264",
+          "width": 1600,
+          "height": 900,
+          "sample_aspect_ratio": "1:1",
+          "display_aspect_ratio": "16:9",
+          "average_frame_rate": "30/1",
+          "start_seconds": 0,
+          "duration_seconds": 180.733333,
+          "frames": 5422,
+          "packets": 5422
+        },
+        "audio": {
+          "codec": "aac",
+          "start_seconds": 0,
+          "duration_seconds": 180.778,
+          "bitrate": 174268,
+          "frames": 8475,
+          "packets": 8475
+        }
+      },
+      "delivery_probe": {
+        "format_duration_seconds": 180.778,
+        "video": {
+          "codec": "h264",
+          "width": 1600,
+          "height": 900,
+          "sample_aspect_ratio": "1:1",
+          "display_aspect_ratio": "16:9",
+          "average_frame_rate": "30/1",
+          "start_seconds": 0,
+          "duration_seconds": 180.733333,
+          "frames": 5422,
+          "packets": 5422
+        },
+        "audio": {
+          "codec": "aac",
+          "start_seconds": 0,
+          "duration_seconds": 180.778,
+          "bitrate": 174268,
+          "frames": 8475,
+          "packets": 8475
+        }
+      },
+      "qc_evidence_sha256": "6070a339368bd0ab30b5e3f21a3aafa5bdba78ebfc7aa2c255e45d7fc3244138"
+    },
+    {
+      "source_key": "video-slot-13-follow-up",
+      "approved_source": {
+        "local_path": "course-assets/review-lesson10A/LESSON-10A-v6.mp4",
+        "sha256": "2c3c6e383b634a6d802f5764186338ed85ca40a9cdc6f136fb16489752488cc0",
+        "size_bytes": 59182532
+      },
+      "delivery": {
+        "local_path": "course-assets/delivery-v1/video-slot-13-follow-up.from-2c3c6e383b634a6d.mp4",
+        "sha256": "89774836f4ef3a6c4cd3007bff7c5b715e24561c248af8fdf0e27d5eeaf6d644",
+        "size_bytes": 46165621
+      },
+      "video_bitrate": 646174,
+      "source_probe": {
+        "format_duration_seconds": 437.76,
+        "video": {
+          "codec": "h264",
+          "width": 1600,
+          "height": 900,
+          "sample_aspect_ratio": "1:1",
+          "display_aspect_ratio": "16:9",
+          "average_frame_rate": "30/1",
+          "start_seconds": 0,
+          "duration_seconds": 437.7,
+          "frames": 13131,
+          "packets": 13131
+        },
+        "audio": {
+          "codec": "aac",
+          "start_seconds": 0,
+          "duration_seconds": 437.76,
+          "bitrate": 187159,
+          "frames": 20521,
+          "packets": 20521
+        }
+      },
+      "delivery_probe": {
+        "format_duration_seconds": 437.76,
+        "video": {
+          "codec": "h264",
+          "width": 1600,
+          "height": 900,
+          "sample_aspect_ratio": "1:1",
+          "display_aspect_ratio": "16:9",
+          "average_frame_rate": "30/1",
+          "start_seconds": 0,
+          "duration_seconds": 437.7,
+          "frames": 13131,
+          "packets": 13131
+        },
+        "audio": {
+          "codec": "aac",
+          "start_seconds": 0,
+          "duration_seconds": 437.76,
+          "bitrate": 187159,
+          "frames": 20521,
+          "packets": 20521
+        }
+      },
+      "qc_evidence_sha256": "87d4456afc4190cc34a3856f082ebe64a17ba922053e2eb23aa934899c406b10"
+    },
+    {
+      "source_key": "video-slot-14-flow",
+      "approved_source": {
+        "local_path": "course-assets/review-lesson1C/LESSON-1C-v3-FULL.mp4",
+        "sha256": "aa423da1d4ee7ecbc6a90148a28516ab952027133528be6e1852c92ec6834b79",
+        "size_bytes": 189579130
+      },
+      "delivery": {
+        "local_path": "course-assets/delivery-v1/video-slot-14-flow.from-aa423da1d4ee7ecb.mp4",
+        "sha256": "ab60ddbe1cd4cfbf821f36223061655a6457741bdf2b49a37f77d617a2d3af51",
+        "size_bytes": 46073483
+      },
+      "video_bitrate": 554317,
+      "source_probe": {
+        "format_duration_seconds": 418.496,
+        "video": {
+          "codec": "h264",
+          "width": 1600,
+          "height": 900,
+          "sample_aspect_ratio": "1:1",
+          "display_aspect_ratio": "16:9",
+          "average_frame_rate": "30/1",
+          "start_seconds": 0,
+          "duration_seconds": 418.433333,
+          "frames": 12553,
+          "packets": 12553
+        },
+        "audio": {
+          "codec": "aac",
+          "start_seconds": 0,
+          "duration_seconds": 418.496,
+          "bitrate": 317375,
+          "frames": 19617,
+          "packets": 19617
+        }
+      },
+      "delivery_probe": {
+        "format_duration_seconds": 418.496,
+        "video": {
+          "codec": "h264",
+          "width": 1600,
+          "height": 900,
+          "sample_aspect_ratio": "1:1",
+          "display_aspect_ratio": "16:9",
+          "average_frame_rate": "30/1",
+          "start_seconds": 0,
+          "duration_seconds": 418.433008,
+          "frames": 12553,
+          "packets": 12553
+        },
+        "audio": {
+          "codec": "aac",
+          "start_seconds": 0,
+          "duration_seconds": 418.496,
+          "bitrate": 317375,
+          "frames": 19617,
+          "packets": 19617
+        }
+      },
+      "qc_evidence_sha256": "81acf0db125ffb2cf3940aad88c498bfbb2d468d28e4bef5feb0cd3411fd1f68"
+    },
+    {
+      "source_key": "video-slot-16-kpis",
+      "approved_source": {
+        "local_path": "course-assets/review-lesson12A/LESSON-12A-v12-LOCAL-POLICY-CUT.mp4",
+        "sha256": "3d50cc79cfe74277ac1311367d5b0bd6fd62d2d38c2c74fff8732ea62203d61a",
+        "size_bytes": 53799917
+      },
+      "delivery": {
+        "local_path": "course-assets/delivery-v1/video-slot-16-kpis.from-3d50cc79cfe74277.mp4",
+        "sha256": "9adb0775cf0ca3877476424012e7b0cedb7d614e4da1ed74fabd00a6832b738f",
+        "size_bytes": 46131359
+      },
+      "video_bitrate": 724136,
+      "source_probe": {
+        "format_duration_seconds": 400.994,
+        "video": {
+          "codec": "h264",
+          "width": 1600,
+          "height": 900,
+          "sample_aspect_ratio": "1:1",
+          "display_aspect_ratio": "16:9",
+          "average_frame_rate": "30/1",
+          "start_seconds": 0,
+          "duration_seconds": 400.933333,
+          "frames": 12028,
+          "packets": 12028
+        },
+        "audio": {
+          "codec": "aac",
+          "start_seconds": 0,
+          "duration_seconds": 400.994,
+          "bitrate": 185603,
+          "frames": 18798,
+          "packets": 18798
+        }
+      },
+      "delivery_probe": {
+        "format_duration_seconds": 400.994,
+        "video": {
+          "codec": "h264",
+          "width": 1600,
+          "height": 900,
+          "sample_aspect_ratio": "1:1",
+          "display_aspect_ratio": "16:9",
+          "average_frame_rate": "30/1",
+          "start_seconds": 0,
+          "duration_seconds": 400.933333,
+          "frames": 12028,
+          "packets": 12028
+        },
+        "audio": {
+          "codec": "aac",
+          "start_seconds": 0,
+          "duration_seconds": 400.994,
+          "bitrate": 185603,
+          "frames": 18798,
+          "packets": 18798
+        }
+      },
+      "qc_evidence_sha256": "80931a1a59f7d952a34af93ddd56ae88bf20cded0395b290a489b0bbde10b068"
+    },
+    {
+      "source_key": "video-slot-18-mission-control",
+      "approved_source": {
+        "local_path": "course-assets/review-lesson18B/LESSON-18B-v7.mp4",
+        "sha256": "aaba86083cc1be1d0da7e334da7f473165f81fd4c916115749a93a8bf3e05d19",
+        "size_bytes": 71475777
+      },
+      "delivery": {
+        "local_path": "course-assets/delivery-v1/video-slot-18-mission-control.from-aaba86083cc1be1d.mp4",
+        "sha256": "c3a68357b966ad71d306dd9c2886a10f3ad47dc78fee1303a32abe1849f06157",
+        "size_bytes": 46068595
+      },
+      "video_bitrate": 755263,
+      "source_probe": {
+        "format_duration_seconds": 340.096,
+        "video": {
+          "codec": "h264",
+          "width": 1600,
+          "height": 900,
+          "sample_aspect_ratio": "1:1",
+          "display_aspect_ratio": "16:9",
+          "average_frame_rate": "30/1",
+          "start_seconds": 0,
+          "duration_seconds": 340.033008,
+          "frames": 10201,
+          "packets": 10201
+        },
+        "audio": {
+          "codec": "aac",
+          "start_seconds": 0,
+          "duration_seconds": 340.096,
+          "bitrate": 317375,
+          "frames": 15942,
+          "packets": 15942
+        }
+      },
+      "delivery_probe": {
+        "format_duration_seconds": 340.096,
+        "video": {
+          "codec": "h264",
+          "width": 1600,
+          "height": 900,
+          "sample_aspect_ratio": "1:1",
+          "display_aspect_ratio": "16:9",
+          "average_frame_rate": "30/1",
+          "start_seconds": 0,
+          "duration_seconds": 340.033008,
+          "frames": 10201,
+          "packets": 10201
+        },
+        "audio": {
+          "codec": "aac",
+          "start_seconds": 0,
+          "duration_seconds": 340.096,
+          "bitrate": 317375,
+          "frames": 15942,
+          "packets": 15942
+        }
+      },
+      "qc_evidence_sha256": "117a1d0d2c6838e22ee3f2d62e4ff989a6aad49fe1559af813627f641524eb49"
+    }
+  ]
+}
