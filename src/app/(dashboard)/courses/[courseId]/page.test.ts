@@ -54,7 +54,9 @@ const course = {
 };
 const baseLessons = course.modules[0].lessons;
 let courseLessons = baseLessons;
+let courseIsPublished = true;
 let lessonStatesError: { message: string } | null = null;
+let unlockedLessonIds = new Set(["lesson-done", "lesson-current"]);
 const rpcSpy = vi.fn();
 
 vi.mock("@/lib/supabase/server", () => ({
@@ -78,7 +80,7 @@ vi.mock("@/lib/supabase/server", () => ({
           : args.p_lesson_ids.map((lessonId) => ({
               lesson_id: lessonId,
               is_complete: lessonId === "lesson-done",
-              is_unlocked: lessonId !== "lesson-locked",
+              is_unlocked: unlockedLessonIds.has(lessonId),
             })),
         error: lessonStatesError,
       };
@@ -88,6 +90,7 @@ vi.mock("@/lib/supabase/server", () => ({
         ? {
             data: {
               ...course,
+              is_published: courseIsPublished,
               modules: [{ ...course.modules[0], lessons: courseLessons }],
             },
             error: null,
@@ -116,8 +119,34 @@ import CoursePage from "./page";
 describe("CoursePage BMH learner presentation", () => {
   beforeEach(() => {
     courseLessons = baseLessons;
+    courseIsPublished = true;
     lessonStatesError = null;
+    unlockedLessonIds = new Set(["lesson-done", "lesson-current"]);
     rpcSpy.mockClear();
+  });
+
+  it("uses the authoritative unlock state so an admin can review every lesson", async () => {
+    unlockedLessonIds = new Set([
+      "lesson-done",
+      "lesson-current",
+      "lesson-locked",
+    ]);
+
+    const html = renderToStaticMarkup(
+      await CoursePage({ params: Promise.resolve({ courseId: "course-1" }) }),
+    );
+
+    expect(html).toContain('href="/lessons/lesson-locked"');
+  });
+
+  it("labels an unpublished course as a private review", async () => {
+    courseIsPublished = false;
+
+    const html = renderToStaticMarkup(
+      await CoursePage({ params: Promise.resolve({ courseId: "course-1" }) }),
+    );
+
+    expect(html).toContain("Private review");
   });
 
   it("renders real progress plus completed, current, and locked lesson states", async () => {

@@ -52,7 +52,6 @@ export default async function DashboardPage() {
       )
     `,
     )
-    .eq("is_published", true)
     .order("sort_order");
 
   const programs = shapeProgramsResponse(data);
@@ -424,9 +423,14 @@ function ProgramRail({
             {program.title}
           </h2>
         </div>
-        <Badge tone="blue" size="sm">
-          {program.course_order_mode === "sequential" ? "Sequential" : "Any order"}
-        </Badge>
+        <div className="flex flex-wrap justify-end gap-2">
+          {!program.is_published ? (
+            <Badge tone="yellow" size="sm">Private review</Badge>
+          ) : null}
+          <Badge tone="blue" size="sm">
+            {program.course_order_mode === "sequential" ? "Sequential" : "Any order"}
+          </Badge>
+        </div>
       </div>
 
       <div className="px-2 pb-3">

@@ -3,6 +3,10 @@ import { notFound } from "next/navigation";
 import { Badge, Card } from "@/components/bmh-ds";
 import { createClient } from "@/lib/supabase/server";
 import { getAuthedProfile } from "@/lib/auth/guard";
+import {
+  filterAssignableRoleGroups,
+  unreleasedImportQaRoleGroupIds,
+} from "@/lib/release-control/qa-role-groups";
 
 import { AdminPageHeader, AdminSectionHeading } from "../../../_components/admin-shell";
 import { UserEditForm, type RoleGroupOption } from "./user-edit-form";
@@ -17,7 +21,7 @@ export default async function EditUserPage({
   if (!me) notFound();
 
   const supabase = await createClient();
-  const [profileRes, roleGroupsRes, userRoleGroupsRes] = await Promise.all([
+  const [profileRes, roleGroupsRes, userRoleGroupsRes, importedProgramsRes] = await Promise.all([
     supabase
       .from("profiles")
       .select("id, email, full_name, system_role, status, created_at")
@@ -28,6 +32,11 @@ export default async function EditUserPage({
       .from("user_role_groups")
       .select("role_group_id")
       .eq("user_id", userId),
+    supabase
+      .from("programs")
+      .select("content_import_id, is_published, program_access(role_group_id)")
+      .not("content_import_id", "is", null)
+      .eq("is_published", false),
   ]);
 
   const profile = profileRes.data as
@@ -41,8 +50,23 @@ export default async function EditUserPage({
       }
     | null;
   if (!profile) notFound();
+  if (importedProgramsRes.error) {
+    throw new Error(
+      "Unable to verify protected imported-course review groups.",
+      { cause: importedProgramsRes.error },
+    );
+  }
 
-  const allRoleGroups = (roleGroupsRes.data ?? []) as RoleGroupOption[];
+  const allRoleGroups = filterAssignableRoleGroups(
+    (roleGroupsRes.data ?? []) as RoleGroupOption[],
+    unreleasedImportQaRoleGroupIds(
+      (importedProgramsRes.data ?? []) as Array<{
+        content_import_id: string | null;
+        is_published: boolean;
+        program_access: Array<{ role_group_id: string | null }> | null;
+      }>,
+    ),
+  );
   const currentRoleGroupIds = (userRoleGroupsRes.data ?? []).map(
     (r) => r.role_group_id as string,
   );

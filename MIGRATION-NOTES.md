@@ -160,7 +160,6 @@ Names only. Do not commit values.
 - `npm run test:prod:readiness`: production-readiness suite with disposable prefixed production writes and cleanup.
 - `npm run test:prod:dryrun`: production pilot dry-run suite.
 - `npm run seed:e2e`: seeds non-production E2E data.
-- `npm run seed:walkthrough`: seeds the durable production walkthrough curriculum when run with `--apply-production`.
 - `npm run cleanup:prod-readiness`: cleans production-readiness data by prefix.
 - `npm run cleanup:prod-dryrun`: cleans pilot dry-run data by prefix.
 - `npm run backfill:sanitize-html`: content HTML sanitization backfill.

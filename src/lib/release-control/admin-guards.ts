@@ -4,6 +4,9 @@ export const IMPORT_RELEASE_REQUIRED_ERROR =
 export const IMPORT_ROLLBACK_REQUIRED_ERROR =
   "Imported course content can only be deleted with the exact course-import rollback operation.";
 
+export const IMPORT_QA_MEMBERSHIP_RESTRICTED_ERROR =
+  "The private imported-course review group cannot be assigned through user or invite administration.";
+
 export function importedPublicationError(input: {
   contentImportId: string | null;
   currentlyPublished: boolean;
@@ -21,6 +24,9 @@ export function importedPublicationError(input: {
 }
 
 export function normalizeReleaseControlError(message: string): string {
+  if (/unreleased imported catalog QA role group/i.test(message)) {
+    return IMPORT_QA_MEMBERSHIP_RESTRICTED_ERROR;
+  }
   if (/imported catalog graph deletion|course-import rollback/i.test(message)) {
     return IMPORT_ROLLBACK_REQUIRED_ERROR;
   }

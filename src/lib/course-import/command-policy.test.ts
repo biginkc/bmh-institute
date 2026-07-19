@@ -22,4 +22,16 @@ describe("course import command policy", () => {
     expect(enforcePublicationBlockersForGate("release")).toBe(true);
     expect(enforcePublicationBlockersForGate("draft")).toBe(false);
   });
+
+  it("allows an explicitly requested unpublished review import without weakening release", () => {
+    expect(manifestGateForCommand("apply", false, true)).toBe("draft");
+    expect(manifestGateForCommand("verify", false, true)).toBe("draft");
+    expect(manifestGateForCommand("apply", false, false)).toBe("release");
+  });
+
+  it("rejects combining review and canary scopes", () => {
+    expect(() => manifestGateForCommand("apply", true, true)).toThrow(
+      /review and canary/i,
+    );
+  });
 });

@@ -296,11 +296,20 @@ function addMigrationDefaultGuards(table, rows) {
   if (table === "assignments") {
     return rows.map((row) => ({ ...row, rubric: [] }));
   }
+  if (table === "user_block_progress") {
+    return rows.map((row) => ({ ...row, asset_version: null }));
+  }
   return rows;
 }
 
 function hasMigrationDefaultGuard(table) {
-  return ["programs", "courses", "lessons", "assignments"].includes(table);
+  return [
+    "programs",
+    "courses",
+    "lessons",
+    "assignments",
+    "user_block_progress",
+  ].includes(table);
 }
 
 function classifyOrigin(row) {

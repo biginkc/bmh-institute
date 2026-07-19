@@ -5,7 +5,7 @@ import { resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const PRODUCTION_PROJECT_REF = "dhvfsyteqsxagokoerrx";
-const PRODUCTION_POOLER_HOST = "aws-1-us-west-1.pooler.supabase.com";
+const PRODUCTION_POOLER_HOST = "aws-1-us-east-1.pooler.supabase.com";
 const PRODUCTION_POOLER_USER = `postgres.${PRODUCTION_PROJECT_REF}`;
 const PRODUCTION_DATABASE = "postgres";
 const PRODUCTION_PORT = "5432";

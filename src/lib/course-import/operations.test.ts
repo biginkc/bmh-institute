@@ -1,9 +1,45 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+
 import { describe, expect, it } from "vitest";
 
 import { buildImportPlan, deterministicImportId } from "./operations";
+import { validateCourseManifest } from "./manifest";
 import { validCourseManifest } from "./test-fixtures";
 
 describe("buildImportPlan", () => {
+  it("builds the checked-in full course as an unpublished review plan", () => {
+    const input = JSON.parse(
+      readFileSync(
+        resolve("content/course-manifests/bmh-employee-training.v1.json"),
+        "utf8",
+      ),
+    ) as unknown;
+    const validation = validateCourseManifest(input, { gate: "draft" });
+    expect(validation.ok).toBe(true);
+    if (!validation.ok) throw new Error(validation.errors.join("\n"));
+
+    const plan = buildImportPlan(validation.value, {
+      allowUnapprovedAssetPlaceholders: true,
+    });
+
+    expect(plan.summary).toMatchObject({
+      programs: 1,
+      courses: 1,
+      modules: 6,
+      lessons: 44,
+      quizzes: 19,
+      questions: 342,
+      assignments: 6,
+      assets: 155,
+    });
+    const unavailablePaths = plan.operations
+      .filter((operation) => operation.table === "content_blocks")
+      .map((operation) => operation.row.content as Record<string, unknown>)
+      .filter((content) => content.file_path === null);
+    expect(unavailablePaths.length).toBeGreaterThan(0);
+  });
+
   it("produces stable dependency-ordered operations", () => {
     const first = buildImportPlan(validCourseManifest());
     const second = buildImportPlan(validCourseManifest());
@@ -129,6 +165,24 @@ describe("buildImportPlan", () => {
     expect(() => buildImportPlan(manifest)).toThrow(
       "block-video.file_path must exactly match one approved immutable asset in this import",
     );
+  });
+
+  it("turns held asset references into visible placeholders only for review plans", () => {
+    const manifest = validCourseManifest();
+    const video = manifest.assets.find((asset) => asset.source_key === "video-1");
+    const block = manifest.program.courses[0].modules[0].lessons[0].blocks?.[0];
+    if (!video || !block) throw new Error("Fixture video is missing.");
+    video.approval_status = "hold";
+    block.content.file_path = video.storage_path;
+
+    const plan = buildImportPlan(manifest, {
+      allowUnapprovedAssetPlaceholders: true,
+    });
+    const videoOperation = plan.operations.find(
+      (operation) => operation.sourceKey === "block-video",
+    );
+
+    expect(videoOperation?.row.content).toMatchObject({ file_path: null });
   });
 
   it("persists exact entity-bound provenance only for approved immutable artwork", () => {

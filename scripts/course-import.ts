@@ -57,7 +57,7 @@ async function main() {
   const manifestBytes = await readFile(absoluteManifestPath);
   const raw = JSON.parse(manifestBytes.toString("utf8")) as unknown;
   const result = validateCourseManifest(raw, {
-    gate: manifestGateForCommand(command, flags.canary),
+    gate: manifestGateForCommand(command, flags.canary, flags.review),
   });
   if (!result.ok) throw new Error(result.errors.map((error) => `- ${error}`).join("\n"));
   if (flags.canary) {
@@ -70,18 +70,25 @@ async function main() {
   if (semanticReport) {
     console.log(JSON.stringify({ phase: "bmh_semantic_validation", report: semanticReport }, null, 2));
     assertBmhImportInvocationScope(semanticReport, flags.canary);
+    if (flags.review && semanticReport.scope !== "full") {
+      throw new Error("--review is restricted to the canonical full BMH course manifest.");
+    }
     if (command !== "rollback" && command !== "inspect-rollback-storage") {
       assertBmhImportSemanticGate(semanticReport, {
         enforcePublicationBlockers: enforcePublicationBlockersForGate(
-          manifestGateForCommand(command, flags.canary),
+          manifestGateForCommand(command, flags.canary, flags.review),
         ),
       });
     }
+  } else if (flags.review) {
+    throw new Error("--review is restricted to the canonical full BMH course manifest.");
   }
-  const plan = buildImportPlan(result.value);
+  const plan = buildImportPlan(result.value, {
+    allowUnapprovedAssetPlaceholders: flags.review,
+  });
   if (command === "upload") assertApprovedUploadIntegrity(plan.assets);
 
-  console.log(JSON.stringify({ command, canary: flags.canary, dryRun: !flags.execute, summary: plan.summary }, null, 2));
+  console.log(JSON.stringify({ command, canary: flags.canary, review: flags.review, dryRun: !flags.execute, summary: plan.summary }, null, 2));
   if (command === "validate") return;
   if (!flags.execute) {
     console.log("Dry run only. Add --execute after reviewing this plan.");
@@ -270,7 +277,7 @@ function parseArgs(args: string[]) {
   const command = args[0];
   const manifestPath = args[1];
   if (!["validate", "upload", "apply", "verify", "rollback", "inspect-rollback-storage"].includes(command) || !manifestPath) {
-    throw new Error("Usage: npm run course:import -- <validate|upload|apply|verify|rollback|inspect-rollback-storage> <manifest.json> [--execute] [--canary] [--source-root=<path>] [--state-root=<path>] [--allow-production] [--confirm=<import_id>]");
+    throw new Error("Usage: npm run course:import -- <validate|upload|apply|verify|rollback|inspect-rollback-storage> <manifest.json> [--execute] [--canary|--review] [--source-root=<path>] [--state-root=<path>] [--allow-production] [--confirm=<import_id>]");
   }
   return {
     command: command as CourseImportCommand,
@@ -278,6 +285,7 @@ function parseArgs(args: string[]) {
     flags: {
       execute: args.includes("--execute"),
       canary: args.includes("--canary"),
+      review: args.includes("--review"),
       allowProduction: args.includes("--allow-production"),
       confirm: args.find((arg) => arg.startsWith("--confirm="))?.slice("--confirm=".length),
       sourceRoot: args.find((arg) => arg.startsWith("--source-root="))?.slice("--source-root=".length),

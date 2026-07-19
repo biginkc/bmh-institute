@@ -52,12 +52,19 @@ export type ImportPlan = {
   };
 };
 
+export type BuildImportPlanOptions = {
+  allowUnapprovedAssetPlaceholders?: boolean;
+};
+
 export function deterministicImportId(importId: string, sourceKey: string): string {
   const hex = createHash("sha256").update(`${importId}:${sourceKey}`).digest("hex").slice(0, 32);
   return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-5${hex.slice(13, 16)}-a${hex.slice(17, 20)}-${hex.slice(20, 32)}`;
 }
 
-export function buildImportPlan(manifest: CourseImportManifest): ImportPlan {
+export function buildImportPlan(
+  manifest: CourseImportManifest,
+  options: BuildImportPlanOptions = {},
+): ImportPlan {
   const operations: ImportOperation[] = [];
   const id = (key: string) => deterministicImportId(manifest.import_id, key);
   const assets = new Map(manifest.assets.map((asset) => [asset.source_key, asset]));
@@ -172,6 +179,7 @@ export function buildImportPlan(manifest: CourseImportManifest): ImportPlan {
               assets,
               assetsByPath,
               manifest.import_id,
+              options,
             ),
             sort_order: block.sort_order,
             is_required_for_completion: block.required,
@@ -308,6 +316,7 @@ function resolveBlockContent(
   assets: Map<string, CourseImportAsset>,
   assetsByPath: Map<string, CourseImportAsset[]>,
   importId: string,
+  options: BuildImportPlanOptions,
 ) {
   const content = { ...block.content };
   if (block.type === "text" && typeof content.html === "string") {
@@ -324,18 +333,21 @@ function resolveBlockContent(
     const rawPath = content[pathField];
     if (typeof key === "string") {
       const asset = assets.get(key);
+      const prefix = importStoragePrefix(importId);
+      const approved = Boolean(
+        asset && prefix && isImmutableApprovedAsset(asset, prefix),
+      );
       if (typeof rawPath === "string" && rawPath !== asset?.storage_path) {
         throw new Error(`${block.source_key}.${pathField} does not match ${keyField} ${key}.`);
       }
       if (typeof rawPath === "string") {
-        const prefix = importStoragePrefix(importId);
-        if (!asset || !prefix || !isImmutableApprovedAsset(asset, prefix)) {
+        if (!approved && !options.allowUnapprovedAssetPlaceholders) {
           throw new Error(
             `${block.source_key}.${pathField} must exactly match one approved immutable asset in this import.`,
           );
         }
       }
-      content[pathField] = asset?.storage_path ?? null;
+      content[pathField] = approved ? asset?.storage_path ?? null : null;
     } else if (typeof rawPath === "string") {
       const matches = assetsByPath.get(rawPath) ?? [];
       const prefix = importStoragePrefix(importId);

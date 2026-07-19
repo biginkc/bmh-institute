@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  IMPORT_QA_MEMBERSHIP_RESTRICTED_ERROR,
   IMPORT_RELEASE_REQUIRED_ERROR,
   IMPORT_ROLLBACK_REQUIRED_ERROR,
   importedDeletionError,
@@ -64,5 +65,13 @@ describe("imported catalog release controls", () => {
         "Imported catalog graph deletion requires the exact course-import rollback operation.",
       ),
     ).toBe(IMPORT_ROLLBACK_REQUIRED_ERROR);
+  });
+
+  it("turns QA membership guard failures into an actionable admin message", () => {
+    expect(
+      normalizeReleaseControlError(
+        "Unreleased imported catalog QA role group cannot be assigned through generic user or invite administration.",
+      ),
+    ).toBe(IMPORT_QA_MEMBERSHIP_RESTRICTED_ERROR);
   });
 });

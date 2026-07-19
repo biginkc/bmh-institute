@@ -6,13 +6,14 @@ import {
 } from "../../../scripts/fixture-boundary/run-verified-production-db-operation";
 
 const projectRef = "dhvfsyteqsxagokoerrx";
-const poolerHost = "aws-1-us-west-1.pooler.supabase.com";
+const poolerHost = "aws-1-us-east-1.pooler.supabase.com";
 const canonicalUrl =
   `postgresql://postgres.${projectRef}:p%40ss%2Fword@${poolerHost}:5432/postgres`;
 
 describe("verified production fixture-boundary database operation", () => {
   it.each([
     `postgresql://postgres.${projectRef}:secret@127.0.0.1:5432/postgres`,
+    `postgresql://postgres.${projectRef}:secret@aws-1-us-west-1.pooler.supabase.com:5432/postgres`,
     `postgresql://postgres.${projectRef}:secret@${poolerHost}.evil.example:5432/postgres`,
     `postgresql://postgres.jvaabkchkihkjllehmft:secret@${poolerHost}:5432/postgres`,
     `postgresql://postgres.${projectRef}:secret@${poolerHost}:6543/postgres`,

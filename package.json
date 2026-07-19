@@ -22,7 +22,6 @@
     "artwork:production": "node scripts/course-content/artwork-production.mjs",
     "seed:e2e": "tsx scripts/seed-e2e-test-content.ts",
     "cleanup:e2e": "tsx scripts/seed-e2e-test-content.ts --cleanup-only",
-    "seed:walkthrough": "tsx scripts/seed-walkthrough-onboarding.ts",
     "typecheck": "tsc --noEmit",
     "verify": "npm run typecheck && npm run test && npm run test:rtl",
     "prepare": "husky",

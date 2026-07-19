@@ -29,6 +29,10 @@ const controllerGatePath = resolve(
   root,
   "supabase/migrations/036_controller_verified_fixture_cleanup_gate.sql",
 );
+const progressFingerprintRefreshPath = resolve(
+  root,
+  "supabase/migrations/038_refresh_fixture_progress_fingerprints.sql",
+);
 const controllerGateSqlTestPath = resolve(
   root,
   "supabase/tests/036_controller_verified_fixture_cleanup_gate.sql",
@@ -56,6 +60,10 @@ const ownership = readFileSync(ownershipPath, "utf8");
 const volatilityFix = readFileSync(volatilityFixPath, "utf8");
 const contractRefresh = readFileSync(contractRefreshPath, "utf8");
 const controllerGate = readFileSync(controllerGatePath, "utf8");
+const progressFingerprintRefresh = readFileSync(
+  progressFingerprintRefreshPath,
+  "utf8",
+);
 const controllerGateSqlTest = readFileSync(controllerGateSqlTestPath, "utf8");
 const controllerGateHostedSqlTest = readFileSync(
   controllerGateHostedSqlTestPath,
@@ -72,8 +80,8 @@ describe("atomic fixture cleanup migration", () => {
     expect(readFileSync(`${manifestPath}.sha256`, "utf8")).toBe(
       `${manifestHash}  fixture-boundary-manifest.json\n`,
     );
-    expect(contractRefresh).toContain(
-      `v_new_sha constant text :=\n    '${manifestHash}'`,
+    expect(progressFingerprintRefresh).toContain(
+      `v_new_manifest_sha constant text := '${manifestHash}'`,
     );
     expect(contractRefresh).toContain("Migration 021 is already applied");
     expect(contractRefresh).toContain(
@@ -115,6 +123,18 @@ describe("atomic fixture cleanup migration", () => {
     expect(
       manifest.fixture_tables.user_course_resume.fingerprint_fields,
     ).toContain("updated_at");
+    expect(
+      manifest.fixture_tables.user_block_progress.fingerprint_fields,
+    ).toContain("asset_version");
+    expect(progressFingerprintRefresh).toContain(
+      "array['asset_version', 'block_id', 'completed_at', 'id', 'user_id']::text[]",
+    );
+    expect(progressFingerprintRefresh).toContain(
+      "fixture_cleanup_legacy_contract_attestation_v1",
+    );
+    expect(progressFingerprintRefresh).toContain(
+      "fixture_cleanup_controller_contract_attestation_v1",
+    );
     for (const table of ["programs", "courses", "lessons"]) {
       expect(manifest.fixture_tables[table].fingerprint_fields).toEqual(
         expect.arrayContaining([

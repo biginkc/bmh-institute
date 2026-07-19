@@ -126,6 +126,11 @@ export default async function CoursePage({
       .filter((state) => state.isComplete)
       .map((state) => state.lessonId),
   );
+  const unlockedLessonIds = new Set(
+    Array.from(stateResult.states.values())
+      .filter((state) => state.isUnlocked)
+      .map((state) => state.lessonId),
+  );
   const requiredLessons = allLessons.filter(
     (lesson) => lesson.is_required_for_completion,
   );
@@ -147,7 +152,7 @@ export default async function CoursePage({
   const currentLessonId = allLessons.find(
     (lesson) =>
       !completedLessonIds.has(lesson.id) &&
-      !isLessonLocked(lesson, completedLessonIds),
+      unlockedLessonIds.has(lesson.id),
   )?.id;
 
   return (
@@ -164,9 +169,14 @@ export default async function CoursePage({
       </Link>
 
       <header className="mt-6 border-b border-[var(--border-hairline)] pb-8">
-        <Badge tone={isCourseComplete ? "green" : "solid"} size="sm">
-          {isCourseComplete ? "Course complete" : "In progress"}
-        </Badge>
+        <div className="flex flex-wrap gap-2">
+          {!course.is_published ? (
+            <Badge tone="yellow" size="sm">Private review</Badge>
+          ) : null}
+          <Badge tone={isCourseComplete ? "green" : "solid"} size="sm">
+            {isCourseComplete ? "Course complete" : "In progress"}
+          </Badge>
+        </div>
         <h1 className="mt-3 font-[family-name:var(--font-display)] text-4xl leading-[1.05] font-extrabold tracking-[-0.025em] text-[var(--ink-900)]">
           {course.title}
         </h1>
@@ -256,7 +266,7 @@ export default async function CoursePage({
                         key={lesson.id}
                         lesson={lesson}
                         completed={completedLessonIds.has(lesson.id)}
-                        locked={isLessonLocked(lesson, completedLessonIds)}
+                        locked={!unlockedLessonIds.has(lesson.id)}
                         active={lesson.id === currentLessonId}
                       />
                     ))}
@@ -269,14 +279,6 @@ export default async function CoursePage({
       )}
     </div>
   );
-}
-
-function isLessonLocked(
-  lesson: LessonSummary,
-  completedLessonIds: Set<string>,
-): boolean {
-  if (!lesson.prerequisite_lesson_id) return false;
-  return !completedLessonIds.has(lesson.prerequisite_lesson_id);
 }
 
 function LessonRow({

@@ -18,6 +18,7 @@ import {
 import { enrichBlocksWithSignedUrls } from "@/lib/content-blocks/sign-urls";
 import { computeQuizEligibility } from "@/lib/quizzes/attempts";
 import { mintRolePlayEmbedToken } from "@/lib/role-plays/embed-token";
+import { isConfiguredRolePlayScenarioId } from "@/lib/role-plays/scenario-id";
 import { getAppUrl } from "@/lib/app-url";
 import { QuizGateCard } from "./quiz-gate-card";
 import { QuizRunner } from "./quiz-runner";
@@ -488,7 +489,7 @@ async function attachRolePlayEmbeds(
   return blocks.map((block) => {
     if (block.block_type !== "role_play") return block;
     const scenarioId = stringOr(block.content.scenario_id, "");
-    if (!scenarioId || !baseUrl) return block;
+    if (!isConfiguredRolePlayScenarioId(scenarioId) || !baseUrl) return block;
 
     try {
       const token = mintRolePlayEmbedToken({

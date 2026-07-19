@@ -5,6 +5,7 @@ let tableData: Record<string, unknown[]> = {};
 let completedLessonIds = new Set<string>();
 let lessonStatesError: { message: string } | null = null;
 const rpcSpy = vi.fn();
+const eqSpy = vi.fn();
 
 vi.mock("@/lib/supabase/server", () => ({
   createClient: vi.fn(async () => ({
@@ -35,7 +36,10 @@ vi.mock("@/lib/supabase/server", () => ({
     from: (table: string) => {
       const chain = {
         select: () => chain,
-        eq: () => chain,
+        eq: (...args: unknown[]) => {
+          eqSpy(...args);
+          return chain;
+        },
         in: () => chain,
         order: () => chain,
         then: (resolve: (value: { data: unknown[]; error: null }) => unknown) =>
@@ -62,6 +66,31 @@ describe("DashboardPage learner onboarding", () => {
     completedLessonIds = new Set();
     lessonStatesError = null;
     rpcSpy.mockClear();
+    eqSpy.mockClear();
+  });
+
+  it("lets RLS return the sole assigned unpublished QA program", async () => {
+    tableData = {
+      programs: [
+        {
+          id: "review-program",
+          title: "BMH Employee Training Review",
+          description: "Private course review",
+          thumbnail_path: null,
+          content_import_id: "bmh-employee-training-v1",
+          course_order_mode: "sequential",
+          is_published: false,
+          sort_order: 0,
+          program_courses: [],
+        },
+      ],
+    };
+
+    const html = renderToStaticMarkup(await DashboardPage());
+
+    expect(html).toContain("BMH Employee Training Review");
+    expect(html).toContain("Private review");
+    expect(eqSpy).not.toHaveBeenCalledWith("is_published", true);
   });
 
   it("renders support-oriented copy when no programs are assigned", async () => {

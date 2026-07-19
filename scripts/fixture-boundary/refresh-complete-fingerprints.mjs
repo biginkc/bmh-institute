@@ -163,6 +163,9 @@ function addMigrationDefaultGuards(table, rows) {
     }));
   }
   if (table === "assignments") return rows.map((row) => ({ ...row, rubric: [] }));
+  if (table === "user_block_progress") {
+    return rows.map((row) => ({ ...row, asset_version: null }));
+  }
   return rows;
 }
 

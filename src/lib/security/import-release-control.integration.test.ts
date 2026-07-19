@@ -436,7 +436,7 @@ describe.skipIf(!envPresent)("imported catalog release control on a test project
     }
   });
 
-  it("lets only the sole QA cohort exercise the unpublished learner path and blocks admin deletion", async () => {
+  it("keeps imported review admin-only and blocks generic QA membership and invites", async () => {
     if (!service) throw new Error("Test-project service client is unavailable.");
     const plan = uniquePlan();
     const operation = (table: ImportPlan["operations"][number]["table"]) => {
@@ -450,48 +450,57 @@ describe.skipIf(!envPresent)("imported catalog release control on a test project
     const qaRoleGroup = operation("role_groups");
     let learner: Awaited<ReturnType<typeof createSignedInUser>> | null = null;
     let owner: Awaited<ReturnType<typeof createSignedInUser>> | null = null;
-    let unrelatedCourseId: string | null = null;
 
     try {
       await applyImportPlan(plan, adapter());
       learner = await createSignedInUser("learner");
       owner = await createSignedInUser("owner");
-      const membership = await service.from("user_role_groups").insert({
+
+      const directMembership = await service.from("user_role_groups").insert({
         user_id: learner.id,
         role_group_id: qaRoleGroup.id,
       });
-      if (membership.error) throw membership.error;
+      expect(directMembership.error?.message).toMatch(
+        /QA role group cannot be assigned/i,
+      );
 
-      const unrelated = await service
-        .from("courses")
-        .insert({ title: `Unrelated unpublished ${randomBytes(6).toString("hex")}` })
-        .select("id")
-        .single();
-      if (unrelated.error || !unrelated.data) throw unrelated.error;
-      unrelatedCourseId = unrelated.data.id;
-      const unrelatedAccess = await service.from("course_access").insert({
-        course_id: unrelatedCourseId,
-        role_group_id: qaRoleGroup.id,
+      const genericAssignment = await owner.client.rpc(
+        "fn_set_user_role_groups",
+        {
+          p_user_id: learner.id,
+          p_role_group_ids: [qaRoleGroup.id],
+        },
+      );
+      expect(genericAssignment.error?.message).toMatch(
+        /QA role group cannot be assigned/i,
+      );
+
+      const genericInvite = await service.from("invites").insert({
+        email: `qa-invite-${randomBytes(6).toString("hex")}@bmh.invalid`,
+        role_group_ids: [qaRoleGroup.id],
+        token: randomBytes(24).toString("base64url"),
       });
-      if (unrelatedAccess.error) throw unrelatedAccess.error;
+      expect(genericInvite.error?.message).toMatch(
+        /QA role group cannot be assigned/i,
+      );
 
-      const [visibleProgram, visibleCourse, visibleLesson, hiddenUnrelated, unlocked] =
+      const [visibleProgram, visibleCourse, visibleLesson, unlocked, hiddenFromLearner] =
         await Promise.all([
-          learner.client.from("programs").select("id").eq("id", program.id).maybeSingle(),
-          learner.client.from("courses").select("id").eq("id", course.id).maybeSingle(),
-          learner.client.from("lessons").select("id").eq("id", lesson.id).maybeSingle(),
-          learner.client.from("courses").select("id").eq("id", unrelatedCourseId).maybeSingle(),
-          learner.client.rpc("fn_lesson_is_unlocked", {
-            p_user_id: learner.id,
+          owner.client.from("programs").select("id").eq("id", program.id).maybeSingle(),
+          owner.client.from("courses").select("id").eq("id", course.id).maybeSingle(),
+          owner.client.from("lessons").select("id").eq("id", lesson.id).maybeSingle(),
+          owner.client.rpc("fn_lesson_is_unlocked", {
+            p_user_id: owner.id,
             p_lesson_id: lesson.id,
           }),
+          learner.client.from("programs").select("id").eq("id", program.id).maybeSingle(),
         ]);
       expect(visibleProgram.data?.id).toBe(program.id);
       expect(visibleCourse.data?.id).toBe(course.id);
       expect(visibleLesson.data?.id).toBe(lesson.id);
-      expect(hiddenUnrelated.data).toBeNull();
       expect(unlocked.error).toBeNull();
       expect(unlocked.data).toBe(true);
+      expect(hiddenFromLearner.data).toBeNull();
 
       const genericDelete = await owner.client
         .from("programs")
@@ -507,10 +516,6 @@ describe.skipIf(!envPresent)("imported catalog release control on a test project
         /exact course-import rollback/i,
       );
     } finally {
-      if (unrelatedCourseId) {
-        await service.from("course_access").delete().eq("course_id", unrelatedCourseId);
-        await service.from("courses").delete().eq("id", unrelatedCourseId);
-      }
       if (learner) await service.auth.admin.deleteUser(learner.id);
       if (owner) await service.auth.admin.deleteUser(owner.id);
       const rollback = await service.rpc("fn_rollback_course_import", {
@@ -522,6 +527,51 @@ describe.skipIf(!envPresent)("imported catalog release control on a test project
         import_id: plan.importId,
         status: "rolled_back",
       });
+    }
+  });
+
+  it("refuses to link a pre-created QA role group that already has a learner", async () => {
+    if (!service) throw new Error("Test-project service client is unavailable.");
+    const plan = uniquePlan();
+    const qaRoleGroup = atomicImportOperations(plan).find(
+      (operation) => operation.table === "role_groups",
+    );
+    const program = atomicImportOperations(plan).find(
+      (operation) => operation.table === "programs",
+    );
+    if (!qaRoleGroup || !program) throw new Error("Test import roots are missing.");
+    let learner: Awaited<ReturnType<typeof createSignedInUser>> | null = null;
+
+    try {
+      learner = await createSignedInUser("learner");
+      const roleGroup = await service.from("role_groups").insert(qaRoleGroup.row);
+      if (roleGroup.error) throw roleGroup.error;
+      const membership = await service.from("user_role_groups").insert({
+        user_id: learner.id,
+        role_group_id: qaRoleGroup.id,
+      });
+      if (membership.error) throw membership.error;
+
+      await expect(applyImportPlan(plan, adapter())).rejects.toThrow(
+        /already has user memberships/i,
+      );
+
+      const importedProgram = await service
+        .from("programs")
+        .select("id", { count: "exact", head: true })
+        .eq("id", program.id);
+      expect(importedProgram.error).toBeNull();
+      expect(importedProgram.count).toBe(0);
+    } finally {
+      if (learner) {
+        await service
+          .from("user_role_groups")
+          .delete()
+          .eq("user_id", learner.id)
+          .eq("role_group_id", qaRoleGroup.id);
+        await service.auth.admin.deleteUser(learner.id);
+      }
+      await service.from("role_groups").delete().eq("id", qaRoleGroup.id);
     }
   });
 
