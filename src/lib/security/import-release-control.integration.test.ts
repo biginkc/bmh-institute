@@ -130,6 +130,50 @@ async function createSignedInUser(
   return { id, client };
 }
 
+const catalogPolicyTables = [
+  "programs",
+  "courses",
+  "program_courses",
+  "program_access",
+  "course_access",
+  "modules",
+  "lessons",
+  "content_blocks",
+  "quizzes",
+  "questions",
+  "answer_options",
+  "assignments",
+] as const;
+
+const importedCatalogTables = catalogPolicyTables.filter(
+  (table) => table !== "course_access",
+);
+
+type GuardedCatalogTable = (typeof catalogPolicyTables)[number];
+type CatalogRowReference = { table: GuardedCatalogTable; id: string };
+
+function importedCatalogReferences(plan: ImportPlan): CatalogRowReference[] {
+  const operations = atomicImportOperations(plan);
+  return importedCatalogTables.map((table) => {
+    const operation = operations.find((candidate) => candidate.table === table);
+    if (!operation) throw new Error(`Test import is missing ${table}.`);
+    return { table, id: operation.id };
+  });
+}
+
+async function readCatalogReferences(
+  client: SupabaseClient,
+  references: CatalogRowReference[],
+): Promise<Array<string | null>> {
+  return Promise.all(
+    references.map(async ({ table, id }) => {
+      const result = await client.from(table).select("id").eq("id", id).maybeSingle();
+      if (result.error) throw result.error;
+      return result.data?.id ?? null;
+    }),
+  );
+}
+
 async function cleanupContentionPlan(
   client: SupabaseClient,
   plan: ImportPlan,
@@ -447,26 +491,58 @@ describe.skipIf(!envPresent)("imported catalog release control on a test project
     const program = operation("programs");
     const course = operation("courses");
     const lesson = operation("lessons");
+    const module = operation("modules");
+    const assignment = operation("assignments");
+    const assignmentLesson = atomicImportOperations(plan).find(
+      (candidate) =>
+        candidate.table === "lessons" && candidate.row.assignment_id === assignment.id,
+    );
+    if (!assignmentLesson) throw new Error("Test import assignment lesson is missing.");
     const qaRoleGroup = operation("role_groups");
+    const importedReferences = importedCatalogReferences(plan);
     let learner: Awaited<ReturnType<typeof createSignedInUser>> | null = null;
     let admin: Awaited<ReturnType<typeof createSignedInUser>> | null = null;
     let owner: Awaited<ReturnType<typeof createSignedInUser>> | null = null;
+    let importApplied = false;
 
     try {
       await applyImportPlan(plan, adapter());
+      importApplied = true;
       learner = await createSignedInUser("learner");
       admin = await createSignedInUser("admin");
       owner = await createSignedInUser("owner");
 
       const [ownerBeforeGrant, adminBeforeGrant, learnerBeforeGrant] =
         await Promise.all([
-          owner.client.from("programs").select("id").eq("id", program.id).maybeSingle(),
-          admin.client.from("programs").select("id").eq("id", program.id).maybeSingle(),
-          learner.client.from("programs").select("id").eq("id", program.id).maybeSingle(),
+          readCatalogReferences(owner.client, importedReferences),
+          readCatalogReferences(admin.client, importedReferences),
+          readCatalogReferences(learner.client, importedReferences),
         ]);
-      expect(ownerBeforeGrant.data).toBeNull();
-      expect(adminBeforeGrant.data).toBeNull();
-      expect(learnerBeforeGrant.data).toBeNull();
+      expect(ownerBeforeGrant).toEqual(importedReferences.map(() => null));
+      expect(adminBeforeGrant).toEqual(importedReferences.map(() => null));
+      expect(learnerBeforeGrant).toEqual(importedReferences.map(() => null));
+
+      const directReviewerRead = await owner.client
+        .from("course_import_reviewers_v1")
+        .select("program_id")
+        .eq("program_id", program.id);
+      expect(directReviewerRead.error?.message).toMatch(/permission denied/i);
+
+      const directReviewerInsert = await owner.client
+        .from("course_import_reviewers_v1")
+        .insert({ program_id: program.id, user_id: owner.id });
+      expect(directReviewerInsert.error?.message).toMatch(/permission denied/i);
+
+      const serviceReviewerRead = await service
+        .from("course_import_reviewers_v1")
+        .select("program_id")
+        .eq("program_id", program.id);
+      expect(serviceReviewerRead.error?.message).toMatch(/permission denied/i);
+
+      const serviceReviewerInsert = await service
+        .from("course_import_reviewers_v1")
+        .insert({ program_id: program.id, user_id: owner.id });
+      expect(serviceReviewerInsert.error?.message).toMatch(/permission denied/i);
 
       const directMembership = await service.from("user_role_groups").insert({
         user_id: learner.id,
@@ -516,25 +592,88 @@ describe.skipIf(!envPresent)("imported catalog release control on a test project
       );
       expect(reviewerGrant.error).toBeNull();
 
-      const [visibleProgram, visibleCourse, visibleLesson, unlocked, hiddenFromAdmin, hiddenFromLearner] =
+      const [visibleToReviewer, hiddenFromAdmin, hiddenFromLearner, unlocked] =
         await Promise.all([
-          owner.client.from("programs").select("id").eq("id", program.id).maybeSingle(),
-          owner.client.from("courses").select("id").eq("id", course.id).maybeSingle(),
-          owner.client.from("lessons").select("id").eq("id", lesson.id).maybeSingle(),
+          readCatalogReferences(owner.client, importedReferences),
+          readCatalogReferences(admin.client, importedReferences),
+          readCatalogReferences(learner.client, importedReferences),
           owner.client.rpc("fn_lesson_is_unlocked", {
             p_user_id: owner.id,
             p_lesson_id: lesson.id,
           }),
-          admin.client.from("programs").select("id").eq("id", program.id).maybeSingle(),
-          learner.client.from("programs").select("id").eq("id", program.id).maybeSingle(),
         ]);
-      expect(visibleProgram.data?.id).toBe(program.id);
-      expect(visibleCourse.data?.id).toBe(course.id);
-      expect(visibleLesson.data?.id).toBe(lesson.id);
+      expect(visibleToReviewer).toEqual(importedReferences.map(({ id }) => id));
+      expect(hiddenFromAdmin).toEqual(importedReferences.map(() => null));
+      expect(hiddenFromLearner).toEqual(importedReferences.map(() => null));
       expect(unlocked.error).toBeNull();
       expect(unlocked.data).toBe(true);
-      expect(hiddenFromAdmin.data).toBeNull();
-      expect(hiddenFromLearner.data).toBeNull();
+
+      const adminModuleMove = await admin.client.rpc("fn_move_module", {
+        p_module_id: module.id,
+        p_course_id: course.id,
+        p_direction: "up",
+      });
+      expect(adminModuleMove.error?.message).toMatch(/admin reviewer access required/i);
+
+      const reviewerModuleMove = await owner.client.rpc("fn_move_module", {
+        p_module_id: module.id,
+        p_course_id: course.id,
+        p_direction: "up",
+      });
+      expect(reviewerModuleMove.error).toBeNull();
+
+      const assignmentArgs = {
+        p_lesson_id: assignmentLesson.id,
+        p_assignment_id: assignment.id,
+        p_title: String(assignment.row.title),
+        p_instructions: String(assignment.row.instructions),
+        p_submission_type: String(assignment.row.submission_type),
+        p_requires_review: Boolean(assignment.row.requires_review),
+        p_rubric: assignment.row.rubric,
+      };
+      const adminAssignmentUpdate = await admin.client.rpc(
+        "fn_update_assignment_for_lesson",
+        assignmentArgs,
+      );
+      expect(adminAssignmentUpdate.error?.message).toMatch(
+        /admin reviewer access required/i,
+      );
+
+      const reviewerAssignmentUpdate = await owner.client.rpc(
+        "fn_update_assignment_for_lesson",
+        assignmentArgs,
+      );
+      expect(reviewerAssignmentUpdate.error).toBeNull();
+      expect(reviewerAssignmentUpdate.data).toBe(true);
+
+      const reviewerRevoke = await service.rpc(
+        "fn_set_unreleased_import_reviewer_v1",
+        {
+          p_program_id: program.id,
+          p_user_id: owner.id,
+          p_allowed: false,
+        },
+      );
+      expect(reviewerRevoke.error).toBeNull();
+      expect(await readCatalogReferences(owner.client, importedReferences)).toEqual(
+        importedReferences.map(() => null),
+      );
+      const lockedAfterRevoke = await owner.client.rpc("fn_lesson_is_unlocked", {
+        p_user_id: owner.id,
+        p_lesson_id: lesson.id,
+      });
+      expect(lockedAfterRevoke.error).toBeNull();
+      expect(lockedAfterRevoke.data).toBe(false);
+
+      const reviewerRegrant = await service.rpc(
+        "fn_set_unreleased_import_reviewer_v1",
+        {
+          p_program_id: program.id,
+          p_user_id: owner.id,
+          p_allowed: true,
+        },
+      );
+      expect(reviewerRegrant.error).toBeNull();
 
       const genericDelete = await owner.client
         .from("programs")
@@ -549,10 +688,7 @@ describe.skipIf(!envPresent)("imported catalog release control on a test project
       expect(forgedServiceDelete.error?.message).toMatch(
         /exact course-import rollback/i,
       );
-    } finally {
-      if (learner) await service.auth.admin.deleteUser(learner.id);
-      if (admin) await service.auth.admin.deleteUser(admin.id);
-      if (owner) await service.auth.admin.deleteUser(owner.id);
+
       const rollback = await service.rpc("fn_rollback_course_import", {
         p_import_id: plan.importId,
         p_owned: buildRollbackOwnedIds(plan),
@@ -562,6 +698,149 @@ describe.skipIf(!envPresent)("imported catalog release control on a test project
         import_id: plan.importId,
         status: "rolled_back",
       });
+      importApplied = false;
+
+      await applyImportPlan(plan, adapter());
+      importApplied = true;
+      expect(await readCatalogReferences(owner.client, importedReferences)).toEqual(
+        importedReferences.map(() => null),
+      );
+    } finally {
+      if (learner) await service.auth.admin.deleteUser(learner.id);
+      if (admin) await service.auth.admin.deleteUser(admin.id);
+      if (owner) await service.auth.admin.deleteUser(owner.id);
+      if (importApplied) {
+        const rollback = await service.rpc("fn_rollback_course_import", {
+          p_import_id: plan.importId,
+          p_owned: buildRollbackOwnedIds(plan),
+        });
+        expect(rollback.error).toBeNull();
+        expect(rollback.data).toMatchObject({
+          import_id: plan.importId,
+          status: "rolled_back",
+        });
+      }
+    }
+  });
+
+  it("preserves ordinary admin review and editing of hand-authored unpublished drafts", async () => {
+    if (!service) throw new Error("Test-project service client is unavailable.");
+    const suffix = randomBytes(8).toString("hex");
+    const ids = {
+      roleGroup: randomUUID(), program: randomUUID(), course: randomUUID(),
+      programCourse: randomUUID(), programAccess: randomUUID(), courseAccess: randomUUID(),
+      module: randomUUID(), quiz: randomUUID(), question: randomUUID(),
+      answerOption: randomUUID(), assignment: randomUUID(), contentLesson: randomUUID(),
+      quizLesson: randomUUID(), assignmentLesson: randomUUID(), contentBlock: randomUUID(),
+    };
+    const references: CatalogRowReference[] = [
+      { table: "programs", id: ids.program },
+      { table: "courses", id: ids.course },
+      { table: "program_courses", id: ids.programCourse },
+      { table: "program_access", id: ids.programAccess },
+      { table: "course_access", id: ids.courseAccess },
+      { table: "modules", id: ids.module },
+      { table: "lessons", id: ids.contentLesson },
+      { table: "content_blocks", id: ids.contentBlock },
+      { table: "quizzes", id: ids.quiz },
+      { table: "questions", id: ids.question },
+      { table: "answer_options", id: ids.answerOption },
+      { table: "assignments", id: ids.assignment },
+    ];
+    let admin: Awaited<ReturnType<typeof createSignedInUser>> | null = null;
+
+    const insert = async (table: string, row: Record<string, unknown>) => {
+      const result = await service.from(table).insert(row);
+      if (result.error) throw result.error;
+    };
+
+    try {
+      await insert("role_groups", { id: ids.roleGroup, name: `Hand-authored draft ${suffix}` });
+      await insert("programs", {
+        id: ids.program, title: `Hand-authored program ${suffix}`,
+        description: "Unpublished editor fixture.", is_published: false,
+      });
+      await insert("courses", {
+        id: ids.course, title: `Hand-authored course ${suffix}`,
+        description: "Unpublished editor fixture.", is_published: false,
+      });
+      await insert("program_courses", {
+        id: ids.programCourse, program_id: ids.program, course_id: ids.course,
+      });
+      await insert("program_access", {
+        id: ids.programAccess, program_id: ids.program, role_group_id: ids.roleGroup,
+      });
+      await insert("course_access", {
+        id: ids.courseAccess, course_id: ids.course, role_group_id: ids.roleGroup,
+      });
+      await insert("modules", { id: ids.module, course_id: ids.course, title: "Draft module" });
+      await insert("quizzes", { id: ids.quiz, title: "Draft quiz" });
+      await insert("questions", {
+        id: ids.question, quiz_id: ids.quiz, question_text: "Draft question?",
+        question_type: "single_choice",
+      });
+      await insert("answer_options", {
+        id: ids.answerOption, question_id: ids.question,
+        option_text: "Draft answer", is_correct: true,
+      });
+      await insert("assignments", {
+        id: ids.assignment, title: "Draft assignment",
+        instructions: "Complete the draft assignment.", submission_type: "text",
+        requires_review: true,
+        rubric: [{ criterion: "Complete", description: "Answers the prompt." }],
+      });
+      await insert("lessons", {
+        id: ids.contentLesson, module_id: ids.module, title: "Draft content lesson",
+        lesson_type: "content", sort_order: 0,
+      });
+      await insert("lessons", {
+        id: ids.quizLesson, module_id: ids.module, title: "Draft quiz lesson",
+        lesson_type: "quiz", quiz_id: ids.quiz, sort_order: 1,
+      });
+      await insert("lessons", {
+        id: ids.assignmentLesson, module_id: ids.module, title: "Draft assignment lesson",
+        lesson_type: "assignment", assignment_id: ids.assignment, sort_order: 2,
+      });
+      await insert("content_blocks", {
+        id: ids.contentBlock, lesson_id: ids.contentLesson,
+        block_type: "text", content: { markdown: "Draft content." },
+      });
+
+      admin = await createSignedInUser("admin");
+      expect(await readCatalogReferences(admin.client, references)).toEqual(
+        references.map(({ id }) => id),
+      );
+
+      const directEdit = await admin.client
+        .from("programs")
+        .update({ description: "Edited by an ordinary admin." })
+        .eq("id", ids.program)
+        .select("id")
+        .single();
+      expect(directEdit.error).toBeNull();
+      expect(directEdit.data?.id).toBe(ids.program);
+
+      const moduleMove = await admin.client.rpc("fn_move_module", {
+        p_module_id: ids.module, p_course_id: ids.course, p_direction: "up",
+      });
+      expect(moduleMove.error).toBeNull();
+
+      const assignmentUpdate = await admin.client.rpc("fn_update_assignment_for_lesson", {
+        p_lesson_id: ids.assignmentLesson, p_assignment_id: ids.assignment,
+        p_title: "Draft assignment edited",
+        p_instructions: "Complete the edited draft assignment.",
+        p_submission_type: "text", p_requires_review: true,
+        p_rubric: [{ criterion: "Complete", description: "Answers the edited prompt." }],
+      });
+      expect(assignmentUpdate.error).toBeNull();
+      expect(assignmentUpdate.data).toBe(true);
+    } finally {
+      if (admin) await service.auth.admin.deleteUser(admin.id);
+      await service.from("programs").delete().eq("id", ids.program);
+      await service.from("courses").delete().eq("id", ids.course);
+      await service.from("quizzes").delete().eq("id", ids.quiz);
+      await service.from("assignments").delete().eq("id", ids.assignment);
+      await service.from("role_groups").delete().eq("id", ids.roleGroup);
     }
   });
 
