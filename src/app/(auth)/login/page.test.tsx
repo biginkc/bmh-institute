@@ -116,18 +116,21 @@ describe("LoginPage", () => {
     expect(signInWithOAuth).toHaveBeenCalledWith({
       provider: "custom:bmh",
       options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(
+        redirectTo: `${window.location.origin}/auth/callback?flow=sso&next=${encodeURIComponent(
           "/lessons/abc",
         )}`,
       },
     });
   });
 
-  it("surfaces an error when the BMH ID flow fails to start", async () => {
+  // Real signInWithOAuth startup failures (PKCE storage/crypto/URL setup)
+  // REJECT rather than resolving { error } — this SDK path never produces a
+  // resolved error — so the regression pins the rejection shape.
+  it("surfaces an error and re-enables the button when the BMH ID flow rejects", async () => {
     vi.stubEnv("NEXT_PUBLIC_BMH_ID_SSO", "1");
     const signInWithOAuth = vi
       .fn()
-      .mockResolvedValue({ error: { message: "provider not enabled" } });
+      .mockRejectedValue(new Error("PKCE code verifier storage unavailable"));
     mocks.createClient.mockReturnValue({ auth: { signInWithOAuth } });
 
     render(<LoginPage />);
@@ -142,5 +145,19 @@ describe("LoginPage", () => {
     expect(
       screen.getByRole("button", { name: "Continue with BMH ID" }),
     ).toBeEnabled();
+  });
+
+  it("shows the SSO-specific message when the callback redirects with error=sso_failed", () => {
+    mocks.useSearchParams.mockReturnValue(
+      new URLSearchParams({ error: "sso_failed" }),
+    );
+
+    render(<LoginPage />);
+
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "BMH ID sign-in didn't complete. Try again or use your password.",
+    );
+    // Password form stays usable.
+    expect(screen.getByRole("button", { name: "Continue" })).toBeEnabled();
   });
 });

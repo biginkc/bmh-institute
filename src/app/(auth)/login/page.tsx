@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useActionState, useEffect, useState } from "react";
 import { ArrowRight, KeyRound, LockKeyhole, Mail } from "lucide-react";
-import type { Provider } from "@supabase/supabase-js";
 
 import { Button, Card, Input, Mascot } from "@/components/bmh-ds";
 import { createClient } from "@/lib/supabase/client";
@@ -17,6 +16,9 @@ const SUSPENDED_ERROR =
 
 const SSO_ERROR =
   "BMH ID sign-in couldn't start. Try again or use your password.";
+
+const SSO_CALLBACK_ERROR =
+  "BMH ID sign-in didn't complete. Try again or use your password.";
 
 /**
  * BMH ID single sign-on rollout flag. The button only renders when
@@ -57,19 +59,23 @@ function LoginForm() {
     setSsoPending(true);
     setSsoError(null);
 
+    // flow=sso tags the callback so its failures map to an SSO-specific
+    // login error instead of the invite message.
     const redirectTo = new URL("/auth/callback", window.location.origin);
+    redirectTo.searchParams.set("flow", "sso");
     if (next) redirectTo.searchParams.set("next", next);
 
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithOAuth({
-      // Custom OIDC providers use the custom: prefix, which predates the
-      // supabase-js Provider type union — hence the narrow cast.
-      provider: "custom:bmh" as Provider,
-      options: { redirectTo: redirectTo.toString() },
-    });
-
-    // On success the browser client navigates away; only errors land here.
-    if (error) {
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "custom:bmh",
+        options: { redirectTo: redirectTo.toString() },
+      });
+      // signInWithOAuth resolves { error: null } and navigates away on
+      // success; real startup failures (PKCE storage/crypto/URL setup)
+      // REJECT, which the catch below turns back into a usable button.
+      if (error) throw error;
+    } catch {
       setSsoError(SSO_ERROR);
       setSsoPending(false);
     }
@@ -147,7 +153,9 @@ function LoginForm() {
       ? "Invite link couldn't be verified. Ask an admin to resend it."
       : urlError === "invite_failed"
       ? "Invite link couldn't be verified. Ask an admin to resend it."
-      : urlError === "invite_expired"
+      : urlError === "sso_failed"
+        ? SSO_CALLBACK_ERROR
+        : urlError === "invite_expired"
         ? "This invite link has expired. Ask your admin to send you a fresh one."
         : null);
 
