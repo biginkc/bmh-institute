@@ -135,6 +135,12 @@ describe("atomic fixture cleanup migration", () => {
     expect(progressFingerprintRefresh).toContain(
       "fixture_cleanup_controller_contract_attestation_v1",
     );
+    expect(progressFingerprintRefresh).toContain(
+      "v_live_progress_count not in (0, 67)",
+    );
+    expect(progressFingerprintRefresh).toContain(
+      "if v_live_progress_count = 67 then",
+    );
     for (const table of ["programs", "courses", "lessons"]) {
       expect(manifest.fixture_tables[table].fingerprint_fields).toEqual(
         expect.arrayContaining([
@@ -478,7 +484,7 @@ describe("atomic fixture cleanup migration", () => {
       "utf8",
     );
     expect(controllerContract).toContain(
-      "1f20fcb5390b85bd1ba3d45166e204bdc947e0ef3ea3f3214a16a1c6aef08b30",
+      "0a4ff6b98a86427016faee21d6b8a821944015b944317e9942bda11dd23de05e",
     );
     for (const hash of [
       "1766ff88e3dfaf4b37f3629406c6be1bbed32274e0937e1a4ab7257d715aa612",
@@ -487,13 +493,23 @@ describe("atomic fixture cleanup migration", () => {
       "fed40391a8ac6902110fcd62c36c8c14615ce9a437390316f05a591759a8fe74",
       "9631a9eb83cb21f3c84faddc02c5cd08a33db51be410228590e02df99b4c6380",
       "f5574da2efc5aaaa9c9e063d380aed273a7e14be0d6de78ad46bffd178a5d141",
-      "c2830bd8f872ae71a94325295e35d7c6283df405f9d65feaff7192dc578203ad",
-      "1f20fcb5390b85bd1ba3d45166e204bdc947e0ef3ea3f3214a16a1c6aef08b30",
       "6a286ad85ab3b904675a0c1a86306bf3c389a30323d09c4f48dca06ef926181b",
     ]) {
       expect(controllerContract).toContain(hash);
       expect(controllerGate).toContain(hash);
     }
+    expect(controllerGate).toContain(
+      "c2830bd8f872ae71a94325295e35d7c6283df405f9d65feaff7192dc578203ad",
+    );
+    expect(controllerGate).toContain(
+      "1f20fcb5390b85bd1ba3d45166e204bdc947e0ef3ea3f3214a16a1c6aef08b30",
+    );
+    expect(controllerContract).toContain(
+      "e63f6f40802a11ddf0b855dd61b6a8844ab5259942f777c037d099bd7ef8f93e",
+    );
+    expect(controllerContract).toContain(
+      "0a4ff6b98a86427016faee21d6b8a821944015b944317e9942bda11dd23de05e",
+    );
     const localAdversarialTest = readFileSync(
       resolve(root, "scripts/fixture-boundary/atomic-cleanup-local-test.sql"),
       "utf8",

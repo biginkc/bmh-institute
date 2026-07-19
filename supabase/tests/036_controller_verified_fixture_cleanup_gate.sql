@@ -145,9 +145,9 @@ select set_config('request.jwt.claim.role', 'service_role', true);
 do $test$
 declare
   v_manifest_sha constant text :=
-    '80a4e2cac5e11e28c65605be1f22acccb708670095d0f46d5c14219feafca9a1';
+    '2ee30597dd997614acc93422d00bbd2874c7438b0dc189d826ea9fbea55c1489';
   v_confirmation constant text :=
-    'DELETE-EXACT-BMH-INSTITUTE-FIXTURES:dhvfsyteqsxagokoerrx:80a4e2cac5e11e28c65605be1f22acccb708670095d0f46d5c14219feafca9a1';
+    'DELETE-EXACT-BMH-INSTITUTE-FIXTURES:dhvfsyteqsxagokoerrx:2ee30597dd997614acc93422d00bbd2874c7438b0dc189d826ea9fbea55c1489';
   v_secret constant text := repeat('test-controller-secret-', 3);
   v_execution_id constant text := '00000000-0000-4000-8000-000000000037';
   v_now timestamptz := clock_timestamp();
@@ -233,7 +233,7 @@ begin
       or (v_probe ->> 'postgres_major')::integer not in (15, 16, 17)
       or coalesce((v_probe ->> 'legacy_contract_safe')::boolean, false) is not true
       or v_probe ->> 'legacy_definition_sha256' <>
-        '1f20fcb5390b85bd1ba3d45166e204bdc947e0ef3ea3f3214a16a1c6aef08b30'
+        '0a4ff6b98a86427016faee21d6b8a821944015b944317e9942bda11dd23de05e'
       or coalesce((v_probe ->> 'controller_contract_safe')::boolean, false) is not true
       or v_probe -> 'controller_contracts' is distinct from
         private.fixture_cleanup_controller_contract_attestation_v1() -> 'functions'

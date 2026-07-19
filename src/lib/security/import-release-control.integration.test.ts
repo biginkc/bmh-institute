@@ -92,7 +92,7 @@ function adapter(): CourseImportAdapter {
 }
 
 async function createSignedInUser(
-  systemRole: "learner" | "owner",
+  systemRole: "learner" | "admin" | "owner",
 ): Promise<{ id: string; client: SupabaseClient }> {
   if (!service || !url || !anonKey) {
     throw new Error("Test-project clients are unavailable.");
@@ -436,7 +436,7 @@ describe.skipIf(!envPresent)("imported catalog release control on a test project
     }
   });
 
-  it("keeps imported review admin-only and blocks generic QA membership and invites", async () => {
+  it("keeps imported review reviewer-only and blocks generic QA membership and invites", async () => {
     if (!service) throw new Error("Test-project service client is unavailable.");
     const plan = uniquePlan();
     const operation = (table: ImportPlan["operations"][number]["table"]) => {
@@ -449,12 +449,24 @@ describe.skipIf(!envPresent)("imported catalog release control on a test project
     const lesson = operation("lessons");
     const qaRoleGroup = operation("role_groups");
     let learner: Awaited<ReturnType<typeof createSignedInUser>> | null = null;
+    let admin: Awaited<ReturnType<typeof createSignedInUser>> | null = null;
     let owner: Awaited<ReturnType<typeof createSignedInUser>> | null = null;
 
     try {
       await applyImportPlan(plan, adapter());
       learner = await createSignedInUser("learner");
+      admin = await createSignedInUser("admin");
       owner = await createSignedInUser("owner");
+
+      const [ownerBeforeGrant, adminBeforeGrant, learnerBeforeGrant] =
+        await Promise.all([
+          owner.client.from("programs").select("id").eq("id", program.id).maybeSingle(),
+          admin.client.from("programs").select("id").eq("id", program.id).maybeSingle(),
+          learner.client.from("programs").select("id").eq("id", program.id).maybeSingle(),
+        ]);
+      expect(ownerBeforeGrant.data).toBeNull();
+      expect(adminBeforeGrant.data).toBeNull();
+      expect(learnerBeforeGrant.data).toBeNull();
 
       const directMembership = await service.from("user_role_groups").insert({
         user_id: learner.id,
@@ -484,7 +496,27 @@ describe.skipIf(!envPresent)("imported catalog release control on a test project
         /QA role group cannot be assigned/i,
       );
 
-      const [visibleProgram, visibleCourse, visibleLesson, unlocked, hiddenFromLearner] =
+      const authenticatedGrant = await owner.client.rpc(
+        "fn_set_unreleased_import_reviewer_v1",
+        {
+          p_program_id: program.id,
+          p_user_id: owner.id,
+          p_allowed: true,
+        },
+      );
+      expect(authenticatedGrant.error).not.toBeNull();
+
+      const reviewerGrant = await service.rpc(
+        "fn_set_unreleased_import_reviewer_v1",
+        {
+          p_program_id: program.id,
+          p_user_id: owner.id,
+          p_allowed: true,
+        },
+      );
+      expect(reviewerGrant.error).toBeNull();
+
+      const [visibleProgram, visibleCourse, visibleLesson, unlocked, hiddenFromAdmin, hiddenFromLearner] =
         await Promise.all([
           owner.client.from("programs").select("id").eq("id", program.id).maybeSingle(),
           owner.client.from("courses").select("id").eq("id", course.id).maybeSingle(),
@@ -493,6 +525,7 @@ describe.skipIf(!envPresent)("imported catalog release control on a test project
             p_user_id: owner.id,
             p_lesson_id: lesson.id,
           }),
+          admin.client.from("programs").select("id").eq("id", program.id).maybeSingle(),
           learner.client.from("programs").select("id").eq("id", program.id).maybeSingle(),
         ]);
       expect(visibleProgram.data?.id).toBe(program.id);
@@ -500,6 +533,7 @@ describe.skipIf(!envPresent)("imported catalog release control on a test project
       expect(visibleLesson.data?.id).toBe(lesson.id);
       expect(unlocked.error).toBeNull();
       expect(unlocked.data).toBe(true);
+      expect(hiddenFromAdmin.data).toBeNull();
       expect(hiddenFromLearner.data).toBeNull();
 
       const genericDelete = await owner.client
@@ -517,6 +551,7 @@ describe.skipIf(!envPresent)("imported catalog release control on a test project
       );
     } finally {
       if (learner) await service.auth.admin.deleteUser(learner.id);
+      if (admin) await service.auth.admin.deleteUser(admin.id);
       if (owner) await service.auth.admin.deleteUser(owner.id);
       const rollback = await service.rpc("fn_rollback_course_import", {
         p_import_id: plan.importId,

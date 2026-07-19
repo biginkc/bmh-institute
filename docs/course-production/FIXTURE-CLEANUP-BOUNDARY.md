@@ -14,7 +14,7 @@ The private rollback snapshot and a fresh read-only production inventory were co
 - Snapshot and production identity comparison: no missing or added IDs in any catalog, access or activity table
 - Storage comparison: zero objects in both `content` and `submissions` in the snapshot and live capture
 - Machine manifest: `fixture-boundary-manifest.json`
-- Current manifest SHA-256: `80a4e2cac5e11e28c65605be1f22acccb708670095d0f46d5c14219feafca9a1`
+- Current manifest SHA-256: `2ee30597dd997614acc93422d00bbd2874c7438b0dc189d826ea9fbea55c1489`
 
 The live inventory used the approved 1Password service-account path to read a Browser V1 owner fixture. Owner-scoped production reads verified every current ID and every owner-readable field. `answer_options.is_correct` is intentionally not owner-readable. Those protected values came from the rollback snapshot and the service-role-only atomic RPC must recheck them before deletion.
 
@@ -123,7 +123,7 @@ Approval record shape:
 ```json
 {
   "project_ref": "dhvfsyteqsxagokoerrx",
-  "manifest_sha256": "80a4e2cac5e11e28c65605be1f22acccb708670095d0f46d5c14219feafca9a1",
+  "manifest_sha256": "2ee30597dd997614acc93422d00bbd2874c7438b0dc189d826ea9fbea55c1489",
   "approved_by": "Jarrad Henry",
   "approved_at": "<ISO timestamp within 24 hours>",
   "recorded_by": "controller",
@@ -142,7 +142,7 @@ Fresh rollback record shape:
 ```json
 {
   "project_ref": "dhvfsyteqsxagokoerrx",
-  "manifest_sha256": "80a4e2cac5e11e28c65605be1f22acccb708670095d0f46d5c14219feafca9a1",
+  "manifest_sha256": "2ee30597dd997614acc93422d00bbd2874c7438b0dc189d826ea9fbea55c1489",
   "captured_at": "<ISO timestamp within 24 hours>",
   "backup_id": "<new backup identifier>",
   "backup_provider": "supabase",

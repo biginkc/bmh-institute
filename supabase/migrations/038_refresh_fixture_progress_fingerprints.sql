@@ -20,6 +20,7 @@ declare
   v_old_legacy_definition_sha constant text :=
     '1f20fcb5390b85bd1ba3d45166e204bdc947e0ef3ea3f3214a16a1c6aef08b30';
   v_occurrences integer;
+  v_live_progress_count integer;
 begin
   if to_regclass('private.fixture_cleanup_boundary_v1') is null
     or to_regprocedure(
@@ -32,12 +33,14 @@ begin
     raise exception 'fixture progress fingerprint refresh blocked: controller-gated cleanup prerequisite is missing';
   end if;
 
-  if (select count(*) from public.user_block_progress) <> 67
+  select count(*) into strict v_live_progress_count
+  from public.user_block_progress;
+  if v_live_progress_count not in (0, 67)
     or exists (
       select 1 from public.user_block_progress where asset_version is not null
     )
   then
-    raise exception 'fixture progress fingerprint refresh blocked: live progress rows do not match the exact post-migration default';
+    raise exception 'fixture progress fingerprint refresh blocked: live progress rows are neither a clean install nor the exact post-migration production fixture set';
   end if;
 
   for v_expected in
@@ -123,50 +126,52 @@ begin
       raise exception 'fixture progress fingerprint refresh blocked: prior boundary drift for %', v_expected.id;
     end if;
 
-    select * into strict v_progress
-    from public.user_block_progress
-    where id = v_expected.id;
+    if v_live_progress_count = 67 then
+      select * into strict v_progress
+      from public.user_block_progress
+      where id = v_expected.id;
 
-    v_old_hash := encode(
-      extensions.digest(
-        convert_to(
-          private.fixture_cleanup_canonical_jsonb_v1(
-            jsonb_build_object(
-              'block_id', v_progress.block_id,
-              'completed_at', v_progress.completed_at,
-              'id', v_progress.id,
-              'user_id', v_progress.user_id
-            )
+      v_old_hash := encode(
+        extensions.digest(
+          convert_to(
+            private.fixture_cleanup_canonical_jsonb_v1(
+              jsonb_build_object(
+                'block_id', v_progress.block_id,
+                'completed_at', v_progress.completed_at,
+                'id', v_progress.id,
+                'user_id', v_progress.user_id
+              )
+            ),
+            'UTF8'
           ),
-          'UTF8'
+          'sha256'
         ),
-        'sha256'
-      ),
-      'hex'
-    );
-    v_new_hash := encode(
-      extensions.digest(
-        convert_to(
-          private.fixture_cleanup_canonical_jsonb_v1(
-            jsonb_build_object(
-              'asset_version', v_progress.asset_version,
-              'block_id', v_progress.block_id,
-              'completed_at', v_progress.completed_at,
-              'id', v_progress.id,
-              'user_id', v_progress.user_id
-            )
+        'hex'
+      );
+      v_new_hash := encode(
+        extensions.digest(
+          convert_to(
+            private.fixture_cleanup_canonical_jsonb_v1(
+              jsonb_build_object(
+                'asset_version', v_progress.asset_version,
+                'block_id', v_progress.block_id,
+                'completed_at', v_progress.completed_at,
+                'id', v_progress.id,
+                'user_id', v_progress.user_id
+              )
+            ),
+            'UTF8'
           ),
-          'UTF8'
+          'sha256'
         ),
-        'sha256'
-      ),
-      'hex'
-    );
+        'hex'
+      );
 
-    if v_old_hash <> v_expected.old_hash
-      or v_new_hash <> v_expected.new_hash
-    then
-      raise exception 'fixture progress fingerprint refresh blocked: live row drift for %', v_expected.id;
+      if v_old_hash <> v_expected.old_hash
+        or v_new_hash <> v_expected.new_hash
+      then
+        raise exception 'fixture progress fingerprint refresh blocked: live row drift for %', v_expected.id;
+      end if;
     end if;
 
     update private.fixture_cleanup_boundary_v1

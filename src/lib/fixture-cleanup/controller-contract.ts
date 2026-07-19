@@ -148,7 +148,7 @@ export const REVIEWED_CONTROLLER_FUNCTION_CONTRACTS: Record<
   },
   legacy_attester: {
     definition_sha256:
-      "c2830bd8f872ae71a94325295e35d7c6283df405f9d65feaff7192dc578203ad",
+      "e63f6f40802a11ddf0b855dd61b6a8844ab5259942f777c037d099bd7ef8f93e",
     owner_exact: true,
     security_definer: true,
     search_path: ["search_path=pg_catalog"],
@@ -160,7 +160,7 @@ export const REVIEWED_CONTROLLER_FUNCTION_CONTRACTS: Record<
   },
   moved_destructive: {
     definition_sha256:
-      "1f20fcb5390b85bd1ba3d45166e204bdc947e0ef3ea3f3214a16a1c6aef08b30",
+      "0a4ff6b98a86427016faee21d6b8a821944015b944317e9942bda11dd23de05e",
     owner_exact: true,
     security_definer: true,
     search_path: ["search_path=pg_catalog"],
@@ -412,7 +412,7 @@ export const REVIEWED_CONTROLLER_TABLE_CONTRACTS =
   REVIEWED_CONTROLLER_TABLE_CONTRACTS_BY_POSTGRES_MAJOR[17];
 
 const REVIEWED_LEGACY_DEFINITION_SHA256 =
-  "1f20fcb5390b85bd1ba3d45166e204bdc947e0ef3ea3f3214a16a1c6aef08b30";
+  "0a4ff6b98a86427016faee21d6b8a821944015b944317e9942bda11dd23de05e";
 
 export function assertFixtureCleanupTransportContract(
   probe: Record<string, unknown> | null,

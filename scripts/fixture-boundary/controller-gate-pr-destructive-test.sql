@@ -82,9 +82,9 @@ select set_config('request.jwt.claim.role', 'service_role', true);
 do $test$
 declare
   v_manifest_sha constant text :=
-    '80a4e2cac5e11e28c65605be1f22acccb708670095d0f46d5c14219feafca9a1';
+    '2ee30597dd997614acc93422d00bbd2874c7438b0dc189d826ea9fbea55c1489';
   v_confirmation constant text :=
-    'DELETE-EXACT-BMH-INSTITUTE-FIXTURES:dhvfsyteqsxagokoerrx:80a4e2cac5e11e28c65605be1f22acccb708670095d0f46d5c14219feafca9a1';
+    'DELETE-EXACT-BMH-INSTITUTE-FIXTURES:dhvfsyteqsxagokoerrx:2ee30597dd997614acc93422d00bbd2874c7438b0dc189d826ea9fbea55c1489';
   v_secret constant text := repeat('deterministic-pr-secret-', 2);
   v_execution_id constant text := '00000000-0000-4000-8000-000000000301';
   v_malformed_execution_id constant text :=
