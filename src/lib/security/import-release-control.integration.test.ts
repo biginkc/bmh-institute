@@ -14,16 +14,21 @@ import { buildImportPlan, type ImportPlan } from "@/lib/course-import/operations
 import { validCourseManifest } from "@/lib/course-import/test-fixtures";
 import { courseImportProviderPsqlEnvironment } from "@/lib/course-import/provider-acceptance";
 
-const url = process.env.TEST_SUPABASE_URL;
-const anonKey = process.env.TEST_SUPABASE_ANON_KEY;
-const serviceKey = process.env.TEST_SUPABASE_SERVICE_ROLE_KEY;
-const databaseUrl = process.env.TEST_SUPABASE_DB_URL;
-const envPresent = Boolean(url && anonKey && serviceKey && databaseUrl);
-const service = envPresent
-  ? createClient(url!, serviceKey!, {
-      auth: { autoRefreshToken: false, persistSession: false },
-    })
-  : null;
+function requiredTestEnvironment(name: string): string {
+  const value = process.env[name]?.trim();
+  if (!value) {
+    throw new Error(`${name} is required for imported-catalog integration coverage.`);
+  }
+  return value;
+}
+
+const url = requiredTestEnvironment("TEST_SUPABASE_URL");
+const anonKey = requiredTestEnvironment("TEST_SUPABASE_ANON_KEY");
+const serviceKey = requiredTestEnvironment("TEST_SUPABASE_SERVICE_ROLE_KEY");
+const databaseUrl = requiredTestEnvironment("TEST_SUPABASE_DB_URL");
+const service = createClient(url, serviceKey, {
+  auth: { autoRefreshToken: false, persistSession: false },
+});
 
 function uniquePlan(): ImportPlan {
   const suffix = randomBytes(8).toString("hex");
@@ -306,7 +311,7 @@ async function terminatePsql(session: PsqlSession | null) {
   if (session.child.exitCode === null) session.child.kill("SIGKILL");
 }
 
-describe.skipIf(!envPresent)("imported catalog release control on a test project", () => {
+describe("imported catalog release control on a test project", () => {
   it("settles same-manifest apply against ordinary catalog updates without a lock-upgrade deadlock", async () => {
     if (!service) throw new Error("Test-project service client is unavailable.");
     const plan = contentionPlan();
@@ -361,10 +366,13 @@ describe.skipIf(!envPresent)("imported catalog release control on a test project
           loop
             if exists (
               select 1
-              from pg_stat_activity blocked
+              from (
+                select distinct lock.pid
+                from pg_catalog.pg_locks lock
+                where lock.pid is not null
+              ) blocked
               where blocked.pid <> pg_backend_pid()
-                and blocked.wait_event_type = 'Lock'
-                and ${writerPid} = any(pg_blocking_pids(blocked.pid))
+                and ${writerPid} = any(pg_catalog.pg_blocking_pids(blocked.pid))
             ) then
               return;
             end if;
@@ -491,7 +499,14 @@ describe.skipIf(!envPresent)("imported catalog release control on a test project
     const program = operation("programs");
     const course = operation("courses");
     const lesson = operation("lessons");
-    const module = operation("modules");
+    const importedModule = operation("modules");
+    const quiz = operation("quizzes");
+    const answerOption = operation("answer_options");
+    const quizLesson = atomicImportOperations(plan).find(
+      (candidate) =>
+        candidate.table === "lessons" && candidate.row.quiz_id === quiz.id,
+    );
+    if (!quizLesson) throw new Error("Test import quiz lesson is missing.");
     const assignment = operation("assignments");
     const assignmentLesson = atomicImportOperations(plan).find(
       (candidate) =>
@@ -609,14 +624,14 @@ describe.skipIf(!envPresent)("imported catalog release control on a test project
       expect(unlocked.data).toBe(true);
 
       const adminModuleMove = await admin.client.rpc("fn_move_module", {
-        p_module_id: module.id,
+        p_module_id: importedModule.id,
         p_course_id: course.id,
         p_direction: "up",
       });
       expect(adminModuleMove.error?.message).toMatch(/admin reviewer access required/i);
 
       const reviewerModuleMove = await owner.client.rpc("fn_move_module", {
-        p_module_id: module.id,
+        p_module_id: importedModule.id,
         p_course_id: course.id,
         p_direction: "up",
       });
@@ -645,6 +660,81 @@ describe.skipIf(!envPresent)("imported catalog release control on a test project
       );
       expect(reviewerAssignmentUpdate.error).toBeNull();
       expect(reviewerAssignmentUpdate.data).toBe(true);
+
+      const ordinaryAdminOptionUpdate = await admin.client.rpc(
+        "fn_update_answer_option_for_reviewer_v1",
+        {
+          p_lesson_id: quizLesson.id,
+          p_option_id: answerOption.id,
+          p_option_text: "Ordinary admin must not write this",
+          p_is_correct: false,
+          p_exclusive_peer_option_ids: [],
+        },
+      );
+      expect(ordinaryAdminOptionUpdate.error?.message).toMatch(
+        /admin reviewer access required/i,
+      );
+
+      const ordinaryAdminOptionCreate = await admin.client.rpc(
+        "fn_create_answer_option_for_reviewer_v1",
+        {
+          p_lesson_id: quizLesson.id,
+          p_question_id: answerOption.row.question_id,
+          p_option_text: "Ordinary admin must not create this",
+        },
+      );
+      expect(ordinaryAdminOptionCreate.error?.message).toMatch(
+        /admin reviewer access required/i,
+      );
+
+      const reviewerOptionCreate = await owner.client.rpc(
+        "fn_create_answer_option_for_reviewer_v1",
+        {
+          p_lesson_id: quizLesson.id,
+          p_question_id: answerOption.row.question_id,
+          p_option_text: "Reviewer temporary option",
+        },
+      );
+      expect(reviewerOptionCreate.error).toBeNull();
+      expect(reviewerOptionCreate.data).toBe(true);
+
+      const temporaryOption = await service
+        .from("answer_options")
+        .select("id")
+        .eq("question_id", answerOption.row.question_id)
+        .eq("option_text", "Reviewer temporary option")
+        .single();
+      if (temporaryOption.error || !temporaryOption.data) {
+        throw temporaryOption.error ?? new Error("Temporary reviewer option was not created.");
+      }
+
+      const reviewerOptionUpdate = await owner.client.rpc(
+        "fn_update_answer_option_for_reviewer_v1",
+        {
+          p_lesson_id: quizLesson.id,
+          p_option_id: answerOption.id,
+          p_option_text: "Reviewer-authorized option",
+          p_is_correct: Boolean(answerOption.row.is_correct),
+          p_exclusive_peer_option_ids: [],
+        },
+      );
+      expect(reviewerOptionUpdate.error).toBeNull();
+      expect(reviewerOptionUpdate.data).toBe(true);
+
+      const radioCorrectness = await service
+        .from("answer_options")
+        .select("id,is_correct")
+        .eq("question_id", answerOption.row.question_id);
+      expect(radioCorrectness.error).toBeNull();
+      expect(
+        radioCorrectness.data?.filter((option) => option.is_correct),
+      ).toEqual([expect.objectContaining({ id: answerOption.id })]);
+
+      const removeTemporaryOption = await service
+        .from("answer_options")
+        .delete()
+        .eq("id", temporaryOption.data.id);
+      expect(removeTemporaryOption.error).toBeNull();
 
       const reviewerRevoke = await service.rpc(
         "fn_set_unreleased_import_reviewer_v1",
@@ -723,6 +813,432 @@ describe.skipIf(!envPresent)("imported catalog release control on a test project
     }
   });
 
+  it("cleans exact reviewer evidence, suppresses Sandra, and preserves learner rollback blockers", async () => {
+    const plan = uniquePlan();
+    const operations = atomicImportOperations(plan);
+    const operation = (table: ImportPlan["operations"][number]["table"]) => {
+      const row = operations.find((candidate) => candidate.table === table);
+      if (!row) throw new Error(`Test import is missing ${table}.`);
+      return row;
+    };
+    const program = operation("programs");
+    const course = operation("courses");
+    const contentBlock = operation("content_blocks");
+    const quiz = operation("quizzes");
+    const assignment = operation("assignments");
+    const quizLesson = operations.find(
+      (candidate) =>
+        candidate.table === "lessons" && candidate.row.quiz_id === quiz.id,
+    );
+    const assignmentLesson = operations.find(
+      (candidate) =>
+        candidate.table === "lessons" &&
+        candidate.row.assignment_id === assignment.id,
+    );
+    if (!quizLesson || !assignmentLesson) {
+      throw new Error("Reviewer evidence lessons are missing.");
+    }
+
+    let reviewer: Awaited<ReturnType<typeof createSignedInUser>> | null = null;
+    let learner: Awaited<ReturnType<typeof createSignedInUser>> | null = null;
+    let ordinaryAdmin: Awaited<ReturnType<typeof createSignedInUser>> | null = null;
+    let importApplied = false;
+    let storagePath: string | null = null;
+    let auditEventId: string | null = null;
+    let reviewerAccessRevoked = false;
+    let testError: unknown = null;
+
+    const insert = async (table: string, row: Record<string, unknown>) => {
+      const result = await service.from(table).insert(row);
+      if (result.error) throw result.error;
+    };
+    const reviewerRowCount = async (table: string, column: string) => {
+      if (!reviewer) throw new Error("Reviewer is unavailable.");
+      const result = await service
+        .from(table)
+        .select("*", { count: "exact", head: true })
+        .eq(column, reviewer.id);
+      if (result.error) throw result.error;
+      return result.count ?? 0;
+    };
+
+    try {
+      await applyImportPlan(plan, adapter());
+      importApplied = true;
+      reviewer = await createSignedInUser("owner");
+      learner = await createSignedInUser("learner");
+      ordinaryAdmin = await createSignedInUser("admin");
+
+      const grant = await service.rpc("fn_set_unreleased_import_reviewer_v1", {
+        p_program_id: program.id,
+        p_user_id: reviewer.id,
+        p_allowed: true,
+      });
+      expect(grant.error).toBeNull();
+
+      storagePath = `${reviewer.id}/review-${randomBytes(8).toString("hex")}.txt`;
+      const upload = await service.storage
+        .from("submissions")
+        .upload(storagePath, Buffer.from("private reviewer assignment evidence"), {
+          contentType: "text/plain",
+          upsert: false,
+        });
+      expect(upload.error).toBeNull();
+
+      const reviewerSubmission = await service
+        .from("assignment_submissions")
+        .insert({
+          assignment_id: assignment.id,
+          lesson_id: assignmentLesson.id,
+          user_id: reviewer.id,
+          submission_text: "Reviewer assignment evidence",
+          submission_file_path: storagePath,
+          status: "submitted",
+        })
+        .select("id")
+        .single();
+      if (reviewerSubmission.error || !reviewerSubmission.data) {
+        throw reviewerSubmission.error ?? new Error("Reviewer submission insert failed.");
+      }
+
+      const reviewerSubmissionRead = await reviewer.client
+        .from("assignment_submissions")
+        .select("id")
+        .eq("id", reviewerSubmission.data.id)
+        .single();
+      expect(reviewerSubmissionRead.error).toBeNull();
+      expect(reviewerSubmissionRead.data?.id).toBe(reviewerSubmission.data.id);
+      const reviewerFile = await reviewer.client.storage
+        .from("submissions")
+        .createSignedUrl(storagePath, 60);
+      expect(reviewerFile.error).toBeNull();
+      expect(reviewerFile.data?.signedUrl).toBeTruthy();
+
+      const hiddenSubmission = await ordinaryAdmin.client
+        .from("assignment_submissions")
+        .select("id")
+        .eq("id", reviewerSubmission.data.id)
+        .maybeSingle();
+      expect(hiddenSubmission.error).toBeNull();
+      expect(hiddenSubmission.data).toBeNull();
+      const deniedSubmissionUpdate = await ordinaryAdmin.client
+        .from("assignment_submissions")
+        .update({ reviewer_notes: "Unauthorized review" })
+        .eq("id", reviewerSubmission.data.id)
+        .select("id");
+      expect(deniedSubmissionUpdate.error).toBeNull();
+      expect(deniedSubmissionUpdate.data).toEqual([]);
+      const deniedFile = await ordinaryAdmin.client.storage
+        .from("submissions")
+        .createSignedUrl(storagePath, 60);
+      expect(deniedFile.error).not.toBeNull();
+      await insert("user_quiz_attempts", {
+        user_id: reviewer.id,
+        quiz_id: quiz.id,
+        lesson_id: quizLesson.id,
+        score: 100,
+        passed: true,
+        completed_at: new Date().toISOString(),
+      });
+      await insert("user_video_progress", {
+        user_id: reviewer.id,
+        block_id: contentBlock.id,
+        position_seconds: 10,
+        duration_seconds: 10,
+        watched_ranges: [[0, 10]],
+        last_observed_position_seconds: 10,
+        asset_version: "reviewer-test#duration=10",
+      });
+      await insert("user_video_completion_history", {
+        user_id: reviewer.id,
+        block_id: contentBlock.id,
+        asset_version: "reviewer-test#duration=10",
+      });
+      await service.from("user_block_progress").upsert({
+        user_id: reviewer.id,
+        block_id: contentBlock.id,
+        asset_version: "reviewer-test#duration=10",
+      });
+      await service.from("user_lesson_completions").upsert({
+        user_id: reviewer.id,
+        lesson_id: quizLesson.id,
+      });
+      await insert("role_play_results", {
+        user_id: reviewer.id,
+        block_id: contentBlock.id,
+        scenario_id: "reviewer-scenario",
+        attempt_id: `reviewer-${randomBytes(8).toString("hex")}`,
+        score: 100,
+      });
+      await service.from("user_course_resume").upsert({
+        user_id: reviewer.id,
+        course_id: course.id,
+        last_lesson_id: quizLesson.id,
+        last_block_id: contentBlock.id,
+      });
+      await service.from("certificates").upsert({
+        user_id: reviewer.id,
+        course_id: course.id,
+        certificate_number: `REVIEW-C-${randomBytes(10).toString("hex")}`,
+      });
+      await service.from("program_certificates").upsert({
+        user_id: reviewer.id,
+        program_id: program.id,
+        certificate_number: `REVIEW-P-${randomBytes(10).toString("hex")}`,
+      });
+
+      const outboxBeforeClaim = await service
+        .from("sandra_course_completion_deliveries")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", reviewer.id)
+        .eq("course_id", course.id);
+      expect(outboxBeforeClaim.error).toBeNull();
+      expect(outboxBeforeClaim.count).toBe(0);
+
+      const suppressedClaim = await service.rpc(
+        "fn_claim_sandra_course_completion_delivery",
+        {
+          p_user_id: reviewer.id,
+          p_course_id: course.id,
+          p_payload: {
+            userId: reviewer.id,
+            courseId: course.id,
+            completedAt: new Date().toISOString(),
+          },
+        },
+      );
+      expect(suppressedClaim.error?.message).toMatch(
+        /suppressed for an unreleased imported course/i,
+      );
+
+      const outboxAfterClaim = await service
+        .from("sandra_course_completion_deliveries")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", reviewer.id)
+        .eq("course_id", course.id);
+      expect(outboxAfterClaim.error).toBeNull();
+      expect(outboxAfterClaim.count).toBe(0);
+
+      // Seed a legacy reviewer delivery to prove cleanup handles rows created
+      // before the suppression guard was deployed.
+      await insert("sandra_course_completion_deliveries", {
+        user_id: reviewer.id,
+        course_id: course.id,
+        completed_at: new Date().toISOString(),
+        payload: { userId: reviewer.id, courseId: course.id },
+      });
+      auditEventId = randomUUID();
+      await insert("audit_log", {
+        id: auditEventId,
+        user_id: reviewer.id,
+        action: "reviewer_acceptance_evidence",
+        entity_type: "program",
+        entity_id: program.id,
+        metadata: { import_id: plan.importId },
+      });
+
+      const authenticatedCleanup = await reviewer.client.rpc(
+        "fn_cleanup_unreleased_import_reviewer_evidence_v1",
+        { p_import_id: plan.importId, p_user_id: reviewer.id },
+      );
+      expect(authenticatedCleanup.error).not.toBeNull();
+
+      await insert("role_play_results", {
+        user_id: learner.id,
+        block_id: contentBlock.id,
+        scenario_id: "non-reviewer-scenario",
+        attempt_id: `learner-${randomBytes(8).toString("hex")}`,
+        score: 80,
+      });
+
+      const revokeWithEvidence = await service.rpc(
+        "fn_set_unreleased_import_reviewer_v1",
+        {
+          p_program_id: program.id,
+          p_user_id: reviewer.id,
+          p_allowed: false,
+        },
+      );
+      expect(revokeWithEvidence.error).toBeNull();
+      const revokedSubmissionRead = await reviewer.client
+        .from("assignment_submissions")
+        .select("id")
+        .eq("id", reviewerSubmission.data.id)
+        .maybeSingle();
+      expect(revokedSubmissionRead.error).toBeNull();
+      expect(revokedSubmissionRead.data).toBeNull();
+      const revokedFile = await reviewer.client.storage
+        .from("submissions")
+        .createSignedUrl(storagePath, 60);
+      expect(revokedFile.error).not.toBeNull();
+
+      const regrantForCleanup = await service.rpc(
+        "fn_set_unreleased_import_reviewer_v1",
+        {
+          p_program_id: program.id,
+          p_user_id: reviewer.id,
+          p_allowed: true,
+        },
+      );
+      expect(regrantForCleanup.error).toBeNull();
+
+      const storagePreflight = await service.rpc(
+        "fn_cleanup_unreleased_import_reviewer_evidence_v1",
+        { p_import_id: plan.importId, p_user_id: reviewer.id },
+      );
+      expect(storagePreflight.error).toBeNull();
+      expect(storagePreflight.data).toMatchObject({
+        import_id: plan.importId,
+        reviewer_user_id: reviewer.id,
+        status: "storage_cleanup_required",
+        submission_file_paths: [storagePath],
+      });
+      expect(await reviewerRowCount("assignment_submissions", "user_id")).toBe(1);
+
+      const removeReviewerStorage = await service.storage
+        .from("submissions")
+        .remove([storagePath]);
+      expect(removeReviewerStorage.error).toBeNull();
+      storagePath = null;
+
+      const cleanup = await service.rpc(
+        "fn_cleanup_unreleased_import_reviewer_evidence_v1",
+        { p_import_id: plan.importId, p_user_id: reviewer.id },
+      );
+      expect(cleanup.error).toBeNull();
+      expect(cleanup.data).toMatchObject({
+        import_id: plan.importId,
+        reviewer_user_id: reviewer.id,
+        status: "reviewer_evidence_cleaned",
+        reviewer_access_revoked: true,
+      });
+      reviewerAccessRevoked = true;
+
+      for (const table of [
+        "assignment_submissions",
+        "user_quiz_attempts",
+        "role_play_results",
+        "user_video_progress",
+        "user_video_completion_history",
+        "user_block_progress",
+        "user_lesson_completions",
+        "user_course_resume",
+        "certificates",
+        "program_certificates",
+        "sandra_course_completion_deliveries",
+      ]) {
+        expect(await reviewerRowCount(table, "user_id"), table).toBe(0);
+      }
+      const preservedAudit = await service
+        .from("audit_log")
+        .select("id")
+        .eq("id", auditEventId)
+        .single();
+      expect(preservedAudit.error).toBeNull();
+      expect(preservedAudit.data?.id).toBe(auditEventId);
+      expect(
+        await readCatalogReferences(reviewer.client, importedCatalogReferences(plan)),
+      ).toEqual(importedCatalogReferences(plan).map(() => null));
+
+      const blockedRollback = await service.rpc("fn_rollback_course_import", {
+        p_import_id: plan.importId,
+        p_owned: buildRollbackOwnedIds(plan),
+      });
+      expect(blockedRollback.error?.message).toMatch(/role-play results exist/i);
+
+      const removeLearnerEvidence = await service
+        .from("role_play_results")
+        .delete()
+        .eq("user_id", learner.id)
+        .eq("block_id", contentBlock.id);
+      expect(removeLearnerEvidence.error).toBeNull();
+
+      const rollback = await service.rpc("fn_rollback_course_import", {
+        p_import_id: plan.importId,
+        p_owned: buildRollbackOwnedIds(plan),
+      });
+      expect(rollback.error).toBeNull();
+      expect(rollback.data).toMatchObject({
+        import_id: plan.importId,
+        status: "rolled_back",
+      });
+      importApplied = false;
+    } catch (error) {
+      testError = error;
+    } finally {
+      const cleanupErrors: Error[] = [];
+      if (learner) {
+        const result = await service
+          .from("role_play_results")
+          .delete()
+          .eq("user_id", learner.id);
+        if (result.error) cleanupErrors.push(result.error);
+      }
+      if (reviewer && importApplied && !reviewerAccessRevoked) {
+        const preflight = await service.rpc(
+          "fn_cleanup_unreleased_import_reviewer_evidence_v1",
+          {
+            p_import_id: plan.importId,
+            p_user_id: reviewer.id,
+          },
+        );
+        if (preflight.error) {
+          cleanupErrors.push(preflight.error);
+        } else if (
+          preflight.data?.status === "storage_cleanup_required" &&
+          Array.isArray(preflight.data.submission_file_paths)
+        ) {
+          const paths = preflight.data.submission_file_paths.filter(
+            (value: unknown): value is string => typeof value === "string",
+          );
+          const removed = await service.storage.from("submissions").remove(paths);
+          if (removed.error) cleanupErrors.push(removed.error);
+          const cleanup = await service.rpc(
+            "fn_cleanup_unreleased_import_reviewer_evidence_v1",
+            {
+              p_import_id: plan.importId,
+              p_user_id: reviewer.id,
+            },
+          );
+          if (cleanup.error) cleanupErrors.push(cleanup.error);
+        }
+      }
+      if (storagePath) {
+        const removed = await service.storage.from("submissions").remove([storagePath]);
+        if (removed.error) cleanupErrors.push(removed.error);
+      }
+      if (auditEventId) {
+        const removed = await service.from("audit_log").delete().eq("id", auditEventId);
+        if (removed.error) cleanupErrors.push(removed.error);
+      }
+      if (importApplied) {
+        const rollback = await service.rpc("fn_rollback_course_import", {
+          p_import_id: plan.importId,
+          p_owned: buildRollbackOwnedIds(plan),
+        });
+        if (rollback.error) cleanupErrors.push(rollback.error);
+      }
+      for (const actor of [learner, ordinaryAdmin, reviewer]) {
+        if (!actor) continue;
+        const removed = await service.auth.admin.deleteUser(actor.id);
+        if (removed.error) cleanupErrors.push(removed.error);
+      }
+      if (testError && cleanupErrors.length > 0) {
+        throw new AggregateError(
+          [testError, ...cleanupErrors],
+          "Reviewer evidence proof and its TEST cleanup both failed.",
+        );
+      }
+      if (cleanupErrors.length > 0) {
+        throw new AggregateError(
+          cleanupErrors,
+          "Reviewer evidence TEST cleanup failed.",
+        );
+      }
+    }
+    if (testError) throw testError;
+  });
+
   it("preserves ordinary admin review and editing of hand-authored unpublished drafts", async () => {
     if (!service) throw new Error("Test-project service client is unavailable.");
     const suffix = randomBytes(8).toString("hex");
@@ -748,6 +1264,10 @@ describe.skipIf(!envPresent)("imported catalog release control on a test project
       { table: "assignments", id: ids.assignment },
     ];
     let admin: Awaited<ReturnType<typeof createSignedInUser>> | null = null;
+    let manualLearner: Awaited<ReturnType<typeof createSignedInUser>> | null = null;
+    let manualSubmissionId: string | null = null;
+    let manualStoragePath: string | null = null;
+    let testError: unknown = null;
 
     const insert = async (table: string, row: Record<string, unknown>) => {
       const result = await service.from(table).insert(row);
@@ -807,6 +1327,7 @@ describe.skipIf(!envPresent)("imported catalog release control on a test project
       });
 
       admin = await createSignedInUser("admin");
+      manualLearner = await createSignedInUser("learner");
       expect(await readCatalogReferences(admin.client, references)).toEqual(
         references.map(({ id }) => id),
       );
@@ -834,14 +1355,98 @@ describe.skipIf(!envPresent)("imported catalog release control on a test project
       });
       expect(assignmentUpdate.error).toBeNull();
       expect(assignmentUpdate.data).toBe(true);
+
+      manualStoragePath = `${manualLearner.id}/manual-${suffix}.txt`;
+      const upload = await service.storage
+        .from("submissions")
+        .upload(manualStoragePath, Buffer.from("ordinary draft submission"), {
+          contentType: "text/plain",
+          upsert: false,
+        });
+      expect(upload.error).toBeNull();
+      const submission = await service
+        .from("assignment_submissions")
+        .insert({
+          assignment_id: ids.assignment,
+          lesson_id: ids.assignmentLesson,
+          user_id: manualLearner.id,
+          submission_text: "Ordinary draft submission",
+          submission_file_path: manualStoragePath,
+          status: "submitted",
+        })
+        .select("id")
+        .single();
+      if (submission.error || !submission.data) {
+        throw submission.error ?? new Error("Manual submission insert failed.");
+      }
+      manualSubmissionId = submission.data.id;
+
+      const visibleSubmission = await admin.client
+        .from("assignment_submissions")
+        .select("id")
+        .eq("id", manualSubmissionId)
+        .single();
+      expect(visibleSubmission.error).toBeNull();
+      expect(visibleSubmission.data?.id).toBe(manualSubmissionId);
+      const reviewedSubmission = await admin.client
+        .from("assignment_submissions")
+        .update({
+          status: "needs_revision",
+          reviewer_notes: "Ordinary admin review remains available.",
+        })
+        .eq("id", manualSubmissionId)
+        .select("id")
+        .single();
+      expect(reviewedSubmission.error).toBeNull();
+      expect(reviewedSubmission.data?.id).toBe(manualSubmissionId);
+      const signedFile = await admin.client.storage
+        .from("submissions")
+        .createSignedUrl(manualStoragePath, 60);
+      expect(signedFile.error).toBeNull();
+      expect(signedFile.data?.signedUrl).toBeTruthy();
+    } catch (error) {
+      testError = error;
     } finally {
-      if (admin) await service.auth.admin.deleteUser(admin.id);
-      await service.from("programs").delete().eq("id", ids.program);
-      await service.from("courses").delete().eq("id", ids.course);
-      await service.from("quizzes").delete().eq("id", ids.quiz);
-      await service.from("assignments").delete().eq("id", ids.assignment);
-      await service.from("role_groups").delete().eq("id", ids.roleGroup);
+      const cleanupErrors: Error[] = [];
+      if (manualStoragePath) {
+        const removed = await service.storage
+          .from("submissions")
+          .remove([manualStoragePath]);
+        if (removed.error) cleanupErrors.push(removed.error);
+      }
+      if (manualSubmissionId) {
+        const removed = await service
+          .from("assignment_submissions")
+          .delete()
+          .eq("id", manualSubmissionId);
+        if (removed.error) cleanupErrors.push(removed.error);
+      }
+      for (const actor of [admin, manualLearner]) {
+        if (!actor) continue;
+        const removed = await service.auth.admin.deleteUser(actor.id);
+        if (removed.error) cleanupErrors.push(removed.error);
+      }
+      for (const [table, id] of [
+        ["programs", ids.program],
+        ["courses", ids.course],
+        ["quizzes", ids.quiz],
+        ["assignments", ids.assignment],
+        ["role_groups", ids.roleGroup],
+      ] as const) {
+        const removed = await service.from(table).delete().eq("id", id);
+        if (removed.error) cleanupErrors.push(removed.error);
+      }
+      if (testError && cleanupErrors.length > 0) {
+        throw new AggregateError(
+          [testError, ...cleanupErrors],
+          "Manual draft proof and its TEST cleanup both failed.",
+        );
+      }
+      if (cleanupErrors.length > 0) {
+        throw new AggregateError(cleanupErrors, "Manual draft TEST cleanup failed.");
+      }
     }
+    if (testError) throw testError;
   });
 
   it("refuses to link a pre-created QA role group that already has a learner", async () => {

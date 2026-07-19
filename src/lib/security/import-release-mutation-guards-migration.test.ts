@@ -177,7 +177,7 @@ describe("final import release and fixture dependency guards", () => {
       /lock table public\.programs in row exclusive mode[\s\S]*WRITER_LOCKED[\s\S]*pg_advisory_xact_lock/i,
     );
     expect(providerIntegration).toMatch(
-      /pg_stat_activity[\s\S]*wait_event_type = 'Lock'[\s\S]*pg_blocking_pids\(blocked\.pid\)/i,
+      /pg_catalog\.pg_locks[\s\S]*pg_catalog\.pg_blocking_pids\(blocked\.pid\)/i,
     );
     expect(providerIntegration).toMatch(
       /pg_advisory_unlock[\s\S]*Promise\.all\(\[waitForPsqlExit\(barrier\), waitForPsqlExit\(writer\), replay\]\)/i,
