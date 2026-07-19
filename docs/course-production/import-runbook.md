@@ -15,6 +15,78 @@ npm run course:import -- rollback content/course-manifests/bmh-employee-training
 
 These commands print a plan without changing storage or the database. Add `--execute` only after reviewing the manifest and the printed counts. `apply` and `verify` enforce the release gate. `--canary` requires a separate approved manifest containing only the unpublished Tech Stack slice: one course, one module, one content lesson, optionally its quiz, and no more than ten referenced assets. It cannot relax the full manifest into a draft import.
 
+### Private full-course review
+
+Use `--review` only with the canonical full BMH course manifest. It allows the
+unreleased import to retain explicit review placeholders while keeping every
+program and course unpublished. It cannot be combined with a smaller canary or
+used to publish content.
+
+```bash
+npm run course:import -- validate \
+  content/course-manifests/bmh-employee-training.v1.json \
+  --review
+npm run course:import -- apply \
+  content/course-manifests/bmh-employee-training.v1.json \
+  --review \
+  --execute
+npm run course:import -- verify \
+  content/course-manifests/bmh-employee-training.v1.json \
+  --review \
+  --execute
+```
+
+The controller must use a service-role session to grant one active owner
+reviewer to the exact unpublished imported program. Do not add the reviewer to
+the imported QA role group and do not send an invite for that group.
+
+```sql
+select public.fn_set_unreleased_import_reviewer_v1(
+  '<program-id>'::uuid,
+  '<reviewer-user-id>'::uuid,
+  true
+);
+```
+
+An explicit reviewer may open the imported learner path and exercise quizzes,
+video playback, assignments, and role plays. The same reviewer may use the
+authenticated admin editors that are protected by the imported catalog
+boundary. This includes the atomic answer option editor. Ordinary admins may
+still review hand-authored or released catalog submissions, but they cannot
+see or act on unreleased imported submissions or files. Review activity must
+not enqueue or attempt Sandra course completion delivery before release.
+
+If review rejects the import, remove only that reviewer's evidence while the
+reviewer grant still proves ownership. The cleanup is service-role-only. It
+covers quiz, video, assignment, role-play, progress, completion, certificate,
+resume, and suppressed delivery rows owned by that reviewer. It preserves
+audit history. It does not make non-reviewer learner activity safe to delete.
+
+Call the cleanup RPC once. If it returns `storage_cleanup_required`, it has not
+deleted any database evidence. Its `submission_file_paths` list contains only
+exact unshared reviewer objects that still exist. Remove those paths through
+the Supabase Storage API with the same service-role controller. Do not delete
+from `storage.objects` with SQL because that removes metadata without removing
+the provider bytes. Then call the cleanup RPC again. The successful second
+call deletes the relational reviewer evidence and revokes reviewer access in
+one database transaction. It returns `reviewer_evidence_cleaned` and
+`reviewer_access_revoked: true`.
+
+```sql
+select public.fn_cleanup_unreleased_import_reviewer_evidence_v1(
+  '<import-id>',
+  '<reviewer-user-id>'::uuid
+);
+```
+
+The controller must stop on any RPC or Storage error. Verify every returned
+path is absent through the Storage API before the second RPC. Run the normal
+dry-run and rollback command only after the successful cleanup has also
+revoked access. A
+rollback must still stop when any learner activity belongs to a person who was
+not an explicit reviewer for that import. Cleanup never weakens the closed
+graph, exact ID, external reference, or storage inspection checks.
+
 `upload --execute` writes a completion receipt under
 `.course-import-state/upload-receipts/` only after every approved object has
 passed exact remote byte and checksum verification. `apply --execute` refuses
@@ -219,20 +291,24 @@ The complete migration list must match the disposable project. In particular,
 `018_storage_content_markdown.sql`, `019_atomic_course_import_rollback.sql`,
 `020_catalog_artwork_provenance.sql`, `023_atomic_course_import_apply.sql`,
 `027_import_release_control.sql` through
-`032_exact_import_reconciliation.sql`
+`045_fix_submission_self_storage_policy.sql`
 must be verified before any production migration. Do not use the production
-project ref. With test-project environment variables loaded, run:
+project ref. Load the exact canonical TEST database URL first. The validation
+command must succeed before either push command can start:
 
 ```bash
-supabase link --project-ref=<TEST_PROJECT_REF>
-supabase db push --dry-run
-supabase db push
+node -e 'const u=new URL(process.env.TEST_SUPABASE_DB_URL); const ok=u.protocol==="postgresql:"&&u.username==="postgres.jvaabkchkihkjllehmft"&&u.password&&u.hostname==="aws-1-us-west-1.pooler.supabase.com"&&u.port==="5432"&&u.pathname==="/postgres"&&!u.search&&!u.hash; if(!ok) process.exit(1)'
+supabase db push --db-url "$TEST_SUPABASE_DB_URL" --include-all --dry-run
+# Stop unless the dry run lists only the expected pending TEST migrations.
+supabase db push --db-url "$TEST_SUPABASE_DB_URL" --include-all --yes
 npm run test:course-import-provider
 ```
 
-The provider acceptance wrapper refuses to start unless all three
-`TEST_SUPABASE_*` values are present and the URL is the canonical non-production
-project. It runs atomic apply, atomic rollback, and artwork provenance suites.
+The provider acceptance wrapper refuses to start unless the HTTP URL, direct
+database URL, anon key, and service-role key are present. The HTTP and database
+targets must identify the canonical non-production project and each key must
+have its expected role. It runs atomic apply, atomic rollback, and artwork
+provenance suites.
 Together they prove idempotent apply, exact reconciliation, complete rollback,
 unknown-ID and external-dependent refusal, QA-group invite blocking, provenance
 immutability, and service-role-only function access. The wrapper parses Vitest's
@@ -274,4 +350,9 @@ any production migration.
 - Database rollback sends each deterministic ID together with its source key to one service-role-only database function. Migration 019 predates the explicit `content_import_id` columns in migration 020, so it proves provenance by recomputing every UUID from `import_id + source_key` and requiring a complete closed catalog graph. This assumes the import was applied through the deterministic importer; hand-created rows that deliberately reuse those exact derived IDs are outside the rollback contract. The function locks every catalog and dependent table, rejects missing IDs and QA-group invite overlap, checks learner activity, certificates, memberships, and unexplained dependents, then verifies every actual per-table delete count in the same transaction.
 - Storage rollback automatically deletes nothing because the storage API has no conditional delete. It inspects approved objects only and reports exact import-owned, size-matched, checksum-matched objects as manual cleanup candidates; uncertain, raced, held, missing, or unrelated objects are preserved.
 - Storage inspection is an independent read-only command. Database rollback records an atomic plan-bound receipt and verifies the rows remain absent before reusing it, so retries do not repeat a completed mutation or trust a stale receipt blindly.
-- Authentication accounts, audit history, learner activity, and unrelated storage objects are never rollback targets.
+- Reviewer evidence cleanup is service-role-only and exact-import scoped. It
+  accepts only a current explicit reviewer on the sole unpublished import. Its
+  Storage API preflight changes no database evidence. After exact unshared
+  objects are absent, relational cleanup and access revocation are atomic.
+  Non-reviewer learner activity continues to block rollback.
+- Authentication accounts, non-reviewer audit history, non-reviewer learner activity, and unrelated storage objects are never rollback targets.
