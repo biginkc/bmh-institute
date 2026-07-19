@@ -112,7 +112,7 @@ export const REVIEWED_CONTROLLER_FUNCTION_CONTRACTS: Record<
   },
   controller_attester: {
     definition_sha256:
-      "fed40391a8ac6902110fcd62c36c8c14615ce9a437390316f05a591759a8fe74",
+      "4e37b8d49d9c60097a2659c4c7fd2c8b162ef8f9a4f0b226431d2d08f61778ef",
     owner_exact: true,
     security_definer: true,
     search_path: ["search_path=pg_catalog"],
@@ -339,7 +339,7 @@ const roleMembershipsPostgres16And17: ControllerRoleMembership[] = [
     member: "supabase_storage_admin",
     role: "authenticator",
     admin_option: false,
-    inherit_option: true,
+    inherit_option: false,
     set_option: true,
   },
 ];

@@ -778,7 +778,7 @@ begin
       {"member":"postgres","role":"authenticated","admin_option":true,"inherit_option":true,"set_option":true},
       {"member":"postgres","role":"authenticator","admin_option":true,"inherit_option":true,"set_option":true},
       {"member":"postgres","role":"service_role","admin_option":true,"inherit_option":true,"set_option":true},
-      {"member":"supabase_storage_admin","role":"authenticator","admin_option":false,"inherit_option":true,"set_option":true}
+      {"member":"supabase_storage_admin","role":"authenticator","admin_option":false,"inherit_option":false,"set_option":true}
     ]'::jsonb;
   else
     v_expected_role_memberships := '[]'::jsonb;
@@ -1197,7 +1197,7 @@ insert into private.fixture_cleanup_expected_function_contracts_v1 (
   (
     'controller_attester',
     'private.fixture_cleanup_controller_contract_attestation_v1()',
-    'fed40391a8ac6902110fcd62c36c8c14615ce9a437390316f05a591759a8fe74', true, '["search_path=pg_catalog"]',
+    '4e37b8d49d9c60097a2659c4c7fd2c8b162ef8f9a4f0b226431d2d08f61778ef', true, '["search_path=pg_catalog"]',
     'plpgsql', 'stable', false,
     '[{"grantee":"owner","grantable":false}]'
   ),

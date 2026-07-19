@@ -138,6 +138,9 @@ describe("atomic fixture cleanup migration", () => {
     expect(progressFingerprintRefresh).toContain(
       "v_live_progress_count not in (0, 67)",
     );
+    expect(progressFingerprintRefresh).toMatch(
+      /from public\.user_block_progress progress[\s\S]*join private\.fixture_cleanup_boundary_v1 boundary[\s\S]*boundary\.identity_key = progress\.id::text/i,
+    );
     expect(progressFingerprintRefresh).toContain(
       "if v_live_progress_count = 67 then",
     );
@@ -434,6 +437,18 @@ describe("atomic fixture cleanup migration", () => {
     expect(prHarness).toContain("for (const migration of migrations)");
     expect(prHarness).toContain("FIXTURE_GATE_EXTERNAL_PG");
     expect(prHarness).toContain('fixture_cleanup_isolated_superuser: "on"');
+    expect(prHarness).toContain(
+      'migration === "038_refresh_fixture_progress_fingerprints.sql"',
+    );
+    expect(prHarness).toContain(
+      "fixture-owned progress with non-null asset_version was accepted",
+    );
+    expect(prHarness).toContain(
+      "fixture progress boundary count changed from exactly 67",
+    );
+    expect(prHarness).toContain(
+      "unrelated progress row changed during migration 038",
+    );
     const prJob = manualWorkflow.slice(
       manualWorkflow.indexOf("validate-pr-migrations:"),
       manualWorkflow.indexOf("migrate-test:"),
@@ -483,6 +498,12 @@ describe("atomic fixture cleanup migration", () => {
       resolve(root, "src/lib/fixture-cleanup/controller-contract.ts"),
       "utf8",
     );
+    expect(controllerGate).toContain(
+      '{"member":"supabase_storage_admin","role":"authenticator","admin_option":false,"inherit_option":false,"set_option":true}',
+    );
+    expect(controllerContract).toMatch(
+      /member: "supabase_storage_admin",[\s\S]*?role: "authenticator",[\s\S]*?inherit_option: false,/,
+    );
     expect(controllerContract).toContain(
       "0a4ff6b98a86427016faee21d6b8a821944015b944317e9942bda11dd23de05e",
     );
@@ -490,7 +511,7 @@ describe("atomic fixture cleanup migration", () => {
       "1766ff88e3dfaf4b37f3629406c6be1bbed32274e0937e1a4ab7257d715aa612",
       "79a0862a703d7d0698a6b179157bf4fef0fda58e52471e6efd77f66605eeceab",
       "6db0a612dc15cb21e0fd39317d87e4e103d0953f2ab5e8d759da39431fa5ad8d",
-      "fed40391a8ac6902110fcd62c36c8c14615ce9a437390316f05a591759a8fe74",
+      "4e37b8d49d9c60097a2659c4c7fd2c8b162ef8f9a4f0b226431d2d08f61778ef",
       "9631a9eb83cb21f3c84faddc02c5cd08a33db51be410228590e02df99b4c6380",
       "f5574da2efc5aaaa9c9e063d380aed273a7e14be0d6de78ad46bffd178a5d141",
       "6a286ad85ab3b904675a0c1a86306bf3c389a30323d09c4f48dca06ef926181b",

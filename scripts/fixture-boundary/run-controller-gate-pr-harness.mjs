@@ -65,7 +65,7 @@ try {
     create role authenticated nologin inherit;
     create role service_role nologin inherit bypassrls;
     create role authenticator login noinherit;
-    create role supabase_storage_admin nologin;
+    create role supabase_storage_admin nologin noinherit;
     grant anon, authenticated, service_role to authenticator;
     do $$
     begin
@@ -132,7 +132,12 @@ try {
     }
   }
   for (const migration of migrations) {
-    psqlFile(resolve(root, "supabase/migrations", migration));
+    const migrationPath = resolve(root, "supabase/migrations", migration);
+    if (migration === "038_refresh_fixture_progress_fingerprints.sql") {
+      replayProgressFingerprintMigration(migrationPath);
+    } else {
+      psqlFile(migrationPath);
+    }
   }
   psqlFile(
     resolve(
@@ -310,6 +315,19 @@ function psqlText(sql) {
   exec(binary("psql"), ["-v", "ON_ERROR_STOP=1", "-c", sql]);
 }
 
+function psqlScalar(sql) {
+  return exec(binary("psql"), [
+    "-v",
+    "ON_ERROR_STOP=1",
+    "-A",
+    "-t",
+    "-c",
+    sql,
+  ])
+    .toString()
+    .trim();
+}
+
 function psqlFile(path, extraEnv = {}, variables = {}) {
   const args = ["-v", "ON_ERROR_STOP=1"];
   for (const [key, value] of Object.entries(variables)) {
@@ -339,8 +357,116 @@ function expectPsqlFileFailure(path, extraEnv, expectedText, forbiddenSecret) {
   throw new Error("Expected controller provisioning to fail closed.");
 }
 
+function replayProgressFingerprintMigration(migrationPath) {
+  const unrelatedProgressId = "ffffffff-ffff-4fff-8fff-ffffffffffff";
+  psqlText(`
+    do $$
+    begin
+      if (select count(*) from private.fixture_cleanup_boundary_v1
+          where table_name = 'user_block_progress') <> 67 then
+        raise exception 'fixture progress boundary count changed from exactly 67';
+      end if;
+      if exists (
+        select 1 from private.fixture_cleanup_boundary_v1
+        where table_name = 'user_block_progress'
+          and identity_key = '${unrelatedProgressId}'
+      ) then
+        raise exception 'unrelated progress regression ID overlaps fixture boundary';
+      end if;
+    end;
+    $$;
+
+    set session_replication_role = replica;
+    insert into public.user_block_progress (
+      id, user_id, block_id, completed_at, asset_version
+    ) values (
+      '${unrelatedProgressId}',
+      '11111111-1111-4111-8111-111111111111',
+      '22222222-2222-4222-8222-222222222222',
+      '2026-07-18 12:34:56.789012+00',
+      null
+    );
+    insert into public.user_block_progress (
+      id, user_id, block_id, completed_at, asset_version
+    )
+    select
+      boundary.identity_key::uuid,
+      boundary.identity_key::uuid,
+      boundary.identity_key::uuid,
+      '2026-07-18 12:34:56.789012+00'::timestamptz,
+      case when row_number() over (order by boundary.identity_key) = 1
+        then 'fixture-owned-non-null-must-block'
+        else null
+      end
+    from private.fixture_cleanup_boundary_v1 boundary
+    where boundary.table_name = 'user_block_progress';
+    set session_replication_role = origin;
+  `);
+
+  const unrelatedBefore = progressRowBytes(unrelatedProgressId);
+  expectPsqlFileFailure(
+    migrationPath,
+    {},
+    "fixture progress fingerprint refresh blocked: fixture-owned progress rows",
+  );
+  const fixtureRowsAfterRefusal = psqlScalar(`
+    select count(*)::text || '|' ||
+      count(*) filter (where progress.asset_version is not null)::text
+    from public.user_block_progress progress
+    join private.fixture_cleanup_boundary_v1 boundary
+      on boundary.table_name = 'user_block_progress'
+     and boundary.identity_key = progress.id::text
+  `);
+  if (fixtureRowsAfterRefusal !== "67|1") {
+    throw new Error(
+      "fixture-owned progress with non-null asset_version was accepted",
+    );
+  }
+
+  psqlText(`
+    delete from public.user_block_progress progress
+    using private.fixture_cleanup_boundary_v1 boundary
+    where boundary.table_name = 'user_block_progress'
+      and boundary.identity_key = progress.id::text;
+  `);
+  psqlFile(migrationPath);
+
+  const unrelatedAfter = progressRowBytes(unrelatedProgressId);
+  if (unrelatedAfter !== unrelatedBefore) {
+    throw new Error("unrelated progress row changed during migration 038");
+  }
+  const boundaryCounts = psqlScalar(`
+    select
+      count(*)::text || '|' ||
+      count(*) filter (
+        where fingerprint_fields =
+          array['asset_version', 'block_id', 'completed_at', 'id', 'user_id']::text[]
+      )::text
+    from private.fixture_cleanup_boundary_v1
+    where table_name = 'user_block_progress'
+  `);
+  if (boundaryCounts !== "67|67") {
+    throw new Error("fixture progress boundary count changed from exactly 67");
+  }
+  psqlText(`
+    delete from public.user_block_progress
+    where id = '${unrelatedProgressId}';
+  `);
+}
+
+function progressRowBytes(id) {
+  return psqlScalar(`
+    select encode(
+      convert_to(to_jsonb(progress)::text, 'UTF8'),
+      'hex'
+    )
+    from public.user_block_progress progress
+    where id = '${id}'
+  `);
+}
+
 function exec(command, args, extraEnv = {}) {
-  execFileSync(command, args, {
+  return execFileSync(command, args, {
     env: { ...pgEnv, ...extraEnv },
     stdio: "pipe",
   });

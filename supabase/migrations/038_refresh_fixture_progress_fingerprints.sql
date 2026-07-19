@@ -34,13 +34,21 @@ begin
   end if;
 
   select count(*) into strict v_live_progress_count
-  from public.user_block_progress;
+  from public.user_block_progress progress
+  join private.fixture_cleanup_boundary_v1 boundary
+    on boundary.table_name = 'user_block_progress'
+   and boundary.identity_key = progress.id::text;
   if v_live_progress_count not in (0, 67)
     or exists (
-      select 1 from public.user_block_progress where asset_version is not null
+      select 1
+      from public.user_block_progress progress
+      join private.fixture_cleanup_boundary_v1 boundary
+        on boundary.table_name = 'user_block_progress'
+       and boundary.identity_key = progress.id::text
+      where progress.asset_version is not null
     )
   then
-    raise exception 'fixture progress fingerprint refresh blocked: live progress rows are neither a clean install nor the exact post-migration production fixture set';
+    raise exception 'fixture progress fingerprint refresh blocked: fixture-owned progress rows are neither absent nor the exact post-migration production fixture set';
   end if;
 
   for v_expected in
