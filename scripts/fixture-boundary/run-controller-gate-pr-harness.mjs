@@ -126,6 +126,7 @@ try {
     "033_import_qa_access_and_delete_guards.sql",
     "034_import_release_and_fixture_dependency_guards.sql",
     "036_controller_verified_fixture_cleanup_gate.sql",
+    "047_register_reviewer_answer_option_fixture_dependencies.sql",
   ]) {
     if (!migrations.includes(required)) {
       throw new Error(`Current migration stack is missing ${required}.`);
@@ -139,6 +140,76 @@ try {
       psqlFile(migrationPath);
     }
   }
+  psqlText(`
+    do $$
+    begin
+      if not exists (
+        select 1
+        from private.fixture_cleanup_tables_v1
+        where table_name = 'course_import_reviewer_answer_options_v1'
+          and identity_fields = array['answer_option_id']::text[]
+          and expected_count = 0
+      ) or (
+        select jsonb_agg(
+          jsonb_build_object(
+            'child_field', child_field,
+            'parent_table', parent_table,
+            'match_type', match_type
+          )
+          order by child_field
+        )
+        from private.fixture_cleanup_references_v1
+        where child_table = 'course_import_reviewer_answer_options_v1'
+      ) is distinct from '[
+        {
+          "child_field": "answer_option_id",
+          "parent_table": "answer_options",
+          "match_type": "scalar"
+        },
+        {
+          "child_field": "program_id",
+          "parent_table": "programs",
+          "match_type": "scalar"
+        },
+        {
+          "child_field": "question_id",
+          "parent_table": "questions",
+          "match_type": "scalar"
+        }
+      ]'::jsonb then
+        raise exception 'migration 047 reviewer answer-option dependencies are absent';
+      end if;
+    end;
+    $$;
+
+    begin;
+    create table public.fixture_cleanup_unknown_fk_probe (
+      id uuid primary key,
+      answer_option_id uuid references public.answer_options(id)
+    );
+    do $$
+    begin
+      begin
+        perform private.admin_cleanup_fixture_catalog_v021_without_controller_gate(
+          '2ee30597dd997614acc93422d00bbd2874c7438b0dc189d826ea9fbea55c1489',
+          'DELETE-EXACT-BMH-INSTITUTE-FIXTURES:dhvfsyteqsxagokoerrx:2ee30597dd997614acc93422d00bbd2874c7438b0dc189d826ea9fbea55c1489'
+        );
+        raise exception 'unregistered foreign key was accepted';
+      exception when others then
+        if sqlerrm = 'unregistered foreign key was accepted' then
+          raise;
+        end if;
+        if sqlerrm not like
+          '%unknown foreign key fixture_cleanup_unknown_fk_probe.answer_option_id -> answer_options.id%'
+        then
+          raise exception 'unregistered foreign key failed for the wrong reason: %',
+            sqlerrm;
+        end if;
+      end;
+    end;
+    $$;
+    rollback;
+  `);
   psqlFile(
     resolve(
       root,
