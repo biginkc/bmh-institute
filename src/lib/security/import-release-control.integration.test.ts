@@ -519,6 +519,7 @@ describe("imported catalog release control on a test project", () => {
     let admin: Awaited<ReturnType<typeof createSignedInUser>> | null = null;
     let owner: Awaited<ReturnType<typeof createSignedInUser>> | null = null;
     let importApplied = false;
+    let reviewerOptionOutstanding = false;
 
     try {
       await applyImportPlan(plan, adapter());
@@ -687,6 +688,18 @@ describe("imported catalog release control on a test project", () => {
         /admin reviewer access required/i,
       );
 
+      const directReviewerOptionCreate = await owner.client
+        .from("answer_options")
+        .insert({
+          question_id: answerOption.row.question_id,
+          option_text: "Direct reviewer insert must stay blocked",
+          is_correct: false,
+          sort_order: 999,
+        });
+      expect(directReviewerOptionCreate.error?.message).toMatch(
+        /permission denied|exact apply or release operation/i,
+      );
+
       const reviewerOptionCreate = await owner.client.rpc(
         "fn_create_answer_option_for_reviewer_v1",
         {
@@ -695,6 +708,8 @@ describe("imported catalog release control on a test project", () => {
           p_option_text: "Reviewer temporary option",
         },
       );
+      reviewerOptionOutstanding =
+        reviewerOptionCreate.error === null && reviewerOptionCreate.data === true;
       expect(reviewerOptionCreate.error).toBeNull();
       expect(reviewerOptionCreate.data).toBe(true);
 
@@ -707,7 +722,6 @@ describe("imported catalog release control on a test project", () => {
       if (temporaryOption.error || !temporaryOption.data) {
         throw temporaryOption.error ?? new Error("Temporary reviewer option was not created.");
       }
-
       const reviewerOptionUpdate = await owner.client.rpc(
         "fn_update_answer_option_for_reviewer_v1",
         {
@@ -730,11 +744,82 @@ describe("imported catalog release control on a test project", () => {
         radioCorrectness.data?.filter((option) => option.is_correct),
       ).toEqual([expect.objectContaining({ id: answerOption.id })]);
 
-      const removeTemporaryOption = await service
+      const revokeWithReviewerOption = await service.rpc(
+        "fn_set_unreleased_import_reviewer_v1",
+        {
+          p_program_id: program.id,
+          p_user_id: owner.id,
+          p_allowed: false,
+        },
+      );
+      expect(revokeWithReviewerOption.error).toBeNull();
+      const hiddenAfterOptionRevoke = await owner.client
+        .from("answer_options")
+        .select("id")
+        .eq("id", temporaryOption.data.id)
+        .maybeSingle();
+      expect(hiddenAfterOptionRevoke.error).toBeNull();
+      expect(hiddenAfterOptionRevoke.data).toBeNull();
+      const revokedReviewerOptionUpdate = await owner.client.rpc(
+        "fn_update_answer_option_for_reviewer_v1",
+        {
+          p_lesson_id: quizLesson.id,
+          p_option_id: answerOption.id,
+          p_option_text: "Revoked reviewer must not write this",
+          p_is_correct: false,
+          p_exclusive_peer_option_ids: [],
+        },
+      );
+      expect(revokedReviewerOptionUpdate.error?.message).toMatch(
+        /admin reviewer access required/i,
+      );
+
+      const regrantForOptionCleanup = await service.rpc(
+        "fn_set_unreleased_import_reviewer_v1",
+        {
+          p_program_id: program.id,
+          p_user_id: owner.id,
+          p_allowed: true,
+        },
+      );
+      expect(regrantForOptionCleanup.error).toBeNull();
+
+      const forgedServiceOptionDelete = await service
         .from("answer_options")
         .delete()
         .eq("id", temporaryOption.data.id);
-      expect(removeTemporaryOption.error).toBeNull();
+      expect(forgedServiceOptionDelete.error?.message).toMatch(
+        /exact course-import rollback operation/i,
+      );
+
+      const optionCleanup = await service.rpc(
+        "fn_cleanup_unreleased_import_reviewer_evidence_v1",
+        { p_import_id: plan.importId, p_user_id: owner.id },
+      );
+      expect(optionCleanup.error).toBeNull();
+      reviewerOptionOutstanding = false;
+      expect(optionCleanup.data).toMatchObject({
+        import_id: plan.importId,
+        reviewer_user_id: owner.id,
+        status: "reviewer_evidence_cleaned",
+        reviewer_access_revoked: true,
+      });
+      const removedTemporaryOption = await service
+        .from("answer_options")
+        .select("id")
+        .eq("id", temporaryOption.data.id)
+        .maybeSingle();
+      expect(removedTemporaryOption.error).toBeNull();
+      expect(removedTemporaryOption.data).toBeNull();
+      const reviewerRegrantAfterOptionCleanup = await service.rpc(
+        "fn_set_unreleased_import_reviewer_v1",
+        {
+          p_program_id: program.id,
+          p_user_id: owner.id,
+          p_allowed: true,
+        },
+      );
+      expect(reviewerRegrantAfterOptionCleanup.error).toBeNull();
 
       const reviewerRevoke = await service.rpc(
         "fn_set_unreleased_import_reviewer_v1",
@@ -796,6 +881,23 @@ describe("imported catalog release control on a test project", () => {
         importedReferences.map(() => null),
       );
     } finally {
+      if (owner && importApplied && reviewerOptionOutstanding) {
+        const regrant = await service.rpc(
+          "fn_set_unreleased_import_reviewer_v1",
+          {
+            p_program_id: program.id,
+            p_user_id: owner.id,
+            p_allowed: true,
+          },
+        );
+        expect(regrant.error).toBeNull();
+        const cleanup = await service.rpc(
+          "fn_cleanup_unreleased_import_reviewer_evidence_v1",
+          { p_import_id: plan.importId, p_user_id: owner.id },
+        );
+        expect(cleanup.error).toBeNull();
+        reviewerOptionOutstanding = false;
+      }
       if (learner) await service.auth.admin.deleteUser(learner.id);
       if (admin) await service.auth.admin.deleteUser(admin.id);
       if (owner) await service.auth.admin.deleteUser(owner.id);
@@ -1331,6 +1433,17 @@ describe("imported catalog release control on a test project", () => {
       expect(await readCatalogReferences(admin.client, references)).toEqual(
         references.map(({ id }) => id),
       );
+
+      const manualOptionCreate = await admin.client.rpc(
+        "fn_create_answer_option_for_reviewer_v1",
+        {
+          p_lesson_id: ids.quizLesson,
+          p_question_id: ids.question,
+          p_option_text: "Draft answer created through the admin RPC",
+        },
+      );
+      expect(manualOptionCreate.error).toBeNull();
+      expect(manualOptionCreate.data).toBe(true);
 
       const directEdit = await admin.client
         .from("programs")
