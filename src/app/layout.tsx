@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
 import { Baloo_2, Geist, Geist_Mono, Nunito_Sans } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { WalkthroughCaptionOverlay } from "@/components/walkthrough-caption-overlay";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -45,9 +43,6 @@ export default function RootLayout({
     >
       <body className="flex min-h-full flex-col">
         <TooltipProvider>{children}</TooltipProvider>
-        <Suspense fallback={null}>
-          <WalkthroughCaptionOverlay />
-        </Suspense>
         <Toaster richColors position="top-right" />
       </body>
     </html>

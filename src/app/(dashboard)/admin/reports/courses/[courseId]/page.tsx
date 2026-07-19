@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Badge, Card } from "@/components/bmh-ds";
 import { requireAdmin } from "@/lib/auth/guard";
 import { createClient } from "@/lib/supabase/server";
+import { loadAdminLessonCompletions } from "../../../../lesson-state-rpc";
 
 import { AdminDataTable } from "../../../_components/admin-data-table";
 import {
@@ -10,6 +11,7 @@ import {
   AdminPageHeader,
   AdminSectionHeading,
 } from "../../../_components/admin-shell";
+import { loadAllReportRowsById } from "../../report-source-pagination";
 
 export default async function CourseReportPage({
   params,
@@ -21,61 +23,110 @@ export default async function CourseReportPage({
   const { courseId } = await params;
   const supabase = await createClient();
 
-  const [
-    courseRes,
-    modulesRes,
-    completionsRes,
-    certsRes,
-    accessibleUserRes,
-  ] = await Promise.all([
-    supabase
-      .from("courses")
-      .select("id, title, description, is_published")
-      .eq("id", courseId)
-      .maybeSingle(),
-    supabase
-      .from("modules")
-      .select("id, title, lessons(id, is_required_for_completion)")
-      .eq("course_id", courseId),
-    supabase
-      .from("user_lesson_completions")
-      .select(
-        `lesson_id, user_id, completed_at,
-         lessons!inner(module_id,
-           modules!inner(course_id)
-         )`,
-      )
-      .eq("lessons.modules.course_id", courseId),
-    supabase
-      .from("certificates")
-      .select("user_id, issued_at, certificate_number")
-      .eq("course_id", courseId),
-    // Learners with potential access: anyone whose role_group has access to
-    // a program containing this course OR to this course directly.
-    supabase
-      .from("profiles")
-      .select("id, full_name, email, system_role")
-      .order("full_name"),
-  ]);
+  const [courseRes, courseLessonsResult, certsResult, accessibleUsersResult] =
+    await Promise.all([
+      supabase
+        .from("courses")
+        .select("id, title, description, is_published")
+        .eq("id", courseId)
+        .maybeSingle(),
+      loadAllReportRowsById<CourseLessonRow>(({ afterId, limit }) => {
+        let query = supabase
+          .from("lessons")
+          .select("id, is_required_for_completion, modules!inner(course_id)", {
+            count: "exact",
+          })
+          .eq("modules.course_id", courseId)
+          .order("id", { ascending: true })
+          .limit(limit);
+        if (afterId !== null) query = query.gt("id", afterId);
+        return query;
+      }),
+      loadAllReportRowsById(({ afterId, limit }) => {
+        let query = supabase
+          .from("certificates")
+          .select("id, user_id, issued_at, certificate_number", {
+            count: "exact",
+          })
+          .eq("course_id", courseId)
+          .order("id", { ascending: true })
+          .limit(limit);
+        if (afterId !== null) query = query.gt("id", afterId);
+        return query;
+      }),
+      // Learners with potential access: anyone whose role_group has access to
+      // a program containing this course OR to this course directly.
+      loadAllReportRowsById(({ afterId, limit }) => {
+        const query = supabase
+          .from("profiles")
+          .select("id, full_name, email, system_role", { count: "exact" })
+          .order("id", { ascending: true })
+          .limit(limit);
+        return afterId === null ? query : query.gt("id", afterId);
+      }),
+    ]);
 
-  const course = courseRes.data as
-    | { id: string; title: string; description: string | null; is_published: boolean }
-    | null;
-  if (!course) notFound();
+  if (courseRes.error) {
+    return (
+      <main className="w-full flex-1 p-6 md:p-10">
+        <AdminPageHeader
+          eyebrow="Admin · Report"
+          title="Course report"
+          description="Report source data could not be verified. Refresh the page to try again."
+          backHref="/admin/reports"
+          backLabel="Back to reports"
+        />
+      </main>
+    );
+  }
 
-  // Required lessons in this course.
-  const requiredLessonIds = new Set<string>();
-  const modules = (modulesRes.data ?? []) as Array<{
+  const course = courseRes.data as {
     id: string;
     title: string;
-    lessons: Array<{ id: string; is_required_for_completion: boolean }> | null;
-  }>;
-  for (const m of modules) {
-    for (const l of m.lessons ?? []) {
-      if (l.is_required_for_completion) requiredLessonIds.add(l.id);
-    }
+    description: string | null;
+    is_published: boolean;
+  } | null;
+  if (!course) notFound();
+  if (!courseLessonsResult.ok || !certsResult.ok || !accessibleUsersResult.ok) {
+    return (
+      <main className="w-full flex-1 p-6 md:p-10">
+        <AdminPageHeader
+          eyebrow="Admin · Report"
+          title={course.title}
+          description="Report source data could not be verified. Refresh the page to try again."
+          backHref="/admin/reports"
+          backLabel="Back to reports"
+        />
+      </main>
+    );
   }
+
+  // Required lessons in this course.
+  const requiredLessonIds = new Set(
+    courseLessonsResult.rows
+      .filter((lesson) => lesson.is_required_for_completion)
+      .map((lesson) => lesson.id),
+  );
   const totalRequired = requiredLessonIds.size;
+
+  const profiles = accessibleUsersResult.rows as ReportProfile[];
+  const completionResult = await loadAdminLessonCompletions(supabase, {
+    userIds: profiles.map((profile) => profile.id),
+    lessonIds: Array.from(requiredLessonIds),
+  });
+  if (!completionResult.ok) {
+    return (
+      <main className="w-full flex-1 p-6 md:p-10">
+        <AdminPageHeader
+          eyebrow="Admin · Report"
+          title={course.title}
+          description="Current learner completion could not be verified. Refresh the page to try again."
+          backHref="/admin/reports"
+          backLabel="Back to reports"
+        />
+      </main>
+    );
+  }
 
   // Per-user completion counts and latest activity.
   type Row = {
@@ -84,14 +135,14 @@ export default async function CourseReportPage({
     latest: string | null;
   };
   const byUser = new Map<string, Row>();
-  for (const c of completionsRes.data ?? []) {
-    const uid = c.user_id;
-    const lid = c.lesson_id;
+  for (const completion of completionResult.completions) {
+    const uid = completion.userId;
+    const lid = completion.lessonId;
     if (!requiredLessonIds.has(lid)) continue;
     const row = byUser.get(uid) ?? { userId: uid, doneCount: 0, latest: null };
     row.doneCount++;
-    const ts = c.completed_at;
-    if (!row.latest || ts > row.latest) row.latest = ts;
+    const ts = completion.completedAt;
+    if (ts && (!row.latest || ts > row.latest)) row.latest = ts;
     byUser.set(uid, row);
   }
 
@@ -99,19 +150,12 @@ export default async function CourseReportPage({
     string,
     { issued_at: string; certificate_number: string }
   >();
-  for (const cert of certsRes.data ?? []) {
+  for (const cert of certsResult.rows) {
     certByUser.set(cert.user_id, {
       issued_at: cert.issued_at,
       certificate_number: cert.certificate_number,
     });
   }
-
-  const profiles = (accessibleUserRes.data ?? []) as Array<{
-    id: string;
-    full_name: string;
-    email: string;
-    system_role: "owner" | "admin" | "learner";
-  }>;
 
   // Only show profiles that have at least one completion OR a cert — keeps
   // the table relevant to actual progress instead of listing every auth user.
@@ -139,7 +183,9 @@ export default async function CourseReportPage({
         cert,
       };
     })
-    .sort((a, b) => b.pct - a.pct || (a.name ?? "").localeCompare(b.name ?? ""));
+    .sort(
+      (a, b) => b.pct - a.pct || (a.name ?? "").localeCompare(b.name ?? ""),
+    );
 
   return (
     <main className="w-full flex-1 p-6 md:p-10">
@@ -159,10 +205,7 @@ export default async function CourseReportPage({
       <div className="mb-6 grid gap-4 md:grid-cols-3">
         <StatCard label="Required lessons" value={totalRequired} />
         <StatCard label="Learners with progress" value={rows.length} />
-        <StatCard
-          label="Certificates issued"
-          value={(certsRes.data ?? []).length}
-        />
+        <StatCard label="Certificates issued" value={certsResult.rows.length} />
       </div>
 
       <Card padding="sm">
@@ -176,20 +219,43 @@ export default async function CourseReportPage({
           minWidth="48rem"
           empty="No one has started this course yet."
           columns={[
-            { key: "name", label: "Name", presentation: "link", hrefKey: "href" },
-            { key: "systemRole", label: "Role", presentation: "badge", toneKey: "roleTone" },
+            {
+              key: "name",
+              label: "Name",
+              presentation: "link",
+              hrefKey: "href",
+            },
+            {
+              key: "systemRole",
+              label: "Role",
+              presentation: "badge",
+              toneKey: "roleTone",
+            },
             { key: "doneLabel", label: "Done", align: "right", tabular: true },
-            { key: "pct", label: "%", align: "right", tabular: true, suffix: "%" },
+            {
+              key: "pct",
+              label: "%",
+              align: "right",
+              tabular: true,
+              suffix: "%",
+            },
             { key: "certificate", label: "Certificate", muted: true },
             { key: "latestLabel", label: "Last activity", muted: true },
           ]}
           rows={rows.map((row) => ({
             ...row,
             href: `/admin/reports/users/${row.id}`,
-            roleTone: row.systemRole === "owner" ? "solid" : row.systemRole === "admin" ? "blue" : "neutral",
+            roleTone:
+              row.systemRole === "owner"
+                ? "solid"
+                : row.systemRole === "admin"
+                  ? "blue"
+                  : "neutral",
             doneLabel: `${row.doneCount} / ${row.total}`,
             certificate: row.cert?.certificate_number ?? "-",
-            latestLabel: row.latest ? new Date(row.latest).toLocaleString() : "-",
+            latestLabel: row.latest
+              ? new Date(row.latest).toLocaleString()
+              : "-",
           }))}
         />
       </Card>
@@ -200,3 +266,16 @@ export default async function CourseReportPage({
 function StatCard({ label, value }: { label: string; value: number }) {
   return <AdminMetricCard label={label} value={value} />;
 }
+
+type CourseLessonRow = {
+  id: string;
+  is_required_for_completion: boolean;
+  modules: { course_id: string } | Array<{ course_id: string }> | null;
+};
+
+type ReportProfile = {
+  id: string;
+  full_name: string;
+  email: string;
+  system_role: "owner" | "admin" | "learner";
+};

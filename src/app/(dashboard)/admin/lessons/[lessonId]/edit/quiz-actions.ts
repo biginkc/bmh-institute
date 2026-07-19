@@ -3,6 +3,10 @@
 import { revalidatePath } from "next/cache";
 
 import { requireAdmin } from "@/lib/auth/guard";
+import {
+  importedDeletionError,
+  normalizeReleaseControlError,
+} from "@/lib/release-control/admin-guards";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -150,7 +154,9 @@ export async function deleteQuestion(input: {
     .from("questions")
     .delete()
     .eq("id", input.questionId);
-  if (error) return { ok: false, error: error.message };
+  if (error) {
+    return { ok: false, error: normalizeReleaseControlError(error.message) };
+  }
   revalidatePath(`/admin/lessons/${input.lessonId}/edit`);
   revalidatePath(`/lessons/${input.lessonId}`);
   return { ok: true };
@@ -198,27 +204,21 @@ export async function createAnswerOption(input: {
   await requireAdmin();
   const text = input.text.trim();
   if (!text) return { ok: false, error: "Option text is required." };
-  const admin = getAdminClientResult();
-  if (!admin.ok) return admin;
-  const supabase = admin.supabase;
-
-  const { data: last } = await supabase
-    .from("answer_options")
-    .select("sort_order")
-    .eq("question_id", input.questionId)
-    .order("sort_order", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  const nextOrder = last ? (last.sort_order as number) + 1 : 0;
-
-  const { error } = await supabase.from("answer_options").insert({
-    question_id: input.questionId,
-    option_text: text,
-    is_correct: false,
-    sort_order: nextOrder,
-  });
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc(
+    "fn_create_answer_option_for_reviewer_v1",
+    {
+      p_lesson_id: input.lessonId,
+      p_question_id: input.questionId,
+      p_option_text: text,
+    },
+  );
   if (error) return { ok: false, error: error.message };
+  if (data !== true) {
+    return { ok: false, error: "The answer option could not be created." };
+  }
   revalidatePath(`/admin/lessons/${input.lessonId}/edit`);
+  revalidatePath(`/lessons/${input.lessonId}`);
   return { ok: true };
 }
 
@@ -227,36 +227,36 @@ export async function updateAnswerOption(input: {
   lessonId: string;
   text: string;
   is_correct: boolean;
-  // For radio-style exclusivity: if single_choice/true_false and this option
-  // is being marked correct, the caller passes the question's other option
-  // ids so we can clear them in the same call.
+  // Retained for compatibility with the editor payload. The database derives
+  // the complete radio peer set and never trusts this list for exclusivity.
   exclusivePeerOptionIds?: string[];
 }): Promise<ActionResult> {
   await requireAdmin();
   if (!input.text.trim()) return { ok: false, error: "Text is required." };
-  const admin = getAdminClientResult();
-  if (!admin.ok) return admin;
-  const supabase = admin.supabase;
-
-  if (input.is_correct && input.exclusivePeerOptionIds?.length) {
-    await supabase
-      .from("answer_options")
-      .update({ is_correct: false })
-      .in("id", input.exclusivePeerOptionIds);
-  }
-
-  const { error } = await supabase
-    .from("answer_options")
-    .update({
-      option_text: input.text.trim(),
-      is_correct: input.is_correct,
-    })
-    .eq("id", input.optionId);
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc(
+    "fn_update_answer_option_for_reviewer_v1",
+    {
+      p_lesson_id: input.lessonId,
+      p_option_id: input.optionId,
+      p_option_text: input.text.trim(),
+      p_is_correct: input.is_correct,
+      p_exclusive_peer_option_ids: input.exclusivePeerOptionIds ?? [],
+    },
+  );
   if (error) return { ok: false, error: error.message };
+  if (data !== true) {
+    return { ok: false, error: "The answer option could not be updated." };
+  }
   revalidatePath(`/admin/lessons/${input.lessonId}/edit`);
   revalidatePath(`/lessons/${input.lessonId}`);
   return { ok: true };
 }
+
+/*
+ * Keep the answer-option mutations above together. Both are authenticated
+ * atomic RPCs so a caller cannot bypass the private import reviewer boundary.
+ */
 
 export async function deleteAnswerOption(input: {
   optionId: string;
@@ -266,14 +266,83 @@ export async function deleteAnswerOption(input: {
   const admin = getAdminClientResult();
   if (!admin.ok) return admin;
   const supabase = admin.supabase;
+  const imported = await importedAnswerOptionId(
+    supabase,
+    input.optionId,
+    input.lessonId,
+  );
+  if (!imported.ok) return imported;
+  if (imported.contentImportId) {
+    return {
+      ok: false,
+      error: importedDeletionError(imported.contentImportId)!,
+    };
+  }
   const { error } = await supabase
     .from("answer_options")
     .delete()
     .eq("id", input.optionId);
-  if (error) return { ok: false, error: error.message };
+  if (error) {
+    return { ok: false, error: normalizeReleaseControlError(error.message) };
+  }
   revalidatePath(`/admin/lessons/${input.lessonId}/edit`);
   revalidatePath(`/lessons/${input.lessonId}`);
   return { ok: true };
+}
+
+async function importedAnswerOptionId(
+  supabase: ReturnType<typeof createAdminClient>,
+  optionId: string,
+  lessonId: string,
+): Promise<
+  | { ok: true; contentImportId: string | null }
+  | { ok: false; error: string }
+> {
+  const [option, lesson] = await Promise.all([
+    supabase
+      .from("answer_options")
+      .select("question_id")
+      .eq("id", optionId)
+      .maybeSingle(),
+    supabase
+      .from("lessons")
+      .select("quiz_id, module_id, content_import_id")
+      .eq("id", lessonId)
+      .maybeSingle(),
+  ]);
+  if (option.error || lesson.error || !option.data || !lesson.data?.quiz_id) {
+    return { ok: false, error: "Couldn't verify the answer option's catalog ownership." };
+  }
+
+  const question = await supabase
+    .from("questions")
+    .select("quiz_id")
+    .eq("id", option.data.question_id)
+    .maybeSingle();
+  if (question.error || question.data?.quiz_id !== lesson.data.quiz_id) {
+    return { ok: false, error: "Couldn't verify the answer option's catalog ownership." };
+  }
+  if (lesson.data.content_import_id) {
+    return { ok: true, contentImportId: lesson.data.content_import_id };
+  }
+
+  const moduleRow = await supabase
+    .from("modules")
+    .select("course_id")
+    .eq("id", lesson.data.module_id)
+    .maybeSingle();
+  if (moduleRow.error || !moduleRow.data) {
+    return { ok: false, error: "Couldn't verify the answer option's catalog ownership." };
+  }
+  const course = await supabase
+    .from("courses")
+    .select("content_import_id")
+    .eq("id", moduleRow.data.course_id)
+    .maybeSingle();
+  if (course.error || !course.data) {
+    return { ok: false, error: "Couldn't verify the answer option's catalog ownership." };
+  }
+  return { ok: true, contentImportId: course.data.content_import_id };
 }
 
 function getAdminClientResult():

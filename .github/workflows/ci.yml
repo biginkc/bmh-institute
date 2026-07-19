@@ -21,6 +21,10 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+        with:
+          # Caption approval evidence is bound to historical commits. A shallow
+          # clone cannot verify those immutable review records.
+          fetch-depth: 0
 
       - name: Set up Node
         uses: actions/setup-node@v4
@@ -28,24 +32,42 @@ jobs:
           node-version: 22
           cache: npm
 
+      - name: Set up uv
+        uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
+
       - name: Install dependencies
         run: npm ci
 
+      - name: Install media and PDF inspection tools
+        run: sudo apt-get update && sudo apt-get install --yes ffmpeg poppler-utils
+
       - name: Run typecheck, unit, and RTL tests
         run: npm run verify
+
+      - name: Run course-content tests and deterministic guide rebuild
+        run: npm run test:course-content
+
+      - name: Run artwork production workflow tests
+        run: npm run test:artwork-production
 
   e2e:
     name: Seeded Playwright E2E
     runs-on: ubuntu-latest
     needs: verify
+    concurrency:
+      group: bmh-institute-seeded-e2e-shared-test-project
+      cancel-in-progress: false
     env:
       TEST_SUPABASE_URL: ${{ secrets.TEST_SUPABASE_URL }}
       TEST_SUPABASE_ANON_KEY: ${{ secrets.TEST_SUPABASE_ANON_KEY }}
       TEST_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.TEST_SUPABASE_SERVICE_ROLE_KEY }}
-      E2E_SEED_PASSWORD: ${{ secrets.E2E_SEED_PASSWORD }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+        with:
+          # The canary gate verifies immutable caption and held-video approval
+          # transitions before it reads the remote test project.
+          fetch-depth: 0
 
       - name: Set up Node
         uses: actions/setup-node@v4
@@ -55,6 +77,22 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Verify Tech Stack canary has no remote drift
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.TEST_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.TEST_SUPABASE_SERVICE_ROLE_KEY }}
+        run: >-
+          npm run course:import -- verify
+          content/course-manifests/bmh-employee-training-canary.v1.json
+          --canary --execute
+
+      - name: Create one-run E2E credential
+        shell: bash
+        run: |
+          E2E_PASSWORD="$(openssl rand -base64 36 | tr -d '\n')"
+          echo "::add-mask::${E2E_PASSWORD}"
+          echo "E2E_SEED_PASSWORD=${E2E_PASSWORD}" >> "${GITHUB_ENV}"
 
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
@@ -64,6 +102,10 @@ jobs:
 
       - name: Run Playwright E2E
         run: npm run test:e2e
+
+      - name: Remove seeded E2E accounts and content
+        if: always()
+        run: npm run cleanup:e2e
 
       - name: Upload Playwright report
         if: always()

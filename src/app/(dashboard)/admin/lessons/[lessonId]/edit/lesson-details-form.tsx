@@ -4,7 +4,9 @@ import { useState, useTransition } from "react";
 import { toast } from "sonner";
 
 import { Button, Input } from "@/components/bmh-ds";
+import { FileUpload } from "@/components/file-upload";
 import { Label } from "@/components/ui/label";
+import { manualArtworkNamespace } from "@/lib/artwork/paths";
 
 import { updateLessonDetails } from "./actions";
 
@@ -13,16 +15,24 @@ export function LessonDetailsForm({
   defaultTitle,
   defaultDescription,
   defaultRequired,
+  defaultThumbnailPath = null,
+  contentImportId = null,
 }: {
   lessonId: string;
   defaultTitle: string;
   defaultDescription: string | null;
   defaultRequired: boolean;
+  defaultThumbnailPath?: string | null;
+  contentImportId?: string | null;
 }) {
   const [title, setTitle] = useState(defaultTitle);
   const [description, setDescription] = useState(defaultDescription ?? "");
   const [required, setRequired] = useState(defaultRequired);
+  const [thumbnailPath, setThumbnailPath] = useState(defaultThumbnailPath ?? "");
   const [pending, startTransition] = useTransition();
+  const artworkPrefix = contentImportId
+    ? null
+    : manualArtworkNamespace("lesson", lessonId);
 
   function onSave() {
     startTransition(async () => {
@@ -31,6 +41,7 @@ export function LessonDetailsForm({
         title,
         description: description.trim() === "" ? null : description.trim(),
         is_required_for_completion: required,
+        thumbnail_path: thumbnailPath || null,
       });
       if (!result.ok) toast.error(result.error);
       else toast.success("Saved.");
@@ -71,6 +82,25 @@ export function LessonDetailsForm({
         <Label htmlFor="is_required">
           Required for course completion
         </Label>
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="lesson-thumbnail-path">Lesson thumbnail path</Label>
+        <Input id="lesson-thumbnail-path" value={thumbnailPath} readOnly />
+        {contentImportId ? (
+          <p className="text-xs font-semibold text-[var(--text-muted)]">
+            Imported artwork is managed through the approved course manifest.
+          </p>
+        ) : (
+          <FileUpload
+            accept="image/png,image/jpeg,image/webp,image/avif"
+            maxMb={20}
+            label="Upload lesson thumbnail"
+            currentPath={thumbnailPath || null}
+            pathPrefix={artworkPrefix!}
+            onUploaded={(file) => setThumbnailPath(file.file_path)}
+          />
+        )}
       </div>
 
       <div>

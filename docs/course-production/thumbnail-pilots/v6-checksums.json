@@ -1,0 +1,86 @@
+{
+  "status": "rejected-superseded-by-single-character-v7",
+  "generator": "built-in image_gen",
+  "post_processing": "locked eight-color palette, no dithering, contain normalization, lossless WebP",
+  "palette_rgb": [
+    [103, 182, 255],
+    [255, 211, 1],
+    [255, 174, 1],
+    [255, 110, 0],
+    [254, 255, 198],
+    [255, 255, 255],
+    [0, 0, 0],
+    [105, 153, 53]
+  ],
+  "assets": [
+    {
+      "slug": "orientation",
+      "source": {
+        "path": "course-assets/thumbnails/pilots/revisions/v6/sources/orientation-generated-v6.png",
+        "dimensions": [1672, 941],
+        "sha256": "091f61e047ee21c6e7ea0069581feab52c827f1e9c832d80f8617031f1bf30a5"
+      },
+      "flat_master": {
+        "path": "course-assets/thumbnails/pilots/revisions/v6/flat-masters/orientation-flat-master-v6.png",
+        "dimensions": [1672, 941],
+        "sha256": "2b03e873b79aa250e868269bd0b7bf62963c673cbdb81cc757bd45c78b670a83"
+      },
+      "lesson_card": {
+        "path": "course-assets/thumbnails/pilots/revisions/v6/lesson-cards/orientation-lesson-card-v6-16x10.webp",
+        "dimensions": [1280, 800],
+        "sha256": "b14a809d6f053172a7684efa519a292620eb8473ea1bf395d55ce8e65dbba60d"
+      },
+      "video_poster": {
+        "path": "course-assets/thumbnails/pilots/revisions/v6/video-posters/orientation-video-poster-v6-16x9.webp",
+        "dimensions": [1280, 720],
+        "sha256": "a37506ab03aed2fedce885d11901ffccbecd974d454493d9f83fe1f2cba88007"
+      }
+    },
+    {
+      "slug": "opening-the-call",
+      "source": {
+        "path": "course-assets/thumbnails/pilots/revisions/v6/sources/opening-the-call-generated-v5.png",
+        "dimensions": [1672, 941],
+        "sha256": "24df5d8cebe5395075c20dc83b22554a649a2a973b80dccd0040b53ccd50c9e4"
+      },
+      "flat_master": {
+        "path": "course-assets/thumbnails/pilots/revisions/v6/flat-masters/opening-the-call-flat-master-v6.png",
+        "dimensions": [1672, 941],
+        "sha256": "083fe75328fdaff6843b25b3c4d4364801bea5117517cd3aa3754f9d803673fb"
+      },
+      "lesson_card": {
+        "path": "course-assets/thumbnails/pilots/revisions/v6/lesson-cards/opening-the-call-lesson-card-v6-16x10.webp",
+        "dimensions": [1280, 800],
+        "sha256": "86ae5395c5f1fd27a900d539ca33a1e84252462ccaaefcd51fdf2d90cc25ed3a"
+      },
+      "video_poster": {
+        "path": "course-assets/thumbnails/pilots/revisions/v6/video-posters/opening-the-call-video-poster-v6-16x9.webp",
+        "dimensions": [1280, 720],
+        "sha256": "802cbc44bd4023f3e66d2edc28f26d04c367ea32705d2939e39b4bf636ddce39"
+      }
+    },
+    {
+      "slug": "objection-architecture",
+      "source": {
+        "path": "course-assets/thumbnails/pilots/revisions/v6/sources/objection-architecture-generated-v6.png",
+        "dimensions": [1672, 941],
+        "sha256": "fa2ec9eef64cc171f8afb43c1ebeeea6f8f4460445ce94f79dd9da53b3485a54"
+      },
+      "flat_master": {
+        "path": "course-assets/thumbnails/pilots/revisions/v6/flat-masters/objection-architecture-flat-master-v6.png",
+        "dimensions": [1672, 941],
+        "sha256": "497b329a901272f20ddca4187f4f559894e0acc5158b362662d3c75e0ca6a081"
+      },
+      "lesson_card": {
+        "path": "course-assets/thumbnails/pilots/revisions/v6/lesson-cards/objection-architecture-lesson-card-v6-16x10.webp",
+        "dimensions": [1280, 800],
+        "sha256": "2d2e2d1e2e8314526b70a99b05a3eedf639ef2899aadc16a120e66e9b4eea0fc"
+      },
+      "video_poster": {
+        "path": "course-assets/thumbnails/pilots/revisions/v6/video-posters/objection-architecture-video-poster-v6-16x9.webp",
+        "dimensions": [1280, 720],
+        "sha256": "7bda0e99e2566098e710db7757aabfd76d15c246c0d0cee14689c4f091e758ed"
+      }
+    }
+  ]
+}

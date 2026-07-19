@@ -10,6 +10,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendEmail } from "@/lib/email/send";
 import { renderEnrollmentEmail } from "@/lib/email/enrollment";
+import { normalizeReleaseControlError } from "@/lib/release-control/admin-guards";
 import {
   parseInviteInput,
   type InviteInput,
@@ -114,12 +115,17 @@ async function sendEnrollmentEmail(input: {
     // Programs accessible via any of the invitee's role groups.
     const { data: pRows } = await input.supabase
       .from("program_access")
-      .select("programs(id, title)")
+      .select("programs(id, title, is_published)")
       .in("role_group_id", input.roleGroupIds);
     const seen = new Set<string>();
     for (const row of pRows ?? []) {
       const p = firstRow(row.programs);
-      if (p && typeof p.id === "string" && !seen.has(p.id)) {
+      if (
+        p &&
+        p.is_published === true &&
+        typeof p.id === "string" &&
+        !seen.has(p.id)
+      ) {
         seen.add(p.id);
         programs.push({ id: p.id, title: p.title as string });
       }
@@ -129,7 +135,7 @@ async function sendEnrollmentEmail(input: {
     // one of the invitee's accessible programs.
     const { data: cRows } = await input.supabase
       .from("course_access")
-      .select("courses(id, title)")
+      .select("courses(id, title, is_published)")
       .in("role_group_id", input.roleGroupIds);
     const courseIdsInPrograms = new Set<string>();
     if (programs.length > 0) {
@@ -148,6 +154,7 @@ async function sendEnrollmentEmail(input: {
     for (const row of cRows ?? []) {
       const c = firstRow(row.courses);
       if (!c || typeof c.id !== "string") continue;
+      if (c.is_published !== true) continue;
       if (courseIdsInPrograms.has(c.id)) continue;
       if (seenC.has(c.id)) continue;
       seenC.add(c.id);
@@ -216,7 +223,9 @@ export async function setUserRoleGroups(input: {
     p_user_id: input.userId,
     p_role_group_ids: input.role_group_ids,
   });
-  if (error) return { ok: false, error: error.message };
+  if (error) {
+    return { ok: false, error: normalizeReleaseControlError(error.message) };
+  }
 
   revalidatePath("/admin/users");
   revalidatePath("/dashboard");

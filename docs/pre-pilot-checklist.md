@@ -85,10 +85,10 @@ Automated by production readiness:
 - [ ] File assignment upload and approval.
 - [ ] Certificate issuance and certificate page.
 
-## Pilot monitoring
+## Learner monitoring
 
 - [ ] `/admin/reports` opens.
-- [ ] Pilot monitoring panel is visible.
+- [ ] Learner monitoring panel is visible.
 - [ ] Needs access rows link to learner access editing.
 - [ ] Needs review rows link to submissions.
 - [ ] Learner report links open.
@@ -96,11 +96,11 @@ Automated by production readiness:
 
 Automated by seeded e2e:
 
-- [ ] Pilot monitoring panel and action links render.
+- [ ] Learner monitoring panel and action links render.
 
 Automated by production readiness:
 
-- [ ] Pilot monitoring panel and export link render against production fixture.
+- [ ] Learner monitoring panel and `/admin/reports/learners/export` link render against production fixture.
 
 ## Cleanup readiness
 

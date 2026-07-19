@@ -1,0 +1,11 @@
+# The Five-Step Conversation Framework
+
+Video: video-slot-06-framework
+
+Now, inside each of these pipeline stages, there's a conversation happening. And every conversation you have follows a five-step framework. Step one is the intro, where you set expectations. You tell them who you are, why you're calling, and what they'll get out of the conversation. Step two is the fact find, where you ask questions, qualify, and listen. This is where you should be spending about 80% of your conversation time. And notice I said talking about the person, not the house. Step three is the pitch, where you present what BMH does. This is actually the only part of the conversation that's really about the property and the transaction itself.
+
+Step four is the offer, where you transition toward next steps. For you, that usually means teeing up the handoff rather than throwing out a number. And step five is the close, where you get commitment. That might be setting an appointment with the acquisition team, getting agreement to receive an offer, or just locking in a firm follow-up time. Here's the thing that ties all this together. The pipeline stages are the organizational structure. They tell you where a lead is in the overall process. The five-step framework is how you actually execute within each conversation. Pipeline stages move leads forward through the system.
+
+Conversation steps move each individual call forward. One more thing, and this is important. About 80% of your conversation should not be about the property. Only about 20% should actually be about the house itself. The rest is intro, rapport building, fact finding, understanding the person. Because the house is not the problem, the person's situation is the problem. Your job is to find the solution to their problem, and the house just happens to be the vehicle for that solution. New people make the mistake of jumping straight to, tell me about the house, and trying to race toward an offer as fast as possible. Don't do that. Slow down.
+
+Build the relationship. Actually care about what's going on. The deals will follow. Alright, let's keep going. Next up, we're going to break down exactly how to open a call and run a fact find.

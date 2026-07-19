@@ -1,0 +1,25 @@
+{
+  "schema_version": "bmh-artwork-postapproval-defect/v1",
+  "master_id": "master-slot-01",
+  "decision": "postapproval-defect-remediation-authorized",
+  "approval_inheritance": "forbidden",
+  "approved_v8_source_sha256": "a3a0b69a48d359d29247e557babdad2bc5a88bc79dc19edb113f885e0ccc22a6",
+  "approved_v8_flat_master_sha256": "e8f17f745865e69631517c94ab1110f5767f64f5c2de1e80531d9f2a7fa31f94",
+  "affected_asset": {
+    "asset_key": "poster-video-slot-01-mindset",
+    "rejected_checksum_sha256": "3a63a5f8d070f29cd2ae518791cc33ed8e07e3ac44605de09d24e78b0b308168",
+    "rejected_pixel_sha256": "154fc8bad8389bea339914ee09956ca821814e6d9aca55e9344fdfbf8ef59abd",
+    "defect": "The fixed left-safe crop clips the doorway and steps at the top, clips Andrea at the bottom, and omits the declared compass-led path cue."
+  },
+  "preserved_approved_assets": [
+    {
+      "asset_key": "thumbnail-slot-01",
+      "checksum_sha256": "3a684cd589bf3895e672e43d6a734b35c503f6b3a191e1564c997c93c8c84988"
+    },
+    {
+      "asset_key": "poster-video-slot-01-welcome",
+      "checksum_sha256": "7da124a20704285fed7b2ed1c2db81fa56be849da4222f22ce1810638ec46d07"
+    }
+  ],
+  "required_result": "A checksum-distinct, crop-safe replacement through explicit correction lineage, left unapproved pending final artwork review."
+}

@@ -52,6 +52,9 @@ export async function sendEmail(input: {
     // 465 is implicit TLS; 587 is STARTTLS upgrade.
     secure: port === 465,
     auth: { user, pass },
+    connectionTimeout: 10_000,
+    greetingTimeout: 10_000,
+    socketTimeout: 10_000,
   });
 
   try {

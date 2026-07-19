@@ -3,6 +3,11 @@ import path from "node:path";
 
 import { defineConfig, devices } from "@playwright/test";
 
+import {
+  CREDENTIAL_SAFE_PLAYWRIGHT_USE,
+} from "./src/lib/testing/credential-artifact-policy";
+import { requireInstituteProductionBaseUrl } from "./src/lib/testing/production-base-url";
+
 /**
  * Playwright config for smoke-testing the live bmh-institute deployment.
  *
@@ -44,10 +49,10 @@ const env = {
   ...loadEnvFile(".env.test.local"),
 };
 
-const baseURL =
+const baseURL = requireInstituteProductionBaseUrl(
   process.env.E2E_PROD_BASE_URL ??
-  env.E2E_PROD_BASE_URL ??
-  "https://sandra-university.vercel.app";
+  env.E2E_PROD_BASE_URL,
+);
 
 // Publish for the setup project so it can read creds.
 process.env.E2E_TEST_EMAIL = process.env.E2E_TEST_EMAIL ?? env.E2E_TEST_EMAIL ?? "";
@@ -81,8 +86,7 @@ export default defineConfig({
   expect: { timeout: 10_000 },
   use: {
     baseURL,
-    trace: "retain-on-failure",
-    screenshot: "only-on-failure",
+    ...CREDENTIAL_SAFE_PLAYWRIGHT_USE,
   },
   projects: [
     {

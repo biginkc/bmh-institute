@@ -3,9 +3,23 @@
 import { useRef, useState } from "react";
 import { Upload, X } from "lucide-react";
 import { toast } from "sonner";
+import { defaultOptions as tusDefaultOptions, Upload as TusUpload } from "tus-js-client";
 
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
+import { artworkMimeMatchesPath } from "@/lib/artwork/paths";
+import {
+  ValidatingTusUrlStorage,
+  assertSafeTusUrl,
+  createScopedTusFingerprint,
+  sha256Blob,
+  supabaseResumableEndpoint,
+} from "@/lib/storage/tus-safety";
+import {
+  clearUploadGeneration,
+  getOrCreateUploadGeneration,
+} from "@/lib/storage/upload-generation";
+import { uploadSmallBrowserObject } from "@/lib/storage/browser-upload";
 import { cn } from "@/lib/utils";
 
 export type UploadedFile = {
@@ -14,6 +28,9 @@ export type UploadedFile = {
   size_bytes: number;
   mime_type: string;
 };
+
+const RESUMABLE_THRESHOLD_BYTES = 6 * 1024 * 1024;
+const TUS_CHUNK_BYTES = 6 * 1024 * 1024;
 
 /**
  * Uploads directly from the browser to the `content` Supabase Storage bucket
@@ -31,6 +48,7 @@ export function FileUpload({
   currentPath,
   label = "Upload file",
   bucket = "content",
+  pathPrefix,
 }: {
   accept: string;
   maxMb?: number;
@@ -38,6 +56,7 @@ export function FileUpload({
   currentPath?: string | null;
   label?: string;
   bucket?: "content" | "submissions" | "avatars";
+  pathPrefix?: string;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [progress, setProgress] = useState<number | null>(null);
@@ -62,9 +81,9 @@ export function FileUpload({
     try {
       const supabase = createClient();
       const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session?.user) {
         toast.error("You need to be signed in to upload.");
         return;
       }
@@ -72,27 +91,54 @@ export function FileUpload({
       const safeName = file.name
         .replace(/\s+/g, "-")
         .replace(/[^a-zA-Z0-9._-]/g, "");
-      const path = `${user.id}/${Date.now()}-${safeName}`;
+      const normalizedPrefix = pathPrefix
+        ? `${pathPrefix.replace(/^\/+|\/+$/g, "")}/`
+        : `${session.user.id}/`;
+      const uploadGeneration = getOrCreateUploadGeneration({
+        bucket,
+        ownerId: session.user.id,
+        pathPrefix: normalizedPrefix,
+        file,
+      });
+      const path = `${normalizedPrefix}${uploadGeneration.generationId}-${file.size}-${file.lastModified}-${safeName}`;
 
-      const { error } = await supabase.storage
-        .from(bucket)
-        .upload(path, file, {
-          contentType: file.type || "application/octet-stream",
-          upsert: false,
-        });
-
-      if (error) {
-        toast.error(`Upload failed: ${error.message}`);
+      const contentType = file.type || "application/octet-stream";
+      if (pathPrefix && !artworkMimeMatchesPath(path, contentType)) {
+        toast.error("Choose a supported image whose file extension matches its type.");
         return;
       }
+      const checksum = await sha256Blob(file);
+      if (file.size > RESUMABLE_THRESHOLD_BYTES) {
+        await uploadResumably({
+          file,
+          bucket,
+          path,
+          contentType,
+          accessToken: session.access_token,
+          checksum,
+          onProgress: setProgress,
+        });
+      } else {
+        await uploadSmallBrowserObject({
+          bucket: supabase.storage.from(bucket),
+          path,
+          file,
+          contentType,
+          checksum,
+        });
+        setProgress(100);
+      }
 
+      clearUploadGeneration(uploadGeneration.storageKey);
       onUploaded({
         file_path: path,
         filename: file.name,
         size_bytes: file.size,
-        mime_type: file.type || "application/octet-stream",
+        mime_type: contentType,
       });
       toast.success("Uploaded.");
+    } catch (error) {
+      toast.error(`Upload failed: ${error instanceof Error ? error.message : "Unknown error"}`);
     } finally {
       setUploading(false);
       setProgress(null);
@@ -142,4 +188,69 @@ export function FileUpload({
       </Button>
     </div>
   );
+}
+
+async function uploadResumably({
+  file,
+  bucket,
+  path,
+  contentType,
+  accessToken,
+  checksum,
+  onProgress,
+}: {
+  file: File;
+  bucket: string;
+  path: string;
+  contentType: string;
+  accessToken: string;
+  checksum: string;
+  onProgress: (progress: number) => void;
+}) {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!supabaseUrl) return Promise.reject(new Error("NEXT_PUBLIC_SUPABASE_URL is not configured."));
+  const endpoint = supabaseResumableEndpoint(supabaseUrl);
+  const fingerprint = createScopedTusFingerprint({ endpoint, bucket, path, checksum });
+  const urlStorage = new ValidatingTusUrlStorage(tusDefaultOptions.urlStorage, {
+    endpoint,
+    fingerprint,
+    size: file.size,
+    bucket,
+    path,
+    checksum,
+    contentType,
+  });
+
+  return new Promise<void>((resolve, reject) => {
+    const upload = new TusUpload(file, {
+      endpoint,
+      retryDelays: [0, 3_000, 5_000, 10_000, 20_000],
+      headers: {
+        authorization: `Bearer ${accessToken}`,
+        "x-upsert": "false",
+      },
+      uploadDataDuringCreation: true,
+      removeFingerprintOnSuccess: true,
+      storeFingerprintForResuming: true,
+      fingerprint: async () => fingerprint,
+      urlStorage,
+      chunkSize: TUS_CHUNK_BYTES,
+      metadata: {
+        bucketName: bucket,
+        objectName: path,
+        contentType,
+        cacheControl: "3600",
+        metadata: JSON.stringify({ sha256: checksum }),
+      },
+      onBeforeRequest: (request) => assertSafeTusUrl(request.getURL(), endpoint),
+      onProgress: (uploaded, total) => onProgress(total > 0 ? Math.round((uploaded / total) * 100) : 0),
+      onError: reject,
+      onSuccess: () => resolve(),
+    });
+
+    void upload.findPreviousUploads().then((previous) => {
+      if (previous[0]) upload.resumeFromPreviousUpload(previous[0]);
+      upload.start();
+    }, reject);
+  });
 }

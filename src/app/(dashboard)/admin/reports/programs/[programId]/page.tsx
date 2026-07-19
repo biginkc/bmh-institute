@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Badge, Card } from "@/components/bmh-ds";
 import { requireAdmin } from "@/lib/auth/guard";
 import { createClient } from "@/lib/supabase/server";
+import { loadAdminLessonCompletions } from "../../../../lesson-state-rpc";
 
 import { AdminDataTable } from "../../../_components/admin-data-table";
 import {
@@ -10,6 +11,7 @@ import {
   AdminPageHeader,
   AdminSectionHeading,
 } from "../../../_components/admin-shell";
+import { loadAllReportRowsById } from "../../report-source-pagination";
 
 export default async function ProgramReportPage({
   params,
@@ -23,81 +25,143 @@ export default async function ProgramReportPage({
 
   const [
     programRes,
-    programCoursesRes,
-    modulesRes,
-    completionsRes,
-    courseCertsRes,
-    programCertsRes,
-    profilesRes,
+    programCoursesResult,
+    lessonsResult,
+    courseCertsResult,
+    programCertsResult,
+    profilesResult,
   ] = await Promise.all([
     supabase
       .from("programs")
       .select("id, title, description, course_order_mode, is_published")
       .eq("id", programId)
       .maybeSingle(),
-    supabase
-      .from("program_courses")
-      .select("course_id, sort_order, courses(id, title, is_published)")
-      .eq("program_id", programId)
-      .order("sort_order"),
-    supabase
-      .from("modules")
-      .select("id, course_id, lessons(id, is_required_for_completion)"),
-    supabase
-      .from("user_lesson_completions")
-      .select("lesson_id, user_id, completed_at"),
-    supabase
-      .from("certificates")
-      .select("user_id, course_id"),
-    supabase
-      .from("program_certificates")
-      .select("user_id, certificate_number, issued_at")
-      .eq("program_id", programId),
-    supabase
-      .from("profiles")
-      .select("id, full_name, email, system_role")
-      .order("full_name"),
+    loadAllReportRowsById(({ afterId, limit }) => {
+      let query = supabase
+        .from("program_courses")
+        .select("id, course_id, sort_order, courses(id, title, is_published)", {
+          count: "exact",
+        })
+        .eq("program_id", programId)
+        .order("id", { ascending: true })
+        .limit(limit);
+      if (afterId !== null) query = query.gt("id", afterId);
+      return query;
+    }),
+    loadAllReportRowsById<ProgramLessonRow>(({ afterId, limit }) => {
+      const query = supabase
+        .from("lessons")
+        .select("id, is_required_for_completion, modules!inner(course_id)", {
+          count: "exact",
+        })
+        .order("id", { ascending: true })
+        .limit(limit);
+      return afterId === null ? query : query.gt("id", afterId);
+    }),
+    loadAllReportRowsById(({ afterId, limit }) => {
+      const query = supabase
+        .from("certificates")
+        .select("id, user_id, course_id", { count: "exact" })
+        .order("id", { ascending: true })
+        .limit(limit);
+      return afterId === null ? query : query.gt("id", afterId);
+    }),
+    loadAllReportRowsById(({ afterId, limit }) => {
+      let query = supabase
+        .from("program_certificates")
+        .select("id, user_id, certificate_number, issued_at", {
+          count: "exact",
+        })
+        .eq("program_id", programId)
+        .order("id", { ascending: true })
+        .limit(limit);
+      if (afterId !== null) query = query.gt("id", afterId);
+      return query;
+    }),
+    loadAllReportRowsById(({ afterId, limit }) => {
+      const query = supabase
+        .from("profiles")
+        .select("id, full_name, email, system_role", { count: "exact" })
+        .order("id", { ascending: true })
+        .limit(limit);
+      return afterId === null ? query : query.gt("id", afterId);
+    }),
   ]);
 
-  const program = programRes.data as
-    | {
-        id: string;
-        title: string;
-        description: string | null;
-        course_order_mode: "sequential" | "free";
-        is_published: boolean;
-      }
-    | null;
+  if (programRes.error) {
+    return (
+      <main className="w-full flex-1 p-6 md:p-10">
+        <AdminPageHeader
+          eyebrow="Admin · Report"
+          title="Program report"
+          description="Report source data could not be verified. Refresh the page to try again."
+          backHref="/admin/reports"
+          backLabel="Back to reports"
+        />
+      </main>
+    );
+  }
+
+  const program = programRes.data as {
+    id: string;
+    title: string;
+    description: string | null;
+    course_order_mode: "sequential" | "free";
+    is_published: boolean;
+  } | null;
   if (!program) notFound();
+  if (
+    !programCoursesResult.ok ||
+    !lessonsResult.ok ||
+    !courseCertsResult.ok ||
+    !programCertsResult.ok ||
+    !profilesResult.ok
+  ) {
+    return (
+      <main className="w-full flex-1 p-6 md:p-10">
+        <AdminPageHeader
+          eyebrow="Admin · Report"
+          title={program.title}
+          description="Report source data could not be verified. Refresh the page to try again."
+          backHref="/admin/reports"
+          backLabel="Back to reports"
+        />
+      </main>
+    );
+  }
 
   // Courses in this program, ordered.
-  const programCourses = ((programCoursesRes.data ?? []) as Array<{
-    course_id: string;
-    sort_order: number;
-    courses: { id: string; title: string; is_published: boolean } | { id: string; title: string; is_published: boolean }[] | null;
-  }>).map((row) => ({
-    course_id: row.course_id,
-    sort_order: row.sort_order,
-    course: firstRow(row.courses),
-  }));
-  const programCourseIds = new Set(
-    programCourses.map((pc) => pc.course_id),
-  );
+  const programCourses = (
+    programCoursesResult.rows as Array<{
+      id: string;
+      course_id: string;
+      sort_order: number;
+      courses:
+        | { id: string; title: string; is_published: boolean }
+        | { id: string; title: string; is_published: boolean }[]
+        | null;
+    }>
+  )
+    .map((row) => ({
+      course_id: row.course_id,
+      sort_order: row.sort_order,
+      course: firstRow(row.courses),
+    }))
+    .sort(
+      (left, right) =>
+        left.sort_order - right.sort_order ||
+        left.course_id.localeCompare(right.course_id),
+    );
+  const programCourseIds = new Set(programCourses.map((pc) => pc.course_id));
 
   // Required lessons per course in this program.
   const requiredByCourse = new Map<string, Set<string>>();
-  for (const m of modulesRes.data ?? []) {
-    if (!programCourseIds.has(m.course_id)) continue;
-    const lessons = m.lessons as
-      | { id: string; is_required_for_completion: boolean }[]
-      | null;
-    if (!lessons) continue;
-    const bucket =
-      requiredByCourse.get(m.course_id) ?? new Set<string>();
-    for (const l of lessons) {
-      if (l.is_required_for_completion) bucket.add(l.id);
-    }
-    requiredByCourse.set(m.course_id, bucket);
+  for (const lesson of lessonsResult.rows) {
+    const courseId = firstRow(lesson.modules)?.course_id;
+    if (!courseId || !programCourseIds.has(courseId)) continue;
+    const bucket = requiredByCourse.get(courseId) ?? new Set<string>();
+    if (lesson.is_required_for_completion) bucket.add(lesson.id);
+    requiredByCourse.set(courseId, bucket);
   }
 
   const programRequiredLessonIds = new Set<string>();
@@ -105,25 +169,44 @@ export default async function ProgramReportPage({
     for (const id of set) programRequiredLessonIds.add(id);
   }
 
+  const profiles = profilesResult.rows as ReportProfile[];
+  const completionResult = await loadAdminLessonCompletions(supabase, {
+    userIds: profiles.map((profile) => profile.id),
+    lessonIds: Array.from(programRequiredLessonIds),
+  });
+  if (!completionResult.ok) {
+    return (
+      <main className="w-full flex-1 p-6 md:p-10">
+        <AdminPageHeader
+          eyebrow="Admin · Report"
+          title={program.title}
+          description="Current learner completion could not be verified. Refresh the page to try again."
+          backHref="/admin/reports"
+          backLabel="Back to reports"
+        />
+      </main>
+    );
+  }
+
   // Completions filtered to this program's lessons + latest activity.
   const completionsByUser = new Map<
     string,
     { total: number; latest: string | null }
   >();
-  for (const c of completionsRes.data ?? []) {
-    const lid = c.lesson_id;
+  for (const completion of completionResult.completions) {
+    const lid = completion.lessonId;
     if (!programRequiredLessonIds.has(lid)) continue;
-    const uid = c.user_id;
-    const ts = c.completed_at;
+    const uid = completion.userId;
+    const ts = completion.completedAt;
     const row = completionsByUser.get(uid) ?? { total: 0, latest: null };
     row.total++;
-    if (!row.latest || ts > row.latest) row.latest = ts;
+    if (ts && (!row.latest || ts > row.latest)) row.latest = ts;
     completionsByUser.set(uid, row);
   }
 
   // Course certificates filtered to this program's courses.
   const courseCertsByUser = new Map<string, Set<string>>();
-  for (const cert of courseCertsRes.data ?? []) {
+  for (const cert of courseCertsResult.rows) {
     const cid = cert.course_id;
     if (!programCourseIds.has(cid)) continue;
     const uid = cert.user_id;
@@ -136,19 +219,12 @@ export default async function ProgramReportPage({
     string,
     { certificate_number: string; issued_at: string }
   >();
-  for (const pc of programCertsRes.data ?? []) {
+  for (const pc of programCertsResult.rows) {
     programCertByUser.set(pc.user_id, {
       certificate_number: pc.certificate_number,
       issued_at: pc.issued_at,
     });
   }
-
-  const profiles = (profilesRes.data ?? []) as Array<{
-    id: string;
-    full_name: string;
-    email: string;
-    system_role: "owner" | "admin" | "learner";
-  }>;
 
   const totalRequired = programRequiredLessonIds.size;
   const totalCourses = programCourseIds.size;
@@ -197,7 +273,9 @@ export default async function ProgramReportPage({
         actions={
           <div className="flex gap-2">
             <Badge tone="blue" size="sm">
-              {program.course_order_mode === "sequential" ? "Sequential" : "Any order"}
+              {program.course_order_mode === "sequential"
+                ? "Sequential"
+                : "Any order"}
             </Badge>
             <Badge tone={program.is_published ? "green" : "neutral"} size="sm">
               {program.is_published ? "Published" : "Draft"}
@@ -212,7 +290,7 @@ export default async function ProgramReportPage({
         <StatCard label="Learners engaged" value={rows.length} />
         <StatCard
           label="Program certs issued"
-          value={(programCertsRes.data ?? []).length}
+          value={programCertsResult.rows.length}
         />
       </div>
 
@@ -220,23 +298,45 @@ export default async function ProgramReportPage({
         <div style={{ padding: "6px 12px 12px" }}>
           <AdminSectionHeading
             title="Courses in order"
-            description={program.course_order_mode === "sequential" ? "Sequential: each course unlocks after the prior one completes." : "Free: learners pick any order."}
+            description={
+              program.course_order_mode === "sequential"
+                ? "Sequential: each course unlocks after the prior one completes."
+                : "Free: learners pick any order."
+            }
           />
         </div>
         <AdminDataTable
           rowKey="id"
           columns={[
-            { key: "position", label: "#", width: "4rem", muted: true, tabular: true },
+            {
+              key: "position",
+              label: "#",
+              width: "4rem",
+              muted: true,
+              tabular: true,
+            },
             { key: "title", label: "Course" },
-            { key: "action", label: "Drill in", align: "right", presentation: "link", hrefKey: "href" },
+            {
+              key: "action",
+              label: "Drill in",
+              align: "right",
+              presentation: "link",
+              hrefKey: "href",
+            },
           ]}
-          rows={programCourses.flatMap((programCourse, index) => programCourse.course ? [{
-            id: programCourse.course.id,
-            position: index + 1,
-            title: programCourse.course.title,
-            action: "View →",
-            href: `/admin/reports/courses/${programCourse.course.id}`,
-          }] : [])}
+          rows={programCourses.flatMap((programCourse, index) =>
+            programCourse.course
+              ? [
+                  {
+                    id: programCourse.course.id,
+                    position: index + 1,
+                    title: programCourse.course.title,
+                    action: "View →",
+                    href: `/admin/reports/courses/${programCourse.course.id}`,
+                  },
+                ]
+              : [],
+          )}
           empty="No courses in this program yet."
         />
       </Card>
@@ -252,10 +352,26 @@ export default async function ProgramReportPage({
           minWidth="52rem"
           empty="Nobody's started the program yet."
           columns={[
-            { key: "name", label: "Name", presentation: "link", hrefKey: "href" },
+            {
+              key: "name",
+              label: "Name",
+              presentation: "link",
+              hrefKey: "href",
+            },
             { key: "lessons", label: "Lessons", align: "right", tabular: true },
-            { key: "pct", label: "%", align: "right", tabular: true, suffix: "%" },
-            { key: "coursesDone", label: "Courses done", align: "right", tabular: true },
+            {
+              key: "pct",
+              label: "%",
+              align: "right",
+              tabular: true,
+              suffix: "%",
+            },
+            {
+              key: "coursesDone",
+              label: "Courses done",
+              align: "right",
+              tabular: true,
+            },
             { key: "certificate", label: "Program cert", muted: true },
             { key: "latestLabel", label: "Last activity", muted: true },
           ]}
@@ -265,7 +381,9 @@ export default async function ProgramReportPage({
             lessons: `${row.doneCount} / ${row.total}`,
             coursesDone: `${row.coursesComplete} / ${row.totalCourses}`,
             certificate: row.programCert?.certificate_number ?? "-",
-            latestLabel: row.latest ? new Date(row.latest).toLocaleString() : "-",
+            latestLabel: row.latest
+              ? new Date(row.latest).toLocaleString()
+              : "-",
           }))}
         />
       </Card>
@@ -282,3 +400,16 @@ function firstRow<T>(value: T | T[] | null | undefined): T | null {
   if (Array.isArray(value)) return value[0] ?? null;
   return value;
 }
+
+type ProgramLessonRow = {
+  id: string;
+  is_required_for_completion: boolean;
+  modules: { course_id: string } | Array<{ course_id: string }> | null;
+};
+
+type ReportProfile = {
+  id: string;
+  full_name: string;
+  email: string;
+  system_role: "owner" | "admin" | "learner";
+};

@@ -1,0 +1,274 @@
+{
+  "schema_version": "bmh-held-video-heygen-draft/v2",
+  "status": "offline_payload_only_provider_call_forbidden",
+  "source_key": "video-slot-19-career",
+  "held_source_sha256": "1ddcf7b1b0b45bbc90ec14b3660b3d5f5a284b5095dd0d0682164924ce1a3da9",
+  "humanizer_review": {
+    "skill": "humanizer",
+    "skill_version": "2.5.1",
+    "reviewed_on": "2026-07-18",
+    "result": "passed",
+    "checks": [
+      "role-agnostic spoken language",
+      "no viewer-facing chapter numbers or timelines",
+      "no em dashes, curly quotes, promotional filler, or chatbot phrasing",
+      "natural sentence rhythm retained without shortening the lesson contract",
+      "source-depth minimum and every locked teaching example preserved",
+      "no negative parallelism or tailing negation"
+    ]
+  },
+  "source_depth": {
+    "source_spoken_word_count": 615,
+    "minimum_replacement_word_count": 560,
+    "replacement_word_count": 577,
+    "teaching_beat_ids": [
+      "master-current-work",
+      "clean-output",
+      "complexity-through-practice",
+      "feedback-loop",
+      "coachability",
+      "team-contribution",
+      "business-impact",
+      "written-ownership",
+      "current-sources",
+      "checkpoint-transition"
+    ],
+    "example_ids": [
+      "messy-handoff",
+      "complex-family",
+      "feedback-gap",
+      "help-peer",
+      "ownership-change"
+    ]
+  },
+  "provider_gate": {
+    "provider_call_allowed": false,
+    "render_allowed": false,
+    "generate_button_allowed_for_codex": false,
+    "required_approval": "Jarrad Henry",
+    "provider_call_executor_after_approval": "Codex controller only",
+    "final_generate_button_actor": "Jarrad Henry"
+  },
+  "provider_preparation": {
+    "every_scene_andrea_speaks": true,
+    "standard_scene_end_pause_seconds": 2,
+    "learner_think_gap_seconds": 3,
+    "canonical_video_input_count": 8,
+    "studio_api_single_request_video_input_limit": 50,
+    "canonical_sequence_fits_single_api_request": true,
+    "preflight_requirement": "Apply every recorded scene-end pause in Studio before Jarrad generates.",
+    "scene_boundaries": [
+      {
+        "input_index": 0,
+        "source_scene_id": "career-foundation",
+        "segment_id": "career-foundation",
+        "segment_kind": "andrea_narration",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end"
+      },
+      {
+        "input_index": 1,
+        "source_scene_id": "career-clean-output",
+        "segment_id": "career-clean-output",
+        "segment_kind": "andrea_narration",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end"
+      },
+      {
+        "input_index": 2,
+        "source_scene_id": "career-complexity",
+        "segment_id": "career-complexity",
+        "segment_kind": "andrea_narration",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end"
+      },
+      {
+        "input_index": 3,
+        "source_scene_id": "career-feedback-loop",
+        "segment_id": "career-feedback-loop",
+        "segment_kind": "andrea_narration",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end"
+      },
+      {
+        "input_index": 4,
+        "source_scene_id": "career-coachability",
+        "segment_id": "career-coachability",
+        "segment_kind": "andrea_narration",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end"
+      },
+      {
+        "input_index": 5,
+        "source_scene_id": "career-team",
+        "segment_id": "career-team",
+        "segment_kind": "andrea_narration",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end"
+      },
+      {
+        "input_index": 6,
+        "source_scene_id": "career-ownership",
+        "segment_id": "career-ownership",
+        "segment_kind": "andrea_narration",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end"
+      },
+      {
+        "input_index": 7,
+        "source_scene_id": "career-transition",
+        "segment_id": "career-transition",
+        "segment_kind": "andrea_narration",
+        "andrea_speaks": true,
+        "pause_after_seconds": 2,
+        "pause_kind": "standard_scene_end"
+      }
+    ]
+  },
+  "api_endpoint": "https://api.heygen.com/v2/video/generate",
+  "request_body": {
+    "title": "Chapter 19 - Draft",
+    "folder_id": "3d837f4e9fb84b8294785fc060a342c0",
+    "dimension": {
+      "width": 1920,
+      "height": 1080
+    },
+    "video_inputs": [
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "7c00b3e0ad8b4a6a97115243aff056bb",
+          "use_avatar_iv_model": true
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "Development starts with the work assigned to you now. Learn the seller conversations, the current process, the records, and the handoffs that your role sheet expects. Reliability is visible in the ordinary work. The notes are accurate. The next action is clear. A commitment gets completed. Start there. Ask which part of the work would make the biggest difference if it became more consistent, then practice that part deliberately. A new title or a training example cannot substitute for becoming dependable at the responsibilities already in front of you."
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "7c00b3e0ad8b4a6a97115243aff056bb",
+          "use_avatar_iv_model": true
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "Clean output gives you something real to improve. Imagine a handoff with a vague motivation note, no decision makers, and no next action. Go back to the conversation, identify the missing facts, and rebuild the record so another person can use it. A trustworthy page gives the next person enough detail to understand the seller's situation and take the right action. Extra activity on the page does not help. Reliable records and useful handoffs show what you can do without a promise about what comes next."
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "7c00b3e0ad8b4a6a97115243aff056bb",
+          "use_avatar_iv_model": true
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "Growth often shows up as better judgment in harder situations. A property may have several owners who disagree, a seller may be grieving, or a financial deadline may make the conversation sensitive. Choose a skill inside that situation. It could be slowing down, identifying every decision maker, or knowing when to pause for qualified review. Practice the skill, use it in real work when appropriate, and review the result with your manager."
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "7c00b3e0ad8b4a6a97115243aff056bb",
+          "use_avatar_iv_model": true
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "Ask for feedback that points to a behavior you can change. Suppose you rushed past a discovery answer and moved to the next script line. Your manager may ask you to restate what you heard and leave more room before the follow-up question. Practice that moment out loud. Use the correction in the next appropriate conversation, then bring back an example. Feedback becomes useful when it changes what you do, not when it simply sounds agreeable."
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "7c00b3e0ad8b4a6a97115243aff056bb",
+          "use_avatar_iv_model": true
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "Coachability can feel uncomfortable because useful feedback often arrives where you thought you were already doing well. Listen through it. Ask for the exact moment or record that shows the gap. If you disagree, explain what you saw after you understand the concern. Then test the correction in the work. Defensiveness protects the first version. Curiosity gives you a chance to build a better version and show what changed."
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "7c00b3e0ad8b4a6a97115243aff056bb",
+          "use_avatar_iv_model": true
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "Development also shows in how you help the people around you. Share a question that worked, point a peer to the current SOP, or help them find a missing record. Do not rewrite someone else's responsibilities or present your habit as the rule. For example, if a peer is stuck on a handoff, help them compare it with the current checklist and let the assigned owner make the decision. Useful support strengthens the process without creating unofficial authority."
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "7c00b3e0ad8b4a6a97115243aff056bb",
+          "use_avatar_iv_model": true
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "Getting better does not automatically change your responsibilities. If the business needs you to own different work, your manager should confirm it and the change should appear in the current written role plan. Review the role sheet and offer letter issued to you. Ask how the new ownership will be measured and where questions should go. Another person's duties, an old course example, or an informal compliment cannot redefine what you are responsible for. Development stays concrete when you can name the skill, the feedback, and the change in your work."
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      },
+      {
+        "character": {
+          "type": "talking_photo",
+          "talking_photo_id": "7c00b3e0ad8b4a6a97115243aff056bb",
+          "use_avatar_iv_model": true
+        },
+        "voice": {
+          "type": "text",
+          "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+          "input_text": "Take the Career Growth Path checkpoint next. Then complete the Mission Control and Growth Capstone."
+        },
+        "background": {
+          "type": "color",
+          "value": "#ffffff"
+        }
+      }
+    ]
+  }
+}

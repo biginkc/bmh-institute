@@ -1,45 +1,152 @@
 name: Apply Supabase migrations to test
 
 on:
-  workflow_dispatch: {}
   pull_request:
-    branches: [main]
     paths:
-      - "supabase/migrations/**"
       - ".github/workflows/db-migrate-test.yml"
+      - "package.json"
+      - "package-lock.json"
+      - "scripts/cleanup-fixture-catalog.ts"
+      - "scripts/fixture-boundary/**"
+      - "scripts/sign-fixture-cleanup-evidence.ts"
+      - "src/lib/fixture-cleanup/**"
+      - "supabase/migrations/**"
+      - "supabase/tests/**"
+  workflow_dispatch: {}
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
+permissions:
+  contents: read
+
 jobs:
+  validate-pr-migrations:
+    name: Validate migrations on PostgreSQL ${{ matrix.postgres }}
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        postgres: ["15", "16", "17"]
+
+    services:
+      postgres:
+        image: postgres:${{ matrix.postgres }}
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      FIXTURE_GATE_EXTERNAL_PG: "1"
+      PGHOST: 127.0.0.1
+      PGPORT: "5432"
+      PGDATABASE: postgres
+      PGUSER: postgres
+      PGPASSWORD: postgres
+
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: "24"
+
+      - name: Install dependencies and PostgreSQL client
+        run: |
+          npm ci
+          sudo apt-get update
+          sudo apt-get install --yes postgresql-client
+
+      - name: Apply and adversarially verify every migration
+        run: node scripts/fixture-boundary/run-controller-gate-pr-harness.mjs
+
   migrate-test:
     name: Apply migrations to BMH test
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
+    concurrency:
+      group: bmh-institute-seeded-e2e-shared-test-project
+      cancel-in-progress: false
 
     env:
       TEST_PROJECT_REF: jvaabkchkihkjllehmft
 
     steps:
-      - uses: actions/checkout@v5
-
-      - uses: supabase/setup-cli@v1
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
         with:
-          version: latest
+          ref: refs/heads/main
+          persist-credentials: false
 
-      - uses: actions/setup-node@v5
+      - uses: supabase/setup-cli@ab058987d8d6c725971f6cf9d0b5c98467e30bd1 # v1
+        with:
+          version: 2.109.1
+
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
           node-version: "24"
+
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install --yes postgresql-client
 
       - name: Apply pending migrations
         env:
           TEST_SUPABASE_DB_PASSWORD: ${{ secrets.TEST_SUPABASE_DB_PASSWORD }}
         run: |
+          echo "::add-mask::$TEST_SUPABASE_DB_PASSWORD"
           if [ -z "$TEST_SUPABASE_DB_PASSWORD" ]; then
             echo "TEST_SUPABASE_DB_PASSWORD secret is required."
             exit 1
           fi
 
           ENCODED_PASSWORD="$(node -e 'process.stdout.write(encodeURIComponent(process.env.TEST_SUPABASE_DB_PASSWORD))')"
+          echo "::add-mask::$ENCODED_PASSWORD"
           DB_URL="postgresql://postgres.${TEST_PROJECT_REF}:${ENCODED_PASSWORD}@aws-1-us-west-1.pooler.supabase.com:5432/postgres"
           supabase db push --include-all --db-url "$DB_URL" --yes
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run versioned completion and import guard Postgres acceptance
+        env:
+          TEST_SUPABASE_DB_PASSWORD: ${{ secrets.TEST_SUPABASE_DB_PASSWORD }}
+        run: |
+          echo "::add-mask::$TEST_SUPABASE_DB_PASSWORD"
+          export PGHOST="aws-1-us-west-1.pooler.supabase.com"
+          export PGPORT="5432"
+          export PGDATABASE="postgres"
+          export PGUSER="postgres.${TEST_PROJECT_REF}"
+          export PGPASSWORD="$TEST_SUPABASE_DB_PASSWORD"
+          export PGSSLMODE="require"
+          psql --set ON_ERROR_STOP=1 --file supabase/tests/031_versioned_video_completion_and_submission_evidence.sql
+          psql --set ON_ERROR_STOP=1 --file supabase/tests/034_import_release_and_fixture_dependency_guards.sql
+          psql --set ON_ERROR_STOP=1 --set fixture_cleanup_hosted_nonmutating=on --file supabase/tests/036_controller_verified_fixture_cleanup_gate_hosted.sql
+
+      - name: Run fail-closed provider acceptance against migrated test database
+        env:
+          TEST_SUPABASE_URL: ${{ secrets.TEST_SUPABASE_URL }}
+          TEST_SUPABASE_ANON_KEY: ${{ secrets.TEST_SUPABASE_ANON_KEY }}
+          TEST_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.TEST_SUPABASE_SERVICE_ROLE_KEY }}
+          TEST_SUPABASE_DB_PASSWORD: ${{ secrets.TEST_SUPABASE_DB_PASSWORD }}
+        run: |
+          echo "::add-mask::$TEST_SUPABASE_DB_PASSWORD"
+          ENCODED_PASSWORD="$(node -e 'process.stdout.write(encodeURIComponent(process.env.TEST_SUPABASE_DB_PASSWORD))')"
+          echo "::add-mask::$ENCODED_PASSWORD"
+          TEST_SUPABASE_DB_URL="postgresql://postgres.${TEST_PROJECT_REF}:${ENCODED_PASSWORD}@aws-1-us-west-1.pooler.supabase.com:5432/postgres" \
+            npm run test:course-import-provider
+
+      - name: Run no-write fixture cleanup transport canary
+        env:
+          TEST_SUPABASE_URL: ${{ secrets.TEST_SUPABASE_URL }}
+          TEST_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.TEST_SUPABASE_SERVICE_ROLE_KEY }}
+        run: npx tsx scripts/fixture-boundary/run-test-project-transport-canary.ts

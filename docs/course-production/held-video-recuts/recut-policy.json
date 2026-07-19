@@ -1,0 +1,97 @@
+{
+  "schema_version": "1.0.0",
+  "policy_name": "BMH reusable held-video recut policy",
+  "scan_scope": "scenes[].spoken_text",
+  "forbidden_patterns": [
+    {
+      "id": "currency_amount",
+      "pattern": "(?:\\$\\s*\\d|\\b\\d+(?:\\.\\d{2})?\\s*(?:dollars?|usd)\\b)",
+      "flags": "i",
+      "reason": "No dollar figures or currency amounts."
+    },
+    {
+      "id": "fixed_activity_quota",
+      "pattern": "\\b(?:\\d{1,4}|one|two|three|four|five|six|seven|eight|nine|ten|hundred)(?:\\s*(?:to|through|-)\\s*(?:\\d{1,4}|one|two|three|four|five|six|seven|eight|nine|ten|hundred)|\\s*(?:plus|\\+)|-plus)?\\s*(?:calls?|dials?)\\s*(?:a|per|each)?\\s*(?:day|week|block|shift)?\\b|\\b(?:dial target|call quota|dial quota|hit(?:ting)? your numbers)\\b",
+      "flags": "i",
+      "reason": "No fixed call, dial, or numeric KPI quota."
+    },
+    {
+      "id": "fixed_timeline",
+      "pattern": "\\b(?:\\d+|one|two|three|four|five|six|seven|eight|nine|ten|ninety)(?:-plus)?[ -](?:days?|weeks?|months?|years?)\\b",
+      "flags": "i",
+      "reason": "No fixed promotion, ramp, or advancement timeline."
+    },
+    {
+      "id": "compensation_promise",
+      "pattern": "\\b(?:base pay|base rate|ramp-up base|performance pay|milestone bonus(?:es)?|bonus(?:es)? (?:for|milestones?)|commission on|earning potential|earnings can grow|higher earnings?|earn the most|strong months show up in your paycheck|the more you make|money (?:you are|you're) putting in your own pocket|compensation (?:is|will be) tied to)\\b|\\byou (?:will|can|may) (?:earn|receive|get paid)\\b",
+      "flags": "i",
+      "reason": "No fixed pay structure or compensation promise."
+    },
+    {
+      "id": "advancement_promise",
+      "pattern": "\\b(?:you (?:will|can) (?:move up|advance|get promoted)|first (?:one|ones|people) considered|there(?:'s| is) a real path here|promotion schedule|role ladder|management path|at the next level)\\b",
+      "flags": "i",
+      "reason": "No guaranteed role ladder, promotion, or first-consideration claim."
+    },
+    {
+      "id": "role_title",
+      "pattern": "\\b(?:navigator|virtual onboarding specialist|lead sourcing specialist|lead sourcing seat|acquisition manager|acquisitions manager|acquisition team|acquisition responsibilities?|transaction coordinator|follow-up specialist|setter|closer|sales manager|team lead)\\b",
+      "flags": "i",
+      "reason": "Scripts must remain role-agnostic."
+    },
+    {
+      "id": "fixed_stage_progression",
+      "pattern": "\\b(?:day|week|month|year)\\s+(?:\\d+|one|two|three|four|five|six|seven|eight|nine|ten|ninety)\\b",
+      "flags": "i",
+      "reason": "No fixed learner, seller, ramp, or advancement progression."
+    },
+    {
+      "id": "outcome_guarantee",
+      "pattern": "\\b(?:guarantee(?:d|s|ing)?|clean,?\\s+certain outcome|price,?\\s+timeline,?\\s+and certainty (?:do not|don't) change|stop the sale|rebuild your credit|i can close,?\\s*fund you)\\b",
+      "flags": "i",
+      "reason": "No direct price, timing, legal, credit, funding, or certainty guarantee."
+    },
+    {
+      "id": "provider_specific_claim",
+      "pattern": "\\b(?:Sandra|Slack|DialPad|HeyGen|Supabase|Vercel)\\b",
+      "flags": "i",
+      "reason": "Reusable spoken training must not depend on a named software provider."
+    },
+    {
+      "id": "fixed_daily_schedule",
+      "pattern": "\\b(?:first half hour|last half hour|full hours|days? a week|fixed calling block)\\b|\\b(?:\\d+|one|two|three|four|five|six|seven|eight|nine|ten|fifteen|thirty)\\s*(?:minutes?|hours?)\\b",
+      "flags": "i",
+      "reason": "The current role sheet, schedule, and manager define daily timing."
+    },
+    {
+      "id": "viewer_chapter_number",
+      "pattern": "\\bchapter\\s+\\d+\\b",
+      "flags": "i",
+      "reason": "Videos must not depend on visible chapter numbering."
+    },
+    {
+      "id": "em_dash",
+      "pattern": "—",
+      "flags": "",
+      "reason": "BMH spoken scripts do not use em dashes."
+    }
+  ],
+  "required_source_language": {
+    "video-slot-17-compensation": [
+      "offer letter",
+      "written compensation plan",
+      "role sheet",
+      "manager"
+    ],
+    "video-slot-18-operator": [
+      "current SOP",
+      "role sheet",
+      "manager"
+    ],
+    "video-slot-19-career": [
+      "role sheet",
+      "offer letter",
+      "manager"
+    ]
+  }
+}

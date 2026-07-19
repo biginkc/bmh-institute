@@ -7,11 +7,13 @@ import { getAppUrl } from "@/lib/app-url";
 import { createClient } from "@/lib/supabase/server";
 import { sendEmail } from "@/lib/email/send";
 import { emitSandraCourseCompletedForLesson } from "@/lib/integrations/sandra/course-completed";
+import { parseAssignmentRubric } from "@/lib/assignments/rubric";
 import {
   renderApprovedEmail,
   renderRevisionEmail,
   type ReviewEmailInput,
 } from "@/lib/email/review";
+import { schedulePostCommitEffect } from "@/lib/actions/post-commit-effect";
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
 
@@ -22,7 +24,30 @@ export async function approveSubmission(input: {
   const reviewer = await requireAdmin();
   const supabase = await createClient();
 
-  const { error } = await supabase
+  const { data: reviewRow, error: reviewLookupError } = await supabase
+    .from("assignment_submissions")
+    .select("status, reviewer_notes, reviewed_by, assignments ( rubric, requires_review )")
+    .eq("id", input.submissionId)
+    .maybeSingle();
+  if (reviewLookupError || !reviewRow) {
+    return { ok: false, error: "Submission not found." };
+  }
+  const assignment = firstRow(reviewRow.assignments) as
+    | { rubric: unknown; requires_review: boolean }
+    | null;
+  const rubric = parseAssignmentRubric(assignment?.rubric);
+  if (
+    !assignment ||
+    !rubric.ok ||
+    (assignment.requires_review && rubric.items.length === 0)
+  ) {
+    return {
+      ok: false,
+      error: "Repair this assignment's review rubric before approving submissions.",
+    };
+  }
+
+  const { data: updated, error } = await supabase
     .from("assignment_submissions")
     .update({
       status: "approved",
@@ -30,20 +55,35 @@ export async function approveSubmission(input: {
       reviewed_by: reviewer.id,
       reviewed_at: new Date().toISOString(),
     })
-    .eq("id", input.submissionId);
+    .eq("id", input.submissionId)
+    .eq("status", "submitted")
+    .select("id")
+    .maybeSingle();
   if (error) return { ok: false, error: error.message };
+  if (!updated) {
+    const currentReview = await readReviewState(supabase, input.submissionId);
+    if (
+      currentReview?.status === "approved" &&
+      currentReview.reviewer_notes === (input.note ?? null) &&
+      currentReview.reviewed_by === reviewer.id
+    ) {
+      revalidateReviewPaths();
+      return { ok: true };
+    }
+    return { ok: false, error: "This submission was already reviewed." };
+  }
 
-  await emitCompletionForApprovedSubmission(supabase, input.submissionId);
+  schedulePostCommitEffect("approved assignment Sandra completion", () =>
+    emitCompletionForApprovedSubmission(supabase, input.submissionId));
 
   // Fire-and-forget email — SMTP hiccups shouldn't block the approval.
-  await notifyReview({
+  schedulePostCommitEffect("assignment approval notification", () => notifyReview({
     submissionId: input.submissionId,
     kind: "approved",
     note: input.note ?? "",
-  });
+  }));
 
-  revalidatePath("/admin/submissions");
-  revalidatePath("/dashboard");
+  revalidateReviewPaths();
   return { ok: true };
 }
 
@@ -73,7 +113,15 @@ export async function requestRevision(input: {
     return { ok: false, error: "Leave a note explaining what to fix." };
   }
   const supabase = await createClient();
-  const { error } = await supabase
+  const { data: reviewRow, error: reviewLookupError } = await supabase
+    .from("assignment_submissions")
+    .select("status, reviewer_notes, reviewed_by")
+    .eq("id", input.submissionId)
+    .maybeSingle();
+  if (reviewLookupError || !reviewRow) {
+    return { ok: false, error: "Submission not found." };
+  }
+  const { data: updated, error } = await supabase
     .from("assignment_submissions")
     .update({
       status: "needs_revision",
@@ -81,18 +129,48 @@ export async function requestRevision(input: {
       reviewed_by: reviewer.id,
       reviewed_at: new Date().toISOString(),
     })
-    .eq("id", input.submissionId);
+    .eq("id", input.submissionId)
+    .eq("status", "submitted")
+    .select("id")
+    .maybeSingle();
   if (error) return { ok: false, error: error.message };
+  if (!updated) {
+    const currentReview = await readReviewState(supabase, input.submissionId);
+    if (
+      currentReview?.status === "needs_revision" &&
+      currentReview.reviewer_notes === input.note.trim() &&
+      currentReview.reviewed_by === reviewer.id
+    ) {
+      revalidateReviewPaths();
+      return { ok: true };
+    }
+    return { ok: false, error: "This submission was already reviewed." };
+  }
 
-  await notifyReview({
+  schedulePostCommitEffect("assignment revision notification", () => notifyReview({
     submissionId: input.submissionId,
     kind: "needs_revision",
     note: input.note.trim(),
-  });
+  }));
 
-  revalidatePath("/admin/submissions");
-  revalidatePath("/dashboard");
+  revalidateReviewPaths();
   return { ok: true };
+}
+
+async function readReviewState(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  submissionId: string,
+): Promise<{
+  status: string;
+  reviewer_notes: string | null;
+  reviewed_by: string | null;
+} | null> {
+  const { data, error } = await supabase
+    .from("assignment_submissions")
+    .select("status, reviewer_notes, reviewed_by")
+    .eq("id", submissionId)
+    .maybeSingle();
+  return error ? null : data;
 }
 
 export async function createSubmissionDownloadUrl(
@@ -157,11 +235,19 @@ async function notifyReview(input: {
       ? renderApprovedEmail(payload)
       : renderRevisionEmail(payload);
 
-  await sendEmail({
+  const result = await sendEmail({
     to: profile.email,
     subject: rendered.subject,
     html: rendered.html,
   });
+  if (!result.ok) {
+    throw new Error("Assignment review notification was not delivered.");
+  }
+}
+
+function revalidateReviewPaths(): void {
+  revalidatePath("/admin/submissions");
+  revalidatePath("/dashboard");
 }
 
 function firstRow<T>(value: T | T[] | null | undefined): T | null {

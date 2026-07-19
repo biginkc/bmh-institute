@@ -17,6 +17,7 @@ describe("shapeProgramsResponse", () => {
         id: "p1",
         title: "Appointment Setter Onboarding",
         description: null,
+        thumbnail_path: "programs/appointment-setter.webp",
         course_order_mode: "sequential" as const,
         is_published: true,
         sort_order: 0,
@@ -27,6 +28,7 @@ describe("shapeProgramsResponse", () => {
               id: "c2",
               title: "Handling Objections",
               description: null,
+              thumbnail_path: "courses/objections.webp",
               is_published: true,
             },
           },
@@ -36,6 +38,7 @@ describe("shapeProgramsResponse", () => {
               id: "c1",
               title: "Phone Basics",
               description: null,
+              thumbnail_path: "courses/phone-basics.webp",
               is_published: true,
             },
           },
@@ -47,6 +50,8 @@ describe("shapeProgramsResponse", () => {
 
     expect(shaped).toHaveLength(1);
     expect(shaped[0].id).toBe("p1");
+    expect(shaped[0].thumbnail_path).toBe("programs/appointment-setter.webp");
+    expect(shaped[0].courses[0].thumbnail_path).toBe("courses/phone-basics.webp");
     // Courses must be ordered by program_courses.sort_order, not their own.
     expect(shaped[0].courses.map((c) => c.id)).toEqual(["c1", "c2"]);
   });
@@ -57,6 +62,7 @@ describe("shapeProgramsResponse", () => {
         id: "p1",
         title: "P1",
         description: null,
+        thumbnail_path: null,
         course_order_mode: "free" as const,
         is_published: true,
         sort_order: 0,
@@ -68,6 +74,7 @@ describe("shapeProgramsResponse", () => {
               id: "c2",
               title: "C2",
               description: null,
+              thumbnail_path: null,
               is_published: true,
             },
           },
@@ -86,6 +93,7 @@ describe("shapeProgramsResponse", () => {
         id: "p2",
         title: "Second",
         description: null,
+        thumbnail_path: null,
         course_order_mode: "free" as const,
         is_published: true,
         sort_order: 1,
@@ -95,6 +103,7 @@ describe("shapeProgramsResponse", () => {
         id: "p1",
         title: "First",
         description: null,
+        thumbnail_path: null,
         course_order_mode: "free" as const,
         is_published: true,
         sort_order: 0,

@@ -1,16 +1,18 @@
 import { Card } from "@/components/bmh-ds";
 import { requireAdmin } from "@/lib/auth/guard";
 import { createClient } from "@/lib/supabase/server";
+import { shapeLearnerAccessRows } from "@/lib/learner-access/status";
 import {
-  shapePilotCohortRows,
-} from "@/lib/pilot-cohort/status";
+  filterAssignableRoleGroups,
+  unreleasedImportQaRoleGroupIds,
+} from "@/lib/release-control/qa-role-groups";
 
 import { AdminPageHeader, AdminSectionHeading } from "../_components/admin-shell";
 import { InviteForm } from "./invite-form";
 import {
   ActiveMembersTable,
   PendingInvitesTable,
-  PilotSetupTable,
+  LearnerAccessTable,
 } from "./users-tables";
 
 export default async function AdminUsersPage() {
@@ -21,7 +23,7 @@ export default async function AdminUsersPage() {
   // having run.
   await requireAdmin();
   const supabase = await createClient();
-  const [profiles, invites, roleGroups, userRoleGroups] = await Promise.all([
+  const [profiles, invites, roleGroups, userRoleGroups, importedPrograms] = await Promise.all([
     supabase
       .from("profiles")
       .select("id, email, full_name, system_role, status, created_at")
@@ -32,7 +34,33 @@ export default async function AdminUsersPage() {
       .order("created_at", { ascending: false }),
     supabase.from("role_groups").select("id, name").order("name"),
     supabase.from("user_role_groups").select("user_id, role_group_id"),
+    supabase
+      .from("programs")
+      .select("content_import_id, is_published, program_access(role_group_id)")
+      .not("content_import_id", "is", null)
+      .eq("is_published", false),
   ]);
+
+  if (importedPrograms.error) {
+    throw new Error(
+      "Unable to verify protected imported-course review groups.",
+      { cause: importedPrograms.error },
+    );
+  }
+
+  const assignableRoleGroups = filterAssignableRoleGroups(
+    (roleGroups.data ?? []).map((roleGroup) => ({
+      id: roleGroup.id as string,
+      name: roleGroup.name as string,
+    })),
+    unreleasedImportQaRoleGroupIds(
+      (importedPrograms.data ?? []) as Array<{
+        content_import_id: string | null;
+        is_published: boolean;
+        program_access: Array<{ role_group_id: string | null }> | null;
+      }>,
+    ),
+  );
 
   const pendingInvites = (invites.data ?? []).filter(
     (i) => !i.accepted_at,
@@ -45,7 +73,7 @@ export default async function AdminUsersPage() {
     acc[userId] = [...(acc[userId] ?? []), roleGroupId];
     return acc;
   }, {});
-  const pilotRows = shapePilotCohortRows({
+  const learnerAccessRows = shapeLearnerAccessRows({
     profiles: (profiles.data ?? []).map((p) => ({
       id: p.id as string,
       email: p.email as string | null,
@@ -71,17 +99,17 @@ export default async function AdminUsersPage() {
     <main className="w-full flex-1 p-6 md:p-10">
       <AdminPageHeader
         title="Users"
-        description="Pilot learner access, invite status, and role groups."
+        description="Learner access, invite status, and role groups."
       />
 
       <Card padding="sm" style={{ marginBottom: 24 }}>
         <div style={{ padding: "6px 12px 12px" }}>
           <AdminSectionHeading
-            title="Pilot setup"
-            description="Learner access, invite status, and next actions for the internal pilot."
+            title="Learner access"
+            description="Access, invite status, and next actions for assigned learning groups."
           />
         </div>
-        <PilotSetupTable rows={pilotRows} />
+        <LearnerAccessTable rows={learnerAccessRows} />
       </Card>
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(20rem,1fr)]">
@@ -109,10 +137,7 @@ export default async function AdminUsersPage() {
             description="They get a Supabase email with a signup link."
           />
           <InviteForm
-            roleGroups={(roleGroups.data ?? []).map((rg) => ({
-              id: rg.id as string,
-              name: rg.name as string,
-            }))}
+            roleGroups={assignableRoleGroups}
           />
         </Card>
       </div>

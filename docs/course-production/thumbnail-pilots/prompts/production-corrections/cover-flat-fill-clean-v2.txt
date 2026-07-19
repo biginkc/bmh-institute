@@ -1,0 +1,9 @@
+Edit this exact terminal 16:9 BMH Institute course-cover source. Make one local flat-fill cleanup only; do not redesign, regenerate, move, scale, crop, add, or remove any person, object, outline, path, or teaching cue.
+
+Preserve exactly one Andrea in her current walking three-quarter pose, at the exact current coordinates and scale. Preserve her approved black curly-hair silhouette, orange headset and microphone, pure-white face and hands, yellow top, orange pants, yellow shoes, learner guide, facial features, body proportions, and black line weight exactly as shown.
+
+Correct the small lower-left house sticker. Replace every gradient, mottled, noisy, dithered, or speckled facade pixel with one perfectly uniform locked cream fill, RGB 254,255,198. Keep its roof and door as perfectly uniform existing locked orange fills, its windows pure white, its bushes locked green, and all existing black outlines unchanged. No isolated cream, white, yellow, or orange flecks may remain inside another fill region.
+
+Also make the central open doorway's cream interior and yellow door panel perfectly uniform flat fills so palette flattening cannot create alternate-color speckles. Do not change their shapes, outlines, coordinates, scale, or relationship to Andrea.
+
+Preserve the uniform cornflower-blue field, all course-journey stickers, white connector paths, exact composition, generous negative space, central-80-percent safety, and BMH Sticker System style. Thick slightly wobbly black outlines, rounded imperfect geometry, pure flat fills only. Exactly one person. No second person, text, letters, numbers, logo, watermark, gradient, lighting, glow, shadow, reflection, texture, depth, realistic perspective, or 3D rendering.

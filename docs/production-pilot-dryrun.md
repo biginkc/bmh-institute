@@ -3,7 +3,7 @@
 This run rehearses the internal pilot with disposable production data.
 
 The test creates records prefixed with `PILOT-DRYRUN-`, signs in through the
-production app, verifies pilot monitoring states, verifies CSV export, corrects
+production app, verifies learner monitoring states, verifies the learner CSV export, corrects
 one learner's role group through the admin UI, checks an unassigned learner is
 blocked by UI and RLS, then deletes the seeded users and content.
 

@@ -15,6 +15,7 @@ describe("<CourseForm />", () => {
           title: "Call foundations",
           description: "Learn the opening.",
           is_published: true,
+          thumbnail_path: "courses/training/course.webp",
         }}
       />,
     );
@@ -29,6 +30,9 @@ describe("<CourseForm />", () => {
     expect(screen.getByRole("button", { name: "Save changes" })).toHaveAttribute(
       "type",
       "submit",
+    );
+    expect(screen.getByLabelText("Course cover path")).toHaveValue(
+      "courses/training/course.webp",
     );
   });
 

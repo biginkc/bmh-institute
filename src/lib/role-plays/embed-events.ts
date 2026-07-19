@@ -7,6 +7,7 @@ export type RolePlayEvent =
       attempt_id: string;
       score: number;
       summary_url?: string;
+      completion_token: string;
     }
   | { type: "rp.error"; scenario_id: string; message: string };
 
@@ -23,7 +24,8 @@ export function parseRolePlayEvent(value: unknown): RolePlayEvent | null {
   if (
     data.type === "rp.complete" &&
     typeof data.attempt_id === "string" &&
-    typeof data.score === "number"
+    typeof data.score === "number" &&
+    typeof data.completion_token === "string"
   ) {
     return data as RolePlayEvent;
   }
@@ -44,12 +46,16 @@ export function getTrustedOrigin(src: string): string | null {
 export function isTrustedRolePlayMessage(params: {
   eventOrigin: string;
   trustedOrigin: string | null;
+  eventSource: MessageEventSource | null;
+  trustedSource: MessageEventSource | null;
   expectedScenarioId: string;
   event: RolePlayEvent | null;
 }): boolean {
   return (
     params.trustedOrigin !== null &&
+    params.trustedSource !== null &&
     params.eventOrigin === params.trustedOrigin &&
+    params.eventSource === params.trustedSource &&
     params.event?.scenario_id === params.expectedScenarioId
   );
 }

@@ -9,9 +9,19 @@ vi.mock("next/cache", () => ({
   revalidatePath: vi.fn(),
 }));
 
-const sendEmailSpy = vi.fn(async (args: unknown) => {
-  void args;
-});
+const { afterEffects, sendEmailSpy } = vi.hoisted(() => ({
+  afterEffects: [] as Array<Promise<unknown>>,
+  sendEmailSpy: vi.fn(async (args: unknown) => {
+    void args;
+    return { ok: true as const, messageId: "test-message" };
+  }),
+}));
+
+vi.mock("next/server", () => ({
+  after: (effect: () => Promise<unknown>) => {
+    afterEffects.push(Promise.resolve().then(effect));
+  },
+}));
 vi.mock("@/lib/email/send", () => ({
   sendEmail: (args: unknown) => sendEmailSpy(args),
 }));
@@ -20,10 +30,70 @@ const insertSpy = vi.fn(async (row: Record<string, unknown>) => {
   void row;
   return { error: null };
 });
+const adminFromSpy = vi.fn();
 let insertedRow: Record<string, unknown> | null = null;
 
 // Flipped per-test to drive the review policy returned by the assignments row.
 let assignmentRequiresReview = true;
+
+vi.mock("@/lib/supabase/admin", () => ({
+  createAdminClient: vi.fn(() => ({
+    from: (table: string) => {
+      adminFromSpy(table);
+      if (table === "assignment_submissions") {
+        return {
+          insert: (row: Record<string, unknown>) => {
+            insertedRow = row;
+            return insertSpy(row);
+          },
+        };
+      }
+      if (table === "profiles") {
+        return {
+          select: () => ({
+            eq: () => ({
+              maybeSingle: async () => ({
+                data: { full_name: "Learner One", email: "learner@bmh.test" },
+                error: null,
+              }),
+            }),
+            in: () => ({
+              eq: async () => ({
+                data: [{ email: "admin@bmh.test", full_name: "Admin" }],
+                error: null,
+              }),
+            }),
+          }),
+        };
+      }
+      if (table === "assignments") {
+        return {
+          select: () => ({
+            eq: () => ({
+              maybeSingle: async () => ({
+                data: { title: "Auto assignment" },
+                error: null,
+              }),
+            }),
+          }),
+        };
+      }
+      if (table === "lessons") {
+        return {
+          select: () => ({
+            eq: () => ({
+              maybeSingle: async () => ({
+                data: { title: "Lesson one" },
+                error: null,
+              }),
+            }),
+          }),
+        };
+      }
+      throw new Error(`Unexpected admin table: ${table}`);
+    },
+  })),
+}));
 
 vi.mock("@/lib/supabase/server", () => ({
   createClient: vi.fn(async () => ({
@@ -42,12 +112,13 @@ vi.mock("@/lib/supabase/server", () => ({
     },
     from: (table: string) => {
       if (table === "assignment_submissions") {
-        return {
-          insert: (row: Record<string, unknown>) => {
-            insertedRow = row;
-            return insertSpy(row);
-          },
+        const query = {
+          eq: () => query,
+          in: () => query,
+          limit: () => query,
+          maybeSingle: async () => ({ data: null, error: null }),
         };
+        return { select: () => query };
       }
       if (table === "assignments") {
         return {
@@ -57,6 +128,7 @@ vi.mock("@/lib/supabase/server", () => ({
                 data: {
                   title: "Auto assignment",
                   requires_review: assignmentRequiresReview,
+                  submission_type: "text",
                 },
                 error: null,
               }),
@@ -75,9 +147,11 @@ vi.mock("@/lib/supabase/server", () => ({
             }),
             // Admins list — kept non-empty so we can prove the notify email is
             // suppressed by policy, not just by an empty recipient list.
-            in: async () => ({
-              data: [{ email: "admin@bmh.test", full_name: "Admin" }],
-              error: null,
+            in: () => ({
+              eq: async () => ({
+                data: [{ email: "admin@bmh.test", full_name: "Admin" }],
+                error: null,
+              }),
             }),
           }),
         };
@@ -107,7 +181,9 @@ describe("submitAssignment auto-completion (requires_review policy)", () => {
     insertSpy.mockReset();
     insertSpy.mockResolvedValue({ error: null });
     sendEmailSpy.mockReset();
-    sendEmailSpy.mockResolvedValue(undefined);
+    sendEmailSpy.mockResolvedValue({ ok: true, messageId: "test-message" });
+    afterEffects.length = 0;
+    adminFromSpy.mockClear();
   });
 
   afterEach(() => {
@@ -123,6 +199,7 @@ describe("submitAssignment auto-completion (requires_review policy)", () => {
       submission_type: "text",
       submission_text: "My answer",
     });
+    await Promise.all(afterEffects.splice(0));
 
     expect(result).toEqual({ ok: true });
     expect(insertSpy).toHaveBeenCalledTimes(1);
@@ -148,10 +225,12 @@ describe("submitAssignment auto-completion (requires_review policy)", () => {
       submission_type: "text",
       submission_text: "My answer",
     });
+    await Promise.all(afterEffects.splice(0));
 
     expect(result).toEqual({ ok: true });
     expect(insertedRow).toMatchObject({ status: "submitted" });
     expect(insertedRow?.reviewed_at).toBeNull();
     expect(sendEmailSpy).toHaveBeenCalledTimes(1);
+    expect(adminFromSpy).toHaveBeenCalledWith("profiles");
   });
 });

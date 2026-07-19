@@ -1,0 +1,4 @@
+Use case: precise-object-edit
+Asset type: BMH Institute Tech Stack and Systems lesson-master correction
+Primary request: Remove only the small Andrea face/portrait/avatar from the circular profile area in the top center card. Replace that circular area with a simple person-free orange-and-yellow tool-hub icon. Keep the single full Andrea on the stool exactly unchanged: same approved identity, pure-white face and hands, pose, proportions, clothing, gesture, and line weight. Preserve the tool-hub composition, device, checklist, headset, chart, connectors, blue background, and all other nonhuman stickers.
+Constraints: Exactly one person in the entire image. No second portrait, face, head, avatar, person icon, silhouette, reflection, body part, crowd, text, letters, numbers, logo, or watermark. Keep flat sticker shapes and a visually uniform cornflower-blue background.

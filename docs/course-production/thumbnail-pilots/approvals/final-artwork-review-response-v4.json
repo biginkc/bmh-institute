@@ -1,0 +1,25 @@
+{
+  "schema_version": "bmh-artwork-final-review-response/v3",
+  "decision": "approved",
+  "respondent": "Jarrad Henry",
+  "responded_at": "2026-07-18T14:34:13.000Z",
+  "request_binding": {
+    "request_id": "bmh-artwork-final-review-ad6aea5731157e30aa71a5f2e4c5d9bfb9d6f1b0b80cf3fec9f2a1b6fa758b40",
+    "request_path": "docs/course-production/thumbnail-pilots/approvals/final-artwork-review-request-v4.json",
+    "request_sha256": "5ad3b9488542f41228c1071d1e0577937c3d0a5ce5e3b30f71bd9aea5cdff735",
+    "bindings_sha256": "ad6aea5731157e30aa71a5f2e4c5d9bfb9d6f1b0b80cf3fec9f2a1b6fa758b40"
+  },
+  "scope": {
+    "master_count": 28,
+    "master_review_sheet_count": 4,
+    "masters_per_sheet": 7,
+    "master_review_surface_sha256": "f132dd7a7cd8ff9d54fa91f3562bdfdc26afbca9cc8a8058b0584ecf00985aab",
+    "derived_asset_count": 49,
+    "derivative_promotion_policy": "deterministic-bound-outputs-of-approved-masters"
+  },
+  "response_text": "approved",
+  "response_context": {
+    "controller_prompt": "Do you approve all 28 exact masters, or which numbered masters need revision?",
+    "normalized_scope_statement": "Approved: I approve all 28 exact artwork masters shown in the four checksum-bound master review sheets."
+  }
+}

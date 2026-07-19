@@ -3,12 +3,17 @@ import { notFound } from "next/navigation";
 import { Badge, Card } from "@/components/bmh-ds";
 import { requireAdmin } from "@/lib/auth/guard";
 import { createClient } from "@/lib/supabase/server";
+import { loadAdminLessonCompletions } from "../../../../lesson-state-rpc";
 
 import { AdminDataTable } from "../../../_components/admin-data-table";
 import {
   AdminPageHeader,
   AdminSectionHeading,
 } from "../../../_components/admin-shell";
+import {
+  loadAllReportRowsByCursor,
+  loadAllReportRowsById,
+} from "../../report-source-pagination";
 
 export default async function UserReportPage({
   params,
@@ -22,15 +27,15 @@ export default async function UserReportPage({
 
   const [
     profileRes,
-    roleGroupsRes,
-    programsRes,
-    courseAccessRes,
-    modulesLessonsRes,
-    completionsRes,
-    certificatesRes,
-    programCertsRes,
-    attemptsRes,
-    rolePlayResultsRes,
+    roleGroupsResult,
+    programsResult,
+    programCoursesResult,
+    courseAccessResult,
+    lessonsResult,
+    certificatesResult,
+    programCertsResult,
+    attemptsResult,
+    rolePlayResultsResult,
     auditRes,
   ] = await Promise.all([
     supabase
@@ -38,56 +43,128 @@ export default async function UserReportPage({
       .select("id, email, full_name, system_role, status, created_at")
       .eq("id", userId)
       .maybeSingle(),
-    supabase
-      .from("user_role_groups")
-      .select("role_groups(id, name)")
-      .eq("user_id", userId),
-    supabase
-      .from("programs")
-      .select(
-        `id, title, course_order_mode, is_published,
+    loadAllReportRowsByCursor(
+      ({ after, limit }) => {
+        let query = supabase
+          .from("user_role_groups")
+          .select("user_id, role_group_id, role_groups(id, name)", {
+            count: "exact",
+          })
+          .eq("user_id", userId)
+          .order("user_id", { ascending: true })
+          .order("role_group_id", { ascending: true })
+          .limit(limit);
+        if (after !== null) {
+          query = query.or(
+            `user_id.gt.${after[0]},and(user_id.eq.${after[0]},role_group_id.gt.${after[1]})`,
+          );
+        }
+        return query;
+      },
+      (row) => [row.user_id, row.role_group_id] as const,
+    ),
+    loadAllReportRowsById(({ afterId, limit }) => {
+      let query = supabase
+        .from("programs")
+        .select(
+          `id, title, course_order_mode, is_published,
          program_access!inner( role_group_id,
            role_groups!inner( user_role_groups!inner( user_id ) )
-         ),
-         program_courses( course_id, sort_order,
-           courses( id, title, is_published )
          )`,
-      )
-      .eq(
-        "program_access.role_groups.user_role_groups.user_id",
-        userId,
-      ),
-    supabase
-      .from("course_access")
-      .select(
-        `course_id,
+          { count: "exact" },
+        )
+        .eq("program_access.role_groups.user_role_groups.user_id", userId)
+        .order("id", { ascending: true })
+        .limit(limit);
+      if (afterId !== null) query = query.gt("id", afterId);
+      return query;
+    }),
+    loadAllReportRowsById(({ afterId, limit }) => {
+      let query = supabase
+        .from("program_courses")
+        .select(
+          `id, program_id, course_id, sort_order,
+           courses(id, title, is_published),
+           programs!inner(
+             program_access!inner(
+               role_groups!inner(user_role_groups!inner(user_id))
+             )
+           )`,
+          { count: "exact" },
+        )
+        .eq(
+          "programs.program_access.role_groups.user_role_groups.user_id",
+          userId,
+        )
+        .order("id", { ascending: true })
+        .limit(limit);
+      if (afterId !== null) query = query.gt("id", afterId);
+      return query;
+    }),
+    loadAllReportRowsById(({ afterId, limit }) => {
+      let query = supabase
+        .from("course_access")
+        .select(
+          `id, course_id,
          role_groups!inner( user_role_groups!inner( user_id ) ),
          courses( id, title, is_published )`,
-      )
-      .eq("role_groups.user_role_groups.user_id", userId),
-    supabase
-      .from("modules")
-      .select("id, course_id, lessons(id, is_required_for_completion)"),
-    supabase
-      .from("user_lesson_completions")
-      .select("lesson_id, completed_at")
-      .eq("user_id", userId),
-    supabase
-      .from("certificates")
-      .select("course_id, issued_at, certificate_number")
-      .eq("user_id", userId),
-    supabase
-      .from("program_certificates")
-      .select("program_id, issued_at, certificate_number")
-      .eq("user_id", userId),
-    supabase
-      .from("user_quiz_attempts")
-      .select("quiz_id, score, passed, completed_at")
-      .eq("user_id", userId),
-    supabase
-      .from("role_play_results")
-      .select(
-        `block_id, scenario_id, attempt_id, score, summary, completed_at,
+          { count: "exact" },
+        )
+        .eq("role_groups.user_role_groups.user_id", userId)
+        .order("id", { ascending: true })
+        .limit(limit);
+      if (afterId !== null) query = query.gt("id", afterId);
+      return query;
+    }),
+    loadAllReportRowsById<UserReportLessonRow>(({ afterId, limit }) => {
+      const query = supabase
+        .from("lessons")
+        .select("id, is_required_for_completion, modules!inner(course_id)", {
+          count: "exact",
+        })
+        .order("id", { ascending: true })
+        .limit(limit);
+      return afterId === null ? query : query.gt("id", afterId);
+    }),
+    loadAllReportRowsById(({ afterId, limit }) => {
+      let query = supabase
+        .from("certificates")
+        .select("id, course_id, issued_at, certificate_number", {
+          count: "exact",
+        })
+        .eq("user_id", userId)
+        .order("id", { ascending: true })
+        .limit(limit);
+      if (afterId !== null) query = query.gt("id", afterId);
+      return query;
+    }),
+    loadAllReportRowsById(({ afterId, limit }) => {
+      let query = supabase
+        .from("program_certificates")
+        .select("id, program_id, issued_at, certificate_number", {
+          count: "exact",
+        })
+        .eq("user_id", userId)
+        .order("id", { ascending: true })
+        .limit(limit);
+      if (afterId !== null) query = query.gt("id", afterId);
+      return query;
+    }),
+    loadAllReportRowsById(({ afterId, limit }) => {
+      let query = supabase
+        .from("user_quiz_attempts")
+        .select("id, quiz_id, score, passed, completed_at", { count: "exact" })
+        .eq("user_id", userId)
+        .order("id", { ascending: true })
+        .limit(limit);
+      if (afterId !== null) query = query.gt("id", afterId);
+      return query;
+    }),
+    loadAllReportRowsById(({ afterId, limit }) => {
+      let query = supabase
+        .from("role_play_results")
+        .select(
+          `id, block_id, scenario_id, attempt_id, score, summary, completed_at,
          content_blocks(
            content,
            lessons(
@@ -97,9 +174,14 @@ export default async function UserReportPage({
              )
            )
          )`,
-      )
-      .eq("user_id", userId)
-      .order("completed_at", { ascending: false }),
+          { count: "exact" },
+        )
+        .eq("user_id", userId)
+        .order("id", { ascending: true })
+        .limit(limit);
+      if (afterId !== null) query = query.gt("id", afterId);
+      return query;
+    }),
     supabase
       .from("audit_log")
       .select("id, action, entity_type, entity_id, metadata, created_at")
@@ -108,42 +190,96 @@ export default async function UserReportPage({
       .limit(20),
   ]);
 
+  if (
+    profileRes.error ||
+    !roleGroupsResult.ok ||
+    !programsResult.ok ||
+    !programCoursesResult.ok ||
+    !courseAccessResult.ok ||
+    !lessonsResult.ok ||
+    !certificatesResult.ok ||
+    !programCertsResult.ok ||
+    !attemptsResult.ok ||
+    !rolePlayResultsResult.ok ||
+    auditRes.error
+  ) {
+    return (
+      <main className="w-full flex-1 p-6 md:p-10">
+        <AdminPageHeader
+          eyebrow="Admin · Learner report"
+          title="Learner report"
+          description="Report source data could not be verified. Refresh the page to try again."
+          backHref="/admin/reports"
+          backLabel="Back to reports"
+        />
+      </main>
+    );
+  }
+
   const profile = profileRes.data as Profile | null;
   if (!profile) notFound();
 
-  const roleGroups = (roleGroupsRes.data ?? [])
+  const roleGroups = roleGroupsResult.rows
     .map((r) => firstRow(r.role_groups))
     .filter(
       (rg): rg is { id: string; name: string } =>
         !!rg && typeof rg.id === "string" && typeof rg.name === "string",
     );
 
-  const accessiblePrograms = (programsRes.data ?? []) as AccessibleProgram[];
+  const programCoursesByProgramId = new Map<string, AccessibleProgramCourse[]>();
+  for (const row of programCoursesResult.rows as AccessibleProgramCourse[]) {
+    const values = programCoursesByProgramId.get(row.program_id) ?? [];
+    values.push(row);
+    programCoursesByProgramId.set(row.program_id, values);
+  }
+  const accessiblePrograms = (
+    programsResult.rows as AccessibleProgramBase[]
+  ).map((program) => ({
+    ...program,
+    program_courses: programCoursesByProgramId.get(program.id) ?? [],
+  }));
 
-  const standaloneCoursesFromAccess = (courseAccessRes.data ?? [])
+  const standaloneCoursesFromAccess = courseAccessResult.rows
     .map((r) => firstRow(r.courses))
     .filter(
       (c): c is { id: string; title: string; is_published: boolean } =>
         !!c && typeof c.id === "string",
     );
 
-  const completedLessonIds = new Set(
-    (completionsRes.data ?? []).map((c) => c.lesson_id),
-  );
-
   // Index required lessons per course.
   const requiredByCourse = new Map<string, Set<string>>();
-  for (const m of modulesLessonsRes.data ?? []) {
-    const lessons = m.lessons as
-      | { id: string; is_required_for_completion: boolean }[]
-      | null;
-    if (!lessons) continue;
-    const bucket = requiredByCourse.get(m.course_id) ?? new Set();
-    for (const l of lessons) {
-      if (l.is_required_for_completion) bucket.add(l.id);
-    }
-    requiredByCourse.set(m.course_id, bucket);
+  for (const lesson of lessonsResult.rows) {
+    const courseId = firstRow(lesson.modules)?.course_id;
+    if (!courseId) continue;
+    const bucket = requiredByCourse.get(courseId) ?? new Set<string>();
+    if (lesson.is_required_for_completion) bucket.add(lesson.id);
+    requiredByCourse.set(courseId, bucket);
   }
+  const requiredLessonIds = Array.from(
+    new Set(
+      Array.from(requiredByCourse.values()).flatMap((ids) => Array.from(ids)),
+    ),
+  );
+  const completionResult = await loadAdminLessonCompletions(supabase, {
+    userIds: [userId],
+    lessonIds: requiredLessonIds,
+  });
+  if (!completionResult.ok) {
+    return (
+      <main className="w-full flex-1 p-6 md:p-10">
+        <AdminPageHeader
+          eyebrow="Admin · Learner report"
+          title={profile.full_name || profile.email}
+          description="Current learner completion could not be verified. Refresh the page to try again."
+          backHref="/admin/reports"
+          backLabel="Back to reports"
+        />
+      </main>
+    );
+  }
+  const completedLessonIds = new Set(
+    completionResult.completions.map((completion) => completion.lessonId),
+  );
 
   function percentForCourse(courseId: string): {
     total: number;
@@ -159,19 +295,21 @@ export default async function UserReportPage({
   }
 
   const courseCertsByCourseId = new Map(
-    (certificatesRes.data ?? []).map((c) => [c.course_id, c]),
+    certificatesResult.rows.map((c) => [c.course_id, c]),
   );
   const programCertsByProgramId = new Map(
-    (programCertsRes.data ?? []).map((c) => [c.program_id, c]),
+    programCertsResult.rows.map((c) => [c.program_id, c]),
   );
 
-  const attempts = (attemptsRes.data ?? []) as Array<{
+  const attempts = attemptsResult.rows as Array<{
     quiz_id: string;
     score: number | null;
     passed: boolean | null;
     completed_at: string | null;
   }>;
-  const rolePlayResults = (rolePlayResultsRes.data ?? []) as RolePlayResult[];
+  const rolePlayResults = (rolePlayResultsResult.rows as RolePlayResult[]).sort(
+    (a, b) => b.completed_at.localeCompare(a.completed_at),
+  );
   const auditRows = (auditRes.data ?? []) as AuditRow[];
 
   // Standalone courses: accessible via course_access AND not already listed
@@ -215,10 +353,28 @@ export default async function UserReportPage({
         backLabel="Back to reports"
         actions={
           <div className="flex flex-wrap items-center gap-2">
-            <Badge tone={profile.system_role === "owner" ? "solid" : profile.system_role === "admin" ? "blue" : "neutral"} size="sm">
+            <Badge
+              tone={
+                profile.system_role === "owner"
+                  ? "solid"
+                  : profile.system_role === "admin"
+                    ? "blue"
+                    : "neutral"
+              }
+              size="sm"
+            >
               {profile.system_role}
             </Badge>
-            <Badge tone={profile.status === "active" ? "green" : profile.status === "suspended" ? "red" : "yellow"} size="sm">
+            <Badge
+              tone={
+                profile.status === "active"
+                  ? "green"
+                  : profile.status === "suspended"
+                    ? "red"
+                    : "yellow"
+              }
+              size="sm"
+            >
               {profile.status}
             </Badge>
             {roleGroups.map((roleGroup) => (
@@ -248,13 +404,17 @@ export default async function UserReportPage({
                 if (!course) return [];
                 const { total, done, pct } = percentForCourse(course.id);
                 const cert = courseCertsByCourseId.get(course.id);
-                return [{
-                  id: course.id,
-                  title: course.title,
-                  lessonsDone: `${done} / ${total}`,
-                  pct,
-                  certificate: cert?.certificate_number ?? (pct === 100 ? "Pending issuance" : "-"),
-                }];
+                return [
+                  {
+                    id: course.id,
+                    title: course.title,
+                    lessonsDone: `${done} / ${total}`,
+                    pct,
+                    certificate:
+                      cert?.certificate_number ??
+                      (pct === 100 ? "Pending issuance" : "-"),
+                  },
+                ];
               });
               return (
                 <Card key={program.id} padding="sm">
@@ -264,17 +424,34 @@ export default async function UserReportPage({
                         {program.title}
                       </h3>
                       <p className="text-xs font-semibold text-[var(--text-muted)]">
-                        {program.course_order_mode === "sequential" ? "Sequential" : "Any order"}
+                        {program.course_order_mode === "sequential"
+                          ? "Sequential"
+                          : "Any order"}
                       </p>
                     </div>
-                    {programCert ? <Badge tone="green" size="sm">Completed</Badge> : null}
+                    {programCert ? (
+                      <Badge tone="green" size="sm">
+                        Completed
+                      </Badge>
+                    ) : null}
                   </div>
                   <AdminDataTable
                     empty="No courses in this program."
                     columns={[
                       { key: "title", label: "Course" },
-                      { key: "lessonsDone", label: "Required lessons done", align: "right", tabular: true },
-                      { key: "pct", label: "%", align: "right", tabular: true, suffix: "%" },
+                      {
+                        key: "lessonsDone",
+                        label: "Required lessons done",
+                        align: "right",
+                        tabular: true,
+                      },
+                      {
+                        key: "pct",
+                        label: "%",
+                        align: "right",
+                        tabular: true,
+                        suffix: "%",
+                      },
                       { key: "certificate", label: "Certificate", muted: true },
                     ]}
                     rows={shapedCourseRows}
@@ -293,12 +470,28 @@ export default async function UserReportPage({
             <AdminDataTable
               columns={[
                 { key: "title", label: "Course" },
-                { key: "lessons", label: "Required lessons", align: "right", tabular: true },
-                { key: "pct", label: "%", align: "right", tabular: true, suffix: "%" },
+                {
+                  key: "lessons",
+                  label: "Required lessons",
+                  align: "right",
+                  tabular: true,
+                },
+                {
+                  key: "pct",
+                  label: "%",
+                  align: "right",
+                  tabular: true,
+                  suffix: "%",
+                },
               ]}
               rows={standaloneCourses.map((course) => {
                 const { total, done, pct } = percentForCourse(course.id);
-                return { id: course.id, title: course.title, lessons: `${done} / ${total}`, pct };
+                return {
+                  id: course.id,
+                  title: course.title,
+                  lessons: `${done} / ${total}`,
+                  pct,
+                };
               })}
             />
           </Card>
@@ -307,7 +500,10 @@ export default async function UserReportPage({
 
       <section className="mb-8 grid gap-4 md:grid-cols-2">
         <Card padding="md">
-          <AdminSectionHeading title="Quiz activity" description="Attempts, pass count, best score." />
+          <AdminSectionHeading
+            title="Quiz activity"
+            description="Attempts, pass count, best score."
+          />
           <div className="text-sm">
             <div className="flex flex-col gap-1">
               <Stat label="Attempts" value={attempts.length} />
@@ -331,7 +527,10 @@ export default async function UserReportPage({
           </div>
         </Card>
         <Card padding="md">
-          <AdminSectionHeading title="Role-play activity" description="Closer Lab attempts completed from embedded lessons." />
+          <AdminSectionHeading
+            title="Role-play activity"
+            description="Closer Lab attempts completed from embedded lessons."
+          />
           <div className="text-sm">
             <div className="flex flex-col gap-1">
               <Stat label="Attempts" value={rolePlayResults.length} />
@@ -353,16 +552,19 @@ export default async function UserReportPage({
           </div>
         </Card>
         <Card padding="md">
-          <AdminSectionHeading title="Certificates" description="Earned course and program certs." />
+          <AdminSectionHeading
+            title="Certificates"
+            description="Earned course and program certs."
+          />
           <div className="text-sm">
             <div className="flex flex-col gap-1">
               <Stat
                 label="Course certificates"
-                value={(certificatesRes.data ?? []).length}
+                value={certificatesResult.rows.length}
               />
               <Stat
                 label="Program certificates"
-                value={(programCertsRes.data ?? []).length}
+                value={programCertsResult.rows.length}
               />
             </div>
           </div>
@@ -380,7 +582,12 @@ export default async function UserReportPage({
               { key: "course", label: "Course", muted: true },
               { key: "score", label: "Score", align: "right", tabular: true },
               { key: "completed", label: "Completed", muted: true },
-              { key: "summary", label: "Summary", presentation: "external-link", hrefKey: "summaryUrl" },
+              {
+                key: "summary",
+                label: "Summary",
+                presentation: "external-link",
+                hrefKey: "summaryUrl",
+              },
             ]}
             rows={rolePlayRows}
           />
@@ -417,16 +624,28 @@ type Profile = {
   created_at: string;
 };
 
-type AccessibleProgram = {
+type UserReportLessonRow = {
+  id: string;
+  is_required_for_completion: boolean;
+  modules: { course_id: string } | Array<{ course_id: string }> | null;
+};
+
+type AccessibleProgramBase = {
   id: string;
   title: string;
   course_order_mode: "sequential" | "free";
   is_published: boolean;
-  program_courses: Array<{
-    course_id: string;
-    sort_order: number;
-    courses: { id: string; title: string; is_published: boolean } | { id: string; title: string; is_published: boolean }[] | null;
-  }> | null;
+};
+
+type AccessibleProgramCourse = {
+  id: string;
+  program_id: string;
+  course_id: string;
+  sort_order: number;
+  courses:
+    | { id: string; title: string; is_published: boolean }
+    | { id: string; title: string; is_published: boolean }[]
+    | null;
 };
 
 type AuditRow = {
@@ -454,15 +673,11 @@ type RolePlayResult = {
               modules:
                 | {
                     courses:
-                      | { title: string }
-                      | Array<{ title: string }>
-                      | null;
+                      { title: string } | Array<{ title: string }> | null;
                   }
                 | Array<{
                     courses:
-                      | { title: string }
-                      | Array<{ title: string }>
-                      | null;
+                      { title: string } | Array<{ title: string }> | null;
                   }>
                 | null;
             }
@@ -471,15 +686,11 @@ type RolePlayResult = {
               modules:
                 | {
                     courses:
-                      | { title: string }
-                      | Array<{ title: string }>
-                      | null;
+                      { title: string } | Array<{ title: string }> | null;
                   }
                 | Array<{
                     courses:
-                      | { title: string }
-                      | Array<{ title: string }>
-                      | null;
+                      { title: string } | Array<{ title: string }> | null;
                   }>
                 | null;
             }>
@@ -493,15 +704,11 @@ type RolePlayResult = {
               modules:
                 | {
                     courses:
-                      | { title: string }
-                      | Array<{ title: string }>
-                      | null;
+                      { title: string } | Array<{ title: string }> | null;
                   }
                 | Array<{
                     courses:
-                      | { title: string }
-                      | Array<{ title: string }>
-                      | null;
+                      { title: string } | Array<{ title: string }> | null;
                   }>
                 | null;
             }
@@ -510,15 +717,11 @@ type RolePlayResult = {
               modules:
                 | {
                     courses:
-                      | { title: string }
-                      | Array<{ title: string }>
-                      | null;
+                      { title: string } | Array<{ title: string }> | null;
                   }
                 | Array<{
                     courses:
-                      | { title: string }
-                      | Array<{ title: string }>
-                      | null;
+                      { title: string } | Array<{ title: string }> | null;
                   }>
                 | null;
             }>

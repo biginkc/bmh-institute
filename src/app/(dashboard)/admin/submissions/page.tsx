@@ -1,6 +1,8 @@
 import Link from "next/link";
 
 import { Badge, Card, Coach } from "@/components/bmh-ds";
+import { parseAssignmentRubric } from "@/lib/assignments/rubric";
+import { requireAdmin } from "@/lib/auth/guard";
 import { createClient } from "@/lib/supabase/server";
 
 import { AdminPageHeader } from "../_components/admin-shell";
@@ -11,6 +13,7 @@ export default async function AdminSubmissionsPage({
 }: {
   searchParams: Promise<{ status?: string }>;
 }) {
+  await requireAdmin();
   const sp = await searchParams;
   const filterStatus = sp.status ?? "submitted";
 
@@ -30,7 +33,7 @@ export default async function AdminSubmissionsPage({
       lesson_id,
       assignment_id,
       profiles!assignment_submissions_user_id_fkey ( email, full_name ),
-      assignments ( title ),
+      assignments ( title, rubric, requires_review ),
       lessons ( title )
     `,
     )
@@ -41,7 +44,7 @@ export default async function AdminSubmissionsPage({
     query = query.eq("status", filterStatus);
   }
 
-  const { data: submissions } = await query;
+  const { data: submissions, error } = await query;
   const rows = (submissions ?? []) as Row[];
 
   return (
@@ -59,7 +62,13 @@ export default async function AdminSubmissionsPage({
         }
       />
 
-      {rows.length === 0 ? (
+      {error ? (
+        <Card padding="md">
+          <div role="alert" className="font-semibold text-[var(--danger)]">
+            We couldn&apos;t load submissions. Refresh the page or try again later.
+          </div>
+        </Card>
+      ) : rows.length === 0 ? (
         <Card padding="md">
           <Coach
             emotion="content"
@@ -88,8 +97,9 @@ type Row = {
   submission_text: string | null;
   submission_url: string | null;
   submission_file_path: string | null;
+  assignment_id: string;
   profiles: { email: string; full_name: string } | { email: string; full_name: string }[] | null;
-  assignments: { title: string } | { title: string }[] | null;
+  assignments: { title: string; rubric: unknown; requires_review: boolean } | { title: string; rubric: unknown; requires_review: boolean }[] | null;
   lessons: { title: string } | { title: string }[] | null;
 };
 
@@ -97,9 +107,12 @@ function SubmissionCard({ row }: { row: Row }) {
   const profile = firstRow(row.profiles);
   const assignment = firstRow(row.assignments);
   const lesson = firstRow(row.lessons);
+  const rubric = parseAssignmentRubric(assignment?.rubric);
+  const rubricReady =
+    rubric.ok && (!assignment?.requires_review || rubric.items.length > 0);
 
   return (
-    <Card padding="md">
+    <Card padding="md" data-assignment-id={row.assignment_id}>
       <div className="flex items-start justify-between gap-3">
         <div>
           <h2 className="font-[var(--font-display)] text-lg font-bold text-[var(--ink-900)]">
@@ -116,6 +129,36 @@ function SubmissionCard({ row }: { row: Row }) {
         <div className="text-xs font-semibold text-[var(--text-muted)]">
           Submitted {new Date(row.submitted_at).toLocaleString()}
         </div>
+
+        {!rubric.ok ? (
+          <div role="alert" className="rounded-[var(--bmh-radius-md)] border border-[var(--danger)] bg-[var(--danger-soft)] p-3 text-sm font-semibold text-[var(--danger)]">
+            This assignment&apos;s review rubric is invalid. Repair it before making a review decision.
+          </div>
+        ) : assignment?.requires_review && rubric.items.length === 0 ? (
+          <div role="alert" className="rounded-[var(--bmh-radius-md)] border border-[var(--danger)] bg-[var(--danger-soft)] p-3 text-sm font-semibold text-[var(--danger)]">
+            This assignment&apos;s review rubric is missing. Add at least one item before making a review decision.
+          </div>
+        ) : rubric.items.length > 0 ? (
+          <section
+            aria-labelledby={`submission-${row.id}-rubric`}
+            className="rounded-[var(--bmh-radius-md)] border border-[var(--border-hairline)] bg-[var(--surface-tint)] p-4"
+          >
+            <h3
+              id={`submission-${row.id}-rubric`}
+              className="font-[family-name:var(--font-display)] text-base font-extrabold text-[var(--ink-900)]"
+            >
+              Review rubric
+            </h3>
+            <ol className="mt-3 space-y-3">
+              {rubric.items.map((item, index) => (
+                <li key={`${item.criterion}-${index}`} className="text-sm text-[var(--text-body)]">
+                  <p className="font-extrabold text-[var(--ink-900)]">{item.criterion}</p>
+                  <p className="mt-0.5 font-semibold leading-relaxed">{item.description}</p>
+                </li>
+              ))}
+            </ol>
+          </section>
+        ) : null}
 
         {row.submission_text ? (
           <div className="whitespace-pre-wrap rounded-[var(--bmh-radius-md)] border border-[var(--border-hairline)] bg-[var(--ink-050)] p-3 text-sm font-semibold text-[var(--text-body)]">
@@ -141,7 +184,7 @@ function SubmissionCard({ row }: { row: Row }) {
           </div>
         ) : null}
 
-        {row.status === "submitted" ? (
+        {row.status === "submitted" && rubricReady ? (
           <ReviewControls
             submissionId={row.id}
             filePath={row.submission_file_path}

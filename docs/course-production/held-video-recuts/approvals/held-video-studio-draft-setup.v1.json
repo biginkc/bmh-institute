@@ -1,0 +1,104 @@
+{
+  "schema_version": "bmh-held-video-studio-draft-setup/v1",
+  "status": "manual_studio_setup_evidence_only_pending_exact_script_approval",
+  "request_binding": {
+    "request_id": "bmh-held-video-script-review-3fc85f5554557277413636e8a449cadfc4331750143e082f200c9ad1a618433c",
+    "request_sha256": "9259bc7b61e3f065a682777234c1f9856a9221ab777a8ab226a37041022a9ab3"
+  },
+  "manual_setup": {
+    "provider_api_called": false,
+    "generate_clicked_by_codex": false,
+    "render_started": false,
+    "billed_generation_started": false,
+    "canvas": "landscape"
+  },
+  "offline_identity_contract": {
+    "evidence_kind": "offline_configuration_contract_not_browser_observation",
+    "avatar_group_name": "Doodle Andrea",
+    "avatar_group_id": "b2cd05454d284058ad8d7303545821e6",
+    "generation_look_name": "cafe (course)",
+    "generation_look_id": "7c00b3e0ad8b4a6a97115243aff056bb",
+    "voice_name": "Hope",
+    "voice_id": "42d00d4aac5441279d8536cd6b52c53c",
+    "motion_engine": "Avatar IV"
+  },
+  "browser_audit": {
+    "source": {
+      "tool": "Chrome Playwright DOM snapshot",
+      "thread_id": "019f6bec-4d36-7711-b205-e2042030e970",
+      "turn_id": "5762fad8-d7c2-48a8-9d82-53af3666844c"
+    },
+    "window": {
+      "first_success_at": "2026-07-18T17:12:06.346Z",
+      "finished_at": "2026-07-18T17:21:20.804Z"
+    },
+    "scene_selections_checked": 128,
+    "expected_scene_selections": 128,
+    "visible_labels": {
+      "avatar": "Doodle Andrea cafe (course)",
+      "voice": "Hope",
+      "motion_engine": "Avatar IV"
+    },
+    "evidence_scope": "Canonical rollout proof covers only the three visible labels for 128 of 128 scene selections; it does not prove provider IDs, Auto-enhance, pauses, voice speed, or any other Studio setting."
+  },
+  "drafts": [
+    {
+      "source_key": "video-slot-01-welcome",
+      "title": "Chapter 1A - Draft",
+      "draft_id": "2ebcb01279484cb4bc91263fa5965f46",
+      "url": "https://app.heygen.com/create-v4/2ebcb01279484cb4bc91263fa5965f46?vt=l&subPanel=home&sceneId=UlVysfFM&panel=scene",
+      "scene_count": 10
+    },
+    {
+      "source_key": "video-slot-01-mindset",
+      "title": "Chapter 1B - Draft",
+      "draft_id": "83d974c849714434b3fae447f9d1476e",
+      "url": "https://app.heygen.com/create-v4/83d974c849714434b3fae447f9d1476e?vt=l&panel=scene",
+      "scene_count": 12
+    },
+    {
+      "source_key": "video-slot-10-objection-scripts",
+      "title": "Chapter 7B - Draft",
+      "draft_id": "170194ab42314ba6b7bea0c6022fe440",
+      "url": "https://app.heygen.com/create-v4/170194ab42314ba6b7bea0c6022fe440?vt=l&panel=scene",
+      "scene_count": 68
+    },
+    {
+      "source_key": "video-slot-15-closing",
+      "title": "Chapter 11A - Draft",
+      "draft_id": "b32fd9f8d298490cbc7d5dafa533c616",
+      "url": "https://app.heygen.com/create-v4/b32fd9f8d298490cbc7d5dafa533c616?vt=l&panel=scene",
+      "scene_count": 11
+    },
+    {
+      "source_key": "video-slot-17-compensation",
+      "title": "Chapter 17 - Draft",
+      "draft_id": "a4c28243ffa7423398667f9e10f2fbc8",
+      "url": "https://app.heygen.com/create-v4/a4c28243ffa7423398667f9e10f2fbc8?vt=l&panel=scene",
+      "scene_count": 7
+    },
+    {
+      "source_key": "video-slot-18-operator",
+      "title": "Chapter 18 - Draft",
+      "draft_id": "58ac32f578d7447285905b05bf898304",
+      "url": "https://app.heygen.com/create-v4/58ac32f578d7447285905b05bf898304?vt=l&panel=scene",
+      "scene_count": 12
+    },
+    {
+      "source_key": "video-slot-19-career",
+      "title": "Chapter 19 - Draft",
+      "draft_id": "c07d8d30a05d4ee6abb0303a4168ec5e",
+      "url": "https://app.heygen.com/create-v4/c07d8d30a05d4ee6abb0303a4168ec5e?vt=l&panel=scene",
+      "scene_count": 8
+    }
+  ],
+  "next_gate": {
+    "actor": "Jarrad Henry",
+    "action": "Provide the exact response to the checksum-bound script and scene approval question",
+    "exact_response_required": "approved",
+    "retroactive_setup_authorized": false,
+    "settings_verification_authorized": false,
+    "generation_authorized": false,
+    "release_qa_status": "pending-script-approval"
+  }
+}

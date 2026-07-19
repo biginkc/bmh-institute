@@ -18,9 +18,10 @@ import {
 import { enrichBlocksWithSignedUrls } from "@/lib/content-blocks/sign-urls";
 import { computeQuizEligibility } from "@/lib/quizzes/attempts";
 import { mintRolePlayEmbedToken } from "@/lib/role-plays/embed-token";
-import { MarkCompleteButton } from "./mark-complete-button";
+import { isConfiguredRolePlayScenarioId } from "@/lib/role-plays/scenario-id";
+import { getAppUrl } from "@/lib/app-url";
 import { QuizGateCard } from "./quiz-gate-card";
-import { QuizRunner, type QuizQuestion } from "./quiz-runner";
+import { QuizRunner } from "./quiz-runner";
 import {
   AssignmentRunner,
   type AssignmentDescriptor,
@@ -34,6 +35,11 @@ import {
   type ContentLessonNavigation,
   type NavigationLessonRow,
 } from "./lesson-navigation";
+import { loadLearnerLessonStates } from "../../lesson-state-rpc";
+
+type ContentNavigationResult =
+  | { ok: true; navigation: ContentLessonNavigation | null }
+  | { ok: false };
 
 export default async function LessonPage({
   params,
@@ -75,32 +81,32 @@ export default async function LessonPage({
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  if (!user) notFound();
 
-  const [{ data: unlocked }, { data: completion }] = await Promise.all([
-    supabase.rpc("fn_lesson_is_unlocked", {
-      p_user_id: user?.id ?? "",
-      p_lesson_id: lessonId,
-    }),
-    supabase
-      .from("user_lesson_completions")
-      .select("lesson_id")
-      .eq("lesson_id", lessonId)
-      .maybeSingle(),
-  ]);
-
-  const alreadyComplete = Boolean(completion);
+  const stateResult = await loadLearnerLessonStates(supabase, {
+    userId: user.id,
+    lessonIds: [lessonId],
+  });
+  const currentState = stateResult.ok ? stateResult.states.get(lessonId) : null;
+  const stateVerificationFailed = !currentState;
+  const unlocked = currentState?.isUnlocked === true;
+  const alreadyComplete = currentState?.isComplete === true;
   const moduleJoin = firstRow(lesson.modules);
   const courseJoin = firstRow(moduleJoin?.courses);
   const courseId = courseJoin?.id;
   const contentNavigationPromise =
-    lesson.lesson_type === "content" && courseId && user
+    lesson.lesson_type === "content" && courseId && !stateVerificationFailed
       ? loadContentLessonNavigation({
           supabase,
           courseId,
           lessonId,
           userId: user.id,
         })
-      : Promise.resolve(null);
+      : Promise.resolve(
+          stateVerificationFailed
+            ? ({ ok: false } as const)
+            : ({ ok: true, navigation: null } as const),
+        );
 
   return (
     <div
@@ -149,7 +155,11 @@ export default async function LessonPage({
         </div>
       </header>
 
-      {!unlocked ? (
+      {stateVerificationFailed ? (
+        <div className="max-w-3xl rounded-[var(--bmh-radius-md)] border border-[var(--danger)] bg-[var(--danger-soft)] px-4 py-3 text-sm font-semibold text-[var(--danger)]">
+          We couldn&apos;t verify your lesson access or progress. Refresh the page to try again.
+        </div>
+      ) : !unlocked ? (
         <div className="max-w-3xl">
           <BmhCard padding="lg" tint>
             <h2 className="font-[family-name:var(--font-display)] text-2xl font-bold text-[var(--ink-900)]">
@@ -163,6 +173,7 @@ export default async function LessonPage({
       ) : lesson.lesson_type === "content" ? (
         <ContentLessonBody
           lessonId={lessonId}
+          userId={user.id}
           alreadyComplete={alreadyComplete}
           navigationPromise={contentNavigationPromise}
         />
@@ -171,6 +182,7 @@ export default async function LessonPage({
           <QuizLessonBody
             quizId={lesson.quiz_id}
             lessonId={lessonId}
+            userId={user.id}
             backHref={courseId ? `/courses/${courseId}` : "/dashboard"}
           />
         </div>
@@ -179,6 +191,7 @@ export default async function LessonPage({
           <AssignmentLessonBody
             assignmentId={lesson.assignment_id}
             lessonId={lessonId}
+            userId={user.id}
           />
         </div>
       )}
@@ -188,15 +201,17 @@ export default async function LessonPage({
 
 async function ContentLessonBody({
   lessonId,
+  userId,
   alreadyComplete,
   navigationPromise,
 }: {
   lessonId: string;
+  userId: string;
   alreadyComplete: boolean;
-  navigationPromise: Promise<ContentLessonNavigation | null>;
+  navigationPromise: Promise<ContentNavigationResult>;
 }) {
   const supabase = await createClient();
-  const [{ data: blocks }, navigation] = await Promise.all([
+  const [{ data: blocks }, navigationResult] = await Promise.all([
     supabase
       .from("content_blocks")
       .select("id, block_type, content, sort_order, is_required_for_completion")
@@ -204,12 +219,35 @@ async function ContentLessonBody({
       .order("sort_order"),
     navigationPromise,
   ]);
+  const navigation = navigationResult.ok ? navigationResult.navigation : null;
 
   const rows = (blocks ?? []) as ContentBlock[];
-  const enriched = await attachRolePlayEmbeds(
-    await enrichBlocksWithSignedUrls(rows),
-    lessonId,
-    supabase,
+  const [{ data: completedRows }, enriched] = await Promise.all([
+    rows.length > 0
+      ? supabase
+          .from("user_block_progress")
+          .select("block_id, asset_version")
+          .eq("user_id", userId)
+          .in("block_id", rows.map((block) => block.id))
+      : Promise.resolve({ data: [] }),
+    attachRolePlayEmbeds(
+      await enrichBlocksWithSignedUrls(rows),
+      lessonId,
+      supabase,
+    ),
+  ]);
+  const blocksById = new Map(rows.map((block) => [block.id, block]));
+  const completedBlockIds = new Set(
+    (completedRows ?? []).flatMap((row) => {
+      if (typeof row.block_id !== "string") return [];
+      const block = blocksById.get(row.block_id);
+      if (!block) return [];
+      if (block.block_type !== "video") return [row.block_id];
+      const currentAssetVersion = videoAssetVersion(block.content);
+      return currentAssetVersion && row.asset_version === currentAssetVersion
+        ? [row.block_id]
+        : [];
+    }),
   );
 
   if (enriched.length === 0) {
@@ -238,7 +276,11 @@ async function ContentLessonBody({
       <div className="min-w-0">
         <div className="flex flex-col gap-5">
           {enriched.map((block) => (
-            <ContentBlockRenderer key={block.id} block={block} />
+            <ContentBlockRenderer
+              key={block.id}
+              block={block}
+              completed={completedBlockIds.has(block.id)}
+            />
           ))}
         </div>
 
@@ -263,16 +305,18 @@ async function ContentLessonBody({
           </nav>
         ) : null}
 
+        {!navigationResult.ok ? (
+          <div className="mt-8 rounded-[var(--bmh-radius-md)] border border-[var(--danger)] bg-[var(--danger-soft)] px-4 py-3 text-sm font-semibold text-[var(--danger)]">
+            We couldn&apos;t verify the next lesson. Refresh the page to try again.
+          </div>
+        ) : null}
+
         <div className="mt-8 flex flex-col gap-4 border-t border-[var(--border-hairline)] pt-6 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm font-bold text-[var(--text-muted)]">
             {alreadyComplete
               ? "Nice. This lesson is complete."
-              : "Mark this lesson complete when you are done."}
+              : "Required videos complete after 90% of their content has been watched."}
           </p>
-          <MarkCompleteButton
-            lessonId={lessonId}
-            alreadyComplete={alreadyComplete}
-          />
         </div>
       </div>
 
@@ -286,17 +330,38 @@ async function ContentLessonBody({
   );
 }
 
+function videoAssetVersion(value: unknown): string {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return "";
+  const content = value as Record<string, unknown>;
+  const filePath = content.file_path;
+  const duration = content.duration_seconds;
+  return typeof filePath === "string" &&
+    filePath.trim().length > 0 &&
+    typeof duration === "number" &&
+    Number.isFinite(duration) &&
+    duration > 0
+    ? `${filePath.trim()}#duration=${duration}`
+    : "";
+}
+
 async function LessonPosition({
   navigationPromise,
 }: {
-  navigationPromise: Promise<ContentLessonNavigation | null>;
+  navigationPromise: Promise<ContentNavigationResult>;
 }) {
-  const navigation = await navigationPromise;
-  if (!navigation) return null;
+  const result = await navigationPromise;
+  if (!result.ok) {
+    return (
+      <span className="ml-1 text-xs font-extrabold text-[var(--danger)]">
+        Progress unavailable
+      </span>
+    );
+  }
+  if (!result.navigation) return null;
 
   return (
     <span className="ml-1 text-xs font-extrabold text-[var(--text-muted)]">
-      Chapter {navigation.chapterIndex} of {navigation.chapters.length}
+      Chapter {result.navigation.chapterIndex} of {result.navigation.chapters.length}
     </span>
   );
 }
@@ -340,7 +405,7 @@ type NavigationModuleRow = {
   lessons: NavigationLessonRow[] | null;
 };
 
-async function loadContentLessonNavigation({
+export async function loadContentLessonNavigation({
   supabase,
   courseId,
   lessonId,
@@ -350,20 +415,15 @@ async function loadContentLessonNavigation({
   courseId: string;
   lessonId: string;
   userId: string;
-}): Promise<ContentLessonNavigation | null> {
-  const [modulesResult, completionsResult] = await Promise.all([
-    supabase
-      .from("modules")
-      .select(
-        "id, sort_order, lessons(id, title, lesson_type, sort_order, prerequisite_lesson_id)",
-      )
-      .eq("course_id", courseId)
-      .order("sort_order"),
-    supabase
-      .from("user_lesson_completions")
-      .select("lesson_id")
-      .eq("user_id", userId),
-  ]);
+}): Promise<ContentNavigationResult> {
+  const modulesResult = await supabase
+    .from("modules")
+    .select(
+      "id, sort_order, lessons(id, title, lesson_type, sort_order, prerequisite_lesson_id)",
+    )
+    .eq("course_id", courseId)
+    .order("sort_order");
+  if (modulesResult.error) return { ok: false };
 
   const moduleRows = (modulesResult.data ?? []) as NavigationModuleRow[];
   const lessons = [...moduleRows]
@@ -373,32 +433,31 @@ async function loadContentLessonNavigation({
         (left, right) => left.sort_order - right.sort_order,
       ),
     );
+  const stateResult = await loadLearnerLessonStates(supabase, {
+    userId,
+    lessonIds: lessons.map((lesson) => lesson.id),
+  });
+  if (!stateResult.ok) return { ok: false };
   const completedLessonIds = new Set(
-    (completionsResult.data ?? []).map((completion) =>
-      String(completion.lesson_id),
-    ),
-  );
-  const unlockResults = await Promise.all(
-    lessons.map(async (lesson) => {
-      const { data } = await supabase.rpc("fn_lesson_is_unlocked", {
-        p_user_id: userId,
-        p_lesson_id: lesson.id,
-      });
-      return [lesson.id, data === true] as const;
-    }),
+    Array.from(stateResult.states.values())
+      .filter((state) => state.isComplete)
+      .map((state) => state.lessonId),
   );
   const unlockedLessonIds = new Set(
-    unlockResults
-      .filter(([, unlocked]) => unlocked)
-      .map(([unlockedLessonId]) => unlockedLessonId),
+    Array.from(stateResult.states.values())
+      .filter((state) => state.isUnlocked)
+      .map((state) => state.lessonId),
   );
 
-  return buildContentLessonNavigation({
-    lessons,
-    lessonId,
-    completedLessonIds,
-    unlockedLessonIds,
-  });
+  return {
+    ok: true,
+    navigation: buildContentLessonNavigation({
+      lessons,
+      lessonId,
+      completedLessonIds,
+      unlockedLessonIds,
+    }),
+  };
 }
 
 async function attachRolePlayEmbeds(
@@ -430,7 +489,7 @@ async function attachRolePlayEmbeds(
   return blocks.map((block) => {
     if (block.block_type !== "role_play") return block;
     const scenarioId = stringOr(block.content.scenario_id, "");
-    if (!scenarioId || !baseUrl) return block;
+    if (!isConfiguredRolePlayScenarioId(scenarioId) || !baseUrl) return block;
 
     try {
       const token = mintRolePlayEmbedToken({
@@ -439,6 +498,7 @@ async function attachRolePlayEmbeds(
         blockId: block.id,
         learnerName,
         scenarioId,
+        parentOrigin: new URL(getAppUrl()).origin,
       });
       const iframeUrl = new URL(
         `/embed/role-play/${encodeURIComponent(scenarioId)}`,
@@ -472,10 +532,12 @@ function getRolePlayBaseUrl(): string | null {
 async function QuizLessonBody({
   quizId,
   lessonId,
+  userId,
   backHref,
 }: {
   quizId: string | null;
   lessonId: string;
+  userId: string;
   backHref: string;
 }) {
   if (!quizId) {
@@ -490,59 +552,19 @@ async function QuizLessonBody({
   }
 
   const supabase = await createClient();
-  const [{ data: quiz }, questionsResult, { data: attempts }] =
-    await Promise.all([
+  const [{ data: quiz }, { data: attempts }] = await Promise.all([
       supabase
         .from("quizzes")
         .select("id, passing_score, max_attempts, retake_cooldown_hours")
         .eq("id", quizId)
         .maybeSingle(),
-      // HARDEN-04: read from answer_options_public view; is_correct is not
-      // exposed to learner sessions. Two queries + in-process join avoids the
-      // PostgREST embedded-FK cache surprise on views (see PATTERNS.md Path 1).
-      supabase
-        .from("questions")
-        .select("id, question_text, question_type, sort_order")
-        .eq("quiz_id", quizId)
-        .order("sort_order"),
       supabase
         .from("user_quiz_attempts")
         .select("passed, score, completed_at")
+        .eq("user_id", userId)
         .eq("quiz_id", quizId)
         .order("completed_at", { ascending: false }),
     ]);
-
-  const rawQuestions = questionsResult.data;
-  const questionIds = (rawQuestions ?? []).map((q) => q.id);
-  const { data: rawOptions } = questionIds.length
-    ? await supabase
-        .from("answer_options_public")
-        .select("id, question_id, option_text, sort_order")
-        .in("question_id", questionIds)
-        .order("sort_order")
-    : {
-        data: [] as Array<{
-          id: string;
-          question_id: string;
-          option_text: string;
-          sort_order: number;
-        }>,
-      };
-
-  const optionsByQuestion = new Map<
-    string,
-    Array<{ id: string; option_text: string; sort_order: number | null }>
-  >();
-  for (const opt of rawOptions ?? []) {
-    if (!opt.id || !opt.question_id || !opt.option_text) continue;
-    const arr = optionsByQuestion.get(opt.question_id) ?? [];
-    arr.push({
-      id: opt.id,
-      option_text: opt.option_text,
-      sort_order: opt.sort_order,
-    });
-    optionsByQuestion.set(opt.question_id, arr);
-  }
 
   if (!quiz) {
     return (
@@ -585,24 +607,15 @@ async function QuizLessonBody({
     );
   }
 
-  const questions: QuizQuestion[] = (rawQuestions ?? []).map((q) => ({
-    id: q.id,
-    question_text: q.question_text,
-    question_type: q.question_type as QuizQuestion["question_type"],
-    options: (optionsByQuestion.get(q.id) ?? [])
-      .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
-      .map((o) => ({ id: o.id, option_text: o.option_text })),
-  }));
-
   return (
     <QuizRunner
       quizId={quizId}
       lessonId={lessonId}
       passingScore={quiz.passing_score}
-      questions={questions}
       backHref={backHref}
       attemptsUsed={eligibility.attemptsUsed}
       attemptsLeft={eligibility.attemptsLeft}
+      retakeCooldownHours={quiz.retake_cooldown_hours ?? 0}
     />
   );
 }
@@ -610,9 +623,11 @@ async function QuizLessonBody({
 async function AssignmentLessonBody({
   assignmentId,
   lessonId,
+  userId,
 }: {
   assignmentId: string | null;
   lessonId: string;
+  userId: string;
 }) {
   if (!assignmentId) {
     return (
@@ -637,6 +652,7 @@ async function AssignmentLessonBody({
     supabase
       .from("assignment_submissions")
       .select("id, status, submitted_at, reviewer_notes")
+      .eq("user_id", userId)
       .eq("lesson_id", lessonId)
       .order("submitted_at", { ascending: false }),
   ]);

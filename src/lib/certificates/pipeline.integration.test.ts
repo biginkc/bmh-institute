@@ -42,6 +42,7 @@ describe.skipIf(!envPresent)(
         let userId: string | null = null;
         let programId: string | null = null;
         let courseId: string | null = null;
+        let roleGroupId: string | null = null;
 
         try {
           const { data: created, error: createUserError } =
@@ -55,12 +56,18 @@ describe.skipIf(!envPresent)(
           }
           userId = created.user.id;
           await waitForProfile(userId);
+          const profileUpdate = await admin
+            .from("profiles")
+            .update({ status: "active" })
+            .eq("id", userId);
+          if (profileUpdate.error) throw profileUpdate.error;
 
           const { data: program, error: programError } = await admin
             .from("programs")
             .insert({
               title: `TEST-02 Program ${suffix}`,
               certificate_enabled: true,
+              is_published: true,
             })
             .select("id")
             .single();
@@ -74,6 +81,7 @@ describe.skipIf(!envPresent)(
             .insert({
               title: `TEST-02 Course ${suffix}`,
               certificate_enabled: true,
+              is_published: true,
             })
             .select("id")
             .single();
@@ -81,6 +89,24 @@ describe.skipIf(!envPresent)(
             throw courseError ?? new Error("Failed to create course.");
           }
           courseId = course.id;
+
+          const { data: roleGroup, error: roleGroupError } = await admin
+            .from("role_groups")
+            .insert({ name: `TEST-02 role ${suffix}` })
+            .select("id")
+            .single();
+          if (roleGroupError || !roleGroup) throw roleGroupError;
+          roleGroupId = roleGroup.id;
+          const membership = await admin.from("user_role_groups").insert({
+            user_id: userId,
+            role_group_id: roleGroupId,
+          });
+          if (membership.error) throw membership.error;
+          const programAccess = await admin.from("program_access").insert({
+            program_id: programId,
+            role_group_id: roleGroupId,
+          });
+          if (programAccess.error) throw programAccess.error;
 
           const { error: attachError } = await admin
             .from("program_courses")
@@ -165,9 +191,61 @@ describe.skipIf(!envPresent)(
           if (courseId) {
             await admin.from("courses").delete().eq("id", courseId);
           }
+          if (roleGroupId) {
+            await admin.from("role_groups").delete().eq("id", roleGroupId);
+          }
         }
       },
     );
+
+    it("does not turn admin catalog authority into learner certificate eligibility", async () => {
+      if (!admin) throw new Error("Admin client unavailable.");
+      const suffix = randomBytes(8).toString("hex");
+      let userId: string | null = null;
+      let programId: string | null = null;
+      try {
+        const created = await admin.auth.admin.createUser({
+          email: `test-02-negative-${suffix}@bmh.invalid`,
+          password: `${randomBytes(16).toString("base64url")}!Aa1`,
+          email_confirm: true,
+        });
+        if (created.error || !created.data.user) throw created.error;
+        userId = created.data.user.id;
+        await waitForProfile(userId);
+        const profileUpdate = await admin
+          .from("profiles")
+          .update({ status: "active", system_role: "admin" })
+          .eq("id", userId);
+        if (profileUpdate.error) throw profileUpdate.error;
+
+        const program = await admin
+          .from("programs")
+          .insert({
+            title: `TEST-02 inaccessible ${suffix}`,
+            certificate_enabled: true,
+            is_published: false,
+          })
+          .select("id")
+          .single();
+        if (program.error) throw program.error;
+        programId = program.data.id;
+
+        const issued = await admin.rpc(
+          "fn_issue_program_certificate_if_eligible",
+          { p_user_id: userId, p_program_id: programId },
+        );
+        expect(issued.error).toBeNull();
+        const certificate = await admin
+          .from("program_certificates")
+          .select("id")
+          .eq("user_id", userId)
+          .eq("program_id", programId)
+          .maybeSingle();
+        expect(certificate.data).toBeNull();
+      } finally {
+        if (userId) await admin.auth.admin.deleteUser(userId).catch(() => undefined);
+        if (programId) await admin.from("programs").delete().eq("id", programId);
+      }
+    });
   },
 );
-

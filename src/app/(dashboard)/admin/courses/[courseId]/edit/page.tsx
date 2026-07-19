@@ -26,6 +26,11 @@ export default async function EditCoursePage({
       title,
       description,
       is_published,
+      thumbnail_path,
+      content_import_id,
+      thumbnail_asset_key,
+      thumbnail_approved_path,
+      thumbnail_approved_sha256,
       modules (
         id,
         title,
@@ -76,12 +81,18 @@ export default async function EditCoursePage({
             description="Title, description and publish state."
           />
           <CourseForm
+            entityId={courseId}
             action={boundAction}
             submitLabel="Save changes"
             defaults={{
               title: shaped.title,
               description: shaped.description,
               is_published: shaped.is_published,
+              thumbnail_path: shaped.thumbnail_path,
+              content_import_id: shaped.content_import_id,
+              thumbnail_asset_key: shaped.thumbnail_asset_key,
+              thumbnail_approved_path: shaped.thumbnail_approved_path,
+              thumbnail_approved_sha256: shaped.thumbnail_approved_sha256,
             }}
           />
         </Card>

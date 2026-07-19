@@ -36,7 +36,12 @@ vi.mock("@/lib/supabase/server", () => ({
           select: () => ({
             in: async (_column: string, ids: string[]) => ({
               data: ids.includes("new-group")
-                ? [{ program_id: "program-1" }]
+                ? [
+                    {
+                      program_id: "program-1",
+                      programs: { is_published: true },
+                    },
+                  ]
                 : [],
               error: null,
             }),
@@ -122,5 +127,24 @@ describe("saveUserSettings (INTEG-01)", () => {
       error: "role group insert failed",
     });
   });
-});
 
+  it("explains release-control access failures without exposing database jargon", async () => {
+    rpcError = {
+      message:
+        "Unreleased imported catalog access requires the evidence-bound release operation.",
+    };
+
+    const result = await saveUserSettings({
+      userId: "user-1",
+      system_role: "learner",
+      status: "active",
+      role_group_ids: ["employee-group"],
+    });
+
+    expect(result).toEqual({
+      ok: false,
+      error:
+        "Imported course content can only be published or granted to employees by the evidence-bound release operation.",
+    });
+  });
+});

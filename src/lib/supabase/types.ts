@@ -129,6 +129,7 @@ export type Database = {
           id: string
           instructions: string
           requires_review: boolean
+          rubric: Json
           submission_type: string
           title: string
           updated_at: string
@@ -138,6 +139,7 @@ export type Database = {
           id?: string
           instructions: string
           requires_review?: boolean
+          rubric?: Json
           submission_type: string
           title: string
           updated_at?: string
@@ -147,6 +149,7 @@ export type Database = {
           id?: string
           instructions?: string
           requires_review?: boolean
+          rubric?: Json
           submission_type?: string
           title?: string
           updated_at?: string
@@ -389,36 +392,51 @@ export type Database = {
         Row: {
           certificate_enabled: boolean
           certificate_template_id: string | null
+          content_import_id: string | null
           created_at: string
           description: string | null
           id: string
           is_published: boolean
           sort_order: number
+          thumbnail_approved_path: string | null
+          thumbnail_approved_sha256: string | null
+          thumbnail_asset_key: string | null
           thumbnail_url: string | null
+          thumbnail_path: string | null
           title: string
           updated_at: string
         }
         Insert: {
           certificate_enabled?: boolean
           certificate_template_id?: string | null
+          content_import_id?: string | null
           created_at?: string
           description?: string | null
           id?: string
           is_published?: boolean
           sort_order?: number
+          thumbnail_approved_path?: string | null
+          thumbnail_approved_sha256?: string | null
+          thumbnail_asset_key?: string | null
           thumbnail_url?: string | null
+          thumbnail_path?: string | null
           title: string
           updated_at?: string
         }
         Update: {
           certificate_enabled?: boolean
           certificate_template_id?: string | null
+          content_import_id?: string | null
           created_at?: string
           description?: string | null
           id?: string
           is_published?: boolean
           sort_order?: number
+          thumbnail_approved_path?: string | null
+          thumbnail_approved_sha256?: string | null
+          thumbnail_asset_key?: string | null
           thumbnail_url?: string | null
+          thumbnail_path?: string | null
           title?: string
           updated_at?: string
         }
@@ -479,6 +497,7 @@ export type Database = {
       lessons: {
         Row: {
           assignment_id: string | null
+          content_import_id: string | null
           created_at: string
           description: string | null
           id: string
@@ -489,11 +508,16 @@ export type Database = {
           prerequisite_quiz_min_score: number | null
           quiz_id: string | null
           sort_order: number
+          thumbnail_approved_path: string | null
+          thumbnail_approved_sha256: string | null
+          thumbnail_asset_key: string | null
+          thumbnail_path: string | null
           title: string
           updated_at: string
         }
         Insert: {
           assignment_id?: string | null
+          content_import_id?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -504,11 +528,16 @@ export type Database = {
           prerequisite_quiz_min_score?: number | null
           quiz_id?: string | null
           sort_order?: number
+          thumbnail_approved_path?: string | null
+          thumbnail_approved_sha256?: string | null
+          thumbnail_asset_key?: string | null
+          thumbnail_path?: string | null
           title: string
           updated_at?: string
         }
         Update: {
           assignment_id?: string | null
+          content_import_id?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -519,6 +548,10 @@ export type Database = {
           prerequisite_quiz_min_score?: number | null
           quiz_id?: string | null
           sort_order?: number
+          thumbnail_approved_path?: string | null
+          thumbnail_approved_sha256?: string | null
+          thumbnail_asset_key?: string | null
+          thumbnail_path?: string | null
           title?: string
           updated_at?: string
         }
@@ -739,39 +772,54 @@ export type Database = {
         Row: {
           certificate_enabled: boolean
           certificate_template_id: string | null
+          content_import_id: string | null
           course_order_mode: string
           created_at: string
           description: string | null
           id: string
           is_published: boolean
           sort_order: number
+          thumbnail_approved_path: string | null
+          thumbnail_approved_sha256: string | null
+          thumbnail_asset_key: string | null
           thumbnail_url: string | null
+          thumbnail_path: string | null
           title: string
           updated_at: string
         }
         Insert: {
           certificate_enabled?: boolean
           certificate_template_id?: string | null
+          content_import_id?: string | null
           course_order_mode?: string
           created_at?: string
           description?: string | null
           id?: string
           is_published?: boolean
           sort_order?: number
+          thumbnail_approved_path?: string | null
+          thumbnail_approved_sha256?: string | null
+          thumbnail_asset_key?: string | null
           thumbnail_url?: string | null
+          thumbnail_path?: string | null
           title: string
           updated_at?: string
         }
         Update: {
           certificate_enabled?: boolean
           certificate_template_id?: string | null
+          content_import_id?: string | null
           course_order_mode?: string
           created_at?: string
           description?: string | null
           id?: string
           is_published?: boolean
           sort_order?: number
+          thumbnail_approved_path?: string | null
+          thumbnail_approved_sha256?: string | null
+          thumbnail_asset_key?: string | null
           thumbnail_url?: string | null
+          thumbnail_path?: string | null
           title?: string
           updated_at?: string
         }
@@ -949,20 +997,86 @@ export type Database = {
           },
         ]
       }
+      sandra_course_completion_deliveries: {
+        Row: {
+          acknowledged_at: string | null
+          attempt_count: number
+          completed_at: string
+          course_id: string
+          created_at: string
+          id: string
+          last_attempt_at: string | null
+          last_error: string | null
+          payload: Json
+          remote_outcome_id: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          attempt_count?: number
+          completed_at: string
+          course_id: string
+          created_at?: string
+          id?: string
+          last_attempt_at?: string | null
+          last_error?: string | null
+          payload: Json
+          remote_outcome_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          acknowledged_at?: string | null
+          attempt_count?: number
+          completed_at?: string
+          course_id?: string
+          created_at?: string
+          id?: string
+          last_attempt_at?: string | null
+          last_error?: string | null
+          payload?: Json
+          remote_outcome_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sandra_course_completion_deliveries_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sandra_course_completion_deliveries_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_block_progress: {
         Row: {
+          asset_version: string | null
           block_id: string
           completed_at: string
           id: string
           user_id: string
         }
         Insert: {
+          asset_version?: string | null
           block_id: string
           completed_at?: string
           id?: string
           user_id: string
         }
         Update: {
+          asset_version?: string | null
           block_id?: string
           completed_at?: string
           id?: string
@@ -978,6 +1092,42 @@ export type Database = {
           },
           {
             foreignKeyName: "user_block_progress_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_video_completion_history: {
+        Row: {
+          asset_version: string
+          block_id: string
+          completed_at: string
+          user_id: string
+        }
+        Insert: {
+          asset_version: string
+          block_id: string
+          completed_at?: string
+          user_id: string
+        }
+        Update: {
+          asset_version?: string
+          block_id?: string
+          completed_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_video_completion_history_block_id_fkey"
+            columns: ["block_id"]
+            isOneToOne: false
+            referencedRelation: "content_blocks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_video_completion_history_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
@@ -1138,6 +1288,57 @@ export type Database = {
           },
         ]
       }
+      user_video_progress: {
+        Row: {
+          asset_version: string
+          block_id: string
+          duration_seconds: number
+          last_observed_at: string | null
+          last_observed_position_seconds: number
+          position_seconds: number
+          updated_at: string
+          user_id: string
+          watched_ranges: Json
+        }
+        Insert: {
+          asset_version: string
+          block_id: string
+          duration_seconds: number
+          last_observed_at?: string | null
+          last_observed_position_seconds?: number
+          position_seconds?: number
+          updated_at?: string
+          user_id: string
+          watched_ranges?: Json
+        }
+        Update: {
+          asset_version?: string
+          block_id?: string
+          duration_seconds?: number
+          last_observed_at?: string | null
+          last_observed_position_seconds?: number
+          position_seconds?: number
+          updated_at?: string
+          user_id?: string
+          watched_ranges?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_video_progress_block_id_fkey"
+            columns: ["block_id"]
+            isOneToOne: false
+            referencedRelation: "content_blocks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_video_progress_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_role_groups: {
         Row: {
           role_group_id: string
@@ -1201,6 +1402,14 @@ export type Database = {
       }
     }
     Functions: {
+      fn_create_answer_option_for_reviewer_v1: {
+        Args: {
+          p_lesson_id: string
+          p_option_text: string
+          p_question_id: string
+        }
+        Returns: boolean
+      }
       fn_check_and_consume_rate_limit: {
         Args: {
           p_key_type: Database["public"]["Enums"]["auth_rate_limit_key_type"]
@@ -1213,9 +1422,26 @@ export type Database = {
           retry_after_seconds: number
         }[]
       }
+      fn_claim_sandra_course_completion_delivery: {
+        Args: { p_course_id: string; p_payload: Json; p_user_id: string }
+        Returns: Json
+      }
+      fn_admin_lesson_completion_states: {
+        Args: { p_lesson_ids: string[]; p_user_ids: string[] }
+        Returns: {
+          completed_at: string | null
+          is_complete: boolean
+          lesson_id: string
+          user_id: string
+        }[]
+      }
       fn_course_completion_percent: {
         Args: { p_course_id: string; p_user_id: string }
         Returns: number
+      }
+      fn_course_completed_at: {
+        Args: { p_course_id: string; p_user_id: string }
+        Returns: string | null
       }
       fn_course_is_complete: {
         Args: { p_course_id: string; p_user_id: string }
@@ -1237,6 +1463,24 @@ export type Database = {
         Args: { p_lesson_id: string; p_user_id: string }
         Returns: boolean
       }
+      fn_update_answer_option_for_reviewer_v1: {
+        Args: {
+          p_exclusive_peer_option_ids?: string[]
+          p_is_correct: boolean
+          p_lesson_id: string
+          p_option_id: string
+          p_option_text: string
+        }
+        Returns: boolean
+      }
+      fn_lesson_states: {
+        Args: { p_lesson_ids: string[]; p_user_id: string }
+        Returns: {
+          is_complete: boolean
+          is_unlocked: boolean
+          lesson_id: string
+        }[]
+      }
       fn_move_module: {
         Args: { p_course_id: string; p_direction: string; p_module_id: string }
         Returns: undefined
@@ -1248,6 +1492,18 @@ export type Database = {
       fn_program_completion_percent: {
         Args: { p_program_id: string; p_user_id: string }
         Returns: number
+      }
+      fn_record_video_playback: {
+        Args: {
+          p_block_id: string
+          p_duration_seconds: number
+          p_observed_from?: number | null
+          p_observed_to?: number | null
+          p_operation: string
+          p_position_seconds: number
+          p_user_id: string
+        }
+        Returns: Json
       }
       fn_save_user_settings: {
         Args: {
@@ -1261,6 +1517,29 @@ export type Database = {
       fn_set_user_role_groups: {
         Args: { p_role_group_ids: string[]; p_user_id: string }
         Returns: undefined
+      }
+      fn_settle_sandra_course_completion_delivery: {
+        Args: {
+          p_acknowledged: boolean
+          p_attempt_count: number
+          p_course_id: string
+          p_error?: string | null
+          p_remote_outcome_id?: string | null
+          p_user_id: string
+        }
+        Returns: boolean
+      }
+      fn_update_assignment_for_lesson: {
+        Args: {
+          p_assignment_id: string
+          p_instructions: string
+          p_lesson_id: string
+          p_requires_review: boolean
+          p_rubric: Json
+          p_submission_type: string
+          p_title: string
+        }
+        Returns: boolean
       }
       fn_user_has_course_access: {
         Args: { p_course_id: string; p_user_id: string }

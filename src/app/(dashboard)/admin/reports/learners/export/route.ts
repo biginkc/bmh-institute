@@ -1,0 +1,297 @@
+import { NextResponse } from "next/server";
+
+import { requireAdmin } from "@/lib/auth/guard";
+import {
+  summarizeLearnerMonitoring,
+  type LearnerMonitoringSummary,
+} from "@/lib/learner-monitoring/summary";
+import { createClient } from "@/lib/supabase/server";
+import { loadAdminLessonCompletions } from "../../../../lesson-state-rpc";
+import {
+  loadAllReportRowsByCursor,
+  loadAllReportRowsById,
+} from "../../report-source-pagination";
+
+export async function GET() {
+  await requireAdmin();
+  const supabase = await createClient();
+
+  const [
+    profilesResult,
+    userRoleGroupsResult,
+    requiredLessonsResult,
+    quizAttemptsResult,
+    submissionsResult,
+    courseCertsResult,
+    programCertsResult,
+  ] = await Promise.all([
+    loadAllReportRowsById(({ afterId, limit }) => {
+      const query = supabase
+        .from("profiles")
+        .select("id, email, full_name, system_role, status", { count: "exact" })
+        .order("id", { ascending: true })
+        .limit(limit);
+      return afterId === null ? query : query.gt("id", afterId);
+    }),
+    loadAllReportRowsByCursor(
+      ({ after, limit }) => {
+        let query = supabase
+          .from("user_role_groups")
+          .select("user_id, role_group_id", { count: "exact" })
+          .order("user_id", { ascending: true })
+          .order("role_group_id", { ascending: true })
+          .limit(limit);
+        if (after !== null) {
+          query = query.or(
+            `user_id.gt.${after[0]},and(user_id.eq.${after[0]},role_group_id.gt.${after[1]})`,
+          );
+        }
+        return query;
+      },
+      (row) => [row.user_id, row.role_group_id] as const,
+    ),
+    loadAllReportRowsById<RequiredLessonRow>(({ afterId, limit }) => {
+      let query = supabase
+        .from("lessons")
+        .select(
+          "id, title, is_required_for_completion, modules!inner(course_id)",
+          {
+            count: "exact",
+          },
+        )
+        .eq("is_required_for_completion", true)
+        .order("id", { ascending: true })
+        .limit(limit);
+      if (afterId !== null) query = query.gt("id", afterId);
+      return query;
+    }),
+    loadAllReportRowsById(({ afterId, limit }) => {
+      const query = supabase
+        .from("user_quiz_attempts")
+        .select("id, user_id, passed, score, completed_at", { count: "exact" })
+        .order("id", { ascending: true })
+        .limit(limit);
+      return afterId === null ? query : query.gt("id", afterId);
+    }),
+    loadAllReportRowsById(({ afterId, limit }) => {
+      const query = supabase
+        .from("assignment_submissions")
+        .select("id, user_id, status, submitted_at", { count: "exact" })
+        .order("id", { ascending: true })
+        .limit(limit);
+      return afterId === null ? query : query.gt("id", afterId);
+    }),
+    loadAllReportRowsById(({ afterId, limit }) => {
+      const query = supabase
+        .from("certificates")
+        .select("id, user_id, course_id, issued_at", { count: "exact" })
+        .order("id", { ascending: true })
+        .limit(limit);
+      return afterId === null ? query : query.gt("id", afterId);
+    }),
+    loadAllReportRowsById(({ afterId, limit }) => {
+      const query = supabase
+        .from("program_certificates")
+        .select("id, user_id, program_id, issued_at", { count: "exact" })
+        .order("id", { ascending: true })
+        .limit(limit);
+      return afterId === null ? query : query.gt("id", afterId);
+    }),
+  ]);
+
+  if (
+    !profilesResult.ok ||
+    !userRoleGroupsResult.ok ||
+    !requiredLessonsResult.ok ||
+    !quizAttemptsResult.ok ||
+    !submissionsResult.ok ||
+    !courseCertsResult.ok ||
+    !programCertsResult.ok
+  ) {
+    return NextResponse.json(
+      {
+        error:
+          "Report source data could not be verified. Try the export again.",
+      },
+      { status: 503, headers: { "retry-after": "5" } },
+    );
+  }
+
+  const profiles = profilesResult.rows as Profile[];
+  const userRoleGroups = userRoleGroupsResult.rows as UserRoleGroup[];
+  const requiredLessons = requiredLessonsResult.rows;
+  const quizAttempts = quizAttemptsResult.rows as QuizAttempt[];
+  const submissions = submissionsResult.rows as Submission[];
+  const courseCerts = courseCertsResult.rows as CourseCert[];
+  const programCerts = programCertsResult.rows as ProgramCert[];
+  const completionResult = await loadAdminLessonCompletions(supabase, {
+    userIds: profiles.map((profile) => profile.id),
+    lessonIds: requiredLessons.map((lesson) => lesson.id),
+  });
+  if (!completionResult.ok) {
+    return NextResponse.json(
+      {
+        error:
+          "Current learner completion could not be verified. Try the export again.",
+      },
+      { status: 503, headers: { "retry-after": "5" } },
+    );
+  }
+  const completions: Completion[] = completionResult.completions.map(
+    (completion) => ({
+      user_id: completion.userId,
+      lesson_id: completion.lessonId,
+      completed_at: completion.completedAt,
+    }),
+  );
+  const roleGroupIdsByUserId = new Map<string, string[]>();
+
+  for (const row of userRoleGroups) {
+    const values = roleGroupIdsByUserId.get(row.user_id) ?? [];
+    values.push(row.role_group_id);
+    roleGroupIdsByUserId.set(row.user_id, values);
+  }
+
+  const summary = summarizeLearnerMonitoring({
+    now: new Date(),
+    learners: profiles.map((profile) => ({
+      id: profile.id,
+      email: profile.email,
+      fullName: profile.full_name,
+      systemRole: profile.system_role,
+      status: profile.status,
+      roleGroupIds: roleGroupIdsByUserId.get(profile.id) ?? [],
+    })),
+    requiredLessons: requiredLessons.map((lesson) => {
+      const moduleRow = Array.isArray(lesson.modules)
+        ? lesson.modules[0]
+        : lesson.modules;
+      return {
+        id: lesson.id,
+        title: lesson.title,
+        courseId: moduleRow?.course_id ?? "",
+      };
+    }),
+    completions: completions.map((completion) => ({
+      userId: completion.user_id,
+      lessonId: completion.lesson_id,
+      completedAt: completion.completed_at,
+    })),
+    quizAttempts: quizAttempts.map((attempt) => ({
+      userId: attempt.user_id,
+      passed: attempt.passed,
+      score: attempt.score,
+      completedAt: attempt.completed_at,
+    })),
+    submissions: submissions.map((submission) => ({
+      userId: submission.user_id,
+      status: submission.status,
+      submittedAt: submission.submitted_at,
+    })),
+    courseCertificates: courseCerts.map((certificate) => ({
+      userId: certificate.user_id,
+      courseId: certificate.course_id,
+      issuedAt: certificate.issued_at,
+    })),
+    programCertificates: programCerts.map((certificate) => ({
+      userId: certificate.user_id,
+      programId: certificate.program_id,
+      issuedAt: certificate.issued_at,
+    })),
+  });
+
+  return new NextResponse(toLearnerMonitoringCsv(summary), {
+    headers: {
+      "content-type": "text/csv; charset=utf-8",
+      "content-disposition": `attachment; filename="bmh-institute-learner-status-${new Date().toISOString().slice(0, 10)}.csv"`,
+    },
+  });
+}
+
+export function toLearnerMonitoringCsv(summary: LearnerMonitoringSummary): string {
+  const rows = [
+    [
+      "learner",
+      "email",
+      "status",
+      "required_lessons",
+      "progress_percent",
+      "pending_submissions",
+      "needs_revision_submissions",
+      "quizzes_passed",
+      "certificates_issued",
+      "last_activity",
+      "action",
+    ],
+    ...summary.rows.map((row) => [
+      row.name,
+      row.email,
+      row.statusLabel,
+      row.progressLabel,
+      String(row.progressPercent),
+      String(row.pendingSubmissions),
+      String(row.needsRevisionSubmissions),
+      String(row.quizzesPassed),
+      String(row.certificatesIssued),
+      row.lastActivity ?? "",
+      row.actionLabel,
+    ]),
+  ];
+
+  return `${rows.map((row) => row.map(csvCell).join(",")).join("\n")}\n`;
+}
+
+function csvCell(value: string): string {
+  const dangerousPrefix = /^[=+\-@\t\r\n\0\uFF1D\uFF0B\uFF0D\uFF20]/.test(value);
+  const withoutNul = value.replaceAll("\0", "\uFFFD");
+  const neutralized = dangerousPrefix ? `'${withoutNul}` : withoutNul;
+  if (!/[",\n\r]/.test(neutralized)) return neutralized;
+  return `"${neutralized.replaceAll('"', '""')}"`;
+}
+
+type Profile = {
+  id: string;
+  email: string;
+  full_name: string;
+  system_role: "owner" | "admin" | "learner";
+  status: "active" | "invited" | "suspended";
+};
+
+type UserRoleGroup = {
+  user_id: string;
+  role_group_id: string;
+};
+
+type RequiredLessonRow = {
+  id: string;
+  title: string;
+  is_required_for_completion: boolean;
+  modules: { course_id: string } | Array<{ course_id: string }> | null;
+};
+
+type Completion = {
+  user_id: string;
+  lesson_id: string;
+  completed_at: string | null;
+};
+
+type QuizAttempt = {
+  user_id: string;
+  passed: boolean | null;
+  score: number | null;
+  completed_at: string | null;
+};
+
+type Submission = {
+  user_id: string;
+  status: "submitted" | "approved" | "needs_revision";
+  submitted_at: string;
+};
+
+type CourseCert = { user_id: string; course_id: string; issued_at: string };
+
+type ProgramCert = {
+  user_id: string;
+  program_id: string;
+  issued_at: string;
+};

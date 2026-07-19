@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { Badge, Card } from "@/components/bmh-ds";
 import { requireAdmin } from "@/lib/auth/guard";
-import { summarizePilotMonitoring } from "@/lib/pilot-monitoring/summary";
+import { summarizeLearnerMonitoring } from "@/lib/learner-monitoring/summary";
 import { createClient } from "@/lib/supabase/server";
 
 import { AdminDataTable } from "../_components/admin-data-table";
@@ -11,6 +11,11 @@ import {
   AdminPageHeader,
   AdminSectionHeading,
 } from "../_components/admin-shell";
+import { loadAdminLessonCompletions } from "../../lesson-state-rpc";
+import {
+  loadAllReportRowsByCursor,
+  loadAllReportRowsById,
+} from "./report-source-pagination";
 
 export default async function AdminReportsPage() {
   // HARDEN-01: page-level guard so a direct fetch can't bypass the layout.
@@ -18,90 +23,187 @@ export default async function AdminReportsPage() {
   const supabase = await createClient();
 
   const [
-    profilesRes,
-    programsRes,
-    coursesRes,
-    courseCertsRes,
-    programCertsRes,
-    completionsRes,
+    profilesResult,
+    programsResult,
+    coursesResult,
+    courseCertsResult,
+    programCertsResult,
     auditRes,
-    quizAttemptsRes,
-    submissionsRes,
-    lessonCourseRes,
-    userRoleGroupsRes,
-    requiredLessonsRes,
+    quizAttemptsResult,
+    submissionsResult,
+    lessonCourseResult,
+    userRoleGroupsResult,
   ] = await Promise.all([
-    supabase
-      .from("profiles")
-      .select("id, email, full_name, system_role, status"),
-    supabase.from("programs").select("id, title"),
-    supabase.from("courses").select("id, title"),
-    supabase.from("certificates").select("user_id, course_id, issued_at"),
-    supabase
-      .from("program_certificates")
-      .select("user_id, program_id, issued_at"),
-    supabase
-      .from("user_lesson_completions")
-      .select("user_id, lesson_id, completed_at"),
+    loadAllReportRowsById(({ afterId, limit }) => {
+      const query = supabase
+        .from("profiles")
+        .select("id, email, full_name, system_role, status", { count: "exact" })
+        .order("id", { ascending: true })
+        .limit(limit);
+      return afterId === null ? query : query.gt("id", afterId);
+    }),
+    loadAllReportRowsById(({ afterId, limit }) => {
+      const query = supabase
+        .from("programs")
+        .select("id, title", { count: "exact" })
+        .order("id", { ascending: true })
+        .limit(limit);
+      return afterId === null ? query : query.gt("id", afterId);
+    }),
+    loadAllReportRowsById(({ afterId, limit }) => {
+      const query = supabase
+        .from("courses")
+        .select("id, title", { count: "exact" })
+        .order("id", { ascending: true })
+        .limit(limit);
+      return afterId === null ? query : query.gt("id", afterId);
+    }),
+    loadAllReportRowsById(({ afterId, limit }) => {
+      const query = supabase
+        .from("certificates")
+        .select("id, user_id, course_id, issued_at", { count: "exact" })
+        .order("id", { ascending: true })
+        .limit(limit);
+      return afterId === null ? query : query.gt("id", afterId);
+    }),
+    loadAllReportRowsById(({ afterId, limit }) => {
+      const query = supabase
+        .from("program_certificates")
+        .select("id, user_id, program_id, issued_at", { count: "exact" })
+        .order("id", { ascending: true })
+        .limit(limit);
+      return afterId === null ? query : query.gt("id", afterId);
+    }),
     supabase
       .from("audit_log")
-      .select("id, user_id, action, entity_type, entity_id, metadata, created_at")
+      .select(
+        "id, user_id, action, entity_type, entity_id, metadata, created_at",
+      )
       .order("created_at", { ascending: false })
       .limit(40),
-    supabase
-      .from("user_quiz_attempts")
-      .select("user_id, quiz_id, passed, score, completed_at"),
-    supabase
-      .from("assignment_submissions")
-      .select("user_id, status, submitted_at"),
+    loadAllReportRowsById(({ afterId, limit }) => {
+      const query = supabase
+        .from("user_quiz_attempts")
+        .select("id, user_id, quiz_id, passed, score, completed_at", {
+          count: "exact",
+        })
+        .order("id", { ascending: true })
+        .limit(limit);
+      return afterId === null ? query : query.gt("id", afterId);
+    }),
+    loadAllReportRowsById(({ afterId, limit }) => {
+      const query = supabase
+        .from("assignment_submissions")
+        .select("id, user_id, status, submitted_at", { count: "exact" })
+        .order("id", { ascending: true })
+        .limit(limit);
+      return afterId === null ? query : query.gt("id", afterId);
+    }),
     // WR-03: lesson -> module -> course mapping so the per-course "active
     // learners" count is scoped to the course rather than the org-wide
     // distinct-user total.
-    supabase
-      .from("lessons")
-      .select("id, title, modules!inner(course_id, courses(id, title))"),
-    supabase.from("user_role_groups").select("user_id, role_group_id"),
-    supabase
-      .from("lessons")
-      .select("id, title, is_required_for_completion, modules!inner(course_id)")
-      .eq("is_required_for_completion", true),
+    loadAllReportRowsById<LessonCourseRow>(({ afterId, limit }) => {
+      const query = supabase
+        .from("lessons")
+        .select(
+          "id, title, is_required_for_completion, modules!inner(course_id, courses(id, title))",
+          { count: "exact" },
+        )
+        .order("id", { ascending: true })
+        .limit(limit);
+      return afterId === null ? query : query.gt("id", afterId);
+    }),
+    loadAllReportRowsByCursor(
+      ({ after, limit }) => {
+        let query = supabase
+          .from("user_role_groups")
+          .select("user_id, role_group_id", { count: "exact" })
+          .order("user_id", { ascending: true })
+          .order("role_group_id", { ascending: true })
+          .limit(limit);
+        if (after !== null) {
+          query = query.or(
+            `user_id.gt.${after[0]},and(user_id.eq.${after[0]},role_group_id.gt.${after[1]})`,
+          );
+        }
+        return query;
+      },
+      (row) => [row.user_id, row.role_group_id] as const,
+    ),
   ]);
 
-  const profiles = (profilesRes.data ?? []) as Profile[];
-  const programs = (programsRes.data ?? []) as Entity[];
-  const courses = (coursesRes.data ?? []) as Entity[];
-  const courseCerts = (courseCertsRes.data ?? []) as CourseCert[];
-  const programCerts = (programCertsRes.data ?? []) as ProgramCert[];
-  const completions = (completionsRes.data ?? []) as Completion[];
+  if (
+    !profilesResult.ok ||
+    !programsResult.ok ||
+    !coursesResult.ok ||
+    !courseCertsResult.ok ||
+    !programCertsResult.ok ||
+    auditRes.error ||
+    !quizAttemptsResult.ok ||
+    !submissionsResult.ok ||
+    !lessonCourseResult.ok ||
+    !userRoleGroupsResult.ok
+  ) {
+    return (
+      <main className="w-full flex-1 p-6 md:p-10">
+        <AdminPageHeader
+          title="Reports"
+          description="Rollup view of who's learning what."
+        />
+        <div className="rounded-[var(--bmh-radius-md)] border border-[var(--danger)] bg-[var(--danger-soft)] px-4 py-3 text-sm font-semibold text-[var(--danger)]">
+          Report source data could not be verified. Refresh the page to try
+          again.
+        </div>
+      </main>
+    );
+  }
+
+  const profiles = profilesResult.rows as Profile[];
+  const programs = programsResult.rows as Entity[];
+  const courses = coursesResult.rows as Entity[];
+  const courseCerts = courseCertsResult.rows as CourseCert[];
+  const programCerts = programCertsResult.rows as ProgramCert[];
   const auditRows = (auditRes.data ?? []) as AuditRow[];
-  const quizAttempts = (quizAttemptsRes.data ?? []) as QuizAttempt[];
-  const submissions = (submissionsRes.data ?? []) as Submission[];
-  const userRoleGroups = (userRoleGroupsRes.data ?? []) as UserRoleGroup[];
-  const requiredLessons = (requiredLessonsRes.data ?? []) as RequiredLessonRow[];
+  const quizAttempts = quizAttemptsResult.rows as QuizAttempt[];
+  const submissions = submissionsResult.rows as Submission[];
+  const userRoleGroups = userRoleGroupsResult.rows as UserRoleGroup[];
+  const requiredLessons = lessonCourseResult.rows.filter(
+    (lesson) => lesson.is_required_for_completion,
+  );
 
   // WR-03: build a lesson_id -> course_id index. PostgREST returns the inner
   // join either as a scalar object or a one-element array depending on
   // server version, so handle both shapes.
-  const lessonCourseRows = (lessonCourseRes.data ?? []) as Array<{
-    id: string;
-    title: string;
-    modules:
-      | {
-          course_id: string;
-          courses:
-            | { id: string; title: string }
-            | Array<{ id: string; title: string }>
-            | null;
-        }
-      | Array<{
-          course_id: string;
-          courses:
-            | { id: string; title: string }
-            | Array<{ id: string; title: string }>
-            | null;
-        }>
-      | null;
-  }>;
+  const lessonCourseRows = lessonCourseResult.rows;
+  const completionResult = await loadAdminLessonCompletions(supabase, {
+    userIds: profiles.map((profile) => profile.id),
+    lessonIds: lessonCourseRows.map((lesson) => lesson.id),
+  });
+  if (!completionResult.ok) {
+    console.error(
+      "Admin reports completion RPC failed closed.",
+      completionResult.error,
+    );
+    return (
+      <main className="w-full flex-1 p-6 md:p-10">
+        <AdminPageHeader
+          title="Reports"
+          description="Rollup view of who's learning what."
+        />
+        <div className="rounded-[var(--bmh-radius-md)] border border-[var(--danger)] bg-[var(--danger-soft)] px-4 py-3 text-sm font-semibold text-[var(--danger)]">
+          Current learner completion could not be verified. Refresh the page to
+          try again.
+        </div>
+      </main>
+    );
+  }
+  const completions: Completion[] = completionResult.completions.map(
+    (completion) => ({
+      user_id: completion.userId,
+      lesson_id: completion.lessonId,
+      completed_at: completion.completedAt,
+    }),
+  );
   const courseIdByLessonId = new Map<string, string>();
   const lessonTitlesById = new Map<string, string>();
   const courseTitlesByLessonId = new Map<string, string>();
@@ -153,7 +255,7 @@ export default async function AdminReportsPage() {
     values.push(row.role_group_id);
     roleGroupIdsByUserId.set(row.user_id, values);
   }
-  const pilotSummary = summarizePilotMonitoring({
+  const learnerSummary = summarizeLearnerMonitoring({
     now: new Date(),
     learners: profiles.map((profile) => ({
       id: profile.id,
@@ -208,7 +310,7 @@ export default async function AdminReportsPage() {
         description="Rollup view of who's learning what. Click a row to drill in."
         actions={
           <Link
-            href="/admin/reports/pilot/export"
+            href="/admin/reports/learners/export"
             className="font-extrabold text-[var(--action)] underline-offset-2 hover:underline"
           >
             Export CSV
@@ -221,15 +323,12 @@ export default async function AdminReportsPage() {
           label="Active learners"
           value={profiles.filter((p) => p.system_role === "learner").length}
         />
-        <StatCard
-          label="Lessons completed"
-          value={completions.length}
-        />
+        <StatCard label="Lessons completed" value={completions.length} />
         <StatCard label="Course certs" value={courseCerts.length} />
         <StatCard label="Program certs" value={programCerts.length} />
       </div>
 
-      <PilotMonitoringPanel summary={pilotSummary} />
+      <LearnerMonitoringPanel summary={learnerSummary} />
 
       <section className="mt-8">
         <AdminSectionHeading title="Learners" />
@@ -239,20 +338,62 @@ export default async function AdminReportsPage() {
             minWidth="64rem"
             empty="No learners yet."
             columns={[
-              { key: "fullName", label: "Name", presentation: "link", hrefKey: "href" },
-              { key: "systemRole", label: "Role", presentation: "badge", toneKey: "roleTone" },
-              { key: "lessonsDone", label: "Lessons done", align: "right", tabular: true },
-              { key: "courseCerts", label: "Course certs", align: "right", tabular: true },
-              { key: "programCerts", label: "Program certs", align: "right", tabular: true },
-              { key: "quizzesPassed", label: "Quizzes passed", align: "right", tabular: true },
-              { key: "submissions", label: "Submissions", align: "right", tabular: true },
+              {
+                key: "fullName",
+                label: "Name",
+                presentation: "link",
+                hrefKey: "href",
+              },
+              {
+                key: "systemRole",
+                label: "Role",
+                presentation: "badge",
+                toneKey: "roleTone",
+              },
+              {
+                key: "lessonsDone",
+                label: "Lessons done",
+                align: "right",
+                tabular: true,
+              },
+              {
+                key: "courseCerts",
+                label: "Course certs",
+                align: "right",
+                tabular: true,
+              },
+              {
+                key: "programCerts",
+                label: "Program certs",
+                align: "right",
+                tabular: true,
+              },
+              {
+                key: "quizzesPassed",
+                label: "Quizzes passed",
+                align: "right",
+                tabular: true,
+              },
+              {
+                key: "submissions",
+                label: "Submissions",
+                align: "right",
+                tabular: true,
+              },
               { key: "lastActivityLabel", label: "Last activity", muted: true },
             ]}
             rows={learnerStats.map((learner) => ({
               ...learner,
               href: `/admin/reports/users/${learner.id}`,
-              roleTone: learner.systemRole === "owner" ? "solid" : learner.systemRole === "admin" ? "blue" : "neutral",
-              lastActivityLabel: learner.lastActivity ? new Date(learner.lastActivity).toLocaleString() : "-",
+              roleTone:
+                learner.systemRole === "owner"
+                  ? "solid"
+                  : learner.systemRole === "admin"
+                    ? "blue"
+                    : "neutral",
+              lastActivityLabel: learner.lastActivity
+                ? new Date(learner.lastActivity).toLocaleString()
+                : "-",
             }))}
           />
         </Card>
@@ -264,9 +405,24 @@ export default async function AdminReportsPage() {
           <AdminDataTable
             empty="No courses yet."
             columns={[
-              { key: "title", label: "Course", presentation: "link", hrefKey: "href" },
-              { key: "activeLearners", label: "Learners with completed lessons", align: "right", tabular: true },
-              { key: "completedCount", label: "Certificates issued", align: "right", tabular: true },
+              {
+                key: "title",
+                label: "Course",
+                presentation: "link",
+                hrefKey: "href",
+              },
+              {
+                key: "activeLearners",
+                label: "Learners with completed lessons",
+                align: "right",
+                tabular: true,
+              },
+              {
+                key: "completedCount",
+                label: "Certificates issued",
+                align: "right",
+                tabular: true,
+              },
             ]}
             rows={courseStats.map((course) => ({
               ...course,
@@ -282,8 +438,18 @@ export default async function AdminReportsPage() {
           <AdminDataTable
             empty="No programs yet."
             columns={[
-              { key: "title", label: "Program", presentation: "link", hrefKey: "href" },
-              { key: "completedCount", label: "Certificates issued", align: "right", tabular: true },
+              {
+                key: "title",
+                label: "Program",
+                presentation: "link",
+                hrefKey: "href",
+              },
+              {
+                key: "completedCount",
+                label: "Certificates issued",
+                align: "right",
+                tabular: true,
+              },
             ]}
             rows={programStats.map((program) => ({
               ...program,
@@ -302,29 +468,29 @@ export default async function AdminReportsPage() {
               description="Learner actions first. System-generated certificate and maintenance events are grouped below."
             />
           </div>
-            {auditRows.length === 0 ? (
-              <p className="text-muted-foreground p-6 text-sm">
-                Nothing logged yet.
-              </p>
-            ) : (
-              <div>
-                <ActivityList
-                  rows={activityGroups.learnerRows}
-                  emptyCopy="No learner activity logged yet."
-                />
-                {activityGroups.systemRows.length > 0 ? (
-                  <div className="border-border border-t">
-                    <div className="px-6 pt-4">
-                      <h3 className="text-sm font-medium">System events</h3>
-                      <p className="text-muted-foreground mt-1 text-xs">
-                        Automated certificates, imports, and maintenance events.
-                      </p>
-                    </div>
-                    <ActivityList rows={activityGroups.systemRows} />
+          {auditRows.length === 0 ? (
+            <p className="text-muted-foreground p-6 text-sm">
+              Nothing logged yet.
+            </p>
+          ) : (
+            <div>
+              <ActivityList
+                rows={activityGroups.learnerRows}
+                emptyCopy="No learner activity logged yet."
+              />
+              {activityGroups.systemRows.length > 0 ? (
+                <div className="border-border border-t">
+                  <div className="px-6 pt-4">
+                    <h3 className="text-sm font-medium">System events</h3>
+                    <p className="text-muted-foreground mt-1 text-xs">
+                      Automated certificates, imports, and maintenance events.
+                    </p>
                   </div>
-                ) : null}
-              </div>
-            )}
+                  <ActivityList rows={activityGroups.systemRows} />
+                </div>
+              ) : null}
+            </div>
+          )}
         </Card>
       </section>
     </main>
@@ -352,12 +518,12 @@ function ActivityList({
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="font-medium">{row.actor}</span>
-                <Badge tone="neutral" size="sm">{row.badge}</Badge>
+                <Badge tone="neutral" size="sm">
+                  {row.badge}
+                </Badge>
               </div>
               <p className="text-muted-foreground mt-1 text-xs">
-                <span className="text-foreground font-medium">
-                  {row.label}
-                </span>
+                <span className="text-foreground font-medium">{row.label}</span>
                 {row.detail ? `: ${row.detail}` : ""}
               </p>
             </div>
@@ -375,10 +541,10 @@ function StatCard({ label, value }: { label: string; value: number }) {
   return <AdminMetricCard label={label} value={value} />;
 }
 
-function PilotMonitoringPanel({
+function LearnerMonitoringPanel({
   summary,
 }: {
-  summary: ReturnType<typeof summarizePilotMonitoring>;
+  summary: ReturnType<typeof summarizeLearnerMonitoring>;
 }) {
   const actionRows = summary.rows.filter((row) =>
     ["blocked", "needs_revision", "needs_review", "not_started"].includes(
@@ -389,34 +555,77 @@ function PilotMonitoringPanel({
   return (
     <section className="mt-8">
       <AdminSectionHeading
-        title="Pilot monitoring"
+        title="Learner monitoring"
         description="Watch learner blockers, assignment review, progress, and certificates."
       />
       <div className="grid gap-3 md:grid-cols-5">
-        <PilotStat label="Needs access" value={summary.totals.blocked} />
-        <PilotStat label="Needs revision" value={summary.totals.needsRevision} />
-        <PilotStat label="Needs review" value={summary.totals.needsReview} />
-        <PilotStat label="In progress" value={summary.totals.inProgress} />
-        <PilotStat label="Certified" value={summary.totals.certified} />
+        <LearnerMonitoringStat
+          label="Needs access"
+          value={summary.totals.blocked}
+        />
+        <LearnerMonitoringStat
+          label="Needs revision"
+          value={summary.totals.needsRevision}
+        />
+        <LearnerMonitoringStat
+          label="Needs review"
+          value={summary.totals.needsReview}
+        />
+        <LearnerMonitoringStat
+          label="In progress"
+          value={summary.totals.inProgress}
+        />
+        <LearnerMonitoringStat
+          label="Certified"
+          value={summary.totals.certified}
+        />
       </div>
       <Card padding="sm" style={{ marginTop: 16 }}>
         <AdminDataTable
           rowKey="userId"
           minWidth="50rem"
-          empty="No pilot learner blockers right now."
+          empty="No learner blockers right now."
           columns={[
-            { key: "name", label: "Learner", presentation: "stacked", secondaryKey: "email" },
-            { key: "statusLabel", label: "Status", presentation: "badge", toneKey: "tone" },
-            { key: "progressLabel", label: "Required", align: "right", tabular: true },
-            { key: "submissionCount", label: "Submissions", align: "right", tabular: true },
+            {
+              key: "name",
+              label: "Learner",
+              presentation: "stacked",
+              secondaryKey: "email",
+            },
+            {
+              key: "statusLabel",
+              label: "Status",
+              presentation: "badge",
+              toneKey: "tone",
+            },
+            {
+              key: "progressLabel",
+              label: "Required",
+              align: "right",
+              tabular: true,
+            },
+            {
+              key: "submissionCount",
+              label: "Submissions",
+              align: "right",
+              tabular: true,
+            },
             { key: "lastActivityLabel", label: "Last activity", muted: true },
-            { key: "actionLabel", label: "Action", presentation: "link", hrefKey: "actionHref" },
+            {
+              key: "actionLabel",
+              label: "Action",
+              presentation: "link",
+              hrefKey: "actionHref",
+            },
           ]}
           rows={actionRows.map((row) => ({
             ...row,
-            tone: pilotStatusTone(row.statusKey),
-            submissionCount: row.pendingSubmissions + row.needsRevisionSubmissions,
-            lastActivityLabel: row.lastActivity ? new Date(row.lastActivity).toLocaleString() : "-",
+            tone: learnerStatusTone(row.statusKey),
+            submissionCount:
+              row.pendingSubmissions + row.needsRevisionSubmissions,
+            lastActivityLabel: row.lastActivity
+              ? new Date(row.lastActivity).toLocaleString()
+              : "-",
           }))}
         />
       </Card>
@@ -424,11 +633,17 @@ function PilotMonitoringPanel({
   );
 }
 
-function PilotStat({ label, value }: { label: string; value: number }) {
+function LearnerMonitoringStat({
+  label,
+  value,
+}: {
+  label: string;
+  value: number;
+}) {
   return <AdminMetricCard label={label} value={value} />;
 }
 
-function pilotStatusTone(statusKey: string) {
+function learnerStatusTone(statusKey: string) {
   if (statusKey === "blocked" || statusKey === "needs_revision") {
     return "red";
   }
@@ -446,7 +661,11 @@ type Profile = {
 
 type Entity = { id: string; title: string };
 
-type Completion = { user_id: string; lesson_id: string; completed_at: string };
+type Completion = {
+  user_id: string;
+  lesson_id: string;
+  completed_at: string | null;
+};
 
 type CourseCert = { user_id: string; course_id: string; issued_at: string };
 
@@ -475,11 +694,26 @@ type UserRoleGroup = {
   role_group_id: string;
 };
 
-type RequiredLessonRow = {
+type LessonCourseRow = {
   id: string;
   title: string;
   is_required_for_completion: boolean;
-  modules: { course_id: string } | Array<{ course_id: string }> | null;
+  modules:
+    | {
+        course_id: string;
+        courses:
+          | { id: string; title: string }
+          | Array<{ id: string; title: string }>
+          | null;
+      }
+    | Array<{
+        course_id: string;
+        courses:
+          | { id: string; title: string }
+          | Array<{ id: string; title: string }>
+          | null;
+      }>
+    | null;
 };
 
 type AuditRow = {
@@ -535,7 +769,10 @@ type LearnerStat = {
   lastActivity: string | null;
 };
 
-type ActivityProfile = Pick<Profile, "id" | "email" | "full_name" | "system_role">;
+type ActivityProfile = Pick<
+  Profile,
+  "id" | "email" | "full_name" | "system_role"
+>;
 
 function summarizeLearners({
   profiles,
@@ -563,6 +800,7 @@ function summarizeLearners({
 
   const lastActivityByUser = new Map<string, string>();
   for (const c of completions) {
+    if (!c.completed_at) continue;
     const existing = lastActivityByUser.get(c.user_id);
     if (!existing || c.completed_at > existing) {
       lastActivityByUser.set(c.user_id, c.completed_at);
@@ -670,7 +908,7 @@ export function formatActivityRow(
 ): FormattedActivityRow {
   const profile = row.user_id ? maps.profilesById.get(row.user_id) : undefined;
   const actor = row.user_id
-    ? (profile?.full_name || profile?.email || "Unknown learner")
+    ? profile?.full_name || profile?.email || "Unknown learner"
     : "System activity";
   const lessonDetail = formatLessonDetail(row.entity_id, maps);
 

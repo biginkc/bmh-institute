@@ -1,0 +1,13 @@
+# Compensation Engine
+
+Video: video-slot-17-compensation
+
+Alright, let's talk about money. Specifically, how your performance turns into a paycheck. I'm going to lay out how compensation works here so there's no mystery about it. The more you understand this, the clearer the connection between your daily work and what you earn. Whatever seat you're in, compensation here is built around the same idea. A base while you ramp up, performance pay on the results your role owns, and bonuses for hitting milestones along the way. When you start, you receive a base rate while you're ramping up. You're learning, building skills, getting comfortable with the process.
+
+The base pay makes sure you've got income coming in while you're still getting up to speed. Once you're consistently hitting your role's KPIs, you graduate to the full performance structure. That's the transition point. Take the lead sourcing seat as an example. You earn a commission on every deal that closes where you are the person who sourced and qualified the lead. You did the follow-up. You built the relationship. You handed it off with a clean, complete package and the acquisition team closed it. That's your deal. And performance pay moves with your performance. Strong months show up in your paycheck.
+
+Milestone bonuses work the same way in every seat. They count on real outcomes. In lead sourcing, an appointment counts when the seller actually shows up for the call, not when you put it on the calendar. Real results, not activity for its own sake. The math is direct. The better you get at your craft, the more you make. And good work has a long tail. Deals you worked months ago can still close and that follow-through is exactly what gets noticed and rewarded here. The people who earn the most here aren't necessarily the ones with the most raw volume. They're the ones who are thorough, consistent, and don't let good leads die from neglect.
+
+More quality conversations means more deals in your pipeline. Consistent follow-up means those deals actually convert instead of going cold. And clean handoffs mean the acquisition team can close efficiently instead of scrambling for missing information. Every lead you let slip is potential commission you left on the table. Every thorough handoff is money you're putting in your own pocket. It's that direct. Now, your exact numbers, your base rate, how your performance pay is calculated, your bonus milestones, those live in your offer letter or your comp plan. If you ever have a question about what applies to you, go there first or ask your manager.
+
+Alright, next up, what a real day actually looks like here. How you run your day and how the team stays in sync. Then we'll close out with where you can go from here.

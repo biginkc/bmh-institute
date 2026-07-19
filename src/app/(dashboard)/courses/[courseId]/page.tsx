@@ -12,15 +12,19 @@ import type { AriaAttributes } from "react";
 
 import { Badge } from "@/components/bmh-ds/badge";
 import { Card } from "@/components/bmh-ds/card";
+import { CourseCoverArtwork } from "@/components/course-cover-artwork";
 import {
   ProgressBar,
   type ProgressBarProps,
 } from "@/components/bmh-ds/progress-bar";
 import { createClient } from "@/lib/supabase/server";
+import { signAuthorizedArtworkPaths } from "@/lib/content-blocks/sign-urls";
+import { artworkRequestKey } from "@/lib/artwork/paths";
 import {
   shapeCourseResponse,
   type LessonSummary,
 } from "@/lib/courses/shape";
+import { loadLearnerLessonStates } from "../../lesson-state-rpc";
 
 export default async function CoursePage({
   params,
@@ -34,14 +38,18 @@ export default async function CoursePage({
     data: { user },
   } = await supabase.auth.getUser();
 
-  const [courseResult, completionsResult] = await Promise.all([
-    supabase
-      .from("courses")
-      .select(
+  const courseResult = await supabase
+    .from("courses")
+    .select(
         `
         id,
         title,
         description,
+        thumbnail_path,
+        content_import_id,
+        thumbnail_asset_key,
+        thumbnail_approved_path,
+        thumbnail_approved_sha256,
         is_published,
         modules (
           id,
@@ -61,16 +69,9 @@ export default async function CoursePage({
           )
         )
       `,
-      )
-      .eq("id", courseId)
-      .maybeSingle(),
-    user
-      ? supabase
-          .from("user_lesson_completions")
-          .select("lesson_id")
-          .eq("user_id", user.id)
-      : Promise.resolve({ data: [] }),
-  ]);
+    )
+    .eq("id", courseId)
+    .maybeSingle();
 
   if (courseResult.error || !courseResult.data) {
     notFound();
@@ -78,13 +79,58 @@ export default async function CoursePage({
 
   const course = shapeCourseResponse(courseResult.data);
   if (!course) notFound();
+  const courseCoverUrl = course.thumbnail_path
+    ? (
+        await signAuthorizedArtworkPaths([
+          {
+            entityType: "course",
+            entityId: course.id,
+            contentImportId: course.content_import_id,
+            thumbnailAssetKey: course.thumbnail_asset_key,
+            thumbnailApprovedPath: course.thumbnail_approved_path,
+            thumbnailApprovedSha256: course.thumbnail_approved_sha256,
+            path: course.thumbnail_path,
+          },
+        ])
+      ).get(artworkRequestKey("course", course.id))
+    : undefined;
 
-  const completedLessonIds = new Set(
-    (completionsResult.data ?? []).map((completion) =>
-      String(completion.lesson_id),
-    ),
-  );
   const allLessons = course.modules.flatMap((module) => module.lessons);
+  const stateResult = user
+    ? await loadLearnerLessonStates(supabase, {
+        userId: user.id,
+        lessonIds: allLessons.map((lesson) => lesson.id),
+      })
+    : { ok: true as const, states: new Map() };
+  if (!stateResult.ok) {
+    return (
+      <div className="w-full flex-1 p-5 font-[family-name:var(--font-body)] md:p-8 lg:p-10">
+        <Link
+          href="/dashboard"
+          className="inline-flex items-center gap-1.5 text-sm font-extrabold text-[var(--action)] underline-offset-4 hover:underline"
+        >
+          <ArrowLeft aria-hidden="true" className="size-4" />
+          Back to dashboard
+        </Link>
+        <h1 className="mt-6 font-[family-name:var(--font-display)] text-4xl font-extrabold text-[var(--ink-900)]">
+          {course.title}
+        </h1>
+        <div className="mt-6 rounded-[var(--bmh-radius-md)] border border-[var(--danger)] bg-[var(--danger-soft)] px-4 py-3 text-sm font-semibold text-[var(--danger)]">
+          We couldn&apos;t verify your lesson progress. Refresh the page to try again.
+        </div>
+      </div>
+    );
+  }
+  const completedLessonIds = new Set(
+    Array.from(stateResult.states.values())
+      .filter((state) => state.isComplete)
+      .map((state) => state.lessonId),
+  );
+  const unlockedLessonIds = new Set(
+    Array.from(stateResult.states.values())
+      .filter((state) => state.isUnlocked)
+      .map((state) => state.lessonId),
+  );
   const requiredLessons = allLessons.filter(
     (lesson) => lesson.is_required_for_completion,
   );
@@ -106,7 +152,7 @@ export default async function CoursePage({
   const currentLessonId = allLessons.find(
     (lesson) =>
       !completedLessonIds.has(lesson.id) &&
-      !isLessonLocked(lesson, completedLessonIds),
+      unlockedLessonIds.has(lesson.id),
   )?.id;
 
   return (
@@ -123,9 +169,14 @@ export default async function CoursePage({
       </Link>
 
       <header className="mt-6 border-b border-[var(--border-hairline)] pb-8">
-        <Badge tone={isCourseComplete ? "green" : "solid"} size="sm">
-          {isCourseComplete ? "Course complete" : "In progress"}
-        </Badge>
+        <div className="flex flex-wrap gap-2">
+          {!course.is_published ? (
+            <Badge tone="yellow" size="sm">Private review</Badge>
+          ) : null}
+          <Badge tone={isCourseComplete ? "green" : "solid"} size="sm">
+            {isCourseComplete ? "Course complete" : "In progress"}
+          </Badge>
+        </div>
         <h1 className="mt-3 font-[family-name:var(--font-display)] text-4xl leading-[1.05] font-extrabold tracking-[-0.025em] text-[var(--ink-900)]">
           {course.title}
         </h1>
@@ -134,6 +185,13 @@ export default async function CoursePage({
             {course.description}
           </p>
         ) : null}
+        <div className="mt-6 max-w-2xl">
+          <CourseCoverArtwork
+            imageUrl={courseCoverUrl}
+            alt={`${course.title} course cover`}
+            size="course"
+          />
+        </div>
         {requiredLessons.length > 0 ? (
           <div className="mt-6 max-w-3xl">
             <div className="mb-2 flex items-center justify-between gap-4 text-sm font-extrabold">
@@ -208,7 +266,7 @@ export default async function CoursePage({
                         key={lesson.id}
                         lesson={lesson}
                         completed={completedLessonIds.has(lesson.id)}
-                        locked={isLessonLocked(lesson, completedLessonIds)}
+                        locked={!unlockedLessonIds.has(lesson.id)}
                         active={lesson.id === currentLessonId}
                       />
                     ))}
@@ -221,14 +279,6 @@ export default async function CoursePage({
       )}
     </div>
   );
-}
-
-function isLessonLocked(
-  lesson: LessonSummary,
-  completedLessonIds: Set<string>,
-): boolean {
-  if (!lesson.prerequisite_lesson_id) return false;
-  return !completedLessonIds.has(lesson.prerequisite_lesson_id);
 }
 
 function LessonRow({

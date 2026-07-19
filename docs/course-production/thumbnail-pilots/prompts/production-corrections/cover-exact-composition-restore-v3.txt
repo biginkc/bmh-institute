@@ -1,0 +1,5 @@
+Reject the step-003 whole-image redraw and restore the exact accepted step-002 source bytes for the BMH Employee Training course cover.
+
+Reason: the attempted local facade cleanup changed Andrea, black outlines, sticker coordinates, and connector pixels outside the intended house region. That violates the exact-composition preservation contract.
+
+This restoration introduces no newly generated pixels. The terminal source must decode to pixels exactly identical to lineage step-002, SHA-256 1f8caa9a9985e4a76ba6590eb8d6fb7078c7e8f4d5128bfbab91f2f2af4e94e1; only the lossless PNG container encoding may differ so the append-only lineage can record the restoration as a distinct output. The deterministic flat-fill pipeline alone may replace the checksum-bound lower-left house-facade component with one uniform locked yellow fill. That component is bound to seed (250,450), accepted locked-palette colors, 6,282 pixels, 1,277 changed pixels, and bounds (229,392)-(310,510). No pixel outside that mask and no black outline pixel may change.

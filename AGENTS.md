@@ -116,9 +116,6 @@ BMH Institute is BMH Group's internal training platform for VAs (mostly Philippi
 - `tw-animate-css` 1.4.0 - CSS animation utilities for Tailwind
 - `sonner` 2.0.7 - Toast notifications; rendered at app root in `src/app/layout.tsx`
 - `next-themes` 0.4.6 - Theme support (used within sonner component at `src/components/ui/sonner.tsx`)
-- `@dnd-kit/core` 6.3.1 - Drag-and-drop primitives (declared in package.json; available for use)
-- `@dnd-kit/sortable` 10.0.0 - Sortable list utilities
-- `@dnd-kit/utilities` 3.2.2 - DnD helper utilities
 - `date-fns` 4.1.0 - Date formatting and manipulation
 ## Configuration
 - Config: `tsconfig.json`

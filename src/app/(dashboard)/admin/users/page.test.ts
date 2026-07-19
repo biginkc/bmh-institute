@@ -5,6 +5,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 
 const calls: string[] = [];
 let tableData: Record<string, unknown[]> = {};
+let tableErrors: Record<string, { message: string }> = {};
 
 vi.mock("@/lib/auth/guard", () => ({
   requireAdmin: vi.fn(async () => {
@@ -27,12 +28,16 @@ vi.mock("@/lib/supabase/server", () => ({
         const chain = {
           select: () => chain,
           eq: () => chain,
+          not: () => chain,
           in: () => chain,
           order: () => chain,
           limit: () => chain,
           maybeSingle: async () => ({ data: null, error: null }),
-          then: (r: (v: { data: unknown[]; error: null }) => unknown) =>
-            Promise.resolve({ data: tableData[table] ?? [], error: null }).then(r),
+          then: (r: (v: { data: unknown[]; error: { message: string } | null }) => unknown) =>
+            Promise.resolve({
+              data: tableData[table] ?? [],
+              error: tableErrors[table] ?? null,
+            }).then(r),
         };
         return chain;
       },
@@ -54,6 +59,7 @@ describe("AdminUsersPage (WR-05)", () => {
   beforeEach(() => {
     calls.length = 0;
     tableData = {};
+    tableErrors = {};
     vi.mocked(requireAdmin).mockReset();
     vi.mocked(requireAdmin).mockImplementation(async () => {
       calls.push("requireAdmin");
@@ -137,7 +143,7 @@ describe("AdminUsersPage (WR-05)", () => {
 
     const html = renderToStaticMarkup(await AdminUsersPage());
 
-    expect(html).toContain("Pilot setup");
+    expect(html).toContain("Learner access");
     expect(html).toContain("No role group assigned");
     expect(html).toContain("Expired");
     expect(html).toContain("Role group assigned");
@@ -177,13 +183,42 @@ describe("AdminUsersPage (WR-05)", () => {
     const html = renderToStaticMarkup(await AdminUsersPage());
 
     expect(html).toMatch(
-      /data-testid="pilot-setup-table-scroll" style="[^"]*overflow-x:auto/,
+      /data-testid="learner-access-table-scroll" style="[^"]*overflow-x:auto/,
     );
     expect(html).toMatch(
       /data-testid="active-members-table-scroll" style="[^"]*overflow-x:auto/,
     );
     expect(html).toMatch(
       /data-testid="pending-invites-table-scroll" style="[^"]*overflow-x:auto/,
+    );
+  });
+
+  it("does not offer an unreleased imported QA group in the invite form", async () => {
+    tableData = {
+      role_groups: [
+        { id: "employee-group", name: "Employees" },
+        { id: "qa-group", name: "Imported review QA" },
+      ],
+      programs: [
+        {
+          content_import_id: "bmh-review-v1",
+          is_published: false,
+          program_access: [{ role_group_id: "qa-group" }],
+        },
+      ],
+    };
+
+    const html = renderToStaticMarkup(await AdminUsersPage());
+
+    expect(html).toContain("Employees");
+    expect(html).not.toContain("Imported review QA");
+  });
+
+  it("fails closed when protected imported review groups cannot be verified", async () => {
+    tableErrors = { programs: { message: "database unavailable" } };
+
+    await expect(AdminUsersPage()).rejects.toThrow(
+      "Unable to verify protected imported-course review groups.",
     );
   });
 });

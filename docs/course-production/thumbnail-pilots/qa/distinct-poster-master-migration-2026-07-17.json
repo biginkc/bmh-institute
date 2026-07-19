@@ -1,0 +1,75 @@
+{
+  "schema_version": "bmh-distinct-poster-master-migration/v1",
+  "reason": "replace repeated grouped poster poses with exact-video-specific independent masters",
+  "terms_v10_evidence_correction": {
+    "master_id": "master-slot-02",
+    "video_sha256": "6f57600d6ec3a596f96175052eda997503ab9b72aa5b7e9ec02239fe1a125769",
+    "contact_sheet_sha256": "e5e869d33d440ba155dd8f5088f2039f96a2cfb105a5ea9be79911933f2f363c",
+    "tool_output_id": "exec-25158f03-2799-4e21-bd74-2b6722a4a6db"
+  },
+  "assets": [
+    {
+      "asset_key": "poster-video-slot-04-humanizing-b",
+      "prior_master_id": "master-slot-04",
+      "replacement_master_id": "master-poster-video-slot-04-humanizing-b",
+      "archived_path": "course-assets/posters/production/sources/lineage/master-poster-video-slot-04-humanizing-b/migration/prior-grouped-6cb881cc1dcedd85e01c743b50c47820ef4f3550a84eb3e302af4aa93e7faea9.webp",
+      "checksum_sha256": "6cb881cc1dcedd85e01c743b50c47820ef4f3550a84eb3e302af4aa93e7faea9",
+      "pixel_sha256": "5c1cfb3298cbbe3e22eb5c05da61b54b9ec85b61797a2ae0eac0c1f687e55877",
+      "size_bytes": 6882
+    },
+    {
+      "asset_key": "poster-video-slot-05-offer-b",
+      "prior_master_id": "master-slot-05",
+      "replacement_master_id": "master-poster-video-slot-05-offer-b",
+      "archived_path": "course-assets/posters/production/sources/lineage/master-poster-video-slot-05-offer-b/migration/prior-grouped-58febb9e2c03947a0644385eafb00870d80fe167dd466b972d58f2eb767207b2.webp",
+      "checksum_sha256": "58febb9e2c03947a0644385eafb00870d80fe167dd466b972d58f2eb767207b2",
+      "pixel_sha256": "e17cb587cf96e09ba3872aaa9365a48fd049e3adcfe7001629522e1ca9485589",
+      "size_bytes": 16126
+    },
+    {
+      "asset_key": "poster-video-slot-04-ideal-seller",
+      "prior_master_id": "master-slot-04",
+      "replacement_master_id": "master-poster-video-slot-04-ideal-seller",
+      "archived_path": "course-assets/posters/production/sources/lineage/master-poster-video-slot-04-ideal-seller/migration/prior-grouped-f3ebc4164db53d63001288bdac0d54791dbf91e5aced0d173eb2a0c1102f4a95.webp",
+      "checksum_sha256": "f3ebc4164db53d63001288bdac0d54791dbf91e5aced0d173eb2a0c1102f4a95",
+      "pixel_sha256": "b2f88a5cb129d8ee88f4ef1786446374ea0b418d9ba91668bcfd740d98b15d5a",
+      "size_bytes": 8002
+    },
+    {
+      "asset_key": "poster-video-slot-06-framework",
+      "prior_master_id": "master-slot-06",
+      "replacement_master_id": "master-poster-video-slot-06-framework",
+      "archived_path": "course-assets/posters/production/sources/lineage/master-poster-video-slot-06-framework/migration/prior-grouped-009593153e20ae06b16826c2321719993ab6aa7a12fb6a8376c87408aa0213d0.webp",
+      "checksum_sha256": "009593153e20ae06b16826c2321719993ab6aa7a12fb6a8376c87408aa0213d0",
+      "pixel_sha256": "cae9a3befda7dcf7d6f654b18c2e40971867cb8aeae6b66598fd16531454805d",
+      "size_bytes": 9592
+    },
+    {
+      "asset_key": "poster-video-slot-11-trust",
+      "prior_master_id": "master-slot-11",
+      "replacement_master_id": "master-poster-video-slot-11-trust",
+      "archived_path": "course-assets/posters/production/sources/lineage/master-poster-video-slot-11-trust/migration/prior-grouped-db4f16e3f3a9db7a52c8c6a0fe9878561d83e19dcd4b9c712566676a7a3ac36b.webp",
+      "checksum_sha256": "db4f16e3f3a9db7a52c8c6a0fe9878561d83e19dcd4b9c712566676a7a3ac36b",
+      "pixel_sha256": "d1c62ace4143c5c51e7d4efdd3e4e48d3070e7cec8a9d776382f6b7b4c989191",
+      "size_bytes": 11152
+    },
+    {
+      "asset_key": "poster-video-slot-12-faq-b",
+      "prior_master_id": "master-slot-12",
+      "replacement_master_id": "master-poster-video-slot-12-faq-b",
+      "archived_path": "course-assets/posters/production/sources/lineage/master-poster-video-slot-12-faq-b/migration/prior-grouped-9ceeaeea9f9e19357b1eab1057bf2bee61de7004915850cfb35bb97437e01ef4.webp",
+      "checksum_sha256": "9ceeaeea9f9e19357b1eab1057bf2bee61de7004915850cfb35bb97437e01ef4",
+      "pixel_sha256": "ae8c8257daf4c5517266b82747d90ba1fef2fe8b715131741a3ae82ef0cfe8bb",
+      "size_bytes": 13700
+    },
+    {
+      "asset_key": "poster-video-slot-18-operator",
+      "prior_master_id": "master-slot-18",
+      "replacement_master_id": "master-poster-video-slot-18-operator",
+      "archived_path": "course-assets/posters/production/sources/lineage/master-poster-video-slot-18-operator/migration/prior-grouped-fd97ba99f3bc768e43eb47db9aae9a0b5120de8e23153f6910083eebceb481c6.webp",
+      "checksum_sha256": "fd97ba99f3bc768e43eb47db9aae9a0b5120de8e23153f6910083eebceb481c6",
+      "pixel_sha256": "d60dc14415466d7683c759338a7330938f36e0eff59916b5cfb4f64f9f22d5ef",
+      "size_bytes": 7720
+    }
+  ]
+}

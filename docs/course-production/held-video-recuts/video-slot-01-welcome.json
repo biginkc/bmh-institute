@@ -1,0 +1,157 @@
+{
+  "schema_version": "1.0.0",
+  "status": "script_ready_not_rendered",
+  "source": {
+    "source_key": "video-slot-01-welcome",
+    "held_sha256": "493de8a5e0663ad577ba46d6d5befce33e9640f250677095094978714d22ac72",
+    "technical_qa_path": "docs/course-production/held-video-review/TECHNICAL-CONTENT-QA-2026-07-17.md",
+    "technical_qa_sha256": "2f77324aaebd2d29fa283c50402c0255eacfb7a40996a49220f97d5019e8a5d0",
+    "source_script_reference": "docs/course-production/held-video-recuts/source-evidence/video-slot-01-welcome-source-evidence.md",
+    "source_script_sha256": "a9239b28b6045cf42f9c354cf18bb5b117f56b83aba3a45f4a0ac7f7756458ad",
+    "duration_seconds": 246.186,
+    "last_spoken_time_seconds": 246.185
+  },
+  "lesson_contract": {
+    "lesson_source_key": "lesson-content-slot-01",
+    "objective": "Learn the BMH Group service standard and the mindset that keeps seller conversations clear, calm, and human.",
+    "objective_points": [
+      "Explain the BMH service standard",
+      "Put service before pressure",
+      "Use curiosity and clarity in seller conversations",
+      "Detach from outcomes while staying accountable"
+    ],
+    "next_sequence": ["video-slot-01-mindset", "lesson-quiz-slot-01", "lesson-content-slot-02"],
+    "transition_spoken_text": "Continue into Mindset next. After that, take the Welcome and Mindset checkpoint and move into Terms Glossary."
+  },
+  "source_depth_contract": {
+    "source_spoken_word_count": 597,
+    "minimum_replacement_word_count": 540,
+    "required_teaching_beats": [
+      {"beat_id": "welcome", "description": "Andrea welcomes the learner without a role title."},
+      {"beat_id": "sincere-welcome", "description": "BMH welcomes the learner sincerely before instruction begins."},
+      {"beat_id": "real-people", "description": "System records represent people carrying real burdens."},
+      {"beat_id": "difficult-context", "description": "Property conversations can involve loss, distance, repairs, family strain, or foreclosure."},
+      {"beat_id": "help-find-path", "description": "The work helps a seller find a responsible path through a difficult situation."},
+      {"beat_id": "meaningful-service", "description": "Good service can matter after the conversation ends."},
+      {"beat_id": "service-fit", "description": "Learners will study who the service can fit."},
+      {"beat_id": "written-offer", "description": "Learners will study how a written offer works."},
+      {"beat_id": "process", "description": "Learners will study how the process moves."},
+      {"beat_id": "hard-conversations", "description": "Learners will practice objections and difficult conversations."},
+      {"beat_id": "connected-training", "description": "Qualification, offer explanation, and difficult moments form one service process."},
+      {"beat_id": "script-judgment", "description": "A script provides structure while listening and judgment guide its use."},
+      {"beat_id": "seller-fit-path", "description": "The useful path is the one that fits the seller, even when it is not BMH."},
+      {"beat_id": "presence-builds-trust", "description": "Presence and another useful question build trust better than recitation."},
+      {"beat_id": "consult-no-pressure", "description": "The learner explains options and avoids pressure."},
+      {"beat_id": "mission", "description": "The mission is to help families reach clarity and a responsible next step."},
+      {"beat_id": "begin-training", "description": "The close invites the learner to begin the training sequence."}
+    ],
+    "required_examples": [
+      {"example_id": "inherited-property", "description": "A distant inherited property creates a practical and emotional burden."},
+      {"example_id": "repair-burden", "description": "A seller may need relief from repairs and preparation work."},
+      {"example_id": "other-path-fits", "description": "A responsible conversation can end with another path fitting the seller better."}
+    ]
+  },
+  "production_constraints": {
+    "strategy": "replace_full_spoken_cut",
+    "render_allowed": false,
+    "provider_call_allowed": false,
+    "caption_generation_allowed": false,
+    "approval_status_change_allowed": false
+  },
+  "forbidden_language_removals": [
+    {"source_time": "00:00", "exact_source_language": "Your virtual onboarding specialist", "replacement_rule": "Andrea introduces herself without a role title."},
+    {"source_time": "approximately 02:48", "exact_source_language": "the best closers at BMH Group", "replacement_rule": "Describe the service behavior without naming a role or ranking people."}
+  ],
+  "scenes": [
+    {
+      "scene_id": "welcome-intro",
+      "title": "Welcome",
+      "spoken_text": "Hi, I'm Andrea. Welcome to BMH Group. We are glad you are here, and I mean that. You made time to learn work that can change the direction of a difficult property situation for a real family. This training will show you how we serve people, how the work moves, and what sound judgment feels like in a live conversation.",
+      "teaching_beat_ids": ["welcome", "sincere-welcome"],
+      "example_ids": [],
+      "visual_plan": {"mode": "avatar_on_camera", "shot": "Andrea in a relaxed medium shot", "editor_note": "Keep the introduction direct and uncluttered."}
+    },
+    {
+      "scene_id": "welcome-people-first",
+      "title": "Start with the person",
+      "spoken_text": "The people in the current system are more than names and property records. Someone may have inherited a house far from home and have no idea where to start. Another person may be handling a loss, a looming foreclosure, a difficult move, or repairs that grew beyond what the family can carry. Start with the person. The property facts make more sense after you understand the burden attached to them.",
+      "teaching_beat_ids": ["real-people", "difficult-context"],
+      "example_ids": ["inherited-property"],
+      "visual_plan": {"mode": "avatar_with_optional_cutaway", "shot": "Andrea standing beside a seller reviewing property papers", "editor_note": "Show a calm, grounded seller situation with no dramatic warning text."}
+    },
+    {
+      "scene_id": "welcome-service",
+      "title": "Help them find a path",
+      "spoken_text": "Your job in that moment is to help the seller see a responsible path. Ask a clear question, listen through the full answer, and make sure you understood it. Price may be the first thing they mention, while timing, repairs, or a family decision is what they are really trying to solve. When you stay present, the conversation can be useful even if the right answer is a path outside BMH.",
+      "teaching_beat_ids": ["help-find-path", "meaningful-service", "seller-fit-path"],
+      "example_ids": ["other-path-fits"],
+      "visual_plan": {"mode": "avatar_with_optional_cutaway", "shot": "Andrea seated across from a seller with an open notebook", "editor_note": "Keep the posture attentive. The seller decides among unlabeled paths."}
+    },
+    {
+      "scene_id": "welcome-training-map",
+      "title": "What you will learn",
+      "spoken_text": "You will learn who this service may fit and what information helps qualify a situation. You will see how the written offer and the surrounding process work. You will practice objections, discovery, and the moments when a conversation gets uncomfortable. Those pieces belong together. Good qualification supports an accurate offer explanation, and careful notes keep the next part of the process from starting with missing information.",
+      "teaching_beat_ids": ["service-fit", "written-offer", "process", "hard-conversations", "connected-training"],
+      "example_ids": [],
+      "visual_plan": {"mode": "avatar_with_optional_cutaway", "shot": "Andrea beside a learning path made of property, document, conversation, and handoff cards", "editor_note": "Use generic cards with no chapter numbers, provider marks, or role labels."}
+    },
+    {
+      "scene_id": "welcome-script",
+      "title": "Use the script with judgment",
+      "spoken_text": "You will have a script, and it is useful. It gives you a place to begin and a structure when the conversation feels unfamiliar. The script cannot listen for you. If the seller says something important, slow down. Ask the useful follow-up instead of racing toward the next line. Read the words as a guide, then pay attention to the person who is answering you.",
+      "teaching_beat_ids": ["script-judgment", "presence-builds-trust"],
+      "example_ids": [],
+      "visual_plan": {"mode": "avatar_with_optional_cutaway", "shot": "Andrea beside a script page that lowers as a seller begins speaking", "editor_note": "The page is generic and contains no readable provider or role text."}
+    },
+    {
+      "scene_id": "welcome-cash-as-is",
+      "title": "Explain cash as is accurately",
+      "spoken_text": "A cash, as-is path can remove some of the preparation that comes with a traditional sale. A seller facing a long repair list may value that simplicity. The exact price, timing, costs, condition terms, and responsibilities still come from the written offer and the facts of that property. Explain what has been confirmed. When you do not know, say that you will get the right answer and follow through.",
+      "teaching_beat_ids": ["written-offer", "help-find-path"],
+      "example_ids": ["repair-burden"],
+      "visual_plan": {"mode": "avatar_with_optional_cutaway", "shot": "Andrea beside a property folder and a repair list", "editor_note": "Show no price, date, fee, or promise on the folder."}
+    },
+    {
+      "scene_id": "welcome-no-pressure",
+      "title": "Consult without pressure",
+      "spoken_text": "A strong conversation helps the seller understand the available choices. It does not corner them into a yes. Explain what the current process supports, separate confirmed facts from open questions, and give the person room to think. A clear answer that the service does not fit is useful. So is a thoughtful follow-up when the seller wants more information. Pressure hides uncertainty. Calm questions bring it into the open.",
+      "teaching_beat_ids": ["consult-no-pressure", "seller-fit-path"],
+      "example_ids": [],
+      "visual_plan": {"mode": "avatar_on_camera", "shot": "Andrea standing with a relaxed open-hand gesture", "editor_note": "Keep the delivery calm and conversational."}
+    },
+    {
+      "scene_id": "welcome-accountability",
+      "title": "Own the next step",
+      "spoken_text": "Care also shows up after the call. Keep the record accurate while the details are fresh. Set the next action, make the expectation clear, and do what you said you would do. If something is blocked, tell the right person and leave enough detail for the issue to be resolved. A warm conversation without follow-through is incomplete. Service and accountability have to travel together.",
+      "teaching_beat_ids": ["meaningful-service", "mission"],
+      "example_ids": [],
+      "visual_plan": {"mode": "avatar_with_optional_cutaway", "shot": "Andrea at a desk with a simple completed next-action card", "editor_note": "Use a generic record with no software branding."}
+    },
+    {
+      "scene_id": "welcome-mission",
+      "title": "Remember the mission",
+      "spoken_text": "The mission is simple to say and demanding to practice. Help families understand the situation in front of them. Give accurate information. Treat the seller with dignity when the conversation is hard. Leave them with more clarity and a responsible next step, even when that step takes them somewhere else. The skills in this course exist to help you do that work with steadiness and care.",
+      "teaching_beat_ids": ["mission", "meaningful-service", "seller-fit-path"],
+      "example_ids": [],
+      "visual_plan": {"mode": "avatar_on_camera", "shot": "Andrea centered in a warm medium shot", "editor_note": "Keep the frame uncluttered and sincere."}
+    },
+    {
+      "scene_id": "welcome-transition",
+      "title": "Continue into mindset",
+      "spoken_text": "Continue into Mindset next. After that, take the Welcome and Mindset checkpoint and move into Terms Glossary.",
+      "teaching_beat_ids": ["begin-training"],
+      "example_ids": [],
+      "visual_plan": {"mode": "avatar_on_camera", "shot": "Andrea centered in a medium shot", "editor_note": "End cleanly with no chapter number on screen."}
+    }
+  ],
+  "edit_operations": [
+    {
+      "operation_id": "welcome-edit-01",
+      "source_start": "00:00:00.000",
+      "source_end": "00:04:06.185",
+      "action": "replace",
+      "replacement_scene_ids": ["welcome-intro", "welcome-people-first", "welcome-service", "welcome-training-map", "welcome-script", "welcome-cash-as-is", "welcome-no-pressure", "welcome-accountability", "welcome-mission", "welcome-transition"],
+      "source_problem": "Role-title wording is embedded in the opener and later service principle, so the full spoken cut is replaced while preserving the complete service lesson."
+    }
+  ]
+}

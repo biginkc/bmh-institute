@@ -4,6 +4,12 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
 import { requireAdmin } from "@/lib/auth/guard";
+import { validateArtworkChange } from "@/lib/artwork/paths";
+import {
+  importedDeletionError,
+  importedPublicationError,
+  normalizeReleaseControlError,
+} from "@/lib/release-control/admin-guards";
 import { createClient } from "@/lib/supabase/server";
 import {
   parseCourseInput,
@@ -28,6 +34,14 @@ export async function createCourse(
   await requireAdmin();
   const parsed = parseCourseInput(formData);
   if (!parsed.ok) return fieldResult(parsed, formData);
+  if (parsed.value.thumbnail_path) {
+    return {
+      ok: false,
+      error: "Save the course before uploading artwork.",
+      fieldErrors: { thumbnail_path: "Save the course before uploading artwork." },
+      values: parsed.value,
+    };
+  }
 
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -36,6 +50,7 @@ export async function createCourse(
       title: parsed.value.title,
       description: parsed.value.description,
       is_published: parsed.value.is_published,
+      thumbnail_path: parsed.value.thumbnail_path,
     })
     .select("id")
     .single();
@@ -59,15 +74,52 @@ export async function updateCourse(
   if (!parsed.ok) return fieldResult(parsed, formData);
 
   const supabase = await createClient();
+  const current = await supabase
+    .from("courses")
+    .select("thumbnail_path, content_import_id, thumbnail_asset_key, thumbnail_approved_path, thumbnail_approved_sha256, is_published")
+    .eq("id", courseId)
+    .maybeSingle();
+  if (current.error || !current.data) {
+    return { ok: false, error: "Couldn't verify the course artwork." };
+  }
+  const releaseError = importedPublicationError({
+    contentImportId: current.data.content_import_id,
+    currentlyPublished: current.data.is_published,
+    requestedPublished: parsed.value.is_published,
+  });
+  if (releaseError) {
+    return { ok: false, error: releaseError, values: parsed.value };
+  }
+  const artworkError = validateArtworkChange({
+    entityType: "course",
+    entityId: courseId,
+    contentImportId: current.data.content_import_id,
+    thumbnailAssetKey: current.data.thumbnail_asset_key,
+    thumbnailApprovedPath: current.data.thumbnail_approved_path,
+    thumbnailApprovedSha256: current.data.thumbnail_approved_sha256,
+    currentPath: current.data.thumbnail_path,
+    nextPath: parsed.value.thumbnail_path,
+  });
+  if (artworkError) {
+    return {
+      ok: false,
+      error: "Fix the highlighted fields.",
+      fieldErrors: { thumbnail_path: artworkError },
+      values: parsed.value,
+    };
+  }
   const { error } = await supabase
     .from("courses")
     .update({
       title: parsed.value.title,
       description: parsed.value.description,
       is_published: parsed.value.is_published,
+      thumbnail_path: parsed.value.thumbnail_path,
     })
     .eq("id", courseId);
-  if (error) return { ok: false, error: error.message };
+  if (error) {
+    return { ok: false, error: normalizeReleaseControlError(error.message) };
+  }
 
   revalidatePath(`/admin/courses/${courseId}/edit`);
   revalidatePath("/admin/courses");
@@ -78,8 +130,18 @@ export async function updateCourse(
 export async function deleteCourse(courseId: string): Promise<CourseFormState> {
   await requireAdmin();
   const supabase = await createClient();
+  const current = await supabase
+    .from("courses")
+    .select("content_import_id")
+    .eq("id", courseId)
+    .maybeSingle();
+  if (current.error || !current.data) {
+    return { ok: false, error: "Couldn't verify the course before deleting it." };
+  }
+  const deletionError = importedDeletionError(current.data.content_import_id);
+  if (deletionError) return { ok: false, error: deletionError };
   const { error } = await supabase.from("courses").delete().eq("id", courseId);
-  if (error) return { ok: false, error: error.message };
+  if (error) return { ok: false, error: normalizeReleaseControlError(error.message) };
   revalidatePath("/admin/courses");
   revalidatePath("/dashboard");
   redirect("/admin/courses");
@@ -154,7 +216,7 @@ export async function deleteModule(input: {
     .from("modules")
     .delete()
     .eq("id", input.moduleId);
-  if (error) return { ok: false, error: error.message };
+  if (error) return { ok: false, error: normalizeReleaseControlError(error.message) };
   revalidatePath(`/admin/courses/${input.courseId}/edit`);
   revalidatePath("/dashboard");
   return { ok: true };
@@ -283,7 +345,7 @@ export async function deleteLesson(input: {
     .from("lessons")
     .delete()
     .eq("id", input.lessonId);
-  if (error) return { ok: false, error: error.message };
+  if (error) return { ok: false, error: normalizeReleaseControlError(error.message) };
 
   if (lesson?.quiz_id) {
     await supabase.from("quizzes").delete().eq("id", lesson.quiz_id);
@@ -350,6 +412,7 @@ function fieldResult(
       title: String(formData.get("title") ?? ""),
       description: String(formData.get("description") ?? "") || null,
       is_published: formData.get("is_published") === "on",
+      thumbnail_path: String(formData.get("thumbnail_path") ?? "") || null,
     },
   };
 }

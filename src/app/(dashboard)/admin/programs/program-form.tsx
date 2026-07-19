@@ -1,8 +1,10 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 
 import { Button, Input } from "@/components/bmh-ds";
+import { FileUpload } from "@/components/file-upload";
+import { manualArtworkNamespace } from "@/lib/artwork/paths";
 import type { FormState } from "./actions";
 
 type Action = (state: FormState, formData: FormData) => Promise<FormState>;
@@ -12,16 +14,23 @@ type Defaults = {
   description?: string | null;
   course_order_mode?: "sequential" | "free" | null;
   is_published?: boolean | null;
+  thumbnail_path?: string | null;
+  content_import_id?: string | null;
+  thumbnail_asset_key?: string | null;
+  thumbnail_approved_path?: string | null;
+  thumbnail_approved_sha256?: string | null;
 };
 
 export function ProgramForm({
   action,
   submitLabel,
   defaults,
+  entityId,
 }: {
   action: Action;
   submitLabel: string;
   defaults?: Defaults;
+  entityId?: string;
 }) {
   const [state, formAction, pending] = useActionState<FormState, FormData>(
     action,
@@ -29,6 +38,10 @@ export function ProgramForm({
   );
   const fieldError = (name: string): string | undefined =>
     state && !state.ok ? state.fieldErrors?.[name] : undefined;
+  const [thumbnailPath, setThumbnailPath] = useState(defaults?.thumbnail_path ?? "");
+  const artworkPrefix = !defaults?.content_import_id && entityId
+    ? manualArtworkNamespace("program", entityId)
+    : null;
 
   return (
     <form action={formAction} className="flex flex-col gap-5">
@@ -54,6 +67,31 @@ export function ProgramForm({
           defaultValue={defaults?.description ?? ""}
           className="w-full rounded-[var(--bmh-radius-md)] border-2 border-[var(--ink-300)] bg-[var(--paper)] px-4 py-3 font-[family-name:var(--font-body)] text-base font-semibold text-[var(--ink-900)] outline-none transition focus-visible:border-[var(--action)] focus-visible:ring-4 focus-visible:ring-[var(--focus-ring)]"
         />
+      </Field>
+
+      <Field
+        label="Program cover path"
+        htmlFor="thumbnail_path_display"
+        error={fieldError("thumbnail_path")}
+      >
+        <input type="hidden" name="thumbnail_path" value={thumbnailPath} />
+        <Input id="thumbnail_path_display" value={thumbnailPath} readOnly />
+        {defaults?.content_import_id ? (
+          <p className="text-xs font-semibold text-[var(--text-muted)]">
+            Imported artwork is managed through the approved course manifest.
+          </p>
+        ) : artworkPrefix ? (
+          <FileUpload
+            accept="image/png,image/jpeg,image/webp,image/avif"
+            maxMb={20}
+            label="Upload program cover"
+            currentPath={thumbnailPath || null}
+            pathPrefix={artworkPrefix}
+            onUploaded={(file) => setThumbnailPath(file.file_path)}
+          />
+        ) : (
+          <p className="text-xs font-semibold text-[var(--text-muted)]">Save the program before uploading artwork.</p>
+        )}
       </Field>
 
       <Field

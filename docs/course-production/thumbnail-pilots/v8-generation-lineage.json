@@ -1,0 +1,135 @@
+{
+  "schema_version": "bmh-thumbnail-pilot-lineage/v4-candidate",
+  "status": "awaiting-jarrad-approval",
+  "generator": "built-in image_gen",
+  "contract": {
+    "people_per_thumbnail": 1,
+    "allowed_characters": ["andrea", "recurring-seller"],
+    "selection_rule": "Andrea or the recurring seller, never both; the lesson and exact source video determine the character and cue",
+    "skin_fill": "pure white",
+    "character_consistency": "Identity roots, palette, pure-white skin, hair, face, and wardrobe stay recognizable while posture and position vary by lesson",
+    "pose_variation": "Do not reuse the same stance, placement, or body arrangement across pilot records"
+  },
+  "identity_roots": [
+    {
+      "id": "andrea-approved",
+      "path": "docs/course-production/thumbnail-pilots/references/v5-cast/andrea-approved.png",
+      "sha256": "ab1c01dfc642f00b2f6df08a20fd231cb47fffb60a3e013a42960ee4fa5e2ca8"
+    },
+    {
+      "id": "recurring-seller-approved",
+      "path": "docs/course-production/thumbnail-pilots/references/v5-cast/recurring-seller.png",
+      "sha256": "b88724ccd840ecf295c2b8607525a76a938349978407a0ba8b92eccd8f2cf4f0"
+    }
+  ],
+  "records": [
+    {
+      "slug": "orientation",
+      "character_id": "andrea-approved",
+      "pose_label": "standing-welcome",
+      "pose_signature": "standing-front-centered-arms-relaxed-beneath-doorway-cue",
+      "background_rgb": [103, 182, 255],
+      "lesson_cue": "open doorway, rising steps, and flag",
+      "video_evidence": [
+        {
+          "path": "course-assets/review-lessonA/LESSON-1A-v7.mp4",
+          "sha256": "493de8a5e0663ad577ba46d6d5befce33e9640f250677095094978714d22ac72"
+        },
+        {
+          "path": "course-assets/review-lessonB/LESSON-1B-v4.mp4",
+          "sha256": "b0cad612499dbd2d867c906c1ad8a8e3e13fcded333fa973fa6d19339fa930da"
+        }
+      ],
+      "contact_sheet_input": {
+        "path": "docs/course-production/thumbnail-pilots/references/v7-video-stills/orientation-contact-sheet.jpg",
+        "sha256": "838ef332a6a2b35b13908bc8651df7770979777613fd87fef96d09917fb9ebda"
+      },
+      "generation": {
+        "operation": "generate",
+        "prompt_path": "docs/course-production/thumbnail-pilots/prompts/v7/orientation.txt",
+        "prompt_sha256": "84e6ad28f0c973c927612892a2801517836e04428078575ec8fec90932b77a07",
+        "tool_output_id": "exec-3185de1f-c9f1-459a-9785-a83f2fd30e16",
+        "output_path": "course-assets/thumbnails/pilots/revisions/v7/sources/orientation-andrea-generated-v7.png",
+        "output_sha256": "a3a0b69a48d359d29247e557babdad2bc5a88bc79dc19edb113f885e0ccc22a6"
+      }
+    },
+    {
+      "slug": "opening-the-call",
+      "character_id": "andrea-approved",
+      "pose_label": "seated-desk-call",
+      "pose_signature": "seated-three-quarter-behind-desk-left-hand-open-right-hand-at-headset",
+      "background_rgb": [103, 182, 255],
+      "lesson_cue": "telephone handset, headset, speaking gesture, and desk",
+      "video_evidence": [
+        {
+          "path": "course-assets/review-lesson5A/LESSON-5A-v3-FINAL.mp4",
+          "sha256": "1a6a2256651d6b55e7548982387508579c7330000ab01095a0c1bc81cf7c7961"
+        },
+        {
+          "path": "course-assets/review-lesson5B/LESSON-5B-v1-FINAL.mp4",
+          "sha256": "71e1f962af3a42d1e6f6e2da50c94a8ee74b40896873d557f74a23dd50d15870"
+        }
+      ],
+      "contact_sheet_input": {
+        "path": "docs/course-production/thumbnail-pilots/references/v7-video-stills/opening-contact-sheet.jpg",
+        "sha256": "f57c71fb9425eed09bd3297690e43617c5737fc579b96bd596ae0ffa168075a5"
+      },
+      "generation": {
+        "operation": "edit",
+        "parent_path": "course-assets/thumbnails/pilots/revisions/v7/sources/opening-andrea-generated-v7.png",
+        "parent_sha256": "cdea83a43f02a6b018306a41720cbd097ba67c849c167cc82ead448488f962c8",
+        "prompt_path": "docs/course-production/thumbnail-pilots/prompts/v8/opening-the-call-seated.txt",
+        "prompt_sha256": "4e78bd0aafc62b8b7046f8f09ccdea869841d0dcf546c350e768d23a9c2743aa",
+        "tool_output_id": "exec-85ecb2c4-a6dd-4a5f-a8e9-393d0ad8d175",
+        "output_path": "course-assets/thumbnails/pilots/revisions/v8/sources/opening-andrea-seated-generated-v8.png",
+        "output_sha256": "e18d7b66576f2bf4998e6dfd7a2112f6323374e53df4f926ea7676384548eadd"
+      },
+      "deterministic_contour_normalization": {
+        "operation": "erode black contours",
+        "source_pixel_radius": 1,
+        "exposure": "north-or-west-boundary",
+        "replacement": "eight-connected-majority-color",
+        "removed_source_pixels": 8331,
+        "reason": "match the approved BMH Sticker System line weight after the pose edit produced a visibly heavier pen"
+      }
+    },
+    {
+      "slug": "objection-architecture",
+      "character_id": "recurring-seller-approved",
+      "pose_label": "standing-reframe-gesture",
+      "pose_signature": "standing-three-quarter-left-hand-open-right-arm-relaxed",
+      "background_rgb": [255, 211, 1],
+      "lesson_cue": "objection burst, response arrow, and checked speech bubble",
+      "video_evidence": [
+        {
+          "path": "course-assets/review-lesson7A/LESSON-7A-v1-FULL.mp4",
+          "sha256": "b8f4669b7039d531fadd332f65bd6f8f09e924dec1de858558ab4d52c4921bb9"
+        }
+      ],
+      "contact_sheet_input": {
+        "path": "docs/course-production/thumbnail-pilots/references/v7-video-stills/objection-contact-sheet.jpg",
+        "sha256": "31145ddd3485159dbaa298d8ee1958834dca1098bbd86645c43414ccaa8eea7b"
+      },
+      "generation": {
+        "operation": "edit",
+        "parent_path": "course-assets/thumbnails/pilots/revisions/v7/sources/objection-seller-generated-v7.png",
+        "parent_sha256": "6fbbc49d5251438d6bd3a9a8a3269c328fd4d19804acc6744310ac597f6801d1",
+        "prompt_path": "docs/course-production/thumbnail-pilots/prompts/v7/objection-architecture.txt",
+        "prompt_sha256": "c6a3b114e844f4d899d9bc667d118311b4737cd4e0791e65a1657f6eac3e4d3f",
+        "tool_output_id": "exec-efda88ec-b6ab-4559-8187-f30f38c5810c",
+        "output_path": "course-assets/thumbnails/pilots/revisions/v7/sources/objection-seller-generated-v7b.png",
+        "output_sha256": "88f3513e1f4985ded8bceefc1e11aff60ae97dc934896bee56bd88a1133d9a58"
+      },
+      "deterministic_contour_normalization": {
+        "operation": "dilate black contours",
+        "source_pixel_radius": 1,
+        "pattern": "cross-plus-checkerboard-diagonals",
+        "added_source_pixels": 10590,
+        "reason": "match the recurring seller contour weight to Andrea after the image edit produced a visibly thinner pen"
+      }
+    }
+  ],
+  "derivative_config_path": "docs/course-production/thumbnail-pilots/v8-derivative-config.json",
+  "derivative_report_path": "docs/course-production/thumbnail-pilots/v8-derivative-report.json",
+  "promotion_note": "V8 preserves stable identities while intentionally varying pose and placement. It must not be forced into V7's identical-Andrea-pixel lock. Canonical V4 support remains pending until these exact bytes pass QA."
+}

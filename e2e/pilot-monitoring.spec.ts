@@ -38,12 +38,12 @@ test.describe("pilot monitoring", () => {
       await signIn(page, fixture.admin.email, fixture.password);
       await page.goto("/admin/reports");
 
-      await expect(page.getByRole("heading", { name: "Pilot monitoring" })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "Learner monitoring" })).toBeVisible();
       await expect(page.getByText("Needs access").first()).toBeVisible();
       await expect(page.getByText("Needs review").first()).toBeVisible();
       await expect(
         page.getByRole("link", { name: /^export csv$/i }),
-      ).toHaveAttribute("href", "/admin/reports/pilot/export");
+      ).toHaveAttribute("href", "/admin/reports/learners/export");
 
       const reviewRow = page
         .getByRole("row")

@@ -6,9 +6,13 @@ import { Card } from "@/components/bmh-ds/card";
 import { Coach } from "@/components/bmh-ds/coach";
 import { LessonCard } from "@/components/bmh-ds/lesson-card";
 import { ProgressBar } from "@/components/bmh-ds/progress-bar";
+import { CourseCoverArtwork } from "@/components/course-cover-artwork";
 import { createClient } from "@/lib/supabase/server";
 import { shapeProgramsResponse } from "@/lib/programs/shape";
 import { summarizeLearnerOnboarding } from "@/lib/learner-onboarding/summary";
+import { signAuthorizedArtworkPaths } from "@/lib/content-blocks/sign-urls";
+import { artworkRequestKey } from "@/lib/artwork/paths";
+import { loadLearnerLessonStates } from "../lesson-state-rpc";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -24,6 +28,11 @@ export default async function DashboardPage() {
       id,
       title,
       description,
+      thumbnail_path,
+      content_import_id,
+      thumbnail_asset_key,
+      thumbnail_approved_path,
+      thumbnail_approved_sha256,
       course_order_mode,
       is_published,
       sort_order,
@@ -33,12 +42,16 @@ export default async function DashboardPage() {
           id,
           title,
           description,
+          thumbnail_path,
+          content_import_id,
+          thumbnail_asset_key,
+          thumbnail_approved_path,
+          thumbnail_approved_sha256,
           is_published
         )
       )
     `,
     )
-    .eq("is_published", true)
     .order("sort_order");
 
   const programs = shapeProgramsResponse(data);
@@ -47,9 +60,9 @@ export default async function DashboardPage() {
     new Set(programs.flatMap((p) => p.courses.map((c) => c.id))),
   );
 
-  // Count required lessons per course and how many the current user finished.
-  // Done as two cheap queries rather than a stored RPC to keep the model
-  // simple — completion volume is low for an internal team.
+  // Count required lessons per course against the trusted dynamic completion
+  // function. A stored completion row alone is not sufficient after a video
+  // asset is replaced and must be watched again.
   const progressByCourse = new Map<string, { done: number; total: number }>();
   const lessonsByCourse = new Map<
     string,
@@ -57,23 +70,24 @@ export default async function DashboardPage() {
       id: string;
       title: string;
       isRequiredForCompletion: boolean;
+      thumbnailPath: string | null;
+      contentImportId: string | null;
+      thumbnailAssetKey: string | null;
+      thumbnailApprovedPath: string | null;
+      thumbnailApprovedSha256: string | null;
+      thumbnailUrl?: string;
     }>
   >();
   let completedLessonIds = new Set<string>();
+  let progressLoadFailed = false;
 
   if (courseIds.length > 0 && user) {
-    const [lessonsRes, completionsRes] = await Promise.all([
-      supabase
-        .from("modules")
-        .select(
-          "course_id, sort_order, lessons(id, title, sort_order, is_required_for_completion)",
-        )
-        .in("course_id", courseIds),
-      supabase
-        .from("user_lesson_completions")
-        .select("lesson_id")
-        .eq("user_id", user.id),
-    ]);
+    const lessonsRes = await supabase
+      .from("modules")
+      .select(
+        "course_id, sort_order, lessons(id, title, thumbnail_path, content_import_id, thumbnail_asset_key, thumbnail_approved_path, thumbnail_approved_sha256, sort_order, is_required_for_completion)",
+      )
+      .in("course_id", courseIds);
 
     const requiredLessonsByCourse = new Map<string, Set<string>>();
     const moduleRows = [...(lessonsRes.data ?? [])].sort(
@@ -86,6 +100,11 @@ export default async function DashboardPage() {
         title: string;
         sort_order: number;
         is_required_for_completion: boolean;
+        thumbnail_path: string | null;
+        content_import_id: string | null;
+        thumbnail_asset_key: string | null;
+        thumbnail_approved_path: string | null;
+        thumbnail_approved_sha256: string | null;
       }>;
       if (!requiredLessonsByCourse.has(courseId)) {
         requiredLessonsByCourse.set(courseId, new Set());
@@ -102,15 +121,36 @@ export default async function DashboardPage() {
             id: lesson.id,
             title: lesson.title,
             isRequiredForCompletion: true,
+            thumbnailPath: lesson.thumbnail_path,
+            contentImportId: lesson.content_import_id,
+            thumbnailAssetKey: lesson.thumbnail_asset_key,
+            thumbnailApprovedPath: lesson.thumbnail_approved_path,
+            thumbnailApprovedSha256: lesson.thumbnail_approved_sha256,
           });
           lessonsByCourse.set(courseId, courseLessons);
         }
       }
     }
 
-    completedLessonIds = new Set(
-      (completionsRes.data ?? []).map((r) => r.lesson_id as string),
+    const requiredLessonIds = Array.from(
+      new Set(
+        Array.from(requiredLessonsByCourse.values()).flatMap((required) =>
+          Array.from(required),
+        ),
+      ),
     );
+    const stateResult = await loadLearnerLessonStates(supabase, {
+      userId: user.id,
+      lessonIds: requiredLessonIds,
+    });
+    progressLoadFailed = !stateResult.ok;
+    if (stateResult.ok) {
+      completedLessonIds = new Set(
+        Array.from(stateResult.states.values())
+          .filter((state) => state.isComplete)
+          .map((state) => state.lessonId),
+      );
+    }
 
     for (const [courseId, required] of requiredLessonsByCourse.entries()) {
       let done = 0;
@@ -118,6 +158,53 @@ export default async function DashboardPage() {
         if (completedLessonIds.has(lessonId)) done += 1;
       }
       progressByCourse.set(courseId, { done, total: required.size });
+    }
+  }
+
+  const thumbnailSignedByPath = await signAuthorizedArtworkPaths([
+    ...programs.flatMap((program) => [
+      {
+        entityType: "program" as const,
+        entityId: program.id,
+        contentImportId: program.content_import_id,
+        thumbnailAssetKey: program.thumbnail_asset_key,
+        thumbnailApprovedPath: program.thumbnail_approved_path,
+        thumbnailApprovedSha256: program.thumbnail_approved_sha256,
+        path: program.thumbnail_path,
+      },
+      ...program.courses.map((course) => ({
+        entityType: "course" as const,
+        entityId: course.id,
+        contentImportId: course.content_import_id,
+        thumbnailAssetKey: course.thumbnail_asset_key,
+        thumbnailApprovedPath: course.thumbnail_approved_path,
+        thumbnailApprovedSha256: course.thumbnail_approved_sha256,
+        path: course.thumbnail_path,
+      })),
+    ]),
+    ...Array.from(lessonsByCourse.values()).flat().map((lesson) => ({
+      entityType: "lesson" as const,
+      entityId: lesson.id,
+      contentImportId: lesson.contentImportId,
+      thumbnailAssetKey: lesson.thumbnailAssetKey,
+      thumbnailApprovedPath: lesson.thumbnailApprovedPath,
+      thumbnailApprovedSha256: lesson.thumbnailApprovedSha256,
+      path: lesson.thumbnailPath,
+    })),
+  ]);
+  for (const program of programs) {
+    if (program.thumbnail_path) {
+      program.thumbnailUrl = thumbnailSignedByPath.get(artworkRequestKey("program", program.id));
+    }
+    for (const course of program.courses) {
+      if (course.thumbnail_path) {
+        course.thumbnailUrl = thumbnailSignedByPath.get(artworkRequestKey("course", course.id));
+      }
+    }
+  }
+  for (const lessons of lessonsByCourse.values()) {
+    for (const lesson of lessons) {
+      if (lesson.thumbnailPath) lesson.thumbnailUrl = thumbnailSignedByPath.get(artworkRequestKey("lesson", lesson.id));
     }
   }
 
@@ -145,9 +232,11 @@ export default async function DashboardPage() {
 
   return (
     <main className="w-full flex-1 p-5 md:p-8 lg:p-10">
-      {error ? (
+      {error || progressLoadFailed ? (
         <div className="rounded-[var(--bmh-radius-md)] border border-[var(--danger)] bg-[var(--danger-soft)] px-4 py-3 font-[family-name:var(--font-body)] text-sm font-semibold text-[var(--danger)]">
-          We couldn&apos;t load your programs. Try refreshing. ({error.message})
+          {error
+            ? `We couldn't load your programs. Refresh the page to try again. (${error.message})`
+            : "We couldn't verify your lesson progress. Refresh the page to try again."}
         </div>
       ) : programs.length === 0 ? (
         <NoAssignments />
@@ -161,6 +250,7 @@ export default async function DashboardPage() {
               programs[0]?.description ??
               "Complete your assigned lessons and build confidence one step at a time."
             }
+            coverUrl={currentCourse?.thumbnailUrl}
           />
 
           <div className="grid items-start gap-7 lg:grid-cols-[minmax(290px,0.9fr)_minmax(0,1.55fr)]">
@@ -244,10 +334,12 @@ function DashboardHero({
   summary,
   courseTitle,
   description,
+  coverUrl,
 }: {
   summary: ReturnType<typeof summarizeLearnerOnboarding>;
   courseTitle: string;
   description: string;
+  coverUrl?: string;
 }) {
   const actionHref = summary.nextLesson
     ? `/lessons/${summary.nextLesson.id}`
@@ -293,19 +385,11 @@ function DashboardHero({
           </p>
         </div>
 
-        <div className="hidden justify-end lg:flex">
-          <Coach
-            base="/brand/mascot"
-            pose={complete ? "wave" : "present"}
-            tone="white"
-            side="right"
-            align="flex-start"
-            height={235}
-            message={
-              complete
-                ? "Nice work. Your completed training is ready to review anytime."
-                : "Ready when you are. Let's pick up where you left off."
-            }
+        <div className="flex justify-center lg:justify-end">
+          <CourseCoverArtwork
+            imageUrl={coverUrl}
+            alt={`${courseTitle} course cover`}
+            size="hero"
           />
         </div>
       </div>
@@ -339,9 +423,22 @@ function ProgramRail({
             {program.title}
           </h2>
         </div>
-        <Badge tone="blue" size="sm">
-          {program.course_order_mode === "sequential" ? "Sequential" : "Any order"}
-        </Badge>
+        <div className="flex flex-wrap justify-end gap-2">
+          {!program.is_published ? (
+            <Badge tone="yellow" size="sm">Private review</Badge>
+          ) : null}
+          <Badge tone="blue" size="sm">
+            {program.course_order_mode === "sequential" ? "Sequential" : "Any order"}
+          </Badge>
+        </div>
+      </div>
+
+      <div className="px-2 pb-3">
+        <CourseCoverArtwork
+          imageUrl={program.thumbnailUrl}
+          alt={`${program.title} program cover`}
+          size="rail"
+        />
       </div>
 
       {program.courses.length === 0 ? (
@@ -461,7 +558,7 @@ function ContinueLearning({
 }: {
   courseId?: string;
   courseTitle?: string;
-  lessons: Array<{ id: string; title: string }>;
+  lessons: Array<{ id: string; title: string; thumbnailUrl?: string }>;
   completedLessonIds: Set<string>;
   nextLessonId?: string;
 }) {
@@ -517,6 +614,7 @@ function ContinueLearning({
                   <LessonCard
                     eyebrow="Required lesson"
                     title={lesson.title}
+                    image={lesson.thumbnailUrl}
                     tone={tones[index % tones.length]}
                     pose={poses[index % poses.length]}
                     mascotBase="/brand/mascot"

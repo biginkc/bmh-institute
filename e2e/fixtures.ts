@@ -6,8 +6,10 @@
 // (Supabase ephemeral branches) or Path C (prod-with-prefix-cleanup).
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
+import { requireE2eSeedPassword } from "../src/lib/testing/e2e-seed-password";
+
 export const TEST_USER_EMAIL = "claude@test.com";
-export const TEST_USER_PASSWORD = "test12345";
+export const TEST_USER_PASSWORD = requireE2eSeedPassword();
 
 export function adminClient(): SupabaseClient {
   const url =
@@ -21,9 +23,6 @@ export function adminClient(): SupabaseClient {
       "E2E fixtures need TEST_SUPABASE_URL + TEST_SUPABASE_SERVICE_ROLE_KEY in the environment.",
     );
   }
-  // BMH Institute has ONE Supabase project, the prod project
-  // (dhvfsyteqsxagokoerrx). Refusing to construct an admin client against
-  // it prevents specs from trashing prod data.
   if (url.includes("dhvfsyteqsxagokoerrx")) {
     throw new Error(
       "E2E fixtures refusing to run against the prod project (dhvfsyteqsxagokoerrx). Point TEST_SUPABASE_URL at a non-prod project.",
@@ -35,23 +34,30 @@ export function adminClient(): SupabaseClient {
 }
 
 /**
- * Ensure the well-known test user exists and can sign in with the shared
- * password. Idempotent: returns the existing user id if already present,
- * otherwise creates and confirms the user.
+ * Ensure the durable test user exists and rotate it to the injected CI secret
+ * on every run. The secret is never returned in logs.
  */
 export async function ensureTestUser(admin: SupabaseClient): Promise<string> {
   const { data, error } = await admin.auth.admin.listUsers({ perPage: 200 });
   if (error) throw error;
-  const existing = data.users.find((u) => u.email === TEST_USER_EMAIL);
-  if (existing) return existing.id;
+  const existing = data.users.find((user) => user.email === TEST_USER_EMAIL);
+  if (existing) {
+    const { error: updateError } = await admin.auth.admin.updateUserById(
+      existing.id,
+      { password: TEST_USER_PASSWORD },
+    );
+    if (updateError) throw updateError;
+    return existing.id;
+  }
 
-  const { data: created, error: createErr } = await admin.auth.admin.createUser({
-    email: TEST_USER_EMAIL,
-    password: TEST_USER_PASSWORD,
-    email_confirm: true,
-  });
-  if (createErr || !created.user) {
-    throw createErr ?? new Error("Failed to create test user");
+  const { data: created, error: createError } =
+    await admin.auth.admin.createUser({
+      email: TEST_USER_EMAIL,
+      password: TEST_USER_PASSWORD,
+      email_confirm: true,
+    });
+  if (createError || !created.user) {
+    throw createError ?? new Error("Failed to create test user");
   }
   return created.user.id;
 }

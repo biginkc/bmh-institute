@@ -9,6 +9,10 @@ export interface SearchBarProps {
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   /** Override the leading icon. */
   icon?: React.ReactNode;
+  inputProps?: Omit<
+    React.InputHTMLAttributes<HTMLInputElement>,
+    "value" | "onChange" | "placeholder"
+  >;
 }
 
 type SearchBarRuntimeProps = SearchBarProps &
@@ -16,9 +20,17 @@ type SearchBarRuntimeProps = SearchBarProps &
 
 /** Pill-shaped search field used in the course catalog and dashboard header. */
 export function SearchBar(props: SearchBarProps) {
-  const { placeholder = "Search lessons…", value, onChange, icon, style, ...rest } =
-    props as SearchBarRuntimeProps;
+  const {
+    placeholder = "Search lessons…",
+    value,
+    onChange,
+    icon,
+    inputProps,
+    style,
+    ...rest
+  } = props as SearchBarRuntimeProps;
   const [focus, setFocus] = React.useState(false);
+  const { onFocus, onBlur, ...inputRest } = inputProps ?? {};
 
   return (
     <div
@@ -43,12 +55,19 @@ export function SearchBar(props: SearchBarProps) {
         {icon || <Search aria-hidden="true" size={18} />}
       </span>
       <input
+        {...inputRest}
         value={value}
         onChange={onChange}
         placeholder={placeholder}
-        aria-label={placeholder}
-        onFocus={() => setFocus(true)}
-        onBlur={() => setFocus(false)}
+        aria-label={inputProps?.["aria-label"] ?? placeholder}
+        onFocus={(event) => {
+          setFocus(true);
+          onFocus?.(event);
+        }}
+        onBlur={(event) => {
+          setFocus(false);
+          onBlur?.(event);
+        }}
         style={{
           flex: 1,
           border: "none",

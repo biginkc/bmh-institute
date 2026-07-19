@@ -1,0 +1,145 @@
+{
+  "schema_version": "bmh-held-video-studio-import/v1",
+  "status": "manual_studio_preparation_only",
+  "source_key": "video-slot-01-mindset",
+  "provider_call_allowed": false,
+  "render_allowed": false,
+  "generate_button_allowed_for_codex": false,
+  "narration": {
+    "path": "docs/course-production/held-video-recuts/generated/video-slot-01-mindset-studio-import.txt",
+    "sha256": "12d315c15b239f32a776f66c8d9c28130cdfb0e092c6f52f434aee7eb348cc94",
+    "size_bytes": 4642,
+    "line_count": 12,
+    "format": "one UTF-8 narration line per canonical provider scene; no blank lines"
+  },
+  "studio_preparation": {
+    "manual_only": true,
+    "canonical_video_input_count": 12,
+    "narration_line_character_limit": 1000,
+    "studio_api_single_request_video_input_limit": 50,
+    "canonical_sequence_fits_single_api_request": true,
+    "instruction": "Create one Studio scene per narration line, then apply the sidecar pause at that scene boundary."
+  },
+  "scene_map": [
+    {
+      "line_number": 1,
+      "input_index": 0,
+      "source_scene_id": "mindset-open",
+      "segment_id": "mindset-open",
+      "segment_kind": "andrea_narration",
+      "input_text_sha256": "363d7b67277b51780d82b6ae6d7a511b717010601e50db300d7d2801fd696341",
+      "pause_after_seconds": 2,
+      "pause_kind": "standard_scene_end"
+    },
+    {
+      "line_number": 2,
+      "input_index": 1,
+      "source_scene_id": "mindset-service",
+      "segment_id": "mindset-service",
+      "segment_kind": "andrea_narration",
+      "input_text_sha256": "93ff62aff2e3acf86727d8c558e76d26e25faa299394d227e564091a24ad840e",
+      "pause_after_seconds": 2,
+      "pause_kind": "standard_scene_end"
+    },
+    {
+      "line_number": 3,
+      "input_index": 2,
+      "source_scene_id": "mindset-alignment",
+      "segment_id": "mindset-alignment",
+      "segment_kind": "andrea_narration",
+      "input_text_sha256": "37d72ed1732ed90b0ab499f26d948b762af7e17b416dfd690ebf9517c1530a9b",
+      "pause_after_seconds": 2,
+      "pause_kind": "standard_scene_end"
+    },
+    {
+      "line_number": 4,
+      "input_index": 3,
+      "source_scene_id": "mindset-clarity",
+      "segment_id": "mindset-clarity",
+      "segment_kind": "andrea_narration",
+      "input_text_sha256": "e567811b6dd32dcac85e8e4cc9f8f7124e20dcf30720954e0a57a2a26561345e",
+      "pause_after_seconds": 2,
+      "pause_kind": "standard_scene_end"
+    },
+    {
+      "line_number": 5,
+      "input_index": 4,
+      "source_scene_id": "mindset-actions",
+      "segment_id": "mindset-actions",
+      "segment_kind": "andrea_narration",
+      "input_text_sha256": "36618432c1f9e0283b0eb4fa8e6b3696993454ee72c8e53f7fe9c4bd75a6e88b",
+      "pause_after_seconds": 2,
+      "pause_kind": "standard_scene_end"
+    },
+    {
+      "line_number": 6,
+      "input_index": 5,
+      "source_scene_id": "mindset-curiosity",
+      "segment_id": "mindset-curiosity",
+      "segment_kind": "andrea_narration",
+      "input_text_sha256": "3906188aedd2e99d984a85bdc3aad87856547f3bf7887cc451d075adece870ad",
+      "pause_after_seconds": 2,
+      "pause_kind": "standard_scene_end"
+    },
+    {
+      "line_number": 7,
+      "input_index": 6,
+      "source_scene_id": "mindset-equal",
+      "segment_id": "mindset-equal",
+      "segment_kind": "andrea_narration",
+      "input_text_sha256": "dc27e1104668e9211686f1848c4214e0af70866275c24a652d3acff695b4c8ea",
+      "pause_after_seconds": 2,
+      "pause_kind": "standard_scene_end"
+    },
+    {
+      "line_number": 8,
+      "input_index": 7,
+      "source_scene_id": "mindset-long-game",
+      "segment_id": "mindset-long-game",
+      "segment_kind": "andrea_narration",
+      "input_text_sha256": "1e3a87616acd549c17b8518d0d291d35c7a089d4a2761c5745bd082e8b151bd3",
+      "pause_after_seconds": 2,
+      "pause_kind": "standard_scene_end"
+    },
+    {
+      "line_number": 9,
+      "input_index": 8,
+      "source_scene_id": "mindset-puzzles",
+      "segment_id": "mindset-puzzles",
+      "segment_kind": "andrea_narration",
+      "input_text_sha256": "c9ff52276ea76f26d102d1645e9b7e438d23101178d050d581d164b6733382ea",
+      "pause_after_seconds": 2,
+      "pause_kind": "standard_scene_end"
+    },
+    {
+      "line_number": 10,
+      "input_index": 9,
+      "source_scene_id": "mindset-reps",
+      "segment_id": "mindset-reps",
+      "segment_kind": "andrea_narration",
+      "input_text_sha256": "339ccbc8c05a248bdc932eb2c7da2d9b1095944b9317154ded75a1160bfe5e90",
+      "pause_after_seconds": 2,
+      "pause_kind": "standard_scene_end"
+    },
+    {
+      "line_number": 11,
+      "input_index": 10,
+      "source_scene_id": "mindset-understand",
+      "segment_id": "mindset-understand",
+      "segment_kind": "andrea_narration",
+      "input_text_sha256": "6221502abf84e25dc71da60d98ed1c2dca377657c8d18e867db3a40a28963714",
+      "pause_after_seconds": 2,
+      "pause_kind": "standard_scene_end"
+    },
+    {
+      "line_number": 12,
+      "input_index": 11,
+      "source_scene_id": "mindset-transition",
+      "segment_id": "mindset-transition",
+      "segment_kind": "andrea_narration",
+      "input_text_sha256": "71d2d0fa13f5bfc5b8bc9d018a3f9c0c203485bd0ca7d26fde59980f1fd0174e",
+      "pause_after_seconds": 2,
+      "pause_kind": "standard_scene_end"
+    }
+  ]
+}

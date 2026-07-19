@@ -1,0 +1,7 @@
+Use case: stylized-concept
+Asset type: BMH Institute Offer Presentation B video-poster master, wide 16:9 artwork
+Primary request: Create a focused illustration about moving from a distressed property to a clear, protected offer decision. The exact mapped video must inform the fixer house, offer folder, choice path, handshake, and protection cues.
+Input images: Image 1 and Image 2 are the canonical BMH Sticker System references. Image 3 is the approved recurring curly-haired seller identity root. Image 4 is the checksum-bound contact sheet from the exact mapped video.
+Character direction: Show exactly one person: the recurring curly-haired seller. Preserve the approved face, curly hair, proportions, clothing language, pure-white skin fill, and thick slightly wobbly black line weight. Put him on the left walking briskly toward the right, carrying a sealed blank offer folder and extending one open hand. This moving stride must be materially different from the seated Offer A poster.
+Scene: uniform flat cornflower-blue background. Show a distressed house, blank checklist and handshake nodes leading to a shield check.
+Constraints: one person only; no Andrea; no words, letters, numbers, currency, logos, watermark, gradients, texture, shadows, extra limbs, cropped anatomy, or unrelated objects. Keep all meaningful content inside the central 80 percent.

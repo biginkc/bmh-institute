@@ -1,0 +1,135 @@
+{
+  "schema_version": "bmh-held-video-studio-import/v1",
+  "status": "manual_studio_preparation_only",
+  "source_key": "video-slot-15-closing",
+  "provider_call_allowed": false,
+  "render_allowed": false,
+  "generate_button_allowed_for_codex": false,
+  "narration": {
+    "path": "docs/course-production/held-video-recuts/generated/video-slot-15-closing-studio-import.txt",
+    "sha256": "d28850b9b8c6a847b02c552d27fc19a60dd4da0011e93519c7c2cdb0f9317738",
+    "size_bytes": 4686,
+    "line_count": 11,
+    "format": "one UTF-8 narration line per canonical provider scene; no blank lines"
+  },
+  "studio_preparation": {
+    "manual_only": true,
+    "canonical_video_input_count": 11,
+    "narration_line_character_limit": 1000,
+    "studio_api_single_request_video_input_limit": 50,
+    "canonical_sequence_fits_single_api_request": true,
+    "instruction": "Create one Studio scene per narration line, then apply the sidecar pause at that scene boundary."
+  },
+  "scene_map": [
+    {
+      "line_number": 1,
+      "input_index": 0,
+      "source_scene_id": "closing-open",
+      "segment_id": "closing-open",
+      "segment_kind": "andrea_narration",
+      "input_text_sha256": "9d71e4e474a0149cf83bc49ae0047a2a14c9a31334839ccdd21e202166a70b04",
+      "pause_after_seconds": 2,
+      "pause_kind": "standard_scene_end"
+    },
+    {
+      "line_number": 2,
+      "input_index": 1,
+      "source_scene_id": "closing-handoff",
+      "segment_id": "closing-handoff",
+      "segment_kind": "andrea_narration",
+      "input_text_sha256": "6b2f11f47dcb107bd4a15723a66c68ad92a211bb79d5811169f15d09f0ac03e1",
+      "pause_after_seconds": 2,
+      "pause_kind": "standard_scene_end"
+    },
+    {
+      "line_number": 3,
+      "input_index": 2,
+      "source_scene_id": "closing-prepare",
+      "segment_id": "closing-prepare",
+      "segment_kind": "andrea_narration",
+      "input_text_sha256": "655ed180e84876820bee2945f7b02e0887b2497793e89a81dc5b56d60cb5f3de",
+      "pause_after_seconds": 2,
+      "pause_kind": "standard_scene_end"
+    },
+    {
+      "line_number": 4,
+      "input_index": 3,
+      "source_scene_id": "closing-authority",
+      "segment_id": "closing-authority",
+      "segment_kind": "andrea_narration",
+      "input_text_sha256": "dad24acb52ebc17d649995b81d225c87312abc998b5fe59aad406283e1a2e03b",
+      "pause_after_seconds": 2,
+      "pause_kind": "standard_scene_end"
+    },
+    {
+      "line_number": 5,
+      "input_index": 4,
+      "source_scene_id": "closing-present",
+      "segment_id": "closing-present",
+      "segment_kind": "andrea_narration",
+      "input_text_sha256": "2838c1dcd34551e93e65954c637669e4c26f1861dea967a403d263c54617ec4f",
+      "pause_after_seconds": 2,
+      "pause_kind": "standard_scene_end"
+    },
+    {
+      "line_number": 6,
+      "input_index": 5,
+      "source_scene_id": "closing-price-gap",
+      "segment_id": "closing-price-gap",
+      "segment_kind": "andrea_narration",
+      "input_text_sha256": "92c740eef5340cc25e435ea2e140522bd319bd23837df4450cd1b94f91e06b5a",
+      "pause_after_seconds": 2,
+      "pause_kind": "standard_scene_end"
+    },
+    {
+      "line_number": 7,
+      "input_index": 6,
+      "source_scene_id": "closing-consent",
+      "segment_id": "closing-consent",
+      "segment_kind": "andrea_narration",
+      "input_text_sha256": "526027ddb96f9cff2d8bc23a91d9d2a98c9510ed94d1dbb637eebd92276d9b3d",
+      "pause_after_seconds": 2,
+      "pause_kind": "standard_scene_end"
+    },
+    {
+      "line_number": 8,
+      "input_index": 7,
+      "source_scene_id": "closing-after-agreement",
+      "segment_id": "closing-after-agreement",
+      "segment_kind": "andrea_narration",
+      "input_text_sha256": "eb66b9c966dd47a0ea99a09b07dd38745bf93a042f63a6fec300f56395358ad2",
+      "pause_after_seconds": 2,
+      "pause_kind": "standard_scene_end"
+    },
+    {
+      "line_number": 9,
+      "input_index": 8,
+      "source_scene_id": "closing-remorse",
+      "segment_id": "closing-remorse",
+      "segment_kind": "andrea_narration",
+      "input_text_sha256": "944e5eaed8e265af9b31b15ed05f2ae0d8f9701dd6c8a6dc62e01a3e1b2f3299",
+      "pause_after_seconds": 2,
+      "pause_kind": "standard_scene_end"
+    },
+    {
+      "line_number": 10,
+      "input_index": 9,
+      "source_scene_id": "closing-risks",
+      "segment_id": "closing-risks",
+      "segment_kind": "andrea_narration",
+      "input_text_sha256": "f865f82ce9269c5b97c33cfea836eabdf050437764d646142e12fa4d549d1edb",
+      "pause_after_seconds": 2,
+      "pause_kind": "standard_scene_end"
+    },
+    {
+      "line_number": 11,
+      "input_index": 10,
+      "source_scene_id": "closing-transition",
+      "segment_id": "closing-transition",
+      "segment_kind": "andrea_narration",
+      "input_text_sha256": "768758e8896649fad7f10bcc67b9a1cefd409ba0ea189b719822adb05155e27d",
+      "pause_after_seconds": 2,
+      "pause_kind": "standard_scene_end"
+    }
+  ]
+}

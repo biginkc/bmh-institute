@@ -28,10 +28,10 @@ test.describe("learner onboarding", () => {
       await signIn(page, fixture.learner.email, fixture.password);
 
       await expect(page.getByText("In progress")).toBeVisible();
-      await expect(page.getByText(`${fixture.prefix} Content Lesson`)).toBeVisible();
+      await expect(page.getByText(`${fixture.prefix} Quiz Lesson`)).toBeVisible();
       await expect(
         page.getByRole("link", { name: /^resume lesson$/i }),
-      ).toHaveAttribute("href", `/lessons/${fixture.contentLessonId}`);
+      ).toHaveAttribute("href", `/lessons/${fixture.quizLessonId}`);
       await expect(page.getByText("Complete required lessons")).toBeVisible();
       await expect(page.getByRole("link", { name: /^profile$/i })).toHaveAttribute(
         "href",

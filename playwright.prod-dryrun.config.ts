@@ -3,6 +3,11 @@ import path from "node:path";
 
 import { defineConfig, devices } from "@playwright/test";
 
+import {
+  CREDENTIAL_SAFE_PLAYWRIGHT_USE,
+} from "./src/lib/testing/credential-artifact-policy";
+import { requireInstituteProductionBaseUrl } from "./src/lib/testing/production-base-url";
+
 function loadEnvFile(filename: string): Record<string, string> {
   const filepath = path.resolve(__dirname, filename);
   if (!fs.existsSync(filepath)) return {};
@@ -31,10 +36,10 @@ const env = {
   ...loadEnvFile(".env.test.local"),
 };
 
-const baseURL =
+const baseURL = requireInstituteProductionBaseUrl(
   process.env.E2E_PROD_BASE_URL ??
-  env.E2E_PROD_BASE_URL ??
-  "https://institute.bmhgroupkc.com";
+  env.E2E_PROD_BASE_URL,
+);
 
 process.env.E2E_PROD_BASE_URL = baseURL;
 process.env.TEST_SUPABASE_URL =
@@ -75,8 +80,7 @@ export default defineConfig({
   expect: { timeout: 10_000 },
   use: {
     baseURL,
-    trace: "retain-on-failure",
-    screenshot: "only-on-failure",
     ...devices["Desktop Chrome"],
+    ...CREDENTIAL_SAFE_PLAYWRIGHT_USE,
   },
 });

@@ -1,8 +1,10 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 
 import { Button, Input } from "@/components/bmh-ds";
+import { FileUpload } from "@/components/file-upload";
+import { manualArtworkNamespace } from "@/lib/artwork/paths";
 
 import type { CourseFormState } from "./actions";
 
@@ -15,16 +17,23 @@ type Defaults = {
   title?: string | null;
   description?: string | null;
   is_published?: boolean | null;
+  thumbnail_path?: string | null;
+  content_import_id?: string | null;
+  thumbnail_asset_key?: string | null;
+  thumbnail_approved_path?: string | null;
+  thumbnail_approved_sha256?: string | null;
 };
 
 export function CourseForm({
   action,
   submitLabel,
   defaults,
+  entityId,
 }: {
   action: Action;
   submitLabel: string;
   defaults?: Defaults;
+  entityId?: string;
 }) {
   const [state, formAction, pending] = useActionState<
     CourseFormState,
@@ -32,6 +41,10 @@ export function CourseForm({
   >(action, null);
   const fieldError = (name: string): string | undefined =>
     state && !state.ok ? state.fieldErrors?.[name] : undefined;
+  const [thumbnailPath, setThumbnailPath] = useState(defaults?.thumbnail_path ?? "");
+  const artworkPrefix = !defaults?.content_import_id && entityId
+    ? manualArtworkNamespace("course", entityId)
+    : null;
 
   return (
     <form action={formAction} className="flex flex-col gap-5">
@@ -59,6 +72,38 @@ export function CourseForm({
           defaultValue={defaults?.description ?? ""}
           className="w-full rounded-[var(--bmh-radius-md)] border-2 border-[var(--ink-300)] bg-[var(--paper)] px-4 py-3 font-[family-name:var(--font-body)] text-base font-semibold text-[var(--ink-900)] outline-none transition focus-visible:border-[var(--action)] focus-visible:ring-4 focus-visible:ring-[var(--focus-ring)]"
         />
+      </div>
+
+      <div className="flex items-center gap-2.5">
+        <input type="hidden" name="thumbnail_path" value={thumbnailPath} />
+        <div className="flex w-full flex-col gap-1.5">
+          <label
+            htmlFor="thumbnail_path_display"
+            className="font-[family-name:var(--font-body)] text-sm font-bold text-[var(--ink-800)]"
+          >
+            Course cover path
+          </label>
+          <Input id="thumbnail_path_display" value={thumbnailPath} readOnly />
+          {defaults?.content_import_id ? (
+            <p className="text-xs font-semibold text-[var(--text-muted)]">
+              Imported artwork is managed through the approved course manifest.
+            </p>
+          ) : artworkPrefix ? (
+            <FileUpload
+              accept="image/png,image/jpeg,image/webp,image/avif"
+              maxMb={20}
+              label="Upload course cover"
+              currentPath={thumbnailPath || null}
+              pathPrefix={artworkPrefix}
+              onUploaded={(file) => setThumbnailPath(file.file_path)}
+            />
+          ) : (
+            <p className="text-xs font-semibold text-[var(--text-muted)]">Save the course before uploading artwork.</p>
+          )}
+          {fieldError("thumbnail_path") ? (
+            <p className="text-xs font-bold text-[var(--danger)]">{fieldError("thumbnail_path")}</p>
+          ) : null}
+        </div>
       </div>
 
       <div className="flex items-center gap-2.5">

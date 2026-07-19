@@ -1,0 +1,23 @@
+{
+  "schema_version": "bmh-artwork-postapproval-defect/v1",
+  "master_id": "master-slot-01",
+  "decision": "postapproval-defect-remediation-authorized",
+  "approval_inheritance": "forbidden",
+  "parent_source_sha256": "9cc04bee5858c661f6a66fdae45d6351da70e0925e2a4d68fd9cf232972e4a93",
+  "affected_asset": {
+    "asset_key": "poster-video-slot-01-mindset",
+    "rejected_checksum_sha256": "f51bb91968be42ab575660e23a0e2386612cb92438b13797beab4412a10338ad",
+    "defect": "The first remediation still clips the compass at the bottom and doorway at the top in the fixed left-safe crop."
+  },
+  "preserved_approved_assets": [
+    {
+      "asset_key": "thumbnail-slot-01",
+      "checksum_sha256": "3a684cd589bf3895e672e43d6a734b35c503f6b3a191e1564c997c93c8c84988"
+    },
+    {
+      "asset_key": "poster-video-slot-01-welcome",
+      "checksum_sha256": "7da124a20704285fed7b2ed1c2db81fa56be849da4222f22ce1810638ec46d07"
+    }
+  ],
+  "required_result": "A checksum-distinct crop-safe replacement through another explicit correction step, unapproved pending final artwork review."
+}

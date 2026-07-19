@@ -26,6 +26,30 @@ async function signIn(page: Page, email: string, password: string) {
   await page.waitForURL(/\/dashboard/, { timeout: 20_000 });
 }
 
+async function verifyLessonSearchSelection(
+  page: Page,
+  fixture: ProductionReadinessFixture,
+  viewport: { width: number; height: number },
+) {
+  await page.setViewportSize(viewport);
+  await page.goto("/dashboard");
+  if (viewport.width < 640) {
+    await page.getByRole("button", { name: "Search lessons" }).click();
+  }
+
+  const search = page.getByRole("combobox", { name: "Search lessons" });
+  await search.fill(fixture.prefix);
+  const result = page.getByRole("option", {
+    name: `${fixture.prefix} Content Lesson`,
+  });
+  await expect(result).toHaveAttribute("href", `/lessons/${fixture.contentLessonId}`);
+  await result.click();
+  await expect(page).toHaveURL(new RegExp(`/lessons/${fixture.contentLessonId}$`));
+  await expect(
+    page.getByRole("heading", { name: `${fixture.prefix} Content Lesson` }),
+  ).toBeVisible();
+}
+
 test.describe("production readiness lifecycle", () => {
   test("validates real production auth, DB writes, storage, review, certificates, and cleanup", async ({
     browser,
@@ -40,6 +64,11 @@ test.describe("production readiness lifecycle", () => {
       const learner = await learnerContext.newPage();
       await signIn(learner, fixture.learner.email, fixture.password);
 
+      await verifyLessonSearchSelection(learner, fixture, { width: 1280, height: 900 });
+      await verifyLessonSearchSelection(learner, fixture, { width: 390, height: 844 });
+      await learner.setViewportSize({ width: 1280, height: 900 });
+      await learner.goto("/dashboard");
+
       await expect(
         learner.getByText(`${fixture.prefix} Program`),
       ).toBeVisible();
@@ -52,10 +81,19 @@ test.describe("production readiness lifecycle", () => {
       await expect(
         learner.getByRole("heading", { name: `${fixture.prefix} Content Lesson` }),
       ).toBeVisible();
-      await learner.getByRole("button", { name: /mark lesson complete/i }).click();
-      await expect(learner.getByText(/lesson complete/i)).toBeVisible();
+      await expect(
+        learner.getByLabel(`${fixture.prefix} Required video`),
+      ).toBeVisible();
+      await learner.getByRole("button", { name: /play lesson video/i }).click();
+      await expect(learner.getByRole("status")).toHaveText("Complete", {
+        timeout: 15_000,
+      });
+      await expect(
+        learner.getByText(/this lesson is complete/i),
+      ).toBeVisible();
 
       await learner.goto(`/lessons/${fixture.quizLessonId}`);
+      await learner.getByRole("button", { name: /start quiz/i }).click();
       await learner.getByText(fixture.correctOptionText).click();
       await learner.getByRole("button", { name: /submit quiz/i }).click();
       await expect(learner.getByText(/^Passed$/)).toBeVisible();
@@ -73,11 +111,11 @@ test.describe("production readiness lifecycle", () => {
 
       await adminPage.goto("/admin/reports");
       await expect(
-        adminPage.getByRole("heading", { name: "Pilot monitoring" }),
+        adminPage.getByRole("heading", { name: "Learner monitoring" }),
       ).toBeVisible();
       await expect(
         adminPage.getByRole("link", { name: /^export csv$/i }),
-      ).toHaveAttribute("href", "/admin/reports/pilot/export");
+      ).toHaveAttribute("href", "/admin/reports/learners/export");
       const monitoringReviewRow = adminPage
         .getByRole("row")
         .filter({ hasText: fixture.learner.email });

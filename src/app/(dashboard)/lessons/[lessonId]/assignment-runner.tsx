@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { MessageSquare, RotateCcw, Send, UploadCloud } from "lucide-react";
 import { toast } from "sonner";
 
@@ -47,31 +48,37 @@ export function AssignmentRunner({
   const [filePath, setFilePath] = useState<string | null>(null);
   const [filename, setFilename] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const router = useRouter();
 
   function onSubmit() {
     startTransition(async () => {
-      const result = await submitAssignment({
-        assignmentId: assignment.id,
-        lessonId,
-        submission_type: assignment.submission_type,
-        submission_text: assignment.submission_type === "text" ? text : undefined,
-        submission_url: assignment.submission_type === "url" ? url : undefined,
-        submission_file_path:
-          assignment.submission_type === "file_upload" ? filePath ?? "" : undefined,
-      });
-      if (!result.ok) {
-        toast.error(result.error);
-        return;
+      try {
+        const result = await submitAssignment({
+          assignmentId: assignment.id,
+          lessonId,
+          submission_type: assignment.submission_type,
+          submission_text: assignment.submission_type === "text" ? text : undefined,
+          submission_url: assignment.submission_type === "url" ? url : undefined,
+          submission_file_path:
+            assignment.submission_type === "file_upload" ? filePath ?? "" : undefined,
+        });
+        if (!result.ok) {
+          toast.error(result.error);
+          return;
+        }
+        toast.success(
+          assignment.requires_review
+            ? "Submitted. An admin will review."
+            : "Submitted.",
+        );
+        setText("");
+        setUrl("");
+        setFilePath(null);
+        setFilename(null);
+      } catch {
+        router.refresh();
+        toast.error("Submission could not be confirmed. Check your connection and try again.");
       }
-      toast.success(
-        assignment.requires_review
-          ? "Submitted. An admin will review."
-          : "Submitted.",
-      );
-      setText("");
-      setUrl("");
-      setFilePath(null);
-      setFilename(null);
     });
   }
 
@@ -134,7 +141,7 @@ export function AssignmentRunner({
         />
       ) : null}
 
-      {approved ? null : (
+      {approved || awaitingReview ? null : (
         <Card padding="md">
           <h2 className="mb-5 font-[family-name:var(--font-display)] text-xl font-extrabold text-[var(--ink-900)]">
             Your submission

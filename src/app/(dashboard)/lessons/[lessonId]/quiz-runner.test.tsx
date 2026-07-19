@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { QuizRunner, type QuizQuestion } from "./quiz-runner";
-import { submitQuizAttempt } from "./quiz-actions";
+import { startQuizAttempt, submitQuizAttempt } from "./quiz-actions";
 
 vi.mock("sonner", () => ({
   toast: {
@@ -12,6 +12,7 @@ vi.mock("sonner", () => ({
 }));
 
 vi.mock("./quiz-actions", () => ({
+  startQuizAttempt: vi.fn(),
   submitQuizAttempt: vi.fn(),
 }));
 
@@ -46,16 +47,44 @@ const questions: QuizQuestion[] = [
   },
 ];
 
-function renderRunner(overrideQuestions = questions) {
+function renderRunner() {
   return render(
     <QuizRunner
       quizId="quiz-1"
       lessonId="lesson-1"
       passingScore={80}
-      questions={overrideQuestions}
       backHref="/courses/course-1"
       attemptsUsed={1}
       attemptsLeft={2}
+      retakeCooldownHours={0}
+    />,
+  );
+}
+
+function renderFinalAttemptRunner() {
+  return render(
+    <QuizRunner
+      quizId="quiz-1"
+      lessonId="lesson-1"
+      passingScore={80}
+      backHref="/courses/course-1"
+      attemptsUsed={2}
+      attemptsLeft={1}
+      retakeCooldownHours={0}
+    />,
+  );
+}
+
+function renderCooldownRunner() {
+  return render(
+    <QuizRunner
+      quizId="quiz-1"
+      lessonId="lesson-1"
+      passingScore={80}
+      backHref="/courses/course-1"
+      attemptsUsed={1}
+      attemptsLeft={2}
+      retakeCooldownHours={24}
     />,
   );
 }
@@ -63,6 +92,19 @@ function renderRunner(overrideQuestions = questions) {
 describe("<QuizRunner />", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(startQuizAttempt).mockResolvedValue({
+      ok: true,
+      attemptId: "attempt-1",
+      questions: questions.map((question, index) => ({
+        ...question,
+        sort_order: index + 1,
+        options: question.options.map((option, optionIndex) => ({
+          ...option,
+          sort_order: optionIndex + 1,
+        })),
+      })),
+      resumed: false,
+    });
   });
 
   it("keeps all three question types selectable and submits the same response payload", async () => {
@@ -74,10 +116,13 @@ describe("<QuizRunner />", () => {
       earnedPoints: 3,
       totalPoints: 3,
       attemptId: "attempt-1",
+      review: null,
     });
     renderRunner();
 
-    expect(screen.getByText("Attempt 2 of 3")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Start quiz" }));
+
+    expect(await screen.findByText("Attempt 2 of 3")).toBeInTheDocument();
     expect(screen.getByText("Select all that apply")).toBeInTheDocument();
 
     await user.click(screen.getByLabelText("Ask one clear question"));
@@ -88,8 +133,7 @@ describe("<QuizRunner />", () => {
 
     await waitFor(() =>
       expect(submitQuizAttempt).toHaveBeenCalledWith({
-        quizId: "quiz-1",
-        lessonId: "lesson-1",
+        attemptId: "attempt-1",
         responses: {
           single: ["single-b"],
           truth: ["false"],
@@ -109,7 +153,9 @@ describe("<QuizRunner />", () => {
     const { toast } = await import("sonner");
     renderRunner();
 
-    await user.click(screen.getByRole("button", { name: "Submit quiz" }));
+    await user.click(screen.getByRole("button", { name: "Start quiz" }));
+
+    await user.click(await screen.findByRole("button", { name: "Submit quiz" }));
 
     expect(toast.error).toHaveBeenCalledWith(
       "Answer every question before submitting.",
@@ -126,10 +172,26 @@ describe("<QuizRunner />", () => {
       earnedPoints: 1,
       totalPoints: 2,
       attemptId: "attempt-2",
+      review: null,
     });
-    renderRunner([questions[0]]);
+    vi.mocked(startQuizAttempt).mockResolvedValue({
+      ok: true,
+      attemptId: "attempt-2",
+      questions: [{
+        ...questions[0],
+        sort_order: 1,
+        options: questions[0].options.map((option, index) => ({
+          ...option,
+          sort_order: index + 1,
+        })),
+      }],
+      resumed: false,
+    });
+    renderRunner();
 
-    await user.click(screen.getByLabelText("Lead with the offer"));
+    await user.click(screen.getByRole("button", { name: "Start quiz" }));
+
+    await user.click(await screen.findByLabelText("Lead with the offer"));
     await user.click(screen.getByRole("button", { name: "Submit quiz" }));
 
     expect(
@@ -142,17 +204,99 @@ describe("<QuizRunner />", () => {
 
     await user.click(screen.getByRole("button", { name: "Retake quiz" }));
 
-    expect(screen.getByRole("heading", { name: "Quiz" })).toBeInTheDocument();
-    expect(screen.getByLabelText("Lead with the offer")).not.toBeChecked();
+    expect(
+      screen.getByRole("heading", { name: "Ready for the checkpoint?" }),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Start quiz" }));
+    expect(await screen.findByText("Attempt 3 of 3")).toBeInTheDocument();
   });
 
-  it("uses the branded empty state when an admin has not added questions", () => {
-    renderRunner([]);
+  it("shows the server error when an attempt cannot start", async () => {
+    const user = userEvent.setup();
+    const { toast } = await import("sonner");
+    vi.mocked(startQuizAttempt).mockResolvedValue({
+      ok: false,
+      error: "This quiz does not have any questions yet.",
+    });
+    renderRunner();
 
-    expect(screen.getByRole("heading", { name: "No questions yet" })).toBeInTheDocument();
-    expect(screen.getByRole("img", { name: "Andrea" })).toHaveAttribute(
-      "src",
-      "/brand/mascot/face-curious.png",
+    await user.click(screen.getByRole("button", { name: "Start quiz" }));
+
+    await waitFor(() =>
+      expect(toast.error).toHaveBeenCalledWith(
+        "This quiz does not have any questions yet.",
+      ),
     );
+  });
+
+  it("does not offer an in-page retake after the final allowed attempt", async () => {
+    const user = userEvent.setup();
+    vi.mocked(submitQuizAttempt).mockResolvedValue({
+      ok: true,
+      score: 50,
+      passed: false,
+      earnedPoints: 1,
+      totalPoints: 2,
+      attemptId: "attempt-final",
+      review: null,
+    });
+    vi.mocked(startQuizAttempt).mockResolvedValue({
+      ok: true,
+      attemptId: "attempt-final",
+      questions: [{
+        ...questions[0],
+        sort_order: 1,
+        options: questions[0].options.map((option, index) => ({
+          ...option,
+          sort_order: index + 1,
+        })),
+      }],
+      resumed: false,
+    });
+    renderFinalAttemptRunner();
+
+    await user.click(screen.getByRole("button", { name: "Start quiz" }));
+    expect(await screen.findByText("Attempt 3 of 3")).toBeInTheDocument();
+    await user.click(screen.getByLabelText("Lead with the offer"));
+    await user.click(screen.getByRole("button", { name: "Submit quiz" }));
+
+    expect(await screen.findByRole("heading", { name: "Attempts complete" })).toBeVisible();
+    expect(screen.queryByRole("button", { name: "Retake quiz" })).toBeNull();
+    expect(screen.getByText(/no more attempts are available/i)).toBeVisible();
+  });
+
+  it("returns cooldown retakes to the server gate instead of offering an immediate retry", async () => {
+    const user = userEvent.setup();
+    vi.mocked(submitQuizAttempt).mockResolvedValue({
+      ok: true,
+      score: 50,
+      passed: false,
+      earnedPoints: 1,
+      totalPoints: 2,
+      attemptId: "attempt-cooldown",
+      review: null,
+    });
+    vi.mocked(startQuizAttempt).mockResolvedValue({
+      ok: true,
+      attemptId: "attempt-cooldown",
+      questions: [{
+        ...questions[0],
+        sort_order: 1,
+        options: questions[0].options.map((option, index) => ({
+          ...option,
+          sort_order: index + 1,
+        })),
+      }],
+      resumed: false,
+    });
+    renderCooldownRunner();
+
+    await user.click(screen.getByRole("button", { name: "Start quiz" }));
+    await user.click(await screen.findByLabelText("Lead with the offer"));
+    await user.click(screen.getByRole("button", { name: "Submit quiz" }));
+
+    expect(await screen.findByText(/return when the retake cooldown ends/i)).toBeVisible();
+    expect(screen.queryByRole("button", { name: "Retake quiz" })).toBeNull();
   });
 });

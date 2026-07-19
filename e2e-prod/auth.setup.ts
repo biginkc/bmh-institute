@@ -14,10 +14,7 @@ setup("authenticate via the live /login form", async ({ page }) => {
   }
 
   await page.goto("/login");
-  // shadcn CardTitle renders as a <div>, not <h>. Match by data-slot + text.
-  await expect(
-    page.locator('[data-slot="card-title"]', { hasText: /sign in/i }),
-  ).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
 
   await page.getByLabel(/email/i).fill(email);
   await page.getByLabel(/password/i).fill(password);

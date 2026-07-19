@@ -1,0 +1,143 @@
+import type { CourseImportManifest } from "./manifest";
+
+export function validCourseManifest(): CourseImportManifest {
+  return {
+    schema_version: 1,
+    import_id: "training-v1",
+    status: "draft",
+    qa_role_group: {
+      source_key: "qa-group",
+      name: "BMH Content QA",
+      description: "Private content review group.",
+    },
+    assets: [
+      {
+        source_key: "video-1",
+        kind: "video",
+        local_path: "assets/video.mp4",
+        storage_path: "courses/training/v1/video.mp4",
+        mime_type: "video/mp4",
+        checksum_sha256: null,
+        size_bytes: 10,
+        approval_status: "approved",
+      },
+      {
+        source_key: "thumb-1",
+        kind: "thumbnail",
+        local_path: "assets/thumb.webp",
+        storage_path: "courses/training/v1/thumbnails/thumb.webp",
+        mime_type: "image/webp",
+        checksum_sha256: null,
+        size_bytes: 10,
+        approval_status: "approved",
+      },
+    ],
+    program: {
+      source_key: "program",
+      title: "BMH Employee Training",
+      description: "Internal training.",
+      thumbnail_asset_key: "thumb-1",
+      is_published: false,
+      course_order_mode: "sequential",
+      certificate_enabled: true,
+      courses: [
+        {
+          source_key: "course",
+          title: "Core Training",
+          description: "Core course.",
+          thumbnail_asset_key: "thumb-1",
+          is_published: false,
+          certificate_enabled: false,
+          modules: [
+            {
+              source_key: "module",
+              title: "Orientation",
+              description: null,
+              sort_order: 0,
+              lessons: [
+                {
+                  source_key: "lesson-content",
+                  title: "Welcome",
+                  description: null,
+                  type: "content",
+                  sort_order: 0,
+                  required: true,
+                  thumbnail_asset_key: "thumb-1",
+                  blocks: [
+                    {
+                      source_key: "block-video",
+                      type: "video",
+                      sort_order: 0,
+                      required: true,
+                      content: { asset_key: "video-1", duration_seconds: 120 },
+                    },
+                    {
+                      source_key: "block-cards",
+                      type: "flashcard",
+                      sort_order: 1,
+                      required: false,
+                      content: { cards: [{ front: "BMH", back: "Better Made Homes" }] },
+                    },
+                  ],
+                },
+                {
+                  source_key: "lesson-quiz",
+                  title: "Check your knowledge",
+                  description: null,
+                  type: "quiz",
+                  sort_order: 1,
+                  required: true,
+                  thumbnail_asset_key: null,
+                  quiz: {
+                    source_key: "quiz",
+                    title: "Orientation quiz",
+                    description: null,
+                    approval_status: "approved",
+                    passing_score: 80,
+                    randomize_questions: true,
+                    randomize_answers: true,
+                    questions_per_attempt: 1,
+                    max_attempts: null,
+                    retake_cooldown_hours: 0,
+                    show_correct_answers_after: "after_pass",
+                    questions: [
+                      {
+                        source_key: "question",
+                        question_text: "What does BMH stand for?",
+                        question_type: "single_choice",
+                        explanation: "It stands for Better Made Homes.",
+                        points: 1,
+                        sort_order: 0,
+                        options: [
+                          { source_key: "option-a", option_text: "Better Made Homes", is_correct: true, sort_order: 0 },
+                          { source_key: "option-b", option_text: "Business Management Hub", is_correct: false, sort_order: 1 },
+                        ],
+                      },
+                    ],
+                  },
+                },
+                {
+                  source_key: "lesson-assignment",
+                  title: "Readiness check",
+                  description: null,
+                  type: "assignment",
+                  sort_order: 2,
+                  required: true,
+                  thumbnail_asset_key: null,
+                  assignment: {
+                    source_key: "assignment",
+                    title: "Readiness check",
+                    instructions: "Describe how you will prepare.",
+                    submission_type: "text",
+                    requires_review: true,
+                    rubric: [{ criterion: "Complete", description: "Answers every prompt." }],
+                  },
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+  };
+}

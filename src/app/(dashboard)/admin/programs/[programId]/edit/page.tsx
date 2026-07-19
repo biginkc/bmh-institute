@@ -22,7 +22,7 @@ export default async function EditProgramPage({
       supabase
         .from("programs")
         .select(
-          "id, title, description, course_order_mode, is_published, sort_order",
+          "id, title, description, thumbnail_path, content_import_id, thumbnail_asset_key, thumbnail_approved_path, thumbnail_approved_sha256, course_order_mode, is_published, sort_order",
         )
         .eq("id", programId)
         .maybeSingle(),
@@ -74,6 +74,7 @@ export default async function EditProgramPage({
             description="Title, description and sequencing behavior."
           />
           <ProgramForm
+            entityId={programId}
             action={boundAction}
             submitLabel="Save changes"
             defaults={{
@@ -82,6 +83,11 @@ export default async function EditProgramPage({
               course_order_mode:
                 (program.course_order_mode as "sequential" | "free") ?? "free",
               is_published: program.is_published as boolean,
+              thumbnail_path: program.thumbnail_path as string | null,
+              content_import_id: program.content_import_id as string | null,
+              thumbnail_asset_key: program.thumbnail_asset_key as string | null,
+              thumbnail_approved_path: program.thumbnail_approved_path as string | null,
+              thumbnail_approved_sha256: program.thumbnail_approved_sha256 as string | null,
             }}
           />
         </Card>

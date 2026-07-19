@@ -53,8 +53,14 @@ const closerSupabaseServiceRoleKey =
   env.CLOSER_TEST_SUPABASE_SERVICE_ROLE_KEY ??
   process.env.CLOSER_TEST_SUPABASE_SERVICE_ROLE_KEY ??
   "";
-const rolePlayJwtSecret =
-  env.ROLE_PLAY_JWT_SECRET ?? process.env.ROLE_PLAY_JWT_SECRET ?? "";
+const rolePlayEmbedSigningSecret =
+  env.ROLE_PLAY_EMBED_SIGNING_SECRET ??
+  process.env.ROLE_PLAY_EMBED_SIGNING_SECRET ??
+  "";
+const rolePlayCompletionVerifySecret =
+  env.ROLE_PLAY_COMPLETION_VERIFY_SECRET ??
+  process.env.ROLE_PLAY_COMPLETION_VERIFY_SECRET ??
+  "";
 const rolePlayBaseUrl =
   env.NEXT_PUBLIC_ROLE_PLAY_BASE_URL ??
   process.env.NEXT_PUBLIC_ROLE_PLAY_BASE_URL ??
@@ -66,7 +72,8 @@ process.env.TEST_SUPABASE_SERVICE_ROLE_KEY = supabaseServiceRoleKey;
 process.env.CLOSER_TEST_SUPABASE_URL = closerSupabaseUrl;
 process.env.CLOSER_TEST_SUPABASE_ANON_KEY = closerSupabaseAnonKey;
 process.env.CLOSER_TEST_SUPABASE_SERVICE_ROLE_KEY = closerSupabaseServiceRoleKey;
-process.env.ROLE_PLAY_JWT_SECRET = rolePlayJwtSecret;
+process.env.ROLE_PLAY_EMBED_SIGNING_SECRET = rolePlayEmbedSigningSecret;
+process.env.ROLE_PLAY_COMPLETION_VERIFY_SECRET = rolePlayCompletionVerifySecret;
 process.env.NEXT_PUBLIC_ROLE_PLAY_BASE_URL = rolePlayBaseUrl;
 
 const webServerEnv: Record<string, string> = {
@@ -75,7 +82,8 @@ const webServerEnv: Record<string, string> = {
   SUPABASE_SERVICE_ROLE_KEY: supabaseServiceRoleKey,
   ADMIN_EMAILS: "claude@test.com,jarrad@bmhgroupkc.com",
   NODE_ENV: "development",
-  ROLE_PLAY_JWT_SECRET: rolePlayJwtSecret,
+  ROLE_PLAY_EMBED_SIGNING_SECRET: rolePlayEmbedSigningSecret,
+  ROLE_PLAY_COMPLETION_VERIFY_SECRET: rolePlayCompletionVerifySecret,
   NEXT_PUBLIC_ROLE_PLAY_BASE_URL: rolePlayBaseUrl,
 };
 
@@ -90,7 +98,9 @@ export default defineConfig({
   expect: { timeout: 5_000 },
   use: {
     baseURL: "http://localhost:3200",
-    trace: "retain-on-failure",
+    // Auth setup fills a credential. Trace archives retain input values, so the
+    // seeded suite must never create a credential-bearing trace artifact.
+    trace: "off",
     screenshot: "only-on-failure",
   },
   projects: [

@@ -1,5 +1,7 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
+import { requireE2eSeedPassword } from "../src/lib/testing/e2e-seed-password";
+
 type SeedUser = {
   email: string;
   password: string;
@@ -14,8 +16,8 @@ const PROD_PROJECT_REF = "dhvfsyteqsxagokoerrx";
 const SUPABASE_URL = process.env.TEST_SUPABASE_URL;
 const SERVICE_ROLE = process.env.TEST_SUPABASE_SERVICE_ROLE_KEY;
 
-const E2E_PASSWORD =
-  process.env.E2E_SEED_PASSWORD?.trim() || "BMHInstituteTest123!";
+const CLEANUP_ONLY = process.argv.slice(2).includes("--cleanup-only");
+const E2E_PASSWORD = CLEANUP_ONLY ? "" : requireE2eSeedPassword();
 const SEED = {
   roleGroup: "E2E Appointment Setters",
   program: "E2E VA Onboarding",
@@ -69,6 +71,10 @@ const supabase = createClient(SUPABASE_URL, SERVICE_ROLE, {
 
 async function main() {
   await cleanupSeed(supabase);
+  if (CLEANUP_ONLY) {
+    console.log(JSON.stringify({ ok: true, cleaned: true }));
+    return;
+  }
 
   const users = await createSeedUsers(supabase);
   const roleGroupId = await insertOne("role_groups", {
@@ -208,12 +214,7 @@ async function main() {
           objectionsCourseId,
           standaloneCourseId,
         },
-        users: Object.fromEntries(
-          Object.entries(SEED.users).map(([key, user]) => [
-            key,
-            { email: user.email, password: user.password },
-          ]),
-        ),
+        seededUserCount: Object.keys(SEED.users).length,
       },
       null,
       2,
@@ -281,7 +282,10 @@ async function cleanupSeed(client: SupabaseClient) {
     perPage: 1000,
   });
   if (error) throw error;
-  const seedEmails = new Set(Object.values(SEED.users).map((user) => user.email));
+  const seedEmails = new Set([
+    ...Object.values(SEED.users).map((user) => user.email),
+    "claude@test.com",
+  ]);
   for (const user of listed.users) {
     if (user.email && seedEmails.has(user.email)) {
       const { error: deleteError } = await client.auth.admin.deleteUser(user.id);
@@ -307,7 +311,7 @@ async function createSeedUsers(client: SupabaseClient) {
       user_metadata: { full_name: user.fullName },
     });
     if (error || !data.user) {
-      throw error ?? new Error(`Failed to create ${user.email}`);
+      throw error ?? new Error(`Failed to create ${key} seed user`);
     }
     ids[key] = data.user.id;
     await client

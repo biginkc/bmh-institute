@@ -1,0 +1,125 @@
+{
+  "schema_version": "bmh-held-video-studio-import/v1",
+  "status": "manual_studio_preparation_only",
+  "source_key": "video-slot-01-welcome",
+  "provider_call_allowed": false,
+  "render_allowed": false,
+  "generate_button_allowed_for_codex": false,
+  "narration": {
+    "path": "docs/course-production/held-video-recuts/generated/video-slot-01-welcome-studio-import.txt",
+    "sha256": "b13b41dd87d5b4c8f06f237f2ce4e118b6f05acf32df8e5f0514173b31e5e761",
+    "size_bytes": 3612,
+    "line_count": 10,
+    "format": "one UTF-8 narration line per canonical provider scene; no blank lines"
+  },
+  "studio_preparation": {
+    "manual_only": true,
+    "canonical_video_input_count": 10,
+    "narration_line_character_limit": 1000,
+    "studio_api_single_request_video_input_limit": 50,
+    "canonical_sequence_fits_single_api_request": true,
+    "instruction": "Create one Studio scene per narration line, then apply the sidecar pause at that scene boundary."
+  },
+  "scene_map": [
+    {
+      "line_number": 1,
+      "input_index": 0,
+      "source_scene_id": "welcome-intro",
+      "segment_id": "welcome-intro",
+      "segment_kind": "andrea_narration",
+      "input_text_sha256": "9c6e10029d7eb6d1897856486ba8dee08f50778af6b0a02e701625200851e2da",
+      "pause_after_seconds": 2,
+      "pause_kind": "standard_scene_end"
+    },
+    {
+      "line_number": 2,
+      "input_index": 1,
+      "source_scene_id": "welcome-people-first",
+      "segment_id": "welcome-people-first",
+      "segment_kind": "andrea_narration",
+      "input_text_sha256": "eab6320273a0e247916de70faa8cb96a020d5b86070435b820dcf770e81d98fb",
+      "pause_after_seconds": 2,
+      "pause_kind": "standard_scene_end"
+    },
+    {
+      "line_number": 3,
+      "input_index": 2,
+      "source_scene_id": "welcome-service",
+      "segment_id": "welcome-service",
+      "segment_kind": "andrea_narration",
+      "input_text_sha256": "7eb2e71d3edb4f779b82e70a556f1c888d9c684c95d346b5798d234580439130",
+      "pause_after_seconds": 2,
+      "pause_kind": "standard_scene_end"
+    },
+    {
+      "line_number": 4,
+      "input_index": 3,
+      "source_scene_id": "welcome-training-map",
+      "segment_id": "welcome-training-map",
+      "segment_kind": "andrea_narration",
+      "input_text_sha256": "fa0fb5b2dc38c976aaca684c0a723b9d937d131b0a0989dd0d4f6ac64ae5429e",
+      "pause_after_seconds": 2,
+      "pause_kind": "standard_scene_end"
+    },
+    {
+      "line_number": 5,
+      "input_index": 4,
+      "source_scene_id": "welcome-script",
+      "segment_id": "welcome-script",
+      "segment_kind": "andrea_narration",
+      "input_text_sha256": "70f6cc1d90f45aadbc7a25e0b0ec33567109a22543c35315db7adb25308e8c3a",
+      "pause_after_seconds": 2,
+      "pause_kind": "standard_scene_end"
+    },
+    {
+      "line_number": 6,
+      "input_index": 5,
+      "source_scene_id": "welcome-cash-as-is",
+      "segment_id": "welcome-cash-as-is",
+      "segment_kind": "andrea_narration",
+      "input_text_sha256": "72d913622ec357393e9bdd9143f6571c264407e7a333853aa177128b783bc357",
+      "pause_after_seconds": 2,
+      "pause_kind": "standard_scene_end"
+    },
+    {
+      "line_number": 7,
+      "input_index": 6,
+      "source_scene_id": "welcome-no-pressure",
+      "segment_id": "welcome-no-pressure",
+      "segment_kind": "andrea_narration",
+      "input_text_sha256": "01f59b24683669df1a05fafdcc0284255535f9dd54023b69b7be8c8f80404d3b",
+      "pause_after_seconds": 2,
+      "pause_kind": "standard_scene_end"
+    },
+    {
+      "line_number": 8,
+      "input_index": 7,
+      "source_scene_id": "welcome-accountability",
+      "segment_id": "welcome-accountability",
+      "segment_kind": "andrea_narration",
+      "input_text_sha256": "80ff3d2e6e3ba6e4a33325ad3891e346c6b9c5074532e819b43d1f7d7e1e7bce",
+      "pause_after_seconds": 2,
+      "pause_kind": "standard_scene_end"
+    },
+    {
+      "line_number": 9,
+      "input_index": 8,
+      "source_scene_id": "welcome-mission",
+      "segment_id": "welcome-mission",
+      "segment_kind": "andrea_narration",
+      "input_text_sha256": "64f51cd7a8c2c6561e16890c6655fbce73144f9943acd508580cbd4ebc5fa68f",
+      "pause_after_seconds": 2,
+      "pause_kind": "standard_scene_end"
+    },
+    {
+      "line_number": 10,
+      "input_index": 9,
+      "source_scene_id": "welcome-transition",
+      "segment_id": "welcome-transition",
+      "segment_kind": "andrea_narration",
+      "input_text_sha256": "8e773c48d98888ad1762f4ceb84610e97f74588659d38106acd76998933448b7",
+      "pause_after_seconds": 2,
+      "pause_kind": "standard_scene_end"
+    }
+  ]
+}

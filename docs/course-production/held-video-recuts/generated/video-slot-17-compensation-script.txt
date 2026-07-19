@@ -1,0 +1,26 @@
+video-slot-17-compensation
+Held source SHA-256: cecad85478bb1a8ba5bfed7404dc045440c567ed0eaaa90b11b644e124b27846
+Status: script ready; not rendered, captioned, approved, or published
+Spoken depth: 434 words; required minimum 420
+Teaching coverage: 7 locked beats; 3 locked examples
+
+SCENE 1: Start with the written source
+Pay questions deserve a precise answer, so begin with the documents issued to you. Your current offer letter, written compensation plan, and role sheet tell you what applies. Read them together. Check the effective version and keep the current copies where you can find them. This course can explain how BMH thinks about work and measurement, but it does not create or change a pay term.
+
+SCENE 2: Understand what the scorecard measures
+The current scorecard describes the work assigned to you today. It may track conversation quality, record quality, completed handoffs, follow-through, or a team outcome. Those measures help you and your manager see where the work is strong and where coaching is needed. A scorecard does not add language to your written compensation plan. Use it to understand the work, then use the controlling documents for pay questions.
+
+SCENE 3: Keep the work visible
+Good records make the work visible. Write useful notes while the details are fresh. Keep the stage and next action current. Complete the handoff with the facts the next step needs. When the scorecard points to a result, make sure the supporting record is accurate enough to review. That discipline helps coaching and accountability. It still does not turn a course example into a term of your agreement.
+
+SCENE 4: Do not borrow another person's plan
+You may hear someone describe a document that was issued to them. That document belongs to their situation. The work, effective date, and written terms may differ from yours. Use the conversation as a reminder to check your own current documents, not as evidence that the same language applies to you. If you cannot locate the documents issued to you, ask your manager for the current copies instead of filling the gap with someone else's answer.
+
+SCENE 5: Treat old examples as old examples
+A training video, slide, or note can become outdated when the written plan changes. Imagine finding an old example that describes the work differently from your current role sheet. Do not average the two together. Follow the documents issued to you now and raise the mismatch. Training should help you understand the work. It should never become a substitute agreement simply because the example sounds familiar.
+
+SCENE 6: Ask when the documents are unclear
+Suppose your role sheet and another current document seem to disagree about the work being measured. Stop and ask your manager. Bring the exact documents and point to the language that conflicts. Ask which version controls and request the answer in the proper written source. Do not rely on memory or a hallway explanation for something this important. Once the documents are clear, use the current scorecard to track the work they describe.
+
+SCENE 7: Continue into daily operations
+Take the Compensation Engine checkpoint next. Then you'll move into the Operator Playbook and Daily Mission Control.

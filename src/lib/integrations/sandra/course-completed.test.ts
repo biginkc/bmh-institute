@@ -4,6 +4,8 @@ import { describe, expect, it, vi } from "vitest";
 
 import {
   buildSandraCourseCompletedRequest,
+  reconcilePendingSandraCourseCompletions,
+  reconcileSandraCourseCompleted,
   sendSandraCourseCompleted,
 } from "./course-completed";
 
@@ -102,4 +104,648 @@ describe("sendSandraCourseCompleted", () => {
     });
     vi.useRealTimers();
   });
+
+  it("caps an oversized timeout override to the cron-safe request budget", async () => {
+    vi.useFakeTimers();
+    const fetchMock = vi.fn(
+      (_url: string, init: RequestInit) =>
+        new Promise((_resolve, reject) => {
+          init.signal?.addEventListener("abort", () => reject(new Error("aborted")));
+        }),
+    );
+    const resultPromise = sendSandraCourseCompleted(INPUT, {
+      env: { ...ENV, SANDRA_REQUEST_TIMEOUT_MS: "10000" },
+      fetch: fetchMock as unknown as typeof fetch,
+    });
+
+    await vi.advanceTimersByTimeAsync(2_999);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    await vi.advanceTimersByTimeAsync(1);
+    await expect(resultPromise).resolves.toEqual({
+      ok: false,
+      reason: "request_failed",
+    });
+    vi.useRealTimers();
+  });
 });
+
+describe("durable Sandra course completion reconciliation", () => {
+  it("binds a program certificate to the one exact program containing the course", async () => {
+    const state = {
+      payload: null as typeof INPUT | null,
+      status: "pending" as "pending" | "delivering" | "acknowledged",
+      attempts: 0,
+      remoteOutcomeId: null as string | null,
+      settlements: [] as Array<Record<string, unknown>>,
+    };
+    const programLinkQuery: { count?: string; limit?: number } = {};
+    const supabase = createCompletionSupabase(state, {
+      programIds: ["program-exact"],
+      programLinkQuery,
+      programCertificate: {
+        id: "program-cert-exact",
+        program_id: "program-exact",
+        certificate_number: "BMH-P-2026-0001",
+        issued_at: INPUT.completedAt,
+      },
+    });
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ course_outcome: { id: "course-outcome-program" } }),
+    });
+
+    await expect(reconcileSandraCourseCompleted(
+      supabase,
+      { userId: INPUT.userId, courseId: INPUT.courseId },
+      { env: ENV, fetch: fetchMock as unknown as typeof fetch, deliveryClient: supabase },
+    )).resolves.toEqual({ ok: true, id: "course-outcome-program" });
+
+    const [, request] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(JSON.parse(String(request.body))).toMatchObject({
+      certificate_number: "BMH-P-2026-0001",
+      certificate_url: expect.stringContaining("/certificates/program/program-cert-exact"),
+    });
+    expect(programLinkQuery).toEqual({ count: "exact", limit: 2 });
+  });
+
+  it("never guesses between certificates when a reusable course belongs to multiple programs", async () => {
+    const state = {
+      payload: null as typeof INPUT | null,
+      status: "pending" as "pending" | "delivering" | "acknowledged",
+      attempts: 0,
+      remoteOutcomeId: null as string | null,
+      settlements: [] as Array<Record<string, unknown>>,
+    };
+    const supabase = createCompletionSupabase(state, {
+      programIds: ["program-a", "program-b"],
+      forbidProgramCertificateLookup: true,
+    });
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ course_outcome: { id: "course-outcome-course-cert" } }),
+    });
+
+    await reconcileSandraCourseCompleted(
+      supabase,
+      { userId: INPUT.userId, courseId: INPUT.courseId },
+      { env: ENV, fetch: fetchMock as unknown as typeof fetch, deliveryClient: supabase },
+    );
+
+    const [, request] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(JSON.parse(String(request.body))).toMatchObject({
+      certificate_number: INPUT.certificateNumber,
+      certificate_url: expect.stringContaining("/certificates/course/cert-123"),
+    });
+  });
+
+  it("rejects inconsistent exact-count evidence instead of binding an arbitrary program", async () => {
+    const state = {
+      payload: null as typeof INPUT | null,
+      status: "pending" as "pending" | "delivering" | "acknowledged",
+      attempts: 0,
+      remoteOutcomeId: null as string | null,
+      settlements: [] as Array<Record<string, unknown>>,
+    };
+    const supabase = createCompletionSupabase(state, {
+      programIds: ["program-a", "program-b"],
+      programCount: 1,
+      forbidProgramCertificateLookup: true,
+    });
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ course_outcome: { id: "course-outcome-count-mismatch" } }),
+    });
+
+    await reconcileSandraCourseCompleted(
+      supabase,
+      { userId: INPUT.userId, courseId: INPUT.courseId },
+      { env: ENV, fetch: fetchMock as unknown as typeof fetch, deliveryClient: supabase },
+    );
+
+    const [, request] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(JSON.parse(String(request.body))).toMatchObject({
+      certificate_number: INPUT.certificateNumber,
+      certificate_url: expect.stringContaining("/certificates/course/cert-123"),
+    });
+  });
+
+  it("does not bind a program certificate when the exact count is unavailable", async () => {
+    const state = {
+      payload: null as typeof INPUT | null,
+      status: "pending" as "pending" | "delivering" | "acknowledged",
+      attempts: 0,
+      remoteOutcomeId: null as string | null,
+      settlements: [] as Array<Record<string, unknown>>,
+    };
+    const supabase = createCompletionSupabase(state, {
+      programIds: ["program-apparently-unique"],
+      programCount: null,
+      forbidProgramCertificateLookup: true,
+    });
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ course_outcome: { id: "course-outcome-no-count" } }),
+    });
+
+    await reconcileSandraCourseCompleted(
+      supabase,
+      { userId: INPUT.userId, courseId: INPUT.courseId },
+      { env: ENV, fetch: fetchMock as unknown as typeof fetch, deliveryClient: supabase },
+    );
+
+    const [, request] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(JSON.parse(String(request.body))).toMatchObject({
+      certificate_number: INPUT.certificateNumber,
+      certificate_url: expect.stringContaining("/certificates/course/cert-123"),
+    });
+  });
+
+  it("does not send while another caller owns a fresh delivery lease", async () => {
+    const state = {
+      payload: null as typeof INPUT | null,
+      status: "delivering" as "pending" | "delivering" | "acknowledged",
+      attempts: 1,
+      remoteOutcomeId: null as string | null,
+      settlements: [] as Array<Record<string, unknown>>,
+    };
+    const supabase = createCompletionSupabase(state);
+    const originalRpc = supabase.rpc;
+    supabase.rpc = async (name: string, args: Record<string, unknown>) => {
+      if (name === "fn_claim_sandra_course_completion_delivery") {
+        return {
+          data: {
+            payload: args.p_payload as typeof INPUT,
+            status: "delivering",
+            claimed: false,
+            attemptCount: 1,
+            remoteOutcomeId: null,
+          },
+          error: null,
+        };
+      }
+      return originalRpc(name, args);
+    };
+    const fetchMock = vi.fn();
+
+    await expect(reconcileSandraCourseCompleted(
+      supabase,
+      { userId: INPUT.userId, courseId: INPUT.courseId },
+      {
+        env: ENV,
+        fetch: fetchMock as unknown as typeof fetch,
+        deliveryClient: supabase,
+      },
+    )).resolves.toEqual({ ok: false, reason: "delivery_in_progress" });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("does not send a retry after another worker wins the next lease", async () => {
+    const state = {
+      payload: null as typeof INPUT | null,
+      status: "pending" as "pending" | "delivering" | "acknowledged",
+      attempts: 0,
+      remoteOutcomeId: null as string | null,
+      settlements: [] as Array<Record<string, unknown>>,
+    };
+    const supabase = createCompletionSupabase(state);
+    const originalRpc = supabase.rpc;
+    let claimCount = 0;
+    supabase.rpc = async (name: string, args: Record<string, unknown>) => {
+      if (name === "fn_claim_sandra_course_completion_delivery") {
+        claimCount += 1;
+        if (claimCount === 2) {
+          return {
+            data: {
+              payload: state.payload ?? args.p_payload as typeof INPUT,
+              status: "delivering",
+              claimed: false,
+              attemptCount: 2,
+              remoteOutcomeId: null,
+            },
+            error: null,
+          };
+        }
+      }
+      return originalRpc(name, args);
+    };
+    const fetchMock = vi.fn(async () => ({
+      ok: false,
+      json: async () => null,
+    }));
+
+    await expect(reconcileSandraCourseCompleted(
+      supabase,
+      { userId: INPUT.userId, courseId: INPUT.courseId },
+      {
+        env: ENV,
+        fetch: fetchMock as unknown as typeof fetch,
+        deliveryClient: supabase,
+      },
+    )).resolves.toEqual({ ok: false, reason: "delivery_in_progress" });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("persists before a timeout, then retries the same event until acknowledged", async () => {
+    vi.useFakeTimers();
+    const state = {
+      payload: null as typeof INPUT | null,
+      status: "pending" as "pending" | "delivering" | "acknowledged",
+      attempts: 0,
+      remoteOutcomeId: null as string | null,
+      settlements: [] as Array<Record<string, unknown>>,
+    };
+    const supabase = createCompletionSupabase(state);
+    const fetchMock = vi.fn()
+      .mockImplementationOnce((_url: string, init: RequestInit) =>
+        new Promise((_resolve, reject) => {
+          init.signal?.addEventListener("abort", () => reject(new Error("timeout")));
+        }),
+      )
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ course_outcome: { id: "sandra-outcome-1" } }),
+      });
+
+    const firstPromise = reconcileSandraCourseCompleted(
+      supabase,
+      { userId: INPUT.userId, courseId: INPUT.courseId },
+      {
+        env: ENV,
+        fetch: fetchMock as unknown as typeof fetch,
+        deliveryClient: supabase,
+      },
+    );
+    await vi.advanceTimersByTimeAsync(5);
+    await expect(firstPromise).resolves.toEqual({
+      ok: true,
+      id: "sandra-outcome-1",
+    });
+    expect(state.payload).toMatchObject({
+      userId: INPUT.userId,
+      courseId: INPUT.courseId,
+      completedAt: INPUT.completedAt,
+    });
+    expect(state.status).toBe("acknowledged");
+    expect(state.attempts).toBe(2);
+    expect(state.remoteOutcomeId).toBe("sandra-outcome-1");
+
+    const requestKeys = fetchMock.mock.calls.map(([, init]) =>
+      (init as RequestInit).headers &&
+      ((init as RequestInit).headers as Record<string, string>)["idempotency-key"]
+    );
+    expect(requestKeys).toEqual([
+      `bmh-institute-course:${INPUT.userId}:${INPUT.courseId}:${INPUT.completedAt}`,
+      `bmh-institute-course:${INPUT.userId}:${INPUT.courseId}:${INPUT.completedAt}`,
+    ]);
+
+    await expect(reconcileSandraCourseCompleted(
+      supabase,
+      { userId: INPUT.userId, courseId: INPUT.courseId },
+      {
+        env: ENV,
+        fetch: fetchMock as unknown as typeof fetch,
+        deliveryClient: supabase,
+      },
+    )).resolves.toEqual({ ok: true, id: "sandra-outcome-1" });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    vi.useRealTimers();
+  });
+
+  it("selects a bounded pending/stale batch, skips acknowledged rows, and isolates failures", async () => {
+    const query = { filter: "", limit: 0 };
+    const rows = [
+      {
+        user_id: "user-ok",
+        course_id: "course-ok",
+        status: "pending",
+        last_attempt_at: null,
+        updated_at: "2026-06-02T14:30:00.000Z",
+      },
+      {
+        user_id: "user-fail",
+        course_id: "course-fail",
+        status: "delivering",
+        last_attempt_at: "2026-06-02T14:20:00.000Z",
+        updated_at: "2026-06-02T14:30:00.000Z",
+      },
+      {
+        user_id: "user-acked",
+        course_id: "course-acked",
+        status: "acknowledged",
+        last_attempt_at: "2026-06-02T14:20:00.000Z",
+        updated_at: "2026-06-02T14:30:00.000Z",
+      },
+    ];
+    const deliveryClient = createSweepSupabase(rows, query);
+    const fetchMock = vi.fn(async (url: string) =>
+      url.includes("course-ok")
+        ? {
+            ok: true,
+            json: async () => ({ course_outcome: { id: "outcome-ok" } }),
+          }
+        : { ok: false, json: async () => null },
+    );
+
+    await expect(reconcilePendingSandraCourseCompletions({
+      env: ENV,
+      fetch: fetchMock as unknown as typeof fetch,
+      deliveryClient,
+      batchSize: 500,
+      now: new Date("2026-06-02T14:30:00.000Z"),
+    })).resolves.toEqual({
+      ok: true,
+      selected: 2,
+      acknowledged: 1,
+      stillPending: 1,
+      failures: [{
+        userId: "user-fail",
+        courseId: "course-fail",
+        reason: "http_error",
+      }],
+    });
+    expect(query.filter).toContain("status.eq.pending");
+    expect(query.filter).toContain("status.eq.delivering");
+    expect(query.filter).toContain("2026-06-02T14:25:00.000Z");
+    expect(query.limit).toBe(100);
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(fetchMock.mock.calls.every(([url]) =>
+      !String(url).includes("course-acked"),
+    )).toBe(true);
+  });
+
+  it("continues to later rows when one reconciliation throws", async () => {
+    const query = { filter: "", limit: 0 };
+    const rows = [
+      {
+        user_id: "user-throw",
+        course_id: "course-throw",
+        status: "pending",
+        last_attempt_at: null,
+        updated_at: "2026-06-02T14:20:00.000Z",
+      },
+      {
+        user_id: "user-after",
+        course_id: "course-after",
+        status: "pending",
+        last_attempt_at: null,
+        updated_at: "2026-06-02T14:21:00.000Z",
+      },
+    ];
+    const deliveryClient = createSweepSupabase(rows, query);
+    const fetchMock = vi.fn(async () => ({
+      ok: true,
+      json: async () => ({ course_outcome: { id: "outcome-after" } }),
+    }));
+
+    await expect(reconcilePendingSandraCourseCompletions({
+      env: ENV,
+      fetch: fetchMock as unknown as typeof fetch,
+      deliveryClient,
+      now: new Date("2026-06-02T14:30:00.000Z"),
+    })).resolves.toEqual({
+      ok: true,
+      selected: 2,
+      acknowledged: 1,
+      stillPending: 1,
+      failures: [{
+        userId: "user-throw",
+        courseId: "course-throw",
+        reason: "unexpected_error",
+      }],
+    });
+    expect(query.limit).toBe(6);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+});
+
+function createCompletionSupabase(state: {
+  payload: typeof INPUT | null;
+  status: "pending" | "delivering" | "acknowledged";
+  attempts: number;
+  remoteOutcomeId: string | null;
+  settlements: Array<Record<string, unknown>>;
+}, options: {
+  programIds?: string[];
+  programCount?: number | null;
+  programLinkQuery?: { count?: string; limit?: number };
+  programCertificate?: {
+    id: string;
+    program_id: string;
+    certificate_number: string;
+    issued_at: string;
+  };
+  forbidProgramCertificateLookup?: boolean;
+} = {}) {
+  const maybeSingle = (data: unknown) => ({ data, error: null });
+  return {
+    from: (table: string) => {
+      const data = table === "profiles"
+        ? { email: INPUT.learnerEmail, full_name: INPUT.learnerName }
+        : table === "courses"
+          ? { title: INPUT.courseTitle }
+          : table === "certificates"
+            ? {
+                id: "cert-123",
+                certificate_number: INPUT.certificateNumber,
+                issued_at: INPUT.completedAt,
+              }
+            : null;
+      if (table === "program_courses") {
+        return {
+          select: (_columns: string, queryOptions?: { count?: string }) => {
+            if (options.programLinkQuery) options.programLinkQuery.count = queryOptions?.count;
+            return {
+              eq: () => ({
+                limit: async (limit: number) => {
+                  if (options.programLinkQuery) options.programLinkQuery.limit = limit;
+                  const programIds = options.programIds ?? [];
+                  return {
+                    data: programIds.slice(0, limit).map((program_id) => ({ program_id })),
+                    count: options.programCount === undefined
+                      ? programIds.length
+                      : options.programCount,
+                    error: null,
+                  };
+                },
+              }),
+            };
+          },
+        };
+      }
+      if (table === "program_certificates") {
+        if (options.forbidProgramCertificateLookup) {
+          throw new Error("ambiguous program certificate lookup");
+        }
+        const filters = new Map<string, unknown>();
+        const chain = {
+          eq: (field: string, value: unknown) => {
+            filters.set(field, value);
+            return chain;
+          },
+          maybeSingle: async () => ({
+            data: options.programCertificate?.program_id === filters.get("program_id")
+              ? options.programCertificate
+              : null,
+            error: null,
+          }),
+        };
+        return { select: () => chain };
+      }
+      const chain = {
+        eq: () => chain,
+        maybeSingle: async () => maybeSingle(data),
+      };
+      return { select: () => chain };
+    },
+    rpc: async (name: string, args: Record<string, unknown>) => {
+      if (name === "fn_course_is_complete") return { data: true, error: null };
+      if (name === "fn_course_completed_at") {
+        return { data: INPUT.completedAt, error: null };
+      }
+      if (name === "fn_claim_sandra_course_completion_delivery") {
+        if (state.payload === null) {
+          state.payload = {
+            ...(args.p_payload as typeof INPUT),
+            userId: INPUT.userId,
+            courseId: INPUT.courseId,
+            completedAt: INPUT.completedAt,
+          };
+        }
+        if (state.status !== "acknowledged") {
+          state.status = "delivering";
+          state.attempts += 1;
+        }
+        return {
+          data: {
+            payload: state.payload,
+            status: state.status,
+            claimed: state.status !== "acknowledged",
+            attemptCount: state.attempts,
+            remoteOutcomeId: state.remoteOutcomeId,
+          },
+          error: null,
+        };
+      }
+      if (name === "fn_settle_sandra_course_completion_delivery") {
+        state.settlements.push(args);
+        if (args.p_acknowledged === true) {
+          state.status = "acknowledged";
+          state.remoteOutcomeId = String(args.p_remote_outcome_id);
+        } else if (args.p_attempt_count === state.attempts) {
+          state.status = "pending";
+        }
+        return { data: true, error: null };
+      }
+      throw new Error(`Unexpected RPC ${name}`);
+    },
+  };
+}
+
+function createSweepSupabase(
+  rows: Array<Record<string, unknown>>,
+  query: { filter: string; limit: number },
+) {
+  const states = new Map<string, {
+    payload: Record<string, unknown> | null;
+    status: "pending" | "delivering" | "acknowledged";
+    attempts: number;
+    remoteOutcomeId: string | null;
+  }>();
+  for (const row of rows) {
+    states.set(String(row.course_id), {
+      payload: null,
+      status: row.status as "pending" | "delivering" | "acknowledged",
+      attempts: 0,
+      remoteOutcomeId: null,
+    });
+  }
+  return {
+    from: (table: string) => {
+      if (table === "sandra_course_completion_deliveries") {
+        return {
+          select: () => ({
+            or: (filter: string) => {
+              query.filter = filter;
+              return {
+                order: () => ({
+                  limit: async (limit: number) => {
+                    query.limit = limit;
+                    return { data: rows, error: null };
+                  },
+                }),
+              };
+            },
+          }),
+        };
+      }
+      if (table === "program_courses") {
+        return {
+          select: () => ({
+            eq: () => ({
+              limit: async () => ({ data: [], count: 0, error: null }),
+            }),
+          }),
+        };
+      }
+      const data = table === "profiles"
+        ? { email: "learner@example.test", full_name: "Learner" }
+        : table === "courses"
+          ? { title: "Course" }
+          : table === "certificates"
+            ? null
+            : null;
+      const chain = {
+        eq: () => chain,
+        maybeSingle: async () => ({ data, error: null }),
+      };
+      return { select: () => chain };
+    },
+    rpc: async (name: string, args: Record<string, unknown>) => {
+      if (
+        name === "fn_course_is_complete" &&
+        args.p_course_id === "course-throw"
+      ) {
+        throw new Error("simulated row failure");
+      }
+      if (name === "fn_course_is_complete") return { data: true, error: null };
+      if (name === "fn_course_completed_at") {
+        return { data: INPUT.completedAt, error: null };
+      }
+      const courseId = String(args.p_course_id);
+      const state = states.get(courseId);
+      if (!state) throw new Error(`Unexpected course ${courseId}`);
+      if (name === "fn_claim_sandra_course_completion_delivery") {
+        if (!state.payload) {
+          state.payload = {
+            ...(args.p_payload as Record<string, unknown>),
+            completedAt: INPUT.completedAt,
+          };
+        }
+        if (state.status !== "acknowledged") {
+          state.status = "delivering";
+          state.attempts += 1;
+        }
+        return {
+          data: {
+            payload: state.payload,
+            status: state.status,
+            claimed: state.status !== "acknowledged",
+            attemptCount: state.attempts,
+            remoteOutcomeId: state.remoteOutcomeId,
+          },
+          error: null,
+        };
+      }
+      if (name === "fn_settle_sandra_course_completion_delivery") {
+        if (args.p_acknowledged === true) {
+          state.status = "acknowledged";
+          state.remoteOutcomeId = String(args.p_remote_outcome_id);
+        } else {
+          state.status = "pending";
+        }
+        return { data: true, error: null };
+      }
+      throw new Error(`Unexpected RPC ${name}`);
+    },
+  };
+}

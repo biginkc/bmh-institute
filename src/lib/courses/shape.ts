@@ -23,6 +23,11 @@ export type CourseWithModulesAndLessons = {
   title: string;
   description: string | null;
   is_published: boolean;
+  thumbnail_path?: string | null;
+  content_import_id: string | null;
+  thumbnail_asset_key: string | null;
+  thumbnail_approved_path: string | null;
+  thumbnail_approved_sha256: string | null;
   modules: ModuleWithLessons[];
 };
 
@@ -43,6 +48,11 @@ type RawCourse = {
   title: string;
   description: string | null;
   is_published: boolean;
+  thumbnail_path?: string | null;
+  content_import_id?: string | null;
+  thumbnail_asset_key?: string | null;
+  thumbnail_approved_path?: string | null;
+  thumbnail_approved_sha256?: string | null;
   modules: RawModule[] | null;
 };
 
@@ -71,6 +81,11 @@ export function shapeCourseResponse(
     title: raw.title,
     description: raw.description,
     is_published: raw.is_published,
+    thumbnail_path: raw.thumbnail_path ?? null,
+    content_import_id: raw.content_import_id ?? null,
+    thumbnail_asset_key: raw.thumbnail_asset_key ?? null,
+    thumbnail_approved_path: raw.thumbnail_approved_path ?? null,
+    thumbnail_approved_sha256: raw.thumbnail_approved_sha256 ?? null,
     modules,
   };
 }

@@ -11,8 +11,10 @@ import {
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { sanitizeTextBlockHtml } from "@/lib/sanitize/text-block";
 import { RolePlayBlock } from "./role-play-block";
 import { VideoBlockPlayer } from "./video-block-player";
+import { FlashcardBlock, type Flashcard } from "./flashcard-block";
 
 export type ContentBlock = {
   id: string;
@@ -27,21 +29,28 @@ export type ContentBlock = {
     | "embed"
     | "role_play"
     | "divider"
-    | "callout";
+    | "callout"
+    | "flashcard";
   content: Record<string, unknown>;
   sort_order: number;
   is_required_for_completion: boolean;
 };
 
-export function ContentBlockRenderer({ block }: { block: ContentBlock }) {
+export function ContentBlockRenderer({
+  block,
+  completed = false,
+}: {
+  block: ContentBlock;
+  completed?: boolean;
+}) {
   return (
     <div data-content-block={block.block_type} className="w-full">
-      {renderContentBlock(block)}
+      {renderContentBlock(block, completed)}
     </div>
   );
 }
 
-function renderContentBlock(block: ContentBlock) {
+function renderContentBlock(block: ContentBlock, completed: boolean) {
   switch (block.block_type) {
     case "text":
       return <TextBlock html={stringOr(block.content.html, "")} />;
@@ -108,10 +117,16 @@ function renderContentBlock(block: ContentBlock) {
       return (
         <VideoBlock
           blockId={block.id}
+          initialComplete={completed}
           source={stringOr(block.content.source, "upload")}
           signedUrl={stringOr(block.content.signed_url, null)}
           url={stringOr(block.content.url, null)}
           filePath={stringOr(block.content.file_path, null)}
+          posterSignedUrl={stringOr(block.content.poster_signed_url, null)}
+          captionSignedUrl={stringOr(block.content.caption_signed_url, null)}
+          transcriptSignedUrl={stringOr(block.content.transcript_signed_url, null)}
+          title={stringOr(block.content.title, "")}
+          partLabel={stringOr(block.content.part_label, "")}
         />
       );
     case "embed":
@@ -129,11 +144,34 @@ function renderContentBlock(block: ContentBlock) {
           title={stringOr(block.content.title, "Role play")}
           iframeSrc={stringOr(block.content.iframe_src, "")}
           initialHeightPx={numberOr(block.content.height_px, 720)}
+          initialComplete={completed}
         />
       );
+    case "flashcard":
+      return <FlashcardBlock cards={flashcardsOrEmpty(block.content.cards)} />;
     default:
       return <UnsupportedBlock type={block.block_type} />;
   }
+}
+
+function flashcardsOrEmpty(value: unknown): Flashcard[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((card) => {
+    if (
+      typeof card === "object" &&
+      card !== null &&
+      typeof (card as Record<string, unknown>).front === "string" &&
+      typeof (card as Record<string, unknown>).back === "string"
+    ) {
+      return [
+        {
+          front: (card as Record<string, string>).front,
+          back: (card as Record<string, string>).back,
+        },
+      ];
+    }
+    return [];
+  });
 }
 
 function stringOr<T extends string | null>(
@@ -152,10 +190,11 @@ function numberOr(value: unknown, fallback: number): number {
 }
 
 function TextBlock({ html }: { html: string }) {
+  const safeHtml = sanitizeTextBlockHtml(html);
   return (
     <div
       className="prose prose-neutral max-w-none font-[family-name:var(--font-body)] text-[15px] leading-relaxed font-semibold text-[var(--text-body)] [&_a]:font-extrabold [&_a]:text-[var(--action)] [&_blockquote]:rounded-r-[var(--bmh-radius-md)] [&_blockquote]:border-l-4 [&_blockquote]:border-[var(--action)] [&_blockquote]:bg-[var(--surface-tint)] [&_blockquote]:px-5 [&_blockquote]:py-3 [&_blockquote]:text-[var(--ink-700)] [&_h2]:mb-3 [&_h2]:mt-5 [&_h2]:font-[family-name:var(--font-display)] [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:text-[var(--ink-900)] [&_h3]:mb-2 [&_h3]:mt-4 [&_h3]:font-[family-name:var(--font-display)] [&_h3]:text-xl [&_h3]:font-bold [&_h3]:text-[var(--ink-900)] [&_li]:my-1 [&_p]:mb-4 [&_strong]:font-extrabold [&_strong]:text-[var(--ink-900)]"
-      dangerouslySetInnerHTML={{ __html: html }}
+      dangerouslySetInnerHTML={{ __html: safeHtml }}
     />
   );
 }
@@ -421,19 +460,31 @@ function formatBytes(bytes: number): string {
 
 function VideoBlock({
   blockId,
+  initialComplete,
   source,
   signedUrl,
   url,
   filePath,
+  posterSignedUrl,
+  captionSignedUrl,
+  transcriptSignedUrl,
+  title,
+  partLabel,
 }: {
   blockId: string;
+  initialComplete: boolean;
   source: string;
   signedUrl: string | null;
   url: string | null;
   filePath: string | null;
+  posterSignedUrl: string | null;
+  captionSignedUrl: string | null;
+  transcriptSignedUrl: string | null;
+  title: string;
+  partLabel: string;
 }) {
-  // Uploaded video: prefer the signed URL the server attached.
-  if (source === "upload") {
+  const accessibleName = [partLabel, title].filter(Boolean).join(": ") || "Lesson video";
+  const player = source === "upload" ? (() => {
     const src = signedUrl ?? filePath;
     if (!src) {
       return (
@@ -442,29 +493,61 @@ function VideoBlock({
         </div>
       );
     }
-    return <VideoBlockPlayer blockId={blockId} src={src} />;
-  }
-
-  if (!url) {
     return (
-      <div className="rounded-[var(--bmh-radius-md)] border border-dashed border-[var(--ink-300)] bg-[var(--ink-050)] p-6 text-center text-sm font-semibold text-[var(--text-muted)]">
-        Video URL not set.
+      <VideoBlockPlayer
+        blockId={blockId}
+        src={src}
+        initialComplete={initialComplete}
+        title={accessibleName}
+        posterSrc={posterSignedUrl ?? undefined}
+        captionsSrc={captionSignedUrl ?? undefined}
+        transcriptSrc={transcriptSignedUrl ?? undefined}
+      />
+    );
+  })() : (() => {
+    if (!url) {
+      return (
+        <div className="rounded-[var(--bmh-radius-md)] border border-dashed border-[var(--ink-300)] bg-[var(--ink-050)] p-6 text-center text-sm font-semibold text-[var(--text-muted)]">
+          Video URL not set.
+        </div>
+      );
+    }
+    return (
+      <div className="aspect-video overflow-hidden rounded-[var(--bmh-radius-lg)] border-[2.5px] border-[var(--ink-900)] bg-[var(--ink-900)] shadow-[var(--bmh-shadow-sm)]">
+        <iframe
+          src={toEmbedSrc(source, url)}
+          title={accessibleName}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+          className="h-full w-full"
+        />
       </div>
     );
-  }
+  })();
 
-  const embedSrc = toEmbedSrc(source, url);
   return (
-    <div className="aspect-video overflow-hidden rounded-[var(--bmh-radius-lg)] border-[2.5px] border-[var(--ink-900)] bg-[var(--ink-900)] shadow-[var(--bmh-shadow-sm)]">
-      <iframe
-        src={embedSrc}
-        title="Video"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-        allowFullScreen
-        className="h-full w-full"
-      />
-    </div>
+    <section aria-labelledby={title ? `video-title-${blockId}` : undefined} className="space-y-3">
+      {title || partLabel ? (
+        <header>
+          {partLabel ? (
+            <p className="text-xs font-extrabold uppercase tracking-[0.08em] text-[var(--action)]">
+              {partLabel}
+            </p>
+          ) : null}
+          {title ? (
+            <h2
+              id={`video-title-${blockId}`}
+              className="font-[family-name:var(--font-display)] text-xl font-extrabold text-[var(--ink-900)]"
+            >
+              {title}
+            </h2>
+          ) : null}
+        </header>
+      ) : null}
+      {player}
+    </section>
   );
+
 }
 
 function toEmbedSrc(source: string, url: string): string {

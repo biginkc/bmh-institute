@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Card } from "@/components/bmh-ds";
 import { PageHeader } from "@/components/page-header";
 import { requireAdmin } from "@/lib/auth/guard";
+import { parseAssignmentRubric } from "@/lib/assignments/rubric";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -36,6 +37,11 @@ export default async function EditLessonPage({
       quiz_id,
       assignment_id,
       is_required_for_completion,
+      thumbnail_path,
+      content_import_id,
+      thumbnail_asset_key,
+      thumbnail_approved_path,
+      thumbnail_approved_sha256,
       module_id,
       modules ( id, title, course_id )
     `,
@@ -78,6 +84,8 @@ export default async function EditLessonPage({
         defaultTitle={lesson.title as string}
         defaultDescription={lesson.description as string | null}
         defaultRequired={lesson.is_required_for_completion as boolean}
+        defaultThumbnailPath={lesson.thumbnail_path as string | null}
+        contentImportId={lesson.content_import_id as string | null}
       />
     </Card>
   );
@@ -211,7 +219,7 @@ async function AssignmentLessonEditor({
   const supabase = await createClient();
   const { data: asn } = await supabase
     .from("assignments")
-    .select("id, title, instructions, submission_type, requires_review")
+    .select("id, title, instructions, submission_type, requires_review, rubric")
     .eq("id", assignmentId)
     .maybeSingle();
 
@@ -226,6 +234,18 @@ async function AssignmentLessonEditor({
     );
   }
 
+  const parsedRubric = parseAssignmentRubric(asn.rubric);
+  if (!parsedRubric.ok) {
+    return (
+      <Card padding="md">
+        <PanelHeading
+          title="Assignment data needs repair"
+          description="The saved review rubric is invalid. Repair the assignment data before editing or reviewing submissions."
+        />
+      </Card>
+    );
+  }
+
   return (
     <Card padding="md">
       <PanelHeading
@@ -234,7 +254,10 @@ async function AssignmentLessonEditor({
       />
       <AssignmentEditor
         lessonId={lessonId}
-        assignment={asn as AssignmentSettings}
+        assignment={{
+          ...(asn as Omit<AssignmentSettings, "rubric">),
+          rubric: parsedRubric.items,
+        }}
       />
     </Card>
   );

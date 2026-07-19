@@ -1,15 +1,14 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Bell } from "lucide-react";
 
 import { Avatar } from "@/components/bmh-ds/avatar";
 import { Button } from "@/components/bmh-ds/button";
-import { IconButton } from "@/components/bmh-ds/icon-button";
 import { Logo } from "@/components/bmh-ds/logo";
-import { SearchBar } from "@/components/bmh-ds/search-bar";
 import { createClient } from "@/lib/supabase/server";
 
 import { SidebarNav } from "./sidebar-nav";
+import { LessonSearch, type LessonSearchItem } from "./lesson-search";
+import { MobileNav } from "./mobile-nav";
 
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
@@ -42,14 +41,21 @@ export default async function DashboardLayout({
   const isAdmin =
     profile?.system_role === "owner" || profile?.system_role === "admin";
 
-  const pendingSubmissions = isAdmin
-    ? (
-        await supabase
+  const [pendingResult, lessonResult] = await Promise.all([
+    isAdmin
+      ? supabase
           .from("assignment_submissions")
           .select("id", { count: "exact", head: true })
           .eq("status", "submitted")
-      ).count ?? 0
-    : 0;
+      : Promise.resolve({ count: 0 }),
+    supabase.from("lessons").select("id, title").order("title").limit(500),
+  ]);
+  const pendingSubmissions = pendingResult.count ?? 0;
+  const searchableLessons = (lessonResult.data ?? []).flatMap((lesson) =>
+    typeof lesson.id === "string" && typeof lesson.title === "string"
+      ? [{ id: lesson.id, title: lesson.title } satisfies LessonSearchItem]
+      : [],
+  );
 
   const displayName = profile?.full_name || user.email || "BMH Institute user";
   const roleLabel = profile?.system_role ?? "learner";
@@ -107,7 +113,7 @@ export default async function DashboardLayout({
         </div>
       </aside>
 
-      <header className="fixed inset-x-0 top-0 z-30 flex h-[76px] items-center gap-4 border-b border-[var(--border-hairline)] bg-[var(--paper)] px-4 md:left-64 md:px-7 print:hidden">
+      <header className="fixed inset-x-0 top-0 z-30 flex h-[76px] items-center gap-2 border-b border-[var(--border-hairline)] bg-[var(--paper)] px-2 sm:gap-4 sm:px-4 md:left-64 md:px-7 print:hidden">
         <Link
           href="/dashboard"
           className="shrink-0 md:hidden"
@@ -118,15 +124,19 @@ export default async function DashboardLayout({
           </span>
         </Link>
         <div className="hidden w-full max-w-[360px] sm:block">
-          <SearchBar placeholder="Search lessons…" />
+          <LessonSearch lessons={searchableLessons} instanceId="desktop" />
         </div>
         <span className="flex-1" />
-        <IconButton label="Notifications" variant="plain">
-          <Bell aria-hidden="true" size={20} />
-        </IconButton>
+        <div className="shrink-0 sm:hidden">
+          <LessonSearch lessons={searchableLessons} instanceId="mobile" compact />
+        </div>
+        <MobileNav
+          isAdmin={isAdmin}
+          pendingSubmissionsCount={pendingSubmissions}
+        />
         <Link
           href="/profile"
-          className="md:hidden"
+          className="flex size-10 shrink-0 items-center justify-center md:hidden"
           aria-label={`${displayName} profile`}
         >
           <Avatar name={displayName} size={36} />

@@ -27,10 +27,10 @@ async function approveSubmission(
 ) {
   await page.goto("/admin/submissions");
   const card = page
-    .locator('[data-slot="card"]')
-    .filter({ hasText: assignmentTitle })
+    .locator(`[data-assignment-id="${assignmentId}"]`)
     .first();
   await expect(card).toBeVisible();
+  await expect(card.getByRole("heading", { name: assignmentTitle })).toBeVisible();
   await card.getByRole("button", { name: /^approve$/i }).click();
   await expect
     .poll(() => submissionIsApproved(writePathAdminClient(), fixture, assignmentId), {
@@ -210,14 +210,16 @@ test.describe("durable write-path coverage", () => {
 
       await page.goto(`/lessons/${fixture.contentLessonId}`);
       await expect(page.getByText(`${fixture.prefix} Operating standard`)).toBeVisible();
-      await page.getByRole("button", { name: /mark lesson complete/i }).click();
-      await expect(page.getByText(/lesson complete/i)).toBeVisible();
+      await expect(
+        page.getByRole("button", { name: /mark lesson complete/i }),
+      ).toHaveCount(0);
 
       await page.goto(`/lessons/${fixture.quizLessonId}`);
+      await page.getByRole("button", { name: /start quiz/i }).click();
       await page.getByText(fixture.incorrectOptionText).click();
       await page.getByRole("button", { name: /submit quiz/i }).click();
-      await expect(page.getByText(/didn.t pass/i)).toBeVisible();
-      await expect(page.getByText(/score: 0%/i)).toBeVisible();
+      await expect(page.getByRole("heading", { name: "Keep going" })).toBeVisible();
+      await expect(page.getByText(/0% score/i)).toBeVisible();
       await page.goto(`/courses/${fixture.courseId}`);
       await expect(
         page
@@ -226,10 +228,9 @@ test.describe("durable write-path coverage", () => {
       ).toBeVisible();
 
       await page.goto(`/lessons/${fixture.quizLessonId}`);
-      const retakeButton = page.getByRole("button", { name: /retake quiz/i });
-      if (await retakeButton.isVisible()) {
-        await retakeButton.click();
-      }
+      await page
+        .getByRole("button", { name: /start quiz|retake quiz/i })
+        .click();
       await page.getByText(fixture.correctOptionText).click();
       await page.getByRole("button", { name: /submit quiz/i }).click();
       await expect(page.getByText(/^Passed$/)).toBeVisible();
@@ -242,8 +243,10 @@ test.describe("durable write-path coverage", () => {
 
       await page.goto(`/lessons/${fixture.textAssignmentLessonId}`);
       await page.getByLabel(/response/i).fill(`${fixture.prefix} first response`);
-      await page.getByRole("button", { name: /^submit$/i }).click();
-      await expect(page.getByText(/submitted, awaiting review/i)).toBeVisible();
+      await page.getByRole("button", { name: /^submit for review$/i }).click();
+      await expect(
+        page.getByRole("heading", { name: "Submitted, awaiting review" }),
+      ).toBeVisible();
 
       const adminContext = await browser.newContext();
       const adminPage = await adminContext.newPage();
@@ -251,12 +254,11 @@ test.describe("durable write-path coverage", () => {
 
       await adminPage.goto("/admin/submissions");
       const textSubmissionCard = adminPage
-        .locator('[data-slot="card"]')
-        .filter({ hasText: `${fixture.prefix} Text Assignment` })
+        .locator(`[data-assignment-id="${fixture.textAssignmentId}"]`)
         .first();
       await expect(textSubmissionCard).toBeVisible();
       await textSubmissionCard
-        .getByPlaceholder(/note to learner/i)
+        .getByLabel(/note to learner/i)
         .fill(`${fixture.prefix} revise this response`);
       await textSubmissionCard
         .getByRole("button", { name: /request revision/i })
@@ -267,8 +269,10 @@ test.describe("durable write-path coverage", () => {
       await expect(page.getByText(/^Needs revision$/).first()).toBeVisible();
       await expect(page.getByText(`${fixture.prefix} revise this response`).first()).toBeVisible();
       await page.getByLabel(/response/i).fill(`${fixture.prefix} revised response`);
-      await page.getByRole("button", { name: /^submit$/i }).click();
-      await expect(page.getByText(/submitted, awaiting review/i)).toBeVisible();
+      await page.getByRole("button", { name: /^resubmit for review$/i }).click();
+      await expect(
+        page.getByRole("heading", { name: "Submitted, awaiting review" }),
+      ).toBeVisible();
 
       await approveSubmission(
         adminPage,
@@ -287,8 +291,10 @@ test.describe("durable write-path coverage", () => {
         buffer: Buffer.from(`${fixture.prefix} file upload`),
       });
       await expect(page.getByText(/selected: write-path-upload.txt/i)).toBeVisible();
-      await page.getByRole("button", { name: /^submit$/i }).click();
-      await expect(page.getByText(/submitted, awaiting review/i)).toBeVisible();
+      await page.getByRole("button", { name: /^submit for review$/i }).click();
+      await expect(
+        page.getByRole("heading", { name: "Submitted, awaiting review" }),
+      ).toBeVisible();
 
       await approveSubmission(
         adminPage,
@@ -310,9 +316,10 @@ test.describe("durable write-path coverage", () => {
       await expect(page.getByText(`${fixture.prefix} Course`)).toBeVisible();
       await expect(page.getByText(`${fixture.prefix} Program`)).toBeVisible();
       await page.goto(`/certificates/course/${certificateRefs!.courseId}`);
-      await expect(page.locator(".print-cert")).toContainText(
-        `${fixture.prefix} Course`,
-      );
+      await expect(
+        page.getByRole("heading", { name: "Certificate of Completion" }),
+      ).toBeVisible();
+      await expect(page.getByText(`${fixture.prefix} Course`, { exact: false })).toBeVisible();
       await page.evaluate(() => {
         window.print = () => window.sessionStorage.setItem("print-called", "1");
       });

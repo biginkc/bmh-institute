@@ -10,7 +10,7 @@ Next.js 16 + React 19 (App Router, Server Components, Server Actions)
 TypeScript strict
 Tailwind 4 (CSS-first @theme config) + shadcn v4 + Base UI (@base-ui/react)
 @supabase/ssr + @supabase/supabase-js for auth and Postgres access
-@dnd-kit (core, sortable, utilities) for drag-and-drop reordering at every level
+Accessible move-up and move-down controls for supported admin ordering; no drag-and-drop runtime dependency
 sonner for toasts, lucide-react for icons, date-fns for dates
 @react-pdf/renderer or pdf-lib for certificate PDF generation
 HTML5 video player for Supabase-hosted video, iframe embeds for YouTube/Vimeo/Loom
@@ -388,11 +388,11 @@ All routes live in the Next.js App Router under `src/app/`. Public routes live o
 **Admin (owner/admin):**
 - /admin — dashboard with team progress heatmap and activity feed
 - /admin/programs — list, create, edit, publish; assign courses and order; assign role groups
-- /admin/programs/:programId/edit — drag to reorder courses, set course_order_mode, manage program_access
+- /admin/programs/:programId/edit — attach or remove courses, set course_order_mode, manage program_access
 - /admin/courses — list, create, edit, publish; assign to programs; assign role groups
-- /admin/courses/:courseId/edit — drag to reorder modules and lessons; set prerequisites
-- /admin/lessons/:lessonId/edit — for content lessons: drag to reorder content_blocks, add/remove blocks, edit per-block settings
-- /admin/quizzes/:quizId/edit — drag to reorder questions and options; configure randomization, passing score, retakes
+- /admin/courses/:courseId/edit — use explicit move controls to reorder modules and lessons; set prerequisites
+- /admin/lessons/:lessonId/edit — for content lessons: use explicit move controls to reorder content_blocks, add/remove blocks, edit per-block settings
+- /admin/lessons/:lessonId/edit — for quiz lessons: use explicit move controls to reorder questions; edit answer options; configure randomization, passing score, and retakes
 - /admin/assignments/:assignmentId/edit — instructions, submission type, reviewer settings
 - /admin/users — list members, invite new, assign system_role and role_groups, suspend
 - /admin/role-groups — CRUD role groups
@@ -401,17 +401,21 @@ All routes live in the Next.js App Router under `src/app/`. Public routes live o
 - /admin/certificates — manage certificate templates for course and program scopes
 - /admin/audit — activity feed
 
-## Drag and Drop (@dnd-kit)
+## Accessible Ordering Controls
 
-Reordering is drag-and-drop at every level:
-- Courses within a Program (uses program_courses.sort_order)
+The current admin UI uses explicit, keyboard-accessible move-up and move-down
+actions for:
+
 - Modules within a Course
 - Lessons within a Module
 - Content blocks within a content Lesson
 - Questions within a Quiz
-- Answer options within a Question
 
-Each drop persists the new order via a batch update RPC that updates all affected sort_order values in a single transaction.
+The server operation updates the affected `sort_order` values and refreshes the
+authoring route. Attached courses and answer options retain stored sort order,
+but the current UI does not expose reorder controls for those two lists. Do not
+claim or reintroduce drag-and-drop without a new product decision and an
+accessible implementation contract.
 
 ## Key UI Components
 
@@ -425,7 +429,7 @@ Each drop persists the new order via a batch update RPC that updates all affecte
 
 **VideoBlock** — provider-aware. For source='upload', plays via HTML5 `<video>` tag from a Supabase Storage signed URL. For source in ('youtube','vimeo','loom'), embeds via iframe with privacy params (YouTube: youtube-nocookie.com; Vimeo: dnt=1). Exposes: playback speed, resume position, fullscreen, 90% completion event.
 
-**LessonEditor** (admin) — for content lessons. @dnd-kit column of content blocks with "Add block" menu. Clicking a block opens a side drawer with fields specific to its type. File uploads go through the upload-content-file edge function.
+**LessonEditor** (admin) — for content lessons. Ordered column of content blocks with explicit move controls and an "Add block" menu. Clicking a block opens a side drawer with fields specific to its type. File uploads go through the upload-content-file edge function.
 
 **QuizRunner** — handles the full attempt flow. On mount, creates a user_quiz_attempts row with question_order and answer_orders computed from the quiz's randomization settings. Persists responses jsonb on each answered question so a mid-quiz refresh restores state. On submit, calls score-quiz-attempt RPC server-side so scoring is tamper-proof. Shows pass or fail screen with retake button respecting cooldown and max_attempts.
 
@@ -477,7 +481,7 @@ Test tooling mirrors Sandra CRM:
 
 **Phase 1 — Foundation**
 - Initialize Next.js 16 + TypeScript project mirroring Sandra CRM structure.
-- Install deps (React 19, Tailwind 4, shadcn v4, Base UI, @supabase/ssr, @dnd-kit, Vitest, Playwright, Husky, ESLint).
+- Install deps (React 19, Tailwind 4, shadcn v4, Base UI, @supabase/ssr, Vitest, Playwright, Husky, ESLint).
 - Configure Tailwind theme, shadcn registry, ESLint, Husky pre-commit.
 - Set up Vitest unit + integration configs and Playwright config.
 - Apply all 5 Supabase migrations (001 through 005).
@@ -488,9 +492,9 @@ Test tooling mirrors Sandra CRM:
 - Green tests, verify, commit.
 
 **Phase 2 — Admin authoring for content**
-- Program, Course, Module CRUD with drag-and-drop ordering.
-- Lesson CRUD (type = content) with drag-and-drop ordering.
-- ContentBlocks CRUD with drag-and-drop and per-type editor drawers.
+- Program, Course, Module CRUD with explicit move controls where ordering is supported.
+- Lesson CRUD (type = content) with explicit move controls.
+- ContentBlocks CRUD with explicit move controls and per-type editor drawers.
 - upload-content-file edge function.
 
 **Phase 3 — Learner experience for content lessons**
@@ -502,7 +506,7 @@ Test tooling mirrors Sandra CRM:
 - Resume-where-you-left-off.
 
 **Phase 4 — Quizzes**
-- Quiz, Question, AnswerOption CRUD with drag-and-drop.
+- Quiz and Question CRUD with explicit question move controls; AnswerOption CRUD retains creation order.
 - Quiz lesson type wiring.
 - QuizRunner with randomization, retakes, cooldowns.
 - score-quiz-attempt edge function.

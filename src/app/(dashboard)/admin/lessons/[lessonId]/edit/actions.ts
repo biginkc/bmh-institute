@@ -3,7 +3,13 @@
 import { revalidatePath } from "next/cache";
 
 import { requireAdmin } from "@/lib/auth/guard";
+import { validateArtworkChange } from "@/lib/artwork/paths";
 import { sanitizeTextBlockHtml } from "@/lib/sanitize/text-block";
+import {
+  defaultRequiredForBlock,
+  normalizeRequiredForBlock,
+} from "@/lib/content-blocks/completion";
+import { normalizeReleaseControlError } from "@/lib/release-control/admin-guards";
 import { createClient } from "@/lib/supabase/server";
 import type { Json } from "@/lib/supabase/types";
 
@@ -16,18 +22,39 @@ export async function updateLessonDetails(input: {
   title: string;
   description: string | null;
   is_required_for_completion: boolean;
+  thumbnail_path: string | null;
 }): Promise<ActionResult> {
   await requireAdmin();
   const title = input.title.trim();
   if (!title) return { ok: false, error: "Title is required." };
-
+  const thumbnailPath = input.thumbnail_path?.trim() || null;
   const supabase = await createClient();
+  const current = await supabase
+    .from("lessons")
+    .select("thumbnail_path, content_import_id, thumbnail_asset_key, thumbnail_approved_path, thumbnail_approved_sha256")
+    .eq("id", input.lessonId)
+    .maybeSingle();
+  if (current.error || !current.data) {
+    return { ok: false, error: "Couldn't verify the lesson artwork." };
+  }
+  const artworkError = validateArtworkChange({
+    entityType: "lesson",
+    entityId: input.lessonId,
+    contentImportId: current.data.content_import_id,
+    thumbnailAssetKey: current.data.thumbnail_asset_key,
+    thumbnailApprovedPath: current.data.thumbnail_approved_path,
+    thumbnailApprovedSha256: current.data.thumbnail_approved_sha256,
+    currentPath: current.data.thumbnail_path,
+    nextPath: thumbnailPath,
+  });
+  if (artworkError) return { ok: false, error: artworkError };
   const { error } = await supabase
     .from("lessons")
     .update({
       title,
       description: input.description,
       is_required_for_completion: input.is_required_for_completion,
+      thumbnail_path: thumbnailPath,
     })
     .eq("id", input.lessonId);
   if (error) return { ok: false, error: error.message };
@@ -49,7 +76,8 @@ export type BlockType =
   | "pdf"
   | "image"
   | "audio"
-  | "download";
+  | "download"
+  | "flashcard";
 
 const DEFAULT_CONTENT: Record<BlockType, Json> = {
   text: { html: "<p>Start writing...</p>" },
@@ -68,6 +96,7 @@ const DEFAULT_CONTENT: Record<BlockType, Json> = {
   image: { file_path: "", alt: "", caption: "" },
   audio: { source: "upload", file_path: "", url: "" },
   download: { file_path: "", filename: "", size_bytes: 0, description: "" },
+  flashcard: { cards: [{ front: "Term", back: "Definition" }] },
 };
 
 export async function createBlock(input: {
@@ -91,7 +120,7 @@ export async function createBlock(input: {
     block_type: input.block_type,
     content: DEFAULT_CONTENT[input.block_type],
     sort_order: nextOrder,
-    is_required_for_completion: input.block_type !== "divider",
+    is_required_for_completion: defaultRequiredForBlock(),
   });
   if (error) return { ok: false, error: error.message };
 
@@ -110,7 +139,7 @@ export async function updateBlock(input: {
   const supabase = await createClient();
   const { data: existing, error: lookupError } = await supabase
     .from("content_blocks")
-    .select("block_type")
+    .select("block_type, is_required_for_completion")
     .eq("id", input.blockId)
     .maybeSingle();
   if (lookupError) return { ok: false, error: lookupError.message };
@@ -151,14 +180,48 @@ export async function updateBlock(input: {
           ? input.content.height_px
           : 720,
     } as Json;
+  } else if (existing.block_type === "video") {
+    const duration = input.content.duration_seconds;
+    if (
+      duration !== undefined &&
+      (typeof duration !== "number" ||
+        !Number.isFinite(duration) ||
+        duration <= 0)
+    ) {
+      return {
+        ok: false,
+        error: "Video duration must be a positive number of seconds.",
+      };
+    }
   }
 
-  const patch: { content: Json; is_required_for_completion?: boolean } = {
-    content: safeContent,
-  };
-  if (typeof input.is_required_for_completion === "boolean") {
-    patch.is_required_for_completion = input.is_required_for_completion;
+  const requestedRequired =
+    typeof input.is_required_for_completion === "boolean"
+      ? input.is_required_for_completion
+      : Boolean(existing.is_required_for_completion);
+  if (
+    existing.block_type === "video" &&
+    requestedRequired &&
+    input.content.source === "upload" &&
+    typeof input.content.file_path === "string" &&
+    input.content.file_path.trim().length > 0 &&
+    (typeof input.content.duration_seconds !== "number" ||
+      !Number.isFinite(input.content.duration_seconds) ||
+      input.content.duration_seconds <= 0)
+  ) {
+    return {
+      ok: false,
+      error: "Add a valid video duration before requiring completion.",
+    };
   }
+  const patch: { content: Json; is_required_for_completion: boolean } = {
+    content: safeContent,
+    is_required_for_completion: normalizeRequiredForBlock(
+      existing.block_type,
+      safeContent,
+      requestedRequired,
+    ),
+  };
   const { error } = await supabase
     .from("content_blocks")
     .update(patch)
@@ -180,7 +243,9 @@ export async function deleteBlock(input: {
     .from("content_blocks")
     .delete()
     .eq("id", input.blockId);
-  if (error) return { ok: false, error: error.message };
+  if (error) {
+    return { ok: false, error: normalizeReleaseControlError(error.message) };
+  }
 
   revalidatePath(`/admin/lessons/${input.lessonId}/edit`);
   revalidatePath(`/lessons/${input.lessonId}`);

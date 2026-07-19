@@ -1,5 +1,7 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
+import { PRODUCTION_READINESS_VIDEO_BASE64 } from "../src/lib/testing/production-readiness-media";
+
 export type ProductionReadinessFixture = {
   prefix: string;
   password: string;
@@ -10,6 +12,7 @@ export type ProductionReadinessFixture = {
   contentLessonId: string;
   contentBlockId: string;
   embedBlockId: string;
+  videoPath: string;
   quizId: string;
   quizLessonId: string;
   correctOptionText: string;
@@ -63,6 +66,75 @@ export type ProductionPilotDryRunFixture = {
 
 type InsertResult = { id: string };
 
+type FixtureRollbackAction = {
+  label: string;
+  run: () => Promise<void>;
+};
+
+async function runCleanupActions(
+  scope: string,
+  actions: FixtureRollbackAction[],
+): Promise<void> {
+  const failures: Error[] = [];
+  for (const action of actions) {
+    try {
+      await action.run();
+    } catch (error) {
+      failures.push(new Error(`Cleanup failed for ${action.label}.`, { cause: error }));
+    }
+  }
+  if (failures.length > 0) {
+    throw new AggregateError(failures, `${scope} cleanup was incomplete.`);
+  }
+}
+
+class FixtureCleanupJournal {
+  private actions: FixtureRollbackAction[] = [];
+
+  add(label: string, run: () => Promise<void>): void {
+    this.actions.push({ label, run });
+  }
+
+  commit(): void {
+    this.actions = [];
+  }
+
+  async rollback(): Promise<Error[]> {
+    const failures: Error[] = [];
+    for (const action of this.actions.reverse()) {
+      try {
+        await action.run();
+      } catch (error) {
+        failures.push(new Error(`Fixture rollback failed for ${action.label}.`, { cause: error }));
+      }
+    }
+    this.actions = [];
+    return failures;
+  }
+}
+
+async function buildFixtureWithRollback<T>(
+  build: (journal: FixtureCleanupJournal) => Promise<T>,
+): Promise<T> {
+  const journal = new FixtureCleanupJournal();
+  try {
+    const fixture = await build(journal);
+    journal.commit();
+    return fixture;
+  } catch (error) {
+    const originalError = error;
+    const cleanupFailures = await journal.rollback();
+    if (cleanupFailures.length > 0) {
+      throw new AggregateError(
+        [originalError, ...cleanupFailures],
+        "Fixture construction failed and its rollback was incomplete.",
+        { cause: originalError },
+      );
+    }
+    throw originalError;
+  }
+}
+
 const PROD_PROJECT_REF = "dhvfsyteqsxagokoerrx";
 
 export function productionAdminClient(): SupabaseClient {
@@ -114,6 +186,7 @@ export async function productionUserClient(
 export async function createProductionReadinessFixture(
   admin: SupabaseClient,
 ): Promise<ProductionReadinessFixture> {
+  return buildFixtureWithRollback(async (journal) => {
   const prefix = `PRD-READY-${Date.now()}-${crypto.randomUUID().slice(0, 8)}`;
   const password = process.env.PROD_READINESS_TEST_PASSWORD?.trim()
     || `BMHProdReady-${crypto.randomUUID()}!1`;
@@ -126,24 +199,25 @@ export async function createProductionReadinessFixture(
     password,
     fullName: `${prefix} Admin`,
     systemRole: "owner",
-  });
+  }, journal);
   const learner = await createFixtureUser(admin, {
     email: learnerEmail,
     password,
     fullName: `${prefix} Learner`,
     systemRole: "learner",
-  });
+  }, journal);
   const unassigned = await createFixtureUser(admin, {
     email: unassignedEmail,
     password,
     fullName: `${prefix} Unassigned`,
     systemRole: "learner",
-  });
+  }, journal);
 
   const roleGroupId = await insertOne(admin, "role_groups", {
     name: `${prefix} Role Group`,
     description: "Disposable production-readiness role group.",
   });
+  journalTableRow(admin, journal, "role_groups", roleGroupId);
   await admin
     .from("user_role_groups")
     .insert({ user_id: learner.id, role_group_id: roleGroupId })
@@ -157,6 +231,7 @@ export async function createProductionReadinessFixture(
     certificate_enabled: true,
     sort_order: 9999,
   });
+  journalTableRow(admin, journal, "programs", programId);
   const courseId = await insertOne(admin, "courses", {
     title: `${prefix} Course`,
     description: "Disposable production-readiness course.",
@@ -164,6 +239,7 @@ export async function createProductionReadinessFixture(
     certificate_enabled: true,
     sort_order: 9999,
   });
+  journalTableRow(admin, journal, "courses", courseId);
   await admin
     .from("program_access")
     .insert({ program_id: programId, role_group_id: roleGroupId })
@@ -198,7 +274,7 @@ export async function createProductionReadinessFixture(
       html: `<h2>${prefix} Operating standard</h2><p>Disposable production-readiness content.</p>`,
     },
     sort_order: 10,
-    is_required_for_completion: true,
+    is_required_for_completion: false,
   });
   const embedBlockId = await insertOne(admin, "content_blocks", {
     lesson_id: contentLessonId,
@@ -209,6 +285,29 @@ export async function createProductionReadinessFixture(
     },
     sort_order: 20,
     is_required_for_completion: false,
+  });
+  const videoPath = `production-readiness/${prefix}/required-video.webm`;
+  const { error: videoUploadError } = await admin.storage
+    .from("content")
+    .upload(videoPath, Buffer.from(PRODUCTION_READINESS_VIDEO_BASE64, "base64"), {
+      contentType: "video/webm",
+      upsert: false,
+    });
+  if (videoUploadError) throw videoUploadError;
+  journal.add(`storage content/${videoPath}`, async () => {
+    await removeStorageObjects(admin, "content", [videoPath]);
+  });
+  await insertOne(admin, "content_blocks", {
+    lesson_id: contentLessonId,
+    block_type: "video",
+    content: {
+      source: "upload",
+      file_path: videoPath,
+      duration_seconds: 1,
+      title: `${prefix} Required video`,
+    },
+    sort_order: 30,
+    is_required_for_completion: true,
   });
 
   const quizId = await insertOne(admin, "quizzes", {
@@ -221,6 +320,7 @@ export async function createProductionReadinessFixture(
     retake_cooldown_hours: 0,
     show_correct_answers_after: "after_pass",
   });
+  journalTableRow(admin, journal, "quizzes", quizId);
   const questionId = await insertOne(admin, "questions", {
     quiz_id: quizId,
     question_text: "What confirms the production readiness quiz path?",
@@ -263,6 +363,7 @@ export async function createProductionReadinessFixture(
     submission_type: "text",
     requires_review: true,
   });
+  journalTableRow(admin, journal, "assignments", textAssignmentId);
   const textAssignmentLessonId = await insertOne(admin, "lessons", {
     module_id: moduleId,
     title: `${prefix} Text Assignment Lesson`,
@@ -279,6 +380,7 @@ export async function createProductionReadinessFixture(
     submission_type: "file_upload",
     requires_review: true,
   });
+  journalTableRow(admin, journal, "assignments", fileAssignmentId);
   const fileAssignmentLessonId = await insertOne(admin, "lessons", {
     module_id: moduleId,
     title: `${prefix} File Assignment Lesson`,
@@ -299,6 +401,7 @@ export async function createProductionReadinessFixture(
     contentLessonId,
     contentBlockId,
     embedBlockId,
+    videoPath,
     quizId,
     quizLessonId,
     correctOptionText,
@@ -310,6 +413,7 @@ export async function createProductionReadinessFixture(
     learner,
     unassigned,
   };
+  });
 }
 
 export async function cleanupProductionReadinessFixture(
@@ -318,24 +422,30 @@ export async function cleanupProductionReadinessFixture(
 ): Promise<void> {
   if (!fixture) return;
 
-  await cleanupProductionReadinessStorage(admin, fixture.learner.id);
-  await admin.from("programs").delete().eq("id", fixture.programId);
-  await admin.from("courses").delete().eq("id", fixture.courseId);
-  await admin
-    .from("assignments")
-    .delete()
-    .in("id", [fixture.textAssignmentId, fixture.fileAssignmentId]);
-  await admin.from("quizzes").delete().eq("id", fixture.quizId);
-  await admin.from("role_groups").delete().eq("id", fixture.roleGroupId);
-  await admin.auth.admin.deleteUser(fixture.admin.id);
-  await admin.auth.admin.deleteUser(fixture.learner.id);
-  await admin.auth.admin.deleteUser(fixture.unassigned.id);
+  await runCleanupActions("Production readiness fixture", [
+    { label: "readiness storage", run: () => cleanupProductionReadinessStorage(admin, fixture) },
+    { label: `program ${fixture.programId}`, run: () => deleteRow(admin, "programs", fixture.programId) },
+    { label: `course ${fixture.courseId}`, run: () => deleteRow(admin, "courses", fixture.courseId) },
+    {
+      label: "readiness assignments",
+      run: async () => {
+        await admin.from("assignments").delete()
+          .in("id", [fixture.textAssignmentId, fixture.fileAssignmentId]).throwOnError();
+      },
+    },
+    { label: `quiz ${fixture.quizId}`, run: () => deleteRow(admin, "quizzes", fixture.quizId) },
+    { label: `role group ${fixture.roleGroupId}`, run: () => deleteRow(admin, "role_groups", fixture.roleGroupId) },
+    { label: `admin user ${fixture.admin.id}`, run: () => deleteAuthUser(admin, fixture.admin.id) },
+    { label: `learner user ${fixture.learner.id}`, run: () => deleteAuthUser(admin, fixture.learner.id) },
+    { label: `unassigned user ${fixture.unassigned.id}`, run: () => deleteAuthUser(admin, fixture.unassigned.id) },
+  ]);
 }
 
 export async function createProductionInviteFixture(
   admin: SupabaseClient,
   inviteeEmail: string,
 ): Promise<ProductionInviteFixture> {
+  return buildFixtureWithRollback(async (journal) => {
   const prefix = `PRD-INVITE-${Date.now()}-${crypto.randomUUID().slice(0, 8)}`;
   const password = process.env.PROD_READINESS_TEST_PASSWORD?.trim()
     || `BMHProdInvite-${crypto.randomUUID()}!1`;
@@ -345,12 +455,13 @@ export async function createProductionInviteFixture(
     password,
     fullName: `${prefix} Owner`,
     systemRole: "owner",
-  });
+  }, journal);
 
   const roleGroupId = await insertOne(admin, "role_groups", {
     name: `${prefix} Invite Role Group`,
     description: "Disposable production invite role group.",
   });
+  journalTableRow(admin, journal, "role_groups", roleGroupId);
 
   const programId = await insertOne(admin, "programs", {
     title: `${prefix} Invite Program`,
@@ -360,6 +471,7 @@ export async function createProductionInviteFixture(
     certificate_enabled: false,
     sort_order: 9999,
   });
+  journalTableRow(admin, journal, "programs", programId);
   const courseId = await insertOne(admin, "courses", {
     title: `${prefix} Invite Course`,
     description: "Disposable production invite course.",
@@ -367,6 +479,7 @@ export async function createProductionInviteFixture(
     certificate_enabled: false,
     sort_order: 9999,
   });
+  journalTableRow(admin, journal, "courses", courseId);
 
   await admin
     .from("program_access")
@@ -390,6 +503,7 @@ export async function createProductionInviteFixture(
     inviter,
     inviteeEmail,
   };
+  });
 }
 
 export async function cleanupProductionInviteFixture(
@@ -398,18 +512,26 @@ export async function cleanupProductionInviteFixture(
 ): Promise<void> {
   if (!fixture) return;
 
-  await admin.from("invites").delete().eq("email", fixture.inviteeEmail);
-  await admin.from("programs").delete().eq("id", fixture.programId);
-  await admin.from("courses").delete().eq("id", fixture.courseId);
-  await admin.from("role_groups").delete().eq("id", fixture.roleGroupId);
-  await deleteAuthUserByEmail(admin, fixture.inviteeEmail);
-  await admin.auth.admin.deleteUser(fixture.inviter.id);
+  await runCleanupActions("Production invite fixture", [
+    {
+      label: `invite ${fixture.inviteeEmail}`,
+      run: async () => {
+        await admin.from("invites").delete().eq("email", fixture.inviteeEmail).throwOnError();
+      },
+    },
+    { label: `program ${fixture.programId}`, run: () => deleteRow(admin, "programs", fixture.programId) },
+    { label: `course ${fixture.courseId}`, run: () => deleteRow(admin, "courses", fixture.courseId) },
+    { label: `role group ${fixture.roleGroupId}`, run: () => deleteRow(admin, "role_groups", fixture.roleGroupId) },
+    { label: `invitee user ${fixture.inviteeEmail}`, run: () => deleteAuthUserByEmail(admin, fixture.inviteeEmail) },
+    { label: `inviter user ${fixture.inviter.id}`, run: () => deleteAuthUser(admin, fixture.inviter.id) },
+  ]);
 }
 
 export async function createProductionRecoveryFixture(
   admin: SupabaseClient,
   email: string,
 ): Promise<ProductionRecoveryFixture> {
+  return buildFixtureWithRollback(async (journal) => {
   const oldPassword = process.env.PROD_READINESS_TEST_PASSWORD?.trim()
     || `BMHProdRecovery-${crypto.randomUUID()}!1`;
   const newPassword = `BMHProdRecoveryNew-${crypto.randomUUID()}!1`;
@@ -418,8 +540,9 @@ export async function createProductionRecoveryFixture(
     password: oldPassword,
     fullName: "Production Readiness Recovery",
     systemRole: "learner",
-  });
+  }, journal);
   return { email, userId: user.id, oldPassword, newPassword };
+  });
 }
 
 export async function cleanupProductionRecoveryFixture(
@@ -427,82 +550,77 @@ export async function cleanupProductionRecoveryFixture(
   fixture: ProductionRecoveryFixture | null,
 ): Promise<void> {
   if (!fixture) return;
-  await admin.auth.admin.deleteUser(fixture.userId);
+  await runCleanupActions("Production recovery fixture", [
+    { label: `recovery user ${fixture.userId}`, run: () => deleteAuthUser(admin, fixture.userId) },
+  ]);
 }
 
 export async function createProductionPilotDryRunFixture(
   admin: SupabaseClient,
 ): Promise<ProductionPilotDryRunFixture> {
+  return buildFixtureWithRollback(async (journal) => {
   const prefix = `PILOT-DRYRUN-${Date.now()}-${crypto.randomUUID().slice(0, 8)}`;
   const password = process.env.PROD_READINESS_TEST_PASSWORD?.trim()
     || `BMHPilotDryRun-${crypto.randomUUID()}!1`;
   const email = (name: string) =>
     `${prefix.toLowerCase()}-${name}@bmh-institute.test`;
 
-  const [
-    adminUser,
-    certified,
-    needsReview,
-    needsRevision,
-    notStarted,
-    needsAccess,
-    accessCorrection,
-    suspended,
-  ] = await Promise.all([
-    createFixtureUser(admin, {
-      email: email("owner"),
-      password,
-      fullName: `${prefix} Owner`,
-      systemRole: "owner",
-    }),
-    createFixtureUser(admin, {
-      email: email("certified"),
-      password,
-      fullName: `${prefix} Certified Learner`,
-      systemRole: "learner",
-    }),
-    createFixtureUser(admin, {
-      email: email("needs-review"),
-      password,
-      fullName: `${prefix} Needs Review`,
-      systemRole: "learner",
-    }),
-    createFixtureUser(admin, {
-      email: email("needs-revision"),
-      password,
-      fullName: `${prefix} Needs Revision`,
-      systemRole: "learner",
-    }),
-    createFixtureUser(admin, {
-      email: email("not-started"),
-      password,
-      fullName: `${prefix} Not Started`,
-      systemRole: "learner",
-    }),
-    createFixtureUser(admin, {
-      email: email("needs-access"),
-      password,
-      fullName: `${prefix} Needs Access`,
-      systemRole: "learner",
-    }),
-    createFixtureUser(admin, {
-      email: email("access-correction"),
-      password,
-      fullName: `${prefix} Access Correction`,
-      systemRole: "learner",
-    }),
-    createFixtureUser(admin, {
-      email: email("suspended"),
-      password,
-      fullName: `${prefix} Suspended`,
-      systemRole: "learner",
-    }),
-  ]);
+  // Sequential creation prevents a rejected Promise.all from racing rollback
+  // while another auth request is still creating a user.
+  const adminUser = await createFixtureUser(admin, {
+    email: email("owner"),
+    password,
+    fullName: `${prefix} Owner`,
+    systemRole: "owner",
+  }, journal);
+  const certified = await createFixtureUser(admin, {
+    email: email("certified"),
+    password,
+    fullName: `${prefix} Certified Learner`,
+    systemRole: "learner",
+  }, journal);
+  const needsReview = await createFixtureUser(admin, {
+    email: email("needs-review"),
+    password,
+    fullName: `${prefix} Needs Review`,
+    systemRole: "learner",
+  }, journal);
+  const needsRevision = await createFixtureUser(admin, {
+    email: email("needs-revision"),
+    password,
+    fullName: `${prefix} Needs Revision`,
+    systemRole: "learner",
+  }, journal);
+  const notStarted = await createFixtureUser(admin, {
+    email: email("not-started"),
+    password,
+    fullName: `${prefix} Not Started`,
+    systemRole: "learner",
+  }, journal);
+  const needsAccess = await createFixtureUser(admin, {
+    email: email("needs-access"),
+    password,
+    fullName: `${prefix} Needs Access`,
+    systemRole: "learner",
+  }, journal);
+  const accessCorrection = await createFixtureUser(admin, {
+    email: email("access-correction"),
+    password,
+    fullName: `${prefix} Access Correction`,
+    systemRole: "learner",
+  }, journal);
+  const suspended = await createFixtureUser(admin, {
+    email: email("suspended"),
+    password,
+    fullName: `${prefix} Suspended`,
+    systemRole: "learner",
+  }, journal);
 
   const roleGroupId = await insertOne(admin, "role_groups", {
     name: `${prefix} Pilot Cohort`,
     description: "Disposable production pilot dry-run role group.",
   });
+  journalTableRow(admin, journal, "role_groups", roleGroupId);
 
   await admin
     .from("user_role_groups")
@@ -528,6 +646,7 @@ export async function createProductionPilotDryRunFixture(
     certificate_enabled: true,
     sort_order: 9999,
   });
+  journalTableRow(admin, journal, "programs", programId);
   const courseId = await insertOne(admin, "courses", {
     title: `${prefix} Pilot Course`,
     description: "Disposable production pilot dry-run course.",
@@ -535,6 +654,7 @@ export async function createProductionPilotDryRunFixture(
     certificate_enabled: true,
     sort_order: 9999,
   });
+  journalTableRow(admin, journal, "courses", courseId);
   await admin
     .from("program_access")
     .insert({ program_id: programId, role_group_id: roleGroupId })
@@ -582,6 +702,7 @@ export async function createProductionPilotDryRunFixture(
     retake_cooldown_hours: 0,
     show_correct_answers_after: "after_pass",
   });
+  journalTableRow(admin, journal, "quizzes", quizId);
   const questionId = await insertOne(admin, "questions", {
     quiz_id: quizId,
     question_text: "What confirms the pilot dry-run quiz path?",
@@ -623,6 +744,7 @@ export async function createProductionPilotDryRunFixture(
     submission_type: "text",
     requires_review: true,
   });
+  journalTableRow(admin, journal, "assignments", textAssignmentId);
   const textAssignmentLessonId = await insertOne(admin, "lessons", {
     module_id: moduleId,
     title: `${prefix} Pilot Assignment`,
@@ -669,6 +791,7 @@ export async function createProductionPilotDryRunFixture(
     accessCorrection,
     suspended,
   };
+  });
 }
 
 export async function cleanupProductionPilotDryRunFixture(
@@ -688,18 +811,17 @@ export async function cleanupProductionPilotDryRunFixture(
     fixture.suspended.id,
   ];
 
-  await admin.from("programs").delete().eq("id", fixture.programId);
-  await admin.from("courses").delete().eq("id", fixture.courseId);
-  await admin
-    .from("assignments")
-    .delete()
-    .eq("id", fixture.textAssignmentId);
-  await admin.from("quizzes").delete().eq("id", fixture.quizId);
-  await admin.from("role_groups").delete().eq("id", fixture.roleGroupId);
-
-  for (const userId of userIds) {
-    await admin.auth.admin.deleteUser(userId);
-  }
+  await runCleanupActions("Production pilot dry-run fixture", [
+    { label: `program ${fixture.programId}`, run: () => deleteRow(admin, "programs", fixture.programId) },
+    { label: `course ${fixture.courseId}`, run: () => deleteRow(admin, "courses", fixture.courseId) },
+    { label: `assignment ${fixture.textAssignmentId}`, run: () => deleteRow(admin, "assignments", fixture.textAssignmentId) },
+    { label: `quiz ${fixture.quizId}`, run: () => deleteRow(admin, "quizzes", fixture.quizId) },
+    { label: `role group ${fixture.roleGroupId}`, run: () => deleteRow(admin, "role_groups", fixture.roleGroupId) },
+    ...userIds.map((userId) => ({
+      label: `pilot user ${userId}`,
+      run: () => deleteAuthUser(admin, userId),
+    })),
+  ]);
 }
 
 export async function countProductionPilotDryRunArtifacts(
@@ -722,8 +844,9 @@ export async function countProductionPilotDryRunArtifacts(
 
 async function cleanupProductionReadinessStorage(
   admin: SupabaseClient,
-  learnerId: string,
+  fixture: ProductionReadinessFixture,
 ) {
+  const learnerId = fixture.learner.id;
   const { data, error } = await admin.storage
     .from("submissions")
     .list(learnerId, { limit: 1000 });
@@ -737,12 +860,16 @@ async function cleanupProductionReadinessStorage(
         path.endsWith("blocked-cross-prefix.txt"),
     );
 
-  if (paths.length > 0) {
-    const { error: removeError } = await admin.storage
-      .from("submissions")
-      .remove(paths);
-    if (removeError) throw removeError;
-  }
+  await runCleanupActions("Production readiness storage", [
+    ...(paths.length > 0 ? [{
+      label: "readiness submission objects",
+      run: () => removeStorageObjects(admin, "submissions", paths),
+    }] : []),
+    {
+      label: `readiness video ${fixture.videoPath}`,
+      run: () => removeStorageObjects(admin, "content", [fixture.videoPath]),
+    },
+  ]);
 }
 
 async function seedPilotDryRunStates(
@@ -870,8 +997,21 @@ async function deleteAuthUserByEmail(admin: SupabaseClient, email: string) {
   if (error) throw error;
   const user = data.users.find((candidate) => candidate.email === email);
   if (user) {
-    await admin.auth.admin.deleteUser(user.id);
+    await deleteAuthUser(admin, user.id);
   }
+}
+
+async function deleteAuthUser(admin: SupabaseClient, userId: string): Promise<void> {
+  const { error } = await admin.auth.admin.deleteUser(userId);
+  if (error) throw error;
+}
+
+async function deleteRow(
+  admin: SupabaseClient,
+  table: string,
+  id: string,
+): Promise<void> {
+  await admin.from(table).delete().eq("id", id).throwOnError();
 }
 
 async function createFixtureUser(
@@ -882,6 +1022,7 @@ async function createFixtureUser(
     fullName: string;
     systemRole: "owner" | "admin" | "learner";
   },
+  journal: FixtureCleanupJournal,
 ): Promise<{ id: string; email: string }> {
   const { data, error } = await admin.auth.admin.createUser({
     email: input.email,
@@ -892,6 +1033,11 @@ async function createFixtureUser(
   if (error || !data.user) {
     throw error ?? new Error(`Failed to create ${input.email}`);
   }
+  const userId = data.user.id;
+  journal.add(`auth user ${userId}`, async () => {
+    const { error: deleteError } = await admin.auth.admin.deleteUser(userId);
+    if (deleteError) throw deleteError;
+  });
   await admin
     .from("profiles")
     .update({
@@ -899,9 +1045,30 @@ async function createFixtureUser(
       system_role: input.systemRole,
       status: "active",
     })
-    .eq("id", data.user.id)
+    .eq("id", userId)
     .throwOnError();
-  return { id: data.user.id, email: input.email };
+  return { id: userId, email: input.email };
+}
+
+function journalTableRow(
+  admin: SupabaseClient,
+  journal: FixtureCleanupJournal,
+  table: string,
+  id: string,
+): void {
+  journal.add(`${table} row ${id}`, async () => {
+    const { error } = await admin.from(table).delete().eq("id", id);
+    if (error) throw error;
+  });
+}
+
+async function removeStorageObjects(
+  admin: SupabaseClient,
+  bucket: string,
+  paths: string[],
+): Promise<void> {
+  const { error } = await admin.storage.from(bucket).remove(paths);
+  if (error) throw error;
 }
 
 async function insertOne(

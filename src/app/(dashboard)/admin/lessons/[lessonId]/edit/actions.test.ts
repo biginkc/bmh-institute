@@ -1,6 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-let blockTypeRow: { block_type: string } | null = { block_type: "text" };
+let blockTypeRow: {
+  block_type: string;
+  is_required_for_completion?: boolean;
+} | null = { block_type: "text" };
 let updatePatch: Record<string, unknown> | null = null;
 let updateError: { message: string } | null = null;
 
@@ -62,7 +65,10 @@ describe("updateBlock sanitization (HARDEN-05)", () => {
       content: { html: "<p>Safe</p>" },
     });
 
-    expect(updatePatch).toEqual({ content: { html: "<p>Safe</p>" } });
+    expect(updatePatch).toEqual({
+      content: { html: "<p>Safe</p>" },
+      is_required_for_completion: false,
+    });
   });
 
   it("sanitizes text block html before update", async () => {
@@ -73,7 +79,10 @@ describe("updateBlock sanitization (HARDEN-05)", () => {
     });
 
     expect(result).toEqual({ ok: true });
-    expect(updatePatch).toEqual({ content: { html: "<p>Safe</p>" } });
+    expect(updatePatch).toEqual({
+      content: { html: "<p>Safe</p>" },
+      is_required_for_completion: false,
+    });
   });
 
   it("does not sanitize non-text blocks", async () => {
@@ -88,6 +97,7 @@ describe("updateBlock sanitization (HARDEN-05)", () => {
     expect(result).toEqual({ ok: true });
     expect(updatePatch).toEqual({
       content: { html: '<p>Safe</p><script>alert("xss")</script>' },
+      is_required_for_completion: false,
     });
   });
 
@@ -132,6 +142,7 @@ describe("updateBlock embed branch (HARDEN-05)", () => {
         iframe_src: "https://www.loom.com/embed/abc",
         aspect_ratio: "16:9",
       },
+      is_required_for_completion: false,
     });
   });
 
@@ -189,6 +200,7 @@ describe("updateBlock embed branch (HARDEN-05)", () => {
     expect(result).toEqual({ ok: true });
     expect(updatePatch).toEqual({
       content: { html: "<p>hi</p>", iframe_src: "http://danger" },
+      is_required_for_completion: false,
     });
   });
 });
@@ -222,7 +234,104 @@ describe("updateBlock role_play branch", () => {
         title: "Handle the price objection",
         height_px: 900,
       },
+      is_required_for_completion: false,
     });
+  });
+
+  it("allows an admin to make a role play required", async () => {
+    const result = await updateBlock({
+      blockId: "block-1",
+      lessonId: "lesson-1",
+      content: {
+        scenario_id: "scenario-1",
+        title: "Opening practice",
+        height_px: 720,
+      },
+      is_required_for_completion: true,
+    });
+
+    expect(result).toEqual({ ok: true });
+    expect(updatePatch).toMatchObject({ is_required_for_completion: true });
+  });
+
+  it("forces an external video to optional even when the client requests required", async () => {
+    blockTypeRow = { block_type: "video" };
+
+    const result = await updateBlock({
+      blockId: "block-1",
+      lessonId: "lesson-1",
+      content: { source: "youtube", url: "https://youtu.be/example" },
+      is_required_for_completion: true,
+    });
+
+    expect(result).toEqual({ ok: true });
+    expect(updatePatch).toMatchObject({ is_required_for_completion: false });
+  });
+
+  it("allows an uploaded video with authored duration to be required", async () => {
+    blockTypeRow = { block_type: "video" };
+
+    const result = await updateBlock({
+      blockId: "block-1",
+      lessonId: "lesson-1",
+      content: {
+        source: "upload",
+        file_path: "courses/test/video.mp4",
+        duration_seconds: 412.096,
+      },
+      is_required_for_completion: true,
+    });
+
+    expect(result).toEqual({ ok: true });
+    expect(updatePatch).toEqual({
+      content: {
+        source: "upload",
+        file_path: "courses/test/video.mp4",
+        duration_seconds: 412.096,
+      },
+      is_required_for_completion: true,
+    });
+  });
+
+  it("rejects a required uploaded video without authored duration", async () => {
+    blockTypeRow = { block_type: "video" };
+
+    const result = await updateBlock({
+      blockId: "block-1",
+      lessonId: "lesson-1",
+      content: {
+        source: "upload",
+        file_path: "courses/test/video.mp4",
+      },
+      is_required_for_completion: true,
+    });
+
+    expect(result).toEqual({
+      ok: false,
+      error: "Add a valid video duration before requiring completion.",
+    });
+    expect(updatePatch).toBeNull();
+  });
+
+  it("rejects an invalid authored duration even when the video is optional", async () => {
+    blockTypeRow = { block_type: "video" };
+
+    const result = await updateBlock({
+      blockId: "block-1",
+      lessonId: "lesson-1",
+      content: {
+        source: "upload",
+        file_path: "courses/test/video.mp4",
+        duration_seconds: 0,
+      },
+      is_required_for_completion: false,
+    });
+
+    expect(result).toEqual({
+      ok: false,
+      error: "Video duration must be a positive number of seconds.",
+    });
+    expect(updatePatch).toBeNull();
   });
 
   it("rejects an empty scenario id without updating", async () => {

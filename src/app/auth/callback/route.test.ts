@@ -14,14 +14,23 @@ type InviteRow = {
 
 let inviteRow: InviteRow = null;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const profileUpdate = vi.fn(async (_patch: any) => ({ error: null }));
+const profileUpdate = vi.fn(async (patch: any) => {
+  void patch;
+  return { error: null };
+});
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const userRoleInsert = vi.fn(async (_rows: any) => ({ error: null }));
+const userRoleInsert = vi.fn(async (rows: any) => {
+  void rows;
+  return { error: null };
+});
 const userRoleDelete = vi.fn(async () => ({ error: null }));
-const adminAuthDeleteUser = vi.fn(async (_id: string) => ({
-  data: null,
-  error: null,
-}));
+const adminAuthDeleteUser = vi.fn(async (id: string) => {
+  void id;
+  return {
+    data: null,
+    error: null,
+  };
+});
 
 vi.mock("@/lib/supabase/admin", () => ({
   createAdminClient: vi.fn(() => ({
@@ -74,12 +83,15 @@ vi.mock("@/lib/supabase/admin", () => ({
   })),
 }));
 
-const exchangeCodeForSession = vi.fn(async (_code: string) => ({
-  data: {
-    session: { user: { id: "user-123" } },
-  },
-  error: null,
-}));
+const exchangeCodeForSession = vi.fn(async (code: string) => {
+  void code;
+  return {
+    data: {
+      session: { user: { id: "user-123" } },
+    },
+    error: null,
+  };
+});
 const sessionSignOut = vi.fn(async () => ({ error: null }));
 
 vi.mock("@/lib/supabase/server", () => ({

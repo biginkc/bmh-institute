@@ -1,0 +1,89 @@
+{
+  "schema_version": "bmh-thumbnail-pilot-derivative-report/v2",
+  "config_path": "docs/course-production/thumbnail-pilots/v6-derivative-config.json",
+  "config_sha256": "b8bc2ec2853941ecbcd67a7681196789a35e77cf1243f688fb09f342a7def4f2",
+  "mode": "write",
+  "records": [
+    {
+      "slug": "orientation",
+      "background_rgb": [103, 182, 255],
+      "source": {
+        "path": "course-assets/thumbnails/pilots/revisions/v6/sources/orientation-generated-v6.png",
+        "dimensions": [1672, 941],
+        "sha256": "091f61e047ee21c6e7ea0069581feab52c827f1e9c832d80f8617031f1bf30a5"
+      },
+      "flat_master": {
+        "path": "course-assets/thumbnails/pilots/revisions/v6/flat-masters/orientation-flat-master-v6.png",
+        "dimensions": [1672, 941],
+        "sha256": "2b03e873b79aa250e868269bd0b7bf62963c673cbdb81cc757bd45c78b670a83",
+        "pixel_sha256": "683ad3df0463190f6e9ee6dee16d05368b4aaf2bb3a521bd82931fc4c1759e28"
+      },
+      "lesson_card": {
+        "path": "course-assets/thumbnails/pilots/revisions/v6/lesson-cards/orientation-lesson-card-v6-16x10.webp",
+        "dimensions": [1280, 800],
+        "sha256": "b14a809d6f053172a7684efa519a292620eb8473ea1bf395d55ce8e65dbba60d",
+        "pixel_sha256": "f81eb7dae0252322a208048d1b9681521bf7fe87d64e9b4efaed12bc2ffbf806"
+      },
+      "video_poster": {
+        "path": "course-assets/thumbnails/pilots/revisions/v6/video-posters/orientation-video-poster-v6-16x9.webp",
+        "dimensions": [1280, 720],
+        "sha256": "a37506ab03aed2fedce885d11901ffccbecd974d454493d9f83fe1f2cba88007",
+        "pixel_sha256": "67a32de011e9018de68828d8b6df9410f03493663b49044f14d7a8085af26002"
+      }
+    },
+    {
+      "slug": "opening-the-call",
+      "background_rgb": [255, 211, 1],
+      "source": {
+        "path": "course-assets/thumbnails/pilots/revisions/v6/sources/opening-the-call-generated-v5.png",
+        "dimensions": [1672, 941],
+        "sha256": "24df5d8cebe5395075c20dc83b22554a649a2a973b80dccd0040b53ccd50c9e4"
+      },
+      "flat_master": {
+        "path": "course-assets/thumbnails/pilots/revisions/v6/flat-masters/opening-the-call-flat-master-v6.png",
+        "dimensions": [1672, 941],
+        "sha256": "083fe75328fdaff6843b25b3c4d4364801bea5117517cd3aa3754f9d803673fb",
+        "pixel_sha256": "20953727233f31647f892f08c149de1f4750f10047a907b143625482897ec118"
+      },
+      "lesson_card": {
+        "path": "course-assets/thumbnails/pilots/revisions/v6/lesson-cards/opening-the-call-lesson-card-v6-16x10.webp",
+        "dimensions": [1280, 800],
+        "sha256": "86ae5395c5f1fd27a900d539ca33a1e84252462ccaaefcd51fdf2d90cc25ed3a",
+        "pixel_sha256": "b84d67173caeed59a25caa18766ee1e106e41ed30f6bf4823426bfef3dcd6e98"
+      },
+      "video_poster": {
+        "path": "course-assets/thumbnails/pilots/revisions/v6/video-posters/opening-the-call-video-poster-v6-16x9.webp",
+        "dimensions": [1280, 720],
+        "sha256": "802cbc44bd4023f3e66d2edc28f26d04c367ea32705d2939e39b4bf636ddce39",
+        "pixel_sha256": "7163c35067b2832012b50b0ac7e7f3abe477bc3af4df83b29ff53dbe77a54c70"
+      }
+    },
+    {
+      "slug": "objection-architecture",
+      "background_rgb": [103, 182, 255],
+      "source": {
+        "path": "course-assets/thumbnails/pilots/revisions/v6/sources/objection-architecture-generated-v6.png",
+        "dimensions": [1672, 941],
+        "sha256": "fa2ec9eef64cc171f8afb43c1ebeeea6f8f4460445ce94f79dd9da53b3485a54"
+      },
+      "flat_master": {
+        "path": "course-assets/thumbnails/pilots/revisions/v6/flat-masters/objection-architecture-flat-master-v6.png",
+        "dimensions": [1672, 941],
+        "sha256": "497b329a901272f20ddca4187f4f559894e0acc5158b362662d3c75e0ca6a081",
+        "pixel_sha256": "198504e48c0de829153ac639a20843c17bd5d87d1448f31e06ca7c0a3b806747"
+      },
+      "lesson_card": {
+        "path": "course-assets/thumbnails/pilots/revisions/v6/lesson-cards/objection-architecture-lesson-card-v6-16x10.webp",
+        "dimensions": [1280, 800],
+        "sha256": "2d2e2d1e2e8314526b70a99b05a3eedf639ef2899aadc16a120e66e9b4eea0fc",
+        "pixel_sha256": "c331b65e9d5ed4193b20062b4988ab14dcd22de046964b27488a6aa63f8043e2"
+      },
+      "video_poster": {
+        "path": "course-assets/thumbnails/pilots/revisions/v6/video-posters/objection-architecture-video-poster-v6-16x9.webp",
+        "dimensions": [1280, 720],
+        "sha256": "7bda0e99e2566098e710db7757aabfd76d15c246c0d0cee14689c4f091e758ed",
+        "pixel_sha256": "bb935537620aaec0a6cbd017355197c996cdd8cb060b6bc999bf116a307b09cc"
+      }
+    }
+  ]
+}

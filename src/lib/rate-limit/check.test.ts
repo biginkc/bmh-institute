@@ -9,7 +9,11 @@ let rpcResponse: RpcResponse = {
   data: [{ allowed: true, retry_after_seconds: 0 }],
   error: null,
 };
-const rpc = vi.fn(async (_name: string, _params: Record<string, unknown>) => rpcResponse);
+const rpc = vi.fn(async (name: string, params: Record<string, unknown>) => {
+  void name;
+  void params;
+  return rpcResponse;
+});
 
 vi.mock("@/lib/supabase/admin", () => ({
   createAdminClient: vi.fn(() => ({ rpc })),

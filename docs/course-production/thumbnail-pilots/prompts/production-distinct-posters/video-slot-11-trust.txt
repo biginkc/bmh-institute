@@ -1,0 +1,7 @@
+Use case: stylized-concept
+Asset type: BMH Institute Trust and Objections video-poster master, wide 16:9 artwork
+Primary request: Create a focused illustration about listening, acknowledging, asking, and redirecting to build trust. The exact mapped video must inform the ear, heart, conversation, bridge, and trust-shield cues.
+Input images: Image 1 and Image 2 are the canonical BMH Sticker System references. Image 3 is the approved recurring curly-haired seller identity root. Image 4 is the checksum-bound contact sheet from the exact mapped video.
+Character direction: Show exactly one person: the recurring curly-haired seller. Preserve the approved face, curly hair, proportions, clothing language, pure-white skin fill, and thick slightly wobbly black line weight. Seat him upright on the edge of a sofa in the right safe zone, one arm folded and the other palm open in a considered response. This posture must be materially different from the bent-forward Complex Objections poster.
+Scene: uniform flat golden-yellow background. Arrange ear, heart, speech bubble and bridge-shield cues as a left-to-right trust path.
+Constraints: one person only; no Andrea; no words, letters, numbers, logos, watermark, gradients, texture, shadows, extra limbs, cropped anatomy, or unrelated objects. Keep all meaningful content inside the central 80 percent.

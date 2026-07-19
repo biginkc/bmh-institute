@@ -1,0 +1,224 @@
+{
+  "schema_version": "bmh-distinct-poster-contact-sheets/v1",
+  "generator": "lossless row extraction from checksum-bound mapped-video contact sheets",
+  "source_record_path": "docs/course-production/thumbnail-pilots/references/production-video-stills/contact-sheets.json",
+  "records": [
+    {
+      "master_id": "master-poster-video-slot-04-humanizing-b",
+      "contact_sheet_input": {
+        "id": "video-contact-sheet-video-slot-04-humanizing-b",
+        "role": "checksum-bound exact mapped-video contact sheet",
+        "path": "docs/course-production/thumbnail-pilots/references/production-video-stills/distinct-posters/video-slot-04-humanizing-b-contact-sheet.png",
+        "sha256": "d1000f38925457fd9be75fc81fd9fe28be5eab8dae5d1452636be40faafbe7aa",
+        "dimensions": [
+          960,
+          180
+        ],
+        "frame_count": 3
+      },
+      "video_evidence": [
+        {
+          "asset_key": "video-slot-04-humanizing-b",
+          "local_path": "course-assets/review-lesson2B/LESSON-2B-v3-FULL.mp4",
+          "checksum_sha256": "582125d4d8a2b30f911071e644ebfc2b3e1aa6fb839470f52ef04c2a0c307f4d",
+          "size_bytes": 127585423,
+          "approval_status": "approved",
+          "duration_seconds": 357.824,
+          "frame_timestamps_seconds": [
+            71.565,
+            178.912,
+            286.259
+          ]
+        }
+      ],
+      "parent_contact_sheet_sha256": "931a377c15e4d0945fb35588214939e42948b700fa39b2262354c813fae4961e",
+      "parent_row": 1
+    },
+    {
+      "master_id": "master-poster-video-slot-04-ideal-seller",
+      "contact_sheet_input": {
+        "id": "video-contact-sheet-video-slot-04-ideal-seller",
+        "role": "checksum-bound exact mapped-video contact sheet",
+        "path": "docs/course-production/thumbnail-pilots/references/production-video-stills/distinct-posters/video-slot-04-ideal-seller-contact-sheet.png",
+        "sha256": "161e0ec7e67f81b9455f1abb9b320ebfc993a5e2e0282b188ac6a9702b1172eb",
+        "dimensions": [
+          960,
+          180
+        ],
+        "frame_count": 3
+      },
+      "video_evidence": [
+        {
+          "asset_key": "video-slot-04-ideal-seller",
+          "local_path": "course-assets/review-lessonISP/LESSON-ISP-v6.mp4",
+          "checksum_sha256": "f99650628999c4c82c69fd3fe508c7dfc09697198b28ecf8bb7bab8542c800d1",
+          "size_bytes": 62498444,
+          "approval_status": "approved",
+          "duration_seconds": 312.192,
+          "frame_timestamps_seconds": [
+            62.438,
+            156.096,
+            249.754
+          ]
+        }
+      ],
+      "parent_contact_sheet_sha256": "931a377c15e4d0945fb35588214939e42948b700fa39b2262354c813fae4961e",
+      "parent_row": 2
+    },
+    {
+      "master_id": "master-poster-video-slot-05-offer-b",
+      "contact_sheet_input": {
+        "id": "video-contact-sheet-video-slot-05-offer-b",
+        "role": "checksum-bound exact mapped-video contact sheet",
+        "path": "docs/course-production/thumbnail-pilots/references/production-video-stills/distinct-posters/video-slot-05-offer-b-contact-sheet.png",
+        "sha256": "2478f180564f0275d0f6debe9e05693a460515412c5e8a410b60fd6feaed3524",
+        "dimensions": [
+          960,
+          180
+        ],
+        "frame_count": 3
+      },
+      "video_evidence": [
+        {
+          "asset_key": "video-slot-05-offer-b",
+          "local_path": "course-assets/review-lesson3B/LESSON-3B-v1-FULL.mp4",
+          "checksum_sha256": "a9206ce9907d887c5be95c18755e0793e938bdac8bcb788ab6f2c269b9b9cc83",
+          "size_bytes": 66943724,
+          "approval_status": "approved",
+          "duration_seconds": 231.893,
+          "frame_timestamps_seconds": [
+            46.379,
+            115.947,
+            185.514
+          ]
+        }
+      ],
+      "parent_contact_sheet_sha256": "ce8083c8bd0bf5e7d987e904fa71bf167d102bf0d100fc0ea712fcbba3c26525",
+      "parent_row": 1
+    },
+    {
+      "master_id": "master-poster-video-slot-06-framework",
+      "contact_sheet_input": {
+        "id": "video-contact-sheet-video-slot-06-framework",
+        "role": "checksum-bound exact mapped-video contact sheet",
+        "path": "docs/course-production/thumbnail-pilots/references/production-video-stills/distinct-posters/video-slot-06-framework-contact-sheet.png",
+        "sha256": "de9a5e1f3c5f05c1301b867a04668b108f80f2729e2957665cec3150ec706e5f",
+        "dimensions": [
+          960,
+          180
+        ],
+        "frame_count": 3
+      },
+      "video_evidence": [
+        {
+          "asset_key": "video-slot-06-framework",
+          "local_path": "course-assets/review-lesson4B/LESSON-4B-v1-APPROVED.mp4",
+          "checksum_sha256": "2b66d59b3325ceb4ca8cc5dd8db3edd50f05b583a9705e334f2a40088f8b79ef",
+          "size_bytes": 57684948,
+          "approval_status": "approved",
+          "duration_seconds": 160.661,
+          "frame_timestamps_seconds": [
+            32.132,
+            80.331,
+            128.529
+          ]
+        }
+      ],
+      "parent_contact_sheet_sha256": "6cac93dea6aee049f4c59fdea25bb28064cd239483525ebe25f818d9329e9ed5",
+      "parent_row": 1
+    },
+    {
+      "master_id": "master-poster-video-slot-11-trust",
+      "contact_sheet_input": {
+        "id": "video-contact-sheet-video-slot-11-trust",
+        "role": "checksum-bound exact mapped-video contact sheet",
+        "path": "docs/course-production/thumbnail-pilots/references/production-video-stills/distinct-posters/video-slot-11-trust-contact-sheet.png",
+        "sha256": "46f5ac1032d93d13102595a4f6f2b534b1e7cf4416e5c93b5f3ce8b7f4c85cc2",
+        "dimensions": [
+          960,
+          180
+        ],
+        "frame_count": 3
+      },
+      "video_evidence": [
+        {
+          "asset_key": "video-slot-11-trust",
+          "local_path": "course-assets/review-lesson8B/LESSON-8B-v2.mp4",
+          "checksum_sha256": "470dd69db0884c0724ee863232c3e634ced7caa7cf7c5dcba0e0088c96ee0525",
+          "size_bytes": 51502258,
+          "approval_status": "approved",
+          "duration_seconds": 245.717,
+          "frame_timestamps_seconds": [
+            49.143,
+            122.859,
+            196.574
+          ]
+        }
+      ],
+      "parent_contact_sheet_sha256": "4abb1a1f11a90de78454b78dc16e390a778239e154f1d0b14e95e37230ff591e",
+      "parent_row": 1
+    },
+    {
+      "master_id": "master-poster-video-slot-12-faq-b",
+      "contact_sheet_input": {
+        "id": "video-contact-sheet-video-slot-12-faq-b",
+        "role": "checksum-bound exact mapped-video contact sheet",
+        "path": "docs/course-production/thumbnail-pilots/references/production-video-stills/distinct-posters/video-slot-12-faq-b-contact-sheet.png",
+        "sha256": "fd1828d31a00d6fc4ad15ac290de7729f8aaae2aee13b71e2a4e4b386f1d9897",
+        "dimensions": [
+          960,
+          180
+        ],
+        "frame_count": 3
+      },
+      "video_evidence": [
+        {
+          "asset_key": "video-slot-12-faq-b",
+          "local_path": "course-assets/review-lesson9B/LESSON-9B-v3.mp4",
+          "checksum_sha256": "b977edbf0438b6cc8c4410e569f6f686fa8f4efbd864828795ac7a89034f919c",
+          "size_bytes": 75665539,
+          "approval_status": "approved",
+          "duration_seconds": 180.778,
+          "frame_timestamps_seconds": [
+            36.156,
+            90.389,
+            144.622
+          ]
+        }
+      ],
+      "parent_contact_sheet_sha256": "a089313107c032438735a4670888fa8a4ad0862553ded32be021ddbeab19ce9d",
+      "parent_row": 1
+    },
+    {
+      "master_id": "master-poster-video-slot-18-operator",
+      "contact_sheet_input": {
+        "id": "video-contact-sheet-video-slot-18-operator",
+        "role": "checksum-bound exact mapped-video contact sheet",
+        "path": "docs/course-production/thumbnail-pilots/references/production-video-stills/distinct-posters/video-slot-18-operator-contact-sheet.png",
+        "sha256": "a64731ba34bd05fd87dc34b21db8332971b0360bebcc7edad001da48bca639e9",
+        "dimensions": [
+          960,
+          180
+        ],
+        "frame_count": 3
+      },
+      "video_evidence": [
+        {
+          "asset_key": "video-slot-18-operator",
+          "local_path": "course-assets/review-lesson18A/LESSON-18A-v10.mp4",
+          "checksum_sha256": "6e6a3f257ff8cf3ef201de775de47c6e7833e3abd673e44bb8d4d5ac3aafa048",
+          "size_bytes": 85657783,
+          "approval_status": "hold",
+          "duration_seconds": 378.858,
+          "frame_timestamps_seconds": [
+            75.772,
+            189.429,
+            303.086
+          ]
+        }
+      ],
+      "parent_contact_sheet_sha256": "b75223df2a1f310612a47bc1b347c8b8af2fe31d05e84ee26fb19aa01fc91541",
+      "parent_row": 0
+    }
+  ]
+}

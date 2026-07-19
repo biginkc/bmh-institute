@@ -1,0 +1,8 @@
+Use case: style-transfer
+Asset type: corrected BMH Institute Orientation thumbnail master
+Primary request: Edit Image 1 only to enforce the locked BMH Sticker System flatness while preserving its subject, layout, proportions, object count, and wide composition. Keep the training building, learner, compass, checklist, orange path marks, arrow, and doodles in exactly the same approximate positions.
+Input images: Image 1 is the edit target; Images 2 and 3 are the canonical flat-style references.
+Style/medium: match the genuinely flat, loose, hand-drawn sticker-sheet treatment of Images 2–3
+Color palette: replace every shaded or blended area with a single uniform flat fill chosen from cornflower blue, golden yellow, orange, cream, white, black, and one muted green; maximum 7 colors
+Constraints: make the cornflower-blue background one perfectly uniform solid color edge to edge; remove every gradient, highlight, glow, shadow, reflection, and lighting effect; remove the thick white cutout border surrounding each sticker; retain thick slightly wobbly black outlines and all existing icon silhouettes; no text, letters, numbers, logos, or watermark
+Avoid: changing the composition, adding objects, deleting objects, rendering depth, realism, 3D polish, texture, soft shading, edge cropping

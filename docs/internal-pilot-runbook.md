@@ -38,13 +38,13 @@ Use `/admin/reports` as the command center.
 
 Check these areas:
 
-- Pilot monitoring: who needs access, review, revision, or follow-up.
+- Learner monitoring: who needs access, review, revision, or follow-up.
 - Learners table: lesson, quiz, submission, certificate, and last activity rollups.
 - Courses table: active learners and certificates by course.
 - Programs table: certificates by program.
 - Recent activity: latest learner and system events.
 
-Use the action links in Pilot monitoring:
+Use the action links in Learner monitoring:
 
 - Review access opens the learner access editor.
 - Review submissions opens the pending submissions queue.

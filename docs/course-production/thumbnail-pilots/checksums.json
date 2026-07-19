@@ -1,0 +1,154 @@
+{
+  "status": "pilot-awaiting-jarrad-approval",
+  "generator": "built-in image_gen",
+  "post_processing": "locked eight-color palette, no dithering",
+  "palette_rgb": [
+    [
+      103,
+      182,
+      255
+    ],
+    [
+      255,
+      211,
+      1
+    ],
+    [
+      255,
+      174,
+      1
+    ],
+    [
+      255,
+      110,
+      0
+    ],
+    [
+      254,
+      255,
+      198
+    ],
+    [
+      255,
+      255,
+      255
+    ],
+    [
+      0,
+      0,
+      0
+    ],
+    [
+      105,
+      153,
+      53
+    ]
+  ],
+  "assets": [
+    {
+      "slug": "orientation",
+      "source": {
+        "path": "course-assets/thumbnails/pilots/sources/orientation-generated.png",
+        "dimensions": [
+          1672,
+          941
+        ],
+        "sha256": "25307aedf8d8ac0f60181e9e0d2bbad4eb76b0548af254de12fa9f9451ad99a5"
+      },
+      "flat_master": {
+        "path": "course-assets/thumbnails/pilots/flat-masters/orientation-flat-master.png",
+        "dimensions": [
+          1672,
+          941
+        ],
+        "sha256": "0c26f841a92a4253692e36f851b10d090ecca78874054f8fc4e64738b116288c"
+      },
+      "lesson_card": {
+        "path": "course-assets/thumbnails/pilots/lesson-cards/orientation-lesson-card-16x10.webp",
+        "dimensions": [
+          1280,
+          800
+        ],
+        "sha256": "2f18cc10daca3ec29c9005feacb8b4b6167f60720786dffabaa66071f7105c02"
+      },
+      "video_poster": {
+        "path": "course-assets/posters/pilots/orientation-video-poster-16x9.webp",
+        "dimensions": [
+          1280,
+          720
+        ],
+        "sha256": "71094a3f54b908963ab44096b4a9af3ce2ba7b1212c73f19a1f92fc5aaf49b20"
+      }
+    },
+    {
+      "slug": "opening-the-call",
+      "source": {
+        "path": "course-assets/thumbnails/pilots/sources/opening-the-call-generated.png",
+        "dimensions": [
+          1672,
+          941
+        ],
+        "sha256": "024256e8af219b185de73bbbd8274dfda67c40d28dd2692f861345dc68b0518b"
+      },
+      "flat_master": {
+        "path": "course-assets/thumbnails/pilots/flat-masters/opening-the-call-flat-master.png",
+        "dimensions": [
+          1672,
+          941
+        ],
+        "sha256": "98ce86bdb4dfaeb4906aca4ed287b80d78920df4f02f0c8b89bae1b33a7cfbf8"
+      },
+      "lesson_card": {
+        "path": "course-assets/thumbnails/pilots/lesson-cards/opening-the-call-lesson-card-16x10.webp",
+        "dimensions": [
+          1280,
+          800
+        ],
+        "sha256": "4c71982ce2f43660ae07076e3f3613264cfca2a1b097d5657e2d15383d473f55"
+      },
+      "video_poster": {
+        "path": "course-assets/posters/pilots/opening-the-call-video-poster-16x9.webp",
+        "dimensions": [
+          1280,
+          720
+        ],
+        "sha256": "ef6d25c3a00d8582bc1daf8149a51672848e5358b66e9d54cef0c90d4c9611ae"
+      }
+    },
+    {
+      "slug": "objection-architecture",
+      "source": {
+        "path": "course-assets/thumbnails/pilots/sources/objection-architecture-generated.png",
+        "dimensions": [
+          1672,
+          941
+        ],
+        "sha256": "b0d30bbb17d89f6141251a7fa0541a162d543d70706a1cdacdfe0c71aab9cfd1"
+      },
+      "flat_master": {
+        "path": "course-assets/thumbnails/pilots/flat-masters/objection-architecture-flat-master.png",
+        "dimensions": [
+          1672,
+          941
+        ],
+        "sha256": "445d7bc6a714a2f35e0dec13cf0ade52c0cabdf3232ffc379cfe2c7f613040e2"
+      },
+      "lesson_card": {
+        "path": "course-assets/thumbnails/pilots/lesson-cards/objection-architecture-lesson-card-16x10.webp",
+        "dimensions": [
+          1280,
+          800
+        ],
+        "sha256": "f585ff79241da17bf4fb513680cd98bb2ec9d5986aba53711112c0cf6f157fd9"
+      },
+      "video_poster": {
+        "path": "course-assets/posters/pilots/objection-architecture-video-poster-16x9.webp",
+        "dimensions": [
+          1280,
+          720
+        ],
+        "sha256": "ef478ca179f9b410bf60811bef1a4ff9ca8fae5b5e0587812f0c7912789a1fd8"
+      }
+    }
+  ]
+}

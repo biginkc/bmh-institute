@@ -1,0 +1,79 @@
+{
+  "status": "pilot-awaiting-jarrad-approval",
+  "generator": "built-in image_gen",
+  "post_processing": "pose-varied single-character compositions, locked eight-color palette, no dithering, contain normalization, lossless WebP",
+  "assets": [
+    {
+      "slug": "orientation",
+      "character": "andrea",
+      "source": {
+        "path": "course-assets/thumbnails/pilots/revisions/v7/sources/orientation-andrea-generated-v7.png",
+        "dimensions": [1672, 941],
+        "sha256": "a3a0b69a48d359d29247e557babdad2bc5a88bc79dc19edb113f885e0ccc22a6"
+      },
+      "flat_master": {
+        "path": "course-assets/thumbnails/pilots/revisions/v8/flat-masters/orientation-andrea-standing-flat-master-v8.png",
+        "dimensions": [1672, 941],
+        "sha256": "e8f17f745865e69631517c94ab1110f5767f64f5c2de1e80531d9f2a7fa31f94"
+      },
+      "lesson_card": {
+        "path": "course-assets/thumbnails/pilots/revisions/v8/lesson-cards/orientation-andrea-standing-lesson-card-v8-16x10.webp",
+        "dimensions": [1280, 800],
+        "sha256": "3a684cd589bf3895e672e43d6a734b35c503f6b3a191e1564c997c93c8c84988"
+      },
+      "video_poster": {
+        "path": "course-assets/thumbnails/pilots/revisions/v8/video-posters/orientation-andrea-standing-video-poster-v8-16x9.webp",
+        "dimensions": [1280, 720],
+        "sha256": "7da124a20704285fed7b2ed1c2db81fa56be849da4222f22ce1810638ec46d07"
+      }
+    },
+    {
+      "slug": "opening-the-call",
+      "character": "andrea",
+      "source": {
+        "path": "course-assets/thumbnails/pilots/revisions/v8/sources/opening-andrea-seated-generated-v8.png",
+        "dimensions": [1672, 941],
+        "sha256": "e18d7b66576f2bf4998e6dfd7a2112f6323374e53df4f926ea7676384548eadd"
+      },
+      "flat_master": {
+        "path": "course-assets/thumbnails/pilots/revisions/v8/flat-masters/opening-andrea-seated-flat-master-v8.png",
+        "dimensions": [1672, 941],
+        "sha256": "002aca5936253cf2f22164352634431ed38c139aadd3806de2e190f92f26c506"
+      },
+      "lesson_card": {
+        "path": "course-assets/thumbnails/pilots/revisions/v8/lesson-cards/opening-andrea-seated-lesson-card-v8-16x10.webp",
+        "dimensions": [1280, 800],
+        "sha256": "3a2f38e2619f5bb33aa69cfcd0712c4e6e4e4c02979ef20ec9313d8e14973c25"
+      },
+      "video_poster": {
+        "path": "course-assets/thumbnails/pilots/revisions/v8/video-posters/opening-andrea-seated-video-poster-v8-16x9.webp",
+        "dimensions": [1280, 720],
+        "sha256": "ff1458f6b657f002430df9cb937b0498975f83eaad7a39ec9d800f9d56eea509"
+      }
+    },
+    {
+      "slug": "objection-architecture",
+      "character": "recurring-seller",
+      "source": {
+        "path": "course-assets/thumbnails/pilots/revisions/v7/sources/objection-seller-generated-v7b.png",
+        "dimensions": [1672, 941],
+        "sha256": "88f3513e1f4985ded8bceefc1e11aff60ae97dc934896bee56bd88a1133d9a58"
+      },
+      "flat_master": {
+        "path": "course-assets/thumbnails/pilots/revisions/v8/flat-masters/objection-seller-gesturing-flat-master-v8.png",
+        "dimensions": [1672, 941],
+        "sha256": "9478035c8c98f287f8d1e0fb9426c70963ad5e4b7f006ba186218fa3b5e45c16"
+      },
+      "lesson_card": {
+        "path": "course-assets/thumbnails/pilots/revisions/v8/lesson-cards/objection-seller-gesturing-lesson-card-v8-16x10.webp",
+        "dimensions": [1280, 800],
+        "sha256": "9ecbea7d29ce43d999161e5ab1eb60607fbc26a0a26b24c0b1f9116c51b2a1c1"
+      },
+      "video_poster": {
+        "path": "course-assets/thumbnails/pilots/revisions/v8/video-posters/objection-seller-gesturing-video-poster-v8-16x9.webp",
+        "dimensions": [1280, 720],
+        "sha256": "2e08972e271cf6e98e9eaf0dafbf933b2dffe4d114110bed04bf25b233d3e30e"
+      }
+    }
+  ]
+}
