@@ -2,7 +2,7 @@
 status: complete
 task: approved-thumbnail-review
 date: 2026-07-20
-implementation_commit: pending
+implementation_commit: 706f6a3
 ---
 
 # Approved thumbnail review upload summary
@@ -19,4 +19,4 @@ The 29 video posters were not changed. All six assignments continue to use null 
 - `npm run test:artwork-production` — passed.
 - `npm run test:course-content` — passed.
 - `npm run lint -- scripts/course-content/build-thumbnail-redesign-review.mjs` — passed.
-- `npm run verify` — pending final rerun.
+- `npm run verify` — passed; 150 unit files / 901 tests and 36 RTL files / 107 tests.

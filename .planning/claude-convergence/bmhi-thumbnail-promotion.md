@@ -4,7 +4,7 @@
 - Plan source: `.planning/quick/20260720-approved-thumbnail-review/PLAN.md`.
 - Approval surface: `docs/course-production/thumbnail-redesign/approvals/preapproval-review-board-2026-07-20.png`.
 - Approval evidence: `docs/course-production/thumbnail-redesign/approvals/thumbnail-redesign-approval-2026-07-20.json`.
-- Rollback point before merge: `origin/main` at promotion-branch creation; record the final SHA immediately before merge.
+- Rollback point before merge: `origin/main` at `a356caa08580c65b14d6615625e6e436d6699abf`.
 
 ## Acceptance gates
 
@@ -14,7 +14,7 @@
 - [x] All 29 video posters remain unchanged.
 - [x] Production artwork ledger and full/canary manifests reconcile and validate.
 - [x] Artwork review and course-content suites pass.
-- [ ] Full project verification passes on the final diff.
+- [x] Full project verification passes on the final diff.
 - [ ] Manual code review is clean.
 - [ ] Independent reviewer reports high-confidence readiness.
 - [ ] PR checks pass and the PR is conflict-free.
