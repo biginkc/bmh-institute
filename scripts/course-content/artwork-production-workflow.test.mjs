@@ -38,7 +38,6 @@ import {
   preparePipelineReprocess,
   readJson,
   reconcileManifestFromLedger,
-  recordApprovedTextureExceptions,
   resolveRepoPath,
   reviewMaster,
   sha256,
@@ -292,15 +291,18 @@ async function writeFinalApprovalArtifact(root, ledger, {
   mutateApproval = () => {},
 } = {}) {
   await writeRepoFile(root, DEFAULT_PATHS.inventory, Buffer.from(`${JSON.stringify(inventory, null, 2)}\n`));
-  await writeRepoFile(root, DEFAULT_PATHS.ledger, Buffer.from(`${JSON.stringify(ledger, null, 2)}\n`));
   for (const asset of ledger.assets) {
     try {
       await lstat(resolveRepoPath(root, asset.output_path));
     } catch (error) {
       if (error?.code !== "ENOENT") throw error;
-      await copyRepoFile(root, asset.output_path);
+      const sourcePath = asset.__fixture_source_path ?? asset.output_path;
+      const target = resolveRepoPath(root, asset.output_path);
+      await mkdir(path.dirname(target), { recursive: true });
+      await copyFile(resolveRepoPath(REPO_ROOT, sourcePath), target);
     }
   }
+  await writeRepoFile(root, DEFAULT_PATHS.ledger, Buffer.from(`${JSON.stringify(ledger, null, 2)}\n`));
   for (const master of ledger.masters) await copyRepoFile(root, master.flat_master_path);
   for (const reference of ledger.references ?? []) await copyRepoFile(root, reference.path);
   if (ledger.pilot_approval?.status === "approved") {
@@ -392,6 +394,21 @@ async function writeFinalApprovalArtifact(root, ledger, {
 
 async function readPreFinalReviewLedgerFixture() {
   const ledger = structuredClone(await readJson(resolveRepoPath(REPO_ROOT, DEFAULT_PATHS.ledger)));
+  for (const asset of ledger.assets) {
+    if (asset.redesign_replacement === undefined) continue;
+    const historical = asset.history.findLast((entry) =>
+      entry.checksum_sha256 === asset.redesign_replacement.replaced_checksum_sha256 && Number.isInteger(entry.size_bytes));
+    assert(historical, `${asset.asset_key} is missing its pre-redesign bytes`);
+    asset.checksum_sha256 = historical.checksum_sha256;
+    asset.pixel_sha256 = historical.pixel_sha256;
+    asset.size_bytes = historical.size_bytes;
+    asset.history = asset.history.filter((entry) => entry.version < historical.version);
+    asset.__fixture_source_path = historical.archived_path;
+    delete asset.redesign_replacement;
+    delete asset.current_replacement_provenance;
+    delete asset.legacy_provenance;
+  }
+  delete ledger.thumbnail_redesign_approval;
   ledger.status = "production";
   ledger.final_approval = {
     status: "pending",
@@ -477,6 +494,47 @@ test("tracked ledger validates the active fail-closed lifecycle while preserving
     manifest,
     ledger: tracked,
   });
+});
+
+test("thumbnail redesign binds current source, display recipe, review, output, and payload budget", async () => {
+  const tracked = await readJson(resolveRepoPath(REPO_ROOT, DEFAULT_PATHS.ledger));
+  const replacements = tracked.assets.filter((asset) => asset.redesign_replacement !== undefined);
+  assert.equal(replacements.length, 19);
+  assert.equal(replacements.reduce((sum, asset) => sum + asset.size_bytes, 0) <= 1_500_000, true);
+  assert.equal(replacements.every((asset) => asset.current_replacement_provenance?.derivative?.recipe?.quality === 90), true);
+  assert.equal(replacements.every((asset) => asset.legacy_provenance?.schema_version === "bmh-thumbnail-redesign-legacy-provenance/v1"), true);
+
+  const outputTamper = structuredClone(tracked);
+  outputTamper.assets.find((asset) => asset.redesign_replacement).current_replacement_provenance.output.size_bytes += 1;
+  await assert.rejects(
+    validateLedger({ root: REPO_ROOT, inventory, manifest, ledger: outputTamper, inspectFiles: false }),
+    /current redesign output provenance drifted/,
+  );
+
+  const recipeTamper = structuredClone(tracked);
+  recipeTamper.assets.find((asset) => asset.redesign_replacement).current_replacement_provenance.derivative.recipe.quality = 10;
+  await assert.rejects(
+    validateLedger({ root: REPO_ROOT, inventory, manifest, ledger: recipeTamper, inspectFiles: false }),
+    /display encoding drifted|recipe checksum drifted/,
+  );
+
+  const budgetTamper = structuredClone(tracked);
+  budgetTamper.assets.filter((asset) => asset.redesign_replacement).forEach((asset) => {
+    asset.size_bytes = 100_000;
+    asset.current_replacement_provenance.output.size_bytes = 100_000;
+  });
+  await assert.rejects(
+    validateLedger({ root: REPO_ROOT, inventory, manifest, ledger: budgetTamper, inspectFiles: false }),
+    /display payload exceeds 1.5 MB/,
+  );
+
+  const historicalApprovalTamper = structuredClone(tracked);
+  const first = historicalApprovalTamper.assets.find((asset) => asset.asset_key === "thumbnail-slot-01");
+  first.history.find((entry) => entry.checksum_sha256 === first.redesign_replacement.replaced_checksum_sha256).pixel_sha256 = "f".repeat(64);
+  await assert.rejects(
+    validateLedger({ root: REPO_ROOT, inventory, manifest, ledger: historicalApprovalTamper, inspectFiles: false }),
+    /Historical final artwork asset bindings drifted/,
+  );
 });
 
 test("only a pristine preapproval ledger may be refreshed after inventory evidence changes", () => {
@@ -1638,16 +1696,14 @@ test("poster-only correction preserves the approved card bytes while replacing e
 });
 
 test("V8 texture exceptions are exact-checksum scoped and cannot transfer to replacement bytes", async () => {
-  const tracked = await readPreFinalReviewLedgerFixture();
-  const evidence = "docs/course-production/thumbnail-pilots/approvals/v8-approved-texture-exceptions-2026-07-17.json";
-  await recordApprovedTextureExceptions({ root: REPO_ROOT, ledger: tracked, evidence });
+  const tracked = await readJson(resolveRepoPath(REPO_ROOT, DEFAULT_PATHS.ledger));
   assert.equal(tracked.approved_texture_exceptions.length, 4);
   assert.equal(tracked.approved_texture_exceptions.every((entry) => entry.approval_inheritance === "forbidden"), true);
-  await validateLedger({ root: REPO_ROOT, inventory, manifest: preapprovalManifest, ledger: tracked, inspectFiles: true });
+  await validateLedger({ root: REPO_ROOT, inventory, manifest, ledger: tracked, inspectFiles: true });
   const replacement = structuredClone(tracked);
   replacement.approved_texture_exceptions[0].checksum_sha256 = "f".repeat(64);
   await assert.rejects(
-    validateLedger({ root: REPO_ROOT, inventory, manifest: preapprovalManifest, ledger: replacement, inspectFiles: false }),
+    validateLedger({ root: REPO_ROOT, inventory, manifest, ledger: replacement, inspectFiles: false }),
     /no longer matches current or historical bytes|not preserved in redesign history/,
   );
 });
@@ -1658,7 +1714,7 @@ test("final artwork review request binds four exact master sheets, a current der
   const { request } = await writeFinalApprovalArtifact(root, ledger);
   await validateFinalReviewRequest({ root, ledger, request, requireLedgerSnapshot: true });
   assert.equal(request.request_id, `bmh-artwork-final-review-${request.bindings_sha256}`);
-  assert.match(request.contact_sheet.sha256, /^[a-f0-9]{64}$/);
+  assert.equal(request.contact_sheet.sha256, "a6aa3ee0d2bc1ae3ed6c9b2f691fa9bc86247f025ca54a15cb3e5788e238505d");
   assert.equal(request.schema_version, "bmh-artwork-final-review-request/v2");
   assert.equal(request.master_review_surface.master_count, 28);
   assert.equal(request.master_review_surface.sheet_count, 4);

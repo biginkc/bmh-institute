@@ -9,12 +9,13 @@
 ## Acceptance gates
 
 - [x] Exact approval binds all 19 content PNGs and preserves the assignment-thumbnail-free policy.
-- [x] All 19 content PNGs promote to lossless 1280 x 800 WebPs with identical decoded pixels.
+- [x] All 19 exact approved PNGs remain checksum-bound source evidence and produce 1280 x 800 quality-90 display WebPs under a 1.5 MB aggregate budget.
 - [x] Previous production WebPs are archived by checksum.
 - [x] All 29 video posters remain unchanged.
 - [x] Production artwork ledger and full/canary manifests reconcile and validate.
 - [x] Artwork review and course-content suites pass.
 - [x] Full project verification passes on the final diff.
+- [x] Learner lesson cards render full 16:10 artwork panels; assignments remain thumbnail-free.
 - [ ] Manual code review is clean.
 - [ ] Independent reviewer reports high-confidence readiness.
 - [ ] PR checks pass and the PR is conflict-free.

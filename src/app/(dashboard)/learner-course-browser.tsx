@@ -130,31 +130,40 @@ export function LearnerCourseBrowser({
 }
 
 function LearnerTile({ tile }: { tile: LearnerCourseTile }) {
+  const showThumbnail = tile.kind === "content" && Boolean(tile.thumbnailUrl);
   const content = (
-    <div className="relative flex min-h-28 flex-col overflow-hidden rounded-[var(--bmh-radius-lg)] border border-[var(--border-card)] bg-[var(--paper)] p-4 shadow-[var(--bmh-shadow-xs)]">
-      {tile.thumbnailUrl ? (
-        <span
-          aria-hidden="true"
-          className="absolute inset-y-0 left-0 w-1.5 bg-cover bg-center"
-          style={{ backgroundImage: `url(${tile.thumbnailUrl})` }}
-        />
-      ) : (
-        <span aria-hidden="true" className="absolute inset-y-0 left-0 w-1.5 bg-[var(--action-soft)]" />
-      )}
-      <div className="flex items-start justify-between gap-3 pl-1">
-        <span className="text-xs font-extrabold text-[var(--text-muted)]">
-          Lesson {tile.lessonNumber}
-        </span>
-        <TileMark tile={tile} />
-      </div>
-      <h4 className="mt-3 pl-1 font-[family-name:var(--font-display)] text-base font-extrabold leading-snug text-[var(--ink-900)]">
-        {tile.title}
-      </h4>
-      <div className="mt-auto flex flex-wrap gap-2 pl-1 pt-3">
-        {tile.kind === "assignment" ? <Badge tone="orange" size="sm">Assignment</Badge> : null}
-        {tile.kind === "quiz" ? <Badge tone="blue" size="sm">Quiz</Badge> : null}
-        {tile.state === "awaiting_review" ? <Badge tone="blue" size="sm">Awaiting review</Badge> : null}
-        {tile.state === "needs_revision" ? <Badge tone="yellow" size="sm">Needs revision</Badge> : null}
+    <div className="relative flex min-h-28 h-full flex-col overflow-hidden rounded-[var(--bmh-radius-lg)] border border-[var(--border-card)] bg-[var(--paper)] shadow-[var(--bmh-shadow-xs)]">
+      {showThumbnail ? (
+        <div className="aspect-[16/10] overflow-hidden border-b border-[var(--border-hairline)] bg-[var(--action-soft)]">
+          {/* Signed artwork URLs are runtime values and must fill the fixed 16:10 shell. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={tile.thumbnailUrl}
+            alt={`${tile.title} thumbnail`}
+            width={1280}
+            height={800}
+            loading="lazy"
+            decoding="async"
+            className="h-full w-full object-cover"
+          />
+        </div>
+      ) : null}
+      <div className="flex flex-1 flex-col p-4">
+        <div className="flex items-start justify-between gap-3">
+          <span className="text-xs font-extrabold text-[var(--text-muted)]">
+            Lesson {tile.lessonNumber}
+          </span>
+          <TileMark tile={tile} />
+        </div>
+        <h4 className="mt-3 font-[family-name:var(--font-display)] text-base font-extrabold leading-snug text-[var(--ink-900)]">
+          {tile.title}
+        </h4>
+        <div className="mt-auto flex flex-wrap gap-2 pt-3">
+          {tile.kind === "assignment" ? <Badge tone="orange" size="sm">Assignment</Badge> : null}
+          {tile.kind === "quiz" ? <Badge tone="blue" size="sm">Quiz</Badge> : null}
+          {tile.state === "awaiting_review" ? <Badge tone="blue" size="sm">Awaiting review</Badge> : null}
+          {tile.state === "needs_revision" ? <Badge tone="yellow" size="sm">Needs revision</Badge> : null}
+        </div>
       </div>
     </div>
   );
