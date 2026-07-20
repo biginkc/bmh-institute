@@ -36,4 +36,31 @@ describe("LearnerCourseBrowser", () => {
       expect(label.closest("a")).toBeNull();
     }
   });
+
+  it("renders an explicitly synthetic module as an unlabeled lesson group", () => {
+    const outline = learnerOutlineFixture(3);
+    outline.modules[0].title = "";
+    for (const tile of outline.tiles) tile.moduleTitle = "";
+
+    render(React.createElement(LearnerCourseBrowser, {
+      outline,
+      page: 1,
+      pageHref: "/dashboard",
+    }));
+
+    expect(screen.queryByText("Module 1")).toBeNull();
+    expect(screen.getAllByText("Topic 1")).toHaveLength(2);
+  });
+
+  it("keeps a meaningful label on a one-module hand-authored outline", () => {
+    const outline = learnerOutlineFixture(3);
+
+    render(React.createElement(LearnerCourseBrowser, {
+      outline,
+      page: 1,
+      pageHref: "/dashboard",
+    }));
+
+    expect(screen.getAllByText("Module 1")).toHaveLength(2);
+  });
 });

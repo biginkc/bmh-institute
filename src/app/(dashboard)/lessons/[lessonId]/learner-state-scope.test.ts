@@ -19,6 +19,8 @@ describe("lesson learner-state query scope", () => {
   it("passes the signed-in identity into quiz and assignment bodies", () => {
     expect(source).toContain("userId={auth.user.id}");
     expect(source).toContain("userId={userId}");
+    expect(source).toContain('tile.kind === "quiz"');
+    expect(source).toContain("<StandaloneQuizLesson");
   });
 
   it("filters admin-visible attempts and submissions to that identity", () => {

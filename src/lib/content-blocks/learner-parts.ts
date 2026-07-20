@@ -22,6 +22,7 @@ export type LearnerLessonPartsInput = {
   quizComplete: boolean;
   quizUnlocked: boolean;
   compositeComplete: boolean;
+  includeQuiz?: boolean;
 };
 
 const ACTIONABLE_TYPES = new Set<ContentBlock["block_type"]>([
@@ -90,22 +91,26 @@ export function buildLearnerLessonParts(
     });
   }
 
-  parts.push({
-    id: "quiz",
-    label: "Quiz",
-    kind: "quiz",
-    blocks: [],
-    complete: input.quizComplete,
-    available: priorComplete && input.quizUnlocked,
-  });
-  parts.push({
-    id: "guide",
-    label: "Guide",
-    kind: "guide",
-    blocks: guides,
-    complete: input.compositeComplete,
-    available: input.compositeComplete,
-  });
+  if (input.includeQuiz !== false) {
+    parts.push({
+      id: "quiz",
+      label: "Quiz",
+      kind: "quiz",
+      blocks: [],
+      complete: input.quizComplete,
+      available: priorComplete && input.quizUnlocked,
+    });
+  }
+  if (guides.length > 0) {
+    parts.push({
+      id: "guide",
+      label: "Guide",
+      kind: "guide",
+      blocks: guides,
+      complete: input.compositeComplete,
+      available: input.compositeComplete,
+    });
+  }
 
   return parts;
 }

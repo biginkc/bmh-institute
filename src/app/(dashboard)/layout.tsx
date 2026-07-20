@@ -50,7 +50,7 @@ export default async function DashboardLayout({
       : Promise.resolve({ count: 0 }),
     supabase
       .from("lessons")
-      .select("id, title, lesson_type, prerequisite_lesson_id")
+      .select("id, title")
       .order("title")
       .limit(500),
   ]);
@@ -60,10 +60,7 @@ export default async function DashboardLayout({
       ? [{
           id: lesson.id,
           title: lesson.title,
-          href:
-            lesson.lesson_type === "quiz" && lesson.prerequisite_lesson_id
-              ? `/lessons/${encodeURIComponent(lesson.prerequisite_lesson_id)}?part=quiz`
-              : `/lessons/${encodeURIComponent(lesson.id)}`,
+          href: `/lessons/${encodeURIComponent(lesson.id)}`,
         } satisfies LessonSearchItem]
       : [],
   );

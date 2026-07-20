@@ -35,7 +35,8 @@ export function LearnerCourseBrowser({
     id: tile.id,
     label: tile.title,
     eyebrow:
-      index === 0 || outline.tiles[index - 1]?.moduleId !== tile.moduleId
+      (index === 0 || outline.tiles[index - 1]?.moduleId !== tile.moduleId) &&
+      tile.moduleTitle.trim().length > 0
         ? tile.moduleTitle
         : undefined,
     href: tile.unlocked ? tile.href : null,
@@ -81,15 +82,17 @@ export function LearnerCourseBrowser({
         <div className="space-y-8" data-learner-tile-grid>
           {modules.map((module) => (
             <section key={module.id}>
-              <div className="mb-3 flex items-center gap-3">
-                <h3 className="shrink-0 font-[family-name:var(--font-display)] text-base font-extrabold text-[var(--ink-900)]">
-                  {module.title}
-                </h3>
-                <span className="h-px flex-1 bg-[var(--border-hairline)]" />
-                <span className="shrink-0 text-xs font-extrabold text-[var(--text-muted)]">
-                  {module.tiles.filter((tile) => tile.complete).length}/{module.tiles.length}
-                </span>
-              </div>
+              {module.title.trim().length > 0 ? (
+                <div className="mb-3 flex items-center gap-3">
+                  <h3 className="shrink-0 font-[family-name:var(--font-display)] text-base font-extrabold text-[var(--ink-900)]">
+                    {module.title}
+                  </h3>
+                  <span className="h-px flex-1 bg-[var(--border-hairline)]" />
+                  <span className="shrink-0 text-xs font-extrabold text-[var(--text-muted)]">
+                    {module.tiles.filter((tile) => tile.complete).length}/{module.tiles.length}
+                  </span>
+                </div>
+              ) : null}
               <ol className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                 {module.tiles.map((tile) => (
                   <LearnerTile key={tile.id} tile={tile} />
@@ -149,6 +152,7 @@ function LearnerTile({ tile }: { tile: LearnerCourseTile }) {
       </h4>
       <div className="mt-auto flex flex-wrap gap-2 pl-1 pt-3">
         {tile.kind === "assignment" ? <Badge tone="orange" size="sm">Assignment</Badge> : null}
+        {tile.kind === "quiz" ? <Badge tone="blue" size="sm">Quiz</Badge> : null}
         {tile.state === "awaiting_review" ? <Badge tone="blue" size="sm">Awaiting review</Badge> : null}
         {tile.state === "needs_revision" ? <Badge tone="yellow" size="sm">Needs revision</Badge> : null}
       </div>
