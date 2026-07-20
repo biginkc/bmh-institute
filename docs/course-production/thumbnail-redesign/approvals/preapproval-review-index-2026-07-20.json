@@ -2,12 +2,12 @@
   "schema_version": "bmh-thumbnail-redesign-review/v1",
   "course": "BMH Employee Training",
   "review_date": "2026-07-20",
-  "status": "approved",
-  "production_promotion": true,
+  "status": "partial",
+  "production_promotion": false,
   "summary": {
     "total": 25,
-    "approved": 21,
-    "draft": 0,
+    "approved": 15,
+    "draft": 6,
     "pending": 0,
     "not_required": 4
   },
@@ -29,13 +29,13 @@
     { "visible_order": 15, "title": "Seller FAQ Decoder", "kind": "content", "binding": "thumbnail-slot-12", "status": "approved", "asset": "assets/15-seller-faq-decoder.png" },
     { "visible_order": 16, "title": "Objection Response Plan", "kind": "assignment", "binding": "lesson-assignment-section-4", "status": "not_required", "asset": null },
     { "visible_order": 17, "title": "Follow-Up Cadence", "kind": "content", "binding": "thumbnail-slot-13", "status": "approved", "asset": "assets/17-follow-up-cadence.png" },
-    { "visible_order": 18, "title": "Conversation Flow Mastery", "kind": "content", "binding": "thumbnail-slot-14", "status": "approved", "asset": "assets/18-conversation-flow-mastery-draft-v1.png" },
-    { "visible_order": 19, "title": "Closing and Deal Engineering", "kind": "content", "binding": "thumbnail-slot-15", "status": "approved", "asset": "assets/19-closing-and-deal-engineering-draft-v1.png" },
+    { "visible_order": 18, "title": "Conversation Flow Mastery", "kind": "content", "binding": "thumbnail-slot-14", "status": "draft", "asset": "assets/18-conversation-flow-mastery-draft-v1.png" },
+    { "visible_order": 19, "title": "Closing and Deal Engineering", "kind": "content", "binding": "thumbnail-slot-15", "status": "draft", "asset": "assets/19-closing-and-deal-engineering-draft-v1.png" },
     { "visible_order": 20, "title": "Follow-Up and Closing Plan", "kind": "assignment", "binding": "lesson-assignment-section-5", "status": "not_required", "asset": null },
-    { "visible_order": 21, "title": "KPIs and Sales Telemetry", "kind": "content", "binding": "thumbnail-slot-16", "status": "approved", "asset": "assets/21-kpis-and-sales-telemetry-draft-v1.png" },
-    { "visible_order": 22, "title": "Compensation Engine", "kind": "content", "binding": "thumbnail-slot-17", "status": "approved", "asset": "assets/22-compensation-engine-draft-v1.png" },
-    { "visible_order": 23, "title": "Operator Playbook and Daily Mission Control", "kind": "content", "binding": "thumbnail-slot-18", "status": "approved", "asset": "assets/23-operator-playbook-mission-control-draft-v1.png" },
-    { "visible_order": 24, "title": "Career Growth Path", "kind": "content", "binding": "thumbnail-slot-19", "status": "approved", "asset": "assets/24-career-growth-path-draft-v1.png" },
+    { "visible_order": 21, "title": "KPIs and Sales Telemetry", "kind": "content", "binding": "thumbnail-slot-16", "status": "draft", "asset": "assets/21-kpis-and-sales-telemetry-draft-v1.png" },
+    { "visible_order": 22, "title": "Compensation Engine", "kind": "content", "binding": "thumbnail-slot-17", "status": "draft", "asset": "assets/22-compensation-engine-draft-v1.png" },
+    { "visible_order": 23, "title": "Operator Playbook and Daily Mission Control", "kind": "content", "binding": "thumbnail-slot-18", "status": "draft", "asset": "assets/23-operator-playbook-mission-control-draft-v1.png" },
+    { "visible_order": 24, "title": "Career Growth Path", "kind": "content", "binding": "thumbnail-slot-19", "status": "draft", "asset": "assets/24-career-growth-path-draft-v1.png" },
     { "visible_order": 25, "title": "Mission Control and Growth Capstone", "kind": "assignment", "binding": "lesson-assignment-section-6", "status": "not_required", "asset": null }
   ]
 }

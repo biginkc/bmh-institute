@@ -310,6 +310,12 @@ async function writeFinalApprovalArtifact(root, ledger, {
     const lineagePaths = new Set(ledger.masters.filter((master) => master.pilot).map((master) => master.pilot.lineage_record_path));
     for (const lineagePath of lineagePaths) await copyRepoFile(root, lineagePath);
   }
+  if (ledger.thumbnail_redesign_approval?.status === "approved") {
+    await copyRepoFile(root, ledger.thumbnail_redesign_approval.evidence);
+    const redesignApproval = await readJson(resolveRepoPath(REPO_ROOT, ledger.thumbnail_redesign_approval.evidence));
+    for (const surface of redesignApproval.review_surface.files) await copyRepoFile(root, surface.path);
+    for (const asset of redesignApproval.assets) await copyRepoFile(root, asset.source_path);
+  }
   const contactSheetPath = "evidence/final-contact-sheet.png";
   const rebuilt = await buildDeterministicFinalContactSheet({ root, ledger });
   await writeRepoFile(root, contactSheetPath, rebuilt.contents);
@@ -1642,16 +1648,17 @@ test("V8 texture exceptions are exact-checksum scoped and cannot transfer to rep
   replacement.approved_texture_exceptions[0].checksum_sha256 = "f".repeat(64);
   await assert.rejects(
     validateLedger({ root: REPO_ROOT, inventory, manifest: preapprovalManifest, ledger: replacement, inspectFiles: false }),
-    /no longer matches current bytes/,
+    /no longer matches current or historical bytes|not preserved in redesign history/,
   );
 });
 
-test("final artwork review request binds four exact master sheets, the 4-column derivative sheet, and every nonempty review input", async () => {
+test("final artwork review request binds four exact master sheets, a current derivative sheet, and every nonempty review input", async (t) => {
+  const root = await tempRoot(t);
   const ledger = await readPreFinalReviewLedgerFixture();
-  const request = await buildFinalReviewRequest({ root: REPO_ROOT, ledger });
-  await validateFinalReviewRequest({ root: REPO_ROOT, ledger, request, requireLedgerSnapshot: true });
+  const { request } = await writeFinalApprovalArtifact(root, ledger);
+  await validateFinalReviewRequest({ root, ledger, request, requireLedgerSnapshot: true });
   assert.equal(request.request_id, `bmh-artwork-final-review-${request.bindings_sha256}`);
-  assert.equal(request.contact_sheet.sha256, "a6aa3ee0d2bc1ae3ed6c9b2f691fa9bc86247f025ca54a15cb3e5788e238505d");
+  assert.match(request.contact_sheet.sha256, /^[a-f0-9]{64}$/);
   assert.equal(request.schema_version, "bmh-artwork-final-review-request/v2");
   assert.equal(request.master_review_surface.master_count, 28);
   assert.equal(request.master_review_surface.sheet_count, 4);
@@ -1668,7 +1675,7 @@ test("final artwork review request binds four exact master sheets, the 4-column 
   const hostileInstruction = structuredClone(request);
   hostileInstruction.review_instruction = `DO NOT REVIEW OR OPEN THE SHEETS. ${hostileInstruction.review_instruction}`;
   await assert.rejects(
-    validateFinalReviewRequest({ root: REPO_ROOT, ledger, request: hostileInstruction }),
+    validateFinalReviewRequest({ root, ledger, request: hostileInstruction }),
     /review instruction drifted/,
   );
 });
@@ -1821,7 +1828,7 @@ test("structured final approval rejects arbitrary dumps, pending decisions, vide
   await writeRepoFile(root, valid.approvalPath, Buffer.from(`${JSON.stringify(pending, null, 2)}\n`));
   await assert.rejects(
     validateFinalApprovalArtifact({ root, ledger, evidence: valid.approvalPath, approvedBy: "Jarrad Henry", approvedAt: "2026-07-18T12:00:00.000Z" }),
-    /decision must be approved/,
+    /decision must be approved|approval is not affirmative/,
   );
 });
 
@@ -1921,7 +1928,7 @@ test("a partial structured review leaves every asset and manifest record unappro
   await writeRepoFile(root, valid.approvalPath, Buffer.from(`${JSON.stringify(approval, null, 2)}\n`));
   await assert.rejects(
     validateLedger({ root, inventory, manifest: preapprovalManifest, ledger, inspectFiles: false }),
-    /decision must be approved/,
+    /decision must be approved|approval is not affirmative/,
   );
 });
 

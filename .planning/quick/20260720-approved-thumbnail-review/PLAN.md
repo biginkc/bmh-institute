@@ -1,23 +1,25 @@
 ---
-status: in_progress
+status: complete
 task: approved-thumbnail-review
 date: 2026-07-20
 ---
 
 # Approved thumbnail review upload
 
-Package the 15 lesson thumbnails approved by Jarrad on 2026-07-20 into a review-only merge request. Show the full 25-card learner sequence in one contact sheet, add the 6 generated lesson drafts without representing them as approved, and mark the 4 remaining assignments as not requiring thumbnails.
+Package the complete thumbnail set approved by Jarrad on 2026-07-20, promote the 19 content thumbnails through the production manifest, retain assignment thumbnail bindings as null, and preserve exact rollback bytes.
 
 ## Boundaries
 
 - Preserve approved 1280 x 800 source images without modifying their pixels.
-- Do not promote the redesign into the checksum-bound production artwork ledger in this partial batch.
-- Do not represent placeholder cards as approved artwork.
-- Open the merge request as a draft because the set is intentionally incomplete.
+- Bind the final approval to the exact preapproval review surface and all 19 content PNG checksums.
+- Replace only lesson-card WebPs; do not replace video posters.
+- Keep all six assignment thumbnail bindings null.
+- Archive the replaced WebPs before promotion.
 
 ## Verification
 
 - All 15 approved files exist, are PNGs, and are exactly 1280 x 800.
-- The review index contains 25 unique visible positions: 15 approved, 6 drafts awaiting approval, and 4 assignment thumbnails not required.
-- Every approved index entry has a matching file and SHA-256 checksum.
+- The review index contains 25 unique visible positions: 21 approved concepts and 4 assignment thumbnails not required.
+- All 19 production content thumbnails have a matching approved PNG, lossless WebP, SHA-256 checksum, and rollback archive.
 - The generated contact sheet is reproducible from the index and source files.
+- The production ledger, full manifest, and Tech Stack canary manifest validate against the replacements.

@@ -1,6 +1,6 @@
-# Remaining lesson thumbnail draft generation
+# Final six lesson thumbnail generations
 
-These six images were generated with the built-in image-generation tool on 2026-07-20. They are review drafts, not approved production artwork.
+These six images were generated with the built-in image-generation tool on 2026-07-20 and subsequently approved by Jarrad as part of the complete thumbnail set. The filenames retain `draft-v1` to preserve the exact files that were reviewed; approval is carried by the checksum-bound approval artifact rather than by renaming the bytes.
 
 ## Shared prompt constraints
 
@@ -14,7 +14,7 @@ These six images were generated with the built-in image-generation tool on 2026-
 
 ## Prompt set
 
-| Lesson | Requested visual | Background | Full generated master | 1280 x 800 review derivative |
+| Lesson | Requested visual | Background | Full generated master | Approved 1280 x 800 review derivative |
 |---|---|---|---|---|
 | Conversation Flow Mastery | Andrea at her desk wearing her headset with her feet up on the desk | Yellow | [master](sources/18-conversation-flow-mastery-master.png) | [draft](assets/18-conversation-flow-mastery-draft-v1.png) |
 | Closing and Deal Engineering | Andrea and the recurring seller seated across from a distinct man in a suit at a closing table with documents | Blue | [master](sources/19-closing-and-deal-engineering-master.png) | [draft](assets/19-closing-and-deal-engineering-draft-v1.png) |

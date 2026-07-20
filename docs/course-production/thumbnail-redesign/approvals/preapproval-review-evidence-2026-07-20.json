@@ -1,17 +1,17 @@
 {
   "schema_version": "bmh-thumbnail-redesign-review-evidence/v1",
   "review_index": "review-index.json",
-  "review_index_sha256": "51c4f1dbd4c5ce9e3d8ec8b0c6daf2cb27cf1ecfa35e68985ce5817dc42794da",
+  "review_index_sha256": "fd6e99d794774f4ec6e2f1d6ae0508e046c443aac8ff2d934cee539bd63d2220",
   "board": "approved-and-pending-review-board.png",
-  "board_sha256": "bc8cca4942e99412fd2a8abfcf79891d8af435e75b0d21c6a0fbbcf0089c762b",
+  "board_sha256": "e191bd449adaa9c49857a351e1ce55fa16d49cffa3d8b40d770d88eca2d8d455",
   "board_dimensions": [
     2400,
     2110
   ],
   "counts": {
     "total": 25,
-    "approved": 21,
-    "draft": 0,
+    "approved": 15,
+    "draft": 6,
     "pending": 0,
     "not_required": 4
   },
@@ -195,7 +195,9 @@
         1280,
         800
       ]
-    },
+    }
+  ],
+  "draft_assets": [
     {
       "visible_order": 18,
       "title": "Conversation Flow Mastery",
@@ -269,7 +271,6 @@
       ]
     }
   ],
-  "draft_assets": [],
   "pending_items": [],
   "not_required_items": [
     {

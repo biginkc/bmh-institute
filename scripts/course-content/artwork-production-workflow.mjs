@@ -1873,6 +1873,17 @@ async function inspectArtworkBuffer(asset, palette, contents) {
   const riff = contents.toString("ascii");
   assert(riff.includes("VP8L") && !riff.includes("ANIM"), `${asset.asset_key} must be lossless, non-animated WebP`);
   const { data, info } = await sharp(contents).removeAlpha().raw().toBuffer({ resolveWithObject: true });
+  if (asset.redesign_replacement !== undefined) {
+    assert(
+      asset.redesign_replacement.schema_version === "bmh-thumbnail-redesign-replacement/v1",
+      `${asset.asset_key} thumbnail redesign replacement schema is invalid`,
+    );
+    assert(
+      sha256(data) === asset.redesign_replacement.output_pixel_sha256,
+      `${asset.asset_key} thumbnail redesign decoded pixels drifted`,
+    );
+    return { pixel_sha256: sha256(data) };
+  }
   const allowed = new Set(palette.map(paletteKey));
   for (let index = 0; index < data.length; index += 3) {
     const key = `${data[index]},${data[index + 1]},${data[index + 2]}`;
@@ -1901,6 +1912,104 @@ export async function inspectArtworkFile(root, asset, palette) {
   };
 }
 
+async function validateThumbnailRedesignApproval({ root, ledger, inspectFiles }) {
+  const approval = ledger.thumbnail_redesign_approval;
+  const replacements = ledger.assets.filter((asset) => asset.redesign_replacement !== undefined);
+  if (approval === undefined) {
+    assert(replacements.length === 0, "Thumbnail redesign replacements require a bound approval artifact");
+    return;
+  }
+
+  assert(["production", "finalized"].includes(ledger.status), "Thumbnail redesign approval requires production or finalized artwork state");
+  assert(approval.schema_version === "bmh-thumbnail-redesign-ledger-approval/v1", "Thumbnail redesign ledger approval schema is invalid");
+  assert(approval.status === APPROVED, "Thumbnail redesign ledger approval must be approved");
+  assert(approval.approved_by === "Jarrad Henry", "Thumbnail redesign approval requires Jarrad Henry");
+  assertIso(approval.approved_at, "thumbnail redesign approved_at");
+  assertString(approval.evidence, "thumbnail redesign approval evidence");
+  assert(SHA256.test(approval.evidence_sha256), "Thumbnail redesign approval evidence checksum is invalid");
+  assert(approval.assignment_policy === "assignments-remain-thumbnail-free", "Thumbnail redesign assignment policy drifted");
+  assert(replacements.length === 19, "Thumbnail redesign must replace exactly 19 content thumbnails");
+
+  const evidenceRecord = await fileRecord(root, approval.evidence);
+  assert(evidenceRecord.checksum_sha256 === approval.evidence_sha256, "Thumbnail redesign approval evidence drifted");
+  const artifact = await parseStructuredJson(evidenceRecord, "Thumbnail redesign approval artifact");
+  assert(artifact.schema_version === "bmh-thumbnail-redesign-approval/v1", "Thumbnail redesign approval artifact schema is invalid");
+  assert(artifact.decision === APPROVED, "Thumbnail redesign approval artifact is not affirmative");
+  assert(artifact.approver === approval.approved_by, "Thumbnail redesign approval artifact approver drifted");
+  assert(artifact.approved_at === approval.approved_at, "Thumbnail redesign approval artifact timestamp drifted");
+  assert(artifact.response_text === "Okay you have my approval for the thumbnails Go ahead and get them iInto the application", "Thumbnail redesign preserved approval response drifted");
+  assert(artifact.assignment_policy === approval.assignment_policy, "Thumbnail redesign approval assignment policy drifted");
+  assert(Array.isArray(artifact.assets) && artifact.assets.length === 19, "Thumbnail redesign approval must bind 19 content thumbnails");
+  assert(Array.isArray(artifact.review_surface?.files) && artifact.review_surface.files.length === 3, "Thumbnail redesign approval review surface is incomplete");
+
+  for (const surface of artifact.review_surface.files) {
+    assertString(surface.path, "thumbnail redesign review surface path");
+    assert(SHA256.test(surface.sha256), "Thumbnail redesign review surface checksum is invalid");
+    if (inspectFiles) {
+      const record = await fileRecord(root, surface.path);
+      assert(record.checksum_sha256 === surface.sha256, `Thumbnail redesign review surface drifted: ${surface.path}`);
+    }
+  }
+
+  const artifactByKey = new Map(artifact.assets.map((asset) => [asset.asset_key, asset]));
+  assert(artifactByKey.size === 19, "Thumbnail redesign approval asset keys must be unique");
+  for (const output of replacements) {
+    assert(output.kind === "lesson-card", `${output.asset_key} thumbnail redesign can only replace lesson cards`);
+    const binding = artifactByKey.get(output.asset_key);
+    assert(binding, `${output.asset_key} is not bound by the thumbnail redesign approval`);
+    const replacement = output.redesign_replacement;
+    assert(replacement.schema_version === "bmh-thumbnail-redesign-replacement/v1", `${output.asset_key} redesign replacement schema is invalid`);
+    assert(replacement.source_path === binding.source_path, `${output.asset_key} redesign source path drifted`);
+    assert(replacement.source_sha256 === binding.source_sha256, `${output.asset_key} redesign source checksum drifted`);
+    assert(replacement.approval_evidence === approval.evidence, `${output.asset_key} redesign approval path drifted`);
+    assert(replacement.approval_evidence_sha256 === approval.evidence_sha256, `${output.asset_key} redesign approval checksum drifted`);
+    assert(replacement.approved_by === approval.approved_by && replacement.approved_at === approval.approved_at, `${output.asset_key} redesign reviewer binding drifted`);
+    assert(replacement.output_checksum_sha256 === output.checksum_sha256, `${output.asset_key} redesign output checksum drifted`);
+    assert(replacement.output_pixel_sha256 === output.pixel_sha256, `${output.asset_key} redesign output pixel checksum drifted`);
+    assert(output.history.some((entry) => entry.checksum_sha256 === replacement.replaced_checksum_sha256), `${output.asset_key} redesign did not archive the replaced bytes`);
+    if (inspectFiles) {
+      const source = await fileRecord(root, replacement.source_path);
+      assert(source.checksum_sha256 === replacement.source_sha256, `${output.asset_key} approved PNG source drifted`);
+      const current = await fileRecord(root, output.manifest_path);
+      await assertDecodedArtworkPixelsEqual(source.contents, current.contents, `${output.asset_key} approved PNG to WebP promotion`);
+    }
+  }
+}
+
+async function validateHistoricalFinalApprovalArtifact({ root, ledger, evidence, approvedBy, approvedAt }) {
+  assert(ledger.thumbnail_redesign_approval !== undefined, "Historical final approval validation is only valid after a bound thumbnail redesign");
+  const approvalRecord = await fileRecord(root, evidence);
+  const artifact = await parseStructuredJson(approvalRecord, "Historical final artwork approval evidence");
+  assert(artifact.schema_version === "bmh-artwork-final-approval/v2", "Historical final artwork approval schema is invalid");
+  assert(artifact.decision === APPROVED, "Historical final artwork approval is not affirmative");
+  assert(artifact.approver === "Jarrad Henry" && artifact.approver === approvedBy, "Historical final artwork approver drifted");
+  assert(artifact.approved_at === approvedAt, "Historical final artwork approval timestamp drifted");
+  assert(artifact.request_binding?.request_id && SHA256.test(artifact.request_binding?.request_sha256), "Historical final artwork request binding is invalid");
+  assert(SHA256.test(artifact.request_binding?.bindings_sha256), "Historical final artwork bindings checksum is invalid");
+  assert(SHA256.test(artifact.response_binding?.response_sha256), "Historical final artwork response checksum is invalid");
+  const [requestRecord, responseRecord] = await Promise.all([
+    fileRecord(root, artifact.request_binding.request_path),
+    fileRecord(root, artifact.response_binding.response_path),
+  ]);
+  assert(requestRecord.checksum_sha256 === artifact.request_binding.request_sha256, "Historical final artwork request drifted");
+  assert(responseRecord.checksum_sha256 === artifact.response_binding.response_sha256, "Historical final artwork response drifted");
+  const [request, response] = await Promise.all([
+    parseStructuredJson(requestRecord, "Historical final artwork request"),
+    parseStructuredJson(responseRecord, "Historical final artwork response"),
+  ]);
+  assert(request.request_id === artifact.request_binding.request_id, "Historical final artwork request_id drifted");
+  assert(request.bindings_sha256 === artifact.request_binding.bindings_sha256, "Historical final artwork bindings drifted");
+  assert(response.decision === APPROVED && response.respondent === "Jarrad Henry", "Historical final artwork response is invalid");
+  assert(response.responded_at === approvedAt, "Historical final artwork response timestamp drifted");
+  assert(JSON.stringify(response.request_binding) === JSON.stringify(artifact.request_binding), "Historical final artwork response targets a different request");
+  assert(
+    response.response_text === FINAL_ARTWORK_APPROVAL_RESPONSE ||
+      (response.response_text === "approved" && response.response_context?.controller_prompt === FINAL_ARTWORK_CONTEXTUAL_APPROVAL_PROMPT),
+    "Historical final artwork response text drifted",
+  );
+  return { evidenceRecord: approvalRecord, artifact, request, response };
+}
+
 export async function recordApprovedTextureExceptions({ root, ledger, evidence }) {
   assert(ledger.status === "production", "Texture exceptions require active production state");
   const evidenceRecord = await fileRecord(root, evidence);
@@ -1914,8 +2023,15 @@ export async function recordApprovedTextureExceptions({ root, ledger, evidence }
     assert(allowedMasters.has(exception.master_id), `${exception.asset_key} is outside the approved texture-exception masters`);
     const output = findOutput(ledger, exception.asset_key);
     assert(output.provenance.master_id === exception.master_id, `${exception.asset_key} texture-exception owner drifted`);
-    assert(output.checksum_sha256 === exception.checksum_sha256, `${exception.asset_key} texture-exception checksum drifted`);
-    assert(output.pixel_sha256 === exception.pixel_sha256, `${exception.asset_key} texture-exception pixel checksum drifted`);
+    if (output.redesign_replacement !== undefined) {
+      assert(
+        output.history.some((entry) => entry.checksum_sha256 === exception.checksum_sha256 && entry.pixel_sha256 === exception.pixel_sha256),
+        `${exception.asset_key} texture-exception bytes are not preserved in redesign history`,
+      );
+    } else {
+      assert(output.checksum_sha256 === exception.checksum_sha256, `${exception.asset_key} texture-exception checksum drifted`);
+      assert(output.pixel_sha256 === exception.pixel_sha256, `${exception.asset_key} texture-exception pixel checksum drifted`);
+    }
     assert(output.provenance.promoted_pilot_sha256 === exception.checksum_sha256, `${exception.asset_key} is not an exact promoted V8 byte exception`);
     output.provenance.approved_texture_exception = {
       scope: artifact.scope,
@@ -2224,6 +2340,7 @@ export async function validateLedger({ root, inventory, manifest, ledger, inspec
       assert(asset.replacement_authorized_checksum && existing.checksum_sha256 === asset.replacement_authorized_checksum, `${asset.asset_key} is an orphan production output not recorded by the ledger`);
     }
   }
+  await validateThumbnailRedesignApproval({ root, ledger, inspectFiles });
   if (ledger.approved_texture_exceptions !== undefined) {
     assert(Array.isArray(ledger.approved_texture_exceptions) && ledger.approved_texture_exceptions.length === 4, "Approved texture exceptions must bind exactly four assets");
     const allowedMasters = new Set(["master-slot-07", "master-slot-09"]);
@@ -2238,7 +2355,14 @@ export async function validateLedger({ root, inventory, manifest, ledger, inspec
       assert(SHA256.test(exception.evidence_sha256), `${exception.asset_key} approved texture exception evidence checksum invalid`);
       const output = ledger.assets.find((asset) => asset.asset_key === exception.asset_key);
       assert(output?.provenance.master_id === exception.master_id, `${exception.asset_key} approved texture exception owner drifted`);
-      assert(output.checksum_sha256 === exception.checksum_sha256 && output.pixel_sha256 === exception.pixel_sha256, `${exception.asset_key} approved texture exception no longer matches current bytes`);
+      if (output.redesign_replacement !== undefined) {
+        assert(
+          output.history.some((entry) => entry.checksum_sha256 === exception.checksum_sha256 && entry.pixel_sha256 === exception.pixel_sha256),
+          `${exception.asset_key} approved texture exception is not preserved in redesign history`,
+        );
+      } else {
+        assert(output.checksum_sha256 === exception.checksum_sha256 && output.pixel_sha256 === exception.pixel_sha256, `${exception.asset_key} approved texture exception no longer matches current bytes`);
+      }
       assert(output.provenance.promoted_pilot_sha256 === exception.checksum_sha256, `${exception.asset_key} approved texture exception is not a promoted V8 checksum`);
       assert(JSON.stringify(output.provenance.approved_texture_exception) === JSON.stringify({
         scope: exception.scope,
@@ -2273,13 +2397,21 @@ export async function validateLedger({ root, inventory, manifest, ledger, inspec
       assert(master.review.evidence_sha256 === first.evidence_sha256, "Every recorded final artwork review must use one approval artifact checksum");
       assert(master.review.reviewed_by === first.reviewed_by && master.review.reviewed_at === first.reviewed_at, "Every recorded final artwork review must use one approver and timestamp");
     }
-    recordedFinalApproval = await validateFinalApprovalArtifact({
-      root,
-      ledger,
-      evidence: first.evidence,
-      approvedBy: first.reviewed_by,
-      approvedAt: first.reviewed_at,
-    });
+    recordedFinalApproval = ledger.thumbnail_redesign_approval === undefined
+      ? await validateFinalApprovalArtifact({
+          root,
+          ledger,
+          evidence: first.evidence,
+          approvedBy: first.reviewed_by,
+          approvedAt: first.reviewed_at,
+        })
+      : await validateHistoricalFinalApprovalArtifact({
+          root,
+          ledger,
+          evidence: first.evidence,
+          approvedBy: first.reviewed_by,
+          approvedAt: first.reviewed_at,
+        });
   }
   for (const master of ledger.masters) {
     const planned = expected.masters.find((candidate) => candidate.id === master.id);
@@ -2542,13 +2674,21 @@ export async function validateLedger({ root, inventory, manifest, ledger, inspec
     assert(SHA256.test(ledger.final_approval.evidence_sha256), "Final evidence checksum invalid");
     assert(new Set(ledger.assets.map((asset) => asset.checksum_sha256)).size === 49, "Final artwork file checksums must be unique");
     assert(new Set(ledger.assets.filter((asset) => asset.kind === "video-poster").map((asset) => asset.pixel_sha256)).size === 29, "Final poster pixels must be unique");
-    const approval = await validateFinalApprovalArtifact({
-      root,
-      ledger,
-      evidence: ledger.final_approval.evidence,
-      approvedBy: ledger.final_approval.approved_by,
-      approvedAt: ledger.final_approval.approved_at,
-    });
+    const approval = ledger.thumbnail_redesign_approval === undefined
+      ? await validateFinalApprovalArtifact({
+          root,
+          ledger,
+          evidence: ledger.final_approval.evidence,
+          approvedBy: ledger.final_approval.approved_by,
+          approvedAt: ledger.final_approval.approved_at,
+        })
+      : await validateHistoricalFinalApprovalArtifact({
+          root,
+          ledger,
+          evidence: ledger.final_approval.evidence,
+          approvedBy: ledger.final_approval.approved_by,
+          approvedAt: ledger.final_approval.approved_at,
+        });
     assert(approval.evidenceRecord.checksum_sha256 === ledger.final_approval.evidence_sha256, "Final evidence drifted");
   } else {
     for (const asset of ledger.assets) {

@@ -9077,12 +9077,12 @@
       "source_key": "thumbnail-slot-01",
       "manifest_path": "course-assets/thumbnails/slot-01.webp",
       "output_path": "course-assets/thumbnails/slot-01.webp",
-      "checksum_sha256": "3a684cd589bf3895e672e43d6a734b35c503f6b3a191e1564c997c93c8c84988",
-      "pixel_sha256": "359f27e02106920e899b81523f08d9957001b9ed8a058271e693fc1060795d28",
-      "size_bytes": 4106,
+      "checksum_sha256": "577dce6c1b6e1db57fc91d5a42ace0a2b58212c59c9418b36d94ac8af570b9f9",
+      "pixel_sha256": "35daecbe7de383a8425258763daafe33d141dcea2e50782eb7c22d3b41dd6bc5",
+      "size_bytes": 571284,
       "approval_status": "approved",
       "base_storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-01.webp",
-      "storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-01-3a684cd589bf3895e672e43d6a734b35c503f6b3a191e1564c997c93c8c84988.webp",
+      "storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-01-577dce6c1b6e1db57fc91d5a42ace0a2b58212c59c9418b36d94ac8af570b9f9.webp",
       "replacement_authorized_checksum": null,
       "history": [
         {
@@ -9115,6 +9115,22 @@
             "reviewed_at": null,
             "evidence": null,
             "evidence_sha256": null
+          }
+        },
+        {
+          "version": 3,
+          "lineage_sequence": 3,
+          "archived_path": "course-assets/thumbnails/redesign-history/thumbnail-slot-01-3a684cd589bf3895e672e43d6a734b35c503f6b3a191e1564c997c93c8c84988.webp",
+          "checksum_sha256": "3a684cd589bf3895e672e43d6a734b35c503f6b3a191e1564c997c93c8c84988",
+          "pixel_sha256": "359f27e02106920e899b81523f08d9957001b9ed8a058271e693fc1060795d28",
+          "size_bytes": 4106,
+          "recipe_sha256": "a1b83163cf06c7b1a6bb864fd2dbbeaac756b72fc5a644563f46c8bfe0286572",
+          "review": {
+            "status": "approved",
+            "reviewed_by": "Jarrad Henry",
+            "reviewed_at": "2026-07-18T14:34:13.000Z",
+            "evidence": "docs/course-production/thumbnail-pilots/approvals/final-artwork-approval-v4.json",
+            "evidence_sha256": "8db531f1becc859109b39df076d4ed82a983dd2a49c044582134c209ccf9f1ee"
           }
         }
       ],
@@ -9244,6 +9260,18 @@
         "reviewed_at": "2026-07-18T14:34:13.000Z",
         "evidence": "docs/course-production/thumbnail-pilots/approvals/final-artwork-approval-v4.json",
         "evidence_sha256": "8db531f1becc859109b39df076d4ed82a983dd2a49c044582134c209ccf9f1ee"
+      },
+      "redesign_replacement": {
+        "schema_version": "bmh-thumbnail-redesign-replacement/v1",
+        "source_path": "docs/course-production/thumbnail-redesign/assets/01-welcome-and-mindset.png",
+        "source_sha256": "fbd7b0bb0898f112b130b8c1c5b19fb79a88e65fc60c4ed6d007f0163ded9a98",
+        "replaced_checksum_sha256": "3a684cd589bf3895e672e43d6a734b35c503f6b3a191e1564c997c93c8c84988",
+        "output_checksum_sha256": "577dce6c1b6e1db57fc91d5a42ace0a2b58212c59c9418b36d94ac8af570b9f9",
+        "output_pixel_sha256": "35daecbe7de383a8425258763daafe33d141dcea2e50782eb7c22d3b41dd6bc5",
+        "approval_evidence": "docs/course-production/thumbnail-redesign/approvals/thumbnail-redesign-approval-2026-07-20.json",
+        "approval_evidence_sha256": "5d70fcb8f61a88e46322433b63ad902110cab201ad2d1975e51c60cb736875e2",
+        "approved_by": "Jarrad Henry",
+        "approved_at": "2026-07-20T10:41:02.000Z"
       }
     },
     {
@@ -9608,12 +9636,12 @@
       "source_key": "thumbnail-slot-02",
       "manifest_path": "course-assets/thumbnails/slot-02.webp",
       "output_path": "course-assets/thumbnails/slot-02.webp",
-      "checksum_sha256": "9f484d3fb7f324a81b07f196e8e7c7434c06bc01cb8ae229cdba3046329f66ea",
-      "pixel_sha256": "623d2b93d6aa3c466eb17fcddac1a524ae653fb9e87d389237768c2bf98358f9",
-      "size_bytes": 16124,
+      "checksum_sha256": "dd95c5884d4cd69fd8211f5ea08f29dd9d588858ad9b2e9f1929ef84a9cef067",
+      "pixel_sha256": "916e208fb32b5f832c6ae100b6904316ef71b251276c83e1b8277745696628aa",
+      "size_bytes": 797710,
       "approval_status": "approved",
       "base_storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-02.webp",
-      "storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-02-9f484d3fb7f324a81b07f196e8e7c7434c06bc01cb8ae229cdba3046329f66ea.webp",
+      "storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-02-dd95c5884d4cd69fd8211f5ea08f29dd9d588858ad9b2e9f1929ef84a9cef067.webp",
       "replacement_authorized_checksum": null,
       "history": [
         {
@@ -9646,6 +9674,22 @@
             "reviewed_at": null,
             "evidence": null,
             "evidence_sha256": null
+          }
+        },
+        {
+          "version": 4,
+          "lineage_sequence": 2,
+          "archived_path": "course-assets/thumbnails/redesign-history/thumbnail-slot-02-9f484d3fb7f324a81b07f196e8e7c7434c06bc01cb8ae229cdba3046329f66ea.webp",
+          "checksum_sha256": "9f484d3fb7f324a81b07f196e8e7c7434c06bc01cb8ae229cdba3046329f66ea",
+          "pixel_sha256": "623d2b93d6aa3c466eb17fcddac1a524ae653fb9e87d389237768c2bf98358f9",
+          "size_bytes": 16124,
+          "recipe_sha256": "34186800f90cd1d69b90f9633b79d25a3c6c1d5fccdfc9f734b35a85b703dda9",
+          "review": {
+            "status": "approved",
+            "reviewed_by": "Jarrad Henry",
+            "reviewed_at": "2026-07-18T14:34:13.000Z",
+            "evidence": "docs/course-production/thumbnail-pilots/approvals/final-artwork-approval-v4.json",
+            "evidence_sha256": "8db531f1becc859109b39df076d4ed82a983dd2a49c044582134c209ccf9f1ee"
           }
         }
       ],
@@ -9789,6 +9833,18 @@
         "reviewed_at": "2026-07-18T14:34:13.000Z",
         "evidence": "docs/course-production/thumbnail-pilots/approvals/final-artwork-approval-v4.json",
         "evidence_sha256": "8db531f1becc859109b39df076d4ed82a983dd2a49c044582134c209ccf9f1ee"
+      },
+      "redesign_replacement": {
+        "schema_version": "bmh-thumbnail-redesign-replacement/v1",
+        "source_path": "docs/course-production/thumbnail-redesign/assets/02-real-estate-terms-glossary.png",
+        "source_sha256": "16995b6118cb52e19f3eaab726d91494c5c6ef49665839a13c5a813c0bf1eca2",
+        "replaced_checksum_sha256": "9f484d3fb7f324a81b07f196e8e7c7434c06bc01cb8ae229cdba3046329f66ea",
+        "output_checksum_sha256": "dd95c5884d4cd69fd8211f5ea08f29dd9d588858ad9b2e9f1929ef84a9cef067",
+        "output_pixel_sha256": "916e208fb32b5f832c6ae100b6904316ef71b251276c83e1b8277745696628aa",
+        "approval_evidence": "docs/course-production/thumbnail-redesign/approvals/thumbnail-redesign-approval-2026-07-20.json",
+        "approval_evidence_sha256": "5d70fcb8f61a88e46322433b63ad902110cab201ad2d1975e51c60cb736875e2",
+        "approved_by": "Jarrad Henry",
+        "approved_at": "2026-07-20T10:41:02.000Z"
       }
     },
     {
@@ -9989,12 +10045,12 @@
       "source_key": "thumbnail-slot-03",
       "manifest_path": "course-assets/thumbnails/slot-03.webp",
       "output_path": "course-assets/thumbnails/slot-03.webp",
-      "checksum_sha256": "f89052943fd149d23d9712be8cb2d50031484eb08c76865726360cd08a2281f9",
-      "pixel_sha256": "758580fcefd855cae471faa108045dbfb9812f06f340b48b40a8ab315d38c293",
-      "size_bytes": 14260,
+      "checksum_sha256": "e273fb300573702c123d1a94d3529d8caa3f18169d9d9c6e4c13a9e05feb1542",
+      "pixel_sha256": "850c77e6d5dbac105a75fc124ef1abb3b43a6cdd2aceee74479d18cb6cfb43c7",
+      "size_bytes": 774852,
       "approval_status": "approved",
       "base_storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-03.webp",
-      "storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-03-f89052943fd149d23d9712be8cb2d50031484eb08c76865726360cd08a2281f9.webp",
+      "storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-03-e273fb300573702c123d1a94d3529d8caa3f18169d9d9c6e4c13a9e05feb1542.webp",
       "replacement_authorized_checksum": null,
       "history": [
         {
@@ -10028,6 +10084,22 @@
           "archived_path": "course-assets/thumbnails/production/sources/lineage/master-slot-03/derivatives/pipeline-version-003-slot-03.webp",
           "recipe_sha256": "ba2363067e8d8fc06d6a8cdbed13366815c965c34c0e3ad09c98296d38c97f75",
           "lineage_sequence": 2
+        },
+        {
+          "version": 4,
+          "lineage_sequence": 2,
+          "archived_path": "course-assets/thumbnails/redesign-history/thumbnail-slot-03-f89052943fd149d23d9712be8cb2d50031484eb08c76865726360cd08a2281f9.webp",
+          "checksum_sha256": "f89052943fd149d23d9712be8cb2d50031484eb08c76865726360cd08a2281f9",
+          "pixel_sha256": "758580fcefd855cae471faa108045dbfb9812f06f340b48b40a8ab315d38c293",
+          "size_bytes": 14260,
+          "recipe_sha256": "ba2363067e8d8fc06d6a8cdbed13366815c965c34c0e3ad09c98296d38c97f75",
+          "review": {
+            "status": "approved",
+            "reviewed_by": "Jarrad Henry",
+            "reviewed_at": "2026-07-18T14:34:13.000Z",
+            "evidence": "docs/course-production/thumbnail-pilots/approvals/final-artwork-approval-v4.json",
+            "evidence_sha256": "8db531f1becc859109b39df076d4ed82a983dd2a49c044582134c209ccf9f1ee"
+          }
         }
       ],
       "dimensions": [
@@ -10170,6 +10242,18 @@
         "reviewed_at": "2026-07-18T14:34:13.000Z",
         "evidence": "docs/course-production/thumbnail-pilots/approvals/final-artwork-approval-v4.json",
         "evidence_sha256": "8db531f1becc859109b39df076d4ed82a983dd2a49c044582134c209ccf9f1ee"
+      },
+      "redesign_replacement": {
+        "schema_version": "bmh-thumbnail-redesign-replacement/v1",
+        "source_path": "docs/course-production/thumbnail-redesign/assets/03-tech-stack-and-systems.png",
+        "source_sha256": "2b340995fe2c511ce4e262d6f7841f6418f38ff0bce4ce7db808ad428e978983",
+        "replaced_checksum_sha256": "f89052943fd149d23d9712be8cb2d50031484eb08c76865726360cd08a2281f9",
+        "output_checksum_sha256": "e273fb300573702c123d1a94d3529d8caa3f18169d9d9c6e4c13a9e05feb1542",
+        "output_pixel_sha256": "850c77e6d5dbac105a75fc124ef1abb3b43a6cdd2aceee74479d18cb6cfb43c7",
+        "approval_evidence": "docs/course-production/thumbnail-redesign/approvals/thumbnail-redesign-approval-2026-07-20.json",
+        "approval_evidence_sha256": "5d70fcb8f61a88e46322433b63ad902110cab201ad2d1975e51c60cb736875e2",
+        "approved_by": "Jarrad Henry",
+        "approved_at": "2026-07-20T10:41:02.000Z"
       }
     },
     {
@@ -10370,12 +10454,12 @@
       "source_key": "thumbnail-slot-04",
       "manifest_path": "course-assets/thumbnails/slot-04.webp",
       "output_path": "course-assets/thumbnails/slot-04.webp",
-      "checksum_sha256": "70d7095c65b3003db6cc6eb6ae060f5aee60463a4ab8564e2366f1b613852aa3",
-      "pixel_sha256": "61fb6a334f7002ccd1cb3fd5e74647efd2308ff1ad04a9d00a2b687db284cf39",
-      "size_bytes": 11086,
+      "checksum_sha256": "4aaf9c6e66653bc31339f792fedc8b81b9b6560edee8119b7651ec3b5aa2a86d",
+      "pixel_sha256": "154db25134e29a61ec8d410f98e9f0d3fbfda71afc62dc34986f7aa3b634fa16",
+      "size_bytes": 544780,
       "approval_status": "approved",
       "base_storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-04.webp",
-      "storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-04-70d7095c65b3003db6cc6eb6ae060f5aee60463a4ab8564e2366f1b613852aa3.webp",
+      "storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-04-4aaf9c6e66653bc31339f792fedc8b81b9b6560edee8119b7651ec3b5aa2a86d.webp",
       "replacement_authorized_checksum": null,
       "history": [
         {
@@ -10393,6 +10477,22 @@
           "archived_path": "course-assets/thumbnails/production/sources/lineage/master-slot-04/derivatives/pipeline-version-002-slot-04.webp",
           "recipe_sha256": "6eecabf7c7eab200df46d3e372447223f2bdcca05f2c64619f34deeb7e06bbf7",
           "lineage_sequence": 1
+        },
+        {
+          "version": 3,
+          "lineage_sequence": 1,
+          "archived_path": "course-assets/thumbnails/redesign-history/thumbnail-slot-04-70d7095c65b3003db6cc6eb6ae060f5aee60463a4ab8564e2366f1b613852aa3.webp",
+          "checksum_sha256": "70d7095c65b3003db6cc6eb6ae060f5aee60463a4ab8564e2366f1b613852aa3",
+          "pixel_sha256": "61fb6a334f7002ccd1cb3fd5e74647efd2308ff1ad04a9d00a2b687db284cf39",
+          "size_bytes": 11086,
+          "recipe_sha256": "6eecabf7c7eab200df46d3e372447223f2bdcca05f2c64619f34deeb7e06bbf7",
+          "review": {
+            "status": "approved",
+            "reviewed_by": "Jarrad Henry",
+            "reviewed_at": "2026-07-18T14:34:13.000Z",
+            "evidence": "docs/course-production/thumbnail-pilots/approvals/final-artwork-approval-v4.json",
+            "evidence_sha256": "8db531f1becc859109b39df076d4ed82a983dd2a49c044582134c209ccf9f1ee"
+          }
         }
       ],
       "dimensions": [
@@ -10561,6 +10661,18 @@
         "reviewed_at": "2026-07-18T14:34:13.000Z",
         "evidence": "docs/course-production/thumbnail-pilots/approvals/final-artwork-approval-v4.json",
         "evidence_sha256": "8db531f1becc859109b39df076d4ed82a983dd2a49c044582134c209ccf9f1ee"
+      },
+      "redesign_replacement": {
+        "schema_version": "bmh-thumbnail-redesign-replacement/v1",
+        "source_path": "docs/course-production/thumbnail-redesign/assets/05-humanizing-the-lead.png",
+        "source_sha256": "78c61095e58d8a3138b7ff21feba835f677cabd6f48cdd67e5c653ffd9a6defe",
+        "replaced_checksum_sha256": "70d7095c65b3003db6cc6eb6ae060f5aee60463a4ab8564e2366f1b613852aa3",
+        "output_checksum_sha256": "4aaf9c6e66653bc31339f792fedc8b81b9b6560edee8119b7651ec3b5aa2a86d",
+        "output_pixel_sha256": "154db25134e29a61ec8d410f98e9f0d3fbfda71afc62dc34986f7aa3b634fa16",
+        "approval_evidence": "docs/course-production/thumbnail-redesign/approvals/thumbnail-redesign-approval-2026-07-20.json",
+        "approval_evidence_sha256": "5d70fcb8f61a88e46322433b63ad902110cab201ad2d1975e51c60cb736875e2",
+        "approved_by": "Jarrad Henry",
+        "approved_at": "2026-07-20T10:41:02.000Z"
       }
     },
     {
@@ -11219,12 +11331,12 @@
       "source_key": "thumbnail-slot-05",
       "manifest_path": "course-assets/thumbnails/slot-05.webp",
       "output_path": "course-assets/thumbnails/slot-05.webp",
-      "checksum_sha256": "a886a8f3c5ebc36cac8b7980a1fd399a686fd0613200d4516aca25c6bd5e77b2",
-      "pixel_sha256": "6124258fb2ceafcd0cd55830c5200037853c51c167bf6f6548281dafe3952062",
-      "size_bytes": 11272,
+      "checksum_sha256": "dbb9dc63b41dd3ca252d01f61077daffb405c3a058836e18e2a4285972602969",
+      "pixel_sha256": "c05835837ef146750f70c423b9cd452c12b72d15e0a7700155155dff7b5fa2eb",
+      "size_bytes": 620968,
       "approval_status": "approved",
       "base_storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-05.webp",
-      "storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-05-a886a8f3c5ebc36cac8b7980a1fd399a686fd0613200d4516aca25c6bd5e77b2.webp",
+      "storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-05-dbb9dc63b41dd3ca252d01f61077daffb405c3a058836e18e2a4285972602969.webp",
       "replacement_authorized_checksum": null,
       "history": [
         {
@@ -11273,6 +11385,22 @@
             "reviewed_at": null,
             "evidence": null,
             "evidence_sha256": null
+          }
+        },
+        {
+          "version": 5,
+          "lineage_sequence": 3,
+          "archived_path": "course-assets/thumbnails/redesign-history/thumbnail-slot-05-a886a8f3c5ebc36cac8b7980a1fd399a686fd0613200d4516aca25c6bd5e77b2.webp",
+          "checksum_sha256": "a886a8f3c5ebc36cac8b7980a1fd399a686fd0613200d4516aca25c6bd5e77b2",
+          "pixel_sha256": "6124258fb2ceafcd0cd55830c5200037853c51c167bf6f6548281dafe3952062",
+          "size_bytes": 11272,
+          "recipe_sha256": "ae36442fc6e7170821a7a6245492f0b7e86324408ae52a945b25331cf95930fc",
+          "review": {
+            "status": "approved",
+            "reviewed_by": "Jarrad Henry",
+            "reviewed_at": "2026-07-18T14:34:13.000Z",
+            "evidence": "docs/course-production/thumbnail-pilots/approvals/final-artwork-approval-v4.json",
+            "evidence_sha256": "8db531f1becc859109b39df076d4ed82a983dd2a49c044582134c209ccf9f1ee"
           }
         }
       ],
@@ -11429,6 +11557,18 @@
         "reviewed_at": "2026-07-18T14:34:13.000Z",
         "evidence": "docs/course-production/thumbnail-pilots/approvals/final-artwork-approval-v4.json",
         "evidence_sha256": "8db531f1becc859109b39df076d4ed82a983dd2a49c044582134c209ccf9f1ee"
+      },
+      "redesign_replacement": {
+        "schema_version": "bmh-thumbnail-redesign-replacement/v1",
+        "source_path": "docs/course-production/thumbnail-redesign/assets/06-the-bmh-offer-playbook.png",
+        "source_sha256": "f24da48daee7c57a6e2d634b7be94e88c28e325e076b4af31cffb4a2928cb794",
+        "replaced_checksum_sha256": "a886a8f3c5ebc36cac8b7980a1fd399a686fd0613200d4516aca25c6bd5e77b2",
+        "output_checksum_sha256": "dbb9dc63b41dd3ca252d01f61077daffb405c3a058836e18e2a4285972602969",
+        "output_pixel_sha256": "c05835837ef146750f70c423b9cd452c12b72d15e0a7700155155dff7b5fa2eb",
+        "approval_evidence": "docs/course-production/thumbnail-redesign/approvals/thumbnail-redesign-approval-2026-07-20.json",
+        "approval_evidence_sha256": "5d70fcb8f61a88e46322433b63ad902110cab201ad2d1975e51c60cb736875e2",
+        "approved_by": "Jarrad Henry",
+        "approved_at": "2026-07-20T10:41:02.000Z"
       }
     },
     {
@@ -11818,12 +11958,12 @@
       "source_key": "thumbnail-slot-06",
       "manifest_path": "course-assets/thumbnails/slot-06.webp",
       "output_path": "course-assets/thumbnails/slot-06.webp",
-      "checksum_sha256": "56f9fce2b8e20ec6fdb6cf7da478d6ca0629e1bb158d29af6200886fb66c88f0",
-      "pixel_sha256": "f8d6b29f4cc0d76b230856e7f4b6602ed48889012b4dad99729fcdd82cce0431",
-      "size_bytes": 14580,
+      "checksum_sha256": "6fe3f05c035207107ca443d201830c966d0939d481140c1bc079a4c9fbc87556",
+      "pixel_sha256": "47281b1e22a455afc7aa2c7a5044352a24fcc86fb1c1b0e5403182f489aed92f",
+      "size_bytes": 389490,
       "approval_status": "approved",
       "base_storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-06.webp",
-      "storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-06-56f9fce2b8e20ec6fdb6cf7da478d6ca0629e1bb158d29af6200886fb66c88f0.webp",
+      "storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-06-6fe3f05c035207107ca443d201830c966d0939d481140c1bc079a4c9fbc87556.webp",
       "replacement_authorized_checksum": null,
       "history": [
         {
@@ -11841,6 +11981,22 @@
           "archived_path": "course-assets/thumbnails/production/sources/lineage/master-slot-06/derivatives/pipeline-version-002-slot-06.webp",
           "recipe_sha256": "44b3b6af86a0b8879792a3ab644210d5664bb2c65d581c5c8e53f9571913ff1b",
           "lineage_sequence": 1
+        },
+        {
+          "version": 3,
+          "lineage_sequence": 1,
+          "archived_path": "course-assets/thumbnails/redesign-history/thumbnail-slot-06-56f9fce2b8e20ec6fdb6cf7da478d6ca0629e1bb158d29af6200886fb66c88f0.webp",
+          "checksum_sha256": "56f9fce2b8e20ec6fdb6cf7da478d6ca0629e1bb158d29af6200886fb66c88f0",
+          "pixel_sha256": "f8d6b29f4cc0d76b230856e7f4b6602ed48889012b4dad99729fcdd82cce0431",
+          "size_bytes": 14580,
+          "recipe_sha256": "44b3b6af86a0b8879792a3ab644210d5664bb2c65d581c5c8e53f9571913ff1b",
+          "review": {
+            "status": "approved",
+            "reviewed_by": "Jarrad Henry",
+            "reviewed_at": "2026-07-18T14:34:13.000Z",
+            "evidence": "docs/course-production/thumbnail-pilots/approvals/final-artwork-approval-v4.json",
+            "evidence_sha256": "8db531f1becc859109b39df076d4ed82a983dd2a49c044582134c209ccf9f1ee"
+          }
         }
       ],
       "dimensions": [
@@ -11996,6 +12152,18 @@
         "reviewed_at": "2026-07-18T14:34:13.000Z",
         "evidence": "docs/course-production/thumbnail-pilots/approvals/final-artwork-approval-v4.json",
         "evidence_sha256": "8db531f1becc859109b39df076d4ed82a983dd2a49c044582134c209ccf9f1ee"
+      },
+      "redesign_replacement": {
+        "schema_version": "bmh-thumbnail-redesign-replacement/v1",
+        "source_path": "docs/course-production/thumbnail-redesign/assets/08-sales-pipeline-and-stage-ownership.png",
+        "source_sha256": "1743eeaa5e06770a3c9a0b4eab9f50e6ee67f8c4b0026e06937160822f10b6d2",
+        "replaced_checksum_sha256": "56f9fce2b8e20ec6fdb6cf7da478d6ca0629e1bb158d29af6200886fb66c88f0",
+        "output_checksum_sha256": "6fe3f05c035207107ca443d201830c966d0939d481140c1bc079a4c9fbc87556",
+        "output_pixel_sha256": "47281b1e22a455afc7aa2c7a5044352a24fcc86fb1c1b0e5403182f489aed92f",
+        "approval_evidence": "docs/course-production/thumbnail-redesign/approvals/thumbnail-redesign-approval-2026-07-20.json",
+        "approval_evidence_sha256": "5d70fcb8f61a88e46322433b63ad902110cab201ad2d1975e51c60cb736875e2",
+        "approved_by": "Jarrad Henry",
+        "approved_at": "2026-07-20T10:41:02.000Z"
       }
     },
     {
@@ -12417,14 +12585,31 @@
       "source_key": "thumbnail-slot-07",
       "manifest_path": "course-assets/thumbnails/slot-07.webp",
       "output_path": "course-assets/thumbnails/slot-07.webp",
-      "checksum_sha256": "3a2f38e2619f5bb33aa69cfcd0712c4e6e4e4c02979ef20ec9313d8e14973c25",
-      "pixel_sha256": "c56ebf83f4442a5a8be4f185c91cb2449eab9d4ffcdbe83be8a527400e18e7f1",
-      "size_bytes": 10346,
+      "checksum_sha256": "94f827a469c84306c0a9850436d2b3c1c349b2d248e96514200a45a604f5d528",
+      "pixel_sha256": "9cdf329e6c7edbb8a10a2381adbc4dcbfa0d55d764bebc93508273050001fae7",
+      "size_bytes": 742344,
       "approval_status": "approved",
       "base_storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-07.webp",
-      "storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-07-3a2f38e2619f5bb33aa69cfcd0712c4e6e4e4c02979ef20ec9313d8e14973c25.webp",
+      "storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-07-94f827a469c84306c0a9850436d2b3c1c349b2d248e96514200a45a604f5d528.webp",
       "replacement_authorized_checksum": null,
-      "history": [],
+      "history": [
+        {
+          "version": 1,
+          "lineage_sequence": 1,
+          "archived_path": "course-assets/thumbnails/redesign-history/thumbnail-slot-07-3a2f38e2619f5bb33aa69cfcd0712c4e6e4e4c02979ef20ec9313d8e14973c25.webp",
+          "checksum_sha256": "3a2f38e2619f5bb33aa69cfcd0712c4e6e4e4c02979ef20ec9313d8e14973c25",
+          "pixel_sha256": "c56ebf83f4442a5a8be4f185c91cb2449eab9d4ffcdbe83be8a527400e18e7f1",
+          "size_bytes": 10346,
+          "recipe_sha256": "9e4d99ad2e5f2eb1306d791b242b17ce9b6bf31d62303c426ae2752c6a4cbe92",
+          "review": {
+            "status": "approved",
+            "reviewed_by": "Jarrad Henry",
+            "reviewed_at": "2026-07-18T14:34:13.000Z",
+            "evidence": "docs/course-production/thumbnail-pilots/approvals/final-artwork-approval-v4.json",
+            "evidence_sha256": "8db531f1becc859109b39df076d4ed82a983dd2a49c044582134c209ccf9f1ee"
+          }
+        }
+      ],
       "dimensions": [
         1280,
         800
@@ -12560,6 +12745,18 @@
         "reviewed_at": "2026-07-18T14:34:13.000Z",
         "evidence": "docs/course-production/thumbnail-pilots/approvals/final-artwork-approval-v4.json",
         "evidence_sha256": "8db531f1becc859109b39df076d4ed82a983dd2a49c044582134c209ccf9f1ee"
+      },
+      "redesign_replacement": {
+        "schema_version": "bmh-thumbnail-redesign-replacement/v1",
+        "source_path": "docs/course-production/thumbnail-redesign/assets/09-opening-the-call.png",
+        "source_sha256": "50fa72f36833ca707094e8ef5628df1dc67e798645c46a7d5dc93bd3189bf02f",
+        "replaced_checksum_sha256": "3a2f38e2619f5bb33aa69cfcd0712c4e6e4e4c02979ef20ec9313d8e14973c25",
+        "output_checksum_sha256": "94f827a469c84306c0a9850436d2b3c1c349b2d248e96514200a45a604f5d528",
+        "output_pixel_sha256": "9cdf329e6c7edbb8a10a2381adbc4dcbfa0d55d764bebc93508273050001fae7",
+        "approval_evidence": "docs/course-production/thumbnail-redesign/approvals/thumbnail-redesign-approval-2026-07-20.json",
+        "approval_evidence_sha256": "5d70fcb8f61a88e46322433b63ad902110cab201ad2d1975e51c60cb736875e2",
+        "approved_by": "Jarrad Henry",
+        "approved_at": "2026-07-20T10:41:02.000Z"
       }
     },
     {
@@ -12899,12 +13096,12 @@
       "source_key": "thumbnail-slot-08",
       "manifest_path": "course-assets/thumbnails/slot-08.webp",
       "output_path": "course-assets/thumbnails/slot-08.webp",
-      "checksum_sha256": "633780c1bc888dcefb85a46bb22e7621b8034d02c53df68aa40f1313e481a543",
-      "pixel_sha256": "808183a657d091a71c122246dde2d31c3d10f92a38804ecdf67ddeb64e7e724b",
-      "size_bytes": 13418,
+      "checksum_sha256": "c20113e33c92c1f27f45061a4fa8ddc22ff709b6ad05beaa985db55efa5c307d",
+      "pixel_sha256": "787329f55f9978c9824d76c4ef197de0827eae82b71768b32e19e5a3a4f8cad3",
+      "size_bytes": 772704,
       "approval_status": "approved",
       "base_storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-08.webp",
-      "storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-08-633780c1bc888dcefb85a46bb22e7621b8034d02c53df68aa40f1313e481a543.webp",
+      "storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-08-c20113e33c92c1f27f45061a4fa8ddc22ff709b6ad05beaa985db55efa5c307d.webp",
       "replacement_authorized_checksum": null,
       "history": [
         {
@@ -12922,6 +13119,22 @@
           "archived_path": "course-assets/thumbnails/production/sources/lineage/master-slot-08/derivatives/pipeline-version-002-slot-08.webp",
           "recipe_sha256": "16824b402829736ab448b86db4b47ea04ec8f0dbfe4939e2ee81380b4adfa868",
           "lineage_sequence": 1
+        },
+        {
+          "version": 3,
+          "lineage_sequence": 1,
+          "archived_path": "course-assets/thumbnails/redesign-history/thumbnail-slot-08-633780c1bc888dcefb85a46bb22e7621b8034d02c53df68aa40f1313e481a543.webp",
+          "checksum_sha256": "633780c1bc888dcefb85a46bb22e7621b8034d02c53df68aa40f1313e481a543",
+          "pixel_sha256": "808183a657d091a71c122246dde2d31c3d10f92a38804ecdf67ddeb64e7e724b",
+          "size_bytes": 13418,
+          "recipe_sha256": "16824b402829736ab448b86db4b47ea04ec8f0dbfe4939e2ee81380b4adfa868",
+          "review": {
+            "status": "approved",
+            "reviewed_by": "Jarrad Henry",
+            "reviewed_at": "2026-07-18T14:34:13.000Z",
+            "evidence": "docs/course-production/thumbnail-pilots/approvals/final-artwork-approval-v4.json",
+            "evidence_sha256": "8db531f1becc859109b39df076d4ed82a983dd2a49c044582134c209ccf9f1ee"
+          }
         }
       ],
       "dimensions": [
@@ -13077,6 +13290,18 @@
         "reviewed_at": "2026-07-18T14:34:13.000Z",
         "evidence": "docs/course-production/thumbnail-pilots/approvals/final-artwork-approval-v4.json",
         "evidence_sha256": "8db531f1becc859109b39df076d4ed82a983dd2a49c044582134c209ccf9f1ee"
+      },
+      "redesign_replacement": {
+        "schema_version": "bmh-thumbnail-redesign-replacement/v1",
+        "source_path": "docs/course-production/thumbnail-redesign/assets/10-discovery-and-handoff.png",
+        "source_sha256": "4ea77075f1c461b5cc69a86b2db6916cfe420cf8663b5d02970fa862384ea898",
+        "replaced_checksum_sha256": "633780c1bc888dcefb85a46bb22e7621b8034d02c53df68aa40f1313e481a543",
+        "output_checksum_sha256": "c20113e33c92c1f27f45061a4fa8ddc22ff709b6ad05beaa985db55efa5c307d",
+        "output_pixel_sha256": "787329f55f9978c9824d76c4ef197de0827eae82b71768b32e19e5a3a4f8cad3",
+        "approval_evidence": "docs/course-production/thumbnail-redesign/approvals/thumbnail-redesign-approval-2026-07-20.json",
+        "approval_evidence_sha256": "5d70fcb8f61a88e46322433b63ad902110cab201ad2d1975e51c60cb736875e2",
+        "approved_by": "Jarrad Henry",
+        "approved_at": "2026-07-20T10:41:02.000Z"
       }
     },
     {
@@ -13496,14 +13721,31 @@
       "source_key": "thumbnail-slot-09",
       "manifest_path": "course-assets/thumbnails/slot-09.webp",
       "output_path": "course-assets/thumbnails/slot-09.webp",
-      "checksum_sha256": "9ecbea7d29ce43d999161e5ab1eb60607fbc26a0a26b24c0b1f9116c51b2a1c1",
-      "pixel_sha256": "6501793802fdaeede21f048c4071b55b24997c2d99ab4e76dd86252642deeafe",
-      "size_bytes": 5904,
+      "checksum_sha256": "511e10ffeac38a7f55e084b2fb1207e9bb8193ca0d7f095cdef34c23b560c6d1",
+      "pixel_sha256": "69864bc00cb425650ce6f323f0385e5227f89e4752f20cf269652944b5310db3",
+      "size_bytes": 682138,
       "approval_status": "approved",
       "base_storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-09.webp",
-      "storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-09-9ecbea7d29ce43d999161e5ab1eb60607fbc26a0a26b24c0b1f9116c51b2a1c1.webp",
+      "storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-09-511e10ffeac38a7f55e084b2fb1207e9bb8193ca0d7f095cdef34c23b560c6d1.webp",
       "replacement_authorized_checksum": null,
-      "history": [],
+      "history": [
+        {
+          "version": 1,
+          "lineage_sequence": 1,
+          "archived_path": "course-assets/thumbnails/redesign-history/thumbnail-slot-09-9ecbea7d29ce43d999161e5ab1eb60607fbc26a0a26b24c0b1f9116c51b2a1c1.webp",
+          "checksum_sha256": "9ecbea7d29ce43d999161e5ab1eb60607fbc26a0a26b24c0b1f9116c51b2a1c1",
+          "pixel_sha256": "6501793802fdaeede21f048c4071b55b24997c2d99ab4e76dd86252642deeafe",
+          "size_bytes": 5904,
+          "recipe_sha256": "cd138ed15bcf7407ad213ef5215bde35be7e9bf9ba92ed186e7e567ce167f323",
+          "review": {
+            "status": "approved",
+            "reviewed_by": "Jarrad Henry",
+            "reviewed_at": "2026-07-18T14:34:13.000Z",
+            "evidence": "docs/course-production/thumbnail-pilots/approvals/final-artwork-approval-v4.json",
+            "evidence_sha256": "8db531f1becc859109b39df076d4ed82a983dd2a49c044582134c209ccf9f1ee"
+          }
+        }
+      ],
       "dimensions": [
         1280,
         800
@@ -13635,6 +13877,18 @@
         "reviewed_at": "2026-07-18T14:34:13.000Z",
         "evidence": "docs/course-production/thumbnail-pilots/approvals/final-artwork-approval-v4.json",
         "evidence_sha256": "8db531f1becc859109b39df076d4ed82a983dd2a49c044582134c209ccf9f1ee"
+      },
+      "redesign_replacement": {
+        "schema_version": "bmh-thumbnail-redesign-replacement/v1",
+        "source_path": "docs/course-production/thumbnail-redesign/assets/12-objection-architecture.png",
+        "source_sha256": "0a851dfb58e402b0582a0fb914839890a595d3f3c945960155d372b3605a428a",
+        "replaced_checksum_sha256": "9ecbea7d29ce43d999161e5ab1eb60607fbc26a0a26b24c0b1f9116c51b2a1c1",
+        "output_checksum_sha256": "511e10ffeac38a7f55e084b2fb1207e9bb8193ca0d7f095cdef34c23b560c6d1",
+        "output_pixel_sha256": "69864bc00cb425650ce6f323f0385e5227f89e4752f20cf269652944b5310db3",
+        "approval_evidence": "docs/course-production/thumbnail-redesign/approvals/thumbnail-redesign-approval-2026-07-20.json",
+        "approval_evidence_sha256": "5d70fcb8f61a88e46322433b63ad902110cab201ad2d1975e51c60cb736875e2",
+        "approved_by": "Jarrad Henry",
+        "approved_at": "2026-07-20T10:41:02.000Z"
       }
     },
     {
@@ -13793,12 +14047,12 @@
       "source_key": "thumbnail-slot-10",
       "manifest_path": "course-assets/thumbnails/slot-10.webp",
       "output_path": "course-assets/thumbnails/slot-10.webp",
-      "checksum_sha256": "2402351798269121a8a51373533101c95c6de4684064529486f392cd1f237105",
-      "pixel_sha256": "b2675a26cfb28fe4d10c3f75dea6a69fee390e85a80f10f2193685c71fe64375",
-      "size_bytes": 12668,
+      "checksum_sha256": "c271d50c2a85f8bc236cf84162c091348d42329065f953e6d7410ab710897a47",
+      "pixel_sha256": "5e0de7a597f90cf883780d6abed49a245ccf834d21d7e43aa34e488ae9e1e8c3",
+      "size_bytes": 670068,
       "approval_status": "approved",
       "base_storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-10.webp",
-      "storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-10-2402351798269121a8a51373533101c95c6de4684064529486f392cd1f237105.webp",
+      "storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-10-c271d50c2a85f8bc236cf84162c091348d42329065f953e6d7410ab710897a47.webp",
       "replacement_authorized_checksum": null,
       "history": [
         {
@@ -13831,6 +14085,22 @@
             "reviewed_at": null,
             "evidence": null,
             "evidence_sha256": null
+          }
+        },
+        {
+          "version": 4,
+          "lineage_sequence": 2,
+          "archived_path": "course-assets/thumbnails/redesign-history/thumbnail-slot-10-2402351798269121a8a51373533101c95c6de4684064529486f392cd1f237105.webp",
+          "checksum_sha256": "2402351798269121a8a51373533101c95c6de4684064529486f392cd1f237105",
+          "pixel_sha256": "b2675a26cfb28fe4d10c3f75dea6a69fee390e85a80f10f2193685c71fe64375",
+          "size_bytes": 12668,
+          "recipe_sha256": "a954a69d74ab7c5c49f53fa8105fbf3b1c3f0178b4692351f3ae71f26384f6d8",
+          "review": {
+            "status": "approved",
+            "reviewed_by": "Jarrad Henry",
+            "reviewed_at": "2026-07-18T14:34:13.000Z",
+            "evidence": "docs/course-production/thumbnail-pilots/approvals/final-artwork-approval-v4.json",
+            "evidence_sha256": "8db531f1becc859109b39df076d4ed82a983dd2a49c044582134c209ccf9f1ee"
           }
         }
       ],
@@ -13974,6 +14244,18 @@
         "reviewed_at": "2026-07-18T14:34:13.000Z",
         "evidence": "docs/course-production/thumbnail-pilots/approvals/final-artwork-approval-v4.json",
         "evidence_sha256": "8db531f1becc859109b39df076d4ed82a983dd2a49c044582134c209ccf9f1ee"
+      },
+      "redesign_replacement": {
+        "schema_version": "bmh-thumbnail-redesign-replacement/v1",
+        "source_path": "docs/course-production/thumbnail-redesign/assets/13-objection-scripts-playbook.png",
+        "source_sha256": "d0cb16888b29fbb5b4353e996473b7d079326bb520fcf620dc8b5f08516fb08a",
+        "replaced_checksum_sha256": "2402351798269121a8a51373533101c95c6de4684064529486f392cd1f237105",
+        "output_checksum_sha256": "c271d50c2a85f8bc236cf84162c091348d42329065f953e6d7410ab710897a47",
+        "output_pixel_sha256": "5e0de7a597f90cf883780d6abed49a245ccf834d21d7e43aa34e488ae9e1e8c3",
+        "approval_evidence": "docs/course-production/thumbnail-redesign/approvals/thumbnail-redesign-approval-2026-07-20.json",
+        "approval_evidence_sha256": "5d70fcb8f61a88e46322433b63ad902110cab201ad2d1975e51c60cb736875e2",
+        "approved_by": "Jarrad Henry",
+        "approved_at": "2026-07-20T10:41:02.000Z"
       }
     },
     {
@@ -14174,12 +14456,12 @@
       "source_key": "thumbnail-slot-11",
       "manifest_path": "course-assets/thumbnails/slot-11.webp",
       "output_path": "course-assets/thumbnails/slot-11.webp",
-      "checksum_sha256": "7f52c136cd6b3025406ad73f6e7cec0e602f12aa7b25e16fecd17600a64fa469",
-      "pixel_sha256": "7d32a959e3dfbe4f0cc6a1abd362dc12c11b4dc617fca40fe099bee25d7af751",
-      "size_bytes": 13926,
+      "checksum_sha256": "e04d00096fe85db185e7b5282370adacb1f3b8807a0ab06b71fb651269966c27",
+      "pixel_sha256": "d63f96ed926099d4f82015a286632a57c05119f36e0703dbfa8b34632d26ced9",
+      "size_bytes": 708430,
       "approval_status": "approved",
       "base_storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-11.webp",
-      "storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-11-7f52c136cd6b3025406ad73f6e7cec0e602f12aa7b25e16fecd17600a64fa469.webp",
+      "storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-11-e04d00096fe85db185e7b5282370adacb1f3b8807a0ab06b71fb651269966c27.webp",
       "replacement_authorized_checksum": null,
       "history": [
         {
@@ -14197,6 +14479,22 @@
           "archived_path": "course-assets/thumbnails/production/sources/lineage/master-slot-11/derivatives/pipeline-version-002-slot-11.webp",
           "recipe_sha256": "cf2b9849eb75bce7da5e7a53de3bddb255695528295eb46c7ab8253f9ff094cd",
           "lineage_sequence": 1
+        },
+        {
+          "version": 3,
+          "lineage_sequence": 1,
+          "archived_path": "course-assets/thumbnails/redesign-history/thumbnail-slot-11-7f52c136cd6b3025406ad73f6e7cec0e602f12aa7b25e16fecd17600a64fa469.webp",
+          "checksum_sha256": "7f52c136cd6b3025406ad73f6e7cec0e602f12aa7b25e16fecd17600a64fa469",
+          "pixel_sha256": "7d32a959e3dfbe4f0cc6a1abd362dc12c11b4dc617fca40fe099bee25d7af751",
+          "size_bytes": 13926,
+          "recipe_sha256": "cf2b9849eb75bce7da5e7a53de3bddb255695528295eb46c7ab8253f9ff094cd",
+          "review": {
+            "status": "approved",
+            "reviewed_by": "Jarrad Henry",
+            "reviewed_at": "2026-07-18T14:34:13.000Z",
+            "evidence": "docs/course-production/thumbnail-pilots/approvals/final-artwork-approval-v4.json",
+            "evidence_sha256": "8db531f1becc859109b39df076d4ed82a983dd2a49c044582134c209ccf9f1ee"
+          }
         }
       ],
       "dimensions": [
@@ -14352,6 +14650,18 @@
         "reviewed_at": "2026-07-18T14:34:13.000Z",
         "evidence": "docs/course-production/thumbnail-pilots/approvals/final-artwork-approval-v4.json",
         "evidence_sha256": "8db531f1becc859109b39df076d4ed82a983dd2a49c044582134c209ccf9f1ee"
+      },
+      "redesign_replacement": {
+        "schema_version": "bmh-thumbnail-redesign-replacement/v1",
+        "source_path": "docs/course-production/thumbnail-redesign/assets/14-complex-objections.png",
+        "source_sha256": "88a90131a615d8eee2510099fea9724d64cdad506de72a4fab612f4424d19c85",
+        "replaced_checksum_sha256": "7f52c136cd6b3025406ad73f6e7cec0e602f12aa7b25e16fecd17600a64fa469",
+        "output_checksum_sha256": "e04d00096fe85db185e7b5282370adacb1f3b8807a0ab06b71fb651269966c27",
+        "output_pixel_sha256": "d63f96ed926099d4f82015a286632a57c05119f36e0703dbfa8b34632d26ced9",
+        "approval_evidence": "docs/course-production/thumbnail-redesign/approvals/thumbnail-redesign-approval-2026-07-20.json",
+        "approval_evidence_sha256": "5d70fcb8f61a88e46322433b63ad902110cab201ad2d1975e51c60cb736875e2",
+        "approved_by": "Jarrad Henry",
+        "approved_at": "2026-07-20T10:41:02.000Z"
       }
     },
     {
@@ -14741,12 +15051,12 @@
       "source_key": "thumbnail-slot-12",
       "manifest_path": "course-assets/thumbnails/slot-12.webp",
       "output_path": "course-assets/thumbnails/slot-12.webp",
-      "checksum_sha256": "32b9c1ffca28ffd6debeb721d1a421f7fd7e54ed9a229492cb3e4051ec05710d",
-      "pixel_sha256": "f71a8d6fb979b20307adab1d703261654ae77fed3d4de3430c311bdc47d5b1c8",
-      "size_bytes": 19692,
+      "checksum_sha256": "9a058b9951d4fbf878554a85767f436901819272ec26927f4b158086fa2e2c91",
+      "pixel_sha256": "73fab13216cf089da8200bfc3650d7a24fb8c1a1a63d04fe43c32f39c908f9c2",
+      "size_bytes": 718936,
       "approval_status": "approved",
       "base_storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-12.webp",
-      "storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-12-32b9c1ffca28ffd6debeb721d1a421f7fd7e54ed9a229492cb3e4051ec05710d.webp",
+      "storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-12-9a058b9951d4fbf878554a85767f436901819272ec26927f4b158086fa2e2c91.webp",
       "replacement_authorized_checksum": null,
       "history": [
         {
@@ -14764,6 +15074,22 @@
           "archived_path": "course-assets/thumbnails/production/sources/lineage/master-slot-12/derivatives/pipeline-version-002-slot-12.webp",
           "recipe_sha256": "f0041f6eb40bdae75471f17b347af6d1bd207df3016c5105d786aec15e15d138",
           "lineage_sequence": 1
+        },
+        {
+          "version": 3,
+          "lineage_sequence": 1,
+          "archived_path": "course-assets/thumbnails/redesign-history/thumbnail-slot-12-32b9c1ffca28ffd6debeb721d1a421f7fd7e54ed9a229492cb3e4051ec05710d.webp",
+          "checksum_sha256": "32b9c1ffca28ffd6debeb721d1a421f7fd7e54ed9a229492cb3e4051ec05710d",
+          "pixel_sha256": "f71a8d6fb979b20307adab1d703261654ae77fed3d4de3430c311bdc47d5b1c8",
+          "size_bytes": 19692,
+          "recipe_sha256": "f0041f6eb40bdae75471f17b347af6d1bd207df3016c5105d786aec15e15d138",
+          "review": {
+            "status": "approved",
+            "reviewed_by": "Jarrad Henry",
+            "reviewed_at": "2026-07-18T14:34:13.000Z",
+            "evidence": "docs/course-production/thumbnail-pilots/approvals/final-artwork-approval-v4.json",
+            "evidence_sha256": "8db531f1becc859109b39df076d4ed82a983dd2a49c044582134c209ccf9f1ee"
+          }
         }
       ],
       "dimensions": [
@@ -14919,6 +15245,18 @@
         "reviewed_at": "2026-07-18T14:34:13.000Z",
         "evidence": "docs/course-production/thumbnail-pilots/approvals/final-artwork-approval-v4.json",
         "evidence_sha256": "8db531f1becc859109b39df076d4ed82a983dd2a49c044582134c209ccf9f1ee"
+      },
+      "redesign_replacement": {
+        "schema_version": "bmh-thumbnail-redesign-replacement/v1",
+        "source_path": "docs/course-production/thumbnail-redesign/assets/15-seller-faq-decoder.png",
+        "source_sha256": "f296f5564e3f9fa9ec49b29b06c3b0f855ecb1660b78cf4c621bf82601dc841e",
+        "replaced_checksum_sha256": "32b9c1ffca28ffd6debeb721d1a421f7fd7e54ed9a229492cb3e4051ec05710d",
+        "output_checksum_sha256": "9a058b9951d4fbf878554a85767f436901819272ec26927f4b158086fa2e2c91",
+        "output_pixel_sha256": "73fab13216cf089da8200bfc3650d7a24fb8c1a1a63d04fe43c32f39c908f9c2",
+        "approval_evidence": "docs/course-production/thumbnail-redesign/approvals/thumbnail-redesign-approval-2026-07-20.json",
+        "approval_evidence_sha256": "5d70fcb8f61a88e46322433b63ad902110cab201ad2d1975e51c60cb736875e2",
+        "approved_by": "Jarrad Henry",
+        "approved_at": "2026-07-20T10:41:02.000Z"
       }
     },
     {
@@ -15308,12 +15646,12 @@
       "source_key": "thumbnail-slot-13",
       "manifest_path": "course-assets/thumbnails/slot-13.webp",
       "output_path": "course-assets/thumbnails/slot-13.webp",
-      "checksum_sha256": "1fc8c89552066b70b1eb004eb5e35e7ed0a4630acad30d9edac992414da64135",
-      "pixel_sha256": "f7280203cafb7a60fba72d2ae4234ebbc823b345542205edb3cced4606d8f947",
-      "size_bytes": 11748,
+      "checksum_sha256": "5f00b85756ad770847ff0f1b70a97ac7a90415d3990c706881073d7728c4491a",
+      "pixel_sha256": "e7323792bfad0261fa82edb5fb8ce4f2633db358567f31ed65f0884204834c9f",
+      "size_bytes": 692874,
       "approval_status": "approved",
       "base_storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-13.webp",
-      "storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-13-1fc8c89552066b70b1eb004eb5e35e7ed0a4630acad30d9edac992414da64135.webp",
+      "storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-13-5f00b85756ad770847ff0f1b70a97ac7a90415d3990c706881073d7728c4491a.webp",
       "replacement_authorized_checksum": null,
       "history": [
         {
@@ -15346,6 +15684,22 @@
             "reviewed_at": null,
             "evidence": null,
             "evidence_sha256": null
+          }
+        },
+        {
+          "version": 4,
+          "lineage_sequence": 2,
+          "archived_path": "course-assets/thumbnails/redesign-history/thumbnail-slot-13-1fc8c89552066b70b1eb004eb5e35e7ed0a4630acad30d9edac992414da64135.webp",
+          "checksum_sha256": "1fc8c89552066b70b1eb004eb5e35e7ed0a4630acad30d9edac992414da64135",
+          "pixel_sha256": "f7280203cafb7a60fba72d2ae4234ebbc823b345542205edb3cced4606d8f947",
+          "size_bytes": 11748,
+          "recipe_sha256": "00e5606f3e824a148defe6d5e91492066a54d059fe967e904879d81ef2b7f591",
+          "review": {
+            "status": "approved",
+            "reviewed_by": "Jarrad Henry",
+            "reviewed_at": "2026-07-18T14:34:13.000Z",
+            "evidence": "docs/course-production/thumbnail-pilots/approvals/final-artwork-approval-v4.json",
+            "evidence_sha256": "8db531f1becc859109b39df076d4ed82a983dd2a49c044582134c209ccf9f1ee"
           }
         }
       ],
@@ -15489,6 +15843,18 @@
         "reviewed_at": "2026-07-18T14:34:13.000Z",
         "evidence": "docs/course-production/thumbnail-pilots/approvals/final-artwork-approval-v4.json",
         "evidence_sha256": "8db531f1becc859109b39df076d4ed82a983dd2a49c044582134c209ccf9f1ee"
+      },
+      "redesign_replacement": {
+        "schema_version": "bmh-thumbnail-redesign-replacement/v1",
+        "source_path": "docs/course-production/thumbnail-redesign/assets/17-follow-up-cadence.png",
+        "source_sha256": "a874d10c26a94488cc6b8e5f1f4c786230ee0f371ea49e5e61a45f80e851d13d",
+        "replaced_checksum_sha256": "1fc8c89552066b70b1eb004eb5e35e7ed0a4630acad30d9edac992414da64135",
+        "output_checksum_sha256": "5f00b85756ad770847ff0f1b70a97ac7a90415d3990c706881073d7728c4491a",
+        "output_pixel_sha256": "e7323792bfad0261fa82edb5fb8ce4f2633db358567f31ed65f0884204834c9f",
+        "approval_evidence": "docs/course-production/thumbnail-redesign/approvals/thumbnail-redesign-approval-2026-07-20.json",
+        "approval_evidence_sha256": "5d70fcb8f61a88e46322433b63ad902110cab201ad2d1975e51c60cb736875e2",
+        "approved_by": "Jarrad Henry",
+        "approved_at": "2026-07-20T10:41:02.000Z"
       }
     },
     {
@@ -15689,12 +16055,12 @@
       "source_key": "thumbnail-slot-14",
       "manifest_path": "course-assets/thumbnails/slot-14.webp",
       "output_path": "course-assets/thumbnails/slot-14.webp",
-      "checksum_sha256": "4e52d9f7996f720d333c3ed5f57f930a966c9d19770bd29c5d52480f79191fcd",
-      "pixel_sha256": "c84ab0821ba61e5266db075f3f7c5c730530749dc9f9c29b7e5d20d50fd3aba0",
-      "size_bytes": 13946,
+      "checksum_sha256": "2d15f8af63fa45d572c7a5d95e0a8f452e76b8e12c8d4e8bc822925476df1e87",
+      "pixel_sha256": "bb23710a9ef42c41829eadc9590e21a1f2f17e0d5883f681554ddec033b97237",
+      "size_bytes": 665564,
       "approval_status": "approved",
       "base_storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-14.webp",
-      "storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-14-4e52d9f7996f720d333c3ed5f57f930a966c9d19770bd29c5d52480f79191fcd.webp",
+      "storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-14-2d15f8af63fa45d572c7a5d95e0a8f452e76b8e12c8d4e8bc822925476df1e87.webp",
       "replacement_authorized_checksum": null,
       "history": [
         {
@@ -15712,6 +16078,22 @@
           "archived_path": "course-assets/thumbnails/production/sources/lineage/master-slot-14/derivatives/pipeline-version-002-slot-14.webp",
           "recipe_sha256": "36b9495237ab0d5220dae86a9bbb301d96cfe3e7da73d19d412f3763294c6d80",
           "lineage_sequence": 1
+        },
+        {
+          "version": 3,
+          "lineage_sequence": 1,
+          "archived_path": "course-assets/thumbnails/redesign-history/thumbnail-slot-14-4e52d9f7996f720d333c3ed5f57f930a966c9d19770bd29c5d52480f79191fcd.webp",
+          "checksum_sha256": "4e52d9f7996f720d333c3ed5f57f930a966c9d19770bd29c5d52480f79191fcd",
+          "pixel_sha256": "c84ab0821ba61e5266db075f3f7c5c730530749dc9f9c29b7e5d20d50fd3aba0",
+          "size_bytes": 13946,
+          "recipe_sha256": "36b9495237ab0d5220dae86a9bbb301d96cfe3e7da73d19d412f3763294c6d80",
+          "review": {
+            "status": "approved",
+            "reviewed_by": "Jarrad Henry",
+            "reviewed_at": "2026-07-18T14:34:13.000Z",
+            "evidence": "docs/course-production/thumbnail-pilots/approvals/final-artwork-approval-v4.json",
+            "evidence_sha256": "8db531f1becc859109b39df076d4ed82a983dd2a49c044582134c209ccf9f1ee"
+          }
         }
       ],
       "dimensions": [
@@ -15854,6 +16236,18 @@
         "reviewed_at": "2026-07-18T14:34:13.000Z",
         "evidence": "docs/course-production/thumbnail-pilots/approvals/final-artwork-approval-v4.json",
         "evidence_sha256": "8db531f1becc859109b39df076d4ed82a983dd2a49c044582134c209ccf9f1ee"
+      },
+      "redesign_replacement": {
+        "schema_version": "bmh-thumbnail-redesign-replacement/v1",
+        "source_path": "docs/course-production/thumbnail-redesign/assets/18-conversation-flow-mastery-draft-v1.png",
+        "source_sha256": "91b93c4e49c03056bc54432d39593f5ef1363826c40795dd665bef3428d66328",
+        "replaced_checksum_sha256": "4e52d9f7996f720d333c3ed5f57f930a966c9d19770bd29c5d52480f79191fcd",
+        "output_checksum_sha256": "2d15f8af63fa45d572c7a5d95e0a8f452e76b8e12c8d4e8bc822925476df1e87",
+        "output_pixel_sha256": "bb23710a9ef42c41829eadc9590e21a1f2f17e0d5883f681554ddec033b97237",
+        "approval_evidence": "docs/course-production/thumbnail-redesign/approvals/thumbnail-redesign-approval-2026-07-20.json",
+        "approval_evidence_sha256": "5d70fcb8f61a88e46322433b63ad902110cab201ad2d1975e51c60cb736875e2",
+        "approved_by": "Jarrad Henry",
+        "approved_at": "2026-07-20T10:41:02.000Z"
       }
     },
     {
@@ -16038,12 +16432,12 @@
       "source_key": "thumbnail-slot-15",
       "manifest_path": "course-assets/thumbnails/slot-15.webp",
       "output_path": "course-assets/thumbnails/slot-15.webp",
-      "checksum_sha256": "c97c3334788d21096cac4c201e01245815c6e6e10f241408e282b5901df31ccf",
-      "pixel_sha256": "be224a2233e6d8281377360e95a0ad3422e56ca1f855dd75698e376904a652f9",
-      "size_bytes": 10780,
+      "checksum_sha256": "a239c7d7fc9300a8d671318a0e8e30c4c716fda8245b6dbb5a99a62e7644b67d",
+      "pixel_sha256": "0925204ae046843a1b348abf19b0e064f98f5ea3ff8bfcb02d2ab40cb69a71b9",
+      "size_bytes": 738384,
       "approval_status": "approved",
       "base_storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-15.webp",
-      "storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-15-c97c3334788d21096cac4c201e01245815c6e6e10f241408e282b5901df31ccf.webp",
+      "storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-15-a239c7d7fc9300a8d671318a0e8e30c4c716fda8245b6dbb5a99a62e7644b67d.webp",
       "replacement_authorized_checksum": null,
       "history": [
         {
@@ -16076,6 +16470,22 @@
             "reviewed_at": null,
             "evidence": null,
             "evidence_sha256": null
+          }
+        },
+        {
+          "version": 4,
+          "lineage_sequence": 2,
+          "archived_path": "course-assets/thumbnails/redesign-history/thumbnail-slot-15-c97c3334788d21096cac4c201e01245815c6e6e10f241408e282b5901df31ccf.webp",
+          "checksum_sha256": "c97c3334788d21096cac4c201e01245815c6e6e10f241408e282b5901df31ccf",
+          "pixel_sha256": "be224a2233e6d8281377360e95a0ad3422e56ca1f855dd75698e376904a652f9",
+          "size_bytes": 10780,
+          "recipe_sha256": "0d84ebebc94be0dc8c681da74b154c4e2b8168a91b1acf7f9f24902edfe321b9",
+          "review": {
+            "status": "approved",
+            "reviewed_by": "Jarrad Henry",
+            "reviewed_at": "2026-07-18T14:34:13.000Z",
+            "evidence": "docs/course-production/thumbnail-pilots/approvals/final-artwork-approval-v4.json",
+            "evidence_sha256": "8db531f1becc859109b39df076d4ed82a983dd2a49c044582134c209ccf9f1ee"
           }
         }
       ],
@@ -16219,6 +16629,18 @@
         "reviewed_at": "2026-07-18T14:34:13.000Z",
         "evidence": "docs/course-production/thumbnail-pilots/approvals/final-artwork-approval-v4.json",
         "evidence_sha256": "8db531f1becc859109b39df076d4ed82a983dd2a49c044582134c209ccf9f1ee"
+      },
+      "redesign_replacement": {
+        "schema_version": "bmh-thumbnail-redesign-replacement/v1",
+        "source_path": "docs/course-production/thumbnail-redesign/assets/19-closing-and-deal-engineering-draft-v1.png",
+        "source_sha256": "52d12f2a2c0d5f1fca3925c8381506762ee1b07e362b39910ce43d75539a3693",
+        "replaced_checksum_sha256": "c97c3334788d21096cac4c201e01245815c6e6e10f241408e282b5901df31ccf",
+        "output_checksum_sha256": "a239c7d7fc9300a8d671318a0e8e30c4c716fda8245b6dbb5a99a62e7644b67d",
+        "output_pixel_sha256": "0925204ae046843a1b348abf19b0e064f98f5ea3ff8bfcb02d2ab40cb69a71b9",
+        "approval_evidence": "docs/course-production/thumbnail-redesign/approvals/thumbnail-redesign-approval-2026-07-20.json",
+        "approval_evidence_sha256": "5d70fcb8f61a88e46322433b63ad902110cab201ad2d1975e51c60cb736875e2",
+        "approved_by": "Jarrad Henry",
+        "approved_at": "2026-07-20T10:41:02.000Z"
       }
     },
     {
@@ -16419,12 +16841,12 @@
       "source_key": "thumbnail-slot-16",
       "manifest_path": "course-assets/thumbnails/slot-16.webp",
       "output_path": "course-assets/thumbnails/slot-16.webp",
-      "checksum_sha256": "13a93415758a31dbc7f75b2a385c8899cd76e9abdbb9833fc8cb300255149f41",
-      "pixel_sha256": "e75865d0b6d4960d5c558aa1ee4c9ada565be9bd679005086619c39efdd669b9",
-      "size_bytes": 16484,
+      "checksum_sha256": "fea86bfd9456667dd99ca070f715df435dd394c94db9dc56aa47ce19c7e725d2",
+      "pixel_sha256": "ee22af8f704b8bbd0753266c6ddb84c55988e07416be5b45fe91c93f8d8d0794",
+      "size_bytes": 527486,
       "approval_status": "approved",
       "base_storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-16.webp",
-      "storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-16-13a93415758a31dbc7f75b2a385c8899cd76e9abdbb9833fc8cb300255149f41.webp",
+      "storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-16-fea86bfd9456667dd99ca070f715df435dd394c94db9dc56aa47ce19c7e725d2.webp",
       "replacement_authorized_checksum": null,
       "history": [
         {
@@ -16442,6 +16864,22 @@
           "archived_path": "course-assets/thumbnails/production/sources/lineage/master-slot-16/derivatives/pipeline-version-002-slot-16.webp",
           "recipe_sha256": "2cd0ce7d0c6414c03e24866e6a4b0070cd7d5fa3dd91b4c5c69350f4f3eb7035",
           "lineage_sequence": 1
+        },
+        {
+          "version": 3,
+          "lineage_sequence": 1,
+          "archived_path": "course-assets/thumbnails/redesign-history/thumbnail-slot-16-13a93415758a31dbc7f75b2a385c8899cd76e9abdbb9833fc8cb300255149f41.webp",
+          "checksum_sha256": "13a93415758a31dbc7f75b2a385c8899cd76e9abdbb9833fc8cb300255149f41",
+          "pixel_sha256": "e75865d0b6d4960d5c558aa1ee4c9ada565be9bd679005086619c39efdd669b9",
+          "size_bytes": 16484,
+          "recipe_sha256": "2cd0ce7d0c6414c03e24866e6a4b0070cd7d5fa3dd91b4c5c69350f4f3eb7035",
+          "review": {
+            "status": "approved",
+            "reviewed_by": "Jarrad Henry",
+            "reviewed_at": "2026-07-18T14:34:13.000Z",
+            "evidence": "docs/course-production/thumbnail-pilots/approvals/final-artwork-approval-v4.json",
+            "evidence_sha256": "8db531f1becc859109b39df076d4ed82a983dd2a49c044582134c209ccf9f1ee"
+          }
         }
       ],
       "dimensions": [
@@ -16584,6 +17022,18 @@
         "reviewed_at": "2026-07-18T14:34:13.000Z",
         "evidence": "docs/course-production/thumbnail-pilots/approvals/final-artwork-approval-v4.json",
         "evidence_sha256": "8db531f1becc859109b39df076d4ed82a983dd2a49c044582134c209ccf9f1ee"
+      },
+      "redesign_replacement": {
+        "schema_version": "bmh-thumbnail-redesign-replacement/v1",
+        "source_path": "docs/course-production/thumbnail-redesign/assets/21-kpis-and-sales-telemetry-draft-v1.png",
+        "source_sha256": "a31923e27595814e2043efe87c10aa136adb0aec87ee631244a82e66fee0d7fb",
+        "replaced_checksum_sha256": "13a93415758a31dbc7f75b2a385c8899cd76e9abdbb9833fc8cb300255149f41",
+        "output_checksum_sha256": "fea86bfd9456667dd99ca070f715df435dd394c94db9dc56aa47ce19c7e725d2",
+        "output_pixel_sha256": "ee22af8f704b8bbd0753266c6ddb84c55988e07416be5b45fe91c93f8d8d0794",
+        "approval_evidence": "docs/course-production/thumbnail-redesign/approvals/thumbnail-redesign-approval-2026-07-20.json",
+        "approval_evidence_sha256": "5d70fcb8f61a88e46322433b63ad902110cab201ad2d1975e51c60cb736875e2",
+        "approved_by": "Jarrad Henry",
+        "approved_at": "2026-07-20T10:41:02.000Z"
       }
     },
     {
@@ -16768,12 +17218,12 @@
       "source_key": "thumbnail-slot-17",
       "manifest_path": "course-assets/thumbnails/slot-17.webp",
       "output_path": "course-assets/thumbnails/slot-17.webp",
-      "checksum_sha256": "c92a137c4c2f4367d71f5fe3e4355629a80f836e487de452bfafee2915504103",
-      "pixel_sha256": "2850b7b65769663ffda511b53c42ae816ad0477eb612bb44d9c5e575ad5e9dbd",
-      "size_bytes": 13628,
+      "checksum_sha256": "ded4d7a45ce682422de865b3641b3b38f7abfe6fb2cf5245698d57b349f8006b",
+      "pixel_sha256": "882908c1e241cefdde672fa8e7f5e9ee4673fb901b56bf8e4a698b87d355caa9",
+      "size_bytes": 589102,
       "approval_status": "approved",
       "base_storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-17.webp",
-      "storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-17-c92a137c4c2f4367d71f5fe3e4355629a80f836e487de452bfafee2915504103.webp",
+      "storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-17-ded4d7a45ce682422de865b3641b3b38f7abfe6fb2cf5245698d57b349f8006b.webp",
       "replacement_authorized_checksum": null,
       "history": [
         {
@@ -16806,6 +17256,22 @@
             "reviewed_at": null,
             "evidence": null,
             "evidence_sha256": null
+          }
+        },
+        {
+          "version": 4,
+          "lineage_sequence": 2,
+          "archived_path": "course-assets/thumbnails/redesign-history/thumbnail-slot-17-c92a137c4c2f4367d71f5fe3e4355629a80f836e487de452bfafee2915504103.webp",
+          "checksum_sha256": "c92a137c4c2f4367d71f5fe3e4355629a80f836e487de452bfafee2915504103",
+          "pixel_sha256": "2850b7b65769663ffda511b53c42ae816ad0477eb612bb44d9c5e575ad5e9dbd",
+          "size_bytes": 13628,
+          "recipe_sha256": "56172c2c23c5723021e36a6434faa63a20a4b9362ee4dcdcec9b0c91b4befcf1",
+          "review": {
+            "status": "approved",
+            "reviewed_by": "Jarrad Henry",
+            "reviewed_at": "2026-07-18T14:34:13.000Z",
+            "evidence": "docs/course-production/thumbnail-pilots/approvals/final-artwork-approval-v4.json",
+            "evidence_sha256": "8db531f1becc859109b39df076d4ed82a983dd2a49c044582134c209ccf9f1ee"
           }
         }
       ],
@@ -16949,6 +17415,18 @@
         "reviewed_at": "2026-07-18T14:34:13.000Z",
         "evidence": "docs/course-production/thumbnail-pilots/approvals/final-artwork-approval-v4.json",
         "evidence_sha256": "8db531f1becc859109b39df076d4ed82a983dd2a49c044582134c209ccf9f1ee"
+      },
+      "redesign_replacement": {
+        "schema_version": "bmh-thumbnail-redesign-replacement/v1",
+        "source_path": "docs/course-production/thumbnail-redesign/assets/22-compensation-engine-draft-v1.png",
+        "source_sha256": "582cc7f3da9089c0cf0e3d4b7dde1200cbe2fa5f07fcc8e53914e97bb43b9abf",
+        "replaced_checksum_sha256": "c92a137c4c2f4367d71f5fe3e4355629a80f836e487de452bfafee2915504103",
+        "output_checksum_sha256": "ded4d7a45ce682422de865b3641b3b38f7abfe6fb2cf5245698d57b349f8006b",
+        "output_pixel_sha256": "882908c1e241cefdde672fa8e7f5e9ee4673fb901b56bf8e4a698b87d355caa9",
+        "approval_evidence": "docs/course-production/thumbnail-redesign/approvals/thumbnail-redesign-approval-2026-07-20.json",
+        "approval_evidence_sha256": "5d70fcb8f61a88e46322433b63ad902110cab201ad2d1975e51c60cb736875e2",
+        "approved_by": "Jarrad Henry",
+        "approved_at": "2026-07-20T10:41:02.000Z"
       }
     },
     {
@@ -17149,12 +17627,12 @@
       "source_key": "thumbnail-slot-18",
       "manifest_path": "course-assets/thumbnails/slot-18.webp",
       "output_path": "course-assets/thumbnails/slot-18.webp",
-      "checksum_sha256": "2c276eb7cb5da6784c5779a335433dd4053d35659540cabf6793617b51546353",
-      "pixel_sha256": "d31f9282b4a5c5af538aaec823fc37fbdf09cf22888114281b3fda6569b22fbe",
-      "size_bytes": 8964,
+      "checksum_sha256": "8c26a2e6ddae49360597ad890e3d7ace42d37e97d89c11a25a51bf8c00e54069",
+      "pixel_sha256": "ea316c558c15c1babf8e5ce7b70afd4bcbbfea95887c1c9d3f17d2749ffda3cb",
+      "size_bytes": 798214,
       "approval_status": "approved",
       "base_storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-18.webp",
-      "storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-18-2c276eb7cb5da6784c5779a335433dd4053d35659540cabf6793617b51546353.webp",
+      "storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-18-8c26a2e6ddae49360597ad890e3d7ace42d37e97d89c11a25a51bf8c00e54069.webp",
       "replacement_authorized_checksum": null,
       "history": [
         {
@@ -17187,6 +17665,22 @@
             "reviewed_at": null,
             "evidence": null,
             "evidence_sha256": null
+          }
+        },
+        {
+          "version": 4,
+          "lineage_sequence": 2,
+          "archived_path": "course-assets/thumbnails/redesign-history/thumbnail-slot-18-2c276eb7cb5da6784c5779a335433dd4053d35659540cabf6793617b51546353.webp",
+          "checksum_sha256": "2c276eb7cb5da6784c5779a335433dd4053d35659540cabf6793617b51546353",
+          "pixel_sha256": "d31f9282b4a5c5af538aaec823fc37fbdf09cf22888114281b3fda6569b22fbe",
+          "size_bytes": 8964,
+          "recipe_sha256": "5d379be4f7f0bb687411f73ee28ac62bccca14fee9de8d51e2e05b579eae233c",
+          "review": {
+            "status": "approved",
+            "reviewed_by": "Jarrad Henry",
+            "reviewed_at": "2026-07-18T14:34:13.000Z",
+            "evidence": "docs/course-production/thumbnail-pilots/approvals/final-artwork-approval-v4.json",
+            "evidence_sha256": "8db531f1becc859109b39df076d4ed82a983dd2a49c044582134c209ccf9f1ee"
           }
         }
       ],
@@ -17343,6 +17837,18 @@
         "reviewed_at": "2026-07-18T14:34:13.000Z",
         "evidence": "docs/course-production/thumbnail-pilots/approvals/final-artwork-approval-v4.json",
         "evidence_sha256": "8db531f1becc859109b39df076d4ed82a983dd2a49c044582134c209ccf9f1ee"
+      },
+      "redesign_replacement": {
+        "schema_version": "bmh-thumbnail-redesign-replacement/v1",
+        "source_path": "docs/course-production/thumbnail-redesign/assets/23-operator-playbook-mission-control-draft-v1.png",
+        "source_sha256": "37482821b34882503849b2c535ead7ef4c17eb818a62f759dc3c963095c0361c",
+        "replaced_checksum_sha256": "2c276eb7cb5da6784c5779a335433dd4053d35659540cabf6793617b51546353",
+        "output_checksum_sha256": "8c26a2e6ddae49360597ad890e3d7ace42d37e97d89c11a25a51bf8c00e54069",
+        "output_pixel_sha256": "ea316c558c15c1babf8e5ce7b70afd4bcbbfea95887c1c9d3f17d2749ffda3cb",
+        "approval_evidence": "docs/course-production/thumbnail-redesign/approvals/thumbnail-redesign-approval-2026-07-20.json",
+        "approval_evidence_sha256": "5d70fcb8f61a88e46322433b63ad902110cab201ad2d1975e51c60cb736875e2",
+        "approved_by": "Jarrad Henry",
+        "approved_at": "2026-07-20T10:41:02.000Z"
       }
     },
     {
@@ -17716,12 +18222,12 @@
       "source_key": "thumbnail-slot-19",
       "manifest_path": "course-assets/thumbnails/slot-19.webp",
       "output_path": "course-assets/thumbnails/slot-19.webp",
-      "checksum_sha256": "37fcc0375daabb5e8e0bd0e65d064f3129f9fb4158ef7e4f8bdca3b98eb0c81d",
-      "pixel_sha256": "10f175e1c8feb2a2d48c819707738761544c658749b87dd56a41d3ebe28b4b0f",
-      "size_bytes": 14014,
+      "checksum_sha256": "1989f0e8a78f8b1d5c82f6e00e84ee79cb3c654b394ff509fe16b40359c47b78",
+      "pixel_sha256": "7ba3bb44edb127d7241c2eba8bbaf47b24d95b468310f29fd44bd511515a0ba1",
+      "size_bytes": 700506,
       "approval_status": "approved",
       "base_storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-19.webp",
-      "storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-19-37fcc0375daabb5e8e0bd0e65d064f3129f9fb4158ef7e4f8bdca3b98eb0c81d.webp",
+      "storage_path": "courses/bmh-employee-training/v1/thumbnails/slot-19-1989f0e8a78f8b1d5c82f6e00e84ee79cb3c654b394ff509fe16b40359c47b78.webp",
       "replacement_authorized_checksum": null,
       "history": [
         {
@@ -17739,6 +18245,22 @@
           "archived_path": "course-assets/thumbnails/production/sources/lineage/master-slot-19/derivatives/pipeline-version-002-slot-19.webp",
           "recipe_sha256": "ae3b2412869f6dbe48533fbdf0694459e56012452e3bc7fe4512b58d664eb9f6",
           "lineage_sequence": 1
+        },
+        {
+          "version": 3,
+          "lineage_sequence": 1,
+          "archived_path": "course-assets/thumbnails/redesign-history/thumbnail-slot-19-37fcc0375daabb5e8e0bd0e65d064f3129f9fb4158ef7e4f8bdca3b98eb0c81d.webp",
+          "checksum_sha256": "37fcc0375daabb5e8e0bd0e65d064f3129f9fb4158ef7e4f8bdca3b98eb0c81d",
+          "pixel_sha256": "10f175e1c8feb2a2d48c819707738761544c658749b87dd56a41d3ebe28b4b0f",
+          "size_bytes": 14014,
+          "recipe_sha256": "ae3b2412869f6dbe48533fbdf0694459e56012452e3bc7fe4512b58d664eb9f6",
+          "review": {
+            "status": "approved",
+            "reviewed_by": "Jarrad Henry",
+            "reviewed_at": "2026-07-18T14:34:13.000Z",
+            "evidence": "docs/course-production/thumbnail-pilots/approvals/final-artwork-approval-v4.json",
+            "evidence_sha256": "8db531f1becc859109b39df076d4ed82a983dd2a49c044582134c209ccf9f1ee"
+          }
         }
       ],
       "dimensions": [
@@ -17881,6 +18403,18 @@
         "reviewed_at": "2026-07-18T14:34:13.000Z",
         "evidence": "docs/course-production/thumbnail-pilots/approvals/final-artwork-approval-v4.json",
         "evidence_sha256": "8db531f1becc859109b39df076d4ed82a983dd2a49c044582134c209ccf9f1ee"
+      },
+      "redesign_replacement": {
+        "schema_version": "bmh-thumbnail-redesign-replacement/v1",
+        "source_path": "docs/course-production/thumbnail-redesign/assets/24-career-growth-path-draft-v1.png",
+        "source_sha256": "601f5090217d085310ffeba508a01034c2a97dd262ca9a955985223ea7446bf7",
+        "replaced_checksum_sha256": "37fcc0375daabb5e8e0bd0e65d064f3129f9fb4158ef7e4f8bdca3b98eb0c81d",
+        "output_checksum_sha256": "1989f0e8a78f8b1d5c82f6e00e84ee79cb3c654b394ff509fe16b40359c47b78",
+        "output_pixel_sha256": "7ba3bb44edb127d7241c2eba8bbaf47b24d95b468310f29fd44bd511515a0ba1",
+        "approval_evidence": "docs/course-production/thumbnail-redesign/approvals/thumbnail-redesign-approval-2026-07-20.json",
+        "approval_evidence_sha256": "5d70fcb8f61a88e46322433b63ad902110cab201ad2d1975e51c60cb736875e2",
+        "approved_by": "Jarrad Henry",
+        "approved_at": "2026-07-20T10:41:02.000Z"
       }
     },
     {
@@ -18061,7 +18595,7 @@
       }
     }
   ],
-  "updated_at": "2026-07-18T14:34:13.000Z",
+  "updated_at": "2026-07-20T10:41:02.000Z",
   "approved_texture_exceptions": [
     {
       "asset_key": "thumbnail-slot-07",
@@ -18107,5 +18641,14 @@
       "evidence": "docs/course-production/thumbnail-pilots/approvals/v8-approved-texture-exceptions-2026-07-17.json",
       "evidence_sha256": "d2fcbb9f8ac7c99c753e2b9c3a7fdd39f40392a16f6221e48c341a55934447e3"
     }
-  ]
+  ],
+  "thumbnail_redesign_approval": {
+    "schema_version": "bmh-thumbnail-redesign-ledger-approval/v1",
+    "status": "approved",
+    "approved_by": "Jarrad Henry",
+    "approved_at": "2026-07-20T10:41:02.000Z",
+    "evidence": "docs/course-production/thumbnail-redesign/approvals/thumbnail-redesign-approval-2026-07-20.json",
+    "evidence_sha256": "5d70fcb8f61a88e46322433b63ad902110cab201ad2d1975e51c60cb736875e2",
+    "assignment_policy": "assignments-remain-thumbnail-free"
+  }
 }

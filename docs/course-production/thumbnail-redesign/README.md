@@ -1,22 +1,24 @@
 # BMH Employee Training thumbnail redesign
 
-![Approved and pending thumbnail review board](approved-and-pending-review-board.png)
+![Approved thumbnail review board](approved-and-pending-review-board.png)
 
-This is the partial review package approved in the 2026-07-20 thumbnail session.
+This is the approved review and production-promotion package from the 2026-07-20 thumbnail session.
 
-- 15 concepts are approved and preserved as their original 1280 x 800 PNG files.
-- 6 lesson concepts are generated and shown as `DRAFT` artwork awaiting individual approval.
-- 4 remaining assignment cards are marked `NO THUMBNAIL REQUIRED` and are not part of the pending artwork count.
+- 21 concepts were approved as their exact 1280 x 800 PNG review files.
+- 19 content concepts are promoted as lossless 1280 x 800 WebP lesson thumbnails.
+- The 2 approved assignment concepts remain review references because assignments do not bind thumbnails in the manifest.
+- The other 4 assignment cards are marked `NO THUMBNAIL REQUIRED`.
 - The review sequence matches the 25 learner-facing content and assignment cards.
-- This merge request does **not** replace production artwork. Production promotion remains blocked until the full set is designed, approved, converted to the canonical WebP derivatives, and rebound through the checksum-locked artwork ledger.
+- The 29 video posters are unchanged.
 
-The machine-readable mapping is in [`review-index.json`](review-index.json). Checksums and dimensions are recorded in [`review-evidence.json`](review-evidence.json). The six draft concepts, preserved masters, and review derivatives are documented in [`DRAFT-GENERATION.md`](DRAFT-GENERATION.md).
+The machine-readable mapping is in [`review-index.json`](review-index.json). Checksums and dimensions are recorded in [`review-evidence.json`](review-evidence.json). The exact preapproval surface remains under [`approvals/`](approvals/), and Jarrad's response is bound to all 19 production PNGs in [`thumbnail-redesign-approval-2026-07-20.json`](approvals/thumbnail-redesign-approval-2026-07-20.json).
 
-## Drafts awaiting approval
+The production workflow:
 
-1. Conversation Flow Mastery
-2. Closing and Deal Engineering
-3. KPIs and Sales Telemetry
-4. Compensation Engine
-5. Operator Playbook and Daily Mission Control
-6. Career Growth Path
+```bash
+npm run artwork:redesign-review
+npm run artwork:redesign:verify
+npm run artwork:production -- verify
+```
+
+Each replaced WebP is checksum-addressed in the course manifest. Its prior production bytes are retained under `course-assets/thumbnails/redesign-history/` for exact rollback.

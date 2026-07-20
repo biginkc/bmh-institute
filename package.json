@@ -22,6 +22,8 @@
     "artwork:production": "node scripts/course-content/artwork-production.mjs",
     "artwork:redesign-review": "node scripts/course-content/build-thumbnail-redesign-review.mjs --check",
     "artwork:redesign-review:write": "node scripts/course-content/build-thumbnail-redesign-review.mjs --write",
+    "artwork:redesign:promote": "node scripts/course-content/promote-thumbnail-redesign.mjs promote",
+    "artwork:redesign:verify": "node scripts/course-content/promote-thumbnail-redesign.mjs verify",
     "seed:e2e": "tsx scripts/seed-e2e-test-content.ts",
     "cleanup:e2e": "tsx scripts/seed-e2e-test-content.ts --cleanup-only",
     "typecheck": "tsc --noEmit",

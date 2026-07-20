@@ -62,8 +62,8 @@ function validateIndex(index) {
   const drafts = index.items.filter((item) => item.status === "draft");
   const pending = index.items.filter((item) => item.status === "pending");
   const notRequired = index.items.filter((item) => item.status === "not_required");
-  if (approved.length !== 15 || drafts.length !== 6 || pending.length !== 0 || notRequired.length !== 4) {
-    throw new Error("Thumbnail review must contain exactly 15 approved, 6 drafts, 0 pending, and 4 not-required items");
+  if (approved.length !== 21 || drafts.length !== 0 || pending.length !== 0 || notRequired.length !== 4) {
+    throw new Error("Thumbnail review must contain exactly 21 approved, 0 drafts, 0 pending, and 4 not-required items");
   }
   if (
     [...approved, ...drafts].some((item) => typeof item.asset !== "string") ||
@@ -73,8 +73,8 @@ function validateIndex(index) {
   }
   if (
     index.summary?.total !== 25 ||
-    index.summary?.approved !== 15 ||
-    index.summary?.draft !== 6 ||
+    index.summary?.approved !== 21 ||
+    index.summary?.draft !== 0 ||
     index.summary?.pending !== 0 ||
     index.summary?.not_required !== 4
   ) {
@@ -115,9 +115,9 @@ async function build() {
 
   baseParts.push(`<rect width="${width}" height="${height}" fill="#f4f1e9"/>`);
   baseParts.push(`<text x="${margin}" y="66" font-family="Arial, Helvetica, sans-serif" font-size="42" font-weight="900" fill="#0e1116">BMH Employee Training — thumbnail redesign</text>`);
-  baseParts.push(`<text x="${margin}" y="112" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="700" fill="#536170">15 approved · 6 drafts awaiting approval · 4 assignment thumbnails not required</text>`);
+  baseParts.push(`<text x="${margin}" y="112" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="700" fill="#536170">21 approved concepts · 19 content thumbnails for production · 4 assignments not required</text>`);
   baseParts.push(`<rect x="1988" y="42" width="380" height="72" rx="36" fill="#fff" stroke="#0e1116" stroke-width="4"/>`);
-  baseParts.push(`<text x="2178" y="87" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="23" font-weight="900" fill="#0e1116">DRAFT — NOT PRODUCTION</text>`);
+  baseParts.push(`<text x="2178" y="87" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="23" font-weight="900" fill="#0e1116">APPROVED · 2026-07-20</text>`);
 
   for (const item of index.items) {
     const position = item.visible_order - 1;
@@ -197,7 +197,7 @@ async function build() {
     board: "approved-and-pending-review-board.png",
     board_sha256: sha256(board),
     board_dimensions: [width, height],
-    counts: { total: 25, approved: 15, draft: 6, pending: 0, not_required: 4 },
+    counts: { total: 25, approved: 21, draft: 0, pending: 0, not_required: 4 },
     approved_assets: approvedEvidence,
     draft_assets: draftEvidence,
     pending_items: index.items.filter((item) => item.status === "pending").map(({ visible_order, title, kind, binding }) => ({ visible_order, title, kind, binding })),
@@ -224,9 +224,9 @@ const built = await build();
 if (mode === "--write") {
   await writeFile(boardPath, built.board);
   await writeFile(evidencePath, built.evidence);
-  console.log(JSON.stringify({ mode: "write", approved: 15, draft: 6, pending: 0, not_required: 4, board: path.relative(repoRoot, boardPath) }, null, 2));
+  console.log(JSON.stringify({ mode: "write", approved: 21, draft: 0, pending: 0, not_required: 4, board: path.relative(repoRoot, boardPath) }, null, 2));
 } else {
   await assertCurrent(boardPath, built.board, "Thumbnail review board");
   await assertCurrent(evidencePath, built.evidence, "Thumbnail review evidence");
-  console.log(JSON.stringify({ mode: "check", approved: 15, draft: 6, pending: 0, not_required: 4, status: "current" }, null, 2));
+  console.log(JSON.stringify({ mode: "check", approved: 21, draft: 0, pending: 0, not_required: 4, status: "current" }, null, 2));
 }
