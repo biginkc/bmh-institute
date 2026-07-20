@@ -24,7 +24,7 @@ export function renderEnrollmentEmail(input: EnrollmentEmailInput): {
            ? courseList(input.standaloneCourses)
            : ""
        }`
-    : `<p>You're getting set up with access to BMH Group's internal training platform. An admin will assign your first program shortly.</p>`;
+    : `<p>You're getting set up with access to BMH Group's internal training platform. An admin will assign your first course shortly.</p>`;
 
   const html = `
     <div style="font-family:Arial,Helvetica,sans-serif;max-width:560px;margin:0 auto;padding:24px;color:#111;">
@@ -47,7 +47,7 @@ export function renderEnrollmentEmail(input: EnrollmentEmailInput): {
 
 function programList(programs: Array<{ id: string; title: string }>): string {
   return `
-    <h2 style="font-size:16px;margin:16px 0 8px;">Programs</h2>
+    <h2 style="font-size:16px;margin:16px 0 8px;">Courses</h2>
     <ul style="padding-left:20px;">
       ${programs.map((p) => `<li>${escapeHtml(p.title)}</li>`).join("")}
     </ul>
@@ -67,10 +67,10 @@ function summarizeCount(input: EnrollmentEmailInput): string {
   const progs = input.programs.length;
   const courses = input.standaloneCourses.length;
   if (progs > 0 && courses > 0) {
-    return `${progs} ${progs === 1 ? "program" : "programs"} and ${courses} ${courses === 1 ? "course" : "courses"}`;
+    return `${progs + courses} course assignments`;
   }
   if (progs > 0) {
-    return progs === 1 ? "a new program" : `${progs} programs`;
+    return progs === 1 ? "a new course" : `${progs} courses`;
   }
   return courses === 1 ? "a new course" : `${courses} courses`;
 }

@@ -49,10 +49,11 @@ describe("CertificatesPage", () => {
     expect(html).toContain("Certificate BMH-COURSE-001");
   });
 
-  it("shows a locked program tile until a program certificate is earned", async () => {
+  it("shows a locked final course tile until the aggregate certificate is earned", async () => {
     const lockedHtml = renderToStaticMarkup(await CertificatesPage());
 
-    expect(lockedHtml).toContain("Program certificate");
+    expect(lockedHtml).toContain("Final course certificate");
+    expect(lockedHtml).not.toContain("Program certificate");
     expect(lockedHtml).toContain("Finish all courses to unlock");
 
     tableData.program_certificates = [

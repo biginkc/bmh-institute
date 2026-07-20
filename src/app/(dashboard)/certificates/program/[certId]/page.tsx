@@ -1,7 +1,10 @@
 import { notFound } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
-import { renderCertificateHtml } from "@/lib/certificates/render";
+import {
+  normalizeLearnerCertificateTemplate,
+  renderCertificateHtml,
+} from "@/lib/certificates/render";
 
 import { CertificateLayout } from "../../certificate-layout";
 
@@ -33,7 +36,7 @@ export default async function ProgramCertificatePage({
 
   const programRow = firstRow(cert.programs);
   const profileRow = firstRow(cert.profiles);
-  const title = programRow?.title ?? "Program";
+  const title = programRow?.title ?? "Course";
   const fullName = profileRow?.full_name ?? "Learner";
 
   const templateId = programRow?.certificate_template_id as string | null;
@@ -55,7 +58,7 @@ export default async function ProgramCertificatePage({
     (template?.body_html as string | undefined) ??
     "<h1>Program Completion Certificate</h1><p>{{full_name}} completed the {{title}} program.</p>";
 
-  const html = renderCertificateHtml(bodyHtml, {
+  const html = renderCertificateHtml(normalizeLearnerCertificateTemplate(bodyHtml, "program"), {
     full_name: fullName,
     title,
     completion_date: new Date(cert.issued_at as string).toLocaleDateString(
@@ -69,7 +72,7 @@ export default async function ProgramCertificatePage({
     <CertificateLayout
       backHref="/certificates"
       backLabel="Back to certificates"
-      certificateType="Program certificate"
+      certificateType="Course certificate"
       html={html}
     />
   );
