@@ -1,0 +1,186 @@
+{
+  "schema_version": "bmh.quiz-coverage-report.v1",
+  "slots": [
+    {
+      "slot": 1,
+      "lesson": "Welcome and Mindset",
+      "selected": 55,
+      "generated": 51,
+      "needs_review": 4,
+      "sum_ok": true
+    },
+    {
+      "slot": 2,
+      "lesson": "Real Estate Terms Glossary",
+      "selected": 50,
+      "generated": 48,
+      "needs_review": 2,
+      "sum_ok": true
+    },
+    {
+      "slot": 3,
+      "lesson": "Tech Stack and Systems",
+      "selected": 50,
+      "generated": 44,
+      "needs_review": 6,
+      "sum_ok": true
+    },
+    {
+      "slot": 4,
+      "lesson": "Humanizing the Lead",
+      "selected": 81,
+      "generated": 70,
+      "needs_review": 11,
+      "sum_ok": true
+    },
+    {
+      "slot": 5,
+      "lesson": "The BMH Offer Playbook",
+      "selected": 78,
+      "generated": 73,
+      "needs_review": 5,
+      "sum_ok": true
+    },
+    {
+      "slot": 6,
+      "lesson": "Sales Pipeline and Stage Ownership",
+      "selected": 44,
+      "generated": 42,
+      "needs_review": 2,
+      "sum_ok": true
+    },
+    {
+      "slot": 7,
+      "lesson": "Opening the Call",
+      "selected": 40,
+      "generated": 39,
+      "needs_review": 1,
+      "sum_ok": true
+    },
+    {
+      "slot": 8,
+      "lesson": "Discovery and Handoff",
+      "selected": 35,
+      "generated": 32,
+      "needs_review": 3,
+      "sum_ok": true
+    },
+    {
+      "slot": 9,
+      "lesson": "Objection Architecture",
+      "selected": 78,
+      "generated": 76,
+      "needs_review": 2,
+      "sum_ok": true
+    },
+    {
+      "slot": 10,
+      "lesson": "Objection Scripts Playbook",
+      "selected": 50,
+      "generated": 50,
+      "needs_review": 0,
+      "sum_ok": true
+    },
+    {
+      "slot": 11,
+      "lesson": "Complex Objections",
+      "selected": 60,
+      "generated": 59,
+      "needs_review": 1,
+      "sum_ok": true
+    },
+    {
+      "slot": 12,
+      "lesson": "Seller FAQ Decoder",
+      "selected": 38,
+      "generated": 37,
+      "needs_review": 1,
+      "sum_ok": true
+    },
+    {
+      "slot": 13,
+      "lesson": "Follow-Up Cadence",
+      "selected": 60,
+      "generated": 57,
+      "needs_review": 3,
+      "sum_ok": true
+    },
+    {
+      "slot": 14,
+      "lesson": "Conversation Flow Mastery",
+      "selected": 40,
+      "generated": 40,
+      "needs_review": 0,
+      "sum_ok": true
+    },
+    {
+      "slot": 15,
+      "lesson": "Closing and Deal Engineering",
+      "selected": 35,
+      "generated": 30,
+      "needs_review": 5,
+      "sum_ok": true
+    },
+    {
+      "slot": 16,
+      "lesson": "KPIs and Sales Telemetry",
+      "selected": 38,
+      "generated": 38,
+      "needs_review": 0,
+      "sum_ok": true
+    },
+    {
+      "slot": 17,
+      "lesson": "Compensation Engine",
+      "selected": 55,
+      "generated": 51,
+      "needs_review": 4,
+      "sum_ok": true
+    },
+    {
+      "slot": 18,
+      "lesson": "Operator Playbook and Daily Mission Control",
+      "selected": 38,
+      "generated": 36,
+      "needs_review": 2,
+      "sum_ok": true
+    },
+    {
+      "slot": 19,
+      "lesson": "Career Growth Path",
+      "selected": 52,
+      "generated": 47,
+      "needs_review": 5,
+      "sum_ok": true
+    }
+  ],
+  "totals": {
+    "selected": 977,
+    "generated": 920,
+    "needs_review": 57,
+    "sum_ok": true,
+    "expected_selected": 977,
+    "expected_selected_by_slot": [
+      55,
+      50,
+      50,
+      81,
+      78,
+      44,
+      40,
+      35,
+      78,
+      50,
+      60,
+      38,
+      60,
+      40,
+      35,
+      38,
+      55,
+      38,
+      52
+    ],
+    "selected_vector_ok": true
+  }
+}
