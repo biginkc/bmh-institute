@@ -111,6 +111,7 @@ export async function signAuthorizedArtworkPaths(
         const { data, error } = await bucket.info(request.path);
         const metadata = data?.metadata as Record<string, unknown> | undefined;
         const mime =
+          (typeof data?.contentType === "string" && data.contentType) ||
           (typeof metadata?.mimetype === "string" && metadata.mimetype) ||
           (typeof metadata?.contentType === "string" && metadata.contentType) ||
           null;
