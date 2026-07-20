@@ -20,6 +20,9 @@ describe("checksum-guarded imported lesson artwork replacement", () => {
     expect(sql).toContain("replacement object is missing");
     expect(sql).toContain("pg_advisory_xact_lock");
     expect(sql).toContain("for update");
+    expect(sql).toContain("'^courses/[a-z0-9-]+/v[0-9]+/thumbnails/[a-z0-9-]+-[0-9a-f]{64}\\.webp$'");
+    expect(sql).toContain("expected_thumbnail_approved_path') <> (v_item ->> 'expected_thumbnail_path");
+    expect(sql).toContain("replace(");
   });
 
   it("exposes the replacement only to service_role", () => {

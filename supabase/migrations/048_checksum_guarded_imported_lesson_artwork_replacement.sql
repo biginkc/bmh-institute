@@ -139,12 +139,19 @@ begin
       or (v_item ->> 'replacement_thumbnail_approved_sha256') !~ '^[0-9a-f]{64}$'
       or (v_item ->> 'expected_thumbnail_asset_key') !~ '^[a-z0-9][a-z0-9-]{0,127}$'
       or (v_item ->> 'replacement_thumbnail_asset_key') !~ '^[a-z0-9][a-z0-9-]{0,127}$'
-      or (v_item ->> 'expected_thumbnail_approved_path') !~ '^course-assets/thumbnails/[a-z0-9/_-]+\.webp$'
-      or (v_item ->> 'replacement_thumbnail_approved_path') !~ '^course-assets/thumbnails/[a-z0-9/_-]+\.webp$'
+      or (v_item ->> 'expected_thumbnail_approved_path') !~ '^courses/[a-z0-9-]+/v[0-9]+/thumbnails/[a-z0-9-]+-[0-9a-f]{64}\.webp$'
+      or (v_item ->> 'replacement_thumbnail_approved_path') !~ '^courses/[a-z0-9-]+/v[0-9]+/thumbnails/[a-z0-9-]+-[0-9a-f]{64}\.webp$'
       or (v_item ->> 'expected_thumbnail_path') !~ '^courses/[a-z0-9-]+/v[0-9]+/thumbnails/[a-z0-9-]+-[0-9a-f]{64}\.webp$'
       or (v_item ->> 'replacement_thumbnail_path') !~ '^courses/[a-z0-9-]+/v[0-9]+/thumbnails/[a-z0-9-]+-[0-9a-f]{64}\.webp$'
-      or (v_item ->> 'replacement_thumbnail_path') not like
-        '%' || (v_item ->> 'replacement_thumbnail_approved_sha256') || '.webp'
+      or (v_item ->> 'expected_thumbnail_asset_key') <> (v_item ->> 'replacement_thumbnail_asset_key')
+      or (v_item ->> 'expected_thumbnail_approved_path') <> (v_item ->> 'expected_thumbnail_path')
+      or (v_item ->> 'replacement_thumbnail_approved_path') <> (v_item ->> 'replacement_thumbnail_path')
+      or (v_item ->> 'expected_thumbnail_path') <>
+        replace(
+          v_item ->> 'replacement_thumbnail_path',
+          v_item ->> 'replacement_thumbnail_approved_sha256',
+          v_item ->> 'expected_thumbnail_approved_sha256'
+        )
     then
       raise exception 'Imported lesson artwork replacement has invalid provenance values.'
         using errcode = '22023';

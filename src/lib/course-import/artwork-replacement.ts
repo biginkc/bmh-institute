@@ -69,6 +69,7 @@ export function buildImportedLessonArtworkReplacements(
       typeof approvedPath !== "string"
       || typeof replacementChecksum !== "string"
       || typeof replacementPath !== "string"
+      || approvedPath !== replacementPath
       || !replacementPath.includes(replacementChecksum)
     ) {
       throw new Error(`${assetKey} has incomplete replacement provenance in the import plan.`);
@@ -77,7 +78,7 @@ export function buildImportedLessonArtworkReplacements(
     replacements.push({
       lesson_id: operation.id,
       expected_thumbnail_asset_key: assetKey,
-      expected_thumbnail_approved_path: approvedPath,
+      expected_thumbnail_approved_path: approvedPath.replace(replacementChecksum, expectedChecksum),
       expected_thumbnail_approved_sha256: expectedChecksum,
       expected_thumbnail_path: replacementPath.replace(replacementChecksum, expectedChecksum),
       replacement_thumbnail_asset_key: assetKey,
