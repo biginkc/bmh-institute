@@ -229,6 +229,9 @@ export default async function DashboardPage() {
   const currentLessons = currentCourseId
     ? (lessonsByCourse.get(currentCourseId) ?? [])
     : [];
+  const programsWithMultipleCourses = programs.filter(
+    (program) => program.courses.length > 1,
+  );
 
   return (
     <main className="w-full flex-1 p-5 md:p-8 lg:p-10">
@@ -253,22 +256,30 @@ export default async function DashboardPage() {
             coverUrl={currentCourse?.thumbnailUrl}
           />
 
-          <div className="grid items-start gap-7 lg:grid-cols-[minmax(290px,0.9fr)_minmax(0,1.55fr)]">
-            <div className="flex flex-col gap-5">
-              {programs.map((program) => (
-                <ProgramRail
-                  key={program.id}
-                  program={program}
-                  currentCourseId={
-                    onboardingSummary.state === "complete"
-                      ? undefined
-                      : currentCourseId
-                  }
-                  progressByCourse={progressByCourse}
-                  trainingComplete={onboardingSummary.state === "complete"}
-                />
-              ))}
-            </div>
+          <div
+            className={`grid items-start gap-7 ${
+              programsWithMultipleCourses.length > 0
+                ? "lg:grid-cols-[minmax(290px,0.9fr)_minmax(0,1.55fr)]"
+                : ""
+            }`}
+          >
+            {programsWithMultipleCourses.length > 0 ? (
+              <div className="flex flex-col gap-5">
+                {programsWithMultipleCourses.map((program) => (
+                  <ProgramRail
+                    key={program.id}
+                    program={program}
+                    currentCourseId={
+                      onboardingSummary.state === "complete"
+                        ? undefined
+                        : currentCourseId
+                    }
+                    progressByCourse={progressByCourse}
+                    trainingComplete={onboardingSummary.state === "complete"}
+                  />
+                ))}
+              </div>
+            ) : null}
 
             <ContinueLearning
               courseId={currentCourseId}
