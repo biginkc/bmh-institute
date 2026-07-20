@@ -3,10 +3,10 @@ import { test, expect } from "@playwright/test";
 test("dashboard lists the signed-in user's training", async ({ page }) => {
   await page.goto("/dashboard");
   await expect(page.locator("main").getByRole("heading", { level: 1 })).toBeVisible();
-  // Either the program card is visible or the empty state is — both pass.
-  const programHit = page.getByText(/appointment setter onboarding/i);
-  const emptyHit = page.getByText(/no programs yet/i);
-  await expect(programHit.or(emptyHit).first()).toBeVisible();
+  // Either assigned course progress or the learner empty state is valid.
+  const courseHit = page.getByText(/course progress/i);
+  const emptyHit = page.getByText(/no training assigned yet/i);
+  await expect(courseHit.or(emptyHit).first()).toBeVisible();
 });
 
 test("header shows the signed-in email and a sign-out control", async ({

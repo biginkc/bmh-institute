@@ -354,6 +354,7 @@ export async function createProductionReadinessFixture(
     lesson_type: "quiz",
     quiz_id: quizId,
     is_required_for_completion: true,
+    prerequisite_lesson_id: contentLessonId,
     sort_order: 20,
   });
 
@@ -371,6 +372,7 @@ export async function createProductionReadinessFixture(
     lesson_type: "assignment",
     assignment_id: textAssignmentId,
     is_required_for_completion: true,
+    prerequisite_lesson_id: quizLessonId,
     sort_order: 30,
   });
 
@@ -388,6 +390,7 @@ export async function createProductionReadinessFixture(
     lesson_type: "assignment",
     assignment_id: fileAssignmentId,
     is_required_for_completion: true,
+    prerequisite_lesson_id: textAssignmentLessonId,
     sort_order: 40,
   });
 
@@ -735,6 +738,7 @@ export async function createProductionPilotDryRunFixture(
     lesson_type: "quiz",
     quiz_id: quizId,
     is_required_for_completion: true,
+    prerequisite_lesson_id: contentLessonId,
     sort_order: 20,
   });
 
@@ -752,6 +756,7 @@ export async function createProductionPilotDryRunFixture(
     lesson_type: "assignment",
     assignment_id: textAssignmentId,
     is_required_for_completion: true,
+    prerequisite_lesson_id: quizLessonId,
     sort_order: 30,
   });
 

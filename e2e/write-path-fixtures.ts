@@ -192,6 +192,7 @@ export async function createWritePathFixture(
     lesson_type: "quiz",
     quiz_id: quizId,
     is_required_for_completion: true,
+    prerequisite_lesson_id: contentLessonId,
     sort_order: 20,
   });
 
