@@ -1530,7 +1530,7 @@
       "mime_type": "application/pdf",
       "checksum_sha256": "1ea291e1190ba6f990407cff53160ef90c1acf787e5e66ed6686a2d9984d7c5d",
       "size_bytes": 50676,
-      "approval_status": "missing"
+      "approval_status": "approved"
     },
     {
       "source_key": "guide-slot-17",

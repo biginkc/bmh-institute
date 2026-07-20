@@ -1,8 +1,8 @@
 {
   "schema_version": "bmh-quiz-guide-review-index/v1",
-  "index_id": "bmh-employee-training-quiz-guide-review-2026-07-20-v2",
-  "status": "quiz_approved_guide_pending_human_decision",
-  "scope_note": "The quiz ledger records Jarrad's checksum-bound approval for all 19 quizbank pools. The separate Slot 16 guide decision remains pending. Neither state authorizes import, publication, or employee access.",
+  "index_id": "bmh-employee-training-quiz-guide-review-2026-07-20-v3",
+  "status": "quiz_and_guides_approved",
+  "scope_note": "The quiz ledger records Jarrad's checksum-bound approval for all 19 quizbank pools. The guide ledger records course-QA controller acceptance for all 19 learner guides including the regenerated Slot 16 guide. Neither approval authorizes import, publication, or employee access.",
   "quiz_review": {
     "status": "approved",
     "approved_by": "Jarrad Henry",
@@ -141,23 +141,22 @@
     "controller_follow_up": "No quiz approval action remains. Preserve the request and 19 exact approval records as the publication binding."
   },
   "guide_review": {
-    "status": "pending_course_qa_reacceptance",
-    "question": "Do you approve the changed Slot 16 learner guide for course-QA reacceptance?",
-    "exact_approval_response": "Approved guide: I reviewed the current Slot 16 learner guide bound to SHA-256 1ea291e1190ba6f990407cff53160ef90c1acf787e5e66ed6686a2d9984d7c5d and size 50676 bytes for course-QA reacceptance.",
-    "bare_approved_is_valid": false,
+    "status": "accepted",
+    "accepted_by": "codex-course-qa-controller",
+    "accepted_at": "2026-07-20T22:30:00Z",
+    "human_approval": false,
+    "evidence": "Re-issued for the regenerated slot-16 learner guide (policy/content update): deterministic rebuild verified for all 19 accessible learner guides via generate-guides.py --check; semantic tests passed (generate-guides.semantic.test.py, 2 tests OK); visual review of slot-16 PDF confirmed 2 pages, KPIs and Sales Telemetry title, no thin pages. Course QA controller acceptance, not Jarrad human approval.",
+    "ledger": {
+      "path": "docs/course-production/guide-approvals.json",
+      "records_sha256": "fb9ba09eeb42d0c3cf4e800426e817446384f8e2405082923f635110c7d8c42f",
+      "record_count": 19
+    },
     "current_file": {
       "source_key": "guide-slot-16",
       "path": "output/pdf/slot-16-learner-guide.pdf",
       "sha256": "1ea291e1190ba6f990407cff53160ef90c1acf787e5e66ed6686a2d9984d7c5d",
       "size_bytes": 50676
     },
-    "superseded_course_qa_record": {
-      "path": "docs/course-production/guide-approvals.json",
-      "sha256": "52fba6bfab15ec9b91cf5814b0ab2a04d03189387f96574056852fb778aeaae6",
-      "size_bytes": 50633,
-      "accepted_by": "codex-course-qa-controller",
-      "human_approval": false
-    },
-    "controller_follow_up": "After preserving the exact human response, rerun deterministic rebuild, semantic tests, and visual review; then rebuild and reaccept the complete 19-guide ledger. The response alone does not reaccept the guide."
+    "controller_follow_up": "No guide approval action remains. Preserve the complete 19-record guide ledger as the publication binding."
   }
 }

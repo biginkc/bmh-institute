@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 
 import {
   quizContentSha256,
+  validateGuideApprovalLedger,
   validateQuizApprovalLedger,
 } from "./build-manifest.mjs";
 
@@ -12,6 +13,7 @@ const ROOT = path.resolve(fileURLToPath(new URL("../..", import.meta.url)));
 const REQUEST_PATH = "docs/course-production/quiz-content-review-request.v1.json";
 const GUIDE_LEDGER_PATH = "docs/course-production/guide-approvals.json";
 const QUIZ_LEDGER_PATH = "docs/course-production/quiz-approvals.json";
+const DEFAULT_MANIFEST_PATH = "content/course-manifests/bmh-employee-training.v1.json";
 const OUTPUT_JSON_PATH = "docs/course-production/quiz-guide-review-index.v1.json";
 const OUTPUT_MARKDOWN_PATH = "docs/course-production/quiz-guide-review-index.v1.md";
 const GUIDE_SOURCE_KEY = "guide-slot-16";
@@ -37,8 +39,35 @@ function manifestQuizzes(manifest) {
     .map((lesson) => lesson.quiz);
 }
 
-function guideApprovalWording(guide) {
-  return `Approved guide: I reviewed the current Slot 16 learner guide bound to SHA-256 ${guide.checksum_sha256} and size ${guide.size_bytes} bytes for course-QA reacceptance.`;
+function validateGuideFileBinding(record, file) {
+  const errors = [];
+  if (!file) return [`Live ${record.source_key} guide file is missing`];
+  if (file.local_path !== record.local_path) errors.push(`Live ${record.source_key} guide path drifted`);
+  if (file.checksum_sha256 !== record.checksum_sha256) errors.push(`Live ${record.source_key} guide checksum drifted`);
+  if (file.size_bytes !== record.size_bytes) errors.push(`Live ${record.source_key} guide size drifted`);
+  return errors;
+}
+
+function validateGuideManifestBinding(record, { label, manifest }) {
+  const asset = manifest.assets.find((candidate) => candidate.source_key === record.source_key);
+  if (!asset) return [`${label} is missing ${record.source_key}`];
+  const errors = [];
+  if (asset.approval_status !== "approved") errors.push(`${label} ${record.source_key} is not approved`);
+  if (asset.local_path !== record.local_path) errors.push(`${label} ${record.source_key} path drifted`);
+  if (asset.checksum_sha256 !== record.checksum_sha256) errors.push(`${label} ${record.source_key} checksum drifted`);
+  if (asset.size_bytes !== record.size_bytes) errors.push(`${label} ${record.source_key} size drifted`);
+  return errors;
+}
+
+export function validateGuideManifestBindings({ guideLedger, manifests, guideFiles }) {
+  const filesBySourceKey = new Map(guideFiles.map((file) => [file.source_key, file]));
+  return guideLedger.records.flatMap((record) => {
+    const errors = validateGuideFileBinding(record, filesBySourceKey.get(record.source_key));
+    for (const manifest of manifests) {
+      errors.push(...validateGuideManifestBinding(record, manifest));
+    }
+    return errors;
+  });
 }
 
 export async function buildReviewIndex() {
@@ -50,11 +79,12 @@ export async function buildReviewIndex() {
   ]);
   const requestSha256 = sha256(requestBytes);
   const reviewPath = request.review_surface.path;
-  const [reviewBytes, guideBytes, guideStats, manifest] = await Promise.all([
+  const [reviewBytes, guideBytes, guideStats, manifest, defaultManifest] = await Promise.all([
     readFile(path.resolve(ROOT, reviewPath)),
     readFile(path.resolve(ROOT, GUIDE_PATH)),
     stat(path.resolve(ROOT, GUIDE_PATH)),
     readJson(request.scope.manifest_path),
+    readJson(DEFAULT_MANIFEST_PATH),
   ]);
   const quizzes = manifestQuizzes(manifest);
   const guide = {
@@ -62,11 +92,11 @@ export async function buildReviewIndex() {
     local_path: GUIDE_PATH,
     checksum_sha256: sha256(guideBytes),
     size_bytes: guideStats.size,
-    approval_status: "pending_course_qa_reacceptance",
   };
-  const oldGuideRecord = guideLedger.records.find(
+  const guideRecord = guideLedger.records.find(
     (record) => record.source_key === GUIDE_SOURCE_KEY,
   );
+  const guideApprovalErrors = validateGuideApprovalLedger(guideLedger);
   const quizApprovalErrors = await validateQuizApprovalLedger(quizLedger);
   const approvers = new Set(quizLedger.records.map((record) => record.approved_by));
   const approvalTimes = new Set(quizLedger.records.map((record) => record.approved_at));
@@ -105,18 +135,36 @@ export async function buildReviewIndex() {
     assert(approval.content_sha256 === quizContentSha256(quiz), `${quiz.source_key} content drifted from the approval ledger`);
     assert(quiz.approval_status === "approved", `${quiz.source_key} is not approved in the quizbank manifest`);
   }
-  assert(oldGuideRecord, "Existing Slot 16 guide acceptance record is missing");
-  assert(
-    oldGuideRecord.checksum_sha256 !== guide.checksum_sha256 ||
-      oldGuideRecord.size_bytes !== guide.size_bytes,
-    "Slot 16 guide already matches the existing course-QA acceptance record",
-  );
+  assert(guideApprovalErrors.length === 0, guideApprovalErrors.join("\n"));
+  assert(guideRecord, "Slot 16 guide acceptance record is missing");
+  assert(guideRecord.local_path === guide.local_path, "Slot 16 guide path drifted from the course-QA acceptance record");
+  assert(guideRecord.checksum_sha256 === guide.checksum_sha256, "Slot 16 guide checksum drifted from the course-QA acceptance record");
+  assert(guideRecord.size_bytes === guide.size_bytes, "Slot 16 guide size drifted from the course-QA acceptance record");
+  const guideFiles = await Promise.all(guideLedger.records.map(async (record) => {
+    const absolutePath = path.resolve(ROOT, record.local_path);
+    const [bytes, fileStats] = await Promise.all([readFile(absolutePath), stat(absolutePath)]);
+    return {
+      source_key: record.source_key,
+      local_path: record.local_path,
+      checksum_sha256: sha256(bytes),
+      size_bytes: fileStats.size,
+    };
+  }));
+  const guideBindingErrors = validateGuideManifestBindings({
+    guideLedger,
+    guideFiles,
+    manifests: [
+      { label: "Quizbank manifest", manifest },
+      { label: "Default manifest", manifest: defaultManifest },
+    ],
+  });
+  assert(guideBindingErrors.length === 0, guideBindingErrors.join("\n"));
 
   return {
     schema_version: "bmh-quiz-guide-review-index/v1",
-    index_id: "bmh-employee-training-quiz-guide-review-2026-07-20-v2",
-    status: "quiz_approved_guide_pending_human_decision",
-    scope_note: "The quiz ledger records Jarrad's checksum-bound approval for all 19 quizbank pools. The separate Slot 16 guide decision remains pending. Neither state authorizes import, publication, or employee access.",
+    index_id: "bmh-employee-training-quiz-guide-review-2026-07-20-v3",
+    status: "quiz_and_guides_approved",
+    scope_note: "The quiz ledger records Jarrad's checksum-bound approval for all 19 quizbank pools. The guide ledger records course-QA controller acceptance for all 19 learner guides including the regenerated Slot 16 guide. Neither approval authorizes import, publication, or employee access.",
     quiz_review: {
       status: "approved",
       approved_by: [...approvers][0],
@@ -143,24 +191,23 @@ export async function buildReviewIndex() {
       controller_follow_up: "No quiz approval action remains. Preserve the request and 19 exact approval records as the publication binding.",
     },
     guide_review: {
-      status: guide.approval_status,
-      question: "Do you approve the changed Slot 16 learner guide for course-QA reacceptance?",
-      exact_approval_response: guideApprovalWording(guide),
-      bare_approved_is_valid: false,
+      status: "accepted",
+      accepted_by: guideLedger.acceptance.accepted_by,
+      accepted_at: guideLedger.acceptance.accepted_at,
+      human_approval: guideLedger.acceptance.human_approval,
+      evidence: guideLedger.acceptance.evidence,
+      ledger: {
+        path: GUIDE_LEDGER_PATH,
+        records_sha256: guideLedger.acceptance.records_sha256,
+        record_count: guideLedger.records.length,
+      },
       current_file: {
         source_key: guide.source_key,
         path: guide.local_path,
         sha256: guide.checksum_sha256,
         size_bytes: guide.size_bytes,
       },
-      superseded_course_qa_record: {
-        path: GUIDE_LEDGER_PATH,
-        sha256: oldGuideRecord.checksum_sha256,
-        size_bytes: oldGuideRecord.size_bytes,
-        accepted_by: guideLedger.acceptance.accepted_by,
-        human_approval: guideLedger.acceptance.human_approval,
-      },
-      controller_follow_up: "After preserving the exact human response, rerun deterministic rebuild, semantic tests, and visual review; then rebuild and reaccept the complete 19-guide ledger. The response alone does not reaccept the guide.",
+      controller_follow_up: "No guide approval action remains. Preserve the complete 19-record guide ledger as the publication binding.",
     },
   };
 }
@@ -169,9 +216,9 @@ export function renderReviewIndex(index) {
   const lines = [
     "# BMH Institute quiz and Slot 16 guide review",
     "",
-    "Status: **quizbank approved; separate Slot 16 guide decision still required**.",
+    "Status: **quizbank and all 19 learner guides approved**.",
     "",
-    "> Jarrad's quiz approval is recorded in the checksum-bound ledger. It does not approve the changed Slot 16 guide.",
+    "> Jarrad's quiz approval and the course-QA guide acceptance are separate checksum-bound records.",
     "",
     "## 1. Quiz pools: approved",
     "",
@@ -191,22 +238,21 @@ export function renderReviewIndex(index) {
       (quiz) => `| \`${quiz.quiz_source_key}\` | ${quiz.question_count} | \`${quiz.content_sha256}\` | ${quiz.approval_status} |`,
     ),
     "",
-    "## 2. Changed Slot 16 learner guide",
+    "## 2. Slot 16 learner guide: course-QA accepted",
     "",
     `[Open the current Slot 16 learner guide](../../${index.guide_review.current_file.path})`,
     "",
     `- Current SHA-256: \`${index.guide_review.current_file.sha256}\``,
     `- Current size: ${index.guide_review.current_file.size_bytes} bytes`,
-    `- Superseded course-QA record SHA-256: \`${index.guide_review.superseded_course_qa_record.sha256}\``,
-    `- Superseded size: ${index.guide_review.superseded_course_qa_record.size_bytes} bytes`,
+    `- Guide ledger: [${path.basename(index.guide_review.ledger.path)}](./${path.basename(index.guide_review.ledger.path)})`,
+    `- Ordered guide records SHA-256: \`${index.guide_review.ledger.records_sha256}\``,
+    `- Guide records: ${index.guide_review.ledger.record_count}`,
+    `- Accepted by: ${index.guide_review.accepted_by}`,
+    `- Accepted at: ${index.guide_review.accepted_at}`,
+    `- Human approval: ${index.guide_review.human_approval}`,
+    `- Evidence: ${index.guide_review.evidence}`,
     "",
-    "The current PDF differs from the accepted course-QA record. Human approval permits the controller to perform reacceptance checks; it does not itself rewrite the guide ledger.",
-    "",
-    `**Question:** ${index.guide_review.question}`,
-    "",
-    "If approved, respond exactly:",
-    "",
-    `> ${index.guide_review.exact_approval_response}`,
+    "The current PDF matches the Slot 16 record in the accepted guide ledger. The ledger acceptance is bound to the exact ordered set of all 19 guide records.",
     "",
     "## What the controller does next",
     "",

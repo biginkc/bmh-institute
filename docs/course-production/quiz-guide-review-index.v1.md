@@ -1,8 +1,8 @@
 # BMH Institute quiz and Slot 16 guide review
 
-Status: **quizbank approved; separate Slot 16 guide decision still required**.
+Status: **quizbank and all 19 learner guides approved**.
 
-> Jarrad's quiz approval is recorded in the checksum-bound ledger. It does not approve the changed Slot 16 guide.
+> Jarrad's quiz approval and the course-QA guide acceptance are separate checksum-bound records.
 
 ## 1. Quiz pools: approved
 
@@ -38,25 +38,24 @@ Status: **quizbank approved; separate Slot 16 guide decision still required**.
 | `quiz-slot-18` | 36 | `21b86b46ff63e3be37d4e16c88e1e1aaed96973f4442fb9e61042ca2dc848e4d` | approved |
 | `quiz-slot-19` | 47 | `0f52e746349e5b7a8ca8087a57ec284296004c69a5a5003d258b5c871b82ad89` | approved |
 
-## 2. Changed Slot 16 learner guide
+## 2. Slot 16 learner guide: course-QA accepted
 
 [Open the current Slot 16 learner guide](../../output/pdf/slot-16-learner-guide.pdf)
 
 - Current SHA-256: `1ea291e1190ba6f990407cff53160ef90c1acf787e5e66ed6686a2d9984d7c5d`
 - Current size: 50676 bytes
-- Superseded course-QA record SHA-256: `52fba6bfab15ec9b91cf5814b0ab2a04d03189387f96574056852fb778aeaae6`
-- Superseded size: 50633 bytes
+- Guide ledger: [guide-approvals.json](./guide-approvals.json)
+- Ordered guide records SHA-256: `fb9ba09eeb42d0c3cf4e800426e817446384f8e2405082923f635110c7d8c42f`
+- Guide records: 19
+- Accepted by: codex-course-qa-controller
+- Accepted at: 2026-07-20T22:30:00Z
+- Human approval: false
+- Evidence: Re-issued for the regenerated slot-16 learner guide (policy/content update): deterministic rebuild verified for all 19 accessible learner guides via generate-guides.py --check; semantic tests passed (generate-guides.semantic.test.py, 2 tests OK); visual review of slot-16 PDF confirmed 2 pages, KPIs and Sales Telemetry title, no thin pages. Course QA controller acceptance, not Jarrad human approval.
 
-The current PDF differs from the accepted course-QA record. Human approval permits the controller to perform reacceptance checks; it does not itself rewrite the guide ledger.
-
-**Question:** Do you approve the changed Slot 16 learner guide for course-QA reacceptance?
-
-If approved, respond exactly:
-
-> Approved guide: I reviewed the current Slot 16 learner guide bound to SHA-256 1ea291e1190ba6f990407cff53160ef90c1acf787e5e66ed6686a2d9984d7c5d and size 50676 bytes for course-QA reacceptance.
+The current PDF matches the Slot 16 record in the accepted guide ledger. The ledger acceptance is bound to the exact ordered set of all 19 guide records.
 
 ## What the controller does next
 
 - Quizzes: No quiz approval action remains. Preserve the request and 19 exact approval records as the publication binding.
-- Guide: After preserving the exact human response, rerun deterministic rebuild, semantic tests, and visual review; then rebuild and reaccept the complete 19-guide ledger. The response alone does not reaccept the guide.
+- Guide: No guide approval action remains. Preserve the complete 19-record guide ledger as the publication binding.
 - Neither decision authorizes course import, publication, or employee access.

@@ -22,6 +22,8 @@ const DEFAULT_MANIFEST_PATH = resolve(import.meta.dirname, "bmh-employee-trainin
 const REQUEST_PATH = resolve(ROOT, "docs/course-production/quiz-content-review-request.v1.json");
 const LEDGER_PATH = resolve(ROOT, "docs/course-production/quiz-approvals.json");
 const REVIEW_PATH = resolve(ROOT, "docs/course-production/quiz-content-review.quizbank.v1.md");
+const ACCEPTED_SLOT_16_GUIDE_SHA256 = "1ea291e1190ba6f990407cff53160ef90c1acf787e5e66ed6686a2d9984d7c5d";
+const ACCEPTED_SLOT_16_GUIDE_SIZE = 50676;
 
 function manifestQuizzes(manifest) {
   return manifest.program.courses
@@ -31,7 +33,7 @@ function manifestQuizzes(manifest) {
     .map((lesson) => lesson.quiz);
 }
 
-test("quiz review request binds all 19 exact quizbank pools and approvals", async () => {
+test("quiz review request binds all 19 exact pools while the reaccepted Slot 16 guide stays approved", async () => {
   const [manifest, request, ledger, requestBytes, review] = await Promise.all([
     readFile(MANIFEST_PATH, "utf8").then(JSON.parse),
     readFile(REQUEST_PATH, "utf8").then(JSON.parse),
@@ -45,7 +47,9 @@ test("quiz review request binds all 19 exact quizbank pools and approvals", asyn
   assert.equal(manifest.status, "draft");
   assert.equal(manifest.program.is_published, false);
   assert.ok(manifest.program.courses.every((course) => course.is_published === false));
-  assert.equal(slot16Guide.approval_status, "missing");
+  assert.equal(slot16Guide.approval_status, "approved");
+  assert.equal(slot16Guide.checksum_sha256, ACCEPTED_SLOT_16_GUIDE_SHA256);
+  assert.equal(slot16Guide.size_bytes, ACCEPTED_SLOT_16_GUIDE_SIZE);
   assert.equal(request.request_id, "bmh-employee-training-quiz-review-2026-07-20-quizbank-v1");
   assert.equal(request.created_at, "2026-07-20T21:00:00Z");
   assert.equal(request.status, "pending_human_review");
