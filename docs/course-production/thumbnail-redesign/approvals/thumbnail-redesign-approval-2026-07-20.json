@@ -1,0 +1,160 @@
+{
+  "schema_version": "bmh-thumbnail-redesign-approval/v1",
+  "decision": "approved",
+  "approver": "Jarrad Henry",
+  "approved_at": "2026-07-20T10:41:02.000Z",
+  "response_text": "Okay you have my approval for the thumbnails Go ahead and get them iInto the application",
+  "assignment_policy": "assignments-remain-thumbnail-free",
+  "review_surface": {
+    "status_at_review": "15-approved-6-drafts-4-assignments-not-required",
+    "files": [
+      {
+        "path": "docs/course-production/thumbnail-redesign/approvals/preapproval-review-index-2026-07-20.json",
+        "sha256": "fd6e99d794774f4ec6e2f1d6ae0508e046c443aac8ff2d934cee539bd63d2220"
+      },
+      {
+        "path": "docs/course-production/thumbnail-redesign/approvals/preapproval-review-evidence-2026-07-20.json",
+        "sha256": "89a305fee85f4271fda46f9190f40de932855fb4aa871579efce3717863c7b6a"
+      },
+      {
+        "path": "docs/course-production/thumbnail-redesign/approvals/preapproval-review-board-2026-07-20.png",
+        "sha256": "e191bd449adaa9c49857a351e1ce55fa16d49cffa3d8b40d770d88eca2d8d455"
+      }
+    ]
+  },
+  "assets": [
+    {
+      "visible_order": 1,
+      "title": "Welcome and Mindset",
+      "asset_key": "thumbnail-slot-01",
+      "source_path": "docs/course-production/thumbnail-redesign/assets/01-welcome-and-mindset.png",
+      "source_sha256": "fbd7b0bb0898f112b130b8c1c5b19fb79a88e65fc60c4ed6d007f0163ded9a98"
+    },
+    {
+      "visible_order": 2,
+      "title": "Real Estate Terms Glossary",
+      "asset_key": "thumbnail-slot-02",
+      "source_path": "docs/course-production/thumbnail-redesign/assets/02-real-estate-terms-glossary.png",
+      "source_sha256": "16995b6118cb52e19f3eaab726d91494c5c6ef49665839a13c5a813c0bf1eca2"
+    },
+    {
+      "visible_order": 3,
+      "title": "Tech Stack and Systems",
+      "asset_key": "thumbnail-slot-03",
+      "source_path": "docs/course-production/thumbnail-redesign/assets/03-tech-stack-and-systems.png",
+      "source_sha256": "2b340995fe2c511ce4e262d6f7841f6418f38ff0bce4ce7db808ad428e978983"
+    },
+    {
+      "visible_order": 5,
+      "title": "Humanizing the Lead",
+      "asset_key": "thumbnail-slot-04",
+      "source_path": "docs/course-production/thumbnail-redesign/assets/05-humanizing-the-lead.png",
+      "source_sha256": "78c61095e58d8a3138b7ff21feba835f677cabd6f48cdd67e5c653ffd9a6defe"
+    },
+    {
+      "visible_order": 6,
+      "title": "The BMH Offer Playbook",
+      "asset_key": "thumbnail-slot-05",
+      "source_path": "docs/course-production/thumbnail-redesign/assets/06-the-bmh-offer-playbook.png",
+      "source_sha256": "f24da48daee7c57a6e2d634b7be94e88c28e325e076b4af31cffb4a2928cb794"
+    },
+    {
+      "visible_order": 8,
+      "title": "Sales Pipeline and Stage Ownership",
+      "asset_key": "thumbnail-slot-06",
+      "source_path": "docs/course-production/thumbnail-redesign/assets/08-sales-pipeline-and-stage-ownership.png",
+      "source_sha256": "1743eeaa5e06770a3c9a0b4eab9f50e6ee67f8c4b0026e06937160822f10b6d2"
+    },
+    {
+      "visible_order": 9,
+      "title": "Opening the Call",
+      "asset_key": "thumbnail-slot-07",
+      "source_path": "docs/course-production/thumbnail-redesign/assets/09-opening-the-call.png",
+      "source_sha256": "50fa72f36833ca707094e8ef5628df1dc67e798645c46a7d5dc93bd3189bf02f"
+    },
+    {
+      "visible_order": 10,
+      "title": "Discovery and Handoff",
+      "asset_key": "thumbnail-slot-08",
+      "source_path": "docs/course-production/thumbnail-redesign/assets/10-discovery-and-handoff.png",
+      "source_sha256": "4ea77075f1c461b5cc69a86b2db6916cfe420cf8663b5d02970fa862384ea898"
+    },
+    {
+      "visible_order": 12,
+      "title": "Objection Architecture",
+      "asset_key": "thumbnail-slot-09",
+      "source_path": "docs/course-production/thumbnail-redesign/assets/12-objection-architecture.png",
+      "source_sha256": "0a851dfb58e402b0582a0fb914839890a595d3f3c945960155d372b3605a428a"
+    },
+    {
+      "visible_order": 13,
+      "title": "Objection Scripts Playbook",
+      "asset_key": "thumbnail-slot-10",
+      "source_path": "docs/course-production/thumbnail-redesign/assets/13-objection-scripts-playbook.png",
+      "source_sha256": "d0cb16888b29fbb5b4353e996473b7d079326bb520fcf620dc8b5f08516fb08a"
+    },
+    {
+      "visible_order": 14,
+      "title": "Complex Objections",
+      "asset_key": "thumbnail-slot-11",
+      "source_path": "docs/course-production/thumbnail-redesign/assets/14-complex-objections.png",
+      "source_sha256": "88a90131a615d8eee2510099fea9724d64cdad506de72a4fab612f4424d19c85"
+    },
+    {
+      "visible_order": 15,
+      "title": "Seller FAQ Decoder",
+      "asset_key": "thumbnail-slot-12",
+      "source_path": "docs/course-production/thumbnail-redesign/assets/15-seller-faq-decoder.png",
+      "source_sha256": "f296f5564e3f9fa9ec49b29b06c3b0f855ecb1660b78cf4c621bf82601dc841e"
+    },
+    {
+      "visible_order": 17,
+      "title": "Follow-Up Cadence",
+      "asset_key": "thumbnail-slot-13",
+      "source_path": "docs/course-production/thumbnail-redesign/assets/17-follow-up-cadence.png",
+      "source_sha256": "a874d10c26a94488cc6b8e5f1f4c786230ee0f371ea49e5e61a45f80e851d13d"
+    },
+    {
+      "visible_order": 18,
+      "title": "Conversation Flow Mastery",
+      "asset_key": "thumbnail-slot-14",
+      "source_path": "docs/course-production/thumbnail-redesign/assets/18-conversation-flow-mastery-draft-v1.png",
+      "source_sha256": "91b93c4e49c03056bc54432d39593f5ef1363826c40795dd665bef3428d66328"
+    },
+    {
+      "visible_order": 19,
+      "title": "Closing and Deal Engineering",
+      "asset_key": "thumbnail-slot-15",
+      "source_path": "docs/course-production/thumbnail-redesign/assets/19-closing-and-deal-engineering-draft-v1.png",
+      "source_sha256": "52d12f2a2c0d5f1fca3925c8381506762ee1b07e362b39910ce43d75539a3693"
+    },
+    {
+      "visible_order": 21,
+      "title": "KPIs and Sales Telemetry",
+      "asset_key": "thumbnail-slot-16",
+      "source_path": "docs/course-production/thumbnail-redesign/assets/21-kpis-and-sales-telemetry-draft-v1.png",
+      "source_sha256": "a31923e27595814e2043efe87c10aa136adb0aec87ee631244a82e66fee0d7fb"
+    },
+    {
+      "visible_order": 22,
+      "title": "Compensation Engine",
+      "asset_key": "thumbnail-slot-17",
+      "source_path": "docs/course-production/thumbnail-redesign/assets/22-compensation-engine-draft-v1.png",
+      "source_sha256": "582cc7f3da9089c0cf0e3d4b7dde1200cbe2fa5f07fcc8e53914e97bb43b9abf"
+    },
+    {
+      "visible_order": 23,
+      "title": "Operator Playbook and Daily Mission Control",
+      "asset_key": "thumbnail-slot-18",
+      "source_path": "docs/course-production/thumbnail-redesign/assets/23-operator-playbook-mission-control-draft-v1.png",
+      "source_sha256": "37482821b34882503849b2c535ead7ef4c17eb818a62f759dc3c963095c0361c"
+    },
+    {
+      "visible_order": 24,
+      "title": "Career Growth Path",
+      "asset_key": "thumbnail-slot-19",
+      "source_path": "docs/course-production/thumbnail-redesign/assets/24-career-growth-path-draft-v1.png",
+      "source_sha256": "601f5090217d085310ffeba508a01034c2a97dd262ca9a955985223ea7446bf7"
+    }
+  ]
+}

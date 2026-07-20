@@ -1,0 +1,41 @@
+{
+  "schema_version": "bmh-thumbnail-redesign-review/v1",
+  "course": "BMH Employee Training",
+  "review_date": "2026-07-20",
+  "status": "partial",
+  "production_promotion": false,
+  "summary": {
+    "total": 25,
+    "approved": 15,
+    "draft": 6,
+    "pending": 0,
+    "not_required": 4
+  },
+  "items": [
+    { "visible_order": 1, "title": "Welcome and Mindset", "kind": "content", "binding": "thumbnail-slot-01", "status": "approved", "asset": "assets/01-welcome-and-mindset.png" },
+    { "visible_order": 2, "title": "Real Estate Terms Glossary", "kind": "content", "binding": "thumbnail-slot-02", "status": "approved", "asset": "assets/02-real-estate-terms-glossary.png" },
+    { "visible_order": 3, "title": "Tech Stack and Systems", "kind": "content", "binding": "thumbnail-slot-03", "status": "approved", "asset": "assets/03-tech-stack-and-systems.png" },
+    { "visible_order": 4, "title": "Orientation Readiness Check", "kind": "assignment", "binding": "lesson-assignment-section-1", "status": "approved", "asset": "assets/04-orientation-readiness-check.png" },
+    { "visible_order": 5, "title": "Humanizing the Lead", "kind": "content", "binding": "thumbnail-slot-04", "status": "approved", "asset": "assets/05-humanizing-the-lead.png" },
+    { "visible_order": 6, "title": "The BMH Offer Playbook", "kind": "content", "binding": "thumbnail-slot-05", "status": "approved", "asset": "assets/06-the-bmh-offer-playbook.png" },
+    { "visible_order": 7, "title": "Seller and Offer Fit Analysis", "kind": "assignment", "binding": "lesson-assignment-section-2", "status": "approved", "asset": "assets/07-seller-and-offer-fit-analysis.png" },
+    { "visible_order": 8, "title": "Sales Pipeline and Stage Ownership", "kind": "content", "binding": "thumbnail-slot-06", "status": "approved", "asset": "assets/08-sales-pipeline-and-stage-ownership.png" },
+    { "visible_order": 9, "title": "Opening the Call", "kind": "content", "binding": "thumbnail-slot-07", "status": "approved", "asset": "assets/09-opening-the-call.png" },
+    { "visible_order": 10, "title": "Discovery and Handoff", "kind": "content", "binding": "thumbnail-slot-08", "status": "approved", "asset": "assets/10-discovery-and-handoff.png" },
+    { "visible_order": 11, "title": "Conversation and Handoff Plan", "kind": "assignment", "binding": "lesson-assignment-section-3", "status": "not_required", "asset": null },
+    { "visible_order": 12, "title": "Objection Architecture", "kind": "content", "binding": "thumbnail-slot-09", "status": "approved", "asset": "assets/12-objection-architecture.png" },
+    { "visible_order": 13, "title": "Objection Scripts Playbook", "kind": "content", "binding": "thumbnail-slot-10", "status": "approved", "asset": "assets/13-objection-scripts-playbook.png" },
+    { "visible_order": 14, "title": "Complex Objections", "kind": "content", "binding": "thumbnail-slot-11", "status": "approved", "asset": "assets/14-complex-objections.png" },
+    { "visible_order": 15, "title": "Seller FAQ Decoder", "kind": "content", "binding": "thumbnail-slot-12", "status": "approved", "asset": "assets/15-seller-faq-decoder.png" },
+    { "visible_order": 16, "title": "Objection Response Plan", "kind": "assignment", "binding": "lesson-assignment-section-4", "status": "not_required", "asset": null },
+    { "visible_order": 17, "title": "Follow-Up Cadence", "kind": "content", "binding": "thumbnail-slot-13", "status": "approved", "asset": "assets/17-follow-up-cadence.png" },
+    { "visible_order": 18, "title": "Conversation Flow Mastery", "kind": "content", "binding": "thumbnail-slot-14", "status": "draft", "asset": "assets/18-conversation-flow-mastery-draft-v1.png" },
+    { "visible_order": 19, "title": "Closing and Deal Engineering", "kind": "content", "binding": "thumbnail-slot-15", "status": "draft", "asset": "assets/19-closing-and-deal-engineering-draft-v1.png" },
+    { "visible_order": 20, "title": "Follow-Up and Closing Plan", "kind": "assignment", "binding": "lesson-assignment-section-5", "status": "not_required", "asset": null },
+    { "visible_order": 21, "title": "KPIs and Sales Telemetry", "kind": "content", "binding": "thumbnail-slot-16", "status": "draft", "asset": "assets/21-kpis-and-sales-telemetry-draft-v1.png" },
+    { "visible_order": 22, "title": "Compensation Engine", "kind": "content", "binding": "thumbnail-slot-17", "status": "draft", "asset": "assets/22-compensation-engine-draft-v1.png" },
+    { "visible_order": 23, "title": "Operator Playbook and Daily Mission Control", "kind": "content", "binding": "thumbnail-slot-18", "status": "draft", "asset": "assets/23-operator-playbook-mission-control-draft-v1.png" },
+    { "visible_order": 24, "title": "Career Growth Path", "kind": "content", "binding": "thumbnail-slot-19", "status": "draft", "asset": "assets/24-career-growth-path-draft-v1.png" },
+    { "visible_order": 25, "title": "Mission Control and Growth Capstone", "kind": "assignment", "binding": "lesson-assignment-section-6", "status": "not_required", "asset": null }
+  ]
+}

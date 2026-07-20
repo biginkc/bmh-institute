@@ -63,4 +63,21 @@ describe("LearnerCourseBrowser", () => {
 
     expect(screen.getAllByText("Module 1")).toHaveLength(2);
   });
+
+  it("shows approved artwork as a full thumbnail panel for content lessons only", () => {
+    const outline = learnerOutlineFixture(4);
+    outline.tiles[0].thumbnailUrl = "https://assets.example/welcome.webp";
+    outline.tiles[3].thumbnailUrl = "https://assets.example/assignment.webp";
+
+    render(React.createElement(LearnerCourseBrowser, {
+      outline,
+      page: 1,
+      pageHref: "/dashboard",
+    }));
+
+    const thumbnail = screen.getByRole("img", { name: "Topic 1 thumbnail" });
+    expect(thumbnail.getAttribute("src")).toBe("https://assets.example/welcome.webp");
+    expect(thumbnail.parentElement?.className).toContain("aspect-[16/10]");
+    expect(screen.queryByRole("img", { name: "Assignment 4 thumbnail" })).toBeNull();
+  });
 });

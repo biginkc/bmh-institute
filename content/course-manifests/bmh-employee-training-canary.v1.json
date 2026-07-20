@@ -52,10 +52,10 @@
       "source_key": "thumbnail-slot-03",
       "kind": "image",
       "local_path": "course-assets/thumbnails/slot-03.webp",
-      "storage_path": "courses/bmh-employee-training-canary/v1/thumbnails/slot-03-f89052943fd149d23d9712be8cb2d50031484eb08c76865726360cd08a2281f9.webp",
+      "storage_path": "courses/bmh-employee-training-canary/v1/thumbnails/slot-03-d3ec20abbd97be7aa00bd076a6140c2b52e314fe391270f2a6369297242b0239.webp",
       "mime_type": "image/webp",
-      "checksum_sha256": "f89052943fd149d23d9712be8cb2d50031484eb08c76865726360cd08a2281f9",
-      "size_bytes": 14260,
+      "checksum_sha256": "d3ec20abbd97be7aa00bd076a6140c2b52e314fe391270f2a6369297242b0239",
+      "size_bytes": 93714,
       "approval_status": "approved"
     },
     {
