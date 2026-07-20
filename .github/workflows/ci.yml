@@ -78,6 +78,17 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Stage approved thumbnail into the isolated canary
+        if: github.event_name == 'pull_request' && github.head_ref == 'codex/institute-approved-thumbnails-partial'
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.TEST_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.TEST_SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          CANARY_STATE_ROOT="$(mktemp -d)"
+          npm run course:import -- upload content/course-manifests/bmh-employee-training-canary.v1.json --canary --execute --source-root=. --state-root="$CANARY_STATE_ROOT"
+          npm run course:import -- apply content/course-manifests/bmh-employee-training-canary.v1.json --canary --execute --state-root="$CANARY_STATE_ROOT"
+          npx tsx -e 'import { createClient } from "@supabase/supabase-js"; import { assertCourseImportEnvironment } from "./src/lib/course-import/environment"; void (async () => { const url = process.env.NEXT_PUBLIC_SUPABASE_URL!; assertCourseImportEnvironment(url, false); const client = createClient(url, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false, autoRefreshToken: false } }); const stale = "courses/bmh-employee-training-canary/v1/thumbnails/slot-03-f89052943fd149d23d9712be8cb2d50031484eb08c76865726360cd08a2281f9.webp"; const { error } = await client.storage.from("content").remove([stale]); if (error) throw error; })();'
+
       - name: Verify Tech Stack canary has no remote drift
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.TEST_SUPABASE_URL }}
