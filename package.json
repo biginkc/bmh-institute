@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "course:artwork:replace": "tsx scripts/course-content/replace-imported-lesson-artwork.ts",
     "dev": "next dev --webpack -p 3100",
     "build": "next build",
     "start": "next start -p 3100",
@@ -17,7 +18,7 @@
     "test:prod:readiness": "playwright test --config playwright.prod-readiness.config.ts",
     "test:prod:dryrun": "playwright test --config playwright.prod-dryrun.config.ts",
     "test:course-content": "node --test content/course-manifests/*.qa.test.mjs && python3 scripts/course-content/generate-approved-captions.test.py && uv run --with reportlab==4.4.9 --with pypdf==6.8.0 python scripts/course-content/generate-guides.semantic.test.py && uv run --with reportlab==4.4.9 --with pypdf==6.8.0 python scripts/course-content/generate-guides.py --check",
-    "test:artwork-production": "node --test docs/course-production/thumbnail-pilots/qa/master-review/build-master-review.test.mjs scripts/course-content/artwork-production-workflow.test.mjs",
+    "test:artwork-production": "node --test docs/course-production/thumbnail-pilots/qa/master-review/build-master-review.test.mjs scripts/course-content/artwork-production-workflow.test.mjs scripts/course-content/promote-thumbnail-redesign.test.mjs",
     "artwork:video-stills": "node scripts/course-content/build-artwork-video-contact-sheets.mjs",
     "artwork:production": "node scripts/course-content/artwork-production.mjs",
     "artwork:redesign-review": "node scripts/course-content/build-thumbnail-redesign-review.mjs --check",

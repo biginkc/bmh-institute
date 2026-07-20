@@ -266,7 +266,7 @@ export async function writeJsonAtomicCreateOrExact(filePath, value, { root = nul
   }
 }
 
-async function writeBufferAtomic(filePath, buffer, root) {
+export async function writeBufferAtomic(filePath, buffer, root) {
   await prepareSafeWriteParent(root, filePath);
   const temporary = path.join(path.dirname(filePath), `.${path.basename(filePath)}.${process.pid}.${randomUUID()}.tmp`);
   const handle = await open(temporary, "wx", 0o600);

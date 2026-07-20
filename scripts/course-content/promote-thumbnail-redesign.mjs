@@ -1,5 +1,5 @@
-import { createHash, randomUUID } from "node:crypto";
-import { lstat, mkdir, readFile, rename, writeFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
+import { lstat, readFile, rm } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -11,6 +11,7 @@ import {
   resolveRepoPath,
   validateLedger,
   withWorkflowLock,
+  writeBufferAtomic,
 } from "./artwork-production-workflow.mjs";
 
 const ROOT = path.resolve(fileURLToPath(new URL("../..", import.meta.url)));
@@ -23,9 +24,12 @@ const CANARY_MANIFEST_PATH = "content/course-manifests/bmh-employee-training-can
 const RESPONSE_TEXT = "Okay you have my approval for the thumbnails Go ahead and get them iInto the application";
 const ASSIGNMENT_POLICY = "assignments-remain-thumbnail-free";
 const DISPLAY_WEBP_QUALITY = 90;
+const TRANSACTION_ROOT = "course-assets/thumbnails/.redesign-promotion-transaction";
+const TRANSACTION_JOURNAL = `${TRANSACTION_ROOT}/journal.json`;
 
 const sha256 = (value) => createHash("sha256").update(value).digest("hex");
-const absolute = (relative) => resolveRepoPath(ROOT, relative);
+const absoluteAt = (root, relative) => resolveRepoPath(root, relative);
+const absolute = (relative) => absoluteAt(ROOT, relative);
 const storagePath = (base, checksum) => {
   const extension = path.posix.extname(base);
   return `${base.slice(0, -extension.length)}-${checksum}${extension}`;
@@ -35,20 +39,87 @@ async function readJson(relative) {
   return JSON.parse(await readFile(absolute(relative), "utf8"));
 }
 
-async function writeAtomic(relative, contents) {
-  const target = absolute(relative);
-  await mkdir(path.dirname(target), { recursive: true });
-  const temporary = `${target}.${randomUUID()}.tmp`;
-  await writeFile(temporary, contents);
-  await rename(temporary, target);
+async function writeAtomicAt(root, relative, contents) {
+  await writeBufferAtomic(absoluteAt(root, relative), contents, root);
 }
 
-async function exactFileRecord(relative) {
-  const target = absolute(relative);
+async function writeAtomic(relative, contents) {
+  await writeAtomicAt(ROOT, relative, contents);
+}
+
+async function exactFileRecordAt(root, relative) {
+  const target = absoluteAt(root, relative);
   const info = await lstat(target);
   if (!info.isFile() || info.isSymbolicLink()) throw new Error(`Expected regular file: ${relative}`);
   const contents = await readFile(target);
   return { contents, sha256: sha256(contents), size: contents.length };
+}
+
+async function exactFileRecord(relative) {
+  return exactFileRecordAt(ROOT, relative);
+}
+
+function assertTransactionTarget(relative) {
+  if (
+    relative === DEFAULT_PATHS.ledger ||
+    relative === DEFAULT_PATHS.manifest ||
+    relative === CANARY_MANIFEST_PATH ||
+    /^course-assets\/thumbnails\/slot-(?:0[1-9]|1[0-9])\.webp$/.test(relative)
+  ) return relative;
+  throw new Error(`Thumbnail promotion transaction target is not allowed: ${relative}`);
+}
+
+export async function recoverPendingTransaction({ root = ROOT, failAfterWrites = null } = {}) {
+  const journalBytes = await readFile(absoluteAt(root, TRANSACTION_JOURNAL)).catch((error) =>
+    error?.code === "ENOENT" ? null : Promise.reject(error));
+  if (!journalBytes) return false;
+  const journal = JSON.parse(journalBytes.toString("utf8"));
+  if (journal.schema_version !== "bmh-thumbnail-redesign-transaction/v1" || !Array.isArray(journal.writes) || journal.writes.length === 0) {
+    throw new Error("Thumbnail promotion transaction journal is invalid");
+  }
+  const targets = new Set();
+  let completedWrites = 0;
+  for (const [index, item] of journal.writes.entries()) {
+    const target = assertTransactionTarget(item.target);
+    if (targets.has(target)) throw new Error(`Duplicate thumbnail promotion transaction target: ${target}`);
+    targets.add(target);
+    if (!/^[a-f0-9]{64}$/.test(item.before_sha256) || !/^[a-f0-9]{64}$/.test(item.after_sha256)) {
+      throw new Error(`Thumbnail promotion transaction checksum is invalid: ${target}`);
+    }
+    const stagedPath = `${TRANSACTION_ROOT}/staged-${String(index + 1).padStart(2, "0")}.bin`;
+    const staged = await exactFileRecordAt(root, stagedPath);
+    if (staged.sha256 !== item.after_sha256) throw new Error(`Thumbnail promotion staged bytes drifted: ${target}`);
+    const current = await exactFileRecordAt(root, target);
+    if (current.sha256 === item.after_sha256) continue;
+    if (current.sha256 !== item.before_sha256) throw new Error(`Thumbnail promotion recovery found unexpected canonical bytes: ${target}`);
+    await writeAtomicAt(root, target, staged.contents);
+    completedWrites += 1;
+    if (failAfterWrites === completedWrites) throw new Error(`Injected thumbnail promotion failure after ${completedWrites} writes`);
+  }
+  await rm(absoluteAt(root, TRANSACTION_ROOT), { recursive: true, force: false });
+  return true;
+}
+
+export async function commitTransaction(writes, { root = ROOT, failAfterWrites = null } = {}) {
+  if (writes.length === 0) return;
+  const targets = new Set();
+  const journalWrites = [];
+  for (const [index, item] of writes.entries()) {
+    const target = assertTransactionTarget(item.target);
+    if (targets.has(target)) throw new Error(`Duplicate thumbnail promotion transaction target: ${target}`);
+    targets.add(target);
+    const before = await exactFileRecordAt(root, target);
+    const after = Buffer.from(item.contents);
+    const afterChecksum = sha256(after);
+    const stagedPath = `${TRANSACTION_ROOT}/staged-${String(index + 1).padStart(2, "0")}.bin`;
+    await writeAtomicAt(root, stagedPath, after);
+    journalWrites.push({ target, before_sha256: before.sha256, after_sha256: afterChecksum });
+  }
+  await writeAtomicAt(root, TRANSACTION_JOURNAL, Buffer.from(`${JSON.stringify({
+    schema_version: "bmh-thumbnail-redesign-transaction/v1",
+    writes: journalWrites,
+  }, null, 2)}\n`));
+  await recoverPendingTransaction({ root, failAfterWrites });
 }
 
 async function buildApprovalArtifact(approvedAt) {
@@ -234,6 +305,7 @@ async function promote(approvedAt) {
   if (totalDisplayBytes > 1_500_000) throw new Error(`Thumbnail display payload exceeds 1.5 MB: ${totalDisplayBytes}`);
   if (!existingApproval) await writeAtomic(APPROVAL_PATH, artifactBytes);
   if (workflow.ledger.thumbnail_redesign_approval !== undefined) {
+    const transactionalWrites = [];
     for (const binding of artifact.assets) {
       const output = workflow.ledger.assets.find((asset) => asset.asset_key === binding.asset_key);
       if (!output?.redesign_replacement) throw new Error(`Missing redesign replacement ${binding.asset_key}`);
@@ -273,7 +345,9 @@ async function promote(approvedAt) {
             evidence_sha256: artifactChecksum,
           },
         });
-        if (current.sha256 !== promoted.checksum) await writeAtomic(output.manifest_path, promoted.contents);
+        if (current.sha256 !== promoted.checksum) {
+          transactionalWrites.push({ target: output.manifest_path, contents: promoted.contents });
+        }
       }
       output.checksum_sha256 = promoted.checksum;
       output.pixel_sha256 = promoted.pixelChecksum;
@@ -285,15 +359,17 @@ async function promote(approvedAt) {
     }
     workflow.manifest = reconcileManifestFromLedger(workflow.ledger, workflow.manifest);
     workflow.canaryManifest = reconcileCanaryManifest(workflow.canaryManifest, workflow.ledger);
-    await Promise.all([
-      writeAtomic(DEFAULT_PATHS.ledger, Buffer.from(`${JSON.stringify(workflow.ledger, null, 2)}\n`)),
-      writeAtomic(DEFAULT_PATHS.manifest, Buffer.from(`${JSON.stringify(workflow.manifest, null, 2)}\n`)),
-      writeAtomic(CANARY_MANIFEST_PATH, Buffer.from(`${JSON.stringify(workflow.canaryManifest, null, 2)}\n`)),
-    ]);
+    transactionalWrites.push(
+      { target: DEFAULT_PATHS.ledger, contents: Buffer.from(`${JSON.stringify(workflow.ledger, null, 2)}\n`) },
+      { target: DEFAULT_PATHS.manifest, contents: Buffer.from(`${JSON.stringify(workflow.manifest, null, 2)}\n`) },
+      { target: CANARY_MANIFEST_PATH, contents: Buffer.from(`${JSON.stringify(workflow.canaryManifest, null, 2)}\n`) },
+    );
+    await commitTransaction(transactionalWrites);
     await verify();
     return;
   }
 
+  const transactionalWrites = [];
   for (const binding of artifact.assets) {
     const output = workflow.ledger.assets.find((asset) => asset.asset_key === binding.asset_key);
     if (!output || output.kind !== "lesson-card") throw new Error(`Missing lesson-card output ${binding.asset_key}`);
@@ -323,7 +399,9 @@ async function promote(approvedAt) {
       recipe_sha256: output.derivative.recipe_sha256,
       review: structuredClone(workflow.ledger.masters.find((master) => master.id === output.provenance.master_id).review),
     });
-    if (current.sha256 !== promoted.checksum) await writeAtomic(output.manifest_path, promoted.contents);
+    if (current.sha256 !== promoted.checksum) {
+      transactionalWrites.push({ target: output.manifest_path, contents: promoted.contents });
+    }
     output.checksum_sha256 = promoted.checksum;
     output.pixel_sha256 = promoted.pixelChecksum;
     output.size_bytes = promoted.contents.length;
@@ -355,21 +433,34 @@ async function promote(approvedAt) {
   workflow.ledger.updated_at = artifact.approved_at;
   workflow.manifest = reconcileManifestFromLedger(workflow.ledger, workflow.manifest);
   workflow.canaryManifest = reconcileCanaryManifest(workflow.canaryManifest, workflow.ledger);
-  await Promise.all([
-    writeAtomic(DEFAULT_PATHS.ledger, Buffer.from(`${JSON.stringify(workflow.ledger, null, 2)}\n`)),
-    writeAtomic(DEFAULT_PATHS.manifest, Buffer.from(`${JSON.stringify(workflow.manifest, null, 2)}\n`)),
-    writeAtomic(CANARY_MANIFEST_PATH, Buffer.from(`${JSON.stringify(workflow.canaryManifest, null, 2)}\n`)),
-  ]);
+  transactionalWrites.push(
+    { target: DEFAULT_PATHS.ledger, contents: Buffer.from(`${JSON.stringify(workflow.ledger, null, 2)}\n`) },
+    { target: DEFAULT_PATHS.manifest, contents: Buffer.from(`${JSON.stringify(workflow.manifest, null, 2)}\n`) },
+    { target: CANARY_MANIFEST_PATH, contents: Buffer.from(`${JSON.stringify(workflow.canaryManifest, null, 2)}\n`) },
+  );
+  await commitTransaction(transactionalWrites);
   await verify();
 }
 
-const [command = "verify", ...args] = process.argv.slice(2);
-if (command === "promote") {
-  const approvedAt = args.find((argument) => argument.startsWith("--approved-at="))?.slice("--approved-at=".length);
-  if (!approvedAt) throw new Error("Usage: promote-thumbnail-redesign.mjs promote --approved-at=ISO");
-  await withWorkflowLock(ROOT, () => promote(approvedAt));
-} else if (command === "verify") {
-  await withWorkflowLock(ROOT, verify);
-} else {
-  throw new Error("Usage: promote-thumbnail-redesign.mjs <promote --approved-at=ISO|verify>");
+export async function main(argv = process.argv.slice(2)) {
+  const [command = "verify", ...args] = argv;
+  if (command === "promote") {
+    const approvedAt = args.find((argument) => argument.startsWith("--approved-at="))?.slice("--approved-at=".length);
+    if (!approvedAt) throw new Error("Usage: promote-thumbnail-redesign.mjs promote --approved-at=ISO");
+    await withWorkflowLock(ROOT, async () => {
+      await recoverPendingTransaction();
+      await promote(approvedAt);
+    });
+  } else if (command === "verify") {
+    await withWorkflowLock(ROOT, async () => {
+      await recoverPendingTransaction();
+      await verify();
+    });
+  } else {
+    throw new Error("Usage: promote-thumbnail-redesign.mjs <promote --approved-at=ISO|verify>");
+  }
+}
+
+if (path.resolve(process.argv[1] ?? "") === fileURLToPath(import.meta.url)) {
+  await main();
 }
