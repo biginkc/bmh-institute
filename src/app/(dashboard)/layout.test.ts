@@ -45,10 +45,9 @@ describe("DashboardLayout sibling shell contract", () => {
     expect(layoutSource).toContain('instanceId="desktop"');
   });
 
-  it("maps quiz search results into their composite lesson part", () => {
-    expect(layoutSource).toContain('lesson.lesson_type === "quiz"');
-    expect(layoutSource).toContain("lesson.prerequisite_lesson_id");
-    expect(layoutSource).toContain("?part=quiz");
+  it("routes quiz search results through the authoritative lesson page", () => {
+    expect(layoutSource).toContain("`/lessons/${encodeURIComponent(lesson.id)}`");
+    expect(layoutSource).not.toContain("?part=quiz");
   });
 
   it("preserves the native sign-out POST contract", () => {

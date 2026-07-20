@@ -19,7 +19,11 @@ import {
   type LearnerLessonPart,
 } from "@/lib/content-blocks/learner-parts";
 import { enrichBlocksWithSignedUrls } from "@/lib/content-blocks/sign-urls";
-import type { LearnerContentTile, LearnerCourseTile } from "@/lib/courses/learner-outline";
+import type {
+  LearnerContentTile,
+  LearnerCourseTile,
+  LearnerQuizTile,
+} from "@/lib/courses/learner-outline";
 import { computeQuizEligibility } from "@/lib/quizzes/attempts";
 import { getAppUrl } from "@/lib/app-url";
 import { mintRolePlayEmbedToken } from "@/lib/role-plays/embed-token";
@@ -71,15 +75,23 @@ export default async function LessonPage({
       (tile): tile is LearnerContentTile =>
         tile.kind === "content" && tile.pairedQuizLessonId === lessonId,
     );
-    if (!parent) {
-      return <LessonError error="This quiz is not paired to exactly one course lesson." courseId={courseId} />;
-    }
-    redirect(`/lessons/${parent.id}?part=quiz`);
+    if (parent) redirect(`/lessons/${parent.id}?part=quiz`);
   }
 
   const tile = outline.tiles.find((candidate) => candidate.id === lessonId);
   if (!tile) notFound();
   if (!tile.unlocked) return <LockedLesson courseId={courseId} />;
+
+  if (tile.kind === "quiz") {
+    return (
+      <StandaloneQuizLesson
+        courseId={courseId}
+        tile={tile}
+        total={outline.totalCount}
+        userId={auth.user.id}
+      />
+    );
+  }
 
   if (tile.kind === "assignment") {
     return (
@@ -100,6 +112,39 @@ export default async function LessonPage({
       requestedPart={firstQueryValue(query.part)}
       nextTile={outline.tiles[tile.lessonNumber] ?? null}
     />
+  );
+}
+
+async function StandaloneQuizLesson({
+  courseId,
+  tile,
+  total,
+  userId,
+}: {
+  courseId: string;
+  tile: LearnerQuizTile;
+  total: number;
+  userId: string;
+}) {
+  return (
+    <main className="w-full flex-1 p-5 font-[family-name:var(--font-body)] md:p-8 lg:p-10" data-bmh-lesson-page>
+      <Link href={`/courses/${courseId}`} className="inline-flex items-center gap-1.5 text-sm font-extrabold text-[var(--action)] hover:underline">
+        <ArrowLeft className="size-4" /> Back to course
+      </Link>
+      <header className="mx-auto mb-7 mt-5 max-w-3xl border-b border-[var(--border-hairline)] pb-5">
+        <Badge tone="blue" size="sm">Quiz</Badge>
+        <h1 className="mt-3 font-[family-name:var(--font-display)] text-3xl font-extrabold text-[var(--ink-900)]">{tile.title}</h1>
+        <p className="mt-1 text-xs font-bold text-[var(--text-muted)]">Lesson {tile.lessonNumber} of {total} · {tile.moduleTitle}</p>
+      </header>
+      <div className="mx-auto max-w-3xl">
+        <QuizLessonBody
+          quizId={tile.quizId}
+          lessonId={tile.id}
+          userId={userId}
+          backHref={`/lessons/${tile.id}`}
+        />
+      </div>
+    </main>
   );
 }
 
@@ -130,6 +175,7 @@ async function ContentCompositeLesson({
     quizComplete: tile.quizComplete,
     quizUnlocked: tile.quizUnlocked,
     compositeComplete: tile.complete,
+    includeQuiz: tile.quizId !== null && tile.pairedQuizLessonId !== null,
   });
   const selected = selectLearnerPart(parts, requestedPart);
   if (!selected) return <LessonError error="This lesson has no available content." courseId={courseId} />;
@@ -189,6 +235,16 @@ async function PartBody({
   userId: string;
 }) {
   if (part.kind === "quiz") {
+    if (!tile.quizId || !tile.pairedQuizLessonId) {
+      return (
+        <Card>
+          <CardHeader>
+            <CardTitle>Quiz unavailable</CardTitle>
+            <CardDescription>This lesson does not include a quiz.</CardDescription>
+          </CardHeader>
+        </Card>
+      );
+    }
     return (
       <QuizLessonBody
         quizId={tile.quizId}

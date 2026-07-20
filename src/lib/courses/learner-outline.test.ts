@@ -93,6 +93,11 @@ function buildInput(lessons: LearnerOutlineLesson[]): LearnerOutlineBuildInput {
   };
 }
 
+function imported(input: LearnerOutlineBuildInput): LearnerOutlineBuildInput {
+  input.course.contentImportId = "bmh-institute-v1";
+  return input;
+}
+
 describe("buildLearnerCourseOutline", () => {
   it("projects content plus its quiz into one tile and leaves assignments standalone", () => {
     const content = Array.from({ length: 19 }, (_, index) =>
@@ -119,8 +124,162 @@ describe("buildLearnerCourseOutline", () => {
     );
   });
 
-  it("fails closed when a content lesson has no immediately-dependent quiz", () => {
-    const result = buildLearnerCourseOutline(buildInput([contentLesson("content", 1)]));
+  it("projects the seeded hand-authored fixture shape into three learner lessons", () => {
+    const content = contentLesson("content", 10);
+    content.isRequiredForCompletion = false;
+    content.blocks = [
+      {
+        id: "content-text",
+        block_type: "text",
+        content: { html: "<h2>Operating standard</h2>" },
+        sort_order: 10,
+        is_required_for_completion: false,
+      },
+    ];
+    const input = buildInput([
+      content,
+      quizLesson("quiz", content.id, 20),
+      assignmentLesson("text-assignment", 30),
+      assignmentLesson("file-assignment", 40),
+    ]);
+    input.states.set(content.id, {
+      lessonId: content.id,
+      isComplete: true,
+      isUnlocked: true,
+    });
+
+    const result = buildLearnerCourseOutline(input);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.outline.totalCount).toBe(3);
+    expect(result.outline.resume?.href).toBe("/lessons/content?part=quiz");
+  });
+
+  it("projects hand-authored content without a dependent quiz", () => {
+    const input = buildInput([contentLesson("content", 1)]);
+    input.states.set("content", {
+      lessonId: "content",
+      isComplete: true,
+      isUnlocked: true,
+    });
+
+    const result = buildLearnerCourseOutline(input);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.outline.tiles).toHaveLength(1);
+    expect(result.outline.tiles[0]).toMatchObject({
+      kind: "content",
+      pairedQuizLessonId: null,
+      quizId: null,
+      complete: true,
+    });
+  });
+
+  it("projects a normalized module-less course as one unlabeled group", () => {
+    const input = buildInput([contentLesson("content", 1)]);
+    input.course.modules[0] = {
+      ...input.course.modules[0],
+      id: "unlabeled-lessons",
+      title: "",
+      description: null,
+    };
+
+    const result = buildLearnerCourseOutline(input);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.outline.modules).toHaveLength(1);
+    expect(result.outline.modules[0]).toMatchObject({
+      id: "unlabeled-lessons",
+      title: "",
+    });
+    expect(result.outline.modules[0].tiles).toHaveLength(1);
+  });
+
+  it("keeps hand-authored standalone quizzes as their own learner lessons", () => {
+    const quiz = quizLesson("quiz", "unused", 2);
+    quiz.prerequisiteLessonId = null;
+    const input = buildInput([contentLesson("content", 1), quiz]);
+
+    const result = buildLearnerCourseOutline(input);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.outline.tiles).toHaveLength(2);
+    expect(result.outline.tiles[1]).toMatchObject({
+      kind: "quiz",
+      id: "quiz",
+      quizId: "quiz-record-quiz",
+      href: "/lessons/quiz",
+    });
+  });
+
+  it("keeps ambiguous hand-authored quizzes standalone instead of dropping them", () => {
+    const result = buildLearnerCourseOutline(
+      buildInput([
+        contentLesson("content", 1),
+        quizLesson("quiz-a", "content", 2),
+        quizLesson("quiz-b", "content", 3),
+      ]),
+    );
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.outline.tiles.map((tile) => tile.kind)).toEqual([
+      "content",
+      "quiz",
+      "quiz",
+    ]);
+  });
+
+  it("resumes a current standalone quiz at its direct lesson route", () => {
+    const quiz = quizLesson("quiz", "unused", 2);
+    quiz.prerequisiteLessonId = null;
+    const input = buildInput([contentLesson("content", 1), quiz]);
+    input.states.set("content", {
+      lessonId: "content",
+      isComplete: true,
+      isUnlocked: true,
+    });
+
+    const result = buildLearnerCourseOutline(input);
+
+    expect(result.ok && result.outline.resume?.href).toBe("/lessons/quiz");
+  });
+
+  it("projects a valid imported content and quiz pair", () => {
+    const result = buildLearnerCourseOutline(
+      imported(buildInput([
+        contentLesson("content", 1),
+        quizLesson("quiz", "content", 2),
+      ])),
+    );
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.outline.tiles).toHaveLength(1);
+    expect(result.outline.tiles[0]).toMatchObject({
+      kind: "content",
+      pairedQuizLessonId: "quiz",
+    });
+  });
+
+  it("fails closed when an imported quiz has no prerequisite", () => {
+    const quiz = quizLesson("quiz", "unused", 1);
+    quiz.prerequisiteLessonId = null;
+
+    expect(buildLearnerCourseOutline(imported(buildInput([quiz])))).toEqual({
+      ok: false,
+      error: expect.stringMatching(/orphan quiz.*no content prerequisite/i),
+    });
+  });
+
+  it("fails closed when imported content has no immediately-dependent quiz", () => {
+    const result = buildLearnerCourseOutline(
+      imported(buildInput([contentLesson("content", 1)])),
+    );
 
     expect(result).toEqual({
       ok: false,
@@ -130,11 +289,11 @@ describe("buildLearnerCourseOutline", () => {
 
   it("fails closed when multiple quizzes depend on the same content lesson", () => {
     const result = buildLearnerCourseOutline(
-      buildInput([
+      imported(buildInput([
         contentLesson("content", 1),
         quizLesson("quiz-a", "content", 2),
         quizLesson("quiz-b", "content", 3),
-      ]),
+      ])),
     );
 
     expect(result).toEqual({
@@ -147,23 +306,25 @@ describe("buildLearnerCourseOutline", () => {
     const nullQuiz = quizLesson("quiz", "content", 2);
     nullQuiz.quizId = null;
     expect(
-      buildLearnerCourseOutline(buildInput([contentLesson("content", 1), nullQuiz])),
+      buildLearnerCourseOutline(
+        imported(buildInput([contentLesson("content", 1), nullQuiz])),
+      ),
     ).toMatchObject({ ok: false, error: expect.stringMatching(/quiz record/i) });
 
     expect(
       buildLearnerCourseOutline(
-        buildInput([
+        imported(buildInput([
           contentLesson("content", 1),
           quizLesson("quiz", "content", 2),
           quizLesson("orphan", "missing", 3),
-        ]),
+        ])),
       ),
     ).toMatchObject({ ok: false, error: expect.stringMatching(/orphan/i) });
 
-    const crossModule = buildInput([
+    const crossModule = imported(buildInput([
       contentLesson("content", 1),
       quizLesson("quiz", "content", 2),
-    ]);
+    ]));
     const quiz = crossModule.course.modules[0].lessons.pop()!;
     crossModule.course.modules.push({
       id: "module-2",

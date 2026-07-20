@@ -78,8 +78,8 @@ type TileBase = {
 
 export type LearnerContentTile = TileBase & {
   kind: "content";
-  pairedQuizLessonId: string;
-  quizId: string;
+  pairedQuizLessonId: string | null;
+  quizId: string | null;
   contentComplete: boolean;
   quizComplete: boolean;
   quizUnlocked: boolean;
@@ -92,7 +92,15 @@ export type LearnerAssignmentTile = TileBase & {
   submissionStatus: "submitted" | "approved" | "needs_revision" | null;
 };
 
-export type LearnerCourseTile = LearnerContentTile | LearnerAssignmentTile;
+export type LearnerQuizTile = TileBase & {
+  kind: "quiz";
+  quizId: string;
+};
+
+export type LearnerCourseTile =
+  | LearnerContentTile
+  | LearnerQuizTile
+  | LearnerAssignmentTile;
 
 export type LearnerCourseOutline = {
   course: LearnerOutlineCourse;
@@ -135,12 +143,18 @@ export function buildLearnerCourseOutline(
       allLessons.push(lesson);
     }
   }
+  const importedCatalog =
+    input.course.contentImportId !== null ||
+    allLessons.some((lesson) => lesson.contentImportId !== null);
 
   const dependentQuizzes = new Map<string, LearnerOutlineLesson[]>();
   for (const lesson of allLessons) {
     if (lesson.lessonType !== "quiz") continue;
     if (!lesson.prerequisiteLessonId) {
-      return { ok: false, error: `Orphan quiz ${lesson.id} has no content prerequisite.` };
+      if (importedCatalog) {
+        return { ok: false, error: `Orphan quiz ${lesson.id} has no content prerequisite.` };
+      }
+      continue;
     }
     const candidates = dependentQuizzes.get(lesson.prerequisiteLessonId) ?? [];
     candidates.push(lesson);
@@ -148,34 +162,83 @@ export function buildLearnerCourseOutline(
   }
 
   const consumedQuizIds = new Set<string>();
+  const pairedQuizzes = new Map<string, LearnerOutlineLesson>();
+  for (const lesson of allLessons) {
+    if (lesson.lessonType !== "content") continue;
+    const quizzes = dependentQuizzes.get(lesson.id) ?? [];
+    if (importedCatalog && quizzes.length !== 1) {
+      return {
+        ok: false,
+        error: `Content lesson ${lesson.id} requires exactly one dependent quiz; found ${quizzes.length}.`,
+      };
+    }
+    if (quizzes.length !== 1) continue;
+    const quiz = quizzes[0];
+    if (!quiz.quizId) {
+      if (importedCatalog) {
+        return { ok: false, error: `Paired quiz ${quiz.id} has no quiz record.` };
+      }
+      continue;
+    }
+    if (lessonModule.get(quiz.id)?.id !== lessonModule.get(lesson.id)?.id) {
+      if (importedCatalog) {
+        return {
+          ok: false,
+          error: `Paired quiz ${quiz.id} must be in the same module as ${lesson.id}.`,
+        };
+      }
+      continue;
+    }
+    pairedQuizzes.set(lesson.id, quiz);
+    consumedQuizIds.add(quiz.id);
+  }
+  if (importedCatalog) {
+    const orphan = allLessons.find(
+      (lesson) => lesson.lessonType === "quiz" && !consumedQuizIds.has(lesson.id),
+    );
+    if (orphan) {
+      return { ok: false, error: `Orphan quiz ${orphan.id} is not paired to course content.` };
+    }
+  }
+
   const tiles: LearnerCourseTile[] = [];
   for (const courseModule of modules) {
     for (const lesson of courseModule.lessons) {
-      if (lesson.lessonType === "quiz") continue;
       const state = input.states.get(lesson.id);
       const unlocked = state?.isUnlocked === true;
+      if (lesson.lessonType === "quiz") {
+        if (consumedQuizIds.has(lesson.id)) continue;
+        if (!lesson.quizId) {
+          return { ok: false, error: `Quiz lesson ${lesson.id} has no quiz record.` };
+        }
+        const complete = state?.isComplete === true;
+        tiles.push({
+          kind: "quiz",
+          id: lesson.id,
+          title: lesson.title,
+          description: lesson.description,
+          moduleId: courseModule.id,
+          moduleTitle: courseModule.title,
+          lessonNumber: tiles.length + 1,
+          complete,
+          unlocked,
+          state: complete ? "complete" : unlocked ? "open" : "locked",
+          href: `/lessons/${lesson.id}`,
+          blocks: lesson.blocks,
+          thumbnailPath: lesson.thumbnailPath,
+          contentImportId: lesson.contentImportId,
+          thumbnailAssetKey: lesson.thumbnailAssetKey,
+          thumbnailApprovedPath: lesson.thumbnailApprovedPath,
+          thumbnailApprovedSha256: lesson.thumbnailApprovedSha256,
+          quizId: lesson.quizId,
+        });
+        continue;
+      }
       if (lesson.lessonType === "content") {
-        const quizzes = dependentQuizzes.get(lesson.id) ?? [];
-        if (quizzes.length !== 1) {
-          return {
-            ok: false,
-            error: `Content lesson ${lesson.id} requires exactly one dependent quiz; found ${quizzes.length}.`,
-          };
-        }
-        const quiz = quizzes[0];
-        if (!quiz.quizId) {
-          return { ok: false, error: `Paired quiz ${quiz.id} has no quiz record.` };
-        }
-        if (lessonModule.get(quiz.id)?.id !== courseModule.id) {
-          return {
-            ok: false,
-            error: `Paired quiz ${quiz.id} must be in the same module as ${lesson.id}.`,
-          };
-        }
-        consumedQuizIds.add(quiz.id);
-        const quizState = input.states.get(quiz.id);
+        const quiz = pairedQuizzes.get(lesson.id) ?? null;
+        const quizState = quiz ? input.states.get(quiz.id) : undefined;
         const contentComplete = state?.isComplete === true;
-        const quizComplete = quizState?.isComplete === true;
+        const quizComplete = quiz ? quizState?.isComplete === true : true;
         const complete = contentComplete && quizComplete;
         tiles.push({
           kind: "content",
@@ -195,11 +258,11 @@ export function buildLearnerCourseOutline(
           thumbnailAssetKey: lesson.thumbnailAssetKey,
           thumbnailApprovedPath: lesson.thumbnailApprovedPath,
           thumbnailApprovedSha256: lesson.thumbnailApprovedSha256,
-          pairedQuizLessonId: quiz.id,
-          quizId: quiz.quizId,
+          pairedQuizLessonId: quiz?.id ?? null,
+          quizId: quiz?.quizId ?? null,
           contentComplete,
           quizComplete,
-          quizUnlocked: quizState?.isUnlocked === true,
+          quizUnlocked: quiz ? quizState?.isUnlocked === true : false,
           completedBlockIds: new Set(
             lesson.blocks
               .filter((block) => input.completedBlockIds.has(block.id))
@@ -246,13 +309,6 @@ export function buildLearnerCourseOutline(
         submissionStatus,
       });
     }
-  }
-
-  const orphan = allLessons.find(
-    (lesson) => lesson.lessonType === "quiz" && !consumedQuizIds.has(lesson.id),
-  );
-  if (orphan) {
-    return { ok: false, error: `Orphan quiz ${orphan.id} is not paired to course content.` };
   }
 
   const currentIndex = tiles.findIndex((tile) => !tile.complete && tile.unlocked);
@@ -320,7 +376,9 @@ function resolveResume(
     }
     const quizParent = tiles.find(
       (tile): tile is LearnerContentTile =>
-        tile.kind === "content" && tile.pairedQuizLessonId === resume.lastLessonId,
+        tile.kind === "content" &&
+        tile.pairedQuizLessonId !== null &&
+        tile.pairedQuizLessonId === resume.lastLessonId,
     );
     if (quizParent?.id === current.id && quizParent.quizUnlocked) {
       return {
@@ -355,7 +413,7 @@ function resolveResume(
 
   if (current.kind === "content") {
     const part =
-      current.contentComplete && current.quizUnlocked
+      current.quizId && current.contentComplete && current.quizUnlocked
         ? "quiz"
         : firstActionablePartId(current.blocks);
     return {

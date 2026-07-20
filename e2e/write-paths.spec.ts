@@ -212,7 +212,10 @@ test.describe("durable write-path coverage", () => {
         page.getByRole("heading", { name: `${fixture.prefix} Course` }),
       ).toBeVisible();
 
-      await page.goto(`/lessons/${fixture.contentLessonId}`);
+      await page.goto(`/lessons/${fixture.contentLessonId}?part=lesson`);
+      await expect(page).toHaveURL(
+        new RegExp(`/lessons/${fixture.contentLessonId}\\?part=lesson$`),
+      );
       await expect(page.getByText(`${fixture.prefix} Operating standard`)).toBeVisible();
       await expect(
         page.getByRole("button", { name: /mark lesson complete/i }),

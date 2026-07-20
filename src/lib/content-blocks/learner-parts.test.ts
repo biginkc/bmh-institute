@@ -67,7 +67,6 @@ describe("learner lesson parts", () => {
       ["video-1", true],
       ["role-play-1", false],
       ["quiz", false],
-      ["guide", false],
     ]);
     expect(selectLearnerPart(parts, "quiz")?.id).toBe("video-1");
     expect(selectLearnerPart(parts, "made-up")?.id).toBe("video-1");
@@ -90,7 +89,6 @@ describe("learner lesson parts", () => {
       ["role-play-1", "Role play A"],
       ["role-play-2", "Role play B"],
       ["quiz", "Quiz"],
-      ["guide", "Guide"],
     ]);
   });
 
@@ -116,6 +114,35 @@ describe("learner lesson parts", () => {
     expect(parts[0].blocks.map((item) => item.id)).toEqual(
       supported.map((item) => item.id),
     );
+  });
+
+  it("omits the quiz part for a hand-authored lesson with no quiz", () => {
+    const parts = buildLearnerLessonParts({
+      blocks: [block("1", "video")],
+      completedBlockIds: new Set(["1"]),
+      quizComplete: false,
+      quizUnlocked: false,
+      compositeComplete: true,
+      includeQuiz: false,
+    });
+
+    expect(parts.map((part) => part.id)).toEqual(["video-1"]);
+  });
+
+  it("keeps a real guide as the final part for a no-quiz lesson", () => {
+    const parts = buildLearnerLessonParts({
+      blocks: [
+        block("1", "video"),
+        block("2", "download", { filename: "learner-guide.pdf" }),
+      ],
+      completedBlockIds: new Set(["1"]),
+      quizComplete: false,
+      quizUnlocked: false,
+      compositeComplete: true,
+      includeQuiz: false,
+    });
+
+    expect(parts.map((part) => part.id)).toEqual(["video-1", "guide"]);
   });
 
   it("uses deterministic guide and duplicate-objective heuristics", () => {
