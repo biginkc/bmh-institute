@@ -164,7 +164,10 @@ describe("signAuthorizedArtworkPaths", () => {
   });
 
   it("signs only provenance-matched image objects with matching MIME", async () => {
-    info.mockResolvedValue({ data: { metadata: { mimetype: "image/webp" } }, error: null });
+    info.mockResolvedValue({
+      data: { contentType: "image/webp", metadata: { sha256: SHA } },
+      error: null,
+    });
     createSignedUrls.mockResolvedValue({
       data: [{ path: APPROVED_PATH, signedUrl: "signed-cover" }],
       error: null,
