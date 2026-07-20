@@ -1,6 +1,6 @@
 # BMH employee training quiz content review
 
-Status: **pending human review**. This packet is review evidence, not approval.
+Status: **all quiz pools marked approved in this manifest**. This packet is review evidence, not independent approval.
 
 Manifest import: `bmh-employee-training-v1`
 Quiz pools: 19
@@ -12,7 +12,7 @@ Correct options are marked `[correct]`. Questions are sourced from the checksum-
 
 - Pool key: `quiz-slot-01`
 - Pool SHA-256: `e2cbefd1df13d7c57d69e2daf3b8e0fe2569a8f0f99a059e0f3b70bcb247519e`
-- Approval status: `pending_human_review`
+- Approval status: `approved`
 
 ### 1. How does the BMH Group define its mission beyond just performing a job?
 
@@ -630,7 +630,7 @@ Explanation: It maintains the relationship so that when the seller is ready, BMH
 
 - Pool key: `quiz-slot-02`
 - Pool SHA-256: `6ef8eaa76138102b8b64aca16247b3c74768b10aa461d6fcb0815f53e540afd6`
-- Approval status: `pending_human_review`
+- Approval status: `approved`
 
 ### 1. A home in rough physical shape or owned by someone facing a difficult life situation is known as a _____.
 
@@ -1212,7 +1212,7 @@ Explanation: The recorded outcome of a specific call, such as 'no answer' or 'ap
 
 - Pool key: `quiz-slot-03`
 - Pool SHA-256: `f78f6f367ff71777f9e2a73843c75a6aa9a82f2e2897b2cda679d3f19d41e8ae`
-- Approval status: `pending_human_review`
+- Approval status: `approved`
 
 ### 1. Which application serves as the central CRM and "single source of truth" for the BMH Group?
 
@@ -1746,7 +1746,7 @@ Explanation: Sandra
 
 - Pool key: `quiz-slot-04`
 - Pool SHA-256: `e309cbc93304e58a2733436a19807e16660997bb1f6a49e14a24689d0c599313`
-- Approval status: `pending_human_review`
+- Approval status: `approved`
 
 ### 1. How should leads in a CRM be viewed beyond being simple numbers?
 
@@ -2592,7 +2592,7 @@ Explanation: To treat every lead like a human being rather than just another tra
 
 - Pool key: `quiz-slot-05`
 - Pool SHA-256: `f10154a2cadbb999a007d8901d0c4b44b67058a39ea864679db81ed738d63b98`
-- Approval status: `pending_human_review`
+- Approval status: `approved`
 
 ### 1. What is the primary way BMH Group explains their offer to homeowners in 'plain English'?
 
@@ -3474,7 +3474,7 @@ Explanation: Buying the house 'as-is'.
 
 - Pool key: `quiz-slot-06`
 - Pool SHA-256: `b0fe8d2c9aea0a97c6296b507905e93b6258779d17156b0fecf31bf28ac4e74e`
-- Approval status: `pending_human_review`
+- Approval status: `approved`
 
 ### 1. How many total stages comprise the BMH Sales Pipeline?
 
@@ -3984,7 +3984,7 @@ Explanation: Jumping straight to property details and racing toward an offer.
 
 - Pool key: `quiz-slot-07`
 - Pool SHA-256: `62da1ee54359184d012152908b826ab7c89710607c92f2e65284550bbd455c4b`
-- Approval status: `pending_human_review`
+- Approval status: `approved`
 
 ### 1. What is the primary objective of Step 1 in the five-step acquisition framework?
 
@@ -4458,7 +4458,7 @@ Explanation: Recognize that real engagement has not yet been established.
 
 - Pool key: `quiz-slot-08`
 - Pool SHA-256: `9defcb29a8dc63a3f964748421d92e054ba2c95dc4891eb9b7316cac74b0dcfe`
-- Approval status: `pending_human_review`
+- Approval status: `approved`
 
 ### 1. What is the primary objective of the 'qualification' phase?
 
@@ -4848,7 +4848,7 @@ Explanation: It identifies the specific trigger or event that created the curren
 
 - Pool key: `quiz-slot-09`
 - Pool SHA-256: `11e93d705f23ade0ac958019a5f20a3f9d7e848dd20b28c5f51ce8810a0f0626`
-- Approval status: `pending_human_review`
+- Approval status: `approved`
 
 ### 1. According to the text, what is the primary factor that distinguishes a top-performing caller from an average one?
 
@@ -5766,7 +5766,7 @@ Explanation: To move the lead forward by resolving concerns.
 
 - Pool key: `quiz-slot-10`
 - Pool SHA-256: `60411b79b40a7c240116cbf803a9e9464fb991d48372adb18ec6423f1a8efe57`
-- Approval status: `pending_human_review`
+- Approval status: `approved`
 
 ### 1. What are the four components of the objection-handling framework used in the BMH training?
 
@@ -6372,7 +6372,7 @@ Explanation: To gather more context or narrow down the seller's true priorities.
 
 - Pool key: `quiz-slot-11`
 - Pool SHA-256: `4a6cb0aabac99fe53f52c22a2fdc9be7702882bd5ac37967b61116b12a2980f5`
-- Approval status: `pending_human_review`
+- Approval status: `approved`
 
 ### 1. What percentage of common objections is covered by the basic 'listen, acknowledge, ask, redirect' framework?
 
@@ -7084,7 +7084,7 @@ Explanation: A situation where the mortgage balance exceeds the sale price
 
 - Pool key: `quiz-slot-12`
 - Pool SHA-256: `2f31f8363a95b64977b1e118971a85792f9ab504753d462eada75e4910bbc062`
-- Approval status: `pending_human_review`
+- Approval status: `approved`
 
 ### 1. Beyond memorization, what is the primary goal of learning how to answer common seller questions?
 
@@ -7534,7 +7534,7 @@ Explanation: Attorney review availability.
 
 - Pool key: `quiz-slot-13`
 - Pool SHA-256: `300dabc961c9aa27671b4b0ee79314320c02adb442e58b95ff4159c3654c11a0`
-- Approval status: `pending_human_review`
+- Approval status: `approved`
 
 ### 1. According to the text, where do real estate deals actually happen?
 
@@ -8224,7 +8224,7 @@ Explanation: It builds trust with the seller.
 
 - Pool key: `quiz-slot-14`
 - Pool SHA-256: `178967e13d68fa46e4ac08145796d7007e8d0276030901ceff37f7c863c91340`
-- Approval status: `pending_human_review`
+- Approval status: `approved`
 
 ### 1. According to Module 14, what is the recommended opening line to start a real estate conversation flow?
 
@@ -8710,7 +8710,7 @@ Explanation: It establishes certainty as a form of value that most other buyers 
 
 - Pool key: `quiz-slot-15`
 - Pool SHA-256: `01de5ec47774db205c391f0391fb487fe1ccacf05d6263fb791cdc1231e3b40b`
-- Approval status: `pending_human_review`
+- Approval status: `approved`
 
 ### 1. In a successful sales process, why should the closing stage ideally be the easiest part?
 
@@ -9076,7 +9076,7 @@ Explanation: The closing/funds transfer managed by the transaction team.
 
 - Pool key: `quiz-slot-16`
 - Pool SHA-256: `b3b7ea9348829ef87700073f04d23749057fabfdf9ef8851ab6f978a24a79259`
-- Approval status: `pending_human_review`
+- Approval status: `approved`
 
 ### 1. According to the text, what is the only thing that actually closes deals in business?
 
@@ -9538,7 +9538,7 @@ Explanation: To find gaps and close them rather than to micromanage.
 
 - Pool key: `quiz-slot-17`
 - Pool SHA-256: `2aafd9a9521386cfb19ad476382558df8172a5574b37734d59a2be7149aacdd2`
-- Approval status: `pending_human_review`
+- Approval status: `approved`
 
 ### 1. What are the three components of the compensation structure described in the text?
 
@@ -10156,7 +10156,7 @@ Explanation: The compensation structure (specifically follow-up, qualification, 
 
 - Pool key: `quiz-slot-18`
 - Pool SHA-256: `21b86b46ff63e3be37d4e16c88e1e1aaed96973f4442fb9e61042ca2dc848e4d`
-- Approval status: `pending_human_review`
+- Approval status: `approved`
 
 ### 1. Which software tool is used by BMH operators for time tracking and clocking in?
 
@@ -10594,7 +10594,7 @@ Explanation: The genuine care and follow-through brought to every conversation.
 
 - Pool key: `quiz-slot-19`
 - Pool SHA-256: `0f52e746349e5b7a8ca8087a57ec284296004c69a5a5003d258b5c871b82ad89`
-- Approval status: `pending_human_review`
+- Approval status: `approved`
 
 ### 1. What is the foundational task for someone starting at BMH Group?
 

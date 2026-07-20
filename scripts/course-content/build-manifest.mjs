@@ -52,6 +52,9 @@ const QUIZ_APPROVAL_LEDGER_PATH = path.join(
 const ARTWORK_LEDGER_SCHEMA = "bmh-artwork-production-ledger/v1";
 export const GUIDE_APPROVAL_LEDGER_SCHEMA = "bmh-guide-approval-ledger/v1";
 export const QUIZ_APPROVAL_LEDGER_SCHEMA = "bmh-quiz-content-approval-ledger/v1";
+const QUIZ_REVIEW_REQUEST_PATH = "docs/course-production/quiz-content-review-request.v1.json";
+const QUIZ_REVIEW_SURFACE_PATH = "docs/course-production/quiz-content-review.quizbank.v1.md";
+const QUIZ_REVIEW_MANIFEST_PATH = "content/course-manifests/bmh-employee-training.quizbank.v1.json";
 const SHA256_PATTERN = /^[a-f0-9]{64}$/;
 const ISO_TIMESTAMP_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/;
 
@@ -1230,6 +1233,15 @@ export function quizContentSha256({ source_key, title, questions }) {
     .digest("hex");
 }
 
+export function quizBindingsSha256(quizPools) {
+  const bindings = quizPools.map(({ quiz_source_key, question_count, content_sha256 }) => ({
+    quiz_source_key,
+    question_count,
+    content_sha256,
+  }));
+  return createHash("sha256").update(JSON.stringify(bindings)).digest("hex");
+}
+
 export async function validateQuizApprovalLedger(ledger, repoRoot = REPO_ROOT) {
   const errors = [];
   let reviewRequest;
@@ -1237,7 +1249,7 @@ export async function validateQuizApprovalLedger(ledger, repoRoot = REPO_ROOT) {
     return [`Quiz approval ledger schema_version must be ${QUIZ_APPROVAL_LEDGER_SCHEMA}`];
   }
   if (ledger.status !== "active") errors.push("Quiz approval ledger must be active");
-  if (ledger.request_path !== "docs/course-production/quiz-content-review-request.v1.json") {
+  if (ledger.request_path !== QUIZ_REVIEW_REQUEST_PATH) {
     errors.push("Quiz approval ledger request path is not canonical");
   }
   if (!SHA256_PATTERN.test(ledger.request_sha256 ?? "")) {
@@ -1255,15 +1267,83 @@ export async function validateQuizApprovalLedger(ledger, repoRoot = REPO_ROOT) {
     }
   }
   if (reviewRequest) {
+    const requestedPools = Array.isArray(reviewRequest.quiz_pools)
+      ? reviewRequest.quiz_pools
+      : [];
     if (reviewRequest.schema_version !== "bmh-quiz-content-review-request/v1") {
       errors.push("Quiz approval review request schema is invalid");
+    }
+    if (
+      reviewRequest.request_id !== "bmh-employee-training-quiz-review-2026-07-20-quizbank-v1"
+      || reviewRequest.created_at !== "2026-07-20T21:00:00Z"
+    ) {
+      errors.push("Quiz approval review request identity is not canonical");
+    }
+    if (reviewRequest.status !== "pending_human_review") {
+      errors.push("Quiz approval review request must preserve its pending review state");
+    }
+    const scope = reviewRequest.scope;
+    if (
+      !isRecord(scope)
+      || scope.manifest_path !== QUIZ_REVIEW_MANIFEST_PATH
+      || scope.import_id !== "bmh-employee-training-v1"
+      || scope.quiz_pool_count !== 19
+      || scope.question_count !== 920
+      || scope.questions_per_pool !== null
+      || scope.questions_per_attempt !== null
+    ) {
+      errors.push("Quiz approval review request scope is not the canonical quizbank scope");
+    }
+    if (!Array.isArray(reviewRequest.quiz_pools) || requestedPools.length !== 19) {
+      errors.push("Quiz approval review request must bind exactly 19 quizbank pools");
+    } else {
+      const poolKeys = new Set();
+      let questionCount = 0;
+      let poolsAreHashable = true;
+      for (const pool of requestedPools) {
+        if (!isRecord(pool) || !/^quiz-slot-[0-9]{2}$/.test(pool.quiz_source_key ?? "")) {
+          errors.push("Quiz approval review request contains an invalid quiz source key");
+          poolsAreHashable = false;
+          continue;
+        }
+        if (poolKeys.has(pool.quiz_source_key)) {
+          errors.push(`Quiz approval review request duplicates ${pool.quiz_source_key}`);
+        }
+        poolKeys.add(pool.quiz_source_key);
+        if (!Number.isInteger(pool.question_count) || pool.question_count < 1) {
+          errors.push(`${pool.quiz_source_key} review binding has an invalid question count`);
+        } else {
+          questionCount += pool.question_count;
+        }
+        if (!SHA256_PATTERN.test(pool.content_sha256 ?? "")) {
+          errors.push(`${pool.quiz_source_key} review binding checksum is invalid`);
+        }
+        if (pool.approval_status !== "pending_human_review") {
+          errors.push(`${pool.quiz_source_key} review binding must preserve its pending review state`);
+        }
+      }
+      if (questionCount !== 920) {
+        errors.push("Quiz approval review request question counts must total 920");
+      }
+      if (
+        poolsAreHashable
+        && scope?.quiz_bindings_sha256 !== quizBindingsSha256(requestedPools)
+      ) {
+        errors.push("Quiz approval review request pool binding checksum is invalid");
+      }
     }
     const reviewSurface = reviewRequest.review_surface;
     if (
       !isRecord(reviewSurface)
-      || reviewSurface.path !== "docs/course-production/quiz-content-review.v1.md"
+      || reviewSurface.path !== QUIZ_REVIEW_SURFACE_PATH
     ) {
       errors.push("Quiz approval review surface path is not canonical");
+    } else if (
+      reviewSurface.format !== "markdown"
+      || reviewSurface.quiz_pool_count !== 19
+      || reviewSurface.question_count !== 920
+    ) {
+      errors.push("Quiz approval review surface scope is not the canonical quizbank scope");
     } else if (!SHA256_PATTERN.test(reviewSurface.sha256 ?? "")) {
       errors.push("Quiz approval review surface checksum is invalid");
     } else {
@@ -1292,8 +1372,11 @@ export async function validateQuizApprovalLedger(ledger, repoRoot = REPO_ROOT) {
     seen.add(record.quiz_source_key);
     if (record.decision !== "approved") errors.push(`${label} approval record decision must be approved`);
     if (!SHA256_PATTERN.test(record.content_sha256 ?? "")) errors.push(`${label} approval checksum is invalid`);
-    const requestedPool = reviewRequest?.quiz_pools?.find((pool) =>
-      pool.quiz_source_key === record.quiz_source_key
+    const requestedPools = Array.isArray(reviewRequest?.quiz_pools)
+      ? reviewRequest.quiz_pools
+      : [];
+    const requestedPool = requestedPools.find((pool) =>
+      isRecord(pool) && pool.quiz_source_key === record.quiz_source_key
     );
     if (!requestedPool || requestedPool.content_sha256 !== record.content_sha256) {
       errors.push(`${label} approval does not match an exact pool in the current review request`);
@@ -1301,6 +1384,7 @@ export async function validateQuizApprovalLedger(ledger, repoRoot = REPO_ROOT) {
     if (record.request_sha256 !== ledger.request_sha256) errors.push(`${label} is not bound to the current review request`);
     if (typeof record.approved_by !== "string" || !record.approved_by.trim()) errors.push(`${label} needs an approver`);
     if (!ISO_TIMESTAMP_PATTERN.test(record.approved_at ?? "")) errors.push(`${label} approval timestamp is invalid`);
+    if (typeof record.evidence !== "string" || !record.evidence.trim()) errors.push(`${label} needs approval evidence`);
   }
   return errors;
 }

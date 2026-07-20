@@ -24,10 +24,14 @@ export function renderQuizReview(manifest) {
     .flatMap((courseModule) => courseModule.lessons)
     .filter((lesson) => lesson.type === "quiz")
     .map((lesson) => lesson.quiz);
+  const allApproved = quizzes.length > 0
+    && quizzes.every((quiz) => quiz.approval_status === "approved");
   const lines = [
     "# BMH employee training quiz content review",
     "",
-    "Status: **pending human review**. This packet is review evidence, not approval.",
+    allApproved
+      ? "Status: **all quiz pools marked approved in this manifest**. This packet is review evidence, not independent approval."
+      : "Status: **pending human review**. This packet is review evidence, not approval.",
     "",
     `Manifest import: \`${manifest.import_id}\``,
     `Quiz pools: ${quizzes.length}`,

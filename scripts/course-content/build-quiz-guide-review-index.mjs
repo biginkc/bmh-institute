@@ -3,12 +3,19 @@ import { readFile, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import {
+  quizContentSha256,
+  validateQuizApprovalLedger,
+} from "./build-manifest.mjs";
+
 const ROOT = path.resolve(fileURLToPath(new URL("../..", import.meta.url)));
 const REQUEST_PATH = "docs/course-production/quiz-content-review-request.v1.json";
 const GUIDE_LEDGER_PATH = "docs/course-production/guide-approvals.json";
 const QUIZ_LEDGER_PATH = "docs/course-production/quiz-approvals.json";
 const OUTPUT_JSON_PATH = "docs/course-production/quiz-guide-review-index.v1.json";
 const OUTPUT_MARKDOWN_PATH = "docs/course-production/quiz-guide-review-index.v1.md";
+const GUIDE_SOURCE_KEY = "guide-slot-16";
+const GUIDE_PATH = "output/pdf/slot-16-learner-guide.pdf";
 
 function sha256(value) {
   return createHash("sha256").update(value).digest("hex");
@@ -22,11 +29,16 @@ function assert(condition, message) {
   if (!condition) throw new Error(message);
 }
 
-function approvalWording(requestSha256, guide) {
-  return {
-    quizzes: `Approved quizzes: I reviewed and approve all 19 exact quiz pools bound to request SHA-256 ${requestSha256}.`,
-    guide: `Approved guide: I reviewed the current Slot 16 learner guide bound to SHA-256 ${guide.checksum_sha256} and size ${guide.size_bytes} bytes for course-QA reacceptance.`,
-  };
+function manifestQuizzes(manifest) {
+  return manifest.program.courses
+    .flatMap((course) => course.modules)
+    .flatMap((courseModule) => courseModule.lessons)
+    .filter((lesson) => lesson.type === "quiz")
+    .map((lesson) => lesson.quiz);
+}
+
+function guideApprovalWording(guide) {
+  return `Approved guide: I reviewed the current Slot 16 learner guide bound to SHA-256 ${guide.checksum_sha256} and size ${guide.size_bytes} bytes for course-QA reacceptance.`;
 }
 
 export async function buildReviewIndex() {
@@ -38,47 +50,78 @@ export async function buildReviewIndex() {
   ]);
   const requestSha256 = sha256(requestBytes);
   const reviewPath = request.review_surface.path;
-  const guidePath = request.guide_binding.local_path;
-  const [reviewBytes, guideBytes, guideStats] = await Promise.all([
+  const [reviewBytes, guideBytes, guideStats, manifest] = await Promise.all([
     readFile(path.resolve(ROOT, reviewPath)),
-    readFile(path.resolve(ROOT, guidePath)),
-    stat(path.resolve(ROOT, guidePath)),
+    readFile(path.resolve(ROOT, GUIDE_PATH)),
+    stat(path.resolve(ROOT, GUIDE_PATH)),
+    readJson(request.scope.manifest_path),
   ]);
+  const quizzes = manifestQuizzes(manifest);
+  const guide = {
+    source_key: GUIDE_SOURCE_KEY,
+    local_path: GUIDE_PATH,
+    checksum_sha256: sha256(guideBytes),
+    size_bytes: guideStats.size,
+    approval_status: "pending_course_qa_reacceptance",
+  };
   const oldGuideRecord = guideLedger.records.find(
-    (record) => record.source_key === request.guide_binding.source_key,
+    (record) => record.source_key === GUIDE_SOURCE_KEY,
   );
+  const quizApprovalErrors = await validateQuizApprovalLedger(quizLedger);
+  const approvers = new Set(quizLedger.records.map((record) => record.approved_by));
+  const approvalTimes = new Set(quizLedger.records.map((record) => record.approved_at));
+  const evidence = new Set(quizLedger.records.map((record) => record.evidence));
 
   assert(request.schema_version === "bmh-quiz-content-review-request/v1", "Unexpected quiz review request schema");
   assert(request.status === "pending_human_review", "Quiz review request is no longer pending human review");
+  assert(manifest.import_id === request.scope.import_id, "Quizbank manifest import ID does not match the review request");
+  assert(quizzes.length === 19, "Quizbank manifest must contain exactly 19 quiz pools");
   assert(requestSha256 === quizLedger.request_sha256, "Quiz ledger is not bound to the exact review request");
-  assert(quizLedger.records.length === 0, "Quiz ledger is no longer empty; rebuild the human review index for the new state");
+  assert(quizApprovalErrors.length === 0, quizApprovalErrors.join("\n"));
+  assert(quizLedger.records.length === 19, "Expected exactly 19 quiz approval records");
+  assert(approvers.size === 1, "Quiz approval records must identify one approver");
+  assert(approvalTimes.size === 1, "Quiz approval records must identify one approval time");
+  assert(evidence.size === 1, "Quiz approval records must identify one evidence statement");
   assert(sha256(reviewBytes) === request.review_surface.sha256, "Full quiz review checksum does not match its request binding");
-  assert(sha256(guideBytes) === request.guide_binding.checksum_sha256, "Slot 16 guide checksum does not match its request binding");
-  assert(guideStats.size === request.guide_binding.size_bytes, "Slot 16 guide size does not match its request binding");
   assert(request.quiz_pools.length === 19, "Expected exactly 19 quiz pools");
   assert(new Set(request.quiz_pools.map((quiz) => quiz.quiz_source_key)).size === 19, "Quiz pool keys must be unique");
   assert(new Set(request.quiz_pools.map((quiz) => quiz.content_sha256)).size === 19, "Quiz pool checksums must be unique");
-  assert(request.quiz_pools.every((quiz) => quiz.question_count === 18), "Every quiz pool must contain 18 questions");
+  assert(new Set(request.quiz_pools.map((quiz) => quiz.question_count)).size > 1, "Quizbank pool counts must be variable");
   assert(request.quiz_pools.every((quiz) => quiz.approval_status === "pending_human_review"), "Every quiz pool must remain pending human review");
-  assert(request.quiz_pools.reduce((sum, quiz) => sum + quiz.question_count, 0) === 342, "Expected exactly 342 quiz questions");
+  assert(request.quiz_pools.reduce((sum, quiz) => sum + quiz.question_count, 0) === 920, "Expected exactly 920 quiz questions");
+  assert(request.scope.questions_per_pool === null, "Quizbank must declare variable pool sizes");
+  assert(request.scope.questions_per_attempt === null, "Quizbank must serve every question per attempt");
+  for (const quiz of quizzes) {
+    const binding = request.quiz_pools.find((candidate) =>
+      candidate.quiz_source_key === quiz.source_key
+    );
+    const approval = quizLedger.records.find((candidate) =>
+      candidate.quiz_source_key === quiz.source_key
+    );
+    assert(binding, `${quiz.source_key} is missing from the quiz review request`);
+    assert(approval, `${quiz.source_key} is missing from the quiz approval ledger`);
+    assert(binding.question_count === quiz.questions.length, `${quiz.source_key} question count drifted from the review request`);
+    assert(binding.content_sha256 === quizContentSha256(quiz), `${quiz.source_key} content drifted from the review request`);
+    assert(approval.content_sha256 === quizContentSha256(quiz), `${quiz.source_key} content drifted from the approval ledger`);
+    assert(quiz.approval_status === "approved", `${quiz.source_key} is not approved in the quizbank manifest`);
+  }
   assert(oldGuideRecord, "Existing Slot 16 guide acceptance record is missing");
   assert(
-    oldGuideRecord.checksum_sha256 !== request.guide_binding.checksum_sha256 ||
-      oldGuideRecord.size_bytes !== request.guide_binding.size_bytes,
+    oldGuideRecord.checksum_sha256 !== guide.checksum_sha256 ||
+      oldGuideRecord.size_bytes !== guide.size_bytes,
     "Slot 16 guide already matches the existing course-QA acceptance record",
   );
 
-  const exactResponse = approvalWording(requestSha256, request.guide_binding);
   return {
     schema_version: "bmh-quiz-guide-review-index/v1",
-    index_id: "bmh-employee-training-quiz-guide-review-2026-07-18-v1",
-    status: "pending_two_separate_human_decisions",
-    scope_note: "This index is a review surface only. It does not record approval, change either ledger, authorize import or publication, or grant employee access.",
+    index_id: "bmh-employee-training-quiz-guide-review-2026-07-20-v2",
+    status: "quiz_approved_guide_pending_human_decision",
+    scope_note: "The quiz ledger records Jarrad's checksum-bound approval for all 19 quizbank pools. The separate Slot 16 guide decision remains pending. Neither state authorizes import, publication, or employee access.",
     quiz_review: {
-      status: request.status,
-      question: "Do you approve all 19 exact quiz pools shown in the full review?",
-      exact_approval_response: exactResponse.quizzes,
-      bare_approved_is_valid: false,
+      status: "approved",
+      approved_by: [...approvers][0],
+      approved_at: [...approvalTimes][0],
+      evidence: [...evidence][0],
       request: {
         path: REQUEST_PATH,
         sha256: requestSha256,
@@ -93,19 +136,22 @@ export async function buildReviewIndex() {
       questions_per_pool: request.scope.questions_per_pool,
       questions_per_attempt: request.scope.questions_per_attempt,
       quiz_bindings_sha256: request.scope.quiz_bindings_sha256,
-      quiz_pools: request.quiz_pools.map((quiz) => ({ ...quiz })),
-      controller_follow_up: "Preserve the exact human response and create one checksum-bound approval-ledger record for each of the 19 pools; the response itself does not mutate the ledger.",
+      quiz_pools: request.quiz_pools.map((binding) => ({
+        ...binding,
+        approval_status: quizzes.find((quiz) => quiz.source_key === binding.quiz_source_key).approval_status,
+      })),
+      controller_follow_up: "No quiz approval action remains. Preserve the request and 19 exact approval records as the publication binding.",
     },
     guide_review: {
-      status: request.guide_binding.approval_status,
+      status: guide.approval_status,
       question: "Do you approve the changed Slot 16 learner guide for course-QA reacceptance?",
-      exact_approval_response: exactResponse.guide,
+      exact_approval_response: guideApprovalWording(guide),
       bare_approved_is_valid: false,
       current_file: {
-        source_key: request.guide_binding.source_key,
-        path: guidePath,
-        sha256: request.guide_binding.checksum_sha256,
-        size_bytes: request.guide_binding.size_bytes,
+        source_key: guide.source_key,
+        path: guide.local_path,
+        sha256: guide.checksum_sha256,
+        size_bytes: guide.size_bytes,
       },
       superseded_course_qa_record: {
         path: GUIDE_LEDGER_PATH,
@@ -123,29 +169,26 @@ export function renderReviewIndex(index) {
   const lines = [
     "# BMH Institute quiz and Slot 16 guide review",
     "",
-    "Status: **two separate human decisions required**.",
+    "Status: **quizbank approved; separate Slot 16 guide decision still required**.",
     "",
-    "> This page does not approve anything. Quiz approval and guide approval are separate. A bare `approved` is not enough to identify either checksum-bound decision.",
+    "> Jarrad's quiz approval is recorded in the checksum-bound ledger. It does not approve the changed Slot 16 guide.",
     "",
-    "## 1. Quiz pools",
+    "## 1. Quiz pools: approved",
     "",
-    `[Open the full 342-question quiz review](./${path.basename(index.quiz_review.full_review.path)})`,
+    `[Open the full 920-question quizbank review](./${path.basename(index.quiz_review.full_review.path)})`,
     "",
     `- Exact request: [${path.basename(index.quiz_review.request.path)}](./${path.basename(index.quiz_review.request.path)})`,
     `- Request SHA-256: \`${index.quiz_review.request.sha256}\``,
     `- Full review SHA-256: \`${index.quiz_review.full_review.sha256}\``,
-    `- Scope: ${index.quiz_review.quiz_pool_count} pools, ${index.quiz_review.question_count} questions, ${index.quiz_review.questions_per_pool} per pool, ${index.quiz_review.questions_per_attempt} randomized per attempt`,
+    `- Scope: ${index.quiz_review.quiz_pool_count} variable-size pools, ${index.quiz_review.question_count} questions, all questions randomized per attempt`,
+    `- Approved by: ${index.quiz_review.approved_by}`,
+    `- Approved at: ${index.quiz_review.approved_at}`,
+    `- Evidence: ${index.quiz_review.evidence}`,
     "",
-    `**Question:** ${index.quiz_review.question}`,
-    "",
-    "If approved, respond exactly:",
-    "",
-    `> ${index.quiz_review.exact_approval_response}`,
-    "",
-    "| Quiz pool | Questions | SHA-256 |",
-    "| --- | ---: | --- |",
+    "| Quiz pool | Questions | SHA-256 | Status |",
+    "| --- | ---: | --- | --- |",
     ...index.quiz_review.quiz_pools.map(
-      (quiz) => `| \`${quiz.quiz_source_key}\` | ${quiz.question_count} | \`${quiz.content_sha256}\` |`,
+      (quiz) => `| \`${quiz.quiz_source_key}\` | ${quiz.question_count} | \`${quiz.content_sha256}\` | ${quiz.approval_status} |`,
     ),
     "",
     "## 2. Changed Slot 16 learner guide",

@@ -1,68 +1,45 @@
 {
   "schema_version": "bmh-quiz-content-review-request/v1",
-  "request_id": "bmh-employee-training-quiz-review-2026-07-18-v1",
+  "request_id": "bmh-employee-training-quiz-review-2026-07-20-quizbank-v1",
   "status": "pending_human_review",
-  "created_at": "2026-07-18T18:00:00Z",
-  "review_instruction": "Review all 19 checksum-bound quiz pools, with special attention to the two policy-safe Slot 16 replacements and the regenerated Slot 16 learner guide. Approve only by recording one checksum-bound approved response per quiz in docs/course-production/quiz-approvals.json; this request is not approval.",
+  "created_at": "2026-07-20T21:00:00Z",
+  "review_instruction": "Review all 19 checksum-bound quiz pools in the canonical quizbank packet. Approve only by recording one checksum-bound approved response per quiz in docs/course-production/quiz-approvals.json; this request is not approval.",
   "scope": {
-    "manifest_path": "content/course-manifests/bmh-employee-training.v1.json",
+    "manifest_path": "content/course-manifests/bmh-employee-training.quizbank.v1.json",
     "import_id": "bmh-employee-training-v1",
     "quiz_pool_count": 19,
-    "question_count": 342,
-    "questions_per_pool": 18,
-    "questions_per_attempt": 10,
-    "quiz_bindings_sha256": "51c83cd82f15cb6253fd6fcfd4dbcf3d70d50426804d13bf150ff8a74bcf6e90"
+    "question_count": 920,
+    "questions_per_pool": null,
+    "questions_per_attempt": null,
+    "quiz_bindings_sha256": "1ed9693d7a782de2aa95ee888c3b4e7993462fdda5b4d83b0b0fb98cc1887b17"
   },
   "review_surface": {
-    "path": "docs/course-production/quiz-content-review.v1.md",
-    "sha256": "56b2f2b9f5c3ab5cf28bac01f9fd98ea0713bcd3c07dea5adcbaa073f2cdc508",
+    "path": "docs/course-production/quiz-content-review.quizbank.v1.md",
+    "sha256": "b2a99497dd6e154befaf157524ce9728aa4ed4de4f765ada2541d9d597c2d1d9",
     "format": "markdown",
     "quiz_pool_count": 19,
-    "question_count": 342
-  },
-  "policy_correction": {
-    "slot": 16,
-    "removed_question_source_keys": [
-      "question-slot-16-07",
-      "question-slot-16-12"
-    ],
-    "removed_content": [
-      "200 dials, 15-20% connection rate, and 30-40 connections",
-      "50% offer-to-contract target benchmark"
-    ],
-    "replacement_questions": [
-      "What should happen when connection rate falls below the normal range for the current role and market?",
-      "Why are the six KPI metrics read from left to right?"
-    ],
-    "approval_status": "pending_human_review"
-  },
-  "guide_binding": {
-    "source_key": "guide-slot-16",
-    "local_path": "output/pdf/slot-16-learner-guide.pdf",
-    "checksum_sha256": "1ea291e1190ba6f990407cff53160ef90c1acf787e5e66ed6686a2d9984d7c5d",
-    "size_bytes": 50676,
-    "approval_status": "pending_course_qa_reacceptance"
+    "question_count": 920
   },
   "quiz_pools": [
-    { "quiz_source_key": "quiz-slot-01", "question_count": 18, "content_sha256": "c3cf74f2731f8314d9cee4db09f6c6567079886c297f283f7e2514ec91c37e7a", "approval_status": "pending_human_review" },
-    { "quiz_source_key": "quiz-slot-02", "question_count": 18, "content_sha256": "ede4d6f342aa02da32c2cc3e121a46a80467be796b35a8edb5f4dba9861e9118", "approval_status": "pending_human_review" },
-    { "quiz_source_key": "quiz-slot-03", "question_count": 18, "content_sha256": "a01ae20c3233b24d6de0fd42664886b079973817e0a369c40fdb00d5a6707f42", "approval_status": "pending_human_review" },
-    { "quiz_source_key": "quiz-slot-04", "question_count": 18, "content_sha256": "7d341270c1a538cc8d77cda301f0da8600e2d37d180c12f458913a2d0713736f", "approval_status": "pending_human_review" },
-    { "quiz_source_key": "quiz-slot-05", "question_count": 18, "content_sha256": "f598f449ed82b846ce535830d793e7928b741c1d7223f76d8e7f2b5c265c451b", "approval_status": "pending_human_review" },
-    { "quiz_source_key": "quiz-slot-06", "question_count": 18, "content_sha256": "79e9d3998242aaeac614b9d759ce9a40c2448bf9a2055d380bd11ff3e010681a", "approval_status": "pending_human_review" },
-    { "quiz_source_key": "quiz-slot-07", "question_count": 18, "content_sha256": "d54e5329832efaf532cce35ae444f001baf511b98f757ffc6b43ee129dd824e3", "approval_status": "pending_human_review" },
-    { "quiz_source_key": "quiz-slot-08", "question_count": 18, "content_sha256": "9ae5c2e9a149cad1de2c421b30b44b94893517e648c91aef6d7e66340343e974", "approval_status": "pending_human_review" },
-    { "quiz_source_key": "quiz-slot-09", "question_count": 18, "content_sha256": "cd7f0d9aa428dd0c6fff36a41dd8571e6e3d65b42e05c969587aa0d6b60ec9f9", "approval_status": "pending_human_review" },
-    { "quiz_source_key": "quiz-slot-10", "question_count": 18, "content_sha256": "7995b650523a6202c15f8469f0360253b7b459f61f49b3a589f7e5d074b30774", "approval_status": "pending_human_review" },
-    { "quiz_source_key": "quiz-slot-11", "question_count": 18, "content_sha256": "c00326476ecab5dd818837ee26dbfa0c57d63409803c80fa02383b0ba0d28d48", "approval_status": "pending_human_review" },
-    { "quiz_source_key": "quiz-slot-12", "question_count": 18, "content_sha256": "f88ec3143cd6a7f2f58ce60470f2b7eb067172c8e9a6aa9cf9a6f4dfb6ff30f4", "approval_status": "pending_human_review" },
-    { "quiz_source_key": "quiz-slot-13", "question_count": 18, "content_sha256": "6254e3260e6ddeaa7bab32bbcdc60afb15b428b7cde14ec043389bf9d455304b", "approval_status": "pending_human_review" },
-    { "quiz_source_key": "quiz-slot-14", "question_count": 18, "content_sha256": "191526e22cca05f36a669d2b934335205529f76390c53e4f6bbc816fb37c517d", "approval_status": "pending_human_review" },
-    { "quiz_source_key": "quiz-slot-15", "question_count": 18, "content_sha256": "12981cc437e3b070eeeffb1b2c7b23a3bd790319299c3c00c3575a8b998602e8", "approval_status": "pending_human_review" },
-    { "quiz_source_key": "quiz-slot-16", "question_count": 18, "content_sha256": "e9a8219eb5d217074ea4e70482a34adc30143cf25f24ab2c785e2e973c97fc49", "approval_status": "pending_human_review" },
-    { "quiz_source_key": "quiz-slot-17", "question_count": 18, "content_sha256": "448bd0baa4bbf74279c2840539cede844a4900c413f8a521c5ed97f6b4138cb6", "approval_status": "pending_human_review" },
-    { "quiz_source_key": "quiz-slot-18", "question_count": 18, "content_sha256": "57bdabd7398275372a2f01144000be49a7a42a4b41381a00c054a58c99f88c4a", "approval_status": "pending_human_review" },
-    { "quiz_source_key": "quiz-slot-19", "question_count": 18, "content_sha256": "e901eace1d37ed784b3ee2e471457c0e89e52c19d690064a2bd7e17b31b22e7b", "approval_status": "pending_human_review" }
+    { "quiz_source_key": "quiz-slot-01", "question_count": 51, "content_sha256": "e2cbefd1df13d7c57d69e2daf3b8e0fe2569a8f0f99a059e0f3b70bcb247519e", "approval_status": "pending_human_review" },
+    { "quiz_source_key": "quiz-slot-02", "question_count": 48, "content_sha256": "6ef8eaa76138102b8b64aca16247b3c74768b10aa461d6fcb0815f53e540afd6", "approval_status": "pending_human_review" },
+    { "quiz_source_key": "quiz-slot-03", "question_count": 44, "content_sha256": "f78f6f367ff71777f9e2a73843c75a6aa9a82f2e2897b2cda679d3f19d41e8ae", "approval_status": "pending_human_review" },
+    { "quiz_source_key": "quiz-slot-04", "question_count": 70, "content_sha256": "e309cbc93304e58a2733436a19807e16660997bb1f6a49e14a24689d0c599313", "approval_status": "pending_human_review" },
+    { "quiz_source_key": "quiz-slot-05", "question_count": 73, "content_sha256": "f10154a2cadbb999a007d8901d0c4b44b67058a39ea864679db81ed738d63b98", "approval_status": "pending_human_review" },
+    { "quiz_source_key": "quiz-slot-06", "question_count": 42, "content_sha256": "b0fe8d2c9aea0a97c6296b507905e93b6258779d17156b0fecf31bf28ac4e74e", "approval_status": "pending_human_review" },
+    { "quiz_source_key": "quiz-slot-07", "question_count": 39, "content_sha256": "62da1ee54359184d012152908b826ab7c89710607c92f2e65284550bbd455c4b", "approval_status": "pending_human_review" },
+    { "quiz_source_key": "quiz-slot-08", "question_count": 32, "content_sha256": "9defcb29a8dc63a3f964748421d92e054ba2c95dc4891eb9b7316cac74b0dcfe", "approval_status": "pending_human_review" },
+    { "quiz_source_key": "quiz-slot-09", "question_count": 76, "content_sha256": "11e93d705f23ade0ac958019a5f20a3f9d7e848dd20b28c5f51ce8810a0f0626", "approval_status": "pending_human_review" },
+    { "quiz_source_key": "quiz-slot-10", "question_count": 50, "content_sha256": "60411b79b40a7c240116cbf803a9e9464fb991d48372adb18ec6423f1a8efe57", "approval_status": "pending_human_review" },
+    { "quiz_source_key": "quiz-slot-11", "question_count": 59, "content_sha256": "4a6cb0aabac99fe53f52c22a2fdc9be7702882bd5ac37967b61116b12a2980f5", "approval_status": "pending_human_review" },
+    { "quiz_source_key": "quiz-slot-12", "question_count": 37, "content_sha256": "2f31f8363a95b64977b1e118971a85792f9ab504753d462eada75e4910bbc062", "approval_status": "pending_human_review" },
+    { "quiz_source_key": "quiz-slot-13", "question_count": 57, "content_sha256": "300dabc961c9aa27671b4b0ee79314320c02adb442e58b95ff4159c3654c11a0", "approval_status": "pending_human_review" },
+    { "quiz_source_key": "quiz-slot-14", "question_count": 40, "content_sha256": "178967e13d68fa46e4ac08145796d7007e8d0276030901ceff37f7c863c91340", "approval_status": "pending_human_review" },
+    { "quiz_source_key": "quiz-slot-15", "question_count": 30, "content_sha256": "01de5ec47774db205c391f0391fb487fe1ccacf05d6263fb791cdc1231e3b40b", "approval_status": "pending_human_review" },
+    { "quiz_source_key": "quiz-slot-16", "question_count": 38, "content_sha256": "b3b7ea9348829ef87700073f04d23749057fabfdf9ef8851ab6f978a24a79259", "approval_status": "pending_human_review" },
+    { "quiz_source_key": "quiz-slot-17", "question_count": 51, "content_sha256": "2aafd9a9521386cfb19ad476382558df8172a5574b37734d59a2be7149aacdd2", "approval_status": "pending_human_review" },
+    { "quiz_source_key": "quiz-slot-18", "question_count": 36, "content_sha256": "21b86b46ff63e3be37d4e16c88e1e1aaed96973f4442fb9e61042ca2dc848e4d", "approval_status": "pending_human_review" },
+    { "quiz_source_key": "quiz-slot-19", "question_count": 47, "content_sha256": "0f52e746349e5b7a8ca8087a57ec284296004c69a5a5003d258b5c871b82ad89", "approval_status": "pending_human_review" }
   ],
   "response_contract": {
     "schema_version": "bmh-quiz-content-approval/v1",
@@ -72,7 +49,8 @@
       "content_sha256",
       "request_sha256",
       "approved_by",
-      "approved_at"
+      "approved_at",
+      "evidence"
     ],
     "note": "Approval is per exact quiz checksum. A changed pool returns to pending_human_review."
   }
