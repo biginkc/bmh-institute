@@ -1,0 +1,623 @@
+{
+  "schema_version": "bmh.quiz-distractor-bank.v1",
+  "slot": 19,
+  "quiz_source_key": "quiz-slot-19",
+  "lesson": "Career Growth Path",
+  "source_ledger_sha256": "f130f47f03585928e40f37dfba3a37c4ab3f9f8d41ae65332668b430960ba4ff",
+  "authored_by": "codex (EXECUTE 2.19, 2026-07-20)",
+  "entries": [
+    {
+      "record_id": "legacy-ch13-001",
+      "front_sha256": "f1364a81126b283e4f6afa68deba8a6793b2703b0ab3cecfe43e8a7c536d31fe",
+      "back_sha256": "39791bdf294059a76e5f1efc0e43f6dee5b69fe21501cb919040d94e49700141",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Presenting offers, negotiating terms, structuring deals, and closing directly.",
+        "Hiring people, training them, coaching them, and owning team performance.",
+        "Opening new markets, building new teams, and creating new positions."
+      ]
+    },
+    {
+      "record_id": "legacy-ch13-002",
+      "front_sha256": "28470e46e1bbcea75fe0495d7d520aa39aad7540e10a48e9354411ed20511a44",
+      "back_sha256": "53d613264f1ffaffe2abd8b442904ffa8174f95212180fe6f76b6ad90aadbf06",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "They must understand signed contracts and internalize the management path.",
+        "They must understand team output and internalize the commission structure.",
+        "They must understand new markets and internalize every growth opportunity."
+      ]
+    },
+    {
+      "record_id": "legacy-ch13-003",
+      "front_sha256": "1aeccf311198221b277a84fd5b6872629dec9abe15b5555b3245d914f9357c11",
+      "back_sha256": "8808eb6eb430e3fdef3e4872a3995333ad42795660e5f7c1122d10f4c006d7dc",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Hitting KPIs only on good days.",
+        "Hitting KPIs once before promotion.",
+        "Reviewing KPIs without consistent execution."
+      ]
+    },
+    {
+      "record_id": "legacy-ch13-004",
+      "front_sha256": "59e6849b77e55b7165f8c6ba99463551dd5b91e0da5fadbbc07cc0df049f5fdc",
+      "back_sha256": "c34a01a32c0b384c3c188fd087b0e82ba6824a7e8b27c9a5559bf21631eeabf9",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The leads must involve probate, multiple owners, and financial distress.",
+        "The leads must have incomplete notes, no stage, and no next action.",
+        "The leads must have an offer, negotiated terms, and a signed contract."
+      ]
+    },
+    {
+      "record_id": "legacy-ch13-005",
+      "front_sha256": "7b7fdedfacb35ef42ec6fe32e1ed61880eee26811f60fdb8fa1d65b88f31a1f6",
+      "back_sha256": "6569ecedea2a24d8aeeeafeca044a55a39271df55a881f14688d0b6f40928364",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "One good day.",
+        "Good days only.",
+        "No sustained period."
+      ]
+    },
+    {
+      "record_id": "legacy-ch13-006",
+      "front_sha256": "ec99454f61ecc3bd7ba2d6c8e56aff594c66284cab3871c5c4eebe446832bae1",
+      "back_sha256": "65172cfa8b5509b24c99e4d473095195ec3dac6830e3cee3d9d3c4c2db6fadff",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "A higher commission tier.",
+        "A signed-contract pipeline.",
+        "A new-market assignment."
+      ]
+    },
+    {
+      "record_id": "legacy-ch13-007",
+      "front_sha256": "56097830c4231a455ab0a6319869e555fedc469d4b2695cc3e6e8c1c98db6675",
+      "back_sha256": "226a6598358aaa7607eb92a6e4b8c4a8a3ab3f914b354f67598543cefc9258dc",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "New-market leads.",
+        "Financial-distress sellers.",
+        "Straightforward deals."
+      ]
+    },
+    {
+      "record_id": "legacy-ch13-008",
+      "front_sha256": "25253a628feca721821d3d07328f0a829989e64e5cb23c032d0d13fa945de2f0",
+      "back_sha256": "28a8f6255755724b375c3475be5f433056e80fe5ebddd65d551c7c6c37b962a4",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Financial-distress leads.",
+        "Straightforward deals.",
+        "New-market leads."
+      ]
+    },
+    {
+      "record_id": "legacy-ch13-009",
+      "front_sha256": "06a60c73f2d05dc83a476eeed466076048f6c73b5c1c8e54c09e3e093d3dedc2",
+      "back_sha256": "52bfb709e1edf6a3c972edceaa56d265f29e9581c104e169c817b9e39ac48e95",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "By treating the conversation as straightforward and avoiding sensitive dynamics.",
+        "By presenting an offer before qualifying the seller or understanding the situation.",
+        "By handing off the seller without clean notes, a stage, or a next action."
+      ]
+    },
+    {
+      "record_id": "legacy-ch13-010",
+      "front_sha256": "ae564ffd73a04d052096905515a55da370e4f16e57b61317899e8bfb060421ea",
+      "back_sha256": "b8fe472bdeefebf7d5d5ec26000d904018596577756fdb842436c78d8a9647eb",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Owning the full sales cycle through a signed contract.",
+        "Owning the performance and output of an entire team.",
+        "Opening new markets, teams, and positions for the company."
+      ]
+    },
+    {
+      "record_id": "legacy-ch13-011",
+      "front_sha256": "ae0f9cdbe2331ac7e97fb00d91777a2241729865e56b6cb9a583739271c1181b",
+      "back_sha256": "f485a602fccf26ca47c6a4f229cfa26abca8b4dc3b87eaa6a567ffe2f59e9829",
+      "status": "needs_human_review",
+      "question_type": "single_choice",
+      "distractors": [],
+      "review_reason": "insufficient_content_for_fair_distractors",
+      "notes": "The source provides only one work-environment benefit pair. Other available benefits concern pay or duties, while alternative autonomy and oversight pairs become duplicates or partially true."
+    },
+    {
+      "record_id": "legacy-ch13-012",
+      "front_sha256": "eb3ba009ba295510c0fa90cd9d2e18529501d44552e9c37184293dcc3b4ea9d2",
+      "back_sha256": "c55c1c05d24fc1c97594febb17a95b57e7abbd5dfefbbdf6a05c1bab97bae7b2",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The commission becomes tied to the output of the entire team.",
+        "The commission becomes limited to deals closed directly.",
+        "The commission stays at the same tier despite added seniority."
+      ]
+    },
+    {
+      "record_id": "legacy-ch13-013",
+      "front_sha256": "711154625e4968b1b269ba3d39e35b7e133ffdfe7533dde89ef0f617d75bbe17",
+      "back_sha256": "e8faf6379cd38b2c89ec1a68f8e7681aeb36dcb209abb458eba6a3d217675ae0",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Qualifying sellers, building a pipeline, and handing leads off to acquisitions.",
+        "Mentoring newer people, receiving less oversight, and moving to a higher tier.",
+        "Hiring team members, coaching their work, and owning the team's performance."
+      ]
+    },
+    {
+      "record_id": "legacy-ch13-014",
+      "front_sha256": "e14369c8e69013b59b885e5639d42d7b18ff5931cde8793ad516cadf26a754a3",
+      "back_sha256": "511fd60f53d013d5142771d5ecf19c309b1db0d38509ab2e16cd264b85805e80",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Owning lead sourcing from the first contact through the acquisitions handoff.",
+        "Owning hiring, training, coaching, and the output of the entire team.",
+        "Owning complex lead qualification while another person negotiates and closes."
+      ]
+    },
+    {
+      "record_id": "legacy-ch13-015",
+      "front_sha256": "2980c5e5f74b03d36043b5951d475f16a810c69407c7091dd0b9c0a1bf753fe6",
+      "back_sha256": "3b33145acd754a31a72c928dbb8e4f862a7ff8168f24ccadc743b6dd0cbcf73d",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Compensation is tied to the output of the entire management team.",
+        "The higher commission tier applies only to complex lead qualification.",
+        "Daily oversight is reduced after consistent foundational performance."
+      ]
+    },
+    {
+      "record_id": "legacy-ch13-016",
+      "front_sha256": "c22d7c84db1447761bccfea8019759fe72a57c697a29d9e071dca1773925e21f",
+      "back_sha256": "756a5384cf0b954878365f702fe54d8aee834f73ff63b740bfcb8271a73f3c00",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Promotion timing.",
+        "Team compensation.",
+        "Daily oversight."
+      ]
+    },
+    {
+      "record_id": "legacy-ch13-017",
+      "front_sha256": "0bf80677686451b2689681a59ca7284d4120b7a4dde0a3323ef0fd22d8c4cbef",
+      "back_sha256": "ddd7ad5c55ac4fd9759dbb16372e4fd49c43eb61bc22153d52e400b6adc6546c",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The ability to qualify sellers consistently.",
+        "The ability to keep a spotless CRM.",
+        "The ability to mentor newer people."
+      ]
+    },
+    {
+      "record_id": "legacy-ch13-018",
+      "front_sha256": "fddbb2a510c0cfa84aae8af5310447d8fc1b84f81254ec8eb5f63e281dac5f97",
+      "back_sha256": "3b2fd0908385a6e76d8a3e2d2139532881b4a073cb1903646091153eba1acc69",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Presenting offers and closing deals directly.",
+        "Qualifying sellers and building a pipeline.",
+        "Opening new markets and positions."
+      ]
+    },
+    {
+      "record_id": "legacy-ch13-019",
+      "front_sha256": "3df4b30ec419e1ebcf10e54594a090ec5c5d83ebcc47360000c47c6fcc082f6a",
+      "back_sha256": "cb97962bf42d7b1ef7c3df08fec016d2f23530fdebe87a4bd543915840be5230",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Sourcing, qualifying, documenting, and handing off leads.",
+        "Presenting, negotiating, structuring, and closing deals.",
+        "Practicing, applying feedback, reviewing, and confirming ownership."
+      ]
+    },
+    {
+      "record_id": "legacy-ch13-020",
+      "front_sha256": "0227083dcf8ae2f9924ba6ec79849651c3bc9dda49cfca5a31d9c9e0532640d8",
+      "back_sha256": "efbda0b3b1346cc51d7a9c66d0d65d56900186e16f7cedeaad5e5c244cfb3915",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "It is tied only to the number of sourced leads.",
+        "It is earned only on deals the manager closes directly.",
+        "It is determined by the amount of daily oversight received."
+      ]
+    },
+    {
+      "record_id": "legacy-ch13-021",
+      "front_sha256": "3515f1d6ad90092ce23e0e19fbbde652d94da15a50a3264d315bd8df730484cf",
+      "back_sha256": "b77518db4286c65dd84341540e1240ed011b4dc8b6520ad75dba51baf4699b31",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "A fixed six-month schedule.",
+        "One good day of KPI results.",
+        "Interest in an opportunity without demonstrated readiness."
+      ]
+    },
+    {
+      "record_id": "legacy-ch13-022",
+      "front_sha256": "85ea385a726babfed97637249a4943286617026fd49adb71b22d898b120692dd",
+      "back_sha256": "93c8370d41096937e48ba578a57e3f292ff389e12584cc016f3e5369600b0ade",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Advancement always occurs after exactly 90 days.",
+        "Advancement follows a fixed six-month schedule.",
+        "Advancement is guaranteed at the one-year mark."
+      ]
+    },
+    {
+      "record_id": "legacy-ch13-023",
+      "front_sha256": "3ae785aaef4e6fa5f59b2556c067a59f97a96ccabbf106b60d802af66cf8cd8f",
+      "back_sha256": "d4403f57b547f53fdc43bdc0a27dbca7198d31bd673bc4aca7da7b7c8229f5ab",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Hitting numbers on good days while results vary the rest of the time.",
+        "Hitting numbers once before asking to take on a new opportunity.",
+        "Reviewing the numbers regularly without applying them to daily execution."
+      ]
+    },
+    {
+      "record_id": "legacy-ch13-024",
+      "front_sha256": "bc12c19f7cfe27ce01bbbdfd86f6a578dec342a705025c78b2376cb2f082b638",
+      "back_sha256": "3f9ab5a81f7b683123306f55e6723680f8039a1ff586691ded2f3affae1f3fa0",
+      "status": "needs_human_review",
+      "question_type": "single_choice",
+      "distractors": [],
+      "review_reason": "insufficient_content_for_fair_distractors",
+      "notes": "The source defines one exact CRM field trio. Other source concepts are either implausible as entry fields or may also belong in a CRM record."
+    },
+    {
+      "record_id": "legacy-ch13-025",
+      "front_sha256": "9b95ee5982480ced25f617e637d5efc4206cbc69ff1bf8f929519bc1df8e4178",
+      "back_sha256": "4abd27bd4d1b41fa3e973f691a58e2b13881cd469ed8b2d2b18ad756d6a312b8",
+      "status": "needs_human_review",
+      "question_type": "single_choice",
+      "distractors": [],
+      "review_reason": "concept_cue_front",
+      "notes": "The front is a concept label rather than a question stem."
+    },
+    {
+      "record_id": "legacy-ch13-026",
+      "front_sha256": "55f7af0457e1c2355d44730b4521b74e5ac13b8459d5d78864be695318b49428",
+      "back_sha256": "4857250e0c39e3f6cf70ab33ba176f8c612bbd28a52979c18a6b56f5e2aee3d1",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "By keeping useful strategies private and focusing only on individual numbers.",
+        "By waiting for daily oversight before helping anyone with current work.",
+        "By taking on undocumented ownership before confirming it with a manager."
+      ]
+    },
+    {
+      "record_id": "legacy-ch13-027",
+      "front_sha256": "f9a977f77cb58ae9fb28ea0cefecb530335c75da6216889ae44e0bd0b4af8e1a",
+      "back_sha256": "db17e0ed84a44907d71a4995a73abaa47835439b00b21c4877711f2a3c74cb55",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Hearing feedback, defending the current process, and returning with the same results.",
+        "Applying feedback once, skipping review, and waiting for the next opportunity.",
+        "Hearing about a gap, leaving it for the manager, and avoiding responsibility."
+      ]
+    },
+    {
+      "record_id": "legacy-ch13-028",
+      "front_sha256": "4ce92527eeef4fd3adacbc87805fbe9bb8e8f26f2835e6d7ba1bb321b93254fd",
+      "back_sha256": "3ca8034d57b23d144570829195e9e3be01d1909094adb4875f3b848a2c27bd3d",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Whether their leads remain in the CRM without an active plan.",
+        "Whether their notes are clean even when no leads produce revenue.",
+        "Whether the company opens new markets, teams, and positions."
+      ]
+    },
+    {
+      "record_id": "legacy-ch13-029",
+      "front_sha256": "d14c6f630ef693df3c8c47e6b9ba92b483c8d3c10dfc81745add5ca3d6f08b0c",
+      "back_sha256": "b4a1f41677227fdebdaf7a5e09d1f6a0fcc76ec18a807fd594cc53b47ba21fb9",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "They move directly into management regardless of demonstrated readiness.",
+        "They receive new ownership before it appears in their written role plan.",
+        "They lose consideration because expansion is unrelated to prior performance."
+      ]
+    },
+    {
+      "record_id": "legacy-ch13-030",
+      "front_sha256": "ebc148c99108e5a52ba2fc4d51c985cef4dee74e7a859c2ef1486c3af42b9052",
+      "back_sha256": "d27984a0396affaab917bd7f19a7d92c2eb1539b3ee47563b3f939c3c31fe55a",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Immediately after qualifying one seller and entering one lead in the CRM.",
+        "As soon as a new market opens regardless of performance or readiness.",
+        "After 90 days even when leads have no notes, stage, or next action."
+      ]
+    },
+    {
+      "record_id": "legacy-ch13-031",
+      "front_sha256": "c45fe001b8a68baa039a6c65db4edf27b36319612f03cb60cbe4e9303a440a15",
+      "back_sha256": "749b247ba498112150dbaabe334e91ccfffd9c21ec6842bb7f63fb24d0f9a481",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Definition: Leads involving only living co-owners who disagree about selling their property.",
+        "Definition: Leads involving a living seller dealing only with financial distress.",
+        "Definition: Deals that have moved from an acquisitions handoff to a signed contract."
+      ]
+    },
+    {
+      "record_id": "legacy-ch13-032",
+      "front_sha256": "4081097ea651ed45fee1f32fa253a8fbf494a1b51bb0f00541b222ffe9a482f5",
+      "back_sha256": "d3491fcf7e8c087168d67ca1966cb0cbc148a7be0b8d8fa0abcbe5c2b0396a0c",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Definition: Leads involving property left by a deceased person with one decision-maker.",
+        "Definition: Leads involving one seller who is dealing only with financial distress.",
+        "Definition: Deals involving one closer who owns the cycle through signed contract."
+      ]
+    },
+    {
+      "record_id": "legacy-ch13-033",
+      "front_sha256": "db55c45c689bad3f4dcfe258c85b215061974be2e6288573b90a562c4eb9b0b5",
+      "back_sha256": "cb8254732ca94cb31fa982a7c3ce2bb62fe848770acd820168471054e79d2fb9",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "A fixed advancement schedule and time in the current role.",
+        "The amount of daily oversight and the current commission tier.",
+        "The number of new markets and positions the company opens."
+      ]
+    },
+    {
+      "record_id": "legacy-ch13-034",
+      "front_sha256": "5edb8249342bf9b89133c8e2d7b11dd34f946e00e69a60fd3b7bd0c366405d90",
+      "back_sha256": "14903f66128bbd7cf8148e4d31806f030bb6a79495bce8f8892260680d8e0e6d",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The individual should defend the process and return with the same result.",
+        "The individual should leave the gap for a manager to fix later.",
+        "The individual should wait for promotion before applying the feedback."
+      ]
+    },
+    {
+      "record_id": "legacy-ch13-035",
+      "front_sha256": "f46d08d46d2ae30fec77a020da314a54881da74376a1917b4befdda27a4f30e6",
+      "back_sha256": "d7d8ce3c0cdb8127d21d0aba7bb4a37abb6cc05fa0ff72813cdfe891089c058b",
+      "status": "needs_human_review",
+      "question_type": "single_choice",
+      "distractors": [],
+      "review_reason": "insufficient_content_for_fair_distractors"
+    },
+    {
+      "record_id": "legacy-ch13-036",
+      "front_sha256": "33a97ec66e67babd4247ca70336f0a5f6cb51adde28a4714788aed95bb64bd53",
+      "back_sha256": "7bf234abc8547029ebeb43df2ad5dfdcc49930576d934d0e978a4f4af360b3b1",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The manager's compensation remains based only on individually sourced leads.",
+        "The manager becomes a closer paid only for deals they close directly.",
+        "The manager loses responsibility for the team's performance and output."
+      ]
+    },
+    {
+      "record_id": "legacy-ch13-037",
+      "front_sha256": "2ed3c00de24513fd0c1ccc8544bd7c868a32dd29e1c3cb0278e1f12fa0de62db",
+      "back_sha256": "625ada4069e82240fd5416a7fe8952de3e7dd93fe2e02e8bc3cf96e597a21857",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Clean notes allow the qualifying employee to keep ownership through signed contract.",
+        "Clean notes make a lead ready even when it has no stage or next action.",
+        "Clean notes transfer responsibility for qualification to the acquisition team."
+      ]
+    },
+    {
+      "record_id": "legacy-ch13-038",
+      "front_sha256": "f9b00d768fdf910f2d17164ce35563907723c3dc7cbf160ebbfdd3a66e62a5ee",
+      "back_sha256": "c6d348cf1870fb63bc950cf55a7277e9660fddb60046c14236a4183433e7c2a6",
+      "status": "needs_human_review",
+      "question_type": "single_choice",
+      "distractors": [],
+      "review_reason": "insufficient_content_for_fair_distractors",
+      "notes": "The only other seller categories in the source can also require sensitive conversations, so they would be partially true distractors."
+    },
+    {
+      "record_id": "legacy-ch13-039",
+      "front_sha256": "4cedf1a64236a9493b8ab720533bd26eecf3d1990922dde1e8943a3ded68f957",
+      "back_sha256": "69b1b9136e798af3e7aa9617e7742b7b5407fb0bfdf05c9a25388c3556af56a2",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Every starting task can be skipped when a new market opens.",
+        "Promotion follows a fixed 90-day schedule regardless of performance.",
+        "Increased ownership begins before a manager updates the written role plan."
+      ]
+    },
+    {
+      "record_id": "legacy-ch13-040",
+      "front_sha256": "ad880b1724f7769af6f6e6b9d205b9ccd60c1f0be7c002983632650037109400",
+      "back_sha256": "e25cc65f7efde88f971e6de615d0670f88f41872b1f20414ed2054b6da288d15",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Presenting offers, negotiating terms, and signing contracts every day.",
+        "Hiring people, training them, and owning the entire team's output.",
+        "Entering new markets, building new teams, and opening new positions."
+      ]
+    },
+    {
+      "record_id": "legacy-ch13-041",
+      "front_sha256": "825ca8cbee04643fb2a5f52b948ee2421702e25d732ca683706519e6bdd3bc5f",
+      "back_sha256": "6d958b4aaa824a06fcff599f5f8963520abf4fb82c694d2b0658fa62801b08ac",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The negotiation and signed contract for every individual deal.",
+        "The notes, stage, and next action for one qualified lead.",
+        "The manager's individual KPIs without the rest of the team's results."
+      ]
+    },
+    {
+      "record_id": "legacy-ch13-042",
+      "front_sha256": "f040e877241060b464d292871f60cb021ad4f8afc1833b3f4ce70d48f4f83293",
+      "back_sha256": "2689eacafc5b60b7888b41d6105588aba144503ae286c09cbd24fc05d2e56495",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "By counting calls without considering how effective they sound.",
+        "By reviewing CRM notes instead of the call's actual effectiveness.",
+        "By looking only at closed deals without evaluating the calls."
+      ]
+    },
+    {
+      "record_id": "legacy-ch13-043",
+      "front_sha256": "e7ac0cd608997ab00d5b0ff8883f88478f61d7fd51d216434c833821880d1b4f",
+      "back_sha256": "392e1c0a22c81cbfaf2b3dbc05fde1b710f36aceca07e944b500abc984c68b59",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "It replaces the need to structure a deal creatively when the direct path fails.",
+        "It determines the manager's compensation from the output of the entire team.",
+        "It supplies the notes, stage, and next action required for CRM hygiene."
+      ]
+    },
+    {
+      "record_id": "legacy-ch13-044",
+      "front_sha256": "8b8eb4b34e06b43230fb55890d499c113d5fff9ec57b847b502ee95da7d83dd3",
+      "back_sha256": "aba41e91eb5b2906376bf8b917dca99e16e8e428fed1fc44591dc82df37dc1b3",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "It is a reason to defend the current process and keep the same results.",
+        "It is a signal to wait for a fixed schedule before improving.",
+        "It is a task that only a manager can apply to the work."
+      ]
+    },
+    {
+      "record_id": "legacy-ch13-045",
+      "front_sha256": "a4e11d299556bd295678d17337287d92a2f904af980dfed7ccd002cb9ffe85f6",
+      "back_sha256": "df0914808315c5a5bca4d0788bfb95f599ecd4cede780424ab6f20513b4457b4",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Present an offer, negotiate terms, and sign the contract personally.",
+        "Leave the seller in the CRM without a stage or next action.",
+        "Take on new ownership before it appears in the written role plan."
+      ]
+    },
+    {
+      "record_id": "legacy-ch13-046",
+      "front_sha256": "1fd8da782f4f8ead7689794ab338212685338c79fba4b4dd72917ffefb5e5db8",
+      "back_sha256": "1a8d5748a0eb9d7292838c406c009ad8cfc0dbe63a96527c69f6b39a886da118",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "It is considered ready for an efficient acquisition team handoff.",
+        "It is considered proof of consistent performance and readiness.",
+        "It is considered complete because the full sales cycle is finished."
+      ]
+    },
+    {
+      "record_id": "legacy-ch13-047",
+      "front_sha256": "81b022b796a095b36549f65efae05bd9e361121e2a5893a1c8d6a0514f50dafc",
+      "back_sha256": "ff128da56fb0c1ca6963eb2ecf865eda02353a78acd795dbf2625b7dff223273",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Presenting offers and signing contracts directly.",
+        "Tracking compensation across the entire team.",
+        "Opening new markets, teams, and positions."
+      ]
+    },
+    {
+      "record_id": "legacy-ch13-048",
+      "front_sha256": "e7bdcbb9b5f736bb398bcc1007a74b78910801e05799b45c54329fcda389aa42",
+      "back_sha256": "9e1b51e9b153da9c61f05ab2e3931c7627658e45ee37fe287ee5bb1c6a5ab7b7",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "It adds CRM notes, a stage, and a next action to lead sourcing.",
+        "It adds mentoring and less daily oversight to complex lead work.",
+        "It replaces lead qualification with hiring, training, and team management."
+      ]
+    },
+    {
+      "record_id": "legacy-ch13-049",
+      "front_sha256": "716da3e6e004491a7081741d0ab9bf11aeb4a771cc711a1c3a0f03693e65811c",
+      "back_sha256": "546a85f30082dfc67d4239d706527d2f2dfbf1cf45cd53394d40cf8f96137d63",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "When a qualified lead is first handed off to acquisitions.",
+        "When a deal already has a signed contract.",
+        "When a seller is still being qualified at the foundation."
+      ]
+    },
+    {
+      "record_id": "legacy-ch13-050",
+      "front_sha256": "2c98744d71d819c91b077eb24e4387a75e55fedb2a75bc90745c3516060be16d",
+      "back_sha256": "66a44b8da571f8fd5ab0aaf3fc8a7b728bee88f988805c2ae22934845959cf75",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Keeping each employee on one fixed promotion schedule.",
+        "Reducing every position to foundational lead sourcing work.",
+        "Increasing daily oversight while limiting new opportunities."
+      ]
+    },
+    {
+      "record_id": "legacy-ch13-051",
+      "front_sha256": "6679a7fb40e057a312b03180cb386f7b5ba74d68fe99c113ef8551b5ea30c85a",
+      "back_sha256": "245e6b9b1f908debbdb30f11c71bb5d331937c01f4ae2113a51d502097e2f344",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "By beginning with hiring, coaching, and ownership of team performance.",
+        "By moving directly into presenting offers, negotiating, and signing contracts.",
+        "By waiting for a new market or position before practicing current work."
+      ]
+    },
+    {
+      "record_id": "legacy-ch13-052",
+      "front_sha256": "c4b7b7672f06ec2a21ca45619daf770326b2773523b68e84eddedd2653136711",
+      "back_sha256": "31bc9b4665a1505ebbb14808c9b8ac7669645c3204b5e03bcf9ab0789a48b6a4",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "To identify people who defend their current process and return unchanged.",
+        "To identify people who need daily oversight instead of applying feedback.",
+        "To identify people who wait for a fixed schedule before improving."
+      ]
+    }
+  ]
+}

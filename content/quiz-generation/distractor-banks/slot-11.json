@@ -1,0 +1,725 @@
+{
+  "schema_version": "bmh.quiz-distractor-bank.v1",
+  "slot": 11,
+  "quiz_source_key": "quiz-slot-11",
+  "lesson": "Complex Objections",
+  "source_ledger_sha256": "f130f47f03585928e40f37dfba3a37c4ab3f9f8d41ae65332668b430960ba4ff",
+  "authored_by": "codex (EXECUTE 2.11, 2026-07-20)",
+  "entries": [
+    {
+      "record_id": "legacy-ch14-001",
+      "front_sha256": "8523c377d6dae47786a45caa0d950e35a18671ea94717bdf6594baec9df6c91d",
+      "back_sha256": "865156d4103d05efdb2dcb41202f693fc79a2c532ffa7930fc693e17d9de69bd",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "20 percent",
+        "50 percent",
+        "100 percent"
+      ]
+    },
+    {
+      "record_id": "legacy-ch14-002",
+      "front_sha256": "2a09747f94a174be7283635e234b6d4fc790fa4ade15d46d59135347e94b8823",
+      "back_sha256": "7e3c3108c5dc58aa1a247b0df71e3f89a8a45e7ecfc6f3e772babd54f84994d9",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Lower emotional weight, no legal complexity, and fewer moving pieces",
+        "Only routine property condition questions with no seller concerns",
+        "Simple objections handled by a fixed response without deeper questions"
+      ]
+    },
+    {
+      "record_id": "legacy-ch14-003",
+      "front_sha256": "4b875ddac508afbed5f7fd5b8106b34792b85daf789e782a8c0ce3572248c204",
+      "back_sha256": "3b2e6d479ed146dc0d28382d67a46d9c01325b461079caa3f693384acabb44cb",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Definition: A transaction completed without signs, listings, open houses, or neighborhood attention.",
+        "Definition: An arrangement where the seller remains as a tenant for a defined period after closing.",
+        "Definition: A property occupied by someone without a lease or the owner's permission."
+      ]
+    },
+    {
+      "record_id": "legacy-ch14-004",
+      "front_sha256": "9014241f9e7e1adb4e8f7a4d8c963e744dee84c78fdd2422f0ec0fac91433370",
+      "back_sha256": "d5b2d4fbf6844272163808cdc49d2adf7c85504ab5e50289b5f61df1ea88d22c",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Promise that a short sale will solve it",
+        "Negotiate a leaseback before discussing the mortgage",
+        "Ask the seller to clean out the property"
+      ]
+    },
+    {
+      "record_id": "legacy-ch14-005",
+      "front_sha256": "def0307879c80e1ef90e8ed8b7152c6fd0258584a0e5a4ceb941f3da8b086d29",
+      "back_sha256": "e86d3ae03b4d2f146d5bce99a9dc88379e4959571c1cb71150da462a7bc9373d",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Whether the co-owners agree to sell or remain in conflict",
+        "Whether existing tenants have a lease and plan to stay",
+        "Whether the seller wants signs, listings, or open houses"
+      ]
+    },
+    {
+      "record_id": "legacy-ch14-006",
+      "front_sha256": "7022b0204f35471de05fee05c264cb6360a68d722fa37476d910b540599884b3",
+      "back_sha256": "99dca44afd8e516706f529e22ce4821ac487cc1ce210fb7a7492d559eda2b6d1",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Roughly how much profit the company expects after resale",
+        "Roughly how long they need to remain after closing",
+        "Roughly how many co-owners disagree with the sale"
+      ]
+    },
+    {
+      "record_id": "legacy-ch14-007",
+      "front_sha256": "e37c33970ea5856e0d225b805e60b103a5f600333a8acbe673b4a472e41d9a3c",
+      "back_sha256": "dedb64e865d8577e4009e9d627b52a8129c1e9d6e6139d8656feedea5655c319",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "A leaseback",
+        "A private transaction",
+        "An inspection period"
+      ]
+    },
+    {
+      "record_id": "legacy-ch14-008",
+      "front_sha256": "6f2580518ae354c0701873d57b59aef79fff578ace7379531a04bbe1c84b0e10",
+      "back_sha256": "b6333c732c84379693364d0a137b61bf15b48a26f3f2ea4006a4ae4091d56b6d",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "They believe existing tenants always prevent the property from being sold",
+        "They expect to complete every property repair before any evaluation",
+        "They think a public listing and open house are required"
+      ]
+    },
+    {
+      "record_id": "legacy-ch14-009",
+      "front_sha256": "c1e4e17a9dced5b2dbd3b2d1a3c7b2989a96737bc277fe0973c0db5c794f2eb5",
+      "back_sha256": "c43cca67b46ca53e95f314fc5a5de5f81f147f3af59a442722f932e55a6d61bc",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Do they own the property, approve the sale, and want a leaseback?",
+        "Are payments current, how much is owed, and is a short sale needed?",
+        "Does the house have mold, foundation problems, and code violations?"
+      ]
+    },
+    {
+      "record_id": "legacy-ch14-010",
+      "front_sha256": "5b952764019882f95dec6c46146cd7b65fe07a39d4f077292aeead5e91f95e42",
+      "back_sha256": "288af89e5220c96767d07162eb21d31dc9dbf602e6f8298722b94f0c44cd4fda",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Definition: A seller who stays in the property as a tenant for a defined period after closing.",
+        "Definition: A property whose mortgage balance is higher than its current market value.",
+        "Definition: A seller who wants no signs, listings, open houses, or strangers walking through."
+      ]
+    },
+    {
+      "record_id": "legacy-ch14-011",
+      "front_sha256": "5c6cda59ddb29cba7353093bfb89154291ad4789c547f5ba8b472506453bd129",
+      "back_sha256": "74da7de14d18cdbc2700de0fdadafeeba44e6bd54eef61272327a1b7c852bddb",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Promise that the company will remove the squatter before the sale",
+        "Immediately ask whether the occupant has a lease and pays rent",
+        "Redirect to property condition and an offer without acknowledging the frustration"
+      ]
+    },
+    {
+      "record_id": "legacy-ch14-012",
+      "front_sha256": "235088af9b4b1d32e6d368e1a6ff01da90da6824b9e10e6917f0dd802e463672",
+      "back_sha256": "b0ba39666c050b41f43a0f7d4a0be3084175c0a44cbadc33b8092a42152f27c0",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Acknowledging that the situation sounds incredibly frustrating",
+        "Gathering information about the squatter situation",
+        "Documenting the sensitivity for the next team member"
+      ]
+    },
+    {
+      "record_id": "legacy-ch14-013",
+      "front_sha256": "1938ce5ef2c38e036efa7e69b3064d9ddc26b435ed129173a2f681427be434f9",
+      "back_sha256": "1bbecf4398edf0c0be8d95fd34809e805abb7ab6dddeb92ee6ab90a6a0ec3b76",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Promise a specific solution for the seller",
+        "Negotiate the exact terms of a leaseback",
+        "Decide the seller's legal right to remove the occupant"
+      ]
+    },
+    {
+      "record_id": "legacy-ch14-014",
+      "front_sha256": "4d4b636eb293b0e36b395676a9fe12761b51d3e44edc1ef0a7197a7be7edb890",
+      "back_sha256": "39e5f0204f3960b1d1c279b23a97b320591bc508b3a15d2882320ad8d21d6ffb",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Definition: A property where the mortgage balance is higher than its market value.",
+        "Definition: A person living in a property without a lease or the owner's permission.",
+        "Definition: A contract period that gives the seller time to obtain a trusted review."
+      ]
+    },
+    {
+      "record_id": "legacy-ch14-015",
+      "front_sha256": "41aa2eb34f17ea556c88fbf2aa88f904ad182858f37c641b93a28863f25b753d",
+      "back_sha256": "fe172802140752a885609fa98c0e1d6e59d7b22d106d008bc35e2ba4cd6a95d7",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "They need the buyer to clean the entire property before closing",
+        "They want neighbors alerted through signs, listings, and open houses",
+        "They need the mortgage balance to exceed the property's current value"
+      ]
+    },
+    {
+      "record_id": "legacy-ch14-016",
+      "front_sha256": "80c36674ce5d3d75e19c91b5bae9eb17f49e21ef627c74e4577aa58b0797bac3",
+      "back_sha256": "d684fb988b90696456119dae206cc99e8892eed363ffe5b7f12bfb27aa71860a",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The licensed title company",
+        "The seller's attorney",
+        "The seller's co-owner"
+      ]
+    },
+    {
+      "record_id": "legacy-ch14-017",
+      "front_sha256": "ebe2d10c61750685895bc78e91ec36e58aa55f199a14665b2cd944d85402e1af",
+      "back_sha256": "c592551d2067e80210f44936030008ab87712c462ad58484b091ea589c72df92",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Mortgage balances, short sales, leasebacks, and inspection periods",
+        "Mold, foundation problems, code violations, and asbestos",
+        "Payment status, mortgage balance, market conditions, and holding costs"
+      ]
+    },
+    {
+      "record_id": "legacy-ch14-018",
+      "front_sha256": "e053962900faa4ee4ad84f24fc6811c41e52868d6d38b590c1aa17b39eaa4f3b",
+      "back_sha256": "ce916c3a51024705fed55b917b55230ee682c8e9bceba9e878908aa89a517c7d",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Existing tenants, squatters, or left-behind belongings",
+        "Mold, foundation problems, or asbestos",
+        "Leasebacks, short sales, or inspection periods"
+      ]
+    },
+    {
+      "record_id": "legacy-ch14-019",
+      "front_sha256": "5b621493290bfa3cdd524bd9dae88b295c3941f835233e3eaf1c24e2e1475bea",
+      "back_sha256": "a90d56d1f7fb21f0e6b0a4ddd7d5edd4fb3ad79203255e27104d12a9912a9279",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "A leaseback arrangement",
+        "A short sale structure",
+        "A licensed title company"
+      ]
+    },
+    {
+      "record_id": "legacy-ch14-020",
+      "front_sha256": "52a10db516b24722e482d3f3fee3ccda533b5720d90bc48c57c8f2533eb0dbc1",
+      "back_sha256": "227059cf90305975a7e1cad64a4672b9a794a44e23e47a09c0088f625b6b449a",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The contract immediately resolves every disagreement between co-owners",
+        "The company will provide legal advice instead of involving their attorney",
+        "The inspection period guarantees a specific solution for every concern"
+      ]
+    },
+    {
+      "record_id": "legacy-ch14-021",
+      "front_sha256": "0e704a59d33f852239076c584c01dd9be3ec1dbb79be18da17b7cfa0e53fd508",
+      "back_sha256": "e43b363279602f488eec9ca1f3c5ad47c254646524d29282686b2ebb20751e04",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Whether the company buys properties with existing tenants",
+        "Whether they may leave personal belongings after the sale",
+        "Whether the transaction will use a licensed title company"
+      ]
+    },
+    {
+      "record_id": "legacy-ch14-022",
+      "front_sha256": "966f7029f983666465b9b0f58d8ec6cb4dfcc9855726e5d8a4805b36511bc23a",
+      "back_sha256": "ee15c7eab72585ebce02c01c7a18ffb8a168b3cdbededb5a9c061d9646f40f98",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Apologize for the model and promise the company will make no profit",
+        "Say the profit comes from money the seller must provide upfront",
+        "Avoid explaining the model and redirect immediately to property repairs"
+      ]
+    },
+    {
+      "record_id": "legacy-ch14-023",
+      "front_sha256": "8477e9a1e241233e42bab8954af093e3bc2b7eeebce6d078188f2817e42cb035",
+      "back_sha256": "f34ce5bf899c10062866902c09f97d017781a791893765ebe8b414f941c2ea0c",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Defend the company immediately and dismiss the fear as unreasonable",
+        "Promise a specific legal solution before asking about their experience",
+        "Redirect to property condition without acknowledging the seller's concern"
+      ]
+    },
+    {
+      "record_id": "legacy-ch14-024",
+      "front_sha256": "b85d7e6ce20c81ed6ef0d0b6abf0913f632ead15adaa74762825ad1f5b9467dc",
+      "back_sha256": "ec6730ef2aa401d832dfe11cc0b466dadbe732b0ad3fa9ca47925c8bf7271b0a",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The acquisition team",
+        "The seller's attorney",
+        "An outside buyer"
+      ]
+    },
+    {
+      "record_id": "legacy-ch14-025",
+      "front_sha256": "ba5edeeecf4d272c3a1d03174578cfc48969424a02e5547c843f23a1b7ca33fc",
+      "back_sha256": "5d3f4f48d38b1d4d1162881d94366969859901645d9b317504e7585bd908661c",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The company takes upfront money to provide an inspection period",
+        "The seller pays the title company upfront before a private transaction",
+        "Upfront money is required when the seller leaves belongings behind"
+      ]
+    },
+    {
+      "record_id": "legacy-ch14-026",
+      "front_sha256": "ab2a008f663a4d4e570129d1cfda8247f7fe9a35bbe6a317b67a63985429e5d8",
+      "back_sha256": "12a9850bb0e831576afd9cc2d2c85324538242b151d6d4da14985bb3389fb4c9",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Argue that the attorney is wrong and press for an immediate signature",
+        "Exclude the attorney and promise that the contract carries no risk",
+        "Apologize for the company's profit and end the conversation"
+      ]
+    },
+    {
+      "record_id": "legacy-ch14-027",
+      "front_sha256": "80024348ea9b2025e37016645e3134a531ec230e7dabfe4dd3497cbf5d74d191",
+      "back_sha256": "7c4c522625434f32e8d080d89c42329c2dcfa41c586705be3626b2acf26648c7",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "To have the attorney negotiate the leaseback instead of the acquisition team",
+        "To get the attorney to promise a specific short sale solution",
+        "To prevent the attorney from reviewing the contract during the inspection period"
+      ]
+    },
+    {
+      "record_id": "legacy-ch14-028",
+      "front_sha256": "6a8cf80b1a0d0d8a17f01cc2869fcbc79d4907100fcb8f5e0add2546fc06431e",
+      "back_sha256": "5cebe2842d0e02b43006b86e6fa062d147cb394e3105c5bf4c9f1aaa740f5603",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Side with the present seller and ignore the absent co-owner",
+        "Explain that the title company can override the disagreement",
+        "Promise that holding costs will force the other person to agree"
+      ]
+    },
+    {
+      "record_id": "legacy-ch14-029",
+      "front_sha256": "7992d39c1a76c82b40e628e7a9da90b13992136d7946feaf1d7e8d3dae3ffd3f",
+      "back_sha256": "f81a2816ce268c719c1446c50da3d9e74023fc73610d417f15becba63c828c8e",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "An outside person can make the selling decision for every co-owner",
+        "A buyer can complete the sale without a resistant co-owner's involvement",
+        "Family members must accept the buyer's view of actual market conditions"
+      ]
+    },
+    {
+      "record_id": "legacy-ch14-030",
+      "front_sha256": "5f5c95856e521f89c5704b551cda982c05ebc9b5e7c75e6d202a4325393205bc",
+      "back_sha256": "a79fbc05bbe00d498846597de3cd50602c4bc529a1efe89c9be6ed21b445be4a",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "They disqualify the property until the seller completes the repairs",
+        "They require an MLS listing and open house before evaluation",
+        "They preserve interest only if every belonging is removed first"
+      ]
+    },
+    {
+      "record_id": "legacy-ch14-031",
+      "front_sha256": "22aa72946cb62eacbe1d0b61c37d27df2939f2d1c35907b17cfcbb0a2d54e247",
+      "back_sha256": "e9580c1fc0ea92bd7e34550163c5bfeac13fdedfc1b18304836e8777c1ef79f0",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The seller must remove every belonging before the property is evaluated",
+        "The licensed title company becomes responsible for every item after closing",
+        "Existing tenants must clean out all belongings before the company can buy"
+      ]
+    },
+    {
+      "record_id": "legacy-ch14-032",
+      "front_sha256": "ec5195b5acab4b2056a28e40046cf0f4f977f43f8315d2aeaa78a1b893f066f2",
+      "back_sha256": "cb2da4e929df3f6c3062665b8a77923e6a9ffed79df9ea6d1eafe3cc2bfd96bc",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "It removes the need to confirm who has legal authority to sell",
+        "It guarantees a leaseback for as long as the seller chooses",
+        "It makes the title company responsible for every property repair"
+      ]
+    },
+    {
+      "record_id": "legacy-ch14-033",
+      "front_sha256": "21b41c96a37d635b3a55921e4622d7b116c773780cd576278c084d14c8b7ad33",
+      "back_sha256": "f9236d9e87b6235ec4f2d7e00d60f5a68670c6dcf70f6f2f354a4325f79f1b27",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Ask",
+        "Redirect",
+        "Escalate"
+      ]
+    },
+    {
+      "record_id": "legacy-ch14-034",
+      "front_sha256": "9ba3a0fa2d2127b60a12130da2fe859ca3f84bf6ee5c6836133ec3933cd3b243",
+      "back_sha256": "171a10659e4f55415bf9eca0b9310d69e3df6ea85ee20419e0d6f4d95d98621f",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Listen",
+        "Acknowledge",
+        "Ask"
+      ]
+    },
+    {
+      "record_id": "legacy-ch14-035",
+      "front_sha256": "2d7a6cb5fe6cea5d59565a8a55a673c43ba0311214f4e810ce26e09d0c3e13b4",
+      "back_sha256": "8a117111bef44ec7ce8870a0b55980605fba63b025174ba47371126979bade3d",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Legal confidence to advise the seller",
+        "Defensiveness about the company's profit",
+        "Willingness to promise specific solutions"
+      ]
+    },
+    {
+      "record_id": "legacy-ch14-036",
+      "front_sha256": "914c4be3b71aa98d8367ff7430637bab8786dfc72f7ee9d1612eb6e76bf43dc9",
+      "back_sha256": "171a10659e4f55415bf9eca0b9310d69e3df6ea85ee20419e0d6f4d95d98621f",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Escalate",
+        "Resolve",
+        "Close"
+      ]
+    },
+    {
+      "record_id": "legacy-ch14-037",
+      "front_sha256": "940be2f6b1fd18f35970ba82642ad97d40d2f56f32ab1caff3db7575d558c683",
+      "back_sha256": "46a80d907c0fb75ff3e25842781beacc7477815efaa66816aa88dc9f6c374e5c",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "No, every tenant must move before the property can be evaluated",
+        "Yes, but only when the tenants have no lease and pay no rent",
+        "No, a tenanted property must be publicly listed before a sale"
+      ]
+    },
+    {
+      "record_id": "legacy-ch14-038",
+      "front_sha256": "cdfa3c0b9704a785ded291d927ab48ab272f81039a5b194e266ed577db7a4df0",
+      "back_sha256": "05e6348627f26dd8ed3ba2ce8bf2bb5331eb25b5408029d661a220bdcf70e176",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "To promise a specific solution before gathering the facts",
+        "To move directly from the initial concern to a contract signature",
+        "To negotiate leaseback terms instead of involving the acquisition team"
+      ]
+    },
+    {
+      "record_id": "legacy-ch14-039",
+      "front_sha256": "b10e41c190d8bc3613e3ad52e224e3239a22b620ced0c133238f963c1dc4bfcf",
+      "back_sha256": "0d75f694af61a99465d3a192cbf5b1c29e89ecd87234a976f127e7c4ae29d346",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Explaining it honestly",
+        "Connecting it to seller value",
+        "Showing mutual benefit"
+      ]
+    },
+    {
+      "record_id": "legacy-ch14-040",
+      "front_sha256": "8804948f5a6464b8516df8c737a84cbd311e9bd3ab635d7b9fc2f8a488f7565f",
+      "back_sha256": "f168ccdd91548c5a8c871bd4b9b757c5e889a1672e774bddef4a2714759a7a8f",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "property",
+        "mortgage",
+        "tenant"
+      ]
+    },
+    {
+      "record_id": "legacy-ch14-041",
+      "front_sha256": "353063997baed8d3764fd19cbc66ec62695e5274b853de9c7e409c71f23c046d",
+      "back_sha256": "60a33e6cf5151f2d52eddae9685cfa270426aa89d8dbc7dfb854606f1d1a40fe",
+      "status": "authored",
+      "question_type": "true_false",
+      "distractors": [],
+      "true_false_answer": false
+    },
+    {
+      "record_id": "legacy-ch14-042",
+      "front_sha256": "c238cf994c7a22a531f263460fcfca8eedaa2ac5d70d12b081d83b232a21a5b7",
+      "back_sha256": "1b0075bb806219c2936fca246da5547993ef5da18892b13f9d5e06318e89c823",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Neighbors will be invited to an open house before closing",
+        "The property will be listed on the MLS with a yard sign",
+        "Strangers will tour the home so the neighborhood sees the activity"
+      ]
+    },
+    {
+      "record_id": "legacy-ch14-043",
+      "front_sha256": "315d4d6d884dccfb2efca71a33ff05400ccfbd3cfce61ce8ff3a6dec9d571137",
+      "back_sha256": "35f418fc0f5e59885e2d124c932b52aec1b630a2125b0efe39d424f250d7f67a",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The property condition and whether the seller will make repairs",
+        "The tenant lease and whether the occupants plan to stay",
+        "The co-owner conflict and whether an attorney will review the contract"
+      ]
+    },
+    {
+      "record_id": "legacy-ch14-044",
+      "front_sha256": "18a70f3b48063db260e6db34eb7c8da46a5ddcad0a19c189e87eff23bcde134a",
+      "back_sha256": "199489231e408670caeeaff31315ee90e7d0a23a73373a77f7936a1ae42129c8",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "We can guarantee that this will be resolved",
+        "You should remove them before we discuss the property",
+        "The title company will decide what happens"
+      ]
+    },
+    {
+      "record_id": "legacy-ch14-045",
+      "front_sha256": "ee6d8a718776d286ce8f851688c185dc354d50a54118ce613d3245d9b57ffd4b",
+      "back_sha256": "1192da374ede50c433fa791dfa547a5d912bb9f8d0d798ac17e9bf8315966f58",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "An open-ended time that the seller chooses after closing",
+        "The inspection period used to evaluate the property's condition",
+        "The time needed to process the transaction through the title company"
+      ]
+    },
+    {
+      "record_id": "legacy-ch14-046",
+      "front_sha256": "2dc79c8cec48a67db400792eaee8ce609f7faea0359b7d1d4f4888ae47177eac",
+      "back_sha256": "5906b9707425780bd2ca9f4db5ad64f3c3e6eded5c8df62978a399df72364c78",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Promising that the resistant owner can be excluded from the transaction",
+        "Hiding the company's profit so the business model is never discussed",
+        "Guaranteeing the resistant owner a leaseback without negotiated terms"
+      ]
+    },
+    {
+      "record_id": "legacy-ch14-047",
+      "front_sha256": "898408cd93be7bb0eb0598860c5d1e9a7e87b7483bb52b6981d982300e5137ec",
+      "back_sha256": "06ed1b5a75487238943da5c2e9668cef05735dc7568343e67872abe553b14aaf",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "They buy them only after the seller corrects every issue",
+        "They require an MLS listing and open house before considering them",
+        "They buy them only if every tenant and belonging is removed"
+      ]
+    },
+    {
+      "record_id": "legacy-ch14-048",
+      "front_sha256": "933c974d4d61eec928cc9207d27f127de941d581ef6145105e551594d23ddf27",
+      "back_sha256": "d0c6eed96991fab9769d053aaaacbd646d36575e01e8e518826c21f4eaa57c2b",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "It guarantees that the seller will not need an attorney's review",
+        "It makes the contract carry no legal weight as soon as it is signed",
+        "It transfers all leaseback negotiation from the acquisition team to the seller"
+      ]
+    },
+    {
+      "record_id": "legacy-ch14-049",
+      "front_sha256": "614fd72fbb93eefb90fd7fc3ee468cb5311b81049eeb41f4baaae846604e9d96",
+      "back_sha256": "5e8265a8f7012a821b30c377d08ce6a9e70f9f44313d2e56774f44262557dd19",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "It wastes time better spent gathering facts about the seller's concern",
+        "It can prolong the call without clarifying how the transaction works",
+        "It shifts attention away from the process details the seller requested"
+      ]
+    },
+    {
+      "record_id": "legacy-ch14-050",
+      "front_sha256": "1f4f87b22eb5ae6702a234f96a1db7811a674a1e7cd273bf57528a420bcd6d61",
+      "back_sha256": "dcab7f7d07fb2ac50991ed5ae8c3273c9b36cbd21c123db2e71517eda2f7edaf",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "financial",
+        "structural",
+        "procedural"
+      ]
+    },
+    {
+      "record_id": "legacy-ch14-051",
+      "front_sha256": "bd815211e7a1eb71ec1fa83acff68bdc67f16dc25bca7e236d69d8fbbafbb170",
+      "back_sha256": "991603207eef2cf76661c185e1050030ac3061df42fba6fd0f8d589cf7fbd065",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Cold outreach to an elderly heir who wants to leave belongings behind",
+        "A follow-up call with a landlord whose tenants are current on rent",
+        "A contract review with co-owners who already agree on the sale"
+      ]
+    },
+    {
+      "record_id": "legacy-ch14-052",
+      "front_sha256": "1306fe29b22cbb077457c1df912c22a0837d5a6018404ce1b3739ef44475e0ee",
+      "back_sha256": "8732d6327e25cb31b285cc6a75221718a169a033477def64faeeb1aefd302a2a",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "occupied",
+        "as-is",
+        "unlisted"
+      ]
+    },
+    {
+      "record_id": "legacy-ch14-053",
+      "front_sha256": "e2eb03ac667672e3dfe0b7ea6108002f48b2034cfa3454cf8d49f718dca88cbb",
+      "back_sha256": "065e6528de6412a8ba35e7292fb2dd8f1df3be0102aa3ae406c22f0034963590",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The seller's payment status and remaining mortgage balance",
+        "The property repairs and disposal of left-behind belongings",
+        "The attorney's advice about whether the seller should sign"
+      ]
+    },
+    {
+      "record_id": "legacy-ch14-054",
+      "front_sha256": "94e3e5b22f8319648e368255bbb39e93892b3ef8290c69d937b2a9fbb614202f",
+      "back_sha256": "6a2e0ffaadc660a4bf767e8d2ccbdcb8b52109f29ba7664cab95b2c77cbd4405",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Apologetically, claiming the company does not expect to make a profit",
+        "Defensively, avoiding any explanation of what the seller receives",
+        "Aggressively, pressing for commitment before the seller is comfortable"
+      ]
+    },
+    {
+      "record_id": "legacy-ch14-055",
+      "front_sha256": "7f4b3e93366889d2ced70e6389dbc2f495c60b93c258ed3e0668ff4c18bb2c0a",
+      "back_sha256": "132f90158b738346f1bef92df8d79ed31fd320b3c4405cc56714c4e79d480393",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Concern can be scripted well enough that sellers will never notice",
+        "Defensiveness shows confidence and strengthens the seller's trust",
+        "Promising a specific solution proves that the company genuinely cares"
+      ]
+    },
+    {
+      "record_id": "legacy-ch14-056",
+      "front_sha256": "774a9ed6b2d65cafbf6fb7a504fff9635534a332a8ade1bc24e11ceb61adc4b2",
+      "back_sha256": "db5ce89b83813fdb586468aba1d2e9bc59ffee7b9d7fec021f8c75d552e72cd9",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Are the tenants on a lease and paying rent?",
+        "Are you current on your mortgage payments?",
+        "Roughly how much do you owe on the mortgage?"
+      ]
+    },
+    {
+      "record_id": "legacy-ch14-057",
+      "front_sha256": "f076cdb4213b8890e8502e80444fb64a7d132f9a9e3c59824a8952091a951d50",
+      "back_sha256": "d224c1f772aa02edde8165a8babfb652b050d02ff4480ad7a9980afbdbdfef34",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The seller must complete every repair before the company evaluates it",
+        "Only properties without mold, foundation issues, or asbestos qualify",
+        "Repairs are waived only when the seller removes every belonging"
+      ]
+    },
+    {
+      "record_id": "legacy-ch14-058",
+      "front_sha256": "c185b94c24ccd554284b0c605c01581a8c2623bb89d3c5f42a2053259eb71511",
+      "back_sha256": "aa3eee225a750ec7ecd8a55165299d572cae8203fa4ad49c39e99446042faee0",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The framework changes completely and removes the Ask step",
+        "Complex objections skip acknowledgment and move directly to a contract",
+        "The basic framework applies only until legal or emotional issues appear"
+      ]
+    },
+    {
+      "record_id": "legacy-ch14-059",
+      "front_sha256": "87b152c69cfbf1e38f15e0520f8793bc960c442a7cf7987e284e9223b006c125",
+      "back_sha256": "d0129d5ff89beb27f9cf2efbef5271494a8fb3d3f04d18ce768c80e71322a165",
+      "status": "needs_human_review",
+      "question_type": "single_choice",
+      "distractors": [],
+      "review_reason": "back_too_ambiguous",
+      "notes": "The front asks for an action the seller should take, but the back states a company reassurance and does not identify any seller action."
+    },
+    {
+      "record_id": "legacy-ch14-060",
+      "front_sha256": "e8f9b6f8ebab1943c956768e761902f76a3184ada63e0afd832b600e963fec03",
+      "back_sha256": "3ee3e8b8a52b2be77e23edb7023e670744cb7a61299c90dfcb7f0782e125a00a",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "An arrangement where the seller remains as a tenant after closing",
+        "A property occupied by someone without a lease or owner permission",
+        "A contract concern reduced by an inspection period before commitment"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,464 @@
+{
+  "schema_version": "bmh.quiz-distractor-bank.v1",
+  "slot": 12,
+  "quiz_source_key": "quiz-slot-12",
+  "lesson": "Seller FAQ Decoder",
+  "source_ledger_sha256": "f130f47f03585928e40f37dfba3a37c4ab3f9f8d41ae65332668b430960ba4ff",
+  "authored_by": "codex (EXECUTE 2.12, 2026-07-20)",
+  "entries": [
+    {
+      "record_id": "legacy-ch16-001",
+      "front_sha256": "9ceca037e971994ec11a05ead064253607cfc9574ba405204a2447d0c28a4441",
+      "back_sha256": "fb77a172c6e647298104a9b6a5430c29580d461bf67169a0a69c0089b5e80b58",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "To memorize one ten-minute explanation and repeat it to every seller.",
+        "To move directly to a cash offer without confirming the seller's concern.",
+        "To replace specific process facts with vague reassurances that sound scripted."
+      ]
+    },
+    {
+      "record_id": "legacy-ch16-002",
+      "front_sha256": "d28d6259eb6bda968460337316beb8d6a9c3a5d30645cfa7701bf6c7d6482d5f",
+      "back_sha256": "943fd3230baab17130becddcbae10da92acd6f4be15b15d3310ac651b78981fc",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Speed, certainty, and no hassle.",
+        "Property condition, repair costs, and local sales data.",
+        "Title work, inspections, and closing logistics."
+      ]
+    },
+    {
+      "record_id": "legacy-ch16-003",
+      "front_sha256": "1a776c5c0b0a4700be9586db94060d1229893cc91c8dc21133426f93845efa32",
+      "back_sha256": "0588ebfd2367687f7e650dc51d673b78957783841a7b8b919b8c63c66923a2e4",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Trust",
+        "Fairness",
+        "Certainty"
+      ]
+    },
+    {
+      "record_id": "legacy-ch16-004",
+      "front_sha256": "b66e082f48f62f9dd6b94a3840723b5e94e2f51cd157a3aafa8cb3113756a041",
+      "back_sha256": "078f1d17ef7609faee074ff8619cba55a25fea4c27fdfcac8c26c03d66990df9",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Property condition, repair costs, local sales data, and carrying costs.",
+        "Title work, inspections, closing logistics, and final paperwork.",
+        "Speed, certainty, no hassle, and no commissions."
+      ]
+    },
+    {
+      "record_id": "legacy-ch16-005",
+      "front_sha256": "c10b8cb17ceb30df461e496aaf0741ff9a7d176b972228edce00e66b170ecbd5",
+      "back_sha256": "a933fc8f0524db7450b89b630e69d6acd8073accdd49449b985c246c24a2b60c",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The seller needs the full ARV and MAO formula before hearing the basic flow.",
+        "The seller should memorize title work, inspections, and closing logistics.",
+        "The seller must choose a closing date before asking any follow-up questions."
+      ]
+    },
+    {
+      "record_id": "legacy-ch16-006",
+      "front_sha256": "3fcc4d6b83500e404c79f8ab33124a272ad322809b540ba8a49d6af672ec860e",
+      "back_sha256": "624007f56855f53f6dbc3b1ce7554f0bb6b0d78eeae338fe73a14b146f435a45",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "They want to close quickly without making repairs.",
+        "They want the acquisition team to set leaseback terms.",
+        "They want company information for independent research."
+      ]
+    },
+    {
+      "record_id": "legacy-ch16-007",
+      "front_sha256": "566c71f8cef80946fcb93250b751ccb136fe3247b6c1edfff9060b899b672a5d",
+      "back_sha256": "e7ef78a30cfa8361b54c68f50f659e408228421733ed4eae8cfd503c8fc85a88",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The seller's need for trust and desire for simplicity.",
+        "The speed of closing and certainty of the cash sale.",
+        "The title work completed and inspections handled after signing."
+      ]
+    },
+    {
+      "record_id": "legacy-ch16-008",
+      "front_sha256": "88ac8714e20ceaa53a7b9d70b4df8e605493c31188c62965dc4e264c9e87d3ee",
+      "back_sha256": "d118995a38fb3f3f2cfbf5acd66eff67cebc91f5fe68d6bacca47c1f56a6abb0",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Repair costs and carrying costs.",
+        "Cash offer and closing costs.",
+        "Property condition and local sales data."
+      ]
+    },
+    {
+      "record_id": "legacy-ch16-009",
+      "front_sha256": "1eca4b3cf16eb43dc21ed4a70e71f8f9533268a2ecd7948094a9fa4e25090368",
+      "back_sha256": "cf8f5d31fdebba2a8fc57ee9bc57b1472d9bbc8974e710300295da3372804bcb",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Defensive and focused on proving the seller's caution wrong.",
+        "Vague and reassuring without any specific process facts.",
+        "Scripted and focused on moving directly to the cash offer."
+      ]
+    },
+    {
+      "record_id": "legacy-ch16-010",
+      "front_sha256": "c1f71f26a0b8a4ffefaa7d00df9dfaeaf960c6bfbf710a9fe9900806f5168f6d",
+      "back_sha256": "233c78375476df63f0b445e6cfaf43398a96c029d661c9156d00ea0485247455",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The transaction team.",
+        "The acquisition team.",
+        "The buyer."
+      ]
+    },
+    {
+      "record_id": "legacy-ch16-011",
+      "front_sha256": "3a61e889c1ff6e0b530e7e0940f6408cd652a01c1d7aa03ce9ddf10243f5a7ff",
+      "back_sha256": "3afaed6dcde5baa280cce47fff381f9bb52af9e40ed22ae3ee748f6a1a446c1c",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The seller pays upfront before the initial conversation.",
+        "The seller pays after the property evaluation but before the offer.",
+        "The seller pays at closing to cover title work and inspections."
+      ]
+    },
+    {
+      "record_id": "legacy-ch16-012",
+      "front_sha256": "e33d4c7bac98a796f224c40ef3eaaf34d0487bcda6d53dfb5405fb81da429edc",
+      "back_sha256": "73edc01bb9321310d206e3e1d3c9c8aee9073f3dbf55b86391df1a4f83f16f86",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The estimated repair costs.",
+        "The seller's selected closing date.",
+        "The transaction team's closing logistics."
+      ]
+    },
+    {
+      "record_id": "legacy-ch16-013",
+      "front_sha256": "0b15316b443ebfe03b674a722301ad79a43120578b9807aaf7f4bea5cbf35d1b",
+      "back_sha256": "f9ea0d279a603fe35e716ce8916b6e1d5848c1a8256c91868c5c0a9c447fada3",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The simplicity of the process relative to the basic flow explained.",
+        "The trust in the business relative to the title company used.",
+        "The speed of closing relative to the date selected by the seller."
+      ]
+    },
+    {
+      "record_id": "legacy-ch16-014",
+      "front_sha256": "ccaed7000a09b0043557c11bc7bdb59519d86abaf0939ac71f6f02475a202318",
+      "back_sha256": "f0aeb7c692a5dd5c737a8590f7e94190019f580729e2aa3bb70a29733efcbd7a",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Trust, fairness, and simplicity.",
+        "Speed, certainty, and no commissions.",
+        "Initial conversation, cash offer, and closing."
+      ]
+    },
+    {
+      "record_id": "legacy-ch16-015",
+      "front_sha256": "8bf8221618b29aad3aa2eca2cb5a15e505fdce0d8a9ffd1fecf022c6163e7748",
+      "back_sha256": "a6cedb04ddf4c5c1e4e89931ab9e808b8c9d1c44296f5a405d2387355273ad5a",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Initial conversation, property evaluation, cash offer, and closing.",
+        "Property condition, repair costs, local sales data, and carrying costs.",
+        "Title work, inspections, closing logistics, and attorney review."
+      ]
+    },
+    {
+      "record_id": "legacy-ch16-016",
+      "front_sha256": "8cc95f951f153125b8181b74034736d976b61b396c3174b5db9fae201e6c61ad",
+      "back_sha256": "269035f955b0c6396a69507b7652c533cd011f48c9fe141bcedc7b3d2d2425f5",
+      "status": "needs_human_review",
+      "question_type": "single_choice",
+      "distractors": [],
+      "review_reason": "insufficient_content_for_fair_distractors",
+      "notes": "The lesson gives one closing-speed window. Its only other timing facts describe when funds arrive and how long a leaseback lasts, so three plausible alternative closing windows would require outside facts."
+    },
+    {
+      "record_id": "legacy-ch16-017",
+      "front_sha256": "c18351dc5340882261253d3ec4752ed7959e68d378e2db7b0e30d4fb10e093c3",
+      "back_sha256": "a0fc9ceb6b8a2cd0a91a04fde1833c1840ce32518e96dae0d9d1cf36175c560a",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The buyer.",
+        "The acquisition team.",
+        "The transaction team."
+      ]
+    },
+    {
+      "record_id": "legacy-ch16-018",
+      "front_sha256": "3e3a19b31c1491568fbb4198bac75c9f6cd6a5e4b6095d5cf74ae13d2e20712c",
+      "back_sha256": "02c5bd2d955ea93c143ddb910a00f13f295b318e4920b76beb00fd04b16646a9",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "All estimated repairs must be completed before closing.",
+        "Only the repairs found during inspections must be completed.",
+        "Enough repairs must be completed to justify the cash offer."
+      ]
+    },
+    {
+      "record_id": "legacy-ch16-019",
+      "front_sha256": "649beed05d73c246cc36c8a1a3e990cf8b168f2f3f1038401c22551a7d7da429",
+      "back_sha256": "0c2809ebee40c286c150564d56bdcefae424c3c67c48ec96f14ab1c3097250a0",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The estimated repair costs based on the property's condition.",
+        "The local sales data used to determine the cash offer.",
+        "The buyer's repair and carrying costs after closing."
+      ]
+    },
+    {
+      "record_id": "legacy-ch16-020",
+      "front_sha256": "ac5600140f7d55e94823a3c4bb232ad6c06966b63562299db297f1b54501ddb0",
+      "back_sha256": "e851c39cabfd84800d28d50f95b2ab1f610670d18866c71ff78b2aab9e95b017",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The seller.",
+        "The licensed title company.",
+        "The transaction team."
+      ]
+    },
+    {
+      "record_id": "legacy-ch16-021",
+      "front_sha256": "992042ada8aebdf8941a55ae8f5c51ad194235611d8ea7c5c7cd950772318bb8",
+      "back_sha256": "3639e8598bdf7d078346858ca816ec17e0d792e9f96b24c72f79c17d2c21cc9c",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The acquisition team.",
+        "The licensed title company.",
+        "The buyer."
+      ]
+    },
+    {
+      "record_id": "legacy-ch16-022",
+      "front_sha256": "50b62f28db53f7ab7e34b0a22a37d7e18a51a259777ce5ed7096797a0104d151",
+      "back_sha256": "dc12b64823ce92dce46f06cf942338462b220391a97e275b6dccecbc9471f5ed",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Initial conversation, property evaluation, and cash offer.",
+        "Repair costs, carrying costs, and property condition.",
+        "Trust, fairness, and simplicity."
+      ]
+    },
+    {
+      "record_id": "legacy-ch16-023",
+      "front_sha256": "fe9ef912a29f24871f572cef9a5eb7812cf141e28bd6db44bf752ce77bed9c66",
+      "back_sha256": "fefeb4497e0ed9cfe293a7dbdfd21d91fa364ea1bb042394d659cff316194b8c",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "When the cash offer is first presented.",
+        "As soon as the inspection period begins.",
+        "After any leaseback period has ended."
+      ]
+    },
+    {
+      "record_id": "legacy-ch16-024",
+      "front_sha256": "4d4b636eb293b0e36b395676a9fe12761b51d3e44edc1ef0a7197a7be7edb890",
+      "back_sha256": "c61f1329659635efd6f0d65cbac76b1713945110b764473a13de1906aca91962",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Definition: An agreement that gives both parties time to review the deal before it becomes final.",
+        "Definition: A process where a licensed title company handles the paperwork and funds at closing.",
+        "Definition: A cash sale where the seller trades equity for speed, certainty, and no commissions."
+      ]
+    },
+    {
+      "record_id": "legacy-ch16-025",
+      "front_sha256": "50867dadd6877a57ab5253a1e5fd7029b3ae66b83c0630e3dffcbd8df3232e6b",
+      "back_sha256": "dc899b91ca32c9d1e0d503466f64d6b0fd16868693d10993de4cca73a49c9882",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The seller.",
+        "The transaction team.",
+        "The licensed title company."
+      ]
+    },
+    {
+      "record_id": "legacy-ch16-026",
+      "front_sha256": "964875638f10e160166f047dbd2f15d0d9b843787c6bbc425e845078b1bb9e89",
+      "back_sha256": "f75f9f9d295340573525e64b2c212ce2fa5dabed6f7e25320d809b0b67ecd412",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The leaseback agreement.",
+        "The property evaluation.",
+        "The cash offer."
+      ]
+    },
+    {
+      "record_id": "legacy-ch16-027",
+      "front_sha256": "9880ee1d712120418868a1be82c157e3f101ae35ab175416bb041c8049b14f11",
+      "back_sha256": "0e1def4cd3688c74b41978e61d26380a83853b846a8a475eb7c2d96b935e7e12",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "To establish the exact amount the seller will receive at closing.",
+        "To explain how repair costs and carrying costs justify the offer.",
+        "To let the seller research the company independently."
+      ]
+    },
+    {
+      "record_id": "legacy-ch16-028",
+      "front_sha256": "cf5d70d47779f315cd2553a79665815b15c4713f03090efb651965e15e76e09f",
+      "back_sha256": "71015b683c3f6b33000c76ee00fc06c6762033c4ffd1c3b280aafe72be10360b",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Like a polished recorded message that follows the same script word for word.",
+        "Like a defensive buyer who quickly challenges the seller's caution.",
+        "Like an expert giving a complex ten-minute explanation before questions."
+      ]
+    },
+    {
+      "record_id": "legacy-ch16-029",
+      "front_sha256": "fe4f1f92a10740119ae99ae2dfb158c3b7ff9497cb386aaedec2dccdfd1a3ca7",
+      "back_sha256": "dfb28ce30451d3e3c6c5709fede18c1c04683f4c5291ab1dc5a9eba27801c36b",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Memorizing each response silently until you can repeat it word for word like a recorded message.",
+        "Practicing only the technical terms ARV and MAO until they replace natural wording.",
+        "Rehearsing a complex ten-minute explanation before allowing any follow-up questions."
+      ]
+    },
+    {
+      "record_id": "legacy-ch16-030",
+      "front_sha256": "6a81c249d0a3c29bdc1d3bbbb27ab63f3c2cb3b9957bf92a612013f9b917245d",
+      "back_sha256": "49b69791ecead5fabe86a84556ae4baff7711e262e13fcce098be6ce1b7ce0fe",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Nervous, cautious, and afraid of being locked in.",
+        "Hurried, focused on speed, and prioritizing the closing date.",
+        "Skeptical, focused on trust, and researching the company."
+      ]
+    },
+    {
+      "record_id": "legacy-ch16-031",
+      "front_sha256": "7077c9ed3b39c284c853aa453baef5b3c052bb8ceb776a83c05f43e787ad2e63",
+      "back_sha256": "7ae4610189617003158027eadbe35629796ad557473153c766d889fa52e542b5",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "By offering vague reassurances instead of local sales data.",
+        "By avoiding details about property condition and repair costs.",
+        "By repeating a memorized script instead of answering follow-up questions."
+      ]
+    },
+    {
+      "record_id": "legacy-ch16-032",
+      "front_sha256": "197ba311daea101fb7dd385e890179f0a67fe7891dfff80bfad898624aed47bf",
+      "back_sha256": "04b21e57212f7eb0cb15de0df576ad7c2ac47c60be2dd97061d540f26945f2d8",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "A firm deadline for making the decision.",
+        "Reassurance that every sale follows the same process.",
+        "An offer before discussing the property's condition."
+      ]
+    },
+    {
+      "record_id": "legacy-ch16-033",
+      "front_sha256": "5609b18d81860e8ec11e3fb8ffe315ac0e4126f2968eca6e114ac5cafd418d59",
+      "back_sha256": "2bc89d0137bcec08fbaa46d6045beee0b0f261110fd66d01f68435e4abd159f1",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Only if the seller completes all repairs before closing.",
+        "Only if the inspections find no property-condition issues.",
+        "Only if the acquisition team sets leaseback terms."
+      ]
+    },
+    {
+      "record_id": "legacy-ch16-034",
+      "front_sha256": "d12e8f80d612f245ab5816365affff58d140b8b0152bd9219f8638d38c4cfe09",
+      "back_sha256": "ff2deb199a52b677f30dafa754c7208777a95864de9833dd4d6e767800caf306",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Comparing the property's condition and repair costs against local sales data.",
+        "Using a licensed title company to handle the paperwork and funds.",
+        "Letting the transaction team handle title work, inspections, and closing logistics."
+      ]
+    },
+    {
+      "record_id": "legacy-ch16-035",
+      "front_sha256": "93f001aaf1703b2bcc1830429bc0ff11410873a8be64cb24efa5b930f29aff32",
+      "back_sha256": "2256f8049d73fe031050a61eb1e42de26f34b0d29e44b79d4369fa9de154bb31",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "An upfront payment before the property evaluation.",
+        "The buyer's repair costs and carrying costs.",
+        "A small monthly leaseback fee after closing."
+      ]
+    },
+    {
+      "record_id": "legacy-ch16-036",
+      "front_sha256": "595287f4fa3f54142691efab9e3418dd2c45221a88e4000dd925c90ccecf1861",
+      "back_sha256": "bf49710a5e05c408cf5c9884658017e5e83760fb57b12fe62ffcfa06fc2b3e71",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Give the full ten-minute explanation before the seller asks another question.",
+        "Redirect the conversation to the offer price and avoid more process detail.",
+        "Repeat the same short summary and end the conversation without confirming the concern."
+      ]
+    },
+    {
+      "record_id": "legacy-ch16-037",
+      "front_sha256": "bcae06e783a26b099d19e21f2fa2b96f0c701fb370611d55f2e1baee2f67bd7c",
+      "back_sha256": "cdc256f8452c3d9c739fb42d6a017c0585040cd119fb38284a03e6f03a1e4cfc",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "\"How does this work?\"",
+        "\"Is this business a scam?\"",
+        "\"How fast can we close?\""
+      ]
+    },
+    {
+      "record_id": "legacy-ch16-038",
+      "front_sha256": "69959e9dc9b3152e515ebae29b4c6e98c671882337cf614c974a7e0467ba98e0",
+      "back_sha256": "0b9fede7db06f8bc334abb52966600aa4a86a3a592a44d101f9ac643b0b14b46",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Remote notary availability.",
+        "Electronic signature availability.",
+        "Printed contract availability."
+      ]
+    }
+  ]
+}

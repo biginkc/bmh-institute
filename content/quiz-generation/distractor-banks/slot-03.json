@@ -1,0 +1,600 @@
+{
+  "schema_version": "bmh.quiz-distractor-bank.v1",
+  "slot": 3,
+  "quiz_source_key": "quiz-slot-03",
+  "lesson": "Tech Stack and Systems",
+  "source_ledger_sha256": "f130f47f03585928e40f37dfba3a37c4ab3f9f8d41ae65332668b430960ba4ff",
+  "authored_by": "codex (EXECUTE 2.3, 2026-07-20)",
+  "entries": [
+    {
+      "record_id": "slot-module-03-001",
+      "front_sha256": "668bf1a11fbb00b81e0d3b75b6759eac9e007c91174ce1bc2226f56757e551c0",
+      "back_sha256": "1f02e917fd21530620990a81a8ddce4a8cb1f0e57770e393877e4a68a2984ff8",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "PropStream",
+        "DealMachine",
+        "Deal Sniper"
+      ]
+    },
+    {
+      "record_id": "slot-module-03-002",
+      "front_sha256": "b10836e92ebe4cac3ab4e4b32bbdd404e4c6fe4ec372d0152c291444d29ca222",
+      "back_sha256": "226f3ed0aaf3694b8827df0636c5d07fc37a449a733e7694095ad4ec8c1cec2e",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "It remains unassigned.",
+        "It is visible in Slack.",
+        "It counts as completed."
+      ]
+    },
+    {
+      "record_id": "slot-module-03-003",
+      "front_sha256": "938b8780a8fc64b3596951866c7d2738525c9a918b4151a3a965a0098bbadbdf",
+      "back_sha256": "1f02e917fd21530620990a81a8ddce4a8cb1f0e57770e393877e4a68a2984ff8",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "DialPad",
+        "Slack",
+        "HubStaff"
+      ]
+    },
+    {
+      "record_id": "slot-module-03-004",
+      "front_sha256": "9dc14508508a0b945dfb536d0412079e83d17c8a4d40a1b5352d3ec763294bba",
+      "back_sha256": "f677e37938d3068b3133fd341207a21005dfee7ce11d4058d1beafdfa8b21e75",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The property list must be pulled again.",
+        "The call recording must be moved to Slack.",
+        "The offer must be practiced in Closer Lab."
+      ]
+    },
+    {
+      "record_id": "slot-module-03-005",
+      "front_sha256": "403f27dc2ee25de727bc347e5224a09c5bae6b18549e71a91218a7f59067cebe",
+      "back_sha256": "1f02e917fd21530620990a81a8ddce4a8cb1f0e57770e393877e4a68a2984ff8",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Slack",
+        "HubStaff",
+        "BMH Institute"
+      ]
+    },
+    {
+      "record_id": "slot-module-03-006",
+      "front_sha256": "d4772879c7474064483c0146a650b4859ca006dae0752d9150a4031f49b07e8c",
+      "back_sha256": "4d95e41f2953f8efb9a7b77d7fe0ed90417b5c93263286bffa6a384a50652f08",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "After each call.",
+        "Once per module.",
+        "Only when blocked."
+      ]
+    },
+    {
+      "record_id": "slot-module-03-007",
+      "front_sha256": "2df5b24cc0b662417570b18002fc3f48edf6dd2e673c08b22d78412b062039e9",
+      "back_sha256": "4ac301193255e3f24c885cff77959f97ebcdf0950faab0154c57d9298fcfaf09",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "To track hours and activity for accurate payment.",
+        "To coach calls through recorded conversations.",
+        "To practice objections before speaking with homeowners."
+      ]
+    },
+    {
+      "record_id": "slot-module-03-008",
+      "front_sha256": "67b557ebffb18761d359e332d41c2b50d1d94aa56756b3ddf611d54503531d36",
+      "back_sha256": "ea6f4c8baa4d2077ce4c7a8e3c238ff740ffb35450d0f31a3cd2114e699cc641",
+      "status": "needs_human_review",
+      "question_type": "single_choice",
+      "distractors": [],
+      "review_reason": "imperative_front_cannot_be_mcq_stem",
+      "notes": "The imperative front asks the learner to produce two examples rather than select one answer."
+    },
+    {
+      "record_id": "slot-module-03-009",
+      "front_sha256": "fc9443fd8ed5942f2acddd6f96390c2e7c9a1949fa059bd97b8c9f1694d0de49",
+      "back_sha256": "893294e308346fa73c2d6728df390fcd6c867e416eccff7728857a04b6fea101",
+      "status": "needs_human_review",
+      "question_type": "single_choice",
+      "distractors": [],
+      "review_reason": "insufficient_content_for_fair_distractors",
+      "notes": "The lesson provides only one other property-condition set, and it may overlap PropStream in practice. Three fair same-specificity distractors would require facts outside the source material."
+    },
+    {
+      "record_id": "slot-module-03-010",
+      "front_sha256": "0920952e094b7cc467fbb99b29b4cf69f193fba3fad55151a5343946aa9fe98d",
+      "back_sha256": "73d464d990822e010ec51715cd4ad94425e0cb5f4b90fad87f01284e380e5fa3",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Call volume, call duration, and recorded coaching sessions.",
+        "Filler words, pacing, and clarity during roleplay sessions.",
+        "Quiz results, module progress, and assigned onboarding order."
+      ]
+    },
+    {
+      "record_id": "slot-module-03-011",
+      "front_sha256": "e64f04a8ea2b63b6088ca5d8316a5cfc40299f17bb77d8fc9c413303740d0ff0",
+      "back_sha256": "006cafc41af3b8183040afea3c003a2c85baa29eb8ba63bbd851c9cb06a069ae",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Sandra sources motivated-seller data, while PropStream stores homeowner notes and deal stages.",
+        "PropStream is used to place calls, while Sandra is used to analyze speech during roleplay.",
+        "Sandra is used to track hours, while PropStream is used to store onboarding modules."
+      ]
+    },
+    {
+      "record_id": "slot-module-03-012",
+      "front_sha256": "343a7b31776bf2f393fe3b2a889efcc75868a4db2d1c007dd16b0d3bedbe3a73",
+      "back_sha256": "64de5821ef08c1251241af14246b85bc6ee9abdcd07167a7779abbd69e78fe7a",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "PropStream",
+        "Deal Sniper",
+        "Sandra"
+      ]
+    },
+    {
+      "record_id": "slot-module-03-013",
+      "front_sha256": "b232a31af3702812e17a057ff77e9501929f14870e0524e8bc6f48bd0dde939e",
+      "back_sha256": "23908e11c7e1864ec53f72e6f41366792344b47732144fc9d4f441d99b547fb9",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Properties behind on taxes, in probate, or owned by absentees.",
+        "Properties with active follow-ups, updated stages, or recorded notes.",
+        "Properties with high call volume, long calls, or low clarity."
+      ]
+    },
+    {
+      "record_id": "slot-module-03-014",
+      "front_sha256": "1ae59a58f51ec2710b127ab252db6534d483e046673873d617ef54972f2ada59",
+      "back_sha256": "dd07d4127bbaa57a0ac9b388fb9ad087e89177e6284da34b209837efcda69732",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Update the deal stage and assign a daily follow-up.",
+        "Record a homeowner call and review its duration.",
+        "Complete a roleplay and bookmark the related SOP."
+      ]
+    },
+    {
+      "record_id": "slot-module-03-015",
+      "front_sha256": "b9547bc9a08da2f34de518eb95dab43acad3c93cd73ee1d08d157f539308579d",
+      "back_sha256": "f4ce8d7f2547d453508bae4cb5596e442070ecc099a4032b37822ad10bd08624",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "To record homeowner calls for coaching and review.",
+        "To track work hours and activity for accurate payment.",
+        "To store onboarding modules and measure quiz progress."
+      ]
+    },
+    {
+      "record_id": "slot-module-03-016",
+      "front_sha256": "fc0aa639535182fc32300a5ce248e6c5a13b7c4dedab39b023b1b12acc52b290",
+      "back_sha256": "58c85578fad64f5f04d6a803b4d6557bd864383f1506cd2e66f91811f706e962",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Sending offers quickly automatically moves each deal to the next stage in Sandra.",
+        "Sending more offers eliminates the need to evaluate which properties are good deals.",
+        "Sending offers through the system replaces follow-up with the homeowner."
+      ]
+    },
+    {
+      "record_id": "slot-module-03-017",
+      "front_sha256": "98ce572f72aa4bc4e1d461f61a8387a691fb1ef008fa7fc5fdd24c6ae2334218",
+      "back_sha256": "a11e761bb41f19e9695cd8bb02a12feb66eea3547806ae70a482a1f98020410b",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "It supplies distressed-homeowner lists so the team can begin property research.",
+        "It records call volume and duration so managers can review dialing activity.",
+        "It tracks quiz results and module progress so trainees complete lessons in order."
+      ]
+    },
+    {
+      "record_id": "slot-module-03-018",
+      "front_sha256": "9b54e0e6b65dc054413a2dbebb8d5981b4bbaab4d6b00acf9fab460d89fd10c6",
+      "back_sha256": "b748e09500cd15fea35e82ee92ca1792454cfa82698d3002ba4c04d4b69d71c2",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Slack",
+        "Closer Lab",
+        "HubStaff"
+      ]
+    },
+    {
+      "record_id": "slot-module-03-019",
+      "front_sha256": "69302d9bd15ddb344da4ab27fa4b1265f40caa93d2e1cf9b76e8e24a6946c2fb",
+      "back_sha256": "6cf38cb4c1946bc5721bce1fdae3a3650b3f2ec00a77c4a83af1e938b48935d7",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "To replace the relationship notes team members are required to enter in Sandra.",
+        "To calculate the hours and activity used to determine accurate payment.",
+        "To identify code violations and absentee owners for property research."
+      ]
+    },
+    {
+      "record_id": "slot-module-03-020",
+      "front_sha256": "b876f5f58d32b0f9c760fb8d1cca19b1114d2d6d11d1bf7a12bd9efd07d07fe9",
+      "back_sha256": "864a98e0d924086c1caecaedfae88227faec787debfe2f9c72dfde962b19dd6e",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Filler words and pacing.",
+        "Quiz results and progress.",
+        "Property value and owner situation."
+      ]
+    },
+    {
+      "record_id": "slot-module-03-021",
+      "front_sha256": "4ddfad7708f25899129a9534faf1872f65e0410834ddc049fce2420ff82fd9f7",
+      "back_sha256": "e6dfe54696d46d28b537bd67e17ae38332db2752ea3ee02daf53e57be4a7e6b7",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "A property data tool used to find and evaluate motivated-seller leads.",
+        "A time and activity tracking tool used to support accurate payment.",
+        "A central CRM used to manage lead relationships and deal stages."
+      ]
+    },
+    {
+      "record_id": "slot-module-03-022",
+      "front_sha256": "c471271c6a65d9ba3a8196ea904f3301bd309b9682c93c3417fb2f894c38e451",
+      "back_sha256": "da25d31cda2abc80bb6dafb87f9a62bb44a57e1ff87d8242e25ffba9e96a00ff",
+      "status": "needs_human_review",
+      "question_type": "single_choice",
+      "distractors": [],
+      "review_reason": "imperative_front_cannot_be_mcq_stem",
+      "notes": "The imperative front asks the learner to produce three speech metrics rather than select one answer."
+    },
+    {
+      "record_id": "slot-module-03-023",
+      "front_sha256": "f87f9c89835dc8c4fe5b6d5e07df7917870a27442b4e710a1be50a53c9ed8f65",
+      "back_sha256": "bbab497ded3330cf0ca423589450a735374ad6dc1a4194d1d32a19f9c7b1d33e",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Property research and estimated-value reviews.",
+        "SOP bookmarking and onboarding-module quizzes.",
+        "Call-volume checks and HubStaff activity reviews."
+      ]
+    },
+    {
+      "record_id": "slot-module-03-024",
+      "front_sha256": "e1fea14674e801bfb490fa34ace856385f3c3eaefb43310317d95c9aa3fde00e",
+      "back_sha256": "1f02e917fd21530620990a81a8ddce4a8cb1f0e57770e393877e4a68a2984ff8",
+      "status": "needs_human_review",
+      "question_type": "single_choice",
+      "distractors": [],
+      "review_reason": "back_too_ambiguous",
+      "notes": "This back points process and checklist work to Sandra, while another source card says company SOPs are stored in Google Docs or Google Drive. The lesson does not define the boundary clearly enough for three unarguable options."
+    },
+    {
+      "record_id": "slot-module-03-025",
+      "front_sha256": "5491d03c049fc684eafc65673f2cde5bec7d20e176282d8fdd99cbcb2de7ce3b",
+      "back_sha256": "b27fb38ba323745c91fe7fd9021605430d43bdb7d3be765266e29364d103e26f",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Sandra",
+        "DialPad",
+        "HubStaff"
+      ]
+    },
+    {
+      "record_id": "slot-module-03-026",
+      "front_sha256": "31927923944dc11abe0af83fd685937ba9d3b8865fc85e2a2799087afd3c69a4",
+      "back_sha256": "b2b893ffa87f28cf1f230249e079b2c04fbe028f2a3b024bee836c3109244a5e",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Slack",
+        "DialPad",
+        "Closer Lab"
+      ]
+    },
+    {
+      "record_id": "slot-module-03-027",
+      "front_sha256": "504a2c849d8bfaf4b7b58a7a400d21756d54a401dd5e793f3d35f358ec51bf66",
+      "back_sha256": "04f62e59fe62312918cd5cd76cfa17a9527f0dbde9cc951ff646ed93607e4303",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Clock in after checking Sandra and clock out after the final homeowner call.",
+        "Clock in for Closer Lab practice and clock out before completing daily tasks.",
+        "Clock in when a manager posts in Slack and clock out after reading updates."
+      ]
+    },
+    {
+      "record_id": "slot-module-03-028",
+      "front_sha256": "3e14b69e1112e84de65839a718b69bd8b2e38b8971bceee2fe52fff47daee849",
+      "back_sha256": "b27fb38ba323745c91fe7fd9021605430d43bdb7d3be765266e29364d103e26f",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Email",
+        "Sandra",
+        "Google Docs"
+      ]
+    },
+    {
+      "record_id": "slot-module-03-029",
+      "front_sha256": "326678a563e24d7cbbf914d369c22b0f3778b6fd21dea82aa2284a5fd0981d75",
+      "back_sha256": "969ccbd3cf6300ecd5c880459d81ae9027df7517563184a1b8b15282db230621",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Slack",
+        "Sandra",
+        "DialPad"
+      ]
+    },
+    {
+      "record_id": "slot-module-03-030",
+      "front_sha256": "58a65fbd6744dc3485909da67af54e78564e989b37a96be9fb7424c34e3384d4",
+      "back_sha256": "9a6da6cf3ce9c3ac6634c9fbfdda8cfa664ad82633f25573711a14c6c78fa2b7",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Logging every lead and updating each deal stage.",
+        "Clocking in for work and clocking out when stopping.",
+        "Completing modules in order and tracking quiz results."
+      ]
+    },
+    {
+      "record_id": "slot-module-03-031",
+      "front_sha256": "846c5e9021755c41ae75301be454c06f9d0e23a46b2841f9e121fe11ddf2193c",
+      "back_sha256": "e2cbb94eff09977ee09123e63d435965f4a150892fe8a577fa225c58d298d096",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The central CRM containing all homeowner notes and deal stages.",
+        "The property research platform containing motivated-seller data.",
+        "The speech coaching platform containing objection roleplays and call simulations."
+      ]
+    },
+    {
+      "record_id": "slot-module-03-032",
+      "front_sha256": "517a964c53c2bd19553743e5804d3720636487a864ba7d711dd6249c31c5fde3",
+      "back_sha256": "1e95e950d2e4fb47aeba5560c269094a74075574cfd418d907c913d76625acb2",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Work through the modules based on the order of daily tasks in Sandra.",
+        "Complete the quizzes first, then return to the onboarding modules.",
+        "Use only modules tied to a current homeowner conversation or blocked task."
+      ]
+    },
+    {
+      "record_id": "slot-module-03-033",
+      "front_sha256": "b2ce923364800c7138d1b04f05c5da8e06b5d69444eed5b2c7f2658b78ad190d",
+      "back_sha256": "c5077d2a952b7892d73f7ef0141b32f3660e144699696da84bb79fab50c51f43",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Sandra notes (or task lists)",
+        "Slack updates (or announcements)",
+        "BMH Institute modules (or quizzes)"
+      ]
+    },
+    {
+      "record_id": "slot-module-03-034",
+      "front_sha256": "02ceb43086b618d251a37d13c3c44dbd6150ee060c00cbc23ed46c4d4c5c1615",
+      "back_sha256": "5d3345f4f7fb917738896ebaa897b73226eebd054acca165b479207ed1dd904e",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Enter the documents as homeowner notes in Sandra.",
+        "Share every document as a team announcement in Slack.",
+        "Use the documents to replace assigned modules in the BMH Institute."
+      ]
+    },
+    {
+      "record_id": "slot-module-03-035",
+      "front_sha256": "58cf5eb5b6a34a33c96aeea47af091431c4af9cf7027333f2ac66b78f9f364f0",
+      "back_sha256": "60453079b8722e3877625923b584174ea9c040f081971b68ebf6be1b59b613ba",
+      "status": "needs_human_review",
+      "question_type": "single_choice",
+      "distractors": [],
+      "review_reason": "back_too_ambiguous",
+      "notes": "The source back says team lead, while the lesson guide says to ask a manager for the current SOP. Their equivalence is not defined, so a manager option could be arguable."
+    },
+    {
+      "record_id": "slot-module-03-036",
+      "front_sha256": "a5ed6093a8a720d7bf3be0be3a64cacc3baa27ea3e62e4fca4d1c07c31a3927d",
+      "back_sha256": "9e0d63adbd1b4b3955829d2490a94856325b919a42cbe91afa3da516cedddeca",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Call recordings will stop showing volume and duration.",
+        "Property research will stop showing value and owner details.",
+        "Quiz results will stop showing training module progress."
+      ]
+    },
+    {
+      "record_id": "slot-module-03-037",
+      "front_sha256": "456fd7e57adab2821564721bc275a59ce5e26606d85109ec79e7d99b0f4b00d3",
+      "back_sha256": "f902264c4b9da0807a7362fea552bbfbde1ac38e2fef9277a1100c88b7d2f435",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Definition: Property research using data on probate, taxes, code violations, or absentee owners.",
+        "Definition: Rapid property filtering and offer generation using Deal Sniper.",
+        "Definition: Homeowner call recording and activity review using DialPad."
+      ]
+    },
+    {
+      "record_id": "slot-module-03-038",
+      "front_sha256": "2c66ca4e3938bf9318fcc3088c44c1edf89209e46a9339c3fe0894b8427194f0",
+      "back_sha256": "c733dd1a1191192fcba161175ece7ba2558b27a01460c81c87e7c2ebf57c0f9d",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "To estimate property values and identify each owner's likely situation.",
+        "To calculate hours worked and determine accurate payment through HubStaff.",
+        "To measure filler words, pacing, and clarity during Closer Lab roleplay."
+      ]
+    },
+    {
+      "record_id": "slot-module-03-039",
+      "front_sha256": "92424f2c09fac2305d4ed60cedfd9240c2abef748fc81034271bb43f693c8a58",
+      "back_sha256": "aa8e3de12b6c742befa034b0de5ec86ffc65d27eb10690079c6ad5414058b38a",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "It replaces the requirement to record live homeowner activity in Sandra.",
+        "It generates property offers without filtering or evaluating good deals.",
+        "It tracks work hours and activity instead of requiring HubStaff."
+      ]
+    },
+    {
+      "record_id": "slot-module-03-040",
+      "front_sha256": "807e26f12c0860f9c6bee58c87227c3a6b6bbe387de5d694a3b46e510495c22b",
+      "back_sha256": "4caa6ffc13458a3417fb65e98a998f627fbb9387804bb4e27673fa2cfeef5658",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Lists of completed follow-ups.",
+        "Lists of recorded homeowner calls.",
+        "Lists of assigned training modules."
+      ]
+    },
+    {
+      "record_id": "slot-module-03-041",
+      "front_sha256": "ac4697fb7e5ab477ea67adb4c3086e8879f80e1f71bb649a7d3756390ff4f37e",
+      "back_sha256": "5f7d6697e7e1241594ed929d7272a7cbd7ca5c6f24064c50785a6e65f9016760",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "It gives them distressed-homeowner lists before the team evaluates any properties.",
+        "It records their homeowner conversations so managers can coach their call skills.",
+        "It assigns their daily tasks and stores the relationship history for each lead."
+      ]
+    },
+    {
+      "record_id": "slot-module-03-042",
+      "front_sha256": "25ca630ca4439a597ffcbf3d6bbc5d132477e4f7f7c8c94c202bd8bcef3888ae",
+      "back_sha256": "0ad38a049ee97099ccfe406f67f8efd5004f8dccd5f1bc8c9c562504e242ba06",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Call volume and call duration.",
+        "Hours worked and activity level.",
+        "Property value and owner situation."
+      ]
+    },
+    {
+      "record_id": "slot-module-03-043",
+      "front_sha256": "f1d3db3f97e834f698f8fcea96157602e7091ca1fcc3632d2d3eb7fcb4623ec8",
+      "back_sha256": "7ddaa67af357c001bf767c1d63f4eae45c9cf8c7c4ccc56adf6d773920425099",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Definition: A CRM that stores lead relationships, notes, tasks, and deal stages.",
+        "Definition: A call platform that records volume and duration for manager review.",
+        "Definition: A training platform that stores onboarding modules, quiz results, and progress."
+      ]
+    },
+    {
+      "record_id": "slot-module-03-044",
+      "front_sha256": "f4d6644d41aad0e4bb40a1711e0340c971f8e33e396699ae6be883df0259ed0e",
+      "back_sha256": "b27fb38ba323745c91fe7fd9021605430d43bdb7d3be765266e29364d103e26f",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Sandra",
+        "DialPad",
+        "Google Docs"
+      ]
+    },
+    {
+      "record_id": "slot-module-03-045",
+      "front_sha256": "7ae86d3cd8e1c7534292d00a3eb1066b4c840ec91aa48b0532750be1261bf5a2",
+      "back_sha256": "10a735f4c8af41acb7b388805e5e3222501d813ae28c164adc0d170a2aa36274",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Updating the deal stage in Sandra.",
+        "Reviewing the call duration in DialPad.",
+        "Completing an objection roleplay in Closer Lab."
+      ]
+    },
+    {
+      "record_id": "slot-module-03-046",
+      "front_sha256": "0862bf04b0bbd9b486d03befb4884990a4b3bf7f61905c1a05c110ab0b860b2e",
+      "back_sha256": "d8857f366f0c05cacc29f43c94c37438798a4281bcf7e3ede095aab29e130321",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "sell fast",
+        "close within days",
+        "list soon"
+      ]
+    },
+    {
+      "record_id": "slot-module-03-047",
+      "front_sha256": "ffbabd5da4ea158d0250afda6532c7e383481d099f13e798c5115ffc9bc9ee02",
+      "back_sha256": "00b31232b03ead30f3293e719a103155e45a5ddf58315dea8b92344c245c9b0b",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Pull property data and send every homeowner an offer.",
+        "Record every call and use duration as the deal stage.",
+        "Complete every module and log quiz results in Slack."
+      ]
+    },
+    {
+      "record_id": "slot-module-03-048",
+      "front_sha256": "6c50de8a9b7398221368f1e061e9fa461203d7631d52a11bf6bd4f1562b78326",
+      "back_sha256": "65b23be12030796919e6b7e645bf84962b211a3934c932daa86d690858ed4217",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "PropStream",
+        "DealMachine",
+        "Sandra"
+      ]
+    },
+    {
+      "record_id": "slot-module-03-049",
+      "front_sha256": "b6bfe1a3845f3a0c5b88038bba0bab6cb3099cc55c528c778697a69b11163e90",
+      "back_sha256": "7e6089153bb89747df68390625bb1282381c27e92739d1811cb20b8f6e6dc099",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "It allows property research to replace relationship management in Sandra.",
+        "It allows call recordings to replace live homeowner follow-up.",
+        "It allows training modules to replace assigned daily tasks."
+      ]
+    },
+    {
+      "record_id": "slot-module-03-050",
+      "front_sha256": "58abaae7b6a6f3c644927e7cc4de19ece6588bed3685dce8a36fd13d912766f6",
+      "back_sha256": "1f02e917fd21530620990a81a8ddce4a8cb1f0e57770e393877e4a68a2984ff8",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "PropStream",
+        "DealMachine",
+        "Deal Sniper"
+      ]
+    }
+  ]
+}

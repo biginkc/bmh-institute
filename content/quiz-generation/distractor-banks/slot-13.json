@@ -1,0 +1,724 @@
+{
+  "schema_version": "bmh.quiz-distractor-bank.v1",
+  "slot": 13,
+  "quiz_source_key": "quiz-slot-13",
+  "lesson": "Follow-Up Cadence",
+  "source_ledger_sha256": "f130f47f03585928e40f37dfba3a37c4ab3f9f8d41ae65332668b430960ba4ff",
+  "authored_by": "codex (EXECUTE 2.13, 2026-07-20)",
+  "entries": [
+    {
+      "record_id": "legacy-ch09-001",
+      "front_sha256": "603220b657ed33327d0f1c2c48f0ae751d4836acca713e69f8c322afee3c9c73",
+      "back_sha256": "0b400a20bb5b76a56266040e6d7867293fbb260635cdd7328abcc4135e763b66",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "On the initial discovery call.",
+        "In the day-one note-taking process.",
+        "In the long-term nurture process."
+      ]
+    },
+    {
+      "record_id": "legacy-ch09-002",
+      "front_sha256": "e39103801d985666d3910ac95954acf0115ebff86cfccc70d7a7304772d9ac43",
+      "back_sha256": "1432f90bc98e58113800ca08e1939751668bfe8ff6a39086b0b166d88d0bcb87",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The first call before any follow-up.",
+        "The fourth call after three attempts.",
+        "The first or fourth call only."
+      ]
+    },
+    {
+      "record_id": "legacy-ch09-003",
+      "front_sha256": "a33fcf9c4b8e2ba56a66109e78edc36537423de94af6731aca734da1437b7718",
+      "back_sha256": "8488dab8b33e4db5ce851c56098b8728c6ac7b0cc3a5e4a760ec15dd43007ff5",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "They received one aggressive burst of calls and texts.",
+        "They were sent generic mass blasts without personal context.",
+        "They were contacted only after every new lead was called."
+      ]
+    },
+    {
+      "record_id": "legacy-ch09-004",
+      "front_sha256": "ad64423e3d9b86c632c3d13fb26b1d5854332c688c279694e481d75400f96f88",
+      "back_sha256": "bf8812374b37b8a5f2d6f1df08044269621c17d3c3a5ce3bf1e732e5f8563d56",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The seller has explicitly asked for all contact to stop.",
+        "The lead has completed six months of zero engagement.",
+        "The seller wants a mass message instead of personal follow-up."
+      ]
+    },
+    {
+      "record_id": "legacy-ch09-005",
+      "front_sha256": "d9650d30f091d739de9685ab0fa254ea65d7e3d94d0a2214fba32ebf15b5876f",
+      "back_sha256": "facb8d82da1840469c145e9c16ac8b6d31981c5db016b180948083b7ac2a8c07",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Five or more attempts.",
+        "Three or four attempts.",
+        "Thirty scheduled attempts."
+      ]
+    },
+    {
+      "record_id": "legacy-ch09-006",
+      "front_sha256": "c93b8ea63e1e84c6790483013d82b0ae7474651e244b5e3a061c47bb2856bb85",
+      "back_sha256": "19954af985125b900145a550df754985e23b77b5013aa8eeeab3229adb8488c3",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Two or more touches.",
+        "Three or more touches.",
+        "Seven or more touches."
+      ]
+    },
+    {
+      "record_id": "legacy-ch09-007",
+      "front_sha256": "b4ac67c3fec24efab04fd5c3bb54896c47ac3583e143a4d6f29f3852027cb76f",
+      "back_sha256": "a956ff3031b812af5f6dce1c11a801cb7f6b7e2b5a8251e225482050ff4f072b",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Empathy.",
+        "Patience.",
+        "Optimism."
+      ]
+    },
+    {
+      "record_id": "legacy-ch09-008",
+      "front_sha256": "3e0d4da25df1df6ff93e37aed54edc70a18c3e0bda6ae6f6fd4d4582a0b8367f",
+      "back_sha256": "c9d79dbb9e6826f36839aa09bea7f7b71a2a7883d8a88ba2277d81db1c466f6a",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Sending a short, personal follow-up text.",
+        "Calling again with a new angle or new information.",
+        "Moving the lead directly to long-term nurture."
+      ]
+    },
+    {
+      "record_id": "legacy-ch09-009",
+      "front_sha256": "60b555c6633dfc59ee2c4b99876a148e32a57faab43671e9038be096456b769c",
+      "back_sha256": "8cac858d2e0d2aafe5e7377e74c59fc9041307078d0aecaeaac31bb81e67e7fa",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Making a follow-up call that references the previous conversation.",
+        "Calling and sending a text when the call is unanswered.",
+        "Adding a new angle or a new piece of information."
+      ]
+    },
+    {
+      "record_id": "legacy-ch09-010",
+      "front_sha256": "2b506f7079ff9f703c6b57ec08b62b5cf646b949db08c01fdbf3e21f86e0355d",
+      "back_sha256": "88b2ce1b7c53ec30908a6b3a81311d6ec09548063381c94dd7ad4693b6f644af",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "It must introduce a new angle or new market information.",
+        "It must ask whether anything has changed on the seller's end.",
+        "It must alternate between a call and an email."
+      ]
+    },
+    {
+      "record_id": "legacy-ch09-011",
+      "front_sha256": "96e9a49af35cb143353274550e39e334486fb4a2e0c6f45dae13ce042deab981",
+      "back_sha256": "c86bd7223891c64c79d6fdbd9f7bab7ebad27ac121390a41c2ff94eef84f07da",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Recent sales in the seller's area.",
+        "The seller's zero engagement.",
+        "The long-term nurture decision."
+      ]
+    },
+    {
+      "record_id": "legacy-ch09-012",
+      "front_sha256": "9ec8240feb155613017e1569f5b29df199e66c3be23375d2618fc111a499dbf5",
+      "back_sha256": "0759d988610c164e895e9b58cfa56a0f7b94c412eb7436e35eabd03c38617135",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Move the lead directly to long-term nurture.",
+        "Call again exactly one month later.",
+        "Mark the lead dead immediately."
+      ]
+    },
+    {
+      "record_id": "legacy-ch09-013",
+      "front_sha256": "73b00ed33270539248431aa6ecd8e0961fb89ade2766da331d79957d699e5982",
+      "back_sha256": "8ee5340915d8257d71c2c931ec4dbae4df3ca87e33317c227098381c186d59ca",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "A repeat of the initial discovery and qualification.",
+        "A simple question about whether anything has changed.",
+        "A casual message asking whether the seller is doing okay."
+      ]
+    },
+    {
+      "record_id": "legacy-ch09-014",
+      "front_sha256": "c7128392413f7dc120fdd8d2897bb5874e6378a2763910ff1916544fd5c25927",
+      "back_sha256": "2ef548d22b23450b6a72b7205128695ed3ffca5fa087c6de47ac250524828041",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "A follow-up call only.",
+        "A voicemail only.",
+        "A call or voicemail."
+      ]
+    },
+    {
+      "record_id": "legacy-ch09-015",
+      "front_sha256": "f0892b066f8b252a993ef192bee1f15c6e8f181a6d6c5e04e9aca86be977d1a3",
+      "back_sha256": "4f7b6c95a59c891a615c59a6980eabdda4757189f4083986a96f8a3f34ef7915",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "\"Just a quick yes or no and I'll know how to help.\"",
+        "\"Wanted to make sure you're doing okay.\"",
+        "\"Would you like me to call again next month?\""
+      ]
+    },
+    {
+      "record_id": "legacy-ch09-016",
+      "front_sha256": "442ccd8417dc53aad10c5118cd5face5a6718f14f1a29d4c63eb8c4e2db0fdfe",
+      "back_sha256": "bf1cc8715cea8518e6659173dad8c88ea16b3f68b12ca29c65d6332ae77a8a1f",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Once every two days.",
+        "Once per week.",
+        "Once every six months."
+      ]
+    },
+    {
+      "record_id": "legacy-ch09-017",
+      "front_sha256": "1a9a0e51153ddbd73aa3161274a76e14a81bf63bbaad7445ae48a6a9d02d2fb7",
+      "back_sha256": "077e7bf6fc32b35a4ca99af6c73c39ebfdeb5dc777d048b6d75a798bd3eeea7f",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Thirty days.",
+        "Four months.",
+        "One month."
+      ]
+    },
+    {
+      "record_id": "legacy-ch09-018",
+      "front_sha256": "e0be4262cf607f372fa4d89cf51c50cbda5959b5441e01828e69b0ba1fac3159",
+      "back_sha256": "2786487fd59e18953952838ae5bd4feaaea3a6e791cfe139626ab2c6a37b2df7",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Building an existing relationship.",
+        "Adding a new or relevant angle.",
+        "Choosing long-term nurture or dead status."
+      ]
+    },
+    {
+      "record_id": "legacy-ch09-019",
+      "front_sha256": "4bc81478e285c21dbc813f5718244f0d2f46b71ebdaaeaa5d7c91c7f337332ff",
+      "back_sha256": "4e6353381c46f2eec05f14d7a459a25c074219f39adee8bce40f3fa11d49b0e9",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "They repeat discovery and qualification from the beginning each time.",
+        "They move every seller directly into long-term nurture after one interaction.",
+        "They replace personal context with the same mass message for every lead."
+      ]
+    },
+    {
+      "record_id": "legacy-ch09-020",
+      "front_sha256": "716ce501ee8ece0f11e633dd5c34810471a7b7340c2b2702714259323408636e",
+      "back_sha256": "06a0e8a5086e13c29622f00ca1c65fb5687bc34a5d9b19cc181a9f1b9c7aca95",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "It shows the seller that the investor is beginning discovery from scratch.",
+        "It confirms that the seller has asked for all contact to stop.",
+        "It proves that recent neighborhood sales have changed the seller's timing."
+      ]
+    },
+    {
+      "record_id": "legacy-ch09-021",
+      "front_sha256": "83733681ee1947829947aabb7ede389c5107013dc46adb0cad8f0af92dce1b4d",
+      "back_sha256": "25044847515481c560ee8d9530dbc7ea14b7cb76c0db59a03b2ecd3bf5bc891c",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The same generic check-in used on every prior call.",
+        "A repeat of the initial discovery conversation.",
+        "A mass-blast message with no lead-specific context."
+      ]
+    },
+    {
+      "record_id": "legacy-ch09-022",
+      "front_sha256": "7603aaf66082d2c7d9bdb5e87ba6841de793a7ce1956936ab9ce5f7da6e81aab",
+      "back_sha256": "b2a055f282e8f52a0e860696209252c0a62ec822fbe0098144045848948f118d",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "It is viewed as strategic ghost texting.",
+        "It is viewed as active listening.",
+        "It is viewed as a value-add approach."
+      ]
+    },
+    {
+      "record_id": "legacy-ch09-023",
+      "front_sha256": "75eefc4771bce35640c1627868c889efebe8b8f1808fb2fa30fd2869918bb01b",
+      "back_sha256": "1b65c4fecc8df9280996e293fbdbeac59436cd2127735808a5e795b577b8b49b",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Asking whether a visiting relative has arrived.",
+        "Requesting a quick yes or no from the seller.",
+        "Asking whether anything has changed on the seller's end."
+      ]
+    },
+    {
+      "record_id": "legacy-ch09-024",
+      "front_sha256": "99776591e3d51f1dfcbd08a636719e846e03ba4354bff013bc78ce7e8730f7fa",
+      "back_sha256": "d2681b70ad4005fb30ba1d418691061366f5bfdedc9ba01a70b904da013d6d4e",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Definition: Generic mass messages sent to every lead after the first call.",
+        "Definition: CRM notes used to schedule monthly calls and texts for active leads.",
+        "Definition: Initial discovery questions used to qualify a new seller."
+      ]
+    },
+    {
+      "record_id": "legacy-ch09-025",
+      "front_sha256": "350b1b3e55ec3248bfcbf9dac040f53e041405f9c3449ba9569a73dfb9dd1e2d",
+      "back_sha256": "2d52e847c6a433c4680a76ae0b06cea06d634cb5ba5cb84e25f109b0afc00357",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "To create a reason for the seller to reconsider timing based on market changes.",
+        "To ask for a simple yes or no so the investor knows how to help.",
+        "To show personal concern by asking whether the seller is doing okay."
+      ]
+    },
+    {
+      "record_id": "legacy-ch09-026",
+      "front_sha256": "ca57962d58b5a0cc1b2ce2cf80431cbacdde0ac9fcd37c97929c08adc49ad430",
+      "back_sha256": "1c0301ef7afaf0bf3193d911eaaeff860898e6336d11051df988fbe9b9e59036",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Assumptive approach.",
+        "Value-add approach.",
+        "Casual check-in."
+      ]
+    },
+    {
+      "record_id": "legacy-ch09-027",
+      "front_sha256": "dbeffecb1226237e65aa6566186923266095750581ebcf94b72cc9746f60384a",
+      "back_sha256": "4556a06aa206a5c9135f4548b3a5526cf063e2ca5c74d31c2f1af5593c57312d",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Schedule the next call for exactly one month later.",
+        "Move the seller into long-term nurture for monthly contact.",
+        "Send a casual check-in before marking the request in the CRM."
+      ]
+    },
+    {
+      "record_id": "legacy-ch09-028",
+      "front_sha256": "9b9be861f42887af294937553f943e4f48b45bc02ed5651309c173b7f544e1df",
+      "back_sha256": "00c117fab021504e628a3cb106240130565baf43883280be8a8b602a5e267f67",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Stop all contact immediately and mark the lead in the CRM.",
+        "Send a personal follow-up text on day two instead.",
+        "Move the lead to long-term nurture after six months."
+      ]
+    },
+    {
+      "record_id": "legacy-ch09-029",
+      "front_sha256": "63364435a3a67f305213a7b348788e891377554adde3a2c5e84ed11f3aac1c7d",
+      "back_sha256": "65a1415c7712af556c830a4ffdd81694b458529a57169b66d2f8ea48a03472a1",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The new-lead list waiting for initial calls.",
+        "The long-term nurture list for monthly contact.",
+        "The day-thirty check-in list for active leads."
+      ]
+    },
+    {
+      "record_id": "legacy-ch09-030",
+      "front_sha256": "3c7f20df99468ef031db8342b419e8ec7fe9c92351c268f5ea3fd9c50141f8c6",
+      "back_sha256": "ef76244a1b79d251b7c116c045c97d5b2e0ab9fa2c98b4a7e31a04f89d2912e7",
+      "status": "authored",
+      "question_type": "single_choice",
+    "distractors": [
+      "Seller research.",
+      "CRM setup.",
+      "Initial call."
+      ]
+    },
+    {
+      "record_id": "legacy-ch09-031",
+      "front_sha256": "0f2d548275b666b8028455e84805ebfca067df966d69a8a99fa2c12731728026",
+      "back_sha256": "fed0f2183bba12b9a83992d4be34492103c3934aed498b9f73b6a834055fb0f8",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Move it to long-term nurture and schedule monthly contact.",
+        "Mark it dead and begin working new leads.",
+        "Log an opt-out and stop all contact."
+      ]
+    },
+    {
+      "record_id": "legacy-ch09-032",
+      "front_sha256": "cbfaa0c5ea171685b6c412da1cdb0d36acbdaa0b9d8c2863e147e06c2fe5a222",
+      "back_sha256": "8a0fe52cd8fd978b6ee9c0870e7d7aae0dccf9f579b23cd22d935050fe72a460",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Silence should be treated as an explicit request to stop contact.",
+        "One unanswered call proves the lead belongs in long-term nurture.",
+        "An investor should replace unanswered follow-ups with new-lead calls."
+      ]
+    },
+    {
+      "record_id": "legacy-ch09-033",
+      "front_sha256": "97145a7251889aa1302a6981cdb1d2c7985e16e2b9c8d4d37cb71b2d5afaefe3",
+      "back_sha256": "97fafa60c19f0f34b2a46414c9e4f0b38e342bfce24c3db483035a5b3b35b8be",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The consistent follow-up practitioner performs the same as the high-volume caller.",
+        "The consistent follow-up practitioner falls behind the high-volume caller every time.",
+        "The two approaches alternate which one performs better each month."
+      ]
+    },
+    {
+      "record_id": "legacy-ch09-034",
+      "front_sha256": "8dcd67f8ca40122e908da52d9df5233eb030e9648154c683fd3e397e0d094878",
+      "back_sha256": "0e5c4721a2c5cc8c2ae14a0adfe8b573c85ed364ceabc946f72aa83ad5e2c384",
+      "status": "needs_human_review",
+      "question_type": "single_choice",
+      "distractors": [],
+      "review_reason": "insufficient_content_for_fair_distractors",
+      "notes": "REsimpli is the only named software in the supplied cards and lesson context. Three plausible alternative software names would introduce facts outside the approved source material."
+    },
+    {
+      "record_id": "legacy-ch09-035",
+      "front_sha256": "48759490760ccf00175913d942289379ec7bec8776dd05e39da19637af211a7a",
+      "back_sha256": "9c4978875a9cad723bec6f4be0492bdfb22d0f2eb9bea6a4e2a0df2d56a3dd0d",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Discipline.",
+        "Panic.",
+        "Pressure."
+      ]
+    },
+    {
+      "record_id": "legacy-ch09-036",
+      "front_sha256": "e47a496b25c054800f07b6cac8b5dfb211136c5b5a6213a9aac94c5bf5c8b5f0",
+      "back_sha256": "dc42c0a531899e3f67d98262e6affd1ad64717e8f62a99ddc20aab0a4038487e",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "One or two contacts.",
+        "Two or three contacts.",
+        "Seven contacts."
+      ]
+    },
+    {
+      "record_id": "legacy-ch09-037",
+      "front_sha256": "a26b5482f7319408f6f0ab0bcf8f4a6a0022c88dc2286755fe89d4aede3def1b",
+      "back_sha256": "5abfc3ba33976bd4430812ceef35c2c95b8fb811d4c2cc61f9f0255fd0739950",
+      "status": "needs_human_review",
+      "question_type": "single_choice",
+      "distractors": [],
+      "review_reason": "insufficient_content_for_fair_distractors",
+      "notes": "The approved material names only calls, texts, emails, and voicemails as channels. After excluding the correct calls-and-texts pair, it does not support three distinct paired-channel distractors without reusing a correct channel and making each option partially true."
+    },
+    {
+      "record_id": "legacy-ch09-038",
+      "front_sha256": "53f8406d04a306c1cab9e29dd3a3d0a2865d38859edfff150dc6f6931cc48e4b",
+      "back_sha256": "f16b0ee6f0c69b10fa4cd45b7a690923f7cb083c4154f0f434c169ffb1c271c6",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Tired landlords.",
+        "Silent sellers.",
+        "Active leads."
+      ]
+    },
+    {
+      "record_id": "legacy-ch09-039",
+      "front_sha256": "06221f8d0288abbcfc14ff84ba6ffdba9f3419722dea562e6dd1910ce76e44b3",
+      "back_sha256": "25225fb4e2164b946799d1ced66da672d26edc3216a30b8c44b041f99b79ab5d",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "To give the seller an easy out if the timing is wrong.",
+        "To create a reason to reconsider timing based on market changes.",
+        "To decide whether zero engagement requires nurture or dead status."
+      ]
+    },
+    {
+      "record_id": "legacy-ch09-040",
+      "front_sha256": "8f2e2021b181ef613c69e87753199c41278befc1675f5af4f955fffaf1757ff3",
+      "back_sha256": "9480af1bc9eefb466d91575bf5ef751f4e76a49d8c92a815ab3b08bf53e11841",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Stop all contact immediately.",
+        "Mark the lead dead immediately.",
+        "Restart discovery and qualification."
+      ]
+    },
+    {
+      "record_id": "legacy-ch09-041",
+      "front_sha256": "dea265328d0ba98e0c8b49d128438fba109eb9650def7222f607d86a6f219c4e",
+      "back_sha256": "1caf17da811f98088929003ce5a51a3c461fad7dd91a10ca24f7cb67390ce943",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "True (four months of zero engagement requires dead status).",
+        "True (any unanswered follow-up requires dead status).",
+        "False (the text specifies thirty days)."
+      ]
+    },
+    {
+      "record_id": "legacy-ch09-042",
+      "front_sha256": "bec040d4f6f26933d169ed08aa3b07c08c25645636f64cade435c8131f603800",
+      "back_sha256": "e6f0986c4f7b7213ecd8ec104b6d6e89e324787a8d28ad9e2b08192a7b62d51f",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Return it to the day-one active cadence.",
+        "Send a mass-blast text and leave it active.",
+        "Treat the silence as an explicit request to stop contact."
+      ]
+    },
+    {
+      "record_id": "legacy-ch09-043",
+      "front_sha256": "2a46e9913a7e04823e43dc91e92f39fd230055ab140d0acd7c7abe521363de02",
+      "back_sha256": "99af2ffce11f53714150b842a0718d3506b42763649cb2e03dafec7a00cbe3fd",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "It shows the seller that the investor remembers a personal detail.",
+        "It gives the seller an easy out if the timing is wrong.",
+        "It demonstrates active listening without adding market context."
+      ]
+    },
+    {
+      "record_id": "legacy-ch09-044",
+      "front_sha256": "14ea14a4acffe80f0e94a0f444c336c0e859e19395c441946971f3bc8fa738df",
+      "back_sha256": "cdaedf21e006d6580f00584974b6bc697d3f9459f98b2a75b22ed4b8597414bf",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Day four.",
+        "Day twenty-one.",
+        "Day thirty."
+      ]
+    },
+    {
+      "record_id": "legacy-ch09-045",
+      "front_sha256": "707948a82942bb64bf20bbd7f952a69e0f69027587ab01bf045090513d201036",
+      "back_sha256": "ad46100b79cc48f14969bba8a57e733e3a8da9fb326a8c24293e0643a0022855",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Repeating discovery and qualification from the beginning.",
+        "Sending the same mass message to every lead.",
+        "Asking the seller to commit to a call exactly next month."
+      ]
+    },
+    {
+      "record_id": "legacy-ch09-046",
+      "front_sha256": "0a86827dce9a4d35daafa41a42e06acb16d028a6a82692fdfcc647911305f1a4",
+      "back_sha256": "6c448e4b5f8301f316b0047ed5437f644ceaaafcb021868b97b57d8e035ae817",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Personal.",
+        "Professional.",
+        "Consistent."
+      ]
+    },
+    {
+      "record_id": "legacy-ch09-047",
+      "front_sha256": "73e1da86b3aaf1dda14548976016c581d04b59af653c4de51a2fb01027bd64bc",
+      "back_sha256": "58365a9a8978a9a54595ca9d5398b224b2dec3f6f380acea9b7ef45ffdda76e0",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "To create a complete legal transcript of every word spoken during the conversation.",
+        "To calculate a final property offer from the first call without further discovery.",
+        "To replace the need for future seller conversations once the record is saved."
+      ]
+    },
+    {
+      "record_id": "legacy-ch09-048",
+      "front_sha256": "f8c93acf3394266dacdf5b3915c1ae80bd1ebade7d4df89008ccad0d30600793",
+      "back_sha256": "e76712ee8582908c9cbf4bc4729f0f80d7b4f2eb20ada91948a9d77c29c721fa",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Deals come from discovery and qualification alone.",
+        "Deals come from one aggressive burst of contact.",
+        "Deals come from mass messages instead of personal contact."
+      ]
+    },
+    {
+      "record_id": "legacy-ch09-049",
+      "front_sha256": "e75f4398158bd99625b29c0720776770e853e72858e83ff305d92a4970bf714a",
+      "back_sha256": "1748d80ae594a32b8ff4319e3b3df63403e169cf4ddcbc1d05f71c62981a7419",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "As an explicit opt-out that requires all contact to stop immediately.",
+        "As proof that the lead should be marked dead after the first call.",
+        "As a reason to abandon personal context and send a mass message."
+      ]
+    },
+    {
+      "record_id": "legacy-ch09-050",
+      "front_sha256": "264ce223d6e8961974a1a2b63f457576e7facf471bfcf1d3950f221add92c72b",
+      "back_sha256": "cb911f1dc728ebdbd7a2a7459a15e7dc8c8c839566e6ee4b76c5ad5e9f970f64",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The Day 2 text adds a new market angle for every lead.",
+        "The Day 2 text asks every seller whether anything has changed.",
+        "The Day 2 text is sent only after six months of follow-up."
+      ]
+    },
+    {
+      "record_id": "legacy-ch09-051",
+      "front_sha256": "94f8b8c11905340f0656a79296eb94ddac5c1b1c053b81132727da4f0227c155",
+      "back_sha256": "65d9ba6dbf7e5804f46363f4c22959a1e27c6f7d6b50bb702c8b38a5c3723b31",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "One or two scheduled attempts.",
+        "Five or six scheduled attempts.",
+        "One scheduled attempt per month."
+      ]
+    },
+    {
+      "record_id": "legacy-ch09-052",
+      "front_sha256": "4fdd079995749f6c32665fbb1d7a677b529f6ceed26c4cdd02f6ea69f356501b",
+      "back_sha256": "7e1252ef204a483227fe344efa24550012039fbad602f45f344b9eed76dade9e",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "A relationship with no prior conversation or interaction.",
+        "A relationship built through six months of monthly contact.",
+        "A relationship ended by an explicit request to stop contact."
+      ]
+    },
+    {
+      "record_id": "legacy-ch09-053",
+      "front_sha256": "1e7d60a1df7f649c2eaa2d68202a86d351eb47fe9b620da9d1d50ec3d67c35bf",
+      "back_sha256": "4c20faff1327523e89c9a971f1a693648a8529521b365bd35e91c470e519002b",
+      "status": "needs_human_review",
+      "question_type": "single_choice",
+      "distractors": [],
+      "review_reason": "insufficient_content_for_fair_distractors",
+      "notes": "Tired landlord syndrome is the only named core seller pressure in the supplied cards and lesson context. Three peer-level named alternatives would require inventing terminology outside the approved material."
+    },
+    {
+      "record_id": "legacy-ch09-054",
+      "front_sha256": "cddab34dc152906601caa381817375b3be372fa2aa2016ccb70218534dcdf333",
+      "back_sha256": "fe9182ec704400587d4562b34f122f668e0c4faa8f16387af57bf521112d98c3",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Bringing something new or relevant to every later call.",
+        "Logging notes immediately after the initial conversation.",
+        "Using multiple approved communication channels when appropriate."
+      ]
+    },
+    {
+      "record_id": "legacy-ch09-055",
+      "front_sha256": "3ea01013a89e3a7871ed788bb6ebf7f152d7198bdbb6018a6cd56411c37632aa",
+      "back_sha256": "8bb91124f59213d50512ba090654da91f41777e1e093eec56662f4a0b34f39a2",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Assumptive approach.",
+        "Simple yes/no approach.",
+        "Value-add approach."
+      ]
+    },
+    {
+      "record_id": "legacy-ch09-056",
+      "front_sha256": "387039053c0f99a7333ef8a72b17a97f204dfb1a135e288eea7f72f733c96f3e",
+      "back_sha256": "d8a9dfd58f53d8cbdc12b8517954d8295816ae2861f705ebd2dc47b99bdce116",
+      "status": "authored",
+    "question_type": "single_choice",
+    "distractors": [
+      "Stop all contact immediately.",
+      "Mark it dead after one no.",
+      "Demand a sale this month."
+    ]
+    },
+    {
+      "record_id": "legacy-ch09-057",
+      "front_sha256": "32384fbd775a0803d2456b42bfb908403e6b1dda02d879a665e0eba1b2bcace2",
+      "back_sha256": "971a16d958bd40926032877c3b9ad97f25aae341a574b9ae58fce3389d798efb",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "To build on a relationship established during an earlier call.",
+        "To confirm interest while giving the seller an easy out.",
+        "To decide between long-term nurture and dead status."
+      ]
+    },
+    {
+      "record_id": "legacy-ch09-058",
+      "front_sha256": "71deec44f2cb0a3a4e383149e0bb44ffa9f264b27006f9bf425b72e1f15ec4d8",
+      "back_sha256": "984379325a35fb6ed45762988ab4c675cbb773c10d290d5003c1963a1311f15d",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The seller has explicitly asked every investor to stop contact.",
+        "The lead must be marked dead before a sixth touch is attempted.",
+        "The seller's timing has aligned and no more follow-up is needed."
+      ]
+    },
+    {
+      "record_id": "legacy-ch09-059",
+      "front_sha256": "1a03ac674e80152f109f68a4e927147290e341b5bb63f9dc303b5529d6973462",
+      "back_sha256": "704a1ff5e4170b2f486260b1a28fb15ca93b070c1af446414de4d4760936ff56",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "One touch per day.",
+        "Two touches per month.",
+        "Five or six touches per month."
+      ]
+    },
+    {
+      "record_id": "legacy-ch09-060",
+      "front_sha256": "81ed081f4b63b38ebb40205ca57c4cfad426fd4a943c1a71a59575174165bd45",
+      "back_sha256": "4f35ace7589e248d58a304543b7e38de66dfc1d435046f823c444c261bff6801",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "It creates pressure for the seller.",
+        "It turns follow-up into a mass blast.",
+        "It signals that the investor is starting from scratch."
+      ]
+    }
+  ]
+}

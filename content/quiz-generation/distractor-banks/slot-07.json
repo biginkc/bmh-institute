@@ -1,0 +1,488 @@
+{
+  "schema_version": "bmh.quiz-distractor-bank.v1",
+  "slot": 7,
+  "quiz_source_key": "quiz-slot-07",
+  "lesson": "Opening the Call",
+  "source_ledger_sha256": "f130f47f03585928e40f37dfba3a37c4ab3f9f8d41ae65332668b430960ba4ff",
+  "authored_by": "codex (EXECUTE 2.7, 2026-07-20)",
+  "entries": [
+    {
+      "record_id": "legacy-ch05-001",
+      "front_sha256": "f47a6c82422ee2059ec837bf5966457ea77f9c1f77f9276e1b28310b30769058",
+      "back_sha256": "14ae3488d7169980b6906ab84ece3e037795e4d19939ff44b838308a2df09e39",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "To conduct the fact find and document the seller's property details.",
+        "To uncover the life events driving the seller to consider selling.",
+        "To confirm ownership, mortgage balance, and the seller's timeline."
+      ]
+    },
+    {
+      "record_id": "legacy-ch05-002",
+      "front_sha256": "d418f3b7001cd44c26f08fd91a4a688a2ebcc42a15a9307171e25069d1cef3b2",
+      "back_sha256": "9633c2dd9eca08dea47eb2d886d742cd7a85feb7f9f7e0a50026b005b55ea68a",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "To open the call and set the tone for the entire conversation.",
+        "To present the property buying program before hearing the seller's situation.",
+        "To provide an approval or denial before gathering property facts."
+      ]
+    },
+    {
+      "record_id": "legacy-ch05-003",
+      "front_sha256": "a4d3aac9f6403e78ccd0ed8de53a2d1f1eef6261d9f2062a3136fc1c1c4057ca",
+      "back_sha256": "e7417014c478899b83877eefda4c61b1c48c87b6cf1ff234c024d31789f0fc2b",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Approximately thirty seconds.",
+        "Approximately one minute.",
+        "Approximately five minutes."
+      ]
+    },
+    {
+      "record_id": "legacy-ch05-004",
+      "front_sha256": "e47cf0f02cb87e330765db0b3de0188e036c31f02ad54edf7eb2c8e7f8af1b00",
+      "back_sha256": "49f0bb0ee3701666bbd0038e5c9c9a1328c31ee8dc23ca1422cd91742c02a0b4",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Sales pitch.",
+        "Fact find.",
+        "Property review."
+      ]
+    },
+    {
+      "record_id": "legacy-ch05-005",
+      "front_sha256": "d08d3aba35daa44d4589a4518c73c6caaf67ad48ac0fbf09a485418412351ecb",
+      "back_sha256": "86c2c0b2621927de6286cb632e8ed512e1aa3a1d0ef1244655d00c8b39270772",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "It presents the interaction as a direct pitch for an immediate sale.",
+        "It makes the seller think the property has already been approved.",
+        "It makes the seller think the call only covers basic property facts."
+      ]
+    },
+    {
+      "record_id": "legacy-ch05-006",
+      "front_sha256": "4026a59ed3cee3ed65bbdf91428c35aeb0ae877f320af5c7b6ad700c8305c06f",
+      "back_sha256": "0c049ad3b27607f0b330c1b9253337682653320df4a0a7802770284205cd1974",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Property type, number of bedrooms, and number of bathrooms.",
+        "Ownership status, title holders, and approximate mortgage balance.",
+        "Condition rating, last major updates, and the selling timeline."
+      ]
+    },
+    {
+      "record_id": "legacy-ch05-007",
+      "front_sha256": "564072cc3a50e9cef234fd97df80cb8415ef892aa12b1da99f971f639cb74cf0",
+      "back_sha256": "285d7844054d257f79b29c1600048f6b0b590ac186e5ad831c4e86a0959d012d",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "A scheduled follow-up text or a request for property updates.",
+        "A condition rating or confirmation of the remaining mortgage balance.",
+        "A completed fact find or an immediate property sale."
+      ]
+    },
+    {
+      "record_id": "legacy-ch05-008",
+      "front_sha256": "ed703b615d3df12355229bbf0d9e5a5a7b06c5d31c5d8bfdffd18522a07baa54",
+      "back_sha256": "ce9390b861af9bdf6fb339739d64f7211e73741445ae7975aaa967c6bd203840",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Are you on a landline or a cell phone?",
+        "What would happen if you didn't sell?",
+        "How would you rate the property's condition from 1 to 10?"
+      ]
+    },
+    {
+      "record_id": "legacy-ch05-009",
+      "front_sha256": "f67abe2fd473309591475a7f5d3d45398f3bd61271d7153a8d195304cf140e1f",
+      "back_sha256": "f53ce27a6deb03633c31a0bc81bbdfed586cfcc4a4c04979950899e78da79bca",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "To determine whether texting is an option for follow-up.",
+        "To begin collecting the property's bedroom and bathroom counts.",
+        "To test whether the seller can repeat the caller's phone number."
+      ]
+    },
+    {
+      "record_id": "legacy-ch05-010",
+      "front_sha256": "ba662536897d8540cf1c977b0f4315ca3ce35855a61a4281136d7a5c0eef9c5a",
+      "back_sha256": "935f580f560c35f4badf496b804eae7fe4c3605ca2e3858887a0edea80d86df9",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "To rate the property's condition on a scale of 1 to 10.",
+        "To repeat the caller's phone number without writing it down.",
+        "To identify every other person listed on the property title."
+      ]
+    },
+    {
+      "record_id": "legacy-ch05-011",
+      "front_sha256": "4380b9bc891ae81f68736b3aefed6620f0bcfd46b6a2434f52e159182c5738a7",
+      "back_sha256": "a286ff5970da4f0a35d6ada3ae1aa8416394c1ddceaa20cba0b029c62d6406c7",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "It determines the property's condition, update history, and bedroom count.",
+        "It determines whether the seller uses a landline or can receive texts.",
+        "It determines who owns the property and who else is on the title."
+      ]
+    },
+    {
+      "record_id": "legacy-ch05-012",
+      "front_sha256": "1c56a398616330bdf53d2a3b3102b465c73d3381ce9f55ccbe65671a6394b0c9",
+      "back_sha256": "ae500bd8104d9b56ee9760c51566308eae3c2726c6f3851fb997a0d1d6a864df",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "By asking whether the seller is on a landline or cell phone.",
+        "By asking the seller to rate the property's condition from 1 to 10.",
+        "By asking whether anyone else is listed on the property title."
+      ]
+    },
+    {
+      "record_id": "legacy-ch05-013",
+      "front_sha256": "531c02cba72fc7655600aca97fc1a6bd63e71a40c5e6f8387f126eadbcfa3fe9",
+      "back_sha256": "6687bc381e1dd8a6cccd88e78fe627cb0bff0aa822452bd2c67f2da29b6e206f",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The property type and the number of bedrooms and bathrooms.",
+        "The mortgage status and the approximate amount still owed.",
+        "The condition rating and the date of the last major updates."
+      ]
+    },
+    {
+      "record_id": "legacy-ch05-014",
+      "front_sha256": "979d428e7f2cf961fbbabb2d743af7ed664e237eb0f5ef61e29726a345764013",
+      "back_sha256": "b33c9ab4132b72495b2c6a25077184887570f74097202cdf18a4ec58357351ea",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "To determine the property's condition rating and update history.",
+        "To confirm who owns the property and who else is on the title.",
+        "To uncover the life events driving the person to consider selling."
+      ]
+    },
+    {
+      "record_id": "legacy-ch05-015",
+      "front_sha256": "ecd0d5929d1752915f5ee453f1a808f370a5f26276ec5675654e751b9810af34",
+      "back_sha256": "9ecbad054b20009f845b28d3feeded1c77d1fb70b454c1c04f5f4f4ffa61d990",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Twenty percent.",
+        "Fifty percent.",
+        "Fifteen percent."
+      ]
+    },
+    {
+      "record_id": "legacy-ch05-016",
+      "front_sha256": "86e6cc3d97631dae2726a3fca2a1c8b8993a88ed90d1f219d8d633b7ac1fc454",
+      "back_sha256": "e6652a4895ea0c71c619dffe55a522e1c53695dad12338f55fe8f9665ddba566",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Treating motivation as absent unless the seller demonstrates it.",
+        "Waiting to consider motivation until after discussing an offer.",
+        "Treating property condition as the only evidence of motivation."
+      ]
+    },
+    {
+      "record_id": "legacy-ch05-017",
+      "front_sha256": "0a5bba5fbf1abf55f1942c88d9181e61d4bc56c6ea44b6c948b5ccb03b6cb118",
+      "back_sha256": "c2dd99c37f77714f7c7d656d7262da34e2c41208ca865708ed461d53d4d13a28",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "To decide the property's outcome from its condition rating alone.",
+        "To deliver every scripted question before allowing the seller to respond.",
+        "To persuade the seller to accept the buying program before discussing their situation."
+      ]
+    },
+    {
+      "record_id": "legacy-ch05-018",
+      "front_sha256": "e12f121bf33faecec295d9b6f7cc068dbd2ba1f50737b109fff533035a330266",
+      "back_sha256": "ea354078265e8858dd2b3c454f9ad831beef283cf658e7a9925afc9664ebd94f",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "By reading every question directly from a clipboard in order.",
+        "By moving rapidly from one question to the next without listening.",
+        "By asking property-specific questions before building any rapport."
+      ]
+    },
+    {
+      "record_id": "legacy-ch05-019",
+      "front_sha256": "f1495000420003801b60f5a4c284fc8171ae6197b7528fcdaa266e5d7c37ed36",
+      "back_sha256": "4978b30ee889a33787dd0a2794793735a2c793d206f808864df7c1a42fddbe2b",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Spending 20% of the call listening and 80% of the call talking.",
+        "Spending 50% of the call listening and 50% of the call talking.",
+        "Spending 15% of the call listening and 85% of the call talking."
+      ]
+    },
+    {
+      "record_id": "legacy-ch05-020",
+      "front_sha256": "e98c9073bcc97d2ec5d557b7f96e6720b10055aa2985d14626e3326c1b179c63",
+      "back_sha256": "3bdfab35fc1134be190f57828faf5dd013fdcbe5a32dfbda87316610fc1118f3",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Asking when the last major property updates were completed.",
+        "Asking roughly how much is still owed on the mortgage.",
+        "Asking whether anyone else is listed on the property title."
+      ]
+    },
+    {
+      "record_id": "legacy-ch05-021",
+      "front_sha256": "8bc951a325d5868d54020ef437677d647cddcfd4df2abc71dfd1e10f8bf62ad4",
+      "back_sha256": "a7431a37a2ea49657143b4a5aa0055c7c7fef4e8f9d2fafcdad0163bebbe7256",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Condition rating, date of last major updates, and approximate mortgage balance.",
+        "Lot size, annual property taxes, and current insurance cost.",
+        "Roof age, foundation type, and utility provider."
+      ]
+    },
+    {
+      "record_id": "legacy-ch05-022",
+      "front_sha256": "88ab7fcef06303e2bcd622ffa3a3aab2bc9a0b043dcb11f8f01a145ff86d021a",
+      "back_sha256": "86991e95cf26d11c742a736e858db63fcef9bf671eca4770a83e634168b36ab1",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "How the seller currently rates the property's condition from 1 to 10.",
+        "Whether the seller is the owner and who else is on the title.",
+        "Whether there is a mortgage and roughly how much is owed."
+      ]
+    },
+    {
+      "record_id": "legacy-ch05-023",
+      "front_sha256": "c43bf68642791dd358ceeb05b7d9edaa38e1a2468d4d6630e5edc4b692e269fe",
+      "back_sha256": "8a96f4f70672ac0b909522bd5d914f6d3145ee5283a6069c5962445d09ef8d47",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Whether the person uses a landline and if texting is an option.",
+        "What the property type is and how many bedrooms and bathrooms it has.",
+        "Whether there is a mortgage and approximately how much is still owed."
+      ]
+    },
+    {
+      "record_id": "legacy-ch05-024",
+      "front_sha256": "f372a01926ee6f7e502073ee79ef133203e3c5168ae78e35a99e63c504fe419e",
+      "back_sha256": "7303d59639804f11af6090811429cb908fedfcd7258ca0364bb65e384f5d9a1c",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The property's condition rating and the timing of its last major updates.",
+        "Whether the person is the owner and if anyone else is on the title.",
+        "The property type and the number of bedrooms and bathrooms."
+      ]
+    },
+    {
+      "record_id": "legacy-ch05-025",
+      "front_sha256": "ab44fbb97ec702b694572c58e17f270bc1935be3c00ff414cfa93f1eb2d77a05",
+      "back_sha256": "94cf9366966a653e99c26e36b4102171cc69dc914adca05633c461e524e010c5",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "To get a quick rating of the property's physical condition.",
+        "To determine whether texting is available for future follow-up.",
+        "To verify that the seller wrote down the caller's phone number."
+      ]
+    },
+    {
+      "record_id": "legacy-ch05-026",
+      "front_sha256": "7d85f9b4df2e7506a2f9db3e0d874ef4f0e5bd78c85eb4734ca850f670c054a8",
+      "back_sha256": "f1e87663a246c7185a173e892c1f5ae2c6143d33a6c27ca223ae0cc0943e8f13",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The seller's preferred closing date.",
+        "The amount remaining on the mortgage.",
+        "The property's overall condition rating."
+      ]
+    },
+    {
+      "record_id": "legacy-ch05-027",
+      "front_sha256": "ffb551298dae9908368107711a2476456671b6576959a4ab4158f5906e5102a9",
+      "back_sha256": "1f84c963876061ff6fe1af9e180021a026800086da7d72e9c4bc0a0046714f0b",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "High energy lets the specialist shorten or skip the fact find.",
+        "Energetic delivery lets the specialist control most of the conversation while the seller listens.",
+        "Strong energy removes the need to ask what is driving the seller's decision."
+      ]
+    },
+    {
+      "record_id": "legacy-ch05-028",
+      "front_sha256": "7f23dd26b1a992980046b63718d5be05b84c1105ba73e64afdb328ade6266bd8",
+      "back_sha256": "778b520799c3b03b150e7ce37e4bd8e2b63abfd47151dd4f48ad72c5b43406cb",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Writing down every property detail while speaking.",
+        "Reading each script line directly from a clipboard.",
+        "Asking the seller to repeat the phone number."
+      ]
+    },
+    {
+      "record_id": "legacy-ch05-029",
+      "front_sha256": "c4902159ded7f2137c70c68cd0d67671ba85d4358c0d7afd296008454c0c0fd6",
+      "back_sha256": "6d287335a3ecc2f151505999a62adbc3a5ccaf76145e361f5190def4cdaf395a",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Delivering each call from the script in the same flat tone.",
+        "Rushing directly to property details as the day gets later.",
+        "Shortening the fact find to spend more time talking."
+      ]
+    },
+    {
+      "record_id": "legacy-ch05-030",
+      "front_sha256": "08d5e4d36eb073f79b85b42c79f4d571c193914fb68713ea91cd0557f72fcc5b",
+      "back_sha256": "15f1c407bcb97295bd72275445ee1e773b2470585f0d9486c61f426ac5e193ca",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Waiting until after building rapport to ask property-specific questions.",
+        "Asking for a condition rating during the fact find.",
+        "Writing down property details instead of relying on memory."
+      ]
+    },
+    {
+      "record_id": "legacy-ch05-031",
+      "front_sha256": "93c0f154fdf456243436f2faaeeb7e36c27f82e3b8e9fb64aead94f55713e032",
+      "back_sha256": "54d0721ec7e6fe5696b3abf471a7889c463e1e5daa62441ea335e6a31ccf20c1",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "As a teleprompter that must be repeated word for word.",
+        "As a replacement for listening whenever the seller gives a guarded response.",
+        "As a checklist to finish before allowing any natural conversation."
+      ]
+    },
+    {
+      "record_id": "legacy-ch05-032",
+      "front_sha256": "aaa43b3bda0f5b4530a9b19c83a19228e80e655e53b16152fa968e39277fd47e",
+      "back_sha256": "08259ca0f623517ab2765a4b3f3ba5f5dc607034fb84e3d20dfb6c704275e113",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Rushing directly into property-specific questions before building rapport.",
+        "Repeating the script in a flat tone until the seller responds.",
+        "Ending the call before giving the seller a reason to continue."
+      ]
+    },
+    {
+      "record_id": "legacy-ch05-033",
+      "front_sha256": "60e38a73409c5a137f20470fb18a5082682a943e61829e41d88bfaa04ab60f85",
+      "back_sha256": "ce31653da4e619a2fb5c9bd602922494eef07858a06ee568c16a94e8f826ea03",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Commissions.",
+        "Approval.",
+        "Texting."
+      ]
+    },
+    {
+      "record_id": "legacy-ch05-034",
+      "front_sha256": "13aeab482033a56c39f36ce2814e91f27833349356de556a50bfe0e97d46c4d3",
+      "back_sha256": "c03907e32605ca5733cda9b1b782b4cf040fc67cfaef77fd6fdf34052861204e",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "It lets the specialist skip the fact find and move directly to an outcome.",
+        "It confirms the seller is using a cell phone and can receive texts.",
+        "It allows the specialist to ask property questions before earning permission."
+      ]
+    },
+    {
+      "record_id": "legacy-ch05-035",
+      "front_sha256": "071453821627bfbdc1c968498e6a72e1b296b66c42619d475867b4b2bf9f2c9a",
+      "back_sha256": "3da566b0e593463bb5915247b4dd0d2b7aa291a2f36ca76683d7fcd2154b3c13",
+      "status": "needs_human_review",
+      "question_type": "single_choice",
+      "distractors": [],
+      "review_reason": "concept_cue_front",
+      "notes": "The front is a Concept cue rather than a multiple-choice question stem."
+    },
+    {
+      "record_id": "legacy-ch05-036",
+      "front_sha256": "469f4afa4968a05a50ffe236527f1cdcec5f1b17f75739392ee5549b2fa7a3d3",
+      "back_sha256": "083c1c77c2a02f15f47828b499e0ef6cc08cd5e06a43874b7fe533e0ce689d61",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The seller feels pressured to accept an offer before one has been calculated.",
+        "The specialist commits to a purchase price before checking the property's condition.",
+        "The seller assumes the property was denied because the intro lasted too long."
+      ]
+    },
+    {
+      "record_id": "legacy-ch05-037",
+      "front_sha256": "a5b8f1473ade7a933098b1a8a4c9499090a40cd2f93286baf6d30c84d263e546",
+      "back_sha256": "e3f8ec6dffa94d9b9fd89d35470351755c98638bdb39798fe4339fc8e06866b4",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The opening phase used to earn permission and set the tone in the first fifteen seconds.",
+        "The approval-or-denial frame used to position the caller as the evaluator.",
+        "The follow-up step used to determine whether texting is available after the call."
+      ]
+    },
+    {
+      "record_id": "legacy-ch05-038",
+      "front_sha256": "cabd3f9b8bfd13cb547e4c8024a70939d6144fb68abbbc4c888e84dc7c1034bb",
+      "back_sha256": "e866dfbfb0a98829ce26de8991493bad957bcdcb40ec54afb793cd5cbec55af6",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "To determine whether the seller can receive a follow-up text.",
+        "To get a quick rating of the property's physical condition.",
+        "To verify that the seller is writing down the caller's information."
+      ]
+    },
+    {
+      "record_id": "legacy-ch05-039",
+      "front_sha256": "c845b68c7e08397a41f1c04b002e9f0e721fc836b23ef8594c2236a52775419f",
+      "back_sha256": "cef3acb399712830a4bb9d189aeae3a1848bd25d06fbf4c1f11804cc027940ea",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The seller assumes the property has already failed the company's qualification.",
+        "The seller insists on a written offer before sharing any property details.",
+        "The seller treats the caller as the final decision-maker and demands contract terms immediately."
+      ]
+    },
+    {
+      "record_id": "legacy-ch05-040",
+      "front_sha256": "53f6621425a2f9b8c0cfb87003abfc7c54ab140cdccf269b39f3a3ad73031847",
+      "back_sha256": "7b078e2f781a165ec1506b2874acf555f962fd053e4698dd064c71c0e0845957",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Assume the seller is on a landline and skip the follow-up plan.",
+        "Treat the property as denied and provide a reason immediately.",
+        "Move directly into the fact find because the compliance test succeeded."
+      ]
+    }
+  ]
+}

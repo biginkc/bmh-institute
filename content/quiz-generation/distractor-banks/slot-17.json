@@ -1,0 +1,662 @@
+{
+  "schema_version": "bmh.quiz-distractor-bank.v1",
+  "slot": 17,
+  "quiz_source_key": "quiz-slot-17",
+  "lesson": "Compensation Engine",
+  "source_ledger_sha256": "f130f47f03585928e40f37dfba3a37c4ab3f9f8d41ae65332668b430960ba4ff",
+  "authored_by": "codex (EXECUTE 2.17, 2026-07-20)",
+  "entries": [
+    {
+      "record_id": "legacy-ch12-001",
+      "front_sha256": "0c5502e0209b2da7378bed097c82f4d82a844216fb66eed5ead9065b0c181570",
+      "back_sha256": "46590c2e62a95e5a9eff7a13d31efe41dcf92fc8c10dd6a45e03bd9c6aea54ff",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "KPIs, qualified leads, and clean handoffs.",
+        "Signed contracts, completed transactions, and role scorecards.",
+        "Quality conversations, follow-up, and pipeline growth."
+      ]
+    },
+    {
+      "record_id": "legacy-ch12-002",
+      "front_sha256": "6f8f86ff7f88b3f46fdfa68691bbbeba2124585b476499f52cb21305f54f7f28",
+      "back_sha256": "13f3d0454c4b5d3d41c03aa3d8a202a97a504d5fbb53e30da125128da2be387a",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "A guaranteed annual salary.",
+        "A recoverable commission draw.",
+        "A fixed monthly stipend."
+      ]
+    },
+    {
+      "record_id": "legacy-ch12-003",
+      "front_sha256": "96c949558cfa26b16b5759b126603a783e400ba59438d1083070b2df0c4f1702",
+      "back_sha256": "ec56a295b1a2045d57f8f07d5ceb052741da9f80a4abc40b0c26b4e6564a0b08",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "To raise every deal to the highest commission tier during the ramp period.",
+        "To reward each qualified appointment as soon as it is scheduled.",
+        "To attribute each deal before a signed contract and completed transaction."
+      ]
+    },
+    {
+      "record_id": "legacy-ch12-004",
+      "front_sha256": "7839808a31cc7c71d0d7b2ff02ef757fecf07e0ced986fa6f9e738c11d496f15",
+      "back_sha256": "1f7238d8d9884a8b36b74d2bc37f20d9a8b65f7956e690e488345b44f04e965c",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "$25$ straight days.",
+        "$50$ uninterrupted days.",
+        "$75$ days without a missed KPI."
+      ]
+    },
+    {
+      "record_id": "legacy-ch12-005",
+      "front_sha256": "097a8103ca75b5e2cd6e31abaaf0db72ba999adb49d2d6ea7cd08fb02dc21a24",
+      "back_sha256": "ab219a573ebc78d207e519bc93c56f618bfca28de49f23c125265cbceea84927",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The appointment bonus structure.",
+        "The hourly base structure.",
+        "The role scorecard structure."
+      ]
+    },
+    {
+      "record_id": "legacy-ch12-006",
+      "front_sha256": "b33728ab0b81de31b2e4389a36f34e854f551299f1cd92dd349fdda6609a24e5",
+      "back_sha256": "64d9500321b521b904bd9500d513167947ee3b718aa26798327bd7eca756be37",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Hit KPIs, graduate from ramp, reach Tier 1, and earn a bonus.",
+        "Set appointments, close transactions, calculate bonuses, and approve contracts.",
+        "Review the role sheet, ask a manager, count deals, and choose a tier."
+      ]
+    },
+    {
+      "record_id": "legacy-ch12-007",
+      "front_sha256": "6fffdc25757a7d1ecf8e1e5487d4cd0348b7ef2c16bb8db029185748c1672dfc",
+      "back_sha256": "dc899b91ca32c9d1e0d503466f64d6b0fd16868693d10993de4cca73a49c9882",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The representative or lead sourcer.",
+        "The representative’s manager.",
+        "The seller."
+      ]
+    },
+    {
+      "record_id": "legacy-ch12-008",
+      "front_sha256": "1c727e1fc2398bfdd92b2e450484a873108840206da76697d2f8637618af633f",
+      "back_sha256": "c76a4707781df7c1a857c2a4517531a8fc600a9d212c602d8d35bdb29a7faca2",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The monthly count of appointments where the seller attends.",
+        "The number of consecutive days the representative hits KPIs during ramp.",
+        "The amount of time each lead remains in the representative’s pipeline."
+      ]
+    },
+    {
+      "record_id": "legacy-ch12-009",
+      "front_sha256": "0a7cfe206f58d71dc574af0716f226bc20d788fb634e380128924c2c950b8217",
+      "back_sha256": "40fcc2d95a3a0a81de4bd7859e741828892172c9f4311d2edbf40bb27caecf8a",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "$3$ or $4$ deals.",
+        "$5$ or more deals.",
+        "$25$ deals."
+      ]
+    },
+    {
+      "record_id": "legacy-ch12-010",
+      "front_sha256": "2ad41888b2ecab74464dbf788ca32aba5182039db8b619007583792ccf19eec7",
+      "back_sha256": "0b45973981d70824ef0fc9d5552756d13c21bf9babcb6054a7d0b3c46c22a2d8",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "$\\$250$ per deal.",
+        "$\\$750$ per deal.",
+        "$\\$1,000$ per deal."
+      ]
+    },
+    {
+      "record_id": "legacy-ch12-011",
+      "front_sha256": "e724c65837eee8ff0eefa39175684f1a4f5a88cdf1c585ea049fd1c6fbaf05dc",
+      "back_sha256": "bbbb227d279957c8fd2fc4fab90ad4ce99a52164f3e3f6040520764d4afbdb9e",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "$1$ or $2$ deals.",
+        "$5$ or more deals.",
+        "$25$ or more deals."
+      ]
+    },
+    {
+      "record_id": "legacy-ch12-012",
+      "front_sha256": "d109a8c10f15998fdc0ab3836d38fad359eef63da7efc5f86680be5b6193efbd",
+      "back_sha256": "b53f7da9a1a2e59360367056b25df8e6faea661e6b20084d67dffa8794009ade",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "$\\$250$ per deal.",
+        "$\\$500$ per deal.",
+        "$\\$1,000$ per deal."
+      ]
+    },
+    {
+      "record_id": "legacy-ch12-013",
+      "front_sha256": "72e4df17297c507fba023e8e87f58624f848e7a1e83a5a23879e8fff172a98b4",
+      "back_sha256": "84f0aac1d65f4ec149d0f44cdcea3caab62809a22f60fd021dd29afb4906d90c",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "$1$ deal.",
+        "$2$ deals.",
+        "$3$ or $4$ deals."
+      ]
+    },
+    {
+      "record_id": "legacy-ch12-014",
+      "front_sha256": "a0dee5ce6615496b69a77506150ec8c495e3822b31d3e62d254824f3cbe5695f",
+      "back_sha256": "fbd4a058a2dd96432169700070677d62a43a9fa60cfd6cb6ecb6088c3797281c",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "$\\$250$ per deal.",
+        "$\\$500$ per deal.",
+        "$\\$750$ per deal."
+      ]
+    },
+    {
+      "record_id": "legacy-ch12-015",
+      "front_sha256": "e83982190d1a6c331b507ef7f774ac3aacc287b2ecf9dcdba07cb893200cbbd6",
+      "back_sha256": "a5687aef47589f3800a3b34f86ea53ce67fe0bdc4e8ae5263a42109b00a8eeff",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Only deals sourced after the higher threshold are paid at the higher rate.",
+        "The higher rate applies only to the deal that crosses the threshold.",
+        "All deals remain at the Tier 1 rate until the following month."
+      ]
+    },
+    {
+      "record_id": "legacy-ch12-016",
+      "front_sha256": "d143799b5b32b2f4af0af348412eb340b31c3028b74634d4a9885f9a0f7707df",
+      "back_sha256": "04afbca208f35ab95e34c2955285bb9967d5d3cd457722b3b80d95b82a020afe",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "$\\$2,500$.",
+        "$\\$3,750$.",
+        "$\\$5,250$."
+      ]
+    },
+    {
+      "record_id": "legacy-ch12-017",
+      "front_sha256": "59dcc035c808b5d57257316d6b3a05b3e77305b882ed23872952406872130f3b",
+      "back_sha256": "8c5f630bb9cc2f0e932f359392836d2cd88ec076928eef6f406b5898874de000",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "One bonus for each block of $30$ qualified appointments.",
+        "One bonus for each block of $40$ qualified appointments.",
+        "One bonus for each block of $50$ qualified appointments."
+      ]
+    },
+    {
+      "record_id": "legacy-ch12-018",
+      "front_sha256": "0797defbbcfdd3a4300a8cf63cc91086ae320a450b8904373eddd88127866cc1",
+      "back_sha256": "6c43b6b1b342266888b72f23c1fc9db9ccf4d2b421913771d800535fc53f1d91",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "$\\$500$.",
+        "$\\$750$.",
+        "$\\$1,000$."
+      ]
+    },
+    {
+      "record_id": "legacy-ch12-019",
+      "front_sha256": "1ad196330b3a1bb82e0a51e952276be88e29b4fe3723390c11b818daaa643aee",
+      "back_sha256": "351e8955c381a583b61f13d95a595bb8a43e1cd1c8b87386fb3746b1b2a56c70",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The representative schedules the call whether or not the seller attends.",
+        "The representative qualifies the lead and provides a clean handoff.",
+        "The acquisition team signs a contract and completes the transaction."
+      ]
+    },
+    {
+      "record_id": "legacy-ch12-020",
+      "front_sha256": "2083e8d0f6f0e701fd43fd63dcae8cbe2311bffc1436bc18e66ed3a21913dd61",
+      "back_sha256": "7930037be11cef7faa8a0cc90aea8b51650617c8bb19b5c00c6a8864f35e56af",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "$25$ kept appointments.",
+        "$49$ kept appointments.",
+        "$75$ kept appointments."
+      ]
+    },
+    {
+      "record_id": "legacy-ch12-021",
+      "front_sha256": "657160534a29989ac301b1edf87504f69714563d2743befe873756f155715d22",
+      "back_sha256": "f2aa1982573975a486df8de5d9e6d439388477084de2fbabee2aab4415ccde3d",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "$\\$2,250$.",
+        "$\\$3,000$.",
+        "$\\$5,250$."
+      ]
+    },
+    {
+      "record_id": "legacy-ch12-022",
+      "front_sha256": "df52aaa51995b21471c8245d501d6ab548b0f18d2f89aae449f867c28ed8aa6b",
+      "back_sha256": "bb2945397d57c7f4e3ddd0e6dd2c3ca77f119ebea76ee7f29966fc842e7aeb6b",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "$\\$3,750$.",
+        "$\\$5,000$.",
+        "$\\$5,500$."
+      ]
+    },
+    {
+      "record_id": "legacy-ch12-023",
+      "front_sha256": "2a7eaaf58da5338519d9671b690cedfebbb5a5441e07a0b63d56ea3eb9f73a52",
+      "back_sha256": "4d07fc935ede036367f7f84ab0823b478ea17ac85e86ef374fdb930a08ed8c58",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Commissions are capped after Tier 1.",
+        "Commissions are capped at $\\$5,000$ per month.",
+        "Commissions are capped after five deals."
+      ]
+    },
+    {
+      "record_id": "legacy-ch12-024",
+      "front_sha256": "6a58a899f78e4f460e35172539404807754b0146c97f0936eb589b013d761c61",
+      "back_sha256": "f8eb9fbbca6d18d13c4f7f2244434bd63d76aaa4a064fd3aaed53b2d33096f95",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "When the representative graduates from the ramp period.",
+        "When the representative reaches the highest monthly tier.",
+        "When an appointment is scheduled but the seller does not attend."
+      ]
+    },
+    {
+      "record_id": "legacy-ch12-025",
+      "front_sha256": "1e294f6cc1bc6aaa470e2a13c7f164c6b43e8627fd473a01ef55bcf988071fde",
+      "back_sha256": "39e12af60f1d26cc8e91d02844bbad9f4422070d6a00fb291b140f4abdb29ed3",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "They lose all credit once the first month ends.",
+        "They share the deal credit with the acquisition team.",
+        "Their deal credit transfers to the representative’s manager."
+      ]
+    },
+    {
+      "record_id": "legacy-ch12-026",
+      "front_sha256": "76f554dace0b2599073a3fe173729a64b97fd91fe28fb3e2530ce1cbf3b1ea3e",
+      "back_sha256": "940d2a83d5a66a0385820f8357d36cb20d510d75fcd920e9b967f675e6bc0f83",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Scheduling more first appointments.",
+        "Handing leads to acquisitions sooner.",
+        "Increasing the new-lead dial target."
+      ]
+    },
+    {
+      "record_id": "legacy-ch12-027",
+      "front_sha256": "884fcf1440be68d75f1545e99a81093510072f89be26cc28157fef275d334e62",
+      "back_sha256": "53fc4681ddbfce2ee847350491975b4db9fb56de610de866a0f6fb33260824dc",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The representative immediately graduates from the ramp period.",
+        "Every scheduled appointment counts as a qualified appointment.",
+        "The acquisition team no longer needs clean handoffs."
+      ]
+    },
+    {
+      "record_id": "legacy-ch12-028",
+      "front_sha256": "60cf9992c106a1f26c9ed0162196de9341ce38317d8c7e7e8de570e3a000872f",
+      "back_sha256": "3586413d112490589ab97f15a06c28a8583f242437a3c328cc5149ba6a5cc451",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "They allow the representative to close instead of the acquisition team.",
+        "They guarantee every qualified lead becomes a signed deal.",
+        "They eliminate the need for qualification and consistent follow-up."
+      ]
+    },
+    {
+      "record_id": "legacy-ch12-029",
+      "front_sha256": "01bd40646e78a565f068b81691cf6537f9b62354e26aca2680fa4a9900ad69fd",
+      "back_sha256": "23e246e2cd9f121cb62e739febb00713b25e094a039db4692f20c7123ae90aa7",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "They schedule the most appointments each month.",
+        "They reach the highest commission tier in their first month.",
+        "They close every sourced deal without help from acquisitions."
+      ]
+    },
+    {
+      "record_id": "legacy-ch12-030",
+      "front_sha256": "db862c386406fbd437771e574fceec96f00b22ae1cc0452f9025f0ad12b29c6c",
+      "back_sha256": "fffa0a9334725e47e7e81205a9c66e3ff6cea015d87ebd16f5463828afc59844",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Qualification.",
+        "Attribution.",
+        "Commission."
+      ]
+    },
+    {
+      "record_id": "legacy-ch12-031",
+      "front_sha256": "86d9337511542c8f5c02227da718541f89b3c5704ddfdecf7cf2e2a5de95cd2e",
+      "back_sha256": "19305687389567700d7d736c0d6fab93df8aec42f0a3b65acf8954290b917520",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Agreeing.",
+        "Confirming.",
+        "Preparing."
+      ]
+    },
+    {
+      "record_id": "legacy-ch12-032",
+      "front_sha256": "f109e4d668e57360b8885201ce36fa5d304676e9b6ba9882bd624e423b431380",
+      "back_sha256": "2bb198230b571c436b5837ce03fc30415ca7709dd6f224c9fccd3e80ab763935",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "$30$.",
+        "$50$.",
+        "$75$."
+      ]
+    },
+    {
+      "record_id": "legacy-ch12-033",
+      "front_sha256": "6fd44c8f251c285b83bf9bede8c4d097d625273124b9ea9bb48ec40a0d30976d",
+      "back_sha256": "af01eedfcb0696a3d326d035087be300d7d78971565a1dc51042d19f52ed0b13",
+      "status": "needs_human_review",
+      "question_type": "single_choice",
+      "distractors": [],
+      "review_reason": "concept_cue_front",
+      "notes": "The front is a Concept cue, so it cannot serve as a multiple choice question stem."
+    },
+    {
+      "record_id": "legacy-ch12-034",
+      "front_sha256": "b4da38a1f8ab923d84f41488be315750b59ae03df07736fbd1817d77df2ea24b",
+      "back_sha256": "b53f7da9a1a2e59360367056b25df8e6faea661e6b20084d67dffa8794009ade",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "$\\$250$ per deal.",
+        "$\\$500$ per deal.",
+        "$\\$1,000$ per deal."
+      ]
+    },
+    {
+      "record_id": "legacy-ch12-035",
+      "front_sha256": "e942a5aaddf2101a65dec4ed5f4360f33ce980abfac2eaa321eab0f3dc0dfacb",
+      "back_sha256": "ae04e4bf619699e69bbd80101f4f613993d30592d5e22eb27066a51414e1ecbb",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "$\\$250$.",
+        "$\\$500$.",
+        "$\\$750$."
+      ]
+    },
+    {
+      "record_id": "legacy-ch12-036",
+      "front_sha256": "cf744a7de9421a28d82a43ee5a5a7a3e9888f470b1d7ddd3e5e210ad380921c8",
+      "back_sha256": "cc2cbc0928d55e419bc1c324cd7e0bf79bca3fa2e9f18bc105661091477e62be",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "A handoff with only contact details that requires the acquisition team to find the rest.",
+        "A scheduled appointment sent without qualification or follow-up information.",
+        "A handoff with seller details and qualification notes but no property information."
+      ]
+    },
+    {
+      "record_id": "legacy-ch12-037",
+      "front_sha256": "2ddaef4fb461042a8da87fc25749d5c216e12e21fb2fc204134f60e8380e4425",
+      "back_sha256": "47998846e8e2357c9e45bc8461f4f5123b397f49f7e734e28e452c9dbd284187",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Sourcing exactly five deals to reach the maximum commission tier.",
+        "Setting 25 qualified appointments to earn an appointment bonus.",
+        "Closing every transaction without help from the acquisition team."
+      ]
+    },
+    {
+      "record_id": "legacy-ch12-038",
+      "front_sha256": "dcaaba48013b2de52e3108bbdd90e031e54e6fa8b1a077198133df36eeb55e00",
+      "back_sha256": "6c43b6b1b342266888b72f23c1fc9db9ccf4d2b421913771d800535fc53f1d91",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "$\\$0$.",
+        "$\\$500$.",
+        "$\\$750$."
+      ]
+    },
+    {
+      "record_id": "legacy-ch12-039",
+      "front_sha256": "4255cdec8596c1d3f0fb96316c616c31f61436ef1f7b02e4ad07801282191c79",
+      "back_sha256": "9a3c2f6904aa2058c9db2374ff144b51ea786bb7731b5387caacb6f4f1072348",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The acquisition team.",
+        "The representative’s manager.",
+        "The seller."
+      ]
+    },
+    {
+      "record_id": "legacy-ch12-040",
+      "front_sha256": "9107569bf9cf3c60a20b4bebf4add85d9af2e6eab8b98c128ba74d9067bd1944",
+      "back_sha256": "2b651a3b5695d5a8d44cc09533f2a292b656b4670e8013f62076ed50159c00b1",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "A monthly training stipend.",
+        "A guaranteed signing bonus.",
+        "A ramp graduation bonus."
+      ]
+    },
+    {
+      "record_id": "legacy-ch12-041",
+      "front_sha256": "4f68c4f13764772043f90a844e6d2b9e9079f64e8b8e8d35708fe2249ed95290",
+      "back_sha256": "0b45973981d70824ef0fc9d5552756d13c21bf9babcb6054a7d0b3c46c22a2d8",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "$\\$250$ per deal.",
+        "$\\$750$ per deal.",
+        "$\\$1,000$ per deal."
+      ]
+    },
+    {
+      "record_id": "legacy-ch12-042",
+      "front_sha256": "fc17341a3e3e43c0ef80cd56049ca4fc8c6e6d3ad545ad7a57f654713f5db1ca",
+      "back_sha256": "906bfa073b1e97c5bdf1a7da39ea48de519b607a54e5db2943f3ee59b155b806",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "$2$ deals.",
+        "$3$ deals.",
+        "$4$ deals."
+      ]
+    },
+    {
+      "record_id": "legacy-ch12-043",
+      "front_sha256": "733bbfbd2b8c6a5e68e72b6d58123e83b750790c18d4e4969445ad07d1cb3be5",
+      "back_sha256": "cce6b92ec21ee0510bde7362731fd6a097031a1556ee0310924a0fd5b3e01a80",
+      "status": "needs_human_review",
+      "question_type": "single_choice",
+      "distractors": [],
+      "review_reason": "back_too_ambiguous",
+      "notes": "The payload says monthly tier depends on deals sourced, but this card calculates payout from deals that close. The internal conflict makes the keyed answer arguable."
+    },
+    {
+      "record_id": "legacy-ch12-044",
+      "front_sha256": "e5acbd14088c6b39c873c2322111118722056487b237223d7e591eb12c32b47c",
+      "back_sha256": "4fa7b33e1264795005e2ef88945d9296b9208608be7bb978f122c63a2c684c54",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Following up with the lead for three months.",
+        "The seller showing up for the acquisition call.",
+        "The deal reaching the highest monthly tier."
+      ]
+    },
+    {
+      "record_id": "legacy-ch12-045",
+      "front_sha256": "772e23adf49fad7c5e972e504669516f24f00cbec8041e9b938aae565469bf57",
+      "back_sha256": "1e1ce941909358fae360126fd2c7f7d7871d7e2c2d6bef7b05ffc9cf466fccb9",
+      "status": "needs_human_review",
+      "question_type": "single_choice",
+      "distractors": [],
+      "review_reason": "back_too_ambiguous",
+      "notes": "The back is hedged as an implication and does not name a circumstance, so three fair alternatives would manufacture a rule the source does not state."
+    },
+    {
+      "record_id": "legacy-ch12-046",
+      "front_sha256": "fcfc7f3446f835568e8527a0481cc8d0d2a37b41e5a8b953bd094ae5b9e5276b",
+      "back_sha256": "7d8a6bba134a1dd06f6ee543a44c07c10a600bdc96b41f43787c31cfc987cedd",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "$\\$1,000$.",
+        "$\\$1,500$.",
+        "$\\$1,750$."
+      ]
+    },
+    {
+      "record_id": "legacy-ch12-047",
+      "front_sha256": "d30816b50eaf04c0a6c98dd464ec7e073f7f9e8f042747420508b74ba47d3f1a",
+      "back_sha256": "08b56fcc03ef6d7a86adba299f2b92eda909e97aae047ff825dcac6c32388915",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "One bonus (totaling $\\$250$).",
+        "Two bonuses (totaling $\\$500$).",
+        "Four bonuses (totaling $\\$1,000$)."
+      ]
+    },
+    {
+      "record_id": "legacy-ch12-048",
+      "front_sha256": "e8e53aa59a622f7e01e85e353da905da417e3f6752059da13387912ffd68aaf3",
+      "back_sha256": "7930037be11cef7faa8a0cc90aea8b51650617c8bb19b5c00c6a8864f35e56af",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "$25$ kept appointments.",
+        "$49$ kept appointments.",
+        "$75$ kept appointments."
+      ]
+    },
+    {
+      "record_id": "legacy-ch12-049",
+      "front_sha256": "9db8621f81e6bfb0af8e1b6b31d2adf0028cda77f719d442a0f7c625778dd85a",
+      "back_sha256": "078ec38504e3ed7136079daf4e1ccd03be18e5d868ab3a27907af0362309afed",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "It lets the representative stop after qualification while keeping full credit.",
+        "It makes scheduled appointments qualify even when the seller does not attend.",
+        "It replaces a clean handoff with the acquisition team searching for information."
+      ]
+    },
+    {
+      "record_id": "legacy-ch12-050",
+      "front_sha256": "691d5ed01e0fd1b3a7fefb77154d108d6b127df5d16a0aa379e279b4b9dd7341",
+      "back_sha256": "645fde3794075020a5615a575414ce9c0d408ed32e8b2afa4cd19ec60a818360",
+      "status": "needs_human_review",
+      "question_type": "single_choice",
+      "distractors": [],
+      "review_reason": "back_too_ambiguous",
+      "notes": "The phrase real money is subjective and appointment bonuses are also earnings after ramp, so the keyed answer is not unambiguously superior."
+    },
+    {
+      "record_id": "legacy-ch12-051",
+      "front_sha256": "746f832c34bcb1982d116c121a179423d16f87b0f1905543d49df4fddbca6b47",
+      "back_sha256": "89492f2200d20634abc2498e2854b07d8d1ea3a2339b77c5ccef0286f78afebd",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "A qualified lead and a clean handoff.",
+        "A scheduled appointment and the seller showing up.",
+        "Thirty KPI days and graduation from the ramp period."
+      ]
+    },
+    {
+      "record_id": "legacy-ch12-052",
+      "front_sha256": "a6db03ebdbe2187462ed90332da71ed1f23e82be54c8efd91b0bf7e7a8ce9700",
+      "back_sha256": "008f2d8d5870cf0a501acd27f9f4933671d1157ee0c22807c531efc7a53087e3",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "True; every scheduled appointment counts whether or not the seller attends.",
+        "False; they are based on the number of leads placed in the pipeline.",
+        "False; they are based on the number of deals closed by the acquisition team."
+      ]
+    },
+    {
+      "record_id": "legacy-ch12-053",
+      "front_sha256": "a85c9489da293209383f870430e0ed5f70788b66fca651977195c17aed5c734a",
+      "back_sha256": "f9fe77a69959c3640b13c1a719fbb427c428e3b58024bb2fd131e1e2a11b31f7",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "$\\$2,000$.",
+        "$\\$2,500$.",
+        "$\\$4,000$."
+      ]
+    },
+    {
+      "record_id": "legacy-ch12-054",
+      "front_sha256": "a7a5a521ca310b2284cd28bf46bb2636b683b83554e054e24ea037d8345259b9",
+      "back_sha256": "5522d1763561f025abd762fe53bedff22591234822c018c175df6226125d0032",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The lead is reassigned to another representative.",
+        "The representative loses that month's appointment bonuses.",
+        "The lead is removed from the CRM at the end of the day."
+      ]
+    },
+    {
+      "record_id": "legacy-ch12-055",
+      "front_sha256": "5d9282d7c1ddc7fd6d9bcd0ef2ec761bfd35f96d5c5f7d62dba3ceb2077d229c",
+      "back_sha256": "58ffab3d20197f23acd0bc5c6e2d819745b4028dd2411497765c935698de5c2e",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The hourly base rate alone regardless of pipeline outcomes.",
+        "The acquisition team's deal volume without representative input.",
+        "The monthly appointment total as the sole measure of all earnings."
+      ]
+    }
+  ]
+}

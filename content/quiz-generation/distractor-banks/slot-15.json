@@ -1,0 +1,420 @@
+{
+  "schema_version": "bmh.quiz-distractor-bank.v1",
+  "slot": 15,
+  "quiz_source_key": "quiz-slot-15",
+  "lesson": "Closing and Deal Engineering",
+  "source_ledger_sha256": "f130f47f03585928e40f37dfba3a37c4ab3f9f8d41ae65332668b430960ba4ff",
+  "authored_by": "codex (EXECUTE 2.15, 2026-07-20)",
+  "entries": [
+    {
+      "record_id": "legacy-ch10-001",
+      "front_sha256": "b16f745fc76fbf0bc85fdd7fae39d9a87831735ff19fd8daf0c8e590cdf3b60d",
+      "back_sha256": "0596949a38462fab2cc3ac8e0811abaf70a5f81dc9511331de1a24a39279d2d7",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Because rapport, discovery, and objection handling are postponed until after the seller signs.",
+        "Because the title company decides the offer before the seller discusses their needs.",
+        "Because the transaction team negotiates price only after funds have been transferred."
+      ]
+    },
+    {
+      "record_id": "legacy-ch10-002",
+      "front_sha256": "d5b5ac70ade36ccd7cca1e3525ba12c095ce43b73c9436d8738158cf7b4b7b29",
+      "back_sha256": "51083f7c544927f5a076774e7fe6b95001fbeda029f047988f25288b618c7ebb",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "They have decided to accept the highest price regardless of who presents it.",
+        "They have decided the title company should choose whether the deal proceeds after checking ownership.",
+        "They have decided the transaction team will negotiate the terms after signing."
+      ]
+    },
+    {
+      "record_id": "legacy-ch10-003",
+      "front_sha256": "c9b0ce30a5e0a69875d63d9cb4ac0c086edbf9d5d4b263320e5cfbb096d10d66",
+      "back_sha256": "e30bc95b555277b77f538a9ae3d59c9818c24b276534c8a9c7159131016040cc",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "verbal objection",
+        "discovery handoff",
+        "offer range"
+      ]
+    },
+    {
+      "record_id": "legacy-ch10-004",
+      "front_sha256": "acf389c7bdb2baf5cb2435a3e2cbee880218fbd0c524d91951b4fe283b601b19",
+      "back_sha256": "dc899b91ca32c9d1e0d503466f64d6b0fd16868693d10993de4cca73a49c9882",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The transaction team.",
+        "The title company.",
+        "The transaction coordinator."
+      ]
+    },
+    {
+      "record_id": "legacy-ch10-005",
+      "front_sha256": "df586abb07f7d9167b7894852aecc9365eabdff1f61dc82d644447cc96ed0b51",
+      "back_sha256": "7d21529f1a7a9beb574bd4b25540599a31fcd78bcac605759ba8146528fee07e",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "It replaces the acquisition team's offer presentation and negotiation.",
+        "It sends the signed contract directly to the title company for closing.",
+        "It determines the closing date, signing location, and funds transfer."
+      ]
+    },
+    {
+      "record_id": "legacy-ch10-006",
+      "front_sha256": "6d840f53c8e43c7b7c5bf45b209a98bb4664e1c5d2f9e141a6bcfc18d78d697a",
+      "back_sha256": "cf637ea071bff2176df37ca9461c6991cf27a31136d3066f8d068dfad60a4ee3",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "It authorizes them to generate the offer range and negotiate final terms.",
+        "It makes them responsible for verifying ownership and checking for liens.",
+        "It transfers post-contract paperwork and logistics from the transaction team to them."
+      ]
+    },
+    {
+      "record_id": "legacy-ch10-007",
+      "front_sha256": "01bf2e1b93c340558e5bfeb381fad695cb942307102d21f61dee5f97dc8a5135",
+      "back_sha256": "cead22484190490fe97f45a8cea9df5802a271dbdcd2b1335c982d805eb8efb2",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Seller expectations and the purchase agreement.",
+        "Title verification and lien checks.",
+        "The closing date and funds transfer."
+      ]
+    },
+    {
+      "record_id": "legacy-ch10-008",
+      "front_sha256": "d01f48dc02bd4263b39c0c934c3f8c6db33dda826b4643559575447ce08bdf6d",
+      "back_sha256": "e51ffa2df8dbea495ce86a1fc4c0c0ac85a70f444f006c3e75072e884f30d47e",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "It should be detailed, complex, and presented with firm pressure.",
+        "It should focus on paperwork and avoid explaining the seller benefits.",
+        "It should be presented by the transaction team only after the contract is signed."
+      ]
+    },
+    {
+      "record_id": "legacy-ch10-009",
+      "front_sha256": "2ce004b3436fc9be89dc154970cccb6ac63cf52dc0f4bab47384a9a165b27190",
+      "back_sha256": "9e4d171f01f23b09233d4d20cf7aa04dd5a296f46fc52a882bf77bc81c23112a",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Generating the offer range, negotiating a higher price, and checking for liens.",
+        "Confirming every decision-maker, completing discovery, and handling objections.",
+        "Preparing title documents, selecting the signing location, and transferring funds."
+      ]
+    },
+    {
+      "record_id": "legacy-ch10-010",
+      "front_sha256": "492e567fb9d564b59a6140fdac7d063a8fd70e2a2dcf1ef3e1ad27f87ee43112",
+      "back_sha256": "ff8060a7c1f14b2e65d47bf46471e971735279448d368e95056488fede91d2e5",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "\"That number works for me.\"",
+        "\"How does that sound?\"",
+        "\"I am ready to sign.\""
+      ]
+    },
+    {
+      "record_id": "legacy-ch10-011",
+      "front_sha256": "4aba042c56a6d3f1a0e08055a1d40591d3c2da02d6c041671ecbb18fa299b7a0",
+      "back_sha256": "4e40db29b988b97adfb98abe0ca19daec244922e5ef75ad5751b5f33e2c65e58",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Reframing the value of the offer.",
+        "Asking what number the seller needs.",
+        "Confirming all terms on the call."
+      ]
+    },
+    {
+      "record_id": "legacy-ch10-012",
+      "front_sha256": "ad1fdf4c70b88fe1ea3ee02d0b4d6d51f158ea122e57191c3a33f457e71f22c4",
+      "back_sha256": "533c58e0ba8b4cff7139c9043696cfdb66224f99efbc1cf1162f230f7c5ea95e",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The team confirms all terms on the call.",
+        "The team sends the purchase agreement for electronic signature.",
+        "The team transfers the deal to the transaction team."
+      ]
+    },
+    {
+      "record_id": "legacy-ch10-013",
+      "front_sha256": "13d0b45dca63bd69c2d59f021f810324b896db708fd33af2b7b9ee4c30b3832c",
+      "back_sha256": "5160ab3174e07b91741f0170959a5153e8ecb8044958f2836fd1f19bcdd32460",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "\"Why are you considering selling the property at this time?\"",
+        "\"When would you ideally like to have the property sold?\"",
+        "\"What repairs or updates does the property currently need?\""
+      ]
+    },
+    {
+      "record_id": "legacy-ch10-014",
+      "front_sha256": "0ddc4592c17c6fa2725d28ba4077a4793cafc4e44d6fae5d0d04c37b263e96d7",
+      "back_sha256": "770e607624d689265ca6c44884d0807d9b054d23c473c106c72be9de08b7376c",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "happy",
+        "safe",
+        "secure"
+      ]
+    },
+    {
+      "record_id": "legacy-ch10-015",
+      "front_sha256": "fc8f9c7045c608a5990048843bd8adb8c037c3ade605550681a955fa5718704a",
+      "back_sha256": "dc8c06717e8062c5ab660fed5c2e10d3c5d6fdf3ee94b4cf151dd06fd145be91",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The seller becomes more committed to the signed agreement.",
+        "The seller asks for another concession before agreeing to the offer.",
+        "The seller delays signing until a higher offer becomes available."
+      ]
+    },
+    {
+      "record_id": "legacy-ch10-016",
+      "front_sha256": "901d7263421b22f10922a5201308d89062f336e8202fed16d3771b3c2e20a1dd",
+      "back_sha256": "b3192d36c883326590237e7a0dfb1e6071216bd18b2469f10353fd6c1ee222b2",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Reframe the value of the offer.",
+        "Generate a different offer range.",
+        "Send the unsigned terms to the transaction team."
+      ]
+    },
+    {
+      "record_id": "legacy-ch10-017",
+      "front_sha256": "6935ce59d223fd4bbd0f6184525e623c6aa7f8bbfb099868e46645ee13aa4f23",
+      "back_sha256": "f69a862c70496410b4648faf2141a98984e25ee55378401454e3542707f27817",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "It is discussed verbally and left unsigned.",
+        "It is sent to the title company instead of the seller.",
+        "It is signed only after the closing funds are transferred."
+      ]
+    },
+    {
+      "record_id": "legacy-ch10-018",
+      "front_sha256": "563c93722209e8f95f08d8471a2b720b7228e1f18fa5bcec5bacee10b6ea9f8a",
+      "back_sha256": "3639e8598bdf7d078346858ca816ec17e0d792e9f96b24c72f79c17d2c21cc9c",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The acquisition team.",
+        "The title company.",
+        "The SDR."
+      ]
+    },
+    {
+      "record_id": "legacy-ch10-019",
+      "front_sha256": "d30e6d0b4ef9d4cc3da79951a5b72b20880abd16656de421f9ea7894b27da929",
+      "back_sha256": "2e29ca29c29bdb888beaf0d2fcbc63be57b97eb758eca73e6b5de1ba0988dd2c",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Presenting the offer, negotiating terms, and confirming the verbal agreement.",
+        "Coordinating the closing date, signing location, and funds transfer.",
+        "Building rapport, conducting discovery, and documenting decision-makers."
+      ]
+    },
+    {
+      "record_id": "legacy-ch10-020",
+      "front_sha256": "b7bbbbd31064f39d4c5a0b17ade49c89ecdb5a785b0f9d26ed789abfcd72c6e3",
+      "back_sha256": "83c5cb96609f48f583310a678f844e18a7919c8b28cc278c225e57a6f0c49247",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The acquisition team.",
+        "The title company.",
+        "The SDR who completed discovery."
+      ]
+    },
+    {
+      "record_id": "legacy-ch10-021",
+      "front_sha256": "9bdd157ec9bbdc1455ef115ba013c748958a613797e8bfcd3702073786122c68",
+      "back_sha256": "96c4449a24dcfd25891cc846ceb8be15aea485b050312646a760eaa22667e1b7",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "If the acquisition team still needs to generate the offer range.",
+        "If the title company has not verified ownership or checked for liens.",
+        "If the transaction coordinator needs someone to transfer the funds."
+      ]
+    },
+    {
+      "record_id": "legacy-ch10-022",
+      "front_sha256": "0eb446a4e5f2161c63e12f2e1fa5c5bc5c1cf2f6802815537ae3c826720baedf",
+      "back_sha256": "a66008da91c939cccea164e15d172363358ca2d7f062fc0ea69910e8cb15c219",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The offer presentation focusing only on the final cash price.",
+        "The purchase agreement being rushed before all terms are reviewed.",
+        "The closing schedule changing after the seller gives verbal approval."
+      ]
+    },
+    {
+      "record_id": "legacy-ch10-023",
+      "front_sha256": "20d2b77bf80267a65c3b62e2d5fcf8bfe764f24494689868a18e2289a458f402",
+      "back_sha256": "7126452b1da22f322ee71d58888df2dcbaa3cfe73a5a0e9aec9cd9ff36239cf3",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "By sending the purchase agreement before identifying who can decide.",
+        "By asking the title company to negotiate with the family after signing.",
+        "By leaving family concerns for the transaction team after the contract is signed."
+      ]
+    },
+    {
+      "record_id": "legacy-ch10-024",
+      "front_sha256": "f220bfe1de3a9e80b671782f380acf83487414ef57fa7b8de2e6cf5e9e869e56",
+      "back_sha256": "bda83b21296f70c95daa1a19fd89e6d9a70d4acaf97a0d136b5fdad89f996236",
+      "status": "needs_human_review",
+      "question_type": "single_choice",
+      "distractors": [],
+      "review_reason": "imperative_front_cannot_be_mcq_stem",
+      "notes": "The front asks the learner to list three title issues rather than select one answer."
+    },
+    {
+      "record_id": "legacy-ch10-025",
+      "front_sha256": "7087ff04d355d0aadc90ce1a8f23d173398d3965431cfa24fb7a5ca8e8d96821",
+      "back_sha256": "859cb58f019a587eab1c783d5fd10c80322464f5070a9d23101eb5009a2f75c5",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "A faster closing timeline than the competing buyer offers.",
+        "A larger earnest deposit included with the purchase agreement.",
+        "A complimentary moving service arranged before the purchase agreement is signed."
+      ]
+    },
+    {
+      "record_id": "legacy-ch10-026",
+      "front_sha256": "df2c806aa551173ea2e42f8738cd44c6a0580db7e46c82a7c145a6015e7aecda",
+      "back_sha256": "edf4521fd7a3725b5030c9e482b0e623fd9726522b329991b1fd89fe3da8deb4",
+      "status": "needs_human_review",
+      "question_type": "single_choice",
+      "distractors": [],
+      "review_reason": "insufficient_content_for_fair_distractors",
+      "notes": "The lesson's plausible alternatives are rapport, relationship, seller timeline, repairs, or fees. Rapport and relationship overlap with Trust, while the transaction benefits could reasonably outweigh price for some sellers. Other lesson terms are not plausible answers."
+    },
+    {
+      "record_id": "legacy-ch10-027",
+      "front_sha256": "f78f92113f0d540dc690f8abf607068eb67e01b413d0f9573722e822a2ffe820",
+      "back_sha256": "1ffa49d116c63fb5300df2750c3546e10218a7f325fe604ea57d027a33b37d50",
+      "status": "needs_human_review",
+      "question_type": "single_choice",
+      "distractors": [],
+      "review_reason": "insufficient_content_for_fair_distractors",
+      "notes": "The lesson also presents empathy, rapport, trust, and thorough discovery as qualities that can keep a seller engaged. Using them would create partially true alternatives, while the remaining process terms are not plausible qualities of a representative."
+    },
+    {
+      "record_id": "legacy-ch10-028",
+      "front_sha256": "d10a8b32ed66117341ee15f62d3a976fe288a8165fafc29fd025b1cef0b61ebb",
+      "back_sha256": "54bfa72e2a0020c3daac54838713b936fa9102c330f58cf22e76d9809f020f3f",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Definition: A purchase agreement sent electronically after the seller confirms the terms.",
+        "Definition: A company that verifies ownership, checks liens, and prepares for closing.",
+        "Definition: A role that coordinates the closing date, signing location, and funds transfer."
+      ]
+    },
+    {
+      "record_id": "legacy-ch10-029",
+      "front_sha256": "28e2b3b710a4cc1b2cc8f6cdd00e5b0ae79bf18fdaf80849df9aeb75b24a96cd",
+      "back_sha256": "7243d50cd712e87e778925ff8642c012c6474c1d212bad8a5e47deb5a5632875",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "It contains only the seller's hoped-for number and no property information.",
+        "It contains the closing date and funds transfer before the terms are agreed.",
+        "It contains a signed contract with no discovery notes for the acquisition team."
+      ]
+    },
+    {
+      "record_id": "legacy-ch10-030",
+      "front_sha256": "34e1c019277604450cf2da970671fb69f9f65ea3705f75a36829ab3673b0db00",
+      "back_sha256": "918b38ef046b9bd453077c02794cfaab93b2dc70e35641a391039c123cf9d5ab",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "nervous",
+        "confused",
+        "unprepared"
+      ]
+    },
+    {
+      "record_id": "legacy-ch10-031",
+      "front_sha256": "ca5286691f57028b09797011120887a7cf2edba7c11260dcbe5b0ecded075bb7",
+      "back_sha256": "e7101753c36f99ac3ca7d30ee6591ec1e36a44806912fe7e338714fe01ffb58d",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "To end the conversation before the seller states a needed number.",
+        "To transfer the signed contract to the transaction team.",
+        "To determine the closing date, signing location, and funds transfer."
+      ]
+    },
+    {
+      "record_id": "legacy-ch10-032",
+      "front_sha256": "9a23d097d5a2973cacf77bdb48619b289055d8f90120318c629160fff1eae6f8",
+      "back_sha256": "83c5cb96609f48f583310a678f844e18a7919c8b28cc278c225e57a6f0c49247",
+      "status": "needs_human_review",
+      "question_type": "single_choice",
+      "distractors": [],
+      "review_reason": "insufficient_content_for_fair_distractors",
+      "notes": "The title company also handles post-contract paperwork and closing preparation, so it would be partially true. The lesson does not provide three other professional roles with clearly distinct post-contract duties."
+    },
+    {
+      "record_id": "legacy-ch10-033",
+      "front_sha256": "33b11abe23bf1bd2971ff6f01a8080956d46721b4ac2c9aef90cfa71b8aac797",
+      "back_sha256": "54d5dbf0124e59afba31626db737667cba02fa73560691be0cdb0e7cab9b1fc7",
+      "status": "needs_human_review",
+      "question_type": "single_choice",
+      "distractors": [],
+      "review_reason": "insufficient_content_for_fair_distractors",
+      "notes": "Natural completions such as deal or distance would make the statement arguable or reword Gap. Other lesson terms do not fit the phrase naturally enough to be plausible distractors."
+    },
+    {
+      "record_id": "legacy-ch10-034",
+      "front_sha256": "66cd252664055847ac93bb71b5d91c0c6361e8d0417a9896d1169026c03e2956",
+      "back_sha256": "74b217e6785173892c15420e698a039eb134cb23f4bb425643df09e552c92c8a",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "It makes the seller more likely to accept the first number presented.",
+        "It allows unresolved objections to be handled after the agreement is signed.",
+        "It lets the negotiator shorten discovery and move directly to agreement."
+      ]
+    },
+    {
+      "record_id": "legacy-ch10-035",
+      "front_sha256": "f6a6ed724201c0e07bd80e877cd70d73722d40b71eefe3ee50250f0fa24f8654",
+      "back_sha256": "8e8e4925c7ada2ed9d0ee524ffb175dac4b4a3e5c7e8ecd248d413167bd06fee",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The initial discovery completed by the SDR.",
+        "The offer range generated with Deal Sniper and comparable sales data.",
+        "The verbal agreement before the terms are confirmed and signed."
+      ]
+    }
+  ]
+}

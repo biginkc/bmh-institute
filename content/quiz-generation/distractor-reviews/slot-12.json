@@ -1,0 +1,235 @@
+{
+  "schema_version": "bmh.quiz-distractor-review.v1",
+  "slot": 12,
+  "checked_by": "claude-fable-5 (adversarial checker)",
+  "verdicts": [
+    {
+      "record_id": "legacy-ch16-001",
+      "distractors_sha256": "419de55623a4cfc15ac96b8353d64846fd4098a1757a0e4dd4509a6047f71d85",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch16-002",
+      "distractors_sha256": "970fd946c033f6690ab06c774786e79a3a0bf16b4d13eed459326dbfe07a2fea",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch16-003",
+      "distractors_sha256": "74e3c4ac0946f8a4d185c70582a1a0f7cdc2df007263f1937e793d8960044a84",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch16-004",
+      "distractors_sha256": "e1b5dc97a65ba929d8358e931ecd4aa1409ab157647bab165be0c1764d7bf556",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch16-005",
+      "distractors_sha256": "288b968cd36c552e7f7fcad0631df0b50de889f06ec7c3fe5dc1f1ca671fceaa",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch16-006",
+      "distractors_sha256": "6eff580a9a7d1dd65e00b79fe155b2699268fa7e117afd1da9cd724ae560a4b7",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch16-007",
+      "distractors_sha256": "9dfed437441c74b96c73b5a06883219ec08ff1fbf24f86075640b98580627207",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch16-008",
+      "distractors_sha256": "c8587c5442e4ff73296bc9c76be2d45d423e8e56e3169b0031820dc225e8414d",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch16-009",
+      "distractors_sha256": "14bd41e9c843346145e43a707ddf620bfdc0d8f1d514264723772f15c4c37f9e",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch16-010",
+      "distractors_sha256": "28951f9500131e5233a2a70a0a3001010dacb30df735756246de13d95e6bbc72",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch16-011",
+      "distractors_sha256": "1cc0e5d1df5ad1e825ae12f17a801d53bb0cbc0624abf6382d8b7e3e99fdea56",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch16-012",
+      "distractors_sha256": "985b8744e7de2b68effe999324607acf8e2e6ca918a59036c7c982cfd217c5e4",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch16-013",
+      "distractors_sha256": "76d049b9776895ae368dbb0aeb2b18297cff6a9bd0bee4428e4708d1c5619a54",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch16-014",
+      "distractors_sha256": "a54259012723fbf8c9e47b2bba2a97c51cf008e11ebbd98ce23d7cce1ce78404",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch16-015",
+      "distractors_sha256": "ddc288304095218673068c0f9dec9547ac2f6cf2aedf05a5c4931981ae159f5b",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch16-016",
+      "distractors_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch16-017",
+      "distractors_sha256": "abfb9599cf96af107cb124daf9d4ac3dd547102e78ecad099a7c0c032472713d",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch16-018",
+      "distractors_sha256": "8c20d5daa5c3bd1159f211177019e087baafc8380428850928b0ddba1cb31ab8",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch16-019",
+      "distractors_sha256": "ace8fd9f0d9521cb526c967a2f78d24d0e785b785f5a32aecee4e42672c127da",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch16-020",
+      "distractors_sha256": "fcff6bdfdf39896ac2aef427c928c6daba7f87485f4827dad34238af966eec52",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch16-021",
+      "distractors_sha256": "94a61fae1738d1359ecda0ade1ddbb9e41835af93d0ba2cfb34017a089b5cbb8",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch16-022",
+      "distractors_sha256": "f22c0ff452e2db924bf8c084477a27b75a1a41d3b6e0bea80e4d4476d3945986",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch16-023",
+      "distractors_sha256": "65d5ce40e8b5c164cf9df67ec2c73dd7776ba4f98aa07e18a5da08d678c924e5",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch16-024",
+      "distractors_sha256": "eece096505473ec5bacaadbe519bb77fdc40fbe5da3bc0d5eed33ab3af658259",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch16-025",
+      "distractors_sha256": "218137bc668e317496dd26f32f0e461730da49f95ba286fa5a27054529db759c",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch16-026",
+      "distractors_sha256": "4c23f2ba2cbbcfe20d3c31bf84908402b833ee5eec21a049f7a6ef5a0f976469",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch16-027",
+      "distractors_sha256": "56b1cb107fe3816b07b6332429b1912389c1e04f1ffb55ccaac54b444deb1563",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch16-028",
+      "distractors_sha256": "c4b97f84b7129d2e2a8ec98e7a82b6efc1eb8f06b96612095450def0bb04a637",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch16-029",
+      "distractors_sha256": "2bcea92d40b9f64eaef43bcea2727d54f76ba5f2c696e8547855c9277c1849aa",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch16-030",
+      "distractors_sha256": "311990028ac66c5b3a73ab18593481acbf1f077c8dd79049ecda59e1d306d53f",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch16-031",
+      "distractors_sha256": "22e80672413d9903191f8efc02260cd5a901daa88ee09536c4fe3e8d3aecf0ef",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch16-032",
+      "distractors_sha256": "6ae51aecfba37089a688785b392d585909ca36fb5817df363d4bb710d47593e2",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch16-033",
+      "distractors_sha256": "0e70d6a8aa7bea65aed2882cec825b5c6607dba8a619e51ae97460c69346e6b4",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch16-034",
+      "distractors_sha256": "05b971f99e7714a6351a1cf5969a41d3b21e6462fd9c84fc3e13150b4a1ca7f8",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch16-035",
+      "distractors_sha256": "78815ac9968c1fe3216d828b4f734c6603e411d800680d2377437f1b6c457258",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch16-036",
+      "distractors_sha256": "a58ac96f89ffbe3f961452d8e035acf31ea13728f6a9dc80a27dbadb90aa4641",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch16-037",
+      "distractors_sha256": "aa401c05585cfd19eb38d0753472d5b35a43b774d052d86394590d0e2704bcd1",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch16-038",
+      "distractors_sha256": "921729a084039056e82aaffc889bcc7733f2137893f7c6279af02e2d11c65705",
+      "verdict": "pass",
+      "issues": []
+    }
+  ]
+}

@@ -1,0 +1,964 @@
+{
+  "schema_version": "bmh.quiz-distractor-bank.v1",
+  "slot": 4,
+  "quiz_source_key": "quiz-slot-04",
+  "lesson": "Humanizing the Lead",
+  "source_ledger_sha256": "f130f47f03585928e40f37dfba3a37c4ab3f9f8d41ae65332668b430960ba4ff",
+  "authored_by": "codex (EXECUTE 2.4, 2026-07-20)",
+  "entries": [
+    {
+      "record_id": "legacy-ch02-001",
+      "front_sha256": "9bdfa752fd5e2d64b1297446cd50a19ddbfa305c9607a37cd2e9508782022139",
+      "back_sha256": "0bf3b9e613681f52719c1111559caac5952341594b15e81d8f0db3bff1f3c85a",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "As property records that matter only when they show equity.",
+        "As call targets ranked only by how quickly they may sell.",
+        "As transactions whose property condition matters more than the owner."
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-002",
+      "front_sha256": "f0c871475363adf2c4478c6170c8fb1663b3e5c7674cc5dd6afb3a6670d19c46",
+      "back_sha256": "073e3c45399f2ee06e87141034339e2906a8cf833d11cf18939c3925ba814383",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "It lets the caller skip listening once the conversation begins.",
+        "It guarantees the seller will accept a discounted cash offer.",
+        "It makes the property's condition more important than the seller's outcome."
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-003",
+      "front_sha256": "bb461aa688a03afb9b6fc61f86e87ec2740b5c81a9ed5530cdee0fef307dbfae",
+      "back_sha256": "5dc61cdc8cce8168521d13ff9d876c997e14c7967e0e5593dc94eaf2fa4ee496",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Calling without context makes sellers trust the first pitch they hear.",
+        "Pre-call research removes the need to ask insightful questions.",
+        "Winging it helps the caller focus only on the amount offered."
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-004",
+      "front_sha256": "f975e4bcc8ddd71df5901d19e06dfd5a25437b0373d09373b697aa54dc69a769",
+      "back_sha256": "44121e29be3cf0b9dd16a9fb36d683ac34438d65faa1b471bb587b9970ddc729",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Those with pristine houses who insist on full retail value.",
+        "Those selling commercial buildings or vacant land.",
+        "Those who have no reason or timeline for selling."
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-005",
+      "front_sha256": "a08aa6ad3c151a66bcd12941d2a37a8a24fcadb92112e7ab2454272699b39ee2",
+      "back_sha256": "1c43abf69317887053cc9e9aa6d4bff7368749bd87082a65bb820c8317799f5d",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "They usually live in the same house they inherited.",
+        "They are usually managing tenants in a nearby property.",
+        "They often have the inherited property actively listed locally."
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-006",
+      "front_sha256": "83c1418fd904d4d0d3dd050b6f405e799e7d884ced66788942460459c145c985",
+      "back_sha256": "6db43e14567436a7e70e919bf62977aac953ee6bfe95e6fb27b455b5c564f1a9",
+      "status": "authored",
+      "question_type": "single_choice",
+    "distractors": [
+      "They believe inheriting the home automatically cancels all leases and repair obligations.",
+      "They think the property must be sold before they can obtain insurance on it.",
+      "They expect probate to choose a property manager for them automatically."
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-007",
+      "front_sha256": "5753314875261ceb9ac99460662a3ef2685da710d35417e8fec30dd501ea5114",
+      "back_sha256": "df57cd258803eb47a4d8bfa12fcd749d445b3aaca11f4c55cae083ade8bfe33a",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The conversations tend to be relaxed and detached.",
+        "The conversations focus only on maximizing retail price.",
+        "The conversations are usually free of personal pressure."
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-008",
+      "front_sha256": "e1ee7908a2c7dec1946e46f637878fe4eb063625f8f34bbbe6ede8344a0952cc",
+      "back_sha256": "ac5689f78869995ffcecce94cd4624edcf6dfb8174b6e08a37cc0af6cdfed836",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "A pristine house and a demand for full retail value.",
+        "A cancelled listing and a desire to manage tenants.",
+        "A distant property and frequent calls from investors."
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-009",
+      "front_sha256": "0c0ec6401d452a4a2c32c9873f68f308aa04cf1c7dae956319c85915b91e7ba6",
+      "back_sha256": "7e24cc2d9c5c79c02149a2231ae9fe73bd42a18591c541ca9f76044907582094",
+      "status": "authored",
+      "question_type": "single_choice",
+    "distractors": [
+      "MLS rules require the mortgage to be paid off before the home can be advertised.",
+      "A foreclosure notice automatically cancels the owner's authority to list the property.",
+      "Traditional buyers are never allowed to purchase a home before foreclosure."
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-010",
+      "front_sha256": "87dccb3883f9f89778d02afbc11575a7438ca06a01c46e344505f66858b41424",
+      "back_sha256": "98550e4716d5bcd7adbdf275a26db11fac8e41847bbd6dbcdfd1327e09d9d0d4",
+      "status": "needs_human_review",
+      "question_type": "single_choice",
+      "distractors": [],
+      "review_reason": "concept_cue_front",
+      "notes": "The front is a Concept cue rather than a usable multiple choice stem."
+    },
+    {
+      "record_id": "legacy-ch02-011",
+      "front_sha256": "b4dc4a285e557ddb97e5b4e0bfb41e75037245643a7ec86cea326bb54790e98a",
+      "back_sha256": "792b542bc420b65695a53869f7bfbecd5fc43f2751a8f39b6b35ff2192e2754a",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Repeated laughter about ongoing maintenance problems.",
+        "Excited descriptions of managing difficult tenants.",
+        "Enthusiastic plans to keep the property indefinitely."
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-012",
+      "front_sha256": "d208d32625ac4393beaa94053bca850c766449c28a2eacac7e09c29c46bf493b",
+      "back_sha256": "214278d0dd605879e94e5d2dee23c449fe0e791d1f9195686e5ebcaf54e2be94",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The mortgage may have a balance that must be paid before an agent can market the home.",
+        "The property may have tenants who must leave before the home can appear on the MLS.",
+        "The property may have unpaid taxes that must be cleared before an agent can advertise it."
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-013",
+      "front_sha256": "5cb995cbccc56e9abd31493d144e019976e1792dfec507bd8d07d64cc1b42e46",
+      "back_sha256": "dd6b0fcb74181b90f1dcc457f0f3e009d21ae265f1e7a8ea0914c5cd8c9a60e7",
+      "status": "needs_human_review",
+      "question_type": "single_choice",
+      "distractors": [],
+      "review_reason": "imperative_front_cannot_be_mcq_stem",
+      "notes": "The front asks the learner to list examples rather than posing a multiple choice question."
+    },
+    {
+      "record_id": "legacy-ch02-014",
+      "front_sha256": "179149df8421c6ddf47ee8942f11eb7323ad848ff7b14f555b525a82b53d2b60",
+      "back_sha256": "62ff33bc80aac1101188c0c002cf2b9e0dfd7441883417e119c43dcca7fed92a",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "A full retail listing after the seller completes every repair.",
+        "Ongoing property management while the seller keeps the house.",
+        "A months-long sale that depends on buyer financing clearing."
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-015",
+      "front_sha256": "bd0ee6c40141dc8dacb6ea19eb633ad51121a8397070ab04ebc2508f242f811f",
+      "back_sha256": "e3bb7a03fa593ec788f270e0f44880eb6f8d32d02c8543c7ade8b19efb25688b",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "They remove the seller's timeline and reduce the need to act.",
+        "They make managing the property the seller's preferred long-term plan.",
+        "They turn a distressed property into a pristine retail listing."
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-016",
+      "front_sha256": "d756562e6438a9de9704551c1fe5cf88de406291a53ceedc060eb8a55a2af968",
+      "back_sha256": "cccb7ba55939c290c6c0705e13dcf46008b97d1049510979f8638c0a9cdc96c4",
+      "status": "authored",
+      "question_type": "single_choice",
+    "distractors": [
+      "The seller worries that a smaller home will cost more to maintain than the current one.",
+      "The seller expects the move to increase the number of repairs they must personally handle.",
+      "The seller fears that downsizing will prevent the current home from ever being listed."
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-017",
+      "front_sha256": "8c1a5524656804bfe3f84d7e2a36ec1bea1c4273d4cf0d9cee91e0f9a82918b8",
+      "back_sha256": "80708d2da49364d944b328eaa9ebaf710a50d8250fcdd1c75a46f042845b82bc",
+      "status": "authored",
+      "question_type": "single_choice",
+    "distractors": [
+      "Paying a mandatory nonresident surcharge each time a local contractor is hired.",
+      "Losing the right to use a local property manager after moving away.",
+      "Having tenant leases expire automatically when the owner changes states."
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-018",
+      "front_sha256": "ebc6d1a8dcefb31143fd12b63608ccef6ae62c488a288b0b16988da21f527355",
+      "back_sha256": "bece2a1b02154cf516b4fb96830d61d6c4df8c4231eddbe10316b90b467a6470",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "A pristine property and an active retail listing.",
+        "A discounted offer and a persuasive sales pitch.",
+        "A distant owner and a large amount of equity."
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-019",
+      "front_sha256": "e4d8581cdb7701fc0aa74647f72a2bbff919413d555653f2cf0e3ef3d41ab8fa",
+      "back_sha256": "743d773019d99449e29e9f1d9a12aa01e1b348dd9f50c82433570b9e70387277",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "They need an immediate sale and will accept a discounted offer.",
+        "They have a defined timeline and a specific reason to sell.",
+        "They have reached their limit and want the property off their plate."
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-020",
+      "front_sha256": "b2dc50799fbc70979dc9c29edbdf342767cd00c2116fdec43b920c785d80ed99",
+      "back_sha256": "413a3f0ceea4cadcb370e9beca52b69c0e055abe7d4cc4f09bcb708805969e79",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "They are likely to accept a discount before discussing their situation.",
+        "They have a defined timeline that makes preparation unnecessary.",
+        "They need an as-is sale because traditional listing cannot work."
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-021",
+      "front_sha256": "eb33726e18d6945211b9651d3fa2742c6fe3315480a8ff390dc706e906dc90b7",
+      "back_sha256": "e3fc1733623679df0740f624a4bdb649f1bf256c61bdb7e3f82d94d65479defb",
+      "status": "authored",
+      "question_type": "single_choice",
+    "distractors": [
+      "They have already accepted another offer but want a backup price.",
+      "They believe the caller can approve full retail value without asking questions.",
+      "They assume saying they are curious will guarantee a higher offer."
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-022",
+      "front_sha256": "73f8a0a311e8053cfc67d4a8f396cd78f23cebc6def5b09511af7bcb7f2cb5fd",
+      "back_sha256": "4e1c970ee0d043ded60c1323578aafa9e69f09139650e5a4f6f6b5ad14899acb",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Delivering a slick pitch before the seller explains anything.",
+        "Assuming the list already reveals why the seller must sell.",
+        "Focusing only on the offer amount and property condition."
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-023",
+      "front_sha256": "e154101bfc254e9f9dc3ffc453f3714fb3863260b5aa98afb360cf3e34e80e87",
+      "back_sha256": "d3076f3a4a09ed69a0802727ed79c0cb04e7f7fa515a5835907185160421e0fa",
+      "status": "needs_human_review",
+      "question_type": "single_choice",
+      "distractors": [],
+      "review_reason": "phrase_cue_front",
+      "notes": "The front is a Phrase cue rather than a usable multiple choice stem."
+    },
+    {
+      "record_id": "legacy-ch02-024",
+      "front_sha256": "28e7c4054b24bdbff4dcb5e72f6bab6c8536d00b318d5b7e0c628e2c72a5ba86",
+      "back_sha256": "dce6bd90c143d12cd6f17291a1d3a9f0f5ce0d5c3231cb169c7b317abc2f2fce",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The phrases replace the need to confirm ownership and equity.",
+        "The phrases prove the seller will accept any offer amount.",
+        "The phrases allow the caller to stop listening and begin pitching."
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-025",
+      "front_sha256": "ca6c314405ced3d1c1324b68a81c4c5c99f8111adde3015ce42df8b2dc0b3c66",
+      "back_sha256": "f3b1732e715041f6ccb166a7275467f38f9012c1fdf5ed2b1dba79f6636a4c38",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "If the seller needs speed because foreclosure is close.",
+        "If the property needs major work the seller cannot afford.",
+        "If the owner wants to cash out of a distant vacant property."
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-026",
+      "front_sha256": "94027cf9a2935dade9786bb96a3f317e4dd5e675fadf385d0b789a8e9e68465f",
+      "back_sha256": "f8157c8234388b488bbce09f927f6d6932b0962391e58b0734075c265de07b69",
+      "status": "authored",
+      "question_type": "single_choice",
+    "distractors": [
+      "The agreement proves the property has no equity.",
+      "The agreement makes the title company the legal owner until closing.",
+      "The agreement means the seller cannot have legal authority to sell."
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-027",
+      "front_sha256": "5b591bc2e6f386875944e70dfcbaff5c9cccbff9dfa84ac400352979d9b793cf",
+      "back_sha256": "ba676b27f12fd9e3c1cb8d5ce4f35eff9cbe2291297b616f90bcaad141bcb02f",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Whether they have received five to ten investor calls that day.",
+        "Whether the house needs roof, foundation, or hoarding work.",
+        "Whether they prefer a slick pitch or active listening."
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-028",
+      "front_sha256": "439421b7f8fe60e0b570a65e8c87694bbf7988679cf9337a5d3c3d8705634442",
+      "back_sha256": "58094c46eb58803b4f5a0211a642de65159cedf6b4513910490000f4c55acf42",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The owner has enough equity to cover everything owed.",
+        "The house is pristine and the owner accepts an as-is purchase.",
+        "The seller has a reason to sell and a defined timeline."
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-029",
+      "front_sha256": "6dd3f4c2772c1400ba62cefc83b576f1372133108b0d0522b643e3642ca0c69c",
+      "back_sha256": "1c627dce480a22f5f771d8c8c033b3f34df1dbc4a0bf9671ce7e2da569f7d0f3",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Inherited houses and pre-foreclosure homes.",
+        "Vacant houses and out-of-state properties.",
+        "Rental houses and properties needing major repairs."
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-030",
+      "front_sha256": "f0351b2a7fdad3ba0e421be7e4c6a293a9c1c54eebea1ccfcaed81e8304e7a30",
+      "back_sha256": "00e9c9f6ee0a1cfae87df2bc59c51d0110192219fb323cd1598e5d4e53ef3b82",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Only one or two calls each day.",
+        "Between eleven and fifteen calls daily.",
+        "More than twenty calls every day."
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-031",
+      "front_sha256": "d432c4a4e19ac5b31a127e71d6e455cf4861710f8e150795b0bf7f9c2c99644d",
+      "back_sha256": "458cb4b19ede4b62108a77faf770811733406c9ca8548b6f6fa9e961d12b92e4",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Relaxed, eager for more calls, and immediately trusting.",
+        "Unconcerned, patient with every pitch, and ready to list.",
+        "Enthusiastic, free of pressure, and focused on managing tenants."
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-032",
+      "front_sha256": "93c81cbeb5b6ab9ca9b5a0fdc36c1966b8cf98d05ffdf4cac0326fada105a296",
+      "back_sha256": "50abcd35e6320aa33839def900f647e547b8df76dba3dcd72b8ebc8a19d0c53c",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "By giving the slickest pitch before asking about the seller.",
+        "By focusing on the transaction and ignoring the person's problem.",
+        "By calling without context and leading with the offer amount."
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-033",
+      "front_sha256": "8dbf32c92710e939e82d3f889da94247b30ead6f4b25173d1bf08f04827a7811",
+      "back_sha256": "4d495bdd4032073ada4646fd19fd8c9e38bc7dff9b327cb79cf399abfbc7be8b",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "They heard the slickest pitch from that investor.",
+        "That investor called without learning their situation.",
+        "That investor treated them more like a transaction."
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-034",
+      "front_sha256": "42102fe9049fd4db95276f799236196c7d4b95a41bfde88cd40678eaf420aee9",
+      "back_sha256": "92db1185d8b052e1cad45f822010c25d7919e78c4bf9d718ac074a0c59aa780e",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Presenting a discounted offer before asking any questions.",
+        "Classifying the lead as hot or cold from the CRM alone.",
+        "Explaining the property's condition before listening to the owner."
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-035",
+      "front_sha256": "cef2fa3176181d697cf59c81271d1c0e2da9052c4641fcf7573b69fa42a7fb4c",
+      "back_sha256": "0ca4b31354181d72faf653d3d5014ea4bbaf3ba2f5f9a9c24e90200db1707cbe",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Smallest",
+        "Rarest",
+        "Weakest"
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-036",
+      "front_sha256": "1749944bf4e04f8671f8fff6703b080c86915ea3c97b10af681de4b7bff7acd3",
+      "back_sha256": "58bee6ad66fcddf338f8f025053ba645ac7e265257a707bf8a7ab80d08443a94",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Highly motivated",
+        "Under strict urgency",
+        "Ready to cash out"
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-037",
+      "front_sha256": "42ac67671729b480ccb8edd66d579108c21aa37f7d81f3b941971084e45899c2",
+      "back_sha256": "d423e4819f37b33beff1f1d4ae46c6ae3ba7ad4cc2bc6a03badc03ecb4a3c5db",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Renovated",
+        "Staged",
+        "Listed"
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-038",
+      "front_sha256": "9d15b7d47160123732e0801235309b3f4fe56e98304bb75f98a8e0caaaafad27",
+      "back_sha256": "8f40203ab7df88d973f3bd5f284218f233cc70e4876bc951078a7e33aa4c3da4",
+      "status": "authored",
+      "question_type": "single_choice",
+    "distractors": [
+      "Preserve their asking price",
+      "Keep the property",
+      "Manage the tenants"
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-039",
+      "front_sha256": "61d2bbd79969d758c1f4ca447e3b32449e81db026aa7e54e57e8f16428b4fe4c",
+      "back_sha256": "2a5902de7786fe5918c973f1a862e94c74ec3691247a97a169b499730467cdca",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Started exploring",
+        "Chosen full retail",
+        "Kept renting"
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-040",
+      "front_sha256": "56b74afb147f798710ec9d9bc4d8d30a5d4746fc1a057a3ac1851209f2f7956c",
+      "back_sha256": "7b1afd88b8cd89823f1be05fe7bf6a467d58c1ec72ea6febdcd7888092663456",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Property-condition",
+        "Financial-pressure",
+        "Call-volume"
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-041",
+      "front_sha256": "883e9e108612b2ff2f3864b50efd5ace29274bb3b5d62c3080b3f005ee8990b3",
+      "back_sha256": "e0d55fe839065cefad221751e515cad21849b9ecf0119ebfd30944ae4b389032",
+      "status": "needs_human_review",
+      "question_type": "single_choice",
+      "distractors": [],
+      "review_reason": "back_too_ambiguous",
+      "notes": "Many words can fairly complete the broad sentence, so Obvious cannot remain the unambiguous sole correct answer."
+    },
+    {
+      "record_id": "legacy-ch02-042",
+      "front_sha256": "1cfb6df938e22f05a473a1aaa4719b0f5297f4232e01c464cc8706c847fd2b2a",
+      "back_sha256": "cf1451b8d4f67d3042830b814a33abde75a509963b05f3618a131ff7ada6e48d",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Retail buyers also require a seller to accept a deep discount.",
+        "A full retail price creates the urgency investors need.",
+        "The investor can pay retail whenever the seller has a timeline."
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-043",
+      "front_sha256": "b263cb2554e7190194dc141d8fb7c98e6112c9ddea7bb51c977c154105403e29",
+      "back_sha256": "56d1341b20e8613f91d75f405075e8c37509bc0b150a12800dd6331ec6f72fe2",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "A desire to keep managing the tenants and property.",
+        "A lack of urgency from a seller seeking retail value.",
+        "A failed traditional sale caused by buyer financing."
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-044",
+      "front_sha256": "6908ff6ee06bfbc291c1da6d4ca9af234fc81d294f357ab0b0291412eafd635d",
+      "back_sha256": "046753e0b6aff33be51a80dd8214b09b97a1d8725c016012fda78a926d2bebf6",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "It increases the owner's fear of selling too soon, strengthening their desire to wait for a higher offer.",
+        "It increases the owner's concern about losing rental income, strengthening their desire to keep the property.",
+        "It increases the owner's worry about local prices, strengthening their desire to renovate before selling."
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-045",
+      "front_sha256": "0037e3aca5a11f92072c70695864f2178065d0a0372ebbe457b44b6cbd4057bd",
+      "back_sha256": "2e35be5b7d2a2dde730f12417bb5935ef070661556466a8fb3dbfb1db470735e",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "To add a months-long listing process to the seller's stress.",
+        "To push the seller toward repairs before discussing the situation.",
+        "To focus on the transaction instead of the seller's desired outcome."
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-046",
+      "front_sha256": "0b1d08d990dff03e87c8362fd1ceb5d57cdcfdc8c8687717abe7dafa094fca66",
+      "back_sha256": "176f6c68ad0fb64bffdc03e394dce3823e4834c88979ff6de1befaef846a3a56",
+      "status": "needs_human_review",
+      "question_type": "single_choice",
+      "distractors": [],
+      "review_reason": "back_too_ambiguous",
+      "notes": "Several lesson concepts can fairly complete the comparison, so the offered amount cannot remain the unambiguous sole correct answer."
+    },
+    {
+      "record_id": "legacy-ch02-047",
+      "front_sha256": "3c8cfe40053ad1e3c127dd4522868012069701933af58ad0300450fc4e1f9ea4",
+      "back_sha256": "d0407f1f1fc30a8d899434f2bf9392b5a514300ac75b767041cd1d9fd900a131",
+      "status": "needs_human_review",
+      "question_type": "single_choice",
+      "distractors": [],
+      "review_reason": "imperative_front_cannot_be_mcq_stem",
+      "notes": "The front directs the learner to identify a problem rather than posing a multiple choice question."
+    },
+    {
+      "record_id": "legacy-ch02-048",
+      "front_sha256": "a0a0e8da1dbf962ab6c750afc13117325d531cd6cb115d8d8766c9942bd44ab5",
+      "back_sha256": "5faf4a251d1bc4608ff8e4c3d42d453b413647fffac05fd9eaa9695fb1467dec",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Assume motivation makes the cash deal viable anyway.",
+        "Treat the debt as proof the seller can demand retail value.",
+        "Ignore what is owed and focus only on property condition."
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-049",
+      "front_sha256": "83a6382749220fd1b306401ea30f418bb79cc38eac83ea5c04b982e4f0b52846",
+      "back_sha256": "750f428538be4cd9e4c0d9a392a2ca5ccc79a5f07f85915dd85be25c082a8420",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "A polished pitch reveals hidden motivation without questions.",
+        "Skeptical sellers mainly choose whichever caller speaks first.",
+        "Talking more than the seller creates the strongest trust."
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-050",
+      "front_sha256": "c7d26200c3999f61f4f3b33939a2d5a8727f0aefdf84de6461322d11cfeddb5b",
+      "back_sha256": "bb0ce7f084cc2c63ea22da7f5cba634df7b7fc8d3456bbfac19cc0af2cfe682c",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "By matching the other callers with a faster slick pitch.",
+        "By ignoring the hostility and immediately naming an offer.",
+        "By treating the lead as a transaction that needs pressure."
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-051",
+      "front_sha256": "d388a08bfc1cdd7f85ce00e39225b4b2b6966d01dfbf8c1794b710c0b7812690",
+      "back_sha256": "95148250468b60e76bbc8af9049964e981df98281bc2e0860306f31b893203d7",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Divorce, relocation, and downsizing situations.",
+        "Tax liens, late payments, and foreclosure pressure.",
+        "Distance, property managers, and repair travel."
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-052",
+      "front_sha256": "d7cf8ee169849e8eb9bd9547f21ccd1a5f044ee38f272c3c127ab99f4ea1178b",
+      "back_sha256": "0163c5e8b18f1cb6e26a134896a1a90b35be0b7442472ebc608db2c9c098aa82",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The time spent staging, listing, and waiting for buyer financing.",
+        "The stress of tenants, repairs, and property managers reducing rent.",
+        "The skepticism and hostility created by calls from other investors."
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-053",
+      "front_sha256": "845ccebf0dbe2c7e4dc21ce72f7848611f229eb885fd35130d9624a985984a79",
+      "back_sha256": "305e0ea0a3b0602f004b632db9462d152643273cfad7dc33be642db6e6d07d74",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Keeping the property and managing it personally from a distance.",
+        "Repairing it for a full retail listing with no timeline.",
+        "Waiting for additional investors to call before making a decision."
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-054",
+      "front_sha256": "44e1e598b1a030cf919750e4d3557927305fa71e4b4ed8e2c810f8ffcc20bc16",
+      "back_sha256": "8a18bd0efd5f63f4c0b39e0e25ba46867d0b4944d1ce42242ef08bd078f46b43",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "It creates pressure to refinance the mortgage before starting the new job.",
+        "It creates pressure to hire a property manager and keep the home as a rental.",
+        "It creates pressure to complete a retail renovation before leaving town."
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-055",
+      "front_sha256": "a7f6c3116fa76a2973d1868a4fc7d4da85f5ba110579c013363b9b951db21645",
+      "back_sha256": "643241331a5568e4ce93a5c5dde474b528daf5652e9e47fac48afb2a8d339c68",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Routing the lead to another rep before the seller's motivation is known.",
+        "Making the seller expect the same rep to handle every later transaction step.",
+        "Shortening the follow-up schedule below the seller's decision timeline."
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-056",
+      "front_sha256": "eee80307affbd71f51f256957a449963adb18c0bb89a2180fa6c1fa9e577f850",
+      "back_sha256": "617cefbdcaaf861c35a309b7c860213ed8203f94fc5f04d406eb758a7beeaf00",
+      "status": "authored",
+      "question_type": "single_choice",
+    "distractors": [
+      "It permanently locks the lead's status after the first call.",
+      "It prevents later call notes from being saved in the CRM.",
+      "It automatically sends the same offer to everyone in a category."
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-057",
+      "front_sha256": "251600170562585c9f64e0c03518fd592ac11f8395f9e5c47bf4dae87eeac66a",
+      "back_sha256": "298c14d132cd7222596cb45f829e32e5297f6c7a5967c1232991cee1b4c04311",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Curiosity from a seller with no reason or timeline.",
+        "A desire to keep the property and manage tenants.",
+        "Confidence that a pristine house will get full retail value."
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-058",
+      "front_sha256": "c5c6d4395d8b6e2ca33860e9d8604ebb34ad58007d396c17a91ce826560b219a",
+      "back_sha256": "054747e5e963060bd1620c7c7e2cf63eed25bfa3e4704f571984a00cb3107cfa",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Assume the first family member has sole authority to sell.",
+        "Wait until closing to learn who appears on the title.",
+        "Treat family agreement as irrelevant if the property has equity."
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-059",
+      "front_sha256": "96fa2917acfad0df4a8f85a2491297a67191c1828c254c4f3d943604faf60db2",
+      "back_sha256": "303d9c3680903b750f31900bf9ae2b84ac157133a68b6c0f1bfc6f2a76d3febd",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "It requires every seller to repair foundation, mold, and fire damage.",
+        "It imposes a fixed 90-day MLS waiting period before buyers may submit offers.",
+        "It involves waiting for tenant leases to end before marketing can begin."
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-060",
+      "front_sha256": "b74355a4e87a346a912fc04ad112c35430a0f7be2b4332e05b079e4fc44f728e",
+      "back_sha256": "7b1c79c26d609f54ffae45a332b14ac4e5a995525a576da7e5bfde180becbcec",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Choosing an offer amount before learning anything about the seller.",
+        "Labeling the CRM record hot or cold and delivering a pitch.",
+        "Assuming the lead list already explains the person's motivation."
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-061",
+      "front_sha256": "bb1cbf034696f615cf16c482047ceca965e87a81257b1e7cea6df0e427b71397",
+      "back_sha256": "1d7b9ea6ed25f09434a1d5db31325e9a5fd1f8bda29bc4f5437d362b8ff59c0d",
+      "status": "needs_human_review",
+      "question_type": "single_choice",
+      "distractors": [],
+      "review_reason": "phrase_cue_front",
+      "notes": "The front is a Phrase cue rather than a usable multiple choice stem."
+    },
+    {
+      "record_id": "legacy-ch02-062",
+      "front_sha256": "a80a5f774434ab8eac2e2ce5917968d54127d2ac52bd7fb9b1a90504e0d5a6a2",
+      "back_sha256": "15e0c680c03815f54a7bf46e2c45e9a4f62f082a4a11b9f26d586c7f573bca58",
+      "status": "authored",
+      "question_type": "single_choice",
+    "distractors": [
+      "To match each lead with the marketing channel that first found them.",
+      "To estimate property condition before scheduling any follow-up.",
+      "To decide which caller should own the next conversation."
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-063",
+      "front_sha256": "c7b314ad09c3908c7b95e7ce494bee45db7a0bf42371a5e5c6c4862dfc66c25d",
+      "back_sha256": "bddfd571c3e3f1eabadc0f2e268b3c3d557176276914ce4b02f23547d271ddd3",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "They have a strong reason to sell within a defined timeline.",
+        "They are likely to accept less because urgency is high.",
+        "They need an immediate as-is sale instead of a listing."
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-064",
+      "front_sha256": "2e1c8d921219da7082d6b24acccc7fea48c82cc4ff33279e40814e1eda530801",
+      "back_sha256": "875254c20076f34fbb74aaf34b846db22ed592a01b45724a3f5fa63bfeeb05ff",
+      "status": "needs_human_review",
+      "question_type": "single_choice",
+      "distractors": [],
+      "review_reason": "back_too_ambiguous",
+      "notes": "The quoted desire can also fairly describe inherited property and tired landlord leads, so out-of-state owner is not uniquely supported."
+    },
+    {
+      "record_id": "legacy-ch02-065",
+      "front_sha256": "51baa5331be84721578db901820a005d446e643611f7737c47e653933aa335f2",
+      "back_sha256": "0b919f06169f7cd53cf36a5dac5ff3d90a40bf72da3f641edbaee6df142fb9d6",
+      "status": "authored",
+      "question_type": "single_choice",
+    "distractors": [
+      "Guaranteeing a higher price than every competitor before evaluating the property.",
+      "Calling more frequently than every other investor until the seller answers.",
+      "Using a longer script so competitors cannot cover the same points."
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-066",
+      "front_sha256": "157ed1f24eaccd2ae3ca4d11bf93bceb86b2d2df04581da07ff3e7729281faa3",
+      "back_sha256": "e05146f140bd77029b49fd77a24065022f70dc18de7de7bd74a5884cc44268ef",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Unmotivated",
+        "Curious",
+        "Just exploring"
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-067",
+      "front_sha256": "141abaf62330c22ed35b8d741e1d18beb63d7f89830b29c6535efe17501ce702",
+      "back_sha256": "77edf1cda7872ca006682bbecc02374330c3fb86daf3fbaf42ff9efc3671a90d",
+      "status": "authored",
+      "question_type": "single_choice",
+    "distractors": [
+      "List it",
+      "Move into it",
+      "Make repairs"
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-068",
+      "front_sha256": "5704ed50525f4e3c92b24f68080a718ebfd0775096116aa96c5d90150f1f804f",
+      "back_sha256": "0ea352c8cdf0e325384203c09c30a1c057e3e4ef43cf82a7e70c630a3f58c29d",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Pre-foreclosure sellers",
+        "Curious sellers",
+        "Pristine-house sellers"
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-069",
+      "front_sha256": "54992e22f3bd5869274af500a7bf95032a406d4163941a787ee5d72d5fe52958",
+      "back_sha256": "4729bf3c52475483fff1773f1a61d759d0bf68fde4d519d281b772cf5cdecd31",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Simple curiosity",
+        "No urgency",
+        "Full retail value"
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-070",
+      "front_sha256": "39c1331196360b864ab543c32facb3f196c3e44643d67bcc73a723b719599033",
+      "back_sha256": "a6b870aa82858e92ca40e5b1688ba357c63c747bcc5d834d1264867f6e578149",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "By assuming the CRM list already shows the real reason.",
+        "By giving a slick pitch before the seller can explain.",
+        "By focusing on price and avoiding personal questions entirely."
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-071",
+      "front_sha256": "e7a6d2f391b3862e769c3f5e9fc58200810c78810034d64713bb07c4efe9073d",
+      "back_sha256": "8ae4daf80059f8f9ad6e832f24952a3e231e610d3bfed13754feb94da69bef79",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "It may need repairs that the seller cannot afford.",
+        "Its owner may live in another city and want to cash out.",
+        "Its seller may need a fast and simple sale."
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-072",
+      "front_sha256": "f7e7e63c1f843990b21d6316c4686175d7e436c72b40f0d5a6a24fcfaf2174ed",
+      "back_sha256": "40878fad36f8ad2a5c2ee26288b65e49735c51f3acae4facdf02e141fb423255",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The caller repeatedly mispronouncing the property's street name.",
+        "The investor opening with a property-condition question before discussing an offer.",
+        "The agent leaving urgent voicemails after missed calls."
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-073",
+      "front_sha256": "f097e99fd22163855c0d453107788fb7945a1080682b11434bbdeee615a1b6df",
+      "back_sha256": "d0736f943dcd4f548274d9cc5d56d8584d1af2803b5c6e03c35a9d211758542c",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The point where a curious seller begins demanding full retail value.",
+        "The stage when an inherited property becomes a pristine listing.",
+        "The moment buyer financing clears after a traditional sale."
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-074",
+      "front_sha256": "56d65f252184ed83e229e6ef97ee5e8b16abf6526aefa22b236340f41c220527",
+      "back_sha256": "68c3904aa6bacd0a7d5bf8ec7b76d55475cdea7c3aa5b54fef4c1c231647f4d0",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Equity is irrelevant whenever the seller has enough motivation.",
+        "The owner must owe more than the property is worth.",
+        "Equity matters only for commercial buildings and vacant land."
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-075",
+      "front_sha256": "53d7a26a3b8f70914d78c839a511bbbf10ebfbf5ee0d282ecaf5ba447aa4a79e",
+      "back_sha256": "9df67b7d48188abf26ad85024661bd079aabebd3bd05f9960a669b2a5c6c73fd",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "It lets the agent replace listening with a prepared sales pitch.",
+        "It proves the seller will accept the first discounted offer.",
+        "It makes understanding the seller unnecessary once the call begins."
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-076",
+      "front_sha256": "4809efe50e01b80a13fd5cbe4fe5bb2cf1ad9f6426815e4af5ca7f5e06d6903f",
+      "back_sha256": "f683aed5ccfc53564109df49eec45cfa90dd2ca501adab73e016715373ecf13e",
+      "status": "authored",
+      "question_type": "single_choice",
+    "distractors": [
+      "These sellers expect one buyer to handle every legal and financial issue in the life event.",
+      "These sellers believe a simple sale guarantees the property's full retail value.",
+      "These sellers want the sale completed without choosing a price or closing date."
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-077",
+      "front_sha256": "cbefa5a0d5dd513e7e410dde9064d19137e198dbfbb428e94b33f9101643a264",
+      "back_sha256": "d8b48800d4c09706ef697f6186f3f87ae37f4cf2a0a955f3d88b40d95b001b71",
+      "status": "needs_human_review",
+      "question_type": "single_choice",
+      "distractors": [],
+      "review_reason": "phrase_cue_front",
+      "notes": "The front is a Phrase cue rather than a usable multiple choice stem."
+    },
+    {
+      "record_id": "legacy-ch02-078",
+      "front_sha256": "83fa13b7b2504a6308c8dedc11163f0abb83daf98742d6980d578b478bc73889",
+      "back_sha256": "81b0551ffb2ea7143584122fecf2ca5973c45f3d9829eac074aedff1ef52fae8",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Price; condition",
+        "Trust; empathy",
+        "Debt; interest"
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-079",
+      "front_sha256": "79a3193c3e60566eb7ecd26010f8852f381914adf85c3308ad2e54bd2933568e",
+      "back_sha256": "d8eb112847171382b49be9566fc38681b055e68755dbb0d811371c4472ab9c96",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Ranking CRM records only by whether they are hot or cold.",
+        "Finding the property defects before asking about the owner.",
+        "Choosing the offer amount before hearing the seller's desired outcome."
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-080",
+      "front_sha256": "4bc6ffc1241cc6c5ba67273a8af4d73452feff9faaf409e08cd2f75bcdf2b997",
+      "back_sha256": "1d01fa0566b7501b6cbbda6767ae8659cb48e5b85e3dc9ff21c158fe4f326dce",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Keep pitching until they accept a discounted cash offer.",
+        "Treat their curiosity as urgency and continue the deal.",
+        "Assume a pristine house makes them ideal for an investor."
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-081",
+      "front_sha256": "5f72369bfe133452154d3aa934f10c34811ee0763fd807192fc58ba25e67ef8b",
+      "back_sha256": "1f549c06fff63daead135161aff2aa3b5fd8c773ee6ac34e53020d57884876df",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "To turn every conversation into the slickest possible sales pitch.",
+        "To value property data more than the seller's real-life problem.",
+        "To keep every lead active even when the company cannot help."
+      ]
+    }
+  ]
+}

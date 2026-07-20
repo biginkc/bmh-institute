@@ -1,0 +1,253 @@
+{
+  "schema_version": "bmh.quiz-distractor-review.v1",
+  "slot": 7,
+  "checked_by": "claude-fable-5 (adversarial checker)",
+  "verdicts": [
+    {
+      "record_id": "legacy-ch05-001",
+      "distractors_sha256": "b3c32f379e83dd0a42268209e390e7cb01e892cd8a455869b76639d3a90872dd",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch05-002",
+      "distractors_sha256": "8560b379867248faa1931347c4f86cffeb6c43e29833f33078c86c8dbd1c6c85",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch05-003",
+      "distractors_sha256": "d197b40985200aec4b5db5675bd61fa00983cadd79a6c74d918bab2f2cd1b63e",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch05-004",
+      "distractors_sha256": "17323f6bda70cabbc86b5895d6eb0e5d68e9567c520e927dffb684dbe09d1984",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch05-005",
+      "distractors_sha256": "a0589d1cb7b9bf638aacdc4cd71509de18950c607499db6e516e35fb06f8ec72",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch05-006",
+      "distractors_sha256": "d22d6dc2104c8268b6702f96b7fa3a50fda16e3cc74f420191703ac0ec04e9ec",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch05-007",
+      "distractors_sha256": "dfab228404578b22f0a7baf73fa867f0e34c78ae46e996b135764dceac4efee8",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch05-008",
+      "distractors_sha256": "a0b5c52059509f21c1d5e6d7c89828bad5852c00230d26429ad887e0ea8adaf4",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch05-009",
+      "distractors_sha256": "d25f301d29ee28f1c5aa0dbae0ba2ee0bea800b6b8098306818ae222f6ef0c43",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch05-010",
+      "distractors_sha256": "445d7a67595e326617d11acabb3bef84ed790c3706f5dd15bb249f04cc3ac740",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch05-011",
+      "distractors_sha256": "7a353fa129a4cf396d05453a4dc3315a978f622bcbadffedb1c359399c5fe134",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch05-012",
+      "distractors_sha256": "ac784ac4a8342ff628c0006cbe9949a887a81d7a6d39b8247e390be9cd760463",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch05-013",
+      "distractors_sha256": "adf81d57d3e8c03952a2821546e678d7f6f43f4b3579629218dc72fa729112be",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch05-014",
+      "distractors_sha256": "0c9422dfa14bcadac33f94da8fe188fd9abea2b36313e92a97356ce244f9bc31",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch05-015",
+      "distractors_sha256": "cb33f1c2001ccde7c2b22191af6d6fa7d1a76debd3f6fb9705c5b7e70ee51c47",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch05-016",
+      "distractors_sha256": "35206dfd226629eab66ac40213982f3194026d67b075ec8b3dc76f729ae3123b",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch05-017",
+      "distractors_sha256": "c9ad3b23538618eae42a8117dc8a39fdd1febfb9b89bb192b40be61c54f6d5e5",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch05-018",
+      "distractors_sha256": "9d4e4e1fa9a4d518f74938b9ee61281b5fcf9a92fc7ed36c936d2679d65f5e1a",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch05-019",
+      "distractors_sha256": "5203b2ad4a18e6390240cc31198b49c46347c48a6bcea2b3d97d62997a5fbdef",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch05-020",
+      "distractors_sha256": "2d084822e9c2a4a2d2f7a7e21735b9cb1f4af7fb4a502597fcddbb3a56eb5dd8",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch05-021",
+      "distractors_sha256": "40517c2922b6cf119715a130f64906ce93106270ae036cd61319b4f0a5e20ce5",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch05-022",
+      "distractors_sha256": "fdee65c05c8fe52b450584c4f76524a5a8ccc0ad123be13940213f2db9d064b6",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch05-023",
+      "distractors_sha256": "81e66cd9b8102de4e6b2ff9fd32fa4780f4cd9ae86cba6fd7f789759dbc66193",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch05-024",
+      "distractors_sha256": "09690b23442a5bc8f0c2eb227c486b5624c78b1c77f3509228c211fd2b28c22e",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch05-025",
+      "distractors_sha256": "6b30c6c9767618d981772a09cfd31bf956c813800e79a62bf14fd93c796664f4",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch05-026",
+      "distractors_sha256": "0d94b78b047bb55e4612e6f0898e3c7f476b532a39a08df185ccb5871d0e7eff",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch05-027",
+      "distractors_sha256": "406054ba9effce51ad34a6485b23e6041da0971933db4b90b905c2340f6332ec",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch05-028",
+      "distractors_sha256": "20fe4e4630c4c4d206cb9d91f097d5368d8d937e5c0f3b9e6fddab3e50aaeb6d",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch05-029",
+      "distractors_sha256": "69f90416cb2a3134fa14b37c686220fadf96faf5d4fe6fd4e2e23397c5f97c27",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch05-030",
+      "distractors_sha256": "4f3386d613c448d9f48bbecc4497b9cd25ae084af2a5ad2da6bd98ff2e98860f",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch05-031",
+      "distractors_sha256": "707353c58b86f20cf897e0e7ffb7968377959b55990e9e1d0d7fcfb5084e9d2c",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch05-032",
+      "distractors_sha256": "42d9dfad6b46988e9b1cefc40ced279fe42abd38de95281202c0b628a985a884",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch05-033",
+      "distractors_sha256": "6b35af675f7e90d52551131e91d17481f3d5746246744ca9887be5562a936b3f",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch05-034",
+      "distractors_sha256": "620ef225afc2aba305f91df204faa632faae7a698d926b46ebad55298863e586",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch05-035",
+      "distractors_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "verdict": "needs_human_review",
+      "issues": [
+        {
+          "code": "wrong_flag_reason",
+          "distractor_index": 0,
+          "note": "Flag reason 'concept_cue_front' (not a multiple-choice stem) is inconsistent: legacy-ch05-037 has the same cue-style front ('Term: Fact Find') and WAS authored as a definition-matching item that works fine. 'Concept: The Approval or Denial Frame' is equally authorable with rival tactic-definitions as distractors. Human should decide whether cue fronts are authorable; if yes, author 035; if no, 037 must be flagged too."
+        }
+      ]
+    },
+    {
+      "record_id": "legacy-ch05-036",
+      "distractors_sha256": "2e1686a53c3df23a2ac1cc93750429372574cf4a80d4c245b5fcd827474478dd",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch05-037",
+      "distractors_sha256": "856f72bdbcc933c74ab69ae5f820d5934b32bde9c2eb8c2eb450d6c9789d220e",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch05-038",
+      "distractors_sha256": "5564f7bc6ed72f6b3dde2968ebab3ba8001a56e8d2c2858e46dcefcd529873ff",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch05-039",
+      "distractors_sha256": "f5f4386b679f9a4ec3da8e055833784015a1a106375467724e2a53826f6dd00d",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch05-040",
+      "distractors_sha256": "5f97593bb1aa09eb8d249889c84d9a18a997970863d18458752fe8bb8dacc947",
+      "verdict": "pass",
+      "issues": []
+    }
+  ]
+}
