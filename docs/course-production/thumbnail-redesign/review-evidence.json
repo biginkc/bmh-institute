@@ -1,0 +1,260 @@
+{
+  "schema_version": "bmh-thumbnail-redesign-review-evidence/v1",
+  "review_index": "review-index.json",
+  "review_index_sha256": "be3f89cdb64cc367ce24aeacff1583f8cddd66c5d33199b56cd6ccc9cc034d27",
+  "board": "approved-and-pending-review-board.png",
+  "board_sha256": "d126b8dabd5d06eb7dfe8be937276a7313f6637f7879a70bc59cbe58f96ca9bf",
+  "board_dimensions": [
+    2400,
+    2110
+  ],
+  "counts": {
+    "total": 25,
+    "approved": 15,
+    "pending": 10
+  },
+  "approved_assets": [
+    {
+      "visible_order": 1,
+      "title": "Welcome and Mindset",
+      "binding": "thumbnail-slot-01",
+      "asset": "assets/01-welcome-and-mindset.png",
+      "checksum_sha256": "fbd7b0bb0898f112b130b8c1c5b19fb79a88e65fc60c4ed6d007f0163ded9a98",
+      "size_bytes": 959436,
+      "dimensions": [
+        1280,
+        800
+      ]
+    },
+    {
+      "visible_order": 2,
+      "title": "Real Estate Terms Glossary",
+      "binding": "thumbnail-slot-02",
+      "asset": "assets/02-real-estate-terms-glossary.png",
+      "checksum_sha256": "16995b6118cb52e19f3eaab726d91494c5c6ef49665839a13c5a813c0bf1eca2",
+      "size_bytes": 1040849,
+      "dimensions": [
+        1280,
+        800
+      ]
+    },
+    {
+      "visible_order": 3,
+      "title": "Tech Stack and Systems",
+      "binding": "thumbnail-slot-03",
+      "asset": "assets/03-tech-stack-and-systems.png",
+      "checksum_sha256": "2b340995fe2c511ce4e262d6f7841f6418f38ff0bce4ce7db808ad428e978983",
+      "size_bytes": 1058441,
+      "dimensions": [
+        1280,
+        800
+      ]
+    },
+    {
+      "visible_order": 4,
+      "title": "Orientation Readiness Check",
+      "binding": "lesson-assignment-section-1",
+      "asset": "assets/04-orientation-readiness-check.png",
+      "checksum_sha256": "64bcfd778e39a7992e4cdf6192613c3e28cdf02c8391e3e058bc22d942073c88",
+      "size_bytes": 844985,
+      "dimensions": [
+        1280,
+        800
+      ]
+    },
+    {
+      "visible_order": 5,
+      "title": "Humanizing the Lead",
+      "binding": "thumbnail-slot-04",
+      "asset": "assets/05-humanizing-the-lead.png",
+      "checksum_sha256": "78c61095e58d8a3138b7ff21feba835f677cabd6f48cdd67e5c653ffd9a6defe",
+      "size_bytes": 762078,
+      "dimensions": [
+        1280,
+        800
+      ]
+    },
+    {
+      "visible_order": 6,
+      "title": "The BMH Offer Playbook",
+      "binding": "thumbnail-slot-05",
+      "asset": "assets/06-the-bmh-offer-playbook.png",
+      "checksum_sha256": "f24da48daee7c57a6e2d634b7be94e88c28e325e076b4af31cffb4a2928cb794",
+      "size_bytes": 824605,
+      "dimensions": [
+        1280,
+        800
+      ]
+    },
+    {
+      "visible_order": 7,
+      "title": "Seller and Offer Fit Analysis",
+      "binding": "lesson-assignment-section-2",
+      "asset": "assets/07-seller-and-offer-fit-analysis.png",
+      "checksum_sha256": "b896945cc2d08544f646a17921bb3b9b396f6d13b644fcc8cf5e50a5a2c73c2e",
+      "size_bytes": 1001001,
+      "dimensions": [
+        1280,
+        800
+      ]
+    },
+    {
+      "visible_order": 8,
+      "title": "Sales Pipeline and Stage Ownership",
+      "binding": "thumbnail-slot-06",
+      "asset": "assets/08-sales-pipeline-and-stage-ownership.png",
+      "checksum_sha256": "1743eeaa5e06770a3c9a0b4eab9f50e6ee67f8c4b0026e06937160822f10b6d2",
+      "size_bytes": 605388,
+      "dimensions": [
+        1280,
+        800
+      ]
+    },
+    {
+      "visible_order": 9,
+      "title": "Opening the Call",
+      "binding": "thumbnail-slot-07",
+      "asset": "assets/09-opening-the-call.png",
+      "checksum_sha256": "50fa72f36833ca707094e8ef5628df1dc67e798645c46a7d5dc93bd3189bf02f",
+      "size_bytes": 1005328,
+      "dimensions": [
+        1280,
+        800
+      ]
+    },
+    {
+      "visible_order": 10,
+      "title": "Discovery and Handoff",
+      "binding": "thumbnail-slot-08",
+      "asset": "assets/10-discovery-and-handoff.png",
+      "checksum_sha256": "4ea77075f1c461b5cc69a86b2db6916cfe420cf8663b5d02970fa862384ea898",
+      "size_bytes": 1033644,
+      "dimensions": [
+        1280,
+        800
+      ]
+    },
+    {
+      "visible_order": 12,
+      "title": "Objection Architecture",
+      "binding": "thumbnail-slot-09",
+      "asset": "assets/12-objection-architecture.png",
+      "checksum_sha256": "0a851dfb58e402b0582a0fb914839890a595d3f3c945960155d372b3605a428a",
+      "size_bytes": 946830,
+      "dimensions": [
+        1280,
+        800
+      ]
+    },
+    {
+      "visible_order": 13,
+      "title": "Objection Scripts Playbook",
+      "binding": "thumbnail-slot-10",
+      "asset": "assets/13-objection-scripts-playbook.png",
+      "checksum_sha256": "d0cb16888b29fbb5b4353e996473b7d079326bb520fcf620dc8b5f08516fb08a",
+      "size_bytes": 924197,
+      "dimensions": [
+        1280,
+        800
+      ]
+    },
+    {
+      "visible_order": 14,
+      "title": "Complex Objections",
+      "binding": "thumbnail-slot-11",
+      "asset": "assets/14-complex-objections.png",
+      "checksum_sha256": "88a90131a615d8eee2510099fea9724d64cdad506de72a4fab612f4424d19c85",
+      "size_bytes": 1010125,
+      "dimensions": [
+        1280,
+        800
+      ]
+    },
+    {
+      "visible_order": 15,
+      "title": "Seller FAQ Decoder",
+      "binding": "thumbnail-slot-12",
+      "asset": "assets/15-seller-faq-decoder.png",
+      "checksum_sha256": "f296f5564e3f9fa9ec49b29b06c3b0f855ecb1660b78cf4c621bf82601dc841e",
+      "size_bytes": 965678,
+      "dimensions": [
+        1280,
+        800
+      ]
+    },
+    {
+      "visible_order": 17,
+      "title": "Follow-Up Cadence",
+      "binding": "thumbnail-slot-13",
+      "asset": "assets/17-follow-up-cadence.png",
+      "checksum_sha256": "a874d10c26a94488cc6b8e5f1f4c786230ee0f371ea49e5e61a45f80e851d13d",
+      "size_bytes": 1111383,
+      "dimensions": [
+        1280,
+        800
+      ]
+    }
+  ],
+  "pending_items": [
+    {
+      "visible_order": 11,
+      "title": "Conversation and Handoff Plan",
+      "kind": "assignment",
+      "binding": "lesson-assignment-section-3"
+    },
+    {
+      "visible_order": 16,
+      "title": "Objection Response Plan",
+      "kind": "assignment",
+      "binding": "lesson-assignment-section-4"
+    },
+    {
+      "visible_order": 18,
+      "title": "Conversation Flow Mastery",
+      "kind": "content",
+      "binding": "thumbnail-slot-14"
+    },
+    {
+      "visible_order": 19,
+      "title": "Closing and Deal Engineering",
+      "kind": "content",
+      "binding": "thumbnail-slot-15"
+    },
+    {
+      "visible_order": 20,
+      "title": "Follow-Up and Closing Plan",
+      "kind": "assignment",
+      "binding": "lesson-assignment-section-5"
+    },
+    {
+      "visible_order": 21,
+      "title": "KPIs and Sales Telemetry",
+      "kind": "content",
+      "binding": "thumbnail-slot-16"
+    },
+    {
+      "visible_order": 22,
+      "title": "Compensation Engine",
+      "kind": "content",
+      "binding": "thumbnail-slot-17"
+    },
+    {
+      "visible_order": 23,
+      "title": "Operator Playbook and Daily Mission Control",
+      "kind": "content",
+      "binding": "thumbnail-slot-18"
+    },
+    {
+      "visible_order": 24,
+      "title": "Career Growth Path",
+      "kind": "content",
+      "binding": "thumbnail-slot-19"
+    },
+    {
+      "visible_order": 25,
+      "title": "Mission Control and Growth Capstone",
+      "kind": "assignment",
+      "binding": "lesson-assignment-section-6"
+    }
+  ]
+}

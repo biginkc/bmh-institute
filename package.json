@@ -20,6 +20,8 @@
     "test:artwork-production": "node --test docs/course-production/thumbnail-pilots/qa/master-review/build-master-review.test.mjs scripts/course-content/artwork-production-workflow.test.mjs",
     "artwork:video-stills": "node scripts/course-content/build-artwork-video-contact-sheets.mjs",
     "artwork:production": "node scripts/course-content/artwork-production.mjs",
+    "artwork:redesign-review": "node scripts/course-content/build-thumbnail-redesign-review.mjs --check",
+    "artwork:redesign-review:write": "node scripts/course-content/build-thumbnail-redesign-review.mjs --write",
     "seed:e2e": "tsx scripts/seed-e2e-test-content.ts",
     "cleanup:e2e": "tsx scripts/seed-e2e-test-content.ts --cleanup-only",
     "typecheck": "tsc --noEmit",
