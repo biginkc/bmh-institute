@@ -69,7 +69,7 @@ describe("DashboardPage learner onboarding", () => {
     eqSpy.mockClear();
   });
 
-  it("lets RLS return the sole assigned unpublished QA program", async () => {
+  it("hides the program card for a single-course program", async () => {
     tableData = {
       programs: [
         {
@@ -81,7 +81,67 @@ describe("DashboardPage learner onboarding", () => {
           course_order_mode: "sequential",
           is_published: false,
           sort_order: 0,
-          program_courses: [],
+          program_courses: [
+            {
+              sort_order: 0,
+              courses: {
+                id: "review-course",
+                title: "BMH Employee Training",
+                description: null,
+                thumbnail_path: null,
+                content_import_id: "bmh-employee-training-v1",
+                is_published: false,
+              },
+            },
+          ],
+        },
+      ],
+    };
+
+    const html = renderToStaticMarkup(await DashboardPage());
+
+    expect(html).toContain("BMH Employee Training");
+    expect(html).not.toContain("BMH Employee Training Review");
+    expect(html).not.toContain("Private review");
+    expect(eqSpy).not.toHaveBeenCalledWith("is_published", true);
+  });
+
+  it("shows the program card and its review and unlock states for multiple courses", async () => {
+    tableData = {
+      programs: [
+        {
+          id: "review-program",
+          title: "BMH Employee Training Review",
+          description: "Private course review",
+          thumbnail_path: null,
+          content_import_id: "bmh-employee-training-v1",
+          course_order_mode: "sequential",
+          is_published: false,
+          sort_order: 0,
+          program_courses: [
+            {
+              sort_order: 0,
+              courses: {
+                id: "course-1",
+                title: "BMH Employee Training",
+                description: null,
+                thumbnail_path: null,
+                content_import_id: "bmh-employee-training-v1",
+                is_published: false,
+              },
+            },
+            {
+              sort_order: 1,
+              courses: {
+                id: "course-2",
+                title: "Advanced Employee Training",
+                description: null,
+                thumbnail_path: null,
+                content_import_id: "bmh-employee-training-v1",
+                is_published: false,
+              },
+            },
+          ],
         },
       ],
     };
@@ -90,7 +150,10 @@ describe("DashboardPage learner onboarding", () => {
 
     expect(html).toContain("BMH Employee Training Review");
     expect(html).toContain("Private review");
-    expect(eqSpy).not.toHaveBeenCalledWith("is_published", true);
+    expect(html).toContain("Sequential");
+    expect(html).toContain("Advanced Employee Training");
+    expect(html).toContain("Locked · finish course 1 first");
+    expect(html).toContain("Courses unlock in order");
   });
 
   it("renders support-oriented copy when no programs are assigned", async () => {
@@ -172,8 +235,8 @@ describe("DashboardPage learner onboarding", () => {
     expect(html).toContain("Password help");
     expect(html).toContain("https://signed.example/courses/va-foundations/v1/thumbnails/course.webp");
     expect(html).toContain("Getting Started course cover");
-    expect(html).toContain("https://signed.example/courses/va-foundations/v1/thumbnails/program.webp");
-    expect(html).toContain("VA Foundations program cover");
+    expect(html).not.toContain("https://signed.example/courses/va-foundations/v1/thumbnails/program.webp");
+    expect(html).not.toContain("VA Foundations program cover");
     expect(html).toContain("https://signed.example/courses/va-foundations/v1/thumbnails/first-task.webp");
     expect(rpcSpy).toHaveBeenCalledTimes(1);
   });

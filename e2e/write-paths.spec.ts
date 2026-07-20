@@ -177,7 +177,9 @@ test.describe("durable write-path coverage", () => {
       await page.getByLabel(/^confirm password$/i).fill(fixture.password);
       await page.getByRole("button", { name: /finish setup/i }).click();
       await page.waitForURL(/\/dashboard/, { timeout: 20_000 });
-      await expect(page.getByText(`${fixture.prefix} Invite Program`)).toBeVisible();
+      await expect(
+        page.getByRole("heading", { name: `${fixture.prefix} Invite Course` }),
+      ).toBeVisible();
 
       await expect
         .poll(() => inviteWasAccepted(admin, fixture!), { timeout: 20_000 })
@@ -202,7 +204,9 @@ test.describe("durable write-path coverage", () => {
       fixture = await createWritePathFixture(admin);
 
       await signIn(page, fixture.learner.email, fixture.password);
-      await expect(page.getByText(`${fixture.prefix} Program`)).toBeVisible();
+      await expect(
+        page.getByRole("heading", { name: `${fixture.prefix} Course` }),
+      ).toBeVisible();
       await page.goto(`/courses/${fixture.courseId}`);
       await expect(
         page.getByRole("heading", { name: `${fixture.prefix} Course` }),
