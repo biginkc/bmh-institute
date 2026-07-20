@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Internal Pilot Operations
 status: shipped
-stopped_at: Partial thumbnail redesign review packaged; 10 concepts remain pending before production promotion
+stopped_at: Partial thumbnail redesign review packaged; 6 lesson concepts remain pending before production promotion
 last_updated: "2026-07-20T04:50:00-05:00"
 last_activity: 2026-07-20
 progress:
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-04-30)
 Phase: Complete
 Plan: Complete
 Status: v1.1 shipped; post-ship QA and workflow cleanup complete
-Last activity: 2026-07-20 - Packaged 15 approved thumbnail redesigns and 10 explicit placeholders into a checksum-bound review board. Production promotion remains intentionally blocked until the pending set is approved.
+Last activity: 2026-07-20 - Packaged 15 approved thumbnail redesigns, 6 explicit placeholders, and 4 no-thumbnail-required assignment states into a checksum-bound review board. Production promotion remains intentionally blocked until the pending lesson set is approved.
 
 ## Performance Metrics
 

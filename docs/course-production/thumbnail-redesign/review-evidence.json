@@ -1,9 +1,9 @@
 {
   "schema_version": "bmh-thumbnail-redesign-review-evidence/v1",
   "review_index": "review-index.json",
-  "review_index_sha256": "be3f89cdb64cc367ce24aeacff1583f8cddd66c5d33199b56cd6ccc9cc034d27",
+  "review_index_sha256": "1929f3a2c2cc2821f9edd2d3d7f7f40da1cabb053f3ff777423b35a45d7be932",
   "board": "approved-and-pending-review-board.png",
-  "board_sha256": "d126b8dabd5d06eb7dfe8be937276a7313f6637f7879a70bc59cbe58f96ca9bf",
+  "board_sha256": "60e25af2f6ae038ebc1d26395141b73f81cb2a213873b1fa732bf22ede7d7e93",
   "board_dimensions": [
     2400,
     2110
@@ -11,7 +11,8 @@
   "counts": {
     "total": 25,
     "approved": 15,
-    "pending": 10
+    "pending": 6,
+    "not_required": 4
   },
   "approved_assets": [
     {
@@ -197,18 +198,6 @@
   ],
   "pending_items": [
     {
-      "visible_order": 11,
-      "title": "Conversation and Handoff Plan",
-      "kind": "assignment",
-      "binding": "lesson-assignment-section-3"
-    },
-    {
-      "visible_order": 16,
-      "title": "Objection Response Plan",
-      "kind": "assignment",
-      "binding": "lesson-assignment-section-4"
-    },
-    {
       "visible_order": 18,
       "title": "Conversation Flow Mastery",
       "kind": "content",
@@ -219,12 +208,6 @@
       "title": "Closing and Deal Engineering",
       "kind": "content",
       "binding": "thumbnail-slot-15"
-    },
-    {
-      "visible_order": 20,
-      "title": "Follow-Up and Closing Plan",
-      "kind": "assignment",
-      "binding": "lesson-assignment-section-5"
     },
     {
       "visible_order": 21,
@@ -249,6 +232,26 @@
       "title": "Career Growth Path",
       "kind": "content",
       "binding": "thumbnail-slot-19"
+    }
+  ],
+  "not_required_items": [
+    {
+      "visible_order": 11,
+      "title": "Conversation and Handoff Plan",
+      "kind": "assignment",
+      "binding": "lesson-assignment-section-3"
+    },
+    {
+      "visible_order": 16,
+      "title": "Objection Response Plan",
+      "kind": "assignment",
+      "binding": "lesson-assignment-section-4"
+    },
+    {
+      "visible_order": 20,
+      "title": "Follow-Up and Closing Plan",
+      "kind": "assignment",
+      "binding": "lesson-assignment-section-5"
     },
     {
       "visible_order": 25,
