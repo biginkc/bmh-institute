@@ -86,6 +86,75 @@ describe("enrichBlocksWithSignedUrls", () => {
     expect(block.content.signed_url).toBe("signed-authorized");
     expect(block.content).not.toHaveProperty("transcript_signed_url");
   });
+
+  it("withholds guide text and guide files before composite completion", async () => {
+    createSignedUrls.mockResolvedValue({
+      data: [{ path: "video.mp4", signedUrl: "signed-video" }],
+      error: null,
+    });
+
+    const blocks = await enrichBlocksWithSignedUrls(
+      [
+        {
+          id: "video",
+          block_type: "video",
+          sort_order: 1,
+          is_required_for_completion: true,
+          content: { file_path: "video.mp4" },
+        },
+        {
+          id: "guide-text",
+          block_type: "text",
+          sort_order: 2,
+          is_required_for_completion: false,
+          content: { html: "<h2>Learner guide</h2><p>Private until pass.</p>" },
+        },
+        {
+          id: "guide-file",
+          block_type: "download",
+          sort_order: 3,
+          is_required_for_completion: false,
+          content: {
+            file_path: "courses/training/v1/guides/learner-guide.pdf",
+            filename: "learner-guide.pdf",
+          },
+        },
+        {
+          id: "guide-pdf",
+          block_type: "pdf",
+          sort_order: 4,
+          is_required_for_completion: false,
+          content: { file_path: "courses/training/v1/guides/reference.pdf" },
+        },
+      ],
+      { includeGuides: false },
+    );
+
+    expect(blocks.map((block) => block.id)).toEqual(["video"]);
+    expect(JSON.stringify(blocks)).not.toContain("learner-guide.pdf");
+    expect(createSignedUrls).toHaveBeenCalledWith(["video.mp4"], 3600);
+  });
+
+  it("signs and returns guide files after composite completion", async () => {
+    createSignedUrls.mockResolvedValue({
+      data: [{ path: "courses/training/v1/guides/learner-guide.pdf", signedUrl: "signed-guide" }],
+      error: null,
+    });
+    const blocks = await enrichBlocksWithSignedUrls([
+      {
+        id: "guide-file",
+        block_type: "download",
+        sort_order: 1,
+        is_required_for_completion: false,
+        content: {
+          file_path: "courses/training/v1/guides/learner-guide.pdf",
+          filename: "learner-guide.pdf",
+        },
+      },
+    ], { includeGuides: true });
+
+    expect(blocks[0].content.signed_url).toBe("signed-guide");
+  });
 });
 
 describe("signAuthorizedArtworkPaths", () => {

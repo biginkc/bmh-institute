@@ -5,6 +5,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { QuizRunner, type QuizQuestion } from "./quiz-runner";
 import { startQuizAttempt, submitQuizAttempt } from "./quiz-actions";
 
+const { refresh } = vi.hoisted(() => ({ refresh: vi.fn() }));
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh }),
+}));
+
 vi.mock("sonner", () => ({
   toast: {
     error: vi.fn(),
@@ -142,6 +147,7 @@ describe("<QuizRunner />", () => {
       }),
     );
     expect(await screen.findByRole("heading", { name: "Passed" })).toBeInTheDocument();
+    expect(refresh).toHaveBeenCalled();
     expect(screen.getByRole("img", { name: "Andrea" })).toHaveAttribute(
       "src",
       "/brand/mascot/face-laugh.png",

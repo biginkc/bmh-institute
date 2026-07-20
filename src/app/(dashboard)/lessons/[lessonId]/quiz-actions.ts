@@ -241,7 +241,15 @@ export async function submitQuizAttempt(input: {
     };
   }
 
+  const { data: quizLesson } = await learner
+    .from("lessons")
+    .select("prerequisite_lesson_id")
+    .eq("id", attempt.lesson_id)
+    .maybeSingle();
   revalidatePath(`/lessons/${attempt.lesson_id}`);
+  if (quizLesson?.prerequisite_lesson_id) {
+    revalidatePath(`/lessons/${quizLesson.prerequisite_lesson_id}`);
+  }
   revalidatePath("/dashboard");
   if (result.passed) {
     await emitSandraCourseCompletedForLesson(learner, {
