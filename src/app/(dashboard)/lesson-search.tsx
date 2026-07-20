@@ -12,6 +12,7 @@ import { CLOSE_LESSON_SEARCH_EVENT } from "./dashboard-events";
 export type LessonSearchItem = {
   id: string;
   title: string;
+  href: string;
 };
 
 const MAX_RESULTS = 8;
@@ -68,7 +69,7 @@ export function LessonSearch({
     const lesson = results[index];
     if (!lesson) return;
     closeSearch();
-    router.push(lessonHref(lesson.id));
+    router.push(lesson.href);
   }
 
   const searchSurface = (
@@ -130,7 +131,7 @@ export function LessonSearch({
                 id={`${idPrefix}-option-${index}`}
                 role="option"
                 aria-selected={index === activeIndex}
-                href={lessonHref(lesson.id)}
+                href={lesson.href}
                 onMouseEnter={() => setActiveIndex(index)}
                 onClick={closeSearch}
                 className="block rounded-[var(--bmh-radius-sm)] px-3 py-2 text-sm font-extrabold text-[var(--ink-900)] no-underline hover:bg-[var(--action-soft)] focus-visible:bg-[var(--action-soft)] focus-visible:outline-2 focus-visible:outline-[var(--action)] aria-selected:bg-[var(--action-soft)]"
@@ -181,8 +182,4 @@ export function LessonSearch({
       )}
     </div>
   );
-}
-
-function lessonHref(id: string): string {
-  return `/lessons/${encodeURIComponent(id)}`;
 }
