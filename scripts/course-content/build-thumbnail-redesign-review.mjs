@@ -59,21 +59,23 @@ function validateIndex(index) {
     throw new Error("Thumbnail review bindings must be unique");
   }
   const approved = index.items.filter((item) => item.status === "approved");
+  const drafts = index.items.filter((item) => item.status === "draft");
   const pending = index.items.filter((item) => item.status === "pending");
   const notRequired = index.items.filter((item) => item.status === "not_required");
-  if (approved.length !== 15 || pending.length !== 6 || notRequired.length !== 4) {
-    throw new Error("Thumbnail review must contain exactly 15 approved, 6 pending, and 4 not-required items");
+  if (approved.length !== 15 || drafts.length !== 6 || pending.length !== 0 || notRequired.length !== 4) {
+    throw new Error("Thumbnail review must contain exactly 15 approved, 6 drafts, 0 pending, and 4 not-required items");
   }
   if (
-    approved.some((item) => typeof item.asset !== "string") ||
+    [...approved, ...drafts].some((item) => typeof item.asset !== "string") ||
     [...pending, ...notRequired].some((item) => item.asset !== null)
   ) {
-    throw new Error("Approved items require assets and non-approved items must not claim assets");
+    throw new Error("Approved and draft items require assets; pending and not-required items must not claim assets");
   }
   if (
     index.summary?.total !== 25 ||
     index.summary?.approved !== 15 ||
-    index.summary?.pending !== 6 ||
+    index.summary?.draft !== 6 ||
+    index.summary?.pending !== 0 ||
     index.summary?.not_required !== 4
   ) {
     throw new Error("Thumbnail review summary does not match the item statuses");
@@ -93,6 +95,7 @@ async function build() {
   validateIndex(index);
 
   const approvedEvidence = [];
+  const draftEvidence = [];
   const imageComposites = [];
   const baseParts = [];
   const overlayParts = [];
@@ -112,7 +115,7 @@ async function build() {
 
   baseParts.push(`<rect width="${width}" height="${height}" fill="#f4f1e9"/>`);
   baseParts.push(`<text x="${margin}" y="66" font-family="Arial, Helvetica, sans-serif" font-size="42" font-weight="900" fill="#0e1116">BMH Employee Training — thumbnail redesign</text>`);
-  baseParts.push(`<text x="${margin}" y="112" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="700" fill="#536170">15 approved · 6 pending · 4 assignment thumbnails not required</text>`);
+  baseParts.push(`<text x="${margin}" y="112" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="700" fill="#536170">15 approved · 6 drafts awaiting approval · 4 assignment thumbnails not required</text>`);
   baseParts.push(`<rect x="1988" y="42" width="380" height="72" rx="36" fill="#fff" stroke="#0e1116" stroke-width="4"/>`);
   baseParts.push(`<text x="2178" y="87" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="23" font-weight="900" fill="#0e1116">DRAFT — NOT PRODUCTION</text>`);
 
@@ -124,7 +127,7 @@ async function build() {
     const y = gridTop + row * (cardHeight + gap);
     baseParts.push(`<rect x="${x}" y="${y}" width="${cardWidth}" height="${cardHeight}" rx="18" fill="#fff" stroke="#0e1116" stroke-width="4"/>`);
 
-    if (item.status === "approved") {
+    if (item.status === "approved" || item.status === "draft") {
       const assetPath = path.resolve(reviewRoot, item.asset);
       if (!assetPath.startsWith(`${reviewRoot}${path.sep}`)) {
         throw new Error(`Asset path escapes the review directory: ${item.asset}`);
@@ -134,7 +137,7 @@ async function build() {
       if (metadata.format !== "png" || metadata.width !== 1280 || metadata.height !== 800) {
         throw new Error(`Approved asset must be a 1280 x 800 PNG: ${item.asset}`);
       }
-      approvedEvidence.push({
+      const evidenceRecord = {
         visible_order: item.visible_order,
         title: item.title,
         binding: item.binding,
@@ -142,7 +145,8 @@ async function build() {
         checksum_sha256: sha256(contents),
         size_bytes: contents.length,
         dimensions: [metadata.width, metadata.height],
-      });
+      };
+      (item.status === "approved" ? approvedEvidence : draftEvidence).push(evidenceRecord);
       imageComposites.push({
         input: await sharp(contents)
           .resize(cardWidth, imageHeight, { fit: "cover" })
@@ -168,9 +172,9 @@ async function build() {
       baseParts.push(`<text x="${x + cardWidth / 2}" y="${y + 184}" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="23" font-weight="900" fill="#0e1116">REQUIRED</text>`);
     }
 
-    const badgeFill = item.status === "approved" ? "#22863a" : item.status === "pending" ? "#ff6e00" : "#536170";
+    const badgeFill = item.status === "approved" ? "#22863a" : item.status === "draft" ? "#7c3aed" : item.status === "pending" ? "#ff6e00" : "#536170";
     const badgeLabel = item.status === "not_required" ? "NOT REQUIRED" : item.status.toUpperCase();
-    const badgeWidth = item.status === "approved" ? 132 : item.status === "pending" ? 118 : 164;
+    const badgeWidth = item.status === "approved" ? 132 : item.status === "draft" ? 94 : item.status === "pending" ? 118 : 164;
     overlayParts.push(`<rect x="${x + 14}" y="${y + 14}" width="${badgeWidth}" height="38" rx="19" fill="${badgeFill}" stroke="#fff" stroke-width="3"/>`);
     overlayParts.push(`<text x="${x + 14 + badgeWidth / 2}" y="${y + 40}" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="900" fill="#fff">${badgeLabel}</text>`);
     overlayParts.push(`<rect x="${x}" y="${y + imageHeight}" width="${cardWidth}" height="${footerHeight}" rx="0" fill="#fff"/>`);
@@ -193,8 +197,9 @@ async function build() {
     board: "approved-and-pending-review-board.png",
     board_sha256: sha256(board),
     board_dimensions: [width, height],
-    counts: { total: 25, approved: 15, pending: 6, not_required: 4 },
+    counts: { total: 25, approved: 15, draft: 6, pending: 0, not_required: 4 },
     approved_assets: approvedEvidence,
+    draft_assets: draftEvidence,
     pending_items: index.items.filter((item) => item.status === "pending").map(({ visible_order, title, kind, binding }) => ({ visible_order, title, kind, binding })),
     not_required_items: index.items.filter((item) => item.status === "not_required").map(({ visible_order, title, kind, binding }) => ({ visible_order, title, kind, binding })),
   }, null, 2)}\n`);
@@ -219,9 +224,9 @@ const built = await build();
 if (mode === "--write") {
   await writeFile(boardPath, built.board);
   await writeFile(evidencePath, built.evidence);
-  console.log(JSON.stringify({ mode: "write", approved: 15, pending: 6, not_required: 4, board: path.relative(repoRoot, boardPath) }, null, 2));
+  console.log(JSON.stringify({ mode: "write", approved: 15, draft: 6, pending: 0, not_required: 4, board: path.relative(repoRoot, boardPath) }, null, 2));
 } else {
   await assertCurrent(boardPath, built.board, "Thumbnail review board");
   await assertCurrent(evidencePath, built.evidence, "Thumbnail review evidence");
-  console.log(JSON.stringify({ mode: "check", approved: 15, pending: 6, not_required: 4, status: "current" }, null, 2));
+  console.log(JSON.stringify({ mode: "check", approved: 15, draft: 6, pending: 0, not_required: 4, status: "current" }, null, 2));
 }

@@ -1,9 +1,9 @@
 {
   "schema_version": "bmh-thumbnail-redesign-review-evidence/v1",
   "review_index": "review-index.json",
-  "review_index_sha256": "1929f3a2c2cc2821f9edd2d3d7f7f40da1cabb053f3ff777423b35a45d7be932",
+  "review_index_sha256": "fd6e99d794774f4ec6e2f1d6ae0508e046c443aac8ff2d934cee539bd63d2220",
   "board": "approved-and-pending-review-board.png",
-  "board_sha256": "60e25af2f6ae038ebc1d26395141b73f81cb2a213873b1fa732bf22ede7d7e93",
+  "board_sha256": "e191bd449adaa9c49857a351e1ce55fa16d49cffa3d8b40d770d88eca2d8d455",
   "board_dimensions": [
     2400,
     2110
@@ -11,7 +11,8 @@
   "counts": {
     "total": 25,
     "approved": 15,
-    "pending": 6,
+    "draft": 6,
+    "pending": 0,
     "not_required": 4
   },
   "approved_assets": [
@@ -196,44 +197,81 @@
       ]
     }
   ],
-  "pending_items": [
+  "draft_assets": [
     {
       "visible_order": 18,
       "title": "Conversation Flow Mastery",
-      "kind": "content",
-      "binding": "thumbnail-slot-14"
+      "binding": "thumbnail-slot-14",
+      "asset": "assets/18-conversation-flow-mastery-draft-v1.png",
+      "checksum_sha256": "91b93c4e49c03056bc54432d39593f5ef1363826c40795dd665bef3428d66328",
+      "size_bytes": 948925,
+      "dimensions": [
+        1280,
+        800
+      ]
     },
     {
       "visible_order": 19,
       "title": "Closing and Deal Engineering",
-      "kind": "content",
-      "binding": "thumbnail-slot-15"
+      "binding": "thumbnail-slot-15",
+      "asset": "assets/19-closing-and-deal-engineering-draft-v1.png",
+      "checksum_sha256": "52d12f2a2c0d5f1fca3925c8381506762ee1b07e362b39910ce43d75539a3693",
+      "size_bytes": 1082477,
+      "dimensions": [
+        1280,
+        800
+      ]
     },
     {
       "visible_order": 21,
       "title": "KPIs and Sales Telemetry",
-      "kind": "content",
-      "binding": "thumbnail-slot-16"
+      "binding": "thumbnail-slot-16",
+      "asset": "assets/21-kpis-and-sales-telemetry-draft-v1.png",
+      "checksum_sha256": "a31923e27595814e2043efe87c10aa136adb0aec87ee631244a82e66fee0d7fb",
+      "size_bytes": 726486,
+      "dimensions": [
+        1280,
+        800
+      ]
     },
     {
       "visible_order": 22,
       "title": "Compensation Engine",
-      "kind": "content",
-      "binding": "thumbnail-slot-17"
+      "binding": "thumbnail-slot-17",
+      "asset": "assets/22-compensation-engine-draft-v1.png",
+      "checksum_sha256": "582cc7f3da9089c0cf0e3d4b7dde1200cbe2fa5f07fcc8e53914e97bb43b9abf",
+      "size_bytes": 932228,
+      "dimensions": [
+        1280,
+        800
+      ]
     },
     {
       "visible_order": 23,
       "title": "Operator Playbook and Daily Mission Control",
-      "kind": "content",
-      "binding": "thumbnail-slot-18"
+      "binding": "thumbnail-slot-18",
+      "asset": "assets/23-operator-playbook-mission-control-draft-v1.png",
+      "checksum_sha256": "37482821b34882503849b2c535ead7ef4c17eb818a62f759dc3c963095c0361c",
+      "size_bytes": 1280815,
+      "dimensions": [
+        1280,
+        800
+      ]
     },
     {
       "visible_order": 24,
       "title": "Career Growth Path",
-      "kind": "content",
-      "binding": "thumbnail-slot-19"
+      "binding": "thumbnail-slot-19",
+      "asset": "assets/24-career-growth-path-draft-v1.png",
+      "checksum_sha256": "601f5090217d085310ffeba508a01034c2a97dd262ca9a955985223ea7446bf7",
+      "size_bytes": 1021713,
+      "dimensions": [
+        1280,
+        800
+      ]
     }
   ],
+  "pending_items": [],
   "not_required_items": [
     {
       "visible_order": 11,
