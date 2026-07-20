@@ -29,6 +29,7 @@ export type InviteAcceptanceFixture = {
   inviteLink: string;
   roleGroupId: string;
   programId: string;
+  courseId: string;
   inviter: { id: string; email: string };
   invitee: { id: string; email: string };
 };
@@ -323,10 +324,21 @@ export async function createInviteAcceptanceFixture(
     certificate_enabled: false,
     sort_order: 9999,
   });
+  const courseId = await insertOne(admin, "courses", {
+    title: `${prefix} Invite Course`,
+    description: "Disposable invite acceptance E2E course.",
+    is_published: true,
+    certificate_enabled: false,
+    sort_order: 9999,
+  });
 
   await admin
     .from("program_access")
     .insert({ program_id: programId, role_group_id: roleGroupId })
+    .throwOnError();
+  await admin
+    .from("program_courses")
+    .insert({ program_id: programId, course_id: courseId, sort_order: 10 })
     .throwOnError();
 
   const inviteId = await insertOne(admin, "invites", {
@@ -361,6 +373,7 @@ export async function createInviteAcceptanceFixture(
     inviteLink: data.properties.action_link,
     roleGroupId,
     programId,
+    courseId,
     inviter,
     invitee: { id: data.user.id, email: inviteeEmail },
   };
@@ -373,6 +386,7 @@ export async function cleanupInviteAcceptanceFixture(
   if (!fixture) return;
 
   await admin.from("programs").delete().eq("id", fixture.programId);
+  await admin.from("courses").delete().eq("id", fixture.courseId);
   await admin.from("role_groups").delete().eq("id", fixture.roleGroupId);
   await admin.from("invites").delete().eq("id", fixture.inviteId);
   await admin.auth.admin.deleteUser(fixture.invitee.id);
