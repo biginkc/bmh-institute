@@ -254,7 +254,7 @@ test.describe("durable write-path coverage", () => {
       await page.goto(`/courses/${fixture.courseId}`);
       await expect(
         page
-          .locator("a")
+          .locator("[data-learner-tile-grid] a")
           .filter({ hasText: `${fixture.prefix} Text Assignment Lesson` }),
       ).toBeVisible();
 
