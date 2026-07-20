@@ -23,6 +23,7 @@ import {
   validateCaptionApprovalEvidence,
   validateCaptionApprovalHistory,
 } from "./caption-approval-ledger.mjs";
+import { projectQuizBankQuestion, quizBankSha256, validateQuizBank } from "./quiz-bank.mjs";
 
 const REPO_ROOT = path.resolve(fileURLToPath(new URL("../..", import.meta.url)));
 const DEFAULT_VIDEO_SOURCE_ROOT = "/Users/jarradhenry/Sites/BMH apps/BMH Institute";
@@ -1119,6 +1120,10 @@ function shapeQuestion(slot, question, index) {
   };
 }
 
+function shapeQuizBankQuestion(question) {
+  return projectQuizBankQuestion(question, normalizeRoleAgnosticCourseText);
+}
+
 function textHtml(lesson) {
   return `<h2>What you will learn</h2><p>${lesson.summary}</p><ul>${lesson.objectives.map((objective) => `<li>${objective}</li>`).join("")}</ul>`;
 }
@@ -1320,8 +1325,30 @@ export async function buildManifest({
   quizApprovalLedgerPath = QUIZ_APPROVAL_LEDGER_PATH,
   videoSourceRoot = DEFAULT_VIDEO_SOURCE_ROOT,
   quizSourceRoot = DEFAULT_QUIZ_SOURCE_ROOT,
+  quizBankPath = null,
   inspectDuration = probeVideoDuration,
 } = {}) {
+  let quizBankContext = null;
+  if (quizBankPath) {
+    const relativeBankPath = path.relative(REPO_ROOT, quizBankPath);
+    if (relativeBankPath.startsWith("..") || path.isAbsolute(relativeBankPath)) {
+      throw new Error("The configured question bank must be inside the repository.");
+    }
+    const bytes = await readFile(quizBankPath);
+    let bank;
+    try {
+      bank = JSON.parse(bytes.toString("utf8"));
+    } catch (error) {
+      throw new Error(`Question bank is not valid JSON: ${error.message}`);
+    }
+    const errors = validateQuizBank(bank);
+    if (errors.length > 0) throw new Error(`Question bank is invalid: ${errors.join("; ")}`);
+    quizBankContext = {
+      bank,
+      sha256: quizBankSha256(bytes),
+      path: relativeBankPath.split(path.sep).join("/"),
+    };
+  }
   const [videoApprovalLedger, captionApprovalLedger, guideApprovalLedger, quizApprovalLedger] = await Promise.all([
     readFile(videoApprovalLedgerPath, "utf8").then(JSON.parse),
     readFile(captionApprovalLedgerPath, "utf8").then(JSON.parse),
@@ -1381,10 +1408,13 @@ export async function buildManifest({
   const videosBySlot = Map.groupBy(videoAssetsWithMetadata, (asset) => asset._slot);
   const quizQuestionsBySlot = new Map();
   for (const lesson of LESSONS) {
+    const bankSlot = quizBankContext?.bank.slots.find((slot) => slot.slot === lesson.slot);
     quizQuestionsBySlot.set(
       lesson.slot,
-      (await sourceQuestions(lesson.slot, quizSourceRoot))
-        .map((question, index) => shapeQuestion(lesson.slot, question, index)),
+      bankSlot
+        ? bankSlot.questions.map(shapeQuizBankQuestion)
+        : (await sourceQuestions(lesson.slot, quizSourceRoot))
+          .map((question, index) => shapeQuestion(lesson.slot, question, index)),
     );
   }
 
@@ -1537,15 +1567,21 @@ export async function buildManifest({
         quiz: {
           source_key: `quiz-slot-${slotKey}`,
           title: `${topic.title} Checkpoint`,
-          description: "Each attempt draws 10 questions from the curated lesson pool.",
+          description: quizBankContext
+            ? "Each attempt includes every question in the lesson pool in randomized order."
+            : "Each attempt draws 10 questions from the curated lesson pool.",
           approval_status: quizApprovalStatus(quizApprovalLedger, quizIdentity),
-          passing_score: 80,
-          randomize_questions: true,
-          randomize_answers: true,
-          questions_per_attempt: 10,
-          max_attempts: null,
-          retake_cooldown_hours: 0,
-          show_correct_answers_after: "after_pass",
+          ...(quizBankContext
+            ? quizBankContext.bank.quiz_config
+            : {
+                passing_score: 80,
+                randomize_questions: true,
+                randomize_answers: true,
+                questions_per_attempt: 10,
+                max_attempts: null,
+                retake_cooldown_hours: 0,
+                show_correct_answers_after: "after_pass",
+              }),
           questions,
         },
       });
@@ -1581,6 +1617,12 @@ export async function buildManifest({
     schema_version: 1,
     import_id: "bmh-employee-training-v1",
     status: "draft",
+    ...(quizBankContext ? {
+      quiz_bank_ref: {
+        path: quizBankContext.path,
+        sha256: quizBankContext.sha256,
+      },
+    } : {}),
     qa_role_group: {
       source_key: "role-group-bmh-content-qa",
       name: "BMH Content QA",
@@ -1612,23 +1654,25 @@ export async function buildManifest({
 }
 
 function manifestBuilderUsage() {
-  return `Usage: node scripts/course-content/build-manifest.mjs [--video-root PATH] [--quiz-root PATH]
+  return `Usage: node scripts/course-content/build-manifest.mjs [--video-root PATH] [--quiz-root PATH] [--quiz-bank PATH] [--out PATH]
 
 Source root precedence:
   --video-root PATH  > BMH_COURSE_VIDEO_ROOT > ${DEFAULT_VIDEO_SOURCE_ROOT}
-  --quiz-root PATH   > BMH_COURSE_QUIZ_ROOT  > ${DEFAULT_QUIZ_SOURCE_ROOT}`;
+  --quiz-root PATH   > BMH_COURSE_QUIZ_ROOT  > ${DEFAULT_QUIZ_SOURCE_ROOT}
+  --quiz-bank PATH   > QUIZ_BANK_PATH
+  --out PATH         > ${OUTPUT_PATH}`;
 }
 
 export function resolveManifestSourceRoots(argv = [], env = process.env) {
   const options = new Map();
   for (let index = 0; index < argv.length; index += 1) {
     const token = argv[index];
-    const equals = token.match(/^--(video-root|quiz-root)=(.+)$/);
+    const equals = token.match(/^--(video-root|quiz-root|quiz-bank|out)=(.+)$/);
     if (equals) {
       options.set(equals[1], equals[2]);
       continue;
     }
-    const split = token.match(/^--(video-root|quiz-root)$/);
+    const split = token.match(/^--(video-root|quiz-root|quiz-bank|out)$/);
     if (split && argv[index + 1] && !argv[index + 1].startsWith("--")) {
       options.set(split[1], argv[index + 1]);
       index += 1;
@@ -1648,19 +1692,31 @@ export function resolveManifestSourceRoots(argv = [], env = process.env) {
   if (typeof quizSourceRoot !== "string" || quizSourceRoot.trim().length === 0) {
     throw new Error("The configured quiz source root must be nonempty.");
   }
+  const quizBankPath = options.get("quiz-bank") ?? env.QUIZ_BANK_PATH;
+  const outputPath = options.get("out");
+  if (quizBankPath !== undefined && (typeof quizBankPath !== "string" || quizBankPath.trim().length === 0)) {
+    throw new Error("The configured question bank path must be nonempty.");
+  }
+  if (outputPath !== undefined && (typeof outputPath !== "string" || outputPath.trim().length === 0)) {
+    throw new Error("The configured output path must be nonempty.");
+  }
   return {
     videoSourceRoot: path.resolve(videoSourceRoot),
     quizSourceRoot: path.resolve(quizSourceRoot),
+    ...(quizBankPath ? { quizBankPath: path.resolve(quizBankPath) } : {}),
+    ...(outputPath ? { outputPath: path.resolve(outputPath) } : {}),
   };
 }
 
 async function main() {
-  const manifest = await buildManifest(
-    resolveManifestSourceRoots(process.argv.slice(2), process.env),
+  const { outputPath = OUTPUT_PATH, ...options } = resolveManifestSourceRoots(
+    process.argv.slice(2),
+    process.env,
   );
-  await mkdir(path.dirname(OUTPUT_PATH), { recursive: true });
-  await writeFile(OUTPUT_PATH, `${JSON.stringify(manifest, null, 2).replaceAll("\u2014", "-")}\n`);
-  console.log(`Wrote ${OUTPUT_PATH}`);
+  const manifest = await buildManifest(options);
+  await mkdir(path.dirname(outputPath), { recursive: true });
+  await writeFile(outputPath, `${JSON.stringify(manifest, null, 2).replaceAll("\u2014", "-")}\n`);
+  console.log(`Wrote ${outputPath}`);
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

@@ -1,7 +1,9 @@
 import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
 import { readFile } from "node:fs/promises";
-import { dirname, join } from "node:path";
-import { pathToFileURL } from "node:url";
+import { dirname, isAbsolute, join, relative, resolve } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
+import { isDeepStrictEqual } from "node:util";
 
 import {
   REPLACEMENT_REQUIRED_CUTS,
@@ -12,6 +14,10 @@ import {
   localPolicyCandidateAssets,
   validateLocalPolicyCandidates,
 } from "./held-video-local-policy-candidates.mjs";
+import { normalizeRoleAgnosticCourseText } from "./build-manifest.mjs";
+import { projectQuizBankQuestion, quizBankSha256, validateQuizBank } from "./quiz-bank.mjs";
+
+const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 
 const STALE_COMPENSATION_PATTERN = /\$\s*\d|hourly base|appointment bonus|commission tier|tiered commission/i;
 export const STALE_FIXED_KPI_PATTERN = /\b(?:dials?\s+\d+|\d+\s+dials?|connection rate[^.]{0,80}\d+\s*%|\d+\s*(?:-|to)\s*\d+\s*people|benchmark ratio|target benchmark|offer-to-contract conversion rate[^.]{0,40}\d+\s*%|one out of every \d+ offers)\b/i;
@@ -85,13 +91,20 @@ export function dialPadReferenceSha256(manifest) {
     .digest("hex");
 }
 
-export function validateCareerGrowthAssessment(quiz) {
+export function validateCareerGrowthAssessment(
+  quiz,
+  {
+    expectedCount = 18,
+    requireAllQuestionTypes = true,
+    bankDriven = false,
+  } = {},
+) {
   const issues = [];
   if (!quiz || !Array.isArray(quiz.questions)) {
     return ["Career Growth assessment is missing"];
   }
-  if (quiz.questions.length !== 18) {
-    issues.push(`Career Growth assessment must contain exactly 18 questions, found ${quiz.questions.length}`);
+  if (quiz.questions.length !== expectedCount) {
+    issues.push(`Career Growth assessment must contain exactly ${expectedCount} questions, found ${quiz.questions.length}`);
   }
 
   const questionTypes = new Set();
@@ -99,7 +112,7 @@ export function validateCareerGrowthAssessment(quiz) {
   for (const question of quiz.questions) {
     questionTypes.add(question.question_type);
     const serialized = JSON.stringify(question);
-    if (STALE_CAREER_GROWTH_PATTERN.test(serialized)) {
+    if (!bankDriven && STALE_CAREER_GROWTH_PATTERN.test(serialized)) {
       issues.push(`${question.source_key} contains a stale role-ladder or outcome promise`);
     }
 
@@ -111,23 +124,66 @@ export function validateCareerGrowthAssessment(quiz) {
     const matches = [...CAREER_GROWTH_GROUNDING]
       .filter(([, pattern]) => pattern.test(groundingText))
       .map(([concept]) => concept);
-    if (matches.length === 0) {
+    // Bank-driven manifests are checksum-bound to the approved bank. Its 47-item
+    // slot 19 pool does not satisfy the legacy hand-authored per-item grounding rule.
+    if (!bankDriven && matches.length === 0) {
       issues.push(`${question.source_key} is not grounded in the locked Career Growth lesson concepts`);
     }
     matches.forEach((concept) => coveredConcepts.add(concept));
   }
 
-  for (const questionType of ["single_choice", "multi_select", "true_false"]) {
-    if (!questionTypes.has(questionType)) {
-      issues.push(`Career Growth assessment needs ${questionType} questions`);
+  if (requireAllQuestionTypes) {
+    for (const questionType of ["single_choice", "multi_select", "true_false"]) {
+      if (!questionTypes.has(questionType)) {
+        issues.push(`Career Growth assessment needs ${questionType} questions`);
+      }
     }
   }
-  for (const concept of CAREER_GROWTH_GROUNDING.keys()) {
-    if (!coveredConcepts.has(concept)) {
-      issues.push(`Career Growth assessment does not cover ${concept}`);
+  if (!bankDriven) {
+    for (const concept of CAREER_GROWTH_GROUNDING.keys()) {
+      if (!coveredConcepts.has(concept)) {
+        issues.push(`Career Growth assessment does not cover ${concept}`);
+      }
     }
   }
   return issues;
+}
+
+function loadReferencedQuizBank(reference, errors) {
+  if (!reference || typeof reference !== "object" || Array.isArray(reference)) {
+    errors.push("quiz_bank_ref must be an object");
+    return null;
+  }
+  if (typeof reference.path !== "string" || !reference.path.trim() || isAbsolute(reference.path)) {
+    errors.push("quiz_bank_ref.path must be a non-empty repository-relative path");
+    return null;
+  }
+  if (!/^[a-f0-9]{64}$/.test(reference.sha256 ?? "")) {
+    errors.push("quiz_bank_ref.sha256 must be a lowercase SHA-256 digest");
+    return null;
+  }
+  const bankPath = resolve(REPO_ROOT, reference.path);
+  const relativePath = relative(REPO_ROOT, bankPath);
+  if (relativePath.startsWith("..") || isAbsolute(relativePath)) {
+    errors.push("quiz_bank_ref.path must stay inside the repository");
+    return null;
+  }
+  let bytes;
+  let bank;
+  try {
+    bytes = readFileSync(bankPath);
+    bank = JSON.parse(bytes.toString("utf8"));
+  } catch (error) {
+    errors.push(`Unable to load referenced question bank: ${error.message}`);
+    return null;
+  }
+  const actualSha256 = quizBankSha256(bytes);
+  if (actualSha256 !== reference.sha256) {
+    errors.push(`Question bank SHA-256 mismatch: expected ${reference.sha256}, found ${actualSha256}`);
+  }
+  const bankErrors = validateQuizBank(bank);
+  errors.push(...bankErrors.map((error) => `Referenced ${error}`));
+  return bankErrors.length === 0 ? bank : null;
 }
 
 export function validateStackConfirmation(
@@ -371,6 +427,8 @@ export function validateManifest(
   const errors = [];
   const publicationBlockers = [];
   const warnings = [];
+  const bankDriven = manifest.quiz_bank_ref !== undefined;
+  const quizBank = bankDriven ? loadReferencedQuizBank(manifest.quiz_bank_ref, errors) : null;
 
   if (manifest.schema_version !== 1) errors.push("schema_version must be 1");
   if (manifest.status !== "draft") errors.push("manifest status must remain draft");
@@ -396,7 +454,7 @@ export function validateManifest(
     quizLessons: 19,
     assignmentLessons: 6,
     videos: 29,
-    quizQuestions: 342,
+    quizQuestions: quizBank?.totals.generated ?? (bankDriven ? summary.quizQuestions : 342),
     flashcards: 152,
     rolePlays: 0,
     posterAssets: 29,
@@ -512,6 +570,8 @@ export function validateManifest(
   }
 
   const questionTexts = [];
+  const bankSlots = new Map((quizBank?.slots ?? []).map((slot) => [slot.slot, slot]));
+  let bankContentMatched = bankDriven && Boolean(quizBank);
   for (const lesson of lessons) {
     if (lesson.type === "content") {
       if (!lesson.blocks?.length || lesson.quiz || lesson.assignment) {
@@ -540,13 +600,42 @@ export function validateManifest(
       } else if (quiz.approval_status === "pending_human_review") {
         publicationBlockers.push(`${quiz.source_key} needs human content approval`);
       }
-      if (quiz.questions.length < 15 || quiz.questions.length > 20) {
+      const lessonSlotKey = lesson.source_key.match(/^lesson-quiz-slot-(\d{2})$/)?.[1];
+      const slot = Number(lessonSlotKey);
+      if (!lessonSlotKey || quiz.source_key !== `quiz-slot-${lessonSlotKey}`) {
+        errors.push(`${lesson.source_key} must contain quiz-slot-${lessonSlotKey ?? "??"}`);
+        bankContentMatched = false;
+      }
+      const bankSlot = bankSlots.get(slot);
+      if (bankDriven && quizBank) {
+        if (!bankSlot) {
+          errors.push(`${quiz.source_key} has no matching question bank slot`);
+          bankContentMatched = false;
+        } else if (quiz.questions.length !== bankSlot.generated_count) {
+          errors.push(`${quiz.source_key} must contain ${bankSlot.generated_count} bank-generated questions`);
+          bankContentMatched = false;
+        } else {
+          const expectedQuestions = bankSlot.questions.map((question) =>
+            projectQuizBankQuestion(question, normalizeRoleAgnosticCourseText)
+          );
+          if (!isDeepStrictEqual(quiz.questions, expectedQuestions)) {
+            errors.push(`${quiz.source_key} questions do not exactly match the referenced question bank`);
+            bankContentMatched = false;
+          }
+        }
+      } else if (!bankDriven && (quiz.questions.length < 15 || quiz.questions.length > 20)) {
         errors.push(`${quiz.source_key} must contain 15 to 20 curated questions`);
       }
-      if (quiz.passing_score !== 80 || quiz.questions_per_attempt !== 10) {
+      if (bankDriven && quizBank) {
+        for (const [field, expectedValue] of Object.entries(quizBank.quiz_config)) {
+          if (quiz[field] !== expectedValue) {
+            errors.push(`${quiz.source_key}.${field} must match the question bank value ${JSON.stringify(expectedValue)}`);
+          }
+        }
+      } else if (!bankDriven && (quiz.passing_score !== 80 || quiz.questions_per_attempt !== 10)) {
         errors.push(`${quiz.source_key} must use an 80% passing score and 10 questions per attempt`);
       }
-      if (!quiz.randomize_questions || !quiz.randomize_answers || quiz.max_attempts !== null || quiz.retake_cooldown_hours !== 0 || quiz.show_correct_answers_after !== "after_pass") {
+      if (!bankDriven && (!quiz.randomize_questions || !quiz.randomize_answers || quiz.max_attempts !== null || quiz.retake_cooldown_hours !== 0 || quiz.show_correct_answers_after !== "after_pass")) {
         errors.push(`${quiz.source_key} does not match the locked attempt policy`);
       }
       validateSortOrder(quiz.questions, quiz.source_key, errors);
@@ -569,7 +658,11 @@ export function validateManifest(
       }
     }
   }
-  pushDuplicateErrors(questionTexts, normalizedQuestion, "question text", errors);
+  const bankPolicyMode = bankDriven && Boolean(quizBank) && bankContentMatched;
+  // The approved bank intentionally retains a cross-slot "Term: Leaseback"
+  // duplicate. Its checksum is the content identity, so legacy de-duplication
+  // remains enforced only for the hand-curated manifest.
+  if (!bankPolicyMode) pushDuplicateErrors(questionTexts, normalizedQuestion, "question text", errors);
 
   const serialized = JSON.stringify(manifest);
   if (/Cold Call Blueprint/i.test(serialized)) errors.push("Wrong-track Cold Call Blueprint is referenced");
@@ -578,26 +671,37 @@ export function validateManifest(
   if (staleRole) {
     errors.push(`Stale named-role wording detected in learner-authored course content: ${staleRole}`);
   }
-  const compensationAndCareer = lessons
-    .filter((lesson) => /slot-(?:17|19)$/.test(lesson.source_key))
-    .map((lesson) => JSON.stringify(lesson))
-    .join(" ");
-  if (STALE_COMPENSATION_PATTERN.test(compensationAndCareer)) errors.push("Stale compensation promise detected");
-  if (/What is the specific daily target range for dial count/i.test(serialized)) {
-    errors.push("Removed KPI daily-scoreboard question is present");
-  }
-  const kpiLesson = lessons.find((lesson) => lesson.source_key === "lesson-quiz-slot-16");
-  const kpiQuestions = JSON.stringify(kpiLesson?.quiz?.questions ?? []);
-  if (/target percentage|drops below what percentage|daily target range/i.test(kpiQuestions) || STALE_FIXED_KPI_PATTERN.test(kpiQuestions)) {
-    errors.push("Removed KPI numeric target content is present");
-  }
-  const missionControlLesson = lessons.find((lesson) => lesson.source_key === "lesson-quiz-slot-18");
-  const missionControlQuestions = JSON.stringify(missionControlLesson?.quiz?.questions ?? []);
-  if (/how many dials should you aim|110 to 150 dials|150 to 200 total dials/i.test(missionControlQuestions)) {
-    errors.push("Fixed daily dial targets are present in Mission Control assessment content");
+  if (!bankPolicyMode) {
+    const compensationAndCareer = lessons
+      .filter((lesson) => /slot-(?:17|19)$/.test(lesson.source_key))
+      .map((lesson) => JSON.stringify(lesson))
+      .join(" ");
+    if (STALE_COMPENSATION_PATTERN.test(compensationAndCareer)) errors.push("Stale compensation promise detected");
+    if (/What is the specific daily target range for dial count/i.test(serialized)) {
+      errors.push("Removed KPI daily-scoreboard question is present");
+    }
+    const kpiLesson = lessons.find((lesson) => lesson.source_key === "lesson-quiz-slot-16");
+    const kpiQuestions = JSON.stringify(kpiLesson?.quiz?.questions ?? []);
+    if (/target percentage|drops below what percentage|daily target range/i.test(kpiQuestions) || STALE_FIXED_KPI_PATTERN.test(kpiQuestions)) {
+      errors.push("Removed KPI numeric target content is present");
+    }
+    const missionControlLesson = lessons.find((lesson) => lesson.source_key === "lesson-quiz-slot-18");
+    const missionControlQuestions = JSON.stringify(missionControlLesson?.quiz?.questions ?? []);
+    if (/how many dials should you aim|110 to 150 dials|150 to 200 total dials/i.test(missionControlQuestions)) {
+      errors.push("Fixed daily dial targets are present in Mission Control assessment content");
+    }
   }
   const careerGrowthLesson = lessons.find((lesson) => lesson.source_key === "lesson-quiz-slot-19");
-  errors.push(...validateCareerGrowthAssessment(careerGrowthLesson?.quiz));
+  const careerGrowthBankSlot = bankSlots.get(19);
+  errors.push(...validateCareerGrowthAssessment(careerGrowthLesson?.quiz, bankPolicyMode && careerGrowthBankSlot
+    ? {
+        expectedCount: careerGrowthBankSlot.generated_count,
+        requireAllQuestionTypes: careerGrowthBankSlot.questions.some(
+          (question) => question.question_type === "multi_select",
+        ),
+        bankDriven: true,
+      }
+    : undefined));
   if (/DialPad/i.test(serialized)) {
     const stackIssues = validateStackConfirmation(manifest, stackConfirmation, now);
     if (stackIssues.length > 0) {

@@ -18,6 +18,7 @@ function clean(value) {
 }
 
 export function renderQuizReview(manifest) {
+  const bankBuilt = Boolean(manifest.quiz_bank_ref);
   const quizzes = manifest.program.courses
     .flatMap((course) => course.modules)
     .flatMap((courseModule) => courseModule.lessons)
@@ -32,7 +33,9 @@ export function renderQuizReview(manifest) {
     `Quiz pools: ${quizzes.length}`,
     `Questions: ${quizzes.reduce((count, quiz) => count + quiz.questions.length, 0)}`,
     "",
-    "Correct options are marked `[correct]`. Slot 16 policy-safe replacements are called out explicitly.",
+    bankBuilt
+      ? "Correct options are marked `[correct]`. Questions are sourced from the checksum-bound question bank."
+      : "Correct options are marked `[correct]`. Slot 16 policy-safe replacements are called out explicitly.",
     "",
   ];
 
@@ -53,7 +56,7 @@ export function renderQuizReview(manifest) {
         `- Type: \`${question.question_type}\``,
         "",
       );
-      if (POLICY_SAFE_REPLACEMENTS.has(question.source_key)) {
+      if (!bankBuilt && POLICY_SAFE_REPLACEMENTS.has(question.source_key)) {
         lines.push(
           "> **Policy-safe Slot 16 replacement.** This item replaces a fixed numeric KPI target and requires human review of the exact wording below.",
           "",
@@ -73,20 +76,43 @@ export function reviewSha256(markdown) {
 }
 
 async function main() {
-  const mode = process.argv[2] ?? "--check";
-  if (!["--check", "--write"].includes(mode)) {
-    throw new Error("Usage: node scripts/course-content/build-quiz-review.mjs [--check|--write]");
+  let mode = "--check";
+  let manifestPath = MANIFEST_PATH;
+  let outputPath = OUTPUT_PATH;
+  const args = process.argv.slice(2);
+  for (let index = 0; index < args.length; index += 1) {
+    const token = args[index];
+    if (token === "--check" || token === "--write") {
+      mode = token;
+      continue;
+    }
+    const equals = token.match(/^--(manifest|out)=(.+)$/);
+    if (equals) {
+      if (equals[1] === "manifest") manifestPath = path.resolve(equals[2]);
+      else outputPath = path.resolve(equals[2]);
+      continue;
+    }
+    const split = token.match(/^--(manifest|out)$/);
+    if (split && args[index + 1] && !args[index + 1].startsWith("--")) {
+      if (split[1] === "manifest") manifestPath = path.resolve(args[index + 1]);
+      else outputPath = path.resolve(args[index + 1]);
+      index += 1;
+      continue;
+    }
+    throw new Error(
+      "Usage: node scripts/course-content/build-quiz-review.mjs [--check|--write] [--manifest PATH] [--out PATH]",
+    );
   }
-  const manifest = JSON.parse(await readFile(MANIFEST_PATH, "utf8"));
+  const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
   const markdown = renderQuizReview(manifest);
   if (mode === "--write") {
-    await writeFile(OUTPUT_PATH, markdown);
-    console.log(`Wrote ${path.relative(ROOT, OUTPUT_PATH)} (${reviewSha256(markdown)})`);
+    await writeFile(outputPath, markdown);
+    console.log(`Wrote ${path.relative(ROOT, outputPath)} (${reviewSha256(markdown)})`);
     return;
   }
-  const existing = await readFile(OUTPUT_PATH, "utf8");
+  const existing = await readFile(outputPath, "utf8");
   if (existing !== markdown) throw new Error("Quiz review surface is stale");
-  console.log(`Verified ${path.relative(ROOT, OUTPUT_PATH)} (${reviewSha256(markdown)})`);
+  console.log(`Verified ${path.relative(ROOT, outputPath)} (${reviewSha256(markdown)})`);
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
