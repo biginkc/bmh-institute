@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { renderCertificateHtml } from "./render";
+import {
+  normalizeLearnerCertificateTemplate,
+  renderCertificateHtml,
+} from "./render";
 
 const FIELDS = {
   full_name: "Jarrad Henry",
@@ -44,5 +47,30 @@ describe("renderCertificateHtml", () => {
       FIELDS,
     );
     expect(html).toBe("<p>Certificate of achievement</p>");
+  });
+
+  it("normalizes legacy learner-facing program wording at render time", () => {
+    expect(
+      normalizeLearnerCertificateTemplate(
+        "<h1>Program Completion Certificate</h1><p>{{full_name}} has completed the program: {{title}}.</p>",
+        "program",
+      ),
+    ).toBe(
+      "<h1>Course Completion Certificate</h1><p>{{full_name}} has completed the course: {{title}}.</p>",
+    );
+  });
+
+  it("does not alter course templates or learner field values containing Program", () => {
+    const template = "<h1>Program Leadership</h1><p>{{title}}</p>";
+    expect(normalizeLearnerCertificateTemplate(template, "course")).toBe(template);
+    expect(
+      renderCertificateHtml(
+        normalizeLearnerCertificateTemplate(
+          "<p>completed the {{title}} program</p>",
+          "program",
+        ),
+        { ...FIELDS, title: "Program Leadership" },
+      ),
+    ).toBe("<p>completed the Program Leadership course</p>");
   });
 });

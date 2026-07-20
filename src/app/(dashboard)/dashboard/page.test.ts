@@ -1,337 +1,65 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-let tableData: Record<string, unknown[]> = {};
-let completedLessonIds = new Set<string>();
-let lessonStatesError: { message: string } | null = null;
-const rpcSpy = vi.fn();
-const eqSpy = vi.fn();
+import { learnerOutlineFixture } from "@/lib/courses/learner-outline.test-helpers";
 
+const mocks = vi.hoisted(() => ({
+  loadLearnerCourseOutline: vi.fn(),
+  programs: [] as unknown[],
+}));
+vi.mock("../load-learner-outline", () => ({
+  loadLearnerCourseOutline: mocks.loadLearnerCourseOutline,
+}));
+vi.mock("@/lib/content-blocks/sign-urls", () => ({ signAuthorizedArtworkPaths: vi.fn(async () => new Map()) }));
 vi.mock("@/lib/supabase/server", () => ({
   createClient: vi.fn(async () => ({
-    auth: {
-      getUser: async () => ({
-        data: { user: { id: "learner-1", email: "learner@example.com" } },
-      }),
-    },
-    rpc: async (
-      name: string,
-      args: { p_lesson_ids: string[] },
-    ) => {
-      rpcSpy(name, args);
-      if (name !== "fn_lesson_states") {
-        throw new Error(`Unexpected RPC: ${name}`);
-      }
-      return {
-        data: lessonStatesError
-          ? null
-          : args.p_lesson_ids.map((lessonId) => ({
-              lesson_id: lessonId,
-              is_complete: completedLessonIds.has(lessonId),
-              is_unlocked: true,
-            })),
-        error: lessonStatesError,
-      };
-    },
-    from: (table: string) => {
-      const chain = {
-        select: () => chain,
-        eq: (...args: unknown[]) => {
-          eqSpy(...args);
-          return chain;
-        },
-        in: () => chain,
-        order: () => chain,
-        then: (resolve: (value: { data: unknown[]; error: null }) => unknown) =>
-          Promise.resolve({ data: tableData[table] ?? [], error: null }).then(
-            resolve,
-          ),
-      };
-      return chain;
-    },
+    auth: { getUser: async () => ({ data: { user: { id: "user-1" } } }) },
+    from: () => ({ select: () => ({ order: async () => ({ data: mocks.programs, error: null }) }) }),
   })),
-}));
-
-vi.mock("@/lib/content-blocks/sign-urls", () => ({
-  signAuthorizedArtworkPaths: vi.fn(async (requests: Array<{ entityType: string; entityId: string; path: string | null }>) =>
-    new Map(requests.flatMap(({ entityType, entityId, path }) => path ? [[`${entityType}:${entityId}`, `https://signed.example/${path}`] as const] : [])),
-  ),
 }));
 
 import DashboardPage from "./page";
 
-describe("DashboardPage learner onboarding", () => {
+function oneCourseProgram() {
+  return [{
+    id: "internal-1",
+    title: "Internal grouping",
+    description: null,
+    thumbnail_path: null,
+    content_import_id: null,
+    thumbnail_asset_key: null,
+    thumbnail_approved_path: null,
+    thumbnail_approved_sha256: null,
+    course_order_mode: "sequential",
+    is_published: false,
+    sort_order: 1,
+    program_courses: [{ sort_order: 1, courses: { id: "course-1", title: "BMH Employee Training", description: null, thumbnail_path: null, content_import_id: null, thumbnail_asset_key: null, thumbnail_approved_path: null, thumbnail_approved_sha256: null, is_published: false } }],
+  }];
+}
+
+describe("DashboardPage learner redesign", () => {
   beforeEach(() => {
-    tableData = {};
-    completedLessonIds = new Set();
-    lessonStatesError = null;
-    rpcSpy.mockClear();
-    eqSpy.mockClear();
+    mocks.programs = oneCourseProgram();
+    mocks.loadLearnerCourseOutline.mockReset();
+    mocks.loadLearnerCourseOutline.mockResolvedValue({ ok: true, outline: learnerOutlineFixture() });
   });
 
-  it("hides the program card for a single-course program", async () => {
-    tableData = {
-      programs: [
-        {
-          id: "review-program",
-          title: "BMH Employee Training Review",
-          description: "Private course review",
-          thumbnail_path: null,
-          content_import_id: "bmh-employee-training-v1",
-          course_order_mode: "sequential",
-          is_published: false,
-          sort_order: 0,
-          program_courses: [
-            {
-              sort_order: 0,
-              courses: {
-                id: "review-course",
-                title: "BMH Employee Training",
-                description: null,
-                thumbnail_path: null,
-                content_import_id: "bmh-employee-training-v1",
-                is_published: false,
-              },
-            },
-          ],
-        },
-      ],
-    };
-
+  it("renders one compact resume banner, paginated tiles, and the all-lesson rail", async () => {
     const html = renderToStaticMarkup(await DashboardPage());
-
-    expect(html).toContain("BMH Employee Training");
-    expect(html).not.toContain("BMH Employee Training Review");
-    expect(html).not.toContain("Private review");
-    expect(eqSpy).not.toHaveBeenCalledWith("is_published", true);
-  });
-
-  it("shows the program card and its review and unlock states for multiple courses", async () => {
-    tableData = {
-      programs: [
-        {
-          id: "review-program",
-          title: "BMH Employee Training Review",
-          description: "Private course review",
-          thumbnail_path: null,
-          content_import_id: "bmh-employee-training-v1",
-          course_order_mode: "sequential",
-          is_published: false,
-          sort_order: 0,
-          program_courses: [
-            {
-              sort_order: 0,
-              courses: {
-                id: "course-1",
-                title: "BMH Employee Training",
-                description: null,
-                thumbnail_path: null,
-                content_import_id: "bmh-employee-training-v1",
-                is_published: false,
-              },
-            },
-            {
-              sort_order: 1,
-              courses: {
-                id: "course-2",
-                title: "Advanced Employee Training",
-                description: null,
-                thumbnail_path: null,
-                content_import_id: "bmh-employee-training-v1",
-                is_published: false,
-              },
-            },
-          ],
-        },
-      ],
-    };
-
-    const html = renderToStaticMarkup(await DashboardPage());
-
-    expect(html).toContain("BMH Employee Training Review");
-    expect(html).toContain("Private review");
-    expect(html).toContain("Sequential");
-    expect(html).toContain("Advanced Employee Training");
-    expect(html).toContain("Locked · finish course 1 first");
-    expect(html).toContain("Courses unlock in order");
-  });
-
-  it("renders support-oriented copy when no programs are assigned", async () => {
-    const html = renderToStaticMarkup(await DashboardPage());
-
-    expect(html).toContain("No training assigned yet");
-    expect(html).toContain("They can check your invite and role group.");
-    expect(html).toContain("Check your profile");
-    expect(html).toContain("Reset password");
-    expect(html).toContain("Andrea");
-  });
-
-  it("renders the real resume target and progress in the BMH dashboard", async () => {
-    tableData = {
-      programs: [
-        {
-          id: "program-1",
-          title: "VA Foundations",
-          description: "Start here",
-          thumbnail_path: "courses/va-foundations/v1/thumbnails/program.webp",
-          content_import_id: "va-foundations-v1",
-          course_order_mode: "sequential",
-          is_published: true,
-          sort_order: 0,
-          program_courses: [
-            {
-              sort_order: 0,
-              courses: {
-                id: "course-1",
-                title: "Getting Started",
-                description: null,
-                thumbnail_path: "courses/va-foundations/v1/thumbnails/course.webp",
-                content_import_id: "va-foundations-v1",
-                is_published: true,
-              },
-            },
-          ],
-        },
-      ],
-      modules: [
-        {
-          course_id: "course-1",
-          sort_order: 0,
-          lessons: [
-            {
-              id: "lesson-1",
-              title: "Welcome to BMH Institute",
-              sort_order: 0,
-              is_required_for_completion: true,
-              thumbnail_path: "courses/va-foundations/v1/thumbnails/welcome.webp",
-              content_import_id: "va-foundations-v1",
-            },
-            {
-              id: "lesson-2",
-              title: "Your first task",
-              sort_order: 1,
-              is_required_for_completion: true,
-              thumbnail_path: "courses/va-foundations/v1/thumbnails/first-task.webp",
-              content_import_id: "va-foundations-v1",
-            },
-          ],
-        },
-      ],
-    };
-    completedLessonIds = new Set(["lesson-1"]);
-
-    const html = renderToStaticMarkup(await DashboardPage());
-
-    expect(html).toContain("In progress");
-    expect(html).toContain("Getting Started");
-    expect(html).toContain("Your first task");
-    expect(html).toContain("Resume lesson");
-    expect(html).toContain('href="/lessons/lesson-2"');
-    expect(html).toContain("Complete required lessons");
-    expect(html).toContain("1/2");
-    expect(html).toContain("50%");
     expect(html).toContain("Continue learning");
-    expect(html).toContain("Welcome to BMH Institute");
-    expect(html).toContain("Password help");
-    expect(html).toContain("https://signed.example/courses/va-foundations/v1/thumbnails/course.webp");
-    expect(html).toContain("Getting Started course cover");
-    expect(html).not.toContain("https://signed.example/courses/va-foundations/v1/thumbnails/program.webp");
-    expect(html).not.toContain("VA Foundations program cover");
-    expect(html).toContain("https://signed.example/courses/va-foundations/v1/thumbnails/first-task.webp");
-    expect(rpcSpy).toHaveBeenCalledTimes(1);
+    expect(html).toContain("Lesson 3 · Topic 3");
+    expect(html).toContain("25 lessons · 2 complete");
+    expect(html.match(/Course progress/g)).toHaveLength(1);
+    expect(html).not.toContain("Continue learning</h2>");
+    expect(html).not.toContain("Program");
+    expect(html).not.toContain("Chapter");
   });
 
-  it("loads dozens of lesson states with one RPC call", async () => {
-    const lessons = Array.from({ length: 48 }, (_, index) => ({
-      id: `lesson-${index + 1}`,
-      title: `Lesson ${index + 1}`,
-      sort_order: index,
-      is_required_for_completion: true,
-      thumbnail_path: null,
-      content_import_id: "va-foundations-v1",
-    }));
-    tableData = {
-      programs: [
-        {
-          id: "program-1",
-          title: "VA Foundations",
-          description: null,
-          thumbnail_path: null,
-          content_import_id: "va-foundations-v1",
-          course_order_mode: "sequential",
-          is_published: true,
-          sort_order: 0,
-          program_courses: [
-            {
-              sort_order: 0,
-              courses: {
-                id: "course-1",
-                title: "Getting Started",
-                description: null,
-                thumbnail_path: null,
-                content_import_id: "va-foundations-v1",
-                is_published: true,
-              },
-            },
-          ],
-        },
-      ],
-      modules: [{ course_id: "course-1", sort_order: 0, lessons }],
-    };
-
-    await DashboardPage();
-
-    expect(rpcSpy).toHaveBeenCalledTimes(1);
-    expect(rpcSpy).toHaveBeenCalledWith(
-      "fn_lesson_states",
-      expect.objectContaining({ p_lesson_ids: lessons.map((lesson) => lesson.id) }),
-    );
-  });
-
-  it("renders a retry state instead of false progress when state verification fails", async () => {
-    tableData = {
-      programs: [
-        {
-          id: "program-1",
-          title: "VA Foundations",
-          description: null,
-          thumbnail_path: null,
-          content_import_id: "va-foundations-v1",
-          course_order_mode: "sequential",
-          is_published: true,
-          sort_order: 0,
-          program_courses: [{
-            sort_order: 0,
-            courses: {
-              id: "course-1",
-              title: "Getting Started",
-              description: null,
-              thumbnail_path: null,
-              content_import_id: "va-foundations-v1",
-              is_published: true,
-            },
-          }],
-        },
-      ],
-      modules: [{
-        course_id: "course-1",
-        sort_order: 0,
-        lessons: [{
-          id: "lesson-1",
-          title: "Lesson one",
-          sort_order: 0,
-          is_required_for_completion: true,
-          thumbnail_path: null,
-          content_import_id: "va-foundations-v1",
-        }],
-      }],
-    };
-    lessonStatesError = { message: "database unavailable" };
-
+  it("renders course-oriented support copy when no training is assigned", async () => {
+    mocks.programs = [];
     const html = renderToStaticMarkup(await DashboardPage());
-
-    expect(html).toContain("We couldn&#x27;t verify your lesson progress");
-    expect(html).not.toContain("0/1");
-    expect(rpcSpy).toHaveBeenCalledTimes(1);
+    expect(html).toContain("No training assigned yet");
+    expect(html).toContain("no courses are assigned yet");
+    expect(html).not.toContain("no programs");
   });
 });

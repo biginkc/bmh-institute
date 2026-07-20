@@ -48,12 +48,23 @@ export default async function DashboardLayout({
           .select("id", { count: "exact", head: true })
           .eq("status", "submitted")
       : Promise.resolve({ count: 0 }),
-    supabase.from("lessons").select("id, title").order("title").limit(500),
+    supabase
+      .from("lessons")
+      .select("id, title, lesson_type, prerequisite_lesson_id")
+      .order("title")
+      .limit(500),
   ]);
   const pendingSubmissions = pendingResult.count ?? 0;
   const searchableLessons = (lessonResult.data ?? []).flatMap((lesson) =>
     typeof lesson.id === "string" && typeof lesson.title === "string"
-      ? [{ id: lesson.id, title: lesson.title } satisfies LessonSearchItem]
+      ? [{
+          id: lesson.id,
+          title: lesson.title,
+          href:
+            lesson.lesson_type === "quiz" && lesson.prerequisite_lesson_id
+              ? `/lessons/${encodeURIComponent(lesson.prerequisite_lesson_id)}?part=quiz`
+              : `/lessons/${encodeURIComponent(lesson.id)}`,
+        } satisfies LessonSearchItem]
       : [],
   );
 

@@ -75,6 +75,7 @@ export function AssignmentRunner({
         setUrl("");
         setFilePath(null);
         setFilename(null);
+        router.refresh();
       } catch {
         router.refresh();
         toast.error("Submission could not be confirmed. Check your connection and try again.");

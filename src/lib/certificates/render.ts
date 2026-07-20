@@ -28,6 +28,18 @@ export function renderCertificateHtml(
   });
 }
 
+/** Normalizes only known legacy copy on program-scope learner certificates. */
+export function normalizeLearnerCertificateTemplate(
+  bodyHtml: string,
+  scope: "course" | "program",
+): string {
+  if (scope !== "program") return bodyHtml;
+  return bodyHtml
+    .replace(/Program Completion Certificate/g, "Course Completion Certificate")
+    .replace(/has completed the program/g, "has completed the course")
+    .replace(/completed the (\{\{title\}\}) program/g, "completed the $1 course");
+}
+
 function escapeHtml(v: string): string {
   return v
     .replace(/&/g, "&amp;")

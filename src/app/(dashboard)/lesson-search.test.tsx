@@ -11,9 +11,10 @@ vi.mock("next/navigation", () => ({
 import { LessonSearch } from "./lesson-search";
 
 const lessons = [
-  { id: "lesson-opening", title: "Opening the Call" },
-  { id: "lesson-objections", title: "Objection Architecture" },
-  { id: "lesson-tech", title: "Tech Stack" },
+  { id: "lesson-opening", title: "Opening the Call", href: "/lessons/lesson-opening" },
+  { id: "lesson-objections", title: "Objection Architecture", href: "/lessons/lesson-objections" },
+  { id: "lesson-tech", title: "Tech Stack", href: "/lessons/lesson-tech" },
+  { id: "quiz-tech", title: "Tech quiz", href: "/lessons/lesson-tech?part=quiz" },
 ];
 
 describe("<LessonSearch />", () => {
@@ -54,6 +55,14 @@ describe("<LessonSearch />", () => {
 
     expect(trigger).toHaveAttribute("aria-expanded", "true");
     expect(screen.getByRole("combobox", { name: "Search lessons" })).toBeVisible();
+  });
+
+  it("uses the prevalidated composite destination for quiz search results", async () => {
+    const user = userEvent.setup();
+    render(<LessonSearch lessons={lessons} />);
+    await user.type(screen.getByRole("combobox", { name: "Search lessons" }), "tech quiz");
+    await user.keyboard("{Enter}");
+    expect(push).toHaveBeenCalledWith("/lessons/lesson-tech?part=quiz");
   });
 
   it("uses unique combobox and listbox IDs for multiple header placements", async () => {

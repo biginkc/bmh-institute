@@ -83,7 +83,11 @@ const learnerClient = {
   rpc: async () => ({ data: unlocked, error: null }),
   from: (table: string) => ({
     select: (columns: string) => {
-      if (table === "lessons") return query({ quiz_id: lessonQuizId });
+      if (table === "lessons") {
+        return columns === "prerequisite_lesson_id"
+          ? query({ prerequisite_lesson_id: "content-lesson-1" })
+          : query({ quiz_id: lessonQuizId });
+      }
       if (table === "quizzes") {
         return query({
           id: "quiz-1",
@@ -137,7 +141,8 @@ const adminClient = {
   },
 };
 
-vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
+const { revalidatePath } = vi.hoisted(() => ({ revalidatePath: vi.fn() }));
+vi.mock("next/cache", () => ({ revalidatePath }));
 vi.mock("@/lib/supabase/server", () => ({
   createClient: vi.fn(async () => learnerClient),
 }));
@@ -290,6 +295,8 @@ describe("quiz server actions", () => {
       passed: true,
       responses: { "q-1": ["q1-good"] },
     });
+    expect(revalidatePath).toHaveBeenCalledWith("/lessons/lesson-1");
+    expect(revalidatePath).toHaveBeenCalledWith("/lessons/content-lesson-1");
     if (result.ok) {
       expect(result.review).toEqual([{
         questionId: "q-1",

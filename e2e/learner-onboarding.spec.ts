@@ -28,17 +28,17 @@ test.describe("learner onboarding", () => {
       await signIn(page, fixture.learner.email, fixture.password);
 
       await expect(page.getByText("In progress")).toBeVisible();
-      await expect(page.getByText(`${fixture.prefix} Quiz Lesson`)).toBeVisible();
+      await expect(page.getByText(`${fixture.prefix} Content Lesson`).first()).toBeVisible();
       await expect(
-        page.getByRole("link", { name: /^resume lesson$/i }),
-      ).toHaveAttribute("href", `/lessons/${fixture.quizLessonId}`);
-      await expect(page.getByText("Complete required lessons")).toBeVisible();
+        page.getByRole("link", { name: /^resume$/i }),
+      ).toHaveAttribute("href", `/lessons/${fixture.contentLessonId}?part=quiz`);
+      await expect(page.getByText("3 lessons · 0 complete")).toBeVisible();
       await expect(page.getByRole("link", { name: /^profile$/i })).toHaveAttribute(
         "href",
         "/profile",
       );
       await expect(
-        page.getByRole("link", { name: /^password help$/i }),
+        page.getByRole("link", { name: /^reset password$/i }),
       ).toHaveAttribute("href", "/forgot-password");
     } finally {
       await cleanupWritePathFixture(admin, fixture);

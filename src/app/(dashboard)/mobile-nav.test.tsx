@@ -90,7 +90,7 @@ describe("<MobileNav />", () => {
         <LessonSearch
           compact
           instanceId="mobile-test"
-          lessons={[{ id: "lesson-1", title: "Orientation" }]}
+          lessons={[{ id: "lesson-1", title: "Orientation", href: "/lessons/lesson-1" }]}
         />
         <MobileNav isAdmin={false} pendingSubmissionsCount={0} />
       </main>,

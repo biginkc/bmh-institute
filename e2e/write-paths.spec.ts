@@ -219,6 +219,9 @@ test.describe("durable write-path coverage", () => {
       ).toHaveCount(0);
 
       await page.goto(`/lessons/${fixture.quizLessonId}`);
+      await expect(page).toHaveURL(
+        new RegExp(`/lessons/${fixture.contentLessonId}\\?part=quiz$`),
+      );
       await page.getByRole("button", { name: /start quiz/i }).click();
       await page.getByText(fixture.incorrectOptionText).click();
       await page.getByRole("button", { name: /submit quiz/i }).click();
@@ -226,12 +229,19 @@ test.describe("durable write-path coverage", () => {
       await expect(page.getByText(/0% score/i)).toBeVisible();
       await page.goto(`/courses/${fixture.courseId}`);
       await expect(
-        page
-          .locator("li.cursor-not-allowed")
-          .filter({ hasText: `${fixture.prefix} Text Assignment Lesson` }),
+        page.getByText(`${fixture.prefix} Text Assignment Lesson`).first(),
       ).toBeVisible();
+      await expect(
+        page
+          .locator("[data-learner-tile-grid] li")
+          .filter({ hasText: `${fixture.prefix} Text Assignment Lesson` })
+          .locator("a"),
+      ).toHaveCount(0);
 
       await page.goto(`/lessons/${fixture.quizLessonId}`);
+      await expect(page).toHaveURL(
+        new RegExp(`/lessons/${fixture.contentLessonId}\\?part=quiz$`),
+      );
       await page
         .getByRole("button", { name: /start quiz|retake quiz/i })
         .click();

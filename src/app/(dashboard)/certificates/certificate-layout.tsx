@@ -15,7 +15,7 @@ export function CertificateLayout({
 }: {
   backHref: string;
   backLabel: string;
-  certificateType: "Course certificate" | "Program certificate";
+  certificateType: "Course certificate";
   html: string;
 }) {
   return (

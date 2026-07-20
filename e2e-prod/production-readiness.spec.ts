@@ -70,7 +70,7 @@ test.describe("production readiness lifecycle", () => {
       await learner.goto("/dashboard");
 
       await expect(
-        learner.getByText(`${fixture.prefix} Program`),
+        learner.getByText(`${fixture.prefix} Course`).first(),
       ).toBeVisible();
       await learner.goto(`/courses/${fixture.courseId}`);
       await expect(
@@ -89,10 +89,13 @@ test.describe("production readiness lifecycle", () => {
         timeout: 15_000,
       });
       await expect(
-        learner.getByText(/this lesson is complete/i),
-      ).toBeVisible();
+        learner.getByRole("link", { name: /^quiz$/i }),
+      ).toHaveAttribute("href", `/lessons/${fixture.contentLessonId}?part=quiz`);
 
       await learner.goto(`/lessons/${fixture.quizLessonId}`);
+      await expect(learner).toHaveURL(
+        new RegExp(`/lessons/${fixture.contentLessonId}\\?part=quiz$`),
+      );
       await learner.getByRole("button", { name: /start quiz/i }).click();
       await learner.getByText(fixture.correctOptionText).click();
       await learner.getByRole("button", { name: /submit quiz/i }).click();

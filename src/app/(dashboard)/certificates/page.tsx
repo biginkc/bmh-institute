@@ -33,7 +33,7 @@ export default async function CertificatesPage() {
       id: c.id as string,
       number: c.certificate_number as string,
       issuedAt: c.issued_at as string,
-      title: firstRow(c.programs)?.title ?? "Program",
+      title: firstRow(c.programs)?.title ?? "Course",
       scope: "program" as const,
     })),
     ...(courseCerts.data ?? []).map((c) => ({
@@ -56,8 +56,7 @@ export default async function CertificatesPage() {
           Certificates
         </h1>
         <p className="mt-1.5 max-w-2xl font-[family-name:var(--font-body)] text-base font-semibold text-[var(--text-muted)]">
-          Completed courses and programs. Update your name on your profile
-          before printing.
+          Your completed course certificates. Update your name on your profile before printing.
         </p>
       </div>
 
@@ -73,8 +72,7 @@ export default async function CertificatesPage() {
                   No certificates yet
                 </h2>
                 <p className="mt-1 font-[family-name:var(--font-body)] text-sm font-semibold leading-relaxed text-[var(--text-muted)]">
-                  Finish a course to earn your first one. Complete every course
-                  in a program for a program-level certificate.
+                  Finish a course to earn your first certificate. Some courses also award a final completion certificate.
                 </p>
               </div>
             </div>
@@ -107,7 +105,7 @@ export default async function CertificatesPage() {
                       tone={c.scope === "program" ? "blue" : "green"}
                       size="sm"
                     >
-                      {c.scope === "program" ? "Program" : "Course"}
+                      Course
                     </Badge>
                     <h2 className="mt-2 font-[family-name:var(--font-display)] text-lg leading-tight font-bold text-[var(--ink-900)]">
                       {c.title}
@@ -138,7 +136,7 @@ export default async function CertificatesPage() {
               </span>
               <div>
                 <h2 className="font-[family-name:var(--font-display)] text-lg leading-tight font-bold text-[var(--ink-700)]">
-                  Program certificate
+                  Final course certificate
                 </h2>
                 <p className="mt-1 font-[family-name:var(--font-body)] text-[13px] font-bold text-[var(--text-muted)]">
                   Finish all courses to unlock

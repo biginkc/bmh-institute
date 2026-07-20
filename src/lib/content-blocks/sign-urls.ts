@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { ContentBlock } from "@/components/content-blocks";
+import { isGuideBlock } from "@/lib/content-blocks/learner-parts";
 import {
   artworkRequestKey,
   artworkMimeMatchesPath,
@@ -22,24 +23,31 @@ const ARTWORK_METADATA_CONCURRENCY = 6;
  */
 export async function enrichBlocksWithSignedUrls(
   blocks: ContentBlock[],
+  options: { includeGuides?: boolean } = {},
 ): Promise<ContentBlock[]> {
+  // Filter before collecting paths. This prevents a pre-pass request from ever
+  // reaching the privileged storage signer with a learner-guide path.
+  const authorizedBlocks =
+    options.includeGuides === false
+      ? blocks.filter((block) => !isGuideBlock(block))
+      : blocks;
   const pathFields = [
     ["file_path", "signed_url"],
     ["poster_path", "poster_signed_url"],
     ["caption_path", "caption_signed_url"],
     ["transcript_path", "transcript_signed_url"],
   ] as const;
-  const paths = blocks.flatMap((block) =>
+  const paths = authorizedBlocks.flatMap((block) =>
     pathFields
       .map(([pathField]) => block.content?.[pathField])
       .filter((path): path is string => typeof path === "string" && path.length > 0),
   );
 
-  if (paths.length === 0) return blocks;
+  if (paths.length === 0) return authorizedBlocks;
 
   const signedByPath = await signContentPaths(paths);
 
-  return blocks.map((block) => {
+  return authorizedBlocks.map((block) => {
     const content = { ...block.content };
     let changed = false;
     for (const [pathField, signedField] of pathFields) {

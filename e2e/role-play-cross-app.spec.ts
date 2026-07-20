@@ -160,6 +160,35 @@ async function seedBmhLesson(client: SupabaseClient, userId: string, scenarioId:
     .single();
   if (lessonError || !lesson) throw lessonError ?? new Error("No lesson");
 
+  const { data: quiz, error: quizError } = await client
+    .from("quizzes")
+    .insert({
+      title: `E2E Cross-App Quiz ${stamp}`,
+      passing_score: 80,
+      randomize_questions: false,
+      randomize_answers: false,
+      show_correct_answers_after: "after_pass",
+    })
+    .select("id")
+    .single();
+  if (quizError || !quiz) throw quizError ?? new Error("No quiz");
+  const { data: quizLesson, error: quizLessonError } = await client
+    .from("lessons")
+    .insert({
+      module_id: module.id,
+      title: `E2E Cross-App Quiz Lesson ${stamp}`,
+      lesson_type: "quiz",
+      quiz_id: quiz.id,
+      prerequisite_lesson_id: lesson.id,
+      sort_order: 1,
+      is_required_for_completion: true,
+    })
+    .select("id")
+    .single();
+  if (quizLessonError || !quizLesson) {
+    throw quizLessonError ?? new Error("No quiz lesson");
+  }
+
   const { data: block, error: blockError } = await client
     .from("content_blocks")
     .insert({
@@ -194,6 +223,8 @@ async function seedBmhLesson(client: SupabaseClient, userId: string, scenarioId:
     moduleId: module.id as string,
     lessonId: lesson.id as string,
     blockId: block.id as string,
+    quizId: quiz.id as string,
+    quizLessonId: quizLesson.id as string,
   };
 }
 
@@ -206,12 +237,16 @@ async function cleanupBmhLesson(
     moduleId: string;
     lessonId: string;
     blockId: string;
+    quizId: string;
+    quizLessonId: string;
   },
 ) {
   await client.from("role_play_results").delete().eq("block_id", seeded.blockId);
   await client.from("user_block_progress").delete().eq("block_id", seeded.blockId);
   await client.from("content_blocks").delete().eq("id", seeded.blockId);
+  await client.from("lessons").delete().eq("id", seeded.quizLessonId);
   await client.from("lessons").delete().eq("id", seeded.lessonId);
+  await client.from("quizzes").delete().eq("id", seeded.quizId);
   await client.from("modules").delete().eq("id", seeded.moduleId);
   await client.from("program_courses").delete().eq("program_id", seeded.programId);
   await client.from("program_access").delete().eq("program_id", seeded.programId);
@@ -240,6 +275,8 @@ test.describe("Phase 5 cross-app role play", () => {
         moduleId: string;
         lessonId: string;
         blockId: string;
+        quizId: string;
+        quizLessonId: string;
       }
     | null = null;
 

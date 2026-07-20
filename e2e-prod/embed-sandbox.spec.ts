@@ -11,6 +11,7 @@ type Fixture = {
   courseId: string;
   lessonId: string;
   blockId: string;
+  quizId: string;
 };
 
 async function adminClient(): Promise<SupabaseClient> {
@@ -33,6 +34,7 @@ async function adminClient(): Promise<SupabaseClient> {
 async function createEmbedFixture(admin: SupabaseClient): Promise<Fixture> {
   const suffix = crypto.randomUUID();
   let courseId: string | null = null;
+  let quizId: string | null = null;
   try {
   const { data: course, error: courseError } = await admin
     .from("courses")
@@ -76,6 +78,30 @@ async function createEmbedFixture(admin: SupabaseClient): Promise<Fixture> {
     throw lessonError ?? new Error("Failed to create lesson fixture");
   }
 
+  const { data: quiz, error: quizError } = await admin
+    .from("quizzes")
+    .insert({
+      title: `E2E Embed Quiz ${suffix}`,
+      passing_score: 80,
+      randomize_questions: false,
+      randomize_answers: false,
+      show_correct_answers_after: "after_pass",
+    })
+    .select("id")
+    .single();
+  if (quizError || !quiz) throw quizError ?? new Error("Failed to create quiz fixture");
+  quizId = quiz.id as string;
+  const { error: quizLessonError } = await admin.from("lessons").insert({
+    module_id: moduleRow.id,
+    title: "Embed sandbox quiz",
+    lesson_type: "quiz",
+    quiz_id: quiz.id,
+    prerequisite_lesson_id: lesson.id,
+    is_required_for_completion: true,
+    sort_order: 1,
+  });
+  if (quizLessonError) throw quizLessonError;
+
   const { data: block, error: blockError } = await admin
     .from("content_blocks")
     .insert({
@@ -94,7 +120,12 @@ async function createEmbedFixture(admin: SupabaseClient): Promise<Fixture> {
     throw blockError ?? new Error("Failed to create embed block fixture");
   }
 
-  return { courseId, lessonId: lesson.id as string, blockId: block.id as string };
+  return {
+    courseId,
+    lessonId: lesson.id as string,
+    blockId: block.id as string,
+    quizId: quiz.id as string,
+  };
   } catch (error) {
     const originalError = error;
     if (courseId) {
@@ -103,6 +134,16 @@ async function createEmbedFixture(admin: SupabaseClient): Promise<Fixture> {
         throw new AggregateError(
           [originalError, cleanupError],
           "Embed fixture construction failed and its rollback was incomplete.",
+          { cause: originalError },
+        );
+      }
+    }
+    if (quizId) {
+      const { error: quizCleanupError } = await admin.from("quizzes").delete().eq("id", quizId);
+      if (quizCleanupError) {
+        throw new AggregateError(
+          [originalError, quizCleanupError],
+          "Embed fixture construction failed and quiz rollback was incomplete.",
           { cause: originalError },
         );
       }
@@ -129,6 +170,8 @@ async function cleanupFixture(admin: SupabaseClient, fixture: Fixture | null) {
   if (!fixture) return;
   const { error } = await admin.from("courses").delete().eq("id", fixture.courseId);
   if (error) throw error;
+  const { error: quizError } = await admin.from("quizzes").delete().eq("id", fixture.quizId);
+  if (quizError) throw quizError;
 }
 
 test.describe("embed iframe sandbox prod smoke", () => {

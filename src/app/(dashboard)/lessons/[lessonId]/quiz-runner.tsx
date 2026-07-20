@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Play, RotateCcw, Send } from "lucide-react";
 import { toast } from "sonner";
 
@@ -49,6 +50,7 @@ export function QuizRunner({
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [completedAttempts, setCompletedAttempts] = useState(attemptsUsed);
   const [pending, startTransition] = useTransition();
+  const router = useRouter();
 
   function beginAttempt() {
     startTransition(async () => {
@@ -146,6 +148,8 @@ export function QuizRunner({
       setResult(response);
       if (!response.ok) {
         toast.error(response.error);
+      } else if (response.passed) {
+        router.refresh();
       }
     });
   }

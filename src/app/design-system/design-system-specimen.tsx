@@ -17,7 +17,6 @@ import {
   Badge,
   Button,
   Card,
-  ChapterItem,
   Coach,
   IconButton,
   Input,
@@ -25,6 +24,7 @@ import {
   Logo,
   Mascot,
   ProgressBar,
+  ProgressRail,
   SearchBar,
   SpeechBubble,
   Table,
@@ -289,7 +289,7 @@ export function DesignSystemSpecimen() {
           </div>
         </Specimen>
 
-        <Specimen title="LessonCard and ChapterItem">
+        <Specimen title="LessonCard and ProgressRail">
           <div
             style={{
               display: "grid",
@@ -343,22 +343,18 @@ export function DesignSystemSpecimen() {
                 boxShadow: "var(--bmh-shadow-sm)",
               }}
             >
-              <h3
-                style={{
-                  margin: 0,
-                  padding: "8px 10px 10px",
-                  fontFamily: "var(--font-display)",
-                  fontSize: 15,
-                  fontWeight: 700,
-                }}
-              >
-                Chapters
-              </h3>
-              <ChapterItem index={1} title="Evaluation" status="done" />
-              <ChapterItem index={2} title="Opening the Call" progress={40} active />
-              <ChapterItem index={3} title="Objection Architecture" progress={15} />
-              <ChapterItem index={4} title="Seller Financing" meta="9 min" />
-              <ChapterItem index={5} title="Complex Objections" status="locked" meta="Pro" />
+              <ProgressRail
+                title="Lesson parts"
+                countLabel="2 of 5"
+                ariaLabel="Example lesson parts"
+                entries={[
+                  { id: "1", label: "Evaluation", href: "/", state: "done" },
+                  { id: "2", label: "Opening the call", href: "/", state: "current" },
+                  { id: "3", label: "Objection architecture", href: "/", state: "open" },
+                  { id: "4", label: "Seller financing", href: "/", state: "open" },
+                  { id: "5", label: "Complex objections", href: null, state: "locked" },
+                ]}
+              />
             </div>
           </div>
         </Specimen>
