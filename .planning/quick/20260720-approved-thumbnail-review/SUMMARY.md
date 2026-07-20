@@ -2,6 +2,7 @@
 status: complete
 task: approved-thumbnail-review
 date: 2026-07-20
+implementation_commit: 69ba1a9
 ---
 
 # Approved thumbnail review upload summary
