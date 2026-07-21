@@ -53,7 +53,7 @@ vi.mock("@/lib/supabase/server", () => ({
   createClient: vi.fn(),
 }));
 
-import { inviteUser, resendInvite } from "./actions";
+import { inviteUser } from "./actions";
 
 function accessForm(email = "Person@Example.com") {
   const form = new FormData();
@@ -133,14 +133,5 @@ describe("Grant Institute access", () => {
     expect(mocks.groupsInsert).toHaveBeenCalledWith([
       { user_id: "canonical-user", role_group_id: "group-1" },
     ]);
-  });
-
-  it("never resends a historical Institute authentication invite", async () => {
-    await expect(resendInvite("legacy-invite")).resolves.toEqual({
-      ok: false,
-      error:
-        "Institute invitation emails are disabled. Grant access, then invite the person through Hugo.",
-    });
-    expect(mocks.createUser).not.toHaveBeenCalled();
   });
 });

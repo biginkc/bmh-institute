@@ -35,15 +35,3 @@ export async function updateProfile(
   revalidatePath("/dashboard");
   return { ok: true };
 }
-
-export async function changePassword(
-  _prev: UpdateProfileState,
-  _formData: FormData,
-): Promise<UpdateProfileState> {
-  void _prev;
-  void _formData;
-  return {
-    ok: false,
-    error: "Institute passwords are disabled. Change your Hugo password instead.",
-  };
-}

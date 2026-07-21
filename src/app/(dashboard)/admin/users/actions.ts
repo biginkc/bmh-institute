@@ -179,17 +179,6 @@ export async function setUserRoleGroups(input: {
   return { ok: true };
 }
 
-export async function resendInvite(
-  _inviteId: string,
-): Promise<{ ok: true } | { ok: false; error: string }> {
-  void _inviteId;
-  await requireAdmin();
-  return {
-    ok: false,
-    error: "Institute invitation emails are disabled. Grant access, then invite the person through Hugo.",
-  };
-}
-
 function fieldResult(
   parsed: Extract<ParseResult<InviteInput>, { ok: false }>,
   formData: FormData,
