@@ -361,6 +361,15 @@ production database change.
   is green.
 - The three locked helpers (`score.ts`, `attempts.ts`, and
   `attempt-selection.ts`) still have zero diff against `origin/main`.
+- PR #107's first seeded Playwright run exposed one stale release test: the
+  durable learner write-path still searched for the removed all-at-once
+  `Submit quiz` control. The product flow itself rendered correctly, but the
+  acceptance test timed out before completing either attempt.
+- The write-path now follows the shipped stepper contract for both outcomes:
+  choose an option, select `Check answer`, assert the immediate `Correct` or
+  `Incorrect` feedback, and then select `Finish`. A focused seeded run against
+  TEST passed both the auth setup and durable write-path test in 48.6 seconds,
+  and the cleanup trap returned `{\"ok\":true,\"cleaned\":true}`.
 - A read-only TEST/PROD catalog comparison found identical function-definition
   hashes, execution ACLs, security-definer flags, search paths, and comments for
   every artifact introduced by migrations 048 and 049. Production already has

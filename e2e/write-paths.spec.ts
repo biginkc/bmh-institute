@@ -174,7 +174,9 @@ test.describe("durable write-path coverage", () => {
       );
       await page.getByRole("button", { name: /start quiz/i }).click();
       await page.getByText(fixture.incorrectOptionText).click();
-      await page.getByRole("button", { name: /submit quiz/i }).click();
+      await page.getByRole("button", { name: /check answer/i }).click();
+      await expect(page.getByText(/^Incorrect$/)).toBeVisible();
+      await page.getByRole("button", { name: /^finish$/i }).click();
       await expect(page.getByRole("heading", { name: "Keep going" })).toBeVisible();
       await expect(page.getByText(/0% score/i)).toBeVisible();
       await page.goto(`/courses/${fixture.courseId}`);
@@ -196,7 +198,9 @@ test.describe("durable write-path coverage", () => {
         .getByRole("button", { name: /start quiz|retake quiz/i })
         .click();
       await page.getByText(fixture.correctOptionText).click();
-      await page.getByRole("button", { name: /submit quiz/i }).click();
+      await page.getByRole("button", { name: /check answer/i }).click();
+      await expect(page.getByText(/^Correct$/)).toBeVisible();
+      await page.getByRole("button", { name: /^finish$/i }).click();
       await expect(page.getByText(/^Passed$/)).toBeVisible();
       await page.goto(`/courses/${fixture.courseId}`);
       await expect(
