@@ -355,6 +355,63 @@ export type Database = {
           },
         ]
       }
+      content_import_release_records: {
+        Row: {
+          admin_happy_path_sha256: string
+          approval_sha256: string
+          approved_by: string
+          catalog_sha256: string
+          chrome_desktop_sha256: string
+          chrome_mobile_sha256: string
+          employee_role_group_id: string
+          evidence: Json
+          import_id: string
+          manifest_sha256: string
+          program_id: string
+          qa_role_group_id: string
+          reconciliation_sha256: string
+          released_at: string
+          released_by: string | null
+          rollback_rehearsal_sha256: string
+        }
+        Insert: {
+          admin_happy_path_sha256: string
+          approval_sha256: string
+          approved_by: string
+          catalog_sha256: string
+          chrome_desktop_sha256: string
+          chrome_mobile_sha256: string
+          employee_role_group_id: string
+          evidence: Json
+          import_id: string
+          manifest_sha256: string
+          program_id: string
+          qa_role_group_id: string
+          reconciliation_sha256: string
+          released_at?: string
+          released_by?: string | null
+          rollback_rehearsal_sha256: string
+        }
+        Update: {
+          admin_happy_path_sha256?: string
+          approval_sha256?: string
+          approved_by?: string
+          catalog_sha256?: string
+          chrome_desktop_sha256?: string
+          chrome_mobile_sha256?: string
+          employee_role_group_id?: string
+          evidence?: Json
+          import_id?: string
+          manifest_sha256?: string
+          program_id?: string
+          qa_role_group_id?: string
+          reconciliation_sha256?: string
+          released_at?: string
+          released_by?: string | null
+          rollback_rehearsal_sha256?: string
+        }
+        Relationships: []
+      }
       course_access: {
         Row: {
           course_id: string
@@ -388,6 +445,112 @@ export type Database = {
           },
         ]
       }
+      course_import_reviewer_answer_options_v1: {
+        Row: {
+          answer_option_id: string
+          created_at: string
+          import_id: string
+          program_id: string
+          question_id: string
+          reviewer_user_id: string
+        }
+        Insert: {
+          answer_option_id: string
+          created_at?: string
+          import_id: string
+          program_id: string
+          question_id: string
+          reviewer_user_id: string
+        }
+        Update: {
+          answer_option_id?: string
+          created_at?: string
+          import_id?: string
+          program_id?: string
+          question_id?: string
+          reviewer_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_import_reviewer_answer_options_v1_answer_option_id_fkey"
+            columns: ["answer_option_id"]
+            isOneToOne: true
+            referencedRelation: "answer_options"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "course_import_reviewer_answer_options_v1_answer_option_id_fkey"
+            columns: ["answer_option_id"]
+            isOneToOne: true
+            referencedRelation: "answer_options_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "course_import_reviewer_answer_options_v1_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "course_import_reviewer_answer_options_v1_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "course_import_reviewer_answer_options_v1_reviewer_user_id_fkey"
+            columns: ["reviewer_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      course_import_reviewers_v1: {
+        Row: {
+          granted_at: string
+          granted_by: string | null
+          program_id: string
+          user_id: string
+        }
+        Insert: {
+          granted_at?: string
+          granted_by?: string | null
+          program_id: string
+          user_id: string
+        }
+        Update: {
+          granted_at?: string
+          granted_by?: string | null
+          program_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_import_reviewers_v1_granted_by_fkey"
+            columns: ["granted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "course_import_reviewers_v1_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "course_import_reviewers_v1_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       courses: {
         Row: {
           certificate_enabled: boolean
@@ -401,8 +564,8 @@ export type Database = {
           thumbnail_approved_path: string | null
           thumbnail_approved_sha256: string | null
           thumbnail_asset_key: string | null
-          thumbnail_url: string | null
           thumbnail_path: string | null
+          thumbnail_url: string | null
           title: string
           updated_at: string
         }
@@ -418,8 +581,8 @@ export type Database = {
           thumbnail_approved_path?: string | null
           thumbnail_approved_sha256?: string | null
           thumbnail_asset_key?: string | null
-          thumbnail_url?: string | null
           thumbnail_path?: string | null
+          thumbnail_url?: string | null
           title: string
           updated_at?: string
         }
@@ -435,8 +598,8 @@ export type Database = {
           thumbnail_approved_path?: string | null
           thumbnail_approved_sha256?: string | null
           thumbnail_asset_key?: string | null
-          thumbnail_url?: string | null
           thumbnail_path?: string | null
+          thumbnail_url?: string | null
           title?: string
           updated_at?: string
         }
@@ -782,8 +945,8 @@ export type Database = {
           thumbnail_approved_path: string | null
           thumbnail_approved_sha256: string | null
           thumbnail_asset_key: string | null
-          thumbnail_url: string | null
           thumbnail_path: string | null
+          thumbnail_url: string | null
           title: string
           updated_at: string
         }
@@ -800,8 +963,8 @@ export type Database = {
           thumbnail_approved_path?: string | null
           thumbnail_approved_sha256?: string | null
           thumbnail_asset_key?: string | null
-          thumbnail_url?: string | null
           thumbnail_path?: string | null
+          thumbnail_url?: string | null
           title: string
           updated_at?: string
         }
@@ -818,8 +981,8 @@ export type Database = {
           thumbnail_approved_path?: string | null
           thumbnail_approved_sha256?: string | null
           thumbnail_asset_key?: string | null
-          thumbnail_url?: string | null
           thumbnail_path?: string | null
+          thumbnail_url?: string | null
           title?: string
           updated_at?: string
         }
@@ -1099,42 +1262,6 @@ export type Database = {
           },
         ]
       }
-      user_video_completion_history: {
-        Row: {
-          asset_version: string
-          block_id: string
-          completed_at: string
-          user_id: string
-        }
-        Insert: {
-          asset_version: string
-          block_id: string
-          completed_at?: string
-          user_id: string
-        }
-        Update: {
-          asset_version?: string
-          block_id?: string
-          completed_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "user_video_completion_history_block_id_fkey"
-            columns: ["block_id"]
-            isOneToOne: false
-            referencedRelation: "content_blocks"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "user_video_completion_history_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       user_course_resume: {
         Row: {
           course_id: string
@@ -1288,6 +1415,72 @@ export type Database = {
           },
         ]
       }
+      user_role_groups: {
+        Row: {
+          role_group_id: string
+          user_id: string
+        }
+        Insert: {
+          role_group_id: string
+          user_id: string
+        }
+        Update: {
+          role_group_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_role_groups_role_group_id_fkey"
+            columns: ["role_group_id"]
+            isOneToOne: false
+            referencedRelation: "role_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_role_groups_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_video_completion_history: {
+        Row: {
+          asset_version: string
+          block_id: string
+          completed_at: string
+          user_id: string
+        }
+        Insert: {
+          asset_version: string
+          block_id: string
+          completed_at?: string
+          user_id: string
+        }
+        Update: {
+          asset_version?: string
+          block_id?: string
+          completed_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_video_completion_history_block_id_fkey"
+            columns: ["block_id"]
+            isOneToOne: false
+            referencedRelation: "content_blocks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_video_completion_history_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_video_progress: {
         Row: {
           asset_version: string
@@ -1339,36 +1532,6 @@ export type Database = {
           },
         ]
       }
-      user_role_groups: {
-        Row: {
-          role_group_id: string
-          user_id: string
-        }
-        Insert: {
-          role_group_id: string
-          user_id: string
-        }
-        Update: {
-          role_group_id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "user_role_groups_role_group_id_fkey"
-            columns: ["role_group_id"]
-            isOneToOne: false
-            referencedRelation: "role_groups"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "user_role_groups_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
     }
     Views: {
       answer_options_public: {
@@ -1402,14 +1565,46 @@ export type Database = {
       }
     }
     Functions: {
-      fn_create_answer_option_for_reviewer_v1: {
+      admin_cleanup_fixture_catalog_v1: {
         Args: {
-          p_lesson_id: string
-          p_option_text: string
-          p_question_id: string
+          p_approval: Json
+          p_confirmation: string
+          p_manifest_sha256: string
+          p_rollback: Json
         }
+        Returns: Json
+      }
+      fixture_cleanup_transport_probe_v1: { Args: never; Returns: Json }
+      fn_actor_may_access_catalog_entity_v1: {
+        Args: { p_actor_id: string; p_entity_id: string; p_entity_type: string }
         Returns: boolean
       }
+      fn_actor_may_access_submission_file_v1: {
+        Args: { p_actor_id: string; p_file_path: string }
+        Returns: boolean
+      }
+      fn_actor_may_access_submission_storage_object_v1: {
+        Args: { p_actor_id: string; p_file_path: string }
+        Returns: boolean
+      }
+      fn_actor_may_access_submission_v1: {
+        Args: { p_actor_id: string; p_submission_id: string }
+        Returns: boolean
+      }
+      fn_admin_lesson_completion_states: {
+        Args: { p_lesson_ids: string[]; p_user_ids: string[] }
+        Returns: {
+          completed_at: string
+          is_complete: boolean
+          lesson_id: string
+          user_id: string
+        }[]
+      }
+      fn_apply_course_import: {
+        Args: { p_import_id: string; p_operations: Json }
+        Returns: Json
+      }
+      fn_can_read_user_state: { Args: { p_user_id: string }; Returns: boolean }
       fn_check_and_consume_rate_limit: {
         Args: {
           p_key_type: Database["public"]["Enums"]["auth_rate_limit_key_type"]
@@ -1426,25 +1621,52 @@ export type Database = {
         Args: { p_course_id: string; p_payload: Json; p_user_id: string }
         Returns: Json
       }
-      fn_admin_lesson_completion_states: {
-        Args: { p_lesson_ids: string[]; p_user_ids: string[] }
-        Returns: {
-          completed_at: string | null
-          is_complete: boolean
-          lesson_id: string
-          user_id: string
-        }[]
+      fn_cleanup_unreleased_import_reviewer_evidence_v1: {
+        Args: { p_import_id: string; p_user_id: string }
+        Returns: Json
       }
-      fn_course_completion_percent: {
-        Args: { p_course_id: string; p_user_id: string }
-        Returns: number
+      fn_complete_role_play_block: {
+        Args: {
+          p_attempt_id: string
+          p_block_id: string
+          p_goals_met?: Json
+          p_scenario_id: string
+          p_score: number
+          p_summary?: Json
+          p_user_id: string
+        }
+        Returns: Json
       }
       fn_course_completed_at: {
         Args: { p_course_id: string; p_user_id: string }
         Returns: string | null
       }
+      fn_course_completion_percent: {
+        Args: { p_course_id: string; p_user_id: string }
+        Returns: number
+      }
+      fn_course_import_catalog_sha256: {
+        Args: { p_import_id: string }
+        Returns: string
+      }
+      fn_course_import_exact_reconciliation_contract: {
+        Args: never
+        Returns: string
+      }
+      fn_course_import_managed_ids: {
+        Args: { p_import_id: string }
+        Returns: Json
+      }
       fn_course_is_complete: {
         Args: { p_course_id: string; p_user_id: string }
+        Returns: boolean
+      }
+      fn_create_answer_option_for_reviewer_v1: {
+        Args: {
+          p_lesson_id: string
+          p_option_text: string
+          p_question_id: string
+        }
         Returns: boolean
       }
       fn_issue_course_certificate_if_eligible: {
@@ -1461,16 +1683,6 @@ export type Database = {
       }
       fn_lesson_is_unlocked: {
         Args: { p_lesson_id: string; p_user_id: string }
-        Returns: boolean
-      }
-      fn_update_answer_option_for_reviewer_v1: {
-        Args: {
-          p_exclusive_peer_option_ids?: string[]
-          p_is_correct: boolean
-          p_lesson_id: string
-          p_option_id: string
-          p_option_text: string
-        }
         Returns: boolean
       }
       fn_lesson_states: {
@@ -1493,6 +1705,18 @@ export type Database = {
         Args: { p_program_id: string; p_user_id: string }
         Returns: number
       }
+      fn_record_quiz_answer: {
+        Args: {
+          p_attempt_id: string
+          p_question_id: string
+          p_selected: string[]
+        }
+        Returns: {
+          already_answered: boolean
+          completed_at: string | null
+          responses: Json
+        }[]
+      }
       fn_record_video_playback: {
         Args: {
           p_block_id: string
@@ -1505,6 +1729,32 @@ export type Database = {
         }
         Returns: Json
       }
+      fn_release_course_import_v1: {
+        Args: {
+          p_confirmation: string
+          p_employee_role_group_id: string
+          p_evidence: Json
+          p_import_id: string
+          p_program_id: string
+        }
+        Returns: Json
+      }
+      fn_remove_unreleased_import_reconciliation_drift: {
+        Args: {
+          p_import_id: string
+          p_lesson_ids: string[]
+          p_orphan_course_ids: string[]
+        }
+        Returns: Json
+      }
+      fn_replace_imported_lesson_artwork: {
+        Args: { p_import_id: string; p_replacements: Json }
+        Returns: Json
+      }
+      fn_rollback_course_import: {
+        Args: { p_import_id: string; p_owned: Json }
+        Returns: Json
+      }
       fn_save_user_settings: {
         Args: {
           p_role_group_ids: string[]
@@ -1512,6 +1762,10 @@ export type Database = {
           p_system_role: string
           p_user_id: string
         }
+        Returns: undefined
+      }
+      fn_set_unreleased_import_reviewer_v1: {
+        Args: { p_allowed: boolean; p_program_id: string; p_user_id: string }
         Returns: undefined
       }
       fn_set_user_role_groups: {
@@ -1526,6 +1780,16 @@ export type Database = {
           p_error?: string | null
           p_remote_outcome_id?: string | null
           p_user_id: string
+        }
+        Returns: boolean
+      }
+      fn_update_answer_option_for_reviewer_v1: {
+        Args: {
+          p_exclusive_peer_option_ids?: string[]
+          p_is_correct: boolean
+          p_lesson_id: string
+          p_option_id: string
+          p_option_text: string
         }
         Returns: boolean
       }
@@ -1549,6 +1813,15 @@ export type Database = {
         Args: { p_program_id: string; p_user_id: string }
         Returns: boolean
       }
+      fn_user_has_unreleased_import_qa_course_access: {
+        Args: { p_course_id: string; p_user_id: string }
+        Returns: boolean
+      }
+      fn_user_has_unreleased_import_qa_program_access: {
+        Args: { p_program_id: string; p_user_id: string }
+        Returns: boolean
+      }
+      fn_video_asset_version: { Args: { p_content: Json }; Returns: string }
       is_admin: { Args: { p_user_id: string }; Returns: boolean }
     }
     Enums: {
