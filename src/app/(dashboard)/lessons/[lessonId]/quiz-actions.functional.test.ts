@@ -542,8 +542,7 @@ describe("quiz server actions", () => {
     expect(result).toMatchObject({ ok: true, score: 100, passed: true });
     expect(updatedAttempt).toEqual(expect.objectContaining({ score: 100, passed: true }));
     expect(updatedAttempt).not.toHaveProperty("responses");
-    expect(revalidatePath).toHaveBeenCalledWith("/lessons/lesson-1");
-    expect(revalidatePath).toHaveBeenCalledWith("/lessons/content-lesson-1");
+    expect(revalidatePath).not.toHaveBeenCalled();
     if (result.ok) {
       expect(result.review).toEqual([{
         questionId: "q-1",

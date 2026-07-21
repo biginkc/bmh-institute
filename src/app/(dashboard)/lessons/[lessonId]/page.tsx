@@ -141,7 +141,7 @@ async function StandaloneQuizLesson({
           quizId={tile.quizId}
           lessonId={tile.id}
           userId={userId}
-          backHref={`/lessons/${tile.id}`}
+          backHref={`/courses/${courseId}`}
         />
       </div>
     </main>
@@ -201,7 +201,12 @@ async function ContentCompositeLesson({
       </Link>
       <div className="mt-5 grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_330px]">
         <div className="min-w-0">
-          <PartBody part={selected} tile={tile} userId={userId} />
+          <PartBody
+            part={selected}
+            tile={tile}
+            courseId={courseId}
+            userId={userId}
+          />
           <div className="mt-6 border-t border-[var(--border-hairline)] pt-4">
             <h1 className="font-[family-name:var(--font-display)] text-xl font-extrabold text-[var(--ink-900)]">{tile.title}</h1>
             <p className="mt-1 text-xs font-bold text-[var(--text-muted)]">Lesson {tile.lessonNumber} of {total} · {tile.moduleTitle}</p>
@@ -228,10 +233,12 @@ async function ContentCompositeLesson({
 async function PartBody({
   part,
   tile,
+  courseId,
   userId,
 }: {
   part: LearnerLessonPart;
   tile: LearnerContentTile;
+  courseId: string;
   userId: string;
 }) {
   if (part.kind === "quiz") {
@@ -250,7 +257,7 @@ async function PartBody({
         quizId={tile.quizId}
         lessonId={tile.pairedQuizLessonId}
         userId={userId}
-        backHref={`/lessons/${tile.id}?part=quiz`}
+        backHref={`/courses/${courseId}`}
       />
     );
   }

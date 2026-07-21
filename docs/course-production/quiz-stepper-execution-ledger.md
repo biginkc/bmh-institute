@@ -386,3 +386,77 @@ production database change.
   this ledger's test count after the added snapshot case. All three lanes are
   now clean. The branch remains local and production remains unchanged pending
   the final command rerun and release commit.
+
+### Production database release
+
+- Claude independently reviewed the release packet and returned `NEXT_STEP`
+  with high confidence after requiring complete TEST/PROD parity for migrations
+  048 and 049, including all four trigger definitions.
+- The immediate production preflight confirmed exact TEST/PROD parity for the
+  three functions and four triggers introduced by 048 and 049. Production had
+  no 048, 049, or 050 migration-history rows and did not yet contain the quiz
+  answer RPC.
+- One atomic transaction recorded 048 and 049 as already applied without
+  replaying their SQL, applied only
+  `050_atomic_quiz_answer_recording.sql`, and recorded 050. The transaction
+  targeted production project `dhvfsyteqsxagokoerrx` only.
+- Post-transaction catalog verification confirmed history rows 048, 049, and
+  050; the quiz RPC definition exactly matched TEST; `SECURITY DEFINER` and an
+  empty `search_path` were retained; execution remained limited to postgres,
+  authenticated users, and the service role; anonymous/public execution was
+  absent; and the function comment matched TEST.
+- No rollback was required. Claude then independently reviewed this evidence
+  and returned a second high-confidence `NEXT_STEP` authorizing the normal
+  merge and Git-connected deployment, with no manual Vercel deployment or alias
+  mutation.
+
+### Merge and Git-connected production deployment
+
+- PR #107 merged normally. The production merge commit is
+  `1cb09eb0177f086eda255156c2e1bc2e0b35e5ef`, and `origin/main` resolves to that
+  exact commit.
+- Vercel's Git integration created production deployment
+  `dpl_5PgjBYyyc1R57yKsXfaJxmdBnKLU`. Its Git source SHA is the exact merge
+  commit, its status is Ready, and its aliases include
+  `institute.bmhgroupkc.com`.
+- The exact deployment's error scan returned zero errors. No manual deploy,
+  redeploy, or alias operation was used. The preceding production deployment,
+  `dpl_Ci44mtqiTfnAGq46mVRmB4PAcFva`, remains the recorded rollback point.
+
+### Production browser checkpoint and exact canary cleanup
+
+- An exact-ID `PRD-READY-` fixture was created in production with one published
+  course, one quiz lesson, three questions covering single choice, true/false,
+  and multi-select, seven options, and access granted to one existing real
+  Hugo-provisioned identity. No Supabase-auth user or Hugo identity was created
+  or mutated.
+- Chrome reached the live production Institute route and followed its real
+  `Continue with Hugo` sign-in path. Both approved stored credentials associated
+  with that production identity were rejected by Hugo with `Invalid email or
+  password`.
+- Codex did not reset the password, generate a bypass session, create a new auth
+  identity, or otherwise mutate the production authentication system because
+  those actions were outside the release authority. Consequently the live
+  signed-in quiz walkthrough, two-tab conflict proof, desktop/mobile result
+  focus proof, and final Claude `DONE` approval were not obtained.
+- The canary cleanup targeted only the exact IDs created by this run. The
+  post-cleanup verification returned zero courses, lessons, modules, quizzes,
+  questions, options, attempts, role groups, course-access rows, and role
+  mappings for those IDs. The reusable real Hugo identity was not changed.
+- Jarrad's earlier waiver still applies only to the Chrome DevTools
+  Network-response screenshot. It does not waive the blocked signed-in
+  production walkthrough, and this ledger does not claim that screenshot or the
+  walkthrough exists.
+
+### Production continuation outcome
+
+- The migration, merge, and Git-connected deployment are live in production at
+  the exact reviewed merge commit, and the temporary production fixture has
+  been removed completely.
+- Release acceptance remains blocked solely at the real Hugo login needed for
+  the production learner walkthrough. This is a credential/access blocker, not
+  evidence of a failed database migration or failed Vercel deployment.
+- Per the convergence contract, Codex does not self-declare `DONE`. A current
+  Hugo login must be supplied or restored, then the exact-ID canary must be
+  recreated, the production browser scenarios completed, the fixture cleaned,
+  and Claude must return `DONE` with high confidence.

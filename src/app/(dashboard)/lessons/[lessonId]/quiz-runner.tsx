@@ -2,7 +2,6 @@
 
 import { useEffect, useReducer, useRef } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { Play, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 
@@ -200,8 +199,6 @@ export function QuizRunner({
     (count: number) => count + 1,
     attemptsUsed,
   );
-  const router = useRouter();
-
   async function loadAttempt(showStartingState: boolean) {
     if (showStartingState) dispatch({ type: "start" });
     let response: Awaited<ReturnType<typeof startQuizAttempt>>;
@@ -290,7 +287,6 @@ export function QuizRunner({
       return;
     }
     dispatch({ type: "done", result: response });
-    if (response.passed) router.refresh();
   }
 
   if (state.status === "idle" || state.status === "starting") {
