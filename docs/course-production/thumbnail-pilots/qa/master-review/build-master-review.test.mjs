@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { readFile } from "node:fs/promises";
+import { copyFile, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
@@ -10,8 +11,10 @@ import sharp from "sharp";
 import {
   DEFAULT_MASTER_REVIEW_INDEX_PATH,
   DEFAULT_MASTER_REVIEW_SHEET_PATHS,
+  artworkReviewInventoryProjection,
   buildMasterReviewSurface,
   validateMasterReviewSurface,
+  writeMasterReviewSurface,
 } from "./build-master-review.mjs";
 
 const root = path.resolve(fileURLToPath(new URL("../../../../../", import.meta.url)));
@@ -61,6 +64,8 @@ test("the review surface binds all 28 actual flat masters into four readable she
 test("build is deterministic and check exact-byte-validates every generated file", async () => {
   const first = await buildMasterReviewSurface({ root });
   const second = await buildMasterReviewSurface({ root });
+  const currentInventory = await readFile(path.join(root, first.index.source_bindings.inventory_path));
+  assert.equal(first.index.source_bindings.inventory_sha256, sha256(currentInventory));
   assert.ok(first.indexBytes.equals(second.indexBytes));
   assert.deepEqual(
     first.sheets.map((sheet) => sheet.sha256),
@@ -73,8 +78,76 @@ test("build is deterministic and check exact-byte-validates every generated file
   const checked = await validateMasterReviewSurface({ root });
   const storedIndex = await readFile(path.join(root, DEFAULT_MASTER_REVIEW_INDEX_PATH));
   assert.ok(storedIndex.equals(checked.indexBytes));
+  assert.notEqual(first.indexBytes.toString("hex"), checked.indexBytes.toString("hex"));
   for (const sheet of checked.sheets) {
     const storedSheet = await readFile(path.join(root, sheet.path));
     assert.ok(storedSheet.equals(sheet.contents), sheet.path);
+  }
+});
+
+test("only video approval status is excluded from the historical artwork projection", async () => {
+  const inventory = JSON.parse(
+    await readFile(path.join(root, "docs/course-production/thumbnail-pilots/production-inventory.json")),
+  );
+  const projected = artworkReviewInventoryProjection(inventory);
+  assert.equal(sha256(Buffer.from(`${JSON.stringify(projected, null, 2)}\n`)), "176d6367fb10c4df42ded8f48bd5d5d942bed3d6fccf628d589f238d9c322699");
+
+  const statusOnly = structuredClone(inventory);
+  statusOnly.lessons[0].master.video_evidence[0].approval_status = "different-status";
+  assert.deepEqual(artworkReviewInventoryProjection(statusOnly), projected);
+
+  for (const mutate of [
+    (candidate) => { candidate.lessons[0].master.video_evidence[0].checksum_sha256 = "f".repeat(64); },
+    (candidate) => { candidate.lessons[0].master.video_evidence[0].local_path = "different.mp4"; },
+    (candidate) => { candidate.lessons[0].master.video_evidence[0].duration_seconds += 1; },
+    (candidate) => { candidate.lessons[0].title = "Different artwork title"; },
+    (candidate) => { candidate.lessons[0].master.art_direction.character_id = "different-character"; },
+  ]) {
+    const changed = structuredClone(inventory);
+    mutate(changed);
+    assert.notDeepEqual(artworkReviewInventoryProjection(changed), projected);
+  }
+});
+
+test("write cannot overwrite the approved historical surface after ledger status drift", async (t) => {
+  const testRoot = await mkdtemp(path.join(os.tmpdir(), "bmh-master-review-write-"));
+  t.after(() => rm(testRoot, { recursive: true, force: true }));
+  const ledgerPath = "docs/course-production/thumbnail-pilots/production-ledger.json";
+  const inventoryPath = "docs/course-production/thumbnail-pilots/production-inventory.json";
+  const ledger = JSON.parse(await readFile(path.join(root, ledgerPath)));
+  const approval = JSON.parse(await readFile(path.join(root, ledger.final_approval.evidence)));
+  const protectedPaths = [DEFAULT_MASTER_REVIEW_INDEX_PATH, ...DEFAULT_MASTER_REVIEW_SHEET_PATHS];
+  const requiredPaths = [
+    ledgerPath,
+    inventoryPath,
+    ledger.final_approval.evidence,
+    approval.request_binding.request_path,
+    ...protectedPaths,
+    ...ledger.masters.map((master) => master.flat_master_path),
+  ];
+  for (const relativePath of requiredPaths) {
+    const target = path.join(testRoot, relativePath);
+    await mkdir(path.dirname(target), { recursive: true });
+    await copyFile(path.join(root, relativePath), target);
+  }
+  const before = new Map(
+    await Promise.all(protectedPaths.map(async (relativePath) => [
+      relativePath,
+      sha256(await readFile(path.join(testRoot, relativePath))),
+    ])),
+  );
+  ledger.status = "production";
+  await writeFile(path.join(testRoot, ledgerPath), `${JSON.stringify(ledger, null, 2)}\n`);
+
+  await assert.rejects(
+    writeMasterReviewSurface({ root: testRoot }),
+    /Approved historical master review surface is immutable/,
+  );
+  for (const relativePath of protectedPaths) {
+    assert.equal(
+      sha256(await readFile(path.join(testRoot, relativePath))),
+      before.get(relativePath),
+      relativePath,
+    );
   }
 });
