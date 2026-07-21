@@ -1,7 +1,5 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
-
 import { emitSandraCourseCompletedForLesson } from "@/lib/integrations/sandra/course-completed";
 import {
   buildAttemptSelection,
@@ -298,16 +296,6 @@ export async function finalizeQuizAttempt(input: {
     return completedAttemptResult(landed);
   }
 
-  const { data: quizLesson } = await learner
-    .from("lessons")
-    .select("prerequisite_lesson_id")
-    .eq("id", attempt.lesson_id)
-    .maybeSingle();
-  revalidatePath(`/lessons/${attempt.lesson_id}`);
-  if (quizLesson?.prerequisite_lesson_id) {
-    revalidatePath(`/lessons/${quizLesson.prerequisite_lesson_id}`);
-  }
-  revalidatePath("/dashboard");
   if (result.passed) {
     await emitSandraCourseCompletedForLesson(learner, {
       userId: user.id,

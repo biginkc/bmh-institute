@@ -200,8 +200,19 @@ test.describe("durable write-path coverage", () => {
       await page.getByText(fixture.correctOptionText).click();
       await page.getByRole("button", { name: /check answer/i }).click();
       await expect(page.getByText(/^Correct$/)).toBeVisible();
+      const finalizeResponsePromise = page.waitForResponse(async (response) => {
+        const request = response.request();
+        return request.method() === "POST" &&
+          (await request.headerValue("next-action")) !== null;
+      });
       await page.getByRole("button", { name: /^finish$/i }).click();
-      await expect(page.getByText(/^Passed$/)).toBeVisible();
+      const finalizeResponse = await finalizeResponsePromise;
+      expect(finalizeResponse.ok()).toBe(true);
+      expect(await finalizeResponse.finished()).toBeNull();
+      await expect(page.getByText(/On to the next lesson/i)).toBeVisible();
+      await expect(
+        page.getByRole("heading", { name: "Passed" }),
+      ).toBeFocused();
       await page.goto(`/courses/${fixture.courseId}`);
       await expect(
         page
