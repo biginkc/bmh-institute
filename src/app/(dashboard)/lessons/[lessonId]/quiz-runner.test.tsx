@@ -176,7 +176,7 @@ describe("<QuizRunner />", () => {
     });
     expect(await screen.findByRole("heading", { name: "Passed" })).toBeVisible();
     expect(screen.getByRole("heading", { name: "Passed" })).toHaveFocus();
-    expect(refresh).toHaveBeenCalled();
+    expect(refresh).not.toHaveBeenCalled();
     expect(screen.getByRole("img", { name: "Andrea" })).toHaveAttribute(
       "src",
       "/brand/mascot/face-laugh.png",
