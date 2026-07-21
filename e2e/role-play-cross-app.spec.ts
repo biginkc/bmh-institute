@@ -1,6 +1,8 @@
 import { expect, test } from "@playwright/test";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
+import { assertCanonicalSupabaseProjectUrl } from "../src/lib/supabase/canonical-project-url";
+
 import {
   adminClient,
   ensureTestUser,
@@ -14,6 +16,7 @@ const rolePlayEmbedSigningSecret =
   process.env.ROLE_PLAY_EMBED_SIGNING_SECRET ?? "";
 const rolePlayCompletionVerifySecret =
   process.env.ROLE_PLAY_COMPLETION_VERIFY_SECRET ?? "";
+const CLOSER_TEST_PROJECT_REF = "moocmsisaopnznppqvsq";
 
 const hasCrossAppEnv =
   Boolean(closerUrl) &&
@@ -28,6 +31,13 @@ function closerAdmin(): SupabaseClient {
   if (!closerUrl || !closerServiceRoleKey) {
     throw new Error(
       "Cross-app E2E needs CLOSER_TEST_SUPABASE_URL and CLOSER_TEST_SUPABASE_SERVICE_ROLE_KEY.",
+    );
+  }
+  try {
+    assertCanonicalSupabaseProjectUrl(closerUrl, [CLOSER_TEST_PROJECT_REF]);
+  } catch {
+    throw new Error(
+      `Cross-app E2E requires exact Closer test origin https://${CLOSER_TEST_PROJECT_REF}.supabase.co.`,
     );
   }
   return createClient(closerUrl, closerServiceRoleKey, {

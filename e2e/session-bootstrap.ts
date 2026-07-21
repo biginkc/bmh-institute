@@ -1,8 +1,9 @@
 import { expect, type Page } from "@playwright/test";
 import { createServerClient } from "@supabase/ssr";
 
+import { assertCanonicalSupabaseProjectUrl } from "../src/lib/supabase/canonical-project-url";
+
 const TEST_PROJECT_REF = "jvaabkchkihkjllehmft";
-const PROD_PROJECT_REF = "dhvfsyteqsxagokoerrx";
 
 /**
  * Prove the public login surface remains Hugo-only. This helper never follows
@@ -37,9 +38,11 @@ export async function bootstrapTestSession(
       "E2E session bootstrap requires the non-production test project.",
     );
   }
-  if (url.includes(PROD_PROJECT_REF) || !url.includes(TEST_PROJECT_REF)) {
+  try {
+    assertCanonicalSupabaseProjectUrl(url, [TEST_PROJECT_REF]);
+  } catch {
     throw new Error(
-      `E2E session bootstrap expected non-production Supabase ref ${TEST_PROJECT_REF}.`,
+      `E2E session bootstrap requires exact test origin https://${TEST_PROJECT_REF}.supabase.co.`,
     );
   }
 

@@ -1,5 +1,7 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
+import { assertCanonicalSupabaseProjectUrl } from "../src/lib/supabase/canonical-project-url";
+
 export type WritePathFixture = {
   prefix: string;
   password: string;
@@ -8,6 +10,7 @@ export type WritePathFixture = {
   courseId: string;
   moduleId: string;
   contentLessonId: string;
+  contentBlockId: string;
   quizId: string;
   quizLessonId: string;
   correctOptionText: string;
@@ -24,7 +27,6 @@ export type WritePathFixture = {
 type InsertResult = { id: string };
 
 const TEST_PROJECT_REF = "jvaabkchkihkjllehmft";
-const PROD_PROJECT_REF = "dhvfsyteqsxagokoerrx";
 
 export function writePathAdminClient(): SupabaseClient {
   const url = process.env.TEST_SUPABASE_URL;
@@ -34,12 +36,11 @@ export function writePathAdminClient(): SupabaseClient {
       "Write-path E2E needs TEST_SUPABASE_URL and TEST_SUPABASE_SERVICE_ROLE_KEY.",
     );
   }
-  if (url.includes(PROD_PROJECT_REF)) {
-    throw new Error("Write-path E2E refuses to run against production.");
-  }
-  if (!url.includes(TEST_PROJECT_REF)) {
+  try {
+    assertCanonicalSupabaseProjectUrl(url, [TEST_PROJECT_REF]);
+  } catch {
     throw new Error(
-      `Write-path E2E expected non-prod Supabase ref ${TEST_PROJECT_REF}.`,
+      `Write-path E2E requires exact test origin https://${TEST_PROJECT_REF}.supabase.co.`,
     );
   }
   return createClient(url, key, {
@@ -132,6 +133,16 @@ export async function createWritePathFixture(
       html: `<h2>${prefix} Operating standard</h2><p>Keep notes concise and confirm next steps.</p>`,
     },
     sort_order: 10,
+    is_required_for_completion: false,
+  });
+  const contentBlockId = await insertOne(admin, "content_blocks", {
+    lesson_id: contentLessonId,
+    block_type: "embed",
+    content: {
+      iframe_src: "https://www.loom.com/embed/original",
+      aspect_ratio: "16:9",
+    },
+    sort_order: 20,
     is_required_for_completion: false,
   });
 
@@ -237,6 +248,7 @@ export async function createWritePathFixture(
     courseId,
     moduleId,
     contentLessonId,
+    contentBlockId,
     quizId,
     quizLessonId,
     correctOptionText,

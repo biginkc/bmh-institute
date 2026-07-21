@@ -66,21 +66,6 @@ if (storageStatePath && !fs.existsSync(storageStatePath)) {
   );
 }
 process.env.E2E_HUGO_STORAGE_STATE = storageStatePath;
-process.env.TEST_SUPABASE_URL =
-  env.TEST_SUPABASE_URL ??
-  process.env.TEST_SUPABASE_URL ??
-  env.NEXT_PUBLIC_SUPABASE_URL ??
-  "";
-process.env.TEST_SUPABASE_ANON_KEY =
-  env.TEST_SUPABASE_ANON_KEY ??
-  process.env.TEST_SUPABASE_ANON_KEY ??
-  env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
-  "";
-process.env.TEST_SUPABASE_SERVICE_ROLE_KEY =
-  env.TEST_SUPABASE_SERVICE_ROLE_KEY ??
-  process.env.TEST_SUPABASE_SERVICE_ROLE_KEY ??
-  env.SUPABASE_SERVICE_ROLE_KEY ??
-  "";
 
 export default defineConfig({
   testDir: "./e2e-prod",
@@ -106,7 +91,7 @@ export default defineConfig({
     },
     {
       name: "authenticated-chromium",
-      testMatch: /\/(?:admin|dashboard|embed-sandbox|shell-navigation)\.spec\.ts$/,
+      testMatch: /\/(?:admin|dashboard|shell-navigation)\.spec\.ts$/,
       use: {
         ...devices["Desktop Chrome"],
         storageState: storageStatePath || { cookies: [], origins: [] },

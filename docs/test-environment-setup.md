@@ -68,6 +68,10 @@ legacy password/recovery/invite routes are unusable, and exercises unauthenticat
 route guards. Authenticated dashboard/admin checks run only when
 `E2E_HUGO_STORAGE_STATE` is supplied.
 
+The production config does not bind or use `TEST_SUPABASE_*` or service-role
+credentials and contains no fixture-writing spec. Embed-editor write coverage
+runs only in the seeded nonproduction suite.
+
 The HARDEN-01 learner-context spec (`e2e-prod/admin-route-guard-learner.spec.ts`)
 uses an empty state and asserts the unauthenticated redirect on the four
 `/admin/reports/*` routes.

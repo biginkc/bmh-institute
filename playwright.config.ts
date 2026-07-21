@@ -3,6 +3,8 @@ import path from "node:path";
 
 import { defineConfig, devices } from "@playwright/test";
 
+import { assertCanonicalSupabaseProjectUrl } from "./src/lib/supabase/canonical-project-url";
+
 /**
  * Playwright config for the BMH Institute E2E safety net.
  *
@@ -36,6 +38,9 @@ function loadTestEnv(): Record<string, string> {
 
 const env = loadTestEnv();
 
+const INSTITUTE_TEST_PROJECT_REF = "jvaabkchkihkjllehmft";
+const CLOSER_TEST_PROJECT_REF = "moocmsisaopnznppqvsq";
+
 const supabaseUrl = env.TEST_SUPABASE_URL ?? process.env.TEST_SUPABASE_URL ?? "";
 const supabaseAnonKey =
   env.TEST_SUPABASE_ANON_KEY ?? process.env.TEST_SUPABASE_ANON_KEY ?? "";
@@ -65,6 +70,37 @@ const rolePlayBaseUrl =
   env.NEXT_PUBLIC_ROLE_PLAY_BASE_URL ??
   process.env.NEXT_PUBLIC_ROLE_PLAY_BASE_URL ??
   "http://localhost:3458";
+
+function assertCredentialTarget(
+  label: string,
+  url: string,
+  keys: readonly string[],
+  expectedProjectRef: string,
+): void {
+  if (!url && keys.every((key) => !key)) return;
+  try {
+    assertCanonicalSupabaseProjectUrl(url, [expectedProjectRef]);
+  } catch {
+    throw new Error(
+      `${label} credentials require exact test origin https://${expectedProjectRef}.supabase.co.`,
+    );
+  }
+}
+
+// Fail during config loading, before either service-role key is copied into
+// the dev server environment or made available to a seeded browser spec.
+assertCredentialTarget(
+  "Institute E2E",
+  supabaseUrl,
+  [supabaseAnonKey, supabaseServiceRoleKey],
+  INSTITUTE_TEST_PROJECT_REF,
+);
+assertCredentialTarget(
+  "Closer cross-app E2E",
+  closerSupabaseUrl,
+  [closerSupabaseAnonKey, closerSupabaseServiceRoleKey],
+  CLOSER_TEST_PROJECT_REF,
+);
 
 process.env.TEST_SUPABASE_URL = supabaseUrl;
 process.env.TEST_SUPABASE_ANON_KEY = supabaseAnonKey;
