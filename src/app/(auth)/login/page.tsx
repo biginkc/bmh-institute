@@ -15,15 +15,15 @@ const SUSPENDED_ERROR =
   "Your account has been suspended. Contact your administrator.";
 
 const SSO_ERROR =
-  "BMH ID sign-in couldn't start. Try again or use your password.";
+  "Hugo sign-in couldn't start. Try again or use your password.";
 
 const SSO_CALLBACK_ERROR =
-  "BMH ID sign-in didn't complete. Try again or use your password.";
+  "Hugo sign-in didn't complete. Try again or use your password.";
 
 /**
- * BMH ID single sign-on rollout flag. The button only renders when
+ * Hugo single sign-on rollout flag. The button only renders when
  * NEXT_PUBLIC_BMH_ID_SSO=1 (set in Vercel at flip time), so merging this
- * code is decoupled from enabling the dashboard's custom:bmh OIDC provider.
+ * code is decoupled from enabling the dashboard's custom:hugo OIDC provider.
  * Read at render time so tests can stub the env.
  */
 function bmhIdSsoEnabled() {
@@ -68,7 +68,7 @@ function LoginForm() {
     try {
       const supabase = createClient();
       const { error } = await supabase.auth.signInWithOAuth({
-        provider: "custom:bmh",
+        provider: "custom:hugo",
         options: { redirectTo: redirectTo.toString() },
       });
       // signInWithOAuth resolves { error: null } and navigates away on
@@ -200,7 +200,7 @@ function LoginForm() {
             iconLeft={<KeyRound aria-hidden size={20} />}
             onClick={() => void signInWithBmhId()}
           >
-            {ssoPending ? "Redirecting..." : "Continue with BMH ID"}
+            {ssoPending ? "Redirecting..." : "Continue with Hugo"}
           </Button>
           <div
             aria-hidden
