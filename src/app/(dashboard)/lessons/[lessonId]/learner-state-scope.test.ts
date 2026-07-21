@@ -103,7 +103,11 @@ describe("lesson learner-state query scope", () => {
     expect(runnerSource).toContain(
       'document.addEventListener("click", hardNavigateFromCompletedResult, true)',
     );
-    expect(runnerSource).toContain("window.location.assign(destination.href)");
+    expect(runnerSource).toContain(
+      `event.preventDefault();
+      event.stopPropagation();
+      window.location.assign(destination.href)`,
+    );
     expect(lessonSearchSource).toContain(
       "COMPLETED_QUIZ_HARD_NAVIGATION_ATTRIBUTE",
     );

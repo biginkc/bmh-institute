@@ -237,6 +237,7 @@ export function QuizRunner({
       }
 
       event.preventDefault();
+      event.stopPropagation();
       window.location.assign(destination.href);
     }
 
