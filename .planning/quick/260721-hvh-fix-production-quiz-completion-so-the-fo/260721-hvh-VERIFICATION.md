@@ -7,6 +7,8 @@ score: 4/5 must-haves verified
 code_commits:
   - 9f52e5e
   - ffa0b33
+  - cfba4ad
+  - 07c4628
 blocked_by:
   - production desktop and mobile human verification after deployment
 human_verification:
@@ -24,11 +26,13 @@ human_verification:
 | Passed client result mounts and receives focus | Targeted runner RTL drives the full successful flow and asserts Passed heading focus | PASS, 17 of 17 |
 | Successful finalization does not call client refresh | Runner spy requires zero refresh calls and runtime source contains no router dependency | PASS |
 | Successful finalization does not call server path revalidation | Functional test requires zero `revalidatePath` calls and runtime source has no `next/cache` import or prerequisite lookup | PASS, 25 of 25 |
+| Standalone and composite result routing | Source invariant requires `/courses/${courseId}` in both result call sites and rejects former lesson URLs | PASS, 4 of 4 |
 | Persistence and recovery remain intact | Functional suite retains score, pass, review, retry, and concurrent-landed coverage | PASS |
-| Repository gate | `npm run verify` | PASS, 919 unit and 126 RTL tests |
-| Five-file quality checks | Targeted ESLint and `git diff --check` | PASS |
+| Repository gate | `npm run verify` | PASS, 920 unit and 126 RTL tests |
+| Scoped quality checks | Targeted ESLint and `git diff --check` | PASS |
 | Focused Playwright discovery | List-only command with a non-secret validation password | PASS, setup plus Chromium test discovered |
-| Real Next Server Action and later-navigation boundary | Credentialed TEST-only Playwright run | PASS, 2 of 2 in 51.2 seconds |
+| Real Next Server Action settle, client copy, and focus | Prior credentialed TEST-only Playwright run | PASS, 2 of 2 in 51.2 seconds |
+| Result-card Back to course and real Back to dashboard freshness | Revised focused TEST-only Playwright run | PASS, 2 of 2 in 49.8 seconds |
 
 ## Real Next write-path proof
 
@@ -40,7 +44,9 @@ Root injected approved TEST credentials without printing or persisting them and 
 npm run test:e2e -- e2e/write-paths.spec.ts --project=chromium --grep 'drives learner/admin LMS write paths against non-production data'
 ```
 
-The setup project and focused Chromium test both passed, 2 of 2 in 51.2 seconds. The run exercised the real Next Server Action response, client-only result copy and focus, later dynamic navigation unlock, and disposable TEST cleanup in `finally`. No production target was used or modified.
+The setup project and focused Chromium test first passed, 2 of 2 in 51.2 seconds. That run exercised the real Next Server Action response, client-only result copy and focus, later dynamic navigation unlock, and disposable TEST cleanup in `finally`.
+
+Commit `07c4628` strengthens that navigation proof: it routes both result variants to the owning course, proves that wiring through a focused source invariant, verifies both Back to course links are visible, scopes from the client-only result copy to the nearest result container, and clicks only the actual QuizResultCard link. It then verifies the assignment link on the course page, clicks the real `Back to dashboard` Link, and verifies the same assignment link on the dashboard. Root injected approved TEST credentials without printing or persisting them, and this revised setup-plus-Chromium run passed 2 of 2 in 49.8 seconds. Cleanup ran from `finally`. No production target was used or modified.
 
 ## Remaining human verification
 
@@ -48,4 +54,4 @@ After the reviewed change is deployed, complete one passing quiz in production a
 
 ## Verdict
 
-Implementation, repository verification, and the real Next TEST write path pass. Final GSD status is `human_needed` until the post-deployment production desktop and mobile checkpoint is approved.
+Implementation, repository verification, and the revised result-card-scoped linked-navigation TEST run pass. Final GSD status is `human_needed`: 4 of 5 must-haves are verified, with only the post-deployment production desktop and mobile checkpoint remaining.
