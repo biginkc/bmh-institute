@@ -22,7 +22,7 @@
 - Claude desktop app: running and visible on macOS.
 - Direct Codex app control tool for Claude: unavailable in this runtime.
 - Safe GUI fallback: macOS accessibility automation is potentially available but must use the permanent orange-border protocol and visually verify the exact Claude task and draft before sending.
-- Claude CLI: unavailable because `claude` is not installed on PATH.
+- Claude CLI: not installed on PATH. Claude's bundled 2.1.215 client was discovered after the desktop subtask stalled. `auth status` reported a logged-in Claude account, but a real print-mode prompt failed with `401 OAuth access token has expired`, so it is not a viable fallback.
 - Chrome DevTools: available and already used for production evidence. No further browser proof is required for plan approval.
 - Repo/provider CLIs: not required for this planning-only loop.
 - Secrets/PII: none included in the plan or state packet.
@@ -51,7 +51,17 @@
 
 ### Iteration 1
 
-- Status: ready to send exact plan for adversarial review.
+- Status: exact plan reviewed in Claude desktop task `BMH Institute lesson load performance plan review`.
 - Evidence delta: durable plan and conservative acceptance gates created from the measured diagnosis.
+- Claude verdict: `NEXT_STEP`, confidence high.
+- Claude reasoning: evidence, sequence, budgets, and quiz-key isolation survived challenge. The Step 5 security-definer contract preserved a weaker course/lesson quarantine boundary than the per-entity RLS behavior it would replace. Step 6 lacked cache invalidation and learner/reviewer boundary tests.
+- Proposed action accepted: require set-wise import release and quarantine filtering for every returned entity, add a mixed-release TEST fixture, add cache mutation invalidation and cross-persona isolation tests, and add timing/log redaction coverage.
+- Codex evaluation: accepted. The findings tighten existing security gates, stay within planning scope, are concrete and testable, cross no hard gate, and are not repetitions of a failed action.
+- Desktop transport note: Claude requested broad macOS access to other-app data while verifying the worktree path. Codex denied it because the full exact plan was already present in the packet. Claude still confirmed the committed artifact matched the packet verbatim and completed the review.
+
+### Iteration 2
+
+- Status: plan revisions applied. Ready for exact revised-artifact review.
+- Evidence delta: yes. Per-entity mixed-release filtering, cache invalidation, persona isolation, and telemetry redaction tests are now explicit.
 - Claude verdict: pending.
 - Codex evaluation: pending.

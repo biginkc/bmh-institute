@@ -57,7 +57,7 @@ Excluded:
 1. The server derives the actor from `auth.uid()`. No caller-supplied user ID may choose another learner's state.
 2. Course and lesson membership are validated before any learner data is returned.
 3. Unanswered quiz answer keys are never selected into or returned by the lesson page payload.
-4. Reviewer and import-review boundaries remain fail closed.
+4. Reviewer and import-review boundaries remain fail closed for every returned entity. Authorizing a course or lesson does not imply that every nested lesson, block, quiz reference, or assignment reference inside that boundary is released to the same actor.
 5. Guide assets remain unsigned and absent from learner-visible output until their existing completion gate passes.
 6. Video completion continues to require the current media asset version.
 7. Role-play tokens remain scoped to the authenticated actor, selected lesson, and selected role-play block.
@@ -136,7 +136,7 @@ The function contract must:
 - Validate course access and current lesson membership once before reading learner state.
 - Return lightweight course navigation, set-based lesson state, current lesson detail, current block progress, and only the current assignment's latest status when applicable.
 - Never query or return answer correctness, scoring keys, or unrevealed quiz explanations.
-- Preserve reviewer/import quarantine checks at the course and lesson boundary.
+- Apply import release and quarantine filtering set-wise to every returned entity row, including navigation lessons, current lesson blocks, quiz references, and assignment references. The result must be semantically equivalent to applying `fn_actor_may_access_catalog_entity_v1` to each returned entity even though the implementation must avoid the current per-row traversal cost. A course or current lesson boundary check alone is insufficient.
 - Avoid calling the 20-branch catalog traversal once per returned row.
 - Enforce bounded cardinality and deterministic ordering.
 
@@ -147,6 +147,8 @@ Regenerate checked-in Supabase types after the RPC contract is final.
 ### Step 6: cache only stable catalog structure
 
 After security tests pass, cache the published lightweight course structure beneath the private page layer. Key it by course and published content version. Invalidate it from authoring mutations that change programs, courses, modules, lessons, pairing, prerequisites, publication state, or block structure.
+
+Cache verification must prove that publish, unpublish, and structure mutations invalidate the prior version. A cache warmed by one persona must never cross a learner/reviewer access boundary. Unpublished and quarantined entities must remain absent from learner cache payloads before and after an invalidation event.
 
 Do not cache across requests:
 
@@ -171,20 +173,26 @@ Do not cache across requests:
 - Private links do not prefetch before deliberate interaction.
 - Search requests begin only after typing and return a bounded result set.
 - Migration tests prove safe search path, actor derivation, grants, cardinality, and no answer-key selection.
+- Migration tests prove per-entity import release and quarantine filtering for every returned entity type.
+- Timing tests prove `Server-Timing` and structured logs contain no user identifiers, emails, tokens, signed URLs, quiz contents, or other private values.
 
 ### TEST integration
 
-Use a production-shaped course with 6 modules, 44 lessons, and 111 blocks. Verify owner, admin, learner, reviewer, unassigned, and suspended personas.
+Use a production-shaped course with 6 modules, 44 lessons, and 111 blocks. Verify owner, admin, learner, reviewer, unassigned, and suspended personas. Include one accessible course containing a partially released import with both released and unreleased lessons, blocks, quiz references, and assignment references.
 
 Prove:
 
 - Course and lesson access parity with the baseline.
 - Reviewer/import quarantine parity.
+- The mixed-release fixture returns released rows to learners, withholds every unreleased nested row, and returns only the reviewer-authorized quarantined rows to the correct granted reviewer.
 - Prerequisite, completion, next-lesson, composite quiz, standalone quiz, assignment, and resume navigation parity.
 - Guide withholding and stale video asset-version behavior.
 - Role-play token actor and block scope.
 - First-answer locking, refresh resume, and completed quiz terminal behavior remain intact.
 - An unanswered quiz network response contains no answer key. The existing user waiver may satisfy only a Chrome screenshot requirement. It does not waive server review or automated answer-isolation tests.
+- Publishing, unpublishing, pairing, prerequisite, ordering, and block-structure mutations invalidate the prior cached structure.
+- A cache warmed by a learner is never served to a reviewer and a cache warmed by a reviewer is never served to a learner.
+- Unpublished and quarantined entities remain absent from learner cache payloads before and after invalidation.
 
 ### Performance verification
 
