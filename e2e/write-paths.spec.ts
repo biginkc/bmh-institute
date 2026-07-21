@@ -223,9 +223,15 @@ test.describe("durable write-path coverage", () => {
         .getByText(/On to the next lesson/i)
         .locator(
           "xpath=ancestor::div[.//a[normalize-space()='Back to course']][1]",
-        );
+      );
       await expect(resultCard).toBeVisible();
+      const resultCourseId = fixture.courseId;
+      const courseDocumentRequest = page.waitForRequest((request) => {
+        if (request.resourceType() !== "document") return false;
+        return new URL(request.url()).pathname === `/courses/${resultCourseId}`;
+      });
       await resultCard.getByRole("link", { name: "Back to course" }).click();
+      await courseDocumentRequest;
       await expect(page).toHaveURL(
         new RegExp(`/courses/${fixture.courseId}$`),
       );
@@ -244,6 +250,25 @@ test.describe("durable write-path coverage", () => {
           .locator("[data-learner-tile-grid] a")
           .filter({ hasText: `${fixture.prefix} Text Assignment Lesson` }),
       ).toBeVisible();
+
+      await page.goBack();
+      await expect(page).toHaveURL(
+        new RegExp(`/courses/${fixture.courseId}$`),
+      );
+      await expect(
+        page
+          .locator("[data-learner-tile-grid] a")
+          .filter({ hasText: `${fixture.prefix} Text Assignment Lesson` }),
+      ).toBeVisible();
+
+      await page.goBack();
+      await expect(page).toHaveURL(
+        new RegExp(`/lessons/${fixture.contentLessonId}\\?part=quiz$`),
+      );
+      await expect(page.getByRole("heading", { name: "Passed" })).toBeVisible();
+      await expect(
+        page.getByRole("button", { name: /start quiz|retake quiz/i }),
+      ).toHaveCount(0);
 
       await page.goto(`/lessons/${fixture.textAssignmentLessonId}`);
       await page.getByLabel(/response/i).fill(`${fixture.prefix} first response`);

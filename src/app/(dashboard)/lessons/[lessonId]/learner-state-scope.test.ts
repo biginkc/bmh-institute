@@ -14,6 +14,17 @@ const loaderSource = readFileSync(
   resolve(process.cwd(), "src/app/(dashboard)/load-learner-outline.ts"),
   "utf8",
 );
+const runnerSource = readFileSync(
+  resolve(
+    process.cwd(),
+    "src/app/(dashboard)/lessons/[lessonId]/quiz-runner.tsx",
+  ),
+  "utf8",
+);
+const progressRailSource = readFileSync(
+  resolve(process.cwd(), "src/components/bmh-ds/progress-rail.tsx"),
+  "utf8",
+);
 
 describe("lesson learner-state query scope", () => {
   it("passes the signed-in identity into quiz and assignment bodies", () => {
@@ -64,5 +75,29 @@ describe("lesson learner-state query scope", () => {
     expect(partBody).not.toContain(
       'backHref={`/lessons/${tile.id}?part=quiz`}',
     );
+  });
+
+  it("crosses a document boundary when leaving a quiz", () => {
+    const standalone = source.slice(
+      source.indexOf("async function StandaloneQuizLesson"),
+      source.indexOf("async function ContentCompositeLesson"),
+    );
+    const composite = source.slice(
+      source.indexOf("async function ContentCompositeLesson"),
+      source.indexOf("async function PartBody"),
+    );
+
+    expect(standalone).toContain('<a href={`/courses/${courseId}`}');
+    expect(composite).toContain('hardQuizNavigation = selected.kind === "quiz"');
+    expect(composite).toContain('<a href={`/courses/${courseId}`}');
+    expect(composite).toContain("hardNavigation={hardQuizNavigation}");
+    expect(composite).toContain('<a href={nextTile.href}');
+    expect(runnerSource).toContain('<a href={backHref}');
+    expect(runnerSource).not.toContain(
+      '<Link href={backHref} className={linkButtonClass}>Back to course</Link>',
+    );
+    expect(progressRailSource).toContain("hardNavigation ? (");
+    expect(progressRailSource).toContain("<a");
+    expect(progressRailSource).toContain("href={entry.href}");
   });
 });

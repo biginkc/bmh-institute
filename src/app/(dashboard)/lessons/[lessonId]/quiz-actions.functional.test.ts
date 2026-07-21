@@ -384,6 +384,38 @@ describe("quiz server actions", () => {
     expect(insertedAttempt).toBeNull();
   });
 
+  it("rejects a stale start after the learner has passed without inserting", async () => {
+    priorAttempts = [{
+      passed: true,
+      score: 100,
+      completed_at: new Date().toISOString(),
+    }];
+
+    await expect(
+      startQuizAttempt({ quizId: "quiz-1", lessonId: "lesson-1" }),
+    ).resolves.toEqual({
+      ok: false,
+      error: "You've already passed this quiz.",
+    });
+    expect(insertedAttempt).toBeNull();
+  });
+
+  it("rejects a stale start after max attempts without inserting", async () => {
+    priorAttempts = [
+      { passed: false, score: 50, completed_at: "2026-07-21T10:00:00.000Z" },
+      { passed: false, score: 60, completed_at: "2026-07-21T11:00:00.000Z" },
+      { passed: false, score: 70, completed_at: "2026-07-21T12:00:00.000Z" },
+    ];
+
+    await expect(
+      startQuizAttempt({ quizId: "quiz-1", lessonId: "lesson-1" }),
+    ).resolves.toEqual({
+      ok: false,
+      error: "You've used all of your attempts on this quiz.",
+    });
+    expect(insertedAttempt).toBeNull();
+  });
+
   it("fails closed when prior-attempt eligibility cannot be read", async () => {
     priorAttemptsError = { message: "read unavailable" };
 

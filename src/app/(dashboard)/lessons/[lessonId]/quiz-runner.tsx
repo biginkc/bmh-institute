@@ -528,7 +528,7 @@ function QuizResultCard({
       ) : null}
 
       <div className="flex flex-col-reverse justify-center gap-3 sm:flex-row">
-        <Link href={backHref} className={linkButtonClass}>Back to course</Link>
+        <a href={backHref} className={linkButtonClass}>Back to course</a>
         {canRetake ? (
           <Button
             onClick={onRetake}

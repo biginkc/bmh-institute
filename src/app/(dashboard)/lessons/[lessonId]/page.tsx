@@ -128,9 +128,9 @@ async function StandaloneQuizLesson({
 }) {
   return (
     <main className="w-full flex-1 p-5 font-[family-name:var(--font-body)] md:p-8 lg:p-10" data-bmh-lesson-page>
-      <Link href={`/courses/${courseId}`} className="inline-flex items-center gap-1.5 text-sm font-extrabold text-[var(--action)] hover:underline">
+      <a href={`/courses/${courseId}`} className="inline-flex items-center gap-1.5 text-sm font-extrabold text-[var(--action)] hover:underline">
         <ArrowLeft className="size-4" /> Back to course
-      </Link>
+      </a>
       <header className="mx-auto mb-7 mt-5 max-w-3xl border-b border-[var(--border-hairline)] pb-5">
         <Badge tone="blue" size="sm">Quiz</Badge>
         <h1 className="mt-3 font-[family-name:var(--font-display)] text-3xl font-extrabold text-[var(--ink-900)]">{tile.title}</h1>
@@ -179,6 +179,7 @@ async function ContentCompositeLesson({
   });
   const selected = selectLearnerPart(parts, requestedPart);
   if (!selected) return <LessonError error="This lesson has no available content." courseId={courseId} />;
+  const hardQuizNavigation = selected.kind === "quiz";
 
   const railEntries: ProgressRailEntry[] = parts.map((part) => ({
     id: part.id,
@@ -195,10 +196,17 @@ async function ContentCompositeLesson({
 
   return (
     <main className="w-full flex-1 p-5 font-[family-name:var(--font-body)] md:p-8 lg:p-10" data-bmh-lesson-page>
-      <Link href={`/courses/${courseId}`} className="inline-flex items-center gap-1.5 text-sm font-extrabold text-[var(--action)] underline-offset-4 hover:underline">
-        <ArrowLeft aria-hidden="true" className="size-4" />
-        Back to course
-      </Link>
+      {hardQuizNavigation ? (
+        <a href={`/courses/${courseId}`} className="inline-flex items-center gap-1.5 text-sm font-extrabold text-[var(--action)] underline-offset-4 hover:underline">
+          <ArrowLeft aria-hidden="true" className="size-4" />
+          Back to course
+        </a>
+      ) : (
+        <Link href={`/courses/${courseId}`} className="inline-flex items-center gap-1.5 text-sm font-extrabold text-[var(--action)] underline-offset-4 hover:underline">
+          <ArrowLeft aria-hidden="true" className="size-4" />
+          Back to course
+        </Link>
+      )}
       <div className="mt-5 grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_330px]">
         <div className="min-w-0">
           <PartBody
@@ -215,15 +223,21 @@ async function ContentCompositeLesson({
           {tile.complete && nextTile ? (
             <div className="mt-6 flex justify-end">
               {nextTile.unlocked ? (
-                <Link href={nextTile.href} className="inline-flex items-center gap-2 rounded-[var(--bmh-radius-md)] bg-[var(--action)] px-5 py-3 text-sm font-extrabold text-white no-underline hover:bg-[var(--action-hover)]">
-                  Next lesson <ArrowRight className="size-4" />
-                </Link>
+                hardQuizNavigation ? (
+                  <a href={nextTile.href} className="inline-flex items-center gap-2 rounded-[var(--bmh-radius-md)] bg-[var(--action)] px-5 py-3 text-sm font-extrabold text-white no-underline hover:bg-[var(--action-hover)]">
+                    Next lesson <ArrowRight className="size-4" />
+                  </a>
+                ) : (
+                  <Link href={nextTile.href} className="inline-flex items-center gap-2 rounded-[var(--bmh-radius-md)] bg-[var(--action)] px-5 py-3 text-sm font-extrabold text-white no-underline hover:bg-[var(--action-hover)]">
+                    Next lesson <ArrowRight className="size-4" />
+                  </Link>
+                )
               ) : null}
             </div>
           ) : null}
         </div>
         <div className="lg:sticky lg:top-[96px]">
-          <ProgressRail title="Lesson parts" countLabel={`Lesson ${tile.lessonNumber} of ${total}`} entries={railEntries} ariaLabel="Lesson parts" />
+          <ProgressRail title="Lesson parts" countLabel={`Lesson ${tile.lessonNumber} of ${total}`} entries={railEntries} ariaLabel="Lesson parts" hardNavigation={hardQuizNavigation} />
         </div>
       </div>
     </main>
