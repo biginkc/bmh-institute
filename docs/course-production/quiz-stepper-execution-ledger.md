@@ -460,3 +460,113 @@ production database change.
   Hugo login must be supplied or restored, then the exact-ID canary must be
   recreated, the production browser scenarios completed, the fixture cleaned,
   and Claude must return `DONE` with high confidence.
+
+## Completed-quiz history correction — 2026-07-21
+
+### Production defect reproduction and fix
+
+- After the real Hugo browser session became available, the first production
+  walkthrough exposed a release-blocking history defect: after a learner passed,
+  selected result `Back to course`, selected course `Back to dashboard`, and
+  used browser Back twice, the client cache could resurrect the pre-attempt
+  `Ready for the checkpoint` screen even though production had stored the pass.
+- A hard reload rendered the correct terminal `Passed` gate, proving that the
+  persisted attempt was sound and the defect was stale Next App Router state,
+  not a quiz-scoring or database failure.
+- Quick task `260721-kb5` reproduced the same failure first against the
+  canonical TEST project and then changed completed-quiz exits to cross a full
+  document boundary. It covers result-card exits, lesson headers, the progress
+  rail, the persistent dashboard shell, and keyboard lesson search while
+  preserving modified clicks, downloads, alternate targets, external links,
+  and same-page fragments.
+- Server-side terminal checks were also exercised so a passed, exhausted, or
+  cooldown-blocked quiz cannot insert a new sequential attempt.
+
+### Review convergence and exact-head CI
+
+- The initial implementation was independently reviewed across root-cause,
+  manual code, security/UX, and test/release lanes. A lesson-local-only fix was
+  rejected because it did not cover the persistent shell or keyboard search;
+  that finding was fixed in `d7f9afb9e301a1638437af37153304a379e1d894`.
+- Claude A5 rejected documentation head `ace90bfded02e3ca16b1badbbd58eb90add814d9`
+  because the capture listener prevented the browser default but did not stop
+  propagation to a competing Next Link handler. The corrected implementation
+  in `3bf15b6682925eee0d6d7026e0d1e75dc4a06065` now requires
+  `preventDefault()`, `stopPropagation()`, and `location.assign()` in that
+  order.
+- Three exact-head rereview lanes found no release blocker at
+  `4341b05b605a3476ad3702f5c4ecba54cf0874f0`. The test lane recorded one
+  non-blocking P3 opportunity for a more behavior-specific propagation test;
+  the source invariant and canonical real-Next TEST E2E already cover the
+  released behavior.
+- Claude A5 independently inspected the actual diff and authorized merge for
+  exact head `4341b05b605a3476ad3702f5c4ecba54cf0874f0`, with no remaining
+  pre-merge blocker.
+- GitHub Actions run `29864914244` completed successfully at that exact head:
+  `Verify` succeeded, `Seeded Playwright E2E` succeeded, the seeded cleanup step
+  succeeded, and the PR also had successful Vercel and Vercel Preview Comments
+  checks.
+
+### Merge and Git-connected hotfix deployment
+
+- PR #109 merged normally into `main`. Its merge commit is
+  `1eb980a53d12865741e9490051552e283c86439f`; the rollback point recorded before
+  this hotfix is `c86bd8b416d51786bf0814cb9398ba70dcd5a79e`.
+- Vercel's Git integration created production deployment
+  `dpl_922SKBoW3S4wCuntJLEJA33N8yh1`. Fresh inspection reports target
+  `production`, status `Ready`, and aliases including
+  `institute.bmhgroupkc.com`. No manual deploy, redeploy, or alias mutation was
+  used.
+
+### Completed production browser acceptance
+
+- The exact-ID fixture `PRD-READY-QUIZ-20260721094226` was recreated in
+  production and mapped only to the one existing real Hugo-provisioned learner.
+  No credential, auth identity, environment, provider, or unrelated production
+  row was changed.
+- In controlled Chrome on `institute.bmhgroupkc.com`, the real signed-in learner
+  completed all three stepper questions. Each checked answer immediately
+  returned server-verified `Correct` feedback with the expected explanation,
+  and the accepted controls were disabled before advancing.
+- Finishing produced a 100% result. At desktop viewport 1280 by 800, the active
+  element was the `H2` whose text was `Passed`, the result showed three of three
+  points, and the document contained zero `Start quiz` or `Retake quiz`
+  controls.
+- Returning to the course showed lesson 1 as Complete and lesson 2
+  (`9d900b02-5f5a-4c15-8f19-cce217b2cc82`) as Current with an enabled Resume
+  link, proving the prerequisite unlock was fresh.
+- The exact release path then ran result to course, course to dashboard, browser
+  Back to course, and browser Back to the quiz. Without a reload, the restored
+  lesson showed terminal `Passed`, `Best score: 100%`, and zero Start/Retake
+  controls.
+- At mobile viewport 390 by 844, the same history-restored production lesson
+  visibly retained `Passed` and `Best score: 100%` with zero Start/Retake
+  controls. The browser was returned to the normal viewport and finalized on a
+  clean production dashboard.
+
+### Production row invariants and exact cleanup
+
+- Immediately before history traversal, the fixture had exactly one quiz
+  attempt, one completed attempt, score 100, passed true, three response keys,
+  one quiz-lesson completion, and zero next-lesson completions.
+- Immediately after the complete history traversal, the same read-only query
+  returned the identical values. Browser history created no attempt,
+  completion, or submission row.
+- Exact-ID cleanup then removed the fixture. A second independent inspection
+  returned zero for courses, lessons, modules, options, quizzes, attempts,
+  completed attempts, programs, questions, assignments, role groups,
+  certificates, course access, course resume, role mappings, program access,
+  program courses, lesson completions, program certificates, assignment
+  submissions, and mapped Hugo users for the fixture identifiers.
+- Jarrad Henry's explicit waiver still covers only the Chrome DevTools
+  Network-response screenshot for unanswered answer-key absence. The server
+  review, automated tests, hosted TEST integration proof, and browser
+  walkthrough remain the accepted substitute evidence; this ledger does not
+  claim that screenshot was captured.
+
+### Final reviewer gate
+
+- All implementation, merge, deployment, production browser, database
+  invariant, and cleanup gates now have external evidence. Per the convergence
+  contract, the only remaining action is Claude A5's final high-confidence
+  `DONE` verdict over this complete packet.
