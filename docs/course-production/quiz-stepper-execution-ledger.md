@@ -103,7 +103,8 @@ the plan files plus the test Supabase project.
 
 ### 2026-07-21 implementation checkpoint
 
-- Added migration `049_atomic_quiz_answer_recording.sql` and implemented the
+- Added migration `049_atomic_quiz_answer_recording.sql` (later renumbered to
+  `050_atomic_quiz_answer_recording.sql` during the production rebase) and implemented the
   server-side answer, resume, and idempotent-finalize actions.
 - Replaced the learner runner with the planned reducer flow and added the
   progress, question, and feedback components.
@@ -117,7 +118,7 @@ the plan files plus the test Supabase project.
   final rerun was not performed before the security pause below.
 - The guarded migration dry run targeted the verified test pooler identity and
   listed only migration 049.
-- Migration 049 applied successfully to test project
+- The then-numbered quiz migration 049 applied successfully to test project
   `jvaabkchkihkjllehmft`. A direct catalog query verified the exact
   `fn_record_quiz_answer(uuid,uuid,text[])` signature, `SECURITY DEFINER`,
   authenticated execute permission, and no anonymous execute permission.
@@ -154,7 +155,7 @@ the plan files plus the test Supabase project.
 ### 2026-07-21 verification and review checkpoint
 
 - Regenerated `src/lib/supabase/types.ts` from the canonical test project after
-  migration 049. The generator omitted known nullable SQL contracts; the
+  the then-numbered quiz migration 049. The generator omitted known nullable SQL contracts; the
   established nullable annotations for course completion, Sandra settlement,
   video playback, and the new answer RPC were restored manually and typechecked.
 - `npm run verify` passed after the final fixes: 152 server/unit files with 919
@@ -180,7 +181,7 @@ the plan files plus the test Supabase project.
   payload assertions, restored server eligibility/auth guards, and early
   integration cleanup.
 - Supabase's official database-function guidance and PostgreSQL's official
-  `SECURITY DEFINER` guidance were checked. Migration 049 follows them by using
+  `SECURITY DEFINER` guidance were checked. The quiz migration follows them by using
   an empty `search_path`, fully qualified relations, revoked public/anonymous
   execution, and explicit authenticated/service-role grants.
 - Fallow's changed-file audit was reviewed. Its remaining leads are generated
@@ -260,3 +261,64 @@ verification, learner-facing Chrome walkthrough, explicit Network-evidence
 waiver, temporary TEST-fixture cleanup, final integrity checks, and local commit.
 The loop stops here as directed. There has been no push, PR, merge, deploy, or
 production database change.
+
+## Production release continuation — 2026-07-21
+
+### Expanded authority
+
+- Jarrad Henry explicitly authorized a new convergence loop to rebase and review
+  this feature, push a branch, open a PR, apply only the quiz migration to the
+  BMH Institute production Supabase project, merge after all gates pass, allow
+  the normal Git-connected Vercel deployment, run a bounded production canary,
+  remove only canary data created by this run, and verify the live result.
+- This does not authorize unrelated production data or environment changes,
+  manual Vercel deploys or alias changes, paid-provider use, outbound messages,
+  changes to unrelated PRs, or disclosure of secrets.
+- The direct Chrome Network-panel capture remains absent under Jarrad's earlier
+  explicit waiver. Production evidence must not represent that artifact as
+  captured.
+
+### Release preflight and rebase
+
+- The remote `main` branch had advanced through merged PR #106 to
+  `adbf5e3e452fd836ad0d6cadd21444aabb798b6b`, while the quiz branch was still
+  based on `31aeb4b260a20f2252e3b118909449533227a7e9`.
+- A local rollback ref, `wip/quiz-one-by-one-pre-rebase-20260721`, preserves the
+  pre-rebase feature head `efffbb6e6cb3db5894d9cd9a21a08bf6d6cd282e`.
+- The branch rebased cleanly onto `adbf5e3`; the plan commit is now `227e3ce`
+  and the implementation commit is now `f7ad52a` before any release-ledger
+  update.
+- Current `main` added `049_fail_closed_hugo_provisioning.sql`. The quiz file
+  initially had the same numeric version, and the repository migration sentinel
+  correctly failed after rebase. The quiz migration was therefore renumbered to
+  `050_atomic_quiz_answer_recording.sql`; production must see 049 then 050.
+- The shared TEST project had already recorded the quiz migration under version
+  049 before PR #106 merged, while its Hugo provisioning definition was still
+  absent. TEST migration history must be repaired so 049 records the Hugo
+  migration and 050 records the already-idempotent quiz migration before the
+  release can proceed.
+- PRs #83 and #100 are unrelated and remain outside this release.
+- Claude CLI is not installed. The requested Claude surface is the existing
+  desktop/app conversation; availability must be proven before approval.
+
+### Rebase integration correction and verification
+
+- The first post-rebase `npm run verify` failed exactly one migration-history
+  sentinel because both the merged Hugo migration and the quiz migration used
+  version 049. Lint still had zero errors (nine existing warnings), and the
+  production build passed.
+- The quiz migration was renumbered to 050. Following Supabase's documented
+  migration-repair workflow, TEST history version 049 was marked reverted, a
+  dry run showed only `049_fail_closed_hugo_provisioning.sql` and
+  `050_atomic_quiz_answer_recording.sql`, and those two migrations were then
+  applied in that order to `jvaabkchkihkjllehmft`.
+- TEST now records `049|fail_closed_hugo_provisioning` and
+  `050|atomic_quiz_answer_recording`. Catalog probes confirm the Hugo invited
+  state is installed and the quiz RPC exists as `SECURITY DEFINER`, is executable
+  by `authenticated`, and is not executable by `anon`.
+- The corrected branch passes `npm run verify`: 153 server/unit files with 912
+  tests and 37 RTL files with 124 tests, zero failures and zero skips.
+- The focused hosted quiz integration test passed against corrected TEST
+  history, including ownership, first-answer locking, and concurrent-answer
+  preservation. `git diff --check` passed, and all three locked helper files
+  retain zero diff against current `origin/main`.
