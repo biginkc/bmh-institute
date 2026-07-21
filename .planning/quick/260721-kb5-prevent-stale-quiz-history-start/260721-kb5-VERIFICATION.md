@@ -7,6 +7,7 @@ score: 4/5 must-haves verified
 code_commits:
   - b2f61fa
   - d7f9afb
+  - 3bf15b6
 human_verification:
   - test: Production completed-quiz history at desktop and mobile viewports
     expected: Immediate result focus remains correct; result, shell, and browser Back navigation never show Start or Retake after a pass; next lesson stays unlocked; history traversal creates no rows.
@@ -22,12 +23,13 @@ human_verification:
 | Defect reproduced before implementation | Real Next + TEST Playwright result/course/dashboard/Back x2 path | RED at missing Passed heading |
 | Result exit crosses a document boundary | Playwright waits for a course `document` request before linked navigation | PASS |
 | Shell exit crosses a document boundary | Separate Playwright flow clicks Primary Dashboard from immediate Passed result and waits for a dashboard `document` request | PASS |
+| Shell exit is exclusive | Capture handler requires `preventDefault`, `stopPropagation`, then `location.assign`, preventing the Next Link click path from also running | PASS |
 | History return is terminal | Both real-stack flows require Passed and zero Start/Retake without a reload | PASS |
 | Immediate result focus remains | Existing and new real-stack flows require the Passed heading to own focus | PASS |
 | Terminal starts are fail-closed | Functional passed/max cases require exact errors and no attempt insert | PASS, 27 of 27 action tests |
 | Quiz exit wiring | Focused source invariant covers local anchors, progress rail, completed-result document listener, and lesson-search fallback | PASS, 5 of 5 |
 | Repository gate | `npm run verify` | PASS, 923 unit/server and 126 RTL tests |
-| Focused TEST browser gate | Setup plus both write-path/history tests | PASS, 3 of 3 in 59.2 seconds |
+| Focused TEST browser gate | Setup plus both write-path/history tests, rerun after the A5 propagation fix | PASS, 3 of 3 in 57.6 seconds |
 | Production release | Exact deployed SHA plus Chrome and DB proof | PENDING |
 
 ## Residuals
