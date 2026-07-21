@@ -55,6 +55,7 @@ const authoredQuestions = [
     ],
   },
 ];
+let availableQuestions = authoredQuestions;
 
 let currentUser: { id: string } | null;
 let lessonQuizId: string;
@@ -139,9 +140,9 @@ const adminClient = {
     if (table === "questions") {
       return {
         select: () => ({
-          eq: () => ({ order: async () => ({ data: authoredQuestions, error: null }) }),
+          eq: () => ({ order: async () => ({ data: availableQuestions, error: null }) }),
           in: async (_column: string, ids: string[]) => ({
-            data: authoredQuestions.filter((question) => ids.includes(question.id)),
+            data: availableQuestions.filter((question) => ids.includes(question.id)),
             error: null,
           }),
         }),
@@ -224,6 +225,7 @@ describe("quiz server actions", () => {
       already_answered: false,
     }];
     recordRpcError = null;
+    availableQuestions = authoredQuestions;
     vi.clearAllMocks();
   });
 
@@ -281,6 +283,68 @@ describe("quiz server actions", () => {
       expect(JSON.stringify(result.questions)).not.toContain("is_correct");
       expect(JSON.stringify(result.questions)).not.toContain("explanation");
     }
+  });
+
+  it("fails closed when a resumed question is no longer available", async () => {
+    incompleteAttempt = {
+      id: "attempt-existing",
+      question_order: ["q-1", "q-2"],
+      answer_orders: {
+        "q-1": ["q1-good", "q1-bad"],
+        "q-2": ["q2-a", "q2-b", "q2-bad"],
+      },
+      responses: {},
+    };
+    availableQuestions = authoredQuestions.filter((question) => question.id !== "q-2");
+
+    await expect(
+      startQuizAttempt({ quizId: "quiz-1", lessonId: "lesson-1" }),
+    ).resolves.toEqual({
+      ok: false,
+      error: "This attempt contains unavailable questions.",
+    });
+  });
+
+  it("fails closed when a resumed attempt has an empty question snapshot", async () => {
+    incompleteAttempt = {
+      id: "attempt-existing",
+      question_order: [],
+      answer_orders: {},
+      responses: {},
+    };
+
+    await expect(
+      startQuizAttempt({ quizId: "quiz-1", lessonId: "lesson-1" }),
+    ).resolves.toEqual({
+      ok: false,
+      error: "This attempt contains unavailable questions.",
+    });
+  });
+
+  it("fails closed when a resumed answer option is no longer available", async () => {
+    incompleteAttempt = {
+      id: "attempt-existing",
+      question_order: ["q-1"],
+      answer_orders: { "q-1": ["q1-good", "q1-bad"] },
+      responses: {},
+    };
+    availableQuestions = authoredQuestions.map((question) =>
+      question.id === "q-1"
+        ? {
+            ...question,
+            answer_options: question.answer_options.filter(
+              (option) => option.id !== "q1-bad",
+            ),
+          }
+        : question,
+    );
+
+    await expect(
+      startQuizAttempt({ quizId: "quiz-1", lessonId: "lesson-1" }),
+    ).resolves.toEqual({
+      ok: false,
+      error: "This attempt contains unavailable questions.",
+    });
   });
 
   it("resumes the race winner when concurrent starts hit the unique index", async () => {
@@ -352,6 +416,21 @@ describe("quiz server actions", () => {
         correctOptionIds: ["q1-good"],
         explanation: "Because one is correct.",
       },
+    });
+  });
+
+  it("reveals a correct zero-point answer as correct without changing final scoring", async () => {
+    availableQuestions = authoredQuestions.map((question) =>
+      question.id === "q-1" ? { ...question, points: 0 } : question,
+    );
+
+    await expect(answerQuizQuestion({
+      attemptId: "attempt-1",
+      questionId: "q-1",
+      selected: ["q1-good"],
+    })).resolves.toMatchObject({
+      ok: true,
+      reveal: { isCorrect: true },
     });
   });
 

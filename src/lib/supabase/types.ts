@@ -1594,7 +1594,7 @@ export type Database = {
       fn_admin_lesson_completion_states: {
         Args: { p_lesson_ids: string[]; p_user_ids: string[] }
         Returns: {
-          completed_at: string
+          completed_at: string | null
           is_complete: boolean
           lesson_id: string
           user_id: string

@@ -19,6 +19,7 @@ set search_path = ''
 as $$
 declare
   v_attempt public.user_quiz_attempts%rowtype;
+  v_question_type text;
   v_stored text[];
   v_selected_sorted text[];
 begin
@@ -42,8 +43,18 @@ begin
   if not coalesce(v_attempt.question_order ? p_question_id::text, false) then
     raise exception 'The response contains a question outside this attempt.';
   end if;
+  select question.question_type
+    into v_question_type
+  from public.questions question
+  where question.id = p_question_id
+    and question.quiz_id = v_attempt.quiz_id;
+
+  if v_question_type is null then
+    raise exception 'This attempt contains unavailable questions.';
+  end if;
   if p_selected is null
     or cardinality(p_selected) = 0
+    or (v_question_type <> 'multi_select' and cardinality(p_selected) <> 1)
     or exists (select 1 from unnest(p_selected) selected where selected is null)
     or cardinality(p_selected) <>
       (select count(distinct selected) from unnest(p_selected) selected)

@@ -147,12 +147,21 @@ describe.skipIf(!envPresent)("atomic quiz answer recording", () => {
             question_type: "single_choice",
             sort_order: 2,
           },
+          {
+            quiz_id: quizId,
+            question_text: "Multi-select question",
+            question_type: "multi_select",
+            sort_order: 3,
+          },
         ])
         .select("id, sort_order");
       if (questions.error || !questions.data) throw questions.error;
       const questionOne = questions.data.find((row) => row.sort_order === 1)?.id;
       const questionTwo = questions.data.find((row) => row.sort_order === 2)?.id;
-      if (!questionOne || !questionTwo) throw new Error("Questions were not created.");
+      const questionMulti = questions.data.find((row) => row.sort_order === 3)?.id;
+      if (!questionOne || !questionTwo || !questionMulti) {
+        throw new Error("Questions were not created.");
+      }
       const options = await admin
         .from("answer_options")
         .insert([
@@ -160,6 +169,8 @@ describe.skipIf(!envPresent)("atomic quiz answer recording", () => {
           { question_id: questionOne, option_text: "Q1 B", sort_order: 2 },
           { question_id: questionTwo, option_text: "Q2 A", sort_order: 1 },
           { question_id: questionTwo, option_text: "Q2 B", sort_order: 2 },
+          { question_id: questionMulti, option_text: "Multi A", sort_order: 1 },
+          { question_id: questionMulti, option_text: "Multi B", sort_order: 2 },
         ])
         .select("id, question_id, sort_order");
       if (options.error || !options.data) throw options.error;
@@ -174,11 +185,17 @@ describe.skipIf(!envPresent)("atomic quiz answer recording", () => {
       const q1b = option(questionOne, 2);
       const q2a = option(questionTwo, 1);
       const q2b = option(questionTwo, 2);
+      const multiA = option(questionMulti, 1);
+      const multiB = option(questionMulti, 2);
 
       const createAttempt = async (questionOrder: string[]) => {
         const answerOrders = Object.fromEntries(questionOrder.map((id) => [
           id,
-          id === questionOne ? [q1a, q1b] : [q2a, q2b],
+          id === questionOne
+            ? [q1a, q1b]
+            : id === questionTwo
+              ? [q2a, q2b]
+              : [multiA, multiB],
         ]));
         const result = await admin
           .from("user_quiz_attempts")
@@ -195,6 +212,46 @@ describe.skipIf(!envPresent)("atomic quiz answer recording", () => {
         if (result.error || !result.data) throw result.error;
         return result.data.id;
       };
+
+      const invalidCardinalityAttempt = await createAttempt([questionOne]);
+      const invalidCardinality = await recordAnswer(
+        owner,
+        invalidCardinalityAttempt,
+        questionOne,
+        [q1a, q1b],
+      );
+      expect(invalidCardinality.error?.message).toContain(
+        "invalid or duplicate answers",
+      );
+      const invalidCardinalityStored = await admin
+        .from("user_quiz_attempts")
+        .select("responses")
+        .eq("id", invalidCardinalityAttempt)
+        .single();
+      expect(invalidCardinalityStored.error).toBeNull();
+      expect(invalidCardinalityStored.data?.responses).toEqual({});
+      const invalidCardinalityCleanup = await admin
+        .from("user_quiz_attempts")
+        .delete()
+        .eq("id", invalidCardinalityAttempt);
+      if (invalidCardinalityCleanup.error) throw invalidCardinalityCleanup.error;
+
+      const multiSelectAttempt = await createAttempt([questionMulti]);
+      const multiSelect = await recordAnswer(
+        owner,
+        multiSelectAttempt,
+        questionMulti,
+        [multiA, multiB],
+      );
+      expect(multiSelect.error).toBeNull();
+      expect(multiSelect.data?.[0].responses).toEqual({
+        [questionMulti]: [multiA, multiB],
+      });
+      const multiSelectCleanup = await admin
+        .from("user_quiz_attempts")
+        .delete()
+        .eq("id", multiSelectAttempt);
+      if (multiSelectCleanup.error) throw multiSelectCleanup.error;
 
       const firstAttempt = await createAttempt([questionOne]);
       const first = await recordAnswer(owner, firstAttempt, questionOne, [q1a]);
@@ -266,16 +323,52 @@ describe.skipIf(!envPresent)("atomic quiz answer recording", () => {
       )[questionOne];
       expect([[q1a], [q1b]]).toContainEqual(persistedSelection);
     } finally {
-      await Promise.all([
-        ownerId
-          ? admin.auth.admin.deleteUser(ownerId).catch(() => undefined)
-          : Promise.resolve(),
-        otherId
-          ? admin.auth.admin.deleteUser(otherId).catch(() => undefined)
-          : Promise.resolve(),
-      ]);
-      if (courseId) await admin.from("courses").delete().eq("id", courseId);
-      if (quizId) await admin.from("quizzes").delete().eq("id", quizId);
+      const cleanupFailures: string[] = [];
+      const userIds = [ownerId, otherId].filter(
+        (id): id is string => Boolean(id),
+      );
+      for (const userId of userIds) {
+        const { error } = await admin.auth.admin.deleteUser(userId);
+        if (error) cleanupFailures.push(`auth user ${userId}: ${error.message}`);
+      }
+      if (courseId) {
+        const { error } = await admin.from("courses").delete().eq("id", courseId);
+        if (error) cleanupFailures.push(`course ${courseId}: ${error.message}`);
+      }
+      if (quizId) {
+        const { error } = await admin.from("quizzes").delete().eq("id", quizId);
+        if (error) cleanupFailures.push(`quiz ${quizId}: ${error.message}`);
+      }
+
+      if (userIds.length) {
+        const { data, error } = await admin
+          .from("profiles")
+          .select("id")
+          .in("id", userIds);
+        if (error) cleanupFailures.push(`profile verification: ${error.message}`);
+        for (const row of data ?? []) {
+          cleanupFailures.push(`profile ${row.id}: still present`);
+        }
+      }
+      if (courseId) {
+        const { data, error } = await admin
+          .from("courses")
+          .select("id")
+          .eq("id", courseId);
+        if (error) cleanupFailures.push(`course verification ${courseId}: ${error.message}`);
+        if (data?.length) cleanupFailures.push(`course ${courseId}: still present`);
+      }
+      if (quizId) {
+        const { data, error } = await admin
+          .from("quizzes")
+          .select("id")
+          .eq("id", quizId);
+        if (error) cleanupFailures.push(`quiz verification ${quizId}: ${error.message}`);
+        if (data?.length) cleanupFailures.push(`quiz ${quizId}: still present`);
+      }
+      if (cleanupFailures.length) {
+        throw new Error(`TEST fixture cleanup failed: ${cleanupFailures.join("; ")}`);
+      }
     }
   });
 });

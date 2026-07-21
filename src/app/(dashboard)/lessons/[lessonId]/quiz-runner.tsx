@@ -1,6 +1,6 @@
 "use client";
 
-import { useReducer } from "react";
+import { useEffect, useReducer, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Play, RotateCcw } from "lucide-react";
@@ -37,6 +37,11 @@ type Answer = {
   explanation: string | null;
 };
 
+type Recovery = {
+  kind: "retry" | "reload";
+  message: string;
+};
+
 type RunState = {
   status: "run";
   attemptId: string;
@@ -46,6 +51,7 @@ type RunState = {
   selected: Record<string, string[]>;
   answers: Record<string, Answer>;
   phase: QuizQuestionPhase;
+  recovery: Recovery | null;
 };
 
 type RunnerState =
@@ -67,10 +73,10 @@ type RunnerAction =
   | { type: "toggle"; question: QuizQuestion; optionId: string }
   | { type: "checking" }
   | { type: "check_success"; reveal: QuestionReveal }
-  | { type: "check_error" }
+  | { type: "check_error"; recovery: Recovery }
   | { type: "move"; index: number }
   | { type: "finalizing" }
-  | { type: "finalize_error" }
+  | { type: "finalize_error"; recovery: Recovery }
   | { type: "done"; result: Extract<QuizSubmitResult, { ok: true }> }
   | { type: "reset" };
 
@@ -103,6 +109,7 @@ function runnerReducer(state: RunnerState, action: RunnerAction): RunnerState {
       selected: action.responses,
       answers,
       phase: answers[action.questions[viewIndex]?.id] ? "revealed" : "answering",
+      recovery: null,
     };
   }
   if (state.status !== "run") return state;
@@ -122,11 +129,12 @@ function runnerReducer(state: RunnerState, action: RunnerAction): RunnerState {
       };
     }
     case "checking":
-      return { ...state, phase: "checking" };
+      return { ...state, phase: "checking", recovery: null };
     case "check_success":
       return {
         ...state,
         phase: "revealed",
+        recovery: null,
         maxReachedIndex: Math.max(state.maxReachedIndex, state.viewIndex),
         answers: {
           ...state.answers,
@@ -134,7 +142,7 @@ function runnerReducer(state: RunnerState, action: RunnerAction): RunnerState {
         },
       };
     case "check_error":
-      return { ...state, phase: "check_error" };
+      return { ...state, phase: "check_error", recovery: action.recovery };
     case "move": {
       if (action.index < 0 || action.index >= state.questions.length) return state;
       if (action.index > state.viewIndex && state.phase !== "revealed") return state;
@@ -148,12 +156,13 @@ function runnerReducer(state: RunnerState, action: RunnerAction): RunnerState {
           ? Math.max(state.maxReachedIndex, action.index)
           : state.maxReachedIndex,
         phase: targetWasAnswered ? "revealed" : "answering",
+        recovery: null,
       };
     }
     case "finalizing":
-      return { ...state, phase: "finalizing" };
+      return { ...state, phase: "finalizing", recovery: null };
     case "finalize_error":
-      return { ...state, phase: "finalize_error" };
+      return { ...state, phase: "finalize_error", recovery: action.recovery };
     case "done":
       return { status: "done", result: action.result };
     default:
@@ -193,18 +202,22 @@ export function QuizRunner({
   );
   const router = useRouter();
 
-  async function beginAttempt() {
-    dispatch({ type: "start" });
+  async function loadAttempt(showStartingState: boolean) {
+    if (showStartingState) dispatch({ type: "start" });
     let response: Awaited<ReturnType<typeof startQuizAttempt>>;
     try {
       response = await startQuizAttempt({ quizId, lessonId });
     } catch {
-      dispatch({ type: "start_error" });
-      toast.error("Could not start the quiz. Try again.");
+      if (showStartingState) dispatch({ type: "start_error" });
+      toast.error(
+        showStartingState
+          ? "Could not start the quiz. Try again."
+          : "Could not reload your saved progress. Try again.",
+      );
       return;
     }
     if (!response.ok) {
-      dispatch({ type: "start_error" });
+      if (showStartingState) dispatch({ type: "start_error" });
       toast.error(response.error);
       return;
     }
@@ -215,6 +228,14 @@ export function QuizRunner({
       responses: response.responses,
       reveals: response.reveals,
     });
+  }
+
+  async function beginAttempt() {
+    await loadAttempt(true);
+  }
+
+  async function reloadSavedProgress() {
+    await loadAttempt(false);
   }
 
   async function checkAnswer(run: RunState) {
@@ -229,12 +250,21 @@ export function QuizRunner({
         selected,
       });
     } catch {
-      dispatch({ type: "check_error" });
+      dispatch({
+        type: "check_error",
+        recovery: {
+          kind: "retry",
+          message: "Your selection is locked here. Try the same answer again.",
+        },
+      });
       return;
     }
     dispatch(response.ok
       ? { type: "check_success", reveal: response.reveal }
-      : { type: "check_error" });
+      : {
+          type: "check_error",
+          recovery: { kind: "reload", message: response.error },
+        });
   }
 
   async function finishAttempt(run: RunState) {
@@ -243,11 +273,20 @@ export function QuizRunner({
     try {
       response = await finalizeQuizAttempt({ attemptId: run.attemptId });
     } catch {
-      dispatch({ type: "finalize_error" });
+      dispatch({
+        type: "finalize_error",
+        recovery: {
+          kind: "retry",
+          message: "Your checked answers are still saved.",
+        },
+      });
       return;
     }
     if (!response.ok) {
-      dispatch({ type: "finalize_error" });
+      dispatch({
+        type: "finalize_error",
+        recovery: { kind: "reload", message: response.error },
+      });
       return;
     }
     dispatch({ type: "done", result: response });
@@ -343,19 +382,30 @@ export function QuizRunner({
           selected={state.selected[question.id] ?? []}
           phase={state.phase}
           feedback={feedback}
+          recovery={state.phase === "check_error" ? state.recovery : null}
           onToggle={(optionId) =>
             dispatch({ type: "toggle", question, optionId })}
           onCheck={() => void checkAnswer(state)}
           onRetryCheck={() => void checkAnswer(state)}
+          onReload={() => void reloadSavedProgress()}
         />
       </div>
 
       {state.phase === "finalize_error" ? (
         <div role="alert" className="rounded-[var(--bmh-radius-md)] border-2 border-[var(--danger)] bg-[var(--danger-soft)] p-4 text-sm font-bold text-[var(--ink-900)]">
-          <p>Couldn&apos;t finish the quiz. Your checked answers are still saved.</p>
-          <Button className="mt-3" onClick={() => void finishAttempt(state)}>
-            Try finishing again
-          </Button>
+          <p>Couldn&apos;t finish the quiz.</p>
+          <p className="mt-1 font-semibold text-[var(--text-muted)]">
+            {state.recovery?.message ?? "Your checked answers are still saved."}
+          </p>
+          {state.recovery?.kind === "reload" ? (
+            <Button className="mt-3" onClick={() => void reloadSavedProgress()}>
+              Reload saved progress
+            </Button>
+          ) : (
+            <Button className="mt-3" onClick={() => void finishAttempt(state)}>
+              Try finishing again
+            </Button>
+          )}
         </div>
       ) : null}
 
@@ -414,13 +464,22 @@ function QuizResultCard({
   attemptsExhausted: boolean;
   onRetake: () => void;
 }) {
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    headingRef.current?.focus();
+  }, []);
+
   return (
     <Card outline padding="lg">
       <div className="mb-6 text-center">
         <Badge tone={result.passed ? "green" : "red"}>
           {result.score}% score
         </Badge>
-        <h2 className="mt-3 font-[family-name:var(--font-display)] text-3xl font-extrabold text-[var(--ink-900)]">
+        <h2
+          ref={headingRef}
+          tabIndex={-1}
+          className="mt-3 scroll-mt-24 font-[family-name:var(--font-display)] text-3xl font-extrabold text-[var(--ink-900)] outline-none"
+        >
           {result.passed
             ? "Passed"
             : attemptsExhausted

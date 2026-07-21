@@ -335,6 +335,7 @@ async function resumeAttempt(
   admin: ReturnType<typeof createAdminClient>,
 ): Promise<QuizStartResult> {
   const questionOrder = stringArray(attempt.question_order);
+  const answerOrders = stringArrayRecord(attempt.answer_orders);
   const responses = stringArrayRecord(attempt.responses);
   const answeredIds = questionOrder.filter((id) => responses[id]?.length);
   let reveals: QuestionReveal[] = [];
@@ -349,14 +350,32 @@ async function resumeAttempt(
     }
     reveals = answeredIds.map((id) => buildReveal(byId.get(id)!, responses[id]));
   }
+  const restoredQuestions = restoreAttemptQuestions({
+    questions: publicQuestions,
+    questionOrder,
+    answerOrders,
+  });
+  if (
+    questionOrder.length === 0 ||
+    new Set(questionOrder).size !== questionOrder.length ||
+    questionOrder.some((questionId) => {
+      const persistedOrder = answerOrders[questionId] ?? [];
+      return (
+        persistedOrder.length === 0 ||
+        new Set(persistedOrder).size !== persistedOrder.length
+      );
+    }) ||
+    restoredQuestions.length !== questionOrder.length ||
+    restoredQuestions.some(
+      (question) => question.options.length !== (answerOrders[question.id]?.length ?? 0),
+    )
+  ) {
+    return { ok: false, error: "This attempt contains unavailable questions." };
+  }
   return {
     ok: true,
     attemptId: attempt.id,
-    questions: restoreAttemptQuestions({
-      questions: publicQuestions,
-      questionOrder,
-      answerOrders: stringArrayRecord(attempt.answer_orders),
-    }),
+    questions: restoredQuestions,
     resumed: true,
     responses,
     reveals,
@@ -669,11 +688,12 @@ function buildReveal(
   persistedSelected: string[],
 ): QuestionReveal {
   const scoringQuestion = toScoringQuestion(question);
+  const revealScoringQuestion = { ...scoringQuestion, points: 1 };
   return {
     questionId: question.id,
     isCorrect:
       scoreQuizAttempt(
-        [scoringQuestion],
+        [revealScoringQuestion],
         { [question.id]: persistedSelected },
         0,
       ).earnedPoints > 0,

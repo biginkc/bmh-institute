@@ -8,6 +8,11 @@ import { Card } from "@/components/bmh-ds/card";
 import { QuizFeedback } from "./quiz-feedback";
 import type { QuizQuestion } from "./quiz-runner";
 
+type Recovery = {
+  kind: "retry" | "reload";
+  message: string;
+} | null;
+
 export type QuizQuestionPhase =
   | "answering"
   | "checking"
@@ -29,9 +34,11 @@ export function QuizQuestionCard({
   selected,
   phase,
   feedback,
+  recovery = null,
   onToggle,
   onCheck,
   onRetryCheck,
+  onReload = onRetryCheck,
 }: {
   question: QuizQuestion;
   index: number;
@@ -39,9 +46,11 @@ export function QuizQuestionCard({
   selected: string[];
   phase: QuizQuestionPhase;
   feedback: Feedback;
+  recovery?: Recovery;
   onToggle: (optionId: string) => void;
   onCheck: () => void;
   onRetryCheck: () => void;
+  onReload?: () => void;
 }) {
   const headingRef = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
@@ -132,9 +141,13 @@ export function QuizQuestionCard({
             Couldn&apos;t check that answer
           </p>
           <p className="mt-1 text-sm font-semibold text-[var(--text-muted)]">
-            Your selection is locked here. Try the same answer again.
+            {recovery?.message ?? "Your selection is locked here. Try the same answer again."}
           </p>
-          <Button className="mt-3" onClick={onRetryCheck}>Try again</Button>
+          {recovery?.kind === "reload" ? (
+            <Button className="mt-3" onClick={onReload}>Reload saved progress</Button>
+          ) : (
+            <Button className="mt-3" onClick={onRetryCheck}>Try again</Button>
+          )}
         </div>
       ) : feedback ? (
         <QuizFeedback

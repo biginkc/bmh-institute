@@ -322,3 +322,58 @@ production database change.
   history, including ownership, first-answer locking, and concurrent-answer
   preservation. `git diff --check` passed, and all three locked helper files
   retain zero diff against current `origin/main`.
+
+### Adversarial production-readiness review and correction
+
+- Three fresh, independent review lanes inspected database/security behavior,
+  learner UX/state recovery, and tests/release safety on rebased head
+  `f051ba9` before any push or production change.
+- The review found and the implementation now fixes: direct-RPC cardinality
+  poisoning of a single-choice attempt; incomplete resume payloads when a
+  snapshotted question or option disappears; deterministic two-tab conflicts
+  being retried forever; zero-point correct answers displaying as incorrect;
+  missing result-card focus; a nullable generated completion timestamp typed as
+  non-null; and TEST integration cleanup that could hide leaked fixtures.
+- Ambiguous transport failures still retry the byte-identical answer/finalize
+  request. A definitive server rejection instead offers `Reload saved progress`
+  and rehydrates from the persisted attempt without discarding the current
+  recovery state if that reload itself fails.
+- The RPC now enforces question-type cardinality inside the locked database
+  transaction. The focused hosted TEST integration proves a two-option answer
+  to a single-choice question is rejected and leaves `responses` empty.
+- Hosted TEST cleanup now captures every auth/database deletion error, queries
+  the exact user/course/quiz IDs afterward, and fails if any remain. The broad
+  historical `cleanup:prod-readiness` command is explicitly excluded from this
+  release because it can target artifacts outside a supplied prefix; any later
+  production canary cleanup must use only exact IDs created by this run.
+- Production browser proof must reuse an existing real Hugo-provisioned canary
+  account and exercise the live Hugo-only sign-in path. This release must not
+  create a Supabase-auth user through the service role or otherwise bypass Hugo
+  provisioning for acceptance evidence.
+- The corrected branch passes `npm run verify`: 155 server/unit files with 919
+  tests and 37 RTL files with 126 tests, zero failures and zero skips. Lint has
+  zero errors and the same nine inherited warnings; the production build and
+  `git diff --check` pass.
+- TEST project `jvaabkchkihkjllehmft` has the corrected 050 function body.
+  Catalog probes confirm the exact table return shape, `SECURITY DEFINER`,
+  authenticated execute, anonymous denial, and the added question-type guard.
+  The corrected hosted integration test passes and its exact-ID cleanup proof
+  is green.
+- The three locked helpers (`score.ts`, `attempts.ts`, and
+  `attempt-selection.ts`) still have zero diff against `origin/main`.
+- A read-only TEST/PROD catalog comparison found identical function-definition
+  hashes, execution ACLs, security-definer flags, search paths, and comments for
+  every artifact introduced by migrations 048 and 049. Production already has
+  those exact schema definitions, but its migration history has no 048 or 049
+  rows. Before applying 050, the safe production path is therefore to record
+  048 and 049 as already applied without replaying either migration SQL, then
+  apply only the quiz migration SQL as authorized.
+- The first re-review returned clean from database/security and app/UX. The
+  tests/release lane requested positive hosted coverage for the new
+  `multi_select` database branch and an explicit Hugo-only canary restriction.
+  Both are now implemented: the hosted TEST test proves two distinct valid
+  multi-select options persist, and the ledger forbids service-role auth bypass.
+  The final tests/release re-review found no code issue; its only correction was
+  this ledger's test count after the added snapshot case. All three lanes are
+  now clean. The branch remains local and production remains unchanged pending
+  the final command rerun and release commit.

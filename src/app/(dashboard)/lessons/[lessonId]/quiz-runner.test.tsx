@@ -175,6 +175,7 @@ describe("<QuizRunner />", () => {
       selected: ["multi-a", "multi-b"],
     });
     expect(await screen.findByRole("heading", { name: "Passed" })).toBeVisible();
+    expect(screen.getByRole("heading", { name: "Passed" })).toHaveFocus();
     expect(refresh).toHaveBeenCalled();
     expect(screen.getByRole("img", { name: "Andrea" })).toHaveAttribute(
       "src",
@@ -244,7 +245,7 @@ describe("<QuizRunner />", () => {
   it("retries a failed check with byte-for-byte identical action arguments", async () => {
     const user = userEvent.setup();
     vi.mocked(answerQuizQuestion)
-      .mockResolvedValueOnce({ ok: false, error: "network lost" })
+      .mockRejectedValueOnce(new Error("network lost"))
       .mockResolvedValueOnce(revealFor("single"));
     renderRunner();
     await start(user);
@@ -281,7 +282,7 @@ describe("<QuizRunner />", () => {
   it("turns retry-after-landed-write into feedback instead of another error", async () => {
     const user = userEvent.setup();
     vi.mocked(answerQuizQuestion)
-      .mockResolvedValueOnce({ ok: false, error: "response lost" })
+      .mockRejectedValueOnce(new Error("response lost"))
       .mockResolvedValueOnce(revealFor("single"));
     renderRunner();
     await start(user);
@@ -289,6 +290,44 @@ describe("<QuizRunner />", () => {
     await user.click(screen.getByRole("button", { name: "Check answer" }));
     await user.click(await screen.findByRole("button", { name: "Try again" }));
     expect(await screen.findByText("Ask before pitching.")).toBeVisible();
+  });
+
+  it("reloads saved progress after a definitive first-answer-lock conflict", async () => {
+    const user = userEvent.setup();
+    vi.mocked(answerQuizQuestion).mockResolvedValueOnce({
+      ok: false,
+      error: "This question has already been answered.",
+    });
+    vi.mocked(startQuizAttempt)
+      .mockResolvedValueOnce({
+        ok: true,
+        attemptId: "attempt-1",
+        questions: attemptQuestions,
+        resumed: false,
+        responses: {},
+        reveals: [],
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        attemptId: "attempt-1",
+        questions: attemptQuestions,
+        resumed: true,
+        responses: { single: ["single-a"] },
+        reveals: [revealFor("single", false).reveal],
+      });
+    renderRunner();
+    await start(user);
+    await user.click(screen.getByLabelText("Ask one clear question"));
+    await user.click(screen.getByRole("button", { name: "Check answer" }));
+
+    expect(await screen.findByText("This question has already been answered.")).toBeVisible();
+    expect(screen.queryByRole("button", { name: "Try again" })).toBeNull();
+    await user.click(screen.getByRole("button", { name: "Reload saved progress" }));
+    expect(await screen.findByRole("heading", { name: questions[1].question_text })).toBeVisible();
+    await user.click(screen.getByRole("button", { name: "Back" }));
+    expect(await screen.findByText("Incorrect")).toBeVisible();
+    expect(startQuizAttempt).toHaveBeenCalledTimes(2);
+    expect(answerQuizQuestion).toHaveBeenCalledTimes(1);
   });
 
   it("retries finalize without losing checked answers", async () => {
@@ -302,7 +341,7 @@ describe("<QuizRunner />", () => {
       reveals: [],
     });
     vi.mocked(finalizeQuizAttempt)
-      .mockResolvedValueOnce({ ok: false, error: "network lost" })
+      .mockRejectedValueOnce(new Error("network lost"))
       .mockResolvedValueOnce({ ...finalPass, earnedPoints: 1, totalPoints: 1 });
     renderRunner();
     await user.click(screen.getByRole("button", { name: "Start quiz" }));
@@ -310,10 +349,47 @@ describe("<QuizRunner />", () => {
     await user.click(screen.getByRole("button", { name: "Check answer" }));
     await user.click(await screen.findByRole("button", { name: "Finish" }));
 
-    expect(await screen.findByText("Couldn't finish the quiz. Your checked answers are still saved.")).toBeVisible();
+    expect(await screen.findByText("Your checked answers are still saved.")).toBeVisible();
     await user.click(screen.getByRole("button", { name: "Try finishing again" }));
     expect(await screen.findByRole("heading", { name: "Passed" })).toBeVisible();
     expect(finalizeQuizAttempt).toHaveBeenCalledTimes(2);
+  });
+
+  it("reloads saved progress after a definitive finalize rejection", async () => {
+    const user = userEvent.setup();
+    vi.mocked(startQuizAttempt)
+      .mockResolvedValueOnce({
+        ok: true,
+        attemptId: "attempt-1",
+        questions: [attemptQuestions[0]],
+        resumed: false,
+        responses: {},
+        reveals: [],
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        attemptId: "attempt-1",
+        questions: [attemptQuestions[0]],
+        resumed: true,
+        responses: { single: ["single-b"] },
+        reveals: [revealFor("single").reveal],
+      });
+    vi.mocked(finalizeQuizAttempt).mockResolvedValueOnce({
+      ok: false,
+      error: "Answer every question before submitting.",
+    });
+    renderRunner();
+    await start(user);
+    await user.click(screen.getByLabelText("Ask one clear question"));
+    await user.click(screen.getByRole("button", { name: "Check answer" }));
+    await user.click(await screen.findByRole("button", { name: "Finish" }));
+
+    expect(await screen.findByText("Answer every question before submitting.")).toBeVisible();
+    expect(screen.queryByRole("button", { name: "Try finishing again" })).toBeNull();
+    await user.click(screen.getByRole("button", { name: "Reload saved progress" }));
+    expect(await screen.findByText("Ask before pitching.")).toBeVisible();
+    expect(startQuizAttempt).toHaveBeenCalledTimes(2);
+    expect(finalizeQuizAttempt).toHaveBeenCalledTimes(1);
   });
 
   it("recovers from a rejected finalize request", async () => {
