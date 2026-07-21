@@ -55,8 +55,8 @@ describe("DashboardPage learner redesign", () => {
     expect(html).not.toContain("Chapter");
     expect(html).toContain('href="/profile"');
     expect(html).toContain(">Profile</a>");
-    expect(html).toContain('href="/forgot-password"');
-    expect(html).toContain(">Reset password</a>");
+    expect(html).toContain('href="https://hugo.bmhgroupkc.com"');
+    expect(html).toContain(">Manage Hugo account</a>");
   });
 
   it("renders course-oriented support copy when no training is assigned", async () => {

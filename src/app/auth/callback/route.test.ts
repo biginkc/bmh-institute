@@ -1,321 +1,97 @@
-// HARDEN-02: regression for applyInvite expiry handling.
-// Mocks @/lib/supabase/admin to exercise the four invite states.
-// CR-02: regression for the GET handler tearing down the session and the
-// freshly created auth.users row when applyInvite returns expired.
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-type InviteRow = {
-  id: string;
-  system_role: string;
-  role_group_ids: string[];
-  accepted_at: string | null;
-  expires_at: string;
-} | null;
-
-let inviteRow: InviteRow = null;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const profileUpdate = vi.fn(async (patch: any) => {
-  void patch;
-  return { error: null };
-});
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const userRoleInsert = vi.fn(async (rows: any) => {
-  void rows;
-  return { error: null };
-});
-const userRoleDelete = vi.fn(async () => ({ error: null }));
-const adminAuthDeleteUser = vi.fn(async (id: string) => {
-  void id;
-  return {
-    data: null,
-    error: null,
-  };
-});
-
-vi.mock("@/lib/supabase/admin", () => ({
-  createAdminClient: vi.fn(() => ({
-    from: (table: string) => {
-      if (table === "invites") {
-        return {
-          select: () => ({
-            eq: () => ({
-              maybeSingle: async () => ({ data: inviteRow, error: null }),
-            }),
-          }),
-          update: () => ({
-            eq: async () => {
-              return { error: null };
-            },
-          }),
-        };
-      }
-      if (table === "profiles") {
-        return {
-          update: (patch: unknown) => ({
-            eq: async () => {
-              await profileUpdate(patch);
-              return { error: null };
-            },
-          }),
-        };
-      }
-      if (table === "user_role_groups") {
-        return {
-          delete: () => ({
-            eq: async () => {
-              await userRoleDelete();
-              return { error: null };
-            },
-          }),
-          upsert: async (rows: unknown) => {
-            await userRoleInsert(rows);
-            return { error: null };
-          },
-          insert: async (rows: unknown) => {
-            await userRoleInsert(rows);
-            return { error: null };
-          },
-        };
-      }
-      throw new Error(`Unexpected table ${table}`);
-    },
-    auth: { admin: { deleteUser: adminAuthDeleteUser } },
-  })),
-}));
-
-const exchangeCodeForSession = vi.fn(async (code: string) => {
-  void code;
-  return {
-    data: {
-      session: { user: { id: "user-123" } },
-    },
-    error: null,
-  };
-});
-const sessionSignOut = vi.fn(async () => ({ error: null }));
+const exchangeCodeForSession = vi.fn();
+const signOut = vi.fn();
+const maybeSingle = vi.fn();
 
 vi.mock("@/lib/supabase/server", () => ({
   createClient: vi.fn(async () => ({
-    auth: {
-      exchangeCodeForSession,
-      signOut: sessionSignOut,
-    },
+    auth: { exchangeCodeForSession, signOut },
+    from: () => ({
+      select: () => ({
+        eq: () => ({ maybeSingle }),
+      }),
+    }),
   })),
 }));
 
-import { applyInvite, GET } from "./route";
-
-describe("applyInvite (HARDEN-02)", () => {
-  beforeEach(() => {
-    inviteRow = null;
-    profileUpdate.mockClear();
-    userRoleInsert.mockClear();
-    userRoleDelete.mockClear();
-  });
-
-  afterEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it("applies role assignment when the invite is active", async () => {
-    const future = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
-    inviteRow = {
-      id: "inv-1",
-      system_role: "admin",
-      role_group_ids: ["g1"],
-      accepted_at: null,
-      expires_at: future,
-    };
-
-    const result = await applyInvite({ userId: "u-1", token: "tok-1" });
-    expect(result).toEqual({ ok: true });
-    expect(profileUpdate).toHaveBeenCalledWith(
-      expect.objectContaining({ system_role: "admin" }),
-    );
-    expect(userRoleInsert).toHaveBeenCalled();
-  });
-
-  it("rejects with reason 'expired' when expires_at is in the past", async () => {
-    const past = new Date(Date.now() - 60 * 1000).toISOString();
-    inviteRow = {
-      id: "inv-2",
-      system_role: "admin",
-      role_group_ids: ["g1"],
-      accepted_at: null,
-      expires_at: past,
-    };
-
-    const result = await applyInvite({ userId: "u-1", token: "tok-2" });
-    expect(result).toEqual({ ok: false, reason: "expired" });
-    expect(profileUpdate).not.toHaveBeenCalled();
-    expect(userRoleInsert).not.toHaveBeenCalled();
-  });
-
-  it("returns ok when the invite has already been accepted", async () => {
-    inviteRow = {
-      id: "inv-3",
-      system_role: "admin",
-      role_group_ids: ["g1"],
-      accepted_at: new Date().toISOString(),
-      expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-    };
-
-    const result = await applyInvite({ userId: "u-1", token: "tok-3" });
-    expect(result).toEqual({ ok: true });
-    expect(profileUpdate).not.toHaveBeenCalled();
-    expect(userRoleInsert).not.toHaveBeenCalled();
-  });
-
-  it("returns ok when no matching invite row exists", async () => {
-    inviteRow = null;
-    const result = await applyInvite({ userId: "u-1", token: "tok-missing" });
-    expect(result).toEqual({ ok: true });
-    expect(profileUpdate).not.toHaveBeenCalled();
-    expect(userRoleInsert).not.toHaveBeenCalled();
-  });
-});
+import { GET } from "./route";
 
 function makeRequest(url: string) {
-  // The GET handler reads request.nextUrl.searchParams and request.nextUrl.origin.
-  // Build a minimal stand-in instead of pulling NextRequest into the unit test.
-  const u = new URL(url);
-  return {
-    nextUrl: {
-      searchParams: u.searchParams,
-      origin: u.origin,
-    },
-  } as unknown as Parameters<typeof GET>[0];
+  const nextUrl = new URL(url);
+  return { nextUrl } as unknown as Parameters<typeof GET>[0];
 }
 
-describe("auth callback GET (CR-02 expired-invite teardown)", () => {
+describe("Hugo-only auth callback", () => {
   beforeEach(() => {
-    inviteRow = null;
-    profileUpdate.mockClear();
-    userRoleInsert.mockClear();
-    userRoleDelete.mockClear();
-    adminAuthDeleteUser.mockClear();
-    sessionSignOut.mockClear();
-    exchangeCodeForSession.mockClear();
+    vi.clearAllMocks();
     exchangeCodeForSession.mockResolvedValue({
-      data: { session: { user: { id: "user-123" } } },
+      data: { session: { user: { id: "existing-user" } } },
       error: null,
     });
+    maybeSingle.mockResolvedValue({
+      data: { status: "active" },
+      error: null,
+    });
+    signOut.mockResolvedValue({ error: null });
   });
 
-  afterEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it("signs the session out and deletes the auth.users row when the invite is expired", async () => {
-    const past = new Date(Date.now() - 60 * 1000).toISOString();
-    inviteRow = {
-      id: "inv-expired",
-      system_role: "admin",
-      role_group_ids: ["g1"],
-      accepted_at: null,
-      expires_at: past,
-    };
-
-    const res = await GET(
+  it("lands a provisioned active Hugo user on the requested page", async () => {
+    const response = await GET(
       makeRequest(
-        "https://example.test/auth/callback?code=abc&invite_token=tok-expired",
+        "https://institute.bmhgroupkc.com/auth/callback?flow=sso&code=abc&next=/lessons/abc",
       ),
     );
 
-    expect(sessionSignOut).toHaveBeenCalledTimes(1);
-    expect(adminAuthDeleteUser).toHaveBeenCalledWith("user-123");
-    expect(res.headers.get("location")).toBe(
-      "https://example.test/login?error=invite_expired",
+    expect(exchangeCodeForSession).toHaveBeenCalledWith("abc");
+    expect(response.headers.get("location")).toBe(
+      "https://institute.bmhgroupkc.com/lessons/abc",
     );
   });
 
-  it("preserves invite_token for browser hash-token invite callbacks", async () => {
-    const res = await GET(
-      makeRequest("https://example.test/auth/callback?invite_token=tok-hash"),
+  it("rejects historical password, invite, recovery, and magic-link callbacks", async () => {
+    const response = await GET(
+      makeRequest(
+        "https://institute.bmhgroupkc.com/auth/callback?code=legacy&type=recovery",
+      ),
     );
 
     expect(exchangeCodeForSession).not.toHaveBeenCalled();
-    expect(res.headers.get("location")).toBe(
-      "https://example.test/login?invite_token=tok-hash",
+    expect(response.headers.get("location")).toBe(
+      "https://institute.bmhgroupkc.com/login?error=sso_failed",
     );
   });
 
-  it("does not call signOut or deleteUser when the invite is active", async () => {
-    const future = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
-    inviteRow = {
-      id: "inv-ok",
-      system_role: "admin",
-      role_group_ids: [],
-      accepted_at: null,
-      expires_at: future,
-    };
+  it("signs out a Hugo identity with no provisioned Institute profile", async () => {
+    maybeSingle.mockResolvedValue({ data: null, error: null });
 
-    await GET(
+    const response = await GET(
       makeRequest(
-        "https://example.test/auth/callback?code=abc&invite_token=tok-ok&type=invite",
+        "https://institute.bmhgroupkc.com/auth/callback?flow=sso&code=abc",
       ),
     );
 
-    expect(sessionSignOut).not.toHaveBeenCalled();
-    expect(adminAuthDeleteUser).not.toHaveBeenCalled();
-  });
-
-  it("maps a code-less SSO callback to error=sso_failed instead of the invite error", async () => {
-    const res = await GET(
-      makeRequest("https://example.test/auth/callback?flow=sso"),
-    );
-
-    expect(exchangeCodeForSession).not.toHaveBeenCalled();
-    expect(res.headers.get("location")).toBe(
-      "https://example.test/login?error=sso_failed",
+    expect(signOut).toHaveBeenCalledTimes(1);
+    expect(response.headers.get("location")).toBe(
+      "https://institute.bmhgroupkc.com/login?error=access_denied",
     );
   });
 
-  it("keeps error=invite_failed for a code-less callback without the sso tag", async () => {
-    const res = await GET(makeRequest("https://example.test/auth/callback"));
+  it("signs out a suspended Institute user without a redirect loop", async () => {
+    maybeSingle.mockResolvedValue({
+      data: { status: "suspended" },
+      error: null,
+    });
 
-    expect(res.headers.get("location")).toBe(
-      "https://example.test/login?error=invite_failed",
-    );
-  });
-
-  it("maps an SSO exchange failure to error=sso_failed", async () => {
-    exchangeCodeForSession.mockResolvedValueOnce({
-      data: { session: null },
-      error: { message: "invalid code" },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } as any);
-
-    const res = await GET(
-      makeRequest("https://example.test/auth/callback?code=bad&flow=sso"),
-    );
-
-    expect(res.headers.get("location")).toBe(
-      "https://example.test/login?error=sso_failed",
-    );
-  });
-
-  it("redirects to /login?error=invite_expired even when the admin client throws on delete", async () => {
-    const past = new Date(Date.now() - 60 * 1000).toISOString();
-    inviteRow = {
-      id: "inv-expired-2",
-      system_role: "admin",
-      role_group_ids: [],
-      accepted_at: null,
-      expires_at: past,
-    };
-    adminAuthDeleteUser.mockRejectedValueOnce(new Error("admin unavailable"));
-
-    const res = await GET(
+    const response = await GET(
       makeRequest(
-        "https://example.test/auth/callback?code=abc&invite_token=tok-expired",
+        "https://institute.bmhgroupkc.com/auth/callback?flow=sso&code=abc",
       ),
     );
 
-    // signOut still ran so the cookie session is cleared.
-    expect(sessionSignOut).toHaveBeenCalledTimes(1);
-    expect(res.headers.get("location")).toBe(
-      "https://example.test/login?error=invite_expired",
+    expect(signOut).toHaveBeenCalledTimes(1);
+    expect(response.headers.get("location")).toBe(
+      "https://institute.bmhgroupkc.com/login?error=suspended",
     );
   });
 });

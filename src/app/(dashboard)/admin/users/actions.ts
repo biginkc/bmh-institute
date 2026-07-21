@@ -1,15 +1,10 @@
 "use server";
 
-import { randomBytes } from "node:crypto";
-
 import { revalidatePath } from "next/cache";
 
 import { requireAdmin } from "@/lib/auth/guard";
-import { getAppUrl } from "@/lib/app-url";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { sendEmail } from "@/lib/email/send";
-import { renderEnrollmentEmail } from "@/lib/email/enrollment";
 import { normalizeReleaseControlError } from "@/lib/release-control/admin-guards";
 import {
   parseInviteInput,
@@ -18,7 +13,7 @@ import {
 } from "@/lib/invites/validate";
 
 export type InviteFormState =
-  | { ok: true; email: string }
+  | { ok: true; email: string; created: boolean }
   | {
       ok: false;
       error: string;
@@ -31,7 +26,7 @@ export async function inviteUser(
   _prev: InviteFormState,
   formData: FormData,
 ): Promise<InviteFormState> {
-  const inviter = await requireAdmin();
+  await requireAdmin();
   const parsed = parseInviteInput(formData);
   if (!parsed.ok) return fieldResult(parsed, formData);
 
@@ -48,138 +43,90 @@ export async function inviteUser(
     };
   }
 
-  const token = randomBytes(32).toString("base64url");
-  const supabase = await createClient();
-
-  // Persist the invite first — its token is what the callback uses to apply
-  // role_groups and system_role after Supabase finishes its side of the flow.
-  const { error: insertError } = await supabase.from("invites").insert({
-    email: parsed.value.email,
-    role_group_ids: parsed.value.role_group_ids,
-    system_role: parsed.value.system_role,
-    token,
-    invited_by: inviter.id,
-  });
-  if (insertError) {
+  const canonicalEmail = parsed.value.email.trim().toLowerCase();
+  const { data: listed, error: listError } =
+    await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+  if (listError) {
     return {
       ok: false,
-      error: `Couldn't record the invite: ${insertError.message}`,
+      error: `Couldn't check existing access: ${listError.message}`,
     };
   }
 
-  const appUrl = getAppUrl();
-  const redirectTo = `${appUrl}/auth/callback?invite_token=${encodeURIComponent(token)}`;
-
-  const { error: inviteError } =
-    await admin.auth.admin.inviteUserByEmail(parsed.value.email, {
-      redirectTo,
-      data: {
-        invited_by: inviter.email,
-        system_role: parsed.value.system_role,
-      },
+  let user = listed.users.find(
+    (candidate) => candidate.email?.trim().toLowerCase() === canonicalEmail,
+  );
+  const created = !user;
+  if (!user) {
+    const { data, error } = await admin.auth.admin.createUser({
+      email: canonicalEmail,
+      email_confirm: true,
+      app_metadata: { system_role: parsed.value.system_role },
+      user_metadata: { provisioned_by: "institute_admin" },
     });
-  if (inviteError) {
-    // Back out the invite row so a retry doesn't double up.
-    await supabase.from("invites").delete().eq("token", token);
+    if (error || !data.user) {
+      return {
+        ok: false,
+        error: `Couldn't grant Institute access: ${error?.message ?? "No user returned."}`,
+      };
+    }
+    user = data.user;
+  }
+
+  const { data: updatedProfile, error: profileError } = await admin
+    .from("profiles")
+    .update({
+      email: canonicalEmail,
+      system_role: parsed.value.system_role,
+      status: "active",
+    })
+    .eq("id", user.id)
+    .select("id")
+    .maybeSingle();
+  if (profileError) {
     return {
       ok: false,
-      error: `Supabase rejected the invite: ${inviteError.message}`,
+      error: `The account exists, but its Institute role couldn't be saved: ${profileError.message}`,
     };
   }
 
-  // Send enrollment email listing the programs + standalone courses the
-  // invitee will have access to. Fire-and-forget — an SMTP failure or
-  // missing SMTP_* config shouldn't block the invite since Supabase
-  // already delivered the signup link.
-  await sendEnrollmentEmail({
-    supabase,
-    email: parsed.value.email,
-    roleGroupIds: parsed.value.role_group_ids,
-    appUrl,
-  });
+  if (!updatedProfile) {
+    const fullName =
+      typeof user.user_metadata?.full_name === "string"
+        ? user.user_metadata.full_name
+        : canonicalEmail.split("@")[0];
+    const { error: insertProfileError } = await admin.from("profiles").insert({
+      id: user.id,
+      email: canonicalEmail,
+      full_name: fullName,
+      system_role: parsed.value.system_role,
+      status: "active",
+    });
+    if (insertProfileError) {
+      return { ok: false, error: insertProfileError.message };
+    }
+  }
+
+  const { error: deleteGroupsError } = await admin
+    .from("user_role_groups")
+    .delete()
+    .eq("user_id", user.id);
+  if (deleteGroupsError) {
+    return { ok: false, error: deleteGroupsError.message };
+  }
+
+  if (parsed.value.role_group_ids.length > 0) {
+    const { error: groupError } = await admin.from("user_role_groups").insert(
+      parsed.value.role_group_ids.map((roleGroupId) => ({
+        user_id: user.id,
+        role_group_id: roleGroupId,
+      })),
+    );
+    if (groupError) return { ok: false, error: groupError.message };
+  }
 
   revalidatePath("/admin/users");
-  return { ok: true, email: parsed.value.email };
-}
-
-async function sendEnrollmentEmail(input: {
-  supabase: Awaited<ReturnType<typeof createClient>>;
-  email: string;
-  roleGroupIds: string[];
-  appUrl: string;
-}): Promise<void> {
-  const programs: Array<{ id: string; title: string }> = [];
-  const standaloneCourses: Array<{ id: string; title: string }> = [];
-
-  if (input.roleGroupIds.length > 0) {
-    // Programs accessible via any of the invitee's role groups.
-    const { data: pRows } = await input.supabase
-      .from("program_access")
-      .select("programs(id, title, is_published)")
-      .in("role_group_id", input.roleGroupIds);
-    const seen = new Set<string>();
-    for (const row of pRows ?? []) {
-      const p = firstRow(row.programs);
-      if (
-        p &&
-        p.is_published === true &&
-        typeof p.id === "string" &&
-        !seen.has(p.id)
-      ) {
-        seen.add(p.id);
-        programs.push({ id: p.id, title: p.title as string });
-      }
-    }
-
-    // Courses accessible directly via course_access AND not already in
-    // one of the invitee's accessible programs.
-    const { data: cRows } = await input.supabase
-      .from("course_access")
-      .select("courses(id, title, is_published)")
-      .in("role_group_id", input.roleGroupIds);
-    const courseIdsInPrograms = new Set<string>();
-    if (programs.length > 0) {
-      const { data: pcRows } = await input.supabase
-        .from("program_courses")
-        .select("course_id")
-        .in(
-          "program_id",
-          programs.map((p) => p.id),
-        );
-      for (const r of pcRows ?? []) {
-        courseIdsInPrograms.add(r.course_id as string);
-      }
-    }
-    const seenC = new Set<string>();
-    for (const row of cRows ?? []) {
-      const c = firstRow(row.courses);
-      if (!c || typeof c.id !== "string") continue;
-      if (c.is_published !== true) continue;
-      if (courseIdsInPrograms.has(c.id)) continue;
-      if (seenC.has(c.id)) continue;
-      seenC.add(c.id);
-      standaloneCourses.push({ id: c.id, title: c.title as string });
-    }
-  }
-
-  const { subject, html } = renderEnrollmentEmail({
-    inviteeEmail: input.email,
-    appUrl: input.appUrl,
-    programs,
-    standaloneCourses,
-  });
-
-  await sendEmail({
-    to: input.email,
-    subject,
-    html,
-  });
-}
-
-function firstRow<T>(value: T | T[] | null | undefined): T | null {
-  if (!value) return null;
-  if (Array.isArray(value)) return value[0] ?? null;
-  return value;
+  return { ok: true, email: canonicalEmail, created };
 }
 
 export async function revokeInvite(
@@ -233,66 +180,14 @@ export async function setUserRoleGroups(input: {
 }
 
 export async function resendInvite(
-  inviteId: string,
+  _inviteId: string,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
-  const inviter = await requireAdmin();
-
-  let admin;
-  try {
-    admin = createAdminClient();
-  } catch (e) {
-    const message = e instanceof Error ? e.message : "Admin client unavailable.";
-    return { ok: false, error: message };
-  }
-
-  const supabase = await createClient();
-  const { data: invite, error: lookupErr } = await supabase
-    .from("invites")
-    .select("id, email, system_role, role_group_ids, accepted_at")
-    .eq("id", inviteId)
-    .maybeSingle();
-  if (lookupErr || !invite) {
-    return { ok: false, error: lookupErr?.message ?? "Invite not found." };
-  }
-  if (invite.accepted_at) {
-    return { ok: false, error: "This invite was already accepted." };
-  }
-
-  const token = randomBytes(32).toString("base64url");
-  const fourteenDays = 14 * 24 * 60 * 60 * 1000;
-  const newExpiry = new Date(Date.now() + fourteenDays).toISOString();
-
-  const { error: updateErr } = await supabase
-    .from("invites")
-    .update({ token, expires_at: newExpiry })
-    .eq("id", inviteId);
-  if (updateErr) return { ok: false, error: updateErr.message };
-
-  const appUrl = getAppUrl();
-  const redirectTo = `${appUrl}/auth/callback?invite_token=${encodeURIComponent(token)}`;
-
-  // HARDEN-02 / D-03: re-fire the Supabase invite email through the existing
-  // admin.auth.admin.inviteUserByEmail path. Skip the enrollment email
-  // re-send (already sent at original invite).
-  const { error: inviteError } = await admin.auth.admin.inviteUserByEmail(
-    invite.email as string,
-    {
-      redirectTo,
-      data: {
-        invited_by: inviter.email,
-        system_role: invite.system_role as string,
-      },
-    },
-  );
-  if (inviteError) {
-    return {
-      ok: false,
-      error: `Supabase rejected the invite: ${inviteError.message}`,
-    };
-  }
-
-  revalidatePath("/admin/users");
-  return { ok: true };
+  void _inviteId;
+  await requireAdmin();
+  return {
+    ok: false,
+    error: "Institute invitation emails are disabled. Grant access, then invite the person through Hugo.",
+  };
 }
 
 function fieldResult(

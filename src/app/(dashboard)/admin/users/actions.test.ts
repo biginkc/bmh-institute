@@ -1,252 +1,146 @@
-// HARDEN-02: regression for resendInvite. Six branches covering requireAdmin
-// gating, admin client acquisition failure, accepted-invite rejection,
-// missing-invite rejection, happy-path token rotation, and inviteUserByEmail
-// failure surfacing. Mocks @/lib/auth/guard, @/lib/supabase/server,
-// @/lib/supabase/admin, and next/cache. Uses the same call-order pattern as
-// plan 1-1's HARDEN-01 regression so requireAdmin gating is verified, not
-// just exercised.
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const calls: string[] = [];
-
-let inviteRow:
-  | {
-      id: string;
-      email: string;
-      system_role: string;
-      role_group_ids: string[];
-      accepted_at: string | null;
-    }
-  | null = null;
-
-let lookupError: { message: string } | null = null;
-let updatePatch: Record<string, unknown> | null = null;
-let updateError: { message: string } | null = null;
-let inviteEmailArgs: { email: string; opts: Record<string, unknown> } | null =
-  null;
-let inviteEmailError: { message: string } | null = null;
-let adminFactoryThrows: Error | null = null;
-let rpcCalls: Array<{ name: string; params: Record<string, unknown> }> = [];
-let rpcError: { message: string } | null = null;
-
-vi.mock("@/lib/auth/guard", () => ({
-  requireAdmin: vi.fn(async () => {
-    calls.push("requireAdmin");
-    return { id: "admin-1", email: "admin@bmh.test", system_role: "owner" };
-  }),
+const mocks = vi.hoisted(() => ({
+  requireAdmin: vi.fn(),
+  listUsers: vi.fn(),
+  createUser: vi.fn(),
+  profileMaybeSingle: vi.fn(),
+  profileInsert: vi.fn(),
+  groupsDeleteEq: vi.fn(),
+  groupsInsert: vi.fn(),
+  revalidatePath: vi.fn(),
 }));
 
-vi.mock("@/lib/supabase/server", () => ({
-  createClient: vi.fn(async () => ({
-    rpc: async (name: string, params: Record<string, unknown>) => {
-      rpcCalls.push({ name, params });
-      return { data: null, error: rpcError };
+vi.mock("@/lib/auth/guard", () => ({
+  requireAdmin: mocks.requireAdmin,
+}));
+
+vi.mock("next/cache", () => ({
+  revalidatePath: mocks.revalidatePath,
+}));
+
+vi.mock("@/lib/supabase/admin", () => ({
+  createAdminClient: vi.fn(() => ({
+    auth: {
+      admin: {
+        listUsers: mocks.listUsers,
+        createUser: mocks.createUser,
+      },
     },
     from: (table: string) => {
-      if (table !== "invites") {
-        throw new Error(`Unexpected learner-client table ${table}`);
-      }
-      return {
-        select: () => ({
-          eq: () => ({
-            maybeSingle: async () => {
-              calls.push("invites.select");
-              return { data: inviteRow, error: lookupError };
-            },
+      if (table === "profiles") {
+        return {
+          update: () => ({
+            eq: () => ({
+              select: () => ({ maybeSingle: mocks.profileMaybeSingle }),
+            }),
           }),
-        }),
-        update: (patch: Record<string, unknown>) => {
-          updatePatch = patch;
-          return {
-            eq: async () => {
-              calls.push("invites.update");
-              return { error: updateError };
-            },
-          };
-        },
-      };
+          insert: mocks.profileInsert,
+        };
+      }
+      if (table === "user_role_groups") {
+        return {
+          delete: () => ({ eq: mocks.groupsDeleteEq }),
+          insert: mocks.groupsInsert,
+        };
+      }
+      throw new Error(`Unexpected table: ${table}`);
     },
   })),
 }));
 
-vi.mock("@/lib/supabase/admin", () => ({
-  createAdminClient: vi.fn(() => {
-    if (adminFactoryThrows) throw adminFactoryThrows;
-    return {
-      auth: {
-        admin: {
-          inviteUserByEmail: vi.fn(
-            async (email: string, opts: Record<string, unknown>) => {
-              inviteEmailArgs = { email, opts };
-              calls.push("inviteUserByEmail");
-              return { data: null, error: inviteEmailError };
-            },
-          ),
-        },
-      },
-    };
-  }),
+vi.mock("@/lib/supabase/server", () => ({
+  createClient: vi.fn(),
 }));
 
-vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
+import { inviteUser, resendInvite } from "./actions";
 
-import { resendInvite, setUserRoleGroups } from "./actions";
+function accessForm(email = "Person@Example.com") {
+  const form = new FormData();
+  form.set("email", email);
+  form.set("system_role", "admin");
+  form.append("role_group_ids", "group-1");
+  return form;
+}
 
-describe("resendInvite (HARDEN-02)", () => {
+describe("Grant Institute access", () => {
   beforeEach(() => {
-    calls.length = 0;
-    inviteRow = null;
-    lookupError = null;
-    updatePatch = null;
-    updateError = null;
-    inviteEmailArgs = null;
-    inviteEmailError = null;
-    adminFactoryThrows = null;
-    rpcCalls = [];
-    rpcError = null;
-  });
-
-  afterEach(() => {
     vi.clearAllMocks();
-  });
-
-  it("calls requireAdmin before any Supabase work", async () => {
-    inviteRow = {
-      id: "inv-1",
-      email: "u@example.com",
-      system_role: "admin",
-      role_group_ids: [],
-      accepted_at: null,
-    };
-    const result = await resendInvite("inv-1");
-    expect(result).toEqual({ ok: true });
-    expect(calls[0]).toBe("requireAdmin");
-    const guardIdx = calls.indexOf("requireAdmin");
-    const supabaseFirstIdx = Math.min(
-      ...["invites.select", "invites.update", "inviteUserByEmail"]
-        .map((label) => calls.indexOf(label))
-        .filter((idx) => idx >= 0),
-    );
-    expect(guardIdx).toBeLessThan(supabaseFirstIdx);
-  });
-
-  it("returns the admin client error when env vars are missing", async () => {
-    adminFactoryThrows = new Error("Service role key missing");
-    const result = await resendInvite("inv-1");
-    expect(result).toEqual({
-      ok: false,
-      error: "Service role key missing",
-    });
-    expect(calls).not.toContain("invites.select");
-    expect(calls).not.toContain("invites.update");
-    expect(calls).not.toContain("inviteUserByEmail");
-  });
-
-  it("rejects when the invite has already been accepted", async () => {
-    inviteRow = {
-      id: "inv-1",
-      email: "u@example.com",
-      system_role: "admin",
-      role_group_ids: [],
-      accepted_at: "2026-04-01T00:00:00.000Z",
-    };
-    const result = await resendInvite("inv-1");
-    expect(result).toEqual({
-      ok: false,
-      error: "This invite was already accepted.",
-    });
-    expect(calls).not.toContain("invites.update");
-    expect(calls).not.toContain("inviteUserByEmail");
-  });
-
-  it("rejects when the invite is not found", async () => {
-    inviteRow = null;
-    const result = await resendInvite("inv-missing");
-    expect(result).toEqual({ ok: false, error: "Invite not found." });
-    expect(calls).not.toContain("invites.update");
-    expect(calls).not.toContain("inviteUserByEmail");
-  });
-
-  it("rotates the token and refreshes expires_at on the happy path", async () => {
-    inviteRow = {
-      id: "inv-1",
-      email: "u@example.com",
-      system_role: "admin",
-      role_group_ids: [],
-      accepted_at: null,
-    };
-    const before = Date.now();
-    const result = await resendInvite("inv-1");
-    expect(result).toEqual({ ok: true });
-    expect(updatePatch).not.toBeNull();
-    const newToken = updatePatch!.token as string;
-    expect(typeof newToken).toBe("string");
-    expect(newToken.length).toBeGreaterThan(0);
-    expect(newToken).not.toBe("old-token");
-    const newExpiry = new Date(updatePatch!.expires_at as string).getTime();
-    expect(newExpiry).toBeGreaterThan(before);
-    expect(inviteEmailArgs).not.toBeNull();
-    expect(inviteEmailArgs!.email).toBe("u@example.com");
-    expect(String(inviteEmailArgs!.opts.redirectTo)).toContain(
-      encodeURIComponent(newToken),
-    );
-  });
-
-  it("surfaces inviteUserByEmail failure", async () => {
-    inviteRow = {
-      id: "inv-1",
-      email: "u@example.com",
-      system_role: "admin",
-      role_group_ids: [],
-      accepted_at: null,
-    };
-    inviteEmailError = { message: "rate limited" };
-    const result = await resendInvite("inv-1");
-    expect(result).toEqual({
-      ok: false,
-      error: "Supabase rejected the invite: rate limited",
-    });
-  });
-});
-
-describe("setUserRoleGroups (INTEG-01)", () => {
-  beforeEach(() => {
-    calls.length = 0;
-    rpcCalls = [];
-    rpcError = null;
-  });
-
-  afterEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it("rewrites role groups through the transactional database function", async () => {
-    const result = await setUserRoleGroups({
-      userId: "user-1",
-      role_group_ids: ["group-1", "group-2"],
-    });
-
-    expect(result).toEqual({ ok: true });
-    expect(calls[0]).toBe("requireAdmin");
-    expect(rpcCalls).toEqual([
-      {
-        name: "fn_set_user_role_groups",
-        params: {
-          p_user_id: "user-1",
-          p_role_group_ids: ["group-1", "group-2"],
+    mocks.requireAdmin.mockResolvedValue({ id: "owner-1", email: "owner@example.com" });
+    mocks.listUsers.mockResolvedValue({ data: { users: [] }, error: null });
+    mocks.createUser.mockResolvedValue({
+      data: {
+        user: {
+          id: "new-user",
+          email: "person@example.com",
+          user_metadata: {},
         },
       },
+      error: null,
+    });
+    mocks.profileMaybeSingle.mockResolvedValue({
+      data: { id: "new-user" },
+      error: null,
+    });
+    mocks.profileInsert.mockResolvedValue({ error: null });
+    mocks.groupsDeleteEq.mockResolvedValue({ error: null });
+    mocks.groupsInsert.mockResolvedValue({ error: null });
+  });
+
+  it("creates a confirmed passwordless user and assigns its access", async () => {
+    await expect(inviteUser(null, accessForm())).resolves.toEqual({
+      ok: true,
+      email: "person@example.com",
+      created: true,
+    });
+
+    expect(mocks.createUser).toHaveBeenCalledWith({
+      email: "person@example.com",
+      email_confirm: true,
+      app_metadata: { system_role: "admin" },
+      user_metadata: { provisioned_by: "institute_admin" },
+    });
+    expect(mocks.groupsInsert).toHaveBeenCalledWith([
+      { user_id: "new-user", role_group_id: "group-1" },
     ]);
   });
 
-  it("surfaces transactional rewrite errors", async () => {
-    rpcError = { message: "insert failed" };
-
-    const result = await setUserRoleGroups({
-      userId: "user-1",
-      role_group_ids: ["missing-group"],
+  it("preserves an exact-email existing user instead of replacing it", async () => {
+    mocks.listUsers.mockResolvedValue({
+      data: {
+        users: [
+          {
+            id: "canonical-user",
+            email: "PERSON@example.com",
+            user_metadata: { full_name: "Canonical Person" },
+          },
+        ],
+      },
+      error: null,
+    });
+    mocks.profileMaybeSingle.mockResolvedValue({
+      data: { id: "canonical-user" },
+      error: null,
     });
 
-    expect(result).toEqual({ ok: false, error: "insert failed" });
+    await expect(inviteUser(null, accessForm())).resolves.toEqual({
+      ok: true,
+      email: "person@example.com",
+      created: false,
+    });
+
+    expect(mocks.createUser).not.toHaveBeenCalled();
+    expect(mocks.groupsInsert).toHaveBeenCalledWith([
+      { user_id: "canonical-user", role_group_id: "group-1" },
+    ]);
+  });
+
+  it("never resends a historical Institute authentication invite", async () => {
+    await expect(resendInvite("legacy-invite")).resolves.toEqual({
+      ok: false,
+      error:
+        "Institute invitation emails are disabled. Grant access, then invite the person through Hugo.",
+    });
+    expect(mocks.createUser).not.toHaveBeenCalled();
   });
 });
