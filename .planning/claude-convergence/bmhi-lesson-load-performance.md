@@ -61,7 +61,31 @@
 
 ### Iteration 2
 
-- Status: plan revisions applied. Ready for exact revised-artifact review.
+- Status: exact revised plan at `395c901` reviewed in the same Claude desktop task.
 - Evidence delta: yes. Per-entity mixed-release filtering, cache invalidation, persona isolation, and telemetry redaction tests are now explicit.
-- Claude verdict: pending.
-- Codex evaluation: pending.
+- Claude verdict: `DONE`, confidence high.
+- Claude reasoning: both iteration 1 findings are resolved verbatim in the committed artifact. Evidence, diagnosis, sequencing, budgets, security invariants, test coverage, and rollback survived a second refutation attempt. Remaining concerns are implementation choices covered by the plan's own tests rather than plan blockers.
+- Claude done criteria:
+  - Every measured bottleneck maps to a named plan step and verification method.
+  - All nine security invariants are preserved, including per-entity mixed-release quarantine and database-enforced quiz-key isolation.
+  - The sequence applies lower-risk projection and amplification fixes before the measured fallback RPC, with caching last behind security tests.
+  - Unit, migration, integration, and performance coverage includes mixed-release access, bidirectional cache persona isolation, mutation invalidation, and telemetry redaction.
+  - Budgets are concrete and baseline anchored: 1,500 ms median, 2,500 ms p95, at least 50 percent reduction, and 500 ms database p95.
+  - Rollback records the pre-merge SHA, migration, deployment, and function definitions and uses an application-first compatibility path without destructive learner-data rollback.
+- Iteration budget advice: stop. The planning loop has converged. Future iterations belong to a separately authorized execution loop.
+- Codex adversarial evaluation: accepted. Claude reviewed the exact `395c901` plan rather than only the packet, crossed no hard gate, introduced no scope creep, and supported `DONE` with concrete artifact and code checks. Codex independently confirms the accepted changes are present and the branch contains docs only.
+
+## Final outcome
+
+- Final verdict: completed for plan approval.
+- Claude surface: Claude desktop/app Code task `BMH Institute lesson load performance plan review`.
+- Iterations: 2. Iteration 1 found two valid security/test defects. Iteration 2 approved their exact committed resolution with high confidence.
+- Approved plan artifact: `docs/performance/lesson-load-remediation-plan.md` at `395c901`.
+- Plan alignment: pass for the BMH Institute learner-path performance front and four-app v1 goal.
+- Planning acceptance gates: pass.
+- Implementation acceptance gates: intentionally unstarted. This loop did not authorize or perform implementation, migration, PR, merge, deployment, or production changes.
+- Research evidence: three read-only lanes established the browser critical path, deployed code waterfall, and Vercel/Supabase causal measurements before the loop.
+- Manual code review: not applicable because no implementation code changed.
+- Chrome operator target and `Start Session`: not applicable to this planning-only BMH Institute goal.
+- PR and merge: none. No push, PR, merge, or deployment was performed.
+- Hard gates: none encountered. Broad macOS other-app access was denied because the full artifact was already supplied. The bundled Claude CLI fallback was unusable because its OAuth token was expired, but the desktop surface completed both reviews.
