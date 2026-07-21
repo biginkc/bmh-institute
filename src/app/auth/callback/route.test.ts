@@ -260,6 +260,41 @@ describe("auth callback GET (CR-02 expired-invite teardown)", () => {
     expect(adminAuthDeleteUser).not.toHaveBeenCalled();
   });
 
+  it("maps a code-less SSO callback to error=sso_failed instead of the invite error", async () => {
+    const res = await GET(
+      makeRequest("https://example.test/auth/callback?flow=sso"),
+    );
+
+    expect(exchangeCodeForSession).not.toHaveBeenCalled();
+    expect(res.headers.get("location")).toBe(
+      "https://example.test/login?error=sso_failed",
+    );
+  });
+
+  it("keeps error=invite_failed for a code-less callback without the sso tag", async () => {
+    const res = await GET(makeRequest("https://example.test/auth/callback"));
+
+    expect(res.headers.get("location")).toBe(
+      "https://example.test/login?error=invite_failed",
+    );
+  });
+
+  it("maps an SSO exchange failure to error=sso_failed", async () => {
+    exchangeCodeForSession.mockResolvedValueOnce({
+      data: { session: null },
+      error: { message: "invalid code" },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
+
+    const res = await GET(
+      makeRequest("https://example.test/auth/callback?code=bad&flow=sso"),
+    );
+
+    expect(res.headers.get("location")).toBe(
+      "https://example.test/login?error=sso_failed",
+    );
+  });
+
   it("redirects to /login?error=invite_expired even when the admin client throws on delete", async () => {
     const past = new Date(Date.now() - 60 * 1000).toISOString();
     inviteRow = {

@@ -1,9 +1,11 @@
 import { render, screen } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import userEvent from "@testing-library/user-event";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   useActionState: vi.fn(),
   useSearchParams: vi.fn(),
+  createClient: vi.fn(),
 }));
 
 vi.mock("react", async (importOriginal) => {
@@ -16,7 +18,7 @@ vi.mock("next/navigation", () => ({
 }));
 
 vi.mock("@/lib/supabase/client", () => ({
-  createClient: vi.fn(),
+  createClient: mocks.createClient,
 }));
 
 import LoginPage from "./page";
@@ -26,6 +28,10 @@ describe("LoginPage", () => {
     mocks.useActionState.mockReturnValue([null, vi.fn(), false]);
     mocks.useSearchParams.mockReturnValue(new URLSearchParams());
     window.history.replaceState(null, "", "/login");
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
   it("renders the split brand panel and accessible sign-in form", () => {
@@ -79,5 +85,79 @@ describe("LoginPage", () => {
     ).toBeVisible();
     expect(screen.getByText(/access is currently suspended/i)).toBeVisible();
     expect(screen.queryByLabelText("Work email")).not.toBeInTheDocument();
+  });
+
+  it("hides the Hugo button while the rollout flag is unset", () => {
+    render(<LoginPage />);
+
+    expect(
+      screen.queryByRole("button", { name: "Continue with Hugo" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("starts the custom:hugo OAuth flow when the flag is on", async () => {
+    vi.stubEnv("NEXT_PUBLIC_HUGO_SSO", "1");
+    mocks.useSearchParams.mockReturnValue(
+      new URLSearchParams({ next: "/lessons/abc" }),
+    );
+    const signInWithOAuth = vi.fn().mockResolvedValue({ error: null });
+    mocks.createClient.mockReturnValue({ auth: { signInWithOAuth } });
+
+    render(<LoginPage />);
+
+    // Password form stays fully intact alongside the SSO button.
+    expect(screen.getByLabelText("Work email")).toBeVisible();
+    expect(screen.getByLabelText("Password")).toBeVisible();
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "Continue with Hugo" }),
+    );
+
+    expect(signInWithOAuth).toHaveBeenCalledWith({
+      provider: "custom:hugo",
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback?flow=sso&next=${encodeURIComponent(
+          "/lessons/abc",
+        )}`,
+      },
+    });
+  });
+
+  // Real signInWithOAuth startup failures (PKCE storage/crypto/URL setup)
+  // REJECT rather than resolving { error } — this SDK path never produces a
+  // resolved error — so the regression pins the rejection shape.
+  it("surfaces an error and re-enables the button when the Hugo flow rejects", async () => {
+    vi.stubEnv("NEXT_PUBLIC_HUGO_SSO", "1");
+    const signInWithOAuth = vi
+      .fn()
+      .mockRejectedValue(new Error("PKCE code verifier storage unavailable"));
+    mocks.createClient.mockReturnValue({ auth: { signInWithOAuth } });
+
+    render(<LoginPage />);
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "Continue with Hugo" }),
+    );
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Hugo sign-in couldn't start. Try again or use your password.",
+    );
+    expect(
+      screen.getByRole("button", { name: "Continue with Hugo" }),
+    ).toBeEnabled();
+  });
+
+  it("shows the SSO-specific message when the callback redirects with error=sso_failed", () => {
+    mocks.useSearchParams.mockReturnValue(
+      new URLSearchParams({ error: "sso_failed" }),
+    );
+
+    render(<LoginPage />);
+
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Hugo sign-in didn't complete. Try again or use your password.",
+    );
+    // Password form stays usable.
+    expect(screen.getByRole("button", { name: "Continue" })).toBeEnabled();
   });
 });

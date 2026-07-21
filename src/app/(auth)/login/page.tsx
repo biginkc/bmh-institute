@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useActionState, useEffect, useState } from "react";
-import { ArrowRight, LockKeyhole, Mail } from "lucide-react";
+import { ArrowRight, KeyRound, LockKeyhole, Mail } from "lucide-react";
 
 import { Button, Card, Input, Mascot } from "@/components/bmh-ds";
 import { createClient } from "@/lib/supabase/client";
@@ -13,6 +13,22 @@ import { signIn } from "./actions";
 
 const SUSPENDED_ERROR =
   "Your account has been suspended. Contact your administrator.";
+
+const SSO_ERROR =
+  "Hugo sign-in couldn't start. Try again or use your password.";
+
+const SSO_CALLBACK_ERROR =
+  "Hugo sign-in didn't complete. Try again or use your password.";
+
+/**
+ * Hugo single sign-on rollout flag. The button only renders when
+ * NEXT_PUBLIC_HUGO_SSO=1 (set in Vercel at flip time), so merging this
+ * code is decoupled from enabling the dashboard's custom:hugo OIDC provider.
+ * Read at render time so tests can stub the env.
+ */
+function hugoSsoEnabled() {
+  return process.env.NEXT_PUBLIC_HUGO_SSO === "1";
+}
 
 /**
  * Next 16 requires `useSearchParams` to live inside a Suspense boundary so
@@ -31,11 +47,39 @@ function LoginForm() {
   const [hashAuthState, setHashAuthState] = useState<
     "idle" | "processing" | "failed"
   >("idle");
+  const [ssoPending, setSsoPending] = useState(false);
+  const [ssoError, setSsoError] = useState<string | null>(null);
   const actionError = state && !state.ok ? state.error : null;
   const searchParams = useSearchParams();
   const next = searchParams.get("next") ?? "";
   const urlError = searchParams.get("error");
   const inviteToken = searchParams.get("invite_token");
+
+  async function signInWithHugo() {
+    setSsoPending(true);
+    setSsoError(null);
+
+    // flow=sso tags the callback so its failures map to an SSO-specific
+    // login error instead of the invite message.
+    const redirectTo = new URL("/auth/callback", window.location.origin);
+    redirectTo.searchParams.set("flow", "sso");
+    if (next) redirectTo.searchParams.set("next", next);
+
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "custom:hugo",
+        options: { redirectTo: redirectTo.toString() },
+      });
+      // signInWithOAuth resolves { error: null } and navigates away on
+      // success; real startup failures (PKCE storage/crypto/URL setup)
+      // REJECT, which the catch below turns back into a usable button.
+      if (error) throw error;
+    } catch {
+      setSsoError(SSO_ERROR);
+      setSsoPending(false);
+    }
+  }
 
   useEffect(() => {
     if (hashAuthState !== "idle") return;
@@ -104,11 +148,14 @@ function LoginForm() {
 
   const errorMessage =
     actionError ??
+    ssoError ??
     (hashAuthState === "failed"
       ? "Invite link couldn't be verified. Ask an admin to resend it."
       : urlError === "invite_failed"
       ? "Invite link couldn't be verified. Ask an admin to resend it."
-      : urlError === "invite_expired"
+      : urlError === "sso_failed"
+        ? SSO_CALLBACK_ERROR
+        : urlError === "invite_expired"
         ? "This invite link has expired. Ask your admin to send you a fresh one."
         : null);
 
@@ -142,6 +189,29 @@ function LoginForm() {
       <h2 className="font-[family-name:var(--font-display)] text-[30px] leading-tight font-bold text-[var(--ink-900)]">
         Sign in
       </h2>
+      {hugoSsoEnabled() ? (
+        <div className="flex flex-col gap-[18px]">
+          <Button
+            type="button"
+            variant="secondary"
+            size="lg"
+            block
+            disabled={ssoPending}
+            iconLeft={<KeyRound aria-hidden size={20} />}
+            onClick={() => void signInWithHugo()}
+          >
+            {ssoPending ? "Redirecting..." : "Continue with Hugo"}
+          </Button>
+          <div
+            aria-hidden
+            className="flex items-center gap-3 font-[family-name:var(--font-body)] text-sm font-bold text-[var(--text-muted)]"
+          >
+            <span className="h-[2px] flex-1 rounded-full bg-[var(--ink-100)]" />
+            or
+            <span className="h-[2px] flex-1 rounded-full bg-[var(--ink-100)]" />
+          </div>
+        </div>
+      ) : null}
       <form action={formAction} className="flex flex-col gap-[18px]">
         <input type="hidden" name="next" value={next} />
         <Input

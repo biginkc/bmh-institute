@@ -20,19 +20,26 @@ export async function GET(request: NextRequest) {
   const next = searchParams.get("next");
   const inviteToken = searchParams.get("invite_token");
 
+  // Hugo sign-in tags its redirectTo with flow=sso (login page), so a
+  // rejected/cancelled SSO attempt maps to an SSO error instead of the
+  // invite one. Only the error param choice differs; the exchange/invite
+  // logic is identical for both flows.
+  const failureError =
+    searchParams.get("flow") === "sso" ? "sso_failed" : "invite_failed";
+
   if (!code) {
     if (inviteToken) {
       return NextResponse.redirect(
         `${origin}/login?invite_token=${encodeURIComponent(inviteToken)}`,
       );
     }
-    return NextResponse.redirect(`${origin}/login?error=invite_failed`);
+    return NextResponse.redirect(`${origin}/login?error=${failureError}`);
   }
 
   const supabase = await createClient();
   const { error, data } = await supabase.auth.exchangeCodeForSession(code);
   if (error || !data.session) {
-    return NextResponse.redirect(`${origin}/login?error=invite_failed`);
+    return NextResponse.redirect(`${origin}/login?error=${failureError}`);
   }
 
   if (inviteToken) {
