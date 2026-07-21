@@ -1,6 +1,13 @@
 import { test, expect } from "@playwright/test";
 
+import {
+  hasPreauthenticatedState,
+  PREAUTHENTICATED_STATE_REQUIRED,
+} from "./preauthenticated-state";
+
 test.describe("admin surfaces", () => {
+  test.skip(!hasPreauthenticatedState(), PREAUTHENTICATED_STATE_REQUIRED);
+
   test("overview shows stat cards", async ({ page }) => {
     await page.goto("/admin");
     await expect(
@@ -30,19 +37,19 @@ test.describe("admin surfaces", () => {
     ).toBeVisible();
   });
 
-  test("users page shows invite form", async ({ page }) => {
+  test("users page shows passwordless access form", async ({ page }) => {
     await page.goto("/admin/users");
     await expect(
       page.getByRole("heading", { name: /^users$/i }),
     ).toBeVisible();
     await expect(
       page
-        .locator('[data-slot="card-title"]', { hasText: /invite someone/i })
+        .locator('[data-slot="card-title"]', { hasText: /grant access/i })
         .first(),
     ).toBeVisible();
     await expect(page.getByLabel(/email/i)).toBeVisible();
     await expect(
-      page.getByRole("button", { name: /send invite/i }),
+      page.getByRole("button", { name: /grant institute access/i }),
     ).toBeVisible();
   });
 

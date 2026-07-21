@@ -16,21 +16,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       E2E_PROD_BASE_URL: ${{ secrets.E2E_PROD_BASE_URL }}
-      E2E_TEST_EMAIL: ${{ secrets.E2E_TEST_EMAIL }}
-      E2E_TEST_PASSWORD: ${{ secrets.E2E_TEST_PASSWORD }}
-      TEST_SUPABASE_URL: ${{ secrets.PROD_SUPABASE_URL }}
-      TEST_SUPABASE_ANON_KEY: ${{ secrets.PROD_SUPABASE_ANON_KEY }}
-      TEST_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.PROD_SUPABASE_SERVICE_ROLE_KEY }}
-      PROD_READINESS_TEST_PASSWORD: ${{ secrets.PROD_READINESS_TEST_PASSWORD }}
-      PROD_READINESS_EMAIL_INBOX: ${{ secrets.PROD_READINESS_EMAIL_INBOX }}
-      PROD_READINESS_EMAIL_IMAP_HOST: ${{ secrets.PROD_READINESS_EMAIL_IMAP_HOST }}
-      PROD_READINESS_EMAIL_IMAP_PORT: ${{ secrets.PROD_READINESS_EMAIL_IMAP_PORT }}
-      PROD_READINESS_EMAIL_IMAP_SECURE: ${{ secrets.PROD_READINESS_EMAIL_IMAP_SECURE }}
-      PROD_READINESS_EMAIL_IMAP_USER: ${{ secrets.PROD_READINESS_EMAIL_IMAP_USER }}
-      PROD_READINESS_EMAIL_IMAP_PASS: ${{ secrets.PROD_READINESS_EMAIL_IMAP_PASS }}
-      PROD_READINESS_EMAIL_MAILBOX: ${{ secrets.PROD_READINESS_EMAIL_MAILBOX }}
-      PROD_READINESS_EMAIL_POLL_MS: ${{ secrets.PROD_READINESS_EMAIL_POLL_MS }}
-      PROD_READINESS_EMAIL_TIMEOUT_MS: ${{ secrets.PROD_READINESS_EMAIL_TIMEOUT_MS }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -47,7 +32,7 @@ jobs:
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
 
-      - name: Run production readiness checks
+      - name: Run Hugo-only public auth checks and emit manual gates
         run: npm run test:prod:readiness
 
       - name: Upload Playwright report

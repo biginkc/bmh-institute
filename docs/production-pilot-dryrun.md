@@ -1,36 +1,35 @@
-# Production Pilot Dry Run
+# Production pilot manual gate
 
-This run rehearses the internal pilot with disposable production data.
+The historical password-seeded production pilot rehearsal is retired. The
+current command emits a skipped Playwright item that records the required
+manual Chrome gate; it does not sign in, create users, write production data,
+or clean anything up.
 
-The test creates records prefixed with `PILOT-DRYRUN-`, signs in through the
-production app, verifies learner monitoring states, verifies the learner CSV export, corrects
-one learner's role group through the admin UI, checks an unassigned learner is
-blocked by UI and RLS, then deletes the seeded users and content.
-
-## Commands
-
-Run the dry run against production:
+## Command
 
 ```bash
-npm run test:prod:dryrun
+E2E_PROD_BASE_URL=https://institute.bmhgroupkc.com npm run test:prod:dryrun
 ```
 
-Clean up any abandoned dry-run records:
+The corresponding GitHub workflow is `workflow_dispatch` only. It needs only
+`E2E_PROD_BASE_URL` and publishes the manual-gate result. It has no app-password
+or Supabase service-role secret.
 
-```bash
-npm run cleanup:prod-dryrun -- --execute
-```
+## Manual gate
 
-## Required Secrets
+Using real Hugo-authenticated Chrome sessions:
 
-The dry run requires the same production Supabase secrets as the production
-readiness suite:
+1. Confirm both active users enter their existing Institute UID, role, profile, role groups, and learning records.
+2. Confirm learner monitoring, access correction, and the CSV export are available to an authorized admin.
+3. Confirm an unprovisioned Hugo user is denied without creating an Institute account or content.
+4. Confirm a suspended user is denied without a redirect loop.
+5. Confirm a formerly valid Institute password is rejected and Institute recovery sends no email.
 
-- `PROD_SUPABASE_URL`
-- `PROD_SUPABASE_ANON_KEY`
-- `PROD_SUPABASE_SERVICE_ROLE_KEY`
-- `PROD_READINESS_TEST_PASSWORD`
+Do not replace these checks with a forged session, an Institute password, or a
+service-role-created production fixture.
 
-The GitHub workflow runs against `https://institute.bmhgroupkc.com` and uploads
-the Playwright trace plus `test-results/production-pilot-dryrun-manifest.json`
-as artifacts.
+## Historical leftovers
+
+If an older harness left `PILOT-DRYRUN-` or `PRD-READY-` records, use
+`docs/production-readiness-recovery.md` under explicit operator supervision.
+The current manual-gate command does not create those records.

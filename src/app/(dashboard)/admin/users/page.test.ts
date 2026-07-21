@@ -147,7 +147,8 @@ describe("AdminUsersPage (WR-05)", () => {
     expect(html).toContain("No role group assigned");
     expect(html).toContain("Expired");
     expect(html).toContain("Role group assigned");
-    expect(html).toContain("Send invite");
+    expect(html).toContain("Grant Institute access");
+    expect(html).not.toContain("Supabase email with a signup link");
     expect(html).toContain("text-transform:uppercase");
   });
 

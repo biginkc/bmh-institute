@@ -1,6 +1,7 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 import { requireE2eSeedPassword } from "../src/lib/testing/e2e-seed-password";
+import { assertCanonicalSupabaseProjectUrl } from "../src/lib/supabase/canonical-project-url";
 
 type SeedUser = {
   email: string;
@@ -11,7 +12,6 @@ type SeedUser = {
 };
 
 const TEST_PROJECT_REF = "jvaabkchkihkjllehmft";
-const PROD_PROJECT_REF = "dhvfsyteqsxagokoerrx";
 
 const SUPABASE_URL = process.env.TEST_SUPABASE_URL;
 const SERVICE_ROLE = process.env.TEST_SUPABASE_SERVICE_ROLE_KEY;
@@ -55,13 +55,11 @@ if (!SUPABASE_URL || !SERVICE_ROLE) {
   );
 }
 
-if (SUPABASE_URL.includes(PROD_PROJECT_REF)) {
-  throw new Error("Refusing to seed the production Supabase project.");
-}
-
-if (!SUPABASE_URL.includes(TEST_PROJECT_REF)) {
+try {
+  assertCanonicalSupabaseProjectUrl(SUPABASE_URL, [TEST_PROJECT_REF]);
+} catch {
   throw new Error(
-    `Refusing to seed unexpected Supabase project. Expected ${TEST_PROJECT_REF}.`,
+    `E2E seed requires exact test origin https://${TEST_PROJECT_REF}.supabase.co.`,
   );
 }
 

@@ -1,118 +1,92 @@
 # Pre-pilot checklist
 
-Use this checklist before sending internal pilot invites.
+Use this checklist before granting Institute access to the internal pilot. Hugo
+is the only identity system for sign-in; Institute grants authorization and
+never creates an app password or sends an authentication email.
 
-## Production access
+## Identity and production access
 
-- [ ] `https://institute.bmhgroupkc.com` loads.
-- [ ] Login page loads without browser security warnings.
-- [ ] Admin account can sign in.
-- [ ] Learner test account can sign in.
-- [ ] Learner cannot open `/admin`.
+- [ ] `https://institute.bmhgroupkc.com` loads without a browser warning.
+- [ ] Both active people have confirmed Hugo accounts.
+- [ ] Each person's Hugo email exactly matches the canonical Institute email.
+- [ ] Opening Institute from Hugo reaches the existing Institute user without a second password prompt.
+- [ ] A direct visit to `/login` shows exactly one **Continue with Hugo** action.
+- [ ] `/login` has no email field, password field, password-help link, or invite-acceptance action.
+- [ ] The team understands that Hugo and Institute keep separate sessions; signing out of one does not automatically sign out of the other.
 
-Automated by production readiness:
+The production Playwright command proves only the public Hugo-only boundary and
+unauthenticated route guards:
 
-- [ ] Admin login.
-- [ ] Learner login.
-- [ ] Learner blocked from admin routes.
+```bash
+E2E_PROD_BASE_URL=https://institute.bmhgroupkc.com npm run test:prod
+```
 
-## Email links
+Authenticated read-only browser checks require a short-lived
+`E2E_HUGO_STORAGE_STATE` captured after a real Hugo login. If no artifact is
+provided, perform the authenticated checks manually in Chrome. Never substitute
+an Institute password or service-role session.
 
-- [ ] Invite email is delivered to the configured mailbox.
-- [ ] Invite link opens `/auth/set-password`.
-- [ ] Password setup lands on `/dashboard`.
-- [ ] Forgot-password email is delivered.
-- [ ] Reset link lands on `/auth/set-password`.
-- [ ] New password can sign in.
+## Required manual Hugo gate
 
-Automated by production readiness when email capture secrets are configured:
+- [ ] Jarrad enters the original Institute UID, owner role, profile, role groups, and learning records.
+- [ ] The second active user enters the original Institute UID, assigned role, profile, role groups, and learning records for every authorized area.
+- [ ] An isolated, unprovisioned Hugo user is denied and no Institute auth user, profile, membership, or content is created.
+- [ ] A suspended Institute user is denied without a redirect loop.
+- [ ] A formerly valid Institute password is rejected.
+- [ ] Attempting Institute password recovery sends no Institute email and cannot establish a session.
+- [ ] Signing out returns to the Hugo-only login surface.
 
-- [ ] Real invite link retrieval.
-- [ ] Real recovery link retrieval.
+These identity-linking and negative-access outcomes are manual Chrome gates.
+They are not claimed by the public production-readiness workflow.
 
-## Pilot cohort setup
+## Pilot authorization
 
-- [ ] Open `/admin/users`.
-- [ ] Each pilot learner appears in Pilot setup.
-- [ ] Each pilot learner has Ready status.
-- [ ] No pilot learner has Needs access.
-- [ ] Expired or unused invites are revoked or resent.
+- [ ] Open `/admin/users` with a real Hugo-authenticated admin session.
+- [ ] Use **Grant Institute access** only for an exact canonical email.
+- [ ] Confirm the action reports that no Institute password or authentication email was created.
+- [ ] Each pilot learner has the intended system role and role groups.
+- [ ] Each pilot learner is active and no learner remains in **Needs access**.
+- [ ] Historical invite rows remain reference-only and are not treated as active Hugo invitations.
+- [ ] Anyone returning from the historical account pool is added to Hugo with the same email before Institute access is reactivated.
 
-Automated by seeded e2e:
+The seeded nonproduction E2E suite proves passwordless grant-access behavior and
+role-group correction against `bmh-institute-test`; it does not provision or
+email a production identity.
 
-- [ ] Missing access can be corrected from the Pilot setup table.
+## Learner onboarding and authorization
 
-## Learner onboarding
+- [ ] The learner dashboard shows assigned programs, courses, and required lessons.
+- [ ] Profile links to Hugo for account management.
+- [ ] The learner can open an assigned course and content lesson.
+- [ ] An unassigned learner cannot open the assigned course or lesson.
+- [ ] The learner cannot open `/admin` or an admin reports route.
 
-- [ ] Learner dashboard shows First step.
-- [ ] Learner dashboard shows assigned programs.
-- [ ] Learner dashboard shows assigned courses.
-- [ ] Learner dashboard shows required lessons.
-- [ ] Profile link is visible.
-- [ ] Password help link is visible.
+## Learning workflows
 
-Automated by seeded e2e:
+- [ ] The learner can submit a text assignment.
+- [ ] An admin can request revision and approve a resubmission.
+- [ ] The learner can upload a file assignment.
+- [ ] Course and program certificates are issued after requirements are met.
+- [ ] The certificate page opens.
+- [ ] The Institute-to-Closer role-play embed opens for an authorized learner.
 
-- [ ] First action and recovery links render for a disposable learner.
-
-## Content access
-
-- [ ] Learner can open assigned course.
-- [ ] Learner can open content lesson.
-- [ ] Unassigned learner cannot open assigned course.
-- [ ] Unassigned learner cannot open assigned lesson.
-
-Automated by production readiness:
-
-- [ ] Course visibility.
-- [ ] Lesson visibility.
-- [ ] RLS denial for unassigned learner.
-
-## Submissions and certificates
-
-- [ ] Learner can submit text assignment.
-- [ ] Admin can request revision.
-- [ ] Learner can resubmit.
-- [ ] Admin can approve.
-- [ ] Learner can upload file assignment.
-- [ ] Course certificate is issued.
-- [ ] Program certificate is issued.
-- [ ] Certificate page opens.
-
-Automated by production readiness:
-
-- [ ] Text assignment submit, revision, resubmit, approval.
-- [ ] File assignment upload and approval.
-- [ ] Certificate issuance and certificate page.
+These write paths are automated only against the exact nonproduction test
+project. Production acceptance uses existing authorized users and avoids
+creating disposable production records.
 
 ## Learner monitoring
 
 - [ ] `/admin/reports` opens.
-- [ ] Learner monitoring panel is visible.
-- [ ] Needs access rows link to learner access editing.
-- [ ] Needs review rows link to submissions.
-- [ ] Learner report links open.
-- [ ] Export CSV link is visible.
+- [ ] Learner monitoring and learner rollups are visible.
+- [ ] **Needs access**, **Needs review**, and **Needs revision** links open the correct operator surfaces.
+- [ ] A learner report opens.
+- [ ] The CSV export link is visible.
 
-Automated by seeded e2e:
+## Cleanup and launch decision
 
-- [ ] Learner monitoring panel and action links render.
-
-Automated by production readiness:
-
-- [ ] Learner monitoring panel and `/admin/reports/learners/export` link render against production fixture.
-
-## Cleanup readiness
-
-- [ ] `docs/production-readiness-recovery.md` is available.
-- [ ] Cleanup dry-run command is known.
-- [ ] Cleanup execute command is known.
-- [ ] Team understands only `PRD-READY-` prefixed disposable data should be deleted.
-
-## Launch decision
-
-- [ ] Production readiness workflow passed from current `main`.
-- [ ] No required checklist item is failing.
-- [ ] No new spending is needed.
-- [ ] Pilot owner approves sending invites.
-
+- [ ] No production test user, course, lesson, quiz, assignment, or content block was created by the acceptance run.
+- [ ] Any historical `PRD-READY-` or `PILOT-DRYRUN-` leftovers are handled separately with `docs/production-readiness-recovery.md`; that recovery script is not part of the normal Hugo gate.
+- [ ] The current-head public production-readiness workflow passed.
+- [ ] The required manual Hugo gate passed for both active people and the unauthorized test identity.
+- [ ] No required checklist item is failing and no new spending is needed.
+- [ ] The pilot owner approves granting access and opening the pilot.

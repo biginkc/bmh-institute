@@ -12,15 +12,21 @@ TEST_SUPABASE_ANON_KEY=<anon key from Supabase Dashboard>
 TEST_SUPABASE_SERVICE_ROLE_KEY=<service role key from Supabase Dashboard>
 ```
 
-For the Playwright prod-smoke suite (`npm run test:prod`) you also need:
+The public Playwright prod-smoke checks (`npm run test:prod`) need only:
 
 ```
 E2E_PROD_BASE_URL=https://institute.bmhgroupkc.com
-E2E_TEST_EMAIL=<an account that exists on the deployed environment with admin privileges>
-E2E_TEST_PASSWORD=<that account's password>
 ```
 
-The two sets are independent. You can populate one without the other.
+Authenticated read-only checks are manual/opt-in and require a short-lived
+Playwright storage-state artifact captured after a real Hugo login:
+
+```
+E2E_HUGO_STORAGE_STATE=/absolute/path/to/hugo-authenticated-state.json
+```
+
+Never substitute an Institute password for this artifact. It contains session
+cookies, must remain outside the repository, and must be deleted after the run.
 
 ## Where to obtain each value
 
@@ -32,7 +38,10 @@ TEST_SUPABASE_SERVICE_ROLE_KEY: from the same Dashboard panel. The "service_role
 
 E2E_PROD_BASE_URL: the deployed BMH Institute URL. Production uses `https://institute.bmhgroupkc.com`. A Vercel preview URL also works.
 
-E2E_TEST_EMAIL and E2E_TEST_PASSWORD: an account on the deployed environment. A real BMH Group VA account or a dedicated test account with admin privileges.
+E2E_HUGO_STORAGE_STATE: a local Playwright storage-state JSON file captured only
+after completing the real Hugo flow. If it is omitted, public auth checks run
+and authenticated scenarios are reported as skipped with a manual Chrome
+acceptance instruction.
 
 ## Verifying the integration suite
 
@@ -48,15 +57,24 @@ If a file reports an error rather than skipped or passed, that is a regression i
 
 ## Verifying the prod-smoke suite
 
-Once `.env.test.local` has the three E2E_* vars populated:
+Once `E2E_PROD_BASE_URL` is set:
 
 ```
 npm run test:prod
 ```
 
-Expected output: signs in via the live `/login`, runs the read-only specs in `e2e-prod/` (admin surfaces, dashboard, learner-context HARDEN-01 guard), all pass.
+Expected output: proves `/login` exposes only **Continue with Hugo**, proves the
+legacy password/recovery/invite routes are unusable, and exercises unauthenticated
+route guards. Authenticated dashboard/admin checks run only when
+`E2E_HUGO_STORAGE_STATE` is supplied.
 
-The HARDEN-01 learner-context spec (`e2e-prod/admin-route-guard-learner.spec.ts`) opts out of storage state and asserts the unauthenticated redirect on the four `/admin/reports/*` routes. It does not need the E2E_TEST_EMAIL credentials to pass; the credentials are still required for the existing admin-context specs.
+The production config does not bind or use `TEST_SUPABASE_*` or service-role
+credentials and contains no fixture-writing spec. Embed-editor write coverage
+runs only in the seeded nonproduction suite.
+
+The HARDEN-01 learner-context spec (`e2e-prod/admin-route-guard-learner.spec.ts`)
+uses an empty state and asserts the unauthenticated redirect on the four
+`/admin/reports/*` routes.
 
 ## BMH Institute test Supabase project
 
@@ -66,20 +84,13 @@ The fixture guard is intentionally strict. If you see a production-ref refusal, 
 
 ## Phase 01 HUMAN-UAT items
 
-The five items in `.planning/phases/01-auth-and-access-hardening/01-HUMAN-UAT.md` were retired in Phase 01.1. Read-only items moved to Playwright specs in `e2e-prod/`; integration items got their gates flipped; durable LMS write paths now run against `bmh-institute-test` through `npm run test:e2e`. Invite acceptance uses Supabase Admin `generateLink` in the non-production test project so the browser can exercise the real invite callback and first password setup without an inbox.
+The five items in `.planning/phases/01-auth-and-access-hardening/01-HUMAN-UAT.md` were retired in Phase 01.1. Durable LMS write paths run against `bmh-institute-test` through `npm run test:e2e`. The seeded suite proves that the public login surface has one Hugo action and that legacy password, recovery, and invite-acceptance entrypoints cannot establish an app session. Business-workflow specs create test-project sessions out of band so browser automation never reintroduces product password UI.
 
-## Production-readiness email-link capture
+## Production readiness after Hugo cutover
 
-`npm run test:prod:readiness` includes real production invite and forgot-password link checks. They skip until an IMAP-readable mailbox is configured.
-
-Add these GitHub Actions secrets to enable them:
-
-- `PROD_READINESS_EMAIL_INBOX`: mailbox address that receives disposable plus-addressed emails.
-- `PROD_READINESS_EMAIL_IMAP_USER`: IMAP username. Defaults to the inbox address when omitted.
-- `PROD_READINESS_EMAIL_IMAP_PASS`: IMAP app password or mailbox password.
-- `PROD_READINESS_EMAIL_IMAP_HOST`: defaults to `imap.gmail.com`.
-- `PROD_READINESS_EMAIL_IMAP_PORT`: defaults to `993`.
-- `PROD_READINESS_EMAIL_IMAP_SECURE`: defaults to `true`.
-- `PROD_READINESS_EMAIL_MAILBOX`: defaults to `INBOX`.
-
-The specs send to aliases like `qa+prd-invite-...@bmhgroupkc.com`, retrieve the real Supabase action link from the inbox, complete the browser flow, and clean up disposable production users and rows.
+`npm run test:prod:readiness` automatically checks only the public Hugo boundary.
+The two-user linking, authorization preservation, unauthorized-user denial,
+suspension, former-password rejection, and no-recovery-email checks are explicit
+manual Chrome gates. The harness intentionally cannot generate app passwords,
+send Institute invitations, or forge production sessions to make those gates
+look automated.

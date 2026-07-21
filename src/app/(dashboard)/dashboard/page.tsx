@@ -122,9 +122,9 @@ export default async function DashboardPage({
         page={parsePage(query.page)}
         pageHref="/dashboard"
       />
-      <nav aria-label="Account recovery" className="mt-8 flex gap-4 border-t border-[var(--border-hairline)] pt-5 text-sm font-extrabold">
+      <nav aria-label="Account" className="mt-8 flex gap-4 border-t border-[var(--border-hairline)] pt-5 text-sm font-extrabold">
         <Link href="/profile" className="text-[var(--action)] hover:underline">Profile</Link>
-        <Link href="/forgot-password" className="text-[var(--action)] hover:underline">Reset password</Link>
+        <a href="https://hugo.bmhgroupkc.com" className="text-[var(--action)] hover:underline">Manage Hugo account</a>
       </nav>
     </main>
   );
@@ -143,7 +143,7 @@ function NoAssignments() {
             </p>
             <div className="mt-5 flex gap-4 text-sm font-extrabold">
               <Link href="/profile" className="text-[var(--action)] hover:underline">Check your profile</Link>
-              <Link href="/forgot-password" className="text-[var(--action)] hover:underline">Reset password</Link>
+              <a href="https://hugo.bmhgroupkc.com" className="text-[var(--action)] hover:underline">Manage Hugo account</a>
             </div>
           </div>
           <div className="hidden md:block">

@@ -1,5 +1,12 @@
 import { test, expect } from "@playwright/test";
 
+import {
+  hasPreauthenticatedState,
+  PREAUTHENTICATED_STATE_REQUIRED,
+} from "./preauthenticated-state";
+
+test.skip(!hasPreauthenticatedState(), PREAUTHENTICATED_STATE_REQUIRED);
+
 test("dashboard lists the signed-in user's training", async ({ page }) => {
   await page.goto("/dashboard");
   await expect(page.locator("main").getByRole("heading", { level: 1 })).toBeVisible();

@@ -1,5 +1,7 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
+import { assertCanonicalSupabaseProjectUrl } from "../src/lib/supabase/canonical-project-url";
+
 export type WritePathFixture = {
   prefix: string;
   password: string;
@@ -8,6 +10,7 @@ export type WritePathFixture = {
   courseId: string;
   moduleId: string;
   contentLessonId: string;
+  contentBlockId: string;
   quizId: string;
   quizLessonId: string;
   correctOptionText: string;
@@ -21,23 +24,9 @@ export type WritePathFixture = {
   unassigned: { id: string; email: string };
 };
 
-export type InviteAcceptanceFixture = {
-  prefix: string;
-  password: string;
-  inviteId: string;
-  inviteToken: string;
-  inviteLink: string;
-  roleGroupId: string;
-  programId: string;
-  courseId: string;
-  inviter: { id: string; email: string };
-  invitee: { id: string; email: string };
-};
-
 type InsertResult = { id: string };
 
 const TEST_PROJECT_REF = "jvaabkchkihkjllehmft";
-const PROD_PROJECT_REF = "dhvfsyteqsxagokoerrx";
 
 export function writePathAdminClient(): SupabaseClient {
   const url = process.env.TEST_SUPABASE_URL;
@@ -47,12 +36,11 @@ export function writePathAdminClient(): SupabaseClient {
       "Write-path E2E needs TEST_SUPABASE_URL and TEST_SUPABASE_SERVICE_ROLE_KEY.",
     );
   }
-  if (url.includes(PROD_PROJECT_REF)) {
-    throw new Error("Write-path E2E refuses to run against production.");
-  }
-  if (!url.includes(TEST_PROJECT_REF)) {
+  try {
+    assertCanonicalSupabaseProjectUrl(url, [TEST_PROJECT_REF]);
+  } catch {
     throw new Error(
-      `Write-path E2E expected non-prod Supabase ref ${TEST_PROJECT_REF}.`,
+      `Write-path E2E requires exact test origin https://${TEST_PROJECT_REF}.supabase.co.`,
     );
   }
   return createClient(url, key, {
@@ -145,6 +133,16 @@ export async function createWritePathFixture(
       html: `<h2>${prefix} Operating standard</h2><p>Keep notes concise and confirm next steps.</p>`,
     },
     sort_order: 10,
+    is_required_for_completion: false,
+  });
+  const contentBlockId = await insertOne(admin, "content_blocks", {
+    lesson_id: contentLessonId,
+    block_type: "embed",
+    content: {
+      iframe_src: "https://www.loom.com/embed/original",
+      aspect_ratio: "16:9",
+    },
+    sort_order: 20,
     is_required_for_completion: false,
   });
 
@@ -250,6 +248,7 @@ export async function createWritePathFixture(
     courseId,
     moduleId,
     contentLessonId,
+    contentBlockId,
     quizId,
     quizLessonId,
     correctOptionText,
@@ -282,116 +281,6 @@ export async function cleanupWritePathFixture(
   await admin.auth.admin.deleteUser(fixture.admin.id);
   await admin.auth.admin.deleteUser(fixture.learner.id);
   await admin.auth.admin.deleteUser(fixture.unassigned.id);
-}
-
-export async function deleteRateLimitRows(
-  admin: SupabaseClient,
-  keyType: "email" | "ip",
-  keyValue: string,
-): Promise<void> {
-  await admin
-    .from("auth_rate_limits")
-    .delete()
-    .eq("key_type", keyType)
-    .eq("key_value", keyValue)
-    .throwOnError();
-}
-
-export async function createInviteAcceptanceFixture(
-  admin: SupabaseClient,
-): Promise<InviteAcceptanceFixture> {
-  const prefix = `E2E-INVITE-${Date.now()}-${crypto.randomUUID().slice(0, 8)}`;
-  const password = `BMHInvite-${crypto.randomUUID()}!1`;
-  const inviteToken = crypto.randomUUID().replaceAll("-", "");
-  const inviteeEmail = `${prefix.toLowerCase()}-invitee@bmh-institute.test`;
-
-  const inviter = await createFixtureUser(admin, {
-    email: `${prefix.toLowerCase()}-owner@bmh-institute.test`,
-    password,
-    fullName: `${prefix} Owner`,
-    systemRole: "owner",
-  });
-
-  const roleGroupId = await insertOne(admin, "role_groups", {
-    name: `${prefix} Invite Role Group`,
-    description: "Disposable invite acceptance E2E role group.",
-  });
-
-  const programId = await insertOne(admin, "programs", {
-    title: `${prefix} Invite Program`,
-    description: "Disposable invite acceptance E2E program.",
-    is_published: true,
-    course_order_mode: "free",
-    certificate_enabled: false,
-    sort_order: 9999,
-  });
-  const courseId = await insertOne(admin, "courses", {
-    title: `${prefix} Invite Course`,
-    description: "Disposable invite acceptance E2E course.",
-    is_published: true,
-    certificate_enabled: false,
-    sort_order: 9999,
-  });
-
-  await admin
-    .from("program_access")
-    .insert({ program_id: programId, role_group_id: roleGroupId })
-    .throwOnError();
-  await admin
-    .from("program_courses")
-    .insert({ program_id: programId, course_id: courseId, sort_order: 10 })
-    .throwOnError();
-
-  const inviteId = await insertOne(admin, "invites", {
-    email: inviteeEmail,
-    role_group_ids: [roleGroupId],
-    system_role: "learner",
-    token: inviteToken,
-    invited_by: inviter.id,
-  });
-
-  const redirectTo = `http://localhost:3200/auth/callback?invite_token=${encodeURIComponent(inviteToken)}`;
-  const { data, error } = await admin.auth.admin.generateLink({
-    type: "invite",
-    email: inviteeEmail,
-    options: {
-      redirectTo,
-      data: {
-        invited_by: inviter.email,
-        system_role: "learner",
-      },
-    },
-  });
-  if (error || !data.properties?.action_link || !data.user?.id) {
-    throw error ?? new Error("Failed to generate invite action link.");
-  }
-
-  return {
-    prefix,
-    password,
-    inviteId,
-    inviteToken,
-    inviteLink: data.properties.action_link,
-    roleGroupId,
-    programId,
-    courseId,
-    inviter,
-    invitee: { id: data.user.id, email: inviteeEmail },
-  };
-}
-
-export async function cleanupInviteAcceptanceFixture(
-  admin: SupabaseClient,
-  fixture: InviteAcceptanceFixture | null,
-): Promise<void> {
-  if (!fixture) return;
-
-  await admin.from("programs").delete().eq("id", fixture.programId);
-  await admin.from("courses").delete().eq("id", fixture.courseId);
-  await admin.from("role_groups").delete().eq("id", fixture.roleGroupId);
-  await admin.from("invites").delete().eq("id", fixture.inviteId);
-  await admin.auth.admin.deleteUser(fixture.invitee.id);
-  await admin.auth.admin.deleteUser(fixture.inviter.id);
 }
 
 async function cleanupSubmissionStorage(

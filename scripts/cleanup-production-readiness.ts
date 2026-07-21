@@ -1,5 +1,7 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
+import { assertCanonicalSupabaseProjectUrl } from "../src/lib/supabase/canonical-project-url";
+
 type IdRow = { id: string };
 
 const PROD_PROJECT_REF = "dhvfsyteqsxagokoerrx";
@@ -24,9 +26,11 @@ if (!supabaseUrl || !serviceRole) {
   );
 }
 
-if (!supabaseUrl.includes(PROD_PROJECT_REF)) {
+try {
+  assertCanonicalSupabaseProjectUrl(supabaseUrl, [PROD_PROJECT_REF]);
+} catch {
   throw new Error(
-    `Refusing cleanup against unexpected Supabase project. Expected ${PROD_PROJECT_REF}.`,
+    `Production-readiness cleanup requires exact origin https://${PROD_PROJECT_REF}.supabase.co.`,
   );
 }
 

@@ -42,51 +42,10 @@ const baseURL = requireInstituteProductionBaseUrl(
 );
 
 process.env.E2E_PROD_BASE_URL = baseURL;
-process.env.TEST_SUPABASE_URL =
-  process.env.TEST_SUPABASE_URL ??
-  process.env.PROD_SUPABASE_URL ??
-  env.PROD_SUPABASE_URL ??
-  env.TEST_SUPABASE_URL ??
-  env.NEXT_PUBLIC_SUPABASE_URL ??
-  "";
-process.env.TEST_SUPABASE_ANON_KEY =
-  process.env.TEST_SUPABASE_ANON_KEY ??
-  process.env.PROD_SUPABASE_ANON_KEY ??
-  env.PROD_SUPABASE_ANON_KEY ??
-  env.TEST_SUPABASE_ANON_KEY ??
-  env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
-  "";
-process.env.TEST_SUPABASE_SERVICE_ROLE_KEY =
-  process.env.TEST_SUPABASE_SERVICE_ROLE_KEY ??
-  process.env.PROD_SUPABASE_SERVICE_ROLE_KEY ??
-  env.PROD_SUPABASE_SERVICE_ROLE_KEY ??
-  env.TEST_SUPABASE_SERVICE_ROLE_KEY ??
-  env.SUPABASE_SERVICE_ROLE_KEY ??
-  "";
-process.env.PROD_READINESS_TEST_PASSWORD =
-  process.env.PROD_READINESS_TEST_PASSWORD ??
-  env.PROD_READINESS_TEST_PASSWORD ??
-  "";
-process.env.PROD_READINESS_EMAIL_INBOX =
-  process.env.PROD_READINESS_EMAIL_INBOX ??
-  env.PROD_READINESS_EMAIL_INBOX ??
-  "";
-for (const key of [
-  "PROD_READINESS_EMAIL_IMAP_HOST",
-  "PROD_READINESS_EMAIL_IMAP_PORT",
-  "PROD_READINESS_EMAIL_IMAP_SECURE",
-  "PROD_READINESS_EMAIL_IMAP_USER",
-  "PROD_READINESS_EMAIL_IMAP_PASS",
-  "PROD_READINESS_EMAIL_MAILBOX",
-  "PROD_READINESS_EMAIL_POLL_MS",
-  "PROD_READINESS_EMAIL_TIMEOUT_MS",
-]) {
-  process.env[key] = process.env[key] ?? env[key] ?? "";
-}
 
 export default defineConfig({
   testDir: "./e2e-prod",
-  testMatch: /production-readiness\.spec\.ts$/,
+  testMatch: /\/(?:hugo-auth-surface|production-readiness)\.spec\.ts$/,
   fullyParallel: false,
   workers: 1,
   forbidOnly: !!process.env.CI,
@@ -98,5 +57,6 @@ export default defineConfig({
     baseURL,
     ...devices["Desktop Chrome"],
     ...CREDENTIAL_SAFE_PLAYWRIGHT_USE,
+    storageState: { cookies: [], origins: [] },
   },
 });

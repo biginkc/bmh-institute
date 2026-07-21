@@ -79,13 +79,13 @@ export function InviteForm({
       ) : null}
       {state && state.ok ? (
         <div className="rounded-[var(--bmh-radius-md)] border border-[var(--success)] bg-[var(--success-soft)] px-3 py-2 text-sm font-semibold text-[var(--green-500)]">
-          Invite sent to {state.email}. They&apos;ll receive a Supabase email with a signup link.
+          Access granted to {state.email}. No Institute password or authentication email was created. Add them to Hugo separately.
         </div>
       ) : null}
 
       <div>
         <Button type="submit" disabled={pending} block>
-          {pending ? "Sending..." : "Send invite"}
+          {pending ? "Granting..." : "Grant Institute access"}
         </Button>
       </div>
     </form>

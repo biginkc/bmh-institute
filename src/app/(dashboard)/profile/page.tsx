@@ -5,7 +5,7 @@ import { Badge } from "@/components/bmh-ds/badge";
 import { Card } from "@/components/bmh-ds/card";
 import { createClient } from "@/lib/supabase/server";
 
-import { ChangePasswordForm, UpdateNameForm } from "./profile-forms";
+import { UpdateNameForm } from "./profile-forms";
 
 export default async function ProfilePage() {
   const supabase = await createClient();
@@ -49,8 +49,8 @@ export default async function ProfilePage() {
           Your profile
         </h1>
         <p className="mt-1.5 font-[family-name:var(--font-body)] text-base font-semibold text-[var(--text-muted)]">
-          Check your account details, update your certificate name, or change
-          your password.
+          Check your account details or update your certificate name. Hugo
+          manages your sign-in and password.
         </p>
       </div>
 
@@ -122,19 +122,6 @@ export default async function ProfilePage() {
           </p>
           <div className="mt-5">
             <UpdateNameForm defaultName={fullName} />
-          </div>
-        </Card>
-
-        <Card padding="md">
-          <h2 className="font-[family-name:var(--font-display)] text-xl font-bold text-[var(--ink-900)]">
-            Change password
-          </h2>
-          <p className="mt-1 font-[family-name:var(--font-body)] text-sm font-semibold leading-relaxed text-[var(--text-muted)]">
-            Use this if you can sign in but want a new password. If you are
-            signed out, use the reset password link on the sign-in page.
-          </p>
-          <div className="mt-5">
-            <ChangePasswordForm />
           </div>
         </Card>
       </div>

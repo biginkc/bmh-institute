@@ -1,286 +1,404 @@
-// HARDEN-02: regression for applyInvite expiry handling.
-// Mocks @/lib/supabase/admin to exercise the four invite states.
-// CR-02: regression for the GET handler tearing down the session and the
-// freshly created auth.users row when applyInvite returns expired.
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { NextRequest, type NextResponse } from "next/server";
 
-type InviteRow = {
-  id: string;
-  system_role: string;
-  role_group_ids: string[];
-  accepted_at: string | null;
-  expires_at: string;
-} | null;
+import { HUGO_LAUNCH_COOKIE } from "@/app/auth/hugo/launch-nonce";
 
-let inviteRow: InviteRow = null;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const profileUpdate = vi.fn(async (patch: any) => {
-  void patch;
-  return { error: null };
-});
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const userRoleInsert = vi.fn(async (rows: any) => {
-  void rows;
-  return { error: null };
-});
-const userRoleDelete = vi.fn(async () => ({ error: null }));
-const adminAuthDeleteUser = vi.fn(async (id: string) => {
-  void id;
-  return {
-    data: null,
-    error: null,
-  };
-});
-
-vi.mock("@/lib/supabase/admin", () => ({
-  createAdminClient: vi.fn(() => ({
-    from: (table: string) => {
-      if (table === "invites") {
-        return {
-          select: () => ({
-            eq: () => ({
-              maybeSingle: async () => ({ data: inviteRow, error: null }),
-            }),
-          }),
-          update: () => ({
-            eq: async () => {
-              return { error: null };
-            },
-          }),
-        };
-      }
-      if (table === "profiles") {
-        return {
-          update: (patch: unknown) => ({
-            eq: async () => {
-              await profileUpdate(patch);
-              return { error: null };
-            },
-          }),
-        };
-      }
-      if (table === "user_role_groups") {
-        return {
-          delete: () => ({
-            eq: async () => {
-              await userRoleDelete();
-              return { error: null };
-            },
-          }),
-          upsert: async (rows: unknown) => {
-            await userRoleInsert(rows);
-            return { error: null };
-          },
-          insert: async (rows: unknown) => {
-            await userRoleInsert(rows);
-            return { error: null };
-          },
-        };
-      }
-      throw new Error(`Unexpected table ${table}`);
-    },
-    auth: { admin: { deleteUser: adminAuthDeleteUser } },
-  })),
-}));
-
-const exchangeCodeForSession = vi.fn(async (code: string) => {
-  void code;
-  return {
-    data: {
-      session: { user: { id: "user-123" } },
-    },
-    error: null,
-  };
-});
-const sessionSignOut = vi.fn(async () => ({ error: null }));
+const exchangeCodeForSession = vi.fn();
+const getClaims = vi.fn();
+const signOut = vi.fn();
+const maybeSingle = vi.fn();
 
 vi.mock("@/lib/supabase/server", () => ({
   createClient: vi.fn(async () => ({
-    auth: {
-      exchangeCodeForSession,
-      signOut: sessionSignOut,
-    },
+    auth: { exchangeCodeForSession, getClaims, signOut },
+    from: () => ({
+      select: () => ({
+        eq: () => ({ maybeSingle }),
+      }),
+    }),
   })),
 }));
 
-import { applyInvite, GET } from "./route";
+import { GET } from "./route";
 
-describe("applyInvite (HARDEN-02)", () => {
-  beforeEach(() => {
-    inviteRow = null;
-    profileUpdate.mockClear();
-    userRoleInsert.mockClear();
-    userRoleDelete.mockClear();
+const LAUNCH_NONCE = "3d1fa0bb-f8b5-4f7c-8a98-8a074585fafe";
+
+function makeRequest(url: string, cookieNonce: string | null = LAUNCH_NONCE) {
+  return new NextRequest(url, {
+    headers: cookieNonce
+      ? { cookie: `${HUGO_LAUNCH_COOKIE}=${cookieNonce}` }
+      : undefined,
   });
-
-  afterEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it("applies role assignment when the invite is active", async () => {
-    const future = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
-    inviteRow = {
-      id: "inv-1",
-      system_role: "admin",
-      role_group_ids: ["g1"],
-      accepted_at: null,
-      expires_at: future,
-    };
-
-    const result = await applyInvite({ userId: "u-1", token: "tok-1" });
-    expect(result).toEqual({ ok: true });
-    expect(profileUpdate).toHaveBeenCalledWith(
-      expect.objectContaining({ system_role: "admin" }),
-    );
-    expect(userRoleInsert).toHaveBeenCalled();
-  });
-
-  it("rejects with reason 'expired' when expires_at is in the past", async () => {
-    const past = new Date(Date.now() - 60 * 1000).toISOString();
-    inviteRow = {
-      id: "inv-2",
-      system_role: "admin",
-      role_group_ids: ["g1"],
-      accepted_at: null,
-      expires_at: past,
-    };
-
-    const result = await applyInvite({ userId: "u-1", token: "tok-2" });
-    expect(result).toEqual({ ok: false, reason: "expired" });
-    expect(profileUpdate).not.toHaveBeenCalled();
-    expect(userRoleInsert).not.toHaveBeenCalled();
-  });
-
-  it("returns ok when the invite has already been accepted", async () => {
-    inviteRow = {
-      id: "inv-3",
-      system_role: "admin",
-      role_group_ids: ["g1"],
-      accepted_at: new Date().toISOString(),
-      expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-    };
-
-    const result = await applyInvite({ userId: "u-1", token: "tok-3" });
-    expect(result).toEqual({ ok: true });
-    expect(profileUpdate).not.toHaveBeenCalled();
-    expect(userRoleInsert).not.toHaveBeenCalled();
-  });
-
-  it("returns ok when no matching invite row exists", async () => {
-    inviteRow = null;
-    const result = await applyInvite({ userId: "u-1", token: "tok-missing" });
-    expect(result).toEqual({ ok: true });
-    expect(profileUpdate).not.toHaveBeenCalled();
-    expect(userRoleInsert).not.toHaveBeenCalled();
-  });
-});
-
-function makeRequest(url: string) {
-  // The GET handler reads request.nextUrl.searchParams and request.nextUrl.origin.
-  // Build a minimal stand-in instead of pulling NextRequest into the unit test.
-  const u = new URL(url);
-  return {
-    nextUrl: {
-      searchParams: u.searchParams,
-      origin: u.origin,
-    },
-  } as unknown as Parameters<typeof GET>[0];
 }
 
-describe("auth callback GET (CR-02 expired-invite teardown)", () => {
+function callbackUrl(query: string) {
+  return `https://institute.bmhgroupkc.com/auth/callback?${query}&launch_nonce=${LAUNCH_NONCE}`;
+}
+
+function expectLaunchNonceConsumed(response: NextResponse) {
+  const setCookie = response.headers.get("set-cookie");
+  expect(setCookie).toContain(`${HUGO_LAUNCH_COOKIE}=`);
+  expect(setCookie).toMatch(/Expires=Thu, 01 Jan 1970 00:00:00 GMT/i);
+  expect(setCookie).toContain("Max-Age=0");
+  expect(setCookie).toContain("Path=/auth/callback");
+  expect(setCookie).toContain("HttpOnly");
+  expect(setCookie).toContain("SameSite=lax");
+}
+
+describe("Hugo-only auth callback", () => {
+  const originalSupabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+
   beforeEach(() => {
-    inviteRow = null;
-    profileUpdate.mockClear();
-    userRoleInsert.mockClear();
-    userRoleDelete.mockClear();
-    adminAuthDeleteUser.mockClear();
-    sessionSignOut.mockClear();
-    exchangeCodeForSession.mockClear();
+    vi.clearAllMocks();
     exchangeCodeForSession.mockResolvedValue({
-      data: { session: { user: { id: "user-123" } } },
+      data: {
+        session: {
+          access_token: "oauth-access-token",
+          user: {
+            id: "existing-user",
+            identities: [
+              {
+                provider: "custom:hugo",
+                // A linked identity may predate this login. Freshness is proven
+                // by the launch nonce and the signed OAuth AMR, not this field.
+                last_sign_in_at: "2024-01-01T00:00:00.000Z",
+              },
+            ],
+          },
+        },
+      },
       error: null,
     });
+    getClaims.mockResolvedValue({
+      data: {
+        claims: { amr: [{ method: "oauth", timestamp: 1784613600 }] },
+      },
+      error: null,
+    });
+    maybeSingle.mockResolvedValue({
+      data: { status: "active" },
+      error: null,
+    });
+    signOut.mockResolvedValue({ error: null });
+    process.env.NEXT_PUBLIC_SUPABASE_URL =
+      "https://dhvfsyteqsxagokoerrx.supabase.co";
   });
 
   afterEach(() => {
-    vi.clearAllMocks();
+    if (originalSupabaseUrl === undefined) {
+      delete process.env.NEXT_PUBLIC_SUPABASE_URL;
+    } else {
+      process.env.NEXT_PUBLIC_SUPABASE_URL = originalSupabaseUrl;
+    }
   });
 
-  it("signs the session out and deletes the auth.users row when the invite is expired", async () => {
-    const past = new Date(Date.now() - 60 * 1000).toISOString();
-    inviteRow = {
-      id: "inv-expired",
-      system_role: "admin",
-      role_group_ids: ["g1"],
-      accepted_at: null,
-      expires_at: past,
-    };
+  it("lands a provisioned active Hugo user on the requested page", async () => {
+    const response = await GET(
+      makeRequest(callbackUrl("flow=sso&code=abc&next=/lessons/abc")),
+    );
 
-    const res = await GET(
+    expect(exchangeCodeForSession).toHaveBeenCalledWith("abc");
+    expect(response.headers.get("location")).toBe(
+      "https://institute.bmhgroupkc.com/lessons/abc",
+    );
+    expectLaunchNonceConsumed(response);
+  });
+
+  it("allows a repeat Hugo login when the linked identity timestamp is stale but AMR is fresh", async () => {
+    getClaims.mockResolvedValue({
+      data: {
+        claims: { amr: [{ method: "oauth", timestamp: 1893456000 }] },
+      },
+      error: null,
+    });
+
+    const response = await GET(
+      makeRequest(callbackUrl("flow=sso&code=repeat-login")),
+    );
+
+    expect(exchangeCodeForSession).toHaveBeenCalledWith("repeat-login");
+    expect(response.headers.get("location")).toBe(
+      "https://institute.bmhgroupkc.com/dashboard",
+    );
+    expectLaunchNonceConsumed(response);
+  });
+
+  it("rejects historical password, invite, recovery, and magic-link callbacks", async () => {
+    const response = await GET(
       makeRequest(
-        "https://example.test/auth/callback?code=abc&invite_token=tok-expired",
+        callbackUrl("code=legacy&type=recovery"),
       ),
-    );
-
-    expect(sessionSignOut).toHaveBeenCalledTimes(1);
-    expect(adminAuthDeleteUser).toHaveBeenCalledWith("user-123");
-    expect(res.headers.get("location")).toBe(
-      "https://example.test/login?error=invite_expired",
-    );
-  });
-
-  it("preserves invite_token for browser hash-token invite callbacks", async () => {
-    const res = await GET(
-      makeRequest("https://example.test/auth/callback?invite_token=tok-hash"),
     );
 
     expect(exchangeCodeForSession).not.toHaveBeenCalled();
-    expect(res.headers.get("location")).toBe(
-      "https://example.test/login?invite_token=tok-hash",
+    expect(response.headers.get("location")).toBe(
+      "https://institute.bmhgroupkc.com/login?error=sso_failed",
     );
+    expectLaunchNonceConsumed(response);
   });
 
-  it("does not call signOut or deleteUser when the invite is active", async () => {
-    const future = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
-    inviteRow = {
-      id: "inv-ok",
-      system_role: "admin",
-      role_group_ids: [],
-      accepted_at: null,
-      expires_at: future,
-    };
+  it("rejects a callback when the launch nonce cookie is missing", async () => {
+    const response = await GET(
+      makeRequest(callbackUrl("flow=sso&code=missing-cookie"), null),
+    );
 
-    await GET(
+    expect(exchangeCodeForSession).not.toHaveBeenCalled();
+    expect(response.headers.get("location")).toBe(
+      "https://institute.bmhgroupkc.com/login?error=sso_failed",
+    );
+    expectLaunchNonceConsumed(response);
+  });
+
+  it("rejects and consumes a mismatched launch nonce", async () => {
+    const response = await GET(
+      makeRequest(callbackUrl("flow=sso&code=mismatch"), "different-nonce"),
+    );
+
+    expect(exchangeCodeForSession).not.toHaveBeenCalled();
+    expect(response.headers.get("location")).toBe(
+      "https://institute.bmhgroupkc.com/login?error=sso_failed",
+    );
+    expectLaunchNonceConsumed(response);
+  });
+
+  it("rejects a replay after the launch nonce cookie was consumed", async () => {
+    const firstResponse = await GET(
+      makeRequest(callbackUrl("flow=sso&code=first")),
+    );
+    expect(firstResponse.headers.get("location")).toBe(
+      "https://institute.bmhgroupkc.com/dashboard",
+    );
+    expectLaunchNonceConsumed(firstResponse);
+
+    exchangeCodeForSession.mockClear();
+    const replayResponse = await GET(
+      makeRequest(callbackUrl("flow=sso&code=replay"), null),
+    );
+
+    expect(exchangeCodeForSession).not.toHaveBeenCalled();
+    expect(replayResponse.headers.get("location")).toBe(
+      "https://institute.bmhgroupkc.com/login?error=sso_failed",
+    );
+    expectLaunchNonceConsumed(replayResponse);
+  });
+
+  it("rejects a forged callback marker when the exchanged grant was not OAuth", async () => {
+    getClaims.mockResolvedValue({
+      data: { claims: { amr: [{ method: "magiclink", timestamp: 1 }] } },
+      error: null,
+    });
+
+    const response = await GET(
       makeRequest(
-        "https://example.test/auth/callback?code=abc&invite_token=tok-ok&type=invite",
+        callbackUrl("flow=sso&code=forged"),
       ),
     );
 
-    expect(sessionSignOut).not.toHaveBeenCalled();
-    expect(adminAuthDeleteUser).not.toHaveBeenCalled();
+    expect(signOut).toHaveBeenCalledWith({ scope: "local" });
+    expect(response.headers.get("location")).toBe(
+      "https://institute.bmhgroupkc.com/login?error=sso_failed",
+    );
+    expectLaunchNonceConsumed(response);
   });
 
-  it("redirects to /login?error=invite_expired even when the admin client throws on delete", async () => {
-    const past = new Date(Date.now() - 60 * 1000).toISOString();
-    inviteRow = {
-      id: "inv-expired-2",
-      system_role: "admin",
-      role_group_ids: [],
-      accepted_at: null,
-      expires_at: past,
-    };
-    adminAuthDeleteUser.mockRejectedValueOnce(new Error("admin unavailable"));
+  it("expires the full Institute auth-cookie namespace when local sign-out returns an error", async () => {
+    getClaims.mockResolvedValue({
+      data: { claims: { amr: [{ method: "password", timestamp: 1 }] } },
+      error: null,
+    });
+    signOut.mockResolvedValue({ error: { message: "logout failed" } });
+    const request = makeRequest(callbackUrl("flow=sso&code=forged"));
+    request.cookies.set(
+      "sb-dhvfsyteqsxagokoerrx-auth-token.0",
+      "seeded-session-chunk",
+    );
+    request.cookies.set(
+      "sb-dhvfsyteqsxagokoerrx-auth-token-code-verifier",
+      "seeded-verifier",
+    );
+    request.cookies.set(
+      "sb-dhvfsyteqsxagokoerrx-auth-token-user",
+      "seeded-user",
+    );
+    request.cookies.set("unrelated", "keep");
 
-    const res = await GET(
+    const response = await GET(request);
+    const setCookie = response.headers.get("set-cookie") ?? "";
+
+    expect(signOut).toHaveBeenCalledWith({ scope: "local" });
+    expect(setCookie).toContain("sb-dhvfsyteqsxagokoerrx-auth-token=");
+    expect(setCookie).toContain("sb-dhvfsyteqsxagokoerrx-auth-token.0=");
+    expect(setCookie).toContain("sb-dhvfsyteqsxagokoerrx-auth-token.4=");
+    expect(setCookie).toContain(
+      "sb-dhvfsyteqsxagokoerrx-auth-token-code-verifier=",
+    );
+    expect(setCookie).toContain(
+      "sb-dhvfsyteqsxagokoerrx-auth-token-user=",
+    );
+    expect(setCookie).toContain("Max-Age=0");
+    expect(setCookie).not.toContain("unrelated=");
+    expectLaunchNonceConsumed(response);
+  });
+
+  it("expires auth cookies when the code exchange throws", async () => {
+    exchangeCodeForSession.mockRejectedValue(new Error("exchange failed"));
+    const request = makeRequest(callbackUrl("flow=sso&code=throws"));
+    request.cookies.set(
+      "sb-dhvfsyteqsxagokoerrx-auth-token",
+      "seeded-session",
+    );
+
+    const response = await GET(request);
+
+    expect(signOut).toHaveBeenCalledWith({ scope: "local" });
+    expect(response.headers.get("location")).toBe(
+      "https://institute.bmhgroupkc.com/login?error=sso_failed",
+    );
+    expect(response.headers.get("set-cookie")).toContain(
+      "sb-dhvfsyteqsxagokoerrx-auth-token=",
+    );
+    expectLaunchNonceConsumed(response);
+  });
+
+  it("expires auth cookies when post-exchange authorization throws", async () => {
+    maybeSingle.mockRejectedValue(new Error("profiles unavailable"));
+    const request = makeRequest(callbackUrl("flow=sso&code=profile-throws"));
+    request.cookies.set(
+      "sb-dhvfsyteqsxagokoerrx-auth-token-code-verifier.1",
+      "seeded-verifier-chunk",
+    );
+
+    const response = await GET(request);
+
+    expect(signOut).toHaveBeenCalledWith({ scope: "local" });
+    expect(response.headers.get("location")).toBe(
+      "https://institute.bmhgroupkc.com/login?error=access_denied",
+    );
+    expect(response.headers.get("set-cookie")).toContain(
+      "sb-dhvfsyteqsxagokoerrx-auth-token-code-verifier.1=",
+    );
+    expectLaunchNonceConsumed(response);
+  });
+
+  it("expires auth cookies and redirects when local sign-out throws", async () => {
+    maybeSingle.mockResolvedValue({ data: null, error: null });
+    signOut.mockRejectedValue(new Error("local storage failed"));
+    const request = makeRequest(callbackUrl("flow=sso&code=missing-profile"));
+    request.cookies.set(
+      "sb-dhvfsyteqsxagokoerrx-auth-token.3",
+      "seeded-session-chunk",
+    );
+
+    const response = await GET(request);
+    const setCookie = response.headers.get("set-cookie") ?? "";
+
+    expect(response.headers.get("location")).toBe(
+      "https://institute.bmhgroupkc.com/login?error=access_denied",
+    );
+    expect(setCookie).toContain("sb-dhvfsyteqsxagokoerrx-auth-token.3=");
+    expect(setCookie).toContain("Max-Age=0");
+    expectLaunchNonceConsumed(response);
+  });
+
+  it("does not expire Institute auth cookies for an authorized Hugo session", async () => {
+    const request = makeRequest(callbackUrl("flow=sso&code=authorized"));
+    request.cookies.set(
+      "sb-dhvfsyteqsxagokoerrx-auth-token",
+      "existing-session",
+    );
+
+    const response = await GET(request);
+    const setCookie = response.headers.get("set-cookie") ?? "";
+
+    expect(response.headers.get("location")).toBe(
+      "https://institute.bmhgroupkc.com/dashboard",
+    );
+    expect(setCookie).not.toContain("sb-dhvfsyteqsxagokoerrx-auth-token=");
+    expectLaunchNonceConsumed(response);
+  });
+
+  it("rejects an OAuth callback whose current identity is not custom:hugo", async () => {
+    exchangeCodeForSession.mockResolvedValue({
+      data: {
+        session: {
+          access_token: "other-oauth-token",
+          user: {
+            id: "existing-user",
+            identities: [
+              {
+                provider: "google",
+              },
+            ],
+          },
+        },
+      },
+      error: null,
+    });
+
+    const response = await GET(
       makeRequest(
-        "https://example.test/auth/callback?code=abc&invite_token=tok-expired",
+        callbackUrl("flow=sso&code=google"),
       ),
     );
 
-    // signOut still ran so the cookie session is cleared.
-    expect(sessionSignOut).toHaveBeenCalledTimes(1);
-    expect(res.headers.get("location")).toBe(
-      "https://example.test/login?error=invite_expired",
+    expect(signOut).toHaveBeenCalledTimes(1);
+    expect(response.headers.get("location")).toBe(
+      "https://institute.bmhgroupkc.com/login?error=sso_failed",
     );
+    expectLaunchNonceConsumed(response);
+  });
+
+  it("signs out a Hugo identity with no provisioned Institute profile", async () => {
+    maybeSingle.mockResolvedValue({ data: null, error: null });
+
+    const response = await GET(
+      makeRequest(
+        callbackUrl("flow=sso&code=abc"),
+      ),
+    );
+
+    expect(signOut).toHaveBeenCalledTimes(1);
+    expect(response.headers.get("location")).toBe(
+      "https://institute.bmhgroupkc.com/login?error=access_denied",
+    );
+    expectLaunchNonceConsumed(response);
+  });
+
+  it("signs out a suspended Institute user without a redirect loop", async () => {
+    maybeSingle.mockResolvedValue({
+      data: { status: "suspended" },
+      error: null,
+    });
+
+    const response = await GET(
+      makeRequest(
+        callbackUrl("flow=sso&code=abc"),
+      ),
+    );
+
+    expect(signOut).toHaveBeenCalledTimes(1);
+    expect(response.headers.get("location")).toBe(
+      "https://institute.bmhgroupkc.com/login?error=suspended",
+    );
+    expectLaunchNonceConsumed(response);
+  });
+
+  it("signs out an invited Institute profile until access is activated", async () => {
+    maybeSingle.mockResolvedValue({
+      data: { status: "invited" },
+      error: null,
+    });
+
+    const response = await GET(
+      makeRequest(
+        callbackUrl("flow=sso&code=abc"),
+      ),
+    );
+
+    expect(signOut).toHaveBeenCalledTimes(1);
+    expect(response.headers.get("location")).toBe(
+      "https://institute.bmhgroupkc.com/login?error=access_denied",
+    );
+    expectLaunchNonceConsumed(response);
   });
 });

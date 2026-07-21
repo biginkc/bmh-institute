@@ -84,4 +84,20 @@ describe("credential-bearing Playwright artifact policy", () => {
       expect(source, filename).not.toMatch(/video:\s*["'](?:on|retain-on-failure|on-first-retry)["']/);
     }
   });
+
+  it("keeps the default production browser suite read-only", () => {
+    const productionConfig = fs.readFileSync(
+      path.resolve(process.cwd(), "playwright.prod.config.ts"),
+      "utf8",
+    );
+    expect(productionConfig).not.toContain("embed-sandbox");
+    expect(productionConfig).not.toContain("TEST_SUPABASE_SERVICE_ROLE_KEY");
+
+    const seededEmbedSpec = fs.readFileSync(
+      path.resolve(process.cwd(), "e2e/embed-sandbox.spec.ts"),
+      "utf8",
+    );
+    expect(seededEmbedSpec).toContain("writePathAdminClient");
+    expect(seededEmbedSpec).toContain("bootstrapTestSession");
+  });
 });

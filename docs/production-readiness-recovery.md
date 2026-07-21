@@ -1,8 +1,13 @@
 # Production readiness recovery runbook
 
-Use this when a production-readiness run fails, is cancelled, or leaves disposable data behind.
+Use this only to inspect or remove historical disposable records created by the
+retired password-seeded production harness. Current Hugo production-readiness
+and pilot-gate commands do not create production users or business data, so
+this script is not part of a normal acceptance run.
 
-Production readiness data must use the `PRD-READY-` prefix. The cleanup script is dry-run by default and refuses to run unless the Supabase URL points at production ref `dhvfsyteqsxagokoerrx`.
+Historical production-readiness data used the `PRD-READY-` prefix. The cleanup
+script is dry-run by default and refuses to run unless the Supabase URL points
+at production ref `dhvfsyteqsxagokoerrx`.
 
 ## Inspect leftovers
 

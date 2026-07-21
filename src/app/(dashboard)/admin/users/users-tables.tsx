@@ -9,7 +9,6 @@ import type {
   LearnerAccessStatusKey,
 } from "@/lib/learner-access/status";
 
-import { ResendInviteButton } from "./resend-invite-button";
 import { RevokeInviteButton } from "./revoke-invite-button";
 
 type ProfileRow = {
@@ -41,7 +40,7 @@ export function LearnerAccessTable({ rows }: { rows: LearnerAccessRow[] }) {
         { key: "action", label: "Action", align: "right" },
       ]}
       rows={rows}
-      empty="No learners yet. Send the first invite when the learning group is ready."
+      empty="No learners yet. Grant the first person access when the learning group is ready."
       cell={{
         email: (row) => muted(row.email),
         statusLabel: (row) => (
@@ -138,7 +137,6 @@ export function PendingInvitesTable({ rows }: { rows: InviteRow[] }) {
 function InviteActions({ inviteId }: { inviteId: string }) {
   return (
     <span style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
-      <ResendInviteButton inviteId={inviteId} />
       <RevokeInviteButton inviteId={inviteId} />
     </span>
   );

@@ -133,8 +133,8 @@ export default async function AdminUsersPage() {
 
         <Card padding="md">
           <AdminSectionHeading
-            title="Invite someone"
-            description="They get a Supabase email with a signup link."
+            title="Grant access"
+            description="Provision Institute access without creating a password or sending an authentication email."
           />
           <InviteForm
             roleGroups={assignableRoleGroups}
@@ -145,8 +145,8 @@ export default async function AdminUsersPage() {
       <Card padding="sm" style={{ marginTop: 24 }}>
         <div style={{ padding: "6px 12px 12px" }}>
           <AdminSectionHeading
-            title="Pending invites"
-            description="Haven't been accepted yet. Revoke to remove from the list."
+            title="Historical invites"
+            description="Preserved for reference. Revoke to remove one from this list."
           />
         </div>
         <PendingInvitesTable

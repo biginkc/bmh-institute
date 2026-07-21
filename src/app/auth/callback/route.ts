@@ -1,134 +1,207 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { sanitizeNextUrl } from "@/app/(auth)/login/sanitize-next";
+import {
+  HUGO_LAUNCH_COOKIE,
+  matchesHugoLaunchNonce,
+} from "@/app/auth/hugo/launch-nonce";
+import { createClient } from "@/lib/supabase/server";
 
-/**
- * Supabase invite / magic-link / recovery callback.
- *
- * Handles:
- *   - exchangeCodeForSession so the user ends up authenticated,
- *   - applying `invite_token` (from the invite email's redirect_to) — wires
- *     up system_role + user_role_groups,
- *   - routing invite/recovery/signup to /auth/set-password.
- */
+type AuthenticationMethod = string | { method?: string; timestamp?: number };
+
+function methodName(method: AuthenticationMethod) {
+  return typeof method === "string" ? method : method.method;
+}
+
+function hasOAuthAuthenticationMethod(methods: AuthenticationMethod[] | undefined) {
+  return Boolean(methods?.some((method) => methodName(method) === "oauth"));
+}
+
+function hasHugoIdentity(
+  identities: Array<{ provider?: string }> | undefined,
+) {
+  return Boolean(
+    identities?.some((identity) => identity.provider === "custom:hugo"),
+  );
+}
+
+function redirectAfterConsumingLaunchNonce(url: string) {
+  const response = NextResponse.redirect(url);
+  response.cookies.set(HUGO_LAUNCH_COOKIE, "", {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/auth/callback",
+    expires: new Date(0),
+    maxAge: 0,
+  });
+  return response;
+}
+
+function supabaseAuthCookieBase(): string | null {
+  try {
+    const projectRef = new URL(
+      process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
+    ).hostname.split(".")[0];
+    return projectRef ? `sb-${projectRef}-auth-token` : null;
+  } catch {
+    return null;
+  }
+}
+
+function expireSupabaseAuthCookies(
+  request: NextRequest,
+  response: NextResponse,
+): NextResponse {
+  const base = supabaseAuthCookieBase();
+  if (!base) return response;
+
+  const names = new Set<string>([
+    base,
+    `${base}-code-verifier`,
+    `${base}-user`,
+  ]);
+  for (let chunk = 0; chunk < 5; chunk += 1) {
+    names.add(`${base}.${chunk}`);
+    names.add(`${base}-code-verifier.${chunk}`);
+    names.add(`${base}-user.${chunk}`);
+  }
+  for (const { name } of request.cookies.getAll()) {
+    if (
+      name === base ||
+      name.startsWith(`${base}.`) ||
+      name.startsWith(`${base}-code-verifier`) ||
+      name.startsWith(`${base}-user`)
+    ) {
+      names.add(name);
+    }
+  }
+
+  for (const name of names) {
+    response.cookies.set(name, "", {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      expires: new Date(0),
+      maxAge: 0,
+    });
+  }
+  return response;
+}
+
+async function rejectExchangedSession(
+  request: NextRequest,
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  url: string,
+): Promise<NextResponse> {
+  try {
+    await supabase.auth.signOut({ scope: "local" });
+  } catch {
+    // The explicit cookie expiry below is the final local-session boundary.
+  }
+  return expireSupabaseAuthCookies(
+    request,
+    redirectAfterConsumingLaunchNonce(url),
+  );
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = request.nextUrl;
   const code = searchParams.get("code");
-  const type = searchParams.get("type");
-  const next = searchParams.get("next");
-  const inviteToken = searchParams.get("invite_token");
+  const hasValidLaunchNonce = matchesHugoLaunchNonce(
+    request.cookies.get(HUGO_LAUNCH_COOKIE)?.value,
+    searchParams.get("launch_nonce"),
+  );
 
-  if (!code) {
-    if (inviteToken) {
-      return NextResponse.redirect(
-        `${origin}/login?invite_token=${encodeURIComponent(inviteToken)}`,
-      );
-    }
-    return NextResponse.redirect(`${origin}/login?error=invite_failed`);
+  // Only Hugo may establish a new Institute session. Historical invite,
+  // recovery, signup, and magic-link callbacks are deliberately rejected.
+  if (searchParams.get("flow") !== "sso" || !code || !hasValidLaunchNonce) {
+    return redirectAfterConsumingLaunchNonce(
+      `${origin}/login?error=sso_failed`,
+    );
   }
 
-  const supabase = await createClient();
-  const { error, data } = await supabase.auth.exchangeCodeForSession(code);
-  if (error || !data.session) {
-    return NextResponse.redirect(`${origin}/login?error=invite_failed`);
-  }
-
-  if (inviteToken) {
-    const result = await applyInvite({
-      userId: data.session.user.id,
-      token: inviteToken,
-    });
-    if (!result.ok && result.reason === "expired") {
-      // CR-02: applyInvite runs after exchangeCodeForSession, so by the time
-      // we detect expiry the auth.users row exists, the cookie session is
-      // set, and the handle_new_user trigger has populated profiles with a
-      // default 'learner' row. Without teardown the user could navigate
-      // straight to /dashboard. Sign out clears the cookie; admin
-      // deleteUser removes the auth.users row, and the FK cascade declared
-      // in migration 001 cleans up profiles.
-      await supabase.auth.signOut();
-      try {
-        const admin = createAdminClient();
-        await admin.auth.admin.deleteUser(data.session.user.id);
-      } catch {
-        // If the service-role client is unavailable the session is at least
-        // gone; an orphan auth.users row will be cleaned up out-of-band.
-      }
-      return NextResponse.redirect(`${origin}/login?error=invite_expired`);
-    }
-  }
-
-  if (type === "invite" || type === "recovery" || type === "signup") {
-    return NextResponse.redirect(`${origin}/auth/set-password`);
-  }
-
-  return NextResponse.redirect(`${origin}${sanitizeNextUrl(next)}`);
-}
-
-export type ApplyInviteResult = { ok: true } | { ok: false; reason: "expired" };
-
-/**
- * Look up the invite by token and apply its system_role and role_group_ids
- * to the user. Uses the service-role client so RLS doesn't block the writes
- * from a learner-scoped session.
- *
- * Returns a discriminated union so the GET handler can redirect on expiry.
- * HARDEN-02 / D-02: refuses expired invites before applying any role assignment.
- */
-export async function applyInvite({
-  userId,
-  token,
-}: {
-  userId: string;
-  token: string;
-}): Promise<ApplyInviteResult> {
-  let admin;
+  let supabase: Awaited<ReturnType<typeof createClient>>;
   try {
-    admin = createAdminClient();
+    supabase = await createClient();
   } catch {
-    // No service-role key configured yet — skip pre-assignment. The user still
-    // lands with a 'learner' profile and can be upgraded by hand.
-    return { ok: true };
+    return redirectAfterConsumingLaunchNonce(
+      `${origin}/login?error=sso_failed`,
+    );
   }
 
-  const { data: invite } = await admin
-    .from("invites")
-    .select("id, system_role, role_group_ids, accepted_at, expires_at")
-    .eq("token", token)
-    .maybeSingle();
-  if (!invite || invite.accepted_at) return { ok: true };
-
-  // HARDEN-02 / D-02: refuse expired invites before applying any role
-  // assignment. Expired tokens redirect the caller back to /login with a
-  // dedicated error code. The unit test in route.test.ts pins this contract.
-  if (new Date(invite.expires_at as string) <= new Date()) {
-    return { ok: false, reason: "expired" };
+  let exchange: Awaited<
+    ReturnType<typeof supabase.auth.exchangeCodeForSession>
+  >;
+  try {
+    exchange = await supabase.auth.exchangeCodeForSession(code);
+  } catch {
+    return rejectExchangedSession(
+      request,
+      supabase,
+      `${origin}/login?error=sso_failed`,
+    );
+  }
+  const { error, data } = exchange;
+  if (error || !data.session) {
+    return rejectExchangedSession(
+      request,
+      supabase,
+      `${origin}/login?error=sso_failed`,
+    );
   }
 
-  await admin
-    .from("profiles")
-    .update({
-      system_role: invite.system_role as "owner" | "admin" | "learner",
-    })
-    .eq("id", userId);
-
-  const roleGroupIds = (invite.role_group_ids ?? []) as string[];
-  if (roleGroupIds.length > 0) {
-    const rows = roleGroupIds.map((rg) => ({
-      user_id: userId,
-      role_group_id: rg,
-    }));
-    await admin
-      .from("user_role_groups")
-      .upsert(rows, { onConflict: "user_id,role_group_id", ignoreDuplicates: true });
+  let claimsResult: Awaited<ReturnType<typeof supabase.auth.getClaims>>;
+  try {
+    claimsResult = await supabase.auth.getClaims(data.session.access_token);
+  } catch {
+    return rejectExchangedSession(
+      request,
+      supabase,
+      `${origin}/login?error=sso_failed`,
+    );
+  }
+  const { data: claimsData, error: claimsError } = claimsResult;
+  if (
+    claimsError ||
+    !claimsData ||
+    !hasOAuthAuthenticationMethod(claimsData.claims.amr) ||
+    !hasHugoIdentity(data.session.user.identities ?? undefined)
+  ) {
+    return rejectExchangedSession(
+      request,
+      supabase,
+      `${origin}/login?error=sso_failed`,
+    );
   }
 
-  await admin
-    .from("invites")
-    .update({ accepted_at: new Date().toISOString() })
-    .eq("id", invite.id as string);
+  let profile: { status: string } | null = null;
+  try {
+    const result = await supabase
+      .from("profiles")
+      .select("status")
+      .eq("id", data.session.user.id)
+      .maybeSingle();
+    profile = result.data;
+  } catch {
+    return rejectExchangedSession(
+      request,
+      supabase,
+      `${origin}/login?error=access_denied`,
+    );
+  }
 
-  return { ok: true };
+  if (!profile || profile.status !== "active") {
+    const reason = profile?.status === "suspended" ? "suspended" : "access_denied";
+    return rejectExchangedSession(
+      request,
+      supabase,
+      `${origin}/login?error=${reason}`,
+    );
+  }
+
+  return redirectAfterConsumingLaunchNonce(
+    `${origin}${sanitizeNextUrl(searchParams.get("next"))}`,
+  );
 }

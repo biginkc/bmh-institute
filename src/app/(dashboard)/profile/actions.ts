@@ -35,28 +35,3 @@ export async function updateProfile(
   revalidatePath("/dashboard");
   return { ok: true };
 }
-
-export async function changePassword(
-  _prev: UpdateProfileState,
-  formData: FormData,
-): Promise<UpdateProfileState> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { ok: false, error: "Sign in first." };
-
-  const password = String(formData.get("password") ?? "");
-  const confirm = String(formData.get("confirm") ?? "");
-  if (password.length < 8) {
-    return { ok: false, error: "Password must be at least 8 characters." };
-  }
-  if (password !== confirm) {
-    return { ok: false, error: "Passwords don't match." };
-  }
-
-  const { error } = await supabase.auth.updateUser({ password });
-  if (error) return { ok: false, error: error.message };
-
-  return { ok: true };
-}

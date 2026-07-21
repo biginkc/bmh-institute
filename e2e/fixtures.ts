@@ -1,12 +1,12 @@
 // TPAR-02: shared helpers for local-dev e2e specs. Runs OUT OF BAND from
-// Playwright's browser context. Path A scope (Plan 2): exposes only
-// adminClient + ensureTestUser + prod-ref guard. Write-path helpers for
-// the destructive Phase 01 HUMAN-UAT items (HARDEN-02 invite-expiry,
-// HARDEN-03 deleted-user re-auth via UI) require Jarrad's lock on Path B
-// (Supabase ephemeral branches) or Path C (prod-with-prefix-cleanup).
+// Playwright's browser context and is restricted to the nonproduction test
+// project. Product password UI is intentionally never exercised.
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 import { requireE2eSeedPassword } from "../src/lib/testing/e2e-seed-password";
+import { assertCanonicalSupabaseProjectUrl } from "../src/lib/supabase/canonical-project-url";
+
+const TEST_PROJECT_REF = "jvaabkchkihkjllehmft";
 
 export const TEST_USER_EMAIL = "claude@test.com";
 export const TEST_USER_PASSWORD = requireE2eSeedPassword();
@@ -23,9 +23,11 @@ export function adminClient(): SupabaseClient {
       "E2E fixtures need TEST_SUPABASE_URL + TEST_SUPABASE_SERVICE_ROLE_KEY in the environment.",
     );
   }
-  if (url.includes("dhvfsyteqsxagokoerrx")) {
+  try {
+    assertCanonicalSupabaseProjectUrl(url, [TEST_PROJECT_REF]);
+  } catch {
     throw new Error(
-      "E2E fixtures refusing to run against the prod project (dhvfsyteqsxagokoerrx). Point TEST_SUPABASE_URL at a non-prod project.",
+      `E2E fixtures require exact test origin https://${TEST_PROJECT_REF}.supabase.co.`,
     );
   }
   return createClient(url, key, {

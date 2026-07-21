@@ -4,7 +4,7 @@ import type { Database } from "./types";
 
 /**
  * Service-role Supabase client — bypasses RLS and unlocks auth.admin.*
- * methods (inviteUserByEmail, listUsers, deleteUser) used for team
+ * methods (createUser, listUsers, deleteUser) used for team
  * management and trigger-equivalent server-side operations.
  *
  * NEVER return this from a server component rendered for an untrusted
