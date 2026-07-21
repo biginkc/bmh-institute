@@ -1,6 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import { sanitizeNextUrl } from "@/app/(auth)/login/sanitize-next";
+import {
+  HUGO_LAUNCH_COOKIE,
+  matchesHugoLaunchNonce,
+} from "@/app/auth/hugo/launch-nonce";
 import { createClient } from "@/lib/supabase/server";
 
 type AuthenticationMethod = string | { method?: string; timestamp?: number };
@@ -13,51 +17,49 @@ function hasOAuthAuthenticationMethod(methods: AuthenticationMethod[] | undefine
   return Boolean(methods?.some((method) => methodName(method) === "oauth"));
 }
 
-function hasCurrentHugoIdentity(
-  identities: Array<{ provider?: string; last_sign_in_at?: string }> | undefined,
-  methods: AuthenticationMethod[] | undefined,
+function hasHugoIdentity(
+  identities: Array<{ provider?: string }> | undefined,
 ) {
-  const oauthTimestamp = Math.max(
-    ...(
-      methods
-        ?.filter(
-          (method) =>
-            typeof method !== "string" &&
-            method.method === "oauth" &&
-            method.timestamp,
-        )
-        .map((method) =>
-          typeof method === "string" ? 0 : (method.timestamp as number),
-        ) ?? []
-    ),
-  );
-  if (!Number.isFinite(oauthTimestamp)) return false;
-
   return Boolean(
-    identities?.some((identity) => {
-      if (identity.provider !== "custom:hugo" || !identity.last_sign_in_at) {
-        return false;
-      }
-      const lastSignIn = Date.parse(identity.last_sign_in_at) / 1000;
-      return Number.isFinite(lastSignIn) && Math.abs(lastSignIn - oauthTimestamp) <= 5;
-    }),
+    identities?.some((identity) => identity.provider === "custom:hugo"),
   );
+}
+
+function redirectAfterConsumingLaunchNonce(url: string) {
+  const response = NextResponse.redirect(url);
+  response.cookies.set(HUGO_LAUNCH_COOKIE, "", {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/auth/callback",
+    expires: new Date(0),
+    maxAge: 0,
+  });
+  return response;
 }
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = request.nextUrl;
   const code = searchParams.get("code");
+  const hasValidLaunchNonce = matchesHugoLaunchNonce(
+    request.cookies.get(HUGO_LAUNCH_COOKIE)?.value,
+    searchParams.get("launch_nonce"),
+  );
 
   // Only Hugo may establish a new Institute session. Historical invite,
   // recovery, signup, and magic-link callbacks are deliberately rejected.
-  if (searchParams.get("flow") !== "sso" || !code) {
-    return NextResponse.redirect(`${origin}/login?error=sso_failed`);
+  if (searchParams.get("flow") !== "sso" || !code || !hasValidLaunchNonce) {
+    return redirectAfterConsumingLaunchNonce(
+      `${origin}/login?error=sso_failed`,
+    );
   }
 
   const supabase = await createClient();
   const { error, data } = await supabase.auth.exchangeCodeForSession(code);
   if (error || !data.session) {
-    return NextResponse.redirect(`${origin}/login?error=sso_failed`);
+    return redirectAfterConsumingLaunchNonce(
+      `${origin}/login?error=sso_failed`,
+    );
   }
 
   const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(
@@ -67,13 +69,12 @@ export async function GET(request: NextRequest) {
     claimsError ||
     !claimsData ||
     !hasOAuthAuthenticationMethod(claimsData.claims.amr) ||
-    !hasCurrentHugoIdentity(
-      data.session.user.identities ?? undefined,
-      claimsData.claims.amr,
-    )
+    !hasHugoIdentity(data.session.user.identities ?? undefined)
   ) {
     await supabase.auth.signOut();
-    return NextResponse.redirect(`${origin}/login?error=sso_failed`);
+    return redirectAfterConsumingLaunchNonce(
+      `${origin}/login?error=sso_failed`,
+    );
   }
 
   const { data: profile } = await supabase
@@ -85,10 +86,12 @@ export async function GET(request: NextRequest) {
   if (!profile || profile.status !== "active") {
     await supabase.auth.signOut();
     const reason = profile?.status === "suspended" ? "suspended" : "access_denied";
-    return NextResponse.redirect(`${origin}/login?error=${reason}`);
+    return redirectAfterConsumingLaunchNonce(
+      `${origin}/login?error=${reason}`,
+    );
   }
 
-  return NextResponse.redirect(
+  return redirectAfterConsumingLaunchNonce(
     `${origin}${sanitizeNextUrl(searchParams.get("next"))}`,
   );
 }

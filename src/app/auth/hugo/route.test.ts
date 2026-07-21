@@ -1,4 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { NextRequest } from "next/server";
+
+import {
+  HUGO_LAUNCH_COOKIE,
+  HUGO_LAUNCH_MAX_AGE_SECONDS,
+} from "./launch-nonce";
 
 const signInWithOAuth = vi.fn();
 
@@ -9,8 +15,7 @@ vi.mock("@/lib/supabase/server", () => ({
 import { GET } from "./route";
 
 function makeRequest(url: string) {
-  const nextUrl = new URL(url);
-  return { nextUrl } as unknown as Parameters<typeof GET>[0];
+  return new NextRequest(url);
 }
 
 describe("GET /auth/hugo", () => {
@@ -31,11 +36,24 @@ describe("GET /auth/hugo", () => {
     expect(signInWithOAuth).toHaveBeenCalledWith({
       provider: "custom:hugo",
       options: {
-        redirectTo:
-          "https://institute.bmhgroupkc.com/auth/callback?flow=sso&next=%2Flessons%2Fabc",
+        redirectTo: expect.stringContaining(
+          "https://institute.bmhgroupkc.com/auth/callback?flow=sso&next=%2Flessons%2Fabc&launch_nonce=",
+        ),
         scopes: "openid email profile",
       },
     });
+    const redirectTo = new URL(
+      signInWithOAuth.mock.calls[0][0].options.redirectTo,
+    );
+    const launchNonce = redirectTo.searchParams.get("launch_nonce");
+    expect(launchNonce).toMatch(/^[0-9a-f-]{36}$/);
+    expect(response.cookies.get(HUGO_LAUNCH_COOKIE)?.value).toBe(launchNonce);
+    expect(response.headers.get("set-cookie")).toContain("HttpOnly");
+    expect(response.headers.get("set-cookie")).toContain("SameSite=lax");
+    expect(response.headers.get("set-cookie")).toContain("Path=/auth/callback");
+    expect(response.headers.get("set-cookie")).toContain(
+      `Max-Age=${HUGO_LAUNCH_MAX_AGE_SECONDS}`,
+    );
     expect(response.headers.get("location")).toBe(
       "https://hugo.bmhgroupkc.com/oauth/authorize?request=1",
     );
@@ -56,8 +74,9 @@ describe("GET /auth/hugo", () => {
     expect(signInWithOAuth).toHaveBeenCalledWith(
       expect.objectContaining({
         options: expect.objectContaining({
-          redirectTo:
-            "https://institute.bmhgroupkc.com/auth/callback?flow=sso&next=%2Fdashboard",
+          redirectTo: expect.stringContaining(
+            "https://institute.bmhgroupkc.com/auth/callback?flow=sso&next=%2Fdashboard&launch_nonce=",
+          ),
         }),
       }),
     );
