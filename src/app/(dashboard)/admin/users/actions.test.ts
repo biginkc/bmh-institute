@@ -75,7 +75,10 @@ describe("Grant Institute access", () => {
     expect(mocks.createUser).toHaveBeenCalledWith({
       email: "person@example.com",
       email_confirm: true,
-      app_metadata: { system_role: "admin" },
+      app_metadata: {
+        system_role: "admin",
+        provisioning_origin: "institute_admin",
+      },
       user_metadata: { provisioned_by: "institute_admin" },
     });
     expect(mocks.rpc).toHaveBeenCalledWith("fn_save_user_settings", {

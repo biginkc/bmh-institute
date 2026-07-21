@@ -68,7 +68,10 @@ export async function inviteUser(
     const { data, error } = await admin.auth.admin.createUser({
       email: canonicalEmail,
       email_confirm: true,
-      app_metadata: { system_role: parsed.value.system_role },
+      app_metadata: {
+        system_role: parsed.value.system_role,
+        provisioning_origin: "institute_admin",
+      },
       user_metadata: { provisioned_by: "institute_admin" },
     });
     if (error || !data.user) {
