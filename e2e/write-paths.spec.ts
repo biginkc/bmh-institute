@@ -213,7 +213,20 @@ test.describe("durable write-path coverage", () => {
       await expect(
         page.getByRole("heading", { name: "Passed" }),
       ).toBeFocused();
-      await page.goto(`/courses/${fixture.courseId}`);
+      await page.getByRole("link", { name: "Back to course" }).click();
+      await expect(page).toHaveURL(
+        new RegExp(`/courses/${fixture.courseId}$`),
+      );
+      await expect(
+        page
+          .locator("[data-learner-tile-grid] a")
+          .filter({ hasText: `${fixture.prefix} Text Assignment Lesson` }),
+      ).toBeVisible();
+      await page.getByRole("link", { name: "Back to dashboard" }).click();
+      await expect(page).toHaveURL(/\/dashboard$/);
+      await expect(
+        page.getByRole("heading", { name: `${fixture.prefix} Course` }),
+      ).toBeVisible();
       await expect(
         page
           .locator("[data-learner-tile-grid] a")
