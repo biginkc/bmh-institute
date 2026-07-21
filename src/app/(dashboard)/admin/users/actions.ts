@@ -44,18 +44,25 @@ export async function inviteUser(
   }
 
   const canonicalEmail = parsed.value.email.trim().toLowerCase();
-  const { data: listed, error: listError } =
-    await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
-  if (listError) {
-    return {
-      ok: false,
-      error: `Couldn't check existing access: ${listError.message}`,
-    };
+  let page = 1;
+  let user;
+  while (!user) {
+    const { data: listed, error: listError } =
+      await admin.auth.admin.listUsers({ page, perPage: 1000 });
+    if (listError) {
+      return {
+        ok: false,
+        error: `Couldn't check existing access: ${listError.message}`,
+      };
+    }
+
+    user = listed.users.find(
+      (candidate) => candidate.email?.trim().toLowerCase() === canonicalEmail,
+    );
+    if (user || listed.users.length < 1000) break;
+    page += 1;
   }
 
-  let user = listed.users.find(
-    (candidate) => candidate.email?.trim().toLowerCase() === canonicalEmail,
-  );
   const created = !user;
   if (!user) {
     const { data, error } = await admin.auth.admin.createUser({
@@ -73,56 +80,27 @@ export async function inviteUser(
     user = data.user;
   }
 
-  const { data: updatedProfile, error: profileError } = await admin
-    .from("profiles")
-    .update({
-      email: canonicalEmail,
-      system_role: parsed.value.system_role,
-      status: "active",
-    })
-    .eq("id", user.id)
-    .select("id")
-    .maybeSingle();
-  if (profileError) {
+  const supabase = await createClient();
+  const { error: accessError } = await supabase.rpc("fn_save_user_settings", {
+    p_user_id: user.id,
+    p_system_role: parsed.value.system_role,
+    p_status: "active",
+    p_role_group_ids: parsed.value.role_group_ids,
+  });
+  if (accessError) {
+    if (created) {
+      const { error: cleanupError } = await admin.auth.admin.deleteUser(user.id);
+      if (cleanupError) {
+        return {
+          ok: false,
+          error: `Access assignment failed and the new account couldn't be rolled back: ${cleanupError.message}`,
+        };
+      }
+    }
     return {
       ok: false,
-      error: `The account exists, but its Institute role couldn't be saved: ${profileError.message}`,
+      error: normalizeReleaseControlError(accessError.message),
     };
-  }
-
-  if (!updatedProfile) {
-    const fullName =
-      typeof user.user_metadata?.full_name === "string"
-        ? user.user_metadata.full_name
-        : canonicalEmail.split("@")[0];
-    const { error: insertProfileError } = await admin.from("profiles").insert({
-      id: user.id,
-      email: canonicalEmail,
-      full_name: fullName,
-      system_role: parsed.value.system_role,
-      status: "active",
-    });
-    if (insertProfileError) {
-      return { ok: false, error: insertProfileError.message };
-    }
-  }
-
-  const { error: deleteGroupsError } = await admin
-    .from("user_role_groups")
-    .delete()
-    .eq("user_id", user.id);
-  if (deleteGroupsError) {
-    return { ok: false, error: deleteGroupsError.message };
-  }
-
-  if (parsed.value.role_group_ids.length > 0) {
-    const { error: groupError } = await admin.from("user_role_groups").insert(
-      parsed.value.role_group_ids.map((roleGroupId) => ({
-        user_id: user.id,
-        role_group_id: roleGroupId,
-      })),
-    );
-    if (groupError) return { ok: false, error: groupError.message };
   }
 
   revalidatePath("/admin/users");

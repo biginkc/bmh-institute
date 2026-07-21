@@ -4,10 +4,8 @@ const mocks = vi.hoisted(() => ({
   requireAdmin: vi.fn(),
   listUsers: vi.fn(),
   createUser: vi.fn(),
-  profileMaybeSingle: vi.fn(),
-  profileInsert: vi.fn(),
-  groupsDeleteEq: vi.fn(),
-  groupsInsert: vi.fn(),
+  deleteUser: vi.fn(),
+  rpc: vi.fn(),
   revalidatePath: vi.fn(),
 }));
 
@@ -25,32 +23,14 @@ vi.mock("@/lib/supabase/admin", () => ({
       admin: {
         listUsers: mocks.listUsers,
         createUser: mocks.createUser,
+        deleteUser: mocks.deleteUser,
       },
-    },
-    from: (table: string) => {
-      if (table === "profiles") {
-        return {
-          update: () => ({
-            eq: () => ({
-              select: () => ({ maybeSingle: mocks.profileMaybeSingle }),
-            }),
-          }),
-          insert: mocks.profileInsert,
-        };
-      }
-      if (table === "user_role_groups") {
-        return {
-          delete: () => ({ eq: mocks.groupsDeleteEq }),
-          insert: mocks.groupsInsert,
-        };
-      }
-      throw new Error(`Unexpected table: ${table}`);
     },
   })),
 }));
 
 vi.mock("@/lib/supabase/server", () => ({
-  createClient: vi.fn(),
+  createClient: vi.fn(async () => ({ rpc: mocks.rpc })),
 }));
 
 import { inviteUser } from "./actions";
@@ -66,7 +46,10 @@ function accessForm(email = "Person@Example.com") {
 describe("Grant Institute access", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.requireAdmin.mockResolvedValue({ id: "owner-1", email: "owner@example.com" });
+    mocks.requireAdmin.mockResolvedValue({
+      id: "owner-1",
+      email: "owner@example.com",
+    });
     mocks.listUsers.mockResolvedValue({ data: { users: [] }, error: null });
     mocks.createUser.mockResolvedValue({
       data: {
@@ -78,16 +61,11 @@ describe("Grant Institute access", () => {
       },
       error: null,
     });
-    mocks.profileMaybeSingle.mockResolvedValue({
-      data: { id: "new-user" },
-      error: null,
-    });
-    mocks.profileInsert.mockResolvedValue({ error: null });
-    mocks.groupsDeleteEq.mockResolvedValue({ error: null });
-    mocks.groupsInsert.mockResolvedValue({ error: null });
+    mocks.deleteUser.mockResolvedValue({ data: null, error: null });
+    mocks.rpc.mockResolvedValue({ data: null, error: null });
   });
 
-  it("creates a confirmed passwordless user and assigns its access", async () => {
+  it("creates a confirmed passwordless user and assigns access atomically", async () => {
     await expect(inviteUser(null, accessForm())).resolves.toEqual({
       ok: true,
       email: "person@example.com",
@@ -100,9 +78,12 @@ describe("Grant Institute access", () => {
       app_metadata: { system_role: "admin" },
       user_metadata: { provisioned_by: "institute_admin" },
     });
-    expect(mocks.groupsInsert).toHaveBeenCalledWith([
-      { user_id: "new-user", role_group_id: "group-1" },
-    ]);
+    expect(mocks.rpc).toHaveBeenCalledWith("fn_save_user_settings", {
+      p_user_id: "new-user",
+      p_system_role: "admin",
+      p_status: "active",
+      p_role_group_ids: ["group-1"],
+    });
   });
 
   it("preserves an exact-email existing user instead of replacing it", async () => {
@@ -118,10 +99,6 @@ describe("Grant Institute access", () => {
       },
       error: null,
     });
-    mocks.profileMaybeSingle.mockResolvedValue({
-      data: { id: "canonical-user" },
-      error: null,
-    });
 
     await expect(inviteUser(null, accessForm())).resolves.toEqual({
       ok: true,
@@ -130,8 +107,73 @@ describe("Grant Institute access", () => {
     });
 
     expect(mocks.createUser).not.toHaveBeenCalled();
-    expect(mocks.groupsInsert).toHaveBeenCalledWith([
-      { user_id: "canonical-user", role_group_id: "group-1" },
-    ]);
+    expect(mocks.rpc).toHaveBeenCalledWith(
+      "fn_save_user_settings",
+      expect.objectContaining({ p_user_id: "canonical-user" }),
+    );
+  });
+
+  it("continues exact-email lookup beyond the first 1,000 users", async () => {
+    mocks.listUsers
+      .mockResolvedValueOnce({
+        data: {
+          users: Array.from({ length: 1000 }, (_, index) => ({
+            id: `other-${index}`,
+            email: `other-${index}@example.com`,
+          })),
+        },
+        error: null,
+      })
+      .mockResolvedValueOnce({
+        data: {
+          users: [{ id: "page-two-user", email: "person@example.com" }],
+        },
+        error: null,
+      });
+
+    await expect(inviteUser(null, accessForm())).resolves.toMatchObject({
+      ok: true,
+      created: false,
+    });
+
+    expect(mocks.listUsers).toHaveBeenNthCalledWith(2, {
+      page: 2,
+      perPage: 1000,
+    });
+    expect(mocks.createUser).not.toHaveBeenCalled();
+  });
+
+  it("deletes only a newly created user when transactional access fails", async () => {
+    mocks.rpc.mockResolvedValue({
+      data: null,
+      error: { message: "role group assignment failed" },
+    });
+
+    await expect(inviteUser(null, accessForm())).resolves.toEqual({
+      ok: false,
+      error: "role group assignment failed",
+    });
+
+    expect(mocks.deleteUser).toHaveBeenCalledWith("new-user");
+  });
+
+  it("never deletes a canonical existing user when assignment fails", async () => {
+    mocks.listUsers.mockResolvedValue({
+      data: {
+        users: [{ id: "canonical-user", email: "person@example.com" }],
+      },
+      error: null,
+    });
+    mocks.rpc.mockResolvedValue({
+      data: null,
+      error: { message: "role group assignment failed" },
+    });
+
+    await expect(inviteUser(null, accessForm())).resolves.toEqual({
+      ok: false,
+      error: "role group assignment failed",
+    });
+
+    expect(mocks.deleteUser).not.toHaveBeenCalled();
   });
 });
