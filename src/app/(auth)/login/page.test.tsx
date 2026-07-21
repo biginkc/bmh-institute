@@ -96,7 +96,7 @@ describe("LoginPage", () => {
   });
 
   it("starts the custom:hugo OAuth flow when the flag is on", async () => {
-    vi.stubEnv("NEXT_PUBLIC_BMH_ID_SSO", "1");
+    vi.stubEnv("NEXT_PUBLIC_HUGO_SSO", "1");
     mocks.useSearchParams.mockReturnValue(
       new URLSearchParams({ next: "/lessons/abc" }),
     );
@@ -127,7 +127,7 @@ describe("LoginPage", () => {
   // REJECT rather than resolving { error } — this SDK path never produces a
   // resolved error — so the regression pins the rejection shape.
   it("surfaces an error and re-enables the button when the Hugo flow rejects", async () => {
-    vi.stubEnv("NEXT_PUBLIC_BMH_ID_SSO", "1");
+    vi.stubEnv("NEXT_PUBLIC_HUGO_SSO", "1");
     const signInWithOAuth = vi
       .fn()
       .mockRejectedValue(new Error("PKCE code verifier storage unavailable"));

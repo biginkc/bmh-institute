@@ -22,12 +22,12 @@ const SSO_CALLBACK_ERROR =
 
 /**
  * Hugo single sign-on rollout flag. The button only renders when
- * NEXT_PUBLIC_BMH_ID_SSO=1 (set in Vercel at flip time), so merging this
+ * NEXT_PUBLIC_HUGO_SSO=1 (set in Vercel at flip time), so merging this
  * code is decoupled from enabling the dashboard's custom:hugo OIDC provider.
  * Read at render time so tests can stub the env.
  */
-function bmhIdSsoEnabled() {
-  return process.env.NEXT_PUBLIC_BMH_ID_SSO === "1";
+function hugoSsoEnabled() {
+  return process.env.NEXT_PUBLIC_HUGO_SSO === "1";
 }
 
 /**
@@ -55,7 +55,7 @@ function LoginForm() {
   const urlError = searchParams.get("error");
   const inviteToken = searchParams.get("invite_token");
 
-  async function signInWithBmhId() {
+  async function signInWithHugo() {
     setSsoPending(true);
     setSsoError(null);
 
@@ -189,7 +189,7 @@ function LoginForm() {
       <h2 className="font-[family-name:var(--font-display)] text-[30px] leading-tight font-bold text-[var(--ink-900)]">
         Sign in
       </h2>
-      {bmhIdSsoEnabled() ? (
+      {hugoSsoEnabled() ? (
         <div className="flex flex-col gap-[18px]">
           <Button
             type="button"
@@ -198,7 +198,7 @@ function LoginForm() {
             block
             disabled={ssoPending}
             iconLeft={<KeyRound aria-hidden size={20} />}
-            onClick={() => void signInWithBmhId()}
+            onClick={() => void signInWithHugo()}
           >
             {ssoPending ? "Redirecting..." : "Continue with Hugo"}
           </Button>
