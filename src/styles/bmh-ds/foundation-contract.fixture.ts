@@ -183,13 +183,13 @@ export const SOURCE_TOKEN_SHA256 = {
 } as const;
 
 export const MASCOT_SHA256 = {
-  "face-content.png": "67bf612ebc7769ab2886943b158facf5468f228407dd23a2a013a1481c83ed27",
+  "face-content.png": "0856a3e14dc50c67269eec1f0ff3e1a6d10d3bfb226d8c7fd0f9a3f4db10fa9f",
   "face-curious.png": "67cbe030e553dd5de86ffd3d44693649a47a58d41670210eb85ecfe5e55259bf",
   "face-laugh.png": "119fe57ee5c8ce958648945824b191eac1319b4ab6771d7efde05eead92d7e1a",
   "face-neutral.png": "b5776a85bdf14035507e74f9204e2c014ae7c2d1bced2aec5239b9b30495382c",
   "face-smile.png": "00f1b6a9dc3898fe993f9b6c367e47c6e1fbce08381bb66dea54f22f9af1a8d8",
   "face-thinking.png": "f70ba019d2385e1693e4eadd574085b0da5fbd36e2bc7c21c8f7b556a55fe5ee",
-  "face-worried.png": "d74ec1c66603185753823920aef85f85a3aabb3e6f469c002e8e9ec2b3f942b3",
+  "face-worried.png": "c26090b6ac622088960d6fc96a4463012b00569f1b0e7ba4494433b0fc2f7c69",
   "logo-head.png": "aad1dac79589368afe8694f2c0cdace8f00de99ac28cbcd1885f6353714ec73a",
   "pose-hips.png": "4ccebe1a01514a02a75e799d31bbef7337d4422b3f030ba1dc04e9c0d38535dd",
   "pose-point.png": "bfdc84ba8c9fc9ed3f5f40df4e434a37150640dbf81183aced3a17a9da00be3a",

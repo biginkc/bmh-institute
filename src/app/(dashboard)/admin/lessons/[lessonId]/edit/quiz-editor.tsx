@@ -179,7 +179,7 @@ function QuizSettingsEditor({
             onChange={(e) => setCooldown(Number(e.target.value))}
           />
         </Field>
-        <Field label="Show correct answers" htmlFor="q-show">
+        <Field label="Show correct-response explanations" htmlFor="q-show">
           <select
             id="q-show"
             value={showAfter}
@@ -190,9 +190,9 @@ function QuizSettingsEditor({
             }
             className="w-full rounded-[var(--bmh-radius-md)] border-2 border-[var(--ink-300)] bg-[var(--paper)] px-4 py-3 text-sm font-semibold text-[var(--ink-900)] outline-none focus:border-[var(--action)] focus:ring-4 focus:ring-[var(--focus-ring)]"
           >
-            <option value="never">Never</option>
+            <option value="never">Never show explanations</option>
             <option value="after_pass">After a passing attempt</option>
-            <option value="always">Always</option>
+            <option value="always">After every attempt</option>
           </select>
         </Field>
         <div className="flex items-center gap-2 md:col-span-2">

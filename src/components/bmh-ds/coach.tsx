@@ -67,6 +67,7 @@ export function Coach(props: CoachProps) {
       tone={tone}
       size={size}
       tail={side === "left" ? "left" : "bottom-right"}
+      style={{ flex: "0 1 340px", minWidth: 0 }}
     >
       {message || children}
     </SpeechBubble>
@@ -78,7 +79,9 @@ export function Coach(props: CoachProps) {
         display: "flex",
         flexDirection: side === "left" ? "row" : "row-reverse",
         alignItems: align,
-        gap: 18,
+        gap: 28,
+        maxWidth: "100%",
+        minWidth: 0,
         ...style,
       }}
       {...rest}

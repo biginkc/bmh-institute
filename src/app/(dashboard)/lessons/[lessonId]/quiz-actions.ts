@@ -15,12 +15,16 @@ import {
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
-export type QuestionReveal = {
-  questionId: string;
-  isCorrect: boolean;
-  correctOptionIds: string[];
-  explanation: string | null;
-};
+export type QuestionReveal =
+  | {
+      questionId: string;
+      isCorrect: false;
+    }
+  | {
+      questionId: string;
+      isCorrect: true;
+      explanation: string | null;
+    };
 
 export type QuizAnswerResult =
   | { ok: true; reveal: QuestionReveal }
@@ -47,8 +51,8 @@ export type QuizSubmitResult =
       attemptId: string;
       review: Array<{
         questionId: string;
-        explanation: string | null;
-        correctOptions: string[];
+        questionNumber: number;
+        explanation: string;
       }> | null;
     }
   | { ok: false; error: string };
@@ -308,6 +312,7 @@ export async function finalizeQuizAttempt(input: {
     result,
     questionOrder,
     questions: questionsResult.questions,
+    responses,
     revealPolicy: auth.quiz.show_correct_answers_after,
   });
 }
@@ -397,6 +402,7 @@ async function completedAttemptResult(attempt: {
     return { ok: false, error: "This attempt contains unavailable questions." };
   }
   const score = scoreQuizAttempt(scoring, stringArrayRecord(attempt.responses), 0);
+  const responses = stringArrayRecord(attempt.responses);
   const { data: quiz, error: quizError } = await admin.client
     .from("quizzes")
     .select("show_correct_answers_after")
@@ -414,6 +420,7 @@ async function completedAttemptResult(attempt: {
     },
     questionOrder,
     questions: questionsResult.questions,
+    responses,
     revealPolicy: quiz.show_correct_answers_after,
   });
 }
@@ -423,15 +430,35 @@ function buildSubmitResult({
   result,
   questionOrder,
   questions,
+  responses,
   revealPolicy,
 }: {
   attemptId: string;
   result: ReturnType<typeof scoreQuizAttempt>;
   questionOrder: string[];
   questions: PrivateQuestion[];
+  responses: ScoringResponses;
   revealPolicy: string;
 }): Extract<QuizSubmitResult, { ok: true }> {
   const byId = new Map(questions.map((question) => [question.id, question]));
+  const review = shouldRevealAnswers(revealPolicy, result.passed)
+    ? questionOrder.flatMap((questionId, index) => {
+        const question = byId.get(questionId);
+        const explanation = question?.explanation?.trim();
+        if (
+          !question ||
+          !explanation ||
+          !isQuestionResponseCorrect(question, responses[questionId] ?? [])
+        ) {
+          return [];
+        }
+        return [{
+          questionId,
+          questionNumber: index + 1,
+          explanation,
+        }];
+      })
+    : [];
   return {
     ok: true,
     score: result.score,
@@ -439,19 +466,7 @@ function buildSubmitResult({
     earnedPoints: result.earnedPoints,
     totalPoints: result.totalPoints,
     attemptId,
-    review: shouldRevealAnswers(revealPolicy, result.passed)
-      ? questionOrder.flatMap((questionId) => {
-          const question = byId.get(questionId);
-          if (!question) return [];
-          return [{
-            questionId,
-            explanation: question.explanation ?? null,
-            correctOptions: toOptionArray(question.answer_options)
-              .filter((option) => option.is_correct)
-              .map((option) => option.option_text),
-          }];
-        })
-      : null,
+    review: review.length ? review : null,
   };
 }
 
@@ -603,8 +618,7 @@ async function loadPrivateQuestions(
       explanation,
       answer_options (
         id,
-        is_correct,
-        option_text
+        is_correct
       )
     `,
     )
@@ -675,19 +689,26 @@ function buildReveal(
   question: PrivateQuestion,
   persistedSelected: string[],
 ): QuestionReveal {
-  const scoringQuestion = toScoringQuestion(question);
-  const revealScoringQuestion = { ...scoringQuestion, points: 1 };
+  if (!isQuestionResponseCorrect(question, persistedSelected)) {
+    return { questionId: question.id, isCorrect: false };
+  }
   return {
     questionId: question.id,
-    isCorrect:
-      scoreQuizAttempt(
-        [revealScoringQuestion],
-        { [question.id]: persistedSelected },
-        0,
-      ).earnedPoints > 0,
-    correctOptionIds: scoringQuestion.correctOptionIds,
+    isCorrect: true,
     explanation: question.explanation ?? null,
   };
+}
+
+function isQuestionResponseCorrect(
+  question: PrivateQuestion,
+  selected: string[],
+): boolean {
+  const scoringQuestion = { ...toScoringQuestion(question), points: 1 };
+  return scoreQuizAttempt(
+    [scoringQuestion],
+    { [question.id]: selected },
+    0,
+  ).earnedPoints > 0;
 }
 
 function toScoringQuestion(question: PrivateQuestion): ScoringQuestion {
@@ -714,7 +735,7 @@ function stringArrayRecord(value: unknown): Record<string, string[]> {
   );
 }
 
-type RawOption = { id: string; is_correct: boolean; option_text: string };
+type RawOption = { id: string; is_correct: boolean };
 type PrivateQuestion = {
   id: string;
   question_type: string;

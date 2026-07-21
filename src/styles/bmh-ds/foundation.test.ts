@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import sharp from "sharp";
 import {
   COLLISION_MAPPINGS,
   EXPECTED_TOKENS,
@@ -136,5 +137,29 @@ describe("BMH Institute design-system foundation", () => {
 
     expect(filenames).toEqual(MASCOT_FILENAMES);
     expect(destinationHashes).toEqual(MASCOT_SHA256);
+  });
+
+  it("keeps every face sprite clear of non-baseline canvas edges", async () => {
+    const filenames = readdirSync(mascotDir)
+      .filter((name) => name.startsWith("face-") && name.endsWith(".png"))
+      .sort();
+
+    for (const name of filenames) {
+      const { data, info } = await sharp(join(mascotDir, name))
+        .ensureAlpha()
+        .raw()
+        .toBuffer({ resolveWithObject: true });
+      const alphaAt = (x: number, y: number) =>
+        data[(y * info.width + x) * info.channels + 3];
+      const top = Array.from({ length: info.width }, (_, x) => alphaAt(x, 0));
+      const left = Array.from({ length: info.height }, (_, y) => alphaAt(0, y));
+      const right = Array.from(
+        { length: info.height },
+        (_, y) => alphaAt(info.width - 1, y),
+      );
+
+      expect({ name, top: Math.max(...top), left: Math.max(...left), right: Math.max(...right) })
+        .toEqual({ name, top: 0, left: 0, right: 0 });
+    }
   });
 });

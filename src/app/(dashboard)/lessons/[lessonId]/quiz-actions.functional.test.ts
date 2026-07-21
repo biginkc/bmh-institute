@@ -274,12 +274,12 @@ describe("quiz server actions", () => {
       reveals: [{
         questionId: "q-1",
         isCorrect: false,
-        correctOptionIds: ["q1-good"],
-        explanation: "Because one is correct.",
       }],
     });
     if (result.ok) {
       expect(result.reveals.map((reveal) => reveal.questionId)).toEqual(["q-1"]);
+      expect(JSON.stringify(result.reveals)).not.toContain("q1-good");
+      expect(JSON.stringify(result.reveals)).not.toContain("Because one is correct.");
       expect(JSON.stringify(result.questions)).not.toContain("is_correct");
       expect(JSON.stringify(result.questions)).not.toContain("explanation");
     }
@@ -445,10 +445,30 @@ describe("quiz server actions", () => {
       reveal: {
         questionId: "q-1",
         isCorrect: true,
-        correctOptionIds: ["q1-good"],
         explanation: "Because one is correct.",
       },
     });
+  });
+
+  it("does not return answer-key material after a wrong answer", async () => {
+    recordRpcData = [{
+      responses: { "q-1": ["q1-bad"] },
+      completed_at: null,
+      already_answered: false,
+    }];
+
+    const result = await answerQuizQuestion({
+      attemptId: "attempt-1",
+      questionId: "q-1",
+      selected: ["q1-bad"],
+    });
+
+    expect(result).toEqual({
+      ok: true,
+      reveal: { questionId: "q-1", isCorrect: false },
+    });
+    expect(JSON.stringify(result)).not.toContain("q1-good");
+    expect(JSON.stringify(result)).not.toContain("Because one is correct.");
   });
 
   it("reveals a correct zero-point answer as correct without changing final scoring", async () => {
@@ -578,10 +598,38 @@ describe("quiz server actions", () => {
     if (result.ok) {
       expect(result.review).toEqual([{
         questionId: "q-1",
+        questionNumber: 1,
         explanation: "Because one is correct.",
-        correctOptions: ["Good"],
       }]);
     }
+  });
+
+  it("excludes missed-question answers and explanations from final review", async () => {
+    quizPolicy = "always";
+    quizQuestionsPerAttempt = 2;
+    attempt = {
+      ...attempt,
+      question_order: ["q-1", "q-2"],
+      answer_orders: {
+        "q-1": ["q1-good", "q1-bad"],
+        "q-2": ["q2-a", "q2-b", "q2-bad"],
+      },
+      responses: {
+        "q-1": ["q1-good"],
+        "q-2": ["q2-bad"],
+      },
+    };
+
+    const result = await finalizeQuizAttempt({ attemptId: "attempt-1" });
+
+    expect(result).toMatchObject({ ok: true, review: [{
+      questionId: "q-1",
+      questionNumber: 1,
+      explanation: "Because one is correct.",
+    }] });
+    expect(JSON.stringify(result)).not.toContain("q2-a");
+    expect(JSON.stringify(result)).not.toContain("q2-b");
+    expect(JSON.stringify(result)).not.toContain("Choose both.");
   });
 
   it("rejects finalize when a persisted question is unanswered", async () => {
