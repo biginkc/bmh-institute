@@ -41,4 +41,28 @@ describe("lesson learner-state query scope", () => {
     expect(source).not.toContain('supabase.rpc("fn_lesson_is_complete"');
     expect(source).not.toContain('supabase.rpc("fn_lesson_is_unlocked"');
   });
+
+  it("routes standalone and composite quiz results back to the owning course", () => {
+    const standalone = source.slice(
+      source.indexOf("async function StandaloneQuizLesson"),
+      source.indexOf("async function ContentCompositeLesson"),
+    );
+    const composite = source.slice(
+      source.indexOf("async function ContentCompositeLesson"),
+      source.indexOf("async function PartBody"),
+    );
+    const partBody = source.slice(
+      source.indexOf("async function PartBody"),
+      source.indexOf("function LessonShell"),
+    );
+
+    expect(standalone).toContain('backHref={`/courses/${courseId}`}');
+    expect(composite).toContain("courseId={courseId}");
+    expect(partBody).toContain("courseId: string;");
+    expect(partBody).toContain('backHref={`/courses/${courseId}`}');
+    expect(standalone).not.toContain('backHref={`/lessons/${tile.id}`}');
+    expect(partBody).not.toContain(
+      'backHref={`/lessons/${tile.id}?part=quiz`}',
+    );
+  });
 });
