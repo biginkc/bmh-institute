@@ -14,11 +14,13 @@ export function ProgressRail({
   countLabel,
   entries,
   ariaLabel,
+  hardNavigation = false,
 }: {
   title: string;
   countLabel: string;
   entries: ProgressRailEntry[];
   ariaLabel: string;
+  hardNavigation?: boolean;
 }) {
   return (
     <nav
@@ -48,20 +50,31 @@ export function ProgressRail({
               </span>
             </span>
           );
+          const linkClassName = `block rounded-[var(--bmh-radius-md)] no-underline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[var(--action)] ${
+            entry.state === "current"
+              ? "bg-[var(--action-soft)]"
+              : "hover:bg-[var(--ink-050)]"
+          }`;
           return (
             <li key={entry.id}>
               {entry.href ? (
-                <Link
-                  href={entry.href}
-                  aria-current={entry.state === "current" ? "step" : undefined}
-                  className={`block rounded-[var(--bmh-radius-md)] no-underline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[var(--action)] ${
-                    entry.state === "current"
-                      ? "bg-[var(--action-soft)]"
-                      : "hover:bg-[var(--ink-050)]"
-                  }`}
-                >
-                  {row}
-                </Link>
+                hardNavigation ? (
+                  <a
+                    href={entry.href}
+                    aria-current={entry.state === "current" ? "step" : undefined}
+                    className={linkClassName}
+                  >
+                    {row}
+                  </a>
+                ) : (
+                  <Link
+                    href={entry.href}
+                    aria-current={entry.state === "current" ? "step" : undefined}
+                    className={linkClassName}
+                  >
+                    {row}
+                  </Link>
+                )
               ) : (
                 <span aria-disabled="true" className="block cursor-not-allowed opacity-55">
                   {row}

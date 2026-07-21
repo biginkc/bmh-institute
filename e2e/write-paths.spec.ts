@@ -223,9 +223,15 @@ test.describe("durable write-path coverage", () => {
         .getByText(/On to the next lesson/i)
         .locator(
           "xpath=ancestor::div[.//a[normalize-space()='Back to course']][1]",
-        );
+      );
       await expect(resultCard).toBeVisible();
+      const resultCourseId = fixture.courseId;
+      const courseDocumentRequest = page.waitForRequest((request) => {
+        if (request.resourceType() !== "document") return false;
+        return new URL(request.url()).pathname === `/courses/${resultCourseId}`;
+      });
       await resultCard.getByRole("link", { name: "Back to course" }).click();
+      await courseDocumentRequest;
       await expect(page).toHaveURL(
         new RegExp(`/courses/${fixture.courseId}$`),
       );
@@ -244,6 +250,25 @@ test.describe("durable write-path coverage", () => {
           .locator("[data-learner-tile-grid] a")
           .filter({ hasText: `${fixture.prefix} Text Assignment Lesson` }),
       ).toBeVisible();
+
+      await page.goBack();
+      await expect(page).toHaveURL(
+        new RegExp(`/courses/${fixture.courseId}$`),
+      );
+      await expect(
+        page
+          .locator("[data-learner-tile-grid] a")
+          .filter({ hasText: `${fixture.prefix} Text Assignment Lesson` }),
+      ).toBeVisible();
+
+      await page.goBack();
+      await expect(page).toHaveURL(
+        new RegExp(`/lessons/${fixture.contentLessonId}\\?part=quiz$`),
+      );
+      await expect(page.getByRole("heading", { name: "Passed" })).toBeVisible();
+      await expect(
+        page.getByRole("button", { name: /start quiz|retake quiz/i }),
+      ).toHaveCount(0);
 
       await page.goto(`/lessons/${fixture.textAssignmentLessonId}`);
       await page.getByLabel(/response/i).fill(`${fixture.prefix} first response`);
@@ -347,6 +372,51 @@ test.describe("durable write-path coverage", () => {
 
       await adminContext.close();
       await unassignedContext.close();
+    } finally {
+      await cleanupWritePathFixture(admin, fixture);
+    }
+  });
+
+  test("hard-navigates shell exits after a completed quiz", async ({ page }) => {
+    const admin = writePathAdminClient();
+    let fixture: WritePathFixture | null = null;
+
+    try {
+      fixture = await createWritePathFixture(admin);
+      await bootstrapTestSession(page, {
+        email: fixture.learner.email,
+        password: fixture.password,
+      });
+      await page.goto(`/lessons/${fixture.quizLessonId}`);
+      await expect(page).toHaveURL(
+        new RegExp(`/lessons/${fixture.contentLessonId}\\?part=quiz$`),
+      );
+      await page.getByRole("button", { name: /start quiz/i }).click();
+      await page.getByText(fixture.correctOptionText).click();
+      await page.getByRole("button", { name: /check answer/i }).click();
+      await expect(page.getByText(/^Correct$/)).toBeVisible();
+      await page.getByRole("button", { name: /^finish$/i }).click();
+      await expect(page.getByRole("heading", { name: "Passed" })).toBeFocused();
+
+      const dashboardDocumentRequest = page.waitForRequest((request) => {
+        if (request.resourceType() !== "document") return false;
+        return new URL(request.url()).pathname === "/dashboard";
+      });
+      await page
+        .getByRole("navigation", { name: "Primary" })
+        .getByRole("link", { name: "Dashboard", exact: true })
+        .click();
+      await dashboardDocumentRequest;
+      await expect(page).toHaveURL(/\/dashboard$/);
+
+      await page.goBack();
+      await expect(page).toHaveURL(
+        new RegExp(`/lessons/${fixture.contentLessonId}\\?part=quiz$`),
+      );
+      await expect(page.getByRole("heading", { name: "Passed" })).toBeVisible();
+      await expect(
+        page.getByRole("button", { name: /start quiz|retake quiz/i }),
+      ).toHaveCount(0);
     } finally {
       await cleanupWritePathFixture(admin, fixture);
     }

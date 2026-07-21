@@ -10,6 +10,8 @@ import { Button } from "@/components/bmh-ds/button";
 import { Card } from "@/components/bmh-ds/card";
 import { Coach } from "@/components/bmh-ds/coach";
 
+import { COMPLETED_QUIZ_HARD_NAVIGATION_ATTRIBUTE } from "../../dashboard-events";
+
 import {
   answerQuizQuestion,
   finalizeQuizAttempt,
@@ -199,6 +201,59 @@ export function QuizRunner({
     (count: number) => count + 1,
     attemptsUsed,
   );
+  useEffect(() => {
+    if (state.status !== "done") return;
+
+    function hardNavigateFromCompletedResult(event: MouseEvent) {
+      if (
+        event.defaultPrevented ||
+        event.button !== 0 ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.shiftKey ||
+        event.altKey
+      ) {
+        return;
+      }
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      const anchor = target.closest<HTMLAnchorElement>("a[href]");
+      if (
+        !anchor ||
+        anchor.hasAttribute("download") ||
+        (anchor.target && anchor.target !== "_self")
+      ) {
+        return;
+      }
+      const destination = new URL(anchor.href, window.location.href);
+      if (destination.origin !== window.location.origin) return;
+      const current = new URL(window.location.href);
+      if (
+        destination.pathname === current.pathname &&
+        destination.search === current.search &&
+        destination.hash
+      ) {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+      window.location.assign(destination.href);
+    }
+
+    document.documentElement.setAttribute(
+      COMPLETED_QUIZ_HARD_NAVIGATION_ATTRIBUTE,
+      "true",
+    );
+    document.addEventListener("click", hardNavigateFromCompletedResult, true);
+    return () => {
+      document.documentElement.removeAttribute(
+        COMPLETED_QUIZ_HARD_NAVIGATION_ATTRIBUTE,
+      );
+      document.removeEventListener("click", hardNavigateFromCompletedResult, true);
+    };
+  }, [state.status]);
+
   async function loadAttempt(showStartingState: boolean) {
     if (showStartingState) dispatch({ type: "start" });
     let response: Awaited<ReturnType<typeof startQuizAttempt>>;
@@ -528,7 +583,7 @@ function QuizResultCard({
       ) : null}
 
       <div className="flex flex-col-reverse justify-center gap-3 sm:flex-row">
-        <Link href={backHref} className={linkButtonClass}>Back to course</Link>
+        <a href={backHref} className={linkButtonClass}>Back to course</a>
         {canRetake ? (
           <Button
             onClick={onRetake}
