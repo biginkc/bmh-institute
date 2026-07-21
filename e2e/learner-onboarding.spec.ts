@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 import {
   cleanupWritePathFixture,
@@ -6,26 +6,22 @@ import {
   writePathAdminClient,
   type WritePathFixture,
 } from "./write-path-fixtures";
-
-async function signIn(page: Page, email: string, password: string) {
-  await page.goto("/login");
-  await page.getByLabel(/email/i).fill(email);
-  await page.getByLabel(/password/i).fill(password);
-  await page.getByRole("button", { name: /^continue$/i }).click();
-  await page.waitForURL(/\/dashboard/, { timeout: 20_000 });
-}
+import { bootstrapTestSession } from "./session-bootstrap";
 
 test.describe("learner onboarding", () => {
   test.describe.configure({ timeout: 90_000 });
 
-  test("shows the first learner action and recovery paths", async ({ page }) => {
+  test("shows the first learner action and Hugo-managed profile path", async ({ page }) => {
     const admin = writePathAdminClient();
     let fixture: WritePathFixture | null = null;
 
     try {
       fixture = await createWritePathFixture(admin);
 
-      await signIn(page, fixture.learner.email, fixture.password);
+      await bootstrapTestSession(page, {
+        email: fixture.learner.email,
+        password: fixture.password,
+      });
 
       await expect(page.getByText("In progress")).toBeVisible();
       await expect(page.getByText(`${fixture.prefix} Content Lesson`).first()).toBeVisible();
@@ -37,9 +33,14 @@ test.describe("learner onboarding", () => {
         "href",
         "/profile",
       );
+      await page.getByRole("link", { name: /^profile$/i }).click();
+      await expect(page).toHaveURL(/\/profile$/);
       await expect(
-        page.getByRole("link", { name: /^reset password$/i }),
-      ).toHaveAttribute("href", "/forgot-password");
+        page.getByText(/hugo manages your sign-in and password/i),
+      ).toBeVisible();
+      await expect(
+        page.getByRole("link", { name: /forgot|reset|set password/i }),
+      ).toHaveCount(0);
     } finally {
       await cleanupWritePathFixture(admin, fixture);
     }

@@ -1,9 +1,6 @@
 // TPAR-02: shared helpers for local-dev e2e specs. Runs OUT OF BAND from
-// Playwright's browser context. Path A scope (Plan 2): exposes only
-// adminClient + ensureTestUser + prod-ref guard. Write-path helpers for
-// the destructive Phase 01 HUMAN-UAT items (HARDEN-02 invite-expiry,
-// HARDEN-03 deleted-user re-auth via UI) require Jarrad's lock on Path B
-// (Supabase ephemeral branches) or Path C (prod-with-prefix-cleanup).
+// Playwright's browser context and is restricted to the nonproduction test
+// project. Product password UI is intentionally never exercised.
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 import { requireE2eSeedPassword } from "../src/lib/testing/e2e-seed-password";

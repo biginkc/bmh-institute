@@ -11,9 +11,9 @@ import { requireInstituteProductionBaseUrl } from "./src/lib/testing/production-
 /**
  * Playwright config for smoke-testing the live bmh-institute deployment.
  *
- * Use: `npm run test:prod` — reads creds from `.env.test.local`, logs into
- * the real production URL, saves auth state, then runs read-only specs
- * against the authenticated surface (dashboard, admin pages).
+ * Use: `npm run test:prod` — always proves the public Hugo-only boundary.
+ * Read-only authenticated specs run only when E2E_HUGO_STORAGE_STATE points
+ * to a user-supplied state artifact captured after a real Hugo login.
  *
  * This is how Claude verifies post-deploy without bouncing screenshots
  * back to Jarrad. Keep specs read-only to avoid polluting production
@@ -54,11 +54,18 @@ const baseURL = requireInstituteProductionBaseUrl(
   env.E2E_PROD_BASE_URL,
 );
 
-// Publish for the setup project so it can read creds.
-process.env.E2E_TEST_EMAIL = process.env.E2E_TEST_EMAIL ?? env.E2E_TEST_EMAIL ?? "";
-process.env.E2E_TEST_PASSWORD =
-  process.env.E2E_TEST_PASSWORD ?? env.E2E_TEST_PASSWORD ?? "";
 process.env.E2E_PROD_BASE_URL = baseURL;
+const suppliedStorageState =
+  process.env.E2E_HUGO_STORAGE_STATE ?? env.E2E_HUGO_STORAGE_STATE ?? "";
+const storageStatePath = suppliedStorageState
+  ? path.resolve(__dirname, suppliedStorageState)
+  : "";
+if (storageStatePath && !fs.existsSync(storageStatePath)) {
+  throw new Error(
+    `E2E_HUGO_STORAGE_STATE does not exist: ${storageStatePath}`,
+  );
+}
+process.env.E2E_HUGO_STORAGE_STATE = storageStatePath;
 process.env.TEST_SUPABASE_URL =
   env.TEST_SUPABASE_URL ??
   process.env.TEST_SUPABASE_URL ??
@@ -90,16 +97,20 @@ export default defineConfig({
   },
   projects: [
     {
-      name: "setup",
-      testMatch: /auth\.setup\.ts$/,
-    },
-    {
-      name: "chromium",
+      name: "public-auth",
+      testMatch: /\/(?:hugo-auth-surface|admin-route-guard-learner)\.spec\.ts$/,
       use: {
         ...devices["Desktop Chrome"],
-        storageState: "e2e-prod/.auth/state.json",
+        storageState: { cookies: [], origins: [] },
       },
-      dependencies: ["setup"],
+    },
+    {
+      name: "authenticated-chromium",
+      testMatch: /\/(?:admin|dashboard|embed-sandbox|shell-navigation)\.spec\.ts$/,
+      use: {
+        ...devices["Desktop Chrome"],
+        storageState: storageStatePath || { cookies: [], origins: [] },
+      },
     },
   ],
 });

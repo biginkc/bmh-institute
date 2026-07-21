@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest, type NextResponse } from "next/server";
 
 import { HUGO_LAUNCH_COOKIE } from "@/app/auth/hugo/launch-nonce";
@@ -46,6 +46,8 @@ function expectLaunchNonceConsumed(response: NextResponse) {
 }
 
 describe("Hugo-only auth callback", () => {
+  const originalSupabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+
   beforeEach(() => {
     vi.clearAllMocks();
     exchangeCodeForSession.mockResolvedValue({
@@ -78,6 +80,16 @@ describe("Hugo-only auth callback", () => {
       error: null,
     });
     signOut.mockResolvedValue({ error: null });
+    process.env.NEXT_PUBLIC_SUPABASE_URL =
+      "https://dhvfsyteqsxagokoerrx.supabase.co";
+  });
+
+  afterEach(() => {
+    if (originalSupabaseUrl === undefined) {
+      delete process.env.NEXT_PUBLIC_SUPABASE_URL;
+    } else {
+      process.env.NEXT_PUBLIC_SUPABASE_URL = originalSupabaseUrl;
+    }
   });
 
   it("lands a provisioned active Hugo user on the requested page", async () => {
@@ -182,10 +194,126 @@ describe("Hugo-only auth callback", () => {
       ),
     );
 
-    expect(signOut).toHaveBeenCalledTimes(1);
+    expect(signOut).toHaveBeenCalledWith({ scope: "local" });
     expect(response.headers.get("location")).toBe(
       "https://institute.bmhgroupkc.com/login?error=sso_failed",
     );
+    expectLaunchNonceConsumed(response);
+  });
+
+  it("expires the full Institute auth-cookie namespace when local sign-out returns an error", async () => {
+    getClaims.mockResolvedValue({
+      data: { claims: { amr: [{ method: "password", timestamp: 1 }] } },
+      error: null,
+    });
+    signOut.mockResolvedValue({ error: { message: "logout failed" } });
+    const request = makeRequest(callbackUrl("flow=sso&code=forged"));
+    request.cookies.set(
+      "sb-dhvfsyteqsxagokoerrx-auth-token.0",
+      "seeded-session-chunk",
+    );
+    request.cookies.set(
+      "sb-dhvfsyteqsxagokoerrx-auth-token-code-verifier",
+      "seeded-verifier",
+    );
+    request.cookies.set(
+      "sb-dhvfsyteqsxagokoerrx-auth-token-user",
+      "seeded-user",
+    );
+    request.cookies.set("unrelated", "keep");
+
+    const response = await GET(request);
+    const setCookie = response.headers.get("set-cookie") ?? "";
+
+    expect(signOut).toHaveBeenCalledWith({ scope: "local" });
+    expect(setCookie).toContain("sb-dhvfsyteqsxagokoerrx-auth-token=");
+    expect(setCookie).toContain("sb-dhvfsyteqsxagokoerrx-auth-token.0=");
+    expect(setCookie).toContain("sb-dhvfsyteqsxagokoerrx-auth-token.4=");
+    expect(setCookie).toContain(
+      "sb-dhvfsyteqsxagokoerrx-auth-token-code-verifier=",
+    );
+    expect(setCookie).toContain(
+      "sb-dhvfsyteqsxagokoerrx-auth-token-user=",
+    );
+    expect(setCookie).toContain("Max-Age=0");
+    expect(setCookie).not.toContain("unrelated=");
+    expectLaunchNonceConsumed(response);
+  });
+
+  it("expires auth cookies when the code exchange throws", async () => {
+    exchangeCodeForSession.mockRejectedValue(new Error("exchange failed"));
+    const request = makeRequest(callbackUrl("flow=sso&code=throws"));
+    request.cookies.set(
+      "sb-dhvfsyteqsxagokoerrx-auth-token",
+      "seeded-session",
+    );
+
+    const response = await GET(request);
+
+    expect(signOut).toHaveBeenCalledWith({ scope: "local" });
+    expect(response.headers.get("location")).toBe(
+      "https://institute.bmhgroupkc.com/login?error=sso_failed",
+    );
+    expect(response.headers.get("set-cookie")).toContain(
+      "sb-dhvfsyteqsxagokoerrx-auth-token=",
+    );
+    expectLaunchNonceConsumed(response);
+  });
+
+  it("expires auth cookies when post-exchange authorization throws", async () => {
+    maybeSingle.mockRejectedValue(new Error("profiles unavailable"));
+    const request = makeRequest(callbackUrl("flow=sso&code=profile-throws"));
+    request.cookies.set(
+      "sb-dhvfsyteqsxagokoerrx-auth-token-code-verifier.1",
+      "seeded-verifier-chunk",
+    );
+
+    const response = await GET(request);
+
+    expect(signOut).toHaveBeenCalledWith({ scope: "local" });
+    expect(response.headers.get("location")).toBe(
+      "https://institute.bmhgroupkc.com/login?error=access_denied",
+    );
+    expect(response.headers.get("set-cookie")).toContain(
+      "sb-dhvfsyteqsxagokoerrx-auth-token-code-verifier.1=",
+    );
+    expectLaunchNonceConsumed(response);
+  });
+
+  it("expires auth cookies and redirects when local sign-out throws", async () => {
+    maybeSingle.mockResolvedValue({ data: null, error: null });
+    signOut.mockRejectedValue(new Error("local storage failed"));
+    const request = makeRequest(callbackUrl("flow=sso&code=missing-profile"));
+    request.cookies.set(
+      "sb-dhvfsyteqsxagokoerrx-auth-token.3",
+      "seeded-session-chunk",
+    );
+
+    const response = await GET(request);
+    const setCookie = response.headers.get("set-cookie") ?? "";
+
+    expect(response.headers.get("location")).toBe(
+      "https://institute.bmhgroupkc.com/login?error=access_denied",
+    );
+    expect(setCookie).toContain("sb-dhvfsyteqsxagokoerrx-auth-token.3=");
+    expect(setCookie).toContain("Max-Age=0");
+    expectLaunchNonceConsumed(response);
+  });
+
+  it("does not expire Institute auth cookies for an authorized Hugo session", async () => {
+    const request = makeRequest(callbackUrl("flow=sso&code=authorized"));
+    request.cookies.set(
+      "sb-dhvfsyteqsxagokoerrx-auth-token",
+      "existing-session",
+    );
+
+    const response = await GET(request);
+    const setCookie = response.headers.get("set-cookie") ?? "";
+
+    expect(response.headers.get("location")).toBe(
+      "https://institute.bmhgroupkc.com/dashboard",
+    );
+    expect(setCookie).not.toContain("sb-dhvfsyteqsxagokoerrx-auth-token=");
     expectLaunchNonceConsumed(response);
   });
 

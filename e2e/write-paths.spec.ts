@@ -1,23 +1,12 @@
 import { expect, test, type Page } from "@playwright/test";
 
 import {
-  cleanupInviteAcceptanceFixture,
   cleanupWritePathFixture,
-  createInviteAcceptanceFixture,
   createWritePathFixture,
-  deleteRateLimitRows,
   writePathAdminClient,
-  type InviteAcceptanceFixture,
   type WritePathFixture,
 } from "./write-path-fixtures";
-
-async function signIn(page: Page, email: string, password: string) {
-  await page.goto("/login");
-  await page.getByLabel(/email/i).fill(email);
-  await page.getByLabel(/password/i).fill(password);
-  await page.getByRole("button", { name: /^continue$/i }).click();
-  await page.waitForURL(/\/dashboard/, { timeout: 20_000 });
-}
+import { bootstrapTestSession, expectHugoOnlyLogin } from "./session-bootstrap";
 
 async function approveSubmission(
   page: Page,
@@ -112,84 +101,39 @@ async function issuedCertificateRefs(
   };
 }
 
-async function inviteWasAccepted(
-  admin: ReturnType<typeof writePathAdminClient>,
-  fixture: InviteAcceptanceFixture,
-): Promise<boolean> {
-  const [invite, profile, roleGroups] = await Promise.all([
-    admin
-      .from("invites")
-      .select("accepted_at")
-      .eq("id", fixture.inviteId)
-      .maybeSingle(),
-    admin
-      .from("profiles")
-      .select("system_role, status")
-      .eq("id", fixture.invitee.id)
-      .maybeSingle(),
-    admin
-      .from("user_role_groups")
-      .select("role_group_id")
-      .eq("user_id", fixture.invitee.id)
-      .eq("role_group_id", fixture.roleGroupId),
-  ]);
-  if (invite.error || profile.error || roleGroups.error) return false;
-  return Boolean(
-    invite.data?.accepted_at &&
-      profile.data?.system_role === "learner" &&
-      profile.data?.status === "active" &&
-      (roleGroups.data ?? []).length === 1,
-  );
-}
-
-async function clearSetPasswordRateLimits(
-  admin: ReturnType<typeof writePathAdminClient>,
-  email: string,
-): Promise<void> {
-  await Promise.all([
-    deleteRateLimitRows(admin, "email", email),
-    deleteRateLimitRows(admin, "ip", "127.0.0.1"),
-    deleteRateLimitRows(admin, "ip", "::1"),
-    deleteRateLimitRows(admin, "ip", "::ffff:127.0.0.1"),
-  ]);
-}
-
 test.describe("durable write-path coverage", () => {
   test.describe.configure({ timeout: 120_000 });
 
-  test("accepts an invite and sets the first password without email capture", async ({
+  test("retires app password, recovery, and invite-acceptance entrypoints", async ({
     browser,
   }) => {
-    const admin = writePathAdminClient();
-    let fixture: InviteAcceptanceFixture | null = null;
     const context = await browser.newContext({ storageState: { cookies: [], origins: [] } });
     const page = await context.newPage();
 
     try {
-      fixture = await createInviteAcceptanceFixture(admin);
-      await clearSetPasswordRateLimits(admin, fixture.invitee.email);
+      await expectHugoOnlyLogin(page);
 
-      await page.goto(fixture.inviteLink);
-      await page.waitForURL(/\/auth\/set-password/, { timeout: 30_000 });
-      await expect(page.getByLabel(/email/i)).toHaveValue(fixture.invitee.email);
-
-      await page.getByLabel(/^new password$/i).fill(fixture.password);
-      await page.getByLabel(/^confirm password$/i).fill(fixture.password);
-      await page.getByRole("button", { name: /finish setup/i }).click();
-      await page.waitForURL(/\/dashboard/, { timeout: 20_000 });
-      await expect(
-        page.getByRole("heading", { name: `${fixture.prefix} Invite Course` }),
-      ).toBeVisible();
-
-      await expect
-        .poll(() => inviteWasAccepted(admin, fixture!), { timeout: 20_000 })
-        .toBe(true);
-    } finally {
-      if (fixture) {
-        await clearSetPasswordRateLimits(admin, fixture.invitee.email);
+      for (const legacyPath of ["/forgot-password", "/auth/set-password"]) {
+        await page.goto(legacyPath);
+        await expect(page).toHaveURL(/\/login$/);
+        await expect(
+          page.getByRole("button", { name: /^continue with hugo$/i }),
+        ).toHaveCount(1);
+        await expect(page.getByLabel(/email|password/i)).toHaveCount(0);
       }
+
+      const removedResetRoute = await page.goto("/reset-password");
+      expect(removedResetRoute?.status()).toBe(404);
+      await expect(page.getByLabel(/email|password/i)).toHaveCount(0);
+
+      const response = await context.request.post("/auth/apply-invite");
+      expect(response.status()).toBe(410);
+      await expect(response.json()).resolves.toEqual({
+        ok: false,
+        error: "legacy_invites_disabled",
+      });
+    } finally {
       await context.close();
-      await cleanupInviteAcceptanceFixture(admin, fixture);
     }
   });
 
@@ -203,7 +147,10 @@ test.describe("durable write-path coverage", () => {
     try {
       fixture = await createWritePathFixture(admin);
 
-      await signIn(page, fixture.learner.email, fixture.password);
+      await bootstrapTestSession(page, {
+        email: fixture.learner.email,
+        password: fixture.password,
+      });
       await expect(
         page.getByRole("heading", { name: `${fixture.prefix} Course` }),
       ).toBeVisible();
@@ -267,7 +214,10 @@ test.describe("durable write-path coverage", () => {
 
       const adminContext = await browser.newContext();
       const adminPage = await adminContext.newPage();
-      await signIn(adminPage, fixture.admin.email, fixture.password);
+      await bootstrapTestSession(adminPage, {
+        email: fixture.admin.email,
+        password: fixture.password,
+      });
 
       await adminPage.goto("/admin/submissions");
       const textSubmissionCard = adminPage
@@ -347,7 +297,10 @@ test.describe("durable write-path coverage", () => {
 
       const unassignedContext = await browser.newContext();
       const unassigned = await unassignedContext.newPage();
-      await signIn(unassigned, fixture.unassigned.email, fixture.password);
+      await bootstrapTestSession(unassigned, {
+        email: fixture.unassigned.email,
+        password: fixture.password,
+      });
       await expect(unassigned.getByText(/no training assigned yet/i)).toBeVisible();
       await unassigned.goto(`/courses/${fixture.courseId}`);
       await expect(unassigned.getByText(`${fixture.prefix} Course`)).toHaveCount(0);
@@ -359,22 +312,4 @@ test.describe("durable write-path coverage", () => {
     }
   });
 
-  test("forgot-password form keeps enumeration-safe success copy", async ({
-    page,
-  }) => {
-    const admin = writePathAdminClient();
-    const email = `e2e-reset-${Date.now()}-${crypto.randomUUID().slice(0, 8)}@bmh-institute.test`;
-
-    try {
-      await deleteRateLimitRows(admin, "email", email);
-      await page.goto("/forgot-password");
-      await page.getByLabel(/email/i).fill(email);
-      await page.getByRole("button", { name: /send reset link/i }).click();
-      await expect(
-        page.getByText(/check your inbox for a reset link/i),
-      ).toBeVisible();
-    } finally {
-      await deleteRateLimitRows(admin, "email", email);
-    }
-  });
 });

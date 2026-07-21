@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 import {
   cleanupWritePathFixture,
@@ -6,14 +6,7 @@ import {
   writePathAdminClient,
   type WritePathFixture,
 } from "./write-path-fixtures";
-
-async function signIn(page: Page, email: string, password: string) {
-  await page.goto("/login");
-  await page.getByLabel(/email/i).fill(email);
-  await page.getByLabel(/password/i).fill(password);
-  await page.getByRole("button", { name: /^continue$/i }).click();
-  await page.waitForURL(/\/dashboard/, { timeout: 20_000 });
-}
+import { bootstrapTestSession } from "./session-bootstrap";
 
 async function hasRoleGroup(fixture: WritePathFixture): Promise<boolean> {
   const admin = writePathAdminClient();
@@ -36,7 +29,10 @@ test.describe("pilot cohort setup", () => {
     try {
       fixture = await createWritePathFixture(admin);
 
-      await signIn(page, fixture.admin.email, fixture.password);
+      await bootstrapTestSession(page, {
+        email: fixture.admin.email,
+        password: fixture.password,
+      });
       await page.goto("/admin/users");
 
       await expect(page.getByRole("heading", { name: "Learner access" })).toBeVisible();

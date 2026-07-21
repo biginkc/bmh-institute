@@ -1,6 +1,13 @@
 import { test, expect } from "@playwright/test";
 
+import {
+  hasPreauthenticatedState,
+  PREAUTHENTICATED_STATE_REQUIRED,
+} from "./preauthenticated-state";
+
 test.describe("ecosystem shell navigation", () => {
+  test.skip(!hasPreauthenticatedState(), PREAUTHENTICATED_STATE_REQUIRED);
+
   test("admin shell exposes shared topbar and left navigation", async ({
     page,
   }) => {

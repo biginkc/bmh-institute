@@ -1,11 +1,14 @@
 import { expect, test } from "@playwright/test";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
+import {
+  hasPreauthenticatedState,
+  PREAUTHENTICATED_STATE_REQUIRED,
+} from "./preauthenticated-state";
+
 const SUPABASE_URL = process.env.TEST_SUPABASE_URL;
-const ANON_KEY = process.env.TEST_SUPABASE_ANON_KEY;
-const E2E_EMAIL = process.env.E2E_TEST_EMAIL;
-const E2E_PASSWORD = process.env.E2E_TEST_PASSWORD;
-const envPresent = Boolean(SUPABASE_URL && ANON_KEY && E2E_EMAIL && E2E_PASSWORD);
+const SERVICE_ROLE_KEY = process.env.TEST_SUPABASE_SERVICE_ROLE_KEY;
+const PROD_PROJECT_REF = "dhvfsyteqsxagokoerrx";
 
 type Fixture = {
   courseId: string;
@@ -15,20 +18,19 @@ type Fixture = {
 };
 
 async function adminClient(): Promise<SupabaseClient> {
-  if (!SUPABASE_URL || !ANON_KEY || !E2E_EMAIL || !E2E_PASSWORD) {
+  if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
     throw new Error(
-      "embed sandbox prod smoke needs TEST_SUPABASE_URL, TEST_SUPABASE_ANON_KEY, E2E_TEST_EMAIL, and E2E_TEST_PASSWORD.",
+      "embed sandbox prod smoke needs TEST_SUPABASE_URL and TEST_SUPABASE_SERVICE_ROLE_KEY.",
     );
   }
-  const client = createClient(SUPABASE_URL, ANON_KEY, {
+  if (!SUPABASE_URL.includes(PROD_PROJECT_REF)) {
+    throw new Error(
+      `embed sandbox prod smoke expected production Supabase ref ${PROD_PROJECT_REF}.`,
+    );
+  }
+  return createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
-  const { error } = await client.auth.signInWithPassword({
-    email: E2E_EMAIL,
-    password: E2E_PASSWORD,
-  });
-  if (error) throw error;
-  return client;
 }
 
 async function createEmbedFixture(admin: SupabaseClient): Promise<Fixture> {
@@ -176,8 +178,8 @@ async function cleanupFixture(admin: SupabaseClient, fixture: Fixture | null) {
 
 test.describe("embed iframe sandbox prod smoke", () => {
   test.skip(
-    !envPresent,
-    "TEST_SUPABASE_URL, TEST_SUPABASE_ANON_KEY, E2E_TEST_EMAIL, and E2E_TEST_PASSWORD are required.",
+    !hasPreauthenticatedState(),
+    PREAUTHENTICATED_STATE_REQUIRED,
   );
 
   test("rejects unsafe iframe_src, saves trimmed https, and renders sandbox", async ({

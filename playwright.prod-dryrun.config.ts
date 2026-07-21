@@ -42,32 +42,6 @@ const baseURL = requireInstituteProductionBaseUrl(
 );
 
 process.env.E2E_PROD_BASE_URL = baseURL;
-process.env.TEST_SUPABASE_URL =
-  process.env.TEST_SUPABASE_URL ??
-  process.env.PROD_SUPABASE_URL ??
-  env.PROD_SUPABASE_URL ??
-  env.TEST_SUPABASE_URL ??
-  env.NEXT_PUBLIC_SUPABASE_URL ??
-  "";
-process.env.TEST_SUPABASE_ANON_KEY =
-  process.env.TEST_SUPABASE_ANON_KEY ??
-  process.env.PROD_SUPABASE_ANON_KEY ??
-  env.PROD_SUPABASE_ANON_KEY ??
-  env.TEST_SUPABASE_ANON_KEY ??
-  env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
-  "";
-process.env.TEST_SUPABASE_SERVICE_ROLE_KEY =
-  process.env.TEST_SUPABASE_SERVICE_ROLE_KEY ??
-  process.env.PROD_SUPABASE_SERVICE_ROLE_KEY ??
-  env.PROD_SUPABASE_SERVICE_ROLE_KEY ??
-  env.TEST_SUPABASE_SERVICE_ROLE_KEY ??
-  env.SUPABASE_SERVICE_ROLE_KEY ??
-  "";
-process.env.PROD_READINESS_TEST_PASSWORD =
-  process.env.PROD_READINESS_TEST_PASSWORD ??
-  env.PROD_READINESS_TEST_PASSWORD ??
-  "";
-
 export default defineConfig({
   testDir: "./e2e-prod",
   testMatch: /pilot-dryrun\.spec\.ts$/,
