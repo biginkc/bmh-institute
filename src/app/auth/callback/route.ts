@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
   const next = searchParams.get("next");
   const inviteToken = searchParams.get("invite_token");
 
-  // BMH ID sign-in tags its redirectTo with flow=sso (login page), so a
+  // Hugo sign-in tags its redirectTo with flow=sso (login page), so a
   // rejected/cancelled SSO attempt maps to an SSO error instead of the
   // invite one. Only the error param choice differs; the exchange/invite
   // logic is identical for both flows.

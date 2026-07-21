@@ -87,15 +87,15 @@ describe("LoginPage", () => {
     expect(screen.queryByLabelText("Work email")).not.toBeInTheDocument();
   });
 
-  it("hides the BMH ID button while the rollout flag is unset", () => {
+  it("hides the Hugo button while the rollout flag is unset", () => {
     render(<LoginPage />);
 
     expect(
-      screen.queryByRole("button", { name: "Continue with BMH ID" }),
+      screen.queryByRole("button", { name: "Continue with Hugo" }),
     ).not.toBeInTheDocument();
   });
 
-  it("starts the custom:bmh OAuth flow when the flag is on", async () => {
+  it("starts the custom:hugo OAuth flow when the flag is on", async () => {
     vi.stubEnv("NEXT_PUBLIC_BMH_ID_SSO", "1");
     mocks.useSearchParams.mockReturnValue(
       new URLSearchParams({ next: "/lessons/abc" }),
@@ -110,11 +110,11 @@ describe("LoginPage", () => {
     expect(screen.getByLabelText("Password")).toBeVisible();
 
     await userEvent.click(
-      screen.getByRole("button", { name: "Continue with BMH ID" }),
+      screen.getByRole("button", { name: "Continue with Hugo" }),
     );
 
     expect(signInWithOAuth).toHaveBeenCalledWith({
-      provider: "custom:bmh",
+      provider: "custom:hugo",
       options: {
         redirectTo: `${window.location.origin}/auth/callback?flow=sso&next=${encodeURIComponent(
           "/lessons/abc",
@@ -126,7 +126,7 @@ describe("LoginPage", () => {
   // Real signInWithOAuth startup failures (PKCE storage/crypto/URL setup)
   // REJECT rather than resolving { error } — this SDK path never produces a
   // resolved error — so the regression pins the rejection shape.
-  it("surfaces an error and re-enables the button when the BMH ID flow rejects", async () => {
+  it("surfaces an error and re-enables the button when the Hugo flow rejects", async () => {
     vi.stubEnv("NEXT_PUBLIC_BMH_ID_SSO", "1");
     const signInWithOAuth = vi
       .fn()
@@ -136,14 +136,14 @@ describe("LoginPage", () => {
     render(<LoginPage />);
 
     await userEvent.click(
-      screen.getByRole("button", { name: "Continue with BMH ID" }),
+      screen.getByRole("button", { name: "Continue with Hugo" }),
     );
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
-      "BMH ID sign-in couldn't start. Try again or use your password.",
+      "Hugo sign-in couldn't start. Try again or use your password.",
     );
     expect(
-      screen.getByRole("button", { name: "Continue with BMH ID" }),
+      screen.getByRole("button", { name: "Continue with Hugo" }),
     ).toBeEnabled();
   });
 
@@ -155,7 +155,7 @@ describe("LoginPage", () => {
     render(<LoginPage />);
 
     expect(screen.getByRole("alert")).toHaveTextContent(
-      "BMH ID sign-in didn't complete. Try again or use your password.",
+      "Hugo sign-in didn't complete. Try again or use your password.",
     );
     // Password form stays usable.
     expect(screen.getByRole("button", { name: "Continue" })).toBeEnabled();
