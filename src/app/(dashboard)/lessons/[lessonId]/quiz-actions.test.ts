@@ -24,6 +24,11 @@ describe("quiz action security contract", () => {
     expect(source).toContain("validateResponseCardinality");
   });
 
+  it("records each answer through the atomic learner RPC", () => {
+    expect(source).toContain('"fn_record_quiz_answer"');
+    expect(source).toContain("completedAttemptResult");
+  });
+
   it("applies the configured answer-review policy", () => {
     expect(source).toContain("show_correct_answers_after");
     expect(source).toContain("shouldRevealAnswers");
