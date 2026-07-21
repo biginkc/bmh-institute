@@ -7,7 +7,10 @@ import { useEffect, useId, useMemo, useState } from "react";
 
 import { SearchBar } from "@/components/bmh-ds/search-bar";
 
-import { CLOSE_LESSON_SEARCH_EVENT } from "./dashboard-events";
+import {
+  CLOSE_LESSON_SEARCH_EVENT,
+  COMPLETED_QUIZ_HARD_NAVIGATION_ATTRIBUTE,
+} from "./dashboard-events";
 
 export type LessonSearchItem = {
   id: string;
@@ -69,6 +72,14 @@ export function LessonSearch({
     const lesson = results[index];
     if (!lesson) return;
     closeSearch();
+    if (
+      document.documentElement.hasAttribute(
+        COMPLETED_QUIZ_HARD_NAVIGATION_ATTRIBUTE,
+      )
+    ) {
+      window.location.assign(lesson.href);
+      return;
+    }
     router.push(lesson.href);
   }
 

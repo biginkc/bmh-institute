@@ -25,6 +25,10 @@ const progressRailSource = readFileSync(
   resolve(process.cwd(), "src/components/bmh-ds/progress-rail.tsx"),
   "utf8",
 );
+const lessonSearchSource = readFileSync(
+  resolve(process.cwd(), "src/app/(dashboard)/lesson-search.tsx"),
+  "utf8",
+);
 
 describe("lesson learner-state query scope", () => {
   it("passes the signed-in identity into quiz and assignment bodies", () => {
@@ -96,6 +100,14 @@ describe("lesson learner-state query scope", () => {
     expect(runnerSource).not.toContain(
       '<Link href={backHref} className={linkButtonClass}>Back to course</Link>',
     );
+    expect(runnerSource).toContain(
+      'document.addEventListener("click", hardNavigateFromCompletedResult, true)',
+    );
+    expect(runnerSource).toContain("window.location.assign(destination.href)");
+    expect(lessonSearchSource).toContain(
+      "COMPLETED_QUIZ_HARD_NAVIGATION_ATTRIBUTE",
+    );
+    expect(lessonSearchSource).toContain("window.location.assign(lesson.href)");
     expect(progressRailSource).toContain("hardNavigation ? (");
     expect(progressRailSource).toContain("<a");
     expect(progressRailSource).toContain("href={entry.href}");
