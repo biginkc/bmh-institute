@@ -360,7 +360,7 @@ test("manifest_path-keyed ledgers must map uniquely to expected artwork", async 
   );
 });
 
-test("a canonically finalized 49-asset workflow cannot forge held-video release approval", async () => {
+test("a canonically finalized 49-asset workflow cannot forge unrelated release approval", async () => {
   const root = await mkdtemp(path.join(await realpath(tmpdir()), "bmh-artwork-ledger-release-"));
   const inventoryPath = path.join(repoRoot, "docs/course-production/thumbnail-pilots/production-inventory.json");
   const [inventory, baseManifest] = await Promise.all([readJson(inventoryPath), readJson(manifestPath)]);
@@ -542,8 +542,8 @@ test("a canonically finalized 49-asset workflow cannot forge held-video release 
 
   for (const command of ["upload", "apply"]) {
     const result = spawnSync(path.join(repoRoot, "node_modules/.bin/tsx"), ["scripts/course-import.ts", command, releaseManifestPath], { cwd: repoRoot, encoding: "utf8" });
-    assert.equal(result.status, 1, `${command} dry-run accepted synthetic video approvals without ledger decisions:\n${result.stdout}\n${result.stderr}`);
-    assert.match(result.stderr, /approved in the manifest without an exact approved ledger decision/);
+    assert.equal(result.status, 1, `${command} dry-run accepted a noncanonical synthetic release:\n${result.stdout}\n${result.stderr}`);
+    assert.match(result.stderr, /not source-equivalent to the canonical release manifest/);
   }
 });
 

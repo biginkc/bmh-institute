@@ -26,6 +26,39 @@ test("only approved video cuts have complete learner-facing caption assets", asy
   assert.deepEqual(report.errors, []);
 });
 
+test("learner-facing transcripts cannot re-enter the canonical course", async () => {
+  for (const mutation of ["asset", "asset_key", "path"]) {
+    const manifest = await loadManifest(MANIFEST_URL);
+    const videoBlock = manifest.program.courses
+      .flatMap((course) => course.modules)
+      .flatMap((courseModule) => courseModule.lessons)
+      .flatMap((lesson) => lesson.blocks ?? [])
+      .find((block) => block.type === "video");
+    assert.ok(videoBlock);
+    if (mutation === "asset") {
+      manifest.assets.push({
+        source_key: "transcript-forbidden",
+        kind: "transcript",
+        local_path: "course-assets/transcripts/forbidden.md",
+        storage_path: "courses/bmh-employee-training/v1/transcripts/forbidden.md",
+        mime_type: "text/markdown",
+        checksum_sha256: "a".repeat(64),
+        size_bytes: 1,
+        approval_status: "approved",
+      });
+    } else if (mutation === "asset_key") {
+      videoBlock.content.transcript_asset_key = "transcript-forbidden";
+    } else {
+      videoBlock.content.transcript_path = "courses/bmh-employee-training/v1/transcripts/forbidden.md";
+    }
+    const report = await inspectApprovedCaptionAssets(manifest, REPO_ROOT);
+    assert.ok(
+      report.errors.some((error) => error.includes("accessibility captions only")),
+      `${mutation} transcript mutation was not rejected`,
+    );
+  }
+});
+
 test("file-backed release QA refuses absolute, traversal, and escaping caption paths", async () => {
   for (const localPath of ["/etc/passwd", "../../outside.md"]) {
     const manifest = await loadManifest(MANIFEST_URL);
@@ -40,7 +73,7 @@ test("file-backed release QA refuses absolute, traversal, and escaping caption p
   }
 });
 
-test("approved captions do not split punctuation or disagree with their transcripts", async () => {
+test("approved captions are readable and legacy reviewed captions match their internal QA text", async () => {
   const manifest = await loadManifest(MANIFEST_URL);
   const approvedVideos = manifest.assets.filter(
     (asset) => asset.kind === "video" && asset.approval_status === "approved",
@@ -51,13 +84,7 @@ test("approved captions do not split punctuation or disagree with their transcri
       new URL(`../../course-assets/captions/${video.source_key}.vtt`, import.meta.url),
       "utf8",
     );
-    const transcript = await readFile(
-      new URL(`../../course-assets/transcripts/${video.source_key}.md`, import.meta.url),
-      "utf8",
-    );
     const parsed = parseWebVtt(caption);
-    const captionProse = parsed.cues.map((cue) => cue.text).join(" ").replace(/\s+/g, " ").trim();
-    const transcriptProse = transcript.split("\n").slice(4).join(" ").replace(/\s+/g, " ").trim();
 
     assert.equal(
       parsed.cues.some((cue) => /^[-,.;:!?]/.test(cue.text)),
@@ -72,7 +99,15 @@ test("approved captions do not split punctuation or disagree with their transcri
       parsed.cues.every((cue) => cue.durationSeconds >= MIN_CAPTION_DURATION_SECONDS - 0.000001),
       `${video.source_key} contains a cue shorter than ${MIN_CAPTION_DURATION_SECONDS.toFixed(1)} seconds`,
     );
-    assert.equal(captionProse, transcriptProse, `${video.source_key} caption and transcript disagree`);
+    if (!DIRECT_APPROVAL_OVERRIDE_CUTS.has(`${video.source_key}:${video.checksum_sha256}`)) {
+      const transcript = await readFile(
+        new URL(`../../course-assets/transcripts/${video.source_key}.md`, import.meta.url),
+        "utf8",
+      );
+      const captionProse = parsed.cues.map((cue) => cue.text).join(" ").replace(/\s+/g, " ").trim();
+      const transcriptProse = transcript.split("\n").slice(4).join(" ").replace(/\s+/g, " ").trim();
+      assert.equal(captionProse, transcriptProse, `${video.source_key} caption and internal QA text disagree`);
+    }
   }
 });
 
@@ -104,17 +139,20 @@ test("approved transcripts without a checksum-specific override do not hard-code
   }
 });
 
-test("direct exact-cut caption approvals preserve the expressly authorized wording", async () => {
+test("direct exact-cut accessibility captions preserve the verified wording", async () => {
   const operator = await readFile(
-    new URL("../../course-assets/transcripts/video-slot-18-operator.md", import.meta.url),
+    new URL("../../course-assets/captions/video-slot-18-operator.vtt", import.meta.url),
     "utf8",
   );
   const compensation = await readFile(
-    new URL("../../course-assets/transcripts/video-slot-17-compensation.md", import.meta.url),
+    new URL("../../course-assets/captions/video-slot-17-compensation.vtt", import.meta.url),
     "utf8",
   );
+  const operatorProse = parseWebVtt(operator).cues.map((cue) => cue.text).join(" ");
 
-  assert.match(operator, /(?:110 to 150|dial target)/i);
+  assert.match(operatorProse, /Liens, tax status/i);
+  assert.match(operatorProse, /110 to\s+150 dials/i);
+  assert.doesNotMatch(operatorProse, /Leans, tax status|100, 10 to/i);
   assert.match(compensation, /(?:performance pay|milestone bonus|commission)/i);
 });
 

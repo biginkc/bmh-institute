@@ -11,6 +11,7 @@ import {
   validateLedger as validateArtworkWorkflowLedger,
 } from "./artwork-production-workflow.mjs";
 import {
+  DIRECT_APPROVAL_OVERRIDE_CUTS,
   REPLACEMENT_REQUIRED_CUTS,
   REVIEWED_VIDEO_SOURCE_KEYS,
   approvalRecordKey,
@@ -944,10 +945,15 @@ async function buildVideoAsset(
 }
 
 export async function buildDerivativePair(videoAsset, captionApprovalLedger, repoRoot = REPO_ROOT) {
-  const descriptors = [
-    { kind: "caption", extension: "vtt", directory: "captions", mimeType: "text/vtt" },
-    { kind: "transcript", extension: "md", directory: "transcripts", mimeType: "text/markdown" },
-  ];
+  const isDirectAccessibilityCut = DIRECT_APPROVAL_OVERRIDE_CUTS.has(
+    `${videoAsset.source_key}:${videoAsset.checksum_sha256}`,
+  );
+  const descriptors = isDirectAccessibilityCut
+    ? [{ kind: "caption", extension: "vtt", directory: "captions", mimeType: "text/vtt" }]
+    : [
+      { kind: "caption", extension: "vtt", directory: "captions", mimeType: "text/vtt" },
+      { kind: "transcript", extension: "md", directory: "transcripts", mimeType: "text/markdown" },
+    ];
   const files = await Promise.all(descriptors.map(async (descriptor) => {
     const localPath = `course-assets/${descriptor.directory}/${videoAsset.source_key}.${descriptor.extension}`;
     const fullPath = path.join(repoRoot, localPath);
@@ -981,7 +987,7 @@ export async function buildDerivativePair(videoAsset, captionApprovalLedger, rep
     video_source_key: videoAsset.source_key,
     video_sha256: videoAsset.checksum_sha256,
     caption_sha256: caption.checksum,
-    transcript_sha256: transcript.checksum,
+    transcript_sha256: transcript?.checksum ?? null,
   });
   if (!approval) {
     return files.filter((file) => file.kind === "caption").map(missingAsset);

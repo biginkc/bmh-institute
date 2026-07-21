@@ -110,10 +110,10 @@ mapped, clean import lines and sidecars match the canonical provider sequence,
 generated documents are current, and all production permissions remain false.
 
 The eleven-record approval ledger is
-`../held-video-review/approvals.json`. Both local policy-cut candidates are now
-checksum-bound exact-cut approvals; none remains pending.
-The nine policy-defective source hashes are terminally marked
-`changes_requested` and cannot be approved. A reviewer must key every decision
+`../held-video-review/approvals.json`. Both local policy-cut candidates and
+seven directly authorized source cuts are checksum-bound exact-cut approvals;
+none remains pending. Two historical source hashes remain terminally marked
+`changes_requested`. A reviewer must key every decision
 to both `source_key` and SHA-256 and provide approver, date, and notes. A revised
 cut receives a new pending checksum-keyed candidate rather than rewriting
 review history.

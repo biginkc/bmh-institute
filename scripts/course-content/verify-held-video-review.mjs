@@ -301,13 +301,11 @@ function approvedLearnerDerivativePair(manifestAssets, reviewAsset, record) {
     throw new Error(`Approved review cut ${reviewAsset.source_key} does not exactly match the approved manifest video.`);
   }
   const caption = manifestAssets.get(`caption-${reviewAsset.source_key}`);
-  const transcript = manifestAssets.get(`transcript-${reviewAsset.source_key}`);
-  const approvedCount = [caption, transcript].filter((asset) => asset?.approval_status === "approved").length;
-  if (approvedCount === 0) return null;
-  if (approvedCount !== 2) {
-    throw new Error(`Approved review cut ${reviewAsset.source_key} has a mixed caption/transcript approval state.`);
+  if (!caption) return null;
+  if (caption.approval_status !== "approved") {
+    throw new Error(`Approved review cut ${reviewAsset.source_key} learner caption is not approved.`);
   }
-  for (const derivative of [caption, transcript]) {
+  for (const derivative of [caption]) {
     if (
       !/^[a-f0-9]{64}$/.test(derivative.checksum_sha256 ?? "") ||
       !Number.isSafeInteger(derivative.size_bytes) || derivative.size_bytes <= 0 ||
@@ -318,7 +316,7 @@ function approvedLearnerDerivativePair(manifestAssets, reviewAsset, record) {
       throw new Error(`Approved learner derivative ${derivative?.source_key ?? "unknown"} is not checksum-locked.`);
     }
   }
-  return { caption, transcript };
+  return { caption };
 }
 
 function originalReviewEvidence(asset) {
@@ -346,7 +344,15 @@ export function reviewSurfaceAssets(manifest, localPolicyCandidates) {
   const candidates = localPolicyCandidates
     ? localPolicyCandidateAssets(localPolicyCandidates)
     : [];
-  const originals = originalReviewAssets();
+  const manifestAssets = new Map(
+    manifest.assets.map((asset) => [`${asset.source_key}:${asset.checksum_sha256}`, asset]),
+  );
+  const originals = originalReviewAssets().map((asset) => ({
+    ...asset,
+    approval_status: manifestAssets.get(
+      `${asset.source_key}:${asset.checksum_sha256}`,
+    )?.approval_status ?? asset.approval_status,
+  }));
   const knownKeys = new Set(
     [...candidates, ...originals].map((asset) => `${asset.source_key}:${asset.checksum_sha256}`),
   );
@@ -414,8 +420,8 @@ export function renderHeldVideoReview(manifest, {
   const manifestAssets = new Map(manifest.assets.map((asset) => [asset.source_key, asset]));
   const videoCourseLocations = buildVideoCourseLocations(manifest);
   const approvableCount = reviewRecords.filter((record) => record.decision === "pending").length;
-  const approvedCorrectedCount = reviewRecords.filter((record, index) =>
-    record.decision === "approved" && held[index].local_policy_candidate,
+  const approvedExactCount = reviewRecords.filter(
+    (record) => record.decision === "approved",
   ).length;
   const replacementCount = held.filter(isPolicyDefectiveSource).length;
   let pendingIndex = 0;
@@ -455,37 +461,32 @@ export function renderHeldVideoReview(manifest, {
           ? learnerDerivativeRoute(asset.source_key, "caption")
           : evidenceStaticUrl(learnerDerivatives.caption.local_path))
       : null;
-    const learnerTranscriptUrl = learnerDerivatives
-      ? (mode === "verified"
-          ? learnerDerivativeRoute(asset.source_key, "transcript")
-          : evidenceStaticUrl(learnerDerivatives.transcript.local_path))
-      : null;
     const track = learnerDerivatives
       ? `<track kind="captions" srclang="en" label="Approved learner captions for ${escapeHtml(details.title)}" src="${escapeHtml(learnerCaptionUrl)}" default>`
       : originalEvidence?.evidence
         ? `<track kind="captions" srclang="en" label="Review-only English captions for ${escapeHtml(details.title)}" src="${escapeHtml(vttUrl)}" default>`
         : "";
     const learnerEvidence = learnerDerivatives
-      ? `\n      <div class="evidence"><strong>Approved learner accessibility:</strong> <a href="${escapeHtml(learnerCaptionUrl)}">VTT captions</a> · <a href="${escapeHtml(learnerTranscriptUrl)}">transcript</a></div>`
+      ? `\n      <div class="evidence"><strong>Approved learner accessibility:</strong> <a href="${escapeHtml(learnerCaptionUrl)}">VTT captions</a></div>`
       : "";
     const replacementRequired = isPolicyDefectiveSource(asset);
-    const accessibilityNote = candidate && learnerDerivatives
-      ? "Learner captions and transcript are finalized and approved for this exact cut."
+    const accessibilityNote = learnerDerivatives
+      ? "Learner captions are finalized and approved for this exact cut."
       : candidate && record.decision === "approved"
-      ? "This exact cut is approved. Learner captions and the transcript remain blocked until their checksum-bound evidence record is approved."
+      ? "This exact cut is approved. Learner captions remain blocked until their checksum-bound evidence record is approved."
       : candidate
-      ? "Captions and a transcript are intentionally not finalized for this candidate while exact-file approval is pending."
+      ? "Captions are intentionally not finalized for this candidate while exact-file approval is pending."
       : replacementRequired
         ? originalEvidence?.evidence
-          ? "Review-only captions are available for wording verification. This cut is source evidence only. Learner captions and a transcript wait for the replacement cut."
-          : "This cut is source evidence only and cannot be approved. Learner captions and a transcript wait for the replacement cut."
-        : "Captions and a transcript are intentionally not finalized for this cut while exact-file approval is pending.";
+          ? "Review-only captions are available for wording verification. This cut is source evidence only. Learner captions wait for the replacement cut."
+          : "This cut is source evidence only and cannot be approved. Learner captions wait for the replacement cut."
+        : "Captions are intentionally not finalized for this cut while exact-file approval is pending.";
     const reviewIndex = replacementRequired
       ? ++replacementIndex
       : record.decision === "approved"
         ? ++approvedIndex
         : ++pendingIndex;
-    const reviewKind = candidate && record.decision === "approved"
+    const reviewKind = record.decision === "approved"
       ? "approved-exact-cut"
       : candidate
       ? "pending-review-candidate"
@@ -502,7 +503,7 @@ export function renderHeldVideoReview(manifest, {
       : record.decision === "pending"
         ? '<p class="candidate"><strong>JARRAD REVIEW REQUIRED</strong> — approve or request changes on this corrected candidate.</p>'
         : record.decision === "approved" && learnerDerivatives
-          ? '<p class="approved"><strong>APPROVED EXACT CUT</strong> — this video, its learner captions, and its transcript are approved for the exact checksums.</p>'
+          ? '<p class="approved"><strong>APPROVED EXACT CUT</strong> — this video and its learner captions are approved for the exact checksums.</p>'
         : record.decision === "approved"
           ? '<p class="approved"><strong>APPROVED EXACT CUT</strong> — this video checksum is approved; learner derivatives remain blocked on their exact evidence record.</p>'
         : '<p class="replacement"><strong>NEW CUT REQUIRED</strong> — this exact cut already has a terminal review decision.</p>';
@@ -552,11 +553,11 @@ export function renderHeldVideoReview(manifest, {
 <body>
 <main>
   <section class="intro">
-    <div class="eyebrow">Local review only · ${approvedCorrectedCount} approved exact cut${approvedCorrectedCount === 1 ? "" : "s"} · ${approvableCount} candidate${approvableCount === 1 ? "" : "s"} · ${replacementCount} source-evidence cut${replacementCount === 1 ? "" : "s"}</div>
+    <div class="eyebrow">Local review only · ${approvedExactCount} approved exact cut${approvedExactCount === 1 ? "" : "s"} · ${approvableCount} candidate${approvableCount === 1 ? "" : "s"} · ${replacementCount} source-evidence cut${replacementCount === 1 ? "" : "s"}</div>
     <h1>Video review lifecycle</h1>
     ${verificationStatus}
     <p>${approvableCount === 0
-      ? "Both corrected local-policy cuts have exact checksum-bound Jarrad approval. No corrected candidate remains on this page for a new decision."
+      ? "Nine exact cuts have checksum-bound Jarrad approval: Terms v10, KPIs v12, and seven directly approved source cuts are exact-cut approved. No corrected candidate remains on this page for a new decision."
       : `${approvableCount} corrected candidate${approvableCount === 1 ? "" : "s"} ${approvableCount === 1 ? "awaits" : "await"} Jarrad review. Approve or request changes only on those exact checksum-locked cuts; a filename alone is not approval.`}</p>
     <p><strong>Exact review status:</strong> ${escapeHtml(EXACT_LOCAL_POLICY_REVIEW_QUESTION)}</p>
     <p>${replacementCount} policy-defective source-evidence cut${replacementCount === 1 ? " is" : "s are"} marked <strong>changes requested</strong> and cannot be approved. Replacements receive new checksums and a separate review.</p>
@@ -811,8 +812,8 @@ export async function verifyHeldVideoReview({
     approvalLedger,
     localPolicyCandidateCount: candidateAssets.length,
     pendingCandidateCount: reviewRecords.filter((record) => record.decision === "pending").length,
-    approvedExactCutCount: reviewRecords.filter((record, index) =>
-      record.decision === "approved" && held[index].local_policy_candidate,
+    approvedExactCutCount: reviewRecords.filter(
+      (record) => record.decision === "approved",
     ).length,
     localPolicyCandidates,
     htmlIsCurrent: checkHtml,
@@ -892,10 +893,7 @@ export function createHeldVideoReviewServer({
     expectedRoutes.push(mediaRoute(asset));
     const learnerDerivatives = approvedLearnerDerivativePair(manifestAssets, asset, reviewRecord);
     if (learnerDerivatives) {
-      expectedRoutes.push(
-        learnerDerivativeRoute(asset.source_key, "caption"),
-        learnerDerivativeRoute(asset.source_key, "transcript"),
-      );
+      expectedRoutes.push(learnerDerivativeRoute(asset.source_key, "caption"));
     }
     const originalEvidence = originalReviewEvidence(asset);
     if (originalEvidence?.qcReport) expectedRoutes.push(qcReportRoute(asset.source_key));

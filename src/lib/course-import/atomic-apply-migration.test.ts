@@ -35,4 +35,11 @@ describe("atomic course import apply migration", () => {
     expect(sql).toContain("'status', 'applied'");
     expect(sql).toContain("'operation_count', v_operation_count");
   });
+
+  it("replaces the complete content-block JSON so omitted transcript fields are removed", () => {
+    expect(sql).toMatch(
+      /insert into public\.content_blocks[\s\S]*?on conflict \(id\) do update set[\s\S]*?content = excluded\.content/,
+    );
+    expect(sql).not.toMatch(/content\s*=\s*public\.content_blocks\.content\s*\|\|/i);
+  });
 });

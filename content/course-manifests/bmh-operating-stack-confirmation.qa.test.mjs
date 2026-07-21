@@ -110,7 +110,7 @@ test("confirmation fails closed when missing, stale, scoped incorrectly, or mism
   );
 });
 
-test("audited captions, transcripts, and guides match their recorded checksums and counts", async () => {
+test("audited captions and guides match their recorded checksums and counts", async () => {
   const [manifest, confirmation] = await Promise.all([
     loadJson("./bmh-employee-training.v1.json"),
     loadJson("./bmh-operating-stack-confirmation.v1.json"),

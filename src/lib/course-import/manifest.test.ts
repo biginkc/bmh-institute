@@ -286,6 +286,73 @@ describe("validateCourseManifest", () => {
     );
   });
 
+  it("requires an accessibility caption asset reference on every release video", () => {
+    const input = validCourseManifest();
+    const video = input.program.courses[0].modules[0].lessons[0].blocks?.[0];
+    if (!video) throw new Error("Fixture video block is missing.");
+    delete video.content.caption_asset_key;
+
+    const result = validateCourseManifest(input, { gate: "release" });
+
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.errors).toContain(
+      "program.courses[0].modules[0].lessons[0].blocks[0].content.caption_asset_key is required for release.",
+    );
+  });
+
+  it("does not require a learner-facing transcript when validating release video media", () => {
+    const input = validCourseManifest();
+    const video = input.program.courses[0].modules[0].lessons[0].blocks?.[0];
+    if (!video) throw new Error("Fixture video block is missing.");
+    const checksum = "a".repeat(64);
+    input.program.thumbnail_asset_key = null;
+    input.program.courses[0].thumbnail_asset_key = null;
+    input.program.courses[0].modules[0].lessons = [
+      input.program.courses[0].modules[0].lessons[0],
+    ];
+    input.program.courses[0].modules[0].lessons[0].thumbnail_asset_key = null;
+    video.content.poster_asset_key = "poster-1";
+    video.content.caption_asset_key = "caption-1";
+    delete video.content.transcript_asset_key;
+    input.assets = [
+      {
+        source_key: "video-1",
+        kind: "video",
+        local_path: "assets/video.mp4",
+        storage_path: `courses/training/v1/videos/${checksum}.mp4`,
+        mime_type: "video/mp4",
+        checksum_sha256: checksum,
+        size_bytes: 10,
+        approval_status: "approved",
+      },
+      {
+        source_key: "poster-1",
+        kind: "poster",
+        local_path: "assets/poster.webp",
+        storage_path: `courses/training/v1/artwork/posters/${checksum}.webp`,
+        mime_type: "image/webp",
+        checksum_sha256: checksum,
+        size_bytes: 10,
+        approval_status: "approved",
+      },
+      {
+        source_key: "caption-1",
+        kind: "caption",
+        local_path: "assets/caption.vtt",
+        storage_path: `courses/training/v1/captions/${checksum}.vtt`,
+        mime_type: "text/vtt",
+        checksum_sha256: checksum,
+        size_bytes: 10,
+        approval_status: "approved",
+      },
+    ];
+
+    const result = validateCourseManifest(input, { gate: "release" });
+
+    expect(result.ok).toBe(true);
+  });
+
   it.each([undefined, 0, -1, Number.NaN, Number.POSITIVE_INFINITY, "120"])(
     "rejects required release video duration %s",
     (duration) => {

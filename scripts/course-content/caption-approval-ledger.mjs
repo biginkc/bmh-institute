@@ -252,8 +252,15 @@ export async function validateCaptionApprovalEvidence({ ledger, repoRoot }) {
       errors.push(`${label} has no video_source_key.`);
       continue;
     }
-    for (const field of ["video_sha256", "caption_sha256", "transcript_sha256", "evidence_sha256"]) {
+    for (const field of ["video_sha256", "caption_sha256", "evidence_sha256"]) {
       if (!SHA256_PATTERN.test(record[field] ?? "")) errors.push(`${label}.${field} must be lowercase SHA-256.`);
+    }
+    if (
+      record.decision_source === "caption_accessibility_validation"
+        ? record.transcript_sha256 !== null
+        : !SHA256_PATTERN.test(record.transcript_sha256 ?? "")
+    ) {
+      errors.push(`${label}.transcript_sha256 must be null only for caption-only accessibility validation, otherwise lowercase SHA-256.`);
     }
     if (!["approved", "changes_requested", "superseded"].includes(record.status)) {
       errors.push(`${label}.status must be a decided immutable state.`);
@@ -264,7 +271,7 @@ export async function validateCaptionApprovalEvidence({ ledger, repoRoot }) {
     if (!GIT_SHA_PATTERN.test(record.evidence_commit_sha ?? "")) {
       errors.push(`${label}.evidence_commit_sha must bind the evidence commit.`);
     }
-    if (!["content_qa_generation_and_validation", "direct_exact_cut_approval"].includes(record.decision_source)) {
+    if (!["content_qa_generation_and_validation", "direct_exact_cut_approval", "caption_accessibility_validation"].includes(record.decision_source)) {
       errors.push(`${label}.decision_source is invalid.`);
     }
     if (
@@ -278,6 +285,12 @@ export async function validateCaptionApprovalEvidence({ ledger, repoRoot }) {
       record.reviewed_by !== "Jarrad Henry"
     ) {
       errors.push(`${label} direct exact-cut approval must name Jarrad Henry as reviewer.`);
+    }
+    if (
+      record.decision_source === "caption_accessibility_validation" &&
+      record.reviewed_by !== "BMH Institute caption QA evidence"
+    ) {
+      errors.push(`${label} caption accessibility validation must name BMH Institute caption QA evidence as reviewer.`);
     }
     if (!ISO_TIMESTAMP_PATTERN.test(record.reviewed_at ?? "") || !Number.isFinite(Date.parse(record.reviewed_at))) {
       errors.push(`${label}.reviewed_at must be an ISO UTC timestamp.`);
@@ -314,7 +327,7 @@ export async function validateCaptionApprovalEvidence({ ledger, repoRoot }) {
           ].every((field) => binding?.[field] === record[field]),
         ).length === 1;
       if (!evidenceMatches) {
-        errors.push(`${label} evidence does not contain this exact video, caption, transcript, reviewer, and decision binding.`);
+        errors.push(`${label} evidence does not contain this exact video, caption, optional transcript, reviewer, and decision binding.`);
       }
       const commitKey = `${record.evidence_commit_sha}:${record.evidence_path}`;
       let committed = commitEvidence.get(commitKey);
@@ -360,12 +373,16 @@ export async function validateCaptionApprovalLedger({
 
   for (const video of approvedVideos) {
     const caption = assets.get(`caption-${video.source_key}`);
-    const matches = ledger.records.filter((record) =>
+    const candidateMatches = ledger.records.filter((record) =>
       record.status === "approved" &&
       record.video_source_key === video.source_key &&
       record.video_sha256 === video.checksum_sha256 &&
       record.caption_sha256 === caption?.checksum_sha256,
     );
+    const accessibilityMatches = candidateMatches.filter(
+      (record) => record.decision_source === "caption_accessibility_validation",
+    );
+    const matches = accessibilityMatches.length > 0 ? accessibilityMatches : candidateMatches;
     if (
       !caption || caption.approval_status !== "approved" ||
       matches.length !== 1

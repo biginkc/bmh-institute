@@ -46,17 +46,18 @@ approve a cut. The verified local-server page is the review surface.
 The verifier fails unless all nine source files and both candidate files match
 their byte sizes and SHA-256 values. It also checksum-locks the review-only captions and transcripts for
 Compensation Engine, Operator Playbook, and Career Growth Path, and fails if the
-checked-in fallback HTML is stale. The page distinguishes approved candidates,
-pending candidates, and policy-defective source evidence without changing any
-of those decisions.
+checked-in fallback HTML is stale. The page distinguishes nine approved exact
+cuts from the two remaining policy-defective source-evidence cuts without
+changing any decision.
 
-Terms Glossary v10 and KPIs v12 are recorded as `APPROVED EXACT CUT`. No corrected
+Nine exact cuts are approved: Terms Glossary v10, KPIs v12, and the seven
+source cuts directly approved by Jarrad Henry on 2026-07-21. No corrected
 candidate remains marked `JARRAD REVIEW REQUIRED`. Any future replacement must
 receive a new checksum-keyed record with the displayed SHA-256, approval date,
-and approver; a filename by itself is not an approval. The nine original cards
-are marked `REPLACEMENT REQUIRED`; their
-exact policy-defective hashes are already `changes_requested` and the validator
-forbids approving them. Use the linked `approvals.json` ledger. The verifier
+and approver; a filename by itself is not an approval. Two historical source
+records remain `changes_requested` and are marked `REPLACEMENT REQUIRED`; the
+seven other original cards are approved only for their exact hashes. Use the
+linked `approvals.json` ledger. The verifier
 locks and serves this file with the review surface, and stops if it changes
 while the server is running. The transition validator requires approver, date,
 decision, and notes, preserves terminal history, and permits a replacement only
@@ -88,7 +89,7 @@ through this controlled sequence:
 2. Promote only that exact video checksum from `hold` to `approved` in the
    manifest builder source, then rebuild the manifest. Do not reuse an approval
    for a different file or checksum.
-3. Generate captions and a transcript for the newly approved exact cut:
+3. Generate captions and an internal review transcript for the newly approved exact cut:
 
    ```sh
    python3 scripts/course-content/generate-approved-captions.py \
@@ -113,13 +114,15 @@ through this controlled sequence:
    ```
 
 Do not treat the ledger decision alone as course-ready. The video remains a
-publication blocker until its exact learner captions and transcript are
-reviewed, checksum-recorded, and approved.
+publication blocker until its exact learner captions are reviewed,
+checksum-recorded, and approved. Review transcripts remain internal evidence
+and are not learner-facing manifest assets.
 
 Policy-safe replacement scripts, shot plans, forbidden-language maps, and
 timecoded edit maps for seven full recuts are documented in
 `../held-video-recuts/README.md`. They are preparation artifacts only; they do
-not replace or approve the currently held media.
+not replace the seven directly approved exact cuts or approve a future
+replacement checksum.
 
 If the held set intentionally changes, update the manifest and review details,
 then regenerate and verify the page:

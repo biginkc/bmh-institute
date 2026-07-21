@@ -148,9 +148,19 @@ export async function inspectApprovedCaptionAssets(manifest, repoRootUrl) {
   const videos = assets.filter((asset) => asset.kind === "video");
   const approvedVideos = videos.filter((asset) => asset.approval_status === "approved");
   const heldVideos = videos.filter((asset) => asset.approval_status === "hold");
+  const transcriptAssets = assets.filter((asset) => asset.kind === "transcript");
   const errors = [];
   let approvedCaptions = 0;
   let heldDerivativeAssetsStillMissing = 0;
+
+  for (const asset of transcriptAssets) {
+    errors.push(`${asset.source_key} is a learner-facing transcript asset; this course permits accessibility captions only`);
+  }
+  for (const block of videoBlocks.values()) {
+    if (block.content.transcript_asset_key !== undefined || block.content.transcript_path !== undefined) {
+      errors.push(`${block.source_key} contains a learner-facing transcript reference; this course permits accessibility captions only`);
+    }
+  }
 
   for (const video of approvedVideos) {
     const block = videoBlocks.get(video.source_key);
@@ -196,7 +206,7 @@ export async function inspectApprovedCaptionAssets(manifest, repoRootUrl) {
     approvedVideos: approvedVideos.length,
     heldVideos: heldVideos.length,
     approvedCaptions,
-    approvedTranscripts: 0,
+    approvedTranscripts: transcriptAssets.filter((asset) => asset.approval_status === "approved").length,
     heldDerivativeAssetsStillMissing,
     errors,
   };

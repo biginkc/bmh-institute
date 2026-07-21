@@ -96,14 +96,16 @@ canary/full scope being applied. Always pass the same `--state-root` to upload
 and apply. An interrupted upload, stale manifest, or receipt from another scope
 or environment must be resumed or uploaded again before apply can proceed.
 
-### Checksum-bound release evidence
+### Checksum-bound caption evidence
 
-Caption and transcript approval is one atomic decision per video cut. The
-immutable history in `caption-approvals.json` binds the exact video, VTT, and
-transcript SHA-256 values plus its review evidence. A new video or derivative
-checksum requires a new record; never rewrite or remove a prior decision. The
-manifest builder approves both derivatives only when one exact composite
-record matches, otherwise both remain missing.
+The immutable history in `caption-approvals.json` binds each accessibility
+caption to the exact video and VTT SHA-256 values plus its review evidence. A
+new video or caption checksum requires a new record; never rewrite or remove a
+prior decision. Legacy caption records may retain an internal QA transcript
+checksum as historical evidence. Caption-only accessibility records use a null
+transcript checksum, and learner-facing manifests must contain no transcript
+asset or reference. The manifest builder approves a caption only when one
+exact current evidence record matches; otherwise it remains missing.
 
 The six production Closer Lab IDs remain deliberately null in
 `closer-lab-production-mapping.json` until the canonical service-role-only

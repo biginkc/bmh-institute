@@ -73,15 +73,13 @@ test("a replacement retains immutable approval history and selects one exact cur
   const previous = structuredClone(ledger);
   const video = manifest.assets.find((asset) => asset.source_key === "video-slot-03-tech-stack");
   const caption = manifest.assets.find((asset) => asset.source_key === "caption-video-slot-03-tech-stack");
-  const transcript = manifest.assets.find((asset) => asset.source_key === "transcript-video-slot-03-tech-stack");
   video.checksum_sha256 = "a".repeat(64);
   caption.checksum_sha256 = "b".repeat(64);
-  transcript.checksum_sha256 = "c".repeat(64);
   ledger.records.push({
     ...ledger.records[0],
     video_sha256: video.checksum_sha256,
     caption_sha256: caption.checksum_sha256,
-    transcript_sha256: transcript.checksum_sha256,
+    transcript_sha256: "c".repeat(64),
   });
   assert.deepEqual(validateCaptionApprovalTransition(previous, ledger), []);
   const replacementErrors = await validateCaptionApprovalLedger({ ledger, manifest, repoRoot: ROOT });
@@ -286,7 +284,7 @@ test("caption approval history fails closed when a shallow checkout hides its pr
   }
 });
 
-test("the builder approves a caption and transcript only from one composite record", async () => {
+test("the builder approves a learner-facing caption only from one composite review record", async () => {
   const root = await mkdtemp(path.join(tmpdir(), "bmh-caption-pair-"));
   await mkdir(path.join(root, "course-assets/captions"), { recursive: true });
   await mkdir(path.join(root, "course-assets/transcripts"), { recursive: true });
@@ -300,7 +298,7 @@ test("the builder approves a caption and transcript only from one composite reco
     ],
   };
   const assets = await buildDerivativePair(video, splitLedger, root);
-  assert.deepEqual(assets.map((asset) => asset.approval_status), ["missing", "missing"]);
+  assert.deepEqual(assets.map((asset) => asset.approval_status), ["missing"]);
 });
 
 test("an incomplete derivative pair remains atomically missing", async () => {
@@ -309,8 +307,33 @@ test("an incomplete derivative pair remains atomically missing", async () => {
   await writeFile(path.join(root, "course-assets/captions/video-test.vtt"), "WEBVTT\n");
   const video = { source_key: "video-test", approval_status: "approved", checksum_sha256: "a".repeat(64) };
   const assets = await buildDerivativePair(video, { records: [] }, root);
-  assert.deepEqual(assets.map((asset) => asset.approval_status), ["missing", "missing"]);
-  assert.deepEqual(assets.map((asset) => asset.checksum_sha256), [null, null]);
+  assert.deepEqual(assets.map((asset) => asset.approval_status), ["missing"]);
+  assert.deepEqual(assets.map((asset) => asset.checksum_sha256), [null]);
+});
+
+test("a directly authorized accessibility cut rebuilds from its tracked caption without a transcript", async () => {
+  const root = await mkdtemp(path.join(tmpdir(), "bmh-caption-only-"));
+  await mkdir(path.join(root, "course-assets/captions"), { recursive: true });
+  await writeFile(path.join(root, "course-assets/captions/video-slot-01-welcome.vtt"), "WEBVTT\n");
+  const video = {
+    source_key: "video-slot-01-welcome",
+    approval_status: "approved",
+    checksum_sha256: "493de8a5e0663ad577ba46d6d5befce33e9640f250677095094978714d22ac72",
+  };
+  const ledger = {
+    records: [{
+      status: "approved",
+      video_source_key: video.source_key,
+      video_sha256: video.checksum_sha256,
+      caption_sha256: "73420fdc06730575e08b8a09b5b3824e0f2a9d2dd742640613490ef3abac2bd0",
+      transcript_sha256: null,
+      decision_source: "caption_accessibility_validation",
+    }],
+  };
+
+  const assets = await buildDerivativePair(video, ledger, root);
+
+  assert.deepEqual(assets.map((asset) => [asset.kind, asset.approval_status]), [["caption", "approved"]]);
 });
 
 test("buildManifest refuses forged caption evidence before emitting approved metadata", async () => {

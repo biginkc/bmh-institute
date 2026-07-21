@@ -295,11 +295,11 @@
       },
       "video_evidence": [
         {
-          "asset_key": "video-slot-10-objection-scripts",
+      "asset_key": "video-slot-10-objection-scripts",
           "local_path": "course-assets/review-lesson7B/LESSON-7B-v5.mp4",
           "checksum_sha256": "59c745ccca7387f82d0b13eaf95439f9f6a50a8f727ad3c1db4fb839050b1ebb",
           "size_bytes": 572011027,
-          "approval_status": "hold",
+      "approval_status": "approved",
           "duration_seconds": 1508.757,
           "frame_timestamps_seconds": [
             301.751,
@@ -466,11 +466,11 @@
       },
       "video_evidence": [
         {
-          "asset_key": "video-slot-15-closing",
+      "asset_key": "video-slot-15-closing",
           "local_path": "course-assets/review-lesson11A/LESSON-11A-v4.mp4",
           "checksum_sha256": "6e3aa1b007117b303a05906ca8443a8b9bc38f7c44bd61475c5437b99e7c90d2",
           "size_bytes": 55329810,
-          "approval_status": "hold",
+      "approval_status": "approved",
           "duration_seconds": 329.429,
           "frame_timestamps_seconds": [
             65.886,
@@ -524,11 +524,11 @@
       },
       "video_evidence": [
         {
-          "asset_key": "video-slot-17-compensation",
+      "asset_key": "video-slot-17-compensation",
           "local_path": "course-assets/review-lesson17/LESSON-17-v1-QT.mp4",
           "checksum_sha256": "cecad85478bb1a8ba5bfed7404dc045440c567ed0eaaa90b11b644e124b27846",
           "size_bytes": 45346253,
-          "approval_status": "hold",
+      "approval_status": "approved",
           "duration_seconds": 181.013,
           "frame_timestamps_seconds": [
             36.203,
@@ -553,11 +553,11 @@
       },
       "video_evidence": [
         {
-          "asset_key": "video-slot-18-operator",
+      "asset_key": "video-slot-18-operator",
           "local_path": "course-assets/review-lesson18A/LESSON-18A-v10.mp4",
           "checksum_sha256": "6e6a3f257ff8cf3ef201de775de47c6e7833e3abd673e44bb8d4d5ac3aafa048",
           "size_bytes": 85657783,
-          "approval_status": "hold",
+      "approval_status": "approved",
           "duration_seconds": 378.858,
           "frame_timestamps_seconds": [
             75.772,
@@ -595,11 +595,11 @@
       },
       "video_evidence": [
         {
-          "asset_key": "video-slot-19-career",
+      "asset_key": "video-slot-19-career",
           "local_path": "course-assets/review-lesson19/LESSON-19-v7.mp4",
           "checksum_sha256": "1ddcf7b1b0b45bbc90ec14b3660b3d5f5a284b5095dd0d0682164924ce1a3da9",
           "size_bytes": 77199756,
-          "approval_status": "hold",
+      "approval_status": "approved",
           "duration_seconds": 252.949,
           "frame_timestamps_seconds": [
             50.59,

@@ -222,7 +222,7 @@ test("the manifest passes structural and semantic content QA", async () => {
     report.publicationBlockers.filter((blocker) =>
       blocker.includes("requires a policy-safe replacement cut"),
     ).length,
-    7,
+    0,
   );
   assert.ok(
     report.publicationBlockers.some((blocker) =>
@@ -259,7 +259,7 @@ test("Closer Lab publication blockers are trim and case robust", async () => {
   );
 });
 
-test("known held cuts are immutable and never replaced by older files", async () => {
+test("directly approved exact cuts are immutable and never replaced by older files", async () => {
   const manifest = await loadManifest(MANIFEST_URL);
   const approvedKpis = manifest.assets.find(
     (asset) => asset.source_key === "video-slot-16-kpis",
@@ -278,8 +278,17 @@ test("known held cuts are immutable and never replaced by older files", async ()
       size_bytes: 53799917,
     },
   );
-  const heldVideos = manifest.assets
-    .filter((asset) => asset.kind === "video" && asset.approval_status === "hold")
+  const directApprovalKeys = new Set([
+    "video-slot-01-welcome",
+    "video-slot-01-mindset",
+    "video-slot-10-objection-scripts",
+    "video-slot-15-closing",
+    "video-slot-17-compensation",
+    "video-slot-18-operator",
+    "video-slot-19-career",
+  ]);
+  const directlyApprovedVideos = manifest.assets
+    .filter((asset) => asset.kind === "video" && directApprovalKeys.has(asset.source_key))
     .map(({ source_key, local_path, checksum_sha256, size_bytes }) => ({
       source_key,
       local_path,
@@ -287,7 +296,7 @@ test("known held cuts are immutable and never replaced by older files", async ()
       size_bytes,
     }));
 
-  assert.deepEqual(heldVideos, [
+  assert.deepEqual(directlyApprovedVideos, [
     {
       source_key: "video-slot-01-welcome",
       local_path: "course-assets/review-lessonA/LESSON-1A-v7.mp4",

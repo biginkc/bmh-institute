@@ -24,8 +24,8 @@ test("draft validation accepts finalized artwork while reporting remaining relea
   assert.ok(report.publicationBlockers.every((blocker) =>
     !blocker.includes("Artwork production ledger is not finalized"),
   ));
-  assert.ok(report.publicationBlockers.some((blocker) =>
-    blocker.includes("requires a policy-safe replacement cut"),
+  assert.ok(report.publicationBlockers.every((blocker) =>
+    !blocker.includes("requires a policy-safe replacement cut"),
   ));
   assert.ok(report.publicationBlockers.some((blocker) =>
     blocker.includes("production Closer Lab scenario ID"),
@@ -39,21 +39,21 @@ test("draft validation accepts finalized artwork while reporting remaining relea
   );
 });
 
-test("file-backed caption and transcript drift cannot borrow canonical release evidence", async () => {
+test("file-backed caption drift cannot borrow canonical release evidence", async () => {
   const manifest = await loadManifest(FULL_URL);
-  const transcript = manifest.assets.find((asset) =>
-    asset.source_key === "transcript-video-slot-04-humanizing-a",
+  const caption = manifest.assets.find((asset) =>
+    asset.source_key === "caption-video-slot-04-humanizing-a",
   );
-  assert.ok(transcript);
-  transcript.checksum_sha256 = "a".repeat(64);
-  transcript.storage_path = `courses/bmh-employee-training/v1/transcripts/${transcript.source_key}.${transcript.checksum_sha256}.md`;
+  assert.ok(caption);
+  caption.checksum_sha256 = "a".repeat(64);
+  caption.storage_path = `courses/bmh-employee-training/v1/captions/${caption.source_key}.${caption.checksum_sha256}.vtt`;
 
   const report = await validateBmhImportSemanticGate({
     manifest,
     now: CURRENT_TIME,
   });
   assert.ok(report.publicationBlockers.some((blocker) =>
-    blocker.includes("Caption/transcript file trust failed")
+    blocker.includes("Caption file trust failed")
       && blocker.includes("checksum does not match"),
   ));
   assert.ok(report.errors.some((error) => error.includes("canonical release manifest")));

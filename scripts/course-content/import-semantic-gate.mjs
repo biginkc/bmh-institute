@@ -97,7 +97,7 @@ async function validateBmhFileBackedReleaseTrust({
     pathToFileURL(`${REPO_ROOT}/`),
   );
   blockers.push(...captionReport.errors.map(
-    (error) => `Caption/transcript file trust failed: ${error}`,
+    (error) => `Caption file trust failed: ${error}`,
   ));
   const captionApprovalErrors = await validateCaptionApprovalLedger({
     ledger: captionApprovalLedger,
@@ -110,7 +110,7 @@ async function validateBmhFileBackedReleaseTrust({
     ledgerPath: CAPTION_APPROVAL_LEDGER_PATH,
   }));
   blockers.push(...captionApprovalErrors.map(
-    (error) => `Caption/transcript approval trust failed: ${error}`,
+    (error) => `Caption approval trust failed: ${error}`,
   ));
   const currentReviewAssets = [
     ...(manifest.assets ?? []).filter((asset) =>
