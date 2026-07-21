@@ -971,9 +971,11 @@ export async function buildDerivativePair(videoAsset, captionApprovalLedger, rep
   });
   if (videoAsset.approval_status === "hold") {
     if (files.some((file) => file.fileStat)) throw new Error(`${videoAsset.source_key} derivatives exist before the held cut is approved`);
-    return files.map(missingAsset);
+    return files.filter((file) => file.kind === "caption").map(missingAsset);
   }
-  if (files.some((file) => !file.fileStat)) return files.map(missingAsset);
+  if (files.some((file) => !file.fileStat)) {
+    return files.filter((file) => file.kind === "caption").map(missingAsset);
+  }
   const [caption, transcript] = files;
   const approval = findCaptionApprovalRecord(captionApprovalLedger, {
     video_source_key: videoAsset.source_key,
@@ -981,8 +983,12 @@ export async function buildDerivativePair(videoAsset, captionApprovalLedger, rep
     caption_sha256: caption.checksum,
     transcript_sha256: transcript.checksum,
   });
-  if (!approval) return files.map(missingAsset);
-  return files.map((file) => ({
+  if (!approval) {
+    return files.filter((file) => file.kind === "caption").map(missingAsset);
+  }
+  // The Markdown transcript is internal caption-review evidence only. It is
+  // deliberately excluded from the learner-facing manifest and storage plan.
+  return files.filter((file) => file.kind === "caption").map((file) => ({
     source_key: `${file.kind}-${videoAsset.source_key}`,
     kind: file.kind,
     local_path: file.localPath,
@@ -1445,7 +1451,6 @@ export async function buildManifest({
           asset_key: asset.source_key,
           poster_asset_key: `poster-${asset.source_key}`,
           caption_asset_key: `caption-${asset.source_key}`,
-          transcript_asset_key: `transcript-${asset.source_key}`,
           title: asset._title,
           part_label: asset._partLabel,
           duration_seconds: asset._duration,

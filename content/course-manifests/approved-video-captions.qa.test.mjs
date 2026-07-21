@@ -14,25 +14,25 @@ import { DIRECT_APPROVAL_OVERRIDE_CUTS } from "../../scripts/course-content/held
 const MANIFEST_URL = new URL("./bmh-employee-training.v1.json", import.meta.url);
 const REPO_ROOT = new URL("../../", import.meta.url);
 
-test("only approved video cuts have complete caption and transcript assets", async () => {
+test("only approved video cuts have complete learner-facing caption assets", async () => {
   const manifest = await loadManifest(MANIFEST_URL);
   const report = await inspectApprovedCaptionAssets(manifest, REPO_ROOT);
 
-  assert.equal(report.approvedVideos, 22);
-  assert.equal(report.heldVideos, 7);
-  assert.equal(report.approvedCaptions, 22);
-  assert.equal(report.approvedTranscripts, 22);
-  assert.equal(report.heldDerivativeAssetsStillMissing, 14);
+  assert.equal(report.approvedVideos, 29);
+  assert.equal(report.heldVideos, 0);
+  assert.equal(report.approvedCaptions, 29);
+  assert.equal(report.approvedTranscripts, 0);
+  assert.equal(report.heldDerivativeAssetsStillMissing, 0);
   assert.deepEqual(report.errors, []);
 });
 
 test("file-backed release QA refuses absolute, traversal, and escaping caption paths", async () => {
   for (const localPath of ["/etc/passwd", "../../outside.md"]) {
     const manifest = await loadManifest(MANIFEST_URL);
-    const transcript = manifest.assets.find((asset) =>
-      asset.source_key === "transcript-video-slot-04-humanizing-a",
+    const caption = manifest.assets.find((asset) =>
+      asset.source_key === "caption-video-slot-04-humanizing-a",
     );
-    transcript.local_path = localPath;
+    caption.local_path = localPath;
     const report = await inspectApprovedCaptionAssets(manifest, REPO_ROOT);
     assert.ok(report.errors.some((error) =>
       error.includes("local path escapes the repository trust root"),

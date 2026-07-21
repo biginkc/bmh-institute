@@ -360,22 +360,17 @@ export async function validateCaptionApprovalLedger({
 
   for (const video of approvedVideos) {
     const caption = assets.get(`caption-${video.source_key}`);
-    const transcript = assets.get(`transcript-${video.source_key}`);
     const matches = ledger.records.filter((record) =>
       record.status === "approved" &&
-      captionApprovalRecordKey(record) === captionApprovalRecordKey({
-        video_source_key: video.source_key,
-        video_sha256: video.checksum_sha256,
-        caption_sha256: caption?.checksum_sha256,
-        transcript_sha256: transcript?.checksum_sha256,
-      }),
+      record.video_source_key === video.source_key &&
+      record.video_sha256 === video.checksum_sha256 &&
+      record.caption_sha256 === caption?.checksum_sha256,
     );
     if (
-      !caption || !transcript ||
-      caption.approval_status !== "approved" || transcript.approval_status !== "approved" ||
+      !caption || caption.approval_status !== "approved" ||
       matches.length !== 1
     ) {
-      errors.push(`${video.source_key} captions are not approved for this exact video checksum.`);
+      errors.push(`${video.source_key} caption is not approved for this exact video checksum.`);
     }
   }
   return errors;
