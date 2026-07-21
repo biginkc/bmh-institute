@@ -9,6 +9,7 @@ import {
   MIN_CAPTION_DURATION_SECONDS,
   parseWebVtt,
 } from "../../scripts/course-content/validate-caption-assets.mjs";
+import { DIRECT_APPROVAL_OVERRIDE_CUTS } from "../../scripts/course-content/held-video-approval-ledger.mjs";
 
 const MANIFEST_URL = new URL("./bmh-employee-training.v1.json", import.meta.url);
 const REPO_ROOT = new URL("../../", import.meta.url);
@@ -86,7 +87,7 @@ test("caption parsing rejects unreadably short and orphaned one-word cues", () =
   assert.ok(parsed.errors.some((error) => error.includes("orphan one-word segment")));
 });
 
-test("approved transcripts do not hard-code learner dial quotas", async () => {
+test("approved transcripts without a checksum-specific override do not hard-code learner dial quotas", async () => {
   const manifest = await loadManifest(MANIFEST_URL);
   const approvedVideos = manifest.assets.filter(
     (asset) => asset.kind === "video" && asset.approval_status === "approved",
@@ -94,12 +95,27 @@ test("approved transcripts do not hard-code learner dial quotas", async () => {
   const fixedDialQuota = /\b(?:\d{2,3}(?:\s*(?:to|-|plus|\+))\s*\d{2,3}|\d{2,3}\s*(?:plus|\+))\s+(?:total\s+)?dials?\b|\bdial target\b/i;
 
   for (const video of approvedVideos) {
+    if (DIRECT_APPROVAL_OVERRIDE_CUTS.has(`${video.source_key}:${video.checksum_sha256}`)) continue;
     const transcript = await readFile(
       new URL(`../../course-assets/transcripts/${video.source_key}.md`, import.meta.url),
       "utf8",
     );
     assert.doesNotMatch(transcript, fixedDialQuota, `${video.source_key} contains a fixed dial quota`);
   }
+});
+
+test("direct exact-cut caption approvals preserve the expressly authorized wording", async () => {
+  const operator = await readFile(
+    new URL("../../course-assets/transcripts/video-slot-18-operator.md", import.meta.url),
+    "utf8",
+  );
+  const compensation = await readFile(
+    new URL("../../course-assets/transcripts/video-slot-17-compensation.md", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(operator, /(?:110 to 150|dial target)/i);
+  assert.match(compensation, /(?:performance pay|milestone bonus|commission)/i);
 });
 
 test("Fact Find captions preserve the exact authored words at known ASR trouble spots", async () => {

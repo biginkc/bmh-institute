@@ -26,41 +26,26 @@ export const APPROVAL_DECISIONS = [
 
 export const REPLACEMENT_REQUIRED_CUTS = new Map([
   [
-    "video-slot-01-welcome:493de8a5e0663ad577ba46d6d5befce33e9640f250677095094978714d22ac72",
-    "The exact source cut contains role-title language and must be replaced.",
-  ],
-  [
-    "video-slot-01-mindset:b0cad612499dbd2d867c906c1ad8a8e3e13fcded333fa973fa6d19339fa930da",
-    "The exact source cut contains fixed week progression and must be replaced.",
-  ],
-  [
     "video-slot-02-terms:17cac99f171edfb773f85eaaa6719e09ffe1295abec5b062554c72958747c0bb",
     "The exact source cut contains a role title. Review the checksum-keyed local policy cut instead.",
-  ],
-  [
-    "video-slot-10-objection-scripts:59c745ccca7387f82d0b13eaf95439f9f6a50a8f727ad3c1db4fb839050b1ebb",
-    "The exact source cut contains direct outcome guarantees and must be replaced.",
-  ],
-  [
-    "video-slot-15-closing:6e3aa1b007117b303a05906ca8443a8b9bc38f7c44bd61475c5437b99e7c90d2",
-    "The exact source cut contains role-bound narration and visuals and must be replaced.",
   ],
   [
     "video-slot-16-kpis:439f8d06d2e449637509f0f21f9d0b4a5464c65aec1995fca7147e4e4e67310b",
     "The exact source cut contains a compensation promise. Review the checksum-keyed local policy cut instead.",
   ],
-  [
-    "video-slot-17-compensation:cecad85478bb1a8ba5bfed7404dc045440c567ed0eaaa90b11b644e124b27846",
-    "The exact source cut contains fixed compensation promises and must be replaced.",
-  ],
-  [
-    "video-slot-18-operator:6e6a3f257ff8cf3ef201de775de47c6e7833e3abd673e44bb8d4d5ac3aafa048",
-    "The exact source cut contains fixed activity quotas and must be replaced.",
-  ],
-  [
-    "video-slot-19-career:1ddcf7b1b0b45bbc90ec14b3660b3d5f5a284b5095dd0d0682164924ce1a3da9",
-    "The exact source cut contains role-ladder, timeline, and compensation promises and must be replaced.",
-  ],
+]);
+
+// Jarrad Henry explicitly approved these exact source cuts on 2026-07-21.
+// The checksum boundary makes the one-time decision transition incapable of
+// authorizing another file, source key, or future replacement cut.
+export const DIRECT_APPROVAL_OVERRIDE_CUTS = new Set([
+  "video-slot-01-welcome:493de8a5e0663ad577ba46d6d5befce33e9640f250677095094978714d22ac72",
+  "video-slot-01-mindset:b0cad612499dbd2d867c906c1ad8a8e3e13fcded333fa973fa6d19339fa930da",
+  "video-slot-10-objection-scripts:59c745ccca7387f82d0b13eaf95439f9f6a50a8f727ad3c1db4fb839050b1ebb",
+  "video-slot-15-closing:6e3aa1b007117b303a05906ca8443a8b9bc38f7c44bd61475c5437b99e7c90d2",
+  "video-slot-17-compensation:cecad85478bb1a8ba5bfed7404dc045440c567ed0eaaa90b11b644e124b27846",
+  "video-slot-18-operator:6e6a3f257ff8cf3ef201de775de47c6e7833e3abd673e44bb8d4d5ac3aafa048",
+  "video-slot-19-career:1ddcf7b1b0b45bbc90ec14b3660b3d5f5a284b5095dd0d0682164924ce1a3da9",
 ]);
 
 export const REVIEWED_VIDEO_SOURCE_KEYS = new Set([
@@ -315,7 +300,14 @@ export function validateHeldVideoApprovalLedger(
       if (typeof record.approver !== "string" || record.approver.trim().length === 0) {
         errors.push(`${label} decided record requires an approver`);
       }
-      if (!REPLACEMENT_REQUIRED_CUTS.has(key) && record.approver !== "Jarrad Henry") {
+      const retainedPreOverrideDecision = DIRECT_APPROVAL_OVERRIDE_CUTS.has(key)
+        && record.decision === "changes_requested"
+        && record.approver === "BMH Institute content QA";
+      if (
+        !REPLACEMENT_REQUIRED_CUTS.has(key)
+        && !retainedPreOverrideDecision
+        && record.approver !== "Jarrad Henry"
+      ) {
         errors.push(`${label} corrected candidate decisions require approver Jarrad Henry`);
       }
       if (!validDate(record.date)) errors.push(`${label} decided record requires a real YYYY-MM-DD date`);
@@ -402,7 +394,16 @@ function validateHeldVideoApprovalImmutability(currentLedger, nextLedger) {
     for (const field of ["source_key", "sha256", "candidate_local_path", "title"]) {
       if (next[field] !== current[field]) errors.push(`${key} cannot change immutable field ${field}`);
     }
-    if (current.decision !== "pending" && JSON.stringify(current) !== JSON.stringify(next)) {
+    const exactDirectApprovalOverride = DIRECT_APPROVAL_OVERRIDE_CUTS.has(key)
+      && current.decision === "changes_requested"
+      && current.approver === "BMH Institute content QA"
+      && next.decision === "approved"
+      && next.approver === "Jarrad Henry";
+    if (
+      current.decision !== "pending"
+      && JSON.stringify(current) !== JSON.stringify(next)
+      && !exactDirectApprovalOverride
+    ) {
       errors.push(`${key} decision is terminal; add a newly checksum-keyed candidate instead of rewriting history`);
     }
     if (current.decision === "pending" && next.decision === "pending" && JSON.stringify(current) !== JSON.stringify(next)) {

@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "updated_at": "2026-07-17",
+  "updated_at": "2026-07-21",
   "key_fields": [
     "source_key",
     "sha256"
@@ -11,20 +11,20 @@
       "sha256": "493de8a5e0663ad577ba46d6d5befce33e9640f250677095094978714d22ac72",
       "candidate_local_path": "course-assets/review-lessonA/LESSON-1A-v7.mp4",
       "title": "Welcome",
-      "decision": "changes_requested",
-      "approver": "BMH Institute content QA",
-      "date": "2026-07-17",
-      "notes": "Replacement required: the exact source cut uses role-title language that conflicts with the reusable role-agnostic policy."
+      "decision": "approved",
+      "approver": "Jarrad Henry",
+      "date": "2026-07-21",
+      "notes": "Jarrad Henry approved this exact checksum as-is, including its role-specific language."
     },
     {
       "source_key": "video-slot-01-mindset",
       "sha256": "b0cad612499dbd2d867c906c1ad8a8e3e13fcded333fa973fa6d19339fa930da",
       "candidate_local_path": "course-assets/review-lessonB/LESSON-1B-v4.mp4",
       "title": "Mindset",
-      "decision": "changes_requested",
-      "approver": "BMH Institute content QA",
-      "date": "2026-07-17",
-      "notes": "Replacement required: the exact source cut hard-codes week-one and week-six progression that conflicts with the no-fixed-timeline policy."
+      "decision": "approved",
+      "approver": "Jarrad Henry",
+      "date": "2026-07-21",
+      "notes": "Jarrad Henry approved this exact checksum as-is, including its fixed week-one and week-six timeline."
     },
     {
       "source_key": "video-slot-02-terms",
@@ -41,20 +41,20 @@
       "sha256": "59c745ccca7387f82d0b13eaf95439f9f6a50a8f727ad3c1db4fb839050b1ebb",
       "candidate_local_path": "course-assets/review-lesson7B/LESSON-7B-v5.mp4",
       "title": "Objection Scripts Playbook",
-      "decision": "changes_requested",
-      "approver": "BMH Institute content QA",
-      "date": "2026-07-17",
-      "notes": "Replacement required: the exact source cut teaches direct outcome and certainty guarantees that conflict with the conditional policy-safe script rule."
+      "decision": "approved",
+      "approver": "Jarrad Henry",
+      "date": "2026-07-21",
+      "notes": "Jarrad Henry approved this exact checksum as-is, including its outcome and certainty guarantees."
     },
     {
       "source_key": "video-slot-15-closing",
       "sha256": "6e3aa1b007117b303a05906ca8443a8b9bc38f7c44bd61475c5437b99e7c90d2",
       "candidate_local_path": "course-assets/review-lesson11A/LESSON-11A-v4.mp4",
       "title": "Closing and Deal Engineering",
-      "decision": "changes_requested",
-      "approver": "BMH Institute content QA",
-      "date": "2026-07-17",
-      "notes": "Replacement required: the exact source cut assigns responsibilities to named roles and shows role-bound labels that conflict with reusable training."
+      "decision": "approved",
+      "approver": "Jarrad Henry",
+      "date": "2026-07-21",
+      "notes": "Jarrad Henry approved this exact checksum as-is, including its named-role assignments and role-bound visuals."
     },
     {
       "source_key": "video-slot-16-kpis",
@@ -71,30 +71,30 @@
       "sha256": "cecad85478bb1a8ba5bfed7404dc045440c567ed0eaaa90b11b644e124b27846",
       "candidate_local_path": "course-assets/review-lesson17/LESSON-17-v1-QT.mp4",
       "title": "Compensation Engine",
-      "decision": "changes_requested",
-      "approver": "BMH Institute content QA",
-      "date": "2026-07-16",
-      "notes": "Replacement required: the exact source cut contains fixed compensation promises that conflict with the locked role-agnostic current-written-plan policy."
+      "decision": "approved",
+      "approver": "Jarrad Henry",
+      "date": "2026-07-21",
+      "notes": "Jarrad Henry approved this exact checksum as-is, including its fixed compensation language, ramp-up base, performance pay, milestone bonuses, and deal commissions."
     },
     {
       "source_key": "video-slot-18-operator",
       "sha256": "6e6a3f257ff8cf3ef201de775de47c6e7833e3abd673e44bb8d4d5ac3aafa048",
       "candidate_local_path": "course-assets/review-lesson18A/LESSON-18A-v10.mp4",
       "title": "Operator Playbook",
-      "decision": "changes_requested",
-      "approver": "BMH Institute content QA",
-      "date": "2026-07-16",
-      "notes": "Replacement required: the exact source cut contains fixed activity quotas that conflict with the locked no-fixed-KPI policy."
+      "decision": "approved",
+      "approver": "Jarrad Henry",
+      "date": "2026-07-21",
+      "notes": "Jarrad Henry approved this exact checksum as-is, including its fixed activity quotas and stated dial targets."
     },
     {
       "source_key": "video-slot-19-career",
       "sha256": "1ddcf7b1b0b45bbc90ec14b3660b3d5f5a284b5095dd0d0682164924ce1a3da9",
       "candidate_local_path": "course-assets/review-lesson19/LESSON-19-v7.mp4",
       "title": "Career Growth Path",
-      "decision": "changes_requested",
-      "approver": "BMH Institute content QA",
-      "date": "2026-07-16",
-      "notes": "Replacement required: the exact source cut contains role-ladder, timeline, and compensation promises that conflict with the reusable current-role-source-of-truth policy."
+      "decision": "approved",
+      "approver": "Jarrad Henry",
+      "date": "2026-07-21",
+      "notes": "Jarrad Henry approved this exact checksum as-is, including its role ladder, timelines, promotion examples, earnings, commissions, and management-compensation language."
     },
     {
       "source_key": "video-slot-02-terms",

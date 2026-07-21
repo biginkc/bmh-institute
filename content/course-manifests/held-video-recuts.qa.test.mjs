@@ -34,6 +34,7 @@ import {
   validateSpokenPolicy,
 } from "../../scripts/course-content/validate-held-video-recuts.mjs";
 import {
+  DIRECT_APPROVAL_OVERRIDE_CUTS,
   validateHeldVideoApprovalLedger,
   validateHeldVideoApprovalHistory,
   validateHeldVideoManifestApprovalState,
@@ -183,7 +184,7 @@ test("the spoken policy rejects money, quotas, timelines, promises, and role tit
   }
 });
 
-test("Terms v10 and KPIs v12 are exactly approved, and all nine originals remain changes requested", async () => {
+test("the seven direct overrides plus Terms v10 and KPIs v12 are exactly approved", async () => {
   const [ledger, held] = await Promise.all([ledgerPromise, currentReviewAssets()]);
   assert.deepEqual(validateHeldVideoApprovalLedger(ledger, held), []);
   assert.equal(ledger.records.length, 11);
@@ -196,6 +197,15 @@ test("Terms v10 and KPIs v12 are exactly approved, and all nine originals remain
         record.notes === null,
     ).length,
     0,
+  );
+  assert.equal(
+    ledger.records.filter((record) =>
+      DIRECT_APPROVAL_OVERRIDE_CUTS.has(`${record.source_key}:${record.sha256}`) &&
+      record.decision === "approved" &&
+      record.approver === "Jarrad Henry" &&
+      record.date === "2026-07-21",
+    ).length,
+    7,
   );
   assert.equal(
     ledger.records.filter(
@@ -225,7 +235,7 @@ test("Terms v10 and KPIs v12 are exactly approved, and all nine originals remain
         ["2026-07-16", "2026-07-17"].includes(record.date) &&
         record.notes.includes("Replacement required"),
     ).length,
-    9,
+    2,
   );
 });
 
@@ -334,7 +344,12 @@ test("approval transitions require evidence and keep decided checksums immutable
   );
 
   const policyDefectiveApproval = structuredClone(ledger);
-  Object.assign(policyDefectiveApproval.records[0], {
+  const policyDefectiveIndex = policyDefectiveApproval.records.findIndex((record) =>
+    record.source_key === "video-slot-02-terms" &&
+    record.sha256 === "17cac99f171edfb773f85eaaa6719e09ffe1295abec5b062554c72958747c0bb",
+  );
+  assert.notEqual(policyDefectiveIndex, -1);
+  Object.assign(policyDefectiveApproval.records[policyDefectiveIndex], {
     approver: "Jarrad Henry",
     date: "2026-07-16",
     decision: "approved",
@@ -349,12 +364,50 @@ test("approval transitions require evidence and keep decided checksums immutable
   );
 
   const rewrittenPolicyOwner = structuredClone(ledger);
-  rewrittenPolicyOwner.records[0].approver = "Jarrad Henry";
+  rewrittenPolicyOwner.records[policyDefectiveIndex].approver = "Jarrad Henry";
   assert.ok(
     validateHeldVideoApprovalLedger(rewrittenPolicyOwner, held).some((error) =>
       error.includes("must retain the BMH Institute content QA decision"),
     ),
   );
+});
+
+test("direct approval overrides are checksum-bound and permit only the authorized terminal transitions", async () => {
+  const [ledger, reviewAssets] = await Promise.all([ledgerPromise, currentReviewAssets()]);
+  assert.equal(DIRECT_APPROVAL_OVERRIDE_CUTS.size, 7);
+
+  const current = structuredClone(ledger);
+  current.updated_at = "2026-07-17";
+  for (const record of current.records) {
+    const key = `${record.source_key}:${record.sha256}`;
+    if (!DIRECT_APPROVAL_OVERRIDE_CUTS.has(key)) continue;
+    Object.assign(record, {
+      decision: "changes_requested",
+      approver: "BMH Institute content QA",
+      date: ["video-slot-17-compensation", "video-slot-18-operator", "video-slot-19-career"].includes(record.source_key)
+        ? "2026-07-16"
+        : "2026-07-17",
+      notes: "Replacement required before the direct checksum override.",
+    });
+  }
+  assert.deepEqual(validateHeldVideoApprovalTransition(current, ledger, reviewAssets), []);
+
+  const unauthorized = structuredClone(current);
+  unauthorized.updated_at = "2026-07-21";
+  const remainingPolicyCut = unauthorized.records.find((record) =>
+    record.source_key === "video-slot-02-terms" &&
+    record.sha256 === "17cac99f171edfb773f85eaaa6719e09ffe1295abec5b062554c72958747c0bb",
+  );
+  assert.ok(remainingPolicyCut);
+  Object.assign(remainingPolicyCut, {
+    decision: "approved",
+    approver: "Jarrad Henry",
+    date: "2026-07-21",
+    notes: "Not authorized by the exact override set.",
+  });
+  assert.ok(validateHeldVideoApprovalTransition(current, unauthorized, reviewAssets).some(
+    (error) => error.includes("policy-defective source cut"),
+  ));
 });
 
 test("the builder-facing history check rejects a rewritten decided record", async () => {
@@ -390,17 +443,17 @@ test("a corrected replacement can enter review as a new checksum-keyed pending c
   const replacementSha256 = "a".repeat(64);
   const replacementPath =
     "course-assets/review-lesson17/LESSON-17-policy-safe-v2.mp4";
-  const replacementHeld = held.map((asset) =>
-    asset.source_key === "video-slot-17-compensation"
-      ? {
-          ...asset,
-          checksum_sha256: replacementSha256,
-          local_path: replacementPath,
-        }
-      : asset,
-  );
+  const replacementHeld = [
+    ...held,
+    {
+      source_key: "video-slot-17-compensation",
+      checksum_sha256: replacementSha256,
+      local_path: replacementPath,
+      approval_status: "hold",
+    },
+  ];
   const next = structuredClone(ledger);
-  next.updated_at = "2026-07-17";
+  next.updated_at = "2026-07-21";
   next.records.push({
     source_key: "video-slot-17-compensation",
     sha256: replacementSha256,
@@ -439,11 +492,11 @@ test("a corrected version can replace a previously pending cut without rewriting
     : asset,
   );
   const next = structuredClone(current);
-  next.updated_at = "2026-07-17";
+  next.updated_at = "2026-07-21";
   Object.assign(next.records.find((record) => record.decision === "pending"), {
     decision: "changes_requested",
     approver: "Jarrad Henry",
-    date: "2026-07-17",
+    date: "2026-07-21",
     notes: "Exact checksum-locked cut needs a correction.",
   });
   next.records.push({
@@ -523,7 +576,7 @@ test("the immutable ledger supports a final manifest with all 29 videos approved
   assert.deepEqual(validateHeldVideoManifestApprovalState(finalLedger, finalReviewAssets), []);
 });
 
-test("the real manifest generator selects the latest non-defective checksum record and preserves defective history", async () => {
+test("the real manifest generator keeps a direct approved checksum ahead of a pending replacement", async () => {
   const ledger = structuredClone(await ledgerPromise);
   const replacement = {
     source_key: "video-slot-17-compensation",
@@ -539,29 +592,21 @@ test("the real manifest generator selects the latest non-defective checksum reco
 
   assert.deepEqual(
     currentReviewedVideoRecord("video-slot-17-compensation", ledger),
-    replacement,
+    ledger.records.find((record) =>
+      record.source_key === "video-slot-17-compensation" &&
+      record.sha256 === "cecad85478bb1a8ba5bfed7404dc045440c567ed0eaaa90b11b644e124b27846"
+    ),
   );
   assert.ok(
     ledger.records.some((record) =>
       record.sha256 === "cecad85478bb1a8ba5bfed7404dc045440c567ed0eaaa90b11b644e124b27846"
-      && record.decision === "changes_requested"),
+      && record.decision === "approved"),
   );
 
   replacement.decision = "approved";
   replacement.approver = "Jarrad Henry";
   replacement.date = "2026-07-17";
   replacement.notes = "Watched and approved the exact checksum-locked replacement.";
-  assert.equal(
-    currentReviewedVideoRecord("video-slot-17-compensation", ledger).decision,
-    "approved",
-  );
-
-  ledger.records.push({
-    ...replacement,
-    sha256: "b".repeat(64),
-    candidate_local_path: "course-assets/review-lesson17/LESSON-17-policy-safe-v3.mp4",
-    title: "Compensation Engine second approved replacement",
-  });
   assert.throws(
     () => currentReviewedVideoRecord("video-slot-17-compensation", ledger),
     /multiple approved corrected cuts.*explicit supersession/,

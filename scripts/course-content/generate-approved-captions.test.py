@@ -35,6 +35,36 @@ class CaptionGeneratorTests(unittest.TestCase):
 
         self.assertEqual(MODULE.repair_cue_boundaries(cues)[1]["text"], "Group standard")
 
+    def test_normalize_cues_merges_short_fast_segments_and_preserves_prose(self):
+        cues = [
+            {"start": 0.0, "end": 0.25, "text": "This segment is much too fast"},
+            {"start": 0.25, "end": 4.0, "text": "but the combined timing can support it."},
+        ]
+
+        normalized = MODULE.normalize_cues_for_readability(cues)
+
+        self.assertEqual(
+            " ".join(cue["text"] for cue in normalized),
+            "This segment is much too fast but the combined timing can support it.",
+        )
+        for cue in normalized:
+            duration = cue["end"] - cue["start"]
+            self.assertGreaterEqual(duration + 0.000001, MODULE.MIN_CUE_DURATION_SECONDS)
+            self.assertLessEqual(
+                len(cue["text"]) / duration,
+                MODULE.MAX_CHARACTERS_PER_SECOND + 0.000001,
+            )
+
+    def test_normalize_cues_reflows_long_text_to_two_line_sized_chunks(self):
+        text = " ".join(["seller-conversation"] * 12)
+        normalized = MODULE.normalize_cues_for_readability([
+            {"start": 1.0, "end": 14.0, "text": text},
+        ])
+
+        self.assertGreater(len(normalized), 1)
+        self.assertTrue(all(len(cue["text"]) <= MODULE.MAX_CUE_CHARACTERS for cue in normalized))
+        self.assertEqual(" ".join(cue["text"] for cue in normalized), text)
+
 
 if __name__ == "__main__":
     unittest.main()

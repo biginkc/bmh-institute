@@ -25,7 +25,10 @@ import {
   spokenDeliveryText,
   validateHeldVideoScriptReviewResponse,
 } from "./build-held-video-recut-docs.mjs";
-import { validateHeldVideoApprovalLedger } from "./held-video-approval-ledger.mjs";
+import {
+  DIRECT_APPROVAL_OVERRIDE_CUTS,
+  validateHeldVideoApprovalLedger,
+} from "./held-video-approval-ledger.mjs";
 import {
   HELD_VIDEO_STUDIO_SETUP_PATH,
   validateHeldVideoStudioSetup,
@@ -183,8 +186,23 @@ export async function validateRecutPackage(pkg, manifest, policy) {
   }
 
   const heldAsset = manifest.assets.find((asset) => asset.source_key === label);
-  if (!heldAsset || heldAsset.approval_status !== "hold")
-    errors.push(`${label} must still be held in the manifest`);
+  const exactAssetKey = heldAsset
+    ? `${heldAsset.source_key}:${heldAsset.checksum_sha256}`
+    : null;
+  const isDirectApprovalOverride = exactAssetKey
+    ? DIRECT_APPROVAL_OVERRIDE_CUTS.has(exactAssetKey)
+    : false;
+  if (
+    !heldAsset
+    || (
+      heldAsset.approval_status !== "hold"
+      && !(heldAsset.approval_status === "approved" && isDirectApprovalOverride)
+    )
+  ) {
+    errors.push(
+      `${label} must remain held unless its exact checksum has a direct approval override`,
+    );
+  }
   if (heldAsset && pkg.source.held_sha256 !== heldAsset.checksum_sha256)
     errors.push(`${label} held SHA does not match the manifest`);
   if (pkg.source.review_transcript_path && pkg.source.review_vtt_path) {
@@ -524,8 +542,13 @@ export async function validateHeldVideoRecuts() {
     readFile(APPROVAL_LEDGER_PATH, "utf8").then(JSON.parse),
     readFile(LOCAL_POLICY_CANDIDATES_PATH, "utf8").then(JSON.parse),
   ]);
-  const heldAssets = manifest.assets.filter(
-    (asset) => asset.kind === "video" && asset.approval_status === "hold",
+  const reviewedAssets = manifest.assets.filter(
+    (asset) => asset.kind === "video" && (
+      asset.approval_status === "hold"
+      || DIRECT_APPROVAL_OVERRIDE_CUTS.has(
+        `${asset.source_key}:${asset.checksum_sha256}`,
+      )
+    ),
   );
   const supplementalAssets = localPolicyCandidates.candidates.map((candidate) => ({
     source_key: candidate.source_key,
@@ -534,7 +557,7 @@ export async function validateHeldVideoRecuts() {
     approval_status: "hold",
   }));
   const errors = validateHeldVideoApprovalLedger(ledger, [
-    ...heldAssets,
+    ...reviewedAssets,
     ...supplementalAssets,
   ]);
   for (const pkg of packages)

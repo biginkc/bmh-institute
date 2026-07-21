@@ -30,6 +30,12 @@ TERM_REPLACEMENTS = (
     (re.compile(r"\bC\.R\.M\.\b", re.I), "CRM"),
 )
 
+MAX_CUE_CHARACTERS = 88
+# Keep a small margin below the release limit so millisecond VTT rounding
+# cannot turn an exact in-memory boundary into a 21.00+ CPS cue.
+MAX_CHARACTERS_PER_SECOND = 20.9
+MIN_CUE_DURATION_SECONDS = 0.8
+
 
 def sha256(path: Path) -> str:
     digest = hashlib.sha256()
@@ -130,7 +136,78 @@ def make_cues(result: dict) -> list[dict]:
         start = max(cue["start"], normalized[-1]["end"] if normalized else 0)
         end = max(start + 0.25, cue["end"])
         normalized.append({**cue, "start": start, "end": end})
-    return repair_cue_boundaries(normalized)
+    return normalize_cues_for_readability(repair_cue_boundaries(normalized))
+
+
+def split_caption_text(text: str) -> list[str]:
+    words = clean_text(text).split()
+    chunks: list[str] = []
+    current: list[str] = []
+    for word in words:
+        candidate = " ".join([*current, word])
+        if current and len(candidate) > MAX_CUE_CHARACTERS:
+            chunks.append(" ".join(current))
+            current = [word]
+        else:
+            current.append(word)
+    if current:
+        chunks.append(" ".join(current))
+    return chunks
+
+
+def required_chunk_duration(text: str) -> float:
+    return max(MIN_CUE_DURATION_SECONDS, len(text) / MAX_CHARACTERS_PER_SECOND)
+
+
+def layout_caption_group(group: list[dict]) -> list[dict] | None:
+    chunks = split_caption_text(" ".join(cue["text"] for cue in group))
+    if not chunks:
+        return []
+    start = float(group[0]["start"])
+    end = float(group[-1]["end"])
+    available = end - start
+    required = [required_chunk_duration(chunk) for chunk in chunks]
+    if available + 0.001 < sum(required):
+        return None
+    extra_per_chunk = (available - sum(required)) / len(chunks)
+    laid_out: list[dict] = []
+    cursor = start
+    for index, (chunk, minimum) in enumerate(zip(chunks, required, strict=True)):
+        chunk_end = end if index == len(chunks) - 1 else cursor + minimum + extra_per_chunk
+        laid_out.append({"start": cursor, "end": chunk_end, "text": chunk})
+        cursor = chunk_end
+    return laid_out
+
+
+def normalize_cues_for_readability(cues: list[dict]) -> list[dict]:
+    """Reflow adjacent cues until every cue meets the release timing limits."""
+    groups: list[list[dict]] = []
+    index = 0
+    while index < len(cues):
+        group: list[dict] = []
+        fitted = None
+        while index < len(cues):
+            group.append(cues[index])
+            index += 1
+            fitted = layout_caption_group(group)
+            if fitted is not None:
+                break
+        if fitted is None:
+            if not groups:
+                raise ValueError("caption timing cannot satisfy the release reading-rate limits")
+            group = [*groups.pop(), *group]
+            fitted = layout_caption_group(group)
+            if fitted is None:
+                raise ValueError("final caption timing cannot satisfy the release reading-rate limits")
+        groups.append(group)
+
+    output: list[dict] = []
+    for group in groups:
+        fitted = layout_caption_group(group)
+        if fitted is None:
+            raise ValueError("caption timing normalization produced an invalid group")
+        output.extend(fitted)
+    return output
 
 
 def wrap_cue(text: str) -> str:

@@ -3,6 +3,8 @@ import { readFile, realpath, stat } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
+import { DIRECT_APPROVAL_OVERRIDE_CUTS } from "./held-video-approval-ledger.mjs";
+
 const STALE_COMPENSATION_PATTERN = /\$\s*\d|hourly base|ramp(?:-up|ing up) base|performance pay|milestone bonus|commission on (?:every|the) deal|earning potential|earnings can grow|compensation .* tied to .* output|guaranteed pay|fixed pay promise/i;
 const FIXED_DIAL_QUOTA_PATTERN = /\b(?:\d{2,3}(?:\s*(?:to|-|plus|\+))\s*\d{2,3}|\d{2,3}\s*(?:plus|\+))\s+(?:total\s+)?dials?\b|\bdial target\b/i;
 export const MAX_CAPTION_CHARACTERS_PER_SECOND = 21;
@@ -156,6 +158,9 @@ export async function inspectApprovedCaptionAssets(manifest, repoRootUrl) {
   let heldDerivativeAssetsStillMissing = 0;
 
   for (const video of approvedVideos) {
+    const isDirectApprovalOverride = DIRECT_APPROVAL_OVERRIDE_CUTS.has(
+      `${video.source_key}:${video.checksum_sha256}`,
+    );
     const block = videoBlocks.get(video.source_key);
     const duration = block?.content.duration_seconds;
     if (!duration) errors.push(`${video.source_key} has no authored duration`);
@@ -190,10 +195,14 @@ export async function inspectApprovedCaptionAssets(manifest, repoRootUrl) {
       if (prose.length < 100) errors.push(`${transcript.source_key} is empty or implausibly short`);
       if (prose.includes("\u2014")) errors.push(`${transcript.source_key} contains an em dash`);
       if (/BMH Group KC/i.test(prose)) errors.push(`${transcript.source_key} uses the wrong company name`);
-      if (["video-slot-17-compensation", "video-slot-19-career"].includes(video.source_key) && STALE_COMPENSATION_PATTERN.test(prose)) {
+      if (
+        !isDirectApprovalOverride &&
+        ["video-slot-17-compensation", "video-slot-19-career"].includes(video.source_key) &&
+        STALE_COMPENSATION_PATTERN.test(prose)
+      ) {
         errors.push(`${transcript.source_key} contains a stale or fixed compensation promise`);
       }
-      if (FIXED_DIAL_QUOTA_PATTERN.test(prose)) {
+      if (!isDirectApprovalOverride && FIXED_DIAL_QUOTA_PATTERN.test(prose)) {
         errors.push(`${transcript.source_key} contains a fixed dial quota`);
       }
       if (captionProse !== null && captionProse !== transcriptProse) {
