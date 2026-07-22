@@ -2,6 +2,10 @@
   "schema_version": 1,
   "import_id": "bmh-employee-training-canary-v1",
   "status": "draft",
+  "quiz_bank_ref": {
+    "path": "content/quiz-generation/question-bank.v1.json",
+    "sha256": "e2aee2460b8c6f6c8fb29a79bdf2beb7937a039606e3822f10c05a2e8245c5b7"
+  },
   "qa_role_group": {
     "source_key": "qa-role-group-bmh-content-canary",
     "name": "BMH Content QA - Tech Stack Canary",
@@ -158,32 +162,32 @@
                           "back": "Sandra"
                         },
                         {
-                          "front": "After a conversation with a homeowner, you log your notes in Sandra.",
-                          "back": "True"
+                          "front": "According to BMH Group standards, what is the status of a lead or interaction if it is not recorded in Sandra?",
+                          "back": "It does not exist."
                         },
                         {
-                          "front": "Where do the daily tasks, follow-ups, and process checklists your manager assigns live?",
+                          "front": "Where are team members required to log notes after a conversation with a homeowner?",
                           "back": "Sandra"
                         },
                         {
-                          "front": "Which homeowner and property categories does the team pull from PropStream? (Select all that apply.)",
-                          "back": "Homeowners behind on taxes; Owners going through probate; Properties with code violations or absentee owners"
+                          "front": "What action must be taken in Sandra when a deal moves from one stage to the next?",
+                          "back": "The deal stage must be updated."
                         },
                         {
-                          "front": "What is the functional difference between PropStream and Sandra in the lead pipeline?",
-                          "back": "PropStream finds the leads; Sandra manages the relationships"
+                          "front": "Where are daily tasks and follow-ups assigned by managers located?",
+                          "back": "Sandra"
                         },
                         {
-                          "front": "When driving for dollars, which property conditions are you looking to flag in DealMachine? (Select all that apply.)",
-                          "back": "Properties that appear vacant; Properties that look neglected or distressed"
+                          "front": "How often should a BMH Group team member check their task list in Sandra?",
+                          "back": "Every day."
                         },
                         {
-                          "front": "What is the primary role of Deal Sniper in the BMH workflow?",
-                          "back": "Generating offers quickly and reliably"
+                          "front": "What is the primary purpose of using PropStream within the tech stack?",
+                          "back": "To find motivated sellers by accessing property data."
                         },
                         {
-                          "front": "Which platform do all outbound phone calls to homeowners go through?",
-                          "back": "DialPad"
+                          "front": "Beyond lead generation, what property-specific information is PropStream used to evaluate?",
+                          "back": "Property details, estimated value, and the owner's likely situation."
                         }
                       ]
                     }
@@ -201,412 +205,758 @@
                 "quiz": {
                   "source_key": "quiz-slot-03",
                   "title": "Tech Stack and Systems Checkpoint",
-                  "description": "Each attempt draws 10 questions from the curated lesson pool.",
+                  "description": "Each attempt includes every question in the lesson pool in randomized order.",
                   "approval_status": "approved",
                   "passing_score": 80,
+                  "questions_per_attempt": null,
                   "randomize_questions": true,
                   "randomize_answers": true,
-                  "questions_per_attempt": 10,
                   "max_attempts": null,
                   "retake_cooldown_hours": 0,
                   "show_correct_answers_after": "after_pass",
                   "questions": [
                     {
-                      "source_key": "question-slot-03-01",
+                      "source_key": "question-r-slot-module-03-001",
                       "question_text": "Which application serves as the central CRM and \"single source of truth\" for the BMH Group?",
                       "question_type": "single_choice",
-                      "explanation": "Sandra is the CRM at the center of everything - every lead, conversation, and deal lives inside it.",
+                      "explanation": "Sandra",
                       "points": 1,
                       "sort_order": 1,
                       "options": [
                         {
-                          "source_key": "option-slot-03-01-1",
-                          "option_text": "Sandra",
-                          "is_correct": true,
+                          "source_key": "question-r-slot-module-03-001-opt-1",
+                          "option_text": "DealMachine",
+                          "is_correct": false,
                           "sort_order": 1
                         },
                         {
-                          "source_key": "option-slot-03-01-2",
+                          "source_key": "question-r-slot-module-03-001-opt-2",
+                          "option_text": "Sandra",
+                          "is_correct": true,
+                          "sort_order": 2
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-001-opt-3",
+                          "option_text": "Deal Sniper",
+                          "is_correct": false,
+                          "sort_order": 3
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-001-opt-4",
+                          "option_text": "PropStream",
+                          "is_correct": false,
+                          "sort_order": 4
+                        }
+                      ]
+                    },
+                    {
+                      "source_key": "question-r-slot-module-03-002",
+                      "question_text": "According to BMH Group standards, what is the status of a lead or interaction if it is not recorded in Sandra?",
+                      "question_type": "single_choice",
+                      "explanation": "It does not exist.",
+                      "points": 1,
+                      "sort_order": 2,
+                      "options": [
+                        {
+                          "source_key": "question-r-slot-module-03-002-opt-1",
+                          "option_text": "It remains unassigned.",
+                          "is_correct": false,
+                          "sort_order": 1
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-002-opt-2",
+                          "option_text": "It does not exist.",
+                          "is_correct": true,
+                          "sort_order": 2
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-002-opt-3",
+                          "option_text": "It is visible in Slack.",
+                          "is_correct": false,
+                          "sort_order": 3
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-002-opt-4",
+                          "option_text": "It counts as completed.",
+                          "is_correct": false,
+                          "sort_order": 4
+                        }
+                      ]
+                    },
+                    {
+                      "source_key": "question-r-slot-module-03-003",
+                      "question_text": "Where are team members required to log notes after a conversation with a homeowner?",
+                      "question_type": "single_choice",
+                      "explanation": "Sandra",
+                      "points": 1,
+                      "sort_order": 3,
+                      "options": [
+                        {
+                          "source_key": "question-r-slot-module-03-003-opt-1",
+                          "option_text": "Slack",
+                          "is_correct": false,
+                          "sort_order": 1
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-003-opt-2",
+                          "option_text": "HubStaff",
+                          "is_correct": false,
+                          "sort_order": 2
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-003-opt-3",
+                          "option_text": "Sandra",
+                          "is_correct": true,
+                          "sort_order": 3
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-003-opt-4",
+                          "option_text": "DialPad",
+                          "is_correct": false,
+                          "sort_order": 4
+                        }
+                      ]
+                    },
+                    {
+                      "source_key": "question-r-slot-module-03-004",
+                      "question_text": "What action must be taken in Sandra when a deal moves from one stage to the next?",
+                      "question_type": "single_choice",
+                      "explanation": "The deal stage must be updated.",
+                      "points": 1,
+                      "sort_order": 4,
+                      "options": [
+                        {
+                          "source_key": "question-r-slot-module-03-004-opt-1",
+                          "option_text": "The property list must be pulled again.",
+                          "is_correct": false,
+                          "sort_order": 1
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-004-opt-2",
+                          "option_text": "The offer must be practiced in Closer Lab.",
+                          "is_correct": false,
+                          "sort_order": 2
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-004-opt-3",
+                          "option_text": "The call recording must be moved to Slack.",
+                          "is_correct": false,
+                          "sort_order": 3
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-004-opt-4",
+                          "option_text": "The deal stage must be updated.",
+                          "is_correct": true,
+                          "sort_order": 4
+                        }
+                      ]
+                    },
+                    {
+                      "source_key": "question-r-slot-module-03-005",
+                      "question_text": "Where are daily tasks and follow-ups assigned by managers located?",
+                      "question_type": "single_choice",
+                      "explanation": "Sandra",
+                      "points": 1,
+                      "sort_order": 5,
+                      "options": [
+                        {
+                          "source_key": "question-r-slot-module-03-005-opt-1",
+                          "option_text": "HubStaff",
+                          "is_correct": false,
+                          "sort_order": 1
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-005-opt-2",
+                          "option_text": "BMH Institute",
+                          "is_correct": false,
+                          "sort_order": 2
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-005-opt-3",
+                          "option_text": "Slack",
+                          "is_correct": false,
+                          "sort_order": 3
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-005-opt-4",
+                          "option_text": "Sandra",
+                          "is_correct": true,
+                          "sort_order": 4
+                        }
+                      ]
+                    },
+                    {
+                      "source_key": "question-r-slot-module-03-006",
+                      "question_text": "How often should a BMH Group team member check their task list in Sandra?",
+                      "question_type": "single_choice",
+                      "explanation": "Every day.",
+                      "points": 1,
+                      "sort_order": 6,
+                      "options": [
+                        {
+                          "source_key": "question-r-slot-module-03-006-opt-1",
+                          "option_text": "After each call.",
+                          "is_correct": false,
+                          "sort_order": 1
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-006-opt-2",
+                          "option_text": "Only when blocked.",
+                          "is_correct": false,
+                          "sort_order": 2
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-006-opt-3",
+                          "option_text": "Every day.",
+                          "is_correct": true,
+                          "sort_order": 3
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-006-opt-4",
+                          "option_text": "Once per module.",
+                          "is_correct": false,
+                          "sort_order": 4
+                        }
+                      ]
+                    },
+                    {
+                      "source_key": "question-r-slot-module-03-007",
+                      "question_text": "What is the primary purpose of using PropStream within the tech stack?",
+                      "question_type": "single_choice",
+                      "explanation": "To find motivated sellers by accessing property data.",
+                      "points": 1,
+                      "sort_order": 7,
+                      "options": [
+                        {
+                          "source_key": "question-r-slot-module-03-007-opt-1",
+                          "option_text": "To practice objections before speaking with homeowners.",
+                          "is_correct": false,
+                          "sort_order": 1
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-007-opt-2",
+                          "option_text": "To find motivated sellers by accessing property data.",
+                          "is_correct": true,
+                          "sort_order": 2
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-007-opt-3",
+                          "option_text": "To track hours and activity for accurate payment.",
+                          "is_correct": false,
+                          "sort_order": 3
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-007-opt-4",
+                          "option_text": "To coach calls through recorded conversations.",
+                          "is_correct": false,
+                          "sort_order": 4
+                        }
+                      ]
+                    },
+                    {
+                      "source_key": "question-r-slot-module-03-010",
+                      "question_text": "Beyond lead generation, what property-specific information is PropStream used to evaluate?",
+                      "question_type": "single_choice",
+                      "explanation": "Property details, estimated value, and the owner's likely situation.",
+                      "points": 1,
+                      "sort_order": 8,
+                      "options": [
+                        {
+                          "source_key": "question-r-slot-module-03-010-opt-1",
+                          "option_text": "Filler words, pacing, and clarity during roleplay sessions.",
+                          "is_correct": false,
+                          "sort_order": 1
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-010-opt-2",
+                          "option_text": "Call volume, call duration, and recorded coaching sessions.",
+                          "is_correct": false,
+                          "sort_order": 2
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-010-opt-3",
+                          "option_text": "Quiz results, module progress, and assigned onboarding order.",
+                          "is_correct": false,
+                          "sort_order": 3
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-010-opt-4",
+                          "option_text": "Property details, estimated value, and the owner's likely situation.",
+                          "is_correct": true,
+                          "sort_order": 4
+                        }
+                      ]
+                    },
+                    {
+                      "source_key": "question-r-slot-module-03-011",
+                      "question_text": "What is the functional difference between Sandra and PropStream in the lead pipeline?",
+                      "question_type": "single_choice",
+                      "explanation": "PropStream is used to find leads, while Sandra is used to manage the resulting relationships.",
+                      "points": 1,
+                      "sort_order": 9,
+                      "options": [
+                        {
+                          "source_key": "question-r-slot-module-03-011-opt-1",
+                          "option_text": "PropStream is used to place calls, while Sandra is used to analyze speech during roleplay.",
+                          "is_correct": false,
+                          "sort_order": 1
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-011-opt-2",
+                          "option_text": "Sandra sources motivated-seller data, while PropStream stores homeowner notes and deal stages.",
+                          "is_correct": false,
+                          "sort_order": 2
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-011-opt-3",
+                          "option_text": "Sandra is used to track hours, while PropStream is used to store onboarding modules.",
+                          "is_correct": false,
+                          "sort_order": 3
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-011-opt-4",
+                          "option_text": "PropStream is used to find leads, while Sandra is used to manage the resulting relationships.",
+                          "is_correct": true,
+                          "sort_order": 4
+                        }
+                      ]
+                    },
+                    {
+                      "source_key": "question-r-slot-module-03-012",
+                      "question_text": "Which tool is used for the \"driving for dollars\" strategy of sourcing leads?",
+                      "question_type": "single_choice",
+                      "explanation": "DealMachine",
+                      "points": 1,
+                      "sort_order": 10,
+                      "options": [
+                        {
+                          "source_key": "question-r-slot-module-03-012-opt-1",
+                          "option_text": "Deal Sniper",
+                          "is_correct": false,
+                          "sort_order": 1
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-012-opt-2",
                           "option_text": "PropStream",
                           "is_correct": false,
                           "sort_order": 2
                         },
                         {
-                          "source_key": "option-slot-03-01-3",
+                          "source_key": "question-r-slot-module-03-012-opt-3",
+                          "option_text": "Sandra",
+                          "is_correct": false,
+                          "sort_order": 3
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-012-opt-4",
                           "option_text": "DealMachine",
-                          "is_correct": false,
-                          "sort_order": 3
-                        },
-                        {
-                          "source_key": "option-slot-03-01-4",
-                          "option_text": "HubStaff",
-                          "is_correct": false,
+                          "is_correct": true,
                           "sort_order": 4
                         }
                       ]
                     },
                     {
-                      "source_key": "question-slot-03-02",
-                      "question_text": "After a conversation with a homeowner, you log your notes in Sandra.",
-                      "question_type": "true_false",
-                      "explanation": "Every homeowner conversation gets its notes logged in Sandra.",
-                      "points": 1,
-                      "sort_order": 2,
-                      "options": [
-                        {
-                          "source_key": "option-slot-03-02-1",
-                          "option_text": "True",
-                          "is_correct": true,
-                          "sort_order": 1
-                        },
-                        {
-                          "source_key": "option-slot-03-02-2",
-                          "option_text": "False",
-                          "is_correct": false,
-                          "sort_order": 2
-                        }
-                      ]
-                    },
-                    {
-                      "source_key": "question-slot-03-03",
-                      "question_text": "Where do the daily tasks, follow-ups, and process checklists your manager assigns live?",
+                      "source_key": "question-r-slot-module-03-013",
+                      "question_text": "What visual property conditions are flagged using DealMachine in neighborhoods?",
                       "question_type": "single_choice",
-                      "explanation": "Tasks live in Sandra too - assignments, follow-ups, and process checklists are all found there.",
-                      "points": 1,
-                      "sort_order": 3,
-                      "options": [
-                        {
-                          "source_key": "option-slot-03-03-1",
-                          "option_text": "Sandra",
-                          "is_correct": true,
-                          "sort_order": 1
-                        },
-                        {
-                          "source_key": "option-slot-03-03-2",
-                          "option_text": "Slack",
-                          "is_correct": false,
-                          "sort_order": 2
-                        },
-                        {
-                          "source_key": "option-slot-03-03-3",
-                          "option_text": "BMH Institute",
-                          "is_correct": false,
-                          "sort_order": 3
-                        },
-                        {
-                          "source_key": "option-slot-03-03-4",
-                          "option_text": "HubStaff",
-                          "is_correct": false,
-                          "sort_order": 4
-                        }
-                      ]
-                    },
-                    {
-                      "source_key": "question-slot-03-04",
-                      "question_text": "Which homeowner and property categories does the team pull from PropStream? (Select all that apply.)",
-                      "question_type": "multi_select",
-                      "explanation": "PropStream lists include owners behind on taxes, probate situations, code violations, and absentee owners.",
-                      "points": 1,
-                      "sort_order": 4,
-                      "options": [
-                        {
-                          "source_key": "option-slot-03-04-1",
-                          "option_text": "Homeowners behind on taxes",
-                          "is_correct": true,
-                          "sort_order": 1
-                        },
-                        {
-                          "source_key": "option-slot-03-04-2",
-                          "option_text": "Owners going through probate",
-                          "is_correct": true,
-                          "sort_order": 2
-                        },
-                        {
-                          "source_key": "option-slot-03-04-3",
-                          "option_text": "Properties with code violations or absentee owners",
-                          "is_correct": true,
-                          "sort_order": 3
-                        },
-                        {
-                          "source_key": "option-slot-03-04-4",
-                          "option_text": "Buyers pre-approved for a mortgage",
-                          "is_correct": false,
-                          "sort_order": 4
-                        },
-                        {
-                          "source_key": "option-slot-03-04-5",
-                          "option_text": "Homeowners who just listed with a top agent",
-                          "is_correct": false,
-                          "sort_order": 5
-                        }
-                      ]
-                    },
-                    {
-                      "source_key": "question-slot-03-05",
-                      "question_text": "What is the functional difference between PropStream and Sandra in the lead pipeline?",
-                      "question_type": "single_choice",
-                      "explanation": "PropStream is where leads are found in the first place; Sandra is where the resulting relationships are managed.",
-                      "points": 1,
-                      "sort_order": 5,
-                      "options": [
-                        {
-                          "source_key": "option-slot-03-05-1",
-                          "option_text": "PropStream finds the leads; Sandra manages the relationships",
-                          "is_correct": true,
-                          "sort_order": 1
-                        },
-                        {
-                          "source_key": "option-slot-03-05-2",
-                          "option_text": "PropStream records calls; Sandra sends the offers",
-                          "is_correct": false,
-                          "sort_order": 2
-                        },
-                        {
-                          "source_key": "option-slot-03-05-3",
-                          "option_text": "PropStream tracks hours; Sandra is the phone system",
-                          "is_correct": false,
-                          "sort_order": 3
-                        },
-                        {
-                          "source_key": "option-slot-03-05-4",
-                          "option_text": "PropStream is the training platform; Sandra stores SOPs",
-                          "is_correct": false,
-                          "sort_order": 4
-                        }
-                      ]
-                    },
-                    {
-                      "source_key": "question-slot-03-06",
-                      "question_text": "When driving for dollars, which property conditions are you looking to flag in DealMachine? (Select all that apply.)",
-                      "question_type": "multi_select",
-                      "explanation": "DealMachine is used to flag properties that look vacant, neglected, or distressed.",
-                      "points": 1,
-                      "sort_order": 6,
-                      "options": [
-                        {
-                          "source_key": "option-slot-03-06-1",
-                          "option_text": "Properties that appear vacant",
-                          "is_correct": true,
-                          "sort_order": 1
-                        },
-                        {
-                          "source_key": "option-slot-03-06-2",
-                          "option_text": "Properties that look neglected or distressed",
-                          "is_correct": true,
-                          "sort_order": 2
-                        },
-                        {
-                          "source_key": "option-slot-03-06-3",
-                          "option_text": "Freshly renovated homes with staged photos",
-                          "is_correct": false,
-                          "sort_order": 3
-                        },
-                        {
-                          "source_key": "option-slot-03-06-4",
-                          "option_text": "New construction in pristine condition",
-                          "is_correct": false,
-                          "sort_order": 4
-                        }
-                      ]
-                    },
-                    {
-                      "source_key": "question-slot-03-07",
-                      "question_text": "What is the primary role of Deal Sniper in the BMH workflow?",
-                      "question_type": "single_choice",
-                      "explanation": "Deal Sniper is used to generate offers quickly and reliably so the team can make confident offers without wasting time.",
-                      "points": 1,
-                      "sort_order": 7,
-                      "options": [
-                        {
-                          "source_key": "option-slot-03-07-1",
-                          "option_text": "Generating offers quickly and reliably",
-                          "is_correct": true,
-                          "sort_order": 1
-                        },
-                        {
-                          "source_key": "option-slot-03-07-2",
-                          "option_text": "Recording and coaching sales calls",
-                          "is_correct": false,
-                          "sort_order": 2
-                        },
-                        {
-                          "source_key": "option-slot-03-07-3",
-                          "option_text": "Tracking hours and activity for payroll",
-                          "is_correct": false,
-                          "sort_order": 3
-                        },
-                        {
-                          "source_key": "option-slot-03-07-4",
-                          "option_text": "Managing leads and deal stages",
-                          "is_correct": false,
-                          "sort_order": 4
-                        }
-                      ]
-                    },
-                    {
-                      "source_key": "question-slot-03-08",
-                      "question_text": "Which platform do all outbound phone calls to homeowners go through?",
-                      "question_type": "single_choice",
-                      "explanation": "DialPad is the phone system - all outbound homeowner calls go through it and are recorded and logged.",
-                      "points": 1,
-                      "sort_order": 8,
-                      "options": [
-                        {
-                          "source_key": "option-slot-03-08-1",
-                          "option_text": "DialPad",
-                          "is_correct": true,
-                          "sort_order": 1
-                        },
-                        {
-                          "source_key": "option-slot-03-08-2",
-                          "option_text": "Slack",
-                          "is_correct": false,
-                          "sort_order": 2
-                        },
-                        {
-                          "source_key": "option-slot-03-08-3",
-                          "option_text": "Closer Lab",
-                          "is_correct": false,
-                          "sort_order": 3
-                        },
-                        {
-                          "source_key": "option-slot-03-08-4",
-                          "option_text": "Sandra",
-                          "is_correct": false,
-                          "sort_order": 4
-                        }
-                      ]
-                    },
-                    {
-                      "source_key": "question-slot-03-09",
-                      "question_text": "Which call metrics can managers see through DialPad? (Select all that apply.)",
-                      "question_type": "multi_select",
-                      "explanation": "DialPad shows managers how many calls you made and how long you were on the phone.",
-                      "points": 1,
-                      "sort_order": 9,
-                      "options": [
-                        {
-                          "source_key": "option-slot-03-09-1",
-                          "option_text": "How many calls you made",
-                          "is_correct": true,
-                          "sort_order": 1
-                        },
-                        {
-                          "source_key": "option-slot-03-09-2",
-                          "option_text": "How long you were on the phone",
-                          "is_correct": true,
-                          "sort_order": 2
-                        },
-                        {
-                          "source_key": "option-slot-03-09-3",
-                          "option_text": "Your HubStaff clock-in times",
-                          "is_correct": false,
-                          "sort_order": 3
-                        },
-                        {
-                          "source_key": "option-slot-03-09-4",
-                          "option_text": "Your quiz scores from the BMH Institute",
-                          "is_correct": false,
-                          "sort_order": 4
-                        }
-                      ]
-                    },
-                    {
-                      "source_key": "question-slot-03-10",
-                      "question_text": "What is Closer Lab?",
-                      "question_type": "single_choice",
-                      "explanation": "Closer Lab is the AI speech coaching tool used specifically for training and role play before you talk to real homeowners.",
-                      "points": 1,
-                      "sort_order": 10,
-                      "options": [
-                        {
-                          "source_key": "option-slot-03-10-1",
-                          "option_text": "An AI speech coaching tool used for training and role play",
-                          "is_correct": true,
-                          "sort_order": 1
-                        },
-                        {
-                          "source_key": "option-slot-03-10-2",
-                          "option_text": "The phone system used for homeowner calls",
-                          "is_correct": false,
-                          "sort_order": 2
-                        },
-                        {
-                          "source_key": "option-slot-03-10-3",
-                          "option_text": "The training platform where onboarding modules live",
-                          "is_correct": false,
-                          "sort_order": 3
-                        },
-                        {
-                          "source_key": "option-slot-03-10-4",
-                          "option_text": "A tool for pulling lists of distressed owners",
-                          "is_correct": false,
-                          "sort_order": 4
-                        }
-                      ]
-                    },
-                    {
-                      "source_key": "question-slot-03-11",
-                      "question_text": "What do you complete in Closer Lab before ever getting on the phone with a real homeowner? (Select all that apply.)",
-                      "question_type": "multi_select",
-                      "explanation": "Before live calls, you work through objection role plays and call simulations with the AI roleplay agent.",
+                      "explanation": "Properties that appear vacant, neglected, or distressed.",
                       "points": 1,
                       "sort_order": 11,
                       "options": [
                         {
-                          "source_key": "option-slot-03-11-1",
-                          "option_text": "Objection role plays",
-                          "is_correct": true,
+                          "source_key": "question-r-slot-module-03-013-opt-1",
+                          "option_text": "Properties with high call volume, long calls, or low clarity.",
+                          "is_correct": false,
                           "sort_order": 1
                         },
                         {
-                          "source_key": "option-slot-03-11-2",
-                          "option_text": "Call simulations with the AI agent",
-                          "is_correct": true,
+                          "source_key": "question-r-slot-module-03-013-opt-2",
+                          "option_text": "Properties with active follow-ups, updated stages, or recorded notes.",
+                          "is_correct": false,
                           "sort_order": 2
                         },
                         {
-                          "source_key": "option-slot-03-11-3",
-                          "option_text": "Ten live calls to real distressed sellers",
+                          "source_key": "question-r-slot-module-03-013-opt-3",
+                          "option_text": "Properties behind on taxes, in probate, or owned by absentees.",
                           "is_correct": false,
                           "sort_order": 3
                         },
                         {
-                          "source_key": "option-slot-03-11-4",
-                          "option_text": "A property valuation certification exam",
+                          "source_key": "question-r-slot-module-03-013-opt-4",
+                          "option_text": "Properties that appear vacant, neglected, or distressed.",
+                          "is_correct": true,
+                          "sort_order": 4
+                        }
+                      ]
+                    },
+                    {
+                      "source_key": "question-r-slot-module-03-014",
+                      "question_text": "In DealMachine, what can a user do immediately after tagging a distressed property?",
+                      "question_type": "single_choice",
+                      "explanation": "Pull owner information and add them to a marketing campaign.",
+                      "points": 1,
+                      "sort_order": 12,
+                      "options": [
+                        {
+                          "source_key": "question-r-slot-module-03-014-opt-1",
+                          "option_text": "Update the deal stage and assign a daily follow-up.",
+                          "is_correct": false,
+                          "sort_order": 1
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-014-opt-2",
+                          "option_text": "Record a homeowner call and review its duration.",
+                          "is_correct": false,
+                          "sort_order": 2
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-014-opt-3",
+                          "option_text": "Pull owner information and add them to a marketing campaign.",
+                          "is_correct": true,
+                          "sort_order": 3
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-014-opt-4",
+                          "option_text": "Complete a roleplay and bookmark the related SOP.",
                           "is_correct": false,
                           "sort_order": 4
                         }
                       ]
                     },
                     {
-                      "source_key": "question-slot-03-12",
-                      "question_text": "Which tool tracks your hours and activity so you're paid accurately for the time you put in?",
+                      "source_key": "question-r-slot-module-03-015",
+                      "question_text": "What is the primary role of Deal Sniper in the BMH Group's workflow?",
                       "question_type": "single_choice",
-                      "explanation": "HubStaff is the time-tracking tool - it tracks hours and activity so pay is accurate.",
+                      "explanation": "To generate offers quickly and reliably.",
                       "points": 1,
-                      "sort_order": 12,
+                      "sort_order": 13,
                       "options": [
                         {
-                          "source_key": "option-slot-03-12-1",
-                          "option_text": "HubStaff",
+                          "source_key": "question-r-slot-module-03-015-opt-1",
+                          "option_text": "To record homeowner calls for coaching and review.",
+                          "is_correct": false,
+                          "sort_order": 1
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-015-opt-2",
+                          "option_text": "To store onboarding modules and measure quiz progress.",
+                          "is_correct": false,
+                          "sort_order": 2
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-015-opt-3",
+                          "option_text": "To track work hours and activity for accurate payment.",
+                          "is_correct": false,
+                          "sort_order": 3
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-015-opt-4",
+                          "option_text": "To generate offers quickly and reliably.",
+                          "is_correct": true,
+                          "sort_order": 4
+                        }
+                      ]
+                    },
+                    {
+                      "source_key": "question-r-slot-module-03-016",
+                      "question_text": "Why is speed emphasized when using Deal Sniper to send offers?",
+                      "question_type": "single_choice",
+                      "explanation": "Sending a higher volume of offers increases the probability of transacting a deal.",
+                      "points": 1,
+                      "sort_order": 14,
+                      "options": [
+                        {
+                          "source_key": "question-r-slot-module-03-016-opt-1",
+                          "option_text": "Sending offers through the system replaces follow-up with the homeowner.",
+                          "is_correct": false,
+                          "sort_order": 1
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-016-opt-2",
+                          "option_text": "Sending more offers eliminates the need to evaluate which properties are good deals.",
+                          "is_correct": false,
+                          "sort_order": 2
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-016-opt-3",
+                          "option_text": "Sending offers quickly automatically moves each deal to the next stage in Sandra.",
+                          "is_correct": false,
+                          "sort_order": 3
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-016-opt-4",
+                          "option_text": "Sending a higher volume of offers increases the probability of transacting a deal.",
+                          "is_correct": true,
+                          "sort_order": 4
+                        }
+                      ]
+                    },
+                    {
+                      "source_key": "question-r-slot-module-03-017",
+                      "question_text": "How does Deal Sniper assist in property evaluation?",
+                      "question_type": "single_choice",
+                      "explanation": "It helps filter and evaluate properties so the team can move fast on good deals.",
+                      "points": 1,
+                      "sort_order": 15,
+                      "options": [
+                        {
+                          "source_key": "question-r-slot-module-03-017-opt-1",
+                          "option_text": "It tracks quiz results and module progress so trainees complete lessons in order.",
+                          "is_correct": false,
+                          "sort_order": 1
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-017-opt-2",
+                          "option_text": "It helps filter and evaluate properties so the team can move fast on good deals.",
+                          "is_correct": true,
+                          "sort_order": 2
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-017-opt-3",
+                          "option_text": "It supplies distressed-homeowner lists so the team can begin property research.",
+                          "is_correct": false,
+                          "sort_order": 3
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-017-opt-4",
+                          "option_text": "It records call volume and duration so managers can review dialing activity.",
+                          "is_correct": false,
+                          "sort_order": 4
+                        }
+                      ]
+                    },
+                    {
+                      "source_key": "question-r-slot-module-03-018",
+                      "question_text": "Which platform is used for all outbound phone calls to homeowners?",
+                      "question_type": "single_choice",
+                      "explanation": "DialPad",
+                      "points": 1,
+                      "sort_order": 16,
+                      "options": [
+                        {
+                          "source_key": "question-r-slot-module-03-018-opt-1",
+                          "option_text": "DialPad",
                           "is_correct": true,
                           "sort_order": 1
                         },
                         {
-                          "source_key": "option-slot-03-12-2",
+                          "source_key": "question-r-slot-module-03-018-opt-2",
+                          "option_text": "Closer Lab",
+                          "is_correct": false,
+                          "sort_order": 2
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-018-opt-3",
+                          "option_text": "HubStaff",
+                          "is_correct": false,
+                          "sort_order": 3
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-018-opt-4",
+                          "option_text": "Slack",
+                          "is_correct": false,
+                          "sort_order": 4
+                        }
+                      ]
+                    },
+                    {
+                      "source_key": "question-r-slot-module-03-019",
+                      "question_text": "What is the primary reason BMH Group records homeowner calls in DialPad?",
+                      "question_type": "single_choice",
+                      "explanation": "To provide coaching and help team members improve their skills.",
+                      "points": 1,
+                      "sort_order": 17,
+                      "options": [
+                        {
+                          "source_key": "question-r-slot-module-03-019-opt-1",
+                          "option_text": "To replace the relationship notes team members are required to enter in Sandra.",
+                          "is_correct": false,
+                          "sort_order": 1
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-019-opt-2",
+                          "option_text": "To provide coaching and help team members improve their skills.",
+                          "is_correct": true,
+                          "sort_order": 2
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-019-opt-3",
+                          "option_text": "To calculate the hours and activity used to determine accurate payment.",
+                          "is_correct": false,
+                          "sort_order": 3
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-019-opt-4",
+                          "option_text": "To identify code violations and absentee owners for property research.",
+                          "is_correct": false,
+                          "sort_order": 4
+                        }
+                      ]
+                    },
+                    {
+                      "source_key": "question-r-slot-module-03-020",
+                      "question_text": "What call metrics are visible to managers through the DialPad system?",
+                      "question_type": "single_choice",
+                      "explanation": "Call volume and call duration.",
+                      "points": 1,
+                      "sort_order": 18,
+                      "options": [
+                        {
+                          "source_key": "question-r-slot-module-03-020-opt-1",
+                          "option_text": "Property value and owner situation.",
+                          "is_correct": false,
+                          "sort_order": 1
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-020-opt-2",
+                          "option_text": "Call volume and call duration.",
+                          "is_correct": true,
+                          "sort_order": 2
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-020-opt-3",
+                          "option_text": "Quiz results and progress.",
+                          "is_correct": false,
+                          "sort_order": 3
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-020-opt-4",
+                          "option_text": "Filler words and pacing.",
+                          "is_correct": false,
+                          "sort_order": 4
+                        }
+                      ]
+                    },
+                    {
+                      "source_key": "question-r-slot-module-03-021",
+                      "question_text": "What is Closer Lab?",
+                      "question_type": "single_choice",
+                      "explanation": "An AI-driven speech coaching tool used for training and roleplay.",
+                      "points": 1,
+                      "sort_order": 19,
+                      "options": [
+                        {
+                          "source_key": "question-r-slot-module-03-021-opt-1",
+                          "option_text": "A property data tool used to find and evaluate motivated-seller leads.",
+                          "is_correct": false,
+                          "sort_order": 1
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-021-opt-2",
+                          "option_text": "A time and activity tracking tool used to support accurate payment.",
+                          "is_correct": false,
+                          "sort_order": 2
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-021-opt-3",
+                          "option_text": "A central CRM used to manage lead relationships and deal stages.",
+                          "is_correct": false,
+                          "sort_order": 3
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-021-opt-4",
+                          "option_text": "An AI-driven speech coaching tool used for training and roleplay.",
+                          "is_correct": true,
+                          "sort_order": 4
+                        }
+                      ]
+                    },
+                    {
+                      "source_key": "question-r-slot-module-03-023",
+                      "question_text": "What specific exercise should be completed in Closer Lab before speaking with a real homeowner?",
+                      "question_type": "single_choice",
+                      "explanation": "Objection role plays and call simulations.",
+                      "points": 1,
+                      "sort_order": 20,
+                      "options": [
+                        {
+                          "source_key": "question-r-slot-module-03-023-opt-1",
+                          "option_text": "Property research and estimated-value reviews.",
+                          "is_correct": false,
+                          "sort_order": 1
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-023-opt-2",
+                          "option_text": "Objection role plays and call simulations.",
+                          "is_correct": true,
+                          "sort_order": 2
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-023-opt-3",
+                          "option_text": "SOP bookmarking and onboarding-module quizzes.",
+                          "is_correct": false,
+                          "sort_order": 3
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-023-opt-4",
+                          "option_text": "Call-volume checks and HubStaff activity reviews.",
+                          "is_correct": false,
+                          "sort_order": 4
+                        }
+                      ]
+                    },
+                    {
+                      "source_key": "question-r-slot-module-03-025",
+                      "question_text": "If a task is blocked or a team member needs help, where should they flag it to their manager?",
+                      "question_type": "single_choice",
+                      "explanation": "Slack",
+                      "points": 1,
+                      "sort_order": 21,
+                      "options": [
+                        {
+                          "source_key": "question-r-slot-module-03-025-opt-1",
+                          "option_text": "Slack",
+                          "is_correct": true,
+                          "sort_order": 1
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-025-opt-2",
+                          "option_text": "Sandra",
+                          "is_correct": false,
+                          "sort_order": 2
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-025-opt-3",
+                          "option_text": "DialPad",
+                          "is_correct": false,
+                          "sort_order": 3
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-025-opt-4",
+                          "option_text": "HubStaff",
+                          "is_correct": false,
+                          "sort_order": 4
+                        }
+                      ]
+                    },
+                    {
+                      "source_key": "question-r-slot-module-03-026",
+                      "question_text": "Which software is used at BMH Group for time tracking and activity monitoring?",
+                      "question_type": "single_choice",
+                      "explanation": "HubStaff",
+                      "points": 1,
+                      "sort_order": 22,
+                      "options": [
+                        {
+                          "source_key": "question-r-slot-module-03-026-opt-1",
+                          "option_text": "Closer Lab",
+                          "is_correct": false,
+                          "sort_order": 1
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-026-opt-2",
                           "option_text": "DialPad",
                           "is_correct": false,
                           "sort_order": 2
                         },
                         {
-                          "source_key": "option-slot-03-12-3",
-                          "option_text": "Sandra",
-                          "is_correct": false,
+                          "source_key": "question-r-slot-module-03-026-opt-3",
+                          "option_text": "HubStaff",
+                          "is_correct": true,
                           "sort_order": 3
                         },
                         {
-                          "source_key": "option-slot-03-12-4",
+                          "source_key": "question-r-slot-module-03-026-opt-4",
                           "option_text": "Slack",
                           "is_correct": false,
                           "sort_order": 4
@@ -614,33 +964,101 @@
                       ]
                     },
                     {
-                      "source_key": "question-slot-03-13",
-                      "question_text": "What is the primary internal communication tool at BMH Group?",
+                      "source_key": "question-r-slot-module-03-027",
+                      "question_text": "What is the mandatory clock-in/clock-out protocol for HubStaff?",
                       "question_type": "single_choice",
-                      "explanation": "Slack is how the team communicates - if you need to reach your manager, you do it in Slack.",
+                      "explanation": "Clock in when starting work and clock out when stopping.",
                       "points": 1,
-                      "sort_order": 13,
+                      "sort_order": 23,
                       "options": [
                         {
-                          "source_key": "option-slot-03-13-1",
-                          "option_text": "Slack",
-                          "is_correct": true,
+                          "source_key": "question-r-slot-module-03-027-opt-1",
+                          "option_text": "Clock in after checking Sandra and clock out after the final homeowner call.",
+                          "is_correct": false,
                           "sort_order": 1
                         },
                         {
-                          "source_key": "option-slot-03-13-2",
+                          "source_key": "question-r-slot-module-03-027-opt-2",
+                          "option_text": "Clock in when a manager posts in Slack and clock out after reading updates.",
+                          "is_correct": false,
+                          "sort_order": 2
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-027-opt-3",
+                          "option_text": "Clock in when starting work and clock out when stopping.",
+                          "is_correct": true,
+                          "sort_order": 3
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-027-opt-4",
+                          "option_text": "Clock in for Closer Lab practice and clock out before completing daily tasks.",
+                          "is_correct": false,
+                          "sort_order": 4
+                        }
+                      ]
+                    },
+                    {
+                      "source_key": "question-r-slot-module-03-028",
+                      "question_text": "What is the primary internal communication tool used by BMH Group?",
+                      "question_type": "single_choice",
+                      "explanation": "Slack",
+                      "points": 1,
+                      "sort_order": 24,
+                      "options": [
+                        {
+                          "source_key": "question-r-slot-module-03-028-opt-1",
+                          "option_text": "Google Docs",
+                          "is_correct": false,
+                          "sort_order": 1
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-028-opt-2",
                           "option_text": "Email",
                           "is_correct": false,
                           "sort_order": 2
                         },
                         {
-                          "source_key": "option-slot-03-13-3",
+                          "source_key": "question-r-slot-module-03-028-opt-3",
+                          "option_text": "Sandra",
+                          "is_correct": false,
+                          "sort_order": 3
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-028-opt-4",
+                          "option_text": "Slack",
+                          "is_correct": true,
+                          "sort_order": 4
+                        }
+                      ]
+                    },
+                    {
+                      "source_key": "question-r-slot-module-03-029",
+                      "question_text": "Which standard communication method does BMH Group explicitly avoid for internal operations?",
+                      "question_type": "single_choice",
+                      "explanation": "Email",
+                      "points": 1,
+                      "sort_order": 25,
+                      "options": [
+                        {
+                          "source_key": "question-r-slot-module-03-029-opt-1",
+                          "option_text": "Slack",
+                          "is_correct": false,
+                          "sort_order": 1
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-029-opt-2",
+                          "option_text": "Email",
+                          "is_correct": true,
+                          "sort_order": 2
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-029-opt-3",
                           "option_text": "DialPad",
                           "is_correct": false,
                           "sort_order": 3
                         },
                         {
-                          "source_key": "option-slot-03-13-4",
+                          "source_key": "question-r-slot-module-03-029-opt-4",
                           "option_text": "Sandra",
                           "is_correct": false,
                           "sort_order": 4
@@ -648,171 +1066,647 @@
                       ]
                     },
                     {
-                      "source_key": "question-slot-03-14",
-                      "question_text": "What is expected of you on Slack? (Select all that apply.)",
-                      "question_type": "multi_select",
-                      "explanation": "Keep notifications on and stay active - Slack is where wins, updates, and team announcements are shared.",
-                      "points": 1,
-                      "sort_order": 14,
-                      "options": [
-                        {
-                          "source_key": "option-slot-03-14-1",
-                          "option_text": "Keep notifications on",
-                          "is_correct": true,
-                          "sort_order": 1
-                        },
-                        {
-                          "source_key": "option-slot-03-14-2",
-                          "option_text": "Stay active so you see wins, updates, and team announcements",
-                          "is_correct": true,
-                          "sort_order": 2
-                        },
-                        {
-                          "source_key": "option-slot-03-14-3",
-                          "option_text": "Check it once a week during downtime",
-                          "is_correct": false,
-                          "sort_order": 3
-                        },
-                        {
-                          "source_key": "option-slot-03-14-4",
-                          "option_text": "Route homeowner calls through it",
-                          "is_correct": false,
-                          "sort_order": 4
-                        }
-                      ]
-                    },
-                    {
-                      "source_key": "question-slot-03-15",
-                      "question_text": "How should you work through the modules in the BMH Institute?",
+                      "source_key": "question-r-slot-module-03-030",
+                      "question_text": "What are the two requirements for staying connected to the business via Slack?",
                       "question_type": "single_choice",
-                      "explanation": "Work through the modules in order because each lesson builds on the one before it.",
+                      "explanation": "Keeping notifications on and staying active to see wins and updates.",
                       "points": 1,
-                      "sort_order": 15,
+                      "sort_order": 26,
                       "options": [
                         {
-                          "source_key": "option-slot-03-15-1",
-                          "option_text": "In order, because each lesson builds on the one before it",
-                          "is_correct": true,
+                          "source_key": "question-r-slot-module-03-030-opt-1",
+                          "option_text": "Completing modules in order and tracking quiz results.",
+                          "is_correct": false,
                           "sort_order": 1
                         },
                         {
-                          "source_key": "option-slot-03-15-2",
-                          "option_text": "In any order - the modules are independent",
+                          "source_key": "question-r-slot-module-03-030-opt-2",
+                          "option_text": "Clocking in for work and clocking out when stopping.",
                           "is_correct": false,
                           "sort_order": 2
                         },
                         {
-                          "source_key": "option-slot-03-15-3",
-                          "option_text": "Only the modules your manager specifically flags",
-                          "is_correct": false,
+                          "source_key": "question-r-slot-module-03-030-opt-3",
+                          "option_text": "Keeping notifications on and staying active to see wins and updates.",
+                          "is_correct": true,
                           "sort_order": 3
                         },
                         {
-                          "source_key": "option-slot-03-15-4",
-                          "option_text": "Start from the final quiz and work backwards",
+                          "source_key": "question-r-slot-module-03-030-opt-4",
+                          "option_text": "Logging every lead and updating each deal stage.",
                           "is_correct": false,
                           "sort_order": 4
                         }
                       ]
                     },
                     {
-                      "source_key": "question-slot-03-16",
-                      "question_text": "You can't find a specific SOP. Who do you ask?",
+                      "source_key": "question-r-slot-module-03-031",
+                      "question_text": "What is the BMH Institute?",
                       "question_type": "single_choice",
-                      "explanation": "The lesson says to ask your team lead how to locate specific SOPs.",
+                      "explanation": "The company's training platform containing all onboarding modules.",
                       "points": 1,
-                      "sort_order": 16,
+                      "sort_order": 27,
                       "options": [
                         {
-                          "source_key": "option-slot-03-16-1",
-                          "option_text": "Your team lead",
-                          "is_correct": true,
+                          "source_key": "question-r-slot-module-03-031-opt-1",
+                          "option_text": "The property research platform containing motivated-seller data.",
+                          "is_correct": false,
                           "sort_order": 1
                         },
                         {
-                          "source_key": "option-slot-03-16-2",
-                          "option_text": "PropStream customer support",
+                          "source_key": "question-r-slot-module-03-031-opt-2",
+                          "option_text": "The speech coaching platform containing objection roleplays and call simulations.",
                           "is_correct": false,
                           "sort_order": 2
                         },
                         {
-                          "source_key": "option-slot-03-16-3",
-                          "option_text": "The AI agent in Closer Lab",
-                          "is_correct": false,
+                          "source_key": "question-r-slot-module-03-031-opt-3",
+                          "option_text": "The company's training platform containing all onboarding modules.",
+                          "is_correct": true,
                           "sort_order": 3
                         },
                         {
-                          "source_key": "option-slot-03-16-4",
-                          "option_text": "Nobody - keep searching until you find it",
+                          "source_key": "question-r-slot-module-03-031-opt-4",
+                          "option_text": "The central CRM containing all homeowner notes and deal stages.",
                           "is_correct": false,
                           "sort_order": 4
                         }
                       ]
                     },
                     {
-                      "source_key": "question-slot-03-17",
-                      "question_text": "What does the BMH Institute track for your manager? (Select all that apply.)",
-                      "question_type": "multi_select",
-                      "explanation": "The Institute tracks your module progress, with quizzes to make sure the material is sticking.",
-                      "points": 1,
-                      "sort_order": 17,
-                      "options": [
-                        {
-                          "source_key": "option-slot-03-17-1",
-                          "option_text": "Quiz results",
-                          "is_correct": true,
-                          "sort_order": 1
-                        },
-                        {
-                          "source_key": "option-slot-03-17-2",
-                          "option_text": "Module progress",
-                          "is_correct": true,
-                          "sort_order": 2
-                        },
-                        {
-                          "source_key": "option-slot-03-17-3",
-                          "option_text": "Your daily call volume",
-                          "is_correct": false,
-                          "sort_order": 3
-                        },
-                        {
-                          "source_key": "option-slot-03-17-4",
-                          "option_text": "Your clocked hours",
-                          "is_correct": false,
-                          "sort_order": 4
-                        }
-                      ]
-                    },
-                    {
-                      "source_key": "question-slot-03-18",
-                      "question_text": "You just got a new lead. What's the first thing you do with it?",
+                      "source_key": "question-r-slot-module-03-032",
+                      "question_text": "How should a trainee approach the modules within the BMH Institute?",
                       "question_type": "single_choice",
-                      "explanation": "New leads go into Sandra first - that's how it stays the single source of truth.",
+                      "explanation": "Work through the modules in order, as each builds on the previous one.",
                       "points": 1,
-                      "sort_order": 18,
+                      "sort_order": 28,
                       "options": [
                         {
-                          "source_key": "option-slot-03-18-1",
-                          "option_text": "Enter it into Sandra",
-                          "is_correct": true,
+                          "source_key": "question-r-slot-module-03-032-opt-1",
+                          "option_text": "Work through the modules based on the order of daily tasks in Sandra.",
+                          "is_correct": false,
                           "sort_order": 1
                         },
                         {
-                          "source_key": "option-slot-03-18-2",
-                          "option_text": "Send an offer through Deal Sniper right away",
-                          "is_correct": false,
+                          "source_key": "question-r-slot-module-03-032-opt-2",
+                          "option_text": "Work through the modules in order, as each builds on the previous one.",
+                          "is_correct": true,
                           "sort_order": 2
                         },
                         {
-                          "source_key": "option-slot-03-18-3",
-                          "option_text": "Post it in Slack for the team to see",
+                          "source_key": "question-r-slot-module-03-032-opt-3",
+                          "option_text": "Complete the quizzes first, then return to the onboarding modules.",
                           "is_correct": false,
                           "sort_order": 3
                         },
                         {
-                          "source_key": "option-slot-03-18-4",
-                          "option_text": "Add it to a Google Doc tracker",
+                          "source_key": "question-r-slot-module-03-032-opt-4",
+                          "option_text": "Use only modules tied to a current homeowner conversation or blocked task.",
                           "is_correct": false,
+                          "sort_order": 4
+                        }
+                      ]
+                    },
+                    {
+                      "source_key": "question-r-slot-module-03-033",
+                      "question_text": "Cloze: All company SOPs, scripts, and templates are stored in _____. ",
+                      "question_type": "single_choice",
+                      "explanation": "Google Docs (or Google Drive)",
+                      "points": 1,
+                      "sort_order": 29,
+                      "options": [
+                        {
+                          "source_key": "question-r-slot-module-03-033-opt-1",
+                          "option_text": "Sandra notes (or task lists)",
+                          "is_correct": false,
+                          "sort_order": 1
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-033-opt-2",
+                          "option_text": "Google Docs (or Google Drive)",
+                          "is_correct": true,
+                          "sort_order": 2
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-033-opt-3",
+                          "option_text": "BMH Institute modules (or quizzes)",
+                          "is_correct": false,
+                          "sort_order": 3
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-033-opt-4",
+                          "option_text": "Slack updates (or announcements)",
+                          "is_correct": false,
+                          "sort_order": 4
+                        }
+                      ]
+                    },
+                    {
+                      "source_key": "question-r-slot-module-03-034",
+                      "question_text": "What is the recommended action for team members regarding relevant Google Drive documents?",
+                      "question_type": "single_choice",
+                      "explanation": "Bookmark the documents most relevant to their daily work.",
+                      "points": 1,
+                      "sort_order": 30,
+                      "options": [
+                        {
+                          "source_key": "question-r-slot-module-03-034-opt-1",
+                          "option_text": "Use the documents to replace assigned modules in the BMH Institute.",
+                          "is_correct": false,
+                          "sort_order": 1
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-034-opt-2",
+                          "option_text": "Share every document as a team announcement in Slack.",
+                          "is_correct": false,
+                          "sort_order": 2
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-034-opt-3",
+                          "option_text": "Enter the documents as homeowner notes in Sandra.",
+                          "is_correct": false,
+                          "sort_order": 3
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-034-opt-4",
+                          "option_text": "Bookmark the documents most relevant to their daily work.",
+                          "is_correct": true,
+                          "sort_order": 4
+                        }
+                      ]
+                    },
+                    {
+                      "source_key": "question-r-slot-module-03-036",
+                      "question_text": "What is the consequence of skipping steps or working around the established tech stack?",
+                      "question_type": "single_choice",
+                      "explanation": "Deals will fall through the cracks and get lost.",
+                      "points": 1,
+                      "sort_order": 31,
+                      "options": [
+                        {
+                          "source_key": "question-r-slot-module-03-036-opt-1",
+                          "option_text": "Quiz results will stop showing training module progress.",
+                          "is_correct": false,
+                          "sort_order": 1
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-036-opt-2",
+                          "option_text": "Call recordings will stop showing volume and duration.",
+                          "is_correct": false,
+                          "sort_order": 2
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-036-opt-3",
+                          "option_text": "Property research will stop showing value and owner details.",
+                          "is_correct": false,
+                          "sort_order": 3
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-036-opt-4",
+                          "option_text": "Deals will fall through the cracks and get lost.",
+                          "is_correct": true,
+                          "sort_order": 4
+                        }
+                      ]
+                    },
+                    {
+                      "source_key": "question-r-slot-module-03-037",
+                      "question_text": "Term: Driving for Dollars",
+                      "question_type": "single_choice",
+                      "explanation": "Definition: Neighborhood sourcing by flagging vacant or neglected properties using DealMachine.",
+                      "points": 1,
+                      "sort_order": 32,
+                      "options": [
+                        {
+                          "source_key": "question-r-slot-module-03-037-opt-1",
+                          "option_text": "Definition: Neighborhood sourcing by flagging vacant or neglected properties using DealMachine.",
+                          "is_correct": true,
+                          "sort_order": 1
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-037-opt-2",
+                          "option_text": "Definition: Property research using data on probate, taxes, code violations, or absentee owners.",
+                          "is_correct": false,
+                          "sort_order": 2
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-037-opt-3",
+                          "option_text": "Definition: Homeowner call recording and activity review using DialPad.",
+                          "is_correct": false,
+                          "sort_order": 3
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-037-opt-4",
+                          "option_text": "Definition: Rapid property filtering and offer generation using Deal Sniper.",
+                          "is_correct": false,
+                          "sort_order": 4
+                        }
+                      ]
+                    },
+                    {
+                      "source_key": "question-r-slot-module-03-038",
+                      "question_text": "Why does BMH Group track call volume and duration in DialPad?",
+                      "question_type": "single_choice",
+                      "explanation": "To monitor activity and ensure team members are making their dials.",
+                      "points": 1,
+                      "sort_order": 33,
+                      "options": [
+                        {
+                          "source_key": "question-r-slot-module-03-038-opt-1",
+                          "option_text": "To calculate hours worked and determine accurate payment through HubStaff.",
+                          "is_correct": false,
+                          "sort_order": 1
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-038-opt-2",
+                          "option_text": "To measure filler words, pacing, and clarity during Closer Lab roleplay.",
+                          "is_correct": false,
+                          "sort_order": 2
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-038-opt-3",
+                          "option_text": "To estimate property values and identify each owner's likely situation.",
+                          "is_correct": false,
+                          "sort_order": 3
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-038-opt-4",
+                          "option_text": "To monitor activity and ensure team members are making their dials.",
+                          "is_correct": true,
+                          "sort_order": 4
+                        }
+                      ]
+                    },
+                    {
+                      "source_key": "question-r-slot-module-03-039",
+                      "question_text": "What is the benefit of practicing in Closer Lab before live calls?",
+                      "question_type": "single_choice",
+                      "explanation": "It allows for practice without the pressure of a live call with a homeowner.",
+                      "points": 1,
+                      "sort_order": 34,
+                      "options": [
+                        {
+                          "source_key": "question-r-slot-module-03-039-opt-1",
+                          "option_text": "It replaces the requirement to record live homeowner activity in Sandra.",
+                          "is_correct": false,
+                          "sort_order": 1
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-039-opt-2",
+                          "option_text": "It tracks work hours and activity instead of requiring HubStaff.",
+                          "is_correct": false,
+                          "sort_order": 2
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-039-opt-3",
+                          "option_text": "It allows for practice without the pressure of a live call with a homeowner.",
+                          "is_correct": true,
+                          "sort_order": 3
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-039-opt-4",
+                          "option_text": "It generates property offers without filtering or evaluating good deals.",
+                          "is_correct": false,
+                          "sort_order": 4
+                        }
+                      ]
+                    },
+                    {
+                      "source_key": "question-r-slot-module-03-040",
+                      "question_text": "What kind of lists does a manager provide to a team member that originate from PropStream?",
+                      "question_type": "single_choice",
+                      "explanation": "Lists of distressed homeowners.",
+                      "points": 1,
+                      "sort_order": 35,
+                      "options": [
+                        {
+                          "source_key": "question-r-slot-module-03-040-opt-1",
+                          "option_text": "Lists of recorded homeowner calls.",
+                          "is_correct": false,
+                          "sort_order": 1
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-040-opt-2",
+                          "option_text": "Lists of distressed homeowners.",
+                          "is_correct": true,
+                          "sort_order": 2
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-040-opt-3",
+                          "option_text": "Lists of assigned training modules.",
+                          "is_correct": false,
+                          "sort_order": 3
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-040-opt-4",
+                          "option_text": "Lists of completed follow-ups.",
+                          "is_correct": false,
+                          "sort_order": 4
+                        }
+                      ]
+                    },
+                    {
+                      "source_key": "question-r-slot-module-03-041",
+                      "question_text": "How does Deal Sniper help team members handle motivated homeowners effectively?",
+                      "question_type": "single_choice",
+                      "explanation": "It enables them to make confident offers quickly without wasting time.",
+                      "points": 1,
+                      "sort_order": 36,
+                      "options": [
+                        {
+                          "source_key": "question-r-slot-module-03-041-opt-1",
+                          "option_text": "It records their homeowner conversations so managers can coach their call skills.",
+                          "is_correct": false,
+                          "sort_order": 1
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-041-opt-2",
+                          "option_text": "It gives them distressed-homeowner lists before the team evaluates any properties.",
+                          "is_correct": false,
+                          "sort_order": 2
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-041-opt-3",
+                          "option_text": "It enables them to make confident offers quickly without wasting time.",
+                          "is_correct": true,
+                          "sort_order": 3
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-041-opt-4",
+                          "option_text": "It assigns their daily tasks and stores the relationship history for each lead.",
+                          "is_correct": false,
+                          "sort_order": 4
+                        }
+                      ]
+                    },
+                    {
+                      "source_key": "question-r-slot-module-03-042",
+                      "question_text": "What is tracked within the BMH Institute to ensure trainees understand the material?",
+                      "question_type": "single_choice",
+                      "explanation": "Quiz results and module progress.",
+                      "points": 1,
+                      "sort_order": 37,
+                      "options": [
+                        {
+                          "source_key": "question-r-slot-module-03-042-opt-1",
+                          "option_text": "Call volume and call duration.",
+                          "is_correct": false,
+                          "sort_order": 1
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-042-opt-2",
+                          "option_text": "Hours worked and activity level.",
+                          "is_correct": false,
+                          "sort_order": 2
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-042-opt-3",
+                          "option_text": "Property value and owner situation.",
+                          "is_correct": false,
+                          "sort_order": 3
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-042-opt-4",
+                          "option_text": "Quiz results and module progress.",
+                          "is_correct": true,
+                          "sort_order": 4
+                        }
+                      ]
+                    },
+                    {
+                      "source_key": "question-r-slot-module-03-043",
+                      "question_text": "Term: HubStaff",
+                      "question_type": "single_choice",
+                      "explanation": "Definition: A tool that tracks hours and activity to ensure accurate payment for work put in.",
+                      "points": 1,
+                      "sort_order": 38,
+                      "options": [
+                        {
+                          "source_key": "question-r-slot-module-03-043-opt-1",
+                          "option_text": "Definition: A call platform that records volume and duration for manager review.",
+                          "is_correct": false,
+                          "sort_order": 1
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-043-opt-2",
+                          "option_text": "Definition: A CRM that stores lead relationships, notes, tasks, and deal stages.",
+                          "is_correct": false,
+                          "sort_order": 2
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-043-opt-3",
+                          "option_text": "Definition: A tool that tracks hours and activity to ensure accurate payment for work put in.",
+                          "is_correct": true,
+                          "sort_order": 3
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-043-opt-4",
+                          "option_text": "Definition: A training platform that stores onboarding modules, quiz results, and progress.",
+                          "is_correct": false,
+                          "sort_order": 4
+                        }
+                      ]
+                    },
+                    {
+                      "source_key": "question-r-slot-module-03-044",
+                      "question_text": "Where are company wins, updates, and team announcements shared?",
+                      "question_type": "single_choice",
+                      "explanation": "Slack",
+                      "points": 1,
+                      "sort_order": 39,
+                      "options": [
+                        {
+                          "source_key": "question-r-slot-module-03-044-opt-1",
+                          "option_text": "DialPad",
+                          "is_correct": false,
+                          "sort_order": 1
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-044-opt-2",
+                          "option_text": "Sandra",
+                          "is_correct": false,
+                          "sort_order": 2
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-044-opt-3",
+                          "option_text": "Google Docs",
+                          "is_correct": false,
+                          "sort_order": 3
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-044-opt-4",
+                          "option_text": "Slack",
+                          "is_correct": true,
+                          "sort_order": 4
+                        }
+                      ]
+                    },
+                    {
+                      "source_key": "question-r-slot-module-03-045",
+                      "question_text": "What is the final step in the DealMachine process after tagging a property?",
+                      "question_type": "single_choice",
+                      "explanation": "Dropping the lead directly into a marketing campaign.",
+                      "points": 1,
+                      "sort_order": 40,
+                      "options": [
+                        {
+                          "source_key": "question-r-slot-module-03-045-opt-1",
+                          "option_text": "Completing an objection roleplay in Closer Lab.",
+                          "is_correct": false,
+                          "sort_order": 1
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-045-opt-2",
+                          "option_text": "Reviewing the call duration in DialPad.",
+                          "is_correct": false,
+                          "sort_order": 2
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-045-opt-3",
+                          "option_text": "Updating the deal stage in Sandra.",
+                          "is_correct": false,
+                          "sort_order": 3
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-045-opt-4",
+                          "option_text": "Dropping the lead directly into a marketing campaign.",
+                          "is_correct": true,
+                          "sort_order": 4
+                        }
+                      ]
+                    },
+                    {
+                      "source_key": "question-r-slot-module-03-047",
+                      "question_text": "What are the two components of the 'Standard' regarding data in Sandra?",
+                      "question_type": "single_choice",
+                      "explanation": "Log everything and if it's not logged, it doesn't exist.",
+                      "points": 1,
+                      "sort_order": 41,
+                      "options": [
+                        {
+                          "source_key": "question-r-slot-module-03-047-opt-1",
+                          "option_text": "Log everything and if it's not logged, it doesn't exist.",
+                          "is_correct": true,
+                          "sort_order": 1
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-047-opt-2",
+                          "option_text": "Record every call and use duration as the deal stage.",
+                          "is_correct": false,
+                          "sort_order": 2
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-047-opt-3",
+                          "option_text": "Pull property data and send every homeowner an offer.",
+                          "is_correct": false,
+                          "sort_order": 3
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-047-opt-4",
+                          "option_text": "Complete every module and log quiz results in Slack.",
+                          "is_correct": false,
+                          "sort_order": 4
+                        }
+                      ]
+                    },
+                    {
+                      "source_key": "question-r-slot-module-03-048",
+                      "question_text": "In the BMH tech stack, which tool is specifically used for filtering properties to find good deals fast?",
+                      "question_type": "single_choice",
+                      "explanation": "Deal Sniper",
+                      "points": 1,
+                      "sort_order": 42,
+                      "options": [
+                        {
+                          "source_key": "question-r-slot-module-03-048-opt-1",
+                          "option_text": "Deal Sniper",
+                          "is_correct": true,
+                          "sort_order": 1
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-048-opt-2",
+                          "option_text": "Sandra",
+                          "is_correct": false,
+                          "sort_order": 2
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-048-opt-3",
+                          "option_text": "PropStream",
+                          "is_correct": false,
+                          "sort_order": 3
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-048-opt-4",
+                          "option_text": "DealMachine",
+                          "is_correct": false,
+                          "sort_order": 4
+                        }
+                      ]
+                    },
+                    {
+                      "source_key": "question-r-slot-module-03-049",
+                      "question_text": "Why is organization considered essential in the real estate business according to the text?",
+                      "question_type": "single_choice",
+                      "explanation": "It ensures that nothing is dropped and deals are handled efficiently.",
+                      "points": 1,
+                      "sort_order": 43,
+                      "options": [
+                        {
+                          "source_key": "question-r-slot-module-03-049-opt-1",
+                          "option_text": "It ensures that nothing is dropped and deals are handled efficiently.",
+                          "is_correct": true,
+                          "sort_order": 1
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-049-opt-2",
+                          "option_text": "It allows property research to replace relationship management in Sandra.",
+                          "is_correct": false,
+                          "sort_order": 2
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-049-opt-3",
+                          "option_text": "It allows training modules to replace assigned daily tasks.",
+                          "is_correct": false,
+                          "sort_order": 3
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-049-opt-4",
+                          "option_text": "It allows call recordings to replace live homeowner follow-up.",
+                          "is_correct": false,
+                          "sort_order": 4
+                        }
+                      ]
+                    },
+                    {
+                      "source_key": "question-r-slot-module-03-050",
+                      "question_text": "Cloze: When you get a new lead, the first step is to enter it into _____. ",
+                      "question_type": "single_choice",
+                      "explanation": "Sandra",
+                      "points": 1,
+                      "sort_order": 44,
+                      "options": [
+                        {
+                          "source_key": "question-r-slot-module-03-050-opt-1",
+                          "option_text": "Deal Sniper",
+                          "is_correct": false,
+                          "sort_order": 1
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-050-opt-2",
+                          "option_text": "DealMachine",
+                          "is_correct": false,
+                          "sort_order": 2
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-050-opt-3",
+                          "option_text": "PropStream",
+                          "is_correct": false,
+                          "sort_order": 3
+                        },
+                        {
+                          "source_key": "question-r-slot-module-03-050-opt-4",
+                          "option_text": "Sandra",
+                          "is_correct": true,
                           "sort_order": 4
                         }
                       ]

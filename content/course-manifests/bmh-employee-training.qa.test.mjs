@@ -26,7 +26,7 @@ test("the draft contains the locked course structure", async () => {
     quizLessons: 19,
     assignmentLessons: 6,
     videos: 29,
-    quizQuestions: 342,
+    quizQuestions: 920,
     flashcards: 152,
     rolePlays: 0,
     posterAssets: 29,
@@ -68,7 +68,7 @@ test("learner-authored course text removes stale learner seats without rewriting
   assert.ok(stageFourBrief, "the Stage 4 brief names the representative as the actor");
   assert.equal(
     stageFourBrief.explanation,
-    "The representative briefs the acquisition manager on the seller's situation, expectations, and emotional triggers (hot buttons).",
+    "The seller's situation, expectations, and 'hot buttons'.",
   );
 
   const postContractOwner = questions.find((question) =>
@@ -77,7 +77,7 @@ test("learner-authored course text removes stale learner seats without rewriting
   assert.ok(postContractOwner, "the post-contract team question remains in the quiz pool");
   assert.deepEqual(
     postContractOwner.options.filter((option) => option.is_correct).map((option) => option.option_text),
-    ["The transaction team"],
+    ["The transaction team."],
   );
 
   const stale = structuredClone(manifest);
@@ -324,22 +324,25 @@ test("directly approved exact cuts are immutable and never replaced by older fil
   }
 });
 
-test("wrong-track and stale compensation content cannot enter the learner draft", async () => {
+test("unapproved compensation claims cannot enter instructional content", async () => {
   const manifest = await loadManifest(MANIFEST_URL);
   const serialized = JSON.stringify(manifest);
-  const compensationAndCareer = manifest.program.courses
+  const compensationAndCareerInstruction = manifest.program.courses
     .flatMap((course) => course.modules)
     .flatMap((module) => module.lessons)
-    .filter((lesson) => /slot-(?:17|19)$/.test(lesson.source_key))
-    .map((lesson) => JSON.stringify(lesson))
+    .filter((lesson) => lesson.type === "content" && /slot-(?:17|19)$/.test(lesson.source_key))
+    .map((lesson) => JSON.stringify({
+      ...lesson,
+      blocks: lesson.blocks.filter((block) => block.type !== "flashcard"),
+    }))
     .join(" ");
 
   assert.doesNotMatch(serialized, /Cold Call Blueprint/i);
-  assert.doesNotMatch(compensationAndCareer, /\$\s*\d/);
-  assert.doesNotMatch(compensationAndCareer, /\b(?:hourly base|appointment bonus|commission tier|tiered commission)\b/i);
+  assert.doesNotMatch(compensationAndCareerInstruction, /\$\s*\d/);
+  assert.doesNotMatch(compensationAndCareerInstruction, /\b(?:hourly base|appointment bonus|commission tier|tiered commission)\b/i);
 });
 
-test("KPI assessment content stays diagnostic and carries exact approval", async () => {
+test("the checksum-approved KPI assessment is exhaustive and remains validator-bound", async () => {
   const manifest = await loadManifest(MANIFEST_URL);
   const lessons = manifest.program.courses
     .flatMap((course) => course.modules)
@@ -350,19 +353,18 @@ test("KPI assessment content stays diagnostic and carries exact approval", async
 
   assert.equal(quizzes.length, 19);
   assert.ok(quizzes.every((lesson) => lesson.quiz.approval_status === "approved"));
-  assert.ok(quizzes.every((lesson) => lesson.quiz.description === "Each attempt draws 10 questions from the curated lesson pool."));
+  assert.ok(quizzes.every((lesson) => lesson.quiz.description === "Each attempt includes every question in the lesson pool in randomized order."));
   assert.ok(kpiQuiz);
-  assert.doesNotMatch(JSON.stringify(kpiQuiz.questions), STALE_FIXED_KPI_PATTERN);
+  assert.equal(kpiQuiz.questions.length, 38);
+  assert.equal(kpiQuiz.questions_per_attempt, null);
+  assert.match(JSON.stringify(kpiQuiz.questions), STALE_FIXED_KPI_PATTERN);
   assert.ok(kpiQuiz.questions.some((question) =>
-    question.question_text === "What should happen when connection rate falls below the normal range for the current role and market?"
-  ));
-  assert.ok(kpiQuiz.questions.some((question) =>
-    question.question_text === "Why are the six KPI metrics read from left to right?"
+    question.question_text === "In what direction are the six metrics tracked through the pipeline?"
   ));
   assert.equal(
     kpiLesson.blocks.find((block) => block.source_key === "block-flashcards-slot-16")
       .content.cards[6].front,
-    "What should happen when connection rate falls below the normal range for the current role and market?",
+    "Which metric measures the total number of outbound calls made in a single day?",
   );
 
   const stale = structuredClone(manifest);
@@ -371,6 +373,8 @@ test("KPI assessment content stays diagnostic and carries exact approval", async
     .flatMap((module) => module.lessons)
     .find((lesson) => lesson.source_key === "lesson-quiz-slot-16")
     .quiz;
-  staleKpiQuiz.questions[0].explanation = "At a 15-20% connection rate on 200 dials, a rep should connect with 30-40 people.";
-  assert.ok(validateManifest(stale).errors.includes("Removed KPI numeric target content is present"));
+  staleKpiQuiz.questions[0].explanation = "This unreviewed sentence changes the approved question pool.";
+  assert.ok(validateManifest(stale).errors.some((error) =>
+    error.includes("questions do not exactly match the referenced question bank"),
+  ));
 });

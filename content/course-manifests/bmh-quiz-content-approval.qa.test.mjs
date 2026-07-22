@@ -131,15 +131,15 @@ test("only an exact checksum-bound response can keep a quiz approved", async () 
   );
 });
 
-test("superseded default pools remain pending under the quizbank approval request", async () => {
+test("the sole active default pools exactly retain their checksum-bound approvals", async () => {
   const [manifest, ledger] = await Promise.all([
     readFile(DEFAULT_MANIFEST_PATH, "utf8").then(JSON.parse),
     readFile(LEDGER_PATH, "utf8").then(JSON.parse),
   ]);
 
   for (const quiz of manifestQuizzes(manifest)) {
-    assert.equal(quiz.approval_status, "pending_human_review");
-    assert.equal(quizApprovalStatus(ledger, quiz), "pending_human_review");
+    assert.equal(quiz.approval_status, "approved");
+    assert.equal(quizApprovalStatus(ledger, quiz), "approved");
   }
 });
 

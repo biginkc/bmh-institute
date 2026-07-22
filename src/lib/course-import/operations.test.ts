@@ -43,7 +43,7 @@ describe("buildImportPlan", () => {
       modules: 6,
       lessons: 44,
       quizzes: 19,
-      questions: 342,
+      questions: 920,
       assignments: 6,
       assets: 126,
     });

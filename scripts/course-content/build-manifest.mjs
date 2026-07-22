@@ -28,6 +28,10 @@ import { projectQuizBankQuestion, quizBankSha256, validateQuizBank } from "./qui
 const REPO_ROOT = path.resolve(fileURLToPath(new URL("../..", import.meta.url)));
 const DEFAULT_VIDEO_SOURCE_ROOT = "/Users/jarradhenry/Sites/BMH apps/BMH Institute";
 const DEFAULT_QUIZ_SOURCE_ROOT = "/Users/jarradhenry/BMH-OS/BMH Training Course/Thinkific";
+const DEFAULT_QUIZ_BANK_PATH = path.join(
+  REPO_ROOT,
+  "content/quiz-generation/question-bank.v1.json",
+);
 const OUTPUT_PATH = path.join(REPO_ROOT, "content/course-manifests/bmh-employee-training.v1.json");
 const ARTWORK_LEDGER_PATH = path.join(
   REPO_ROOT,
@@ -1409,7 +1413,7 @@ export async function buildManifest({
   quizApprovalLedgerPath = QUIZ_APPROVAL_LEDGER_PATH,
   videoSourceRoot = DEFAULT_VIDEO_SOURCE_ROOT,
   quizSourceRoot = DEFAULT_QUIZ_SOURCE_ROOT,
-  quizBankPath = null,
+  quizBankPath = DEFAULT_QUIZ_BANK_PATH,
   inspectDuration = probeVideoDuration,
 } = {}) {
   let quizBankContext = null;
@@ -1743,7 +1747,7 @@ function manifestBuilderUsage() {
 Source root precedence:
   --video-root PATH  > BMH_COURSE_VIDEO_ROOT > ${DEFAULT_VIDEO_SOURCE_ROOT}
   --quiz-root PATH   > BMH_COURSE_QUIZ_ROOT  > ${DEFAULT_QUIZ_SOURCE_ROOT}
-  --quiz-bank PATH   > QUIZ_BANK_PATH
+  --quiz-bank PATH   > QUIZ_BANK_PATH > ${DEFAULT_QUIZ_BANK_PATH}
   --out PATH         > ${OUTPUT_PATH}`;
 }
 
@@ -1776,7 +1780,9 @@ export function resolveManifestSourceRoots(argv = [], env = process.env) {
   if (typeof quizSourceRoot !== "string" || quizSourceRoot.trim().length === 0) {
     throw new Error("The configured quiz source root must be nonempty.");
   }
-  const quizBankPath = options.get("quiz-bank") ?? env.QUIZ_BANK_PATH;
+  const quizBankPath = options.get("quiz-bank")
+    ?? env.QUIZ_BANK_PATH
+    ?? DEFAULT_QUIZ_BANK_PATH;
   const outputPath = options.get("out");
   if (quizBankPath !== undefined && (typeof quizBankPath !== "string" || quizBankPath.trim().length === 0)) {
     throw new Error("The configured question bank path must be nonempty.");

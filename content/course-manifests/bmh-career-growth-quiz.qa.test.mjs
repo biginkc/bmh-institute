@@ -25,7 +25,7 @@ function careerQuiz(manifest) {
   ).quiz;
 }
 
-test("Career Growth uses the locked 18-question role-agnostic pool", async () => {
+test("Career Growth uses the complete approved 47-question role-agnostic pool", async () => {
   const manifest = await loadManifest(MANIFEST_URL);
   const quiz = careerQuiz(manifest);
   const typeCounts = Object.groupBy(
@@ -33,19 +33,21 @@ test("Career Growth uses the locked 18-question role-agnostic pool", async () =>
     (question) => question.question_type,
   );
 
-  assert.equal(quiz.questions.length, 18);
-  assert.equal(quiz.questions_per_attempt, 10);
+  assert.equal(quiz.questions.length, 47);
+  assert.equal(quiz.questions_per_attempt, null);
   assert.equal(quiz.passing_score, 80);
   assert.equal(quiz.randomize_questions, true);
   assert.equal(quiz.randomize_answers, true);
-  assert.equal(typeCounts.single_choice.length, 10);
-  assert.equal(typeCounts.multi_select.length, 4);
-  assert.equal(typeCounts.true_false.length, 4);
+  assert.equal(typeCounts.single_choice.length, 47);
   assert.equal(
     new Set(quiz.questions.map((question) => question.question_text.trim().toLowerCase())).size,
-    18,
+    47,
   );
-  assert.deepEqual(validateCareerGrowthAssessment(quiz), []);
+  assert.deepEqual(validateCareerGrowthAssessment(quiz, {
+    expectedCount: 47,
+    requireAllQuestionTypes: false,
+    bankDriven: true,
+  }), []);
 });
 
 test("every Career Growth flashcard is derived from the compliant quiz source", async () => {

@@ -114,10 +114,16 @@ test("manifest source roots are portable with CLI precedence over environment de
   assert.deepEqual(fromEnvironment, {
     videoSourceRoot: path.resolve("/fixture/environment/videos"),
     quizSourceRoot: path.resolve("/fixture/environment/quizzes"),
+    quizBankPath: path.join(repoRoot, "content/quiz-generation/question-bank.v1.json"),
   });
 
   const fromCli = resolveManifestSourceRoots(
-    ["--video-root", "/fixture/cli/videos", "--quiz-root=/fixture/cli/quizzes"],
+    [
+      "--video-root",
+      "/fixture/cli/videos",
+      "--quiz-root=/fixture/cli/quizzes",
+      "--quiz-bank=content/quiz-generation/question-bank.v1.json",
+    ],
     {
       BMH_COURSE_VIDEO_ROOT: "/fixture/environment/videos",
       BMH_COURSE_QUIZ_ROOT: "/fixture/environment/quizzes",
@@ -126,6 +132,7 @@ test("manifest source roots are portable with CLI precedence over environment de
   assert.deepEqual(fromCli, {
     videoSourceRoot: path.resolve("/fixture/cli/videos"),
     quizSourceRoot: path.resolve("/fixture/cli/quizzes"),
+    quizBankPath: path.resolve("content/quiz-generation/question-bank.v1.json"),
   });
   assert.throws(
     () => resolveManifestSourceRoots(["--video-root"], {}),
@@ -238,9 +245,12 @@ test("the complete manifest builder is deterministic against portable fixture so
       `${video.source_key} did not come from the injected video root`,
     );
   }
+  const canonicalQuestionBank = JSON.parse(
+    await readFile(new URL("../quiz-generation/question-bank.v1.json", import.meta.url), "utf8"),
+  );
   assert.equal(
     first.program.courses[0].modules[0].lessons[1].quiz.questions[0].question_text,
-    "Fixture slot 1 question 1",
+    canonicalQuestionBank.slots[0].questions[0].question_text,
   );
 });
 

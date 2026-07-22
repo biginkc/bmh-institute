@@ -48,9 +48,9 @@ Status: **quizbank and all 19 learner guides approved**.
 - Ordered guide records SHA-256: `fb9ba09eeb42d0c3cf4e800426e817446384f8e2405082923f635110c7d8c42f`
 - Guide records: 19
 - Accepted by: codex-course-qa-controller
-- Accepted at: 2026-07-20T22:30:00Z
+- Accepted at: 2026-07-22T02:03:09Z
 - Human approval: false
-- Evidence: Re-issued for the regenerated slot-16 learner guide (policy/content update): deterministic rebuild verified for all 19 accessible learner guides via generate-guides.py --check; semantic tests passed (generate-guides.semantic.test.py, 2 tests OK); visual review of slot-16 PDF confirmed 2 pages, KPIs and Sales Telemetry title, no thin pages. Course QA controller acceptance, not Jarrad human approval.
+- Evidence: Course-QA controller reacceptance after Jarrad's checksum-bound authorization, deterministic rebuild, full semantic tests, and visual review of all 38 pages; not Jarrad human approval.
 
 The current PDF matches the Slot 16 record in the accepted guide ledger. The ledger acceptance is bound to the exact ordered set of all 19 guide records.
 

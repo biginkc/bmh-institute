@@ -28,15 +28,15 @@ test("current confirmation covers the full and canary DialPad references", async
     loadJson("./bmh-operating-stack-confirmation.v1.json"),
   ]);
 
-  assert.equal(collectDialPadReferences(full).length, 10);
-  assert.equal(collectDialPadReferences(canary).length, 7);
+  assert.equal(collectDialPadReferences(full).length, 22);
+  assert.equal(collectDialPadReferences(canary).length, 12);
   assert.equal(
     dialPadReferenceSha256(full),
-    "44c244150a9ad90830458f8b1bd111dbf7fd1482d4c9c47e46581cbdb5530061",
+    "72dca36446c4e24e1795b46fbef6ebe0a5bfe49fd84e7d98c28043cd2903e693",
   );
   assert.equal(
     dialPadReferenceSha256(canary),
-    "afa1cdb42b2df8f941eed10663e82e880b76f910a948d156f12e7f9c43188c38",
+    "44f2db7c93186f730baafca79c07551e5525a6cf8105af3b7cbc434d02326850",
   );
   assert.deepEqual(validateStackConfirmation(full, confirmation, CURRENT_TIME), []);
   assert.deepEqual(validateStackConfirmation(canary, confirmation, CURRENT_TIME), []);

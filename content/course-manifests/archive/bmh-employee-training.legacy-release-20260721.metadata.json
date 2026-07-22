@@ -1,0 +1,22 @@
+{
+  "schema_version": "bmh-legacy-manifest-archive/v1",
+  "status": "superseded",
+  "import_id": "bmh-employee-training-v1",
+  "source_commit": "1435458d201eb3b94e6c7589f9512f24fa537476",
+  "manifest_path": "content/course-manifests/archive/bmh-employee-training.legacy-release-20260721.v1.json",
+  "manifest_sha256": "71f85173bc857d1b3b042fba0a50fdd420b6410ef84b104a751c3ed5982eba5c",
+  "production_catalog_sha256": "b83477e696714d80e099c03723be4c3423bd9bacef0fb049fb77d42c70ee4352",
+  "released_at": "2026-07-22T03:57:16.147731+00:00",
+  "released_by_approval": "Jarrad Henry",
+  "quiz_count": 19,
+  "question_count": 342,
+  "questions_per_attempt": 10,
+  "superseded_by": {
+    "active_manifest_path": "content/course-manifests/bmh-employee-training.v1.json",
+    "question_bank_path": "content/quiz-generation/question-bank.v1.json",
+    "question_bank_sha256": "e2aee2460b8c6f6c8fb29a79bdf2beb7937a039606e3822f10c05a2e8245c5b7",
+    "quiz_count": 19,
+    "question_count": 920,
+    "questions_per_attempt": null
+  }
+}
