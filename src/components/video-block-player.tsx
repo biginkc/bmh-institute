@@ -50,6 +50,7 @@ export function VideoBlockPlayer({
   const refreshRequestedRef = useRef(false);
   const [playing, setPlaying] = useState(false);
   const [duration, setDuration] = useState(0);
+  const [mediaError, setMediaError] = useState<string | null>(null);
   const [progressError, setProgressError] = useState<string | null>(null);
   const [watchedPercent, setWatchedPercent] = useState(0);
   const [completed, setCompleted] = useState(initialComplete);
@@ -266,6 +267,7 @@ export function VideoBlockPlayer({
           aria-label={title}
           className="h-full w-full bg-[var(--ink-900)] object-contain"
           onLoadedMetadata={(event) => {
+            setMediaError(null);
             const nextDuration = event.currentTarget.duration;
             setDuration(Number.isFinite(nextDuration) ? nextDuration : 0);
             if (!playbackStartedRef.current && resumePositionRef.current > 0) {
@@ -279,6 +281,7 @@ export function VideoBlockPlayer({
             const replayingAfterEnd = playbackEndedRef.current;
             playbackStartedRef.current = true;
             playbackEndedRef.current = false;
+            setMediaError(null);
             const resumePosition = resumePositionRef.current;
             if (
               !replayingAfterEnd &&
@@ -315,6 +318,12 @@ export function VideoBlockPlayer({
             flushProgress(event.currentTarget);
             setPlaying(false);
             if (refreshPendingRef.current) requestRefresh();
+          }}
+          onError={() => {
+            setPlaying(false);
+            setMediaError(
+              "Video could not load. Reload it to request a fresh secure media link.",
+            );
           }}
           onTimeUpdate={onTimeUpdate}
         >
@@ -357,6 +366,21 @@ export function VideoBlockPlayer({
         <p role="alert" className="text-sm font-bold text-[var(--danger)]">
           {progressError}
         </p>
+      ) : null}
+      {mediaError ? (
+        <div
+          role="alert"
+          className="flex flex-wrap items-center gap-2 text-sm font-bold text-[var(--danger)]"
+        >
+          <span>{mediaError}</span>
+          <button
+            type="button"
+            onClick={() => refresh()}
+            className="rounded-[var(--bmh-radius-sm)] border-2 border-current px-2.5 py-1 font-extrabold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--danger)]"
+          >
+            Reload video
+          </button>
+        </div>
       ) : null}
       {transcriptSrc ? (
         <a

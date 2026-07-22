@@ -358,6 +358,23 @@ describe("<VideoBlockPlayer />", () => {
     );
   });
 
+  it("offers a fresh secure media link after a playback failure", async () => {
+    render(
+      <VideoBlockPlayer
+        blockId="block-1"
+        src="https://example.com/video.mp4?token=expired"
+      />,
+    );
+
+    fireEvent.error(screen.getByLabelText("Lesson video"));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "fresh secure media link",
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Reload video" }));
+    expect(refresh).toHaveBeenCalledTimes(1);
+  });
+
   it("serializes progress writes so a later sample cannot overwrite stale ranges", async () => {
     type ProgressSuccess = {
       ok: true;
