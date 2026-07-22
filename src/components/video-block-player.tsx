@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Play } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -397,16 +397,14 @@ export function VideoBlockPlayer({
 }
 
 function useStableSignedAssetUrl(value: string | undefined): string | undefined {
-  const [stableValue, setStableValue] = useState(value);
   const identity = assetIdentity(value);
-
-  useEffect(() => {
-    setStableValue((current) =>
-      assetIdentity(current) === identity ? current : value,
-    );
-  }, [identity, value]);
-
-  return stableValue;
+  return useMemo(
+    () => value,
+    // Signed-token rotation must not replace an active media element. A real
+    // storage path change produces a new identity and refreshes the value.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [identity],
+  );
 }
 
 function assetIdentity(value: string | undefined): string {
