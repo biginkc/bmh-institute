@@ -78,10 +78,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Reconcile caption-only Tech Stack canary
-        if: github.event_name == 'workflow_dispatch'
-        run: npx tsx scripts/reconcile-test-canary-caption-only.ts
-
       - name: Verify Tech Stack canary has no remote drift
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.TEST_SUPABASE_URL }}

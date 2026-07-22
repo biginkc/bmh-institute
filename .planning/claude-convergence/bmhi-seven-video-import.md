@@ -84,3 +84,9 @@ No production write had occurred when this baseline was recorded.
 - A direct index regeneration was rejected because it would rewrite the historical surface Jarrad approved. The final fix instead recognizes the exact approval-bound index and four sheets, permits drift only in the two explicit video-evidence `approval_status` locations, and keeps every other inventory field fail-closed.
 - Canonical write mode cannot overwrite the approved surface even if ledger approval status is corrupted. A temporary-repository regression proves the index and all four sheets retain identical before/after hashes in that failure case.
 - Final review verdict: no findings. Targeted build/check/write tests and the complete 51-test artwork production lifecycle pass with the historical index SHA unchanged at `da0b7a3467a8f7f31e94f7eddde8fa80e3715a73e68b3cf653178ad9257cdfd3`.
+
+### Iteration 5 — caption-only test canary settlement
+
+- The first seeded E2E run correctly rejected the shared test canary's stale transcript field and one exact stale transcript object after the caption-only manifest change.
+- A one-time workflow-dispatch repair ran only against canonical test project `jvaabkchkihkjllehmft`: it atomically reapplied the canary's managed rows and removed only `courses/bmh-employee-training-canary/v1/transcripts/video-slot-03-tech-stack.f96bb3853919ebe2499c25c126fcebe71bae4b072d78df438f6195c8bf26cc4d.md`.
+- The authenticated repair run then passed exact canary reconciliation and the complete seeded Playwright suite, including fixture cleanup. The temporary repair script and workflow step were removed before final merge review.
