@@ -110,7 +110,9 @@ try {
       id uuid primary key default gen_random_uuid(),
       bucket_id text not null,
       name text not null,
-      owner uuid
+      owner uuid,
+      metadata jsonb,
+      user_metadata jsonb
     );
     alter table storage.objects enable row level security;
     create function storage.foldername(name text) returns text[]
@@ -120,13 +122,14 @@ try {
     alter database postgres set search_path = public, extensions;
   `);
   const migrations = (await readdir(resolve(root, "supabase/migrations")))
-    .filter((file) => /^\d{3}_.+\.sql$/.test(file))
+    .filter((file) => /^(?:\d{3}|\d{14})_.+\.sql$/.test(file))
     .sort();
   for (const required of [
     "033_import_qa_access_and_delete_guards.sql",
     "034_import_release_and_fixture_dependency_guards.sql",
     "036_controller_verified_fixture_cleanup_gate.sql",
     "047_register_reviewer_answer_option_fixture_dependencies.sql",
+    "20260722043000_replace_released_imported_video_posters.sql",
   ]) {
     if (!migrations.includes(required)) {
       throw new Error(`Current migration stack is missing ${required}.`);

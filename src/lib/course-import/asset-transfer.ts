@@ -91,6 +91,40 @@ export async function findRemoteAssetProblems(
   return problems;
 }
 
+export async function findOptionalRemoteAssetProblems(
+  bucket: RemoteAssetBucket,
+  assets: CourseImportAsset[],
+) {
+  return (await inspectOptionalRemoteAssets(bucket, assets)).problems;
+}
+
+export async function inspectOptionalRemoteAssets(
+  bucket: RemoteAssetBucket,
+  assets: CourseImportAsset[],
+) {
+  const problems: RemoteAssetProblem[] = [];
+  const present: string[] = [];
+  const absent: string[] = [];
+  for (const asset of assets) {
+    if (asset.approval_status !== "approved") continue;
+    const current = await bucket.info(asset.storage_path);
+    if (!current.data) {
+      if (isExplicitNotFound(current.error)) {
+        absent.push(asset.storage_path);
+        continue;
+      }
+      problems.push({
+        path: asset.storage_path,
+        problem: `optional retained object state is uncertain: ${current.error?.message ?? "empty response"}`,
+      });
+      continue;
+    }
+    present.push(asset.storage_path);
+    problems.push(...await findRemoteAssetProblems(bucket, [asset]));
+  }
+  return { problems, present: present.sort(), absent: absent.sort() };
+}
+
 export async function listRemoteAssetPaths(
   bucket: RemoteAssetListingBucket,
   prefix: string,
@@ -166,4 +200,10 @@ async function sha256RemoteBytes(data: Blob | ReadableStream<Uint8Array>) {
 
 function errorMessage(error: unknown) {
   return error instanceof Error ? error.message : String(error);
+}
+
+function isExplicitNotFound(error: RemoteStorageError | null) {
+  if (!error) return false;
+  const status = error.statusCode ?? error.status;
+  return status === 404 || status === "404";
 }

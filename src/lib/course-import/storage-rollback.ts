@@ -1,6 +1,7 @@
 import type { CourseImportAsset } from "./manifest";
 import {
   findRemoteAssetProblems,
+  findOptionalRemoteAssetProblems,
   findUnexpectedRemoteAssetPaths,
   type RemoteAssetListingBucket,
   type RemoteStorageError,
@@ -16,19 +17,23 @@ type StorageRollbackBucket = RemoteAssetListingBucket & {
 export async function inspectStorageRollbackAssets(options: {
   importId: string;
   assets: CourseImportAsset[];
+  optionalRetainedAssets?: CourseImportAsset[];
   bucket: StorageRollbackBucket;
 }) {
   const storagePrefix = importStoragePrefix(options.importId);
   if (!storagePrefix) throw new Error("Rollback storage inspection has no canonical import prefix.");
-  const [integrity_problems, unexpected_storage] = await Promise.all([
+  const optionalRetainedAssets = options.optionalRetainedAssets ?? [];
+  const [requiredProblems, optionalProblems, unexpected_storage] = await Promise.all([
     findRemoteAssetProblems(options.bucket, options.assets),
+    findOptionalRemoteAssetProblems(options.bucket, optionalRetainedAssets),
     findUnexpectedRemoteAssetPaths(
       options.bucket,
       options.importId,
       storagePrefix,
-      options.assets,
+      [...options.assets, ...optionalRetainedAssets],
     ),
   ]);
+  const integrity_problems = [...requiredProblems, ...optionalProblems];
   const pathsWithIntegrityProblems = new Set(integrity_problems.map((problem) => problem.path));
   const manual_review_candidates: Array<{
     source_key: string;

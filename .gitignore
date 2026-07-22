@@ -68,4 +68,9 @@ supabase/.temp/
 /.course-import-state/
 
 # BMH course video assets — regenerable build outputs, not versioned (recipe lives in docs/course-production/shotlists)
-course-assets/
+# The exact pre-redesign poster bytes are the rollback point for the approved poster replacement.
+course-assets/*
+!course-assets/posters/
+course-assets/posters/*
+!course-assets/posters/redesign-history/
+!course-assets/posters/redesign-history/*.webp

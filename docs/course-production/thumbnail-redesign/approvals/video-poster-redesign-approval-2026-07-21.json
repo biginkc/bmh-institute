@@ -1,0 +1,449 @@
+{
+  "schema_version": "bmh-video-poster-redesign-approval/v1",
+  "decision": "approved",
+  "approver": "Jarrad Henry",
+  "approved_at": "2026-07-22T04:19:11Z",
+  "response_text": "They should be swapped out",
+  "correction": "Replace all old pre-play video posters with 16:9 derivatives of the matching newly approved lesson thumbnails.",
+  "source_approval": {
+    "path": "docs/course-production/thumbnail-redesign/approvals/thumbnail-redesign-approval-2026-07-20.json",
+    "sha256": "5d70fcb8f61a88e46322433b63ad902110cab201ad2d1975e51c60cb736875e2"
+  },
+  "assets": [
+    {
+      "lesson_key": "lesson-content-slot-01",
+      "lesson_title": "Welcome and Mindset",
+      "video_key": "video-slot-01-welcome",
+      "poster_asset_key": "poster-video-slot-01-welcome",
+      "source_thumbnail_asset_key": "thumbnail-slot-01",
+      "source_path": "docs/course-production/thumbnail-redesign/assets/01-welcome-and-mindset.png",
+      "source_sha256": "fbd7b0bb0898f112b130b8c1c5b19fb79a88e65fc60c4ed6d007f0163ded9a98",
+      "crop": {
+        "left": 0,
+        "top": 0,
+        "width": 1280,
+        "height": 720
+      }
+    },
+    {
+      "lesson_key": "lesson-content-slot-01",
+      "lesson_title": "Welcome and Mindset",
+      "video_key": "video-slot-01-mindset",
+      "poster_asset_key": "poster-video-slot-01-mindset",
+      "source_thumbnail_asset_key": "thumbnail-slot-01",
+      "source_path": "docs/course-production/thumbnail-redesign/assets/01-welcome-and-mindset.png",
+      "source_sha256": "fbd7b0bb0898f112b130b8c1c5b19fb79a88e65fc60c4ed6d007f0163ded9a98",
+      "crop": {
+        "left": 0,
+        "top": 80,
+        "width": 1280,
+        "height": 720
+      }
+    },
+    {
+      "lesson_key": "lesson-content-slot-02",
+      "lesson_title": "Real Estate Terms Glossary",
+      "video_key": "video-slot-02-terms",
+      "poster_asset_key": "poster-video-slot-02-terms",
+      "source_thumbnail_asset_key": "thumbnail-slot-02",
+      "source_path": "docs/course-production/thumbnail-redesign/assets/02-real-estate-terms-glossary.png",
+      "source_sha256": "16995b6118cb52e19f3eaab726d91494c5c6ef49665839a13c5a813c0bf1eca2",
+      "crop": {
+        "left": 0,
+        "top": 40,
+        "width": 1280,
+        "height": 720
+      }
+    },
+    {
+      "lesson_key": "lesson-content-slot-03",
+      "lesson_title": "Tech Stack and Systems",
+      "video_key": "video-slot-03-tech-stack",
+      "poster_asset_key": "poster-video-slot-03-tech-stack",
+      "source_thumbnail_asset_key": "thumbnail-slot-03",
+      "source_path": "docs/course-production/thumbnail-redesign/assets/03-tech-stack-and-systems.png",
+      "source_sha256": "2b340995fe2c511ce4e262d6f7841f6418f38ff0bce4ce7db808ad428e978983",
+      "crop": {
+        "left": 0,
+        "top": 40,
+        "width": 1280,
+        "height": 720
+      }
+    },
+    {
+      "lesson_key": "lesson-content-slot-04",
+      "lesson_title": "Humanizing the Lead",
+      "video_key": "video-slot-04-humanizing-a",
+      "poster_asset_key": "poster-video-slot-04-humanizing-a",
+      "source_thumbnail_asset_key": "thumbnail-slot-04",
+      "source_path": "docs/course-production/thumbnail-redesign/assets/05-humanizing-the-lead.png",
+      "source_sha256": "78c61095e58d8a3138b7ff21feba835f677cabd6f48cdd67e5c653ffd9a6defe",
+      "crop": {
+        "left": 0,
+        "top": 0,
+        "width": 1280,
+        "height": 720
+      }
+    },
+    {
+      "lesson_key": "lesson-content-slot-04",
+      "lesson_title": "Humanizing the Lead",
+      "video_key": "video-slot-04-humanizing-b",
+      "poster_asset_key": "poster-video-slot-04-humanizing-b",
+      "source_thumbnail_asset_key": "thumbnail-slot-04",
+      "source_path": "docs/course-production/thumbnail-redesign/assets/05-humanizing-the-lead.png",
+      "source_sha256": "78c61095e58d8a3138b7ff21feba835f677cabd6f48cdd67e5c653ffd9a6defe",
+      "crop": {
+        "left": 0,
+        "top": 40,
+        "width": 1280,
+        "height": 720
+      }
+    },
+    {
+      "lesson_key": "lesson-content-slot-04",
+      "lesson_title": "Humanizing the Lead",
+      "video_key": "video-slot-04-ideal-seller",
+      "poster_asset_key": "poster-video-slot-04-ideal-seller",
+      "source_thumbnail_asset_key": "thumbnail-slot-04",
+      "source_path": "docs/course-production/thumbnail-redesign/assets/05-humanizing-the-lead.png",
+      "source_sha256": "78c61095e58d8a3138b7ff21feba835f677cabd6f48cdd67e5c653ffd9a6defe",
+      "crop": {
+        "left": 0,
+        "top": 80,
+        "width": 1280,
+        "height": 720
+      }
+    },
+    {
+      "lesson_key": "lesson-content-slot-05",
+      "lesson_title": "The BMH Offer Playbook",
+      "video_key": "video-slot-05-offer-a",
+      "poster_asset_key": "poster-video-slot-05-offer-a",
+      "source_thumbnail_asset_key": "thumbnail-slot-05",
+      "source_path": "docs/course-production/thumbnail-redesign/assets/06-the-bmh-offer-playbook.png",
+      "source_sha256": "f24da48daee7c57a6e2d634b7be94e88c28e325e076b4af31cffb4a2928cb794",
+      "crop": {
+        "left": 0,
+        "top": 0,
+        "width": 1280,
+        "height": 720
+      }
+    },
+    {
+      "lesson_key": "lesson-content-slot-05",
+      "lesson_title": "The BMH Offer Playbook",
+      "video_key": "video-slot-05-offer-b",
+      "poster_asset_key": "poster-video-slot-05-offer-b",
+      "source_thumbnail_asset_key": "thumbnail-slot-05",
+      "source_path": "docs/course-production/thumbnail-redesign/assets/06-the-bmh-offer-playbook.png",
+      "source_sha256": "f24da48daee7c57a6e2d634b7be94e88c28e325e076b4af31cffb4a2928cb794",
+      "crop": {
+        "left": 0,
+        "top": 80,
+        "width": 1280,
+        "height": 720
+      }
+    },
+    {
+      "lesson_key": "lesson-content-slot-06",
+      "lesson_title": "Sales Pipeline and Stage Ownership",
+      "video_key": "video-slot-06-pipeline",
+      "poster_asset_key": "poster-video-slot-06-pipeline",
+      "source_thumbnail_asset_key": "thumbnail-slot-06",
+      "source_path": "docs/course-production/thumbnail-redesign/assets/08-sales-pipeline-and-stage-ownership.png",
+      "source_sha256": "1743eeaa5e06770a3c9a0b4eab9f50e6ee67f8c4b0026e06937160822f10b6d2",
+      "crop": {
+        "left": 0,
+        "top": 0,
+        "width": 1280,
+        "height": 720
+      }
+    },
+    {
+      "lesson_key": "lesson-content-slot-06",
+      "lesson_title": "Sales Pipeline and Stage Ownership",
+      "video_key": "video-slot-06-framework",
+      "poster_asset_key": "poster-video-slot-06-framework",
+      "source_thumbnail_asset_key": "thumbnail-slot-06",
+      "source_path": "docs/course-production/thumbnail-redesign/assets/08-sales-pipeline-and-stage-ownership.png",
+      "source_sha256": "1743eeaa5e06770a3c9a0b4eab9f50e6ee67f8c4b0026e06937160822f10b6d2",
+      "crop": {
+        "left": 0,
+        "top": 80,
+        "width": 1280,
+        "height": 720
+      }
+    },
+    {
+      "lesson_key": "lesson-content-slot-07",
+      "lesson_title": "Opening the Call",
+      "video_key": "video-slot-07-opening",
+      "poster_asset_key": "poster-video-slot-07-opening",
+      "source_thumbnail_asset_key": "thumbnail-slot-07",
+      "source_path": "docs/course-production/thumbnail-redesign/assets/09-opening-the-call.png",
+      "source_sha256": "50fa72f36833ca707094e8ef5628df1dc67e798645c46a7d5dc93bd3189bf02f",
+      "crop": {
+        "left": 0,
+        "top": 0,
+        "width": 1280,
+        "height": 720
+      }
+    },
+    {
+      "lesson_key": "lesson-content-slot-07",
+      "lesson_title": "Opening the Call",
+      "video_key": "video-slot-07-fact-find",
+      "poster_asset_key": "poster-video-slot-07-fact-find",
+      "source_thumbnail_asset_key": "thumbnail-slot-07",
+      "source_path": "docs/course-production/thumbnail-redesign/assets/09-opening-the-call.png",
+      "source_sha256": "50fa72f36833ca707094e8ef5628df1dc67e798645c46a7d5dc93bd3189bf02f",
+      "crop": {
+        "left": 0,
+        "top": 80,
+        "width": 1280,
+        "height": 720
+      }
+    },
+    {
+      "lesson_key": "lesson-content-slot-08",
+      "lesson_title": "Discovery and Handoff",
+      "video_key": "video-slot-08-discovery",
+      "poster_asset_key": "poster-video-slot-08-discovery",
+      "source_thumbnail_asset_key": "thumbnail-slot-08",
+      "source_path": "docs/course-production/thumbnail-redesign/assets/10-discovery-and-handoff.png",
+      "source_sha256": "4ea77075f1c461b5cc69a86b2db6916cfe420cf8663b5d02970fa862384ea898",
+      "crop": {
+        "left": 0,
+        "top": 0,
+        "width": 1280,
+        "height": 720
+      }
+    },
+    {
+      "lesson_key": "lesson-content-slot-08",
+      "lesson_title": "Discovery and Handoff",
+      "video_key": "video-slot-08-handoff",
+      "poster_asset_key": "poster-video-slot-08-handoff",
+      "source_thumbnail_asset_key": "thumbnail-slot-08",
+      "source_path": "docs/course-production/thumbnail-redesign/assets/10-discovery-and-handoff.png",
+      "source_sha256": "4ea77075f1c461b5cc69a86b2db6916cfe420cf8663b5d02970fa862384ea898",
+      "crop": {
+        "left": 0,
+        "top": 80,
+        "width": 1280,
+        "height": 720
+      }
+    },
+    {
+      "lesson_key": "lesson-content-slot-09",
+      "lesson_title": "Objection Architecture",
+      "video_key": "video-slot-09-objection-architecture",
+      "poster_asset_key": "poster-video-slot-09-objection-architecture",
+      "source_thumbnail_asset_key": "thumbnail-slot-09",
+      "source_path": "docs/course-production/thumbnail-redesign/assets/12-objection-architecture.png",
+      "source_sha256": "0a851dfb58e402b0582a0fb914839890a595d3f3c945960155d372b3605a428a",
+      "crop": {
+        "left": 0,
+        "top": 40,
+        "width": 1280,
+        "height": 720
+      }
+    },
+    {
+      "lesson_key": "lesson-content-slot-10",
+      "lesson_title": "Objection Scripts Playbook",
+      "video_key": "video-slot-10-objection-scripts",
+      "poster_asset_key": "poster-video-slot-10-objection-scripts",
+      "source_thumbnail_asset_key": "thumbnail-slot-10",
+      "source_path": "docs/course-production/thumbnail-redesign/assets/13-objection-scripts-playbook.png",
+      "source_sha256": "d0cb16888b29fbb5b4353e996473b7d079326bb520fcf620dc8b5f08516fb08a",
+      "crop": {
+        "left": 0,
+        "top": 40,
+        "width": 1280,
+        "height": 720
+      }
+    },
+    {
+      "lesson_key": "lesson-content-slot-11",
+      "lesson_title": "Complex Objections",
+      "video_key": "video-slot-11-complex",
+      "poster_asset_key": "poster-video-slot-11-complex",
+      "source_thumbnail_asset_key": "thumbnail-slot-11",
+      "source_path": "docs/course-production/thumbnail-redesign/assets/14-complex-objections.png",
+      "source_sha256": "88a90131a615d8eee2510099fea9724d64cdad506de72a4fab612f4424d19c85",
+      "crop": {
+        "left": 0,
+        "top": 0,
+        "width": 1280,
+        "height": 720
+      }
+    },
+    {
+      "lesson_key": "lesson-content-slot-11",
+      "lesson_title": "Complex Objections",
+      "video_key": "video-slot-11-trust",
+      "poster_asset_key": "poster-video-slot-11-trust",
+      "source_thumbnail_asset_key": "thumbnail-slot-11",
+      "source_path": "docs/course-production/thumbnail-redesign/assets/14-complex-objections.png",
+      "source_sha256": "88a90131a615d8eee2510099fea9724d64cdad506de72a4fab612f4424d19c85",
+      "crop": {
+        "left": 0,
+        "top": 80,
+        "width": 1280,
+        "height": 720
+      }
+    },
+    {
+      "lesson_key": "lesson-content-slot-12",
+      "lesson_title": "Seller FAQ Decoder",
+      "video_key": "video-slot-12-faq-a",
+      "poster_asset_key": "poster-video-slot-12-faq-a",
+      "source_thumbnail_asset_key": "thumbnail-slot-12",
+      "source_path": "docs/course-production/thumbnail-redesign/assets/15-seller-faq-decoder.png",
+      "source_sha256": "f296f5564e3f9fa9ec49b29b06c3b0f855ecb1660b78cf4c621bf82601dc841e",
+      "crop": {
+        "left": 0,
+        "top": 0,
+        "width": 1280,
+        "height": 720
+      }
+    },
+    {
+      "lesson_key": "lesson-content-slot-12",
+      "lesson_title": "Seller FAQ Decoder",
+      "video_key": "video-slot-12-faq-b",
+      "poster_asset_key": "poster-video-slot-12-faq-b",
+      "source_thumbnail_asset_key": "thumbnail-slot-12",
+      "source_path": "docs/course-production/thumbnail-redesign/assets/15-seller-faq-decoder.png",
+      "source_sha256": "f296f5564e3f9fa9ec49b29b06c3b0f855ecb1660b78cf4c621bf82601dc841e",
+      "crop": {
+        "left": 0,
+        "top": 80,
+        "width": 1280,
+        "height": 720
+      }
+    },
+    {
+      "lesson_key": "lesson-content-slot-13",
+      "lesson_title": "Follow-Up Cadence",
+      "video_key": "video-slot-13-follow-up",
+      "poster_asset_key": "poster-video-slot-13-follow-up",
+      "source_thumbnail_asset_key": "thumbnail-slot-13",
+      "source_path": "docs/course-production/thumbnail-redesign/assets/17-follow-up-cadence.png",
+      "source_sha256": "a874d10c26a94488cc6b8e5f1f4c786230ee0f371ea49e5e61a45f80e851d13d",
+      "crop": {
+        "left": 0,
+        "top": 40,
+        "width": 1280,
+        "height": 720
+      }
+    },
+    {
+      "lesson_key": "lesson-content-slot-14",
+      "lesson_title": "Conversation Flow Mastery",
+      "video_key": "video-slot-14-flow",
+      "poster_asset_key": "poster-video-slot-14-flow",
+      "source_thumbnail_asset_key": "thumbnail-slot-14",
+      "source_path": "docs/course-production/thumbnail-redesign/assets/18-conversation-flow-mastery-draft-v1.png",
+      "source_sha256": "91b93c4e49c03056bc54432d39593f5ef1363826c40795dd665bef3428d66328",
+      "crop": {
+        "left": 0,
+        "top": 40,
+        "width": 1280,
+        "height": 720
+      }
+    },
+    {
+      "lesson_key": "lesson-content-slot-15",
+      "lesson_title": "Closing and Deal Engineering",
+      "video_key": "video-slot-15-closing",
+      "poster_asset_key": "poster-video-slot-15-closing",
+      "source_thumbnail_asset_key": "thumbnail-slot-15",
+      "source_path": "docs/course-production/thumbnail-redesign/assets/19-closing-and-deal-engineering-draft-v1.png",
+      "source_sha256": "52d12f2a2c0d5f1fca3925c8381506762ee1b07e362b39910ce43d75539a3693",
+      "crop": {
+        "left": 0,
+        "top": 40,
+        "width": 1280,
+        "height": 720
+      }
+    },
+    {
+      "lesson_key": "lesson-content-slot-16",
+      "lesson_title": "KPIs and Sales Telemetry",
+      "video_key": "video-slot-16-kpis",
+      "poster_asset_key": "poster-video-slot-16-kpis",
+      "source_thumbnail_asset_key": "thumbnail-slot-16",
+      "source_path": "docs/course-production/thumbnail-redesign/assets/21-kpis-and-sales-telemetry-draft-v1.png",
+      "source_sha256": "a31923e27595814e2043efe87c10aa136adb0aec87ee631244a82e66fee0d7fb",
+      "crop": {
+        "left": 0,
+        "top": 40,
+        "width": 1280,
+        "height": 720
+      }
+    },
+    {
+      "lesson_key": "lesson-content-slot-17",
+      "lesson_title": "Compensation Engine",
+      "video_key": "video-slot-17-compensation",
+      "poster_asset_key": "poster-video-slot-17-compensation",
+      "source_thumbnail_asset_key": "thumbnail-slot-17",
+      "source_path": "docs/course-production/thumbnail-redesign/assets/22-compensation-engine-draft-v1.png",
+      "source_sha256": "582cc7f3da9089c0cf0e3d4b7dde1200cbe2fa5f07fcc8e53914e97bb43b9abf",
+      "crop": {
+        "left": 0,
+        "top": 40,
+        "width": 1280,
+        "height": 720
+      }
+    },
+    {
+      "lesson_key": "lesson-content-slot-18",
+      "lesson_title": "Operator Playbook and Daily Mission Control",
+      "video_key": "video-slot-18-operator",
+      "poster_asset_key": "poster-video-slot-18-operator",
+      "source_thumbnail_asset_key": "thumbnail-slot-18",
+      "source_path": "docs/course-production/thumbnail-redesign/assets/23-operator-playbook-mission-control-draft-v1.png",
+      "source_sha256": "37482821b34882503849b2c535ead7ef4c17eb818a62f759dc3c963095c0361c",
+      "crop": {
+        "left": 0,
+        "top": 0,
+        "width": 1280,
+        "height": 720
+      }
+    },
+    {
+      "lesson_key": "lesson-content-slot-18",
+      "lesson_title": "Operator Playbook and Daily Mission Control",
+      "video_key": "video-slot-18-mission-control",
+      "poster_asset_key": "poster-video-slot-18-mission-control",
+      "source_thumbnail_asset_key": "thumbnail-slot-18",
+      "source_path": "docs/course-production/thumbnail-redesign/assets/23-operator-playbook-mission-control-draft-v1.png",
+      "source_sha256": "37482821b34882503849b2c535ead7ef4c17eb818a62f759dc3c963095c0361c",
+      "crop": {
+        "left": 0,
+        "top": 80,
+        "width": 1280,
+        "height": 720
+      }
+    },
+    {
+      "lesson_key": "lesson-content-slot-19",
+      "lesson_title": "Career Growth Path",
+      "video_key": "video-slot-19-career",
+      "poster_asset_key": "poster-video-slot-19-career",
+      "source_thumbnail_asset_key": "thumbnail-slot-19",
+      "source_path": "docs/course-production/thumbnail-redesign/assets/24-career-growth-path-draft-v1.png",
+      "source_sha256": "601f5090217d085310ffeba508a01034c2a97dd262ca9a955985223ea7446bf7",
+      "crop": {
+        "left": 0,
+        "top": 40,
+        "width": 1280,
+        "height": 720
+      }
+    }
+  ]
+}
