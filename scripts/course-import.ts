@@ -31,7 +31,7 @@ import {
   assertStorageRollbackInspectionClean,
   inspectStorageRollbackAssets,
 } from "../src/lib/course-import/storage-rollback";
-import { loadApprovedVideoPosterRetention } from "../src/lib/course-import/video-poster-retention";
+import { assertExactVideoPosterRetentionAudit, loadApprovedVideoPosterRetention } from "../src/lib/course-import/video-poster-retention";
 import type { Database } from "../src/lib/supabase/types";
 import { assertCourseImportEnvironment } from "../src/lib/course-import/environment";
 import {
@@ -215,22 +215,20 @@ async function readAuditedVideoPosterRetention(
   const retention = await loadApprovedVideoPosterRetention(plan);
   if (!retention) return null;
   const table = supabase.from(retention.auditTable as never) as unknown as {
-    select(columns: "id"): {
+    select(columns: "id,replacements"): {
       eq(column: "import_id", value: string): {
         eq(column: "client_payload_sha256", value: string): {
-          limit(count: number): PromiseLike<{ data: Array<{ id: string }> | null; error: { message: string } | null }>;
+          limit(count: number): PromiseLike<{ data: Array<{ id: string; replacements: unknown }> | null; error: { message: string } | null }>;
         };
       };
     };
   };
-  const { data, error } = await table.select("id")
+  const { data, error } = await table.select("id,replacements")
     .eq("import_id", retention.importId)
     .eq("client_payload_sha256", retention.clientPayloadSha256)
     .limit(1);
   if (error) throw new Error(`Video poster retention audit could not be verified: ${error.message}`);
-  if (data?.length !== 1) {
-    throw new Error("Video poster rollback objects cannot be retained without the exact replacement audit record.");
-  }
+  assertExactVideoPosterRetentionAudit(retention, data);
   return retention;
 }
 

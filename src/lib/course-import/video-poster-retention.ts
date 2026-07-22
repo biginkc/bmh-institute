@@ -9,6 +9,7 @@ import {
   assertLocalSupersededVideoPosterAssets,
   buildImportedVideoPosterReplacements,
   buildSupersededVideoPosterAssets,
+  canonicalizeJson,
   hashVideoPosterReplacementPayload,
 } from "./video-poster-replacement";
 
@@ -52,6 +53,21 @@ export async function loadApprovedVideoPosterRetention(
       ? "content_import_video_poster_replacement_records" as const
       : "content_import_canary_video_poster_replacement_records" as const,
     clientPayloadSha256: hashVideoPosterReplacementPayload(replacements),
+    replacements,
     assets,
   };
+}
+
+export function assertExactVideoPosterRetentionAudit(
+  retention: NonNullable<Awaited<ReturnType<typeof loadApprovedVideoPosterRetention>>>,
+  rows: Array<{ id: string; replacements: unknown }> | null,
+) {
+  if (rows?.length !== 1) {
+    throw new Error("Video poster rollback objects cannot be retained without one exact replacement audit record.");
+  }
+  const expected = JSON.stringify(canonicalizeJson(retention.replacements));
+  const recorded = JSON.stringify(canonicalizeJson(rows[0].replacements));
+  if (recorded !== expected) {
+    throw new Error("Video poster retention audit payload does not match the exact approved replacements.");
+  }
 }

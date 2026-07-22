@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 
 import { validateCourseManifest } from "./manifest";
 import { buildImportPlan } from "./operations";
-import { loadApprovedVideoPosterRetention } from "./video-poster-retention";
+import { assertExactVideoPosterRetentionAudit, loadApprovedVideoPosterRetention } from "./video-poster-retention";
 
 describe("approved video poster retention", () => {
   it.each([
@@ -19,6 +19,15 @@ describe("approved video poster retention", () => {
     const retention = await loadApprovedVideoPosterRetention(buildImportPlan(validated.value));
     expect(retention?.assets).toHaveLength(count);
     expect(retention?.clientPayloadSha256).toMatch(/^[0-9a-f]{64}$/);
+    if (!retention) throw new Error("retention fixture missing");
+    expect(() => assertExactVideoPosterRetentionAudit(retention, [{
+      id: "audit",
+      replacements: structuredClone(retention.replacements),
+    }])).not.toThrow();
+    expect(() => assertExactVideoPosterRetentionAudit(retention, [{
+      id: "audit",
+      replacements: [{ forged: true }],
+    }])).toThrow(/payload does not match/i);
   });
 
   it("does not widen unrelated imports", async () => {
