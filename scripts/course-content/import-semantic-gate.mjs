@@ -140,6 +140,9 @@ async function optionalJson(path) {
 }
 
 async function validateScenarioTrust(manifest) {
+  if (rolePlayBindings(manifest).length === 0) {
+    return { errors: [], blockers: [] };
+  }
   const [manifestBytes, ledgerBytes, evidence, productionCatalogBytes, productionCatalogProvenance] = await Promise.all([
     readFile(join(CANONICAL_MANIFEST_DIRECTORY, "bmh-employee-training.v1.json")),
     readFile(SCENARIO_MAPPING_LEDGER_PATH),

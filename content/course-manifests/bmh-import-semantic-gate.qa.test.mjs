@@ -12,7 +12,7 @@ const FULL_URL = new URL("./bmh-employee-training.v1.json", import.meta.url);
 const CANARY_URL = new URL("./bmh-employee-training-canary.v1.json", import.meta.url);
 const CURRENT_TIME = new Date("2026-07-17T12:00:00-05:00");
 
-test("draft validation accepts finalized artwork while reporting remaining release blockers without treating the report as approval", async () => {
+test("draft validation accepts the approved release without requiring deferred Closer Lab scenarios", async () => {
   const manifest = await loadManifest(FULL_URL);
   const report = await validateBmhImportSemanticGate({
     manifest,
@@ -20,22 +20,18 @@ test("draft validation accepts finalized artwork while reporting remaining relea
   });
   assert.equal(report.scope, "full");
   assert.deepEqual(report.errors, []);
-  assert.ok(report.publicationBlockers.length > 0);
+  assert.deepEqual(report.publicationBlockers, []);
   assert.ok(report.publicationBlockers.every((blocker) =>
     !blocker.includes("Artwork production ledger is not finalized"),
   ));
   assert.ok(report.publicationBlockers.every((blocker) =>
     !blocker.includes("requires a policy-safe replacement cut"),
   ));
-  assert.ok(report.publicationBlockers.some((blocker) =>
-    blocker.includes("production Closer Lab scenario ID"),
-  ));
   assert.doesNotThrow(() =>
     assertBmhImportSemanticGate(report, { enforcePublicationBlockers: false }),
   );
-  assert.throws(
+  assert.doesNotThrow(
     () => assertBmhImportSemanticGate(report, { enforcePublicationBlockers: true }),
-    /BMH publication gate failed/,
   );
 });
 
@@ -104,16 +100,23 @@ test("an expired operating-stack confirmation remains a canary publication block
 });
 
 test("a canary cannot add role-play without entering the scenario trust boundary", async () => {
-  const [canary, full] = await Promise.all([
-    loadManifest(CANARY_URL),
-    loadManifest(FULL_URL),
-  ]);
-  const requiredRolePlay = full.program.courses
-    .flatMap((course) => course.modules)
-    .flatMap((courseModule) => courseModule.lessons)
-    .flatMap((lesson) => lesson.blocks ?? [])
-    .find((block) => block.type === "role_play" && block.required === true);
-  assert.ok(requiredRolePlay);
+  const canary = await loadManifest(CANARY_URL);
+  const requiredRolePlay = {
+    source_key: "block-role-play-deferred-test",
+    type: "role_play",
+    sort_order: 99,
+    required: true,
+    content: {
+      scenario_id: "pending:deferred-test",
+      scenario_spec: {
+        assignment_source_key: "assignment-section-3",
+        context: "Deferred test context",
+        learner_goal: "Deferred test goal",
+        success_criteria: ["one", "two", "three", "four"],
+        fail_conditions: ["one", "two", "three"],
+      },
+    },
+  };
   canary.program.courses[0].modules[0].lessons[0].blocks.push(
     structuredClone(requiredRolePlay),
   );

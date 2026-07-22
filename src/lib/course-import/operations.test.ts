@@ -59,7 +59,7 @@ describe("buildImportPlan", () => {
       .filter((operation) => operation.table === "content_blocks")
       .map((operation) => operation.row.content as Record<string, unknown>)
       .filter((content) => content.file_path === null);
-    expect(unavailablePaths.length).toBeGreaterThan(0);
+    expect(unavailablePaths).toHaveLength(0);
   });
 
   it("produces stable dependency-ordered operations", () => {

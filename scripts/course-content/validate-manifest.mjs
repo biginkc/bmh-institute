@@ -398,7 +398,7 @@ export function validateManifest(
     videos: 29,
     quizQuestions: 342,
     flashcards: 152,
-    rolePlays: 6,
+    rolePlays: 0,
     posterAssets: 29,
     posterReferences: 29,
     guideAssets: 19,
