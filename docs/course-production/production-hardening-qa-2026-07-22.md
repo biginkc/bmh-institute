@@ -3,7 +3,7 @@
 Date: 2026-07-22  
 Production surface: `https://institute.bmhgroupkc.com`  
 Change branch: `codex/institute-production-hardening-20260722`  
-Verified branch head: `34cb74b9c09cc354bca230a0690111010fb534d2`
+Verified code head: `34cb74b9c09cc354bca230a0690111010fb534d2`
 Pull request: `https://github.com/biginkc/bmh-institute/pull/119`
 Status: production walkthrough complete; fixes verified on preview; production release not yet approved
 
