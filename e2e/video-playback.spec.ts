@@ -38,7 +38,9 @@ test.describe("signed learner video playback", () => {
         `/lessons/${fixture.lessonId}`,
       );
 
-      const video = page.getByLabel("Playback continuity video");
+      const video = page.locator(
+        'video[aria-label="Playback continuity video"]',
+      );
       await expect(video).toBeVisible();
       await expect
         .poll(
@@ -265,17 +267,19 @@ async function insertOne(
 }
 
 async function installPlaybackDisruptionRecorder(page: Page): Promise<void> {
-  await page.getByLabel("Playback continuity video").evaluate((element) => {
-    const state = window as typeof window & {
-      __bmhPlaybackDisruptions?: string[];
-    };
-    state.__bmhPlaybackDisruptions = [];
-    for (const eventName of ["emptied", "loadstart"]) {
-      element.addEventListener(eventName, () => {
-        state.__bmhPlaybackDisruptions?.push(eventName);
-      });
-    }
-  });
+  await page
+    .locator('video[aria-label="Playback continuity video"]')
+    .evaluate((element) => {
+      const state = window as typeof window & {
+        __bmhPlaybackDisruptions?: string[];
+      };
+      state.__bmhPlaybackDisruptions = [];
+      for (const eventName of ["emptied", "loadstart"]) {
+        element.addEventListener(eventName, () => {
+          state.__bmhPlaybackDisruptions?.push(eventName);
+        });
+      }
+    });
 }
 
 async function readPlaybackDisruptions(page: Page): Promise<string[]> {
