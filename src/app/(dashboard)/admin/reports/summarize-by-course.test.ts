@@ -3,7 +3,7 @@
 // no Supabase or React mocks required.
 import { describe, expect, it } from "vitest";
 
-import { summarizeByCourse } from "./page";
+import { summarizeByCourse } from "./report-format";
 
 describe("summarizeByCourse (WR-03)", () => {
   const courses = [

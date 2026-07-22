@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { formatActivityRow, splitActivityRows } from "./page";
+import { formatActivityRow, splitActivityRows } from "./report-format";
 
 describe("formatActivityRow", () => {
   const profilesById = new Map([

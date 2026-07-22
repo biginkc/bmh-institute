@@ -27,6 +27,7 @@ const MAX_IDS_PER_AXIS = 500;
 // cardinality check below distinguishes real omissions from API truncation.
 const MAX_ADMIN_PAIRS_PER_CALL = 1_000;
 const MAX_ADMIN_TOTAL_PAIRS = 1_000_000;
+const MAX_ADMIN_CONCURRENT_CALLS = 6;
 
 export async function loadLearnerLessonStates(
   supabase: SupabaseClient<Database>,
@@ -127,36 +128,54 @@ export async function loadAdminLessonCompletions(
   }
   const seenPairs = new Set<string>();
   const completions: VerifiedLessonCompletion[] = [];
+  const batches: Array<{ userIds: string[]; lessonIds: string[] }> = [];
 
-  for (const lessonBatch of chunks(lessonIds, MAX_IDS_PER_AXIS)) {
-    const maxUsersInBatch = Math.min(
+  // The RPC repeats actor-to-catalog authorization for every lesson in a
+  // request. Keep the user axis large and split the lesson axis so each
+  // lesson is authorized once per unavoidable user chunk rather than once
+  // for every small group of users.
+  for (const userBatch of chunks(userIds, MAX_IDS_PER_AXIS)) {
+    const maxLessonsInBatch = Math.min(
       MAX_IDS_PER_AXIS,
-      Math.floor(MAX_ADMIN_PAIRS_PER_CALL / lessonBatch.length),
+      Math.floor(MAX_ADMIN_PAIRS_PER_CALL / userBatch.length),
     );
-    for (const userBatch of chunks(userIds, maxUsersInBatch)) {
-      const { data, error } = await supabase.rpc(
-        "fn_admin_lesson_completion_states",
-        {
-          p_user_ids: userBatch,
-          p_lesson_ids: lessonBatch,
-        },
-      );
+    for (const lessonBatch of chunks(lessonIds, maxLessonsInBatch)) {
+      batches.push({ userIds: userBatch, lessonIds: lessonBatch });
+    }
+  }
+
+  const batchResults = await mapWithConcurrency(
+    batches,
+    MAX_ADMIN_CONCURRENT_CALLS,
+    async (batch): Promise<AdminCompletionBatchResult> => {
+      let response;
+      try {
+        response = await supabase.rpc("fn_admin_lesson_completion_states", {
+          p_user_ids: batch.userIds,
+          p_lesson_ids: batch.lessonIds,
+        });
+      } catch (error) {
+        return { ok: false, error };
+      }
+      const { data, error } = response;
       if (error) return { ok: false, error };
       if (!Array.isArray(data)) return { ok: false };
 
-      const requestedUsers = new Set(userBatch);
-      const requestedLessons = new Set(lessonBatch);
+      const requestedUsers = new Set(batch.userIds);
+      const requestedLessons = new Set(batch.lessonIds);
+      const batchPairs = new Set<string>();
+      const batchCompletions: VerifiedLessonCompletion[] = [];
       for (const row of data) {
         const key = pairKey(row.user_id, row.lesson_id);
         if (
           !requestedUsers.has(row.user_id) ||
           !requestedLessons.has(row.lesson_id) ||
           typeof row.is_complete !== "boolean" ||
-          seenPairs.has(key)
+          batchPairs.has(key)
         ) {
           return { ok: false };
         }
-        seenPairs.add(key);
+        batchPairs.add(key);
 
         if (!row.is_complete) continue;
         if (
@@ -166,22 +185,67 @@ export async function loadAdminLessonCompletions(
         ) {
           return { ok: false };
         }
-        completions.push({
+        batchCompletions.push({
           userId: row.user_id,
           lessonId: row.lesson_id,
           completedAt: row.completed_at,
         });
       }
 
-      if (data.length !== userBatch.length * lessonBatch.length) {
+      if (data.length !== batch.userIds.length * batch.lessonIds.length) {
         return { ok: false };
       }
+      return {
+        ok: true,
+        pairs: [...batchPairs],
+        completions: batchCompletions,
+      };
+    },
+  );
+
+  for (const result of batchResults) {
+    if (!result.ok) {
+      return result.error === undefined
+        ? { ok: false }
+        : { ok: false, error: result.error };
     }
+    for (const key of result.pairs) {
+      if (seenPairs.has(key)) return { ok: false };
+      seenPairs.add(key);
+    }
+    completions.push(...result.completions);
   }
 
   return seenPairs.size === expectedPairCount
     ? { ok: true, completions }
     : { ok: false };
+}
+
+type AdminCompletionBatchResult =
+  | {
+      ok: true;
+      pairs: string[];
+      completions: VerifiedLessonCompletion[];
+    }
+  | { ok: false; error?: unknown };
+
+async function mapWithConcurrency<T, R>(
+  values: T[],
+  concurrency: number,
+  transform: (value: T) => Promise<R>,
+): Promise<R[]> {
+  const results = new Array<R>(values.length);
+  let nextIndex = 0;
+  const workerCount = Math.min(concurrency, values.length);
+  const workers = Array.from({ length: workerCount }, async () => {
+    while (nextIndex < values.length) {
+      const index = nextIndex;
+      nextIndex += 1;
+      results[index] = await transform(values[index]);
+    }
+  });
+  await Promise.all(workers);
+  return results;
 }
 
 function uniqueNonEmpty(values: string[]): string[] {

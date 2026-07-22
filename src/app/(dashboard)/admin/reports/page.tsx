@@ -16,6 +16,12 @@ import {
   loadAllReportRowsByCursor,
   loadAllReportRowsById,
 } from "./report-source-pagination";
+import {
+  formatActivityRow,
+  splitActivityRows,
+  summarizeByCourse,
+  type FormattedActivityRow,
+} from "./report-format";
 
 export default async function AdminReportsPage() {
   // HARDEN-01: page-level guard so a direct fetch can't bypass the layout.
@@ -726,37 +732,6 @@ type AuditRow = {
   created_at: string;
 };
 
-export type ActivityMaps = {
-  profilesById: Map<string, ActivityProfile>;
-  coursesById: Map<string, string>;
-  programsById: Map<string, string>;
-  lessonTitlesById: Map<string, string>;
-  courseTitlesByLessonId: Map<string, string>;
-};
-
-export type FormattedActivityRow = {
-  actor: string;
-  label: string;
-  detail: string;
-  badge: string;
-  createdAt: string;
-};
-
-export function splitActivityRows<T extends FormattedActivityRow>(rows: T[]) {
-  const learnerRows: T[] = [];
-  const systemRows: T[] = [];
-
-  for (const row of rows) {
-    if (row.actor === "System activity" || row.badge === "System") {
-      systemRows.push(row);
-    } else {
-      learnerRows.push(row);
-    }
-  }
-
-  return { learnerRows, systemRows };
-}
-
 type LearnerStat = {
   id: string;
   fullName: string;
@@ -768,11 +743,6 @@ type LearnerStat = {
   submissions: number;
   lastActivity: string | null;
 };
-
-type ActivityProfile = Pick<
-  Profile,
-  "id" | "email" | "full_name" | "system_role"
->;
 
 function summarizeLearners({
   profiles,
@@ -842,42 +812,6 @@ function summarizeLearners({
     });
 }
 
-export function summarizeByCourse({
-  courses,
-  courseCerts,
-  completions,
-  courseIdByLessonId,
-}: {
-  courses: Entity[];
-  courseCerts: CourseCert[];
-  completions: Completion[];
-  courseIdByLessonId: Map<string, string>;
-}) {
-  const certCountByCourse = groupCount(courseCerts, (c) => c.course_id);
-  // WR-03: per-course active learners. A learner counts as "active" for a
-  // course when they have at least one lesson completion in that course.
-  // Aggregating distinct user_ids per course replaces the previous
-  // org-wide distinct-user count that was rendered identically on every
-  // row.
-  const learnersByCourse = new Map<string, Set<string>>();
-  for (const c of completions) {
-    const courseId = courseIdByLessonId.get(c.lesson_id);
-    if (!courseId) continue;
-    let set = learnersByCourse.get(courseId);
-    if (!set) {
-      set = new Set<string>();
-      learnersByCourse.set(courseId, set);
-    }
-    set.add(c.user_id);
-  }
-  return courses.map((c) => ({
-    id: c.id,
-    title: c.title,
-    activeLearners: learnersByCourse.get(c.id)?.size ?? 0,
-    completedCount: certCountByCourse.get(c.id) ?? 0,
-  }));
-}
-
 function summarizeByProgram({
   programs,
   programCerts,
@@ -900,103 +834,4 @@ function groupCount<T>(items: T[], key: (t: T) => string): Map<string, number> {
     out.set(k, (out.get(k) ?? 0) + 1);
   }
   return out;
-}
-
-export function formatActivityRow(
-  row: AuditRow,
-  maps: ActivityMaps,
-): FormattedActivityRow {
-  const profile = row.user_id ? maps.profilesById.get(row.user_id) : undefined;
-  const actor = row.user_id
-    ? profile?.full_name || profile?.email || "Unknown learner"
-    : "System activity";
-  const lessonDetail = formatLessonDetail(row.entity_id, maps);
-
-  switch (row.action) {
-    case "lesson_completed":
-      return {
-        actor,
-        label: "Completed lesson",
-        detail: lessonDetail,
-        badge: "Learning",
-        createdAt: row.created_at,
-      };
-    case "quiz_passed": {
-      const score = row.metadata?.score;
-      return {
-        actor,
-        label: "Passed quiz",
-        detail:
-          typeof score === "number"
-            ? `${lessonDetail} with ${score}%`
-            : lessonDetail,
-        badge: "Learning",
-        createdAt: row.created_at,
-      };
-    }
-    case "assignment_approved":
-      return {
-        actor,
-        label: "Assignment approved",
-        detail: lessonDetail,
-        badge: "Assignment",
-        createdAt: row.created_at,
-      };
-    case "course_certificate_issued": {
-      const title = row.entity_id
-        ? maps.coursesById.get(row.entity_id)
-        : undefined;
-      return {
-        actor,
-        label: "Issued course certificate",
-        detail: appendDetail(title ?? "Course", certificateNumber(row)),
-        badge: "Certificate",
-        createdAt: row.created_at,
-      };
-    }
-    case "program_certificate_issued": {
-      const title = row.entity_id
-        ? maps.programsById.get(row.entity_id)
-        : undefined;
-      return {
-        actor,
-        label: "Issued program certificate",
-        detail: appendDetail(title ?? "Program", certificateNumber(row)),
-        badge: "Certificate",
-        createdAt: row.created_at,
-      };
-    }
-    default:
-      return {
-        actor,
-        label: titleize(row.action),
-        detail: row.entity_type,
-        badge: row.user_id ? "Activity" : "System",
-        createdAt: row.created_at,
-      };
-  }
-}
-
-function formatLessonDetail(
-  lessonId: string | null,
-  maps: ActivityMaps,
-): string {
-  if (!lessonId) return "Lesson";
-  const lessonTitle = maps.lessonTitlesById.get(lessonId) ?? "Lesson";
-  const courseTitle = maps.courseTitlesByLessonId.get(lessonId);
-  return courseTitle ? `${lessonTitle} in ${courseTitle}` : lessonTitle;
-}
-
-function certificateNumber(row: AuditRow): string {
-  const number = row.metadata?.certificate_number;
-  return typeof number === "string" ? number : "";
-}
-
-function appendDetail(primary: string, secondary: string): string {
-  return secondary ? `${primary}, ${secondary}` : primary;
-}
-
-function titleize(value: string): string {
-  const clean = value.replace(/_/g, " ");
-  return clean.charAt(0).toUpperCase() + clean.slice(1);
 }
