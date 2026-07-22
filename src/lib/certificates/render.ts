@@ -1,3 +1,5 @@
+import { sanitizeCertificateBodyHtml } from "@/lib/sanitize/certificate";
+
 /**
  * Resolves the {{merge_field}} placeholders inside a certificate template's
  * body_html. Unknown fields render as empty strings so an admin typo in
@@ -12,7 +14,9 @@ export function renderCertificateHtml(
     certificate_number: string;
   },
 ): string {
-  return bodyHtml.replace(/\{\{(\w+)\}\}/g, (_, key: string) => {
+  const sanitizedTemplate = sanitizeCertificateBodyHtml(bodyHtml);
+
+  return sanitizedTemplate.replace(/\{\{(\w+)\}\}/g, (_, key: string) => {
     switch (key) {
       case "full_name":
         return escapeHtml(fields.full_name);

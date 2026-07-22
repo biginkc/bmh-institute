@@ -31,6 +31,13 @@ describe("DashboardLayout sibling shell contract", () => {
     expect(layoutSource).toContain("size-10 shrink-0");
   });
 
+  it("contains dense table overflow inside the dashboard shell", () => {
+    expect(layoutSource).toContain(
+      "min-h-screen overflow-x-clip bg-[var(--surface-app)]",
+    );
+    expect(layoutSource).toContain("flex min-w-0 flex-1 flex-col");
+  });
+
   it("removes the dead notification control and keeps signed-in identity visible", () => {
     expect(layoutSource).not.toContain("Bell");
     expect(layoutSource).not.toContain("Notifications");

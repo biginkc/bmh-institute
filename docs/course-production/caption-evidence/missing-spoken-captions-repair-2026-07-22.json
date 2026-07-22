@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-07-22",
+  "authorization_source": "Jarrad Henry requested exhaustive production hardening, including complete audio transcription and anomaly detection.",
+  "records": [
+    {
+      "video_source_key": "video-slot-04-humanizing-b",
+      "video_sha256": "582125d4d8a2b30f911071e644ebfc2b3e1aa6fb839470f52ef04c2a0c307f4d",
+      "caption_sha256": "fbb9d779a3a82ec83ae575aa3166a7658f697e8d843928b94bc6a8f7f832eebb",
+      "transcript_sha256": null,
+      "status": "approved",
+      "reviewed_by": "BMH Institute caption QA evidence",
+      "decision_source": "caption_accessibility_validation"
+    },
+    {
+      "video_source_key": "video-slot-14-flow",
+      "video_sha256": "aa423da1d4ee7ecbc6a90148a28516ab952027133528be6e1852c92ec6834b79",
+      "caption_sha256": "ad675af84af85a2dd1662e4793dd0c480b39cefbc56fc2303efb38d604d41b4b",
+      "transcript_sha256": null,
+      "status": "approved",
+      "reviewed_by": "BMH Institute caption QA evidence",
+      "decision_source": "caption_accessibility_validation"
+    }
+  ],
+  "validation": {
+    "video-slot-04-humanizing-b": {
+      "exact_video_duration_seconds": 357.824,
+      "caption_cue_count": 90,
+      "restored_spoken_span_seconds": [130.14, 143.52],
+      "restored_cue_count": 3,
+      "restored_content": "The seller's first-person account of grief, carrying cost, and her mother's wishes is now captioned before the lesson returns to narration.",
+      "webvtt_parser_errors": 0,
+      "minimum_cue_duration_seconds": 0.8,
+      "maximum_characters_per_second": 20.998601,
+      "maximum_lines_per_cue": 2,
+      "full_video_decode_errors": 0
+    },
+    "video-slot-14-flow": {
+      "exact_video_duration_seconds": 418.496,
+      "caption_cue_count": 105,
+      "restored_spoken_span_seconds": [87.76, 112.86],
+      "restored_cue_count": 7,
+      "restored_content": "The cash-to-terms transition and its three numbered steps are now captioned, replacing one incorrect fragment and a 24.846-second learner-facing caption gap.",
+      "webvtt_parser_errors": 0,
+      "minimum_cue_duration_seconds": 0.8,
+      "maximum_characters_per_second": 20.998416,
+      "maximum_lines_per_cue": 2,
+      "full_video_decode_errors": 0
+    }
+  }
+}

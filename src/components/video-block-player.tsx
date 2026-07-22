@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Play } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -34,6 +34,16 @@ export function VideoBlockPlayer({
   initialComplete?: boolean;
 }) {
   const { refresh } = useRouter();
+  const [refreshingSignedMedia, setRefreshingSignedMedia] = useState(false);
+  const stableSrc = useStableSignedAssetUrl(src, refreshingSignedMedia);
+  const stablePosterSrc = useStableSignedAssetUrl(
+    posterSrc,
+    refreshingSignedMedia,
+  );
+  const stableCaptionsSrc = useStableSignedAssetUrl(
+    captionsSrc,
+    refreshingSignedMedia,
+  );
   const videoRef = useRef<HTMLVideoElement>(null);
   const sampleStartRef = useRef<number | null>(null);
   const resumePositionRef = useRef(0);
@@ -47,6 +57,7 @@ export function VideoBlockPlayer({
   const refreshRequestedRef = useRef(false);
   const [playing, setPlaying] = useState(false);
   const [duration, setDuration] = useState(0);
+  const [mediaError, setMediaError] = useState<string | null>(null);
   const [progressError, setProgressError] = useState<string | null>(null);
   const [watchedPercent, setWatchedPercent] = useState(0);
   const [completed, setCompleted] = useState(initialComplete);
@@ -115,6 +126,9 @@ export function VideoBlockPlayer({
         }
         if (!mountedRef.current) return;
         if (result?.ok) {
+          if (Number.isFinite(result.positionSeconds)) {
+            resumePositionRef.current = result.positionSeconds;
+          }
           setWatchedPercent(result.watchedPercent);
           if (result.completed && !completedRef.current) {
             completedRef.current = true;
@@ -147,6 +161,9 @@ export function VideoBlockPlayer({
           if (result?.ok) break;
         }
         if (!mountedRef.current) return;
+        if (result?.ok && Number.isFinite(result.positionSeconds)) {
+          resumePositionRef.current = result.positionSeconds;
+        }
         const recovered = result?.ok ? true : await resynchronizeProgress();
         if (!mountedRef.current) return;
         setProgressError(
@@ -249,13 +266,16 @@ export function VideoBlockPlayer({
       <div className="relative aspect-video overflow-hidden rounded-[var(--bmh-radius-lg)] border-[2.5px] border-[var(--ink-900)] bg-[var(--thumb-blue)] shadow-[var(--bmh-shadow-sm)]">
         <video
           ref={videoRef}
-          src={src}
-          poster={posterSrc}
+          src={stableSrc}
+          poster={stablePosterSrc}
           controls
+          crossOrigin="anonymous"
           preload="metadata"
           aria-label={title}
           className="h-full w-full bg-[var(--ink-900)] object-contain"
           onLoadedMetadata={(event) => {
+            setRefreshingSignedMedia(false);
+            setMediaError(null);
             const nextDuration = event.currentTarget.duration;
             setDuration(Number.isFinite(nextDuration) ? nextDuration : 0);
             if (!playbackStartedRef.current && resumePositionRef.current > 0) {
@@ -266,8 +286,19 @@ export function VideoBlockPlayer({
             }
           }}
           onPlay={(event) => {
+            const replayingAfterEnd = playbackEndedRef.current;
             playbackStartedRef.current = true;
             playbackEndedRef.current = false;
+            setMediaError(null);
+            const resumePosition = resumePositionRef.current;
+            if (
+              !replayingAfterEnd &&
+              event.currentTarget.currentTime < 0.5 &&
+              resumePosition > 0.5 &&
+              resumePosition < event.currentTarget.duration
+            ) {
+              event.currentTarget.currentTime = resumePosition;
+            }
             setPlaying(true);
             sampleStartRef.current = event.currentTarget.currentTime;
           }}
@@ -278,6 +309,7 @@ export function VideoBlockPlayer({
           }}
           onSeeked={(event) => {
             const seekPosition = event.currentTarget.currentTime;
+            resumePositionRef.current = seekPosition;
             sampleStartRef.current = seekPosition;
             enqueueSeek({
               blockId,
@@ -295,12 +327,18 @@ export function VideoBlockPlayer({
             setPlaying(false);
             if (refreshPendingRef.current) requestRefresh();
           }}
+          onError={() => {
+            setPlaying(false);
+            setMediaError(
+              "Video could not load. Reload it to request a fresh secure media link.",
+            );
+          }}
           onTimeUpdate={onTimeUpdate}
         >
-          {captionsSrc ? (
+          {stableCaptionsSrc ? (
             <track
               kind="captions"
-              src={captionsSrc}
+              src={stableCaptionsSrc}
               srcLang="en"
               label="English"
               default
@@ -337,6 +375,24 @@ export function VideoBlockPlayer({
           {progressError}
         </p>
       ) : null}
+      {mediaError ? (
+        <div
+          role="alert"
+          className="flex flex-wrap items-center gap-2 text-sm font-bold text-[var(--danger)]"
+        >
+          <span>{mediaError}</span>
+          <button
+            type="button"
+            onClick={() => {
+              setRefreshingSignedMedia(true);
+              refresh();
+            }}
+            className="rounded-[var(--bmh-radius-sm)] border-2 border-current px-2.5 py-1 font-extrabold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--danger)]"
+          >
+            Reload video
+          </button>
+        </div>
+      ) : null}
       {transcriptSrc ? (
         <a
           href={transcriptSrc}
@@ -349,6 +405,31 @@ export function VideoBlockPlayer({
       ) : null}
     </div>
   );
+}
+
+function useStableSignedAssetUrl(
+  value: string | undefined,
+  acceptTokenRotation: boolean,
+): string | undefined {
+  const identity = assetIdentity(value);
+  const stabilityKey = acceptTokenRotation ? value : identity;
+  return useMemo(
+    () => value,
+    // Signed-token rotation must not replace an active media element. A real
+    // storage path change or an explicit recovery request refreshes the value.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [stabilityKey],
+  );
+}
+
+function assetIdentity(value: string | undefined): string {
+  if (!value) return "";
+  try {
+    const parsed = new URL(value);
+    return `${parsed.origin}${parsed.pathname}`;
+  } catch {
+    return value.split("?", 1)[0];
+  }
 }
 
 function formatDuration(seconds: number): string {

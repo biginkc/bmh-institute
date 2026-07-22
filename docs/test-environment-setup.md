@@ -36,12 +36,34 @@ TEST_SUPABASE_ANON_KEY: from your throwaway project's Dashboard at Project Setti
 
 TEST_SUPABASE_SERVICE_ROLE_KEY: from the same Dashboard panel. The "service_role secret" key. Treat this like a password.
 
-E2E_PROD_BASE_URL: the deployed BMH Institute URL. Production uses `https://institute.bmhgroupkc.com`. A Vercel preview URL also works.
+E2E_PROD_BASE_URL: the deployed BMH Institute production URL,
+`https://institute.bmhgroupkc.com`. The production smoke harness deliberately
+rejects preview hosts so it cannot be mistaken for production evidence.
 
 E2E_HUGO_STORAGE_STATE: a local Playwright storage-state JSON file captured only
 after completing the real Hugo flow. If it is omitted, public auth checks run
 and authenticated scenarios are reported as skipped with a manual Chrome
 acceptance instruction.
+
+### Preview Hugo prerequisite
+
+A Vercel preview that points at `bmh-institute-test` can complete the real Hugo
+flow only when that Supabase project has an enabled `custom:hugo` provider. The
+provider must use a dedicated non-production OAuth client registered in Hugo
+with this exact callback:
+
+```
+https://jvaabkchkihkjllehmft.supabase.co/auth/v1/callback
+```
+
+Keep the production Institute OAuth client and secret out of the test project.
+The dedicated client ID must also be on Hugo's first-party client allowlist.
+Treat these as one controlled configuration change: register the client, add it
+to the Hugo allowlist, configure the test provider, then prove the authorization
+redirect, callback, and resulting test-project session before accepting preview
+authentication. A preview that reports `Unsupported provider: custom provider
+custom:hugo not found` is missing this configuration and is not valid evidence
+for the real sign-in path.
 
 ## Verifying the integration suite
 

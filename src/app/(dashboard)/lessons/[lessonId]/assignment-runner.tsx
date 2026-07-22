@@ -27,6 +27,9 @@ export type PriorSubmission = {
   status: "submitted" | "approved" | "needs_revision";
   submitted_at: string;
   reviewer_notes: string | null;
+  submission_text: string | null;
+  submission_url: string | null;
+  submission_file_path: string | null;
 };
 
 export function AssignmentRunner({
@@ -42,15 +45,22 @@ export function AssignmentRunner({
   const approved = latest?.status === "approved";
   const needsRevision = latest?.status === "needs_revision";
   const awaitingReview = latest?.status === "submitted";
+  const revision = needsRevision ? latest : null;
 
-  const [text, setText] = useState("");
-  const [url, setUrl] = useState("");
-  const [filePath, setFilePath] = useState<string | null>(null);
-  const [filename, setFilename] = useState<string | null>(null);
+  const [text, setText] = useState(revision?.submission_text ?? "");
+  const [url, setUrl] = useState(revision?.submission_url ?? "");
+  const [filePath, setFilePath] = useState<string | null>(
+    revision?.submission_file_path ?? null,
+  );
+  const [filename, setFilename] = useState<string | null>(
+    filenameFromPath(revision?.submission_file_path),
+  );
+  const [submissionError, setSubmissionError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const router = useRouter();
 
   function onSubmit() {
+    setSubmissionError(null);
     startTransition(async () => {
       try {
         const result = await submitAssignment({
@@ -63,6 +73,7 @@ export function AssignmentRunner({
             assignment.submission_type === "file_upload" ? filePath ?? "" : undefined,
         });
         if (!result.ok) {
+          setSubmissionError(result.error);
           toast.error(result.error);
           return;
         }
@@ -77,8 +88,10 @@ export function AssignmentRunner({
         setFilename(null);
         router.refresh();
       } catch {
+        const message = "Submission could not be confirmed. Check your connection and try again.";
+        setSubmissionError(message);
         router.refresh();
-        toast.error("Submission could not be confirmed. Check your connection and try again.");
+        toast.error(message);
       }
     });
   }
@@ -204,6 +217,15 @@ export function AssignmentRunner({
             </div>
           ) : null}
 
+          {submissionError ? (
+            <p
+              role="alert"
+              className="mt-3 rounded-[var(--bmh-radius-md)] border-2 border-[var(--danger)] bg-red-50 px-4 py-3 font-[family-name:var(--font-body)] text-sm font-bold text-[var(--danger)]"
+            >
+              {submissionError}
+            </p>
+          ) : null}
+
           <div className="mt-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
             <Badge tone={assignment.requires_review ? "neutral" : "green"}>
               {assignment.requires_review
@@ -263,6 +285,11 @@ export function AssignmentRunner({
       ) : null}
     </div>
   );
+}
+
+function filenameFromPath(path: string | null | undefined): string | null {
+  if (!path) return null;
+  return path.split("/").at(-1) || null;
 }
 
 function AssignmentStatus({

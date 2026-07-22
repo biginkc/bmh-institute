@@ -54,7 +54,7 @@ export function CertificateLayout({
             className="absolute -bottom-20 -left-14 size-40 rounded-full bg-[var(--orange-100)]"
           />
           <div
-            className="certificate-body relative z-10"
+            className="certificate-body relative z-10 min-w-0 break-words [overflow-wrap:anywhere]"
             dangerouslySetInnerHTML={{ __html: html }}
           />
         </div>

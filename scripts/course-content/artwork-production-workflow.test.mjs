@@ -25,6 +25,7 @@ import {
   approvePilots,
   buildFinalReviewRequest,
   buildDeterministicFinalContactSheet,
+  assertCurrentDerivativeRuntime,
   assertFlatFillCleanupDelta,
   assertPosterSafeEdges,
   createInitialLedger,
@@ -499,6 +500,39 @@ test("tracked ledger validates the active fail-closed lifecycle while preserving
     manifest,
     ledger: tracked,
   });
+});
+
+test("historical artwork remains verifiable while new derivation stays pinned to its recorded runtime", async () => {
+  const current = createInitialLedger(inventory);
+  assert.doesNotThrow(() => assertCurrentDerivativeRuntime(current));
+
+  const historical = structuredClone(current);
+  historical.derivative_runtime.sharp_version = "0.0.0";
+  historical.derivative_runtime.libvips_version = "0.0.0";
+  await validateLedger({
+    root: REPO_ROOT,
+    inventory,
+    manifest: preapprovalManifest,
+    ledger: historical,
+    inspectFiles: false,
+  });
+  assert.throws(
+    () => assertCurrentDerivativeRuntime(historical),
+    /Derivative runtime changed/,
+  );
+
+  const malformed = structuredClone(historical);
+  malformed.derivative_runtime.engine = "untrusted-engine";
+  await assert.rejects(
+    validateLedger({
+      root: REPO_ROOT,
+      inventory,
+      manifest: preapprovalManifest,
+      ledger: malformed,
+      inspectFiles: false,
+    }),
+    /Derivative runtime engine is invalid/,
+  );
 });
 
 test("thumbnail redesign binds current source, display recipe, review, output, and payload budget", async () => {

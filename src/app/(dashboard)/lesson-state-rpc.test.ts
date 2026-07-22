@@ -166,7 +166,7 @@ describe("lesson state batch RPC readers", () => {
     expect(
       rpc.mock.calls.some(
         ([, args]) =>
-          args.p_user_ids.length * args.p_lesson_ids.length === 1_000,
+          args.p_user_ids.length * args.p_lesson_ids.length >= 900,
       ),
     ).toBe(true);
     for (const [, args] of rpc.mock.calls) {
@@ -174,6 +174,49 @@ describe("lesson state batch RPC readers", () => {
         args.p_user_ids.length * args.p_lesson_ids.length,
       ).toBeLessThanOrEqual(1_000);
     }
+    const requestedLessons = rpc.mock.calls.flatMap(
+      ([, args]) => args.p_lesson_ids,
+    );
+    expect(requestedLessons).toHaveLength(lessonIds.length);
+    expect(new Set(requestedLessons)).toEqual(new Set(lessonIds));
+  });
+
+  it("loads independent admin report batches concurrently without an unbounded fan-out", async () => {
+    const userIds = Array.from({ length: 121 }, (_, index) => `user-${index}`);
+    const lessonIds = Array.from(
+      { length: 50 },
+      (_, index) => `lesson-${index}`,
+    );
+    let activeCalls = 0;
+    let peakCalls = 0;
+    const rpc = vi.fn(
+      async (
+        _name: string,
+        args: { p_user_ids: string[]; p_lesson_ids: string[] },
+      ) => {
+        activeCalls += 1;
+        peakCalls = Math.max(peakCalls, activeCalls);
+        await new Promise((resolve) => setTimeout(resolve, 5));
+        activeCalls -= 1;
+        return {
+          data: args.p_user_ids.flatMap((userId) =>
+            args.p_lesson_ids.map((lessonId) => ({
+              user_id: userId,
+              lesson_id: lessonId,
+              is_complete: false,
+              completed_at: null,
+            })),
+          ),
+          error: null,
+        };
+      },
+    );
+
+    await expect(
+      loadAdminLessonCompletions({ rpc } as never, { userIds, lessonIds }),
+    ).resolves.toEqual({ ok: true, completions: [] });
+    expect(peakCalls).toBeGreaterThan(1);
+    expect(peakCalls).toBeLessThanOrEqual(6);
   });
 
   it("fails closed before issuing an unbounded report cross-product", async () => {

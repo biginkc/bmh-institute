@@ -44,7 +44,7 @@ export default async function DashboardLayout({
   const roleLabel = profile?.system_role ?? "learner";
 
   return (
-    <div className="min-h-screen bg-[var(--surface-app)]">
+    <div className="min-h-screen overflow-x-clip bg-[var(--surface-app)]">
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-[var(--border-hairline)] bg-[var(--paper)] md:flex md:w-64 print:hidden">
         <Link
           href="/dashboard"
@@ -131,7 +131,7 @@ export default async function DashboardLayout({
       </header>
 
       <div className="flex min-h-screen flex-col pt-[76px] md:ml-64">
-        <main className="flex flex-1 flex-col">{children}</main>
+        <main className="flex min-w-0 flex-1 flex-col">{children}</main>
       </div>
     </div>
   );

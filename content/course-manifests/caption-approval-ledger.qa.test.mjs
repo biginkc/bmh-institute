@@ -336,6 +336,33 @@ test("a directly authorized accessibility cut rebuilds from its tracked caption 
   assert.deepEqual(assets.map((asset) => [asset.kind, asset.approval_status]), [["caption", "approved"]]);
 });
 
+test("an accessibility correction supersedes a legacy transcript-bound caption", async () => {
+  const root = await mkdtemp(path.join(tmpdir(), "bmh-caption-correction-"));
+  await mkdir(path.join(root, "course-assets/captions"), { recursive: true });
+  await mkdir(path.join(root, "course-assets/transcripts"), { recursive: true });
+  await writeFile(path.join(root, "course-assets/captions/video-test.vtt"), "WEBVTT\n");
+  await writeFile(path.join(root, "course-assets/transcripts/video-test.md"), "# Legacy review transcript\n");
+  const video = {
+    source_key: "video-test",
+    approval_status: "approved",
+    checksum_sha256: "a".repeat(64),
+  };
+  const ledger = {
+    records: [{
+      status: "approved",
+      video_source_key: video.source_key,
+      video_sha256: video.checksum_sha256,
+      caption_sha256: "73420fdc06730575e08b8a09b5b3824e0f2a9d2dd742640613490ef3abac2bd0",
+      transcript_sha256: null,
+      decision_source: "caption_accessibility_validation",
+    }],
+  };
+
+  const assets = await buildDerivativePair(video, ledger, root);
+
+  assert.deepEqual(assets.map((asset) => [asset.kind, asset.approval_status]), [["caption", "approved"]]);
+});
+
 test("buildManifest refuses forged caption evidence before emitting approved metadata", async () => {
   const { ledger } = await fixtures();
   ledger.records[0].evidence_sha256 = "f".repeat(64);
