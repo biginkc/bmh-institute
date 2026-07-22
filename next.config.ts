@@ -1,10 +1,15 @@
 import type { NextConfig } from "next";
 
+const serverActionAllowedOrigins = ["institute.bmhgroupkc.com"];
+if (process.env.NODE_ENV === "development") {
+  serverActionAllowedOrigins.push("localhost:3100");
+}
+
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   experimental: {
     serverActions: {
-      allowedOrigins: ["institute.bmhgroupkc.com"],
+      allowedOrigins: serverActionAllowedOrigins,
       bodySizeLimit: "25mb",
     },
   },
