@@ -43,6 +43,26 @@ after completing the real Hugo flow. If it is omitted, public auth checks run
 and authenticated scenarios are reported as skipped with a manual Chrome
 acceptance instruction.
 
+### Preview Hugo prerequisite
+
+A Vercel preview that points at `bmh-institute-test` can complete the real Hugo
+flow only when that Supabase project has an enabled `custom:hugo` provider. The
+provider must use a dedicated non-production OAuth client registered in Hugo
+with this exact callback:
+
+```
+https://jvaabkchkihkjllehmft.supabase.co/auth/v1/callback
+```
+
+Keep the production Institute OAuth client and secret out of the test project.
+The dedicated client ID must also be on Hugo's first-party client allowlist.
+Treat these as one controlled configuration change: register the client, add it
+to the Hugo allowlist, configure the test provider, then prove the authorization
+redirect, callback, and resulting test-project session before accepting preview
+authentication. A preview that reports `Unsupported provider: custom provider
+custom:hugo not found` is missing this configuration and is not valid evidence
+for the real sign-in path.
+
 ## Verifying the integration suite
 
 Once `.env.test.local` is populated with the three TEST_SUPABASE_* vars:
