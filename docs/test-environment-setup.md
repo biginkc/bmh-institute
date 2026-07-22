@@ -36,7 +36,9 @@ TEST_SUPABASE_ANON_KEY: from your throwaway project's Dashboard at Project Setti
 
 TEST_SUPABASE_SERVICE_ROLE_KEY: from the same Dashboard panel. The "service_role secret" key. Treat this like a password.
 
-E2E_PROD_BASE_URL: the deployed BMH Institute URL. Production uses `https://institute.bmhgroupkc.com`. A Vercel preview URL also works.
+E2E_PROD_BASE_URL: the deployed BMH Institute production URL,
+`https://institute.bmhgroupkc.com`. The production smoke harness deliberately
+rejects preview hosts so it cannot be mistaken for production evidence.
 
 E2E_HUGO_STORAGE_STATE: a local Playwright storage-state JSON file captured only
 after completing the real Hugo flow. If it is omitted, public auth checks run
