@@ -95,7 +95,18 @@ select set_config('request.jwt.claim.role', 'service_role', true);
 
 do $$
 begin
-  if not exists (select 1 from public.profiles) then
+  -- Bootstrap an identity only for an empty, throwaway CI catalog. The entire
+  -- rehearsal is transaction-scoped and rolls back; populated hosted targets
+  -- must never receive this fixture identity.
+  if exists (select 1 from public.profiles) then
+    if exists (
+      select 1 from auth.users where id = ${sqlText(rehearsalProfileId)}::uuid
+    ) or exists (
+      select 1 from public.profiles where id = ${sqlText(rehearsalProfileId)}::uuid
+    ) then
+      raise exception 'Rehearsal fixture identity unexpectedly exists on a populated target.';
+    end if;
+  else
     perform set_config('session_replication_role', 'replica', true);
     insert into auth.users (id, email)
     values (${sqlText(rehearsalProfileId)}::uuid, 'quiz-revision-rehearsal@example.test');
