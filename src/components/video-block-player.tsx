@@ -252,6 +252,7 @@ export function VideoBlockPlayer({
           src={src}
           poster={posterSrc}
           controls
+          crossOrigin="anonymous"
           preload="metadata"
           aria-label={title}
           className="h-full w-full bg-[var(--ink-900)] object-contain"

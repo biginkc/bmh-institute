@@ -485,6 +485,10 @@ describe("<VideoBlockPlayer />", () => {
       "poster",
       "https://example.com/poster.webp",
     );
+    expect(screen.getByLabelText("Lesson video")).toHaveAttribute(
+      "crossorigin",
+      "anonymous",
+    );
     expect(container.querySelector('track[kind="captions"]')).toHaveAttribute(
       "src",
       "https://example.com/captions.vtt",
