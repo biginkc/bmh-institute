@@ -145,9 +145,9 @@ select set_config('request.jwt.claim.role', 'service_role', true);
 do $test$
 declare
   v_manifest_sha constant text :=
-    '2ee30597dd997614acc93422d00bbd2874c7438b0dc189d826ea9fbea55c1489';
+    '84cd11f70007a28cbb0612f3d5ec34e3124a86377b7cda7d8e87ac6f1e587528';
   v_confirmation constant text :=
-    'DELETE-EXACT-BMH-INSTITUTE-FIXTURES:dhvfsyteqsxagokoerrx:2ee30597dd997614acc93422d00bbd2874c7438b0dc189d826ea9fbea55c1489';
+    'DELETE-EXACT-BMH-INSTITUTE-FIXTURES:dhvfsyteqsxagokoerrx:84cd11f70007a28cbb0612f3d5ec34e3124a86377b7cda7d8e87ac6f1e587528';
   v_secret constant text := repeat('test-controller-secret-', 3);
   v_execution_id constant text := '00000000-0000-4000-8000-000000000037';
   v_now timestamptz := clock_timestamp();
@@ -233,7 +233,9 @@ begin
       or (v_probe ->> 'postgres_major')::integer not in (15, 16, 17)
       or coalesce((v_probe ->> 'legacy_contract_safe')::boolean, false) is not true
       or v_probe ->> 'legacy_definition_sha256' <>
-        '0a4ff6b98a86427016faee21d6b8a821944015b944317e9942bda11dd23de05e'
+        (select expected_sha256
+         from private.fixture_cleanup_expected_function_contracts_v1
+         where contract_name = 'moved_destructive')
       or coalesce((v_probe ->> 'controller_contract_safe')::boolean, false) is not true
       or v_probe -> 'controller_contracts' is distinct from
         private.fixture_cleanup_controller_contract_attestation_v1() -> 'functions'

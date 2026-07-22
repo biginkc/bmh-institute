@@ -55,9 +55,10 @@ navigation, attempt policy, and completed-quiz hard navigation.
 - One additive database migration may store an immutable, privacy-safe grading
   snapshot (`is_correct`, locked point value and question type, plus
   `explanation` only for new correct responses). It must not store correct
-  option identifiers or answer text, and it must preserve the existing score
-  calculation and attempt behavior. Legacy responses are graded once during
-  migration without copying any authored explanation.
+  option identifiers or answer text. Incomplete legacy attempts are graded once
+  only when their saved catalog remains structurally valid; completed legacy
+  attempts preserve their stored percentage and outcome without reconstructing
+  per-question correctness or a point breakdown.
 - No implementation from `docs/performance/lesson-load-remediation-plan.md`.
 - No production data mutation beyond disposable browser verification state that
   is safe for the authenticated owner account.
@@ -70,3 +71,10 @@ review. Reconstructing a reveal from the current answer key makes historical
 privacy mutable: an answer that was wrong when locked can become correct after
 an administrator edits the key. The additive immutable snapshot is therefore
 required to satisfy the approved immediate, resume, and final-payload contract.
+
+The second server/regression review refuted deployment-time regrading for
+completed legacy attempts: historical keys, point weights, and deleted
+questions cannot be recovered reliably. Those rows are now explicitly
+`legacy_summary_only`. It also refuted access checks that existed only in server
+actions; the learner table policy now requires current catalog access and an
+unlocked lesson for direct reads.

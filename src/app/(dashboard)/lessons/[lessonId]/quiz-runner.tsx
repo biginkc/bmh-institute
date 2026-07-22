@@ -548,9 +548,11 @@ function QuizResultCard({
               ? "Attempts complete"
               : "Keep going"}
         </h2>
-        <p className="mt-1 font-[family-name:var(--font-body)] text-sm font-semibold text-[var(--text-muted)]">
-          {result.earnedPoints} of {result.totalPoints} points
-        </p>
+        {result.earnedPoints !== null && result.totalPoints !== null ? (
+          <p className="mt-1 font-[family-name:var(--font-body)] text-sm font-semibold text-[var(--text-muted)]">
+            {result.earnedPoints} of {result.totalPoints} points
+          </p>
+        ) : null}
       </div>
 
       <div className="mx-auto mb-7 max-w-xl">

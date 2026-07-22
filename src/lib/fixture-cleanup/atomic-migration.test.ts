@@ -33,6 +33,10 @@ const progressFingerprintRefreshPath = resolve(
   root,
   "supabase/migrations/038_refresh_fixture_progress_fingerprints.sql",
 );
+const quizPrivacyMigrationPath = resolve(
+  root,
+  "supabase/migrations/051_quiz_answer_privacy_snapshots.sql",
+);
 const controllerGateSqlTestPath = resolve(
   root,
   "supabase/tests/036_controller_verified_fixture_cleanup_gate.sql",
@@ -64,6 +68,7 @@ const progressFingerprintRefresh = readFileSync(
   progressFingerprintRefreshPath,
   "utf8",
 );
+const quizPrivacyMigration = readFileSync(quizPrivacyMigrationPath, "utf8");
 const controllerGateSqlTest = readFileSync(controllerGateSqlTestPath, "utf8");
 const controllerGateHostedSqlTest = readFileSync(
   controllerGateHostedSqlTestPath,
@@ -80,9 +85,8 @@ describe("atomic fixture cleanup migration", () => {
     expect(readFileSync(`${manifestPath}.sha256`, "utf8")).toBe(
       `${manifestHash}  fixture-boundary-manifest.json\n`,
     );
-    expect(progressFingerprintRefresh).toContain(
-      `v_new_manifest_sha constant text := '${manifestHash}'`,
-    );
+    expect(quizPrivacyMigration).toContain("v_new_manifest_sha constant text :=");
+    expect(quizPrivacyMigration).toContain(manifestHash);
     expect(contractRefresh).toContain("Migration 021 is already applied");
     expect(contractRefresh).toContain(
       "v_old_occurrences <> 2 or v_new_occurrences <> 0",
@@ -505,7 +509,7 @@ describe("atomic fixture cleanup migration", () => {
       /member: "supabase_storage_admin",[\s\S]*?role: "authenticator",[\s\S]*?inherit_option: false,/,
     );
     expect(controllerContract).toContain(
-      "0a4ff6b98a86427016faee21d6b8a821944015b944317e9942bda11dd23de05e",
+      "bcbbcae23f50cad629373393c969344ae2fd865d65e31efa22ab1b7050044b6b",
     );
     for (const hash of [
       "1766ff88e3dfaf4b37f3629406c6be1bbed32274e0937e1a4ab7257d715aa612",
@@ -526,10 +530,10 @@ describe("atomic fixture cleanup migration", () => {
       "1f20fcb5390b85bd1ba3d45166e204bdc947e0ef3ea3f3214a16a1c6aef08b30",
     );
     expect(controllerContract).toContain(
-      "e63f6f40802a11ddf0b855dd61b6a8844ab5259942f777c037d099bd7ef8f93e",
+      "c3fc0a14b443329216f1227f4c201ddd7d5dcc1485ba1c7a8f0bc49014aa4ad6",
     );
     expect(controllerContract).toContain(
-      "0a4ff6b98a86427016faee21d6b8a821944015b944317e9942bda11dd23de05e",
+      "bcbbcae23f50cad629373393c969344ae2fd865d65e31efa22ab1b7050044b6b",
     );
     const localAdversarialTest = readFileSync(
       resolve(root, "scripts/fixture-boundary/atomic-cleanup-local-test.sql"),

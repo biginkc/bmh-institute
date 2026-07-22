@@ -386,6 +386,13 @@ describe("<QuizRunner />", () => {
     expect(await screen.findByRole("heading", { name: questions[1].question_text })).toBeVisible();
     await user.click(screen.getByRole("button", { name: "Back" }));
     expect(await screen.findByText("Incorrect")).toBeVisible();
+    expect(screen.queryByText("Correct answer")).not.toBeInTheDocument();
+    expect(screen.queryByText("Ask before pitching.")).not.toBeInTheDocument();
+    const wrongOption = screen.getByLabelText("Lead with the offer").closest("label") as HTMLElement;
+    const neutralOption = screen.getByLabelText("Ask one clear question").closest("label") as HTMLElement;
+    expect(wrongOption.style.borderColor).toBe("var(--danger)");
+    expect(neutralOption.style.borderColor).toBe("var(--ink-200)");
+    expect(document.querySelector("[data-quiz-feedback-announcement]")).toBeEmptyDOMElement();
     expect(startQuizAttempt).toHaveBeenCalledTimes(2);
     expect(answerQuizQuestion).toHaveBeenCalledTimes(1);
   });
@@ -585,6 +592,36 @@ describe("<QuizRunner />", () => {
     expect(screen.getAllByText("Third useful explanation.")).toHaveLength(1);
     expect(screen.queryByText("Correct answer")).not.toBeInTheDocument();
     expect(screen.queryByText("Ask one clear question", { selector: "p" })).not.toBeInTheDocument();
+  });
+
+  it("renders a legacy summary without a fabricated point breakdown", async () => {
+    const user = userEvent.setup();
+    vi.mocked(startQuizAttempt).mockResolvedValue({
+      ok: true,
+      attemptId: "attempt-legacy",
+      questions: [attemptQuestions[0]],
+      resumed: false,
+      responses: {},
+      reveals: [],
+    });
+    vi.mocked(finalizeQuizAttempt).mockResolvedValue({
+      ok: true,
+      score: 50,
+      passed: false,
+      earnedPoints: null,
+      totalPoints: null,
+      attemptId: "attempt-legacy",
+      review: null,
+    });
+    renderRunner();
+    await start(user);
+    await user.click(screen.getByLabelText("Lead with the offer"));
+    await user.click(screen.getByRole("button", { name: "Check answer" }));
+    await user.click(await screen.findByRole("button", { name: "Finish" }));
+
+    expect(await screen.findByText("50% score")).toBeVisible();
+    expect(screen.queryByText(/points$/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Correct-response review" })).not.toBeInTheDocument();
   });
 
   it("keeps the cooldown result state", async () => {

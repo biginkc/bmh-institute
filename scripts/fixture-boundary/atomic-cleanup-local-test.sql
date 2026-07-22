@@ -142,7 +142,7 @@ begin
 
   begin
     update public.courses
-      set thumbnail_path = 'real-artwork/course.webp', content_import_id = 'real-import'
+      set thumbnail_path = 'real-artwork/course.webp'
       where id = '02c489f6-d43f-43d4-b065-3846feb468f4';
     perform pg_temp.fixture_cleanup_test_call(v_manifest, v_confirmation);
     raise exception 'test expected a post-capture-field drift failure';
@@ -154,7 +154,7 @@ begin
   end if;
 
   begin
-    alter table public.programs drop column thumbnail_asset_key;
+    alter table public.programs drop column thumbnail_asset_key cascade;
     perform pg_temp.fixture_cleanup_test_call(v_manifest, v_confirmation);
     raise exception 'test expected a migration-020 prerequisite failure';
   exception when others then

@@ -46,8 +46,8 @@ export type QuizSubmitResult =
       ok: true;
       score: number;
       passed: boolean;
-      earnedPoints: number;
-      totalPoints: number;
+      earnedPoints: number | null;
+      totalPoints: number | null;
       attemptId: string;
       review: Array<{
         questionId: string;
@@ -233,7 +233,7 @@ export async function finalizeQuizAttempt(input: {
   const { data: attempt, error: attemptError } = await learner
     .from("user_quiz_attempts")
     .select(
-      "id, user_id, quiz_id, lesson_id, question_order, answer_orders, responses, answer_results, score, passed, completed_at",
+      "id, user_id, quiz_id, lesson_id, question_order, answer_orders, responses, answer_results, grading_snapshot_state, score, passed, completed_at",
     )
     .eq("id", input.attemptId)
     .eq("user_id", user.id)
@@ -296,7 +296,7 @@ export async function finalizeQuizAttempt(input: {
     const { data: landed, error: landedError } = await learner
       .from("user_quiz_attempts")
       .select(
-        "id, user_id, quiz_id, lesson_id, question_order, answer_orders, responses, answer_results, score, passed, completed_at",
+        "id, user_id, quiz_id, lesson_id, question_order, answer_orders, responses, answer_results, grading_snapshot_state, score, passed, completed_at",
       )
       .eq("id", attempt.id)
       .eq("user_id", user.id)
@@ -388,11 +388,23 @@ async function completedAttemptResult(attempt: {
   question_order: unknown;
   responses: unknown;
   answer_results: unknown;
+  grading_snapshot_state: string;
   score: number | null;
   passed: boolean | null;
 }, revealPolicy: string): Promise<QuizSubmitResult> {
   if (attempt.score === null || attempt.passed === null) {
     return { ok: false, error: "This attempt has no stored result." };
+  }
+  if (attempt.grading_snapshot_state === "legacy_summary_only") {
+    return {
+      ok: true,
+      score: attempt.score,
+      passed: attempt.passed,
+      earnedPoints: null,
+      totalPoints: null,
+      attemptId: attempt.id,
+      review: null,
+    };
   }
   const questionOrder = stringArray(attempt.question_order);
   const answerResults = answerResultRecord(attempt.answer_results);

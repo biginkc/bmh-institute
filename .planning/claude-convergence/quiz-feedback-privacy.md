@@ -136,3 +136,32 @@
   same nine inherited warnings.
 - Next action: commit and push a new exact head, require the PostgreSQL matrix
   to prove the SQL, then re-review that head in all three lanes.
+
+### Iteration 4
+
+- Status: exact head `50c310cbf48bd8bc08fac49fce4d253cd78ce000` was rejected by
+  server-security and regression review; UI/accessibility was clean.
+- Direct-read privacy fix: the learner attempt policy now requires the caller's
+  current lesson catalog access and unlocked lesson state. The PostgreSQL
+  harness proves an active learner can read an owned attempt and a suspended
+  learner receives zero rows from the same direct table query.
+- Historical truth fix: completed pre-migration attempts are marked
+  `legacy_summary_only`; their stored score/pass result is preserved, while
+  point breakdown and per-question review remain absent. Only structurally
+  valid incomplete attempts are backfilled. Invalid saved state aborts migration
+  051 and rolls back its schema changes.
+- Cleanup authorization fix: the canonical rollback snapshot regenerated all
+  11 quiz-attempt hashes and manifest SHA
+  `84cd11f70007a28cbb0612f3d5ec34e3124a86377b7cda7d8e87ac6f1e587528`.
+  Migration 051 pins all 11 before/after hashes and atomically advances the
+  moved cleanup function, legacy attester, and expected-contract registry.
+- Database evidence: the fresh-stack controller harness replays a valid partial
+  attempt, a completed orphaned attempt, an invalid incomplete rollback,
+  immutable key/point edits, and active-versus-suspended direct reads. The
+  rollback-data harness applies through migration 051 and proves all 11
+  production-snapshot rows match the regenerated manifest exactly.
+- Green evidence: `npm run verify` passed 156 unit/server files with 942 tests
+  and 38 RTL files with 132 tests. Production build passed. Lint has zero errors
+  and the same nine inherited warnings. Both PostgreSQL 17 harnesses pass.
+- Next action: commit and push this correction, obtain PostgreSQL 15/16/17 CI,
+  then rerun all three independent exact-head review lanes.

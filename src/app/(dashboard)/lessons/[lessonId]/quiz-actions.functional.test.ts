@@ -216,6 +216,7 @@ describe("quiz server actions", () => {
           question_type: "single_choice",
         },
       },
+      grading_snapshot_state: "native",
       score: null,
       passed: null,
       completed_at: null,
@@ -847,6 +848,27 @@ describe("quiz server actions", () => {
       attemptId: "attempt-1",
     });
     expect(updatedAttempt).toBeNull();
+  });
+
+  it("preserves a completed legacy summary without inventing points or review", async () => {
+    attempt = {
+      ...attempt,
+      answer_results: {},
+      grading_snapshot_state: "legacy_summary_only",
+      score: 50,
+      passed: false,
+      completed_at: "2026-07-20T12:00:00Z",
+    };
+
+    await expect(finalizeQuizAttempt({ attemptId: "attempt-1" })).resolves.toEqual({
+      ok: true,
+      score: 50,
+      passed: false,
+      earnedPoints: null,
+      totalPoints: null,
+      attemptId: "attempt-1",
+      review: null,
+    });
   });
 
   it("rejects a completed-attempt retry after current access is revoked", async () => {

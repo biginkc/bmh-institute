@@ -1356,6 +1356,7 @@ export type Database = {
           answer_orders: Json
           answer_results: Json
           completed_at: string | null
+          grading_snapshot_state: string
           id: string
           lesson_id: string
           passed: boolean | null
@@ -1370,6 +1371,7 @@ export type Database = {
           answer_orders?: Json
           answer_results?: Json
           completed_at?: string | null
+          grading_snapshot_state?: string
           id?: string
           lesson_id: string
           passed?: boolean | null
@@ -1384,6 +1386,7 @@ export type Database = {
           answer_orders?: Json
           answer_results?: Json
           completed_at?: string | null
+          grading_snapshot_state?: string
           id?: string
           lesson_id?: string
           passed?: boolean | null

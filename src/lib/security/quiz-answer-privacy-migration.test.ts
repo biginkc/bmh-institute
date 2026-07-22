@@ -29,6 +29,10 @@ describe("quiz answer privacy snapshot migration", () => {
     expect(sql).toMatch(/update public\.user_quiz_attempts[\s\S]*answer_results[\s\S]*jsonb_each\(attempt\.responses\)/i);
     expect(sql).toMatch(/'explanation', null/i);
     expect(sql).toMatch(/This attempt has no stored grading result/i);
+    expect(sql).toMatch(/grading_snapshot_state = 'legacy_backfilled'/i);
+    expect(sql).toMatch(/grading_snapshot_state = 'legacy_summary_only'/i);
+    expect(sql).toMatch(/completed_at is not null/i);
+    expect(sql).toMatch(/unavailable questions; remediation is required before migration/i);
   });
 
   it("checks current catalog access inside the atomic recording boundary", () => {
@@ -57,7 +61,18 @@ describe("quiz answer privacy snapshot migration", () => {
 
   it("updates the guarded fixture-cleanup column fingerprint", () => {
     expect(sql).toMatch(
-      /v_fields text\[\][\s\S]*'answer_results'[\s\S]*update private\.fixture_cleanup_boundary_v1[\s\S]*where table_name = 'user_quiz_attempts'/i,
+      /v_new_fields text\[\][\s\S]*'answer_results'[\s\S]*'grading_snapshot_state'[\s\S]*update private\.fixture_cleanup_boundary_v1[\s\S]*where table_name = 'user_quiz_attempts'/i,
+    );
+    expect(sql).toContain("84cd11f70007a28cbb0612f3d5ec34e3124a86377b7cda7d8e87ac6f1e587528");
+    expect(sql).toMatch(/v_occurrences <> 2/i);
+    expect(sql).toMatch(/contract_name = 'moved_destructive'/i);
+    expect(sql).toMatch(/fixture_cleanup_controller_contract_attestation_v1/i);
+  });
+
+  it("denies direct learner reads after current catalog access is revoked", () => {
+    expect(sql).toMatch(/drop policy if exists user_quiz_attempts_self_read/i);
+    expect(sql).toMatch(
+      /create policy user_quiz_attempts_self_read[\s\S]*user_id = auth\.uid\(\)[\s\S]*fn_actor_may_access_catalog_entity_v1\([\s\S]*'lessons'[\s\S]*lesson_id[\s\S]*fn_lesson_is_unlocked\(user_id, lesson_id\)/i,
     );
   });
 });
