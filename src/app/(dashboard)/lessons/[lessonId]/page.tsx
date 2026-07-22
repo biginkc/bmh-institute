@@ -193,7 +193,7 @@ async function StandaloneQuizLesson({
     >
       <a
         href={`/courses/${courseId}`}
-        className="inline-flex items-center gap-1.5 text-sm font-extrabold text-[var(--action)] hover:underline"
+        className="inline-flex min-h-11 items-center gap-1.5 text-sm font-extrabold text-[var(--action)] hover:underline"
       >
         <ArrowLeft className="size-4" /> Back to course
       </a>
@@ -289,7 +289,7 @@ async function ContentCompositeLesson({
       {hardQuizNavigation ? (
         <a
           href={`/courses/${courseId}`}
-          className="inline-flex items-center gap-1.5 text-sm font-extrabold text-[var(--action)] underline-offset-4 hover:underline"
+          className="inline-flex min-h-11 items-center gap-1.5 text-sm font-extrabold text-[var(--action)] underline-offset-4 hover:underline"
         >
           <ArrowLeft aria-hidden="true" className="size-4" />
           Back to course
@@ -298,7 +298,7 @@ async function ContentCompositeLesson({
         <Link
           href={`/courses/${courseId}`}
           prefetch={false}
-          className="inline-flex items-center gap-1.5 text-sm font-extrabold text-[var(--action)] underline-offset-4 hover:underline"
+          className="inline-flex min-h-11 items-center gap-1.5 text-sm font-extrabold text-[var(--action)] underline-offset-4 hover:underline"
         >
           <ArrowLeft aria-hidden="true" className="size-4" />
           Back to course
@@ -436,7 +436,7 @@ function LessonShell({
       <Link
         href={`/courses/${courseId}`}
         prefetch={false}
-        className="inline-flex items-center gap-1.5 text-sm font-extrabold text-[var(--action)] hover:underline"
+        className="inline-flex min-h-11 items-center gap-1.5 text-sm font-extrabold text-[var(--action)] hover:underline"
       >
         <ArrowLeft className="size-4" /> Back to course
       </Link>
@@ -617,7 +617,7 @@ function LockedLesson({ courseId }: { courseId: string }) {
       <Link
         href={`/courses/${courseId}`}
         prefetch={false}
-        className="inline-flex items-center gap-1.5 text-sm font-extrabold text-[var(--action)] hover:underline"
+        className="inline-flex min-h-11 items-center gap-1.5 text-sm font-extrabold text-[var(--action)] hover:underline"
       >
         <ArrowLeft className="size-4" /> Back to course
       </Link>
@@ -641,7 +641,7 @@ function LessonError({ error, courseId }: { error: string; courseId: string }) {
       <Link
         href={`/courses/${courseId}`}
         prefetch={false}
-        className="text-sm font-extrabold text-[var(--action)] hover:underline"
+        className="inline-flex min-h-11 items-center text-sm font-extrabold text-[var(--action)] hover:underline"
       >
         Back to course
       </Link>
