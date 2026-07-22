@@ -5,8 +5,8 @@
   "target_count": 29,
   "target_mismatch_count": 0,
   "target_state_sha256": "78607ab2f10f846add8f05a23011c26188f32522978a8fd235ad6abf1257d8af",
-  "replacement_payload_sha256": "602f965c2e9ca687468684220c7a6a967b03cd1d14ff4c3914ca062e1d5fd073",
+  "client_payload_sha256": "2e1ee8434837bfbf49a56c0099a53bb093cf81fc9888e2a1ff49f2573bb33e06",
   "approval_evidence": "docs/course-production/thumbnail-redesign/approvals/video-poster-redesign-approval-2026-07-21.json",
   "approval_evidence_sha256": "18b29e7122614bc687836c76663d0cf4430c27220bfded35babc27c379678d83",
-  "recorded_at": "2026-07-22T04:52:04.151Z"
+  "recorded_at": "2026-07-22T06:58:49.976Z"
 }

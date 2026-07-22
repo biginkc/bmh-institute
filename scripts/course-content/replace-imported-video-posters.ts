@@ -13,9 +13,14 @@ import {
 import { assertCourseImportEnvironment } from "../../src/lib/course-import/environment";
 import { validateCourseManifest } from "../../src/lib/course-import/manifest";
 import { buildImportPlan } from "../../src/lib/course-import/operations";
+import { removeExactReplacedAssets } from "../../src/lib/course-import/replaced-asset-cleanup";
 import {
   assertImportedVideoPosterReplacementApproval,
+  assertLocalSupersededVideoPosterAssets,
+  buildSupersededVideoPosterAssets,
   buildImportedVideoPosterReplacements,
+  hashVideoPosterReplacementPayload,
+  hashVideoPosterTargetState,
 } from "../../src/lib/course-import/video-poster-replacement";
 
 const DEFAULT_LEDGER = "docs/course-production/thumbnail-pilots/production-ledger.json";
@@ -66,16 +71,8 @@ async function main() {
     approvalPath,
     approvalSha256,
   });
-  const replacementPayloadSha256 = createHash("sha256")
-    .update(JSON.stringify(replacements))
-    .digest("hex");
-  const targetStateSha256 = createHash("sha256")
-    .update(JSON.stringify(
-      replacements
-        .map((replacement) => ({ id: replacement.block_id, content: canonicalize(replacement.expected_content) }))
-        .sort((left, right) => left.id.localeCompare(right.id)),
-    ))
-    .digest("hex");
+  const clientPayloadSha256 = hashVideoPosterReplacementPayload(replacements);
+  const targetStateSha256 = hashVideoPosterTargetState(replacements);
   const preflight = JSON.parse(preflightBytes.toString("utf8")) as Record<string, unknown>;
   if (
     preflight.schema_version !== "bmh-video-poster-production-preflight/v1"
@@ -85,7 +82,7 @@ async function main() {
     || preflight.target_count !== EXPECTED_REPLACEMENTS
     || preflight.target_mismatch_count !== 0
     || preflight.target_state_sha256 !== targetStateSha256
-    || preflight.replacement_payload_sha256 !== replacementPayloadSha256
+    || preflight.client_payload_sha256 !== clientPayloadSha256
     || preflight.approval_evidence !== approvalPath
     || preflight.approval_evidence_sha256 !== approvalSha256
     || typeof preflight.recorded_at !== "string"
@@ -96,6 +93,7 @@ async function main() {
   const preflightSha256 = createHash("sha256").update(preflightBytes).digest("hex");
   const replacementPaths = new Set(replacements.map((replacement) => replacement.replacement_poster_path));
   const replacementAssets = plan.assets.filter((asset) => replacementPaths.has(asset.storage_path));
+  const superseded = buildSupersededVideoPosterAssets(replacements);
   if (replacementAssets.length !== EXPECTED_REPLACEMENTS) {
     throw new Error("Replacement payload does not bind one manifest asset to every video poster.");
   }
@@ -113,6 +111,7 @@ async function main() {
   if (!allowProduction || confirm !== plan.importId) {
     throw new Error(`Execution requires --allow-production --confirm=${plan.importId}.`);
   }
+  await assertLocalSupersededVideoPosterAssets(process.cwd(), superseded);
 
   const url = requiredEnv("NEXT_PUBLIC_SUPABASE_URL");
   const serviceKey = requiredEnv("SUPABASE_SERVICE_ROLE_KEY");
@@ -140,12 +139,24 @@ async function main() {
   const { data, error } = await rpc.rpc("fn_replace_released_imported_video_posters", {
     p_import_id: plan.importId,
     p_replacements: replacements,
+    p_client_payload_sha256: clientPayloadSha256,
     p_approval_evidence_sha256: approvalSha256,
     p_expected_catalog_sha256: preflight.catalog_sha256,
     p_preflight_evidence_sha256: preflightSha256,
   });
   if (error) throw new Error(`Released video poster replacement failed: ${error.message}`);
   console.log(JSON.stringify({ phase: "released_video_posters_replaced", result: data }, null, 2));
+
+  const bucket = client.storage.from(COURSE_IMPORT_BUCKET) as unknown as CourseImportUploadBucket & {
+    remove(paths: string[]): Promise<{ data?: unknown; error: { message: string; statusCode?: string | number; status?: string | number } | null }>;
+  };
+  const cleanup = await removeExactReplacedAssets({
+    importId: plan.importId,
+    assets: superseded,
+    bucket,
+    assertUnreferenced: (storagePath) => assertStoragePathUnreferenced(client, storagePath),
+  });
+  console.log(JSON.stringify({ phase: "superseded_video_posters_removed", ...cleanup }, null, 2));
 }
 
 function value(args: string[], prefix: string) {
@@ -158,14 +169,25 @@ function requiredEnv(name: string) {
   return result;
 }
 
-function canonicalize(value: unknown): unknown {
-  if (Array.isArray(value)) return value.map(canonicalize);
-  if (!value || typeof value !== "object") return value;
-  return Object.fromEntries(
-    Object.keys(value)
-      .sort()
-      .map((key) => [key, canonicalize((value as Record<string, unknown>)[key])]),
-  );
+async function assertStoragePathUnreferenced(
+  client: unknown,
+  storagePath: string,
+) {
+  const query = client as unknown as {
+    from(table: "content_blocks"): {
+      select(columns: "id"): {
+        contains(column: "content", value: Record<string, unknown>): {
+          limit(count: number): PromiseLike<{ data: Array<{ id: string }> | null; error: { message: string } | null }>;
+        };
+      };
+    };
+  };
+  const { data, error } = await query.from("content_blocks")
+    .select("id")
+    .contains("content", { poster_path: storagePath })
+    .limit(1);
+  if (error) throw new Error(`Could not prove ${storagePath} is unreferenced: ${error.message}`);
+  if ((data?.length ?? 0) > 0) throw new Error(`Refused to remove still-referenced poster ${storagePath}.`);
 }
 
 void main().catch((error) => {

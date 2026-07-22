@@ -8,7 +8,12 @@ import { validateCourseManifest } from "./manifest";
 import { buildImportPlan } from "./operations";
 import {
   assertImportedVideoPosterReplacementApproval,
+  assertLocalSupersededVideoPosterAssets,
+  buildSupersededVideoPosterAssets,
   buildImportedVideoPosterReplacements,
+  buildVideoPosterProductionPreflight,
+  hashVideoPosterReplacementPayload,
+  hashVideoPosterTargetState,
 } from "./video-poster-replacement";
 
 const approvalPath = "docs/course-production/thumbnail-redesign/approvals/video-poster-redesign-approval-2026-07-21.json";
@@ -51,8 +56,16 @@ describe("released imported video poster replacement payload", () => {
       expect(replacement.replacement_poster_path).toContain(replacement.replacement_poster_sha256);
       expect(replacement.expected_content.poster_path).toBe(replacement.expected_poster_path);
       expect(replacement.expected_poster_path).not.toBe(replacement.replacement_poster_path);
+      expect(replacement.expected_size_bytes).toBeGreaterThan(0);
       expect(replacement.replacement_size_bytes).toBeGreaterThan(0);
     }
+
+    const superseded = buildSupersededVideoPosterAssets(replacements);
+    expect(superseded).toHaveLength(29);
+    expect(superseded[0].storage_path).toBe(replacements[0].expected_poster_path);
+    expect(superseded[0].checksum_sha256).toBe(replacements[0].expected_poster_sha256);
+    expect(hashVideoPosterReplacementPayload(replacements)).toMatch(/^[0-9a-f]{64}$/);
+    expect(hashVideoPosterTargetState(replacements)).toMatch(/^[0-9a-f]{64}$/);
   });
 
   it("refuses a poster without the exact archived rollback checksum", () => {
@@ -63,6 +76,17 @@ describe("released imported video poster replacement payload", () => {
     poster.history = [];
 
     expect(() => buildImportedVideoPosterReplacements(plan, mutable)).toThrow(/no exact poster redesign rollback checksum/i);
+  });
+
+  it("proves all tracked rollback poster bytes before remote cleanup", async () => {
+    const { plan, ledger } = realInputs();
+    const superseded = buildSupersededVideoPosterAssets(
+      buildImportedVideoPosterReplacements(plan, ledger),
+    );
+    await expect(assertLocalSupersededVideoPosterAssets(process.cwd(), superseded)).resolves.toBeUndefined();
+    const altered = structuredClone(superseded);
+    altered[0].checksum_sha256 = "f".repeat(64);
+    await expect(assertLocalSupersededVideoPosterAssets(process.cwd(), altered)).rejects.toThrow(/local rollback bytes/i);
   });
 
   it("refuses a manifest path that is not bound to its poster asset", () => {
@@ -111,5 +135,36 @@ describe("released imported video poster replacement payload", () => {
       approvalPath,
       approvalSha256: "f".repeat(64),
     })).toThrow(/not bound to the production ledger/i);
+  });
+
+  it("builds a preflight from the exact live block set and reports drift", () => {
+    const { plan, ledger } = realInputs();
+    const replacements = buildImportedVideoPosterReplacements(plan, ledger);
+    const currentBlocks = replacements.map((replacement) => ({
+      id: replacement.block_id,
+      content: replacement.expected_content,
+    }));
+    const clean = buildVideoPosterProductionPreflight({
+      importId: plan.importId,
+      catalogSha256: "a".repeat(64),
+      currentBlocks,
+      replacements,
+      approvalPath,
+      approvalSha256: "b".repeat(64),
+      recordedAt: "2026-07-22T05:00:00.000Z",
+    });
+    expect(clean.target_mismatch_count).toBe(0);
+    expect(clean.client_payload_sha256).toBe(hashVideoPosterReplacementPayload(replacements));
+
+    currentBlocks[0] = { id: currentBlocks[0].id, content: { poster_path: "drifted" } };
+    expect(buildVideoPosterProductionPreflight({
+      importId: plan.importId,
+      catalogSha256: "a".repeat(64),
+      currentBlocks,
+      replacements,
+      approvalPath,
+      approvalSha256: "b".repeat(64),
+      recordedAt: "2026-07-22T05:00:00.000Z",
+    }).target_mismatch_count).toBe(1);
   });
 });

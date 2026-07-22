@@ -1,3 +1,8 @@
+import { createHash } from "node:crypto";
+import { lstat, readFile, realpath } from "node:fs/promises";
+import { relative, resolve } from "node:path";
+
+import type { CourseImportAsset } from "./manifest";
 import type { ImportPlan } from "./operations";
 
 type ProductionLedgerAsset = {
@@ -19,6 +24,7 @@ export type ImportedVideoPosterReplacement = {
   expected_content: Record<string, unknown>;
   expected_poster_path: string;
   expected_poster_sha256: string;
+  expected_size_bytes: number;
   replacement_poster_path: string;
   replacement_poster_sha256: string;
   replacement_size_bytes: number;
@@ -78,8 +84,14 @@ export function buildImportedVideoPosterReplacements(
         && archivedPath.startsWith("course-assets/posters/redesign-history/");
     }) as Record<string, unknown> | undefined;
     const expectedChecksum = rollback?.checksum_sha256;
+    const expectedSize = rollback?.size_bytes;
     const replacementChecksum = manifestAsset.checksum_sha256;
-    if (typeof expectedChecksum !== "string" || !/^[0-9a-f]{64}$/.test(expectedChecksum)) {
+    if (
+      typeof expectedChecksum !== "string"
+      || !/^[0-9a-f]{64}$/.test(expectedChecksum)
+      || !Number.isSafeInteger(expectedSize)
+      || (expectedSize as number) < 1
+    ) {
       throw new Error(`${manifestAsset.source_key} has no exact poster redesign rollback checksum.`);
     }
     if (
@@ -102,6 +114,7 @@ export function buildImportedVideoPosterReplacements(
       },
       expected_poster_path: replacementPath.replace(replacementChecksum, expectedChecksum),
       expected_poster_sha256: expectedChecksum,
+      expected_size_bytes: expectedSize as number,
       replacement_poster_path: replacementPath,
       replacement_poster_sha256: replacementChecksum,
       replacement_size_bytes: manifestAsset.size_bytes,
@@ -115,6 +128,117 @@ export function buildImportedVideoPosterReplacements(
     throw new Error("The import plan contains duplicate video block IDs.");
   }
   return replacements;
+}
+
+export function buildSupersededVideoPosterAssets(
+  replacements: ImportedVideoPosterReplacement[],
+): CourseImportAsset[] {
+  return replacements.map((replacement) => ({
+    source_key: `superseded-${replacement.poster_asset_key}`,
+    kind: "image",
+    local_path: `course-assets/posters/redesign-history/${replacement.poster_asset_key}-${replacement.expected_poster_sha256}.webp`,
+    storage_path: replacement.expected_poster_path,
+    mime_type: "image/webp",
+    checksum_sha256: replacement.expected_poster_sha256,
+    size_bytes: replacement.expected_size_bytes,
+    approval_status: "approved",
+  }));
+}
+
+export async function assertLocalSupersededVideoPosterAssets(
+  sourceRoot: string,
+  assets: CourseImportAsset[],
+) {
+  const root = await realpath(resolve(sourceRoot));
+  for (const asset of assets) {
+    if (asset.checksum_sha256 === null || asset.size_bytes === null) {
+      throw new Error(`${asset.source_key} has incomplete local rollback evidence.`);
+    }
+    const requested = resolve(root, asset.local_path);
+    const withinRoot = relative(root, requested);
+    if (withinRoot.startsWith("..") || resolve(root, withinRoot) !== requested) {
+      throw new Error(`${asset.source_key} rollback path escapes the repository.`);
+    }
+    const requestedStat = await lstat(requested);
+    if (!requestedStat.isFile() || requestedStat.isSymbolicLink()) {
+      throw new Error(`${asset.source_key} rollback path is not a regular file.`);
+    }
+    const canonical = await realpath(requested);
+    const canonicalWithinRoot = relative(root, canonical);
+    if (canonicalWithinRoot.startsWith("..") || resolve(root, canonicalWithinRoot) !== canonical) {
+      throw new Error(`${asset.source_key} rollback file escapes the repository.`);
+    }
+    const bytes = await readFile(canonical);
+    if (
+      bytes.length !== asset.size_bytes
+      || createHash("sha256").update(bytes).digest("hex") !== asset.checksum_sha256
+    ) {
+      throw new Error(`${asset.source_key} local rollback bytes do not match their exact evidence.`);
+    }
+  }
+}
+
+export function hashVideoPosterReplacementPayload(
+  replacements: ImportedVideoPosterReplacement[],
+) {
+  return createHash("sha256").update(JSON.stringify(replacements)).digest("hex");
+}
+
+export function hashVideoPosterTargetState(
+  replacements: ImportedVideoPosterReplacement[],
+) {
+  const targets = replacements
+    .map((replacement) => ({
+      id: replacement.block_id,
+      content: canonicalizeJson(replacement.expected_content),
+    }))
+    .sort((left, right) => left.id.localeCompare(right.id));
+  return createHash("sha256").update(JSON.stringify(targets)).digest("hex");
+}
+
+export function canonicalizeJson(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(canonicalizeJson);
+  if (!value || typeof value !== "object") return value;
+  return Object.fromEntries(
+    Object.keys(value)
+      .sort()
+      .map((key) => [key, canonicalizeJson((value as Record<string, unknown>)[key])]),
+  );
+}
+
+export function buildVideoPosterProductionPreflight(options: {
+  importId: string;
+  catalogSha256: string;
+  currentBlocks: Array<{ id: string; content: unknown }>;
+  replacements: ImportedVideoPosterReplacement[];
+  approvalPath: string;
+  approvalSha256: string;
+  recordedAt: string;
+}) {
+  const currentById = new Map(options.currentBlocks.map((block) => [block.id, block.content]));
+  const mismatchCount = options.replacements.filter((replacement) =>
+    JSON.stringify(canonicalizeJson(currentById.get(replacement.block_id)))
+      !== JSON.stringify(canonicalizeJson(replacement.expected_content)),
+  ).length;
+  if (
+    !/^[0-9a-f]{64}$/.test(options.catalogSha256)
+    || !/^[0-9a-f]{64}$/.test(options.approvalSha256)
+    || !Number.isFinite(Date.parse(options.recordedAt))
+  ) {
+    throw new Error("Production preflight requires exact catalog, approval, and timestamp evidence.");
+  }
+  return {
+    schema_version: "bmh-video-poster-production-preflight/v1" as const,
+    import_id: options.importId,
+    catalog_sha256: options.catalogSha256,
+    target_count: options.replacements.length,
+    target_mismatch_count: mismatchCount,
+    target_state_sha256: hashVideoPosterTargetState(options.replacements),
+    client_payload_sha256: hashVideoPosterReplacementPayload(options.replacements),
+    approval_evidence: options.approvalPath,
+    approval_evidence_sha256: options.approvalSha256,
+    recorded_at: options.recordedAt,
+  };
 }
 
 export function assertImportedVideoPosterReplacementApproval(options: {

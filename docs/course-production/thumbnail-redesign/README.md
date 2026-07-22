@@ -24,3 +24,5 @@ npm run artwork:production -- verify
 Each replaced WebP is checksum-addressed in the course manifest. The exact approved PNG remains the source-of-truth evidence, the display derivative recipe is recorded in the production ledger, and prior production bytes are retained under `course-assets/thumbnails/redesign-history/` for exact rollback.
 
 The video-poster correction is recorded in [`approvals/video-poster-redesign-approval-2026-07-21.json`](approvals/video-poster-redesign-approval-2026-07-21.json). Prior poster bytes are retained under `course-assets/posters/redesign-history/` for exact rollback.
+
+After the database compare-and-swap succeeds, the replacement command re-verifies each superseded remote poster's checksum, size, import ownership, upload ownership token, and absence of database references before deleting it. This keeps the managed storage prefix exactly equal to the current manifest. Rollback bytes remain tracked locally; a rollback must re-upload those checksum-addressed files before reversing the database paths.
