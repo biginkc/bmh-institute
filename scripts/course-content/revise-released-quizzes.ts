@@ -78,10 +78,11 @@ export async function loadLegacyRollbackArtifact(args: {
     validated.value.import_id !== args.expectedImportId
     || graph.quizzes.length !== 19
     || graph.questions.length !== 342
+    || graph.answer_options.length !== 1292
     || graph.quizzes.some((quiz) => quiz.questions_per_attempt !== 10)
   ) {
     throw new Error(
-      "Rollback artifact must be the exact 19-quiz, 342-question legacy manifest with a 10-question attempt cap.",
+      "Rollback artifact must be the exact 19-quiz, 342-question, 1,292-option legacy manifest with a 10-question attempt cap.",
     );
   }
   return { graph, sha256 };

@@ -7,6 +7,11 @@ const sql = readFileSync(
   resolve(process.cwd(), "supabase/migrations/20260722130000_versioned_released_quiz_revisions.sql"),
   "utf8",
 );
+const workflow = readFileSync(resolve(process.cwd(), ".github/workflows/db-migrate-test.yml"), "utf8");
+const rehearsal = readFileSync(
+  resolve(process.cwd(), "scripts/course-content/build-released-quiz-revision-rehearsal-sql.ts"),
+  "utf8",
+);
 
 describe("versioned released quiz revision migration", () => {
   it("keeps the v1 receipt immutable and records append-only revisions", () => {
@@ -75,5 +80,16 @@ describe("versioned released quiz revision migration", () => {
     expect(sql).toMatch(/failed to restore the exact prior catalog checksum/i);
     expect(sql).toMatch(/completed quiz activity now exists; automatic rollback is unsafe/i);
     expect(sql).toMatch(/grant execute on function public\.fn_rollback_released_quiz_revision_v1[\s\S]*to service_role/i);
+  });
+
+  it("executes the behavioral rehearsal in the PostgreSQL 15/16/17 CI matrix", () => {
+    expect(workflow).toContain("build-released-quiz-revision-rehearsal-sql.ts");
+    expect(workflow).toMatch(/psql --set ON_ERROR_STOP=1 --file/i);
+    expect(workflow).toContain('postgres: ["15", "16", "17"]');
+    expect(rehearsal).toMatch(/confirmation mismatch/i);
+    expect(rehearsal).toMatch(/stale compare-and-swap manifest/i);
+    expect(rehearsal).toMatch(/drifted legacy graph/i);
+    expect(rehearsal).toMatch(/immutability trigger unexpectedly allowed an update/i);
+    expect(rehearsal).toMatch(/immutability trigger unexpectedly allowed a delete/i);
   });
 });

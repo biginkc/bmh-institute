@@ -1,10 +1,12 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { readFile, readdir } from "node:fs/promises";
+import { access, readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 import { test } from "node:test";
 
 import { buildManifest } from "../../scripts/course-content/build-manifest.mjs";
+import { validateManifest } from "../../scripts/course-content/validate-manifest.mjs";
 
 const ROOT = path.resolve(import.meta.dirname, "../..");
 const ACTIVE_MANIFEST_PATH = path.join(
@@ -57,6 +59,10 @@ test("the exact released 342-question manifest is archived outside the active im
   assert.ok(legacyQuizzes.every((quiz) => quiz.questions_per_attempt === 10));
   assert.equal(metadata.manifest_sha256, LEGACY_MANIFEST_SHA256);
   assert.equal(metadata.superseded_by.question_bank_sha256, sha256(bankBytes));
+  assert.match(
+    validateManifest(manifest).errors.join("\n"),
+    /legacy embedded 342-question graph is archive-only/i,
+  );
 });
 
 test("the sole active full manifest is the approved exhaustive 920-question bank", async () => {
@@ -113,7 +119,16 @@ test("only one top-level manifest can import the BMH employee training release",
   assert.deepEqual(candidates, ["bmh-employee-training.v1.json"]);
 });
 
-test("the normal manifest builder reproduces the exhaustive active manifest", async () => {
+test("the normal manifest builder reproduces the exhaustive active manifest", async (t) => {
+  try {
+    await access("/Users/jarradhenry/Sites/BMH apps/BMH Institute/course-assets/review-lessonA/LESSON-1A-v7.mp4");
+  } catch (error) {
+    if (error?.code === "ENOENT") {
+      t.skip("canonical course media is not present on this runner");
+      return;
+    }
+    throw error;
+  }
   const tracked = await readFile(ACTIVE_MANIFEST_PATH, "utf8");
   const rebuilt = await buildManifest();
 
@@ -121,4 +136,33 @@ test("the normal manifest builder reproduces the exhaustive active manifest", as
     `${JSON.stringify(rebuilt, null, 2).replaceAll("\u2014", "-")}\n`,
     tracked,
   );
+});
+
+test("the committed database rehearsal evidence matches the current generated SQL", async () => {
+  const evidence = JSON.parse(await readFile(path.join(
+    ROOT,
+    "docs/course-production/released-quiz-revision-rehearsal-2026-07-22.json",
+  ), "utf8"));
+  const result = spawnSync(
+    path.join(ROOT, "node_modules/.bin/tsx"),
+    ["scripts/course-content/build-released-quiz-revision-rehearsal-sql.ts"],
+    { cwd: ROOT, encoding: "buffer", maxBuffer: 10 * 1024 * 1024 },
+  );
+  assert.equal(result.status, 0, result.stderr?.toString("utf8"));
+  assert.equal(sha256(result.stdout), evidence.generated_sql_sha256);
+  assert.equal(evidence.status, "passed");
+  assert.equal(evidence.target.transaction_rolled_back, true);
+  assert.deepEqual(evidence.ci_contract.postgres_versions, ["15", "16", "17"]);
+  for (const refusal of [
+    "forward confirmation mismatch",
+    "stale compare-and-swap prior manifest",
+    "drifted legacy questions_per_attempt graph",
+    "completed learner attempt",
+    "release revision update",
+    "release revision delete",
+    "rollback with reviewer-authored answer-option evidence",
+    "second rollback",
+  ]) {
+    assert.ok(evidence.verified_refusals.includes(refusal), refusal);
+  }
 });

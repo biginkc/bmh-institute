@@ -99,3 +99,17 @@
 - Claude verdict: approved for content. A stale graph-hash test found by Claude was repinned to the exact v8 graph and the full suite rerun green.
 - Remaining gates: commit/push, PR CI, technical diff review, merge/deployment identity, controlled production revision, reconciliation, and authenticated Chrome proof.
 - Blockers: none.
+
+### Iteration 4 - CI integration repair and technical-review closure
+
+- GitHub CI correctly rejected head `7112c35` because the final v8 question-bank checksum had not propagated to the Tech Stack canary, three learner guides still reflected pre-final generation state, and several QA assertions assumed the developer's local canonical media paths.
+- Regenerated only the three stale two-page guides (Slots 17, 18, and 19) from the final approved bank. All six rendered pages were visually inspected and the accessibility/semantic/reproducibility checks pass. Guide records SHA-256 is now `70f94a88356cf0cddf3567295122733980b04af6cc4c96a23687c8d717f473c3`.
+- Rebuilt the full manifest, canary, stack confirmation binding, and combined review index. The final active manifest SHA-256 is now `440ec4d85bc6dc0aec9d471fb0f5ecbe0ca8c17236b3012e8b036b8d045a154d`; the approved released quiz graph remains `d2b9fc182b7ca72f76ce038eac8c5b37446ba999fce5a269699802812177c78a`.
+- Claude's independent technical review of base `369881f` to head `7112c35` returned `REQUEST_CHANGES`: the content ledger needed an explicit human-governance authorization record, and the server-side revision rehearsal needed to execute in CI with missing confirmation, compare-and-swap, drift, and immutability refusals.
+- Jarrad's explicit end-to-end delegation was recorded truthfully as authorization for Claude's exact checksum-bound content approval to satisfy the content gate; it does not claim Jarrad personally reviewed the 920 questions, and merge/production proof remain separate gates. Approval ledger SHA-256 is `60f064bf2f070fa9f3bb47dbc260ee85daae7806e22b7ca3660b0a9ba91866a1`.
+- The real forward/rollback rehearsal is now wired into the PostgreSQL 15/16/17 PR matrix. It behaviorally refuses confirmation mismatch, stale compare-and-swap state, drifted legacy configuration, completed activity, revision update/delete, reviewer evidence, and a second rollback.
+- Hosted test evidence: the expanded rehearsal passed on Supabase test project `jvaabkchkihkjllehmft` at `2026-07-22T13:49:16Z`; forward reconciled 19/342/1,292 to 19/920/3,678, rollback restored 19/342/1,292, and the transaction rolled back. Evidence is checksum-bound in `docs/course-production/released-quiz-revision-rehearsal-2026-07-22.json`.
+- Additional hardening: archived manifest JSON now has explicit attributes, the generic semantic validator refuses the embedded 342-question graph for the canonical import ID, the rollback loader requires exactly 1,292 legacy options, and throw paths for non-920/capped graphs are behaviorally tested.
+- Claude verdict: prior technical verdict remains `REQUEST_CHANGES` for head `7112c35`; a fresh review of the corrected commit is required before merge.
+- Remaining gates: full local suite, corrected commit/push, green PR CI, fresh Claude technical approval, rollback tag, merge/deployment identity, controlled production revision, reconciliation, and authenticated Chrome proof.
+- Blockers: none.

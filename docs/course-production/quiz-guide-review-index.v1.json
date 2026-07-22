@@ -143,12 +143,12 @@
   "guide_review": {
     "status": "accepted",
     "accepted_by": "codex-course-qa-controller",
-    "accepted_at": "2026-07-22T11:25:14Z",
+    "accepted_at": "2026-07-22T13:41:39Z",
     "human_approval": false,
-    "evidence": "Course-QA controller reacceptance after the content-quality exhaustive quiz-bank update, deterministic rebuild, full semantic tests, and visual review of all ten changed guide pages; not Jarrad human approval.",
+    "evidence": "Course-QA controller reacceptance after the final content-quality v8 quiz-bank update, deterministic rebuild, full semantic tests, and visual review of all six changed guide pages; not Jarrad human approval.",
     "ledger": {
       "path": "docs/course-production/guide-approvals.json",
-      "records_sha256": "e3a3b8811d71a7f1be8db69621f848e09e3c3f3c4839f773d195aa644a87c91e",
+      "records_sha256": "70f94a88356cf0cddf3567295122733980b04af6cc4c96a23687c8d717f473c3",
       "record_count": 19
     },
     "current_file": {

@@ -4,7 +4,7 @@
   "status": "draft",
   "quiz_bank_ref": {
     "path": "content/quiz-generation/question-bank.v1.json",
-    "sha256": "e2aee2460b8c6f6c8fb29a79bdf2beb7937a039606e3822f10c05a2e8245c5b7"
+    "sha256": "7b92395c5582728d6a13f49c36542d54a709ecbe87ec06787925b15019ac4425"
   },
   "qa_role_group": {
     "source_key": "qa-role-group-bmh-content-canary",

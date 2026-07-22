@@ -430,6 +430,10 @@ export function validateManifest(
   const bankDriven = manifest.quiz_bank_ref !== undefined;
   const quizBank = bankDriven ? loadReferencedQuizBank(manifest.quiz_bank_ref, errors) : null;
 
+  if (manifest.import_id === "bmh-employee-training-v1" && !bankDriven) {
+    errors.push("The canonical BMH release requires the exhaustive checksum-bound quiz bank; the legacy embedded 342-question graph is archive-only");
+  }
+
   if (manifest.schema_version !== 1) errors.push("schema_version must be 1");
   if (manifest.status !== "draft") errors.push("manifest status must remain draft");
   if (manifest.program.is_published !== false) errors.push("program must be unpublished");
@@ -454,7 +458,8 @@ export function validateManifest(
     quizLessons: 19,
     assignmentLessons: 6,
     videos: 29,
-    quizQuestions: quizBank?.totals.generated ?? (bankDriven ? summary.quizQuestions : 342),
+    quizQuestions: quizBank?.totals.generated
+      ?? (manifest.import_id === "bmh-employee-training-v1" ? 920 : summary.quizQuestions),
     flashcards: 152,
     rolePlays: 0,
     posterAssets: 29,

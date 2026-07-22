@@ -89,7 +89,7 @@
     {
       "source_key": "guide-slot-18",
       "local_path": "output/pdf/slot-18-learner-guide.pdf",
-      "checksum_sha256": "f3f48308a008b70701b74093b110d0621ce7120ad2c56031d450b808e727fa15",
+      "checksum_sha256": "5ebd759c88c7a05f8e37c00a0fe8d97299d1eff205136813492a7d88381ae4d9",
       "dialpad_reference_count": 0,
       "audit_result": "no DialPad reference; guide directs workflow changes to the current written SOP and manager"
     }

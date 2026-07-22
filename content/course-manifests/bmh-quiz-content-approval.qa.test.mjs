@@ -62,6 +62,15 @@ test("quiz review request binds all 19 exact pools while all regenerated guides 
   assert.equal(request.quiz_pools.reduce((sum, pool) => sum + pool.question_count, 0), 920);
   assert.equal(request.scope.quiz_bindings_sha256, quizBindingsSha256(request.quiz_pools));
   assert.equal(ledger.records.length, 19);
+  assert.deepEqual(ledger.release_authorization, {
+    decision: "delegated_ai_checksum_review_satisfies_human_content_gate",
+    authorized_by: "Jarrad Henry",
+    recorded_at: "2026-07-22T13:47:21Z",
+    request_id: "bmh-employee-training-quiz-review-2026-07-22-content-quality-v8",
+    request_sha256: ledger.request_sha256,
+    scope: "Jarrad explicitly delegated the approvals necessary to execute the exhaustive quiz release end to end. Claude's independent checksum-bound content approval satisfies the delegated content gate; merge and production verification remain separate release gates.",
+    source: "Codex GOAL conversation, 2026-07-22",
+  });
   assert.equal(
     createHash("sha256").update(requestBytes).digest("hex"),
     ledger.request_sha256,
@@ -127,6 +136,14 @@ test("only an exact checksum-bound response can keep a quiz approved", async () 
     (await validateQuizApprovalLedger(missingEvidence)).join("\n"),
     /needs approval evidence/i,
   );
+
+  const missingDelegation = structuredClone(ledger);
+  delete missingDelegation.release_authorization;
+  assert.match(
+    (await validateQuizApprovalLedger(missingDelegation)).join("\n"),
+    /delegated human-gate authorization/i,
+  );
+  assert.equal(quizApprovalStatus(missingDelegation, quiz), "pending_human_review");
 });
 
 test("the sole active default pools exactly retain their checksum-bound approvals", async () => {

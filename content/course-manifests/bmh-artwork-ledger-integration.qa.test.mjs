@@ -559,7 +559,10 @@ test("a canonically finalized 49-asset workflow cannot forge unrelated release a
   for (const command of ["upload", "apply"]) {
     const result = spawnSync(path.join(repoRoot, "node_modules/.bin/tsx"), ["scripts/course-import.ts", command, releaseManifestPath], { cwd: repoRoot, encoding: "utf8" });
     assert.equal(result.status, 1, `${command} dry-run accepted a noncanonical synthetic release:\n${result.stdout}\n${result.stderr}`);
-    assert.match(result.stderr, /not source-equivalent to the canonical release manifest/);
+    assert.match(
+      result.stderr,
+      /accepts only content\/course-manifests\/bmh-employee-training\.v1\.json|not source-equivalent to the canonical release manifest/,
+    );
   }
 });
 

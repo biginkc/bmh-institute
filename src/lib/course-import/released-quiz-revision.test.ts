@@ -89,6 +89,32 @@ describe("released quiz revision payload", () => {
     );
   });
 
+  it("refuses a non-920 graph and any restored attempt cap", () => {
+    const raw = JSON.parse(readFileSync(
+      resolve("content/course-manifests/bmh-employee-training.v1.json"),
+      "utf8",
+    )) as unknown;
+    const validated = validateCourseManifest(raw, { gate: "draft" });
+    expect(validated.ok).toBe(true);
+    if (!validated.ok) throw new Error(validated.errors.join("\n"));
+    const plan = buildImportPlan(validated.value, {
+      allowUnapprovedAssetPlaceholders: true,
+    });
+
+    const missingQuestion = structuredClone(plan);
+    const questionIndex = missingQuestion.operations.findIndex((operation) =>
+      operation.table === "questions"
+    );
+    missingQuestion.operations.splice(questionIndex, 1);
+    expect(() => buildReleasedQuizGraph(missingQuestion)).toThrow(/exactly 19 quizzes and 920 questions/i);
+
+    const capped = structuredClone(plan);
+    const quiz = capped.operations.find((operation) => operation.table === "quizzes");
+    if (!quiz) throw new Error("quiz operation missing");
+    quiz.row.questions_per_attempt = 10;
+    expect(() => buildReleasedQuizGraph(capped)).toThrow(/questions_per_attempt=null/i);
+  });
+
   it("builds the exact rollback compare-and-swap confirmation", () => {
     expect(releasedQuizRollbackConfirmation({
       importId: "bmh-employee-training-v1",
@@ -136,6 +162,7 @@ describe("released quiz revision payload", () => {
     });
     expect(artifact.graph.quizzes).toHaveLength(19);
     expect(artifact.graph.questions).toHaveLength(342);
+    expect(artifact.graph.answer_options).toHaveLength(1292);
     expect(artifact.graph.quizzes.every((quiz) => quiz.questions_per_attempt === 10)).toBe(true);
     expect(() => assertExactReleasedQuizGraph(
       artifact.graph,

@@ -74,6 +74,12 @@ async function main() {
     priorManifestSha256: legacy.sha256,
     manifestSha256: active.sha256,
   });
+  const stalePriorManifestSha256 = "0".repeat(64);
+  const stalePriorConfirmation = releasedQuizRevisionConfirmation({
+    importId: IMPORT_ID,
+    priorManifestSha256: stalePriorManifestSha256,
+    manifestSha256: active.sha256,
+  });
   const rollbackConfirmation = releasedQuizRollbackConfirmation({
     importId: IMPORT_ID,
     expectedRevision: 2,
@@ -110,6 +116,71 @@ update public.programs set is_published = true where content_import_id = ${sqlTe
 insert into public.program_access (program_id, role_group_id)
 values (${sqlText(programId)}::uuid, ${sqlText(employeeRoleId)}::uuid);
 select set_config('bmh.release_import_id', '', true);
+
+do $$
+begin
+  begin
+    perform public.fn_revise_released_quizzes_v1(
+      ${sqlText(IMPORT_ID)}, ${sqlText(legacy.sha256)}, ${sqlText(active.sha256)},
+      ${sqlJson(activeGraph.quizzes)}, ${sqlJson(activeGraph.questions)},
+      ${sqlJson(activeGraph.answer_options)}, ${sqlJson(evidence)},
+      ${sqlText(`${forwardConfirmation}-invalid`)}
+    );
+    raise exception 'Forward revision unexpectedly accepted a confirmation mismatch.';
+  exception when sqlstate '22023' then
+    null;
+  end;
+  if exists (select 1 from public.content_import_release_revisions where import_id = ${sqlText(IMPORT_ID)}) then
+    raise exception 'Confirmation-mismatch refusal created a release revision.';
+  end if;
+end;
+$$;
+
+do $$
+begin
+  begin
+    perform public.fn_revise_released_quizzes_v1(
+      ${sqlText(IMPORT_ID)}, ${sqlText(stalePriorManifestSha256)}, ${sqlText(active.sha256)},
+      ${sqlJson(activeGraph.quizzes)}, ${sqlJson(activeGraph.questions)},
+      ${sqlJson(activeGraph.answer_options)}, ${sqlJson(evidence)},
+      ${sqlText(stalePriorConfirmation)}
+    );
+    raise exception 'Forward revision unexpectedly accepted a stale compare-and-swap manifest.';
+  exception when sqlstate '40001' then
+    null;
+  end;
+  if exists (select 1 from public.content_import_release_revisions where import_id = ${sqlText(IMPORT_ID)}) then
+    raise exception 'Stale compare-and-swap refusal created a release revision.';
+  end if;
+end;
+$$;
+
+do $$
+begin
+  begin
+    update public.quizzes
+    set questions_per_attempt = 9
+    where id = ${sqlText(humanizingQuizId)}::uuid;
+    perform public.fn_revise_released_quizzes_v1(
+      ${sqlText(IMPORT_ID)}, ${sqlText(legacy.sha256)}, ${sqlText(active.sha256)},
+      ${sqlJson(activeGraph.quizzes)}, ${sqlJson(activeGraph.questions)},
+      ${sqlJson(activeGraph.answer_options)}, ${sqlJson(evidence)},
+      ${sqlText(forwardConfirmation)}
+    );
+    raise exception 'Forward revision unexpectedly accepted a drifted legacy graph.';
+  exception when sqlstate '40001' then
+    null;
+  end;
+  if exists (
+    select 1 from public.quizzes
+    where id = ${sqlText(humanizingQuizId)}::uuid and questions_per_attempt is distinct from 10
+  ) or exists (
+    select 1 from public.content_import_release_revisions where import_id = ${sqlText(IMPORT_ID)}
+  ) then
+    raise exception 'Drifted-legacy refusal did not restore the exact preflight fixture.';
+  end if;
+end;
+$$;
 
 insert into public.user_quiz_attempts (
   user_id, quiz_id, lesson_id, score, passed, completed_at,
@@ -197,6 +268,29 @@ begin
     or (select count(*) from public.content_import_release_revisions where import_id = ${sqlText(IMPORT_ID)}) <> 1
   then
     raise exception 'Idempotent revision retry did not return the exact committed revision.';
+  end if;
+end;
+$$;
+
+do $$
+begin
+  begin
+    update public.content_import_release_revisions
+    set evidence = evidence
+    where import_id = ${sqlText(IMPORT_ID)} and revision = 2;
+    raise exception 'Release revision immutability trigger unexpectedly allowed an update.';
+  exception when sqlstate '42501' then
+    null;
+  end;
+  begin
+    delete from public.content_import_release_revisions
+    where import_id = ${sqlText(IMPORT_ID)} and revision = 2;
+    raise exception 'Release revision immutability trigger unexpectedly allowed a delete.';
+  exception when sqlstate '42501' then
+    null;
+  end;
+  if (select count(*) from public.content_import_release_revisions where import_id = ${sqlText(IMPORT_ID)}) <> 1 then
+    raise exception 'Immutability-trigger refusal changed the release revision ledger.';
   end if;
 end;
 $$;

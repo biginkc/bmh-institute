@@ -1270,6 +1270,21 @@ export async function validateQuizApprovalLedger(ledger, repoRoot = REPO_ROOT) {
       errors.push("Quiz approval review request is missing or invalid");
     }
   }
+  const authorization = ledger.release_authorization;
+  if (
+    !isRecord(authorization)
+    || authorization.decision !== "delegated_ai_checksum_review_satisfies_human_content_gate"
+    || authorization.authorized_by !== "Jarrad Henry"
+    || !ISO_TIMESTAMP_PATTERN.test(authorization.recorded_at ?? "")
+    || authorization.request_id !== "bmh-employee-training-quiz-review-2026-07-22-content-quality-v8"
+    || authorization.request_sha256 !== ledger.request_sha256
+    || typeof authorization.scope !== "string"
+    || !/explicitly delegated/i.test(authorization.scope)
+    || !/Claude's independent checksum-bound content approval satisfies the delegated content gate/i.test(authorization.scope)
+    || authorization.source !== "Codex GOAL conversation, 2026-07-22"
+  ) {
+    errors.push("Quiz approval ledger requires Jarrad's explicit delegated human-gate authorization bound to the exact review request");
+  }
   if (reviewRequest) {
     const requestedPools = Array.isArray(reviewRequest.quiz_pools)
       ? reviewRequest.quiz_pools
@@ -1412,6 +1427,15 @@ export async function validateQuizApprovalLedger(ledger, repoRoot = REPO_ROOT) {
 }
 
 export function quizApprovalStatus(ledger, quiz) {
+  const authorization = ledger.release_authorization;
+  if (
+    !isRecord(authorization)
+    || authorization.decision !== "delegated_ai_checksum_review_satisfies_human_content_gate"
+    || authorization.authorized_by !== "Jarrad Henry"
+    || authorization.request_sha256 !== ledger.request_sha256
+  ) {
+    return "pending_human_review";
+  }
   const checksum = quizContentSha256(quiz);
   const approved = ledger.records.some((record) =>
     record.quiz_source_key === quiz.source_key

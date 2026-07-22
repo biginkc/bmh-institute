@@ -1246,30 +1246,30 @@
       "source_key": "guide-slot-17",
       "kind": "pdf",
       "local_path": "output/pdf/slot-17-learner-guide.pdf",
-      "storage_path": "courses/bmh-employee-training/v1/guides/guide-slot-17.e0752001a5e5676225a45b7b91c263a72ebbb4cb723aeaf66b38c7484d91fdf1.pdf",
+      "storage_path": "courses/bmh-employee-training/v1/guides/guide-slot-17.06727ca72c257831fa6c8511f06d99e6bb23a7bb3a2f11cb077c5981b44f7da2.pdf",
       "mime_type": "application/pdf",
-      "checksum_sha256": "e0752001a5e5676225a45b7b91c263a72ebbb4cb723aeaf66b38c7484d91fdf1",
-      "size_bytes": 50766,
+      "checksum_sha256": "06727ca72c257831fa6c8511f06d99e6bb23a7bb3a2f11cb077c5981b44f7da2",
+      "size_bytes": 50935,
       "approval_status": "approved"
     },
     {
       "source_key": "guide-slot-18",
       "kind": "pdf",
       "local_path": "output/pdf/slot-18-learner-guide.pdf",
-      "storage_path": "courses/bmh-employee-training/v1/guides/guide-slot-18.f3f48308a008b70701b74093b110d0621ce7120ad2c56031d450b808e727fa15.pdf",
+      "storage_path": "courses/bmh-employee-training/v1/guides/guide-slot-18.5ebd759c88c7a05f8e37c00a0fe8d97299d1eff205136813492a7d88381ae4d9.pdf",
       "mime_type": "application/pdf",
-      "checksum_sha256": "f3f48308a008b70701b74093b110d0621ce7120ad2c56031d450b808e727fa15",
-      "size_bytes": 50886,
+      "checksum_sha256": "5ebd759c88c7a05f8e37c00a0fe8d97299d1eff205136813492a7d88381ae4d9",
+      "size_bytes": 50937,
       "approval_status": "approved"
     },
     {
       "source_key": "guide-slot-19",
       "kind": "pdf",
       "local_path": "output/pdf/slot-19-learner-guide.pdf",
-      "storage_path": "courses/bmh-employee-training/v1/guides/guide-slot-19.f5d49cc058c06af7f9c37badd5fb1e09826beb181c40bf53839b3642dbc99e22.pdf",
+      "storage_path": "courses/bmh-employee-training/v1/guides/guide-slot-19.97794ad5d1fc48be593b82a5e98c156e96262e46aa15fbdf86f1274bff5b2b5f.pdf",
       "mime_type": "application/pdf",
-      "checksum_sha256": "f5d49cc058c06af7f9c37badd5fb1e09826beb181c40bf53839b3642dbc99e22",
-      "size_bytes": 50825,
+      "checksum_sha256": "97794ad5d1fc48be593b82a5e98c156e96262e46aa15fbdf86f1274bff5b2b5f",
+      "size_bytes": 50845,
       "approval_status": "approved"
     }
   ],
@@ -30324,9 +30324,9 @@
                     "required": false,
                     "content": {
                       "asset_key": "guide-slot-17",
-                      "file_path": "courses/bmh-employee-training/v1/guides/guide-slot-17.e0752001a5e5676225a45b7b91c263a72ebbb4cb723aeaf66b38c7484d91fdf1.pdf",
+                      "file_path": "courses/bmh-employee-training/v1/guides/guide-slot-17.06727ca72c257831fa6c8511f06d99e6bb23a7bb3a2f11cb077c5981b44f7da2.pdf",
                       "filename": "slot-17-learner-guide.pdf",
-                      "size_bytes": 50766,
+                      "size_bytes": 50935,
                       "description": "Accessible learner guide for Compensation Engine"
                     }
                   },
@@ -32194,9 +32194,9 @@
                     "required": false,
                     "content": {
                       "asset_key": "guide-slot-18",
-                      "file_path": "courses/bmh-employee-training/v1/guides/guide-slot-18.f3f48308a008b70701b74093b110d0621ce7120ad2c56031d450b808e727fa15.pdf",
+                      "file_path": "courses/bmh-employee-training/v1/guides/guide-slot-18.5ebd759c88c7a05f8e37c00a0fe8d97299d1eff205136813492a7d88381ae4d9.pdf",
                       "filename": "slot-18-learner-guide.pdf",
-                      "size_bytes": 50886,
+                      "size_bytes": 50937,
                       "description": "Accessible learner guide for Operator Playbook and Daily Mission Control"
                     }
                   },
@@ -33540,9 +33540,9 @@
                     "required": false,
                     "content": {
                       "asset_key": "guide-slot-19",
-                      "file_path": "courses/bmh-employee-training/v1/guides/guide-slot-19.f5d49cc058c06af7f9c37badd5fb1e09826beb181c40bf53839b3642dbc99e22.pdf",
+                      "file_path": "courses/bmh-employee-training/v1/guides/guide-slot-19.97794ad5d1fc48be593b82a5e98c156e96262e46aa15fbdf86f1274bff5b2b5f.pdf",
                       "filename": "slot-19-learner-guide.pdf",
-                      "size_bytes": 50825,
+                      "size_bytes": 50845,
                       "description": "Accessible learner guide for Career Growth Path"
                     }
                   },

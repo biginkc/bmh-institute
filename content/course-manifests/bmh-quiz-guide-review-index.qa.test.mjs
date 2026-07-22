@@ -22,7 +22,7 @@ const QUIZ_LEDGER_PATH = path.resolve(ROOT, "docs/course-production/quiz-approva
 const GUIDE_LEDGER_PATH = path.resolve(ROOT, "docs/course-production/guide-approvals.json");
 const QUIZBANK_MANIFEST_PATH = path.resolve(ROOT, "content/course-manifests/bmh-employee-training.v1.json");
 const DEFAULT_MANIFEST_PATH = path.resolve(ROOT, "content/course-manifests/bmh-employee-training.v1.json");
-const ACCEPTED_GUIDE_RECORDS_SHA256 = "e3a3b8811d71a7f1be8db69621f848e09e3c3f3c4839f773d195aa644a87c91e";
+const ACCEPTED_GUIDE_RECORDS_SHA256 = "70f94a88356cf0cddf3567295122733980b04af6cc4c96a23687c8d717f473c3";
 const ACCEPTED_SLOT_16_SHA256 = "71c9ad3757b135363ec12bdb3538a4aac388124cc30223304714e2bb5d2017ad";
 const ACCEPTED_SLOT_16_SIZE = 50695;
 
@@ -84,7 +84,7 @@ test("recorded quiz and course-QA guide approvals stay distinct and checksum bou
   const index = await buildReviewIndex();
 
   assert.equal(index.quiz_review.status, "approved");
-  assert.match(index.quiz_review.evidence, /independently re-verified/i);
+  assert.match(index.quiz_review.evidence, /independently verified/i);
   assert.match(index.quiz_review.evidence, /content-quality v8/i);
   assert.equal(index.guide_review.status, "accepted");
   assert.equal(index.guide_review.human_approval, false);

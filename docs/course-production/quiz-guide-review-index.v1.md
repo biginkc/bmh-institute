@@ -45,12 +45,12 @@ Status: **quizbank and all 19 learner guides approved**.
 - Current SHA-256: `71c9ad3757b135363ec12bdb3538a4aac388124cc30223304714e2bb5d2017ad`
 - Current size: 50695 bytes
 - Guide ledger: [guide-approvals.json](./guide-approvals.json)
-- Ordered guide records SHA-256: `e3a3b8811d71a7f1be8db69621f848e09e3c3f3c4839f773d195aa644a87c91e`
+- Ordered guide records SHA-256: `70f94a88356cf0cddf3567295122733980b04af6cc4c96a23687c8d717f473c3`
 - Guide records: 19
 - Accepted by: codex-course-qa-controller
-- Accepted at: 2026-07-22T11:25:14Z
+- Accepted at: 2026-07-22T13:41:39Z
 - Human approval: false
-- Evidence: Course-QA controller reacceptance after the content-quality exhaustive quiz-bank update, deterministic rebuild, full semantic tests, and visual review of all ten changed guide pages; not Jarrad human approval.
+- Evidence: Course-QA controller reacceptance after the final content-quality v8 quiz-bank update, deterministic rebuild, full semantic tests, and visual review of all six changed guide pages; not Jarrad human approval.
 
 The linked sample matches the Slot 16 record in the accepted guide ledger. The ledger acceptance is bound to the exact ordered set of all 19 regenerated guide records.
 

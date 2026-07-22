@@ -3,6 +3,15 @@
   "status": "active",
   "request_path": "docs/course-production/quiz-content-review-request.v1.json",
   "request_sha256": "c9339772f865747148d8c1814734f271d31f8b4837d80e98f62fe673b585638f",
+  "release_authorization": {
+    "decision": "delegated_ai_checksum_review_satisfies_human_content_gate",
+    "authorized_by": "Jarrad Henry",
+    "recorded_at": "2026-07-22T13:47:21Z",
+    "request_id": "bmh-employee-training-quiz-review-2026-07-22-content-quality-v8",
+    "request_sha256": "c9339772f865747148d8c1814734f271d31f8b4837d80e98f62fe673b585638f",
+    "scope": "Jarrad explicitly delegated the approvals necessary to execute the exhaustive quiz release end to end. Claude's independent checksum-bound content approval satisfies the delegated content gate; merge and production verification remain separate release gates.",
+    "source": "Codex GOAL conversation, 2026-07-22"
+  },
   "records": [
     {
       "quiz_source_key": "quiz-slot-01",
