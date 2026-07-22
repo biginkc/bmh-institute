@@ -46,8 +46,14 @@ describe("DashboardLayout sibling shell contract", () => {
   });
 
   it("routes quiz search results through the authoritative lesson page", () => {
-    expect(layoutSource).toContain("`/lessons/${encodeURIComponent(lesson.id)}`");
+    expect(layoutSource).toContain("<LessonSearch");
     expect(layoutSource).not.toContain("?part=quiz");
+  });
+
+  it("does not load the entire lesson catalog into every dashboard response", () => {
+    expect(layoutSource).not.toContain('.from("lessons")');
+    expect(layoutSource).not.toContain("limit(500)");
+    expect(layoutSource).not.toContain("searchableLessons");
   });
 
   it("preserves the native sign-out POST contract", () => {

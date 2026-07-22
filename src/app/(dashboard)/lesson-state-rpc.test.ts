@@ -2,12 +2,16 @@ import { describe, expect, it, vi } from "vitest";
 
 import {
   loadAdminLessonCompletions,
+  loadLearnerCourseLessonStates,
   loadLearnerLessonStates,
 } from "./lesson-state-rpc";
 
 describe("lesson state batch RPC readers", () => {
   it("uses one learner RPC for dozens of lessons", async () => {
-    const lessonIds = Array.from({ length: 48 }, (_, index) => `lesson-${index}`);
+    const lessonIds = Array.from(
+      { length: 48 },
+      (_, index) => `lesson-${index}`,
+    );
     const rpc = vi.fn(async () => ({
       data: lessonIds.map((lessonId) => ({
         lesson_id: lessonId,
@@ -38,6 +42,29 @@ describe("lesson state batch RPC readers", () => {
         lessonIds: ["lesson-1", "lesson-2"],
       }),
     ).resolves.toEqual({ ok: false });
+  });
+
+  it("uses the actor-derived course RPC for lesson-page state", async () => {
+    const lessonIds = ["lesson-1", "lesson-2"];
+    const rpc = vi.fn(async () => ({
+      data: lessonIds.map((lessonId) => ({
+        lesson_id: lessonId,
+        is_complete: false,
+        is_unlocked: true,
+      })),
+      error: null,
+    }));
+
+    await expect(
+      loadLearnerCourseLessonStates({ rpc } as never, {
+        courseId: "course-1",
+        lessonIds,
+      }),
+    ).resolves.toMatchObject({ ok: true });
+    expect(rpc).toHaveBeenCalledWith("fn_learner_lesson_states_v1", {
+      p_course_id: "course-1",
+      p_lesson_ids: lessonIds,
+    });
   });
 
   it("does not count a stale stored completion after its video asset is replaced", async () => {
@@ -107,7 +134,10 @@ describe("lesson state batch RPC readers", () => {
 
   it("chunks large admin reports below the hosted Data API row limit", async () => {
     const userIds = Array.from({ length: 121 }, (_, index) => `user-${index}`);
-    const lessonIds = Array.from({ length: 50 }, (_, index) => `lesson-${index}`);
+    const lessonIds = Array.from(
+      { length: 50 },
+      (_, index) => `lesson-${index}`,
+    );
     const rpc = vi.fn(
       async (
         _name: string,
@@ -135,20 +165,27 @@ describe("lesson state batch RPC readers", () => {
     expect(rpc).toHaveBeenCalledTimes(7);
     expect(
       rpc.mock.calls.some(
-        ([, args]) => args.p_user_ids.length * args.p_lesson_ids.length === 1_000,
+        ([, args]) =>
+          args.p_user_ids.length * args.p_lesson_ids.length === 1_000,
       ),
     ).toBe(true);
     for (const [, args] of rpc.mock.calls) {
-      expect(args.p_user_ids.length * args.p_lesson_ids.length).toBeLessThanOrEqual(
-        1_000,
-      );
+      expect(
+        args.p_user_ids.length * args.p_lesson_ids.length,
+      ).toBeLessThanOrEqual(1_000);
     }
   });
 
   it("fails closed before issuing an unbounded report cross-product", async () => {
     const rpc = vi.fn();
-    const userIds = Array.from({ length: 2_001 }, (_, index) => `user-${index}`);
-    const lessonIds = Array.from({ length: 500 }, (_, index) => `lesson-${index}`);
+    const userIds = Array.from(
+      { length: 2_001 },
+      (_, index) => `user-${index}`,
+    );
+    const lessonIds = Array.from(
+      { length: 500 },
+      (_, index) => `lesson-${index}`,
+    );
 
     await expect(
       loadAdminLessonCompletions({ rpc } as never, { userIds, lessonIds }),

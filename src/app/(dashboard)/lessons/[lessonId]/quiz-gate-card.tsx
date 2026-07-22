@@ -62,6 +62,7 @@ export function QuizGateCard({
         <div className="mt-6">
           <Link
             href={backHref}
+            prefetch={false}
             className="inline-flex items-center justify-center rounded-[var(--bmh-radius-md)] border-[2.5px] border-[var(--ink-900)] bg-[var(--paper)] px-5 py-3 font-[family-name:var(--font-body)] text-sm font-extrabold text-[var(--ink-900)] transition-colors hover:bg-[var(--ink-050)]"
           >
             Back to course

@@ -4,14 +4,11 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const source = readFileSync(
-  resolve(
-    process.cwd(),
-    "src/app/(dashboard)/lessons/[lessonId]/page.tsx",
-  ),
+  resolve(process.cwd(), "src/app/(dashboard)/lessons/[lessonId]/page.tsx"),
   "utf8",
 );
 const loaderSource = readFileSync(
-  resolve(process.cwd(), "src/app/(dashboard)/load-learner-outline.ts"),
+  resolve(process.cwd(), "src/app/(dashboard)/load-learner-lesson-outline.ts"),
   "utf8",
 );
 const runnerSource = readFileSync(
@@ -32,14 +29,17 @@ const lessonSearchSource = readFileSync(
 
 describe("lesson learner-state query scope", () => {
   it("passes the signed-in identity into quiz and assignment bodies", () => {
-    expect(source).toContain("userId={auth.user.id}");
+    expect(source).toContain("userId={user.id}");
+    expect(source).toContain("getRequestAuthContext()");
     expect(source).toContain("userId={userId}");
     expect(source).toContain('tile.kind === "quiz"');
     expect(source).toContain("<StandaloneQuizLesson");
   });
 
   it("filters admin-visible attempts and submissions to that identity", () => {
-    const quizBody = source.slice(source.indexOf("async function QuizLessonBody"));
+    const quizBody = source.slice(
+      source.indexOf("async function QuizLessonBody"),
+    );
     const assignmentBody = source.slice(
       source.indexOf("async function AssignmentLessonBody"),
     );
@@ -48,9 +48,11 @@ describe("lesson learner-state query scope", () => {
   });
 
   it("loads trusted lesson state in batches scoped to the signed-in identity", () => {
-    const start = loaderSource.indexOf("loadLearnerLessonStates(supabase");
+    const start = loaderSource.indexOf(
+      "loadLearnerCourseLessonStates(supabase",
+    );
     const completionQuery = loaderSource.slice(start, start + 300);
-    expect(completionQuery).toContain("userId");
+    expect(completionQuery).toContain("courseId");
     expect(completionQuery).toContain("lessons.map");
     expect(loaderSource).not.toContain("createAdminClient");
     expect(source).not.toContain('supabase.rpc("fn_lesson_is_complete"');
@@ -71,13 +73,13 @@ describe("lesson learner-state query scope", () => {
       source.indexOf("function LessonShell"),
     );
 
-    expect(standalone).toContain('backHref={`/courses/${courseId}`}');
+    expect(standalone).toContain("backHref={`/courses/${courseId}`}");
     expect(composite).toContain("courseId={courseId}");
     expect(partBody).toContain("courseId: string;");
-    expect(partBody).toContain('backHref={`/courses/${courseId}`}');
-    expect(standalone).not.toContain('backHref={`/lessons/${tile.id}`}');
+    expect(partBody).toContain("backHref={`/courses/${courseId}`}");
+    expect(standalone).not.toContain("backHref={`/lessons/${tile.id}`}");
     expect(partBody).not.toContain(
-      'backHref={`/lessons/${tile.id}?part=quiz`}',
+      "backHref={`/lessons/${tile.id}?part=quiz`}",
     );
   });
 
@@ -91,14 +93,16 @@ describe("lesson learner-state query scope", () => {
       source.indexOf("async function PartBody"),
     );
 
-    expect(standalone).toContain('<a href={`/courses/${courseId}`}');
-    expect(composite).toContain('hardQuizNavigation = selected.kind === "quiz"');
-    expect(composite).toContain('<a href={`/courses/${courseId}`}');
+    expect(standalone).toMatch(/<a\s+ href=\{`\/courses\/\$\{courseId\}`\}/);
+    expect(composite).toContain(
+      'hardQuizNavigation = selected.kind === "quiz"',
+    );
+    expect(composite).toMatch(/<a\s+ href=\{`\/courses\/\$\{courseId\}`\}/);
     expect(composite).toContain("hardNavigation={hardQuizNavigation}");
-    expect(composite).toContain('<a href={nextTile.href}');
-    expect(runnerSource).toContain('<a href={backHref}');
+    expect(composite).toMatch(/<a\s+ href=\{nextTile\.href\}/);
+    expect(runnerSource).toContain("<a href={backHref}");
     expect(runnerSource).not.toContain(
-      '<Link href={backHref} className={linkButtonClass}>Back to course</Link>',
+      "<Link href={backHref} className={linkButtonClass}>Back to course</Link>",
     );
     expect(runnerSource).toContain(
       'document.addEventListener("click", hardNavigateFromCompletedResult, true)',

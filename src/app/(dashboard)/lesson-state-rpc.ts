@@ -15,8 +15,7 @@ export type VerifiedLessonCompletion = {
 };
 
 type LessonStateResult =
-  | { ok: true; states: Map<string, LearnerLessonState> }
-  | { ok: false };
+  { ok: true; states: Map<string, LearnerLessonState> } | { ok: false };
 
 type AdminCompletionResult =
   | { ok: true; completions: VerifiedLessonCompletion[] }
@@ -43,6 +42,46 @@ export async function loadLearnerLessonStates(
   for (const lessonBatch of chunks(lessonIds, MAX_IDS_PER_AXIS)) {
     const { data, error } = await supabase.rpc("fn_lesson_states", {
       p_user_id: input.userId,
+      p_lesson_ids: lessonBatch,
+    });
+    if (error || !Array.isArray(data)) return { ok: false };
+
+    for (const row of data) {
+      if (
+        !requested.has(row.lesson_id) ||
+        typeof row.is_complete !== "boolean" ||
+        typeof row.is_unlocked !== "boolean" ||
+        states.has(row.lesson_id)
+      ) {
+        return { ok: false };
+      }
+      states.set(row.lesson_id, {
+        lessonId: row.lesson_id,
+        isComplete: row.is_complete,
+        isUnlocked: row.is_unlocked,
+      });
+    }
+  }
+
+  return states.size === lessonIds.length
+    ? { ok: true, states }
+    : { ok: false };
+}
+
+export async function loadLearnerCourseLessonStates(
+  supabase: SupabaseClient<Database>,
+  input: { courseId: string; lessonIds: string[] },
+): Promise<LessonStateResult> {
+  const lessonIds = uniqueNonEmpty(input.lessonIds);
+  if (lessonIds.length === 0) {
+    return { ok: true, states: new Map() };
+  }
+
+  const requested = new Set(lessonIds);
+  const states = new Map<string, LearnerLessonState>();
+  for (const lessonBatch of chunks(lessonIds, MAX_IDS_PER_AXIS)) {
+    const { data, error } = await supabase.rpc("fn_learner_lesson_states_v1", {
+      p_course_id: input.courseId,
       p_lesson_ids: lessonBatch,
     });
     if (error || !Array.isArray(data)) return { ok: false };
@@ -122,7 +161,8 @@ export async function loadAdminLessonCompletions(
         if (!row.is_complete) continue;
         if (
           row.completed_at !== null &&
-          (typeof row.completed_at !== "string" || row.completed_at.length === 0)
+          (typeof row.completed_at !== "string" ||
+            row.completed_at.length === 0)
         ) {
           return { ok: false };
         }

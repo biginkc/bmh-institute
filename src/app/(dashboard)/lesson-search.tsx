@@ -3,7 +3,7 @@
 import { Search } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useId, useMemo, useState } from "react";
+import { useEffect, useId, useState } from "react";
 
 import { SearchBar } from "@/components/bmh-ds/search-bar";
 
@@ -12,20 +12,19 @@ import {
   COMPLETED_QUIZ_HARD_NAVIGATION_ATTRIBUTE,
 } from "./dashboard-events";
 
-export type LessonSearchItem = {
+type LessonSearchItem = {
   id: string;
   title: string;
   href: string;
 };
 
 const MAX_RESULTS = 8;
+const SEARCH_DEBOUNCE_MS = 250;
 
 export function LessonSearch({
-  lessons,
   instanceId,
   compact = false,
 }: {
-  lessons: LessonSearchItem[];
   instanceId?: string;
   compact?: boolean;
 }) {
@@ -33,24 +32,74 @@ export function LessonSearch({
   const generatedId = useId().replaceAll(":", "");
   const idPrefix = instanceId ?? `lesson-search-${generatedId}`;
   const resultsId = `${idPrefix}-results`;
+  const statusId = `${idPrefix}-status`;
   const panelId = `${idPrefix}-panel`;
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [compactOpen, setCompactOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
+  const [searchResult, setSearchResult] = useState<{
+    query: string;
+    items: LessonSearchItem[];
+    status: "idle" | "loading" | "success" | "error";
+  }>({ query: "", items: [], status: "idle" });
   const normalizedQuery = query.trim().toLocaleLowerCase();
-  const results = useMemo(
-    () =>
-      normalizedQuery
-        ? lessons
-            .filter((lesson) =>
-              lesson.title.toLocaleLowerCase().includes(normalizedQuery),
-            )
-            .slice(0, MAX_RESULTS)
-        : [],
-    [lessons, normalizedQuery],
-  );
-  const expanded = open && normalizedQuery.length > 0;
+  const results =
+    searchResult.query === normalizedQuery ? searchResult.items : [];
+  const searchStatus =
+    normalizedQuery.length < 2
+      ? "idle"
+      : searchResult.query === normalizedQuery
+        ? searchResult.status
+        : "loading";
+  const expanded = open && normalizedQuery.length >= 2;
+  const hasResultsPopup =
+    expanded && searchStatus === "success" && results.length > 0;
+
+  useEffect(() => {
+    if (normalizedQuery.length < 2) {
+      return;
+    }
+    const controller = new AbortController();
+    const timer = window.setTimeout(async () => {
+      try {
+        const response = await fetch(
+          `/api/lesson-search?q=${encodeURIComponent(normalizedQuery)}`,
+          { signal: controller.signal, cache: "no-store" },
+        );
+        if (!response.ok) {
+          setSearchResult({
+            query: normalizedQuery,
+            items: [],
+            status: "error",
+          });
+          return;
+        }
+        const payload = (await response.json()) as {
+          results?: LessonSearchItem[];
+        };
+        setSearchResult({
+          query: normalizedQuery,
+          items: Array.isArray(payload.results)
+            ? payload.results.slice(0, MAX_RESULTS)
+            : [],
+          status: "success",
+        });
+      } catch (error) {
+        if (!(error instanceof DOMException && error.name === "AbortError")) {
+          setSearchResult({
+            query: normalizedQuery,
+            items: [],
+            status: "error",
+          });
+        }
+      }
+    }, SEARCH_DEBOUNCE_MS);
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+    };
+  }, [normalizedQuery]);
 
   function closeSearch() {
     setOpen(false);
@@ -65,7 +114,11 @@ export function LessonSearch({
       setActiveIndex(-1);
     };
     window.addEventListener(CLOSE_LESSON_SEARCH_EVENT, closeForModalNavigation);
-    return () => window.removeEventListener(CLOSE_LESSON_SEARCH_EVENT, closeForModalNavigation);
+    return () =>
+      window.removeEventListener(
+        CLOSE_LESSON_SEARCH_EVENT,
+        closeForModalNavigation,
+      );
   }, []);
 
   function navigateTo(index: number) {
@@ -89,17 +142,24 @@ export function LessonSearch({
         placeholder="Search lessons"
         value={query}
         onChange={(event) => {
-          setQuery(event.target.value);
+          const nextQuery = event.target.value;
+          const nextNormalizedQuery = nextQuery.trim().toLocaleLowerCase();
+          setQuery(nextQuery);
+          setSearchResult({
+            query: nextNormalizedQuery,
+            items: [],
+            status: nextNormalizedQuery.length >= 2 ? "loading" : "idle",
+          });
           setOpen(true);
           setActiveIndex(-1);
         }}
         inputProps={{
           role: "combobox",
           "aria-autocomplete": "list",
-          "aria-controls": resultsId,
-          "aria-expanded": expanded,
+          "aria-controls": hasResultsPopup ? resultsId : undefined,
+          "aria-expanded": hasResultsPopup,
           "aria-activedescendant":
-            expanded && activeIndex >= 0
+            hasResultsPopup && activeIndex >= 0
               ? `${idPrefix}-option-${activeIndex}`
               : undefined,
           autoComplete: "off",
@@ -110,7 +170,7 @@ export function LessonSearch({
               closeSearch();
               return;
             }
-            if (!expanded || results.length === 0) return;
+            if (!hasResultsPopup) return;
             if (event.key === "ArrowDown") {
               event.preventDefault();
               setActiveIndex((current) =>
@@ -128,33 +188,49 @@ export function LessonSearch({
           },
         }}
       />
-      {expanded ? (
+      {hasResultsPopup ? (
         <div
           id={resultsId}
           role="listbox"
           aria-label="Lesson search results"
           className="absolute left-0 right-0 top-[calc(100%+8px)] z-50 max-h-80 overflow-y-auto rounded-[var(--bmh-radius-md)] border border-[var(--border-card)] bg-[var(--paper)] p-1 shadow-[var(--bmh-shadow-md)]"
         >
-          {results.length > 0 ? (
-            results.map((lesson, index) => (
-              <Link
-                key={lesson.id}
-                id={`${idPrefix}-option-${index}`}
-                role="option"
-                aria-selected={index === activeIndex}
-                href={lesson.href}
-                onMouseEnter={() => setActiveIndex(index)}
-                onClick={closeSearch}
-                className="block rounded-[var(--bmh-radius-sm)] px-3 py-2 text-sm font-extrabold text-[var(--ink-900)] no-underline hover:bg-[var(--action-soft)] focus-visible:bg-[var(--action-soft)] focus-visible:outline-2 focus-visible:outline-[var(--action)] aria-selected:bg-[var(--action-soft)]"
-              >
-                {lesson.title}
-              </Link>
-            ))
-          ) : (
-            <p className="px-3 py-2 text-sm font-semibold text-[var(--text-muted)]">
-              No lessons found.
-            </p>
-          )}
+          {results.map((lesson, index) => (
+            <Link
+              key={lesson.id}
+              id={`${idPrefix}-option-${index}`}
+              role="option"
+              aria-selected={index === activeIndex}
+              href={lesson.href}
+              prefetch={false}
+              onMouseEnter={() => setActiveIndex(index)}
+              onClick={closeSearch}
+              className="block rounded-[var(--bmh-radius-sm)] px-3 py-2 text-sm font-extrabold text-[var(--ink-900)] no-underline hover:bg-[var(--action-soft)] focus-visible:bg-[var(--action-soft)] focus-visible:outline-2 focus-visible:outline-[var(--action)] aria-selected:bg-[var(--action-soft)]"
+            >
+              {lesson.title}
+            </Link>
+          ))}
+        </div>
+      ) : expanded ? (
+        <div
+          id={statusId}
+          role="status"
+          aria-live="polite"
+          className="absolute left-0 right-0 top-[calc(100%+8px)] z-50 rounded-[var(--bmh-radius-md)] border border-[var(--border-card)] bg-[var(--paper)] px-3 py-2 text-sm font-semibold shadow-[var(--bmh-shadow-md)]"
+        >
+          <span
+            className={
+              searchStatus === "error"
+                ? "text-[var(--danger)]"
+                : "text-[var(--text-muted)]"
+            }
+          >
+            {searchStatus === "loading"
+              ? "Searching…"
+              : searchStatus === "error"
+                ? "Search unavailable. Try again."
+                : "No lessons found."}
+          </span>
         </div>
       ) : null}
     </div>

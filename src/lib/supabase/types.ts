@@ -1699,6 +1699,14 @@ export type Database = {
           lesson_id: string
         }[]
       }
+      fn_learner_lesson_states_v1: {
+        Args: { p_course_id: string; p_lesson_ids: string[] }
+        Returns: {
+          is_complete: boolean
+          is_unlocked: boolean
+          lesson_id: string
+        }[]
+      }
       fn_move_module: {
         Args: { p_course_id: string; p_direction: string; p_module_id: string }
         Returns: undefined

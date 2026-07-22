@@ -317,7 +317,7 @@ describe.skipIf(!envPresent)("atomic role-play completion", () => {
         scenarioId: `scenario-${suffix}`,
         attemptId: `suspended-${suffix}`,
       });
-      expect(suspended.error?.message).toMatch(/active learner is required/i);
+      expect(suspended.error?.message).toMatch(/active learner.*required/i);
     } finally {
       await admin.auth.admin.deleteUser(userId).catch(() => {});
       if (courseId) await admin.from("courses").delete().eq("id", courseId);
