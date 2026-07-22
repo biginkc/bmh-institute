@@ -312,6 +312,7 @@ declare
   v_old_moved_definition_sha text;
   v_attester_definition text;
   v_attester_definition_sha text;
+  v_old_attester_definition_sha text;
   v_occurrences integer;
   v_old_manifest_sha constant text :=
     '2ee30597dd997614acc93422d00bbd2874c7438b0dc189d826ea9fbea55c1489';
@@ -422,9 +423,17 @@ begin
     'private.admin_cleanup_fixture_catalog_v021_without_controller_gate(text,text)'
   );
 
+  select expected_sha256 into strict v_old_attester_definition_sha
+  from private.fixture_cleanup_expected_function_contracts_v1
+  where contract_name = 'legacy_attester';
   select pg_get_functiondef(
     'private.fixture_cleanup_legacy_contract_attestation_v1()'::regprocedure
   ) into strict v_attester_definition;
+  if encode(extensions.digest(v_attester_definition, 'sha256'), 'hex')
+      <> v_old_attester_definition_sha
+  then
+    raise exception 'quiz privacy migration blocked: legacy attester definition drift';
+  end if;
   v_occurrences := (
     length(v_attester_definition) -
     length(replace(v_attester_definition, v_old_moved_definition_sha, ''))
@@ -454,9 +463,10 @@ begin
   end if;
   update private.fixture_cleanup_expected_function_contracts_v1
   set expected_sha256 = v_attester_definition_sha
-  where contract_name = 'legacy_attester';
+  where contract_name = 'legacy_attester'
+    and expected_sha256 = v_old_attester_definition_sha;
   if not found then
-    raise exception 'quiz privacy migration blocked: attester contract registry missing';
+    raise exception 'quiz privacy migration blocked: attester contract registry mismatch';
   end if;
 
   if not coalesce(

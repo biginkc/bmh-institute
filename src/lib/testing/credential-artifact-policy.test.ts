@@ -39,6 +39,8 @@ describe("credential-bearing Playwright artifact policy", () => {
     expect(source).toContain("permissions:\n  contents: read");
     const triggerBlock = source.match(/^on:\n([\s\S]*?)\nenv:/m)?.[1] ?? "";
     expect(triggerBlock).toContain("workflow_dispatch");
+    expect(triggerBlock).toContain("expected_sha:");
+    expect(triggerBlock).toContain("required: true");
     expect(triggerBlock).toContain("pull_request");
     const prJob = source.slice(
       source.indexOf("  validate-pr-migrations:"),
@@ -47,18 +49,24 @@ describe("credential-bearing Playwright artifact policy", () => {
     expect(prJob).not.toContain("secrets.");
     expect(prJob).toContain("run-controller-gate-pr-harness.mjs");
     const remoteJob = source.slice(source.indexOf("  migrate-test:"));
-    expect(remoteJob).toContain(
-      "if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'",
-    );
+    expect(remoteJob).toContain("if: github.event_name == 'workflow_dispatch'");
     expect(source).not.toMatch(/uses:\s+[^\n]+@(?![a-f0-9]{40}(?:\s|#|$))[^\n]+/);
     const checkoutStep = remoteJob.match(
       /- uses: actions\/checkout@[a-f0-9]{40}[\s\S]*?(?=\n\s{6}- uses:|\n\s{6}- name:|$)/,
     )?.[0] ?? "";
-    expect(checkoutStep).toContain("ref: refs/heads/main");
+    expect(checkoutStep).toContain("ref: ${{ github.sha }}");
     expect(checkoutStep).toContain("persist-credentials: false");
     expect(checkoutStep).not.toContain("github.ref");
-    expect(checkoutStep).not.toContain("github.sha");
     expect(checkoutStep).not.toContain("github.event.inputs");
+    const revisionGuard = remoteJob.match(
+      /- name: Verify exact authorized revision[\s\S]*?(?=\n\s{6}- uses:|\n\s{6}- name:|$)/,
+    )?.[0] ?? "";
+    expect(revisionGuard).toContain("EXPECTED_SHA: ${{ inputs.expected_sha }}");
+    expect(revisionGuard).toContain("DISPATCH_SHA: ${{ github.sha }}");
+    expect(revisionGuard).toContain("'^[0-9a-f]{40}$'");
+    expect(revisionGuard).toContain('ACTUAL_SHA="$(git rev-parse HEAD)"');
+    expect(revisionGuard).toContain('[ "$ACTUAL_SHA" != "$EXPECTED_SHA" ]');
+    expect(revisionGuard).toContain('[ "$DISPATCH_SHA" != "$EXPECTED_SHA" ]');
     const jobEnv = remoteJob.match(/\n    env:\n([\s\S]*?)\n    steps:/)?.[1] ?? "";
     expect(jobEnv).not.toContain("TEST_SUPABASE_SERVICE_ROLE_KEY");
     const providerStep = remoteJob.match(

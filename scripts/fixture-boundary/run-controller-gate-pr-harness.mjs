@@ -571,6 +571,11 @@ function replayQuizPrivacyMigration(migrationPath) {
   const invalidAttempt = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa31";
   const validAttempt = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa32";
   const completedAttempt = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa33";
+  const reviewedLegacyAttesterSha = psqlScalar(`
+    select expected_sha256
+    from private.fixture_cleanup_expected_function_contracts_v1
+    where contract_name = 'legacy_attester'
+  `);
 
   psqlText(`
     set session_replication_role = replica;
@@ -625,6 +630,32 @@ function replayQuizPrivacyMigration(migrationPath) {
 
   psqlText(`
     delete from public.user_quiz_attempts where id = '${invalidAttempt}';
+    alter function private.fixture_cleanup_legacy_contract_attestation_v1()
+      volatile;
+  `);
+  expectPsqlFileFailure(
+    migrationPath,
+    {},
+    "legacy attester definition drift",
+  );
+  if (psqlScalar(`select count(*) from information_schema.columns where table_schema='public' and table_name='user_quiz_attempts' and column_name='answer_results'`) !== "0") {
+    throw new Error("attester-drift refusal left a partial schema change");
+  }
+  psqlText(`
+    alter function private.fixture_cleanup_legacy_contract_attestation_v1()
+      stable;
+  `);
+  if (psqlScalar(`
+    select encode(extensions.digest(pg_get_functiondef(proc.oid), 'sha256'), 'hex')
+    from pg_proc proc
+    where proc.oid = to_regprocedure(
+      'private.fixture_cleanup_legacy_contract_attestation_v1()'
+    )
+  `) !== reviewedLegacyAttesterSha) {
+    throw new Error("legacy attester restoration did not recover the reviewed definition");
+  }
+
+  psqlText(`
     set session_replication_role = replica;
     insert into public.user_quiz_attempts (
       id, user_id, quiz_id, lesson_id, question_order, answer_orders, responses
