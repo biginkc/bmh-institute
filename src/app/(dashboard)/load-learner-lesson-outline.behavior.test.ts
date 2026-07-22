@@ -14,6 +14,7 @@ type QueryCall = {
   table: string;
   filters: Array<[string, unknown]>;
   inFilters: Array<[string, unknown[]]>;
+  limits: number[];
 };
 
 const lessons = [
@@ -86,6 +87,7 @@ describe("loadLearnerLessonOutline", () => {
       ["user_id", "user-1"],
       ["lesson_id", "assignment-1"],
     ]);
+    expect(assignment?.limits).toEqual([1]);
   });
 });
 
@@ -93,7 +95,7 @@ function fakeSupabase() {
   const calls: QueryCall[] = [];
   const supabase = {
     from(table: string) {
-      const call: QueryCall = { table, filters: [], inFilters: [] };
+      const call: QueryCall = { table, filters: [], inFilters: [], limits: [] };
       calls.push(call);
       const result = resultFor(table);
       const query = {
@@ -107,6 +109,10 @@ function fakeSupabase() {
           return query;
         },
         order() { return query; },
+        limit(value: number) {
+          call.limits.push(value);
+          return query;
+        },
         maybeSingle: async () => result,
         then<TResult1 = unknown, TResult2 = never>(
           onfulfilled?: ((value: typeof result) => TResult1 | PromiseLike<TResult1>) | null,

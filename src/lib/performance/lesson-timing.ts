@@ -2,6 +2,7 @@ export type LessonTimingStage =
   | "middleware-auth"
   | "dashboard-identity-profile"
   | "lesson-membership"
+  | "paired-quiz-parent"
   | "lightweight-outline"
   | "lesson-states"
   | "current-blocks"
@@ -9,7 +10,7 @@ export type LessonTimingStage =
   | "current-assignment-status"
   | "selected-part-media-signing"
   | "selected-role-play-token"
-  | "lesson-server-render-total";
+  | "lesson-page-render";
 
 export function serverTimingValue(stage: LessonTimingStage, durationMs: number): string {
   return `${stage};dur=${Math.max(0, durationMs).toFixed(1)}`;

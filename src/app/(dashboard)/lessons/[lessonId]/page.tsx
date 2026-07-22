@@ -40,6 +40,7 @@ import {
 } from "./assignment-runner";
 import { QuizGateCard } from "./quiz-gate-card";
 import { QuizRunner } from "./quiz-runner";
+import { pairedQuizParentHref } from "./paired-quiz-parent";
 
 export default async function LessonPage({
   params,
@@ -48,7 +49,7 @@ export default async function LessonPage({
   params: Promise<{ lessonId: string }>;
   searchParams: Promise<{ part?: string | string[] }>;
 }) {
-  return withLessonTiming("lesson-server-render-total", () =>
+  return withLessonTiming("lesson-page-render", () =>
     renderLessonPage({ params, searchParams }),
   );
 }
@@ -68,7 +69,7 @@ async function renderLessonPage({
     async () =>
       supabase
         .from("lessons")
-        .select("id, lesson_type, module_id, modules(course_id)")
+        .select("id, lesson_type, prerequisite_lesson_id, module_id, modules(course_id)")
         .eq("id", lessonId)
         .maybeSingle(),
   );
@@ -76,6 +77,23 @@ async function renderLessonPage({
   const moduleRow = firstRow(lesson.modules);
   const courseId = moduleRow?.course_id;
   if (!courseId) notFound();
+
+  if (lesson.lesson_type === "quiz" && lesson.prerequisite_lesson_id) {
+    const prerequisiteLessonId = lesson.prerequisite_lesson_id;
+    const { data: parent } = await withLessonTiming("paired-quiz-parent", async () =>
+      supabase
+        .from("lessons")
+        .select("id, lesson_type, modules(course_id)")
+        .eq("id", prerequisiteLessonId)
+        .maybeSingle(),
+    );
+    const parentHref = pairedQuizParentHref({
+      courseId,
+      quizPrerequisiteId: prerequisiteLessonId,
+      parent,
+    });
+    if (parentHref) redirect(parentHref);
+  }
 
   const result = await loadLearnerLessonOutline({
     supabase,

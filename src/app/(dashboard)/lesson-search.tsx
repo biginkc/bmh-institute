@@ -12,7 +12,7 @@ import {
   COMPLETED_QUIZ_HARD_NAVIGATION_ATTRIBUTE,
 } from "./dashboard-events";
 
-export type LessonSearchItem = {
+type LessonSearchItem = {
   id: string;
   title: string;
   href: string;
@@ -40,10 +40,16 @@ export function LessonSearch({
   const [searchResult, setSearchResult] = useState<{
     query: string;
     items: LessonSearchItem[];
-  }>({ query: "", items: [] });
+    status: "idle" | "loading" | "success" | "error";
+  }>({ query: "", items: [], status: "idle" });
   const normalizedQuery = query.trim().toLocaleLowerCase();
   const results =
     searchResult.query === normalizedQuery ? searchResult.items : [];
+  const searchStatus = normalizedQuery.length < 2
+    ? "idle"
+    : searchResult.query === normalizedQuery
+      ? searchResult.status
+      : "loading";
   const expanded = open && normalizedQuery.length >= 2;
 
   useEffect(() => {
@@ -58,7 +64,7 @@ export function LessonSearch({
           { signal: controller.signal, cache: "no-store" },
         );
         if (!response.ok) {
-          setSearchResult({ query: normalizedQuery, items: [] });
+          setSearchResult({ query: normalizedQuery, items: [], status: "error" });
           return;
         }
         const payload = (await response.json()) as { results?: LessonSearchItem[] };
@@ -67,10 +73,11 @@ export function LessonSearch({
           items: Array.isArray(payload.results)
             ? payload.results.slice(0, MAX_RESULTS)
             : [],
+          status: "success",
         });
       } catch (error) {
         if (!(error instanceof DOMException && error.name === "AbortError")) {
-          setSearchResult({ query: normalizedQuery, items: [] });
+          setSearchResult({ query: normalizedQuery, items: [], status: "error" });
         }
       }
     }, SEARCH_DEBOUNCE_MS);
@@ -117,7 +124,14 @@ export function LessonSearch({
         placeholder="Search lessons"
         value={query}
         onChange={(event) => {
-          setQuery(event.target.value);
+          const nextQuery = event.target.value;
+          const nextNormalizedQuery = nextQuery.trim().toLocaleLowerCase();
+          setQuery(nextQuery);
+          setSearchResult({
+            query: nextNormalizedQuery,
+            items: [],
+            status: nextNormalizedQuery.length >= 2 ? "loading" : "idle",
+          });
           setOpen(true);
           setActiveIndex(-1);
         }}
@@ -163,7 +177,15 @@ export function LessonSearch({
           aria-label="Lesson search results"
           className="absolute left-0 right-0 top-[calc(100%+8px)] z-50 max-h-80 overflow-y-auto rounded-[var(--bmh-radius-md)] border border-[var(--border-card)] bg-[var(--paper)] p-1 shadow-[var(--bmh-shadow-md)]"
         >
-          {results.length > 0 ? (
+          {searchStatus === "loading" ? (
+            <p className="px-3 py-2 text-sm font-semibold text-[var(--text-muted)]" role="status">
+              Searching…
+            </p>
+          ) : searchStatus === "error" ? (
+            <p className="px-3 py-2 text-sm font-semibold text-[var(--danger)]" role="status">
+              Search unavailable. Try again.
+            </p>
+          ) : results.length > 0 ? (
             results.map((lesson, index) => (
               <Link
                 key={lesson.id}

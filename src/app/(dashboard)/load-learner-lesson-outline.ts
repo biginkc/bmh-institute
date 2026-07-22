@@ -106,7 +106,8 @@ export async function loadLearnerLessonOutline({
             .eq("user_id", userId)
             .eq("lesson_id", lessonId)
             .order("submitted_at", { ascending: false })
-            .order("id", { ascending: false }),
+            .order("id", { ascending: false })
+            .limit(1),
         )
       : Promise.resolve({ data: [], error: null }),
   ]);

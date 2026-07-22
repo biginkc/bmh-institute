@@ -7,6 +7,13 @@ describe("lesson timing telemetry", () => {
     expect(serverTimingValue("middleware-auth", 12.345)).toBe("middleware-auth;dur=12.3");
   });
 
+  it("labels component work as page render rather than total response time", async () => {
+    const info = vi.spyOn(console, "info").mockImplementation(() => undefined);
+    await withLessonTiming("lesson-page-render", async () => undefined);
+    expect(info.mock.calls.flat().join(" ")).toContain("lesson-page-render");
+    info.mockRestore();
+  });
+
   it("does not serialize operation values or private context into structured logs", async () => {
     const info = vi.spyOn(console, "info").mockImplementation(() => undefined);
     const privateValue = "learner@example.test signed-token-secret";

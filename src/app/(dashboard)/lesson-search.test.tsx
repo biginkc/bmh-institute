@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -74,6 +74,36 @@ describe("<LessonSearch />", () => {
     await screen.findByRole("option", { name: "Tech quiz" });
     await user.keyboard("{Enter}");
     expect(push).toHaveBeenCalledWith("/lessons/lesson-tech?part=quiz");
+  });
+
+  it("shows progress instead of a false empty result while a request is pending", async () => {
+    let resolveRequest: ((response: Response) => void) | undefined;
+    vi.stubGlobal("fetch", vi.fn(() => new Promise<Response>((resolve) => {
+      resolveRequest = resolve;
+    })));
+    const user = userEvent.setup();
+    render(<LessonSearch />);
+
+    await user.type(screen.getByRole("combobox", { name: "Search lessons" }), "opening");
+    expect(await screen.findByText("Searching…")).toBeVisible();
+    expect(screen.queryByText("No lessons found.")).not.toBeInTheDocument();
+    await waitFor(() => expect(fetch).toHaveBeenCalledOnce());
+
+    resolveRequest?.(new Response(JSON.stringify({ results: [] }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    }));
+    expect(await screen.findByText("No lessons found.")).toBeVisible();
+  });
+
+  it("distinguishes a failed search from a valid empty result", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(null, { status: 500 })));
+    const user = userEvent.setup();
+    render(<LessonSearch />);
+
+    await user.type(screen.getByRole("combobox", { name: "Search lessons" }), "opening");
+    expect(await screen.findByText("Search unavailable. Try again.")).toBeVisible();
+    expect(screen.queryByText("No lessons found.")).not.toBeInTheDocument();
   });
 
   it("uses unique combobox and listbox IDs for multiple header placements", async () => {

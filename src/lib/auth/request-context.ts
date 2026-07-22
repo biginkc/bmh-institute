@@ -3,7 +3,7 @@ import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { withLessonTiming } from "@/lib/performance/lesson-timing";
 
-export type RequestProfile = {
+type RequestProfile = {
   system_role: "owner" | "admin" | "learner";
   full_name: string;
   status: "active" | "invited" | "suspended";

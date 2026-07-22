@@ -179,6 +179,71 @@ async function readCatalogReferences(
   );
 }
 
+async function readLessonLoadQueryShape(
+  client: SupabaseClient,
+  courseId: string,
+  lessonId: string,
+) {
+  const [membership, course, blocks] = await Promise.all([
+    client
+      .from("lessons")
+      .select("id, lesson_type, prerequisite_lesson_id, module_id, modules(course_id)")
+      .eq("id", lessonId)
+      .maybeSingle(),
+    client
+      .from("courses")
+      .select(`
+        id,
+        title,
+        description,
+        is_published,
+        thumbnail_path,
+        content_import_id,
+        thumbnail_asset_key,
+        thumbnail_approved_path,
+        thumbnail_approved_sha256,
+        modules (
+          id,
+          title,
+          description,
+          sort_order,
+          lessons (
+            id,
+            title,
+            description,
+            lesson_type,
+            sort_order,
+            prerequisite_lesson_id,
+            quiz_id,
+            assignment_id,
+            is_required_for_completion,
+            thumbnail_path,
+            content_import_id,
+            thumbnail_asset_key,
+            thumbnail_approved_path,
+            thumbnail_approved_sha256
+          )
+        )
+      `)
+      .eq("id", courseId)
+      .maybeSingle(),
+    client
+      .from("content_blocks")
+      .select("id, block_type, content, sort_order, is_required_for_completion")
+      .eq("lesson_id", lessonId)
+      .order("sort_order")
+      .order("id"),
+  ]);
+  for (const result of [membership, course, blocks]) {
+    if (result.error) throw result.error;
+  }
+  return {
+    membershipId: membership.data?.id ?? null,
+    courseId: course.data?.id ?? null,
+    blockIds: (blocks.data ?? []).map((block) => block.id),
+  };
+}
+
 async function cleanupContentionPlan(
   client: SupabaseClient,
   plan: ImportPlan,
@@ -499,6 +564,12 @@ describe("imported catalog release control on a test project", () => {
     const program = operation("programs");
     const course = operation("courses");
     const lesson = operation("lessons");
+    const contentBlock = operation("content_blocks");
+    const contentLesson = atomicImportOperations(plan).find(
+      (candidate) =>
+        candidate.table === "lessons" && candidate.id === contentBlock.row.lesson_id,
+    );
+    if (!contentLesson) throw new Error("Test import content lesson is missing.");
     const importedModule = operation("modules");
     const quiz = operation("quizzes");
     const answerOption = operation("answer_options");
@@ -537,6 +608,17 @@ describe("imported catalog release control on a test project", () => {
       expect(ownerBeforeGrant).toEqual(importedReferences.map(() => null));
       expect(adminBeforeGrant).toEqual(importedReferences.map(() => null));
       expect(learnerBeforeGrant).toEqual(importedReferences.map(() => null));
+
+      const [ownerLoadBeforeGrant, adminLoadBeforeGrant, learnerLoadBeforeGrant] =
+        await Promise.all([
+          readLessonLoadQueryShape(owner.client, course.id, contentLesson.id),
+          readLessonLoadQueryShape(admin.client, course.id, contentLesson.id),
+          readLessonLoadQueryShape(learner.client, course.id, contentLesson.id),
+        ]);
+      const hiddenLessonLoad = { membershipId: null, courseId: null, blockIds: [] };
+      expect(ownerLoadBeforeGrant).toEqual(hiddenLessonLoad);
+      expect(adminLoadBeforeGrant).toEqual(hiddenLessonLoad);
+      expect(learnerLoadBeforeGrant).toEqual(hiddenLessonLoad);
 
       const directReviewerRead = await owner.client
         .from("course_import_reviewers_v1")
@@ -623,6 +705,17 @@ describe("imported catalog release control on a test project", () => {
       expect(hiddenFromLearner).toEqual(importedReferences.map(() => null));
       expect(unlocked.error).toBeNull();
       expect(unlocked.data).toBe(true);
+
+      const reviewerLessonLoad = await readLessonLoadQueryShape(
+        owner.client,
+        course.id,
+        contentLesson.id,
+      );
+      expect(reviewerLessonLoad).toEqual({
+        membershipId: contentLesson.id,
+        courseId: course.id,
+        blockIds: expect.arrayContaining([contentBlock.id]),
+      });
 
       const adminModuleMove = await admin.client.rpc("fn_move_module", {
         p_module_id: importedModule.id,
