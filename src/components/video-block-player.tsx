@@ -42,6 +42,8 @@ export function VideoBlockPlayer({
   const completedRef = useRef(initialComplete);
   const hasRecordedProgressRef = useRef(false);
   const playbackStartedRef = useRef(false);
+  const playbackEndedRef = useRef(false);
+  const refreshPendingRef = useRef(false);
   const refreshRequestedRef = useRef(false);
   const [playing, setPlaying] = useState(false);
   const [duration, setDuration] = useState(0);
@@ -58,8 +60,17 @@ export function VideoBlockPlayer({
   const requestRefresh = useCallback(() => {
     if (refreshRequestedRef.current) return;
     refreshRequestedRef.current = true;
+    refreshPendingRef.current = false;
     refresh();
   }, [refresh]);
+
+  const requestRefreshWhenPlaybackSafe = useCallback(() => {
+    if (!playbackStartedRef.current || playbackEndedRef.current) {
+      requestRefresh();
+      return;
+    }
+    refreshPendingRef.current = true;
+  }, [requestRefresh]);
 
   const resynchronizeProgress = useCallback(async () => {
     let result: Awaited<ReturnType<typeof loadVideoProgress>> | null = null;
@@ -82,9 +93,11 @@ export function VideoBlockPlayer({
     if (video && Number.isFinite(result.positionSeconds)) {
       video.currentTime = result.positionSeconds;
     }
-    if (transitionedToComplete || result.reconciled) requestRefresh();
+    if (transitionedToComplete || result.reconciled) {
+      requestRefreshWhenPlaybackSafe();
+    }
     return true;
-  }, [blockId, requestRefresh]);
+  }, [blockId, requestRefreshWhenPlaybackSafe]);
 
   const enqueueProgress = useCallback(
     (progress: Parameters<typeof recordVideoProgress>[0]) => {
@@ -105,7 +118,7 @@ export function VideoBlockPlayer({
           if (result.completed && !completedRef.current) {
             completedRef.current = true;
             setCompleted(true);
-            requestRefresh();
+            requestRefreshWhenPlaybackSafe();
           }
         }
         const recovered = result?.ok ? true : await resynchronizeProgress();
@@ -117,7 +130,7 @@ export function VideoBlockPlayer({
         );
       });
     },
-    [requestRefresh, resynchronizeProgress],
+    [requestRefreshWhenPlaybackSafe, resynchronizeProgress],
   );
 
   const enqueueSeek = useCallback(
@@ -185,14 +198,16 @@ export function VideoBlockPlayer({
         sampleStartRef.current = result.positionSeconds;
         video.currentTime = result.positionSeconds;
       }
-      if (transitionedToComplete || result.reconciled) requestRefresh();
+      if (transitionedToComplete || result.reconciled) {
+        requestRefreshWhenPlaybackSafe();
+      }
     });
     return () => {
       active = false;
       mountedRef.current = false;
       if (video && !video.paused) flushProgress(video);
     };
-  }, [blockId, flushProgress, requestRefresh]);
+  }, [blockId, flushProgress, requestRefreshWhenPlaybackSafe]);
 
   useEffect(() => {
     function flushWhenHidden() {
@@ -248,11 +263,13 @@ export function VideoBlockPlayer({
           }}
           onPlay={(event) => {
             playbackStartedRef.current = true;
+            playbackEndedRef.current = false;
             setPlaying(true);
             sampleStartRef.current = event.currentTarget.currentTime;
           }}
           onSeeking={() => {
             playbackStartedRef.current = true;
+            playbackEndedRef.current = false;
             sampleStartRef.current = null;
           }}
           onSeeked={(event) => {
@@ -269,8 +286,10 @@ export function VideoBlockPlayer({
             setPlaying(false);
           }}
           onEnded={(event) => {
+            playbackEndedRef.current = true;
             flushProgress(event.currentTarget);
             setPlaying(false);
+            if (refreshPendingRef.current) requestRefresh();
           }}
           onTimeUpdate={onTimeUpdate}
         >

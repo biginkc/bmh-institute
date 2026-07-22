@@ -189,8 +189,6 @@ export async function recordVideoProgress(input: {
     });
   }
 
-  revalidatePath(`/lessons/${trusted.lessonId}`);
-  revalidatePath("/dashboard");
   return {
     ok: true,
     positionSeconds: trusted.positionSeconds,

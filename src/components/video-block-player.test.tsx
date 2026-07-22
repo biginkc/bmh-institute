@@ -116,7 +116,7 @@ describe("<VideoBlockPlayer />", () => {
     expect(video.currentTime).toBe(15);
   });
 
-  it("announces completion and refreshes the lesson once on transition", async () => {
+  it("announces completion but defers the lesson refresh until playback ends", async () => {
     recordVideoProgress.mockResolvedValue({
       ok: true,
       positionSeconds: 95,
@@ -136,11 +136,53 @@ describe("<VideoBlockPlayer />", () => {
     fireEvent.timeUpdate(video);
 
     expect(await screen.findByText("Complete")).toBeVisible();
-    expect(refresh).toHaveBeenCalledTimes(1);
+    expect(refresh).not.toHaveBeenCalled();
 
-    video.currentTime = 100;
+    fireEvent.ended(video);
+    fireEvent.ended(video);
+    await waitFor(() => expect(refresh).toHaveBeenCalledTimes(1));
+    expect(refresh).toHaveBeenCalledTimes(1);
+  });
+
+  it("refreshes once when the completion response arrives after playback ends", async () => {
+    let resolveCompletion: (value: {
+      ok: true;
+      positionSeconds: number;
+      watchedRanges: [number, number][];
+      watchedPercent: number;
+      completed: true;
+    }) => void = () => undefined;
+    recordVideoProgress.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveCompletion = resolve;
+        }),
+    );
+    render(<VideoBlockPlayer blockId="block-1" src="https://example.com/video.mp4" />);
+    const video = screen.getByLabelText("Lesson video") as HTMLVideoElement;
+    Object.defineProperties(video, {
+      duration: { configurable: true, value: 100 },
+      currentTime: { configurable: true, writable: true, value: 0 },
+    });
+
+    fireEvent.play(video);
+    video.currentTime = 95;
     fireEvent.timeUpdate(video);
-    await waitFor(() => expect(recordVideoProgress).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(recordVideoProgress).toHaveBeenCalledTimes(1));
+
+    fireEvent.ended(video);
+    expect(refresh).not.toHaveBeenCalled();
+
+    await act(async () => {
+      resolveCompletion({
+        ok: true,
+        positionSeconds: 95,
+        watchedRanges: [[0, 95]],
+        watchedPercent: 95,
+        completed: true,
+      });
+    });
+    expect(await screen.findByText("Complete")).toBeVisible();
     expect(refresh).toHaveBeenCalledTimes(1);
   });
 
