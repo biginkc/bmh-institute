@@ -34,6 +34,9 @@ export function VideoBlockPlayer({
   initialComplete?: boolean;
 }) {
   const { refresh } = useRouter();
+  const stableSrc = useStableSignedAssetUrl(src);
+  const stablePosterSrc = useStableSignedAssetUrl(posterSrc);
+  const stableCaptionsSrc = useStableSignedAssetUrl(captionsSrc);
   const videoRef = useRef<HTMLVideoElement>(null);
   const sampleStartRef = useRef<number | null>(null);
   const resumePositionRef = useRef(0);
@@ -115,6 +118,9 @@ export function VideoBlockPlayer({
         }
         if (!mountedRef.current) return;
         if (result?.ok) {
+          if (Number.isFinite(result.positionSeconds)) {
+            resumePositionRef.current = result.positionSeconds;
+          }
           setWatchedPercent(result.watchedPercent);
           if (result.completed && !completedRef.current) {
             completedRef.current = true;
@@ -147,6 +153,9 @@ export function VideoBlockPlayer({
           if (result?.ok) break;
         }
         if (!mountedRef.current) return;
+        if (result?.ok && Number.isFinite(result.positionSeconds)) {
+          resumePositionRef.current = result.positionSeconds;
+        }
         const recovered = result?.ok ? true : await resynchronizeProgress();
         if (!mountedRef.current) return;
         setProgressError(
@@ -249,8 +258,8 @@ export function VideoBlockPlayer({
       <div className="relative aspect-video overflow-hidden rounded-[var(--bmh-radius-lg)] border-[2.5px] border-[var(--ink-900)] bg-[var(--thumb-blue)] shadow-[var(--bmh-shadow-sm)]">
         <video
           ref={videoRef}
-          src={src}
-          poster={posterSrc}
+          src={stableSrc}
+          poster={stablePosterSrc}
           controls
           crossOrigin="anonymous"
           preload="metadata"
@@ -267,8 +276,18 @@ export function VideoBlockPlayer({
             }
           }}
           onPlay={(event) => {
+            const replayingAfterEnd = playbackEndedRef.current;
             playbackStartedRef.current = true;
             playbackEndedRef.current = false;
+            const resumePosition = resumePositionRef.current;
+            if (
+              !replayingAfterEnd &&
+              event.currentTarget.currentTime < 0.5 &&
+              resumePosition > 0.5 &&
+              resumePosition < event.currentTarget.duration
+            ) {
+              event.currentTarget.currentTime = resumePosition;
+            }
             setPlaying(true);
             sampleStartRef.current = event.currentTarget.currentTime;
           }}
@@ -279,6 +298,7 @@ export function VideoBlockPlayer({
           }}
           onSeeked={(event) => {
             const seekPosition = event.currentTarget.currentTime;
+            resumePositionRef.current = seekPosition;
             sampleStartRef.current = seekPosition;
             enqueueSeek({
               blockId,
@@ -298,10 +318,10 @@ export function VideoBlockPlayer({
           }}
           onTimeUpdate={onTimeUpdate}
         >
-          {captionsSrc ? (
+          {stableCaptionsSrc ? (
             <track
               kind="captions"
-              src={captionsSrc}
+              src={stableCaptionsSrc}
               srcLang="en"
               label="English"
               default
@@ -350,6 +370,29 @@ export function VideoBlockPlayer({
       ) : null}
     </div>
   );
+}
+
+function useStableSignedAssetUrl(value: string | undefined): string | undefined {
+  const [stableValue, setStableValue] = useState(value);
+  const identity = assetIdentity(value);
+
+  useEffect(() => {
+    setStableValue((current) =>
+      assetIdentity(current) === identity ? current : value,
+    );
+  }, [identity, value]);
+
+  return stableValue;
+}
+
+function assetIdentity(value: string | undefined): string {
+  if (!value) return "";
+  try {
+    const parsed = new URL(value);
+    return `${parsed.origin}${parsed.pathname}`;
+  } catch {
+    return value.split("?", 1)[0];
+  }
 }
 
 function formatDuration(seconds: number): string {

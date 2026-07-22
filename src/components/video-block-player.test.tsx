@@ -292,6 +292,72 @@ describe("<VideoBlockPlayer />", () => {
     );
   });
 
+  it("restores the latest saved position after an unexpected media reset", async () => {
+    recordVideoProgress.mockResolvedValue({
+      ok: true,
+      positionSeconds: 2,
+      watchedRanges: [[0, 2]],
+      watchedPercent: 2,
+      completed: false,
+    });
+    render(
+      <VideoBlockPlayer
+        blockId="block-1"
+        src="https://example.com/video.mp4?token=first"
+      />,
+    );
+    const video = screen.getByLabelText("Lesson video") as HTMLVideoElement;
+    Object.defineProperties(video, {
+      duration: { configurable: true, value: 100 },
+      currentTime: { configurable: true, writable: true, value: 0 },
+    });
+
+    fireEvent.play(video);
+    video.currentTime = 2;
+    fireEvent.timeUpdate(video);
+    await waitFor(() => expect(recordVideoProgress).toHaveBeenCalledTimes(1));
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    video.currentTime = 0;
+    fireEvent.play(video);
+    expect(video.currentTime).toBe(2);
+
+    fireEvent.seeking(video);
+    video.currentTime = 0;
+    fireEvent.seeked(video);
+    fireEvent.play(video);
+    expect(video.currentTime).toBe(0);
+  });
+
+  it("does not replace active media when only a signed URL token changes", () => {
+    const { rerender } = render(
+      <VideoBlockPlayer
+        blockId="block-1"
+        src="https://example.com/video.mp4?token=first"
+        captionsSrc="https://example.com/video.vtt?token=first"
+      />,
+    );
+
+    rerender(
+      <VideoBlockPlayer
+        blockId="block-1"
+        src="https://example.com/video.mp4?token=second"
+        captionsSrc="https://example.com/video.vtt?token=second"
+      />,
+    );
+
+    expect(screen.getByLabelText("Lesson video")).toHaveAttribute(
+      "src",
+      "https://example.com/video.mp4?token=first",
+    );
+    expect(document.querySelector('track[kind="captions"]')).toHaveAttribute(
+      "src",
+      "https://example.com/video.vtt?token=first",
+    );
+  });
+
   it("serializes progress writes so a later sample cannot overwrite stale ranges", async () => {
     type ProgressSuccess = {
       ok: true;
