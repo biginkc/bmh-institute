@@ -1,0 +1,10 @@
+# Internal QA and production-review artifacts are not part of the runtime app.
+course-assets/
+docs/
+output/
+.planning/
+.stitch/
+e2e/
+e2e-prod/
+test-results/
+files.zip
