@@ -3,8 +3,6 @@ import { readFile, realpath, stat } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-const STALE_COMPENSATION_PATTERN = /\$\s*\d|hourly base|ramp(?:-up|ing up) base|performance pay|milestone bonus|commission on (?:every|the) deal|earning potential|earnings can grow|compensation .* tied to .* output|guaranteed pay|fixed pay promise/i;
-const FIXED_DIAL_QUOTA_PATTERN = /\b(?:\d{2,3}(?:\s*(?:to|-|plus|\+))\s*\d{2,3}|\d{2,3}\s*(?:plus|\+))\s+(?:total\s+)?dials?\b|\bdial target\b/i;
 export const MAX_CAPTION_CHARACTERS_PER_SECOND = 21;
 export const MIN_CAPTION_DURATION_SECONDS = 0.8;
 const CAPTION_RATE_EPSILON = 0.000001;
@@ -150,30 +148,36 @@ export async function inspectApprovedCaptionAssets(manifest, repoRootUrl) {
   const videos = assets.filter((asset) => asset.kind === "video");
   const approvedVideos = videos.filter((asset) => asset.approval_status === "approved");
   const heldVideos = videos.filter((asset) => asset.approval_status === "hold");
+  const transcriptAssets = assets.filter((asset) => asset.kind === "transcript");
   const errors = [];
   let approvedCaptions = 0;
-  let approvedTranscripts = 0;
   let heldDerivativeAssetsStillMissing = 0;
+
+  for (const asset of transcriptAssets) {
+    errors.push(`${asset.source_key} is a learner-facing transcript asset; this course permits accessibility captions only`);
+  }
+  for (const block of videoBlocks.values()) {
+    if (block.content.transcript_asset_key !== undefined || block.content.transcript_path !== undefined) {
+      errors.push(`${block.source_key} contains a learner-facing transcript reference; this course permits accessibility captions only`);
+    }
+  }
 
   for (const video of approvedVideos) {
     const block = videoBlocks.get(video.source_key);
     const duration = block?.content.duration_seconds;
     if (!duration) errors.push(`${video.source_key} has no authored duration`);
     const caption = byKey.get(`caption-${video.source_key}`);
-    const transcript = byKey.get(`transcript-${video.source_key}`);
-    if (!caption || !transcript) {
-      errors.push(`${video.source_key} has no derivative asset records`);
+    if (!caption) {
+      errors.push(`${video.source_key} has no caption asset record`);
       continue;
     }
 
     const captionText = await inspectFile(caption, repoRoot, "caption", errors);
-    let captionProse = null;
     if (captionText !== null) {
       approvedCaptions += 1;
       const parsed = parseWebVtt(captionText);
       errors.push(...parsed.errors.map((error) => `${caption.source_key}: ${error}`));
       const finalCue = parsed.cues.at(-1);
-      captionProse = parsed.cues.map((cue) => cue.text).join(" ").replace(/\s+/g, " ").trim();
       if (parsed.cues.some((cue) => /^[-,.;:!?]/.test(cue.text))) {
         errors.push(`${caption.source_key} starts a cue with detached punctuation`);
       }
@@ -181,29 +185,10 @@ export async function inspectApprovedCaptionAssets(manifest, repoRootUrl) {
         errors.push(`${caption.source_key} extends beyond the video duration`);
       }
     }
-
-    const transcriptText = await inspectFile(transcript, repoRoot, "transcript", errors);
-    if (transcriptText !== null) {
-      approvedTranscripts += 1;
-      const prose = transcriptText.replace(/^#.*$/gm, "").trim();
-      const transcriptProse = transcriptText.split("\n").slice(4).join(" ").replace(/\s+/g, " ").trim();
-      if (prose.length < 100) errors.push(`${transcript.source_key} is empty or implausibly short`);
-      if (prose.includes("\u2014")) errors.push(`${transcript.source_key} contains an em dash`);
-      if (/BMH Group KC/i.test(prose)) errors.push(`${transcript.source_key} uses the wrong company name`);
-      if (["video-slot-17-compensation", "video-slot-19-career"].includes(video.source_key) && STALE_COMPENSATION_PATTERN.test(prose)) {
-        errors.push(`${transcript.source_key} contains a stale or fixed compensation promise`);
-      }
-      if (FIXED_DIAL_QUOTA_PATTERN.test(prose)) {
-        errors.push(`${transcript.source_key} contains a fixed dial quota`);
-      }
-      if (captionProse !== null && captionProse !== transcriptProse) {
-        errors.push(`${video.source_key} caption and transcript disagree`);
-      }
-    }
   }
 
   for (const video of heldVideos) {
-    for (const prefix of ["caption", "transcript"]) {
+    for (const prefix of ["caption"]) {
       const derivative = byKey.get(`${prefix}-${video.source_key}`);
       if (!derivative) {
         errors.push(`${video.source_key} has no ${prefix} inventory record`);
@@ -221,7 +206,7 @@ export async function inspectApprovedCaptionAssets(manifest, repoRootUrl) {
     approvedVideos: approvedVideos.length,
     heldVideos: heldVideos.length,
     approvedCaptions,
-    approvedTranscripts,
+    approvedTranscripts: transcriptAssets.filter((asset) => asset.approval_status === "approved").length,
     heldDerivativeAssetsStillMissing,
     errors,
   };

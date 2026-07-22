@@ -22,6 +22,20 @@ describe("buildImportPlan", () => {
     const plan = buildImportPlan(validation.value, {
       allowUnapprovedAssetPlaceholders: true,
     });
+    const assetsByKey = new Map(validation.value.assets.map((asset) => [asset.source_key, asset]));
+    const manifestVideoBlocks = validation.value.program.courses
+      .flatMap((course) => course.modules)
+      .flatMap((courseModule) => courseModule.lessons)
+      .flatMap((lesson) => lesson.blocks ?? [])
+      .filter((block) => block.type === "video");
+    const expectedVideoPaths = manifestVideoBlocks
+      .map((block) => assetsByKey.get(String(block.content.asset_key))?.storage_path)
+      .sort();
+    const expectedCaptionPaths = manifestVideoBlocks
+      .map((block) => assetsByKey.get(String(block.content.caption_asset_key))?.storage_path)
+      .sort();
+    expect(expectedVideoPaths.every((value) => typeof value === "string" && value.length > 0)).toBe(true);
+    expect(expectedCaptionPaths.every((value) => typeof value === "string" && value.length > 0)).toBe(true);
 
     expect(plan.summary).toMatchObject({
       programs: 1,
@@ -31,8 +45,16 @@ describe("buildImportPlan", () => {
       quizzes: 19,
       questions: 342,
       assignments: 6,
-      assets: 155,
+      assets: 126,
     });
+    const videoContent = plan.operations
+      .filter((operation) => operation.table === "content_blocks" && operation.row.block_type === "video")
+      .map((operation) => operation.row.content as Record<string, unknown>)
+      .filter((content) => content.file_path !== undefined);
+    expect(videoContent).toHaveLength(29);
+    expect(videoContent.map((content) => content.file_path).sort()).toEqual(expectedVideoPaths);
+    expect(videoContent.map((content) => content.caption_path).sort()).toEqual(expectedCaptionPaths);
+    expect(videoContent.every((content) => content.transcript_path === undefined)).toBe(true);
     const unavailablePaths = plan.operations
       .filter((operation) => operation.table === "content_blocks")
       .map((operation) => operation.row.content as Record<string, unknown>)

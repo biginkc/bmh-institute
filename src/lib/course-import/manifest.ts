@@ -545,10 +545,18 @@ function validateLesson(
         }
       }
       if (gate !== "draft" && block.type === "video") {
-        for (const field of ["asset_key", "poster_asset_key", "caption_asset_key", "transcript_asset_key"] as const) {
+        for (const field of ["asset_key", "poster_asset_key", "caption_asset_key"] as const) {
           const value = block.content[field];
           if (typeof value !== "string") errors.push(`${blockPath}.content.${field} is required for release.`);
           else requireApprovedAsset(value, `${blockPath}.content.${field}`, assets, errors);
+        }
+        if (typeof block.content.transcript_asset_key === "string") {
+          requireApprovedAsset(
+            block.content.transcript_asset_key,
+            `${blockPath}.content.transcript_asset_key`,
+            assets,
+            errors,
+          );
         }
         if (
           block.required === true &&

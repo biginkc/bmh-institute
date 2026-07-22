@@ -44,10 +44,8 @@ const STACK_ASSETS_BY_IMPORT = new Map([
     [
       "video-slot-03-tech-stack",
       "caption-video-slot-03-tech-stack",
-      "transcript-video-slot-03-tech-stack",
       "video-slot-18-mission-control",
       "caption-video-slot-18-mission-control",
-      "transcript-video-slot-18-mission-control",
       "guide-slot-03",
       "guide-slot-18",
     ],
@@ -57,7 +55,6 @@ const STACK_ASSETS_BY_IMPORT = new Map([
     [
       "video-slot-03-tech-stack",
       "caption-video-slot-03-tech-stack",
-      "transcript-video-slot-03-tech-stack",
       "guide-slot-03",
     ],
   ],

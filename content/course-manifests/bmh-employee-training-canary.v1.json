@@ -29,16 +29,6 @@
       "approval_status": "approved"
     },
     {
-      "source_key": "transcript-video-slot-03-tech-stack",
-      "kind": "transcript",
-      "local_path": "course-assets/transcripts/video-slot-03-tech-stack.md",
-      "storage_path": "courses/bmh-employee-training-canary/v1/transcripts/video-slot-03-tech-stack.f96bb3853919ebe2499c25c126fcebe71bae4b072d78df438f6195c8bf26cc4d.md",
-      "mime_type": "text/markdown",
-      "checksum_sha256": "f96bb3853919ebe2499c25c126fcebe71bae4b072d78df438f6195c8bf26cc4d",
-      "size_bytes": 6223,
-      "approval_status": "approved"
-    },
-    {
       "source_key": "thumbnail-program-bmh-employee-training",
       "kind": "image",
       "local_path": "course-assets/thumbnails/program-bmh-employee-training.webp",
@@ -129,7 +119,6 @@
                       "asset_key": "video-slot-03-tech-stack",
                       "poster_asset_key": "poster-video-slot-03-tech-stack",
                       "caption_asset_key": "caption-video-slot-03-tech-stack",
-                      "transcript_asset_key": "transcript-video-slot-03-tech-stack",
                       "title": "Tech Stack and Systems",
                       "part_label": null,
                       "duration_seconds": 412.096

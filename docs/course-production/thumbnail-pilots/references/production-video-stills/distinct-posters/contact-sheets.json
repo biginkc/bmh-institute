@@ -204,11 +204,11 @@
       },
       "video_evidence": [
         {
-          "asset_key": "video-slot-18-operator",
+      "asset_key": "video-slot-18-operator",
           "local_path": "course-assets/review-lesson18A/LESSON-18A-v10.mp4",
           "checksum_sha256": "6e6a3f257ff8cf3ef201de775de47c6e7833e3abd673e44bb8d4d5ac3aafa048",
           "size_bytes": 85657783,
-          "approval_status": "hold",
+      "approval_status": "approved",
           "duration_seconds": 378.858,
           "frame_timestamps_seconds": [
             75.772,

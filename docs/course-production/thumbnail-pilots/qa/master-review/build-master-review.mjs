@@ -33,6 +33,10 @@ const COLUMN_GAP = 40;
 const LEFT_MARGIN = 20;
 const TOP_MARGIN = 82;
 const ROW_GAP = 10;
+const APPROVED_HISTORICAL_INDEX_SHA256 =
+  "da0b7a3467a8f7f31e94f7eddde8fa80e3715a73e68b3cf653178ad9257cdfd3";
+const LOCKED_NON_ARTWORK_STATUS_PROJECTION_SHA256 =
+  "176d6367fb10c4df42ded8f48bd5d5d942bed3d6fccf628d589f238d9c322699";
 
 // A deliberately tiny in-repo font. Rendering never consults a host font,
 // locale, browser, or SVG text engine, so the review bytes are portable.
@@ -106,6 +110,130 @@ function immutableLedgerMasterInputs(ledger) {
       flat_master_path: master.flat_master_path,
       flat_master_sha256: master.flat_master_sha256,
     })),
+  };
+}
+
+export function artworkReviewInventoryProjection(inventory) {
+  const projected = structuredClone(inventory);
+  for (const lesson of projected.lessons ?? []) {
+    for (const evidence of lesson.master?.video_evidence ?? []) {
+      delete evidence.approval_status;
+    }
+    for (const poster of lesson.posters ?? []) {
+      for (const evidence of poster.direct_master?.video_evidence ?? []) {
+        delete evidence.approval_status;
+      }
+    }
+  }
+  return projected;
+}
+
+async function approvedHistoricalSurfaceBinding({
+  root,
+  ledger,
+  inventoryPath,
+  indexPath,
+  sheetPaths,
+}) {
+  const approvalRecord = ledger.final_approval;
+  if (ledger.status !== "finalized" || approvalRecord?.status !== "approved") return null;
+  if (!SHA256.test(approvalRecord.evidence_sha256 ?? "")) {
+    throw new Error("Final artwork approval has no exact evidence SHA");
+  }
+
+  const approvalBytes = await readFile(repoPath(root, approvalRecord.evidence));
+  if (sha256(approvalBytes) !== approvalRecord.evidence_sha256) {
+    throw new Error("Final artwork approval evidence drifted from the production ledger");
+  }
+  const approval = JSON.parse(approvalBytes);
+  const requestBinding = approval.request_binding;
+  if (approval.decision !== "approved" || !SHA256.test(requestBinding?.request_sha256 ?? "")) {
+    throw new Error("Final artwork approval request binding is invalid");
+  }
+
+  const requestBytes = await readFile(repoPath(root, requestBinding.request_path));
+  if (sha256(requestBytes) !== requestBinding.request_sha256) {
+    throw new Error("Final artwork review request drifted from its approval binding");
+  }
+  const request = JSON.parse(requestBytes);
+  const approvedSurface = request.master_review_surface;
+  const approvedSheets = approvedSurface?.sheets?.map((sheet) => sheet.path);
+  const targetsApprovedSurface = approvedSurface?.index_path === indexPath
+    && JSON.stringify(approvedSheets) === JSON.stringify(sheetPaths);
+  if (!targetsApprovedSurface) return null;
+
+  const inventorySnapshot = request.inventory_snapshot;
+  if (
+    inventorySnapshot?.path !== inventoryPath
+    || !SHA256.test(inventorySnapshot?.sha256 ?? "")
+    || !SHA256.test(approvedSurface?.index_sha256 ?? "")
+    || !approvedSurface.sheets.every((sheet) => SHA256.test(sheet.sha256 ?? ""))
+  ) {
+    throw new Error("Final artwork review request has an invalid inventory snapshot binding");
+  }
+  return {
+    indexSha256: approvedSurface.index_sha256,
+    inventorySha256: inventorySnapshot.sha256,
+    sheetSha256ByPath: new Map(approvedSurface.sheets.map((sheet) => [sheet.path, sheet.sha256])),
+  };
+}
+
+async function approvedHistoricalSurfaceCompatibility({
+  root,
+  built,
+  ledgerPath,
+  inventoryPath,
+  indexPath,
+  sheetPaths,
+}) {
+  const [ledgerBytes, inventoryBytes] = await Promise.all([
+    readFile(repoPath(root, ledgerPath)),
+    readFile(repoPath(root, inventoryPath)),
+  ]);
+  const ledger = JSON.parse(ledgerBytes);
+  const inventory = JSON.parse(inventoryBytes);
+  const binding = await approvedHistoricalSurfaceBinding({
+    root,
+    ledger,
+    inventoryPath,
+    indexPath,
+    sheetPaths,
+  });
+  if (!binding) return { bound: false, result: null };
+
+  const projectionSha256 = sha256(canonicalJson(artworkReviewInventoryProjection(inventory)));
+  if (projectionSha256 !== LOCKED_NON_ARTWORK_STATUS_PROJECTION_SHA256) {
+    return { bound: true, result: null };
+  }
+
+  const actualIndex = await readFile(repoPath(root, indexPath)).catch(() => null);
+  if (!actualIndex || sha256(actualIndex) !== binding.indexSha256) {
+    return { bound: true, result: null };
+  }
+  const historicalIndex = JSON.parse(actualIndex);
+  if (historicalIndex.source_bindings?.inventory_sha256 !== binding.inventorySha256) {
+    return { bound: true, result: null };
+  }
+  const compatibleIndex = structuredClone(built.index);
+  compatibleIndex.source_bindings.inventory_sha256 = binding.inventorySha256;
+  const compatibleIndexBytes = canonicalJson(compatibleIndex);
+  if (!actualIndex.equals(compatibleIndexBytes)) {
+    return { bound: true, result: null };
+  }
+
+  for (const sheet of built.sheets) {
+    const actual = await readFile(repoPath(root, sheet.path)).catch(() => null);
+    if (
+      !actual
+      || !actual.equals(sheet.contents)
+      || sha256(actual) !== binding.sheetSha256ByPath.get(sheet.path)
+    ) {
+      return { bound: true, result: null };
+    }
+  }
+  return {
+    bound: true,
+    result: { ...built, index: compatibleIndex, indexBytes: actualIndex },
   };
 }
 
@@ -477,11 +605,33 @@ async function writeAtomic(filename, contents) {
 export async function writeMasterReviewSurface(options = {}) {
   const root = path.resolve(options.root ?? DEFAULT_REPO_ROOT);
   const built = await buildMasterReviewSurface({ ...options, root });
+  const ledgerPath = options.ledgerPath ?? DEFAULT_LEDGER_PATH;
+  const inventoryPath = options.inventoryPath ?? DEFAULT_INVENTORY_PATH;
+  const indexPath = options.indexPath ?? DEFAULT_MASTER_REVIEW_INDEX_PATH;
+  const sheetPaths = options.sheetPaths ?? DEFAULT_MASTER_REVIEW_SHEET_PATHS;
+  const historical = await approvedHistoricalSurfaceCompatibility({
+    root,
+    built,
+    ledgerPath,
+    inventoryPath,
+    indexPath,
+    sheetPaths,
+  });
+  if (historical.result) return historical.result;
+  const existingIndex = await readFile(repoPath(root, indexPath)).catch(() => null);
+  const targetsCanonicalSurface = indexPath === DEFAULT_MASTER_REVIEW_INDEX_PATH
+    && JSON.stringify(sheetPaths) === JSON.stringify(DEFAULT_MASTER_REVIEW_SHEET_PATHS);
+  const protectedHistoricalIndex = targetsCanonicalSurface
+    && existingIndex
+    && sha256(existingIndex) === APPROVED_HISTORICAL_INDEX_SHA256;
+  if (historical.bound || protectedHistoricalIndex) {
+    throw new Error("Approved historical master review surface is immutable");
+  }
   for (const sheet of built.sheets) {
     await writeAtomic(repoPath(root, sheet.path), sheet.contents);
   }
   await writeAtomic(
-    repoPath(root, options.indexPath ?? DEFAULT_MASTER_REVIEW_INDEX_PATH),
+    repoPath(root, indexPath),
     built.indexBytes,
   );
   return built;
@@ -498,6 +648,17 @@ export async function validateMasterReviewSurface(options = {}) {
   const indexPath = options.indexPath ?? DEFAULT_MASTER_REVIEW_INDEX_PATH;
   const actualIndex = await readFile(repoPath(root, indexPath)).catch(() => null);
   if (!actualIndex || !actualIndex.equals(built.indexBytes)) stale.push(indexPath);
+  if (stale.length) {
+    const historical = await approvedHistoricalSurfaceCompatibility({
+      root,
+      built,
+      ledgerPath: options.ledgerPath ?? DEFAULT_LEDGER_PATH,
+      inventoryPath: options.inventoryPath ?? DEFAULT_INVENTORY_PATH,
+      indexPath,
+      sheetPaths: options.sheetPaths ?? DEFAULT_MASTER_REVIEW_SHEET_PATHS,
+    });
+    if (historical.result) return historical.result;
+  }
   if (stale.length) throw new Error(`Master review surface is missing or stale: ${stale.join(", ")}`);
   return built;
 }

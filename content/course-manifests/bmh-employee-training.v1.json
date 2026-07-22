@@ -16,7 +16,7 @@
       "mime_type": "video/mp4",
       "checksum_sha256": "493de8a5e0663ad577ba46d6d5befce33e9640f250677095094978714d22ac72",
       "size_bytes": 35190296,
-      "approval_status": "hold"
+      "approval_status": "approved"
     },
     {
       "source_key": "video-slot-01-mindset",
@@ -26,7 +26,7 @@
       "mime_type": "video/mp4",
       "checksum_sha256": "b0cad612499dbd2d867c906c1ad8a8e3e13fcded333fa973fa6d19339fa930da",
       "size_bytes": 107220021,
-      "approval_status": "hold"
+      "approval_status": "approved"
     },
     {
       "source_key": "video-slot-02-terms",
@@ -176,7 +176,7 @@
       "mime_type": "video/mp4",
       "checksum_sha256": "59c745ccca7387f82d0b13eaf95439f9f6a50a8f727ad3c1db4fb839050b1ebb",
       "size_bytes": 572011027,
-      "approval_status": "hold"
+      "approval_status": "approved"
     },
     {
       "source_key": "video-slot-11-complex",
@@ -246,7 +246,7 @@
       "mime_type": "video/mp4",
       "checksum_sha256": "6e3aa1b007117b303a05906ca8443a8b9bc38f7c44bd61475c5437b99e7c90d2",
       "size_bytes": 55329810,
-      "approval_status": "hold"
+      "approval_status": "approved"
     },
     {
       "source_key": "video-slot-16-kpis",
@@ -266,7 +266,7 @@
       "mime_type": "video/mp4",
       "checksum_sha256": "cecad85478bb1a8ba5bfed7404dc045440c567ed0eaaa90b11b644e124b27846",
       "size_bytes": 45346253,
-      "approval_status": "hold"
+      "approval_status": "approved"
     },
     {
       "source_key": "video-slot-18-operator",
@@ -276,7 +276,7 @@
       "mime_type": "video/mp4",
       "checksum_sha256": "6e6a3f257ff8cf3ef201de775de47c6e7833e3abd673e44bb8d4d5ac3aafa048",
       "size_bytes": 85657783,
-      "approval_status": "hold"
+      "approval_status": "approved"
     },
     {
       "source_key": "video-slot-18-mission-control",
@@ -296,47 +296,27 @@
       "mime_type": "video/mp4",
       "checksum_sha256": "1ddcf7b1b0b45bbc90ec14b3660b3d5f5a284b5095dd0d0682164924ce1a3da9",
       "size_bytes": 77199756,
-      "approval_status": "hold"
+      "approval_status": "approved"
     },
     {
       "source_key": "caption-video-slot-01-welcome",
       "kind": "caption",
       "local_path": "course-assets/captions/video-slot-01-welcome.vtt",
-      "storage_path": "courses/bmh-employee-training/v1/captions/video-slot-01-welcome.vtt",
+      "storage_path": "courses/bmh-employee-training/v1/captions/video-slot-01-welcome.54150f0e7f8c691b32ad0767934db2da0ac7ef9bcdb4ff73e3147a79ba262a11.vtt",
       "mime_type": "text/vtt",
-      "checksum_sha256": null,
-      "size_bytes": null,
-      "approval_status": "missing"
-    },
-    {
-      "source_key": "transcript-video-slot-01-welcome",
-      "kind": "transcript",
-      "local_path": "course-assets/transcripts/video-slot-01-welcome.md",
-      "storage_path": "courses/bmh-employee-training/v1/transcripts/video-slot-01-welcome.md",
-      "mime_type": "text/markdown",
-      "checksum_sha256": null,
-      "size_bytes": null,
-      "approval_status": "missing"
+      "checksum_sha256": "54150f0e7f8c691b32ad0767934db2da0ac7ef9bcdb4ff73e3147a79ba262a11",
+      "size_bytes": 5636,
+      "approval_status": "approved"
     },
     {
       "source_key": "caption-video-slot-01-mindset",
       "kind": "caption",
       "local_path": "course-assets/captions/video-slot-01-mindset.vtt",
-      "storage_path": "courses/bmh-employee-training/v1/captions/video-slot-01-mindset.vtt",
+      "storage_path": "courses/bmh-employee-training/v1/captions/video-slot-01-mindset.e69ac117513d403ad8b0a4b2edaefdb53cefab7d0b5ca6d8c7533ee586e1b2a1.vtt",
       "mime_type": "text/vtt",
-      "checksum_sha256": null,
-      "size_bytes": null,
-      "approval_status": "missing"
-    },
-    {
-      "source_key": "transcript-video-slot-01-mindset",
-      "kind": "transcript",
-      "local_path": "course-assets/transcripts/video-slot-01-mindset.md",
-      "storage_path": "courses/bmh-employee-training/v1/transcripts/video-slot-01-mindset.md",
-      "mime_type": "text/markdown",
-      "checksum_sha256": null,
-      "size_bytes": null,
-      "approval_status": "missing"
+      "checksum_sha256": "e69ac117513d403ad8b0a4b2edaefdb53cefab7d0b5ca6d8c7533ee586e1b2a1",
+      "size_bytes": 7785,
+      "approval_status": "approved"
     },
     {
       "source_key": "caption-video-slot-02-terms",
@@ -346,16 +326,6 @@
       "mime_type": "text/vtt",
       "checksum_sha256": "f0e2223107de4cbc4acfa63a64e9a7caf1e35c1f3799224716bb4b9b5418172c",
       "size_bytes": 10631,
-      "approval_status": "approved"
-    },
-    {
-      "source_key": "transcript-video-slot-02-terms",
-      "kind": "transcript",
-      "local_path": "course-assets/transcripts/video-slot-02-terms.md",
-      "storage_path": "courses/bmh-employee-training/v1/transcripts/video-slot-02-terms.27bec72a0a5274d6c79c30cbbc37b0ce3b48959992c29e419868dbcfdb831015.md",
-      "mime_type": "text/markdown",
-      "checksum_sha256": "27bec72a0a5274d6c79c30cbbc37b0ce3b48959992c29e419868dbcfdb831015",
-      "size_bytes": 6739,
       "approval_status": "approved"
     },
     {
@@ -369,16 +339,6 @@
       "approval_status": "approved"
     },
     {
-      "source_key": "transcript-video-slot-03-tech-stack",
-      "kind": "transcript",
-      "local_path": "course-assets/transcripts/video-slot-03-tech-stack.md",
-      "storage_path": "courses/bmh-employee-training/v1/transcripts/video-slot-03-tech-stack.f96bb3853919ebe2499c25c126fcebe71bae4b072d78df438f6195c8bf26cc4d.md",
-      "mime_type": "text/markdown",
-      "checksum_sha256": "f96bb3853919ebe2499c25c126fcebe71bae4b072d78df438f6195c8bf26cc4d",
-      "size_bytes": 6223,
-      "approval_status": "approved"
-    },
-    {
       "source_key": "caption-video-slot-04-humanizing-a",
       "kind": "caption",
       "local_path": "course-assets/captions/video-slot-04-humanizing-a.vtt",
@@ -386,16 +346,6 @@
       "mime_type": "text/vtt",
       "checksum_sha256": "34118ac2aa84d4ff632013b549eefabccd8e9d4a7ff242fd504a81d5e38a6607",
       "size_bytes": 10144,
-      "approval_status": "approved"
-    },
-    {
-      "source_key": "transcript-video-slot-04-humanizing-a",
-      "kind": "transcript",
-      "local_path": "course-assets/transcripts/video-slot-04-humanizing-a.md",
-      "storage_path": "courses/bmh-employee-training/v1/transcripts/video-slot-04-humanizing-a.8ee2568f1db958bd345aa84d36f471839d3dcd91ab9346453797a048c35e57d8.md",
-      "mime_type": "text/markdown",
-      "checksum_sha256": "8ee2568f1db958bd345aa84d36f471839d3dcd91ab9346453797a048c35e57d8",
-      "size_bytes": 6497,
       "approval_status": "approved"
     },
     {
@@ -409,16 +359,6 @@
       "approval_status": "approved"
     },
     {
-      "source_key": "transcript-video-slot-04-humanizing-b",
-      "kind": "transcript",
-      "local_path": "course-assets/transcripts/video-slot-04-humanizing-b.md",
-      "storage_path": "courses/bmh-employee-training/v1/transcripts/video-slot-04-humanizing-b.1f782773ad26e5970a3de4a1a2215ae9f0863a5cb068c477e916bc192e85df4e.md",
-      "mime_type": "text/markdown",
-      "checksum_sha256": "1f782773ad26e5970a3de4a1a2215ae9f0863a5cb068c477e916bc192e85df4e",
-      "size_bytes": 5043,
-      "approval_status": "approved"
-    },
-    {
       "source_key": "caption-video-slot-04-ideal-seller",
       "kind": "caption",
       "local_path": "course-assets/captions/video-slot-04-ideal-seller.vtt",
@@ -426,16 +366,6 @@
       "mime_type": "text/vtt",
       "checksum_sha256": "59783b75bcbfe0b6b5dc4561d58c12fc9fd99d52da9ec12b5144c2d50c48cdca",
       "size_bytes": 6828,
-      "approval_status": "approved"
-    },
-    {
-      "source_key": "transcript-video-slot-04-ideal-seller",
-      "kind": "transcript",
-      "local_path": "course-assets/transcripts/video-slot-04-ideal-seller.md",
-      "storage_path": "courses/bmh-employee-training/v1/transcripts/video-slot-04-ideal-seller.9ee8b5f0c0ec873a0f595f8dbd115be3f3034620a553741c6fc0f4d09952ab30.md",
-      "mime_type": "text/markdown",
-      "checksum_sha256": "9ee8b5f0c0ec873a0f595f8dbd115be3f3034620a553741c6fc0f4d09952ab30",
-      "size_bytes": 4481,
       "approval_status": "approved"
     },
     {
@@ -449,16 +379,6 @@
       "approval_status": "approved"
     },
     {
-      "source_key": "transcript-video-slot-05-offer-a",
-      "kind": "transcript",
-      "local_path": "course-assets/transcripts/video-slot-05-offer-a.md",
-      "storage_path": "courses/bmh-employee-training/v1/transcripts/video-slot-05-offer-a.3a54ca25cffc4b38f7bba9d0125074de06250b6ea46e2c7f57b3ae53e2f78d74.md",
-      "mime_type": "text/markdown",
-      "checksum_sha256": "3a54ca25cffc4b38f7bba9d0125074de06250b6ea46e2c7f57b3ae53e2f78d74",
-      "size_bytes": 6362,
-      "approval_status": "approved"
-    },
-    {
       "source_key": "caption-video-slot-05-offer-b",
       "kind": "caption",
       "local_path": "course-assets/captions/video-slot-05-offer-b.vtt",
@@ -466,16 +386,6 @@
       "mime_type": "text/vtt",
       "checksum_sha256": "743475bb7c9aa5864ffba6cd7ce81ab7f5e0902ee9952000d29482be50efe880",
       "size_bytes": 5259,
-      "approval_status": "approved"
-    },
-    {
-      "source_key": "transcript-video-slot-05-offer-b",
-      "kind": "transcript",
-      "local_path": "course-assets/transcripts/video-slot-05-offer-b.md",
-      "storage_path": "courses/bmh-employee-training/v1/transcripts/video-slot-05-offer-b.077fb15841eb5566309aeed21621a9425538784fbc8dbbcb2f4f586a8b7f6a9c.md",
-      "mime_type": "text/markdown",
-      "checksum_sha256": "077fb15841eb5566309aeed21621a9425538784fbc8dbbcb2f4f586a8b7f6a9c",
-      "size_bytes": 3213,
       "approval_status": "approved"
     },
     {
@@ -489,16 +399,6 @@
       "approval_status": "approved"
     },
     {
-      "source_key": "transcript-video-slot-06-pipeline",
-      "kind": "transcript",
-      "local_path": "course-assets/transcripts/video-slot-06-pipeline.md",
-      "storage_path": "courses/bmh-employee-training/v1/transcripts/video-slot-06-pipeline.9efeef245ee5ef44e1622914d922b9bb0f56ef6670ebd3b4a9b30457e4b6f6cf.md",
-      "mime_type": "text/markdown",
-      "checksum_sha256": "9efeef245ee5ef44e1622914d922b9bb0f56ef6670ebd3b4a9b30457e4b6f6cf",
-      "size_bytes": 5976,
-      "approval_status": "approved"
-    },
-    {
       "source_key": "caption-video-slot-06-framework",
       "kind": "caption",
       "local_path": "course-assets/captions/video-slot-06-framework.vtt",
@@ -506,16 +406,6 @@
       "mime_type": "text/vtt",
       "checksum_sha256": "7bb032da9666cd3cda9eba19d849a187f16db920827685fe5e2c4dbd1cb0acf6",
       "size_bytes": 3389,
-      "approval_status": "approved"
-    },
-    {
-      "source_key": "transcript-video-slot-06-framework",
-      "kind": "transcript",
-      "local_path": "course-assets/transcripts/video-slot-06-framework.md",
-      "storage_path": "courses/bmh-employee-training/v1/transcripts/video-slot-06-framework.97466faebf1f3d648ba38f2e8a815f3a26625ec7cd0ca3fd466ce3e244340e68.md",
-      "mime_type": "text/markdown",
-      "checksum_sha256": "97466faebf1f3d648ba38f2e8a815f3a26625ec7cd0ca3fd466ce3e244340e68",
-      "size_bytes": 2208,
       "approval_status": "approved"
     },
     {
@@ -529,16 +419,6 @@
       "approval_status": "approved"
     },
     {
-      "source_key": "transcript-video-slot-07-opening",
-      "kind": "transcript",
-      "local_path": "course-assets/transcripts/video-slot-07-opening.md",
-      "storage_path": "courses/bmh-employee-training/v1/transcripts/video-slot-07-opening.71daafe0a3b436ca82d6b3fb75e511824fbd3e96246888b75ecf9095ccea8a4e.md",
-      "mime_type": "text/markdown",
-      "checksum_sha256": "71daafe0a3b436ca82d6b3fb75e511824fbd3e96246888b75ecf9095ccea8a4e",
-      "size_bytes": 4297,
-      "approval_status": "approved"
-    },
-    {
       "source_key": "caption-video-slot-07-fact-find",
       "kind": "caption",
       "local_path": "course-assets/captions/video-slot-07-fact-find.vtt",
@@ -546,16 +426,6 @@
       "mime_type": "text/vtt",
       "checksum_sha256": "e0488938033aed4d47b4cd87a86c15d5ce0ddf50bd4199c855ea2a0ad6533a0b",
       "size_bytes": 5742,
-      "approval_status": "approved"
-    },
-    {
-      "source_key": "transcript-video-slot-07-fact-find",
-      "kind": "transcript",
-      "local_path": "course-assets/transcripts/video-slot-07-fact-find.md",
-      "storage_path": "courses/bmh-employee-training/v1/transcripts/video-slot-07-fact-find.2fe7b8f133380c92ed256cfadd0abf51fe10fc44aaa71f362dd01272dbaa6f21.md",
-      "mime_type": "text/markdown",
-      "checksum_sha256": "2fe7b8f133380c92ed256cfadd0abf51fe10fc44aaa71f362dd01272dbaa6f21",
-      "size_bytes": 3520,
       "approval_status": "approved"
     },
     {
@@ -569,16 +439,6 @@
       "approval_status": "approved"
     },
     {
-      "source_key": "transcript-video-slot-08-discovery",
-      "kind": "transcript",
-      "local_path": "course-assets/transcripts/video-slot-08-discovery.md",
-      "storage_path": "courses/bmh-employee-training/v1/transcripts/video-slot-08-discovery.a856c9dd7e9b46c8100f4133f9067b73a46811d6a770751067cc9fd400bbc40d.md",
-      "mime_type": "text/markdown",
-      "checksum_sha256": "a856c9dd7e9b46c8100f4133f9067b73a46811d6a770751067cc9fd400bbc40d",
-      "size_bytes": 4556,
-      "approval_status": "approved"
-    },
-    {
       "source_key": "caption-video-slot-08-handoff",
       "kind": "caption",
       "local_path": "course-assets/captions/video-slot-08-handoff.vtt",
@@ -586,16 +446,6 @@
       "mime_type": "text/vtt",
       "checksum_sha256": "e8d2e54fce323701fc7ae4dc250a58e66d05cd8598c3cea619d95a602980ab39",
       "size_bytes": 6307,
-      "approval_status": "approved"
-    },
-    {
-      "source_key": "transcript-video-slot-08-handoff",
-      "kind": "transcript",
-      "local_path": "course-assets/transcripts/video-slot-08-handoff.md",
-      "storage_path": "courses/bmh-employee-training/v1/transcripts/video-slot-08-handoff.4b8d6a830006db8b1555540146bdad1998c8186c40812804c9b23523c502d6de.md",
-      "mime_type": "text/markdown",
-      "checksum_sha256": "4b8d6a830006db8b1555540146bdad1998c8186c40812804c9b23523c502d6de",
-      "size_bytes": 3911,
       "approval_status": "approved"
     },
     {
@@ -609,34 +459,14 @@
       "approval_status": "approved"
     },
     {
-      "source_key": "transcript-video-slot-09-objection-architecture",
-      "kind": "transcript",
-      "local_path": "course-assets/transcripts/video-slot-09-objection-architecture.md",
-      "storage_path": "courses/bmh-employee-training/v1/transcripts/video-slot-09-objection-architecture.3571017811c0c22efe4146286f3eb3618b897f73c5c35a73280aefab248d7fe1.md",
-      "mime_type": "text/markdown",
-      "checksum_sha256": "3571017811c0c22efe4146286f3eb3618b897f73c5c35a73280aefab248d7fe1",
-      "size_bytes": 5033,
-      "approval_status": "approved"
-    },
-    {
       "source_key": "caption-video-slot-10-objection-scripts",
       "kind": "caption",
       "local_path": "course-assets/captions/video-slot-10-objection-scripts.vtt",
-      "storage_path": "courses/bmh-employee-training/v1/captions/video-slot-10-objection-scripts.vtt",
+      "storage_path": "courses/bmh-employee-training/v1/captions/video-slot-10-objection-scripts.1a116db84d9d86b36df654d4fdba220f9a1ca3a9a6b4ce07cac45cbd991b3589.vtt",
       "mime_type": "text/vtt",
-      "checksum_sha256": null,
-      "size_bytes": null,
-      "approval_status": "missing"
-    },
-    {
-      "source_key": "transcript-video-slot-10-objection-scripts",
-      "kind": "transcript",
-      "local_path": "course-assets/transcripts/video-slot-10-objection-scripts.md",
-      "storage_path": "courses/bmh-employee-training/v1/transcripts/video-slot-10-objection-scripts.md",
-      "mime_type": "text/markdown",
-      "checksum_sha256": null,
-      "size_bytes": null,
-      "approval_status": "missing"
+      "checksum_sha256": "1a116db84d9d86b36df654d4fdba220f9a1ca3a9a6b4ce07cac45cbd991b3589",
+      "size_bytes": 19851,
+      "approval_status": "approved"
     },
     {
       "source_key": "caption-video-slot-11-complex",
@@ -646,16 +476,6 @@
       "mime_type": "text/vtt",
       "checksum_sha256": "3b7ede318bffd056c3fe3b09b2fe94bc028dcd9baafa2d726884de297b13a68e",
       "size_bytes": 5672,
-      "approval_status": "approved"
-    },
-    {
-      "source_key": "transcript-video-slot-11-complex",
-      "kind": "transcript",
-      "local_path": "course-assets/transcripts/video-slot-11-complex.md",
-      "storage_path": "courses/bmh-employee-training/v1/transcripts/video-slot-11-complex.69b01627a5e700bd5e121fae2ab1d7026b79661e7a77137739fe0b749985f269.md",
-      "mime_type": "text/markdown",
-      "checksum_sha256": "69b01627a5e700bd5e121fae2ab1d7026b79661e7a77137739fe0b749985f269",
-      "size_bytes": 3589,
       "approval_status": "approved"
     },
     {
@@ -669,16 +489,6 @@
       "approval_status": "approved"
     },
     {
-      "source_key": "transcript-video-slot-11-trust",
-      "kind": "transcript",
-      "local_path": "course-assets/transcripts/video-slot-11-trust.md",
-      "storage_path": "courses/bmh-employee-training/v1/transcripts/video-slot-11-trust.3acc6a518c68cc97cba36c85161ae20a38e64e8097f6f6c09777a55410a89cff.md",
-      "mime_type": "text/markdown",
-      "checksum_sha256": "3acc6a518c68cc97cba36c85161ae20a38e64e8097f6f6c09777a55410a89cff",
-      "size_bytes": 3757,
-      "approval_status": "approved"
-    },
-    {
       "source_key": "caption-video-slot-12-faq-a",
       "kind": "caption",
       "local_path": "course-assets/captions/video-slot-12-faq-a.vtt",
@@ -686,16 +496,6 @@
       "mime_type": "text/vtt",
       "checksum_sha256": "4bfdc95ea554b101c92a80a8fcdfc656ba0854fdeb548b9b266a1060bb3c00a5",
       "size_bytes": 5075,
-      "approval_status": "approved"
-    },
-    {
-      "source_key": "transcript-video-slot-12-faq-a",
-      "kind": "transcript",
-      "local_path": "course-assets/transcripts/video-slot-12-faq-a.md",
-      "storage_path": "courses/bmh-employee-training/v1/transcripts/video-slot-12-faq-a.43426431e42bf2c2ef40fdf12e87d6c33e78bcb0952c6531f07721d5ab9522f9.md",
-      "mime_type": "text/markdown",
-      "checksum_sha256": "43426431e42bf2c2ef40fdf12e87d6c33e78bcb0952c6531f07721d5ab9522f9",
-      "size_bytes": 2977,
       "approval_status": "approved"
     },
     {
@@ -709,16 +509,6 @@
       "approval_status": "approved"
     },
     {
-      "source_key": "transcript-video-slot-12-faq-b",
-      "kind": "transcript",
-      "local_path": "course-assets/transcripts/video-slot-12-faq-b.md",
-      "storage_path": "courses/bmh-employee-training/v1/transcripts/video-slot-12-faq-b.64dc2dc2b79dd1be9629da5775a7efe4d51bdf4d9bd8231e2e06b064a84234ca.md",
-      "mime_type": "text/markdown",
-      "checksum_sha256": "64dc2dc2b79dd1be9629da5775a7efe4d51bdf4d9bd8231e2e06b064a84234ca",
-      "size_bytes": 2655,
-      "approval_status": "approved"
-    },
-    {
       "source_key": "caption-video-slot-13-follow-up",
       "kind": "caption",
       "local_path": "course-assets/captions/video-slot-13-follow-up.vtt",
@@ -726,16 +516,6 @@
       "mime_type": "text/vtt",
       "checksum_sha256": "282709519e6a6caba14f7ab2fe176ea9b724a6e4969d856090566d2890b1c281",
       "size_bytes": 10651,
-      "approval_status": "approved"
-    },
-    {
-      "source_key": "transcript-video-slot-13-follow-up",
-      "kind": "transcript",
-      "local_path": "course-assets/transcripts/video-slot-13-follow-up.md",
-      "storage_path": "courses/bmh-employee-training/v1/transcripts/video-slot-13-follow-up.e2df857f3907e90069f102c891844ae5d632f3f0f5fcb7b8470be4f7bbf99dd4.md",
-      "mime_type": "text/markdown",
-      "checksum_sha256": "e2df857f3907e90069f102c891844ae5d632f3f0f5fcb7b8470be4f7bbf99dd4",
-      "size_bytes": 6615,
       "approval_status": "approved"
     },
     {
@@ -749,34 +529,14 @@
       "approval_status": "approved"
     },
     {
-      "source_key": "transcript-video-slot-14-flow",
-      "kind": "transcript",
-      "local_path": "course-assets/transcripts/video-slot-14-flow.md",
-      "storage_path": "courses/bmh-employee-training/v1/transcripts/video-slot-14-flow.412a61e002155d0f6e93f273ae906864f2778f52fdce639d161b81b2f5e3c822.md",
-      "mime_type": "text/markdown",
-      "checksum_sha256": "412a61e002155d0f6e93f273ae906864f2778f52fdce639d161b81b2f5e3c822",
-      "size_bytes": 5535,
-      "approval_status": "approved"
-    },
-    {
       "source_key": "caption-video-slot-15-closing",
       "kind": "caption",
       "local_path": "course-assets/captions/video-slot-15-closing.vtt",
-      "storage_path": "courses/bmh-employee-training/v1/captions/video-slot-15-closing.vtt",
+      "storage_path": "courses/bmh-employee-training/v1/captions/video-slot-15-closing.6cf378a36b737784f2cb2a3a8988ef59fdab2d9bb5e01d304af9f7383d9f7de7.vtt",
       "mime_type": "text/vtt",
-      "checksum_sha256": null,
-      "size_bytes": null,
-      "approval_status": "missing"
-    },
-    {
-      "source_key": "transcript-video-slot-15-closing",
-      "kind": "transcript",
-      "local_path": "course-assets/transcripts/video-slot-15-closing.md",
-      "storage_path": "courses/bmh-employee-training/v1/transcripts/video-slot-15-closing.md",
-      "mime_type": "text/markdown",
-      "checksum_sha256": null,
-      "size_bytes": null,
-      "approval_status": "missing"
+      "checksum_sha256": "6cf378a36b737784f2cb2a3a8988ef59fdab2d9bb5e01d304af9f7383d9f7de7",
+      "size_bytes": 7687,
+      "approval_status": "approved"
     },
     {
       "source_key": "caption-video-slot-16-kpis",
@@ -789,54 +549,24 @@
       "approval_status": "approved"
     },
     {
-      "source_key": "transcript-video-slot-16-kpis",
-      "kind": "transcript",
-      "local_path": "course-assets/transcripts/video-slot-16-kpis.md",
-      "storage_path": "courses/bmh-employee-training/v1/transcripts/video-slot-16-kpis.a2c08ac1daaf8d8950a38aaf46ef36ebc84e1d3f23a40c9fb5692c68bc444feb.md",
-      "mime_type": "text/markdown",
-      "checksum_sha256": "a2c08ac1daaf8d8950a38aaf46ef36ebc84e1d3f23a40c9fb5692c68bc444feb",
-      "size_bytes": 6152,
-      "approval_status": "approved"
-    },
-    {
       "source_key": "caption-video-slot-17-compensation",
       "kind": "caption",
       "local_path": "course-assets/captions/video-slot-17-compensation.vtt",
-      "storage_path": "courses/bmh-employee-training/v1/captions/video-slot-17-compensation.vtt",
+      "storage_path": "courses/bmh-employee-training/v1/captions/video-slot-17-compensation.92eaa487883a9a74818ae46acf26324f19142c14b0c1ff7a18aff2dc0d17db5d.vtt",
       "mime_type": "text/vtt",
-      "checksum_sha256": null,
-      "size_bytes": null,
-      "approval_status": "missing"
-    },
-    {
-      "source_key": "transcript-video-slot-17-compensation",
-      "kind": "transcript",
-      "local_path": "course-assets/transcripts/video-slot-17-compensation.md",
-      "storage_path": "courses/bmh-employee-training/v1/transcripts/video-slot-17-compensation.md",
-      "mime_type": "text/markdown",
-      "checksum_sha256": null,
-      "size_bytes": null,
-      "approval_status": "missing"
+      "checksum_sha256": "92eaa487883a9a74818ae46acf26324f19142c14b0c1ff7a18aff2dc0d17db5d",
+      "size_bytes": 4493,
+      "approval_status": "approved"
     },
     {
       "source_key": "caption-video-slot-18-operator",
       "kind": "caption",
       "local_path": "course-assets/captions/video-slot-18-operator.vtt",
-      "storage_path": "courses/bmh-employee-training/v1/captions/video-slot-18-operator.vtt",
+      "storage_path": "courses/bmh-employee-training/v1/captions/video-slot-18-operator.19bfefcd820b2651b18f550a130edc649f2dc31969ea5c382ebb8546860adff2.vtt",
       "mime_type": "text/vtt",
-      "checksum_sha256": null,
-      "size_bytes": null,
-      "approval_status": "missing"
-    },
-    {
-      "source_key": "transcript-video-slot-18-operator",
-      "kind": "transcript",
-      "local_path": "course-assets/transcripts/video-slot-18-operator.md",
-      "storage_path": "courses/bmh-employee-training/v1/transcripts/video-slot-18-operator.md",
-      "mime_type": "text/markdown",
-      "checksum_sha256": null,
-      "size_bytes": null,
-      "approval_status": "missing"
+      "checksum_sha256": "19bfefcd820b2651b18f550a130edc649f2dc31969ea5c382ebb8546860adff2",
+      "size_bytes": 8818,
+      "approval_status": "approved"
     },
     {
       "source_key": "caption-video-slot-18-mission-control",
@@ -849,34 +579,14 @@
       "approval_status": "approved"
     },
     {
-      "source_key": "transcript-video-slot-18-mission-control",
-      "kind": "transcript",
-      "local_path": "course-assets/transcripts/video-slot-18-mission-control.md",
-      "storage_path": "courses/bmh-employee-training/v1/transcripts/video-slot-18-mission-control.29577ce5cef0790cc023838d5e36d7a660e83f7267a3c211d9a10d21a2a566f8.md",
-      "mime_type": "text/markdown",
-      "checksum_sha256": "29577ce5cef0790cc023838d5e36d7a660e83f7267a3c211d9a10d21a2a566f8",
-      "size_bytes": 5048,
-      "approval_status": "approved"
-    },
-    {
       "source_key": "caption-video-slot-19-career",
       "kind": "caption",
       "local_path": "course-assets/captions/video-slot-19-career.vtt",
-      "storage_path": "courses/bmh-employee-training/v1/captions/video-slot-19-career.vtt",
+      "storage_path": "courses/bmh-employee-training/v1/captions/video-slot-19-career.e84232885fecde1594eb324a8c8341afc7ae9e5b602a50a5b94e755c02b047ff.vtt",
       "mime_type": "text/vtt",
-      "checksum_sha256": null,
-      "size_bytes": null,
-      "approval_status": "missing"
-    },
-    {
-      "source_key": "transcript-video-slot-19-career",
-      "kind": "transcript",
-      "local_path": "course-assets/transcripts/video-slot-19-career.md",
-      "storage_path": "courses/bmh-employee-training/v1/transcripts/video-slot-19-career.md",
-      "mime_type": "text/markdown",
-      "checksum_sha256": null,
-      "size_bytes": null,
-      "approval_status": "missing"
+      "checksum_sha256": "e84232885fecde1594eb324a8c8341afc7ae9e5b602a50a5b94e755c02b047ff",
+      "size_bytes": 5788,
+      "approval_status": "approved"
     },
     {
       "source_key": "thumbnail-program-bmh-employee-training",
@@ -1609,7 +1319,6 @@
                       "asset_key": "video-slot-01-welcome",
                       "poster_asset_key": "poster-video-slot-01-welcome",
                       "caption_asset_key": "caption-video-slot-01-welcome",
-                      "transcript_asset_key": "transcript-video-slot-01-welcome",
                       "title": "Welcome and the Service Playbook",
                       "part_label": "Part A",
                       "duration_seconds": 246.186
@@ -1624,7 +1333,6 @@
                       "asset_key": "video-slot-01-mindset",
                       "poster_asset_key": "poster-video-slot-01-mindset",
                       "caption_asset_key": "caption-video-slot-01-mindset",
-                      "transcript_asset_key": "transcript-video-slot-01-mindset",
                       "title": "Mindset",
                       "part_label": "Part B",
                       "duration_seconds": 362.688
@@ -2317,7 +2025,6 @@
                       "asset_key": "video-slot-02-terms",
                       "poster_asset_key": "poster-video-slot-02-terms",
                       "caption_asset_key": "caption-video-slot-02-terms",
-                      "transcript_asset_key": "transcript-video-slot-02-terms",
                       "title": "Real Estate Terms Glossary",
                       "part_label": null,
                       "duration_seconds": 449.534
@@ -2998,7 +2705,6 @@
                       "asset_key": "video-slot-03-tech-stack",
                       "poster_asset_key": "poster-video-slot-03-tech-stack",
                       "caption_asset_key": "caption-video-slot-03-tech-stack",
-                      "transcript_asset_key": "transcript-video-slot-03-tech-stack",
                       "title": "Tech Stack and Systems",
                       "part_label": null,
                       "duration_seconds": 412.096
@@ -3765,7 +3471,6 @@
                       "asset_key": "video-slot-04-humanizing-a",
                       "poster_asset_key": "poster-video-slot-04-humanizing-a",
                       "caption_asset_key": "caption-video-slot-04-humanizing-a",
-                      "transcript_asset_key": "transcript-video-slot-04-humanizing-a",
                       "title": "Humanizing the Lead",
                       "part_label": "Part A",
                       "duration_seconds": 440.043
@@ -3780,7 +3485,6 @@
                       "asset_key": "video-slot-04-humanizing-b",
                       "poster_asset_key": "poster-video-slot-04-humanizing-b",
                       "caption_asset_key": "caption-video-slot-04-humanizing-b",
-                      "transcript_asset_key": "transcript-video-slot-04-humanizing-b",
                       "title": "Humanizing the Lead",
                       "part_label": "Part B",
                       "duration_seconds": 357.824
@@ -3795,7 +3499,6 @@
                       "asset_key": "video-slot-04-ideal-seller",
                       "poster_asset_key": "poster-video-slot-04-ideal-seller",
                       "caption_asset_key": "caption-video-slot-04-ideal-seller",
-                      "transcript_asset_key": "transcript-video-slot-04-ideal-seller",
                       "title": "Ideal Seller Profile",
                       "part_label": "Part C",
                       "duration_seconds": 312.192
@@ -4548,7 +4251,6 @@
                       "asset_key": "video-slot-05-offer-a",
                       "poster_asset_key": "poster-video-slot-05-offer-a",
                       "caption_asset_key": "caption-video-slot-05-offer-a",
-                      "transcript_asset_key": "transcript-video-slot-05-offer-a",
                       "title": "The BMH Offer Playbook",
                       "part_label": "Part A",
                       "duration_seconds": 463.552
@@ -4563,7 +4265,6 @@
                       "asset_key": "video-slot-05-offer-b",
                       "poster_asset_key": "poster-video-slot-05-offer-b",
                       "caption_asset_key": "caption-video-slot-05-offer-b",
-                      "transcript_asset_key": "transcript-video-slot-05-offer-b",
                       "title": "The BMH Offer Playbook",
                       "part_label": "Part B",
                       "duration_seconds": 231.893
@@ -5318,7 +5019,6 @@
                       "asset_key": "video-slot-06-pipeline",
                       "poster_asset_key": "poster-video-slot-06-pipeline",
                       "caption_asset_key": "caption-video-slot-06-pipeline",
-                      "transcript_asset_key": "transcript-video-slot-06-pipeline",
                       "title": "Sales Pipeline and Stage Ownership",
                       "part_label": "Part A",
                       "duration_seconds": 418.88
@@ -5333,7 +5033,6 @@
                       "asset_key": "video-slot-06-framework",
                       "poster_asset_key": "poster-video-slot-06-framework",
                       "caption_asset_key": "caption-video-slot-06-framework",
-                      "transcript_asset_key": "transcript-video-slot-06-framework",
                       "title": "The Five-Step Conversation Framework",
                       "part_label": "Part B",
                       "duration_seconds": 160.661
@@ -6062,7 +5761,6 @@
                       "asset_key": "video-slot-07-opening",
                       "poster_asset_key": "poster-video-slot-07-opening",
                       "caption_asset_key": "caption-video-slot-07-opening",
-                      "transcript_asset_key": "transcript-video-slot-07-opening",
                       "title": "Opening the Call",
                       "part_label": "Part A",
                       "duration_seconds": 306.816
@@ -6077,7 +5775,6 @@
                       "asset_key": "video-slot-07-fact-find",
                       "poster_asset_key": "poster-video-slot-07-fact-find",
                       "caption_asset_key": "caption-video-slot-07-fact-find",
-                      "transcript_asset_key": "transcript-video-slot-07-fact-find",
                       "title": "The Fact Find",
                       "part_label": "Part B",
                       "duration_seconds": 252.117
@@ -6809,7 +6506,6 @@
                       "asset_key": "video-slot-08-discovery",
                       "poster_asset_key": "poster-video-slot-08-discovery",
                       "caption_asset_key": "caption-video-slot-08-discovery",
-                      "transcript_asset_key": "transcript-video-slot-08-discovery",
                       "title": "Discovery",
                       "part_label": "Part A",
                       "duration_seconds": 312.512
@@ -6824,7 +6520,6 @@
                       "asset_key": "video-slot-08-handoff",
                       "poster_asset_key": "poster-video-slot-08-handoff",
                       "caption_asset_key": "caption-video-slot-08-handoff",
-                      "transcript_asset_key": "transcript-video-slot-08-handoff",
                       "title": "The Handoff",
                       "part_label": "Part B",
                       "duration_seconds": 245.056
@@ -7624,7 +7319,6 @@
                       "asset_key": "video-slot-09-objection-architecture",
                       "poster_asset_key": "poster-video-slot-09-objection-architecture",
                       "caption_asset_key": "caption-video-slot-09-objection-architecture",
-                      "transcript_asset_key": "transcript-video-slot-09-objection-architecture",
                       "title": "Objection Architecture",
                       "part_label": null,
                       "duration_seconds": 358.528
@@ -8329,7 +8023,6 @@
                       "asset_key": "video-slot-10-objection-scripts",
                       "poster_asset_key": "poster-video-slot-10-objection-scripts",
                       "caption_asset_key": "caption-video-slot-10-objection-scripts",
-                      "transcript_asset_key": "transcript-video-slot-10-objection-scripts",
                       "title": "Objection Scripts Playbook",
                       "part_label": null,
                       "duration_seconds": 1508.757
@@ -9034,7 +8727,6 @@
                       "asset_key": "video-slot-11-complex",
                       "poster_asset_key": "poster-video-slot-11-complex",
                       "caption_asset_key": "caption-video-slot-11-complex",
-                      "transcript_asset_key": "transcript-video-slot-11-complex",
                       "title": "Complex Objections",
                       "part_label": "Part A",
                       "duration_seconds": 228.416
@@ -9049,7 +8741,6 @@
                       "asset_key": "video-slot-11-trust",
                       "poster_asset_key": "poster-video-slot-11-trust",
                       "caption_asset_key": "caption-video-slot-11-trust",
-                      "transcript_asset_key": "transcript-video-slot-11-trust",
                       "title": "Trust and People Objections",
                       "part_label": "Part B",
                       "duration_seconds": 245.717
@@ -9781,7 +9472,6 @@
                       "asset_key": "video-slot-12-faq-a",
                       "poster_asset_key": "poster-video-slot-12-faq-a",
                       "caption_asset_key": "caption-video-slot-12-faq-a",
-                      "transcript_asset_key": "transcript-video-slot-12-faq-a",
                       "title": "Seller FAQ Decoder Questions 1 through 5",
                       "part_label": "Part A",
                       "duration_seconds": 198.762
@@ -9796,7 +9486,6 @@
                       "asset_key": "video-slot-12-faq-b",
                       "poster_asset_key": "poster-video-slot-12-faq-b",
                       "caption_asset_key": "caption-video-slot-12-faq-b",
-                      "transcript_asset_key": "transcript-video-slot-12-faq-b",
                       "title": "Seller FAQ Decoder Questions 6 through 10",
                       "part_label": "Part B",
                       "duration_seconds": 180.778
@@ -10527,7 +10216,6 @@
                       "asset_key": "video-slot-13-follow-up",
                       "poster_asset_key": "poster-video-slot-13-follow-up",
                       "caption_asset_key": "caption-video-slot-13-follow-up",
-                      "transcript_asset_key": "transcript-video-slot-13-follow-up",
                       "title": "Follow-Up Cadence",
                       "part_label": null,
                       "duration_seconds": 437.76
@@ -11253,7 +10941,6 @@
                       "asset_key": "video-slot-14-flow",
                       "poster_asset_key": "poster-video-slot-14-flow",
                       "caption_asset_key": "caption-video-slot-14-flow",
-                      "transcript_asset_key": "transcript-video-slot-14-flow",
                       "title": "Conversation Flow Mastery",
                       "part_label": null,
                       "duration_seconds": 418.496
@@ -11988,7 +11675,6 @@
                       "asset_key": "video-slot-15-closing",
                       "poster_asset_key": "poster-video-slot-15-closing",
                       "caption_asset_key": "caption-video-slot-15-closing",
-                      "transcript_asset_key": "transcript-video-slot-15-closing",
                       "title": "Closing and Deal Engineering",
                       "part_label": null,
                       "duration_seconds": 329.429
@@ -12743,7 +12429,6 @@
                       "asset_key": "video-slot-16-kpis",
                       "poster_asset_key": "poster-video-slot-16-kpis",
                       "caption_asset_key": "caption-video-slot-16-kpis",
-                      "transcript_asset_key": "transcript-video-slot-16-kpis",
                       "title": "KPIs and Sales Telemetry",
                       "part_label": null,
                       "duration_seconds": 400.994
@@ -13448,7 +13133,6 @@
                       "asset_key": "video-slot-17-compensation",
                       "poster_asset_key": "poster-video-slot-17-compensation",
                       "caption_asset_key": "caption-video-slot-17-compensation",
-                      "transcript_asset_key": "transcript-video-slot-17-compensation",
                       "title": "Compensation Engine",
                       "part_label": null,
                       "duration_seconds": 181.013
@@ -14147,7 +13831,6 @@
                       "asset_key": "video-slot-18-operator",
                       "poster_asset_key": "poster-video-slot-18-operator",
                       "caption_asset_key": "caption-video-slot-18-operator",
-                      "transcript_asset_key": "transcript-video-slot-18-operator",
                       "title": "Operator Playbook",
                       "part_label": "Part A",
                       "duration_seconds": 378.858
@@ -14162,7 +13845,6 @@
                       "asset_key": "video-slot-18-mission-control",
                       "poster_asset_key": "poster-video-slot-18-mission-control",
                       "caption_asset_key": "caption-video-slot-18-mission-control",
-                      "transcript_asset_key": "transcript-video-slot-18-mission-control",
                       "title": "Daily Mission Control",
                       "part_label": "Part B",
                       "duration_seconds": 340.096
@@ -14886,7 +14568,6 @@
                       "asset_key": "video-slot-19-career",
                       "poster_asset_key": "poster-video-slot-19-career",
                       "caption_asset_key": "caption-video-slot-19-career",
-                      "transcript_asset_key": "transcript-video-slot-19-career",
                       "title": "Career Growth Path",
                       "part_label": null,
                       "duration_seconds": 252.949
