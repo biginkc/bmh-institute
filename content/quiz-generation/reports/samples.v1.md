@@ -250,14 +250,14 @@ Explanation: By demonstrating that they are different through active listening.
 
 Provenance: legacy-ch02-050 | legacy_chapters:ch02 | distractor-banks/slot-04.json | checker pass
 
-### 67. True motivation involves both a _____ and a _____.
+### 67. A seller gives a strong reason for considering a sale but cannot say when a change is needed. What part of true motivation is still missing?
 
-- [ ] Trust; empathy
-- [correct] Reason; timeline
-- [ ] Debt; interest
-- [ ] Price; condition
+- [ ] A promise to accept the first offer presented.
+- [correct] A timeline connected to the seller's reason.
+- [ ] A list of every investor who has contacted the seller.
+- [ ] A repair estimate prepared by the representative.
 
-Explanation: Reason; timeline
+Explanation: A timeline connected to the seller's reason.
 
 Provenance: legacy-ch02-078 | legacy_chapters:ch02 | distractor-banks/slot-04.json | checker pass
 
@@ -329,7 +329,7 @@ Explanation: Directly from homeowners.
 
 Provenance: legacy-ch03-052 | legacy_chapters:ch03 | distractor-banks/slot-05.json | checker pass
 
-### 73. If a seller has a $\$50,000$ repair bill they cannot pay, which BMH benefit is most relevant?
+### 73. If a seller has a $50,000 repair bill they cannot pay, which BMH benefit is most relevant?
 
 - [correct] Buying the house 'as-is'.
 - [ ] No agent commissions.
@@ -1090,47 +1090,47 @@ Provenance: legacy-ch11-038 | legacy_chapters:ch11 | distractor-banks/slot-16.js
 
 ## Slot 17: Compensation Engine
 
-### 1. What are the three components of the compensation structure described in the text?
+### 1. Which description best separates compensation training from an employee's actual compensation terms?
 
-- [ ] Quality conversations, follow-up, and pipeline growth.
-- [ ] KPIs, qualified leads, and clean handoffs.
-- [correct] Base pay, commissions, and appointment bonuses.
-- [ ] Signed contracts, completed transactions, and role scorecards.
+- [ ] Pipeline results supply the binding terms, while the written plan is used only after a payment dispute.
+- [ ] Training supplies the binding terms, while the written plan is only a summary of the course.
+- [correct] Training explains the compensation components; the current written plan supplies the employee's binding terms.
+- [ ] A manager's forecast supplies the binding terms, while training determines which payments have been earned.
 
-Explanation: Base pay, commissions, and appointment bonuses.
+Explanation: Training explains how components such as ramp pay, commissions, and appointment incentives work conceptually; the employee's current written plan supplies the binding terms.
 
 Provenance: legacy-ch12-001 | legacy_chapters:ch12 | distractor-banks/slot-17.json | checker pass
 
-### 2. What type of pay is provided to representatives during their ramp period?
+### 2. What business purpose can ramp-period pay serve?
 
-- [ ] A recoverable commission draw.
-- [ ] A fixed monthly stipend.
-- [correct] An hourly base rate.
-- [ ] A guaranteed annual salary.
+- [ ] It replaces the need for a new employee to learn qualification and handoff standards.
+- [ ] It serves as the current commission rate until the employee's pipeline reaches target.
+- [correct] It provides income while the employee learns the role and develops a pipeline, subject to the plan.
+- [ ] It rewards the acquisition team for contracts that close before a new employee begins calling.
 
-Explanation: An hourly base rate.
+Explanation: It can provide income while a new employee learns the role and develops a pipeline, subject to the current written plan.
 
 Provenance: legacy-ch12-002 | legacy_chapters:ch12 | distractor-banks/slot-17.json | checker pass
 
-### 23. What is the maximum limit or 'cap' on commissions for a representative?
+### 23. How can an employee determine whether a commission limit applies?
 
-- [correct] There is no cap on commissions.
-- [ ] Commissions are capped at $\$5,000$ per month.
-- [ ] Commissions are capped after Tier 1.
-- [ ] Commissions are capped after five deals.
+- [correct] The current plan's cap, limitation, and exception terms for that period.
+- [ ] Use the number of open opportunities as the maximum number of payable deals.
+- [ ] Infer the limit from the largest payment another employee received.
+- [ ] Treat the highest tier threshold as the payment limit for the period.
 
-Explanation: There is no cap on commissions.
+Explanation: Read the cap, limitation, and exception language in the current written compensation plan.
 
 Provenance: legacy-ch12-023 | legacy_chapters:ch12 | distractor-banks/slot-17.json | checker pass
 
-### 40. What is the commission rate for sourcing $2$ deals in a month?
+### 40. Two deals closed in the same period. Which dataset supports their commission calculation?
 
-- [ ] $\$1,000$ per deal.
-- [ ] $\$250$ per deal.
-- [ ] $\$750$ per deal.
-- [correct] $\$500$ per deal.
+- [ ] The applicable market's repair estimates plus the acquisition manager's calendar availability.
+- [ ] The two sellers' asking prices plus the representative's combined talk time.
+- [ ] The team's total lead count plus the employee's number of scheduled follow-ups.
+- [correct] The eligibility, timing, and status of both deals plus the applicable rate and tier rules.
 
-Explanation: $\$500$ per deal.
+Explanation: Both deals' eligibility, timing, ownership, and status records plus the applicable plan's rate and tier rules.
 
 Provenance: legacy-ch12-041 | legacy_chapters:ch12 | distractor-banks/slot-17.json | checker pass
 
@@ -1145,14 +1145,14 @@ Explanation: It ensures deals actually convert instead of going cold.
 
 Provenance: legacy-ch12-049 | legacy_chapters:ch12 | distractor-banks/slot-17.json | checker pass
 
-### 51. What does the text identify as the connection between daily work and earnings?
+### 51. How does daily execution connect to compensation without turning every activity into earned pay?
 
-- [ ] The monthly appointment total as the sole measure of all earnings.
-- [ ] The hourly base rate alone regardless of pipeline outcomes.
-- [correct] The compensation structure (specifically follow-up, qualification, and handoffs).
-- [ ] The acquisition team's deal volume without representative input.
+- [ ] A documented scheduled appointment earns an incentive when its calling-block task is complete.
+- [ ] A documented dial becomes payable when the current activity target is met.
+- [correct] A documented outcome enters the calculation only when it meets the plan's rules.
+- [ ] A documented qualified lead becomes a closed deal when the acquisition team accepts the handoff.
 
-Explanation: The compensation structure (specifically follow-up, qualification, and handoffs).
+Explanation: Daily work creates documented outcomes; only outcomes that meet the current plan's eligibility and attribution rules enter the compensation calculation.
 
 Provenance: legacy-ch12-055 | legacy_chapters:ch12 | distractor-banks/slot-17.json | checker pass
 
@@ -1226,14 +1226,14 @@ Provenance: slot-module-18-038 | locked_master_slot_banks:module-18 | distractor
 
 ## Slot 19: Career Growth Path
 
-### 1. What is the foundational task for someone starting at BMH Group?
+### 1. What is the safest foundation for career growth at BMH Group?
 
-- [ ] Opening new markets, building new teams, and creating new positions.
-- [ ] Hiring people, training them, coaching them, and owning team performance.
-- [ ] Presenting offers, negotiating terms, structuring deals, and closing directly.
-- [correct] Working leads, qualifying sellers, building a pipeline, and handing off to acquisitions.
+- [ ] Interest in a future title supported mainly by one strong performance period.
+- [ ] Visible participation in leadership meetings as the primary evidence of role mastery.
+- [ ] Broad exposure to future-role tasks before current-role results are consistent.
+- [correct] Reliable capability and documented results demonstrated in the current assigned role.
 
-Explanation: Working leads, qualifying sellers, building a pipeline, and handing off to acquisitions.
+Explanation: Build reliable capability in the current assigned role and document the results.
 
 Provenance: legacy-ch13-001 | legacy_chapters:ch13 | distractor-banks/slot-19.json | checker pass
 
@@ -1248,14 +1248,14 @@ Explanation: The ability to structure deals creatively.
 
 Provenance: legacy-ch13-017 | legacy_chapters:ch13 | distractor-banks/slot-19.json | checker pass
 
-### 21. What is the typical timeframe for advancement at BMH Group?
+### 21. How should an employee learn the current timing of an advancement process?
 
-- [ ] Advancement follows a fixed six-month schedule.
-- [ ] Advancement always occurs after exactly 90 days.
-- [ ] Advancement is guaranteed at the one-year mark.
-- [correct] There is no fixed schedule; it varies from six months to a year or more.
+- [ ] Use the approved review period assigned to another employee in a related role.
+- [ ] Use the current project's end date as the advancement-process start date.
+- [ ] Use the current quarter boundary as the standard advancement-review date.
+- [correct] Use the current criteria and ask the authorized reviewer.
 
-Explanation: There is no fixed schedule; it varies from six months to a year or more.
+Explanation: Consult the current written criteria and authorized reviewer; training does not promise a timeframe.
 
 Provenance: legacy-ch13-022 | legacy_chapters:ch13 | distractor-banks/slot-19.json | checker pass
 
@@ -1270,14 +1270,14 @@ Explanation: BMH Group provides a clear path for growth based on mastering curre
 
 Provenance: legacy-ch13-039 | legacy_chapters:ch13 | distractor-banks/slot-19.json | checker pass
 
-### 36. In the management path, what is the manager 'owning' regarding their team?
+### 36. What does a manager own in a policy-safe sense?
 
-- [ ] The negotiation and signed contract for every individual deal.
-- [correct] The performance and output of the entire team.
-- [ ] The notes, stage, and next action for one qualified lead.
-- [ ] The manager's individual KPIs without the rest of the team's results.
+- [ ] Responsibilities listed in the current team charter, including work assigned to peer roles.
+- [correct] Responsibilities assigned in the current written manager role plan.
+- [ ] Responsibilities demonstrated in an approved leadership workshop for future managers.
+- [ ] Tasks the manager selects from the current team backlog during that review period.
 
-Explanation: The performance and output of the entire team.
+Explanation: The responsibilities explicitly assigned in the current written manager role plan.
 
 Provenance: legacy-ch13-041 | legacy_chapters:ch13 | distractor-banks/slot-19.json | checker pass
 

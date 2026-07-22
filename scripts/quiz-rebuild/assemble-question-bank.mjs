@@ -6,8 +6,16 @@ import { runLint } from "./lint-distractor-banks.mjs";
 import { sha256OfFile, selectedBySlot } from "./lib/ledger.mjs";
 import { deterministicShuffle } from "./lib/shuffle.mjs";
 import { stableStringify } from "./lib/stable-json.mjs";
+import { POLICY_SAFE_OVERRIDES } from "./policy-safe-overrides.mjs";
 
-function provenanceFor(record, entry, checkerVerdict, slotLabel, status) {
+export function normalizeLearnerText(value) {
+  return String(value)
+    .replace(/\$\\\$([^$]+)\$/g, (_match, amount) => `$${amount}`)
+    .replace(/\$([^$]+)\$/g, "$1")
+    .replaceAll("\\$", "$");
+}
+
+function provenanceFor(record, entry, checkerVerdict, slotLabel, status, policyOverride = false) {
   return {
     record_id: record.record_id,
     source_set: record.source_set,
@@ -17,15 +25,17 @@ function provenanceFor(record, entry, checkerVerdict, slotLabel, status) {
     candidate_slot: record.candidate_slot,
     front_sha256: entry.front_sha256,
     back_sha256: entry.back_sha256,
-    correct_answer_source: "back_verbatim",
+    correct_answer_source: policyOverride ? "policy_safe_override" : "back_verbatim",
     distractor_bank: `distractor-banks/${slotLabel}.json`,
     checker_verdict: checkerVerdict,
     status,
   };
 }
 
-function buildOptions(record, entry) {
-  if (entry.question_type === "true_false") {
+function buildOptions(record, entry, policyOverride) {
+  const correctAnswer = policyOverride?.correctAnswer ?? policyOverride?.explanation ?? normalizeLearnerText(record.back);
+  const distractors = policyOverride?.distractors ?? entry.distractors;
+  if (!policyOverride && entry.question_type === "true_false") {
     return ["True", "False"].map((optionText, index) => ({
       source_key: `question-r-${record.record_id}-opt-${index + 1}`,
       option_text: optionText,
@@ -36,8 +46,11 @@ function buildOptions(record, entry) {
 
   const shuffled = deterministicShuffle(
     [
-      { option_text: record.back, is_correct: true },
-      ...entry.distractors.map((optionText) => ({ option_text: optionText, is_correct: false })),
+      { option_text: correctAnswer, is_correct: true },
+      ...distractors.map((optionText) => ({
+        option_text: normalizeLearnerText(optionText),
+        is_correct: false,
+      })),
     ],
     `bmh-quiz-rebuild-v1:${record.record_id}`,
   );
@@ -82,19 +95,20 @@ export function buildQuestionBank(repoRoot) {
 
     for (const record of records) {
       const entry = entriesById.get(record.record_id);
+      const policyOverride = POLICY_SAFE_OVERRIDES.get(record.record_id);
       const rawCheckerVerdict = verdictsById.get(record.record_id)?.verdict;
       const checkerVerdict = ["pass", "revise", "needs_human_review"].includes(rawCheckerVerdict) ? rawCheckerVerdict : null;
       if (entry.status === "authored" && checkerVerdict !== "needs_human_review") {
         const sortOrder = questions.length + 1;
         questions.push({
           source_key: `question-r-${record.record_id}`,
-          question_text: record.front,
-          question_type: entry.question_type,
-          explanation: record.back,
+          question_text: policyOverride?.questionText ?? normalizeLearnerText(record.front),
+          question_type: policyOverride ? "single_choice" : entry.question_type,
+          explanation: policyOverride?.explanation ?? normalizeLearnerText(record.back),
           points: 1,
           sort_order: sortOrder,
-          options: buildOptions(record, entry),
-          provenance: provenanceFor(record, entry, checkerVerdict, slotLabel, "generated"),
+          options: buildOptions(record, entry, policyOverride),
+          provenance: provenanceFor(record, entry, checkerVerdict, slotLabel, "generated", Boolean(policyOverride)),
         });
       } else if (entry.status === "needs_human_review" || checkerVerdict === "needs_human_review") {
         needsHumanReview.push({
@@ -132,6 +146,7 @@ export function buildQuestionBank(repoRoot) {
       source_ledger_sha256: sha256OfFile(snapshotPath),
       distractor_bank_sha256: bankHashes,
       distractor_review_sha256: reviewHashes,
+      policy_safe_override_sha256: sha256OfFile(path.join(repoRoot, "scripts/quiz-rebuild/policy-safe-overrides.mjs")),
     },
     quiz_config: {
       passing_score: 80,

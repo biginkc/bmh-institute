@@ -12,7 +12,7 @@
 
 - Plan source: user-provided goal in the active Codex task.
 - Repo plan anchor: `.planning/PROJECT.md` core value that learners can take quizzes without supervision.
-- Baseline: `origin/main` at `d536859` plus the production release and learner snapshots captured before mutation.
+- Baseline: `origin/main` at `369881f` plus the production release and learner snapshots captured before mutation.
 - Authority profile: production-aware with the user's explicit authorization for this scoped production import and verification.
 - Exclusions: no billing changes, no unrelated course edits, no secret persistence, and no changes to external communications or providers.
 
@@ -26,7 +26,7 @@
 - [ ] Released catalog revision preserves the immutable legacy receipt and stable program, course, lesson, and quiz identities.
 - [x] Production is reconfirmed to have no completed attempts; disposable incomplete legacy attempts cannot resume with 10 questions.
 - [x] Rollback artifacts and procedure exist before production mutation.
-- [ ] Typecheck, unit, integration, import, migration rehearsal, build, lint, CI, and manual review gates pass as applicable.
+- [x] Typecheck, unit, integration, import, migration rehearsal, build, lint, and manual review gates pass locally; CI remains part of the merge gate.
 - [ ] Focused PR is merged and production serves the merged commit.
 - [ ] Production contains exactly 19 active quizzes and 920 active questions with per-quiz counts matching the approved ledger.
 - [ ] Chrome visibly proves the exact Humanizing lesson says `Question 1 of 70` with no blocking console or network failure.
@@ -52,7 +52,7 @@
 
 ### Iteration 0 - baseline and preflight
 
-- Status: in progress.
+- Status: complete.
 - Evidence delta: fresh worktree created from `origin/main` at `d536859`.
 - Rebuild source: `claude/quiz-rebuild-977` is 8 commits ahead and 70 behind current main. It will not be merged wholesale.
 - Initial source diff: question bank, distractor reviews, manifest pipeline, approval ledger, canary QA, and related course QA.
@@ -84,4 +84,18 @@
 - Final active manifest SHA-256 is `1c388b80a8158ecce5ebb3eecf606052d359b5289a12e8a0f36e9327d64cc66e`; quiz graph SHA-256 remains `da40fa0a001c38d4c9175f68a1add421742fa65a6075bae986a4ffbad4960b10`.
 - Local gates: typecheck; lint with zero errors; 1,023 unit tests; 135 RTL component tests; 177 course-content tests plus caption and guide semantic/reproducibility checks; and the optimized Next.js production build all pass.
 - Claude verdict: pending after Codex manual review of the completed diff.
+- Blockers: none.
+
+### Iteration 3 - final content approval and release hardening
+
+- Evidence delta: eight adversarial content-review iterations eliminated answer-key, policy, boilerplate, form-asymmetry, and semantic-gate defects. Claude's final checksum-bound v8 verdict is approved with no blocker or major finding.
+- Final approval request SHA-256: `c9339772f865747148d8c1814734f271d31f8b4837d80e98f62fe673b585638f`.
+- Final question-bank SHA-256: `7b92395c5582728d6a13f49c36542d54a709ecbe87ec06787925b15019ac4425`.
+- Final active manifest SHA-256: `c7d80fece3a51daf418d4f6953619d092a9b7b6e49f8d1c3afe3b02f4c0234d7`.
+- Final released quiz-graph SHA-256: `d2b9fc182b7ca72f76ce038eac8c5b37446ba999fce5a269699802812177c78a` (19 quizzes, 920 questions, 3,678 options; Humanizing 70; all attempt caps null).
+- Final hosted rehearsal: forward revision reconciled 342/1,292 to 920/3,678, invalidated one disposable incomplete attempt, preserved the immutable legacy receipt, rolled back exactly to 342/1,292, and refused a second rollback. The transaction rolled back all rehearsal state.
+- Final local gates: 174 Vitest files / 1,026 tests; full course-content, caption, guide, quiz-bank, and deterministic-build QA; TypeScript; optimized Next.js build; lint with zero errors and ten pre-existing warnings; `git diff --check`; and adversarial full-diff review all pass.
+- Manual-review correction: updated stale successor-bank provenance in the legacy archive metadata and added a regression assertion binding it to the active bank checksum.
+- Claude verdict: approved for content. A stale graph-hash test found by Claude was repinned to the exact v8 graph and the full suite rerun green.
+- Remaining gates: commit/push, PR CI, technical diff review, merge/deployment identity, controlled production revision, reconciliation, and authenticated Chrome proof.
 - Blockers: none.

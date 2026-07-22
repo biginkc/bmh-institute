@@ -25,6 +25,10 @@ describe("versioned released quiz revision migration", () => {
     expect(sql).toContain("p_manifest_sha256");
     expect(sql).toMatch(/pg_advisory_xact_lock[\s\S]*course-import-catalog-mutation/i);
     expect(sql).toMatch(/pg_advisory_xact_lock[\s\S]*course-import-release:/i);
+    expect(sql).toMatch(/live catalog changed after the active release receipt/i);
+    expect(sql).toMatch(/question_bank_sha256' is distinct from p_evidence/i);
+    expect(sql).toMatch(/approval_request_sha256' is distinct from p_evidence/i);
+    expect(sql).toMatch(/approval_ledger_sha256' is distinct from p_evidence/i);
   });
 
   it("accepts only the exact 19-quiz exhaustive graph and reconciles options before questions", () => {
@@ -36,7 +40,7 @@ describe("versioned released quiz revision migration", () => {
     expect(sql).toMatch(/insert into public\.answer_options[\s\S]*on conflict \(id\) do update/i);
   });
 
-  it("archives the prior graph, preserves completed attempts, and invalidates only incomplete attempts", () => {
+  it("archives the prior graph, refuses completed activity, and invalidates only incomplete attempts", () => {
     expect(sql).toContain("prior_quiz_graph");
     expect(sql).toContain("invalidated_incomplete_attempts");
     expect(sql).toMatch(/where attempt\.quiz_id = any\(v_quiz_ids\) and attempt\.completed_at is null/i);
@@ -46,7 +50,9 @@ describe("versioned released quiz revision migration", () => {
     );
     expect(attemptDeletes.length).toBeGreaterThan(0);
     expect(attemptDeletes.every((statement) => /completed_at is null/i.test(statement))).toBe(true);
-    expect(sql).toContain("grading_snapshot_state");
+    expect(sql).toMatch(/completed quiz activity exists/i);
+    expect(sql).toMatch(/live legacy graph no longer matches the archived 19\/342\/1292 capped release/i);
+    expect(sql).toMatch(/row\.questions_per_attempt is distinct from 10/i);
   });
 
   it("does not make the generic released import apply or release receipt mutable", () => {
@@ -63,6 +69,10 @@ describe("versioned released quiz revision migration", () => {
     expect(sql).toMatch(/v_latest\.prior_quiz_graph -> 'quizzes'/i);
     expect(sql).toMatch(/v_latest\.prior_quiz_graph -> 'questions'/i);
     expect(sql).toMatch(/v_latest\.prior_quiz_graph -> 'answer_options'/i);
+    expect(sql).toMatch(/v_latest\.question_count <> 920/i);
+    expect(sql).toMatch(/jsonb_array_length\(v_questions\) <> 342/i);
+    expect(sql).toMatch(/p_evidence ->> 'rollback_sha256' is distinct from v_latest\.evidence ->> 'rollback_sha256'/i);
+    expect(sql).toMatch(/failed to restore the exact prior catalog checksum/i);
     expect(sql).toMatch(/completed quiz activity now exists; automatic rollback is unsafe/i);
     expect(sql).toMatch(/grant execute on function public\.fn_rollback_released_quiz_revision_v1[\s\S]*to service_role/i);
   });

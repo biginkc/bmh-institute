@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { readFile } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 import { test } from "node:test";
 
@@ -14,6 +14,10 @@ const ACTIVE_MANIFEST_PATH = path.join(
 const LEGACY_MANIFEST_PATH = path.join(
   ROOT,
   "content/course-manifests/archive/bmh-employee-training.legacy-release-20260721.v1.json",
+);
+const LEGACY_METADATA_PATH = path.join(
+  ROOT,
+  "content/course-manifests/archive/bmh-employee-training.legacy-release-20260721.metadata.json",
 );
 const QUESTION_BANK_PATH = path.join(
   ROOT,
@@ -35,7 +39,11 @@ function sha256(bytes) {
 }
 
 test("the exact released 342-question manifest is archived outside the active import path", async () => {
-  const bytes = await readFile(LEGACY_MANIFEST_PATH);
+  const [bytes, metadata, bankBytes] = await Promise.all([
+    readFile(LEGACY_MANIFEST_PATH),
+    readFile(LEGACY_METADATA_PATH, "utf8").then(JSON.parse),
+    readFile(QUESTION_BANK_PATH),
+  ]);
   const manifest = JSON.parse(bytes.toString("utf8"));
   const legacyQuizzes = quizzes(manifest);
 
@@ -47,6 +55,8 @@ test("the exact released 342-question manifest is archived outside the active im
     342,
   );
   assert.ok(legacyQuizzes.every((quiz) => quiz.questions_per_attempt === 10));
+  assert.equal(metadata.manifest_sha256, LEGACY_MANIFEST_SHA256);
+  assert.equal(metadata.superseded_by.question_bank_sha256, sha256(bankBytes));
 });
 
 test("the sole active full manifest is the approved exhaustive 920-question bank", async () => {
@@ -83,6 +93,24 @@ test("the sole active full manifest is the approved exhaustive 920-question bank
   );
   assert.equal(humanizing.questions.length, 70);
   assert.equal(humanizing.questions_per_attempt, null);
+});
+
+test("only one top-level manifest can import the BMH employee training release", async () => {
+  const manifestDirectory = path.join(ROOT, "content/course-manifests");
+  const candidates = [];
+  for (const name of await readdir(manifestDirectory)) {
+    if (!name.endsWith(".json")) continue;
+    const absolutePath = path.join(manifestDirectory, name);
+    try {
+      const parsed = JSON.parse(await readFile(absolutePath, "utf8"));
+      if (parsed.import_id === "bmh-employee-training-v1" && parsed.program?.courses) {
+        candidates.push(name);
+      }
+    } catch {
+      // Non-manifest JSON files are outside this identity check.
+    }
+  }
+  assert.deepEqual(candidates, ["bmh-employee-training.v1.json"]);
 });
 
 test("the normal manifest builder reproduces the exhaustive active manifest", async () => {

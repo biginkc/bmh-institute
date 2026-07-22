@@ -8,6 +8,8 @@ import { buildImportPlan, deterministicImportId } from "../../src/lib/course-imp
 import {
   buildReleasedQuizGraph,
   extractQuizGraph,
+  releasedQuizGraphSha256,
+  releasedQuizRollbackConfirmation,
   releasedQuizRevisionConfirmation,
 } from "../../src/lib/course-import/released-quiz-revision";
 
@@ -54,21 +56,31 @@ async function main() {
   const employeeRoleId = deterministicImportId(IMPORT_ID, "rehearsal-employee-role");
   const humanizingQuizId = deterministicImportId(IMPORT_ID, "quiz-slot-04");
   const humanizingLessonId = deterministicImportId(IMPORT_ID, "lesson-quiz-slot-04");
+  const reviewerQuestionId = String(activeGraph.questions[0].id);
+  const reviewerAnswerOptionId = String(activeGraph.answer_options.find(
+    (option) => option.question_id === reviewerQuestionId,
+  )?.id);
+  if (!reviewerAnswerOptionId) throw new Error("Rehearsal graph needs an answer option for reviewer evidence.");
   const evidence = {
     operation: "release",
     question_bank_sha256: await sha256("content/quiz-generation/question-bank.v1.json"),
     approval_request_sha256: await sha256("docs/course-production/quiz-content-review-request.v1.json"),
     approval_ledger_sha256: await sha256("docs/course-production/quiz-approvals.json"),
     rollback_sha256: createHash("sha256").update("rehearsal rollback").digest("hex"),
+    client_graph_sha256: releasedQuizGraphSha256(activeGraph),
   };
   const forwardConfirmation = releasedQuizRevisionConfirmation({
     importId: IMPORT_ID,
     priorManifestSha256: legacy.sha256,
     manifestSha256: active.sha256,
   });
-  const rollbackConfirmation = [
-    "ROLLBACK-RELEASED-QUIZZES", IMPORT_ID, "2", active.sha256, legacy.sha256,
-  ].join(":");
+  const rollbackConfirmation = releasedQuizRollbackConfirmation({
+    importId: IMPORT_ID,
+    expectedRevision: 2,
+    manifestSha256: active.sha256,
+    priorManifestSha256: legacy.sha256,
+    rollbackSha256: evidence.rollback_sha256,
+  });
 
   const sql = `
 begin;
@@ -100,12 +112,55 @@ values (${sqlText(programId)}::uuid, ${sqlText(employeeRoleId)}::uuid);
 select set_config('bmh.release_import_id', '', true);
 
 insert into public.user_quiz_attempts (
+  user_id, quiz_id, lesson_id, score, passed, completed_at,
+  question_order, answer_orders, responses, answer_results, grading_snapshot_state
+)
+select profile.id, ${sqlText(humanizingQuizId)}::uuid, ${sqlText(humanizingLessonId)}::uuid,
+  100, true, now(), '[]'::jsonb, '{}'::jsonb, '{}'::jsonb, '{}'::jsonb, 'native'
+from public.profiles profile order by profile.id limit 1;
+
+do $$
+begin
+  if not exists (
+    select 1 from public.user_quiz_attempts
+    where quiz_id = ${sqlText(humanizingQuizId)}::uuid and completed_at is not null
+  ) then
+    raise exception 'Rehearsal requires a profile and failed to create the completed-attempt fixture.';
+  end if;
+  begin
+    perform public.fn_revise_released_quizzes_v1(
+      ${sqlText(IMPORT_ID)}, ${sqlText(legacy.sha256)}, ${sqlText(active.sha256)},
+      ${sqlJson(activeGraph.quizzes)}, ${sqlJson(activeGraph.questions)},
+      ${sqlJson(activeGraph.answer_options)}, ${sqlJson(evidence)},
+      ${sqlText(forwardConfirmation)}
+    );
+    raise exception 'Forward revision unexpectedly accepted completed quiz activity.';
+  exception when sqlstate '23503' then
+    null;
+  end;
+end;
+$$;
+
+delete from public.user_quiz_attempts
+where quiz_id = ${sqlText(humanizingQuizId)}::uuid and completed_at is not null;
+
+insert into public.user_quiz_attempts (
   user_id, quiz_id, lesson_id, question_order, answer_orders,
   responses, answer_results, grading_snapshot_state
 )
 select profile.id, ${sqlText(humanizingQuizId)}::uuid, ${sqlText(humanizingLessonId)}::uuid,
   '[]'::jsonb, '{}'::jsonb, '{}'::jsonb, '{}'::jsonb, 'native'
 from public.profiles profile order by profile.id limit 1;
+
+do $$
+begin
+  if not exists (
+    select 1 from public.user_quiz_attempts where quiz_id = ${sqlText(humanizingQuizId)}::uuid
+  ) then
+    raise exception 'Rehearsal requires a profile and failed to create the incomplete attempt fixture.';
+  end if;
+end;
+$$;
 
 select public.fn_revise_released_quizzes_v1(
   ${sqlText(IMPORT_ID)}, ${sqlText(legacy.sha256)}, ${sqlText(active.sha256)},
@@ -128,6 +183,55 @@ begin
 end;
 $$;
 
+do $$
+declare
+  retry_result jsonb;
+begin
+  retry_result := public.fn_revise_released_quizzes_v1(
+    ${sqlText(IMPORT_ID)}, ${sqlText(legacy.sha256)}, ${sqlText(active.sha256)},
+    ${sqlJson(activeGraph.quizzes)}, ${sqlJson(activeGraph.questions)},
+    ${sqlJson(activeGraph.answer_options)}, ${sqlJson(evidence)},
+    ${sqlText(forwardConfirmation)}
+  );
+  if retry_result ->> 'status' <> 'already_revised'
+    or (select count(*) from public.content_import_release_revisions where import_id = ${sqlText(IMPORT_ID)}) <> 1
+  then
+    raise exception 'Idempotent revision retry did not return the exact committed revision.';
+  end if;
+end;
+$$;
+
+insert into public.course_import_reviewer_answer_options_v1 (
+  answer_option_id, program_id, import_id, reviewer_user_id, question_id
+)
+select ${sqlText(reviewerAnswerOptionId)}::uuid, ${sqlText(programId)}::uuid,
+  ${sqlText(IMPORT_ID)}, profile.id, ${sqlText(reviewerQuestionId)}::uuid
+from public.profiles profile order by profile.id limit 1;
+
+do $$
+begin
+  if not exists (
+    select 1 from public.course_import_reviewer_answer_options_v1
+    where import_id = ${sqlText(IMPORT_ID)}
+  ) then
+    raise exception 'Rehearsal failed to create reviewer-evidence fixture.';
+  end if;
+  begin
+    perform public.fn_rollback_released_quiz_revision_v1(
+      ${sqlText(IMPORT_ID)}, 2,
+      ${sqlJson({ operation: "rollback", rollback_sha256: evidence.rollback_sha256 })},
+      ${sqlText(rollbackConfirmation)}
+    );
+    raise exception 'Rollback unexpectedly accepted reviewer-authored evidence.';
+  exception when sqlstate '23503' then
+    null;
+  end;
+end;
+$$;
+
+delete from public.course_import_reviewer_answer_options_v1
+where import_id = ${sqlText(IMPORT_ID)};
+
 insert into public.user_quiz_attempts (
   user_id, quiz_id, lesson_id, question_order, answer_orders,
   responses, answer_results, grading_snapshot_state
@@ -135,6 +239,16 @@ insert into public.user_quiz_attempts (
 select profile.id, ${sqlText(humanizingQuizId)}::uuid, ${sqlText(humanizingLessonId)}::uuid,
   '[]'::jsonb, '{}'::jsonb, '{}'::jsonb, '{}'::jsonb, 'native'
 from public.profiles profile order by profile.id limit 1;
+
+do $$
+begin
+  if not exists (
+    select 1 from public.user_quiz_attempts where quiz_id = ${sqlText(humanizingQuizId)}::uuid
+  ) then
+    raise exception 'Rehearsal failed to create the rollback incomplete-attempt fixture.';
+  end if;
+end;
+$$;
 
 select public.fn_rollback_released_quiz_revision_v1(
   ${sqlText(IMPORT_ID)}, 2,
@@ -152,6 +266,30 @@ begin
     or exists (select 1 from public.user_quiz_attempts where quiz_id = ${sqlText(humanizingQuizId)}::uuid)
   then
     raise exception 'Released quiz revision rollback rehearsal did not restore the exact legacy graph.';
+  end if;
+end;
+$$;
+
+do $$
+begin
+  begin
+    perform public.fn_rollback_released_quiz_revision_v1(
+      ${sqlText(IMPORT_ID)}, 3,
+      ${sqlJson({ operation: "rollback", rollback_sha256: evidence.rollback_sha256 })},
+      'ROLLBACK-RELEASED-QUIZZES:' || ${sqlText(IMPORT_ID)} || ':3:'
+        || ${sqlText(legacy.sha256)} || ':' || ${sqlText(active.sha256)} || ':'
+        || ${sqlText(evidence.rollback_sha256)}
+    );
+    raise exception 'Second rollback unexpectedly succeeded.';
+  exception when sqlstate '22023' then
+    null;
+  end;
+  if (select active_revision from public.content_import_active_release_v1 where import_id = ${sqlText(IMPORT_ID)}) <> 3
+    or (select count(*) from public.questions where quiz_id in (
+      select quiz_id from public.lessons where content_import_id = ${sqlText(IMPORT_ID)}
+    )) <> 342
+  then
+    raise exception 'Refused second rollback changed the released graph.';
   end if;
 end;
 $$;

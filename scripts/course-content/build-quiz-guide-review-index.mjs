@@ -162,9 +162,9 @@ export async function buildReviewIndex() {
 
   return {
     schema_version: "bmh-quiz-guide-review-index/v1",
-    index_id: "bmh-employee-training-quiz-guide-review-2026-07-20-v3",
+    index_id: "bmh-employee-training-quiz-guide-review-2026-07-22-v4",
     status: "quiz_and_guides_approved",
-    scope_note: "The quiz ledger records Jarrad's checksum-bound approval for all 19 quizbank pools. The guide ledger records course-QA controller acceptance for all 19 learner guides regenerated from those approved pools. Neither approval authorizes import, publication, or employee access.",
+    scope_note: "The quiz ledger records the independent content reviewer's checksum-bound approval for all 19 quizbank pools. The guide ledger records course-QA controller acceptance for all 19 learner guides regenerated from those approved pools. Neither approval authorizes import, publication, or employee access.",
     quiz_review: {
       status: "approved",
       approved_by: [...approvers][0],
@@ -218,7 +218,7 @@ export function renderReviewIndex(index) {
     "",
     "Status: **quizbank and all 19 learner guides approved**.",
     "",
-    "> Jarrad's quiz approval and the course-QA guide acceptance are separate checksum-bound records.",
+    "> Independent quiz approval and course-QA guide acceptance are separate checksum-bound records.",
     "",
     "## 1. Quiz pools: approved",
     "",

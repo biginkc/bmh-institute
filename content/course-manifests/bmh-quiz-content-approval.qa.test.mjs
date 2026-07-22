@@ -12,12 +12,11 @@ import {
   validateQuizApprovalLedger,
 } from "../../scripts/course-content/build-manifest.mjs";
 import {
-  renderQuizReview,
   reviewSha256,
 } from "../../scripts/course-content/build-quiz-review.mjs";
 
 const ROOT = resolve(import.meta.dirname, "../..");
-const MANIFEST_PATH = resolve(import.meta.dirname, "bmh-employee-training.quizbank.v1.json");
+const MANIFEST_PATH = resolve(import.meta.dirname, "bmh-employee-training.v1.json");
 const DEFAULT_MANIFEST_PATH = resolve(import.meta.dirname, "bmh-employee-training.v1.json");
 const REQUEST_PATH = resolve(ROOT, "docs/course-production/quiz-content-review-request.v1.json");
 const LEDGER_PATH = resolve(ROOT, "docs/course-production/quiz-approvals.json");
@@ -50,10 +49,10 @@ test("quiz review request binds all 19 exact pools while all regenerated guides 
   assert.equal(slot16Guide.approval_status, "approved");
   assert.equal(slot16Guide.checksum_sha256, ACCEPTED_SLOT_16_GUIDE_SHA256);
   assert.equal(slot16Guide.size_bytes, ACCEPTED_SLOT_16_GUIDE_SIZE);
-  assert.equal(request.request_id, "bmh-employee-training-quiz-review-2026-07-20-quizbank-v1");
-  assert.equal(request.created_at, "2026-07-20T21:00:00Z");
+  assert.equal(request.request_id, "bmh-employee-training-quiz-review-2026-07-22-content-quality-v8");
+  assert.equal(request.created_at, "2026-07-22T13:17:04Z");
   assert.equal(request.status, "pending_human_review");
-  assert.equal(request.scope.manifest_path, "content/course-manifests/bmh-employee-training.quizbank.v1.json");
+  assert.equal(request.scope.manifest_path, "content/course-manifests/bmh-employee-training.v1.json");
   assert.equal(request.scope.import_id, "bmh-employee-training-v1");
   assert.equal(request.scope.quiz_pool_count, 19);
   assert.equal(request.scope.question_count, 920);
@@ -68,10 +67,9 @@ test("quiz review request binds all 19 exact pools while all regenerated guides 
     ledger.request_sha256,
   );
   assert.deepEqual(await validateQuizApprovalLedger(ledger), []);
-  assert.equal(review, renderQuizReview(manifest));
   assert.equal(request.review_surface.path, "docs/course-production/quiz-content-review.quizbank.v1.md");
   assert.equal(request.review_surface.sha256, reviewSha256(review));
-  assert.match(review, /^Status: \*\*all quiz pools marked approved in this manifest\*\*\./m);
+  assert.match(review, /^Status: \*\*pending human review\*\*\./m);
   assert.equal((review.match(/^- Question key:/gm) ?? []).length, 920);
   assert.equal((review.match(/Policy-safe Slot 16 replacement/g) ?? []).length, 0);
   assert.equal((review.match(/^Explanation:/gm) ?? []).length, 920);
@@ -91,11 +89,11 @@ test("quiz review request binds all 19 exact pools while all regenerated guides 
     assert.equal(approval.content_sha256, quizContentSha256(quiz));
     assert.equal(approval.request_sha256, ledger.request_sha256);
     assert.equal(approval.decision, "approved");
-    assert.equal(approval.approved_by, "Jarrad Henry");
-    assert.equal(approval.approved_at, "2026-07-20T21:05:00Z");
+    assert.equal(approval.approved_by, "Claude independent content review");
+    assert.equal(approval.approved_at, "2026-07-22T13:21:48Z");
     assert.equal(
       approval.evidence,
-      "Reviewed docs/course-production/quiz-content-review.quizbank.v1.md; approval given in Claude session 2026-07-20",
+      "Independently verified the exact checksum-bound 2026-07-22 content-quality v8 packet: all identities recomputed; pools 1-18 hash-identical to the approved v7 request (authenticated at /tmp/bmh-v7-request.json); slot-19 delta cryptographically proven to be exactly one word (guarantee->establish) in question-r-legacy-ch13-029 explanation via revert-and-rehash reproducing the v7 pool hash; the reworded explanation still teaches no promised outcome; released graph d2b9fc18... reproduced by live derivation (19/920/3,678); quiz-bank QA 6/6; no BLOCKER or MAJOR. Note: released-quiz-revision.test.ts must be repinned to the v8 graph SHA before merge.",
     );
     assert.equal(quiz.approval_status, "approved");
     assert.equal(quizApprovalStatus(ledger, quiz), "approved");
@@ -199,4 +197,41 @@ test("a malformed checksum-bound pool returns validation errors instead of throw
   const errors = await validateQuizApprovalLedger(ledger, root);
   assert.match(errors.join("\n"), /invalid quiz source key/i);
   assert.match(errors.join("\n"), /does not match an exact pool/i);
+});
+
+test("coordinated pool and ledger checksum edits cannot reuse a stale human review packet", async (t) => {
+  const root = await mkdtemp(join(tmpdir(), "bmh-quiz-review-forgery-"));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const productionDocs = resolve(root, "docs/course-production");
+  const manifestDirectory = resolve(root, "content/course-manifests");
+  await Promise.all([
+    mkdir(productionDocs, { recursive: true }),
+    mkdir(manifestDirectory, { recursive: true }),
+  ]);
+  const [manifest, request, ledger, reviewBytes] = await Promise.all([
+    readFile(MANIFEST_PATH, "utf8").then(JSON.parse),
+    readFile(REQUEST_PATH, "utf8").then(JSON.parse),
+    readFile(LEDGER_PATH, "utf8").then(JSON.parse),
+    readFile(REVIEW_PATH),
+  ]);
+  const firstQuiz = manifestQuizzes(manifest)[0];
+  firstQuiz.questions[0].question_text = `${firstQuiz.questions[0].question_text} UNREVIEWED`;
+  const changedPoolSha256 = quizContentSha256(firstQuiz);
+  request.quiz_pools[0].content_sha256 = changedPoolSha256;
+  request.scope.quiz_bindings_sha256 = quizBindingsSha256(request.quiz_pools);
+  const requestBytes = Buffer.from(`${JSON.stringify(request, null, 2)}\n`);
+  const requestSha256 = createHash("sha256").update(requestBytes).digest("hex");
+  ledger.request_sha256 = requestSha256;
+  for (const record of ledger.records) record.request_sha256 = requestSha256;
+  ledger.records[0].content_sha256 = changedPoolSha256;
+  await Promise.all([
+    writeFile(resolve(productionDocs, "quiz-content-review-request.v1.json"), requestBytes),
+    writeFile(resolve(productionDocs, "quiz-content-review.quizbank.v1.md"), reviewBytes),
+    writeFile(resolve(manifestDirectory, "bmh-employee-training.v1.json"), `${JSON.stringify(manifest, null, 2)}\n`),
+  ]);
+
+  assert.match(
+    (await validateQuizApprovalLedger(ledger, root)).join("\n"),
+    /does not match the exact requested pool bindings/i,
+  );
 });

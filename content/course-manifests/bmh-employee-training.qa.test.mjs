@@ -357,7 +357,7 @@ test("the checksum-approved KPI assessment is exhaustive and remains validator-b
   assert.ok(kpiQuiz);
   assert.equal(kpiQuiz.questions.length, 38);
   assert.equal(kpiQuiz.questions_per_attempt, null);
-  assert.match(JSON.stringify(kpiQuiz.questions), STALE_FIXED_KPI_PATTERN);
+  assert.doesNotMatch(JSON.stringify(kpiQuiz.questions), STALE_FIXED_KPI_PATTERN);
   assert.ok(kpiQuiz.questions.some((question) =>
     question.question_text === "In what direction are the six metrics tracked through the pipeline?"
   ));

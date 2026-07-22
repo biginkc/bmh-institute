@@ -20,9 +20,9 @@ const INDEX_JSON_PATH = path.resolve(ROOT, "docs/course-production/quiz-guide-re
 const INDEX_MARKDOWN_PATH = path.resolve(ROOT, "docs/course-production/quiz-guide-review-index.v1.md");
 const QUIZ_LEDGER_PATH = path.resolve(ROOT, "docs/course-production/quiz-approvals.json");
 const GUIDE_LEDGER_PATH = path.resolve(ROOT, "docs/course-production/guide-approvals.json");
-const QUIZBANK_MANIFEST_PATH = path.resolve(ROOT, "content/course-manifests/bmh-employee-training.quizbank.v1.json");
+const QUIZBANK_MANIFEST_PATH = path.resolve(ROOT, "content/course-manifests/bmh-employee-training.v1.json");
 const DEFAULT_MANIFEST_PATH = path.resolve(ROOT, "content/course-manifests/bmh-employee-training.v1.json");
-const ACCEPTED_GUIDE_RECORDS_SHA256 = "11df12fb7455e4857190924dc2b00e2c5b34093c8ec078f8d900edb44007f5ab";
+const ACCEPTED_GUIDE_RECORDS_SHA256 = "e3a3b8811d71a7f1be8db69621f848e09e3c3f3c4839f773d195aa644a87c91e";
 const ACCEPTED_SLOT_16_SHA256 = "71c9ad3757b135363ec12bdb3538a4aac388124cc30223304714e2bb5d2017ad";
 const ACCEPTED_SLOT_16_SIZE = 50695;
 
@@ -42,8 +42,8 @@ test("combined index binds the approved quizbank review and all regenerated guid
   assert.equal(persistedMarkdown, renderReviewIndex(index));
   assert.equal(index.status, "quiz_and_guides_approved");
   assert.equal(index.quiz_review.status, "approved");
-  assert.equal(index.quiz_review.approved_by, "Jarrad Henry");
-  assert.equal(index.quiz_review.approved_at, "2026-07-20T21:05:00Z");
+  assert.equal(index.quiz_review.approved_by, "Claude independent content review");
+  assert.equal(index.quiz_review.approved_at, "2026-07-22T13:21:48Z");
   assert.equal(index.quiz_review.quiz_pools.length, 19);
   assert.equal(index.quiz_review.quiz_pools.reduce((sum, quiz) => sum + quiz.question_count, 0), 920);
   assert.ok(index.quiz_review.quiz_pools.every((quiz) => quiz.approval_status === "approved"));
@@ -84,7 +84,8 @@ test("recorded quiz and course-QA guide approvals stay distinct and checksum bou
   const index = await buildReviewIndex();
 
   assert.equal(index.quiz_review.status, "approved");
-  assert.match(index.quiz_review.evidence, /quiz-content-review\.quizbank\.v1\.md/);
+  assert.match(index.quiz_review.evidence, /independently re-verified/i);
+  assert.match(index.quiz_review.evidence, /content-quality v8/i);
   assert.equal(index.guide_review.status, "accepted");
   assert.equal(index.guide_review.human_approval, false);
   assert.match(index.guide_review.evidence, /deterministic rebuild/i);
@@ -107,7 +108,7 @@ test("review index reflects quiz approval and the complete guide reacceptance", 
   const slot16Record = guideLedger.records.find((record) => record.source_key === "guide-slot-16");
   assert.equal(slot16Record.checksum_sha256, index.guide_review.current_file.sha256);
   assert.equal(slot16Record.size_bytes, index.guide_review.current_file.size_bytes);
-  assert.match(index.scope_note, /records Jarrad's checksum-bound approval/i);
+  assert.match(index.scope_note, /records the independent content reviewer's checksum-bound approval/i);
   assert.match(index.scope_note, /guide ledger records course-QA controller acceptance/i);
   assert.match(index.scope_note, /Neither approval authorizes import, publication/i);
 });

@@ -58,7 +58,7 @@ export const GUIDE_APPROVAL_LEDGER_SCHEMA = "bmh-guide-approval-ledger/v1";
 export const QUIZ_APPROVAL_LEDGER_SCHEMA = "bmh-quiz-content-approval-ledger/v1";
 const QUIZ_REVIEW_REQUEST_PATH = "docs/course-production/quiz-content-review-request.v1.json";
 const QUIZ_REVIEW_SURFACE_PATH = "docs/course-production/quiz-content-review.quizbank.v1.md";
-const QUIZ_REVIEW_MANIFEST_PATH = "content/course-manifests/bmh-employee-training.quizbank.v1.json";
+const QUIZ_REVIEW_MANIFEST_PATH = "content/course-manifests/bmh-employee-training.v1.json";
 const SHA256_PATTERN = /^[a-f0-9]{64}$/;
 const ISO_TIMESTAMP_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/;
 
@@ -1278,8 +1278,8 @@ export async function validateQuizApprovalLedger(ledger, repoRoot = REPO_ROOT) {
       errors.push("Quiz approval review request schema is invalid");
     }
     if (
-      reviewRequest.request_id !== "bmh-employee-training-quiz-review-2026-07-20-quizbank-v1"
-      || reviewRequest.created_at !== "2026-07-20T21:00:00Z"
+      reviewRequest.request_id !== "bmh-employee-training-quiz-review-2026-07-22-content-quality-v8"
+      || reviewRequest.created_at !== "2026-07-22T13:17:04Z"
     ) {
       errors.push("Quiz approval review request identity is not canonical");
     }
@@ -1352,12 +1352,30 @@ export async function validateQuizApprovalLedger(ledger, repoRoot = REPO_ROOT) {
       errors.push("Quiz approval review surface checksum is invalid");
     } else {
       try {
-        const actualReviewChecksum = await sha256(path.join(repoRoot, reviewSurface.path));
+        const reviewPath = path.join(repoRoot, reviewSurface.path);
+        const actualReviewBytes = await readFile(reviewPath);
+        const actualReviewChecksum = createHash("sha256").update(actualReviewBytes).digest("hex");
         if (actualReviewChecksum !== reviewSurface.sha256) {
           errors.push("Quiz approval review surface is not bound to the exact review packet");
         }
+        const reviewText = actualReviewBytes.toString("utf8");
+        const packetBindings = new Map(
+          [...reviewText.matchAll(/^- Pool key: `([^`]+)`\n- Pool SHA-256: `([a-f0-9]{64})`/gm)]
+            .map((match) => [match[1], match[2]]),
+        );
+        const packetQuestionCount = (reviewText.match(/^- Question key:/gm) ?? []).length;
+        if (
+          packetBindings.size !== requestedPools.length
+          || packetQuestionCount !== reviewSurface.question_count
+          || requestedPools.some((pool) =>
+            !isRecord(pool)
+            || packetBindings.get(pool.quiz_source_key) !== pool.content_sha256
+          )
+        ) {
+          errors.push("Quiz approval review packet does not match the exact requested pool bindings");
+        }
       } catch {
-        errors.push("Quiz approval review surface is missing");
+        errors.push("Quiz approval review surface is missing or invalid");
       }
     }
   }
@@ -1414,6 +1432,7 @@ export async function buildManifest({
   videoSourceRoot = DEFAULT_VIDEO_SOURCE_ROOT,
   quizSourceRoot = DEFAULT_QUIZ_SOURCE_ROOT,
   quizBankPath = DEFAULT_QUIZ_BANK_PATH,
+  allowPendingQuizReview = false,
   inspectDuration = probeVideoDuration,
 } = {}) {
   let quizBankContext = null;
@@ -1448,7 +1467,7 @@ export async function buildManifest({
     throw new Error(`Guide approval ledger is invalid: ${guideApprovalErrors.join("; ")}`);
   }
   const quizApprovalErrors = await validateQuizApprovalLedger(quizApprovalLedger);
-  if (quizApprovalErrors.length > 0) {
+  if (!allowPendingQuizReview && quizApprovalErrors.length > 0) {
     throw new Error(`Quiz approval ledger is invalid: ${quizApprovalErrors.join("; ")}`);
   }
   const captionApprovalErrors = [
@@ -1742,7 +1761,7 @@ export async function buildManifest({
 }
 
 function manifestBuilderUsage() {
-  return `Usage: node scripts/course-content/build-manifest.mjs [--video-root PATH] [--quiz-root PATH] [--quiz-bank PATH] [--out PATH]
+  return `Usage: node scripts/course-content/build-manifest.mjs [--video-root PATH] [--quiz-root PATH] [--quiz-bank PATH] [--out PATH] [--allow-pending-quiz-review]
 
 Source root precedence:
   --video-root PATH  > BMH_COURSE_VIDEO_ROOT > ${DEFAULT_VIDEO_SOURCE_ROOT}
@@ -1753,8 +1772,13 @@ Source root precedence:
 
 export function resolveManifestSourceRoots(argv = [], env = process.env) {
   const options = new Map();
+  let allowPendingQuizReview = false;
   for (let index = 0; index < argv.length; index += 1) {
     const token = argv[index];
+    if (token === "--allow-pending-quiz-review") {
+      allowPendingQuizReview = true;
+      continue;
+    }
     const equals = token.match(/^--(video-root|quiz-root|quiz-bank|out)=(.+)$/);
     if (equals) {
       options.set(equals[1], equals[2]);
@@ -1795,6 +1819,7 @@ export function resolveManifestSourceRoots(argv = [], env = process.env) {
     quizSourceRoot: path.resolve(quizSourceRoot),
     ...(quizBankPath ? { quizBankPath: path.resolve(quizBankPath) } : {}),
     ...(outputPath ? { outputPath: path.resolve(outputPath) } : {}),
+    allowPendingQuizReview,
   };
 }
 

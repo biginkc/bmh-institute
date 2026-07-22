@@ -98,6 +98,8 @@ declare
   v_release public.content_import_release_records%rowtype;
   v_active_revision integer;
   v_active_manifest_sha256 text;
+  v_active_catalog_sha256 text;
+  v_active_evidence jsonb;
   v_prior_catalog_sha256 text;
   v_catalog_sha256 text;
   v_payload_sha256 text;
@@ -122,10 +124,6 @@ begin
     raise exception 'Released quiz revision refused: invalid identity or manifest checksum.'
       using errcode = '22023';
   end if;
-  if p_manifest_sha256 = p_expected_prior_manifest_sha256 then
-    raise exception 'Released quiz revision refused: manifest checksum did not change.'
-      using errcode = '22023';
-  end if;
   if p_confirmation is distinct from
     'REVISE-RELEASED-QUIZZES:' || p_import_id || ':'
       || p_expected_prior_manifest_sha256 || ':' || p_manifest_sha256 || ':19:920'
@@ -145,16 +143,17 @@ begin
       using errcode = '22023';
   end if;
   if jsonb_typeof(p_evidence) is distinct from 'object'
+    or p_evidence ->> 'operation' <> 'release'
     or not (p_evidence ?& array[
       'question_bank_sha256', 'approval_request_sha256',
-      'approval_ledger_sha256', 'rollback_sha256'
+      'approval_ledger_sha256', 'rollback_sha256', 'client_graph_sha256'
     ])
     or exists (
       select 1
       from jsonb_each_text(p_evidence) item
       where item.key = any(array[
         'question_bank_sha256', 'approval_request_sha256',
-        'approval_ledger_sha256', 'rollback_sha256'
+        'approval_ledger_sha256', 'rollback_sha256', 'client_graph_sha256'
       ]) and item.value !~ '^[a-f0-9]{64}$'
     )
   then
@@ -221,20 +220,40 @@ begin
     raise exception 'Released quiz revision refused: exact published release was not found.'
       using errcode = '42501';
   end if;
+  if p_import_id <> 'bmh-employee-training-v1'
+    or v_release.manifest_sha256 <> '71f85173bc857d1b3b042fba0a50fdd420b6410ef84b104a751c3ed5982eba5c'
+  then
+    raise exception 'Released quiz revision refused: operation is not bound to the immutable BMH release receipt.'
+      using errcode = '42501';
+  end if;
 
   select coalesce(max(revision), 1) into v_active_revision
   from public.content_import_release_revisions
   where import_id = p_import_id;
   if v_active_revision = 1 then
     v_active_manifest_sha256 := v_release.manifest_sha256;
+    v_active_catalog_sha256 := v_release.catalog_sha256;
+    v_active_evidence := '{}'::jsonb;
   else
-    select manifest_sha256 into strict v_active_manifest_sha256
+    select manifest_sha256, catalog_sha256, evidence
+      into strict v_active_manifest_sha256, v_active_catalog_sha256, v_active_evidence
     from public.content_import_release_revisions
     where import_id = p_import_id and revision = v_active_revision;
   end if;
 
   if v_active_manifest_sha256 = p_manifest_sha256 then
     v_catalog_sha256 := public.fn_course_import_catalog_sha256(p_import_id);
+    if p_expected_prior_manifest_sha256 = p_manifest_sha256
+      or v_catalog_sha256 <> v_active_catalog_sha256
+      or v_active_evidence ->> 'question_bank_sha256' is distinct from p_evidence ->> 'question_bank_sha256'
+      or v_active_evidence ->> 'approval_request_sha256' is distinct from p_evidence ->> 'approval_request_sha256'
+      or v_active_evidence ->> 'approval_ledger_sha256' is distinct from p_evidence ->> 'approval_ledger_sha256'
+      or v_active_evidence ->> 'rollback_sha256' is distinct from p_evidence ->> 'rollback_sha256'
+      or v_active_evidence ->> 'client_graph_sha256' is distinct from p_evidence ->> 'client_graph_sha256'
+    then
+      raise exception 'Released quiz revision retry refused: committed identity or live catalog checksum mismatch.'
+        using errcode = '40001';
+    end if;
     return jsonb_build_object(
       'status', 'already_revised',
       'import_id', p_import_id,
@@ -388,19 +407,22 @@ begin
       using errcode = '23503';
   end if;
 
-  -- Completed attempts remain in place. Require a recognized immutable grading
-  -- state before removing any catalog rows they may have referenced.
+  -- This no-user release is only reversible while no completed quiz activity
+  -- exists. Refuse the forward mutation instead of promising an unsafe rollback.
   if exists (
     select 1 from public.user_quiz_attempts attempt
     where attempt.quiz_id = any(v_quiz_ids)
       and attempt.completed_at is not null
-      and attempt.grading_snapshot_state not in ('native', 'legacy_backfilled', 'legacy_summary_only')
   ) then
-    raise exception 'Released quiz revision refused: completed attempt lacks a reviewable grading snapshot.'
+    raise exception 'Released quiz revision refused: completed quiz activity exists.'
       using errcode = '23503';
   end if;
 
   v_prior_catalog_sha256 := public.fn_course_import_catalog_sha256(p_import_id);
+  if v_active_revision > 1 and v_prior_catalog_sha256 <> v_active_catalog_sha256 then
+    raise exception 'Released quiz revision refused: live catalog changed after the active release receipt.'
+      using errcode = '40001';
+  end if;
   select jsonb_build_object(
     'quizzes', coalesce((
       select jsonb_agg(jsonb_build_object(
@@ -436,6 +458,27 @@ begin
       where question.quiz_id = any(v_quiz_ids)
     ), '[]'::jsonb)
   ) into v_prior_graph;
+
+  if v_active_manifest_sha256 = '71f85173bc857d1b3b042fba0a50fdd420b6410ef84b104a751c3ed5982eba5c'
+    and (
+      jsonb_array_length(v_prior_graph -> 'quizzes') <> 19
+      or jsonb_array_length(v_prior_graph -> 'questions') <> 342
+      or jsonb_array_length(v_prior_graph -> 'answer_options') <> 1292
+      or exists (
+        select 1
+        from jsonb_to_recordset(v_prior_graph -> 'quizzes') as row(
+          id uuid, title text, description text, passing_score integer,
+          randomize_questions boolean, randomize_answers boolean,
+          questions_per_attempt integer, max_attempts integer,
+          retake_cooldown_hours integer, show_correct_answers_after text
+        )
+        where row.questions_per_attempt is distinct from 10
+      )
+    )
+  then
+    raise exception 'Released quiz revision refused: live legacy graph no longer matches the archived 19/342/1292 capped release.'
+      using errcode = '40001';
+  end if;
 
   select coalesce(jsonb_agg(to_jsonb(attempt) order by attempt.id), '[]'::jsonb)
     into v_invalidated_attempts
@@ -576,7 +619,7 @@ grant execute on function public.fn_revise_released_quizzes_v1(
 
 comment on function public.fn_revise_released_quizzes_v1(
   text, text, text, jsonb, jsonb, jsonb, jsonb, text
-) is 'Atomically revisions the exact exhaustive quiz graph while retaining the immutable original release receipt and completed attempt history.';
+) is 'Atomically revisions the exact exhaustive quiz graph while retaining the immutable original release receipt and refusing any completed quiz activity.';
 
 create or replace function public.fn_rollback_released_quiz_revision_v1(
   p_import_id text,
@@ -638,9 +681,18 @@ begin
     raise exception 'Released quiz revision rollback refused: active revision changed after preflight.'
       using errcode = '40001';
   end if;
+  if p_import_id <> 'bmh-employee-training-v1'
+    or v_latest.question_count <> 920
+    or v_latest.prior_manifest_sha256 <> '71f85173bc857d1b3b042fba0a50fdd420b6410ef84b104a751c3ed5982eba5c'
+    or p_evidence ->> 'rollback_sha256' is distinct from v_latest.evidence ->> 'rollback_sha256'
+  then
+    raise exception 'Released quiz revision rollback refused: revision or rollback artifact is not the exact forward BMH release.'
+      using errcode = '22023';
+  end if;
   if p_confirmation is distinct from
     'ROLLBACK-RELEASED-QUIZZES:' || p_import_id || ':' || p_expected_revision::text || ':'
-      || v_latest.manifest_sha256 || ':' || v_latest.prior_manifest_sha256
+      || v_latest.manifest_sha256 || ':' || v_latest.prior_manifest_sha256 || ':'
+      || (p_evidence ->> 'rollback_sha256')
   then
     raise exception 'Released quiz revision rollback refused: confirmation mismatch.'
       using errcode = '22023';
@@ -658,7 +710,7 @@ begin
   if jsonb_typeof(v_quizzes) is distinct from 'array'
     or jsonb_array_length(v_quizzes) <> 19
     or jsonb_typeof(v_questions) is distinct from 'array'
-    or jsonb_array_length(v_questions) < 1
+    or jsonb_array_length(v_questions) <> 342
     or jsonb_typeof(v_answer_options) is distinct from 'array'
     or jsonb_array_length(v_answer_options) < 2
   then
@@ -702,6 +754,14 @@ begin
       join public.courses course on course.id = module.course_id
       where coalesce(lesson.content_import_id, course.content_import_id) = p_import_id
         and lesson.quiz_id is not null) <> v_quiz_ids
+    or exists (
+      select 1 from jsonb_to_recordset(v_quizzes) as row(
+        id uuid, title text, description text, passing_score integer,
+        randomize_questions boolean, randomize_answers boolean,
+        questions_per_attempt integer, max_attempts integer,
+        retake_cooldown_hours integer, show_correct_answers_after text
+      ) where row.questions_per_attempt is distinct from 10
+    )
   then
     raise exception 'Released quiz revision rollback refused: archived prior graph identity mismatch.';
   end if;
@@ -837,6 +897,10 @@ begin
   end if;
 
   v_catalog_sha256 := public.fn_course_import_catalog_sha256(p_import_id);
+  if v_catalog_sha256 <> v_latest.prior_catalog_sha256 then
+    raise exception 'Released quiz revision rollback failed to restore the exact prior catalog checksum.'
+      using errcode = '40001';
+  end if;
   v_payload_sha256 := encode(
     extensions.digest(
       convert_to(jsonb_build_object(

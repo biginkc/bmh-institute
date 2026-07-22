@@ -115,6 +115,7 @@ test("manifest source roots are portable with CLI precedence over environment de
     videoSourceRoot: path.resolve("/fixture/environment/videos"),
     quizSourceRoot: path.resolve("/fixture/environment/quizzes"),
     quizBankPath: path.join(repoRoot, "content/quiz-generation/question-bank.v1.json"),
+    allowPendingQuizReview: false,
   });
 
   const fromCli = resolveManifestSourceRoots(
@@ -133,7 +134,12 @@ test("manifest source roots are portable with CLI precedence over environment de
     videoSourceRoot: path.resolve("/fixture/cli/videos"),
     quizSourceRoot: path.resolve("/fixture/cli/quizzes"),
     quizBankPath: path.resolve("content/quiz-generation/question-bank.v1.json"),
+    allowPendingQuizReview: false,
   });
+  assert.equal(
+    resolveManifestSourceRoots(["--allow-pending-quiz-review"], {}).allowPendingQuizReview,
+    true,
+  );
   assert.throws(
     () => resolveManifestSourceRoots(["--video-root"], {}),
     /Unknown or incomplete manifest-builder argument/,

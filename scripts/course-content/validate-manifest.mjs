@@ -19,9 +19,9 @@ import { projectQuizBankQuestion, quizBankSha256, validateQuizBank } from "./qui
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 
-const STALE_COMPENSATION_PATTERN = /\$\s*\d|hourly base|appointment bonus|commission tier|tiered commission/i;
+const STALE_COMPENSATION_PATTERN = /\$\s*\d|uncapped commissions?|commissions? are uncapped|(?:hourly base|appointment bonus|commission tier|tiered commission)[^.]{0,120}(?:\$\s*\d|\b\d+(?:\.\d+)?\b)|hourly base (?:rate )?(?:is|of|provided)/i;
 export const STALE_FIXED_KPI_PATTERN = /\b(?:dials?\s+\d+|\d+\s+dials?|connection rate[^.]{0,80}\d+\s*%|\d+\s*(?:-|to)\s*\d+\s*people|benchmark ratio|target benchmark|offer-to-contract conversion rate[^.]{0,40}\d+\s*%|one out of every \d+ offers)\b/i;
-const STALE_CAREER_GROWTH_PATTERN = /\b(?:role ladder|career ladder|promotion|promoted|readiness|first consideration|management path|closer path|acquisitions? role|90(?:-plus)? days?|six months?|one year|commission|compensation|salary|pay increase|earning potential|higher earnings?|daily (?:numbers?|targets?|quotas?)|dial quotas?|hit(?:ting)? (?:their )?numbers every day|guarante(?:e|ed|es)|own(?:s|ing)? (?:the )?(?:entire )?team(?:'s)? performance)\b/i;
+const STALE_CAREER_GROWTH_PATTERN = /\b(?:role ladder|career ladder|first consideration|management path|closer path|acquisitions? role|90(?:-plus)? days?|six months?|one year|salary|pay increase|daily (?:numbers?|targets?|quotas?)|dial quotas?|hit(?:ting)? (?:their )?numbers every day|guarante(?:e|ed|es)|own(?:s|ing)? (?:the )?(?:entire )?team(?:'s)? performance)\b/i;
 export const STALE_ROLE_BOUND_COURSE_PATTERN = /\b(?:navigators?|virtual onboarding specialists?|lead sourcing specialists?|lead sourcing seats?|lead generators?|SDRs?)\b/i;
 const CAREER_GROWTH_GROUNDING = new Map([
   ["practice", /\b(?:practic(?:e|ing)|repetition|development loop)\b/i],
@@ -112,7 +112,7 @@ export function validateCareerGrowthAssessment(
   for (const question of quiz.questions) {
     questionTypes.add(question.question_type);
     const serialized = JSON.stringify(question);
-    if (!bankDriven && STALE_CAREER_GROWTH_PATTERN.test(serialized)) {
+    if (STALE_CAREER_GROWTH_PATTERN.test(serialized)) {
       issues.push(`${question.source_key} contains a stale role-ladder or outcome promise`);
     }
 
@@ -671,25 +671,23 @@ export function validateManifest(
   if (staleRole) {
     errors.push(`Stale named-role wording detected in learner-authored course content: ${staleRole}`);
   }
-  if (!bankPolicyMode) {
-    const compensationAndCareer = lessons
-      .filter((lesson) => /slot-(?:17|19)$/.test(lesson.source_key))
-      .map((lesson) => JSON.stringify(lesson))
-      .join(" ");
-    if (STALE_COMPENSATION_PATTERN.test(compensationAndCareer)) errors.push("Stale compensation promise detected");
-    if (/What is the specific daily target range for dial count/i.test(serialized)) {
-      errors.push("Removed KPI daily-scoreboard question is present");
-    }
-    const kpiLesson = lessons.find((lesson) => lesson.source_key === "lesson-quiz-slot-16");
-    const kpiQuestions = JSON.stringify(kpiLesson?.quiz?.questions ?? []);
-    if (/target percentage|drops below what percentage|daily target range/i.test(kpiQuestions) || STALE_FIXED_KPI_PATTERN.test(kpiQuestions)) {
-      errors.push("Removed KPI numeric target content is present");
-    }
-    const missionControlLesson = lessons.find((lesson) => lesson.source_key === "lesson-quiz-slot-18");
-    const missionControlQuestions = JSON.stringify(missionControlLesson?.quiz?.questions ?? []);
-    if (/how many dials should you aim|110 to 150 dials|150 to 200 total dials/i.test(missionControlQuestions)) {
-      errors.push("Fixed daily dial targets are present in Mission Control assessment content");
-    }
+  const compensationAndCareer = lessons
+    .filter((lesson) => /slot-(?:17|19)$/.test(lesson.source_key))
+    .map((lesson) => JSON.stringify(lesson))
+    .join(" ");
+  if (STALE_COMPENSATION_PATTERN.test(compensationAndCareer)) errors.push("Stale compensation promise detected");
+  if (/What is the specific daily target range for dial count/i.test(serialized)) {
+    errors.push("Removed KPI daily-scoreboard question is present");
+  }
+  const kpiLesson = lessons.find((lesson) => lesson.source_key === "lesson-quiz-slot-16");
+  const kpiQuestions = JSON.stringify(kpiLesson?.quiz?.questions ?? []);
+  if (/target percentage|drops below what percentage|daily target range/i.test(kpiQuestions) || STALE_FIXED_KPI_PATTERN.test(kpiQuestions)) {
+    errors.push("Removed KPI numeric target content is present");
+  }
+  const missionControlLesson = lessons.find((lesson) => lesson.source_key === "lesson-quiz-slot-18");
+  const missionControlQuestions = JSON.stringify(missionControlLesson?.quiz?.questions ?? []);
+  if (/how many dials should you aim|110 to 150 dials|150 to 200 total dials|150-200 dials/i.test(missionControlQuestions)) {
+    errors.push("Fixed daily dial targets are present in Mission Control assessment content");
   }
   const careerGrowthLesson = lessons.find((lesson) => lesson.source_key === "lesson-quiz-slot-19");
   const careerGrowthBankSlot = bankSlots.get(19);

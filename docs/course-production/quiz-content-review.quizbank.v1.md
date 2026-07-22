@@ -1,6 +1,6 @@
 # BMH employee training quiz content review
 
-Status: **all quiz pools marked approved in this manifest**. This packet is review evidence, not independent approval.
+Status: **pending human review**. This packet is review evidence, not approval.
 
 Manifest import: `bmh-employee-training-v1`
 Quiz pools: 19
@@ -11,7 +11,7 @@ Correct options are marked `[correct]`. Questions are sourced from the checksum-
 ## 1. Welcome and Mindset Checkpoint
 
 - Pool key: `quiz-slot-01`
-- Pool SHA-256: `e2cbefd1df13d7c57d69e2daf3b8e0fe2569a8f0f99a059e0f3b70bcb247519e`
+- Pool SHA-256: `2a348c0c271f734531894d060dfe801f2dc1a6f435595a02b7303015fc3fde29`
 - Approval status: `approved`
 
 ### 1. How does the BMH Group define its mission beyond just performing a job?
@@ -206,17 +206,17 @@ Explanation: They are scared because the path forward is blurry or unclear.
 
 Explanation: By helping them visualize the end result, such as where they will live and how much cash they will have.
 
-### 17. What does the principle 'Detach from Outcomes and Attach to Actions' require a rep to focus on?
+### 17. What does the principle 'Detach from Outcomes and Attach to Actions' require a representative to focus on?
 
 - Question key: `question-r-slot-module-01-017`
 - Type: `single_choice`
 
-- [ ] Controlling the seller's final answer instead of the rep's own conduct.
-- [ ] Focusing all effort on securing a close during the first conversation.
-- [correct] Controlling their own reps, tone, and follow-up cadence rather than the seller's final decision.
-- [ ] Perfecting every script line so the seller cannot raise an objection.
+- [ ] Securing a commitment before the first conversation ends.
+- [ ] Controlling the seller's final answer through a perfect script.
+- [correct] Their own preparation, tone, questions, and follow-up cadence rather than trying to control the seller's final decision.
+- [ ] Preventing the seller from raising concerns or objections.
 
-Explanation: Controlling their own reps, tone, and follow-up cadence rather than the seller's final decision.
+Explanation: Their own preparation, tone, questions, and follow-up cadence rather than trying to control the seller's final decision.
 
 ### 18. Why is consistency in follow-up prioritized over 'closing' on the first call?
 
@@ -410,17 +410,17 @@ Explanation: They are real people carrying real burdens, not just names.
 
 Explanation: It prevents the seller from having the room they need to tell the rep the real reason for selling.
 
-### 34. In the context of Principle 4, what is the consequence of 'sounding needy' on a call?
+### 34. Why can sounding needy damage a seller conversation?
 
 - Question key: `question-r-slot-module-01-034`
 - Type: `single_choice`
 
-- [ ] It makes sellers expect an immediate full-price offer without an evaluation.
-- [ ] It causes sellers to question whether the rep understands the property's physical condition.
-- [correct] It typically happens when a rep is too attached to the outcome and drives sellers away.
-- [ ] It leads sellers to believe the rep will never follow up after the call.
+- [ ] It proves the representative has researched too many property details.
+- [ ] It guarantees the seller will ask for a full-price offer.
+- [correct] It signals attachment to the outcome, creates pressure, and can drive the seller away.
+- [ ] It prevents the representative from scheduling any future follow-up.
 
-Explanation: It typically happens when a rep is too attached to the outcome and drives sellers away.
+Explanation: It signals attachment to the outcome, creates pressure, and can drive the seller away.
 
 ### 35. What is the distinction between 'selling' and 'consulting' at the BMH Group?
 
@@ -1745,7 +1745,7 @@ Explanation: Sandra
 ## 4. Humanizing the Lead Checkpoint
 
 - Pool key: `quiz-slot-04`
-- Pool SHA-256: `e309cbc93304e58a2733436a19807e16660997bb1f6a49e14a24689d0c599313`
+- Pool SHA-256: `298f8dc436d303e028fe9d2ac8a9b2319044308d22b06b0852b2707dca4dae83`
 - Approval status: `approved`
 
 ### 1. How should leads in a CRM be viewed beyond being simple numbers?
@@ -2540,17 +2540,17 @@ Explanation: It provides the foundation for the seller to feel understood and he
 
 Explanation: These sellers are already dealing with high complexity and stress.
 
-### 67. True motivation involves both a _____ and a _____.
+### 67. A seller gives a strong reason for considering a sale but cannot say when a change is needed. What part of true motivation is still missing?
 
 - Question key: `question-r-legacy-ch02-078`
 - Type: `single_choice`
 
-- [ ] Trust; empathy
-- [correct] Reason; timeline
-- [ ] Debt; interest
-- [ ] Price; condition
+- [ ] A promise to accept the first offer presented.
+- [correct] A timeline connected to the seller's reason.
+- [ ] A list of every investor who has contacted the seller.
+- [ ] A repair estimate prepared by the representative.
 
-Explanation: Reason; timeline
+Explanation: A timeline connected to the seller's reason.
 
 ### 68. What is the primary focus of the 'Human Element' in real estate acquisitions?
 
@@ -2591,7 +2591,7 @@ Explanation: To treat every lead like a human being rather than just another tra
 ## 5. The BMH Offer Playbook Checkpoint
 
 - Pool key: `quiz-slot-05`
-- Pool SHA-256: `f10154a2cadbb999a007d8901d0c4b44b67058a39ea864679db81ed738d63b98`
+- Pool SHA-256: `f24ac22e4ba450743612b901cc0f618394570a271a3ec2522aa0f879b16af71d`
 - Approval status: `approved`
 
 ### 1. What is the primary way BMH Group explains their offer to homeowners in 'plain English'?
@@ -2678,17 +2678,17 @@ Explanation: Hoarding situations.
 
 Explanation: 5 to 6 percent.
 
-### 8. In a traditional sale of a $\$200,000$ house, approximately how much money is lost to commissions?
+### 8. In a traditional sale of a $200,000 house, approximately how much money is lost to commissions?
 
 - Question key: `question-r-legacy-ch03-008`
 - Type: `single_choice`
 
-- [ ] $\$100,000$ to $\$110,000$.
-- [correct] $\$10,000$ to $\$12,000$.
-- [ ] $\$50,000$ to $\$60,000$.
-- [ ] $\$5,000$ to $\$6,000$.
+- [ ] 100,000 to 110,000.
+- [correct] 10,000 to 12,000.
+- [ ] 50,000 to 60,000.
+- [ ] 5,000 to 6,000.
 
-Explanation: $\$10,000$ to $\$12,000$.
+Explanation: 10,000 to 12,000.
 
 ### 9. How does the 'number' offered by BMH Group compare to the final amount the seller receives?
 
@@ -2870,19 +2870,19 @@ Explanation: Definition: What the property would sell for on the open market if 
 
 Explanation: Repair costs, profit margin, and carrying costs.
 
-### 24. In the guide's math example, if a house has an ARV of $\$200,000$ and needs $\$50,000$ in repairs, what is a likely offer range?
+### 24. In the guide's math example, if a house has an ARV of 200,000 and needs 50,000 in repairs, what is a likely offer range?
 
 - Question key: `question-r-legacy-ch03-026`
 - Type: `single_choice`
 
-- [ ] $\$150,000$ to $\$160,000$.
-- [ ] $\$50,000$ to $\$60,000$.
-- [correct] $\$100,000$ to $\$110,000$.
-- [ ] $\$190,000$ to $\$200,000$.
+- [ ] 150,000 to 160,000.
+- [ ] 50,000 to 60,000.
+- [correct] 100,000 to 110,000.
+- [ ] 190,000 to 200,000.
 
-Explanation: $\$100,000$ to $\$110,000$.
+Explanation: 100,000 to 110,000.
 
-### 25. Why is a $\$200,000$ retail price unrealistic for a seller with a distressed property?
+### 25. Why is a $200,000 retail price unrealistic for a seller with a distressed property?
 
 - Question key: `question-r-legacy-ch03-027`
 - Type: `single_choice`
@@ -3074,17 +3074,17 @@ Explanation: Calmly and clearly.
 
 Explanation: Speed.
 
-### 41. Why is the lack of open houses and staging considered a major 'convenience' factor?
+### 41. Why can avoiding open houses and staging make the selling experience simpler?
 
 - Question key: `question-r-legacy-ch03-045`
 - Type: `single_choice`
 
-- [ ] It fixes the final walk-away amount by removing agent commissions.
-- [correct] It reduces the stress and physical work required from the seller.
-- [ ] It lets the seller select a closing timeline that fits their needs.
-- [ ] It removes the 45-day bank underwriting wait before a buyer can close.
+- [ ] It removes the need to understand the seller's preferred closing timing.
+- [correct] It reduces the preparation, disruption, and physical work required from the seller.
+- [ ] It allows repairs to be completed without the seller's knowledge.
+- [ ] It guarantees that the cash offer will equal full retail value.
 
-Explanation: It reduces the stress and physical work required from the seller.
+Explanation: It reduces the preparation, disruption, and physical work required from the seller.
 
 ### 42. What does the guide suggest doing to ensure your phone script doesn't sound 'robotic'?
 
@@ -3182,17 +3182,17 @@ Explanation: Directly from homeowners.
 
 Explanation: The BMH offer isn't as far off from the net profit of a retail sale as it sounds.
 
-### 50. How many days does it usually take for bank underwriting to come back, which BMH bypasses?
+### 50. Why can a cash-sale path be more predictable than a traditionally financed sale?
 
 - Question key: `question-r-legacy-ch03-054`
 - Type: `single_choice`
 
-- [ ] 90 days.
-- [correct] 45 days.
-- [ ] 60 days.
-- [ ] 15 days.
+- [ ] It fixes the seller's closing date before their needs are discussed.
+- [correct] It does not depend on a buyer completing the traditional bank-underwriting process before closing.
+- [ ] It requires the seller to stage the property before an offer is made.
+- [ ] It guarantees that every title issue disappears automatically.
 
-Explanation: 45 days.
+Explanation: It does not depend on a buyer completing the traditional bank-underwriting process before closing.
 
 ### 51. BMH Group's business model relies on buying at a discount to account for taking on _____.
 
@@ -3254,17 +3254,17 @@ Explanation: After Repair Value (ARV).
 
 Explanation: It is a no-obligation offer where the firm won't chase uninterested sellers.
 
-### 56. Which specific cost is subtracted *after* repair costs to reach the offer price?
+### 56. Why is a margin considered after estimated repair costs when evaluating a potential cash offer?
 
 - Question key: `question-r-legacy-ch03-060`
 - Type: `single_choice`
 
-- [correct] Margin (for profit and carrying costs).
-- [ ] Remaining mortgage balance owed at closing.
-- [ ] Agent commission from a future retail listing.
-- [ ] Seller-funded staging and showing expenses.
+- [correct] It accounts for the buyer's profit requirement and carrying costs in the deal analysis.
+- [ ] It adds future retail-listing commissions to the seller's cash proceeds.
+- [ ] It converts the seller's mortgage balance into the property's repair estimate.
+- [ ] It replaces the need to estimate the property's after-repair value.
 
-Explanation: Margin (for profit and carrying costs).
+Explanation: It accounts for the buyer's profit requirement and carrying costs in the deal analysis.
 
 ### 57. Traditional sales often fail 'two weeks before closing' because of what specific reason?
 
@@ -3314,17 +3314,17 @@ Explanation: As it sits.
 
 Explanation: They do not have to pay the 5 to 6 percent real estate commission.
 
-### 61. In the process summary, what is the fourth and final step?
+### 61. Before the process can move to closing, what must occur after the property is evaluated?
 
 - Question key: `question-r-legacy-ch03-065`
 - Type: `single_choice`
 
-- [correct] We close.
-- [ ] We offer.
-- [ ] We talk.
-- [ ] We look.
+- [correct] An offer must be presented and accepted, followed by coordination of the closing steps.
+- [ ] The property must be listed publicly for a traditional retail buyer.
+- [ ] The seller must complete staging and host an open house.
+- [ ] The representative must promise a specific closing date before discovery.
 
-Explanation: We close.
+Explanation: An offer must be presented and accepted, followed by coordination of the closing steps.
 
 ### 62. According to the guide, a seller choosing BMH is trading the 'highest price' for _____.
 
@@ -3374,17 +3374,17 @@ Explanation: They handle everything, including title work and signing logistics.
 
 Explanation: If the offer works for the seller.
 
-### 66. What happens if a seller rejects the BMH offer?
+### 66. How should a representative respond when a seller declines the cash offer?
 
 - Question key: `question-r-legacy-ch03-070`
 - Type: `single_choice`
 
-- [ ] The company keeps calling until the seller accepts.
-- [ ] The company pressures the seller to reconsider immediately.
-- [correct] There are no hard feelings and the company does not chase them.
-- [ ] The company raises the offer to the full retail price.
+- [ ] Keep calling until the seller accepts the same offer.
+- [ ] Raise the offer to full retail value without a new evaluation.
+- [correct] Respect the decision, avoid pressure, document the outcome, and leave an appropriate path for future contact.
+- [ ] Tell the seller that declining permanently removes every future option.
 
-Explanation: There are no hard feelings and the company does not chase them.
+Explanation: Respect the decision, avoid pressure, document the outcome, and leave an appropriate path for future contact.
 
 ### 67. Why is the BMH offer considered a 'fair' cash offer despite being below retail?
 
@@ -3410,15 +3410,15 @@ Explanation: It accounts for the costs and risks the company takes on for the se
 
 Explanation: Approximately 50 to 80 days.
 
-### 69. What is the term for the final price of the house once all repairs are finished?
+### 69. Which value estimates what a property could be worth after the planned repairs are complete?
 
 - Question key: `question-r-legacy-ch03-074`
 - Type: `single_choice`
 
-- [ ] The estimated repair cost.
-- [ ] The seller's net after commissions.
+- [ ] The seller's remaining mortgage balance.
+- [ ] The initial cash offer before the deal is evaluated.
 - [correct] After Repair Value (ARV).
-- [ ] The final cash offer.
+- [ ] The estimated repair cost by itself.
 
 Explanation: After Repair Value (ARV).
 
@@ -3458,7 +3458,7 @@ Explanation: To make the pitch sound natural and conversational rather than memo
 
 Explanation: It removes a common point where traditional real estate deals fail.
 
-### 73. If a seller has a $\$50,000$ repair bill they cannot pay, which BMH benefit is most relevant?
+### 73. If a seller has a $50,000 repair bill they cannot pay, which BMH benefit is most relevant?
 
 - Question key: `question-r-legacy-ch03-078`
 - Type: `single_choice`
@@ -3473,7 +3473,7 @@ Explanation: Buying the house 'as-is'.
 ## 6. Sales Pipeline and Stage Ownership Checkpoint
 
 - Pool key: `quiz-slot-06`
-- Pool SHA-256: `b0fe8d2c9aea0a97c6296b507905e93b6258779d17156b0fecf31bf28ac4e74e`
+- Pool SHA-256: `eb8c21df1e0f281f852b645dc8ac19f8ce552fa10036b6c60799516e24e500e5`
 - Approval status: `approved`
 
 ### 1. How many total stages comprise the BMH Sales Pipeline?
@@ -3488,27 +3488,27 @@ Explanation: Buying the house 'as-is'.
 
 Explanation: Six stages.
 
-### 2. What is the primary objective regarding leads that are not moving through the pipeline stages?
+### 2. What should happen when discovery confirms that a lead is not a fit or the person has clearly opted out?
 
 - Question key: `question-r-legacy-ch04-002`
 - Type: `single_choice`
 
-- [ ] Leave them in their current stage indefinitely.
-- [ ] Advance them to the next stage anyway.
-- [correct] Disqualify them and move on.
-- [ ] Send them to acquisitions for an offer.
+- [ ] Advance the lead to acquisitions even though qualification failed.
+- [ ] Leave the lead in the same stage indefinitely without a task or disposition.
+- [correct] Disqualify the lead with the reason documented; an unanswered contact attempt alone should remain in follow-up instead.
+- [ ] Treat every unanswered contact attempt as a confirmed disqualification.
 
-Explanation: Disqualify them and move on.
+Explanation: Disqualify the lead with the reason documented; an unanswered contact attempt alone should remain in follow-up instead.
 
-### 3. Which specific pipeline stages are owned and managed by the sellers?
+### 3. Which pipeline stages are owned and managed by the seller-facing representatives?
 
 - Question key: `question-r-legacy-ch04-003`
 - Type: `single_choice`
 
 - [ ] Stages 1 through 5.
 - [correct] Stages 1 through 4.
-- [ ] All six stages.
 - [ ] Stages 2 through 6.
+- [ ] All six stages.
 
 Explanation: Stages 1 through 4.
 
@@ -3548,17 +3548,17 @@ Explanation: A lead entering the system from a source like marketing, cold calli
 
 Explanation: Basics like name, phone number, property address, and minor source details.
 
-### 7. What is the primary goal of the seller during Stage 1 (Lead Capture)?
+### 7. What is the representative's primary goal during Stage 1 (Lead Capture)?
 
 - Question key: `question-r-legacy-ch04-008`
 - Type: `single_choice`
 
-- [ ] To confirm ownership, property fit, and general motivation.
-- [ ] To pass the qualified lead to acquisitions for an offer.
-- [correct] To make first contact and start a conversation.
-- [ ] To explore the person's life situation and real motivations.
+- [ ] Present the final offer before learning why the owner responded.
+- [ ] Move every unanswered lead to the next pipeline stage.
+- [correct] Make first contact and start a live two-way conversation with the property owner.
+- [ ] Complete the acquisitions handoff before ownership is confirmed.
 
-Explanation: To make first contact and start a conversation.
+Explanation: Make first contact and start a live two-way conversation with the property owner.
 
 ### 8. What action must occur for a lead to exit Stage 1?
 
@@ -3572,17 +3572,17 @@ Explanation: To make first contact and start a conversation.
 
 Explanation: A real, live, two-way conversation with the seller.
 
-### 9. If a seller cannot reach a lead in Stage 1, what is the required protocol?
+### 9. If a representative cannot reach a lead in Stage 1, what is the required protocol?
 
 - Question key: `question-r-legacy-ch04-010`
 - Type: `single_choice`
 
-- [ ] Advance them to Stage 2 and mark qualification complete.
-- [correct] Keep them in Stage 1 and assign a follow-up task.
-- [ ] Disqualify them immediately without another action.
-- [ ] Send them to Stage 4 for an acquisitions call.
+- [ ] Advance the lead to Stage 2 and mark qualification complete.
+- [correct] Keep the lead in Stage 1 and assign the next appropriate follow-up task.
+- [ ] Send the lead to Stage 4 for an acquisitions call.
+- [ ] Disqualify the lead solely because the first attempt was unanswered.
 
-Explanation: Keep them in Stage 1 and assign a follow-up task.
+Explanation: Keep the lead in Stage 1 and assign the next appropriate follow-up task.
 
 ### 10. Pipeline Stage 2: _____.
 
@@ -3764,17 +3764,17 @@ Explanation: When the acquisition team accepts the lead and has all necessary in
 
 Explanation: Offer Review
 
-### 25. What is the seller's role during Stage 5 (Offer Review)?
+### 25. What is the seller-facing representative's role during Stage 5 (Offer Review)?
 
 - Question key: `question-r-legacy-ch04-027`
 - Type: `single_choice`
 
-- [ ] To re-confirm ownership, property type, and general motivation as the person leading the review.
-- [correct] To support the acquisition manager by providing context or making follow-up calls if asked.
-- [ ] To take over transaction-team closing as soon as the offer is accepted.
-- [ ] To determine the final offer alone and present the financial figure without acquisitions.
+- [ ] Take ownership of transaction closing as soon as an offer is discussed.
+- [correct] Support the acquisition manager with context or requested follow-up while acquisitions owns the offer review.
+- [ ] Restart lead capture and remove the discovery notes from the handoff.
+- [ ] Determine and present the final financial offer without acquisitions.
 
-Explanation: To support the acquisition manager by providing context or making follow-up calls if asked.
+Explanation: Support the acquisition manager with context or requested follow-up while acquisitions owns the offer review.
 
 ### 26. Pipeline Stage 6: _____.
 
@@ -3983,7 +3983,7 @@ Explanation: Jumping straight to property details and racing toward an offer.
 ## 7. Opening the Call Checkpoint
 
 - Pool key: `quiz-slot-07`
-- Pool SHA-256: `62da1ee54359184d012152908b826ab7c89710607c92f2e65284550bbd455c4b`
+- Pool SHA-256: `0b2b251cb4bf6a10ec1b274acdb47399f2753293ba37efb78370031134af1e01`
 - Approval status: `approved`
 
 ### 1. What is the primary objective of Step 1 in the five-step acquisition framework?
@@ -4202,17 +4202,17 @@ Explanation: To find out what life events are driving the person to consider sel
 
 Explanation: By weaving them into a natural conversation rather than reading from a clipboard.
 
-### 19. What is the ideal ratio of listening to talking for an acquisition specialist during the call?
+### 19. What listening-to-talking balance should an acquisition specialist generally aim for during discovery?
 
 - Question key: `question-r-legacy-ch05-019`
 - Type: `single_choice`
 
-- [correct] Listening eighty percent of the time and talking twenty percent of the time.
-- [ ] Spending 15% of the call listening and 85% of the call talking.
-- [ ] Spending 50% of the call listening and 50% of the call talking.
-- [ ] Spending 20% of the call listening and 80% of the call talking.
+- [correct] Listen about 80 percent of the time and talk about 20 percent of the time.
+- [ ] Talk throughout the call and save all listening for the final question.
+- [ ] Listen and talk for exactly 50 percent of the time each.
+- [ ] Listen about 20 percent of the time and talk about 80 percent of the time.
 
-Explanation: Listening eighty percent of the time and talking twenty percent of the time.
+Explanation: Listen about 80 percent of the time and talk about 20 percent of the time.
 
 ### 20. Which specific metric is recommended for getting a quick picture of the property's condition?
 
@@ -4847,7 +4847,7 @@ Explanation: It identifies the specific trigger or event that created the curren
 ## 9. Objection Architecture Checkpoint
 
 - Pool key: `quiz-slot-09`
-- Pool SHA-256: `11e93d705f23ade0ac958019a5f20a3f9d7e848dd20b28c5f51ce8810a0f0626`
+- Pool SHA-256: `31a2fbedf0019f5561269d5467d21214cfa9db45324770383e468e6728633d7e`
 - Approval status: `approved`
 
 ### 1. According to the text, what is the primary factor that distinguishes a top-performing caller from an average one?
@@ -4970,17 +4970,17 @@ Explanation: Frustrated venting from sellers who have likely received many inves
 
 Explanation: Acknowledge the complaint, show empathy, and redirect the conversation.
 
-### 11. Term: Reactionary defense responses
+### 11. What is a reactionary defense response?
 
 - Question key: `question-r-legacy-ch07-012`
 - Type: `single_choice`
 
-- [ ] Frustrated venting from sellers who have received many investor calls.
-- [correct] Definition: Automatic, reflexive pushback meant to protect the seller's time or space, similar to saying "just looking" in a store.
-- [ ] Thoughtful concerns that create a specific barrier between the seller and a yes.
-- [ ] Quiet pauses while sellers actively process information from the caller.
+- [ ] A quiet pause while the seller actively processes new information.
+- [correct] Automatic, reflexive pushback meant to protect the seller's time or space, similar to saying 'just looking' in a store.
+- [ ] A specific concern the seller has considered and needs resolved before saying yes.
+- [ ] Frustrated venting about repeated investor calls without a specific barrier.
 
-Explanation: Definition: Automatic, reflexive pushback meant to protect the seller's time or space, similar to saying "just looking" in a store.
+Explanation: Automatic, reflexive pushback meant to protect the seller's time or space, similar to saying 'just looking' in a store.
 
 ### 12. What are two common examples of reactionary defense responses?
 
@@ -5294,14 +5294,14 @@ Explanation: To provide a professional redirect that justifies the conversation.
 
 Explanation: Listen, acknowledge, ask, redirect
 
-### 38. When a seller says they need to talk to their spouse, what step of the framework are they presenting the caller with?
+### 38. When a seller says they need to talk to their spouse, what response type are they presenting?
 
 - Question key: `question-r-legacy-ch07-040`
 - Type: `single_choice`
 
+- [ ] Silence while processing.
 - [ ] A reactionary defense response.
-- [ ] Silence.
-- [ ] A complaint.
+- [ ] A complaint without a decision barrier.
 - [correct] A real objection.
 
 Explanation: A real objection.
@@ -5534,17 +5534,17 @@ Explanation: Honest and understanding of their perspective.
 
 Explanation: To determine the actual gap between the offer and the seller's expectations.
 
-### 58. A seller saying "I've heard this before" is an example of which response type?
+### 58. Before hearing why the representative called, a seller immediately says, 'Not interested.' What response type is this?
 
 - Question key: `question-r-legacy-ch07-060`
 - Type: `single_choice`
 
-- [ ] Complaints from frustration.
-- [correct] Reactionary defense responses.
-- [ ] Real objections requiring thought.
-- [ ] Silence while processing.
+- [ ] A complaint describing repeated unwanted calls in detail.
+- [correct] A reactionary defense response.
+- [ ] Silence while the seller processes the representative's explanation.
+- [ ] A real objection based on a specific unresolved concern.
 
-Explanation: Reactionary defense responses.
+Explanation: A reactionary defense response.
 
 ### 59. What does the text recommend as the very first thing to do when a real objection is raised?
 
@@ -5594,17 +5594,17 @@ Explanation: Silence.
 
 Explanation: It can be used to handle objections the caller has never heard before.
 
-### 63. Why is it important to ask "is there a reason you responded to our outreach in the first place?" to a seller who is "not interested"?
+### 63. Why ask, 'Is there a reason you responded to our outreach in the first place?' when a seller now says they are not interested?
 
 - Question key: `question-r-legacy-ch07-065`
 - Type: `single_choice`
 
-- [ ] To compare the seller's other offers on an apples-to-apples basis.
-- [ ] To determine which repairs are required for a traditional listing.
-- [ ] To confirm how the caller obtained the seller's phone number.
-- [correct] To uncover a underlying motivation that might have changed or been forgotten.
+- [ ] To avoid acknowledging the seller's current response.
+- [ ] To decide which repairs are required for a traditional listing.
+- [ ] To compare competing offers before completing discovery.
+- [correct] To uncover an underlying motivation that may have changed or been set aside.
 
-Explanation: To uncover a underlying motivation that might have changed or been forgotten.
+Explanation: To uncover an underlying motivation that may have changed or been set aside.
 
 ### 64. What does the caller offer in contrast to a Realtor's listing process?
 
@@ -5765,7 +5765,7 @@ Explanation: To move the lead forward by resolving concerns.
 ## 10. Objection Scripts Playbook Checkpoint
 
 - Pool key: `quiz-slot-10`
-- Pool SHA-256: `60411b79b40a7c240116cbf803a9e9464fb991d48372adb18ec6423f1a8efe57`
+- Pool SHA-256: `971f65128b67935edf0b3d98f988b597587158873ae0f7b1b887032d93584a42`
 - Approval status: `approved`
 
 ### 1. What are the four components of the objection-handling framework used in the BMH training?
@@ -6284,17 +6284,17 @@ Explanation: A bidding war or 'highest and best' investor open house.
 
 Explanation: Trading convenience for price.
 
-### 44. What is the suggested response to 'How did you get my number?'
+### 44. Why should the explanation 'public records and standard outreach' be delivered briefly and calmly?
 
 - Question key: `question-r-slot-module-10-044`
 - Type: `single_choice`
 
-- [correct] Public records and standard outreach.
-- [ ] A local title company and recent settlement statements.
-- [ ] A referral from the property's former contractor.
-- [ ] A contact list provided by a neighborhood association.
+- [correct] It answers the question truthfully without becoming defensive, then lets the conversation return to the reason for the outreach.
+- [ ] It prevents the seller from asking any follow-up question about the contact.
+- [ ] It proves the representative received the number from a personal referral.
+- [ ] It replaces the need to respect a clear request not to continue the call.
 
-Explanation: Public records and standard outreach.
+Explanation: It answers the question truthfully without becoming defensive, then lets the conversation return to the reason for the outreach.
 
 ### 45. What does it mean to 'reverse-engineer' a seller's net proceeds?
 
@@ -7533,7 +7533,7 @@ Explanation: Attorney review availability.
 ## 13. Follow-Up Cadence Checkpoint
 
 - Pool key: `quiz-slot-13`
-- Pool SHA-256: `300dabc961c9aa27671b4b0ee79314320c02adb442e58b95ff4159c3654c11a0`
+- Pool SHA-256: `9d52de98ebbae528bdd1f52a6b3de34f49a6203bba81edd5c0dd5740d48382fb`
 - Approval status: `approved`
 
 ### 1. According to the text, where do real estate deals actually happen?
@@ -7548,17 +7548,17 @@ Explanation: Attorney review availability.
 
 Explanation: In the follow-up process.
 
-### 2. Most real estate deals close on which call attempts?
+### 2. Why should a representative avoid assuming that a deal is lost after the first conversation?
 
 - Question key: `question-r-legacy-ch09-002`
 - Type: `single_choice`
 
-- [ ] The first call before any follow-up.
-- [correct] The second, third, or sometimes seventh call.
-- [ ] The fourth call after three attempts.
-- [ ] The first or fourth call only.
+- [ ] Every lead must be contacted indefinitely regardless of consent or fit.
+- [correct] Many opportunities require multiple useful follow-up touches, so the next step should reflect the lead's status and documented cadence.
+- [ ] The first conversation should be ignored when choosing the next action.
+- [ ] A lead becomes qualified automatically after any repeated contact attempt.
 
-Explanation: The second, third, or sometimes seventh call.
+Explanation: Many opportunities require multiple useful follow-up touches, so the next step should reflect the lead's status and documented cadence.
 
 ### 3. What is the primary characteristic of sellers who eventually sign contracts?
 
@@ -7980,17 +7980,17 @@ Explanation: Probate leads.
 
 Explanation: To demonstrate active listening and build the relationship.
 
-### 38. What phrase should an investor use to handle the response "I need to think about it"?
+### 38. What follow-up action is appropriate when a seller says, 'I need to think about it'?
 
 - Question key: `question-r-legacy-ch09-040`
 - Type: `single_choice`
 
-- [ ] Mark the lead dead immediately.
-- [ ] Stop all contact immediately.
-- [correct] Follow up in a few days.
-- [ ] Restart discovery and qualification.
+- [ ] Restart the entire discovery call without acknowledging the request.
+- [ ] Mark the lead dead immediately without clarifying the next step.
+- [correct] Agree on a reasonable time to follow up after giving the seller space to consider the decision.
+- [ ] Continue pressing for an immediate decision after the seller asks for time.
 
-Explanation: Follow up in a few days.
+Explanation: Agree on a reasonable time to follow up after giving the seller space to consider the decision.
 
 ### 39. True or False: If a lead has zero engagement for four months, it should be marked dead.
 
@@ -8709,7 +8709,7 @@ Explanation: It establishes certainty as a form of value that most other buyers 
 ## 15. Closing and Deal Engineering Checkpoint
 
 - Pool key: `quiz-slot-15`
-- Pool SHA-256: `01de5ec47774db205c391f0391fb487fe1ccacf05d6263fb791cdc1231e3b40b`
+- Pool SHA-256: `c7bd2d87cf7c64c342077b9e50f59b0b4312069e8613736317dbbe65e04e1173`
 - Approval status: `approved`
 
 ### 1. In a successful sales process, why should the closing stage ideally be the easiest part?
@@ -8868,17 +8868,17 @@ Explanation: The team reframes the value of the offer.
 
 Explanation: "What number would you need to see to feel good about this?"
 
-### 14. Negotiation is described as finding a number both sides feel _____ about.
+### 14. What outcome best describes a sound negotiation?
 
 - Question key: `question-r-legacy-ch10-014`
 - Type: `single_choice`
 
-- [correct] good
-- [ ] happy
-- [ ] secure
-- [ ] safe
+- [correct] A workable agreement that both sides understand and can accept.
+- [ ] A result where one side wins every term and the other side stays silent.
+- [ ] A promise that every concern will disappear after the agreement is signed.
+- [ ] A number chosen before either side explains its needs or constraints.
 
-Explanation: good
+Explanation: A workable agreement that both sides understand and can accept.
 
 ### 15. What is the likely outcome if a seller feels they "lost" during the negotiation?
 
@@ -9075,7 +9075,7 @@ Explanation: The closing/funds transfer managed by the transaction team.
 ## 16. KPIs and Sales Telemetry Checkpoint
 
 - Pool key: `quiz-slot-16`
-- Pool SHA-256: `b3b7ea9348829ef87700073f04d23749057fabfdf9ef8851ab6f978a24a79259`
+- Pool SHA-256: `98d3d92483b9d6a1d0ccb68a2b1d8bb9867603ae780993f701f1e9790e83d5bb`
 - Approval status: `approved`
 
 ### 1. According to the text, what is the only thing that actually closes deals in business?
@@ -9162,17 +9162,17 @@ Explanation: Left to right.
 
 Explanation: Dial count.
 
-### 8. What is the specific daily target range for dial count?
+### 8. An operator sees different daily dial targets in two documents. What is the safest next step?
 
 - Question key: `question-r-legacy-ch11-008`
 - Type: `single_choice`
 
-- [correct] 150 to 200 dials.
-- [ ] 25 to 40 dials.
-- [ ] 3 to 5 dials.
-- [ ] 8 to 15 dials.
+- [correct] Escalate the document conflict and confirm the target in the current approved operating plan.
+- [ ] Use the higher target because it creates the strongest performance expectation.
+- [ ] Use the current KPI plan for the acquisition role because it covers the same market.
+- [ ] Average the two targets and treat the result as the working requirement.
 
-Explanation: 150 to 200 dials.
+Explanation: Identify the current approved operating plan for the operator's role and effective date, then resolve the conflict before reporting against a target.
 
 ### 9. Why is dial count considered a unique metric compared to others like connection rate?
 
@@ -9222,29 +9222,29 @@ Explanation: Effort.
 
 Explanation: Connection rate.
 
-### 13. What is the target percentage for a healthy connection rate?
+### 13. Which comparison makes a connection-rate result meaningful?
 
 - Question key: `question-r-legacy-ch11-013`
 - Type: `single_choice`
 
-- [ ] 10 to 15 percent.
-- [correct] 15 to 20 percent.
-- [ ] 30 to 40 percent.
-- [ ] 50 to 60 percent.
+- [ ] Compare it with a teammate's raw dial count from a different campaign.
+- [correct] Compare it with the same-role, same-period KPI definition and target.
+- [ ] Compare it with the best single hour in the operator's own history.
+- [ ] Compare it with the current approved dial-volume target for the same calling block.
 
-Explanation: 15 to 20 percent.
+Explanation: Compare the measured rate with the current approved definition and target for the same role, channel, and reporting period.
 
-### 14. If a caller dials 200 times, approximately how many connections should they ideally achieve?
+### 14. A connection rate appears low. What should the operator verify before concluding that performance missed target?
 
 - Question key: `question-r-legacy-ch11-014`
 - Type: `single_choice`
 
-- [ ] 150 to 200 people.
-- [ ] 15 to 20 people.
-- [ ] 60 to 80 people.
-- [correct] 30 to 40 people.
+- [ ] Verify that the operator felt busy throughout the calling block.
+- [ ] Verify only that the dial count is larger than yesterday's dial count.
+- [ ] Verify only that at least one conversation lasted longer than average.
+- [correct] Verify matching definitions, inputs, reporting window, and approved target.
 
-Explanation: 30 to 40 people.
+Explanation: Verify that the numerator, denominator, reporting window, and approved target all use the same current KPI definition.
 
 ### 15. A connection rate that drops below _____ percent indicates a problem with the phone number or list.
 
@@ -9294,17 +9294,17 @@ Explanation: Quality conversations.
 
 Explanation: Wrong numbers, removal requests, and people with zero interest in selling.
 
-### 19. What is the target percentage of connections that should turn into quality conversations?
+### 19. Which evidence is needed to evaluate conversion from connections to quality conversations?
 
 - Question key: `question-r-legacy-ch11-019`
 - Type: `single_choice`
 
-- [ ] 15 to 20 percent.
-- [ ] 10 to 15 percent.
-- [ ] 50 to 60 percent.
-- [correct] 30 to 40 percent.
+- [ ] The documented call count and calendar-event total for the same reporting period.
+- [ ] The total size of the lead list and the number of notes entered by the team.
+- [ ] The operator's strongest conversation and the team's monthly contract count.
+- [correct] The same-period counts built from the current definitions of both events.
 
-Explanation: 30 to 40 percent.
+Explanation: Counts built from the current definitions of a connection and a quality conversation for the same reporting period.
 
 ### 20. Which metric identifies callers who went through the full qualification and discovery fact find?
 
@@ -9354,17 +9354,17 @@ Explanation: Offers made.
 
 Explanation: Contracts signed.
 
-### 24. What is the benchmark ratio for converting offers into signed contracts?
+### 24. A manager asks whether the current offer-to-contract conversion result is healthy. Which source should frame the answer?
 
 - Question key: `question-r-legacy-ch11-024`
 - Type: `single_choice`
 
-- [correct] One out of every two offers.
-- [ ] Three out of every four offers.
-- [ ] Four out of every five offers.
-- [ ] Three out of every five offers.
+- [correct] The approved KPI plan plus the underlying offer and contract records.
+- [ ] The operator's personal benchmark from the month with the most contracts.
+- [ ] The current company revenue target together with the acquisition team's weekly forecast.
+- [ ] The acquisition team's call volume for the same week.
 
-Explanation: One out of every two offers.
+Explanation: The approved KPI plan for the role and reporting period, together with the underlying offer and contract records.
 
 ### 25. If a rep has good dials but low connections, what should be checked first?
 
@@ -9414,41 +9414,41 @@ Explanation: Incomplete handoff of leads to the acquisition team.
 
 Explanation: Negotiation or pricing.
 
-### 29. What is the daily target range for the number of connections a rep should make?
+### 29. A representative reached many owners but recorded few usable conversations. Which target is most relevant to that gap?
 
 - Question key: `question-r-legacy-ch11-029`
 - Type: `single_choice`
 
-- [ ] 150 to 200 connections.
-- [ ] 3 to 5 connections.
-- [ ] 8 to 15 connections.
-- [correct] 25 to 40 connections.
+- [ ] The current market-coverage scorecard for properties reached by the whole team.
+- [ ] The representative's longest call duration for the day.
+- [ ] The acquisition team's average time from offer to contract.
+- [correct] The current quality-conversation definition and target for the role.
 
-Explanation: 25 to 40 connections.
+Explanation: The current quality-conversation target and definition for the representative's role.
 
-### 30. What is the daily target range for the number of quality conversations a rep should have?
+### 30. Why must a quality-conversation target be paired with its definition?
 
 - Question key: `question-r-legacy-ch11-030`
 - Type: `single_choice`
 
-- [ ] 150 to 200 quality conversations.
-- [ ] 3 to 5 quality conversations.
-- [ ] 25 to 40 quality conversations.
-- [correct] 8 to 15 quality conversations.
+- [ ] Because the definition treats a connected call as sufficient evidence of a quality conversation.
+- [ ] Because the definition uses call duration instead of discovery content to classify quality.
+- [ ] Because the target is intended to replace call notes and outcome records.
+- [correct] Because a shared definition makes different people's counts comparable.
 
-Explanation: 8 to 15 quality conversations.
+Explanation: Without the approved definition, people can count different events and report results that are not comparable.
 
-### 31. What is the daily target range for the number of process calls a rep should complete?
+### 31. Which records are needed to evaluate progress toward the daily process-call target?
 
 - Question key: `question-r-legacy-ch11-031`
 - Type: `single_choice`
 
-- [ ] 8 to 15 process calls.
-- [ ] 150 to 200 process calls.
-- [ ] 25 to 40 process calls.
-- [correct] 3 to 5 process calls.
+- [ ] The operator's scheduled breaks plus the number of follow-up tasks due tomorrow.
+- [ ] The operator's total login time plus the acquisition team's completed contract count.
+- [ ] The number of leads in the market plus the team's average seller-call duration.
+- [correct] The approved target and definition plus that day's documented results.
 
-Explanation: 3 to 5 process calls.
+Explanation: The current approved target and counting definition plus the operator's documented process-call results for the same day.
 
 ### 32. Instead of punishment, how does the text describe the management response to off-track metrics?
 
@@ -9537,308 +9537,308 @@ Explanation: To find gaps and close them rather than to micromanage.
 ## 17. Compensation Engine Checkpoint
 
 - Pool key: `quiz-slot-17`
-- Pool SHA-256: `2aafd9a9521386cfb19ad476382558df8172a5574b37734d59a2be7149aacdd2`
+- Pool SHA-256: `5b25bbccd3314cfdadf539765030d7328d1b1c906c392b465f9f5df1b762d88d`
 - Approval status: `approved`
 
-### 1. What are the three components of the compensation structure described in the text?
+### 1. Which description best separates compensation training from an employee's actual compensation terms?
 
 - Question key: `question-r-legacy-ch12-001`
 - Type: `single_choice`
 
-- [ ] Quality conversations, follow-up, and pipeline growth.
-- [ ] KPIs, qualified leads, and clean handoffs.
-- [correct] Base pay, commissions, and appointment bonuses.
-- [ ] Signed contracts, completed transactions, and role scorecards.
+- [ ] Pipeline results supply the binding terms, while the written plan is used only after a payment dispute.
+- [ ] Training supplies the binding terms, while the written plan is only a summary of the course.
+- [correct] Training explains the compensation components; the current written plan supplies the employee's binding terms.
+- [ ] A manager's forecast supplies the binding terms, while training determines which payments have been earned.
 
-Explanation: Base pay, commissions, and appointment bonuses.
+Explanation: Training explains how components such as ramp pay, commissions, and appointment incentives work conceptually; the employee's current written plan supplies the binding terms.
 
-### 2. What type of pay is provided to representatives during their ramp period?
+### 2. What business purpose can ramp-period pay serve?
 
 - Question key: `question-r-legacy-ch12-002`
 - Type: `single_choice`
 
-- [ ] A recoverable commission draw.
-- [ ] A fixed monthly stipend.
-- [correct] An hourly base rate.
-- [ ] A guaranteed annual salary.
+- [ ] It replaces the need for a new employee to learn qualification and handoff standards.
+- [ ] It serves as the current commission rate until the employee's pipeline reaches target.
+- [correct] It provides income while the employee learns the role and develops a pipeline, subject to the plan.
+- [ ] It rewards the acquisition team for contracts that close before a new employee begins calling.
 
-Explanation: An hourly base rate.
+Explanation: It can provide income while a new employee learns the role and develops a pipeline, subject to the current written plan.
 
-### 3. Why is a base hourly rate provided to representatives during the ramp period?
+### 3. A training example shows one ramp-pay amount. What may the learner safely conclude?
 
 - Question key: `question-r-legacy-ch12-003`
 - Type: `single_choice`
 
-- [ ] To raise every deal to the highest commission tier during the ramp period.
-- [correct] To ensure income while the representative is learning and developing their pipeline.
-- [ ] To attribute each deal before a signed contract and completed transaction.
-- [ ] To reward each qualified appointment as soon as it is scheduled.
+- [ ] The example becomes the employee's rate as soon as the lesson is completed.
+- [correct] The example illustrates a concept; the current plan controls the actual terms.
+- [ ] The example supplies the default term when a current plan leaves that field blank.
+- [ ] The example controls whenever it is higher than the amount shown in payroll.
 
-Explanation: To ensure income while the representative is learning and developing their pipeline.
+Explanation: The example can illustrate the concept, but the employee must use the amount and conditions in the current written plan.
 
-### 4. How many consecutive days must a representative hit their KPIs to graduate from the ramp period?
+### 4. Which evidence should a reviewer use to decide whether an employee has completed the ramp period?
 
 - Question key: `question-r-legacy-ch12-004`
 - Type: `single_choice`
 
-- [ ] $50$ uninterrupted days.
-- [ ] $25$ straight days.
-- [ ] $75$ days without a missed KPI.
-- [correct] $30$ or more consecutive days.
+- [ ] The strongest single day of performance and the date the training course was opened.
+- [ ] The date of the employee's first outbound call and the total number of contacts in the CRM.
+- [ ] The average tenure of other employees who previously held the role.
+- [correct] The applicable ramp criteria plus documented results for the employee's measured review period.
 
-Explanation: $30$ or more consecutive days.
+Explanation: The performance and duration requirements in the applicable current plan, supported by the employee's documented results.
 
-### 5. To what structure does a representative graduate after successfully completing the ramp period?
+### 5. What makes a transition from ramp compensation to a post-ramp structure valid?
 
 - Question key: `question-r-legacy-ch12-005`
 - Type: `single_choice`
 
-- [ ] The role scorecard structure.
-- [ ] The appointment bonus structure.
-- [ ] The hourly base structure.
-- [correct] The full commission structure.
+- [ ] The employee completes the current learning plan and the course records the transition.
+- [ ] The employee estimates that the pipeline is large enough to support the change.
+- [ ] A teammate begins using the employee's leads in a different reporting period.
+- [correct] Meeting the criteria and confirming the transition under the current plan.
 
-Explanation: The full commission structure.
+Explanation: The employee meets the applicable criteria and the transition is confirmed under the current written plan.
 
-### 6. Which specific actions must a representative take on a lead to be eligible for a commission?
+### 6. Which record best supports a compensation-eligibility review for work on a lead?
 
 - Question key: `question-r-legacy-ch12-006`
 - Type: `single_choice`
 
-- [ ] Hit KPIs, graduate from ramp, reach Tier 1, and earn a bonus.
-- [ ] Set appointments, close transactions, calculate bonuses, and approve contracts.
-- [ ] Review the role sheet, ask a manager, count deals, and choose a tier.
-- [correct] Source, qualify, follow up, and provide a clean handoff.
+- [ ] A calendar entry showing that the employee was scheduled to work when the lead arrived.
+- [ ] A documented team total showing aggregate contacts for the same reporting period.
+- [ ] A personal list of promising leads that does not include qualification or handoff records.
+- [correct] A traceable CRM history showing sourcing, qualification, follow-up, and handoff activity.
 
-Explanation: Source, qualify, follow up, and provide a clean handoff.
+Explanation: A traceable CRM history showing the employee's sourcing, qualification, follow-up, and handoff activity, evaluated under the current plan.
 
-### 7. Who is responsible for closing the deals that the representative sources and qualifies?
+### 7. After a seller-facing representative qualifies a lead and completes the handoff, which team owns negotiation and closing?
 
 - Question key: `question-r-legacy-ch12-007`
 - Type: `single_choice`
 
-- [ ] The representative’s manager.
-- [ ] The representative or lead sourcer.
-- [ ] The seller.
-- [correct] The acquisition team.
+- [ ] The marketing team that supplied the original lead list.
+- [ ] The seller-facing representative who first contacted the property owner.
+- [ ] The operations team that maintains the calling systems.
+- [correct] The acquisition team receiving the qualified lead handoff.
 
 Explanation: The acquisition team.
 
-### 8. What determines the specific dollar amount of a commission per deal?
+### 8. Which facts are needed before a per-deal commission can be calculated?
 
 - Question key: `question-r-legacy-ch12-008`
 - Type: `single_choice`
 
-- [ ] The amount of time each lead remains in the representative’s pipeline.
-- [ ] The number of consecutive days the representative hits KPIs during ramp.
-- [ ] The monthly count of appointments where the seller attends.
-- [correct] The number of deals sourced by the representative in a given month.
+- [ ] The team's projected revenue and the employee's preferred earnings target.
+- [ ] The number of calls made on the lead and the acquisition manager's total monthly call time.
+- [ ] The applicable market's repair-cost estimate and the seller's preferred closing date.
+- [correct] The deal's eligibility and timing records plus the applicable commission-rate and tier terms.
 
-Explanation: The number of deals sourced by the representative in a given month.
+Explanation: The deal's eligibility and timing records plus the applicable rate or tier terms in the current written plan.
 
-### 9. How many deals must be sourced in a month to qualify for Tier 1 commissions?
+### 9. Two compensation-plan versions show different tier thresholds. Which version should be applied?
 
 - Question key: `question-r-legacy-ch12-009`
 - Type: `single_choice`
 
-- [ ] $3$ or $4$ deals.
-- [ ] $5$ or more deals.
-- [correct] $1$ or $2$ deals.
-- [ ] $25$ deals.
+- [ ] The version with the threshold reached by the largest number of employees.
+- [ ] The current approved version for a different role but the same reporting period.
+- [correct] The approved version covering the employee, role, and measured period.
+- [ ] The version that produces the closest match to the employee's forecast.
 
-Explanation: $1$ or $2$ deals.
+Explanation: The approved version whose role and effective period cover the employee and the measured results.
 
-### 10. What is the commission amount per deal at Tier 1?
+### 10. What is the difference between a commission-tier threshold and a commission rate?
 
 - Question key: `question-r-legacy-ch12-010`
 - Type: `single_choice`
 
-- [ ] $\$250$ per deal.
-- [ ] $\$1,000$ per deal.
-- [correct] $\$500$ per deal.
-- [ ] $\$750$ per deal.
+- [ ] The threshold records when a seller was contacted; the rate records who owns the lead.
+- [ ] The threshold sets the payment date; the rate determines whether the employee completed training.
+- [correct] The threshold selects the applicable tier; its rate controls the resulting commission calculation.
+- [ ] The threshold measures call duration; the rate measures the quality of discovery notes.
 
-Explanation: $\$500$ per deal.
+Explanation: The threshold determines which tier applies; the rate determines the commission calculation within that tier.
 
-### 11. How many deals must be sourced in a month to reach Tier 2 commissions?
+### 11. What evidence is relevant when deciding whether a higher commission tier was reached?
 
 - Question key: `question-r-legacy-ch12-011`
 - Type: `single_choice`
 
-- [ ] $5$ or more deals.
-- [ ] $25$ or more deals.
-- [ ] $1$ or $2$ deals.
-- [correct] $3$ or $4$ deals.
+- [ ] The employee's best historical month adjusted to the current period length.
+- [ ] The current acquisition-call total paired with its scheduled-call records.
+- [ ] The total number of leads assigned to the team, including leads with no qualifying outcome.
+- [correct] The documented qualifying results measured against the applicable tier definition.
 
-Explanation: $3$ or $4$ deals.
+Explanation: The documented qualifying results for the measured period, evaluated against the applicable tier definition.
 
-### 12. What is the commission amount per deal at Tier 2?
+### 12. An employee knows which tier applies but not its rate. What information is still required?
 
 - Question key: `question-r-legacy-ch12-012`
 - Type: `single_choice`
 
-- [ ] $\$500$ per deal.
-- [ ] $\$250$ per deal.
-- [correct] $\$750$ per deal.
-- [ ] $\$1,000$ per deal.
+- [ ] The seller's asking price and the representative's number of follow-up attempts.
+- [ ] The next tier's threshold and the team's total number of open leads.
+- [correct] The applicable tier's rate and calculation terms for the transaction period.
+- [ ] The ramp-period review date and the acquisition team's average close time.
 
-Explanation: $\$750$ per deal.
+Explanation: The rate and calculation terms for that tier in the plan effective for the transaction period.
 
-### 13. How many deals must be sourced in a month to reach Tier 3 commissions?
+### 13. Which forecasting practice avoids overstating commission earnings?
 
 - Question key: `question-r-legacy-ch12-013`
 - Type: `single_choice`
 
-- [ ] $2$ deals.
-- [ ] $3$ or $4$ deals.
-- [ ] $1$ deal.
-- [correct] $5$ or more deals.
+- [ ] Treat documented scheduled seller calls as commission-bearing transactions.
+- [ ] Use the current plan with the strongest historical month as the performance baseline.
+- [ ] Count documented qualified leads as deals when projecting the highest available tier.
+- [correct] Separate supported results from pipeline opportunities, then apply current terms.
 
-Explanation: $5$ or more deals.
+Explanation: Separate documented qualifying results from unconfirmed pipeline opportunities and apply only the current plan's terms.
 
-### 14. What is the commission amount per deal at Tier 3?
+### 14. What controls the amount paid when an employee qualifies for a commission tier?
 
 - Question key: `question-r-legacy-ch12-014`
 - Type: `single_choice`
 
-- [ ] $\$750$ per deal.
-- [correct] $\$1,000$ per deal.
-- [ ] $\$500$ per deal.
-- [ ] $\$250$ per deal.
+- [ ] The acquisition manager's forecast and the age of the lead record.
+- [correct] The applicable tier's rate, eligibility, timing, and calculation terms.
+- [ ] The applicable team's average commission and the employee's length of service.
+- [ ] The employee's number of outbound calls and the seller's initial asking price.
 
-Explanation: $\$1,000$ per deal.
+Explanation: The applicable plan's rate, eligibility, timing, and calculation language for that tier.
 
-### 15. How does reaching a higher commission tier affect the payment of previous deals in the same month?
+### 15. A higher tier is reached late in a measured period. What decides whether earlier qualifying deals are recalculated?
 
 - Question key: `question-r-legacy-ch12-015`
 - Type: `single_choice`
 
-- [ ] The higher rate applies only to the deal that crosses the threshold.
-- [correct] All deals for that month are paid at the highest tier reached.
-- [ ] Only deals sourced after the higher threshold are paid at the higher rate.
-- [ ] All deals remain at the Tier 1 rate until the following month.
+- [ ] The date on which the employee first forecast the higher tier.
+- [correct] The plan's tier-ordering and retroactivity terms for the measured period.
+- [ ] The order in which the employee remembers working the leads.
+- [ ] The size of the largest deal completed during the period.
 
-Explanation: All deals for that month are paid at the highest tier reached.
+Explanation: The applicable plan's tier-ordering and retroactivity language.
 
-### 16. If a representative sources $5$ deals in one month, what is their total commission earnings?
+### 16. Which sequence produces an auditable monthly commission calculation?
 
 - Question key: `question-r-legacy-ch12-016`
 - Type: `single_choice`
 
-- [ ] $\$3,750$.
-- [correct] $\$5,000$.
-- [ ] $\$2,500$.
-- [ ] $\$5,250$.
+- [ ] Select the current highest rate and apply it to each documented pipeline opportunity.
+- [correct] Identify the eligible deals, apply the governing tier and timing rules, and reconcile all source records.
+- [ ] Count all assigned leads, multiply by the team's average rate, and round to the employee's forecast.
+- [ ] Add the month's call totals, divide by closed transactions, and use that ratio as the commission rate.
 
-Explanation: $\$5,000$.
+Explanation: Identify eligible deals, select the governing plan version, apply its tier and timing rules, and reconcile the result to the source records.
 
-### 17. What is the milestone required to earn an appointment bonus?
+### 17. What distinguishes an appointment-incentive milestone from a commission tier?
 
 - Question key: `question-r-legacy-ch12-017`
 - Type: `single_choice`
 
-- [correct] Every $25$ qualified appointments set in a month.
-- [ ] One bonus for each block of $30$ qualified appointments.
-- [ ] One bonus for each block of $40$ qualified appointments.
-- [ ] One bonus for each block of $50$ qualified appointments.
+- [correct] An appointment milestone uses qualifying appointment events; a commission tier uses documented qualifying deals.
+- [ ] An appointment milestone measures contract revenue; a commission tier measures total call duration.
+- [ ] An appointment milestone determines lead ownership; a commission tier determines the seller's asking price.
+- [ ] An appointment milestone applies only during closing; a commission tier applies only during lead capture.
 
-Explanation: Every $25$ qualified appointments set in a month.
+Explanation: An appointment milestone is tied to qualifying appointment events; a commission tier is tied to qualifying deal results, as each is defined by the plan.
 
-### 18. How much is the bonus for reaching an appointment milestone?
+### 18. Before stating an appointment-incentive amount, what must be verified?
 
 - Question key: `question-r-legacy-ch12-018`
 - Type: `single_choice`
 
-- [ ] $\$1,000$.
-- [correct] $\$250$.
-- [ ] $\$750$.
-- [ ] $\$500$.
+- [ ] The number of messages sent, the employee's tenure, and the team's monthly revenue goal.
+- [correct] The amount, qualifying-event definition, milestone rule, eligibility conditions, and effective date.
+- [ ] The acquisition team's contract count, the seller's asking prices, and the lead-list size.
+- [ ] The employee's total calendar entries, average call duration, and projected pipeline value.
 
-Explanation: $\$250$.
+Explanation: The applicable plan's amount, qualifying-event definition, milestone rule, and effective date.
 
-### 19. What specific event defines an appointment as 'qualified' for bonus purposes?
+### 19. Why is a scheduled appointment not automatically a qualifying appointment for compensation purposes?
 
 - Question key: `question-r-legacy-ch12-019`
 - Type: `single_choice`
 
-- [ ] The acquisition team signs a contract and completes the transaction.
-- [ ] The representative qualifies the lead and provides a clean handoff.
-- [correct] The seller actually shows up for the call with the acquisition team.
-- [ ] The representative schedules the call whether or not the seller attends.
+- [ ] Because scheduling moves the appointment outcome into the acquisition team's current records.
+- [ ] Because scheduling converts the appointment into a closed transaction before the call occurs.
+- [correct] Because the plan may require a defined event and CRM evidence beyond scheduling.
+- [ ] Because scheduling transfers qualification responsibility from the representative to the seller.
 
-Explanation: The seller actually shows up for the call with the acquisition team.
+Explanation: The plan may require a defined event and supporting CRM evidence beyond the act of scheduling.
 
-### 20. How many kept appointments are required to earn a total of $\$500$ in bonuses?
+### 20. Which two inputs are essential to an appointment-incentive calculation?
 
 - Question key: `question-r-legacy-ch12-020`
 - Type: `single_choice`
 
-- [ ] $25$ kept appointments.
-- [correct] $50$ kept appointments.
-- [ ] $75$ kept appointments.
-- [ ] $49$ kept appointments.
+- [ ] The number of calendar invitations and the average length of completed calls.
+- [correct] The documented qualifying-event count and the applicable milestone or calculation rule.
+- [ ] The employee's dial count and the acquisition manager's appointment capacity.
+- [ ] The number of leads assigned and the team's total monthly contract value.
 
-Explanation: $50$ kept appointments.
+Explanation: The count of documented qualifying events and the applicable plan's milestone or calculation rule.
 
-### 21. In the example of $30$ kept appointments and $3$ closed deals, what is the total of bonuses and commissions?
+### 21. What is the proper use of an arithmetic example in compensation training?
 
 - Question key: `question-r-legacy-ch12-021`
 - Type: `single_choice`
 
-- [ ] $\$5,250$.
-- [ ] $\$3,000$.
-- [ ] $\$2,250$.
-- [correct] $\$2,500$.
+- [ ] Use its plan version as the standing reference for future calculation practice.
+- [ ] Use its outcome when the employee's records produce a less favorable result.
+- [ ] Use its figures as minimum payments for anyone who completes the lesson.
+- [correct] Use it to demonstrate the method, then apply current terms to documented facts.
 
-Explanation: $\$2,500$.
+Explanation: Use it to demonstrate a calculation method, then substitute the employee's documented facts and current plan terms for an actual review.
 
-### 22. In the example of $40$ kept appointments and $5$ closed deals, what is the total of bonuses and commissions?
+### 22. How should commissions and appointment incentives be combined in one compensation review?
 
 - Question key: `question-r-legacy-ch12-022`
 - Type: `single_choice`
 
-- [correct] $\$5,250$.
-- [ ] $\$5,000$.
-- [ ] $\$3,750$.
-- [ ] $\$5,500$.
+- [correct] Evaluate each compensation component under its own rules, then combine only the supported results.
+- [ ] Choose whichever component produces the larger amount and omit the other component.
+- [ ] Apply the commission rate to appointments and the appointment milestone to closed deals.
+- [ ] Treat all pipeline events as one category and divide the total by the number of workdays.
 
-Explanation: $\$5,250$.
+Explanation: Evaluate each component under its own eligibility and calculation rules, then combine only the supported results.
 
-### 23. What is the maximum limit or 'cap' on commissions for a representative?
+### 23. How can an employee determine whether a commission limit applies?
 
 - Question key: `question-r-legacy-ch12-023`
 - Type: `single_choice`
 
-- [correct] There is no cap on commissions.
-- [ ] Commissions are capped at $\$5,000$ per month.
-- [ ] Commissions are capped after Tier 1.
-- [ ] Commissions are capped after five deals.
+- [correct] The current plan's cap, limitation, and exception terms for that period.
+- [ ] Use the number of open opportunities as the maximum number of payable deals.
+- [ ] Infer the limit from the largest payment another employee received.
+- [ ] Treat the highest tier threshold as the payment limit for the period.
 
-Explanation: There is no cap on commissions.
+Explanation: Read the cap, limitation, and exception language in the current written compensation plan.
 
-### 24. When is a deal officially attributed to a representative for commission purposes?
+### 24. Which evidence controls when a deal is attributed to an employee for compensation?
 
 - Question key: `question-r-legacy-ch12-024`
 - Type: `single_choice`
 
-- [correct] When the deal closes with a signed contract and a completed transaction.
-- [ ] When the representative graduates from the ramp period.
-- [ ] When an appointment is scheduled but the seller does not attend.
-- [ ] When the representative reaches the highest monthly tier.
+- [correct] The deal record matched to the plan's attribution, timing, and evidence rules.
+- [ ] The earliest documented view date matched to the current lead-owner field.
+- [ ] The contract signature date matched to the current acquisition record.
+- [ ] The first scheduled appointment date matched to the current calendar record.
 
-Explanation: When the deal closes with a signed contract and a completed transaction.
+Explanation: The qualifying-event, timing, attribution, and documentation requirements in the applicable plan, matched to the deal record.
 
-### 25. How is a representative's commission affected if a lead they worked takes three months to close?
+### 25. A lead closes long after the representative's original work. What is the correct way to review credit?
 
 - Question key: `question-r-legacy-ch12-025`
 - Type: `single_choice`
 
-- [ ] Their deal credit transfers to the representative’s manager.
-- [ ] They share the deal credit with the acquisition team.
-- [correct] They still receive full credit for the deal.
-- [ ] They lose all credit once the first month ends.
+- [ ] Use the original qualification date as the only fact needed for the decision.
+- [ ] Divide credit using the current team-participation record for the lead.
+- [correct] Preserve the history and apply the plan's attribution and ownership rules.
+- [ ] Assign credit to the person who most recently opened the CRM record.
 
-Explanation: They still receive full credit for the deal.
+Explanation: Preserve the activity history and apply the plan's attribution, timing, ownership, and eligibility rules to the complete record.
 
 ### 26. According to the text, what prevents 'good leads' from dying from neglect?
 
@@ -9876,77 +9876,77 @@ Explanation: More deals enter the representative's pipeline.
 
 Explanation: They allow the team to close deals efficiently without searching for missing information.
 
-### 29. What is the primary characteristic of the highest earners in the company?
+### 29. Which behavior makes an earnings forecast more reliable?
 
 - Question key: `question-r-legacy-ch12-029`
 - Type: `single_choice`
 
-- [ ] They reach the highest commission tier in their first month.
-- [ ] They schedule the most appointments each month.
-- [ ] They close every sourced deal without help from acquisitions.
-- [correct] They are thorough, consistent, and do not neglect leads.
+- [ ] Count appointment requests and closed deals as the same type of result.
+- [ ] Apply the top tier to all assigned leads before qualification begins.
+- [ ] Project the strongest documented week across the year as the performance baseline.
+- [correct] Use documented stages, realistic conversions, and the current plan.
 
-Explanation: They are thorough, consistent, and do not neglect leads.
+Explanation: Build it from documented pipeline stages, realistic conversion assumptions, and the current plan rather than treating every opportunity as earned.
 
-### 30. The transition point from ramp-up to the full commission structure is called _____.
+### 30. What should determine whether an employee leaves ramp status?
 
 - Question key: `question-r-legacy-ch12-030`
 - Type: `single_choice`
 
-- [ ] Qualification.
-- [ ] Attribution.
-- [correct] Graduation.
-- [ ] Commission.
+- [ ] Completion of the current course lessons plus the employee's preferred transition date.
+- [ ] A current acquisition-team opening plus the manager's staffing forecast.
+- [correct] The current plan's completion criteria and documented performance, confirmed through review.
+- [ ] The employee's first commission-eligible pipeline event under the current plan.
 
-Explanation: Graduation.
+Explanation: The current written plan's completion criteria and the employee's documented performance, confirmed through the authorized review.
 
-### 31. An appointment bonus is triggered by the seller _____ for the call, not just the act of scheduling.
+### 31. What evidence distinguishes a kept qualifying appointment from an appointment that was merely scheduled?
 
 - Question key: `question-r-legacy-ch12-031`
 - Type: `single_choice`
 
-- [ ] Agreeing.
-- [ ] Confirming.
-- [correct] Showing up.
-- [ ] Preparing.
+- [ ] A calendar invitation that was created before the end of the calling block.
+- [ ] A text message confirming that a time was proposed to the property owner.
+- [correct] A record of the required outcome and qualification details in the CRM.
+- [ ] A pipeline note showing that the representative intended to schedule a call.
 
-Explanation: Showing up.
+Explanation: The required appointment outcome and qualification details documented in the CRM under the plan's definition.
 
-### 32. Every _____ qualified appointments set in a month results in a $\$250$ bonus.
+### 32. An appointment count crosses a possible milestone. What should happen before an incentive is recorded?
 
 - Question key: `question-r-legacy-ch12-032`
 - Type: `single_choice`
 
-- [ ] $50$.
-- [correct] $25$.
-- [ ] $75$.
-- [ ] $30$.
+- [ ] Use the milestone applied to the acquisition team because both teams attend seller calls.
+- [correct] Validate the documented qualifying events and apply the effective milestone rule for that measured period.
+- [ ] Convert documented rescheduled appointments into qualifying events when a new time exists.
+- [ ] Record the incentive from the raw calendar count and validate attendance after payroll closes.
 
-Explanation: $25$.
+Explanation: Validate the qualifying events and apply the milestone rule from the plan effective for that measured period.
 
-### 33. What is the commission rate for the fourth deal closed in a single month?
+### 33. A deal closes near the boundary between two plan versions. Which timing question must be resolved first?
 
 - Question key: `question-r-legacy-ch12-034`
 - Type: `single_choice`
 
-- [ ] $\$1,000$ per deal.
-- [ ] $\$250$ per deal.
-- [ ] $\$500$ per deal.
-- [correct] $\$750$ per deal.
+- [ ] Whether the employee first opened the lead before or after the boundary.
+- [ ] Whether the seller first answered before or after the plan-version boundary.
+- [ ] Whether the acquisition forecast was recorded before or after the boundary.
+- [correct] Whether the plan assigns the deal to the earlier or later period under its timing rules.
 
-Explanation: $\$750$ per deal.
+Explanation: Whether the plan assigns the deal to the earlier or later effective period under its timing definition.
 
-### 34. What is the commission rate for the first deal if a total of five deals are closed in that month?
+### 34. Why must a tiered calculation preserve the order and timing of qualifying events?
 
 - Question key: `question-r-legacy-ch12-035`
 - Type: `single_choice`
 
-- [ ] $\$750$.
-- [correct] $\$1,000$.
-- [ ] $\$500$.
-- [ ] $\$250$.
+- [ ] Those facts set the employee's role assignment for the next review period.
+- [correct] Those timing facts may determine the applicable tier and treatment of earlier events.
+- [ ] Those facts replace the need to verify whether each deal meets the eligibility definition.
+- [ ] Those facts determine the seller's repair budget and the acquisition team's offer amount.
 
-Explanation: $\$1,000$.
+Explanation: Those facts may determine which tier applies and whether the plan recalculates earlier events.
 
 ### 35. How does the text define a 'clean, complete package' for a handoff?
 
@@ -9960,125 +9960,125 @@ Explanation: $\$1,000$.
 
 Explanation: A handoff with all necessary information that allows the acquisition team to close efficiently.
 
-### 36. What is the primary objective of the graduation period?
+### 36. What should a compensation-plan graduation review accomplish?
 
 - Question key: `question-r-legacy-ch12-037`
 - Type: `single_choice`
 
-- [ ] Sourcing exactly five deals to reach the maximum commission tier.
-- [ ] Setting 25 qualified appointments to earn an appointment bonus.
-- [ ] Closing every transaction without help from the acquisition team.
-- [correct] Consistently hitting KPIs for a full month ($30$ days).
+- [ ] Predict the employee's annual earnings from the strongest week of ramp performance.
+- [ ] Authorize the employee to change CRM outcomes when a result misses a milestone.
+- [ ] Replace the written terms with a simplified rate chosen by the reviewer.
+- [correct] Confirm readiness, current terms, documentation duties, and escalation paths.
 
-Explanation: Consistently hitting KPIs for a full month ($30$ days).
+Explanation: Confirm readiness, explain the current structure and documentation duties, and identify where questions or disputes are escalated.
 
-### 37. If a representative sets $49$ kept appointments, how much bonus money do they earn?
+### 37. A report lists many appointments. What audit should occur before a bonus calculation?
 
 - Question key: `question-r-legacy-ch12-038`
 - Type: `single_choice`
 
-- [ ] $\$0$.
-- [correct] $\$250$.
-- [ ] $\$750$.
-- [ ] $\$500$.
+- [ ] Check whether the total exceeds the representative's dial count for the same period.
+- [correct] Check whether each counted event matches the qualifying definition and source records.
+- [ ] Check whether the average appointment duration matches the team's average talk time.
+- [ ] Check whether the current acquisition calendar shows capacity for the listed invitations.
 
-Explanation: $\$250$.
+Explanation: Check each counted event against the plan's qualifying definition and reconcile it to the appointment and CRM records.
 
-### 38. Which role is responsible for building the relationship with the seller before the handoff?
+### 38. Which role normally builds the seller relationship and discovery record before the acquisitions handoff?
 
 - Question key: `question-r-legacy-ch12-039`
 - Type: `single_choice`
 
-- [ ] The seller.
-- [correct] The representative (or lead sourcer).
-- [ ] The representative’s manager.
-- [ ] The acquisition team.
+- [ ] The marketing specialist who selected the original outreach audience.
+- [correct] The seller-facing representative assigned to the lead.
+- [ ] The finance reviewer who later reconciles compensation records.
+- [ ] The acquisition manager before the representative has completed qualification.
 
-Explanation: The representative (or lead sourcer).
+Explanation: The seller-facing representative assigned to the lead.
 
-### 39. What financial benefit does a representative receive 'on top of' commissions and bonuses during ramp?
+### 39. Why should ramp compensation be reviewed separately from post-ramp compensation?
 
 - Question key: `question-r-legacy-ch12-040`
 - Type: `single_choice`
 
-- [correct] Their hourly base pay.
-- [ ] A monthly training stipend.
-- [ ] A guaranteed signing bonus.
-- [ ] A ramp graduation bonus.
+- [correct] The two periods may use different components, conditions, or effective dates.
+- [ ] Ramp results are stored outside the CRM and cannot be used in any later review.
+- [ ] Post-ramp work is performed only by acquisitions and never involves seller-facing representatives.
+- [ ] Ramp compensation is calculated from property values while post-ramp compensation is calculated from call duration.
 
-Explanation: Their hourly base pay.
+Explanation: The current plan may assign different components, eligibility conditions, or effective dates to the two periods.
 
-### 40. What is the commission rate for sourcing $2$ deals in a month?
+### 40. Two deals closed in the same period. Which dataset supports their commission calculation?
 
 - Question key: `question-r-legacy-ch12-041`
 - Type: `single_choice`
 
-- [ ] $\$1,000$ per deal.
-- [ ] $\$250$ per deal.
-- [ ] $\$750$ per deal.
-- [correct] $\$500$ per deal.
+- [ ] The applicable market's repair estimates plus the acquisition manager's calendar availability.
+- [ ] The two sellers' asking prices plus the representative's combined talk time.
+- [ ] The team's total lead count plus the employee's number of scheduled follow-ups.
+- [correct] The eligibility, timing, and status of both deals plus the applicable rate and tier rules.
 
-Explanation: $\$500$ per deal.
+Explanation: Both deals' eligibility, timing, ownership, and status records plus the applicable plan's rate and tier rules.
 
-### 41. At what count of monthly deals does the commission rate reach its maximum tier of $\$1,000$?
+### 41. A plan uses tiers. What should be checked before describing one tier as the maximum?
 
 - Question key: `question-r-legacy-ch12-042`
 - Type: `single_choice`
 
-- [correct] $5$ deals.
-- [ ] $3$ deals.
-- [ ] $2$ deals.
-- [ ] $4$ deals.
+- [correct] Whether the current plan defines additional or higher tiers for that period.
+- [ ] Whether the team's pipeline contains enough leads to reach the named threshold.
+- [ ] Whether any employee has ever closed more deals than the named threshold.
+- [ ] Whether the named tier has the longest description in the training material.
 
-Explanation: $5$ deals.
+Explanation: Whether the current plan defines a highest tier, any additional tiers, and the period in which they apply.
 
-### 42. What prevents a deal from being attributed to a representative even if they qualified the lead?
+### 42. A deal record has an incomplete handoff. What should happen before compensation attribution is decided?
 
 - Question key: `question-r-legacy-ch12-044`
 - Type: `single_choice`
 
-- [ ] Following up with the lead for three months.
-- [ ] The seller showing up for the acquisition call.
-- [correct] Failing to complete a clean handoff to the acquisition team.
-- [ ] The deal reaching the highest monthly tier.
+- [ ] Assign full credit to the earliest person who contacted the seller and close the review.
+- [ ] Remove the lead history so the acquisition outcome becomes the only evidence considered.
+- [correct] Complete the record, preserve the audit trail, and apply the attribution rules.
+- [ ] Split credit evenly among the representative, manager, and acquisition owner.
 
-Explanation: Failing to complete a clean handoff to the acquisition team.
+Explanation: Correct or complete the record when possible, preserve the audit trail, and apply the plan's attribution and eligibility rules.
 
-### 43. What is the total bonus and commission for $2$ deals and $25$ kept appointments?
+### 43. Which reconciliation prevents double counting when deals and appointments both appear in one period?
 
 - Question key: `question-r-legacy-ch12-046`
 - Type: `single_choice`
 
-- [ ] $\$1,500$.
-- [ ] $\$1,000$.
-- [ ] $\$1,750$.
-- [correct] $\$1,250$.
+- [ ] Merge all events into one total and apply whichever calculation produces the larger result.
+- [ ] Count the appointment and later deal as two events under a single current rate.
+- [ ] Exclude appointment events associated with closed deals under the current combined review.
+- [correct] Classify each event once, apply separate rules, and trace the combined result.
 
-Explanation: $\$1,250$.
+Explanation: Classify each documented event once, apply the separate rules for each component, and trace the combined result back to source records.
 
-### 44. How many appointment bonuses are awarded if a representative reaches $75$ kept appointments?
+### 44. Why can a raw appointment count differ from the number used in an incentive calculation?
 
 - Question key: `question-r-legacy-ch12-047`
 - Type: `single_choice`
 
-- [ ] One bonus (totaling $\$250$).
-- [ ] Two bonuses (totaling $\$500$).
-- [ ] Four bonuses (totaling $\$1,000$).
-- [correct] Three bonuses (totaling $\$750$).
+- [ ] The raw count includes property values, while the incentive calculation uses repair estimates.
+- [ ] The raw count is owned by acquisitions, while the current incentive calculation is owned by marketing.
+- [ ] The raw count measures call duration, while the incentive calculation measures employee tenure.
+- [correct] The raw count omits qualifying outcomes, documentation, timing, exclusions, and milestone treatment.
 
-Explanation: Three bonuses (totaling $\$750$).
+Explanation: The plan may require qualifying outcomes, documentation, timing, exclusions, or milestone treatment that the raw count does not show.
 
-### 45. What is the specific milestone for the second appointment bonus?
+### 45. A learner remembers a second appointment milestone from training. How should that memory be used?
 
 - Question key: `question-r-legacy-ch12-048`
 - Type: `single_choice`
 
-- [ ] $25$ kept appointments.
-- [ ] $49$ kept appointments.
-- [ ] $75$ kept appointments.
-- [correct] $50$ kept appointments.
+- [ ] Apply it whenever the employee's calendar count is close to the remembered number.
+- [ ] Apply it only to appointments scheduled during the final week of the period.
+- [ ] Convert it into a commission tier when the related lead later closes.
+- [correct] Use it as a concept cue and verify the effective plan's actual milestone.
 
-Explanation: $50$ kept appointments.
+Explanation: Treat it as a concept cue and verify the actual milestone in the plan effective for the measured period.
 
 ### 46. Why is 'consistent follow-up' emphasized for maximizing earnings?
 
@@ -10092,70 +10092,70 @@ Explanation: $50$ kept appointments.
 
 Explanation: It ensures deals actually convert instead of going cold.
 
-### 47. What two documents/events signify a 'closed' deal?
+### 47. Which evidence best supports treating a deal as closed in a compensation review?
 
 - Question key: `question-r-legacy-ch12-051`
 - Type: `single_choice`
 
-- [correct] A signed contract and a completed transaction.
-- [ ] Thirty KPI days and graduation from the ramp period.
-- [ ] A qualified lead and a clean handoff.
-- [ ] A scheduled appointment and the seller showing up.
+- [correct] The plan-required closing evidence matched to the deal's documented final status.
+- [ ] The approved offer record plus a projected transaction-completion date.
+- [ ] The current signed contract alone, matched to a scheduled closing date.
+- [ ] The completed acquisition handoff plus the seller's verbal acceptance.
 
-Explanation: A signed contract and a completed transaction.
+Explanation: The closing evidence required by the applicable plan, matched to the deal's documented final status.
 
-### 48. True or False: Appointment bonuses are based on the number of appointments scheduled.
+### 48. The calendar and CRM disagree about an appointment outcome. What should a reviewer do before deciding incentive eligibility?
 
 - Question key: `question-r-legacy-ch12-052`
 - Type: `single_choice`
 
-- [ ] True; every scheduled appointment counts whether or not the seller attends.
-- [correct] False; they are based on appointments where the seller actually shows up.
-- [ ] False; they are based on the number of deals closed by the acquisition team.
-- [ ] False; they are based on the number of leads placed in the pipeline.
+- [ ] Use the calendar's scheduled status as the final qualifying outcome.
+- [correct] Reconcile the records, resolve the outcome, and apply the qualifying-event definition.
+- [ ] Count the appointment under the current milestone and reconcile it next period.
+- [ ] Use the CRM's most recent edit as the final qualifying outcome.
 
-Explanation: False; they are based on appointments where the seller actually shows up.
+Explanation: Reconcile the source records, resolve the actual outcome, and apply the plan's qualifying-event definition.
 
-### 49. How much total commission is earned for $4$ deals in one month?
+### 49. What is the final control step in a multi-deal commission calculation?
 
 - Question key: `question-r-legacy-ch12-053`
 - Type: `single_choice`
 
-- [ ] $\$2,000$.
-- [correct] $\$3,000$.
-- [ ] $\$2,500$.
-- [ ] $\$4,000$.
+- [ ] Compare the result with the employee's preferred forecast and increase it to match when necessary.
+- [correct] Compare the result with eligible deals, tier logic, plan version, and reporting period.
+- [ ] Compare the result with total pipeline value and use whichever figure is higher.
+- [ ] Compare the result with the team's call volume and convert the difference into another deal.
 
-Explanation: $\$3,000$.
+Explanation: Reconcile the calculated result to the eligible deal records, governing plan version, tier logic, and reporting period.
 
-### 50. In the compensation plan, what is the consequence of letting a lead 'slip'?
+### 50. Lead ownership is disputed before payroll review. What is the sound resolution path?
 
 - Question key: `question-r-legacy-ch12-054`
 - Type: `single_choice`
 
-- [correct] It is viewed as potential commission left on the table.
-- [ ] The lead is reassigned to another representative.
-- [ ] The lead is removed from the CRM at the end of the day.
-- [ ] The representative loses that month's appointment bonuses.
+- [correct] Preserve the complete CRM evidence and use the plan's authorized ownership-review process.
+- [ ] Give credit to the employee with the larger monthly forecast and update the record afterward.
+- [ ] Remove both employees from the lead so the acquisition owner receives the commission.
+- [ ] Use the current message record as the deciding evidence of lead ownership.
 
-Explanation: It is viewed as potential commission left on the table.
+Explanation: Freeze assumptions, preserve the CRM evidence, and escalate the ownership and eligibility question through the plan's authorized process.
 
-### 51. What does the text identify as the connection between daily work and earnings?
+### 51. How does daily execution connect to compensation without turning every activity into earned pay?
 
 - Question key: `question-r-legacy-ch12-055`
 - Type: `single_choice`
 
-- [ ] The monthly appointment total as the sole measure of all earnings.
-- [ ] The hourly base rate alone regardless of pipeline outcomes.
-- [correct] The compensation structure (specifically follow-up, qualification, and handoffs).
-- [ ] The acquisition team's deal volume without representative input.
+- [ ] A documented scheduled appointment earns an incentive when its calling-block task is complete.
+- [ ] A documented dial becomes payable when the current activity target is met.
+- [correct] A documented outcome enters the calculation only when it meets the plan's rules.
+- [ ] A documented qualified lead becomes a closed deal when the acquisition team accepts the handoff.
 
-Explanation: The compensation structure (specifically follow-up, qualification, and handoffs).
+Explanation: Daily work creates documented outcomes; only outcomes that meet the current plan's eligibility and attribution rules enter the compensation calculation.
 
 ## 18. Operator Playbook and Daily Mission Control Checkpoint
 
 - Pool key: `quiz-slot-18`
-- Pool SHA-256: `21b86b46ff63e3be37d4e16c88e1e1aaed96973f4442fb9e61042ca2dc848e4d`
+- Pool SHA-256: `78a06155e23ac6808c3b3e324ea67344df65eb5684100f82fdb4ea094cff1f7e`
 - Approval status: `approved`
 
 ### 1. Which software tool is used by BMH operators for time tracking and clocking in?
@@ -10218,17 +10218,17 @@ Explanation: Stage 2
 
 Explanation: People who the operator has not been able to connect with yet.
 
-### 6. What is the primary purpose of spending the first half hour of the day on PropStream?
+### 6. An operator finds two different opening checklists. What resolves which workflow applies today?
 
 - Question key: `question-r-slot-module-18-006`
 - Type: `single_choice`
 
-- [ ] To place 60 to 80 dials before the first energy reset.
-- [correct] To perform research and verify property details for the top 10 to 15 leads.
-- [ ] To log call notes and update stages for every active lead.
-- [ ] To post the daily standup and tomorrow’s plan in Slack.
+- [ ] The checklist attached to the oldest recurring calendar event.
+- [correct] The approved playbook or scorecard for the current role and period.
+- [ ] The current approved call plan for the acquisition team in the same market.
+- [ ] The checklist used by the operator who logged in first that morning.
 
-Explanation: To perform research and verify property details for the top 10 to 15 leads.
+Explanation: The approved operating playbook or scorecard for the operator's role and current effective period.
 
 ### 7. What is the priority sequence for the first calling block of the day?
 
@@ -10242,17 +10242,17 @@ Explanation: To perform research and verify property details for the top 10 to 1
 
 Explanation: Scheduled callbacks, followed by other pipeline follow-ups, then new leads.
 
-### 8. How many dials should an operator aim for in the first calling block?
+### 8. Which information makes a first-block dial result comparable with its target?
 
 - Question key: `question-r-slot-module-18-009`
 - Type: `single_choice`
 
-- [ ] 10 to 15 dials
-- [ ] 110 to 150 dials
-- [correct] 60 to 80 dials
-- [ ] 150 to 200 dials
+- [ ] The actual count and the acquisition team's current appointment target must fall on the same day.
+- [ ] The actual count and the current approved full-day target must cover the same date.
+- [correct] The actual count and approved target must share the same block, period, and counting definition.
+- [ ] The actual count and the operator's current historical best must use the same lead list.
 
-Explanation: 60 to 80 dials
+Explanation: The actual count and the approved target must cover the same role, block, effective period, and counting definition.
 
 ### 9. When should call notes be logged in the Sandra CRM?
 
@@ -10266,17 +10266,17 @@ Explanation: 60 to 80 dials
 
 Explanation: Immediately after every call.
 
-### 10. What task should be performed between dials to maximize contact attempts?
+### 10. What follow-up task may be completed between dials after any required message approval is obtained?
 
 - Question key: `question-r-slot-module-18-011`
 - Type: `single_choice`
 
-- [ ] Researching the top 10 to 15 properties.
-- [ ] Reviewing the full pipeline for tomorrow.
-- [correct] Firing off follow-up texts.
-- [ ] Completing Stage 4 handoff checklists.
+- [ ] Pause the calling block to research unrelated properties for the next day.
+- [ ] Skip the CRM record because the message was sent between calls.
+- [correct] Send the approved text, record it in the CRM, and resume calling.
+- [ ] Send an unreviewed message from a personal number so it is faster.
 
-Explanation: Firing off follow-up texts.
+Explanation: Send the approved follow-up text, record it in the CRM, and return to the calling workflow.
 
 ### 11. What is the recommended duration and frequency for energy resets/stretching breaks?
 
@@ -10290,17 +10290,17 @@ Explanation: Firing off follow-up texts.
 
 Explanation: Fifteen minutes after a calling block.
 
-### 12. What is the target dial count an operator should hit by the time they break for lunch?
+### 12. Why should a before-lunch progress check use the current scorecard definition?
 
 - Question key: `question-r-slot-module-18-013`
 - Type: `single_choice`
 
-- [ ] 150 to 200 dials
-- [ ] 10 to 15 dials
-- [correct] 110 to 150 dials
-- [ ] 60 to 80 dials
+- [ ] It converts the documented dial count into the current quality-conversation total.
+- [ ] It makes the afternoon block optional whenever the morning feels productive.
+- [correct] It aligns documented activity with the approved expectation and definition for that period.
+- [ ] It allows the operator to replace incomplete CRM records with a personal activity estimate.
 
-Explanation: 110 to 150 dials
+Explanation: It keeps the operator's measured activity aligned with the approved expectation for that role and period.
 
 ### 13. The _____ block, scheduled after lunch, is for updating stages, sending emails, and completing handoff checklists.
 
@@ -10314,17 +10314,17 @@ Explanation: 110 to 150 dials
 
 Explanation: admin
 
-### 14. What is the total dial target for a full workday at BMH Group?
+### 14. An operator completed the morning target but is unsure about the full-day expectation. What should be compared?
 
 - Question key: `question-r-slot-module-18-015`
 - Type: `single_choice`
 
-- [ ] 60 to 80 total dials
-- [correct] 150 to 200 total dials
-- [ ] 10 to 15 total dials
-- [ ] 110 to 150 total dials
+- [ ] The number of open leads against the acquisition team's monthly contract goal.
+- [correct] The full-day activity records and the approved target using its defined counting method.
+- [ ] The operator's logged-in time against the longest call completed that day.
+- [ ] The morning dial count against another operator's weekly appointment total.
 
-Explanation: 150 to 200 total dials
+Explanation: The documented full-day activity against the full-day definition and target in the current approved operating plan.
 
 ### 15. What activity should occupy the last half hour of the workday?
 
@@ -10350,17 +10350,17 @@ Explanation: Pipeline review and scheduling follow-ups for tomorrow.
 
 Explanation: specific date
 
-### 17. Under what condition is it considered that an operator has "worked the day" regarding dials?
+### 17. What evidence supports a claim that the day's required work was completed?
 
 - Question key: `question-r-slot-module-18-018`
 - Type: `single_choice`
 
-- [ ] They reached the lunch target of 110 to 150 dials.
-- [ ] They researched the top 10 to 15 leads before calling.
-- [ ] They hit the first-block target of 60 to 80 dials.
-- [correct] They hit the target of 150-200 dials.
+- [ ] A long login session and a list of leads intended for tomorrow.
+- [ ] A teammate's total activity and the operator's description of feeling busy.
+- [ ] A full calendar and an estimate of how many calls probably connected.
+- [correct] A set of CRM and activity records satisfying the plan's defined requirements.
 
-Explanation: They hit the target of 150-200 dials.
+Explanation: CRM and activity records that satisfy the current plan's defined activity and outcome requirements.
 
 ### 18. What is the core philosophy behind the high volume of calls at BMH?
 
@@ -10593,32 +10593,32 @@ Explanation: The genuine care and follow-through brought to every conversation.
 ## 19. Career Growth Path Checkpoint
 
 - Pool key: `quiz-slot-19`
-- Pool SHA-256: `0f52e746349e5b7a8ca8087a57ec284296004c69a5a5003d258b5c871b82ad89`
-- Approval status: `approved`
+- Pool SHA-256: `d96906b18def7a616fbca27a858f68ad914d597f4bb3a93c5ad2784d3370ff7c`
+- Approval status: `pending_human_review`
 
-### 1. What is the foundational task for someone starting at BMH Group?
+### 1. What is the safest foundation for career growth at BMH Group?
 
 - Question key: `question-r-legacy-ch13-001`
 - Type: `single_choice`
 
-- [ ] Opening new markets, building new teams, and creating new positions.
-- [ ] Hiring people, training them, coaching them, and owning team performance.
-- [ ] Presenting offers, negotiating terms, structuring deals, and closing directly.
-- [correct] Working leads, qualifying sellers, building a pipeline, and handing off to acquisitions.
+- [ ] Interest in a future title supported mainly by one strong performance period.
+- [ ] Visible participation in leadership meetings as the primary evidence of role mastery.
+- [ ] Broad exposure to future-role tasks before current-role results are consistent.
+- [correct] Reliable capability and documented results demonstrated in the current assigned role.
 
-Explanation: Working leads, qualifying sellers, building a pipeline, and handing off to acquisitions.
+Explanation: Build reliable capability in the current assigned role and document the results.
 
-### 2. To what standard must a starting employee master the sellers and the pipeline?
+### 2. How should an employee demonstrate mastery of sellers and pipeline work?
 
 - Question key: `question-r-legacy-ch13-002`
 - Type: `single_choice`
 
-- [correct] They must understand the sellers and internalize the pipeline.
-- [ ] They must understand team output and internalize the commission structure.
-- [ ] They must understand signed contracts and internalize the management path.
-- [ ] They must understand new markets and internalize every growth opportunity.
+- [correct] Apply current standards, maintain accurate records, and improve through feedback.
+- [ ] Skip feedback once a single seller conversation goes well.
+- [ ] Rely on confidence alone while leaving pipeline records incomplete.
+- [ ] Use the current workflow from another role when it produces a faster handoff.
 
-Explanation: They must understand the sellers and internalize the pipeline.
+Explanation: Apply the current role standards reliably, keep records accurate, and use feedback to improve.
 
 ### 3. What is the primary goal regarding KPIs for foundational employees?
 
@@ -10644,29 +10644,29 @@ Explanation: Hitting KPIs consistently.
 
 Explanation: The leads must be clean, well-documented, and genuinely prepared for the next stage.
 
-### 5. What is the required duration of consistent performance to be considered for promotion?
+### 5. An employee and manager remember different advancement-review periods. What should settle the question?
 
 - Question key: `question-r-legacy-ch13-005`
 - Type: `single_choice`
 
-- [correct] 90-plus days.
-- [ ] Good days only.
-- [ ] No sustained period.
-- [ ] One good day.
+- [correct] The current written criteria that apply to the employee's review.
+- [ ] The amount of time remaining in the employee's current calendar quarter.
+- [ ] The date the employee first expressed interest in a different role.
+- [ ] The review period used for the most recently promoted employee on another team.
 
-Explanation: 90-plus days.
+Explanation: The current written role and advancement criteria that apply to the employee's review.
 
-### 6. In addition to hitting numbers, what must be maintained for 90-plus days to move up?
+### 6. Why does completing a stated review period not establish advancement readiness by itself?
 
 - Question key: `question-r-legacy-ch13-006`
 - Type: `single_choice`
 
-- [correct] A spotless CRM.
-- [ ] A higher commission tier.
-- [ ] A signed-contract pipeline.
-- [ ] A new-market assignment.
+- [correct] Because advancement also requires current criteria, documented capability, and authorized review.
+- [ ] Because the review period measures workload rather than the employee's training progress.
+- [ ] Because the manager's time in the role is the primary evidence of employee readiness.
+- [ ] Because the review period must match the current compensation plan's payout cycle.
 
-Explanation: A spotless CRM.
+Explanation: Because advancement also depends on current role criteria, documented performance, required capability, and an authorized review.
 
 ### 7. Which level of lead involves dealing with 'emotional family dynamics'?
 
@@ -10704,41 +10704,41 @@ Explanation: Multi-owner properties.
 
 Explanation: By navigating sensitive conversations with skill.
 
-### 10. What leadership responsibility is introduced at the second level of lead management?
+### 10. Which behavior demonstrates readiness to support newer teammates without assuming a promised level or title?
 
 - Question key: `question-r-legacy-ch13-010`
 - Type: `single_choice`
 
-- [correct] Mentoring newer people coming in behind them.
-- [ ] Opening new markets, teams, and positions for the company.
-- [ ] Owning the full sales cycle through a signed contract.
-- [ ] Owning the performance and output of an entire team.
+- [correct] Sharing proven lead-management practices while remaining accountable for current-role results.
+- [ ] Assigning corrective tasks from the current scorecard before manager review.
+- [ ] Taking over a new teammate's assigned leads to demonstrate advanced ownership.
+- [ ] Evaluating the teammate against the employee's current personal workflow.
 
-Explanation: Mentoring newer people coming in behind them.
+Explanation: Sharing proven lead-management practices while remaining accountable for current-role results.
 
-### 11. How does the commission structure change at the second level?
+### 11. What evidence confirms a compensation change associated with a new role or level?
 
 - Question key: `question-r-legacy-ch13-012`
 - Type: `single_choice`
 
-- [ ] The commission stays at the same tier despite added seniority.
-- [ ] The commission becomes tied to the output of the entire team.
-- [correct] The commission tier increases.
-- [ ] The commission becomes limited to deals closed directly.
+- [ ] A development plan listing skills the employee hopes to build for a future role.
+- [ ] The employee's first completed task that resembles work in the new role.
+- [correct] The authorized offer or plan issued for that role and effective period.
+- [ ] A team announcement that describes the new title but contains no compensation terms.
 
-Explanation: The commission tier increases.
+Explanation: The authorized written offer, role plan, or compensation plan issued for that role and effective period.
 
-### 12. What marks the transition to the 'next level' beyond complex lead management?
+### 12. What must happen before an employee takes on responsibilities beyond the current role?
 
 - Question key: `question-r-legacy-ch13-013`
 - Type: `single_choice`
 
-- [correct] Presenting offers, negotiating terms, and closing deals directly.
-- [ ] Qualifying sellers, building a pipeline, and handing leads off to acquisitions.
-- [ ] Mentoring newer people, receiving less oversight, and moving to a higher tier.
-- [ ] Hiring team members, coaching their work, and owning the team's performance.
+- [correct] An authorized, documented change to the employee's role.
+- [ ] The employee must begin the extra work first and request authorization only if a problem occurs.
+- [ ] A coworker must informally agree that the employee appears ready for the additional duties.
+- [ ] The employee's current scorecard expands the role when its top metric is reached.
 
-Explanation: Presenting offers, negotiating terms, and closing deals directly.
+Explanation: The change must be authorized and documented in the current written role plan.
 
 ### 13. What is the scope of responsibility for a closer at BMH Group?
 
@@ -10752,29 +10752,29 @@ Explanation: Presenting offers, negotiating terms, and closing deals directly.
 
 Explanation: Owning the full sales cycle from handoff to signed contract.
 
-### 14. Why is the earning potential significantly higher for those closing deals directly?
+### 14. How should earning potential for a different role be discussed?
 
 - Question key: `question-r-legacy-ch13-015`
 - Type: `single_choice`
 
-- [ ] Compensation is tied to the output of the entire management team.
-- [correct] Commission is earned on closed deals rather than just sourced leads.
-- [ ] The higher commission tier applies only to complex lead qualification.
-- [ ] Daily oversight is reduced after consistent foundational performance.
+- [ ] As the current team's average earnings for that role, projected from recent results.
+- [correct] As subject to that role's current written plan, eligibility conditions, and actual results.
+- [ ] Using the approved compensation plan for a related role with similar responsibilities.
+- [ ] As the current role's opportunity forecast before eligibility criteria are applied.
 
-Explanation: Commission is earned on closed deals rather than just sourced leads.
+Explanation: As subject to that role's current written compensation plan, eligibility rules, and actual results.
 
-### 15. Besides negotiation skills, what technical understanding is required for direct closers?
+### 15. How should an employee prepare for work that requires more technical deal knowledge?
 
 - Question key: `question-r-legacy-ch13-016`
 - Type: `single_choice`
 
-- [ ] Promotion timing.
-- [ ] Team compensation.
-- [ ] Daily oversight.
-- [correct] Market knowledge.
+- [ ] Use the current role's self-study library as sufficient proof of readiness.
+- [ ] Use one successful call as evidence that technical judgment is ready.
+- [ ] Use an approved role description as the only preparation for complex work.
+- [correct] Use approved learning, practice, feedback, and readiness criteria.
 
-Explanation: Market knowledge.
+Explanation: Develop the required skills through approved training, practice, feedback, and documented readiness criteria.
 
 ### 16. What skill is required when a straightforward approach to a deal fails?
 
@@ -10788,41 +10788,41 @@ Explanation: Market knowledge.
 
 Explanation: The ability to structure deals creatively.
 
-### 17. What is the primary source of energy for those on the management path?
+### 17. What is a policy-safe reason to pursue leadership development?
 
 - Question key: `question-r-legacy-ch13-018`
 - Type: `single_choice`
 
-- [ ] Qualifying sellers and building a pipeline.
-- [correct] Building a team and developing other people.
-- [ ] Opening new markets and positions.
-- [ ] Presenting offers and closing deals directly.
+- [ ] To build authority from team results before leadership ownership is documented.
+- [correct] To build capability for supporting people and outcomes in an authorized role.
+- [ ] To qualify under the approved compensation example used in training.
+- [ ] To practice supervisory decisions before receiving the current role assignment.
 
-Explanation: Building a team and developing other people.
+Explanation: To build the capability to support people and outcomes under an authorized role, not to rely on a promised path.
 
-### 18. What are the four core responsibilities of a manager at BMH Group?
+### 18. A new manager is asked to approve an action owned by another role. What should the manager check first?
 
 - Question key: `question-r-legacy-ch13-019`
 - Type: `single_choice`
 
-- [ ] Practicing, applying feedback, reviewing, and confirming ownership.
-- [ ] Presenting, negotiating, structuring, and closing deals.
-- [correct] Hiring, training, coaching, and owning team performance.
-- [ ] Sourcing, qualifying, documenting, and handing off leads.
+- [ ] Check the documented team roster to see who has the longest company tenure.
+- [ ] Check the approved meeting agenda to see whether the action appears as a discussion item.
+- [correct] Check the current role plan and authorized procedures for the actual ownership boundary.
+- [ ] Check the current scorecard to see whether the manager has the larger activity target.
 
-Explanation: Hiring, training, coaching, and owning team performance.
+Explanation: The current manager role plan and authorized operating procedures for the actual ownership boundary.
 
-### 19. How is compensation determined at the management level?
+### 19. What makes a management-level compensation term applicable to a particular employee?
 
 - Question key: `question-r-legacy-ch13-020`
 - Type: `single_choice`
 
-- [ ] It is earned only on deals the manager closes directly.
-- [ ] It is tied only to the number of sourced leads.
-- [correct] It is tied to the output of the entire team.
-- [ ] It is determined by the amount of daily oversight received.
+- [ ] It is associated with a responsibility the employee hopes to assume later.
+- [ ] It appeared in the highest-earning manager's prior-year results.
+- [correct] It is in the authorized plan for the employee's role and effective date.
+- [ ] It was mentioned in a leadership workshop attended by the employee.
 
-Explanation: It is tied to the output of the entire team.
+Explanation: It appears in the authorized plan issued for that employee's role and effective date.
 
 ### 20. On what specific factor are promotions at BMH Group based?
 
@@ -10836,29 +10836,29 @@ Explanation: It is tied to the output of the entire team.
 
 Explanation: Demonstrated performance and readiness.
 
-### 21. What is the typical timeframe for advancement at BMH Group?
+### 21. How should an employee learn the current timing of an advancement process?
 
 - Question key: `question-r-legacy-ch13-022`
 - Type: `single_choice`
 
-- [ ] Advancement follows a fixed six-month schedule.
-- [ ] Advancement always occurs after exactly 90 days.
-- [ ] Advancement is guaranteed at the one-year mark.
-- [correct] There is no fixed schedule; it varies from six months to a year or more.
+- [ ] Use the approved review period assigned to another employee in a related role.
+- [ ] Use the current project's end date as the advancement-process start date.
+- [ ] Use the current quarter boundary as the standard advancement-review date.
+- [correct] Use the current criteria and ask the authorized reviewer.
 
-Explanation: There is no fixed schedule; it varies from six months to a year or more.
+Explanation: Consult the current written criteria and authorized reviewer; training does not promise a timeframe.
 
-### 22. Regarding number consistency, what is the expectation for high performers?
+### 22. How should consistent performance be demonstrated?
 
 - Question key: `question-r-legacy-ch13-023`
 - Type: `single_choice`
 
-- [ ] Reviewing the numbers regularly without applying them to daily execution.
-- [ ] Hitting numbers on good days while results vary the rest of the time.
-- [correct] Hitting numbers every day for extended stretches, not just on good days.
-- [ ] Hitting numbers once before asking to take on a new opportunity.
+- [ ] By comparing results with current targets for a related role in the same period.
+- [ ] By selecting only the employee's best isolated result and omitting the rest of the period.
+- [correct] By showing documented results against the current scorecard across the review period.
+- [ ] By relying on an undocumented impression instead of the assigned scorecard.
 
-Explanation: Hitting numbers every day for extended stretches, not just on good days.
+Explanation: Against the current role scorecard with documented results across the review period defined by current policy.
 
 ### 23. How are employees expected to contribute to the overall team environment?
 
@@ -10896,29 +10896,29 @@ Explanation: Hearing feedback, applying it, and returning with improved results 
 
 Explanation: Whether their leads are producing revenue and turning into closed deals.
 
-### 26. What happens to high performers when BMH Group expands into new markets?
+### 26. How can strong performance support an employee when new opportunities arise?
 
 - Question key: `question-r-legacy-ch13-029`
 - Type: `single_choice`
 
-- [ ] They move directly into management regardless of demonstrated readiness.
-- [ ] They receive new ownership before it appears in their written role plan.
-- [ ] They lose consideration because expansion is unrelated to prior performance.
-- [correct] They are the first ones considered for every new opportunity that opens up.
+- [ ] It supports direct placement into the next open role based on current results.
+- [ ] It moves the employee into management when the team has a current opening.
+- [ ] It authorizes temporary ownership of new tasks while the role review is pending.
+- [correct] It may support consideration under current criteria and business needs.
 
-Explanation: They are the first ones considered for every new opportunity that opens up.
+Explanation: Documented performance may support consideration under the current criteria and business needs, but it does not establish an opportunity or role change.
 
-### 27. At what stage does a team member move from sourcing to negotiating?
+### 27. What authorizes a move from sourcing work to negotiating work?
 
 - Question key: `question-r-legacy-ch13-030`
 - Type: `single_choice`
 
-- [ ] As soon as a new market opens regardless of performance or readiness.
-- [ ] Immediately after qualifying one seller and entering one lead in the CRM.
-- [correct] After proving consistent performance, CRM hygiene, and leadership at the foundation and complex lead levels.
-- [ ] After 90 days even when leads have no notes, stage, or next action.
+- [ ] A coworker's informal suggestion that the employee appears ready.
+- [ ] A current development plan naming negotiation as a future skill goal.
+- [correct] A documented assignment or role change under the current role plan.
+- [ ] One successful sourced lead recorded under the employee's current role.
 
-Explanation: After proving consistent performance, CRM hygiene, and leadership at the foundation and complex lead levels.
+Explanation: A documented role change or assignment under the current written role plan.
 
 ### 28. Term: Probate situations
 
@@ -10944,17 +10944,17 @@ Explanation: Definition: Leads involving property left behind by a deceased pers
 
 Explanation: Definition: Leads involving multiple stakeholders, such as siblings, who may disagree on the sale.
 
-### 30. What determines how far an employee goes within the BMH Group structure?
+### 30. An employee hits a performance target, but the required capability review is incomplete. What is still missing?
 
 - Question key: `question-r-legacy-ch13-033`
 - Type: `single_choice`
 
-- [ ] The amount of daily oversight and the current commission tier.
-- [ ] A fixed advancement schedule and time in the current role.
-- [ ] The number of new markets and positions the company opens.
-- [correct] Their own performance and initiative.
+- [ ] An open position and the employee's preferred title for that position.
+- [ ] The current compensation plan for the role the employee hopes to enter.
+- [ ] The team's average performance for the same scorecard period.
+- [correct] Capability evidence and completion of the authorized review under current criteria.
 
-Explanation: Their own performance and initiative.
+Explanation: Documented capability evidence and completion of the authorized review under the current criteria.
 
 ### 31. What specific action should follow when a gap in a process is pointed out?
 
@@ -10968,17 +10968,17 @@ Explanation: Their own performance and initiative.
 
 Explanation: The individual should fix the gap and come back better.
 
-### 32. When a manager's team wins, what happens to the manager's status?
+### 32. How should a leader's contribution to team results be evaluated?
 
 - Question key: `question-r-legacy-ch13-036`
 - Type: `single_choice`
 
-- [ ] The manager's compensation remains based only on individually sourced leads.
-- [ ] The manager becomes a closer paid only for deals they close directly.
-- [correct] The manager also wins, as their compensation is tied to team output.
-- [ ] The manager loses responsibility for the team's performance and output.
+- [ ] By assigning the leader all team results recorded during the review period.
+- [ ] By using only a personal impression and excluding documented outcomes.
+- [correct] By comparing current leadership responsibilities with documented team outcomes.
+- [ ] By applying the current scorecard for a manager with broader ownership.
 
-Explanation: The manager also wins, as their compensation is tied to team output.
+Explanation: Against the current written leadership responsibilities and documented team outcomes.
 
 ### 33. What is the relationship between clean CRM notes and the acquisition team?
 
@@ -11016,17 +11016,17 @@ Explanation: BMH Group provides a clear path for growth based on mastering curre
 
 Explanation: Internalizing the pipeline and hitting KPIs every single day.
 
-### 36. In the management path, what is the manager 'owning' regarding their team?
+### 36. What does a manager own in a policy-safe sense?
 
 - Question key: `question-r-legacy-ch13-041`
 - Type: `single_choice`
 
-- [ ] The negotiation and signed contract for every individual deal.
-- [correct] The performance and output of the entire team.
-- [ ] The notes, stage, and next action for one qualified lead.
-- [ ] The manager's individual KPIs without the rest of the team's results.
+- [ ] Responsibilities listed in the current team charter, including work assigned to peer roles.
+- [correct] Responsibilities assigned in the current written manager role plan.
+- [ ] Responsibilities demonstrated in an approved leadership workshop for future managers.
+- [ ] Tasks the manager selects from the current team backlog during that review period.
 
-Explanation: The performance and output of the entire team.
+Explanation: The responsibilities explicitly assigned in the current written manager role plan.
 
 ### 37. How does BMH Group evaluate the quality of a representative's calls?
 
@@ -11040,17 +11040,17 @@ Explanation: The performance and output of the entire team.
 
 Explanation: By assessing if they 'actually sound good' and are effective.
 
-### 38. What is the role of 'Market knowledge' in the closing stage of a deal?
+### 38. Which practice develops market knowledge for complex deal analysis?
 
 - Question key: `question-r-legacy-ch13-043`
 - Type: `single_choice`
 
-- [ ] It supplies the notes, stage, and next action required for CRM hygiene.
-- [correct] It provides the context necessary to negotiate terms and present offers effectively.
-- [ ] It replaces the need to structure a deal creatively when the direct path fails.
-- [ ] It determines the manager's compensation from the output of the entire team.
+- [ ] Use current script performance to infer property valuation patterns.
+- [correct] Study current market data and comparable deals, test interpretations, and use feedback.
+- [ ] Memorize one closed deal and use its assumptions for similar markets.
+- [ ] Rely on seller asking prices as the primary measure of current market value.
 
-Explanation: It provides the context necessary to negotiate terms and present offers effectively.
+Explanation: Study current market data and comparable deals, test interpretations in supervised analysis, and use feedback.
 
 ### 39. How does BMH Group view feedback in relation to employee advancement?
 
@@ -11088,17 +11088,17 @@ Explanation: Hand them off to the acquisition team with proper documentation.
 
 Explanation: It is considered a failure in CRM hygiene and readiness for promotion.
 
-### 42. What skill is prioritized for levels handling probate and financial distress?
+### 42. Which preparation best supports a representative facing a sensitive seller situation?
 
 - Question key: `question-r-legacy-ch13-047`
 - Type: `single_choice`
 
-- [ ] Presenting offers and signing contracts directly.
-- [ ] Opening new markets, teams, and positions.
-- [correct] Navigating complex and sensitive human dynamics.
-- [ ] Tracking compensation across the entire team.
+- [ ] Memorize one approved script and use it across different seller contexts.
+- [ ] Practice commission calculations and use them to resolve emotional objections.
+- [correct] Practice listening and empathy, role-play escalation scenarios, and apply current role standards.
+- [ ] Study comparable-property data and lead with valuation details in the conversation.
 
-Explanation: Navigating complex and sensitive human dynamics.
+Explanation: Practice listening and empathy, role-play escalation scenarios, and apply current role standards.
 
 ### 43. How does the 'full sales cycle' differ from the 'foundation' role?
 

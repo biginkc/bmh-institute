@@ -89,6 +89,7 @@ export function releasedQuizRollbackConfirmation(args: {
   expectedRevision: number;
   manifestSha256: string;
   priorManifestSha256: string;
+  rollbackSha256: string;
 }) {
   return [
     "ROLLBACK-RELEASED-QUIZZES",
@@ -96,5 +97,6 @@ export function releasedQuizRollbackConfirmation(args: {
     String(args.expectedRevision),
     args.manifestSha256,
     args.priorManifestSha256,
+    args.rollbackSha256,
   ].join(":");
 }

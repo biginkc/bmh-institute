@@ -257,7 +257,10 @@ function manifestComparisonMarkdown(manifest, questionBank) {
 
 function buildOutputs(repoRoot, questionBank) {
   const { ledger, findings, reviews } = runLint(repoRoot);
-  const manifest = JSON.parse(readFileSync(path.join(repoRoot, "content/course-manifests/bmh-employee-training.v1.json"), "utf8"));
+  const manifest = JSON.parse(readFileSync(path.join(
+    repoRoot,
+    "content/course-manifests/archive/bmh-employee-training.legacy-release-20260721.v1.json",
+  ), "utf8"));
   const coverage = buildCoverage(questionBank);
   return new Map([
     ["coverage.v1.json", stableStringify(coverage)],

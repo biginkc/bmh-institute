@@ -6,9 +6,9 @@
 | 2 | 18 | 48 | 1 | 17 |
 | 3 | 18 | 44 | 2 | 16 |
 | 4 | 18 | 70 | 15 | 3 |
-| 5 | 18 | 73 | 13 | 5 |
+| 5 | 18 | 73 | 12 | 6 |
 | 6 | 18 | 42 | 11 | 7 |
-| 7 | 18 | 39 | 11 | 7 |
+| 7 | 18 | 39 | 10 | 8 |
 | 8 | 18 | 32 | 14 | 4 |
 | 9 | 18 | 76 | 11 | 7 |
 | 10 | 18 | 50 | 0 | 18 |
@@ -21,7 +21,7 @@
 | 17 | 18 | 51 | 0 | 18 |
 | 18 | 18 | 36 | 1 | 17 |
 | 19 | 18 | 47 | 0 | 18 |
-| Total | 342 | 920 | 137 | 205 |
+| Total | 342 | 920 | 135 | 207 |
 
 Every quiz pool checksum changes. Every quiz therefore reverts to `pending_human_review`.
 
@@ -87,6 +87,7 @@ Delivery semantics change from 10 of 18 questions to exhaustive randomized deliv
 - Slot 5: The property evaluation in Step 2 must always be conducted in person.
 - Slot 5: BMH Group's offer prices are generally at or above retail market prices.
 - Slot 5: What is the math formula for an offer?
+- Slot 5: Which specific cost is subtracted after repair costs to reach the offer price?
 - Slot 5: Complete the core pitch: 'We buy houses directly from homeowners for _____.'
 - Slot 6: True or False: The acquisition and transaction teams handle Stage 5 (Offer Review) and Stage 6 (Contract).
 - Slot 6: Which of the following are common sources for a lead entering Stage 1 (Lead Capture)?
@@ -97,6 +98,7 @@ Delivery semantics change from 10 of 18 questions to exhaustive randomized deliv
 - Slot 6: True or False: Eighty percent of a conversation should be dedicated to the Fact Find.
 - Slot 7: What is the primary objective of Step 1 (The Intro) in the five-step acquisition framework?
 - Slot 7: True or False: Eighty percent of the acquisition call should be dedicated to the fact find.
+- Slot 7: What is the ideal ratio of listening to talking for an acquisition specialist during the call?
 - Slot 7: True or False: In real estate deals, the primary driver of urgency for a seller is the pain associated with not taking action.
 - Slot 7: True or False: You should treat every call as if it is the first call of the day to keep your energy fresh.
 - Slot 7: The five-step framework's fact find focuses on which key areas?

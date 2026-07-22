@@ -14,7 +14,7 @@
   "superseded_by": {
     "active_manifest_path": "content/course-manifests/bmh-employee-training.v1.json",
     "question_bank_path": "content/quiz-generation/question-bank.v1.json",
-    "question_bank_sha256": "e2aee2460b8c6f6c8fb29a79bdf2beb7937a039606e3822f10c05a2e8245c5b7",
+    "question_bank_sha256": "7b92395c5582728d6a13f49c36542d54a709ecbe87ec06787925b15019ac4425",
     "quiz_count": 19,
     "question_count": 920,
     "questions_per_attempt": null
