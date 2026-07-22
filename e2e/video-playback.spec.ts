@@ -61,9 +61,9 @@ test.describe("signed learner video playback", () => {
 
       const checkpoints: number[] = [];
       for (const [target, minimumWatchedPercent] of [
-        [2.5, 20],
-        [4.5, 40],
-        [6.5, 60],
+        [2.5, 7],
+        [4.5, 13],
+        [6.5, 20],
       ] as const) {
         await expect
           .poll(
@@ -188,7 +188,7 @@ async function createPlaybackFixture(
         file_path: storagePath,
         filename: "playback.webm",
         mime_type: "video/webm",
-        duration_seconds: 10,
+        duration_seconds: 30,
       },
       sort_order: 10,
       is_required_for_completion: true,

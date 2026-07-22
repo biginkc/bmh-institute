@@ -42,7 +42,6 @@ export function VideoBlockPlayer({
   const completedRef = useRef(initialComplete);
   const hasRecordedProgressRef = useRef(false);
   const playbackStartedRef = useRef(false);
-  const playbackActiveRef = useRef(false);
   const playbackEndedRef = useRef(false);
   const refreshPendingRef = useRef(false);
   const refreshRequestedRef = useRef(false);
@@ -66,11 +65,7 @@ export function VideoBlockPlayer({
   }, [refresh]);
 
   const requestRefreshWhenPlaybackSafe = useCallback(() => {
-    if (
-      !playbackStartedRef.current ||
-      !playbackActiveRef.current ||
-      playbackEndedRef.current
-    ) {
+    if (!playbackStartedRef.current || playbackEndedRef.current) {
       requestRefresh();
       return;
     }
@@ -272,7 +267,6 @@ export function VideoBlockPlayer({
           }}
           onPlay={(event) => {
             playbackStartedRef.current = true;
-            playbackActiveRef.current = true;
             playbackEndedRef.current = false;
             setPlaying(true);
             sampleStartRef.current = event.currentTarget.currentTime;
@@ -292,13 +286,10 @@ export function VideoBlockPlayer({
             });
           }}
           onPause={(event) => {
-            playbackActiveRef.current = false;
             flushProgress(event.currentTarget);
             setPlaying(false);
-            if (refreshPendingRef.current) requestRefresh();
           }}
           onEnded={(event) => {
-            playbackActiveRef.current = false;
             playbackEndedRef.current = true;
             flushProgress(event.currentTarget);
             setPlaying(false);
