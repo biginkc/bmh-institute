@@ -34,9 +34,16 @@ export function VideoBlockPlayer({
   initialComplete?: boolean;
 }) {
   const { refresh } = useRouter();
-  const stableSrc = useStableSignedAssetUrl(src);
-  const stablePosterSrc = useStableSignedAssetUrl(posterSrc);
-  const stableCaptionsSrc = useStableSignedAssetUrl(captionsSrc);
+  const [refreshingSignedMedia, setRefreshingSignedMedia] = useState(false);
+  const stableSrc = useStableSignedAssetUrl(src, refreshingSignedMedia);
+  const stablePosterSrc = useStableSignedAssetUrl(
+    posterSrc,
+    refreshingSignedMedia,
+  );
+  const stableCaptionsSrc = useStableSignedAssetUrl(
+    captionsSrc,
+    refreshingSignedMedia,
+  );
   const videoRef = useRef<HTMLVideoElement>(null);
   const sampleStartRef = useRef<number | null>(null);
   const resumePositionRef = useRef(0);
@@ -267,6 +274,7 @@ export function VideoBlockPlayer({
           aria-label={title}
           className="h-full w-full bg-[var(--ink-900)] object-contain"
           onLoadedMetadata={(event) => {
+            setRefreshingSignedMedia(false);
             setMediaError(null);
             const nextDuration = event.currentTarget.duration;
             setDuration(Number.isFinite(nextDuration) ? nextDuration : 0);
@@ -375,7 +383,10 @@ export function VideoBlockPlayer({
           <span>{mediaError}</span>
           <button
             type="button"
-            onClick={() => refresh()}
+            onClick={() => {
+              setRefreshingSignedMedia(true);
+              refresh();
+            }}
             className="rounded-[var(--bmh-radius-sm)] border-2 border-current px-2.5 py-1 font-extrabold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--danger)]"
           >
             Reload video
@@ -396,14 +407,18 @@ export function VideoBlockPlayer({
   );
 }
 
-function useStableSignedAssetUrl(value: string | undefined): string | undefined {
+function useStableSignedAssetUrl(
+  value: string | undefined,
+  acceptTokenRotation: boolean,
+): string | undefined {
   const identity = assetIdentity(value);
+  const stabilityKey = acceptTokenRotation ? value : identity;
   return useMemo(
     () => value,
     // Signed-token rotation must not replace an active media element. A real
-    // storage path change produces a new identity and refreshes the value.
+    // storage path change or an explicit recovery request refreshes the value.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [identity],
+    [stabilityKey],
   );
 }
 

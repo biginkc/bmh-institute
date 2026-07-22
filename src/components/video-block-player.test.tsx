@@ -359,7 +359,7 @@ describe("<VideoBlockPlayer />", () => {
   });
 
   it("offers a fresh secure media link after a playback failure", async () => {
-    render(
+    const { rerender } = render(
       <VideoBlockPlayer
         blockId="block-1"
         src="https://example.com/video.mp4?token=expired"
@@ -373,6 +373,17 @@ describe("<VideoBlockPlayer />", () => {
     );
     fireEvent.click(screen.getByRole("button", { name: "Reload video" }));
     expect(refresh).toHaveBeenCalledTimes(1);
+
+    rerender(
+      <VideoBlockPlayer
+        blockId="block-1"
+        src="https://example.com/video.mp4?token=fresh"
+      />,
+    );
+    expect(screen.getByLabelText("Lesson video")).toHaveAttribute(
+      "src",
+      "https://example.com/video.mp4?token=fresh",
+    );
   });
 
   it("serializes progress writes so a later sample cannot overwrite stale ranges", async () => {
