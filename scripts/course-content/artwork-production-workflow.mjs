@@ -60,6 +60,14 @@ export function sha256(value) {
   return createHash("sha256").update(value).digest("hex");
 }
 
+export function assertCurrentDerivativeRuntime(ledger) {
+  assert(
+    ledger.derivative_runtime?.sharp_version === sharp.versions.sharp &&
+      ledger.derivative_runtime?.libvips_version === sharp.versions.vips,
+    `Derivative runtime changed: expected sharp ${ledger.derivative_runtime?.sharp_version}/libvips ${ledger.derivative_runtime?.libvips_version}, got sharp ${sharp.versions.sharp}/libvips ${sharp.versions.vips}`,
+  );
+}
+
 function assert(condition, message) {
   if (!condition) throw new Error(message);
 }
@@ -1813,6 +1821,7 @@ async function encodeDerivedWebp(flatMasterInput, recipe, palette) {
 }
 
 export async function preparePipelineReprocess({ root, ledger, masterId }) {
+  assertCurrentDerivativeRuntime(ledger);
   const master = findMaster(ledger, masterId);
   assert(!master.pilot, `${masterId} approved pilot bytes must not be rewritten by pipeline reprocess`);
   assert(master.status === "derived", `${masterId} must be derived before pipeline reprocess`);
@@ -2379,10 +2388,9 @@ export async function validateLedger({ root, inventory, manifest, ledger, inspec
       "Finalized ledger requires every artwork master review to be approved",
     );
   }
-  assert(
-    ledger.derivative_runtime?.sharp_version === sharp.versions.sharp && ledger.derivative_runtime?.libvips_version === sharp.versions.vips,
-    `Derivative runtime changed: expected sharp ${ledger.derivative_runtime?.sharp_version}/libvips ${ledger.derivative_runtime?.libvips_version}, got sharp ${sharp.versions.sharp}/libvips ${sharp.versions.vips}`,
-  );
+  assert(ledger.derivative_runtime?.engine === "sharp", "Derivative runtime engine is invalid");
+  assert(/^\d+\.\d+\.\d+$/.test(ledger.derivative_runtime?.sharp_version ?? ""), "Derivative sharp version is invalid");
+  assert(/^\d+\.\d+\.\d+$/.test(ledger.derivative_runtime?.libvips_version ?? ""), "Derivative libvips version is invalid");
   assert(ledger.masters.length === expected.masters.length, "Ledger master count drifted");
   assert(ledger.assets.length === 49, "Ledger must contain exactly 49 artwork outputs");
   assert(JSON.stringify(ledger.references) === JSON.stringify(expected.references), "Ledger reference order or provenance drifted");
@@ -3226,6 +3234,7 @@ export async function deriveMaster({ root, ledger, masterId }) {
     }
     return ledger;
   }
+  assertCurrentDerivativeRuntime(ledger);
   let flatBuffer = null;
   let flatInput;
   let flatChecksum;
