@@ -53,3 +53,14 @@ Fix the production learner playback reset without weakening signed media deliver
 - Evidence delta: all progress-action route revalidation is removed, completion refresh is deferred until media `ended`, the full local verification suite and production build pass, and a seeded signed-media Playwright regression now covers three progress-save checkpoints.
 - Environment classification: the integration and new seeded browser suites require the dedicated test Supabase credentials. Those credentials are not present on this host and the suites fail closed before running; GitHub CI supplies the required secrets and is the authoritative execution gate.
 - Next: commit and open the focused PR, require CI, complete manual and Claude review, then prove the preview in real Chrome.
+
+### Iteration 2
+
+- Status: manual review found and fixed one player lifecycle defect plus two E2E harness defects.
+- Accepted P2: a learner who crossed 90% and paused could remain on stale locked lesson UI. Pause is now a safe refresh point, including completion-before-pause and pause-before-completion response ordering.
+- Accepted P2: signed `currentSrc` comparisons could print a live URL on assertion failure. The browser test now returns only a SHA-256 fingerprint and signed-path/token-presence booleans.
+- Accepted P2: partial fixture setup and unchecked cleanup could pollute the shared test project. Setup now tracks resources incrementally, rolls back partial state, checks every cleanup result, and aggregates failures.
+- Strengthened browser evidence: each time checkpoint now waits for the corresponding trusted visible watched percentage, proving the Server Action response completed before source and playback stability are asserted.
+- Completion browser boundary: the shared hosted test project cannot safely complete and delete an ad hoc video fixture because completion history is intentionally append-only with restricted user/block deletion. The completion timing contract is covered by player tests, including ended and paused safe points; deployed preview Chrome remains the required real-browser completion/unlock gate.
+- Next: rerun full verification, push the review fixes, then obtain Claude review and deployed Chrome proof.
+- Verification after fixes: exact `npm run verify` passes with 956 Node tests and 135 RTL tests; the optimized production build and focused ESLint pass.

@@ -1,4 +1,10 @@
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const loadVideoProgress = vi.fn();
@@ -94,7 +100,12 @@ describe("<VideoBlockPlayer />", () => {
           resolveLoad = resolve;
         }),
     );
-    render(<VideoBlockPlayer blockId="block-1" src="https://example.com/video.mp4" />);
+    render(
+      <VideoBlockPlayer
+        blockId="block-1"
+        src="https://example.com/video.mp4"
+      />,
+    );
     const video = screen.getByLabelText("Lesson video") as HTMLVideoElement;
     Object.defineProperties(video, {
       readyState: { configurable: true, value: 4 },
@@ -124,7 +135,12 @@ describe("<VideoBlockPlayer />", () => {
       watchedPercent: 95,
       completed: true,
     });
-    render(<VideoBlockPlayer blockId="block-1" src="https://example.com/video.mp4" />);
+    render(
+      <VideoBlockPlayer
+        blockId="block-1"
+        src="https://example.com/video.mp4"
+      />,
+    );
     const video = screen.getByLabelText("Lesson video") as HTMLVideoElement;
     Object.defineProperties(video, {
       duration: { configurable: true, value: 100 },
@@ -158,7 +174,12 @@ describe("<VideoBlockPlayer />", () => {
           resolveCompletion = resolve;
         }),
     );
-    render(<VideoBlockPlayer blockId="block-1" src="https://example.com/video.mp4" />);
+    render(
+      <VideoBlockPlayer
+        blockId="block-1"
+        src="https://example.com/video.mp4"
+      />,
+    );
     const video = screen.getByLabelText("Lesson video") as HTMLVideoElement;
     Object.defineProperties(video, {
       duration: { configurable: true, value: 100 },
@@ -186,18 +207,105 @@ describe("<VideoBlockPlayer />", () => {
     expect(refresh).toHaveBeenCalledTimes(1);
   });
 
+  it("refreshes once when playback pauses after the completion response", async () => {
+    recordVideoProgress.mockResolvedValue({
+      ok: true,
+      positionSeconds: 95,
+      watchedRanges: [[0, 95]],
+      watchedPercent: 95,
+      completed: true,
+    });
+    render(
+      <VideoBlockPlayer
+        blockId="block-1"
+        src="https://example.com/video.mp4"
+      />,
+    );
+    const video = screen.getByLabelText("Lesson video") as HTMLVideoElement;
+    Object.defineProperties(video, {
+      duration: { configurable: true, value: 100 },
+      currentTime: { configurable: true, writable: true, value: 0 },
+    });
+
+    fireEvent.play(video);
+    video.currentTime = 95;
+    fireEvent.timeUpdate(video);
+    expect(await screen.findByText("Complete")).toBeVisible();
+    expect(refresh).not.toHaveBeenCalled();
+
+    fireEvent.pause(video);
+    fireEvent.pause(video);
+    await waitFor(() => expect(refresh).toHaveBeenCalledTimes(1));
+  });
+
+  it("refreshes once when the completion response arrives after playback pauses", async () => {
+    let resolveCompletion: (value: {
+      ok: true;
+      positionSeconds: number;
+      watchedRanges: [number, number][];
+      watchedPercent: number;
+      completed: true;
+    }) => void = () => undefined;
+    recordVideoProgress.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveCompletion = resolve;
+        }),
+    );
+    render(
+      <VideoBlockPlayer
+        blockId="block-1"
+        src="https://example.com/video.mp4"
+      />,
+    );
+    const video = screen.getByLabelText("Lesson video") as HTMLVideoElement;
+    Object.defineProperties(video, {
+      duration: { configurable: true, value: 100 },
+      currentTime: { configurable: true, writable: true, value: 0 },
+    });
+
+    fireEvent.play(video);
+    video.currentTime = 95;
+    fireEvent.timeUpdate(video);
+    await waitFor(() => expect(recordVideoProgress).toHaveBeenCalledTimes(1));
+    fireEvent.pause(video);
+    expect(refresh).not.toHaveBeenCalled();
+
+    await act(async () => {
+      resolveCompletion({
+        ok: true,
+        positionSeconds: 95,
+        watchedRanges: [[0, 95]],
+        watchedPercent: 95,
+        completed: true,
+      });
+    });
+    expect(await screen.findByText("Complete")).toBeVisible();
+    expect(refresh).toHaveBeenCalledTimes(1);
+  });
+
   it("uses the real media duration in the branded play overlay", async () => {
-    render(<VideoBlockPlayer blockId="block-1" src="https://example.com/video.mp4" />);
+    render(
+      <VideoBlockPlayer
+        blockId="block-1"
+        src="https://example.com/video.mp4"
+      />,
+    );
 
     await act(async () => {
       await Promise.resolve();
     });
 
     const video = screen.getByLabelText("Lesson video") as HTMLVideoElement;
-    Object.defineProperty(video, "duration", { configurable: true, value: 100 });
+    Object.defineProperty(video, "duration", {
+      configurable: true,
+      value: 100,
+    });
     fireEvent.loadedMetadata(video);
 
-    expect(screen.getByRole("button", { name: "Play lesson video" })).toBeVisible();
+    expect(
+      screen.getByRole("button", { name: "Play lesson video" }),
+    ).toBeVisible();
     expect(screen.getByText("1:40")).toBeVisible();
   });
 
@@ -211,13 +319,23 @@ describe("<VideoBlockPlayer />", () => {
       reconciled: true,
     });
 
-    render(<VideoBlockPlayer blockId="block-1" src="https://example.com/video.mp4" />);
+    render(
+      <VideoBlockPlayer
+        blockId="block-1"
+        src="https://example.com/video.mp4"
+      />,
+    );
 
     await waitFor(() => expect(refresh).toHaveBeenCalledTimes(1));
   });
 
   it("moves the resume anchor on seek without submitting the skipped range", async () => {
-    render(<VideoBlockPlayer blockId="block-1" src="https://example.com/video.mp4" />);
+    render(
+      <VideoBlockPlayer
+        blockId="block-1"
+        src="https://example.com/video.mp4"
+      />,
+    );
 
     const video = screen.getByLabelText("Lesson video") as HTMLVideoElement;
     Object.defineProperties(video, {
@@ -275,7 +393,12 @@ describe("<VideoBlockPlayer />", () => {
         completed: false,
       });
 
-    render(<VideoBlockPlayer blockId="block-1" src="https://example.com/video.mp4" />);
+    render(
+      <VideoBlockPlayer
+        blockId="block-1"
+        src="https://example.com/video.mp4"
+      />,
+    );
     const video = screen.getByLabelText("Lesson video") as HTMLVideoElement;
     Object.defineProperties(video, {
       duration: { configurable: true, value: 100 },
@@ -301,7 +424,10 @@ describe("<VideoBlockPlayer />", () => {
 
   it("flushes the final contiguous sample when the player unmounts", async () => {
     const { unmount } = render(
-      <VideoBlockPlayer blockId="block-1" src="https://example.com/video.mp4" />,
+      <VideoBlockPlayer
+        blockId="block-1"
+        src="https://example.com/video.mp4"
+      />,
     );
     const video = screen.getByLabelText("Lesson video") as HTMLVideoElement;
     Object.defineProperties(video, {
@@ -340,7 +466,12 @@ describe("<VideoBlockPlayer />", () => {
       ok: false,
       error: "temporary database error",
     });
-    render(<VideoBlockPlayer blockId="block-1" src="https://example.com/video.mp4" />);
+    render(
+      <VideoBlockPlayer
+        blockId="block-1"
+        src="https://example.com/video.mp4"
+      />,
+    );
     const video = screen.getByLabelText("Lesson video") as HTMLVideoElement;
     Object.defineProperties(video, {
       duration: { configurable: true, value: 100 },
@@ -383,7 +514,12 @@ describe("<VideoBlockPlayer />", () => {
         completed: false,
       });
 
-    render(<VideoBlockPlayer blockId="block-1" src="https://example.com/video.mp4" />);
+    render(
+      <VideoBlockPlayer
+        blockId="block-1"
+        src="https://example.com/video.mp4"
+      />,
+    );
     const video = screen.getByLabelText("Lesson video") as HTMLVideoElement;
     Object.defineProperties(video, {
       duration: { configurable: true, value: 100 },
@@ -430,9 +566,8 @@ describe("<VideoBlockPlayer />", () => {
       "src",
       "https://example.com/captions.vtt",
     );
-    expect(screen.getByRole("link", { name: "Open video transcript" })).toHaveAttribute(
-      "href",
-      "https://example.com/transcript.pdf",
-    );
+    expect(
+      screen.getByRole("link", { name: "Open video transcript" }),
+    ).toHaveAttribute("href", "https://example.com/transcript.pdf");
   });
 });

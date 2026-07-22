@@ -42,6 +42,7 @@ export function VideoBlockPlayer({
   const completedRef = useRef(initialComplete);
   const hasRecordedProgressRef = useRef(false);
   const playbackStartedRef = useRef(false);
+  const playbackActiveRef = useRef(false);
   const playbackEndedRef = useRef(false);
   const refreshPendingRef = useRef(false);
   const refreshRequestedRef = useRef(false);
@@ -65,7 +66,11 @@ export function VideoBlockPlayer({
   }, [refresh]);
 
   const requestRefreshWhenPlaybackSafe = useCallback(() => {
-    if (!playbackStartedRef.current || playbackEndedRef.current) {
+    if (
+      !playbackStartedRef.current ||
+      !playbackActiveRef.current ||
+      playbackEndedRef.current
+    ) {
       requestRefresh();
       return;
     }
@@ -103,7 +108,8 @@ export function VideoBlockPlayer({
     (progress: Parameters<typeof recordVideoProgress>[0]) => {
       hasRecordedProgressRef.current = true;
       writeQueueRef.current = writeQueueRef.current.then(async () => {
-        let result: Awaited<ReturnType<typeof recordVideoProgress>> | null = null;
+        let result: Awaited<ReturnType<typeof recordVideoProgress>> | null =
+          null;
         for (let attempt = 0; attempt < 2; attempt += 1) {
           try {
             result = await recordVideoProgress(progress);
@@ -194,7 +200,11 @@ export function VideoBlockPlayer({
           setCompleted(true);
         }
       }
-      if (canRestorePosition && video?.readyState && result.positionSeconds > 0) {
+      if (
+        canRestorePosition &&
+        video?.readyState &&
+        result.positionSeconds > 0
+      ) {
         sampleStartRef.current = result.positionSeconds;
         video.currentTime = result.positionSeconds;
       }
@@ -216,7 +226,8 @@ export function VideoBlockPlayer({
       if (video) flushProgress(video);
     }
     document.addEventListener("visibilitychange", flushWhenHidden);
-    return () => document.removeEventListener("visibilitychange", flushWhenHidden);
+    return () =>
+      document.removeEventListener("visibilitychange", flushWhenHidden);
   }, [flushProgress]);
 
   function onTimeUpdate(e: React.SyntheticEvent<HTMLVideoElement>) {
@@ -226,7 +237,8 @@ export function VideoBlockPlayer({
       sampleStartRef.current = el.currentTime;
       return;
     }
-    if (el.currentTime - sampleStartRef.current < PROGRESS_SAMPLE_SECONDS) return;
+    if (el.currentTime - sampleStartRef.current < PROGRESS_SAMPLE_SECONDS)
+      return;
     flushProgress(el);
   }
 
@@ -251,10 +263,7 @@ export function VideoBlockPlayer({
           onLoadedMetadata={(event) => {
             const nextDuration = event.currentTarget.duration;
             setDuration(Number.isFinite(nextDuration) ? nextDuration : 0);
-            if (
-              !playbackStartedRef.current &&
-              resumePositionRef.current > 0
-            ) {
+            if (!playbackStartedRef.current && resumePositionRef.current > 0) {
               event.currentTarget.currentTime = Math.min(
                 resumePositionRef.current,
                 nextDuration,
@@ -263,6 +272,7 @@ export function VideoBlockPlayer({
           }}
           onPlay={(event) => {
             playbackStartedRef.current = true;
+            playbackActiveRef.current = true;
             playbackEndedRef.current = false;
             setPlaying(true);
             sampleStartRef.current = event.currentTarget.currentTime;
@@ -282,10 +292,13 @@ export function VideoBlockPlayer({
             });
           }}
           onPause={(event) => {
+            playbackActiveRef.current = false;
             flushProgress(event.currentTarget);
             setPlaying(false);
+            if (refreshPendingRef.current) requestRefresh();
           }}
           onEnded={(event) => {
+            playbackActiveRef.current = false;
             playbackEndedRef.current = true;
             flushProgress(event.currentTarget);
             setPlaying(false);

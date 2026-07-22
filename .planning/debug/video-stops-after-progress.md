@@ -99,6 +99,14 @@ updated: 2026-07-22T02:04:31-05:00
   observation: Integration tests fail closed at configuration because all five dedicated test Supabase credentials are absent locally. No test cases ran and this is recorded as an environment gate, not a pass.
 - timestamp: 2026-07-22T02:06:30-05:00
   observation: The exact `npm run verify` gate passes: TypeScript, 956 Node tests, and 133 RTL tests are green.
+- timestamp: 2026-07-22T02:14:34-05:00
+  observation: Manual review found a completion-safe-point gap. Both new pause-ordering tests failed RED because a completed learner who paused before natural end never refreshed the locked lesson UI.
+- timestamp: 2026-07-22T02:14:52-05:00
+  observation: The player now treats pause as safe for the one deferred refresh, and both completion-before-pause and completion-after-pause tests pass. The focused player suite is 15/15 green.
+- timestamp: 2026-07-22T02:15:30-05:00
+  observation: Manual review found the E2E could print a signed URL on failure, could overstate queued progress writes as completed, and could leak partial fixtures. The test now compares only a SHA-256 source fingerprint, waits for trusted watched percentages after each checkpoint, and performs checked partial rollback and cleanup.
+- timestamp: 2026-07-22T02:17:15-05:00
+  observation: Post-review verification is green: exact `npm run verify` passes with 956 Node tests and 135 RTL tests, and the optimized production build passes.
 
 # Eliminated
 
@@ -115,7 +123,7 @@ updated: 2026-07-22T02:04:31-05:00
 
 - root_cause: Routine two-second progress writes are coupled to active-route revalidation. Each successful `recordVideoProgress` Server Action immediately rerenders the viewed lesson, re-signs its uploaded media, and supplies a different URL to `<video src>`, which resets the native media element. The client also refreshes immediately on threshold completion instead of waiting for playback to end.
 - fix: Removed all path revalidation from `recordVideoProgress` while leaving the transactional RPC and Sandra completion emission unchanged. Added an ended-aware, idempotent client refresh gate that works whether completion resolves before or after `ended`.
-- verification: GREEN locally — action tests 10/10, player tests 13/13, exact `npm run verify`, full Node suite 956/956, full RTL suite 133/133, focused ESLint, production build, and `git diff --check`. The signed-media Playwright regression compiles but awaits credentialed CI; real deployed browser verification remains pending.
+- verification: GREEN locally — action tests 10/10, player tests 15/15, exact `npm run verify`, full Node suite 956/956, full RTL suite 135/135, focused ESLint, production build, and `git diff --check`. The signed-media Playwright regression compiles but awaits credentialed CI; real deployed browser verification remains pending.
 - files_changed:
     - src/app/(dashboard)/lessons/[lessonId]/actions.ts
     - src/components/video-block-player.tsx
