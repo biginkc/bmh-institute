@@ -49,6 +49,8 @@
     "course:import": "tsx scripts/course-import.ts",
     "course:assets:stage": "tsx scripts/course-assets-stage.ts",
     "course:reconcile": "tsx scripts/course-content/build-import-reconciliation-evidence.ts",
+    "course:quizzes:revise": "tsx scripts/course-content/revise-released-quizzes.ts",
+    "course:quizzes:rehearsal-sql": "tsx scripts/course-content/build-released-quiz-revision-rehearsal-sql.ts",
     "course:finalize:closer-lab": "node scripts/course-content/finalize-closer-lab-production-mapping.mjs",
     "course:reconcile:closer-lab": "node scripts/course-content/reconcile-closer-lab-production-mapping.mjs"
   },
