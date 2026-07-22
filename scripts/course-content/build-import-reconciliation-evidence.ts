@@ -5,7 +5,7 @@ import path from "node:path";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 import { importStoragePrefix } from "../../src/lib/artwork/paths";
-import { findOptionalRemoteAssetProblems, findRemoteAssetProblems, findUnexpectedRemoteAssetPaths, type RemoteAssetListingBucket } from "../../src/lib/course-import/asset-transfer";
+import { findRemoteAssetProblems, findUnexpectedRemoteAssetPaths, inspectOptionalRemoteAssets, type RemoteAssetListingBucket } from "../../src/lib/course-import/asset-transfer";
 import { assertCourseImportEnvironment } from "../../src/lib/course-import/environment";
 import { assertExactReconciliationClean, reconcileImportPlanExact, type ExactCourseImportAdapter, type ManagedIdInventory } from "../../src/lib/course-import/exact-reconciliation";
 import { validateCanaryScope, validateCourseManifest } from "../../src/lib/course-import/manifest";
@@ -60,6 +60,8 @@ export function buildReconciliationEvidence(options: {
   assetProblems: Array<{ path: string; problem: string }>;
   unexpectedStorage: string[];
   expectedStoragePaths: string[];
+  optionalAllowedStoragePaths?: string[];
+  presentOptionalStoragePaths?: string[];
   storagePrefix: string;
 }) {
   assertExactReconciliationClean(options);
@@ -85,6 +87,22 @@ export function buildReconciliationEvidence(options: {
   if (new Set(expectedStoragePaths).size !== expectedStoragePaths.length) {
     throw new Error("Exact reconciliation evidence found duplicate expected storage paths.");
   }
+  const optionalAllowedStoragePaths = [...(options.optionalAllowedStoragePaths ?? [])].sort();
+  const presentOptionalStoragePaths = [...(options.presentOptionalStoragePaths ?? [])].sort();
+  for (const storagePath of [...optionalAllowedStoragePaths, ...presentOptionalStoragePaths]) {
+    assertCanonicalStorageObjectPath(storagePath, canonicalPrefix);
+  }
+  if (
+    new Set(optionalAllowedStoragePaths).size !== optionalAllowedStoragePaths.length
+    || new Set(presentOptionalStoragePaths).size !== presentOptionalStoragePaths.length
+    || optionalAllowedStoragePaths.some((path) => expectedStoragePaths.includes(path))
+    || presentOptionalStoragePaths.some((path) => !optionalAllowedStoragePaths.includes(path))
+  ) {
+    throw new Error("Exact reconciliation evidence found invalid optional retained storage paths.");
+  }
+  const absentOptionalStoragePaths = optionalAllowedStoragePaths.filter(
+    (path) => !presentOptionalStoragePaths.includes(path),
+  );
   const payload = {
     schema_version: 1,
     status: "passed",
@@ -100,6 +118,12 @@ export function buildReconciliationEvidence(options: {
     storage_prefix: canonicalPrefix,
     expected_storage_paths_sha256: sha256(stableJson(expectedStoragePaths)),
     expected_storage_object_count: expectedStoragePaths.length,
+    optional_allowed_storage_paths_sha256: sha256(stableJson(optionalAllowedStoragePaths)),
+    optional_allowed_storage_object_count: optionalAllowedStoragePaths.length,
+    present_optional_storage_paths_sha256: sha256(stableJson(presentOptionalStoragePaths)),
+    present_optional_storage_object_count: presentOptionalStoragePaths.length,
+    absent_optional_storage_paths_sha256: sha256(stableJson(absentOptionalStoragePaths)),
+    absent_optional_storage_object_count: absentOptionalStoragePaths.length,
   };
   return { ...payload, reconciliation_sha256: sha256(stableJson(payload)) };
 }
@@ -168,12 +192,12 @@ async function main() {
   const bucket = supabase.storage.from("content") as unknown as RemoteAssetListingBucket;
   const prefix = importStoragePrefix(plan.importId);
   if (!prefix) throw new Error("Import has no canonical storage prefix.");
-  const [requiredProblems, optionalProblems, unexpectedStorage] = await Promise.all([
+  const [requiredProblems, optionalRetention, unexpectedStorage] = await Promise.all([
     findRemoteAssetProblems(bucket, plan.assets),
-    findOptionalRemoteAssetProblems(bucket, retention?.assets ?? []),
+    inspectOptionalRemoteAssets(bucket, retention?.assets ?? []),
     findUnexpectedRemoteAssetPaths(bucket, plan.importId, prefix, [...plan.assets, ...(retention?.assets ?? [])]),
   ]);
-  const assetProblems = [...requiredProblems, ...optionalProblems];
+  const assetProblems = [...requiredProblems, ...optionalRetention.problems];
   const evidence = buildReconciliationEvidence({
     manifestBytes,
     importId: plan.importId,
@@ -183,9 +207,13 @@ async function main() {
     database,
     assetProblems,
     unexpectedStorage,
-    expectedStoragePaths: [...plan.assets, ...(retention?.assets ?? [])]
+    expectedStoragePaths: plan.assets
       .filter((asset) => asset.approval_status === "approved")
       .map((asset) => asset.storage_path),
+    optionalAllowedStoragePaths: (retention?.assets ?? [])
+      .filter((asset) => asset.approval_status === "approved")
+      .map((asset) => asset.storage_path),
+    presentOptionalStoragePaths: optionalRetention.present,
     storagePrefix: prefix,
   });
   if (flags.outputPath) await writeEvidence(path.resolve(flags.outputPath), evidence);

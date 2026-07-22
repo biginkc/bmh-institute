@@ -95,21 +95,34 @@ export async function findOptionalRemoteAssetProblems(
   bucket: RemoteAssetBucket,
   assets: CourseImportAsset[],
 ) {
+  return (await inspectOptionalRemoteAssets(bucket, assets)).problems;
+}
+
+export async function inspectOptionalRemoteAssets(
+  bucket: RemoteAssetBucket,
+  assets: CourseImportAsset[],
+) {
   const problems: RemoteAssetProblem[] = [];
+  const present: string[] = [];
+  const absent: string[] = [];
   for (const asset of assets) {
     if (asset.approval_status !== "approved") continue;
     const current = await bucket.info(asset.storage_path);
     if (!current.data) {
-      if (isExplicitNotFound(current.error)) continue;
+      if (isExplicitNotFound(current.error)) {
+        absent.push(asset.storage_path);
+        continue;
+      }
       problems.push({
         path: asset.storage_path,
         problem: `optional retained object state is uncertain: ${current.error?.message ?? "empty response"}`,
       });
       continue;
     }
+    present.push(asset.storage_path);
     problems.push(...await findRemoteAssetProblems(bucket, [asset]));
   }
-  return problems;
+  return { problems, present: present.sort(), absent: absent.sort() };
 }
 
 export async function listRemoteAssetPaths(

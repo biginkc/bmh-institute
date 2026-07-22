@@ -4,9 +4,9 @@ import { join, resolve } from "node:path";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 import {
-  findOptionalRemoteAssetProblems,
   findRemoteAssetProblems,
   findUnexpectedRemoteAssetPaths,
+  inspectOptionalRemoteAssets,
   type RemoteAssetListingBucket,
 } from "../src/lib/course-import/asset-transfer";
 import {
@@ -143,12 +143,13 @@ async function main() {
   if (command === "verify") {
     const retention = await readAuditedVideoPosterRetention(supabase, plan);
     const reconciliation = await reconcileImportPlanExact(plan, adapter);
+    const optionalRetention = await inspectOptionalRemoteAssets(
+      supabase.storage.from("content"),
+      retention?.assets ?? [],
+    );
     const assetProblems = [
       ...await findAssetProblems(supabase, plan.assets),
-      ...await findOptionalRemoteAssetProblems(
-        supabase.storage.from("content"),
-        retention?.assets ?? [],
-      ),
+      ...optionalRetention.problems,
     ];
     const prefix = importStoragePrefix(plan.importId);
     if (!prefix) throw new Error("Import has no canonical storage prefix.");
@@ -162,7 +163,9 @@ async function main() {
       ...reconciliation,
       assetProblems,
       unexpectedStorage,
-      retainedRollbackStorage: retention?.assets.map((asset) => asset.storage_path) ?? [],
+      allowedRetainedRollbackStorage: retention?.assets.map((asset) => asset.storage_path) ?? [],
+      presentRetainedRollbackStorage: optionalRetention.present,
+      absentRetainedRollbackStorage: optionalRetention.absent,
     }, null, 2));
     assertExactReconciliationClean({ database: reconciliation, assetProblems, unexpectedStorage });
     return;

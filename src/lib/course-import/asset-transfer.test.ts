@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { describe, expect, it } from "vitest";
 
 import type { CourseImportAsset } from "./manifest";
-import { findOptionalRemoteAssetProblems, findRemoteAssetProblems, findUnexpectedRemoteAssetPaths } from "./asset-transfer";
+import { findOptionalRemoteAssetProblems, findRemoteAssetProblems, findUnexpectedRemoteAssetPaths, inspectOptionalRemoteAssets } from "./asset-transfer";
 
 describe("course import remote asset verification", () => {
   it("makes no storage calls for assets that are not approved", async () => {
@@ -118,6 +118,10 @@ describe("optional retained asset verification", () => {
       async info() { return { data: null, error: { message: "not found", statusCode: 404 } }; },
       download() { throw new Error("absent objects are not downloaded"); },
     }, [asset])).resolves.toEqual([]);
+    await expect(inspectOptionalRemoteAssets({
+      async info() { return { data: null, error: { message: "not found", statusCode: 404 } }; },
+      download() { throw new Error("absent objects are not downloaded"); },
+    }, [asset])).resolves.toEqual({ problems: [], present: [], absent: [asset.storage_path] });
 
     const changed = Buffer.from("changed!");
     await expect(findOptionalRemoteAssetProblems(fakeBucket({
