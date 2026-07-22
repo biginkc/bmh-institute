@@ -22,8 +22,8 @@ const DEFAULT_MANIFEST_PATH = resolve(import.meta.dirname, "bmh-employee-trainin
 const REQUEST_PATH = resolve(ROOT, "docs/course-production/quiz-content-review-request.v1.json");
 const LEDGER_PATH = resolve(ROOT, "docs/course-production/quiz-approvals.json");
 const REVIEW_PATH = resolve(ROOT, "docs/course-production/quiz-content-review.quizbank.v1.md");
-const ACCEPTED_SLOT_16_GUIDE_SHA256 = "1ea291e1190ba6f990407cff53160ef90c1acf787e5e66ed6686a2d9984d7c5d";
-const ACCEPTED_SLOT_16_GUIDE_SIZE = 50676;
+const ACCEPTED_SLOT_16_GUIDE_SHA256 = "71c9ad3757b135363ec12bdb3538a4aac388124cc30223304714e2bb5d2017ad";
+const ACCEPTED_SLOT_16_GUIDE_SIZE = 50695;
 
 function manifestQuizzes(manifest) {
   return manifest.program.courses
@@ -33,7 +33,7 @@ function manifestQuizzes(manifest) {
     .map((lesson) => lesson.quiz);
 }
 
-test("quiz review request binds all 19 exact pools while the reaccepted Slot 16 guide stays approved", async () => {
+test("quiz review request binds all 19 exact pools while all regenerated guides stay approved", async () => {
   const [manifest, request, ledger, requestBytes, review] = await Promise.all([
     readFile(MANIFEST_PATH, "utf8").then(JSON.parse),
     readFile(REQUEST_PATH, "utf8").then(JSON.parse),

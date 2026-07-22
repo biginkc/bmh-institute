@@ -2,7 +2,7 @@
   "schema_version": "bmh-quiz-guide-review-index/v1",
   "index_id": "bmh-employee-training-quiz-guide-review-2026-07-20-v3",
   "status": "quiz_and_guides_approved",
-  "scope_note": "The quiz ledger records Jarrad's checksum-bound approval for all 19 quizbank pools. The guide ledger records course-QA controller acceptance for all 19 learner guides including the regenerated Slot 16 guide. Neither approval authorizes import, publication, or employee access.",
+  "scope_note": "The quiz ledger records Jarrad's checksum-bound approval for all 19 quizbank pools. The guide ledger records course-QA controller acceptance for all 19 learner guides regenerated from those approved pools. Neither approval authorizes import, publication, or employee access.",
   "quiz_review": {
     "status": "approved",
     "approved_by": "Jarrad Henry",
@@ -143,19 +143,19 @@
   "guide_review": {
     "status": "accepted",
     "accepted_by": "codex-course-qa-controller",
-    "accepted_at": "2026-07-22T02:03:09Z",
+    "accepted_at": "2026-07-22T10:27:23.654Z",
     "human_approval": false,
-    "evidence": "Course-QA controller reacceptance after Jarrad's checksum-bound authorization, deterministic rebuild, full semantic tests, and visual review of all 38 pages; not Jarrad human approval.",
+    "evidence": "Course-QA controller reacceptance after the checksum-approved exhaustive quiz-bank update, deterministic rebuild, full semantic tests, and visual review of all 38 pages; not Jarrad human approval.",
     "ledger": {
       "path": "docs/course-production/guide-approvals.json",
-      "records_sha256": "fb9ba09eeb42d0c3cf4e800426e817446384f8e2405082923f635110c7d8c42f",
+      "records_sha256": "11df12fb7455e4857190924dc2b00e2c5b34093c8ec078f8d900edb44007f5ab",
       "record_count": 19
     },
     "current_file": {
       "source_key": "guide-slot-16",
       "path": "output/pdf/slot-16-learner-guide.pdf",
-      "sha256": "1ea291e1190ba6f990407cff53160ef90c1acf787e5e66ed6686a2d9984d7c5d",
-      "size_bytes": 50676
+      "sha256": "71c9ad3757b135363ec12bdb3538a4aac388124cc30223304714e2bb5d2017ad",
+      "size_bytes": 50695
     },
     "controller_follow_up": "No guide approval action remains. Preserve the complete 19-record guide ledger as the publication binding."
   }

@@ -82,14 +82,14 @@
     {
       "source_key": "guide-slot-03",
       "local_path": "output/pdf/slot-03-learner-guide.pdf",
-      "checksum_sha256": "e084f864dc2a2d7fa443b8969881d9b5e521f47de83aceea1575a7bc9d63ffc0",
+      "checksum_sha256": "c33c1c01c64177f3906432556998ab05b17a606db6d0c3d024bbc6e6c6d97138",
       "dialpad_reference_count": 0,
       "audit_result": "no DialPad reference; guide directs workflow changes to the current written SOP and manager"
     },
     {
       "source_key": "guide-slot-18",
       "local_path": "output/pdf/slot-18-learner-guide.pdf",
-      "checksum_sha256": "ac1afbe4f1284639de206ff2c2075e46d6e3b13e3b9b44a77e5bc173236de5ae",
+      "checksum_sha256": "332bca94e9dee641a60095df8d95d650a2775018fc435f7d9f7b397d6c372590",
       "dialpad_reference_count": 0,
       "audit_result": "no DialPad reference; guide directs workflow changes to the current written SOP and manager"
     }

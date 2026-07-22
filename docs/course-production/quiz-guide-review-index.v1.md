@@ -38,21 +38,21 @@ Status: **quizbank and all 19 learner guides approved**.
 | `quiz-slot-18` | 36 | `21b86b46ff63e3be37d4e16c88e1e1aaed96973f4442fb9e61042ca2dc848e4d` | approved |
 | `quiz-slot-19` | 47 | `0f52e746349e5b7a8ca8087a57ec284296004c69a5a5003d258b5c871b82ad89` | approved |
 
-## 2. Slot 16 learner guide: course-QA accepted
+## 2. Regenerated learner guides: course-QA accepted
 
-[Open the current Slot 16 learner guide](../../output/pdf/slot-16-learner-guide.pdf)
+[Open the current Slot 16 learner guide sample](../../output/pdf/slot-16-learner-guide.pdf)
 
-- Current SHA-256: `1ea291e1190ba6f990407cff53160ef90c1acf787e5e66ed6686a2d9984d7c5d`
-- Current size: 50676 bytes
+- Current SHA-256: `71c9ad3757b135363ec12bdb3538a4aac388124cc30223304714e2bb5d2017ad`
+- Current size: 50695 bytes
 - Guide ledger: [guide-approvals.json](./guide-approvals.json)
-- Ordered guide records SHA-256: `fb9ba09eeb42d0c3cf4e800426e817446384f8e2405082923f635110c7d8c42f`
+- Ordered guide records SHA-256: `11df12fb7455e4857190924dc2b00e2c5b34093c8ec078f8d900edb44007f5ab`
 - Guide records: 19
 - Accepted by: codex-course-qa-controller
-- Accepted at: 2026-07-22T02:03:09Z
+- Accepted at: 2026-07-22T10:27:23.654Z
 - Human approval: false
-- Evidence: Course-QA controller reacceptance after Jarrad's checksum-bound authorization, deterministic rebuild, full semantic tests, and visual review of all 38 pages; not Jarrad human approval.
+- Evidence: Course-QA controller reacceptance after the checksum-approved exhaustive quiz-bank update, deterministic rebuild, full semantic tests, and visual review of all 38 pages; not Jarrad human approval.
 
-The current PDF matches the Slot 16 record in the accepted guide ledger. The ledger acceptance is bound to the exact ordered set of all 19 guide records.
+The linked sample matches the Slot 16 record in the accepted guide ledger. The ledger acceptance is bound to the exact ordered set of all 19 regenerated guide records.
 
 ## What the controller does next
 

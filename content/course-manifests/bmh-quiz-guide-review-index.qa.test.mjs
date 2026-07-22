@@ -22,15 +22,15 @@ const QUIZ_LEDGER_PATH = path.resolve(ROOT, "docs/course-production/quiz-approva
 const GUIDE_LEDGER_PATH = path.resolve(ROOT, "docs/course-production/guide-approvals.json");
 const QUIZBANK_MANIFEST_PATH = path.resolve(ROOT, "content/course-manifests/bmh-employee-training.quizbank.v1.json");
 const DEFAULT_MANIFEST_PATH = path.resolve(ROOT, "content/course-manifests/bmh-employee-training.v1.json");
-const ACCEPTED_GUIDE_RECORDS_SHA256 = "fb9ba09eeb42d0c3cf4e800426e817446384f8e2405082923f635110c7d8c42f";
-const ACCEPTED_SLOT_16_SHA256 = "1ea291e1190ba6f990407cff53160ef90c1acf787e5e66ed6686a2d9984d7c5d";
-const ACCEPTED_SLOT_16_SIZE = 50676;
+const ACCEPTED_GUIDE_RECORDS_SHA256 = "11df12fb7455e4857190924dc2b00e2c5b34093c8ec078f8d900edb44007f5ab";
+const ACCEPTED_SLOT_16_SHA256 = "71c9ad3757b135363ec12bdb3538a4aac388124cc30223304714e2bb5d2017ad";
+const ACCEPTED_SLOT_16_SIZE = 50695;
 
 function sha256(value) {
   return createHash("sha256").update(value).digest("hex");
 }
 
-test("combined index binds the approved quizbank review and reaccepted Slot 16 guide", async () => {
+test("combined index binds the approved quizbank review and all regenerated guides", async () => {
   const [index, persistedIndex, persistedMarkdown, guideLedger] = await Promise.all([
     buildReviewIndex(),
     readFile(INDEX_JSON_PATH, "utf8").then(JSON.parse),
@@ -76,7 +76,7 @@ test("combined index binds the approved quizbank review and reaccepted Slot 16 g
   );
   assert.match(
     persistedMarkdown,
-    /\[Open the current Slot 16 learner guide\]\(\.\.\/\.\.\/output\/pdf\/slot-16-learner-guide\.pdf\)/,
+    /\[Open the current Slot 16 learner guide sample\]\(\.\.\/\.\.\/output\/pdf\/slot-16-learner-guide\.pdf\)/,
   );
 });
 
@@ -92,7 +92,7 @@ test("recorded quiz and course-QA guide approvals stay distinct and checksum bou
   assert.match(index.guide_review.evidence, /visual review/i);
 });
 
-test("review index reflects quiz approval and the legitimate guide reacceptance", async () => {
+test("review index reflects quiz approval and the complete guide reacceptance", async () => {
   const [quizLedger, guideLedger, index] = await Promise.all([
     readFile(QUIZ_LEDGER_PATH, "utf8").then(JSON.parse),
     readFile(GUIDE_LEDGER_PATH, "utf8").then(JSON.parse),
