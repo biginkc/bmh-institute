@@ -180,7 +180,7 @@ describe("final import release and fixture dependency guards", () => {
       /pg_catalog\.pg_locks[\s\S]*pg_catalog\.pg_blocking_pids\(blocked\.pid\)/i,
     );
     expect(providerIntegration).toMatch(
-      /pg_advisory_unlock[\s\S]*Promise\.all\(\[waitForPsqlExit\(barrier\), waitForPsqlExit\(writer\), replay\]\)/i,
+      /pg_advisory_unlock[\s\S]*Promise\.all\(\[\s*waitForPsqlExit\(barrier\),\s*waitForPsqlExit\(writer\),\s*replay,?\s*\]\)/i,
     );
     expect(migrateWorkflow).toMatch(
       /TEST_SUPABASE_DB_URL=[\s\S]*npm run test:course-import-provider/i,

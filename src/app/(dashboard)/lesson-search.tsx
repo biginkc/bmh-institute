@@ -45,11 +45,12 @@ export function LessonSearch({
   const normalizedQuery = query.trim().toLocaleLowerCase();
   const results =
     searchResult.query === normalizedQuery ? searchResult.items : [];
-  const searchStatus = normalizedQuery.length < 2
-    ? "idle"
-    : searchResult.query === normalizedQuery
-      ? searchResult.status
-      : "loading";
+  const searchStatus =
+    normalizedQuery.length < 2
+      ? "idle"
+      : searchResult.query === normalizedQuery
+        ? searchResult.status
+        : "loading";
   const expanded = open && normalizedQuery.length >= 2;
 
   useEffect(() => {
@@ -64,10 +65,16 @@ export function LessonSearch({
           { signal: controller.signal, cache: "no-store" },
         );
         if (!response.ok) {
-          setSearchResult({ query: normalizedQuery, items: [], status: "error" });
+          setSearchResult({
+            query: normalizedQuery,
+            items: [],
+            status: "error",
+          });
           return;
         }
-        const payload = (await response.json()) as { results?: LessonSearchItem[] };
+        const payload = (await response.json()) as {
+          results?: LessonSearchItem[];
+        };
         setSearchResult({
           query: normalizedQuery,
           items: Array.isArray(payload.results)
@@ -77,7 +84,11 @@ export function LessonSearch({
         });
       } catch (error) {
         if (!(error instanceof DOMException && error.name === "AbortError")) {
-          setSearchResult({ query: normalizedQuery, items: [], status: "error" });
+          setSearchResult({
+            query: normalizedQuery,
+            items: [],
+            status: "error",
+          });
         }
       }
     }, SEARCH_DEBOUNCE_MS);
@@ -100,7 +111,11 @@ export function LessonSearch({
       setActiveIndex(-1);
     };
     window.addEventListener(CLOSE_LESSON_SEARCH_EVENT, closeForModalNavigation);
-    return () => window.removeEventListener(CLOSE_LESSON_SEARCH_EVENT, closeForModalNavigation);
+    return () =>
+      window.removeEventListener(
+        CLOSE_LESSON_SEARCH_EVENT,
+        closeForModalNavigation,
+      );
   }, []);
 
   function navigateTo(index: number) {
@@ -170,42 +185,49 @@ export function LessonSearch({
           },
         }}
       />
-      {expanded ? (
+      {expanded && searchStatus === "success" && results.length > 0 ? (
         <div
           id={resultsId}
           role="listbox"
           aria-label="Lesson search results"
           className="absolute left-0 right-0 top-[calc(100%+8px)] z-50 max-h-80 overflow-y-auto rounded-[var(--bmh-radius-md)] border border-[var(--border-card)] bg-[var(--paper)] p-1 shadow-[var(--bmh-shadow-md)]"
         >
-          {searchStatus === "loading" ? (
-            <p className="px-3 py-2 text-sm font-semibold text-[var(--text-muted)]" role="status">
-              Searching…
-            </p>
-          ) : searchStatus === "error" ? (
-            <p className="px-3 py-2 text-sm font-semibold text-[var(--danger)]" role="status">
-              Search unavailable. Try again.
-            </p>
-          ) : results.length > 0 ? (
-            results.map((lesson, index) => (
-              <Link
-                key={lesson.id}
-                id={`${idPrefix}-option-${index}`}
-                role="option"
-                aria-selected={index === activeIndex}
-                href={lesson.href}
-                prefetch={false}
-                onMouseEnter={() => setActiveIndex(index)}
-                onClick={closeSearch}
-                className="block rounded-[var(--bmh-radius-sm)] px-3 py-2 text-sm font-extrabold text-[var(--ink-900)] no-underline hover:bg-[var(--action-soft)] focus-visible:bg-[var(--action-soft)] focus-visible:outline-2 focus-visible:outline-[var(--action)] aria-selected:bg-[var(--action-soft)]"
-              >
-                {lesson.title}
-              </Link>
-            ))
-          ) : (
-            <p className="px-3 py-2 text-sm font-semibold text-[var(--text-muted)]">
-              No lessons found.
-            </p>
-          )}
+          {results.map((lesson, index) => (
+            <Link
+              key={lesson.id}
+              id={`${idPrefix}-option-${index}`}
+              role="option"
+              aria-selected={index === activeIndex}
+              href={lesson.href}
+              prefetch={false}
+              onMouseEnter={() => setActiveIndex(index)}
+              onClick={closeSearch}
+              className="block rounded-[var(--bmh-radius-sm)] px-3 py-2 text-sm font-extrabold text-[var(--ink-900)] no-underline hover:bg-[var(--action-soft)] focus-visible:bg-[var(--action-soft)] focus-visible:outline-2 focus-visible:outline-[var(--action)] aria-selected:bg-[var(--action-soft)]"
+            >
+              {lesson.title}
+            </Link>
+          ))}
+        </div>
+      ) : expanded ? (
+        <div
+          id={resultsId}
+          role="status"
+          aria-live="polite"
+          className="absolute left-0 right-0 top-[calc(100%+8px)] z-50 rounded-[var(--bmh-radius-md)] border border-[var(--border-card)] bg-[var(--paper)] px-3 py-2 text-sm font-semibold shadow-[var(--bmh-shadow-md)]"
+        >
+          <span
+            className={
+              searchStatus === "error"
+                ? "text-[var(--danger)]"
+                : "text-[var(--text-muted)]"
+            }
+          >
+            {searchStatus === "loading"
+              ? "Searching…"
+              : searchStatus === "error"
+                ? "Search unavailable. Try again."
+                : "No lessons found."}
+          </span>
         </div>
       ) : null}
     </div>

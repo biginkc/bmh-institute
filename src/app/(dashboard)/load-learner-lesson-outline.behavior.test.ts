@@ -5,7 +5,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("./lesson-state-rpc", () => ({
-  loadLearnerLessonStates: mocks.states,
+  loadLearnerCourseLessonStates: mocks.states,
 }));
 
 import { loadLearnerLessonOutline } from "./load-learner-lesson-outline";
@@ -37,10 +37,12 @@ describe("loadLearnerLessonOutline", () => {
     mocks.states.mockReset();
     mocks.states.mockResolvedValue({
       ok: true,
-      states: new Map(lessons.map((lesson) => [
-        lesson.id,
-        { lessonId: lesson.id, isComplete: false, isUnlocked: true },
-      ])),
+      states: new Map(
+        lessons.map((lesson) => [
+          lesson.id,
+          { lessonId: lesson.id, isComplete: false, isUnlocked: true },
+        ]),
+      ),
     });
   });
 
@@ -55,8 +57,12 @@ describe("loadLearnerLessonOutline", () => {
 
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    const content = result.outline.tiles.find((tile) => tile.id === "content-1");
-    const assignment = result.outline.tiles.find((tile) => tile.id === "assignment-1");
+    const content = result.outline.tiles.find(
+      (tile) => tile.id === "content-1",
+    );
+    const assignment = result.outline.tiles.find(
+      (tile) => tile.id === "assignment-1",
+    );
     expect(content?.blocks.map((block) => block.id)).toEqual(["block-current"]);
     expect(assignment?.blocks).toEqual([]);
     expect(calls.map((call) => call.table)).toEqual([
@@ -64,13 +70,12 @@ describe("loadLearnerLessonOutline", () => {
       "content_blocks",
       "user_block_progress",
     ]);
-    expect(calls.find((call) => call.table === "content_blocks")?.filters).toContainEqual([
-      "lesson_id",
-      "content-1",
-    ]);
-    expect(calls.find((call) => call.table === "user_block_progress")?.inFilters).toEqual([
-      ["block_id", ["block-current"]],
-    ]);
+    expect(
+      calls.find((call) => call.table === "content_blocks")?.filters,
+    ).toContainEqual(["lesson_id", "content-1"]);
+    expect(
+      calls.find((call) => call.table === "user_block_progress")?.inFilters,
+    ).toEqual([["block_id", ["block-current"]]]);
   });
 
   it("queries assignment status only when the requested lesson is an assignment", async () => {
@@ -82,12 +87,33 @@ describe("loadLearnerLessonOutline", () => {
       userId: "user-1",
     });
 
-    const assignment = calls.find((call) => call.table === "assignment_submissions");
+    const assignment = calls.find(
+      (call) => call.table === "assignment_submissions",
+    );
     expect(assignment?.filters).toEqual([
       ["user_id", "user-1"],
       ["lesson_id", "assignment-1"],
     ]);
     expect(assignment?.limits).toEqual([1]);
+    expect(calls.some((call) => call.table === "content_blocks")).toBe(false);
+    expect(calls.some((call) => call.table === "user_block_progress")).toBe(
+      false,
+    );
+  });
+
+  it("does not query content blocks for a standalone quiz", async () => {
+    const { supabase, calls } = fakeSupabase();
+    await loadLearnerLessonOutline({
+      supabase: supabase as never,
+      courseId: "course-1",
+      lessonId: "quiz-1",
+      userId: "user-1",
+    });
+
+    expect(calls.some((call) => call.table === "content_blocks")).toBe(false);
+    expect(calls.some((call) => call.table === "user_block_progress")).toBe(
+      false,
+    );
   });
 });
 
@@ -99,7 +125,9 @@ function fakeSupabase() {
       calls.push(call);
       const result = resultFor(table);
       const query = {
-        select() { return query; },
+        select() {
+          return query;
+        },
         eq(column: string, value: unknown) {
           call.filters.push([column, value]);
           return query;
@@ -108,15 +136,19 @@ function fakeSupabase() {
           call.inFilters.push([column, values]);
           return query;
         },
-        order() { return query; },
+        order() {
+          return query;
+        },
         limit(value: number) {
           call.limits.push(value);
           return query;
         },
         maybeSingle: async () => result,
         then<TResult1 = unknown, TResult2 = never>(
-          onfulfilled?: ((value: typeof result) => TResult1 | PromiseLike<TResult1>) | null,
-          onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null,
+          onfulfilled?:
+            ((value: typeof result) => TResult1 | PromiseLike<TResult1>) | null,
+          onrejected?:
+            ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null,
         ) {
           return Promise.resolve(result).then(onfulfilled, onrejected);
         },
@@ -140,37 +172,43 @@ function resultFor(table: string) {
         thumbnail_asset_key: null,
         thumbnail_approved_path: null,
         thumbnail_approved_sha256: null,
-        modules: [{
-          id: "module-1",
-          title: "Module",
-          description: null,
-          sort_order: 1,
-          lessons,
-        }],
+        modules: [
+          {
+            id: "module-1",
+            title: "Module",
+            description: null,
+            sort_order: 1,
+            lessons,
+          },
+        ],
       },
       error: null,
     };
   }
   if (table === "content_blocks") {
     return {
-      data: [{
-        id: "block-current",
-        block_type: "text",
-        content: { html: "<p>Current</p>" },
-        sort_order: 1,
-        is_required_for_completion: false,
-      }],
+      data: [
+        {
+          id: "block-current",
+          block_type: "text",
+          content: { html: "<p>Current</p>" },
+          sort_order: 1,
+          is_required_for_completion: false,
+        },
+      ],
       error: null,
     };
   }
   if (table === "assignment_submissions") {
     return {
-      data: [{
-        id: "submission-1",
-        lesson_id: "assignment-1",
-        status: "submitted",
-        submitted_at: "2026-07-22T00:00:00.000Z",
-      }],
+      data: [
+        {
+          id: "submission-1",
+          lesson_id: "assignment-1",
+          status: "submitted",
+          submitted_at: "2026-07-22T00:00:00.000Z",
+        },
+      ],
       error: null,
     };
   }

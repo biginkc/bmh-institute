@@ -8,7 +8,7 @@ import {
   type LoadLearnerOutlineResult,
   videoAssetVersion,
 } from "./load-learner-outline";
-import { loadLearnerLessonStates } from "./lesson-state-rpc";
+import { loadLearnerCourseLessonStates } from "./lesson-state-rpc";
 
 type DashboardClient = Awaited<ReturnType<typeof createClient>>;
 
@@ -32,7 +32,7 @@ export async function loadLearnerLessonOutline({
     supabase
       .from("courses")
       .select(
-      `
+        `
         id,
         title,
         description,
@@ -84,17 +84,21 @@ export async function loadLearnerLessonOutline({
   if (!lesson) return { ok: false, error: "Lesson not found.", notFound: true };
 
   const [blocksResult, stateResult, submissionsResult] = await Promise.all([
-    withLessonTiming("current-blocks", async () =>
-      supabase
-        .from("content_blocks")
-        .select("id, block_type, content, sort_order, is_required_for_completion")
-        .eq("lesson_id", lessonId)
-        .order("sort_order")
-        .order("id"),
-    ),
+    lesson.lessonType === "content"
+      ? withLessonTiming("current-blocks", async () =>
+          supabase
+            .from("content_blocks")
+            .select(
+              "id, block_type, content, sort_order, is_required_for_completion",
+            )
+            .eq("lesson_id", lessonId)
+            .order("sort_order")
+            .order("id"),
+        )
+      : Promise.resolve({ data: [], error: null }),
     withLessonTiming("lesson-states", () =>
-      loadLearnerLessonStates(supabase, {
-        userId,
+      loadLearnerCourseLessonStates(supabase, {
+        courseId,
         lessonIds: lessons.map((candidate) => candidate.id),
       }),
     ),
@@ -125,7 +129,10 @@ export async function loadLearnerLessonOutline({
             .from("user_block_progress")
             .select("block_id, asset_version")
             .eq("user_id", userId)
-            .in("block_id", currentBlocks.map((block) => block.id)),
+            .in(
+              "block_id",
+              currentBlocks.map((block) => block.id),
+            ),
         )
       : { data: [], error: null };
   if (blockProgressResult.error) {
@@ -148,7 +155,10 @@ export async function loadLearnerLessonOutline({
     "submitted" | "approved" | "needs_revision"
   >();
   for (const row of submissionsResult.data ?? []) {
-    if (!assignmentSubmissions.has(row.lesson_id) && isSubmissionStatus(row.status)) {
+    if (
+      !assignmentSubmissions.has(row.lesson_id) &&
+      isSubmissionStatus(row.status)
+    ) {
       assignmentSubmissions.set(row.lesson_id, row.status);
     }
   }
@@ -165,5 +175,7 @@ export async function loadLearnerLessonOutline({
 function isSubmissionStatus(
   value: string,
 ): value is "submitted" | "approved" | "needs_revision" {
-  return value === "submitted" || value === "approved" || value === "needs_revision";
+  return (
+    value === "submitted" || value === "approved" || value === "needs_revision"
+  );
 }
