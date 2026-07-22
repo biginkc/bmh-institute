@@ -1,0 +1,534 @@
+{
+  "schema_version": "bmh.quiz-distractor-bank.v1",
+  "slot": 6,
+  "quiz_source_key": "quiz-slot-06",
+  "lesson": "Sales Pipeline and Stage Ownership",
+  "source_ledger_sha256": "f130f47f03585928e40f37dfba3a37c4ab3f9f8d41ae65332668b430960ba4ff",
+  "authored_by": "codex (EXECUTE 2.6, 2026-07-20)",
+  "entries": [
+    {
+      "record_id": "legacy-ch04-001",
+      "front_sha256": "37db65fd2aeb763e0b248e11c1511960ba1bc8be2e9930823d1d7c6788e8e021",
+      "back_sha256": "17fdaccdf4608639fb33c582956524023e5c99a22138161fe3f728d7946613da",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Four stages.",
+        "Five stages.",
+        "Seven stages."
+      ]
+    },
+    {
+      "record_id": "legacy-ch04-002",
+      "front_sha256": "0bf071b87d539311dad6250551633bc713901a05e6e4417907fc4b3b0d19deb5",
+      "back_sha256": "49816f9bb8944df4cbb234c1053e28263e8e8ea0500a6e4fe196f854201be5fa",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Leave them in their current stage indefinitely.",
+        "Advance them to the next stage anyway.",
+        "Send them to acquisitions for an offer."
+      ]
+    },
+    {
+      "record_id": "legacy-ch04-003",
+      "front_sha256": "83d1299af616b8d2ad4be1159e6534c61e7b6770a667ecfca3f6c083e82a152e",
+      "back_sha256": "e1cd610e909d062dbf5dd2b9ae29acd9260327c4819c47ed0dbcc30e01639cd7",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Stages 1 through 5.",
+        "Stages 2 through 6.",
+        "All six stages."
+      ]
+    },
+    {
+      "record_id": "legacy-ch04-004",
+      "front_sha256": "0d39bc44c914baedebbe5cb16ead08cbed77887e0e07de424b9db68f4c764991",
+      "back_sha256": "f0320bf0cc143f47cf43d03634af32cbe8a4911c6df3a5e5b623a3b2ebb0ba6f",
+      "status": "needs_human_review",
+      "question_type": "single_choice",
+      "distractors": [],
+      "review_reason": "insufficient_content_for_fair_distractors",
+      "notes": "The lesson names only sellers, acquisitions, and transactions as stage owners. Alternatives containing acquisitions or transactions are partially true, while the remaining lesson actors are not plausible handlers of Stages 5 and 6."
+    },
+    {
+      "record_id": "legacy-ch04-005",
+      "front_sha256": "b7dc65c8f251805f74582512d008052abb04f3bc5315cab556f99bfd2a65489b",
+      "back_sha256": "bf719ae659bf8040bed321aea964798ec8382d73ad1e78b2c3f58bbf25448bef",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Qualification",
+        "Discovery",
+        "Handoff"
+      ]
+    },
+    {
+      "record_id": "legacy-ch04-006",
+      "front_sha256": "c77a5a7a09e10be856cc7d18cb809c224caca0d2780e5fce6302c1fa1d346297",
+      "back_sha256": "31820ce5e01350a47fe8f633845130068ba433995f9c61a9d3b8f0052a82053d",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "A seller completing a live two-way conversation and moving the lead forward.",
+        "An acquisition manager accepting a fully briefed lead for offer evaluation.",
+        "A signed contract moving from acquisitions to the transaction team for closing."
+      ]
+    },
+    {
+      "record_id": "legacy-ch04-007",
+      "front_sha256": "a5f04940ce33d9e89a775e184b6bd575954378b04e00c43219d6abae3e06a42b",
+      "back_sha256": "235626580a39fe35c14c4168048fca00edbe95098848cae5b9dcd64fbf4378aa",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The full life situation, real motivation, timeline, and required next step.",
+        "A signed contract, accepted offer, closing date, and transaction details.",
+        "The acquisition manager's evaluation, offer decision, and completed handoff notes."
+      ]
+    },
+    {
+      "record_id": "legacy-ch04-008",
+      "front_sha256": "f2f4529ac83b5fe10f25a20355ecad99ff291b76047411e3830d7b97979af69e",
+      "back_sha256": "0b043b9dcea4900ad00ad8283c30443cd937df6021c6457e83ac09cd103c27e0",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "To confirm ownership, property fit, and general motivation.",
+        "To explore the person's life situation and real motivations.",
+        "To pass the qualified lead to acquisitions for an offer."
+      ]
+    },
+    {
+      "record_id": "legacy-ch04-009",
+      "front_sha256": "24108030f6287ef259059f0606ec53b2f517754449490471a8bb0988bd74e7fe",
+      "back_sha256": "47dbd92d467ef8db47aba8380fd7776a3bc563937779b7048f9d195ac29c86ed",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "A lead entering from a source with basic contact details.",
+        "A follow-up task assigned after an unanswered contact attempt.",
+        "The acquisition team accepting the lead with all required information."
+      ]
+    },
+    {
+      "record_id": "legacy-ch04-010",
+      "front_sha256": "0bd2c25dfed677542d8cc19e7784a3313ff992e28863188ff2045d188ae3a881",
+      "back_sha256": "f588f7fc5df15428cbd770442381fa26ac6e522aa858916deada38557465ca08",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Advance them to Stage 2 and mark qualification complete.",
+        "Send them to Stage 4 for an acquisitions call.",
+        "Disqualify them immediately without another action."
+      ]
+    },
+    {
+      "record_id": "legacy-ch04-011",
+      "front_sha256": "2e26d7c43b2c38b9d35ae16948e954cecd4717adcbfd393184cb140d26ef7513",
+      "back_sha256": "00945c89f76b547f060ab6494e3e10785b96d1850463d5c8ac66edbe58500a9b",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Lead Capture",
+        "Discovery",
+        "Handoff"
+      ]
+    },
+    {
+      "record_id": "legacy-ch04-012",
+      "front_sha256": "3daf283c3de001f36fb6774b49bade8663f8df085ffc1685fef636dd08fb4079",
+      "back_sha256": "8392d84438223fa42ab839998be31515e74d382d3b5a9ba4a441410088789f80",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "To make first contact and begin a live conversation with the lead.",
+        "To dig into the person's life situation and build trust.",
+        "To pass the lead to acquisitions for evaluation and an offer."
+      ]
+    },
+    {
+      "record_id": "legacy-ch04-013",
+      "front_sha256": "eac09a44f087688cb2aaf83df2afe79324e88f6a5b8d5d6d7a0213005640313d",
+      "back_sha256": "c7e96e95cfe6a4bbd50a6ed7c18c50b023e257bc05c60d63447d8d005e3affbf",
+      "status": "needs_human_review",
+      "question_type": "single_choice",
+      "distractors": [],
+      "review_reason": "imperative_front_cannot_be_mcq_stem",
+      "notes": "The front asks the learner to list three items rather than posing a single-answer multiple choice question."
+    },
+    {
+      "record_id": "legacy-ch04-014",
+      "front_sha256": "0904b775980dc69384c3fd0dbc40f6183f1f698fc718f43dc368cc4b8e0f9efa",
+      "back_sha256": "12cce48043904b23a5e38e9debd41ffb5020c64f0d9187ae4a10db2ca5331eb1",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "It determines whether the person speaking is the property owner.",
+        "It determines whether the property fits the company's market.",
+        "It determines whether a live two-way conversation has occurred."
+      ]
+    },
+    {
+      "record_id": "legacy-ch04-015",
+      "front_sha256": "c3d048caeb9339ccce8c58d607554f25ec0f5d0320d70ecea256c0893a236d92",
+      "back_sha256": "a58f7a5764389b3227a9052943fb208e1abd160a6f2ad20720c77ba5adcc1eef",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The lead has only a name, phone number, property address, and minor source details.",
+        "The seller skips the live conversation, assumes motivation, and advances the lead for an offer.",
+        "The acquisition team accepts the offer, signs the contract, and begins the closing process."
+      ]
+    },
+    {
+      "record_id": "legacy-ch04-016",
+      "front_sha256": "9ec1f8a4483110565c72e564a1c4269ee5175d5190afdddf046dc24feb38adfd",
+      "back_sha256": "80fc402133201fbe0e4e9962a9570e741856aa8b0c033f1a20a9bcb06c68e809",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Lead Capture",
+        "Qualification",
+        "Handoff"
+      ]
+    },
+    {
+      "record_id": "legacy-ch04-017",
+      "front_sha256": "a5a4e0360b954cca9fe9dde47269674d5ca1138a31b87af3ae75abe54022573b",
+      "back_sha256": "5e1a0b57a7c3ac72474914ff9e94e3484ee2bfdb40612af501820b0360ef6008",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Recording basic source details for the lead.",
+        "Confirming only ownership and property type.",
+        "Moving a signed contract to the transaction team."
+      ]
+    },
+    {
+      "record_id": "legacy-ch04-018",
+      "front_sha256": "9b24c234404711942adfe4f69e83de2cd5634b0b8868e60702b17f965d3b8081",
+      "back_sha256": "cc6b648efa16721cea3378ee883347c0ca59ee85c935f0c7343cdb179375b4f9",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Stage 2 digs into life situations; Stage 3 only confirms the basic details.",
+        "Both stages focus exclusively on the property and avoid personal motivation.",
+        "Stage 2 presents the offer; Stage 3 signs the contract for closing."
+      ]
+    },
+    {
+      "record_id": "legacy-ch04-019",
+      "front_sha256": "e1569742cc1167b7052eb7a4a3449445518abf835e926a5f852f6937c4f6730d",
+      "back_sha256": "bbd7ed903178539e40c4aebd628f0e8244b2af0cc37e606f518b05e624528996",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "It confirms the lead's name, phone number, property address, and source.",
+        "It establishes whether the lead came from marketing, cold calling, or referrals.",
+        "It confirms that the acquisition team has accepted the completed handoff."
+      ]
+    },
+    {
+      "record_id": "legacy-ch04-020",
+      "front_sha256": "2dc3471fe9b078bbf9f089cc06a9dcbc8051c6c8ceb34a8ff75434b00ccfcb10",
+      "back_sha256": "233fb68ab25d918f22b08888033efbc3dd60035c5bacd953c949a0e8e512cd7c",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Clearly list the lead's name, phone number, address, and source.",
+        "Clearly confirm only ownership, property type, and market fit.",
+        "Clearly provide a financial figure and send a signed contract for closing."
+      ]
+    },
+    {
+      "record_id": "legacy-ch04-021",
+      "front_sha256": "17f571113db5c5fb7b29c55128788cf00f3cf09de6d55584966321bfcda96c57",
+      "back_sha256": "f89e2d72da00888b27c938fff1eff1d138fd49fb664d0269527a69e746ced479",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Lead Capture",
+        "Qualification",
+        "Discovery"
+      ]
+    },
+    {
+      "record_id": "legacy-ch04-022",
+      "front_sha256": "2223c26ec7e4d731c8647a64541e6ce29f0f3bbf0ed1e23f3d1cabc2bd9e7e5f",
+      "back_sha256": "ca02ba86710e46459d5c63a84d57885e16ed983343b70dc7dfaa42f2223a5c10",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "To collect basic lead details and attempt the first live contact.",
+        "To confirm ownership, property fit, equity, and general motivation.",
+        "To move an accepted offer and signed contract to the transaction team."
+      ]
+    },
+    {
+      "record_id": "legacy-ch04-023",
+      "front_sha256": "b275299e2acc453d95be13ea9bf418b96c0be169b996e6fc426261df6c3a92a7",
+      "back_sha256": "1322b31e030ebc02ddb316e849a7ab819c4c8e19f2ad144acef817ccae003f2b",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Entering a lead from marketing or assigning a follow-up task.",
+        "Confirming ownership or checking whether the property fits the market.",
+        "Accepting an offer or moving a signed contract to the transaction team."
+      ]
+    },
+    {
+      "record_id": "legacy-ch04-024",
+      "front_sha256": "38ab1d941c02f4b2d3d2076ca1f1b9d218a06b5fe76d37292dc1f9b29e73e237",
+      "back_sha256": "cee689775a653c2f66c6e24b3912705d3591603c4041e5c0dbf1d5982e6e142c",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The lead's name, phone number, property address, and source details.",
+        "The repair scope, final purchase price, and title-clearance status after underwriting.",
+        "The accepted offer, signed contract terms, and closing instructions."
+      ]
+    },
+    {
+      "record_id": "legacy-ch04-025",
+      "front_sha256": "103efc25805f8ff71eb6a56fc0b24b98e33ed509aeb5c6811ee9d5f40a71bf5b",
+      "back_sha256": "ebd36ef33f57e330e91b928148cd6bfb76790f6c399578b5c67045bf0f38fb17",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "When the lead first enters the system with basic contact and source details.",
+        "When the seller completes the first live two-way conversation with the lead.",
+        "When the offer is accepted and the signed contract moves to the transaction team."
+      ]
+    },
+    {
+      "record_id": "legacy-ch04-026",
+      "front_sha256": "c9339c6fcbeedbff3e6dc8c3aa71736537ed82540e4e491d33d53b34d7fd93fd",
+      "back_sha256": "f13e4a10e144af5392f4bacd96a69f29df0e301d7d1a6c28bb6bd544bbdba497",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Discovery",
+        "Handoff",
+        "Contract"
+      ]
+    },
+    {
+      "record_id": "legacy-ch04-027",
+      "front_sha256": "82206daa1048b011a88dfbc07ffe9bea5ca0b1a1b311660babf62ca3062b4866",
+      "back_sha256": "d341871a0bdf13b1c266eb693ac329afd6f828c93b73b1af9d883bc97211bb8b",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "To determine the final offer alone and present the financial figure without acquisitions.",
+        "To re-confirm ownership, property type, and general motivation as the person leading the review.",
+        "To take over transaction-team closing as soon as the offer is accepted."
+      ]
+    },
+    {
+      "record_id": "legacy-ch04-028",
+      "front_sha256": "2918e013eede4af82ed1e8e807a6905e4b0865e11b5eccb5d544d50a8eeaae2b",
+      "back_sha256": "a6f5b0e592fa68e4ba8014ad5f62214f41153de6a5d51c78fc6148c54a1d6deb",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Lead Capture",
+        "Handoff",
+        "Offer Review"
+      ]
+    },
+    {
+      "record_id": "legacy-ch04-029",
+      "front_sha256": "ef2a7a40e714d3466f65eec84ce0fb3cdc6c1c15815e20779da258814f3ef620",
+      "back_sha256": "90ebf80a52ebd8b9f651ba418904fa230d91d3b636e267936a1b4052df302603",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The lead enters the system with basic source details and waits for first contact.",
+        "The seller confirms ownership, property fit, and general motivation before discovery.",
+        "The seller begins a warm transfer so acquisitions can evaluate the lead and prepare an offer."
+      ]
+    },
+    {
+      "record_id": "legacy-ch04-030",
+      "front_sha256": "aa9ba36a92a3534692d32b4424ae1558626e372ef40f47c8ccae91893b1f76cc",
+      "back_sha256": "07725ad28c0eafb0c8b3bfa06019f2b5d276f5fb49ed37d5f0d6646aefbfdd88",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Stages track only signed contracts; the framework records only lead-source details.",
+        "Stages and the framework are identical names for the same six-step process.",
+        "Stages apply only after a contract is signed; the framework applies only before lead capture."
+      ]
+    },
+    {
+      "record_id": "legacy-ch04-031",
+      "front_sha256": "f2d578ef30de62af4af63cddc81cf8b55847b2ee2078b170772859b1dba51c48",
+      "back_sha256": "73342e8653973c1b15dd0848c183531bc950ebebd29d60bf06c6d5153ded4c86",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Fact Find",
+        "The Pitch",
+        "The Offer"
+      ]
+    },
+    {
+      "record_id": "legacy-ch04-032",
+      "front_sha256": "70193278a8b3583d2f9276866c4d387e86316bceb5ae47b9190dce6b61d89324",
+      "back_sha256": "4b1431cb74e7a1a0a78b1b69f7269310aa1c38daffaf3392cdd91eaa201c9327",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "To uncover the person's life situation, timeline, and real motivation.",
+        "To present what BMH does regarding the property and transaction.",
+        "To get a specific commitment such as an appointment or follow-up time."
+      ]
+    },
+    {
+      "record_id": "legacy-ch04-033",
+      "front_sha256": "2db051a19db8049d452cddf699c3e174a77868158771370edda0a7a1b00cd80e",
+      "back_sha256": "00c31366b3a59831c3bd4c2639d7484c3007b4852ca0429df4dcb629835d82ca",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The Intro",
+        "The Pitch",
+        "The Offer"
+      ]
+    },
+    {
+      "record_id": "legacy-ch04-034",
+      "front_sha256": "a94b5a4002aa6fb0c634a36df97d917a7862f8f9acc7157d5a80292fe3a51c31",
+      "back_sha256": "9ecbad054b20009f845b28d3feeded1c77d1fb70b454c1c04f5f4f4ffa61d990",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Twenty percent.",
+        "Fifty percent.",
+        "One hundred percent."
+      ]
+    },
+    {
+      "record_id": "legacy-ch04-035",
+      "front_sha256": "4d34df773cc94dc03092faeb5187603ab40afc09f752d30c819cdc3cc6e719c5",
+      "back_sha256": "071ae086f156e02802e0a8608a63e587c61d362be7aedd4d897031e73f2b97d5",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Reviewing only the property address and minor source details.",
+        "Presenting a financial figure rather than learning the situation.",
+        "Discussing closing details rather than the person's motivation."
+      ]
+    },
+    {
+      "record_id": "legacy-ch04-036",
+      "front_sha256": "41a2407c843eb0d7738ae86c0aa4aa3a63b12016602515488d8ad22569c99c01",
+      "back_sha256": "b94b623a0921f074d5a4ae19efd4c7231cba2bcf4eb3de7b3b53c7b6146e89d5",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The Intro",
+        "Fact Find",
+        "The Offer"
+      ]
+    },
+    {
+      "record_id": "legacy-ch04-037",
+      "front_sha256": "8ebac788625e093ed841c22a225303d5d3caaf2f48bad1c2c9011e2fd9503304",
+      "back_sha256": "b47f0fe36ed018a9c4912a873e30e8fe05ebc176c2363c0772d4d5e01a8a22e2",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Stating who the caller is and why the call is being made.",
+        "Digging into the person's life situation and real motivation.",
+        "Getting a specific commitment such as an appointment or follow-up time."
+      ]
+    },
+    {
+      "record_id": "legacy-ch04-038",
+      "front_sha256": "13adddc4fc7c42d4b58dd7d844e51147e56da96d0b3cb469cd4902865bad9151",
+      "back_sha256": "8339718da8e40ca3b46f8fc92bc1b65c6f1499fc16536aa505414f48ac540d61",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The Intro",
+        "Fact Find",
+        "The Close"
+      ]
+    },
+    {
+      "record_id": "legacy-ch04-039",
+      "front_sha256": "39ce1e042a4ef029bb1d14ca3e767a8e2af81056548984767ad77639d671d379",
+      "back_sha256": "ea23e4017df8b6ad44cfdd17a7f4d5561a579ca430c9e28cc12fae6f411ff5aa",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Presenting what BMH does regarding the property and transaction.",
+        "Gathering ownership, property, and motivation details for qualification.",
+        "Securing a signed purchase contract and moving the deal to closing."
+      ]
+    },
+    {
+      "record_id": "legacy-ch04-040",
+      "front_sha256": "c144dc7b2106795d6e6276d52037f432d3076088522d4104ac0f3dd1c3de6b1b",
+      "back_sha256": "74c2d70e8f05a8631e1997c36344e8c2caaa49fa27a636b9c06a56b02209bc9d",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The Intro",
+        "Fact Find",
+        "The Pitch"
+      ]
+    },
+    {
+      "record_id": "legacy-ch04-041",
+      "front_sha256": "3535c1447bf2211a437190b86f20061af931a05be2e0a371b87c64faaa369256",
+      "back_sha256": "da37b5db62e2ceafbb183a08860e60e65c30bd49f5ebca8c2bb8f2dc154d91df",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Collecting only the lead's name, phone number, address, and source.",
+        "Continuing discovery without agreeing to any next action or follow-up time.",
+        "Giving a financial figure and moving the deal directly to a signed contract."
+      ]
+    },
+    {
+      "record_id": "legacy-ch04-042",
+      "front_sha256": "d241ec9d87ca62ae77d8f8024bf2d465b5d019e9b4f9908bb82ebab7b51245c2",
+      "back_sha256": "d0a190174b5e2b715d8033847d687302314453f03fd7763997990907b1811aea",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Forty percent.",
+        "Eighty percent.",
+        "One hundred percent."
+      ]
+    },
+    {
+      "record_id": "legacy-ch04-043",
+      "front_sha256": "51f5552c0e41a2a530d834e946e1c75f079747d1e1a8d59629fc411b40a7f727",
+      "back_sha256": "1fefb087e974b693d7b76451afc375108471977d4ca11fe1973f1d9a4c263105",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Because the house alone determines whether every lead advances to Stage 4.",
+        "Because property details replace the need to understand motivation and timeline.",
+        "Because a signed contract is required before the seller's situation can be discussed."
+      ]
+    },
+    {
+      "record_id": "legacy-ch04-044",
+      "front_sha256": "b8e1ec3c9ca0ddb29f87b3808d84d6d17c4804466f8a6a73b304db8319cb54aa",
+      "back_sha256": "3eae10513f641018bfe5e7051128e65985a4d988af00fa71e1cd95b47d80aa9c",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Setting expectations by explaining who they are and why they are calling.",
+        "Spending the Fact Find on the person's situation and real motivation.",
+        "Ending the conversation with a specific appointment or follow-up time."
+      ]
+    }
+  ]
+}

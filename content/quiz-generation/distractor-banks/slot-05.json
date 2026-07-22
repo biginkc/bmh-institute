@@ -1,0 +1,936 @@
+{
+  "schema_version": "bmh.quiz-distractor-bank.v1",
+  "slot": 5,
+  "quiz_source_key": "quiz-slot-05",
+  "lesson": "The BMH Offer Playbook",
+  "source_ledger_sha256": "f130f47f03585928e40f37dfba3a37c4ab3f9f8d41ae65332668b430960ba4ff",
+  "authored_by": "codex (EXECUTE 2.5, 2026-07-20)",
+  "entries": [
+    {
+      "record_id": "legacy-ch03-001",
+      "front_sha256": "22a2a8b9e8c450966bea6bdb74fc7fb3b6520038f415dc44ac1f257db4ab98eb",
+      "back_sha256": "479189017cd84ac1525153add32fe803d381076e713c9ca04de72286d930ad1a",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "They list houses after repairs, staging, agent negotiations, and bank underwriting.",
+        "They buy only fully renovated houses at retail through bank-financed offers.",
+        "They arrange open houses and appraisals before a traditional buyer closes."
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-002",
+      "front_sha256": "35a06f57d9f40d761ce1bf8c9f81a71eb0df161ffa6442d284d41e94818769a6",
+      "back_sha256": "54d2c2e2eaa572ed0a9b7b1b1d0c25af9aec841cfecc1fc2871ad1868d67f76c",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "It still depends on the buyer receiving bank loan approval.",
+        "It requires underwriting to finish before the offer is certain.",
+        "It makes the seller responsible for any financing failure."
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-003",
+      "front_sha256": "34a2cdbc868545bb56ff0d137acc102625f295b3ae9754ead4a8312c4ba4d01f",
+      "back_sha256": "2dc1c697d8f34f2a25d0f90d0c1437dc1740dab81375e1202792e2adccf1c7c2",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "They require an appraisal contingency before making a cash offer.",
+        "They use a bank appraisal to approve every direct purchase.",
+        "They require the seller to order an appraisal before Step 2."
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-004",
+      "front_sha256": "586158e2c7065d3fac91484f5c84a19367f5e93b108654cd785133e7c66cba6b",
+      "back_sha256": "de621e5a748691bff06be6d384a8dad8f379cad6a18dfda2c2362ee3dc20c30a",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "15 days.",
+        "60 days.",
+        "90 days."
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-005",
+      "front_sha256": "cde26ecc85fe1a4729e3e0c13ce91370bd1974115db19485b3b046eaf97a42d1",
+      "back_sha256": "055d997de3eba4b9eabe01acd3e4f4aeb59fd9f9ab709eb16f8dfac0ed155822",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The seller.",
+        "The seller's agent.",
+        "The bank underwriter."
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-006",
+      "front_sha256": "14fb9239e85d3d1f3f8b18295d14f9b348163f8418283f7616354e43bc55feee",
+      "back_sha256": "f60da68e4b8b9bbbf6921c15eabe8009313645c9374af9ae6b4f64dc65ef2d52",
+      "status": "authored",
+      "question_type": "single_choice",
+    "distractors": [
+      "Foundation repair situations.",
+      "Leaking roof situations.",
+      "Fire-damage situations."
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-007",
+      "front_sha256": "1ede700b3ecd1a56ef74cfbc42c7873d635d63d25e11a6a68f12a15355f5713a",
+      "back_sha256": "f8bc3fd6c968c3b49b6cfc28b505d2f7fef7a2d20d3360284bb60cc78b4e9f9f",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "2 to 3 percent.",
+        "8 to 10 percent.",
+        "10 to 12 percent."
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-008",
+      "front_sha256": "c4499fd4ec2a073c75fea68e9c0f3c7eddfe4a75e3dbc710b2953d1bda765a27",
+      "back_sha256": "cc44bf8490ed03ade7f88d28062ed82c96df0545fe6219468727441ad97a13fc",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "$\\$5,000$ to $\\$6,000$.",
+        "$\\$50,000$ to $\\$60,000$.",
+        "$\\$100,000$ to $\\$110,000$."
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-009",
+      "front_sha256": "d84024bf587286cd8e86c1597461e85a4f59458c196fb322443e48867c62d56c",
+      "back_sha256": "e83a508518efb6a0cd92362d3206a3ecce3175e76d56838754ee7357e6e6a89e",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The offer price is reduced by agent commissions before the seller is paid.",
+        "The offer price is an estimate that changes after bank underwriting.",
+        "The offer price is the retail price before repairs and carrying costs."
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-010",
+      "front_sha256": "b29a03af8126cea7631d62903104565ff7f9000d8103c6d4ad54a562d24bb39d",
+      "back_sha256": "2ebde87d0d18705227ac88f862b0830ccc43ebec95a6e2a8a71b5225263c4097",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "One to two weeks.",
+        "45 days.",
+        "Approximately 50 to 80 days."
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-011",
+      "front_sha256": "310045b2444f2bdaf42eb20ce499cab436166798d3f797e04ca268363dc23d0a",
+      "back_sha256": "93217e904543b5be6761531d56103376c3c74bc46cfaa89541e88664523504fd",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "45 days.",
+        "60 to 90 days.",
+        "Approximately 50 to 80 days."
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-012",
+      "front_sha256": "ad1b73b83daba48357573869b74fe9240bb371566ed3f0cab093c0d8f02e1d93",
+      "back_sha256": "3232edb9a67c796d431d16072f339a50cd475641ee0b2e670ffb122eede69102",
+      "status": "needs_human_review",
+      "question_type": "single_choice",
+      "distractors": [],
+      "review_reason": "imperative_front_cannot_be_mcq_stem",
+      "notes": "The front asks the learner to name three items rather than posing a single-answer multiple choice question."
+    },
+    {
+      "record_id": "legacy-ch03-013",
+      "front_sha256": "a02bbe85c19e81072735933d852263f2d70cca9ebdd5966299bde1a1125ad13b",
+      "back_sha256": "5468946c60cdf405247d3bfdff113a3240cca57e535f2bd0dd12b303ba90a022",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "To complete title work and choose the closing date.",
+        "To inspect repairs and calculate the property's ARV.",
+        "To present the seller with the final written offer."
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-014",
+      "front_sha256": "7b1dd257dacf351cc34088ab330ac6d7943f7184b96b389cb553e9b1c0d9b47c",
+      "back_sha256": "9068a0ea293394ffaec4dc832b0bd1650614f5ddd5f5d891f430180cd66e47d1",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Seller timeline, financing source, agent commission, and closing logistics.",
+        "Open houses, staging, agent negotiations, and underwriting time.",
+        "Speed, simplicity, certainty, and convenience."
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-015",
+      "front_sha256": "5565adb02a93abb1322aef3b61e9b4113978fd3c40814b32e744c468362282b1",
+      "back_sha256": "9989a5927de01458582f3811dd0512d4f169cf20ec25a751eac015c415d19e3b",
+      "status": "needs_human_review",
+      "question_type": "single_choice",
+      "distractors": [],
+      "review_reason": "insufficient_content_for_fair_distractors",
+      "notes": "The stem is binary but the back is not literal False, so the true_false schema cannot be used and three fair distractors are not possible."
+    },
+    {
+      "record_id": "legacy-ch03-016",
+      "front_sha256": "37ff7b70600774fff95b8c32881bf870839dfb4b789041b8c607388c4ce620b5",
+      "back_sha256": "821f060153fff799f8b8f6d7cf72e7ed34cfc71b85264dc4442ad9ec15dbcece",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "They require an immediate decision before the evaluation ends.",
+        "They keep contacting the seller until the offer is accepted.",
+        "They make the offer conditional on the seller's obligation to proceed."
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-017",
+      "front_sha256": "95751002cdcf7c7dda10f6f66658436c60ca8fc9ebf50d6321098f3fafde0e3a",
+      "back_sha256": "055d997de3eba4b9eabe01acd3e4f4aeb59fd9f9ab709eb16f8dfac0ed155822",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The seller.",
+        "The seller's agent.",
+        "The bank lender."
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-018",
+      "front_sha256": "95e0c89c105f303565386c6414fb2b4bd9cfc2571c9d0eae1e45a1aa297be678",
+      "back_sha256": "a0fc9ceb6b8a2cd0a91a04fde1833c1840ce32518e96dae0d9d1cf36175c560a",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "BMH Group.",
+        "The bank underwriter.",
+        "The real estate agent."
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-019",
+      "front_sha256": "6ef44c9adee92e41f63392589d45db83b2d865565e13c2214464dafce1035b7e",
+      "back_sha256": "de25c269574f8f628721b191a6f69d44f6923040997b0b42e0a8deb4c4c4c5f2",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Their offers match the property's full ARV.",
+        "Their offers exceed the final resale value after repairs.",
+        "Their offers are set without using repair costs or margin."
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-020",
+      "front_sha256": "f0bcbc3c2820c63e5914de5d2daab7f1e8f098037aed0db2b9aeb9661afded5b",
+      "back_sha256": "0af3adda6ba01816858e818b1c89aab362183f0f7c01cdcfcc8a3f36157a3025",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Sellers complete every repair before BMH Group buys the property.",
+        "Bank underwriting guarantees BMH Group a full-price resale.",
+        "The discounted price includes agent commissions and staging costs."
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-021",
+      "front_sha256": "81d6a06fb7d845b30d2778f42e47ff40deabd1a7e1b6b61ea2a49317085a5dc5",
+      "back_sha256": "ef2716560edc72e68c714e6956128651069d6c0adfb2fe9cd0b26a42609b61cf",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Repairs, commissions, appraisals, and underwriting.",
+        "Open houses, staging, showings, and agent negotiations.",
+        "Condition, location, comparable sales, and repair costs."
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-022",
+      "front_sha256": "21318011c8dec747b1965b861718dcf09d041016f7061c29e71959ec5ecf7eb2",
+      "back_sha256": "cf7bdf5ee888aa8410332e97fe61ff2454de0aa7c2945d8def973940c64abc58",
+      "status": "authored",
+      "question_type": "single_choice",
+    "distractors": [
+      "A fast closing, no bank underwriting wait, and a seller-selected timeline.",
+      "An exact walk-away amount, no commissions, and no appraisal contingency.",
+      "An as-is purchase, buyer-managed repairs, and no junk removal."
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-023",
+      "front_sha256": "4488540aa54507493dddf1ee2d390e09fa1a2204dbeb69a8cfe3985906ce89ef",
+      "back_sha256": "7d6f79d00d657fbc273cec188e25979c4c3e38b37e3499373f885ec1fb4654bc",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Full retail price.",
+        "Agent representation.",
+        "Bank financing."
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-024",
+      "front_sha256": "3109d0361aa3d2f9e3f842dc92a0990ff17af8532c163261830f0b1cbf6b46e7",
+      "back_sha256": "c35fbc3f43941ca8bfe36d632620bdc169e7e560cc8d598f2e789f60ba5bd029",
+      "status": "authored",
+      "question_type": "single_choice",
+    "distractors": [
+      "Definition: The total repair budget required to bring the property to market condition.",
+      "Definition: The amount the seller receives after commissions in a traditional sale.",
+      "Definition: The expense of holding a property while repairs and resale are completed."
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-025",
+      "front_sha256": "6ced8db0963cdeb75de02e5c0479c2a397c01fde15b8ff37fdfccc926bd1014b",
+      "back_sha256": "a06504eae6e8d1cb18e98e02bfc3b19a35cddd30cca5541b01f0eb4cbfa62428",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Open houses, staging, and agent negotiations.",
+        "Speed, certainty, and convenience.",
+        "Seller timeline, title work, and closing logistics."
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-026",
+      "front_sha256": "897a4c0590a9aa4b84a479d636cf0da0543771f17fbad15b9c513c9e71034710",
+      "back_sha256": "71749eb179ace44b2a3735ff40de8145df6bc0d4a31fd982f4e3dca2c53da2ca",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "$\\$50,000$ to $\\$60,000$.",
+        "$\\$150,000$ to $\\$160,000$.",
+        "$\\$190,000$ to $\\$200,000$."
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-027",
+      "front_sha256": "df049189e00211e968db93ba2db394a25ae479c21af69b8b30da23fe19e9a90e",
+      "back_sha256": "db2762f8f34fdbba87e121c39c2c84a1b451f56bf8d97c7aa1cc1f79a31af945",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "BMH Group would pay full retail without considering the property's condition.",
+        "A cash purchase requires the same bank underwriting as a retail sale.",
+        "The seller would receive the retail price without showings or an appraisal."
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-028",
+      "front_sha256": "2b665afde0c337e9c589d9fdb91464a714aea31b9388c5a0d3377a9bd261f9d3",
+      "back_sha256": "d5aca794ad203c3fb958502e2b72f6d1b091bda6c695cd3eaeb64bcab12ec987",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Formal, like reading a memorized contract to an underwriter.",
+        "Forceful, like pressuring the seller to decide immediately.",
+        "Technical, like explaining appraisal and financing rules to an agent."
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-029",
+      "front_sha256": "f1e1719412d5b6835f36de99ae69071f4443809982a76a63c5f90e8a7c8d4a7c",
+      "back_sha256": "25490a10d071aef70f7a5d4fba0b8f17c9629da0453f89aab0f9dcd5fd0e0a21",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Evaluation",
+        "Underwriting",
+        "Resale"
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-030",
+      "front_sha256": "319590554ce6aa2a27252af850215da4fb199106b65e3f4b77d953e27388bf9d",
+      "back_sha256": "30efc667a3979323d4ea6faef55e0f2fe090e1a7506eb90dfc3299f7327debc6",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Reads every word from a script.",
+        "Promises the highest price.",
+        "Uses technical real estate jargon."
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-031",
+      "front_sha256": "bf989dfc315e2044ddbf9287bced06199928dd45a0dcdb42c9631061df7f516d",
+      "back_sha256": "1b4b607607b8c988d8d9b892bf063e9b9ba4f0440296f7dcaaf8309c0e785c50",
+      "status": "authored",
+      "question_type": "single_choice",
+    "distractors": [
+      "Feels temporary.",
+      "Appears risk-free.",
+      "Preserves retail value."
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-032",
+      "front_sha256": "d6a4fa77691b8e9e3d16a77f5cbfc90b37df9c5e8c88cc0a86abd22cc59eba2a",
+      "back_sha256": "98f852914009305c940ff65fd631e1590ec37a079cab9758fbba3f3f1c0130d0",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Highest retail offer",
+        "Only acceptable choice",
+        "Guaranteed final outcome"
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-033",
+      "front_sha256": "575cf6b859310f7227c05835223228e0190a0d03bdb473cdd9950c8f80b3bdd6",
+      "back_sha256": "c93b48a0e70390884eb0ba14ae14ab47639ef2a20669add99304598802db4589",
+      "status": "authored",
+      "question_type": "single_choice",
+    "distractors": [
+      "Agent commission from a future retail listing.",
+      "Seller-funded staging and showing expenses.",
+      "Remaining mortgage balance owed at closing."
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-034",
+      "front_sha256": "aa9ffc5d547a1c320820dd500d45c17d075c1e281e7e6e4ca2a520a3a7859b4b",
+      "back_sha256": "008dacb6d1e85bd8c0ae9661c4472810ef75537f690dd75d77fc74ca62f78fec",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Retail",
+        "Estimated",
+        "Financed"
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-035",
+      "front_sha256": "434e4f93bdc54b7481e68456224225307121a19cc2b54feefa324433b1c83b24",
+      "back_sha256": "9460338c387b8a0899e903bbff6180386ec5f979f0b44c3aa41f7430b2ee0606",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Repair estimates.",
+        "The seller's timeline.",
+        "The property's condition."
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-036",
+      "front_sha256": "62bcc26344a69904a39fb2d69dee0999a3a633a264a765a0aa80ca6a8460443c",
+      "back_sha256": "7d9eb7acb13e24625c404401d8e88b2350e32162455885f18276cf802f7701ed",
+      "status": "authored",
+      "question_type": "single_choice",
+    "distractors": [
+      "Sign",
+      "List",
+      "Appraise"
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-037",
+      "front_sha256": "1ea8e64f40b9e41457b21e2116c0c0fd2939f2e918f829314949a71d0a147caa",
+      "back_sha256": "8394d7e39c1a7f401ec36d1339379d8ec5149d8ab579e9b4a9e1ccc7411f6906",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The seller's cost of staging and showing the property before closing.",
+        "The bank's risk of approving the buyer's loan before underwriting.",
+        "The agent's cost of negotiating commissions during a traditional sale."
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-038",
+      "front_sha256": "cee14ed9db40dc195d0844cb1d3fc8ecd1d123a56c658c4103eaba95f7e56ed8",
+      "back_sha256": "8f3ceeb34941e2cbb96d328bd94aa3c815c427ba82807dc910eaa466f47194be",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Keep contacting the seller until they agree to the discounted price.",
+        "Promise a retail-price outcome so the seller will reconsider.",
+        "Pressure the seller to decide before the offer can be withdrawn."
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-039",
+      "front_sha256": "6b02ee2bdfa228dd2e1834964ef3addf0d167dd14021541720a8f3bf7418497a",
+      "back_sha256": "4b9bec4bfc88715c8a4f1233ba56a8c400cfd08d239dd30b487a7a9568e98509",
+      "status": "needs_human_review",
+      "question_type": "single_choice",
+      "distractors": [],
+      "review_reason": "insufficient_content_for_fair_distractors",
+      "notes": "Alternative property groups such as nearby, renovated, or distressed houses could all be comparable houses, so they would be partially true."
+    },
+    {
+      "record_id": "legacy-ch03-040",
+      "front_sha256": "eb95c14b4d0f72cb9ef9c71adc31bcae174a620538040cbc397d28ea82dc4ecf",
+      "back_sha256": "33e2827719c7d32d96ba92c413190908cba18275c58780b4510b19fd32fc3a64",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Appraisal contingency",
+        "Underwriting wait",
+        "Agent commission"
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-041",
+      "front_sha256": "b91bff0bd42c69ab1e2fad6d96153b3de6d241d648ec974556f09c7bcc3f0ab4",
+      "back_sha256": "1800df658df040cc56744de1e82855b3958f1a0d426734029f4d7cf39a400e9c",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "They begin repairs.",
+        "They order an appraisal.",
+        "They start showings."
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-042",
+      "front_sha256": "7d240de5b8c9d8674d4836c26d08f766c6d5875eea3a4ac0cb67d1dda0a0f1d7",
+      "back_sha256": "cf1604d6f7c9dca7ddcabb67ca9f6e3aa53ce819d434bf76941652a187a2070d",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Urgently and forcefully.",
+        "Technically and formally.",
+        "Rapidly and from memory."
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-043",
+      "front_sha256": "98f2d1cb95314dc2904c50f283ebdb9dabd5ccaa0a020f193ef1444eb756b95b",
+      "back_sha256": "95985ed31518352dfa688a836372365ab9771f2363ef317ad0056f4d5123c37f",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Simplicity.",
+        "Certainty.",
+        "Convenience."
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-044",
+      "front_sha256": "84c4cc42af229a40831c96409307eaebb59b0b41fe20bdccda9c350c092dd136",
+      "back_sha256": "808fcc8800f8b01aba8bfc9826c4a8871d5435ee13e42cfdef68699080dba0ae",
+      "status": "needs_human_review",
+      "question_type": "single_choice",
+      "distractors": [],
+      "review_reason": "insufficient_content_for_fair_distractors",
+      "notes": "The stem is binary but the back is not literal False, so the true_false schema cannot be used and three fair distractors are not possible."
+    },
+    {
+      "record_id": "legacy-ch03-045",
+      "front_sha256": "636edbf7ca382e4576072dc06d891114d5197a6a56da4d24b5f0d6e56f29beac",
+      "back_sha256": "42cffd1c5e6cef653ff6983bfe4e051f4708a86b9cdf9d2d0c7747328474f758",
+      "status": "authored",
+      "question_type": "single_choice",
+    "distractors": [
+      "It removes the 45-day bank underwriting wait before a buyer can close.",
+      "It fixes the final walk-away amount by removing agent commissions.",
+      "It lets the seller select a closing timeline that fits their needs."
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-046",
+      "front_sha256": "ee8fc9b20087e75c91e6e852a5f71f1486e3bb07a4524104c2491158381e22e8",
+      "back_sha256": "be1d6b839fd178da914e9e573763bde4beecce315a3091306cc6bf57fbf9ad00",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Read the script word for word on every call.",
+        "Use technical real estate terms throughout the explanation.",
+        "Promise the seller the highest possible retail price."
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-047",
+      "front_sha256": "976efd3e07de26ef87b17477e0959f66a76ee520551684b17e6c3a9fd27d7a03",
+      "back_sha256": "204a5eb2cd28bcfdf3be9f8c765948e9e831609e3c57048cdbd6b8a94cf49126",
+      "status": "authored",
+      "question_type": "single_choice",
+    "distractors": [
+      "Change",
+      "Prevent",
+      "Restore"
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-048",
+      "front_sha256": "f1c3b01f3c83f9391037b6d5bae2d3933b0364f956899a521a6014caed27ce26",
+      "back_sha256": "ed44d3578a974f34cdce2dac6fc153d088f9747950d2799f57cf056fc5b47ea6",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Formal underwriting language.",
+        "Agent negotiation terms.",
+        "Technical appraisal jargon."
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-049",
+      "front_sha256": "2817c1fcc1209bec9a39fe6370fcb66a206b9d0216541ce49cd774ecef0ba550",
+      "back_sha256": "ef6ff80f15315e29f4bf4ed167d4c36be0bcd4d632001a775f1626dc0416d2f2",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Accepting hidden fees and agent commissions.",
+        "Funding every repair before the property is sold.",
+        "Waiting for a bank-financed retail buyer."
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-050",
+      "front_sha256": "fdcde5f1ef122497aaa88ef3a25c49db03c68ccc7374f8ec4651b1c4936ec54f",
+      "back_sha256": "50709313cb9542d70dc26034c1f9fe0832d26bc28431262aeab99688d345e93e",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The price of repairing the property before it can be resold.",
+        "The real estate commission paid during a traditional sale.",
+        "The appraisal fee required for a bank-financed purchase."
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-051",
+      "front_sha256": "46b8b352c8959022effda4a02e88cd24496573031bcdf2b9aa5ac1ec23277978",
+      "back_sha256": "25063b405c5169f23160a268534ee71677fa4dc9bb558aea96e873fbf8f8c097",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The Offer (Step 3).",
+        "Close (Step 4).",
+        "The Talk (Step 1)."
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-052",
+      "front_sha256": "d7b98709fcd52e86dd7bc53b24fb519279e5690dd129cd4ef66e4b30bcdb3d60",
+      "back_sha256": "ec9641d84567a74bcf454e37f444351cbc7fca543f586c96ad348c59316d77a4",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Through real estate agents.",
+        "After approval from bank underwriting.",
+        "On the open market after staging."
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-053",
+      "front_sha256": "75d3ab80dc37744a52dfaf28ceee24b1746c6294bd1014e2cf95b2070631a28d",
+      "back_sha256": "d678210bcd847528759f8e3dd496982d65ba21f4e8d00dce885c527e5f04aedc",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The BMH offer always equals the property's full retail market price.",
+        "Traditional sale costs have no effect on what the seller receives.",
+        "The BMH offer is calculated without considering repairs or carrying costs."
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-054",
+      "front_sha256": "9933891e8247d9375bd5baeb45bc4b604b85a006f5683b3512e87c80a514c0c4",
+      "back_sha256": "de621e5a748691bff06be6d384a8dad8f379cad6a18dfda2c2362ee3dc20c30a",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "15 days.",
+        "60 days.",
+        "90 days."
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-055",
+      "front_sha256": "93504d4d1b1ef19723c00b283d9b2a9c5f0404953a2d9a11b779ac538307be76",
+      "back_sha256": "0711a8d636e4c068ae59fa80c03ad68e7bd9fe473c1f9248fd2cf3716e3fb715",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Loans",
+        "Fees",
+        "Staging"
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-056",
+      "front_sha256": "cbb18e45bbff00ea4c2d1a90ad3d58eb1973e2c63ec03247a9c972e49c6be039",
+      "back_sha256": "9ab60c66823fd76c71e5aef97ea874421d5a215fb1965b676d6e6b031c933367",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Step 2 (The Look).",
+        "Step 3 (The Offer).",
+        "Step 4 (Close)."
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-057",
+      "front_sha256": "1bdfccc7b027105b452f0578b8bf1be292b3e8258ed70321b0051c1ae6ae3182",
+      "back_sha256": "6583bfa1a333c388efa7418f1a1e8e537ed4c53c1a442912615af50845fa5fcb",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The bank's 45-day underwriting timeline.",
+        "Only a 60-to-90-day traditional timeline.",
+        "A date after the seller completes every repair."
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-058",
+      "front_sha256": "21c8838811bebd52baa7dc2d83a10586b3c78bcaa3d469be2ac050f6a3975971",
+      "back_sha256": "d467aac5deb2f243580385cb320325cc8b50565b6df237c269a97b4b524c5527",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The final cash offer.",
+        "The estimated repair cost.",
+        "The real estate commission."
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-059",
+      "front_sha256": "c4386dc3d6ba70e6440fd067d7ac3fdca0b528647c6fd882da5b7f6b3401df89",
+      "back_sha256": "7d1282f6bdad3ebc105690198d3a78f22f134cb575dc3faaed1c1547f1c357f0",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The seller must accept before the written offer is provided.",
+        "The firm continues calling until an uninterested seller agrees.",
+        "The seller is obligated to close after the property evaluation."
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-060",
+      "front_sha256": "4cba9362c7f36d8f89cfe50f1f24eaad381c6f6bcb4c3b80cf6ba5d1f3e55d4e",
+      "back_sha256": "c93b48a0e70390884eb0ba14ae14ab47639ef2a20669add99304598802db4589",
+      "status": "authored",
+      "question_type": "single_choice",
+    "distractors": [
+      "Agent commission from a future retail listing.",
+      "Seller-funded staging and showing expenses.",
+      "Remaining mortgage balance owed at closing."
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-061",
+      "front_sha256": "9d14e2cb70542f6598c2ff8e8fc812f6243997835b01ba5a5e2fa37ecf96f848",
+      "back_sha256": "1afa419e5e6a3cf513f79d1114dadb4091b495fb2b3b697461d5dbcb29715997",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The buyer withdrew after the inspection uncovered unexpected repairs.",
+        "A title defect prevented the scheduled closing.",
+        "The seller refused the buyer's request to postpone the closing date."
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-062",
+      "front_sha256": "92ce59ee9c3dc01f424f67eb76b6ec1293a90b1e866d29b8c2503bde2fb454f1",
+      "back_sha256": "a7e439fd526ace8138ddc1806159cc7f9e0555cde115b5e29c865f582ffcd5a5",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "By title search.",
+        "By seller appraisal.",
+        "By listing agent."
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-063",
+      "front_sha256": "6d5a7a220f834c14c54e9097d93c4c674687fe2fb14edec03d87506d20128324",
+      "back_sha256": "4e3affa13bc7cf4074560a056b92ea0bc4e3dcf456749705a702253ab87511a9",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Fully repaired.",
+        "Staged for showings.",
+        "After removing every item."
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-064",
+      "front_sha256": "e9d67bab30b87f74bd1322bcdbeb4e1851a5e566928cae3970ad9539008301e4",
+      "back_sha256": "4e5ad635380fd9b9d3d7250dff59aec1ee5eaf5d9be4288ad9ec4705a3969566",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "They pay the commission only after BMH Group resells the property.",
+        "They replace the commission with a required appraisal fee.",
+        "They include the commission in a 45-day underwriting process."
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-065",
+      "front_sha256": "2e30016416421bdc3210ac7a109dc7a63a817b134485e143c3fb58aa3c218fc6",
+      "back_sha256": "51caa522a57d6818b17365ceaee0e671cfef656df445b01c45b0a4d322c0fe60",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "We talk.",
+        "We look.",
+        "We offer."
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-066",
+      "front_sha256": "57da5d1feeb577f4a92f7b209020de35fe92479d94fd90c9cd6cf22a56f538a0",
+      "back_sha256": "9b08cc0236316052ad64e01c3b25a3dea0c09811b7e215e3c144997893aa896c",
+      "status": "authored",
+      "question_type": "single_choice",
+    "distractors": [
+      "A guaranteed share of BMH's resale profit.",
+      "Ongoing rental income with BMH-managed tenants.",
+      "Automatic cancellation of debts unrelated to the home."
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-067",
+      "front_sha256": "8fab1ee3718db69c652d829421040980b0055dad5ba7c9f6a95d1a8f5c098b4a",
+      "back_sha256": "edfef03b96a304779000bbb53ae5f9e6317664d31f17ee0ec6a58628e5f458f1",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The seller must remove all junk before the property evaluation.",
+        "The seller must stage every room before receiving an offer.",
+        "The seller must complete all repairs before the closing date."
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-068",
+      "front_sha256": "b9f180fe8e12466ebf1274459944f67d1109015c8ca4e34ecd32447216fb8428",
+      "back_sha256": "1672327345c2c000d9f70c1faf36539fbd8a2d40f4964c88278a4ba05f194188",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The seller coordinates title work and every signing detail.",
+        "A real estate agent manages the closing after open houses.",
+        "The bank underwriter schedules the closing after loan approval."
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-069",
+      "front_sha256": "a5bea04aa6e1943cee727c8a4417dbe79d882f7f8e84f4cecdbed6f451fe5d5f",
+      "back_sha256": "705f54113a776dc5244cd383a0a6a6c97209d6201017ce84b93191a89d4f73c2",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "If the seller completes all repairs before closing.",
+        "If bank underwriting approves the purchase.",
+        "If the offer equals the property's full ARV."
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-070",
+      "front_sha256": "96b39b6e8f39fa9ee56880930dccb874ed7eaff8e7d230ef0157bfb8fc00e66a",
+      "back_sha256": "f8bc9c0e46c1b5b0bb40fe2abc708f3796ad6facdd071c0251d05d072274cc97",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The company keeps calling until the seller accepts.",
+        "The company pressures the seller to reconsider immediately.",
+        "The company raises the offer to the full retail price."
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-071",
+      "front_sha256": "bdb73b7e64a74a3c4d705a1d519115d8b1d1da61cba9ae4b92fe6458a344abf6",
+      "back_sha256": "d7cf99122dfaf7663ca4409d04cfd3e8240a701eecd261a77b540f7101aa9f4a",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "It guarantees the seller the full ARV without accounting for repairs.",
+        "It shifts all holding and resale costs back to the seller after closing.",
+        "It includes bank financing, appraisal, and agent commissions in the offer."
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-072",
+      "front_sha256": "fd9ade88e638935b1318c3e3fe9e3a9f6323d3616bb6a7dcd98c7b01ce9b6c69",
+      "back_sha256": "949134527bbfab20e01ad668081042206c2949bd05133facac5f36332bdc7aa7",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Approximately 10 to 20 days.",
+        "Approximately 20 to 40 days.",
+        "Approximately 90 to 120 days."
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-073",
+      "front_sha256": "1cae123dd36506ded8f9b4f403176cd6f0e63b72f8ef37cf7313b2e09632cee0",
+      "back_sha256": "e2da108f63008e441619d6e89d6389cafcb9a80dd4fe7059c677e1a54fa07bbe",
+      "status": "needs_human_review",
+      "question_type": "single_choice",
+      "distractors": [],
+      "review_reason": "insufficient_content_for_fair_distractors",
+      "notes": "The lesson does not provide three short alternative purchase methods that match Cash without introducing foreign vocabulary or creating a length clue."
+    },
+    {
+      "record_id": "legacy-ch03-074",
+      "front_sha256": "374c534e8f509eae75fd7e316320d3c063e772466d18e7c865558bb81b7a2f58",
+      "back_sha256": "d467aac5deb2f243580385cb320325cc8b50565b6df237c269a97b4b524c5527",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The final cash offer.",
+        "The estimated repair cost.",
+        "The seller's net after commissions."
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-075",
+      "front_sha256": "0d9b3f95cb1ce18b84ed5d2a0377b32ac9f88f51b77df939b0518d7d0c6d352e",
+      "back_sha256": "2957f3519fb9fd4f69639f9aeca001a26c778f5716214107b2665fef21d0740f",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "By submitting every purchase to a faster bank underwriter.",
+        "By requiring the seller to obtain loan approval before Step 2.",
+        "By replacing the bank loan with an appraisal contingency."
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-076",
+      "front_sha256": "96adc650f8abb49ba06097d3a0488e6a0bbaf6af4c7e5020a2c72db4062639be",
+      "back_sha256": "a95f08d47bb288d88c78e7c2b65d4b540cd6fe998e8afaa9c4c541d5feb3cf27",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "To make the pitch sound formal and memorized on every call.",
+        "To make the explanation rely on technical real estate language.",
+        "To make the seller feel pressured to accept the offer immediately."
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-077",
+      "front_sha256": "31558029c0672bd06e7bdad52622f6d55f0973c3f2e45b25ba58f64602cd278b",
+      "back_sha256": "75a82aedf25449a317bf4190833ea495ad9a0cf738a1162f332c29264d3d1f52",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "It adds another bank approval that can delay the direct sale.",
+        "It requires the seller to repair and stage the property first.",
+        "It makes the offer depend on the property's full retail price."
+      ]
+    },
+    {
+      "record_id": "legacy-ch03-078",
+      "front_sha256": "7900a5d2b5df7091531024486f76f7d39d131ec2bf7a4c9ba31a90aa3f509c7c",
+      "back_sha256": "98d603f21c7e7567d7d581124e45c29ba684e729c2ef1b476542825d2e29f642",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The one-to-two-week close.",
+        "No agent commissions.",
+        "The seller-chosen closing date."
+      ]
+    }
+  ]
+}

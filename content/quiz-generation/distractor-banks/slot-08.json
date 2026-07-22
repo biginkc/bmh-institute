@@ -1,0 +1,424 @@
+{
+  "schema_version": "bmh.quiz-distractor-bank.v1",
+  "slot": 8,
+  "quiz_source_key": "quiz-slot-08",
+  "lesson": "Discovery and Handoff",
+  "source_ledger_sha256": "f130f47f03585928e40f37dfba3a37c4ab3f9f8d41ae65332668b430960ba4ff",
+  "authored_by": "codex (EXECUTE 2.8, 2026-07-20)",
+  "entries": [
+    {
+      "record_id": "legacy-ch06-001",
+      "front_sha256": "99258b3325fe4e0b97a5b2c1d4098e450237d31b6899b9187ad8d3427842cb62",
+      "back_sha256": "ccf509a623fbcbff73943a2864472fb54e90f479af79e1d2f487a23ded191a16",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Determining why the seller should act now by uncovering the real motivation.",
+        "Completing the full discovery story and briefing the acquisition manager.",
+        "Framing the next property evaluation so the seller knows what to expect."
+      ]
+    },
+    {
+      "record_id": "legacy-ch06-002",
+      "front_sha256": "ad90a76b79ce2e3a64c588f9c078bf10c1039c5b44ceceaa4f727311f2dc5ff5",
+      "back_sha256": "2d09e1bfc751a8a237cfc2ee0e90148bf1511a81727c7a8ac66e5c1791d1cd45",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Confirming basic facts such as ownership, residential status, and market location.",
+        "Documenting every discovery detail for the acquisition manager before the handoff.",
+        "Setting a specific acquisition appointment so the next step maintains momentum."
+      ]
+    },
+    {
+      "record_id": "legacy-ch06-003",
+      "front_sha256": "995a4b3df4678d35de99f2d3f03e38c72b5e722483ac1c438b8346829018ccf7",
+      "back_sha256": "83270779a740e22c3792a0ab3fd1a5812c4f2b2337b025b469c7908437984db3",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The seller's underlying pain, current urgency, and emotional drivers.",
+        "The consequences of doing nothing, the future state, and what changed now.",
+        "The decision-makers, handoff expectations, and next acquisition appointment."
+      ]
+    },
+    {
+      "record_id": "legacy-ch06-004",
+      "front_sha256": "0e4f04cb4f8c1021ba19c539505795f4467f9724c0785eed55acf09141023550",
+      "back_sha256": "4b810b72fcec4c5a92500ded5af0c2fadc05c05910b0fb57537af0a7d3899786",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Basic property ownership and residential-status facts.",
+        "The Stage 4 handoff step and acquisition appointment.",
+        "The acquisition manager's pressure-free evaluation."
+      ]
+    },
+    {
+      "record_id": "legacy-ch06-005",
+      "front_sha256": "3f4adc13f00305576266e99cedaaf23f47d85ff59fdf1f9b5fbef39f1193f5c7",
+      "back_sha256": "fbe97ee1f555f69bd04eff16b3d4a3b63557f9cd74692da50bcc16806a943e06",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "It usually addresses motivation but not whether the property meets basic qualification criteria.",
+        "It usually comes from someone who lacks authority to sign for the property.",
+        "It usually omits the seller's exact price expectation for the handoff."
+      ]
+    },
+    {
+      "record_id": "legacy-ch06-006",
+      "front_sha256": "57f37c5df98577e11f5018bc9bd6dbf4398ecd72af1c8a865ecdd46d81d77b51",
+      "back_sha256": "b3f647c720ddfcfd8ba84dd605e35047f393f69ea7e6537ed3af3df7061b838e",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "By repeating why after each answer until the seller describes their pain.",
+        "By advising the seller what will happen if they choose not to sell.",
+        "By asking several discovery questions at once to cover the situation quickly."
+      ]
+    },
+    {
+      "record_id": "legacy-ch06-007",
+      "front_sha256": "978d67313fed6c275099f1dba81f7c06e3d7a4bfb25c7ab565e85a3543040da2",
+      "back_sha256": "8a2b7e65c150785b1572ceac280db3bde5d1063b99fe929027930fd9b544887b",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "basic property ownership and market-location facts.",
+        "a specific acquisition appointment for the next call.",
+        "the acquisition manager's pressure-free evaluation."
+      ]
+    },
+    {
+      "record_id": "legacy-ch06-008",
+      "front_sha256": "f41028fd1acbbdeab354f1f192eb69a07395411faaf4d6c1e64139f9e6deec6e",
+      "back_sha256": "69df22d5d381e04e835e5cf3383de71661270955fee073f4c5e5d56c11e58832",
+      "status": "needs_human_review",
+      "question_type": "single_choice",
+      "distractors": [],
+      "review_reason": "concept_cue_front",
+      "notes": "The front is a concept label rather than a single-answer multiple choice question."
+    },
+    {
+      "record_id": "legacy-ch06-009",
+      "front_sha256": "599fd28137b42af9c431be29c7607ed827114f2b7d197f7523eea47cad310455",
+      "back_sha256": "bff4b6f22f1f4d1a0de5ddaa1bfbc7639bab94e1f8cc524365c54cb9e863987a",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Sellers need every decision-maker present before any financial detail can be recorded.",
+        "Sellers expect the lead generator to diagnose their financial situation for them.",
+        "Sellers must receive a specific acquisition appointment before discussing pressure."
+      ]
+    },
+    {
+      "record_id": "legacy-ch06-010",
+      "front_sha256": "68bb5b35727a4200a0579d9c91a1d9aedb866c65db69214059b8ea6c57f79776",
+      "back_sha256": "920e2d8e02f443cbe09ce1542850cee2ccd76ebe5167c3f06740524ef1ac9c8f",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Property ownership, residential status, or market location.",
+        "Seller motivation, emotional hot buttons, or future-state goals.",
+        "Decision-makers, warm-transfer timing, or handoff expectations."
+      ]
+    },
+    {
+      "record_id": "legacy-ch06-011",
+      "front_sha256": "f3569eb68d1f03ae7002ccc5a3aa10c94719b3b5e5066a3696ff1b5deb31be48",
+      "back_sha256": "5cc766deb3c2457f21d9aeb9f116d127a593f2e001fc3bc884962f018455f4f3",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "It confirms the basic property facts used during qualification.",
+        "It identifies who has authority to sign off on a deal.",
+        "It frames the pressure-free property evaluation for the seller."
+      ]
+    },
+    {
+      "record_id": "legacy-ch06-012",
+      "front_sha256": "5ae0c4ecc4347721b76d094d1c805d471b75bc9a525f27b811c2dd3f2033df42",
+      "back_sha256": "e99d53c8a6d70314d97cc88e2a230a872503ed0af3b0d58d4cd4dc3b7a09c1f0",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "They have high urgency because a six-month deadline is already fixed.",
+        "Their motivation cannot be assessed until the mortgage balance is known.",
+        "They are ready for Stage 4 because a rental plan itself proves urgency."
+      ]
+    },
+    {
+      "record_id": "legacy-ch06-013",
+      "front_sha256": "9007722c8fc670426b159df2ad4d57d54fafd884877d13e1b26b798047c09147",
+      "back_sha256": "8a1c57b9d240999f13114958e4e4541ae624088950e20ea59da992dff8432dc0",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "They are describing a future possibility that does not affect current urgency.",
+        "They are only confirming basic qualification facts about the property.",
+        "They have enough flexibility to wait for a traditional listing."
+      ]
+    },
+    {
+      "record_id": "legacy-ch06-014",
+      "front_sha256": "9d84edab8bbfceccda22631a2ffa0b080066f00f419cf30798776cc0accdefd7",
+      "back_sha256": "636b18c84c7485e37040af193b2bf91b34f81762fda55c59176ce9fc430fb52b",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "To document the property condition before beginning the discovery conversation.",
+        "To replace the warm transfer with a general promise of another call.",
+        "To judge the seller's motivation only from the property's market location."
+      ]
+    },
+    {
+      "record_id": "legacy-ch06-015",
+      "front_sha256": "d1f732ce645a0169eb204cdadb6bb558fa3c69494ebb60a40925e6aa89c7d9da",
+      "back_sha256": "280e04936b515009fd842defe1e1ea1fb2389962a5cff86499b88586fcab49c9",
+      "status": "needs_human_review",
+      "question_type": "single_choice",
+      "distractors": [],
+      "review_reason": "insufficient_content_for_fair_distractors",
+      "notes": "The lesson names the correct secondary decision-makers but does not provide three same-form groups of people that are definitively not seller-side decision-makers."
+    },
+    {
+      "record_id": "legacy-ch06-016",
+      "front_sha256": "1836483d623be7be8e36fe0e591fde80846ddf93ddf0721916cf32f3cfffd3da",
+      "back_sha256": "7c898dcefcf12e674d9572f3715961f5af281024c4c3f37bd963206034621dc3",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Stage 1.",
+        "Stage 2.",
+        "Stage 3."
+      ]
+    },
+    {
+      "record_id": "legacy-ch06-017",
+      "front_sha256": "94b5d20716d9f85a715d678f9a11a2a92d0c5d37cd4018ecc0e0d778946231a0",
+      "back_sha256": "2d362dc1b88bc3f3b91e482d2e642330a97b5167d621000c205a55ffd67cf99e",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Briefing the acquisition manager with the seller's story and real context.",
+        "Performing a warm transfer or setting a specific time for the next call.",
+        "Framing the handoff so the seller knows exactly what to expect next."
+      ]
+    },
+    {
+      "record_id": "legacy-ch06-018",
+      "front_sha256": "a4d9e67bee90516b1b224f7f021c38afb5eb5e5575618a0292b11539c9423a07",
+      "back_sha256": "c5e29db3b612f01d9ab27159fceae90a4c84a9506bff8a48f7a3aba810047c01",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The notes should contain only the qualification facts and the pipeline stage.",
+        "The seller should need to repeat the discovery story to confirm every detail.",
+        "The acquisition manager should still need to ask about motivation and hot buttons."
+      ]
+    },
+    {
+      "record_id": "legacy-ch06-019",
+      "front_sha256": "7f07e76b55c7262e687e4e1f855c3f995b75631264bf94cc68e0aa463f4c1f37",
+      "back_sha256": "1b76d1091d8dd5099300b417b6851d63026dc5fd576f9d615b1d6eae6349b598",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Completing all CRM notes and documenting every detail from discovery.",
+        "Performing a warm transfer or setting a specific time for the next call.",
+        "Framing the handoff so the seller knows exactly what to expect next."
+      ]
+    },
+    {
+      "record_id": "legacy-ch06-020",
+      "front_sha256": "324390ea05a93abe6bfc271e5a33964219066dee36cdf81e8da7fb74e1fc2bde",
+      "back_sha256": "49c86195933fcf469f8bb5e6c199862d0c0f8bc3d69ec9c79bee68c11b28de11",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Property ownership, residential status, and market location.",
+        "Spouses, siblings, and attorneys involved in the decision.",
+        "Mortgage balance, property condition, and a specific appointment."
+      ]
+    },
+    {
+      "record_id": "legacy-ch06-021",
+      "front_sha256": "c418752a9d4780d00109af5b1e08b7091764a672da3342eb56141a33ed68b634",
+      "back_sha256": "48aecdaac0e18831f90769ec3caf6a834b39dfb025c3af08a8243c94a3a63668",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Completing all CRM notes and documenting every detail from discovery.",
+        "Briefing the acquisition manager with the seller's story and real context.",
+        "Framing the handoff so the seller knows exactly what to expect next."
+      ]
+    },
+    {
+      "record_id": "legacy-ch06-022",
+      "front_sha256": "5e1acc053d5db81f5fe41ad3969a8c2446a0e064b1033461502afffd301dd78f",
+      "back_sha256": "9feaceed7d506120e18ee57c251ea23965ce3f033fb8dde6211c47b339376762",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "It lets the team complete the acquisition evaluation before the manager hears the seller's context.",
+        "It eliminates the need to document CRM notes before the handoff.",
+        "It confirms the next call will include every decision-maker."
+      ]
+    },
+    {
+      "record_id": "legacy-ch06-023",
+      "front_sha256": "8a4c1819eee6835fdcac6fe6e1e5bb1ae2f8b33304c80300aed9ba50aaf36832",
+      "back_sha256": "05b5ea12cfef57b7c166445b878cf57dab29795ac02a1e7968ec0f8eb2df0738",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Completing all CRM notes and documenting every detail from discovery.",
+        "Briefing the acquisition manager with the seller's story and real context.",
+        "Performing a warm transfer or setting a specific time for the next call."
+      ]
+    },
+    {
+      "record_id": "legacy-ch06-024",
+      "front_sha256": "1a05a1e7942ccc7b7e960d97924bce31ce06f68143f1209eda45c702b8c170e6",
+      "back_sha256": "f6918e7644f6a01513a2d3cabd4b279b9407156d386724b079a8e9e0cc5fa7c8",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "As a required decision on an offer immediately after the property review.",
+        "As a call where the seller must repeat every discovery answer from the beginning.",
+        "As a qualification check limited to ownership, residential status, and location."
+      ]
+    },
+    {
+      "record_id": "legacy-ch06-025",
+      "front_sha256": "182bf7b68968087f7cb5ed981621495b197058f45b8269d63b087f13383f3b57",
+      "back_sha256": "74257538962994a6301482661ebbcf55931e2c85a5c3488b3952ecbd8772e6f4",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Certainty that the seller will not need a warm introduction or an appointment.",
+        "Confidence that repeating the full discovery story is part of the next call.",
+        "Assurance that the acquisition manager can proceed without the seller's context."
+      ]
+    },
+    {
+      "record_id": "legacy-ch06-026",
+      "front_sha256": "dc24c7be6db01d7c3adcc46d8837301313720780253a7ce52de49ea859ce99eb",
+      "back_sha256": "7e89ac5c08b468e6960e262c41775c277ed22b456bccd49692d7c9f3e1e3d242",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Property condition and market location.",
+        "Seller motivation and emotional hot buttons.",
+        "Decision-makers and the acquisition appointment time."
+      ]
+    },
+    {
+      "record_id": "legacy-ch06-027",
+      "front_sha256": "c9eb9bca0ad9cd41fa85cfabb1c64cbb788c13679012ce115289856c3fd0e61a",
+      "back_sha256": "873843a23f9940751f4c6fc81b6c6ac73f76ebd8dfc57dc499961d982d1353a4",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Basic facts about ownership, residential status, and market location.",
+        "Financial figures such as mortgage balance, liens, and back taxes.",
+        "Handoff logistics such as the warm transfer and appointment time."
+      ]
+    },
+    {
+      "record_id": "legacy-ch06-028",
+      "front_sha256": "1567550d48ce6cf6fee81a72b9c88b00a91e57e1054f65f1af407f5fbcae79de",
+      "back_sha256": "7f8f2c1dc60cd6324ecdcffd26a602169253cda9d97187c86a598014d01114be",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Receiving a warm introduction before speaking with the acquisition manager.",
+        "Being told the specific time and expectations for the next acquisition call.",
+        "Having the earlier discovery story documented in complete CRM notes."
+      ]
+    },
+    {
+      "record_id": "legacy-ch06-029",
+      "front_sha256": "71ef030ef8ea61df6d5928f8a23afb720f1cc65c9a55d6a974ccb755fb7f8db0",
+      "back_sha256": "2f2010a52191c1afe099f215453c5d6b0527caa5f6cf3bec849de568698cf73e",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The seller may receive questions meant for a title company instead of an acquisition evaluation.",
+        "The manager may treat a tentative price expectation as an accepted contract price.",
+        "The lead may be sent to transaction closing before an offer is reviewed."
+      ]
+    },
+    {
+      "record_id": "legacy-ch06-030",
+      "front_sha256": "5e15b2b86b9b74d11fee5ff2189c9c27140248be978144df122beffe633bd6bf",
+      "back_sha256": "5afac96feb16fd27edd217d301a10f3caf2d1cdae56f56770fa599b41bb60154",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The seller assumes the property was denied before the evaluation.",
+        "The seller believes the acquisition call creates a binding obligation.",
+        "The seller expects the transaction team to close before an offer is reviewed."
+      ]
+    },
+    {
+      "record_id": "legacy-ch06-031",
+      "front_sha256": "ec5b5da34c978be7a1c28bd0c883b401d4b12a6e2359bd26c64821854296f433",
+      "back_sha256": "43687098a4e76446de6d7cf656069d4b2a6cf2cc50a45f5622844289f990258b",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "One month from now.",
+        "Three months from now.",
+        "One year from now."
+      ]
+    },
+    {
+      "record_id": "legacy-ch06-032",
+      "front_sha256": "414737b303b2e01b1e1595274a00b5f5c9dbf7a07f3e46175df6ef97046b003c",
+      "back_sha256": "737260476fcdca2ca64c53bc3fc5ebba15590c5409f215587ee26ffd9a9a6edf",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Qualification uncovers the real driver, while discovery confirms only ownership and location.",
+        "Qualification frames the acquisition call, while discovery documents the final CRM handoff.",
+        "Qualification sets the next appointment, while discovery introduces the acquisition manager."
+      ]
+    },
+    {
+      "record_id": "legacy-ch06-033",
+      "front_sha256": "1de5ea63889c6565b6d86577cefae76e94c80b3e2ca3b09768660f04ded65102",
+      "back_sha256": "4c42c804904153bae985494fa806558e8c09eddd202b54ab9132bb5bf35daba0",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The seller's secondary decision-makers.",
+        "The seller's motivation and emotional hot buttons.",
+        "The warm-transfer plan and acquisition appointment time."
+      ]
+    },
+    {
+      "record_id": "legacy-ch06-034",
+      "front_sha256": "1dd758b2bcddc730ba1512981f760ed05e8073a0c2ba5165e0c1171c82d6c306",
+      "back_sha256": "7d1790f79d257eee43e5864592f7ac4945faa5c9e4ec743e726caee049a7e9ab",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "It confirms ownership, residential status, and the property's market location.",
+        "It identifies who has authority to sign off on the potential deal.",
+        "It frames the acquisition manager's evaluation and the next handoff step."
+      ]
+    },
+    {
+      "record_id": "legacy-ch06-035",
+      "front_sha256": "1cfe011439d8716bd5e11d6772339d47e51dedcc61ea66204f481d1e28ddb824",
+      "back_sha256": "a2ff07d9f50b2f5461021bf4b8b9994b61d137e6859287805fb2a4dcccda6b6f",
+      "status": "needs_human_review",
+      "question_type": "single_choice",
+      "distractors": [],
+      "review_reason": "insufficient_content_for_fair_distractors",
+      "notes": "The lesson supplies price expectations as the required phrase but does not supply three equally natural alternative phrases that are definitively wrong."
+    }
+  ]
+}

@@ -1,0 +1,466 @@
+{
+  "schema_version": "bmh.quiz-distractor-bank.v1",
+  "slot": 16,
+  "quiz_source_key": "quiz-slot-16",
+  "lesson": "KPIs and Sales Telemetry",
+  "source_ledger_sha256": "f130f47f03585928e40f37dfba3a37c4ab3f9f8d41ae65332668b430960ba4ff",
+  "authored_by": "codex (EXECUTE 2.16, 2026-07-20)",
+  "entries": [
+    {
+      "record_id": "legacy-ch11-001",
+      "front_sha256": "ec713a0d8475e19365d26039c05dc1ec927b1cf9bfc53186b3a67f829db2cf86",
+      "back_sha256": "6ac7ca27870e710a272343cf52d15fda77c9e3f38389f71f4cd74dab915568bb",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Scripts.",
+        "Activity.",
+        "Coaching."
+      ]
+    },
+    {
+      "record_id": "legacy-ch11-002",
+      "front_sha256": "d263a3e429d7a39b349114a4b771e0a113341eebd5fc2bb34c3740d29df8de2e",
+      "back_sha256": "4c2e02f896cf86122a16369b8905a30efd85f4b7a4850744916c2b7c5edc6c57",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Key Pipeline Indicator.",
+        "Key Performance Index.",
+        "Key Process Index."
+      ]
+    },
+    {
+      "record_id": "legacy-ch11-003",
+      "front_sha256": "f3a914747a0547be611824659fe2ebe859d34845ddd3b0a6b8d6a2518747875d",
+      "back_sha256": "fa70a5887bb51a09325af8d849b9aa111ecb35115a27ae7f4bdfd9de07a61967",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "A sales pipeline.",
+        "A coaching scorecard.",
+        "A call review."
+      ]
+    },
+    {
+      "record_id": "legacy-ch11-004",
+      "front_sha256": "67b7673981a75be0f68cb2b2950c90810349564d811bcc4a857eb42bfbef3fcc",
+      "back_sha256": "2926a44785e29ebc5f4d229446116f4201215dad4561949e1eddb5a3d73caad5",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Speed-dialing.",
+        "Micromanaging.",
+        "Dispositioning."
+      ]
+    },
+    {
+      "record_id": "legacy-ch11-005",
+      "front_sha256": "d4ba26c2f3d1510a3d7490b3b9963debef7578b0e29fe5d38234d750461b2ca3",
+      "back_sha256": "9e7366e0d92b8d4c48d40a9ffb1faa48b3601f9bee120f9317b74018f83dc0ff",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Connected.",
+        "Qualified.",
+        "Coached."
+      ]
+    },
+    {
+      "record_id": "legacy-ch11-006",
+      "front_sha256": "5a10612a7cfc7ab8712df06187af84ccb0d00996f9854858c09150b91d6af99e",
+      "back_sha256": "ad19d12e8aca27ccb81ce8c82be58e0f2c61c5be7d690a8ac712ced40a1e0ced",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Backward.",
+        "From the middle outward.",
+        "In no fixed order."
+      ]
+    },
+    {
+      "record_id": "legacy-ch11-007",
+      "front_sha256": "910e9849374fcedea81c17c7ea43cdca70c4a54be19abbeb3fef85b39445ed1a",
+      "back_sha256": "58cd23697dd047e037ecbf2c00a824049aabf841914121d64531c015c14a307d",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Connection rate.",
+        "Quality conversations.",
+        "Process calls."
+      ]
+    },
+    {
+      "record_id": "legacy-ch11-008",
+      "front_sha256": "15e442284e4a7152bb132deb9758255a0812bbbdddd1cfa0509a3adc3625452b",
+      "back_sha256": "360a0a857e261145dbb905834ff4895345e332d1d970dc0e3a94f2d4ec256978",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "25 to 40 dials.",
+        "8 to 15 dials.",
+        "3 to 5 dials."
+      ]
+    },
+    {
+      "record_id": "legacy-ch11-009",
+      "front_sha256": "291966f22d2a974f051cecb2ef5f893db06e7e0c512bc1354f37e4278ef723f8",
+      "back_sha256": "ec34dccc7a32961c9728ce08a372e4cfb41731ff9e0ae36a391dca070ee1ca0e",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "It is the only metric calculated as a percentage of connections.",
+        "It is the only metric tracked primarily by the acquisition team.",
+        "It is the only metric that measures whether offers were accepted."
+      ]
+    },
+    {
+      "record_id": "legacy-ch11-010",
+      "front_sha256": "2d5f671fd458070e5698fac3785f73db5492c41f23388430946de506e33ba9fd",
+      "back_sha256": "baa829481dadc1f520e0150a9a29f6b441820e112ae06ea6c7edc5ba8121991b",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Sacrificing dial volume for longer discovery conversations.",
+        "Treating connection rate as the only metric in the pipeline.",
+        "Sending too many qualified leads to the acquisition team."
+      ]
+    },
+    {
+      "record_id": "legacy-ch11-011",
+      "front_sha256": "9f66cd668691d03d1d054f62c2f3d3ef952102a6c7a8fd501c06f639566a0a89",
+      "back_sha256": "87f941925fc726f8d18c570a6f5a30ef07a842f9f2a079baa807e29ff25956b4",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Quality.",
+        "Pricing.",
+        "Negotiation."
+      ]
+    },
+    {
+      "record_id": "legacy-ch11-012",
+      "front_sha256": "14ec768672eef8f7b6578a610e81ad99eb1a9133634c3e6cbfe5cb7eb8f56e5a",
+      "back_sha256": "739db49dc4971e2e519dd26f5b2e610733d6d124ea7170dd19cedd96efd628e6",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Dial count.",
+        "Quality conversations.",
+        "Process calls."
+      ]
+    },
+    {
+      "record_id": "legacy-ch11-013",
+      "front_sha256": "58ee2b2f02c0b5adc029ddaf06027c1bc84b4cf8c91fb344f86ecc77e830f1ab",
+      "back_sha256": "c661bbb80df61a39b86794723b7df3a52c300b48976bb072fde407ab2d93509a",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "10 to 15 percent.",
+        "30 to 40 percent.",
+        "50 to 60 percent."
+      ]
+    },
+    {
+      "record_id": "legacy-ch11-014",
+      "front_sha256": "68157a7d4519badf563bccf9a0876a2cc4586a92c19978a24d45502f7f28da6e",
+      "back_sha256": "ca006bc9c4f429e22d486c915e0288830823d1710bc3e9470555c8d7c0254caf",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "15 to 20 people.",
+        "60 to 80 people.",
+        "150 to 200 people."
+      ]
+    },
+    {
+      "record_id": "legacy-ch11-015",
+      "front_sha256": "3bf21d730079cf0f6552bdcedc52fae4463e81023c7147861108e9a7b0c2b8d4",
+      "back_sha256": "e3b7e7a038be142c2a042fc1f7374d00fe4caaf7b6b65a3175e33d11644b7499",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "15.",
+        "20.",
+        "30."
+      ]
+    },
+    {
+      "record_id": "legacy-ch11-016",
+      "front_sha256": "666c5b2dd3c4886b753d5bb2bf991b3e71f9d461987f331c8ce2aff645d9b0a8",
+      "back_sha256": "eb207594cd97d3fcf72f7157df65e3cf4e0eea4a5f8d88913be9aa60df1fc584",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The audience being wrong.",
+        "The opening script needing work.",
+        "The lead handoff being incomplete."
+      ]
+    },
+    {
+      "record_id": "legacy-ch11-017",
+      "front_sha256": "eb6a37af0c224194828787808d8dcf575915c9e382b558b325121a0700e7855a",
+      "back_sha256": "e095d24faf89bea49413ee5b007237b53819cae0d861d84ab6a057f58227b6c3",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Dial count.",
+        "Connection rate.",
+        "Process calls."
+      ]
+    },
+    {
+      "record_id": "legacy-ch11-018",
+      "front_sha256": "a26d91146ed8324b0ba8870a3c7e6ff34fa3689040f7f52de6ae9ffc405917f1",
+      "back_sha256": "3c2d60b32b5a4d3ca06efc8574797a64bfb8032fcdd9e3dab1404e7ff0fb927d",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Process calls, offers made, and contracts signed.",
+        "Interested owners, qualified leads, and completed fact finds.",
+        "Phone number status, list quality, and opening script issues."
+      ]
+    },
+    {
+      "record_id": "legacy-ch11-019",
+      "front_sha256": "2e1c5bf1f352ef8c863224f0a492f89f3a1eea12221a7141d30458c58cc4d82b",
+      "back_sha256": "551b7158f25d0ab73e396a2957687b9459b48adc2ec4d7f03af91637fe6f853f",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "15 to 20 percent.",
+        "10 to 15 percent.",
+        "50 to 60 percent."
+      ]
+    },
+    {
+      "record_id": "legacy-ch11-020",
+      "front_sha256": "0aafcc9686c5693612df621e8aec9a1d6cc5476be485cbce9fdabe0da238b310",
+      "back_sha256": "c2bef34989ab4f6c0af62f1b7b903fc31a9aaa665319b4ec58c0f7254bc7dbcd",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Dial count.",
+        "Quality conversations.",
+        "Offers made."
+      ]
+    },
+    {
+      "record_id": "legacy-ch11-021",
+      "front_sha256": "0cf667ff016df538782a09820a5bceb692f32a4f47761a17fd62e1c13991c901",
+      "back_sha256": "22568efa88df4d7c168e6944ad1252332fc011d2af2d3bbe3bf18af5e996aa92",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Phone number status or list quality.",
+        "Audience fit or opening script.",
+        "Negotiation or pricing."
+      ]
+    },
+    {
+      "record_id": "legacy-ch11-022",
+      "front_sha256": "82236979214f3b752e2b02d1d43a1a33f794ecd138f3e22cae7b1ffe6f24b34f",
+      "back_sha256": "fa1de00aa6f2240ad4c011c6290ee6d34a41e746f5e9231119fc25cb4d1e2f94",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Dial count.",
+        "Connection rate.",
+        "Process calls."
+      ]
+    },
+    {
+      "record_id": "legacy-ch11-023",
+      "front_sha256": "c3d180d8da88fc79ef4e8c3df77162ccb8c7b3a140903ab94c4198f082c4cdda",
+      "back_sha256": "58bdc22963533999fe485e8462feba3bbec3c60d62d217c958239c5652f279e5",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Quality conversations.",
+        "Process calls.",
+        "Offers made."
+      ]
+    },
+    {
+      "record_id": "legacy-ch11-024",
+      "front_sha256": "f7f706f73a32f174607dfc17b74b23a0b806278c6dd12258adaa32776cbc5037",
+      "back_sha256": "07119dffb5ec65126e229fcca08d280e4fbbc75e38810b29b60e054edca3c493",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Three out of every four offers.",
+        "Four out of every five offers.",
+        "Three out of every five offers."
+      ]
+    },
+    {
+      "record_id": "legacy-ch11-025",
+      "front_sha256": "1562cd549420415cdea6c647c3c5f29b2ea09f838765912878907fe54f532afe",
+      "back_sha256": "d7385faa735edbef7112fe7ba90f9a86501cfbc98c52213d8275301923c27b91",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Audience fit and the opening script.",
+        "Objection handling and deep discovery.",
+        "Negotiation and pricing."
+      ]
+    },
+    {
+      "record_id": "legacy-ch11-026",
+      "front_sha256": "61b7c8b245695d9e004401fd45b830885bc4123b824086efec467b7abb416afb",
+      "back_sha256": "6a8e35aba2a5c89db7757925d4b1b55823b3d640c48469e81a7f25554c84f7ef",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The phone number status or list quality is poor.",
+        "Objection handling or deep discovery needs work.",
+        "Negotiation or pricing is causing the breakdown."
+      ]
+    },
+    {
+      "record_id": "legacy-ch11-027",
+      "front_sha256": "7e2fd5dfc245ad7783c552c5a647bc312985cabeb487f1d81340d3a398d0252d",
+      "back_sha256": "84610d4d765e295bbee0d6cf42657eea907cc8c9447f2fd545d87f7ffbaf078f",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "A spam-marked phone number or a poor-quality list.",
+        "Weak objection handling or shallow discovery.",
+        "Poor negotiation or incorrect pricing."
+      ]
+    },
+    {
+      "record_id": "legacy-ch11-028",
+      "front_sha256": "7f63c1fac49ce6fbc56ef2b6f26080554eaa3ab7df3ca17659cb6b8986f00728",
+      "back_sha256": "4001afd7424a80e6e37c2ed171f26294df7358d59c3eda4a8a5e4b552d2fd96d",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Phone number status or list quality.",
+        "Audience fit or opening script.",
+        "Objection handling or deep discovery."
+      ]
+    },
+    {
+      "record_id": "legacy-ch11-029",
+      "front_sha256": "389e4a8c0b1ffff6ac9d0f8ec12196ac66adc16bde6921f7969994462348e25a",
+      "back_sha256": "dd0b9eda4e2fcc4a813ad27fe0adfdbb6d30b12a0e9cc0493051b34fbffb7b09",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "150 to 200 connections.",
+        "8 to 15 connections.",
+        "3 to 5 connections."
+      ]
+    },
+    {
+      "record_id": "legacy-ch11-030",
+      "front_sha256": "9b3ad0b1157866c2b2c943b493a0dbb1bf178aaec808c5a0b0fb3d44657d30a3",
+      "back_sha256": "77ba2af2b71b3eefb96f0e257815c914550f82561f274e609d57f8739943a813",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "150 to 200 quality conversations.",
+        "25 to 40 quality conversations.",
+        "3 to 5 quality conversations."
+      ]
+    },
+    {
+      "record_id": "legacy-ch11-031",
+      "front_sha256": "7dfddaababb2270735f4206494e3e2d1e656cdb8a95ac22476449d7e46481ddd",
+      "back_sha256": "4ff60615b9205efcae470c1e89fa059cae65f5f24586da67854d9a16653b5a8b",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "150 to 200 process calls.",
+        "25 to 40 process calls.",
+        "8 to 15 process calls."
+      ]
+    },
+    {
+      "record_id": "legacy-ch11-032",
+      "front_sha256": "433f0f6199c4fba31469b0baaafb4ae362841162f2bff68f3bf3cc5c74b32905",
+      "back_sha256": "2516735b6720fbb4249c7c5a3576250cca2181616751119bec2afb1859ee6592",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Enforcement.",
+        "Micromanagement.",
+        "Judgment."
+      ]
+    },
+    {
+      "record_id": "legacy-ch11-033",
+      "front_sha256": "4274994bcd6bb366ad026d7fcbe33ccd3bb5026824bf35956133c0bb71523b80",
+      "back_sha256": "8371a3b1ef82f3ae394e648b6a677a93009b6b361de8a484d58524c99b2372fc",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Who missed the target and what punishment should follow?",
+        "How can dial count increase without reviewing the calls?",
+        "Which final result matters without checking adjacent stages?"
+      ]
+    },
+    {
+      "record_id": "legacy-ch11-034",
+      "front_sha256": "aa194131b1cdf7199ce524d2d0454ba9894917aae9a94201f18a7112ec79d755",
+      "back_sha256": "b6069641531cbd4a647efda20ee5a55397611ac2e63d3653f4e6850a0f1ec5ae",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Definition: A final result like contracts signed that records an outcome already achieved.",
+        "Definition: A fixed numeric target that applies to every role and market.",
+        "Definition: A punishment triggered whenever a daily metric falls off track."
+      ]
+    },
+    {
+      "record_id": "legacy-ch11-035",
+      "front_sha256": "57029635a7187b6e86e4df69a558b8a6b57e8ed63e2e43b7474b592532ee0b6b",
+      "back_sha256": "aaa34ce8fd54451867fa78fc19de18f4394d2d2b3490f5c176c0d4ca26facf61",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Moving every lead directly to the acquisition team for an offer.",
+        "Counting every connection as a quality conversation regardless of interest.",
+        "Marking every unanswered dial as zero interest in selling."
+      ]
+    },
+    {
+      "record_id": "legacy-ch11-036",
+      "front_sha256": "82f6bce6f5cd232711d90f25fe5fd6dcd17b8b6d33f73d9f3b5e719f65b45482",
+      "back_sha256": "08f1df09dd9b875f30e9ef3d4a55bdda13c542583c473ef3c0dfa26ac13608bf",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Their phone number may be marked as spam.",
+        "Their audience may be wrong for the opening script.",
+        "Their lead handoff to acquisition may be incomplete."
+      ]
+    },
+    {
+      "record_id": "legacy-ch11-037",
+      "front_sha256": "aa4178b7b7bd932a86269ae390634ea080eab7761ccf1e7c0e60bd2ba38c5535",
+      "back_sha256": "c73a988640c1ec13ec9060558721e3fed69beccf016cdab743bf06ffff6d45fe",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "To enforce one universal numeric target for every role and market.",
+        "To replace notes and call review with metric totals alone.",
+        "To reward high dial counts without checking later conversions."
+      ]
+    },
+    {
+      "record_id": "legacy-ch11-038",
+      "front_sha256": "7c806148c2f625038dc8b0d87e968e1fc35f0297f8d08f2852f07e2311dcf886",
+      "back_sha256": "7c134702e2761f58d998a3bf414f012dc5a6d993b30ed03964e27a35e8ac89f8",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "To use one universal target to punish every off-track metric.",
+        "To maximize dial count even when conversation quality falls.",
+        "To judge each metric alone without reviewing adjacent conversions."
+      ]
+    }
+  ]
+}

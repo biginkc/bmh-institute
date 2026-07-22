@@ -1,0 +1,942 @@
+{
+  "schema_version": "bmh.quiz-distractor-bank.v1",
+  "slot": 9,
+  "quiz_source_key": "quiz-slot-09",
+  "lesson": "Objection Architecture",
+  "source_ledger_sha256": "f130f47f03585928e40f37dfba3a37c4ab3f9f8d41ae65332668b430960ba4ff",
+  "authored_by": "codex (EXECUTE 2.9, 2026-07-20)",
+  "entries": [
+    {
+      "record_id": "legacy-ch07-001",
+      "front_sha256": "3153dee0666692ac9326dd2a42cc0f6d545aea50a335a199fd6c911d57cad54d",
+      "back_sha256": "b91ea986a9f01ec720ffd7879cf0c5b539a6f0fde451320fcae0184db72955af",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "How quickly they deliver a rebuttal when the seller goes silent.",
+        "How many specific rebuttals they memorize before making calls.",
+        "Their willingness to agree with every concern the seller raises."
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-002",
+      "front_sha256": "848a180396d18a013ad6971cb513a899e4491a0cd349aeb7d632b587ad337640",
+      "back_sha256": "e19b21ae9bd2f3d5382b3d1719614703f23b599172910cda02c77177bf13ab5f",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "They show the seller has decided to list and only needs repairs assessed.",
+        "They mean the seller wants an immediate offer without any questions.",
+        "They prove the seller values speed more than a higher market price."
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-003",
+      "front_sha256": "d74e5b9d0c67cf3c26eed28ba5007d7f52495d903202e9bd5adfad3ab7c3c9da",
+      "back_sha256": "081ef2cf7399dc3b957d8e2035cebae98c7c9ea6ab868fb43cbd14c1eb6ad8db",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "They would remain silent while processing the caller's information.",
+        "They would ask for the offer to be sent in writing.",
+        "They would mention other offers and ask to compare the terms."
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-004",
+      "front_sha256": "2fda86f3ce56d3162f9f218a5b98159280e4df7c72d61025c74786bef982ee23",
+      "back_sha256": "fde68bab1666c64acbd350bd878e6296a88996704be290e6a8aaac1b914ceaaa",
+      "status": "needs_human_review",
+      "question_type": "single_choice",
+      "distractors": [],
+      "review_reason": "concept_cue_front",
+      "notes": "The front is a Concept cue rather than a multiple choice question stem."
+    },
+    {
+      "record_id": "legacy-ch07-005",
+      "front_sha256": "3373c4f41e57f05f73c9fcf626fe4a782dfbd499b7b5a07eb719686639a73979",
+      "back_sha256": "d8c19ee17ce8c55b4b6f435e77fe7650e37e6622b7d3baa376b232397affb162",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "As a dead end that requires the call to end.",
+        "As permission to argue until the seller agrees.",
+        "As proof that the seller wants an immediate offer."
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-006",
+      "front_sha256": "d64adf3261aed85ae7f49af5877a31994c4f5dd57ab12f77bbde33a30fb4abba",
+      "back_sha256": "88349a5d9023d163accb7bfc89aedb69e5fad4fbc27e56a16aa1976e1c2463f4",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Urgency to speed up before the seller ends the call.",
+        "Confidence that the seller's concern should be dismissed.",
+        "Determination to win the argument with a memorized rebuttal."
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-007",
+      "front_sha256": "0c6999b3e8e9ab7eb7bc99fdcd0253bbc2e40b4c801c47f948499ed1367ed11b",
+      "back_sha256": "85dd90f8daad198c84ff939f81878035dcdb7021f65bc83205700ca6d5265f60",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Listen, acknowledge, ask, and redirect.",
+        "Price, repairs, timeline, and trust.",
+        "Empathy, curiosity, certainty, and speed."
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-008",
+      "front_sha256": "225336603708c9f45195fa19fc633313a81117e086be29f2323c60a61edaa267",
+      "back_sha256": "359846fa606b5ee7929144a8d68d709dae0ef28170a40dba7bf81f5d94bdd6bb",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Fill the silence by explaining the offer in more detail.",
+        "Speed up the process before the seller can object.",
+        "Redirect immediately without waiting for their reaction."
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-009",
+      "front_sha256": "7646c6317630e3ca740b6bfa3a5299795f3b9cd06e1790205b54b75bf753b4e2",
+      "back_sha256": "22058421ac7b9469d4794baa31be0e55d2b9adf27fce52f1213cc9299b89de66",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "They gain leverage in the conversation.",
+        "They identify the seller's real concern.",
+        "They prove the seller is ready to accept."
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-010",
+      "front_sha256": "402884482c55f5a56febccce15b8694deed8c5764aa808b07542058943722dfa",
+      "back_sha256": "1b392f27f5341556e76ed39cc540b836be0662745c223010bb35bed4944b4fd5",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Automatic pushback meant to protect the seller's time or space.",
+        "A genuine concern that creates a specific barrier to a yes.",
+        "A quiet pause while the seller processes what was said."
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-011",
+      "front_sha256": "f6e0cf2d946c9a0f03522866fe192d913458e4d080b8e2ea5545999670a7f47a",
+      "back_sha256": "401e560c3db75cdfb160ce68686ba9c0bd9e932019aab7bcdc9e4cd3f057bade",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Listen to the complaint, argue the facts, and send an offer.",
+        "Ask for a number, speed up the process, and end the call.",
+        "Wait through the silence, explain the listing, and agree."
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-012",
+      "front_sha256": "4e6cbd4395c8ffa3a4af785a92e5e2a08b35af7239f3a8606f3d4f1816d94545",
+      "back_sha256": "87765d9aafcb60721a8ef6c037b4fd1e5325ab674227677863d8948c55bc1aa7",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Thoughtful concerns that create a specific barrier between the seller and a yes.",
+        "Frustrated venting from sellers who have received many investor calls.",
+        "Quiet pauses while sellers actively process information from the caller."
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-013",
+      "front_sha256": "75d5898bc58f53b4c987ed3ce9f6cbdbf197b67b77969d9a2c85cfdd005a77f5",
+      "back_sha256": "e25cb5b38eeaabcb1dc2644c271798aa9716f0bbb14023be5ea5563b228582ce",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "\"Your price is too low\" or \"I need to talk to my spouse.\"",
+        "\"I need to think about it\" or \"I want to list with a Realtor.\"",
+        "\"The market is hot\" or \"I am getting other offers.\""
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-014",
+      "front_sha256": "b5f0b2a6ce1cfa7f2bd596c8a1c0add6c1e908dcf524637d735dc532492a15e7",
+      "back_sha256": "8f5cfafe9216a73b77e69bd56e380014c94be6e413f00bcbaa1ad69eae2ee9a5",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Giving the seller space to finish their thought completely.",
+        "Acknowledging the time constraint before continuing steadily.",
+        "Asking questions to understand the seller's actual concern."
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-015",
+      "front_sha256": "09c243a38ae85a7e1f1d6f120a6b1b378e49e52c8aba055a94f1aa8e75a3550c",
+      "back_sha256": "58bc91914f258a87ed8d3be0cb903d43adafe3ede4303e7d88d83a1cc2134806",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Speed up and skip questions so the process fits the limit.",
+        "Treat the time constraint as a dead end and end the call.",
+        "Argue that two minutes is not enough time for the conversation."
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-016",
+      "front_sha256": "70a31d987b3d962ca1c8bcbf2a3318de297b90c6bc494c6e34281f76a907db8e",
+      "back_sha256": "6bca923ede92c8010b5409650c8eb8910c845de3bfbc1c13f9f07a1654413cd2",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "It is a quiet pause while the seller processes what was said.",
+        "It is frustrated venting after the seller receives many investor calls.",
+        "It is automatic pushback intended to protect the seller's time or space."
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-017",
+      "front_sha256": "59ebfffb81f9bc6ddc21635c0fbeb848f403abb81ad9926cb2fd61f53d6cbb32",
+      "back_sha256": "e19f9f89f8ae80e7acb27968e6d5dbbce1d0707b5bb8b439afe5b21b18910830",
+      "status": "needs_human_review",
+      "question_type": "single_choice",
+      "distractors": [],
+      "review_reason": "imperative_front_cannot_be_mcq_stem",
+      "notes": "The imperative front asks the learner to produce all four framework steps rather than select one answer."
+    },
+    {
+      "record_id": "legacy-ch07-018",
+      "front_sha256": "71584bf7355395ad82d96fcce6a07b4898967bc9f6e3da772b03d9685043429a",
+      "back_sha256": "102af2aadb7f2730c0f0fa237c523a00c6e8e499706afe305d13ac75920c9e10",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Wait for the seller to ask for an immediate offer before responding.",
+        "Wait until the seller provides a specific price they will accept.",
+        "Wait only long enough to prepare the caller's memorized rebuttal."
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-019",
+      "front_sha256": "ccc8f083e8e2aaf9c9f55fdb0bda857d3395f587a6b4babe81bfc92063b299b1",
+      "back_sha256": "6b2a525550aa8f475dac231b7bddddefecd14b6a7c7207e87ec0e8e49439a033",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "To show the seller that the caller automatically agrees with the concern.",
+        "To prove that the caller has a stronger argument than the seller.",
+        "To move toward an offer before the seller has explained the concern."
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-020",
+      "front_sha256": "e4728136b4b1d752f6a3606008fbc3181a0a05160db432fde86a1c4f751dda12",
+      "back_sha256": "a03b030975ecee003edb81f0113f5bf25dbd454a54f4aa78ff343a65021f1784",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The seller feels heard and explains the concern more fully.",
+        "The caller gathers the information needed to solve the problem.",
+        "The conversation moves toward a mutually beneficial solution."
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-021",
+      "front_sha256": "ad296cb5adf7e38151bf73b19525e85b9f33ac091378997848df71abbccbde70",
+      "back_sha256": "110c81e3774590b5c2ab6381664e9f5770ef062b0d401c15e36d0fc9f37a3dd4",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Restate the concern to demonstrate empathy.",
+        "Give the seller more space to repeat the same thought.",
+        "Redirect to a solution before gathering any details."
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-022",
+      "front_sha256": "50bd81b2ca2896a6f03c6c82a4bb5f2c47c57c5ce498a710755f00e3ebb1379f",
+      "back_sha256": "5ab449ee718c9df04c279163aefc006aabb0d6d2262825a3b24d44f38ff5b1fb",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "It gives the caller permission to dismiss the seller's concern.",
+        "It proves the seller has already accepted the proposed solution.",
+        "It lets the caller skip acknowledging what the seller said."
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-023",
+      "front_sha256": "4abee9e42ee9bfee7cf91001fa4408df7e1a401a4678043e70baff4d2ab455bd",
+      "back_sha256": "69d7b54fb760c886b2c727c06e83ea625349d7dc067edaec158b68f23d0d39dc",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "To guide the seller toward a solution before they finish speaking.",
+        "To end the conversation once the concern has been identified.",
+        "To return to a memorized rebuttal instead of gathering information."
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-024",
+      "front_sha256": "067ee26dcbfaaad6fe1902cb5d40371920cda384fb3be35cfcad51598b914b50",
+      "back_sha256": "eaa1558a83275935a5f536eb33ee644c9f3cf86b04895572029e36a6db94ca91",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "\"Can I ask what specifically you're weighing?\"",
+        "\"How long has it been on the market?\"",
+        "\"Why did you respond to our outreach in the first place?\""
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-025",
+      "front_sha256": "5c3d06514fc8249a2a52be4510a8e0710c41a03fc2d811b4c6cf4d0e4a385b36",
+      "back_sha256": "0495dfa108ffac50e7f32a1d473be961c54523fdc0efa3eb81fe84eb9b1138ba",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "They are rejecting every type of sale.",
+        "They are asking to end the call.",
+        "They are confirming their listing failed."
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-026",
+      "front_sha256": "2b4e449b70dd8a374d72f968666d26c7505eaa38ccb54551290816149a497795",
+      "back_sha256": "2dc01a4b488bba346bd90e1442e1b24865355a861474e0ad644d7a7807d13c1b",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "\"What number were you hoping for?\"",
+        "\"What have you seen so far from the other offers?\"",
+        "\"How long has the property been on the market?\""
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-027",
+      "front_sha256": "6dc74da501716ca5b6f012c0809cb65089705bfe0f543920ed0d592b47785c63",
+      "back_sha256": "5daed36aa517e93f9195503d0153201f96e62ba2c37f1fddd6bfd285a626d8b8",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The other offer structures and the numbers the seller has seen so far.",
+        "The licensed title company and the availability of an attorney review.",
+        "The reason for answering the outreach and the need for a fast sale."
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-028",
+      "front_sha256": "c65126a549468d882ef3156e976272a4abd03b28caa4da547f4cc5f5a62145d5",
+      "back_sha256": "431490d40e65550fe0017f7e78cabcb96e778a4e5f7f700095d4e43fcdb8bc44",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Tell them the other offers are unreliable and argue that yours is better.",
+        "Ask them to stop exploring options and accept the current offer instead.",
+        "Treat the mention of another offer as a dead end and end the call."
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-029",
+      "front_sha256": "bb8cff9f7b4c9ea5d886cdf853324211b7205643bb4390e4640da9dafbfdfc43",
+      "back_sha256": "5084527cc7baac457885dd03fe8bf0c9e38c1ae78dc51005f5ed4da36b0c327a",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Send it immediately so the caller does not lose ground during silence.",
+        "Explain why the seller should accept before asking any questions.",
+        "Ask the seller to list the property before providing the information."
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-030",
+      "front_sha256": "74ba96503a3a99dbefaa8332e5f59ac4ad781aa5d6aede7de554bf5071d56934",
+      "back_sha256": "e4672ccc2a4518083dcfb10d0f6cc6d36538118c3f5ff035c38034847a3106da",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Ask what number the seller was hoping to receive.",
+        "Ask what the seller has seen from other offers so far.",
+        "Ask whether the seller can wait several months for a sale."
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-031",
+      "front_sha256": "1acda0e6a08f982ca1668fdedf97ea012fbc90583ff894542f8460051900160e",
+      "back_sha256": "ebb5f014522f3e0826d4953e64daa813c03ab8de77536b8749ac34c027f65902",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Explain that the seller answered the outreach and requested a fast sale.",
+        "Explain that the property was already listed and the caller is the backup option.",
+        "Explain that the number came from another offer being compared with theirs."
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-032",
+      "front_sha256": "08b12a5f051ab41baf3863d72c42bc9123eb433a7f8f8197f7ec20e71b6cb237",
+      "back_sha256": "7f31cd0755261054c5723a984f4cc9b520b1ce77e0625390743875b04d72f54a",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Promise a higher market price without explaining the closing process.",
+        "Speed up the call and avoid discussing why the seller feels skeptical.",
+        "Tell the seller that a hot market should be enough reason to trust investors."
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-033",
+      "front_sha256": "9fe08c2e611418469e03f5288f8369d885f600a8599056a1afe5e684378752fe",
+      "back_sha256": "01dc66ab5ca6e16b355a6630b6325256064d06c8f17686396ee6cadf135468c0",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "A potentially higher price after repairs and several months of waiting.",
+        "An immediate offer delivered before the caller understands the concern.",
+        "A backup listing plan that applies only after the seller's agent fails."
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-034",
+      "front_sha256": "8e3973658f4278e6e7c8d64c8031eb633c36d3eb4caa07693f1f2acfe23e8289",
+      "back_sha256": "52cb0821ba390fc259b862296a430b9721518c968f9e9105b002f8474f68a4b9",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Ask the seller to cancel the listing and accept an immediate offer.",
+        "Argue that using an agent means the seller cannot receive a fair offer.",
+        "Tell the seller to stop exploring options until the caller follows up."
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-035",
+      "front_sha256": "12383f702519a8ed4c998f8adce4b58dda82067a34f23098fd11fbadfe408c63",
+      "back_sha256": "3cbd9d03c9e4b33087898e23dec2a3ceb14c387db829e4af473a67fbe748c64f",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Treat it as information that should be understood.",
+        "Use it as a doorway into a deeper conversation.",
+        "Apply the four-step framework to the concern."
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-036",
+      "front_sha256": "98543729893697f00e8c3264165772c4ac2facd5837749eda2b0a1debc038cb1",
+      "back_sha256": "58eaf14e829ec57bbbf4c207d1c512c21bdb979f3cb00bb7eef79d2959711852",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "To argue until the seller agrees.",
+        "To memorize specific rebuttals.",
+        "To speed through every objection."
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-037",
+      "front_sha256": "1130fb83554a13a2fc8cd4e6c67ba24ef3973b571cc8b3f72ee31217cbd0e4a0",
+      "back_sha256": "ac950292a134a9c4f9a800c18d68f359256b3f86d1f6f5a9a6624440728ea97a",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "A dead end that closes the conversation.",
+        "A battle the caller must win with a rebuttal.",
+        "A signal that the caller should speed up."
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-038",
+      "front_sha256": "0b8a2a8c39d6cc1dc722ca7e6cb6ef8711861d370393ddabd706ee9968b0ee44",
+      "back_sha256": "8353e1d4ab5c6c6b5be86a6b22be03feee1a0e29820dda1f70b9778d1fa42bf9",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "To agree that the complaint makes the rest of the call unnecessary.",
+        "To rebut the seller's frustration by proving that it is incorrect.",
+        "To skip the complaint and move straight to sending an offer."
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-039",
+      "front_sha256": "8c5a30ec80fc3c6afa52209273bac5e65138e64b30f6d97a5c0907f1af39a354",
+      "back_sha256": "8fd8119b00cfe1069e8449f97e655524467284d7e98b53274ae7a82f72d3613d",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Listen, agree, rebut, redirect",
+        "Acknowledge, ask, argue, offer",
+        "Wait, empathize, explain, redirect"
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-040",
+      "front_sha256": "6680ca13d8454ddfe8c0e785df1c892347a6ffa764dd8aa2636c3d435f82e63f",
+      "back_sha256": "5471222872134066d39837912c1b262ff3973f5229f4feacd798d070adc3346a",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Silence.",
+        "A complaint.",
+        "A reactionary defense response."
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-041",
+      "front_sha256": "b15616cb95121b531d31f65db73040d13e8b169ab17aa329efa9292fb680c5a7",
+      "back_sha256": "39908bf2cc66ce0c6b8a1c7d6ba03887c5847a2ee2af52d87ca0905edfe5c8e3",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "It shows the caller will skip questions and send an immediate offer.",
+        "It turns the complaint into proof that the seller accepts the transaction.",
+        "It gives the caller permission to argue about how many calls they received."
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-042",
+      "front_sha256": "cf8115eb18cec509a5a5039d861f72765ed943a6dd373880545a9a765a315730",
+      "back_sha256": "fbd8a915d659ae300f8519ce44f055b07f059829d7199894912a1b1d29973c9d",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "It confirms that the seller values the fastest possible sale.",
+        "It removes the need to ask any more follow-up questions.",
+        "It shows that the seller's hesitation is only a complaint."
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-043",
+      "front_sha256": "d594a96f857f09ae5ded762b6797db174c148818314a4416179e1994d23c7715",
+      "back_sha256": "e488347363788d7805dd31a6790068021ac72856ad1e50c3e469673021ebde1f",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "How many investor calls the seller has received.",
+        "Whether the seller trusts a licensed title company.",
+        "How long the existing agent has had the property listed."
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-044",
+      "front_sha256": "e964d65fd3183d3688a27926820b468c66531c08a1aee8d52ba5edd36689eb3b",
+      "back_sha256": "e67f7e05efb94d3e97510ab03fe1878e21d5a0d35c5531d4966acca4faf55a76",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "premium-price traditional sale",
+        "competitive highest-and-best sale",
+        "fully renovated retail sale"
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-045",
+      "front_sha256": "7d774ddb33a623faf4b38ada3806ac3b1b09694e32e4627771eafc7e4791ccb8",
+      "back_sha256": "525d1b0ed982d667ab4ec2781ac8a058f84d94252e602f0aa349e223de685222",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "\"Can I ask what specifically you're weighing before we go any further?\"",
+        "\"What number were you hoping for so we can compare the actual gap?\"",
+        "\"How long has it been on the market and what have you seen so far?\""
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-046",
+      "front_sha256": "0331244b8fcf1323b6e75cc8c87282cbf88d9291600210cbd14a41b29ae03a1a",
+      "back_sha256": "5842dd537a9d0898e697e3a2f5c308dcfa54e6d6eb070a78de92f63b0fd127b3",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Because the seller owes the caller enough time to finish the full script.",
+        "Because pushback confirms the property already qualifies for an offer.",
+        "Because a longer call makes the seller's concern disappear without questions."
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-047",
+      "front_sha256": "5747695f99087b18c6d35b5a92a2cd23004fcc0e553e7782c6ae7ed163a7058c",
+      "back_sha256": "ce89e6692626abc785c75a89e8a313be0613769dd78e21f2644b9a34851230f0",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "It pressures the caller into making an offer before the property is evaluated.",
+        "It signals that the seller's property has failed the buying criteria.",
+        "It commits the caller to send terms before learning the seller's concern."
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-048",
+      "front_sha256": "6446b426de46ea15175800fe3147dbb43b9099c0725e9a7f510e74ec561d38f3",
+      "back_sha256": "da691074b5bbb05de2f3b15f6acd6f8c15d8f2c3e244db1bab818ee3f5e24647",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "It identifies a specific barrier that requires a structured response.",
+        "It expresses frustration after the seller receives many investor calls.",
+        "It thoughtfully requests a comparison of different offer structures."
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-049",
+      "front_sha256": "41a61fcfdafd1a44f2639128e84db1e4afd0f8cc8cba05ceab898d856ff7042d",
+      "back_sha256": "d4a0c184a1289a69e19e137df3b2ad8e764dc3be8a1613bd5333e19a041f612c",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Make an offer immediately without asking the seller any questions.",
+        "Speed through the whole process within the seller's time limit.",
+        "Argue that an offer is impossible and end the conversation."
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-050",
+      "front_sha256": "15860aec2a7c942dd84d52678172ec509a0024c320a7543b1b87f988b3049071",
+      "back_sha256": "dcf98fe70895823081b33c7360b7a850a68bfb689385b81b685d71776fc2786b",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "To promise the seller a higher market price than any other option.",
+        "To show that the caller can proceed without asking more questions.",
+        "To prove that the seller must list the property with an agent."
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-051",
+      "front_sha256": "dca6d257517023b1e7e2355d02444cef29a246cfdc969741f36d31e5068d5878",
+      "back_sha256": "e452d62fc33a65a5abeb91b2c70341824e119f5b03e47130216ff2243f47735d",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Pressure them to cancel the listing and accept an offer immediately.",
+        "Argue with their choice to use an agent before asking any questions.",
+        "Dismiss the listed property as a dead end for the caller."
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-052",
+      "front_sha256": "7550d89c85ddc07e1a4dbc289ecacd4e89b7a1584e48f6ea4dbac8b2bb9a760f",
+      "back_sha256": "42fcc3e635ccdcbe94941e8999658fa06c420f113be3e750d149ff8fa0039f08",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "To determine the repair costs required before a traditional listing.",
+        "To explain how the caller obtained the seller's phone number.",
+        "To learn whether the seller has already spoken with their spouse."
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-053",
+      "front_sha256": "9ec1de97eb18057d4a5295573d5d5d6ce6f6c5eb6751d71aa27ca00fbc1c0edd",
+      "back_sha256": "3e1d5c20857dfd7e5540cfb0e29962958710b047879b50c03d66298863a69876",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "\"What number were you hoping for?\"",
+        "\"What specifically are you weighing?\"",
+        "\"How long has it been on the market?\""
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-054",
+      "front_sha256": "866ec409169f24d0b1d124ec0f1413782a22d5f3bd04ef3216acbbf2abcaa94e",
+      "back_sha256": "d820122d625427a674d5605832e0981996b29f3000b9aff5b96aee6a4439f847",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Whether the caller should speak first after a period of silence.",
+        "Whether the seller's frustration comes from too many investor calls.",
+        "Whether \"just make me an offer\" is a reactionary defense response."
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-055",
+      "front_sha256": "e6839ec9fa5865848bb4c171119c91d659596ad3b3cc696506dacea0aaa0efcc",
+      "back_sha256": "6a68b6fa1dbcfbb57af0d2426e7845b3b8683720a9cead96abe94540839ff886",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "openly argumentative",
+        "immediately dismissive",
+        "visibly panicked"
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-056",
+      "front_sha256": "a4a0799ee44c33d32af239da58a4ff33404fb56c08fccf84f8c8b459af1dd40b",
+      "back_sha256": "2f7820a5325de01510971fb541180d3730df116b28942068bb1e5a7040528833",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "One.",
+        "Two.",
+        "Three."
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-057",
+      "front_sha256": "c11f0c12491b8f3663323de23487bb3a2d588fdf5fef8a61be512e5986fdb914",
+      "back_sha256": "11228f2c396d08f093850dadc51f45c804227756bb7f094297ed1c9ae28dfe34",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "It indicates the seller has decided to end the call immediately.",
+        "It means the caller should ramble until the seller responds.",
+        "It shows the seller is ready to accept without asking questions."
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-058",
+      "front_sha256": "210becb066e7a1546df9028704037574df42335be07adb19c33416645197a877",
+      "back_sha256": "61c91d9eae1b10478905cdd655f8a6ed247ab83fb241ec30bcb0aba26ecbcf92",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Defensive and argumentative toward the seller.",
+        "Rushed and dismissive of the seller's concern.",
+        "Pushy and focused only on delivering an offer."
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-059",
+      "front_sha256": "c843a9ede12a4ab03a88076d4b770f89fa028dad4e7ce369f5b281e5e85d8b3c",
+      "back_sha256": "d1e6c9ee262cb09de0e4c2bcf7572e40402a0a7b00d6c11d67ba4b23260e126f",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "To persuade the seller to accept without naming a number.",
+        "To skip listening and redirect to an offer immediately.",
+        "To demonstrate that the closing will follow a legal process."
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-060",
+      "front_sha256": "4f7e5504146527878ccff51e7ab8b16ebf1d801958f8004f8325730c82afdf84",
+      "back_sha256": "f9e1c9edf45235dd9987be24e4dfd6d9bf26703e7801e9492c68e1ee547af9c3",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Silence while processing.",
+        "Complaints from frustration.",
+        "Real objections requiring thought."
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-061",
+      "front_sha256": "20974f7da6fc1607fd7fa4fa31f56b3a21c53c4f2b62885b2f5f89f200587613",
+      "back_sha256": "64df403570548cf0d3fbc42eeaa82612d5f224b0b05586984aa2a2abac9b0434",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Acknowledge.",
+        "Ask.",
+        "Redirect."
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-062",
+      "front_sha256": "38c85d1f91e876df7b8334b0200e8ddc35ccbdaf05e98905cf8fa190dbac93ef",
+      "back_sha256": "5cf6708af50588dc865a1d79cb119cb2e24d3dfd65384bc9d3130ad55cdb1ee3",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "\"What number were you hoping for?\"",
+        "\"What specifically are you weighing?\"",
+        "\"How long has it been on the market?\""
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-063",
+      "front_sha256": "da5d037190a851f51cf3ffdb4adb148e44c7b8ee50198dda00527c85217d0734",
+      "back_sha256": "e7d07a06f346da2f5313352ae297acf3bbdc18bbaf6f366822857ca22561c6a5",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Complaints.",
+        "Objections.",
+        "Rebuttals."
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-064",
+      "front_sha256": "9756f46a4db8ecc47b7a45947a0d26509dca9d228cefdb6c0db8dc117444cc44",
+      "back_sha256": "1aa4afac55d2111374fbd7f18dc37c301b0f826e99b2fee14282468206652d21",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "It replaces the need to listen until the seller finishes speaking.",
+        "It guarantees that the seller will accept the caller's lowest price.",
+        "It applies only when the caller has memorized the specific rebuttal."
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-065",
+      "front_sha256": "8dd1afaf614cdfff452ae6c9f2445a76eab5a9ab1a7862e042d3fd308eeb4037",
+      "back_sha256": "33b259c00902e21e0addcc7a48a1e9376af4152152f043ffac3dbf7efcd4f5b9",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "To confirm how the caller obtained the seller's phone number.",
+        "To determine which repairs are required for a traditional listing.",
+        "To compare the seller's other offers on an apples-to-apples basis."
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-066",
+      "front_sha256": "26fa199e6e8a03160b0b0ea47fad7a31f007cb25a37db7a6b5a2962e96d35f24",
+      "back_sha256": "622804ec34535625f7274525b062f56eb0baad185d88d26d1b039de4f78e6155",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Potentially higher market price, repair costs, and several months of waiting.",
+        "Silence, complaints, reactionary defenses, and real objections.",
+        "Listen, acknowledge, ask, and redirect through every concern."
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-067",
+      "front_sha256": "5d5a4a667e9602bd9d1feaf4b55a73e7aa9766ff86e43fa363871d302aca9907",
+      "back_sha256": "b5ddbeb4dec827e3921cf5f8377a6fcbed3a90f493df9fe8d70359eb617e7a93",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Listen completely and stay curious about the concern.",
+        "Acknowledge the concern and show that it was heard.",
+        "Ask a follow-up question to gather more information."
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-068",
+      "front_sha256": "9856e132541c12a21ee9c5e4ae5ebe378588ca44d36a99c64fff3d6cce6dadc5",
+      "back_sha256": "bc89caa6669191491fdba1e1c04046950fa86d4a9aaf90fa5036956e3ccc0b8d",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Ask for the seller's expected number before they finish speaking.",
+        "Redirect to the caller's solution immediately after hearing the price.",
+        "Acknowledge the concern by agreeing that the price is too low."
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-069",
+      "front_sha256": "ef3a76843caa4fb6a6875c89bbc208e74be12b8ef2a7465e6d99bbd988a7434c",
+      "back_sha256": "e6d3920576a43921aee8ba9ce0571f33d1352d9825dbeb78114d9632f2b7375f",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Treat their exploration as a rejection and end the conversation.",
+        "Argue that the other options cannot be compared with the caller's offer.",
+        "Pressure the seller to stop considering other offers immediately."
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-070",
+      "front_sha256": "ea7d5d90a614c6f40ce1e2b8152439041a6c0ffa64340e342811e0abcb52ad61",
+      "back_sha256": "070076ea1af97f1d633a3c89c8570d86344c808dbd6bdf2b1c14c062196544de",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Arguing until the seller accepts the caller's proposed solution.",
+        "Asking follow-up questions before listening to the full concern.",
+        "Returning to a memorized rebuttal before understanding the problem."
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-071",
+      "front_sha256": "4aab714f163a90334b293abe8d85427c9d30e2c56f29534d0377549ef24d3e53",
+      "back_sha256": "e55fca44945d5634d82b4425ddf6273fbdb16e20e5dfcd8e0e916f64e8f5b0dd",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "A seller venting after receiving too many investor calls.",
+        "A seller weighing a specific concern before making a decision.",
+        "A caller waiting silently for the seller to finish speaking."
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-072",
+      "front_sha256": "d265a404ddedee79b384cb06bb1cc9a6f08e6a96bfe8c67e2d0b42f778500edb",
+      "back_sha256": "8bba3f103a8c450d60751c5a15e92b8e86686c974c987d3ff4e1760b59a7def4",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Perfecting a single opening script for every objection.",
+        "Speaking first whenever the seller becomes silent.",
+        "Sending every offer in writing before asking questions."
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-073",
+      "front_sha256": "ffb7d5bd6e97c1a99675bee8b759e97c4684d2e218a0e525b9b8740e1c5b3102",
+      "back_sha256": "48b56e9512b487bccd097db73519fbbfd0e45ba36da0d739b5687f0fb33490de",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Continue faster without acknowledging the seller's request.",
+        "Argue that the seller should remain on the call until the process is complete.",
+        "Treat every immediate request as a price objection that needs a number."
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-074",
+      "front_sha256": "12e7202aec05c7c8787d72ac8f598c57a49c90627006dbaec41f49b334368043",
+      "back_sha256": "92d192e9b1252ecfd86124c00aa3b4c9931ceed0605bea94dd8c425e2ee234c4",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Memorized rebuttals delivered before the seller finishes.",
+        "Speeding up whenever the seller tells the caller to hurry.",
+        "Arguments intended to overcome rather than understand concerns."
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-075",
+      "front_sha256": "4666c3448724e030abd90bc69e891e0467a2919cecdd079a5bf97d8a5f400243",
+      "back_sha256": "e823da61abfbd317f8fd39727af67cead1a5f82ce52e11be72a1efa1be34c5cf",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "larger",
+        "clearer",
+        "harder"
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-076",
+      "front_sha256": "7f5a1eed762df610e128fc66795f6e6095ac8b6c4ddb3a5296f1996de764d2cc",
+      "back_sha256": "bad70a9f48527c2394f1686a9833f6606215a2645de4760c23d0ec2df4eec397",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "It is a genuine concern that creates a specific barrier to the deal.",
+        "It is automatic pushback intended to protect the seller's time or space.",
+        "It is a quiet pause while the seller processes the caller's information."
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-077",
+      "front_sha256": "134201cedbacfc6717027ed8851ba5d80c97770bc41384eb91fc8a99265ed9d8",
+      "back_sha256": "a1a2be15d0f50519fb1a8810b95643547099d376b666cc44f24f28d891973bee",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Argue that the changed situation has no effect on the seller's decision.",
+        "Send an offer immediately without asking what changed or what was missed.",
+        "Treat the response as a dead end and end the conversation immediately."
+      ]
+    },
+    {
+      "record_id": "legacy-ch07-078",
+      "front_sha256": "e2605a2f53a322f4e55f4f73e44f87e30754d68604fa305721e0040397ef4740",
+      "back_sha256": "eb54823692869d4128bab75078329f9f04468b143087d7feb5d74aa91605da77",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "To memorize a separate rebuttal for every possible seller response.",
+        "To win the argument whenever the seller pushes back on the caller.",
+        "To send an offer in writing before learning whether it is relevant."
+      ]
+    }
+  ]
+}

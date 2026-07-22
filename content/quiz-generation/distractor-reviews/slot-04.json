@@ -1,0 +1,542 @@
+{
+  "schema_version": "bmh.quiz-distractor-review.v1",
+  "slot": 4,
+  "checked_by": "claude-fable-5 (adversarial checker)",
+  "verdicts": [
+    {
+      "record_id": "legacy-ch02-001",
+      "distractors_sha256": "6e7b26ed351ade9a5465e649ed09f6cdd0ed1ae55f6a92e3a88e24a297544717",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-002",
+      "distractors_sha256": "f56ebbd20d2a12f018a1da90d02032a307edc75a3a077cbcc2e415da7e744a76",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-003",
+      "distractors_sha256": "a8b6da1c7c361683925fa1cc8bc490bc00cca6cf818a21eeef31dabce4df1582",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-004",
+      "distractors_sha256": "aaacfebe0aec68bf9ebafc86a86bda8bc61a6675da6f3a66c969f7203f61a73d",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-005",
+      "distractors_sha256": "8c8a548966790012dcb8f2a6deff5ba8fd946d9dc6529d848b4fb91ca3e5d501",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-006",
+      "distractors_sha256": "89901c46a26928f202cf7cad0db3e8fe5f17e76bf9828d67f166dcfc063ac049",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-007",
+      "distractors_sha256": "722c28cf2d62ebc54d79aa25d037274bc09090a765d20e0c39232803e0bd7a6d",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-008",
+      "distractors_sha256": "d03e470260f3c9192e35226ec4738a8fde055b1d41c9e23118bac4c34a616606",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-009",
+      "distractors_sha256": "2899a53d981d5d9412c2b47098e4ad2156bea6efe7e09f8b46435e898738d94a",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-010",
+      "distractors_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-011",
+      "distractors_sha256": "f119ec9d48a9221d596b670a543bc957d6e4f48fc0e0f23e68e820e12c39271d",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-012",
+      "distractors_sha256": "97af622449736ed9a536a3129e5b5944c07033e7c68a0c21abf62dfd2241ceb2",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-013",
+      "distractors_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "verdict": "needs_human_review",
+      "issues": [
+        {
+          "code": "wrong_flag_reason",
+          "distractor_index": null,
+          "note": "Flag reason 'imperative_front_cannot_be_mcq_stem' is questionable: imperative stems are standard MCQ stems, and parallel card legacy-ch02-051 was authored with the same triple-answer shape. Escalating for a human call on house style."
+        }
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-014",
+      "distractors_sha256": "b0370731b92bdeeb282f54c0e0f0f978de01331bd33486eb7b4eb47deca3025a",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-015",
+      "distractors_sha256": "00b3bb0ffe9da2d4666d7654823abd8f8b2893801e10c36b9fbb289ea428e95b",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-016",
+      "distractors_sha256": "22a9d09a517a0ecb146430553d24395a7f405c9cc07dd41ea25e99d57cd328ef",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-017",
+      "distractors_sha256": "0b6061f342e29ef82a92fcad7ded9f724e0c0753928619f90bcd7a8ee2e5fd89",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-018",
+      "distractors_sha256": "c6d386c414918046ce884efbb9152d1801075e8c00b7413916c22f6397e1684f",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-019",
+      "distractors_sha256": "493f8d926e613556d168ff758063ab9fb68e84c28696722bd1b1fa9030b31181",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-020",
+      "distractors_sha256": "980224c7bb3f475a3969689483438e7ad89eca9c2b510319eb1141c3dc1b57b1",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-021",
+      "distractors_sha256": "f7da3889325ebc083035443edac1eb542333ddbaf7f39f30975f0cec04436574",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-022",
+      "distractors_sha256": "83ef1f0c930399120a0bff09557fd5c9c6b7298c5dede4380dcdc7baba2c41d8",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-023",
+      "distractors_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-024",
+      "distractors_sha256": "180fbbf3662993fc419c307f7ba61dffd48ba95564e307b0e9046638a6385880",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-025",
+      "distractors_sha256": "539b3090a387dcd7e2936cf436d9ae06ec84bcef0deeae49689adbee6d1210a5",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-026",
+      "distractors_sha256": "dd6f318e3c9b2f74c4e40f7ee908156f67867a6ec6e2aa158d3d230979fc84ed",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-027",
+      "distractors_sha256": "88d33f4ecd89dcbc839e8c3c525a73a453c5688a1409063e4001ac1f23449100",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-028",
+      "distractors_sha256": "f414b6861d01e539afc7232795a949359af83f8e02a2fe244d360691b3685202",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-029",
+      "distractors_sha256": "7a8bdad34b333e9b5c98765167875a62374939348cc77baad1ccb48f3081ede6",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-030",
+      "distractors_sha256": "1c20871cd4e7a3c9e2597d33476edeb57aa7da3efe4eb1aa0c3de6f2e412352a",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-031",
+      "distractors_sha256": "9f8db871bb72e19278722d4b7ff28bb305e8fa34b0209b8c31e661213c12445a",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-032",
+      "distractors_sha256": "a88fbdccac346bb29acdf9cba2880411f6f1b6e2a1cb6c708fb95eec7f5d0b2b",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-033",
+      "distractors_sha256": "e7b7c1f4b99e39f70a44b6b7cb0c948ddf30699cbf8499ef7fc0304883e456c2",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-034",
+      "distractors_sha256": "c46b9a20f243c815b0c393aa80c19fb5e3cf9f9697ca18a5c375f7f05711b930",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-035",
+      "distractors_sha256": "49f0b47bf0b42b38b06387ce96490f6af28379923a6b8d61e57f1560bcfeb2a4",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-036",
+      "distractors_sha256": "6706564ec503fc02a8f2c90fc68e6e6ec16298b6b2af3893a0940c8422212119",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-037",
+      "distractors_sha256": "fba6caab6f88b6f2fa134786a09b7eec0496120cb17b800d4c1b30b455d7c554",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-038",
+      "distractors_sha256": "04b57765763f32794c67e4c26c0e2cec006bfa6b624271e5d52dc8aefeb4603f",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-039",
+      "distractors_sha256": "4a4f44f003bd97fdcc118213680509d02059cc78e7365dd2fe85ed542ead0761",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-040",
+      "distractors_sha256": "96ebe3c13af1e29e167814ab642769b8aa98da2bf7f87571ed859cce2e1441a3",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-041",
+      "distractors_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-042",
+      "distractors_sha256": "e227cfa4be24e7c5278b04b7e32c95870234679e2c93cf141adc0513fb146a2e",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-043",
+      "distractors_sha256": "06fed6397203dc43a7c828c9cdc8a34ae7569bcdf070fea884ce867ed2e20a62",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-044",
+      "distractors_sha256": "30bb1bc12bb67ea345a14f136f0ea914507e43bbf7e20aca5b2b837b8e82ffa1",
+      "verdict": "needs_human_review",
+      "issues": [
+        {
+          "code": "valence_giveaway",
+          "distractor_index": null,
+          "note": "The prior valence defect is repaired in form but not in substance. All three distractors now mention desire/motivation, but every one points AWAY from selling (wait for a higher offer / keep the property / renovate before selling) while the key is the only sell-now option ('desire to cash out'). This deck teaches distance-equals-cash-out in multiple cards (ch02-053, ch02-064, ch02-067), so a test-wise learner answers by picking the lone sell-direction option without knowing the mechanism. At least one distractor must share the key's pro-sale valence with a wrong mechanism (e.g., distance increases desire to sell because the home sits vacant and loses value)."
+        },
+        {
+          "code": "style_mismatch",
+          "distractor_index": null,
+          "note": "Secondary: the three distractors are word-for-word template clones of each other ('It increases the owner's X, strengthening their desire to Y') while the key uses a different construction ('It makes managing the property a headache, increasing their desire to cash out'), making the key the structural odd-one-out — the same form-isolation defect flagged on ch02-055 last round."
+        },
+        {
+          "code": "ambiguous_correctness",
+          "distractor_index": null,
+          "note": "Checker escalation after three failed authoring rounds: the lesson teaches the key from multiple angles, so any in-lesson distractor is either eliminable or partially true. Needs human authoring or a different question form."
+        }
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-045",
+      "distractors_sha256": "42478109fa3d0bdbbde945effb7c28a6ec64a141e8ae751bb2b5fb04f424f3b1",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-046",
+      "distractors_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-047",
+      "distractors_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "verdict": "needs_human_review",
+      "issues": [
+        {
+          "code": "wrong_flag_reason",
+          "distractor_index": null,
+          "note": "Flag reason 'imperative_front_cannot_be_mcq_stem' is questionable: 'Identify the core problem: ...' is a textbook MCQ stem and the back is a clean single answer. Escalating for a human call."
+        }
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-048",
+      "distractors_sha256": "d2cecbc56f83cf9a6ffc8d60261ec70cc1869a55e2d03ca9ed995a35ccbcea59",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-049",
+      "distractors_sha256": "ccde28d0c03d8cc2b925f2501df2374a40ee3106c5bdd287a211da90dc98474b",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-050",
+      "distractors_sha256": "805c769e47d3da68990318ba617936fa5b9ec6830ee88187007215abf786174a",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-051",
+      "distractors_sha256": "bd4fea864a805640c05ae565022828d60df6cbc6db4b11821f6f03691256f2db",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-052",
+      "distractors_sha256": "0012854d4b595aff5688afeeb148af55ff36deceda60a57ecda8edebc49142b3",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-053",
+      "distractors_sha256": "dd3f6c25ef158cb603932adff4df4429f9d7a2269771e005ef3731ca856a5b64",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-054",
+      "distractors_sha256": "318ac49c80353018878842a24ff663dba8b1c4e2f424153ee370a6f09893acfd",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-055",
+      "distractors_sha256": "e7562660b37897477e5298ec63c77822ea4aeeecff8965efa3e03d97b9cbec6b",
+      "verdict": "needs_human_review",
+      "issues": [
+        {
+          "code": "implausible",
+          "distractor_index": 1,
+          "note": "'Making the seller expect the same rep to handle every later transaction step' has no causal connection to winging a call — no learner can construct a story where being unprepared produces this expectation. It is fabricated process trivia that does not answer the stem's question, the same non-engagement defect class this record was rejected for twice."
+        },
+        {
+          "code": "implausible",
+          "distractor_index": 2,
+          "note": "'Shortening the follow-up schedule below the seller's decision timeline' is likewise a non-sequitur for the risk of being unprepared on a call; nothing in the lesson or common sense links winging it to follow-up cadence."
+        },
+        {
+          "code": "style_mismatch",
+          "distractor_index": null,
+          "note": "Compounding giveaway: the key is the only option written in the lesson's own vocabulary (trust, preparation — echoed across ch02-002/003/049/050) while all three distractors use CRM-ops vocabulary (rep routing, follow-up schedule) that appears nowhere in this deck's backs, so the key is isolable by register alone."
+        },
+        {
+          "code": "ambiguous_correctness",
+          "distractor_index": null,
+          "note": "Checker escalation after three failed authoring rounds: the lesson teaches the key from multiple angles, so any in-lesson distractor is either eliminable or partially true. Needs human authoring or a different question form."
+        }
+      ]
+    },
+    {
+      "record_id": "legacy-ch02-056",
+      "distractors_sha256": "856b00734667507d4e6493106fa851a82b8f6b2794ee2012070c55f35c137780",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-057",
+      "distractors_sha256": "4ba2651e52bf8d1760b3e4b231e61d56f23e7f0550abddec397e001813f4d967",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-058",
+      "distractors_sha256": "f9f31fa43711f6ad06ea8f7ae5bcd94f57d9a4f20bf5fb2bcfc0ce0bc60f9bc4",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-059",
+      "distractors_sha256": "5461117963d0e4123fdb4f81c3805599f40697ffabca9d66c5ebe440513a51c9",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-060",
+      "distractors_sha256": "5ea94062240866007f9e38157108b14348b89d8f1ff47b33c0d0b35a1543a483",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-061",
+      "distractors_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-062",
+      "distractors_sha256": "7b4053fc2d23fab31bf12878a31c0247d6ac92515ec07c1f3814f66e4df8e52b",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-063",
+      "distractors_sha256": "82ab2190d03f5528765e7330d08f565e77f5807797dc9ee7d9ae257f0727a586",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-064",
+      "distractors_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-065",
+      "distractors_sha256": "0ab6cdb9dc485bad6453271dce78ab07258e3cd9de750dded1989c5c20dd71d4",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-066",
+      "distractors_sha256": "18e82fbc13fc4000f1132625c7363663bfcdd55a7f57a66aa41b092befdbd9f8",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-067",
+      "distractors_sha256": "8fe68970872af21deb29a7f4af36e702c136f07861dc5574c84efd712e6799a1",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-068",
+      "distractors_sha256": "883efacdc2b31e7f351268291795d684bacd666e3728446a0110f4e1f0dffa88",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-069",
+      "distractors_sha256": "a4f52880b82a4f9930a3a7a467c3777e4bf3ba909a3ee51de396062adf79df59",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-070",
+      "distractors_sha256": "d4c2ed5e59a9e8b5a6dd88b0e08665f12c876f65468af2419c3246ce13b4b601",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-071",
+      "distractors_sha256": "f45621f74df702e3d679d969cf010b8da68bb114115ff998a1c66947f89f44a6",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-072",
+      "distractors_sha256": "cadb46db4b76f6d3b4cf63b116e13fb9efb235e269a9c9d87147842b12175db5",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-073",
+      "distractors_sha256": "4a2e545c68560a179d4bcede997266fe4ceb23215197f9ddb5025cd6a22a44ef",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-074",
+      "distractors_sha256": "033f86d6101c5885b035ba44b917112d110557efe1980555e0a06cee809a37f5",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-075",
+      "distractors_sha256": "56fa0cafb066f855d3b170fdc31a821f723aa314acea0455c81a20eb609f6fbf",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-076",
+      "distractors_sha256": "f3850cfa55cfbe7395341ebbe8ba105cabd4050475241108328acaf8091114d9",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-077",
+      "distractors_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-078",
+      "distractors_sha256": "46a0c1d950be64494c239a3e65b884b3d536f9f41b0228d18e9b99a1ac49d5a4",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-079",
+      "distractors_sha256": "17fca45a8b2c9016b5e82aa920ef03476852645b8859284f592870aacabc8dce",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-080",
+      "distractors_sha256": "15338eb80eeec191d1955368eceb413fa39c8770091c9bcea3cb062949ffefa6",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "legacy-ch02-081",
+      "distractors_sha256": "17e235c10a45623fc8a6e9ac4a76799ab21a5c6921d415f2415b2735a80e3d97",
+      "verdict": "pass",
+      "issues": []
+    }
+  ]
+}

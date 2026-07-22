@@ -1,0 +1,462 @@
+{
+  "schema_version": "bmh.quiz-distractor-bank.v1",
+  "slot": 18,
+  "quiz_source_key": "quiz-slot-18",
+  "lesson": "Operator Playbook and Daily Mission Control",
+  "source_ledger_sha256": "f130f47f03585928e40f37dfba3a37c4ab3f9f8d41ae65332668b430960ba4ff",
+  "authored_by": "codex (EXECUTE 2.18, 2026-07-20)",
+  "entries": [
+    {
+      "record_id": "slot-module-18-001",
+      "front_sha256": "079bf5501a64bd45c5e11b98d5a434182515d69a6099c4c171152da1144e5dd9",
+      "back_sha256": "b2b893ffa87f28cf1f230249e079b2c04fbe028f2a3b024bee836c3109244a5e",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Sandra",
+        "Slack",
+        "DialPad"
+      ]
+    },
+    {
+      "record_id": "slot-module-18-002",
+      "front_sha256": "2d7ede7229de175b0a50d107ddc1aedc31ccd2dc4cc622e6440cb52efa6ba7ce",
+      "back_sha256": "1f02e917fd21530620990a81a8ddce4a8cb1f0e57770e393877e4a68a2984ff8",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Slack",
+        "DialPad",
+        "PropStream"
+      ]
+    },
+    {
+      "record_id": "slot-module-18-003",
+      "front_sha256": "90c434538c145b1103922fa83afd77903b307550fa34802ac2055d30aa59b129",
+      "back_sha256": "bb03faa404781e3b79d116f909060808bf74184e19b884875a7361913e871d84",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "They are the newest leads and have not been connected with yet.",
+        "They still need to be qualified before moving through the pipeline.",
+        "They have already completed the official acquisitions handoff."
+      ]
+    },
+    {
+      "record_id": "slot-module-18-004",
+      "front_sha256": "b437922178c128457616a62de46d9836666d515ad35164750b34eab1e4c34469",
+      "back_sha256": "bc52af22d1648778ae9b83a7bbb0532b064beb07588540cb2cebdc05167738ef",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Stage 1",
+        "Stage 3",
+        "Stage 4"
+      ]
+    },
+    {
+      "record_id": "slot-module-18-005",
+      "front_sha256": "24c1bf53a05c45156d42f000eff461c2ffe6a7a6e073362a5a95c1c0829f15eb",
+      "back_sha256": "9f5c9c17149841f69265495420d8857d065d1131d08d22adac94670e228bb320",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "People who still need to be qualified before moving forward.",
+        "People who are closest to moving forward to a handoff.",
+        "People who are ready for the official acquisitions handoff."
+      ]
+    },
+    {
+      "record_id": "slot-module-18-006",
+      "front_sha256": "74b7bb4616126524c665570c59430ea1fdfd092531db5d57996c1c463ae4861d",
+      "back_sha256": "946a475629010578e9dabeab9c30e4a61281e8b002be4f13c325e060ba664c8d",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "To log call notes and update stages for every active lead.",
+        "To post the daily standup and tomorrow’s plan in Slack.",
+        "To place 60 to 80 dials before the first energy reset."
+      ]
+    },
+    {
+      "record_id": "slot-module-18-007",
+      "front_sha256": "544122e9a87f463b5fd301a05b80ff3dcd0e2927cbbc90d67077dfc858688d68",
+      "back_sha256": "37d6aab7688cadc14a6da1a10e1565f3b764ff3d8e12604cd71a66e16b6529f3",
+      "status": "needs_human_review",
+      "question_type": "single_choice",
+      "distractors": [],
+      "review_reason": "imperative_front_cannot_be_mcq_stem",
+      "notes": "The front instructs the learner to name three property details rather than presenting a single-answer multiple choice stem."
+    },
+    {
+      "record_id": "slot-module-18-008",
+      "front_sha256": "f49973c54640b7a4d610906a13b8361d5cdf157d75bb7133352207b974245d8e",
+      "back_sha256": "cb5a3a4613d0cef8a1263c48884022b73c6c471bce457111488e75ebe2f133e4",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "New leads, followed by scheduled callbacks, then other pipeline follow-ups.",
+        "Other pipeline follow-ups, followed by new leads, then scheduled callbacks.",
+        "New leads, followed by other pipeline follow-ups, then scheduled callbacks."
+      ]
+    },
+    {
+      "record_id": "slot-module-18-009",
+      "front_sha256": "fa639b758205b7bf74333cbdbb6ead684ed2950d334b2be1e7279faa901d56af",
+      "back_sha256": "75f0125cc99d8d8ea0c69cce081d8ee6611f44c3acc97579c5e7066c0d4efecc",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "110 to 150 dials",
+        "150 to 200 dials",
+        "10 to 15 dials"
+      ]
+    },
+    {
+      "record_id": "slot-module-18-010",
+      "front_sha256": "9783178d0e9db86d7f2d93d488d5acfacfaf02aba8d6b9b9437d17275ec00b75",
+      "back_sha256": "ecd83e871d5be18bc23728891ef95b828ab13a2b241193a6f4bf79471e80e39c",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "At the end of the first calling block.",
+        "During the after-lunch admin block.",
+        "During the final pipeline review."
+      ]
+    },
+    {
+      "record_id": "slot-module-18-011",
+      "front_sha256": "8319d8a33b2d3c428dce98e563a240e987a722b059bf369f252137359b6ea72c",
+      "back_sha256": "a3fa50c00fb15ff20362893dd453139047f3c3f16f853ca4f0e984700f486871",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Completing Stage 4 handoff checklists.",
+        "Reviewing the full pipeline for tomorrow.",
+        "Researching the top 10 to 15 properties."
+      ]
+    },
+    {
+      "record_id": "slot-module-18-012",
+      "front_sha256": "e8f4403b2c57cb946f3e055d4b43140857c0702440e6a6d564567980cba37704",
+      "back_sha256": "228ecab36ab0be74647d05c4c4b3d90fa25791f9a5acd62744b35c42f161566d",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Five minutes after each calling block.",
+        "Fifteen minutes before each calling block.",
+        "One hour after the final calling block."
+      ]
+    },
+    {
+      "record_id": "slot-module-18-013",
+      "front_sha256": "dfa945702a6d07d8f6fd05272e4c6c445a88e0ef1f9fb6f379187469555554d5",
+      "back_sha256": "f5c0c5e1077d3959b81db61e431264b5b392aa5f08da2f96721b3d8c3203be06",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "60 to 80 dials",
+        "150 to 200 dials",
+        "10 to 15 dials"
+      ]
+    },
+    {
+      "record_id": "slot-module-18-014",
+      "front_sha256": "8a37be11d2a365709dfc9ce798078d3020e182b72461cb89e334b473a2e474bf",
+      "back_sha256": "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "calling",
+        "research",
+        "standup"
+      ]
+    },
+    {
+      "record_id": "slot-module-18-015",
+      "front_sha256": "498469c64d713008f515adeec35b66722e929018f3c3efad9f6276dbaed329d7",
+      "back_sha256": "95d2c9f27683a664f772b21fb103aa0b5189bac15357c59dca4f37f4d4d1146d",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "110 to 150 total dials",
+        "60 to 80 total dials",
+        "10 to 15 total dials"
+      ]
+    },
+    {
+      "record_id": "slot-module-18-016",
+      "front_sha256": "35899b23a0660573df70d66dcf17488494a4c9aaaa023e1fd46fdcdff36eac9f",
+      "back_sha256": "790ae7df4cc702504294267b3c520cc82adfd5fcc9e5eae4d4871940b3fa9951",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Property research and verification for the top leads.",
+        "Stage updates and completion of handoff checklists.",
+        "Scheduled callbacks followed by new lead calls."
+      ]
+    },
+    {
+      "record_id": "slot-module-18-017",
+      "front_sha256": "a4c861d4d86442f32960b28120096437f32f1ed3293a5c0a35791e63850635c4",
+      "back_sha256": "0eeac66a8448d6beaae14a94d84e5beca82161b9e1f64699a121c717cb04c31d",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Slack thread",
+        "handoff summary",
+        "seller profile"
+      ]
+    },
+    {
+      "record_id": "slot-module-18-018",
+      "front_sha256": "0589e223409fa47655867ffaa9b98f4f587b3c86fbdd89658749236afd1de611",
+      "back_sha256": "1c7d35ce8e3d85f839d1630849e99a25fff023e7f1d1621c570a88abcb7699c8",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "They hit the first-block target of 60 to 80 dials.",
+        "They reached the lunch target of 110 to 150 dials.",
+        "They researched the top 10 to 15 leads before calling."
+      ]
+    },
+    {
+      "record_id": "slot-module-18-019",
+      "front_sha256": "f80bb5061c7f3feece01421b489a2ecb348b2c0b139d444ffddf4157b98ce72d",
+      "back_sha256": "d5a3dccebf2b14eb26655eeee6e959129c212480326185fc5cec4a09272d6b96",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "One unusually high-volume day produces results without follow-up.",
+        "Property research replaces the need for consistent calling over time.",
+        "Manager approval of every seller message guarantees a closed deal."
+      ]
+    },
+    {
+      "record_id": "slot-module-18-020",
+      "front_sha256": "e758aa10e6f0b494af23dac8a1459b3604de6e848a4ea9084f2f04de64c8953b",
+      "back_sha256": "9dd1ddd817302d4e1a7b93b9609cc3da3825a4a2d6c273cbd3b4315afd52a290",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Callers can recall the approved opening without checking their notes.",
+        "People can maintain a fixed speaking pace throughout the conversation.",
+        "Sellers can recognize the approved call opening from its wording."
+      ]
+    },
+    {
+      "record_id": "slot-module-18-021",
+      "front_sha256": "969f6a18713be7294ccd9d80181c7949ead057cf19cbcf8f83ef31ac3988bd5e",
+      "back_sha256": "f705125f5f1276dccec7f0d9f936db58da8d85871bd1d6e28ca57eb7c65b4bc6",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Continue dialing until the full-day target is reached.",
+        "Switch to the after-lunch admin block immediately.",
+        "Post every unanswered call in the county Slack channel."
+      ]
+    },
+    {
+      "record_id": "slot-module-18-022",
+      "front_sha256": "27831609176d69fa10ee7fd73d943016e241839642a88a0a5f85d47a3ad503fb",
+      "back_sha256": "b27fb38ba323745c91fe7fd9021605430d43bdb7d3be765266e29364d103e26f",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Sandra",
+        "DialPad",
+        "Gmail"
+      ]
+    },
+    {
+      "record_id": "slot-module-18-023",
+      "front_sha256": "f8950a00dda66d7f68cb394bc26aee68f1b990e5fc4a7beea8349208327a77b0",
+      "back_sha256": "d7d59fac30b3dc66382d92b44a15af9863306d57d7a9a85847236e6f6e8da92d",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "By city (e.g., Kansas City, Independence).",
+        "By state (e.g., Missouri, Kansas).",
+        "By ZIP code (e.g., 64108, 64114)."
+      ]
+    },
+    {
+      "record_id": "slot-module-18-024",
+      "front_sha256": "3ad9f492f732e6f0236b4d885a71be337f197fe7b9bca6e8df7a40096e31d34b",
+      "back_sha256": "f0c7d1986c47d5dae4eda7012508484c7ec767d20e2d3ce60732e2c413c5f0eb",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Send it in DialPad first, then record it in Sandra for approval.",
+        "Email it through Gmail and ask for approval after the seller replies.",
+        "Add it to the daily standup and wait until the next workday."
+      ]
+    },
+    {
+      "record_id": "slot-module-18-025",
+      "front_sha256": "99ad6d9b30e5ea892d6f588f58ba3a5ad2ef1ef9d115085b0bde972099cf4384",
+      "back_sha256": "169838b2690661422fb25a7253812b53c7e40abc8b9e6ee1514355c7deee7b96",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Sandra or Slack",
+        "HubStaff or PropStream",
+        "Sandra or HubStaff"
+      ]
+    },
+    {
+      "record_id": "slot-module-18-026",
+      "front_sha256": "554d821b2b4c5fafefba7cb474160e68e072b0f7d4fd88eefcf4b7b74f0ab18f",
+      "back_sha256": "0166f3f896b7f982fd5642155aa42224efa589cbd9c5f5471f2aa8c0100eec6e",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "By opening new county channels.",
+        "By adding them to standup posts.",
+        "By saving only Sandra notes."
+      ]
+    },
+    {
+      "record_id": "slot-module-18-027",
+      "front_sha256": "8fcb305a57b2d88b10f791c2ee69e78c2c4853cc7d12ddbf41e2582c0ea932ce",
+      "back_sha256": "a41eb046be018b7dc27df8f2eb3a7eee3914a29ee965bf5bb438bfd3a7aef616",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Stage 1",
+        "Stage 2",
+        "Stage 3"
+      ]
+    },
+    {
+      "record_id": "slot-module-18-028",
+      "front_sha256": "4537e3ca2368c0225d198f212a32f1599a458b1bda4a29ae49c676c4105a9c56",
+      "back_sha256": "819fe2ca215db9babf01f5fe154748cd6ef920158efb98e43d994018b91299e8",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Updating all data in PropStream and posting a handoff summary in Gmail.",
+        "Updating all data in Slack and posting a handoff summary in Sandra.",
+        "Updating all data in DialPad and posting a handoff summary in HubStaff."
+      ]
+    },
+    {
+      "record_id": "slot-module-18-029",
+      "front_sha256": "7436ef2812b3454af282be5bda893d808a42af5d1585fef1b4b363178fce74ed",
+      "back_sha256": "fb9dc685b04853d9ee6ada635fc52a24ed0161be0a9a75fe6d18819b77cdd29f",
+      "status": "needs_human_review",
+      "question_type": "single_choice",
+      "distractors": [],
+      "review_reason": "imperative_front_cannot_be_mcq_stem",
+      "notes": "The front instructs the learner to list three seller-profile items rather than presenting a single-answer multiple choice stem."
+    },
+    {
+      "record_id": "slot-module-18-030",
+      "front_sha256": "94ef4bc71c226c7889cab370f93bd43208612c77f762af989238703bed104c1e",
+      "back_sha256": "f918b28352d0f0d41a91286f2a3a5c6950b586b4fab250dc58aab0d17b25db00",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Within fifteen minutes.",
+        "Within two hours.",
+        "By the end of the workday."
+      ]
+    },
+    {
+      "record_id": "slot-module-18-031",
+      "front_sha256": "c1c5d5f6ee6ef5c261401acb19d91f1c9ab14f881a5df506ce14b79436181e1d",
+      "back_sha256": "65a5430cca45140459d4ecb8c133b2f8cf23ffe59d0e90bb06bf1b1963f50d55",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Clock-in time, lunch location, energy-reset length, admin-block time, and first-call time.",
+        "Ownership records, lien status, tax status, mortgage info, and property condition.",
+        "County channel names, Slack thread counts, manager approvals, Gmail drafts, and DialPad texts."
+      ]
+    },
+    {
+      "record_id": "slot-module-18-032",
+      "front_sha256": "8492d6475b10f1eec3ed94fd3515314f8f5376f4f3120f7f55ea196ddc309e7c",
+      "back_sha256": "c6ce41c7f0d302c6ae6519c33b5c0bd926fd7c93182f8a7cf52232236b202b56",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "One to two lines.",
+        "Six to eight lines.",
+        "Ten to fifteen lines."
+      ]
+    },
+    {
+      "record_id": "slot-module-18-033",
+      "front_sha256": "1d1f47ecba5c4e4b98f3044f93ed58d44ca30838fdcfb2bd29763f4b79cce57e",
+      "back_sha256": "80f40ac16499a26b735ecfe82158e4dfc1fc3515ccbda68a2a84a068738b4b8b",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Make a best guess and update Sandra without asking.",
+        "Record it only as a Sandra note and make no Slack post.",
+        "Send the seller an answer through DialPad before approval."
+      ]
+    },
+    {
+      "record_id": "slot-module-18-034",
+      "front_sha256": "33aa87a437686861d81f685c0f6a9f445ef67acf2a91aec8da23a10030a72fe6",
+      "back_sha256": "b841add49e03d7bf408a9ece26c5f553efc0d24a31b35f8b1dc76fb0d39a0b47",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "daily consistency",
+        "property research",
+        "manager approval"
+      ]
+    },
+    {
+      "record_id": "slot-module-18-035",
+      "front_sha256": "183a23a7473142ca6ceb15442734dcd2d24cecf63faecfc6d605c2e26004670f",
+      "back_sha256": "4a283ea577bb330af0d73c63ef9c6a98f4ad98fd04129337b548e19da20db073",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Tracking work hours and clocking in.",
+        "Researching ownership, liens, and tax status.",
+        "Managing lead stages and next actions."
+      ]
+    },
+    {
+      "record_id": "slot-module-18-036",
+      "front_sha256": "c34f522583a95afe45b3360a22aa2ef756640bcf31b96dc7e846b952a09b1557",
+      "back_sha256": "a7f4949a6d058f5f83158924acbad9937b500576e9300601efbfe2e58198c094",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Eat a protein bar at the desk while completing the admin block.",
+        "Skip lunch until the full-day dial target has been reached.",
+        "Use lunch to review the pipeline and schedule tomorrow’s follow-ups."
+      ]
+    },
+    {
+      "record_id": "slot-module-18-037",
+      "front_sha256": "752c71dfc3e8c0e1794663b0f917f9a52514c12b4974780dc6442491f2045efe",
+      "back_sha256": "9e5a695014c038602cca28fd42bfb148f44da30401a14560448526aceafc252d",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "It replaces the need to update the lead’s stage or next-action date.",
+        "It allows the operator to skip manager approval for seller messages.",
+        "It moves the lead to Stage 4 without an acquisitions handoff."
+      ]
+    },
+    {
+      "record_id": "slot-module-18-038",
+      "front_sha256": "68864dfcef1e2315c718f0b184c3195846e6513d6191c78ad5212afae31c3884",
+      "back_sha256": "49f8115a3ab96e0168c11cd758213e68d3cbd6c9f740f67c43e640d20f72400f",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "One heroic day of calls without consistent follow-up.",
+        "Researching every property instead of prioritizing top leads.",
+        "Sending seller messages before manager approval."
+      ]
+    }
+  ]
+}

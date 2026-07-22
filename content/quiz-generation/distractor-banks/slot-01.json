@@ -1,0 +1,664 @@
+{
+  "schema_version": "bmh.quiz-distractor-bank.v1",
+  "slot": 1,
+  "quiz_source_key": "quiz-slot-01",
+  "lesson": "Welcome and Mindset",
+  "source_ledger_sha256": "f130f47f03585928e40f37dfba3a37c4ab3f9f8d41ae65332668b430960ba4ff",
+  "authored_by": "codex (EXECUTE 2.1, 2026-07-20)",
+  "entries": [
+    {
+      "record_id": "slot-module-01-001",
+      "front_sha256": "a52089a96945951a678e756cf152962aacc94e0e07afa0c5f02b9708fd736525",
+      "back_sha256": "387b5932ba46c0abc62e7636b72bd7e9dbeb5d46f7b7176b07adb0f91a2bb07b",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "To complete property transactions quickly without considering each family's circumstances.",
+        "To persuade every homeowner to accept a cash offer before exploring other paths.",
+        "To focus on property specifications and win the property during the first conversation."
+      ]
+    },
+    {
+      "record_id": "slot-module-01-002",
+      "front_sha256": "49f55f6d1b357e3335a831ae0aea78f16aebdb33723168e4220fb968d9959e03",
+      "back_sha256": "c51e9a8f0ec86fcaeff2b1867c641c3fc891bf378dcac4ab1cc1927b835491f3",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "They are usually ready to sell and need no help understanding their available options.",
+        "They are mainly focused on repaired property specifications rather than a difficult personal burden.",
+        "They have already reached clarity and only need the rep to confirm a cash number."
+      ]
+    },
+    {
+      "record_id": "slot-module-01-003",
+      "front_sha256": "0f629cb382d608cc7fa7ba5c2731d4912a708dc3bbf68119851acc9323cd44d5",
+      "back_sha256": "ffc8f69b3d62d23760a3f40e58a6e9199bc88f12a6008c767c38bb1cfdea4caf",
+      "status": "authored",
+      "question_type": "single_choice",
+    "distractors": [
+      "Arranging a conventional mortgage purchase after lender underwriting.",
+      "Listing the property on the MLS with an agent for retail buyers.",
+      "Offering seller financing with monthly payments from a buyer."
+      ]
+    },
+    {
+      "record_id": "slot-module-01-004",
+      "front_sha256": "cfaef768ded2a16cee1cd8ccf840fc00fad6b7c29cd2982486cc40745de806ef",
+      "back_sha256": "6619526982d3e912d013303b53102b4ffe1452b337441d95f6a58fc5277b036c",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "To replace careful listening with one fixed response for every seller.",
+        "To secure an immediate yes before the seller explains their situation.",
+        "To keep the rep focused on property specifications throughout the call."
+      ]
+    },
+    {
+      "record_id": "slot-module-01-005",
+      "front_sha256": "315589fd4e2b07c138dce01d9fa682d2db32791e5bc917c134a088e3ccbb4e66",
+      "back_sha256": "007a98be043e0f3fe7ce1658ed9584a7e58a7f1f978a795de34bfcecc8bf53b1",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "When they want to press for an answer before the seller is ready.",
+        "When they want to discuss property specifications before the seller's burden.",
+        "When they want to demonstrate that they have memorized every line."
+      ]
+    },
+    {
+      "record_id": "slot-module-01-006",
+      "front_sha256": "6fbff97b4e5d7dbf22730d57b684fcc18536247f1571f102da5e83e87bf21a05",
+      "back_sha256": "3dfadc46a19cc41384a3c676ad2ad20e4274849ab0d442841e994ce7c1356907",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "To convince the homeowner to choose BMH regardless of their specific situation.",
+        "To win the property before understanding the homeowner's actual burden.",
+        "To complete the script perfectly and control the seller's final decision."
+      ]
+    },
+    {
+      "record_id": "slot-module-01-007",
+      "front_sha256": "e6eb6e1bdba5cbb81aaa92426db1622b067434d36fe696aed28cc147b07ca387",
+      "back_sha256": "cda6c15ca81262580f0d30625c6778b8e7cdd66970f021d5e1f8d07cfcd35828",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Delivering each line of the script without ever setting it aside.",
+        "Presenting a cash number before exploring the seller's specific burden.",
+        "Using clever responses to overcome every objection on the first call."
+      ]
+    },
+    {
+      "record_id": "slot-module-01-008",
+      "front_sha256": "333f081ba2ccaa308e2af70b026250a15051c6c7096379c408a713d70ba41792",
+      "back_sha256": "09a43bb8de96ff7749bf9e97a05b4a7b20a7e01c21c6039c7a262949202b838f",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The rep acts as a high-pressure closer focused on obtaining an immediate yes.",
+        "The rep acts as a property evaluator focused mainly on specifications and repairs.",
+        "The rep acts as a script reader who controls every part of the conversation."
+      ]
+    },
+    {
+      "record_id": "slot-module-01-009",
+      "front_sha256": "f1660789f47c230417534a512f8cd301a98c64fcfcfca4c5c4c7a4e8e6bb7537",
+      "back_sha256": "f0c54c9b29d3903fb9ee2d4678e1093483a30088f8a6d209e8de3dbc457e3a1d",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Winning the property before the seller has fully explained their situation.",
+        "Completing every line of the script without slowing down to listen.",
+        "Presenting a cash number before clarifying the seller's needs and options."
+      ]
+    },
+    {
+      "record_id": "slot-module-01-010",
+      "front_sha256": "47ed854870e656373e58cfcff3e0002fae5e73813e77c57b5035ac5121835043",
+      "back_sha256": "22d841f0cd88e3b1b3d1a1708664922a97abdaa72743bac2ff842590b44bac24",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "By reviewing property specifications before asking why the homeowner is selling.",
+        "By presenting the cash solution before diagnosing the homeowner's actual burden.",
+        "By pressing for a quick decision before clarifying the available paths."
+      ]
+    },
+    {
+      "record_id": "slot-module-01-011",
+      "front_sha256": "f1b23801e3c74a07da001dd6e20e3fb87615d4c1d1562dfead510271958ca00a",
+      "back_sha256": "5d6e6dac32125506998cf0af88acf344e610d8f24417cba0847346a09ab3d639",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Securing the property even when a cash offer is not the person's best path.",
+        "Prioritizing the company's desired outcome over the person's need for clarity.",
+        "Assuming every person should choose BMH as the solution to their situation."
+      ]
+    },
+    {
+      "record_id": "slot-module-01-012",
+      "front_sha256": "17d1f6e4e5408fac839b2fb232dd38c9d5eb46d918671d82e114d41cdc0e4d8b",
+      "back_sha256": "5e123112dbdf194cf86170cdde59f3c3deb15322d0b631b82997db6acb20dca8",
+      "status": "authored",
+      "question_type": "single_choice",
+    "distractors": [
+      "It reassures them that BMH will guarantee their preferred price immediately.",
+      "It gives them confidence that the rep can choose their best option without asking more questions.",
+      "It makes them expect a complete repair estimate before the property is evaluated."
+      ]
+    },
+    {
+      "record_id": "slot-module-01-013",
+      "front_sha256": "1984d7a075baebcdfa1e85001778f87d66adad735a2dfef560e90a9b7db24259",
+      "back_sha256": "3e4a030f958c47116caf18bbea64f6c69ad9b1cb46ef7cb9c32a0b24e80abb01",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Getting the seller onto the rep's side and asking them to adopt BMH's view.",
+        "Holding firmly to the company's number until the seller accepts the offer.",
+        "Using the script to direct the conversation without adapting to the seller."
+      ]
+    },
+    {
+      "record_id": "slot-module-01-014",
+      "front_sha256": "fc6429c5b0a607020b87e0f69d8475a16f0651249f45a7aefe7248684e6008ce",
+      "back_sha256": "d56c45a407af55e2f5a605e10c4f4ef75e030bd9230ec050f2b64026cde33753",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "It gives the rep permission to move directly into property specifications.",
+        "It confirms the seller is ready to accept the first cash number presented.",
+        "It lets the rep avoid discussing that burden during future follow-up."
+      ]
+    },
+    {
+      "record_id": "slot-module-01-015",
+      "front_sha256": "1bef3bd739d2c386704d8081b8e1df2b40434714b3bbc7584f4728fe06da0ae7",
+      "back_sha256": "46cdb1cd4634ddd013bb80aae2830c38c54150a43534989bb079759dae6e338d",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "They have reached a final no and no longer need help understanding their options.",
+        "They are ready to accept but want the rep to make the decision for them.",
+        "They fully understand the path and only want to discuss property specifications."
+      ]
+    },
+    {
+      "record_id": "slot-module-01-016",
+      "front_sha256": "7b30b7f44897225c326b9f46de2f21e219a216f49eb811fc2a1357927971e9ae",
+      "back_sha256": "cfe04dd7a029baf37cedb8c3dc76490f3b8667c4eb95d8fa69c7f1fe03c3a3b9",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "By repeating the cash number until they agree to the proposed path.",
+        "By focusing on property specifications and avoiding what happens after the sale.",
+        "By asking for an immediate yes before explaining the available options."
+      ]
+    },
+    {
+      "record_id": "slot-module-01-017",
+      "front_sha256": "098b281ba4e0671316d928ee82558b86a56d155af9dc7f8455a9e5e68540e45d",
+      "back_sha256": "dc6e9249b176b72792a58376417c710a90e9d4670455a3a64c4ab7419e02bcc0",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Controlling the seller's final answer instead of the rep's own conduct.",
+        "Perfecting every script line so the seller cannot raise an objection.",
+        "Focusing all effort on securing a close during the first conversation."
+      ]
+    },
+    {
+      "record_id": "slot-module-01-018",
+      "front_sha256": "b31b7755a9ec9f5ea2c69fb86f950d95dc78eed142b73a2de3329711133c3084",
+      "back_sha256": "cc6a9c1621acd509d4ac9eb73f1cada3ef48be192cbe0cf6f4958e20d4b9318e",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Most deals are secured before the seller has time to consider their options.",
+        "Repeated contact gives the rep more chances to pressure the seller into agreement.",
+        "The first call is for property specifications while motivation belongs in later calls."
+      ]
+    },
+    {
+      "record_id": "slot-module-01-019",
+      "front_sha256": "2ab027f2bdb4bb9def94158131fe999496923c550db28788ba100444a5f1d3e5",
+      "back_sha256": "a01312663cfef5bcd6c6a21bb635f82d4b6134995df03328967de9ded57bc26b",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Giving polished explanations and filling every silence before the seller responds.",
+        "Presenting the solution before asking what burden the seller needs to resolve.",
+        "Asking several clever questions in a row without leaving room for an answer."
+      ]
+    },
+    {
+      "record_id": "slot-module-01-020",
+      "front_sha256": "b5b9f3426ca3642e470bb46bc1e4fcbec087b442bb7508434aab66c9225cd1b7",
+      "back_sha256": "45b175eaeabe6574a01681636e04d6eb917585f2be4443b35b71b6756ec78be5",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "It gives the rep time to prepare the next clever response.",
+        "It creates pressure that moves the seller toward an immediate decision.",
+        "It prevents the rep from needing to ask simple, direct questions."
+      ]
+    },
+    {
+      "record_id": "slot-module-01-021",
+      "front_sha256": "8ae4275149f8e25d22cdb12cd30729784dff130164bd32e872c5ec6b4b5f6b9d",
+      "back_sha256": "f7f8407e46e3d2be8d2ac0b5654f3477fb1f99ae36919ad9a3cd0c67e3fc90b9",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "High-pressure energy, using urgency to secure the seller's agreement.",
+        "Approval-seeking energy, asking the seller to validate the rep's solution.",
+        "Expert-to-student energy, lecturing the seller about the correct decision."
+      ]
+    },
+    {
+      "record_id": "slot-module-01-022",
+      "front_sha256": "fe9dc13c6d1c338b16515b03906988c0a62421e14861282c9eeea08808c152d7",
+      "back_sha256": "be803777d891b286eebcd0ad0c3b151ab11684bb935c13b4c89db962e7b5b8c3",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "By making the answer sound workable even when the company cannot accept it.",
+        "By avoiding a direct answer and changing the subject to property specifications.",
+        "By ending the rapport and treating the number as the seller's final rejection."
+      ]
+    },
+    {
+      "record_id": "slot-module-01-023",
+      "front_sha256": "7de99482990d025d738cd3576bcfd7eee10984b876857d0a2e42da44b83c9653",
+      "back_sha256": "9298d8bdbd0463586b2a988902a87f974085f0d5eab0d0e81b0ecceead1371b5",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The no is a final rejection that should end all future follow-up.",
+        "The no means the rep should increase pressure before the first week ends.",
+        "The no proves the seller has completed their decision curve and chosen another path."
+      ]
+    },
+    {
+      "record_id": "slot-module-01-024",
+      "front_sha256": "2c51521de531bf31c6a970c2f3532827c1465ab4bee65b213a2d11a2ad097455",
+      "back_sha256": "aafecf767f41a534c8b818a7710e44682538f05e8ebb8affd2dbe29e890e250c",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Repeat the same price request without adding anything new to the conversation.",
+        "Wait without further contact until the seller decides to call BMH.",
+        "Reopen each conversation with pressure to accept the original cash number."
+      ]
+    },
+    {
+      "record_id": "slot-module-01-025",
+      "front_sha256": "feec2790a3f2130348582c264a77006a8162387da60e4538d8c97e9b8cab5492",
+      "back_sha256": "5886a5c8004e54e0c6bfc99400a861e395e529666d21498a911a143b89356fbf",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "As a final rejection that ends the need for further questions.",
+        "As a signal to argue that the company's number is already correct.",
+        "As a reason to repeat the proposed solution without seeking more information."
+      ]
+    },
+    {
+      "record_id": "slot-module-01-026",
+      "front_sha256": "554ac2b5a4b1d4410f2b2251a33261138b283dd60e47514461476e02d24c051a",
+      "back_sha256": "24b3e6e8bdf3da664fa22278c1ce36c42e9206bc250ee3ca74694045b7eb8f56",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Explain why the current offer is enough before asking what the money is for.",
+        "Raise the cash number immediately without understanding the seller's burden.",
+        "Treat the request as a final rejection and stop exploring the situation."
+      ]
+    },
+    {
+      "record_id": "slot-module-01-027",
+      "front_sha256": "4977d2df22fa42a7af076335b93ee027c3e9c8a7b0a68a9fa01e78f02d77b7aa",
+      "back_sha256": "aead46bb6dacedba2677bface85182b7577e0d8d81703f08411df79cdc6853a6",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "From generating enough internal hype before each conversation.",
+        "From perfecting the script before speaking with another seller.",
+        "From winning the property during the first call with a seller."
+      ]
+    },
+    {
+      "record_id": "slot-module-01-028",
+      "front_sha256": "ddb329229b6ff9c1947bdf781fd14cd5ccb9245a4ea58b6166430edf6d5515f1",
+      "back_sha256": "3fd97f835e7ba38242ac6a0a10591437a3a640acd2b2235668dd25eaa47dc08b",
+      "status": "authored",
+      "question_type": "single_choice",
+    "distractors": [
+      "A belief that a rep should wait for perfect performance before making real calls.",
+      "A preference for using early calls only to memorize exact wording.",
+      "An assumption that early mistakes show the rep lacks the talent for the work."
+      ]
+    },
+    {
+      "record_id": "slot-module-01-029",
+      "front_sha256": "9a76333fddea001ce82c8cb72de1eb5a8a6d965a813485f4c3970fbdfdc5ea9c",
+      "back_sha256": "c0f281673b38c8e7b87f3b22768953d705bdf9df4046b36871141e6c85f098ca",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "To persuade the seller that the company's number is the only reasonable one.",
+        "To win the argument before exploring why the seller wants more money.",
+        "To keep the seller from discussing their burden once price is raised."
+      ]
+    },
+    {
+      "record_id": "slot-module-01-030",
+      "front_sha256": "355e939edf061a027bf864644aa74e781260396b176b8955cbff5ff178e56507",
+      "back_sha256": "1e28611725a9bffb331a5f900629db42c8aac1c518e61087dc537ed761434097",
+      "status": "authored",
+      "question_type": "single_choice",
+    "distractors": [
+      "Seller clarity, a visualized post-sale plan, and warm long-term follow-up.",
+      "Simple direct questions, room to explain the problem, and a peer-to-peer conversation.",
+      "A diagnosis of the seller's burden, options for the best path, and an aligned decision."
+      ]
+    },
+    {
+      "record_id": "slot-module-01-031",
+      "front_sha256": "dd6d457dfdacc47aeba0f2ed7b0edfa747172c45dd067fe34a72e010c8f1ddda",
+      "back_sha256": "e59d654d57790418effa87d744ef533a9c28af7523b1adca7e7642f6fe10a39f",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The exact script lines and property specifications for every possible call.",
+        "The objective of winning the property before learning the seller's burden.",
+        "The cash number that should be presented before diagnosing the problem."
+      ]
+    },
+    {
+      "record_id": "slot-module-01-032",
+      "front_sha256": "0d7c14caf637f7aad3340f125ed23fb43c6c82b76df602b47f4bbadb5f60dacd",
+      "back_sha256": "126057d705448688c6764b4a0e92fb54c8d5e8659c4a68148760da109c49a015",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "They are names to process efficiently before moving to the next call.",
+        "They are properties whose specifications matter more than the owner's burden.",
+        "They are sellers expected to accept the same path and cash solution."
+      ]
+    },
+    {
+      "record_id": "slot-module-01-033",
+      "front_sha256": "b9e5f1a2362f021f66094316c7fba9fefec10db265a5bbc885f12e94a020da0b",
+      "back_sha256": "15f3fd0095da0a7e46d48614e21cd69fabedc8862a5143290566a57b8c7ca657",
+      "status": "authored",
+      "question_type": "single_choice",
+    "distractors": [
+      "It causes the seller to commit to a price before the property is evaluated.",
+      "It makes the seller assume the rep has finished qualifying the property and is ready to quote a price.",
+      "It forces the call to end before a follow-up can be scheduled."
+      ]
+    },
+    {
+      "record_id": "slot-module-01-034",
+      "front_sha256": "55b735b658e5c17c6b7ec0dbb824b226bbd439c380946cf9e70d9305590db393",
+      "back_sha256": "546c9d53d74bf0d2d0a0d316e301a3b3377d4d9540616f6a253c6bd3293d6208",
+      "status": "authored",
+      "question_type": "single_choice",
+    "distractors": [
+      "It causes sellers to question whether the rep understands the property's physical condition.",
+      "It makes sellers expect an immediate full-price offer without an evaluation.",
+      "It leads sellers to believe the rep will never follow up after the call."
+      ]
+    },
+    {
+      "record_id": "slot-module-01-035",
+      "front_sha256": "6bf97e5baaddcdafe1c1e17110a2701ee0f91ad157c82f6a0adf982163c96d8a",
+      "back_sha256": "a8d05723f98ff11badedfb2a72f99d16e835ec0e1ed313eedeb431cf90553e2c",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Establishing authority and directing the seller toward a cash offer quickly.",
+        "Creating urgency and securing commitment to the first solution presented.",
+        "Demonstrating expertise and completing the conversation without follow-up questions."
+      ]
+    },
+    {
+      "record_id": "slot-module-01-036",
+      "front_sha256": "ec3e0d0167daad0ef562ab0dd199b872e7eb5916e889af50238e365eb6f44d0a",
+      "back_sha256": "f09f035a88fd5835ecbcda9a1fa709138ca3183e96a46be2032cde54a4c62f3a",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Selling provides options and clarity, while consulting pushes for an immediate yes.",
+        "Selling listens for the burden, while consulting focuses first on property specifications.",
+        "Selling gives the seller room, while consulting controls the seller's final decision."
+      ]
+    },
+    {
+      "record_id": "slot-module-01-037",
+      "front_sha256": "9df8a4d88b354c62d443356c105d663378919bfe7760cd61e855f5b2a6dcc01e",
+      "back_sha256": "8c82fcca41e1c273886c8d04b4b2b68540baafe000b969bf24cccfbaf4099409",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "A focus on presenting more reasons the company's current price is correct.",
+        "A determination to win the argument before exploring the seller's perspective.",
+        "An effort to sound interesting by offering clever responses to every objection."
+      ]
+    },
+    {
+      "record_id": "slot-module-01-038",
+      "front_sha256": "7dd02b00c7435931e247482c89a29ac650145c374d03d3b9dbe90dae6927d38d",
+      "back_sha256": "32c870923fced53850ca46019948ffac0a578ddd8696ad2c112cdd4ed37a5aa9",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "pressure",
+        "cleverness",
+        "certainty"
+      ]
+    },
+    {
+      "record_id": "slot-module-01-039",
+      "front_sha256": "7c3b57fb3b8126d1c435e1ec59a07d127b86a6bdab7fb68277ddd50979403f8c",
+      "back_sha256": "6206bbb231e029458324b0df7e8d4ea2290d1762e2c1b1c73900033ad2044cfb",
+      "status": "needs_human_review",
+      "question_type": "single_choice",
+      "distractors": [],
+      "review_reason": "insufficient_content_for_fair_distractors",
+      "notes": "The keyed phrase 'anything else' logically includes every plausible lesson-based alternative, which would make those distractors partially true."
+    },
+    {
+      "record_id": "slot-module-01-040",
+      "front_sha256": "3484d92cbe08133dfc6a05d048d8a41dd1be3b2e79304db54470e9c4461bc859",
+      "back_sha256": "3b958a0d175d8530c7a46659f8adb11d38d49794b00a7f71acb23d949f110519",
+      "status": "needs_human_review",
+      "question_type": "single_choice",
+      "distractors": [],
+      "review_reason": "insufficient_content_for_fair_distractors",
+      "notes": "The source only supplies the ARV expansion. Three alternative definitions would require inventing facts or terminology not present in the lesson material."
+    },
+    {
+      "record_id": "slot-module-01-041",
+      "front_sha256": "191b05825fe5b74514fb7cfc0604400ca6c89f80a500a1d4a6e911507e38b2b6",
+      "back_sha256": "0ac802bd72f24a4ea18edc687a986fc637291b1dd8efdde10beb7d2eeac427d3",
+      "status": "needs_human_review",
+      "question_type": "single_choice",
+      "distractors": [],
+      "review_reason": "concept_cue_front",
+      "notes": "The verbatim front is a Concept cue rather than a multiple choice question stem."
+    },
+    {
+      "record_id": "slot-module-01-042",
+      "front_sha256": "53705f3274fad6bbf44b221e906bafbf0fa0778b803929c83b1cf96b1acef26f",
+      "back_sha256": "7b4f252260b84a68f642adf9eafb7a253af9a8fcb4912e3e94580b55fef65002",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Goal: To collect property specifications and present a cash number before discussing the seller's burden.",
+        "Goal: To persuade every seller that a cash offer is the right path regardless of their needs.",
+        "Goal: To control the seller's final decision and secure a yes during the first call."
+      ]
+    },
+    {
+      "record_id": "slot-module-01-043",
+      "front_sha256": "8f1c7ee590fd769e32d0fe45b9ee6a72a04412b16980fcaf2a004d3412961024",
+      "back_sha256": "64ac9eadace218b4cce30990ef688ee8efabffd4cc258baf7285e89a29264f77",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The satisfaction of winning a property during the first conversation.",
+        "The memory of delivering every line of the script perfectly.",
+        "The relief of getting a seller to accept the first cash number."
+      ]
+    },
+    {
+      "record_id": "slot-module-01-044",
+      "front_sha256": "700ae2d1035d8e4c344e4169fcca5998f7c5a862ed0b30afc4db814dd99b6f84",
+      "back_sha256": "a324c6627039f650a42fe44bf878e3e62a5fddb9e10319bfbee7ec7f1e240d00",
+      "status": "authored",
+      "question_type": "single_choice",
+    "distractors": [
+      "It lets the rep promise a specific result without sounding uncertain.",
+      "It allows the rep to end follow-up once the seller hesitates.",
+      "It helps the rep avoid direct questions that could feel uncomfortable."
+      ]
+    },
+    {
+      "record_id": "slot-module-01-045",
+      "front_sha256": "1f4b663e4e527359759528466f40e66396922609f96501ab661624672ba2b0ff",
+      "back_sha256": "210779b7fc05dd7ff691f93820d5c394da854c309fc68ece796ab16c1f859310",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "A landlord preparing a repaired property for a traditional agent-led sale.",
+        "A landlord comparing cash numbers without any ongoing property burden.",
+        "A landlord ready to accept the first offer after one conversation."
+      ]
+    },
+    {
+      "record_id": "slot-module-01-046",
+      "front_sha256": "f2211b45491e1409d4b57ec93a395807641fbef4442731dbe662864f1f08ed88",
+      "back_sha256": "a90005d5504796e61c1d5f5f03357a39943d63bf297d5d4a821fc1c147a28ffc",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The ability to deliver the entire script without ever setting it aside.",
+        "The ability to overcome the seller and win the property on the first call.",
+        "The ability to discuss property specifications before diagnosing the seller's problem."
+      ]
+    },
+    {
+      "record_id": "slot-module-01-047",
+      "front_sha256": "f04d668a1b146c763a7559baabceb2f297111de701bb6742143cb4ffd76cb732",
+      "back_sha256": "ebcbdd0efc9f423efd06fb5d8b08906ef9481b37ae5e4fac4c7ecd6bee3010b9",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "It is following the script exactly without slowing down or leaving room for silence.",
+        "It is closing every seller on the first call before their motivation can change.",
+        "It is being clever enough to answer every objection before asking another question."
+      ]
+    },
+    {
+      "record_id": "slot-module-01-048",
+      "front_sha256": "5ccd9aa500e77bb0045dac0caf911ef5ce0687e9c12fc36bfc03cacb8b4a70bb",
+      "back_sha256": "c67f2396515ec85c65f5d942f6c45fae1bb5acffe0bf4cee463edb3455790958",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Creating a fixed script that determines every line of the seller conversation.",
+        "Describing the property's specifications without discussing the seller's life afterward.",
+        "Deciding the seller's final outcome before helping them understand their options."
+      ]
+    },
+    {
+      "record_id": "slot-module-01-049",
+      "front_sha256": "2cbab9c89bbac35834eb73f2206704d87928866ea7d8a7d5364c35c0a617ea9e",
+      "back_sha256": "adc876d2eb8b3e51a87e56a7a19716080932e7a773b99c1d5e4accd4613faa35",
+      "status": "authored",
+      "question_type": "single_choice",
+    "distractors": [
+      "The seller assumes the rep can guarantee any requested price.",
+      "The seller expects the rep to make the final decision on their behalf.",
+      "The seller treats the first conversation as a completed agreement."
+      ]
+    },
+    {
+      "record_id": "slot-module-01-050",
+      "front_sha256": "8f4ec8728b2edaaed29ff2e696a7a41caa6fa28e4d1651b709f677403b9e17ff",
+      "back_sha256": "abe7d75e1e833278cd54d4c3651b6334d1224f61d5f54f474e34cbfc8c5a2499",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "As points where the script must be followed without slowing down or listening.",
+        "As signals to increase pressure and secure the seller's immediate agreement.",
+        "As reasons to end the conversation before the seller raises another objection."
+      ]
+    },
+    {
+      "record_id": "slot-module-01-051",
+      "front_sha256": "bf4e232af8942f76946a077312a4511a00f59e4dec12784667edc766f40a33a7",
+      "back_sha256": "3e2ecaf6ce2b5c52475bfadf4f6051068a42c1ea11d9c1d1305a6f34f10b36cb",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Convincing the seller to accept a cash offer before they feel ready.",
+        "Winning the property before the seller understands the available paths.",
+        "Ending the conversation once the seller declines BMH's proposed solution."
+      ]
+    },
+    {
+      "record_id": "slot-module-01-052",
+      "front_sha256": "aaef99d37efa50c0849ce930c3c94f55a7ceca6fb3b9b966bab93359313853bc",
+      "back_sha256": "f2823b9630a11becbb87f1ee9bcf3e4ab500f0bc1967bdf78a1d8e00d318cf03",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Being clever keeps attention on the seller's burden, while curiosity displays the rep's expertise.",
+        "Being clever creates space for silence, while curiosity fills the call with polished answers.",
+        "Being clever clarifies the seller's options, while curiosity pushes for a first-call yes."
+      ]
+    },
+    {
+      "record_id": "slot-module-01-053",
+      "front_sha256": "482444719d7e207aea0e987b5488cfafe24d74ad0d563ecda323a6c084d5976f",
+      "back_sha256": "0a4f893beec4388ade71f804614aeddc6a62a970a26ef57a2fca176d778a834a",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The belief that a first-week no is final and follow-up should stop.",
+        "The belief that added pressure will mature the seller's motivation immediately.",
+        "The belief that perfect script delivery can control the seller's decision."
+      ]
+    },
+    {
+      "record_id": "slot-module-01-054",
+      "front_sha256": "c10ac0f36b62dcf6b264e4d6557a7bc5dc2bfdb748aead00547709ffe74132e3",
+      "back_sha256": "4a1b7779642bc714fe896e140ddb5281168a2823c2d0a7866d1cd25e671ba1e3",
+      "status": "authored",
+      "question_type": "single_choice",
+    "distractors": [
+      "They assume the offer amount is legally binding before it is presented.",
+      "They question whether BMH can evaluate the property without an agent.",
+      "They stop expecting any future follow-up after the call."
+      ]
+    },
+    {
+      "record_id": "slot-module-01-055",
+      "front_sha256": "8ff4b7a63aedd9a3358e918ffdfb1a62e597a78a389489de6850c8ae77e02ee4",
+      "back_sha256": "faedfad0f3a98f24c28272a43c27fdc2976c4e3083827b2cde5e9d05c30e1f75",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "It creates urgency so the seller accepts the original number during the next call.",
+        "It lets the rep repeat the same angle until the seller changes their answer.",
+        "It replaces the need to understand how the seller's situation has changed."
+      ]
+    }
+  ]
+}

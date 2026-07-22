@@ -1,4 +1,11 @@
 *.pdf binary
+content/quiz-generation/*.json text eol=lf
+content/quiz-generation/**/*.json text eol=lf
+content/course-manifests/*.json text eol=lf
+content/course-manifests/archive/*.json text eol=lf -merge
+docs/course-production/quiz-content-review*.md text eol=lf
+docs/course-production/quiz-content-review*.json text eol=lf
+docs/course-production/quiz-approvals.json text eol=lf
 *.gif binary
 *.jpg binary
 *.jpeg binary

@@ -1,0 +1,490 @@
+{
+  "schema_version": "bmh.quiz-distractor-bank.v1",
+  "slot": 14,
+  "quiz_source_key": "quiz-slot-14",
+  "lesson": "Conversation Flow Mastery",
+  "source_ledger_sha256": "f130f47f03585928e40f37dfba3a37c4ab3f9f8d41ae65332668b430960ba4ff",
+  "authored_by": "codex (EXECUTE 2.14, 2026-07-20)",
+  "entries": [
+    {
+      "record_id": "slot-module-14-001",
+      "front_sha256": "c9c8dfa36b225bfcced7b1758a798881bdfe0e15697f15f5f8af9274028858b3",
+      "back_sha256": "6d18756f5cb929bdc690af31762f61124deb6f742ad5ce793ef11ff41332d4c4",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "\"How have the other investors treated you?\"",
+        "\"What did your real estate agent say?\"",
+        "\"Where are you sleeping the first night after closing?\""
+      ]
+    },
+    {
+      "record_id": "slot-module-14-002",
+      "front_sha256": "4145659032409672cab5a219e418de6b5761d9242abef89ee3a3d5305a4676ce",
+      "back_sha256": "72350b99d739c1a7a1570744a491e3b3727bdfae255cf58cbf8ec3f18c16c025",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "It asks for the seller's target number immediately so the buyer can give the first price.",
+        "It moves directly to the cash lane before the negotiator gathers any information.",
+        "It creates urgency by making the seller defend a number before discussing their needs."
+      ]
+    },
+    {
+      "record_id": "slot-module-14-003",
+      "front_sha256": "77694a449159f445be1e3a2b18ecec353262bcbeb95b91bb806800bd8fd09356",
+      "back_sha256": "61d4deefa5e151abd68a95634e4c043a9238061dbe6f4e32a3b0e1e887cacc33",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "\"What did your real estate agent say?\"",
+        "\"Do you and your family have a number you are looking for?\"",
+        "\"What is the toughest part about getting there?\""
+      ]
+    },
+    {
+      "record_id": "slot-module-14-004",
+      "front_sha256": "65939588e607a61f02e2296d4a436875a0ab097d043da867b7a1acd169effaa3",
+      "back_sha256": "8d8092580f2872bd312b2d8fd1f40f5d1fe14435a88e276f6272f76f81372024",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "\"How have the other investors treated you?\"",
+        "\"Do you and your family have a number you are looking for?\"",
+        "\"Is that offer cash or are there contingencies attached?\""
+      ]
+    },
+    {
+      "record_id": "slot-module-14-005",
+      "front_sha256": "6dc933b220238213c33ec35a506aa1571a6f203f3dfedf8217672fad6ee9fbdc",
+      "back_sha256": "6701690dc5543f2473c74fe3eb16423f4c311c5cf7c9a6f54f94cd2b2a42d118",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "It pressures the seller to defend a target number before any options are explored.",
+        "It lets the negotiator give the first number while treating price as the only value.",
+        "It proves that every higher competing offer is cash with no contingencies attached."
+      ]
+    },
+    {
+      "record_id": "slot-module-14-006",
+      "front_sha256": "6940a9f25d1d1efcd86d4a2e2ab269de3a11a3d4a39089a722561f0b94eb0e79",
+      "back_sha256": "819fbd4a70a45a55824ae10645babcfab1ed13bfdd2e7979c7c6a5eb4a812407",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "It confirms that the seller's stated price is their lowest acceptable number.",
+        "It shows that every competing offer is cash with no contingencies attached.",
+        "It means the buyer should stop exploring timing and certainty and debate the price."
+      ]
+    },
+    {
+      "record_id": "slot-module-14-007",
+      "front_sha256": "46b6fbc2933528a999293ff354014665a696c282a14d5c8fa4efe5284f102e38",
+      "back_sha256": "12a4e0003380fd5b2f3fbdc8c03d7cab545a6d5a3e6825ae149d7d387b9946fc",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Price and terms.",
+        "Post-possession and moving help.",
+        "Cash in pocket and contingencies."
+      ]
+    },
+    {
+      "record_id": "slot-module-14-008",
+      "front_sha256": "38ab1537e900974e0d2dd2b938f5edd02343463792e75a65285aa7ec7e312c71",
+      "back_sha256": "c783dea6c5b0713ad572f85510b3d2085220dc2b172a8e08f38a35d8a9752f6f",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Give your cash number first.",
+        "Match the highest competing offer first.",
+        "State the retail price before asking questions."
+      ]
+    },
+    {
+      "record_id": "slot-module-14-009",
+      "front_sha256": "776a414cdd833b0a5bbb83abc0008a705de8eeee34f8a14e9a005f4847065b12",
+      "back_sha256": "b2632d239c79947834e2bd43821db9496bc082c78c30ccbf0497555e91bdacb6",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Say you may not be the buyer at that price.",
+        "Say you can come up toward the price for terms.",
+        "Say the seller must defend the retail number."
+      ]
+    },
+    {
+      "record_id": "slot-module-14-010",
+      "front_sha256": "c6b0243a45a0ff422c31267715724f8cb8848a43bbad736133049cde1363469d",
+      "back_sha256": "f9de7b57bfc51d648c8cc91666a7aa34df5ed0b1cd6f1123dd455e4673cca2ca",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "\"Is that offer cash or are there contingencies attached?\"",
+        "\"Where are you sleeping the first night after closing?\"",
+        "\"What is the toughest part about getting there?\""
+      ]
+    },
+    {
+      "record_id": "slot-module-14-011",
+      "front_sha256": "c268a4dee1c93e6a63625de4b0a3ed4a6cda6cd19ce5ec4638bf62b8bbaae2b0",
+      "back_sha256": "0e58c2bbdb2b25549f0e61c5f23b7fb7d473eaf45803e1b034eb3d272bd3ce4a",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "\"Totally get why you want that number. If I were you, I would want the most too.\"",
+        "\"Hey, I was thinking about your situation and I wanted to share one idea.\"",
+        "\"I might not be your buyer, and that is okay. I will point you to the right option.\""
+      ]
+    },
+    {
+      "record_id": "slot-module-14-012",
+      "front_sha256": "730b953d83e92dd1345e1d17734396b265cff02d1eefd3bb4683af2dca342d8f",
+      "back_sha256": "8eb58137f7c0d844c610ae5ede6b28cf74e248b148033dc82d4a64b442126388",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Test the cash lane, give your number first, and then gather information.",
+        "Open creative options, argue over price, and then ask about competitors.",
+        "De-position immediately, discuss logistics, and then create false urgency."
+      ]
+    },
+    {
+      "record_id": "slot-module-14-013",
+      "front_sha256": "3654da384bbfe1f8f18723ce9e80584fecab07e0c7333a086159914c394af767",
+      "back_sha256": "78505614c46eff4f02c624571a6d343f45823b92366082dd41f5cf885793c7d4",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "\"Totally get why you want that number. If I were you, I would want the most too.\"",
+        "\"Hey, I was thinking about your situation and I wanted to share one idea.\"",
+        "\"I might not be your buyer, and that is okay. I will point you to the right option.\""
+      ]
+    },
+    {
+      "record_id": "slot-module-14-014",
+      "front_sha256": "87bb4dd3cb6bcd708ae439adc5719843f76f73223d813ea5bf1a160172ae457d",
+      "back_sha256": "5823553b66e19b96e1acbaf35d738786dbdea4f05271f1e2fab286f4e384c02c",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "\"How have the other investors treated you?\"",
+        "\"Do you and your family have a number you are looking for?\"",
+        "\"Where are you sleeping the first night after closing?\""
+      ]
+    },
+    {
+      "record_id": "slot-module-14-015",
+      "front_sha256": "8244f94fb3d941e0a9bf1a1afa7d746719528bb45cb5c78686158e3870fb65c2",
+      "back_sha256": "689965f305ac8f677fcb5684faf550f662b78757daf9a84b3eabb21c4067bd4d",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "It forces the seller to reveal a target number before any logistics are discussed.",
+        "It lets the buyer use the higher offer as the first number in the conversation.",
+        "It makes terms irrelevant once the seller has established a price anchor."
+      ]
+    },
+    {
+      "record_id": "slot-module-14-016",
+      "front_sha256": "dbb81b5f7a0fdb88461d4fbe03b300a439eb6d213ad9fd966839307f09e7a6ad",
+      "back_sha256": "57c7e7406f56af98fae4da268db736c89bef39be385c715abce0390291476846",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Repeat the same cash offer and ask whether the seller is ready to accept it.",
+        "Ask the seller to defend the same target number without sharing anything new.",
+        "De-position immediately without addressing the obstacle from the first call."
+      ]
+    },
+    {
+      "record_id": "slot-module-14-017",
+      "front_sha256": "f2b95e95046a53267b865221e64638138bced834752cd9ec8a47887de1855918",
+      "back_sha256": "b82fed0ade7c252e817513c592e885d3d7f6d01ffc703788f1534b65e0d7a0ff",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "\"Catch me up to speed. Where are you at in the process right now?\"",
+        "\"Totally get why you want that number. If I were you, I would want the most too.\"",
+        "\"I might not be your buyer, and that is okay. I will point you to the right option.\""
+      ]
+    },
+    {
+      "record_id": "slot-module-14-018",
+      "front_sha256": "afe55672c625e47084a009571a7f0b4d216ea8b038d6716a26e7766ccb5c691f",
+      "back_sha256": "ecd653c7d9c9d596b0dd48b0f300082812473ae85d32c8c5bebc6796328f7d3e",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Asking the seller to defend a price before discussing any deal logistics.",
+        "Comparing competing offers only by their headline price and ignoring certainty.",
+        "Giving the first cash number and waiting to see whether it is shopped to other buyers."
+      ]
+    },
+    {
+      "record_id": "slot-module-14-019",
+      "front_sha256": "93fe6f3f5e2bc6bd745aec3b506e83f33c7d6aad47463db3b64d40e432d65212",
+      "back_sha256": "533e499f40a5d69d5fafc4d1008099f2fb3c257dd88a033fba5f58670738ec5c",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "\"What is the toughest part about getting there?\"",
+        "\"Do you and your family have a number you are looking for?\"",
+        "\"How have the other investors treated you?\""
+      ]
+    },
+    {
+      "record_id": "slot-module-14-020",
+      "front_sha256": "2274e6a9bf6f10c1a0dc7becca3efd3c30e1ac41fbd9f2dee941185504efba2c",
+      "back_sha256": "88b415b89c0885a8ca413c0b42a1fa05e4b0fe9469eb8f3645f58b277fc258a0",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "To determine the lowest price and give the buyer's number first.",
+        "To test whether a competing offer is cash or has contingencies.",
+        "To end the relationship as soon as the price gap appears too wide."
+      ]
+    },
+    {
+      "record_id": "slot-module-14-021",
+      "front_sha256": "bb7a98d17927e7fbb484c2846c2474dd8311ccfbf48cc45e27fa46fd45183955",
+      "back_sha256": "1a93ff19c960822cf671174f43fdd6a4de7591ecbcdafd83b3fef98438b7504b",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "It guarantees the highest offer will close on the seller's preferred date.",
+        "It proves that the highest offer has certainty regardless of its contingencies.",
+        "It lets the negotiator skip the thought experiment and move directly to price."
+      ]
+    },
+    {
+      "record_id": "slot-module-14-022",
+      "front_sha256": "5bb8c9f7ccf89de4750ade00187f0955ee0b27ce739a0682928abe7302b3de87",
+      "back_sha256": "5b202cb0727b93704e616b5344286c9cae3deb8dda0499f9ad07ca9a4a63771b",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "\"If I were making a cash offer, I would probably be around X. Is that where other offers are?\"",
+        "\"Totally get why you want that number. If I were you, I would want the most too.\"",
+        "\"Hey, I was thinking about your situation and I wanted to share one idea.\""
+      ]
+    },
+    {
+      "record_id": "slot-module-14-023",
+      "front_sha256": "0239eed4b64ccdb3f7708a7503476c21c2f922a19ae4b8ed787aab083b1dbfee",
+      "back_sha256": "cdcf0b91a6e7e76d820782260df7ff4f252a07941b3fb5f5092eff9be522db77",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Argue that a cash offer must be lower until the seller defends their price.",
+        "Give the buyer's cash number before asking about the seller's timeline.",
+        "De-position immediately and end the relationship without offering another path."
+      ]
+    },
+    {
+      "record_id": "slot-module-14-024",
+      "front_sha256": "930627ce0bf1d62d494fe348866e1245574520686b512049998523275c7112cc",
+      "back_sha256": "7dd7f2d507fabe12efbd2c82db19f193a5468a81f4a5bde6a34d8a0acb01a7fc",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "\"I can come up toward your price if you will give me terms. Do you want me to explain terms?\"",
+        "\"If I were making a cash offer, I would probably be around X. Is that where other offers are?\"",
+        "\"I might not be your buyer, and that is okay. I will point you to the right option.\""
+      ]
+    },
+    {
+      "record_id": "slot-module-14-025",
+      "front_sha256": "74bcc149a24eca49b7b75530143999356088cb8215ec36d00d72c7dfe1762ccd",
+      "back_sha256": "8eb174f92fde543607082442e3323d6ba88d8a01fd7fffe3ea000da2c0b3526b",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Ask the seller to defend the exact retail price before discussing any timing.",
+        "Give the buyer's first number and wait for the seller to compare it with other offers.",
+        "Assume a two-week close is the only outcome the seller could consider a win."
+      ]
+    },
+    {
+      "record_id": "slot-module-14-026",
+      "front_sha256": "5ed9e8c31c64f239e0935d3b3477e13773f7b689e65f7b970af21c8eda24b626",
+      "back_sha256": "674da9ad405c8f9b2b03b09944c54b37b0fd76a7c8e06454a523bbc57ab14eb3",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "It makes the buyer's first number the focus and ends the logistics discussion.",
+        "It increases price intensity by treating terms as irrelevant to the seller.",
+        "It replaces the seller's needs with a comparison of competing headline prices."
+      ]
+    },
+    {
+      "record_id": "slot-module-14-027",
+      "front_sha256": "9515ed90484adc11cb5dcfac55ef61cc78dba09487e6c23f4c04b251ec80872c",
+      "back_sha256": "cee0568be22554725d305fb43c345c0a8cc1b06592c861ed461a641aa79b185a",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "It signals that the buyer will match any headline offer after the contract is signed.",
+        "It allows the buyer to avoid discussing contingencies and certainty of closing.",
+        "It tells the seller that price always matters more than the terms of the offer."
+      ]
+    },
+    {
+      "record_id": "slot-module-14-028",
+      "front_sha256": "adba4cdc45af5547a72e701204bb4981408fd3479533c1542ba0ea914cf140e5",
+      "back_sha256": "7a43da078db38af384609f75180f5b0a98da100a3e1bb41c089d6650e1de8411",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "\"I might not be your buyer at that price, and I can point you toward a better path.\"",
+        "\"Totally get why you want that number. If I were you, I would want the most too.\"",
+        "\"If I were making a cash offer, I would probably be around X. Is that where other offers are?\""
+      ]
+    },
+    {
+      "record_id": "slot-module-14-029",
+      "front_sha256": "781a57449c98ba7a8a31247febffbfcde29e0702caf364c9c5de6729e0d5d9ff",
+      "back_sha256": "152bfe127c6820a2a4b7d67d39807f806d543f2912cf7c09fb6756f9bb0a4ea9",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Price is the entire deal, while terms are only a follow-up detail.",
+        "Price creates certainty, while terms only reveal competitor treatment.",
+        "Price solves the moving process, while terms only set the first number."
+      ]
+    },
+    {
+      "record_id": "slot-module-14-030",
+      "front_sha256": "9140f1453371a0306cce9a2a3254aeedb602003e72fd7aa9b9c95df9d2da460c",
+      "back_sha256": "0f54cc8c74c5311bc2fe786f53df9b046b8f2eac7cfbb8f617bcdc9eddb34c85",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The seller becomes more focused on the headline price.",
+        "The seller's focus on price remains unchanged.",
+        "The seller stops considering how the offer fits real-life needs."
+      ]
+    },
+    {
+      "record_id": "slot-module-14-031",
+      "front_sha256": "fdaeced9cef5fd1d8be96a7503ca4f9ef305c154a339b2ba8ba4325bee793f7a",
+      "back_sha256": "4bb5caa71ceda647647b9631bc5c4758560fc2fc86cb03a98a6d38cfe72aa7c8",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "\"Do you and your family have a number you are looking for?\"",
+        "\"Is that offer cash or are there contingencies attached?\"",
+        "\"What is the toughest part about getting there?\""
+      ]
+    },
+    {
+      "record_id": "slot-module-14-032",
+      "front_sha256": "deaab2222aff814ff418adeaf2bb399e5f75d73fb4f603290535427c677244f0",
+      "back_sha256": "f528add633d8a1bcecf13413d0d9114e8028ba7a304e2df1cd04d2e011a9b624",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "It demonstrates that the first number creates certainty and should be given immediately.",
+        "It demonstrates that a headline price reveals the seller's moving obstacles.",
+        "It demonstrates that competing offers should be compared without checking contingencies."
+      ]
+    },
+    {
+      "record_id": "slot-module-14-033",
+      "front_sha256": "1527e75835c94b4bbfc5103e81c4ca14c54677dc75b97ef78017fa4cccb4b6ff",
+      "back_sha256": "4c745a29f0ae43dff0a3a373ea902781df0e08f5440431887f22183274f27ebf",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The highest headline offer before any contingencies are considered.",
+        "The exact place where the seller will sleep on the first night after closing.",
+        "The way competing investors treated the seller during the negotiation."
+      ]
+    },
+    {
+      "record_id": "slot-module-14-034",
+      "front_sha256": "0c6e5f710e70ad169d829789dda7be392dfd07a3367c6888badf5bf9a64df786",
+      "back_sha256": "103aead9353a0a8771d5f982d5954733fe55de94ddd4c98165a777aac7454efa",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Headline price, cash offer, and target number.",
+        "Competitor treatment, agent advice, and price intensity.",
+        "Thought experiment, cash lane, and first-number rule."
+      ]
+    },
+    {
+      "record_id": "slot-module-14-035",
+      "front_sha256": "f45712d544117f81614199d9ba2642947d1b32f90a9c6075f49768010d540aa1",
+      "back_sha256": "20b1d7b6c261e7651fa935ffe1919e8570297cb9472b26e52289c4bc6ac1035d",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Continue debating the price until the seller defends their number.",
+        "End the relationship without offering the seller another path.",
+        "Increase the offer to the retail price without workable terms."
+      ]
+    },
+    {
+      "record_id": "slot-module-14-036",
+      "front_sha256": "8ca9a3b35c4ea39bed166ddfea2c7d607e6af5c2fa2107c4cb9b09d65d437437",
+      "back_sha256": "00609bc6eafb241c606908fad6a8f98f8dc7ed301e4a0fbe1955e5470eebea55",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Sellers often return because repeated follow-ups make the original price more attractive.",
+        "Sellers often return because they expect waiting to raise the buyer's cash offer.",
+        "Sellers often return after the negotiator promises to beat any competing offer."
+      ]
+    },
+    {
+      "record_id": "slot-module-14-037",
+      "front_sha256": "ed754b2cf2bf05fbf246d1ac58ccedf9de60d30bd833bfd3b84ab1bd08d5dddf",
+      "back_sha256": "44e92f33fc992b1dd23a7a8f1dc195282d73391268217cb6e1a42310eea92cb4",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The cash lane.",
+        "The first-number rule.",
+        "The retail price debate."
+      ]
+    },
+    {
+      "record_id": "slot-module-14-038",
+      "front_sha256": "6472e9a03b7c2c979749bf1b85d2a802db7e686d6b8b5b7f40168009a5b5d79f",
+      "back_sha256": "c41f9dbcc976c0d76f14c9ff2f425dfa051e9677bba558db4af3aa59eeee8416",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "To establish the buyer's first number as the offer other buyers must match.",
+        "To move immediately to creative terms before gathering information.",
+        "To settle logistics by choosing post-possession and moving help."
+      ]
+    },
+    {
+      "record_id": "slot-module-14-039",
+      "front_sha256": "0e0f72db52d91fd3e10c17ae7613d2d7e59abfd8be69b22a506faec715812d03",
+      "back_sha256": "ac1ffbdc579cb6ffa6f36a40b31f082e67b1258ef2e9b8a3ab62206014783cd9",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Keep the same cash structure and debate the seller's payoff amount.",
+        "Ignore the debt and present a two-week close as the only form of value.",
+        "De-position without exploring whether terms could solve the payoff problem."
+      ]
+    },
+    {
+      "record_id": "slot-module-14-040",
+      "front_sha256": "41f19db423f3685d1ab1cafa683cfad603746b1c3f7a6778767fd399764a8f77",
+      "back_sha256": "1928d22b8c70a131889446730a13d4dce1744aa14a8993338b2ec99a471f2918",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "It makes price the only form of value and treats terms as irrelevant.",
+        "It encourages the seller to shop the buyer's first number to other buyers.",
+        "It assures the seller that the buyer will match any competing offer."
+      ]
+    }
+  ]
+}

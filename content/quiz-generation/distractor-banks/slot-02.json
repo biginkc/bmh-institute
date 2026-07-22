@@ -1,0 +1,606 @@
+{
+  "schema_version": "bmh.quiz-distractor-bank.v1",
+  "slot": 2,
+  "quiz_source_key": "quiz-slot-02",
+  "lesson": "Real Estate Terms Glossary",
+  "source_ledger_sha256": "f130f47f03585928e40f37dfba3a37c4ab3f9f8d41ae65332668b430960ba4ff",
+  "authored_by": "codex (EXECUTE 2.2, 2026-07-20)",
+  "entries": [
+    {
+      "record_id": "slot-module-02-001",
+      "front_sha256": "d25b23f76012c59db10452c0cf5821bed061557bada0eebead7d5cfbd97a7924",
+      "back_sha256": "bc659984a0ee01811a4cf13a5b8ae0ce50ed6d70692d2e3189e31e11417dbd1c",
+      "status": "authored",
+      "question_type": "single_choice",
+    "distractors": [
+      "rental property",
+      "vacant property",
+      "commercial property"
+      ]
+    },
+    {
+      "record_id": "slot-module-02-002",
+      "front_sha256": "55ca9133e209b12e779c3a856df7f1812fac400523054c470f6f98fa88e4fb36",
+      "back_sha256": "4d9e25f7dbde6001dcb76a5481ddd68fa7c5c32e2ee447d354201e5de88c8409",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Determining how long the property has been listed on the MLS.",
+        "Calculating the property's value after it has been fully renovated.",
+        "Verifying that the property's ownership record is free of legal claims."
+      ]
+    },
+    {
+      "record_id": "slot-module-02-003",
+      "front_sha256": "4fd1e8d533fdd06e495c5305674606368c26762c554caca3be1e294bd3d9693a",
+      "back_sha256": "870a97fac2bf26533737ed5f8368c52ccbb83926a08bf2a6fa7e5fa1125fa632",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The buyer requires the seller to complete repairs and cleaning before the purchase can close.",
+        "The buyer makes payments directly to the seller over time instead of purchasing in the current condition.",
+        "The buyer receives the rights to a purchase agreement and transfers those rights to an end buyer."
+      ]
+    },
+    {
+      "record_id": "slot-module-02-004",
+      "front_sha256": "b00337567f52b3d8e1a3b824eb46e7fd30751ec40d71dc6a86eb074499188174",
+      "back_sha256": "210ac468607064be820c1cf27a266fde3e32d8368178debc90a4c88c87a26d8e",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "as-is property",
+        "inherited property",
+        "owner-occupied property"
+      ]
+    },
+    {
+      "record_id": "slot-module-02-005",
+      "front_sha256": "8c727676f2225b7edfb45dbba8915f50da8343f6829a6620fe32c4b1f3555af3",
+      "back_sha256": "ebb0a67b2e9b430f942a5d99dc34eb9171cf648ce58022a7a25f0a1ea28d0571",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "A CRM used by BMH Group to track active leads and communication.",
+        "The full collection of active leads and deals at different stages.",
+        "A series of scheduled calls, texts, and emails used for lead follow-up."
+      ]
+    },
+    {
+      "record_id": "slot-module-02-006",
+      "front_sha256": "ae3bf106d4ed8b003a2cc57cde8d48b5c9a693c2b7a6ca23d46987d94c3c478c",
+      "back_sha256": "36be87b5bf9ede3e8df79e4d12520fe55808dfb5a7184e1b048233e20f48fd1f",
+      "status": "authored",
+      "question_type": "single_choice",
+    "distractors": [
+      "Licensed agents are prohibited from presenting investor offers to sellers.",
+      "Every MLS sale requires the buyer to occupy the property as a primary residence.",
+      "Listed homes cannot be purchased with cash until their DOM reaches 90 days."
+      ]
+    },
+    {
+      "record_id": "slot-module-02-007",
+      "front_sha256": "6b8102137fd19ce5b918cbf023be8b2db9dc1863f9ba7528db81563bc5f6cf4c",
+      "back_sha256": "903b306f7213a99900dc6064845afb419782f82320cb2710533263271afc66ef",
+      "status": "authored",
+      "question_type": "single_choice",
+    "distractors": [
+      "active MLS listing",
+      "owner-listed property",
+      "aging MLS listing"
+      ]
+    },
+    {
+      "record_id": "slot-module-02-008",
+      "front_sha256": "961c101cee1ae3180c4a34abb70ae53d52e364d449e8f7f4f438ae85c1578a11",
+      "back_sha256": "1a6d8d4324d2f68b31fc827834375f4945198858d65da09ee8d4d492ea9e2b0c",
+      "status": "authored",
+      "question_type": "single_choice",
+    "distractors": [
+      "Deal Origination Method (the channel through which a buyer first found the property).",
+      "Debt Obligation Measure (a ratio comparing the owner's loan balance with value).",
+      "Deed Ownership Map (a record of parties shown in a property's title history)."
+      ]
+    },
+    {
+      "record_id": "slot-module-02-009",
+      "front_sha256": "baa6925c71f23237bdaf1259f3778ac79eda29329bd6bc82e58fa2d9cd469f00",
+      "back_sha256": "9e9d1e06f01a4816dd61837fa6ab7f082f817df7026aa33d44274616cc71cb15",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "It shows that the owner has already accepted a wholesale purchase contract.",
+        "It confirms that the property has no liens, debts, or ownership disputes.",
+        "It means that the property's repair estimate has already been completed."
+      ]
+    },
+    {
+      "record_id": "slot-module-02-010",
+      "front_sha256": "7aa622c6d54793074ff151bbc6877f8faa8ded67558d2cb00de34e525155cd1c",
+      "back_sha256": "edf7a3c9899323f063f96b94ccc1adcd4813c753d42768c386a1c94e6a14705d",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Definition: An expired MLS listing that failed to sell before the listing ended.",
+        "Definition: A property purchase where the seller's existing mortgage remains in place.",
+        "Definition: A purchase and immediate resale completed as back-to-back transactions."
+      ]
+    },
+    {
+      "record_id": "slot-module-02-011",
+      "front_sha256": "e27939412aa413b4fd7e3c4050a13b7768bc050887cef96b8e4c617a82d57cac",
+      "back_sha256": "acd32078b58829e086f27069b23d8c5ef816664c8af6ef269391ea2b5294c5d4",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Listing a property on the MLS and waiting for a buyer represented by a licensed agent.",
+        "Purchasing a property while leaving the seller's existing mortgage in place in the seller's name.",
+        "Having the seller act as the bank and receive purchase payments directly from the buyer over time."
+      ]
+    },
+    {
+      "record_id": "slot-module-02-012",
+      "front_sha256": "15d07da0642b7e74ff42ba6b8500e8dc9a85a857c22f510aff0805741c553d41",
+      "back_sha256": "f2782910e870209fc2e8ee6f3492fea87754f5c6e02cb9a466fff537bf560ba2",
+      "status": "authored",
+      "question_type": "single_choice",
+    "distractors": [
+      "amendment of contract",
+      "escrow closing",
+      "ownership transfer"
+      ]
+    },
+    {
+      "record_id": "slot-module-02-013",
+      "front_sha256": "cc4264a338c5446628f08f03f539fa3ecfab0c8cd3b0603bbae041b82f530cae",
+      "back_sha256": "a8328cfd0abcdddab4c60fb995643bf9991c2971e25296d3c6c3ec7d37b210e6",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The good-faith payment a buyer makes to show intent to complete a purchase agreement.",
+        "The difference between a property's current market value and the amount owed on it.",
+        "The projected cost of returning a distressed property to market condition."
+      ]
+    },
+    {
+      "record_id": "slot-module-02-014",
+      "front_sha256": "37e52b0f73fe200581195f4b3f8c3b07ae1fa06097e6e91af52f4e606115abf4",
+      "back_sha256": "70bc49a85e7e80763723b36d0b7df17ff85072aff94143d234099b5e30ee3e83",
+      "status": "authored",
+      "question_type": "single_choice",
+    "distractors": [
+      "purchase agreement",
+      "seller-financing arrangement",
+      "subject-to purchase"
+      ]
+    },
+    {
+      "record_id": "slot-module-02-015",
+      "front_sha256": "108801433e4f6e6f4f9fcb1423b8d46ecf3f5e792cc16a901650292c6e80d5e7",
+      "back_sha256": "69706bb9c90c83c62b2b3edd394a7095b1ed7c391428a51af2742bdc9f7c5892",
+      "status": "needs_human_review",
+      "question_type": "single_choice",
+      "distractors": [],
+      "review_reason": "concept_cue_front",
+      "notes": "The front is a Concept: cue rather than a complete multiple-choice question stem."
+    },
+    {
+      "record_id": "slot-module-02-016",
+      "front_sha256": "cb6660733e49a99bb8b8297b97642d2b32b5e366b9ea32fb798d7d5e130871de",
+      "back_sha256": "69b0f9e3022a26bf83ae83b4599e2188714312f330aaaae81321417d3783b3eb",
+      "status": "authored",
+      "question_type": "single_choice",
+    "distractors": [
+      "The buyer accepts the home in its current condition without requiring repairs or cleaning.",
+      "The buyer receives the rights to a purchase agreement and transfers them to an end buyer.",
+      "A bank provides the full purchase price and the seller receives no payments after closing."
+      ]
+    },
+    {
+      "record_id": "slot-module-02-017",
+      "front_sha256": "4fb929a912ffec4333d2647f7b768f483ad1edb82471e5d13913ba2200d90a7c",
+      "back_sha256": "9bf5d7945d67fa71aa0a84238849b2c505ce75de9bd25816af6260bce940b5a0",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "property manager",
+        "listing agent",
+        "acquisition manager"
+      ]
+    },
+    {
+      "record_id": "slot-module-02-018",
+      "front_sha256": "d4749c5b5091a02e9fcc0e7a4e78ba9a8b63656f05869d454620aa05e14fdd26",
+      "back_sha256": "3640d8c4ac547d672bfb3889ce3d455404e859d9db73f92805b70fde958d9d3e",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The period while a property is listed on the MLS but before the listing expires.",
+        "The window after signing a contract to inspect the property and verify information.",
+        "The court process used to transfer or sell a deceased person's property."
+      ]
+    },
+    {
+      "record_id": "slot-module-02-019",
+      "front_sha256": "be7fd1c872c59f56ff3b6a1441944a5a948bb1d76868c356566a9d8d59822579",
+      "back_sha256": "2af9cbbe3422e5c176af65ab56b03a5905367d3abde646dc517584f8393ef120",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Purchase and Sale Agreement",
+        "Earnest Money Deposit",
+        "code violation"
+      ]
+    },
+    {
+      "record_id": "slot-module-02-020",
+      "front_sha256": "21d078f8e9f6f97bd1b55777b96fb447a1dabb3ff08a4ab088b269443bacb4ae",
+      "back_sha256": "0b193e0c32cfa3ac245feeba1853a488582e2ecd4771ca736571d19dbd8a0bb7",
+      "status": "authored",
+      "question_type": "single_choice",
+    "distractors": [
+      "They can no longer legally occupy the property once a tax bill is late.",
+      "They are barred from making repairs until every tax bill is paid.",
+      "They must accept the first investor offer once the county records the delinquency."
+      ]
+    },
+    {
+      "record_id": "slot-module-02-021",
+      "front_sha256": "f0ab38002ec801ba81172d6776ddde17479b3d50fb47f6e24701dfc7c1a25390",
+      "back_sha256": "47a245d0fc4cd3cb3594bcd1f0ed1821cf1fc715f00cd7247b8fba4c7fe4aeee",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The period after missed payments but before the lender legally seizes a home.",
+        "The time after contract signing used to inspect a property and verify information.",
+        "A purchase and immediate resale of a property through back-to-back transactions."
+      ]
+    },
+    {
+      "record_id": "slot-module-02-022",
+      "front_sha256": "b6e0f41a0d4d7fab49d2e1dec00c1ee1ca83000659577e325805ad75ce78887b",
+      "back_sha256": "9a7d6f69acc8cb61588897d47b8fc4b338f42c81b233daec903df7c70da23141",
+      "status": "authored",
+      "question_type": "single_choice",
+    "distractors": [
+      "end buyer",
+      "estate representative",
+      "investment buyer"
+      ]
+    },
+    {
+      "record_id": "slot-module-02-023",
+      "front_sha256": "16065af8e20961d007bd50d8f64e8c59e5c7733a6f4b793ba80953998f4804d2",
+      "back_sha256": "ee65eabb6758afd5ae3e12cc39779caf3a32b0f8a73b73f9609f73935590f238",
+      "status": "needs_human_review",
+      "question_type": "single_choice",
+      "distractors": [],
+      "review_reason": "concept_cue_front",
+      "notes": "The front is a Concept: cue rather than a complete multiple-choice question stem."
+    },
+    {
+      "record_id": "slot-module-02-024",
+      "front_sha256": "d18e75558c812e3eb8ba1c88dc208a24c978ef79c4222e500aa9c2cea65e73d8",
+      "back_sha256": "f3f69243fdae800f8b42caff4d568b518345f36535092296a9a310c025157b4e",
+      "status": "authored",
+      "question_type": "single_choice",
+    "distractors": [
+      "property lien",
+      "Notice of Default",
+      "building permit"
+      ]
+    },
+    {
+      "record_id": "slot-module-02-025",
+      "front_sha256": "be77aebcea996955f0846a5f284ede4b8355078558da6c4b3ac61ce394965289",
+      "back_sha256": "c1d2228366ff418041857e31f6fefd22f365af123486f68396686ab0a717fb1c",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The difference between a property's current market value and the amount the owner owes.",
+        "The highest price an acquisition team can pay while preserving a deal's profitability.",
+        "The projected cost required to return a distressed property to market condition."
+      ]
+    },
+    {
+      "record_id": "slot-module-02-026",
+      "front_sha256": "42622d65c2f5c1d1af9f006d55b0c0eb7328886866c085cb85cae87a5851d7a9",
+      "back_sha256": "694bbb91ce5dbe4e8c354499aa7022bbe9f0ccd5203a2fef97f92b6ba3eda9cf",
+      "status": "authored",
+      "question_type": "single_choice",
+    "distractors": [
+      "Definition: Market Assessment Objective, the target used when reviewing comparable properties.",
+      "Definition: Mortgage Approval Outcome, the lender's final decision on a loan application.",
+      "Definition: Municipal Appraisal Order, a local request for a property valuation."
+      ]
+    },
+    {
+      "record_id": "slot-module-02-027",
+      "front_sha256": "ff9208354ee1c60685a644db646f0449453a691c8b04dff80da1bae6086087cc",
+      "back_sha256": "1cdca9493527228769c7025e00460bc9925e76b6605afa671f1f7f29cb725892",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Subtracting the owner's loan balance from the property's current market value.",
+        "Using only the repair estimate without considering the property's After Repair Value.",
+        "Adding repair costs and closing fees to the After Repair Value before setting a profit margin."
+      ]
+    },
+    {
+      "record_id": "slot-module-02-028",
+      "front_sha256": "f2726b0c384e44332012329690399e1ac0c0b8372c2cae6f9a3c6e8cb92247ba",
+      "back_sha256": "ff5a1ae012afa5d4c889c50ad427aaf545d31a4fac04ffc1c4d03d403ba4250a",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "60",
+        "80",
+        "90"
+      ]
+    },
+    {
+      "record_id": "slot-module-02-029",
+      "front_sha256": "d95619983a4eb210c949c926b5d64f4c530599718497ec8c00baeee88c312154",
+      "back_sha256": "c94f608422e4c00c2cee9e01af8350602f0dc20b3dbb1e870e2309042ead9d71",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The difference between the wholesaler's purchase price and the end buyer's purchase price.",
+        "The estimated market value of a property after it has been fully renovated.",
+        "The highest purchase price that allows an acquisition team to preserve profitability."
+      ]
+    },
+    {
+      "record_id": "slot-module-02-030",
+      "front_sha256": "e6874359a1a9138ee47b317efe5d7f79cbde8a49106b1b8f5188dc96c81ed4e4",
+      "back_sha256": "8c90084140f573eb3773e1830b8b36673d6192a70e8aa17ed0b60721abd74e73",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "After Repair Value",
+        "Maximum Allowable Offer",
+        "Earnest Money Deposit"
+      ]
+    },
+    {
+      "record_id": "slot-module-02-031",
+      "front_sha256": "c7b7ad6d384740daee6cb6074fd329478b75ca7662c1bde80ab251a9e0b0c9b6",
+      "back_sha256": "8522468af9350f60a52a14f07ff81480f2bc25d5ad12d6e600f70941cbcecb97",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The difference between a property's current market value and the owner's loan balance.",
+        "The good-faith payment made by a buyer when signing a purchase agreement.",
+        "The highest price the acquisition team can pay while maintaining profitability."
+      ]
+    },
+    {
+      "record_id": "slot-module-02-032",
+      "front_sha256": "335c46e0206f9d3b56733f1bc108cf4fd5f16531e2ace9d8cb62bbd568d52701",
+      "back_sha256": "9fc8522f4bcd02124125ec7ddd226518cf0348388ccd193310f77991982ad142",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "assignment of contract",
+        "Earnest Money Deposit",
+        "due diligence period"
+      ]
+    },
+    {
+      "record_id": "slot-module-02-033",
+      "front_sha256": "3cf6ad7d5d078f90dfd746439fa8f39b1919e95a3a7131fd37679d82dcf1dacb",
+      "back_sha256": "5c426b686f890b366a138fa62795a891700d3c44ac173b874a2a4dc91bf48ce6",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The profit a wholesaler earns for finding a deal and transferring the purchase contract.",
+        "A specific condition that must be satisfied before a purchase can legally close.",
+        "The projected cost of restoring a distressed property to market condition."
+      ]
+    },
+    {
+      "record_id": "slot-module-02-034",
+      "front_sha256": "a36667377c516890e1d32dc1ca8c63876a82daa8223cd8036f21000656d069cf",
+      "back_sha256": "9e52b2888dcefe498af477654c93cf219d862f861202dd0e70a82cb2c7dff13b",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Acquisition Manager",
+        "Disposition Manager",
+        "end buyer"
+      ]
+    },
+    {
+      "record_id": "slot-module-02-035",
+      "front_sha256": "451ec704fff179566aa28b78aea3ce8ac5a3f5420d3da8fe268b776928139a1a",
+      "back_sha256": "3cb1f5493635b592aa49115d0638c5dbf87e02545b7a5207d7372aa6ea3c5c8b",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "An unpaid debt claim attached to a property, such as taxes or contractor fees.",
+        "A local government citation showing that a property fails safety or building standards.",
+        "A lender's formal filing that begins the foreclosure process after missed payments."
+      ]
+    },
+    {
+      "record_id": "slot-module-02-036",
+      "front_sha256": "5422da63ab63df366ec1ab3752d3b3d60eb610a6b580687460c2739b28606b6e",
+      "back_sha256": "c6c01cee2272c62554fb7f983110a166ce86258c12afb2a0f7bde6fc100e13fb",
+      "status": "authored",
+      "question_type": "single_choice",
+    "distractors": [
+      "deed",
+      "lease",
+      "title"
+      ]
+    },
+    {
+      "record_id": "slot-module-02-037",
+      "front_sha256": "fc1449203947a1a48f3291dc3ab0108ab9e643bab474ecbf1d747b0ef1675da7",
+      "back_sha256": "b540e0dbaae40bff2d2e2c6f87c4535f675f3a66f4c280edbc0724bf61d82efa",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The time after contract signing used to inspect the property and verify information.",
+        "A legal claim attached to a property because an owner has an unpaid debt.",
+        "A buyer's good-faith payment showing intent to complete a purchase agreement."
+      ]
+    },
+    {
+      "record_id": "slot-module-02-038",
+      "front_sha256": "f9b05cc2054b14b6dea3ceb5ffedcb57ac43a740f4b3f71c9006b2cf2d14ec3e",
+      "back_sha256": "df7a8ea9bac38c172c9145d38b4d79e4040820c5cfccc6b741d727e11f2cd860",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "pre-foreclosure period",
+        "Days on Market",
+        "drip sequence"
+      ]
+    },
+    {
+      "record_id": "slot-module-02-039",
+      "front_sha256": "0cf7bccd69c96204cb3edacb3adec1412be0f2d8d1c8153b2c2d00c4aa22525f",
+      "back_sha256": "23bf0d244a4cb62c85fc3aa0e8ebf8eb7eb970522a51326adf1ac015fc738c7c",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "CRM system",
+        "MLS system",
+        "sequence"
+      ]
+    },
+    {
+      "record_id": "slot-module-02-040",
+      "front_sha256": "3671d032e4688355e11246831e3089720740657ca8cbff7620085d6d385d1c56",
+      "back_sha256": "f6395cd7a1adfadb7c3bca45edb3897b9e3daaa359dbda04ba95efdb6b2e7904",
+      "status": "authored",
+      "question_type": "single_choice",
+    "distractors": [
+      "Disposition Manager",
+      "Lead Intake Specialist",
+      "Transaction Coordinator"
+      ]
+    },
+    {
+      "record_id": "slot-module-02-041",
+      "front_sha256": "a55bd5ef741393c47049c819da2ee809e3c8a9084383a04baf24338716760b18",
+      "back_sha256": "123cde0fea62c22abf2becd7a986e9f3fd76f2b5411073f4674885ac8cfaf753",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Evaluating leads, running property comparisons, and getting purchase contracts signed.",
+        "Managing the closing process and verifying that a property has clear title.",
+        "Buying wholesale properties from contract holders to renovate or rent them."
+      ]
+    },
+    {
+      "record_id": "slot-module-02-042",
+      "front_sha256": "a392a535cd327608466db0b35bcd7257d0cb2b7de5263de21fd703ce7f860779",
+      "back_sha256": "4c2fb8d678b452529e0df037407bfc9e4a7df81c55e1f4041f7a874d52e07149",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "escrow agent",
+        "estate heir",
+        "acquisition rep"
+      ]
+    },
+    {
+      "record_id": "slot-module-02-043",
+      "front_sha256": "f98f39555ce134fd2eaf39a136b1b375e1192f2a524460242fff30ce5a3575f3",
+      "back_sha256": "d33bbe092a25c8a082c372758cd238bc52c3a8dc45422f0bdbec63471f6d5fff",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Property Owner Contact",
+        "Purchase Offer Contract",
+        "Pipeline Outcome Category"
+      ]
+    },
+    {
+      "record_id": "slot-module-02-044",
+      "front_sha256": "f118dfe2b1ee6c1a001c4a9c1b2874323fa1cc703c6481adef271bd349623242",
+      "back_sha256": "e69cf261b84c40a28c7a378ff7adcd271d494d4fe6e8bb1100705471768a3d30",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The database licensed real estate agents use to post and view properties for sale.",
+        "The neutral third party that manages closing and verifies a property's clear title.",
+        "The scheduled series of calls, texts, and emails used to follow up with a lead."
+      ]
+    },
+    {
+      "record_id": "slot-module-02-045",
+      "front_sha256": "9a353da3912785455b2a6971d36ad0611f5b4973a12bd8c704c0b23e1989a01a",
+      "back_sha256": "78421632517fd7f63a2e8d5b810b1b5e69bb762cece4d67cf572c6db96d19276",
+      "status": "authored",
+      "question_type": "single_choice",
+    "distractors": [
+      "To let one status replace all notes from prior homeowner conversations.",
+      "To place every active lead into the same follow-up sequence.",
+      "To prevent a lead's status from changing after the first call."
+      ]
+    },
+    {
+      "record_id": "slot-module-02-046",
+      "front_sha256": "ec1360db049701e6ab2aa821ddb2d7417a487486f3f99d74676af032c86f4088",
+      "back_sha256": "5f73f75591f71fffc79ed6971e6e96b709fadb91381b85d3eb5397013cb87d8c",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "lead pipeline",
+        "due diligence period",
+        "call disposition"
+      ]
+    },
+    {
+      "record_id": "slot-module-02-047",
+      "front_sha256": "1e2dff9cbce1cc19dabf8d72c37423e80b7eb30fe29cff4d4b2e79f7fa261156",
+      "back_sha256": "019227f1db2b05428189db6a9b993f6a50f9767190951399fbba9dd74ac1635e",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Calculating the final Maximum Allowable Offer and signing the purchase agreement immediately.",
+        "Verifying clear title and resolving every lien before any follow-up takes place.",
+        "Finding an end buyer to purchase the wholesale contract for a profit."
+      ]
+    },
+    {
+      "record_id": "slot-module-02-048",
+      "front_sha256": "049fdb3e6dfbe256a3fa800ad9700280f401c84901ad677aa1d6233afa1fb071",
+      "back_sha256": "52e97f7b13ce044576e6cdb07ad977c32031a79ec731a5f82a2ed7848f9a4916",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "cold lead",
+        "current lead",
+        "point of contact"
+      ]
+    },
+    {
+      "record_id": "slot-module-02-049",
+      "front_sha256": "6b23b04bd3d9b015b3c97929b8761d5463bcbf7f5e7c473845ec963b7aa7c770",
+      "back_sha256": "f1d4931ea3e74829ad4cffc8fbd2c8c88c0aea53db4b306ccfa3ae9f55bd01c0",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Specific conditions that must be satisfied before a purchase agreement can legally close.",
+        "Scheduled follow-ups across calls, text messages, and emails for a particular lead.",
+        "Recorded outcomes of individual calls, such as no answer or appointment set."
+      ]
+    },
+    {
+      "record_id": "slot-module-02-050",
+      "front_sha256": "3744afdc71faccafc1bec8831cd721d0a0c997e42d41fc92c0c5723ab647f49a",
+      "back_sha256": "986723a24ccc1294fe06575b4f5caf9c03632055e145ab22920476f97af43f5c",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The current stage of a lead or deal within the active pipeline.",
+        "The scheduled follow-up plan across phone calls, text messages, and emails.",
+        "A measurable target such as daily dials or appointments used to track performance."
+      ]
+    }
+  ]
+}

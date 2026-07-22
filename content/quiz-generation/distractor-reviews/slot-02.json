@@ -1,0 +1,319 @@
+{
+  "schema_version": "bmh.quiz-distractor-review.v1",
+  "slot": 2,
+  "checked_by": "claude-fable-5 (adversarial checker)",
+  "verdicts": [
+    {
+      "record_id": "slot-module-02-001",
+      "distractors_sha256": "864c23d0f651c62f79e3b2afe94a989deb0194ee37464cbc9e761b425a037548",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-02-002",
+      "distractors_sha256": "b441e78b8c9e8c274079acfa6349d6d03b1b5cef56e31e0c9a07ff82e4d75f56",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-02-003",
+      "distractors_sha256": "780bde076520342ff2b855d1e2ff7cf56de9babd3366a66430cc5db929147015",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-02-004",
+      "distractors_sha256": "163b00b8c5f0d4a1a4156c2002148079d2063bcafa8ea0e2b311a7e939144678",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-02-005",
+      "distractors_sha256": "09849471d773432731c3175beb87c2a82659f48b5b1c5408eabebdd3d8a809b6",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-02-006",
+      "distractors_sha256": "9ea8cb6f3697763dc795056e227b602c1983207d2faca9ec9cc0de58273e3db5",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-02-007",
+      "distractors_sha256": "82617ce7e838fa138e0b108b22c63ce958955a225a70d5e4909917dc18cefba4",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-02-008",
+      "distractors_sha256": "14825baf9d94c2b4a72701b93bfabcc85f82a1fd633f96cab938fdd1e88dcf1c",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-02-009",
+      "distractors_sha256": "e4718378142345fe812c942c690284474a4f367dfb7a97de66edc55c3870621f",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-02-010",
+      "distractors_sha256": "caee38def421cb70751bb004298c178be0bc55f304353e19360717155058f7ad",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-02-011",
+      "distractors_sha256": "4c18ec0018731858a431b290f9ef909b57d232e67dc0e006bf938c7c02abb4fc",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-02-012",
+      "distractors_sha256": "9bbcedc6a09ab690ee1d03bde712d0fa2bf07a6c1e9851d8d06b3d8f57a76423",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-02-013",
+      "distractors_sha256": "2714f94613d0f5498387688a42c3497b0ae4765c319dfb9b3f91084bf8b91889",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-02-014",
+      "distractors_sha256": "5eb92188ff7a3dbde44b7efe81bdfba99d2c9ddc9b833d5161a397f4065a87c1",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-02-015",
+      "distractors_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "verdict": "needs_human_review",
+      "issues": [
+        {
+          "code": "wrong_flag_reason",
+          "distractor_index": null,
+          "note": "Flag reason 'concept_cue_front' is inconsistently applied: cards 010 ('Term: FSBO') and 026 ('Term: MAO') have the same cue-style fronts and were authored with 'Definition: ...' distractors. 'Concept: Subject-To' -> pick-the-definition works identically; either author it the same way or flag all cue fronts. Escalating for a consistent policy decision."
+        }
+      ]
+    },
+    {
+      "record_id": "slot-module-02-016",
+      "distractors_sha256": "1778b9eb4134507df4dc57aa5ae1881195f14f79ae78263ca685d3848494a3ad",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-02-017",
+      "distractors_sha256": "9012ea070d94db544ff6d498dd4f8fb60464e352a19cd8598a2dcf9322d37794",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-02-018",
+      "distractors_sha256": "fc0675591b404273486046c985279090c9e0576b67664c053e8014a6648c205d",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-02-019",
+      "distractors_sha256": "8f2043080d2222c86b421d1c5ea5739bf67c3012088c7f903492edb2813b192d",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-02-020",
+      "distractors_sha256": "f556b5ccbdbaa03bfecb6191d6acce49247cf3a2756a246b1dede39e7df5f5f6",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-02-021",
+      "distractors_sha256": "fbb7c60be727313eb45fd7293c6108aee8ff5b870826913c24f1879e883fbd12",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-02-022",
+      "distractors_sha256": "1c769a0ae63de0989784898cbfa4bf3d1721eb354d524c9fee3ccb3a03ed15cb",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-02-023",
+      "distractors_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "verdict": "needs_human_review",
+      "issues": [
+        {
+          "code": "wrong_flag_reason",
+          "distractor_index": null,
+          "note": "Same inconsistency as 015: 'concept_cue_front' cannot be an appropriate flag reason while structurally identical cue fronts 010 ('Term: FSBO') and 026 ('Term: MAO') were authored with definition distractors. 'Concept: Tired Landlord' -> pick-the-definition is equally workable. Escalating for a consistent policy decision."
+        }
+      ]
+    },
+    {
+      "record_id": "slot-module-02-024",
+      "distractors_sha256": "8e2794f69e55e6767de85d2a7390c00ca9c52d91eb94e1bb05b82f4673378a85",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-02-025",
+      "distractors_sha256": "d06adb3aa0644240a21865fb7da969f5c479ebc455ca71c836e2102b548b3492",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-02-026",
+      "distractors_sha256": "393651d40ed15db09aff571fd9c3c336370b4a89bf01eedc9ece572016aa133c",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-02-027",
+      "distractors_sha256": "cfce5e21cec119d053cf5ace957ff4fdc04d486ee323744a3c177f24a70bbc12",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-02-028",
+      "distractors_sha256": "2dafa24df8e021dc0a4c414210423f4e9273e54efbbbae7410de8d2a7d646647",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-02-029",
+      "distractors_sha256": "47ff548d668b8baa4b124a999da5ac21d4c3cfdeb4ef44771c58c2e1af916d97",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-02-030",
+      "distractors_sha256": "4aab8b940ec457b44a51adea66f55027e736ac7ab9e8f5b908bc0ee02f85618f",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-02-031",
+      "distractors_sha256": "7200a82e42c15cf27339f13f9d1328a6c7d7664ac23110b4a09ab79f29b6cfe8",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-02-032",
+      "distractors_sha256": "53753076600beb80d526f2c742d1b38b354875d7ff9db1c5987c6614ca1c6aa5",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-02-033",
+      "distractors_sha256": "1a3c951aa05ce338e31ecd6863989b90d3854b021066f4e71e4859490900af2d",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-02-034",
+      "distractors_sha256": "301e5d78a26b58d151a47462c8848b0eee2f5e9b759fa97d315c71f99811cf4b",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-02-035",
+      "distractors_sha256": "00d957b3f4aea77ce337a6459444f008ce444115b263449fdfa572e5c7608e26",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-02-036",
+      "distractors_sha256": "9ea5b861c3636698dcbbcfc6c262b512ec5fcd5834b7570cb7d9df085c4cec22",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-02-037",
+      "distractors_sha256": "f1439ad9fdb3f13363027b65f9316e51d36f988f1ae98353fc79095dcadec009",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-02-038",
+      "distractors_sha256": "97fc5aeaa0bb54759dc3be3e082d80ffc04867c88ee1131c5bcadb62fd4707ae",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-02-039",
+      "distractors_sha256": "fa4152c47d82cc690cc9b52be58a8582a48175a2d3b626c562c804c421f3a7d6",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-02-040",
+      "distractors_sha256": "84585e88d3540527691e71751c9358397a1c152f46f509b09406c74c3464a3cb",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-02-041",
+      "distractors_sha256": "a179d036b50395845d6bc47c2c0c8351ff55d47a2cb29deb287b0405360e368b",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-02-042",
+      "distractors_sha256": "93814d64e9ad330540e5315dc4206796c4812b4930ef412ce512a12d159aebdf",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-02-043",
+      "distractors_sha256": "6b212fbe1ac95aad238f650e740e00f692c147d492689a98aa2ae9cf48ee59a0",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-02-044",
+      "distractors_sha256": "14831e88d690ff4b3b18b2d236d2bfb1667de743664d6835e75ced90a77d8336",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-02-045",
+      "distractors_sha256": "3c90366719e9044d449c66aeab5b83c715ccfded8f60df937aba000751d95de9",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-02-046",
+      "distractors_sha256": "256e13a3785fc538db769bdba9c1ab44b91fde947f124a9ab42d12c813d4d704",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-02-047",
+      "distractors_sha256": "bae70bb4629297517d8963a02f6203e288efaad36766d9da5557d1f557a69d8d",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-02-048",
+      "distractors_sha256": "18bf3d43bb6396ae355d35b9b0dfa70328992f28d5ae296ce52575fe8f605f07",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-02-049",
+      "distractors_sha256": "d3f1e2a01c3d86eb774750264771f58e72b48a8a938e5cb9bf58f6b26e5c2405",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-02-050",
+      "distractors_sha256": "69507bae91d2d532b0bab4b34a7c5e69e2e0b7602b36e05f075bb176a18f7a2b",
+      "verdict": "pass",
+      "issues": []
+    }
+  ]
+}

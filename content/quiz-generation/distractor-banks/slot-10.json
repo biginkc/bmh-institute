@@ -1,0 +1,610 @@
+{
+  "schema_version": "bmh.quiz-distractor-bank.v1",
+  "slot": 10,
+  "quiz_source_key": "quiz-slot-10",
+  "lesson": "Objection Scripts Playbook",
+  "source_ledger_sha256": "f130f47f03585928e40f37dfba3a37c4ab3f9f8d41ae65332668b430960ba4ff",
+  "authored_by": "codex (EXECUTE 2.10, 2026-07-20)",
+  "entries": [
+    {
+      "record_id": "slot-module-10-001",
+      "front_sha256": "ea1b1c2a7bccd76230481905addf7e1778c06f3648db156b912c4914432ef025",
+      "back_sha256": "2763219c47e5f8be7cf563b4b46bf5b6cf4b918cd59148ff93f84a42754df0d1",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Listen, offer, inspect, and close.",
+        "Acknowledge, price, negotiate, and follow up.",
+        "Ask, explain, document, and exit."
+      ]
+    },
+    {
+      "record_id": "slot-module-10-002",
+      "front_sha256": "5464bc6d5d3b9e8b33c9b6bf20e8dc556cc0b03cbb8f0c9fff9e4fb9c2e1113f",
+      "back_sha256": "a96ab54b1ce46e8fb1d394b27a1a8d0103fb9010ff03eadb47274b98ca639208",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "To memorize one fixed script so every objection gets identical wording.",
+        "To make the seller accept a cash option before discussing their priorities.",
+        "To replace curiosity questions with a faster offer and close."
+      ]
+    },
+    {
+      "record_id": "slot-module-10-003",
+      "front_sha256": "3dab8f0ca58bc9497606e8bb8a96f51fa82fe218df152b40098c30c57f6fbe1b",
+      "back_sha256": "65da6f2e09359002b9efdffa1d0688549f2f36e6f296c646032e26fbc601d5fe",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Do you want a clean cash option, a terms option, or both?",
+        "What path did you choose and what would make it even better?",
+        "Is it okay if we chat again and answer questions later?"
+      ]
+    },
+    {
+      "record_id": "slot-module-10-004",
+      "front_sha256": "8759d9ecd6b73d4c2b65fb3938cbd492142649fd8f8b8eeee8e65f6751449f94",
+      "back_sha256": "29b88a6fb6269c99022bcb32c455f4ebca5c18475bb875b5c70ef61d6e7678ef",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The title company must pull the payoff statement before any price can be discussed.",
+        "A written offer can only be sent after the seller chooses cash or terms.",
+        "The seller must make the property list-ready before the investor gives a number."
+      ]
+    },
+    {
+      "record_id": "slot-module-10-005",
+      "front_sha256": "96a0a54ba5db70bb42e15dcf2f58d756f9be91dcb6c308ff2868023289d39cf5",
+      "back_sha256": "4968122b7e5bf578ef3368cb625d83d18ec5de7fbce68ef7e480e2dc7cc03910",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "If you truly don't know, should the title company pull the payoff first?",
+        "If you truly don't know, would a clean cash option solve the problem?",
+        "If you truly don't know, can we review condition, timing, and net instead?"
+      ]
+    },
+    {
+      "record_id": "slot-module-10-006",
+      "front_sha256": "01fc0a47a1e778c5195f25febe5c8ba05e85270f7bd561ecdd6127a50cb2ddd4",
+      "back_sha256": "40da8b100d0166653db2e041d8dd07476ef9dd79d7ab133afab748c62d5cb946",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The dealership analogy: you would repair a car before asking what it is worth.",
+        "The trade-in analogy: you would accept the first car estimate without naming a target.",
+        "The rental-car analogy: you would set the daily rate after the car is returned."
+      ]
+    },
+    {
+      "record_id": "slot-module-10-007",
+      "front_sha256": "2b4b6a6a0ca565384caaa96522ad8922bfe4eac139ea94eddb29b7a0a5ccfedb",
+      "back_sha256": "fb43f6745941e46c103eb4f034b4f84002326615311b21bd1a12c36ce632c33a",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "If the seller needs certainty and the property needs a quick close.",
+        "If the seller has difficult tenants and the house needs repairs.",
+        "If the seller is underwater and the loan has arrears."
+      ]
+    },
+    {
+      "record_id": "slot-module-10-008",
+      "front_sha256": "9e26a7d13e9038250c2c6b9160dd0bdee171ef3771bbeea4ab00bd4edecee27c",
+      "back_sha256": "a243b38f3ae7fee268a344412654166238e77427e0382c0153240fb44a156ba8",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "A lower cash price with zero fees versus a higher price on terms.",
+        "Managing repairs and showings versus allowing a quick off-market walkthrough.",
+        "Keeping the property as a rental versus assigning it to a partner."
+      ]
+    },
+    {
+      "record_id": "slot-module-10-009",
+      "front_sha256": "09dc753be5781935c3ac3002559b4a5a28276ee0bb479c4f243c6f8a74da5d13",
+      "back_sha256": "bae8b9c452a0b2f4f29faa78dc716a544f3c11ae784bfbf94eab00c035066fe0",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Ask if they want the investor to buy it, keep it as a rental, or assign it.",
+        "Ask if they want to list it, manage the repairs, or handle the tenants.",
+        "Ask if they want a walkthrough, a repair punch list, or online photos."
+      ]
+    },
+    {
+      "record_id": "slot-module-10-010",
+      "front_sha256": "e813de087afc8270c00996d62fa7e6cf09ae7f4ee198d28438295cd17ff93a7a",
+      "back_sha256": "99efd8d04606e7585b26297484cb440f4a0f10d1fe86016a4e62e0df10ee3798",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Send current proof of funds and recent settlement statements.",
+        "Send a quick one-pager with only the company information.",
+        "Schedule a discreet walkthrough to take the property photos."
+      ]
+    },
+    {
+      "record_id": "slot-module-10-011",
+      "front_sha256": "79c2e8c6d5a0b3e8de32ec514052d3f0de0b0110cabf2d99636ccc7d01276dc2",
+      "back_sha256": "fb4982fb364e687df8aa17994f8774631b433ec76eee4a6584c9ddeafc8f0895",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Describe it as a cash buyer that never works with partners or title companies.",
+        "Describe it as a rental company that only purchases list-ready properties.",
+        "Describe it as an agent team that runs highest-and-best open houses."
+      ]
+    },
+    {
+      "record_id": "slot-module-10-012",
+      "front_sha256": "7ad82fec6092d2fa6ab9dc23cb7f0d1b390d6ba1f11f76b9f451146a61417f7c",
+      "back_sha256": "81e34b91736788d31329f776eeca59956b82fae98ab1866e13097af1f3293515",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "A written cash offer with no supporting company details.",
+        "The property's payoff statement from the title company.",
+        "A repair punch list from the investor's walkthrough."
+      ]
+    },
+    {
+      "record_id": "slot-module-10-013",
+      "front_sha256": "84bcf53945e821b67511528ae949a54067e626a13c9c575f7de3422861888d6f",
+      "back_sha256": "151d2bc455ad27572ebff11cda4f00fbd3b92cbd543226bceae6d091e3bd1d84",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "To secure a signature today before the seller talks with their spouse.",
+        "To lead the walkthrough and provide the investor's number first.",
+        "To redirect the seller into a highest-and-best bidding process."
+      ]
+    },
+    {
+      "record_id": "slot-module-10-014",
+      "front_sha256": "8c3be0a179cffe84efb7d5fca5bbc95d917d0da29ee03a03619a20a60952cb02",
+      "back_sha256": "8c3631776947def6a94467b6039250fc2db3ec663e97fcfe42264537ddd5d771",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "A payoff statement and the company one-pager.",
+        "A written offer and the walkthrough photos.",
+        "A leaseback agreement and a per-day fee schedule."
+      ]
+    },
+    {
+      "record_id": "slot-module-10-015",
+      "front_sha256": "7aab23dc06c385095e95d51377e79378d224687daf90fb0d7a862400ff99cd5b",
+      "back_sha256": "55f3732ace2f462ff4d107ef99c45eac4022b711be6b099225e0d2ce2be7217a",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "A referral from a local real estate agent.",
+        "A homeowner directory provided by a neighborhood association.",
+        "A lead list supplied by a property-management company."
+      ]
+    },
+    {
+      "record_id": "slot-module-10-016",
+      "front_sha256": "ddae3f530fb7780b386c2fa60947472095aa4e606cce7f786bc2c3ca26d6a0ae",
+      "back_sha256": "bbbc91102270bdc0cecf8989cbb9f4803442edb4f4b04b77d0bdd02358d92308",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "At the county courthouse.",
+        "At a local real estate law firm.",
+        "At the investor's closing office."
+      ]
+    },
+    {
+      "record_id": "slot-module-10-017",
+      "front_sha256": "478ba5bb2d675c25459f67eeb0e128d4a4fa589a7e7c3c34961285fed515eb82",
+      "back_sha256": "91c88d6aa6d97c5410d419284ba8dc6203355241ee02f2426b7abad5b8b751f0",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Price, timeline, and certainty.",
+        "Condition, timing, and walk-away net.",
+        "Vacancies, repairs, and collections."
+      ]
+    },
+    {
+      "record_id": "slot-module-10-018",
+      "front_sha256": "d20f698043edf8656ff7598bc70cfe24e57e20fcac0ee14f9b74663cc2501c15",
+      "back_sha256": "9db445e291338c65939cd765d42906942a190aa0be93dc80944ec9d58f1b9c42",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Tenant collections.",
+        "A shopped number.",
+        "An underbid offer."
+      ]
+    },
+    {
+      "record_id": "slot-module-10-019",
+      "front_sha256": "bef9aa6c5953c5b9c15ad89a0ad2bb5501eda1a3fe06bfaa559230e0d9e4ff93",
+      "back_sha256": "ebf8eb6c8a735f66e620ccd599d784196f6fde40c30b4731b0357e57fde01259",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Recommend an agent listing and have the seller prepare the property.",
+        "Ask the seller to manage the repairs, tenants, and collections.",
+        "Start a highest-and-best bidding process with the other investors."
+      ]
+    },
+    {
+      "record_id": "slot-module-10-020",
+      "front_sha256": "606535e9483d040a673dc23a496dc743ff2e03b80122e5bc137901e3b68a19a8",
+      "back_sha256": "42cfb1f6ba8d1971e0f98b105f8e94a0f876b248b704f01fde57db211bd36ff3",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "As the highest-price lane if the agent listing fails.",
+        "As the contractor-roulette lane if the repair plan fails.",
+        "As the mailbox-money lane if the rental plan fails."
+      ]
+    },
+    {
+      "record_id": "slot-module-10-021",
+      "front_sha256": "14e56ee49e55fe8d12fba8d82a4068093adfef339745c35e04ff8478610f0b82",
+      "back_sha256": "c5949b070ccb11fc2366efe8c44d2fe68a61a789fd293cc278d82fb3157f6ce6",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Are you ready to sign and move forward today?",
+        "If you truly don't know, what would your price look like?",
+        "Do you want a clean cash option, a terms option, or both?"
+      ]
+    },
+    {
+      "record_id": "slot-module-10-022",
+      "front_sha256": "5f2fd0de95a63dc9ae20513006bbef7fe77c2f32c38f16a1acb623b47187108f",
+      "back_sha256": "baaa96998f821a45f6d1b7161788d37d0c69699a21d7471a06cc0e153606b145",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Time, cash, or contractors.",
+        "Vacancies, repairs, or collections.",
+        "Photos, punch lists, or walkthroughs."
+      ]
+    },
+    {
+      "record_id": "slot-module-10-023",
+      "front_sha256": "f41d44484a14a610acd3154e20c57a4251bf6257a14db26d224fa7b137b40111",
+      "back_sha256": "8e3783328f280a51a2fd14d8b47303de5651b9fd561fdb7afacd4673a7f17974",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Timing, certainty, and hassle.",
+        "Price, timeline, and flexibility.",
+        "Showings, signs, and online photos."
+      ]
+    },
+    {
+      "record_id": "slot-module-10-024",
+      "front_sha256": "af73b90fb70a57db4bde73805afb396fa50a2a0a8e9db93dbacac680792ee53e",
+      "back_sha256": "f4f845299855e047bcc92020eac3e9007a343c7d38dad595a1e32f33f3d27179",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Buying for a lower cash price with zero fees and a quick close.",
+        "Listing with an agent for the highest price after making the house list-ready.",
+        "Providing a leaseback with a per-day use fee and a safety holdback."
+      ]
+    },
+    {
+      "record_id": "slot-module-10-025",
+      "front_sha256": "3b65b2088f3c021adbf04cea1376c44490bd18f1059d03f3bf3b4c68c6e1d04d",
+      "back_sha256": "bb49bef51a610b7e75eb36fd9f2c5c5535254ac13f67f3d9eedf92e7ec153d86",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "That the title company cannot pull a payoff statement before the walkthrough.",
+        "That the property must be list-ready before a cash number is discussed.",
+        "That repairs and tenant collections will remain the seller's job after closing."
+      ]
+    },
+    {
+      "record_id": "slot-module-10-026",
+      "front_sha256": "a1f055fa8eaa49ecdfe6d8f690c029bddb0741f4a5ee8f7bada26acb90a25c8d",
+      "back_sha256": "3bf3714f382ce0c688704add80581b306aa26af08a087626c23ab8274e6196cd",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Clear title must be confirmed before the investor can decide on any lane.",
+        "Every property must be listed before cash or terms can be considered.",
+        "The payoff statement determines whether anyone can discuss an offer."
+      ]
+    },
+    {
+      "record_id": "slot-module-10-027",
+      "front_sha256": "157833d31cc8c49955b6a9e0f5ed15fd79d8e810645ef3be94711d501af4da85",
+      "back_sha256": "3271bee543e458df8d19d5c01f791c9607277fe24195b8c09bbc53392c6bfeef",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Offering clean cash, offering terms, or offering both.",
+        "Listing with an agent, fixing it themselves, or managing tenants.",
+        "Choosing the price, choosing the timeline, or choosing the certainty."
+      ]
+    },
+    {
+      "record_id": "slot-module-10-028",
+      "front_sha256": "85ddc03dcab4d1da5f8cd8391f079a43f9002bcb720f29d0a599a3188153c45b",
+      "back_sha256": "270fc1ca99aa65d7c29e89f24e667d3f0684d56515ed6bfe840df51846d4c4f0",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Each lane requires the seller to accept a different price before closing.",
+        "The rental lane leaves the seller responsible for repairs and tenants after closing.",
+        "The assignment lane turns the sale into a highest-and-best investor open house."
+      ]
+    },
+    {
+      "record_id": "slot-module-10-029",
+      "front_sha256": "0df07c9021ac82c1d3c117e071af6c6a5bdec4e9be1472dc06d7233005a83c97",
+      "back_sha256": "3216de2b7b9fb447dc67b5ed8e7797ba3dfe0c06b6dd9f283b2be7640b3f5a88",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Several showings, a repair punch list, and a lower price for each item.",
+        "An email-only offer with no context, photos, or walkthrough.",
+        "List-ready preparation followed by a highest-and-best open house."
+      ]
+    },
+    {
+      "record_id": "slot-module-10-030",
+      "front_sha256": "3a6031661be0c8b49b7fdfe7c0df2bcd60c56e1308ed55012f9c14ae9a2001e2",
+      "back_sha256": "c5a9103d0114ba1045b25da3fe44fef3cefae80610e27eb9a6be10bfab9398ea",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Nickel-and-dime the seller with a punch list until the price fits.",
+        "Force the seller into terms even when the structure is not a fit.",
+        "Let an overbid or underbid stand without gathering any more context."
+      ]
+    },
+    {
+      "record_id": "slot-module-10-031",
+      "front_sha256": "451ec1686a8966f7edc454f208a109ebdbfcc08de4f61eda8092f650ed933487",
+      "back_sha256": "209f60e0cac78f9fb339201ad01a75ead188d23ee2189fecb4c02653f569184e",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The seller's agent.",
+        "The repair contractor.",
+        "The investor's partner."
+      ]
+    },
+    {
+      "record_id": "slot-module-10-032",
+      "front_sha256": "4a199ccc2c299b28fb84798c5cafa60e139f6f3bc36db1ecccedce72b30eebdb",
+      "back_sha256": "460b93700f2e75aa8ecb6b721fc641472c4ca8fffec6ff26986a439e12e6834a",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Providing a leaseback with a simple per-day use fee.",
+        "Sending current proof of funds and recent settlement statements.",
+        "Preparing a repair punch list and a contractor schedule."
+      ]
+    },
+    {
+      "record_id": "slot-module-10-033",
+      "front_sha256": "b36d98f4c1c21e4785e42b2e9cf4998f4fecf1422bdd14173033e0877dea5e34",
+      "back_sha256": "fb868ab1d961d325944a8777cc3805c497c896ee6d53f1335da746dbf41c9984",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Offer a leaseback after completing a clean cash closing.",
+        "Schedule a walkthrough and prepare a repair punch list.",
+        "Send a company one-pager and current proof of funds."
+      ]
+    },
+    {
+      "record_id": "slot-module-10-034",
+      "front_sha256": "f8222dc859eb6b7210178e568eb251a10f18871e3defc71823d4dae1855aaf9c",
+      "back_sha256": "41cc438a046569bc578df07025063d7d6adf4bf3b85256b2ae4577e6416858be",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "By completing a cash purchase while leaving the loan arrears unpaid.",
+        "By postponing the payoff until the property becomes list-ready.",
+        "By using a leaseback fee in place of bringing the loan current."
+      ]
+    },
+    {
+      "record_id": "slot-module-10-035",
+      "front_sha256": "46ad69fe41b15fb6dee9f7b6b05a5558b0d5fc81cd661ce52173dfec49b54538",
+      "back_sha256": "b2692e58d3cd3408cf7db75769a460797d2ec833c2a8b410e83f906638dccd0d",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "An agent listing after repairs or a highest-and-best bidding process.",
+        "A leaseback with a use fee or keeping the house as a rental.",
+        "A traditional agent listing or a post-closing leaseback."
+      ]
+    },
+    {
+      "record_id": "slot-module-10-036",
+      "front_sha256": "fe8217a22affec5bc169f80c242c2200d6b5158a67be4e183140196880c767eb",
+      "back_sha256": "6e65127e0d3ac4cc7ee093d0a4f481adfdc2f000277370385be0538232331908",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "A clean cash purchase with no showings and an immediate move-out.",
+        "Taking over the existing payments and arrears through terms.",
+        "Handling cash-for-keys or starting the legal process after closing."
+      ]
+    },
+    {
+      "record_id": "slot-module-10-037",
+      "front_sha256": "ce02b1b9023bc2b9ad67f615a8744c96395d11d513fd711bf32f2c5ead824acd",
+      "back_sha256": "bfe87d3bc905df52bd2ff57476dbe076e27ae9987be67eb34e1cf68ce0d51356",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "State that the inspection will change the price for every punch-list item.",
+        "Give the seller a starting number to shop and then compete against it.",
+        "Wait for another investor's highest-and-best process before naming a price."
+      ]
+    },
+    {
+      "record_id": "slot-module-10-038",
+      "front_sha256": "14f1b2e1a4deb68a095274ad7a51f4b84c1bcf4c2b09226840f46c2731538c10",
+      "back_sha256": "a31c7e16c8f1506eb879df7ecff2a83afbc215197e44787d99130b58b9288eff",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Trading a lower cash price for zero fees.",
+        "Trading a per-day use fee and holdback for more move-out time.",
+        "Trading a list-ready house for the highest possible agent price."
+      ]
+    },
+    {
+      "record_id": "slot-module-10-039",
+      "front_sha256": "0da3db01881b54cb633703ce9a8670574a259542d968821cae7f02e4885ed275",
+      "back_sha256": "0ac6b1a7c9ccb728b0cadda696eb36113903eeeca0655466766040fe825fe438",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "A confidentiality agreement, password-protected documents, an anonymous buyer name, and sealed closing records.",
+        "An unlisted address, appointment-only showings, private bidding, and restricted agent access.",
+        "A private appraisal, encrypted email, a masked owner name, and a nondisclosure clause."
+      ]
+    },
+    {
+      "record_id": "slot-module-10-040",
+      "front_sha256": "c8723e71d1ff068b7986234f236a86a5714520c53af359581875c63045c38844",
+      "back_sha256": "c5f30cc8a6eb87b0aa663a2ce696d1165df0ed2a7d7ceba811c3de8f4dcc2aa0",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Ensuring the house is list-ready.",
+        "Confirming three repair contractors.",
+        "Obtaining the seller's walk-away net."
+      ]
+    },
+    {
+      "record_id": "slot-module-10-041",
+      "front_sha256": "c7d0424f8628bb3acb72c4a0e19fbd79798d8fba6cb0dac77b7229a08c44c8fe",
+      "back_sha256": "1dd9f2028ac0a812eb34f7de61c3372b41ba4b9e7a17fe4ed65ccbb0f54b59a5",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Current proof of funds, recent settlement statements, and a company one-pager.",
+        "Walkthrough photos, repair punch lists, and online listings.",
+        "Loan payments, arrears, and a clear title."
+      ]
+    },
+    {
+      "record_id": "slot-module-10-042",
+      "front_sha256": "e68df89e000fa05ae2a13b88c0114c02160770c3bfd6731c1fc726c688f462ba",
+      "back_sha256": "8cab5b19d1e7830e6fe35d9d7ba8a615e4d5e961dec0adbf7a3d37e614defd59",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "A seller who does not know their price and asks the investor to lead the walkthrough.",
+        "A seller who needs to talk with their spouse and wants a simple summary.",
+        "A seller who is underwater and cannot bring the existing loan current."
+      ]
+    },
+    {
+      "record_id": "slot-module-10-043",
+      "front_sha256": "9c86e71eafb22194fb0a1df76b07aab359e774312a3bc745a3e1b0a9681697a5",
+      "back_sha256": "7bd58e252dec120b56f66765bda62f75533d2d7f8756a80e0dbe2b70baa2703f",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Trading certainty for timeline.",
+        "Trading privacy for proof of funds.",
+        "Trading clear title for a walkthrough."
+      ]
+    },
+    {
+      "record_id": "slot-module-10-044",
+      "front_sha256": "f8a02ad9c36fe928d442aa6e110dd0dd9accea4c714c3e2d0c9abec9f4b99128",
+      "back_sha256": "55f3732ace2f462ff4d107ef99c45eac4022b711be6b099225e0d2ce2be7217a",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "A local title company and recent settlement statements.",
+        "A referral from the property's former contractor.",
+        "A contact list provided by a neighborhood association."
+      ]
+    },
+    {
+      "record_id": "slot-module-10-045",
+      "front_sha256": "0a2dd14628191ad66065f4f3bd59f6080c7293ea031e8ccfd0173982fdec81e3",
+      "back_sha256": "ddccfd421efafd287a848f2d4943bb100986626aa7a507855c3af2c28bd7c1a5",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Starting with the repair list and deciding whether an agent or contractor fits it best.",
+        "Starting with the company one-pager and choosing between a title company or attorney.",
+        "Starting with highest-and-best and deciding whether a rental or assignment fits it best."
+      ]
+    },
+    {
+      "record_id": "slot-module-10-046",
+      "front_sha256": "fb3d4bd7e0cc28a49695f9360325df28093ae3e560735af4c0c6b95160e33db7",
+      "back_sha256": "371f7007607d4d646dcb9ce547f25aaf0d0b2fed00c4358b6ac8d19bcf5505e6",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "It requires the seller to keep handling vacancies, repairs, and collections for a higher price.",
+        "It gives the seller a cash close while leaving them responsible for difficult tenants.",
+        "It creates a leaseback where the seller pays daily and continues managing repairs."
+      ]
+    },
+    {
+      "record_id": "slot-module-10-047",
+      "front_sha256": "465f8d1efbd1de1ae77d4084f709e2e2047b22e4051fa031418d6614c2283a37",
+      "back_sha256": "c082283e6a1a9b2e6ba16b7d82bf56c764f743aea57fe99a6fd299bd417d8232",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "They receive the highest possible agent price through a bidding war.",
+        "They avoid every loan payment while continuing to keep the property.",
+        "They make the house list-ready without time, cash, or contractors."
+      ]
+    },
+    {
+      "record_id": "slot-module-10-048",
+      "front_sha256": "145c9bc7d8cb769e91a34b465c4c00fc5baa94e0afbf603d379c3b3f4c70acd8",
+      "back_sha256": "90756afd7b131de909c1cb4646ac7acc985bdd5f721c91553a09b3c24c7b1de1",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "The investor will accept the seller's repair estimate without reviewing the property.",
+        "The seller may complete any requested repairs after closing.",
+        "The investor will cover the cost of every issue found during the walkthrough."
+      ]
+    },
+    {
+      "record_id": "slot-module-10-049",
+      "front_sha256": "946df651f49467dcc31aeae86566e1923de9849599e268fbb5d2cfe6242c9662",
+      "back_sha256": "e796998eb584cfcaabc7e2866af4b7577121ce55b9370514d9efed54a938bd19",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "Send a written offer immediately because context does not affect the price.",
+        "Ask the title company to choose cash or terms without discussing seller priorities.",
+        "Send proof of funds instead of asking about condition, timing, and walk-away net."
+      ]
+    },
+    {
+      "record_id": "slot-module-10-050",
+      "front_sha256": "70ad7ae16b21dd9a50b36b2622f77a5d7a89d5533f85affb0791c49ea9602d7c",
+      "back_sha256": "3073776ae944a389e1138856e2de34575bb22b36ab7f5a2296c0c60a5e2f025d",
+      "status": "authored",
+      "question_type": "single_choice",
+      "distractors": [
+        "To present a cash number before the seller shares a starting price.",
+        "To recite the script without adapting to the seller's language.",
+        "To move into a written offer before learning condition, timing, and net."
+      ]
+    }
+  ]
+}

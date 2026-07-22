@@ -23,10 +23,15 @@ import {
   validateCaptionApprovalEvidence,
   validateCaptionApprovalHistory,
 } from "./caption-approval-ledger.mjs";
+import { projectQuizBankQuestion, quizBankSha256, validateQuizBank } from "./quiz-bank.mjs";
 
 const REPO_ROOT = path.resolve(fileURLToPath(new URL("../..", import.meta.url)));
 const DEFAULT_VIDEO_SOURCE_ROOT = "/Users/jarradhenry/Sites/BMH apps/BMH Institute";
 const DEFAULT_QUIZ_SOURCE_ROOT = "/Users/jarradhenry/BMH-OS/BMH Training Course/Thinkific";
+const DEFAULT_QUIZ_BANK_PATH = path.join(
+  REPO_ROOT,
+  "content/quiz-generation/question-bank.v1.json",
+);
 const OUTPUT_PATH = path.join(REPO_ROOT, "content/course-manifests/bmh-employee-training.v1.json");
 const ARTWORK_LEDGER_PATH = path.join(
   REPO_ROOT,
@@ -51,6 +56,9 @@ const QUIZ_APPROVAL_LEDGER_PATH = path.join(
 const ARTWORK_LEDGER_SCHEMA = "bmh-artwork-production-ledger/v1";
 export const GUIDE_APPROVAL_LEDGER_SCHEMA = "bmh-guide-approval-ledger/v1";
 export const QUIZ_APPROVAL_LEDGER_SCHEMA = "bmh-quiz-content-approval-ledger/v1";
+const QUIZ_REVIEW_REQUEST_PATH = "docs/course-production/quiz-content-review-request.v1.json";
+const QUIZ_REVIEW_SURFACE_PATH = "docs/course-production/quiz-content-review.quizbank.v1.md";
+const QUIZ_REVIEW_MANIFEST_PATH = "content/course-manifests/bmh-employee-training.v1.json";
 const SHA256_PATTERN = /^[a-f0-9]{64}$/;
 const ISO_TIMESTAMP_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/;
 
@@ -1119,6 +1127,10 @@ function shapeQuestion(slot, question, index) {
   };
 }
 
+function shapeQuizBankQuestion(question) {
+  return projectQuizBankQuestion(question, normalizeRoleAgnosticCourseText);
+}
+
 function textHtml(lesson) {
   return `<h2>What you will learn</h2><p>${lesson.summary}</p><ul>${lesson.objectives.map((objective) => `<li>${objective}</li>`).join("")}</ul>`;
 }
@@ -1225,6 +1237,15 @@ export function quizContentSha256({ source_key, title, questions }) {
     .digest("hex");
 }
 
+export function quizBindingsSha256(quizPools) {
+  const bindings = quizPools.map(({ quiz_source_key, question_count, content_sha256 }) => ({
+    quiz_source_key,
+    question_count,
+    content_sha256,
+  }));
+  return createHash("sha256").update(JSON.stringify(bindings)).digest("hex");
+}
+
 export async function validateQuizApprovalLedger(ledger, repoRoot = REPO_ROOT) {
   const errors = [];
   let reviewRequest;
@@ -1232,7 +1253,7 @@ export async function validateQuizApprovalLedger(ledger, repoRoot = REPO_ROOT) {
     return [`Quiz approval ledger schema_version must be ${QUIZ_APPROVAL_LEDGER_SCHEMA}`];
   }
   if (ledger.status !== "active") errors.push("Quiz approval ledger must be active");
-  if (ledger.request_path !== "docs/course-production/quiz-content-review-request.v1.json") {
+  if (ledger.request_path !== QUIZ_REVIEW_REQUEST_PATH) {
     errors.push("Quiz approval ledger request path is not canonical");
   }
   if (!SHA256_PATTERN.test(ledger.request_sha256 ?? "")) {
@@ -1249,26 +1270,127 @@ export async function validateQuizApprovalLedger(ledger, repoRoot = REPO_ROOT) {
       errors.push("Quiz approval review request is missing or invalid");
     }
   }
+  const authorization = ledger.release_authorization;
+  if (
+    !isRecord(authorization)
+    || authorization.decision !== "delegated_ai_checksum_review_satisfies_human_content_gate"
+    || authorization.authorized_by !== "Jarrad Henry"
+    || !ISO_TIMESTAMP_PATTERN.test(authorization.recorded_at ?? "")
+    || authorization.request_id !== "bmh-employee-training-quiz-review-2026-07-22-content-quality-v8"
+    || authorization.request_sha256 !== ledger.request_sha256
+    || typeof authorization.scope !== "string"
+    || !/explicitly delegated/i.test(authorization.scope)
+    || !/Claude's independent checksum-bound content approval satisfies the delegated content gate/i.test(authorization.scope)
+    || authorization.source !== "Codex GOAL conversation, 2026-07-22"
+  ) {
+    errors.push("Quiz approval ledger requires Jarrad's explicit delegated human-gate authorization bound to the exact review request");
+  }
   if (reviewRequest) {
+    const requestedPools = Array.isArray(reviewRequest.quiz_pools)
+      ? reviewRequest.quiz_pools
+      : [];
     if (reviewRequest.schema_version !== "bmh-quiz-content-review-request/v1") {
       errors.push("Quiz approval review request schema is invalid");
+    }
+    if (
+      reviewRequest.request_id !== "bmh-employee-training-quiz-review-2026-07-22-content-quality-v8"
+      || reviewRequest.created_at !== "2026-07-22T13:17:04Z"
+    ) {
+      errors.push("Quiz approval review request identity is not canonical");
+    }
+    if (reviewRequest.status !== "pending_human_review") {
+      errors.push("Quiz approval review request must preserve its pending review state");
+    }
+    const scope = reviewRequest.scope;
+    if (
+      !isRecord(scope)
+      || scope.manifest_path !== QUIZ_REVIEW_MANIFEST_PATH
+      || scope.import_id !== "bmh-employee-training-v1"
+      || scope.quiz_pool_count !== 19
+      || scope.question_count !== 920
+      || scope.questions_per_pool !== null
+      || scope.questions_per_attempt !== null
+    ) {
+      errors.push("Quiz approval review request scope is not the canonical quizbank scope");
+    }
+    if (!Array.isArray(reviewRequest.quiz_pools) || requestedPools.length !== 19) {
+      errors.push("Quiz approval review request must bind exactly 19 quizbank pools");
+    } else {
+      const poolKeys = new Set();
+      let questionCount = 0;
+      let poolsAreHashable = true;
+      for (const pool of requestedPools) {
+        if (!isRecord(pool) || !/^quiz-slot-[0-9]{2}$/.test(pool.quiz_source_key ?? "")) {
+          errors.push("Quiz approval review request contains an invalid quiz source key");
+          poolsAreHashable = false;
+          continue;
+        }
+        if (poolKeys.has(pool.quiz_source_key)) {
+          errors.push(`Quiz approval review request duplicates ${pool.quiz_source_key}`);
+        }
+        poolKeys.add(pool.quiz_source_key);
+        if (!Number.isInteger(pool.question_count) || pool.question_count < 1) {
+          errors.push(`${pool.quiz_source_key} review binding has an invalid question count`);
+        } else {
+          questionCount += pool.question_count;
+        }
+        if (!SHA256_PATTERN.test(pool.content_sha256 ?? "")) {
+          errors.push(`${pool.quiz_source_key} review binding checksum is invalid`);
+        }
+        if (pool.approval_status !== "pending_human_review") {
+          errors.push(`${pool.quiz_source_key} review binding must preserve its pending review state`);
+        }
+      }
+      if (questionCount !== 920) {
+        errors.push("Quiz approval review request question counts must total 920");
+      }
+      if (
+        poolsAreHashable
+        && scope?.quiz_bindings_sha256 !== quizBindingsSha256(requestedPools)
+      ) {
+        errors.push("Quiz approval review request pool binding checksum is invalid");
+      }
     }
     const reviewSurface = reviewRequest.review_surface;
     if (
       !isRecord(reviewSurface)
-      || reviewSurface.path !== "docs/course-production/quiz-content-review.v1.md"
+      || reviewSurface.path !== QUIZ_REVIEW_SURFACE_PATH
     ) {
       errors.push("Quiz approval review surface path is not canonical");
+    } else if (
+      reviewSurface.format !== "markdown"
+      || reviewSurface.quiz_pool_count !== 19
+      || reviewSurface.question_count !== 920
+    ) {
+      errors.push("Quiz approval review surface scope is not the canonical quizbank scope");
     } else if (!SHA256_PATTERN.test(reviewSurface.sha256 ?? "")) {
       errors.push("Quiz approval review surface checksum is invalid");
     } else {
       try {
-        const actualReviewChecksum = await sha256(path.join(repoRoot, reviewSurface.path));
+        const reviewPath = path.join(repoRoot, reviewSurface.path);
+        const actualReviewBytes = await readFile(reviewPath);
+        const actualReviewChecksum = createHash("sha256").update(actualReviewBytes).digest("hex");
         if (actualReviewChecksum !== reviewSurface.sha256) {
           errors.push("Quiz approval review surface is not bound to the exact review packet");
         }
+        const reviewText = actualReviewBytes.toString("utf8");
+        const packetBindings = new Map(
+          [...reviewText.matchAll(/^- Pool key: `([^`]+)`\n- Pool SHA-256: `([a-f0-9]{64})`/gm)]
+            .map((match) => [match[1], match[2]]),
+        );
+        const packetQuestionCount = (reviewText.match(/^- Question key:/gm) ?? []).length;
+        if (
+          packetBindings.size !== requestedPools.length
+          || packetQuestionCount !== reviewSurface.question_count
+          || requestedPools.some((pool) =>
+            !isRecord(pool)
+            || packetBindings.get(pool.quiz_source_key) !== pool.content_sha256
+          )
+        ) {
+          errors.push("Quiz approval review packet does not match the exact requested pool bindings");
+        }
       } catch {
-        errors.push("Quiz approval review surface is missing");
+        errors.push("Quiz approval review surface is missing or invalid");
       }
     }
   }
@@ -1287,8 +1409,11 @@ export async function validateQuizApprovalLedger(ledger, repoRoot = REPO_ROOT) {
     seen.add(record.quiz_source_key);
     if (record.decision !== "approved") errors.push(`${label} approval record decision must be approved`);
     if (!SHA256_PATTERN.test(record.content_sha256 ?? "")) errors.push(`${label} approval checksum is invalid`);
-    const requestedPool = reviewRequest?.quiz_pools?.find((pool) =>
-      pool.quiz_source_key === record.quiz_source_key
+    const requestedPools = Array.isArray(reviewRequest?.quiz_pools)
+      ? reviewRequest.quiz_pools
+      : [];
+    const requestedPool = requestedPools.find((pool) =>
+      isRecord(pool) && pool.quiz_source_key === record.quiz_source_key
     );
     if (!requestedPool || requestedPool.content_sha256 !== record.content_sha256) {
       errors.push(`${label} approval does not match an exact pool in the current review request`);
@@ -1296,11 +1421,21 @@ export async function validateQuizApprovalLedger(ledger, repoRoot = REPO_ROOT) {
     if (record.request_sha256 !== ledger.request_sha256) errors.push(`${label} is not bound to the current review request`);
     if (typeof record.approved_by !== "string" || !record.approved_by.trim()) errors.push(`${label} needs an approver`);
     if (!ISO_TIMESTAMP_PATTERN.test(record.approved_at ?? "")) errors.push(`${label} approval timestamp is invalid`);
+    if (typeof record.evidence !== "string" || !record.evidence.trim()) errors.push(`${label} needs approval evidence`);
   }
   return errors;
 }
 
 export function quizApprovalStatus(ledger, quiz) {
+  const authorization = ledger.release_authorization;
+  if (
+    !isRecord(authorization)
+    || authorization.decision !== "delegated_ai_checksum_review_satisfies_human_content_gate"
+    || authorization.authorized_by !== "Jarrad Henry"
+    || authorization.request_sha256 !== ledger.request_sha256
+  ) {
+    return "pending_human_review";
+  }
   const checksum = quizContentSha256(quiz);
   const approved = ledger.records.some((record) =>
     record.quiz_source_key === quiz.source_key
@@ -1320,8 +1455,31 @@ export async function buildManifest({
   quizApprovalLedgerPath = QUIZ_APPROVAL_LEDGER_PATH,
   videoSourceRoot = DEFAULT_VIDEO_SOURCE_ROOT,
   quizSourceRoot = DEFAULT_QUIZ_SOURCE_ROOT,
+  quizBankPath = DEFAULT_QUIZ_BANK_PATH,
+  allowPendingQuizReview = false,
   inspectDuration = probeVideoDuration,
 } = {}) {
+  let quizBankContext = null;
+  if (quizBankPath) {
+    const relativeBankPath = path.relative(REPO_ROOT, quizBankPath);
+    if (relativeBankPath.startsWith("..") || path.isAbsolute(relativeBankPath)) {
+      throw new Error("The configured question bank must be inside the repository.");
+    }
+    const bytes = await readFile(quizBankPath);
+    let bank;
+    try {
+      bank = JSON.parse(bytes.toString("utf8"));
+    } catch (error) {
+      throw new Error(`Question bank is not valid JSON: ${error.message}`);
+    }
+    const errors = validateQuizBank(bank);
+    if (errors.length > 0) throw new Error(`Question bank is invalid: ${errors.join("; ")}`);
+    quizBankContext = {
+      bank,
+      sha256: quizBankSha256(bytes),
+      path: relativeBankPath.split(path.sep).join("/"),
+    };
+  }
   const [videoApprovalLedger, captionApprovalLedger, guideApprovalLedger, quizApprovalLedger] = await Promise.all([
     readFile(videoApprovalLedgerPath, "utf8").then(JSON.parse),
     readFile(captionApprovalLedgerPath, "utf8").then(JSON.parse),
@@ -1333,7 +1491,7 @@ export async function buildManifest({
     throw new Error(`Guide approval ledger is invalid: ${guideApprovalErrors.join("; ")}`);
   }
   const quizApprovalErrors = await validateQuizApprovalLedger(quizApprovalLedger);
-  if (quizApprovalErrors.length > 0) {
+  if (!allowPendingQuizReview && quizApprovalErrors.length > 0) {
     throw new Error(`Quiz approval ledger is invalid: ${quizApprovalErrors.join("; ")}`);
   }
   const captionApprovalErrors = [
@@ -1381,10 +1539,13 @@ export async function buildManifest({
   const videosBySlot = Map.groupBy(videoAssetsWithMetadata, (asset) => asset._slot);
   const quizQuestionsBySlot = new Map();
   for (const lesson of LESSONS) {
+    const bankSlot = quizBankContext?.bank.slots.find((slot) => slot.slot === lesson.slot);
     quizQuestionsBySlot.set(
       lesson.slot,
-      (await sourceQuestions(lesson.slot, quizSourceRoot))
-        .map((question, index) => shapeQuestion(lesson.slot, question, index)),
+      bankSlot
+        ? bankSlot.questions.map(shapeQuizBankQuestion)
+        : (await sourceQuestions(lesson.slot, quizSourceRoot))
+          .map((question, index) => shapeQuestion(lesson.slot, question, index)),
     );
   }
 
@@ -1537,15 +1698,21 @@ export async function buildManifest({
         quiz: {
           source_key: `quiz-slot-${slotKey}`,
           title: `${topic.title} Checkpoint`,
-          description: "Each attempt draws 10 questions from the curated lesson pool.",
+          description: quizBankContext
+            ? "Each attempt includes every question in the lesson pool in randomized order."
+            : "Each attempt draws 10 questions from the curated lesson pool.",
           approval_status: quizApprovalStatus(quizApprovalLedger, quizIdentity),
-          passing_score: 80,
-          randomize_questions: true,
-          randomize_answers: true,
-          questions_per_attempt: 10,
-          max_attempts: null,
-          retake_cooldown_hours: 0,
-          show_correct_answers_after: "after_pass",
+          ...(quizBankContext
+            ? quizBankContext.bank.quiz_config
+            : {
+                passing_score: 80,
+                randomize_questions: true,
+                randomize_answers: true,
+                questions_per_attempt: 10,
+                max_attempts: null,
+                retake_cooldown_hours: 0,
+                show_correct_answers_after: "after_pass",
+              }),
           questions,
         },
       });
@@ -1581,6 +1748,12 @@ export async function buildManifest({
     schema_version: 1,
     import_id: "bmh-employee-training-v1",
     status: "draft",
+    ...(quizBankContext ? {
+      quiz_bank_ref: {
+        path: quizBankContext.path,
+        sha256: quizBankContext.sha256,
+      },
+    } : {}),
     qa_role_group: {
       source_key: "role-group-bmh-content-qa",
       name: "BMH Content QA",
@@ -1612,23 +1785,30 @@ export async function buildManifest({
 }
 
 function manifestBuilderUsage() {
-  return `Usage: node scripts/course-content/build-manifest.mjs [--video-root PATH] [--quiz-root PATH]
+  return `Usage: node scripts/course-content/build-manifest.mjs [--video-root PATH] [--quiz-root PATH] [--quiz-bank PATH] [--out PATH] [--allow-pending-quiz-review]
 
 Source root precedence:
   --video-root PATH  > BMH_COURSE_VIDEO_ROOT > ${DEFAULT_VIDEO_SOURCE_ROOT}
-  --quiz-root PATH   > BMH_COURSE_QUIZ_ROOT  > ${DEFAULT_QUIZ_SOURCE_ROOT}`;
+  --quiz-root PATH   > BMH_COURSE_QUIZ_ROOT  > ${DEFAULT_QUIZ_SOURCE_ROOT}
+  --quiz-bank PATH   > QUIZ_BANK_PATH > ${DEFAULT_QUIZ_BANK_PATH}
+  --out PATH         > ${OUTPUT_PATH}`;
 }
 
 export function resolveManifestSourceRoots(argv = [], env = process.env) {
   const options = new Map();
+  let allowPendingQuizReview = false;
   for (let index = 0; index < argv.length; index += 1) {
     const token = argv[index];
-    const equals = token.match(/^--(video-root|quiz-root)=(.+)$/);
+    if (token === "--allow-pending-quiz-review") {
+      allowPendingQuizReview = true;
+      continue;
+    }
+    const equals = token.match(/^--(video-root|quiz-root|quiz-bank|out)=(.+)$/);
     if (equals) {
       options.set(equals[1], equals[2]);
       continue;
     }
-    const split = token.match(/^--(video-root|quiz-root)$/);
+    const split = token.match(/^--(video-root|quiz-root|quiz-bank|out)$/);
     if (split && argv[index + 1] && !argv[index + 1].startsWith("--")) {
       options.set(split[1], argv[index + 1]);
       index += 1;
@@ -1648,19 +1828,34 @@ export function resolveManifestSourceRoots(argv = [], env = process.env) {
   if (typeof quizSourceRoot !== "string" || quizSourceRoot.trim().length === 0) {
     throw new Error("The configured quiz source root must be nonempty.");
   }
+  const quizBankPath = options.get("quiz-bank")
+    ?? env.QUIZ_BANK_PATH
+    ?? DEFAULT_QUIZ_BANK_PATH;
+  const outputPath = options.get("out");
+  if (quizBankPath !== undefined && (typeof quizBankPath !== "string" || quizBankPath.trim().length === 0)) {
+    throw new Error("The configured question bank path must be nonempty.");
+  }
+  if (outputPath !== undefined && (typeof outputPath !== "string" || outputPath.trim().length === 0)) {
+    throw new Error("The configured output path must be nonempty.");
+  }
   return {
     videoSourceRoot: path.resolve(videoSourceRoot),
     quizSourceRoot: path.resolve(quizSourceRoot),
+    ...(quizBankPath ? { quizBankPath: path.resolve(quizBankPath) } : {}),
+    ...(outputPath ? { outputPath: path.resolve(outputPath) } : {}),
+    allowPendingQuizReview,
   };
 }
 
 async function main() {
-  const manifest = await buildManifest(
-    resolveManifestSourceRoots(process.argv.slice(2), process.env),
+  const { outputPath = OUTPUT_PATH, ...options } = resolveManifestSourceRoots(
+    process.argv.slice(2),
+    process.env,
   );
-  await mkdir(path.dirname(OUTPUT_PATH), { recursive: true });
-  await writeFile(OUTPUT_PATH, `${JSON.stringify(manifest, null, 2).replaceAll("\u2014", "-")}\n`);
-  console.log(`Wrote ${OUTPUT_PATH}`);
+  const manifest = await buildManifest(options);
+  await mkdir(path.dirname(outputPath), { recursive: true });
+  await writeFile(outputPath, `${JSON.stringify(manifest, null, 2).replaceAll("\u2014", "-")}\n`);
+  console.log(`Wrote ${outputPath}`);
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

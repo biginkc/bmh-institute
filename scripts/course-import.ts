@@ -48,10 +48,13 @@ import {
   writeCompletedUploadReceipt,
 } from "../src/lib/course-import/upload-receipt";
 import {
+  BMH_FULL_IMPORT_ID,
   assertBmhImportInvocationScope,
   assertBmhImportSemanticGate,
   validateBmhImportSemanticGate,
 } from "./course-content/import-semantic-gate.mjs";
+
+const CANONICAL_BMH_MANIFEST = resolve("content/course-manifests/bmh-employee-training.v1.json");
 
 async function main() {
   const { command, manifestPath, flags } = parseArgs(process.argv.slice(2));
@@ -62,6 +65,9 @@ async function main() {
     gate: manifestGateForCommand(command, flags.canary, flags.review),
   });
   if (!result.ok) throw new Error(result.errors.map((error) => `- ${error}`).join("\n"));
+  if (result.value.import_id === BMH_FULL_IMPORT_ID && absoluteManifestPath !== CANONICAL_BMH_MANIFEST) {
+    throw new Error("The full BMH import controller accepts only content/course-manifests/bmh-employee-training.v1.json.");
+  }
   if (flags.canary) {
     const canaryErrors = validateCanaryScope(result.value);
     if (canaryErrors.length > 0) throw new Error(canaryErrors.map((error) => `- ${error}`).join("\n"));

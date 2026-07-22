@@ -114,10 +114,17 @@ test("manifest source roots are portable with CLI precedence over environment de
   assert.deepEqual(fromEnvironment, {
     videoSourceRoot: path.resolve("/fixture/environment/videos"),
     quizSourceRoot: path.resolve("/fixture/environment/quizzes"),
+    quizBankPath: path.join(repoRoot, "content/quiz-generation/question-bank.v1.json"),
+    allowPendingQuizReview: false,
   });
 
   const fromCli = resolveManifestSourceRoots(
-    ["--video-root", "/fixture/cli/videos", "--quiz-root=/fixture/cli/quizzes"],
+    [
+      "--video-root",
+      "/fixture/cli/videos",
+      "--quiz-root=/fixture/cli/quizzes",
+      "--quiz-bank=content/quiz-generation/question-bank.v1.json",
+    ],
     {
       BMH_COURSE_VIDEO_ROOT: "/fixture/environment/videos",
       BMH_COURSE_QUIZ_ROOT: "/fixture/environment/quizzes",
@@ -126,7 +133,13 @@ test("manifest source roots are portable with CLI precedence over environment de
   assert.deepEqual(fromCli, {
     videoSourceRoot: path.resolve("/fixture/cli/videos"),
     quizSourceRoot: path.resolve("/fixture/cli/quizzes"),
+    quizBankPath: path.resolve("content/quiz-generation/question-bank.v1.json"),
+    allowPendingQuizReview: false,
   });
+  assert.equal(
+    resolveManifestSourceRoots(["--allow-pending-quiz-review"], {}).allowPendingQuizReview,
+    true,
+  );
   assert.throws(
     () => resolveManifestSourceRoots(["--video-root"], {}),
     /Unknown or incomplete manifest-builder argument/,
@@ -238,9 +251,12 @@ test("the complete manifest builder is deterministic against portable fixture so
       `${video.source_key} did not come from the injected video root`,
     );
   }
+  const canonicalQuestionBank = JSON.parse(
+    await readFile(new URL("../quiz-generation/question-bank.v1.json", import.meta.url), "utf8"),
+  );
   assert.equal(
     first.program.courses[0].modules[0].lessons[1].quiz.questions[0].question_text,
-    "Fixture slot 1 question 1",
+    canonicalQuestionBank.slots[0].questions[0].question_text,
   );
 });
 
@@ -543,7 +559,10 @@ test("a canonically finalized 49-asset workflow cannot forge unrelated release a
   for (const command of ["upload", "apply"]) {
     const result = spawnSync(path.join(repoRoot, "node_modules/.bin/tsx"), ["scripts/course-import.ts", command, releaseManifestPath], { cwd: repoRoot, encoding: "utf8" });
     assert.equal(result.status, 1, `${command} dry-run accepted a noncanonical synthetic release:\n${result.stdout}\n${result.stderr}`);
-    assert.match(result.stderr, /not source-equivalent to the canonical release manifest/);
+    assert.match(
+      result.stderr,
+      /accepts only content\/course-manifests\/bmh-employee-training\.v1\.json|not source-equivalent to the canonical release manifest/,
+    );
   }
 });
 

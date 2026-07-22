@@ -41,13 +41,13 @@
   "manifest_snapshots": [
     {
       "import_id": "bmh-employee-training-v1",
-      "dialpad_reference_count": 10,
-      "dialpad_reference_sha256": "44c244150a9ad90830458f8b1bd111dbf7fd1482d4c9c47e46581cbdb5530061"
+      "dialpad_reference_count": 22,
+      "dialpad_reference_sha256": "72dca36446c4e24e1795b46fbef6ebe0a5bfe49fd84e7d98c28043cd2903e693"
     },
     {
       "import_id": "bmh-employee-training-canary-v1",
-      "dialpad_reference_count": 7,
-      "dialpad_reference_sha256": "afa1cdb42b2df8f941eed10663e82e880b76f910a948d156f12e7f9c43188c38"
+      "dialpad_reference_count": 12,
+      "dialpad_reference_sha256": "44f2db7c93186f730baafca79c07551e5525a6cf8105af3b7cbc434d02326850"
     }
   ],
   "audited_assets": [
@@ -82,14 +82,14 @@
     {
       "source_key": "guide-slot-03",
       "local_path": "output/pdf/slot-03-learner-guide.pdf",
-      "checksum_sha256": "e084f864dc2a2d7fa443b8969881d9b5e521f47de83aceea1575a7bc9d63ffc0",
+      "checksum_sha256": "c33c1c01c64177f3906432556998ab05b17a606db6d0c3d024bbc6e6c6d97138",
       "dialpad_reference_count": 0,
       "audit_result": "no DialPad reference; guide directs workflow changes to the current written SOP and manager"
     },
     {
       "source_key": "guide-slot-18",
       "local_path": "output/pdf/slot-18-learner-guide.pdf",
-      "checksum_sha256": "ac1afbe4f1284639de206ff2c2075e46d6e3b13e3b9b44a77e5bc173236de5ae",
+      "checksum_sha256": "5ebd759c88c7a05f8e37c00a0fe8d97299d1eff205136813492a7d88381ae4d9",
       "dialpad_reference_count": 0,
       "audit_result": "no DialPad reference; guide directs workflow changes to the current written SOP and manager"
     }

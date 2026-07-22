@@ -1,0 +1,358 @@
+{
+  "schema_version": "bmh.quiz-distractor-review.v1",
+  "slot": 1,
+  "checked_by": "claude-fable-5 (adversarial checker)",
+  "verdicts": [
+    {
+      "record_id": "slot-module-01-001",
+      "distractors_sha256": "75510db278eddee631c1578b9c11dfb3b3cff60bb376f905f222d9d9bae42507",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-01-002",
+      "distractors_sha256": "4858d43a804912179bd5455d8e815b80ccaeecc608b3a5645261fb38672fc762",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-01-003",
+      "distractors_sha256": "f9c4f9b7c4c97012b7b4912a98d13374ff756cd86d7de9eeccab3ceab5f78068",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-01-004",
+      "distractors_sha256": "641a40b0e4ece62ecebb8db380e313bcd10ad11fef69b79e060c327b6960f8d2",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-01-005",
+      "distractors_sha256": "c6743466d835ad380cbcd1d45d997234cefed4ba6485f1f2fe339818ae0594a0",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-01-006",
+      "distractors_sha256": "a5c5b0815bed90e0abfc9fb59d0b7ab093da16f9ecc291023337c8a215fdf1c9",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-01-007",
+      "distractors_sha256": "b2d6824cd55336d5975bc31dc6785ee8a6b9248b1070c921a991a57072cd8945",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-01-008",
+      "distractors_sha256": "5d6905ab14a1ba6469abc0809fe838493e4172faa46ab84cbcc6e7ffb840ded0",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-01-009",
+      "distractors_sha256": "b20b3aca8eaa4d75bd1e879840ab058d9ae145484596d06a534a1bd6161ebd4f",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-01-010",
+      "distractors_sha256": "abcd6ab08a1157460fe468e05a6cc03018dbc0c75216d1cde23849179f633f0c",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-01-011",
+      "distractors_sha256": "18619e820f14a00cf5d946ee85fd54f7672c8e43113ad44100354342d7f24a43",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-01-012",
+      "distractors_sha256": "a9243043ec637e8b1620e3429fbe7f0e0f2b267cb4416c1d8d5c5fb7d01512ec",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-01-013",
+      "distractors_sha256": "07520b9d60828bb594bb6caaea8194abbf090b9697c876e169cf117ab4290b43",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-01-014",
+      "distractors_sha256": "b57d0ff6c57305d8fdbff059077de2c45dad79c849454014e6a9d9600d50b9d2",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-01-015",
+      "distractors_sha256": "ae739fb909d640a55d9b15c12f8a0a5695830fb5967448048de748abee511f9e",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-01-016",
+      "distractors_sha256": "b8aa576f237f01096d3c973f9caf381243697f5e658f21b56e516dcd409d9adb",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-01-017",
+      "distractors_sha256": "36a636764fbcc88c4dee608a5b5424d4ffeebac42ff64fd6623914b2523f1070",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-01-018",
+      "distractors_sha256": "c31a7a119ac042fceb1120bc14711b8f7f5eac6e539c9983865ffc9680679b5b",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-01-019",
+      "distractors_sha256": "0706a2040fc0490a4d924d86db4ffe99626da074aba73c215f8c08504fa5dcbc",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-01-020",
+      "distractors_sha256": "b4acd27fff76aebfa160accfc63f7a6b5e43651eb9e82e6cb3f19e3dd1c39727",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-01-021",
+      "distractors_sha256": "1fef06eb7ad35e036c5edceb3ebda7af167f00c59fa325e994eab3dc7f322fc5",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-01-022",
+      "distractors_sha256": "fb7ca5b2b440c00c20449f1e373e9b2f376aec0f0ec6950b969921b96ad1bd87",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-01-023",
+      "distractors_sha256": "d6e354271c6f44c0a68d6e800dcf84c4c06f16d32d766b7cf977f1fb8d6961b6",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-01-024",
+      "distractors_sha256": "b1581265fdce171742ab6d4c0cf4a94e5f6ae0851f56dee6a249038ed1a21087",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-01-025",
+      "distractors_sha256": "8be7fca57c169f552a82f772dc1ba74374041c3e84834616e5da624bf97fce1e",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-01-026",
+      "distractors_sha256": "0bb36b20089f8f8dcba68555ff3c9c67bedf6f31e797b22fb151d1400a72b7d4",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-01-027",
+      "distractors_sha256": "58b2ff25668e11c02d9dea04bc565bc2701f31c13e29587149ae45cc1de34f5c",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-01-028",
+      "distractors_sha256": "6c5b58460311eb456919a8f7c8163ca66978a8df8704e8cb52f60c22adce81e1",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-01-029",
+      "distractors_sha256": "2871e4790692b0395d498c33bd57dcf354dc0f986150a85cae43afb64969a520",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-01-030",
+      "distractors_sha256": "5e2d1bacd308508245530c2588a7a69897a955c78d010b78c85eec7bb57bc1d9",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-01-031",
+      "distractors_sha256": "256adc975a9533205bc4686010f994badf4446b726904c9387962f69fed2b330",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-01-032",
+      "distractors_sha256": "fa7bab39c00160c0bae45ef749f11b5b559744536ed8ac0c12af40cbaca2bc0a",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-01-033",
+      "distractors_sha256": "2dc9aef854eb9cfae68f191163c8e5099b02b31e7765a55f05eeb53cf2e1a09a",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-01-034",
+      "distractors_sha256": "e5c2f30607b8d356ad871f50c63d04863c21b22fedba73a51ed73c61268dad81",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-01-035",
+      "distractors_sha256": "12dbf9797a8e48b932122f6883ba92db3520d407e513b8963797fcd01b661868",
+      "verdict": "needs_human_review",
+      "issues": [
+        {
+          "code": "valence_giveaway",
+          "distractor_index": 0,
+          "note": "Original round-2 defects (stem-contradiction on the closing-date distractor, incoherent repair-estimate distractor) ARE resolved — both were removed. But the replacement set introduces a set-level valence giveaway: 'Establishing authority and directing the seller toward a cash offer quickly' is a pressure/rep-centered tactic, and all three distractors sit on that same pressure valence while the key is the only service/seller-centered option. Module 1 is titled Welcome and Mindset with the explicit theme 'put service before pressure'; a learner who knows only the module theme — not this card — eliminates all three and picks the key."
+        },
+        {
+          "code": "valence_giveaway",
+          "distractor_index": 1,
+          "note": "'Creating urgency and securing commitment to the first solution presented' is a forced-yes/pressure tactic explicitly repudiated by the course (aligned decision not a forced yes; consulting means options, not pushing commitment). Same opposite-valence side as index 0; contributes to the all-distractors-opposite-valence pattern that makes the key derivable without lesson knowledge."
+        },
+        {
+          "code": "stem_contradiction",
+          "distractor_index": 2,
+          "note": "'Demonstrating expertise and completing the conversation without follow-up questions' is in logical tension with the stem premise: leading with the seller's problem describes a question-driven discovery approach, so an outcome of completing the conversation WITHOUT follow-up questions reads incoherent under the stem's own terms — eliminable by stem logic alone. This is the third round in which a distractor in this entry is stem-eliminable (same defect class as both prior rejections). It also shares the pressure/performance valence of indexes 0-1."
+        },
+        {
+          "code": "ambiguous_correctness",
+          "distractor_index": null,
+          "note": "Checker escalation after three failed authoring rounds: the module theme (service before pressure) makes the seller-centered key derivable from theme alone whenever distractors are wrong-valenced, and stem-compatible same-valence wrong answers keep collapsing into partial truths. Needs human authoring or a different question form."
+        }
+      ]
+    },
+    {
+      "record_id": "slot-module-01-036",
+      "distractors_sha256": "a8f47801084d011b74c34f9ee2d43b2d25665f46743a078a6768c080bd69a22d",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-01-037",
+      "distractors_sha256": "989a0924af8958e0b2f46780c3201ea9f3e82f81e0d812342c33e64e2cd59b6f",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-01-038",
+      "distractors_sha256": "051879150e4893b3a4fc055ea7dbbde5719f41b9727b66106eb10b32affb0c8d",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-01-039",
+      "distractors_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-01-040",
+      "distractors_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-01-041",
+      "distractors_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-01-042",
+      "distractors_sha256": "e3990caa1ef0d6d262d618f6bd5576e51f36f1a1a05d8b8bf9b7833cdacdcac9",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-01-043",
+      "distractors_sha256": "ff8b9451c569e6abeb4ad4b8067012859416ca7674ce25364616c93431a50a94",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-01-044",
+      "distractors_sha256": "0366eb928c267a8a6c744785ebd670aecc862663cbc1623f039c853293f7ecc6",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-01-045",
+      "distractors_sha256": "f9f4c68c9ae6d84a2c783c15fed437bdeb97e30dec5eb9b331a7434388a95c43",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-01-046",
+      "distractors_sha256": "fe002758ded95e3aaf0b64ed90b3d68fd448393c582dd1d4a589a10348c89d21",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-01-047",
+      "distractors_sha256": "02658494c60e5f01c2b70ac654a3726436bbc379a61494390288ef4ed053ee9f",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-01-048",
+      "distractors_sha256": "dd63d2743758e5206ce053e6293a4c7b7ca34a2c573574ce699c5f24dc9985ba",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-01-049",
+      "distractors_sha256": "f9459ab1d41937abfeb625c130f7c5b56fb930a48c250802b7e02805e308981f",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-01-050",
+      "distractors_sha256": "c386731d0334cd2ada785f6f7bf3dce8ba707da0e478c033bc521c28347d40e1",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-01-051",
+      "distractors_sha256": "4a0816d32240625e989da63dffb0af39239ba2d44ff01eef8ed5f87844056755",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-01-052",
+      "distractors_sha256": "4969f808f8e794232a20e5c12f0d43b2efcd97a56f082dc88e8d3dc5bd3ed3f4",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-01-053",
+      "distractors_sha256": "bd534c102356643e6afc982047b304c883584000514b01da953f860b39c692c6",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-01-054",
+      "distractors_sha256": "e76c1e19c5ec7423a419223dc4d0340a67843f534bae45d749351278979b67c4",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "record_id": "slot-module-01-055",
+      "distractors_sha256": "9b1b31dcdc52b2c46fa744808098ae86e62177c626f1e3dc1584d3849032cd23",
+      "verdict": "pass",
+      "issues": []
+    }
+  ]
+}
