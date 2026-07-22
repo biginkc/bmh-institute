@@ -15,9 +15,9 @@ import {
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   buildLearnerLessonParts,
-  selectLearnerPart,
   type LearnerLessonPart,
 } from "@/lib/content-blocks/learner-parts";
+import { prepareLearnerPart } from "@/lib/content-blocks/prepare-learner-part";
 import { enrichBlocksWithSignedUrls } from "@/lib/content-blocks/sign-urls";
 import type {
   LearnerContentTile,
@@ -29,8 +29,10 @@ import { getAppUrl } from "@/lib/app-url";
 import { mintRolePlayEmbedToken } from "@/lib/role-plays/embed-token";
 import { isConfiguredRolePlayScenarioId } from "@/lib/role-plays/scenario-id";
 import { createClient } from "@/lib/supabase/server";
+import { getRequestAuthContext } from "@/lib/auth/request-context";
+import { withLessonTiming } from "@/lib/performance/lesson-timing";
 
-import { loadLearnerCourseOutline } from "../../load-learner-outline";
+import { loadLearnerLessonOutline } from "../../load-learner-lesson-outline";
 import {
   AssignmentRunner,
   type AssignmentDescriptor,
@@ -46,25 +48,40 @@ export default async function LessonPage({
   params: Promise<{ lessonId: string }>;
   searchParams: Promise<{ part?: string | string[] }>;
 }) {
+  return withLessonTiming("lesson-server-render-total", () =>
+    renderLessonPage({ params, searchParams }),
+  );
+}
+
+async function renderLessonPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ lessonId: string }>;
+  searchParams: Promise<{ part?: string | string[] }>;
+}) {
   const [{ lessonId }, query] = await Promise.all([params, searchParams]);
-  const supabase = await createClient();
-  const [{ data: lesson, error: lessonError }, { data: auth }] = await Promise.all([
-    supabase
-      .from("lessons")
-      .select("id, lesson_type, module_id, modules(course_id)")
-      .eq("id", lessonId)
-      .maybeSingle(),
-    supabase.auth.getUser(),
-  ]);
-  if (lessonError || !lesson || !auth.user) notFound();
+  const { supabase, user, profile } = await getRequestAuthContext();
+  if (!user) notFound();
+  const { data: lesson, error: lessonError } = await withLessonTiming(
+    "lesson-membership",
+    async () =>
+      supabase
+        .from("lessons")
+        .select("id, lesson_type, module_id, modules(course_id)")
+        .eq("id", lessonId)
+        .maybeSingle(),
+  );
+  if (lessonError || !lesson) notFound();
   const moduleRow = firstRow(lesson.modules);
   const courseId = moduleRow?.course_id;
   if (!courseId) notFound();
 
-  const result = await loadLearnerCourseOutline({
+  const result = await loadLearnerLessonOutline({
     supabase,
     courseId,
-    userId: auth.user.id,
+    lessonId,
+    userId: user.id,
   });
   if (!result.ok) {
     return <LessonError error={result.error} courseId={courseId} />;
@@ -88,7 +105,7 @@ export default async function LessonPage({
         courseId={courseId}
         tile={tile}
         total={outline.totalCount}
-        userId={auth.user.id}
+        userId={user.id}
       />
     );
   }
@@ -97,7 +114,7 @@ export default async function LessonPage({
     return (
       <LessonShell courseId={courseId} tile={tile} total={outline.totalCount}>
         <div className="mx-auto max-w-3xl">
-          <AssignmentLessonBody assignmentId={tile.assignmentId} lessonId={tile.id} userId={auth.user.id} />
+          <AssignmentLessonBody assignmentId={tile.assignmentId} lessonId={tile.id} userId={user.id} />
         </div>
       </LessonShell>
     );
@@ -108,7 +125,8 @@ export default async function LessonPage({
       tile={tile}
       courseId={courseId}
       total={outline.totalCount}
-      userId={auth.user.id}
+      userId={user.id}
+      learnerName={profile?.full_name || user.email || "Learner"}
       requestedPart={firstQueryValue(query.part)}
       nextTile={outline.tiles[tile.lessonNumber] ?? null}
     />
@@ -153,6 +171,7 @@ async function ContentCompositeLesson({
   courseId,
   total,
   userId,
+  learnerName,
   requestedPart,
   nextTile,
 }: {
@@ -160,24 +179,30 @@ async function ContentCompositeLesson({
   courseId: string;
   total: number;
   userId: string;
+  learnerName: string;
   requestedPart: string | null;
   nextTile: LearnerCourseTile | null;
 }) {
-  const supabase = await createClient();
-  const enriched = await attachRolePlayEmbeds(
-    await enrichBlocksWithSignedUrls(tile.blocks, { includeGuides: tile.complete }),
-    tile.id,
-    supabase,
-  );
   const parts = buildLearnerLessonParts({
-    blocks: enriched,
+    blocks: tile.blocks,
     completedBlockIds: tile.completedBlockIds,
     quizComplete: tile.quizComplete,
     quizUnlocked: tile.quizUnlocked,
     compositeComplete: tile.complete,
     includeQuiz: tile.quizId !== null && tile.pairedQuizLessonId !== null,
   });
-  const selected = selectLearnerPart(parts, requestedPart);
+  const selected = await prepareLearnerPart({
+    parts,
+    requestedPart,
+    signBlocks: (blocks) => withLessonTiming(
+      "selected-part-media-signing",
+      () => enrichBlocksWithSignedUrls(blocks),
+    ),
+    attachEmbeds: (blocks) => withLessonTiming(
+      "selected-role-play-token",
+      () => attachRolePlayEmbeds(blocks, tile.id, { userId, learnerName }),
+    ),
+  });
   if (!selected) return <LessonError error="This lesson has no available content." courseId={courseId} />;
   const hardQuizNavigation = selected.kind === "quiz";
 
@@ -202,7 +227,7 @@ async function ContentCompositeLesson({
           Back to course
         </a>
       ) : (
-        <Link href={`/courses/${courseId}`} className="inline-flex items-center gap-1.5 text-sm font-extrabold text-[var(--action)] underline-offset-4 hover:underline">
+        <Link href={`/courses/${courseId}`} prefetch={false} className="inline-flex items-center gap-1.5 text-sm font-extrabold text-[var(--action)] underline-offset-4 hover:underline">
           <ArrowLeft aria-hidden="true" className="size-4" />
           Back to course
         </Link>
@@ -228,7 +253,7 @@ async function ContentCompositeLesson({
                     Next lesson <ArrowRight className="size-4" />
                   </a>
                 ) : (
-                  <Link href={nextTile.href} className="inline-flex items-center gap-2 rounded-[var(--bmh-radius-md)] bg-[var(--action)] px-5 py-3 text-sm font-extrabold text-white no-underline hover:bg-[var(--action-hover)]">
+                  <Link href={nextTile.href} prefetch={false} className="inline-flex items-center gap-2 rounded-[var(--bmh-radius-md)] bg-[var(--action)] px-5 py-3 text-sm font-extrabold text-white no-underline hover:bg-[var(--action-hover)]">
                     Next lesson <ArrowRight className="size-4" />
                   </Link>
                 )
@@ -304,7 +329,7 @@ function LessonShell({
 }) {
   return (
     <main className="w-full flex-1 p-5 font-[family-name:var(--font-body)] md:p-8 lg:p-10" data-bmh-lesson-page>
-      <Link href={`/courses/${courseId}`} className="inline-flex items-center gap-1.5 text-sm font-extrabold text-[var(--action)] hover:underline">
+      <Link href={`/courses/${courseId}`} prefetch={false} className="inline-flex items-center gap-1.5 text-sm font-extrabold text-[var(--action)] hover:underline">
         <ArrowLeft className="size-4" /> Back to course
       </Link>
       <header className="mx-auto mb-7 mt-5 max-w-3xl border-b border-[var(--border-hairline)] pb-5">
@@ -358,19 +383,15 @@ async function AssignmentLessonBody({ assignmentId, lessonId, userId }: { assign
   return <AssignmentRunner lessonId={lessonId} assignment={assignment as AssignmentDescriptor} priorSubmissions={(submissions ?? []) as PriorSubmission[]} />;
 }
 
-async function attachRolePlayEmbeds(blocks: ContentBlock[], lessonId: string, supabase: Awaited<ReturnType<typeof createClient>>): Promise<ContentBlock[]> {
+async function attachRolePlayEmbeds(blocks: ContentBlock[], lessonId: string, identity: { userId: string; learnerName: string }): Promise<ContentBlock[]> {
   if (!blocks.some((block) => block.block_type === "role_play")) return blocks;
-  const { data: auth } = await supabase.auth.getUser();
-  if (!auth.user) return blocks;
-  const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", auth.user.id).maybeSingle();
-  const learnerName = typeof profile?.full_name === "string" && profile.full_name.trim() ? profile.full_name : (auth.user.email ?? "Learner");
   const baseUrl = getRolePlayBaseUrl();
   return blocks.map((block) => {
     if (block.block_type !== "role_play") return block;
     const scenarioId = stringOr(block.content.scenario_id, "");
     if (!isConfiguredRolePlayScenarioId(scenarioId) || !baseUrl) return block;
     try {
-      const token = mintRolePlayEmbedToken({ userId: auth.user.id, lessonId, blockId: block.id, learnerName, scenarioId, parentOrigin: new URL(getAppUrl()).origin });
+      const token = mintRolePlayEmbedToken({ userId: identity.userId, lessonId, blockId: block.id, learnerName: identity.learnerName, scenarioId, parentOrigin: new URL(getAppUrl()).origin });
       const iframeUrl = new URL(`/embed/role-play/${encodeURIComponent(scenarioId)}`, baseUrl);
       iframeUrl.searchParams.set("token", token);
       return { ...block, content: { ...block.content, iframe_src: iframeUrl.toString() } };
@@ -383,7 +404,7 @@ async function attachRolePlayEmbeds(blocks: ContentBlock[], lessonId: string, su
 function LockedLesson({ courseId }: { courseId: string }) {
   return (
     <main className="w-full flex-1 p-5 md:p-8 lg:p-10">
-      <Link href={`/courses/${courseId}`} className="inline-flex items-center gap-1.5 text-sm font-extrabold text-[var(--action)] hover:underline"><ArrowLeft className="size-4" /> Back to course</Link>
+      <Link href={`/courses/${courseId}`} prefetch={false} className="inline-flex items-center gap-1.5 text-sm font-extrabold text-[var(--action)] hover:underline"><ArrowLeft className="size-4" /> Back to course</Link>
       <div className="mt-6 max-w-3xl"><BmhCard padding="lg" tint><h1 className="font-[family-name:var(--font-display)] text-2xl font-extrabold text-[var(--ink-900)]">Locked</h1><p className="mt-2 text-sm font-semibold text-[var(--text-muted)]">Finish the earlier lesson first.</p></BmhCard></div>
     </main>
   );
@@ -392,7 +413,7 @@ function LockedLesson({ courseId }: { courseId: string }) {
 function LessonError({ error, courseId }: { error: string; courseId: string }) {
   return (
     <main className="w-full flex-1 p-5 md:p-8 lg:p-10">
-      <Link href={`/courses/${courseId}`} className="text-sm font-extrabold text-[var(--action)] hover:underline">Back to course</Link>
+      <Link href={`/courses/${courseId}`} prefetch={false} className="text-sm font-extrabold text-[var(--action)] hover:underline">Back to course</Link>
       <div className="mt-5 max-w-3xl rounded-[var(--bmh-radius-md)] border border-[var(--danger)] bg-[var(--danger-soft)] px-4 py-3 text-sm font-semibold text-[var(--danger)]">{error} Refresh the page or contact an administrator.</div>
     </main>
   );

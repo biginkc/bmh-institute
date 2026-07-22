@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 import type { Database } from "./types";
+import { logLessonTiming, serverTimingValue } from "@/lib/performance/lesson-timing";
 
 export function isDesignSystemPath(path: string) {
   return path === "/design-system" || path.startsWith("/design-system/");
@@ -20,6 +21,7 @@ export function isPublicPath(path: string) {
 }
 
 export async function updateSession(request: NextRequest) {
+  const authStartedAt = performance.now();
   const path = request.nextUrl.pathname;
 
   // The page owns its production 404. Skip auth here so local QC needs no project
@@ -55,6 +57,12 @@ export async function updateSession(request: NextRequest) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  const authDurationMs = performance.now() - authStartedAt;
+  logLessonTiming("middleware-auth", authDurationMs);
+  supabaseResponse.headers.set(
+    "Server-Timing",
+    serverTimingValue("middleware-auth", authDurationMs),
+  );
 
   if (!user && !isPublicPath(path)) {
     // Preserve the original path + query so the login flow can bounce the
@@ -62,7 +70,12 @@ export async function updateSession(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.searchParams.set("next", path + request.nextUrl.search);
-    return NextResponse.redirect(url);
+    const response = NextResponse.redirect(url);
+    response.headers.set(
+      "Server-Timing",
+      serverTimingValue("middleware-auth", authDurationMs),
+    );
+    return response;
   }
 
   return supabaseResponse;

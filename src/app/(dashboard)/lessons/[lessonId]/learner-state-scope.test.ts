@@ -11,7 +11,7 @@ const source = readFileSync(
   "utf8",
 );
 const loaderSource = readFileSync(
-  resolve(process.cwd(), "src/app/(dashboard)/load-learner-outline.ts"),
+  resolve(process.cwd(), "src/app/(dashboard)/load-learner-lesson-outline.ts"),
   "utf8",
 );
 const runnerSource = readFileSync(
@@ -32,7 +32,8 @@ const lessonSearchSource = readFileSync(
 
 describe("lesson learner-state query scope", () => {
   it("passes the signed-in identity into quiz and assignment bodies", () => {
-    expect(source).toContain("userId={auth.user.id}");
+    expect(source).toContain("userId={user.id}");
+    expect(source).toContain("getRequestAuthContext()");
     expect(source).toContain("userId={userId}");
     expect(source).toContain('tile.kind === "quiz"');
     expect(source).toContain("<StandaloneQuizLesson");

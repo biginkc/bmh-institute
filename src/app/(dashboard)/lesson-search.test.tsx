@@ -18,28 +18,38 @@ const lessons = [
 ];
 
 describe("<LessonSearch />", () => {
-  beforeEach(() => push.mockReset());
+  beforeEach(() => {
+    push.mockReset();
+    vi.stubGlobal("fetch", vi.fn(async (input: string | URL | Request) => {
+      const url = new URL(String(input), "https://institute.test");
+      const query = (url.searchParams.get("q") ?? "").toLocaleLowerCase();
+      return new Response(JSON.stringify({
+        results: lessons.filter((lesson) => lesson.title.toLocaleLowerCase().includes(query)).slice(0, 8),
+      }), { status: 200, headers: { "Content-Type": "application/json" } });
+    }));
+  });
 
   it("filters authorized lesson results and exposes combobox semantics", async () => {
     const user = userEvent.setup();
-    render(<LessonSearch lessons={lessons} />);
+    render(<LessonSearch />);
 
     const search = screen.getByRole("combobox", { name: "Search lessons" });
     await user.type(search, "objection");
 
     expect(search).toHaveAttribute("aria-expanded", "true");
-    expect(screen.getByRole("option", { name: "Objection Architecture" })).toBeVisible();
+    expect(await screen.findByRole("option", { name: "Objection Architecture" })).toBeVisible();
     expect(screen.queryByRole("option", { name: "Opening the Call" })).not.toBeInTheDocument();
   });
 
   it("supports arrow-key selection, Enter navigation, and Escape dismissal", async () => {
     const user = userEvent.setup();
-    render(<LessonSearch lessons={lessons} />);
+    render(<LessonSearch />);
     const search = screen.getByRole("combobox", { name: "Search lessons" });
 
-    await user.type(search, "o");
+    await user.type(search, "tech");
+    await screen.findByRole("option", { name: "Tech Stack" });
     await user.keyboard("{ArrowDown}{ArrowDown}{Enter}");
-    expect(push).toHaveBeenCalledWith("/lessons/lesson-objections");
+    expect(push).toHaveBeenCalledWith("/lessons/lesson-tech?part=quiz");
 
     await user.keyboard("{Escape}");
     expect(search).toHaveAttribute("aria-expanded", "false");
@@ -47,7 +57,7 @@ describe("<LessonSearch />", () => {
 
   it("opens a compact mobile search control", async () => {
     const user = userEvent.setup();
-    render(<LessonSearch lessons={lessons} instanceId="mobile" compact />);
+    render(<LessonSearch instanceId="mobile" compact />);
 
     const trigger = screen.getByRole("button", { name: "Search lessons" });
     expect(trigger).toHaveAttribute("aria-expanded", "false");
@@ -59,8 +69,9 @@ describe("<LessonSearch />", () => {
 
   it("uses the prevalidated composite destination for quiz search results", async () => {
     const user = userEvent.setup();
-    render(<LessonSearch lessons={lessons} />);
+    render(<LessonSearch />);
     await user.type(screen.getByRole("combobox", { name: "Search lessons" }), "tech quiz");
+    await screen.findByRole("option", { name: "Tech quiz" });
     await user.keyboard("{Enter}");
     expect(push).toHaveBeenCalledWith("/lessons/lesson-tech?part=quiz");
   });
@@ -69,13 +80,14 @@ describe("<LessonSearch />", () => {
     const user = userEvent.setup();
     const { container } = render(
       <>
-        <LessonSearch lessons={lessons} instanceId="desktop" />
-        <LessonSearch lessons={lessons} instanceId="mobile-open" />
+        <LessonSearch instanceId="desktop" />
+        <LessonSearch instanceId="mobile-open" />
       </>,
     );
     const searches = screen.getAllByRole("combobox", { name: "Search lessons" });
     await user.type(searches[0], "open");
     await user.type(searches[1], "tech");
+    await screen.findByRole("option", { name: "Tech Stack" });
 
     const ids = Array.from(container.querySelectorAll("[id]"), (node) => node.id);
     expect(new Set(ids).size).toBe(ids.length);

@@ -69,7 +69,7 @@ export default async function CoursePage({
 
   return (
     <main className="w-full flex-1 p-5 font-[family-name:var(--font-body)] md:p-8 lg:p-10" data-bmh-course-page>
-      <Link href="/dashboard" className="inline-flex items-center gap-1.5 text-sm font-extrabold text-[var(--action)] underline-offset-4 hover:underline">
+      <Link href="/dashboard" prefetch={false} className="inline-flex items-center gap-1.5 text-sm font-extrabold text-[var(--action)] underline-offset-4 hover:underline">
         <ArrowLeft aria-hidden="true" className="size-4" />
         Back to dashboard
       </Link>

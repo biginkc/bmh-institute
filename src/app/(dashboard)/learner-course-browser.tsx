@@ -58,6 +58,7 @@ export function LearnerCourseBrowser({
             </div>
             <Link
               href={outline.resume.href}
+              prefetch={false}
               className="inline-flex min-h-10 items-center justify-center rounded-[var(--bmh-radius-md)] bg-[var(--action)] px-5 text-sm font-extrabold text-white no-underline hover:bg-[var(--action-hover)] focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)]"
             >
               Resume
@@ -172,6 +173,7 @@ function LearnerTile({ tile }: { tile: LearnerCourseTile }) {
       {tile.unlocked ? (
         <Link
           href={tile.href}
+          prefetch={false}
           aria-current={tile.state === "current" ? "step" : undefined}
           className="block rounded-[var(--bmh-radius-lg)] no-underline transition hover:-translate-y-0.5 focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)]"
         >
@@ -193,7 +195,7 @@ function TileMark({ tile }: { tile: LearnerCourseTile }) {
 
 function PageLink({ href, direction }: { href: string; direction: "previous" | "next" }) {
   return (
-    <Link href={href} className="inline-flex items-center gap-1 text-sm font-extrabold text-[var(--action)] no-underline hover:underline">
+    <Link href={href} prefetch={false} className="inline-flex items-center gap-1 text-sm font-extrabold text-[var(--action)] no-underline hover:underline">
       {direction === "previous" ? <ChevronLeft className="size-4" /> : null}
       {direction === "previous" ? "Previous" : "Next"}
       {direction === "next" ? <ChevronRight className="size-4" /> : null}

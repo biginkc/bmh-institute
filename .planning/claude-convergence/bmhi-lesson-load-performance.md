@@ -89,3 +89,15 @@
 - Chrome operator target and `Start Session`: not applicable to this planning-only BMH Institute goal.
 - PR and merge: none. No push, PR, merge, or deployment was performed.
 - Hard gates: none encountered. Broad macOS other-app access was denied because the full artifact was already supplied. The bundled Claude CLI fallback was unusable because its OAuth token was expired, but the desktop surface completed both reviews.
+
+## Authorized execution continuation — 2026-07-22
+
+- User authorization: Jarrad asked Codex to take over from the missing conversation and continue from its last valid state.
+- Execution baseline: `origin/main` at `1e42dd779ac0409fcce811bdcb87452f4cec29a4`.
+- Worktree: `/Users/jarradhenry/Sites/BMH apps/_codex_worktrees/institute-lesson-load-performance`.
+- Branch: `codex/lesson-load-performance`.
+- Plan continuity: the approved plan and both Claude review iterations were cherry-picked unchanged onto the execution baseline.
+- Drift check: current `main` changed after plan approval, but the targeted lesson loader, lesson page, dashboard layout, and lesson search implementation remain materially aligned with the approved diagnosis.
+- Tool preflight: GitHub and Vercel CLIs are available. Claude Desktop retains the approved review task. Claude CLI remains unavailable on PATH. Chrome proof is pending implementation and automated verification.
+- Baseline verification: `npm run verify` started from the clean execution baseline before behavioral changes.
+- Release posture: implementation is authorized; merge and production release remain contingent on the plan's automated tests, manual review, Claude review, performance proof, browser proof, rollback record, and absence of blockers.

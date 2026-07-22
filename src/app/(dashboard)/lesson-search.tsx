@@ -3,7 +3,7 @@
 import { Search } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useId, useMemo, useState } from "react";
+import { useEffect, useId, useState } from "react";
 
 import { SearchBar } from "@/components/bmh-ds/search-bar";
 
@@ -19,13 +19,12 @@ export type LessonSearchItem = {
 };
 
 const MAX_RESULTS = 8;
+const SEARCH_DEBOUNCE_MS = 250;
 
 export function LessonSearch({
-  lessons,
   instanceId,
   compact = false,
 }: {
-  lessons: LessonSearchItem[];
   instanceId?: string;
   compact?: boolean;
 }) {
@@ -38,19 +37,48 @@ export function LessonSearch({
   const [open, setOpen] = useState(false);
   const [compactOpen, setCompactOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
+  const [searchResult, setSearchResult] = useState<{
+    query: string;
+    items: LessonSearchItem[];
+  }>({ query: "", items: [] });
   const normalizedQuery = query.trim().toLocaleLowerCase();
-  const results = useMemo(
-    () =>
-      normalizedQuery
-        ? lessons
-            .filter((lesson) =>
-              lesson.title.toLocaleLowerCase().includes(normalizedQuery),
-            )
-            .slice(0, MAX_RESULTS)
-        : [],
-    [lessons, normalizedQuery],
-  );
-  const expanded = open && normalizedQuery.length > 0;
+  const results =
+    searchResult.query === normalizedQuery ? searchResult.items : [];
+  const expanded = open && normalizedQuery.length >= 2;
+
+  useEffect(() => {
+    if (normalizedQuery.length < 2) {
+      return;
+    }
+    const controller = new AbortController();
+    const timer = window.setTimeout(async () => {
+      try {
+        const response = await fetch(
+          `/api/lesson-search?q=${encodeURIComponent(normalizedQuery)}`,
+          { signal: controller.signal, cache: "no-store" },
+        );
+        if (!response.ok) {
+          setSearchResult({ query: normalizedQuery, items: [] });
+          return;
+        }
+        const payload = (await response.json()) as { results?: LessonSearchItem[] };
+        setSearchResult({
+          query: normalizedQuery,
+          items: Array.isArray(payload.results)
+            ? payload.results.slice(0, MAX_RESULTS)
+            : [],
+        });
+      } catch (error) {
+        if (!(error instanceof DOMException && error.name === "AbortError")) {
+          setSearchResult({ query: normalizedQuery, items: [] });
+        }
+      }
+    }, SEARCH_DEBOUNCE_MS);
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+    };
+  }, [normalizedQuery]);
 
   function closeSearch() {
     setOpen(false);
@@ -143,6 +171,7 @@ export function LessonSearch({
                 role="option"
                 aria-selected={index === activeIndex}
                 href={lesson.href}
+                prefetch={false}
                 onMouseEnter={() => setActiveIndex(index)}
                 onClick={closeSearch}
                 className="block rounded-[var(--bmh-radius-sm)] px-3 py-2 text-sm font-extrabold text-[var(--ink-900)] no-underline hover:bg-[var(--action-soft)] focus-visible:bg-[var(--action-soft)] focus-visible:outline-2 focus-visible:outline-[var(--action)] aria-selected:bg-[var(--action-soft)]"

@@ -69,6 +69,7 @@ export function ProgressRail({
                 ) : (
                   <Link
                     href={entry.href}
+                    prefetch={false}
                     aria-current={entry.state === "current" ? "step" : undefined}
                     className={linkClassName}
                   >
