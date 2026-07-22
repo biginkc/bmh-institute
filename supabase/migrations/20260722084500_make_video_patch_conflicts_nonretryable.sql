@@ -146,4 +146,3 @@ revoke all on function public.fn_patch_imported_video_content(text, jsonb)
 from public, anon, authenticated;
 grant execute on function public.fn_patch_imported_video_content(text, jsonb)
 to service_role;
-
