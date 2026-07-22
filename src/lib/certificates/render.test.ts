@@ -41,6 +41,15 @@ describe("renderCertificateHtml", () => {
     );
   });
 
+  it("sanitizes stored template HTML before rendering it to a learner", () => {
+    const html = renderCertificateHtml(
+      '<script>alert("template xss")</script><p onclick="alert(1)">{{full_name}}</p><a href="javascript:alert(2)">Unsafe</a>',
+      FIELDS,
+    );
+
+    expect(html).toBe('<p>Jarrad Henry</p><a rel="noopener noreferrer" target="_self">Unsafe</a>');
+  });
+
   it("returns the template unchanged when no merge fields are present", () => {
     const html = renderCertificateHtml(
       "<p>Certificate of achievement</p>",
