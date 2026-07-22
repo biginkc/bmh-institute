@@ -28,7 +28,7 @@ test("the draft contains the locked course structure", async () => {
     videos: 29,
     quizQuestions: 342,
     flashcards: 152,
-    rolePlays: 6,
+    rolePlays: 0,
     posterAssets: 29,
     posterReferences: 29,
     guideAssets: 19,
@@ -41,7 +41,7 @@ test("learner-authored course text removes stale learner seats without rewriting
   const serializedProgram = JSON.stringify(manifest.program);
   assert.doesNotMatch(serializedProgram, STALE_ROLE_BOUND_COURSE_PATTERN);
   assert.match(serializedProgram, /Closer Lab/);
-  assert.match(serializedProgram, /Guarded inbound seller/);
+  assert.doesNotMatch(serializedProgram, /block-role-play-/);
   assert.match(serializedProgram, /acquisition manager/i);
   assert.match(serializedProgram, /transaction team/i);
 
@@ -165,42 +165,16 @@ test("all six reviewed assignments carry usable reviewer rubrics", async () => {
   }
 });
 
-test("all six Closer Lab scenarios have substantive specs and explicit assignment alignment", async () => {
+test("the current release omits deferred Closer Lab interactive scenarios", async () => {
   const manifest = await loadManifest(MANIFEST_URL);
   const modules = manifest.program.courses.flatMap((course) => course.modules);
-  const assignments = new Set(
-    modules
-      .flatMap((module) => module.lessons)
-      .filter((lesson) => lesson.type === "assignment")
-      .map((lesson) => lesson.assignment.source_key),
-  );
   const rolePlays = modules
     .flatMap((module) => module.lessons)
     .flatMap((lesson) => lesson.blocks ?? [])
     .filter((block) => block.type === "role_play");
 
-  assert.equal(rolePlays.length, 6);
-  assert.deepEqual(
-    rolePlays.map((block) => block.content.scenario_spec.assignment_source_key),
-    [
-      "assignment-section-3",
-      "assignment-section-3",
-      "assignment-section-4",
-      "assignment-section-5",
-      "assignment-section-6",
-      "assignment-section-6",
-    ],
-  );
-  for (const block of rolePlays) {
-    const spec = block.content.scenario_spec;
-    assert.ok(assignments.has(spec.assignment_source_key));
-    assert.ok(spec.context.trim());
-    assert.ok(spec.learner_goal.trim());
-    assert.equal(spec.success_criteria.length, 4);
-    assert.ok(spec.fail_conditions.length >= 3);
-    assert.ok(spec.success_criteria.every((criterion) => criterion.trim()));
-    assert.ok(spec.fail_conditions.every((condition) => condition.trim()));
-  }
+  assert.deepEqual(rolePlays, []);
+  assert.doesNotMatch(JSON.stringify(manifest.program), /pending:[a-z0-9-]+/i);
 });
 
 test("the manifest passes structural and semantic content QA", async () => {
@@ -211,7 +185,7 @@ test("the manifest passes structural and semantic content QA", async () => {
   const report = validateManifest(manifest, { stackConfirmation });
 
   assert.deepEqual(report.errors, []);
-  assert.ok(report.publicationBlockers.length > 0);
+  assert.deepEqual(report.publicationBlockers, []);
   assert.equal(
     report.publicationBlockers.filter((blocker) =>
       blocker.includes("pending Jarrad approval"),
@@ -225,11 +199,6 @@ test("the manifest passes structural and semantic content QA", async () => {
     0,
   );
   assert.ok(
-    report.publicationBlockers.some((blocker) =>
-      blocker.includes("Closer Lab scenario"),
-    ),
-  );
-  assert.ok(
     report.publicationBlockers.every(
       (blocker) => !blocker.includes("DialPad references"),
     ),
@@ -241,15 +210,25 @@ test("the manifest passes structural and semantic content QA", async () => {
   );
 });
 
-test("Closer Lab publication blockers are trim and case robust", async () => {
+test("a reintroduced required Closer Lab block remains publication-blocked", async () => {
   const manifest = await loadManifest(MANIFEST_URL);
-  const rolePlay = manifest.program.courses
-    .flatMap((course) => course.modules)
-    .flatMap((courseModule) => courseModule.lessons)
-    .flatMap((lesson) => lesson.blocks ?? [])
-    .find((block) => block.type === "role_play" && block.required === true);
-  assert.ok(rolePlay);
-  rolePlay.content.scenario_id = "  PeNdInG :replacement  ";
+  const rolePlay = {
+    source_key: "block-role-play-deferred-test",
+    type: "role_play",
+    sort_order: 99,
+    required: true,
+    content: {
+      scenario_id: "  PeNdInG :replacement  ",
+      scenario_spec: {
+        assignment_source_key: "assignment-section-3",
+        context: "Deferred test context",
+        learner_goal: "Deferred test goal",
+        success_criteria: ["one", "two", "three", "four"],
+        fail_conditions: ["one", "two", "three"],
+      },
+    },
+  };
+  manifest.program.courses[0].modules[0].lessons[0].blocks.push(rolePlay);
 
   const report = validateManifest(manifest);
   assert.ok(
@@ -360,7 +339,7 @@ test("wrong-track and stale compensation content cannot enter the learner draft"
   assert.doesNotMatch(compensationAndCareer, /\b(?:hourly base|appointment bonus|commission tier|tiered commission)\b/i);
 });
 
-test("KPI assessment content stays diagnostic and carries explicit pending approval", async () => {
+test("KPI assessment content stays diagnostic and carries exact approval", async () => {
   const manifest = await loadManifest(MANIFEST_URL);
   const lessons = manifest.program.courses
     .flatMap((course) => course.modules)
@@ -370,7 +349,7 @@ test("KPI assessment content stays diagnostic and carries explicit pending appro
   const kpiLesson = lessons.find((lesson) => lesson.source_key === "lesson-content-slot-16");
 
   assert.equal(quizzes.length, 19);
-  assert.ok(quizzes.every((lesson) => lesson.quiz.approval_status === "pending_human_review"));
+  assert.ok(quizzes.every((lesson) => lesson.quiz.approval_status === "approved"));
   assert.ok(quizzes.every((lesson) => lesson.quiz.description === "Each attempt draws 10 questions from the curated lesson pool."));
   assert.ok(kpiQuiz);
   assert.doesNotMatch(JSON.stringify(kpiQuiz.questions), STALE_FIXED_KPI_PATTERN);

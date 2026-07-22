@@ -21,7 +21,7 @@ const REQUEST_PATH = resolve(ROOT, "docs/course-production/quiz-content-review-r
 const LEDGER_PATH = resolve(ROOT, "docs/course-production/quiz-approvals.json");
 const REVIEW_PATH = resolve(ROOT, "docs/course-production/quiz-content-review.v1.md");
 
-test("quiz review request binds all 19 exact pools and the changed KPI guide", async () => {
+test("quiz review request and subsequent approval ledger bind all 19 exact pools", async () => {
   const [manifest, request, ledger, requestBytes, review] = await Promise.all([
     readFile(MANIFEST_PATH, "utf8").then(JSON.parse),
     readFile(REQUEST_PATH, "utf8").then(JSON.parse),
@@ -35,17 +35,29 @@ test("quiz review request binds all 19 exact pools and the changed KPI guide", a
     .filter((lesson) => lesson.type === "quiz")
     .map((lesson) => lesson.quiz);
   const assets = new Map(manifest.assets.map((asset) => [asset.source_key, asset]));
+  const reviewManifest = structuredClone(manifest);
+  for (const lesson of reviewManifest.program.courses
+    .flatMap((course) => course.modules)
+    .flatMap((courseModule) => courseModule.lessons)
+    .filter((lesson) => lesson.type === "quiz")) {
+    lesson.quiz.approval_status = "pending_human_review";
+  }
 
   assert.equal(request.status, "pending_human_review");
   assert.equal(request.quiz_pools.length, 19);
   assert.equal(request.scope.question_count, 342);
-  assert.equal(ledger.records.length, 0, "the request must not fabricate a human approval response");
+  assert.equal(ledger.records.length, 19);
+  assert.ok(ledger.records.every((record) =>
+    record.decision === "approved"
+      && record.approved_by === "Jarrad Henry"
+      && record.request_sha256 === ledger.request_sha256
+  ));
   assert.equal(
     createHash("sha256").update(requestBytes).digest("hex"),
     ledger.request_sha256,
   );
   assert.deepEqual(await validateQuizApprovalLedger(ledger), []);
-  assert.equal(review, renderQuizReview(manifest));
+  assert.equal(review, renderQuizReview(reviewManifest));
   assert.equal(request.review_surface.path, "docs/course-production/quiz-content-review.v1.md");
   assert.equal(request.review_surface.sha256, reviewSha256(review));
   assert.equal((review.match(/^- Question key:/gm) ?? []).length, 342);
@@ -61,14 +73,14 @@ test("quiz review request binds all 19 exact pools and the changed KPI guide", a
     assert.equal(binding.question_count, 18);
     assert.equal(binding.content_sha256, quizContentSha256(quiz));
     assert.equal(binding.approval_status, "pending_human_review");
-    assert.equal(quiz.approval_status, "pending_human_review");
+    assert.equal(quiz.approval_status, "approved");
   }
 
   const guide = assets.get("guide-slot-16");
   const guideStat = await stat(resolve(ROOT, guide.local_path));
   assert.equal(request.guide_binding.checksum_sha256, guide.checksum_sha256);
   assert.equal(request.guide_binding.size_bytes, guideStat.size);
-  assert.equal(guide.approval_status, "missing");
+  assert.equal(guide.approval_status, "approved");
 });
 
 test("only an exact checksum-bound response can flip a quiz to approved", async () => {
@@ -82,21 +94,13 @@ test("only an exact checksum-bound response can flip a quiz to approved", async 
     .find((lesson) => lesson.source_key === "lesson-quiz-slot-16")
     .quiz;
 
-  assert.equal(quizApprovalStatus(ledger, quiz), "pending_human_review");
+  assert.equal(quizApprovalStatus(ledger, quiz), "approved");
 
   const approved = structuredClone(ledger);
-  approved.records.push({
-    quiz_source_key: quiz.source_key,
-    content_sha256: quizContentSha256(quiz),
-    request_sha256: approved.request_sha256,
-    decision: "approved",
-    approved_by: "Jarrad Henry",
-    approved_at: "2026-07-18T19:00:00Z",
-  });
   assert.deepEqual(await validateQuizApprovalLedger(approved), []);
   assert.equal(quizApprovalStatus(approved, quiz), "approved");
 
-  approved.records[0].content_sha256 = "0".repeat(64);
+  approved.records.find((record) => record.quiz_source_key === quiz.source_key).content_sha256 = "0".repeat(64);
   assert.match(
     (await validateQuizApprovalLedger(approved)).join("\n"),
     /does not match an exact pool/i,

@@ -3,10 +3,10 @@
   "acceptance": {
     "decision": "accepted",
     "accepted_by": "codex-course-qa-controller",
-    "accepted_at": "2026-07-18T03:59:36Z",
+    "accepted_at": "2026-07-22T02:03:09Z",
     "human_approval": false,
-    "records_sha256": "e974037d1755ca7818bbd810db60b1c00291f831912118037e78c986a0cd2ca0",
-    "evidence": "Course-QA controller acceptance after deterministic rebuild, full semantic tests, and visual review of all 38 pages; not Jarrad human approval."
+    "records_sha256": "fb9ba09eeb42d0c3cf4e800426e817446384f8e2405082923f635110c7d8c42f",
+    "evidence": "Course-QA controller reacceptance after Jarrad's checksum-bound authorization, deterministic rebuild, full semantic tests, and visual review of all 38 pages; not Jarrad human approval."
   },
   "records": [
     {
@@ -102,8 +102,8 @@
     {
       "source_key": "guide-slot-16",
       "local_path": "output/pdf/slot-16-learner-guide.pdf",
-      "checksum_sha256": "52fba6bfab15ec9b91cf5814b0ab2a04d03189387f96574056852fb778aeaae6",
-      "size_bytes": 50633
+      "checksum_sha256": "1ea291e1190ba6f990407cff53160ef90c1acf787e5e66ed6686a2d9984d7c5d",
+      "size_bytes": 50676
     },
     {
       "source_key": "guide-slot-17",

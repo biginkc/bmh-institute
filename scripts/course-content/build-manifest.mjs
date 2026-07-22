@@ -271,7 +271,7 @@ const ASSIGNMENTS = {
   },
   3: {
     title: "Conversation and Handoff Plan",
-    instructions: "Use both Section 3 practice situations. For the guarded inbound seller, draft a permission-based opening and the first five fact-find questions. For the tired-landlord lead, draft five discovery questions and a handoff summary. Include the pipeline stage, known facts, missing facts, motivation, timeline, decision-makers, and next action.",
+    instructions: "Draft a permission-based seller opening and the first five fact-find questions. Then draft five discovery questions and a handoff summary for a seller who is tired of managing repairs and tenant issues. Include the pipeline stage, known facts, missing facts, motivation, timeline, decision-makers, and next action.",
     rubric: [
       ["Conversation flow", "Moves naturally from permission and facts into discovery."],
       ["Discovery", "Questions surface consequences, timing, priorities, and decision process."],
@@ -280,7 +280,7 @@ const ASSIGNMENTS = {
   },
   4: {
     title: "Objection Response Plan",
-    instructions: "Choose three objections from the lesson, including the scam-suspicious pre-foreclosure practice situation. For each one, write a Listen, Acknowledge, Ask, Redirect response and identify when you would stop, escalate, or seek specialist guidance.",
+    instructions: "Choose three objections from the lesson, including a seller who is concerned the contact may be a scam. For each one, write a Listen, Acknowledge, Ask, Redirect response and identify when you would stop, escalate, or seek specialist guidance.",
     rubric: [
       ["Framework", "Each response includes all four steps in the correct order."],
       ["Fit", "Questions and redirects match the concern instead of using a generic rebuttal."],
@@ -289,7 +289,7 @@ const ASSIGNMENTS = {
   },
   5: {
     title: "Follow-Up and Closing Plan",
-    instructions: "Create a 30-day follow-up plan for the probate practice situation. Include purpose, channel, message angle, stop conditions, CRM note, and next action for each touch. Finish with the conditions required for a clean offer conversation without rushing the estate process.",
+    instructions: "Create a 30-day follow-up plan for a seller managing a relative's estate who previously asked for time. Include purpose, channel, message angle, stop conditions, CRM note, and next action for each touch. Finish with the conditions required for a clean offer conversation without rushing the estate process.",
     rubric: [
       ["Cadence", "Touches are intentional, spaced, and tied to a relevant reason."],
       ["Compliance", "The plan honors preferences, opt-outs, and approved channels."],
@@ -298,12 +298,12 @@ const ASSIGNMENTS = {
   },
   6: {
     title: "Mission Control and Growth Capstone",
-    instructions: "Build a one-day operating plan with priorities, checkpoints, metrics, pipeline hygiene, team communication, and end-of-day review. Add a short reflection on one skill to improve, how you will measure it, and how you will use coaching. Finish with two practice debriefs: how you preserved authority and neutrality in the family-dynamics situation, and what you would carry forward from the full-cycle seller conversation.",
+    instructions: "Build a one-day operating plan with priorities, checkpoints, metrics, pipeline hygiene, team communication, and end-of-day review. Add a short reflection on one skill to improve, how you will measure it, and how you will use coaching. Finish with two written case debriefs: how you would preserve authority and neutrality when an adult child opposes a homeowner's decision, and what you would carry forward through a complete seller conversation from opening to handoff.",
     rubric: [
       ["Operating discipline", "The day protects follow-ups, documentation, communication, breaks, and review."],
       ["Measurement", "Chooses metrics that reveal a specific process gap without inventing targets."],
       ["Growth", "Names a concrete practice and feedback loop tied to the current role."],
-      ["Applied practice", "Uses specific evidence from both required Section 6 role plays to identify a safe behavior to repeat or improve."],
+      ["Applied judgment", "Explains how the written case responses preserve consent, decision authority, neutrality, and an accurate handoff."],
     ],
   },
 };
@@ -374,6 +374,12 @@ const ROLE_PLAYS = {
     },
   ],
 };
+
+// Interactive Closer Lab scenarios are intentionally deferred until their
+// personas, voices, and scoring behavior receive a separate fine-tuning pass.
+// Keep the authored drafts available for that later release, but do not put
+// them in the current learner manifest.
+const INCLUDE_CLOSER_LAB_ROLE_PLAYS = false;
 
 export const QUIZ_SOURCE_FILE_NAMES = [
   "01 - Welcome & Mindset - quiz.json",
@@ -1212,7 +1218,10 @@ export async function buildGuideAsset(lesson, guideApprovalLedger, repoRoot = RE
 
 export function quizContentSha256({ source_key, title, questions }) {
   return createHash("sha256")
-    .update(JSON.stringify({ source_key, title, questions }))
+    // The persisted manifest intentionally normalizes em dashes to ASCII.
+    // Bind approval to those exact learner-visible bytes even while the source
+    // quiz JSON still contains typographic em dashes.
+    .update(JSON.stringify({ source_key, title, questions }).replaceAll("\u2014", "-"))
     .digest("hex");
 }
 
@@ -1466,7 +1475,7 @@ export async function buildManifest({
         front: question.question_text,
         back: question.options.filter((option) => option.is_correct).map((option) => option.option_text).join("; "),
       }));
-      const rolePlayBlocks = (ROLE_PLAYS[topic.slot] ?? []).map((scenario, index) => ({
+      const rolePlayBlocks = (INCLUDE_CLOSER_LAB_ROLE_PLAYS ? ROLE_PLAYS[topic.slot] ?? [] : []).map((scenario, index) => ({
         source_key: `block-role-play-${scenario.key}`,
         type: "role_play",
         sort_order: videoBlocks.length + 5 + index,

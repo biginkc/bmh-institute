@@ -1236,7 +1236,7 @@
       "mime_type": "application/pdf",
       "checksum_sha256": "1ea291e1190ba6f990407cff53160ef90c1acf787e5e66ed6686a2d9984d7c5d",
       "size_bytes": 50676,
-      "approval_status": "missing"
+      "approval_status": "approved"
     },
     {
       "source_key": "guide-slot-17",
@@ -1416,7 +1416,7 @@
                   "source_key": "quiz-slot-01",
                   "title": "Welcome and Mindset Checkpoint",
                   "description": "Each attempt draws 10 questions from the curated lesson pool.",
-                  "approval_status": "pending_human_review",
+                  "approval_status": "approved",
                   "passing_score": 80,
                   "randomize_questions": true,
                   "randomize_answers": true,
@@ -2108,7 +2108,7 @@
                   "source_key": "quiz-slot-02",
                   "title": "Real Estate Terms Glossary Checkpoint",
                   "description": "Each attempt draws 10 questions from the curated lesson pool.",
-                  "approval_status": "pending_human_review",
+                  "approval_status": "approved",
                   "passing_score": 80,
                   "randomize_questions": true,
                   "randomize_answers": true,
@@ -2788,7 +2788,7 @@
                   "source_key": "quiz-slot-03",
                   "title": "Tech Stack and Systems Checkpoint",
                   "description": "Each attempt draws 10 questions from the curated lesson pool.",
-                  "approval_status": "pending_human_review",
+                  "approval_status": "approved",
                   "passing_score": 80,
                   "randomize_questions": true,
                   "randomize_answers": true,
@@ -3582,7 +3582,7 @@
                   "source_key": "quiz-slot-04",
                   "title": "Humanizing the Lead Checkpoint",
                   "description": "Each attempt draws 10 questions from the curated lesson pool.",
-                  "approval_status": "pending_human_review",
+                  "approval_status": "approved",
                   "passing_score": 80,
                   "randomize_questions": true,
                   "randomize_answers": true,
@@ -4348,7 +4348,7 @@
                   "source_key": "quiz-slot-05",
                   "title": "The BMH Offer Playbook Checkpoint",
                   "description": "Each attempt draws 10 questions from the curated lesson pool.",
-                  "approval_status": "pending_human_review",
+                  "approval_status": "approved",
                   "passing_score": 80,
                   "randomize_questions": true,
                   "randomize_answers": true,
@@ -5116,7 +5116,7 @@
                   "source_key": "quiz-slot-06",
                   "title": "Sales Pipeline and Stage Ownership Checkpoint",
                   "description": "Each attempt draws 10 questions from the curated lesson pool.",
-                  "approval_status": "pending_human_review",
+                  "approval_status": "approved",
                   "passing_score": 80,
                   "randomize_questions": true,
                   "randomize_answers": true,
@@ -5843,33 +5843,6 @@
                         }
                       ]
                     }
-                  },
-                  {
-                    "source_key": "block-role-play-guarded-inbound",
-                    "type": "role_play",
-                    "sort_order": 7,
-                    "required": true,
-                    "content": {
-                      "scenario_id": "pending:guarded-inbound",
-                      "title": "Guarded inbound seller",
-                      "height_px": 760,
-                      "scenario_spec": {
-                        "assignment_source_key": "assignment-section-3",
-                        "context": "A warm inbound homeowner is willing to talk but gives short answers and wants to know why BMH Group needs personal details.",
-                        "learner_goal": "Earn permission, complete the opening frame, and gather core facts without rushing into a pitch.",
-                        "success_criteria": [
-                          "States purpose clearly",
-                          "Acknowledges the privacy concern",
-                          "Asks one question at a time",
-                          "Secures a specific next step"
-                        ],
-                        "fail_conditions": [
-                          "Pressures the seller",
-                          "Invents a reason for collecting information",
-                          "Skips consent or the fact find"
-                        ]
-                      }
-                    }
                   }
                 ]
               },
@@ -5885,7 +5858,7 @@
                   "source_key": "quiz-slot-07",
                   "title": "Opening the Call Checkpoint",
                   "description": "Each attempt draws 10 questions from the curated lesson pool.",
-                  "approval_status": "pending_human_review",
+                  "approval_status": "approved",
                   "passing_score": 80,
                   "randomize_questions": true,
                   "randomize_answers": true,
@@ -6588,33 +6561,6 @@
                         }
                       ]
                     }
-                  },
-                  {
-                    "source_key": "block-role-play-tired-landlord",
-                    "type": "role_play",
-                    "sort_order": 7,
-                    "required": true,
-                    "content": {
-                      "scenario_id": "pending:tired-landlord",
-                      "title": "Tired landlord discovery and handoff",
-                      "height_px": 760,
-                      "scenario_spec": {
-                        "assignment_source_key": "assignment-section-3",
-                        "context": "A landlord is exhausted by repairs and tenant problems but has not decided when to sell.",
-                        "learner_goal": "Discover the real impact, clarify timing and decision-makers, then frame a clean handoff.",
-                        "success_criteria": [
-                          "Separates facts from motivation",
-                          "Explores consequences",
-                          "Confirms timing and authority",
-                          "Summarizes an accurate handoff"
-                        ],
-                        "fail_conditions": [
-                          "Assumes urgency",
-                          "Promises a price",
-                          "Transfers the seller with missing context"
-                        ]
-                      }
-                    }
                   }
                 ]
               },
@@ -6630,7 +6576,7 @@
                   "source_key": "quiz-slot-08",
                   "title": "Discovery and Handoff Checkpoint",
                   "description": "Each attempt draws 10 questions from the curated lesson pool.",
-                  "approval_status": "pending_human_review",
+                  "approval_status": "approved",
                   "passing_score": 80,
                   "randomize_questions": true,
                   "randomize_answers": true,
@@ -7265,7 +7211,7 @@
                 "assignment": {
                   "source_key": "assignment-section-3",
                   "title": "Conversation and Handoff Plan",
-                  "instructions": "Use both Section 3 practice situations. For the guarded inbound seller, draft a permission-based opening and the first five fact-find questions. For the tired-landlord lead, draft five discovery questions and a handoff summary. Include the pipeline stage, known facts, missing facts, motivation, timeline, decision-makers, and next action.",
+                  "instructions": "Draft a permission-based seller opening and the first five fact-find questions. Then draft five discovery questions and a handoff summary for a seller who is tired of managing repairs and tenant issues. Include the pipeline stage, known facts, missing facts, motivation, timeline, decision-makers, and next action.",
                   "submission_type": "text",
                   "requires_review": true,
                   "rubric": [
@@ -7402,7 +7348,7 @@
                   "source_key": "quiz-slot-09",
                   "title": "Objection Architecture Checkpoint",
                   "description": "Each attempt draws 10 questions from the curated lesson pool.",
-                  "approval_status": "pending_human_review",
+                  "approval_status": "approved",
                   "passing_score": 80,
                   "randomize_questions": true,
                   "randomize_answers": true,
@@ -8106,7 +8052,7 @@
                   "source_key": "quiz-slot-10",
                   "title": "Objection Scripts Playbook Checkpoint",
                   "description": "Each attempt draws 10 questions from the curated lesson pool.",
-                  "approval_status": "pending_human_review",
+                  "approval_status": "approved",
                   "passing_score": 80,
                   "randomize_questions": true,
                   "randomize_answers": true,
@@ -8809,33 +8755,6 @@
                         }
                       ]
                     }
-                  },
-                  {
-                    "source_key": "block-role-play-scam-suspicious-preforeclosure",
-                    "type": "role_play",
-                    "sort_order": 7,
-                    "required": true,
-                    "content": {
-                      "scenario_id": "pending:scam-suspicious-preforeclosure",
-                      "title": "Scam-suspicious pre-foreclosure seller",
-                      "height_px": 760,
-                      "scenario_spec": {
-                        "assignment_source_key": "assignment-section-4",
-                        "context": "During an initial seller conversation, a homeowner facing a possible foreclosure believes the contact may be a scam and refuses to share information.",
-                        "learner_goal": "Lower pressure, explain the process, offer verifiable next steps, and respect the seller's boundaries.",
-                        "success_criteria": [
-                          "Acknowledges the concern",
-                          "Uses accurate verification options",
-                          "Avoids legal advice",
-                          "Accepts a pause or no"
-                        ],
-                        "fail_conditions": [
-                          "Uses fear or false urgency",
-                          "Claims legal expertise",
-                          "Asks for sensitive financial credentials"
-                        ]
-                      }
-                    }
                   }
                 ]
               },
@@ -8851,7 +8770,7 @@
                   "source_key": "quiz-slot-11",
                   "title": "Complex Objections Checkpoint",
                   "description": "Each attempt draws 10 questions from the curated lesson pool.",
-                  "approval_status": "pending_human_review",
+                  "approval_status": "approved",
                   "passing_score": 80,
                   "randomize_questions": true,
                   "randomize_answers": true,
@@ -9569,7 +9488,7 @@
                   "source_key": "quiz-slot-12",
                   "title": "Seller FAQ Decoder Checkpoint",
                   "description": "Each attempt draws 10 questions from the curated lesson pool.",
-                  "approval_status": "pending_human_review",
+                  "approval_status": "approved",
                   "passing_score": 80,
                   "randomize_questions": true,
                   "randomize_answers": true,
@@ -10162,7 +10081,7 @@
                 "assignment": {
                   "source_key": "assignment-section-4",
                   "title": "Objection Response Plan",
-                  "instructions": "Choose three objections from the lesson, including the scam-suspicious pre-foreclosure practice situation. For each one, write a Listen, Acknowledge, Ask, Redirect response and identify when you would stop, escalate, or seek specialist guidance.",
+                  "instructions": "Choose three objections from the lesson, including a seller who is concerned the contact may be a scam. For each one, write a Listen, Acknowledge, Ask, Redirect response and identify when you would stop, escalate, or seek specialist guidance.",
                   "submission_type": "text",
                   "requires_review": true,
                   "rubric": [
@@ -10284,33 +10203,6 @@
                         }
                       ]
                     }
-                  },
-                  {
-                    "source_key": "block-role-play-probate-follow-up",
-                    "type": "role_play",
-                    "sort_order": 6,
-                    "required": true,
-                    "content": {
-                      "scenario_id": "pending:probate-follow-up",
-                      "title": "Probate follow-up",
-                      "height_px": 760,
-                      "scenario_spec": {
-                        "assignment_source_key": "assignment-section-5",
-                        "context": "A seller handling a relative's estate asked for time and has not responded to two prior contacts.",
-                        "learner_goal": "Use a respectful follow-up reason, acknowledge grief and process complexity, and create a low-pressure next step.",
-                        "success_criteria": [
-                          "References prior context",
-                          "Uses patient language",
-                          "Checks authority without advising",
-                          "Records a clear next action"
-                        ],
-                        "fail_conditions": [
-                          "Treats silence as consent",
-                          "Rushes the estate process",
-                          "Creates an artificial deadline"
-                        ]
-                      }
-                    }
                   }
                 ]
               },
@@ -10326,7 +10218,7 @@
                   "source_key": "quiz-slot-13",
                   "title": "Follow-Up Cadence Checkpoint",
                   "description": "Each attempt draws 10 questions from the curated lesson pool.",
-                  "approval_status": "pending_human_review",
+                  "approval_status": "approved",
                   "passing_score": 80,
                   "randomize_questions": true,
                   "randomize_answers": true,
@@ -11024,7 +10916,7 @@
                   "source_key": "quiz-slot-14",
                   "title": "Conversation Flow Mastery Checkpoint",
                   "description": "Each attempt draws 10 questions from the curated lesson pool.",
-                  "approval_status": "pending_human_review",
+                  "approval_status": "approved",
                   "passing_score": 80,
                   "randomize_questions": true,
                   "randomize_answers": true,
@@ -11758,7 +11650,7 @@
                   "source_key": "quiz-slot-15",
                   "title": "Closing and Deal Engineering Checkpoint",
                   "description": "Each attempt draws 10 questions from the curated lesson pool.",
-                  "approval_status": "pending_human_review",
+                  "approval_status": "approved",
                   "passing_score": 80,
                   "randomize_questions": true,
                   "randomize_answers": true,
@@ -12375,7 +12267,7 @@
                 "assignment": {
                   "source_key": "assignment-section-5",
                   "title": "Follow-Up and Closing Plan",
-                  "instructions": "Create a 30-day follow-up plan for the probate practice situation. Include purpose, channel, message angle, stop conditions, CRM note, and next action for each touch. Finish with the conditions required for a clean offer conversation without rushing the estate process.",
+                  "instructions": "Create a 30-day follow-up plan for a seller managing a relative's estate who previously asked for time. Include purpose, channel, message angle, stop conditions, CRM note, and next action for each touch. Finish with the conditions required for a clean offer conversation without rushing the estate process.",
                   "submission_type": "text",
                   "requires_review": true,
                   "rubric": [
@@ -12512,7 +12404,7 @@
                   "source_key": "quiz-slot-16",
                   "title": "KPIs and Sales Telemetry Checkpoint",
                   "description": "Each attempt draws 10 questions from the curated lesson pool.",
-                  "approval_status": "pending_human_review",
+                  "approval_status": "approved",
                   "passing_score": 80,
                   "randomize_questions": true,
                   "randomize_answers": true,
@@ -13216,7 +13108,7 @@
                   "source_key": "quiz-slot-17",
                   "title": "Compensation Engine Checkpoint",
                   "description": "Each attempt draws 10 questions from the curated lesson pool.",
-                  "approval_status": "pending_human_review",
+                  "approval_status": "approved",
                   "passing_score": 80,
                   "randomize_questions": true,
                   "randomize_answers": true,
@@ -13913,61 +13805,6 @@
                         }
                       ]
                     }
-                  },
-                  {
-                    "source_key": "block-role-play-family-dynamics-dayton",
-                    "type": "role_play",
-                    "sort_order": 7,
-                    "required": true,
-                    "content": {
-                      "scenario_id": "pending:family-dynamics-dayton",
-                      "title": "Family dynamics seller",
-                      "height_px": 760,
-                      "scenario_spec": {
-                        "assignment_source_key": "assignment-section-6",
-                        "context": "An older Dayton homeowner wants to sell but an adult child strongly opposes the decision.",
-                        "learner_goal": "Identify who can decide, hear both concerns, preserve the homeowner's agency, and seek guidance when needed.",
-                        "success_criteria": [
-                          "Confirms decision authority",
-                          "Does not take sides",
-                          "Surfaces each person's concern",
-                          "Sets a safe next step"
-                        ],
-                        "fail_conditions": [
-                          "Manipulates family conflict",
-                          "Ignores the homeowner's stated wishes",
-                          "Provides legal advice"
-                        ]
-                      }
-                    }
-                  },
-                  {
-                    "source_key": "block-role-play-full-cycle-capstone",
-                    "type": "role_play",
-                    "sort_order": 8,
-                    "required": true,
-                    "content": {
-                      "scenario_id": "pending:full-cycle-capstone",
-                      "title": "Full-cycle seller conversation",
-                      "height_px": 760,
-                      "scenario_spec": {
-                        "assignment_source_key": "assignment-section-6",
-                        "context": "A seller moves from a first conversation through qualification, discovery, an objection, and readiness for handoff.",
-                        "learner_goal": "Run the full conversation from opening through a documented handoff while maintaining clarity and consent.",
-                        "success_criteria": [
-                          "Uses a clear opening",
-                          "Completes qualification and discovery",
-                          "Handles the objection with LAAR",
-                          "Produces a complete handoff"
-                        ],
-                        "fail_conditions": [
-                          "Skips required facts",
-                          "Applies pressure",
-                          "Promises price or timing",
-                          "Ends without a documented next action"
-                        ]
-                      }
-                    }
                   }
                 ]
               },
@@ -13983,7 +13820,7 @@
                   "source_key": "quiz-slot-18",
                   "title": "Operator Playbook and Daily Mission Control Checkpoint",
                   "description": "Each attempt draws 10 questions from the curated lesson pool.",
-                  "approval_status": "pending_human_review",
+                  "approval_status": "approved",
                   "passing_score": 80,
                   "randomize_questions": true,
                   "randomize_answers": true,
@@ -14651,7 +14488,7 @@
                   "source_key": "quiz-slot-19",
                   "title": "Career Growth Path Checkpoint",
                   "description": "Each attempt draws 10 questions from the curated lesson pool.",
-                  "approval_status": "pending_human_review",
+                  "approval_status": "approved",
                   "passing_score": 80,
                   "randomize_questions": true,
                   "randomize_answers": true,
@@ -15286,7 +15123,7 @@
                 "assignment": {
                   "source_key": "assignment-section-6",
                   "title": "Mission Control and Growth Capstone",
-                  "instructions": "Build a one-day operating plan with priorities, checkpoints, metrics, pipeline hygiene, team communication, and end-of-day review. Add a short reflection on one skill to improve, how you will measure it, and how you will use coaching. Finish with two practice debriefs: how you preserved authority and neutrality in the family-dynamics situation, and what you would carry forward from the full-cycle seller conversation.",
+                  "instructions": "Build a one-day operating plan with priorities, checkpoints, metrics, pipeline hygiene, team communication, and end-of-day review. Add a short reflection on one skill to improve, how you will measure it, and how you will use coaching. Finish with two written case debriefs: how you would preserve authority and neutrality when an adult child opposes a homeowner's decision, and what you would carry forward through a complete seller conversation from opening to handoff.",
                   "submission_type": "text",
                   "requires_review": true,
                   "rubric": [
@@ -15303,8 +15140,8 @@
                       "description": "Names a concrete practice and feedback loop tied to the current role."
                     },
                     {
-                      "criterion": "Applied practice",
-                      "description": "Uses specific evidence from both required Section 6 role plays to identify a safe behavior to repeat or improve."
+                      "criterion": "Applied judgment",
+                      "description": "Explains how the written case responses preserve consent, decision authority, neutrality, and an accurate handoff."
                     }
                   ]
                 }

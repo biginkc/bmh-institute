@@ -37,6 +37,36 @@ function legacyServiceJwt(ref = CLOSER_LAB_PRODUCTION_PROJECT_REF) {
   ].join(".");
 }
 
+function attachDeferredRolePlayFixture(manifest, catalog) {
+  for (const [index, scenario] of catalog.rolePlays.entries()) {
+    const section = Number.parseInt(scenario.assignmentSourceKey.match(/section-(\d+)$/)?.[1] ?? "", 10);
+    const courseModule = manifest.program.courses[0].modules.find((candidate) =>
+      candidate.source_key === `module-section-${section}`
+    );
+    const lesson = courseModule?.lessons.find((candidate) => candidate.type === "content");
+    assert.ok(lesson, `${scenario.sourceKey} has a deferred fixture lesson`);
+    lesson.blocks.push({
+      source_key: scenario.sourceKey,
+      type: "role_play",
+      sort_order: 900 + index,
+      required: true,
+      content: {
+        scenario_id: scenario.pendingScenarioId,
+        title: scenario.title,
+        height_px: 760,
+        scenario_spec: {
+          assignment_source_key: scenario.assignmentSourceKey,
+          context: scenario.manifestSpec.context,
+          learner_goal: scenario.manifestSpec.learnerGoal,
+          success_criteria: scenario.manifestSpec.successCriteria,
+          fail_conditions: scenario.manifestSpec.failConditions,
+        },
+      },
+    });
+  }
+  return manifest;
+}
+
 async function base() {
   const [manifestBytes, ledgerBytes, catalogBytes, provenanceBytes] = await Promise.all([
     readFile(MANIFEST_URL),
@@ -44,13 +74,15 @@ async function base() {
     readFile(CATALOG_URL),
     readFile(CATALOG_PROVENANCE_URL),
   ]);
+  const catalog = JSON.parse(catalogBytes);
+  const manifest = attachDeferredRolePlayFixture(JSON.parse(manifestBytes), catalog);
   return {
-    manifestBytes,
+    manifestBytes: Buffer.from(JSON.stringify(manifest)),
     ledgerBytes,
     catalogBytes,
-    manifest: JSON.parse(manifestBytes),
+    manifest,
     ledger: JSON.parse(ledgerBytes),
-    catalog: JSON.parse(catalogBytes),
+    catalog,
     provenance: JSON.parse(provenanceBytes),
   };
 }
@@ -147,7 +179,7 @@ function mockResponse(payload, url = RPC_URL, status = 200) {
   };
 }
 
-test("pending mapping scaffold covers the exact six authored scenario and assignment keys", async () => {
+test("deferred mapping scaffold covers the exact six authored scenario and assignment keys", async () => {
   const { manifest, ledger } = await base();
   assert.deepEqual(validateScenarioMappingLedgerShape(manifest, ledger), []);
 });

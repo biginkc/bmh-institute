@@ -147,11 +147,15 @@ describe("validateCourseManifest", () => {
     }
   });
 
-  it("accepts the exact pending-review Tech Stack canary but rejects it as a full release", () => {
+  it("accepts a pending-review Tech Stack canary but rejects it as a full release", () => {
     const canary = JSON.parse(readFileSync(resolve(
       process.cwd(),
       "content/course-manifests/bmh-employee-training-canary.v1.json",
     ), "utf8"));
+    const canaryQuiz = canary.program.courses[0].modules[0].lessons.find(
+      (lesson: { type: string }) => lesson.type === "quiz",
+    ).quiz;
+    canaryQuiz.approval_status = "pending_human_review";
     expect(validateCourseManifest(canary, { gate: "canary" }).ok).toBe(true);
     const release = validateCourseManifest(canary, { gate: "release" });
     expect(release.ok).toBe(false);

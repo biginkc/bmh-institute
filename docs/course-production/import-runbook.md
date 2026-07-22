@@ -107,10 +107,17 @@ transcript checksum, and learner-facing manifests must contain no transcript
 asset or reference. The manifest builder approves a caption only when one
 exact current evidence record matches; otherwise it remains missing.
 
-The six production Closer Lab IDs remain deliberately null in
-`closer-lab-production-mapping.json` until the canonical service-role-only
-production RPC proves the exact 6-role-play, 6-persona, 24-goal, and 24-link
-graph. Set `CLOSER_LAB_PRODUCTION_SUPABASE_URL` and
+The six drafted Closer Lab scenarios are deferred from the current course
+release while their personas, voices, and scoring behavior receive a separate
+fine-tuning pass. The current canonical manifest contains zero role-play blocks,
+so its import and publication do not read, create, finalize, or reconcile any
+Closer Lab scenario. The pending catalog and mapping ledger are retained only
+as future-work artifacts.
+
+When a later release explicitly restores those blocks, the production IDs must
+remain null in `closer-lab-production-mapping.json` until the canonical
+service-role-only production RPC proves the exact 6-role-play, 6-persona,
+24-goal, and 24-link graph. Set `CLOSER_LAB_PRODUCTION_SUPABASE_URL` and
 `CLOSER_LAB_PRODUCTION_SERVICE_ROLE_KEY` from the write-enabled secret runtime,
 and set `BMH_INSTITUTE_SCENARIOS_ELEVENLABS_VOICE_ID` to the exact approved
 production voice used by all six Closer Lab personas. The finalizer sends a
