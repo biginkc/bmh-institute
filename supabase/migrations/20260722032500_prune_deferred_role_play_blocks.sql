@@ -157,4 +157,3 @@ revoke all on function public.fn_prune_deferred_role_play_blocks_v1(text, jsonb,
   from public, anon, authenticated;
 grant execute on function public.fn_prune_deferred_role_play_blocks_v1(text, jsonb, text)
   to service_role;
-

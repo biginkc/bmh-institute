@@ -200,4 +200,3 @@ revoke all on function public.fn_prune_replaced_quiz_pools_v1(text, uuid[], uuid
   from public, anon, authenticated;
 grant execute on function public.fn_prune_replaced_quiz_pools_v1(text, uuid[], uuid[], text)
   to service_role;
-
