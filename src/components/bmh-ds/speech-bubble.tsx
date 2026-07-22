@@ -2,6 +2,7 @@ import React from "react";
 
 export interface SpeechBubbleProps {
   children: React.ReactNode;
+  style?: React.CSSProperties;
   /** @default "white" */
   tone?: "white" | "blue" | "yellow" | "tint";
   /** Tail position. @default "bottom-left" */
@@ -28,60 +29,29 @@ const tones = {
   },
 } as const;
 
-function tailStyles(
-  tail: NonNullable<SpeechBubbleProps["tail"]>,
-  background: string,
-  border: string,
-): { outline: React.CSSProperties; fill: React.CSSProperties } {
+function tailGeometry(tail: NonNullable<SpeechBubbleProps["tail"]>) {
   if (tail === "left") {
     return {
-      outline: {
-        position: "absolute",
-        width: 0,
-        height: 0,
-        top: 20,
-        left: -16,
-        borderTop: "11px solid transparent",
-        borderBottom: "11px solid transparent",
-        borderRight: `16px solid ${border}`,
+      style: {
+        width: 22,
+        height: 32,
+        left: -18,
+        top: "50%",
+        transform: "translateY(-50%)",
       },
-      fill: {
-        position: "absolute",
-        width: 0,
-        height: 0,
-        top: 24,
-        left: -11,
-        borderTop: "8px solid transparent",
-        borderBottom: "8px solid transparent",
-        borderRight: `12px solid ${background}`,
-      },
+      viewBox: "0 0 22 32",
+      points: "21,1 1,16 21,31",
     };
   }
-
-  const outlineSide = tail === "bottom-right" ? { right: 24 } : { left: 24 };
-  const fillSide = tail === "bottom-right" ? { right: 27 } : { left: 27 };
-
   return {
-    outline: {
-      position: "absolute",
-      width: 0,
-      height: 0,
-      ...outlineSide,
-      top: "100%",
-      borderLeft: "11px solid transparent",
-      borderRight: "11px solid transparent",
-      borderTop: `16px solid ${border}`,
+    style: {
+      width: 32,
+      height: 22,
+      top: "calc(100% - 4px)",
+      ...(tail === "bottom-right" ? { right: 24 } : { left: 24 }),
     },
-    fill: {
-      position: "absolute",
-      width: 0,
-      height: 0,
-      ...fillSide,
-      top: "calc(100% - 3px)",
-      borderLeft: "8px solid transparent",
-      borderRight: "8px solid transparent",
-      borderTop: `12px solid ${background}`,
-    },
+    viewBox: "0 0 32 22",
+    points: "1,1 16,21 31,1",
   };
 }
 
@@ -107,31 +77,61 @@ export function SpeechBubble(props: SpeechBubbleProps) {
       : size === "lg"
         ? "var(--fs-title)"
         : "var(--fs-body)";
-  const triangle = tailStyles(tail, colors.background, colors.border);
+  const geometry = tailGeometry(tail);
 
   return (
     <div
+      data-speech-bubble
       style={{
         position: "relative",
         display: "inline-block",
-        maxWidth: 340,
-        background: colors.background,
-        color: colors.color,
-        border: `2.5px solid ${colors.border}`,
-        borderRadius: "var(--bmh-radius-xl)",
-        padding,
-        fontFamily: "var(--font-display)",
-        fontWeight: 600,
-        fontSize,
-        lineHeight: 1.3,
-        boxShadow: "var(--bmh-shadow-sm)",
+        maxWidth: "100%",
+        minWidth: 0,
         ...style,
       }}
       {...rest}
     >
-      {children}
-      <span aria-hidden="true" style={triangle.outline} />
-      <span aria-hidden="true" style={triangle.fill} />
+      <svg
+        data-speech-bubble-tail={tail}
+        aria-hidden="true"
+        viewBox={geometry.viewBox}
+        style={{
+          position: "absolute",
+          zIndex: 0,
+          overflow: "visible",
+          ...geometry.style,
+        }}
+      >
+        <polygon
+          points={geometry.points}
+          fill={colors.background}
+          stroke={colors.border}
+          strokeWidth="2.5"
+          strokeLinejoin="round"
+        />
+      </svg>
+      <div
+        style={{
+          position: "relative",
+          zIndex: 1,
+          boxSizing: "border-box",
+          maxWidth: 340,
+          minWidth: 0,
+          background: colors.background,
+          color: colors.color,
+          border: `2.5px solid ${colors.border}`,
+          borderRadius: "var(--bmh-radius-xl)",
+          padding,
+          fontFamily: "var(--font-display)",
+          fontWeight: 600,
+          fontSize,
+          lineHeight: 1.3,
+          boxShadow: "var(--bmh-shadow-sm)",
+          overflowWrap: "anywhere",
+        }}
+      >
+        {children}
+      </div>
     </div>
   );
 }

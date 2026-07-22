@@ -92,14 +92,17 @@ function revealFor(questionId: string, correct = true) {
     truth: { correct: ["false"], explanation: "Mirroring is selective." },
     multi: { correct: ["multi-a", "multi-b"], explanation: "Both slow the call down." },
   };
+  const reveal = correct ? {
+    questionId,
+    isCorrect: true as const,
+    explanation: map[questionId].explanation,
+  } : {
+    questionId,
+    isCorrect: false as const,
+  };
   return {
     ok: true as const,
-    reveal: {
-      questionId,
-      isCorrect: correct,
-      correctOptionIds: map[questionId].correct,
-      explanation: map[questionId].explanation,
-    },
+    reveal,
   };
 }
 
@@ -183,23 +186,80 @@ describe("<QuizRunner />", () => {
     );
   });
 
-  it("shows wrong-answer coaching, the correct option, and the explanation", async () => {
+  it("keeps a wrong answer private and uses accurate locked-answer coaching", async () => {
     const user = userEvent.setup();
     vi.mocked(answerQuizQuestion).mockResolvedValue(revealFor("single", false));
     renderRunner();
     await start(user);
+    const mountedAnnouncement = document.querySelector(
+      "[data-quiz-feedback-announcement]",
+    );
+    expect(mountedAnnouncement).toBeEmptyDOMElement();
 
     await user.click(screen.getByLabelText("Lead with the offer"));
     await user.click(screen.getByRole("button", { name: "Check answer" }));
 
     expect(await screen.findByText("Incorrect")).toBeVisible();
-    expect(screen.getByText("Correct answer")).toBeVisible();
-    expect(screen.getAllByText("Ask one clear question").length).toBeGreaterThan(1);
-    expect(screen.getByText("Ask before pitching.")).toBeVisible();
+    expect(screen.getByText("Not quite. That answer is locked — keep going.")).toBeVisible();
+    const announcement = document.querySelector("[data-quiz-feedback-announcement]");
+    expect(announcement).toHaveTextContent(
+      "Incorrect. Not quite. That answer is locked — keep going.",
+    );
+    expect(announcement).not.toHaveTextContent("Ask before pitching.");
+    expect(screen.queryByText("Correct answer")).not.toBeInTheDocument();
+    expect(screen.getAllByText("Ask one clear question")).toHaveLength(1);
+    expect(screen.queryByText("Ask before pitching.")).not.toBeInTheDocument();
+    const wrongOption = screen.getByLabelText("Lead with the offer").closest("label") as HTMLElement;
+    expect(wrongOption.style.borderColor).toBe("var(--danger)");
+    expect(wrongOption.style.background).toBe("var(--danger-soft)");
+    const neutralOption = screen.getByLabelText("Ask one clear question").closest("label") as HTMLElement;
+    expect(neutralOption.style.borderColor).toBe("var(--ink-200)");
+    expect(neutralOption.style.background).toBe("var(--paper)");
     expect(screen.getByRole("img", { name: "Andrea" })).toHaveAttribute(
       "src",
       "/brand/mascot/face-worried.png",
     );
+  });
+
+  it("suppresses a correct explanation that duplicates the selected answer", async () => {
+    const user = userEvent.setup();
+    vi.mocked(answerQuizQuestion).mockResolvedValue({
+      ok: true,
+      reveal: {
+        questionId: "single",
+        isCorrect: true,
+        explanation: "Ask one clear question",
+      },
+    });
+    renderRunner();
+    await start(user);
+
+    await user.click(screen.getByLabelText("Ask one clear question"));
+    await user.click(screen.getByRole("button", { name: "Check answer" }));
+
+    expect(await screen.findByText("Correct")).toBeVisible();
+    expect(screen.getAllByText("Ask one clear question")).toHaveLength(1);
+    expect(screen.queryByText("Correct answer")).not.toBeInTheDocument();
+  });
+
+  it("announces fresh feedback but not history replay through Back", async () => {
+    const user = userEvent.setup();
+    renderRunner();
+    await start(user);
+    const mountedAnnouncement = document.querySelector(
+      "[data-quiz-feedback-announcement]",
+    );
+    expect(mountedAnnouncement).toBeEmptyDOMElement();
+    await user.click(screen.getByLabelText("Ask one clear question"));
+    await user.click(screen.getByRole("button", { name: "Check answer" }));
+
+    expect(await screen.findByText("Correct")).toBeVisible();
+    expect(document.querySelectorAll("[data-quiz-feedback-announcement]")).toHaveLength(1);
+    await user.click(screen.getByRole("button", { name: "Next" }));
+    await user.click(screen.getByRole("button", { name: "Back" }));
+    expect(await screen.findByText("Ask before pitching.")).toBeVisible();
+    expect(document.querySelectorAll("[data-quiz-feedback-announcement]")).toHaveLength(1);
+    expect(document.querySelector("[data-quiz-feedback-announcement]")).toBeEmptyDOMElement();
   });
 
   it("resumes at the first unanswered question and replays history without a server call", async () => {
@@ -326,6 +386,13 @@ describe("<QuizRunner />", () => {
     expect(await screen.findByRole("heading", { name: questions[1].question_text })).toBeVisible();
     await user.click(screen.getByRole("button", { name: "Back" }));
     expect(await screen.findByText("Incorrect")).toBeVisible();
+    expect(screen.queryByText("Correct answer")).not.toBeInTheDocument();
+    expect(screen.queryByText("Ask before pitching.")).not.toBeInTheDocument();
+    const wrongOption = screen.getByLabelText("Lead with the offer").closest("label") as HTMLElement;
+    const neutralOption = screen.getByLabelText("Ask one clear question").closest("label") as HTMLElement;
+    expect(wrongOption.style.borderColor).toBe("var(--danger)");
+    expect(neutralOption.style.borderColor).toBe("var(--ink-200)");
+    expect(document.querySelector("[data-quiz-feedback-announcement]")).toBeEmptyDOMElement();
     expect(startQuizAttempt).toHaveBeenCalledTimes(2);
     expect(answerQuizQuestion).toHaveBeenCalledTimes(1);
   });
@@ -492,6 +559,69 @@ describe("<QuizRunner />", () => {
     expect(await screen.findByRole("heading", { name: "Attempts complete" })).toBeVisible();
     expect(screen.queryByRole("button", { name: "Retake quiz" })).toBeNull();
     expect(screen.getByText(/no more attempts are available/i)).toBeVisible();
+  });
+
+  it("renders only numbered correct-response explanations in final review", async () => {
+    const user = userEvent.setup();
+    vi.mocked(startQuizAttempt).mockResolvedValue({
+      ok: true,
+      attemptId: "attempt-review",
+      questions: [attemptQuestions[0]],
+      resumed: false,
+      responses: {},
+      reveals: [],
+    });
+    vi.mocked(finalizeQuizAttempt).mockResolvedValue({
+      ...finalPass,
+      attemptId: "attempt-review",
+      review: [
+        { questionId: "single", questionNumber: 1, explanation: "First useful explanation." },
+        { questionId: "multi", questionNumber: 3, explanation: "Third useful explanation." },
+      ],
+    });
+    renderRunner();
+    await start(user);
+    await user.click(screen.getByLabelText("Ask one clear question"));
+    await user.click(screen.getByRole("button", { name: "Check answer" }));
+    await user.click(await screen.findByRole("button", { name: "Finish" }));
+
+    expect(await screen.findByRole("heading", { name: "Correct-response review" })).toBeVisible();
+    expect(screen.getByText("Question 1 explanation")).toBeVisible();
+    expect(screen.getByText("Question 3 explanation")).toBeVisible();
+    expect(screen.getAllByText("First useful explanation.")).toHaveLength(1);
+    expect(screen.getAllByText("Third useful explanation.")).toHaveLength(1);
+    expect(screen.queryByText("Correct answer")).not.toBeInTheDocument();
+    expect(screen.queryByText("Ask one clear question", { selector: "p" })).not.toBeInTheDocument();
+  });
+
+  it("renders a legacy summary without a fabricated point breakdown", async () => {
+    const user = userEvent.setup();
+    vi.mocked(startQuizAttempt).mockResolvedValue({
+      ok: true,
+      attemptId: "attempt-legacy",
+      questions: [attemptQuestions[0]],
+      resumed: false,
+      responses: {},
+      reveals: [],
+    });
+    vi.mocked(finalizeQuizAttempt).mockResolvedValue({
+      ok: true,
+      score: 50,
+      passed: false,
+      earnedPoints: null,
+      totalPoints: null,
+      attemptId: "attempt-legacy",
+      review: null,
+    });
+    renderRunner();
+    await start(user);
+    await user.click(screen.getByLabelText("Lead with the offer"));
+    await user.click(screen.getByRole("button", { name: "Check answer" }));
+    await user.click(await screen.findByRole("button", { name: "Finish" }));
+
+    expect(await screen.findByText("50% score")).toBeVisible();
+    expect(screen.queryByText(/points$/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Correct-response review" })).not.toBeInTheDocument();
   });
 
   it("keeps the cooldown result state", async () => {

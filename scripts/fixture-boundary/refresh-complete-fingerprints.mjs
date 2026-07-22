@@ -19,7 +19,11 @@ const columnKinds = parseColumnKinds(schemaRaw);
 const snapshot = parseCopyDump(dataRaw, columnKinds);
 
 for (const [table, section] of Object.entries(manifest.fixture_tables)) {
-  const rows = addMigrationDefaultGuards(table, snapshot[`public.${table}`] ?? []);
+  const rows = addMigrationDefaultGuards(
+    table,
+    snapshot[`public.${table}`] ?? [],
+    snapshot,
+  );
   const rowsByIdentity = new Map(
     rows.map((row) => [identityKey(section.identity_fields, row), row]),
   );
@@ -53,7 +57,7 @@ for (const [table, section] of Object.entries(manifest.fixture_tables)) {
 manifest.sources.live_read_only_capture.complete_row_fingerprint_note =
   "Previously guarded fields were verified byte-for-byte against the live-capture hashes. Timestamp baselines came from the rollback snapshot and must still match the locked production rows at execution.";
 manifest.sources.live_read_only_capture.post_capture_migration_default_note =
-  "Post-capture migration fields are included in fixture fingerprints at their required defaults: thumbnail_path, content_import_id, thumbnail_asset_key, thumbnail_approved_path and thumbnail_approved_sha256 are null and assignment rubric is an empty array.";
+  "Post-capture migration fields are included in fixture fingerprints at their required defaults: thumbnail_path, content_import_id, thumbnail_asset_key, thumbnail_approved_path and thumbnail_approved_sha256 are null, assignment rubric is an empty array, and completed legacy quiz attempts carry no reconstructed per-question result.";
 
 const formatted = `${JSON.stringify(manifest, null, 2)}\n`;
 await writeFile(manifestPath, formatted);
@@ -151,7 +155,7 @@ function parsePgArray(value) {
     .map((item) => item.replace(/^"|"$/g, "").replace(/\\"/g, '"').replace(/\\\\/g, "\\"));
 }
 
-function addMigrationDefaultGuards(table, rows) {
+function addMigrationDefaultGuards(table, rows, snapshot) {
   if (["programs", "courses", "lessons"].includes(table)) {
     return rows.map((row) => ({
       ...row,
@@ -165,6 +169,57 @@ function addMigrationDefaultGuards(table, rows) {
   if (table === "assignments") return rows.map((row) => ({ ...row, rubric: [] }));
   if (table === "user_block_progress") {
     return rows.map((row) => ({ ...row, asset_version: null }));
+  }
+  if (table === "user_quiz_attempts") {
+    const questions = new Map(
+      (snapshot["public.questions"] ?? []).map((question) => [
+        question.id,
+        question,
+      ]),
+    );
+    const optionsByQuestion = new Map();
+    for (const option of snapshot["public.answer_options"] ?? []) {
+      const options = optionsByQuestion.get(option.question_id) ?? [];
+      options.push(option);
+      optionsByQuestion.set(option.question_id, options);
+    }
+    return rows.map((row) => {
+      if (row.completed_at !== null) {
+        return {
+          ...row,
+          answer_results: {},
+          grading_snapshot_state: "legacy_summary_only",
+        };
+      }
+      const answerResults = {};
+      for (const [questionId, selected] of Object.entries(row.responses ?? {})) {
+        const question = questions.get(questionId);
+        if (!question || question.quiz_id !== row.quiz_id) {
+          throw new Error(
+            `Incomplete quiz attempt ${row.id} references unavailable question ${questionId}.`,
+          );
+        }
+        const correct = (optionsByQuestion.get(questionId) ?? [])
+          .filter((option) => option.is_correct)
+          .map((option) => option.id)
+          .sort();
+        const selectedSorted = [...selected].sort();
+        const isCorrect = question.question_type === "multi_select"
+          ? canonicalJson(selectedSorted) === canonicalJson(correct)
+          : selectedSorted.length === 1 && correct.includes(selectedSorted[0]);
+        answerResults[questionId] = {
+          is_correct: isCorrect,
+          points: question.points ?? 1,
+          question_type: question.question_type,
+          ...(isCorrect ? { explanation: null } : {}),
+        };
+      }
+      return {
+        ...row,
+        answer_results: answerResults,
+        grading_snapshot_state: "legacy_backfilled",
+      };
+    });
   }
   return rows;
 }

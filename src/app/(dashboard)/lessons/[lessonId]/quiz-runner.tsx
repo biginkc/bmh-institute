@@ -32,11 +32,9 @@ export type QuizQuestion = {
   options: { id: string; option_text: string }[];
 };
 
-type Answer = {
-  correct: boolean;
-  correctOptionIds: string[];
-  explanation: string | null;
-};
+type Answer =
+  | { correct: false }
+  | { correct: true; explanation: string | null };
 
 type Recovery = {
   kind: "retry" | "reload";
@@ -51,6 +49,7 @@ type RunState = {
   maxReachedIndex: number;
   selected: Record<string, string[]>;
   answers: Record<string, Answer>;
+  announcementQuestionId: string | null;
   phase: QuizQuestionPhase;
   recovery: Recovery | null;
 };
@@ -109,6 +108,7 @@ function runnerReducer(state: RunnerState, action: RunnerAction): RunnerState {
         : Math.max(0, viewIndex - 1),
       selected: action.responses,
       answers,
+      announcementQuestionId: null,
       phase: answers[action.questions[viewIndex]?.id] ? "revealed" : "answering",
       recovery: null,
     };
@@ -130,12 +130,18 @@ function runnerReducer(state: RunnerState, action: RunnerAction): RunnerState {
       };
     }
     case "checking":
-      return { ...state, phase: "checking", recovery: null };
+      return {
+        ...state,
+        phase: "checking",
+        recovery: null,
+        announcementQuestionId: null,
+      };
     case "check_success":
       return {
         ...state,
         phase: "revealed",
         recovery: null,
+        announcementQuestionId: action.reveal.questionId,
         maxReachedIndex: Math.max(state.maxReachedIndex, state.viewIndex),
         answers: {
           ...state.answers,
@@ -158,10 +164,16 @@ function runnerReducer(state: RunnerState, action: RunnerAction): RunnerState {
           : state.maxReachedIndex,
         phase: targetWasAnswered ? "revealed" : "answering",
         recovery: null,
+        announcementQuestionId: null,
       };
     }
     case "finalizing":
-      return { ...state, phase: "finalizing", recovery: null };
+      return {
+        ...state,
+        phase: "finalizing",
+        recovery: null,
+        announcementQuestionId: null,
+      };
     case "finalize_error":
       return { ...state, phase: "finalize_error", recovery: action.recovery };
     case "done":
@@ -172,11 +184,9 @@ function runnerReducer(state: RunnerState, action: RunnerAction): RunnerState {
 }
 
 function revealToAnswer(reveal: QuestionReveal): Answer {
-  return {
-    correct: reveal.isCorrect,
-    correctOptionIds: reveal.correctOptionIds,
-    explanation: reveal.explanation,
-  };
+  return reveal.isCorrect
+    ? { correct: true, explanation: reveal.explanation }
+    : { correct: false };
 }
 
 export function QuizRunner({
@@ -433,6 +443,7 @@ export function QuizRunner({
           selected={state.selected[question.id] ?? []}
           phase={state.phase}
           feedback={feedback}
+          announceFeedback={state.announcementQuestionId === question.id}
           recovery={state.phase === "check_error" ? state.recovery : null}
           onToggle={(optionId) =>
             dispatch({ type: "toggle", question, optionId })}
@@ -537,9 +548,11 @@ function QuizResultCard({
               ? "Attempts complete"
               : "Keep going"}
         </h2>
-        <p className="mt-1 font-[family-name:var(--font-body)] text-sm font-semibold text-[var(--text-muted)]">
-          {result.earnedPoints} of {result.totalPoints} points
-        </p>
+        {result.earnedPoints !== null && result.totalPoints !== null ? (
+          <p className="mt-1 font-[family-name:var(--font-body)] text-sm font-semibold text-[var(--text-muted)]">
+            {result.earnedPoints} of {result.totalPoints} points
+          </p>
+        ) : null}
       </div>
 
       <div className="mx-auto mb-7 max-w-xl">
@@ -562,21 +575,19 @@ function QuizResultCard({
       {result.review?.length ? (
         <div className="mx-auto mb-7 max-w-xl space-y-3">
           <h3 className="font-[family-name:var(--font-display)] text-xl font-bold text-[var(--ink-900)]">
-            Answer review
+            Correct-response review
           </h3>
-          {result.review.map((item, index) => (
+          {result.review.map((item) => (
             <div
               key={item.questionId}
               className="rounded-[var(--bmh-radius-md)] border-2 border-[var(--ink-200)] bg-[var(--ink-050)] p-4 text-left"
             >
               <p className="text-sm font-extrabold text-[var(--ink-900)]">
-                Question {index + 1}: {item.correctOptions.join(", ")}
+                Question {item.questionNumber} explanation
               </p>
-              {item.explanation ? (
-                <p className="mt-1 text-sm font-semibold text-[var(--text-muted)]">
-                  {item.explanation}
-                </p>
-              ) : null}
+              <p className="mt-1 text-sm font-semibold text-[var(--text-muted)]">
+                {item.explanation}
+              </p>
             </div>
           ))}
         </div>

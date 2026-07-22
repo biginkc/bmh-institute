@@ -21,11 +21,10 @@ export type QuizQuestionPhase =
   | "finalizing"
   | "finalize_error";
 
-type Feedback = {
-  correct: boolean;
-  correctOptionIds: string[];
-  explanation: string | null;
-} | null;
+type Feedback =
+  | { correct: false }
+  | { correct: true; explanation: string | null }
+  | null;
 
 export function QuizQuestionCard({
   question,
@@ -34,6 +33,7 @@ export function QuizQuestionCard({
   selected,
   phase,
   feedback,
+  announceFeedback = false,
   recovery = null,
   onToggle,
   onCheck,
@@ -46,6 +46,7 @@ export function QuizQuestionCard({
   selected: string[];
   phase: QuizQuestionPhase;
   feedback: Feedback;
+  announceFeedback?: boolean;
   recovery?: Recovery;
   onToggle: (optionId: string) => void;
   onCheck: () => void;
@@ -59,8 +60,22 @@ export function QuizQuestionCard({
 
   const locked = phase !== "answering";
   const headingId = `quiz-question-${question.id}`;
+  const announcement = announceFeedback && feedback
+    ? feedback.correct
+      ? "Correct. Nice work — that answer is right."
+      : "Incorrect. Not quite. That answer is locked — keep going."
+    : "";
   return (
     <Card padding="md">
+      <p
+        data-quiz-feedback-announcement
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        className="sr-only"
+      >
+        {announcement}
+      </p>
       <div className="mb-4 flex items-start gap-3">
         <span
           aria-hidden="true"
@@ -93,17 +108,13 @@ export function QuizQuestionCard({
       >
         {question.options.map((option) => {
           const isSelected = selected.includes(option.id);
-          const isCorrect = feedback?.correctOptionIds.includes(option.id) ?? false;
           const inputId = `${question.id}-${option.id}`;
           let borderColor = isSelected ? "var(--action)" : "var(--ink-200)";
           let background = isSelected ? "var(--action-soft)" : "var(--paper)";
           if (feedback) {
-            if (isCorrect && isSelected) {
+            if (feedback.correct && isSelected) {
               borderColor = "var(--success)";
               background = "var(--success-soft)";
-            } else if (isCorrect) {
-              borderColor = "var(--success)";
-              background = "var(--paper)";
             } else if (isSelected) {
               borderColor = "var(--danger)";
               background = "var(--danger-soft)";
@@ -152,10 +163,10 @@ export function QuizQuestionCard({
       ) : feedback ? (
         <QuizFeedback
           correct={feedback.correct}
-          correctOptions={question.options
-            .filter((option) => feedback.correctOptionIds.includes(option.id))
+          selectedAnswers={question.options
+            .filter((option) => selected.includes(option.id))
             .map((option) => option.option_text)}
-          explanation={feedback.explanation}
+          explanation={feedback.correct ? feedback.explanation : null}
         />
       ) : (
         <div className="mt-5 flex justify-end">

@@ -83,7 +83,6 @@ describe("<QuizQuestionCard />", () => {
         selected: ["a"],
         feedback: phase === "revealed" ? {
           correct: true,
-          correctOptionIds: ["a"],
           explanation: "Alpha is right.",
         } : null,
       });
@@ -103,19 +102,28 @@ describe("<QuizQuestionCard />", () => {
     const { rerender, props } = renderCard({
       phase: "revealed",
       selected: ["a"],
-      feedback: { correct: true, correctOptionIds: ["a"], explanation: "Right." },
+      feedback: { correct: true, explanation: "Right." },
     });
     expect(screen.getByText("Correct")).toHaveStyle({
       background: "var(--success-soft)",
     });
+    const correctOption = screen.getByLabelText("Alpha").closest("label") as HTMLElement;
+    expect(correctOption.style.borderColor).toBe("var(--success)");
+    expect(correctOption.style.background).toBe("var(--success-soft)");
     rerender(<QuizQuestionCard
       {...props}
       phase="revealed"
       selected={["b"]}
-      feedback={{ correct: false, correctOptionIds: ["a"], explanation: "Try Alpha." }}
+      feedback={{ correct: false }}
     />);
     expect(screen.getByText("Incorrect")).toHaveStyle({
       background: "var(--danger-soft)",
     });
+    const wrongOption = screen.getByLabelText("Beta").closest("label") as HTMLElement;
+    expect(wrongOption.style.borderColor).toBe("var(--danger)");
+    expect(wrongOption.style.background).toBe("var(--danger-soft)");
+    const neutralOption = screen.getByLabelText("Alpha").closest("label") as HTMLElement;
+    expect(neutralOption.style.borderColor).toBe("var(--ink-200)");
+    expect(neutralOption.style.background).toBe("var(--paper)");
   });
 });

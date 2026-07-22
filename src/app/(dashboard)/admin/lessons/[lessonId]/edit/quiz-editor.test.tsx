@@ -96,6 +96,10 @@ describe("<QuizEditor />", () => {
 
     expect(screen.getByDisplayValue("What comes first?")).toBeInTheDocument();
     expect(screen.getByDisplayValue("Build rapport")).toBeInTheDocument();
+    expect(screen.getByLabelText("Show correct-response explanations")).toHaveValue(
+      "after_pass",
+    );
+    expect(screen.queryByText("Show correct answers")).not.toBeInTheDocument();
     await user.clear(screen.getByLabelText("Passing score (%)"));
     await user.type(screen.getByLabelText("Passing score (%)"), "85");
     await user.click(screen.getByRole("button", { name: "Save settings" }));

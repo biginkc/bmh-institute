@@ -3,15 +3,22 @@ import { Coach } from "@/components/bmh-ds/coach";
 
 export function QuizFeedback({
   correct,
-  correctOptions,
+  selectedAnswers,
   explanation,
 }: {
   correct: boolean;
-  correctOptions: string[];
+  selectedAnswers: string[];
   explanation: string | null;
 }) {
+  const coachMessage = correct
+    ? "Nice work — that answer is right."
+    : "Not quite. That answer is locked — keep going.";
+  const usefulExplanation = correct && !duplicatesSelection(explanation, selectedAnswers)
+    ? explanation?.trim() || null
+    : null;
+
   return (
-    <div aria-live="polite" className="mt-5 space-y-3">
+    <div className="mt-5 space-y-3">
       <Badge tone={correct ? "green" : "red"}>
         {correct ? "Correct" : "Incorrect"}
       </Badge>
@@ -19,21 +26,34 @@ export function QuizFeedback({
         emotion={correct ? "smile" : "worried"}
         tone={correct ? "tint" : "white"}
         size="sm"
-        message={correct ? "Nice work — that answer is right." : "Not quite. Use the answer below to lock in the lesson."}
+        message={coachMessage}
       />
-      <div className="rounded-[var(--bmh-radius-md)] border-2 border-[var(--success)] bg-[var(--success-soft)] p-4">
-        <p className="text-xs font-extrabold uppercase tracking-wide text-[var(--text-muted)]">
-          Correct answer
-        </p>
-        <p className="mt-1 text-sm font-bold text-[var(--ink-900)]">
-          {correctOptions.join(", ")}
-        </p>
-      </div>
-      {explanation ? (
+      {usefulExplanation ? (
         <p className="text-sm font-semibold leading-relaxed text-[var(--ink-900)]">
-          {explanation}
+          {usefulExplanation}
         </p>
       ) : null}
     </div>
   );
+}
+
+function duplicatesSelection(
+  explanation: string | null,
+  selectedAnswers: string[],
+): boolean {
+  if (!explanation) return false;
+  const normalizedExplanation = normalizeFeedbackText(explanation);
+  if (!normalizedExplanation) return false;
+  const normalizedSelections = selectedAnswers.map(normalizeFeedbackText);
+  return normalizedSelections.includes(normalizedExplanation) ||
+    normalizeFeedbackText(selectedAnswers.join(" ")) === normalizedExplanation;
+}
+
+function normalizeFeedbackText(value: string): string {
+  return value
+    .normalize("NFKD")
+    .replace(/\p{M}/gu, "")
+    .toLowerCase()
+    .replace(/[\p{P}\p{S}\s]+/gu, " ")
+    .trim();
 }

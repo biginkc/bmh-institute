@@ -20,7 +20,7 @@ function reviewedProbe(postgresMajor: 15 | 16 | 17 = 17) {
     key_select: false,
     legacy_contract_safe: true,
     legacy_definition_sha256:
-      "0a4ff6b98a86427016faee21d6b8a821944015b944317e9942bda11dd23de05e",
+      "bcbbcae23f50cad629373393c969344ae2fd865d65e31efa22ab1b7050044b6b",
     controller_contract_safe: true,
     controller_contracts: structuredClone(
       REVIEWED_CONTROLLER_FUNCTION_CONTRACTS,

@@ -135,7 +135,7 @@ const manifest = {
       protected_answer_field_note:
         "answer_options.is_correct is not owner-readable. IDs and public fields matched live production while is_correct came from the rollback snapshot and must be rechecked by service role before execution.",
       post_capture_migration_default_note:
-        "Every captured column, including timestamps, is fingerprinted. Post-capture migration fields are included at their required defaults: thumbnail_path, content_import_id, thumbnail_asset_key, thumbnail_approved_path and thumbnail_approved_sha256 are null and assignment rubric is an empty array.",
+        "Every captured column, including timestamps, is fingerprinted. Post-capture migration fields are included at their required defaults: thumbnail_path, content_import_id, thumbnail_asset_key, thumbnail_approved_path and thumbnail_approved_sha256 are null, assignment rubric is an empty array, and completed legacy quiz attempts carry no reconstructed per-question result.",
     },
   },
   fixture_tables: fixtureTables,
@@ -299,6 +299,18 @@ function addMigrationDefaultGuards(table, rows) {
   if (table === "user_block_progress") {
     return rows.map((row) => ({ ...row, asset_version: null }));
   }
+  if (table === "user_quiz_attempts") {
+    if (rows.some((row) => row.completed_at === null)) {
+      throw new Error(
+        "Incomplete quiz attempts require rollback-snapshot grading before the fixture manifest can be rebuilt.",
+      );
+    }
+    return rows.map((row) => ({
+      ...row,
+      answer_results: {},
+      grading_snapshot_state: "legacy_summary_only",
+    }));
+  }
   return rows;
 }
 
@@ -309,6 +321,7 @@ function hasMigrationDefaultGuard(table) {
     "lessons",
     "assignments",
     "user_block_progress",
+    "user_quiz_attempts",
   ].includes(table);
 }
 

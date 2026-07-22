@@ -136,10 +136,22 @@ try {
     const migrationPath = resolve(root, "supabase/migrations", migration);
     if (migration === "038_refresh_fixture_progress_fingerprints.sql") {
       replayProgressFingerprintMigration(migrationPath);
+    } else if (migration === "051_quiz_answer_privacy_snapshots.sql") {
+      replayQuizPrivacyMigration(migrationPath);
     } else {
       psqlFile(migrationPath);
     }
   }
+  const reviewedLegacyDefinitionSha = psqlScalar(`
+    select expected_sha256
+    from private.fixture_cleanup_expected_function_contracts_v1
+    where contract_name = 'moved_destructive'
+  `);
+  const reviewedLegacyAttesterSha = psqlScalar(`
+    select expected_sha256
+    from private.fixture_cleanup_expected_function_contracts_v1
+    where contract_name = 'legacy_attester'
+  `);
   psqlText(`
     do $$
     begin
@@ -191,8 +203,8 @@ try {
     begin
       begin
         perform private.admin_cleanup_fixture_catalog_v021_without_controller_gate(
-          '2ee30597dd997614acc93422d00bbd2874c7438b0dc189d826ea9fbea55c1489',
-          'DELETE-EXACT-BMH-INSTITUTE-FIXTURES:dhvfsyteqsxagokoerrx:2ee30597dd997614acc93422d00bbd2874c7438b0dc189d826ea9fbea55c1489'
+          '84cd11f70007a28cbb0612f3d5ec34e3124a86377b7cda7d8e87ac6f1e587528',
+          'DELETE-EXACT-BMH-INSTITUTE-FIXTURES:dhvfsyteqsxagokoerrx:84cd11f70007a28cbb0612f3d5ec34e3124a86377b7cda7d8e87ac6f1e587528'
         );
         raise exception 'unregistered foreign key was accepted';
       exception when others then
@@ -364,7 +376,12 @@ try {
     $$;
   `);
   console.log(
-    JSON.stringify({ status: "passed", harness: "controller-gate-pr" }),
+    JSON.stringify({
+      status: "passed",
+      harness: "controller-gate-pr",
+      legacy_definition_sha256: reviewedLegacyDefinitionSha,
+      legacy_attester_sha256: reviewedLegacyAttesterSha,
+    }),
   );
 } finally {
   if (cluster !== null) {
@@ -533,6 +550,184 @@ function progressRowBytes(id) {
     )
     from public.user_block_progress progress
     where id = '${id}'
+  `);
+}
+
+function replayQuizPrivacyMigration(migrationPath) {
+  const userId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa01";
+  const courseId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa02";
+  const moduleId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa03";
+  const quizId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa04";
+  const lessonId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa05";
+  const groupId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa06";
+  const q1 = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa11";
+  const q2 = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa12";
+  const qMissing = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa13";
+  const q1Good = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa21";
+  const q1Bad = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa22";
+  const q2Good = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa23";
+  const q2Bad = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa24";
+  const missingOption = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa25";
+  const invalidAttempt = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa31";
+  const validAttempt = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa32";
+  const completedAttempt = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa33";
+  const reviewedLegacyAttesterSha = psqlScalar(`
+    select expected_sha256
+    from private.fixture_cleanup_expected_function_contracts_v1
+    where contract_name = 'legacy_attester'
+  `);
+
+  psqlText(`
+    set session_replication_role = replica;
+    insert into auth.users (id) values ('${userId}');
+    insert into public.profiles (id, email, full_name, status)
+      values ('${userId}', 'privacy-harness@example.test', 'Privacy Harness', 'active');
+    insert into public.role_groups (id, name) values ('${groupId}', 'Privacy Harness');
+    insert into public.courses (id, title, is_published)
+      values ('${courseId}', 'Privacy Harness', true);
+    insert into public.course_access (course_id, role_group_id)
+      values ('${courseId}', '${groupId}');
+    insert into public.user_role_groups (user_id, role_group_id)
+      values ('${userId}', '${groupId}');
+    insert into public.modules (id, course_id, title)
+      values ('${moduleId}', '${courseId}', 'Privacy Harness');
+    insert into public.quizzes (id, title) values ('${quizId}', 'Privacy Harness');
+    insert into public.lessons (id, module_id, title, lesson_type, quiz_id)
+      values ('${lessonId}', '${moduleId}', 'Privacy Harness', 'quiz', '${quizId}');
+    insert into public.questions (
+      id, quiz_id, question_text, question_type, explanation, points
+    ) values
+      ('${q1}', '${quizId}', 'Q1', 'single_choice', 'Q1 explanation', 2),
+      ('${q2}', '${quizId}', 'Q2', 'single_choice', 'Q2 explanation', 3);
+    insert into public.answer_options (id, question_id, option_text, is_correct)
+    values
+      ('${q1Good}', '${q1}', 'Q1 good', true),
+      ('${q1Bad}', '${q1}', 'Q1 bad', false),
+      ('${q2Good}', '${q2}', 'Q2 good', true),
+      ('${q2Bad}', '${q2}', 'Q2 bad', false);
+    insert into public.user_quiz_attempts (
+      id, user_id, quiz_id, lesson_id, question_order, answer_orders, responses
+    ) values (
+      '${invalidAttempt}', '${userId}', '${quizId}', '${lessonId}',
+      '["${qMissing}"]',
+      '{"${qMissing}":["${missingOption}"]}',
+      '{}'
+    );
+    set session_replication_role = origin;
+  `);
+
+  expectPsqlFileFailure(
+    migrationPath,
+    {},
+    "Incomplete legacy quiz attempts reference unavailable questions",
+  );
+  if (psqlScalar(`select to_regprocedure('public.fn_record_quiz_answer(uuid,uuid,text[])') is not null`) !== "t") {
+    throw new Error("quiz privacy migration refusal did not roll back the prior RPC");
+  }
+  if (psqlScalar(`select count(*) from information_schema.columns where table_schema='public' and table_name='user_quiz_attempts' and column_name='answer_results'`) !== "0") {
+    throw new Error("quiz privacy migration refusal left a partial schema change");
+  }
+
+  psqlText(`
+    delete from public.user_quiz_attempts where id = '${invalidAttempt}';
+    alter function private.fixture_cleanup_legacy_contract_attestation_v1()
+      volatile;
+  `);
+  expectPsqlFileFailure(
+    migrationPath,
+    {},
+    "legacy attester definition drift",
+  );
+  if (psqlScalar(`select count(*) from information_schema.columns where table_schema='public' and table_name='user_quiz_attempts' and column_name='answer_results'`) !== "0") {
+    throw new Error("attester-drift refusal left a partial schema change");
+  }
+  psqlText(`
+    alter function private.fixture_cleanup_legacy_contract_attestation_v1()
+      stable;
+  `);
+  if (psqlScalar(`
+    select encode(extensions.digest(pg_get_functiondef(proc.oid), 'sha256'), 'hex')
+    from pg_proc proc
+    where proc.oid = to_regprocedure(
+      'private.fixture_cleanup_legacy_contract_attestation_v1()'
+    )
+  `) !== reviewedLegacyAttesterSha) {
+    throw new Error("legacy attester restoration did not recover the reviewed definition");
+  }
+
+  psqlText(`
+    set session_replication_role = replica;
+    insert into public.user_quiz_attempts (
+      id, user_id, quiz_id, lesson_id, question_order, answer_orders, responses
+    ) values (
+      '${validAttempt}', '${userId}', '${quizId}', '${lessonId}',
+      '["${q1}","${q2}"]',
+      '{"${q1}":["${q1Good}","${q1Bad}"],"${q2}":["${q2Good}","${q2Bad}"]}',
+      '{"${q1}":["${q1Good}"],"${q2}":["${q2Bad}"]}'
+    );
+    insert into public.user_quiz_attempts (
+      id, user_id, quiz_id, lesson_id, score, passed, question_order,
+      answer_orders, responses, completed_at
+    ) values (
+      '${completedAttempt}', '${userId}', '${quizId}', '${lessonId}', 50, false,
+      '["${qMissing}"]', '{"${qMissing}":["${missingOption}"]}',
+      '{"${qMissing}":["${missingOption}"]}', now()
+    );
+    set session_replication_role = origin;
+  `);
+  psqlFile(migrationPath);
+
+  const transition = psqlScalar(`
+    select string_agg(id::text || ':' || grading_snapshot_state || ':' ||
+      answer_results::text, E'\n' order by id)
+    from public.user_quiz_attempts
+    where id in ('${validAttempt}', '${completedAttempt}')
+  `);
+  if (!transition.includes(`${completedAttempt}:legacy_summary_only:{}`)
+    || !transition.includes(`"${q1}": {"points": 2, "is_correct": true, "explanation": null, "question_type": "single_choice"}`)
+    || !transition.includes(`"${q2}": {"points": 3, "is_correct": false, "question_type": "single_choice"}`)
+    || transition.includes("Q1 explanation")
+    || transition.includes("Q2 explanation")) {
+    throw new Error(`quiz privacy transition mismatch: ${transition}`);
+  }
+
+  psqlText(`
+    update public.questions set points = 99 where id in ('${q1}', '${q2}');
+    update public.answer_options set is_correct = not is_correct
+      where question_id in ('${q1}', '${q2}');
+  `);
+  if (!psqlScalar(`select answer_results::text from public.user_quiz_attempts where id='${validAttempt}'`).includes('"points": 2')) {
+    throw new Error("authored quiz edits changed an immutable grading snapshot");
+  }
+
+  const activeRead = psqlScalar(`
+    set request.jwt.claim.sub = '${userId}';
+    set request.jwt.claim.role = 'authenticated';
+    set role authenticated;
+    select count(*) from public.user_quiz_attempts where id = '${validAttempt}';
+    reset role;
+  `).split("\n").find((line) => /^\d+$/.test(line));
+  if (activeRead !== "1") throw new Error("active learner cannot read the owned attempt");
+  psqlText(`update public.profiles set status='suspended' where id='${userId}'`);
+  const suspendedRead = psqlScalar(`
+    set request.jwt.claim.sub = '${userId}';
+    set request.jwt.claim.role = 'authenticated';
+    set role authenticated;
+    select count(*) from public.user_quiz_attempts where id = '${validAttempt}';
+    reset role;
+  `).split("\n").find((line) => /^\d+$/.test(line));
+  if (suspendedRead !== "0") throw new Error("suspended learner retained direct attempt access");
+  psqlText(`
+    set session_replication_role = replica;
+    delete from public.user_quiz_attempts where user_id = '${userId}';
+    delete from public.user_role_groups where user_id = '${userId}';
+    delete from public.profiles where id = '${userId}';
+    delete from auth.users where id = '${userId}';
+    delete from public.courses where id = '${courseId}';
+    delete from public.quizzes where id = '${quizId}';
+    delete from public.role_groups where id = '${groupId}';
+    delete from public.audit_log;
+    set session_replication_role = origin;
   `);
 }
 

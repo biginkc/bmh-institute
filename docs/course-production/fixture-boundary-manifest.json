@@ -33,7 +33,7 @@
       "raw_capture_sha256": "825e1a9d72a1c5835635889c5b083d8bc01b384aed735dabfcf5c069086879af",
       "credential_path": "1Password service-account read of the Browser V1 owner fixture, then owner-scoped read-only production queries",
       "protected_answer_field_note": "answer_options.is_correct is not owner-readable. IDs and public fields matched live production while is_correct came from the rollback snapshot and must be rechecked by service role before execution.",
-      "post_capture_migration_default_note": "Post-capture migration fields are included in fixture fingerprints at their required defaults: thumbnail_path, content_import_id, thumbnail_asset_key, thumbnail_approved_path, thumbnail_approved_sha256 and user_block_progress.asset_version are null; assignment rubric is an empty array.",
+      "post_capture_migration_default_note": "Post-capture migration fields are included in fixture fingerprints at their required defaults: thumbnail_path, content_import_id, thumbnail_asset_key, thumbnail_approved_path and thumbnail_approved_sha256 are null, assignment rubric is an empty array, and completed legacy quiz attempts carry no reconstructed per-question result.",
       "complete_row_fingerprint_note": "Previously guarded fields were verified byte-for-byte against the live-capture hashes. Timestamp baselines came from the rollback snapshot and must still match the locked production rows at execution."
     }
   },
@@ -4132,7 +4132,9 @@
       ],
       "fingerprint_fields": [
         "answer_orders",
+        "answer_results",
         "completed_at",
+        "grading_snapshot_state",
         "id",
         "lesson_id",
         "passed",
@@ -4151,7 +4153,7 @@
           "identity": {
             "id": "0661a1b9-e84c-44de-a4bb-e895a5e30391"
           },
-          "row_sha256": "2fa90621534436292c0a95970688d531d12bd8461ee36adee12ec3c4ebc72bd7",
+          "row_sha256": "d60fe5c928cd101d2ccd24f3c44d8cf59c4f5a71f94be456c9b4da1a2662388f",
           "origin_classification": "legacy_training_fixture_resolved_by_explicit_empty_app_declaration",
           "ownership_basis": "explicit_empty_app_fixture_declaration"
         },
@@ -4159,7 +4161,7 @@
           "identity": {
             "id": "09f64a7b-91b5-42a9-be05-8ac8088de2a6"
           },
-          "row_sha256": "3fe04155847e3e30c0c940bbd5319ee71d828f2de6a63196fdd7dc715104362f",
+          "row_sha256": "ae56413b3005e4d8cb91a5b5a282d2f562dc57db009e7673d39e9b63b5b7df21",
           "origin_classification": "legacy_training_fixture_resolved_by_explicit_empty_app_declaration",
           "ownership_basis": "explicit_empty_app_fixture_declaration"
         },
@@ -4167,7 +4169,7 @@
           "identity": {
             "id": "1e369174-67cd-402b-a1fd-d3cf87e89f0f"
           },
-          "row_sha256": "09dae33dff4dc567c848347453d84c23a2fa3ab3b151dfc1d5c6e98dad3f80c7",
+          "row_sha256": "6c152501c55c0233ae17839bb92f26675daf64540f94b6791420d3f966fcf293",
           "origin_classification": "legacy_training_fixture_resolved_by_explicit_empty_app_declaration",
           "ownership_basis": "explicit_empty_app_fixture_declaration"
         },
@@ -4175,7 +4177,7 @@
           "identity": {
             "id": "2ac8983c-42d5-4003-bbb1-7ebde41b0f0e"
           },
-          "row_sha256": "ebf6511b80329bfe8ac3b971b824032901e5b61ba14ee3eb1d170e6ce8c1fcaf",
+          "row_sha256": "865364302df3c8859c69a190a8164784a4f1450857eb6f5bdb6fcb94098a6724",
           "origin_classification": "legacy_training_fixture_resolved_by_explicit_empty_app_declaration",
           "ownership_basis": "explicit_empty_app_fixture_declaration"
         },
@@ -4183,7 +4185,7 @@
           "identity": {
             "id": "399bdc9e-54ab-480e-98e8-902d1353f0bb"
           },
-          "row_sha256": "724214ab6441450be6d26a4c00e983f4f82e972983224126d8c408fa007be712",
+          "row_sha256": "216840467946f6d248c6401c1d66c955e7a6c2449966dceb83af7ab987fc089a",
           "origin_classification": "legacy_training_fixture_resolved_by_explicit_empty_app_declaration",
           "ownership_basis": "explicit_empty_app_fixture_declaration"
         },
@@ -4191,7 +4193,7 @@
           "identity": {
             "id": "8955f32a-9395-4774-8616-4a45ea05f450"
           },
-          "row_sha256": "5543567358734850c10a0decb9b5d79bb6f8a38cc5132bab1b4d2d465d8cdebb",
+          "row_sha256": "ccff2c46fc7533add704dceceae096a8f044b4e54391cdc8d63fc443274dccc8",
           "origin_classification": "legacy_training_fixture_resolved_by_explicit_empty_app_declaration",
           "ownership_basis": "explicit_empty_app_fixture_declaration"
         },
@@ -4199,7 +4201,7 @@
           "identity": {
             "id": "95e7e06c-1a7a-46c0-b782-3ca340410756"
           },
-          "row_sha256": "4a7ac106c31b4c65e0c7ec83faefe632a4516482e343cf84f37e4683cc0f0064",
+          "row_sha256": "cc0168fd5346e69482208e0603579b12aaaaaa2d448f2b32b79818aa52abb8d1",
           "origin_classification": "legacy_training_fixture_resolved_by_explicit_empty_app_declaration",
           "ownership_basis": "explicit_empty_app_fixture_declaration"
         },
@@ -4207,7 +4209,7 @@
           "identity": {
             "id": "bb06223a-8adf-4e3a-8b68-9660911b29b2"
           },
-          "row_sha256": "7843c80093a9f10ff36a3c1c2581912481783e5fcbf3cfdf8f40f3ebe9402316",
+          "row_sha256": "cb2ec232b1defe48e02f72c319dd806ec367506b102e794c34b41d4881a2ad0b",
           "origin_classification": "legacy_training_fixture_resolved_by_explicit_empty_app_declaration",
           "ownership_basis": "explicit_empty_app_fixture_declaration"
         },
@@ -4215,7 +4217,7 @@
           "identity": {
             "id": "bceb2eb8-d083-4617-92f1-51c5c04e8e67"
           },
-          "row_sha256": "5a79194ad64566a0cf835572c450c547fccb8caddd6dddc3b5285f4e1679148d",
+          "row_sha256": "9918bbcfa7ce9dd19b4a967f0da57d36a540f63c3407e57c8bc7cda069cf1904",
           "origin_classification": "legacy_training_fixture_resolved_by_explicit_empty_app_declaration",
           "ownership_basis": "explicit_empty_app_fixture_declaration"
         },
@@ -4223,7 +4225,7 @@
           "identity": {
             "id": "bd7b600b-d1de-4f11-b039-f06a6efcb768"
           },
-          "row_sha256": "11ac3ef35c78cc5540a2aa7c7d203e7e544014481ecb16c6bba5bfe92a15a0d2",
+          "row_sha256": "119c9ad3f4e25e944ef1bfd08d8ecb489e1929939c5c471adf42c717f2e3f868",
           "origin_classification": "legacy_training_fixture_resolved_by_explicit_empty_app_declaration",
           "ownership_basis": "explicit_empty_app_fixture_declaration"
         },
@@ -4231,7 +4233,7 @@
           "identity": {
             "id": "ddd39588-a941-4a90-b98c-893392765b8a"
           },
-          "row_sha256": "b8143781dfaf6f2324c5802415ae9829788d1783bc62e66e902d1030736fcd72",
+          "row_sha256": "c48a07cf8f3bf445016ba1059b556886cbc194990bef1ceabe4033b76ec001c4",
           "origin_classification": "legacy_training_fixture_resolved_by_explicit_empty_app_declaration",
           "ownership_basis": "explicit_empty_app_fixture_declaration"
         }
