@@ -17,6 +17,7 @@ describe("released imported video poster replacement migration", () => {
     expect(sql).toMatch(/content_import_video_poster_replacement_records/i);
     expect(sql).toMatch(/prior_catalog_sha256/i);
     expect(sql).toMatch(/replacement_catalog_sha256/i);
+    expect(sql).toMatch(/grant select on table public\.content_import_video_poster_replacement_records[\s\S]*to service_role/i);
     expect(sql).toMatch(/revoke all on function public\.fn_replace_released_imported_video_posters\(text, jsonb, text, text, text, text\)[\s\S]*from public, anon, authenticated/i);
     expect(sql).toMatch(/grant execute on function public\.fn_replace_released_imported_video_posters\(text, jsonb, text, text, text, text\)[\s\S]*to service_role/i);
   });
@@ -48,6 +49,7 @@ describe("released imported video poster replacement migration", () => {
     expect(sql).toMatch(/p_import_id is distinct from 'bmh-employee-training-canary-v1'/i);
     expect(sql).toMatch(/jsonb_array_length\(p_replacements\) <> 1/i);
     expect(sql).toMatch(/content_import_canary_video_poster_replacement_records/i);
+    expect(sql).toMatch(/grant select on table public\.content_import_canary_video_poster_replacement_records[\s\S]*to service_role/i);
     expect(sql).toMatch(/current path lacks the exact audit record/i);
     expect(sql).toMatch(/revoke all on function public\.fn_replace_unreleased_imported_video_posters\(text, jsonb, text\)[\s\S]*from public, anon, authenticated/i);
   });

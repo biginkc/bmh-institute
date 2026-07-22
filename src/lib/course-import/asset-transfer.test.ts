@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { describe, expect, it } from "vitest";
 
 import type { CourseImportAsset } from "./manifest";
-import { findRemoteAssetProblems, findUnexpectedRemoteAssetPaths } from "./asset-transfer";
+import { findOptionalRemoteAssetProblems, findRemoteAssetProblems, findUnexpectedRemoteAssetPaths } from "./asset-transfer";
 
 describe("course import remote asset verification", () => {
   it("makes no storage calls for assets that are not approved", async () => {
@@ -108,6 +108,25 @@ describe("course import remote asset verification", () => {
 
     await expect(findRemoteAssetProblems(bucket, [asset])).resolves.toEqual([]);
     expect(blobFallbackAwaited).toBe(false);
+  });
+});
+
+describe("optional retained asset verification", () => {
+  it("permits explicit absence but verifies exact bytes whenever retained bytes exist", async () => {
+    const asset = approvedAsset(Buffer.from("retained"));
+    await expect(findOptionalRemoteAssetProblems({
+      async info() { return { data: null, error: { message: "not found", statusCode: 404 } }; },
+      download() { throw new Error("absent objects are not downloaded"); },
+    }, [asset])).resolves.toEqual([]);
+
+    const changed = Buffer.from("changed!");
+    await expect(findOptionalRemoteAssetProblems(fakeBucket({
+      bytes: changed,
+      size: asset.size_bytes!,
+      metadataSha256: asset.checksum_sha256!,
+    }), [asset])).resolves.toEqual([
+      { path: asset.storage_path, problem: "remote bytes SHA-256 does not match" },
+    ]);
   });
 });
 

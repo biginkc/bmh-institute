@@ -23,6 +23,8 @@ comment on table public.content_import_video_poster_replacement_records is
 alter table public.content_import_video_poster_replacement_records enable row level security;
 revoke all on table public.content_import_video_poster_replacement_records
 from public, anon, authenticated;
+grant select on table public.content_import_video_poster_replacement_records
+to service_role;
 
 create or replace function public.fn_guard_import_video_poster_replacement_record()
 returns trigger
@@ -413,6 +415,8 @@ comment on table public.content_import_canary_video_poster_replacement_records i
 alter table public.content_import_canary_video_poster_replacement_records enable row level security;
 revoke all on table public.content_import_canary_video_poster_replacement_records
 from public, anon, authenticated;
+grant select on table public.content_import_canary_video_poster_replacement_records
+to service_role;
 
 create or replace function public.fn_guard_import_canary_video_poster_replacement_record()
 returns trigger

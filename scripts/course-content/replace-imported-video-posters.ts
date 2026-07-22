@@ -13,7 +13,6 @@ import {
 import { assertCourseImportEnvironment } from "../../src/lib/course-import/environment";
 import { validateCourseManifest } from "../../src/lib/course-import/manifest";
 import { buildImportPlan } from "../../src/lib/course-import/operations";
-import { removeExactReplacedAssets } from "../../src/lib/course-import/replaced-asset-cleanup";
 import {
   assertImportedVideoPosterReplacementApproval,
   assertLocalSupersededVideoPosterAssets,
@@ -93,7 +92,7 @@ async function main() {
   const preflightSha256 = createHash("sha256").update(preflightBytes).digest("hex");
   const replacementPaths = new Set(replacements.map((replacement) => replacement.replacement_poster_path));
   const replacementAssets = plan.assets.filter((asset) => replacementPaths.has(asset.storage_path));
-  const superseded = buildSupersededVideoPosterAssets(replacements);
+  const retainedRollbackAssets = buildSupersededVideoPosterAssets(replacements);
   if (replacementAssets.length !== EXPECTED_REPLACEMENTS) {
     throw new Error("Replacement payload does not bind one manifest asset to every video poster.");
   }
@@ -111,7 +110,7 @@ async function main() {
   if (!allowProduction || confirm !== plan.importId) {
     throw new Error(`Execution requires --allow-production --confirm=${plan.importId}.`);
   }
-  await assertLocalSupersededVideoPosterAssets(process.cwd(), superseded);
+  await assertLocalSupersededVideoPosterAssets(process.cwd(), retainedRollbackAssets);
 
   const url = requiredEnv("NEXT_PUBLIC_SUPABASE_URL");
   const serviceKey = requiredEnv("SUPABASE_SERVICE_ROLE_KEY");
@@ -147,16 +146,10 @@ async function main() {
   if (error) throw new Error(`Released video poster replacement failed: ${error.message}`);
   console.log(JSON.stringify({ phase: "released_video_posters_replaced", result: data }, null, 2));
 
-  const bucket = client.storage.from(COURSE_IMPORT_BUCKET) as unknown as CourseImportUploadBucket & {
-    remove(paths: string[]): Promise<{ data?: unknown; error: { message: string; statusCode?: string | number; status?: string | number } | null }>;
-  };
-  const cleanup = await removeExactReplacedAssets({
-    importId: plan.importId,
-    assets: superseded,
-    bucket,
-    assertUnreferenced: (storagePath) => assertStoragePathUnreferenced(client, storagePath),
-  });
-  console.log(JSON.stringify({ phase: "superseded_video_posters_removed", ...cleanup }, null, 2));
+  console.log(JSON.stringify({
+    phase: "superseded_video_posters_retained_for_rollback",
+    paths: retainedRollbackAssets.map((asset) => asset.storage_path),
+  }, null, 2));
 }
 
 function value(args: string[], prefix: string) {
@@ -167,27 +160,6 @@ function requiredEnv(name: string) {
   const result = process.env[name];
   if (!result) throw new Error(`${name} is required for --execute.`);
   return result;
-}
-
-async function assertStoragePathUnreferenced(
-  client: unknown,
-  storagePath: string,
-) {
-  const query = client as unknown as {
-    from(table: "content_blocks"): {
-      select(columns: "id"): {
-        contains(column: "content", value: Record<string, unknown>): {
-          limit(count: number): PromiseLike<{ data: Array<{ id: string }> | null; error: { message: string } | null }>;
-        };
-      };
-    };
-  };
-  const { data, error } = await query.from("content_blocks")
-    .select("id")
-    .contains("content", { poster_path: storagePath })
-    .limit(1);
-  if (error) throw new Error(`Could not prove ${storagePath} is unreferenced: ${error.message}`);
-  if ((data?.length ?? 0) > 0) throw new Error(`Refused to remove still-referenced poster ${storagePath}.`);
 }
 
 void main().catch((error) => {

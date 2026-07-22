@@ -91,6 +91,27 @@ export async function findRemoteAssetProblems(
   return problems;
 }
 
+export async function findOptionalRemoteAssetProblems(
+  bucket: RemoteAssetBucket,
+  assets: CourseImportAsset[],
+) {
+  const problems: RemoteAssetProblem[] = [];
+  for (const asset of assets) {
+    if (asset.approval_status !== "approved") continue;
+    const current = await bucket.info(asset.storage_path);
+    if (!current.data) {
+      if (isExplicitNotFound(current.error)) continue;
+      problems.push({
+        path: asset.storage_path,
+        problem: `optional retained object state is uncertain: ${current.error?.message ?? "empty response"}`,
+      });
+      continue;
+    }
+    problems.push(...await findRemoteAssetProblems(bucket, [asset]));
+  }
+  return problems;
+}
+
 export async function listRemoteAssetPaths(
   bucket: RemoteAssetListingBucket,
   prefix: string,
@@ -166,4 +187,10 @@ async function sha256RemoteBytes(data: Blob | ReadableStream<Uint8Array>) {
 
 function errorMessage(error: unknown) {
   return error instanceof Error ? error.message : String(error);
+}
+
+function isExplicitNotFound(error: RemoteStorageError | null) {
+  if (!error) return false;
+  const status = error.statusCode ?? error.status;
+  return status === 404 || status === "404";
 }

@@ -13,7 +13,6 @@ import {
 import { assertCourseImportEnvironment } from "../../src/lib/course-import/environment";
 import { validateCanaryScope, validateCourseManifest } from "../../src/lib/course-import/manifest";
 import { buildImportPlan } from "../../src/lib/course-import/operations";
-import { removeExactReplacedAssets } from "../../src/lib/course-import/replaced-asset-cleanup";
 import {
   assertImportedVideoPosterReplacementApproval,
   assertLocalSupersededVideoPosterAssets,
@@ -91,9 +90,7 @@ async function main() {
   const client = createClient(url, serviceKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
-  const bucket = client.storage.from(COURSE_IMPORT_BUCKET) as unknown as CourseImportUploadBucket & {
-    remove(paths: string[]): Promise<{ data?: unknown; error: { message: string; statusCode?: string | number; status?: string | number } | null }>;
-  };
+  const bucket = client.storage.from(COURSE_IMPORT_BUCKET) as unknown as CourseImportUploadBucket;
   await uploadApprovedAssets({
     endpoint: resumableEndpoint(url),
     serviceKey,
@@ -117,38 +114,11 @@ async function main() {
   });
   if (error) throw new Error(`Canary video poster reconciliation failed: ${error.message}`);
 
-  const cleanup = await removeExactReplacedAssets({
-    importId: plan.importId,
-    assets: superseded,
-    bucket,
-    assertUnreferenced: (storagePath) => assertStoragePathUnreferenced(client, storagePath),
-  });
   console.log(JSON.stringify({
     phase: "canary_video_poster_reconciled",
     result: data,
-    cleanup,
+    retained_rollback_paths: superseded.map((asset) => asset.storage_path),
   }, null, 2));
-}
-
-async function assertStoragePathUnreferenced(
-  client: unknown,
-  storagePath: string,
-) {
-  const query = client as unknown as {
-    from(table: "content_blocks"): {
-      select(columns: "id"): {
-        contains(column: "content", value: Record<string, unknown>): {
-          limit(count: number): PromiseLike<{ data: Array<{ id: string }> | null; error: { message: string } | null }>;
-        };
-      };
-    };
-  };
-  const { data, error } = await query.from("content_blocks")
-    .select("id")
-    .contains("content", { poster_path: storagePath })
-    .limit(1);
-  if (error) throw new Error(`Could not prove ${storagePath} is unreferenced: ${error.message}`);
-  if ((data?.length ?? 0) > 0) throw new Error(`Refused to remove still-referenced poster ${storagePath}.`);
 }
 
 function value(args: string[], prefix: string) {
