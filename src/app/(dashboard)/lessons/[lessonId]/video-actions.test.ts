@@ -6,6 +6,7 @@ const emitSandraSpy = vi.fn(async (...args: unknown[]) => {
 });
 const rpcSpy = vi.fn();
 const adminUpsertSpy = vi.fn();
+const revalidatePathSpy = vi.fn();
 let existingProgress: Record<string, unknown> | null = null;
 let completionAssetVersion: string | null = null;
 
@@ -76,7 +77,9 @@ vi.mock("@/lib/supabase/admin", () => ({
   })),
 }));
 
-vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
+vi.mock("next/cache", () => ({
+  revalidatePath: (...args: unknown[]) => revalidatePathSpy(...args),
+}));
 
 import { loadVideoProgress, recordVideoProgress, recordVideoSeek } from "./actions";
 
@@ -96,6 +99,7 @@ describe("atomic video progress actions", () => {
     rpcSpy.mockResolvedValue({ data: TRUSTED_STATE, error: null });
     adminUpsertSpy.mockClear();
     emitSandraSpy.mockClear();
+    revalidatePathSpy.mockClear();
   });
 
   it("sends the complete observation to the transactional database function", async () => {
@@ -117,6 +121,18 @@ describe("atomic video progress actions", () => {
       p_observed_to: 10,
     });
     expect(adminUpsertSpy).not.toHaveBeenCalled();
+  });
+
+  it("does not revalidate routes for an incomplete playback observation", async () => {
+    await expect(recordVideoProgress({
+      blockId: "video-1",
+      positionSeconds: 2,
+      durationSeconds: 100,
+      observedFrom: 0,
+      observedTo: 2,
+    })).resolves.toMatchObject({ ok: true, completed: false });
+
+    expect(revalidatePathSpy).not.toHaveBeenCalled();
   });
 
   it("uses the same locked function for seek without adding a watched range", async () => {
@@ -182,6 +198,7 @@ describe("atomic video progress actions", () => {
       observedTo: 90,
     });
     expect(emitSandraSpy).toHaveBeenCalledTimes(1);
+    expect(revalidatePathSpy).not.toHaveBeenCalled();
   });
 
   it("does not grant completion from a read-only legacy progress load", async () => {
