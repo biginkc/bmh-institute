@@ -466,10 +466,10 @@
       "source_key": "caption-video-slot-10-objection-scripts",
       "kind": "caption",
       "local_path": "course-assets/captions/video-slot-10-objection-scripts.vtt",
-      "storage_path": "courses/bmh-employee-training/v1/captions/video-slot-10-objection-scripts.1a116db84d9d86b36df654d4fdba220f9a1ca3a9a6b4ce07cac45cbd991b3589.vtt",
+      "storage_path": "courses/bmh-employee-training/v1/captions/video-slot-10-objection-scripts.39f05d8b110e98024d83e6c0ea76d86328629c3be74d7e7fc57987af28047498.vtt",
       "mime_type": "text/vtt",
-      "checksum_sha256": "1a116db84d9d86b36df654d4fdba220f9a1ca3a9a6b4ce07cac45cbd991b3589",
-      "size_bytes": 19851,
+      "checksum_sha256": "39f05d8b110e98024d83e6c0ea76d86328629c3be74d7e7fc57987af28047498",
+      "size_bytes": 18047,
       "approval_status": "approved"
     },
     {
