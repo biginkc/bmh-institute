@@ -55,10 +55,12 @@ export function AssignmentRunner({
   const [filename, setFilename] = useState<string | null>(
     filenameFromPath(revision?.submission_file_path),
   );
+  const [submissionError, setSubmissionError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const router = useRouter();
 
   function onSubmit() {
+    setSubmissionError(null);
     startTransition(async () => {
       try {
         const result = await submitAssignment({
@@ -71,6 +73,7 @@ export function AssignmentRunner({
             assignment.submission_type === "file_upload" ? filePath ?? "" : undefined,
         });
         if (!result.ok) {
+          setSubmissionError(result.error);
           toast.error(result.error);
           return;
         }
@@ -85,8 +88,10 @@ export function AssignmentRunner({
         setFilename(null);
         router.refresh();
       } catch {
+        const message = "Submission could not be confirmed. Check your connection and try again.";
+        setSubmissionError(message);
         router.refresh();
-        toast.error("Submission could not be confirmed. Check your connection and try again.");
+        toast.error(message);
       }
     });
   }
@@ -210,6 +215,15 @@ export function AssignmentRunner({
                 ) : null}
               </div>
             </div>
+          ) : null}
+
+          {submissionError ? (
+            <p
+              role="alert"
+              className="mt-3 rounded-[var(--bmh-radius-md)] border-2 border-[var(--danger)] bg-red-50 px-4 py-3 font-[family-name:var(--font-body)] text-sm font-bold text-[var(--danger)]"
+            >
+              {submissionError}
+            </p>
           ) : null}
 
           <div className="mt-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">

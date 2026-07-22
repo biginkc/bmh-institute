@@ -110,7 +110,25 @@ describe("<AssignmentRunner />", () => {
     await waitFor(() => expect(toast.error).toHaveBeenCalledWith(
       "Submission could not be confirmed. Check your connection and try again.",
     ));
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Submission could not be confirmed. Check your connection and try again.",
+    );
     expect(refreshSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps server validation errors visible beside the submission form", async () => {
+    vi.mocked(submitAssignment).mockResolvedValueOnce({
+      ok: false,
+      error: "Write your response before submitting.",
+    });
+    const user = userEvent.setup();
+    renderRunner();
+
+    await user.click(screen.getByRole("button", { name: "Submit for review" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Write your response before submitting.",
+    );
   });
 
   it("preserves URL and file submission payloads", async () => {
