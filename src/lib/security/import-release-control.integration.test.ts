@@ -4,20 +4,26 @@ import { randomBytes, randomUUID } from "node:crypto";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { describe, expect, it } from "vitest";
 
+import { loadLearnerLessonOutline } from "@/app/(dashboard)/load-learner-lesson-outline";
 import {
   applyImportPlan,
   atomicImportOperations,
   buildRollbackOwnedIds,
   type CourseImportAdapter,
 } from "@/lib/course-import/execute";
-import { buildImportPlan, type ImportPlan } from "@/lib/course-import/operations";
+import {
+  buildImportPlan,
+  type ImportPlan,
+} from "@/lib/course-import/operations";
 import { validCourseManifest } from "@/lib/course-import/test-fixtures";
 import { courseImportProviderPsqlEnvironment } from "@/lib/course-import/provider-acceptance";
 
 function requiredTestEnvironment(name: string): string {
   const value = process.env[name]?.trim();
   if (!value) {
-    throw new Error(`${name} is required for imported-catalog integration coverage.`);
+    throw new Error(
+      `${name} is required for imported-catalog integration coverage.`,
+    );
   }
   return value;
 }
@@ -38,6 +44,110 @@ function uniquePlan(): ImportPlan {
   return buildImportPlan(manifest);
 }
 
+function productionShapePlan(): ImportPlan {
+  const suffix = randomBytes(8).toString("hex");
+  const manifest = validCourseManifest();
+  manifest.import_id = `lesson-load-${suffix}`;
+  manifest.qa_role_group.name = `Lesson load QA ${suffix}`;
+  const course = manifest.program.courses[0];
+  const templateModule = course?.modules[0];
+  const contentTemplate = templateModule?.lessons.find(
+    (lesson) => lesson.type === "content",
+  );
+  const quizTemplate = templateModule?.lessons.find(
+    (lesson) => lesson.type === "quiz",
+  );
+  const assignmentTemplate = templateModule?.lessons.find(
+    (lesson) => lesson.type === "assignment",
+  );
+  if (
+    !course ||
+    !templateModule ||
+    !contentTemplate?.blocks ||
+    !quizTemplate?.quiz ||
+    !assignmentTemplate?.assignment
+  ) {
+    throw new Error("Production-shape fixture templates are incomplete.");
+  }
+  const quizTemplateData = quizTemplate.quiz;
+  const assignmentTemplateData = assignmentTemplate.assignment;
+
+  let contentIndex = 0;
+  let blockCount = 0;
+  course.modules = Array.from({ length: 6 }, (_, moduleIndex) => {
+    const lessons: typeof templateModule.lessons = [];
+    const pairCount = moduleIndex === 5 ? 4 : 3;
+    for (let pairIndex = 0; pairIndex < pairCount; pairIndex += 1) {
+      const pairKey = `m${moduleIndex}-p${pairIndex}`;
+      const blocksForLesson = contentIndex < 16 ? 6 : 5;
+      lessons.push({
+        ...structuredClone(contentTemplate),
+        source_key: `content-${pairKey}`,
+        title: `Content ${moduleIndex + 1}.${pairIndex + 1}`,
+        sort_order: lessons.length,
+        blocks: Array.from({ length: blocksForLesson }, (_, blockIndex) => {
+          const template =
+            contentTemplate.blocks![
+              blockIndex % contentTemplate.blocks!.length
+            ]!;
+          blockCount += 1;
+          return {
+            ...structuredClone(template),
+            source_key: `block-${pairKey}-${blockIndex}`,
+            sort_order: blockIndex,
+          };
+        }),
+      });
+      lessons.push({
+        ...structuredClone(quizTemplate),
+        source_key: `quiz-lesson-${pairKey}`,
+        title: `Quiz ${moduleIndex + 1}.${pairIndex + 1}`,
+        sort_order: lessons.length,
+        quiz: {
+          ...structuredClone(quizTemplateData),
+          source_key: `quiz-${pairKey}`,
+          questions: quizTemplateData.questions.map(
+            (question, questionIndex) => ({
+              ...structuredClone(question),
+              source_key: `question-${pairKey}-${questionIndex}`,
+              options: question.options.map((option, optionIndex) => ({
+                ...structuredClone(option),
+                source_key: `option-${pairKey}-${questionIndex}-${optionIndex}`,
+              })),
+            }),
+          ),
+        },
+      });
+      contentIndex += 1;
+    }
+    lessons.push({
+      ...structuredClone(assignmentTemplate),
+      source_key: `assignment-lesson-m${moduleIndex}`,
+      title: `Assignment ${moduleIndex + 1}`,
+      sort_order: lessons.length,
+      assignment: {
+        ...structuredClone(assignmentTemplateData),
+        source_key: `assignment-m${moduleIndex}`,
+      },
+    });
+    return {
+      ...structuredClone(templateModule),
+      source_key: `module-${moduleIndex}`,
+      title: `Module ${moduleIndex + 1}`,
+      sort_order: moduleIndex,
+      lessons,
+    };
+  });
+  if (
+    course.modules.length !== 6 ||
+    course.modules.flatMap((module) => module.lessons).length !== 44 ||
+    blockCount !== 111
+  ) {
+    throw new Error("Production-shape fixture cardinality drifted.");
+  }
+  return buildImportPlan(manifest);
+}
+
 function contentionPlan(): ImportPlan {
   const suffix = randomBytes(8).toString("hex");
   const manifest = validCourseManifest();
@@ -48,7 +158,8 @@ function contentionPlan(): ImportPlan {
   );
   const quiz = quizLesson?.quiz;
   const template = quiz?.questions[0];
-  if (!quiz || !template) throw new Error("Contention fixture quiz is missing.");
+  if (!quiz || !template)
+    throw new Error("Contention fixture quiz is missing.");
 
   // A same-manifest replay validates this entire envelope before the legacy
   // helper takes its broad table locks. That makes the provider test below a
@@ -79,10 +190,16 @@ function adapter(): CourseImportAdapter {
       return data;
     },
     async readRows(table, ids) {
-      const { data, error } = await service.from(table).select("*").in("id", ids);
+      const { data, error } = await service
+        .from(table)
+        .select("*")
+        .in("id", ids);
       if (error) throw new Error(error.message);
       return new Map(
-        (data ?? []).map((row) => [String(row.id), row as Record<string, unknown>]),
+        (data ?? []).map((row) => [
+          String(row.id),
+          row as Record<string, unknown>,
+        ]),
       );
     },
     async rollbackAtomically(importId, ownedIds) {
@@ -98,6 +215,7 @@ function adapter(): CourseImportAdapter {
 
 async function createSignedInUser(
   systemRole: "learner" | "admin" | "owner",
+  status: "active" | "suspended" = "active",
 ): Promise<{ id: string; client: SupabaseClient }> {
   if (!service || !url || !anonKey) {
     throw new Error("Test-project clients are unavailable.");
@@ -110,11 +228,16 @@ async function createSignedInUser(
     password,
     email_confirm: true,
   });
-  if (created.error || !created.data.user) throw created.error ?? new Error("Test user creation failed.");
+  if (created.error || !created.data.user)
+    throw created.error ?? new Error("Test user creation failed.");
   const id = created.data.user.id;
   let profileFound = false;
   for (let attempt = 0; attempt < 20; attempt += 1) {
-    const profile = await service.from("profiles").select("id").eq("id", id).maybeSingle();
+    const profile = await service
+      .from("profiles")
+      .select("id")
+      .eq("id", id)
+      .maybeSingle();
     if (profile.data) {
       profileFound = true;
       break;
@@ -124,7 +247,7 @@ async function createSignedInUser(
   if (!profileFound) throw new Error(`Profile creation timed out for ${id}.`);
   const profile = await service
     .from("profiles")
-    .update({ system_role: systemRole, status: "active" })
+    .update({ system_role: systemRole, status })
     .eq("id", id);
   if (profile.error) throw profile.error;
   const client = createClient(url, anonKey, {
@@ -172,11 +295,93 @@ async function readCatalogReferences(
 ): Promise<Array<string | null>> {
   return Promise.all(
     references.map(async ({ table, id }) => {
-      const result = await client.from(table).select("id").eq("id", id).maybeSingle();
+      const result = await client
+        .from(table)
+        .select("id")
+        .eq("id", id)
+        .maybeSingle();
       if (result.error) throw result.error;
       return result.data?.id ?? null;
     }),
   );
+}
+
+async function readLessonLoadQueryShape(
+  client: SupabaseClient,
+  courseId: string,
+  lessonId: string,
+) {
+  const [membership, course, blocks] = await Promise.all([
+    client
+      .from("lessons")
+      .select(
+        "id, lesson_type, prerequisite_lesson_id, module_id, modules(course_id)",
+      )
+      .eq("id", lessonId)
+      .maybeSingle(),
+    client
+      .from("courses")
+      .select(
+        `
+        id,
+        title,
+        description,
+        is_published,
+        thumbnail_path,
+        content_import_id,
+        thumbnail_asset_key,
+        thumbnail_approved_path,
+        thumbnail_approved_sha256,
+        modules (
+          id,
+          title,
+          description,
+          sort_order,
+          lessons (
+            id,
+            title,
+            description,
+            lesson_type,
+            sort_order,
+            prerequisite_lesson_id,
+            quiz_id,
+            assignment_id,
+            is_required_for_completion,
+            thumbnail_path,
+            content_import_id,
+            thumbnail_asset_key,
+            thumbnail_approved_path,
+            thumbnail_approved_sha256
+          )
+        )
+      `,
+      )
+      .eq("id", courseId)
+      .maybeSingle(),
+    client
+      .from("content_blocks")
+      .select("id, block_type, content, sort_order, is_required_for_completion")
+      .eq("lesson_id", lessonId)
+      .order("sort_order")
+      .order("id"),
+  ]);
+  for (const result of [membership, course, blocks]) {
+    if (result.error) throw result.error;
+  }
+  const modules = course.data?.modules ?? [];
+  const lessons = modules.flatMap((courseModule) => courseModule.lessons ?? []);
+  return {
+    membershipId: membership.data?.id ?? null,
+    courseId: course.data?.id ?? null,
+    moduleCount: modules.length,
+    lessonIds: lessons.map((lesson) => lesson.id),
+    quizReferenceCount: lessons.filter((lesson) => lesson.quiz_id !== null)
+      .length,
+    assignmentReferenceCount: lessons.filter(
+      (lesson) => lesson.assignment_id !== null,
+    ).length,
+    blockIds: (blocks.data ?? []).map((block) => block.id),
+  };
 }
 
 async function cleanupContentionPlan(
@@ -190,14 +395,20 @@ async function cleanupContentionPlan(
     .select("id", { count: "exact", head: true })
     .eq("id", programId);
   if (before.error) {
-    cleanupErrors.push(new Error(`Contention cleanup lookup failed: ${before.error.message}`));
+    cleanupErrors.push(
+      new Error(`Contention cleanup lookup failed: ${before.error.message}`),
+    );
   } else if ((before.count ?? 0) > 0) {
     const rollback = await client.rpc("fn_rollback_course_import", {
       p_import_id: plan.importId,
       p_owned: buildRollbackOwnedIds(plan),
     });
     if (rollback.error) {
-      cleanupErrors.push(new Error(`Contention cleanup rollback failed: ${rollback.error.message}`));
+      cleanupErrors.push(
+        new Error(
+          `Contention cleanup rollback failed: ${rollback.error.message}`,
+        ),
+      );
     }
   }
 
@@ -206,13 +417,24 @@ async function cleanupContentionPlan(
     .select("id", { count: "exact", head: true })
     .eq("id", programId);
   if (after.error) {
-    cleanupErrors.push(new Error(`Contention cleanup verification failed: ${after.error.message}`));
+    cleanupErrors.push(
+      new Error(
+        `Contention cleanup verification failed: ${after.error.message}`,
+      ),
+    );
   } else if ((after.count ?? 0) !== 0) {
-    cleanupErrors.push(new Error("Contention cleanup left the imported program in the test project."));
+    cleanupErrors.push(
+      new Error(
+        "Contention cleanup left the imported program in the test project.",
+      ),
+    );
   }
 
   if (cleanupErrors.length === 0) return null;
-  return new AggregateError(cleanupErrors, "Contention import cleanup was not exact.");
+  return new AggregateError(
+    cleanupErrors,
+    "Contention import cleanup was not exact.",
+  );
 }
 
 type PsqlSession = {
@@ -222,11 +444,20 @@ type PsqlSession = {
 };
 
 function startPsql(applicationName: string): PsqlSession {
-  if (!databaseUrl) throw new Error("Test-project Postgres URL is unavailable.");
+  if (!databaseUrl)
+    throw new Error("Test-project Postgres URL is unavailable.");
   const session: PsqlSession = {
     child: spawn(
       "psql",
-      ["-X", "--set", "ON_ERROR_STOP=1", "--no-psqlrc", "--tuples-only", "--no-align", "--quiet"],
+      [
+        "-X",
+        "--set",
+        "ON_ERROR_STOP=1",
+        "--no-psqlrc",
+        "--tuples-only",
+        "--no-align",
+        "--quiet",
+      ],
       {
         env: {
           ...process.env,
@@ -284,7 +515,9 @@ async function waitForPsqlExit(session: PsqlSession, timeoutMs = 20_000) {
       });
     });
   } else if (session.child.exitCode !== 0) {
-    throw new Error(`psql failed (${session.child.exitCode}): ${session.stderr}`);
+    throw new Error(
+      `psql failed (${session.child.exitCode}): ${session.stderr}`,
+    );
   }
 }
 
@@ -293,9 +526,31 @@ async function runPsql(sql: string, applicationName: string) {
   session.child.stdin.end(sql);
   try {
     await waitForPsqlExit(session);
+    return session.stdout;
   } finally {
     if (session.child.exitCode === null) session.child.kill("SIGTERM");
   }
+}
+
+function sqlLiteral(value: string): string {
+  return `'${value.replaceAll("'", "''")}'`;
+}
+
+function uuidArraySql(values: string[]): string {
+  return `array[${values.map((value) => `${sqlLiteral(value)}::uuid`).join(",")}]`;
+}
+
+function normalizedLessonStates(value: unknown) {
+  if (!Array.isArray(value)) {
+    throw new Error("Lesson-state RPC did not return an array.");
+  }
+  return value
+    .map((row) => ({
+      lesson_id: String(row.lesson_id),
+      is_complete: Boolean(row.is_complete),
+      is_unlocked: Boolean(row.is_unlocked),
+    }))
+    .sort((left, right) => left.lesson_id.localeCompare(right.lesson_id));
 }
 
 async function terminatePsql(session: PsqlSession | null) {
@@ -313,7 +568,8 @@ async function terminatePsql(session: PsqlSession | null) {
 
 describe("imported catalog release control on a test project", () => {
   it("settles same-manifest apply against ordinary catalog updates without a lock-upgrade deadlock", async () => {
-    if (!service) throw new Error("Test-project service client is unavailable.");
+    if (!service)
+      throw new Error("Test-project service client is unavailable.");
     const plan = contentionPlan();
     const program = atomicImportOperations(plan).find(
       (operation) => operation.table === "programs",
@@ -358,7 +614,8 @@ describe("imported catalog release control on a test project", () => {
       expect(writerPid).toBeGreaterThan(0);
 
       const replay = applyImportPlan(plan, adapter());
-      await runPsql(`
+      await runPsql(
+        `
         do $observer$
         declare
           v_deadline timestamptz := clock_timestamp() + interval '15 seconds';
@@ -383,12 +640,18 @@ describe("imported catalog release control on a test project", () => {
           end loop;
         end
         $observer$;
-      `, "bmh-import-contention-observer");
+      `,
+        "bmh-import-contention-observer",
+      );
 
       barrier.child.stdin.end(
         `select pg_advisory_unlock(${lockKeyA}, ${lockKeyB});\n\\q\n`,
       );
-      await Promise.all([waitForPsqlExit(barrier), waitForPsqlExit(writer), replay]);
+      await Promise.all([
+        waitForPsqlExit(barrier),
+        waitForPsqlExit(writer),
+        replay,
+      ]);
     } catch (error) {
       testError = error;
     } finally {
@@ -407,7 +670,8 @@ describe("imported catalog release control on a test project", () => {
   }, 60_000);
 
   it("denies generic publication and a second role group while preserving rollback", async () => {
-    if (!service) throw new Error("Test-project service client is unavailable.");
+    if (!service)
+      throw new Error("Test-project service client is unavailable.");
     const plan = uniquePlan();
     const program = atomicImportOperations(plan).find(
       (operation) => operation.table === "programs",
@@ -447,7 +711,9 @@ describe("imported catalog release control on a test project", () => {
         program_id: program.id,
         role_group_id: employeeRoleGroupId,
       });
-      expect(access.error?.message).toMatch(/exact apply or release operation/i);
+      expect(access.error?.message).toMatch(
+        /exact apply or release operation/i,
+      );
 
       const directCourseAccess = await service.from("course_access").insert({
         course_id: course.id,
@@ -457,25 +723,31 @@ describe("imported catalog release control on a test project", () => {
         /zero direct access grants/i,
       );
 
-      const malformedRelease = await service.rpc("fn_release_course_import_v1", {
-        p_import_id: plan.importId,
-        p_program_id: program.id,
-        p_employee_role_group_id: employeeRoleGroupId,
-        p_evidence: {},
-        p_confirmation: "not-a-release",
-      });
+      const malformedRelease = await service.rpc(
+        "fn_release_course_import_v1",
+        {
+          p_import_id: plan.importId,
+          p_program_id: program.id,
+          p_employee_role_group_id: employeeRoleGroupId,
+          p_evidence: {},
+          p_confirmation: "not-a-release",
+        },
+      );
       expect(malformedRelease.error?.message).toMatch(/confirmation|evidence/i);
 
       const anonymous = createClient(url!, anonKey!, {
         auth: { autoRefreshToken: false, persistSession: false },
       });
-      const anonymousRelease = await anonymous.rpc("fn_release_course_import_v1", {
-        p_import_id: plan.importId,
-        p_program_id: program.id,
-        p_employee_role_group_id: employeeRoleGroupId,
-        p_evidence: {},
-        p_confirmation: "not-a-release",
-      });
+      const anonymousRelease = await anonymous.rpc(
+        "fn_release_course_import_v1",
+        {
+          p_import_id: plan.importId,
+          p_program_id: program.id,
+          p_employee_role_group_id: employeeRoleGroupId,
+          p_evidence: {},
+          p_confirmation: "not-a-release",
+        },
+      );
       expect(anonymousRelease.error).not.toBeNull();
     } finally {
       await service.rpc("fn_rollback_course_import", {
@@ -483,41 +755,584 @@ describe("imported catalog release control on a test project", () => {
         p_owned: buildRollbackOwnedIds(plan),
       });
       if (employeeRoleGroupId) {
-        await service.from("role_groups").delete().eq("id", employeeRoleGroupId);
+        await service
+          .from("role_groups")
+          .delete()
+          .eq("id", employeeRoleGroupId);
       }
     }
   });
 
-  it("keeps imported review reviewer-only and blocks generic QA membership and invites", async () => {
-    if (!service) throw new Error("Test-project service client is unavailable.");
-    const plan = uniquePlan();
+  it("matches the baseline state vector for a released learner without leaving released TEST data", async () => {
+    if (!service)
+      throw new Error("Test-project service client is unavailable.");
+    const plan = productionShapePlan();
+    const operations = atomicImportOperations(plan);
     const operation = (table: ImportPlan["operations"][number]["table"]) => {
-      const row = atomicImportOperations(plan).find((candidate) => candidate.table === table);
+      const row = operations.find((candidate) => candidate.table === table);
+      if (!row) throw new Error(`Released-state fixture is missing ${table}.`);
+      return row;
+    };
+    const program = operation("programs");
+    const course = operation("courses");
+    const lessonOperations = operations.filter(
+      (candidate) => candidate.table === "lessons",
+    );
+    const contentLessons = lessonOperations.filter(
+      (candidate) => candidate.row.lesson_type === "content",
+    );
+    const quizLessons = lessonOperations.filter(
+      (candidate) => candidate.row.lesson_type === "quiz",
+    );
+    const assignmentLessons = lessonOperations.filter(
+      (candidate) => candidate.row.lesson_type === "assignment",
+    );
+    const [firstContent, secondContent, thirdContent, staleContent] =
+      contentLessons;
+    const [firstQuiz, secondQuiz, thirdQuiz, lockedQuiz] = quizLessons;
+    const [firstAssignment] = assignmentLessons;
+    if (
+      !firstContent ||
+      !secondContent ||
+      !thirdContent ||
+      !staleContent ||
+      !firstQuiz ||
+      !secondQuiz ||
+      !thirdQuiz ||
+      !lockedQuiz ||
+      !firstAssignment
+    ) {
+      throw new Error("Released-state transition fixture is incomplete.");
+    }
+    const rowUuid = (
+      candidate: (typeof operations)[number],
+      key: string,
+    ) => {
+      const value = candidate.row[key];
+      if (typeof value !== "string") {
+        throw new Error(`Released-state fixture ${candidate.id} lacks ${key}.`);
+      }
+      return value;
+    };
+    const firstQuizId = rowUuid(firstQuiz, "quiz_id");
+    const secondQuizId = rowUuid(secondQuiz, "quiz_id");
+    const thirdQuizId = rowUuid(thirdQuiz, "quiz_id");
+    const firstAssignmentId = rowUuid(firstAssignment, "assignment_id");
+    const staleRequiredBlocks = operations.filter(
+      (candidate) =>
+        candidate.table === "content_blocks" &&
+        candidate.row.lesson_id === staleContent.id &&
+        candidate.row.is_required_for_completion === true,
+    );
+    const staleVideoBlock = staleRequiredBlocks.find(
+      (candidate) => candidate.row.block_type === "video",
+    );
+    if (!staleVideoBlock || staleRequiredBlocks.length < 2) {
+      throw new Error("Released-state fixture lacks stale video coverage.");
+    }
+    const lessonIds = lessonOperations.map((candidate) => candidate.id);
+    const lessonTypes = lessonOperations.map((candidate) =>
+      String(candidate.row.lesson_type),
+    );
+    expect(lessonIds).toHaveLength(44);
+    expect(lessonTypes.filter((type) => type === "content")).toHaveLength(19);
+    expect(lessonTypes.filter((type) => type === "quiz")).toHaveLength(19);
+    expect(lessonTypes.filter((type) => type === "assignment")).toHaveLength(6);
+    expect(
+      operations.filter(
+        (candidate) =>
+          candidate.table === "lessons" &&
+          candidate.row.prerequisite_lesson_id !== null,
+      ),
+    ).toHaveLength(43);
+
+    let learner: Awaited<ReturnType<typeof createSignedInUser>> | null = null;
+    let owner: Awaited<ReturnType<typeof createSignedInUser>> | null = null;
+    let employeeRoleGroupId: string | null = null;
+    let importApplied = false;
+
+    try {
+      await applyImportPlan(plan, adapter());
+      importApplied = true;
+      learner = await createSignedInUser("learner");
+      owner = await createSignedInUser("owner");
+      const releasedLearnerId = learner.id;
+
+      const employee = await service
+        .from("role_groups")
+        .insert({ name: `Released parity ${randomBytes(8).toString("hex")}` })
+        .select("id")
+        .single();
+      if (
+        employee.error ||
+        !employee.data ||
+        typeof employee.data.id !== "string"
+      ) {
+        throw (
+          employee.error ?? new Error("Employee role group was not created.")
+        );
+      }
+      const releasedEmployeeRoleGroupId = employee.data.id;
+      employeeRoleGroupId = releasedEmployeeRoleGroupId;
+      const membership = await service.from("user_role_groups").insert({
+        user_id: learner.id,
+        role_group_id: releasedEmployeeRoleGroupId,
+      });
+      expect(membership.error).toBeNull();
+
+      const catalogDigest = await service.rpc(
+        "fn_course_import_catalog_sha256",
+        { p_import_id: plan.importId },
+      );
+      expect(catalogDigest.error).toBeNull();
+      expect(catalogDigest.data).toMatch(/^[a-f0-9]{64}$/);
+
+      const manifestDigest = "a".repeat(64);
+      const gateDigest = "b".repeat(64);
+      const recordedAt = new Date(Date.now() - 120_000).toISOString();
+      const approvedAt = new Date(Date.now() - 60_000).toISOString();
+      const evidence = {
+        manifest: {
+          sha256: manifestDigest,
+          recorded_at: recordedAt,
+          status: "finalized",
+        },
+        reconciliation: {
+          sha256: gateDigest,
+          catalog_sha256: catalogDigest.data,
+          recorded_at: recordedAt,
+          status: "passed",
+          exact: true,
+        },
+        rollback_rehearsal: {
+          sha256: gateDigest,
+          recorded_at: recordedAt,
+          status: "passed",
+        },
+        chrome_desktop: {
+          sha256: gateDigest,
+          recorded_at: recordedAt,
+          status: "passed",
+        },
+        chrome_mobile: {
+          sha256: gateDigest,
+          recorded_at: recordedAt,
+          status: "passed",
+        },
+        admin_happy_path: {
+          sha256: gateDigest,
+          recorded_at: recordedAt,
+          status: "passed",
+        },
+        jarrad_approval: {
+          sha256: gateDigest,
+          approved_at: approvedAt,
+          status: "approved",
+          approved_by: "Jarrad Henry",
+        },
+      };
+      const paritySql = (marker: string) => `
+        select ${sqlLiteral(`${marker}=`)} || jsonb_build_object(
+          'set_based', (
+            select jsonb_agg(to_jsonb(state) order by state.lesson_id)
+            from public.fn_learner_lesson_states_v1(
+              ${sqlLiteral(course.id)}::uuid,
+              ${uuidArraySql(lessonIds)}
+            ) state
+          ),
+          'baseline', (
+            select jsonb_agg(to_jsonb(state) order by state.lesson_id)
+            from public.fn_lesson_states(
+              ${sqlLiteral(releasedLearnerId)}::uuid,
+              ${uuidArraySql(lessonIds)}
+            ) state
+          )
+        )::text;
+      `;
+      const seedRequiredContentSql = (
+        lessonId: string,
+        staleBlockId?: string,
+      ) => `
+        insert into public.user_block_progress (
+          user_id, block_id, asset_version
+        )
+        select
+          ${sqlLiteral(releasedLearnerId)}::uuid,
+          block.id,
+          ${
+            staleBlockId
+              ? `case
+                  when block.id = ${sqlLiteral(staleBlockId)}::uuid
+                    then 'stale-video-version'
+                  else coalesce(
+                    public.fn_video_asset_version(block.content),
+                    'non-video:' || block.id::text
+                  )
+                end`
+              : `coalesce(
+                  public.fn_video_asset_version(block.content),
+                  'non-video:' || block.id::text
+                )`
+          }
+        from public.content_blocks block
+        where block.lesson_id = ${sqlLiteral(lessonId)}::uuid
+          and block.is_required_for_completion = true;
+      `;
+      const databaseBudgetSql = Array.from(
+        { length: 10 },
+        () => `
+          with started as materialized (
+            select clock_timestamp() as started_at
+          ), catalog as materialized (
+            select jsonb_agg(to_jsonb(row_data) order by row_data.module_sort, row_data.lesson_sort) as payload
+            from (
+              select
+                course.id as course_id,
+                course.title as course_title,
+                module.id as module_id,
+                module.sort_order as module_sort,
+                lesson.id as lesson_id,
+                lesson.lesson_type,
+                lesson.prerequisite_lesson_id,
+                lesson.sort_order as lesson_sort
+              from started
+              cross join public.courses course
+              join public.modules module on module.course_id = course.id
+              join public.lessons lesson on lesson.module_id = module.id
+              where course.id = ${sqlLiteral(course.id)}::uuid
+            ) row_data
+          ), states as materialized (
+            select jsonb_agg(to_jsonb(state) order by state.lesson_id) as payload
+            from catalog
+            cross join public.fn_learner_lesson_states_v1(
+              ${sqlLiteral(course.id)}::uuid,
+              ${uuidArraySql(lessonIds)}
+            ) state
+            where catalog.payload is not null
+          )
+          select 'DB_BUDGET_MS=' || round(
+            extract(epoch from (clock_timestamp() - started.started_at)) * 1000,
+            1
+          )::text
+          from started, catalog, states
+          where catalog.payload is not null and states.payload is not null;
+        `,
+      ).join("\n");
+      const output = await runPsql(
+        `
+          begin;
+          select set_config('request.jwt.claim.role', 'service_role', true);
+          select set_config('request.jwt.claim.sub', ${sqlLiteral(owner.id)}, true);
+          select public.fn_release_course_import_v1(
+            ${sqlLiteral(plan.importId)},
+            ${sqlLiteral(program.id)}::uuid,
+            ${sqlLiteral(releasedEmployeeRoleGroupId)}::uuid,
+            ${sqlLiteral(JSON.stringify(evidence))}::jsonb,
+            ${sqlLiteral(`RELEASE-BMH-INSTITUTE:${plan.importId}:${manifestDigest}`)}
+          );
+          update public.lessons
+          set prerequisite_quiz_min_score = 80
+          where id = ${sqlLiteral(secondContent.id)}::uuid;
+          update public.content_blocks
+          set content = jsonb_set(
+            content,
+            '{file_path}',
+            to_jsonb('parity/' || id::text || '.mp4'),
+            true
+          )
+          where lesson_id in (
+            ${sqlLiteral(firstContent.id)}::uuid,
+            ${sqlLiteral(secondContent.id)}::uuid,
+            ${sqlLiteral(thirdContent.id)}::uuid,
+            ${sqlLiteral(staleContent.id)}::uuid
+          )
+            and block_type = 'video';
+          select set_config('request.jwt.claim.role', 'authenticated', true);
+          select set_config('request.jwt.claim.sub', ${sqlLiteral(learner.id)}, true);
+          set local role authenticated;
+          ${databaseBudgetSql}
+          ${paritySql("PARITY_EMPTY")}
+
+          reset role;
+          select set_config('request.jwt.claim.role', 'service_role', true);
+          ${seedRequiredContentSql(firstContent.id)}
+          insert into public.user_quiz_attempts (
+            user_id, quiz_id, lesson_id, score, passed, completed_at
+          ) values (
+            ${sqlLiteral(learner.id)}::uuid,
+            ${sqlLiteral(firstQuizId)}::uuid,
+            ${sqlLiteral(firstQuiz.id)}::uuid,
+            70,
+            true,
+            now()
+          );
+          select set_config('request.jwt.claim.role', 'authenticated', true);
+          set local role authenticated;
+          ${paritySql("PARITY_BELOW_SCORE")}
+
+          reset role;
+          select set_config('request.jwt.claim.role', 'service_role', true);
+          update public.user_quiz_attempts
+          set score = 100
+          where user_id = ${sqlLiteral(learner.id)}::uuid
+            and lesson_id = ${sqlLiteral(firstQuiz.id)}::uuid;
+          select set_config('request.jwt.claim.role', 'authenticated', true);
+          set local role authenticated;
+          ${paritySql("PARITY_ABOVE_SCORE")}
+
+          reset role;
+          select set_config('request.jwt.claim.role', 'service_role', true);
+          ${seedRequiredContentSql(secondContent.id)}
+          ${seedRequiredContentSql(thirdContent.id)}
+          ${seedRequiredContentSql(staleContent.id, staleVideoBlock.id)}
+          insert into public.user_quiz_attempts (
+            user_id, quiz_id, lesson_id, score, passed, completed_at
+          ) values
+          (
+            ${sqlLiteral(learner.id)}::uuid,
+            ${sqlLiteral(secondQuizId)}::uuid,
+            ${sqlLiteral(secondQuiz.id)}::uuid,
+            100,
+            true,
+            now()
+          ),
+          (
+            ${sqlLiteral(learner.id)}::uuid,
+            ${sqlLiteral(thirdQuizId)}::uuid,
+            ${sqlLiteral(thirdQuiz.id)}::uuid,
+            100,
+            true,
+            now()
+          );
+          insert into public.assignment_submissions (
+            assignment_id, lesson_id, user_id, submission_text, status,
+            reviewed_by, reviewed_at
+          ) values (
+            ${sqlLiteral(firstAssignmentId)}::uuid,
+            ${sqlLiteral(firstAssignment.id)}::uuid,
+            ${sqlLiteral(learner.id)}::uuid,
+            'Released-state parity proof',
+            'approved',
+            ${sqlLiteral(owner.id)}::uuid,
+            now()
+          );
+          select set_config('request.jwt.claim.role', 'authenticated', true);
+          set local role authenticated;
+          ${paritySql("PARITY_COMPLETED")}
+          rollback;
+        `,
+        "bmh-released-learner-state-parity",
+      );
+      const outputLines = output.split("\n");
+      const budgetSamples = outputLines
+        .filter((line) => line.startsWith("DB_BUDGET_MS="))
+        .map((line) => Number(line.slice("DB_BUDGET_MS=".length)))
+        .sort((left, right) => left - right);
+      expect(budgetSamples).toHaveLength(10);
+      expect(budgetSamples.every(Number.isFinite)).toBe(true);
+      expect(budgetSamples[9]).toBeLessThan(500);
+
+      const readParity = (marker: string) => {
+        const parityLine = outputLines.find((line) =>
+          line.startsWith(`${marker}=`),
+        );
+        if (!parityLine) {
+          throw new Error(
+            `Released learner ${marker} output was missing: ${output}`,
+          );
+        }
+        const parity = JSON.parse(parityLine.slice(`${marker}=`.length)) as {
+          set_based: unknown;
+          baseline: unknown;
+        };
+        const setBased = normalizedLessonStates(parity.set_based);
+        expect(setBased).toEqual(normalizedLessonStates(parity.baseline));
+        return setBased;
+      };
+      const emptyStates = readParity("PARITY_EMPTY");
+      expect(emptyStates).toHaveLength(44);
+      expect(emptyStates.filter((state) => state.is_unlocked)).toHaveLength(1);
+      expect(emptyStates.filter((state) => state.is_complete)).toHaveLength(0);
+
+      const belowScoreStates = new Map(
+        readParity("PARITY_BELOW_SCORE").map((state) => [
+          state.lesson_id,
+          state,
+        ]),
+      );
+      expect(belowScoreStates.get(firstContent.id)).toMatchObject({
+        is_complete: true,
+        is_unlocked: true,
+      });
+      expect(belowScoreStates.get(firstQuiz.id)).toMatchObject({
+        is_complete: true,
+        is_unlocked: true,
+      });
+      expect(belowScoreStates.get(secondContent.id)).toMatchObject({
+        is_complete: false,
+        is_unlocked: false,
+      });
+
+      const aboveScoreStates = new Map(
+        readParity("PARITY_ABOVE_SCORE").map((state) => [
+          state.lesson_id,
+          state,
+        ]),
+      );
+      expect(aboveScoreStates.get(secondContent.id)).toMatchObject({
+        is_complete: false,
+        is_unlocked: true,
+      });
+
+      const completedStates = new Map(
+        readParity("PARITY_COMPLETED").map((state) => [state.lesson_id, state]),
+      );
+      for (const completedLesson of lessonOperations.slice(0, 7)) {
+        expect(completedStates.get(completedLesson.id)).toMatchObject({
+          is_complete: true,
+          is_unlocked: true,
+        });
+      }
+      expect(completedStates.get(staleContent.id)).toMatchObject({
+        is_complete: false,
+        is_unlocked: true,
+      });
+      expect(completedStates.get(lockedQuiz.id)).toMatchObject({
+        is_complete: false,
+        is_unlocked: false,
+      });
+
+      const releaseAfterRollback = await service
+        .from("content_import_release_records")
+        .select("import_id")
+        .eq("import_id", plan.importId)
+        .maybeSingle();
+      expect(releaseAfterRollback.error).toBeNull();
+      expect(releaseAfterRollback.data).toBeNull();
+      const learnerAfterRollback = await learner.client.rpc(
+        "fn_learner_lesson_states_v1",
+        { p_course_id: course.id, p_lesson_ids: lessonIds },
+      );
+      expect(learnerAfterRollback.error?.message).toMatch(
+        /course or review boundary|course access/i,
+      );
+    } finally {
+      const cleanupErrors: Error[] = [];
+      for (const actor of [learner, owner]) {
+        if (!actor) continue;
+        const deleted = await service.auth.admin.deleteUser(actor.id);
+        if (deleted.error) cleanupErrors.push(deleted.error);
+      }
+      if (employeeRoleGroupId) {
+        const deletedRoleGroup = await service
+          .from("role_groups")
+          .delete()
+          .eq("id", employeeRoleGroupId);
+        if (deletedRoleGroup.error) cleanupErrors.push(deletedRoleGroup.error);
+      }
+      if (importApplied) {
+        const rollback = await service.rpc("fn_rollback_course_import", {
+          p_import_id: plan.importId,
+          p_owned: buildRollbackOwnedIds(plan),
+        });
+        if (rollback.error) cleanupErrors.push(rollback.error);
+      }
+      const fixtureIds = [learner?.id, owner?.id].filter((id): id is string =>
+        Boolean(id),
+      );
+      if (fixtureIds.length > 0) {
+        const remainingProfiles = await service
+          .from("profiles")
+          .select("id")
+          .in("id", fixtureIds);
+        if (remainingProfiles.error)
+          cleanupErrors.push(remainingProfiles.error);
+        if ((remainingProfiles.data ?? []).length > 0) {
+          cleanupErrors.push(
+            new Error("Released-state cleanup left TEST profiles behind."),
+          );
+        }
+      }
+      if (employeeRoleGroupId) {
+        const remainingRoleGroup = await service
+          .from("role_groups")
+          .select("id")
+          .eq("id", employeeRoleGroupId);
+        if (remainingRoleGroup.error)
+          cleanupErrors.push(remainingRoleGroup.error);
+        if ((remainingRoleGroup.data ?? []).length > 0) {
+          cleanupErrors.push(
+            new Error("Released-state cleanup left a TEST role group behind."),
+          );
+        }
+      }
+      if (cleanupErrors.length > 0) {
+        throw new AggregateError(
+          cleanupErrors,
+          "Released-state TEST fixture cleanup was not exact.",
+        );
+      }
+    }
+  }, 60_000);
+
+  it("keeps imported review reviewer-only and blocks generic QA membership and invites", async () => {
+    if (!service)
+      throw new Error("Test-project service client is unavailable.");
+    const plan = productionShapePlan();
+    const planOperations = atomicImportOperations(plan);
+    expect(
+      planOperations.filter((operation) => operation.table === "modules"),
+    ).toHaveLength(6);
+    expect(
+      planOperations.filter((operation) => operation.table === "lessons"),
+    ).toHaveLength(44);
+    expect(
+      planOperations.filter(
+        (operation) => operation.table === "content_blocks",
+      ),
+    ).toHaveLength(111);
+    const operation = (table: ImportPlan["operations"][number]["table"]) => {
+      const row = planOperations.find((candidate) => candidate.table === table);
       if (!row) throw new Error(`Test import is missing ${table}.`);
       return row;
     };
     const program = operation("programs");
     const course = operation("courses");
     const lesson = operation("lessons");
+    const contentBlock = operation("content_blocks");
+    const contentLesson = planOperations.find(
+      (candidate) =>
+        candidate.table === "lessons" &&
+        candidate.id === contentBlock.row.lesson_id,
+    );
+    if (!contentLesson)
+      throw new Error("Test import content lesson is missing.");
     const importedModule = operation("modules");
     const quiz = operation("quizzes");
     const answerOption = operation("answer_options");
-    const quizLesson = atomicImportOperations(plan).find(
+    const quizLesson = planOperations.find(
       (candidate) =>
         candidate.table === "lessons" && candidate.row.quiz_id === quiz.id,
     );
     if (!quizLesson) throw new Error("Test import quiz lesson is missing.");
     const assignment = operation("assignments");
-    const assignmentLesson = atomicImportOperations(plan).find(
+    const assignmentLesson = planOperations.find(
       (candidate) =>
-        candidate.table === "lessons" && candidate.row.assignment_id === assignment.id,
+        candidate.table === "lessons" &&
+        candidate.row.assignment_id === assignment.id,
     );
-    if (!assignmentLesson) throw new Error("Test import assignment lesson is missing.");
+    if (!assignmentLesson)
+      throw new Error("Test import assignment lesson is missing.");
     const qaRoleGroup = operation("role_groups");
     const importedReferences = importedCatalogReferences(plan);
     let learner: Awaited<ReturnType<typeof createSignedInUser>> | null = null;
     let admin: Awaited<ReturnType<typeof createSignedInUser>> | null = null;
     let owner: Awaited<ReturnType<typeof createSignedInUser>> | null = null;
+    let ungrantedOwner: Awaited<ReturnType<typeof createSignedInUser>> | null =
+      null;
+    let unassigned: Awaited<ReturnType<typeof createSignedInUser>> | null =
+      null;
+    let suspended: Awaited<ReturnType<typeof createSignedInUser>> | null = null;
     let importApplied = false;
     let reviewerOptionOutstanding = false;
 
@@ -527,16 +1342,55 @@ describe("imported catalog release control on a test project", () => {
       learner = await createSignedInUser("learner");
       admin = await createSignedInUser("admin");
       owner = await createSignedInUser("owner");
+      ungrantedOwner = await createSignedInUser("owner");
+      unassigned = await createSignedInUser("learner");
+      suspended = await createSignedInUser("learner", "suspended");
 
-      const [ownerBeforeGrant, adminBeforeGrant, learnerBeforeGrant] =
-        await Promise.all([
-          readCatalogReferences(owner.client, importedReferences),
-          readCatalogReferences(admin.client, importedReferences),
-          readCatalogReferences(learner.client, importedReferences),
-        ]);
+      const [
+        ownerBeforeGrant,
+        adminBeforeGrant,
+        learnerBeforeGrant,
+        ungrantedOwnerBeforeGrant,
+        unassignedBeforeGrant,
+        suspendedBeforeGrant,
+      ] = await Promise.all([
+        readCatalogReferences(owner.client, importedReferences),
+        readCatalogReferences(admin.client, importedReferences),
+        readCatalogReferences(learner.client, importedReferences),
+        readCatalogReferences(ungrantedOwner.client, importedReferences),
+        readCatalogReferences(unassigned.client, importedReferences),
+        readCatalogReferences(suspended.client, importedReferences),
+      ]);
       expect(ownerBeforeGrant).toEqual(importedReferences.map(() => null));
       expect(adminBeforeGrant).toEqual(importedReferences.map(() => null));
       expect(learnerBeforeGrant).toEqual(importedReferences.map(() => null));
+      expect(ungrantedOwnerBeforeGrant).toEqual(
+        importedReferences.map(() => null),
+      );
+      expect(unassignedBeforeGrant).toEqual(importedReferences.map(() => null));
+      expect(suspendedBeforeGrant).toEqual(importedReferences.map(() => null));
+
+      const [
+        ownerLoadBeforeGrant,
+        adminLoadBeforeGrant,
+        learnerLoadBeforeGrant,
+      ] = await Promise.all([
+        readLessonLoadQueryShape(owner.client, course.id, contentLesson.id),
+        readLessonLoadQueryShape(admin.client, course.id, contentLesson.id),
+        readLessonLoadQueryShape(learner.client, course.id, contentLesson.id),
+      ]);
+      const hiddenLessonLoad = {
+        membershipId: null,
+        courseId: null,
+        moduleCount: 0,
+        lessonIds: [],
+        quizReferenceCount: 0,
+        assignmentReferenceCount: 0,
+        blockIds: [],
+      };
+      expect(ownerLoadBeforeGrant).toEqual(hiddenLessonLoad);
+      expect(adminLoadBeforeGrant).toEqual(hiddenLessonLoad);
+      expect(learnerLoadBeforeGrant).toEqual(hiddenLessonLoad);
 
       const directReviewerRead = await owner.client
         .from("course_import_reviewers_v1")
@@ -558,7 +1412,9 @@ describe("imported catalog release control on a test project", () => {
       const serviceReviewerInsert = await service
         .from("course_import_reviewers_v1")
         .insert({ program_id: program.id, user_id: owner.id });
-      expect(serviceReviewerInsert.error?.message).toMatch(/permission denied/i);
+      expect(serviceReviewerInsert.error?.message).toMatch(
+        /permission denied/i,
+      );
 
       const directMembership = await service.from("user_role_groups").insert({
         user_id: learner.id,
@@ -608,28 +1464,143 @@ describe("imported catalog release control on a test project", () => {
       );
       expect(reviewerGrant.error).toBeNull();
 
-      const [visibleToReviewer, hiddenFromAdmin, hiddenFromLearner, unlocked] =
-        await Promise.all([
-          readCatalogReferences(owner.client, importedReferences),
-          readCatalogReferences(admin.client, importedReferences),
-          readCatalogReferences(learner.client, importedReferences),
-          owner.client.rpc("fn_lesson_is_unlocked", {
-            p_user_id: owner.id,
-            p_lesson_id: lesson.id,
-          }),
-        ]);
+      const [
+        visibleToReviewer,
+        hiddenFromAdmin,
+        hiddenFromLearner,
+        hiddenFromUngrantedOwner,
+        hiddenFromUnassigned,
+        hiddenFromSuspended,
+        unlocked,
+      ] = await Promise.all([
+        readCatalogReferences(owner.client, importedReferences),
+        readCatalogReferences(admin.client, importedReferences),
+        readCatalogReferences(learner.client, importedReferences),
+        readCatalogReferences(ungrantedOwner.client, importedReferences),
+        readCatalogReferences(unassigned.client, importedReferences),
+        readCatalogReferences(suspended.client, importedReferences),
+        owner.client.rpc("fn_lesson_is_unlocked", {
+          p_user_id: owner.id,
+          p_lesson_id: lesson.id,
+        }),
+      ]);
       expect(visibleToReviewer).toEqual(importedReferences.map(({ id }) => id));
       expect(hiddenFromAdmin).toEqual(importedReferences.map(() => null));
       expect(hiddenFromLearner).toEqual(importedReferences.map(() => null));
+      expect(hiddenFromUngrantedOwner).toEqual(
+        importedReferences.map(() => null),
+      );
+      expect(hiddenFromUnassigned).toEqual(importedReferences.map(() => null));
+      expect(hiddenFromSuspended).toEqual(importedReferences.map(() => null));
       expect(unlocked.error).toBeNull();
       expect(unlocked.data).toBe(true);
+
+      const [unassignedStateRead, suspendedStateRead] = await Promise.all([
+        unassigned.client.rpc("fn_learner_lesson_states_v1", {
+          p_course_id: course.id,
+          p_lesson_ids: [contentLesson.id],
+        }),
+        suspended.client.rpc("fn_learner_lesson_states_v1", {
+          p_course_id: course.id,
+          p_lesson_ids: [contentLesson.id],
+        }),
+      ]);
+      expect(unassignedStateRead.error?.message).toMatch(
+        /course or review boundary|course access/i,
+      );
+      expect(suspendedStateRead.error?.message).toMatch(/active actor/i);
+
+      const reviewerLessonLoad = await readLessonLoadQueryShape(
+        owner.client,
+        course.id,
+        contentLesson.id,
+      );
+      expect(reviewerLessonLoad).toEqual({
+        membershipId: contentLesson.id,
+        courseId: course.id,
+        moduleCount: 6,
+        lessonIds: expect.arrayContaining(
+          planOperations
+            .filter((candidate) => candidate.table === "lessons")
+            .map((candidate) => candidate.id),
+        ),
+        quizReferenceCount: 19,
+        assignmentReferenceCount: 6,
+        blockIds: expect.arrayContaining([contentBlock.id]),
+      });
+      expect(reviewerLessonLoad.lessonIds).toHaveLength(44);
+
+      const lessonLoadDurations: number[] = [];
+      for (let sample = 0; sample < 10; sample += 1) {
+        const startedAt = performance.now();
+        const actualReviewerLoad = await loadLearnerLessonOutline({
+          supabase: owner.client as never,
+          courseId: course.id,
+          lessonId: contentLesson.id,
+          userId: owner.id,
+        });
+        lessonLoadDurations.push(performance.now() - startedAt);
+        expect(actualReviewerLoad.ok).toBe(true);
+        if (actualReviewerLoad.ok) {
+          expect(actualReviewerLoad.outline.course.modules).toHaveLength(6);
+          expect(
+            actualReviewerLoad.outline.course.modules.flatMap(
+              (courseModule) => courseModule.lessons,
+            ),
+          ).toHaveLength(44);
+          expect(actualReviewerLoad.outline.tiles).toHaveLength(25);
+        }
+      }
+      lessonLoadDurations.sort((left, right) => left - right);
+      const lessonLoadMedian =
+        (lessonLoadDurations[4]! + lessonLoadDurations[5]!) / 2;
+      expect(lessonLoadMedian).toBeLessThan(1_500);
+      expect(lessonLoadDurations[9]).toBeLessThan(2_500);
+
+      const stateDurations: number[] = [];
+      const lessonIds = planOperations
+        .filter((candidate) => candidate.table === "lessons")
+        .map((candidate) => candidate.id);
+      const [reviewerSetBasedStates, reviewerBaselineStates] =
+        await Promise.all([
+          owner.client.rpc("fn_learner_lesson_states_v1", {
+            p_course_id: course.id,
+            p_lesson_ids: lessonIds,
+          }),
+          owner.client.rpc("fn_lesson_states", {
+            p_user_id: owner.id,
+            p_lesson_ids: lessonIds,
+          }),
+        ]);
+      expect(reviewerSetBasedStates.error).toBeNull();
+      expect(reviewerBaselineStates.error).toBeNull();
+      expect(normalizedLessonStates(reviewerSetBasedStates.data)).toEqual(
+        normalizedLessonStates(reviewerBaselineStates.data),
+      );
+      for (let sample = 0; sample < 10; sample += 1) {
+        const startedAt = performance.now();
+        const stateResult = await owner.client.rpc(
+          "fn_learner_lesson_states_v1",
+          {
+            p_course_id: course.id,
+            p_lesson_ids: lessonIds,
+          },
+        );
+        stateDurations.push(performance.now() - startedAt);
+        expect(stateResult.error).toBeNull();
+        expect(stateResult.data).toHaveLength(44);
+      }
+      stateDurations.sort((left, right) => left - right);
+      expect(stateDurations[9]).toBeLessThan(500);
 
       const adminModuleMove = await admin.client.rpc("fn_move_module", {
         p_module_id: importedModule.id,
         p_course_id: course.id,
         p_direction: "up",
       });
-      expect(adminModuleMove.error?.message).toMatch(/admin reviewer access required/i);
+      expect(adminModuleMove.error?.message).toMatch(
+        /admin reviewer access required/i,
+      );
 
       const reviewerModuleMove = await owner.client.rpc("fn_move_module", {
         p_module_id: importedModule.id,
@@ -709,7 +1680,8 @@ describe("imported catalog release control on a test project", () => {
         },
       );
       reviewerOptionOutstanding =
-        reviewerOptionCreate.error === null && reviewerOptionCreate.data === true;
+        reviewerOptionCreate.error === null &&
+        reviewerOptionCreate.data === true;
       expect(reviewerOptionCreate.error).toBeNull();
       expect(reviewerOptionCreate.data).toBe(true);
 
@@ -720,7 +1692,10 @@ describe("imported catalog release control on a test project", () => {
         .eq("option_text", "Reviewer temporary option")
         .single();
       if (temporaryOption.error || !temporaryOption.data) {
-        throw temporaryOption.error ?? new Error("Temporary reviewer option was not created.");
+        throw (
+          temporaryOption.error ??
+          new Error("Temporary reviewer option was not created.")
+        );
       }
       const reviewerOptionUpdate = await owner.client.rpc(
         "fn_update_answer_option_for_reviewer_v1",
@@ -830,13 +1805,16 @@ describe("imported catalog release control on a test project", () => {
         },
       );
       expect(reviewerRevoke.error).toBeNull();
-      expect(await readCatalogReferences(owner.client, importedReferences)).toEqual(
-        importedReferences.map(() => null),
+      expect(
+        await readCatalogReferences(owner.client, importedReferences),
+      ).toEqual(importedReferences.map(() => null));
+      const lockedAfterRevoke = await owner.client.rpc(
+        "fn_lesson_is_unlocked",
+        {
+          p_user_id: owner.id,
+          p_lesson_id: lesson.id,
+        },
       );
-      const lockedAfterRevoke = await owner.client.rpc("fn_lesson_is_unlocked", {
-        p_user_id: owner.id,
-        p_lesson_id: lesson.id,
-      });
       expect(lockedAfterRevoke.error).toBeNull();
       expect(lockedAfterRevoke.data).toBe(false);
 
@@ -854,7 +1832,9 @@ describe("imported catalog release control on a test project", () => {
         .from("programs")
         .delete()
         .eq("id", program.id);
-      expect(genericDelete.error?.message).toMatch(/exact course-import rollback/i);
+      expect(genericDelete.error?.message).toMatch(
+        /exact course-import rollback/i,
+      );
 
       const forgedServiceDelete = await service
         .from("programs")
@@ -877,9 +1857,9 @@ describe("imported catalog release control on a test project", () => {
 
       await applyImportPlan(plan, adapter());
       importApplied = true;
-      expect(await readCatalogReferences(owner.client, importedReferences)).toEqual(
-        importedReferences.map(() => null),
-      );
+      expect(
+        await readCatalogReferences(owner.client, importedReferences),
+      ).toEqual(importedReferences.map(() => null));
     } finally {
       if (owner && importApplied && reviewerOptionOutstanding) {
         const regrant = await service.rpc(
@@ -901,6 +1881,10 @@ describe("imported catalog release control on a test project", () => {
       if (learner) await service.auth.admin.deleteUser(learner.id);
       if (admin) await service.auth.admin.deleteUser(admin.id);
       if (owner) await service.auth.admin.deleteUser(owner.id);
+      if (ungrantedOwner)
+        await service.auth.admin.deleteUser(ungrantedOwner.id);
+      if (unassigned) await service.auth.admin.deleteUser(unassigned.id);
+      if (suspended) await service.auth.admin.deleteUser(suspended.id);
       if (importApplied) {
         const rollback = await service.rpc("fn_rollback_course_import", {
           p_import_id: plan.importId,
@@ -943,7 +1927,8 @@ describe("imported catalog release control on a test project", () => {
 
     let reviewer: Awaited<ReturnType<typeof createSignedInUser>> | null = null;
     let learner: Awaited<ReturnType<typeof createSignedInUser>> | null = null;
-    let ordinaryAdmin: Awaited<ReturnType<typeof createSignedInUser>> | null = null;
+    let ordinaryAdmin: Awaited<ReturnType<typeof createSignedInUser>> | null =
+      null;
     let importApplied = false;
     let storagePath: string | null = null;
     let auditEventId: string | null = null;
@@ -981,10 +1966,14 @@ describe("imported catalog release control on a test project", () => {
       storagePath = `${reviewer.id}/review-${randomBytes(8).toString("hex")}.txt`;
       const upload = await service.storage
         .from("submissions")
-        .upload(storagePath, Buffer.from("private reviewer assignment evidence"), {
-          contentType: "text/plain",
-          upsert: false,
-        });
+        .upload(
+          storagePath,
+          Buffer.from("private reviewer assignment evidence"),
+          {
+            contentType: "text/plain",
+            upsert: false,
+          },
+        );
       expect(upload.error).toBeNull();
 
       const reviewerSubmission = await service
@@ -1000,7 +1989,10 @@ describe("imported catalog release control on a test project", () => {
         .select("id")
         .single();
       if (reviewerSubmission.error || !reviewerSubmission.data) {
-        throw reviewerSubmission.error ?? new Error("Reviewer submission insert failed.");
+        throw (
+          reviewerSubmission.error ??
+          new Error("Reviewer submission insert failed.")
+        );
       }
 
       const reviewerSubmissionRead = await reviewer.client
@@ -1195,7 +2187,9 @@ describe("imported catalog release control on a test project", () => {
         status: "storage_cleanup_required",
         submission_file_paths: [storagePath],
       });
-      expect(await reviewerRowCount("assignment_submissions", "user_id")).toBe(1);
+      expect(await reviewerRowCount("assignment_submissions", "user_id")).toBe(
+        1,
+      );
 
       const removeReviewerStorage = await service.storage
         .from("submissions")
@@ -1239,14 +2233,19 @@ describe("imported catalog release control on a test project", () => {
       expect(preservedAudit.error).toBeNull();
       expect(preservedAudit.data?.id).toBe(auditEventId);
       expect(
-        await readCatalogReferences(reviewer.client, importedCatalogReferences(plan)),
+        await readCatalogReferences(
+          reviewer.client,
+          importedCatalogReferences(plan),
+        ),
       ).toEqual(importedCatalogReferences(plan).map(() => null));
 
       const blockedRollback = await service.rpc("fn_rollback_course_import", {
         p_import_id: plan.importId,
         p_owned: buildRollbackOwnedIds(plan),
       });
-      expect(blockedRollback.error?.message).toMatch(/role-play results exist/i);
+      expect(blockedRollback.error?.message).toMatch(
+        /role-play results exist/i,
+      );
 
       const removeLearnerEvidence = await service
         .from("role_play_results")
@@ -1293,7 +2292,9 @@ describe("imported catalog release control on a test project", () => {
           const paths = preflight.data.submission_file_paths.filter(
             (value: unknown): value is string => typeof value === "string",
           );
-          const removed = await service.storage.from("submissions").remove(paths);
+          const removed = await service.storage
+            .from("submissions")
+            .remove(paths);
           if (removed.error) cleanupErrors.push(removed.error);
           const cleanup = await service.rpc(
             "fn_cleanup_unreleased_import_reviewer_evidence_v1",
@@ -1306,11 +2307,16 @@ describe("imported catalog release control on a test project", () => {
         }
       }
       if (storagePath) {
-        const removed = await service.storage.from("submissions").remove([storagePath]);
+        const removed = await service.storage
+          .from("submissions")
+          .remove([storagePath]);
         if (removed.error) cleanupErrors.push(removed.error);
       }
       if (auditEventId) {
-        const removed = await service.from("audit_log").delete().eq("id", auditEventId);
+        const removed = await service
+          .from("audit_log")
+          .delete()
+          .eq("id", auditEventId);
         if (removed.error) cleanupErrors.push(removed.error);
       }
       if (importApplied) {
@@ -1342,14 +2348,25 @@ describe("imported catalog release control on a test project", () => {
   });
 
   it("preserves ordinary admin review and editing of hand-authored unpublished drafts", async () => {
-    if (!service) throw new Error("Test-project service client is unavailable.");
+    if (!service)
+      throw new Error("Test-project service client is unavailable.");
     const suffix = randomBytes(8).toString("hex");
     const ids = {
-      roleGroup: randomUUID(), program: randomUUID(), course: randomUUID(),
-      programCourse: randomUUID(), programAccess: randomUUID(), courseAccess: randomUUID(),
-      module: randomUUID(), quiz: randomUUID(), question: randomUUID(),
-      answerOption: randomUUID(), assignment: randomUUID(), contentLesson: randomUUID(),
-      quizLesson: randomUUID(), assignmentLesson: randomUUID(), contentBlock: randomUUID(),
+      roleGroup: randomUUID(),
+      program: randomUUID(),
+      course: randomUUID(),
+      programCourse: randomUUID(),
+      programAccess: randomUUID(),
+      courseAccess: randomUUID(),
+      module: randomUUID(),
+      quiz: randomUUID(),
+      question: randomUUID(),
+      answerOption: randomUUID(),
+      assignment: randomUUID(),
+      contentLesson: randomUUID(),
+      quizLesson: randomUUID(),
+      assignmentLesson: randomUUID(),
+      contentBlock: randomUUID(),
     };
     const references: CatalogRowReference[] = [
       { table: "programs", id: ids.program },
@@ -1366,7 +2383,8 @@ describe("imported catalog release control on a test project", () => {
       { table: "assignments", id: ids.assignment },
     ];
     let admin: Awaited<ReturnType<typeof createSignedInUser>> | null = null;
-    let manualLearner: Awaited<ReturnType<typeof createSignedInUser>> | null = null;
+    let manualLearner: Awaited<ReturnType<typeof createSignedInUser>> | null =
+      null;
     let manualSubmissionId: string | null = null;
     let manualStoragePath: string | null = null;
     let testError: unknown = null;
@@ -1377,55 +2395,91 @@ describe("imported catalog release control on a test project", () => {
     };
 
     try {
-      await insert("role_groups", { id: ids.roleGroup, name: `Hand-authored draft ${suffix}` });
+      await insert("role_groups", {
+        id: ids.roleGroup,
+        name: `Hand-authored draft ${suffix}`,
+      });
       await insert("programs", {
-        id: ids.program, title: `Hand-authored program ${suffix}`,
-        description: "Unpublished editor fixture.", is_published: false,
+        id: ids.program,
+        title: `Hand-authored program ${suffix}`,
+        description: "Unpublished editor fixture.",
+        is_published: false,
       });
       await insert("courses", {
-        id: ids.course, title: `Hand-authored course ${suffix}`,
-        description: "Unpublished editor fixture.", is_published: false,
+        id: ids.course,
+        title: `Hand-authored course ${suffix}`,
+        description: "Unpublished editor fixture.",
+        is_published: false,
       });
       await insert("program_courses", {
-        id: ids.programCourse, program_id: ids.program, course_id: ids.course,
+        id: ids.programCourse,
+        program_id: ids.program,
+        course_id: ids.course,
       });
       await insert("program_access", {
-        id: ids.programAccess, program_id: ids.program, role_group_id: ids.roleGroup,
+        id: ids.programAccess,
+        program_id: ids.program,
+        role_group_id: ids.roleGroup,
       });
       await insert("course_access", {
-        id: ids.courseAccess, course_id: ids.course, role_group_id: ids.roleGroup,
+        id: ids.courseAccess,
+        course_id: ids.course,
+        role_group_id: ids.roleGroup,
       });
-      await insert("modules", { id: ids.module, course_id: ids.course, title: "Draft module" });
+      await insert("modules", {
+        id: ids.module,
+        course_id: ids.course,
+        title: "Draft module",
+      });
       await insert("quizzes", { id: ids.quiz, title: "Draft quiz" });
       await insert("questions", {
-        id: ids.question, quiz_id: ids.quiz, question_text: "Draft question?",
+        id: ids.question,
+        quiz_id: ids.quiz,
+        question_text: "Draft question?",
         question_type: "single_choice",
       });
       await insert("answer_options", {
-        id: ids.answerOption, question_id: ids.question,
-        option_text: "Draft answer", is_correct: true,
+        id: ids.answerOption,
+        question_id: ids.question,
+        option_text: "Draft answer",
+        is_correct: true,
       });
       await insert("assignments", {
-        id: ids.assignment, title: "Draft assignment",
-        instructions: "Complete the draft assignment.", submission_type: "text",
+        id: ids.assignment,
+        title: "Draft assignment",
+        instructions: "Complete the draft assignment.",
+        submission_type: "text",
         requires_review: true,
         rubric: [{ criterion: "Complete", description: "Answers the prompt." }],
       });
       await insert("lessons", {
-        id: ids.contentLesson, module_id: ids.module, title: "Draft content lesson",
-        lesson_type: "content", sort_order: 0,
+        id: ids.contentLesson,
+        module_id: ids.module,
+        title: "Draft content lesson",
+        lesson_type: "content",
+        sort_order: 0,
       });
       await insert("lessons", {
-        id: ids.quizLesson, module_id: ids.module, title: "Draft quiz lesson",
-        lesson_type: "quiz", quiz_id: ids.quiz, sort_order: 1,
+        id: ids.quizLesson,
+        module_id: ids.module,
+        title: "Draft quiz lesson",
+        lesson_type: "quiz",
+        quiz_id: ids.quiz,
+        sort_order: 1,
       });
       await insert("lessons", {
-        id: ids.assignmentLesson, module_id: ids.module, title: "Draft assignment lesson",
-        lesson_type: "assignment", assignment_id: ids.assignment, sort_order: 2,
+        id: ids.assignmentLesson,
+        module_id: ids.module,
+        title: "Draft assignment lesson",
+        lesson_type: "assignment",
+        assignment_id: ids.assignment,
+        sort_order: 2,
       });
       await insert("content_blocks", {
-        id: ids.contentBlock, lesson_id: ids.contentLesson,
-        block_type: "text", content: { markdown: "Draft content." },
+        id: ids.contentBlock,
+        lesson_id: ids.contentLesson,
+        block_type: "text",
+        content: { markdown: "Draft content." },
       });
 
       admin = await createSignedInUser("admin");
@@ -1455,17 +2509,29 @@ describe("imported catalog release control on a test project", () => {
       expect(directEdit.data?.id).toBe(ids.program);
 
       const moduleMove = await admin.client.rpc("fn_move_module", {
-        p_module_id: ids.module, p_course_id: ids.course, p_direction: "up",
+        p_module_id: ids.module,
+        p_course_id: ids.course,
+        p_direction: "up",
       });
       expect(moduleMove.error).toBeNull();
 
-      const assignmentUpdate = await admin.client.rpc("fn_update_assignment_for_lesson", {
-        p_lesson_id: ids.assignmentLesson, p_assignment_id: ids.assignment,
-        p_title: "Draft assignment edited",
-        p_instructions: "Complete the edited draft assignment.",
-        p_submission_type: "text", p_requires_review: true,
-        p_rubric: [{ criterion: "Complete", description: "Answers the edited prompt." }],
-      });
+      const assignmentUpdate = await admin.client.rpc(
+        "fn_update_assignment_for_lesson",
+        {
+          p_lesson_id: ids.assignmentLesson,
+          p_assignment_id: ids.assignment,
+          p_title: "Draft assignment edited",
+          p_instructions: "Complete the edited draft assignment.",
+          p_submission_type: "text",
+          p_requires_review: true,
+          p_rubric: [
+            {
+              criterion: "Complete",
+              description: "Answers the edited prompt.",
+            },
+          ],
+        },
+      );
       expect(assignmentUpdate.error).toBeNull();
       expect(assignmentUpdate.data).toBe(true);
 
@@ -1556,14 +2622,18 @@ describe("imported catalog release control on a test project", () => {
         );
       }
       if (cleanupErrors.length > 0) {
-        throw new AggregateError(cleanupErrors, "Manual draft TEST cleanup failed.");
+        throw new AggregateError(
+          cleanupErrors,
+          "Manual draft TEST cleanup failed.",
+        );
       }
     }
     if (testError) throw testError;
   });
 
   it("refuses to link a pre-created QA role group that already has a learner", async () => {
-    if (!service) throw new Error("Test-project service client is unavailable.");
+    if (!service)
+      throw new Error("Test-project service client is unavailable.");
     const plan = uniquePlan();
     const qaRoleGroup = atomicImportOperations(plan).find(
       (operation) => operation.table === "role_groups",
@@ -1571,12 +2641,15 @@ describe("imported catalog release control on a test project", () => {
     const program = atomicImportOperations(plan).find(
       (operation) => operation.table === "programs",
     );
-    if (!qaRoleGroup || !program) throw new Error("Test import roots are missing.");
+    if (!qaRoleGroup || !program)
+      throw new Error("Test import roots are missing.");
     let learner: Awaited<ReturnType<typeof createSignedInUser>> | null = null;
 
     try {
       learner = await createSignedInUser("learner");
-      const roleGroup = await service.from("role_groups").insert(qaRoleGroup.row);
+      const roleGroup = await service
+        .from("role_groups")
+        .insert(qaRoleGroup.row);
       if (roleGroup.error) throw roleGroup.error;
       const membership = await service.from("user_role_groups").insert({
         user_id: learner.id,
@@ -1608,10 +2681,13 @@ describe("imported catalog release control on a test project", () => {
   });
 
   it("refuses forged and oversized drift cleanup and preserves Sandra delivery evidence", async () => {
-    if (!service) throw new Error("Test-project service client is unavailable.");
+    if (!service)
+      throw new Error("Test-project service client is unavailable.");
     const plan = uniquePlan();
     const operation = (table: ImportPlan["operations"][number]["table"]) => {
-      const row = atomicImportOperations(plan).find((candidate) => candidate.table === table);
+      const row = atomicImportOperations(plan).find(
+        (candidate) => candidate.table === table,
+      );
       if (!row) throw new Error(`Test import is missing ${table}.`);
       return row;
     };
@@ -1660,7 +2736,9 @@ describe("imported catalog release control on a test project", () => {
           p_orphan_course_ids: [],
         },
       );
-      expect(wrongImport.error?.message).toMatch(/claimed, active, or dependent/i);
+      expect(wrongImport.error?.message).toMatch(
+        /claimed, active, or dependent/i,
+      );
 
       const claimedLesson = await service.rpc(
         "fn_remove_unreleased_import_reconciliation_drift",
@@ -1670,7 +2748,9 @@ describe("imported catalog release control on a test project", () => {
           p_orphan_course_ids: [],
         },
       );
-      expect(claimedLesson.error?.message).toMatch(/claimed, active, or dependent/i);
+      expect(claimedLesson.error?.message).toMatch(
+        /claimed, active, or dependent/i,
+      );
 
       const delivery = await service
         .from("sandra_course_completion_deliveries")
@@ -1686,7 +2766,9 @@ describe("imported catalog release control on a test project", () => {
         p_import_id: plan.importId,
         p_owned: buildRollbackOwnedIds(plan),
       });
-      expect(protectedRollback.error?.message).toMatch(/durable Sandra completion delivery evidence/i);
+      expect(protectedRollback.error?.message).toMatch(
+        /durable Sandra completion delivery evidence/i,
+      );
 
       await service.auth.admin.deleteUser(user.id);
       user = null;
@@ -1700,10 +2782,13 @@ describe("imported catalog release control on a test project", () => {
   });
 
   it("blocks rogue inserts under imported ownership while preserving manual catalog creation", async () => {
-    if (!service) throw new Error("Test-project service client is unavailable.");
+    if (!service)
+      throw new Error("Test-project service client is unavailable.");
     const plan = uniquePlan();
     const operation = (table: ImportPlan["operations"][number]["table"]) => {
-      const row = atomicImportOperations(plan).find((candidate) => candidate.table === table);
+      const row = atomicImportOperations(plan).find(
+        (candidate) => candidate.table === table,
+      );
       if (!row) throw new Error(`Test import is missing ${table}.`);
       return row;
     };
@@ -1723,10 +2808,19 @@ describe("imported catalog release control on a test project", () => {
       owner = await createSignedInUser("owner");
 
       const manualRoots = await Promise.all([
-        service.from("programs").insert({ id: manual.programId, title: "Manual insert program" }),
-        service.from("courses").insert({ id: manual.courseId, title: "Manual insert course" }),
-        service.from("quizzes").insert({ id: manual.quizId, title: "Manual insert quiz" }),
-        service.from("role_groups").insert({ id: manual.roleGroupId, name: `Manual insert ${randomUUID()}` }),
+        service
+          .from("programs")
+          .insert({ id: manual.programId, title: "Manual insert program" }),
+        service
+          .from("courses")
+          .insert({ id: manual.courseId, title: "Manual insert course" }),
+        service
+          .from("quizzes")
+          .insert({ id: manual.quizId, title: "Manual insert quiz" }),
+        service.from("role_groups").insert({
+          id: manual.roleGroupId,
+          name: `Manual insert ${randomUUID()}`,
+        }),
       ]);
       for (const result of manualRoots) if (result.error) throw result.error;
       const manualModule = await service.from("modules").insert({
@@ -1827,7 +2921,9 @@ describe("imported catalog release control on a test project", () => {
         .from("courses")
         .update({ content_import_id: plan.importId })
         .eq("id", manual.courseId);
-      expect(rogueProvenanceClaim.error?.message).toMatch(/exact course-import apply operation/i);
+      expect(rogueProvenanceClaim.error?.message).toMatch(
+        /exact course-import apply operation/i,
+      );
 
       const ownerAttempt = await owner.client.from("modules").insert({
         course_id: operation("courses").id,
@@ -1862,10 +2958,13 @@ describe("imported catalog release control on a test project", () => {
   });
 
   it("prevents imported descendants from being reparented around exact rollback", async () => {
-    if (!service) throw new Error("Test-project service client is unavailable.");
+    if (!service)
+      throw new Error("Test-project service client is unavailable.");
     const plan = uniquePlan();
     const operation = (table: ImportPlan["operations"][number]["table"]) => {
-      const row = atomicImportOperations(plan).find((candidate) => candidate.table === table);
+      const row = atomicImportOperations(plan).find(
+        (candidate) => candidate.table === table,
+      );
       if (!row) throw new Error(`Test import is missing ${table}.`);
       return row;
     };
@@ -1881,9 +2980,15 @@ describe("imported catalog release control on a test project", () => {
     try {
       await applyImportPlan(plan, adapter());
       const roots = await Promise.all([
-        service.from("programs").insert({ id: manual.programId, title: "Manual program root" }),
-        service.from("courses").insert({ id: manual.courseId, title: "Manual course root" }),
-        service.from("quizzes").insert({ id: manual.quizId, title: "Manual quiz root" }),
+        service
+          .from("programs")
+          .insert({ id: manual.programId, title: "Manual program root" }),
+        service
+          .from("courses")
+          .insert({ id: manual.courseId, title: "Manual course root" }),
+        service
+          .from("quizzes")
+          .insert({ id: manual.quizId, title: "Manual quiz root" }),
       ]);
       for (const result of roots) if (result.error) throw result.error;
       const moduleRow = await service.from("modules").insert({
@@ -1910,16 +3015,39 @@ describe("imported catalog release control on a test project", () => {
       if (questionRow.error) throw questionRow.error;
 
       const attempts = [
-        service.from("modules").update({ course_id: manual.courseId }).eq("id", operation("modules").id),
-        service.from("lessons").update({ module_id: manual.moduleId }).eq("id", operation("lessons").id),
-        service.from("content_blocks").update({ lesson_id: manual.lessonId }).eq("id", operation("content_blocks").id),
-        service.from("program_courses").update({ program_id: manual.programId }).eq("id", operation("program_courses").id),
-        service.from("program_access").update({ program_id: manual.programId }).eq("id", operation("program_access").id),
-        service.from("questions").update({ quiz_id: manual.quizId }).eq("id", operation("questions").id),
-        service.from("answer_options").update({ question_id: manual.questionId }).eq("id", operation("answer_options").id),
+        service
+          .from("modules")
+          .update({ course_id: manual.courseId })
+          .eq("id", operation("modules").id),
+        service
+          .from("lessons")
+          .update({ module_id: manual.moduleId })
+          .eq("id", operation("lessons").id),
+        service
+          .from("content_blocks")
+          .update({ lesson_id: manual.lessonId })
+          .eq("id", operation("content_blocks").id),
+        service
+          .from("program_courses")
+          .update({ program_id: manual.programId })
+          .eq("id", operation("program_courses").id),
+        service
+          .from("program_access")
+          .update({ program_id: manual.programId })
+          .eq("id", operation("program_access").id),
+        service
+          .from("questions")
+          .update({ quiz_id: manual.quizId })
+          .eq("id", operation("questions").id),
+        service
+          .from("answer_options")
+          .update({ question_id: manual.questionId })
+          .eq("id", operation("answer_options").id),
       ];
       for (const attempt of await Promise.all(attempts)) {
-        expect(attempt.error?.message).toMatch(/ownership edges are immutable/i);
+        expect(attempt.error?.message).toMatch(
+          /ownership edges are immutable/i,
+        );
       }
 
       const rollback = await service.rpc("fn_rollback_course_import", {

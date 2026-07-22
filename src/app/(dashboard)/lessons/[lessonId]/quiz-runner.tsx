@@ -473,7 +473,7 @@ export function QuizRunner({
 
       <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
         <div className="flex gap-3">
-          <Link href={backHref} className={linkButtonClass}>Cancel</Link>
+          <Link href={backHref} prefetch={false} className={linkButtonClass}>Cancel</Link>
           {state.viewIndex > 0 ? (
             <Button
               variant="secondary"

@@ -112,7 +112,7 @@ export default async function DashboardPage({
           {outline.course.description ? <p className="mt-2 max-w-3xl text-sm font-semibold leading-relaxed text-[var(--text-muted)]">{outline.course.description}</p> : null}
         </div>
         {valid.length > 1 ? (
-          <Link href={`/courses/${outline.course.id}`} className="text-sm font-extrabold text-[var(--action)] no-underline hover:underline">
+          <Link href={`/courses/${outline.course.id}`} prefetch={false} className="text-sm font-extrabold text-[var(--action)] no-underline hover:underline">
             View course
           </Link>
         ) : null}
@@ -123,7 +123,7 @@ export default async function DashboardPage({
         pageHref="/dashboard"
       />
       <nav aria-label="Account" className="mt-8 flex gap-4 border-t border-[var(--border-hairline)] pt-5 text-sm font-extrabold">
-        <Link href="/profile" className="text-[var(--action)] hover:underline">Profile</Link>
+        <Link href="/profile" prefetch={false} className="text-[var(--action)] hover:underline">Profile</Link>
         <a href="https://hugo.bmhgroupkc.com" className="text-[var(--action)] hover:underline">Manage Hugo account</a>
       </nav>
     </main>
@@ -142,7 +142,7 @@ function NoAssignments() {
               Your account is active, but no courses are assigned yet. Ask your BMH Institute admin or manager to add you to the right role group.
             </p>
             <div className="mt-5 flex gap-4 text-sm font-extrabold">
-              <Link href="/profile" className="text-[var(--action)] hover:underline">Check your profile</Link>
+              <Link href="/profile" prefetch={false} className="text-[var(--action)] hover:underline">Check your profile</Link>
               <a href="https://hugo.bmhgroupkc.com" className="text-[var(--action)] hover:underline">Manage Hugo account</a>
             </div>
           </div>

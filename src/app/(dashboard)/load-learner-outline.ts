@@ -78,7 +78,7 @@ export async function loadLearnerCourseOutline({
   if (!courseResult.data) {
     return { ok: false, error: "Course not found.", notFound: true };
   }
-  const course = parseCourse(courseResult.data as unknown as RawCourse);
+  const course = parseLearnerCourse(courseResult.data);
   if (!course.ok) return course;
 
   const lessons = course.course.modules.flatMap((module) => module.lessons);
@@ -161,7 +161,7 @@ export async function loadLearnerCourseOutline({
   });
 }
 
-function videoAssetVersion(value: unknown): string {
+export function videoAssetVersion(value: unknown): string {
   if (!value || typeof value !== "object" || Array.isArray(value)) return "";
   const content = value as Record<string, unknown>;
   const filePath = content.file_path;
@@ -214,9 +214,10 @@ type RawLesson = {
   content_blocks: ContentBlock[] | null;
 };
 
-function parseCourse(
-  raw: RawCourse,
+export function parseLearnerCourse(
+  value: unknown,
 ): { ok: true; course: LearnerOutlineCourse } | { ok: false; error: string } {
+  const raw = value as RawCourse;
   const modules = [...(raw.modules ?? [])].map((module) => {
     const lessons: LearnerOutlineLesson[] = [];
     for (const row of module.lessons ?? []) {

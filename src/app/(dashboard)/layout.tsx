@@ -4,10 +4,10 @@ import { redirect } from "next/navigation";
 import { Avatar } from "@/components/bmh-ds/avatar";
 import { Button } from "@/components/bmh-ds/button";
 import { Logo } from "@/components/bmh-ds/logo";
-import { createClient } from "@/lib/supabase/server";
+import { getRequestAuthContext } from "@/lib/auth/request-context";
 
 import { SidebarNav } from "./sidebar-nav";
-import { LessonSearch, type LessonSearchItem } from "./lesson-search";
+import { LessonSearch } from "./lesson-search";
 import { MobileNav } from "./mobile-nav";
 
 export const dynamic = "force-dynamic";
@@ -18,20 +18,11 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { supabase, user, profile } = await getRequestAuthContext();
 
   if (!user) {
     redirect("/login");
   }
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("system_role, full_name, status")
-    .eq("id", user.id)
-    .maybeSingle();
 
   if (profile?.status === "suspended") {
     await supabase.auth.signOut();
@@ -41,29 +32,13 @@ export default async function DashboardLayout({
   const isAdmin =
     profile?.system_role === "owner" || profile?.system_role === "admin";
 
-  const [pendingResult, lessonResult] = await Promise.all([
-    isAdmin
-      ? supabase
-          .from("assignment_submissions")
-          .select("id", { count: "exact", head: true })
-          .eq("status", "submitted")
-      : Promise.resolve({ count: 0 }),
-    supabase
-      .from("lessons")
-      .select("id, title")
-      .order("title")
-      .limit(500),
-  ]);
+  const pendingResult = isAdmin
+    ? await supabase
+        .from("assignment_submissions")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "submitted")
+    : { count: 0 };
   const pendingSubmissions = pendingResult.count ?? 0;
-  const searchableLessons = (lessonResult.data ?? []).flatMap((lesson) =>
-    typeof lesson.id === "string" && typeof lesson.title === "string"
-      ? [{
-          id: lesson.id,
-          title: lesson.title,
-          href: `/lessons/${encodeURIComponent(lesson.id)}`,
-        } satisfies LessonSearchItem]
-      : [],
-  );
 
   const displayName = profile?.full_name || user.email || "BMH Institute user";
   const roleLabel = profile?.system_role ?? "learner";
@@ -73,6 +48,7 @@ export default async function DashboardLayout({
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-[var(--border-hairline)] bg-[var(--paper)] md:flex md:w-64 print:hidden">
         <Link
           href="/dashboard"
+          prefetch={false}
           className="flex h-[76px] shrink-0 items-center px-6 transition-opacity hover:opacity-90"
           aria-label="BMH Institute dashboard"
         >
@@ -91,6 +67,7 @@ export default async function DashboardLayout({
         <div className="mx-5 border-t border-[var(--border-hairline)] py-4">
           <Link
             href="/profile"
+            prefetch={false}
             className="flex min-w-0 items-center gap-3 rounded-[var(--bmh-radius-md)] px-1 py-1 transition-colors hover:bg-[var(--ink-050)]"
             title={user.email ?? ""}
           >
@@ -124,6 +101,7 @@ export default async function DashboardLayout({
       <header className="fixed inset-x-0 top-0 z-30 flex h-[76px] items-center gap-2 border-b border-[var(--border-hairline)] bg-[var(--paper)] px-2 sm:gap-4 sm:px-4 md:left-64 md:px-7 print:hidden">
         <Link
           href="/dashboard"
+          prefetch={false}
           className="shrink-0 md:hidden"
           aria-label="BMH Institute dashboard"
         >
@@ -132,11 +110,11 @@ export default async function DashboardLayout({
           </span>
         </Link>
         <div className="hidden w-full max-w-[360px] sm:block">
-          <LessonSearch lessons={searchableLessons} instanceId="desktop" />
+          <LessonSearch instanceId="desktop" />
         </div>
         <span className="flex-1" />
         <div className="shrink-0 sm:hidden">
-          <LessonSearch lessons={searchableLessons} instanceId="mobile" compact />
+          <LessonSearch instanceId="mobile" compact />
         </div>
         <MobileNav
           isAdmin={isAdmin}
@@ -144,6 +122,7 @@ export default async function DashboardLayout({
         />
         <Link
           href="/profile"
+          prefetch={false}
           className="flex size-10 shrink-0 items-center justify-center md:hidden"
           aria-label={`${displayName} profile`}
         >

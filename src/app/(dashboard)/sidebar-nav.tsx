@@ -129,6 +129,7 @@ function NavLink({
   return (
     <Link
       href={item.href}
+      prefetch={false}
       aria-current={isActive ? "page" : undefined}
       data-active={isActive || undefined}
       className={cn(
