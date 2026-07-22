@@ -993,16 +993,25 @@ export async function buildDerivativePair(videoAsset, captionApprovalLedger, rep
     if (files.some((file) => file.fileStat)) throw new Error(`${videoAsset.source_key} derivatives exist before the held cut is approved`);
     return files.filter((file) => file.kind === "caption").map(missingAsset);
   }
-  if (files.some((file) => !file.fileStat)) {
+  const [caption, transcript] = files;
+  if (!caption?.fileStat) {
     return files.filter((file) => file.kind === "caption").map(missingAsset);
   }
-  const [caption, transcript] = files;
-  const approval = findCaptionApprovalRecord(captionApprovalLedger, {
+  const captionOnlyApproval = findCaptionApprovalRecord(captionApprovalLedger, {
     video_source_key: videoAsset.source_key,
     video_sha256: videoAsset.checksum_sha256,
     caption_sha256: caption.checksum,
-    transcript_sha256: transcript?.checksum ?? null,
+    transcript_sha256: null,
   });
+  const transcriptBoundApproval = transcript?.fileStat
+    ? findCaptionApprovalRecord(captionApprovalLedger, {
+        video_source_key: videoAsset.source_key,
+        video_sha256: videoAsset.checksum_sha256,
+        caption_sha256: caption.checksum,
+        transcript_sha256: transcript.checksum,
+      })
+    : null;
+  const approval = captionOnlyApproval ?? transcriptBoundApproval;
   if (!approval) {
     return files.filter((file) => file.kind === "caption").map(missingAsset);
   }
