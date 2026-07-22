@@ -3,6 +3,8 @@
 Date: 2026-07-22  
 Production surface: `https://institute.bmhgroupkc.com`  
 Change branch: `codex/institute-production-hardening-20260722`  
+Verified branch head: `34cb74b9c09cc354bca230a0690111010fb534d2`
+Pull request: `https://github.com/biginkc/bmh-institute/pull/119`
 Status: production walkthrough complete; fixes verified on preview; production release not yet approved
 
 ## Acceptance position
@@ -124,6 +126,10 @@ and surrounding lesson meaning before they were classified.
     vulnerabilities.
 17. Excluded internal QA artifacts from Vercel upload; the preview deployment
     payload fell from roughly 220 MB to 8.6 MB.
+18. Separated historical artwork verification from artwork regeneration after
+    the patched image-runtime upgrade. Existing approved bytes remain bound to
+    their original runtime and exact checksums; any attempt to derive new bytes
+    under a different runtime still fails closed.
 
 ## Corrective-branch verification
 
@@ -131,6 +137,9 @@ and surrounding lesson meaning before they were classified.
 - Component tests: 39 files, 141 tests passed.
 - Course-content tests: 183 tests passed; all 19 guides rebuilt
   deterministically.
+- Artwork production workflow: 53 tests passed, including historical runtime
+  trust, exact-byte provenance, interrupted promotion recovery, and approval
+  forgery rejection.
 - Production public-auth smoke: 6 passed; 10 authenticated cases correctly
   skipped without a retained real-Hugo storage state.
 - Production build: passed.
@@ -138,6 +147,10 @@ and surrounding lesson meaning before they were classified.
 - Lint and formatting checks: passed.
 - `npm audit`: zero known vulnerabilities.
 - Vercel preview deployment: Ready.
+- Exact-head GitHub verification: passed on commit `34cb74b`, including the
+  seeded browser suite (11 passed, one intentional Closer Lab credential skip)
+  and successful fixture cleanup.
+- Database migrations: validated successfully on PostgreSQL 15, 16, and 17.
 - Authenticated preview route replay: passed through a test-project canary
   session, including mobile overflow, assignment revision, signed video,
   signed captions, and long certificate-name fixtures. Every fixture was
@@ -202,3 +215,7 @@ and prove the full preview authorization callback.
   drill.
 - Establish a repeatable transcript-to-caption coverage threshold so later
   video replacements cannot silently reintroduce missing spoken passages.
+- Refresh the GitHub Actions runtime declarations and Python cache inputs. The
+  current exact-head checks pass, but GitHub warns that older JavaScript action
+  runtimes are being forced to Node 24 and that the Python cache has no tracked
+  dependency file to invalidate it.
