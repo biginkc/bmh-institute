@@ -58,10 +58,14 @@ describe("<LessonSearch />", () => {
     const search = screen.getByRole("combobox", { name: "Search lessons" });
     await user.type(search, "objection");
 
-    expect(search).toHaveAttribute("aria-expanded", "true");
     expect(
       await screen.findByRole("option", { name: "Objection Architecture" }),
     ).toBeVisible();
+    expect(search).toHaveAttribute("aria-expanded", "true");
+    expect(search).toHaveAttribute(
+      "aria-controls",
+      screen.getByRole("listbox").id,
+    );
     expect(
       screen.queryByRole("option", { name: "Opening the Call" }),
     ).not.toBeInTheDocument();
@@ -121,11 +125,11 @@ describe("<LessonSearch />", () => {
     const user = userEvent.setup();
     render(<LessonSearch />);
 
-    await user.type(
-      screen.getByRole("combobox", { name: "Search lessons" }),
-      "opening",
-    );
+    const search = screen.getByRole("combobox", { name: "Search lessons" });
+    await user.type(search, "opening");
     expect(await screen.findByText("Searching…")).toBeVisible();
+    expect(search).toHaveAttribute("aria-expanded", "false");
+    expect(search).not.toHaveAttribute("aria-controls");
     expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
     expect(screen.getByRole("status")).toHaveAttribute("aria-live", "polite");
     expect(screen.queryByText("No lessons found.")).not.toBeInTheDocument();
@@ -139,6 +143,8 @@ describe("<LessonSearch />", () => {
     );
     expect(await screen.findByText("No lessons found.")).toBeVisible();
     expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+    expect(search).toHaveAttribute("aria-expanded", "false");
+    expect(search).not.toHaveAttribute("aria-controls");
   });
 
   it("distinguishes a failed search from a valid empty result", async () => {
@@ -149,14 +155,14 @@ describe("<LessonSearch />", () => {
     const user = userEvent.setup();
     render(<LessonSearch />);
 
-    await user.type(
-      screen.getByRole("combobox", { name: "Search lessons" }),
-      "opening",
-    );
+    const search = screen.getByRole("combobox", { name: "Search lessons" });
+    await user.type(search, "opening");
     expect(
       await screen.findByText("Search unavailable. Try again."),
     ).toBeVisible();
     expect(screen.queryByText("No lessons found.")).not.toBeInTheDocument();
+    expect(search).toHaveAttribute("aria-expanded", "false");
+    expect(search).not.toHaveAttribute("aria-controls");
   });
 
   it("uses unique combobox and listbox IDs for multiple header placements", async () => {

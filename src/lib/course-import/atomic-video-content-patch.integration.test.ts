@@ -72,7 +72,7 @@ describe.skipIf(!envPresent)("atomic imported video content patch", () => {
           },
         ],
       });
-      expect(mixed.error?.code).toBe("40001");
+      expect(mixed.error?.code).toBe("PT409");
       expect(await readContent(video.id)).toEqual(before);
 
       const patched = await service.rpc("fn_patch_imported_video_content", {
@@ -95,7 +95,7 @@ describe.skipIf(!envPresent)("atomic imported video content patch", () => {
           { block_id: video.id, expected_content: before, replacement_content: replacement },
         ],
       });
-      expect(stale.error?.code).toBe("40001");
+      expect(stale.error?.code).toBe("PT409");
       expect(await readContent(video.id)).toEqual(replacement);
 
       const noncanonical = await service.rpc("fn_patch_imported_video_content", {

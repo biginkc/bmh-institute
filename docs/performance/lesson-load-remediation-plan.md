@@ -20,10 +20,10 @@ Vercel evidence for the exact route showed hot Node invocations in `iad1`, p95 a
 
 Fresh authenticated database measurements showed:
 
-| Operation | Authenticated execution | Diagnostic execution without repeated row authorization |
-| --- | ---: | ---: |
-| Full course, modules, 44 lessons, and 111 blocks | 3,010.16 ms | 4.30 ms |
-| Course lesson states | 754.66 ms | 24.11 ms |
+| Operation                                        | Authenticated execution | Diagnostic execution without repeated row authorization |
+| ------------------------------------------------ | ----------------------: | ------------------------------------------------------: |
+| Full course, modules, 44 lessons, and 111 blocks |             3,010.16 ms |                                                 4.30 ms |
+| Course lesson states                             |               754.66 ms |                                                24.11 ms |
 
 The dominant query performs 84,812 shared-buffer hits despite the course containing only 1 course, 6 modules, 44 lessons, and 111 content blocks. Core relationship indexes exist and the dominant statements show zero disk reads. Repeated row-level access evaluation and over-fetching are the proven hot path.
 
@@ -178,13 +178,14 @@ Do not cache across requests:
 
 ### TEST integration
 
-Use a production-shaped course with 6 modules, 44 lessons, and 111 blocks. Verify owner, admin, learner, reviewer, unassigned, and suspended personas. Include one accessible course containing a partially released import with both released and unreleased lessons, blocks, quiz references, and assignment references.
+Use a production-shaped course with 6 modules, 44 lessons, and 111 blocks. Verify owner, admin, learner, reviewer, unassigned, and suspended personas. Exercise the real atomic import release inside a database transaction that is rolled back after comparison, so TEST proves both the released-learner and unreleased-reviewer boundaries without leaving a permanent release record. A partially released import is not a valid fixture: release records, publication, and employee access are committed atomically, and nested imported entities must fail closed if their provenance does not match that all-or-nothing boundary.
 
 Prove:
 
 - Course and lesson access parity with the baseline.
 - Reviewer/import quarantine parity.
-- The mixed-release fixture returns released rows to learners, withholds every unreleased nested row, and returns only the reviewer-authorized quarantined rows to the correct granted reviewer.
+- The released transaction returns all authorized lesson types to its assigned learner, the set-based completion and prerequisite vector exactly matches the existing scalar baseline, and rolling back the transaction immediately restores learner denial.
+- The unreleased fixture withholds every nested row from learners and ordinary admins and returns quarantined rows only to the explicitly granted owner-reviewer. Malformed mixed-provenance graphs fail closed rather than simulating an impossible partial release.
 - Prerequisite, completion, next-lesson, composite quiz, standalone quiz, assignment, and resume navigation parity.
 - Guide withholding and stale video asset-version behavior.
 - Role-play token actor and block scope.
@@ -223,9 +224,10 @@ If any budget fails, use the recorded stage timing to revise the responsible pha
 3. Run unit, integration, build, seeded browser, and manual Chrome verification against TEST.
 4. Run `custom-manual-code-review` with independent application, database/security, and test/performance lanes.
 5. Send the reviewed exact head to Claude through this convergence loop.
-6. Only after all gates pass, use the repository's normal PR and Git-connected Vercel deployment path.
-7. Record the pre-merge main SHA, migration version, deployment ID, and database function definitions as rollback points.
-8. If production authorization behavior or error rate regresses, revert the application commit first. If the application depends on the new RPC, deploy the compatibility rollback before removing or replacing the function. Do not destructively roll back learner data.
+6. After all review and TEST gates pass, record the current production function definition and apply additive migration 052 to production while the old application remains live. Verify the function exists, has the intended owner/search path/grants, and returns through an authenticated production smoke test before merging application code.
+7. Merge only after that database-first preflight is green, then use the repository's normal Git-connected Vercel deployment path and verify the production deployment serves the merged commit.
+8. Record the pre-merge main SHA, migration version, deployment ID, and database function definitions as rollback points.
+9. If production authorization behavior or error rate regresses, revert the application commit first. Keep the additive function available while any deployed application can call it; only remove or replace it after the compatibility rollback is live. Do not destructively roll back learner data.
 
 ## Acceptance gates
 
@@ -235,6 +237,7 @@ If any budget fails, use the recorded stage timing to revise the responsible pha
 - [ ] TEST proves all listed personas and lesson types with a production-shaped fixture.
 - [ ] Manual code review is clean on the exact implementation head.
 - [ ] Unit, integration, typecheck, build, and seeded browser suites pass on the exact implementation head.
+- [ ] Production migration 052 is applied and its function contract is verified before the application deployment can call it.
 - [ ] Production Chrome meets the timing budgets and shows no console, network, access, or quiz-key regression.
 - [ ] The evidence ledger records baseline, TEST migration, exact head, checks, Claude verdict, deployment, production measurements, and rollback points.
 

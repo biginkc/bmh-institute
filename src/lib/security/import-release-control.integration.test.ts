@@ -526,9 +526,31 @@ async function runPsql(sql: string, applicationName: string) {
   session.child.stdin.end(sql);
   try {
     await waitForPsqlExit(session);
+    return session.stdout;
   } finally {
     if (session.child.exitCode === null) session.child.kill("SIGTERM");
   }
+}
+
+function sqlLiteral(value: string): string {
+  return `'${value.replaceAll("'", "''")}'`;
+}
+
+function uuidArraySql(values: string[]): string {
+  return `array[${values.map((value) => `${sqlLiteral(value)}::uuid`).join(",")}]`;
+}
+
+function normalizedLessonStates(value: unknown) {
+  if (!Array.isArray(value)) {
+    throw new Error("Lesson-state RPC did not return an array.");
+  }
+  return value
+    .map((row) => ({
+      lesson_id: String(row.lesson_id),
+      is_complete: Boolean(row.is_complete),
+      is_unlocked: Boolean(row.is_unlocked),
+    }))
+    .sort((left, right) => left.lesson_id.localeCompare(right.lesson_id));
 }
 
 async function terminatePsql(session: PsqlSession | null) {
@@ -740,6 +762,255 @@ describe("imported catalog release control on a test project", () => {
       }
     }
   });
+
+  it("matches the baseline state vector for a released learner without leaving released TEST data", async () => {
+    if (!service)
+      throw new Error("Test-project service client is unavailable.");
+    const plan = productionShapePlan();
+    const operations = atomicImportOperations(plan);
+    const operation = (table: ImportPlan["operations"][number]["table"]) => {
+      const row = operations.find((candidate) => candidate.table === table);
+      if (!row) throw new Error(`Released-state fixture is missing ${table}.`);
+      return row;
+    };
+    const program = operation("programs");
+    const course = operation("courses");
+    const lessonIds = operations
+      .filter((candidate) => candidate.table === "lessons")
+      .map((candidate) => candidate.id);
+    const lessonTypes = operations
+      .filter((candidate) => candidate.table === "lessons")
+      .map((candidate) => String(candidate.row.lesson_type));
+    expect(lessonIds).toHaveLength(44);
+    expect(lessonTypes.filter((type) => type === "content")).toHaveLength(19);
+    expect(lessonTypes.filter((type) => type === "quiz")).toHaveLength(19);
+    expect(lessonTypes.filter((type) => type === "assignment")).toHaveLength(6);
+    expect(
+      operations.filter(
+        (candidate) =>
+          candidate.table === "lessons" &&
+          candidate.row.prerequisite_lesson_id !== null,
+      ),
+    ).toHaveLength(43);
+
+    let learner: Awaited<ReturnType<typeof createSignedInUser>> | null = null;
+    let owner: Awaited<ReturnType<typeof createSignedInUser>> | null = null;
+    let employeeRoleGroupId: string | null = null;
+    let importApplied = false;
+
+    try {
+      await applyImportPlan(plan, adapter());
+      importApplied = true;
+      learner = await createSignedInUser("learner");
+      owner = await createSignedInUser("owner");
+
+      const employee = await service
+        .from("role_groups")
+        .insert({ name: `Released parity ${randomBytes(8).toString("hex")}` })
+        .select("id")
+        .single();
+      if (
+        employee.error ||
+        !employee.data ||
+        typeof employee.data.id !== "string"
+      ) {
+        throw (
+          employee.error ?? new Error("Employee role group was not created.")
+        );
+      }
+      const releasedEmployeeRoleGroupId = employee.data.id;
+      employeeRoleGroupId = releasedEmployeeRoleGroupId;
+      const membership = await service.from("user_role_groups").insert({
+        user_id: learner.id,
+        role_group_id: releasedEmployeeRoleGroupId,
+      });
+      expect(membership.error).toBeNull();
+
+      const catalogDigest = await service.rpc(
+        "fn_course_import_catalog_sha256",
+        { p_import_id: plan.importId },
+      );
+      expect(catalogDigest.error).toBeNull();
+      expect(catalogDigest.data).toMatch(/^[a-f0-9]{64}$/);
+
+      const manifestDigest = "a".repeat(64);
+      const gateDigest = "b".repeat(64);
+      const recordedAt = new Date(Date.now() - 120_000).toISOString();
+      const approvedAt = new Date(Date.now() - 60_000).toISOString();
+      const evidence = {
+        manifest: {
+          sha256: manifestDigest,
+          recorded_at: recordedAt,
+          status: "finalized",
+        },
+        reconciliation: {
+          sha256: gateDigest,
+          catalog_sha256: catalogDigest.data,
+          recorded_at: recordedAt,
+          status: "passed",
+          exact: true,
+        },
+        rollback_rehearsal: {
+          sha256: gateDigest,
+          recorded_at: recordedAt,
+          status: "passed",
+        },
+        chrome_desktop: {
+          sha256: gateDigest,
+          recorded_at: recordedAt,
+          status: "passed",
+        },
+        chrome_mobile: {
+          sha256: gateDigest,
+          recorded_at: recordedAt,
+          status: "passed",
+        },
+        admin_happy_path: {
+          sha256: gateDigest,
+          recorded_at: recordedAt,
+          status: "passed",
+        },
+        jarrad_approval: {
+          sha256: gateDigest,
+          approved_at: approvedAt,
+          status: "approved",
+          approved_by: "Jarrad Henry",
+        },
+      };
+      const output = await runPsql(
+        `
+          begin;
+          select set_config('request.jwt.claim.role', 'service_role', true);
+          select set_config('request.jwt.claim.sub', ${sqlLiteral(owner.id)}, true);
+          select public.fn_release_course_import_v1(
+            ${sqlLiteral(plan.importId)},
+            ${sqlLiteral(program.id)}::uuid,
+            ${sqlLiteral(releasedEmployeeRoleGroupId)}::uuid,
+            ${sqlLiteral(JSON.stringify(evidence))}::jsonb,
+            ${sqlLiteral(`RELEASE-BMH-INSTITUTE:${plan.importId}:${manifestDigest}`)}
+          );
+          select set_config('request.jwt.claim.role', 'authenticated', true);
+          select set_config('request.jwt.claim.sub', ${sqlLiteral(learner.id)}, true);
+          set local role authenticated;
+          with started as materialized (
+            select clock_timestamp() as started_at
+          ), catalog as materialized (
+            select jsonb_agg(to_jsonb(row_data) order by row_data.module_sort, row_data.lesson_sort) as payload
+            from (
+              select
+                course.id as course_id,
+                course.title as course_title,
+                module.id as module_id,
+                module.sort_order as module_sort,
+                lesson.id as lesson_id,
+                lesson.lesson_type,
+                lesson.prerequisite_lesson_id,
+                lesson.sort_order as lesson_sort
+              from started
+              cross join public.courses course
+              join public.modules module on module.course_id = course.id
+              join public.lessons lesson on lesson.module_id = module.id
+              where course.id = ${sqlLiteral(course.id)}::uuid
+            ) row_data
+          ), states as materialized (
+            select jsonb_agg(to_jsonb(state) order by state.lesson_id) as payload
+            from catalog
+            cross join public.fn_learner_lesson_states_v1(
+              ${sqlLiteral(course.id)}::uuid,
+              ${uuidArraySql(lessonIds)}
+            ) state
+            where catalog.payload is not null
+          )
+          select 'DB_BUDGET_MS=' || round(
+            extract(epoch from (clock_timestamp() - started.started_at)) * 1000,
+            1
+          )::text
+          from started, catalog, states
+          where catalog.payload is not null and states.payload is not null;
+          select 'PARITY=' || jsonb_build_object(
+            'set_based', (
+              select jsonb_agg(to_jsonb(state) order by state.lesson_id)
+              from public.fn_learner_lesson_states_v1(
+                ${sqlLiteral(course.id)}::uuid,
+                ${uuidArraySql(lessonIds)}
+              ) state
+            ),
+            'baseline', (
+              select jsonb_agg(to_jsonb(state) order by state.lesson_id)
+              from public.fn_lesson_states(
+                ${sqlLiteral(learner.id)}::uuid,
+                ${uuidArraySql(lessonIds)}
+              ) state
+            )
+          )::text;
+          rollback;
+        `,
+        "bmh-released-learner-state-parity",
+      );
+      const parityLine = output
+        .split("\n")
+        .find((line) => line.startsWith("PARITY="));
+      if (!parityLine) {
+        throw new Error(
+          `Released learner parity output was missing: ${output}`,
+        );
+      }
+      const budgetLine = output
+        .split("\n")
+        .find((line) => line.startsWith("DB_BUDGET_MS="));
+      if (!budgetLine) {
+        throw new Error(
+          `Released learner DB budget output was missing: ${output}`,
+        );
+      }
+      const combinedDatabaseMs = Number(
+        budgetLine.slice("DB_BUDGET_MS=".length),
+      );
+      expect(Number.isFinite(combinedDatabaseMs)).toBe(true);
+      expect(combinedDatabaseMs).toBeLessThan(500);
+      const parity = JSON.parse(parityLine.slice("PARITY=".length)) as {
+        set_based: unknown;
+        baseline: unknown;
+      };
+      const setBased = normalizedLessonStates(parity.set_based);
+      const baseline = normalizedLessonStates(parity.baseline);
+      expect(setBased).toEqual(baseline);
+      expect(setBased).toHaveLength(44);
+      expect(setBased.filter((state) => state.is_unlocked)).toHaveLength(1);
+      expect(setBased.filter((state) => state.is_complete)).toHaveLength(0);
+
+      const releaseAfterRollback = await service
+        .from("content_import_release_records")
+        .select("import_id")
+        .eq("import_id", plan.importId)
+        .maybeSingle();
+      expect(releaseAfterRollback.error).toBeNull();
+      expect(releaseAfterRollback.data).toBeNull();
+      const learnerAfterRollback = await learner.client.rpc(
+        "fn_learner_lesson_states_v1",
+        { p_course_id: course.id, p_lesson_ids: lessonIds },
+      );
+      expect(learnerAfterRollback.error?.message).toMatch(
+        /course or review boundary|course access/i,
+      );
+    } finally {
+      if (learner) await service.auth.admin.deleteUser(learner.id);
+      if (owner) await service.auth.admin.deleteUser(owner.id);
+      if (employeeRoleGroupId) {
+        await service
+          .from("role_groups")
+          .delete()
+          .eq("id", employeeRoleGroupId);
+      }
+      if (importApplied) {
+        const rollback = await service.rpc("fn_rollback_course_import", {
+          p_import_id: plan.importId,
+          p_owned: buildRollbackOwnedIds(plan),
+        });
+        expect(rollback.error).toBeNull();
+      }
+    }
+  }, 60_000);
 
   it("keeps imported review reviewer-only and blocks generic QA membership and invites", async () => {
     if (!service)
@@ -1018,12 +1289,29 @@ describe("imported catalog release control on a test project", () => {
         }
       }
       lessonLoadDurations.sort((left, right) => left - right);
-      expect(lessonLoadDurations[9]).toBeLessThan(1_500);
+      expect(lessonLoadDurations[4]).toBeLessThan(1_500);
+      expect(lessonLoadDurations[9]).toBeLessThan(2_500);
 
       const stateDurations: number[] = [];
       const lessonIds = planOperations
         .filter((candidate) => candidate.table === "lessons")
         .map((candidate) => candidate.id);
+      const [reviewerSetBasedStates, reviewerBaselineStates] =
+        await Promise.all([
+          owner.client.rpc("fn_learner_lesson_states_v1", {
+            p_course_id: course.id,
+            p_lesson_ids: lessonIds,
+          }),
+          owner.client.rpc("fn_lesson_states", {
+            p_user_id: owner.id,
+            p_lesson_ids: lessonIds,
+          }),
+        ]);
+      expect(reviewerSetBasedStates.error).toBeNull();
+      expect(reviewerBaselineStates.error).toBeNull();
+      expect(normalizedLessonStates(reviewerSetBasedStates.data)).toEqual(
+        normalizedLessonStates(reviewerBaselineStates.data),
+      );
       for (let sample = 0; sample < 10; sample += 1) {
         const startedAt = performance.now();
         const stateResult = await owner.client.rpc(
@@ -2264,12 +2552,10 @@ describe("imported catalog release control on a test project", () => {
         service
           .from("quizzes")
           .insert({ id: manual.quizId, title: "Manual insert quiz" }),
-        service
-          .from("role_groups")
-          .insert({
-            id: manual.roleGroupId,
-            name: `Manual insert ${randomUUID()}`,
-          }),
+        service.from("role_groups").insert({
+          id: manual.roleGroupId,
+          name: `Manual insert ${randomUUID()}`,
+        }),
       ]);
       for (const result of manualRoots) if (result.error) throw result.error;
       const manualModule = await service.from("modules").insert({

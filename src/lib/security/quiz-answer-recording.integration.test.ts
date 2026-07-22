@@ -63,6 +63,7 @@ describe.skipIf(!envPresent)("atomic quiz answer recording", () => {
     let otherId: string | null = null;
     let courseId: string | null = null;
     let quizId: string | null = null;
+    let roleGroupId: string | null = null;
     try {
       const ownerCreated = await admin.auth.admin.createUser({
         email: ownerEmail,
@@ -103,11 +104,28 @@ describe.skipIf(!envPresent)("atomic quiz answer recording", () => {
 
       const course = await admin
         .from("courses")
-        .insert({ title: `Quiz answer integration ${suffix}` })
+        .insert({ title: `Quiz answer integration ${suffix}`, is_published: true })
         .select("id")
         .single();
       if (course.error || !course.data) throw course.error;
       courseId = course.data.id;
+      const roleGroup = await admin
+        .from("role_groups")
+        .insert({ name: `Quiz answer integration ${suffix}` })
+        .select("id")
+        .single();
+      if (roleGroup.error || !roleGroup.data) throw roleGroup.error;
+      roleGroupId = roleGroup.data.id;
+      const access = await admin.from("course_access").insert({
+        course_id: courseId,
+        role_group_id: roleGroupId,
+      });
+      if (access.error) throw access.error;
+      const memberships = await admin.from("user_role_groups").insert([
+        { user_id: ownerId, role_group_id: roleGroupId },
+        { user_id: otherId, role_group_id: roleGroupId },
+      ]);
+      if (memberships.error) throw memberships.error;
       const courseModule = await admin
         .from("modules")
         .insert({ course_id: courseId, title: "Quiz answer module" })
@@ -338,6 +356,10 @@ describe.skipIf(!envPresent)("atomic quiz answer recording", () => {
       if (quizId) {
         const { error } = await admin.from("quizzes").delete().eq("id", quizId);
         if (error) cleanupFailures.push(`quiz ${quizId}: ${error.message}`);
+      }
+      if (roleGroupId) {
+        const { error } = await admin.from("role_groups").delete().eq("id", roleGroupId);
+        if (error) cleanupFailures.push(`role group ${roleGroupId}: ${error.message}`);
       }
 
       if (userIds.length) {

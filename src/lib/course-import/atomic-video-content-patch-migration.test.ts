@@ -7,6 +7,13 @@ const sql = readFileSync(
   resolve(process.cwd(), "supabase/migrations/20260721232728_harden_atomic_imported_video_content_patch.sql"),
   "utf8",
 );
+const conflictFixSql = readFileSync(
+  resolve(
+    process.cwd(),
+    "supabase/migrations/20260722084500_make_video_patch_conflicts_nonretryable.sql",
+  ),
+  "utf8",
+);
 
 describe("atomic imported video content patch migration", () => {
   it("restricts execution to service role and preserves unpublished import boundaries", () => {
@@ -36,5 +43,12 @@ describe("atomic imported video content patch migration", () => {
     expect(sql).toMatch(/\\\.\[0-9a-f\]\{64\}\\\.mp4\$/i);
     expect(sql).toMatch(/\\\.\[0-9a-f\]\{64\}\\\.vtt\$/i);
     expect(sql).toMatch(/from storage\.objects object/i);
+  });
+
+  it("returns compare-and-swap conflicts without triggering transaction retries", () => {
+    expect(conflictFixSql).toMatch(
+      /target, ownership, type, or expected content mismatch[\s\S]*errcode = 'PT409'/i,
+    );
+    expect(conflictFixSql).not.toMatch(/errcode = '40001'/i);
   });
 });

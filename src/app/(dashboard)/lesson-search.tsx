@@ -32,6 +32,7 @@ export function LessonSearch({
   const generatedId = useId().replaceAll(":", "");
   const idPrefix = instanceId ?? `lesson-search-${generatedId}`;
   const resultsId = `${idPrefix}-results`;
+  const statusId = `${idPrefix}-status`;
   const panelId = `${idPrefix}-panel`;
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
@@ -52,6 +53,8 @@ export function LessonSearch({
         ? searchResult.status
         : "loading";
   const expanded = open && normalizedQuery.length >= 2;
+  const hasResultsPopup =
+    expanded && searchStatus === "success" && results.length > 0;
 
   useEffect(() => {
     if (normalizedQuery.length < 2) {
@@ -153,10 +156,10 @@ export function LessonSearch({
         inputProps={{
           role: "combobox",
           "aria-autocomplete": "list",
-          "aria-controls": resultsId,
-          "aria-expanded": expanded,
+          "aria-controls": hasResultsPopup ? resultsId : undefined,
+          "aria-expanded": hasResultsPopup,
           "aria-activedescendant":
-            expanded && activeIndex >= 0
+            hasResultsPopup && activeIndex >= 0
               ? `${idPrefix}-option-${activeIndex}`
               : undefined,
           autoComplete: "off",
@@ -167,7 +170,7 @@ export function LessonSearch({
               closeSearch();
               return;
             }
-            if (!expanded || results.length === 0) return;
+            if (!hasResultsPopup) return;
             if (event.key === "ArrowDown") {
               event.preventDefault();
               setActiveIndex((current) =>
@@ -185,7 +188,7 @@ export function LessonSearch({
           },
         }}
       />
-      {expanded && searchStatus === "success" && results.length > 0 ? (
+      {hasResultsPopup ? (
         <div
           id={resultsId}
           role="listbox"
@@ -210,7 +213,7 @@ export function LessonSearch({
         </div>
       ) : expanded ? (
         <div
-          id={resultsId}
+          id={statusId}
           role="status"
           aria-live="polite"
           className="absolute left-0 right-0 top-[calc(100%+8px)] z-50 rounded-[var(--bmh-radius-md)] border border-[var(--border-card)] bg-[var(--paper)] px-3 py-2 text-sm font-semibold shadow-[var(--bmh-shadow-md)]"
