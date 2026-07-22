@@ -52,10 +52,10 @@
       "source_key": "poster-video-slot-03-tech-stack",
       "kind": "image",
       "local_path": "course-assets/posters/video-slot-03-tech-stack.webp",
-      "storage_path": "courses/bmh-employee-training-canary/v1/posters/video-slot-03-tech-stack-19c51d0c032c630715d69e5d0ae03623dd05ab13774c9df3ae25026ca046b3c1.webp",
+      "storage_path": "courses/bmh-employee-training-canary/v1/posters/video-slot-03-tech-stack-82aa4fcdc60b2c176730506ca835f5c05d624bb30e9543e7beed71499c143f2b.webp",
       "mime_type": "image/webp",
-      "checksum_sha256": "19c51d0c032c630715d69e5d0ae03623dd05ab13774c9df3ae25026ca046b3c1",
-      "size_bytes": 14228,
+      "checksum_sha256": "82aa4fcdc60b2c176730506ca835f5c05d624bb30e9543e7beed71499c143f2b",
+      "size_bytes": 90624,
       "approval_status": "approved"
     },
     {

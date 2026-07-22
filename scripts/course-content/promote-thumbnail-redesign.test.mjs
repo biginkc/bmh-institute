@@ -68,3 +68,20 @@ test("promotion recovery rejects a journal target outside the strict allowlist",
     /transaction target is not allowed/,
   );
 });
+
+test("promotion transaction resumes poster and canary writes together", async (t) => {
+  const root = await tempRoot(t);
+  const writes = [
+    { target: "course-assets/posters/video-slot-03-tech-stack.webp", contents: Buffer.from("new-poster") },
+    { target: "content/course-manifests/bmh-employee-training-canary.v1.json", contents: Buffer.from("new-canary") },
+    { target: "docs/course-production/thumbnail-pilots/production-ledger.json", contents: Buffer.from("new-ledger") },
+  ];
+  for (const item of writes) await put(root, item.target, Buffer.from(`old-${item.target}`));
+
+  await assert.rejects(
+    commitTransaction(writes, { root, failAfterWrites: 2 }),
+    /Injected thumbnail promotion failure after 2 writes/,
+  );
+  assert.equal(await recoverPendingTransaction({ root }), true);
+  for (const item of writes) assert.deepEqual(await readFile(path.join(root, item.target)), item.contents);
+});

@@ -1,0 +1,12 @@
+{
+  "schema_version": "bmh-video-poster-production-preflight/v1",
+  "import_id": "bmh-employee-training-v1",
+  "catalog_sha256": "607eab4ed407bc2f03469e7fb699d4bde86f31d5fbc6a565219f019bbd312f42",
+  "target_count": 29,
+  "target_mismatch_count": 0,
+  "target_state_sha256": "78607ab2f10f846add8f05a23011c26188f32522978a8fd235ad6abf1257d8af",
+  "client_payload_sha256": "2e1ee8434837bfbf49a56c0099a53bb093cf81fc9888e2a1ff49f2573bb33e06",
+  "approval_evidence": "docs/course-production/thumbnail-redesign/approvals/video-poster-redesign-approval-2026-07-21.json",
+  "approval_evidence_sha256": "18b29e7122614bc687836c76663d0cf4430c27220bfded35babc27c379678d83",
+  "recorded_at": "2026-07-22T06:58:49.976Z"
+}

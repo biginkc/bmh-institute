@@ -42,6 +42,43 @@ describe("exact reconciliation evidence", () => {
     expect(() => buildReconciliationEvidence({ ...base, storagePrefix: "courses/bmh-test/v1/", expectedStoragePaths: ["courses/bmh-test/v1/..\\outside.bin"] })).toThrow(/noncanonical/);
   });
 
+  it("separates required objects from optional rollback paths and observed presence", () => {
+    const evidence = buildReconciliationEvidence({
+      manifestBytes: Buffer.from("manifest"),
+      importId: "bmh-test-v1",
+      scope: "full",
+      environment: "test",
+      environmentUrl: COURSE_IMPORT_TEST_URL,
+      database: cleanDatabase,
+      assetProblems: [],
+      unexpectedStorage: [],
+      expectedStoragePaths: ["courses/bmh-test/v1/current.webp"],
+      optionalAllowedStoragePaths: ["courses/bmh-test/v1/old-a.webp", "courses/bmh-test/v1/old-b.webp"],
+      presentOptionalStoragePaths: ["courses/bmh-test/v1/old-a.webp"],
+      storagePrefix: "courses/bmh-test/v1/",
+    });
+    expect(evidence).toMatchObject({
+      expected_storage_object_count: 1,
+      optional_allowed_storage_object_count: 2,
+      present_optional_storage_object_count: 1,
+      absent_optional_storage_object_count: 1,
+    });
+    expect(() => buildReconciliationEvidence({
+      manifestBytes: Buffer.from("manifest"),
+      importId: "bmh-test-v1",
+      scope: "full",
+      environment: "test",
+      environmentUrl: COURSE_IMPORT_TEST_URL,
+      database: cleanDatabase,
+      assetProblems: [],
+      unexpectedStorage: [],
+      expectedStoragePaths: [],
+      optionalAllowedStoragePaths: ["courses/bmh-test/v1/old.webp"],
+      presentOptionalStoragePaths: ["courses/bmh-test/v1/not-allowed.webp"],
+      storagePrefix: "courses/bmh-test/v1/",
+    })).toThrow(/invalid optional retained/i);
+  });
+
   it("binds evidence to the exact canonical project and BMH manifest scope", () => {
     const base = {
       manifestBytes: Buffer.from("manifest"),

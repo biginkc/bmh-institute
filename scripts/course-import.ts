@@ -6,6 +6,7 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import {
   findRemoteAssetProblems,
   findUnexpectedRemoteAssetPaths,
+  inspectOptionalRemoteAssets,
   type RemoteAssetListingBucket,
 } from "../src/lib/course-import/asset-transfer";
 import {
@@ -30,6 +31,7 @@ import {
   assertStorageRollbackInspectionClean,
   inspectStorageRollbackAssets,
 } from "../src/lib/course-import/storage-rollback";
+import { assertExactVideoPosterRetentionAudit, loadApprovedVideoPosterRetention } from "../src/lib/course-import/video-poster-retention";
 import type { Database } from "../src/lib/supabase/types";
 import { assertCourseImportEnvironment } from "../src/lib/course-import/environment";
 import {
@@ -139,17 +141,32 @@ async function main() {
     return;
   }
   if (command === "verify") {
+    const retention = await readAuditedVideoPosterRetention(supabase, plan);
     const reconciliation = await reconcileImportPlanExact(plan, adapter);
-    const assetProblems = await findAssetProblems(supabase, plan.assets);
+    const optionalRetention = await inspectOptionalRemoteAssets(
+      supabase.storage.from("content"),
+      retention?.assets ?? [],
+    );
+    const assetProblems = [
+      ...await findAssetProblems(supabase, plan.assets),
+      ...optionalRetention.problems,
+    ];
     const prefix = importStoragePrefix(plan.importId);
     if (!prefix) throw new Error("Import has no canonical storage prefix.");
     const unexpectedStorage = await findUnexpectedRemoteAssetPaths(
       supabase.storage.from("content") as unknown as RemoteAssetListingBucket,
       plan.importId,
       prefix,
-      plan.assets,
+      [...plan.assets, ...(retention?.assets ?? [])],
     );
-    console.log(JSON.stringify({ ...reconciliation, assetProblems, unexpectedStorage }, null, 2));
+    console.log(JSON.stringify({
+      ...reconciliation,
+      assetProblems,
+      unexpectedStorage,
+      allowedRetainedRollbackStorage: retention?.assets.map((asset) => asset.storage_path) ?? [],
+      presentRetainedRollbackStorage: optionalRetention.present,
+      absentRetainedRollbackStorage: optionalRetention.absent,
+    }, null, 2));
     assertExactReconciliationClean({ database: reconciliation, assetProblems, unexpectedStorage });
     return;
   }
@@ -157,9 +174,11 @@ async function main() {
     if (flags.confirm !== plan.importId) {
       throw new Error(`${command} requires --confirm=${plan.importId}.`);
     }
+    const retention = await readAuditedVideoPosterRetention(supabase, plan);
     const inspectStorage = () => inspectStorageRollbackAssets({
       importId: plan.importId,
       assets: plan.assets,
+      optionalRetainedAssets: retention?.assets ?? [],
       bucket: supabase.storage.from("content"),
     });
     if (command === "inspect-rollback-storage") {
@@ -190,6 +209,30 @@ async function main() {
     console.log(JSON.stringify({ phase: "storage_inspection", storageRollback }, null, 2));
     assertStorageRollbackInspectionClean(storageRollback);
   }
+}
+
+async function readAuditedVideoPosterRetention(
+  supabase: SupabaseClient<Database>,
+  plan: ReturnType<typeof buildImportPlan>,
+) {
+  const retention = await loadApprovedVideoPosterRetention(plan);
+  if (!retention) return null;
+  const table = supabase.from(retention.auditTable as never) as unknown as {
+    select(columns: "id,replacements"): {
+      eq(column: "import_id", value: string): {
+        eq(column: "client_payload_sha256", value: string): {
+          limit(count: number): PromiseLike<{ data: Array<{ id: string; replacements: unknown }> | null; error: { message: string } | null }>;
+        };
+      };
+    };
+  };
+  const { data, error } = await table.select("id,replacements")
+    .eq("import_id", retention.importId)
+    .eq("client_payload_sha256", retention.clientPayloadSha256)
+    .limit(1);
+  if (error) throw new Error(`Video poster retention audit could not be verified: ${error.message}`);
+  assertExactVideoPosterRetentionAudit(retention, data);
+  return retention;
 }
 
 async function findAssetProblems(

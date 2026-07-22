@@ -64,7 +64,8 @@ function assertTransactionTarget(relative) {
     relative === DEFAULT_PATHS.ledger ||
     relative === DEFAULT_PATHS.manifest ||
     relative === CANARY_MANIFEST_PATH ||
-    /^course-assets\/thumbnails\/slot-(?:0[1-9]|1[0-9])\.webp$/.test(relative)
+    /^course-assets\/thumbnails\/slot-(?:0[1-9]|1[0-9])\.webp$/.test(relative) ||
+    /^course-assets\/posters\/video-slot-[a-z0-9-]+\.webp$/.test(relative)
   ) return relative;
   throw new Error(`Thumbnail promotion transaction target is not allowed: ${relative}`);
 }
