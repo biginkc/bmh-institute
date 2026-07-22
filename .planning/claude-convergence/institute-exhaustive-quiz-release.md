@@ -23,13 +23,13 @@
 - [x] The sole active full manifest contains exactly 19 quizzes and 920 approved questions.
 - [x] Humanizing the Lead contains 70 questions and `questions_per_attempt: null`.
 - [x] Canary and full course QA are green without weakened assertions.
-- [ ] Released catalog revision preserves the immutable legacy receipt and stable program, course, lesson, and quiz identities.
+- [x] Released catalog revision preserves the immutable legacy receipt and stable program, course, lesson, and quiz identities.
 - [x] Production is reconfirmed to have no completed attempts; disposable incomplete legacy attempts cannot resume with 10 questions.
 - [x] Rollback artifacts and procedure exist before production mutation.
 - [x] Typecheck, unit, integration, import, migration rehearsal, build, lint, and manual review gates pass locally; CI remains part of the merge gate.
-- [ ] Focused PR is merged and production serves the merged commit.
-- [ ] Production contains exactly 19 active quizzes and 920 active questions with per-quiz counts matching the approved ledger.
-- [ ] Chrome visibly proves the exact Humanizing lesson says `Question 1 of 70` with no blocking console or network failure.
+- [x] Focused PR is merged and production serves the merged commit.
+- [x] Production contains exactly 19 active quizzes and 920 active questions with per-quiz counts matching the approved ledger.
+- [x] Chrome visibly proves the exact Humanizing lesson says `Question 1 of 70` with no blocking console or network failure.
 
 ## Intended test coverage before behavior changes
 
@@ -113,3 +113,14 @@
 - Claude verdict: prior technical verdict remains `REQUEST_CHANGES` for head `7112c35`; a fresh review of the corrected commit is required before merge.
 - Remaining gates: full local suite, corrected commit/push, green PR CI, fresh Claude technical approval, rollback tag, merge/deployment identity, controlled production revision, reconciliation, and authenticated Chrome proof.
 - Blockers: none.
+
+### Iteration 5 - reviewed merge, production revision, and authenticated proof
+
+- Final branch head `6cc04293c4ed94c97fb56ee4fd5008c9299fcafc` received Claude's independent `APPROVE` verdict with no blocker or major finding. Both prior major findings were closed with PostgreSQL 15/16/17 behavioral evidence and checksum-bound governance evidence.
+- PR #117 passed all merge-gate checks, including 174 Vitest files / 1,028 tests, course QA, build/lint, the PostgreSQL 15/16/17 released-revision matrix, and the reconciled seeded Playwright test. It merged to `main` as `5f3da0cef578eadca713eae6374a78923060d902` at `2026-07-22T14:26:48Z`.
+- Rollback point `bmh-exhaustive-quiz-pre-release-20260722` was created and pushed before merge at the prior production commit `369881f2dda2965d37f60d793c9ba9f555a40bb2`; its annotation binds the legacy manifest and immutable receipt checksums.
+- Vercel production deployment `dpl_8zbg3qCwqvwfVkCDkUeBnsXEgz8A` is `Ready`, targets the exact merge SHA on `main`, and automatically owns the verified `institute.bmhgroupkc.com` custom domain. No manual alias mutation was required.
+- The production revision migration was applied atomically with its schema-history record. The released import advanced the stable catalog to revision 2 and reconciled 19 quizzes / 342 questions / 1,292 options to 19 / 920 / 3,678 while invalidating the one explicitly disposable incomplete legacy attempt.
+- Independent production reconciliation preserved the original immutable manifest receipt `71f85173bc857d1b3b042fba0a50fdd420b6410ef84b104a751c3ed5982eba5c`, activated manifest `440ec4d85bc6dc0aec9d471fb0f5ecbe0ca8c17236b3012e8b036b8d045a154d`, matched catalog `ca42e3d6347a71f46bd1aabee6c7b5c9fc570e797473865ceee30d4fe2a36ae0` and graph `d2b9fc182b7ca72f76ce038eac8c5b37446ba999fce5a269699802812177c78a`, retained all stable identities, left every attempt cap null, and found zero live attempts or reviewer evidence.
+- At `2026-07-22 09:36 CDT`, authenticated Chrome on the exact production URL visibly showed Humanizing the Lead `Question 1 of 70`. Codex answered and locked questions 1 and 2, advanced to question 3, reloaded, resumed at question 3, navigated back to question 1, and observed zero browser warnings or errors. The verified production tab was left open for Jarrad.
+- Final status: all acceptance gates satisfied; no blockers.
