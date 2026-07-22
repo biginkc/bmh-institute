@@ -16,11 +16,19 @@ describe("quiz answer privacy snapshot migration", () => {
     expect(sql).toMatch(
       /alter table public\.user_quiz_attempts[\s\S]*add column if not exists answer_results jsonb not null default '\{\}'::jsonb/i,
     );
-    expect(sql).toMatch(/jsonb_build_object\('is_correct', v_is_correct\)/i);
+    expect(sql).toMatch(/jsonb_build_object\(\s*'is_correct', v_is_correct/i);
+    expect(sql).toMatch(/'points', v_points/i);
+    expect(sql).toMatch(/'question_type', v_question_type/i);
     expect(sql).toMatch(
       /if v_is_correct then[\s\S]*jsonb_build_object\('explanation', v_explanation\)/i,
     );
     expect(sql).not.toMatch(/correct_option_ids|correct_options/i);
+  });
+
+  it("backfills legacy responses without disclosing a historical explanation", () => {
+    expect(sql).toMatch(/update public\.user_quiz_attempts[\s\S]*answer_results[\s\S]*jsonb_each\(attempt\.responses\)/i);
+    expect(sql).toMatch(/'explanation', null/i);
+    expect(sql).toMatch(/This attempt has no stored grading result/i);
   });
 
   it("checks current catalog access inside the atomic recording boundary", () => {
@@ -38,6 +46,18 @@ describe("quiz answer privacy snapshot migration", () => {
     );
     expect(sql).toMatch(
       /select\s+v_attempt\.responses,\s*v_attempt\.answer_results,\s*v_attempt\.completed_at,\s*true/i,
+    );
+  });
+
+  it("reads explanation and the complete answer key from one statement snapshot", () => {
+    expect(sql).toMatch(
+      /select[\s\S]*question\.explanation[\s\S]*array_agg\([\s\S]*option\.is_correct[\s\S]*into\s+v_question_type,\s*v_explanation,\s*v_points,\s*v_correct_sorted/i,
+    );
+  });
+
+  it("updates the guarded fixture-cleanup column fingerprint", () => {
+    expect(sql).toMatch(
+      /v_fields text\[\][\s\S]*'answer_results'[\s\S]*update private\.fixture_cleanup_boundary_v1[\s\S]*where table_name = 'user_quiz_attempts'/i,
     );
   });
 });

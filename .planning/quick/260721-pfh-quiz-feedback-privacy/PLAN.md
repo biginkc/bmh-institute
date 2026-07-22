@@ -53,9 +53,11 @@ navigation, attempt policy, and completed-quiz hard navigation.
 ## Scope boundaries
 
 - One additive database migration may store an immutable, privacy-safe grading
-  snapshot (`is_correct`, plus `explanation` only for correct responses). It
-  must not store correct option identifiers or answer text, and it must preserve
-  the existing score calculation and attempt behavior.
+  snapshot (`is_correct`, locked point value and question type, plus
+  `explanation` only for new correct responses). It must not store correct
+  option identifiers or answer text, and it must preserve the existing score
+  calculation and attempt behavior. Legacy responses are graded once during
+  migration without copying any authored explanation.
 - No implementation from `docs/performance/lesson-load-remediation-plan.md`.
 - No production data mutation beyond disposable browser verification state that
   is safe for the authenticated owner account.

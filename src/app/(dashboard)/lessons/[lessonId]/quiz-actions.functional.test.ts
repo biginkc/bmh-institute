@@ -209,7 +209,12 @@ describe("quiz server actions", () => {
       answer_orders: { "q-1": ["q1-good", "q1-bad"] },
       responses: { "q-1": ["q1-good"] },
       answer_results: {
-        "q-1": { is_correct: true, explanation: "Because one is correct." },
+        "q-1": {
+          is_correct: true,
+          explanation: "Because one is correct.",
+          points: 1,
+          question_type: "single_choice",
+        },
       },
       score: null,
       passed: null,
@@ -225,7 +230,12 @@ describe("quiz server actions", () => {
     recordRpcData = [{
       responses: { "q-1": ["q1-good"] },
       answer_results: {
-        "q-1": { is_correct: true, explanation: "Because one is correct." },
+        "q-1": {
+          is_correct: true,
+          explanation: "Because one is correct.",
+          points: 1,
+          question_type: "single_choice",
+        },
       },
       completed_at: null,
       already_answered: false,
@@ -320,6 +330,23 @@ describe("quiz server actions", () => {
       reveals: [{ questionId: "q-1", isCorrect: false }],
     });
     expect(JSON.stringify(result)).not.toContain("The changed key must stay private.");
+  });
+
+  it("fails closed instead of mislabeling a legacy response without a grading snapshot", async () => {
+    incompleteAttempt = {
+      id: "attempt-existing",
+      question_order: ["q-1"],
+      answer_orders: { "q-1": ["q1-good", "q1-bad"] },
+      responses: { "q-1": ["q1-good"] },
+      answer_results: {},
+    };
+
+    await expect(
+      startQuizAttempt({ quizId: "quiz-1", lessonId: "lesson-1" }),
+    ).resolves.toEqual({
+      ok: false,
+      error: "This attempt has no stored grading result.",
+    });
   });
 
   it("fails closed when a resumed question is no longer available", async () => {
@@ -560,7 +587,12 @@ describe("quiz server actions", () => {
     recordRpcData = [{
       responses: { "q-1": ["q1-good"] },
       answer_results: {
-        "q-1": { is_correct: true, explanation: "Because one is correct." },
+        "q-1": {
+          is_correct: true,
+          explanation: "Because one is correct.",
+          points: 1,
+          question_type: "single_choice",
+        },
       },
       completed_at: null,
       already_answered: true,
@@ -692,8 +724,13 @@ describe("quiz server actions", () => {
         "q-2": ["q2-bad"],
       },
       answer_results: {
-        "q-1": { is_correct: true, explanation: "Because one is correct." },
-        "q-2": { is_correct: false },
+        "q-1": {
+          is_correct: true,
+          explanation: "Because one is correct.",
+          points: 1,
+          question_type: "single_choice",
+        },
+        "q-2": { is_correct: false, points: 1, question_type: "multi_select" },
       },
     };
 
@@ -714,7 +751,13 @@ describe("quiz server actions", () => {
     attempt = {
       ...attempt,
       responses: { "q-1": ["q1-bad"] },
-      answer_results: { "q-1": { is_correct: false } },
+      answer_results: {
+        "q-1": {
+          is_correct: false,
+          points: 1,
+          question_type: "single_choice",
+        },
+      },
     };
     availableQuestions = authoredQuestions.map((question) =>
       question.id === "q-1"
@@ -732,7 +775,42 @@ describe("quiz server actions", () => {
     const result = await finalizeQuizAttempt({ attemptId: "attempt-1" });
 
     expect(result).toMatchObject({ ok: true, review: null });
+    expect(result).toMatchObject({ ok: true, score: 0, passed: false });
     expect(JSON.stringify(result)).not.toContain("Changed explanation must stay private.");
+  });
+
+  it("scores from the locked grading snapshot after the authored key changes", async () => {
+    attempt = {
+      ...attempt,
+      responses: { "q-1": ["q1-good"] },
+      answer_results: {
+        "q-1": {
+          is_correct: true,
+          explanation: "Because one is correct.",
+          points: 1,
+          question_type: "single_choice",
+        },
+      },
+    };
+    availableQuestions = authoredQuestions.map((question) =>
+      question.id === "q-1"
+        ? {
+            ...question,
+            answer_options: question.answer_options.map((option) => ({
+              ...option,
+              is_correct: option.id === "q1-bad",
+            })),
+          }
+        : question,
+    );
+
+    await expect(finalizeQuizAttempt({ attemptId: "attempt-1" })).resolves.toMatchObject({
+      ok: true,
+      score: 100,
+      passed: true,
+      earnedPoints: 1,
+      totalPoints: 1,
+    });
   });
 
   it("rejects finalize when a persisted question is unanswered", async () => {
@@ -787,6 +865,27 @@ describe("quiz server actions", () => {
   });
 
   it("re-reads and returns a concurrent landed finalize as success", async () => {
+    updateData = null;
+    landedAttempt = {
+      ...attempt,
+      score: 100,
+      passed: true,
+      completed_at: "2026-07-21T12:00:00Z",
+    };
+
+    await expect(finalizeQuizAttempt({ attemptId: "attempt-1" })).resolves.toMatchObject({
+      ok: true,
+      score: 100,
+      passed: true,
+    });
+  });
+
+  it("returns a concurrent landed result even when the other finalize changed eligibility", async () => {
+    priorAttempts = [{
+      passed: true,
+      score: 100,
+      completed_at: "2026-07-21T12:00:00Z",
+    }];
     updateData = null;
     landedAttempt = {
       ...attempt,

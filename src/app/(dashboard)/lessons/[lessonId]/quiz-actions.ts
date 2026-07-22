@@ -8,7 +8,7 @@ import {
 } from "@/lib/quizzes/attempt-selection";
 import { computeQuizEligibility } from "@/lib/quizzes/attempts";
 import {
-  scoreQuizAttempt,
+  type ScoreResult,
   type ScoringQuestion,
   type ScoringResponses,
 } from "@/lib/quizzes/score";
@@ -256,39 +256,34 @@ export async function finalizeQuizAttempt(input: {
     );
   }
 
-  const eligibility = await quizEligibilityContext(access);
-  if (!eligibility.ok) return eligibility;
-
   const questionOrder = stringArray(attempt.question_order);
   const answerOrders = stringArrayRecord(attempt.answer_orders);
   const responses = stringArrayRecord(attempt.responses);
   const responseError = validateResponses(responses, questionOrder, answerOrders);
   if (responseError) return { ok: false, error: responseError };
 
+  const answerResults = answerResultRecord(attempt.answer_results);
+  const cardinalityError = validateLockedResponseCardinality(
+    responses,
+    questionOrder,
+    answerResults,
+  );
+  if (cardinalityError) return { ok: false, error: cardinalityError };
+  const result = scoreAnswerResults(
+    questionOrder,
+    answerResults,
+    access.quiz.passing_score,
+  );
+  if (!result.ok) return result;
+
   const admin = adminClientResult();
   if (!admin.ok) return admin;
-  const questionsResult = await loadPrivateQuestions(admin.client, questionOrder);
-  if (!questionsResult.ok) return questionsResult;
-  const byId = new Map(
-    questionsResult.questions.map((question) => [question.id, question]),
-  );
-  const scoring = questionOrder.flatMap((questionId) => {
-    const question = byId.get(questionId);
-    return question ? [toScoringQuestion(question)] : [];
-  });
-  if (scoring.length !== questionOrder.length) {
-    return { ok: false, error: "This attempt contains unavailable questions." };
-  }
-  const cardinalityError = validateResponseCardinality(responses, scoring);
-  if (cardinalityError) return { ok: false, error: cardinalityError };
-
-  const result = scoreQuizAttempt(scoring, responses, access.quiz.passing_score);
   const completedAt = new Date().toISOString();
   const { data: updated, error: updateError } = await admin.client
     .from("user_quiz_attempts")
     .update({
-      score: result.score,
-      passed: result.passed,
+      score: result.result.score,
+      passed: result.result.passed,
       completed_at: completedAt,
     })
     .eq("id", attempt.id)
@@ -318,7 +313,7 @@ export async function finalizeQuizAttempt(input: {
     );
   }
 
-  if (result.passed) {
+  if (result.result.passed) {
     await emitSandraCourseCompletedForLesson(learner, {
       userId: user.id,
       lessonId: attempt.lesson_id,
@@ -327,9 +322,9 @@ export async function finalizeQuizAttempt(input: {
 
   return buildSubmitResult({
     attemptId: attempt.id,
-    result,
+    result: result.result,
     questionOrder,
-    answerResults: answerResultRecord(attempt.answer_results),
+    answerResults,
     revealPolicy: access.quiz.show_correct_answers_after,
   });
 }
@@ -349,6 +344,9 @@ async function resumeAttempt(
   const responses = stringArrayRecord(attempt.responses);
   const answerResults = answerResultRecord(attempt.answer_results);
   const answeredIds = questionOrder.filter((id) => responses[id]?.length);
+  if (answeredIds.some((id) => !answerResults[id])) {
+    return { ok: false, error: "This attempt has no stored grading result." };
+  }
   const reveals = answeredIds.map((id) =>
     revealFromAnswerResult(id, answerResults[id]),
   );
@@ -396,31 +394,19 @@ async function completedAttemptResult(attempt: {
   if (attempt.score === null || attempt.passed === null) {
     return { ok: false, error: "This attempt has no stored result." };
   }
-  const admin = adminClientResult();
-  if (!admin.ok) return admin;
   const questionOrder = stringArray(attempt.question_order);
-  const questionsResult = await loadPrivateQuestions(admin.client, questionOrder);
-  if (!questionsResult.ok) return questionsResult;
-  const byId = new Map(
-    questionsResult.questions.map((question) => [question.id, question]),
-  );
-  const scoring = questionOrder.flatMap((id) => {
-    const question = byId.get(id);
-    return question ? [toScoringQuestion(question)] : [];
-  });
-  if (scoring.length !== questionOrder.length) {
-    return { ok: false, error: "This attempt contains unavailable questions." };
-  }
-  const score = scoreQuizAttempt(scoring, stringArrayRecord(attempt.responses), 0);
+  const answerResults = answerResultRecord(attempt.answer_results);
+  const score = scoreAnswerResults(questionOrder, answerResults, 0);
+  if (!score.ok) return score;
   return buildSubmitResult({
     attemptId: attempt.id,
     result: {
-      ...score,
+      ...score.result,
       score: attempt.score,
       passed: attempt.passed,
     },
     questionOrder,
-    answerResults: answerResultRecord(attempt.answer_results),
+    answerResults,
     revealPolicy,
   });
 }
@@ -433,7 +419,7 @@ function buildSubmitResult({
   revealPolicy,
 }: {
   attemptId: string;
-  result: ReturnType<typeof scoreQuizAttempt>;
+  result: ScoreResult;
   questionOrder: string[];
   answerResults: AnswerResultRecord;
   revealPolicy: string;
@@ -700,6 +686,64 @@ function shouldRevealAnswers(policy: string, passed: boolean) {
   return policy === "always" || (policy === "after_pass" && passed);
 }
 
+function scoreAnswerResults(
+  questionOrder: string[],
+  answerResults: AnswerResultRecord,
+  passingScore: number,
+): { ok: true; result: ScoreResult } | { ok: false; error: string } {
+  const snapshots = questionOrder.map((questionId) => answerResults[questionId]);
+  if (
+    snapshots.some(
+      (snapshot) =>
+        !snapshot ||
+        snapshot.points === null ||
+        !Number.isFinite(snapshot.points) ||
+        snapshot.points < 0,
+    )
+  ) {
+    return { ok: false, error: "This attempt has no stored grading result." };
+  }
+  const points = snapshots.map((snapshot) => snapshot!.points!);
+  const totalPoints = points.reduce((sum, value) => sum + value, 0);
+  const earnedPoints = snapshots.reduce(
+    (sum, snapshot, index) => sum + (snapshot!.isCorrect ? points[index] : 0),
+    0,
+  );
+  const score = totalPoints === 0
+    ? 0
+    : Math.round((earnedPoints / totalPoints) * 100);
+  return {
+    ok: true,
+    result: {
+      score,
+      passed: totalPoints > 0 && score >= passingScore,
+      earnedPoints,
+      totalPoints,
+    },
+  };
+}
+
+function validateLockedResponseCardinality(
+  responses: ScoringResponses,
+  questionOrder: string[],
+  answerResults: AnswerResultRecord,
+): string | null {
+  for (const questionId of questionOrder) {
+    const snapshot = answerResults[questionId];
+    if (!snapshot?.questionType) {
+      return "This attempt has no stored grading result.";
+    }
+    const selected = responses[questionId] ?? [];
+    if (snapshot.questionType !== "multi_select" && selected.length !== 1) {
+      return "Choose one answer for each single-choice question.";
+    }
+    if (new Set(selected).size !== selected.length) {
+      return "A response contains the same answer more than once.";
+    }
+  }
+  return null;
+}
+
 function revealFromAnswerResult(
   questionId: string,
   result: AnswerResultSnapshot | undefined,
@@ -717,15 +761,26 @@ function answerResultRecord(value: unknown): AnswerResultRecord {
   const parsed: AnswerResultRecord = {};
   for (const [questionId, raw] of Object.entries(value)) {
     if (!raw || typeof raw !== "object" || Array.isArray(raw)) continue;
-    const result = raw as { is_correct?: unknown; explanation?: unknown };
+    const result = raw as {
+      is_correct?: unknown;
+      explanation?: unknown;
+      points?: unknown;
+      question_type?: unknown;
+    };
+    const points = typeof result.points === "number" ? result.points : null;
+    const questionType = typeof result.question_type === "string"
+      ? result.question_type
+      : null;
     parsed[questionId] = result.is_correct === true
       ? {
         isCorrect: true,
         explanation: typeof result.explanation === "string"
           ? result.explanation
           : null,
+        points,
+        questionType,
       }
-      : { isCorrect: false };
+      : { isCorrect: false, points, questionType };
   }
   return parsed;
 }
@@ -763,8 +818,13 @@ type PrivateQuestion = {
   answer_options: unknown;
 };
 type AnswerResultSnapshot =
-  | { isCorrect: false }
-  | { isCorrect: true; explanation: string | null };
+  | { isCorrect: false; points: number | null; questionType: string | null }
+  | {
+      isCorrect: true;
+      explanation: string | null;
+      points: number | null;
+      questionType: string | null;
+    };
 type AnswerResultRecord = Record<string, AnswerResultSnapshot>;
 
 function toOptionArray(value: unknown): RawOption[] {

@@ -107,3 +107,32 @@
   `e2e/design-system-responsive.spec.ts` on the PR head.
 - Next action: commit the corrected head and send that exact head back through
   all three review lanes.
+
+### Iteration 3
+
+- Status: review head `39e8d7427c2e8c2c99bec068928cb18840702d25`
+  was rejected again. UI/accessibility was clean, but server-security and
+  regression returned valid blockers. The PostgreSQL 15, 16, and 17 CI matrix
+  independently failed with `column-set drift in public.user_quiz_attempts`.
+- Legacy transition fix: migration 051 now grades every pre-migration persisted
+  response once while the relevant tables are locked. It stores correctness,
+  point value, and question type, but intentionally stores a null explanation
+  even for legacy-correct answers because the historical key version is
+  unknowable. Missing evidence now fails closed instead of being mislabeled as
+  incorrect.
+- Consistency fix: new-answer grading reads question type, points, explanation,
+  and the complete correct-option set in one SQL statement snapshot. Final
+  scoring and cardinality validation use the immutable snapshot, so later key,
+  point, or type edits cannot make feedback disagree with the score.
+- Concurrency fix: finalizing an already-authorized active attempt no longer
+  reruns start-only attempt eligibility. A concurrent winner is reread and
+  returned instead of the loser incorrectly receiving an already-passed,
+  cooldown, or max-attempt error.
+- Cleanup safety fix: migration 051 verifies existing fixture fingerprints
+  before evolving them, registers the new column, and rehashes any retained
+  boundary rows. This preserves the cleanup controller's column-drift guard.
+- Green evidence: `npm run verify` passed 156 unit/server files with 940 tests
+  and 38 RTL files with 131 tests. Build passed; lint has zero errors and the
+  same nine inherited warnings.
+- Next action: commit and push a new exact head, require the PostgreSQL matrix
+  to prove the SQL, then re-review that head in all three lanes.
