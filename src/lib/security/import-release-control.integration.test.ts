@@ -775,12 +775,65 @@ describe("imported catalog release control on a test project", () => {
     };
     const program = operation("programs");
     const course = operation("courses");
-    const lessonIds = operations
-      .filter((candidate) => candidate.table === "lessons")
-      .map((candidate) => candidate.id);
-    const lessonTypes = operations
-      .filter((candidate) => candidate.table === "lessons")
-      .map((candidate) => String(candidate.row.lesson_type));
+    const lessonOperations = operations.filter(
+      (candidate) => candidate.table === "lessons",
+    );
+    const contentLessons = lessonOperations.filter(
+      (candidate) => candidate.row.lesson_type === "content",
+    );
+    const quizLessons = lessonOperations.filter(
+      (candidate) => candidate.row.lesson_type === "quiz",
+    );
+    const assignmentLessons = lessonOperations.filter(
+      (candidate) => candidate.row.lesson_type === "assignment",
+    );
+    const [firstContent, secondContent, thirdContent, staleContent] =
+      contentLessons;
+    const [firstQuiz, secondQuiz, thirdQuiz, lockedQuiz] = quizLessons;
+    const [firstAssignment] = assignmentLessons;
+    if (
+      !firstContent ||
+      !secondContent ||
+      !thirdContent ||
+      !staleContent ||
+      !firstQuiz ||
+      !secondQuiz ||
+      !thirdQuiz ||
+      !lockedQuiz ||
+      !firstAssignment
+    ) {
+      throw new Error("Released-state transition fixture is incomplete.");
+    }
+    const rowUuid = (
+      candidate: (typeof operations)[number],
+      key: string,
+    ) => {
+      const value = candidate.row[key];
+      if (typeof value !== "string") {
+        throw new Error(`Released-state fixture ${candidate.id} lacks ${key}.`);
+      }
+      return value;
+    };
+    const firstQuizId = rowUuid(firstQuiz, "quiz_id");
+    const secondQuizId = rowUuid(secondQuiz, "quiz_id");
+    const thirdQuizId = rowUuid(thirdQuiz, "quiz_id");
+    const firstAssignmentId = rowUuid(firstAssignment, "assignment_id");
+    const staleRequiredBlocks = operations.filter(
+      (candidate) =>
+        candidate.table === "content_blocks" &&
+        candidate.row.lesson_id === staleContent.id &&
+        candidate.row.is_required_for_completion === true,
+    );
+    const staleVideoBlock = staleRequiredBlocks.find(
+      (candidate) => candidate.row.block_type === "video",
+    );
+    if (!staleVideoBlock || staleRequiredBlocks.length < 2) {
+      throw new Error("Released-state fixture lacks stale video coverage.");
+    }
+    const lessonIds = lessonOperations.map((candidate) => candidate.id);
+    const lessonTypes = lessonOperations.map((candidate) =>
+      String(candidate.row.lesson_type),
+    );
     expect(lessonIds).toHaveLength(44);
     expect(lessonTypes.filter((type) => type === "content")).toHaveLength(19);
     expect(lessonTypes.filter((type) => type === "quiz")).toHaveLength(19);
@@ -803,6 +856,7 @@ describe("imported catalog release control on a test project", () => {
       importApplied = true;
       learner = await createSignedInUser("learner");
       owner = await createSignedInUser("owner");
+      const releasedLearnerId = learner.id;
 
       const employee = await service
         .from("role_groups")
@@ -877,21 +931,56 @@ describe("imported catalog release control on a test project", () => {
           approved_by: "Jarrad Henry",
         },
       };
-      const output = await runPsql(
-        `
-          begin;
-          select set_config('request.jwt.claim.role', 'service_role', true);
-          select set_config('request.jwt.claim.sub', ${sqlLiteral(owner.id)}, true);
-          select public.fn_release_course_import_v1(
-            ${sqlLiteral(plan.importId)},
-            ${sqlLiteral(program.id)}::uuid,
-            ${sqlLiteral(releasedEmployeeRoleGroupId)}::uuid,
-            ${sqlLiteral(JSON.stringify(evidence))}::jsonb,
-            ${sqlLiteral(`RELEASE-BMH-INSTITUTE:${plan.importId}:${manifestDigest}`)}
-          );
-          select set_config('request.jwt.claim.role', 'authenticated', true);
-          select set_config('request.jwt.claim.sub', ${sqlLiteral(learner.id)}, true);
-          set local role authenticated;
+      const paritySql = (marker: string) => `
+        select ${sqlLiteral(`${marker}=`)} || jsonb_build_object(
+          'set_based', (
+            select jsonb_agg(to_jsonb(state) order by state.lesson_id)
+            from public.fn_learner_lesson_states_v1(
+              ${sqlLiteral(course.id)}::uuid,
+              ${uuidArraySql(lessonIds)}
+            ) state
+          ),
+          'baseline', (
+            select jsonb_agg(to_jsonb(state) order by state.lesson_id)
+            from public.fn_lesson_states(
+              ${sqlLiteral(releasedLearnerId)}::uuid,
+              ${uuidArraySql(lessonIds)}
+            ) state
+          )
+        )::text;
+      `;
+      const seedRequiredContentSql = (
+        lessonId: string,
+        staleBlockId?: string,
+      ) => `
+        insert into public.user_block_progress (
+          user_id, block_id, asset_version
+        )
+        select
+          ${sqlLiteral(releasedLearnerId)}::uuid,
+          block.id,
+          ${
+            staleBlockId
+              ? `case
+                  when block.id = ${sqlLiteral(staleBlockId)}::uuid
+                    then 'stale-video-version'
+                  else coalesce(
+                    public.fn_video_asset_version(block.content),
+                    'non-video:' || block.id::text
+                  )
+                end`
+              : `coalesce(
+                  public.fn_video_asset_version(block.content),
+                  'non-video:' || block.id::text
+                )`
+          }
+        from public.content_blocks block
+        where block.lesson_id = ${sqlLiteral(lessonId)}::uuid
+          and block.is_required_for_completion = true;
+      `;
+      const databaseBudgetSql = Array.from(
+        { length: 10 },
+        () => `
           with started as materialized (
             select clock_timestamp() as started_at
           ), catalog as materialized (
@@ -927,57 +1016,191 @@ describe("imported catalog release control on a test project", () => {
           )::text
           from started, catalog, states
           where catalog.payload is not null and states.payload is not null;
-          select 'PARITY=' || jsonb_build_object(
-            'set_based', (
-              select jsonb_agg(to_jsonb(state) order by state.lesson_id)
-              from public.fn_learner_lesson_states_v1(
-                ${sqlLiteral(course.id)}::uuid,
-                ${uuidArraySql(lessonIds)}
-              ) state
-            ),
-            'baseline', (
-              select jsonb_agg(to_jsonb(state) order by state.lesson_id)
-              from public.fn_lesson_states(
-                ${sqlLiteral(learner.id)}::uuid,
-                ${uuidArraySql(lessonIds)}
-              ) state
-            )
-          )::text;
+        `,
+      ).join("\n");
+      const output = await runPsql(
+        `
+          begin;
+          select set_config('request.jwt.claim.role', 'service_role', true);
+          select set_config('request.jwt.claim.sub', ${sqlLiteral(owner.id)}, true);
+          select public.fn_release_course_import_v1(
+            ${sqlLiteral(plan.importId)},
+            ${sqlLiteral(program.id)}::uuid,
+            ${sqlLiteral(releasedEmployeeRoleGroupId)}::uuid,
+            ${sqlLiteral(JSON.stringify(evidence))}::jsonb,
+            ${sqlLiteral(`RELEASE-BMH-INSTITUTE:${plan.importId}:${manifestDigest}`)}
+          );
+          update public.lessons
+          set prerequisite_quiz_min_score = 80
+          where id = ${sqlLiteral(secondContent.id)}::uuid;
+          update public.content_blocks
+          set content = jsonb_set(
+            content,
+            '{file_path}',
+            to_jsonb('parity/' || id::text || '.mp4'),
+            true
+          )
+          where lesson_id in (
+            ${sqlLiteral(firstContent.id)}::uuid,
+            ${sqlLiteral(secondContent.id)}::uuid,
+            ${sqlLiteral(thirdContent.id)}::uuid,
+            ${sqlLiteral(staleContent.id)}::uuid
+          )
+            and block_type = 'video';
+          select set_config('request.jwt.claim.role', 'authenticated', true);
+          select set_config('request.jwt.claim.sub', ${sqlLiteral(learner.id)}, true);
+          set local role authenticated;
+          ${databaseBudgetSql}
+          ${paritySql("PARITY_EMPTY")}
+
+          reset role;
+          select set_config('request.jwt.claim.role', 'service_role', true);
+          ${seedRequiredContentSql(firstContent.id)}
+          insert into public.user_quiz_attempts (
+            user_id, quiz_id, lesson_id, score, passed, completed_at
+          ) values (
+            ${sqlLiteral(learner.id)}::uuid,
+            ${sqlLiteral(firstQuizId)}::uuid,
+            ${sqlLiteral(firstQuiz.id)}::uuid,
+            70,
+            true,
+            now()
+          );
+          select set_config('request.jwt.claim.role', 'authenticated', true);
+          set local role authenticated;
+          ${paritySql("PARITY_BELOW_SCORE")}
+
+          reset role;
+          select set_config('request.jwt.claim.role', 'service_role', true);
+          update public.user_quiz_attempts
+          set score = 100
+          where user_id = ${sqlLiteral(learner.id)}::uuid
+            and lesson_id = ${sqlLiteral(firstQuiz.id)}::uuid;
+          select set_config('request.jwt.claim.role', 'authenticated', true);
+          set local role authenticated;
+          ${paritySql("PARITY_ABOVE_SCORE")}
+
+          reset role;
+          select set_config('request.jwt.claim.role', 'service_role', true);
+          ${seedRequiredContentSql(secondContent.id)}
+          ${seedRequiredContentSql(thirdContent.id)}
+          ${seedRequiredContentSql(staleContent.id, staleVideoBlock.id)}
+          insert into public.user_quiz_attempts (
+            user_id, quiz_id, lesson_id, score, passed, completed_at
+          ) values
+          (
+            ${sqlLiteral(learner.id)}::uuid,
+            ${sqlLiteral(secondQuizId)}::uuid,
+            ${sqlLiteral(secondQuiz.id)}::uuid,
+            100,
+            true,
+            now()
+          ),
+          (
+            ${sqlLiteral(learner.id)}::uuid,
+            ${sqlLiteral(thirdQuizId)}::uuid,
+            ${sqlLiteral(thirdQuiz.id)}::uuid,
+            100,
+            true,
+            now()
+          );
+          insert into public.assignment_submissions (
+            assignment_id, lesson_id, user_id, submission_text, status,
+            reviewed_by, reviewed_at
+          ) values (
+            ${sqlLiteral(firstAssignmentId)}::uuid,
+            ${sqlLiteral(firstAssignment.id)}::uuid,
+            ${sqlLiteral(learner.id)}::uuid,
+            'Released-state parity proof',
+            'approved',
+            ${sqlLiteral(owner.id)}::uuid,
+            now()
+          );
+          select set_config('request.jwt.claim.role', 'authenticated', true);
+          set local role authenticated;
+          ${paritySql("PARITY_COMPLETED")}
           rollback;
         `,
         "bmh-released-learner-state-parity",
       );
-      const parityLine = output
-        .split("\n")
-        .find((line) => line.startsWith("PARITY="));
-      if (!parityLine) {
-        throw new Error(
-          `Released learner parity output was missing: ${output}`,
+      const outputLines = output.split("\n");
+      const budgetSamples = outputLines
+        .filter((line) => line.startsWith("DB_BUDGET_MS="))
+        .map((line) => Number(line.slice("DB_BUDGET_MS=".length)))
+        .sort((left, right) => left - right);
+      expect(budgetSamples).toHaveLength(10);
+      expect(budgetSamples.every(Number.isFinite)).toBe(true);
+      expect(budgetSamples[9]).toBeLessThan(500);
+
+      const readParity = (marker: string) => {
+        const parityLine = outputLines.find((line) =>
+          line.startsWith(`${marker}=`),
         );
-      }
-      const budgetLine = output
-        .split("\n")
-        .find((line) => line.startsWith("DB_BUDGET_MS="));
-      if (!budgetLine) {
-        throw new Error(
-          `Released learner DB budget output was missing: ${output}`,
-        );
-      }
-      const combinedDatabaseMs = Number(
-        budgetLine.slice("DB_BUDGET_MS=".length),
-      );
-      expect(Number.isFinite(combinedDatabaseMs)).toBe(true);
-      expect(combinedDatabaseMs).toBeLessThan(500);
-      const parity = JSON.parse(parityLine.slice("PARITY=".length)) as {
-        set_based: unknown;
-        baseline: unknown;
+        if (!parityLine) {
+          throw new Error(
+            `Released learner ${marker} output was missing: ${output}`,
+          );
+        }
+        const parity = JSON.parse(parityLine.slice(`${marker}=`.length)) as {
+          set_based: unknown;
+          baseline: unknown;
+        };
+        const setBased = normalizedLessonStates(parity.set_based);
+        expect(setBased).toEqual(normalizedLessonStates(parity.baseline));
+        return setBased;
       };
-      const setBased = normalizedLessonStates(parity.set_based);
-      const baseline = normalizedLessonStates(parity.baseline);
-      expect(setBased).toEqual(baseline);
-      expect(setBased).toHaveLength(44);
-      expect(setBased.filter((state) => state.is_unlocked)).toHaveLength(1);
-      expect(setBased.filter((state) => state.is_complete)).toHaveLength(0);
+      const emptyStates = readParity("PARITY_EMPTY");
+      expect(emptyStates).toHaveLength(44);
+      expect(emptyStates.filter((state) => state.is_unlocked)).toHaveLength(1);
+      expect(emptyStates.filter((state) => state.is_complete)).toHaveLength(0);
+
+      const belowScoreStates = new Map(
+        readParity("PARITY_BELOW_SCORE").map((state) => [
+          state.lesson_id,
+          state,
+        ]),
+      );
+      expect(belowScoreStates.get(firstContent.id)).toMatchObject({
+        is_complete: true,
+        is_unlocked: true,
+      });
+      expect(belowScoreStates.get(firstQuiz.id)).toMatchObject({
+        is_complete: true,
+        is_unlocked: true,
+      });
+      expect(belowScoreStates.get(secondContent.id)).toMatchObject({
+        is_complete: false,
+        is_unlocked: false,
+      });
+
+      const aboveScoreStates = new Map(
+        readParity("PARITY_ABOVE_SCORE").map((state) => [
+          state.lesson_id,
+          state,
+        ]),
+      );
+      expect(aboveScoreStates.get(secondContent.id)).toMatchObject({
+        is_complete: false,
+        is_unlocked: true,
+      });
+
+      const completedStates = new Map(
+        readParity("PARITY_COMPLETED").map((state) => [state.lesson_id, state]),
+      );
+      for (const completedLesson of lessonOperations.slice(0, 7)) {
+        expect(completedStates.get(completedLesson.id)).toMatchObject({
+          is_complete: true,
+          is_unlocked: true,
+        });
+      }
+      expect(completedStates.get(staleContent.id)).toMatchObject({
+        is_complete: false,
+        is_unlocked: true,
+      });
+      expect(completedStates.get(lockedQuiz.id)).toMatchObject({
+        is_complete: false,
+        is_unlocked: false,
+      });
 
       const releaseAfterRollback = await service
         .from("content_import_release_records")
@@ -994,20 +1217,60 @@ describe("imported catalog release control on a test project", () => {
         /course or review boundary|course access/i,
       );
     } finally {
-      if (learner) await service.auth.admin.deleteUser(learner.id);
-      if (owner) await service.auth.admin.deleteUser(owner.id);
+      const cleanupErrors: Error[] = [];
+      for (const actor of [learner, owner]) {
+        if (!actor) continue;
+        const deleted = await service.auth.admin.deleteUser(actor.id);
+        if (deleted.error) cleanupErrors.push(deleted.error);
+      }
       if (employeeRoleGroupId) {
-        await service
+        const deletedRoleGroup = await service
           .from("role_groups")
           .delete()
           .eq("id", employeeRoleGroupId);
+        if (deletedRoleGroup.error) cleanupErrors.push(deletedRoleGroup.error);
       }
       if (importApplied) {
         const rollback = await service.rpc("fn_rollback_course_import", {
           p_import_id: plan.importId,
           p_owned: buildRollbackOwnedIds(plan),
         });
-        expect(rollback.error).toBeNull();
+        if (rollback.error) cleanupErrors.push(rollback.error);
+      }
+      const fixtureIds = [learner?.id, owner?.id].filter((id): id is string =>
+        Boolean(id),
+      );
+      if (fixtureIds.length > 0) {
+        const remainingProfiles = await service
+          .from("profiles")
+          .select("id")
+          .in("id", fixtureIds);
+        if (remainingProfiles.error)
+          cleanupErrors.push(remainingProfiles.error);
+        if ((remainingProfiles.data ?? []).length > 0) {
+          cleanupErrors.push(
+            new Error("Released-state cleanup left TEST profiles behind."),
+          );
+        }
+      }
+      if (employeeRoleGroupId) {
+        const remainingRoleGroup = await service
+          .from("role_groups")
+          .select("id")
+          .eq("id", employeeRoleGroupId);
+        if (remainingRoleGroup.error)
+          cleanupErrors.push(remainingRoleGroup.error);
+        if ((remainingRoleGroup.data ?? []).length > 0) {
+          cleanupErrors.push(
+            new Error("Released-state cleanup left a TEST role group behind."),
+          );
+        }
+      }
+      if (cleanupErrors.length > 0) {
+        throw new AggregateError(
+          cleanupErrors,
+          "Released-state TEST fixture cleanup was not exact.",
+        );
       }
     }
   }, 60_000);
@@ -1289,7 +1552,9 @@ describe("imported catalog release control on a test project", () => {
         }
       }
       lessonLoadDurations.sort((left, right) => left - right);
-      expect(lessonLoadDurations[4]).toBeLessThan(1_500);
+      const lessonLoadMedian =
+        (lessonLoadDurations[4]! + lessonLoadDurations[5]!) / 2;
+      expect(lessonLoadMedian).toBeLessThan(1_500);
       expect(lessonLoadDurations[9]).toBeLessThan(2_500);
 
       const stateDurations: number[] = [];
