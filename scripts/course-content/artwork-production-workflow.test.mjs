@@ -395,9 +395,10 @@ async function writeFinalApprovalArtifact(root, ledger, {
 async function readPreFinalReviewLedgerFixture() {
   const ledger = structuredClone(await readJson(resolveRepoPath(REPO_ROOT, DEFAULT_PATHS.ledger)));
   for (const asset of ledger.assets) {
-    if (asset.redesign_replacement === undefined) continue;
+    const replacement = asset.redesign_replacement ?? asset.poster_redesign_replacement;
+    if (replacement === undefined) continue;
     const historical = asset.history.findLast((entry) =>
-      entry.checksum_sha256 === asset.redesign_replacement.replaced_checksum_sha256 && Number.isInteger(entry.size_bytes));
+      entry.checksum_sha256 === replacement.replaced_checksum_sha256 && Number.isInteger(entry.size_bytes));
     assert(historical, `${asset.asset_key} is missing its pre-redesign bytes`);
     asset.checksum_sha256 = historical.checksum_sha256;
     asset.pixel_sha256 = historical.pixel_sha256;
@@ -407,8 +408,12 @@ async function readPreFinalReviewLedgerFixture() {
     delete asset.redesign_replacement;
     delete asset.current_replacement_provenance;
     delete asset.legacy_provenance;
+    delete asset.poster_redesign_replacement;
+    delete asset.current_poster_replacement_provenance;
+    delete asset.poster_legacy_provenance;
   }
   delete ledger.thumbnail_redesign_approval;
+  delete ledger.video_poster_redesign_approval;
   ledger.status = "production";
   ledger.final_approval = {
     status: "pending",
