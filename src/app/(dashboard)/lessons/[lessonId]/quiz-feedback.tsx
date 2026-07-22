@@ -5,12 +5,10 @@ export function QuizFeedback({
   correct,
   selectedAnswers,
   explanation,
-  announce,
 }: {
   correct: boolean;
   selectedAnswers: string[];
   explanation: string | null;
-  announce: boolean;
 }) {
   const coachMessage = correct
     ? "Nice work — that answer is right."
@@ -21,16 +19,6 @@ export function QuizFeedback({
 
   return (
     <div className="mt-5 space-y-3">
-      {announce ? (
-        <p
-          data-quiz-feedback-announcement
-          aria-live="polite"
-          aria-atomic="true"
-          className="sr-only"
-        >
-          {correct ? "Correct" : "Incorrect"}. {coachMessage}
-        </p>
-      ) : null}
       <Badge tone={correct ? "green" : "red"}>
         {correct ? "Correct" : "Incorrect"}
       </Badge>

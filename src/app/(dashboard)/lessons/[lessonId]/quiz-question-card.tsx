@@ -60,8 +60,22 @@ export function QuizQuestionCard({
 
   const locked = phase !== "answering";
   const headingId = `quiz-question-${question.id}`;
+  const announcement = announceFeedback && feedback
+    ? feedback.correct
+      ? "Correct. Nice work — that answer is right."
+      : "Incorrect. Not quite. That answer is locked — keep going."
+    : "";
   return (
     <Card padding="md">
+      <p
+        data-quiz-feedback-announcement
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        className="sr-only"
+      >
+        {announcement}
+      </p>
       <div className="mb-4 flex items-start gap-3">
         <span
           aria-hidden="true"
@@ -153,7 +167,6 @@ export function QuizQuestionCard({
             .filter((option) => selected.includes(option.id))
             .map((option) => option.option_text)}
           explanation={feedback.correct ? feedback.explanation : null}
-          announce={announceFeedback}
         />
       ) : (
         <div className="mt-5 flex justify-end">

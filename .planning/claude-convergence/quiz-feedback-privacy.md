@@ -71,3 +71,39 @@
   production surface after the PR exists.
 - Next action: commit, open the PR, run the three independent review lanes, and
   fix every valid finding before Claude convergence.
+
+### Iteration 2
+
+- Status: the three independent reviewers rejected the first implementation
+  head `40505988799f5f56d9cf9073d214c1b6f8e53ed0`.
+- UI/accessibility finding: the live region was mounted only after submission,
+  already populated, which is unreliable for assistive-technology announcement.
+  It is now persistently mounted empty and receives only the fresh result plus
+  coach message. Back navigation clears it instead of replaying feedback.
+- Server-security findings: answer and completed-result paths could read private
+  data after current access was revoked, and resume/final disclosure was
+  recalculated from the mutable current answer key. Access is now rechecked
+  before either path. Migration `051_quiz_answer_privacy_snapshots.sql` records
+  the grading result atomically when the first answer locks; wrong snapshots
+  contain only `is_correct: false`.
+- Regression findings: added an explicit final correct-response review test and
+  a real-browser 390 by 844 layout test for both coach variants, sprite bounds,
+  one tail, and horizontal overflow.
+- Red/green evidence: five new functional tests first failed on the reviewed
+  implementation; all 34 functional tests and all three migration contract
+  tests now pass. The 20 quiz-runner RTL tests and typecheck pass.
+- Environment note: the local machine does not expose TEST Supabase credentials;
+  the PR migration workflow will validate every migration on PostgreSQL 15, 16,
+  and 17. Hosted TEST application remains pending an authenticated test-project
+  path.
+- Full verification evidence: `npm run verify` passed 156 unit/server files with
+  934 tests and 38 RTL files with 131 tests. `npm run build` passed. `npm run
+  lint` reported no errors and the same nine inherited warnings. Fallow reported
+  generated-type dead exports, test duplication, and existing complexity, with
+  no new release-blocking correctness finding.
+- Local real-browser automation is still credential-gated because middleware
+  requires a Supabase URL and key even for the public design-system route. The
+  authenticated CI E2E job has the required TEST credentials and will execute
+  `e2e/design-system-responsive.spec.ts` on the PR head.
+- Next action: commit the corrected head and send that exact head back through
+  all three review lanes.

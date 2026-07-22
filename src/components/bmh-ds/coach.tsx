@@ -75,6 +75,7 @@ export function Coach(props: CoachProps) {
 
   return (
     <div
+      data-coach
       style={{
         display: "flex",
         flexDirection: side === "left" ? "row" : "row-reverse",

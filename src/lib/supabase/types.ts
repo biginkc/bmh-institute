@@ -1354,6 +1354,7 @@ export type Database = {
       user_quiz_attempts: {
         Row: {
           answer_orders: Json
+          answer_results: Json
           completed_at: string | null
           id: string
           lesson_id: string
@@ -1367,6 +1368,7 @@ export type Database = {
         }
         Insert: {
           answer_orders?: Json
+          answer_results?: Json
           completed_at?: string | null
           id?: string
           lesson_id: string
@@ -1380,6 +1382,7 @@ export type Database = {
         }
         Update: {
           answer_orders?: Json
+          answer_results?: Json
           completed_at?: string | null
           id?: string
           lesson_id?: string
@@ -1713,6 +1716,7 @@ export type Database = {
         }
         Returns: {
           already_answered: boolean
+          answer_results: Json
           completed_at: string | null
           responses: Json
         }[]

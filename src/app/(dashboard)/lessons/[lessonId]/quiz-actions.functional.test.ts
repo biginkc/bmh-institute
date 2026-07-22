@@ -208,6 +208,9 @@ describe("quiz server actions", () => {
       question_order: ["q-1"],
       answer_orders: { "q-1": ["q1-good", "q1-bad"] },
       responses: { "q-1": ["q1-good"] },
+      answer_results: {
+        "q-1": { is_correct: true, explanation: "Because one is correct." },
+      },
       score: null,
       passed: null,
       completed_at: null,
@@ -221,6 +224,9 @@ describe("quiz server actions", () => {
     finalizeReads = 0;
     recordRpcData = [{
       responses: { "q-1": ["q1-good"] },
+      answer_results: {
+        "q-1": { is_correct: true, explanation: "Because one is correct." },
+      },
       completed_at: null,
       already_answered: false,
     }];
@@ -262,6 +268,7 @@ describe("quiz server actions", () => {
         "q-2": ["q2-b", "q2-a", "q2-bad"],
       },
       responses: { "q-1": ["q1-bad"] },
+      answer_results: { "q-1": { is_correct: false } },
     };
 
     const result = await startQuizAttempt({ quizId: "quiz-1", lessonId: "lesson-1" });
@@ -283,6 +290,36 @@ describe("quiz server actions", () => {
       expect(JSON.stringify(result.questions)).not.toContain("is_correct");
       expect(JSON.stringify(result.questions)).not.toContain("explanation");
     }
+  });
+
+  it("keeps a resumed wrong answer private after the authored key changes", async () => {
+    incompleteAttempt = {
+      id: "attempt-existing",
+      question_order: ["q-1"],
+      answer_orders: { "q-1": ["q1-good", "q1-bad"] },
+      responses: { "q-1": ["q1-bad"] },
+      answer_results: { "q-1": { is_correct: false } },
+    };
+    availableQuestions = authoredQuestions.map((question) =>
+      question.id === "q-1"
+        ? {
+            ...question,
+            explanation: "The changed key must stay private.",
+            answer_options: question.answer_options.map((option) => ({
+              ...option,
+              is_correct: option.id === "q1-bad",
+            })),
+          }
+        : question,
+    );
+
+    const result = await startQuizAttempt({ quizId: "quiz-1", lessonId: "lesson-1" });
+
+    expect(result).toMatchObject({
+      ok: true,
+      reveals: [{ questionId: "q-1", isCorrect: false }],
+    });
+    expect(JSON.stringify(result)).not.toContain("The changed key must stay private.");
   });
 
   it("fails closed when a resumed question is no longer available", async () => {
@@ -453,6 +490,7 @@ describe("quiz server actions", () => {
   it("does not return answer-key material after a wrong answer", async () => {
     recordRpcData = [{
       responses: { "q-1": ["q1-bad"] },
+      answer_results: { "q-1": { is_correct: false } },
       completed_at: null,
       already_answered: false,
     }];
@@ -469,6 +507,38 @@ describe("quiz server actions", () => {
     });
     expect(JSON.stringify(result)).not.toContain("q1-good");
     expect(JSON.stringify(result)).not.toContain("Because one is correct.");
+  });
+
+  it("uses the atomic grading snapshot instead of re-reading a changed key", async () => {
+    recordRpcData = [{
+      responses: { "q-1": ["q1-good"] },
+      answer_results: { "q-1": { is_correct: false } },
+      completed_at: null,
+      already_answered: false,
+    }];
+
+    await expect(answerQuizQuestion({
+      attemptId: "attempt-1",
+      questionId: "q-1",
+      selected: ["q1-good"],
+    })).resolves.toEqual({
+      ok: true,
+      reveal: { questionId: "q-1", isCorrect: false },
+    });
+  });
+
+  it("rejects answer grading after current lesson access is revoked", async () => {
+    unlocked = false;
+
+    await expect(answerQuizQuestion({
+      attemptId: "attempt-1",
+      questionId: "q-1",
+      selected: ["q1-good"],
+    })).resolves.toEqual({
+      ok: false,
+      error: "Complete the prerequisite lessons first.",
+    });
+    expect(rpc).not.toHaveBeenCalledWith("fn_record_quiz_answer", expect.anything());
   });
 
   it("reveals a correct zero-point answer as correct without changing final scoring", async () => {
@@ -489,6 +559,9 @@ describe("quiz server actions", () => {
   it("returns the same reveal for an idempotent same-selection resubmit", async () => {
     recordRpcData = [{
       responses: { "q-1": ["q1-good"] },
+      answer_results: {
+        "q-1": { is_correct: true, explanation: "Because one is correct." },
+      },
       completed_at: null,
       already_answered: true,
     }];
@@ -618,6 +691,10 @@ describe("quiz server actions", () => {
         "q-1": ["q1-good"],
         "q-2": ["q2-bad"],
       },
+      answer_results: {
+        "q-1": { is_correct: true, explanation: "Because one is correct." },
+        "q-2": { is_correct: false },
+      },
     };
 
     const result = await finalizeQuizAttempt({ attemptId: "attempt-1" });
@@ -630,6 +707,32 @@ describe("quiz server actions", () => {
     expect(JSON.stringify(result)).not.toContain("q2-a");
     expect(JSON.stringify(result)).not.toContain("q2-b");
     expect(JSON.stringify(result)).not.toContain("Choose both.");
+  });
+
+  it("keeps final review private when the authored key changes after locking", async () => {
+    quizPolicy = "always";
+    attempt = {
+      ...attempt,
+      responses: { "q-1": ["q1-bad"] },
+      answer_results: { "q-1": { is_correct: false } },
+    };
+    availableQuestions = authoredQuestions.map((question) =>
+      question.id === "q-1"
+        ? {
+            ...question,
+            explanation: "Changed explanation must stay private.",
+            answer_options: question.answer_options.map((option) => ({
+              ...option,
+              is_correct: option.id === "q1-bad",
+            })),
+          }
+        : question,
+    );
+
+    const result = await finalizeQuizAttempt({ attemptId: "attempt-1" });
+
+    expect(result).toMatchObject({ ok: true, review: null });
+    expect(JSON.stringify(result)).not.toContain("Changed explanation must stay private.");
   });
 
   it("rejects finalize when a persisted question is unanswered", async () => {
@@ -666,6 +769,21 @@ describe("quiz server actions", () => {
       attemptId: "attempt-1",
     });
     expect(updatedAttempt).toBeNull();
+  });
+
+  it("rejects a completed-attempt retry after current access is revoked", async () => {
+    unlocked = false;
+    attempt = {
+      ...attempt,
+      score: 100,
+      passed: true,
+      completed_at: "2026-07-21T12:00:00Z",
+    };
+
+    await expect(finalizeQuizAttempt({ attemptId: "attempt-1" })).resolves.toEqual({
+      ok: false,
+      error: "Complete the prerequisite lessons first.",
+    });
   });
 
   it("re-reads and returns a concurrent landed finalize as success", async () => {

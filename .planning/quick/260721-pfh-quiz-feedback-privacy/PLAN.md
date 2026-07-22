@@ -52,8 +52,19 @@ navigation, attempt policy, and completed-quiz hard navigation.
 
 ## Scope boundaries
 
-- No database migration or quiz scoring change.
+- One additive database migration may store an immutable, privacy-safe grading
+  snapshot (`is_correct`, plus `explanation` only for correct responses). It
+  must not store correct option identifiers or answer text, and it must preserve
+  the existing score calculation and attempt behavior.
 - No implementation from `docs/performance/lesson-load-remediation-plan.md`.
 - No production data mutation beyond disposable browser verification state that
   is safe for the authenticated owner account.
 - No secret values in source, evidence, prompts, logs, or screenshots.
+
+## Adversarial amendment
+
+The initial no-migration assumption was refuted during independent server
+review. Reconstructing a reveal from the current answer key makes historical
+privacy mutable: an answer that was wrong when locked can become correct after
+an administrator edits the key. The additive immutable snapshot is therefore
+required to satisfy the approved immediate, resume, and final-payload contract.

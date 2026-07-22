@@ -191,6 +191,10 @@ describe("<QuizRunner />", () => {
     vi.mocked(answerQuizQuestion).mockResolvedValue(revealFor("single", false));
     renderRunner();
     await start(user);
+    const mountedAnnouncement = document.querySelector(
+      "[data-quiz-feedback-announcement]",
+    );
+    expect(mountedAnnouncement).toBeEmptyDOMElement();
 
     await user.click(screen.getByLabelText("Lead with the offer"));
     await user.click(screen.getByRole("button", { name: "Check answer" }));
@@ -242,6 +246,10 @@ describe("<QuizRunner />", () => {
     const user = userEvent.setup();
     renderRunner();
     await start(user);
+    const mountedAnnouncement = document.querySelector(
+      "[data-quiz-feedback-announcement]",
+    );
+    expect(mountedAnnouncement).toBeEmptyDOMElement();
     await user.click(screen.getByLabelText("Ask one clear question"));
     await user.click(screen.getByRole("button", { name: "Check answer" }));
 
@@ -250,7 +258,8 @@ describe("<QuizRunner />", () => {
     await user.click(screen.getByRole("button", { name: "Next" }));
     await user.click(screen.getByRole("button", { name: "Back" }));
     expect(await screen.findByText("Ask before pitching.")).toBeVisible();
-    expect(document.querySelectorAll("[data-quiz-feedback-announcement]")).toHaveLength(0);
+    expect(document.querySelectorAll("[data-quiz-feedback-announcement]")).toHaveLength(1);
+    expect(document.querySelector("[data-quiz-feedback-announcement]")).toBeEmptyDOMElement();
   });
 
   it("resumes at the first unanswered question and replays history without a server call", async () => {
@@ -543,6 +552,39 @@ describe("<QuizRunner />", () => {
     expect(await screen.findByRole("heading", { name: "Attempts complete" })).toBeVisible();
     expect(screen.queryByRole("button", { name: "Retake quiz" })).toBeNull();
     expect(screen.getByText(/no more attempts are available/i)).toBeVisible();
+  });
+
+  it("renders only numbered correct-response explanations in final review", async () => {
+    const user = userEvent.setup();
+    vi.mocked(startQuizAttempt).mockResolvedValue({
+      ok: true,
+      attemptId: "attempt-review",
+      questions: [attemptQuestions[0]],
+      resumed: false,
+      responses: {},
+      reveals: [],
+    });
+    vi.mocked(finalizeQuizAttempt).mockResolvedValue({
+      ...finalPass,
+      attemptId: "attempt-review",
+      review: [
+        { questionId: "single", questionNumber: 1, explanation: "First useful explanation." },
+        { questionId: "multi", questionNumber: 3, explanation: "Third useful explanation." },
+      ],
+    });
+    renderRunner();
+    await start(user);
+    await user.click(screen.getByLabelText("Ask one clear question"));
+    await user.click(screen.getByRole("button", { name: "Check answer" }));
+    await user.click(await screen.findByRole("button", { name: "Finish" }));
+
+    expect(await screen.findByRole("heading", { name: "Correct-response review" })).toBeVisible();
+    expect(screen.getByText("Question 1 explanation")).toBeVisible();
+    expect(screen.getByText("Question 3 explanation")).toBeVisible();
+    expect(screen.getAllByText("First useful explanation.")).toHaveLength(1);
+    expect(screen.getAllByText("Third useful explanation.")).toHaveLength(1);
+    expect(screen.queryByText("Correct answer")).not.toBeInTheDocument();
+    expect(screen.queryByText("Ask one clear question", { selector: "p" })).not.toBeInTheDocument();
   });
 
   it("keeps the cooldown result state", async () => {
