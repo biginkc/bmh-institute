@@ -5,6 +5,9 @@ import nextConfig from "../../../next.config";
 describe("production HTTP security headers", () => {
   it("protects every route from framing, MIME sniffing, and unsafe referrers", async () => {
     expect(nextConfig.poweredByHeader).toBe(false);
+    expect(nextConfig.experimental?.serverActions?.allowedOrigins).toEqual([
+      "institute.bmhgroupkc.com",
+    ]);
     const rules = await nextConfig.headers?.();
     const allRoutes = rules?.find((rule) => rule.source === "/:path*");
     const headers = new Map(

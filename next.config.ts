@@ -4,7 +4,7 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   experimental: {
     serverActions: {
-      allowedOrigins: ["institute.bmhgroupkc.com", "localhost:3100"],
+      allowedOrigins: ["institute.bmhgroupkc.com"],
       bodySizeLimit: "25mb",
     },
   },
