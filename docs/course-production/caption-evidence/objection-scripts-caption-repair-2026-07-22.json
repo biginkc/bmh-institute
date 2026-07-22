@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-07-22",
+  "authorization_source": "Jarrad Henry requested exhaustive production hardening, including full audio transcription and anomaly detection.",
+  "records": [
+    {
+      "video_source_key": "video-slot-10-objection-scripts",
+      "video_sha256": "59c745ccca7387f82d0b13eaf95439f9f6a50a8f727ad3c1db4fb839050b1ebb",
+      "caption_sha256": "39f05d8b110e98024d83e6c0ea76d86328629c3be74d7e7fc57987af28047498",
+      "transcript_sha256": null,
+      "status": "approved",
+      "reviewed_by": "BMH Institute caption QA evidence",
+      "decision_source": "caption_accessibility_validation"
+    }
+  ],
+  "validation": {
+    "exact_video_duration_seconds": 1508.757,
+    "caption_cue_count": 211,
+    "caption_final_cue_end_seconds": 1508.31,
+    "minimum_cue_duration_seconds": 0.97,
+    "maximum_characters_per_second": 20.999581,
+    "maximum_lines_per_cue": 2,
+    "maximum_characters_per_line": 42,
+    "webvtt_parser_errors": 0,
+    "required_seller_prompts_present": 32,
+    "required_seller_prompt_total": 32,
+    "full_video_decode_errors": 0,
+    "black_frame_events": 0,
+    "clipping_events": 0,
+    "original_repeated_generic_question_count": 30,
+    "replacement_repeated_generic_question_count": 0,
+    "practice_pause_answers_exposed_early": false,
+    "notes": "The replacement is aligned to exact word timestamps from the checksum-bound production audio. It removes decoder repetitions, prevents captions from spanning deliberate practice pauses, and preserves every required seller prompt."
+  }
+}
