@@ -548,7 +548,9 @@ async function AssignmentLessonBody({
       .maybeSingle(),
     supabase
       .from("assignment_submissions")
-      .select("id, status, submitted_at, reviewer_notes")
+      .select(
+        "id, status, submitted_at, reviewer_notes, submission_text, submission_url, submission_file_path",
+      )
       .eq("user_id", userId)
       .eq("lesson_id", lessonId)
       .order("submitted_at", { ascending: false })

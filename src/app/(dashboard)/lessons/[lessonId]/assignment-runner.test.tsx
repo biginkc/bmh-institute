@@ -153,6 +153,9 @@ describe("<AssignmentRunner />", () => {
         status: "submitted",
         submitted_at: "2026-07-16T10:00:00.000Z",
         reviewer_notes: null,
+        submission_text: "My submitted response",
+        submission_url: null,
+        submission_file_path: null,
       },
     ]);
 
@@ -174,6 +177,9 @@ describe("<AssignmentRunner />", () => {
         status: "approved",
         submitted_at: "2026-07-16T10:00:00.000Z",
         reviewer_notes: null,
+        submission_text: "My approved response",
+        submission_url: null,
+        submission_file_path: null,
       },
     ]);
 
@@ -192,6 +198,9 @@ describe("<AssignmentRunner />", () => {
         status: "needs_revision",
         submitted_at: "2026-07-16T10:00:00.000Z",
         reviewer_notes: "Mirror the agent's words before you reframe.",
+        submission_text: "My original response",
+        submission_url: null,
+        submission_file_path: null,
       },
     ]);
 
@@ -205,5 +214,43 @@ describe("<AssignmentRunner />", () => {
       "/brand/mascot/face-worried.png",
     );
     expect(screen.getByRole("button", { name: "Resubmit for review" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Response")).toHaveValue("My original response");
+  });
+
+  it("prefills URL and file submissions when an admin requests a revision", () => {
+    const { unmount } = renderRunner(
+      { ...baseAssignment, submission_type: "url" },
+      [
+        {
+          id: "submission-1",
+          status: "needs_revision",
+          submitted_at: "2026-07-16T10:00:00.000Z",
+          reviewer_notes: "Use the share link.",
+          submission_text: null,
+          submission_url: "https://example.com/original",
+          submission_file_path: null,
+        },
+      ],
+    );
+
+    expect(screen.getByLabelText("URL")).toHaveValue("https://example.com/original");
+
+    unmount();
+    renderRunner(
+      { ...baseAssignment, submission_type: "file_upload" },
+      [
+        {
+          id: "submission-2",
+          status: "needs_revision",
+          submitted_at: "2026-07-16T11:00:00.000Z",
+          reviewer_notes: "Replace page two.",
+          submission_text: null,
+          submission_url: null,
+          submission_file_path: "learner-1/original-assignment.pdf",
+        },
+      ],
+    );
+
+    expect(screen.getByText("Selected: original-assignment.pdf")).toBeInTheDocument();
   });
 });
