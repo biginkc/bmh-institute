@@ -1,7 +1,7 @@
 {
   "schema_version": "bmh-released-quiz-revision-rehearsal/v1",
   "status": "passed",
-  "executed_at": "2026-07-22T13:49:16Z",
+  "executed_at": "2026-07-22T14:03:49Z",
   "target": {
     "environment": "BMH Institute test",
     "supabase_project_ref": "jvaabkchkihkjllehmft",
@@ -9,8 +9,8 @@
     "transaction_rolled_back": true
   },
   "generator": "scripts/course-content/build-released-quiz-revision-rehearsal-sql.ts",
-  "generated_sql_sha256": "9d5cd4fefe089c0445ce8d921913294ac971a27e475c49a8f285053e2fb13735",
-  "captured_output_sha256": "f1f082bc27a7921b9bca1255792d5c8e62ce138613f0948a4d8efd31c9dcaebe",
+  "generated_sql_sha256": "b062a62c3ee9378a213e669926a146a19254cf6284f8e566ea5df3c2cc0dec7c",
+  "captured_output_sha256": "a5e0a228e8a8a8908da3c5550c97103a1605d5c840e13eb2a658d184fc04d059",
   "legacy_manifest_sha256": "71f85173bc857d1b3b042fba0a50fdd420b6410ef84b104a751c3ed5982eba5c",
   "active_manifest_sha256": "440ec4d85bc6dc0aec9d471fb0f5ecbe0ca8c17236b3012e8b036b8d045a154d",
   "forward": {

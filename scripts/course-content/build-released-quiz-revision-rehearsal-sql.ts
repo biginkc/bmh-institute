@@ -54,6 +54,7 @@ async function main() {
   const programId = deterministicImportId(IMPORT_ID, "program-bmh-employee-training");
   const qaRoleId = deterministicImportId(IMPORT_ID, "role-group-bmh-content-qa");
   const employeeRoleId = deterministicImportId(IMPORT_ID, "rehearsal-employee-role");
+  const rehearsalProfileId = deterministicImportId(IMPORT_ID, "rehearsal-profile");
   const humanizingQuizId = deterministicImportId(IMPORT_ID, "quiz-slot-04");
   const humanizingLessonId = deterministicImportId(IMPORT_ID, "lesson-quiz-slot-04");
   const reviewerQuestionId = String(activeGraph.questions[0].id);
@@ -91,6 +92,25 @@ async function main() {
   const sql = `
 begin;
 select set_config('request.jwt.claim.role', 'service_role', true);
+
+do $$
+begin
+  if not exists (select 1 from public.profiles) then
+    perform set_config('session_replication_role', 'replica', true);
+    insert into auth.users (id, email)
+    values (${sqlText(rehearsalProfileId)}::uuid, 'quiz-revision-rehearsal@example.test');
+    perform set_config('session_replication_role', 'origin', true);
+    insert into public.profiles (id, email, full_name, status)
+    values (
+      ${sqlText(rehearsalProfileId)}::uuid,
+      'quiz-revision-rehearsal@example.test',
+      'Quiz revision rehearsal',
+      'active'
+    );
+  end if;
+end;
+$$;
+
 select set_config('bmh.apply_import_id', ${sqlText(IMPORT_ID)}, true);
 select public.fn_apply_course_import(${sqlText(IMPORT_ID)}, ${sqlJson(atomicImportOperations(legacy.plan))});
 select set_config('bmh.apply_import_id', '', true);
