@@ -860,6 +860,32 @@
       "evidence_commit_sha": "e1b0ce4adc8241e791e644d89837bb6372bb680f",
       "evidence_path": "docs/course-production/caption-evidence/objection-scripts-caption-repair-2026-07-22.json",
       "evidence_sha256": "72492bfdca8ee4ad126f8d3d4bdc8d5efef15b90992a8889e5921a54531b3464"
+    },
+    {
+      "video_source_key": "video-slot-04-humanizing-b",
+      "video_sha256": "582125d4d8a2b30f911071e644ebfc2b3e1aa6fb839470f52ef04c2a0c307f4d",
+      "caption_sha256": "fbb9d779a3a82ec83ae575aa3166a7658f697e8d843928b94bc6a8f7f832eebb",
+      "transcript_sha256": null,
+      "status": "approved",
+      "reviewed_by": "BMH Institute caption QA evidence",
+      "decision_source": "caption_accessibility_validation",
+      "reviewed_at": "2026-07-22T20:02:47Z",
+      "evidence_commit_sha": "18efb7b0de2a80957b6880a51f20257368a5a072",
+      "evidence_path": "docs/course-production/caption-evidence/missing-spoken-captions-repair-2026-07-22.json",
+      "evidence_sha256": "e8050e521b9624749e6348a5c24d5b5f4245821092b2d4c94efea58651e76bde"
+    },
+    {
+      "video_source_key": "video-slot-14-flow",
+      "video_sha256": "aa423da1d4ee7ecbc6a90148a28516ab952027133528be6e1852c92ec6834b79",
+      "caption_sha256": "ad675af84af85a2dd1662e4793dd0c480b39cefbc56fc2303efb38d604d41b4b",
+      "transcript_sha256": null,
+      "status": "approved",
+      "reviewed_by": "BMH Institute caption QA evidence",
+      "decision_source": "caption_accessibility_validation",
+      "reviewed_at": "2026-07-22T20:02:47Z",
+      "evidence_commit_sha": "18efb7b0de2a80957b6880a51f20257368a5a072",
+      "evidence_path": "docs/course-production/caption-evidence/missing-spoken-captions-repair-2026-07-22.json",
+      "evidence_sha256": "e8050e521b9624749e6348a5c24d5b5f4245821092b2d4c94efea58651e76bde"
     }
   ]
 }

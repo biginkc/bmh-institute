@@ -356,10 +356,10 @@
       "source_key": "caption-video-slot-04-humanizing-b",
       "kind": "caption",
       "local_path": "course-assets/captions/video-slot-04-humanizing-b.vtt",
-      "storage_path": "courses/bmh-employee-training/v1/captions/video-slot-04-humanizing-b.b3573eba10818d5c95de54dcf49640af24a6fa141d7e92bd8720a15f9a20ab5c.vtt",
+      "storage_path": "courses/bmh-employee-training/v1/captions/video-slot-04-humanizing-b.fbb9d779a3a82ec83ae575aa3166a7658f697e8d843928b94bc6a8f7f832eebb.vtt",
       "mime_type": "text/vtt",
-      "checksum_sha256": "b3573eba10818d5c95de54dcf49640af24a6fa141d7e92bd8720a15f9a20ab5c",
-      "size_bytes": 7934,
+      "checksum_sha256": "fbb9d779a3a82ec83ae575aa3166a7658f697e8d843928b94bc6a8f7f832eebb",
+      "size_bytes": 8232,
       "approval_status": "approved"
     },
     {
@@ -526,10 +526,10 @@
       "source_key": "caption-video-slot-14-flow",
       "kind": "caption",
       "local_path": "course-assets/captions/video-slot-14-flow.vtt",
-      "storage_path": "courses/bmh-employee-training/v1/captions/video-slot-14-flow.ce937ee995a329d6366608e618ac7bc0b059b9a9adcc8e5f5a2296a1db8f55e5.vtt",
+      "storage_path": "courses/bmh-employee-training/v1/captions/video-slot-14-flow.ad675af84af85a2dd1662e4793dd0c480b39cefbc56fc2303efb38d604d41b4b.vtt",
       "mime_type": "text/vtt",
-      "checksum_sha256": "ce937ee995a329d6366608e618ac7bc0b059b9a9adcc8e5f5a2296a1db8f55e5",
-      "size_bytes": 8836,
+      "checksum_sha256": "ad675af84af85a2dd1662e4793dd0c480b39cefbc56fc2303efb38d604d41b4b",
+      "size_bytes": 9307,
       "approval_status": "approved"
     },
     {
