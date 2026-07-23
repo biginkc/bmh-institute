@@ -83,7 +83,7 @@ const VIDEO_SOURCES = [
   ["video-slot-11-complex", 11, "Complex Objections", "Part A", "course-assets/review-lesson8A/LESSON-8A-v1-FULL.mp4"],
   ["video-slot-11-trust", 11, "Trust and People Objections", "Part B", "course-assets/review-lesson8B/LESSON-8B-v2.mp4"],
   ["video-slot-12-faq-a", 12, "Seller FAQ Decoder Questions 1 through 5", "Part A", "course-assets/review-lesson9A/LESSON-9A-v1-FULL.mp4"],
-  ["video-slot-12-faq-b", 12, "Seller FAQ Decoder Questions 6 through 10", "Part B", "course-assets/review-lesson9B/LESSON-9B-v3.mp4"],
+  ["video-slot-12-faq-b", 12, "Seller FAQ Decoder Questions 6 through 10", "Part B", "course-assets/review-lesson9B/LESSON-9B-v5-MOVING-MOUTH.mp4"],
   ["video-slot-13-follow-up", 13, "Follow-Up Cadence", null, "course-assets/review-lesson10A/LESSON-10A-v6.mp4"],
   ["video-slot-14-flow", 14, "Conversation Flow Mastery", null, "course-assets/review-lesson1C/LESSON-1C-v3-FULL.mp4"],
   ["video-slot-15-closing", 15, "Closing and Deal Engineering", null, "course-assets/review-lesson11A/LESSON-11A-v4.mp4"],

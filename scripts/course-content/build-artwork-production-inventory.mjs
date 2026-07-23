@@ -13,11 +13,14 @@ const pilotChecksumsRecordPath = "docs/course-production/thumbnail-pilots/v8-che
 const pilotGenerationLineageRecordPath = "docs/course-production/thumbnail-pilots/v8-generation-lineage.json";
 const videoContactSheetsRecordPath =
   "docs/course-production/thumbnail-pilots/references/production-video-stills/contact-sheets.json";
+const mediaReplacementsRecordPath =
+  "docs/course-production/thumbnail-pilots/references/production-video-stills/media-replacements.json";
 const distinctPosterContactSheetsRecordPath =
   "docs/course-production/thumbnail-pilots/references/production-video-stills/distinct-posters/contact-sheets.json";
 const pilotChecksumsPath = path.join(repoRoot, pilotChecksumsRecordPath);
 const pilotGenerationLineagePath = path.join(repoRoot, pilotGenerationLineageRecordPath);
 const videoContactSheetsPath = path.join(repoRoot, videoContactSheetsRecordPath);
+const mediaReplacementsPath = path.join(repoRoot, mediaReplacementsRecordPath);
 const distinctPosterContactSheetsPath = path.join(repoRoot, distinctPosterContactSheetsRecordPath);
 const args = process.argv.slice(2);
 const unknownArgs = args.filter((arg) => arg !== "--check");
@@ -26,11 +29,12 @@ if (unknownArgs.length > 0) {
 }
 const checkMode = args.includes("--check");
 
-const [manifest, pilotChecksums, pilotGenerationLineage, videoContactSheets, distinctPosterContactSheets] = await Promise.all([
+const [manifest, pilotChecksums, pilotGenerationLineage, videoContactSheets, mediaReplacements, distinctPosterContactSheets] = await Promise.all([
   readFile(manifestPath, "utf8").then(JSON.parse),
   readFile(pilotChecksumsPath, "utf8").then(JSON.parse),
   readFile(pilotGenerationLineagePath, "utf8").then(JSON.parse),
   readFile(videoContactSheetsPath, "utf8").then(JSON.parse),
+  readFile(mediaReplacementsPath, "utf8").then(JSON.parse),
   readFile(distinctPosterContactSheetsPath, "utf8").then(JSON.parse),
 ]);
 const course = manifest.program.courses[0];
@@ -40,6 +44,9 @@ const manifestAssets = new Map(manifest.assets.map((asset) => [asset.source_key,
 const BLUE_RGB = [103, 182, 255];
 const YELLOW_RGB = [255, 211, 1];
 const ALLOWED_BACKGROUND_RGB = new Set([BLUE_RGB.join(","), YELLOW_RGB.join(",")]);
+const SHA256 = /^[a-f0-9]{64}$/;
+const MEDIA_REPLACEMENT_SCOPE =
+  "facial-animation-only replacement with unchanged released audio, transcript, duration, lesson mapping, captions, poster, and artwork";
 
 validateArtworkPoseContract();
 
@@ -123,6 +130,114 @@ function expectedNonPilotMasterIds() {
   return ids;
 }
 
+function assertExactKeys(value, expectedKeys, label) {
+  const actualKeys =
+    value && typeof value === "object" && !Array.isArray(value)
+      ? Object.keys(value).sort()
+      : [];
+  if (JSON.stringify(actualKeys) !== JSON.stringify([...expectedKeys].sort())) {
+    throw new Error(`${label} fields are invalid`);
+  }
+}
+
+async function validateMediaReplacement({
+  replacement,
+  record,
+  input,
+  evidence,
+  asset,
+  block,
+}) {
+  assertExactKeys(
+    replacement,
+    [
+      "asset_key",
+      "master_id",
+      "duration_seconds",
+      "historical",
+      "current",
+      "historical_contact_sheet",
+      "release_evidence",
+      "scope",
+    ],
+    `${asset.source_key} media replacement`,
+  );
+  assertExactKeys(
+    replacement.historical,
+    ["local_path", "checksum_sha256", "size_bytes"],
+    `${asset.source_key} historical media`,
+  );
+  assertExactKeys(
+    replacement.current,
+    ["local_path", "checksum_sha256", "size_bytes"],
+    `${asset.source_key} current media`,
+  );
+  assertExactKeys(
+    replacement.historical_contact_sheet,
+    ["path", "checksum_sha256"],
+    `${asset.source_key} historical contact sheet`,
+  );
+  assertExactKeys(
+    replacement.release_evidence,
+    ["path", "checksum_sha256"],
+    `${asset.source_key} release evidence`,
+  );
+
+  const historical = {
+    local_path: evidence.local_path,
+    checksum_sha256: evidence.checksum_sha256,
+    size_bytes: evidence.size_bytes,
+  };
+  const current = {
+    local_path: asset.local_path,
+    checksum_sha256: asset.checksum_sha256,
+    size_bytes: asset.size_bytes,
+  };
+  if (
+    replacement.asset_key !== asset.source_key ||
+    replacement.master_id !== record.master_id ||
+    replacement.duration_seconds !== block.content.duration_seconds ||
+    replacement.scope !== MEDIA_REPLACEMENT_SCOPE ||
+    JSON.stringify(replacement.historical) !== JSON.stringify(historical) ||
+    JSON.stringify(replacement.current) !== JSON.stringify(current) ||
+    replacement.historical_contact_sheet.path !== input.path ||
+    replacement.historical_contact_sheet.checksum_sha256 !== input.sha256 ||
+    !SHA256.test(replacement.release_evidence.checksum_sha256 ?? "")
+  ) {
+    throw new Error(`${asset.source_key} media replacement does not exactly bind the historical and current sources`);
+  }
+
+  const evidenceBytes = await readFile(repoPath(replacement.release_evidence.path));
+  if (sha256(evidenceBytes) !== replacement.release_evidence.checksum_sha256) {
+    throw new Error(`${asset.source_key} media replacement release evidence checksum drifted`);
+  }
+  const releaseEvidence = JSON.parse(evidenceBytes);
+  const approval = releaseEvidence.records?.find(
+    (candidate) => candidate.video_source_key === asset.source_key,
+  );
+  const qa = releaseEvidence.technical_qa;
+  const release = releaseEvidence.release;
+  if (
+    releaseEvidence.schema_version !== 1 ||
+    releaseEvidence.records?.length !== 1 ||
+    approval?.video_sha256 !== asset.checksum_sha256 ||
+    approval?.status !== "approved" ||
+    qa?.video_duration_seconds !== block.content.duration_seconds ||
+    qa?.video_size_bytes !== asset.size_bytes ||
+    qa?.audio_bitstream_matches_released_source !== true ||
+    qa?.decoded_audio_matches_released_source !== true ||
+    qa?.transcript_normalized_exact_match !== true ||
+    qa?.full_decode_clean !== true ||
+    qa?.black_frames_detected !== false ||
+    qa?.uninterrupted_local_browser_playback !== true ||
+    qa?.uninterrupted_production_object_playback !== true ||
+    !release?.storage_path?.includes(asset.checksum_sha256) ||
+    !release?.rollback_storage_path?.includes(evidence.checksum_sha256)
+  ) {
+    throw new Error(`${asset.source_key} media replacement release evidence is incomplete`);
+  }
+}
+
 async function validateVideoContactSheets() {
   if (
     videoContactSheets.schema_version !== "bmh-artwork-video-contact-sheets/v1" ||
@@ -146,6 +261,18 @@ async function validateVideoContactSheets() {
 
   const byMasterId = new Map();
   const references = [];
+  if (
+    mediaReplacements.schema_version !== "bmh-artwork-video-media-replacements/v1" ||
+    !Array.isArray(mediaReplacements.records) ||
+    new Set(mediaReplacements.records.map((record) => record.asset_key)).size !==
+      mediaReplacements.records.length
+  ) {
+    throw new Error("Artwork source-video media replacement contract drifted");
+  }
+  const replacementsByAssetKey = new Map(
+    mediaReplacements.records.map((record) => [record.asset_key, record]),
+  );
+  const usedReplacementKeys = new Set();
   for (const record of records) {
     const expectedBlocks = mappedVideoBlocksForMaster(record.master_id);
     const expectedFrameCount = expectedBlocks.length * videoContactSheets.frame_positions.length;
@@ -182,18 +309,37 @@ async function validateVideoContactSheets() {
       if (
         !asset ||
         evidence?.asset_key !== asset.source_key ||
-        evidence?.local_path !== asset.local_path ||
-        evidence?.checksum_sha256 !== asset.checksum_sha256 ||
-        evidence?.size_bytes !== asset.size_bytes ||
         evidence?.approval_status !== asset.approval_status ||
         evidence?.duration_seconds !== block.content.duration_seconds ||
         JSON.stringify(evidence?.frame_timestamps_seconds) !== JSON.stringify(expectedTimestamps)
       ) {
         throw new Error(`${record.master_id} video evidence ${index + 1} drifted from the exact mapped manifest source`);
       }
+      const exactCurrentSource =
+        evidence.local_path === asset.local_path &&
+        evidence.checksum_sha256 === asset.checksum_sha256 &&
+        evidence.size_bytes === asset.size_bytes;
+      if (!exactCurrentSource) {
+        const replacement = replacementsByAssetKey.get(asset.source_key);
+        if (!replacement) {
+          throw new Error(`${record.master_id} video evidence ${index + 1} has no approved immutable media replacement`);
+        }
+        await validateMediaReplacement({
+          replacement,
+          record,
+          input,
+          evidence,
+          asset,
+          block,
+        });
+        usedReplacementKeys.add(asset.source_key);
+      }
     }
     byMasterId.set(record.master_id, record);
     references.push(input);
+  }
+  if (usedReplacementKeys.size !== replacementsByAssetKey.size) {
+    throw new Error("Artwork source-video media replacement registry contains an unused or stale record");
   }
   return { byMasterId, references };
 }

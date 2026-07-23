@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "status": "active",
-  "updated_at": "2026-07-21",
+  "updated_at": "2026-07-23",
   "records": [
     {
       "video_source_key": "video-slot-03-tech-stack",
@@ -886,6 +886,19 @@
       "evidence_commit_sha": "18efb7b0de2a80957b6880a51f20257368a5a072",
       "evidence_path": "docs/course-production/caption-evidence/missing-spoken-captions-repair-2026-07-22.json",
       "evidence_sha256": "e8050e521b9624749e6348a5c24d5b5f4245821092b2d4c94efea58651e76bde"
+    },
+    {
+      "video_source_key": "video-slot-12-faq-b",
+      "video_sha256": "ec61e54f39fa36e84a662c03fd50e3c260ca3860517298a93c26f27787888b32",
+      "caption_sha256": "dc1dcdf2728294d332c6612bcccecf3ffb6a1d65e49d2818db500f0bd2a1bd77",
+      "transcript_sha256": null,
+      "status": "approved",
+      "reviewed_by": "BMH Institute caption QA evidence",
+      "decision_source": "caption_accessibility_validation",
+      "reviewed_at": "2026-07-23T13:03:30Z",
+      "evidence_commit_sha": "813425d5cc875592f8463c1ca76708075660ad8d",
+      "evidence_path": "docs/course-production/caption-evidence/faq-b-moving-mouth-release-2026-07-23.json",
+      "evidence_sha256": "42049aa714fc56c874ddf997fb3de55b20bab06642f57f5e118f4143f85303c3"
     }
   ]
 }
