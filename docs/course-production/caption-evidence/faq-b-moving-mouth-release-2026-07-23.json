@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-07-23",
+  "records": [
+    {
+      "video_source_key": "video-slot-12-faq-b",
+      "video_sha256": "ec61e54f39fa36e84a662c03fd50e3c260ca3860517298a93c26f27787888b32",
+      "caption_sha256": "dc1dcdf2728294d332c6612bcccecf3ffb6a1d65e49d2818db500f0bd2a1bd77",
+      "transcript_sha256": null,
+      "status": "approved",
+      "reviewed_by": "BMH Institute caption QA evidence",
+      "decision_source": "caption_accessibility_validation"
+    }
+  ],
+  "technical_qa": {
+    "video_duration_seconds": 180.778,
+    "video_size_bytes": 69163561,
+    "video_dimensions": "1600x900",
+    "video_codec": "h264",
+    "video_frames": 5422,
+    "audio_codec": "aac",
+    "audio_sample_rate_hz": 48000,
+    "audio_channels": 2,
+    "audio_bitstream_matches_released_source": true,
+    "decoded_audio_matches_released_source": true,
+    "transcript_expected_words": 482,
+    "transcript_actual_words": 482,
+    "transcript_normalized_exact_match": true,
+    "full_decode_clean": true,
+    "black_frames_detected": false,
+    "uninterrupted_local_browser_playback": true,
+    "uninterrupted_production_object_playback": true
+  },
+  "release": {
+    "lesson_id": "f8b00300-cb73-5851-ad21-960d3ae27243",
+    "block_id": "ea519776-6915-5bad-af2c-3c802b4a034b",
+    "storage_path": "courses/bmh-employee-training/v1/videos/video-slot-12-faq-b.ec61e54f39fa36e84a662c03fd50e3c260ca3860517298a93c26f27787888b32.mp4",
+    "rollback_storage_path": "courses/bmh-employee-training/v1/videos/video-slot-12-faq-b.b977edbf0438b6cc8c4410e569f6f686fa8f4efbd864828795ac7a89034f919c.mp4",
+    "production_reference_updated_at": "2026-07-23T12:55:28.276462Z"
+  }
+}
