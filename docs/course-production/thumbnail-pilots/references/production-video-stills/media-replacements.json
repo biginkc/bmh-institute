@@ -1,0 +1,29 @@
+{
+  "schema_version": "bmh-artwork-video-media-replacements/v1",
+  "records": [
+    {
+      "asset_key": "video-slot-12-faq-b",
+      "master_id": "master-slot-12",
+      "duration_seconds": 180.778,
+      "historical": {
+        "local_path": "course-assets/review-lesson9B/LESSON-9B-v3.mp4",
+        "checksum_sha256": "b977edbf0438b6cc8c4410e569f6f686fa8f4efbd864828795ac7a89034f919c",
+        "size_bytes": 75665539
+      },
+      "current": {
+        "local_path": "course-assets/review-lesson9B/LESSON-9B-v5-MOVING-MOUTH.mp4",
+        "checksum_sha256": "ec61e54f39fa36e84a662c03fd50e3c260ca3860517298a93c26f27787888b32",
+        "size_bytes": 69163561
+      },
+      "historical_contact_sheet": {
+        "path": "docs/course-production/thumbnail-pilots/references/production-video-stills/slot-12-contact-sheet.png",
+        "checksum_sha256": "a089313107c032438735a4670888fa8a4ad0862553ded32be021ddbeab19ce9d"
+      },
+      "release_evidence": {
+        "path": "docs/course-production/caption-evidence/faq-b-moving-mouth-release-2026-07-23.json",
+        "checksum_sha256": "42049aa714fc56c874ddf997fb3de55b20bab06642f57f5e118f4143f85303c3"
+      },
+      "scope": "facial-animation-only replacement with unchanged released audio, transcript, duration, lesson mapping, captions, poster, and artwork"
+    }
+  ]
+}

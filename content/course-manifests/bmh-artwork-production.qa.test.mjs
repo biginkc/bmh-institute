@@ -17,8 +17,12 @@ const videoContactSheetsPath = new URL(
   "../../docs/course-production/thumbnail-pilots/references/production-video-stills/contact-sheets.json",
   import.meta.url,
 );
+const mediaReplacementsPath = new URL(
+  "../../docs/course-production/thumbnail-pilots/references/production-video-stills/media-replacements.json",
+  import.meta.url,
+);
 
-const [manifest, inventory, pilotChecksums, pilotGenerationLineage, pilotDerivativeConfig, pilotDerivativeReport, videoContactSheets] = await Promise.all([
+const [manifest, inventory, pilotChecksums, pilotGenerationLineage, pilotDerivativeConfig, pilotDerivativeReport, videoContactSheets, mediaReplacements] = await Promise.all([
   readFile(manifestPath, "utf8").then(JSON.parse),
   readFile(inventoryPath, "utf8").then(JSON.parse),
   readFile(pilotChecksumsPath, "utf8").then(JSON.parse),
@@ -26,6 +30,7 @@ const [manifest, inventory, pilotChecksums, pilotGenerationLineage, pilotDerivat
   readFile(pilotDerivativeConfigPath, "utf8").then(JSON.parse),
   readFile(pilotDerivativeReportPath, "utf8").then(JSON.parse),
   readFile(videoContactSheetsPath, "utf8").then(JSON.parse),
+  readFile(mediaReplacementsPath, "utf8").then(JSON.parse),
 ]);
 
 const course = manifest.program.courses[0];
@@ -50,6 +55,12 @@ test("every declared reference is portable and checksum locked", async () => {
 test("every non-cover master is bound to exact mapped-video evidence and a checksum-locked contact sheet", async () => {
   assert.equal(videoContactSheets.schema_version, "bmh-artwork-video-contact-sheets/v1");
   assert.equal(videoContactSheets.records.length, 17);
+  assert.equal(mediaReplacements.schema_version, "bmh-artwork-video-media-replacements/v1");
+  const replacementsByAssetKey = new Map(
+    mediaReplacements.records.map((record) => [record.asset_key, record]),
+  );
+  assert.equal(replacementsByAssetKey.size, mediaReplacements.records.length);
+  const usedReplacementKeys = new Set();
   const recordsByMaster = new Map(videoContactSheets.records.map((record) => [record.master_id, record]));
   const expectedNonPilotIds = inventory.lessons
     .filter((lesson) => !lesson.pilot)
@@ -86,7 +97,46 @@ test("every non-cover master is bound to exact mapped-video evidence and a check
             .map((block) => block.content.asset_key);
     assert.deepEqual(record.video_evidence.map((evidence) => evidence.asset_key), mappedKeys, record.master_id);
     assert.equal(recordsByMaster.get(record.master_id), record);
+    for (const evidence of record.video_evidence) {
+      const asset = manifest.assets.find((candidate) => candidate.source_key === evidence.asset_key);
+      assert.ok(asset, evidence.asset_key);
+      const exactCurrentSource =
+        evidence.local_path === asset.local_path &&
+        evidence.checksum_sha256 === asset.checksum_sha256 &&
+        evidence.size_bytes === asset.size_bytes;
+      if (exactCurrentSource) continue;
+      const replacement = replacementsByAssetKey.get(evidence.asset_key);
+      assert.ok(replacement, `${evidence.asset_key} requires an explicit media replacement`);
+      assert.equal(replacement.master_id, record.master_id);
+      assert.deepEqual(replacement.historical, {
+        local_path: evidence.local_path,
+        checksum_sha256: evidence.checksum_sha256,
+        size_bytes: evidence.size_bytes,
+      });
+      assert.deepEqual(replacement.current, {
+        local_path: asset.local_path,
+        checksum_sha256: asset.checksum_sha256,
+        size_bytes: asset.size_bytes,
+      });
+      assert.deepEqual(replacement.historical_contact_sheet, {
+        path: record.contact_sheet_input.path,
+        checksum_sha256: record.contact_sheet_input.sha256,
+      });
+      const releaseEvidenceBytes = await readFile(
+        new URL(`../../${replacement.release_evidence.path}`, import.meta.url),
+      );
+      assert.equal(sha256(releaseEvidenceBytes), replacement.release_evidence.checksum_sha256);
+      const releaseEvidence = JSON.parse(releaseEvidenceBytes);
+      assert.equal(releaseEvidence.records[0].video_source_key, asset.source_key);
+      assert.equal(releaseEvidence.records[0].video_sha256, asset.checksum_sha256);
+      assert.equal(releaseEvidence.technical_qa.audio_bitstream_matches_released_source, true);
+      assert.equal(releaseEvidence.technical_qa.transcript_normalized_exact_match, true);
+      assert.equal(releaseEvidence.technical_qa.uninterrupted_production_object_playback, true);
+      assert.ok(releaseEvidence.release.rollback_storage_path.includes(evidence.checksum_sha256));
+      usedReplacementKeys.add(evidence.asset_key);
+    }
   }
+  assert.deepEqual([...usedReplacementKeys].sort(), [...replacementsByAssetKey.keys()].sort());
   for (const lesson of inventory.lessons.filter((candidate) => !candidate.pilot)) {
     assert.match(lesson.prompt, /Image 4 is the checksum-bound contact sheet extracted from every exact video mapped to this lesson/);
   }

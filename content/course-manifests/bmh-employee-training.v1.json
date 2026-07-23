@@ -215,11 +215,11 @@
     {
       "source_key": "video-slot-12-faq-b",
       "kind": "video",
-      "local_path": "course-assets/review-lesson9B/LESSON-9B-v3.mp4",
-      "storage_path": "courses/bmh-employee-training/v1/videos/video-slot-12-faq-b.b977edbf0438b6cc8c4410e569f6f686fa8f4efbd864828795ac7a89034f919c.mp4",
+      "local_path": "course-assets/review-lesson9B/LESSON-9B-v5-MOVING-MOUTH.mp4",
+      "storage_path": "courses/bmh-employee-training/v1/videos/video-slot-12-faq-b.ec61e54f39fa36e84a662c03fd50e3c260ca3860517298a93c26f27787888b32.mp4",
       "mime_type": "video/mp4",
-      "checksum_sha256": "b977edbf0438b6cc8c4410e569f6f686fa8f4efbd864828795ac7a89034f919c",
-      "size_bytes": 75665539,
+      "checksum_sha256": "ec61e54f39fa36e84a662c03fd50e3c260ca3860517298a93c26f27787888b32",
+      "size_bytes": 69163561,
       "approval_status": "approved"
     },
     {
