@@ -130,6 +130,7 @@ try {
     "036_controller_verified_fixture_cleanup_gate.sql",
     "047_register_reviewer_answer_option_fixture_dependencies.sql",
     "20260722043000_replace_released_imported_video_posters.sql",
+    "20260722235500_replace_released_imported_video_captions.sql",
   ]) {
     if (!migrations.includes(required)) {
       throw new Error(`Current migration stack is missing ${required}.`);
@@ -235,6 +236,12 @@ try {
     resolve(
       root,
       "supabase/tests/034_import_release_and_fixture_dependency_guards.sql",
+    ),
+  );
+  psqlFile(
+    resolve(
+      root,
+      "supabase/tests/053_released_imported_video_caption_replacement.sql",
     ),
   );
   psqlText(`
