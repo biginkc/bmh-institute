@@ -38,6 +38,14 @@ function legacyServiceJwt(ref = CLOSER_LAB_PRODUCTION_PROJECT_REF) {
 }
 
 function attachDeferredRolePlayFixture(manifest, catalog) {
+  for (const course of manifest.program.courses) {
+    for (const courseModule of course.modules) {
+      for (const lesson of courseModule.lessons) {
+        if (!lesson.blocks) continue;
+        lesson.blocks = lesson.blocks.filter((block) => block.type !== "role_play");
+      }
+    }
+  }
   for (const [index, scenario] of catalog.rolePlays.entries()) {
     const section = Number.parseInt(scenario.assignmentSourceKey.match(/section-(\d+)$/)?.[1] ?? "", 10);
     const courseModule = manifest.program.courses[0].modules.find((candidate) =>
@@ -67,6 +75,16 @@ function attachDeferredRolePlayFixture(manifest, catalog) {
   return manifest;
 }
 
+function pendingLedgerFixture(ledger) {
+  const pending = structuredClone(ledger);
+  pending.status = "pending";
+  for (const record of pending.records) {
+    record.production_scenario_id = null;
+    record.scenario_sha256 = null;
+  }
+  return pending;
+}
+
 async function base() {
   const [manifestBytes, ledgerBytes, catalogBytes, provenanceBytes] = await Promise.all([
     readFile(MANIFEST_URL),
@@ -76,12 +94,13 @@ async function base() {
   ]);
   const catalog = JSON.parse(catalogBytes);
   const manifest = attachDeferredRolePlayFixture(JSON.parse(manifestBytes), catalog);
+  const ledger = pendingLedgerFixture(JSON.parse(ledgerBytes));
   return {
     manifestBytes: Buffer.from(JSON.stringify(manifest)),
-    ledgerBytes,
+    ledgerBytes: Buffer.from(JSON.stringify(ledger)),
     catalogBytes,
     manifest,
-    ledger: JSON.parse(ledgerBytes),
+    ledger,
     catalog,
     provenance: JSON.parse(provenanceBytes),
   };

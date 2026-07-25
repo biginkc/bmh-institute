@@ -1,9 +1,9 @@
 {
   "schema_version": "bmh-operating-stack-confirmation/v1",
-  "confirmation_id": "bmh-employee-workflow-2026-07-16",
+  "confirmation_id": "bmh-employee-workflow-2026-07-25",
   "status": "confirmed",
-  "confirmed_at": "2026-07-16T17:06:57-05:00",
-  "expires_at": "2026-07-23T17:06:57-05:00",
+  "confirmed_at": "2026-07-25T12:00:00-05:00",
+  "expires_at": "2026-08-01T12:00:00-05:00",
   "decision": "retain-dialpad-for-employee-manual-workflow",
   "scope": {
     "employee_manual_workflow": {

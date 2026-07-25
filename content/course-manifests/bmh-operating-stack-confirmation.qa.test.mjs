@@ -15,7 +15,7 @@ import {
 
 const execFileAsync = promisify(execFile);
 const ROOT = resolve(import.meta.dirname, "../..");
-const CURRENT_TIME = new Date("2026-07-16T18:00:00-05:00");
+const CURRENT_TIME = new Date("2026-07-25T18:00:00-05:00");
 
 async function loadJson(name) {
   return JSON.parse(await readFile(new URL(name, import.meta.url), "utf8"));
@@ -67,7 +67,7 @@ test("confirmation fails closed when missing, stale, scoped incorrectly, or mism
     validateStackConfirmation(
       manifest,
       confirmation,
-      new Date("2026-07-23T17:06:57-05:00"),
+      new Date("2026-08-02T12:00:00-05:00"),
     ).join(" "),
     /expired/,
   );

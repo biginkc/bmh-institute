@@ -39,6 +39,36 @@ const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../
 const manifestPath = new URL("./bmh-employee-training.v1.json", import.meta.url);
 const pilotPath = new URL("../../course-assets/thumbnails/pilots/lesson-cards/orientation-lesson-card-16x10.webp", import.meta.url);
 
+// The tracked manifest is the source-driven build PLUS the live, human-verified
+// Closer Lab production binding: a fresh buildManifest() always emits pending:*
+// placeholders for role-play scenario_id, since that binding only exists after
+// the finalizer runs against a real production Supabase project. To prove the
+// source-driven parts of the build are still byte-reproducible, apply the same
+// (already-verified, checked-in) production IDs the finalizer bound, then
+// compare exactly -- this still fails closed on any other drift.
+async function applyCheckedInProductionBindings(manifest) {
+  const ledger = JSON.parse(
+    await readFile(path.join(repoRoot, "docs/course-production/closer-lab-production-mapping.json"), "utf8"),
+  );
+  const records = new Map(ledger.records.map((record) => [record.block_source_key, record]));
+  let bound = 0;
+  for (const course of manifest.program.courses) {
+    for (const courseModule of course.modules) {
+      for (const lesson of courseModule.lessons) {
+        for (const block of lesson.blocks ?? []) {
+          if (block.type !== "role_play") continue;
+          const record = records.get(block.source_key);
+          assert.ok(record, `${block.source_key} has a checked-in production binding`);
+          assert.match(block.content.scenario_id, /^pending:/);
+          block.content.scenario_id = record.production_scenario_id;
+          bound += 1;
+        }
+      }
+    }
+  }
+  assert.equal(bound, 6);
+}
+
 test("an absent optional artwork ledger leaves the current tracked artwork records byte-identical", async () => {
   const root = await mkdtemp(path.join(tmpdir(), "bmh-artwork-ledger-missing-"));
   const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
@@ -103,6 +133,7 @@ test("the complete preapproval builder reproduces the tracked manifest when cano
     throw error;
   }
   const [tracked, rebuilt] = await Promise.all([readFile(manifestPath, "utf8"), buildManifest()]);
+  await applyCheckedInProductionBindings(rebuilt);
   assert.equal(`${JSON.stringify(rebuilt, null, 2).replaceAll("\u2014", "-")}\n`, tracked);
 });
 

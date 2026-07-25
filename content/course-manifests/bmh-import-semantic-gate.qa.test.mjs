@@ -10,7 +10,7 @@ import { loadManifest } from "../../scripts/course-content/validate-manifest.mjs
 
 const FULL_URL = new URL("./bmh-employee-training.v1.json", import.meta.url);
 const CANARY_URL = new URL("./bmh-employee-training-canary.v1.json", import.meta.url);
-const CURRENT_TIME = new Date("2026-07-17T12:00:00-05:00");
+const CURRENT_TIME = new Date("2026-07-25T18:00:00-05:00");
 
 test("draft validation accepts the approved release without requiring deferred Closer Lab scenarios", async () => {
   const manifest = await loadManifest(FULL_URL);
@@ -87,7 +87,7 @@ test("an expired operating-stack confirmation remains a canary publication block
   const canary = await loadManifest(CANARY_URL);
   const report = await validateBmhImportSemanticGate({
     manifest: canary,
-    now: new Date("2026-07-24T12:00:00-05:00"),
+    now: new Date("2026-08-02T12:00:00-05:00"),
   });
   assert.deepEqual(report.errors, []);
   assert.ok(report.publicationBlockers.some((blocker) =>

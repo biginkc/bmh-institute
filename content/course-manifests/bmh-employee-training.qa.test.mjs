@@ -28,7 +28,7 @@ test("the draft contains the locked course structure", async () => {
     videos: 29,
     quizQuestions: 920,
     flashcards: 152,
-    rolePlays: 0,
+    rolePlays: 6,
     posterAssets: 29,
     posterReferences: 29,
     guideAssets: 19,
@@ -41,7 +41,7 @@ test("learner-authored course text removes stale learner seats without rewriting
   const serializedProgram = JSON.stringify(manifest.program);
   assert.doesNotMatch(serializedProgram, STALE_ROLE_BOUND_COURSE_PATTERN);
   assert.match(serializedProgram, /Closer Lab/);
-  assert.doesNotMatch(serializedProgram, /block-role-play-/);
+  assert.match(serializedProgram, /block-role-play-/);
   assert.match(serializedProgram, /acquisition manager/i);
   assert.match(serializedProgram, /transaction team/i);
 
@@ -165,7 +165,7 @@ test("all six reviewed assignments carry usable reviewer rubrics", async () => {
   }
 });
 
-test("the current release omits deferred Closer Lab interactive scenarios", async () => {
+test("the current release includes the six production-bound Closer Lab interactive scenarios", async () => {
   const manifest = await loadManifest(MANIFEST_URL);
   const modules = manifest.program.courses.flatMap((course) => course.modules);
   const rolePlays = modules
@@ -173,7 +173,12 @@ test("the current release omits deferred Closer Lab interactive scenarios", asyn
     .flatMap((lesson) => lesson.blocks ?? [])
     .filter((block) => block.type === "role_play");
 
-  assert.deepEqual(rolePlays, []);
+  assert.equal(rolePlays.length, 6);
+  assert.ok(rolePlays.every((block) => block.required === true));
+  assert.ok(
+    rolePlays.every((block) => /^[0-9a-f-]{36}$/i.test(block.content.scenario_id)),
+    "every role-play block is bound to a real production scenario UUID",
+  );
   assert.doesNotMatch(JSON.stringify(manifest.program), /pending:[a-z0-9-]+/i);
 });
 

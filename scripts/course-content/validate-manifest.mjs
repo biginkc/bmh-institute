@@ -461,7 +461,7 @@ export function validateManifest(
     quizQuestions: quizBank?.totals.generated
       ?? (manifest.import_id === "bmh-employee-training-v1" ? 920 : summary.quizQuestions),
     flashcards: 152,
-    rolePlays: 0,
+    rolePlays: 6,
     posterAssets: 29,
     posterReferences: 29,
     guideAssets: 19,
