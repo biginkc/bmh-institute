@@ -192,18 +192,24 @@ async function validateScenarioTrust(manifest) {
   // protected job), a missing or misnamed credential must fail closed with a
   // blocker, never silently fall back to reporting the hermetic result alone
   // as if live verification had never been requested.
+  // Pushed to `errors`, not `blockers`: errors are unconditionally enforced
+  // by assertBmhImportSemanticGate, while publicationBlockers are skipped
+  // entirely in draft/upload commands (enforcePublicationBlockers: false).
+  // Once live verification has been explicitly requested via the flag, its
+  // failure must stop every command, not just publication.
   if (ledger.status === "finalized" && process.env.BMH_INSTITUTE_ALLOW_LIVE_CLOSER_LAB_VERIFICATION === "1") {
     if (
       !process.env.CLOSER_LAB_PRODUCTION_SUPABASE_URL ||
       !process.env.CLOSER_LAB_PRODUCTION_SERVICE_ROLE_KEY ||
       !process.env.BMH_INSTITUTE_SCENARIOS_ELEVENLABS_VOICE_ID
     ) {
-      blockers.push(
+      errors.push(
         "BMH_INSTITUTE_ALLOW_LIVE_CLOSER_LAB_VERIFICATION=1 requires CLOSER_LAB_PRODUCTION_SUPABASE_URL, " +
         "CLOSER_LAB_PRODUCTION_SERVICE_ROLE_KEY, and BMH_INSTITUTE_SCENARIOS_ELEVENLABS_VOICE_ID to all be set.",
       );
     } else {
       let liveAttestationBytes = null;
+      let fetchError = null;
       try {
         liveAttestationBytes = await fetchCloserProductionGraph({
           catalogBytes: productionCatalogBytes,
@@ -212,8 +218,14 @@ async function validateScenarioTrust(manifest) {
           serviceRoleKey: process.env.CLOSER_LAB_PRODUCTION_SERVICE_ROLE_KEY,
           approvedVoiceId: process.env.BMH_INSTITUTE_SCENARIOS_ELEVENLABS_VOICE_ID,
         });
-      } catch {
+      } catch (error) {
         liveAttestationBytes = null;
+        fetchError = error instanceof Error ? error.message : String(error);
+      }
+      if (!liveAttestationBytes) {
+        errors.push(
+          `Explicitly requested Closer Lab live production verification did not complete${fetchError ? `: ${fetchError}` : "."}`,
+        );
       }
       const live = await validateScenarioProductionTrust({
         manifest,

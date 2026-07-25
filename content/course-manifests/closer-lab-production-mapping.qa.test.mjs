@@ -529,6 +529,51 @@ test("an arbitrary but internally-consistent scenario checksum cannot substitute
   );
 });
 
+test("a semantically invalid but internally-consistent, correctly-rehashed attestation graph is still rejected", async () => {
+  const { manifest, manifestBytes, ledger, ledgerBytes, catalogBytes, reconciliation, attestation } =
+    await loadRealTrustQuartet();
+  const catalog = JSON.parse(catalogBytes.toString("utf8"));
+
+  // Codex's exact demonstrated bypass: emptying the graph (both the
+  // top-level copy AND the checksum_binding copy, kept consistent with each
+  // other) and correctly recomputing every downstream hash so all the
+  // hash-pin and cross-file checks pass cleanly. Nothing in those checks
+  // verifies the graph is actually a SANE production graph -- only
+  // validateProductionGraphAttestation (the same strict validator the live
+  // path already trusts) catches this.
+  const tamperedAttestation = structuredClone(attestation);
+  tamperedAttestation.graph = [];
+  tamperedAttestation.checksum_binding.graph = [];
+  tamperedAttestation.graph_checksum_sha256 = postgresJsonbSha256(tamperedAttestation.checksum_binding);
+  const newClientGraphBindingSha256 = clientStableJsonSha256(tamperedAttestation.checksum_binding);
+
+  const tamperedReconciliation = structuredClone(reconciliation);
+  tamperedReconciliation.client_graph_binding_sha256 = newClientGraphBindingSha256;
+  tamperedReconciliation.production_graph_checksum_sha256 = tamperedAttestation.graph_checksum_sha256;
+  for (const record of tamperedReconciliation.bindings) record.scenario_sha256 = newClientGraphBindingSha256;
+
+  const tamperedLedger = structuredClone(ledger);
+  for (const record of tamperedLedger.records) record.scenario_sha256 = newClientGraphBindingSha256;
+  const tamperedLedgerBytes = Buffer.from(JSON.stringify(tamperedLedger));
+  tamperedReconciliation.mapping_ledger_sha256 = sha256(tamperedLedgerBytes);
+
+  // Sanity: the strict validator really does reject this on its own.
+  assert.throws(() => validateProductionGraphAttestation(tamperedAttestation, catalog, reconciliation.approved_voice_id));
+
+  assert.ok(
+    validateScenarioReconciliationEvidencePins({
+      manifest,
+      manifestBytes,
+      ledger: tamperedLedger,
+      ledgerBytes: tamperedLedgerBytes,
+      reconciliation: tamperedReconciliation,
+      catalogBytes,
+      attestation: tamperedAttestation,
+    }).length > 0,
+    "an emptied, self-consistently-rehashed attestation graph must still be blocked",
+  );
+});
+
 test("arbitrary non-pending scenario strings cannot clear production trust", async () => {
   const { manifest, ledger, manifestBytes, ledgerBytes, catalogBytes } = await base();
   for (const course of manifest.program.courses) for (const courseModule of course.modules) for (const lesson of courseModule.lessons) for (const block of lesson.blocks ?? []) {

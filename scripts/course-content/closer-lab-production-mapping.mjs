@@ -566,6 +566,20 @@ export function validateScenarioReconciliationEvidencePins({
     if (!isDeepStrictEqual(attestation.catalog_binding, catalog)) {
       blockers.push("Closer Lab production attestation's embedded catalog does not match the current catalog bytes.");
     }
+    // Every check above only proves internal self-consistency and hash ties
+    // between the checked-in files. None of it proves the attestation is
+    // actually a VALID production graph (real personas, correct goal weights,
+    // exact 6/6/24/24 cardinality per scenario, matching the authored
+    // catalog). validateProductionGraphAttestation is the same strict
+    // validator the live-fetch path already trusts; running it here against
+    // the checked-in attestation closes that gap without any network call.
+    try {
+      validateProductionGraphAttestation(attestation, catalog, reconciliation.approved_voice_id);
+    } catch (error) {
+      blockers.push(
+        `Closer Lab production attestation failed strict graph validation: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
   }
 
   const ledgerByKey = new Map(ledger.records.map((record) => [record.block_source_key, record]));

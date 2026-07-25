@@ -187,9 +187,17 @@ test("explicit live-verification opt-in fails closed on incomplete configuration
     process.env.BMH_INSTITUTE_ALLOW_LIVE_CLOSER_LAB_VERIFICATION = "1";
     const incomplete = await validateBmhImportSemanticGate({ manifest, now: CURRENT_TIME });
     assert.ok(
-      incomplete.publicationBlockers.some((blocker) =>
-        blocker.includes("BMH_INSTITUTE_ALLOW_LIVE_CLOSER_LAB_VERIFICATION=1 requires"),
+      incomplete.errors.some((error) =>
+        error.includes("BMH_INSTITUTE_ALLOW_LIVE_CLOSER_LAB_VERIFICATION=1 requires"),
       ),
+    );
+    // This must be an unconditionally-enforced error, not a publication
+    // blocker: draft/upload commands run with enforcePublicationBlockers:
+    // false and would otherwise silently proceed despite the explicitly
+    // requested live check never happening.
+    assert.throws(
+      () => assertBmhImportSemanticGate(incomplete, { enforcePublicationBlockers: false }),
+      /BMH_INSTITUTE_ALLOW_LIVE_CLOSER_LAB_VERIFICATION=1 requires/,
     );
 
     // Flag on, only the voice ID missing: still fails closed.
@@ -197,9 +205,24 @@ test("explicit live-verification opt-in fails closed on incomplete configuration
     process.env.CLOSER_LAB_PRODUCTION_SERVICE_ROLE_KEY = "sb_secret_test_only_not_real_00000000000000000000";
     const stillIncomplete = await validateBmhImportSemanticGate({ manifest, now: CURRENT_TIME });
     assert.ok(
-      stillIncomplete.publicationBlockers.some((blocker) =>
-        blocker.includes("BMH_INSTITUTE_ALLOW_LIVE_CLOSER_LAB_VERIFICATION=1 requires"),
+      stillIncomplete.errors.some((error) =>
+        error.includes("BMH_INSTITUTE_ALLOW_LIVE_CLOSER_LAB_VERIFICATION=1 requires"),
       ),
+    );
+
+    // Flag on, all three inputs present but pointing at a fake credential:
+    // the live fetch itself fails (auth/network), and that must ALSO be an
+    // unconditionally-enforced error, not silently absorbed.
+    process.env.BMH_INSTITUTE_SCENARIOS_ELEVENLABS_VOICE_ID = "EXAVITQu4vr4xnSDxMaL";
+    const fetchFailed = await validateBmhImportSemanticGate({ manifest, now: CURRENT_TIME });
+    assert.ok(
+      fetchFailed.errors.some((error) =>
+        error.includes("Explicitly requested Closer Lab live production verification did not complete"),
+      ),
+    );
+    assert.throws(
+      () => assertBmhImportSemanticGate(fetchFailed, { enforcePublicationBlockers: false }),
+      /Explicitly requested Closer Lab live production verification did not complete/,
     );
   } finally {
     for (const key of envKeys) {
