@@ -17,6 +17,7 @@ import {
   validateProductionGraphAttestation,
   validateScenarioMappingLedgerShape,
   validateScenarioProductionTrust,
+  validateScenarioReconciliationEvidencePins,
 } from "../../scripts/course-content/closer-lab-production-mapping.mjs";
 import { assertDistinctFinalizationPaths } from "../../scripts/course-content/finalize-closer-lab-production-mapping.mjs";
 
@@ -298,6 +299,65 @@ test("the authenticated RPC catalog is byte-bound to the exact reviewed Closer c
   assert.equal(catalog.rolePlays.length, 6);
   assert.equal(catalog.rolePlays.flatMap((scenario) => scenario.goals).length, 24);
   assert.equal(validateCloserCatalogProvenance({ catalogBytes, provenance }), provenance);
+});
+
+// This is the hermetic check that gates every PR's required CI job (no
+// network, no credentials) -- it runs against the REAL checked-in files
+// (never the media-dependent fixtures above), so unlike the builder-parity
+// tests in bmh-artwork-ledger-integration.qa.test.mjs and
+// bmh-exhaustive-quiz-release.qa.test.mjs (which skip on any runner missing
+// Jarrad's local canonical video files, including every Linux CI runner),
+// this one can never silently skip.
+test("the real tracked manifest, ledger, and reconciliation evidence are exactly cross-bound (runs on every CI runner, no local media required)", async () => {
+  const [manifestBytes, ledgerBytes, catalogBytes] = await Promise.all([
+    readFile(MANIFEST_URL),
+    readFile(LEDGER_URL),
+    readFile(CATALOG_URL),
+  ]);
+  const manifest = JSON.parse(manifestBytes.toString("utf8"));
+  const ledger = JSON.parse(ledgerBytes.toString("utf8"));
+  const reconciliation = JSON.parse(
+    await readFile(
+      new URL("../../docs/course-production/closer-lab-production-mapping-reconciliation.json", import.meta.url),
+      "utf8",
+    ),
+  );
+
+  assert.deepEqual(
+    validateScenarioReconciliationEvidencePins({
+      manifest,
+      manifestBytes,
+      ledger,
+      ledgerBytes,
+      reconciliation,
+      catalogBytes,
+    }),
+    [],
+  );
+
+  // Prove it actually fails closed, not just trivially: a manifest UUID
+  // changed without updating the ledger (Codex's exact round-2 finding) must
+  // be caught, even when the tampered manifest's own bytes are what get
+  // hashed.
+  const tampered = structuredClone(manifest);
+  const tamperedBlock = tampered.program.courses
+    .flatMap((course) => course.modules)
+    .flatMap((courseModule) => courseModule.lessons)
+    .flatMap((lesson) => lesson.blocks ?? [])
+    .find((block) => block.type === "role_play");
+  tamperedBlock.content.scenario_id = "ffffffff-ffff-4fff-8fff-ffffffffffff";
+  const tamperedManifestBytes = Buffer.from(JSON.stringify(tampered));
+  assert.ok(
+    validateScenarioReconciliationEvidencePins({
+      manifest: tampered,
+      manifestBytes: tamperedManifestBytes,
+      ledger,
+      ledgerBytes,
+      reconciliation,
+      catalogBytes,
+    }).length > 0,
+    "a manifest UUID that disagrees with the finalized ledger must be a blocker",
+  );
 });
 
 test("arbitrary non-pending scenario strings cannot clear production trust", async () => {

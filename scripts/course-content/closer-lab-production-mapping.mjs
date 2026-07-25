@@ -480,6 +480,7 @@ export function validateScenarioReconciliationEvidencePins({
   ledger,
   ledgerBytes,
   reconciliation,
+  catalogBytes,
 }) {
   const blockers = [];
   const bindings = rolePlayBindings(manifest);
@@ -496,7 +497,13 @@ export function validateScenarioReconciliationEvidencePins({
     !reconciliation ||
     reconciliation.status !== "passed" ||
     reconciliation.exact !== true ||
-    !Array.isArray(reconciliation.bindings)
+    reconciliation.environment !== "production" ||
+    reconciliation.closer_lab_project_ref !== CLOSER_LAB_PRODUCTION_PROJECT_REF ||
+    typeof reconciliation.approved_voice_id !== "string" ||
+    !reconciliation.approved_voice_id.trim() ||
+    !Array.isArray(reconciliation.bindings) ||
+    reconciliation.bindings.length !== 6 ||
+    new Set(reconciliation.bindings.map((record) => record.block_source_key)).size !== 6
   ) {
     blockers.push("Closer Lab production reconciliation evidence is missing, stale, or not exact.");
     return blockers;
@@ -507,16 +514,35 @@ export function validateScenarioReconciliationEvidencePins({
   if (sha256(ledgerBytes) !== reconciliation.mapping_ledger_sha256) {
     blockers.push("Closer Lab production reconciliation evidence does not match the current mapping ledger bytes.");
   }
-  const reconciled = new Map(reconciliation.bindings.map((record) => [record.block_source_key, record]));
+  if (catalogBytes) {
+    const catalogSha256 = clientStableJsonSha256(JSON.parse(catalogBytes.toString("utf8")));
+    if (catalogSha256 !== reconciliation.client_catalog_sha256) {
+      blockers.push("Closer Lab production reconciliation evidence does not match the current catalog bytes.");
+    }
+  }
+
+  const ledgerByKey = new Map(ledger.records.map((record) => [record.block_source_key, record]));
+  const reconciledByKey = new Map(reconciliation.bindings.map((record) => [record.block_source_key, record]));
+  const scenarioShaValues = new Set();
   for (const binding of bindings) {
-    const record = reconciled.get(binding.block_source_key);
+    const ledgerRecord = ledgerByKey.get(binding.block_source_key);
+    const reconciledRecord = reconciledByKey.get(binding.block_source_key);
     if (
-      !record ||
-      !UUID_PATTERN.test(record.production_scenario_id ?? "") ||
-      record.production_scenario_id !== binding.production_scenario_id
+      !ledgerRecord ||
+      !reconciledRecord ||
+      !UUID_PATTERN.test(binding.production_scenario_id ?? "") ||
+      binding.production_scenario_id !== ledgerRecord.production_scenario_id ||
+      binding.production_scenario_id !== reconciledRecord.production_scenario_id ||
+      !SHA256_PATTERN.test(ledgerRecord.scenario_sha256 ?? "") ||
+      ledgerRecord.scenario_sha256 !== reconciledRecord.scenario_sha256
     ) {
       blockers.push(`${binding.block_source_key} is not bound to its reconciled production Closer Lab UUID.`);
+      continue;
     }
+    scenarioShaValues.add(ledgerRecord.scenario_sha256);
+  }
+  if (blockers.length === 0 && scenarioShaValues.size !== 1) {
+    blockers.push("Closer Lab production scenario checksum is not identical across all six role-play bindings.");
   }
   return blockers;
 }

@@ -168,6 +168,7 @@ async function validateScenarioTrust(manifest) {
     ledger,
     ledgerBytes,
     reconciliation: evidence,
+    catalogBytes: productionCatalogBytes,
   });
 
   // Defense in depth, opt-in only: when production credentials ARE present
