@@ -187,37 +187,47 @@ async function validateScenarioTrust(manifest) {
   // command into one that calls production. Missing either the flag or the
   // credentials never weakens the hermetic result above; it just skips this
   // additional layer.
-  if (
-    ledger.status === "finalized" &&
-    process.env.BMH_INSTITUTE_ALLOW_LIVE_CLOSER_LAB_VERIFICATION === "1" &&
-    process.env.CLOSER_LAB_PRODUCTION_SUPABASE_URL &&
-    process.env.CLOSER_LAB_PRODUCTION_SERVICE_ROLE_KEY &&
-    process.env.BMH_INSTITUTE_SCENARIOS_ELEVENLABS_VOICE_ID
-  ) {
-    let liveAttestationBytes = null;
-    try {
-      liveAttestationBytes = await fetchCloserProductionGraph({
+  // The opt-in flag is checked separately from credential completeness on
+  // purpose: once someone has explicitly asked for live verification (e.g. a
+  // protected job), a missing or misnamed credential must fail closed with a
+  // blocker, never silently fall back to reporting the hermetic result alone
+  // as if live verification had never been requested.
+  if (ledger.status === "finalized" && process.env.BMH_INSTITUTE_ALLOW_LIVE_CLOSER_LAB_VERIFICATION === "1") {
+    if (
+      !process.env.CLOSER_LAB_PRODUCTION_SUPABASE_URL ||
+      !process.env.CLOSER_LAB_PRODUCTION_SERVICE_ROLE_KEY ||
+      !process.env.BMH_INSTITUTE_SCENARIOS_ELEVENLABS_VOICE_ID
+    ) {
+      blockers.push(
+        "BMH_INSTITUTE_ALLOW_LIVE_CLOSER_LAB_VERIFICATION=1 requires CLOSER_LAB_PRODUCTION_SUPABASE_URL, " +
+        "CLOSER_LAB_PRODUCTION_SERVICE_ROLE_KEY, and BMH_INSTITUTE_SCENARIOS_ELEVENLABS_VOICE_ID to all be set.",
+      );
+    } else {
+      let liveAttestationBytes = null;
+      try {
+        liveAttestationBytes = await fetchCloserProductionGraph({
+          catalogBytes: productionCatalogBytes,
+          catalogProvenance: productionCatalogProvenance,
+          url: process.env.CLOSER_LAB_PRODUCTION_SUPABASE_URL,
+          serviceRoleKey: process.env.CLOSER_LAB_PRODUCTION_SERVICE_ROLE_KEY,
+          approvedVoiceId: process.env.BMH_INSTITUTE_SCENARIOS_ELEVENLABS_VOICE_ID,
+        });
+      } catch {
+        liveAttestationBytes = null;
+      }
+      const live = await validateScenarioProductionTrust({
+        manifest,
+        manifestBytes,
+        ledger,
+        ledgerBytes,
+        evidence,
         catalogBytes: productionCatalogBytes,
-        catalogProvenance: productionCatalogProvenance,
-        url: process.env.CLOSER_LAB_PRODUCTION_SUPABASE_URL,
-        serviceRoleKey: process.env.CLOSER_LAB_PRODUCTION_SERVICE_ROLE_KEY,
+        liveAttestationBytes,
         approvedVoiceId: process.env.BMH_INSTITUTE_SCENARIOS_ELEVENLABS_VOICE_ID,
       });
-    } catch {
-      liveAttestationBytes = null;
+      errors.push(...live.errors);
+      blockers.push(...live.blockers);
     }
-    const live = await validateScenarioProductionTrust({
-      manifest,
-      manifestBytes,
-      ledger,
-      ledgerBytes,
-      evidence,
-      catalogBytes: productionCatalogBytes,
-      liveAttestationBytes,
-      approvedVoiceId: process.env.BMH_INSTITUTE_SCENARIOS_ELEVENLABS_VOICE_ID,
-    });
-    errors.push(...live.errors);
-    blockers.push(...live.blockers);
   }
 
   return { errors, blockers };

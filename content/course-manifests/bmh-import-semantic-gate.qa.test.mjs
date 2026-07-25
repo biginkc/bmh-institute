@@ -169,3 +169,42 @@ test("a mutated full manifest cannot inherit canonical reconciliation evidence",
   });
   assert.ok(report.errors.some((error) => error.includes("canonical release manifest")));
 });
+
+test("explicit live-verification opt-in fails closed on incomplete configuration instead of silently staying hermetic", async () => {
+  const manifest = await loadManifest(FULL_URL);
+  const envKeys = [
+    "BMH_INSTITUTE_ALLOW_LIVE_CLOSER_LAB_VERIFICATION",
+    "CLOSER_LAB_PRODUCTION_SUPABASE_URL",
+    "CLOSER_LAB_PRODUCTION_SERVICE_ROLE_KEY",
+    "BMH_INSTITUTE_SCENARIOS_ELEVENLABS_VOICE_ID",
+  ];
+  const saved = Object.fromEntries(envKeys.map((key) => [key, process.env[key]]));
+  try {
+    for (const key of envKeys) delete process.env[key];
+    // Flag on, but every credential missing: must fail closed with a
+    // blocker naming the requirement, never silently report the hermetic
+    // result as if live verification had never been requested.
+    process.env.BMH_INSTITUTE_ALLOW_LIVE_CLOSER_LAB_VERIFICATION = "1";
+    const incomplete = await validateBmhImportSemanticGate({ manifest, now: CURRENT_TIME });
+    assert.ok(
+      incomplete.publicationBlockers.some((blocker) =>
+        blocker.includes("BMH_INSTITUTE_ALLOW_LIVE_CLOSER_LAB_VERIFICATION=1 requires"),
+      ),
+    );
+
+    // Flag on, only the voice ID missing: still fails closed.
+    process.env.CLOSER_LAB_PRODUCTION_SUPABASE_URL = "https://xqrkugdxpwhjscrheuqo.supabase.co";
+    process.env.CLOSER_LAB_PRODUCTION_SERVICE_ROLE_KEY = "sb_secret_test_only_not_real_00000000000000000000";
+    const stillIncomplete = await validateBmhImportSemanticGate({ manifest, now: CURRENT_TIME });
+    assert.ok(
+      stillIncomplete.publicationBlockers.some((blocker) =>
+        blocker.includes("BMH_INSTITUTE_ALLOW_LIVE_CLOSER_LAB_VERIFICATION=1 requires"),
+      ),
+    );
+  } finally {
+    for (const key of envKeys) {
+      if (saved[key] === undefined) delete process.env[key];
+      else process.env[key] = saved[key];
+    }
+  }
+});

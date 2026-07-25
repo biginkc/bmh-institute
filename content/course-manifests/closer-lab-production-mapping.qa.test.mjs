@@ -430,6 +430,105 @@ test("the real tracked manifest, ledger, reconciliation, and attestation are exa
   }
 });
 
+test("attestation top-level fields cannot diverge from their own hashed checksum_binding copies", async () => {
+  const { manifest, manifestBytes, ledger, ledgerBytes, catalogBytes, reconciliation, attestation } =
+    await loadRealTrustQuartet();
+  const firstBlockSourceKey = rolePlayBindings(manifest)[0].block_source_key;
+  const fakeId = "dddddddd-dddd-4ddd-8ddd-dddddddddddd";
+
+  // Codex's exact demonstrated bypass: mutate the UUID across manifest,
+  // ledger, reconciliation, AND the top-level attestation.role_plays array,
+  // but leave attestation.checksum_binding.role_plays (the copy that's
+  // actually hashed into client_graph_binding_sha256) untouched. Every prior
+  // hash-pin check would have passed; only comparing the top-level array
+  // against its own checksum_binding copy catches it.
+  const tamperedManifest = structuredClone(manifest);
+  tamperedManifest.program.courses
+    .flatMap((course) => course.modules)
+    .flatMap((courseModule) => courseModule.lessons)
+    .flatMap((lesson) => lesson.blocks ?? [])
+    .find((block) => block.source_key === firstBlockSourceKey)
+    .content.scenario_id = fakeId;
+  const tamperedManifestBytes = Buffer.from(JSON.stringify(tamperedManifest));
+
+  const tamperedLedger = structuredClone(ledger);
+  tamperedLedger.records.find((record) => record.block_source_key === firstBlockSourceKey)
+    .production_scenario_id = fakeId;
+  const tamperedLedgerBytes = Buffer.from(JSON.stringify(tamperedLedger));
+
+  const tamperedReconciliation = structuredClone(reconciliation);
+  tamperedReconciliation.manifest_sha256 = sha256(tamperedManifestBytes);
+  tamperedReconciliation.mapping_ledger_sha256 = sha256(tamperedLedgerBytes);
+  tamperedReconciliation.bindings.find((record) => record.block_source_key === firstBlockSourceKey)
+    .production_scenario_id = fakeId;
+
+  const tamperedAttestation = structuredClone(attestation);
+  tamperedAttestation.role_plays.find((record) => record.source_key === firstBlockSourceKey).scenario_id = fakeId;
+  // checksum_binding.role_plays is deliberately left unchanged -- so its hash
+  // still ties to tamperedReconciliation.client_graph_binding_sha256 (which
+  // we don't even need to touch, since checksum_binding itself is untouched).
+
+  assert.ok(
+    validateScenarioReconciliationEvidencePins({
+      manifest: tamperedManifest,
+      manifestBytes: tamperedManifestBytes,
+      ledger: tamperedLedger,
+      ledgerBytes: tamperedLedgerBytes,
+      reconciliation: tamperedReconciliation,
+      catalogBytes,
+      attestation: tamperedAttestation,
+    }).length > 0,
+    "a top-level attestation.role_plays mutation left out of checksum_binding must still be blocked",
+  );
+
+  // Mutating graph (voice/goal) data the same way -- independent of
+  // role_plays -- must also be caught.
+  const graphTamperedAttestation = structuredClone(attestation);
+  graphTamperedAttestation.graph[0].voice_id = "some-other-voice-id";
+  assert.ok(
+    validateScenarioReconciliationEvidencePins({
+      manifest,
+      manifestBytes,
+      ledger,
+      ledgerBytes,
+      reconciliation,
+      catalogBytes,
+      attestation: graphTamperedAttestation,
+    }).length > 0,
+    "a top-level attestation.graph mutation left out of checksum_binding must still be blocked",
+  );
+});
+
+test("an arbitrary but internally-consistent scenario checksum cannot substitute for the real graph-binding hash", async () => {
+  const { manifest, manifestBytes, ledger, ledgerBytes, catalogBytes, reconciliation, attestation } =
+    await loadRealTrustQuartet();
+  const arbitraryDigest = "a".repeat(64);
+
+  // All six ledger and reconciliation scenario_sha256 values replaced with
+  // the same arbitrary (but well-formed) digest -- internally consistent
+  // with each other, but not the real clientStableJsonSha256(checksum_binding).
+  const tamperedLedger = structuredClone(ledger);
+  for (const record of tamperedLedger.records) record.scenario_sha256 = arbitraryDigest;
+  const tamperedLedgerBytes = Buffer.from(JSON.stringify(tamperedLedger));
+
+  const tamperedReconciliation = structuredClone(reconciliation);
+  tamperedReconciliation.mapping_ledger_sha256 = sha256(tamperedLedgerBytes);
+  for (const record of tamperedReconciliation.bindings) record.scenario_sha256 = arbitraryDigest;
+
+  assert.ok(
+    validateScenarioReconciliationEvidencePins({
+      manifest,
+      manifestBytes,
+      ledger: tamperedLedger,
+      ledgerBytes: tamperedLedgerBytes,
+      reconciliation: tamperedReconciliation,
+      catalogBytes,
+      attestation,
+    }).length > 0,
+    "an arbitrary uniform scenario_sha256 across ledger and reconciliation must still be blocked",
+  );
+});
+
 test("arbitrary non-pending scenario strings cannot clear production trust", async () => {
   const { manifest, ledger, manifestBytes, ledgerBytes, catalogBytes } = await base();
   for (const course of manifest.program.courses) for (const courseModule of course.modules) for (const lesson of courseModule.lessons) for (const block of lesson.blocks ?? []) {
