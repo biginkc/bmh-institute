@@ -15,6 +15,7 @@ import {
   sha256,
   validateCloserCatalogProvenance,
   validateProductionGraphAttestation,
+  rolePlayBindings,
   validateScenarioMappingLedgerShape,
   validateScenarioProductionTrust,
   validateScenarioReconciliationEvidencePins,
@@ -308,7 +309,7 @@ test("the authenticated RPC catalog is byte-bound to the exact reviewed Closer c
 // bmh-exhaustive-quiz-release.qa.test.mjs (which skip on any runner missing
 // Jarrad's local canonical video files, including every Linux CI runner),
 // this one can never silently skip.
-test("the real tracked manifest, ledger, and reconciliation evidence are exactly cross-bound (runs on every CI runner, no local media required)", async () => {
+async function loadRealTrustQuartet() {
   const [manifestBytes, ledgerBytes, catalogBytes] = await Promise.all([
     readFile(MANIFEST_URL),
     readFile(LEDGER_URL),
@@ -322,6 +323,18 @@ test("the real tracked manifest, ledger, and reconciliation evidence are exactly
       "utf8",
     ),
   );
+  const attestation = JSON.parse(
+    await readFile(
+      new URL("../../docs/course-production/closer-lab-production-attestation.json", import.meta.url),
+      "utf8",
+    ),
+  );
+  return { manifest, manifestBytes, ledger, ledgerBytes, catalogBytes, reconciliation, attestation };
+}
+
+test("the real tracked manifest, ledger, reconciliation, and attestation are exactly cross-bound (runs on every CI runner, no local media required)", async () => {
+  const { manifest, manifestBytes, ledger, ledgerBytes, catalogBytes, reconciliation, attestation } =
+    await loadRealTrustQuartet();
 
   assert.deepEqual(
     validateScenarioReconciliationEvidencePins({
@@ -331,33 +344,90 @@ test("the real tracked manifest, ledger, and reconciliation evidence are exactly
       ledgerBytes,
       reconciliation,
       catalogBytes,
+      attestation,
     }),
     [],
   );
 
-  // Prove it actually fails closed, not just trivially: a manifest UUID
-  // changed without updating the ledger (Codex's exact round-2 finding) must
-  // be caught, even when the tampered manifest's own bytes are what get
-  // hashed.
-  const tampered = structuredClone(manifest);
-  const tamperedBlock = tampered.program.courses
-    .flatMap((course) => course.modules)
-    .flatMap((courseModule) => courseModule.lessons)
-    .flatMap((lesson) => lesson.blocks ?? [])
-    .find((block) => block.type === "role_play");
-  tamperedBlock.content.scenario_id = "ffffffff-ffff-4fff-8fff-ffffffffffff";
-  const tamperedManifestBytes = Buffer.from(JSON.stringify(tampered));
-  assert.ok(
-    validateScenarioReconciliationEvidencePins({
-      manifest: tampered,
-      manifestBytes: tamperedManifestBytes,
-      ledger,
-      ledgerBytes,
-      reconciliation,
-      catalogBytes,
-    }).length > 0,
-    "a manifest UUID that disagrees with the finalized ledger must be a blocker",
-  );
+  const firstBlockSourceKey = rolePlayBindings(manifest)[0].block_source_key;
+
+  // Coordinated tamper #1: manifest, reconciliation, AND attestation all
+  // agree on a fabricated UUID for one scenario; only the finalized ledger
+  // still has the real one. Isolates that the ledger cross-check alone
+  // catches this -- the manifest_sha256/reconciliation pins and the
+  // attestation cross-check are all deliberately made to agree with the
+  // fabrication, so only the ledger comparison can be what blocks it.
+  {
+    const fakeId = "ffffffff-ffff-4fff-8fff-ffffffffffff";
+    const tamperedManifest = structuredClone(manifest);
+    const tamperedBlock = tamperedManifest.program.courses
+      .flatMap((course) => course.modules)
+      .flatMap((courseModule) => courseModule.lessons)
+      .flatMap((lesson) => lesson.blocks ?? [])
+      .find((block) => block.source_key === firstBlockSourceKey);
+    tamperedBlock.content.scenario_id = fakeId;
+    const tamperedManifestBytes = Buffer.from(JSON.stringify(tamperedManifest));
+
+    const tamperedReconciliation = structuredClone(reconciliation);
+    tamperedReconciliation.manifest_sha256 = sha256(tamperedManifestBytes);
+    tamperedReconciliation.bindings.find((record) => record.block_source_key === firstBlockSourceKey)
+      .production_scenario_id = fakeId;
+
+    const tamperedAttestation = structuredClone(attestation);
+    tamperedAttestation.role_plays.find((record) => record.source_key === firstBlockSourceKey).scenario_id = fakeId;
+
+    assert.ok(
+      validateScenarioReconciliationEvidencePins({
+        manifest: tamperedManifest,
+        manifestBytes: tamperedManifestBytes,
+        ledger,
+        ledgerBytes,
+        reconciliation: tamperedReconciliation,
+        catalogBytes,
+        attestation: tamperedAttestation,
+      }).length > 0,
+      "manifest+reconciliation+attestation agreeing on a fabricated UUID must still be blocked by the unchanged ledger",
+    );
+  }
+
+  // Coordinated tamper #2: manifest, reconciliation, AND ledger all agree on
+  // a fabricated UUID; only the production attestation still has the real
+  // one. Isolates that the attestation cross-check alone catches this.
+  {
+    const fakeId = "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee";
+    const tamperedManifest = structuredClone(manifest);
+    const tamperedBlock = tamperedManifest.program.courses
+      .flatMap((course) => course.modules)
+      .flatMap((courseModule) => courseModule.lessons)
+      .flatMap((lesson) => lesson.blocks ?? [])
+      .find((block) => block.source_key === firstBlockSourceKey);
+    tamperedBlock.content.scenario_id = fakeId;
+    const tamperedManifestBytes = Buffer.from(JSON.stringify(tamperedManifest));
+
+    const tamperedLedger = structuredClone(ledger);
+    tamperedLedger.records.find((record) => record.block_source_key === firstBlockSourceKey)
+      .production_scenario_id = fakeId;
+    const tamperedLedgerBytes = Buffer.from(JSON.stringify(tamperedLedger));
+
+    const tamperedReconciliation = structuredClone(reconciliation);
+    tamperedReconciliation.manifest_sha256 = sha256(tamperedManifestBytes);
+    tamperedReconciliation.mapping_ledger_sha256 = sha256(tamperedLedgerBytes);
+    tamperedReconciliation.bindings.find((record) => record.block_source_key === firstBlockSourceKey)
+      .production_scenario_id = fakeId;
+
+    assert.ok(
+      validateScenarioReconciliationEvidencePins({
+        manifest: tamperedManifest,
+        manifestBytes: tamperedManifestBytes,
+        ledger: tamperedLedger,
+        ledgerBytes: tamperedLedgerBytes,
+        reconciliation: tamperedReconciliation,
+        catalogBytes,
+        attestation,
+      }).length > 0,
+      "manifest+reconciliation+ledger agreeing on a fabricated UUID must still be blocked by the unchanged attestation",
+    );
+  }
 });
 
 test("arbitrary non-pending scenario strings cannot clear production trust", async () => {

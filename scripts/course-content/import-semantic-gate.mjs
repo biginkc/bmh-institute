@@ -54,6 +54,10 @@ const SCENARIO_RECONCILIATION_PATH = join(
   REPO_ROOT,
   "docs/course-production/closer-lab-production-mapping-reconciliation.json",
 );
+const SCENARIO_ATTESTATION_PATH = join(
+  REPO_ROOT,
+  "docs/course-production/closer-lab-production-attestation.json",
+);
 const SCENARIO_PRODUCTION_CATALOG_PATH = join(
   REPO_ROOT,
   "docs/course-production/closer-lab-production-catalog.json",
@@ -145,10 +149,11 @@ async function validateScenarioTrust(manifest) {
   if (rolePlayBindings(manifest).length === 0) {
     return { errors: [], blockers: [] };
   }
-  const [manifestBytes, ledgerBytes, evidence, productionCatalogBytes, productionCatalogProvenance] = await Promise.all([
+  const [manifestBytes, ledgerBytes, evidence, attestation, productionCatalogBytes, productionCatalogProvenance] = await Promise.all([
     readFile(join(CANONICAL_MANIFEST_DIRECTORY, "bmh-employee-training.v1.json")),
     readFile(SCENARIO_MAPPING_LEDGER_PATH),
     optionalJson(SCENARIO_RECONCILIATION_PATH),
+    optionalJson(SCENARIO_ATTESTATION_PATH),
     readFile(SCENARIO_PRODUCTION_CATALOG_PATH),
     optionalJson(SCENARIO_PRODUCTION_CATALOG_PROVENANCE_PATH),
   ]);
@@ -158,9 +163,11 @@ async function validateScenarioTrust(manifest) {
   // must never need a production credential -- exposing a Closer Lab
   // service-role key to arbitrary PR-triggered CI is its own security
   // exposure, independent of what the key can prove. It proves the checked-in
-  // manifest and ledger exactly match a checked-in reconciliation record that
-  // was itself produced by a real, independently-run live fetch (see
-  // course:reconcile:closer-lab) -- not by trusting the ledger it's checking.
+  // manifest, ledger, reconciliation record, and production attestation are
+  // all mutually consistent -- the reconciliation and attestation were
+  // themselves produced by a real, independently-run live fetch (see
+  // course:reconcile:closer-lab) -- not by trusting only the ledger or
+  // reconciliation file it's checking.
   const errors = validateScenarioMappingLedgerShape(manifest, ledger);
   const blockers = validateScenarioReconciliationEvidencePins({
     manifest,
@@ -169,17 +176,23 @@ async function validateScenarioTrust(manifest) {
     ledgerBytes,
     reconciliation: evidence,
     catalogBytes: productionCatalogBytes,
+    attestation,
   });
 
-  // Defense in depth, opt-in only: when production credentials ARE present
-  // (a separate, protected job scoped to trusted commits -- never this
-  // required check), also re-verify live and require BOTH to agree. Missing
-  // credentials never weaken the hermetic result above; they just skip this
+  // Defense in depth, explicit opt-in only: when production credentials ARE
+  // present, AND a separate flag explicitly requests live verification, also
+  // re-verify live and require BOTH to agree. This is deliberately not just
+  // "credentials happen to be present" -- ambient credentials in a dev shell
+  // or an unrelated job must never silently turn a routine, hermetic test
+  // command into one that calls production. Missing either the flag or the
+  // credentials never weakens the hermetic result above; it just skips this
   // additional layer.
   if (
     ledger.status === "finalized" &&
+    process.env.BMH_INSTITUTE_ALLOW_LIVE_CLOSER_LAB_VERIFICATION === "1" &&
     process.env.CLOSER_LAB_PRODUCTION_SUPABASE_URL &&
-    process.env.CLOSER_LAB_PRODUCTION_SERVICE_ROLE_KEY
+    process.env.CLOSER_LAB_PRODUCTION_SERVICE_ROLE_KEY &&
+    process.env.BMH_INSTITUTE_SCENARIOS_ELEVENLABS_VOICE_ID
   ) {
     let liveAttestationBytes = null;
     try {

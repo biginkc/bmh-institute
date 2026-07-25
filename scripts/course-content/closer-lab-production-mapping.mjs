@@ -481,6 +481,7 @@ export function validateScenarioReconciliationEvidencePins({
   ledgerBytes,
   reconciliation,
   catalogBytes,
+  attestation,
 }) {
   const blockers = [];
   const bindings = rolePlayBindings(manifest);
@@ -508,6 +509,18 @@ export function validateScenarioReconciliationEvidencePins({
     blockers.push("Closer Lab production reconciliation evidence is missing, stale, or not exact.");
     return blockers;
   }
+  if (
+    !attestation ||
+    attestation.project_ref !== CLOSER_LAB_PRODUCTION_PROJECT_REF ||
+    attestation.approved_voice_id !== reconciliation.approved_voice_id ||
+    !isDeepStrictEqual(attestation.counts, { role_plays: 6, personas: 6, goals: 24, role_play_goal_links: 24 }) ||
+    !Array.isArray(attestation.role_plays) ||
+    attestation.role_plays.length !== 6 ||
+    clientStableJsonSha256(attestation.checksum_binding) !== reconciliation.client_graph_binding_sha256
+  ) {
+    blockers.push("Closer Lab production attestation is missing, stale, or does not match the reconciliation evidence.");
+    return blockers;
+  }
   if (sha256(manifestBytes) !== reconciliation.manifest_sha256) {
     blockers.push("Closer Lab production reconciliation evidence does not match the current manifest bytes.");
   }
@@ -515,24 +528,34 @@ export function validateScenarioReconciliationEvidencePins({
     blockers.push("Closer Lab production reconciliation evidence does not match the current mapping ledger bytes.");
   }
   if (catalogBytes) {
-    const catalogSha256 = clientStableJsonSha256(JSON.parse(catalogBytes.toString("utf8")));
-    if (catalogSha256 !== reconciliation.client_catalog_sha256) {
+    const catalog = JSON.parse(catalogBytes.toString("utf8"));
+    if (clientStableJsonSha256(catalog) !== reconciliation.client_catalog_sha256) {
       blockers.push("Closer Lab production reconciliation evidence does not match the current catalog bytes.");
+    }
+    if (postgresJsonbSha256(catalog) !== attestation.catalog_sha256) {
+      blockers.push("Closer Lab production attestation does not match the current catalog bytes.");
     }
   }
 
   const ledgerByKey = new Map(ledger.records.map((record) => [record.block_source_key, record]));
   const reconciledByKey = new Map(reconciliation.bindings.map((record) => [record.block_source_key, record]));
+  const attestedByKey = new Map(attestation.role_plays.map((record) => [record.source_key, record]));
   const scenarioShaValues = new Set();
   for (const binding of bindings) {
     const ledgerRecord = ledgerByKey.get(binding.block_source_key);
     const reconciledRecord = reconciledByKey.get(binding.block_source_key);
+    const attestedRecord = attestedByKey.get(binding.block_source_key);
     if (
       !ledgerRecord ||
       !reconciledRecord ||
+      !attestedRecord ||
       !UUID_PATTERN.test(binding.production_scenario_id ?? "") ||
       binding.production_scenario_id !== ledgerRecord.production_scenario_id ||
       binding.production_scenario_id !== reconciledRecord.production_scenario_id ||
+      binding.production_scenario_id !== attestedRecord.scenario_id ||
+      attestedRecord.active !== true ||
+      attestedRecord.assignment_source_key !== reconciledRecord.assignment_source_key ||
+      attestedRecord.managed_source_key !== `bmh-institute-v1:role-play:${reconciledRecord.scenario_source_key}` ||
       !SHA256_PATTERN.test(ledgerRecord.scenario_sha256 ?? "") ||
       ledgerRecord.scenario_sha256 !== reconciledRecord.scenario_sha256
     ) {
