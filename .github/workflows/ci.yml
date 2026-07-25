@@ -45,6 +45,10 @@ jobs:
         run: npm run verify
 
       - name: Run course-content tests and deterministic guide rebuild
+        env:
+          CLOSER_LAB_PRODUCTION_SUPABASE_URL: ${{ secrets.CLOSER_LAB_PRODUCTION_SUPABASE_URL }}
+          CLOSER_LAB_PRODUCTION_SERVICE_ROLE_KEY: ${{ secrets.CLOSER_LAB_PRODUCTION_SERVICE_ROLE_KEY }}
+          BMH_INSTITUTE_SCENARIOS_ELEVENLABS_VOICE_ID: ${{ secrets.BMH_INSTITUTE_SCENARIOS_ELEVENLABS_VOICE_ID }}
         run: npm run test:course-content
 
       - name: Run artwork production workflow tests
