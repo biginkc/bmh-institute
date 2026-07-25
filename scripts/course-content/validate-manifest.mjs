@@ -535,12 +535,17 @@ export function validateManifest(
       }
     }
     const scenarioId = block.content?.scenario_id;
-    if (block.type === "role_play" && block.required === true) {
+    // Deliberately NOT gated on block.required === true: a role_play block
+    // marked optional would otherwise skip every scenario_spec and
+    // production-UUID check entirely, letting garbage or unbound content
+    // through as long as it isn't required. Whether role-play blocks are
+    // allowed to be optional at all is enforced separately below, for the
+    // canonical release.
+    if (block.type === "role_play") {
       validateRolePlaySpec(block, assignmentKeys, errors);
     }
     if (
       block.type === "role_play"
-      && block.required === true
       && (
         typeof scenarioId !== "string"
         || scenarioId.trim().length === 0
@@ -550,16 +555,21 @@ export function validateManifest(
       publicationBlockers.push(`${block.source_key} needs a production Closer Lab scenario ID`);
     } else if (
       block.type === "role_play"
-      && block.required === true
       && !UUID_PATTERN.test(scenarioId.trim())
     ) {
       publicationBlockers.push(`${block.source_key} scenario ID is not a valid production UUID`);
     }
   }
 
+  if (
+    manifest.import_id === "bmh-employee-training-v1"
+    && blocks.some((block) => block.type === "role_play" && block.required !== true)
+  ) {
+    errors.push("Every role-play block in the canonical BMH release must be required.");
+  }
+
   const boundRolePlayBlocks = blocks.filter((block) =>
     block.type === "role_play"
-    && block.required === true
     && typeof block.content?.scenario_id === "string"
     && UUID_PATTERN.test(block.content.scenario_id.trim()),
   );

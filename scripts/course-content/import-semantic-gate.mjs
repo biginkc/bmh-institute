@@ -145,9 +145,31 @@ async function optionalJson(path) {
   }
 }
 
+function allRolePlayBlocks(manifest) {
+  return manifest.program.courses
+    .flatMap((course) => course.modules)
+    .flatMap((courseModule) => courseModule.lessons)
+    .flatMap((lesson) => lesson.blocks ?? [])
+    .filter((block) => block.type === "role_play");
+}
+
 async function validateScenarioTrust(manifest) {
-  if (rolePlayBindings(manifest).length === 0) {
+  const totalRolePlayBlocks = allRolePlayBlocks(manifest).length;
+  const bindings = rolePlayBindings(manifest);
+  if (totalRolePlayBlocks === 0) {
     return { errors: [], blockers: [] };
+  }
+  if (bindings.length === 0) {
+    // Role-play blocks exist but none are required: rolePlayBindings only
+    // counts required ones, so the entire scenario-trust chain would
+    // otherwise silently no-op as if there were no role-play content at
+    // all, even with six unbound/garbage blocks sitting in the manifest.
+    return {
+      errors: [
+        `${totalRolePlayBlocks} role-play block(s) are present but none are marked required, so production scenario trust cannot be established.`,
+      ],
+      blockers: [],
+    };
   }
   const [manifestBytes, ledgerBytes, evidence, attestation, productionCatalogBytes, productionCatalogProvenance] = await Promise.all([
     readFile(join(CANONICAL_MANIFEST_DIRECTORY, "bmh-employee-training.v1.json")),
@@ -237,8 +259,15 @@ async function validateScenarioTrust(manifest) {
         liveAttestationBytes,
         approvedVoiceId: process.env.BMH_INSTITUTE_SCENARIOS_ELEVENLABS_VOICE_ID,
       });
-      errors.push(...live.errors);
-      blockers.push(...live.blockers);
+      // Both promoted to unconditional errors, not just live.errors: once
+      // live verification has been explicitly requested, ANY mismatch it
+      // finds -- including what validateScenarioProductionTrust normally
+      // classifies as a publication blocker -- must stop every command.
+      // Leaving reconciliation-drift findings as ordinary blockers would let
+      // draft/upload commands (enforcePublicationBlockers: false) succeed
+      // even though the requested live check found the production graph no
+      // longer matches the checked-in evidence.
+      errors.push(...live.errors, ...live.blockers);
     }
   }
 

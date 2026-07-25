@@ -231,3 +231,16 @@ test("explicit live-verification opt-in fails closed on incomplete configuration
     }
   }
 });
+
+test("role-play blocks present but none required cannot silently skip scenario trust", async () => {
+  const manifest = await loadManifest(FULL_URL);
+  for (const course of manifest.program.courses) for (const courseModule of course.modules) for (const lesson of courseModule.lessons) for (const block of lesson.blocks ?? []) {
+    if (block.type === "role_play") block.required = false;
+  }
+  const report = await validateBmhImportSemanticGate({ manifest, now: CURRENT_TIME });
+  assert.ok(
+    report.errors.some((error) =>
+      error.includes("role-play block(s) are present but none are marked required"),
+    ),
+  );
+});

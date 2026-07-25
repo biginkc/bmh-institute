@@ -224,6 +224,42 @@ test("a malformed or duplicated production scenario ID is a publication blocker,
   assert.ok(rolePlayBlocks.length === 6, "sanity: fixture still has six role-play blocks to mutate");
 });
 
+test("marking a role-play block optional does not exempt it from scenario trust checks", async () => {
+  const manifest = await loadManifest(MANIFEST_URL);
+
+  // Making all six optional is a structural error on the canonical release,
+  // independent of scenario-ID validity, so a builder regression can't
+  // silently ship a manifest where every role-play block escapes production
+  // binding checks just by flipping `required`.
+  const allOptional = structuredClone(manifest);
+  for (const course of allOptional.program.courses) for (const courseModule of course.modules) for (const lesson of courseModule.lessons) for (const block of lesson.blocks ?? []) {
+    if (block.type === "role_play") block.required = false;
+  }
+  assert.ok(
+    validateManifest(allOptional).errors.some((error) =>
+      error.includes("Every role-play block in the canonical BMH release must be required"),
+    ),
+  );
+
+  // A single optional block with a garbage scenario_id must still be
+  // rejected on its own scenario-ID validity, not silently pass because
+  // it's optional.
+  const oneOptionalGarbage = structuredClone(manifest);
+  const target = oneOptionalGarbage.program.courses
+    .flatMap((course) => course.modules)
+    .flatMap((courseModule) => courseModule.lessons)
+    .flatMap((lesson) => lesson.blocks ?? [])
+    .find((block) => block.type === "role_play");
+  target.required = false;
+  target.content.scenario_id = "not-a-uuid";
+  const report = validateManifest(oneOptionalGarbage);
+  assert.ok(
+    report.publicationBlockers.some((blocker) =>
+      blocker.includes(target.source_key) && blocker.includes("not a valid production UUID"),
+    ),
+  );
+});
+
 test("the manifest passes structural and semantic content QA", async () => {
   const [manifest, stackConfirmation] = await Promise.all([
     loadManifest(MANIFEST_URL),
