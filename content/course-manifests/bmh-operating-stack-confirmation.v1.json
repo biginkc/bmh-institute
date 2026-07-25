@@ -5,6 +5,12 @@
   "confirmed_at": "2026-07-25T12:00:00-05:00",
   "expires_at": "2026-08-01T12:00:00-05:00",
   "decision": "retain-dialpad-for-employee-manual-workflow",
+  "reverification": {
+    "reverified_at": "2026-07-25T13:35:00-05:00",
+    "actor": "Claude (automated, this session)",
+    "method": "Recomputed SHA-256 of all three source_evidence vault files directly from their current on-disk content and compared byte-for-byte against the values recorded below; all three matched exactly, so the underlying DialPad/Sendillo/Telnyx facts are unchanged since the 2026-07-16 confirmation. Did not re-author or re-date the vault files themselves -- observed_updated below still reflects each file's real last edit.",
+    "source_hashes_matched": true
+  },
   "scope": {
     "employee_manual_workflow": {
       "outbound_voice": "DialPad",

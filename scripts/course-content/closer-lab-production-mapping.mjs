@@ -4,7 +4,7 @@ import path from "node:path";
 import { isDeepStrictEqual } from "node:util";
 
 const SHA256_PATTERN = /^[a-f0-9]{64}$/;
-const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+export const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 export const CLOSER_LAB_PRODUCTION_PROJECT_REF = "xqrkugdxpwhjscrheuqo";
 export const CLOSER_LAB_CATALOG_SOURCE_COMMIT = "6343fe4c2b72524457b758e23d77b944fcb7ead4";
 export const CLOSER_LAB_CATALOG_RAW_SHA256 = "919a99bea1d0cba1d64933f575a548c1c682ebac628e58e1e3d46f731b2b73cc";
@@ -462,6 +462,63 @@ export async function validateScenarioProductionTrust({
     blockers.push("Closer Lab production reconciliation evidence is missing, stale, or not exact.");
   }
   return { errors, blockers };
+}
+
+// Hermetic counterpart to validateScenarioProductionTrust: proves the
+// checked-in manifest and ledger exactly match a checked-in reconciliation
+// record (itself produced by a real, independently-run live fetch against
+// Closer Lab production -- see course:reconcile:closer-lab), WITHOUT making
+// any network call or needing production credentials. This is what a
+// required, PR-triggered CI check should run: exposing a production
+// service-role key to every PR's CI job is its own security exposure,
+// regardless of what the key can prove. Live re-verification against
+// production still belongs in validateScenarioProductionTrust, run from a
+// separate job scoped to trusted, already-reviewed commits.
+export function validateScenarioReconciliationEvidencePins({
+  manifest,
+  manifestBytes,
+  ledger,
+  ledgerBytes,
+  reconciliation,
+}) {
+  const blockers = [];
+  const bindings = rolePlayBindings(manifest);
+  if (bindings.length === 0) return blockers;
+  if (bindings.some((binding) => /^pending\s*:/i.test(binding.production_scenario_id ?? ""))) {
+    blockers.push("Closer Lab production scenarios are not yet attached to all six required role-play blocks.");
+    return blockers;
+  }
+  if (!ledger || !Array.isArray(ledger.records) || ledger.status !== "finalized") {
+    blockers.push("Closer Lab production mapping ledger is not finalized.");
+    return blockers;
+  }
+  if (
+    !reconciliation ||
+    reconciliation.status !== "passed" ||
+    reconciliation.exact !== true ||
+    !Array.isArray(reconciliation.bindings)
+  ) {
+    blockers.push("Closer Lab production reconciliation evidence is missing, stale, or not exact.");
+    return blockers;
+  }
+  if (sha256(manifestBytes) !== reconciliation.manifest_sha256) {
+    blockers.push("Closer Lab production reconciliation evidence does not match the current manifest bytes.");
+  }
+  if (sha256(ledgerBytes) !== reconciliation.mapping_ledger_sha256) {
+    blockers.push("Closer Lab production reconciliation evidence does not match the current mapping ledger bytes.");
+  }
+  const reconciled = new Map(reconciliation.bindings.map((record) => [record.block_source_key, record]));
+  for (const binding of bindings) {
+    const record = reconciled.get(binding.block_source_key);
+    if (
+      !record ||
+      !UUID_PATTERN.test(record.production_scenario_id ?? "") ||
+      record.production_scenario_id !== binding.production_scenario_id
+    ) {
+      blockers.push(`${binding.block_source_key} is not bound to its reconciled production Closer Lab UUID.`);
+    }
+  }
+  return blockers;
 }
 
 export async function writeJsonAtomically(outputPath, value, { mode = 0o600 } = {}) {

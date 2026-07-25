@@ -1,49 +1,54 @@
 {
-  "schema_version": "bmh-released-quiz-revision-rehearsal/v1",
-  "status": "passed",
-  "executed_at": "2026-07-23T13:09:24Z",
-  "target": {
-    "environment": "BMH Institute test",
-    "supabase_project_ref": "jvaabkchkihkjllehmft",
-    "postgres_transport": "direct transaction with ON_ERROR_STOP",
-    "transaction_rolled_back": true
-  },
+  "schema_version": "bmh-released-quiz-revision-rehearsal/v2",
   "generator": "scripts/course-content/build-released-quiz-revision-rehearsal-sql.ts",
-  "generated_sql_sha256": "749dce3d81f58ff3f798f88de9a3ae970f8031885cd5a911751ec75fce5a39b1",
-  "captured_output_sha256": "01792b3a2add707441737b2155e1daef98b0cae262b72e3d61736c2abc042151",
-  "legacy_manifest_sha256": "71f85173bc857d1b3b042fba0a50fdd420b6410ef84b104a751c3ed5982eba5c",
-  "active_manifest_sha256": "585b72c923a560d2228f6149a5b906ec02958f19d62818dc5c109c3968345a33",
-  "regenerated_note": "2026-07-25: active_manifest_sha256 and generated_sql_sha256 refreshed after the manifest gained six Closer Lab role-play blocks (INCLUDE_CLOSER_LAB_ROLE_PLAYS=true). The quiz-revision graph builder (src/lib/course-import/released-quiz-revision.ts) has no role_play awareness, so the only SQL delta is this content-pin string; captured_output_sha256 and the verified behavior below still reflect the last real BMH Institute test execution and were not re-run live in this pass.",
-  "forward": {
-    "revision": 2,
-    "quiz_count": 19,
-    "question_count": 920,
-    "answer_option_count": 3678,
-    "invalidated_incomplete_attempt_count": 1
+  "current_generated_sql_sha256": "749dce3d81f58ff3f798f88de9a3ae970f8031885cd5a911751ec75fce5a39b1",
+  "current_active_manifest_sha256": "585b72c923a560d2228f6149a5b906ec02958f19d62818dc5c109c3968345a33",
+  "current_generation_status": "regenerated_not_yet_executed_live",
+  "regenerated_note": "2026-07-25: the manifest gained six Closer Lab role-play blocks (INCLUDE_CLOSER_LAB_ROLE_PLAYS=true), which changed active_manifest_sha256 and, downstream, current_generated_sql_sha256 (the SQL embeds the whole-manifest hash as a content pin). The quiz-revision graph builder (src/lib/course-import/released-quiz-revision.ts) has no role_play awareness -- grep-verified in the QA test -- so this is the only delta; the forward/rollback quiz graph, refusal branches, and success paths below are unchanged. This exact current_generated_sql_sha256 has NOT been re-executed against a live database since that change: last_verified_live_execution below is a frozen historical record of the last real run, against the prior (pre-role-play) generated_sql_sha256, not this one.",
+  "last_verified_live_execution": {
+    "status": "passed",
+    "executed_at": "2026-07-23T13:09:24Z",
+    "target": {
+      "environment": "BMH Institute test",
+      "supabase_project_ref": "jvaabkchkihkjllehmft",
+      "postgres_transport": "direct transaction with ON_ERROR_STOP",
+      "transaction_rolled_back": true
+    },
+    "generated_sql_sha256": "4e7b123c6fe91a19bf165616cd2360507d6a2d23bbfc0fcd162a50caf94a8b06",
+    "captured_output_sha256": "01792b3a2add707441737b2155e1daef98b0cae262b72e3d61736c2abc042151",
+    "legacy_manifest_sha256": "71f85173bc857d1b3b042fba0a50fdd420b6410ef84b104a751c3ed5982eba5c",
+    "active_manifest_sha256": "e9dfc1fa04049f09d0c7ebe38c03746ace04ee2bfad69b405ac3dd874ecfe2cb",
+    "forward": {
+      "revision": 2,
+      "quiz_count": 19,
+      "question_count": 920,
+      "answer_option_count": 3678,
+      "invalidated_incomplete_attempt_count": 1
+    },
+    "rollback": {
+      "revision": 3,
+      "quiz_count": 19,
+      "question_count": 342,
+      "answer_option_count": 1292,
+      "invalidated_incomplete_attempt_count": 1
+    },
+    "verified_refusals": [
+      "forward confirmation mismatch",
+      "stale compare-and-swap prior manifest",
+      "drifted legacy questions_per_attempt graph",
+      "completed learner attempt",
+      "release revision update",
+      "release revision delete",
+      "rollback with reviewer-authored answer-option evidence",
+      "second rollback"
+    ],
+    "verified_success_paths": [
+      "forward exact reconciliation",
+      "idempotent forward retry",
+      "incomplete-attempt invalidation",
+      "exact rollback restoration"
+    ]
   },
-  "rollback": {
-    "revision": 3,
-    "quiz_count": 19,
-    "question_count": 342,
-    "answer_option_count": 1292,
-    "invalidated_incomplete_attempt_count": 1
-  },
-  "verified_refusals": [
-    "forward confirmation mismatch",
-    "stale compare-and-swap prior manifest",
-    "drifted legacy questions_per_attempt graph",
-    "completed learner attempt",
-    "release revision update",
-    "release revision delete",
-    "rollback with reviewer-authored answer-option evidence",
-    "second rollback"
-  ],
-  "verified_success_paths": [
-    "forward exact reconciliation",
-    "idempotent forward retry",
-    "incomplete-attempt invalidation",
-    "exact rollback restoration"
-  ],
   "ci_contract": {
     "workflow": ".github/workflows/db-migrate-test.yml",
     "postgres_versions": ["15", "16", "17"],

@@ -15,7 +15,9 @@ import { localPolicyCandidateAssets } from "./held-video-local-policy-candidates
 import {
   fetchCloserProductionGraph,
   rolePlayBindings,
+  validateScenarioMappingLedgerShape,
   validateScenarioProductionTrust,
+  validateScenarioReconciliationEvidencePins,
 } from "./closer-lab-production-mapping.mjs";
 import {
   collectDialPadReferences,
@@ -151,8 +153,34 @@ async function validateScenarioTrust(manifest) {
     optionalJson(SCENARIO_PRODUCTION_CATALOG_PROVENANCE_PATH),
   ]);
   const ledger = JSON.parse(ledgerBytes.toString("utf8"));
-  let liveAttestationBytes = null;
-  if (ledger.status === "finalized") {
+
+  // Hermetic by default: this runs in every PR's required CI check, so it
+  // must never need a production credential -- exposing a Closer Lab
+  // service-role key to arbitrary PR-triggered CI is its own security
+  // exposure, independent of what the key can prove. It proves the checked-in
+  // manifest and ledger exactly match a checked-in reconciliation record that
+  // was itself produced by a real, independently-run live fetch (see
+  // course:reconcile:closer-lab) -- not by trusting the ledger it's checking.
+  const errors = validateScenarioMappingLedgerShape(manifest, ledger);
+  const blockers = validateScenarioReconciliationEvidencePins({
+    manifest,
+    manifestBytes,
+    ledger,
+    ledgerBytes,
+    reconciliation: evidence,
+  });
+
+  // Defense in depth, opt-in only: when production credentials ARE present
+  // (a separate, protected job scoped to trusted commits -- never this
+  // required check), also re-verify live and require BOTH to agree. Missing
+  // credentials never weaken the hermetic result above; they just skip this
+  // additional layer.
+  if (
+    ledger.status === "finalized" &&
+    process.env.CLOSER_LAB_PRODUCTION_SUPABASE_URL &&
+    process.env.CLOSER_LAB_PRODUCTION_SERVICE_ROLE_KEY
+  ) {
+    let liveAttestationBytes = null;
     try {
       liveAttestationBytes = await fetchCloserProductionGraph({
         catalogBytes: productionCatalogBytes,
@@ -164,17 +192,21 @@ async function validateScenarioTrust(manifest) {
     } catch {
       liveAttestationBytes = null;
     }
+    const live = await validateScenarioProductionTrust({
+      manifest,
+      manifestBytes,
+      ledger,
+      ledgerBytes,
+      evidence,
+      catalogBytes: productionCatalogBytes,
+      liveAttestationBytes,
+      approvedVoiceId: process.env.BMH_INSTITUTE_SCENARIOS_ELEVENLABS_VOICE_ID,
+    });
+    errors.push(...live.errors);
+    blockers.push(...live.blockers);
   }
-  return validateScenarioProductionTrust({
-    manifest,
-    manifestBytes,
-    ledger,
-    ledgerBytes,
-    evidence,
-    catalogBytes: productionCatalogBytes,
-    liveAttestationBytes,
-    approvedVoiceId: process.env.BMH_INSTITUTE_SCENARIOS_ELEVENLABS_VOICE_ID,
-  });
+
+  return { errors, blockers };
 }
 
 export async function validateBmhImportSemanticGate({

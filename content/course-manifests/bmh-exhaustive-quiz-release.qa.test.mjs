@@ -33,13 +33,39 @@ const LEGACY_MANIFEST_SHA256 =
 // placeholders for role-play scenario_id, since that binding only exists after
 // the finalizer runs against a real production Supabase project. To prove the
 // source-driven parts of the build are still byte-reproducible, apply the same
-// (already-verified, checked-in) production IDs the finalizer bound, then
-// compare exactly -- this still fails closed on any other drift.
+// production IDs the finalizer bound, then compare exactly -- this still fails
+// closed on any other drift.
+//
+// Deliberately NOT sourced from closer-lab-production-mapping.json itself: a
+// hand-edited manifest+ledger pair would trivially satisfy a test that just
+// copies IDs from the ledger being tested. Instead this reads
+// closer-lab-production-mapping-reconciliation.json -- evidence from a real,
+// independent live fetch against Closer Lab production (course:reconcile:closer-lab)
+// -- and first proves its manifest_sha256/mapping_ledger_sha256 pins match the
+// CURRENT tracked files byte-for-byte, so a post-reconciliation hand edit to
+// either file breaks this check before it ever reaches the ID comparison.
 async function applyCheckedInProductionBindings(manifest) {
-  const ledger = JSON.parse(
-    await readFile(path.join(ROOT, "docs/course-production/closer-lab-production-mapping.json"), "utf8"),
+  const [manifestBytes, ledgerBytes, reconciliationBytes] = await Promise.all([
+    readFile(path.join(ROOT, "content/course-manifests/bmh-employee-training.v1.json")),
+    readFile(path.join(ROOT, "docs/course-production/closer-lab-production-mapping.json")),
+    readFile(path.join(ROOT, "docs/course-production/closer-lab-production-mapping-reconciliation.json"), "utf8"),
+  ]);
+  const ledger = JSON.parse(ledgerBytes.toString("utf8"));
+  const reconciliation = JSON.parse(reconciliationBytes);
+  assert.equal(reconciliation.status, "passed");
+  assert.equal(reconciliation.exact, true);
+  assert.equal(ledger.status, "finalized");
+  assert.equal(
+    createHash("sha256").update(manifestBytes).digest("hex"),
+    reconciliation.manifest_sha256,
+    "the tracked manifest has not drifted from its last live Closer Lab reconciliation",
   );
-  const records = new Map(ledger.records.map((record) => [record.block_source_key, record]));
+  assert.equal(
+    createHash("sha256").update(ledgerBytes).digest("hex"),
+    reconciliation.mapping_ledger_sha256,
+    "the tracked mapping ledger has not drifted from its last live Closer Lab reconciliation",
+  );
+  const records = new Map(reconciliation.bindings.map((record) => [record.block_source_key, record]));
   let bound = 0;
   for (const course of manifest.program.courses) {
     for (const courseModule of course.modules) {
@@ -47,7 +73,7 @@ async function applyCheckedInProductionBindings(manifest) {
         for (const block of lesson.blocks ?? []) {
           if (block.type !== "role_play") continue;
           const record = records.get(block.source_key);
-          assert.ok(record, `${block.source_key} has a checked-in production binding`);
+          assert.ok(record, `${block.source_key} has a live-reconciled production binding`);
           assert.match(block.content.scenario_id, /^pending:/);
           block.content.scenario_id = record.production_scenario_id;
           bound += 1;
@@ -180,9 +206,22 @@ test("the committed database rehearsal evidence matches the current generated SQ
     { cwd: ROOT, encoding: "buffer", maxBuffer: 10 * 1024 * 1024 },
   );
   assert.equal(result.status, 0, result.stderr?.toString("utf8"));
-  assert.equal(sha256(result.stdout), evidence.generated_sql_sha256);
-  assert.equal(evidence.status, "passed");
-  assert.equal(evidence.target.transaction_rolled_back, true);
+  // The current generator output is proven byte-reproducible, but this does
+  // NOT claim it was executed live -- that claim lives only on
+  // last_verified_live_execution, a frozen historical record against the
+  // prior (pre-role-play) SQL. See regenerated_note for why the delta between
+  // the two generated_sql_sha256 values is expected and inert.
+  assert.equal(sha256(result.stdout), evidence.current_generated_sql_sha256);
+  assert.equal(evidence.current_generation_status, "regenerated_not_yet_executed_live");
+  assert.notEqual(
+    evidence.current_generated_sql_sha256,
+    evidence.last_verified_live_execution.generated_sql_sha256,
+    "sanity: this test only has teeth while the two really differ",
+  );
+
+  const execution = evidence.last_verified_live_execution;
+  assert.equal(execution.status, "passed");
+  assert.equal(execution.target.transaction_rolled_back, true);
   assert.deepEqual(evidence.ci_contract.postgres_versions, ["15", "16", "17"]);
   for (const refusal of [
     "forward confirmation mismatch",
@@ -194,6 +233,15 @@ test("the committed database rehearsal evidence matches the current generated SQ
     "rollback with reviewer-authored answer-option evidence",
     "second rollback",
   ]) {
-    assert.ok(evidence.verified_refusals.includes(refusal), refusal);
+    assert.ok(execution.verified_refusals.includes(refusal), refusal);
   }
+
+  // Mechanical proof (not just prose) that the quiz-revision graph the
+  // executed SQL depends on cannot be affected by role_play content: the
+  // builder it depends on has no role_play awareness at all.
+  const releasedQuizRevisionSource = await readFile(
+    path.join(ROOT, "src/lib/course-import/released-quiz-revision.ts"),
+    "utf8",
+  );
+  assert.doesNotMatch(releasedQuizRevisionSource, /role_play/i);
 });
