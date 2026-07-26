@@ -4,7 +4,7 @@ import path from "node:path";
 import { isDeepStrictEqual } from "node:util";
 
 const SHA256_PATTERN = /^[a-f0-9]{64}$/;
-const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+export const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 export const CLOSER_LAB_PRODUCTION_PROJECT_REF = "xqrkugdxpwhjscrheuqo";
 export const CLOSER_LAB_CATALOG_SOURCE_COMMIT = "6343fe4c2b72524457b758e23d77b944fcb7ead4";
 export const CLOSER_LAB_CATALOG_RAW_SHA256 = "919a99bea1d0cba1d64933f575a548c1c682ebac628e58e1e3d46f731b2b73cc";
@@ -462,6 +462,151 @@ export async function validateScenarioProductionTrust({
     blockers.push("Closer Lab production reconciliation evidence is missing, stale, or not exact.");
   }
   return { errors, blockers };
+}
+
+// Hermetic counterpart to validateScenarioProductionTrust: proves the
+// checked-in manifest and ledger exactly match a checked-in reconciliation
+// record (itself produced by a real, independently-run live fetch against
+// Closer Lab production -- see course:reconcile:closer-lab), WITHOUT making
+// any network call or needing production credentials. This is what a
+// required, PR-triggered CI check should run: exposing a production
+// service-role key to every PR's CI job is its own security exposure,
+// regardless of what the key can prove. Live re-verification against
+// production still belongs in validateScenarioProductionTrust, run from a
+// separate job scoped to trusted, already-reviewed commits.
+export function validateScenarioReconciliationEvidencePins({
+  manifest,
+  manifestBytes,
+  ledger,
+  ledgerBytes,
+  reconciliation,
+  catalogBytes,
+  attestation,
+}) {
+  const blockers = [];
+  const bindings = rolePlayBindings(manifest);
+  if (bindings.length === 0) return blockers;
+  if (bindings.some((binding) => /^pending\s*:/i.test(binding.production_scenario_id ?? ""))) {
+    blockers.push("Closer Lab production scenarios are not yet attached to all six required role-play blocks.");
+    return blockers;
+  }
+  if (!ledger || !Array.isArray(ledger.records) || ledger.status !== "finalized") {
+    blockers.push("Closer Lab production mapping ledger is not finalized.");
+    return blockers;
+  }
+  if (
+    !reconciliation ||
+    reconciliation.status !== "passed" ||
+    reconciliation.exact !== true ||
+    reconciliation.environment !== "production" ||
+    reconciliation.closer_lab_project_ref !== CLOSER_LAB_PRODUCTION_PROJECT_REF ||
+    typeof reconciliation.approved_voice_id !== "string" ||
+    !reconciliation.approved_voice_id.trim() ||
+    !Array.isArray(reconciliation.bindings) ||
+    reconciliation.bindings.length !== 6 ||
+    new Set(reconciliation.bindings.map((record) => record.block_source_key)).size !== 6
+  ) {
+    blockers.push("Closer Lab production reconciliation evidence is missing, stale, or not exact.");
+    return blockers;
+  }
+  const expectedCounts = { role_plays: 6, personas: 6, goals: 24, role_play_goal_links: 24 };
+  if (
+    !attestation ||
+    attestation.project_ref !== CLOSER_LAB_PRODUCTION_PROJECT_REF ||
+    attestation.approved_voice_id !== reconciliation.approved_voice_id ||
+    !isDeepStrictEqual(attestation.counts, expectedCounts) ||
+    !Array.isArray(attestation.role_plays) ||
+    attestation.role_plays.length !== 6 ||
+    !attestation.checksum_binding ||
+    !SHA256_PATTERN.test(attestation.graph_checksum_sha256 ?? "")
+  ) {
+    blockers.push("Closer Lab production attestation is missing, stale, or does not match the reconciliation evidence.");
+    return blockers;
+  }
+  // The top-level fields above are what this function actually validates
+  // (role_plays for per-binding checks, counts, project_ref, voice). None of
+  // that is worth anything unless it's the SAME data that was hashed into
+  // checksum_binding -- otherwise a tamper could leave checksum_binding's
+  // internal copies untouched (so its hash still ties to reconciliation)
+  // while mutating the top-level fields this function reads.
+  if (
+    !isDeepStrictEqual(attestation.role_plays, attestation.checksum_binding.role_plays) ||
+    !isDeepStrictEqual(attestation.graph, attestation.checksum_binding.graph) ||
+    !isDeepStrictEqual(attestation.counts, attestation.checksum_binding.counts) ||
+    attestation.project_ref !== attestation.checksum_binding.project_ref ||
+    attestation.approved_voice_id !== attestation.checksum_binding.approved_voice_id ||
+    attestation.catalog_sha256 !== attestation.checksum_binding.catalog_sha256
+  ) {
+    blockers.push("Closer Lab production attestation's top-level fields do not match its own hashed checksum binding.");
+    return blockers;
+  }
+  const clientGraphBindingSha256 = clientStableJsonSha256(attestation.checksum_binding);
+  if (
+    clientGraphBindingSha256 !== reconciliation.client_graph_binding_sha256 ||
+    postgresJsonbSha256(attestation.checksum_binding) !== attestation.graph_checksum_sha256 ||
+    attestation.graph_checksum_sha256 !== reconciliation.production_graph_checksum_sha256
+  ) {
+    blockers.push("Closer Lab production attestation graph checksum does not match the reconciliation evidence.");
+    return blockers;
+  }
+  if (sha256(manifestBytes) !== reconciliation.manifest_sha256) {
+    blockers.push("Closer Lab production reconciliation evidence does not match the current manifest bytes.");
+  }
+  if (sha256(ledgerBytes) !== reconciliation.mapping_ledger_sha256) {
+    blockers.push("Closer Lab production reconciliation evidence does not match the current mapping ledger bytes.");
+  }
+  if (catalogBytes) {
+    const catalog = JSON.parse(catalogBytes.toString("utf8"));
+    if (clientStableJsonSha256(catalog) !== reconciliation.client_catalog_sha256) {
+      blockers.push("Closer Lab production reconciliation evidence does not match the current catalog bytes.");
+    }
+    if (postgresJsonbSha256(catalog) !== attestation.catalog_sha256) {
+      blockers.push("Closer Lab production attestation does not match the current catalog bytes.");
+    }
+    if (!isDeepStrictEqual(attestation.catalog_binding, catalog)) {
+      blockers.push("Closer Lab production attestation's embedded catalog does not match the current catalog bytes.");
+    }
+    // Every check above only proves internal self-consistency and hash ties
+    // between the checked-in files. None of it proves the attestation is
+    // actually a VALID production graph (real personas, correct goal weights,
+    // exact 6/6/24/24 cardinality per scenario, matching the authored
+    // catalog). validateProductionGraphAttestation is the same strict
+    // validator the live-fetch path already trusts; running it here against
+    // the checked-in attestation closes that gap without any network call.
+    try {
+      validateProductionGraphAttestation(attestation, catalog, reconciliation.approved_voice_id);
+    } catch (error) {
+      blockers.push(
+        `Closer Lab production attestation failed strict graph validation: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  const ledgerByKey = new Map(ledger.records.map((record) => [record.block_source_key, record]));
+  const reconciledByKey = new Map(reconciliation.bindings.map((record) => [record.block_source_key, record]));
+  const attestedByKey = new Map(attestation.role_plays.map((record) => [record.source_key, record]));
+  for (const binding of bindings) {
+    const ledgerRecord = ledgerByKey.get(binding.block_source_key);
+    const reconciledRecord = reconciledByKey.get(binding.block_source_key);
+    const attestedRecord = attestedByKey.get(binding.block_source_key);
+    if (
+      !ledgerRecord ||
+      !reconciledRecord ||
+      !attestedRecord ||
+      !UUID_PATTERN.test(binding.production_scenario_id ?? "") ||
+      binding.production_scenario_id !== ledgerRecord.production_scenario_id ||
+      binding.production_scenario_id !== reconciledRecord.production_scenario_id ||
+      binding.production_scenario_id !== attestedRecord.scenario_id ||
+      attestedRecord.active !== true ||
+      attestedRecord.assignment_source_key !== reconciledRecord.assignment_source_key ||
+      attestedRecord.managed_source_key !== `bmh-institute-v1:role-play:${reconciledRecord.scenario_source_key}` ||
+      ledgerRecord.scenario_sha256 !== clientGraphBindingSha256 ||
+      reconciledRecord.scenario_sha256 !== clientGraphBindingSha256
+    ) {
+      blockers.push(`${binding.block_source_key} is not bound to its reconciled production Closer Lab UUID.`);
+    }
+  }
+  return blockers;
 }
 
 export async function writeJsonAtomically(outputPath, value, { mode = 0o600 } = {}) {

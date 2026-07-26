@@ -9,6 +9,7 @@ import {
   validateManifest,
 } from "../../scripts/course-content/validate-manifest.mjs";
 import { normalizeRoleAgnosticCourseText } from "../../scripts/course-content/build-manifest.mjs";
+import { UUID_PATTERN } from "../../scripts/course-content/closer-lab-production-mapping.mjs";
 
 const MANIFEST_URL = new URL("./bmh-employee-training.v1.json", import.meta.url);
 const STACK_CONFIRMATION_URL = new URL(
@@ -28,7 +29,7 @@ test("the draft contains the locked course structure", async () => {
     videos: 29,
     quizQuestions: 920,
     flashcards: 152,
-    rolePlays: 0,
+    rolePlays: 6,
     posterAssets: 29,
     posterReferences: 29,
     guideAssets: 19,
@@ -41,7 +42,7 @@ test("learner-authored course text removes stale learner seats without rewriting
   const serializedProgram = JSON.stringify(manifest.program);
   assert.doesNotMatch(serializedProgram, STALE_ROLE_BOUND_COURSE_PATTERN);
   assert.match(serializedProgram, /Closer Lab/);
-  assert.doesNotMatch(serializedProgram, /block-role-play-/);
+  assert.match(serializedProgram, /block-role-play-/);
   assert.match(serializedProgram, /acquisition manager/i);
   assert.match(serializedProgram, /transaction team/i);
 
@@ -165,7 +166,7 @@ test("all six reviewed assignments carry usable reviewer rubrics", async () => {
   }
 });
 
-test("the current release omits deferred Closer Lab interactive scenarios", async () => {
+test("the current release includes the six production-bound Closer Lab interactive scenarios", async () => {
   const manifest = await loadManifest(MANIFEST_URL);
   const modules = manifest.program.courses.flatMap((course) => course.modules);
   const rolePlays = modules
@@ -173,8 +174,90 @@ test("the current release omits deferred Closer Lab interactive scenarios", asyn
     .flatMap((lesson) => lesson.blocks ?? [])
     .filter((block) => block.type === "role_play");
 
-  assert.deepEqual(rolePlays, []);
+  assert.equal(rolePlays.length, 6);
+  assert.ok(rolePlays.every((block) => block.required === true));
+  assert.ok(
+    rolePlays.every((block) => UUID_PATTERN.test(block.content.scenario_id)),
+    "every role-play block is bound to a real production scenario UUID",
+  );
+  assert.equal(
+    new Set(rolePlays.map((block) => block.content.scenario_id.toLowerCase())).size,
+    6,
+    "all six production scenario IDs are unique",
+  );
   assert.doesNotMatch(JSON.stringify(manifest.program), /pending:[a-z0-9-]+/i);
+});
+
+test("a malformed or duplicated production scenario ID is a publication blocker, not a pass", async () => {
+  const manifest = await loadManifest(MANIFEST_URL);
+  const rolePlayBlocks = manifest.program.courses
+    .flatMap((course) => course.modules)
+    .flatMap((module) => module.lessons)
+    .flatMap((lesson) => lesson.blocks ?? [])
+    .filter((block) => block.type === "role_play" && block.required === true);
+
+  const malformed = structuredClone(manifest);
+  const malformedBlocks = malformed.program.courses
+    .flatMap((course) => course.modules)
+    .flatMap((module) => module.lessons)
+    .flatMap((lesson) => lesson.blocks ?? [])
+    .filter((block) => block.type === "role_play" && block.required === true);
+  malformedBlocks[0].content.scenario_id = "-".repeat(36);
+  assert.ok(
+    validateManifest(malformed).publicationBlockers.some((blocker) =>
+      blocker.includes(malformedBlocks[0].source_key) && blocker.includes("not a valid production UUID"),
+    ),
+  );
+
+  const duplicated = structuredClone(manifest);
+  const duplicatedBlocks = duplicated.program.courses
+    .flatMap((course) => course.modules)
+    .flatMap((module) => module.lessons)
+    .flatMap((lesson) => lesson.blocks ?? [])
+    .filter((block) => block.type === "role_play" && block.required === true);
+  duplicatedBlocks[1].content.scenario_id = duplicatedBlocks[0].content.scenario_id;
+  assert.ok(
+    validateManifest(duplicated).errors.some((error) =>
+      error.includes("Duplicate role-play production scenario ID"),
+    ),
+  );
+  assert.ok(rolePlayBlocks.length === 6, "sanity: fixture still has six role-play blocks to mutate");
+});
+
+test("marking a role-play block optional does not exempt it from scenario trust checks", async () => {
+  const manifest = await loadManifest(MANIFEST_URL);
+
+  // Making all six optional is a structural error on the canonical release,
+  // independent of scenario-ID validity, so a builder regression can't
+  // silently ship a manifest where every role-play block escapes production
+  // binding checks just by flipping `required`.
+  const allOptional = structuredClone(manifest);
+  for (const course of allOptional.program.courses) for (const courseModule of course.modules) for (const lesson of courseModule.lessons) for (const block of lesson.blocks ?? []) {
+    if (block.type === "role_play") block.required = false;
+  }
+  assert.ok(
+    validateManifest(allOptional).errors.some((error) =>
+      error.includes("Every role-play block in the canonical BMH release must be required"),
+    ),
+  );
+
+  // A single optional block with a garbage scenario_id must still be
+  // rejected on its own scenario-ID validity, not silently pass because
+  // it's optional.
+  const oneOptionalGarbage = structuredClone(manifest);
+  const target = oneOptionalGarbage.program.courses
+    .flatMap((course) => course.modules)
+    .flatMap((courseModule) => courseModule.lessons)
+    .flatMap((lesson) => lesson.blocks ?? [])
+    .find((block) => block.type === "role_play");
+  target.required = false;
+  target.content.scenario_id = "not-a-uuid";
+  const report = validateManifest(oneOptionalGarbage);
+  assert.ok(
+    report.publicationBlockers.some((blocker) =>
+      blocker.includes(target.source_key) && blocker.includes("not a valid production UUID"),
+    ),
+  );
 });
 
 test("the manifest passes structural and semantic content QA", async () => {

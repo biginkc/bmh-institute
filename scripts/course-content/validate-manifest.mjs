@@ -15,6 +15,7 @@ import {
   validateLocalPolicyCandidates,
 } from "./held-video-local-policy-candidates.mjs";
 import { normalizeRoleAgnosticCourseText } from "./build-manifest.mjs";
+import { UUID_PATTERN } from "./closer-lab-production-mapping.mjs";
 import { projectQuizBankQuestion, quizBankSha256, validateQuizBank } from "./quiz-bank.mjs";
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
@@ -224,6 +225,17 @@ export function validateStackConfirmation(
     (expiresAtMs <= confirmedAtMs || expiresAtMs - confirmedAtMs > 8 * 24 * 60 * 60 * 1000)
   ) {
     issues.push("confirmation validity window must be positive and no longer than eight days");
+  }
+
+  const reverifiedAtMs = Date.parse(confirmation.reverification?.reverified_at);
+  if (
+    confirmation.reverification?.source_hashes_matched !== true ||
+    !confirmation.reverification?.method?.trim() ||
+    !Number.isFinite(reverifiedAtMs) ||
+    (Number.isFinite(confirmedAtMs) && reverifiedAtMs < confirmedAtMs) ||
+    reverifiedAtMs > nowMs
+  ) {
+    issues.push("confirmation is missing a genuine reverification record for this validity window");
   }
 
   const employee = confirmation.scope?.employee_manual_workflow;
@@ -461,7 +473,7 @@ export function validateManifest(
     quizQuestions: quizBank?.totals.generated
       ?? (manifest.import_id === "bmh-employee-training-v1" ? 920 : summary.quizQuestions),
     flashcards: 152,
-    rolePlays: 0,
+    rolePlays: 6,
     posterAssets: 29,
     posterReferences: 29,
     guideAssets: 19,
@@ -523,12 +535,17 @@ export function validateManifest(
       }
     }
     const scenarioId = block.content?.scenario_id;
-    if (block.type === "role_play" && block.required === true) {
+    // Deliberately NOT gated on block.required === true: a role_play block
+    // marked optional would otherwise skip every scenario_spec and
+    // production-UUID check entirely, letting garbage or unbound content
+    // through as long as it isn't required. Whether role-play blocks are
+    // allowed to be optional at all is enforced separately below, for the
+    // canonical release.
+    if (block.type === "role_play") {
       validateRolePlaySpec(block, assignmentKeys, errors);
     }
     if (
       block.type === "role_play"
-      && block.required === true
       && (
         typeof scenarioId !== "string"
         || scenarioId.trim().length === 0
@@ -536,8 +553,27 @@ export function validateManifest(
       )
     ) {
       publicationBlockers.push(`${block.source_key} needs a production Closer Lab scenario ID`);
+    } else if (
+      block.type === "role_play"
+      && !UUID_PATTERN.test(scenarioId.trim())
+    ) {
+      publicationBlockers.push(`${block.source_key} scenario ID is not a valid production UUID`);
     }
   }
+
+  if (
+    manifest.import_id === "bmh-employee-training-v1"
+    && blocks.some((block) => block.type === "role_play" && block.required !== true)
+  ) {
+    errors.push("Every role-play block in the canonical BMH release must be required.");
+  }
+
+  const boundRolePlayBlocks = blocks.filter((block) =>
+    block.type === "role_play"
+    && typeof block.content?.scenario_id === "string"
+    && UUID_PATTERN.test(block.content.scenario_id.trim()),
+  );
+  pushDuplicateErrors(boundRolePlayBlocks, (block) => block.content.scenario_id.trim().toLowerCase(), "role-play production scenario ID", errors);
 
   for (const key of referencedAssets) {
     if (!assetsByKey.has(key)) errors.push(`Referenced asset is missing from inventory: ${key}`);

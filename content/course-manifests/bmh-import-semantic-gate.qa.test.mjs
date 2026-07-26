@@ -10,7 +10,7 @@ import { loadManifest } from "../../scripts/course-content/validate-manifest.mjs
 
 const FULL_URL = new URL("./bmh-employee-training.v1.json", import.meta.url);
 const CANARY_URL = new URL("./bmh-employee-training-canary.v1.json", import.meta.url);
-const CURRENT_TIME = new Date("2026-07-17T12:00:00-05:00");
+const CURRENT_TIME = new Date("2026-07-25T18:00:00-05:00");
 
 test("draft validation accepts the approved release without requiring deferred Closer Lab scenarios", async () => {
   const manifest = await loadManifest(FULL_URL);
@@ -87,7 +87,7 @@ test("an expired operating-stack confirmation remains a canary publication block
   const canary = await loadManifest(CANARY_URL);
   const report = await validateBmhImportSemanticGate({
     manifest: canary,
-    now: new Date("2026-07-24T12:00:00-05:00"),
+    now: new Date("2026-08-02T12:00:00-05:00"),
   });
   assert.deepEqual(report.errors, []);
   assert.ok(report.publicationBlockers.some((blocker) =>
@@ -168,4 +168,79 @@ test("a mutated full manifest cannot inherit canonical reconciliation evidence",
     now: CURRENT_TIME,
   });
   assert.ok(report.errors.some((error) => error.includes("canonical release manifest")));
+});
+
+test("explicit live-verification opt-in fails closed on incomplete configuration instead of silently staying hermetic", async () => {
+  const manifest = await loadManifest(FULL_URL);
+  const envKeys = [
+    "BMH_INSTITUTE_ALLOW_LIVE_CLOSER_LAB_VERIFICATION",
+    "CLOSER_LAB_PRODUCTION_SUPABASE_URL",
+    "CLOSER_LAB_PRODUCTION_SERVICE_ROLE_KEY",
+    "BMH_INSTITUTE_SCENARIOS_ELEVENLABS_VOICE_ID",
+  ];
+  const saved = Object.fromEntries(envKeys.map((key) => [key, process.env[key]]));
+  try {
+    for (const key of envKeys) delete process.env[key];
+    // Flag on, but every credential missing: must fail closed with a
+    // blocker naming the requirement, never silently report the hermetic
+    // result as if live verification had never been requested.
+    process.env.BMH_INSTITUTE_ALLOW_LIVE_CLOSER_LAB_VERIFICATION = "1";
+    const incomplete = await validateBmhImportSemanticGate({ manifest, now: CURRENT_TIME });
+    assert.ok(
+      incomplete.errors.some((error) =>
+        error.includes("BMH_INSTITUTE_ALLOW_LIVE_CLOSER_LAB_VERIFICATION=1 requires"),
+      ),
+    );
+    // This must be an unconditionally-enforced error, not a publication
+    // blocker: draft/upload commands run with enforcePublicationBlockers:
+    // false and would otherwise silently proceed despite the explicitly
+    // requested live check never happening.
+    assert.throws(
+      () => assertBmhImportSemanticGate(incomplete, { enforcePublicationBlockers: false }),
+      /BMH_INSTITUTE_ALLOW_LIVE_CLOSER_LAB_VERIFICATION=1 requires/,
+    );
+
+    // Flag on, only the voice ID missing: still fails closed.
+    process.env.CLOSER_LAB_PRODUCTION_SUPABASE_URL = "https://xqrkugdxpwhjscrheuqo.supabase.co";
+    process.env.CLOSER_LAB_PRODUCTION_SERVICE_ROLE_KEY = "sb_secret_test_only_not_real_00000000000000000000";
+    const stillIncomplete = await validateBmhImportSemanticGate({ manifest, now: CURRENT_TIME });
+    assert.ok(
+      stillIncomplete.errors.some((error) =>
+        error.includes("BMH_INSTITUTE_ALLOW_LIVE_CLOSER_LAB_VERIFICATION=1 requires"),
+      ),
+    );
+
+    // Flag on, all three inputs present but pointing at a fake credential:
+    // the live fetch itself fails (auth/network), and that must ALSO be an
+    // unconditionally-enforced error, not silently absorbed.
+    process.env.BMH_INSTITUTE_SCENARIOS_ELEVENLABS_VOICE_ID = "EXAVITQu4vr4xnSDxMaL";
+    const fetchFailed = await validateBmhImportSemanticGate({ manifest, now: CURRENT_TIME });
+    assert.ok(
+      fetchFailed.errors.some((error) =>
+        error.includes("Explicitly requested Closer Lab live production verification did not complete"),
+      ),
+    );
+    assert.throws(
+      () => assertBmhImportSemanticGate(fetchFailed, { enforcePublicationBlockers: false }),
+      /Explicitly requested Closer Lab live production verification did not complete/,
+    );
+  } finally {
+    for (const key of envKeys) {
+      if (saved[key] === undefined) delete process.env[key];
+      else process.env[key] = saved[key];
+    }
+  }
+});
+
+test("role-play blocks present but none required cannot silently skip scenario trust", async () => {
+  const manifest = await loadManifest(FULL_URL);
+  for (const course of manifest.program.courses) for (const courseModule of course.modules) for (const lesson of courseModule.lessons) for (const block of lesson.blocks ?? []) {
+    if (block.type === "role_play") block.required = false;
+  }
+  const report = await validateBmhImportSemanticGate({ manifest, now: CURRENT_TIME });
+  assert.ok(
+    report.errors.some((error) =>
+      error.includes("role-play block(s) are present but none are marked required"),
+    ),
+  );
 });

@@ -15,7 +15,9 @@ import { localPolicyCandidateAssets } from "./held-video-local-policy-candidates
 import {
   fetchCloserProductionGraph,
   rolePlayBindings,
+  validateScenarioMappingLedgerShape,
   validateScenarioProductionTrust,
+  validateScenarioReconciliationEvidencePins,
 } from "./closer-lab-production-mapping.mjs";
 import {
   collectDialPadReferences,
@@ -51,6 +53,10 @@ const SCENARIO_MAPPING_LEDGER_PATH = join(
 const SCENARIO_RECONCILIATION_PATH = join(
   REPO_ROOT,
   "docs/course-production/closer-lab-production-mapping-reconciliation.json",
+);
+const SCENARIO_ATTESTATION_PATH = join(
+  REPO_ROOT,
+  "docs/course-production/closer-lab-production-attestation.json",
 );
 const SCENARIO_PRODUCTION_CATALOG_PATH = join(
   REPO_ROOT,
@@ -139,42 +145,133 @@ async function optionalJson(path) {
   }
 }
 
+function allRolePlayBlocks(manifest) {
+  return manifest.program.courses
+    .flatMap((course) => course.modules)
+    .flatMap((courseModule) => courseModule.lessons)
+    .flatMap((lesson) => lesson.blocks ?? [])
+    .filter((block) => block.type === "role_play");
+}
+
 async function validateScenarioTrust(manifest) {
-  if (rolePlayBindings(manifest).length === 0) {
+  const totalRolePlayBlocks = allRolePlayBlocks(manifest).length;
+  const bindings = rolePlayBindings(manifest);
+  if (totalRolePlayBlocks === 0) {
     return { errors: [], blockers: [] };
   }
-  const [manifestBytes, ledgerBytes, evidence, productionCatalogBytes, productionCatalogProvenance] = await Promise.all([
+  if (bindings.length === 0) {
+    // Role-play blocks exist but none are required: rolePlayBindings only
+    // counts required ones, so the entire scenario-trust chain would
+    // otherwise silently no-op as if there were no role-play content at
+    // all, even with six unbound/garbage blocks sitting in the manifest.
+    return {
+      errors: [
+        `${totalRolePlayBlocks} role-play block(s) are present but none are marked required, so production scenario trust cannot be established.`,
+      ],
+      blockers: [],
+    };
+  }
+  const [manifestBytes, ledgerBytes, evidence, attestation, productionCatalogBytes, productionCatalogProvenance] = await Promise.all([
     readFile(join(CANONICAL_MANIFEST_DIRECTORY, "bmh-employee-training.v1.json")),
     readFile(SCENARIO_MAPPING_LEDGER_PATH),
     optionalJson(SCENARIO_RECONCILIATION_PATH),
+    optionalJson(SCENARIO_ATTESTATION_PATH),
     readFile(SCENARIO_PRODUCTION_CATALOG_PATH),
     optionalJson(SCENARIO_PRODUCTION_CATALOG_PROVENANCE_PATH),
   ]);
   const ledger = JSON.parse(ledgerBytes.toString("utf8"));
-  let liveAttestationBytes = null;
-  if (ledger.status === "finalized") {
-    try {
-      liveAttestationBytes = await fetchCloserProductionGraph({
-        catalogBytes: productionCatalogBytes,
-        catalogProvenance: productionCatalogProvenance,
-        url: process.env.CLOSER_LAB_PRODUCTION_SUPABASE_URL,
-        serviceRoleKey: process.env.CLOSER_LAB_PRODUCTION_SERVICE_ROLE_KEY,
-        approvedVoiceId: process.env.BMH_INSTITUTE_SCENARIOS_ELEVENLABS_VOICE_ID,
-      });
-    } catch {
-      liveAttestationBytes = null;
-    }
-  }
-  return validateScenarioProductionTrust({
+
+  // Hermetic by default: this runs in every PR's required CI check, so it
+  // must never need a production credential -- exposing a Closer Lab
+  // service-role key to arbitrary PR-triggered CI is its own security
+  // exposure, independent of what the key can prove. It proves the checked-in
+  // manifest, ledger, reconciliation record, and production attestation are
+  // all mutually consistent -- the reconciliation and attestation were
+  // themselves produced by a real, independently-run live fetch (see
+  // course:reconcile:closer-lab) -- not by trusting only the ledger or
+  // reconciliation file it's checking.
+  const errors = validateScenarioMappingLedgerShape(manifest, ledger);
+  const blockers = validateScenarioReconciliationEvidencePins({
     manifest,
     manifestBytes,
     ledger,
     ledgerBytes,
-    evidence,
+    reconciliation: evidence,
     catalogBytes: productionCatalogBytes,
-    liveAttestationBytes,
-    approvedVoiceId: process.env.BMH_INSTITUTE_SCENARIOS_ELEVENLABS_VOICE_ID,
+    attestation,
   });
+
+  // Defense in depth, explicit opt-in only: when production credentials ARE
+  // present, AND a separate flag explicitly requests live verification, also
+  // re-verify live and require BOTH to agree. This is deliberately not just
+  // "credentials happen to be present" -- ambient credentials in a dev shell
+  // or an unrelated job must never silently turn a routine, hermetic test
+  // command into one that calls production. Missing either the flag or the
+  // credentials never weakens the hermetic result above; it just skips this
+  // additional layer.
+  // The opt-in flag is checked separately from credential completeness on
+  // purpose: once someone has explicitly asked for live verification (e.g. a
+  // protected job), a missing or misnamed credential must fail closed with a
+  // blocker, never silently fall back to reporting the hermetic result alone
+  // as if live verification had never been requested.
+  // Pushed to `errors`, not `blockers`: errors are unconditionally enforced
+  // by assertBmhImportSemanticGate, while publicationBlockers are skipped
+  // entirely in draft/upload commands (enforcePublicationBlockers: false).
+  // Once live verification has been explicitly requested via the flag, its
+  // failure must stop every command, not just publication.
+  if (ledger.status === "finalized" && process.env.BMH_INSTITUTE_ALLOW_LIVE_CLOSER_LAB_VERIFICATION === "1") {
+    if (
+      !process.env.CLOSER_LAB_PRODUCTION_SUPABASE_URL ||
+      !process.env.CLOSER_LAB_PRODUCTION_SERVICE_ROLE_KEY ||
+      !process.env.BMH_INSTITUTE_SCENARIOS_ELEVENLABS_VOICE_ID
+    ) {
+      errors.push(
+        "BMH_INSTITUTE_ALLOW_LIVE_CLOSER_LAB_VERIFICATION=1 requires CLOSER_LAB_PRODUCTION_SUPABASE_URL, " +
+        "CLOSER_LAB_PRODUCTION_SERVICE_ROLE_KEY, and BMH_INSTITUTE_SCENARIOS_ELEVENLABS_VOICE_ID to all be set.",
+      );
+    } else {
+      let liveAttestationBytes = null;
+      let fetchError = null;
+      try {
+        liveAttestationBytes = await fetchCloserProductionGraph({
+          catalogBytes: productionCatalogBytes,
+          catalogProvenance: productionCatalogProvenance,
+          url: process.env.CLOSER_LAB_PRODUCTION_SUPABASE_URL,
+          serviceRoleKey: process.env.CLOSER_LAB_PRODUCTION_SERVICE_ROLE_KEY,
+          approvedVoiceId: process.env.BMH_INSTITUTE_SCENARIOS_ELEVENLABS_VOICE_ID,
+        });
+      } catch (error) {
+        liveAttestationBytes = null;
+        fetchError = error instanceof Error ? error.message : String(error);
+      }
+      if (!liveAttestationBytes) {
+        errors.push(
+          `Explicitly requested Closer Lab live production verification did not complete${fetchError ? `: ${fetchError}` : "."}`,
+        );
+      }
+      const live = await validateScenarioProductionTrust({
+        manifest,
+        manifestBytes,
+        ledger,
+        ledgerBytes,
+        evidence,
+        catalogBytes: productionCatalogBytes,
+        liveAttestationBytes,
+        approvedVoiceId: process.env.BMH_INSTITUTE_SCENARIOS_ELEVENLABS_VOICE_ID,
+      });
+      // Both promoted to unconditional errors, not just live.errors: once
+      // live verification has been explicitly requested, ANY mismatch it
+      // finds -- including what validateScenarioProductionTrust normally
+      // classifies as a publication blocker -- must stop every command.
+      // Leaving reconciliation-drift findings as ordinary blockers would let
+      // draft/upload commands (enforcePublicationBlockers: false) succeed
+      // even though the requested live check found the production graph no
+      // longer matches the checked-in evidence.
+      errors.push(...live.errors, ...live.blockers);
+    }
+  }
+
+  return { errors, blockers };
 }
 
 export async function validateBmhImportSemanticGate({

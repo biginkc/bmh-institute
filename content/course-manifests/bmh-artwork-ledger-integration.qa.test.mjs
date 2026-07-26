@@ -39,6 +39,62 @@ const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../
 const manifestPath = new URL("./bmh-employee-training.v1.json", import.meta.url);
 const pilotPath = new URL("../../course-assets/thumbnails/pilots/lesson-cards/orientation-lesson-card-16x10.webp", import.meta.url);
 
+// The tracked manifest is the source-driven build PLUS the live, human-verified
+// Closer Lab production binding: a fresh buildManifest() always emits pending:*
+// placeholders for role-play scenario_id, since that binding only exists after
+// the finalizer runs against a real production Supabase project. To prove the
+// source-driven parts of the build are still byte-reproducible, apply the same
+// production IDs the finalizer bound, then compare exactly -- this still fails
+// closed on any other drift.
+//
+// Deliberately NOT sourced from closer-lab-production-mapping.json itself: a
+// hand-edited manifest+ledger pair would trivially satisfy a test that just
+// copies IDs from the ledger being tested. Instead this reads
+// closer-lab-production-mapping-reconciliation.json -- evidence from a real,
+// independent live fetch against Closer Lab production (course:reconcile:closer-lab)
+// -- and first proves its manifest_sha256/mapping_ledger_sha256 pins match the
+// CURRENT tracked files byte-for-byte, so a post-reconciliation hand edit to
+// either file breaks this check before it ever reaches the ID comparison.
+async function applyCheckedInProductionBindings(manifest) {
+  const [manifestBytes, ledgerBytes, reconciliationBytes] = await Promise.all([
+    readFile(path.join(repoRoot, "content/course-manifests/bmh-employee-training.v1.json")),
+    readFile(path.join(repoRoot, "docs/course-production/closer-lab-production-mapping.json")),
+    readFile(path.join(repoRoot, "docs/course-production/closer-lab-production-mapping-reconciliation.json"), "utf8"),
+  ]);
+  const ledger = JSON.parse(ledgerBytes.toString("utf8"));
+  const reconciliation = JSON.parse(reconciliationBytes);
+  assert.equal(reconciliation.status, "passed");
+  assert.equal(reconciliation.exact, true);
+  assert.equal(ledger.status, "finalized");
+  assert.equal(
+    createHash("sha256").update(manifestBytes).digest("hex"),
+    reconciliation.manifest_sha256,
+    "the tracked manifest has not drifted from its last live Closer Lab reconciliation",
+  );
+  assert.equal(
+    createHash("sha256").update(ledgerBytes).digest("hex"),
+    reconciliation.mapping_ledger_sha256,
+    "the tracked mapping ledger has not drifted from its last live Closer Lab reconciliation",
+  );
+  const records = new Map(reconciliation.bindings.map((record) => [record.block_source_key, record]));
+  let bound = 0;
+  for (const course of manifest.program.courses) {
+    for (const courseModule of course.modules) {
+      for (const lesson of courseModule.lessons) {
+        for (const block of lesson.blocks ?? []) {
+          if (block.type !== "role_play") continue;
+          const record = records.get(block.source_key);
+          assert.ok(record, `${block.source_key} has a live-reconciled production binding`);
+          assert.match(block.content.scenario_id, /^pending:/);
+          block.content.scenario_id = record.production_scenario_id;
+          bound += 1;
+        }
+      }
+    }
+  }
+  assert.equal(bound, 6);
+}
+
 test("an absent optional artwork ledger leaves the current tracked artwork records byte-identical", async () => {
   const root = await mkdtemp(path.join(tmpdir(), "bmh-artwork-ledger-missing-"));
   const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
@@ -103,6 +159,7 @@ test("the complete preapproval builder reproduces the tracked manifest when cano
     throw error;
   }
   const [tracked, rebuilt] = await Promise.all([readFile(manifestPath, "utf8"), buildManifest()]);
+  await applyCheckedInProductionBindings(rebuilt);
   assert.equal(`${JSON.stringify(rebuilt, null, 2).replaceAll("\u2014", "-")}\n`, tracked);
 });
 

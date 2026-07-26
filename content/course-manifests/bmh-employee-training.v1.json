@@ -13435,6 +13435,33 @@
                         }
                       ]
                     }
+                  },
+                  {
+                    "source_key": "block-role-play-guarded-inbound",
+                    "type": "role_play",
+                    "sort_order": 7,
+                    "required": true,
+                    "content": {
+                      "scenario_id": "7c85106f-d3d5-48a4-8c1b-7c8fc0cdeed3",
+                      "title": "Guarded inbound seller",
+                      "height_px": 760,
+                      "scenario_spec": {
+                        "assignment_source_key": "assignment-section-3",
+                        "context": "A warm inbound homeowner is willing to talk but gives short answers and wants to know why BMH Group needs personal details.",
+                        "learner_goal": "Earn permission, complete the opening frame, and gather core facts without rushing into a pitch.",
+                        "success_criteria": [
+                          "States purpose clearly",
+                          "Acknowledges the privacy concern",
+                          "Asks one question at a time",
+                          "Secures a specific next step"
+                        ],
+                        "fail_conditions": [
+                          "Pressures the seller",
+                          "Invents a reason for collecting information",
+                          "Skips consent or the fact find"
+                        ]
+                      }
+                    }
                   }
                 ]
               },
@@ -14896,6 +14923,33 @@
                           "back": "Sellers are often embarrassed about financial strain and need to feel safe to reveal it."
                         }
                       ]
+                    }
+                  },
+                  {
+                    "source_key": "block-role-play-tired-landlord",
+                    "type": "role_play",
+                    "sort_order": 7,
+                    "required": true,
+                    "content": {
+                      "scenario_id": "da085a49-48e6-4975-86bf-37a7d1d8d3e8",
+                      "title": "Tired landlord discovery and handoff",
+                      "height_px": 760,
+                      "scenario_spec": {
+                        "assignment_source_key": "assignment-section-3",
+                        "context": "A landlord is exhausted by repairs and tenant problems but has not decided when to sell.",
+                        "learner_goal": "Discover the real impact, clarify timing and decision-makers, then frame a clean handoff.",
+                        "success_criteria": [
+                          "Separates facts from motivation",
+                          "Explores consequences",
+                          "Confirms timing and authority",
+                          "Summarizes an accurate handoff"
+                        ],
+                        "fail_conditions": [
+                          "Assumes urgency",
+                          "Promises a price",
+                          "Transfers the seller with missing context"
+                        ]
+                      }
                     }
                   }
                 ]
@@ -20687,6 +20741,33 @@
                         }
                       ]
                     }
+                  },
+                  {
+                    "source_key": "block-role-play-scam-suspicious-preforeclosure",
+                    "type": "role_play",
+                    "sort_order": 7,
+                    "required": true,
+                    "content": {
+                      "scenario_id": "4fc80a3b-ca03-4ee7-8648-21433f9fb74f",
+                      "title": "Scam-suspicious pre-foreclosure seller",
+                      "height_px": 760,
+                      "scenario_spec": {
+                        "assignment_source_key": "assignment-section-4",
+                        "context": "During an initial seller conversation, a homeowner facing a possible foreclosure believes the contact may be a scam and refuses to share information.",
+                        "learner_goal": "Lower pressure, explain the process, offer verifiable next steps, and respect the seller's boundaries.",
+                        "success_criteria": [
+                          "Acknowledges the concern",
+                          "Uses accurate verification options",
+                          "Avoids legal advice",
+                          "Accepts a pause or no"
+                        ],
+                        "fail_conditions": [
+                          "Uses fear or false urgency",
+                          "Claims legal expertise",
+                          "Asks for sensitive financial credentials"
+                        ]
+                      }
+                    }
                   }
                 ]
               },
@@ -24234,6 +24315,33 @@
                           "back": "Logging notes and scheduling the follow-up."
                         }
                       ]
+                    }
+                  },
+                  {
+                    "source_key": "block-role-play-probate-follow-up",
+                    "type": "role_play",
+                    "sort_order": 6,
+                    "required": true,
+                    "content": {
+                      "scenario_id": "92ecfacd-62d5-49d9-b585-d10c7cd015c0",
+                      "title": "Probate follow-up",
+                      "height_px": 760,
+                      "scenario_spec": {
+                        "assignment_source_key": "assignment-section-5",
+                        "context": "A seller handling a relative's estate asked for time and has not responded to two prior contacts.",
+                        "learner_goal": "Use a respectful follow-up reason, acknowledge grief and process complexity, and create a low-pressure next step.",
+                        "success_criteria": [
+                          "References prior context",
+                          "Uses patient language",
+                          "Checks authority without advising",
+                          "Records a clear next action"
+                        ],
+                        "fail_conditions": [
+                          "Treats silence as consent",
+                          "Rushes the estate process",
+                          "Creates an artificial deadline"
+                        ]
+                      }
                     }
                   }
                 ]
@@ -32240,6 +32348,61 @@
                           "back": "The actual count and approved target must share the same block, period, and counting definition."
                         }
                       ]
+                    }
+                  },
+                  {
+                    "source_key": "block-role-play-family-dynamics-dayton",
+                    "type": "role_play",
+                    "sort_order": 7,
+                    "required": true,
+                    "content": {
+                      "scenario_id": "93b8afb7-db18-408a-b082-2e1b9c897cbf",
+                      "title": "Family dynamics seller",
+                      "height_px": 760,
+                      "scenario_spec": {
+                        "assignment_source_key": "assignment-section-6",
+                        "context": "An older Dayton homeowner wants to sell but an adult child strongly opposes the decision.",
+                        "learner_goal": "Identify who can decide, hear both concerns, preserve the homeowner's agency, and seek guidance when needed.",
+                        "success_criteria": [
+                          "Confirms decision authority",
+                          "Does not take sides",
+                          "Surfaces each person's concern",
+                          "Sets a safe next step"
+                        ],
+                        "fail_conditions": [
+                          "Manipulates family conflict",
+                          "Ignores the homeowner's stated wishes",
+                          "Provides legal advice"
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "source_key": "block-role-play-full-cycle-capstone",
+                    "type": "role_play",
+                    "sort_order": 8,
+                    "required": true,
+                    "content": {
+                      "scenario_id": "cb650e04-8405-47db-a76a-2d31cf8eaef0",
+                      "title": "Full-cycle seller conversation",
+                      "height_px": 760,
+                      "scenario_spec": {
+                        "assignment_source_key": "assignment-section-6",
+                        "context": "A seller moves from a first conversation through qualification, discovery, an objection, and readiness for handoff.",
+                        "learner_goal": "Run the full conversation from opening through a documented handoff while maintaining clarity and consent.",
+                        "success_criteria": [
+                          "Uses a clear opening",
+                          "Completes qualification and discovery",
+                          "Handles the objection with LAAR",
+                          "Produces a complete handoff"
+                        ],
+                        "fail_conditions": [
+                          "Skips required facts",
+                          "Applies pressure",
+                          "Promises price or timing",
+                          "Ends without a documented next action"
+                        ]
+                      }
                     }
                   }
                 ]

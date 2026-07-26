@@ -383,11 +383,12 @@ const ROLE_PLAYS = {
   ],
 };
 
-// Interactive Closer Lab scenarios are intentionally deferred until their
-// personas, voices, and scoring behavior receive a separate fine-tuning pass.
-// Keep the authored drafts available for that later release, but do not put
-// them in the current learner manifest.
-const INCLUDE_CLOSER_LAB_ROLE_PLAYS = false;
+// Interactive Closer Lab scenarios: the six certification scenarios are
+// published and attested in Closer Lab production (2026-07-24). Per-persona
+// voices and scoring-reliability hardening are still in progress, but
+// Jarrad approved shipping now regardless (2026-07-25) rather than waiting
+// on those.
+const INCLUDE_CLOSER_LAB_ROLE_PLAYS = true;
 
 export const QUIZ_SOURCE_FILE_NAMES = [
   "01 - Welcome & Mindset - quiz.json",
