@@ -1,8 +1,14 @@
 import { readFile } from "node:fs/promises";
-import { join, resolve } from "node:path";
+import { resolve } from "node:path";
 
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
+import {
+  resumableEndpoint,
+  uploadApprovedAssets,
+  type CourseImportUploadBucket,
+} from "../../src/lib/course-import/asset-upload";
+import { findRemoteAssetProblems } from "../../src/lib/course-import/asset-transfer";
 import { assertCourseImportEnvironment } from "../../src/lib/course-import/environment";
 import { validateCourseManifest } from "../../src/lib/course-import/manifest";
 import {
@@ -11,32 +17,35 @@ import {
   releasedContentBlockRevisionConfirmation,
   releasedContentBlockRevisionDatabasePayloadSha256,
   releasedContentBlockRevisionPayloadSha256,
+  selectReleasedContentBlockRevisionGuideAssets,
   type ReleasedContentBlockMutation,
   type ReleasedContentBlockRow,
 } from "../../src/lib/course-import/released-content-block-revision";
 import {
+  parseReleasedContentBlockRevisionCliOptions,
+  runReleasedContentBlockRevisionAssetPreparation,
   runReleasedContentBlockRevisionCommand,
   type ReleasedContentBlockRevisionAudit,
 } from "../../src/lib/course-import/released-content-block-revision-controller";
 import {
-  assertCompletedUploadReceipt,
-} from "../../src/lib/course-import/upload-receipt";
+  assertCompletedReleasedContentBlockRevisionAssetReceipt,
+  invalidateReleasedContentBlockRevisionAssetReceipt,
+  writeCompletedReleasedContentBlockRevisionAssetReceipt,
+} from "../../src/lib/course-import/released-content-block-revision-receipt";
 
 const DEFAULT_MANIFEST =
   "content/course-manifests/bmh-employee-training.v1.json";
 const LEGACY_MANIFEST =
   "content/course-manifests/archive/bmh-employee-training.legacy-release-20260721.v1.json";
 
-type CommandOptions = {
-  manifestPath: string;
-  execute: boolean;
-  allowProduction: boolean;
-  confirmation: string | undefined;
-  stateRoot: string;
-};
-
 async function main() {
-  const options = parseOptions(process.argv.slice(2));
+  const options = parseReleasedContentBlockRevisionCliOptions(
+    process.argv.slice(2),
+    {
+      cwd: process.cwd(),
+      defaultManifest: DEFAULT_MANIFEST,
+    },
+  );
   const [legacyManifest, targetManifest] = await Promise.all([
     readFile(resolve(LEGACY_MANIFEST)),
     readFile(resolve(options.manifestPath)),
@@ -63,43 +72,92 @@ async function main() {
   if (!targetValidation.ok) {
     throw new Error(targetValidation.errors.join("\n"));
   }
+  const guideAssets = selectReleasedContentBlockRevisionGuideAssets(
+    targetValidation.value.assets,
+    revision.mutations,
+  );
+  const environment = {
+    url: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+  };
+  const plan = {
+    phase:
+      options.mode === "prepare-assets"
+        ? "released_content_block_revision_asset_plan"
+        : "released_content_block_revision_plan",
+    mode: options.mode,
+    environment: options.execute ? "validated_at_execution_gate" : "offline",
+    import_id: RELEASED_CONTENT_BLOCK_REVISION.importId,
+    original_release_manifest_sha256:
+      RELEASED_CONTENT_BLOCK_REVISION.originalReleaseManifestSha256,
+    expected_active_manifest_sha256:
+      RELEASED_CONTENT_BLOCK_REVISION.expectedActiveManifestSha256,
+    manifest_sha256: RELEASED_CONTENT_BLOCK_REVISION.targetManifestSha256,
+    expected_prior_catalog_sha256:
+      RELEASED_CONTENT_BLOCK_REVISION.expectedPriorCatalogSha256,
+    client_payload_sha256: clientPayloadSha256,
+    database_payload_sha256: databasePayloadSha256,
+    ...revision.summary,
+    mutation_count: revision.mutations.length,
+    guide_asset_count: guideAssets.length,
+    guide_asset_paths: guideAssets.map((asset) => asset.storage_path),
+    mutation_ids: revision.mutations.map((mutation) => mutation.block_id),
+    execute: options.execute,
+    required_confirmation: expectedConfirmation,
+  };
+  if (options.mode === "prepare-assets") {
+    await runReleasedContentBlockRevisionAssetPreparation<SupabaseClient>({
+      options,
+      targetManifest,
+      guideAssets,
+      mutations: revision.mutations,
+      clientPayloadSha256,
+      expectedConfirmation,
+      sourceRoot: options.sourceRoot,
+      environment,
+      plan,
+    }, {
+      classifyEnvironment: assertCourseImportEnvironment,
+      createClient: createRevisionClient,
+      invalidateReceipt:
+        invalidateReleasedContentBlockRevisionAssetReceipt,
+      uploadGuideAssets: async (client, input) => {
+        await uploadApprovedAssets({
+          endpoint: resumableEndpoint(input.endpoint),
+          serviceKey: input.serviceRoleKey,
+          importId: input.importId,
+          sourceRoot: input.sourceRoot,
+          assets: input.assets,
+          bucket: client.storage.from("content") as unknown as
+            CourseImportUploadBucket,
+          stateRoot: input.stateRoot,
+        });
+      },
+      verifyGuideAssets: (client, assets) =>
+        findRemoteAssetProblems(client.storage.from("content"), assets),
+      writeReceipt:
+        writeCompletedReleasedContentBlockRevisionAssetReceipt,
+      log: console.log,
+    });
+    return;
+  }
   await runReleasedContentBlockRevisionCommand<SupabaseClient>({
     options,
     targetManifest,
-    targetAssets: targetValidation.value.assets,
+    guideAssets,
     mutations: revision.mutations,
     clientPayloadSha256,
     databasePayloadSha256,
     expectedConfirmation,
-    environment: {
-      url: process.env.NEXT_PUBLIC_SUPABASE_URL,
-      serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
-    },
-    plan: {
-      phase: "released_content_block_revision_plan",
-      environment: options.execute ? "validated_at_execution_gate" : "offline",
-      import_id: RELEASED_CONTENT_BLOCK_REVISION.importId,
-      original_release_manifest_sha256:
-        RELEASED_CONTENT_BLOCK_REVISION.originalReleaseManifestSha256,
-      expected_active_manifest_sha256:
-        RELEASED_CONTENT_BLOCK_REVISION.expectedActiveManifestSha256,
-      manifest_sha256: RELEASED_CONTENT_BLOCK_REVISION.targetManifestSha256,
-      expected_prior_catalog_sha256:
-        RELEASED_CONTENT_BLOCK_REVISION.expectedPriorCatalogSha256,
-      client_payload_sha256: clientPayloadSha256,
-      database_payload_sha256: databasePayloadSha256,
-      ...revision.summary,
-      mutation_count: revision.mutations.length,
-      mutation_ids: revision.mutations.map((mutation) => mutation.block_id),
-      execute: options.execute,
-      required_confirmation: expectedConfirmation,
-    },
+    environment,
+    plan,
   }, {
     classifyEnvironment: assertCourseImportEnvironment,
-    loadUploadReceipt: assertCompletedUploadReceipt,
-    createClient: (url, serviceRoleKey) => createClient(url, serviceRoleKey, {
-      auth: { persistSession: false, autoRefreshToken: false },
-    }),
+    loadUploadReceipt:
+      assertCompletedReleasedContentBlockRevisionAssetReceipt,
+    createClient: createRevisionClient,
+    verifyGuideAssets: (client, assets) =>
+      findRemoteAssetProblems(client.storage.from("content"), assets),
     loadActiveRelease,
     loadCatalogSha256,
     loadAudit,
@@ -120,18 +178,10 @@ async function main() {
   });
 }
 
-function parseOptions(args: string[]): CommandOptions {
-  const manifestPath = args.find((arg) => !arg.startsWith("--")) ?? DEFAULT_MANIFEST;
-  return {
-    manifestPath,
-    execute: args.includes("--execute"),
-    allowProduction: args.includes("--allow-production"),
-    confirmation: value(args, "--confirm="),
-    stateRoot: resolve(
-      value(args, "--state-root=") ??
-        join(process.cwd(), ".course-import-state"),
-    ),
-  };
+function createRevisionClient(url: string, serviceRoleKey: string) {
+  return createClient(url, serviceRoleKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
 }
 
 async function loadActiveRelease(client: SupabaseClient) {
@@ -196,10 +246,6 @@ async function loadAudit(
     );
   }
   return result.data as ReleasedContentBlockRevisionAudit | null;
-}
-
-function value(args: string[], prefix: string) {
-  return args.find((arg) => arg.startsWith(prefix))?.slice(prefix.length);
 }
 
 function requiredQueryData<T>(

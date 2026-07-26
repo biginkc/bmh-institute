@@ -77,6 +77,18 @@ updated: 2026-07-26
 - timestamp: 2026-07-26T15:44:00-05:00
   observed: the commit hook reran the full repository verification after the final controller assertion refactor and passed typecheck, 180 Vitest files with 1,067 tests, and 39 RTL files with 141 tests.
   implication: the committed tree, not only the pre-commit working tree, passed the complete repository gate.
+- timestamp: 2026-07-26T15:50:00-05:00
+  observed: canonical test rehearsal exposed that the test Storage project intentionally contains 0 of the generic manifest's 126 approved assets. The generic full receipt would require 2,602,554,176 bytes even though the released-content correction references only 19 guide PDFs totaling 965,833 bytes.
+  implication: requiring the generic full receipt is an over-broad rehearsal and release blocker. Flashcard updates and role-play inserts are database-only.
+- timestamp: 2026-07-26T15:56:16-05:00
+  observed: TDD RED was captured before the narrow receipt implementation. The new revision-asset suite failed because `released-content-block-revision-receipt` did not exist.
+  implication: the test requires a distinct receipt contract rather than changing or aliasing the generic full receipt.
+- timestamp: 2026-07-26T16:06:38-05:00
+  observed: focused GREEN passed 56 tests across the builder, revision-asset receipt/preparation, controller, and migration suites; typecheck and `git diff --check` passed. Both prepare and apply dry runs succeed with credentials unset, report 19 guide assets, and retain the exact confirmation gate.
+  implication: the revision now has executable regression coverage for its exact 19-guide asset boundary without expanding the database mutation scope.
+- timestamp: 2026-07-26T16:07:00-05:00
+  observed: the generic upload receipt module and existing production full receipt path are unchanged. The new receipt lives under `released-content-block-revision-receipts` and is partitioned by import, target manifest SHA-256, client payload SHA-256, and environment. Preparation invalidates only that path, uploads exactly 19 guides, independently verifies all remote bytes, and writes the receipt only after success. Apply reloads the exact receipt and re-verifies the 19 remote files before lineage or RPC access.
+  implication: production receipt history cannot collide, an empty test project needs less than 1 MB rather than 2.60 GB, and stale/tampered remote guide bytes fail before database mutation.
 
 ## Eliminated
 
@@ -90,8 +102,8 @@ updated: 2026-07-26
 ## Resolution
 
 - root_cause: the current manifest contains 44 approved content-block changes layered over an immutable released import, but the only available controller was generic apply, which is intentionally prohibited after release.
-- fix: add a dedicated versioned, service-role-only, append-only released-content revision that compare-and-swaps the exact live catalog, verifies all immutable guide assets, atomically applies only 19 guide updates, 19 flashcard updates, and 6 role-play inserts, appends exact audit evidence, supports only exact idempotent replay, and leaves all release history immutable. Add an environment-aware CLI that is offline by default and verifies the upload receipt, active lineage, RPC receipt, 44 target rows, whole-course catalog, and audit record.
-- verification: TDD RED captured; focused GREEN 31/31; typecheck passed; offline dry run passed without a database connection; full native PostgreSQL 17 migration/SQL harness passed; the commit hook's `npm run verify` passed 1,208 tests across 219 files plus typecheck; `npm run test:course-content` passed all 191 Node QA tests, report checks, caption tests, semantic guide tests, and 19-guide deterministic rebuild; two manual reviews are clean after fixes.
+- fix: add a dedicated versioned, service-role-only, append-only released-content revision that compare-and-swaps the exact live catalog, verifies all immutable guide assets, atomically applies only 19 guide updates, 19 flashcard updates, and 6 role-play inserts, appends exact audit evidence, supports only exact idempotent replay, and leaves all release history immutable. Add an environment-aware CLI that is offline by default. Its separate `prepare-assets` mode derives, uploads, and byte-verifies only the 19 mutation-bound guide PDFs and writes a collision-proof revision receipt; apply requires that exact receipt, re-verifies the same 19 bytes, then verifies active lineage, RPC receipt, 44 target rows, whole-course catalog, and audit record.
+- verification: initial TDD RED captured; first focused GREEN 31/31; revision-asset TDD RED captured; expanded focused GREEN 56/56; typecheck passed; prepare/apply offline dry runs passed without credentials or connections; full native PostgreSQL 17 migration/SQL harness passed; the first commit hook's `npm run verify` passed 1,208 tests across 219 files plus typecheck; `npm run test:course-content` passed all 191 Node QA tests, report checks, caption tests, semantic guide tests, and 19-guide deterministic rebuild; two manual reviews were clean after the database/controller fixes.
 - files_changed:
   - `.planning/debug/released-import-apply-refusal.md`
   - `package.json`
@@ -99,6 +111,8 @@ updated: 2026-07-26
   - `scripts/fixture-boundary/run-controller-gate-pr-harness.mjs`
   - `src/lib/course-import/released-content-block-revision.ts`
   - `src/lib/course-import/released-content-block-revision-controller.ts`
+  - `src/lib/course-import/released-content-block-revision-receipt.ts`
+  - `src/lib/course-import/released-content-block-revision-assets.test.ts`
   - `src/lib/course-import/released-content-block-revision.test.ts`
   - `src/lib/course-import/released-content-block-revision-command.test.ts`
   - `src/lib/course-import/released-content-block-revision-migration.test.ts`
@@ -108,7 +122,7 @@ updated: 2026-07-26
 ## Remaining Release Gates
 
 - Deploy the new migration to the canonical test Supabase project.
-- Create the exact full test upload receipt by uploading/verifying the same 19 guide assets against the target manifest.
+- Create the exact revision-specific test receipt with `course:content-blocks:prepare` by uploading and byte-verifying only the same 19 guide assets against the target manifest.
 - Execute the dedicated controller in test without `--allow-production`; verify the returned catalog, immutable audit row, 44 target rows, and an exact `already_revised` replay.
 - Run independent test-project reconciliation against the target manifest.
 - Only after review approval, record a rollback point, deploy the reviewed migration to production, run the dedicated production controller with its exact generated confirmation and `--allow-production`, reconcile production, and complete authenticated browser acceptance.

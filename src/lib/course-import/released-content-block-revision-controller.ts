@@ -1,19 +1,23 @@
-import { join, resolve } from "node:path";
+import { resolve } from "node:path";
 
 import type { CourseImportAsset } from "./manifest";
+import type { RemoteAssetProblem } from "./asset-transfer";
 import {
   RELEASED_CONTENT_BLOCK_REVISION,
   assertReleasedContentBlockInitialOrRevisedState,
   assertReleasedContentBlockRevisedState,
+  selectReleasedContentBlockRevisionGuideAssets,
   type ReleasedContentBlockMutation,
   type ReleasedContentBlockRow,
 } from "./released-content-block-revision";
 import {
-  buildUploadReceiptExpectation,
-  uploadReceiptPath,
-  type CompletedUploadReceipt,
+  buildReleasedContentBlockRevisionAssetReceiptExpectation,
+  releasedContentBlockRevisionAssetReceiptPath,
+  type CompletedReleasedContentBlockRevisionAssetReceipt,
+  type ReleasedContentBlockRevisionAssetReceiptExpectation,
+} from "./released-content-block-revision-receipt";
+import {
   type CourseImportEnvironment,
-  type UploadReceiptExpectation,
 } from "./upload-receipt";
 
 export type ReleasedContentBlockRevisionCommandOptions = {
@@ -23,10 +27,52 @@ export type ReleasedContentBlockRevisionCommandOptions = {
   stateRoot: string;
 };
 
+export type ReleasedContentBlockRevisionCliOptions =
+  ReleasedContentBlockRevisionCommandOptions & {
+    mode: "prepare-assets" | "apply";
+    manifestPath: string;
+    sourceRoot: string;
+  };
+
+export function parseReleasedContentBlockRevisionCliOptions(
+  args: string[],
+  options: {
+    cwd: string;
+    defaultManifest: string;
+  },
+): ReleasedContentBlockRevisionCliOptions {
+  const positional = args.filter((arg) => !arg.startsWith("--"));
+  const mode =
+    positional[0] === "prepare-assets" || positional[0] === "apply"
+      ? positional.shift() as "prepare-assets" | "apply"
+      : "apply";
+  if (positional.length > 1) {
+    throw new Error(
+      "Released content revision accepts one mode and one manifest path.",
+    );
+  }
+  return {
+    mode,
+    manifestPath: positional[0] ?? options.defaultManifest,
+    execute: args.includes("--execute"),
+    allowProduction: args.includes("--allow-production"),
+    confirmation: cliValue(args, "--confirm="),
+    stateRoot: resolve(
+      options.cwd,
+      cliValue(args, "--state-root=") ??
+        ".course-import-state",
+    ),
+    sourceRoot: resolve(
+      options.cwd,
+      cliValue(args, "--source-root=") ?? ".",
+    ),
+  };
+}
+
 export type ReleasedContentBlockRevisionCommandInput = {
   options: ReleasedContentBlockRevisionCommandOptions;
   targetManifest: Buffer;
-  targetAssets: CourseImportAsset[];
+  guideAssets: CourseImportAsset[];
   mutations: ReleasedContentBlockMutation[];
   clientPayloadSha256: string;
   databasePayloadSha256: string;
@@ -70,9 +116,13 @@ export type ReleasedContentBlockRevisionDependencies<Client> = {
   ) => CourseImportEnvironment;
   loadUploadReceipt: (
     path: string,
-    expectation: UploadReceiptExpectation,
-  ) => Promise<CompletedUploadReceipt>;
+    expectation: ReleasedContentBlockRevisionAssetReceiptExpectation,
+  ) => Promise<CompletedReleasedContentBlockRevisionAssetReceipt>;
   createClient: (url: string, serviceRoleKey: string) => Client;
+  verifyGuideAssets: (
+    client: Client,
+    guideAssets: CourseImportAsset[],
+  ) => Promise<RemoteAssetProblem[]>;
   loadActiveRelease: (client: Client) => Promise<ActiveRelease>;
   loadCatalogSha256: (client: Client) => Promise<string>;
   loadAudit: (
@@ -89,6 +139,50 @@ export type ReleasedContentBlockRevisionDependencies<Client> = {
   log: (value: string) => void;
 };
 
+export type ReleasedContentBlockRevisionAssetPreparationInput = {
+  options: ReleasedContentBlockRevisionCommandOptions;
+  targetManifest: Buffer;
+  guideAssets: CourseImportAsset[];
+  mutations: ReleasedContentBlockMutation[];
+  clientPayloadSha256: string;
+  expectedConfirmation: string;
+  sourceRoot: string;
+  environment: {
+    url: string | undefined;
+    serviceRoleKey: string | undefined;
+  };
+  plan: Record<string, unknown>;
+};
+
+export type ReleasedContentBlockRevisionAssetPreparationDependencies<Client> = {
+  classifyEnvironment: (
+    url: string,
+    allowProduction: boolean,
+  ) => CourseImportEnvironment;
+  createClient: (url: string, serviceRoleKey: string) => Client;
+  invalidateReceipt: (path: string) => Promise<void>;
+  uploadGuideAssets: (
+    client: Client,
+    input: {
+      endpoint: string;
+      serviceRoleKey: string;
+      importId: string;
+      sourceRoot: string;
+      assets: CourseImportAsset[];
+      stateRoot: string;
+    },
+  ) => Promise<void>;
+  verifyGuideAssets: (
+    client: Client,
+    guideAssets: CourseImportAsset[],
+  ) => Promise<RemoteAssetProblem[]>;
+  writeReceipt: (
+    path: string,
+    expectation: ReleasedContentBlockRevisionAssetReceiptExpectation,
+  ) => Promise<CompletedReleasedContentBlockRevisionAssetReceipt>;
+  log: (value: string) => void;
+};
+
 type ValidatedRpcResult = {
   status: "revised" | "already_revised";
   mutation_count: 44;
@@ -99,6 +193,11 @@ export async function runReleasedContentBlockRevisionCommand<Client>(
   input: ReleasedContentBlockRevisionCommandInput,
   dependencies: ReleasedContentBlockRevisionDependencies<Client>,
 ) {
+  const guideAssets = selectReleasedContentBlockRevisionGuideAssets(
+    input.guideAssets,
+    input.mutations,
+  );
+  assertOnlyExactGuideAssets(input.guideAssets, guideAssets);
   dependencies.log(JSON.stringify(input.plan, null, 2));
   if (!input.options.execute) {
     dependencies.log(
@@ -124,26 +223,28 @@ export async function runReleasedContentBlockRevisionCommand<Client>(
     url,
     input.options.allowProduction,
   );
-  const receiptExpectation = buildUploadReceiptExpectation({
-    manifestBytes: input.targetManifest,
+  const receiptExpectation =
+    buildReleasedContentBlockRevisionAssetReceiptExpectation({
+    targetManifest: input.targetManifest,
     importId: RELEASED_CONTENT_BLOCK_REVISION.importId,
-    scope: "full",
+    clientPayloadSha256: input.clientPayloadSha256,
     environment,
     environmentUrl: url,
-    assets: input.targetAssets,
+    guideAssets,
+    mutations: input.mutations,
   });
   const receipt = await dependencies.loadUploadReceipt(
-    uploadReceiptPath(
-      resolve(
-        input.options.stateRoot ??
-          join(process.cwd(), ".course-import-state"),
-      ),
+    releasedContentBlockRevisionAssetReceiptPath(
+      resolve(input.options.stateRoot),
       receiptExpectation,
     ),
     receiptExpectation,
   );
 
   const client = dependencies.createClient(url, serviceRoleKey);
+  assertNoRemoteAssetProblems(
+    await dependencies.verifyGuideAssets(client, guideAssets),
+  );
   await assertExactLiveReleaseLineage(
     client,
     input,
@@ -208,10 +309,94 @@ export async function runReleasedContentBlockRevisionCommand<Client>(
   };
 }
 
+export async function runReleasedContentBlockRevisionAssetPreparation<Client>(
+  input: ReleasedContentBlockRevisionAssetPreparationInput,
+  dependencies:
+    ReleasedContentBlockRevisionAssetPreparationDependencies<Client>,
+) {
+  const guideAssets = selectReleasedContentBlockRevisionGuideAssets(
+    input.guideAssets,
+    input.mutations,
+  );
+  assertOnlyExactGuideAssets(input.guideAssets, guideAssets);
+  dependencies.log(JSON.stringify(input.plan, null, 2));
+  if (!input.options.execute) {
+    dependencies.log(
+      "Dry run only. No database connection, storage request, or write was attempted.",
+    );
+    return { status: "dry_run" as const };
+  }
+  if (input.options.confirmation !== input.expectedConfirmation) {
+    throw new Error(
+      `Execution confirmation must equal: ${input.expectedConfirmation}`,
+    );
+  }
+
+  const url = requiredValue(
+    input.environment.url,
+    "NEXT_PUBLIC_SUPABASE_URL",
+  );
+  const serviceRoleKey = requiredValue(
+    input.environment.serviceRoleKey,
+    "SUPABASE_SERVICE_ROLE_KEY",
+  );
+  const environment = dependencies.classifyEnvironment(
+    url,
+    input.options.allowProduction,
+  );
+  const receiptExpectation =
+    buildReleasedContentBlockRevisionAssetReceiptExpectation({
+      targetManifest: input.targetManifest,
+      importId: RELEASED_CONTENT_BLOCK_REVISION.importId,
+      clientPayloadSha256: input.clientPayloadSha256,
+      environment,
+      environmentUrl: url,
+      guideAssets,
+      mutations: input.mutations,
+    });
+  const receiptPath = releasedContentBlockRevisionAssetReceiptPath(
+    resolve(input.options.stateRoot),
+    receiptExpectation,
+  );
+  const client = dependencies.createClient(url, serviceRoleKey);
+  await dependencies.invalidateReceipt(receiptPath);
+  await dependencies.uploadGuideAssets(client, {
+    endpoint: url,
+    serviceRoleKey,
+    importId: RELEASED_CONTENT_BLOCK_REVISION.importId,
+    sourceRoot: input.sourceRoot,
+    assets: guideAssets,
+    stateRoot: input.options.stateRoot,
+  });
+  assertNoRemoteAssetProblems(
+    await dependencies.verifyGuideAssets(client, guideAssets),
+  );
+  const receipt = await dependencies.writeReceipt(
+    receiptPath,
+    receiptExpectation,
+  );
+
+  dependencies.log(JSON.stringify({
+    phase: "released_content_block_revision_assets_prepared",
+    environment,
+    approved_asset_count: receipt.approved_asset_count,
+    approved_assets_sha256: receipt.approved_assets_sha256,
+    receipt_sha256: receipt.receipt_sha256,
+    receipt_path: receiptPath,
+  }, null, 2));
+  return {
+    status: "prepared" as const,
+    environment,
+    approvedAssetCount: receipt.approved_asset_count,
+    receiptPath,
+    receiptSha256: receipt.receipt_sha256,
+  };
+}
+
 async function assertExactLiveReleaseLineage<Client>(
   client: Client,
   input: ReleasedContentBlockRevisionCommandInput,
-  receipt: CompletedUploadReceipt,
+  receipt: CompletedReleasedContentBlockRevisionAssetReceipt,
   dependencies: ReleasedContentBlockRevisionDependencies<Client>,
 ) {
   const active = await dependencies.loadActiveRelease(client);
@@ -297,7 +482,7 @@ function assertRevisionRpcResult(value: unknown): ValidatedRpcResult {
 function assertRevisionAudit(
   audit: ReleasedContentBlockRevisionAudit | null,
   input: ReleasedContentBlockRevisionCommandInput,
-  receipt: CompletedUploadReceipt,
+  receipt: CompletedReleasedContentBlockRevisionAssetReceipt,
   catalogSha256: string,
 ) {
   if (!audit) {
@@ -334,7 +519,7 @@ function assertRevisionAudit(
 
 function expectedEvidence(
   input: ReleasedContentBlockRevisionCommandInput,
-  receipt: CompletedUploadReceipt,
+  receipt: CompletedReleasedContentBlockRevisionAssetReceipt,
 ) {
   return {
     operation: "released_content_blocks_v1",
@@ -348,6 +533,26 @@ function expectedEvidence(
     client_payload_sha256: input.clientPayloadSha256,
     upload_receipt_sha256: receipt.receipt_sha256,
   };
+}
+
+function assertNoRemoteAssetProblems(problems: RemoteAssetProblem[]) {
+  if (problems.length === 0) return;
+  throw new Error(
+    `Released content revision guide verification failed: ${problems
+      .map((problem) => `${problem.path}: ${problem.problem}`)
+      .join("; ")}`,
+  );
+}
+
+function assertOnlyExactGuideAssets(
+  supplied: CourseImportAsset[],
+  exact: CourseImportAsset[],
+) {
+  if (supplied.length !== exact.length) {
+    throw new Error(
+      "Released content revision accepts only the exact 19 guide assets.",
+    );
+  }
 }
 
 function requiredValue(value: string | undefined, name: string) {
@@ -408,6 +613,10 @@ function stableJson(value: unknown): string {
       .join(",")}}`;
   }
   return JSON.stringify(value) ?? "null";
+}
+
+function cliValue(args: string[], prefix: string) {
+  return args.find((arg) => arg.startsWith(prefix))?.slice(prefix.length);
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

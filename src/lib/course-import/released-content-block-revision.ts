@@ -1,6 +1,9 @@
 import { createHash } from "node:crypto";
 
-import type { CourseImportManifest } from "./manifest";
+import type {
+  CourseImportAsset,
+  CourseImportManifest,
+} from "./manifest";
 import { validateCourseManifest } from "./manifest";
 import { buildImportPlan, type ImportOperation, type ImportPlan } from "./operations";
 
@@ -11,6 +14,7 @@ export const RELEASED_CONTENT_BLOCK_REVISION = {
   expectedActiveCatalogSha256: "ca42e3d6347a71f46bd1aabee6c7b5c9fc570e797473865ceee30d4fe2a36ae0",
   targetManifestSha256: "585b72c923a560d2228f6149a5b906ec02958f19d62818dc5c109c3968345a33",
   expectedPriorCatalogSha256: "e66250effa99bda93e8dd828077811585a5369e2e142bfa9bc5381f5ccd94eb4",
+  expectedClientPayloadSha256: "81d918fd621bb82da935a81f06a08196ce27b2cb853fafcf0f8a2df88de8201b",
 } as const;
 
 const GUIDE_SOURCE_KEYS = Array.from(
@@ -278,6 +282,65 @@ export function releasedContentBlockRevisionPayloadSha256(
   mutations: ReleasedContentBlockMutation[],
 ) {
   return sha256(JSON.stringify(mutations));
+}
+
+export function selectReleasedContentBlockRevisionGuideAssets(
+  assets: CourseImportAsset[],
+  mutations: ReleasedContentBlockMutation[],
+) {
+  const guideMutations = mutations.filter((mutation) =>
+    mutation.action === "update" &&
+    mutation.block_type === "download"
+  );
+  if (guideMutations.length !== 19) {
+    throw new Error(
+      "Released content revision requires exactly 19 guide mutations.",
+    );
+  }
+  const mutationByStoragePath =
+    new Map<string, ReleasedContentBlockMutation>();
+  for (const mutation of guideMutations) {
+    const storagePath = mutation.replacement_content.file_path;
+    if (
+      typeof storagePath !== "string" ||
+      mutationByStoragePath.has(storagePath)
+    ) {
+      throw new Error(
+        "Released content revision guide mutations require 19 unique storage paths.",
+      );
+    }
+    mutationByStoragePath.set(storagePath, mutation);
+  }
+
+  const selected = assets.filter((asset) =>
+    mutationByStoragePath.has(asset.storage_path)
+  );
+  if (
+    selected.length !== 19 ||
+    new Set(selected.map((asset) => asset.source_key)).size !== 19
+  ) {
+    throw new Error(
+      "Released content revision requires the exact 19 guide assets.",
+    );
+  }
+  for (const asset of selected) {
+    const mutation = mutationByStoragePath.get(asset.storage_path)!;
+    if (
+      asset.approval_status !== "approved" ||
+      asset.kind !== "pdf" ||
+      asset.mime_type !== "application/pdf" ||
+      asset.storage_path !== mutation.replacement_content.file_path ||
+      asset.size_bytes !== mutation.replacement_size_bytes ||
+      asset.checksum_sha256 !== mutation.replacement_sha256
+    ) {
+      throw new Error(
+        `Released content revision asset ${asset.source_key} does not match its exact guide mutation.`,
+      );
+    }
+  }
+  return selected.sort((left, right) =>
+    left.source_key.localeCompare(right.source_key)
+  );
 }
 
 export function releasedContentBlockRevisionDatabasePayloadSha256(

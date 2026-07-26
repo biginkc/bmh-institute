@@ -15,6 +15,7 @@ import {
   releasedContentBlockRevisionConfirmation,
   releasedContentBlockRevisionDatabasePayloadSha256,
   releasedContentBlockRevisionPayloadSha256,
+  selectReleasedContentBlockRevisionGuideAssets,
   type ReleasedContentBlockMutation,
   type ReleasedContentBlockRow,
 } from "./released-content-block-revision";
@@ -25,9 +26,9 @@ import {
   type ReleasedContentBlockRevisionDependencies,
 } from "./released-content-block-revision-controller";
 import type {
-  CompletedUploadReceipt,
-  UploadReceiptExpectation,
-} from "./upload-receipt";
+  CompletedReleasedContentBlockRevisionAssetReceipt,
+  ReleasedContentBlockRevisionAssetReceiptExpectation,
+} from "./released-content-block-revision-receipt";
 
 type FakeClient = { name: "fake-client" };
 
@@ -50,7 +51,10 @@ const validation = validateCourseManifest(
 if (!validation.ok) {
   throw new Error(validation.errors.join("\n"));
 }
-const targetAssets = validation.value.assets;
+const guideAssets = selectReleasedContentBlockRevisionGuideAssets(
+  validation.value.assets,
+  revision.mutations,
+);
 const clientPayloadSha256 = releasedContentBlockRevisionPayloadSha256(
   revision.mutations,
 );
@@ -96,7 +100,7 @@ function makeInput(
       stateRoot: "/tmp/released-content-revision-test-state",
     },
     targetManifest,
-    targetAssets,
+    guideAssets,
     mutations: revision.mutations,
     clientPayloadSha256,
     databasePayloadSha256,
@@ -114,10 +118,11 @@ function makeInput(
 }
 
 function completedReceipt(
-  expectation: UploadReceiptExpectation,
-): CompletedUploadReceipt {
+  expectation: ReleasedContentBlockRevisionAssetReceiptExpectation,
+): CompletedReleasedContentBlockRevisionAssetReceipt {
   return {
     schema_version: 1,
+    receipt_type: "released_content_block_revision_assets_v1",
     status: "complete",
     ...expectation,
     verified_at: "2026-07-26T12:00:00.000Z",
@@ -164,7 +169,8 @@ function makeHarness(options?: {
   const replay = options?.replay ?? false;
   let rowLoadCount = 0;
   let catalogLoadCount = 0;
-  const receiptExpectations: UploadReceiptExpectation[] = [];
+  const receiptExpectations:
+    ReleasedContentBlockRevisionAssetReceiptExpectation[] = [];
   const receiptPaths: string[] = [];
   const dependencies: ReleasedContentBlockRevisionDependencies<FakeClient> = {
     classifyEnvironment: vi.fn(assertCourseImportEnvironment),
@@ -174,6 +180,7 @@ function makeHarness(options?: {
       return completedReceipt(expectation);
     }),
     createClient: vi.fn(() => ({ name: "fake-client" as const })),
+    verifyGuideAssets: vi.fn(async () => []),
     loadActiveRelease: vi.fn(async () => ({
       import_id: RELEASED_CONTENT_BLOCK_REVISION.importId,
       active_revision: 2,
@@ -268,6 +275,30 @@ describe("released content block revision controller", () => {
     expect(harness.dependencies.createClient).not.toHaveBeenCalled();
   });
 
+  it("rejects caller-substituted PDFs before reading a receipt or creating a client", async () => {
+    const harness = makeHarness();
+    const substituted = guideAssets.map((asset, index) =>
+      index === 0
+        ? {
+            ...asset,
+            source_key: "unrelated-approved-pdf",
+            storage_path:
+              `courses/bmh-employee-training/v1/guides/unrelated.${"f".repeat(64)}.pdf`,
+            checksum_sha256: "f".repeat(64),
+          }
+        : asset
+    );
+
+    await expect(
+      runReleasedContentBlockRevisionCommand(
+        makeInput({ guideAssets: substituted }),
+        harness.dependencies,
+      ),
+    ).rejects.toThrow(/exact 19 guide assets/i);
+    expect(harness.dependencies.loadUploadReceipt).not.toHaveBeenCalled();
+    expect(harness.dependencies.createClient).not.toHaveBeenCalled();
+  });
+
   it("refuses an empty service-role value before reading a receipt or creating a client", async () => {
     const harness = makeHarness();
     const input = makeInput({
@@ -299,7 +330,15 @@ describe("released content block revision controller", () => {
       catalogSha256: replacementCatalogSha256,
     });
     expect(harness.receiptExpectations[0]?.environment).toBe("test");
-    expect(harness.receiptPaths[0]).toMatch(/\.full\.test\.json$/);
+    expect(harness.receiptExpectations[0]?.approved_asset_count).toBe(19);
+    expect(harness.receiptPaths[0]).toMatch(
+      /released-content-block-revision-receipts\/.*\.guides-v1\.test\.json$/,
+    );
+    expect(harness.receiptPaths[0]).not.toContain("/upload-receipts/");
+    expect(harness.dependencies.verifyGuideAssets).toHaveBeenCalledWith(
+      { name: "fake-client" },
+      guideAssets,
+    );
   });
 
   it("blocks the canonical production project without --allow-production", async () => {
@@ -335,7 +374,9 @@ describe("released content block revision controller", () => {
       runReleasedContentBlockRevisionCommand(input, harness.dependencies),
     ).resolves.toMatchObject({ environment: "production" });
     expect(harness.receiptExpectations[0]?.environment).toBe("production");
-    expect(harness.receiptPaths[0]).toMatch(/\.full\.production\.json$/);
+    expect(harness.receiptPaths[0]).toMatch(
+      /released-content-block-revision-receipts\/.*\.guides-v1\.production\.json$/,
+    );
   });
 
   it("stops when the exact upload receipt is missing or invalid", async () => {
@@ -351,6 +392,23 @@ describe("released content block revision controller", () => {
       ),
     ).rejects.toThrow("upload receipt checksum verification failed");
     expect(harness.dependencies.createClient).not.toHaveBeenCalled();
+  });
+
+  it("re-byte-verifies all 19 guide assets and refuses problems before the RPC", async () => {
+    const harness = makeHarness();
+    vi.mocked(harness.dependencies.verifyGuideAssets).mockResolvedValue([{
+      path: guideAssets[0].storage_path,
+      problem: "remote bytes SHA-256 does not match",
+    }]);
+
+    await expect(
+      runReleasedContentBlockRevisionCommand(
+        makeInput(),
+        harness.dependencies,
+      ),
+    ).rejects.toThrow(/remote bytes sha-256 does not match/i);
+    expect(harness.dependencies.loadActiveRelease).not.toHaveBeenCalled();
+    expect(harness.dependencies.callRevision).not.toHaveBeenCalled();
   });
 
   it.each([
