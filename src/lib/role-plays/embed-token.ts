@@ -93,7 +93,7 @@ function assertTokenInput(input: RolePlayEmbedTokenInput) {
   normalizeParentOrigin(input.parentOrigin);
 }
 
-function normalizeParentOrigin(value: string): string {
+export function normalizeParentOrigin(value: string): string {
   let url: URL;
   try {
     url = new URL(value);
@@ -110,7 +110,7 @@ function normalizeParentOrigin(value: string): string {
   return url.origin;
 }
 
-function assertSecret(secret: string | undefined): asserts secret is string {
+export function assertSecret(secret: string | undefined): asserts secret is string {
   if (!secret || Buffer.byteLength(secret, "utf8") < MIN_SECRET_BYTES) {
     throw new Error(
       "ROLE_PLAY_EMBED_SIGNING_SECRET must be at least 32 bytes.",
@@ -118,7 +118,7 @@ function assertSecret(secret: string | undefined): asserts secret is string {
   }
 }
 
-function configuredEmbedSecret(env: NodeJS.ProcessEnv): string | undefined {
+export function configuredEmbedSecret(env: NodeJS.ProcessEnv): string | undefined {
   const embedSecret = env.ROLE_PLAY_EMBED_SIGNING_SECRET?.trim();
   if (env.NODE_ENV === "production") {
     const completionSecret = env.ROLE_PLAY_COMPLETION_VERIFY_SECRET?.trim();
