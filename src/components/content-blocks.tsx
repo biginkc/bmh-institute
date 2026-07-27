@@ -144,7 +144,6 @@ function renderContentBlock(block: ContentBlock, completed: boolean) {
           title={stringOr(block.content.title, "Role play")}
           iframeSrc={stringOr(block.content.iframe_src, "")}
           launchCredential={stringOr(block.content.launch_credential, "")}
-          mintedAtMs={numberOr(block.content.minted_at_ms, 0)}
           initialHeightPx={numberOr(block.content.height_px, 720)}
           initialComplete={completed}
         />

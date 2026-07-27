@@ -623,10 +623,6 @@ async function attachRolePlayEmbeds(
           ...block.content,
           iframe_src: iframeUrl.toString(),
           launch_credential: launchCredential,
-          // Lets the client know the credential's age without decoding the JWT,
-          // so it can re-mint before the 300s TTL turns a Start click into a
-          // misleading "session expired".
-          minted_at_ms: now.getTime(),
         },
       };
     } catch {
