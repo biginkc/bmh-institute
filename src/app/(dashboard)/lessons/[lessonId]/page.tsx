@@ -675,7 +675,18 @@ function getRolePlayBaseUrl(): string | null {
   const value = process.env.NEXT_PUBLIC_ROLE_PLAY_BASE_URL;
   if (!value) return null;
   try {
-    return new URL(value).origin;
+    const url = new URL(value);
+    // This origin receives BOTH learner-bound bearer credentials: the
+    // admission token in the iframe URL and the launch credential over
+    // postMessage. Fail closed rather than hand them to a plaintext or
+    // credential-bearing origin that a misconfiguration introduced.
+    if (url.username || url.password) return null;
+    const isLoopback = ["localhost", "127.0.0.1"].includes(url.hostname);
+    if (url.protocol === "https:") return url.origin;
+    if (url.protocol === "http:" && isLoopback && process.env.NODE_ENV !== "production") {
+      return url.origin;
+    }
+    return null;
   } catch {
     return null;
   }

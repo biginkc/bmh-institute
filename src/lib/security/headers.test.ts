@@ -19,25 +19,33 @@ import nextConfig from "../../../next.config";
  * If an explicit directive is ever genuinely required, the only correct value
  * is: microphone=(self "https://<closer-lab-origin>")
  */
-describe("Permissions-Policy", () => {
-  it("does not deny the microphone, so the role-play iframe can use it", async () => {
-    const headerGroups = await nextConfig.headers!();
-    const permissionsPolicy = headerGroups
-      .flatMap((group) => group.headers)
-      .find((header) => header.key === "Permissions-Policy");
+async function permissionsPolicyValues(): Promise<string[]> {
+  const headerGroups = await nextConfig.headers!();
+  // Match case-insensitively and collect EVERY entry, not just the first.
+  // Next.js applies the last matching same-key header, so checking only
+  // `.find()` would stay green while a later route-specific `microphone=()`
+  // silently disabled voice practice.
+  return headerGroups
+    .flatMap((group) => group.headers)
+    .filter((header) => /^permissions-policy$/i.test(header.key))
+    .map((header) => String(header.value));
+}
 
-    expect(permissionsPolicy).toBeDefined();
-    expect(permissionsPolicy!.value).not.toMatch(/(^|[;,\s])microphone\s*=/);
+describe("Permissions-Policy", () => {
+  it("does not deny the microphone in ANY policy entry", async () => {
+    const values = await permissionsPolicyValues();
+    expect(values.length).toBeGreaterThan(0);
+    for (const value of values) {
+      expect(value).not.toMatch(/(^|[;,\s])microphone\s*=/i);
+    }
   });
 
   it("still denies the features we intend to deny", async () => {
-    const headerGroups = await nextConfig.headers!();
-    const value = headerGroups
-      .flatMap((group) => group.headers)
-      .find((header) => header.key === "Permissions-Policy")!.value;
-
+    const values = await permissionsPolicyValues();
     for (const feature of ["camera", "geolocation", "payment", "usb"]) {
-      expect(value).toMatch(new RegExp(`${feature}=\\(\\)`));
+      expect(values.some((value) => new RegExp(`${feature}=\\(\\)`).test(value))).toBe(
+        true,
+      );
     }
   });
 });
