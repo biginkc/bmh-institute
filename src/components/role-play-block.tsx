@@ -187,12 +187,20 @@ export function RolePlayBlock({
           </div>
         ) : null}
       </div>
+      {/*
+        `autoplay` is load-bearing, not cosmetic. The autoplay policy's default
+        allowlist is 'self', so a cross-origin child cannot resume an
+        AudioContext or play the persona's audio track without this delegation
+        — even after the learner clicks Start inside the frame. Without it the
+        agent joins, listens, then dies with browser_persona_audio_unavailable.
+        Observed in production 2026-07-27.
+      */}
       <iframe
         ref={iframeRef}
         src={iframeSrc}
         onLoad={() => setLoaded(true)}
         title={title || "Role play"}
-        allow="microphone; clipboard-write"
+        allow="microphone; autoplay; clipboard-write"
         sandbox="allow-scripts allow-same-origin allow-forms"
         className={cn("w-full", pending && "opacity-80")}
         style={{ height: `${heightPx}px` }}

@@ -207,10 +207,15 @@ describe("<RolePlayBlock /> rp.launch handshake", () => {
     expect(screen.getByRole("status")).toHaveTextContent("Ready");
   });
 
-  it("delegates the microphone and keeps allow-same-origin", () => {
+  it("delegates microphone AND autoplay, and keeps allow-same-origin", () => {
     renderBlock();
     const iframe = screen.getByTitle("Opening practice") as HTMLIFrameElement;
-    expect(iframe.getAttribute("allow")).toContain("microphone");
+    const allow = iframe.getAttribute("allow") ?? "";
+    expect(allow).toContain("microphone");
+    // Without autoplay the agent joins and then dies with
+    // browser_persona_audio_unavailable: a cross-origin child cannot resume an
+    // AudioContext or play the persona track. Observed in production.
+    expect(allow).toContain("autoplay");
     // getUserMedia is refused in a sandboxed frame without allow-same-origin.
     expect(iframe.getAttribute("sandbox")).toContain("allow-same-origin");
   });
