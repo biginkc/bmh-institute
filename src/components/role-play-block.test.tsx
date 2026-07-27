@@ -1,7 +1,8 @@
 import { act, render, screen, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const completeRolePlayBlock = vi.fn();
+const refreshRolePlayEmbed = vi.fn();
 const refresh = vi.fn();
 
 vi.mock("next/navigation", () => ({
@@ -10,6 +11,7 @@ vi.mock("next/navigation", () => ({
 
 vi.mock("@/app/(dashboard)/lessons/[lessonId]/actions", () => ({
   completeRolePlayBlock: (...args: unknown[]) => completeRolePlayBlock(...args),
+  refreshRolePlayEmbed: (...args: unknown[]) => refreshRolePlayEmbed(...args),
 }));
 
 import { RolePlayBlock } from "./role-play-block";
@@ -29,6 +31,7 @@ describe("<RolePlayBlock /> completion messages", () => {
         title="Opening practice"
         iframeSrc="https://lab.example.com/embed/role-play/scenario-1?token=secret"
         launchCredential="launch-credential-1"
+        mintedAtMs={Date.now()}
       initialHeightPx={720}
         initialComplete={false}
       />,
@@ -85,6 +88,7 @@ describe("<RolePlayBlock /> completion messages", () => {
         title="Opening practice"
         iframeSrc="https://lab.example.com/embed/role-play/scenario-1?token=secret"
         launchCredential="launch-credential-1"
+        mintedAtMs={Date.now()}
         initialHeightPx={720}
         initialComplete
       />,
@@ -101,7 +105,10 @@ describe("<RolePlayBlock /> rp.launch handshake", () => {
     "https://lab.example.com/embed/role-play/scenario-1?token=secret";
   const CL_ORIGIN = "https://lab.example.com";
 
-  function renderBlock(launchCredential = "launch-credential-1") {
+  function renderBlock(
+    launchCredential = "launch-credential-1",
+    mintedAtMs = Date.now(),
+  ) {
     render(
       <RolePlayBlock
         blockId="block-1"
@@ -109,6 +116,7 @@ describe("<RolePlayBlock /> rp.launch handshake", () => {
         title="Opening practice"
         iframeSrc={IFRAME_SRC}
         launchCredential={launchCredential}
+        mintedAtMs={mintedAtMs}
         initialHeightPx={720}
         initialComplete={false}
       />,
@@ -213,5 +221,170 @@ describe("<RolePlayBlock /> rp.launch handshake", () => {
     expect(iframe.getAttribute("allow")).toContain("microphone");
     // getUserMedia is refused in a sandboxed frame without allow-same-origin.
     expect(iframe.getAttribute("sandbox")).toContain("allow-same-origin");
+  });
+});
+
+describe("<RolePlayBlock /> credential refresh and readiness", () => {
+  const IFRAME_SRC =
+    "https://lab.example.com/embed/role-play/scenario-1?token=secret";
+  const REFRESHED_SRC =
+    "https://lab.example.com/embed/role-play/scenario-1?token=secret2";
+  const CL_ORIGIN = "https://lab.example.com";
+  const STALE = 4 * 60 * 1000;
+
+  function renderStale(mintedAgoMs = STALE) {
+    render(
+      <RolePlayBlock
+        blockId="block-1"
+        scenarioId="scenario-1"
+        title="Opening practice"
+        iframeSrc={IFRAME_SRC}
+        launchCredential="cred-old"
+        mintedAtMs={Date.now() - mintedAgoMs}
+        initialHeightPx={720}
+        initialComplete={false}
+      />,
+    );
+    const iframe = screen.getByTitle("Opening practice") as HTMLIFrameElement;
+    const postMessage = vi.fn();
+    Object.defineProperty(iframe, "contentWindow", {
+      configurable: true,
+      value: { postMessage },
+    });
+    return { iframe, postMessage };
+  }
+
+  function send(iframe: HTMLIFrameElement, data: Record<string, unknown>) {
+    act(() => {
+      window.dispatchEvent(
+        new MessageEvent("message", {
+          data,
+          origin: CL_ORIGIN,
+          source: iframe.contentWindow,
+        }),
+      );
+    });
+  }
+
+  beforeEach(() => {
+    // Scoped to this block: the suites above rely on real timers via waitFor.
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    refreshRolePlayEmbed.mockReset();
+    refreshRolePlayEmbed.mockResolvedValue({
+      ok: true,
+      iframeSrc: REFRESHED_SRC,
+      launchCredential: "cred-new",
+      mintedAtMs: Date.now(),
+    });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("re-mints a stale credential and hands the fresh one to the iframe", async () => {
+    const { iframe } = renderStale();
+    expect(iframe.getAttribute("src")).toBe(IFRAME_SRC);
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(31_000);
+    });
+
+    expect(refreshRolePlayEmbed).toHaveBeenCalledWith({
+      blockId: "block-1",
+      scenarioId: "scenario-1",
+    });
+
+    const reloaded = screen.getByTitle("Opening practice") as HTMLIFrameElement;
+    expect(reloaded.getAttribute("src")).toBe(REFRESHED_SRC);
+
+    // The reloaded frame announces itself; it must receive the NEW credential.
+    const postMessage = vi.fn();
+    Object.defineProperty(reloaded, "contentWindow", {
+      configurable: true,
+      value: { postMessage },
+    });
+    send(reloaded, { type: "rp.ready", scenario_id: "scenario-1" });
+    expect(postMessage).toHaveBeenCalledWith(
+      expect.objectContaining({ credential: "cred-new" }),
+      CL_ORIGIN,
+    );
+  });
+
+  it("does not re-mint while a credential is still fresh", async () => {
+    renderStale(10_000);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(60_000);
+    });
+    expect(refreshRolePlayEmbed).not.toHaveBeenCalled();
+  });
+
+  it("stops re-minting once rp.started arrives, so a live session is never torn down", async () => {
+    const { iframe } = renderStale();
+    send(iframe, { type: "rp.started", scenario_id: "scenario-1" });
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(120_000);
+    });
+
+    expect(refreshRolePlayEmbed).not.toHaveBeenCalled();
+    expect(iframe.getAttribute("src")).toBe(IFRAME_SRC);
+    expect(screen.getByRole("status")).toHaveTextContent("In progress");
+  });
+
+  it("ignores rp.started from an untrusted source", async () => {
+    const { iframe } = renderStale();
+    act(() => {
+      window.dispatchEvent(
+        new MessageEvent("message", {
+          data: { type: "rp.started", scenario_id: "scenario-1" },
+          origin: "https://evil.example",
+          source: iframe.contentWindow,
+        }),
+      );
+    });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(31_000);
+    });
+    // Untrusted rp.started must not be able to suppress the refresh.
+    expect(refreshRolePlayEmbed).toHaveBeenCalled();
+  });
+
+  it("surfaces an actionable error when the iframe never becomes ready", async () => {
+    renderStale(0);
+    expect(screen.queryByRole("alert")).toBeNull();
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(21_000);
+    });
+
+    const alert = screen.getByRole("alert");
+    expect(alert).toBeVisible();
+    expect(alert).toHaveTextContent(/didn't load/i);
+    expect(alert).toHaveTextContent("scenario-1");
+  });
+
+  it("does not show the readiness error once the iframe is ready", async () => {
+    const { iframe } = renderStale(0);
+    send(iframe, { type: "rp.ready", scenario_id: "scenario-1" });
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(31_000);
+    });
+
+    expect(screen.queryByRole("alert")).toBeNull();
+    expect(screen.getByRole("status")).toHaveTextContent("Ready");
+  });
+
+  it("keeps the old credential when a refresh fails rather than breaking the frame", async () => {
+    refreshRolePlayEmbed.mockResolvedValue({ ok: false, error: "nope" });
+    const { iframe } = renderStale();
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(31_000);
+    });
+
+    expect(refreshRolePlayEmbed).toHaveBeenCalled();
+    expect(iframe.getAttribute("src")).toBe(IFRAME_SRC);
   });
 });

@@ -1,10 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { CheckCircle2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-import { completeRolePlayBlock } from "@/app/(dashboard)/lessons/[lessonId]/actions";
+import {
+  completeRolePlayBlock,
+  refreshRolePlayEmbed,
+} from "@/app/(dashboard)/lessons/[lessonId]/actions";
 import {
   clampRolePlayHeight,
   getTrustedOrigin,
@@ -13,12 +16,28 @@ import {
 } from "@/lib/role-plays/embed-events";
 import { cn } from "@/lib/utils";
 
+/**
+ * Credentials are minted with a hard 300s TTL. Re-mint once they pass this age
+ * so clicking Start is never the moment we discover they expired. Comfortably
+ * inside 300s, and far enough above the 30s poll to avoid churn.
+ */
+const CREDENTIAL_STALE_MS = 3.5 * 60 * 1000;
+const CREDENTIAL_POLL_MS = 30 * 1000;
+
+/**
+ * If the iframe has not announced itself by now, something upstream is wrong
+ * (Closer Lab down, CSP, network). Say so instead of showing a blank box
+ * forever.
+ */
+const READY_TIMEOUT_MS = 20 * 1000;
+
 type RolePlayBlockProps = {
   blockId: string;
   scenarioId: string;
   title: string;
   iframeSrc: string;
   launchCredential: string;
+  mintedAtMs: number;
   initialHeightPx: number;
   initialComplete: boolean;
 };
@@ -27,20 +46,36 @@ export function RolePlayBlock({
   blockId,
   scenarioId,
   title,
-  iframeSrc,
-  launchCredential,
+  iframeSrc: initialIframeSrc,
+  launchCredential: initialLaunchCredential,
+  mintedAtMs: initialMintedAtMs,
   initialHeightPx,
   initialComplete,
 }: RolePlayBlockProps) {
   const router = useRouter();
+  const [iframeSrc, setIframeSrc] = useState(initialIframeSrc);
+  const [launchCredential, setLaunchCredential] = useState(
+    initialLaunchCredential,
+  );
   const [ready, setReady] = useState(false);
+  const [started, setStarted] = useState(false);
   const [complete, setComplete] = useState(initialComplete);
   const [error, setError] = useState<string | null>(null);
   const [heightPx, setHeightPx] = useState(clampRolePlayHeight(initialHeightPx));
   const [pending, startTransition] = useTransition();
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const completedRef = useRef(initialComplete);
+  const readyRef = useRef(false);
+  const startedRef = useRef(false);
+  const refreshingRef = useRef(false);
+  // 0 or absent means "age unknown" — treated as stale below, so an older
+  // cached block without this field simply re-mints once.
+  const mintedAtRef = useRef(initialMintedAtMs);
   const trustedOrigin = useMemo(() => getTrustedOrigin(iframeSrc), [iframeSrc]);
+
+  useEffect(() => {
+    readyRef.current = ready;
+  }, [ready]);
 
   useEffect(() => {
     if (!trustedOrigin) return;
@@ -65,11 +100,13 @@ export function RolePlayBlock({
 
       if (data.type === "rp.ready") {
         setReady(true);
+        readyRef.current = true;
+        setError(null);
         // Answer EVERY rp.ready, not just the first. Closer Lab re-posts every
         // 500ms for 30s and keeps the first credential it receives, so replying
         // each time makes the handshake self-healing against a dropped message
         // without minting anything extra — the credential is minted once per
-        // RSC render. Never use "*" here: this is a bearer capability.
+        // render. Never use "*" here: this is a bearer capability.
         const target = iframeRef.current?.contentWindow;
         if (target && launchCredential) {
           target.postMessage(
@@ -81,6 +118,11 @@ export function RolePlayBlock({
             targetOrigin,
           );
         }
+      } else if (data.type === "rp.started") {
+        // A session is live. Stop re-minting: swapping the iframe src now would
+        // tear the learner's role play down mid-run.
+        startedRef.current = true;
+        setStarted(true);
       } else if (data.type === "rp.height") {
         setHeightPx(clampRolePlayHeight(data.height_px));
       } else if (data.type === "rp.error") {
@@ -111,6 +153,61 @@ export function RolePlayBlock({
     return () => window.removeEventListener("message", onMessage);
   }, [blockId, launchCredential, router, scenarioId, trustedOrigin]);
 
+  const refreshIfStale = useCallback(async () => {
+    if (typeof document !== "undefined" && document.hidden) return;
+    if (startedRef.current || completedRef.current) return;
+    if (refreshingRef.current) return;
+    const mintedAt = mintedAtRef.current;
+    const ageIsKnown = Number.isFinite(mintedAt) && mintedAt > 0;
+    if (ageIsKnown && Date.now() - mintedAt < CREDENTIAL_STALE_MS) return;
+
+    refreshingRef.current = true;
+    try {
+      const result = await refreshRolePlayEmbed({ blockId, scenarioId });
+      // Re-check: the learner may have started while the request was in flight.
+      if (startedRef.current || completedRef.current) return;
+      if (result.ok) {
+        mintedAtRef.current = result.mintedAtMs;
+        setLaunchCredential(result.launchCredential);
+        // Changing src reloads the iframe, which re-mints Closer Lab's frame
+        // proof and produces a fresh rp.ready we answer with the new
+        // credential.
+        setIframeSrc(result.iframeSrc);
+        setReady(false);
+        readyRef.current = false;
+        setError(null);
+      }
+      // A failed refresh is deliberately silent: the existing credential may
+      // still be valid, and the readiness timeout will surface a real problem.
+    } finally {
+      refreshingRef.current = false;
+    }
+  }, [blockId, scenarioId]);
+
+  useEffect(() => {
+    if (started || complete) return;
+    const interval = setInterval(refreshIfStale, CREDENTIAL_POLL_MS);
+    const onVisible = () => void refreshIfStale();
+    window.addEventListener("focus", onVisible);
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("focus", onVisible);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [complete, refreshIfStale, started]);
+
+  useEffect(() => {
+    if (ready || complete) return;
+    const timer = setTimeout(() => {
+      if (readyRef.current) return;
+      setError(
+        `The practice didn't load. Reload the page, and if it keeps happening tell your admin (scenario ${scenarioId}).`,
+      );
+    }, READY_TIMEOUT_MS);
+    return () => clearTimeout(timer);
+  }, [complete, iframeSrc, ready, scenarioId]);
+
   // Without a credential the child would spin on "Waiting for BMH Institute…"
   // forever, so a mint failure must surface as unconfigured instead.
   if (!iframeSrc || !trustedOrigin || !launchCredential) {
@@ -136,9 +233,11 @@ export function RolePlayBlock({
           >
             {complete
               ? "Completed"
-              : ready
-                ? "Ready"
-                : "Loading role play"}
+              : started
+                ? "In progress"
+                : ready
+                  ? "Ready"
+                  : "Loading role play"}
           </p>
         </div>
         {complete ? (

@@ -3,7 +3,12 @@
 import { revalidatePath } from "next/cache";
 
 import { emitSandraCourseCompletedForBlock } from "@/lib/integrations/sandra/course-completed";
+import { getAppUrl } from "@/lib/app-url";
+import { getRolePlayBaseUrl } from "@/lib/role-plays/base-url";
 import { verifyRolePlayCompletionToken } from "@/lib/role-plays/completion-token";
+import { mintRolePlayEmbedToken } from "@/lib/role-plays/embed-token";
+import { mintRolePlayLaunchCredential } from "@/lib/role-plays/launch-credential";
+import { isConfiguredRolePlayScenarioId } from "@/lib/role-plays/scenario-id";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -362,4 +367,119 @@ function scenarioFromContent(value: unknown) {
   if (!value || typeof value !== "object" || Array.isArray(value)) return "";
   const scenario = (value as Record<string, unknown>).scenario_id;
   return typeof scenario === "string" ? scenario.trim() : "";
+}
+
+export type RefreshRolePlayEmbedResult =
+  | {
+      ok: true;
+      iframeSrc: string;
+      launchCredential: string;
+      mintedAtMs: number;
+    }
+  | { ok: false; error: string };
+
+/**
+ * Re-mint the role-play admission token and launch credential for a block the
+ * learner is already entitled to.
+ *
+ * Both credentials are minted during the lesson's server render with a hard
+ * 300-second TTL that cannot be raised (Closer Lab independently re-enforces
+ * it, and the value is inside the byte-compared parent-launch contract). A
+ * learner who reads a lesson for longer than that and then clicks Start would
+ * otherwise be told their login expired — which is false, and which sends them
+ * to a Closer Lab login page they have no account for.
+ *
+ * This mints a bearer capability, so it repeats every entitlement check the
+ * lesson page performs. It must never mint from a client-supplied identifier
+ * alone: the block is re-read from the database, its type and scenario are
+ * re-checked, and the lesson prerequisite chain is re-evaluated for the
+ * *session* user, never for a user id sent by the client.
+ */
+export async function refreshRolePlayEmbed(input: {
+  blockId: string;
+  scenarioId: string;
+}): Promise<RefreshRolePlayEmbedResult> {
+  const learner = await createClient();
+  const {
+    data: { user },
+  } = await learner.auth.getUser();
+  if (!user) return { ok: false, error: "You must be signed in." };
+
+  const blockId = input.blockId.trim();
+  const scenarioId = input.scenarioId.trim();
+  if (!blockId || !scenarioId) {
+    return { ok: false, error: "Role play refresh is missing required data." };
+  }
+  if (!isConfiguredRolePlayScenarioId(scenarioId)) {
+    return { ok: false, error: "Role play not configured." };
+  }
+
+  const { data: block } = await learner
+    .from("content_blocks")
+    .select("id, lesson_id, block_type, content")
+    .eq("id", blockId)
+    .maybeSingle();
+  if (
+    !block ||
+    block.block_type !== "role_play" ||
+    scenarioFromContent(block.content) !== scenarioId
+  ) {
+    return { ok: false, error: "This role play does not belong to the lesson." };
+  }
+
+  const { data: unlocked } = await learner.rpc("fn_lesson_is_unlocked", {
+    p_user_id: user.id,
+    p_lesson_id: block.lesson_id,
+  });
+  if (unlocked !== true) {
+    return { ok: false, error: "Complete the prerequisite lessons first." };
+  }
+
+  const baseUrl = getRolePlayBaseUrl();
+  if (!baseUrl) return { ok: false, error: "Role play not configured." };
+
+  const { data: profile } = await learner
+    .from("profiles")
+    .select("full_name")
+    .eq("id", user.id)
+    .maybeSingle();
+  const learnerName = profile?.full_name || user.email || "Learner";
+
+  try {
+    // One `now` for both mints so the admission token, the launch credential
+    // and Closer Lab's frame proof stay in lockstep.
+    const now = new Date();
+    const parentOrigin = new URL(getAppUrl()).origin;
+    const token = mintRolePlayEmbedToken({
+      userId: user.id,
+      lessonId: block.lesson_id,
+      blockId: block.id,
+      learnerName,
+      scenarioId,
+      parentOrigin,
+      now,
+    });
+    const launchCredential = mintRolePlayLaunchCredential({
+      token,
+      userId: user.id,
+      lessonId: block.lesson_id,
+      blockId: block.id,
+      scenarioId,
+      parentOrigin,
+      now,
+    });
+    const iframeUrl = new URL(
+      `/embed/role-play/${encodeURIComponent(scenarioId)}`,
+      baseUrl,
+    );
+    iframeUrl.searchParams.set("token", token);
+    return {
+      ok: true,
+      iframeSrc: iframeUrl.toString(),
+      launchCredential,
+      mintedAtMs: now.getTime(),
+    };
+  } catch {
+    return { ok: false, error: "Role play not configured." };
+  }
 }

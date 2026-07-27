@@ -34,6 +34,7 @@ import { getAppUrl } from "@/lib/app-url";
 import { pairedQuizParentHref } from "@/lib/courses/paired-quiz";
 import { mintRolePlayEmbedToken } from "@/lib/role-plays/embed-token";
 import { mintRolePlayLaunchCredential } from "@/lib/role-plays/launch-credential";
+import { getRolePlayBaseUrl } from "@/lib/role-plays/base-url";
 import { isConfiguredRolePlayScenarioId } from "@/lib/role-plays/scenario-id";
 import { createClient } from "@/lib/supabase/server";
 import { getRequestAuthContext } from "@/lib/auth/request-context";
@@ -622,6 +623,10 @@ async function attachRolePlayEmbeds(
           ...block.content,
           iframe_src: iframeUrl.toString(),
           launch_credential: launchCredential,
+          // Lets the client know the credential's age without decoding the JWT,
+          // so it can re-mint before the 300s TTL turns a Start click into a
+          // misleading "session expired".
+          minted_at_ms: now.getTime(),
         },
       };
     } catch {
@@ -671,26 +676,6 @@ function LessonError({ error, courseId }: { error: string; courseId: string }) {
   );
 }
 
-function getRolePlayBaseUrl(): string | null {
-  const value = process.env.NEXT_PUBLIC_ROLE_PLAY_BASE_URL;
-  if (!value) return null;
-  try {
-    const url = new URL(value);
-    // This origin receives BOTH learner-bound bearer credentials: the
-    // admission token in the iframe URL and the launch credential over
-    // postMessage. Fail closed rather than hand them to a plaintext or
-    // credential-bearing origin that a misconfiguration introduced.
-    if (url.username || url.password) return null;
-    const isLoopback = ["localhost", "127.0.0.1"].includes(url.hostname);
-    if (url.protocol === "https:") return url.origin;
-    if (url.protocol === "http:" && isLoopback && process.env.NODE_ENV !== "production") {
-      return url.origin;
-    }
-    return null;
-  } catch {
-    return null;
-  }
-}
 
 function firstRow<T>(value: T | T[] | null | undefined): T | null {
   if (!value) return null;

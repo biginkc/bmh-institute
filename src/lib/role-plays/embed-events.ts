@@ -1,5 +1,13 @@
 export type RolePlayEvent =
   | { type: "rp.ready"; scenario_id: string }
+  /**
+   * Closer Lab posts this once the attempt is created. It is the only signal
+   * Institute has that a session is live, and it gates credential re-minting:
+   * re-minting resets the iframe `src`, which would tear down a running role
+   * play. Treated as "not started" when never received, so a Closer Lab that
+   * has not shipped it yet degrades safely.
+   */
+  | { type: "rp.started"; scenario_id: string }
   | { type: "rp.height"; scenario_id: string; height_px: number }
   | {
       type: "rp.complete";
@@ -18,6 +26,7 @@ export function parseRolePlayEvent(value: unknown): RolePlayEvent | null {
     return null;
   }
   if (data.type === "rp.ready") return data as RolePlayEvent;
+  if (data.type === "rp.started") return data as RolePlayEvent;
   if (data.type === "rp.height" && typeof data.height_px === "number") {
     return data as RolePlayEvent;
   }
