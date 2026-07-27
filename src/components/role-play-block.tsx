@@ -200,7 +200,7 @@ export function RolePlayBlock({
         src={iframeSrc}
         onLoad={() => setLoaded(true)}
         title={title || "Role play"}
-        allow="microphone; camera; autoplay; clipboard-write"
+        allow="microphone; autoplay; clipboard-write"
         sandbox="allow-scripts allow-same-origin allow-forms"
         className={cn("w-full", pending && "opacity-80")}
         style={{ height: `${heightPx}px` }}

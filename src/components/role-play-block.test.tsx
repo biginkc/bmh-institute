@@ -212,7 +212,7 @@ describe("<RolePlayBlock /> rp.launch handshake", () => {
     const iframe = screen.getByTitle("Opening practice") as HTMLIFrameElement;
     const allow = iframe.getAttribute("allow") ?? "";
     expect(allow).toContain("microphone");
-    expect(allow).toContain("camera");
+    expect(allow).not.toContain("camera");
     // Without autoplay the agent joins and then dies with
     // browser_persona_audio_unavailable: a cross-origin child cannot resume an
     // AudioContext or play the persona track. Observed in production.
