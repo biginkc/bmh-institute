@@ -1,0 +1,207 @@
+import { createHash } from "node:crypto";
+
+import { describe, expect, it } from "vitest";
+
+import contractVector from "../../../tests/fixtures/embed-parent-launch-contract.v1.json";
+import { mintRolePlayEmbedToken } from "./embed-token";
+import {
+  ROLE_PLAY_LAUNCH_AUDIENCE,
+  ROLE_PLAY_LAUNCH_PURPOSE,
+  mintRolePlayLaunchCredential,
+} from "./launch-credential";
+
+/**
+ * Source of truth for this fixture is Closer Lab:
+ *   Closer Lab/tests/fixtures/embed-parent-launch-contract.v1.json
+ * consumed by CL/src/lib/embed/parent-launch.test.ts ("accepts the exact
+ * deterministic Institute producer contract vector"). CL byte-compares the
+ * whole credential string, so any drift here is a cross-app break.
+ */
+const { input, secret, launch_jti: launchJti, token, launchCredential } =
+  contractVector;
+
+function launchInput() {
+  return {
+    token,
+    userId: input.userId,
+    lessonId: input.lessonId,
+    blockId: input.blockId,
+    scenarioId: input.scenarioId,
+    parentOrigin: input.parentOrigin,
+    jti: launchJti,
+    now: new Date(input.now),
+  };
+}
+
+function decodePayload(credential: string): Record<string, unknown> {
+  return JSON.parse(
+    Buffer.from(credential.split(".")[1], "base64url").toString("utf8"),
+  );
+}
+
+describe("mintRolePlayLaunchCredential", () => {
+  it("reproduces the Closer Lab golden producer vector byte-for-byte", () => {
+    expect(mintRolePlayLaunchCredential(launchInput(), secret)).toBe(
+      launchCredential,
+    );
+  });
+
+  it("keeps the admission token mint coupled to the same vector", () => {
+    expect(
+      mintRolePlayEmbedToken(
+        {
+          userId: input.userId,
+          lessonId: input.lessonId,
+          blockId: input.blockId,
+          learnerName: input.learnerName,
+          scenarioId: input.scenarioId,
+          parentOrigin: input.parentOrigin,
+          now: new Date(input.now),
+        },
+        secret,
+      ),
+    ).toBe(token);
+  });
+
+  it("emits the exact JOSE header", () => {
+    const credential = mintRolePlayLaunchCredential(launchInput(), secret);
+    expect(
+      Buffer.from(credential.split(".")[0], "base64url").toString("utf8"),
+    ).toBe('{"alg":"HS256","typ":"JWT"}');
+  });
+
+  it("emits claims in the load-bearing key order", () => {
+    // CL byte-compares the credential, so a reorder silently breaks the contract.
+    const credential = mintRolePlayLaunchCredential(launchInput(), secret);
+    expect(Object.keys(decodePayload(credential))).toEqual([
+      "iss",
+      "aud",
+      "sub",
+      "lesson_id",
+      "block_id",
+      "scenario_id",
+      "parent_origin",
+      "token_sha256",
+      "jti",
+      "purpose",
+      "iat",
+      "exp",
+    ]);
+  });
+
+  it("uses the parent-launch audience and purpose, not the admission audience", () => {
+    const payload = decodePayload(
+      mintRolePlayLaunchCredential(launchInput(), secret),
+    );
+    expect(payload.aud).toBe(ROLE_PLAY_LAUNCH_AUDIENCE);
+    expect(payload.aud).toBe("closer-lab-parent-launch");
+    expect(payload.purpose).toBe(ROLE_PLAY_LAUNCH_PURPOSE);
+  });
+
+  it("never leaks learner_name into the launch credential", () => {
+    expect(
+      decodePayload(mintRolePlayLaunchCredential(launchInput(), secret)),
+    ).not.toHaveProperty("learner_name");
+  });
+
+  it("binds token_sha256 to the exact admission token", () => {
+    const payload = decodePayload(
+      mintRolePlayLaunchCredential(launchInput(), secret),
+    );
+    expect(payload.token_sha256).toBe(
+      createHash("sha256").update(token).digest("hex"),
+    );
+    expect(payload.token_sha256).toMatch(/^[0-9a-f]{64}$/);
+  });
+
+  it("changes token_sha256 when a single token character changes", () => {
+    const mutated = `${token.slice(0, -1)}${token.endsWith("A") ? "B" : "A"}`;
+    const payload = decodePayload(
+      mintRolePlayLaunchCredential({ ...launchInput(), token: mutated }, secret),
+    );
+    expect(payload.token_sha256).not.toBe(
+      createHash("sha256").update(token).digest("hex"),
+    );
+  });
+
+  it("mints a 43-char base64url jti of 32 random bytes that never repeats", () => {
+    const seen = new Set<string>();
+    for (let index = 0; index < 1000; index += 1) {
+      const payload = decodePayload(
+        mintRolePlayLaunchCredential(
+          { ...launchInput(), jti: undefined },
+          secret,
+        ),
+      );
+      const jti = payload.jti as string;
+      expect(jti).toMatch(/^[A-Za-z0-9_-]{43}$/);
+      expect(Buffer.from(jti, "base64url")).toHaveLength(32);
+      expect(seen.has(jti)).toBe(false);
+      seen.add(jti);
+    }
+    expect(seen.size).toBe(1000);
+  });
+
+  it("defaults to a 300 second lifetime and rejects anything longer", () => {
+    const payload = decodePayload(
+      mintRolePlayLaunchCredential(launchInput(), secret),
+    );
+    expect((payload.exp as number) - (payload.iat as number)).toBe(300);
+
+    for (const ttlSeconds of [0, -1, 301, 1.5, Number.NaN]) {
+      expect(() =>
+        mintRolePlayLaunchCredential({ ...launchInput(), ttlSeconds }, secret),
+      ).toThrow(/lifetime/i);
+    }
+  });
+
+  it("rejects malformed identifiers", () => {
+    const cases: Array<Partial<ReturnType<typeof launchInput>>> = [
+      { userId: "" },
+      { lessonId: "   " },
+      { blockId: "a".repeat(257) },
+      { scenarioId: "bad\u0000id" },
+    ];
+    for (const override of cases) {
+      expect(() =>
+        mintRolePlayLaunchCredential({ ...launchInput(), ...override }, secret),
+      ).toThrow();
+    }
+  });
+
+  it("accepts a real uuid scenario id", () => {
+    // Guards the control-character check against ever rejecting uuid hyphens.
+    expect(() =>
+      mintRolePlayLaunchCredential(
+        { ...launchInput(), scenarioId: "4fc80a3b-ca03-4ee7-8648-21433f9fb74f" },
+        secret,
+      ),
+    ).not.toThrow();
+  });
+
+  it("rejects a non-origin parentOrigin", () => {
+    for (const parentOrigin of [
+      "https://institute.bmhgroupkc.com/path",
+      "https://institute.bmhgroupkc.com?q=1",
+      "https://user:pw@institute.bmhgroupkc.com",
+      "http://institute.bmhgroupkc.com",
+      "not-a-url",
+    ]) {
+      expect(() =>
+        mintRolePlayLaunchCredential({ ...launchInput(), parentOrigin }, secret),
+      ).toThrow(/parent origin/i);
+    }
+  });
+
+  it("requires the admission token it binds", () => {
+    expect(() =>
+      mintRolePlayLaunchCredential({ ...launchInput(), token: "" }, secret),
+    ).toThrow(/admission token/i);
+  });
+
+  it("rejects a secret shorter than 32 bytes", () => {
+    expect(() => mintRolePlayLaunchCredential(launchInput(), "tooshort")).toThrow(
+      /32 bytes/i,
+    );
+  });
+});

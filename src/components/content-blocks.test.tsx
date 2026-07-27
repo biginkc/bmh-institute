@@ -112,6 +112,7 @@ describe("ContentBlockRenderer BMH treatments", () => {
           block_type: "role_play",
           content: {
             iframe_src: "https://practice.example.com/embed/role-play/scenario-1",
+            launch_credential: "launch-credential-1",
             scenario_id: "scenario-1",
             title: "Opening practice",
           },

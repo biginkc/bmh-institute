@@ -18,6 +18,7 @@ type RolePlayBlockProps = {
   scenarioId: string;
   title: string;
   iframeSrc: string;
+  launchCredential: string;
   initialHeightPx: number;
   initialComplete: boolean;
 };
@@ -27,6 +28,7 @@ export function RolePlayBlock({
   scenarioId,
   title,
   iframeSrc,
+  launchCredential,
   initialHeightPx,
   initialComplete,
 }: RolePlayBlockProps) {
@@ -42,6 +44,8 @@ export function RolePlayBlock({
 
   useEffect(() => {
     if (!trustedOrigin) return;
+    // Narrowed once here; the nested handler closes over this non-null copy.
+    const targetOrigin = trustedOrigin;
 
     function onMessage(event: MessageEvent) {
       const data = parseRolePlayEvent(event.data);
@@ -61,6 +65,22 @@ export function RolePlayBlock({
 
       if (data.type === "rp.ready") {
         setReady(true);
+        // Answer EVERY rp.ready, not just the first. Closer Lab re-posts every
+        // 500ms for 30s and keeps the first credential it receives, so replying
+        // each time makes the handshake self-healing against a dropped message
+        // without minting anything extra — the credential is minted once per
+        // RSC render. Never use "*" here: this is a bearer capability.
+        const target = iframeRef.current?.contentWindow;
+        if (target && launchCredential) {
+          target.postMessage(
+            {
+              type: "rp.launch",
+              scenario_id: scenarioId,
+              credential: launchCredential,
+            },
+            targetOrigin,
+          );
+        }
       } else if (data.type === "rp.height") {
         setHeightPx(clampRolePlayHeight(data.height_px));
       } else if (data.type === "rp.error") {
@@ -89,9 +109,11 @@ export function RolePlayBlock({
 
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
-  }, [blockId, router, scenarioId, trustedOrigin]);
+  }, [blockId, launchCredential, router, scenarioId, trustedOrigin]);
 
-  if (!iframeSrc || !trustedOrigin) {
+  // Without a credential the child would spin on "Waiting for BMH Institute…"
+  // forever, so a mint failure must surface as unconfigured instead.
+  if (!iframeSrc || !trustedOrigin || !launchCredential) {
     return (
       <div className="rounded-[var(--bmh-radius-md)] border border-dashed border-[var(--ink-300)] bg-[var(--ink-050)] p-6 text-center font-[family-name:var(--font-body)] text-sm font-semibold text-[var(--text-muted)]">
         Role play not configured.
@@ -130,7 +152,7 @@ export function RolePlayBlock({
         ref={iframeRef}
         src={iframeSrc}
         title={title || "Role play"}
-        allow="microphone; camera; clipboard-write"
+        allow="microphone; clipboard-write"
         sandbox="allow-scripts allow-same-origin allow-forms"
         className={cn("w-full", pending && "opacity-80")}
         style={{ height: `${heightPx}px` }}

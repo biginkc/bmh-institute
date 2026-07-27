@@ -33,6 +33,7 @@ import { computeQuizEligibility } from "@/lib/quizzes/attempts";
 import { getAppUrl } from "@/lib/app-url";
 import { pairedQuizParentHref } from "@/lib/courses/paired-quiz";
 import { mintRolePlayEmbedToken } from "@/lib/role-plays/embed-token";
+import { mintRolePlayLaunchCredential } from "@/lib/role-plays/launch-credential";
 import { isConfiguredRolePlayScenarioId } from "@/lib/role-plays/scenario-id";
 import { createClient } from "@/lib/supabase/server";
 import { getRequestAuthContext } from "@/lib/auth/request-context";
@@ -588,13 +589,27 @@ async function attachRolePlayEmbeds(
     const scenarioId = stringOr(block.content.scenario_id, "");
     if (!isConfiguredRolePlayScenarioId(scenarioId) || !baseUrl) return block;
     try {
+      // Both mints share one `now` so the admission token, the launch
+      // credential and Closer Lab's frame proof expire in lockstep.
+      const now = new Date();
+      const parentOrigin = new URL(getAppUrl()).origin;
       const token = mintRolePlayEmbedToken({
         userId: identity.userId,
         lessonId,
         blockId: block.id,
         learnerName: identity.learnerName,
         scenarioId,
-        parentOrigin: new URL(getAppUrl()).origin,
+        parentOrigin,
+        now,
+      });
+      const launchCredential = mintRolePlayLaunchCredential({
+        token,
+        userId: identity.userId,
+        lessonId,
+        blockId: block.id,
+        scenarioId,
+        parentOrigin,
+        now,
       });
       const iframeUrl = new URL(
         `/embed/role-play/${encodeURIComponent(scenarioId)}`,
@@ -603,7 +618,11 @@ async function attachRolePlayEmbeds(
       iframeUrl.searchParams.set("token", token);
       return {
         ...block,
-        content: { ...block.content, iframe_src: iframeUrl.toString() },
+        content: {
+          ...block.content,
+          iframe_src: iframeUrl.toString(),
+          launch_credential: launchCredential,
+        },
       };
     } catch {
       return block;
@@ -656,7 +675,18 @@ function getRolePlayBaseUrl(): string | null {
   const value = process.env.NEXT_PUBLIC_ROLE_PLAY_BASE_URL;
   if (!value) return null;
   try {
-    return new URL(value).origin;
+    const url = new URL(value);
+    // This origin receives BOTH learner-bound bearer credentials: the
+    // admission token in the iframe URL and the launch credential over
+    // postMessage. Fail closed rather than hand them to a plaintext or
+    // credential-bearing origin that a misconfiguration introduced.
+    if (url.username || url.password) return null;
+    const isLoopback = ["localhost", "127.0.0.1"].includes(url.hostname);
+    if (url.protocol === "https:") return url.origin;
+    if (url.protocol === "http:" && isLoopback && process.env.NODE_ENV !== "production") {
+      return url.origin;
+    }
+    return null;
   } catch {
     return null;
   }

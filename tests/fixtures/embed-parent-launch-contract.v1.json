@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "input": {
+    "userId": "contract-user",
+    "lessonId": "contract-lesson",
+    "blockId": "contract-block",
+    "learnerName": "Contract Learner",
+    "scenarioId": "contract-scenario",
+    "parentOrigin": "https://institute.bmhgroupkc.com",
+    "now": "2026-07-23T12:00:00.000Z"
+  },
+  "secret": "0123456789abcdef0123456789abcdef",
+  "launch_jti": "ERERERERERERERERERERERERERERERERERERERERERE",
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzYW5kcmEtdW5pdmVyc2l0eSIsImF1ZCI6ImNsb3Nlci1sYWIiLCJzdWIiOiJjb250cmFjdC11c2VyIiwibGVzc29uX2lkIjoiY29udHJhY3QtbGVzc29uIiwiYmxvY2tfaWQiOiJjb250cmFjdC1ibG9jayIsImxlYXJuZXJfbmFtZSI6IkNvbnRyYWN0IExlYXJuZXIiLCJzY2VuYXJpb19pZCI6ImNvbnRyYWN0LXNjZW5hcmlvIiwicGFyZW50X29yaWdpbiI6Imh0dHBzOi8vaW5zdGl0dXRlLmJtaGdyb3Vwa2MuY29tIiwiaWF0IjoxNzg0ODA4MDAwLCJleHAiOjE3ODQ4MDgzMDB9.b-ZbomaDM14NxpFye9efcUfxHWqYP9EKlEtJrtauxgw",
+  "launchCredential": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzYW5kcmEtdW5pdmVyc2l0eSIsImF1ZCI6ImNsb3Nlci1sYWItcGFyZW50LWxhdW5jaCIsInN1YiI6ImNvbnRyYWN0LXVzZXIiLCJsZXNzb25faWQiOiJjb250cmFjdC1sZXNzb24iLCJibG9ja19pZCI6ImNvbnRyYWN0LWJsb2NrIiwic2NlbmFyaW9faWQiOiJjb250cmFjdC1zY2VuYXJpbyIsInBhcmVudF9vcmlnaW4iOiJodHRwczovL2luc3RpdHV0ZS5ibWhncm91cGtjLmNvbSIsInRva2VuX3NoYTI1NiI6IjY4ZWYxZjQzODk0ODhlZTY3MzkzNWVmZTM3NzFmMTIwNmU2OWFlOWYyY2EwNmQyMGE1YzdkNTVlN2JmZjA2NzkiLCJqdGkiOiJFUkVSRVJFUkVSRVJFUkVSRVJFUkVSRVJFUkVSRVJFUkVSRVJFUkVSRVJFIiwicHVycG9zZSI6ImVtYmVkLWF0dGVtcHQtbGF1bmNoIiwiaWF0IjoxNzg0ODA4MDAwLCJleHAiOjE3ODQ4MDgzMDB9.nQFGHTpl3ksLfg8RzyIb7UIiO7VYNepXCdHWT0Jox4Y"
+}
