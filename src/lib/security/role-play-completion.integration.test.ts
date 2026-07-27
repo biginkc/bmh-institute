@@ -306,23 +306,81 @@ describe.skipIf(!envPresent)("atomic role-play completion", () => {
       expect(progress.error).toBeNull();
       expect(progress.data).toHaveLength(1);
 
+      const suspendLearner = await admin
+        .from("profiles")
+        .update({ status: "suspended" })
+        .eq("id", userId);
+      if (suspendLearner.error) throw suspendLearner.error;
+      const suspendedLearner = await completeRolePlay(admin, {
+        userId,
+        blockId,
+        scenarioId: `scenario-${suffix}`,
+        attemptId: `suspended-learner-${suffix}`,
+      });
+      expect(suspendedLearner.error?.message).toMatch(
+        /active learner or authorized administrator is required/i,
+      );
+
+      const makeOwner = await admin
+        .from("profiles")
+        .update({ system_role: "owner", status: "active" })
+        .eq("id", userId);
+      if (makeOwner.error) throw makeOwner.error;
+      const ownerCompletion = await completeRolePlay(admin, {
+        userId,
+        blockId,
+        scenarioId: `scenario-${suffix}`,
+        attemptId: `owner-${suffix}`,
+      });
+      expect(ownerCompletion.error).toBeNull();
+      expect(ownerCompletion.data).toMatchObject({
+        lessonId: accessibleLessonId,
+        alreadyMarked: true,
+        resultCreated: true,
+      });
+
       const suspend = await admin
         .from("profiles")
         .update({ status: "suspended" })
         .eq("id", userId);
       if (suspend.error) throw suspend.error;
-      const suspended = await completeRolePlay(admin, {
+      const suspendedOwner = await completeRolePlay(admin, {
         userId,
         blockId,
         scenarioId: `scenario-${suffix}`,
-        attemptId: `suspended-${suffix}`,
+        attemptId: `suspended-owner-${suffix}`,
       });
-      expect(suspended.error?.message).toMatch(/active learner.*required/i);
+      expect(suspendedOwner.error?.message).toMatch(
+        /active learner or authorized administrator is required/i,
+      );
     } finally {
-      await admin.auth.admin.deleteUser(userId).catch(() => {});
-      if (courseId) await admin.from("courses").delete().eq("id", courseId);
+      const cleanupErrors: Error[] = [];
+      const restoreLearner = await admin
+        .from("profiles")
+        .update({ status: "active", system_role: "learner" })
+        .eq("id", userId);
+      if (restoreLearner.error) cleanupErrors.push(restoreLearner.error);
+      const deletedUser = await admin.auth.admin.deleteUser(userId);
+      if (deletedUser.error) cleanupErrors.push(deletedUser.error);
+      if (courseId) {
+        const deletedCourse = await admin
+          .from("courses")
+          .delete()
+          .eq("id", courseId);
+        if (deletedCourse.error) cleanupErrors.push(deletedCourse.error);
+      }
       if (roleGroupId) {
-        await admin.from("role_groups").delete().eq("id", roleGroupId);
+        const deletedRoleGroup = await admin
+          .from("role_groups")
+          .delete()
+          .eq("id", roleGroupId);
+        if (deletedRoleGroup.error) cleanupErrors.push(deletedRoleGroup.error);
+      }
+      if (cleanupErrors.length > 0) {
+        throw new AggregateError(
+          cleanupErrors,
+          "Role-play completion integration cleanup was not exact.",
+        );
       }
     }
   });

@@ -44,6 +44,27 @@ function uniquePlan(): ImportPlan {
   return buildImportPlan(manifest);
 }
 
+function rolePlayPlan(): ImportPlan {
+  const suffix = randomBytes(8).toString("hex");
+  const manifest = validCourseManifest();
+  manifest.import_id = `role-play-access-${suffix}`;
+  manifest.qa_role_group.name = `Role-play QA ${suffix}`;
+  const contentLesson = manifest.program.courses[0]?.modules[0]?.lessons.find(
+    (lesson) => lesson.type === "content",
+  );
+  if (!contentLesson?.blocks) {
+    throw new Error("Role-play import fixture lacks a content lesson.");
+  }
+  contentLesson.blocks.push({
+    source_key: "block-role-play",
+    type: "role_play",
+    sort_order: contentLesson.blocks.length,
+    required: false,
+    content: { scenario_id: randomUUID() },
+  });
+  return buildImportPlan(manifest);
+}
+
 function productionShapePlan(): ImportPlan {
   const suffix = randomBytes(8).toString("hex");
   const manifest = validCourseManifest();
@@ -536,6 +557,268 @@ function sqlLiteral(value: string): string {
   return `'${value.replaceAll("'", "''")}'`;
 }
 
+type SignedInTestUser = Awaited<ReturnType<typeof createSignedInUser>>;
+
+function importedRolePlayFixture(plan: ImportPlan) {
+  const operations = atomicImportOperations(plan);
+  const program = operations.find(
+    (candidate) => candidate.table === "programs",
+  );
+  const rolePlay = operations.find(
+    (candidate) =>
+      candidate.table === "content_blocks" &&
+      candidate.row.block_type === "role_play",
+  );
+  if (!program || !rolePlay) {
+    throw new Error("Role-play import operations are incomplete.");
+  }
+  return {
+    programId: program.id,
+    blockId: rolePlay.id,
+    scenarioId: String(
+      (rolePlay.row.content as { scenario_id?: unknown }).scenario_id,
+    ),
+  };
+}
+
+async function createTestRoleGroup(prefix: string): Promise<string> {
+  const created = await service
+    .from("role_groups")
+    .insert({ name: `${prefix} ${randomBytes(8).toString("hex")}` })
+    .select("id")
+    .single();
+  if (created.error || !created.data || typeof created.data.id !== "string") {
+    throw created.error ?? new Error(`${prefix} role group was not created.`);
+  }
+  return created.data.id;
+}
+
+function releaseEvidence(
+  catalogSha256: string,
+  manifestSha256: string,
+  gateSha256: string,
+) {
+  const recordedAt = new Date(Date.now() - 120_000).toISOString();
+  const approvedAt = new Date(Date.now() - 60_000).toISOString();
+  return {
+    manifest: {
+      sha256: manifestSha256,
+      recorded_at: recordedAt,
+      status: "finalized",
+    },
+    reconciliation: {
+      sha256: gateSha256,
+      catalog_sha256: catalogSha256,
+      recorded_at: recordedAt,
+      status: "passed",
+      exact: true,
+    },
+    rollback_rehearsal: {
+      sha256: gateSha256,
+      recorded_at: recordedAt,
+      status: "passed",
+    },
+    chrome_desktop: {
+      sha256: gateSha256,
+      recorded_at: recordedAt,
+      status: "passed",
+    },
+    chrome_mobile: {
+      sha256: gateSha256,
+      recorded_at: recordedAt,
+      status: "passed",
+    },
+    admin_happy_path: {
+      sha256: gateSha256,
+      recorded_at: recordedAt,
+      status: "passed",
+    },
+    jarrad_approval: {
+      sha256: gateSha256,
+      approved_at: approvedAt,
+      status: "approved",
+      approved_by: "Jarrad Henry",
+    },
+  };
+}
+
+async function completeImportedRolePlay(
+  fixture: ReturnType<typeof importedRolePlayFixture>,
+  userId: string,
+  attemptPrefix: string,
+) {
+  return service.rpc("fn_complete_role_play_block", {
+    p_user_id: userId,
+    p_block_id: fixture.blockId,
+    p_scenario_id: fixture.scenarioId,
+    p_attempt_id: `${attemptPrefix}-${randomUUID()}`,
+    p_score: 91,
+    p_goals_met: { authorization: true },
+    p_summary: {},
+  });
+}
+
+async function proveUnreleasedRolePlayAuthorization(
+  plan: ImportPlan,
+  fixture: ReturnType<typeof importedRolePlayFixture>,
+  owner: SignedInTestUser,
+  admin: SignedInTestUser,
+) {
+  const [ungrantedOwner, ungrantedAdmin] = await Promise.all([
+    completeImportedRolePlay(fixture, owner.id, "ungranted-owner"),
+    completeImportedRolePlay(fixture, admin.id, "ungranted-admin"),
+  ]);
+  expect(ungrantedOwner.error?.message).toMatch(
+    /authorized administrator is required/i,
+  );
+  expect(ungrantedAdmin.error?.message).toMatch(
+    /authorized administrator is required/i,
+  );
+
+  const reviewerGrant = await service.rpc(
+    "fn_set_unreleased_import_reviewer_v1",
+    {
+      p_program_id: fixture.programId,
+      p_user_id: owner.id,
+      p_allowed: true,
+    },
+  );
+  expect(reviewerGrant.error).toBeNull();
+  const reviewerCompletion = await completeImportedRolePlay(
+    fixture,
+    owner.id,
+    "reviewer",
+  );
+  expect(reviewerCompletion.error).toBeNull();
+  expect(reviewerCompletion.data).toMatchObject({ resultCreated: true });
+
+  const reviewerCleanup = await service.rpc(
+    "fn_cleanup_unreleased_import_reviewer_evidence_v1",
+    { p_import_id: plan.importId, p_user_id: owner.id },
+  );
+  expect(reviewerCleanup.error).toBeNull();
+  expect(reviewerCleanup.data).toMatchObject({
+    reviewer_access_revoked: true,
+  });
+}
+
+async function proveReleasedRolePlayAuthorization(
+  plan: ImportPlan,
+  fixture: ReturnType<typeof importedRolePlayFixture>,
+  owner: SignedInTestUser,
+  admin: SignedInTestUser,
+  employeeRoleGroupId: string,
+) {
+  const catalogDigest = await service.rpc("fn_course_import_catalog_sha256", {
+    p_import_id: plan.importId,
+  });
+  expect(catalogDigest.error).toBeNull();
+  expect(catalogDigest.data).toMatch(/^[a-f0-9]{64}$/);
+  const manifestDigest = "c".repeat(64);
+  const evidence = releaseEvidence(
+    String(catalogDigest.data),
+    manifestDigest,
+    "d".repeat(64),
+  );
+  return runPsql(
+    `
+      begin;
+      select set_config('request.jwt.claim.role', 'service_role', true);
+      select set_config('request.jwt.claim.sub', ${sqlLiteral(owner.id)}, true);
+      select public.fn_release_course_import_v1(
+        ${sqlLiteral(plan.importId)},
+        ${sqlLiteral(fixture.programId)}::uuid,
+        ${sqlLiteral(employeeRoleGroupId)}::uuid,
+        ${sqlLiteral(JSON.stringify(evidence))}::jsonb,
+        ${sqlLiteral(`RELEASE-BMH-INSTITUTE:${plan.importId}:${manifestDigest}`)}
+      );
+      select 'RELEASED_OWNER=' || (
+        public.fn_complete_role_play_block(
+          ${sqlLiteral(owner.id)}::uuid,
+          ${sqlLiteral(fixture.blockId)}::uuid,
+          ${sqlLiteral(fixture.scenarioId)},
+          ${sqlLiteral(`released-owner-${randomUUID()}`)},
+          92,
+          '{"authorization":true}'::jsonb,
+          '{}'::jsonb
+        ) ->> 'resultCreated'
+      );
+      select 'RELEASED_ADMIN=' || (
+        public.fn_complete_role_play_block(
+          ${sqlLiteral(admin.id)}::uuid,
+          ${sqlLiteral(fixture.blockId)}::uuid,
+          ${sqlLiteral(fixture.scenarioId)},
+          ${sqlLiteral(`released-admin-${randomUUID()}`)},
+          93,
+          '{"authorization":true}'::jsonb,
+          '{}'::jsonb
+        ) ->> 'resultCreated'
+      );
+      rollback;
+    `,
+    "bmh-role-play-released-admin",
+  );
+}
+
+async function cleanupRolePlayAuthorizationFixture(input: {
+  plan: ImportPlan;
+  owner: SignedInTestUser | null;
+  admin: SignedInTestUser | null;
+  employeeRoleGroupId: string | null;
+  importApplied: boolean;
+}) {
+  const cleanupErrors = [
+    ...(await cleanupRolePlayActor(input.owner)),
+    ...(await cleanupRolePlayActor(input.admin)),
+    ...(await cleanupRolePlayRoleGroup(input.employeeRoleGroupId)),
+    ...(await cleanupRolePlayImport(input.plan, input.importApplied)),
+  ];
+  if (cleanupErrors.length > 0) {
+    throw new AggregateError(
+      cleanupErrors,
+      "Role-play import authorization cleanup was not exact.",
+    );
+  }
+}
+
+async function cleanupRolePlayActor(
+  actor: SignedInTestUser | null,
+): Promise<Error[]> {
+  if (!actor) return [];
+  const cleanupErrors: Error[] = [];
+  const restoredLearner = await service
+    .from("profiles")
+    .update({ status: "active", system_role: "learner" })
+    .eq("id", actor.id);
+  if (restoredLearner.error) cleanupErrors.push(restoredLearner.error);
+  const deleted = await service.auth.admin.deleteUser(actor.id);
+  if (deleted.error) cleanupErrors.push(deleted.error);
+  return cleanupErrors;
+}
+
+async function cleanupRolePlayRoleGroup(
+  employeeRoleGroupId: string | null,
+): Promise<Error[]> {
+  if (!employeeRoleGroupId) return [];
+  const deletedRoleGroup = await service
+    .from("role_groups")
+    .delete()
+    .eq("id", employeeRoleGroupId);
+  return deletedRoleGroup.error ? [deletedRoleGroup.error] : [];
+}
+
+async function cleanupRolePlayImport(
+  plan: ImportPlan,
+  importApplied: boolean,
+): Promise<Error[]> {
+  if (!importApplied) return [];
+  const rollback = await service.rpc("fn_rollback_course_import", {
+    p_import_id: plan.importId,
+    p_owned: buildRollbackOwnedIds(plan),
+  });
+  return rollback.error ? [rollback.error] : [];
+}
+
 function uuidArraySql(values: string[]): string {
   return `array[${values.map((value) => `${sqlLiteral(value)}::uuid`).join(",")}]`;
 }
@@ -699,13 +982,7 @@ describe("imported catalog release control on a test project", () => {
         .eq("id", program.id);
       expect(publish.error?.message).toMatch(/evidence-bound release/i);
 
-      const employee = await service
-        .from("role_groups")
-        .insert({ name: `Employee release ${randomBytes(8).toString("hex")}` })
-        .select("id")
-        .single();
-      if (employee.error || !employee.data) throw employee.error;
-      employeeRoleGroupId = employee.data.id;
+      employeeRoleGroupId = await createTestRoleGroup("Employee release");
 
       const access = await service.from("program_access").insert({
         program_id: program.id,
@@ -762,6 +1039,48 @@ describe("imported catalog release control on a test project", () => {
       }
     }
   });
+
+  it("keeps unreleased role plays reviewer-only and admits active administrators after release", async () => {
+    const plan = rolePlayPlan();
+    const fixture = importedRolePlayFixture(plan);
+    let owner: SignedInTestUser | null = null;
+    let admin: SignedInTestUser | null = null;
+    let employeeRoleGroupId: string | null = null;
+    let importApplied = false;
+
+    try {
+      await applyImportPlan(plan, adapter());
+      importApplied = true;
+      owner = await createSignedInUser("owner");
+      admin = await createSignedInUser("admin");
+
+      await proveUnreleasedRolePlayAuthorization(
+        plan,
+        fixture,
+        owner,
+        admin,
+      );
+      employeeRoleGroupId =
+        await createTestRoleGroup("Role-play release");
+      const releasedOutput = await proveReleasedRolePlayAuthorization(
+        plan,
+        fixture,
+        owner,
+        admin,
+        employeeRoleGroupId,
+      );
+      expect(releasedOutput).toContain("RELEASED_OWNER=true");
+      expect(releasedOutput).toContain("RELEASED_ADMIN=true");
+    } finally {
+      await cleanupRolePlayAuthorizationFixture({
+        plan,
+        owner,
+        admin,
+        employeeRoleGroupId,
+        importApplied,
+      });
+    }
+  }, 60_000);
 
   it("matches the baseline state vector for a released learner without leaving released TEST data", async () => {
     if (!service)
@@ -858,21 +1177,8 @@ describe("imported catalog release control on a test project", () => {
       owner = await createSignedInUser("owner");
       const releasedLearnerId = learner.id;
 
-      const employee = await service
-        .from("role_groups")
-        .insert({ name: `Released parity ${randomBytes(8).toString("hex")}` })
-        .select("id")
-        .single();
-      if (
-        employee.error ||
-        !employee.data ||
-        typeof employee.data.id !== "string"
-      ) {
-        throw (
-          employee.error ?? new Error("Employee role group was not created.")
-        );
-      }
-      const releasedEmployeeRoleGroupId = employee.data.id;
+      const releasedEmployeeRoleGroupId =
+        await createTestRoleGroup("Released parity");
       employeeRoleGroupId = releasedEmployeeRoleGroupId;
       const membership = await service.from("user_role_groups").insert({
         user_id: learner.id,
@@ -889,48 +1195,11 @@ describe("imported catalog release control on a test project", () => {
 
       const manifestDigest = "a".repeat(64);
       const gateDigest = "b".repeat(64);
-      const recordedAt = new Date(Date.now() - 120_000).toISOString();
-      const approvedAt = new Date(Date.now() - 60_000).toISOString();
-      const evidence = {
-        manifest: {
-          sha256: manifestDigest,
-          recorded_at: recordedAt,
-          status: "finalized",
-        },
-        reconciliation: {
-          sha256: gateDigest,
-          catalog_sha256: catalogDigest.data,
-          recorded_at: recordedAt,
-          status: "passed",
-          exact: true,
-        },
-        rollback_rehearsal: {
-          sha256: gateDigest,
-          recorded_at: recordedAt,
-          status: "passed",
-        },
-        chrome_desktop: {
-          sha256: gateDigest,
-          recorded_at: recordedAt,
-          status: "passed",
-        },
-        chrome_mobile: {
-          sha256: gateDigest,
-          recorded_at: recordedAt,
-          status: "passed",
-        },
-        admin_happy_path: {
-          sha256: gateDigest,
-          recorded_at: recordedAt,
-          status: "passed",
-        },
-        jarrad_approval: {
-          sha256: gateDigest,
-          approved_at: approvedAt,
-          status: "approved",
-          approved_by: "Jarrad Henry",
-        },
-      };
+      const evidence = releaseEvidence(
+        String(catalogDigest.data),
+        manifestDigest,
+        gateDigest,
+      );
       const paritySql = (marker: string) => `
         select ${sqlLiteral(`${marker}=`)} || jsonb_build_object(
           'set_based', (
