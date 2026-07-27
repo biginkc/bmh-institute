@@ -40,6 +40,17 @@ describe("Permissions-Policy", () => {
     }
   });
 
+  it("does not deny autoplay in ANY policy entry", async () => {
+    // The role-play iframe must be able to play the persona's voice. Denying
+    // autoplay here kills it exactly like denying microphone kills the mic,
+    // and the iframe allow attribute cannot widen it back.
+    const values = await permissionsPolicyValues();
+    expect(values.length).toBeGreaterThan(0);
+    for (const value of values) {
+      expect(value).not.toMatch(/(^|[;,\s])autoplay\s*=/i);
+    }
+  });
+
   it("still denies the features we intend to deny", async () => {
     const values = await permissionsPolicyValues();
     for (const feature of ["camera", "geolocation", "payment", "usb"]) {

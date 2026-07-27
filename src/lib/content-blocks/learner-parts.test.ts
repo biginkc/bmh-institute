@@ -168,3 +168,81 @@ describe("learner lesson parts", () => {
     ).toBe(false);
   });
 });
+
+describe("optional (not-required) parts", () => {
+  it("does not render a never-attempted optional role play as complete", () => {
+    // Reproduces the 2026-07-27 finding: after making the six live role-play
+    // blocks temporarily non-required (to unlock the course without gating
+    // on the still-broken embed handshake), every role play rendered a
+    // "Complete" badge and rail checkmark before any learner had ever
+    // attempted it — because `complete` and "counts toward unlocking later
+    // parts" were the same flag. They must not be.
+    const parts = buildLearnerLessonParts({
+      blocks: [
+        { ...block("1", "video"), is_required_for_completion: true },
+        { ...block("2", "role_play"), is_required_for_completion: false },
+      ],
+      completedBlockIds: new Set(["1"]), // role play NEVER attempted
+      quizComplete: false,
+      quizUnlocked: false,
+      compositeComplete: false,
+    });
+
+    const rolePlay = parts.find((part) => part.id === "role-play-1");
+    expect(rolePlay?.complete).toBe(false);
+  });
+
+  it("still unlocks later parts past an optional, unattempted role play", () => {
+    const parts = buildLearnerLessonParts({
+      blocks: [
+        { ...block("1", "video"), is_required_for_completion: true },
+        { ...block("2", "role_play"), is_required_for_completion: false },
+      ],
+      completedBlockIds: new Set(["1"]),
+      quizComplete: false,
+      quizUnlocked: true,
+      compositeComplete: false,
+    });
+
+    expect(parts.find((part) => part.id === "quiz")?.available).toBe(true);
+  });
+
+  it("renders complete once the optional role play is actually attempted", () => {
+    const parts = buildLearnerLessonParts({
+      blocks: [
+        { ...block("1", "video"), is_required_for_completion: true },
+        { ...block("2", "role_play"), is_required_for_completion: false },
+      ],
+      completedBlockIds: new Set(["1", "2"]),
+      quizComplete: false,
+      quizUnlocked: true,
+      compositeComplete: false,
+    });
+
+    expect(parts.find((part) => part.id === "role-play-1")?.complete).toBe(true);
+  });
+
+  it("lands on the optional role play by default, not past it", () => {
+    // No requested part (a fresh lesson-page visit): selectLearnerPart should
+    // pick the first available-but-not-genuinely-done part. Before this fix
+    // the role play read as "complete" purely for being optional, so a
+    // learner opening the lesson would be dropped straight on the quiz,
+    // skipping the practice with no indication it existed.
+    const parts = buildLearnerLessonParts({
+      blocks: [
+        { ...block("1", "video"), is_required_for_completion: true },
+        { ...block("2", "role_play"), is_required_for_completion: false },
+      ],
+      completedBlockIds: new Set(["1"]),
+      quizComplete: false,
+      quizUnlocked: true,
+      compositeComplete: false,
+    });
+
+    expect(selectLearnerPart(parts, null)?.id).toBe("role-play-1");
+    // A direct, explicit link to the (unlocked) quiz is still honored — this
+    // guard only blocks FORGED requests to locked parts, never a deliberate
+    // jump past an optional one.
+    expect(selectLearnerPart(parts, "quiz")?.id).toBe("quiz");
+  });
+});

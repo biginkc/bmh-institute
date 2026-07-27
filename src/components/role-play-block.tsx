@@ -13,6 +13,14 @@ import {
 } from "@/lib/role-plays/embed-events";
 import { cn } from "@/lib/utils";
 
+/**
+ * If the iframe has not announced itself this long after LOADING, something
+ * upstream is wrong (Closer Lab down, CSP, network). Must exceed Closer Lab's
+ * own 30s rp.ready retry window, or a healthy slow handshake gets reported as
+ * a failure while its supported recovery is still running.
+ */
+const READY_TIMEOUT_MS = 45 * 1000;
+
 type RolePlayBlockProps = {
   blockId: string;
   scenarioId: string;
@@ -33,14 +41,22 @@ export function RolePlayBlock({
   initialComplete,
 }: RolePlayBlockProps) {
   const router = useRouter();
+  const [loaded, setLoaded] = useState(false);
   const [ready, setReady] = useState(false);
+  const [started, setStarted] = useState(false);
   const [complete, setComplete] = useState(initialComplete);
   const [error, setError] = useState<string | null>(null);
   const [heightPx, setHeightPx] = useState(clampRolePlayHeight(initialHeightPx));
   const [pending, startTransition] = useTransition();
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const completedRef = useRef(initialComplete);
+  const readyRef = useRef(false);
+  const startedRef = useRef(false);
   const trustedOrigin = useMemo(() => getTrustedOrigin(iframeSrc), [iframeSrc]);
+
+  useEffect(() => {
+    readyRef.current = ready;
+  }, [ready]);
 
   useEffect(() => {
     if (!trustedOrigin) return;
@@ -65,11 +81,13 @@ export function RolePlayBlock({
 
       if (data.type === "rp.ready") {
         setReady(true);
+        readyRef.current = true;
+        setError(null);
         // Answer EVERY rp.ready, not just the first. Closer Lab re-posts every
         // 500ms for 30s and keeps the first credential it receives, so replying
         // each time makes the handshake self-healing against a dropped message
         // without minting anything extra — the credential is minted once per
-        // RSC render. Never use "*" here: this is a bearer capability.
+        // render. Never use "*" here: this is a bearer capability.
         const target = iframeRef.current?.contentWindow;
         if (target && launchCredential) {
           target.postMessage(
@@ -81,6 +99,11 @@ export function RolePlayBlock({
             targetOrigin,
           );
         }
+      } else if (data.type === "rp.started") {
+        // A session is live. Stop re-minting: swapping the iframe src now would
+        // tear the learner's role play down mid-run.
+        startedRef.current = true;
+        setStarted(true);
       } else if (data.type === "rp.height") {
         setHeightPx(clampRolePlayHeight(data.height_px));
       } else if (data.type === "rp.error") {
@@ -111,6 +134,20 @@ export function RolePlayBlock({
     return () => window.removeEventListener("message", onMessage);
   }, [blockId, launchCredential, router, scenarioId, trustedOrigin]);
 
+  useEffect(() => {
+    if (!loaded || ready || complete) return;
+    // Anchored to iframe load, not mount, and deliberately longer than Closer
+    // Lab's own 30s rp.ready retry window so a slow-but-healthy handshake is
+    // never reported as a failure. Paused while the tab is hidden.
+    const timer = setTimeout(() => {
+      if (readyRef.current || document.hidden) return;
+      setError(
+        `The practice didn't load. Reload the page, and if it keeps happening tell your admin (scenario ${scenarioId}).`,
+      );
+    }, READY_TIMEOUT_MS);
+    return () => clearTimeout(timer);
+  }, [complete, loaded, ready, scenarioId]);
+
   // Without a credential the child would spin on "Waiting for BMH Institute…"
   // forever, so a mint failure must surface as unconfigured instead.
   if (!iframeSrc || !trustedOrigin || !launchCredential) {
@@ -136,9 +173,11 @@ export function RolePlayBlock({
           >
             {complete
               ? "Completed"
-              : ready
-                ? "Ready"
-                : "Loading role play"}
+              : started
+                ? "In progress"
+                : ready
+                  ? "Ready"
+                  : "Loading role play"}
           </p>
         </div>
         {complete ? (
@@ -148,11 +187,20 @@ export function RolePlayBlock({
           </div>
         ) : null}
       </div>
+      {/*
+        `autoplay` is load-bearing, not cosmetic. The autoplay policy's default
+        allowlist is 'self', so a cross-origin child cannot resume an
+        AudioContext or play the persona's audio track without this delegation
+        — even after the learner clicks Start inside the frame. Without it the
+        agent joins, listens, then dies with browser_persona_audio_unavailable.
+        Observed in production 2026-07-27.
+      */}
       <iframe
         ref={iframeRef}
         src={iframeSrc}
+        onLoad={() => setLoaded(true)}
         title={title || "Role play"}
-        allow="microphone; clipboard-write"
+        allow="microphone; autoplay; clipboard-write"
         sandbox="allow-scripts allow-same-origin allow-forms"
         className={cn("w-full", pending && "opacity-80")}
         style={{ height: `${heightPx}px` }}

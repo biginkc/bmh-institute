@@ -65,8 +65,17 @@ export function buildLearnerLessonParts(
     const video = block.block_type === "video";
     const index = video ? ++videoIndex : ++rolePlayIndex;
     const count = video ? videoCount : rolePlayCount;
-    const complete =
-      !block.is_required_for_completion || input.completedBlockIds.has(block.id);
+    // These are deliberately different things. `done` is genuine learner
+    // completion — the only thing that should ever render a "Complete" badge
+    // or a rail checkmark, or make the "continue learning" pointer skip past
+    // this part (below). `gateSatisfied` additionally treats a non-required
+    // block as satisfied, but ONLY to decide whether LATER parts unlock — an
+    // optional block should never block progress, but skipping it is not the
+    // same as doing it. Collapsing these into one flag previously made every
+    // optional role play read "Complete" before a learner had ever attempted
+    // it, which defeats the entire point of asking someone to test one.
+    const done = input.completedBlockIds.has(block.id);
+    const gateSatisfied = !block.is_required_for_completion || done;
     const blocks = [block];
     if (video && index === 1) blocks.push(...support);
     parts.push({
@@ -74,10 +83,10 @@ export function buildLearnerLessonParts(
       label: partLabel(video ? "Video" : "Role play", index, count),
       kind: video ? "video" : "role_play",
       blocks,
-      complete,
+      complete: done,
       available: priorComplete,
     });
-    priorComplete = priorComplete && complete;
+    priorComplete = priorComplete && gateSatisfied;
   }
 
   if (actionable.length === 0 && support.length > 0) {

@@ -1,5 +1,5 @@
 import { act, render, screen, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const completeRolePlayBlock = vi.fn();
 const refresh = vi.fn();
@@ -207,11 +207,127 @@ describe("<RolePlayBlock /> rp.launch handshake", () => {
     expect(screen.getByRole("status")).toHaveTextContent("Ready");
   });
 
-  it("delegates the microphone and keeps allow-same-origin", () => {
+  it("delegates microphone AND autoplay, and keeps allow-same-origin", () => {
     renderBlock();
     const iframe = screen.getByTitle("Opening practice") as HTMLIFrameElement;
-    expect(iframe.getAttribute("allow")).toContain("microphone");
+    const allow = iframe.getAttribute("allow") ?? "";
+    expect(allow).toContain("microphone");
+    // Without autoplay the agent joins and then dies with
+    // browser_persona_audio_unavailable: a cross-origin child cannot resume an
+    // AudioContext or play the persona track. Observed in production.
+    expect(allow).toContain("autoplay");
     // getUserMedia is refused in a sandboxed frame without allow-same-origin.
     expect(iframe.getAttribute("sandbox")).toContain("allow-same-origin");
+  });
+});
+
+describe("<RolePlayBlock /> readiness and session state", () => {
+  const IFRAME_SRC =
+    "https://lab.example.com/embed/role-play/scenario-1?token=secret";
+  const CL_ORIGIN = "https://lab.example.com";
+
+  function renderBlock() {
+    render(
+      <RolePlayBlock
+        blockId="block-1"
+        scenarioId="scenario-1"
+        title="Opening practice"
+        iframeSrc={IFRAME_SRC}
+        launchCredential="cred-1"
+        initialHeightPx={720}
+        initialComplete={false}
+      />,
+    );
+    const iframe = screen.getByTitle("Opening practice") as HTMLIFrameElement;
+    const postMessage = vi.fn();
+    Object.defineProperty(iframe, "contentWindow", {
+      configurable: true,
+      value: { postMessage },
+    });
+    return { iframe, postMessage };
+  }
+
+  function send(iframe: HTMLIFrameElement, data: Record<string, unknown>) {
+    act(() => {
+      window.dispatchEvent(
+        new MessageEvent("message", {
+          data,
+          origin: CL_ORIGIN,
+          source: iframe.contentWindow,
+        }),
+      );
+    });
+  }
+
+  beforeEach(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("does not start the readiness clock until the iframe has loaded", async () => {
+    renderBlock();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(120_000);
+    });
+    // No load event yet, so no failure can be asserted.
+    expect(screen.queryByRole("alert")).toBeNull();
+  });
+
+  it("waits longer than Closer Lab's own 30s retry window before failing", async () => {
+    const { iframe } = renderBlock();
+    act(() => {
+      iframe.dispatchEvent(new Event("load"));
+    });
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(31_000);
+    });
+    // Closer Lab is still legitimately retrying rp.ready at this point.
+    expect(screen.queryByRole("alert")).toBeNull();
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(15_000);
+    });
+    const alert = screen.getByRole("alert");
+    expect(alert).toHaveTextContent(/didn't load/i);
+    expect(alert).toHaveTextContent("scenario-1");
+  });
+
+  it("never reports a failure once the iframe is ready", async () => {
+    const { iframe } = renderBlock();
+    act(() => {
+      iframe.dispatchEvent(new Event("load"));
+    });
+    send(iframe, { type: "rp.ready", scenario_id: "scenario-1" });
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(120_000);
+    });
+
+    expect(screen.queryByRole("alert")).toBeNull();
+    expect(screen.getByRole("status")).toHaveTextContent("Ready");
+  });
+
+  it("reports In progress once Closer Lab says the session started", () => {
+    const { iframe } = renderBlock();
+    send(iframe, { type: "rp.started", scenario_id: "scenario-1" });
+    expect(screen.getByRole("status")).toHaveTextContent("In progress");
+  });
+
+  it("ignores rp.started from an untrusted origin", () => {
+    const { iframe } = renderBlock();
+    act(() => {
+      window.dispatchEvent(
+        new MessageEvent("message", {
+          data: { type: "rp.started", scenario_id: "scenario-1" },
+          origin: "https://evil.example",
+          source: iframe.contentWindow,
+        }),
+      );
+    });
+    expect(screen.getByRole("status")).not.toHaveTextContent("In progress");
   });
 });
