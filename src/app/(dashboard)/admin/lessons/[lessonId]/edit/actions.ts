@@ -134,12 +134,17 @@ export async function updateBlock(input: {
   lessonId: string;
   content: Record<string, unknown>;
   is_required_for_completion?: boolean;
+  /** Role-play blocks only: the scenario binding the editor LOADED. The
+   * atomic merge compare-and-swaps against it, so a stale tab whose block
+   * has since been rebound (e.g. by a publication) gets a reload-conflict
+   * instead of silently writing its stale binding back. */
+  expected_scenario_id?: string;
 }): Promise<ActionResult> {
   await requireAdmin();
   const supabase = await createClient();
   const { data: existing, error: lookupError } = await supabase
     .from("content_blocks")
-    .select("block_type, is_required_for_completion")
+    .select("block_type, content, is_required_for_completion")
     .eq("id", input.blockId)
     .maybeSingle();
   if (lookupError) return { ok: false, error: lookupError.message };
@@ -168,8 +173,24 @@ export async function updateBlock(input: {
     if (!scenarioId) {
       return { ok: false, error: "Scenario ID is required." };
     }
+    // The admin form edits exactly three fields; merge ONLY those onto the
+    // freshly loaded persisted content and ignore every other key the
+    // client may have sent. This direction matters twice over:
+    //  * a backend-only marker the form doesn't expose (e.g.
+    //    `mode: "oral_check"` for the "Talk with Andrea" variant, or an
+    //    attached `scenario_spec`) survives every admin save; and
+    //  * a STALE browser tab cannot clobber newer backend-only fields by
+    //    replaying its old content snapshot -- the server never accepts
+    //    arbitrary content keys from the client for this block type, so
+    //    the stale snapshot simply has nowhere to leak in.
+    const existingContent =
+      existing.content &&
+      typeof existing.content === "object" &&
+      !Array.isArray(existing.content)
+        ? (existing.content as Record<string, unknown>)
+        : {};
     safeContent = {
-      ...input.content,
+      ...existingContent,
       scenario_id: scenarioId,
       title:
         typeof input.content.title === "string"
@@ -214,13 +235,67 @@ export async function updateBlock(input: {
       error: "Add a valid video duration before requiring completion.",
     };
   }
+  const normalizedRequired = normalizeRequiredForBlock(
+    existing.block_type,
+    safeContent,
+    requestedRequired,
+  );
+
+  if (existing.block_type === "role_play") {
+    // Atomic three-key merge IN the database, not read-merge-replace in app
+    // code: a backend publish landing between this action's SELECT and its
+    // write would otherwise be overwritten by a recomputed full-content
+    // payload. fn_admin_merge_role_play_block_content merges exactly the
+    // three form-exposed fields onto the LIVE row in a single UPDATE
+    // statement (SECURITY INVOKER, so RLS applies unchanged) -- and it is a
+    // compare-and-swap on the scenario binding the editor LOADED, so a
+    // stale tab whose block has since been rebound cannot write its stale
+    // binding back over the live one. The expected value must come from the
+    // CLIENT (what its page actually loaded); deriving it from this
+    // action's own fresh SELECT would defeat the entire check.
+    // A NEW role-play block is created with an explicit but EMPTY
+    // scenario_id ({ scenario_id: "", ... } -- see createBlock's default
+    // content), so "" is the real loaded binding for a first-ever save, not
+    // an omitted field. Only reject when the field is actually missing
+    // (undefined/wrong type) -- a stale build or bug that never sent it --
+    // never on the empty string itself, which must reach the RPC unchanged
+    // so its CAS compares against the block's real (also empty) live value.
+    if (typeof input.expected_scenario_id !== "string") {
+      return {
+        ok: false,
+        error: "Missing the loaded scenario binding. Reload the page and try again.",
+      };
+    }
+    const merged = safeContent as Record<string, unknown>;
+    const { data, error } = await supabase.rpc(
+      "fn_admin_merge_role_play_block_content",
+      {
+        p_block_id: input.blockId,
+        p_expected_scenario_id: input.expected_scenario_id,
+        p_scenario_id: String(merged.scenario_id),
+        p_title: String(merged.title),
+        p_height_px: Number(merged.height_px),
+        p_is_required_for_completion: normalizedRequired,
+      },
+    );
+    if (error) return { ok: false, error: error.message };
+    if (!data) {
+      // The block exists (we just read it) -- a null merge result means the
+      // live scenario binding moved past what this tab loaded.
+      return {
+        ok: false,
+        error:
+          "This role play changed since you loaded it (its scenario binding moved). Reload the page and re-apply your edit.",
+      };
+    }
+    revalidatePath(`/admin/lessons/${input.lessonId}/edit`);
+    revalidatePath(`/lessons/${input.lessonId}`);
+    return { ok: true };
+  }
+
   const patch: { content: Json; is_required_for_completion: boolean } = {
     content: safeContent,
-    is_required_for_completion: normalizeRequiredForBlock(
-      existing.block_type,
-      safeContent,
-      requestedRequired,
-    ),
+    is_required_for_completion: normalizedRequired,
   };
   const { error } = await supabase
     .from("content_blocks")

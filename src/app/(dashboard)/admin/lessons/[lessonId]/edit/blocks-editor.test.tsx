@@ -282,6 +282,55 @@ describe("<BlocksEditor />", () => {
     );
   });
 
+  it("submits only the three form-exposed fields for a role play, never a content snapshot", async () => {
+    const user = userEvent.setup();
+    render(
+      <BlocksEditor
+        lessonId="lesson-1"
+        initialBlocks={[
+          {
+            id: "role-play-oral-check",
+            block_type: "role_play",
+            content: {
+              mode: "oral_check",
+              scenario_id: "scenario-1",
+              scenario_spec: { context: "Backend-attached spec" },
+              title: "Talk with Andrea",
+              height_px: 760,
+            },
+            sort_order: 0,
+            is_required_for_completion: false,
+          },
+        ]}
+      />,
+    );
+
+    // There is no "mode" field in the admin form — it's a backend-only
+    // marker. The client must submit ONLY scenario_id/title/height_px: the
+    // server merges those onto freshly persisted content, so backend-only
+    // fields survive without the client replaying them, and a stale tab can
+    // never overwrite newer backend state with an old snapshot.
+    await user.clear(screen.getByLabelText("Title"));
+    await user.type(screen.getByLabelText("Title"), "Handle the price objection");
+    await user.click(screen.getByRole("button", { name: "Save block" }));
+
+    await waitFor(() =>
+      expect(updateBlock).toHaveBeenCalledWith({
+        blockId: "role-play-oral-check",
+        lessonId: "lesson-1",
+        content: {
+          scenario_id: "scenario-1",
+          title: "Handle the price objection",
+          height_px: 760,
+        },
+        is_required_for_completion: false,
+        // The binding this page loaded -- the server compare-and-swaps
+        // against it so a stale tab conflicts instead of rebinding.
+        expected_scenario_id: "scenario-1",
+      }),
+    );
+  });
+
   it("accepts Markdown transcripts", () => {
     const { container } = render(
       <BlocksEditor

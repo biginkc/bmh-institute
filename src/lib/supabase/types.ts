@@ -1597,6 +1597,17 @@ export type Database = {
         Args: { p_actor_id: string; p_submission_id: string }
         Returns: boolean
       }
+      fn_admin_merge_role_play_block_content: {
+        Args: {
+          p_block_id: string
+          p_expected_scenario_id: string
+          p_scenario_id: string
+          p_title: string
+          p_height_px: number
+          p_is_required_for_completion: boolean
+        }
+        Returns: Json
+      }
       fn_admin_lesson_completion_states: {
         Args: { p_lesson_ids: string[]; p_user_ids: string[] }
         Returns: {

@@ -271,6 +271,7 @@ function useBlockSaver({
   return function save(
     content: Record<string, unknown>,
     required?: boolean,
+    extras?: { expected_scenario_id?: string },
   ) {
     startTransition(async () => {
       const result = await updateBlock({
@@ -279,6 +280,9 @@ function useBlockSaver({
         content,
         ...(typeof required === "boolean"
           ? { is_required_for_completion: required }
+          : {}),
+        ...(typeof extras?.expected_scenario_id === "string"
+          ? { expected_scenario_id: extras.expected_scenario_id }
           : {}),
       });
       if (!result.ok) toast.error(result.error);
@@ -1178,11 +1182,24 @@ function RolePlayBlockEditor({
           onClick={() =>
             save(
               {
+                // Submit ONLY the fields this form actually edits. The
+                // server merges them onto the freshly persisted content, so
+                // backend-only fields (e.g. the `mode: "oral_check"` marker)
+                // survive without this client ever having to replay them --
+                // and a stale tab can never overwrite newer backend state by
+                // resubmitting an old content snapshot.
                 scenario_id: scenarioId,
                 title,
                 height_px: Number(heightPx) || 720,
               },
               required,
+              {
+                // The scenario binding this page LOADED -- the server's
+                // atomic merge compare-and-swaps against it, so if a
+                // publication rebound the block after this page rendered,
+                // the save conflicts instead of writing a stale binding.
+                expected_scenario_id: stringOr(block.content.scenario_id, ""),
+              },
             )
           }
         >

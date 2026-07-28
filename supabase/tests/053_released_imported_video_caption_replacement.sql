@@ -108,13 +108,23 @@ insert into storage.objects (bucket_id, name, metadata, user_metadata) values
     jsonb_build_object('sha256', repeat('b', 64), 'courseImportId', 'migration-053-caption-v1')
   );
 
+-- The released caption replacement RPC is RETIRED by 20260727180000 (phase 1
+-- of the versioned-ledger cutover): released-catalog corrections must go
+-- through the shared ledger (fn_revise_released_content_blocks_v2), and its
+-- already-applied history is absorbed as validated lineage rows by the
+-- phase-2 backfill. This test now proves the retirement is total: even a
+-- perfectly-formed call against a real released fixture fails closed, the
+-- receipt table is sealed against ALL writes (a resumed in-flight old-body
+-- call included), and the same holds for the released POSTER replacement
+-- RPC retired alongside it. The canary poster path
+-- (fn_replace_unreleased_imported_video_posters) is deliberately NOT
+-- retired -- it hard-requires an unreleased, unpublished import and cannot
+-- move a released catalog -- so it must remain callable.
 do $$
 declare
   v_expected_content jsonb;
   v_payload jsonb;
   v_catalog_sha256 text;
-  v_result jsonb;
-  v_after jsonb;
 begin
   select content into v_expected_content
   from public.content_blocks
@@ -135,7 +145,8 @@ begin
     'migration-053-caption-v1'
   );
 
-  perform set_config('request.jwt.claim.role', 'authenticated', true);
+  -- A well-formed call -- real import, real block, live catalog checksum --
+  -- must fail closed on the retirement, never reach any validation.
   begin
     perform public.fn_replace_released_imported_video_captions(
       'migration-053-caption-v1',
@@ -144,74 +155,125 @@ begin
       repeat('d', 64),
       v_catalog_sha256
     );
-    raise exception 'authenticated caller replaced released captions';
+    raise exception 'the retired released caption replacement RPC was callable';
   exception when sqlstate '42501' then
-    if sqlerrm not like '%requires service_role%' then raise; end if;
+    if sqlerrm not like '%retired%' then raise; end if;
   end;
-  perform set_config('request.jwt.claim.role', 'service_role', true);
 
+  -- Same for the released poster replacement RPC.
   begin
-    perform public.fn_replace_released_imported_video_captions(
+    perform public.fn_replace_released_imported_video_posters(
       'migration-053-caption-v1',
-      v_payload,
+      '[]'::jsonb,
       repeat('c', 64),
       repeat('d', 64),
-      repeat('0', 64)
+      v_catalog_sha256,
+      repeat('e', 64)
     );
-    raise exception 'stale catalog preflight replaced released captions';
-  exception when sqlstate '40001' then
-    if sqlerrm not like '%catalog drifted from the exact production preflight%' then raise; end if;
+    raise exception 'the retired released poster replacement RPC was callable';
+  exception when sqlstate '42501' then
+    if sqlerrm not like '%retired%' then raise; end if;
   end;
 
-  v_result := public.fn_replace_released_imported_video_captions(
-    'migration-053-caption-v1',
-    v_payload,
-    repeat('c', 64),
-    repeat('d', 64),
-    v_catalog_sha256
-  );
-  if v_result ->> 'status' <> 'replaced' then
-    raise exception 'caption replacement did not complete: %', v_result;
-  end if;
+  -- The receipt tables are sealed against every write path, including a
+  -- resumed in-flight OLD-BODY call that already holds the exact historical
+  -- marker pair its guard used to accept.
+  perform set_config('bmh.replace_video_captions_import_id', 'migration-053-caption-v1', true);
+  perform set_config('bmh.replace_video_captions_payload_sha256', repeat('f', 64), true);
+  begin
+    insert into public.content_import_video_caption_replacement_records (
+      import_id, prior_catalog_sha256, replacement_catalog_sha256,
+      database_payload_sha256, client_payload_sha256,
+      approval_evidence_sha256, replacement_count, replacements
+    ) values (
+      'migration-053-caption-v1', v_catalog_sha256, repeat('1', 64),
+      repeat('f', 64), repeat('c', 64),
+      repeat('d', 64), 1, v_payload
+    );
+    raise exception 'the sealed caption receipt table accepted a marker-bearing insert';
+  exception when sqlstate '42501' then
+    if sqlerrm not like '%sealed read-only history%' then raise; end if;
+  end;
+  perform set_config('bmh.replace_video_captions_import_id', '', true);
+  perform set_config('bmh.replace_video_captions_payload_sha256', '', true);
 
-  select content into v_after
-  from public.content_blocks
+  perform set_config('bmh.replace_video_posters_import_id', 'migration-053-caption-v1', true);
+  perform set_config('bmh.replace_video_posters_payload_sha256', repeat('f', 64), true);
+  begin
+    insert into public.content_import_video_poster_replacement_records (
+      import_id, prior_catalog_sha256, replacement_catalog_sha256,
+      database_payload_sha256, client_payload_sha256,
+      approval_evidence_sha256, preflight_evidence_sha256,
+      replacement_count, replacements
+    ) values (
+      'migration-053-caption-v1', v_catalog_sha256, repeat('1', 64),
+      repeat('f', 64), repeat('c', 64),
+      repeat('d', 64), repeat('e', 64), 1, '[{"fixture":true}]'::jsonb
+    );
+    raise exception 'the sealed poster receipt table accepted a marker-bearing insert';
+  exception when sqlstate '42501' then
+    if sqlerrm not like '%sealed read-only history%' then raise; end if;
+  end;
+  perform set_config('bmh.replace_video_posters_import_id', '', true);
+  perform set_config('bmh.replace_video_posters_payload_sha256', '', true);
+
+  -- Sealed means UPDATE and DELETE too (append-only history stays intact
+  -- for the ledger backfill to mirror). Seed one historical receipt with
+  -- the guard disabled -- modeling a row that existed before the seal --
+  -- then prove it is immutable. Real hashes: the seeded receipt must chain
+  -- release-publication -> live for the ledger backfill that runs against
+  -- this table (this test's import never mutated content after publish, so
+  -- prior = the release record's pre-publish capture bridged by the
+  -- publication baseline... which requires a real catalog CHANGE; use the
+  -- live catalog with a real caption-path mutation instead).
+  update public.content_blocks
+  set content = jsonb_set(content, '{caption_path}',
+    to_jsonb('courses/migration-053-caption/v1/captions/video-slot-01-test.' || repeat('b', 64) || '.vtt'), false)
   where id = '05300000-0000-5000-a000-000000000005';
-  if v_after <> jsonb_set(
-    v_expected_content,
-    '{caption_path}',
-    to_jsonb('courses/migration-053-caption/v1/captions/video-slot-01-test.' || repeat('b', 64) || '.vtt'),
-    false
-  ) then
-    raise exception 'caption replacement changed fields beyond caption_path: %', v_after;
-  end if;
-  if (select count(*) from public.content_import_video_caption_replacement_records
-      where import_id = 'migration-053-caption-v1') <> 1 then
-    raise exception 'caption replacement did not append one audit record';
-  end if;
-
-  v_result := public.fn_replace_released_imported_video_captions(
-    'migration-053-caption-v1',
-    v_payload,
-    repeat('c', 64),
-    repeat('d', 64),
-    public.fn_course_import_catalog_sha256('migration-053-caption-v1')
+  alter table public.content_import_video_caption_replacement_records
+    disable trigger content_import_video_caption_replacement_records_guard;
+  insert into public.content_import_video_caption_replacement_records (
+    import_id, prior_catalog_sha256, replacement_catalog_sha256,
+    database_payload_sha256, client_payload_sha256,
+    approval_evidence_sha256, replacement_count, replacements
+  ) values (
+    'migration-053-caption-v1', v_catalog_sha256,
+    public.fn_course_import_catalog_sha256('migration-053-caption-v1'),
+    repeat('f', 64), repeat('c', 64),
+    repeat('d', 64), 1, v_payload
   );
-  if v_result ->> 'status' <> 'already_replaced' then
-    raise exception 'caption replacement replay was not idempotent: %', v_result;
-  end if;
-  if (select count(*) from public.content_import_video_caption_replacement_records
-      where import_id = 'migration-053-caption-v1') <> 1 then
-    raise exception 'caption replacement replay duplicated its audit record';
-  end if;
-
+  alter table public.content_import_video_caption_replacement_records
+    enable trigger content_import_video_caption_replacement_records_guard;
   begin
     update public.content_import_video_caption_replacement_records
     set replacements = '[]'::jsonb
     where import_id = 'migration-053-caption-v1';
-    raise exception 'caption replacement audit record was mutable';
+    raise exception 'the sealed caption receipt table accepted an update';
   exception when sqlstate '42501' then
-    if sqlerrm not like '%immutable and operation-bound%' then raise; end if;
+    if sqlerrm not like '%sealed read-only history%' then raise; end if;
+  end;
+  begin
+    delete from public.content_import_video_caption_replacement_records
+    where import_id = 'migration-053-caption-v1';
+    raise exception 'the sealed caption receipt table accepted a delete';
+  exception when sqlstate '42501' then
+    if sqlerrm not like '%sealed read-only history%' then raise; end if;
+  end;
+
+  -- The canary path stays alive: it must still refuse for its own reasons
+  -- (this import is not the canary, errcode 22023), NOT with a retirement
+  -- error (42501).
+  begin
+    perform public.fn_replace_unreleased_imported_video_posters(
+      'migration-053-caption-v1',
+      '[]'::jsonb,
+      repeat('c', 64)
+    );
+    raise exception 'the canary poster RPC accepted a non-canary import';
+  exception when sqlstate '22023' then
+    if sqlerrm not like '%restricted to the exact Tech Stack canary%' then raise; end if;
+  when sqlstate '42501' then
+    raise exception 'the canary poster RPC was wrongly retired: %', sqlerrm;
   end;
 end;
 $$;
