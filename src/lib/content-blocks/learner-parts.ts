@@ -31,6 +31,20 @@ const ACTIONABLE_TYPES = new Set<ContentBlock["block_type"]>([
 ]);
 
 /**
+ * An oral check is a `role_play` block whose persona is Andrea-the-coach
+ * rather than a Closer Lab sales scenario. Content-only marker (no schema
+ * change) so the completion contract, embed plumbing, and gating are all
+ * reused as-is; only the learner-facing label differs.
+ */
+export function isOralCheckBlock(block: ContentBlock): boolean {
+  return block.block_type === "role_play" && block.content?.mode === "oral_check";
+}
+
+function rolePlayLabelBase(block: ContentBlock): string {
+  return isOralCheckBlock(block) ? "Talk with Andrea" : "Role play";
+}
+
+/**
  * Partitions every learner block exactly once. Objectives and flashcards are
  * intentionally hidden. Guides are held for the final post-pass part. All
  * remaining support blocks are attached to the first video or a fallback
@@ -53,9 +67,16 @@ export function buildLearnerLessonParts(
     (block) => !ACTIONABLE_TYPES.has(block.block_type) && !isGuideBlock(block),
   );
   const videoCount = actionable.filter((block) => block.block_type === "video").length;
-  const rolePlayCount = actionable.filter(
-    (block) => block.block_type === "role_play",
-  ).length;
+  const rolePlayBlocks = actionable.filter((block) => block.block_type === "role_play");
+  // Counted per label group (plain role-plays vs oral checks) so each group
+  // gets its own A/B/C lettering. Today a lesson never mixes the two, so this
+  // only ever produces a bare label, but it stays correct if that changes.
+  const rolePlayGroupCounts = new Map<string, number>();
+  for (const block of rolePlayBlocks) {
+    const key = rolePlayLabelBase(block);
+    rolePlayGroupCounts.set(key, (rolePlayGroupCounts.get(key) ?? 0) + 1);
+  }
+  const rolePlayGroupIndex = new Map<string, number>();
   let videoIndex = 0;
   let rolePlayIndex = 0;
   let priorComplete = true;
@@ -64,7 +85,15 @@ export function buildLearnerLessonParts(
   for (const block of actionable) {
     const video = block.block_type === "video";
     const index = video ? ++videoIndex : ++rolePlayIndex;
-    const count = video ? videoCount : rolePlayCount;
+    let label: string;
+    if (video) {
+      label = partLabel("Video", index, videoCount);
+    } else {
+      const key = rolePlayLabelBase(block);
+      const groupIndex = (rolePlayGroupIndex.get(key) ?? 0) + 1;
+      rolePlayGroupIndex.set(key, groupIndex);
+      label = partLabel(key, groupIndex, rolePlayGroupCounts.get(key) ?? 1);
+    }
     // These are deliberately different things. `done` is genuine learner
     // completion — the only thing that should ever render a "Complete" badge
     // or a rail checkmark, or make the "continue learning" pointer skip past
@@ -80,7 +109,7 @@ export function buildLearnerLessonParts(
     if (video && index === 1) blocks.push(...support);
     parts.push({
       id: `${video ? "video" : "role-play"}-${index}`,
-      label: partLabel(video ? "Video" : "Role play", index, count),
+      label,
       kind: video ? "video" : "role_play",
       blocks,
       complete: done,
