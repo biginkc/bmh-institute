@@ -84,6 +84,7 @@ declare
   v_live_catalog text;
   v_active_catalog text;
   v_expected_mutation_count integer;
+  v_absorbed_into_revision integer;
   v_download_evidence jsonb;
   v_backfilled integer := 0;
   v_baselines integer := 0;
@@ -121,7 +122,8 @@ begin
     ) source
     order by source.import_id
   loop
-    select release.manifest_sha256, release.catalog_sha256, release.released_at
+    select release.manifest_sha256, release.catalog_sha256, release.released_at,
+      release.post_publication_catalog_sha256
     into v_release
     from public.content_import_release_records release
     where release.import_id = v_import_id;
@@ -143,7 +145,9 @@ begin
       and mirror.kind = 'legacy_catalog_correction'
       and mirror.evidence ->> 'operation' = 'publication_baseline';
     if found then
-      if v_mirror.prior_catalog_sha256 <> v_expected_catalog then
+      if v_mirror.prior_catalog_sha256 <> v_expected_catalog
+        or v_mirror.catalog_sha256 <> v_release.post_publication_catalog_sha256
+      then
         raise exception 'v1 backfill aborted: the attested publication baseline for % does not chain from the release record.',
           v_import_id;
       end if;
@@ -231,12 +235,24 @@ begin
       if v_event.is_anchor then
         -- Existing ledger rows are immutable evidence: they must chain
         -- exactly from the reconstructed state (allowing the one-time
-        -- publication bridge if this is the very first event).
+        -- publication bridge if this is the very first event -- and ONLY
+        -- when it bridges to the INDEPENDENTLY attested
+        -- post_publication_catalog_sha256, never to whatever this row
+        -- happens to declare; see that column's comment for why a
+        -- caller-declared bridge is not evidence of anything).
         if not v_baseline_done
           and v_event.prior_catalog <> v_expected_catalog
           and v_expected_catalog = v_release.catalog_sha256
           and v_event.prior_manifest = v_expected_manifest
         then
+          if v_release.post_publication_catalog_sha256 is null then
+            raise exception 'v1 backfill aborted: % has no independently attested post-publication catalog to bridge the first event against -- refusing to certify % as publication history on the receipt''s own say-so.',
+              v_import_id, v_event.prior_catalog;
+          end if;
+          if v_event.prior_catalog <> v_release.post_publication_catalog_sha256 then
+            raise exception 'v1 backfill aborted: ledger revision % for % declares a predecessor catalog (%) that does not match the independently attested post-publication catalog (%) -- an unaudited change happened between publication and this event.',
+              v_event.revision, v_import_id, v_event.prior_catalog, v_release.post_publication_catalog_sha256;
+          end if;
           v_baseline_payload := encode(sha256(convert_to(jsonb_build_object(
             'operation', 'publication_baseline',
             'import_id', v_import_id,
@@ -313,11 +329,21 @@ begin
       end if;
 
       -- One-time publication bridge, only ever at the very start of the
-      -- causal walk (see the design contract in the header comment).
+      -- causal walk (see the design contract in the header comment), and
+      -- ONLY against the independently attested post-publication catalog --
+      -- never a bare pass because this happens to be the first event.
       if not v_baseline_done
         and v_event.prior_catalog <> v_expected_catalog
         and v_expected_catalog = v_release.catalog_sha256
       then
+        if v_release.post_publication_catalog_sha256 is null then
+          raise exception 'v1 backfill aborted: % has no independently attested post-publication catalog to bridge the first event against -- refusing to certify % as publication history on the receipt''s own say-so.',
+            v_import_id, v_event.prior_catalog;
+        end if;
+        if v_event.prior_catalog <> v_release.post_publication_catalog_sha256 then
+          raise exception 'v1 backfill aborted: legacy receipt for % (%) declares a predecessor catalog (%) that does not match the independently attested post-publication catalog (%) -- an unaudited change happened between publication and this receipt.',
+            v_import_id, v_event.source, v_event.prior_catalog, v_release.post_publication_catalog_sha256;
+        end if;
         v_baseline_payload := encode(sha256(convert_to(jsonb_build_object(
           'operation', 'publication_baseline',
           'import_id', v_import_id,
@@ -389,6 +415,24 @@ begin
       from public.content_import_release_revisions
       where import_id = v_import_id;
 
+      -- Round-7 review fix (finding 4): if an EXISTING quiz anchor already
+      -- recorded this mirror's resulting catalog as ITS OWN prior catalog,
+      -- that anchor's live execution already causally absorbed this
+      -- mirror's effect -- even though the anchor's own (immutable)
+      -- state_parent_revision cannot be rewritten to point at a row this
+      -- backfill is only now inserting. Record the edge on the NEW row
+      -- instead (see absorbed_into_revision's column comment);
+      -- fn_classify_revision_lineage traverses it so this mirror still
+      -- classifies as a genuine superseded ancestor of the current state,
+      -- not diverged. Scoped to quiz anchors: those are the only kind that
+      -- could have existed, chronologically, before this backfill ever ran.
+      select revision into v_absorbed_into_revision
+      from public.content_import_release_revisions
+      where import_id = v_import_id
+        and kind = 'quiz'
+        and prior_catalog_sha256 = v_event.catalog
+      limit 1;
+
       if v_event.source = 'content_blocks' then
         v_expected_mutation_count := v_event.guide_update_count
           + v_event.flashcard_update_count + v_event.role_play_insert_count;
@@ -404,14 +448,14 @@ begin
 
         perform set_config('bmh.release_revision_import_id', v_import_id, true);
         insert into public.content_import_release_revisions (
-          import_id, revision, kind, state_parent_revision,
+          import_id, revision, kind, state_parent_revision, absorbed_into_revision,
           prior_manifest_sha256, manifest_sha256,
           prior_catalog_sha256, catalog_sha256,
           payload_sha256, client_payload_sha256, download_evidence_sha256,
           mutation_count, update_count, insert_count,
           mutations, prior_block_graph, evidence, revised_at, revised_by
         ) values (
-          v_import_id, v_next_revision, 'content_blocks', v_parent_revision,
+          v_import_id, v_next_revision, 'content_blocks', v_parent_revision, v_absorbed_into_revision,
           v_expected_manifest, v_event.manifest,
           v_event.prior_catalog, v_event.catalog,
           v_event.database_payload_sha256, v_event.client_payload_sha256,
@@ -455,13 +499,13 @@ begin
         -- legacy_catalog_correction kind-shape constraint (20260727180000).
         perform set_config('bmh.release_revision_import_id', v_import_id, true);
         insert into public.content_import_release_revisions (
-          import_id, revision, kind, state_parent_revision,
+          import_id, revision, kind, state_parent_revision, absorbed_into_revision,
           prior_manifest_sha256, manifest_sha256,
           prior_catalog_sha256, catalog_sha256,
           payload_sha256, client_payload_sha256,
           evidence, revised_at, revised_by
         ) values (
-          v_import_id, v_next_revision, 'legacy_catalog_correction', v_parent_revision,
+          v_import_id, v_next_revision, 'legacy_catalog_correction', v_parent_revision, v_absorbed_into_revision,
           v_expected_manifest, v_expected_manifest,
           v_event.prior_catalog, v_event.catalog,
           v_event.database_payload_sha256, v_event.client_payload_sha256,

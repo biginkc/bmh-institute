@@ -346,27 +346,43 @@ insert into public.content_blocks (
   );
 select set_config('bmh.apply_import_id', '', true);
 
-select set_config('bmh.release_import_id', 'test-content-block-revision-v2', true);
-insert into public.content_import_release_records (
-  import_id, program_id, qa_role_group_id, employee_role_group_id,
-  manifest_sha256, reconciliation_sha256, catalog_sha256,
-  rollback_rehearsal_sha256, chrome_desktop_sha256, chrome_mobile_sha256,
-  admin_happy_path_sha256, approval_sha256, approved_by, evidence
-) values (
-  'test-content-block-revision-v2',
-  '05500000-0000-5000-a000-000000000001',
-  '05500000-0000-5000-a000-000000000010',
-  '05500000-0000-5000-a000-000000000011',
-  repeat('1', 64), repeat('2', 64),
-  public.fn_course_import_catalog_sha256('test-content-block-revision-v2'),
-  repeat('4', 64), repeat('5', 64), repeat('6', 64), repeat('7', 64),
-  repeat('8', 64), 'Jarrad Henry', '{}'::jsonb
-);
-update public.programs set is_published = true
-where content_import_id = 'test-content-block-revision-v2';
-update public.courses set is_published = true
-where content_import_id = 'test-content-block-revision-v2';
-select set_config('bmh.release_import_id', '', true);
+do $$
+declare
+  v_post_publish_catalog text;
+begin
+  perform set_config('bmh.release_import_id', 'test-content-block-revision-v2', true);
+  insert into public.content_import_release_records (
+    import_id, program_id, qa_role_group_id, employee_role_group_id,
+    manifest_sha256, reconciliation_sha256, catalog_sha256,
+    rollback_rehearsal_sha256, chrome_desktop_sha256, chrome_mobile_sha256,
+    admin_happy_path_sha256, approval_sha256, approved_by, evidence
+  ) values (
+    'test-content-block-revision-v2',
+    '05500000-0000-5000-a000-000000000001',
+    '05500000-0000-5000-a000-000000000010',
+    '05500000-0000-5000-a000-000000000011',
+    repeat('1', 64), repeat('2', 64),
+    public.fn_course_import_catalog_sha256('test-content-block-revision-v2'),
+    repeat('4', 64), repeat('5', 64), repeat('6', 64), repeat('7', 64),
+    repeat('8', 64), 'Jarrad Henry', '{}'::jsonb
+  );
+  update public.programs set is_published = true
+  where content_import_id = 'test-content-block-revision-v2';
+  update public.courses set is_published = true
+  where content_import_id = 'test-content-block-revision-v2';
+  -- Round-7 fix (finding 3): attest the real post-publication catalog --
+  -- is_published is itself part of the hashed catalog, so it genuinely
+  -- differs from the pre-publish capture above. Allowed as the ONE narrow
+  -- exception fn_guard_content_import_release_record permits (NULL ->
+  -- non-null, this column only, same release marker) -- mirrors what
+  -- fn_release_course_import_v1 itself now does in the same transaction.
+  v_post_publish_catalog := public.fn_course_import_catalog_sha256('test-content-block-revision-v2');
+  update public.content_import_release_records
+     set post_publication_catalog_sha256 = v_post_publish_catalog
+   where import_id = 'test-content-block-revision-v2';
+  perform set_config('bmh.release_import_id', '', true);
+end;
+$$;
 
 -- Revision 2 (a fixture, not a real quiz revision -- the real quiz RPC is
 -- hardcoded to bmh-employee-training-v1's exact shape): seeds the SHARED
@@ -1452,6 +1468,7 @@ declare
   v_program_id uuid := '00000000-0000-6000-a000-000000000f01';
   v_course_id uuid := '00000000-0000-6000-a000-000000000f02';
   v_release_catalog text;
+  v_post_publish_catalog text;
 begin
   perform set_config('bmh.apply_import_id', 'test-first-receipt-v2', true);
   insert into public.programs (id, title, content_import_id, is_published, certificate_enabled)
@@ -1478,12 +1495,20 @@ begin
   );
   update public.programs set is_published = true where content_import_id = 'test-first-receipt-v2';
   update public.courses set is_published = true where content_import_id = 'test-first-receipt-v2';
+  -- Round-7 fix (finding 3): attest the real post-publication catalog --
+  -- is_published is itself part of the hashed catalog, so it genuinely
+  -- differs from the release record's pre-publish capture. Mirrors what
+  -- fn_release_course_import_v1 itself now does in the same transaction.
+  v_post_publish_catalog := public.fn_course_import_catalog_sha256('test-first-receipt-v2');
+  update public.content_import_release_records
+     set post_publication_catalog_sha256 = v_post_publish_catalog
+   where import_id = 'test-first-receipt-v2';
   perform set_config('bmh.release_import_id', '', true);
 
   -- Crafted first receipt: an arbitrary prior catalog AND an arbitrary
-  -- replacement. The prior becomes an attested baseline (see comment
-  -- above), but the fabricated chain never lands on the real live catalog,
-  -- so the whole run aborts and its baseline/mirror inserts roll back.
+  -- replacement. Even WITH a genuine post-publication attestation present,
+  -- the crafted receipt's declared prior catalog does not match it -- an
+  -- unaudited change is exactly what this must catch, first receipt or not.
   alter table public.content_import_released_content_block_revision_records
     disable trigger content_import_released_content_block_revision_records_guard;
   insert into public.content_import_released_content_block_revision_records (
@@ -1504,9 +1529,9 @@ begin
     enable trigger content_import_released_content_block_revision_records_guard;
   begin
     perform public.fn_backfill_v1_content_block_revisions();
-    raise exception 'a crafted FIRST receipt whose chain never lands on reality was mirrored -- finding 1 regressed';
+    raise exception 'a crafted FIRST receipt whose declared prior catalog does not match the real attested post-publication state was mirrored -- finding 3 regressed';
   exception when others then
-    if sqlerrm not like '%live catalog for%' then raise; end if;
+    if sqlerrm not like '%does not match the independently attested post-publication catalog%' then raise; end if;
   end;
   if exists (
     select 1 from public.content_import_release_revisions
@@ -1552,6 +1577,85 @@ begin
   if public.fn_classify_revision_lineage('test-first-receipt-v2', 2) <> 'diverged' then
     raise exception 'a forked sibling revision did not classify as diverged';
   end if;
+end;
+$$;
+
+-- Round-7 review finding 3 (the OTHER half): a release with NO independent
+-- post-publication attestation at all (simulating an import released
+-- BEFORE this fix existed) must refuse the publication bridge outright --
+-- never silently trust whatever the first receipt happens to declare, even
+-- when that declared value is otherwise plausible.
+do $$
+declare
+  v_program_id uuid := '00000000-0000-6000-a000-000000000f31';
+  v_course_id uuid := '00000000-0000-6000-a000-000000000f32';
+  v_release_catalog text;
+begin
+  perform set_config('bmh.apply_import_id', 'test-unattested-release-v2', true);
+  insert into public.programs (id, title, content_import_id, is_published, certificate_enabled)
+  values (v_program_id, 'Round 7 Unattested Release Fixture', 'test-unattested-release-v2', false, true);
+  insert into public.courses (id, title, content_import_id, is_published, certificate_enabled)
+  values (v_course_id, 'Round 7 Unattested Release Course', 'test-unattested-release-v2', false, false);
+  insert into public.program_courses (program_id, course_id, sort_order)
+  values (v_program_id, v_course_id, 0);
+  perform set_config('bmh.apply_import_id', '', true);
+
+  v_release_catalog := public.fn_course_import_catalog_sha256('test-unattested-release-v2');
+  perform set_config('bmh.release_import_id', 'test-unattested-release-v2', true);
+  insert into public.content_import_release_records (
+    import_id, program_id, qa_role_group_id, employee_role_group_id,
+    manifest_sha256, reconciliation_sha256, catalog_sha256,
+    rollback_rehearsal_sha256, chrome_desktop_sha256, chrome_mobile_sha256,
+    admin_happy_path_sha256, approval_sha256, approved_by, evidence
+  ) values (
+    'test-unattested-release-v2', v_program_id,
+    '00000000-0000-6000-a000-000000000f33', '00000000-0000-6000-a000-000000000f34',
+    repeat('1', 64), repeat('2', 64), v_release_catalog,
+    repeat('4', 64), repeat('5', 64), repeat('6', 64), repeat('7', 64),
+    repeat('8', 64), 'Jarrad Henry', '{}'::jsonb
+  );
+  update public.programs set is_published = true where content_import_id = 'test-unattested-release-v2';
+  update public.courses set is_published = true where content_import_id = 'test-unattested-release-v2';
+  perform set_config('bmh.release_import_id', '', true);
+  -- Deliberately NOT setting post_publication_catalog_sha256 -- this is the
+  -- simulated pre-fix historical release with no independent attestation.
+
+  alter table public.content_import_released_content_block_revision_records
+    disable trigger content_import_released_content_block_revision_records_guard;
+  insert into public.content_import_released_content_block_revision_records (
+    import_id, original_release_manifest_sha256, expected_active_manifest_sha256,
+    manifest_sha256, prior_catalog_sha256, replacement_catalog_sha256,
+    database_payload_sha256, client_payload_sha256,
+    guide_update_count, flashcard_update_count, role_play_insert_count,
+    mutations, evidence
+  ) values (
+    'test-unattested-release-v2',
+    repeat('1', 64), repeat('1', 64), repeat('2', 64),
+    repeat('9', 64), repeat('a', 64), repeat('b', 64), repeat('c', 64),
+    19, 19, 6,
+    (select jsonb_agg(jsonb_build_object('fixture', item)) from generate_series(1, 44) item),
+    '{}'::jsonb
+  );
+  alter table public.content_import_released_content_block_revision_records
+    enable trigger content_import_released_content_block_revision_records_guard;
+  begin
+    perform public.fn_backfill_v1_content_block_revisions();
+    raise exception 'the backfill bridged a publication gap for an import with no independent attestation -- finding 3 regressed';
+  exception when others then
+    if sqlerrm not like '%no independently attested post-publication catalog%' then raise; end if;
+  end;
+  if exists (
+    select 1 from public.content_import_release_revisions
+    where import_id = 'test-unattested-release-v2'
+  ) then
+    raise exception 'the aborted unattested-release backfill left partial rows behind';
+  end if;
+  alter table public.content_import_released_content_block_revision_records
+    disable trigger content_import_released_content_block_revision_records_guard;
+  delete from public.content_import_released_content_block_revision_records
+  where import_id = 'test-unattested-release-v2';
+  alter table public.content_import_released_content_block_revision_records
+    enable trigger content_import_released_content_block_revision_records_guard;
 end;
 $$;
 
@@ -1617,11 +1721,16 @@ begin
   );
   update public.programs set is_published = true where content_import_id = 'test-poster-chain-v2';
   update public.courses set is_published = true where content_import_id = 'test-poster-chain-v2';
-  perform set_config('bmh.release_import_id', '', true);
   -- The first live post-publication state -- what the publication baseline
   -- must bridge to (is_published is part of the hashed catalog rows, so
   -- this genuinely differs from the release record's pre-publish capture).
+  -- Attested here in the SAME transaction, exactly as
+  -- fn_release_course_import_v1 itself now does (round-7 fix, finding 3).
   v_post_publish_catalog := public.fn_course_import_catalog_sha256('test-poster-chain-v2');
+  update public.content_import_release_records
+     set post_publication_catalog_sha256 = v_post_publish_catalog
+   where import_id = 'test-poster-chain-v2';
+  perform set_config('bmh.release_import_id', '', true);
 
   -- The poster replacement's REAL effect and REAL hashes: mutate the poster
   -- path exactly as the retired RPC did, capturing live before/after.
@@ -1802,8 +1911,11 @@ begin
   );
   update public.programs set is_published = true where content_import_id = 'test-quiz-interleave-v2';
   update public.courses set is_published = true where content_import_id = 'test-quiz-interleave-v2';
-  perform set_config('bmh.release_import_id', '', true);
   v_post_publish_catalog := public.fn_course_import_catalog_sha256('test-quiz-interleave-v2');
+  update public.content_import_release_records
+     set post_publication_catalog_sha256 = v_post_publish_catalog
+   where import_id = 'test-quiz-interleave-v2';
+  perform set_config('bmh.release_import_id', '', true);
 
   -- t+1: poster correction (real mutation, real hashes).
   update public.content_blocks
@@ -1963,10 +2075,81 @@ begin
     raise exception 'the active-state view does not land on the interleaved chain''s final catalog';
   end if;
 
-  -- Idempotency across the interleave too.
+  -- Round-7 review finding 4: revisions 3 (publication baseline) and 4
+  -- (poster mirror) causally precede the quiz revision (2), which already
+  -- absorbed their effect into ITS OWN live catalog when it was originally
+  -- applied -- but the quiz row's own immutable state_parent_revision still
+  -- points at 1 (it was created before this backfill ever ran, so it
+  -- cannot be rewritten to point at 3/4). Without the absorbed_into_revision
+  -- edge, a state_parent-only walk from head=6 (6->5->2->1) never visits 3
+  -- or 4, and they classify diverged instead of superseded. Assert they
+  -- reach superseded, and that the chain stays reachable through a
+  -- rollback of the head too (ancestry survives past a rollback receipt).
+  if public.fn_classify_revision_lineage('test-quiz-interleave-v2', 3) <> 'superseded' then
+    raise exception 'the publication baseline (revision 3) did not classify as superseded under the interleaved head -- finding 4 regressed';
+  end if;
+  if public.fn_classify_revision_lineage('test-quiz-interleave-v2', 4) <> 'superseded' then
+    raise exception 'the pre-quiz poster mirror (revision 4) did not classify as superseded under the interleaved head -- finding 4 regressed';
+  end if;
+  if public.fn_classify_revision_lineage('test-quiz-interleave-v2', 2) <> 'superseded' then
+    raise exception 'the quiz anchor (revision 2) did not classify as superseded under the interleaved head';
+  end if;
+  if public.fn_classify_revision_lineage('test-quiz-interleave-v2', 5) <> 'superseded' then
+    raise exception 'the post-quiz caption mirror (revision 5) did not classify as superseded under the interleaved head';
+  end if;
+
+  -- Idempotency across the interleave too. Deliberately BEFORE the
+  -- synthetic rollback insert below: that insert is a ledger-only fixture
+  -- (it never actually reverts the real content_blocks row), so a backfill
+  -- re-run AFTER it would fail the mandatory live-catalog reality check on
+  -- a mismatch this test intentionally creates for the lineage classifier,
+  -- not a real inconsistency.
   v_result := public.fn_backfill_v1_content_block_revisions();
   if (v_result ->> 'rows')::int <> 0 or (v_result ->> 'baselines')::int <> 0 then
     raise exception 'the interleave backfill was not idempotent: %', v_result;
+  end if;
+
+  -- Roll back the head (content revision 6) and re-check: 3 and 4 must
+  -- stay reachable as ancestors of the RESTORED state (revision 5), not
+  -- just of the since-reverted head. A synthetic rollback receipt is
+  -- inserted directly here (the real RPC's live-state-matching checks need
+  -- the mutations array to hold REAL per-block replacement content, which
+  -- this fixture's 44-entry v1-shaped placeholder mutations are not built
+  -- to satisfy -- exactly the same lightweight-fixture technique the
+  -- quiz-lineage classification tests elsewhere in this file already use to
+  -- exercise the classifier without a full RPC round trip): it carries the
+  -- exact shape a real rollback of revision 6 would produce.
+  perform set_config('bmh.release_revision_import_id', 'test-quiz-interleave-v2', true);
+  insert into public.content_import_release_revisions (
+    import_id, revision, kind, reverts_revision, state_parent_revision,
+    prior_manifest_sha256, manifest_sha256,
+    prior_catalog_sha256, catalog_sha256, payload_sha256, client_payload_sha256,
+    download_evidence_sha256, mutation_count, update_count, insert_count,
+    mutations, prior_block_graph, evidence, revised_at
+  ) values (
+    'test-quiz-interleave-v2', 7, 'content_blocks', 6, 5,
+    repeat('f', 64), repeat('e', 64),
+    v_after_content_catalog, v_after_caption_catalog, repeat('9', 64), repeat('d', 64),
+    encode(sha256(convert_to('[]'::jsonb::text, 'UTF8')), 'hex'),
+    19, 19, 6,
+    (select jsonb_agg(jsonb_build_object('fixture', item)) from generate_series(1, 44) item),
+    '{}'::jsonb,
+    jsonb_build_object('operation', 'rollback', 'rollback_sha256', repeat('1', 64)),
+    now() + interval '5 minutes'
+  );
+  perform set_config('bmh.release_revision_import_id', '', true);
+
+  if public.fn_current_state_revision('test-quiz-interleave-v2') <> 5 then
+    raise exception 'the synthetic rollback receipt did not restore revision 5 as the current state';
+  end if;
+  if public.fn_classify_revision_lineage('test-quiz-interleave-v2', 6) <> 'reverted' then
+    raise exception 'the rolled-back content revision did not classify as reverted';
+  end if;
+  if public.fn_classify_revision_lineage('test-quiz-interleave-v2', 4) <> 'superseded' then
+    raise exception 'the pre-quiz poster mirror lost its ancestry after rolling back the head -- absorbed_into_revision must survive rollback';
+  end if;
+  if public.fn_classify_revision_lineage('test-quiz-interleave-v2', 3) <> 'superseded' then
+    raise exception 'the publication baseline lost its ancestry after rolling back the head -- absorbed_into_revision must survive rollback';
   end if;
 end;
 $$;

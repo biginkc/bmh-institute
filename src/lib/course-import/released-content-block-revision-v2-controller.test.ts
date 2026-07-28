@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { resolve as resolvePath } from "node:path";
+import { spawnSync } from "node:child_process";
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -20,6 +21,7 @@ import {
   type ReleasedContentBlockRevisionV2Audit,
   type ReleasedContentBlockRevisionV2CommandInput,
   type ReleasedContentBlockRevisionV2Dependencies,
+  type RevisionLineageClassification,
 } from "./released-content-block-revision-v2-controller";
 
 type FakeClient = { name: "fake-client" };
@@ -460,6 +462,44 @@ describe("released content block revision v2 controller", () => {
       .rejects.toThrow(/not produced by the v2 revision operation/);
   });
 
+  it("refuses the reconciliation on an ABA race: the active revision moves and moves back to an identical target state during the unlocked reads", async () => {
+    // Every read in reconciliation (catalog, audit, mutation rows) is
+    // unlocked. A concurrent rollback + reapplication that happens to
+    // restore the exact SAME target manifest/catalog/rows can complete
+    // entirely inside this window -- every check above this would still
+    // pass (they'd match the NEW receipt's identical resulting state), but
+    // `activeRevision` and `audit` were captured against the OLD receipt.
+    // Simulate it: loadActiveRevision returns revision 2 on its first call
+    // (the one the whole reconciliation is keyed to) and revision 5 on the
+    // re-check after all other reads complete.
+    let activeCalls = 0;
+    const audit = expectedAudit(2);
+    const dependencies: ReleasedContentBlockRevisionV2Dependencies<FakeClient> = {
+      classifyEnvironment: vi.fn(assertCourseImportEnvironment),
+      createClient: vi.fn(() => ({ name: "fake-client" as const })),
+      loadActiveRevision: vi.fn(async () => {
+        activeCalls += 1;
+        return {
+          import_id: importId,
+          active_revision: activeCalls === 1 ? 2 : 5,
+          active_manifest_sha256: manifestSha256,
+          active_catalog_sha256: replacementCatalogSha256,
+        };
+      }),
+      loadCatalogSha256: vi.fn(async () => replacementCatalogSha256),
+      loadAudit: vi.fn(async () => audit),
+      loadMutationRows: vi.fn(async () => rows("revised")),
+      callRevision: vi.fn(),
+      log: vi.fn(),
+      classifyRevisionLineage: vi.fn(),
+    };
+
+    await expect(runReleasedContentBlockRevisionV2Command(makeInput(), dependencies))
+      .rejects.toThrow(/active revision changed while reconciling/);
+    expect(dependencies.callRevision).not.toHaveBeenCalled();
+    expect(activeCalls).toBe(2);
+  });
+
   it("refuses the reconciliation when the active receipt's client payload digest differs", async () => {
     const dependencies = reconciliationHarness({
       ...expectedAudit(2),
@@ -575,6 +615,96 @@ describe("released content block revision v2 controller", () => {
     expect(loadCatalogSha256).toHaveBeenCalledTimes(1);
   });
 
+  it("reports rolled_back (not a thrown error) when a rollback commits BETWEEN the active_head classification and the postflight reads", async () => {
+    // Narrower race than the one above: lineage classifies as active_head
+    // (true when checked), but a rollback commits in the gap before the
+    // UNLOCKED live-row/catalog reads run -- those reads then observe the
+    // RESTORED state and legitimately fail their assertions against rpc's
+    // receipt. A naive implementation would let that mismatch surface as a
+    // generic thrown error (CLI exit 1, "something went wrong"); the real
+    // situation is "committed, then reverted" and must re-classify and
+    // report rolled_back (CLI exit 2) instead.
+    const classifyRevisionLineage = vi.fn<() => Promise<RevisionLineageClassification>>(async () => "active_head")
+      .mockResolvedValueOnce("active_head")
+      .mockResolvedValueOnce("reverted");
+    const dependencies: ReleasedContentBlockRevisionV2Dependencies<FakeClient> = {
+      classifyEnvironment: vi.fn(assertCourseImportEnvironment),
+      createClient: vi.fn(() => ({ name: "fake-client" as const })),
+      loadActiveRevision: vi.fn(async () => ({
+        import_id: importId,
+        active_revision: 1,
+        active_manifest_sha256: expectedPriorManifestSha256,
+        active_catalog_sha256: priorCatalogSha256,
+      })),
+      loadCatalogSha256: vi.fn(async () => priorCatalogSha256),
+      loadAudit: vi.fn(async () => expectedAudit(2)),
+      classifyRevisionLineage,
+      // The RESTORED (pre-revision) rows: this is what the unlocked
+      // postflight read observes after the rollback commits.
+      loadMutationRows: vi.fn(async () => rows("initial")),
+      callRevision: vi.fn(async () => ({
+        error: null,
+        data: {
+          status: "revised",
+          import_id: importId,
+          revision: 2,
+          mutation_count: mutations.length,
+          update_count: 1,
+          insert_count: 1,
+          catalog_sha256: replacementCatalogSha256,
+        },
+      })),
+      log: vi.fn(),
+    };
+
+    await expect(runReleasedContentBlockRevisionV2Command(makeInput(), dependencies))
+      .resolves.toMatchObject({
+        status: "rolled_back",
+        revision: 2,
+        catalogSha256: replacementCatalogSha256,
+      });
+    expect(classifyRevisionLineage).toHaveBeenCalledTimes(2);
+  });
+
+  it("still throws the genuine postflight mismatch error when a re-check finds the revision is NOT actually reverted", async () => {
+    // The recheck-on-mismatch path must not swallow a REAL inconsistency --
+    // only a confirmed rollback earns the rolled_back reclassification.
+    const classifyRevisionLineage = vi.fn<() => Promise<RevisionLineageClassification>>(async () => "active_head")
+      .mockResolvedValueOnce("active_head")
+      .mockResolvedValueOnce("active_head");
+    const dependencies: ReleasedContentBlockRevisionV2Dependencies<FakeClient> = {
+      classifyEnvironment: vi.fn(assertCourseImportEnvironment),
+      createClient: vi.fn(() => ({ name: "fake-client" as const })),
+      loadActiveRevision: vi.fn(async () => ({
+        import_id: importId,
+        active_revision: 1,
+        active_manifest_sha256: expectedPriorManifestSha256,
+        active_catalog_sha256: priorCatalogSha256,
+      })),
+      loadCatalogSha256: vi.fn(async () => priorCatalogSha256),
+      loadAudit: vi.fn(async () => expectedAudit(2)),
+      classifyRevisionLineage,
+      loadMutationRows: vi.fn(async () => rows("initial")),
+      callRevision: vi.fn(async () => ({
+        error: null,
+        data: {
+          status: "revised",
+          import_id: importId,
+          revision: 2,
+          mutation_count: mutations.length,
+          update_count: 1,
+          insert_count: 1,
+          catalog_sha256: replacementCatalogSha256,
+        },
+      })),
+      log: vi.fn(),
+    };
+
+    await expect(runReleasedContentBlockRevisionV2Command(makeInput(), dependencies))
+      .rejects.toThrow(/target rows after apply/);
+    expect(classifyRevisionLineage).toHaveBeenCalledTimes(2);
+  });
+
   it("refuses when the lineage classifier reports a diverged or unknown state for its own just-committed revision", async () => {
     const dependencies = makeHarness();
     (dependencies.classifyRevisionLineage as ReturnType<typeof vi.fn>).mockResolvedValueOnce("diverged");
@@ -640,10 +770,12 @@ describe("released content block revision v2 controller", () => {
     });
 
     it("is actually wired into the CLI: the script assigns process.exitCode from this exact mapping", () => {
-      // CLI-level regression: the mapping above is worthless if the script
-      // discards the command's status. Assert the script's own source binds
-      // process.exitCode to the shared helper (importing it from this
-      // module), so a refactor that drops the assignment fails here.
+      // Source-level sanity check that the real CLI script imports and
+      // assigns the shared helper (a refactor that drops the assignment
+      // fails here immediately) -- but this alone was previously the ONLY
+      // proof, and it cannot catch the assignment being wired to the wrong
+      // value or the process never actually exiting with it. See the real
+      // subprocess assertions below for that.
       const script = readFileSync(
         resolvePath(__dirname, "../../../scripts/course-content/revise-released-content-blocks-v2.ts"),
         "utf8",
@@ -655,6 +787,39 @@ describe("released content block revision v2 controller", () => {
         /import\s*\{[^}]*releasedContentBlockRevisionV2ExitCode[^}]*\}\s*from\s*"\.\.\/\.\.\/src\/lib\/course-import\/released-content-block-revision-v2-controller"/,
       );
       expect(script).toContain("const result = await runReleasedContentBlockRevisionV2Command");
+    });
+
+    it("actually exits the real OS process with 2 when the command result is rolled_back (genuine subprocess, not a source scan)", () => {
+      // Runs a fixture that reproduces the real CLI script's exact tail
+      // (call the controller with fake-but-realistic dependencies, then
+      // `process.exitCode = releasedContentBlockRevisionV2ExitCode(result.status)`)
+      // as a REAL separate node process via tsx, and asserts the OS-level
+      // exit status -- proving the full chain (controller status -> helper
+      // -> process.exitCode -> actual process exit code) works, not just
+      // that the right line of source text exists.
+      const result = spawnSync(
+        "npx",
+        ["tsx", resolvePath(__dirname, "../../../scripts/course-content/__fixtures__/exit-code-subprocess-fixture.ts")],
+        {
+          encoding: "utf8",
+          env: { ...process.env, CLI_FIXTURE_STATUS: "rolled_back" },
+        },
+      );
+      expect(result.error).toBeUndefined();
+      expect(result.status).toBe(2);
+    });
+
+    it("actually exits the real OS process with 0 when the command result is revised (genuine subprocess, not a source scan)", () => {
+      const result = spawnSync(
+        "npx",
+        ["tsx", resolvePath(__dirname, "../../../scripts/course-content/__fixtures__/exit-code-subprocess-fixture.ts")],
+        {
+          encoding: "utf8",
+          env: { ...process.env, CLI_FIXTURE_STATUS: "revised" },
+        },
+      );
+      expect(result.error).toBeUndefined();
+      expect(result.status).toBe(0);
     });
   });
 });

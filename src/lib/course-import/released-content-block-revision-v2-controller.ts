@@ -298,13 +298,49 @@ export async function runReleasedContentBlockRevisionV2Command<Client>(
     );
   }
 
-  const afterRows = await dependencies.loadMutationRows(client, input.mutations);
-  assertReleasedContentBlockRevisionV2RevisedState(afterRows, input.mutations);
-  const catalogSha256 = await dependencies.loadCatalogSha256(client, input.importId);
-  if (catalogSha256 !== rpc.catalog_sha256) {
-    throw new Error(
-      "Released content revision v2 postflight catalog does not match the atomic RPC receipt.",
-    );
+  // lineage classified this revision as active_head just now, but that
+  // classification and the live-row/catalog reads below are NOT one atomic
+  // snapshot: a rollback can still commit in the gap between them. If it
+  // does, these unlocked reads observe the RESTORED (pre-revision) state
+  // and legitimately fail their assertions against rpc's receipt -- that
+  // failure must not surface as a generic thrown error (which would exit
+  // the CLI with 1, "something went wrong", when the true outcome is
+  // "committed, then reverted"). Treat a verification mismatch here as a
+  // reason to RE-classify lineage rather than an immediate hard failure:
+  // if the revision is NOW reverted, report rolled_back; otherwise the
+  // mismatch is a genuine inconsistency and the original error stands.
+  let afterRows: Awaited<ReturnType<typeof dependencies.loadMutationRows>>;
+  let catalogSha256: string;
+  try {
+    afterRows = await dependencies.loadMutationRows(client, input.mutations);
+    assertReleasedContentBlockRevisionV2RevisedState(afterRows, input.mutations);
+    catalogSha256 = await dependencies.loadCatalogSha256(client, input.importId);
+    if (catalogSha256 !== rpc.catalog_sha256) {
+      throw new Error(
+        "Released content revision v2 postflight catalog does not match the atomic RPC receipt.",
+      );
+    }
+  } catch (verificationError) {
+    const recheckedLineage = await dependencies.classifyRevisionLineage(client, input.importId, rpc.revision);
+    if (recheckedLineage === "reverted") {
+      dependencies.log(JSON.stringify({
+        phase: "released_content_blocks_v2_rolled_back",
+        environment,
+        prior_state: priorState,
+        mutation_count: mutationCount,
+        revision: rpc.revision,
+        catalog_sha256: rpc.catalog_sha256,
+        reason: "rollback_committed_between_lineage_check_and_postflight_reads",
+      }, null, 2));
+      return {
+        status: "rolled_back" as const,
+        environment,
+        priorState,
+        revision: rpc.revision,
+        catalogSha256: rpc.catalog_sha256,
+      };
+    }
+    throw verificationError;
   }
 
   dependencies.log(JSON.stringify({
@@ -402,6 +438,23 @@ async function reconcileAlreadyActiveTarget<Client>(
   }
   const afterRows = await dependencies.loadMutationRows(client, input.mutations);
   assertReleasedContentBlockRevisionV2RevisedState(afterRows, input.mutations);
+
+  // ABA guard: every read above (catalog, audit, mutation rows) is
+  // UNLOCKED, so a concurrent rollback + reapplication that happens to
+  // restore the SAME target manifest/catalog/rows could complete entirely
+  // within this function's own reads -- every check above would still pass
+  // (they'd match the NEW receipt's identical resulting state), but
+  // `activeRevision` and `audit` were captured against the OLD receipt.
+  // Re-read the active revision now that every other read is done: if it
+  // has moved, we cannot trust that this validated receipt is still the one
+  // that's actually active, and must refuse rather than report success for
+  // the wrong operation.
+  const recheckedActive = await dependencies.loadActiveRevision(client, input.importId);
+  if (Number(recheckedActive.active_revision) !== activeRevision) {
+    throw new Error(
+      "Released content revision v2 refused: the active revision changed while reconciling this call -- a concurrent operation raced this read. Retry against fresh live state.",
+    );
+  }
 
   dependencies.log(JSON.stringify({
     phase: "released_content_blocks_v2_already_revised_reconciled",

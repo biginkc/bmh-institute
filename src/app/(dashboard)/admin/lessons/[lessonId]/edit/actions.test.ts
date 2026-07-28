@@ -447,6 +447,44 @@ describe("updateBlock role_play branch", () => {
     expect(rpcCall).toBeNull();
   });
 
+  it("saves a brand-new role play's FIRST scenario binding (the block starts with an explicit empty scenario_id, not an omitted field)", async () => {
+    // createBlock's default content for a new role_play block is exactly
+    // { scenario_id: "", title: "Role play", height_px: 720 } -- the editor
+    // loads that live row and sends expected_scenario_id: "" (what it
+    // actually saw), never omitting the field. This must succeed: "" is a
+    // real loaded binding, not a missing one.
+    blockTypeRow = {
+      block_type: "role_play",
+      content: { scenario_id: "", title: "Role play", height_px: 720 },
+    };
+
+    const result = await updateBlock({
+      blockId: "block-1",
+      lessonId: "lesson-1",
+      expected_scenario_id: "",
+      content: {
+        scenario_id: "pending:oral-check-1",
+        title: "Talk with Andrea",
+        height_px: 720,
+      },
+    });
+
+    expect(result).toEqual({ ok: true });
+    expect(rpcCall).toEqual({
+      p_block_id: "block-1",
+      p_expected_scenario_id: "",
+      p_scenario_id: "pending:oral-check-1",
+      p_title: "Talk with Andrea",
+      p_height_px: 720,
+      p_is_required_for_completion: false,
+    });
+    expect(rpcMergedContent).toEqual({
+      scenario_id: "pending:oral-check-1",
+      title: "Talk with Andrea",
+      height_px: 720,
+    });
+  });
+
   it("allows an admin to make a role play required", async () => {
     const result = await updateBlock({
       blockId: "block-1",

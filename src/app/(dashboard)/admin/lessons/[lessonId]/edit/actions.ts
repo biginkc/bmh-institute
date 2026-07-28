@@ -253,7 +253,14 @@ export async function updateBlock(input: {
     // binding back over the live one. The expected value must come from the
     // CLIENT (what its page actually loaded); deriving it from this
     // action's own fresh SELECT would defeat the entire check.
-    if (typeof input.expected_scenario_id !== "string" || !input.expected_scenario_id.trim()) {
+    // A NEW role-play block is created with an explicit but EMPTY
+    // scenario_id ({ scenario_id: "", ... } -- see createBlock's default
+    // content), so "" is the real loaded binding for a first-ever save, not
+    // an omitted field. Only reject when the field is actually missing
+    // (undefined/wrong type) -- a stale build or bug that never sent it --
+    // never on the empty string itself, which must reach the RPC unchanged
+    // so its CAS compares against the block's real (also empty) live value.
+    if (typeof input.expected_scenario_id !== "string") {
       return {
         ok: false,
         error: "Missing the loaded scenario binding. Reload the page and try again.",
@@ -264,7 +271,7 @@ export async function updateBlock(input: {
       "fn_admin_merge_role_play_block_content",
       {
         p_block_id: input.blockId,
-        p_expected_scenario_id: input.expected_scenario_id.trim(),
+        p_expected_scenario_id: input.expected_scenario_id,
         p_scenario_id: String(merged.scenario_id),
         p_title: String(merged.title),
         p_height_px: Number(merged.height_px),

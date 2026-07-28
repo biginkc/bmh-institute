@@ -77,7 +77,96 @@ alter table public.content_import_release_revisions
   -- Nullable only for pre-existing rows; the ledger guard trigger below
   -- fills state_parent_revision for any new forward row that omits it.
   add column state_parent_revision integer check (state_parent_revision is null or state_parent_revision >= 1),
-  add column reverts_revision integer check (reverts_revision is null or reverts_revision >= 2);
+  add column reverts_revision integer check (reverts_revision is null or reverts_revision >= 2),
+  -- Round-7 review fix (finding 4): a SEPARATE causal-ancestry edge,
+  -- independent of state_parent_revision and never mutating an existing
+  -- row (the ledger is append-only; an already-inserted row's
+  -- state_parent_revision can never be rewritten to splice a
+  -- retroactively-backfilled ancestor underneath it). Set ONLY on a
+  -- backfilled row whose resulting catalog is exactly what an
+  -- ALREADY-EXISTING later row (typically a quiz revision that predates
+  -- this backfill) recorded as ITS OWN prior catalog -- i.e., this row's
+  -- effect was already causally absorbed into that later row's live state
+  -- when the later row was originally applied, even though the later row's
+  -- own immutable state_parent_revision cannot be updated to say so.
+  -- fn_classify_revision_lineage traverses both edges (state_parent AND
+  -- absorbed_into) so a genuine causal predecessor still classifies as
+  -- superseded instead of diverged.
+  add column absorbed_into_revision integer check (absorbed_into_revision is null or absorbed_into_revision >= 2);
+
+-- Round-7 review fix (finding 3): an INDEPENDENT, immutable attestation of
+-- what the catalog looked like immediately after publication -- captured by
+-- fn_release_course_import_v1 itself (see the redefinition of
+-- private.fn_release_course_import_v027_without_global_mutation_lock
+-- below), in the SAME transaction as the publish flip, not reconstructed or
+-- guessed at backfill time. Before this column, the backfill accepted
+-- WHATEVER the first legacy receipt declared as its own prior catalog as
+-- "the" publication state with no independent evidence that publication was
+-- the ONLY intervening change -- an unrecorded edit between publication and
+-- the first receipt would get silently certified as publication history.
+-- Nullable because an import released BEFORE this migration has no such
+-- attestation; the backfill refuses to bridge the publication gap for any
+-- import where this is null rather than guess.
+alter table public.content_import_release_records
+  add column post_publication_catalog_sha256 text
+    check (post_publication_catalog_sha256 is null or post_publication_catalog_sha256 ~ '^[a-f0-9]{64}$');
+
+-- The release record's own guard (027) blocks EVERY update unconditionally.
+-- That is still the right default -- but capturing the post-publication
+-- catalog needs one narrow, controlled exception: the publish-flip guard
+-- (fn_guard_imported_catalog_publication) itself requires the release
+-- record to already EXIST before is_published can flip, so the pre-publish
+-- insert must happen first and the post-publication value can only be
+-- known afterward, in the same transaction. Reordering to "publish first,
+-- insert once with both values" is blocked by that other guard; the
+-- alternative of loosening it felt like a bigger, less-contained change
+-- than loosening THIS guard for exactly one column. This redefinition
+-- allows an UPDATE only when: the same service_role + bmh.release_import_id
+-- marker that gates the original insert is present, the column currently
+-- being set is NULL -> non-null (once, never again), and every OTHER
+-- column is byte-identical to what it already was -- so nothing about an
+-- already-recorded release can ever actually change.
+create or replace function public.fn_guard_content_import_release_record()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  if tg_op = 'INSERT' then
+    if coalesce(auth.role(), '') <> 'service_role'
+       or coalesce(current_setting('bmh.release_import_id', true), '') <> new.import_id then
+      raise exception 'Content import release records may only be created by the evidence-bound release operation.'
+        using errcode = '42501';
+    end if;
+    return new;
+  end if;
+  if tg_op = 'UPDATE'
+    and coalesce(auth.role(), '') = 'service_role'
+    and coalesce(current_setting('bmh.release_import_id', true), '') = new.import_id
+    and old.post_publication_catalog_sha256 is null
+    and new.post_publication_catalog_sha256 is not null
+    and new.import_id is not distinct from old.import_id
+    and new.program_id is not distinct from old.program_id
+    and new.qa_role_group_id is not distinct from old.qa_role_group_id
+    and new.employee_role_group_id is not distinct from old.employee_role_group_id
+    and new.manifest_sha256 is not distinct from old.manifest_sha256
+    and new.reconciliation_sha256 is not distinct from old.reconciliation_sha256
+    and new.catalog_sha256 is not distinct from old.catalog_sha256
+    and new.rollback_rehearsal_sha256 is not distinct from old.rollback_rehearsal_sha256
+    and new.chrome_desktop_sha256 is not distinct from old.chrome_desktop_sha256
+    and new.chrome_mobile_sha256 is not distinct from old.chrome_mobile_sha256
+    and new.admin_happy_path_sha256 is not distinct from old.admin_happy_path_sha256
+    and new.approval_sha256 is not distinct from old.approval_sha256
+    and new.approved_by is not distinct from old.approved_by
+    and new.evidence is not distinct from old.evidence
+    and new.released_by is not distinct from old.released_by
+    and new.released_at is not distinct from old.released_at
+  then
+    return new;
+  end if;
+  raise exception 'Content import release records are immutable.' using errcode = '42501';
+end;
+$$;
 
 alter table public.content_import_release_revisions
   add constraint content_import_release_revisions_kind_shape_check
@@ -168,6 +257,249 @@ $$;
 
 revoke all on function public.fn_lock_course_import_catalog_tables() from public, anon, authenticated;
 grant execute on function public.fn_lock_course_import_catalog_tables() to service_role;
+
+-- Redefine the release RPC's actual body (private.fn_release_course_import_v027_without_global_mutation_lock,
+-- originally 027's public.fn_release_course_import_v1, renamed by 034) to
+-- also attest the post-publication catalog -- see the
+-- post_publication_catalog_sha256 column comment above for why this must
+-- be captured HERE and not reconstructed later. CREATE OR REPLACE preserves
+-- the existing revoke-from-everyone grant state (034 revoked all, relying
+-- on the public wrapper's SECURITY DEFINER ownership to call it).
+create or replace function private.fn_release_course_import_v027_without_global_mutation_lock(
+  p_import_id text,
+  p_program_id uuid,
+  p_employee_role_group_id uuid,
+  p_evidence jsonb,
+  p_confirmation text
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_catalog_sha256 text;
+  v_qa_role_group_id uuid;
+  v_manifest_at timestamptz;
+  v_reconciliation_at timestamptz;
+  v_rollback_at timestamptz;
+  v_desktop_at timestamptz;
+  v_mobile_at timestamptz;
+  v_admin_at timestamptz;
+  v_approval_at timestamptz;
+  v_existing public.content_import_release_records%rowtype;
+  v_post_publication_catalog_sha256 text;
+begin
+  if coalesce(auth.role(), '') <> 'service_role' then
+    raise exception 'Course import release requires the service role.' using errcode = '42501';
+  end if;
+  if p_import_id is null or p_import_id !~ '^[a-z0-9][a-z0-9._-]{0,127}$' then
+    raise exception 'Course import release refused: invalid import_id.' using errcode = '22023';
+  end if;
+  if p_confirmation is distinct from 'RELEASE-BMH-INSTITUTE:' || p_import_id || ':' || coalesce(p_evidence -> 'manifest' ->> 'sha256', '') then
+    raise exception 'Course import release refused: confirmation does not bind the import and manifest checksum.' using errcode = '22023';
+  end if;
+
+  if p_evidence is null or jsonb_typeof(p_evidence) <> 'object'
+     or (select count(*) from jsonb_object_keys(p_evidence)) <> 7
+     or not (p_evidence ?& array['manifest','reconciliation','rollback_rehearsal','chrome_desktop','chrome_mobile','admin_happy_path','jarrad_approval']) then
+    raise exception 'Course import release refused: evidence must contain exactly the seven required gates.' using errcode = '22023';
+  end if;
+
+  if exists (
+    select 1
+    from (values
+      ('manifest', array['sha256','recorded_at','status']::text[]),
+      ('reconciliation', array['sha256','catalog_sha256','recorded_at','status','exact']::text[]),
+      ('rollback_rehearsal', array['sha256','recorded_at','status']::text[]),
+      ('chrome_desktop', array['sha256','recorded_at','status']::text[]),
+      ('chrome_mobile', array['sha256','recorded_at','status']::text[]),
+      ('admin_happy_path', array['sha256','recorded_at','status']::text[]),
+      ('jarrad_approval', array['sha256','approved_at','status','approved_by']::text[])
+    ) required(name, keys)
+    where jsonb_typeof(p_evidence -> required.name) <> 'object'
+       or (select count(*) from jsonb_object_keys(p_evidence -> required.name)) <> cardinality(required.keys)
+       or not ((p_evidence -> required.name) ?& required.keys)
+  ) then
+    raise exception 'Course import release refused: an evidence gate has an invalid shape.' using errcode = '22023';
+  end if;
+
+  if exists (
+    select 1
+    from (values
+      (p_evidence -> 'manifest' ->> 'sha256'),
+      (p_evidence -> 'reconciliation' ->> 'sha256'),
+      (p_evidence -> 'reconciliation' ->> 'catalog_sha256'),
+      (p_evidence -> 'rollback_rehearsal' ->> 'sha256'),
+      (p_evidence -> 'chrome_desktop' ->> 'sha256'),
+      (p_evidence -> 'chrome_mobile' ->> 'sha256'),
+      (p_evidence -> 'admin_happy_path' ->> 'sha256'),
+      (p_evidence -> 'jarrad_approval' ->> 'sha256')
+    ) digest(value)
+    where digest.value is null or digest.value !~ '^[a-f0-9]{64}$'
+  ) then
+    raise exception 'Course import release refused: every evidence checksum must be lowercase SHA-256.' using errcode = '22023';
+  end if;
+
+  if p_evidence -> 'manifest' ->> 'status' <> 'finalized'
+     or p_evidence -> 'reconciliation' ->> 'status' <> 'passed'
+     or p_evidence -> 'reconciliation' -> 'exact' is distinct from 'true'::jsonb
+     or p_evidence -> 'rollback_rehearsal' ->> 'status' <> 'passed'
+     or p_evidence -> 'chrome_desktop' ->> 'status' <> 'passed'
+     or p_evidence -> 'chrome_mobile' ->> 'status' <> 'passed'
+     or p_evidence -> 'admin_happy_path' ->> 'status' <> 'passed'
+     or p_evidence -> 'jarrad_approval' ->> 'status' <> 'approved'
+     or p_evidence -> 'jarrad_approval' ->> 'approved_by' <> 'Jarrad Henry' then
+    raise exception 'Course import release refused: every required gate must explicitly pass.' using errcode = '22023';
+  end if;
+
+  begin
+    v_manifest_at := (p_evidence -> 'manifest' ->> 'recorded_at')::timestamptz;
+    v_reconciliation_at := (p_evidence -> 'reconciliation' ->> 'recorded_at')::timestamptz;
+    v_rollback_at := (p_evidence -> 'rollback_rehearsal' ->> 'recorded_at')::timestamptz;
+    v_desktop_at := (p_evidence -> 'chrome_desktop' ->> 'recorded_at')::timestamptz;
+    v_mobile_at := (p_evidence -> 'chrome_mobile' ->> 'recorded_at')::timestamptz;
+    v_admin_at := (p_evidence -> 'admin_happy_path' ->> 'recorded_at')::timestamptz;
+    v_approval_at := (p_evidence -> 'jarrad_approval' ->> 'approved_at')::timestamptz;
+  exception when others then
+    raise exception 'Course import release refused: evidence timestamps are invalid.' using errcode = '22023';
+  end;
+
+  if greatest(v_manifest_at, v_reconciliation_at, v_rollback_at, v_desktop_at, v_mobile_at, v_admin_at, v_approval_at) > now()
+     or v_reconciliation_at < now() - interval '1 hour'
+     or least(v_rollback_at, v_desktop_at, v_mobile_at, v_admin_at, v_approval_at) < now() - interval '24 hours'
+     or v_approval_at < greatest(v_manifest_at, v_reconciliation_at, v_rollback_at, v_desktop_at, v_mobile_at, v_admin_at) then
+    raise exception 'Course import release refused: acceptance evidence is stale, future-dated, or approved before its gates.' using errcode = '22023';
+  end if;
+
+  perform pg_advisory_xact_lock(hashtextextended('course-import-release:' || p_import_id, 0));
+  lock table public.programs, public.courses, public.program_courses, public.program_access,
+    public.role_groups, public.content_import_release_records in share row exclusive mode;
+
+  select * into v_existing
+  from public.content_import_release_records release
+  where release.import_id = p_import_id;
+  if found then
+    if v_existing.program_id = p_program_id
+       and v_existing.employee_role_group_id = p_employee_role_group_id
+       and v_existing.evidence = p_evidence
+       and exists (select 1 from public.programs where id = p_program_id and is_published)
+       and not exists (
+         select 1 from public.program_courses pc join public.courses course on course.id = pc.course_id
+         where pc.program_id = p_program_id and not course.is_published
+       )
+       and exists (
+         select 1 from public.program_access
+         where program_id = p_program_id and role_group_id = p_employee_role_group_id
+       ) then
+      return jsonb_build_object('status', 'already_released', 'import_id', p_import_id, 'program_id', p_program_id);
+    end if;
+    raise exception 'Course import release refused: an immutable release record already exists with different state.' using errcode = '22023';
+  end if;
+
+  if (select count(*) from public.programs where content_import_id = p_import_id) <> 1
+     or not exists (
+       select 1 from public.programs
+       where id = p_program_id and content_import_id = p_import_id and not is_published and certificate_enabled
+     ) then
+    raise exception 'Course import release refused: expected one unpublished certificate-enabled imported program.' using errcode = '22023';
+  end if;
+  if not exists (select 1 from public.role_groups where id = p_employee_role_group_id) then
+    raise exception 'Course import release refused: employee role group does not exist.' using errcode = '22023';
+  end if;
+  if (select count(*) from public.program_access where program_id = p_program_id) <> 1 then
+    raise exception 'Course import release refused: unreleased imported content must have exactly one QA access group.' using errcode = '22023';
+  end if;
+  select role_group_id into v_qa_role_group_id
+  from public.program_access where program_id = p_program_id;
+  if v_qa_role_group_id = p_employee_role_group_id then
+    raise exception 'Course import release refused: employee and QA role groups must be distinct.' using errcode = '22023';
+  end if;
+
+  if not exists (select 1 from public.courses where content_import_id = p_import_id)
+     or exists (
+       select 1 from public.courses course
+       where course.content_import_id = p_import_id
+         and (course.is_published or course.certificate_enabled)
+     )
+     or exists (
+       select 1 from public.courses course
+       where course.content_import_id = p_import_id
+         and (select count(*) from public.program_courses pc where pc.program_id = p_program_id and pc.course_id = course.id) <> 1
+     )
+     or exists (
+       select 1 from public.program_courses pc join public.courses course on course.id = pc.course_id
+       where pc.program_id = p_program_id and course.content_import_id is distinct from p_import_id
+     ) then
+    raise exception 'Course import release refused: imported courses must be unpublished, course certificates disabled, and attached only to the imported program.' using errcode = '22023';
+  end if;
+  if not exists (select 1 from public.lessons where content_import_id = p_import_id)
+     or exists (
+       select 1 from public.lessons lesson join public.modules module on module.id = lesson.module_id
+       join public.courses course on course.id = module.course_id
+       where course.content_import_id = p_import_id and lesson.content_import_id is distinct from p_import_id
+     )
+     or exists (
+       select 1 from public.lessons lesson join public.modules module on module.id = lesson.module_id
+       join public.courses course on course.id = module.course_id
+       where lesson.content_import_id = p_import_id and course.content_import_id is distinct from p_import_id
+     ) then
+    raise exception 'Course import release refused: lesson provenance does not exactly match the imported course graph.' using errcode = '22023';
+  end if;
+
+  v_catalog_sha256 := public.fn_course_import_catalog_sha256(p_import_id);
+  if p_evidence -> 'reconciliation' ->> 'catalog_sha256' <> v_catalog_sha256 then
+    raise exception 'Course import release refused: current database catalog no longer matches the reconciled checksum.' using errcode = '22023';
+  end if;
+
+  perform set_config('bmh.release_import_id', p_import_id, true);
+  insert into public.content_import_release_records (
+    import_id, program_id, qa_role_group_id, employee_role_group_id,
+    manifest_sha256, reconciliation_sha256, catalog_sha256,
+    rollback_rehearsal_sha256, chrome_desktop_sha256, chrome_mobile_sha256,
+    admin_happy_path_sha256, approval_sha256, approved_by, evidence, released_by
+  ) values (
+    p_import_id, p_program_id, v_qa_role_group_id, p_employee_role_group_id,
+    p_evidence -> 'manifest' ->> 'sha256', p_evidence -> 'reconciliation' ->> 'sha256',
+    v_catalog_sha256, p_evidence -> 'rollback_rehearsal' ->> 'sha256',
+    p_evidence -> 'chrome_desktop' ->> 'sha256', p_evidence -> 'chrome_mobile' ->> 'sha256',
+    p_evidence -> 'admin_happy_path' ->> 'sha256', p_evidence -> 'jarrad_approval' ->> 'sha256',
+    'Jarrad Henry', p_evidence, auth.uid()
+  );
+
+  update public.courses
+  set is_published = true, certificate_enabled = false
+  where content_import_id = p_import_id;
+  update public.programs
+  set is_published = true, certificate_enabled = true
+  where id = p_program_id;
+  insert into public.program_access (program_id, role_group_id)
+  values (p_program_id, p_employee_role_group_id);
+
+  -- Round-7 review fix (finding 3): capture the post-publication catalog
+  -- HERE, in the same transaction as the publish flip -- the one place
+  -- that can attest it independently, rather than backfilling it later
+  -- from unverified receipt claims. content_import_release_records is
+  -- otherwise fully immutable; this ONE narrow follow-up write is allowed
+  -- by fn_guard_content_import_release_record only under the same
+  -- service_role + bmh.release_import_id marker that gated the insert
+  -- above, only from NULL to non-null, and only for this exact column --
+  -- see that guard's comment.
+  v_post_publication_catalog_sha256 := public.fn_course_import_catalog_sha256(p_import_id);
+  update public.content_import_release_records
+     set post_publication_catalog_sha256 = v_post_publication_catalog_sha256
+   where import_id = p_import_id;
+
+  return jsonb_build_object(
+    'status', 'released',
+    'import_id', p_import_id,
+    'program_id', p_program_id,
+    'catalog_sha256', v_catalog_sha256,
+    'post_publication_catalog_sha256', v_post_publication_catalog_sha256
+  );
+end;
+$$;
+
 
 -- ---------------------------------------------------------------------------
 -- Cutover phase 1 (this migration, one committed transaction): retire the v1
@@ -463,9 +795,23 @@ $$;
 -- (e.g. a publication rebound the block to a new scenario), the merge
 -- refuses by matching zero rows instead of silently writing the stale
 -- binding back over the new one. The caller surfaces that as a
--- reload-and-retry conflict. SECURITY INVOKER on purpose: row-level
--- security and the caller's own authority apply exactly as they would to a
--- direct UPDATE.
+-- reload-and-retry conflict.
+--
+-- Round-7 review fix: this used to be plain SECURITY INVOKER SQL, relying
+-- entirely on RLS for authorization -- but that meant it could mutate a
+-- RELEASED import's live catalog with no lock, no CAS against the shared
+-- ledger, and no receipt: the exact out-of-ledger mutation class retiring
+-- the poster/caption RPCs was supposed to close. If the block belongs to a
+-- tracked import, this now takes the canonical catalog locks and appends a
+-- `legacy_catalog_correction`-shaped ledger receipt in the SAME
+-- transaction as the CAS update, so a future v2 revision/rollback's catalog
+-- checksum always accounts for it. That requires SECURITY DEFINER (writing
+-- the ledger needs elevated privilege the calling admin session does not
+-- have), so authorization is now checked EXPLICITLY inside the function
+-- body -- replicating the exact predicate the content_blocks RLS policy
+-- itself uses (public.is_admin + public.fn_actor_may_access_catalog_entity_v1)
+-- rather than relying on RLS to gate a SECURITY DEFINER function, which RLS
+-- does not do.
 create or replace function public.fn_admin_merge_role_play_block_content(
   p_block_id uuid,
   p_expected_scenario_id text,
@@ -475,20 +821,137 @@ create or replace function public.fn_admin_merge_role_play_block_content(
   p_is_required_for_completion boolean
 )
 returns jsonb
-language sql
+language plpgsql
+security definer
 set search_path = ''
 as $$
+declare
+  v_import_id text;
+  v_row public.content_blocks%rowtype;
+  v_prior_manifest text;
+  v_prior_catalog text;
+  v_new_catalog text;
+  v_next_revision integer;
+  v_payload_sha256 text;
+  v_saved_role text;
+begin
+  -- service_role is already fully trusted everywhere else in this system
+  -- (it bypasses RLS outright); the admin-session path below exists to
+  -- replicate the RLS predicate a regular authenticated admin session would
+  -- otherwise be checked against, since SECURITY DEFINER bypasses RLS.
+  if coalesce(auth.role(), '') <> 'service_role'
+    and not (
+      public.is_admin(auth.uid())
+      and public.fn_actor_may_access_catalog_entity_v1(auth.uid(), 'content_blocks', p_block_id)
+    )
+  then
+    raise exception 'Not authorized to edit this content block.'
+      using errcode = '42501';
+  end if;
+
+  select coalesce(lesson.content_import_id, course.content_import_id) into v_import_id
+  from public.content_blocks block
+  join public.lessons lesson on lesson.id = block.lesson_id
+  join public.modules module on module.id = lesson.module_id
+  join public.courses course on course.id = module.course_id
+  where block.id = p_block_id;
+
+  -- Only a RELEASED import has an active catalog/ledger to protect --
+  -- mid-QA content carries content_import_id before it is ever released,
+  -- and fn_revise_released_content_blocks_v2 itself refuses to run against
+  -- an import with no release record, so there is nothing for this write
+  -- to desynchronize yet.
+  if v_import_id is not null and not exists (
+    select 1 from public.content_import_release_records release
+    where release.import_id = v_import_id
+  ) then
+    v_import_id := null;
+  end if;
+
+  if v_import_id is null then
+    -- Not part of any RELEASED import: a plain CAS merge, matching the
+    -- previous behavior exactly (no ledger involved -- there is no catalog
+    -- to keep in sync for content this mechanism never tracks).
+    update public.content_blocks
+       set content = content || jsonb_build_object(
+             'scenario_id', p_scenario_id, 'title', p_title, 'height_px', p_height_px
+           ),
+           is_required_for_completion = p_is_required_for_completion
+     where id = p_block_id
+       and block_type = 'role_play'
+       and content ->> 'scenario_id' is not distinct from p_expected_scenario_id
+    returning * into v_row;
+    if not found then
+      return null;
+    end if;
+    return to_jsonb(v_row.content);
+  end if;
+
+  -- Tracked import: route under the SAME canonical locks every revision RPC
+  -- uses, so a concurrent v2 revision/rollback/backfill cannot compute a
+  -- catalog checksum that silently omits this edit.
+  perform pg_advisory_xact_lock(hashtextextended('course-import-catalog-mutation', 0));
+  lock table public.content_import_release_records, public.content_import_release_revisions
+    in share row exclusive mode;
+  perform public.fn_lock_course_import_catalog_tables();
+
+  select active.active_manifest_sha256 into v_prior_manifest
+  from public.content_import_active_release_v1 active
+  where active.import_id = v_import_id;
+  v_prior_catalog := public.fn_course_import_catalog_sha256(v_import_id);
+
   update public.content_blocks
      set content = content || jsonb_build_object(
-           'scenario_id', p_scenario_id,
-           'title', p_title,
-           'height_px', p_height_px
+           'scenario_id', p_scenario_id, 'title', p_title, 'height_px', p_height_px
          ),
          is_required_for_completion = p_is_required_for_completion
    where id = p_block_id
      and block_type = 'role_play'
      and content ->> 'scenario_id' is not distinct from p_expected_scenario_id
-  returning content;
+  returning * into v_row;
+  if not found then
+    return null;
+  end if;
+
+  v_new_catalog := public.fn_course_import_catalog_sha256(v_import_id);
+  v_payload_sha256 := encode(sha256(convert_to(jsonb_build_object(
+    'block_id', p_block_id, 'scenario_id', p_scenario_id, 'title', p_title,
+    'height_px', p_height_px, 'is_required_for_completion', p_is_required_for_completion
+  )::text, 'UTF8')), 'hex');
+
+  select coalesce(max(revision), 1) + 1 into v_next_revision
+  from public.content_import_release_revisions
+  where import_id = v_import_id;
+
+  -- The ledger insert guard requires service_role (it protects against an
+  -- arbitrary client writing a fake receipt directly); this function's OWN
+  -- authorization check above is the real gate for THIS specific, vetted
+  -- write path, so it temporarily asserts service_role for the insert and
+  -- restores the caller's real role immediately after -- the same
+  -- elevate-for-one-write pattern used throughout this migration set for
+  -- SECURITY DEFINER functions that append evidence on a caller's behalf.
+  v_saved_role := current_setting('request.jwt.claim.role', true);
+  perform set_config('request.jwt.claim.role', 'service_role', true);
+  perform set_config('bmh.release_revision_import_id', v_import_id, true);
+  insert into public.content_import_release_revisions (
+    import_id, revision, kind, state_parent_revision,
+    prior_manifest_sha256, manifest_sha256,
+    prior_catalog_sha256, catalog_sha256,
+    payload_sha256, client_payload_sha256,
+    evidence, revised_by
+  ) values (
+    v_import_id, v_next_revision, 'legacy_catalog_correction', v_next_revision - 1,
+    v_prior_manifest, v_prior_manifest,
+    v_prior_catalog, v_new_catalog,
+    v_payload_sha256, v_payload_sha256,
+    jsonb_build_object('operation', 'admin_role_play_scenario_bind', 'block_id', p_block_id),
+    auth.uid()
+  );
+  perform set_config('bmh.release_revision_import_id', '', true);
+  perform set_config('request.jwt.claim.role', coalesce(v_saved_role, ''), true);
+
+  return to_jsonb(v_row.content);
+end;
 $$;
 
 revoke all on function public.fn_admin_merge_role_play_block_content(
@@ -654,10 +1117,21 @@ grant execute on function public.fn_current_state_revision(text) to service_role
 --                    reverts_revision = p_revision and the state was not
 --                    since restored to it (the active_head check runs
 --                    first, so a restored state never reaches this branch).
---   * superseded  -- p_revision is a genuine ancestor of the current state:
---                    it appears on the current state's own
---                    state_parent_revision chain, i.e. later activity was
---                    built on top of it.
+--   * superseded  -- p_revision is a genuine causal ancestor of the current
+--                    state: it is reachable by walking BACKWARD from the
+--                    current state along two edges -- state_parent_revision
+--                    (the normal forward/rollback chain) AND
+--                    absorbed_into_revision (see that column's comment --
+--                    a backfilled row whose effect was already embedded in
+--                    a LATER, already-existing, immutable row's own live
+--                    state at the time that row was originally applied,
+--                    which cannot be spliced into the immutable row's own
+--                    state_parent_revision after the fact). Without the
+--                    second edge, a legacy correction backfilled BEFORE an
+--                    existing quiz revision in true causal time -- but
+--                    necessarily numbered AFTER it, since the ledger can
+--                    only append -- would classify diverged even though
+--                    the quiz revision's own catalog already reflects it.
 --   * diverged    -- none of the above: the lineage does not connect this
 --                    revision to the current state (broken/corrupted chain,
 --                    or a rollback receipt row was passed -- receipts are
@@ -676,9 +1150,12 @@ set search_path = ''
 as $$
 declare
   v_current_state integer;
-  v_cursor integer;
-  v_state_parent integer;
   v_target_reverts integer;
+  v_worklist integer[];
+  v_visited integer[] := '{}';
+  v_node integer;
+  v_state_parent integer;
+  v_absorbed integer;
   v_steps integer := 0;
 begin
   if coalesce(auth.role(), '') <> 'service_role' then
@@ -715,26 +1192,40 @@ begin
     return 'reverted';
   end if;
 
-  -- Ancestry: walk the current state's own state-parent chain. Forward
-  -- revisions record the state they were applied on, so the chain from the
-  -- current state down to the original release (state 1) is exactly the
-  -- set of revisions the current state is built on.
-  v_cursor := v_current_state;
-  while v_cursor > 1 loop
-    select state_parent_revision into v_state_parent
-    from public.content_import_release_revisions
-    where import_id = p_import_id and revision = v_cursor;
-    if v_state_parent is null or v_state_parent >= v_cursor then
-      return 'diverged';
-    end if;
-    if v_state_parent = p_revision then
+  -- Ancestry: breadth-first walk backward from the current state along
+  -- BOTH edges. state_parent_revision alone (a single chain) cannot express
+  -- a backfilled row absorbed into an existing, immutable row it causally
+  -- precedes but is numbered after -- absorbed_into_revision is the second
+  -- edge that makes it reachable without ever rewriting that immutable row.
+  v_worklist := array[v_current_state];
+  while cardinality(v_worklist) > 0 loop
+    v_node := v_worklist[1];
+    v_worklist := v_worklist[2:cardinality(v_worklist)];
+    if v_node = p_revision then
       return 'superseded';
     end if;
-    v_cursor := v_state_parent;
+    if v_node = any(v_visited) then
+      continue;
+    end if;
+    v_visited := v_visited || v_node;
     v_steps := v_steps + 1;
     if v_steps > 10000 then
       return 'diverged';
     end if;
+    if v_node > 1 then
+      select state_parent_revision into v_state_parent
+      from public.content_import_release_revisions
+      where import_id = p_import_id and revision = v_node;
+      if v_state_parent is not null and v_state_parent < v_node then
+        v_worklist := v_worklist || v_state_parent;
+      end if;
+    end if;
+    for v_absorbed in
+      select revision from public.content_import_release_revisions
+      where import_id = p_import_id and absorbed_into_revision = v_node
+    loop
+      v_worklist := v_worklist || v_absorbed;
+    end loop;
   end loop;
   return 'diverged';
 end;
