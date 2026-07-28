@@ -111,6 +111,21 @@ describe("Hugo Institute access provisioner contract", () => {
     expect(migration).toContain("fn_hugo_has_durable_activity");
   });
 
+  it("returns an idempotent success receipt for a safe already-prepared retry", () => {
+    const prepare = migration.match(
+      /create or replace function public\.hugo_prepare_pristine_delete\([\s\S]*?\n\$\$;/,
+    )?.[0];
+    expect(prepare).toBeDefined();
+    const alreadyPrepared = prepare?.match(
+      /if found and v_grant\.prepared_for_delete then[\s\S]*?end if;/,
+    )?.[0];
+    expect(alreadyPrepared).toBeDefined();
+    expect(alreadyPrepared).toContain("false, true, null, null");
+    expect(alreadyPrepared).not.toContain("already_prepared");
+    expect(alreadyPrepared).toContain("'suspended'");
+    expect(alreadyPrepared).toContain("v_grant.access_expires_at");
+  });
+
   it("serializes final-owner checks with a shared lifecycle lock", () => {
     expect(migration).toContain(
       "hashtextextended('hugo-institute-privileged-lifecycle-v1', 0)",

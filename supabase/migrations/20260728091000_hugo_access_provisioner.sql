@@ -835,9 +835,13 @@ begin
     return v_receipt;
   end if;
   if found and v_grant.prepared_for_delete then
+    -- A previous delete attempt may have completed this preparation and then
+    -- failed in a later cross-app step.  The shared lifecycle lock plus the
+    -- durable-activity check above make this a safe idempotent success for a
+    -- new retry operation: access is still suspended and no business history
+    -- exists, so the caller may continue to hugo_delete_identity.
     v_receipt := public.fn_hugo_receipt(p_operation_id, v_profile.id::text, null, '{}'::jsonb, 'revoked', null,
-      v_grant.role, v_grant.config, 'suspended', v_grant.access_expires_at, false, false,
-      'already_prepared', 'The Institute identity is already prepared for deletion.');
+      v_grant.role, v_grant.config, 'suspended', v_grant.access_expires_at, false, true, null, null);
     insert into public.hugo_access_operations values (p_operation_id, 'preparePristineDelete', p_email, '{}'::jsonb, v_receipt);
     return v_receipt;
   end if;
@@ -965,6 +969,6 @@ comment on function public.hugo_inspect_access(text) is
 comment on function public.hugo_list_access() is
   'Hugo Institute connector inventory; service-role-only, read-only, deterministic, and expiry-aware.';
 comment on function public.hugo_prepare_pristine_delete(uuid, text) is
-  'Hugo Institute connector pristine-delete preparation with durable-activity and final-owner guards.';
+  'Hugo Institute connector pristine-delete preparation with durable-activity and final-owner guards; safe already-prepared retries return success.';
 comment on function public.hugo_delete_identity(uuid, text) is
   'Hugo Institute connector deletion of an identity previously prepared as pristine.';

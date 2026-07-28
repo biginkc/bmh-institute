@@ -75,6 +75,12 @@ begin
     'prepare RPC lost durable-activity guard';
   assert position('final_owner_guard' in v_definition) > 0,
     'prepare RPC lost final-owner guard';
+  assert position('if found and v_grant.prepared_for_delete then' in v_definition) > 0,
+    'prepare RPC lost the safe already-prepared retry branch';
+  assert position('false, true, null, null' in v_definition) > 0,
+    'already-prepared pristine retry must return an ok receipt without an error';
+  assert position('already_prepared' in v_definition) = 0,
+    'already-prepared pristine retry must not return an error code';
 
   select pg_get_functiondef(p.oid) into v_definition
   from pg_proc p join pg_namespace n on n.oid = p.pronamespace
