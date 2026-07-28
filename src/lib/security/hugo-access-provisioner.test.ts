@@ -14,6 +14,10 @@ describe("Hugo Institute access provisioner contract", () => {
       /create or replace function public\.hugo_apply_access\([\s\S]*?p_operation_id uuid,[\s\S]*?p_email text,[\s\S]*?p_role text,[\s\S]*?p_config jsonb,[\s\S]*?p_status text,[\s\S]*?p_access_expires_at timestamptz,[\s\S]*?p_app_user_id text default null/,
     );
     expect(migration).toContain("public.hugo_inspect_access(p_email text)");
+    expect(migration).toContain("create or replace function public.hugo_list_access()");
+    expect(migration).toMatch(
+      /returns table \([\s\S]*?email text,[\s\S]*?app_user_id text,[\s\S]*?role text,[\s\S]*?config jsonb,[\s\S]*?status text,[\s\S]*?access_expires_at timestamptz,[\s\S]*?has_durable_activity boolean/,
+    );
     expect(migration).toContain(
       "public.hugo_prepare_pristine_delete(\n  p_operation_id uuid,\n  p_email text",
     );
@@ -45,6 +49,9 @@ describe("Hugo Institute access provisioner contract", () => {
     expect(migration).toMatch(
       /revoke all on function public\.hugo_inspect_access[\s\S]*grant execute on function public\.hugo_inspect_access[\s\S]*to service_role;/,
     );
+    expect(migration).toMatch(
+      /revoke all on function public\.hugo_list_access\(\)[\s\S]*grant execute on function public\.hugo_list_access\(\)[\s\S]*to service_role;/,
+    );
   });
 
   it("validates Institute roles and role groups without logging secrets", () => {
@@ -63,6 +70,19 @@ describe("Hugo Institute access provisioner contract", () => {
     );
     expect(migration).toContain("public.fn_hugo_access_is_active(p_user_id)");
     expect(migration).toContain("when v_grant.access_expires_at is not null");
+  });
+
+  it("keeps the inventory read-only, sanitized, and deterministic", () => {
+    const inventory = migration.match(
+      /create or replace function public\.hugo_list_access\(\)[\s\S]*?\n\$\$;/,
+    )?.[0];
+    expect(inventory).toBeDefined();
+    expect(inventory).toContain("fn_hugo_require_service_role");
+    expect(inventory).toContain("fn_hugo_sanitize_json");
+    expect(inventory).toContain("fn_hugo_has_durable_activity");
+    expect(inventory).toContain("order by lower(trim(p.email)), p.id");
+    expect(inventory).not.toMatch(/\b(insert|update|delete)\s+(into\s+)?/i);
+    expect(inventory).not.toContain("hugo_access_operations");
   });
 
   it("guards the final owner and requires pristine deletion preparation", () => {

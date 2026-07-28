@@ -692,6 +692,48 @@ begin
 end;
 $$;
 
+-- Read-only inventory for Hugo's app-only drift check.  This intentionally
+-- reads only managed grant rows: a legacy Institute profile without a grant
+-- is not a Hugo-managed identity.  The function never repairs, inserts an
+-- audit row, or mutates local authorization state.
+create or replace function public.hugo_list_access()
+returns table (
+  email text,
+  app_user_id text,
+  role text,
+  config jsonb,
+  status text,
+  access_expires_at timestamptz,
+  has_durable_activity boolean
+)
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  perform public.fn_hugo_require_service_role();
+  return query
+  select
+    lower(trim(p.email)),
+    g.app_user_id,
+    g.role,
+    public.fn_hugo_sanitize_json(coalesce(g.config, '{}'::jsonb)),
+    case
+      when g.desired_status = 'revoked' then 'revoked'
+      when g.desired_status = 'suspended' then 'suspended'
+      when g.prepared_for_delete then 'suspended'
+      when g.access_expires_at is not null and g.access_expires_at <= now() then 'suspended'
+      when p.status <> 'active' then 'suspended'
+      else 'active'
+    end,
+    g.access_expires_at,
+    public.fn_hugo_has_durable_activity(g.user_id)
+  from public.hugo_access_grants g
+  join public.profiles p on p.id = g.user_id
+  order by lower(trim(p.email)), p.id;
+end;
+$$;
+
 create or replace function public.hugo_prepare_pristine_delete(
   p_operation_id uuid,
   p_email text
@@ -867,10 +909,12 @@ $$;
 
 revoke all on function public.hugo_apply_access(uuid, text, text, jsonb, text, timestamptz, text) from public, anon, authenticated;
 revoke all on function public.hugo_inspect_access(text) from public, anon, authenticated;
+revoke all on function public.hugo_list_access() from public, anon, authenticated;
 revoke all on function public.hugo_prepare_pristine_delete(uuid, text) from public, anon, authenticated;
 revoke all on function public.hugo_delete_identity(uuid, text) from public, anon, authenticated;
 grant execute on function public.hugo_apply_access(uuid, text, text, jsonb, text, timestamptz, text) to service_role;
 grant execute on function public.hugo_inspect_access(text) to service_role;
+grant execute on function public.hugo_list_access() to service_role;
 grant execute on function public.hugo_prepare_pristine_delete(uuid, text) to service_role;
 grant execute on function public.hugo_delete_identity(uuid, text) to service_role;
 
@@ -878,6 +922,8 @@ comment on function public.hugo_apply_access(uuid, text, text, jsonb, text, time
   'Hugo Institute connector: grant, suspend, reactivate, or revoke; service-role-only and idempotent by operation_id.';
 comment on function public.hugo_inspect_access(text) is
   'Hugo Institute connector inspect; service-role-only and expiry-aware.';
+comment on function public.hugo_list_access() is
+  'Hugo Institute connector inventory; service-role-only, read-only, deterministic, and expiry-aware.';
 comment on function public.hugo_prepare_pristine_delete(uuid, text) is
   'Hugo Institute connector pristine-delete preparation with durable-activity and final-owner guards.';
 comment on function public.hugo_delete_identity(uuid, text) is

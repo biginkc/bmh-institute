@@ -27,6 +27,13 @@ begin
   assert exists (
     select 1 from pg_proc p
     join pg_namespace n on n.oid = p.pronamespace
+    where n.nspname = 'public' and p.proname = 'hugo_list_access'
+      and pg_get_function_identity_arguments(p.oid) = ''
+      and pg_get_function_result(p.oid) like '%email text%app_user_id text%role text%config jsonb%status text%access_expires_at timestamp with time zone%has_durable_activity boolean%'
+  ), 'hugo_list_access signature drifted';
+  assert exists (
+    select 1 from pg_proc p
+    join pg_namespace n on n.oid = p.pronamespace
     where n.nspname = 'public' and p.proname = 'hugo_prepare_pristine_delete'
       and pg_get_function_identity_arguments(p.oid) = 'p_operation_id uuid, p_email text'
   ), 'hugo_prepare_pristine_delete signature drifted';
@@ -55,11 +62,27 @@ begin
   assert position('final_owner_guard' in v_definition) > 0,
     'prepare RPC lost final-owner guard';
 
+  select pg_get_functiondef(p.oid) into v_definition
+  from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+  where n.nspname = 'public' and p.proname = 'hugo_list_access';
+  assert position('fn_hugo_require_service_role' in v_definition) > 0,
+    'list RPC lost the service-role guard';
+  assert position('fn_hugo_sanitize_json' in v_definition) > 0,
+    'list RPC lost config sanitization';
+  assert position('fn_hugo_has_durable_activity' in v_definition) > 0,
+    'list RPC lost durable-activity state';
+  assert position('order by lower(trim(p.email)), p.id' in v_definition) > 0,
+    'list RPC lost deterministic ordering';
+  assert position('hugo_access_operations' in v_definition) = 0,
+    'list RPC must not write operation receipts';
+  assert v_definition !~* '\m(insert|update|delete)\M',
+    'list RPC must remain read-only';
+
   for v_acl in
     select proacl from pg_proc p join pg_namespace n on n.oid = p.pronamespace
     where n.nspname = 'public'
       and p.proname in ('hugo_apply_access', 'hugo_inspect_access',
-        'hugo_prepare_pristine_delete', 'hugo_delete_identity')
+        'hugo_list_access', 'hugo_prepare_pristine_delete', 'hugo_delete_identity')
   loop
     assert not exists (
       select 1 from unnest(v_acl) item
