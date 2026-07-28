@@ -71,6 +71,22 @@ begin
     'list RPC lost config sanitization';
   assert position('fn_hugo_has_durable_activity' in v_definition) > 0,
     'list RPC lost durable-activity state';
+  assert position('from public.profiles p' in v_definition) > 0,
+    'list RPC does not enumerate local profiles';
+  assert position('left join public.hugo_access_grants g' in v_definition) > 0,
+    'list RPC lost legacy-profile fallback';
+  assert position('left join public.user_role_groups urg' in v_definition) > 0,
+    'list RPC lost legacy role-group state';
+  assert position('g.app_user_id' in v_definition) > 0
+    and position('g.role' in v_definition) > 0
+    and position('g.config' in v_definition) > 0,
+    'list RPC lost managed grant fields';
+  assert position('p.id::text' in v_definition) > 0,
+    'list RPC lost legacy app-user identity';
+  assert position('jsonb_build_object' in v_definition) > 0,
+    'list RPC lost legacy config fallback';
+  assert position('p.status = ''active''' in v_definition) > 0,
+    'list RPC lost profile status fallback';
   assert position('order by lower(trim(p.email)), p.id' in v_definition) > 0,
     'list RPC lost deterministic ordering';
   assert position('hugo_access_operations' in v_definition) = 0,

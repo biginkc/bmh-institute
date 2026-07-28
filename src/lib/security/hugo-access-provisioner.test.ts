@@ -80,6 +80,15 @@ describe("Hugo Institute access provisioner contract", () => {
     expect(inventory).toContain("fn_hugo_require_service_role");
     expect(inventory).toContain("fn_hugo_sanitize_json");
     expect(inventory).toContain("fn_hugo_has_durable_activity");
+    expect(inventory).toContain("from public.profiles p");
+    expect(inventory).toContain("left join public.hugo_access_grants g");
+    expect(inventory).toContain("left join public.user_role_groups urg");
+    expect(inventory).toContain("g.app_user_id");
+    expect(inventory).toContain("g.role");
+    expect(inventory).toContain("g.config");
+    expect(inventory).toContain("p.id::text");
+    expect(inventory).toContain("jsonb_build_object");
+    expect(inventory).toContain("p.status = 'active'");
     expect(inventory).toContain("order by lower(trim(p.email)), p.id");
     expect(inventory).not.toMatch(/\b(insert|update|delete)\s+(into\s+)?/i);
     expect(inventory).not.toContain("hugo_access_operations");

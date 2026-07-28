@@ -693,9 +693,11 @@ end;
 $$;
 
 -- Read-only inventory for Hugo's app-only drift check.  This intentionally
--- reads only managed grant rows: a legacy Institute profile without a grant
--- is not a Hugo-managed identity.  The function never repairs, inserts an
--- audit row, or mutates local authorization state.
+-- reads every local profile, including legacy profiles that remain authorized
+-- without a Hugo grant.  A grant, when present, supplies the managed desired
+-- state; otherwise the profile and role-group state is reported as the local
+-- fallback.  The function never repairs, inserts an audit row, or mutates
+-- local authorization state.
 create or replace function public.hugo_list_access()
 returns table (
   email text,
@@ -715,10 +717,20 @@ begin
   return query
   select
     lower(trim(p.email)),
-    g.app_user_id,
-    g.role,
-    public.fn_hugo_sanitize_json(coalesce(g.config, '{}'::jsonb)),
+    case when g.user_id is null then p.id::text else g.app_user_id end,
+    case when g.user_id is null then p.system_role else g.role end,
     case
+      when g.user_id is null then jsonb_build_object(
+        'role_group_ids', coalesce(
+          jsonb_agg(urg.role_group_id order by urg.role_group_id)
+            filter (where urg.role_group_id is not null),
+          '[]'::jsonb
+        )
+      )
+      else public.fn_hugo_sanitize_json(coalesce(g.config, '{}'::jsonb))
+    end,
+    case
+      when g.user_id is null then case when p.status = 'active' then 'active' else 'suspended' end
       when g.desired_status = 'revoked' then 'revoked'
       when g.desired_status = 'suspended' then 'suspended'
       when g.prepared_for_delete then 'suspended'
@@ -727,9 +739,12 @@ begin
       else 'active'
     end,
     g.access_expires_at,
-    public.fn_hugo_has_durable_activity(g.user_id)
-  from public.hugo_access_grants g
-  join public.profiles p on p.id = g.user_id
+    public.fn_hugo_has_durable_activity(p.id)
+  from public.profiles p
+  left join public.hugo_access_grants g on g.user_id = p.id
+  left join public.user_role_groups urg on urg.user_id = p.id
+  group by p.id, p.email, p.system_role, p.status, g.user_id, g.app_user_id,
+    g.role, g.config, g.desired_status, g.prepared_for_delete, g.access_expires_at
   order by lower(trim(p.email)), p.id;
 end;
 $$;
