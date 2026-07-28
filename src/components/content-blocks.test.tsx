@@ -125,6 +125,53 @@ describe("ContentBlockRenderer BMH treatments", () => {
     expect(screen.getByText("Complete")).toBeVisible();
   });
 
+  it("falls back to Talk with Andrea for an untitled oral-check role-play block", () => {
+    render(
+      <ContentBlockRenderer
+        completed={false}
+        block={{
+          id: "role-play-oral-check-1",
+          block_type: "role_play",
+          content: {
+            iframe_src: "https://practice.example.com/embed/role-play/oral-check-1",
+            launch_credential: "launch-credential-1",
+            scenario_id: "pending:oral-check-real-estate-terms-glossary",
+            mode: "oral_check",
+          },
+          sort_order: 0,
+          is_required_for_completion: true,
+        }}
+      />,
+    );
+
+    expect(screen.getByRole("heading", { name: "Talk with Andrea" })).toBeVisible();
+  });
+
+  it("prefers an authored title over the oral-check fallback", () => {
+    render(
+      <ContentBlockRenderer
+        completed={false}
+        block={{
+          id: "role-play-oral-check-2",
+          block_type: "role_play",
+          content: {
+            iframe_src: "https://practice.example.com/embed/role-play/oral-check-2",
+            launch_credential: "launch-credential-1",
+            scenario_id: "pending:oral-check-bmh-offer-playbook",
+            mode: "oral_check",
+            title: "Talk with Andrea: The BMH Offer Playbook",
+          },
+          sort_order: 0,
+          is_required_for_completion: true,
+        }}
+      />,
+    );
+
+    expect(
+      screen.getByRole("heading", { name: "Talk with Andrea: The BMH Offer Playbook" }),
+    ).toBeVisible();
+  });
+
   it("passes persisted completion into uploaded video blocks", () => {
     render(
       <ContentBlockRenderer

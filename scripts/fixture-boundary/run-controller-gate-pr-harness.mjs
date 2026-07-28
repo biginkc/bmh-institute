@@ -251,6 +251,12 @@ try {
       "supabase/tests/054_released_content_block_revision.sql",
     ),
   );
+  psqlFile(
+    resolve(
+      root,
+      "supabase/tests/055_versioned_released_content_block_revisions.sql",
+    ),
+  );
   psqlText(`
     do $$
     begin
