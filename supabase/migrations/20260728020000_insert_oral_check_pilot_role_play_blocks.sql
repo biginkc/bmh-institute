@@ -8,12 +8,12 @@
 -- pattern exactly -- hash-pinned CAS against the exact production state,
 -- marker-gated insert-only guard, one immutable evidence row -- but is
 -- deliberately NOT a general, reusable mechanism (that is what the separate,
--- still-hardening `claude/versioned-content-block-revision-v2` PR is for;
--- this pilot does not need it: single operator, off-hours, no concurrent
--- admin edits or historical backfill in scope). It is also NOT a row in
--- content_import_released_content_block_revision_records: that table's own
--- check constraints hard-code the FIRST correction's exact shape
--- (guide_update_count = 19, flashcard_update_count = 19,
+-- still-hardening `claude/versioned-content-block-revision-v2` PR, #128, is
+-- for; this pilot does not need it: single operator, off-hours, no
+-- concurrent admin edits or historical backfill in scope). It is also NOT a
+-- row in content_import_released_content_block_revision_records: that
+-- table's own check constraints hard-code the FIRST correction's exact
+-- shape (guide_update_count = 19, flashcard_update_count = 19,
 -- role_play_insert_count = 6, mutations array length = 44) and cannot
 -- accept a differently-shaped second correction. This defines a parallel,
 -- equally exact-count-guarded evidence table sized for THIS one operation
@@ -27,6 +27,50 @@
 -- the live hash in the error message -- re-derive v_expected_prior_catalog_sha256
 -- from that value and re-author before retrying. Never loosen the check to
 -- work around a mismatch.
+--
+-- HANDOFF NOTE FOR WHOEVER RESUMES PR #128 (claude/versioned-content-block-revision-v2):
+-- This migration's `fn_guard_imported_content_block_insert_v1` extension
+-- below is safe under CURRENT main (verified: this migration applies and
+-- self-invokes cleanly against a fresh database with no #128 migrations
+-- present -- see supabase/tests/056_oral_check_pilot_role_play_blocks.sql).
+-- It is NOT automatically safe once #128 merges. #128's own migration
+-- (20260727180000) introduces a WHOLESALE NEW function,
+-- fn_guard_imported_content_block_insert_v2, and repoints the
+-- guard_imported_catalog_insert TRIGGER to call v2 instead of v1 -- it does
+-- not `create or replace` v1, it replaces which function the trigger calls.
+-- v2 has no knowledge of this migration's oral-check-pilot marker (it only
+-- recognizes the apply-marker and its own generalized v2-revision-payload
+-- check). Because #128's migration timestamps (20260727180000,
+-- 20260727180500) sort BEFORE this file's (20260728020000), a full
+-- fresh-database replay of the ENTIRE migration history after #128 merges
+-- would apply #128's migrations first (installing v2 and repointing the
+-- trigger), THEN this migration -- whose self-invoking insert at the bottom
+-- would then hit the ALREADY-ACTIVE v2 trigger, which rejects it outright,
+-- aborting this migration on replay. This is fine for tonight's actual
+-- production apply (this migration runs standalone against real production,
+-- which will never see #128's migrations run before it, only after this one
+-- has already committed) -- and fine for every environment where this
+-- migration is applied BEFORE #128 ever merges. It only bites on a
+-- from-scratch fresh-database rebuild (a new environment, a CI/hosted-test
+-- rebuild) performed AFTER #128 has merged. Whoever resumes #128 must
+-- either (a) add an equivalent oral-check-pilot exact-hash branch to
+-- fn_guard_imported_content_block_insert_v2 mirroring what this migration
+-- added to v1, or (b) confirm every real target database already has this
+-- migration applied before #128 merges, so a from-scratch replay never
+-- actually needs to run this migration's insert branch again (it would only
+-- ever be replayed against an EMPTY database that has never had the oral
+-- checks inserted, which should not occur in practice once this has shipped
+-- everywhere -- but confirm before assuming). Separately: #128's phase-2
+-- backfill (20260727180500, fn_backfill_v1_content_block_revisions) merges
+-- three OTHER legacy receipt tables into its shared ledger via a causal
+-- replay; it does not know about content_import_oral_check_pilot_role_play_records
+-- (this migration's evidence table) at all. Whoever resumes #128 must
+-- extend that backfill's causal-replay queue to also ingest this table's one
+-- receipt row as an anchor/legacy source, or the backfill's final
+-- live-vs-replayed catalog comparison will fail for this import after
+-- #128's phase 1 has already committed and retired the legacy write paths
+-- -- precisely the same production-breaking shape as the CRITICAL bug #128
+-- itself already fixed once for the other three legacy receipt tables.
 
 set lock_timeout = '10s';
 
@@ -44,7 +88,7 @@ create table public.content_import_oral_check_pilot_role_play_records (
 );
 
 comment on table public.content_import_oral_check_pilot_role_play_records is
-  'Immutable audit evidence for the one-shot Andrea Oral Check pilot role-play insertion (3 blocks, 3 lessons). Exact-count guarded like content_import_released_content_block_revision_records, but sized for this single operation -- never reused for a second correction.';
+  'Immutable audit evidence for the one-shot Andrea Oral Check pilot role-play insertion (3 blocks, 3 lessons). Exact-count guarded like content_import_released_content_block_revision_records, but sized for this single operation -- never reused for a second correction. This is a genuinely ONE-SHOT operation: a second invocation of fn_insert_oral_check_pilot_role_play_blocks always refuses once a row exists here, regardless of live catalog state -- see that function''s comment.';
 
 alter table public.content_import_oral_check_pilot_role_play_records enable row level security;
 revoke all on table public.content_import_oral_check_pilot_role_play_records
@@ -79,7 +123,9 @@ for each row execute function public.fn_guard_content_import_oral_check_pilot_ro
 
 -- Extend the existing imported-content-block insert guard with ONE new
 -- exact-hash branch for this operation, alongside the untouched original
--- apply-marker and 44-block-correction branches (migrations 033, 20260726170000).
+-- apply-marker and 44-block-correction branches (migrations 033,
+-- 20260726170000). Safe under CURRENT main -- see the handoff note above
+-- for what changes once PR #128 merges.
 create or replace function public.fn_guard_imported_content_block_insert_v1()
 returns trigger
 language plpgsql
@@ -150,7 +196,7 @@ begin
     and v_import_id = 'bmh-employee-training-v1'
     and v_oral_check_pilot_import_id = v_import_id
     and v_oral_check_pilot_payload_sha256 =
-      '937dccc6b63825dfcd92ddb7f0aec282fbad4709c9aaed76d4ab288285d28915'
+      '893405d59d508783cbb96bb543ab41080337fa6aa06f92a106c10962c5fcfce5'
     and v_course_published
     and v_program_published
     and exists (
@@ -191,38 +237,74 @@ declare
   v_replacement_catalog_sha256 text;
   v_inserted_count integer;
   v_target_count integer;
-  v_record public.content_import_oral_check_pilot_role_play_records%rowtype;
 begin
   if coalesce(auth.role(), '') <> 'service_role' then
     raise exception 'Oral-check pilot role-play insertion requires service_role.'
       using errcode = '42501';
   end if;
 
+  -- Genuinely ONE-SHOT: if this has already been performed once (a row
+  -- exists in the evidence table for this import), refuse EVERY subsequent
+  -- invocation outright -- never re-verify and report success. An earlier
+  -- version of this function tried to distinguish "safe idempotent retry"
+  -- from "unsafe replay" by re-checking the payload hash and the 3 target
+  -- rows, but that check never compared the live catalog against the
+  -- receipt's own recorded replacement_catalog_sha256 -- an unrelated later
+  -- catalog edit (any admin touching any other part of this course) would
+  -- still report 'already_inserted' with a stale implication that nothing
+  -- has changed since. Simpler and safer: this operation runs exactly once,
+  -- ever. To verify it already succeeded, query
+  -- content_import_oral_check_pilot_role_play_records directly -- do not
+  -- re-invoke this function to check.
+  if exists (
+    select 1 from public.content_import_oral_check_pilot_role_play_records
+    where import_id = v_import_id
+  ) then
+    raise exception 'Oral-check pilot role-play insertion refused: this one-shot operation has already been performed for %. There is nothing to retry or re-verify by calling this function again -- query content_import_oral_check_pilot_role_play_records directly.',
+      v_import_id
+      using errcode = '40001';
+  end if;
+
   -- The exact 3-block mutation payload, built inline -- no companion TS
   -- script or separate invocation round-trip needed (unlike the 44-block
   -- correction's asset-verified, mixed update+insert payload, these 3 are
-  -- plain role_play inserts with no storage asset dependency). scenario_id
-  -- values are the real, live Closer Lab scenario IDs; scenario_spec
-  -- mirrors the shape and field names of the 6 existing role-play blocks'
-  -- content.scenario_spec exactly (context, learner_goal, success_criteria,
-  -- fail_conditions), with success_criteria drawn verbatim from the
-  -- Jarrad-approved weighted knowledge goals for each lesson (see the vault
-  -- source doc referenced in the PR description). content.title is
+  -- plain role_play inserts with no storage asset dependency). block_ids
+  -- are computed with the SAME deterministic scheme the manifest importer
+  -- itself uses (deterministicImportId in src/lib/course-import/operations.ts:
+  -- sha256(import_id || ':' || source_key), version/variant nibbles forced
+  -- to 5/a) so these 3 blocks are indistinguishable, to exact
+  -- reconciliation, from any other manifest-declared block -- see the
+  -- matching entries added to content/course-manifests/bmh-employee-training.v1.json.
+  -- scenario_id values are the real, live, persona-backed Closer Lab
+  -- scenario IDs (verified read-only against project xqrkugdxpwhjscrheuqo,
+  -- non-archived, 4 rubric goals each with 1 supporting document -- see
+  -- docs/course-production/oral-check-pilot-production-attestation.json).
+  -- scenario_spec mirrors the shape and field names of the 6 existing
+  -- role-play blocks' content.scenario_spec exactly (assignment_source_key,
+  -- context, learner_goal, success_criteria, fail_conditions) so these pass
+  -- the same required-role-play manifest validator the other 6 do;
+  -- assignment_source_key is a self-describing operation key (there is no
+  -- real assignment these bind to), not a fabricated assignment reference.
+  -- success_criteria is drawn verbatim from the Jarrad-approved weighted
+  -- knowledge goals for each lesson (see the vault source doc referenced in
+  -- the PR description) -- the same weights checked into Closer Lab
+  -- production as this scenario's real rubric_goals rows. content.title is
   -- deliberately omitted on all 3: the "Talk with Andrea" label change
   -- (content-blocks.tsx / learner-parts.ts, this same PR) already supplies
   -- that as the render-time fallback whenever content.mode = 'oral_check'
   -- and no explicit title is set -- exactly this case.
   v_mutations := jsonb_build_array(
     jsonb_build_object(
-      'block_id', 'da982c09-ab41-5c23-9c77-0d455bc80fa0',
+      'block_id', '7300bba9-a9fc-582c-aa20-dd5d58754165',
       'lesson_id', 'dc391d4b-58f4-5a94-a97f-ca59c4d98f41',
-      'source_key', 'lesson-content-slot-02',
+      'source_key', 'block-oral-check-slot-02',
       'sort_order', 6,
       'content', jsonb_build_object(
         'mode', 'oral_check',
         'height_px', 760,
         'scenario_id', 'e46baf56-d0ae-4621-87f3-07718f0744b2',
         'scenario_spec', jsonb_build_object(
+          'assignment_source_key', 'oral-check-slot-02',
           'context', 'This lesson covers the core vocabulary a caller needs on a live call -- property and seller-situation terms, wholesaling mechanics, deal-math terms, and CRM/pipeline terms. Andrea checks it out loud because recognizing these terms in the moment on a real call is different from recognizing them on a written quiz.',
           'learner_goal', 'Demonstrate accurate understanding of the core terms in your own words, not a memorized definition.',
           'success_criteria', jsonb_build_array(
@@ -240,15 +322,16 @@ begin
       )
     ),
     jsonb_build_object(
-      'block_id', '60aafd07-5c22-5eed-b2ce-755cf26af8cc',
+      'block_id', '4464ecdd-2650-59ed-a525-78871e846d20',
       'lesson_id', '823f016f-6e4c-5791-ac42-9f24c28040df',
-      'source_key', 'lesson-content-slot-05',
+      'source_key', 'block-oral-check-slot-05',
       'sort_order', 7,
       'content', jsonb_build_object(
         'mode', 'oral_check',
         'height_px', 760,
         'scenario_id', 'fd3b4f85-2407-426b-a21b-db9d7163ebbb',
         'scenario_spec', jsonb_build_object(
+          'assignment_source_key', 'oral-check-slot-05',
           'context', 'This lesson covers the As-Is Cash Home Purchase offer, the four-step process, why sellers accept a below-market price, and how the offer number gets built. Andrea checks it out loud because explaining the offer to a real seller is different from reciting the script.',
           'learner_goal', 'Demonstrate accurate understanding of the offer and why it works, in your own words.',
           'success_criteria', jsonb_build_array(
@@ -266,15 +349,16 @@ begin
       )
     ),
     jsonb_build_object(
-      'block_id', '7101c788-8bbe-5a66-a56e-ff1536d22457',
+      'block_id', '34758403-1ddd-5e3c-a054-b2f28310d8b8',
       'lesson_id', 'cccdb0ef-b907-5bce-ade1-3ff0b0d054ce',
-      'source_key', 'lesson-content-slot-16',
+      'source_key', 'block-oral-check-slot-16',
       'sort_order', 6,
       'content', jsonb_build_object(
         'mode', 'oral_check',
         'height_px', 760,
         'scenario_id', '7765693a-5f8a-4aa1-ac39-c21866624006',
         'scenario_spec', jsonb_build_object(
+          'assignment_source_key', 'oral-check-slot-16',
           'context', 'This lesson covers what a KPI is, the six pipeline metrics tracked left to right, and how to use that order to diagnose exactly where a funnel is breaking. Andrea checks it out loud because using the numbers to self-diagnose is different from reciting the list.',
           'learner_goal', 'Demonstrate accurate understanding of the six metrics and how to read them, in your own words.',
           'success_criteria', jsonb_build_array(
@@ -306,33 +390,6 @@ begin
     public.lessons,
     public.content_blocks
   in share row exclusive mode;
-
-  -- Idempotency: a second run must be a safe no-op, never a duplicate.
-  select * into v_record
-  from public.content_import_oral_check_pilot_role_play_records record
-  where record.import_id = v_import_id;
-  if found then
-    v_replacement_catalog_sha256 := public.fn_course_import_catalog_sha256(v_import_id);
-    select count(*) into v_target_count
-    from jsonb_array_elements(v_mutations) mutation(value)
-    join public.content_blocks block
-      on block.id = (mutation.value ->> 'block_id')::uuid
-     and block.lesson_id = (mutation.value ->> 'lesson_id')::uuid
-     and block.block_type = 'role_play'
-     and block.content = mutation.value -> 'content'
-     and block.sort_order = (mutation.value ->> 'sort_order')::integer
-     and block.is_required_for_completion = true;
-    if v_record.database_payload_sha256 = v_database_payload_sha256 and v_target_count = 3 then
-      return jsonb_build_object(
-        'status', 'already_inserted',
-        'import_id', v_import_id,
-        'role_play_insert_count', 3,
-        'catalog_sha256', v_replacement_catalog_sha256
-      );
-    end if;
-    raise exception 'Oral-check pilot role-play insertion retry refused: audit evidence or live target state drifted.'
-      using errcode = '40001';
-  end if;
 
   -- Confirm the exact published release lineage exists FIRST (mirrors
   -- 20260726170000's ordering) -- a fast, clear failure on any database
@@ -438,8 +495,9 @@ to service_role;
 -- Run it now. On a fresh/local database (no bmh-employee-training-v1
 -- release record at all) this is a no-op catch: the function raises before
 -- ever reaching the insert, which the local test harness handles by
--- building a matching minimal fixture first (see 056_*.sql) rather than
--- expecting this bare `do` block to succeed against an empty database.
+-- building a matching minimal fixture first (see
+-- 056_oral_check_pilot_role_play_blocks.sql) rather than expecting this
+-- bare `do` block to succeed against an empty database.
 do $$
 begin
   if exists (

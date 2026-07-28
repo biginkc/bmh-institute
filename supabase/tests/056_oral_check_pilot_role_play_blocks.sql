@@ -20,6 +20,24 @@ begin
 end;
 $$;
 
+-- Proves this migration's fn_guard_imported_content_block_insert_v1
+-- extension is being exercised against the ACTUAL current state of main
+-- tonight, not a hypothetical post-#128 state: PR #128
+-- (claude/versioned-content-block-revision-v2) is parked, unmerged, and
+-- introduces a WHOLESALE NEW fn_guard_imported_content_block_insert_v2
+-- that the content_blocks insert trigger would call INSTEAD of v1 once
+-- merged -- see this migration's header comment for what changes then.
+-- v2 must not exist here.
+do $$
+begin
+  if to_regprocedure(
+    'public.fn_guard_imported_content_block_insert_v2()'
+  ) is not null then
+    raise exception 'fn_guard_imported_content_block_insert_v2 exists -- this test environment is no longer "current main without #128", the header comment''s handoff note applies and this test suite needs updating';
+  end if;
+end;
+$$;
+
 -- Authorization: only service_role may run this.
 do $$
 begin
@@ -48,9 +66,9 @@ begin
   if exists (
     select 1 from public.content_blocks
     where id in (
-      'da982c09-ab41-5c23-9c77-0d455bc80fa0',
-      '60aafd07-5c22-5eed-b2ce-755cf26af8cc',
-      '7101c788-8bbe-5a66-a56e-ff1536d22457'
+      '7300bba9-a9fc-582c-aa20-dd5d58754165',
+      '4464ecdd-2650-59ed-a525-78871e846d20',
+      '34758403-1ddd-5e3c-a054-b2f28310d8b8'
     )
   ) then
     raise exception 'the refused insertion left content blocks behind';
@@ -103,9 +121,9 @@ begin
   if exists (
     select 1 from public.content_blocks
     where id in (
-      'da982c09-ab41-5c23-9c77-0d455bc80fa0',
-      '60aafd07-5c22-5eed-b2ce-755cf26af8cc',
-      '7101c788-8bbe-5a66-a56e-ff1536d22457'
+      '7300bba9-a9fc-582c-aa20-dd5d58754165',
+      '4464ecdd-2650-59ed-a525-78871e846d20',
+      '34758403-1ddd-5e3c-a054-b2f28310d8b8'
     )
   ) then
     raise exception 'the refused insertion left content blocks behind on catalog mismatch';
@@ -202,6 +220,54 @@ begin
   end;
   alter table public.content_import_oral_check_pilot_role_play_records
     enable trigger content_import_oral_check_pilot_role_play_records_guard;
+end;
+$$;
+
+-- Retry-after-drift: once an evidence row exists for this import (this
+-- test simulates that with the guard disabled -- the function's own first
+-- successful run is what would normally create it), every subsequent
+-- invocation must be refused with SQLSTATE 40001 UNCONDITIONALLY -- never
+-- re-verify the live catalog and report success. An earlier version of
+-- this function only re-checked the payload hash and the 3 target rows on
+-- retry, which meant a completely UNRELATED later catalog edit (something
+-- touching a different lesson entirely) would still make a second
+-- invocation return 'already_inserted', silently implying nothing had
+-- changed since the original insert when something plainly had. This
+-- proves the fix: the function refuses outright, regardless of whether the
+-- live catalog happens to still match anything.
+do $$
+begin
+  alter table public.content_import_oral_check_pilot_role_play_records
+    disable trigger content_import_oral_check_pilot_role_play_records_guard;
+  insert into public.content_import_oral_check_pilot_role_play_records (
+    import_id, prior_catalog_sha256, replacement_catalog_sha256,
+    database_payload_sha256, role_play_insert_count, mutations, evidence
+  ) values (
+    'bmh-employee-training-v1', repeat('1', 64), repeat('2', 64),
+    '893405d59d508783cbb96bb543ab41080337fa6aa06f92a106c10962c5fcfce5',
+    3, '[1,2,3]'::jsonb,
+    jsonb_build_object('operation', 'oral_check_pilot_role_play_insert')
+  );
+  alter table public.content_import_oral_check_pilot_role_play_records
+    enable trigger content_import_oral_check_pilot_role_play_records_guard;
+
+  begin
+    perform public.fn_insert_oral_check_pilot_role_play_blocks();
+    raise exception 'a retry after the one-shot evidence row already existed was not refused';
+  exception when sqlstate '40001' then
+    if sqlerrm not like '%this one-shot operation has already been performed%' then raise; end if;
+  end;
+
+  if exists (
+    select 1 from public.content_blocks
+    where id in (
+      '7300bba9-a9fc-582c-aa20-dd5d58754165',
+      '4464ecdd-2650-59ed-a525-78871e846d20',
+      '34758403-1ddd-5e3c-a054-b2f28310d8b8'
+    )
+  ) then
+    raise exception 'the refused retry left content blocks behind';
+  end if;
 end;
 $$;
 

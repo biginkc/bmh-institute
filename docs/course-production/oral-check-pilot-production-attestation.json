@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "purpose": "Read-only-verified evidence that the 3 Andrea Oral Check pilot scenario_id values bound in supabase/migrations/20260728020000_insert_oral_check_pilot_role_play_blocks.sql are real, live, persona-backed Closer Lab production role_plays -- not placeholders. This is a STANDALONE artifact for this pilot only. It is deliberately NOT a row in docs/course-production/closer-lab-production-mapping.json (the 6-scenario ledger) or closer-lab-production-catalog.json (the 6-scenario sales-role-play catalog): those are byte-frozen, hash-pinned (see closer-lab-production-mapping.mjs CLOSER_LAB_CATALOG_*_SHA256 constants) to a closed namespace of 6 sales-persona scenarios, and the 3 Andrea Oral Check scenarios are a structurally different type (a coach persona asking comprehension questions, not a seller persona in an objection-handling drill) living in Closer Lab's separate 'BMH Institute Oral Checks v1' catalog namespace. Merging these 3 into that frozen chain would additionally require a Closer Lab-side production-graph export RPC for the oral-check namespace (mirroring export_bmh_institute_production_graph, which only covers the 6 sales scenarios) that does not exist yet -- see the PR description for the full reasoning.",
+  "verification": {
+    "method": "read-only SQL query via Supabase MCP execute_sql",
+    "project_ref": "xqrkugdxpwhjscrheuqo",
+    "project_name": "closer-lab",
+    "verified_at": "2026-07-28T13:42:02Z",
+    "queries": [
+      "select id, title, description, persona_id, archived_at, created_at, updated_at from public.role_plays where id in (...)",
+      "select id, name, archived_at from public.personas where id in (...)",
+      "select rpg.role_play_id, rpg.sort_order, rpg.weight, rg.id, rg.name, rg.goal_type, rg.knowledge_subtype, rg.archived_at, count(rgd.*) from public.role_play_goals rpg join public.rubric_goals rg on rg.id = rpg.rubric_goal_id left join public.rubric_goal_documents rgd on rgd.rubric_goal_id = rg.id where rpg.role_play_id in (...) group by ..."
+    ]
+  },
+  "scenarios": [
+    {
+      "block_source_key": "block-oral-check-slot-02",
+      "lesson_source_key": "lesson-content-slot-02",
+      "role_play_id": "e46baf56-d0ae-4621-87f3-07718f0744b2",
+      "title": "BMH Institute Oral Checks v1: Talk with Andrea — Real Estate Terms Glossary",
+      "persona_id": "2edb3d95-4adc-4bbb-9735-e98a975d5cb9",
+      "persona_name": "Andrea",
+      "archived_at": null,
+      "persona_archived_at": null,
+      "rubric_goals": [
+        { "id": "99b64db5-b202-4bdc-8f50-b7942912e512", "name": "BMH Institute Oral Checks v1: Glossary — Core Property/Seller-Situation Terms", "weight": 30, "sort_order": 0, "document_count": 1 },
+        { "id": "a737b16f-148f-47dc-9e84-c674c9106d52", "name": "BMH Institute Oral Checks v1: Glossary — Wholesaling Mechanics", "weight": 25, "sort_order": 1, "document_count": 1 },
+        { "id": "8121cdde-87bd-4555-a937-6316f393dac3", "name": "BMH Institute Oral Checks v1: Glossary — ARV, MAO, and Equity", "weight": 25, "sort_order": 2, "document_count": 1 },
+        { "id": "70348f37-af2e-4065-9d45-764f94255312", "name": "BMH Institute Oral Checks v1: Glossary — Transaction and CRM Terms", "weight": 20, "sort_order": 3, "document_count": 1 }
+      ]
+    },
+    {
+      "block_source_key": "block-oral-check-slot-05",
+      "lesson_source_key": "lesson-content-slot-05",
+      "role_play_id": "fd3b4f85-2407-426b-a21b-db9d7163ebbb",
+      "title": "BMH Institute Oral Checks v1: Talk with Andrea — BMH Offer Playbook",
+      "persona_id": "f08d3676-4156-4ed9-97bb-c083aafd3e42",
+      "persona_name": "Andrea",
+      "archived_at": null,
+      "persona_archived_at": null,
+      "rubric_goals": [
+        { "id": "2395e8d4-208b-4f05-86d1-ab197f9a621d", "name": "BMH Institute Oral Checks v1: Offer Playbook — Core Offer and Four-Step Process", "weight": 35, "sort_order": 0, "document_count": 1 },
+        { "id": "80841246-66b0-4979-b666-0d19b0db3a7a", "name": "BMH Institute Oral Checks v1: Offer Playbook — Why Sellers Accept Below Market", "weight": 25, "sort_order": 1, "document_count": 1 },
+        { "id": "504b5853-4940-4565-8867-73e380c03466", "name": "BMH Institute Oral Checks v1: Offer Playbook — Offer Formula (shape, not exact numbers)", "weight": 25, "sort_order": 2, "document_count": 1 },
+        { "id": "1a7fed12-0a67-49c6-a515-6c5aeda8d074", "name": "BMH Institute Oral Checks v1: Offer Playbook — Ideal Seller Profile / Not-a-Fit Criteria", "weight": 15, "sort_order": 3, "document_count": 1 }
+      ]
+    },
+    {
+      "block_source_key": "block-oral-check-slot-16",
+      "lesson_source_key": "lesson-content-slot-16",
+      "role_play_id": "7765693a-5f8a-4aa1-ac39-c21866624006",
+      "title": "BMH Institute Oral Checks v1: Talk with Andrea — KPIs & Sales Telemetry",
+      "persona_id": "ff5d7dbc-487e-4aec-8710-b15da1f60282",
+      "persona_name": "Andrea",
+      "archived_at": null,
+      "persona_archived_at": null,
+      "rubric_goals": [
+        { "id": "9c08063a-deb7-40a9-943a-af39e17e2007", "name": "BMH Institute Oral Checks v1: KPIs — Six Metrics in Order", "weight": 35, "sort_order": 0, "document_count": 1 },
+        { "id": "0d8b001c-c3c4-4eae-b4a5-e68742437f31", "name": "BMH Institute Oral Checks v1: KPIs — Dial Count as an Effort Indicator", "weight": 20, "sort_order": 1, "document_count": 1 },
+        { "id": "3c1bd762-6fa8-490c-8044-4d4fbae8d182", "name": "BMH Institute Oral Checks v1: KPIs — Funnel-Gap Diagnosis", "weight": 30, "sort_order": 2, "document_count": 1 },
+        { "id": "422667fa-a7b0-4419-b2b3-92e51a940ac6", "name": "BMH Institute Oral Checks v1: KPIs — Why Left-to-Right Tracking Matters", "weight": 15, "sort_order": 3, "document_count": 1 }
+      ]
+    }
+  ],
+  "summary": {
+    "scenario_count": 3,
+    "total_rubric_goals": 12,
+    "total_rubric_goal_documents": 12,
+    "all_non_archived": true,
+    "all_weights_sum_to_100_per_scenario": true
+  }
+}
