@@ -4,6 +4,7 @@ import path from "node:path";
 import { defineConfig, devices } from "@playwright/test";
 
 import { assertCanonicalSupabaseProjectUrl } from "./src/lib/supabase/canonical-project-url";
+import { assertHugoBrowserTarget } from "./e2e/hugo-acceptance";
 
 /**
  * Playwright config for the BMH Institute E2E safety net.
@@ -70,6 +71,18 @@ const rolePlayBaseUrl =
   env.NEXT_PUBLIC_ROLE_PLAY_BASE_URL ??
   process.env.NEXT_PUBLIC_ROLE_PLAY_BASE_URL ??
   "http://localhost:3458";
+const hugoBrowserBaseUrl =
+  env.HUGO_E2E_BASE_URL ??
+  process.env.HUGO_E2E_BASE_URL ??
+  "http://localhost:3200";
+const hugoBrowserTarget = assertHugoBrowserTarget({
+  baseUrl: hugoBrowserBaseUrl,
+  productionOptIn:
+    (env.HUGO_E2E_ALLOW_PRODUCTION ?? process.env.HUGO_E2E_ALLOW_PRODUCTION) ===
+    "1",
+  readOnly:
+    (env.HUGO_E2E_READ_ONLY ?? process.env.HUGO_E2E_READ_ONLY) === "1",
+});
 
 function assertCredentialTarget(
   label: string,
@@ -125,6 +138,11 @@ const webServerEnv: Record<string, string> = {
 
 export default defineConfig({
   testDir: "./e2e",
+  // Production is guard-only in this seeded config. A future read-only
+  // production project must opt in explicitly and provide its own fixtures.
+  testIgnore: hugoBrowserTarget.production
+    ? ["**/*.spec.ts", "**/*.test.ts"]
+    : undefined,
   fullyParallel: false,
   workers: 1,
   forbidOnly: !!process.env.CI,
@@ -133,7 +151,7 @@ export default defineConfig({
   timeout: 30_000,
   expect: { timeout: 5_000 },
   use: {
-    baseURL: "http://localhost:3200",
+    baseURL: hugoBrowserTarget.baseUrl,
     // Auth setup creates a test-project session out of band. Trace archives can
     // retain cookies, so the seeded suite must never create an auth trace.
     trace: "off",
@@ -160,11 +178,15 @@ export default defineConfig({
       dependencies: ["setup"],
     },
   ],
-  webServer: {
-    command: "npx next dev -p 3200",
-    url: "http://localhost:3200/login",
-    reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
-    env: webServerEnv,
-  },
+  ...(hugoBrowserTarget.production
+    ? {}
+    : {
+        webServer: {
+          command: "npx next dev -p 3200",
+          url: "http://localhost:3200/login",
+          reuseExistingServer: !process.env.CI,
+          timeout: 120_000,
+          env: webServerEnv,
+        },
+      }),
 });

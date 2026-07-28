@@ -7,6 +7,16 @@ import {
   adminClient,
   ensureTestUser,
 } from "./fixtures";
+import {
+  addHugoCleanupResource,
+  createHugoAcceptanceRun,
+  createHugoCleanupManifest,
+  createHugoEvidenceRecord,
+  syntheticFixtureLabel,
+  writeHugoCleanupManifest,
+  writeHugoEvidence,
+  type HugoCleanupManifest,
+} from "./hugo-acceptance";
 
 const closerUrl = process.env.CLOSER_TEST_SUPABASE_URL ?? "";
 const closerAnonKey = process.env.CLOSER_TEST_SUPABASE_ANON_KEY ?? "";
@@ -17,6 +27,7 @@ const rolePlayEmbedSigningSecret =
 const rolePlayCompletionVerifySecret =
   process.env.ROLE_PLAY_COMPLETION_VERIFY_SECRET ?? "";
 const CLOSER_TEST_PROJECT_REF = "moocmsisaopnznppqvsq";
+const acceptanceRun = createHugoAcceptanceRun();
 
 const hasCrossAppEnv =
   Boolean(closerUrl) &&
@@ -46,7 +57,7 @@ function closerAdmin(): SupabaseClient {
 }
 
 async function seedCloserRolePlay(client: SupabaseClient) {
-  const stamp = Date.now();
+  const stamp = syntheticFixtureLabel(acceptanceRun, "closer-role-play");
   const { data: persona, error: personaError } = await client
     .from("personas")
     .insert({
@@ -116,7 +127,7 @@ async function cleanupCloserRolePlay(
 }
 
 async function seedBmhLesson(client: SupabaseClient, userId: string, scenarioId: string) {
-  const stamp = Date.now();
+  const stamp = syntheticFixtureLabel(acceptanceRun, "institute-role-play");
   const { data: roleGroup, error: roleGroupError } = await client
     .from("role_groups")
     .insert({ name: `E2E Cross-App Group ${stamp}` })
@@ -289,16 +300,41 @@ test.describe("Phase 5 cross-app role play", () => {
         quizLessonId: string;
       }
     | null = null;
+  let cleanupManifest: HugoCleanupManifest | null = null;
 
   test.beforeAll(async () => {
     const bmh = adminClient();
     const closer = closerAdmin();
     const userId = await ensureTestUser(bmh);
+    let manifest = createHugoCleanupManifest(acceptanceRun);
     closerSeed = await seedCloserRolePlay(closer);
+    for (const resource of [
+      { project: "closer" as const, kind: "persona", id: closerSeed.personaId },
+      { project: "closer" as const, kind: "role_play", id: closerSeed.rolePlayId },
+      { project: "closer" as const, kind: "rubric_goal", id: closerSeed.goalId },
+    ]) {
+      manifest = addHugoCleanupResource(manifest, resource);
+    }
+    cleanupManifest = manifest;
     bmhSeed = await seedBmhLesson(bmh, userId, closerSeed.rolePlayId);
+
+    for (const resource of [
+      { project: "institute" as const, kind: "role_group", id: bmhSeed.roleGroupId },
+      { project: "institute" as const, kind: "program", id: bmhSeed.programId },
+      { project: "institute" as const, kind: "course", id: bmhSeed.courseId },
+      { project: "institute" as const, kind: "module", id: bmhSeed.moduleId },
+      { project: "institute" as const, kind: "lesson", id: bmhSeed.lessonId },
+      { project: "institute" as const, kind: "content_block", id: bmhSeed.blockId },
+      { project: "institute" as const, kind: "quiz", id: bmhSeed.quizId },
+      { project: "institute" as const, kind: "quiz_lesson", id: bmhSeed.quizLessonId },
+    ]) {
+      manifest = addHugoCleanupResource(manifest, resource);
+    }
+    cleanupManifest = manifest;
   });
 
-  test.afterAll(async () => {
+  test.afterAll(async ({}, testInfo) => {
+    if (cleanupManifest) await writeHugoCleanupManifest(testInfo, cleanupManifest);
     const bmh = adminClient();
     const closer = closerAdmin();
     if (bmhSeed) await cleanupBmhLesson(bmh, bmhSeed);
@@ -307,56 +343,81 @@ test.describe("Phase 5 cross-app role play", () => {
 
   test("Closer Lab iframe completion marks the BMH lesson block complete", async ({
     page,
-  }) => {
+  }, testInfo) => {
     if (!bmhSeed || !closerSeed) throw new Error("Missing cross-app seed data");
 
     const consoleErrors: string[] = [];
+    let status: "PASS" | "FAIL" = "FAIL";
     page.on("console", (message) => {
       if (message.type() === "error") consoleErrors.push(message.text());
     });
 
-    await page.goto(`/lessons/${bmhSeed.lessonId}`);
-    await expect(
-      page.getByRole("heading", { name: /E2E Cross-App Role Play Lesson/i }),
-    ).toBeVisible();
+    try {
+      await page.goto(`/lessons/${bmhSeed.lessonId}`);
+      await expect(
+        page.getByRole("heading", { name: /E2E Cross-App Role Play Lesson/i }),
+      ).toBeVisible();
 
-    const iframe = page.frameLocator(`iframe[title="Cross-app role play"]`);
-    await expect(
-      iframe.getByRole("button", { name: /start when ready/i }),
-    ).toBeVisible({ timeout: 20_000 });
-    await iframe.getByRole("button", { name: /start when ready/i }).click();
-    await expect(
-      iframe.locator("[data-testid='runtime-stage-active']"),
-    ).toBeVisible({ timeout: 20_000 });
-    await page.waitForTimeout(4_000);
-    await iframe.getByRole("button", { name: /stop/i }).click();
-    await expect(
-      page.getByText("Complete", { exact: true }),
-    ).toBeVisible({ timeout: 60_000 });
+      const iframe = page.frameLocator(`iframe[title="Cross-app role play"]`);
+      await expect(
+        iframe.getByRole("button", { name: /start when ready/i }),
+      ).toBeVisible({ timeout: 20_000 });
+      await iframe.getByRole("button", { name: /start when ready/i }).click();
+      await expect(
+        iframe.locator("[data-testid='runtime-stage-active']"),
+      ).toBeVisible({ timeout: 20_000 });
+      await page.waitForTimeout(4_000);
+      await iframe.getByRole("button", { name: /stop/i }).click();
+      await expect(
+        page.getByText("Complete", { exact: true }),
+      ).toBeVisible({ timeout: 60_000 });
 
-    const bmh = adminClient();
-    await expect
-      .poll(async () => {
-        const { data } = await bmh
-          .from("user_block_progress")
-          .select("id")
-          .eq("block_id", bmhSeed!.blockId)
-          .maybeSingle();
-        return data?.id ?? null;
-      }, { timeout: 20_000 })
-      .not.toBeNull();
+      const bmh = adminClient();
+      await expect
+        .poll(async () => {
+          const { data } = await bmh
+            .from("user_block_progress")
+            .select("id")
+            .eq("block_id", bmhSeed!.blockId)
+            .maybeSingle();
+          return data?.id ?? null;
+        }, { timeout: 20_000 })
+        .not.toBeNull();
 
-    await expect
-      .poll(async () => {
-        const { data } = await bmh
-          .from("role_play_results")
-          .select("attempt_id")
-          .eq("block_id", bmhSeed!.blockId)
-          .maybeSingle();
-        return data?.attempt_id ?? null;
-      }, { timeout: 20_000 })
-      .not.toBeNull();
+      await expect
+        .poll(async () => {
+          const { data } = await bmh
+            .from("role_play_results")
+            .select("attempt_id")
+            .eq("block_id", bmhSeed!.blockId)
+            .maybeSingle();
+          return data?.attempt_id ?? null;
+        }, { timeout: 20_000 })
+        .not.toBeNull();
 
-    expect(consoleErrors).toEqual([]);
+      expect(consoleErrors).toEqual([]);
+      status = "PASS";
+    } finally {
+      if (cleanupManifest) {
+        await writeHugoEvidence(testInfo, createHugoEvidenceRecord({
+          run: acceptanceRun,
+          project: "institute",
+          roles: ["owner"],
+          journey: "cross-app role-play completion",
+          status,
+          entryPoint: "/lessons/:lessonId",
+          actions: [
+            "open seeded lesson",
+            "start embedded role play",
+            "stop embedded role play",
+            "verify completion and persisted receipts",
+          ],
+          successSignals: ["lesson shows Complete", "progress and result receipts exist"],
+          failureSignals: consoleErrors.length > 0 ? ["browser console error observed"] : [],
+          artifacts: [{ kind: "cleanup-manifest", path: "hugo-cleanup-manifest.json" }],
+          cleanupManifest,
+        }));
+      }
+    }
   });
 });
