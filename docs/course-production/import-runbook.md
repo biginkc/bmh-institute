@@ -366,15 +366,21 @@ never apply these out of order or skip one):
    step 2 having already committed, it refuses outright (SQLSTATE 55000)
    rather than inserting the 3 blocks with no rollback path prepared — this
    is what makes the deployment order self-enforcing at the SQL level, not
-   just a runbook convention. It also FAILS CLOSED (SQLSTATE 55000) if no
-   published release record exists for `bmh-employee-training-v1` at all —
-   round-5 review caught that the original design silently no-op-succeeded
-   in that case, which would let a wrong deploy target, an incomplete
-   restore, or a catalog reloaded after migration replay all produce a
-   green `supabase db push` while the pilot silently never applied. There
-   is no legitimate case where this specific migration, applied to the
-   genuine Institute production target, should find the release missing —
-   see step 3a below.
+   just a runbook convention. It also FAILS CLOSED (SQLSTATE 55000) when the
+   `bmh-employee-training-v1` catalog exists on the target but has no
+   published release record. That covers an incomplete restore, a catalog reloaded
+   after migration replay, or an import that was applied but never released.
+   Round-5 review caught that the original design silently no-op-succeeded
+   in that case; round-6 review then caught that raising on EVERY absent
+   release was too blunt, because this file ships in `supabase/migrations/`
+   and so runs on every clean-database replay (`supabase db reset`, CI, a
+   fresh preview or test project), which by definition has no release
+   record. It now skips with a NOTICE only when the target holds no
+   `bmh-employee-training-v1` catalog at all, and still refuses when the
+   catalog is there without a release. That leaves one gap, a push aimed at
+   a wrong and entirely empty project skipping quietly, and it is closed by the
+   target preflight in step 3 and the receipt postflight in step 3b, which
+   are the layers that can actually see which project you are connected to.
 
    Round-5 review also moved the SAME rollback-capability assertion INSIDE
    `fn_insert_oral_check_pilot_role_play_blocks()` itself (in
@@ -416,28 +422,68 @@ Before applying any of the three:
    until the attestation is reconciled with the live state or the mismatch
    is understood and fixed forward.
 3. **Target preflight (do this before every apply, not just the first
-   time):** confirm the connection is genuinely the Institute production
-   project (`dhvfsyteqsxagokoerrx`) before running anything — a SQL
-   migration has no way to verify which Supabase project it is talking to,
-   that is purely an operator/CLI fact:
-
-   ```bash
-   supabase status  # or inspect SUPABASE_DB_URL / --db-url directly
-   ```
-
-   Then confirm the release this migration set targets actually exists on
-   that project:
+   time):** prove the connection is genuinely the Institute production
+   project (`dhvfsyteqsxagokoerrx`) before running anything. Run this against
+   the exact same connection string you are about to migrate with, and only
+   proceed if it prints `preflight ok`:
 
    ```sql
-   select import_id, program_id from public.content_import_release_records
-   where import_id = 'bmh-employee-training-v1';
+   do $$
+   declare
+     v_project_ref constant text := 'dhvfsyteqsxagokoerrx';
+     v_import_id constant text := 'bmh-employee-training-v1';
+     v_expected_manifest_sha256 constant text :=
+       '71f85173bc857d1b3b042fba0a50fdd420b6410ef84b104a751c3ed5982eba5c';
+     v_expected_catalog_sha256 constant text :=
+       '91bee07c6626d0d113291d925cfc7fa65ac26c57c7d85ea3ca172d5b706120f2';
+     v_live_catalog_sha256 text;
+   begin
+     if current_user <> 'postgres.' || v_project_ref then
+       raise exception 'target preflight failed: connected as %, expected postgres.% (connect through the Supabase pooler URL for this project, which is what supabase db push uses)',
+         current_user, v_project_ref;
+     end if;
+
+     if not exists (
+       select 1 from public.content_import_release_records
+       where import_id = v_import_id
+         and program_id = '15a382c9-617c-5407-a880-af6303be74b2'
+         and manifest_sha256 = v_expected_manifest_sha256
+     ) then
+       raise exception 'target preflight failed: this database has no % release record matching the exact production program and manifest pin. Wrong target, incomplete restore, or the catalog was never released.',
+         v_import_id;
+     end if;
+
+     v_live_catalog_sha256 := public.fn_course_import_catalog_sha256(v_import_id);
+     if v_live_catalog_sha256 <> v_expected_catalog_sha256 then
+       raise exception 'target preflight failed: live catalog hashes to %, the migration is pinned to %. Either this is not the production catalog, or production has drifted since the pin was taken and the migration must be re-authored.',
+         v_live_catalog_sha256, v_expected_catalog_sha256;
+     end if;
+
+     if exists (
+       select 1 from public.content_import_oral_check_pilot_role_play_records
+       where import_id = v_import_id
+     ) then
+       raise exception 'target preflight failed: the pilot insertion receipt already exists on this target. This is a one-shot operation and has already been performed.';
+     end if;
+
+     raise notice 'preflight ok: % catalog on project %, live hash matches the migration pin, pilot not yet applied',
+       v_import_id, v_project_ref;
+   end;
+   $$;
    ```
 
-   If that query returns no row, STOP. Do not proceed to step 3a — the
-   target is wrong, the restore is incomplete, or the catalog has not been
-   released yet. `20260728050000` will also refuse on its own (SQLSTATE
-   55000, fail-closed per round-5 review), but do not rely on that alone —
-   confirm before spending a `supabase db push` cycle finding out.
+   Do not substitute `supabase status` here. It reports the LOCAL Supabase
+   stack and cannot say anything about which remote project a connection
+   points at, so it can report a perfectly healthy local environment while
+   you are pointed somewhere else entirely. The block above interrogates the
+   target itself: `current_user` on the Supabase pooler carries the project
+   ref directly, and the release pin plus the live catalog hash are facts
+   only the real Institute production catalog satisfies. If it raises for any
+   reason, STOP. Do not proceed to step 3a. `20260728050000` will also refuse
+   on its own if this database holds the catalog with no release record
+   (SQLSTATE 55000), but do not rely on that alone. A `supabase db push`
+   aimed at a wrong and entirely empty project skips quietly by design, so
+   this preflight and the step 3b postflight are what catch it.
 3a. Apply the 3 migrations to production in numeric order (`20260728020000`,
    then `20260728030000`, then `20260728050000`) — this is the normal
    `supabase db push` behavior since they sort in that order by filename,
@@ -483,9 +529,23 @@ Before applying any of the three:
    ```sql
    begin;
    set local lock_timeout = '10s';
+   select set_config('request.jwt.claim.role', 'service_role', true);
    select public.fn_rollback_oral_check_pilot_role_play_blocks();
    commit;
    ```
+
+   The `set_config` line is not optional and not decoration. The function's
+   first check is `auth.role() = 'service_role'`, and `auth.role()` reads the
+   `request.jwt.claim.role` setting on the current session. PostgREST sets
+   that automatically for RPC calls, but a direct `psql` session does not, so
+   without this line the documented procedure fails immediately with SQLSTATE
+   42501 ("Oral-check pilot role-play rollback requires service_role"),
+   during a real incident, against 3 live published lessons. Holding
+   service-role database credentials is not the same thing as presenting the
+   claim. `true` scopes the setting to this transaction, so it reverts on
+   `COMMIT`. This is the same thing
+   `20260728050000_apply_oral_check_pilot_role_play_blocks.sql` does before
+   calling the forward function.
 
    The function itself already sets a `10s` `lock_timeout` for the
    duration of every call (round-5 review caught that the migration-level

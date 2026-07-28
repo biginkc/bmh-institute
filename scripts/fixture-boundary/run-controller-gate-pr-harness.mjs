@@ -143,21 +143,19 @@ try {
       replayProgressFingerprintMigration(migrationPath);
     } else if (migration === "051_quiz_answer_privacy_snapshots.sql") {
       replayQuizPrivacyMigration(migrationPath);
-    } else if (
-      migration === "20260728050000_apply_oral_check_pilot_role_play_blocks.sql"
-    ) {
-      // Deliberately NOT applied here (round-5 Codex review, finding 1):
-      // this migration now fails CLOSED (raises) when no release record
-      // exists for bmh-employee-training-v1, which every fresh cluster
-      // genuinely lacks at this exact point in a full migration replay.
-      // Applying it here would abort migration application -- and every
-      // other test in this suite -- on every single run. Its real,
-      // unmodified file is instead \i'd directly by
-      // supabase/tests/059_oral_check_pilot_apply_fail_closed.sql, both
-      // against a genuinely empty database (proving the fail-closed
-      // refusal) and against a real populated fixture (proving it still
-      // works when the target is correct).
     } else {
+      // Round-6 Codex review, finding 2: 20260728050000_apply_oral_check_pilot_role_play_blocks.sql
+      // used to be special-cased out of this sweep, because the round-5
+      // version of that migration raised unconditionally when no release
+      // record existed -- which is true of every fresh cluster, and of every
+      // real clean-database replay (supabase db reset, CI, a new preview or
+      // test project). Skipping it here hid that breakage rather than
+      // fixing it. That migration is now replay-safe (it skips with a NOTICE
+      // only when the database holds no bmh-employee-training-v1 catalog at
+      // all, and still fails closed when the catalog exists without a
+      // release), so it is applied here in normal order like every other
+      // migration -- and this sweep passing against a byte-fresh cluster is
+      // what proves the replay safety.
       psqlFile(migrationPath);
     }
   }
@@ -821,6 +819,52 @@ async function runOralCheckPilotRollbackLockTimeoutTest() {
     "4464ecdd-2650-59ed-a525-78871e846d20",
     "34758403-1ddd-5e3c-a054-b2f28310d8b8",
   ];
+  const programId = "15a382c9-617c-5407-a880-af6303be74b2";
+  const courseId = "e743b27c-7e0d-5760-aa25-5dbd75656718";
+  const programCourseId = "8e8b2d86-6e11-59e5-acd2-332488b2341e";
+  const moduleIds = [
+    "b2b26858-4b5c-5e1f-ada4-6814d3c340fe",
+    "2cf8bd25-600c-5514-a88f-bd964bbd6616",
+    "774aa2b9-6460-572c-a8bf-a000020fdfd5",
+  ];
+  const lessonIds = [
+    "dc391d4b-58f4-5a94-a97f-ca59c4d98f41",
+    "823f016f-6e4c-5791-ac42-9f24c28040df",
+    "cccdb0ef-b907-5bce-ade1-3ff0b0d054ce",
+  ];
+  const idList = (ids) => ids.map((id) => `'${id}'`).join(", ");
+
+  // Round-6 Codex review, finding 2: unlike every other check in this
+  // harness, this one deliberately COMMITS its fixture (it needs two real
+  // concurrent connections, so it cannot live inside one rolled-back
+  // transaction). It used to clean up only the 3 content blocks, leaving a
+  // committed bmh-employee-training-v1 release record, the fixture catalog
+  // rows, both evidence receipts, and a stubbed
+  // fn_course_import_catalog_sha256 behind on the shared database. The very
+  // next step of the same CI job -- "Rehearse released quiz forward
+  // revision and rollback" -- then called fn_apply_course_import for that
+  // same import and was refused with "released imports are immutable",
+  // failing the PostgreSQL 15/16/17 jobs. Save the real checksum function
+  // before stubbing it so it can be restored verbatim afterwards, and drop
+  // every committed row at the end.
+  psqlText(`
+    create table public.oral_check_lock_rehearsal_saved_function (definition text);
+    insert into public.oral_check_lock_rehearsal_saved_function (definition)
+    select pg_get_functiondef(
+      'public.fn_course_import_catalog_sha256(text)'::regprocedure
+    );
+    do $$
+    begin
+      if not exists (
+        select 1 from public.oral_check_lock_rehearsal_saved_function
+        where definition is not null
+      ) then
+        raise exception 'could not capture the real fn_course_import_catalog_sha256 definition before stubbing it';
+      end if;
+    end;
+    $$;
+  `);
+
   const lockerSql = `
     select set_config('request.jwt.claim.role', 'service_role', false);
     create or replace function public.fn_course_import_catalog_sha256(p_import_id text)
@@ -954,7 +998,7 @@ async function runOralCheckPilotRollbackLockTimeoutTest() {
 
   const remainingSql = `
     select count(*) from public.content_blocks
-    where id in (${blockIds.map((id) => `'${id}'`).join(", ")});
+    where id in (${idList(blockIds)});
   `;
   const remaining = Number(
     exec(binary("psql"), ["-v", "ON_ERROR_STOP=1", "-A", "-t", "-c", remainingSql])
@@ -966,4 +1010,77 @@ async function runOralCheckPilotRollbackLockTimeoutTest() {
       `lock-timeout rehearsal cleanup: expected 0 oral-check blocks remaining after the real cleanup rollback, found ${remaining}.`,
     );
   }
+
+  // Round-6 review, finding 2: drop everything this rehearsal committed and
+  // restore the real checksum function, so the shared database is left
+  // exactly as it was found. session_replication_role = replica is the same
+  // mechanism the quiz-privacy replay cleanup above uses -- it suspends the
+  // immutability guard triggers on the two evidence tables, which correctly
+  // refuse every delete under normal operation. Deletes run child-first
+  // because the evidence tables reference content_import_release_records
+  // with ON DELETE RESTRICT.
+  psqlText(`
+    set session_replication_role = replica;
+    delete from public.content_import_oral_check_pilot_role_play_rollback_records
+      where import_id = '${importId}';
+    delete from public.content_import_oral_check_pilot_role_play_records
+      where import_id = '${importId}';
+    delete from public.content_import_release_records where import_id = '${importId}';
+    delete from public.lessons where id in (${idList(lessonIds)});
+    delete from public.modules where id in (${idList(moduleIds)});
+    delete from public.program_courses where id = '${programCourseId}';
+    delete from public.courses where id = '${courseId}';
+    delete from public.programs where id = '${programId}';
+    set session_replication_role = origin;
+
+    do $$
+    declare
+      v_definition text;
+    begin
+      select definition into v_definition
+      from public.oral_check_lock_rehearsal_saved_function;
+      if v_definition is null then
+        raise exception 'the saved fn_course_import_catalog_sha256 definition is missing -- refusing to leave the stub in place';
+      end if;
+      execute v_definition;
+    end;
+    $$;
+    drop table public.oral_check_lock_rehearsal_saved_function;
+  `);
+
+  // Prove the restoration for real rather than assuming it: a leftover
+  // release record or a still-stubbed checksum function is exactly what
+  // broke the next CI step, so fail here instead of there.
+  psqlText(`
+    do $$
+    begin
+      if exists (
+        select 1 from public.content_import_release_records where import_id = '${importId}'
+      ) then
+        raise exception 'lock-timeout rehearsal cleanup left a committed release record behind';
+      end if;
+      if exists (
+        select 1 from public.programs where content_import_id = '${importId}'
+        union all
+        select 1 from public.courses where content_import_id = '${importId}'
+        union all
+        select 1 from public.lessons where content_import_id = '${importId}'
+      ) then
+        raise exception 'lock-timeout rehearsal cleanup left committed catalog rows behind';
+      end if;
+      if exists (
+        select 1 from public.content_import_oral_check_pilot_role_play_records
+        union all
+        select 1 from public.content_import_oral_check_pilot_role_play_rollback_records
+      ) then
+        raise exception 'lock-timeout rehearsal cleanup left a committed evidence receipt behind';
+      end if;
+      if pg_get_functiondef(
+        'public.fn_course_import_catalog_sha256(text)'::regprocedure
+      ) like '%91bee07c6626d0d113291d925cfc7fa65ac26c57c7d85ea3ca172d5b706120f2%' then
+        raise exception 'lock-timeout rehearsal cleanup left the stubbed fn_course_import_catalog_sha256 in place';
+      end if;
+    end;
+    $$;
+  `);
 }

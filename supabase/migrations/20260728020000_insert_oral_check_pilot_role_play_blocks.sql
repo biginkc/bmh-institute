@@ -407,6 +407,27 @@ begin
 
   v_database_payload_sha256 := encode(sha256(convert_to(v_mutations::text, 'UTF8')), 'hex');
 
+  -- Round-6 review, finding 3: this lock set used to cover only the tables
+  -- this operation WRITES (programs/courses/modules/lessons/content_blocks
+  -- plus the two evidence tables), while
+  -- public.fn_course_import_catalog_sha256 below READS the entire managed
+  -- import graph -- program_courses, program_access, course_access,
+  -- role_groups, quizzes, questions, answer_options, assignments included.
+  -- A concurrent writer touching any of those unlocked tables between the
+  -- prior-state read and the post-insert read would silently corrupt the
+  -- receipt: prior_catalog_sha256 would record a state the database was
+  -- already past, and the rollback -- which pins itself to that receipt and
+  -- refuses unless it can restore the catalog to exactly that value -- could
+  -- never satisfy its own assertion, permanently stranding the prepared
+  -- rollback for a change that is live in 3 published lessons. The lock set
+  -- now covers every table the checksum reads, taken before the first read,
+  -- so both reads and the insert observe one writer-excluded state the
+  -- receipt provably matches. Keep this list in the same relative order as
+  -- 20260728030000's rollback lock set (which locks a superset) so the two
+  -- operations can never deadlock against each other, and keep it in sync
+  -- with fn_course_import_catalog_sha256 -- src/lib/course-import/oral-check-pilot-catalog-lock-coverage.test.ts
+  -- derives the required set from that function directly and fails CI if
+  -- this drifts.
   perform pg_advisory_xact_lock(hashtextextended('course-import-catalog-mutation', 0));
   perform pg_advisory_xact_lock(hashtextextended('course-import-release:' || v_import_id, 0));
   lock table
@@ -414,9 +435,17 @@ begin
     public.content_import_oral_check_pilot_role_play_records,
     public.programs,
     public.courses,
+    public.program_courses,
+    public.program_access,
+    public.course_access,
+    public.role_groups,
     public.modules,
     public.lessons,
-    public.content_blocks
+    public.content_blocks,
+    public.quizzes,
+    public.questions,
+    public.answer_options,
+    public.assignments
   in share row exclusive mode;
 
   -- Confirm the exact published release lineage exists FIRST (mirrors

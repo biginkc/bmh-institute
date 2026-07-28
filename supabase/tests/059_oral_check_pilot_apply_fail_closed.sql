@@ -3,13 +3,25 @@ begin;
 set local lock_timeout = '10s';
 select set_config('request.jwt.claim.role', 'service_role', true);
 
--- Round-5 review, finding 1: 20260728050000_apply_oral_check_pilot_role_play_blocks.sql
--- must fail CLOSED (raise), not silently no-op succeed, when no release
--- record exists for bmh-employee-training-v1. Because this file is
--- deliberately excluded from run-controller-gate-pr-harness.mjs's blanket
--- migration-application sweep (see that script and this migration's own
--- header comment), this is the ONLY place the real, unmodified file is
--- exercised end-to-end. Prove both required behaviors against it directly.
+-- 20260728050000_apply_oral_check_pilot_role_play_blocks.sql has to satisfy
+-- three separate requirements at once, and this file proves all three against
+-- the REAL, unmodified migration file rather than a hand-copied approximation
+-- of its logic:
+--
+--   (a) Round-6 review, finding 2 -- REPLAY SAFE. Applied to a genuinely
+--       clean database (a local supabase db reset, a CI validation run, a
+--       fresh preview or test project), it must skip cleanly and write
+--       nothing, because there is no bmh-employee-training-v1 catalog there
+--       to modify. The round-5 version raised unconditionally instead, which
+--       broke every clean-database replay and was only masked by a hardcoded
+--       skip in run-controller-gate-pr-harness.mjs.
+--   (b) Round-5 review, finding 1 -- STILL FAILS CLOSED where it matters.
+--       Applied to a database that DOES hold this catalog but has no release
+--       record for it (an incomplete restore, a catalog reloaded after
+--       replay, an import applied but never released), it must still raise
+--       SQLSTATE 55000 rather than quietly reporting success while the pilot
+--       never applied.
+--   (c) It must still genuinely work against a correct, populated target.
 
 do $$
 begin
@@ -22,11 +34,9 @@ begin
 end;
 $$;
 
--- (a) Absent-release refusal: this transaction genuinely has no release
--- record for bmh-employee-training-v1 yet (true of the harness's fresh
--- cluster, and true of this test's own transaction before the fixture
--- section below runs). Confirm the REAL apply file raises rather than
--- silently succeeding.
+-- (a) Clean-database replay safety. This transaction genuinely holds neither
+-- a release record nor any catalog row for this import, which is exactly the
+-- state of a fresh database replaying the migration history.
 do $$
 begin
   if exists (
@@ -35,33 +45,97 @@ begin
   ) then
     raise exception 'this test expects to start with no release record for bmh-employee-training-v1';
   end if;
+  if exists (
+    select 1 from public.programs where content_import_id = 'bmh-employee-training-v1'
+    union all
+    select 1 from public.courses where content_import_id = 'bmh-employee-training-v1'
+    union all
+    select 1 from public.lessons where content_import_id = 'bmh-employee-training-v1'
+  ) then
+    raise exception 'this test expects to start with no bmh-employee-training-v1 catalog rows';
+  end if;
 end;
 $$;
 
-savepoint before_absent_release_apply;
+savepoint before_clean_database_apply;
+
+-- ON_ERROR_STOP stays ON here: raising at all is the failure this section
+-- exists to catch.
+\i supabase/migrations/20260728050000_apply_oral_check_pilot_role_play_blocks.sql
+
+do $$
+begin
+  if exists (
+    select 1 from public.content_blocks
+    where id in (
+      '7300bba9-a9fc-582c-aa20-dd5d58754165',
+      '4464ecdd-2650-59ed-a525-78871e846d20',
+      '34758403-1ddd-5e3c-a054-b2f28310d8b8'
+    )
+  ) then
+    raise exception 'the clean-database skip inserted content blocks -- it must write nothing at all';
+  end if;
+  if exists (
+    select 1 from public.content_import_oral_check_pilot_role_play_records
+    where import_id = 'bmh-employee-training-v1'
+  ) then
+    raise exception 'the clean-database skip wrote a forward evidence row -- it must write nothing at all';
+  end if;
+end;
+$$;
+
+rollback to savepoint before_clean_database_apply;
+
+-- (b) Catalog present, release absent: the state that must still fail closed.
+savepoint before_unreleased_catalog_apply;
+
+do $$
+begin
+  perform set_config('bmh.apply_import_id', 'bmh-employee-training-v1', true);
+
+  insert into public.programs (
+    id, title, description, content_import_id, is_published,
+    course_order_mode, certificate_enabled, sort_order
+  ) values (
+    '15a382c9-617c-5407-a880-af6303be74b2', 'BMH Employee Training',
+    'Internal training for serving sellers, operating the pipeline, and growing at BMH Group.',
+    'bmh-employee-training-v1', false, 'sequential', true, 0
+  );
+  insert into public.courses (
+    id, title, description, content_import_id, is_published,
+    certificate_enabled, sort_order
+  ) values (
+    'e743b27c-7e0d-5760-aa25-5dbd75656718', 'BMH Employee Training',
+    'Six sequential sections covering the BMH way, seller conversations, operating systems, and performance.',
+    'bmh-employee-training-v1', false, false, 0
+  );
+
+  perform set_config('bmh.apply_import_id', '', true);
+end;
+$$;
 
 \set ON_ERROR_STOP off
 \i supabase/migrations/20260728050000_apply_oral_check_pilot_role_play_blocks.sql
 \set ON_ERROR_STOP on
 
-\set absent_release_sqlstate :LAST_ERROR_SQLSTATE
-\set absent_release_message :LAST_ERROR_MESSAGE
+\set unreleased_sqlstate :LAST_ERROR_SQLSTATE
+\set unreleased_message :LAST_ERROR_MESSAGE
 
-rollback to savepoint before_absent_release_apply;
+rollback to savepoint before_unreleased_catalog_apply;
 
-select set_config('bmh.test_059_absent_sqlstate', :'absent_release_sqlstate', true);
-select set_config('bmh.test_059_absent_message', :'absent_release_message', true);
+select set_config('bmh.test_059_unreleased_sqlstate', :'unreleased_sqlstate', true);
+select set_config('bmh.test_059_unreleased_message', :'unreleased_message', true);
 
 do $$
 declare
-  v_sqlstate text := current_setting('bmh.test_059_absent_sqlstate', true);
-  v_message text := current_setting('bmh.test_059_absent_message', true);
+  v_sqlstate text := current_setting('bmh.test_059_unreleased_sqlstate', true);
+  v_message text := current_setting('bmh.test_059_unreleased_message', true);
 begin
   if v_sqlstate is null or v_sqlstate = '' or v_sqlstate = '00000' then
-    raise exception 'the apply migration silently succeeded (or ran no statement) against a database with no release record -- it must fail closed instead';
+    raise exception 'the apply migration silently succeeded against a database that holds this catalog with no release record -- it must fail closed instead';
   end if;
   if v_sqlstate <> '55000' then
-    raise exception 'expected the apply migration to refuse with SQLSTATE 55000 on an absent release, got sqlstate=% message=%',
+    raise exception 'expected the apply migration to refuse with SQLSTATE 55000 on an unreleased catalog, got sqlstate=% message=%',
       v_sqlstate, v_message;
   end if;
   if position('release' in lower(v_message)) = 0 then
@@ -86,7 +160,7 @@ begin
 end;
 $$;
 
--- (b) Real success against a populated fixture: build the exact real
+-- (c) Real success against a populated fixture: build the exact real
 -- production program/course/module/lesson rows and release record 056/057/058
 -- use, then \i the REAL apply file (not the function called directly) and
 -- confirm it actually reaches a genuine successful insertion.

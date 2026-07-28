@@ -87,39 +87,58 @@ describe("oral-check pilot migration ordering (PR #130 round-4 review, finding 1
     );
   });
 
-  it("the apply migration fails CLOSED when no release record exists -- no silent no-op success path (round-5 review, finding 1)", () => {
+  it("the apply migration fails CLOSED on an unreleased catalog but stays replay-safe on a clean database (round-5 finding 1, as amended by round-6 finding 2)", () => {
     const sql = readMigration(APPLY_MIGRATION);
-    // The old design wrapped the invocation in `if exists (select ...
-    // release_records ...) then ... end if;` with no else branch -- a
-    // silent no-op when the release was absent. The fix inverts this to
-    // `if not exists (...) then raise exception ... end if;`, so absence
-    // is now always an error, never a quiet skip.
-    expect(sql).not.toMatch(
-      /if exists \(\s*select 1 from public\.content_import_release_records/,
+    // Round-5 replaced a silent no-op with an unconditional raise whenever
+    // the release record was absent. Round-6 found that raise also aborts
+    // every clean-database replay of the migration history (supabase db
+    // reset, CI, a fresh preview or test project), since a clean database
+    // has no release record by definition. The migration now separates the
+    // two: it raises when this database HOLDS the catalog without a
+    // release, and skips with a NOTICE only when there is no catalog here
+    // at all.
+    expect(sql).toMatch(
+      /select exists \([\s\S]*public\.programs where content_import_id = v_import_id[\s\S]*public\.courses where content_import_id = v_import_id[\s\S]*public\.lessons where content_import_id = v_import_id[\s\S]*\) into v_has_catalog/,
     );
     expect(sql).toMatch(
-      /if not exists \(\s*select 1 from public\.content_import_release_records[\s\S]*raise exception[\s\S]*using errcode = '55000'/,
+      /if v_has_catalog then\s*\n\s*raise exception[\s\S]*using errcode = '55000'/,
     );
-    // The actual invocation must be unconditional after that guard (not
-    // nested inside a second `if exists` block) -- the only thing standing
-    // between "no release" and "invoke" is the raise-and-abort above.
-    const releaseCheckIndex = sql.indexOf(
-      "if not exists (\n    select 1 from public.content_import_release_records",
+    // The clean-database path must be an explicit, announced skip that
+    // returns before any invocation -- never a fallthrough.
+    expect(sql).toMatch(/raise notice 'Oral-check pilot forward apply skipped/);
+
+    const catalogCheckIndex = sql.indexOf("into v_has_catalog");
+    const unreleasedRaiseIndex = sql.indexOf("if v_has_catalog then");
+    const skipReturnIndex = sql.indexOf(
+      "raise notice 'Oral-check pilot forward apply skipped",
     );
     const insertInvocationIndex = sql.indexOf(
       "perform public.fn_insert_oral_check_pilot_role_play_blocks();",
     );
-    expect(releaseCheckIndex).toBeGreaterThan(-1);
+    expect(catalogCheckIndex).toBeGreaterThan(-1);
     expect(insertInvocationIndex).toBeGreaterThan(-1);
-    expect(releaseCheckIndex).toBeLessThan(insertInvocationIndex);
+    expect(catalogCheckIndex).toBeLessThan(unreleasedRaiseIndex);
+    expect(unreleasedRaiseIndex).toBeLessThan(skipReturnIndex);
+    expect(skipReturnIndex).toBeLessThan(insertInvocationIndex);
+    // The skip must return rather than fall through to the invocation.
+    expect(sql.slice(skipReturnIndex, insertInvocationIndex)).toMatch(
+      /\n\s*return;\n/,
+    );
   });
 
-  it("the apply migration is deliberately excluded from the controller-gate harness's blanket migration-application sweep (it would abort every test run otherwise)", () => {
+  it("the apply migration is replayed in the controller-gate harness's normal migration sweep, with no special case (round-6 review, finding 2)", () => {
     const harnessSql = readFileSync(
       resolve(process.cwd(), "scripts/fixture-boundary/run-controller-gate-pr-harness.mjs"),
       "utf8",
     );
-    expect(harnessSql).toMatch(
+    // The round-5 version of the apply migration could not survive the
+    // harness's fresh-cluster sweep, so the harness skipped it by name --
+    // which meant the harness stopped replaying the real migration set the
+    // way an actual environment does, hiding the breakage instead of
+    // fixing it. The migration is replay-safe now, so that special case
+    // must be gone: the sweep passing on a byte-fresh cluster is what
+    // proves the replay safety.
+    expect(harnessSql).not.toMatch(
       /migration === "20260728050000_apply_oral_check_pilot_role_play_blocks\.sql"/,
     );
   });

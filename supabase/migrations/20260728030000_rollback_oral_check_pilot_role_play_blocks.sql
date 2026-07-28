@@ -144,6 +144,19 @@ begin
   -- The exact same locks the forward migration acquired, plus the tables
   -- that can hold real learner activity this rollback must never silently
   -- cascade-delete.
+  --
+  -- Round-6 review, finding 3: this set now also covers every table
+  -- public.fn_course_import_catalog_sha256 reads (program_courses,
+  -- program_access, course_access, role_groups, quizzes, questions,
+  -- answer_options, assignments), matching the forward migration's own
+  -- widened set. Both of this function's checksum reads -- the pre-delete
+  -- read that must equal the forward receipt's replacement_catalog_sha256,
+  -- and the post-delete read that must equal its prior_catalog_sha256 --
+  -- would otherwise be vulnerable to a concurrent edit to an unlocked table
+  -- making a correct rollback appear to have drifted, or a drifted one
+  -- appear correct. The shared tables appear here in the same relative order
+  -- as 20260728020000's lock set so the two operations cannot deadlock
+  -- against each other.
   perform pg_advisory_xact_lock(hashtextextended('course-import-catalog-mutation', 0));
   perform pg_advisory_xact_lock(hashtextextended('course-import-release:' || v_import_id, 0));
   lock table
@@ -152,9 +165,17 @@ begin
     public.content_import_oral_check_pilot_role_play_rollback_records,
     public.programs,
     public.courses,
+    public.program_courses,
+    public.program_access,
+    public.course_access,
+    public.role_groups,
     public.modules,
     public.lessons,
     public.content_blocks,
+    public.quizzes,
+    public.questions,
+    public.answer_options,
+    public.assignments,
     public.role_play_results,
     public.user_block_progress,
     public.user_video_progress,
