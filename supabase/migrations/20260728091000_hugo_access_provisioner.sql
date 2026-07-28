@@ -242,6 +242,12 @@ begin
     return new;
   end if;
 
+  -- All owner transitions, including legacy direct writes, share the same
+  -- transaction lock as the service-role lifecycle RPCs.  A target-row lock
+  -- alone permits two concurrent owner removals to each see the other as
+  -- active and leave the Institute without an owner.
+  perform pg_advisory_xact_lock(hashtextextended('hugo-institute-privileged-lifecycle-v1', 0));
+
   select count(*) into v_other_active_owners
   from public.profiles
   where id <> old.id and system_role = 'owner' and status = 'active';
@@ -384,6 +390,7 @@ declare
   v_durable boolean := false;
 begin
   perform public.fn_hugo_require_service_role();
+  perform pg_advisory_xact_lock(hashtextextended('hugo-institute-privileged-lifecycle-v1', 0));
   if p_operation_id is null then
     raise exception 'operation_id is required.' using errcode = 'invalid_parameter_value';
   end if;
@@ -783,6 +790,7 @@ declare
   v_receipt jsonb;
 begin
   perform public.fn_hugo_require_service_role();
+  perform pg_advisory_xact_lock(hashtextextended('hugo-institute-privileged-lifecycle-v1', 0));
   if p_operation_id is null then
     raise exception 'operation_id is required.' using errcode = 'invalid_parameter_value';
   end if;
@@ -873,6 +881,7 @@ declare
   v_receipt jsonb;
 begin
   perform public.fn_hugo_require_service_role();
+  perform pg_advisory_xact_lock(hashtextextended('hugo-institute-privileged-lifecycle-v1', 0));
   if p_operation_id is null then
     raise exception 'operation_id is required.' using errcode = 'invalid_parameter_value';
   end if;

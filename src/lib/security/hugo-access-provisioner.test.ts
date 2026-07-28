@@ -110,4 +110,18 @@ describe("Hugo Institute access provisioner contract", () => {
     expect(migration).toContain("prepared_for_delete");
     expect(migration).toContain("fn_hugo_has_durable_activity");
   });
+
+  it("serializes final-owner checks with a shared lifecycle lock", () => {
+    expect(migration).toContain(
+      "hashtextextended('hugo-institute-privileged-lifecycle-v1', 0)",
+    );
+    expect(migration).not.toContain(
+      "hashtextextended(p_operation_id::text, 0)",
+    );
+    expect(
+      migration.match(
+        /hashtextextended\('hugo-institute-privileged-lifecycle-v1', 0\)/g,
+      ),
+    ).toHaveLength(4);
+  });
 });
