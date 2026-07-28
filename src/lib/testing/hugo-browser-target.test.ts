@@ -21,6 +21,7 @@ describe("Hugo browser target deployment boundary", () => {
     expect(playwrightConfig).not.toContain(
       'from "./e2e/hugo-acceptance"',
     );
+    expect(playwrightConfig).toContain('"**/auth.setup.ts"');
     expect(assertHugoBrowserTarget({ baseUrl: "http://localhost:3200" })).toEqual({
       baseUrl: "http://localhost:3200",
       production: false,

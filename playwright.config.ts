@@ -141,7 +141,7 @@ export default defineConfig({
   // Production is guard-only in this seeded config. A future read-only
   // production project must opt in explicitly and provide its own fixtures.
   testIgnore: hugoBrowserTarget.production
-    ? ["**/*.spec.ts", "**/*.test.ts"]
+    ? ["**/*.spec.ts", "**/*.test.ts", "**/auth.setup.ts"]
     : undefined,
   fullyParallel: false,
   workers: 1,
