@@ -20,12 +20,15 @@
 --
 -- The catalog history of a released import is a single sequence of state
 -- transitions produced by several mechanisms:
---   * the release itself, whose release-record catalog checksum was
---     captured BEFORE fn_release_course_import_v1 flipped is_published --
---     so the first post-release live catalog differs from the recorded one
---     by exactly the publication flip;
+--   * the release itself. Going forward, fn_release_course_import_v1 now
+--     inserts a real ledger row (kind = legacy_catalog_correction,
+--     evidence.operation = 'release_anchor', revision 2) recording the
+--     post-publication catalog under the same lock as the pre-publication
+--     hash -- see 20260727180000. That row is just ANOTHER pre-existing
+--     ledger row to this backfill (an "anchor", below); no special-casing
+--     needed for imports released after this migration.
 --   * quiz revisions (and their rollbacks), which already write this shared
---     ledger directly ("anchors" below);
+--     ledger directly (also anchors);
 --   * the v1 one-shot content-block correction, and the released
 --     poster/caption replacement mechanisms, each of which kept its own
 --     append-only receipt table and never wrote this ledger ("receipts").
@@ -33,27 +36,43 @@
 -- This backfill reconstructs that one sequence per import: it merges the
 -- existing ledger rows and all unmirrored receipts into one queue ordered
 -- by their real timestamps, then walks it while tracking the expected
--- manifest and catalog state, starting from the release record. Every
--- event -- anchor or receipt, INCLUDING the first -- must chain exactly
--- from the reconstructed expected state.
+-- manifest and catalog state. Every event -- anchor or receipt -- must
+-- chain exactly from the reconstructed expected state, EXCEPT the very
+-- first event overall for an import that has no release-anchor row (an
+-- import released BEFORE this migration -- including real production
+-- data): its declared prior catalog is trusted directly as the seed, with
+-- no comparison against anything. This is sound, not a caller-controlled
+-- free pass, because every receipt row was written exclusively by its own
+-- CAS-verified, service-role, marker-guarded RPC (the receipt tables'
+-- guard triggers are operation-bound and are now sealed entirely) -- a
+-- receipt's declared prior catalog IS what the live catalog was at its own
+-- execution time, proven by that RPC's own compare-and-swap, not asserted
+-- by this backfill. (An earlier version of this migration required a
+-- SEPARATE, independently-attested post_publication_catalog_sha256 column
+-- before trusting a first event at all -- abandoned as a CRITICAL bug: that
+-- column has no default, so every already-released import, including real
+-- production data, has it permanently null, and phase 2 would abort on the
+-- very first real apply after phase 1 had already committed and retired
+-- the legacy write paths. Trusting a receipt's own CAS-proven prior catalog
+-- directly needs no such attestation and costs nothing for historical
+-- data.)
 --
--- The publication flip is the one transition that can never be re-derived
--- (the pre-flip catalog was recorded, the post-flip one was not, and the
--- live rows have moved since). It is absorbed as ONE explicit, attested
--- `publication_baseline` lineage row per import, allowed only at the very
--- start of the walk (while the expected catalog is still the release
--- record's pre-publication checksum), bridging to the first event's
--- declared prior catalog. What makes that attestation sound rather than a
--- caller-controlled free pass:
---   * every receipt row was written exclusively by its own CAS-verified,
---     service-role, marker-guarded RPC (the receipt tables' guard triggers
---     have been operation-bound since creation and are now sealed
---     entirely), so a receipt's declared prior catalog IS what the live
---     catalog was at its own execution time -- receipts are evidence, not
---     caller input; and
---   * the reconstructed chain must terminate exactly at the LIVE catalog,
---     recomputed under the full canonical lock set below -- a fabricated
---     baseline cannot lead anywhere real.
+-- The reconstructed chain must still terminate exactly at the LIVE catalog,
+-- recomputed under the full canonical lock set below -- a fabricated first
+-- event (or any other tampering) cannot lead anywhere real, so this is
+-- still a real safety net even though the first event itself is trusted.
+--
+-- The returned first_events_trusted count is reconciled per import against
+-- whether this CALL actually appended new lineage, not against how many
+-- times the trust comparison internally evaluated true: the first event's
+-- own prior_catalog is compared against the release record's pre-publication
+-- snapshot on EVERY call for an already-resolved import (there is nothing
+-- to persist the bridge on -- the anchor/mirror row that resolved it holds
+-- the same value on every subsequent read), so a naive per-comparison count
+-- would double-count on every idempotent re-run forever. Counting only
+-- when new rows are appended keeps the returned metric call-scoped and
+-- idempotency-safe: a re-run that finds everything already mirrored reports
+-- zero, regardless of how many imports' genesis anchors it re-verifies.
 --
 -- Fail-loud consequences, on purpose: catalog movement this model cannot
 -- explain (an unrecorded mutation between receipts, a receipt that breaks
@@ -78,8 +97,7 @@ declare
   v_expected_manifest text;
   v_expected_catalog text;
   v_parent_revision integer;
-  v_baseline_done boolean;
-  v_baseline_payload text;
+  v_first_event_seen boolean;
   v_next_revision integer;
   v_live_catalog text;
   v_active_catalog text;
@@ -87,7 +105,9 @@ declare
   v_absorbed_into_revision integer;
   v_download_evidence jsonb;
   v_backfilled integer := 0;
-  v_baselines integer := 0;
+  v_first_events_trusted integer := 0;
+  v_import_trust_used boolean;
+  v_import_backfilled_start integer;
 begin
   if coalesce(auth.role(), '') <> 'service_role' then
     raise exception 'v1 content block revision backfill requires service_role.'
@@ -122,8 +142,7 @@ begin
     ) source
     order by source.import_id
   loop
-    select release.manifest_sha256, release.catalog_sha256, release.released_at,
-      release.post_publication_catalog_sha256
+    select release.manifest_sha256, release.catalog_sha256, release.released_at
     into v_release
     from public.content_import_release_records release
     where release.import_id = v_import_id;
@@ -135,32 +154,24 @@ begin
     v_expected_manifest := v_release.manifest_sha256;
     v_expected_catalog := v_release.catalog_sha256;
     v_parent_revision := 1;
-    v_baseline_done := false;
-
-    -- Consume an already-attested publication baseline (idempotent re-run):
-    -- it is not part of the event queue -- it causally precedes everything.
-    select mirror.* into v_mirror
-    from public.content_import_release_revisions mirror
-    where mirror.import_id = v_import_id
-      and mirror.kind = 'legacy_catalog_correction'
-      and mirror.evidence ->> 'operation' = 'publication_baseline';
-    if found then
-      if v_mirror.prior_catalog_sha256 <> v_expected_catalog
-        or v_mirror.catalog_sha256 <> v_release.post_publication_catalog_sha256
-      then
-        raise exception 'v1 backfill aborted: the attested publication baseline for % does not chain from the release record.',
-          v_import_id;
-      end if;
-      v_expected_catalog := v_mirror.catalog_sha256;
-      v_parent_revision := v_mirror.revision;
-      v_baseline_done := true;
-    end if;
+    v_import_trust_used := false;
+    v_import_backfilled_start := v_backfilled;
+    -- True only until the FIRST event (anchor or receipt) in the merged
+    -- queue below has been processed. If that first event is a
+    -- release-anchor row (every import released after this migration), it
+    -- chains normally (its own prior_catalog_sha256 is the release's
+    -- pre-publish capture, matching v_expected_catalog exactly) and this
+    -- flag is irrelevant. If it is a legacy receipt (any import released
+    -- BEFORE this migration, real production data included), its declared
+    -- prior catalog is trusted directly -- see the header comment.
+    v_first_event_seen := false;
 
     -- ONE causal queue: existing ledger rows of every kind ("anchors" --
-    -- quiz revisions and their rollbacks, previously-created mirrors) plus
-    -- every legacy receipt, ordered by real event time. Anchors sort before
-    -- receipts on a timestamp tie so an already-created mirror carries the
-    -- chain before its source receipt is reached (and skipped).
+    -- release anchors, quiz revisions and their rollbacks, previously
+    -- created mirrors) plus every legacy receipt, ordered by real event
+    -- time. Anchors sort before receipts on a timestamp tie so an
+    -- already-created mirror carries the chain before its source receipt
+    -- is reached (and skipped).
     for v_event in
       select * from (
         select
@@ -178,8 +189,6 @@ begin
           null::jsonb as mutations, null::jsonb as evidence, null::uuid as revised_by
         from public.content_import_release_revisions row
         where row.import_id = v_import_id
-          and (row.kind <> 'legacy_catalog_correction'
-            or row.evidence ->> 'operation' is distinct from 'publication_baseline')
         union all
         select
           record.revised_at, false, 'content_blocks', null,
@@ -234,58 +243,27 @@ begin
     loop
       if v_event.is_anchor then
         -- Existing ledger rows are immutable evidence: they must chain
-        -- exactly from the reconstructed state (allowing the one-time
-        -- publication bridge if this is the very first event -- and ONLY
-        -- when it bridges to the INDEPENDENTLY attested
-        -- post_publication_catalog_sha256, never to whatever this row
-        -- happens to declare; see that column's comment for why a
-        -- caller-declared bridge is not evidence of anything).
-        if not v_baseline_done
-          and v_event.prior_catalog <> v_expected_catalog
-          and v_expected_catalog = v_release.catalog_sha256
-          and v_event.prior_manifest = v_expected_manifest
-        then
-          if v_release.post_publication_catalog_sha256 is null then
-            raise exception 'v1 backfill aborted: % has no independently attested post-publication catalog to bridge the first event against -- refusing to certify % as publication history on the receipt''s own say-so.',
-              v_import_id, v_event.prior_catalog;
-          end if;
-          if v_event.prior_catalog <> v_release.post_publication_catalog_sha256 then
-            raise exception 'v1 backfill aborted: ledger revision % for % declares a predecessor catalog (%) that does not match the independently attested post-publication catalog (%) -- an unaudited change happened between publication and this event.',
-              v_event.revision, v_import_id, v_event.prior_catalog, v_release.post_publication_catalog_sha256;
-          end if;
-          v_baseline_payload := encode(sha256(convert_to(jsonb_build_object(
-            'operation', 'publication_baseline',
-            'import_id', v_import_id,
-            'prior_catalog_sha256', v_expected_catalog,
-            'catalog_sha256', v_event.prior_catalog
-          )::text, 'UTF8')), 'hex');
-          select coalesce(max(revision), 1) + 1 into v_next_revision
-          from public.content_import_release_revisions
-          where import_id = v_import_id;
-          perform set_config('bmh.release_revision_import_id', v_import_id, true);
-          insert into public.content_import_release_revisions (
-            import_id, revision, kind, state_parent_revision,
-            prior_manifest_sha256, manifest_sha256,
-            prior_catalog_sha256, catalog_sha256,
-            payload_sha256, client_payload_sha256,
-            evidence, revised_at
-          ) values (
-            v_import_id, v_next_revision, 'legacy_catalog_correction', 1,
-            v_expected_manifest, v_expected_manifest,
-            v_expected_catalog, v_event.prior_catalog,
-            v_baseline_payload, v_baseline_payload,
-            jsonb_build_object(
-              'operation', 'publication_baseline',
-              'backfilled_from', 'release_publication_flip'
-            ),
-            v_release.released_at
-          );
-          perform set_config('bmh.release_revision_import_id', '', true);
+        -- exactly from the reconstructed state, UNLESS this is the very
+        -- first event ever seen for this import (no release-anchor row
+        -- exists -- see the header comment) -- then its declared prior
+        -- catalog is trusted directly, no comparison performed.
+        --
+        -- This can legitimately fire on EVERY call for the same import
+        -- (v_expected_catalog is re-seeded from v_release.catalog_sha256,
+        -- the pre-publication snapshot, at the top of every per-import
+        -- iteration -- so an already-resolved genesis anchor's own
+        -- post-publication prior_catalog mismatches it on every call, not
+        -- just the first). That is fine: it only marks v_import_trust_used,
+        -- which is reconciled against whether this call actually appends
+        -- anything NEW for this import (see below) before it ever affects
+        -- the returned v_first_events_trusted count -- so a re-run that
+        -- re-walks an already-fully-mirrored import reports 0 regardless of
+        -- how many times this branch internally re-fires.
+        if not v_first_event_seen and v_event.prior_catalog <> v_expected_catalog then
           v_expected_catalog := v_event.prior_catalog;
-          v_parent_revision := v_next_revision;
-          v_baselines := v_baselines + 1;
+          v_import_trust_used := true;
         end if;
-        v_baseline_done := true;
+        v_first_event_seen := true;
         if v_event.prior_catalog <> v_expected_catalog
           or v_event.prior_manifest <> v_expected_manifest
         then
@@ -328,55 +306,18 @@ begin
         continue;
       end if;
 
-      -- One-time publication bridge, only ever at the very start of the
-      -- causal walk (see the design contract in the header comment), and
-      -- ONLY against the independently attested post-publication catalog --
-      -- never a bare pass because this happens to be the first event.
-      if not v_baseline_done
-        and v_event.prior_catalog <> v_expected_catalog
-        and v_expected_catalog = v_release.catalog_sha256
-      then
-        if v_release.post_publication_catalog_sha256 is null then
-          raise exception 'v1 backfill aborted: % has no independently attested post-publication catalog to bridge the first event against -- refusing to certify % as publication history on the receipt''s own say-so.',
-            v_import_id, v_event.prior_catalog;
-        end if;
-        if v_event.prior_catalog <> v_release.post_publication_catalog_sha256 then
-          raise exception 'v1 backfill aborted: legacy receipt for % (%) declares a predecessor catalog (%) that does not match the independently attested post-publication catalog (%) -- an unaudited change happened between publication and this receipt.',
-            v_import_id, v_event.source, v_event.prior_catalog, v_release.post_publication_catalog_sha256;
-        end if;
-        v_baseline_payload := encode(sha256(convert_to(jsonb_build_object(
-          'operation', 'publication_baseline',
-          'import_id', v_import_id,
-          'prior_catalog_sha256', v_expected_catalog,
-          'catalog_sha256', v_event.prior_catalog
-        )::text, 'UTF8')), 'hex');
-        select coalesce(max(revision), 1) + 1 into v_next_revision
-        from public.content_import_release_revisions
-        where import_id = v_import_id;
-        perform set_config('bmh.release_revision_import_id', v_import_id, true);
-        insert into public.content_import_release_revisions (
-          import_id, revision, kind, state_parent_revision,
-          prior_manifest_sha256, manifest_sha256,
-          prior_catalog_sha256, catalog_sha256,
-          payload_sha256, client_payload_sha256,
-          evidence, revised_at
-        ) values (
-          v_import_id, v_next_revision, 'legacy_catalog_correction', 1,
-          v_expected_manifest, v_expected_manifest,
-          v_expected_catalog, v_event.prior_catalog,
-          v_baseline_payload, v_baseline_payload,
-          jsonb_build_object(
-            'operation', 'publication_baseline',
-            'backfilled_from', 'release_publication_flip'
-          ),
-          v_release.released_at
-        );
-        perform set_config('bmh.release_revision_import_id', '', true);
-        v_parent_revision := v_next_revision;
+      -- Predecessor CATALOG linkage: trust the FIRST event's declared
+      -- prior catalog directly (see the header comment); every OTHER
+      -- receipt must chain exactly from the reconstructed causal state.
+      -- This branch is unreachable for an already-mirrored receipt (the
+      -- idempotency check above already matched and `continue`d it), so
+      -- reaching here always means a genuinely NEW row is about to be
+      -- inserted for this import -- see v_import_trust_used below.
+      if not v_first_event_seen and v_event.prior_catalog <> v_expected_catalog then
         v_expected_catalog := v_event.prior_catalog;
-        v_baselines := v_baselines + 1;
+        v_import_trust_used := true;
       end if;
-      v_baseline_done := true;
+      v_first_event_seen := true;
 
       -- Predecessor MANIFEST chain (v1 content receipts only -- poster and
       -- caption corrections never touch the manifest): the receipt's
@@ -390,10 +331,6 @@ begin
           v_import_id, v_event.expected_active_manifest, v_expected_manifest;
       end if;
 
-      -- Predecessor CATALOG linkage -- enforced UNCONDITIONALLY for every
-      -- source and every receipt, including the first (the publication
-      -- bridge above is the only sanctioned gap, and it never applies
-      -- past the first event).
       if v_event.prior_catalog <> v_expected_catalog then
         raise exception 'v1 backfill aborted: legacy receipt for % (%) declares predecessor catalog % but the reconstructed causal catalog is %.',
           v_import_id, v_event.source, v_event.prior_catalog, v_expected_catalog;
@@ -415,17 +352,17 @@ begin
       from public.content_import_release_revisions
       where import_id = v_import_id;
 
-      -- Round-7 review fix (finding 4): if an EXISTING quiz anchor already
-      -- recorded this mirror's resulting catalog as ITS OWN prior catalog,
-      -- that anchor's live execution already causally absorbed this
-      -- mirror's effect -- even though the anchor's own (immutable)
-      -- state_parent_revision cannot be rewritten to point at a row this
-      -- backfill is only now inserting. Record the edge on the NEW row
-      -- instead (see absorbed_into_revision's column comment);
-      -- fn_classify_revision_lineage traverses it so this mirror still
-      -- classifies as a genuine superseded ancestor of the current state,
-      -- not diverged. Scoped to quiz anchors: those are the only kind that
-      -- could have existed, chronologically, before this backfill ever ran.
+      -- If an EXISTING quiz anchor already recorded this mirror's resulting
+      -- catalog as ITS OWN prior catalog, that anchor's live execution
+      -- already causally absorbed this mirror's effect -- even though the
+      -- anchor's own (immutable) state_parent_revision cannot be rewritten
+      -- to point at a row this backfill is only now inserting. Record the
+      -- edge on the NEW row instead (see absorbed_into_revision's column
+      -- comment); fn_classify_revision_lineage traverses it so this mirror
+      -- still classifies as a genuine superseded ancestor of the current
+      -- state, not diverged. Scoped to quiz anchors: those are the only
+      -- kind that could have existed, chronologically, before this
+      -- backfill ever ran.
       select revision into v_absorbed_into_revision
       from public.content_import_release_revisions
       where import_id = v_import_id
@@ -525,6 +462,20 @@ begin
       v_backfilled := v_backfilled + 1;
     end loop;
 
+    -- Reconcile the per-import trust flag against whether this CALL
+    -- actually appended anything new for this import. The flag can fire
+    -- every single time this import's genesis is walked (an anchor's own
+    -- prior_catalog is compared against the pre-publication snapshot on
+    -- every call, not just the first -- see the anchor branch's comment
+    -- above), so it is not by itself a safe signal for the returned count.
+    -- Whether new rows were appended IS call-scoped and idempotency-safe:
+    -- an already-mirrored receipt is matched and skipped before it can ever
+    -- contribute a new row, so v_backfilled only advances for this import
+    -- when genuinely new lineage is built on top of the trusted genesis.
+    if v_import_trust_used and v_backfilled > v_import_backfilled_start then
+      v_first_events_trusted := v_first_events_trusted + 1;
+    end if;
+
     -- Reality checks, per import: the reconstructed final state must be
     -- exactly the LIVE catalog (recomputed under the full lock set), and
     -- the active-state view -- which reads the MAX-revision row -- must
@@ -550,7 +501,7 @@ begin
   return jsonb_build_object(
     'status', 'backfilled',
     'rows', v_backfilled,
-    'baselines', v_baselines
+    'first_events_trusted', v_first_events_trusted
   );
 end;
 $$;

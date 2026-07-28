@@ -94,79 +94,20 @@ alter table public.content_import_release_revisions
   -- superseded instead of diverged.
   add column absorbed_into_revision integer check (absorbed_into_revision is null or absorbed_into_revision >= 2);
 
--- Round-7 review fix (finding 3): an INDEPENDENT, immutable attestation of
--- what the catalog looked like immediately after publication -- captured by
--- fn_release_course_import_v1 itself (see the redefinition of
--- private.fn_release_course_import_v027_without_global_mutation_lock
--- below), in the SAME transaction as the publish flip, not reconstructed or
--- guessed at backfill time. Before this column, the backfill accepted
--- WHATEVER the first legacy receipt declared as its own prior catalog as
--- "the" publication state with no independent evidence that publication was
--- the ONLY intervening change -- an unrecorded edit between publication and
--- the first receipt would get silently certified as publication history.
--- Nullable because an import released BEFORE this migration has no such
--- attestation; the backfill refuses to bridge the publication gap for any
--- import where this is null rather than guess.
-alter table public.content_import_release_records
-  add column post_publication_catalog_sha256 text
-    check (post_publication_catalog_sha256 is null or post_publication_catalog_sha256 ~ '^[a-f0-9]{64}$');
-
--- The release record's own guard (027) blocks EVERY update unconditionally.
--- That is still the right default -- but capturing the post-publication
--- catalog needs one narrow, controlled exception: the publish-flip guard
--- (fn_guard_imported_catalog_publication) itself requires the release
--- record to already EXIST before is_published can flip, so the pre-publish
--- insert must happen first and the post-publication value can only be
--- known afterward, in the same transaction. Reordering to "publish first,
--- insert once with both values" is blocked by that other guard; the
--- alternative of loosening it felt like a bigger, less-contained change
--- than loosening THIS guard for exactly one column. This redefinition
--- allows an UPDATE only when: the same service_role + bmh.release_import_id
--- marker that gates the original insert is present, the column currently
--- being set is NULL -> non-null (once, never again), and every OTHER
--- column is byte-identical to what it already was -- so nothing about an
--- already-recorded release can ever actually change.
-create or replace function public.fn_guard_content_import_release_record()
-returns trigger
-language plpgsql
-set search_path = ''
-as $$
-begin
-  if tg_op = 'INSERT' then
-    if coalesce(auth.role(), '') <> 'service_role'
-       or coalesce(current_setting('bmh.release_import_id', true), '') <> new.import_id then
-      raise exception 'Content import release records may only be created by the evidence-bound release operation.'
-        using errcode = '42501';
-    end if;
-    return new;
-  end if;
-  if tg_op = 'UPDATE'
-    and coalesce(auth.role(), '') = 'service_role'
-    and coalesce(current_setting('bmh.release_import_id', true), '') = new.import_id
-    and old.post_publication_catalog_sha256 is null
-    and new.post_publication_catalog_sha256 is not null
-    and new.import_id is not distinct from old.import_id
-    and new.program_id is not distinct from old.program_id
-    and new.qa_role_group_id is not distinct from old.qa_role_group_id
-    and new.employee_role_group_id is not distinct from old.employee_role_group_id
-    and new.manifest_sha256 is not distinct from old.manifest_sha256
-    and new.reconciliation_sha256 is not distinct from old.reconciliation_sha256
-    and new.catalog_sha256 is not distinct from old.catalog_sha256
-    and new.rollback_rehearsal_sha256 is not distinct from old.rollback_rehearsal_sha256
-    and new.chrome_desktop_sha256 is not distinct from old.chrome_desktop_sha256
-    and new.chrome_mobile_sha256 is not distinct from old.chrome_mobile_sha256
-    and new.admin_happy_path_sha256 is not distinct from old.admin_happy_path_sha256
-    and new.approval_sha256 is not distinct from old.approval_sha256
-    and new.approved_by is not distinct from old.approved_by
-    and new.evidence is not distinct from old.evidence
-    and new.released_by is not distinct from old.released_by
-    and new.released_at is not distinct from old.released_at
-  then
-    return new;
-  end if;
-  raise exception 'Content import release records are immutable.' using errcode = '42501';
-end;
-$$;
+-- Round-8 review fix (finding 1, CRITICAL): a round-7 attempt to attest the
+-- post-publication catalog via a NEW required-going-forward column on
+-- content_import_release_records was abandoned -- it has no default, so
+-- every ALREADY-released import (including real production data) has it
+-- NULL, and the backfill's own "refuse without attestation" rule would then
+-- abort phase 2 on the very first real apply, after phase 1 had already
+-- committed and retired the legacy write paths -- a guaranteed
+-- half-migrated production state, not a rare edge case. See
+-- fn_release_course_import_v1's redefinition below and the backfill's
+-- comments for the replacement design: a real, LEDGER-ANCHORED row created
+-- going forward (never a stored column requiring historical backfill), plus
+-- trusting an ALREADY-verified first legacy receipt directly for imports
+-- that predate this migration. content_import_release_records keeps its
+-- original, fully unconditional immutability -- no exception needed.
 
 alter table public.content_import_release_revisions
   add constraint content_import_release_revisions_kind_shape_check
@@ -187,17 +128,23 @@ alter table public.content_import_release_revisions
       and quiz_count is null and question_count is null and option_count is null
       and prior_quiz_graph is null and invalidated_incomplete_attempts is null
     ) or (
-      -- A validated lineage edge for a catalog-touching mechanism that has
-      -- its own append-only, checksum-CAS'd receipt table but never wrote
-      -- this shared ledger directly: the released-poster and
-      -- released-caption replacement mechanisms (20260722043000,
-      -- 20260722235500). Backfilled retroactively, once, alongside the v1
-      -- content-block history -- see 20260727180500 -- so that history's
-      -- FIRST receipt for an import has a real prior state to validate
-      -- against instead of an unvalidated caller-declared checksum. Carries
-      -- only the base identity/evidence columns; never a rollback target
-      -- (reverts_revision is always null -- these mechanisms have no
-      -- rollback of their own to model).
+      -- A validated lineage edge that carries no manifest change and no
+      -- mutation payload. Two producers:
+      --   * fn_release_course_import_v1 inserts one, live, immediately
+      --     after every future publish (evidence.operation =
+      --     'release_anchor') -- a real, lock-computed post-publication
+      --     catalog, always revision 2 / state_parent 1, so every import
+      --     released from here forward always has a trustworthy anchor
+      --     revision > 1 (round-8 fix, finding 1/4).
+      --   * the backfill (20260727180500) mirrors the released-poster and
+      --     released-caption replacement mechanisms' own receipt tables
+      --     (20260722043000, 20260722235500) retroactively, once, alongside
+      --     the v1 content-block history, since those mechanisms never
+      --     wrote this shared ledger directly (evidence.operation =
+      --     'poster_replacement' / 'caption_replacement').
+      -- Carries only the base identity/evidence columns; never a rollback
+      -- target (reverts_revision is always null -- neither producer has a
+      -- rollback of its own to model).
       kind = 'legacy_catalog_correction'
       and reverts_revision is null
       and mutation_count is null and update_count is null and insert_count is null
@@ -373,8 +320,17 @@ begin
   end if;
 
   perform pg_advisory_xact_lock(hashtextextended('course-import-release:' || p_import_id, 0));
-  lock table public.programs, public.courses, public.program_courses, public.program_access,
-    public.role_groups, public.content_import_release_records in share row exclusive mode;
+  perform pg_advisory_xact_lock(hashtextextended('course-import-catalog-mutation', 0));
+  -- Round-8 review fix (finding 2): lock the FULL canonical catalog-hash
+  -- table set (content_blocks, quizzes, etc. included) BEFORE computing
+  -- ANY hash and BEFORE the publish flip -- not just the program/course
+  -- structural tables this function locked before. Without this, an
+  -- ordinary concurrent admin edit to content_blocks (writable the whole
+  -- time under the narrower lock) could land inside the window between the
+  -- pre-publication hash and the release-anchor's post-publication hash
+  -- below, getting baked into the anchor as if it were part of publication.
+  lock table public.content_import_release_records in share row exclusive mode;
+  perform public.fn_lock_course_import_catalog_tables();
 
   select * into v_existing
   from public.content_import_release_records release
@@ -476,19 +432,38 @@ begin
   insert into public.program_access (program_id, role_group_id)
   values (p_program_id, p_employee_role_group_id);
 
-  -- Round-7 review fix (finding 3): capture the post-publication catalog
-  -- HERE, in the same transaction as the publish flip -- the one place
-  -- that can attest it independently, rather than backfilling it later
-  -- from unverified receipt claims. content_import_release_records is
-  -- otherwise fully immutable; this ONE narrow follow-up write is allowed
-  -- by fn_guard_content_import_release_record only under the same
-  -- service_role + bmh.release_import_id marker that gated the insert
-  -- above, only from NULL to non-null, and only for this exact column --
-  -- see that guard's comment.
+  -- Round-8 review fix (finding 1, replacing the abandoned column-based
+  -- attestation): record the real post-publication state as a genuine
+  -- ledger row -- revision 2, state_parent 1 -- computed under the SAME
+  -- lock held since before the pre-publication hash (finding 2), so there
+  -- is no window for anything to land between the two hashes. Because this
+  -- is a normal ledger row (not a new required column), it costs nothing
+  -- for historical data: an import released before this migration simply
+  -- has no such row, and the backfill (20260727180500) trusts its own
+  -- first legacy receipt directly instead -- there is no dependency on
+  -- back-attesting old releases before phase 1 can commit. Every import
+  -- released from here forward always has a real revision-2 anchor, so
+  -- fn_admin_merge_role_play_block_content and any other caller can always
+  -- treat "active_revision > 1" as the trustworthy case (finding 4) --
+  -- the "fresh revision 1, no anchor" case no longer occurs for new
+  -- releases at all.
   v_post_publication_catalog_sha256 := public.fn_course_import_catalog_sha256(p_import_id);
-  update public.content_import_release_records
-     set post_publication_catalog_sha256 = v_post_publication_catalog_sha256
-   where import_id = p_import_id;
+  perform set_config('bmh.release_revision_import_id', p_import_id, true);
+  insert into public.content_import_release_revisions (
+    import_id, revision, kind, state_parent_revision,
+    prior_manifest_sha256, manifest_sha256,
+    prior_catalog_sha256, catalog_sha256,
+    payload_sha256, client_payload_sha256,
+    evidence, revised_at, revised_by
+  ) values (
+    p_import_id, 2, 'legacy_catalog_correction', 1,
+    p_evidence -> 'manifest' ->> 'sha256', p_evidence -> 'manifest' ->> 'sha256',
+    v_catalog_sha256, v_post_publication_catalog_sha256,
+    v_catalog_sha256, v_catalog_sha256,
+    jsonb_build_object('operation', 'release_anchor'),
+    now(), auth.uid()
+  );
+  perform set_config('bmh.release_revision_import_id', '', true);
 
   return jsonb_build_object(
     'status', 'released',
@@ -802,16 +777,34 @@ $$;
 -- RELEASED import's live catalog with no lock, no CAS against the shared
 -- ledger, and no receipt: the exact out-of-ledger mutation class retiring
 -- the poster/caption RPCs was supposed to close. If the block belongs to a
--- tracked import, this now takes the canonical catalog locks and appends a
--- `legacy_catalog_correction`-shaped ledger receipt in the SAME
--- transaction as the CAS update, so a future v2 revision/rollback's catalog
--- checksum always accounts for it. That requires SECURITY DEFINER (writing
--- the ledger needs elevated privilege the calling admin session does not
--- have), so authorization is now checked EXPLICITLY inside the function
--- body -- replicating the exact predicate the content_blocks RLS policy
--- itself uses (public.is_admin + public.fn_actor_may_access_catalog_entity_v1)
+-- tracked, RELEASED import, this now takes the canonical catalog locks and
+-- appends a `legacy_catalog_correction`-shaped ledger receipt in the SAME
+-- transaction as the CAS update, so a future v2 revision/rollback/backfill's
+-- catalog checksum always accounts for it. That requires SECURITY DEFINER
+-- (writing the ledger needs elevated privilege the calling admin session
+-- does not have), so authorization is checked EXPLICITLY inside the
+-- function body -- replicating the exact predicate the content_blocks RLS
+-- policy itself uses (public.is_admin + public.fn_actor_may_access_catalog_entity_v1)
 -- rather than relying on RLS to gate a SECURITY DEFINER function, which RLS
 -- does not do.
+--
+-- Round-8 review fixes:
+--   * (finding 3) the release-status check now happens UNDER the canonical
+--     lock, not before it -- the lock is acquired as soon as this block is
+--     known to belong to ANY tracked import, before deciding released vs.
+--     unreleased, so a concurrent release cannot commit in between and
+--     leave the subsequent write on the wrong (unledgered) branch.
+--   * (finding 4) before writing, the live catalog (recomputed fresh, under
+--     lock) must equal the resolved active revision's OWN recorded
+--     catalog -- proving this edit is adjacent to a real, explained state
+--     -- rather than blindly trusting whatever live happens to be and
+--     parenting to max(revision) regardless, which could launder
+--     unexplained drift into trusted lineage. This is always a REAL ledger
+--     value to compare against (never a synthetic/guessed one) because
+--     fn_release_course_import_v1 now inserts a real release-anchor ledger
+--     row for every import released after this migration, and the backfill
+--     absorbs history for every import released before it -- there is no
+--     "fresh revision 1, nothing to compare against" case left.
 create or replace function public.fn_admin_merge_role_play_block_content(
   p_block_id uuid,
   p_expected_scenario_id text,
@@ -827,9 +820,12 @@ set search_path = ''
 as $$
 declare
   v_import_id text;
+  v_block_type text;
   v_row public.content_blocks%rowtype;
-  v_prior_manifest text;
-  v_prior_catalog text;
+  v_active_revision integer;
+  v_active_manifest text;
+  v_active_catalog text;
+  v_live_catalog text;
   v_new_catalog text;
   v_next_revision integer;
   v_payload_sha256 text;
@@ -849,29 +845,49 @@ begin
       using errcode = '42501';
   end if;
 
-  select coalesce(lesson.content_import_id, course.content_import_id) into v_import_id
+  select block.block_type, coalesce(lesson.content_import_id, course.content_import_id)
+  into v_block_type, v_import_id
   from public.content_blocks block
   join public.lessons lesson on lesson.id = block.lesson_id
   join public.modules module on module.id = lesson.module_id
   join public.courses course on course.id = module.course_id
   where block.id = p_block_id;
 
-  -- Only a RELEASED import has an active catalog/ledger to protect --
-  -- mid-QA content carries content_import_id before it is ever released,
-  -- and fn_revise_released_content_blocks_v2 itself refuses to run against
-  -- an import with no release record, so there is nothing for this write
-  -- to desynchronize yet.
-  if v_import_id is not null and not exists (
-    select 1 from public.content_import_release_records release
-    where release.import_id = v_import_id
-  ) then
-    v_import_id := null;
+  -- Check the block type BEFORE taking any lock or proving catalog
+  -- adjacency: a non-role_play block (or a block_id that does not resolve
+  -- at all) is never going to match either branch's final CAS update below
+  -- regardless of the import's release/catalog state, so there is no reason
+  -- to pay the lock cost, block on a concurrent release, or refuse the call
+  -- outright over drift in a catalog this call was never going to touch.
+  if v_block_type is distinct from 'role_play' then
+    return null;
+  end if;
+
+  if v_import_id is not null then
+    -- Round-8 fix (finding 3): acquire the canonical lock BEFORE deciding
+    -- released vs. unreleased -- not after. A concurrent release commit
+    -- landing between that decision and this function's plain-update
+    -- branch would otherwise mutate now-released content with no ledger
+    -- receipt at all.
+    perform pg_advisory_xact_lock(hashtextextended('course-import-catalog-mutation', 0));
+    lock table public.content_import_release_records, public.content_import_release_revisions
+      in share row exclusive mode;
+    perform public.fn_lock_course_import_catalog_tables();
+
+    -- Re-read release status UNDER the lock now held.
+    if not exists (
+      select 1 from public.content_import_release_records release
+      where release.import_id = v_import_id
+    ) then
+      v_import_id := null;
+    end if;
   end if;
 
   if v_import_id is null then
-    -- Not part of any RELEASED import: a plain CAS merge, matching the
-    -- previous behavior exactly (no ledger involved -- there is no catalog
-    -- to keep in sync for content this mechanism never tracks).
+    -- Not part of any RELEASED import (never tracked, or tracked but
+    -- confirmed still unreleased under lock above): a plain CAS merge, no
+    -- ledger involved -- there is no catalog to keep in sync for content
+    -- this mechanism never tracks.
     update public.content_blocks
        set content = content || jsonb_build_object(
              'scenario_id', p_scenario_id, 'title', p_title, 'height_px', p_height_px
@@ -887,18 +903,24 @@ begin
     return to_jsonb(v_row.content);
   end if;
 
-  -- Tracked import: route under the SAME canonical locks every revision RPC
-  -- uses, so a concurrent v2 revision/rollback/backfill cannot compute a
-  -- catalog checksum that silently omits this edit.
-  perform pg_advisory_xact_lock(hashtextextended('course-import-catalog-mutation', 0));
-  lock table public.content_import_release_records, public.content_import_release_revisions
-    in share row exclusive mode;
-  perform public.fn_lock_course_import_catalog_tables();
-
-  select active.active_manifest_sha256 into v_prior_manifest
+  -- Released import, canonical locks already held. Resolve the CURRENT
+  -- active revision's own recorded manifest/catalog -- always a real
+  -- ledger value now (see the fix comment above).
+  select active.active_revision, active.active_manifest_sha256, active.active_catalog_sha256
+  into v_active_revision, v_active_manifest, v_active_catalog
   from public.content_import_active_release_v1 active
   where active.import_id = v_import_id;
-  v_prior_catalog := public.fn_course_import_catalog_sha256(v_import_id);
+
+  -- Round-8 fix (finding 4): prove adjacency BEFORE writing. If live
+  -- (recomputed fresh, under lock) does not equal what the active revision
+  -- itself recorded, something moved the catalog outside this ledger's own
+  -- accounting -- parenting a new receipt to that revision anyway would
+  -- launder the unexplained drift into trusted lineage.
+  v_live_catalog := public.fn_course_import_catalog_sha256(v_import_id);
+  if v_live_catalog <> v_active_catalog then
+    raise exception 'Released content block edit refused: the live catalog does not match the active ledger revision -- refusing to parent a new receipt to an unexplained state.'
+      using errcode = '40001';
+  end if;
 
   update public.content_blocks
      set content = content || jsonb_build_object(
@@ -940,9 +962,9 @@ begin
     payload_sha256, client_payload_sha256,
     evidence, revised_by
   ) values (
-    v_import_id, v_next_revision, 'legacy_catalog_correction', v_next_revision - 1,
-    v_prior_manifest, v_prior_manifest,
-    v_prior_catalog, v_new_catalog,
+    v_import_id, v_next_revision, 'legacy_catalog_correction', v_active_revision,
+    v_active_manifest, v_active_manifest,
+    v_active_catalog, v_new_catalog,
     v_payload_sha256, v_payload_sha256,
     jsonb_build_object('operation', 'admin_role_play_scenario_bind', 'block_id', p_block_id),
     auth.uid()
