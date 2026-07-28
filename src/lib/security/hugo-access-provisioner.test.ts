@@ -54,6 +54,15 @@ describe("Hugo Institute access provisioner contract", () => {
     );
   });
 
+  it("fails closed on duplicate email identities instead of choosing a row", () => {
+    expect(migration).not.toMatch(/\blimit\s+1\b/i);
+    expect(migration).toContain("v_auth_count integer");
+    expect(migration).toContain("select count(*) into v_auth_count");
+    expect(migration).toContain("More than one Auth identity matches the email.");
+    expect(migration).toContain("More than one Institute identity matches the email.");
+    expect(migration).toContain("'ambiguous_identity'");
+  });
+
   it("validates Institute roles and role groups without logging secrets", () => {
     expect(migration).toContain("('owner', 'admin', 'learner')");
     expect(migration).toContain("role_group_ids must be an array.");

@@ -371,6 +371,7 @@ declare
   v_profile public.profiles%rowtype;
   v_grant public.hugo_access_grants%rowtype;
   v_profile_count integer;
+  v_auth_count integer;
   v_auth_id uuid;
   v_app_id uuid;
   v_ids uuid[] := '{}'::uuid[];
@@ -456,6 +457,17 @@ begin
     v_config := jsonb_set(v_config, '{role_group_ids}', '[]'::jsonb, true);
   end if;
 
+  select count(*) into v_profile_count
+  from public.profiles
+  where lower(email) = lower(btrim(p_email));
+  if v_profile_count > 1 then
+    v_receipt := public.fn_hugo_receipt(p_operation_id, p_app_user_id, p_role, v_config, v_status,
+      p_access_expires_at, null, '{}'::jsonb, 'missing', null, null, false,
+      'ambiguous_identity', 'More than one Institute identity matches the email.');
+    insert into public.hugo_access_operations values (p_operation_id, 'grant', p_email, '{}'::jsonb, v_receipt);
+    return v_receipt;
+  end if;
+
   if p_app_user_id is not null then
     begin
       v_app_id := p_app_user_id::uuid;
@@ -482,17 +494,21 @@ begin
       return v_receipt;
     end if;
   else
-    select count(*) into v_profile_count from public.profiles where lower(email) = lower(btrim(p_email));
-    if v_profile_count > 1 then
-      v_receipt := public.fn_hugo_receipt(p_operation_id, null, p_role, v_config, v_status,
-        p_access_expires_at, null, '{}'::jsonb, 'missing', null, null, false,
-        'ambiguous_identity', 'More than one Institute identity matches the email.');
-      insert into public.hugo_access_operations values (p_operation_id, 'grant', p_email, '{}'::jsonb, v_receipt);
-      return v_receipt;
-    end if;
     select * into v_profile from public.profiles where lower(email) = lower(btrim(p_email)) for update;
     if not found then
-      select id into v_auth_id from auth.users where lower(email) = lower(btrim(p_email)) limit 1;
+      select count(*) into v_auth_count
+      from auth.users
+      where lower(email) = lower(btrim(p_email));
+      if v_auth_count > 1 then
+        v_receipt := public.fn_hugo_receipt(p_operation_id, null, p_role, v_config, v_status,
+          p_access_expires_at, null, '{}'::jsonb, 'missing', null, null, false,
+          'ambiguous_identity', 'More than one Auth identity matches the email.');
+        insert into public.hugo_access_operations values (p_operation_id, 'grant', p_email, '{}'::jsonb, v_receipt);
+        return v_receipt;
+      end if;
+      select id into v_auth_id
+      from auth.users
+      where lower(email) = lower(btrim(p_email));
       if v_auth_id is null then
         v_receipt := public.fn_hugo_receipt(p_operation_id, null, p_role, v_config, v_status,
           p_access_expires_at, null, '{}'::jsonb, 'missing', null, null, false,
@@ -662,7 +678,7 @@ begin
       null, '{}'::jsonb, 'missing', null, null, false, 'ambiguous_identity',
       'More than one Institute identity matches the email.');
   end if;
-  select * into v_profile from public.profiles where lower(email) = lower(btrim(p_email)) limit 1;
+  select * into v_profile from public.profiles where lower(email) = lower(btrim(p_email));
   if not found then
     return public.fn_hugo_receipt(gen_random_uuid(), null, null, '{}'::jsonb, 'active', null,
       null, '{}'::jsonb, 'missing', null, null, true, null, null);

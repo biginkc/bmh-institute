@@ -53,6 +53,20 @@ begin
     'apply RPC lost idempotency receipts';
   assert position('role_group_ids' in v_definition) > 0,
     'apply RPC lost role-group validation';
+  assert position('v_auth_count' in v_definition) > 0,
+    'apply RPC lost Auth duplicate detection';
+  assert position('More than one Auth identity matches the email.' in v_definition) > 0,
+    'apply RPC lost sanitized Auth ambiguity error';
+  assert position('ambiguous_identity' in v_definition) > 0,
+    'apply RPC lost ambiguous-identity error code';
+
+  select pg_get_functiondef(p.oid) into v_definition
+  from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+  where n.nspname = 'public' and p.proname = 'hugo_inspect_access';
+  assert position('ambiguous_identity' in v_definition) > 0,
+    'inspect RPC lost duplicate-identity guard';
+  assert v_definition !~* '\mlimit\s+1\M',
+    'inspect RPC must not choose an arbitrary identity';
 
   select pg_get_functiondef(p.oid) into v_definition
   from pg_proc p join pg_namespace n on n.oid = p.pronamespace
