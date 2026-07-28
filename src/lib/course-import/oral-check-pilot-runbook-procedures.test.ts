@@ -109,6 +109,23 @@ describe("Andrea Oral Check pilot runbook procedures", () => {
     expect(preflight).toContain("raise exception");
   });
 
+  it("documents the executable gate as the path of record, not a pasted snippet", () => {
+    // Round-6 finding 4's recommendation was an executable hard gate that
+    // resolves the linked project URL, exits unless it is the production
+    // project, and uses that SAME verified connection for preflight, apply,
+    // and postflight. A runbook that only shows SQL leaves a window where the
+    // connection verified and the connection written to are different.
+    expect(section).toContain(
+      "scripts/course-content/apply-oral-check-pilot-to-production.ts",
+    );
+    expect(section).toContain("npm run course:oral-check:apply");
+    // The dry run must be documented as the default, and the write path must
+    // carry the repo's established explicit-execute triple.
+    expect(section).toContain("--execute");
+    expect(section).toContain("--allow-production");
+    expect(section).toContain("--confirm=bmh-employee-training-v1");
+  });
+
   it("keeps the preflight ahead of the apply step in the documented order", () => {
     const preflightAt = section.indexOf("Target preflight");
     const applyAt = section.indexOf("Apply the 3 migrations to production");

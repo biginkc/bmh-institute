@@ -443,11 +443,46 @@ Before applying any of the three:
    caught. If the live recheck fails, stop. Do not apply the migration until
    the attestation is reconciled with the live state or the mismatch is
    understood and fixed forward.
-3. **Target preflight (do this before every apply, not just the first
-   time):** prove the connection is genuinely the Institute production
-   project (`dhvfsyteqsxagokoerrx`) before running anything. Run this against
-   the exact same connection string you are about to migrate with, and only
-   proceed if it prints `preflight ok`:
+3. **Target preflight and apply, through the executable gate.** Do not run
+   the migration by hand. Use the gate, which resolves the project identity
+   from the connection itself and then uses that same resolved connection for
+   the preflight, the apply, and the postflight:
+
+   ```bash
+   BMH_INSTITUTE_PRODUCTION_DB_URL=... npm run course:oral-check:apply
+   ```
+
+   That is a dry run. It performs the connection gate and the full preflight,
+   writes nothing, and stops. When it passes, apply for real:
+
+   ```bash
+   BMH_INSTITUTE_PRODUCTION_DB_URL=... npm run course:oral-check:apply -- \
+     --execute --allow-production --confirm=bmh-employee-training-v1
+   ```
+
+   The script is `scripts/course-content/apply-oral-check-pilot-to-production.ts`.
+   Its first phase refuses unless the connection resolves to project
+   `dhvfsyteqsxagokoerrx`, which it reads from the pooler username
+   (`postgres.<project-ref>`) rather than from anything the target database
+   says about itself. Round-6 review is the reason that ordering matters: a
+   cloned test project carrying the same release record and the same catalog
+   hash would satisfy every SQL assertion below while production stayed
+   untouched, so project identity has to be established before any query
+   result is trusted. The refusal logic is unit tested against a deliberately
+   adversarial set of near misses in
+   `src/lib/course-import/oral-check-pilot-deploy-target.test.ts`, including a
+   different project ref, a direct connection with no ref, a host that merely
+   contains the real pooler hostname, and the ref smuggled into the password,
+   the database name, or a query parameter.
+
+   Doing this as one command is the point. A human pasting SQL into one
+   session and then running `supabase db push` in another leaves a real window
+   where the connection that was verified and the connection that gets written
+   to are not the same one.
+
+   For reference, these are the exact preflight assertions the gate runs. You
+   can run them by hand against the target to inspect a failure, but the gate
+   is the path of record, and only proceed if it prints `preflight ok`:
 
    ```sql
    do $$
@@ -507,15 +542,18 @@ Before applying any of the three:
    aimed at a wrong and entirely empty project skips quietly by design, so
    this preflight and the step 3b postflight are what catch it.
 3a. Apply the 3 migrations to production in numeric order (`20260728020000`,
-   then `20260728030000`, then `20260728050000`) — this is the normal
-   `supabase db push` behavior since they sort in that order by filename,
-   but if applying by hand, do not reorder them. The actual insertion
-   (in `20260728050000`) is atomic, hash-pinned CAS against the exact
-   expected prior catalog state, and refuses a second invocation
+   then `20260728030000`, then `20260728050000`). The gate's `--execute`
+   phase does this for you over the verified connection, and it is the normal
+   `supabase db push` behavior anyway since they sort in that order by
+   filename. If you ever do apply by hand, do not reorder them. The actual
+   insertion (in `20260728050000`) is atomic, hash-pinned CAS against the
+   exact expected prior catalog state, and refuses a second invocation
    (SQLSTATE 40001).
-3b. **Receipt and block postflight (do this immediately after `20260728050000`
-   commits):** confirm the exact evidence row and the exact 3 rows exist,
-   not just that `supabase db push` reported success:
+3b. **Receipt and block postflight.** The gate runs this automatically as its
+   final phase over the same verified connection, and exits non-zero if it
+   does not hold. These are the same assertions, if you need to inspect a
+   failure by hand. Confirm the exact evidence row and the exact 3 rows
+   exist, not just that `supabase db push` reported success:
 
    ```sql
    select import_id, prior_catalog_sha256, replacement_catalog_sha256,
