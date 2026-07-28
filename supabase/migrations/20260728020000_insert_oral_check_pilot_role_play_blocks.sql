@@ -30,10 +30,11 @@
 --
 -- HANDOFF NOTE FOR WHOEVER RESUMES PR #128 (claude/versioned-content-block-revision-v2):
 -- This migration's `fn_guard_imported_content_block_insert_v1` extension
--- below is safe under CURRENT main (verified: this migration applies and
--- self-invokes cleanly against a fresh database with no #128 migrations
--- present -- see supabase/tests/056_oral_check_pilot_role_play_blocks.sql).
--- It is NOT automatically safe once #128 merges. #128's own migration
+-- below is safe under CURRENT main (verified: fn_insert_oral_check_pilot_role_play_blocks()
+-- applies and, once actually invoked, self-invokes cleanly against a fresh
+-- database with no #128 migrations present -- see
+-- supabase/tests/056_oral_check_pilot_role_play_blocks.sql). It is NOT
+-- automatically safe once #128 merges. #128's own migration
 -- (20260727180000) introduces a WHOLESALE NEW function,
 -- fn_guard_imported_content_block_insert_v2, and repoints the
 -- guard_imported_catalog_insert TRIGGER to call v2 instead of v1 -- it does
@@ -41,26 +42,31 @@
 -- v2 has no knowledge of this migration's oral-check-pilot marker (it only
 -- recognizes the apply-marker and its own generalized v2-revision-payload
 -- check). Because #128's migration timestamps (20260727180000,
--- 20260727180500) sort BEFORE this file's (20260728020000), a full
--- fresh-database replay of the ENTIRE migration history after #128 merges
--- would apply #128's migrations first (installing v2 and repointing the
--- trigger), THEN this migration -- whose self-invoking insert at the bottom
--- would then hit the ALREADY-ACTIVE v2 trigger, which rejects it outright,
--- aborting this migration on replay. This is fine for tonight's actual
--- production apply (this migration runs standalone against real production,
--- which will never see #128's migrations run before it, only after this one
--- has already committed) -- and fine for every environment where this
--- migration is applied BEFORE #128 ever merges. It only bites on a
--- from-scratch fresh-database rebuild (a new environment, a CI/hosted-test
--- rebuild) performed AFTER #128 has merged. Whoever resumes #128 must
--- either (a) add an equivalent oral-check-pilot exact-hash branch to
--- fn_guard_imported_content_block_insert_v2 mirroring what this migration
--- added to v1, or (b) confirm every real target database already has this
--- migration applied before #128 merges, so a from-scratch replay never
--- actually needs to run this migration's insert branch again (it would only
--- ever be replayed against an EMPTY database that has never had the oral
--- checks inserted, which should not occur in practice once this has shipped
--- everywhere -- but confirm before assuming). Separately: #128's phase-2
+-- 20260727180500) sort BEFORE this file's (20260728020000) and BEFORE
+-- 20260728050000_apply_oral_check_pilot_role_play_blocks.sql (the
+-- self-invoking insert itself, split out from this file in round-4 review
+-- -- see that migration's header), a full fresh-database replay of the
+-- ENTIRE migration history after #128 merges would apply #128's migrations
+-- first (installing v2 and repointing the trigger), THEN this migration and
+-- 20260728030000 (installing the insert and rollback functions, neither of
+-- which mutate the live catalog on their own), THEN 20260728050000's
+-- self-invoking insert -- which would hit the ALREADY-ACTIVE v2 trigger,
+-- which rejects it outright, aborting that migration on replay. This is
+-- fine for the actual production apply (this migration set runs standalone
+-- against real production, which will never see #128's migrations run
+-- before it, only after 20260728050000 has already committed) -- and fine
+-- for every environment where this migration set is applied BEFORE #128
+-- ever merges. It only bites on a from-scratch fresh-database rebuild (a
+-- new environment, a CI/hosted-test rebuild) performed AFTER #128 has
+-- merged. Whoever resumes #128 must either (a) add an equivalent
+-- oral-check-pilot exact-hash branch to fn_guard_imported_content_block_insert_v2
+-- mirroring what this migration added to v1, or (b) confirm every real
+-- target database already has 20260728050000 applied before #128 merges,
+-- so a from-scratch replay never actually needs to run that migration's
+-- insert branch again (it would only ever be replayed against an EMPTY
+-- database that has never had the oral checks inserted, which should not
+-- occur in practice once this has shipped everywhere -- but confirm before
+-- assuming). Separately: #128's phase-2
 -- backfill (20260727180500, fn_backfill_v1_content_block_revisions) merges
 -- three OTHER legacy receipt tables into its shared ledger via a causal
 -- replay; it does not know about content_import_oral_check_pilot_role_play_records
@@ -492,21 +498,18 @@ from public, anon, authenticated;
 grant execute on function public.fn_insert_oral_check_pilot_role_play_blocks()
 to service_role;
 
--- Run it now. On a fresh/local database (no bmh-employee-training-v1
--- release record at all) this is a no-op catch: the function raises before
--- ever reaching the insert, which the local test harness handles by
--- building a matching minimal fixture first (see
--- 056_oral_check_pilot_role_play_blocks.sql) rather than expecting this
--- bare `do` block to succeed against an empty database.
-do $$
-begin
-  if exists (
-    select 1 from public.content_import_release_records
-    where import_id = 'bmh-employee-training-v1'
-  ) then
-    perform set_config('request.jwt.claim.role', 'service_role', true);
-    perform public.fn_insert_oral_check_pilot_role_play_blocks();
-    perform set_config('request.jwt.claim.role', '', true);
-  end if;
-end;
-$$;
+-- This migration DELIBERATELY does not self-invoke
+-- fn_insert_oral_check_pilot_role_play_blocks() here (round-4 Codex review,
+-- finding 1). Supabase applies each migration file as its own transactional
+-- batch, so a self-invoking insert in THIS file could commit the 3 live
+-- required blocks before a later-numbered migration installing the
+-- rollback capability ever ran -- recreating the exact
+-- insert-with-no-prepared-rollback incident state finding 3 (round-3) was
+-- meant to eliminate, if deployment stopped or failed partway between the
+-- two files. The actual forward invocation now lives in
+-- 20260728050000_apply_oral_check_pilot_role_play_blocks.sql, which is
+-- numbered after BOTH this file and
+-- 20260728030000_rollback_oral_check_pilot_role_play_blocks.sql, and
+-- asserts the rollback function and its evidence table actually exist
+-- before invoking this one. This file only ever installs the function and
+-- its evidence table/guard -- it makes no live-catalog changes on its own.

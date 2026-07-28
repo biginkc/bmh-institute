@@ -6,6 +6,7 @@ import type {
 } from "./manifest";
 import { validateCourseManifest } from "./manifest";
 import { buildImportPlan, type ImportOperation, type ImportPlan } from "./operations";
+import { postgresJsonbText } from "./postgres-jsonb";
 
 export const RELEASED_CONTENT_BLOCK_REVISION = {
   importId: "bmh-employee-training-v1",
@@ -431,24 +432,6 @@ export function assertReleasedContentBlockRevisedState(
       );
     }
   }
-}
-
-function postgresJsonbText(value: unknown): string {
-  if (value === null || typeof value === "boolean" || typeof value === "number") {
-    return JSON.stringify(value);
-  }
-  if (typeof value === "string") return JSON.stringify(value);
-  if (Array.isArray(value)) return `[${value.map(postgresJsonbText).join(", ")}]`;
-  if (typeof value === "object") {
-    const entries = Object.entries(value as Record<string, unknown>)
-      .sort(([left], [right]) =>
-        left.length - right.length || Buffer.compare(Buffer.from(left), Buffer.from(right))
-      );
-    return `{${entries.map(([key, item]) =>
-      `${JSON.stringify(key)}: ${postgresJsonbText(item)}`
-    ).join(", ")}}`;
-  }
-  throw new Error("Released content revision payload contains a non-JSON value.");
 }
 
 export function releasedContentBlockRevisionConfirmation(input: {

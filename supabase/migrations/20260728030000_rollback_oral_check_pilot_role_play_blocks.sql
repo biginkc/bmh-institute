@@ -147,6 +147,8 @@ begin
     public.content_blocks,
     public.role_play_results,
     public.user_block_progress,
+    public.user_video_progress,
+    public.user_video_completion_history,
     public.user_course_resume
   in share row exclusive mode;
 
@@ -180,20 +182,34 @@ begin
       using errcode = '40001';
   end if;
 
-  -- Refuse to silently cascade away real learner activity
-  -- (role_play_results and user_block_progress both ON DELETE CASCADE on
-  -- content_blocks.id). An operator rolling back a broken scenario must
-  -- handle that data on purpose, not have it disappear as a side effect.
+  -- Refuse to silently cascade away (or blow up on) real learner activity.
+  -- role_play_results, user_block_progress, and user_video_progress are all
+  -- ON DELETE CASCADE on content_blocks.id (silent data loss if not
+  -- checked first); user_video_completion_history is ON DELETE RESTRICT
+  -- (an uncontrolled foreign-key-violation exception instead of this
+  -- function's own clear, controlled refusal, if not checked first). Round-4
+  -- review (finding 2) caught that this function originally omitted the
+  -- video tables -- normal role-play playback shouldn't populate them for a
+  -- role_play block, but malformed or directly-written data could, and this
+  -- mirrors the exact same 5-table check
+  -- 20260722032500_prune_deferred_role_play_blocks.sql already uses for the
+  -- analogous "remove role-play blocks safely" operation. An operator
+  -- rolling back a broken scenario must handle that data on purpose, not
+  -- have it disappear as a side effect or surface as an opaque FK error.
   select count(*) into v_learner_activity_count
   from (
     select 1 from public.role_play_results where block_id = any(v_expected_block_ids)
     union all
     select 1 from public.user_block_progress where block_id = any(v_expected_block_ids)
     union all
+    select 1 from public.user_video_progress where block_id = any(v_expected_block_ids)
+    union all
+    select 1 from public.user_video_completion_history where block_id = any(v_expected_block_ids)
+    union all
     select 1 from public.user_course_resume where last_block_id = any(v_expected_block_ids)
   ) activity;
   if v_learner_activity_count > 0 then
-    raise exception 'Oral-check pilot role-play rollback refused: % row(s) of real learner activity exist against the 3 target blocks (role_play_results, user_block_progress, or user_course_resume.last_block_id). Resolve or intentionally accept that data loss before rolling back -- this function will not silently cascade-delete it.',
+    raise exception 'Oral-check pilot role-play rollback refused: % row(s) of real learner activity exist against the 3 target blocks (role_play_results, user_block_progress, user_video_progress, user_video_completion_history, or user_course_resume.last_block_id). Resolve or intentionally accept that data loss before rolling back -- this function will not silently cascade-delete or FK-fail on it.',
       v_learner_activity_count
       using errcode = '40001';
   end if;

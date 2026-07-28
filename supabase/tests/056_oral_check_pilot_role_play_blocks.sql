@@ -497,6 +497,61 @@ begin
   ) <> 1 then
     raise exception 'block-oral-check-slot-02 content does not byte-match the migration''s hardcoded payload';
   end if;
+  -- Round-4 review (finding 3) caught that this deep content check only
+  -- ever covered slot 02, leaving slots 05 and 16 free to drift silently.
+  -- Extend the same exact byte-match to both.
+  if (
+    select count(*) from public.content_blocks
+    where id = '4464ecdd-2650-59ed-a525-78871e846d20'
+      and content = jsonb_build_object(
+        'mode', 'oral_check', 'height_px', 760,
+        'scenario_id', 'fd3b4f85-2407-426b-a21b-db9d7163ebbb',
+        'scenario_spec', jsonb_build_object(
+          'assignment_source_key', 'oral-check-slot-05',
+          'context', 'This lesson covers the As-Is Cash Home Purchase offer, the four-step process, why sellers accept a below-market price, and how the offer number gets built. Andrea checks it out loud because explaining the offer to a real seller is different from reciting the script.',
+          'learner_goal', 'Demonstrate accurate understanding of the offer and why it works, in your own words.',
+          'success_criteria', jsonb_build_array(
+            'Explains the core offer and the four-step process accurately',
+            'Explains why sellers accept a below-market price (speed/certainty/simplicity/convenience trade-off)',
+            'Walks through the offer formula (ARV minus repairs minus margin) with the correct general shape',
+            'Names at least 2 Ideal-Seller-Profile criteria OR 2 not-a-fit criteria'
+          ),
+          'fail_conditions', jsonb_build_array(
+            'Confuses or misstates the core offer terms (e.g., says the deal is not cash or claims commissions are charged)',
+            'Cannot walk through the four-step process or the offer formula''s shape',
+            'Gives no grounded answer -- guesses or answers a different question'
+          )
+        )
+      )
+  ) <> 1 then
+    raise exception 'block-oral-check-slot-05 content does not byte-match the migration''s hardcoded payload';
+  end if;
+  if (
+    select count(*) from public.content_blocks
+    where id = '34758403-1ddd-5e3c-a054-b2f28310d8b8'
+      and content = jsonb_build_object(
+        'mode', 'oral_check', 'height_px', 760,
+        'scenario_id', '7765693a-5f8a-4aa1-ac39-c21866624006',
+        'scenario_spec', jsonb_build_object(
+          'assignment_source_key', 'oral-check-slot-16',
+          'context', 'This lesson covers what a KPI is, the six pipeline metrics tracked left to right, and how to use that order to diagnose exactly where a funnel is breaking. Andrea checks it out loud because using the numbers to self-diagnose is different from reciting the list.',
+          'learner_goal', 'Demonstrate accurate understanding of the six metrics and how to read them, in your own words.',
+          'success_criteria', jsonb_build_array(
+            'Names the six metrics in the correct left-to-right order',
+            'Explains dial count as an effort indicator, not a strict goal (names the speed-dialing risk)',
+            'Correctly diagnoses at least one funnel-gap scenario (e.g., high quality conversations / low process calls = discovery or disqualifying-too-fast problem)',
+            'Explains why metrics are tracked left-to-right (to pinpoint exactly where in the funnel something broke)'
+          ),
+          'fail_conditions', jsonb_build_array(
+            'Confuses or misstates the six metrics or their order',
+            'Cannot explain the left-to-right diagnostic logic when asked directly',
+            'Gives no grounded answer -- guesses or answers a different question'
+          )
+        )
+      )
+  ) <> 1 then
+    raise exception 'block-oral-check-slot-16 content does not byte-match the migration''s hardcoded payload';
+  end if;
 end;
 $$;
 

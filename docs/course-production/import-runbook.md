@@ -339,18 +339,41 @@ must appear once and the count must not change. Finally upload the canary
 manifest to that test project and run importer verification before scheduling
 any production migration.
 
-### Andrea Oral Check pilot deployment (`20260728020000_insert_oral_check_pilot_role_play_blocks.sql`)
+### Andrea Oral Check pilot deployment (3 migrations: `20260728020000` / `20260728030000` / `20260728050000`)
 
-This is a standalone, one-shot migration (PR #130) that inserts 3
-`role_play` blocks bound to 3 real, live Closer Lab scenario IDs into 3
-already-published lessons. It is separate from the general course importer
-above and from the versioned content-block-revision system
-(`claude/versioned-content-block-revision-v2`, PR #128, parked). Deploy in
-this exact order:
+This is a standalone, one-shot change (PR #130) that inserts 3 `role_play`
+blocks bound to 3 real, live Closer Lab scenario IDs into 3 already-published
+lessons. It is separate from the general course importer above and from the
+versioned content-block-revision system
+(`claude/versioned-content-block-revision-v2`, PR #128, parked). It is split
+across 3 migrations, applied in this exact order (Supabase applies each
+migration file as its own transactional batch, and round-4 review's finding
+1 is specifically about what can go wrong if this order is violated —
+never apply these out of order or skip one):
+
+1. **`20260728020000_insert_oral_check_pilot_role_play_blocks.sql`** — installs
+   `fn_insert_oral_check_pilot_role_play_blocks()` and its evidence table.
+   Makes NO live catalog changes on its own; it only defines the function.
+2. **`20260728030000_rollback_oral_check_pilot_role_play_blocks.sql`** —
+   installs the forward-rollback capability (see step 4 below) BEFORE the
+   forward insertion is ever allowed to run. Also makes no live catalog
+   changes on its own.
+3. **`20260728050000_apply_oral_check_pilot_role_play_blocks.sql`** — the
+   only one of the three that actually mutates the live catalog. It asserts
+   both `fn_insert_oral_check_pilot_role_play_blocks()` and the rollback
+   capability from step 2 exist, then performs the actual guarded,
+   one-shot-refusing insertion. If this migration is ever applied without
+   step 2 having already committed, it refuses outright (SQLSTATE 55000)
+   rather than inserting the 3 blocks with no rollback path prepared — this
+   is what makes the deployment order self-enforcing at the SQL level, not
+   just a runbook convention.
+
+Before applying any of the three:
 
 1. **Local verification** (already covered by CI): `run-controller-gate-pr-harness.mjs`
-   test 056 exercises the migration's real insertion and one-shot-refusal
-   path against a local PG cluster seeded from real production catalog rows.
+   test 056 exercises the real insertion and one-shot-refusal path, and
+   test 057 exercises the real rollback path, both against a local PG
+   cluster seeded from real production catalog rows.
 2. **MANDATORY gate — run the live recheck against production, credentialed,
    immediately before applying the migration:**
 
@@ -375,13 +398,17 @@ this exact order:
    skipped in normal CI. If it fails, stop — do not apply the migration
    until the attestation is reconciled with the live state or the mismatch
    is understood and fixed forward.
-3. Apply `20260728020000_insert_oral_check_pilot_role_play_blocks.sql` to
-   production. It is atomic, hash-pinned CAS against the exact expected
-   prior catalog state, and refuses a second invocation (SQLSTATE 40001).
-4. If a rollback becomes necessary after the migration has committed, the
-   forward-rollback capability is already in place, ready but never
-   auto-invoked:
-   `supabase/migrations/20260728040000_rollback_oral_check_pilot_role_play_blocks.sql`
+3. Apply the 3 migrations to production in numeric order (`20260728020000`,
+   then `20260728030000`, then `20260728050000`) — this is the normal
+   `supabase db push` behavior since they sort in that order by filename,
+   but if applying by hand, do not reorder them. The actual insertion
+   (in `20260728050000`) is atomic, hash-pinned CAS against the exact
+   expected prior catalog state, and refuses a second invocation
+   (SQLSTATE 40001).
+4. If a rollback becomes necessary after `20260728050000` has committed, the
+   forward-rollback capability installed by `20260728030000` is already in
+   place, ready but never auto-invoked:
+   `supabase/migrations/20260728030000_rollback_oral_check_pilot_role_play_blocks.sql`
    defines `public.fn_rollback_oral_check_pilot_role_play_blocks()`,
    rehearsed end-to-end against a real database state with the insertion
    already applied in
@@ -397,10 +424,14 @@ this exact order:
    (not a second hand-guessed catalog-hash constant), refuses if the live
    catalog or the 3 target rows have drifted since the pilot insertion,
    refuses if real learner activity exists against any of the 3 blocks
-   (role_play_results, user_block_progress, user_course_resume) rather than
-   silently cascade-deleting it, removes exactly the 3 inserted rows,
-   verifies the catalog hash is restored to the exact pre-insert value, and
-   records its own immutable rollback evidence row
+   (role_play_results, user_block_progress, user_video_progress,
+   user_video_completion_history, or user_course_resume — the same 5-table
+   check `20260722032500_prune_deferred_role_play_blocks.sql` uses for the
+   analogous "remove role-play blocks safely" operation) rather than
+   silently cascade-deleting it or hitting an opaque foreign-key error,
+   removes exactly the 3 inserted rows, verifies the catalog hash is
+   restored to the exact pre-insert value, and records its own immutable
+   rollback evidence row
    (`content_import_oral_check_pilot_role_play_rollback_records`). It is
    genuinely one-shot: a second invocation is refused unconditionally.
 
