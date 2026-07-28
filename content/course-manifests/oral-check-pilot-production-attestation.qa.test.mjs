@@ -217,15 +217,48 @@ test("live recheck: the attested role_play/persona/goal data still matches produ
     assert.ok(row, `${scenario.block_source_key} scenario_id ${scenario.role_play_id} still exists in production`);
     assert.equal(row.archived_at, null, `${scenario.block_source_key} is still not archived`);
     assert.equal(row.managed_source_key, scenario.role_play_managed_source_key);
+    // Round-3 review (finding 2) caught that this test used to stop at
+    // counts and totals: it never compared the role-play TITLE, the
+    // PERSONA IDENTITY, or each individual goal's id/name/order/weight
+    // against the checked-in attestation. Four different active goals that
+    // happen to also total weight 100 would have passed this test cleanly
+    // while learners were actually scored against the wrong rubric
+    // entirely. Every field below is now deep-compared against the exact
+    // checked-in attestation, not just shape/count/sum.
+    assert.equal(row.title, scenario.title, `${scenario.block_source_key} role_play title matches the attested title exactly`);
+    assert.equal(row.persona.id, scenario.persona_id, `${scenario.block_source_key} persona id matches the attested persona identity`);
+    assert.equal(row.persona.name, scenario.persona_name, `${scenario.block_source_key} persona name matches the attested persona identity`);
     assert.equal(row.persona.voice_id, scenario.voice_id, `${scenario.block_source_key} voice_id has not drifted`);
     assert.equal(row.persona.archived_at, null, `${scenario.block_source_key} persona is still not archived`);
     assert.equal(row.persona.managed_source_key, scenario.persona_managed_source_key);
-    assert.equal(row.role_play_goals.length, 4);
-    const liveWeightSum = row.role_play_goals.reduce((sum, link) => sum + Number(link.weight), 0);
-    assert.equal(liveWeightSum, 100);
-    for (const link of row.role_play_goals) {
-      assert.equal(link.rubric_goals.archived_at, null);
-      assert.ok(link.rubric_goals.rubric_goal_documents[0]?.count >= 1);
+    assert.equal(row.role_play_goals.length, 4, `${scenario.block_source_key} has exactly 4 live goal links`);
+    assert.equal(scenario.rubric_goals.length, 4, `${scenario.block_source_key} has exactly 4 attested goal links`);
+
+    const liveSortOrders = row.role_play_goals.map((link) => link.sort_order).slice().sort((left, right) => left - right);
+    assert.deepEqual(liveSortOrders, [0, 1, 2, 3], `${scenario.block_source_key} live goal links have exactly sort_order 0-3, no duplicates or gaps`);
+    const attestedSortOrders = scenario.rubric_goals.map((goal) => goal.sort_order).slice().sort((left, right) => left - right);
+    assert.deepEqual(attestedSortOrders, [0, 1, 2, 3], `${scenario.block_source_key} attested goals have exactly sort_order 0-3, no duplicates or gaps`);
+
+    const liveGoalsBySortOrder = [...row.role_play_goals].sort((left, right) => left.sort_order - right.sort_order);
+    const attestedGoalsBySortOrder = [...scenario.rubric_goals].sort((left, right) => left.sort_order - right.sort_order);
+    for (let index = 0; index < attestedGoalsBySortOrder.length; index += 1) {
+      const liveGoal = liveGoalsBySortOrder[index];
+      const attestedGoal = attestedGoalsBySortOrder[index];
+      // Binds id, name, order, individual weight, and document count
+      // together for the goal AT THIS EXACT rubric position -- a swapped or
+      // substituted rubric (same 4 weights summing to 100, wrong goals)
+      // fails here even though total-weight and count checks alone would
+      // not catch it.
+      assert.equal(liveGoal.rubric_goals.id, attestedGoal.id, `${scenario.block_source_key} goal at sort_order ${attestedGoal.sort_order} id matches`);
+      assert.equal(liveGoal.rubric_goals.name, attestedGoal.name, `${scenario.block_source_key} goal at sort_order ${attestedGoal.sort_order} name matches`);
+      assert.equal(Number(liveGoal.weight), attestedGoal.weight, `${scenario.block_source_key} goal at sort_order ${attestedGoal.sort_order} individual weight matches`);
+      assert.equal(liveGoal.rubric_goals.archived_at, null, `${scenario.block_source_key} goal at sort_order ${attestedGoal.sort_order} is not archived`);
+      const liveDocumentCount = Number(liveGoal.rubric_goals.rubric_goal_documents?.[0]?.count ?? 0);
+      assert.equal(liveDocumentCount, attestedGoal.document_count, `${scenario.block_source_key} goal at sort_order ${attestedGoal.sort_order} document_count matches`);
+      assert.ok(liveDocumentCount >= 1, `${scenario.block_source_key} goal at sort_order ${attestedGoal.sort_order} has at least one supporting document`);
     }
+
+    const liveWeightSum = row.role_play_goals.reduce((sum, link) => sum + Number(link.weight), 0);
+    assert.equal(liveWeightSum, 100, `${scenario.block_source_key} live goal weights still sum to 100`);
   }
 });

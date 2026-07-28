@@ -325,7 +325,21 @@ export function finalizeScenarioProductionMapping({ manifest, ledger, catalog, c
     for (const courseModule of course.modules) {
       for (const lesson of courseModule.lessons) {
         for (const block of lesson.blocks ?? []) {
-          if (block.type !== "role_play" || block.required !== true) continue;
+          if (
+            block.type !== "role_play" ||
+            block.required !== true ||
+            // Scoped to the frozen 6-scenario chain only, mirroring
+            // rolePlayBindings() above. Without this prefix filter, the
+            // Andrea Oral Check pilot's 3 `block-oral-check-*` role_play
+            // blocks (PR #130) would hit this loop against a Closer Lab
+            // export that structurally cannot and should not contain them
+            // (a different, frozen 6-scenario production namespace), and
+            // finalization would throw for anyone running it against the
+            // real, current 9-role-play manifest.
+            !block.source_key.startsWith("block-role-play-")
+          ) {
+            continue;
+          }
           const live = exported.get(block.source_key);
           const record = ledgerRecords.get(block.source_key);
           if (

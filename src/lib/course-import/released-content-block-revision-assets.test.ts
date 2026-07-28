@@ -51,7 +51,7 @@ const legacyManifest = Buffer.from(await readFile(resolve(
 )));
 const targetManifest = Buffer.from(await readFile(resolve(
   process.cwd(),
-  "content/course-manifests/bmh-employee-training.v1.json",
+  "content/course-manifests/archive/bmh-employee-training.released-content-block-revision-target-20260726.v1.json",
 )));
 const revision = buildReleasedContentBlockRevision({
   legacyManifest,

@@ -257,6 +257,12 @@ try {
       "supabase/tests/056_oral_check_pilot_role_play_blocks.sql",
     ),
   );
+  psqlFile(
+    resolve(
+      root,
+      "supabase/tests/057_oral_check_pilot_role_play_rollback.sql",
+    ),
+  );
   psqlText(`
     do $$
     begin

@@ -339,6 +339,71 @@ must appear once and the count must not change. Finally upload the canary
 manifest to that test project and run importer verification before scheduling
 any production migration.
 
+### Andrea Oral Check pilot deployment (`20260728020000_insert_oral_check_pilot_role_play_blocks.sql`)
+
+This is a standalone, one-shot migration (PR #130) that inserts 3
+`role_play` blocks bound to 3 real, live Closer Lab scenario IDs into 3
+already-published lessons. It is separate from the general course importer
+above and from the versioned content-block-revision system
+(`claude/versioned-content-block-revision-v2`, PR #128, parked). Deploy in
+this exact order:
+
+1. **Local verification** (already covered by CI): `run-controller-gate-pr-harness.mjs`
+   test 056 exercises the migration's real insertion and one-shot-refusal
+   path against a local PG cluster seeded from real production catalog rows.
+2. **MANDATORY gate — run the live recheck against production, credentialed,
+   immediately before applying the migration:**
+
+   ```bash
+   BMH_INSTITUTE_ALLOW_LIVE_CLOSER_LAB_VERIFICATION=1 \
+     CLOSER_LAB_PRODUCTION_SUPABASE_URL=https://xqrkugdxpwhjscrheuqo.supabase.co \
+     CLOSER_LAB_PRODUCTION_SERVICE_ROLE_KEY=... \
+     node --test content/course-manifests/oral-check-pilot-production-attestation.qa.test.mjs
+   ```
+
+   This is not optional and not a formality: it deep-compares the live
+   Closer Lab `role_plays` → `personas` → `role_play_goals` → `rubric_goals`
+   → `rubric_goal_documents` graph against the checked-in attestation
+   (`docs/course-production/oral-check-pilot-production-attestation.json`),
+   field-for-field — role-play title, persona identity, and each individual
+   rubric goal's id/name/order/weight/document count, not just totals and
+   counts. Round-3 Codex review of PR #130 found the pre-fix version of this
+   test would pass cleanly even if the 4 attached goals for a scenario had
+   been silently swapped for 4 different goals that happened to also sum to
+   weight 100 — learners would be scored against the wrong rubric with a
+   fully "green" test. It only runs opt-in, credentialed, and is otherwise
+   skipped in normal CI. If it fails, stop — do not apply the migration
+   until the attestation is reconciled with the live state or the mismatch
+   is understood and fixed forward.
+3. Apply `20260728020000_insert_oral_check_pilot_role_play_blocks.sql` to
+   production. It is atomic, hash-pinned CAS against the exact expected
+   prior catalog state, and refuses a second invocation (SQLSTATE 40001).
+4. If a rollback becomes necessary after the migration has committed, the
+   forward-rollback capability is already in place, ready but never
+   auto-invoked:
+   `supabase/migrations/20260728040000_rollback_oral_check_pilot_role_play_blocks.sql`
+   defines `public.fn_rollback_oral_check_pilot_role_play_blocks()`,
+   rehearsed end-to-end against a real database state with the insertion
+   already applied in
+   `supabase/tests/057_oral_check_pilot_role_play_rollback.sql`. Do not
+   invent privileged SQL live during an incident — connect with
+   service-role credentials and run:
+
+   ```sql
+   select public.fn_rollback_oral_check_pilot_role_play_blocks();
+   ```
+
+   It pins itself to the forward operation's own immutable evidence row
+   (not a second hand-guessed catalog-hash constant), refuses if the live
+   catalog or the 3 target rows have drifted since the pilot insertion,
+   refuses if real learner activity exists against any of the 3 blocks
+   (role_play_results, user_block_progress, user_course_resume) rather than
+   silently cascade-deleting it, removes exactly the 3 inserted rows,
+   verifies the catalog hash is restored to the exact pre-insert value, and
+   records its own immutable rollback evidence row
+   (`content_import_oral_check_pilot_role_play_rollback_records`). It is
+   genuinely one-shot: a second invocation is refused unconditionally.
+
 ## Safety model
 
 - Identifiers are deterministic from `import_id` and `source_key`.
