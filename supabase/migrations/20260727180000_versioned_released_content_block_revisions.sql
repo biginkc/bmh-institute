@@ -118,15 +118,22 @@ comment on column public.content_import_release_revisions.kind is
 -- and the v1 receipt table itself -- is already gone from committed state,
 -- so its writes fail closed and the backfill sees a frozen v1 history.
 
--- Fill state_parent_revision automatically for any forward ledger insert
--- that omits it (the unchanged v1 quiz RPC, most importantly): the state
--- parent of a forward revision is by construction the previous head of the
--- shared sequence. Explicit values (v2 forward/rollback, backfill) win.
+-- Fill lineage columns automatically for any ledger insert that omits them
+-- (the unchanged v1 quiz RPC, most importantly -- including an old-body quiz
+-- ROLLBACK call that resumes after this migration commits). Classification
+-- is by the row's own evidence operation: a rollback receipt that arrives
+-- without lineage columns reverted the then-head (the old model only ever
+-- rolled back the head), so its reverts/state-parent are derivable exactly;
+-- a forward row's state parent is the previous head. Explicit values
+-- (v2 forward/rollback, backfill) always win.
 create or replace function public.fn_guard_content_import_release_revision()
 returns trigger
 language plpgsql
 set search_path = ''
 as $$
+declare
+  v_head_revision integer;
+  v_head_state_parent integer;
 begin
   if tg_op <> 'INSERT' then
     raise exception 'Content import release revisions are immutable.' using errcode = '42501';
@@ -138,11 +145,115 @@ begin
       using errcode = '42501';
   end if;
   if new.state_parent_revision is null and new.reverts_revision is null then
-    select coalesce(max(revision), 1) into new.state_parent_revision
-    from public.content_import_release_revisions
-    where import_id = new.import_id;
+    if coalesce(new.evidence ->> 'operation', '') = 'rollback' then
+      -- Old-model rollback insert: it targeted (and reverted) the current
+      -- head; the state it restored is that head's own state parent.
+      select revision, coalesce(state_parent_revision, greatest(revision - 1, 1))
+      into v_head_revision, v_head_state_parent
+      from public.content_import_release_revisions
+      where import_id = new.import_id
+      order by revision desc
+      limit 1;
+      if v_head_revision is null then
+        raise exception 'A rollback receipt cannot be the first ledger row for %.', new.import_id
+          using errcode = '42501';
+      end if;
+      new.reverts_revision := v_head_revision;
+      new.state_parent_revision := v_head_state_parent;
+    else
+      select coalesce(max(revision), 1) into new.state_parent_revision
+      from public.content_import_release_revisions
+      where import_id = new.import_id;
+    end if;
   end if;
   return new;
+end;
+$$;
+
+-- Classify every PRE-EXISTING ledger row's lineage. Legacy quiz rows predate
+-- the lineage columns entirely: forward revisions (evidence operation
+-- 'release') sat on strictly sequential history, so their state parent is
+-- revision - 1; legacy rollback receipts (evidence operation 'rollback')
+-- could only ever revert the then-head under the old model, so receipt N
+-- reverted N - 1 and restored N - 2 (floor 1). Anything else -- an unknown
+-- operation, or a legacy rollback stacked on another legacy rollback (which
+-- the old model could not produce; its presence means tampered or corrupted
+-- history) -- ABORTS the migration rather than guessing.
+create or replace function public.fn_classify_legacy_ledger_lineage()
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_classified_forward integer := 0;
+  v_classified_rollback integer := 0;
+begin
+  if coalesce(auth.role(), '') <> 'service_role' then
+    raise exception 'Legacy ledger lineage classification requires service_role.'
+      using errcode = '42501';
+  end if;
+  lock table public.content_import_release_revisions in access exclusive mode;
+
+  if exists (
+    select 1 from public.content_import_release_revisions row
+    where row.state_parent_revision is null
+      and row.reverts_revision is null
+      and coalesce(row.evidence ->> 'operation', '') not in ('release', 'rollback')
+  ) then
+    raise exception 'Legacy ledger lineage classification aborted: a row carries an unrecognized evidence operation and cannot be classified.';
+  end if;
+  if exists (
+    select 1
+    from public.content_import_release_revisions receipt
+    join public.content_import_release_revisions predecessor
+      on predecessor.import_id = receipt.import_id
+     and predecessor.revision = receipt.revision - 1
+    where receipt.state_parent_revision is null
+      and receipt.reverts_revision is null
+      and coalesce(receipt.evidence ->> 'operation', '') = 'rollback'
+      and coalesce(predecessor.evidence ->> 'operation', '') = 'rollback'
+  ) then
+    raise exception 'Legacy ledger lineage classification aborted: a legacy rollback receipt sits directly on another rollback receipt, which the pre-lineage model could not produce.';
+  end if;
+
+  alter table public.content_import_release_revisions
+    disable trigger content_import_release_revisions_guard;
+  update public.content_import_release_revisions row
+  set state_parent_revision = greatest(row.revision - 1, 1)
+  where row.state_parent_revision is null
+    and row.reverts_revision is null
+    and coalesce(row.evidence ->> 'operation', '') = 'release';
+  get diagnostics v_classified_forward = row_count;
+  update public.content_import_release_revisions row
+  set reverts_revision = row.revision - 1,
+      state_parent_revision = greatest(row.revision - 2, 1)
+  where row.state_parent_revision is null
+    and row.reverts_revision is null
+    and coalesce(row.evidence ->> 'operation', '') = 'rollback';
+  get diagnostics v_classified_rollback = row_count;
+  alter table public.content_import_release_revisions
+    enable trigger content_import_release_revisions_guard;
+
+  return jsonb_build_object(
+    'status', 'classified',
+    'forward_rows', v_classified_forward,
+    'rollback_rows', v_classified_rollback
+  );
+end;
+$$;
+
+revoke all on function public.fn_classify_legacy_ledger_lineage()
+  from public, anon, authenticated;
+grant execute on function public.fn_classify_legacy_ledger_lineage()
+  to service_role;
+
+-- Classify existing history now, as part of this migration.
+do $$
+begin
+  perform set_config('request.jwt.claim.role', 'service_role', true);
+  perform public.fn_classify_legacy_ledger_lineage();
+  perform set_config('request.jwt.claim.role', '', true);
 end;
 $$;
 
@@ -194,12 +305,18 @@ revoke all on function public.fn_revise_released_content_blocks_v1(
 -- app-level read-merge-replace it replaces had a race: a backend publish
 -- landing between the editor's SELECT and UPDATE was silently overwritten
 -- by the recomputed full-content payload. This merges exactly the three
--- form-exposed fields onto the LIVE row in a single statement, so
--- concurrent content changes to any other field can never be lost.
--- SECURITY INVOKER on purpose: row-level security and the caller's own
--- authority apply exactly as they would to a direct UPDATE.
+-- form-exposed fields onto the LIVE row in a single statement -- AND it is
+-- a compare-and-swap: p_expected_scenario_id is the scenario binding the
+-- admin's browser LOADED, and if the live row's binding has since moved
+-- (e.g. a publication rebound the block to a new scenario), the merge
+-- refuses by matching zero rows instead of silently writing the stale
+-- binding back over the new one. The caller surfaces that as a
+-- reload-and-retry conflict. SECURITY INVOKER on purpose: row-level
+-- security and the caller's own authority apply exactly as they would to a
+-- direct UPDATE.
 create or replace function public.fn_admin_merge_role_play_block_content(
   p_block_id uuid,
+  p_expected_scenario_id text,
   p_scenario_id text,
   p_title text,
   p_height_px integer,
@@ -218,14 +335,15 @@ as $$
          is_required_for_completion = p_is_required_for_completion
    where id = p_block_id
      and block_type = 'role_play'
+     and content ->> 'scenario_id' is not distinct from p_expected_scenario_id
   returning content;
 $$;
 
 revoke all on function public.fn_admin_merge_role_play_block_content(
-  uuid, text, text, integer, boolean
+  uuid, text, text, text, integer, boolean
 ) from public, anon;
 grant execute on function public.fn_admin_merge_role_play_block_content(
-  uuid, text, text, integer, boolean
+  uuid, text, text, text, integer, boolean
 ) to authenticated, service_role;
 
 -- Generalize the content_blocks insert guard. Preserve migration 033's base
@@ -406,7 +524,7 @@ declare
   v_active_revision integer;
   v_active_manifest_sha256 text;
   v_active_catalog_sha256 text;
-  v_active_evidence jsonb;
+  v_active_row public.content_import_release_revisions%rowtype;
   v_database_payload_sha256 text;
   v_download_evidence_sha256 text;
   v_prior_catalog_sha256 text;
@@ -578,12 +696,6 @@ begin
       using errcode = '42501';
   end if;
 
-  if v_active_revision > 1 then
-    select evidence into v_active_evidence
-    from public.content_import_release_revisions
-    where import_id = p_import_id and revision = v_active_revision;
-  end if;
-
   -- No supported v2 mutation carries a storage-asset binding (downloads are
   -- unsupported by the narrowed contract), so the download-evidence digest a
   -- forward receipt records is always the digest of an empty binding set.
@@ -593,7 +705,18 @@ begin
     encode(sha256(convert_to('[]'::jsonb::text, 'UTF8')), 'hex');
 
   -- Idempotent replay: the exact target manifest is already the active one.
+  -- `already_revised` is granted ONLY when this exact call binds to the
+  -- ACTIVE IMMUTABLE RECEIPT on every identity axis -- kind, both payload
+  -- digests, all three counts, ancestry, evidence operation -- AND the live
+  -- import-owned target rows plus the live catalog still match what that
+  -- receipt committed. Without the receipt binding, a caller submitting a
+  -- matching SUBSET (or an altered payload that happens to leave matching
+  -- rows) could be told "already_revised" for a different operation than
+  -- the one that actually committed.
   if v_active_manifest_sha256 = p_manifest_sha256 then
+    select * into v_active_row
+    from public.content_import_release_revisions
+    where import_id = p_import_id and revision = v_active_revision;
     v_replacement_catalog_sha256 := public.fn_course_import_catalog_sha256(p_import_id);
     select count(*) into v_target_count
     from jsonb_array_elements(p_mutations) mutation(value)
@@ -604,9 +727,22 @@ begin
      and block.content = mutation.value -> 'replacement_content'
      and block.sort_order = (mutation.value ->> 'sort_order')::integer
      and block.is_required_for_completion =
-       (mutation.value ->> 'is_required_for_completion')::boolean;
-    if v_active_revision > 1
-      and v_active_evidence ->> 'manifest_sha256' = p_manifest_sha256
+       (mutation.value ->> 'is_required_for_completion')::boolean
+    join public.lessons lesson on lesson.id = block.lesson_id
+    join public.modules module on module.id = lesson.module_id
+    join public.courses course on course.id = module.course_id
+    where coalesce(lesson.content_import_id, course.content_import_id) = p_import_id;
+    if v_active_row.revision is not null
+      and v_active_row.kind = 'content_blocks'
+      and v_active_row.reverts_revision is null
+      and v_active_row.payload_sha256 = v_database_payload_sha256
+      and v_active_row.client_payload_sha256 is not distinct from p_client_payload_sha256
+      and v_active_row.mutation_count = v_mutation_count
+      and v_active_row.update_count = v_update_count
+      and v_active_row.insert_count = v_insert_count
+      and v_active_row.prior_manifest_sha256 = p_expected_prior_manifest_sha256
+      and v_active_row.evidence ->> 'operation' is not distinct from p_evidence ->> 'operation'
+      and v_active_row.catalog_sha256 = v_replacement_catalog_sha256
       and v_active_catalog_sha256 = v_replacement_catalog_sha256
       and v_target_count = v_mutation_count
     then
@@ -618,7 +754,7 @@ begin
         'catalog_sha256', v_replacement_catalog_sha256
       );
     end if;
-    raise exception 'Released content block revision retry refused: audit evidence or live target state drifted.'
+    raise exception 'Released content block revision retry refused: this call does not bind to the active immutable receipt, or live target state drifted.'
       using errcode = '40001';
   end if;
   if v_active_manifest_sha256 <> p_expected_prior_manifest_sha256 then

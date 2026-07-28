@@ -26,6 +26,8 @@ declare
   v_mirror public.content_import_release_revisions%rowtype;
   v_release_manifest_sha256 text;
   v_active_manifest_sha256 text;
+  v_active_catalog_sha256 text;
+  v_head_kind text;
   v_live_catalog_sha256 text;
   v_next_revision integer;
   v_expected_mutation_count integer;
@@ -39,9 +41,29 @@ begin
   end if;
 
   perform pg_advisory_xact_lock(hashtextextended('course-import-catalog-mutation', 0));
+  -- Lock every table fn_course_import_catalog_sha256 reads (in the same
+  -- canonical order the revision RPCs use, then the remaining catalog
+  -- tables), not just the two ledger tables: the final verification below
+  -- hashes the MUTABLE catalog, and without these locks a concurrent write
+  -- (an admin block edit, a quiz mutation) could land between that hash
+  -- read and this transaction's commit -- recording an active catalog
+  -- checksum that is stale at birth. Table locks are held through commit.
   lock table
+    public.content_import_release_records,
     public.content_import_release_revisions,
-    public.content_import_released_content_block_revision_records
+    public.content_import_released_content_block_revision_records,
+    public.programs,
+    public.courses,
+    public.modules,
+    public.lessons,
+    public.content_blocks,
+    public.quizzes,
+    public.questions,
+    public.answer_options,
+    public.assignments,
+    public.program_courses,
+    public.program_access,
+    public.role_groups
   in share row exclusive mode;
 
   for v_record in
@@ -80,7 +102,8 @@ begin
     -- exactly what the shared ledger currently says is active. For multiple
     -- receipts per import this also validates receipt-to-receipt linkage,
     -- because each mirror insert advances the active manifest to its own.
-    select active.active_manifest_sha256 into v_active_manifest_sha256
+    select active.active_manifest_sha256, active.active_catalog_sha256
+    into v_active_manifest_sha256, v_active_catalog_sha256
     from public.content_import_active_release_v1 active
     where active.import_id = v_record.import_id;
     if v_active_manifest_sha256 is null then
@@ -90,6 +113,37 @@ begin
     if v_active_manifest_sha256 <> v_record.expected_active_manifest_sha256 then
       raise exception 'v1 backfill aborted: legacy receipt for % declares predecessor manifest % but the shared ledger''s active manifest is %.',
         v_record.import_id, v_record.expected_active_manifest_sha256, v_active_manifest_sha256;
+    end if;
+    -- Predecessor CATALOG linkage. Strict whenever the predecessor is a
+    -- mirror THIS backfill created (i.e. from the second receipt of a chain
+    -- onward): the receipt's prior catalog must equal the predecessor
+    -- mirror's replacement catalog exactly -- v1 receipt-to-receipt history
+    -- allows no intervening mutation. For the FIRST receipt of an import
+    -- the same strictness would be historically unsound and would abort the
+    -- real production migration: separately-audited catalog mutations that
+    -- never write this ledger (the released-poster and released-caption
+    -- replacement mechanisms, e.g. 20260722235500) legitimately moved the
+    -- live catalog between the quiz revision's recorded checksum and the v1
+    -- receipt's own CAS-verified preflight -- so the quiz row's catalog and
+    -- the receipt's prior catalog genuinely differ. The receipt's prior
+    -- catalog WAS compare-and-swapped against the live catalog by the v1
+    -- RPC at its own execution time; what remains verifiable here is the
+    -- basic sanity that a revision moved the catalog at all.
+    select head.kind into v_head_kind
+    from public.content_import_release_revisions head
+    where head.import_id = v_record.import_id
+      and head.evidence ->> 'backfilled_from' = 'released_content_blocks_v1'
+    order by head.revision desc
+    limit 1;
+    if v_head_kind = 'content_blocks'
+      and v_active_catalog_sha256 <> v_record.prior_catalog_sha256
+    then
+      raise exception 'v1 backfill aborted: legacy receipt for % declares predecessor catalog % but the shared ledger''s active catalog is %.',
+        v_record.import_id, v_record.prior_catalog_sha256, v_active_catalog_sha256;
+    end if;
+    if v_record.prior_catalog_sha256 = v_record.replacement_catalog_sha256 then
+      raise exception 'v1 backfill aborted: legacy receipt for % claims an unchanged catalog, which no applied revision can produce.',
+        v_record.import_id;
     end if;
 
     -- Original-release binding.

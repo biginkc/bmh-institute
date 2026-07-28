@@ -324,6 +324,9 @@ describe("<BlocksEditor />", () => {
           height_px: 760,
         },
         is_required_for_completion: false,
+        // The binding this page loaded -- the server compare-and-swaps
+        // against it so a stale tab conflicts instead of rebinding.
+        expected_scenario_id: "scenario-1",
       }),
     );
   });

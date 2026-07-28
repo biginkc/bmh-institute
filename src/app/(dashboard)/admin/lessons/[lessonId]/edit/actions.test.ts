@@ -64,9 +64,15 @@ vi.mock("@/lib/supabase/server", () => ({
       if (!blockTypeRow || blockTypeRow.block_type !== "role_play") {
         return { data: null, error: null };
       }
-      // Simulate the database-side atomic merge: content || three keys,
-      // applied to the row's CURRENT content -- which may have changed
-      // since the action's SELECT.
+      // Simulate the database-side compare-and-swap: the merge matches zero
+      // rows (null result, nothing written) unless the LIVE row's scenario
+      // binding still equals what the caller's browser loaded.
+      const liveScenario = blockTypeRow.content?.scenario_id ?? null;
+      if (liveScenario !== args.p_expected_scenario_id) {
+        return { data: null, error: null };
+      }
+      // Otherwise: content || three keys, applied to the row's CURRENT
+      // content -- which may have changed since the action's SELECT.
       rpcMergedContent = {
         ...(blockTypeRow.content ?? {}),
         scenario_id: args.p_scenario_id,
@@ -253,7 +259,10 @@ describe("updateBlock embed branch (HARDEN-05)", () => {
 
 describe("updateBlock role_play branch", () => {
   beforeEach(() => {
-    blockTypeRow = { block_type: "role_play" };
+    blockTypeRow = {
+      block_type: "role_play",
+      content: { scenario_id: "scenario-1", title: "Role play", height_px: 720 },
+    };
     updatePatch = null;
     updateError = null;
     afterSelect = null;
@@ -270,6 +279,7 @@ describe("updateBlock role_play branch", () => {
     const result = await updateBlock({
       blockId: "block-1",
       lessonId: "lesson-1",
+      expected_scenario_id: "scenario-1",
       content: {
         scenario_id: "  scenario-1  ",
         title: " Handle the price objection ",
@@ -281,6 +291,7 @@ describe("updateBlock role_play branch", () => {
     expect(updatePatch).toBeNull();
     expect(rpcCall).toEqual({
       p_block_id: "block-1",
+      p_expected_scenario_id: "scenario-1",
       p_scenario_id: "scenario-1",
       p_title: "Handle the price objection",
       p_height_px: 900,
@@ -302,6 +313,7 @@ describe("updateBlock role_play branch", () => {
     const result = await updateBlock({
       blockId: "block-1",
       lessonId: "lesson-1",
+      expected_scenario_id: "scenario-1",
       // The admin form has no UI control for `mode` — it always resends the
       // fields it does expose, so the payload below is what the client
       // actually sends when an admin only edits the title.
@@ -338,6 +350,7 @@ describe("updateBlock role_play branch", () => {
     const result = await updateBlock({
       blockId: "block-1",
       lessonId: "lesson-1",
+      expected_scenario_id: "scenario-current",
       // A STALE tab loaded before the backend publish replays its whole old
       // snapshot: no mode, no scenario_spec, old scenario_id under a bogus
       // extra key. Only the three form-exposed fields may take effect; the
@@ -362,12 +375,14 @@ describe("updateBlock role_play branch", () => {
     });
   });
 
-  it("keeps a concurrent publish's fields when it lands between the action's read and its write", async () => {
-    // Two-client interleaving: the action reads the block, then -- before it
-    // writes -- a backend publish attaches a scenario_spec and flips the
-    // scenario binding. Because the write is an atomic in-database merge of
-    // ONLY the three form fields onto the LIVE row (not a replacement built
-    // from the earlier read), the publish's fields must survive.
+  it("conflicts a stale save when a publication rebinds the scenario between the read and the write, losing the stale value", async () => {
+    // Two-client interleaving, worst case: the admin's tab loaded
+    // scenario-old, then -- between this action's read and its write -- a
+    // publication rebinds the block to scenario-published and attaches a
+    // new spec. The stale tab's save (which would write scenario-old BACK
+    // over the new binding while keeping the new spec) must LOSE: the
+    // compare-and-swap on the loaded binding conflicts, nothing is written,
+    // and the admin is told to reload.
     blockTypeRow = {
       block_type: "role_play",
       content: {
@@ -389,28 +404,54 @@ describe("updateBlock role_play branch", () => {
     const result = await updateBlock({
       blockId: "block-1",
       lessonId: "lesson-1",
+      expected_scenario_id: "scenario-old",
       content: {
-        scenario_id: "scenario-published",
-        title: "Admin retitle",
+        scenario_id: "scenario-old",
+        title: "Admin retitle from the stale tab",
         height_px: 800,
       },
     });
 
-    expect(result).toEqual({ ok: true });
+    expect(result).toEqual({
+      ok: false,
+      error:
+        "This role play changed since you loaded it (its scenario binding moved). Reload the page and re-apply your edit.",
+    });
     expect(updatePatch).toBeNull();
-    expect(rpcMergedContent).toEqual({
+    expect(rpcMergedContent).toBeNull();
+    // The publication's binding and spec survive untouched.
+    expect(blockTypeRow!.content).toEqual({
       mode: "oral_check",
       scenario_id: "scenario-published",
       scenario_spec: { context: "Published between read and write" },
-      title: "Admin retitle",
-      height_px: 800,
+      title: "Talk with Andrea",
+      height_px: 760,
     });
+  });
+
+  it("refuses a role play save that does not carry the loaded scenario binding", async () => {
+    const result = await updateBlock({
+      blockId: "block-1",
+      lessonId: "lesson-1",
+      content: {
+        scenario_id: "scenario-1",
+        title: "No expected binding",
+        height_px: 720,
+      },
+    });
+
+    expect(result).toEqual({
+      ok: false,
+      error: "Missing the loaded scenario binding. Reload the page and try again.",
+    });
+    expect(rpcCall).toBeNull();
   });
 
   it("allows an admin to make a role play required", async () => {
     const result = await updateBlock({
       blockId: "block-1",
       lessonId: "lesson-1",
+      expected_scenario_id: "scenario-1",
       content: {
         scenario_id: "scenario-1",
         title: "Opening practice",

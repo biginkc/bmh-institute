@@ -447,6 +447,63 @@ begin
     raise exception 'replaying revision 3 wrote a duplicate audit row';
   end if;
 
+  -- `already_revised` must bind to the ACTIVE IMMUTABLE RECEIPT, never be
+  -- inferred from matching live rows alone. A SUBSET of the committed
+  -- payload -- every one of whose rows still matches live state -- is a
+  -- DIFFERENT operation and must be refused.
+  declare
+    v_subset jsonb := jsonb_build_array(v_mutations -> 0);
+    v_subset_payload text;
+  begin
+    v_subset_payload := encode(sha256(convert_to(v_subset::text, 'UTF8')), 'hex');
+    begin
+      perform public.fn_revise_released_content_blocks_v2(
+        'test-content-block-revision-v2', v_prior_manifest, v_manifest,
+        v_prior_catalog, v_subset, v_client_payload,
+        jsonb_build_object(
+          'operation', 'released_content_blocks_v2',
+          'manifest_sha256', v_manifest,
+          'expected_prior_catalog_sha256', v_prior_catalog
+        ),
+        'REVISE-RELEASED-CONTENT-BLOCKS-V2:test-content-block-revision-v2:'
+          || v_prior_manifest || ':' || v_manifest || ':' || v_prior_catalog || ':'
+          || v_subset_payload || ':1'
+      );
+      raise exception 'a subset replay was granted already_revised';
+    exception when sqlstate '40001' then
+      if sqlerrm not like '%does not bind to the active immutable receipt%' then raise; end if;
+    end;
+  end;
+
+  -- An ALTERED payload targeting the same active manifest must be refused,
+  -- not reported as already applied.
+  declare
+    v_altered jsonb;
+    v_altered_payload text;
+  begin
+    v_altered := jsonb_set(
+      v_mutations, '{0,replacement_content}', '{"html":"<p>Altered</p>"}'::jsonb
+    );
+    v_altered_payload := encode(sha256(convert_to(v_altered::text, 'UTF8')), 'hex');
+    begin
+      perform public.fn_revise_released_content_blocks_v2(
+        'test-content-block-revision-v2', v_prior_manifest, v_manifest,
+        v_prior_catalog, v_altered, v_client_payload,
+        jsonb_build_object(
+          'operation', 'released_content_blocks_v2',
+          'manifest_sha256', v_manifest,
+          'expected_prior_catalog_sha256', v_prior_catalog
+        ),
+        'REVISE-RELEASED-CONTENT-BLOCKS-V2:test-content-block-revision-v2:'
+          || v_prior_manifest || ':' || v_manifest || ':' || v_prior_catalog || ':'
+          || v_altered_payload || ':3'
+      );
+      raise exception 'an altered-payload replay was granted already_revised';
+    exception when sqlstate '40001' then
+      if sqlerrm not like '%does not bind to the active immutable receipt%' then raise; end if;
+    end;
+  end;
+
   -- A caller stuck on the pre-revision-3 preflight (stale prior manifest)
   -- attempting a DIFFERENT next change must be refused, not merged in.
   declare
@@ -903,11 +960,13 @@ begin
 end;
 $$;
 
--- Applied-v1-to-v2 transition: a pre-cutover legacy receipt (seeded with the
--- sealed guard disabled, exactly modeling receipts that existed before the
--- seal) is absorbed into the shared sequence by the SAME
--- fn_backfill_v1_content_block_revisions() the migration ran -- after full
--- predecessor/catalog validation -- and the backfill is idempotent.
+-- Applied-v1-to-v2 transition: TWO chained pre-cutover legacy receipts
+-- (seeded with the sealed guard disabled, exactly modeling receipts that
+-- existed before the seal) are absorbed in order by the SAME
+-- fn_backfill_v1_content_block_revisions() the migration ran -- proving
+-- receipt-to-receipt manifest AND catalog linkage -- and the backfill is
+-- idempotent. Receipt one's replacement catalog is an intermediate value;
+-- receipt two must chain from it exactly and land on the live catalog.
 do $$
 declare
   v_live_catalog text;
@@ -931,14 +990,15 @@ begin
     flashcard_update_count,
     role_play_insert_count,
     mutations,
-    evidence
+    evidence,
+    revised_at
   ) values (
     'test-content-block-revision-v2',
     repeat('1', 64),
     repeat('9', 64),
     repeat('a', 64),
     repeat('b', 64),
-    v_live_catalog,
+    repeat('5', 64),
     repeat('9', 64),
     repeat('d', 64),
     19, 19, 6,
@@ -946,14 +1006,31 @@ begin
       select jsonb_agg(jsonb_build_object('fixture', item))
       from generate_series(1, 44) item
     ),
-    '{}'::jsonb
+    '{}'::jsonb,
+    now() - interval '2 minutes'
+  ), (
+    'test-content-block-revision-v2',
+    repeat('1', 64),
+    repeat('a', 64),
+    repeat('0', 64),
+    repeat('5', 64),
+    v_live_catalog,
+    repeat('c', 64),
+    repeat('d', 64),
+    19, 19, 6,
+    (
+      select jsonb_agg(jsonb_build_object('fixture', item))
+      from generate_series(1, 44) item
+    ),
+    '{}'::jsonb,
+    now() - interval '1 minute'
   );
   alter table public.content_import_released_content_block_revision_records
     enable trigger content_import_released_content_block_revision_records_guard;
 
   v_result := public.fn_backfill_v1_content_block_revisions();
-  if (v_result ->> 'rows')::int <> 1 then
-    raise exception 'v1 backfill did not absorb exactly the seeded receipt: %', v_result;
+  if (v_result ->> 'rows')::int <> 2 then
+    raise exception 'v1 backfill did not absorb exactly the two chained receipts: %', v_result;
   end if;
 
   select * into v_mirror
@@ -970,13 +1047,46 @@ begin
     or v_mirror.insert_count <> 6
     or v_mirror.evidence ->> 'backfilled_from' <> 'released_content_blocks_v1'
   then
-    raise exception 'the backfilled mirror row is missing or misshapen';
+    raise exception 'the first backfilled mirror row is missing or misshapen';
+  end if;
+  select * into v_mirror
+  from public.content_import_release_revisions
+  where import_id = 'test-content-block-revision-v2' and revision = 10;
+  if not found
+    or v_mirror.kind <> 'content_blocks'
+    or v_mirror.state_parent_revision <> 9
+    or v_mirror.prior_manifest_sha256 <> repeat('a', 64)
+    or v_mirror.manifest_sha256 <> repeat('0', 64)
+    or v_mirror.prior_catalog_sha256 <> repeat('5', 64)
+    or v_mirror.catalog_sha256 <> v_live_catalog
+  then
+    raise exception 'the second backfilled mirror row did not chain catalog-to-catalog';
   end if;
   if (
     select active_manifest_sha256 from public.content_import_active_release_v1
     where import_id = 'test-content-block-revision-v2'
-  ) <> repeat('a', 64) then
+  ) <> repeat('0', 64) then
     raise exception 'the shared active-state view does not surface the backfilled v1 state';
+  end if;
+
+  -- The backfill's own transaction must be holding table locks on every
+  -- catalog table it hashed, so a concurrent write cannot land between the
+  -- final hash and commit. (A live two-session pause test is not possible
+  -- in this single-connection harness; asserting the held locks is the
+  -- verifiable core of the property.)
+  if (
+    select count(*)
+    from pg_locks lock
+    join pg_class relation on relation.oid = lock.relation
+    where lock.pid = pg_backend_pid()
+      and lock.mode = 'ShareRowExclusiveLock'
+      and lock.granted
+      and relation.relname in (
+        'content_blocks', 'quizzes', 'questions', 'answer_options',
+        'assignments', 'program_courses', 'program_access', 'role_groups'
+      )
+  ) < 8 then
+    raise exception 'the backfill did not hold catalog-table locks through its final verification';
   end if;
 
   -- Idempotency: a second run must absorb nothing.
@@ -1020,7 +1130,7 @@ begin
   ) values (
     'test-content-block-revision-v2',
     repeat('1', 64), repeat('8', 64), repeat('b', 64),
-    repeat('b', 64), v_live_catalog, repeat('e', 64), repeat('d', 64),
+    v_live_catalog, repeat('e', 64), repeat('e', 64), repeat('d', 64),
     19, 19, 6,
     (select jsonb_agg(jsonb_build_object('fixture', item)) from generate_series(1, 44) item),
     '{}'::jsonb
@@ -1032,6 +1142,40 @@ begin
     raise exception 'a legacy receipt with a broken predecessor chain was mirrored';
   exception when others then
     if sqlerrm not like '%declares predecessor manifest%' then raise; end if;
+  end;
+  alter table public.content_import_released_content_block_revision_records
+    disable trigger content_import_released_content_block_revision_records_guard;
+  delete from public.content_import_released_content_block_revision_records
+  where import_id = 'test-content-block-revision-v2' and manifest_sha256 = repeat('b', 64);
+  alter table public.content_import_released_content_block_revision_records
+    enable trigger content_import_released_content_block_revision_records_guard;
+
+  -- (a2) Broken predecessor CATALOG: the manifest chains correctly from the
+  -- active mirror, but the declared prior catalog does not equal the
+  -- predecessor mirror's replacement catalog.
+  alter table public.content_import_released_content_block_revision_records
+    disable trigger content_import_released_content_block_revision_records_guard;
+  insert into public.content_import_released_content_block_revision_records (
+    import_id, original_release_manifest_sha256, expected_active_manifest_sha256,
+    manifest_sha256, prior_catalog_sha256, replacement_catalog_sha256,
+    database_payload_sha256, client_payload_sha256,
+    guide_update_count, flashcard_update_count, role_play_insert_count,
+    mutations, evidence
+  ) values (
+    'test-content-block-revision-v2',
+    repeat('1', 64), repeat('0', 64), repeat('b', 64),
+    repeat('4', 64), repeat('e', 64), repeat('e', 64), repeat('d', 64),
+    19, 19, 6,
+    (select jsonb_agg(jsonb_build_object('fixture', item)) from generate_series(1, 44) item),
+    '{}'::jsonb
+  );
+  alter table public.content_import_released_content_block_revision_records
+    enable trigger content_import_released_content_block_revision_records_guard;
+  begin
+    perform public.fn_backfill_v1_content_block_revisions();
+    raise exception 'a legacy receipt with a broken predecessor catalog was mirrored';
+  exception when others then
+    if sqlerrm not like '%declares predecessor catalog%' then raise; end if;
   end;
   alter table public.content_import_released_content_block_revision_records
     disable trigger content_import_released_content_block_revision_records_guard;
@@ -1073,8 +1217,8 @@ begin
   alter table public.content_import_released_content_block_revision_records
     enable trigger content_import_released_content_block_revision_records_guard;
 
-  -- (c) Final catalog mismatch: the chain links up but the database is not
-  -- actually in the state the legacy history claims.
+  -- (c) Final catalog mismatch: the chain links up (manifest AND catalog)
+  -- but the database is not actually in the state the legacy history claims.
   alter table public.content_import_released_content_block_revision_records
     disable trigger content_import_released_content_block_revision_records_guard;
   insert into public.content_import_released_content_block_revision_records (
@@ -1085,8 +1229,8 @@ begin
     mutations, evidence
   ) values (
     'test-content-block-revision-v2',
-    repeat('1', 64), repeat('a', 64), repeat('e', 64),
-    repeat('b', 64), repeat('c', 64), repeat('b', 64), repeat('d', 64),
+    repeat('1', 64), repeat('0', 64), repeat('e', 64),
+    v_live_catalog, repeat('c', 64), repeat('b', 64), repeat('d', 64),
     19, 19, 6,
     (select jsonb_agg(jsonb_build_object('fixture', item)) from generate_series(1, 44) item),
     '{}'::jsonb
@@ -1105,6 +1249,162 @@ begin
   where import_id = 'test-content-block-revision-v2' and manifest_sha256 = repeat('e', 64);
   alter table public.content_import_released_content_block_revision_records
     enable trigger content_import_released_content_block_revision_records_guard;
+end;
+$$;
+
+-- Pre-migration lineage classification: legacy quiz ledger rows (forward
+-- revisions AND rollback receipts) predate the lineage columns entirely.
+-- fn_classify_legacy_ledger_lineage -- the same function the migration ran
+-- over existing history -- must classify them exactly (forward: parent =
+-- revision - 1; legacy rollback receipt N: reverted N - 1, restored N - 2
+-- floored at 1), the guard trigger must classify a resumed OLD-BODY rollback
+-- insert by its evidence operation, canonical state must resolve through
+-- the classified receipts, and ambiguous history must abort.
+do $$
+declare
+  v_result jsonb;
+begin
+  perform set_config('bmh.release_import_id', 'test-legacy-lineage-v2', true);
+  insert into public.content_import_release_records (
+    import_id, program_id, qa_role_group_id, employee_role_group_id,
+    manifest_sha256, reconciliation_sha256, catalog_sha256,
+    rollback_rehearsal_sha256, chrome_desktop_sha256, chrome_mobile_sha256,
+    admin_happy_path_sha256, approval_sha256, approved_by, evidence
+  ) values (
+    'test-legacy-lineage-v2',
+    '05500000-0000-5000-a000-000000000021',
+    '05500000-0000-5000-a000-000000000022',
+    '05500000-0000-5000-a000-000000000023',
+    repeat('1', 64), repeat('2', 64), repeat('3', 64),
+    repeat('4', 64), repeat('5', 64), repeat('6', 64), repeat('7', 64),
+    repeat('8', 64), 'Jarrad Henry', '{}'::jsonb
+  );
+  perform set_config('bmh.release_import_id', '', true);
+
+  -- Legacy-shaped rows: written BEFORE the lineage columns existed, so
+  -- seeded with the guard disabled (exactly how they exist in reality).
+  alter table public.content_import_release_revisions
+    disable trigger content_import_release_revisions_guard;
+  insert into public.content_import_release_revisions (
+    import_id, revision, kind, prior_manifest_sha256, manifest_sha256,
+    prior_catalog_sha256, catalog_sha256, payload_sha256,
+    quiz_count, question_count, option_count,
+    prior_quiz_graph, invalidated_incomplete_attempts, evidence
+  ) values (
+    'test-legacy-lineage-v2', 2, 'quiz',
+    repeat('1', 64), repeat('2', 64),
+    repeat('3', 64), repeat('4', 64), repeat('5', 64),
+    1, 1, 1, '[]'::jsonb, '[]'::jsonb, '{"operation":"release"}'::jsonb
+  ), (
+    'test-legacy-lineage-v2', 3, 'quiz',
+    repeat('2', 64), repeat('1', 64),
+    repeat('4', 64), repeat('3', 64), repeat('5', 64),
+    1, 1, 1, '[]'::jsonb, '[]'::jsonb, '{"operation":"rollback"}'::jsonb
+  );
+  alter table public.content_import_release_revisions
+    enable trigger content_import_release_revisions_guard;
+
+  v_result := public.fn_classify_legacy_ledger_lineage();
+  if (v_result ->> 'forward_rows')::int < 1 or (v_result ->> 'rollback_rows')::int < 1 then
+    raise exception 'legacy lineage classification did not touch the seeded rows: %', v_result;
+  end if;
+  if (
+    select (state_parent_revision, reverts_revision)
+    from public.content_import_release_revisions
+    where import_id = 'test-legacy-lineage-v2' and revision = 2
+  ) is distinct from (1, null::integer) then
+    raise exception 'the legacy forward row was not classified as parent 1';
+  end if;
+  if (
+    select (state_parent_revision, reverts_revision)
+    from public.content_import_release_revisions
+    where import_id = 'test-legacy-lineage-v2' and revision = 3
+  ) is distinct from (1, 2) then
+    raise exception 'the legacy rollback receipt was not classified as reverts 2 / restored 1';
+  end if;
+  if public.fn_current_state_revision('test-legacy-lineage-v2') <> 1 then
+    raise exception 'canonical state did not resolve through the classified legacy rollback receipt';
+  end if;
+
+  -- A resumed OLD-BODY insert (markers set by the resumed call itself, no
+  -- lineage columns): the guard trigger classifies it by evidence operation.
+  perform set_config('bmh.release_revision_import_id', 'test-legacy-lineage-v2', true);
+  insert into public.content_import_release_revisions (
+    import_id, revision, kind, prior_manifest_sha256, manifest_sha256,
+    prior_catalog_sha256, catalog_sha256, payload_sha256,
+    quiz_count, question_count, option_count,
+    prior_quiz_graph, invalidated_incomplete_attempts, evidence
+  ) values (
+    'test-legacy-lineage-v2', 4, 'quiz',
+    repeat('1', 64), repeat('6', 64),
+    repeat('3', 64), repeat('6', 64), repeat('5', 64),
+    1, 1, 1, '[]'::jsonb, '[]'::jsonb, '{"operation":"release"}'::jsonb
+  );
+  insert into public.content_import_release_revisions (
+    import_id, revision, kind, prior_manifest_sha256, manifest_sha256,
+    prior_catalog_sha256, catalog_sha256, payload_sha256,
+    quiz_count, question_count, option_count,
+    prior_quiz_graph, invalidated_incomplete_attempts, evidence
+  ) values (
+    'test-legacy-lineage-v2', 5, 'quiz',
+    repeat('6', 64), repeat('1', 64),
+    repeat('6', 64), repeat('3', 64), repeat('5', 64),
+    1, 1, 1, '[]'::jsonb, '[]'::jsonb, '{"operation":"rollback"}'::jsonb
+  );
+  perform set_config('bmh.release_revision_import_id', '', true);
+
+  if (
+    select (state_parent_revision, reverts_revision)
+    from public.content_import_release_revisions
+    where import_id = 'test-legacy-lineage-v2' and revision = 4
+  ) is distinct from (3, null::integer) then
+    raise exception 'the guard did not fill the old-body forward insert''s state parent';
+  end if;
+  if (
+    select (state_parent_revision, reverts_revision)
+    from public.content_import_release_revisions
+    where import_id = 'test-legacy-lineage-v2' and revision = 5
+  ) is distinct from (3, 4) then
+    raise exception 'the guard misclassified the old-body rollback insert';
+  end if;
+  if public.fn_current_state_revision('test-legacy-lineage-v2') <> 1 then
+    raise exception 'canonical state did not resolve through the trigger-classified receipt chain';
+  end if;
+
+  -- Ambiguous history aborts: a legacy rollback receipt stacked directly on
+  -- another legacy rollback receipt is impossible under the old model.
+  alter table public.content_import_release_revisions
+    disable trigger content_import_release_revisions_guard;
+  insert into public.content_import_release_revisions (
+    import_id, revision, kind, prior_manifest_sha256, manifest_sha256,
+    prior_catalog_sha256, catalog_sha256, payload_sha256,
+    quiz_count, question_count, option_count,
+    prior_quiz_graph, invalidated_incomplete_attempts, evidence
+  ) values (
+    'test-legacy-lineage-v2', 6, 'quiz',
+    repeat('1', 64), repeat('7', 64),
+    repeat('3', 64), repeat('7', 64), repeat('5', 64),
+    1, 1, 1, '[]'::jsonb, '[]'::jsonb, '{"operation":"rollback"}'::jsonb
+  ), (
+    'test-legacy-lineage-v2', 7, 'quiz',
+    repeat('7', 64), repeat('1', 64),
+    repeat('7', 64), repeat('3', 64), repeat('5', 64),
+    1, 1, 1, '[]'::jsonb, '[]'::jsonb, '{"operation":"rollback"}'::jsonb
+  );
+  alter table public.content_import_release_revisions
+    enable trigger content_import_release_revisions_guard;
+  begin
+    perform public.fn_classify_legacy_ledger_lineage();
+    raise exception 'ambiguous stacked legacy rollbacks were classified instead of aborting';
+  exception when others then
+    if sqlerrm not like '%sits directly on another rollback receipt%' then raise; end if;
+  end;
+  alter table public.content_import_release_revisions
+    disable trigger content_import_release_revisions_guard;
+  delete from public.content_import_release_revisions
+  where import_id = 'test-legacy-lineage-v2' and revision in (6, 7);
+  alter table public.content_import_release_revisions
+    enable trigger content_import_release_revisions_guard;
 end;
 $$;
 
@@ -1166,10 +1466,12 @@ begin
 end;
 $$;
 
--- The atomic admin merge for role-play blocks: merges exactly the three
--- form fields onto the LIVE row content in one statement, preserving every
--- other key (the oral-check marker most importantly), and touches nothing
--- but role_play rows.
+-- The atomic admin merge for role-play blocks: a compare-and-swap that
+-- merges exactly the three form fields onto the LIVE row content in one
+-- statement, preserving every other key (the oral-check marker most
+-- importantly), touches nothing but role_play rows, and refuses -- by
+-- matching zero rows -- when the live scenario binding has moved past the
+-- one the caller's browser loaded.
 do $$
 declare
   v_merged jsonb;
@@ -1178,7 +1480,7 @@ begin
   -- not touch it.
   if public.fn_admin_merge_role_play_block_content(
     '05500000-0000-5000-a000-0000000000f2',
-    'scenario-x', 'Title', 700, false
+    'scenario-x', 'scenario-x', 'Title', 700, false
   ) is not null then
     raise exception 'the role-play merge touched a non-role_play block';
   end if;
@@ -1201,9 +1503,26 @@ begin
   perform set_config('bmh.revise_content_blocks_v2_import_id', '', true);
   perform set_config('bmh.revise_content_blocks_v2_payload_sha256', '', true);
 
+  -- Compare-and-swap refusal: the caller loaded a STALE scenario binding
+  -- (as if a publication rebound the block after their page load). Nothing
+  -- may be written -- not even the title -- or the stale binding would be
+  -- written back over the live one.
+  if public.fn_admin_merge_role_play_block_content(
+    '05500000-0000-5000-a000-0000000000f4',
+    'pending:stale-binding', 'pending:stale-binding', 'Hijacked title', 700, true
+  ) is not null then
+    raise exception 'the merge accepted a stale scenario binding';
+  end if;
+  if (
+    select content ->> 'title' from public.content_blocks
+    where id = '05500000-0000-5000-a000-0000000000f4'
+  ) <> 'Before' then
+    raise exception 'the refused stale merge still modified the row';
+  end if;
+
   v_merged := public.fn_admin_merge_role_play_block_content(
     '05500000-0000-5000-a000-0000000000f4',
-    'pending:merge', 'After', 800, true
+    'pending:merge', 'pending:merge', 'After', 800, true
   );
   if v_merged is distinct from
     '{"mode":"oral_check","scenario_id":"pending:merge","scenario_spec":{"context":"spec"},"title":"After","height_px":800}'::jsonb

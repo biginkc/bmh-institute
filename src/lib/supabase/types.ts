@@ -1600,6 +1600,7 @@ export type Database = {
       fn_admin_merge_role_play_block_content: {
         Args: {
           p_block_id: string
+          p_expected_scenario_id: string
           p_scenario_id: string
           p_title: string
           p_height_px: number

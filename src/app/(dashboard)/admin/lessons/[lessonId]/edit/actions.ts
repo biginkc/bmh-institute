@@ -134,6 +134,11 @@ export async function updateBlock(input: {
   lessonId: string;
   content: Record<string, unknown>;
   is_required_for_completion?: boolean;
+  /** Role-play blocks only: the scenario binding the editor LOADED. The
+   * atomic merge compare-and-swaps against it, so a stale tab whose block
+   * has since been rebound (e.g. by a publication) gets a reload-conflict
+   * instead of silently writing its stale binding back. */
+  expected_scenario_id?: string;
 }): Promise<ActionResult> {
   await requireAdmin();
   const supabase = await createClient();
@@ -242,14 +247,24 @@ export async function updateBlock(input: {
     // write would otherwise be overwritten by a recomputed full-content
     // payload. fn_admin_merge_role_play_block_content merges exactly the
     // three form-exposed fields onto the LIVE row in a single UPDATE
-    // statement (SECURITY INVOKER, so RLS applies unchanged), so concurrent
-    // changes to any other content field can never be lost -- regardless of
-    // what this action read moments earlier.
+    // statement (SECURITY INVOKER, so RLS applies unchanged) -- and it is a
+    // compare-and-swap on the scenario binding the editor LOADED, so a
+    // stale tab whose block has since been rebound cannot write its stale
+    // binding back over the live one. The expected value must come from the
+    // CLIENT (what its page actually loaded); deriving it from this
+    // action's own fresh SELECT would defeat the entire check.
+    if (typeof input.expected_scenario_id !== "string" || !input.expected_scenario_id.trim()) {
+      return {
+        ok: false,
+        error: "Missing the loaded scenario binding. Reload the page and try again.",
+      };
+    }
     const merged = safeContent as Record<string, unknown>;
     const { data, error } = await supabase.rpc(
       "fn_admin_merge_role_play_block_content",
       {
         p_block_id: input.blockId,
+        p_expected_scenario_id: input.expected_scenario_id.trim(),
         p_scenario_id: String(merged.scenario_id),
         p_title: String(merged.title),
         p_height_px: Number(merged.height_px),
@@ -257,7 +272,15 @@ export async function updateBlock(input: {
       },
     );
     if (error) return { ok: false, error: error.message };
-    if (!data) return { ok: false, error: "Block not found." };
+    if (!data) {
+      // The block exists (we just read it) -- a null merge result means the
+      // live scenario binding moved past what this tab loaded.
+      return {
+        ok: false,
+        error:
+          "This role play changed since you loaded it (its scenario binding moved). Reload the page and re-apply your edit.",
+      };
+    }
     revalidatePath(`/admin/lessons/${input.lessonId}/edit`);
     revalidatePath(`/lessons/${input.lessonId}`);
     return { ok: true };

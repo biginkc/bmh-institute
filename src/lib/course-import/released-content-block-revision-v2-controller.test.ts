@@ -130,15 +130,32 @@ function makeHarness(options?: {
   const replay = options?.replay ?? false;
   let rowLoadCount = 0;
   let catalogLoadCount = 0;
+  let activeLoadCount = 0;
   const dependencies: ReleasedContentBlockRevisionV2Dependencies<FakeClient> = {
     classifyEnvironment: vi.fn(assertCourseImportEnvironment),
     createClient: vi.fn(() => ({ name: "fake-client" as const })),
-    loadActiveRevision: vi.fn(async () => ({
-      import_id: importId,
-      active_revision: replay ? 2 : 1,
-      active_manifest_sha256: options?.activeManifestSha256 ?? expectedPriorManifestSha256,
-      active_catalog_sha256: replay ? replacementCatalogSha256 : priorCatalogSha256,
-    })),
+    loadActiveRevision: vi.fn(async () => {
+      activeLoadCount += 1;
+      // First read: the pre-RPC preflight state. Later reads: the post-RPC
+      // head, which after this command's own successful commit is its own
+      // revision (2) with the target manifest active.
+      if (replay || activeLoadCount > 1) {
+        return {
+          import_id: importId,
+          active_revision: 2,
+          active_manifest_sha256: replay
+            ? options?.activeManifestSha256 ?? expectedPriorManifestSha256
+            : manifestSha256,
+          active_catalog_sha256: replacementCatalogSha256,
+        };
+      }
+      return {
+        import_id: importId,
+        active_revision: 1,
+        active_manifest_sha256: options?.activeManifestSha256 ?? expectedPriorManifestSha256,
+        active_catalog_sha256: priorCatalogSha256,
+      };
+    }),
     loadCatalogSha256: vi.fn(async () => {
       catalogLoadCount += 1;
       if (replay) return replacementCatalogSha256;
@@ -365,6 +382,68 @@ describe("released content block revision v2 controller", () => {
 
     await expect(runReleasedContentBlockRevisionV2Command(makeInput(), dependencies))
       .rejects.toThrow(/catalog checksum has drifted/);
+  });
+
+  it("classifies a newer active head after its own commit as superseded success, not failure", async () => {
+    // Two-controller post-commit advancement: this command's RPC commits
+    // revision 2, but before its unlocked postflight reads run, a SECOND
+    // controller advances the shared ledger to revision 3 -- live rows and
+    // catalog now reflect the newer revision, not ours. The immutable
+    // receipt at OUR revision is the commit proof; the correct outcome is
+    // "superseded" success, never an error (a retry would be wrong).
+    let activeCalls = 0;
+    const loadMutationRows = vi.fn(async () => rows("initial"));
+    const loadCatalogSha256 = vi.fn(async () => priorCatalogSha256);
+    const dependencies: ReleasedContentBlockRevisionV2Dependencies<FakeClient> = {
+      classifyEnvironment: vi.fn(assertCourseImportEnvironment),
+      createClient: vi.fn(() => ({ name: "fake-client" as const })),
+      loadActiveRevision: vi.fn(async () => {
+        activeCalls += 1;
+        if (activeCalls === 1) {
+          return {
+            import_id: importId,
+            active_revision: 1,
+            active_manifest_sha256: expectedPriorManifestSha256,
+            active_catalog_sha256: priorCatalogSha256,
+          };
+        }
+        // Post-commit: a second controller already advanced the head.
+        return {
+          import_id: importId,
+          active_revision: 3,
+          active_manifest_sha256: "9".repeat(64),
+          active_catalog_sha256: "8".repeat(64),
+        };
+      }),
+      loadCatalogSha256,
+      loadAudit: vi.fn(async () => expectedAudit(2)),
+      loadMutationRows,
+      callRevision: vi.fn(async () => ({
+        error: null,
+        data: {
+          status: "revised",
+          import_id: importId,
+          revision: 2,
+          mutation_count: mutations.length,
+          update_count: 1,
+          insert_count: 1,
+          catalog_sha256: replacementCatalogSha256,
+        },
+      })),
+      log: vi.fn(),
+    };
+
+    await expect(runReleasedContentBlockRevisionV2Command(makeInput(), dependencies))
+      .resolves.toMatchObject({
+        status: "superseded",
+        revision: 2,
+        catalogSha256: replacementCatalogSha256,
+      });
+    // The superseded path must NOT compare live rows or catalog against its
+    // own receipt -- they legitimately reflect the newer revision. One row
+    // load (the preflight) and one catalog load (the preflight) only.
+    expect(loadMutationRows).toHaveBeenCalledTimes(1);
+    expect(loadCatalogSha256).toHaveBeenCalledTimes(1);
   });
 
   it("surfaces the RPC's own error instead of swallowing it", async () => {

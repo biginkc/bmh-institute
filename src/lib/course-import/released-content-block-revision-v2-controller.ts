@@ -193,6 +193,51 @@ export async function runReleasedContentBlockRevisionV2Command<Client>(
   }
   const rpc = assertRevisionRpcResult(result.data, mutationCount);
 
+  // COMMIT PROOF is the immutable receipt at the RPC-returned revision --
+  // never the mutable rows or the live catalog, which a SUBSEQUENT revision
+  // may legitimately have advanced between our commit and these unlocked
+  // postflight reads. Verify the receipt first; then classify against the
+  // live head: if this revision is still the head, also verify live rows
+  // and catalog against the receipt; if a newer head exists, our write
+  // committed and was then built upon -- that is SUCCESS ("superseded"),
+  // not an error, and retrying would be wrong.
+  const audit = await dependencies.loadAudit(client, input.importId, rpc.revision);
+  assertRevisionAudit(
+    audit,
+    input,
+    evidence,
+    databasePayloadSha256,
+    expectedPriorCatalogSha256,
+    rpc.catalog_sha256,
+    rpc.revision,
+  );
+
+  const postActive = await dependencies.loadActiveRevision(client, input.importId);
+  const postActiveRevision = Number(postActive.active_revision);
+  if (postActiveRevision > rpc.revision) {
+    dependencies.log(JSON.stringify({
+      phase: "released_content_blocks_v2_superseded",
+      environment,
+      prior_state: priorState,
+      mutation_count: mutationCount,
+      revision: rpc.revision,
+      active_revision: postActiveRevision,
+      catalog_sha256: rpc.catalog_sha256,
+    }, null, 2));
+    return {
+      status: "superseded" as const,
+      environment,
+      priorState,
+      revision: rpc.revision,
+      catalogSha256: rpc.catalog_sha256,
+    };
+  }
+  if (postActiveRevision < rpc.revision) {
+    throw new Error(
+      "Released content revision v2 postflight found an active revision OLDER than its own committed receipt; the shared ledger is inconsistent.",
+    );
+  }
+
   const afterRows = await dependencies.loadMutationRows(client, input.mutations);
   assertReleasedContentBlockRevisionV2RevisedState(afterRows, input.mutations);
   const catalogSha256 = await dependencies.loadCatalogSha256(client, input.importId);
@@ -201,16 +246,6 @@ export async function runReleasedContentBlockRevisionV2Command<Client>(
       "Released content revision v2 postflight catalog does not match the atomic RPC receipt.",
     );
   }
-  const audit = await dependencies.loadAudit(client, input.importId, rpc.revision);
-  assertRevisionAudit(
-    audit,
-    input,
-    evidence,
-    databasePayloadSha256,
-    expectedPriorCatalogSha256,
-    catalogSha256,
-    rpc.revision,
-  );
 
   dependencies.log(JSON.stringify({
     phase: "released_content_blocks_v2_revised",

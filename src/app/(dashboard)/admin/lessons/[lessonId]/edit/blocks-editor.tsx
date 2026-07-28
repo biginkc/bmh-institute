@@ -271,6 +271,7 @@ function useBlockSaver({
   return function save(
     content: Record<string, unknown>,
     required?: boolean,
+    extras?: { expected_scenario_id?: string },
   ) {
     startTransition(async () => {
       const result = await updateBlock({
@@ -279,6 +280,9 @@ function useBlockSaver({
         content,
         ...(typeof required === "boolean"
           ? { is_required_for_completion: required }
+          : {}),
+        ...(typeof extras?.expected_scenario_id === "string"
+          ? { expected_scenario_id: extras.expected_scenario_id }
           : {}),
       });
       if (!result.ok) toast.error(result.error);
@@ -1189,6 +1193,13 @@ function RolePlayBlockEditor({
                 height_px: Number(heightPx) || 720,
               },
               required,
+              {
+                // The scenario binding this page LOADED -- the server's
+                // atomic merge compare-and-swaps against it, so if a
+                // publication rebound the block after this page rendered,
+                // the save conflicts instead of writing a stale binding.
+                expected_scenario_id: stringOr(block.content.scenario_id, ""),
+              },
             )
           }
         >
