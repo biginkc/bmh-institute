@@ -60,13 +60,23 @@ alter table public.content_import_release_revisions
   add column prior_block_graph jsonb,
   add column client_payload_sha256 text check (client_payload_sha256 is null or client_payload_sha256 ~ '^[0-9a-f]{64}$'),
   add column download_evidence_sha256 text check (download_evidence_sha256 is null or download_evidence_sha256 ~ '^[0-9a-f]{64}$'),
-  -- The ledger revision this row's state was derived FROM. Receipt numbers
-  -- always append at the end of the shared sequence (max + 1), so on a
-  -- chained rollback the receipt number alone cannot identify which state a
-  -- row restored -- parent_revision records that explicitly. Nullable only
-  -- because pre-existing quiz rows (and quiz rows written by the unchanged
-  -- v1 quiz RPC) do not carry it.
-  add column parent_revision integer check (parent_revision is null or parent_revision >= 1);
+  -- Lineage columns. Receipt numbers always append at the end of the shared
+  -- sequence (max + 1), so the receipt number alone cannot identify what a
+  -- row did to catalog STATE -- these two record it explicitly and are
+  -- deliberately separate concepts:
+  --   * state_parent_revision: the ledger revision whose resulting state
+  --     this row's state sits on top of. For a forward revision, the
+  --     revision it was applied against; for a rollback receipt, the state
+  --     it RESTORED (the reverted revision's own state parent).
+  --   * reverts_revision: set only on rollback receipts -- the forward
+  --     revision this receipt undid. (A receipt reverting revision 4 whose
+  --     state parent was 3 records reverts_revision = 4 AND
+  --     state_parent_revision = 3; conflating the two would misidentify
+  --     which state was restored.)
+  -- Nullable only for pre-existing rows; the ledger guard trigger below
+  -- fills state_parent_revision for any new forward row that omits it.
+  add column state_parent_revision integer check (state_parent_revision is null or state_parent_revision >= 1),
+  add column reverts_revision integer check (reverts_revision is null or reverts_revision >= 2);
 
 alter table public.content_import_release_revisions
   add constraint content_import_release_revisions_kind_shape_check
@@ -93,136 +103,60 @@ comment on column public.content_import_release_revisions.kind is
   'Discriminates which mutation type produced this ledger row. All rows share one revision sequence and one active-state view (content_import_active_release_v1) regardless of kind -- that shared sequence is what prevents a per-kind split-brain.';
 
 -- ---------------------------------------------------------------------------
--- Absorb the v1 one-shot content-block revision history into the shared
--- ledger, then retire the v1 RPC. Without this, the already-applied 44-block
--- correction (recorded only in content_import_released_content_block_revision_records)
--- is invisible to the shared active-state view: the view would keep exposing
--- the pre-correction quiz-revision state as "active", and v2 would reject the
--- real live catalog as drift. The v1 audit table itself is retained untouched
--- as immutable history; only the shared sequence gains mirror rows.
---
--- Exposed as a callable (service-role-only) function rather than inlined so
--- the SQL test harness can exercise the exact transition -- seed a v1-style
--- receipt, invoke this, and verify the shared sequence absorbs it -- inside a
--- rolled-back transaction. Idempotent: a v1 receipt whose payload_sha256 is
--- already mirrored for its import is skipped, so re-running is always safe.
-create or replace function public.fn_backfill_v1_content_block_revisions()
-returns jsonb
+-- Cutover phase 1 (this migration, one committed transaction): retire the v1
+-- one-shot mechanism and remove EVERY admission path a resumed in-flight v1
+-- call could use to write after this commit. The backfill that absorbs the
+-- already-applied v1 history into the shared ledger deliberately lives in
+-- the NEXT migration (its own committed transaction) -- a two-phase cutover.
+-- Rationale: a v1 call that resolved the old function body before this
+-- migration can block on the shared advisory lock and resume after commit;
+-- with a single-phase cutover it could still slip a legacy receipt in AFTER
+-- the backfill, leaving the shared ledger silently stale. With the
+-- two-phase order, by the time the backfill transaction takes the same
+-- advisory lock (a drain barrier for any straggler holding it), every write
+-- path such a resumed call would use -- the content_blocks marker branch
+-- and the v1 receipt table itself -- is already gone from committed state,
+-- so its writes fail closed and the backfill sees a frozen v1 history.
+
+-- Fill state_parent_revision automatically for any forward ledger insert
+-- that omits it (the unchanged v1 quiz RPC, most importantly): the state
+-- parent of a forward revision is by construction the previous head of the
+-- shared sequence. Explicit values (v2 forward/rollback, backfill) win.
+create or replace function public.fn_guard_content_import_release_revision()
+returns trigger
 language plpgsql
-security definer
 set search_path = ''
 as $$
-declare
-  v_record record;
-  v_next_revision integer;
-  v_download_evidence jsonb;
-  v_backfilled integer := 0;
 begin
-  if coalesce(auth.role(), '') <> 'service_role' then
-    raise exception 'v1 content block revision backfill requires service_role.'
+  if tg_op <> 'INSERT' then
+    raise exception 'Content import release revisions are immutable.' using errcode = '42501';
+  end if;
+  if coalesce(auth.role(), '') <> 'service_role'
+    or coalesce(current_setting('bmh.release_revision_import_id', true), '') <> new.import_id
+  then
+    raise exception 'Content import release revisions require the evidence-bound revision operation.'
       using errcode = '42501';
   end if;
-
-  perform pg_advisory_xact_lock(hashtextextended('course-import-catalog-mutation', 0));
-  lock table
-    public.content_import_release_revisions,
-    public.content_import_released_content_block_revision_records
-  in share row exclusive mode;
-
-  for v_record in
-    select *
-    from public.content_import_released_content_block_revision_records record
-    order by record.revised_at, record.manifest_sha256
-  loop
-    if exists (
-      select 1 from public.content_import_release_revisions mirror
-      where mirror.import_id = v_record.import_id
-        and mirror.kind = 'content_blocks'
-        and mirror.payload_sha256 = v_record.database_payload_sha256
-    ) then
-      continue;
-    end if;
-
-    select coalesce(max(revision), 1) + 1 into v_next_revision
+  if new.state_parent_revision is null and new.reverts_revision is null then
+    select coalesce(max(revision), 1) into new.state_parent_revision
     from public.content_import_release_revisions
-    where import_id = v_record.import_id;
-
-    select coalesce(jsonb_agg(jsonb_build_object(
-      'block_id', mutation.value ->> 'block_id',
-      'file_path', mutation.value -> 'replacement_content' ->> 'file_path',
-      'sha256', mutation.value ->> 'replacement_sha256',
-      'size_bytes', mutation.value ->> 'replacement_size_bytes'
-    ) order by mutation.value ->> 'block_id'), '[]'::jsonb)
-    into v_download_evidence
-    from jsonb_array_elements(v_record.mutations) mutation(value)
-    where mutation.value ->> 'block_type' = 'download';
-
-    perform set_config('bmh.release_revision_import_id', v_record.import_id, true);
-    insert into public.content_import_release_revisions (
-      import_id, revision, kind, parent_revision,
-      prior_manifest_sha256, manifest_sha256,
-      prior_catalog_sha256, catalog_sha256,
-      payload_sha256, client_payload_sha256, download_evidence_sha256,
-      mutation_count, update_count, insert_count,
-      mutations, prior_block_graph, evidence, revised_at, revised_by
-    ) values (
-      v_record.import_id, v_next_revision, 'content_blocks', v_next_revision - 1,
-      v_record.expected_active_manifest_sha256, v_record.manifest_sha256,
-      v_record.prior_catalog_sha256, v_record.replacement_catalog_sha256,
-      v_record.database_payload_sha256, v_record.client_payload_sha256,
-      encode(sha256(convert_to(v_download_evidence::text, 'UTF8')), 'hex'),
-      v_record.guide_update_count + v_record.flashcard_update_count
-        + v_record.role_play_insert_count,
-      v_record.guide_update_count + v_record.flashcard_update_count,
-      v_record.role_play_insert_count,
-      v_record.mutations,
-      -- The v1 record carried each update's expected (pre-image) content
-      -- inline in its mutations; project it into the same prior_block_graph
-      -- shape v2 writes, so the shared row is uniformly rollback-shaped.
-      jsonb_build_object(
-        'updated_rows', coalesce((
-          select jsonb_agg(jsonb_build_object(
-            'id', mutation.value ->> 'block_id',
-            'lesson_id', mutation.value ->> 'lesson_id',
-            'block_type', mutation.value ->> 'block_type',
-            'content', mutation.value -> 'expected_content',
-            'sort_order', (mutation.value ->> 'sort_order')::integer,
-            'is_required_for_completion',
-              (mutation.value ->> 'is_required_for_completion')::boolean
-          ) order by mutation.value ->> 'block_id')
-          from jsonb_array_elements(v_record.mutations) mutation(value)
-          where mutation.value ->> 'action' = 'update'
-        ), '[]'::jsonb),
-        'inserted_block_ids', coalesce((
-          select jsonb_agg(mutation.value ->> 'block_id')
-          from jsonb_array_elements(v_record.mutations) mutation(value)
-          where mutation.value ->> 'action' = 'insert'
-        ), '[]'::jsonb)
-      ),
-      v_record.evidence || jsonb_build_object('backfilled_from', 'released_content_blocks_v1'),
-      v_record.revised_at, v_record.revised_by
-    );
-    perform set_config('bmh.release_revision_import_id', '', true);
-    v_backfilled := v_backfilled + 1;
-  end loop;
-
-  return jsonb_build_object('status', 'backfilled', 'rows', v_backfilled);
+    where import_id = new.import_id;
+  end if;
+  return new;
 end;
 $$;
 
-revoke all on function public.fn_backfill_v1_content_block_revisions()
-  from public, anon, authenticated;
-grant execute on function public.fn_backfill_v1_content_block_revisions()
-  to service_role;
-
--- Run the backfill now, as part of this migration, so the shared ledger is
--- correct the moment this migration lands -- in production this absorbs the
--- single applied 44-block correction as the next shared revision.
-do $$
+-- Seal the v1 receipt table entirely: read-only history from here on. The
+-- old guard admitted marker-bound inserts, and a resumed in-flight v1 call
+-- sets those markers itself -- so the seal must not depend on markers.
+create or replace function public.fn_guard_import_released_content_block_revision_record()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
 begin
-  perform set_config('request.jwt.claim.role', 'service_role', true);
-  perform public.fn_backfill_v1_content_block_revisions();
-  perform set_config('request.jwt.claim.role', '', true);
+  raise exception 'Released content block v1 revision records are sealed read-only history; the v1 mechanism is retired and its receipts are mirrored in content_import_release_revisions.'
+    using errcode = '42501';
 end;
 $$;
 
@@ -230,7 +164,7 @@ $$;
 -- 44-block payload (its checksums can never match a second time), and
 -- leaving it callable would let a replay attempt mutate guard markers and
 -- interleave with the shared ledger this migration establishes. The v1
--- audit table and its immutability guard remain untouched as history.
+-- audit table remains as sealed history.
 create or replace function public.fn_revise_released_content_blocks_v1(
   p_import_id text,
   p_expected_active_manifest_sha256 text,
@@ -256,12 +190,50 @@ revoke all on function public.fn_revise_released_content_blocks_v1(
   text, text, text, text, jsonb, text, jsonb, text
 ) from public, anon, authenticated, service_role;
 
+-- Atomic three-key content merge for the admin role-play block editor. The
+-- app-level read-merge-replace it replaces had a race: a backend publish
+-- landing between the editor's SELECT and UPDATE was silently overwritten
+-- by the recomputed full-content payload. This merges exactly the three
+-- form-exposed fields onto the LIVE row in a single statement, so
+-- concurrent content changes to any other field can never be lost.
+-- SECURITY INVOKER on purpose: row-level security and the caller's own
+-- authority apply exactly as they would to a direct UPDATE.
+create or replace function public.fn_admin_merge_role_play_block_content(
+  p_block_id uuid,
+  p_scenario_id text,
+  p_title text,
+  p_height_px integer,
+  p_is_required_for_completion boolean
+)
+returns jsonb
+language sql
+set search_path = ''
+as $$
+  update public.content_blocks
+     set content = content || jsonb_build_object(
+           'scenario_id', p_scenario_id,
+           'title', p_title,
+           'height_px', p_height_px
+         ),
+         is_required_for_completion = p_is_required_for_completion
+   where id = p_block_id
+     and block_type = 'role_play'
+  returning content;
+$$;
+
+revoke all on function public.fn_admin_merge_role_play_block_content(
+  uuid, text, text, integer, boolean
+) from public, anon;
+grant execute on function public.fn_admin_merge_role_play_block_content(
+  uuid, text, text, integer, boolean
+) to authenticated, service_role;
+
 -- Generalize the content_blocks insert guard. Preserve migration 033's base
--- apply-path branch and migration 20260726170000's exact one-shot branch
--- verbatim (nothing in this migration retires history or existing tests);
--- add one new branch bound to this versioned mechanism's own session markers
--- instead of a hardcoded payload hash, since a v2 payload is never a fixed
--- shape.
+-- apply-path branch; add one branch bound to the v2 mechanism's own session
+-- markers. The v1 one-shot marker branch (the hardcoded 68508b6a... payload
+-- hash) is deliberately REMOVED, not preserved: a resumed in-flight v1 call
+-- sets those markers itself, so preserving the branch would leave a live
+-- legacy admission path after the v1 RPC's retirement.
 create or replace function public.fn_guard_imported_content_block_insert_v2()
 returns trigger
 language plpgsql
@@ -275,10 +247,6 @@ declare
   v_program_published boolean;
   v_apply_import_id text :=
     coalesce(current_setting('bmh.apply_import_id', true), '');
-  v_revision_v1_import_id text :=
-    coalesce(current_setting('bmh.revise_content_blocks_import_id', true), '');
-  v_revision_v1_payload_sha256 text :=
-    coalesce(current_setting('bmh.revise_content_blocks_payload_sha256', true), '');
   v_revision_v2_import_id text :=
     coalesce(current_setting('bmh.revise_content_blocks_v2_import_id', true), '');
   v_revision_v2_payload_sha256 text :=
@@ -300,24 +268,6 @@ begin
   if v_import_id is null then return new; end if;
   if coalesce(auth.role(), '') = 'service_role'
     and v_apply_import_id = v_import_id
-  then
-    return new;
-  end if;
-  if coalesce(auth.role(), '') = 'service_role'
-    and v_import_id = 'bmh-employee-training-v1'
-    and v_revision_v1_import_id = v_import_id
-    and v_revision_v1_payload_sha256 =
-      '68508b6a1b85c493d1d39ba80d3d661fcf05fa6a86ecf6df8257e42466fded3a'
-    and v_course_published
-    and v_program_published
-    and exists (
-      select 1
-      from public.content_import_release_records release
-      where release.import_id = v_import_id
-        and release.program_id = v_program_id
-        and release.manifest_sha256 =
-          '71f85173bc857d1b3b042fba0a50fdd420b6410ef84b104a751c3ed5982eba5c'
-    )
   then
     return new;
   end if;
@@ -348,6 +298,72 @@ create trigger guard_imported_catalog_insert
 before insert on public.content_blocks
 for each row execute function public.fn_guard_imported_content_block_insert_v2();
 
+-- Resolves the canonical FORWARD revision whose state the catalog is
+-- currently in, by walking restored-state pointers from the head of the
+-- shared sequence. A single-step look at the head row is not enough: a
+-- rollback can restore a state that is itself a rollback receipt (chained
+-- rollbacks), so the walk continues until it lands on a forward row.
+create or replace function public.fn_current_state_revision(p_import_id text)
+returns integer
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  v_cursor integer;
+  v_reverts integer;
+  v_state_parent integer;
+  v_steps integer := 0;
+begin
+  if coalesce(auth.role(), '') <> 'service_role' then
+    raise exception 'Current state resolution requires service_role.'
+      using errcode = '42501';
+  end if;
+  select max(revision) into v_cursor
+  from public.content_import_release_revisions
+  where import_id = p_import_id;
+  if v_cursor is null then
+    -- No revisions: the catalog is in the original release state.
+    return 1;
+  end if;
+  loop
+    select reverts_revision, state_parent_revision
+    into v_reverts, v_state_parent
+    from public.content_import_release_revisions
+    where import_id = p_import_id and revision = v_cursor;
+    if not found then
+      raise exception 'State lineage for % is broken: revision % is referenced but absent.',
+        p_import_id, v_cursor;
+    end if;
+    if v_reverts is null then
+      return v_cursor;
+    end if;
+    if v_state_parent is null then
+      raise exception 'State lineage for % is broken: rollback receipt % records no restored state.',
+        p_import_id, v_cursor;
+    end if;
+    if v_state_parent = 1 then
+      -- Restored all the way back to the original release state.
+      return 1;
+    end if;
+    if v_state_parent >= v_cursor then
+      raise exception 'State lineage for % is broken: receipt % points forward to %.',
+        p_import_id, v_cursor, v_state_parent;
+    end if;
+    v_cursor := v_state_parent;
+    v_steps := v_steps + 1;
+    if v_steps > 10000 then
+      raise exception 'State lineage for % did not terminate.', p_import_id;
+    end if;
+  end loop;
+end;
+$$;
+
+revoke all on function public.fn_current_state_revision(text)
+  from public, anon, authenticated;
+grant execute on function public.fn_current_state_revision(text) to service_role;
+
 create or replace function public.fn_revise_released_content_blocks_v2(
   p_import_id text,
   p_expected_prior_manifest_sha256 text,
@@ -377,22 +393,21 @@ declare
     'replacement_sha256',
     'replacement_size_bytes'
   ];
-  -- Every block_type the content_blocks table itself allows. Deliberately
-  -- not narrowed to the pilot's block types (an earlier version of this
-  -- migration omitted 'flashcard', which the TS builder and manifest schema
-  -- both already support -- that payload would pass TS preflight and only
-  -- fail here at the RPC boundary).
-  v_allowed_block_types constant text[] := array[
-    'video','text','pdf','image','audio','download',
-    'external_link','embed','role_play','divider','callout','flashcard'
-  ];
+  -- The deliberately SMALL verified contract: the pilot and the planned
+  -- oral-check rollout need exactly (a) inserting role_play blocks and
+  -- (b) content-only updates to text/flashcard blocks. Every other mutation
+  -- shape -- download inserts/updates, sort-order moves, required-state
+  -- flips, other block types -- is rejected here AND at TS planning time
+  -- with an explicit "unsupported in v2" error; extend both layers together,
+  -- deliberately, when a real payload needs more.
+  v_allowed_insert_block_types constant text[] := array['role_play'];
+  v_allowed_update_block_types constant text[] := array['text', 'flashcard'];
   v_program_id uuid;
   v_active_revision integer;
   v_active_manifest_sha256 text;
   v_active_catalog_sha256 text;
   v_active_evidence jsonb;
   v_database_payload_sha256 text;
-  v_download_evidence jsonb;
   v_download_evidence_sha256 text;
   v_prior_catalog_sha256 text;
   v_replacement_catalog_sha256 text;
@@ -459,7 +474,14 @@ begin
       or mutation.value ->> 'lesson_id' !~
         '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
       or jsonb_typeof(mutation.value -> 'block_type') <> 'string'
-      or not (mutation.value ->> 'block_type' = any(v_allowed_block_types))
+      or (
+        mutation.value ->> 'action' = 'insert'
+        and not (mutation.value ->> 'block_type' = any(v_allowed_insert_block_types))
+      )
+      or (
+        mutation.value ->> 'action' = 'update'
+        and not (mutation.value ->> 'block_type' = any(v_allowed_update_block_types))
+      )
       or jsonb_typeof(mutation.value -> 'replacement_content') <> 'object'
       or jsonb_typeof(mutation.value -> 'sort_order') <> 'number'
       or (mutation.value ->> 'sort_order')::numeric % 1 <> 0
@@ -473,27 +495,12 @@ begin
         mutation.value ->> 'action' = 'insert'
         and jsonb_typeof(mutation.value -> 'expected_content') <> 'null'
       )
-      or (
-        mutation.value ->> 'block_type' = 'download'
-        and (
-          jsonb_typeof(mutation.value -> 'replacement_sha256') <> 'string'
-          or mutation.value ->> 'replacement_sha256' !~ '^[0-9a-f]{64}$'
-          or jsonb_typeof(mutation.value -> 'replacement_size_bytes') <> 'number'
-          or (mutation.value ->> 'replacement_size_bytes')::numeric % 1 <> 0
-          or (mutation.value ->> 'replacement_size_bytes')::bigint < 1
-          or mutation.value -> 'replacement_content' ->> 'file_path' !~
-            ('\.' || (mutation.value ->> 'replacement_sha256') || '\.[a-z0-9]{1,16}$')
-        )
-      )
-      or (
-        mutation.value ->> 'block_type' <> 'download'
-        and (
-          jsonb_typeof(mutation.value -> 'replacement_sha256') <> 'null'
-          or jsonb_typeof(mutation.value -> 'replacement_size_bytes') <> 'null'
-        )
-      )
+      -- No supported mutation shape carries a storage-asset binding; these
+      -- keys stay in the row contract (stable shape) but must be JSON null.
+      or jsonb_typeof(mutation.value -> 'replacement_sha256') <> 'null'
+      or jsonb_typeof(mutation.value -> 'replacement_size_bytes') <> 'null'
   ) then
-    raise exception 'Released content block revision refused: mutation row shape mismatch.'
+    raise exception 'Released content block revision refused: unsupported mutation shape for v2 (supported: insert role_play, content-only update of text/flashcard; extend deliberately).'
       using errcode = '22023';
   end if;
 
@@ -548,7 +555,6 @@ begin
     public.lessons,
     public.content_blocks
   in share row exclusive mode;
-  lock table storage.objects in share mode;
 
   select release.program_id, active.active_revision,
     active.active_manifest_sha256, active.active_catalog_sha256
@@ -578,52 +584,13 @@ begin
     where import_id = p_import_id and revision = v_active_revision;
   end if;
 
-  -- The one thing the SQL contract still lets the caller assert without an
-  -- independent server-side recomputation is which storage object backs a
-  -- download mutation's replacement content -- but only its EXISTENCE is
-  -- asserted; this block verifies it, and the digest recorded below
-  -- (v_download_evidence_sha256) is derived only from rows this check just
-  -- confirmed are real, never from anything the caller merely claimed.
-  if exists (
-    select 1
-    from jsonb_array_elements(p_mutations) mutation(value)
-    where mutation.value ->> 'block_type' = 'download'
-      and not exists (
-        select 1
-        from storage.objects object
-        where object.bucket_id = 'content'
-          and object.name = mutation.value -> 'replacement_content' ->> 'file_path'
-          and coalesce(
-            to_jsonb(object) -> 'user_metadata' ->> 'sha256',
-            object.metadata ->> 'sha256'
-          ) = mutation.value ->> 'replacement_sha256'
-          and coalesce(
-            to_jsonb(object) -> 'user_metadata' ->> 'course_import_id',
-            to_jsonb(object) -> 'user_metadata' ->> 'courseImportId',
-            object.metadata ->> 'course_import_id',
-            object.metadata ->> 'courseImportId'
-          ) = p_import_id
-          and coalesce(
-            (to_jsonb(object) ->> 'size')::bigint,
-            (object.metadata ->> 'size')::bigint,
-            (object.metadata ->> 'contentLength')::bigint
-          ) = (mutation.value ->> 'replacement_size_bytes')::bigint
-      )
-  ) then
-    raise exception 'Released content block revision refused: an immutable download asset referenced by the payload is missing.'
-      using errcode = '22023';
-  end if;
-  select coalesce(jsonb_agg(jsonb_build_object(
-    'block_id', mutation.value ->> 'block_id',
-    'file_path', mutation.value -> 'replacement_content' ->> 'file_path',
-    'sha256', mutation.value ->> 'replacement_sha256',
-    'size_bytes', mutation.value ->> 'replacement_size_bytes'
-  ) order by mutation.value ->> 'block_id'), '[]'::jsonb)
-  into v_download_evidence
-  from jsonb_array_elements(p_mutations) mutation(value)
-  where mutation.value ->> 'block_type' = 'download';
+  -- No supported v2 mutation carries a storage-asset binding (downloads are
+  -- unsupported by the narrowed contract), so the download-evidence digest a
+  -- forward receipt records is always the digest of an empty binding set.
+  -- The column itself stays populated (the shared shape check requires it,
+  -- and backfilled v1 mirrors carry real digests from their 19 guide PDFs).
   v_download_evidence_sha256 :=
-    encode(sha256(convert_to(v_download_evidence::text, 'UTF8')), 'hex');
+    encode(sha256(convert_to('[]'::jsonb::text, 'UTF8')), 'hex');
 
   -- Idempotent replay: the exact target manifest is already the active one.
   if v_active_manifest_sha256 = p_manifest_sha256 then
@@ -780,7 +747,7 @@ begin
 
   perform set_config('bmh.release_revision_import_id', p_import_id, true);
   insert into public.content_import_release_revisions (
-    import_id, revision, kind, parent_revision,
+    import_id, revision, kind, state_parent_revision,
     prior_manifest_sha256, manifest_sha256,
     prior_catalog_sha256, catalog_sha256, payload_sha256, client_payload_sha256,
     download_evidence_sha256, mutation_count, update_count, insert_count,
@@ -836,6 +803,7 @@ as $$
 declare
   v_latest public.content_import_release_revisions%rowtype;
   v_next_revision integer;
+  v_current_state_revision integer;
   v_current_catalog_sha256 text;
   v_replacement_catalog_sha256 text;
   v_updated_rows jsonb;
@@ -884,6 +852,7 @@ begin
   where revision.import_id = p_import_id
     and revision.revision = p_expected_revision
     and revision.kind = 'content_blocks'
+    and revision.reverts_revision is null
   limit 1;
   if not found then
     raise exception 'Released content block revision rollback refused: active revision changed after preflight.'
@@ -896,6 +865,26 @@ begin
   then
     raise exception 'Released content block revision rollback refused: confirmation mismatch.'
       using errcode = '22023';
+  end if;
+
+  -- The ONLY legal rollback target is the revision whose state the catalog is
+  -- currently in, derived from ledger lineage: walk to the head row (max
+  -- revision, any kind) and resolve which state it represents -- itself for a
+  -- forward revision, the restored state for a rollback receipt. A catalog
+  -- checksum comparison alone cannot decide this: catalog states can repeat
+  -- across history (apply B, roll back, re-apply the same B via a new
+  -- revision), and under checksum-only legality the OLD forward receipt for B
+  -- would still "match" and restore ITS parent -- rewinding to a state that
+  -- is no longer the live lineage's parent.
+  v_current_state_revision := public.fn_current_state_revision(p_import_id);
+  if v_current_state_revision is distinct from p_expected_revision then
+    raise exception 'Released content block revision rollback refused: revision % is not the active state lineage (current state is revision %).',
+      p_expected_revision, v_current_state_revision
+      using errcode = '40001';
+  end if;
+  if v_latest.state_parent_revision is null then
+    raise exception 'Released content block revision rollback refused: the target revision does not record a state parent.'
+      using errcode = '40001';
   end if;
 
   v_current_catalog_sha256 := public.fn_course_import_catalog_sha256(p_import_id);
@@ -1004,20 +993,23 @@ begin
   -- roll back revision N-1 from the restored state), N-1's successor number
   -- N already exists -- appending there would PK-collide and atomically
   -- abort the emergency rollback at exactly the moment it is needed most.
-  -- parent_revision records explicitly which revision this receipt undid.
+  -- reverts_revision records the revision this receipt undid;
+  -- state_parent_revision records the state it RESTORED (the reverted
+  -- revision's own state parent) -- two different things.
   select coalesce(max(revision), 1) + 1 into v_next_revision
   from public.content_import_release_revisions
   where import_id = p_import_id;
 
   perform set_config('bmh.release_revision_import_id', p_import_id, true);
   insert into public.content_import_release_revisions (
-    import_id, revision, kind, parent_revision,
+    import_id, revision, kind, reverts_revision, state_parent_revision,
     prior_manifest_sha256, manifest_sha256,
     prior_catalog_sha256, catalog_sha256, payload_sha256, client_payload_sha256,
     download_evidence_sha256, mutation_count, update_count, insert_count,
     mutations, prior_block_graph, evidence, revised_by
   ) values (
-    p_import_id, v_next_revision, 'content_blocks', p_expected_revision,
+    p_import_id, v_next_revision, 'content_blocks',
+    p_expected_revision, v_latest.state_parent_revision,
     v_latest.manifest_sha256, v_latest.prior_manifest_sha256,
     v_current_catalog_sha256, v_replacement_catalog_sha256,
     encode(sha256(convert_to(v_latest.mutations::text, 'UTF8')), 'hex'),
@@ -1031,7 +1023,8 @@ begin
     'status', 'rolled_back',
     'import_id', p_import_id,
     'revision', v_next_revision,
-    'rolled_back_revision', p_expected_revision,
+    'reverts_revision', p_expected_revision,
+    'restored_state_revision', v_latest.state_parent_revision,
     'prior_catalog_sha256', v_current_catalog_sha256,
     'catalog_sha256', v_replacement_catalog_sha256,
     'restored_updates', v_restored_count,
@@ -1050,3 +1043,364 @@ grant execute on function public.fn_rollback_released_content_block_revision_v1(
 comment on function public.fn_rollback_released_content_block_revision_v1(
   text, integer, jsonb, text
 ) is 'Reverts the most recent versioned content-block revision by restoring updated rows to their archived pre-image and deleting inserted rows. Refuses if any progress, completion, results, or resume table references a touched block, or if further drift exists.';
+
+-- Align the quiz rollback with the shared lineage model (same reasons as the
+-- content-block rollback above): look up the target by its (import, revision,
+-- kind) identity instead of requiring it to be the physical head row, derive
+-- rollback legality from state lineage, and append the receipt at the end of
+-- the shared sequence with explicit reverts/state-parent pointers. Everything
+-- else -- the confirmation contract, the exact BMH release pins, the
+-- completed-activity refusals, and the restore mechanics -- is byte-identical
+-- to 20260722130000's body.
+create or replace function public.fn_rollback_released_quiz_revision_v1(
+  p_import_id text,
+  p_expected_revision integer,
+  p_evidence jsonb,
+  p_confirmation text
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_latest public.content_import_release_revisions%rowtype;
+  v_next_revision integer;
+  v_current_state_revision integer;
+  v_current_catalog_sha256 text;
+  v_catalog_sha256 text;
+  v_payload_sha256 text;
+  v_quizzes jsonb;
+  v_questions jsonb;
+  v_answer_options jsonb;
+  v_quiz_ids uuid[];
+  v_question_ids uuid[];
+  v_option_ids uuid[];
+  v_current_graph jsonb;
+  v_invalidated_attempts jsonb;
+  v_invalidated_count integer := 0;
+begin
+  if coalesce(auth.role(), '') <> 'service_role' then
+    raise exception 'Released quiz revision rollback requires the service role.'
+      using errcode = '42501';
+  end if;
+  if p_import_id is null or p_import_id !~ '^[a-z0-9][a-z0-9._-]{0,127}$'
+    or p_expected_revision is null or p_expected_revision < 2
+    or jsonb_typeof(p_evidence) is distinct from 'object'
+    or p_evidence ->> 'operation' <> 'rollback'
+    or p_evidence ->> 'rollback_sha256' !~ '^[a-f0-9]{64}$'
+  then
+    raise exception 'Released quiz revision rollback refused: invalid rollback evidence.'
+      using errcode = '22023';
+  end if;
+
+  perform pg_advisory_xact_lock(hashtextextended('course-import-catalog-mutation', 0));
+  perform pg_advisory_xact_lock(hashtextextended('course-import-release:' || p_import_id, 0));
+  lock table
+    public.content_import_release_records,
+    public.content_import_release_revisions,
+    public.programs, public.courses, public.modules, public.lessons,
+    public.quizzes, public.questions, public.answer_options,
+    public.user_quiz_attempts,
+    public.course_import_reviewer_answer_options_v1
+  in share row exclusive mode;
+
+  select * into v_latest
+  from public.content_import_release_revisions revision
+  where revision.import_id = p_import_id
+    and revision.revision = p_expected_revision
+    and revision.kind = 'quiz'
+    and revision.reverts_revision is null
+  limit 1;
+  if not found then
+    raise exception 'Released quiz revision rollback refused: active revision changed after preflight.'
+      using errcode = '40001';
+  end if;
+  -- Same lineage model as the content-block rollback: the only legal target
+  -- is the revision whose state the catalog is currently in, derived from
+  -- the shared ledger's head row -- so a quiz rollback stays reachable even
+  -- when later content-block revisions and their rollbacks sit above it in
+  -- the sequence (the chain no longer dead-ends at the kind boundary).
+  v_current_state_revision := public.fn_current_state_revision(p_import_id);
+  if v_current_state_revision is distinct from p_expected_revision then
+    raise exception 'Released quiz revision rollback refused: revision % is not the active state lineage (current state is revision %).',
+      p_expected_revision, v_current_state_revision
+      using errcode = '40001';
+  end if;
+  if p_import_id <> 'bmh-employee-training-v1'
+    or v_latest.question_count <> 920
+    or v_latest.prior_manifest_sha256 <> '71f85173bc857d1b3b042fba0a50fdd420b6410ef84b104a751c3ed5982eba5c'
+    or p_evidence ->> 'rollback_sha256' is distinct from v_latest.evidence ->> 'rollback_sha256'
+  then
+    raise exception 'Released quiz revision rollback refused: revision or rollback artifact is not the exact forward BMH release.'
+      using errcode = '22023';
+  end if;
+  if p_confirmation is distinct from
+    'ROLLBACK-RELEASED-QUIZZES:' || p_import_id || ':' || p_expected_revision::text || ':'
+      || v_latest.manifest_sha256 || ':' || v_latest.prior_manifest_sha256 || ':'
+      || (p_evidence ->> 'rollback_sha256')
+  then
+    raise exception 'Released quiz revision rollback refused: confirmation mismatch.'
+      using errcode = '22023';
+  end if;
+
+  v_current_catalog_sha256 := public.fn_course_import_catalog_sha256(p_import_id);
+  if v_current_catalog_sha256 <> v_latest.catalog_sha256 then
+    raise exception 'Released quiz revision rollback refused: catalog changed after the recorded revision.'
+      using errcode = '40001';
+  end if;
+
+  v_quizzes := v_latest.prior_quiz_graph -> 'quizzes';
+  v_questions := v_latest.prior_quiz_graph -> 'questions';
+  v_answer_options := v_latest.prior_quiz_graph -> 'answer_options';
+  if jsonb_typeof(v_quizzes) is distinct from 'array'
+    or jsonb_array_length(v_quizzes) <> 19
+    or jsonb_typeof(v_questions) is distinct from 'array'
+    or jsonb_array_length(v_questions) <> 342
+    or jsonb_typeof(v_answer_options) is distinct from 'array'
+    or jsonb_array_length(v_answer_options) < 2
+  then
+    raise exception 'Released quiz revision rollback refused: archived prior graph is malformed.';
+  end if;
+
+  select array_agg(row.id order by row.id) into v_quiz_ids
+  from jsonb_to_recordset(v_quizzes) as row(
+    id uuid, title text, description text, passing_score integer,
+    randomize_questions boolean, randomize_answers boolean,
+    questions_per_attempt integer, max_attempts integer,
+    retake_cooldown_hours integer, show_correct_answers_after text
+  );
+  select array_agg(row.id order by row.id) into v_question_ids
+  from jsonb_to_recordset(v_questions) as row(
+    id uuid, quiz_id uuid, question_text text, question_type text,
+    explanation text, points integer, sort_order integer
+  );
+  select array_agg(row.id order by row.id) into v_option_ids
+  from jsonb_to_recordset(v_answer_options) as row(
+    id uuid, question_id uuid, option_text text, is_correct boolean, sort_order integer
+  );
+
+  if (select count(distinct id) from unnest(v_quiz_ids) id) <> 19
+    or (select count(distinct id) from unnest(v_question_ids) id) <> jsonb_array_length(v_questions)
+    or (select count(distinct id) from unnest(v_option_ids) id) <> jsonb_array_length(v_answer_options)
+    or exists (
+      select 1 from jsonb_to_recordset(v_questions) as row(
+        id uuid, quiz_id uuid, question_text text, question_type text,
+        explanation text, points integer, sort_order integer
+      ) where row.quiz_id <> all(v_quiz_ids)
+    )
+    or exists (
+      select 1 from jsonb_to_recordset(v_answer_options) as row(
+        id uuid, question_id uuid, option_text text, is_correct boolean, sort_order integer
+      ) where row.question_id <> all(v_question_ids)
+    )
+    or (select array_agg(lesson.quiz_id order by lesson.quiz_id)
+      from public.lessons lesson
+      join public.modules module on module.id = lesson.module_id
+      join public.courses course on course.id = module.course_id
+      where coalesce(lesson.content_import_id, course.content_import_id) = p_import_id
+        and lesson.quiz_id is not null) <> v_quiz_ids
+    or exists (
+      select 1 from jsonb_to_recordset(v_quizzes) as row(
+        id uuid, title text, description text, passing_score integer,
+        randomize_questions boolean, randomize_answers boolean,
+        questions_per_attempt integer, max_attempts integer,
+        retake_cooldown_hours integer, show_correct_answers_after text
+      ) where row.questions_per_attempt is distinct from 10
+    )
+  then
+    raise exception 'Released quiz revision rollback refused: archived prior graph identity mismatch.';
+  end if;
+
+  if exists (
+    select 1 from public.user_quiz_attempts attempt
+    where attempt.quiz_id = any(v_quiz_ids) and attempt.completed_at is not null
+  ) then
+    raise exception 'Released quiz revision rollback refused: completed quiz activity now exists; automatic rollback is unsafe.'
+      using errcode = '23503';
+  end if;
+  if exists (
+    select 1
+    from public.course_import_reviewer_answer_options_v1 evidence
+    join public.questions question on question.id = evidence.question_id
+    where evidence.import_id = p_import_id and question.quiz_id = any(v_quiz_ids)
+  ) then
+    raise exception 'Released quiz revision rollback refused: reviewer-authored option evidence now exists.'
+      using errcode = '23503';
+  end if;
+
+  select jsonb_build_object(
+    'quizzes', coalesce((
+      select jsonb_agg(jsonb_build_object(
+        'id', quiz.id, 'title', quiz.title, 'description', quiz.description,
+        'passing_score', quiz.passing_score,
+        'randomize_questions', quiz.randomize_questions,
+        'randomize_answers', quiz.randomize_answers,
+        'questions_per_attempt', quiz.questions_per_attempt,
+        'max_attempts', quiz.max_attempts,
+        'retake_cooldown_hours', quiz.retake_cooldown_hours,
+        'show_correct_answers_after', quiz.show_correct_answers_after
+      ) order by quiz.id)
+      from public.quizzes quiz where quiz.id = any(v_quiz_ids)
+    ), '[]'::jsonb),
+    'questions', coalesce((
+      select jsonb_agg(jsonb_build_object(
+        'id', question.id, 'quiz_id', question.quiz_id,
+        'question_text', question.question_text,
+        'question_type', question.question_type,
+        'explanation', question.explanation, 'points', question.points,
+        'sort_order', question.sort_order
+      ) order by question.id)
+      from public.questions question where question.quiz_id = any(v_quiz_ids)
+    ), '[]'::jsonb),
+    'answer_options', coalesce((
+      select jsonb_agg(jsonb_build_object(
+        'id', option.id, 'question_id', option.question_id,
+        'option_text', option.option_text, 'is_correct', option.is_correct,
+        'sort_order', option.sort_order
+      ) order by option.id)
+      from public.answer_options option
+      join public.questions question on question.id = option.question_id
+      where question.quiz_id = any(v_quiz_ids)
+    ), '[]'::jsonb)
+  ) into v_current_graph;
+
+  select coalesce(jsonb_agg(to_jsonb(attempt) order by attempt.id), '[]'::jsonb)
+    into v_invalidated_attempts
+  from public.user_quiz_attempts attempt
+  where attempt.quiz_id = any(v_quiz_ids) and attempt.completed_at is null;
+  delete from public.user_quiz_attempts attempt
+  where attempt.quiz_id = any(v_quiz_ids) and attempt.completed_at is null;
+  get diagnostics v_invalidated_count = row_count;
+
+  perform set_config('bmh.rollback_import_id', p_import_id, true);
+  delete from public.answer_options option
+  using public.questions question
+  where option.question_id = question.id
+    and question.quiz_id = any(v_quiz_ids)
+    and option.id <> all(v_option_ids);
+  delete from public.questions question
+  where question.quiz_id = any(v_quiz_ids)
+    and question.id <> all(v_question_ids);
+  perform set_config('bmh.rollback_import_id', '', true);
+
+  update public.quizzes quiz set
+    title = row.title,
+    description = row.description,
+    passing_score = row.passing_score,
+    randomize_questions = row.randomize_questions,
+    randomize_answers = row.randomize_answers,
+    questions_per_attempt = row.questions_per_attempt,
+    max_attempts = row.max_attempts,
+    retake_cooldown_hours = row.retake_cooldown_hours,
+    show_correct_answers_after = row.show_correct_answers_after
+  from jsonb_to_recordset(v_quizzes) as row(
+    id uuid, title text, description text, passing_score integer,
+    randomize_questions boolean, randomize_answers boolean,
+    questions_per_attempt integer, max_attempts integer,
+    retake_cooldown_hours integer, show_correct_answers_after text
+  ) where quiz.id = row.id;
+
+  perform set_config('bmh.apply_import_id', p_import_id, true);
+  insert into public.questions (
+    id, quiz_id, question_text, question_type, explanation, points, sort_order
+  )
+  select row.id, row.quiz_id, row.question_text, row.question_type,
+    row.explanation, row.points, row.sort_order
+  from jsonb_to_recordset(v_questions) as row(
+    id uuid, quiz_id uuid, question_text text, question_type text,
+    explanation text, points integer, sort_order integer
+  )
+  on conflict (id) do update set
+    quiz_id = excluded.quiz_id,
+    question_text = excluded.question_text,
+    question_type = excluded.question_type,
+    explanation = excluded.explanation,
+    points = excluded.points,
+    sort_order = excluded.sort_order;
+
+  insert into public.answer_options (
+    id, question_id, option_text, is_correct, sort_order
+  )
+  select row.id, row.question_id, row.option_text, row.is_correct, row.sort_order
+  from jsonb_to_recordset(v_answer_options) as row(
+    id uuid, question_id uuid, option_text text, is_correct boolean, sort_order integer
+  )
+  on conflict (id) do update set
+    question_id = excluded.question_id,
+    option_text = excluded.option_text,
+    is_correct = excluded.is_correct,
+    sort_order = excluded.sort_order;
+  perform set_config('bmh.apply_import_id', '', true);
+
+  if (select count(*) from public.questions question where question.quiz_id = any(v_quiz_ids))
+      <> jsonb_array_length(v_questions)
+    or (select count(*) from public.answer_options option
+      join public.questions question on question.id = option.question_id
+      where question.quiz_id = any(v_quiz_ids)) <> jsonb_array_length(v_answer_options)
+  then
+    raise exception 'Released quiz revision rollback failed exact reconciliation.';
+  end if;
+
+  v_catalog_sha256 := public.fn_course_import_catalog_sha256(p_import_id);
+  if v_catalog_sha256 <> v_latest.prior_catalog_sha256 then
+    raise exception 'Released quiz revision rollback failed to restore the exact prior catalog checksum.'
+      using errcode = '40001';
+  end if;
+  v_payload_sha256 := encode(
+    extensions.digest(
+      convert_to(jsonb_build_object(
+        'quizzes', v_quizzes,
+        'questions', v_questions,
+        'answer_options', v_answer_options
+      )::text, 'UTF8'),
+      'sha256'
+    ),
+    'hex'
+  );
+  -- Append at the END of the shared sequence (see the content-block rollback
+  -- for why v_latest.revision + 1 PK-collides on chained rollbacks), and
+  -- record both lineage pointers. state_parent falls back to revision - 1
+  -- for legacy quiz rows written before lineage columns existed: their
+  -- forward history was strictly sequential, so the predecessor revision is
+  -- their state parent by construction.
+  select coalesce(max(revision), 1) + 1 into v_next_revision
+  from public.content_import_release_revisions
+  where import_id = p_import_id;
+
+  perform set_config('bmh.release_revision_import_id', p_import_id, true);
+  insert into public.content_import_release_revisions (
+    import_id, revision, kind, reverts_revision, state_parent_revision,
+    prior_manifest_sha256, manifest_sha256,
+    prior_catalog_sha256, catalog_sha256, payload_sha256,
+    quiz_count, question_count, option_count,
+    prior_quiz_graph, invalidated_incomplete_attempts, evidence, revised_by
+  ) values (
+    p_import_id, v_next_revision, 'quiz',
+    p_expected_revision,
+    coalesce(v_latest.state_parent_revision, v_latest.revision - 1),
+    v_latest.manifest_sha256, v_latest.prior_manifest_sha256,
+    v_current_catalog_sha256, v_catalog_sha256, v_payload_sha256,
+    jsonb_array_length(v_quizzes), jsonb_array_length(v_questions),
+    jsonb_array_length(v_answer_options),
+    v_current_graph, v_invalidated_attempts, p_evidence, auth.uid()
+  );
+  perform set_config('bmh.release_revision_import_id', '', true);
+
+  return jsonb_build_object(
+    'status', 'rolled_back',
+    'import_id', p_import_id,
+    'revision', v_next_revision,
+    'reverts_revision', p_expected_revision,
+    'prior_manifest_sha256', v_latest.manifest_sha256,
+    'manifest_sha256', v_latest.prior_manifest_sha256,
+    'prior_catalog_sha256', v_current_catalog_sha256,
+    'catalog_sha256', v_catalog_sha256,
+    'payload_sha256', v_payload_sha256,
+    'quizzes', jsonb_array_length(v_quizzes),
+    'questions', jsonb_array_length(v_questions),
+    'answer_options', jsonb_array_length(v_answer_options),
+    'invalidated_incomplete_attempts', v_invalidated_count
+  );
+end;
+$$;

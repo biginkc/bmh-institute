@@ -406,8 +406,14 @@ begin
         || ${sqlText(evidence.rollback_sha256)}
     );
     raise exception 'Second rollback unexpectedly succeeded.';
-  exception when sqlstate '22023' then
-    null;
+  exception when sqlstate '40001' then
+    -- Under the shared lineage model (migration 20260727180000), a rollback
+    -- receipt is not itself a rollback target: the by-identity lookup only
+    -- matches FORWARD quiz revisions, so a second rollback of receipt 3 is
+    -- refused up front as a preflight mismatch rather than reaching the
+    -- release-pin check it used to be refused by (sqlstate 22023). Same
+    -- safety property -- refused, graph untouched -- earlier refusal point.
+    if sqlerrm not like '%active revision changed after preflight%' then raise; end if;
   end;
   if (select active_revision from public.content_import_active_release_v1 where import_id = ${sqlText(IMPORT_ID)}) <> 3
     or (select count(*) from public.questions where quiz_id in (

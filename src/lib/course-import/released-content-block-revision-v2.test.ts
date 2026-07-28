@@ -233,7 +233,7 @@ describe("released content block revision v2 (versioned, variable-count builder)
     })).toThrow(/added outside content_blocks/i);
   });
 
-  it("refuses a target manifest that adds an asset not tied to any download mutation", () => {
+  it("refuses a target manifest that adds any asset (no supported mutation shape is storage-backed)", () => {
     const legacy = releaseReadyManifest();
     const target = releaseReadyManifest();
     blocksOf(target)[0] = { ...blocksOf(target)[0], content: { cards: [{ front: "X", back: "Y" }] } };
@@ -257,10 +257,10 @@ describe("released content block revision v2 (versioned, variable-count builder)
       importId: legacy.import_id,
       legacyManifest: buffer(legacy),
       targetManifest: buffer(target),
-    })).toThrow(/asset smuggled-pdf was added .* without a download mutation binding it/i);
+    })).toThrow(/asset smuggled-pdf was added/i);
   });
 
-  it("refuses a target manifest that changes an asset not tied to any download mutation", () => {
+  it("refuses a target manifest that changes any asset, even with matching declared metadata", () => {
     const legacy = releaseReadyManifest();
     const target = releaseReadyManifest();
     blocksOf(target)[0] = { ...blocksOf(target)[0], content: { cards: [{ front: "X", back: "Y" }] } };
@@ -272,7 +272,7 @@ describe("released content block revision v2 (versioned, variable-count builder)
       importId: legacy.import_id,
       legacyManifest: buffer(legacy),
       targetManifest: buffer(target),
-    })).toThrow(/asset video-1 was changed .* without a download mutation binding it/i);
+    })).toThrow(/asset video-1 was changed/i);
   });
 
   it("refuses a target manifest that removes an asset", () => {
@@ -298,12 +298,15 @@ describe("released content block revision v2 (versioned, variable-count builder)
     // limited to content/sort_order/required would see "no change" and
     // silently skip it; this must instead be treated as a real change that
     // reaches (and is refused by) the reparenting guard below.
+    // The placeholder keeping lesson one non-empty is a role_play insert (a
+    // SUPPORTED insert type) so iteration reaches the moved block instead of
+    // refusing on the placeholder first.
     const [moved] = blocksOf(target).splice(0, 1, {
       source_key: "block-first-lesson-placeholder",
-      type: "text",
+      type: "role_play",
       sort_order: 0,
       required: false,
-      content: { html: "<p>Placeholder so lesson one is never empty.</p>" },
+      content: { mode: "oral_check", scenario_id: "pending:placeholder" },
     });
     secondLessonBlocksOf(target).push(moved);
 
@@ -339,46 +342,81 @@ describe("released content block revision v2 (versioned, variable-count builder)
     })).toThrow(/import_id/i);
   });
 
-  it("binds a download update to its immutable, content-addressed asset path", () => {
+  it("refuses a download update as unsupported in v2 (deliberate scope cut; extend both layers together)", () => {
     const legacy = releaseReadyManifest();
     const target = releaseReadyManifest();
-    const legacySha = "0".repeat(64);
-    const sha = "1".repeat(64);
-    const legacyPath = `courses/training/v1/guides/guide.${legacySha}.pdf`;
-    const targetPath = `courses/training/v1/guides/guide.${sha}.pdf`;
-    legacy.assets.push({
-      source_key: "guide-pdf", kind: "pdf", local_path: "assets/guide.pdf",
-      storage_path: legacyPath, mime_type: "application/pdf",
-      checksum_sha256: legacySha, size_bytes: 10, approval_status: "approved",
-    });
-    target.assets.push({
-      source_key: "guide-pdf", kind: "pdf", local_path: "assets/guide.pdf",
-      storage_path: targetPath, mime_type: "application/pdf",
-      checksum_sha256: sha, size_bytes: 20, approval_status: "approved",
-    });
-    blocksOf(legacy).push({
-      source_key: "block-download",
-      type: "download",
-      sort_order: 1,
-      required: false,
-      content: { asset_key: "guide-pdf", file_path: legacyPath, size_bytes: 10 },
-    });
-    blocksOf(target).push({
-      source_key: "block-download",
-      type: "download",
-      sort_order: 1,
-      required: false,
-      content: { asset_key: "guide-pdf", file_path: targetPath, size_bytes: 20 },
-    });
+    const sha = "0".repeat(64);
+    const path = `courses/training/v1/guides/guide.${sha}.pdf`;
+    for (const manifest of [legacy, target]) {
+      manifest.assets.push({
+        source_key: "guide-pdf", kind: "pdf", local_path: "assets/guide.pdf",
+        storage_path: path, mime_type: "application/pdf",
+        checksum_sha256: sha, size_bytes: 10, approval_status: "approved",
+      });
+      blocksOf(manifest).push({
+        source_key: "block-download",
+        type: "download",
+        sort_order: 1,
+        required: false,
+        content: { asset_key: "guide-pdf", file_path: path, size_bytes: 10 },
+      });
+    }
+    blocksOf(target)[1] = {
+      ...blocksOf(target)[1],
+      content: { asset_key: "guide-pdf", file_path: path, size_bytes: 10, description: "Retitled" },
+    };
 
-    const revision = buildReleasedContentBlockRevisionV2({
+    expect(() => buildReleasedContentBlockRevisionV2({
       importId: legacy.import_id,
       legacyManifest: buffer(legacy),
       targetManifest: buffer(target),
+    })).toThrow(/updating a download block .* is unsupported in v2/i);
+  });
+
+  it("refuses inserting any block type other than role_play as unsupported in v2", () => {
+    const legacy = releaseReadyManifest();
+    const target = releaseReadyManifest();
+    blocksOf(target).push({
+      source_key: "block-added-callout",
+      type: "callout",
+      sort_order: 1,
+      required: false,
+      content: { variant: "info", markdown: "New callout" },
     });
-    const update = revision.mutations.find((mutation) => mutation.source_key === "block-download")!;
-    expect(update.replacement_sha256).toBe(sha);
-    expect(update.replacement_size_bytes).toBe(20);
+
+    expect(() => buildReleasedContentBlockRevisionV2({
+      importId: legacy.import_id,
+      legacyManifest: buffer(legacy),
+      targetManifest: buffer(target),
+    })).toThrow(/inserting a callout block .* is unsupported in v2/i);
+  });
+
+  it("refuses a sort_order change as unsupported in v2 (updates are content-only)", () => {
+    const legacy = releaseReadyManifest();
+    const target = releaseReadyManifest();
+    blocksOf(target)[0] = { ...blocksOf(target)[0], sort_order: 3 };
+
+    expect(() => buildReleasedContentBlockRevisionV2({
+      importId: legacy.import_id,
+      legacyManifest: buffer(legacy),
+      targetManifest: buffer(target),
+    })).toThrow(/changed sort_order, which is unsupported in v2/i);
+  });
+
+  it("refuses a required-state change (double-refused: the manifest gate itself forbids required text/flashcard blocks)", () => {
+    // For the two supported update types, a required-state flip cannot even
+    // produce a valid target manifest -- the release gate refuses required
+    // text/flashcard blocks outright, so the builder's own content-only
+    // check behind it is pure defense in depth.
+    const legacy = releaseReadyManifest();
+    const target = releaseReadyManifest();
+    blocksOf(target)[0] = { ...blocksOf(target)[0], required: true };
+
+    expect(() => buildReleasedContentBlockRevisionV2({
+      importId: legacy.import_id,
+      legacyManifest: buffer(legacy),
+      targetManifest: buffer(target),
+    })).toThrow(/cannot be required because flashcard blocks do not report completion/i);
   });
 
   it("produces stable payload checksums and explicit, non-hardcoded operator confirmations", () => {

@@ -163,44 +163,35 @@ function assertNoOutOfScopeManifestDrift(legacyPlan: ImportPlan, targetPlan: Imp
  * operations-level drift check above cannot see it -- an added, removed, or
  * changed asset alongside a legitimate block edit would otherwise be
  * silently dropped while the full target manifest hash (including the
- * unapplied asset change) gets recorded as active. An asset difference is
- * permitted only when it is explicitly tied to a download mutation in this
- * revision's own payload (its storage_path is the mutation's replacement
- * file_path) -- and even then the SQL function independently verifies the
- * referenced storage object's existence, checksum, size, and import
- * ownership against storage.objects before applying anything, so the tie is
- * receipt-verified server-side rather than trusted from the manifest.
+ * unapplied asset change) gets recorded as active. Since the narrowed v2
+ * contract supports NO storage-backed mutation shape (download mutations
+ * are unsupported -- see SUPPORTED_* below), there is no legitimate reason
+ * for ANY asset difference between the two manifests: every add, change, or
+ * removal is refused unconditionally. When download support is deliberately
+ * extended, this must become an exact one-to-one mapping (identical path +
+ * checksum + size + kind + MIME per tied mutation), not a membership test.
  */
-function assertNoOutOfScopeAssetDrift(
-  legacyPlan: ImportPlan,
-  targetPlan: ImportPlan,
-  mutations: ReleasedContentBlockRevisionV2Mutation[],
-) {
+function assertNoOutOfScopeAssetDrift(legacyPlan: ImportPlan, targetPlan: ImportPlan) {
   const legacyAssets = new Map(legacyPlan.assets.map((asset) => [asset.source_key, asset]));
   const targetAssets = new Map(targetPlan.assets.map((asset) => [asset.source_key, asset]));
-  const mutationBackedPaths = new Set(
-    mutations
-      .filter((mutation) => mutation.block_type === "download")
-      .map((mutation) => mutation.replacement_content.file_path)
-      .filter((path): path is string => typeof path === "string"),
-  );
 
-  for (const [sourceKey, legacyAsset] of legacyAssets) {
+  for (const sourceKey of legacyAssets.keys()) {
     if (!targetAssets.has(sourceKey)) {
       throw new Error(
-        `Released content revision v2 refused: asset ${sourceKey} was removed from the target manifest. This mechanism cannot apply asset removals; the removal would be recorded as part of the active manifest without actually happening.`,
+        `Released content revision v2 refused: asset ${sourceKey} was removed from the target manifest. This mechanism cannot apply asset changes; the removal would be recorded as part of the active manifest without actually happening.`,
       );
     }
-    void legacyAsset;
   }
   for (const [sourceKey, targetAsset] of targetAssets) {
     const legacyAsset = legacyAssets.get(sourceKey);
-    if (legacyAsset && stableJson(legacyAsset) === stableJson(targetAsset)) {
-      continue;
-    }
-    if (!mutationBackedPaths.has(targetAsset.storage_path)) {
+    if (!legacyAsset) {
       throw new Error(
-        `Released content revision v2 refused: asset ${sourceKey} was ${legacyAsset ? "changed in" : "added to"} the target manifest without a download mutation binding it. This mechanism only applies content-block mutations; an untied asset change would be recorded as part of the active manifest without actually being applied.`,
+        `Released content revision v2 refused: asset ${sourceKey} was added to the target manifest. This mechanism cannot apply asset changes; the addition would be recorded as part of the active manifest without actually being applied.`,
+      );
+    }
+    if (stableJson(legacyAsset) !== stableJson(targetAsset)) {
+      throw new Error(
+        `Released content revision v2 refused: asset ${sourceKey} was changed in the target manifest. This mechanism cannot apply asset changes; the change would be recorded as part of the active manifest without actually being applied.`,
       );
     }
   }
@@ -214,34 +205,32 @@ function exactContent(operation: ImportOperation, sourceKey: string) {
   return content as Record<string, unknown>;
 }
 
-function downloadAssetBinding(
-  operation: ImportOperation,
-  sourceKey: string,
-): { replacement_sha256: string | null; replacement_size_bytes: number | null } {
-  if (operation.row.block_type !== "download") {
-    return { replacement_sha256: null, replacement_size_bytes: null };
-  }
-  const content = exactContent(operation, sourceKey);
-  const filePath = content.file_path;
-  const sizeBytes = content.size_bytes;
-  const match = typeof filePath === "string"
-    ? /\.([0-9a-f]{64})\.[a-z0-9]{1,16}$/.exec(filePath)
-    : null;
-  if (!match || !Number.isInteger(sizeBytes) || Number(sizeBytes) < 1) {
-    throw new Error(
-      `Released content revision v2 ${sourceKey} is a download block without an immutable, content-addressed asset binding.`,
-    );
-  }
-  return { replacement_sha256: match[1], replacement_size_bytes: Number(sizeBytes) };
-}
+/**
+ * The deliberately SMALL verified contract, mirrored exactly by
+ * fn_revise_released_content_blocks_v2's own allow-lists: the pilot and the
+ * planned oral-check rollout need precisely (a) inserting role_play blocks
+ * and (b) content-only updates to text/flashcard blocks. Everything else --
+ * download mutations, other block types, sort-order moves, required-state
+ * flips -- is rejected here at PLANNING time with an explicit error, and
+ * again by the RPC at runtime. Extend both layers together, deliberately,
+ * when a real payload needs more.
+ */
+const SUPPORTED_INSERT_BLOCK_TYPES = new Set(["role_play"]);
+const SUPPORTED_UPDATE_BLOCK_TYPES = new Set(["text", "flashcard"]);
 
 function insertMutation(target: ImportOperation, sourceKey: string): ReleasedContentBlockRevisionV2Mutation {
+  const blockType = String(target.row.block_type);
+  if (!SUPPORTED_INSERT_BLOCK_TYPES.has(blockType)) {
+    throw new Error(
+      `Released content revision v2 refused: inserting a ${blockType} block (${sourceKey}) is unsupported in v2 (supported inserts: role_play). Extend the contract deliberately if a real payload needs it.`,
+    );
+  }
   return {
     action: "insert",
     source_key: sourceKey,
     block_id: target.id,
     lesson_id: String(target.row.lesson_id),
-    block_type: String(target.row.block_type),
+    block_type: blockType,
     expected_content: null,
     replacement_content: exactContent(target, sourceKey),
     sort_order: Number(target.row.sort_order),
@@ -266,19 +255,37 @@ function updateMutation(
       `Released content revision v2 ${sourceKey} changed block_type; this mechanism does not support retyping a released block.`,
     );
   }
-  const binding = downloadAssetBinding(target, sourceKey);
+  const blockType = String(target.row.block_type);
+  if (!SUPPORTED_UPDATE_BLOCK_TYPES.has(blockType)) {
+    throw new Error(
+      `Released content revision v2 refused: updating a ${blockType} block (${sourceKey}) is unsupported in v2 (supported updates: content-only edits of text/flashcard). Extend the contract deliberately if a real payload needs it.`,
+    );
+  }
+  // Content-only: the RPC's update statement writes ONLY the content column,
+  // so a sort-order or required-state change would silently not be applied
+  // while still being recorded in the active manifest. Refuse at planning.
+  if (Number(legacy.row.sort_order) !== Number(target.row.sort_order)) {
+    throw new Error(
+      `Released content revision v2 refused: ${sourceKey} changed sort_order, which is unsupported in v2 (updates are content-only). Extend the contract deliberately if a real payload needs it.`,
+    );
+  }
+  if (Boolean(legacy.row.is_required_for_completion) !== Boolean(target.row.is_required_for_completion)) {
+    throw new Error(
+      `Released content revision v2 refused: ${sourceKey} changed is_required_for_completion, which is unsupported in v2 (updates are content-only). Extend the contract deliberately if a real payload needs it.`,
+    );
+  }
   return {
     action: "update",
     source_key: sourceKey,
     block_id: target.id,
     lesson_id: String(target.row.lesson_id),
-    block_type: String(target.row.block_type),
+    block_type: blockType,
     expected_content: exactContent(legacy, sourceKey),
     replacement_content: exactContent(target, sourceKey),
     sort_order: Number(target.row.sort_order),
     is_required_for_completion: Boolean(target.row.is_required_for_completion),
-    replacement_sha256: binding.replacement_sha256,
-    replacement_size_bytes: binding.replacement_size_bytes,
+    replacement_sha256: null,
+    replacement_size_bytes: null,
   };
 }
 
@@ -357,7 +364,7 @@ export function buildReleasedContentBlockRevisionV2(input: {
       "Released content revision v2 refused: no drift was found between the legacy and target manifests.",
     );
   }
-  assertNoOutOfScopeAssetDrift(legacyPlan, targetPlan, mutations);
+  assertNoOutOfScopeAssetDrift(legacyPlan, targetPlan);
 
   const updateCount = mutations.filter((mutation) => mutation.action === "update").length;
   const insertCount = mutations.filter((mutation) => mutation.action === "insert").length;

@@ -230,13 +230,42 @@ export async function updateBlock(input: {
       error: "Add a valid video duration before requiring completion.",
     };
   }
+  const normalizedRequired = normalizeRequiredForBlock(
+    existing.block_type,
+    safeContent,
+    requestedRequired,
+  );
+
+  if (existing.block_type === "role_play") {
+    // Atomic three-key merge IN the database, not read-merge-replace in app
+    // code: a backend publish landing between this action's SELECT and its
+    // write would otherwise be overwritten by a recomputed full-content
+    // payload. fn_admin_merge_role_play_block_content merges exactly the
+    // three form-exposed fields onto the LIVE row in a single UPDATE
+    // statement (SECURITY INVOKER, so RLS applies unchanged), so concurrent
+    // changes to any other content field can never be lost -- regardless of
+    // what this action read moments earlier.
+    const merged = safeContent as Record<string, unknown>;
+    const { data, error } = await supabase.rpc(
+      "fn_admin_merge_role_play_block_content",
+      {
+        p_block_id: input.blockId,
+        p_scenario_id: String(merged.scenario_id),
+        p_title: String(merged.title),
+        p_height_px: Number(merged.height_px),
+        p_is_required_for_completion: normalizedRequired,
+      },
+    );
+    if (error) return { ok: false, error: error.message };
+    if (!data) return { ok: false, error: "Block not found." };
+    revalidatePath(`/admin/lessons/${input.lessonId}/edit`);
+    revalidatePath(`/lessons/${input.lessonId}`);
+    return { ok: true };
+  }
+
   const patch: { content: Json; is_required_for_completion: boolean } = {
     content: safeContent,
-    is_required_for_completion: normalizeRequiredForBlock(
-      existing.block_type,
-      safeContent,
-      requestedRequired,
-    ),
+    is_required_for_completion: normalizedRequired,
   };
   const { error } = await supabase
     .from("content_blocks")

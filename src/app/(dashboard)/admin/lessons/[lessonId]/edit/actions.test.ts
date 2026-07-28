@@ -7,6 +7,16 @@ let blockTypeRow: {
 } | null = { block_type: "text" };
 let updatePatch: Record<string, unknown> | null = null;
 let updateError: { message: string } | null = null;
+/** Runs after updateBlock's SELECT resolves -- lets a test mutate
+ * blockTypeRow to simulate a concurrent backend publish landing between the
+ * action's read and its write, exercising the read/write race for real. */
+let afterSelect: (() => void) | null = null;
+/** The args the action sent to the atomic role-play merge RPC, plus the
+ * content the simulated database produced by merging them onto the LIVE row
+ * content at rpc time (NOT the content the action read earlier). */
+let rpcCall: Record<string, unknown> | null = null;
+let rpcMergedContent: Record<string, unknown> | null = null;
+let rpcError: { message: string } | null = null;
 
 vi.mock("@/lib/auth/guard", () => ({
   requireAdmin: vi.fn(async () => ({
@@ -25,10 +35,16 @@ vi.mock("@/lib/supabase/server", () => ({
       return {
         select: () => ({
           eq: () => ({
-            maybeSingle: async () => ({
-              data: blockTypeRow,
-              error: null,
-            }),
+            maybeSingle: async () => {
+              // Snapshot, like a real SELECT: later mutations of
+              // blockTypeRow (a simulated concurrent publish) must not
+              // retroactively change what this action already read.
+              const snapshot = blockTypeRow
+                ? structuredClone(blockTypeRow)
+                : null;
+              afterSelect?.();
+              return { data: snapshot, error: null };
+            },
           }),
         }),
         update: (patch: Record<string, unknown>) => {
@@ -38,6 +54,27 @@ vi.mock("@/lib/supabase/server", () => ({
           };
         },
       };
+    },
+    rpc: async (name: string, args: Record<string, unknown>) => {
+      if (name !== "fn_admin_merge_role_play_block_content") {
+        throw new Error(`Unexpected rpc ${name}`);
+      }
+      rpcCall = args;
+      if (rpcError) return { data: null, error: rpcError };
+      if (!blockTypeRow || blockTypeRow.block_type !== "role_play") {
+        return { data: null, error: null };
+      }
+      // Simulate the database-side atomic merge: content || three keys,
+      // applied to the row's CURRENT content -- which may have changed
+      // since the action's SELECT.
+      rpcMergedContent = {
+        ...(blockTypeRow.content ?? {}),
+        scenario_id: args.p_scenario_id,
+        title: args.p_title,
+        height_px: args.p_height_px,
+      };
+      blockTypeRow.content = rpcMergedContent;
+      return { data: rpcMergedContent, error: null };
     },
   })),
 }));
@@ -53,6 +90,10 @@ describe("updateBlock sanitization (HARDEN-05)", () => {
     blockTypeRow = { block_type: "text" };
     updatePatch = null;
     updateError = null;
+    afterSelect = null;
+    rpcCall = null;
+    rpcMergedContent = null;
+    rpcError = null;
   });
 
   afterEach(() => {
@@ -121,6 +162,10 @@ describe("updateBlock embed branch (HARDEN-05)", () => {
     blockTypeRow = { block_type: "embed" };
     updatePatch = null;
     updateError = null;
+    afterSelect = null;
+    rpcCall = null;
+    rpcMergedContent = null;
+    rpcError = null;
   });
 
   afterEach(() => {
@@ -211,13 +256,17 @@ describe("updateBlock role_play branch", () => {
     blockTypeRow = { block_type: "role_play" };
     updatePatch = null;
     updateError = null;
+    afterSelect = null;
+    rpcCall = null;
+    rpcMergedContent = null;
+    rpcError = null;
   });
 
   afterEach(() => {
     vi.clearAllMocks();
   });
 
-  it("trims the configured scenario id before saving", async () => {
+  it("trims the configured scenario id and saves through the atomic merge RPC, never a full-content update", async () => {
     const result = await updateBlock({
       blockId: "block-1",
       lessonId: "lesson-1",
@@ -229,13 +278,13 @@ describe("updateBlock role_play branch", () => {
     });
 
     expect(result).toEqual({ ok: true });
-    expect(updatePatch).toEqual({
-      content: {
-        scenario_id: "scenario-1",
-        title: "Handle the price objection",
-        height_px: 900,
-      },
-      is_required_for_completion: false,
+    expect(updatePatch).toBeNull();
+    expect(rpcCall).toEqual({
+      p_block_id: "block-1",
+      p_scenario_id: "scenario-1",
+      p_title: "Handle the price objection",
+      p_height_px: 900,
+      p_is_required_for_completion: false,
     });
   });
 
@@ -264,14 +313,11 @@ describe("updateBlock role_play branch", () => {
     });
 
     expect(result).toEqual({ ok: true });
-    expect(updatePatch).toEqual({
-      content: {
-        mode: "oral_check",
-        scenario_id: "scenario-1",
-        title: "Handle the price objection",
-        height_px: 760,
-      },
-      is_required_for_completion: false,
+    expect(rpcMergedContent).toEqual({
+      mode: "oral_check",
+      scenario_id: "scenario-1",
+      title: "Handle the price objection",
+      height_px: 760,
     });
   });
 
@@ -307,15 +353,57 @@ describe("updateBlock role_play branch", () => {
     });
 
     expect(result).toEqual({ ok: true });
-    expect(updatePatch).toEqual({
+    expect(rpcMergedContent).toEqual({
+      mode: "oral_check",
+      scenario_id: "scenario-current",
+      scenario_spec: { context: "Current published spec" },
+      title: "Retitled from the stale tab",
+      height_px: 720,
+    });
+  });
+
+  it("keeps a concurrent publish's fields when it lands between the action's read and its write", async () => {
+    // Two-client interleaving: the action reads the block, then -- before it
+    // writes -- a backend publish attaches a scenario_spec and flips the
+    // scenario binding. Because the write is an atomic in-database merge of
+    // ONLY the three form fields onto the LIVE row (not a replacement built
+    // from the earlier read), the publish's fields must survive.
+    blockTypeRow = {
+      block_type: "role_play",
       content: {
-        mode: "oral_check",
-        scenario_id: "scenario-current",
-        scenario_spec: { context: "Current published spec" },
-        title: "Retitled from the stale tab",
-        height_px: 720,
+        scenario_id: "scenario-old",
+        title: "Talk with Andrea",
+        height_px: 760,
       },
-      is_required_for_completion: false,
+    };
+    afterSelect = () => {
+      blockTypeRow!.content = {
+        mode: "oral_check",
+        scenario_id: "scenario-published",
+        scenario_spec: { context: "Published between read and write" },
+        title: "Talk with Andrea",
+        height_px: 760,
+      };
+    };
+
+    const result = await updateBlock({
+      blockId: "block-1",
+      lessonId: "lesson-1",
+      content: {
+        scenario_id: "scenario-published",
+        title: "Admin retitle",
+        height_px: 800,
+      },
+    });
+
+    expect(result).toEqual({ ok: true });
+    expect(updatePatch).toBeNull();
+    expect(rpcMergedContent).toEqual({
+      mode: "oral_check",
+      scenario_id: "scenario-published",
+      scenario_spec: { context: "Published between read and write" },
+      title: "Admin retitle",
+      height_px: 800,
     });
   });
 
@@ -332,7 +420,7 @@ describe("updateBlock role_play branch", () => {
     });
 
     expect(result).toEqual({ ok: true });
-    expect(updatePatch).toMatchObject({ is_required_for_completion: true });
+    expect(rpcCall).toMatchObject({ p_is_required_for_completion: true });
   });
 
   it("forces an external video to optional even when the client requests required", async () => {
