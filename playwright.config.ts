@@ -4,7 +4,7 @@ import path from "node:path";
 import { defineConfig, devices } from "@playwright/test";
 
 import { assertCanonicalSupabaseProjectUrl } from "./src/lib/supabase/canonical-project-url";
-import { assertHugoBrowserTarget } from "./e2e/hugo-acceptance";
+import { assertHugoBrowserTarget } from "./src/lib/testing/hugo-browser-target";
 
 /**
  * Playwright config for the BMH Institute E2E safety net.

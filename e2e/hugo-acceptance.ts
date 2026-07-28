@@ -3,6 +3,8 @@ import { mkdir, writeFile } from "node:fs/promises";
 
 import type { TestInfo } from "@playwright/test";
 
+export { assertHugoBrowserTarget } from "../src/lib/testing/hugo-browser-target";
+
 export const HUGO_ACCEPTANCE_SCHEMA = "hugo-acceptance.v1" as const;
 export const HUGO_CLEANUP_MANIFEST_SCHEMA = "hugo-cleanup-manifest.v1" as const;
 export const HUGO_EVIDENCE_SCHEMA = "hugo-browser-evidence.v1" as const;
@@ -23,11 +25,6 @@ export const HUGO_PROJECT_ROLE_MATRIX = Object.freeze([
   Object.freeze({ project: "jitter" as const, roles: Object.freeze(["operator", "member"] as const), state: "placeholder" as const }),
 ] as const);
 
-const LOCAL_BROWSER_ORIGINS = new Set([
-  "http://localhost:3200",
-  "http://127.0.0.1:3200",
-]);
-const HUGO_PRODUCTION_ORIGINS = new Set(["https://institute.bmhgroupkc.com"]);
 const MAX_RUN_ID_LENGTH = 64;
 
 export type HugoAcceptanceRun = Readonly<{
@@ -235,32 +232,4 @@ export async function writeHugoCleanupManifest(
     contentType: "application/json",
   });
   return outputPath;
-}
-
-export function assertHugoBrowserTarget(input: {
-  baseUrl: string;
-  productionOptIn?: boolean;
-  readOnly?: boolean;
-}): { baseUrl: string; production: boolean } {
-  let url: URL;
-  try {
-    url = new URL(input.baseUrl);
-  } catch {
-    throw new Error("Hugo Playwright base URL must be an absolute HTTP(S) URL.");
-  }
-  if (url.pathname !== "/" || url.search || url.hash) {
-    throw new Error("Hugo Playwright base URL must be an origin without a path or query.");
-  }
-  const origin = url.origin;
-  if (LOCAL_BROWSER_ORIGINS.has(origin)) return { baseUrl: origin, production: false };
-  if (!HUGO_PRODUCTION_ORIGINS.has(origin)) {
-    throw new Error(`Hugo Playwright target ${origin} is not an approved test or production origin.`);
-  }
-  if (input.productionOptIn !== true) {
-    throw new Error("Hugo production browser checks require HUGO_E2E_ALLOW_PRODUCTION=1.");
-  }
-  if (input.readOnly !== true) {
-    throw new Error("Hugo production browser checks require HUGO_E2E_READ_ONLY=1.");
-  }
-  return { baseUrl: origin, production: true };
 }
