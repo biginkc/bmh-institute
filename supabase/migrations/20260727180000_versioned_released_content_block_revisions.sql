@@ -2,105 +2,88 @@
 -- correction. That migration hard-pinned an exact 44-row payload (44 UUIDs,
 -- a fixed 19/19/6 breakdown, one literal database-payload checksum baked into
 -- the insert-guard trigger) and cannot be reused for a different set of
--- blocks. This migration adds a `revision integer` compare-and-swap ledger
--- for content-block corrections, modeled on 20260722130000's versioned quiz
--- revision pattern, so any number of future publishes (a 3-block pilot, a
--- larger rollout, ...) can reuse the same mechanism.
+-- blocks.
 --
--- Design notes:
---  * This ledger is intentionally independent of
---    content_import_release_revisions (the quiz-revision ledger). The real
---    safety gate for either mechanism is a fresh whole-catalog SHA-256
---    compare-and-swap via fn_course_import_catalog_sha256, which always
---    reflects live state regardless of which mechanism moved it last. Coupling
---    the two ledgers together would only reproduce the one-shot migration's
---    hard-pin problem in a different shape (an exact "must be revision N"
---    requirement tied to unrelated quiz-revision history).
+-- Design (revised after adversarial review of an earlier version of this
+-- migration -- see inline notes below for what changed and why):
+--
+--  * ONE shared revision ledger. This reuses 20260722130000's
+--    `content_import_release_revisions` table and its
+--    `content_import_active_release_v1` view rather than creating an
+--    independent ledger for content-block mutations. Two independent
+--    per-mutation-type ledgers can each believe they hold "the" active
+--    manifest/catalog state after the other has actually moved it forward --
+--    a split-brain. A shared `revision` sequence per import_id, with every
+--    mutation kind (quiz, content-block, ...) writing into the same table and
+--    reading the same active-state view, makes that structurally impossible:
+--    whichever kind runs next always sees the true prior state, regardless of
+--    which kind produced it.
+--  * The whole-catalog SHA-256 compare-and-swap (fn_course_import_catalog_sha256)
+--    is still the real safety gate for any individual call, exactly as
+--    before; the shared ledger additionally makes revision *numbering* itself
+--    consistent across mutation kinds instead of just the catalog checksum.
 --  * Every check in fn_revise_released_content_blocks_v2 is parametric: no
 --    hardcoded manifest/catalog SHAs, block IDs, or mutation counts. The
 --    caller supplies its own preflight checksums and the function verifies
 --    them against live state.
+--  * The confirmation string is now bound to a checksum PostgreSQL computes
+--    itself from p_mutations (not a caller-supplied "client" hash), so an
+--    operator's approved confirmation string is cryptographically tied to
+--    the exact bytes about to be applied -- a stale or buggy caller cannot
+--    apply a different payload than the one that was reviewed and confirmed.
+--  * Rollback locks and inspects every table that can hold learner activity
+--    against a content block (progress, video-watch state, durable
+--    completion history, role-play results, course-resume pointers) before
+--    touching anything, and refuses if any of them reference a block this
+--    revision touched. Deleting an inserted block cascades into several of
+--    those tables; reverting an updated block's content can orphan others.
+--    Neither is acceptable to do silently to a real learner.
 
 set lock_timeout = '10s';
 
-create table public.content_import_content_block_revisions (
-  import_id text not null references public.content_import_release_records(import_id) on delete restrict,
-  revision integer not null check (revision > 1),
-  prior_manifest_sha256 text not null check (prior_manifest_sha256 ~ '^[0-9a-f]{64}$'),
-  manifest_sha256 text not null check (manifest_sha256 ~ '^[0-9a-f]{64}$'),
-  prior_catalog_sha256 text not null check (prior_catalog_sha256 ~ '^[0-9a-f]{64}$'),
-  catalog_sha256 text not null check (catalog_sha256 ~ '^[0-9a-f]{64}$'),
-  payload_sha256 text not null check (payload_sha256 ~ '^[0-9a-f]{64}$'),
-  client_payload_sha256 text not null check (client_payload_sha256 ~ '^[0-9a-f]{64}$'),
-  mutation_count integer not null check (mutation_count > 0),
-  update_count integer not null check (update_count >= 0),
-  insert_count integer not null check (insert_count >= 0),
-  mutations jsonb not null check (jsonb_typeof(mutations) = 'array'),
-  prior_block_graph jsonb not null,
-  evidence jsonb not null check (jsonb_typeof(evidence) = 'object'),
-  revised_at timestamptz not null default now(),
-  revised_by uuid,
-  primary key (import_id, revision),
-  check (update_count + insert_count = mutation_count)
-);
+-- Generalize the existing versioned ledger to carry either mutation kind.
+-- Existing rows are all quiz revisions; the DEFAULT backfills them as such
+-- without a second migration pass. NULL already satisfies every existing
+-- `check (column > 0)` constraint (NULL comparisons are neither true nor
+-- false, so they never violate a CHECK), so only NOT NULL needs relaxing.
+alter table public.content_import_release_revisions
+  add column kind text not null default 'quiz' check (kind in ('quiz', 'content_blocks')),
+  alter column quiz_count drop not null,
+  alter column question_count drop not null,
+  alter column option_count drop not null,
+  alter column prior_quiz_graph drop not null,
+  alter column invalidated_incomplete_attempts drop not null,
+  add column mutation_count integer check (mutation_count > 0),
+  add column update_count integer check (update_count >= 0),
+  add column insert_count integer check (insert_count >= 0),
+  add column mutations jsonb check (mutations is null or jsonb_typeof(mutations) = 'array'),
+  add column prior_block_graph jsonb,
+  add column client_payload_sha256 text check (client_payload_sha256 is null or client_payload_sha256 ~ '^[0-9a-f]{64}$'),
+  add column download_evidence_sha256 text check (download_evidence_sha256 is null or download_evidence_sha256 ~ '^[0-9a-f]{64}$');
 
-comment on table public.content_import_content_block_revisions is
-  'Versioned, append-only audit ledger for reusable content-block corrections layered over an immutable imported-catalog release. Independent of the quiz-revision ledger; gated on a live whole-catalog checksum compare-and-swap, not on cross-domain revision numbering.';
+alter table public.content_import_release_revisions
+  add constraint content_import_release_revisions_kind_shape_check
+  check (
+    (
+      kind = 'quiz'
+      and quiz_count is not null and question_count is not null
+      and option_count is not null and prior_quiz_graph is not null
+      and invalidated_incomplete_attempts is not null
+      and mutation_count is null and update_count is null and insert_count is null
+      and mutations is null and prior_block_graph is null
+      and client_payload_sha256 is null and download_evidence_sha256 is null
+    ) or (
+      kind = 'content_blocks'
+      and mutation_count is not null and update_count is not null and insert_count is not null
+      and mutations is not null and prior_block_graph is not null
+      and client_payload_sha256 is not null and download_evidence_sha256 is not null
+      and quiz_count is null and question_count is null and option_count is null
+      and prior_quiz_graph is null and invalidated_incomplete_attempts is null
+    )
+  );
 
-alter table public.content_import_content_block_revisions enable row level security;
-revoke all on table public.content_import_content_block_revisions
-  from public, anon, authenticated;
-grant select on table public.content_import_content_block_revisions to service_role;
-
-create or replace function public.fn_guard_content_import_content_block_revision()
-returns trigger
-language plpgsql
-set search_path = ''
-as $$
-begin
-  if tg_op <> 'INSERT'
-    or coalesce(auth.role(), '') <> 'service_role'
-    or coalesce(current_setting('bmh.revise_content_blocks_v2_import_id', true), '') <> new.import_id
-    or coalesce(current_setting('bmh.revise_content_blocks_v2_payload_sha256', true), '') <> new.payload_sha256
-  then
-    raise exception 'Content block revision records are immutable and operation-bound.'
-      using errcode = '42501';
-  end if;
-  return new;
-end;
-$$;
-
-revoke all on function public.fn_guard_content_import_content_block_revision()
-  from public, anon, authenticated;
-
-create trigger content_import_content_block_revisions_guard
-before insert or update or delete on public.content_import_content_block_revisions
-for each row execute function public.fn_guard_content_import_content_block_revision();
-
-create or replace view public.content_import_active_content_block_revision_v1
-with (security_invoker = true)
-as
-select
-  release.import_id,
-  release.program_id,
-  release.manifest_sha256 as original_manifest_sha256,
-  release.catalog_sha256 as original_catalog_sha256,
-  coalesce(revision.revision, 1) as active_revision,
-  coalesce(revision.manifest_sha256, release.manifest_sha256) as active_manifest_sha256,
-  coalesce(revision.catalog_sha256, release.catalog_sha256) as active_catalog_sha256,
-  coalesce(revision.revised_at, release.released_at) as active_revised_at
-from public.content_import_release_records release
-left join lateral (
-  select item.revision, item.manifest_sha256, item.catalog_sha256, item.revised_at
-  from public.content_import_content_block_revisions item
-  where item.import_id = release.import_id
-  order by item.revision desc
-  limit 1
-) revision on true;
-
-revoke all on public.content_import_active_content_block_revision_v1
-  from public, anon, authenticated;
-grant select on public.content_import_active_content_block_revision_v1 to service_role;
+comment on column public.content_import_release_revisions.kind is
+  'Discriminates which mutation type produced this ledger row. All rows share one revision sequence and one active-state view (content_import_active_release_v1) regardless of kind -- that shared sequence is what prevents a per-kind split-brain.';
 
 -- Generalize the content_blocks insert guard. Preserve migration 033's base
 -- apply-path branch and migration 20260726170000's exact one-shot branch
@@ -223,9 +206,14 @@ declare
     'replacement_sha256',
     'replacement_size_bytes'
   ];
+  -- Every block_type the content_blocks table itself allows. Deliberately
+  -- not narrowed to the pilot's block types (an earlier version of this
+  -- migration omitted 'flashcard', which the TS builder and manifest schema
+  -- both already support -- that payload would pass TS preflight and only
+  -- fail here at the RPC boundary).
   v_allowed_block_types constant text[] := array[
     'video','text','pdf','image','audio','download',
-    'external_link','embed','role_play','divider','callout'
+    'external_link','embed','role_play','divider','callout','flashcard'
   ];
   v_program_id uuid;
   v_active_revision integer;
@@ -233,6 +221,8 @@ declare
   v_active_catalog_sha256 text;
   v_active_evidence jsonb;
   v_database_payload_sha256 text;
+  v_download_evidence jsonb;
+  v_download_evidence_sha256 text;
   v_prior_catalog_sha256 text;
   v_replacement_catalog_sha256 text;
   v_update_count integer;
@@ -242,7 +232,6 @@ declare
   v_inserted_count integer;
   v_target_count integer;
   v_prior_block_graph jsonb;
-  v_existing public.content_import_content_block_revisions%rowtype;
 begin
   if coalesce(auth.role(), '') <> 'service_role' then
     raise exception 'Released content block revision requires service_role.'
@@ -270,31 +259,17 @@ begin
   end if;
   v_mutation_count := jsonb_array_length(p_mutations);
 
-  if jsonb_typeof(p_evidence) is distinct from 'object'
-    or not (p_evidence ?& array[
-      'operation', 'manifest_sha256', 'expected_prior_catalog_sha256',
-      'client_payload_sha256', 'upload_receipt_sha256'
-    ])
-    or p_evidence ->> 'operation' <> 'released_content_blocks_v2'
-    or p_evidence ->> 'manifest_sha256' is distinct from p_manifest_sha256
-    or p_evidence ->> 'expected_prior_catalog_sha256'
-      is distinct from p_expected_prior_catalog_sha256
-    or p_evidence ->> 'client_payload_sha256' is distinct from p_client_payload_sha256
-    or coalesce(p_evidence ->> 'upload_receipt_sha256', '') !~ '^[0-9a-f]{64}$'
-  then
-    raise exception 'Released content block revision refused: checksum-bound evidence is incomplete.'
-      using errcode = '22023';
-  end if;
-
-  if p_confirmation is distinct from
-    'REVISE-RELEASED-CONTENT-BLOCKS-V2:' || p_import_id || ':'
-      || p_expected_prior_manifest_sha256 || ':' || p_manifest_sha256 || ':'
-      || p_expected_prior_catalog_sha256 || ':' || p_client_payload_sha256 || ':'
-      || v_mutation_count::text
-  then
-    raise exception 'Released content block revision refused: confirmation mismatch.'
-      using errcode = '22023';
-  end if;
+  -- Compute PostgreSQL's own canonical digest of the mutation payload before
+  -- any further validation. This -- not the caller-supplied
+  -- p_client_payload_sha256 -- is what the required confirmation string
+  -- binds to below, so a stale or buggy caller cannot apply a different
+  -- payload than the one an operator actually reviewed and confirmed.
+  -- p_client_payload_sha256 (computed client-side over JS's own JSON
+  -- canonicalization) is retained only as an audit trail cross-reference;
+  -- it is expected to differ byte-for-byte from this value in general
+  -- (different serialization rules), so it is never compared to it.
+  v_database_payload_sha256 :=
+    encode(sha256(convert_to(p_mutations::text, 'UTF8')), 'hex');
 
   if exists (
     select 1
@@ -362,6 +337,29 @@ begin
       using errcode = '22023';
   end if;
 
+  if jsonb_typeof(p_evidence) is distinct from 'object'
+    or not (p_evidence ?& array['operation', 'manifest_sha256', 'expected_prior_catalog_sha256'])
+    or p_evidence ->> 'operation' <> 'released_content_blocks_v2'
+    or p_evidence ->> 'manifest_sha256' is distinct from p_manifest_sha256
+    or p_evidence ->> 'expected_prior_catalog_sha256'
+      is distinct from p_expected_prior_catalog_sha256
+  then
+    raise exception 'Released content block revision refused: checksum-bound evidence is incomplete.'
+      using errcode = '22023';
+  end if;
+
+  -- Bound to PostgreSQL's own computed digest (v_database_payload_sha256),
+  -- not a caller assertion -- see the comment where it is computed above.
+  if p_confirmation is distinct from
+    'REVISE-RELEASED-CONTENT-BLOCKS-V2:' || p_import_id || ':'
+      || p_expected_prior_manifest_sha256 || ':' || p_manifest_sha256 || ':'
+      || p_expected_prior_catalog_sha256 || ':' || v_database_payload_sha256 || ':'
+      || v_mutation_count::text
+  then
+    raise exception 'Released content block revision refused: confirmation mismatch.'
+      using errcode = '22023';
+  end if;
+
   select
     count(*) filter (where mutation.value ->> 'action' = 'update'),
     count(*) filter (where mutation.value ->> 'action' = 'insert')
@@ -373,7 +371,6 @@ begin
   lock table
     public.content_import_release_records,
     public.content_import_release_revisions,
-    public.content_import_content_block_revisions,
     public.programs,
     public.courses,
     public.modules,
@@ -382,11 +379,12 @@ begin
   in share row exclusive mode;
   lock table storage.objects in share mode;
 
-  select active.program_id, active.active_revision,
+  select release.program_id, active.active_revision,
     active.active_manifest_sha256, active.active_catalog_sha256
   into v_program_id, v_active_revision, v_active_manifest_sha256, v_active_catalog_sha256
-  from public.content_import_active_content_block_revision_v1 active
-  where active.import_id = p_import_id;
+  from public.content_import_release_records release
+  join public.content_import_active_release_v1 active on active.import_id = release.import_id
+  where release.import_id = p_import_id;
   if not found
     or not exists (
       select 1 from public.programs program
@@ -405,10 +403,16 @@ begin
 
   if v_active_revision > 1 then
     select evidence into v_active_evidence
-    from public.content_import_content_block_revisions
+    from public.content_import_release_revisions
     where import_id = p_import_id and revision = v_active_revision;
   end if;
 
+  -- The one thing the SQL contract still lets the caller assert without an
+  -- independent server-side recomputation is which storage object backs a
+  -- download mutation's replacement content -- but only its EXISTENCE is
+  -- asserted; this block verifies it, and the digest recorded below
+  -- (v_download_evidence_sha256) is derived only from rows this check just
+  -- confirmed are real, never from anything the caller merely claimed.
   if exists (
     select 1
     from jsonb_array_elements(p_mutations) mutation(value)
@@ -438,6 +442,17 @@ begin
     raise exception 'Released content block revision refused: an immutable download asset referenced by the payload is missing.'
       using errcode = '22023';
   end if;
+  select coalesce(jsonb_agg(jsonb_build_object(
+    'block_id', mutation.value ->> 'block_id',
+    'file_path', mutation.value -> 'replacement_content' ->> 'file_path',
+    'sha256', mutation.value ->> 'replacement_sha256',
+    'size_bytes', mutation.value ->> 'replacement_size_bytes'
+  ) order by mutation.value ->> 'block_id'), '[]'::jsonb)
+  into v_download_evidence
+  from jsonb_array_elements(p_mutations) mutation(value)
+  where mutation.value ->> 'block_type' = 'download';
+  v_download_evidence_sha256 :=
+    encode(sha256(convert_to(v_download_evidence::text, 'UTF8')), 'hex');
 
   -- Idempotent replay: the exact target manifest is already the active one.
   if v_active_manifest_sha256 = p_manifest_sha256 then
@@ -453,7 +468,7 @@ begin
      and block.is_required_for_completion =
        (mutation.value ->> 'is_required_for_completion')::boolean;
     if v_active_revision > 1
-      and v_active_evidence ->> 'client_payload_sha256' = p_client_payload_sha256
+      and v_active_evidence ->> 'manifest_sha256' = p_manifest_sha256
       and v_active_catalog_sha256 = v_replacement_catalog_sha256
       and v_target_count = v_mutation_count
     then
@@ -482,8 +497,9 @@ begin
   -- before the release's own publish flip (fn_release_course_import_v1
   -- computes it, THEN publishes), so it can never match a live post-publish
   -- checksum. Only compare against the active-state view's cached checksum
-  -- once a prior v2 revision has itself recorded a live, post-publish
-  -- checksum -- exactly the same asymmetry the quiz-revision pattern uses.
+  -- once a prior revision (of either kind) has itself recorded a live,
+  -- post-publish checksum -- exactly the same asymmetry the quiz-revision
+  -- function uses for its own equivalent check.
   if v_active_revision > 1 and v_prior_catalog_sha256 <> v_active_catalog_sha256 then
     raise exception 'Released content block revision refused: live catalog changed after the active revision receipt.'
       using errcode = '40001';
@@ -542,8 +558,6 @@ begin
   end if;
 
   perform set_config('bmh.revise_content_blocks_v2_import_id', p_import_id, true);
-  v_database_payload_sha256 :=
-    encode(sha256(convert_to(p_mutations::text, 'UTF8')), 'hex');
   perform set_config(
     'bmh.revise_content_blocks_v2_payload_sha256',
     v_database_payload_sha256,
@@ -593,19 +607,21 @@ begin
       using errcode = '40001';
   end if;
 
-  insert into public.content_import_content_block_revisions (
-    import_id, revision, prior_manifest_sha256, manifest_sha256,
+  perform set_config('bmh.release_revision_import_id', p_import_id, true);
+  insert into public.content_import_release_revisions (
+    import_id, revision, kind, prior_manifest_sha256, manifest_sha256,
     prior_catalog_sha256, catalog_sha256, payload_sha256, client_payload_sha256,
-    mutation_count, update_count, insert_count,
+    download_evidence_sha256, mutation_count, update_count, insert_count,
     mutations, prior_block_graph, evidence, revised_by
   ) values (
-    p_import_id, v_active_revision + 1,
+    p_import_id, v_active_revision + 1, 'content_blocks',
     p_expected_prior_manifest_sha256, p_manifest_sha256,
     v_prior_catalog_sha256, v_replacement_catalog_sha256,
-    v_database_payload_sha256, p_client_payload_sha256,
+    v_database_payload_sha256, p_client_payload_sha256, v_download_evidence_sha256,
     v_mutation_count, v_update_count, v_insert_count,
     p_mutations, v_prior_block_graph, p_evidence, auth.uid()
   );
+  perform set_config('bmh.release_revision_import_id', '', true);
   perform set_config('bmh.revise_content_blocks_v2_import_id', '', true);
   perform set_config('bmh.revise_content_blocks_v2_payload_sha256', '', true);
 
@@ -617,7 +633,8 @@ begin
     'update_count', v_update_count,
     'insert_count', v_insert_count,
     'prior_catalog_sha256', v_prior_catalog_sha256,
-    'catalog_sha256', v_replacement_catalog_sha256
+    'catalog_sha256', v_replacement_catalog_sha256,
+    'database_payload_sha256', v_database_payload_sha256
   );
 end;
 $$;
@@ -631,7 +648,7 @@ grant execute on function public.fn_revise_released_content_blocks_v2(
 
 comment on function public.fn_revise_released_content_blocks_v2(
   text, text, text, text, jsonb, text, jsonb, text
-) is 'Reusable, versioned content-block revision over an immutable imported-catalog release: compare-and-swaps the whole-catalog checksum, applies a variable-count insert/update mutation payload, and records an append-only, rollback-capable audit row.';
+) is 'Reusable, versioned content-block revision over an immutable imported-catalog release: shares one revision ledger with the quiz-revision mechanism, compare-and-swaps the whole-catalog checksum, applies a variable-count insert/update mutation payload, and records an append-only, rollback-capable audit row. The required confirmation string is bound to a checksum PostgreSQL computes itself from the payload, not a caller assertion.';
 
 create or replace function public.fn_rollback_released_content_block_revision_v1(
   p_import_id text,
@@ -645,11 +662,12 @@ security definer
 set search_path = ''
 as $$
 declare
-  v_latest public.content_import_content_block_revisions%rowtype;
+  v_latest public.content_import_release_revisions%rowtype;
   v_current_catalog_sha256 text;
   v_replacement_catalog_sha256 text;
   v_updated_rows jsonb;
   v_inserted_block_ids jsonb;
+  v_touched_block_ids uuid[];
   v_restored_count integer;
   v_deleted_count integer;
   v_target_count integer;
@@ -670,19 +688,31 @@ begin
 
   perform pg_advisory_xact_lock(hashtextextended('course-import-catalog-mutation', 0));
   perform pg_advisory_xact_lock(hashtextextended('course-import-release:' || p_import_id, 0));
+  -- Every table that can hold learner activity against a content block is
+  -- locked here, not just role_play_results: deleting an inserted block
+  -- cascades into user_block_progress, user_video_progress, and
+  -- role_play_results, and clears user_course_resume.last_block_id; nothing
+  -- may write any of those for a touched block while rollback is deciding
+  -- whether it is safe.
   lock table
     public.content_import_release_records,
-    public.content_import_content_block_revisions,
+    public.content_import_release_revisions,
     public.programs, public.courses, public.modules, public.lessons,
-    public.content_blocks, public.role_play_results
+    public.content_blocks,
+    public.user_block_progress,
+    public.user_video_progress,
+    public.user_video_completion_history,
+    public.role_play_results,
+    public.user_course_resume
   in share row exclusive mode;
 
   select * into v_latest
-  from public.content_import_content_block_revisions revision
+  from public.content_import_release_revisions revision
   where revision.import_id = p_import_id
-  order by revision.revision desc
+    and revision.revision = p_expected_revision
+    and revision.kind = 'content_blocks'
   limit 1;
-  if not found or v_latest.revision <> p_expected_revision then
+  if not found then
     raise exception 'Released content block revision rollback refused: active revision changed after preflight.'
       using errcode = '40001';
   end if;
@@ -709,19 +739,39 @@ begin
     raise exception 'Released content block revision rollback refused: archived prior graph is malformed.';
   end if;
 
-  -- Refuse rollback if a learner has already completed a role-play attempt
-  -- against any block this revision touched — matches the quiz-revision
-  -- rollback's "no completed activity" safety property, scoped to the
-  -- durable evidence table content blocks actually have.
+  select coalesce(array_agg(distinct id), '{}'::uuid[]) into v_touched_block_ids
+  from (
+    select value::uuid as id
+    from jsonb_array_elements_text(v_inserted_block_ids) value
+    union all
+    select (row.value ->> 'id')::uuid
+    from jsonb_array_elements(v_updated_rows) row(value)
+  ) touched;
+
+  -- Refuse rollback if ANY table that can hold learner activity references
+  -- a block this revision touched -- whether it was inserted (rollback would
+  -- delete it, cascading into progress/results rows) or merely updated
+  -- (rollback would revert its content, which can orphan video-watch state
+  -- keyed to that content's asset version). This is deliberately broader
+  -- than the quiz-revision rollback's "completed activity" check because a
+  -- content-block revision can touch any block type, not just role-plays.
   if exists (
-    select 1
-    from public.role_play_results result
-    where result.block_id in (
-      select (mutation.value ->> 'block_id')::uuid
-      from jsonb_array_elements(v_latest.mutations) mutation(value)
-    )
+    select 1 from public.user_block_progress progress
+    where progress.block_id = any(v_touched_block_ids)
+  ) or exists (
+    select 1 from public.user_video_progress progress
+    where progress.block_id = any(v_touched_block_ids)
+  ) or exists (
+    select 1 from public.user_video_completion_history history
+    where history.block_id = any(v_touched_block_ids)
+  ) or exists (
+    select 1 from public.role_play_results result
+    where result.block_id = any(v_touched_block_ids)
+  ) or exists (
+    select 1 from public.user_course_resume resume
+    where resume.last_block_id = any(v_touched_block_ids)
   ) then
-    raise exception 'Released content block revision rollback refused: completed learner activity exists on a touched block.'
+    raise exception 'Released content block revision rollback refused: learner activity exists on a touched block.'
       using errcode = '23503';
   end if;
 
@@ -776,28 +826,22 @@ begin
       using errcode = '40001';
   end if;
 
-  perform set_config('bmh.revise_content_blocks_v2_import_id', p_import_id, true);
-  perform set_config(
-    'bmh.revise_content_blocks_v2_payload_sha256',
-    encode(sha256(convert_to(v_latest.mutations::text, 'UTF8')), 'hex'),
-    true
-  );
-  insert into public.content_import_content_block_revisions (
-    import_id, revision, prior_manifest_sha256, manifest_sha256,
+  perform set_config('bmh.release_revision_import_id', p_import_id, true);
+  insert into public.content_import_release_revisions (
+    import_id, revision, kind, prior_manifest_sha256, manifest_sha256,
     prior_catalog_sha256, catalog_sha256, payload_sha256, client_payload_sha256,
-    mutation_count, update_count, insert_count,
+    download_evidence_sha256, mutation_count, update_count, insert_count,
     mutations, prior_block_graph, evidence, revised_by
   ) values (
-    p_import_id, v_latest.revision + 1,
+    p_import_id, v_latest.revision + 1, 'content_blocks',
     v_latest.manifest_sha256, v_latest.prior_manifest_sha256,
     v_current_catalog_sha256, v_replacement_catalog_sha256,
     encode(sha256(convert_to(v_latest.mutations::text, 'UTF8')), 'hex'),
-    v_latest.client_payload_sha256,
+    v_latest.client_payload_sha256, v_latest.download_evidence_sha256,
     v_latest.mutation_count, v_latest.update_count, v_latest.insert_count,
     v_latest.mutations, v_latest.prior_block_graph, p_evidence, auth.uid()
   );
-  perform set_config('bmh.revise_content_blocks_v2_import_id', '', true);
-  perform set_config('bmh.revise_content_blocks_v2_payload_sha256', '', true);
+  perform set_config('bmh.release_revision_import_id', '', true);
 
   return jsonb_build_object(
     'status', 'rolled_back',
@@ -820,4 +864,4 @@ grant execute on function public.fn_rollback_released_content_block_revision_v1(
 
 comment on function public.fn_rollback_released_content_block_revision_v1(
   text, integer, jsonb, text
-) is 'Reverts the most recent versioned content-block revision by restoring updated rows to their archived pre-image and deleting inserted rows, refusing if completed learner activity or further drift exists.';
+) is 'Reverts the most recent versioned content-block revision by restoring updated rows to their archived pre-image and deleting inserted rows. Refuses if any progress, completion, results, or resume table references a touched block, or if further drift exists.';

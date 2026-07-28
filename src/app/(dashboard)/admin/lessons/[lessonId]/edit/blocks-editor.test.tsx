@@ -282,6 +282,49 @@ describe("<BlocksEditor />", () => {
     );
   });
 
+  it("preserves the oral-check mode marker when only the title changes", async () => {
+    const user = userEvent.setup();
+    render(
+      <BlocksEditor
+        lessonId="lesson-1"
+        initialBlocks={[
+          {
+            id: "role-play-oral-check",
+            block_type: "role_play",
+            content: {
+              mode: "oral_check",
+              scenario_id: "scenario-1",
+              title: "Talk with Andrea",
+              height_px: 760,
+            },
+            sort_order: 0,
+            is_required_for_completion: false,
+          },
+        ]}
+      />,
+    );
+
+    // There is no "mode" field in the admin form — it's a backend-only
+    // marker — so an admin can only ever change scenario_id/title/height_px.
+    await user.clear(screen.getByLabelText("Title"));
+    await user.type(screen.getByLabelText("Title"), "Handle the price objection");
+    await user.click(screen.getByRole("button", { name: "Save block" }));
+
+    await waitFor(() =>
+      expect(updateBlock).toHaveBeenCalledWith({
+        blockId: "role-play-oral-check",
+        lessonId: "lesson-1",
+        content: {
+          mode: "oral_check",
+          scenario_id: "scenario-1",
+          title: "Handle the price objection",
+          height_px: 760,
+        },
+        is_required_for_completion: false,
+      }),
+    );
+  });
+
   it("accepts Markdown transcripts", () => {
     const { container } = render(
       <BlocksEditor

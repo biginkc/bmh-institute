@@ -77,7 +77,6 @@ async function main() {
     manifestSha256,
     mutations: revision.mutations,
     clientPayloadSha256,
-    uploadReceiptSha256: databasePayloadSha256,
     environment: {
       url: process.env.NEXT_PUBLIC_SUPABASE_URL,
       serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
@@ -88,8 +87,12 @@ async function main() {
     createClient: (url, serviceRoleKey) =>
       createClient(url, serviceRoleKey, { auth: { persistSession: false, autoRefreshToken: false } }),
     loadActiveRevision: async (client, activeImportId) => {
+      // content_import_active_release_v1 is SHARED with the quiz-revision
+      // mechanism (one ledger, one active-state view for every mutation
+      // kind) -- see the migration's design notes for why a per-kind view
+      // would be a split-brain risk.
       const active = await client
-        .from("content_import_active_content_block_revision_v1")
+        .from("content_import_active_release_v1")
         .select("import_id,active_revision,active_manifest_sha256,active_catalog_sha256")
         .eq("import_id", activeImportId)
         .single();
@@ -110,13 +113,16 @@ async function main() {
       return result.data as ReleasedContentBlockRevisionV2Row[];
     },
     loadAudit: async (client, auditImportId, auditManifestSha256) => {
+      // Same shared table the quiz-revision mechanism writes to; kind
+      // narrows this lookup to content-block revision rows specifically.
       const result = await client
-        .from("content_import_content_block_revisions")
+        .from("content_import_release_revisions")
         .select(
           "import_id,revision,manifest_sha256,prior_catalog_sha256,catalog_sha256,payload_sha256,client_payload_sha256,mutation_count,update_count,insert_count,evidence",
         )
         .eq("import_id", auditImportId)
         .eq("manifest_sha256", auditManifestSha256)
+        .eq("kind", "content_blocks")
         .maybeSingle();
       if (result.error) {
         throw new Error(`Released content revision v2 audit preflight failed: ${result.error.message}`);

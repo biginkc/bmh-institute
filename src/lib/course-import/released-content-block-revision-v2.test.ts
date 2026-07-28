@@ -9,6 +9,7 @@ import {
   matchesReleasedContentBlockRevisionV2Mutation,
   releasedContentBlockRevisionV2ClientPayloadSha256,
   releasedContentBlockRevisionV2Confirmation,
+  releasedContentBlockRevisionV2DatabasePayloadSha256,
   releasedContentBlockRevisionV2RollbackConfirmation,
 } from "./released-content-block-revision-v2";
 
@@ -42,14 +43,38 @@ function releaseReadyManifest(): CourseImportManifest {
       content: { cards: [{ front: "BMH", back: "Better Made Homes" }] },
     },
   ];
-  manifest.program.courses[0].modules[0].lessons = [lesson];
+  const secondLesson: CourseImportManifest["program"]["courses"][number]["modules"][number]["lessons"][number] = {
+    source_key: "lesson-content-second",
+    title: "Second lesson",
+    description: null,
+    type: "content",
+    sort_order: 1,
+    required: true,
+    thumbnail_asset_key: null,
+    blocks: [
+      {
+        source_key: "block-second-lesson-anchor",
+        type: "text",
+        sort_order: 5,
+        required: false,
+        content: { html: "<p>Anchor block so this lesson is never empty.</p>" },
+      },
+    ],
+  };
+  manifest.program.courses[0].modules[0].lessons = [lesson, secondLesson];
   return manifest;
 }
 
-/** Returns the sole content lesson's blocks array, which is where every test
- * in this file makes its edits. */
+/** Returns the first content lesson's blocks array, which is where most
+ * tests in this file make their edits. */
 function blocksOf(manifest: CourseImportManifest) {
   return manifest.program.courses[0].modules[0].lessons[0].blocks!;
+}
+
+/** Returns the second content lesson's blocks array, used only by the
+ * reparenting test to move a block across lessons. */
+function secondLessonBlocksOf(manifest: CourseImportManifest) {
+  return manifest.program.courses[0].modules[0].lessons[1].blocks!;
 }
 
 describe("released content block revision v2 (versioned, variable-count builder)", () => {
@@ -156,6 +181,84 @@ describe("released content block revision v2 (versioned, variable-count builder)
     })).toThrow(/does not support removing/i);
   });
 
+  it("refuses a target manifest that changes anything outside content_blocks, even alongside a legitimate block edit", () => {
+    const legacy = releaseReadyManifest();
+    const target = releaseReadyManifest();
+    blocksOf(target)[0] = { ...blocksOf(target)[0], content: { cards: [{ front: "X", back: "Y" }] } };
+    // An out-of-scope change bundled in alongside the in-scope block edit --
+    // without this refusal, the caller would go on to record the WHOLE
+    // target manifest's checksum as "active" while only the block edit was
+    // actually applied, so a later revision would trust a manifest checksum
+    // that no longer matches live data for this course's title.
+    target.program.courses[0].title = "Retitled without going through this mechanism";
+
+    expect(() => buildReleasedContentBlockRevisionV2({
+      importId: legacy.import_id,
+      legacyManifest: buffer(legacy),
+      targetManifest: buffer(target),
+    })).toThrow(/changed outside content_blocks/i);
+  });
+
+  it("refuses a target manifest that adds or removes anything outside content_blocks", () => {
+    const legacy = releaseReadyManifest();
+    const addedModule = releaseReadyManifest();
+    blocksOf(addedModule)[0] = { ...blocksOf(addedModule)[0], content: { cards: [{ front: "X", back: "Y" }] } };
+    addedModule.program.courses[0].modules.push({
+      source_key: "module-added-out-of-scope",
+      title: "Added module",
+      description: null,
+      sort_order: 1,
+      lessons: [{
+        source_key: "lesson-added-out-of-scope",
+        title: "Added lesson",
+        description: null,
+        type: "content",
+        sort_order: 0,
+        required: true,
+        thumbnail_asset_key: null,
+        blocks: [{
+          source_key: "block-added-out-of-scope",
+          type: "text",
+          sort_order: 0,
+          required: false,
+          content: { html: "<p>Added.</p>" },
+        }],
+      }],
+    });
+
+    expect(() => buildReleasedContentBlockRevisionV2({
+      importId: legacy.import_id,
+      legacyManifest: buffer(legacy),
+      targetManifest: buffer(addedModule),
+    })).toThrow(/added outside content_blocks/i);
+  });
+
+  it("treats a block moved to a different lesson with byte-identical content as a change, not a silent no-op", () => {
+    const legacy = releaseReadyManifest();
+    const target = releaseReadyManifest();
+    // Move block-cards from lesson one to lesson two in the TARGET only,
+    // keeping its content/sort_order/required exactly as they were (only its
+    // position in the lesson tree changes, and lesson one keeps an unrelated
+    // placeholder block so it is not left empty). A naive equality check
+    // limited to content/sort_order/required would see "no change" and
+    // silently skip it; this must instead be treated as a real change that
+    // reaches (and is refused by) the reparenting guard below.
+    const [moved] = blocksOf(target).splice(0, 1, {
+      source_key: "block-first-lesson-placeholder",
+      type: "text",
+      sort_order: 0,
+      required: false,
+      content: { html: "<p>Placeholder so lesson one is never empty.</p>" },
+    });
+    secondLessonBlocksOf(target).push(moved);
+
+    expect(() => buildReleasedContentBlockRevisionV2({
+      importId: legacy.import_id,
+      legacyManifest: buffer(legacy),
+      targetManifest: buffer(target),
+    })).toThrow(/reparenting/i);
+  });
+
   it("refuses reparenting or retyping a released block instead of misreading it as a fresh insert", () => {
     const legacy = releaseReadyManifest();
     const target = releaseReadyManifest();
@@ -234,18 +337,24 @@ describe("released content block revision v2 (versioned, variable-count builder)
       targetManifest: buffer(target),
     });
     const clientPayloadSha256 = releasedContentBlockRevisionV2ClientPayloadSha256(revision.mutations);
+    const databasePayloadSha256 = releasedContentBlockRevisionV2DatabasePayloadSha256(revision.mutations);
     expect(clientPayloadSha256).toMatch(/^[0-9a-f]{64}$/);
+    expect(databasePayloadSha256).toMatch(/^[0-9a-f]{64}$/);
+    // Different canonicalization rules (JS JSON.stringify order vs
+    // PostgreSQL's jsonb::text order) -- the confirmation binds to the
+    // latter (see the function's own doc comment), never the former.
+    expect(clientPayloadSha256).not.toBe(databasePayloadSha256);
 
     const confirmation = releasedContentBlockRevisionV2Confirmation({
       importId: legacy.import_id,
       expectedPriorManifestSha256: "1".repeat(64),
       manifestSha256: "2".repeat(64),
       expectedPriorCatalogSha256: "3".repeat(64),
-      clientPayloadSha256,
+      databasePayloadSha256,
       mutationCount: revision.summary.mutation_count,
     });
     expect(confirmation).toBe(
-      `REVISE-RELEASED-CONTENT-BLOCKS-V2:${legacy.import_id}:${"1".repeat(64)}:${"2".repeat(64)}:${"3".repeat(64)}:${clientPayloadSha256}:1`,
+      `REVISE-RELEASED-CONTENT-BLOCKS-V2:${legacy.import_id}:${"1".repeat(64)}:${"2".repeat(64)}:${"3".repeat(64)}:${databasePayloadSha256}:1`,
     );
 
     const rollbackConfirmation = releasedContentBlockRevisionV2RollbackConfirmation({

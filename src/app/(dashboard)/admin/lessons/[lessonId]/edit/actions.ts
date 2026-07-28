@@ -139,7 +139,7 @@ export async function updateBlock(input: {
   const supabase = await createClient();
   const { data: existing, error: lookupError } = await supabase
     .from("content_blocks")
-    .select("block_type, is_required_for_completion")
+    .select("block_type, content, is_required_for_completion")
     .eq("id", input.blockId)
     .maybeSingle();
   if (lookupError) return { ok: false, error: lookupError.message };
@@ -168,7 +168,19 @@ export async function updateBlock(input: {
     if (!scenarioId) {
       return { ok: false, error: "Scenario ID is required." };
     }
+    // Merge onto whatever is already persisted rather than reconstructing
+    // from scratch: the admin form only edits scenario_id/title/height_px,
+    // so any other backend-only marker already on the block (e.g.
+    // `mode: "oral_check"` for the "Talk with Andrea" oral-check variant)
+    // must survive a save even if the client payload doesn't carry it.
+    const existingContent =
+      existing.content &&
+      typeof existing.content === "object" &&
+      !Array.isArray(existing.content)
+        ? (existing.content as Record<string, unknown>)
+        : {};
     safeContent = {
+      ...existingContent,
       ...input.content,
       scenario_id: scenarioId,
       title:

@@ -1178,6 +1178,11 @@ function RolePlayBlockEditor({
           onClick={() =>
             save(
               {
+                // Spread the block's existing content first so any field
+                // this form doesn't expose (e.g. the backend-only
+                // `mode: "oral_check"` marker) survives the save instead of
+                // being dropped when we reconstruct the payload below.
+                ...block.content,
                 scenario_id: scenarioId,
                 title,
                 height_px: Number(heightPx) || 720,

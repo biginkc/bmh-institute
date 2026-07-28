@@ -2,6 +2,7 @@ import {
   assertReleasedContentBlockRevisionV2InitialOrRevisedState,
   assertReleasedContentBlockRevisionV2RevisedState,
   releasedContentBlockRevisionV2Confirmation,
+  releasedContentBlockRevisionV2DatabasePayloadSha256,
   type ReleasedContentBlockRevisionV2Mutation,
   type ReleasedContentBlockRevisionV2Row,
 } from "./released-content-block-revision-v2";
@@ -37,8 +38,12 @@ export type ReleasedContentBlockRevisionV2CommandInput = {
   expectedPriorManifestSha256: string;
   manifestSha256: string;
   mutations: ReleasedContentBlockRevisionV2Mutation[];
+  /** Client-side (JS canonicalization) audit-trail hash only -- NOT used to
+   * derive the confirmation string and never compared against the
+   * database's own computed digest (they use different canonicalization
+   * rules and are expected to differ). Stored purely so the audit trail
+   * can trace back to whatever artifact an operator reviewed client-side. */
   clientPayloadSha256: string;
-  uploadReceiptSha256: string;
   environment: {
     url: string | undefined;
     serviceRoleKey: string | undefined;
@@ -102,6 +107,7 @@ export async function runReleasedContentBlockRevisionV2Command<Client>(
   dependencies: ReleasedContentBlockRevisionV2Dependencies<Client>,
 ) {
   const mutationCount = input.mutations.length;
+  const databasePayloadSha256 = releasedContentBlockRevisionV2DatabasePayloadSha256(input.mutations);
   dependencies.log(JSON.stringify(input.plan, null, 2));
   if (!input.options.execute) {
     dependencies.log("Dry run only. No database connection or write was attempted.");
@@ -117,19 +123,32 @@ export async function runReleasedContentBlockRevisionV2Command<Client>(
   if (active.import_id !== input.importId) {
     throw new Error("Released content revision v2 active-release import identity drifted.");
   }
+
+  if (active.active_manifest_sha256 === input.manifestSha256) {
+    // The live active manifest is already the TARGET, not the prior, state.
+    // This is the shape of a successful revision whose response (or a
+    // caller's own read of it) was lost -- retrying the mutation call itself
+    // would be refused by the RPC's own idempotent-replay branch, but a
+    // naive controller that only ever compares against the prior manifest
+    // would instead misreport this as "stale" and refuse outright. Reconcile
+    // against the durable audit trail instead: verify the audit record for
+    // this exact target manifest still matches live state, then report
+    // already_revised without touching the mutation path at all.
+    return reconcileAlreadyActiveTarget(client, input, environment, dependencies);
+  }
+
   if (active.active_manifest_sha256 !== input.expectedPriorManifestSha256) {
     throw new Error(
       "Released content revision v2 refused: the live active manifest checksum no longer matches this preflight.",
     );
   }
   const expectedPriorCatalogSha256 = await dependencies.loadCatalogSha256(client, input.importId);
-  const clientPayloadSha256 = input.clientPayloadSha256;
   const expectedConfirmation = releasedContentBlockRevisionV2Confirmation({
     importId: input.importId,
     expectedPriorManifestSha256: input.expectedPriorManifestSha256,
     manifestSha256: input.manifestSha256,
     expectedPriorCatalogSha256,
-    clientPayloadSha256,
+    databasePayloadSha256,
     mutationCount,
   });
   if (input.options.confirmation !== expectedConfirmation) {
@@ -143,8 +162,6 @@ export async function runReleasedContentBlockRevisionV2Command<Client>(
     operation: "released_content_blocks_v2",
     manifest_sha256: input.manifestSha256,
     expected_prior_catalog_sha256: expectedPriorCatalogSha256,
-    client_payload_sha256: clientPayloadSha256,
-    upload_receipt_sha256: input.uploadReceiptSha256,
   };
   const result = await dependencies.callRevision(client, {
     p_import_id: input.importId,
@@ -152,7 +169,7 @@ export async function runReleasedContentBlockRevisionV2Command<Client>(
     p_manifest_sha256: input.manifestSha256,
     p_expected_prior_catalog_sha256: expectedPriorCatalogSha256,
     p_mutations: input.mutations,
-    p_client_payload_sha256: clientPayloadSha256,
+    p_client_payload_sha256: input.clientPayloadSha256,
     p_evidence: evidence,
     p_confirmation: expectedConfirmation,
   });
@@ -182,6 +199,53 @@ export async function runReleasedContentBlockRevisionV2Command<Client>(
     result: rpc,
   }, null, 2));
   return { status: rpc.status, environment, priorState, revision: rpc.revision, catalogSha256 };
+}
+
+async function reconcileAlreadyActiveTarget<Client>(
+  client: Client,
+  input: ReleasedContentBlockRevisionV2CommandInput,
+  environment: CourseImportEnvironment,
+  dependencies: ReleasedContentBlockRevisionV2Dependencies<Client>,
+) {
+  const catalogSha256 = await dependencies.loadCatalogSha256(client, input.importId);
+  const audit = await dependencies.loadAudit(client, input.importId, input.manifestSha256);
+  if (!audit) {
+    throw new Error(
+      "Released content revision v2 refused: the live manifest already matches the target, but no audit record exists for it -- refusing to report success for an unverifiable state.",
+    );
+  }
+  if (audit.manifest_sha256 !== input.manifestSha256) {
+    throw new Error(
+      "Released content revision v2 refused: audit lookup for the active target manifest returned a mismatched record.",
+    );
+  }
+  if (audit.catalog_sha256 !== catalogSha256) {
+    throw new Error(
+      "Released content revision v2 refused: the active manifest matches the target, but the live catalog checksum has drifted from the audit record for it.",
+    );
+  }
+  if (audit.mutation_count !== input.mutations.length) {
+    throw new Error(
+      "Released content revision v2 refused: the recorded mutation count for the active target manifest does not match this call's own mutation set.",
+    );
+  }
+  const afterRows = await dependencies.loadMutationRows(client, input.mutations);
+  assertReleasedContentBlockRevisionV2RevisedState(afterRows, input.mutations);
+
+  dependencies.log(JSON.stringify({
+    phase: "released_content_blocks_v2_already_revised_reconciled",
+    environment,
+    reason: "active_manifest_already_equals_target",
+    revision: audit.revision,
+    catalog_sha256: catalogSha256,
+  }, null, 2));
+  return {
+    status: "already_revised" as const,
+    environment,
+    priorState: "already_revised" as const,
+    revision: audit.revision,
+    catalogSha256,
+  };
 }
 
 function assertRevisionRpcResult(value: unknown, expectedMutationCount: number): ValidatedRpcResult {

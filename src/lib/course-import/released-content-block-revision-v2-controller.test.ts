@@ -7,6 +7,7 @@ import {
 } from "./environment";
 import {
   releasedContentBlockRevisionV2Confirmation,
+  releasedContentBlockRevisionV2DatabasePayloadSha256,
   type ReleasedContentBlockRevisionV2Mutation,
   type ReleasedContentBlockRevisionV2Row,
 } from "./released-content-block-revision-v2";
@@ -25,7 +26,6 @@ const manifestSha256 = "2".repeat(64);
 const priorCatalogSha256 = "3".repeat(64);
 const replacementCatalogSha256 = "4".repeat(64);
 const clientPayloadSha256 = "5".repeat(64);
-const uploadReceiptSha256 = "6".repeat(64);
 
 const mutations: ReleasedContentBlockRevisionV2Mutation[] = [
   {
@@ -56,12 +56,17 @@ const mutations: ReleasedContentBlockRevisionV2Mutation[] = [
   },
 ];
 
+// The real checksum PostgreSQL would compute from this exact payload -- the
+// confirmation binds to THIS, never to the client-side hash (see the
+// builder's own doc comment on releasedContentBlockRevisionV2Confirmation).
+const databasePayloadSha256 = releasedContentBlockRevisionV2DatabasePayloadSha256(mutations);
+
 const expectedConfirmation = releasedContentBlockRevisionV2Confirmation({
   importId,
   expectedPriorManifestSha256,
   manifestSha256,
   expectedPriorCatalogSha256: priorCatalogSha256,
-  clientPayloadSha256,
+  databasePayloadSha256,
   mutationCount: mutations.length,
 });
 
@@ -89,7 +94,6 @@ function makeInput(
     manifestSha256,
     mutations,
     clientPayloadSha256,
-    uploadReceiptSha256,
     environment: { url: COURSE_IMPORT_TEST_URL, serviceRoleKey: "non-empty-test-service-role-key" },
     plan: { phase: "released_content_block_revision_v2_plan", mutation_count: mutations.length },
     ...overrides,
@@ -106,7 +110,7 @@ function expectedAudit(
     manifest_sha256: manifestSha256,
     prior_catalog_sha256: priorCatalog,
     catalog_sha256: replacementCatalogSha256,
-    database_payload_sha256: "irrelevant-not-checked-by-name",
+    database_payload_sha256: databasePayloadSha256,
     client_payload_sha256: clientPayloadSha256,
     mutation_count: mutations.length,
     update_count: 1,
@@ -115,8 +119,6 @@ function expectedAudit(
       operation: "released_content_blocks_v2",
       manifest_sha256: manifestSha256,
       expected_prior_catalog_sha256: priorCatalog,
-      client_payload_sha256: clientPayloadSha256,
-      upload_receipt_sha256: uploadReceiptSha256,
     },
   };
 }
@@ -189,16 +191,27 @@ describe("released content block revision v2 controller", () => {
     expect(dependencies.createClient).not.toHaveBeenCalled();
   });
 
-  it("derives the confirmation string from the live preflight catalog checksum, not a caller-supplied one", async () => {
+  it("derives the confirmation string from PostgreSQL's own computed payload digest, not a caller-supplied client hash", async () => {
     const dependencies = makeHarness();
-    const input = makeInput({ options: { ...makeInput().options, confirmation: "stale-confirmation" } });
+    // A confirmation built from the CLIENT hash (what an earlier, flawed
+    // version of this mechanism bound to) must be refused: it is not what
+    // the server will require.
+    const clientBoundConfirmation = releasedContentBlockRevisionV2Confirmation({
+      importId,
+      expectedPriorManifestSha256,
+      manifestSha256,
+      expectedPriorCatalogSha256: priorCatalogSha256,
+      databasePayloadSha256: clientPayloadSha256,
+      mutationCount: mutations.length,
+    });
+    const input = makeInput({ options: { ...makeInput().options, confirmation: clientBoundConfirmation } });
 
     await expect(runReleasedContentBlockRevisionV2Command(input, dependencies))
       .rejects.toThrow(/Execution confirmation must equal/);
     expect(dependencies.callRevision).not.toHaveBeenCalled();
   });
 
-  it("refuses before calling the RPC when the live active manifest has moved since preflight", async () => {
+  it("refuses before calling the RPC when the live active manifest has moved to something other than prior or target", async () => {
     const dependencies = makeHarness({ activeManifestSha256: "9".repeat(64) });
     const input = makeInput();
 
@@ -227,7 +240,7 @@ describe("released content block revision v2 controller", () => {
     );
   });
 
-  it("returns already_revised on an idempotent replay without re-mutating", async () => {
+  it("returns already_revised when the RPC's own idempotent-replay branch fires (active still reads as prior)", async () => {
     const dependencies = makeHarness({ replay: true });
     const input = makeInput({
       options: {
@@ -237,7 +250,7 @@ describe("released content block revision v2 controller", () => {
           expectedPriorManifestSha256,
           manifestSha256,
           expectedPriorCatalogSha256: replacementCatalogSha256,
-          clientPayloadSha256,
+          databasePayloadSha256,
           mutationCount: mutations.length,
         }),
       },
@@ -245,6 +258,86 @@ describe("released content block revision v2 controller", () => {
 
     await expect(runReleasedContentBlockRevisionV2Command(input, dependencies))
       .resolves.toMatchObject({ status: "already_revised", priorState: "already_revised" });
+  });
+
+  it("reconciles via the audit trail instead of refusing as stale when a prior call's response was lost (active already equals the target manifest)", async () => {
+    // This is the realistic shape of a lost response: a previous run of this
+    // exact command already succeeded, so the live active manifest is the
+    // TARGET, not the prior, manifest. A controller that only ever compares
+    // against the prior manifest would misreport this as "stale" and refuse
+    // outright; the correct behavior is to look up the durable audit record
+    // for the target manifest and, if it checks out, report already_revised
+    // WITHOUT calling the mutation RPC again.
+    const loadAudit = vi.fn(async () => expectedAudit(2, expectedPriorManifestSha256));
+    const loadMutationRows = vi.fn(async () => rows("revised"));
+    const callRevision = vi.fn();
+    const dependencies: ReleasedContentBlockRevisionV2Dependencies<FakeClient> = {
+      classifyEnvironment: vi.fn(assertCourseImportEnvironment),
+      createClient: vi.fn(() => ({ name: "fake-client" as const })),
+      loadActiveRevision: vi.fn(async () => ({
+        import_id: importId,
+        active_revision: 2,
+        active_manifest_sha256: manifestSha256,
+        active_catalog_sha256: replacementCatalogSha256,
+      })),
+      loadCatalogSha256: vi.fn(async () => replacementCatalogSha256),
+      loadAudit,
+      loadMutationRows,
+      callRevision,
+      log: vi.fn(),
+    };
+
+    await expect(runReleasedContentBlockRevisionV2Command(makeInput(), dependencies))
+      .resolves.toMatchObject({
+        status: "already_revised",
+        priorState: "already_revised",
+        revision: 2,
+        catalogSha256: replacementCatalogSha256,
+      });
+    expect(callRevision).not.toHaveBeenCalled();
+    expect(loadAudit).toHaveBeenCalledWith({ name: "fake-client" }, importId, manifestSha256);
+  });
+
+  it("refuses the response-loss reconciliation if no audit record exists for the active target manifest", async () => {
+    const dependencies: ReleasedContentBlockRevisionV2Dependencies<FakeClient> = {
+      classifyEnvironment: vi.fn(assertCourseImportEnvironment),
+      createClient: vi.fn(() => ({ name: "fake-client" as const })),
+      loadActiveRevision: vi.fn(async () => ({
+        import_id: importId,
+        active_revision: 2,
+        active_manifest_sha256: manifestSha256,
+        active_catalog_sha256: replacementCatalogSha256,
+      })),
+      loadCatalogSha256: vi.fn(async () => replacementCatalogSha256),
+      loadAudit: vi.fn(async () => null),
+      loadMutationRows: vi.fn(async () => rows("revised")),
+      callRevision: vi.fn(),
+      log: vi.fn(),
+    };
+
+    await expect(runReleasedContentBlockRevisionV2Command(makeInput(), dependencies))
+      .rejects.toThrow(/no audit record exists/);
+  });
+
+  it("refuses the response-loss reconciliation if live catalog has drifted from the audited target state", async () => {
+    const dependencies: ReleasedContentBlockRevisionV2Dependencies<FakeClient> = {
+      classifyEnvironment: vi.fn(assertCourseImportEnvironment),
+      createClient: vi.fn(() => ({ name: "fake-client" as const })),
+      loadActiveRevision: vi.fn(async () => ({
+        import_id: importId,
+        active_revision: 2,
+        active_manifest_sha256: manifestSha256,
+        active_catalog_sha256: replacementCatalogSha256,
+      })),
+      loadCatalogSha256: vi.fn(async () => "f".repeat(64)),
+      loadAudit: vi.fn(async () => expectedAudit(2, expectedPriorManifestSha256)),
+      loadMutationRows: vi.fn(async () => rows("revised")),
+      callRevision: vi.fn(),
+      log: vi.fn(),
+    };
+
+    await expect(runReleasedContentBlockRevisionV2Command(makeInput(), dependencies))
+      .rejects.toThrow(/catalog checksum has drifted/);
   });
 
   it("surfaces the RPC's own error instead of swallowing it", async () => {

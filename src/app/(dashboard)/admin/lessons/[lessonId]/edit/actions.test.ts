@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 let blockTypeRow: {
   block_type: string;
+  content?: Record<string, unknown>;
   is_required_for_completion?: boolean;
 } | null = { block_type: "text" };
 let updatePatch: Record<string, unknown> | null = null;
@@ -233,6 +234,42 @@ describe("updateBlock role_play branch", () => {
         scenario_id: "scenario-1",
         title: "Handle the price objection",
         height_px: 900,
+      },
+      is_required_for_completion: false,
+    });
+  });
+
+  it("preserves an existing oral-check mode marker when only the title changes", async () => {
+    blockTypeRow = {
+      block_type: "role_play",
+      content: {
+        mode: "oral_check",
+        scenario_id: "scenario-1",
+        title: "Talk with Andrea",
+        height_px: 760,
+      },
+    };
+
+    const result = await updateBlock({
+      blockId: "block-1",
+      lessonId: "lesson-1",
+      // The admin form has no UI control for `mode` — it always resends the
+      // fields it does expose, so the payload below is what the client
+      // actually sends when an admin only edits the title.
+      content: {
+        scenario_id: "scenario-1",
+        title: "Handle the price objection",
+        height_px: 760,
+      },
+    });
+
+    expect(result).toEqual({ ok: true });
+    expect(updatePatch).toEqual({
+      content: {
+        mode: "oral_check",
+        scenario_id: "scenario-1",
+        title: "Handle the price objection",
+        height_px: 760,
       },
       is_required_for_completion: false,
     });

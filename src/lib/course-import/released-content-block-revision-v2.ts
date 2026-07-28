@@ -96,6 +96,68 @@ function contentBlocks(plan: ImportPlan) {
   );
 }
 
+/** Stable, order-independent JSON serialization used only for TS-side diff
+ * detection (not a security-relevant hash -- fn_revise_released_content_blocks_v2
+ * computes its own canonical digest of the mutation payload server-side). */
+function stableJson(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(stableJson).join(",")}]`;
+  if (value && typeof value === "object" && !(value instanceof Date)) {
+    const entries = Object.entries(value as Record<string, unknown>)
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([key, item]) => `${JSON.stringify(key)}:${stableJson(item)}`);
+    return `{${entries.join(",")}}`;
+  }
+  return JSON.stringify(value) ?? "null";
+}
+
+/**
+ * Every operation OTHER than content_blocks, keyed by `table:sourceKey`, so
+ * they can be diffed for out-of-scope drift. content_blocks is deliberately
+ * excluded -- that is the one table this builder is allowed to mutate.
+ */
+function nonContentBlockOperations(plan: ImportPlan) {
+  return new Map(
+    plan.operations
+      .filter((operation) => operation.table !== "content_blocks")
+      .map((operation) => [`${operation.table}:${operation.sourceKey}`, operation]),
+  );
+}
+
+/**
+ * Refuses if the target manifest changed anything OTHER than content_blocks
+ * rows relative to the legacy manifest. Without this, a target manifest that
+ * bundles an in-scope content-block edit together with an out-of-scope
+ * change (a course title, a quiz question, a lesson's prerequisite, ...)
+ * would silently commit only the content-block mutation while this
+ * function's caller goes on to record the WHOLE target manifest's checksum
+ * as the new "active manifest" -- so a later revision would trust that
+ * checksum as accurately describing live data when it does not.
+ */
+function assertNoOutOfScopeManifestDrift(legacyPlan: ImportPlan, targetPlan: ImportPlan) {
+  const legacy = nonContentBlockOperations(legacyPlan);
+  const target = nonContentBlockOperations(targetPlan);
+  const allKeys = new Set([...legacy.keys(), ...target.keys()]);
+  for (const key of allKeys) {
+    const legacyOperation = legacy.get(key);
+    const targetOperation = target.get(key);
+    if (!legacyOperation) {
+      throw new Error(
+        `Released content revision v2 refused: ${key} was added outside content_blocks. This mechanism only supports content-block mutations; an out-of-scope manifest change would be recorded as part of the active manifest without actually being applied.`,
+      );
+    }
+    if (!targetOperation) {
+      throw new Error(
+        `Released content revision v2 refused: ${key} was removed outside content_blocks. This mechanism only supports content-block mutations.`,
+      );
+    }
+    if (stableJson(legacyOperation.row) !== stableJson(targetOperation.row)) {
+      throw new Error(
+        `Released content revision v2 refused: ${key} changed outside content_blocks. This mechanism only supports content-block mutations; an out-of-scope manifest change would be recorded as part of the active manifest without actually being applied.`,
+      );
+    }
+  }
+}
+
 function exactContent(operation: ImportOperation, sourceKey: string) {
   const content = operation.row.content;
   if (!content || typeof content !== "object" || Array.isArray(content)) {
@@ -172,8 +234,17 @@ function updateMutation(
   };
 }
 
+/**
+ * Includes lesson_id and block_type, not just content/sort_order/required --
+ * a block reparented to a different lesson or retyped while its content,
+ * sort_order, and required flag happen to stay byte-identical must still be
+ * treated as changed, so it reaches updateMutation's own reparenting/
+ * retyping refusal instead of being silently skipped as a no-op.
+ */
 function blockRowIdentity(operation: ImportOperation) {
   return JSON.stringify({
+    lesson_id: operation.row.lesson_id,
+    block_type: operation.row.block_type,
     content: operation.row.content,
     sort_order: operation.row.sort_order,
     is_required_for_completion: operation.row.is_required_for_completion,
@@ -207,6 +278,7 @@ export function buildReleasedContentBlockRevisionV2(input: {
   if (legacyPlan.importId !== input.importId || targetPlan.importId !== input.importId) {
     throw new Error("Released content revision v2 plans have the wrong import identity.");
   }
+  assertNoOutOfScopeManifestDrift(legacyPlan, targetPlan);
 
   const legacyBlocks = contentBlocks(legacyPlan);
   const targetBlocks = contentBlocks(targetPlan);
@@ -286,12 +358,21 @@ function postgresJsonbText(value: unknown): string {
   throw new Error("Released content revision v2 payload contains a non-JSON value.");
 }
 
+/**
+ * Bound to databasePayloadSha256 -- the PostgreSQL-canonical digest
+ * (releasedContentBlockRevisionV2DatabasePayloadSha256) fn_revise_released_content_blocks_v2
+ * computes itself from the mutation payload -- not a caller-supplied
+ * "client" hash. An operator's approved confirmation string is therefore
+ * cryptographically tied to the exact bytes the database will apply; a
+ * stale or buggy caller cannot get a different payload accepted under a
+ * confirmation that was reviewed for this one.
+ */
 export function releasedContentBlockRevisionV2Confirmation(input: {
   importId: string;
   expectedPriorManifestSha256: string;
   manifestSha256: string;
   expectedPriorCatalogSha256: string;
-  clientPayloadSha256: string;
+  databasePayloadSha256: string;
   mutationCount: number;
 }) {
   return [
@@ -300,7 +381,7 @@ export function releasedContentBlockRevisionV2Confirmation(input: {
     input.expectedPriorManifestSha256,
     input.manifestSha256,
     input.expectedPriorCatalogSha256,
-    input.clientPayloadSha256,
+    input.databasePayloadSha256,
     String(input.mutationCount),
   ].join(":");
 }
