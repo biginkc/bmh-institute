@@ -1,3 +1,6 @@
+import { readFileSync } from "node:fs";
+import { resolve as resolvePath } from "node:path";
+
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
@@ -12,6 +15,7 @@ import {
   type ReleasedContentBlockRevisionV2Row,
 } from "./released-content-block-revision-v2";
 import {
+  releasedContentBlockRevisionV2ExitCode,
   runReleasedContentBlockRevisionV2Command,
   type ReleasedContentBlockRevisionV2Audit,
   type ReleasedContentBlockRevisionV2CommandInput,
@@ -107,6 +111,7 @@ function expectedAudit(
   return {
     import_id: importId,
     revision,
+    prior_manifest_sha256: expectedPriorManifestSha256,
     manifest_sha256: manifestSha256,
     prior_catalog_sha256: priorCatalog,
     catalog_sha256: replacementCatalogSha256,
@@ -286,7 +291,7 @@ describe("released content block revision v2 controller", () => {
     // outright; the correct behavior is to look up the durable audit record
     // for the target manifest and, if it checks out, report already_revised
     // WITHOUT calling the mutation RPC again.
-    const loadAudit = vi.fn(async () => expectedAudit(2, expectedPriorManifestSha256));
+    const loadAudit = vi.fn(async () => expectedAudit(2));
     const loadMutationRows = vi.fn(async () => rows("revised"));
     const callRevision = vi.fn();
     const dependencies: ReleasedContentBlockRevisionV2Dependencies<FakeClient> = {
@@ -332,7 +337,7 @@ describe("released content block revision v2 controller", () => {
       })),
       loadCatalogSha256: vi.fn(async () => replacementCatalogSha256),
       loadAudit: vi.fn(async () => ({
-        ...expectedAudit(2, expectedPriorManifestSha256),
+        ...expectedAudit(2),
         database_payload_sha256: "e".repeat(64),
       })),
       loadMutationRows: vi.fn(async () => rows("revised")),
@@ -378,7 +383,7 @@ describe("released content block revision v2 controller", () => {
         active_catalog_sha256: replacementCatalogSha256,
       })),
       loadCatalogSha256: vi.fn(async () => "f".repeat(64)),
-      loadAudit: vi.fn(async () => expectedAudit(2, expectedPriorManifestSha256)),
+      loadAudit: vi.fn(async () => expectedAudit(2)),
       loadMutationRows: vi.fn(async () => rows("revised")),
       callRevision: vi.fn(),
       log: vi.fn(),
@@ -387,6 +392,82 @@ describe("released content block revision v2 controller", () => {
 
     await expect(runReleasedContentBlockRevisionV2Command(makeInput(), dependencies))
       .rejects.toThrow(/catalog checksum has drifted/);
+  });
+
+  function reconciliationHarness(audit: ReleasedContentBlockRevisionV2Audit) {
+    const dependencies: ReleasedContentBlockRevisionV2Dependencies<FakeClient> = {
+      classifyEnvironment: vi.fn(assertCourseImportEnvironment),
+      createClient: vi.fn(() => ({ name: "fake-client" as const })),
+      loadActiveRevision: vi.fn(async () => ({
+        import_id: importId,
+        active_revision: audit.revision,
+        active_manifest_sha256: manifestSha256,
+        active_catalog_sha256: replacementCatalogSha256,
+      })),
+      loadCatalogSha256: vi.fn(async () => replacementCatalogSha256),
+      loadAudit: vi.fn(async () => audit),
+      loadMutationRows: vi.fn(async () => rows("revised")),
+      callRevision: vi.fn(),
+      log: vi.fn(),
+      classifyRevisionLineage: vi.fn(),
+    };
+    return dependencies;
+  }
+
+  it("refuses the reconciliation when the active receipt was reapplied from a different predecessor (rolled back, then reapplied)", async () => {
+    // The exact bypass the receipt binding closes: the same payload and the
+    // same target manifest were legitimately reapplied by someone else after
+    // a rollback -- so the ACTIVE receipt's prior catalog is NOT the one
+    // this stale caller's confirmation was built from. Reporting
+    // already_revised here would hand out success for an operation the
+    // caller never confirmed. The required confirmation is reconstructed
+    // from the receipt's own recorded prior catalog, so the stale one is
+    // refused.
+    const dependencies = reconciliationHarness(expectedAudit(3, "6".repeat(64)));
+
+    await expect(runReleasedContentBlockRevisionV2Command(makeInput(), dependencies))
+      .rejects.toThrow(/confirmation does not match the active receipt/);
+    expect(dependencies.callRevision).not.toHaveBeenCalled();
+  });
+
+  it("refuses the reconciliation outright when no confirmation is presented", async () => {
+    const dependencies = reconciliationHarness(expectedAudit(2));
+    const input = makeInput({
+      options: { ...makeInput().options, confirmation: undefined },
+    });
+
+    await expect(runReleasedContentBlockRevisionV2Command(input, dependencies))
+      .rejects.toThrow(/confirmation does not match the active receipt/);
+  });
+
+  it("refuses the reconciliation when the active receipt was applied from a different prior manifest", async () => {
+    const dependencies = reconciliationHarness({
+      ...expectedAudit(2),
+      prior_manifest_sha256: "9".repeat(64),
+    });
+
+    await expect(runReleasedContentBlockRevisionV2Command(makeInput(), dependencies))
+      .rejects.toThrow(/different prior manifest/);
+  });
+
+  it("refuses the reconciliation when the active receipt was not produced by the v2 operation", async () => {
+    const dependencies = reconciliationHarness({
+      ...expectedAudit(2),
+      evidence: { operation: "released_content_blocks_v1" },
+    });
+
+    await expect(runReleasedContentBlockRevisionV2Command(makeInput(), dependencies))
+      .rejects.toThrow(/not produced by the v2 revision operation/);
+  });
+
+  it("refuses the reconciliation when the active receipt's client payload digest differs", async () => {
+    const dependencies = reconciliationHarness({
+      ...expectedAudit(2),
+      client_payload_sha256: "e".repeat(64),
+    });
+
+    await expect(runReleasedContentBlockRevisionV2Command(makeInput(), dependencies))
+      .rejects.toThrow(/client payload digest does not match/);
   });
 
   it("classifies a newer active head after its own commit as superseded success, not failure", async () => {
@@ -543,5 +624,37 @@ describe("released content block revision v2 controller", () => {
     await expect(runReleasedContentBlockRevisionV2Command(input, dependencies))
       .rejects.toThrow("Production writes are blocked");
     expect(dependencies.createClient).not.toHaveBeenCalled();
+  });
+
+  describe("CLI exit codes", () => {
+    it("maps rolled_back to a distinct nonzero exit and every real success to zero", () => {
+      // rolled_back is NOT success: the write committed but a rollback undid
+      // it before postflight -- an automation that only checks "did the
+      // process throw" would otherwise report an undone revision as
+      // delivered. Distinct from 1 (thrown errors) on purpose.
+      expect(releasedContentBlockRevisionV2ExitCode("rolled_back")).toBe(2);
+      expect(releasedContentBlockRevisionV2ExitCode("dry_run")).toBe(0);
+      expect(releasedContentBlockRevisionV2ExitCode("revised")).toBe(0);
+      expect(releasedContentBlockRevisionV2ExitCode("already_revised")).toBe(0);
+      expect(releasedContentBlockRevisionV2ExitCode("superseded")).toBe(0);
+    });
+
+    it("is actually wired into the CLI: the script assigns process.exitCode from this exact mapping", () => {
+      // CLI-level regression: the mapping above is worthless if the script
+      // discards the command's status. Assert the script's own source binds
+      // process.exitCode to the shared helper (importing it from this
+      // module), so a refactor that drops the assignment fails here.
+      const script = readFileSync(
+        resolvePath(__dirname, "../../../scripts/course-content/revise-released-content-blocks-v2.ts"),
+        "utf8",
+      );
+      expect(script).toContain(
+        "process.exitCode = releasedContentBlockRevisionV2ExitCode(result.status);",
+      );
+      expect(script).toMatch(
+        /import\s*\{[^}]*releasedContentBlockRevisionV2ExitCode[^}]*\}\s*from\s*"\.\.\/\.\.\/src\/lib\/course-import\/released-content-block-revision-v2-controller"/,
+      );
+      expect(script).toContain("const result = await runReleasedContentBlockRevisionV2Command");
+    });
   });
 });

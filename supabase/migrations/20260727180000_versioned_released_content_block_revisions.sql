@@ -368,6 +368,91 @@ revoke all on function public.fn_revise_released_content_blocks_v1(
   text, text, text, text, jsonb, text, jsonb, text
 ) from public, anon, authenticated, service_role;
 
+-- Retire the released-poster and released-caption replacement RPCs
+-- (20260722043000, 20260722235500) as part of the same phase-1 cutover.
+-- Both mutate the RELEASED catalog under their own compare-and-swap but
+-- never write the shared ledger and never take the canonical catalog-hash
+-- lock set -- a post-cutover call would leave content_import_active_release_v1
+-- pointing at a catalog checksum that no longer matches reality, and the
+-- next v2 revision would fail its CAS against a state the ledger cannot
+-- explain. Their already-applied history is absorbed into the shared ledger
+-- as validated legacy_catalog_correction lineage rows by the phase-2
+-- backfill (20260727180500). A future released poster/caption correction
+-- must extend the versioned v2 mechanism deliberately instead. The CANARY
+-- path (fn_replace_unreleased_imported_video_posters) is untouched: it
+-- hard-requires an unreleased, unpublished import, so it can never move a
+-- released catalog.
+create or replace function public.fn_replace_released_imported_video_posters(
+  p_import_id text,
+  p_replacements jsonb,
+  p_client_payload_sha256 text,
+  p_approval_evidence_sha256 text,
+  p_expected_catalog_sha256 text,
+  p_preflight_evidence_sha256 text
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  raise exception 'fn_replace_released_imported_video_posters is retired: released-catalog corrections must go through the versioned shared ledger (fn_revise_released_content_blocks_v2); extend it deliberately for poster paths. Its applied history is mirrored in content_import_release_revisions.'
+    using errcode = '42501';
+end;
+$$;
+
+revoke all on function public.fn_replace_released_imported_video_posters(
+  text, jsonb, text, text, text, text
+) from public, anon, authenticated, service_role;
+
+create or replace function public.fn_replace_released_imported_video_captions(
+  p_import_id text,
+  p_replacements jsonb,
+  p_client_payload_sha256 text,
+  p_approval_evidence_sha256 text,
+  p_expected_catalog_sha256 text
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  raise exception 'fn_replace_released_imported_video_captions is retired: released-catalog corrections must go through the versioned shared ledger (fn_revise_released_content_blocks_v2); extend it deliberately for caption paths. Its applied history is mirrored in content_import_release_revisions.'
+    using errcode = '42501';
+end;
+$$;
+
+revoke all on function public.fn_replace_released_imported_video_captions(
+  text, jsonb, text, text, text
+) from public, anon, authenticated, service_role;
+
+-- Seal both receipt tables unconditionally (same pattern as the v1
+-- content-block receipt seal above): with the RPCs retired, no legitimate
+-- writer remains, and a resumed in-flight old-body call must not be able to
+-- slip a receipt in after the phase-2 backfill has absorbed the history.
+create or replace function public.fn_guard_import_video_poster_replacement_record()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  raise exception 'Released video poster replacement records are sealed read-only history; the replacement RPC is retired and its receipts are mirrored in content_import_release_revisions.'
+    using errcode = '42501';
+end;
+$$;
+
+create or replace function public.fn_guard_import_video_caption_replacement_record()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  raise exception 'Released video caption replacement records are sealed read-only history; the replacement RPC is retired and its receipts are mirrored in content_import_release_revisions.'
+    using errcode = '42501';
+end;
+$$;
+
 -- Atomic three-key content merge for the admin role-play block editor. The
 -- app-level read-merge-replace it replaces had a race: a backend publish
 -- landing between the editor's SELECT and UPDATE was silently overwritten
@@ -554,16 +639,31 @@ grant execute on function public.fn_current_state_revision(text) to service_role
 -- comparison (postActiveRevision > rpc.revision) cannot distinguish "later
 -- activity built on top of this revision" from "a rollback reverted this
 -- revision back to an earlier ancestor" -- a rollback receipt is ALSO a
--- greater revision number. This walks the same state_parent_revision chain
--- fn_current_state_revision does, but tracks the range each rollback
--- receipt on that path wiped, so it can tell the two apart:
---   * active_head    -- p_revision IS the current resolved state.
---   * superseded     -- p_revision is a genuine ancestor of the current
---                       state (something later was built on top of it).
---   * reverted       -- a rollback on the path undid p_revision specifically
---                       (it falls inside that receipt's wiped range).
---   * diverged        -- lineage does not connect (broken chain).
---   * unknown         -- p_revision does not exist for this import.
+-- greater revision number.
+--
+-- Classification consults the COMPLETE immutable reverts history plus the
+-- current state's ancestry chain (an earlier version of this function
+-- range-checked rollback receipts only along a single walk from the head
+-- row, which mislabeled targets after CHAINED rollbacks: with rev3 applied,
+-- rev4 reverting rev3, and rev5 reverting rev2, the head walk jumped
+-- rev5 -> rev1 and never visited rev4, so rev3 came back "diverged" instead
+-- of "reverted"):
+--   * active_head -- p_revision IS the current resolved state
+--     (fn_current_state_revision), including a state RESTORED by rollbacks.
+--   * reverted    -- some rollback receipt anywhere in history records
+--                    reverts_revision = p_revision and the state was not
+--                    since restored to it (the active_head check runs
+--                    first, so a restored state never reaches this branch).
+--   * superseded  -- p_revision is a genuine ancestor of the current state:
+--                    it appears on the current state's own
+--                    state_parent_revision chain, i.e. later activity was
+--                    built on top of it.
+--   * diverged    -- none of the above: the lineage does not connect this
+--                    revision to the current state (broken/corrupted chain,
+--                    or a rollback receipt row was passed -- receipts are
+--                    state transitions, not states, and are never classified
+--                    as active/superseded).
+--   * unknown     -- p_revision does not exist for this import.
 create or replace function public.fn_classify_revision_lineage(
   p_import_id text,
   p_revision integer
@@ -577,19 +677,27 @@ as $$
 declare
   v_current_state integer;
   v_cursor integer;
-  v_reverts integer;
   v_state_parent integer;
+  v_target_reverts integer;
   v_steps integer := 0;
 begin
   if coalesce(auth.role(), '') <> 'service_role' then
     raise exception 'Revision lineage classification requires service_role.'
       using errcode = '42501';
   end if;
-  if not exists (
-    select 1 from public.content_import_release_revisions
-    where import_id = p_import_id and revision = p_revision
-  ) then
+  select reverts_revision into v_target_reverts
+  from public.content_import_release_revisions
+  where import_id = p_import_id and revision = p_revision;
+  if not found then
     return 'unknown';
+  end if;
+  if v_target_reverts is not null then
+    -- Rollback receipts are state TRANSITIONS, not states: they are never
+    -- the active head and never "superseded by" anything -- even though a
+    -- later forward revision's state-parent pointer may name one (forward
+    -- rows record the previous head ROW, which the state walk resolves
+    -- through). Classify them out explicitly.
+    return 'diverged';
   end if;
 
   v_current_state := public.fn_current_state_revision(p_import_id);
@@ -597,31 +705,30 @@ begin
     return 'active_head';
   end if;
 
-  select max(revision) into v_cursor
-  from public.content_import_release_revisions
-  where import_id = p_import_id;
-  if v_cursor is null then
-    return 'unknown';
+  -- Complete reverts history: was this exact revision ever undone by a
+  -- rollback receipt? Order-independent -- chained rollbacks elsewhere in
+  -- the sequence cannot hide the receipt that names this revision.
+  if exists (
+    select 1 from public.content_import_release_revisions
+    where import_id = p_import_id and reverts_revision = p_revision
+  ) then
+    return 'reverted';
   end if;
 
-  loop
-    if v_cursor = p_revision then
-      -- Reached the target row walking down from the head without it ever
-      -- falling inside a wiped range below: a genuine ancestor of the
-      -- current state.
-      return 'superseded';
-    end if;
-    select reverts_revision, state_parent_revision
-    into v_reverts, v_state_parent
+  -- Ancestry: walk the current state's own state-parent chain. Forward
+  -- revisions record the state they were applied on, so the chain from the
+  -- current state down to the original release (state 1) is exactly the
+  -- set of revisions the current state is built on.
+  v_cursor := v_current_state;
+  while v_cursor > 1 loop
+    select state_parent_revision into v_state_parent
     from public.content_import_release_revisions
     where import_id = p_import_id and revision = v_cursor;
-    if v_reverts is not null and v_state_parent is not null
-      and p_revision > v_state_parent and p_revision <= v_reverts
-    then
-      return 'reverted';
-    end if;
     if v_state_parent is null or v_state_parent >= v_cursor then
       return 'diverged';
+    end if;
+    if v_state_parent = p_revision then
+      return 'superseded';
     end if;
     v_cursor := v_state_parent;
     v_steps := v_steps + 1;
@@ -629,6 +736,7 @@ begin
       return 'diverged';
     end if;
   end loop;
+  return 'diverged';
 end;
 $$;
 

@@ -61,6 +61,7 @@ type ActiveRevision = {
 export type ReleasedContentBlockRevisionV2Audit = {
   import_id: string;
   revision: number;
+  prior_manifest_sha256: string;
   manifest_sha256: string;
   prior_catalog_sha256: string;
   catalog_sha256: string;
@@ -121,6 +122,27 @@ export type RevisionLineageClassification =
   | "reverted"
   | "diverged"
   | "unknown";
+
+export type ReleasedContentBlockRevisionV2CommandStatus =
+  | "dry_run"
+  | "revised"
+  | "already_revised"
+  | "superseded"
+  | "rolled_back";
+
+/**
+ * Process exit code for a completed command, for the CLI. `rolled_back` is
+ * NOT success: the write committed but a rollback undid it before postflight
+ * -- automation that treats every non-throwing completion as exit 0 would
+ * report an undone revision as delivered. Distinct from exit 1 (thrown
+ * errors) so callers can tell "the operation failed" from "the operation
+ * succeeded and was then reverted; the catalog is NOT in the target state".
+ */
+export function releasedContentBlockRevisionV2ExitCode(
+  status: ReleasedContentBlockRevisionV2CommandStatus,
+): number {
+  return status === "rolled_back" ? 2 : 0;
+}
 
 type ValidatedRpcResult = {
   status: "revised" | "already_revised";
@@ -321,9 +343,51 @@ async function reconcileAlreadyActiveTarget<Client>(
       "Released content revision v2 refused: the ledger row at the active revision does not match this call's target manifest.",
     );
   }
+  // Bind to the FULL receipt identity, exactly as the SQL replay guard does
+  // -- an earlier version of this reconciliation checked only the target
+  // manifest, payload digest, live catalog, and count, which let a stale
+  // caller be told "already_revised" for a reapplication of the same
+  // payload from a DIFFERENT predecessor state (rolled back, then reapplied
+  // by someone else) without ever presenting the confirmation for it.
+  if (audit.prior_manifest_sha256 !== input.expectedPriorManifestSha256) {
+    throw new Error(
+      "Released content revision v2 refused: the active receipt was applied from a different prior manifest than this call's preflight -- the state you prepared against is not the one that was revised.",
+    );
+  }
   if (audit.database_payload_sha256 !== databasePayloadSha256) {
     throw new Error(
       "Released content revision v2 refused: the ledger row at the active revision was produced by a different mutation payload than this call's.",
+    );
+  }
+  const auditEvidence = audit.evidence;
+  const evidenceOperation = isRecord(auditEvidence) ? auditEvidence.operation : undefined;
+  if (evidenceOperation !== "released_content_blocks_v2") {
+    throw new Error(
+      "Released content revision v2 refused: the active receipt was not produced by the v2 revision operation.",
+    );
+  }
+  if (audit.client_payload_sha256 !== input.clientPayloadSha256) {
+    throw new Error(
+      "Released content revision v2 refused: the active receipt's client payload digest does not match this call's.",
+    );
+  }
+  // The confirmation ceremony still applies on the reconciliation path: the
+  // required string is reconstructed from the IMMUTABLE RECEIPT's own prior
+  // catalog (the state the commit actually consumed), so a caller whose
+  // preflight saw a different predecessor -- or who presents no
+  // confirmation at all -- is refused instead of being handed a success.
+  const receiptBoundConfirmation = releasedContentBlockRevisionV2Confirmation({
+    importId: input.importId,
+    expectedPriorManifestSha256: input.expectedPriorManifestSha256,
+    manifestSha256: input.manifestSha256,
+    expectedPriorCatalogSha256: audit.prior_catalog_sha256,
+    databasePayloadSha256,
+    mutationCount: input.mutations.length,
+  });
+  if (input.options.confirmation !== receiptBoundConfirmation) {
+    throw new Error(
+      "Released content revision v2 refused: this call's confirmation does not match the active receipt's own recorded operation (its prior catalog was "
+        + `${audit.prior_catalog_sha256}). If a rollback and reapplication happened since your preflight, re-run the preflight against live state instead of retrying.`,
     );
   }
   if (audit.catalog_sha256 !== catalogSha256) {

@@ -13,6 +13,7 @@ import {
   type ReleasedContentBlockRevisionV2Row,
 } from "../../src/lib/course-import/released-content-block-revision-v2";
 import {
+  releasedContentBlockRevisionV2ExitCode,
   runReleasedContentBlockRevisionV2Command,
   type ReleasedContentBlockRevisionV2Audit,
 } from "../../src/lib/course-import/released-content-block-revision-v2-controller";
@@ -70,7 +71,7 @@ async function main() {
     execute,
   };
 
-  await runReleasedContentBlockRevisionV2Command<SupabaseClient>({
+  const result = await runReleasedContentBlockRevisionV2Command<SupabaseClient>({
     options: { execute, allowProduction, confirmation },
     importId,
     expectedPriorManifestSha256,
@@ -123,7 +124,7 @@ async function main() {
       const result = await client
         .from("content_import_release_revisions")
         .select(
-          "import_id,revision,manifest_sha256,prior_catalog_sha256,catalog_sha256,payload_sha256,client_payload_sha256,mutation_count,update_count,insert_count,evidence",
+          "import_id,revision,prior_manifest_sha256,manifest_sha256,prior_catalog_sha256,catalog_sha256,payload_sha256,client_payload_sha256,mutation_count,update_count,insert_count,evidence",
         )
         .eq("import_id", auditImportId)
         .eq("revision", auditRevision)
@@ -164,6 +165,17 @@ async function main() {
     },
     log: console.log,
   });
+
+  // The command's status maps to a distinct process exit code -- in
+  // particular, "rolled_back" (the write committed but a rollback undid it
+  // before postflight) exits nonzero so automation never treats an undone
+  // revision as a delivered one.
+  process.exitCode = releasedContentBlockRevisionV2ExitCode(result.status);
+  if (result.status === "rolled_back") {
+    console.error(
+      `Released content revision v2: revision ${result.revision} committed but was ROLLED BACK before postflight -- the catalog is NOT in the target state. Exiting ${process.exitCode}.`,
+    );
+  }
 }
 
 function sha256(value: Buffer) {

@@ -719,6 +719,23 @@ begin
   ) <> '{"cards":[{"front":"BMH","back":"Better Made Homes, revised"}]}'::jsonb then
     raise exception 'revision 4 did not apply the flashcard update end to end through the RPC';
   end if;
+
+  -- Lineage classification against the REAL ledger (never a mocked
+  -- classifier): with revision 4 the head, its ancestors -- 3, then the
+  -- quiz fixture 2 -- classify as superseded, the head as active_head, and
+  -- an absent revision as unknown.
+  if public.fn_classify_revision_lineage('test-content-block-revision-v2', 4) <> 'active_head' then
+    raise exception 'revision 4 did not classify as active_head while it is the head';
+  end if;
+  if public.fn_classify_revision_lineage('test-content-block-revision-v2', 3) <> 'superseded' then
+    raise exception 'revision 3 did not classify as superseded under revision 4';
+  end if;
+  if public.fn_classify_revision_lineage('test-content-block-revision-v2', 2) <> 'superseded' then
+    raise exception 'the quiz fixture revision did not classify as superseded under revision 4';
+  end if;
+  if public.fn_classify_revision_lineage('test-content-block-revision-v2', 999) <> 'unknown' then
+    raise exception 'an absent revision did not classify as unknown';
+  end if;
 end;
 $$;
 
@@ -1032,6 +1049,32 @@ begin
   if public.fn_current_state_revision('test-content-block-revision-v2') <> 2 then
     raise exception 'canonical state did not resolve through chained receipts back to the quiz revision';
   end if;
+
+  -- Lineage classification after CHAINED rollbacks, against the REAL ledger
+  -- (the exact shape a single head-walk mislabeled: with rev5 reverting 4,
+  -- rev6 reverting 3, and rev8 reverting the re-apply 7, a walk from the
+  -- head jumps straight past the receipts that name 3 and 4). The complete
+  -- reverts history classifies every undone forward revision as reverted,
+  -- the restored quiz state as active_head, and rollback receipts
+  -- themselves as neither states nor ancestors.
+  if public.fn_classify_revision_lineage('test-content-block-revision-v2', 2) <> 'active_head' then
+    raise exception 'the restored quiz state did not classify as active_head after chained rollbacks';
+  end if;
+  if public.fn_classify_revision_lineage('test-content-block-revision-v2', 3) <> 'reverted' then
+    raise exception 'revision 3 did not classify as reverted (rev6 names it) after chained rollbacks';
+  end if;
+  if public.fn_classify_revision_lineage('test-content-block-revision-v2', 4) <> 'reverted' then
+    raise exception 'revision 4 did not classify as reverted (rev5 names it) after chained rollbacks';
+  end if;
+  if public.fn_classify_revision_lineage('test-content-block-revision-v2', 7) <> 'reverted' then
+    raise exception 'the re-apply revision 7 did not classify as reverted (rev8 names it)';
+  end if;
+  if public.fn_classify_revision_lineage('test-content-block-revision-v2', 8) <> 'diverged' then
+    raise exception 'a rollback receipt classified as a state instead of a transition';
+  end if;
+  if public.fn_classify_revision_lineage('test-content-block-revision-v2', 999) <> 'unknown' then
+    raise exception 'an absent revision did not classify as unknown after rollbacks';
+  end if;
 end;
 $$;
 
@@ -1069,11 +1112,17 @@ $$;
 
 -- Applied-v1-to-v2 transition: TWO chained pre-cutover legacy receipts
 -- (seeded with the sealed guard disabled, exactly modeling receipts that
--- existed before the seal) are absorbed in order by the SAME
--- fn_backfill_v1_content_block_revisions() the migration ran -- proving
--- receipt-to-receipt manifest AND catalog linkage -- and the backfill is
--- idempotent. Receipt one's replacement catalog is an intermediate value;
--- receipt two must chain from it exactly and land on the live catalog.
+-- existed before the seal) are absorbed by the SAME
+-- fn_backfill_v1_content_block_revisions() the migration ran, through its
+-- CAUSAL REPLAY: the walk first verifies the existing ledger rows (the quiz
+-- fixture and the real v2 forward/rollback revisions 3..8) chain from the
+-- release record -- attesting ONE publication-baseline lineage row for the
+-- release's own pre-publication catalog capture -- then mirrors the two
+-- receipts in receipt-to-receipt manifest AND catalog linkage, landing on
+-- the live catalog. Idempotent on re-run. The receipts' timestamps sit
+-- AFTER the ledger rows' (they model corrections made after the revisions),
+-- which the walk's time-ordered queue requires -- all ledger rows share
+-- this transaction's frozen now(), so the receipts use now()+N minutes.
 do $$
 declare
   v_live_catalog text;
@@ -1117,7 +1166,7 @@ begin
       from generate_series(1, 44) item
     ),
     '{}'::jsonb,
-    now() - interval '2 minutes'
+    now() + interval '1 minute'
   ), (
     'test-content-block-revision-v2',
     repeat('1', 64),
@@ -1133,19 +1182,43 @@ begin
       from generate_series(1, 44) item
     ),
     '{}'::jsonb,
-    now() - interval '1 minute'
+    now() + interval '2 minutes'
   );
   alter table public.content_import_released_content_block_revision_records
     enable trigger content_import_released_content_block_revision_records_guard;
 
   v_result := public.fn_backfill_v1_content_block_revisions();
-  if (v_result ->> 'rows')::int <> 2 then
-    raise exception 'v1 backfill did not absorb exactly the two chained receipts: %', v_result;
+  if (v_result ->> 'rows')::int <> 2 or (v_result ->> 'baselines')::int <> 1 then
+    raise exception 'v1 backfill did not absorb exactly the two chained receipts plus one publication baseline: %', v_result;
+  end if;
+
+  -- The attested publication baseline: the release record's catalog was
+  -- captured BEFORE the publish flip, so the walk's first event (the quiz
+  -- fixture row, whose prior catalog is the live POST-publish state) forced
+  -- exactly one bridging lineage row from the release record's checksum to
+  -- that first real state.
+  select * into v_mirror
+  from public.content_import_release_revisions
+  where import_id = 'test-content-block-revision-v2' and revision = 9;
+  if not found
+    or v_mirror.kind <> 'legacy_catalog_correction'
+    or v_mirror.evidence ->> 'operation' <> 'publication_baseline'
+    or v_mirror.state_parent_revision <> 1
+    or v_mirror.prior_catalog_sha256 <> (
+      select catalog_sha256 from public.content_import_release_records
+      where import_id = 'test-content-block-revision-v2'
+    )
+    or v_mirror.catalog_sha256 <> (
+      select prior_catalog_sha256 from public.content_import_release_revisions
+      where import_id = 'test-content-block-revision-v2' and revision = 2
+    )
+  then
+    raise exception 'the publication baseline lineage row is missing or misshapen: %', to_jsonb(v_mirror);
   end if;
 
   select * into v_mirror
   from public.content_import_release_revisions
-  where import_id = 'test-content-block-revision-v2' and revision = 9;
+  where import_id = 'test-content-block-revision-v2' and revision = 10;
   if not found
     or v_mirror.kind <> 'content_blocks'
     or v_mirror.state_parent_revision <> 8
@@ -1161,10 +1234,10 @@ begin
   end if;
   select * into v_mirror
   from public.content_import_release_revisions
-  where import_id = 'test-content-block-revision-v2' and revision = 10;
+  where import_id = 'test-content-block-revision-v2' and revision = 11;
   if not found
     or v_mirror.kind <> 'content_blocks'
-    or v_mirror.state_parent_revision <> 9
+    or v_mirror.state_parent_revision <> 10
     or v_mirror.prior_manifest_sha256 <> repeat('a', 64)
     or v_mirror.manifest_sha256 <> repeat('0', 64)
     or v_mirror.prior_catalog_sha256 <> repeat('5', 64)
@@ -1199,9 +1272,10 @@ begin
     raise exception 'the backfill did not hold catalog-table locks through its final verification';
   end if;
 
-  -- Idempotency: a second run must absorb nothing.
+  -- Idempotency: a second run must absorb nothing and attest nothing new --
+  -- it re-verifies the whole causal chain (baseline included) instead.
   v_result := public.fn_backfill_v1_content_block_revisions();
-  if (v_result ->> 'rows')::int <> 0 then
+  if (v_result ->> 'rows')::int <> 0 or (v_result ->> 'baselines')::int <> 0 then
     raise exception 'v1 backfill re-absorbed an already-mirrored receipt: %', v_result;
   end if;
 
@@ -1261,8 +1335,9 @@ begin
     enable trigger content_import_released_content_block_revision_records_guard;
 
   -- (a2) Broken predecessor CATALOG: the manifest chains correctly from the
-  -- active mirror, but the declared prior catalog does not equal the
-  -- predecessor mirror's replacement catalog.
+  -- reconstructed causal state (this receipt sits after the mirrors in
+  -- time, hence the future revised_at), but the declared prior catalog
+  -- does not equal the predecessor's replacement catalog.
   alter table public.content_import_released_content_block_revision_records
     disable trigger content_import_released_content_block_revision_records_guard;
   insert into public.content_import_released_content_block_revision_records (
@@ -1270,14 +1345,14 @@ begin
     manifest_sha256, prior_catalog_sha256, replacement_catalog_sha256,
     database_payload_sha256, client_payload_sha256,
     guide_update_count, flashcard_update_count, role_play_insert_count,
-    mutations, evidence
+    mutations, evidence, revised_at
   ) values (
     'test-content-block-revision-v2',
     repeat('1', 64), repeat('0', 64), repeat('b', 64),
     repeat('4', 64), repeat('e', 64), repeat('e', 64), repeat('d', 64),
     19, 19, 6,
     (select jsonb_agg(jsonb_build_object('fixture', item)) from generate_series(1, 44) item),
-    '{}'::jsonb
+    '{}'::jsonb, now() + interval '3 minutes'
   );
   alter table public.content_import_released_content_block_revision_records
     enable trigger content_import_released_content_block_revision_records_guard;
@@ -1327,8 +1402,9 @@ begin
   alter table public.content_import_released_content_block_revision_records
     enable trigger content_import_released_content_block_revision_records_guard;
 
-  -- (c) Final catalog mismatch: the chain links up (manifest AND catalog)
-  -- but the database is not actually in the state the legacy history claims.
+  -- (c) Final catalog mismatch: the chain links up (manifest AND catalog --
+  -- again positioned after the mirrors in time) but the database is not
+  -- actually in the state the legacy history claims.
   alter table public.content_import_released_content_block_revision_records
     disable trigger content_import_released_content_block_revision_records_guard;
   insert into public.content_import_released_content_block_revision_records (
@@ -1336,14 +1412,14 @@ begin
     manifest_sha256, prior_catalog_sha256, replacement_catalog_sha256,
     database_payload_sha256, client_payload_sha256,
     guide_update_count, flashcard_update_count, role_play_insert_count,
-    mutations, evidence
+    mutations, evidence, revised_at
   ) values (
     'test-content-block-revision-v2',
     repeat('1', 64), repeat('0', 64), repeat('e', 64),
     v_live_catalog, repeat('c', 64), repeat('b', 64), repeat('d', 64),
     19, 19, 6,
     (select jsonb_agg(jsonb_build_object('fixture', item)) from generate_series(1, 44) item),
-    '{}'::jsonb
+    '{}'::jsonb, now() + interval '3 minutes'
   );
   alter table public.content_import_released_content_block_revision_records
     enable trigger content_import_released_content_block_revision_records_guard;
@@ -1362,15 +1438,15 @@ begin
 end;
 $$;
 
--- Round-6 review finding 1: a legacy receipt with NO predecessor mirror at
--- all (the true first event ever backfilled for a fresh import) must be
--- validated too, not given a free pass. Prior code special-cased "no mirror
--- exists yet" to skip the catalog check entirely; the fix processes every
--- legacy source (v1 content-block receipts, poster/caption replacements) in
--- one true chronological order, so even the very first receipt is checked
--- against the real active catalog. Use a FRESH import with no history at
--- all so this is genuinely the first event, not merely the first of one
--- source with others already chained.
+-- A crafted first receipt on a FRESH import (no history at all): its
+-- arbitrary declared prior catalog is absorbed only as the attested
+-- publication baseline (which is what the trust model allows -- receipts
+-- come from sealed, CAS-guarded tables, so their priors are RPC evidence),
+-- but the fabricated chain then fails the mandatory landing check: its
+-- claimed final state does not equal the real live catalog, and the whole
+-- backfill aborts with nothing appended. This is the fail-loud guarantee
+-- for fabricated history -- a chain that does not end at reality cannot be
+-- mirrored, first receipt or not.
 do $$
 declare
   v_program_id uuid := '00000000-0000-6000-a000-000000000f01';
@@ -1404,9 +1480,10 @@ begin
   update public.courses set is_published = true where content_import_id = 'test-first-receipt-v2';
   perform set_config('bmh.release_import_id', '', true);
 
-  -- Crafted first receipt: declares an ARBITRARY prior catalog instead of
-  -- the real release catalog. Must now be refused -- there is no more
-  -- "first receipt" exemption.
+  -- Crafted first receipt: an arbitrary prior catalog AND an arbitrary
+  -- replacement. The prior becomes an attested baseline (see comment
+  -- above), but the fabricated chain never lands on the real live catalog,
+  -- so the whole run aborts and its baseline/mirror inserts roll back.
   alter table public.content_import_released_content_block_revision_records
     disable trigger content_import_released_content_block_revision_records_guard;
   insert into public.content_import_released_content_block_revision_records (
@@ -1427,31 +1504,80 @@ begin
     enable trigger content_import_released_content_block_revision_records_guard;
   begin
     perform public.fn_backfill_v1_content_block_revisions();
-    raise exception 'a crafted FIRST receipt with an arbitrary prior catalog was mirrored -- finding 1 regressed';
+    raise exception 'a crafted FIRST receipt whose chain never lands on reality was mirrored -- finding 1 regressed';
   exception when others then
-    if sqlerrm not like '%declares predecessor catalog%' then raise; end if;
+    if sqlerrm not like '%live catalog for%' then raise; end if;
   end;
+  if exists (
+    select 1 from public.content_import_release_revisions
+    where import_id = 'test-first-receipt-v2'
+  ) then
+    raise exception 'the aborted backfill left partial rows behind for the crafted receipt';
+  end if;
   alter table public.content_import_released_content_block_revision_records
     disable trigger content_import_released_content_block_revision_records_guard;
   delete from public.content_import_released_content_block_revision_records
   where import_id = 'test-first-receipt-v2';
   alter table public.content_import_released_content_block_revision_records
     enable trigger content_import_released_content_block_revision_records_guard;
+
+  -- The classifier's fourth state, on this now-receipt-free import: two
+  -- SIBLING forward revisions both claiming state parent 1 (corrupted
+  -- lineage -- a real chain can never fork). The head resolves to the
+  -- later sibling; the earlier one is neither its ancestor nor named by
+  -- any rollback receipt, so it must classify as diverged, never as a
+  -- silent success state.
+  perform set_config('bmh.release_revision_import_id', 'test-first-receipt-v2', true);
+  insert into public.content_import_release_revisions (
+    import_id, revision, kind, state_parent_revision,
+    prior_manifest_sha256, manifest_sha256,
+    prior_catalog_sha256, catalog_sha256, payload_sha256,
+    quiz_count, question_count, option_count,
+    prior_quiz_graph, invalidated_incomplete_attempts, evidence
+  ) values (
+    'test-first-receipt-v2', 2, 'quiz', 1,
+    repeat('1', 64), repeat('2', 64),
+    repeat('3', 64), repeat('4', 64), repeat('5', 64),
+    1, 1, 1, '[]'::jsonb, '[]'::jsonb, '{"operation":"release"}'::jsonb
+  ), (
+    'test-first-receipt-v2', 3, 'quiz', 1,
+    repeat('1', 64), repeat('6', 64),
+    repeat('3', 64), repeat('7', 64), repeat('8', 64),
+    1, 1, 1, '[]'::jsonb, '[]'::jsonb, '{"operation":"release"}'::jsonb
+  );
+  perform set_config('bmh.release_revision_import_id', '', true);
+  if public.fn_classify_revision_lineage('test-first-receipt-v2', 3) <> 'active_head' then
+    raise exception 'the later sibling did not classify as active_head';
+  end if;
+  if public.fn_classify_revision_lineage('test-first-receipt-v2', 2) <> 'diverged' then
+    raise exception 'a forked sibling revision did not classify as diverged';
+  end if;
 end;
 $$;
 
--- Round-6 review finding 1 (positive path): a released-poster replacement
--- that ran between the original release and the first v1 content-block
--- receipt is absorbed as a validated `legacy_catalog_correction` lineage
--- row, and the content-block receipt's prior catalog -- which legitimately
--- differs from the ORIGINAL release catalog because of that poster fix --
--- chains correctly against it instead of being left unvalidated.
+-- Positive path for the publication baseline + poster chain, built from
+-- receipts whose hashes are REAL catalog checksums produced by actually
+-- mutating the live rows (never invented placeholders): a released-poster
+-- replacement ran between the original release and the first v1
+-- content-block receipt, exactly as the retired RPCs would have recorded
+-- them -- each receipt's prior catalog is the live hash before its own
+-- mutation and its replacement is the live hash after it. The backfill must
+-- attest the publication baseline (release record's PRE-publish capture ->
+-- first live state), absorb the poster receipt as a validated
+-- legacy_catalog_correction lineage row, and chain the content-block
+-- receipt against the POSTER's resulting catalog, landing exactly on live.
 do $$
 declare
   v_program_id uuid := '00000000-0000-6000-a000-000000000f11';
   v_course_id uuid := '00000000-0000-6000-a000-000000000f12';
+  v_module_id uuid := '00000000-0000-6000-a000-000000000f15';
+  v_lesson_id uuid := '00000000-0000-6000-a000-000000000f16';
+  v_video_block_id uuid := '00000000-0000-6000-a000-000000000f17';
+  v_text_block_id uuid := '00000000-0000-6000-a000-000000000f18';
   v_release_catalog text;
+  v_post_publish_catalog text;
   v_after_poster_catalog text;
+  v_after_content_catalog text;
   v_result jsonb;
   v_mirror public.content_import_release_revisions%rowtype;
 begin
@@ -1462,6 +1588,17 @@ begin
   values (v_course_id, 'Round 6 Poster Chain Course', 'test-poster-chain-v2', false, false);
   insert into public.program_courses (program_id, course_id, sort_order)
   values (v_program_id, v_course_id, 0);
+  insert into public.modules (id, course_id, title, sort_order)
+  values (v_module_id, v_course_id, 'Round 6 Poster Chain Module', 1);
+  insert into public.lessons (id, module_id, title, lesson_type, sort_order, content_import_id)
+  values (v_lesson_id, v_module_id, 'Round 6 Poster Chain Lesson', 'content', 1, 'test-poster-chain-v2');
+  insert into public.content_blocks (
+    id, lesson_id, block_type, content, sort_order, is_required_for_completion
+  ) values
+    (v_video_block_id, v_lesson_id, 'video',
+     '{"video_path":"courses/poster-chain/v1/videos/slot-01.mp4","poster_path":"courses/poster-chain/v1/posters/slot-01.original.png"}'::jsonb,
+     1, false),
+    (v_text_block_id, v_lesson_id, 'text', '{"html":"<p>Original poster-chain text</p>"}'::jsonb, 2, false);
   perform set_config('bmh.apply_import_id', '', true);
 
   v_release_catalog := public.fn_course_import_catalog_sha256('test-poster-chain-v2');
@@ -1481,22 +1618,19 @@ begin
   update public.programs set is_published = true where content_import_id = 'test-poster-chain-v2';
   update public.courses set is_published = true where content_import_id = 'test-poster-chain-v2';
   perform set_config('bmh.release_import_id', '', true);
+  -- The first live post-publication state -- what the publication baseline
+  -- must bridge to (is_published is part of the hashed catalog rows, so
+  -- this genuinely differs from the release record's pre-publish capture).
+  v_post_publish_catalog := public.fn_course_import_catalog_sha256('test-poster-chain-v2');
 
-  -- Publishing flips is_published, which is itself part of the catalog hash
-  -- -- the release record's OWN catalog_sha256 legitimately reflects the
-  -- PRE-publish state (matching fn_release_course_import_v1's real
-  -- ordering), but the TRUE final live state (what the backfill's reality
-  -- check will actually recompute) is the POST-publish catalog. Nothing
-  -- else in this fixture mutates catalog-relevant rows, so this is the real
-  -- final state the content-block receipt's replacement must land on.
+  -- The poster replacement's REAL effect and REAL hashes: mutate the poster
+  -- path exactly as the retired RPC did, capturing live before/after.
+  update public.content_blocks
+  set content = jsonb_set(content, '{poster_path}',
+    to_jsonb('courses/poster-chain/v1/posters/slot-01.redesigned.png'::text), false)
+  where id = v_video_block_id;
   v_after_poster_catalog := public.fn_course_import_catalog_sha256('test-poster-chain-v2');
 
-  -- A poster replacement happened after release but before any content-block
-  -- receipt. Its replacement_catalog_sha256 is synthetic here (the real
-  -- mechanism would have actually mutated content_blocks poster paths and
-  -- rehashed) -- what matters for this test is that the BACKFILL absorbs it
-  -- as a lineage edge and the NEXT receipt chains against ITS catalog, not
-  -- the original release's.
   alter table public.content_import_video_poster_replacement_records
     disable trigger content_import_video_poster_replacement_records_guard;
   insert into public.content_import_video_poster_replacement_records (
@@ -1505,13 +1639,20 @@ begin
     approval_evidence_sha256, preflight_evidence_sha256,
     replacement_count, replacements, replaced_at
   ) values (
-    'test-poster-chain-v2', v_release_catalog, repeat('7', 64),
+    'test-poster-chain-v2', v_post_publish_catalog, v_after_poster_catalog,
     repeat('6', 64), repeat('5', 64),
     repeat('4', 64), repeat('3', 64),
-    1, '[{"block_id":"x"}]'::jsonb, now() - interval '3 minutes'
+    1, jsonb_build_array(jsonb_build_object('block_id', v_video_block_id)),
+    now() + interval '1 minute'
   );
   alter table public.content_import_video_poster_replacement_records
     enable trigger content_import_video_poster_replacement_records_guard;
+
+  -- The v1 content correction's REAL effect and REAL hashes.
+  update public.content_blocks
+  set content = '{"html":"<p>Corrected poster-chain text</p>"}'::jsonb
+  where id = v_text_block_id;
+  v_after_content_catalog := public.fn_course_import_catalog_sha256('test-poster-chain-v2');
 
   alter table public.content_import_released_content_block_revision_records
     disable trigger content_import_released_content_block_revision_records_guard;
@@ -1524,23 +1665,21 @@ begin
   ) values (
     'test-poster-chain-v2',
     repeat('1', 64), repeat('1', 64), repeat('2', 64),
-    -- Prior catalog is the POSTER fix's replacement, not the original
-    -- release catalog -- the historically real shape this whole mechanism
-    -- exists to accommodate. Replacement catalog must be the REAL final
-    -- live catalog -- the final reality check recomputes it fresh, not a
-    -- placeholder.
-    repeat('7', 64), v_after_poster_catalog, repeat('9', 64), repeat('d', 64),
+    -- Prior catalog is the POSTER fix's real resulting catalog, not the
+    -- original release catalog -- the historically real shape this whole
+    -- mechanism exists to accommodate.
+    v_after_poster_catalog, v_after_content_catalog, repeat('9', 64), repeat('d', 64),
     19, 19, 6,
     (select jsonb_agg(jsonb_build_object('fixture', item)) from generate_series(1, 44) item),
     '{}'::jsonb,
-    now() - interval '2 minutes'
+    now() + interval '2 minutes'
   );
   alter table public.content_import_released_content_block_revision_records
     enable trigger content_import_released_content_block_revision_records_guard;
 
   v_result := public.fn_backfill_v1_content_block_revisions();
-  if (v_result ->> 'rows')::int <> 2 then
-    raise exception 'v1 backfill did not absorb the poster correction plus the content-block receipt: %', v_result;
+  if (v_result ->> 'rows')::int <> 2 or (v_result ->> 'baselines')::int <> 1 then
+    raise exception 'v1 backfill did not absorb the poster correction plus the content-block receipt with one baseline: %', v_result;
   end if;
 
   select * into v_mirror
@@ -1548,8 +1687,22 @@ begin
   where import_id = 'test-poster-chain-v2' and revision = 2;
   if not found
     or v_mirror.kind <> 'legacy_catalog_correction'
+    or v_mirror.evidence ->> 'operation' <> 'publication_baseline'
+    or v_mirror.state_parent_revision <> 1
     or v_mirror.prior_catalog_sha256 <> v_release_catalog
-    or v_mirror.catalog_sha256 <> repeat('7', 64)
+    or v_mirror.catalog_sha256 <> v_post_publish_catalog
+  then
+    raise exception 'the publication baseline did not bridge the release capture to the first live state: %', to_jsonb(v_mirror);
+  end if;
+
+  select * into v_mirror
+  from public.content_import_release_revisions
+  where import_id = 'test-poster-chain-v2' and revision = 3;
+  if not found
+    or v_mirror.kind <> 'legacy_catalog_correction'
+    or v_mirror.state_parent_revision <> 2
+    or v_mirror.prior_catalog_sha256 <> v_post_publish_catalog
+    or v_mirror.catalog_sha256 <> v_after_poster_catalog
     or v_mirror.manifest_sha256 <> repeat('1', 64)
     or v_mirror.mutation_count is not null
     or v_mirror.evidence ->> 'backfilled_from' <> 'released_video_poster_replacement_v1'
@@ -1559,16 +1712,261 @@ begin
 
   select * into v_mirror
   from public.content_import_release_revisions
-  where import_id = 'test-poster-chain-v2' and revision = 3;
+  where import_id = 'test-poster-chain-v2' and revision = 4;
   if not found
     or v_mirror.kind <> 'content_blocks'
-    or v_mirror.state_parent_revision <> 2
-    or v_mirror.prior_catalog_sha256 <> repeat('7', 64)
+    or v_mirror.state_parent_revision <> 3
+    or v_mirror.prior_catalog_sha256 <> v_after_poster_catalog
+    or v_mirror.catalog_sha256 <> v_after_content_catalog
+    or v_mirror.prior_manifest_sha256 <> repeat('1', 64)
+    or v_mirror.manifest_sha256 <> repeat('2', 64)
   then
     raise exception 'the content-block receipt did not chain against the poster correction''s resulting catalog: %', to_jsonb(v_mirror);
   end if;
-  if public.fn_current_state_revision('test-poster-chain-v2') <> 3 then
+  if public.fn_current_state_revision('test-poster-chain-v2') <> 4 then
     raise exception 'the poster-chained lineage did not resolve to the final content-block revision';
+  end if;
+  if (
+    select active_catalog_sha256 from public.content_import_active_release_v1
+    where import_id = 'test-poster-chain-v2'
+  ) <> v_after_content_catalog then
+    raise exception 'the active-state view does not land on the chain''s real final catalog';
+  end if;
+end;
+$$;
+
+-- Round-6 finding 2 regression, the exact demanded shape: release -> poster
+-- -> QUIZ REVISION -> caption -> content. Quiz ledger revisions are part of
+-- the ONE causal sequence: the backfill replays receipts and existing quiz
+-- rows in true chronological order, so a poster receipt BEFORE the quiz
+-- chains against the pre-quiz state, the quiz anchor chains against the
+-- poster's result, and the caption/content receipts chain on top of the
+-- quiz's result -- an ordering the previous receipts-only queue could not
+-- express (it compared every receipt against the post-quiz active view and
+-- aborted on the earlier poster receipt).
+do $$
+declare
+  v_program_id uuid := '00000000-0000-6000-a000-000000000f21';
+  v_course_id uuid := '00000000-0000-6000-a000-000000000f22';
+  v_module_id uuid := '00000000-0000-6000-a000-000000000f23';
+  v_lesson_id uuid := '00000000-0000-6000-a000-000000000f24';
+  v_quiz_lesson_id uuid := '00000000-0000-6000-a000-000000000f25';
+  v_quiz_id uuid := '00000000-0000-6000-a000-000000000f26';
+  v_video_block_id uuid := '00000000-0000-6000-a000-000000000f27';
+  v_text_block_id uuid := '00000000-0000-6000-a000-000000000f28';
+  v_release_catalog text;
+  v_post_publish_catalog text;
+  v_after_poster_catalog text;
+  v_after_quiz_catalog text;
+  v_after_caption_catalog text;
+  v_after_content_catalog text;
+  v_result jsonb;
+  v_mirror public.content_import_release_revisions%rowtype;
+begin
+  perform set_config('bmh.apply_import_id', 'test-quiz-interleave-v2', true);
+  insert into public.programs (id, title, content_import_id, is_published, certificate_enabled)
+  values (v_program_id, 'Round 6 Quiz Interleave Fixture', 'test-quiz-interleave-v2', false, true);
+  insert into public.courses (id, title, content_import_id, is_published, certificate_enabled)
+  values (v_course_id, 'Round 6 Quiz Interleave Course', 'test-quiz-interleave-v2', false, false);
+  insert into public.program_courses (program_id, course_id, sort_order)
+  values (v_program_id, v_course_id, 0);
+  insert into public.modules (id, course_id, title, sort_order)
+  values (v_module_id, v_course_id, 'Round 6 Quiz Interleave Module', 1);
+  insert into public.quizzes (id, title) values (v_quiz_id, 'Round 6 Interleave Quiz');
+  insert into public.lessons (id, module_id, title, lesson_type, sort_order, content_import_id, quiz_id)
+  values
+    (v_lesson_id, v_module_id, 'Round 6 Interleave Lesson', 'content', 1, 'test-quiz-interleave-v2', null),
+    (v_quiz_lesson_id, v_module_id, 'Round 6 Interleave Quiz Lesson', 'quiz', 2, 'test-quiz-interleave-v2', v_quiz_id);
+  insert into public.content_blocks (
+    id, lesson_id, block_type, content, sort_order, is_required_for_completion
+  ) values
+    (v_video_block_id, v_lesson_id, 'video',
+     '{"video_path":"courses/quiz-interleave/v1/videos/slot-01.mp4","poster_path":"courses/quiz-interleave/v1/posters/slot-01.original.png","caption_path":"courses/quiz-interleave/v1/captions/slot-01.original.vtt"}'::jsonb,
+     1, false),
+    (v_text_block_id, v_lesson_id, 'text', '{"html":"<p>Original interleave text</p>"}'::jsonb, 2, false);
+  perform set_config('bmh.apply_import_id', '', true);
+
+  v_release_catalog := public.fn_course_import_catalog_sha256('test-quiz-interleave-v2');
+  perform set_config('bmh.release_import_id', 'test-quiz-interleave-v2', true);
+  insert into public.content_import_release_records (
+    import_id, program_id, qa_role_group_id, employee_role_group_id,
+    manifest_sha256, reconciliation_sha256, catalog_sha256,
+    rollback_rehearsal_sha256, chrome_desktop_sha256, chrome_mobile_sha256,
+    admin_happy_path_sha256, approval_sha256, approved_by, evidence
+  ) values (
+    'test-quiz-interleave-v2', v_program_id,
+    '00000000-0000-6000-a000-000000000f29', '00000000-0000-6000-a000-000000000f2a',
+    repeat('1', 64), repeat('2', 64), v_release_catalog,
+    repeat('4', 64), repeat('5', 64), repeat('6', 64), repeat('7', 64),
+    repeat('8', 64), 'Jarrad Henry', '{}'::jsonb
+  );
+  update public.programs set is_published = true where content_import_id = 'test-quiz-interleave-v2';
+  update public.courses set is_published = true where content_import_id = 'test-quiz-interleave-v2';
+  perform set_config('bmh.release_import_id', '', true);
+  v_post_publish_catalog := public.fn_course_import_catalog_sha256('test-quiz-interleave-v2');
+
+  -- t+1: poster correction (real mutation, real hashes).
+  update public.content_blocks
+  set content = jsonb_set(content, '{poster_path}',
+    to_jsonb('courses/quiz-interleave/v1/posters/slot-01.redesigned.png'::text), false)
+  where id = v_video_block_id;
+  v_after_poster_catalog := public.fn_course_import_catalog_sha256('test-quiz-interleave-v2');
+  alter table public.content_import_video_poster_replacement_records
+    disable trigger content_import_video_poster_replacement_records_guard;
+  insert into public.content_import_video_poster_replacement_records (
+    import_id, prior_catalog_sha256, replacement_catalog_sha256,
+    database_payload_sha256, client_payload_sha256,
+    approval_evidence_sha256, preflight_evidence_sha256,
+    replacement_count, replacements, replaced_at
+  ) values (
+    'test-quiz-interleave-v2', v_post_publish_catalog, v_after_poster_catalog,
+    repeat('6', 64), repeat('5', 64), repeat('4', 64), repeat('3', 64),
+    1, jsonb_build_array(jsonb_build_object('block_id', v_video_block_id)),
+    now() + interval '1 minute'
+  );
+  alter table public.content_import_video_poster_replacement_records
+    enable trigger content_import_video_poster_replacement_records_guard;
+
+  -- t+2: a QUIZ revision (real quiz-graph mutation, real hashes) recorded
+  -- directly in the shared ledger, exactly as the quiz mechanism writes it.
+  update public.quizzes set title = 'Round 6 Interleave Quiz (revised)'
+  where id = v_quiz_id;
+  v_after_quiz_catalog := public.fn_course_import_catalog_sha256('test-quiz-interleave-v2');
+  perform set_config('bmh.release_revision_import_id', 'test-quiz-interleave-v2', true);
+  insert into public.content_import_release_revisions (
+    import_id, revision, kind, prior_manifest_sha256, manifest_sha256,
+    prior_catalog_sha256, catalog_sha256, payload_sha256,
+    quiz_count, question_count, option_count,
+    prior_quiz_graph, invalidated_incomplete_attempts, evidence, revised_at
+  ) values (
+    'test-quiz-interleave-v2', 2, 'quiz',
+    repeat('1', 64), repeat('e', 64),
+    v_after_poster_catalog, v_after_quiz_catalog, repeat('a', 64),
+    1, 1, 1, '[]'::jsonb, '[]'::jsonb, '{"operation":"release"}'::jsonb,
+    now() + interval '2 minutes'
+  );
+  perform set_config('bmh.release_revision_import_id', '', true);
+
+  -- t+3: caption correction (real mutation, real hashes).
+  update public.content_blocks
+  set content = jsonb_set(content, '{caption_path}',
+    to_jsonb('courses/quiz-interleave/v1/captions/slot-01.corrected.vtt'::text), false)
+  where id = v_video_block_id;
+  v_after_caption_catalog := public.fn_course_import_catalog_sha256('test-quiz-interleave-v2');
+  alter table public.content_import_video_caption_replacement_records
+    disable trigger content_import_video_caption_replacement_records_guard;
+  insert into public.content_import_video_caption_replacement_records (
+    import_id, prior_catalog_sha256, replacement_catalog_sha256,
+    database_payload_sha256, client_payload_sha256,
+    approval_evidence_sha256, replacement_count, replacements, replaced_at
+  ) values (
+    'test-quiz-interleave-v2', v_after_quiz_catalog, v_after_caption_catalog,
+    repeat('7', 64), repeat('5', 64), repeat('4', 64),
+    1, jsonb_build_array(jsonb_build_object('block_id', v_video_block_id)),
+    now() + interval '3 minutes'
+  );
+  alter table public.content_import_video_caption_replacement_records
+    enable trigger content_import_video_caption_replacement_records_guard;
+
+  -- t+4: the v1 content-block correction (real mutation, real hashes). Its
+  -- declared predecessor manifest is the QUIZ revision's -- the quiz was
+  -- the last manifest-changing event before it.
+  update public.content_blocks
+  set content = '{"html":"<p>Corrected interleave text</p>"}'::jsonb
+  where id = v_text_block_id;
+  v_after_content_catalog := public.fn_course_import_catalog_sha256('test-quiz-interleave-v2');
+  alter table public.content_import_released_content_block_revision_records
+    disable trigger content_import_released_content_block_revision_records_guard;
+  insert into public.content_import_released_content_block_revision_records (
+    import_id, original_release_manifest_sha256, expected_active_manifest_sha256,
+    manifest_sha256, prior_catalog_sha256, replacement_catalog_sha256,
+    database_payload_sha256, client_payload_sha256,
+    guide_update_count, flashcard_update_count, role_play_insert_count,
+    mutations, evidence, revised_at
+  ) values (
+    'test-quiz-interleave-v2',
+    repeat('1', 64), repeat('e', 64), repeat('f', 64),
+    v_after_caption_catalog, v_after_content_catalog, repeat('9', 64), repeat('d', 64),
+    19, 19, 6,
+    (select jsonb_agg(jsonb_build_object('fixture', item)) from generate_series(1, 44) item),
+    '{}'::jsonb,
+    now() + interval '4 minutes'
+  );
+  alter table public.content_import_released_content_block_revision_records
+    enable trigger content_import_released_content_block_revision_records_guard;
+
+  v_result := public.fn_backfill_v1_content_block_revisions();
+  if (v_result ->> 'rows')::int <> 3 or (v_result ->> 'baselines')::int <> 1 then
+    raise exception 'v1 backfill did not absorb poster + caption + content around the quiz anchor: %', v_result;
+  end if;
+
+  -- Baseline (rev 3 -- the quiz row already held rev 2): release capture ->
+  -- first live post-publish state.
+  select * into v_mirror
+  from public.content_import_release_revisions
+  where import_id = 'test-quiz-interleave-v2' and revision = 3;
+  if not found
+    or v_mirror.evidence ->> 'operation' <> 'publication_baseline'
+    or v_mirror.prior_catalog_sha256 <> v_release_catalog
+    or v_mirror.catalog_sha256 <> v_post_publish_catalog
+  then
+    raise exception 'the interleave baseline is missing or misshapen: %', to_jsonb(v_mirror);
+  end if;
+  -- Poster mirror (rev 4) chains from the baseline, BEFORE the quiz state.
+  select * into v_mirror
+  from public.content_import_release_revisions
+  where import_id = 'test-quiz-interleave-v2' and revision = 4;
+  if not found
+    or v_mirror.kind <> 'legacy_catalog_correction'
+    or v_mirror.state_parent_revision <> 3
+    or v_mirror.prior_catalog_sha256 <> v_post_publish_catalog
+    or v_mirror.catalog_sha256 <> v_after_poster_catalog
+    or v_mirror.manifest_sha256 <> repeat('1', 64)
+  then
+    raise exception 'the pre-quiz poster mirror did not chain against the pre-quiz state: %', to_jsonb(v_mirror);
+  end if;
+  -- Caption mirror (rev 5) chains from the QUIZ anchor's resulting state.
+  select * into v_mirror
+  from public.content_import_release_revisions
+  where import_id = 'test-quiz-interleave-v2' and revision = 5;
+  if not found
+    or v_mirror.kind <> 'legacy_catalog_correction'
+    or v_mirror.state_parent_revision <> 2
+    or v_mirror.prior_catalog_sha256 <> v_after_quiz_catalog
+    or v_mirror.catalog_sha256 <> v_after_caption_catalog
+    or v_mirror.manifest_sha256 <> repeat('e', 64)
+  then
+    raise exception 'the post-quiz caption mirror did not chain against the quiz anchor: %', to_jsonb(v_mirror);
+  end if;
+  -- Content mirror (rev 6): declared predecessor manifest is the QUIZ
+  -- revision's, proving quiz revisions are inside the validated chain.
+  select * into v_mirror
+  from public.content_import_release_revisions
+  where import_id = 'test-quiz-interleave-v2' and revision = 6;
+  if not found
+    or v_mirror.kind <> 'content_blocks'
+    or v_mirror.state_parent_revision <> 5
+    or v_mirror.prior_manifest_sha256 <> repeat('e', 64)
+    or v_mirror.manifest_sha256 <> repeat('f', 64)
+    or v_mirror.prior_catalog_sha256 <> v_after_caption_catalog
+    or v_mirror.catalog_sha256 <> v_after_content_catalog
+  then
+    raise exception 'the content mirror did not chain through the quiz revision: %', to_jsonb(v_mirror);
+  end if;
+  if public.fn_current_state_revision('test-quiz-interleave-v2') <> 6 then
+    raise exception 'the interleaved lineage did not resolve to the final content revision';
+  end if;
+  if (
+    select active_catalog_sha256 from public.content_import_active_release_v1
+    where import_id = 'test-quiz-interleave-v2'
+  ) <> v_after_content_catalog then
+    raise exception 'the active-state view does not land on the interleaved chain''s final catalog';
+  end if;
+
+  -- Idempotency across the interleave too.
+  v_result := public.fn_backfill_v1_content_block_revisions();
+  if (v_result ->> 'rows')::int <> 0 or (v_result ->> 'baselines')::int <> 0 then
+    raise exception 'the interleave backfill was not idempotent: %', v_result;
   end if;
 end;
 $$;
