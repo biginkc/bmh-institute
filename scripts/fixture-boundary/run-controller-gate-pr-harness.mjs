@@ -251,6 +251,12 @@ try {
       "supabase/tests/054_released_content_block_revision.sql",
     ),
   );
+  psqlFile(
+    resolve(
+      root,
+      "supabase/tests/056_oral_check_pilot_role_play_blocks.sql",
+    ),
+  );
   psqlText(`
     do $$
     begin

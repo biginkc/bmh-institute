@@ -8,9 +8,9 @@
   "production_graph_checksum_sha256": "b9fc1ccf73bae2638b3d1a3b7570fae8715f14354646f822e2bc6830c8b6999f",
   "client_catalog_sha256": "523e0cf19ba7eaa96be1ce64c85ad3f4f44c46fdb1333f6268c8e8cae841e196",
   "client_graph_binding_sha256": "e7a310887c9a896f29ba51fd3a9fb9407c699a6576a98a68c8108b8afc47fa9e",
-  "manifest_sha256": "585b72c923a560d2228f6149a5b906ec02958f19d62818dc5c109c3968345a33",
+  "manifest_sha256": "48817f44c7f6ee3ccbebe2ff88cda94979065989f564991d1c77252762bd8f62",
   "mapping_ledger_sha256": "761cb7866d309e5b27e2e0f5d1f8c210c8d2ad620b99fbf33bae0287521e5386",
-  "closer_export_sha256": "e0dab4b3f0b98cd0854c90985aa74381bb4679b9feff99f42dab9e43411ed645",
+  "closer_export_sha256": "c05d490228a2f36a8e72752a03a69a6768045c31451b1c6c290666ca3d034269",
   "bindings": [
     {
       "block_source_key": "block-role-play-family-dynamics-dayton",

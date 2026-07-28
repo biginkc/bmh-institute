@@ -390,6 +390,88 @@ const ROLE_PLAYS = {
 // on those.
 const INCLUDE_CLOSER_LAB_ROLE_PLAYS = true;
 
+// The Andrea Oral Check pilot (PR #130, 2026-07-28): a structurally
+// different role-play type from ROLE_PLAYS above -- a coach persona (Andrea)
+// asking comprehension questions after a lesson, not a seller-persona
+// objection-handling drill -- bound to Closer Lab's separate "BMH Institute
+// Oral Checks v1" scenario namespace. Deliberately keyed by source_key
+// prefix `block-oral-check-slot-` (never `block-role-play-`) so
+// rolePlayBindings() in closer-lab-production-mapping.mjs -- which powers
+// the frozen, hash-pinned 6-scenario sales-role-play ledger/catalog chain --
+// never sees these 3 and the "exactly six" contract stays untouched. content
+// deliberately omits `title`: the "Talk with Andrea" label
+// (content-blocks.tsx / learner-parts.ts) is the render-time fallback
+// whenever content.mode === "oral_check" and no explicit title is set.
+// scenario_id values are the real, live, persona-backed Closer Lab
+// production role_play IDs (read-only-verified against project
+// xqrkugdxpwhjscrheuqo; see docs/course-production/oral-check-pilot-production-attestation.json),
+// not `pending:` placeholders -- these were bound directly, mirroring
+// supabase/migrations/20260728020000_insert_oral_check_pilot_role_play_blocks.sql's
+// hardcoded content exactly (the migration inserted these rows directly
+// against production; this manifest entry exists so the deterministic block
+// IDs it declares -- and the content it declares -- are recognized as
+// EXPECTED by the real exact-reconciliation path (course:import verify),
+// closing what would otherwise be permanent, undetected drift).
+const ORAL_CHECK_ROLE_PLAYS = {
+  2: [
+    {
+      key: "slot-02",
+      scenarioId: "e46baf56-d0ae-4621-87f3-07718f0744b2",
+      context: "This lesson covers the core vocabulary a caller needs on a live call -- property and seller-situation terms, wholesaling mechanics, deal-math terms, and CRM/pipeline terms. Andrea checks it out loud because recognizing these terms in the moment on a real call is different from recognizing them on a written quiz.",
+      learner_goal: "Demonstrate accurate understanding of the core terms in your own words, not a memorized definition.",
+      success_criteria: [
+        "Correctly defines core property/seller-situation terms (distressed, off-market, MLS, DOM, FSBO)",
+        "Explains the wholesaling mechanism (assignment of contract, assignment fee, and/or double close)",
+        "Correctly defines ARV, MAO, and equity and how they relate to the offer calculation",
+        "Correctly explains at least 2 transaction/CRM terms (PSA, EMD, title company, lien, Sandra, disposition)",
+      ],
+      fail_conditions: [
+        'Confuses or misstates the core property/seller-situation terms (e.g., calls a listed property "off-market")',
+        "Cannot describe the wholesaling mechanism (assignment of contract vs. buying and reselling)",
+        "Gives no grounded answer -- guesses or answers a different question",
+      ],
+    },
+  ],
+  5: [
+    {
+      key: "slot-05",
+      scenarioId: "fd3b4f85-2407-426b-a21b-db9d7163ebbb",
+      context: "This lesson covers the As-Is Cash Home Purchase offer, the four-step process, why sellers accept a below-market price, and how the offer number gets built. Andrea checks it out loud because explaining the offer to a real seller is different from reciting the script.",
+      learner_goal: "Demonstrate accurate understanding of the offer and why it works, in your own words.",
+      success_criteria: [
+        "Explains the core offer and the four-step process accurately",
+        "Explains why sellers accept a below-market price (speed/certainty/simplicity/convenience trade-off)",
+        "Walks through the offer formula (ARV minus repairs minus margin) with the correct general shape",
+        "Names at least 2 Ideal-Seller-Profile criteria OR 2 not-a-fit criteria",
+      ],
+      fail_conditions: [
+        "Confuses or misstates the core offer terms (e.g., says the deal is not cash or claims commissions are charged)",
+        "Cannot walk through the four-step process or the offer formula's shape",
+        "Gives no grounded answer -- guesses or answers a different question",
+      ],
+    },
+  ],
+  16: [
+    {
+      key: "slot-16",
+      scenarioId: "7765693a-5f8a-4aa1-ac39-c21866624006",
+      context: "This lesson covers what a KPI is, the six pipeline metrics tracked left to right, and how to use that order to diagnose exactly where a funnel is breaking. Andrea checks it out loud because using the numbers to self-diagnose is different from reciting the list.",
+      learner_goal: "Demonstrate accurate understanding of the six metrics and how to read them, in your own words.",
+      success_criteria: [
+        "Names the six metrics in the correct left-to-right order",
+        "Explains dial count as an effort indicator, not a strict goal (names the speed-dialing risk)",
+        "Correctly diagnoses at least one funnel-gap scenario (e.g., high quality conversations / low process calls = discovery or disqualifying-too-fast problem)",
+        "Explains why metrics are tracked left-to-right (to pinpoint exactly where in the funnel something broke)",
+      ],
+      fail_conditions: [
+        "Confuses or misstates the six metrics or their order",
+        "Cannot explain the left-to-right diagnostic logic when asked directly",
+        "Gives no grounded answer -- guesses or answers a different question",
+      ],
+    },
+  ],
+};
+
 export const QUIZ_SOURCE_FILE_NAMES = [
   "01 - Welcome & Mindset - quiz.json",
   "02 - Real Estate Terms Glossary - quiz.json",
@@ -1664,6 +1746,24 @@ export async function buildManifest({
           },
         },
       }));
+      const oralCheckRolePlayBlocks = (ORAL_CHECK_ROLE_PLAYS[topic.slot] ?? []).map((scenario, index) => ({
+        source_key: `block-oral-check-${scenario.key}`,
+        type: "role_play",
+        sort_order: videoBlocks.length + 5 + rolePlayBlocks.length + index,
+        required: true,
+        content: {
+          mode: "oral_check",
+          height_px: 760,
+          scenario_id: scenario.scenarioId,
+          scenario_spec: {
+            assignment_source_key: `oral-check-${scenario.key}`,
+            context: scenario.context,
+            learner_goal: scenario.learner_goal,
+            success_criteria: scenario.success_criteria,
+            fail_conditions: scenario.fail_conditions,
+          },
+        },
+      }));
       const blocks = [
         { source_key: `block-objectives-slot-${slotKey}`, type: "text", sort_order: 1, required: false, content: { html: textHtml(topic) } },
         ...videoBlocks,
@@ -1686,6 +1786,7 @@ export async function buildManifest({
         },
         { source_key: `block-flashcards-slot-${slotKey}`, type: "flashcard", sort_order: videoBlocks.length + 4, required: false, content: { cards: flashcards } },
         ...rolePlayBlocks,
+        ...oralCheckRolePlayBlocks,
       ];
       lessons.push({
         source_key: `lesson-content-slot-${slotKey}`,

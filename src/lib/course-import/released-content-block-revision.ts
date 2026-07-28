@@ -12,7 +12,15 @@ export const RELEASED_CONTENT_BLOCK_REVISION = {
   originalReleaseManifestSha256: "71f85173bc857d1b3b042fba0a50fdd420b6410ef84b104a751c3ed5982eba5c",
   expectedActiveManifestSha256: "440ec4d85bc6dc0aec9d471fb0f5ecbe0ca8c17236b3012e8b036b8d045a154d",
   expectedActiveCatalogSha256: "ca42e3d6347a71f46bd1aabee6c7b5c9fc570e797473865ceee30d4fe2a36ae0",
-  targetManifestSha256: "585b72c923a560d2228f6149a5b906ec02958f19d62818dc5c109c3968345a33",
+  // 2026-07-28 (PR #130): bumped from 585b72c9... to reflect the manifest
+  // gaining the 3 Andrea Oral Check pilot role_play blocks
+  // (block-oral-check-slot-02/-05/-16). Those 3 blocks are entirely
+  // outside ROLE_PLAY_SOURCE_KEYS above (the frozen 6 this file's 44-block
+  // correction touches) and outside this correction's own mutation set --
+  // this is purely a whole-file content pin that must track the checked-in
+  // manifest, not a claim that this correction has anything to do with the
+  // oral-check pilot.
+  targetManifestSha256: "48817f44c7f6ee3ccbebe2ff88cda94979065989f564991d1c77252762bd8f62",
   expectedPriorCatalogSha256: "e66250effa99bda93e8dd828077811585a5369e2e142bfa9bc5381f5ccd94eb4",
   expectedClientPayloadSha256: "81d918fd621bb82da935a81f06a08196ce27b2cb853fafcf0f8a2df88de8201b",
 } as const;

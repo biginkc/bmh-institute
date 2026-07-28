@@ -114,7 +114,7 @@ export function buildCloserServiceHeaders(serviceRoleKey) {
   };
 }
 
-function assertApprovedVoiceId(approvedVoiceId) {
+export function assertApprovedVoiceId(approvedVoiceId) {
   if (typeof approvedVoiceId !== "string" || !approvedVoiceId.trim()) {
     throw new Error("Closer Lab production approved voice ID is required for live attestation.");
   }
@@ -246,7 +246,20 @@ export function rolePlayBindings(manifest) {
     .flatMap((course) => course.modules)
     .flatMap((courseModule) => courseModule.lessons)
     .flatMap((lesson) => lesson.blocks ?? [])
-    .filter((block) => block.type === "role_play" && block.required === true)
+    .filter((block) =>
+      block.type === "role_play"
+      && block.required === true
+      // Scoped to the frozen 6-scenario sales-role-play chain only. The
+      // Andrea Oral Check pilot (PR #130) added 3 more role_play blocks
+      // under the `block-oral-check-` prefix, bound to a structurally
+      // different Closer Lab namespace ("BMH Institute Oral Checks v1")
+      // with no equivalent production export RPC yet -- see
+      // docs/course-production/oral-check-pilot-production-attestation.json
+      // and the migration's header comment. Without this prefix filter,
+      // those 3 would inflate this list past 6 and break every hardcoded
+      // "exactly six" check downstream (this file and import-semantic-gate.mjs).
+      && block.source_key.startsWith("block-role-play-")
+    )
     .map((block) => ({
       block_source_key: block.source_key,
       scenario_source_key: block.source_key.replace(/^block-role-play-/, ""),

@@ -1119,10 +1119,17 @@ function RolePlayBlockEditor({
   startTransition: (cb: () => void | Promise<void>) => void;
 }) {
   const save = useBlockSaver({ blockId: block.id, lessonId, startTransition });
+  const isOralCheck = block.content.mode === "oral_check";
   const [scenarioId, setScenarioId] = useState(
     stringOr(block.content.scenario_id, ""),
   );
-  const [title, setTitle] = useState(stringOr(block.content.title, "Role play"));
+  // An oral-check block with no explicit title relies on the learner-facing
+  // "Talk with Andrea" fallback (see content-blocks.tsx). Pre-filling this
+  // field with "Role play" would submit that literal string as an explicit
+  // title on the very next save, permanently overwriting the fallback.
+  const [title, setTitle] = useState(
+    stringOr(block.content.title, isOralCheck ? "" : "Role play"),
+  );
   const [heightPx, setHeightPx] = useState(
     String(numberOr(block.content.height_px, 720)),
   );
@@ -1145,7 +1152,9 @@ function RolePlayBlockEditor({
           id={`rp-title-${block.id}`}
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="Handle the price objection"
+          placeholder={
+            isOralCheck ? "Talk with Andrea (default)" : "Handle the price objection"
+          }
         />
       </div>
       <div className="flex flex-col gap-1.5">

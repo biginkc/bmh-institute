@@ -6,20 +6,25 @@
     "project_ref": "xqrkugdxpwhjscrheuqo",
     "project_name": "closer-lab",
     "verified_at": "2026-07-28T13:42:02Z",
+    "revalidated_at": "2026-07-28T14:05:00Z",
+    "revalidated_note": "Round-2 review (finding 2) required voice_id and complete active goal/document data; re-queried role_plays/personas/role_play_goals/rubric_goals/rubric_goal_documents directly (read-only, service-role MCP access to the live closer-lab project, not the production_rpc used by the frozen 6-scenario chain -- see the qa test's 'purpose' note for why this attestation is a lighter, standalone contract). All fields below -- including voice_id and managed_source_key -- are the live values returned by that revalidation, not carried over unverified from the first pass.",
     "queries": [
-      "select id, title, description, persona_id, archived_at, created_at, updated_at from public.role_plays where id in (...)",
-      "select id, name, archived_at from public.personas where id in (...)",
+      "select rp.id as role_play_id, rp.title, rp.managed_source_key as rp_managed_source_key, rp.archived_at as rp_archived_at, p.id as persona_id, p.name as persona_name, p.voice_id, p.archived_at as persona_archived_at, p.managed_source_key as persona_managed_source_key from public.role_plays rp join public.personas p on p.id = rp.persona_id where rp.id in (...)",
       "select rpg.role_play_id, rpg.sort_order, rpg.weight, rg.id, rg.name, rg.goal_type, rg.knowledge_subtype, rg.archived_at, count(rgd.*) from public.role_play_goals rpg join public.rubric_goals rg on rg.id = rpg.rubric_goal_id left join public.rubric_goal_documents rgd on rgd.rubric_goal_id = rg.id where rpg.role_play_id in (...) group by ..."
     ]
   },
   "scenarios": [
     {
       "block_source_key": "block-oral-check-slot-02",
+      "block_id": "7300bba9-a9fc-582c-aa20-dd5d58754165",
       "lesson_source_key": "lesson-content-slot-02",
       "role_play_id": "e46baf56-d0ae-4621-87f3-07718f0744b2",
+      "role_play_managed_source_key": "bmh-institute-oral-checks-v1:role-play:glossary",
       "title": "BMH Institute Oral Checks v1: Talk with Andrea — Real Estate Terms Glossary",
       "persona_id": "2edb3d95-4adc-4bbb-9735-e98a975d5cb9",
       "persona_name": "Andrea",
+      "persona_managed_source_key": "bmh-institute-oral-checks-v1:persona:andrea-glossary",
+      "voice_id": "c7VyuzKrx3xIuZs8QT0P",
       "archived_at": null,
       "persona_archived_at": null,
       "rubric_goals": [
@@ -31,11 +36,15 @@
     },
     {
       "block_source_key": "block-oral-check-slot-05",
+      "block_id": "4464ecdd-2650-59ed-a525-78871e846d20",
       "lesson_source_key": "lesson-content-slot-05",
       "role_play_id": "fd3b4f85-2407-426b-a21b-db9d7163ebbb",
+      "role_play_managed_source_key": "bmh-institute-oral-checks-v1:role-play:offer-playbook",
       "title": "BMH Institute Oral Checks v1: Talk with Andrea — BMH Offer Playbook",
       "persona_id": "f08d3676-4156-4ed9-97bb-c083aafd3e42",
       "persona_name": "Andrea",
+      "persona_managed_source_key": "bmh-institute-oral-checks-v1:persona:andrea-offer-playbook",
+      "voice_id": "c7VyuzKrx3xIuZs8QT0P",
       "archived_at": null,
       "persona_archived_at": null,
       "rubric_goals": [
@@ -47,11 +56,15 @@
     },
     {
       "block_source_key": "block-oral-check-slot-16",
+      "block_id": "34758403-1ddd-5e3c-a054-b2f28310d8b8",
       "lesson_source_key": "lesson-content-slot-16",
       "role_play_id": "7765693a-5f8a-4aa1-ac39-c21866624006",
+      "role_play_managed_source_key": "bmh-institute-oral-checks-v1:role-play:kpis-telemetry",
       "title": "BMH Institute Oral Checks v1: Talk with Andrea — KPIs & Sales Telemetry",
       "persona_id": "ff5d7dbc-487e-4aec-8710-b15da1f60282",
       "persona_name": "Andrea",
+      "persona_managed_source_key": "bmh-institute-oral-checks-v1:persona:andrea-kpis-telemetry",
+      "voice_id": "c7VyuzKrx3xIuZs8QT0P",
       "archived_at": null,
       "persona_archived_at": null,
       "rubric_goals": [
@@ -67,6 +80,8 @@
     "total_rubric_goals": 12,
     "total_rubric_goal_documents": 12,
     "all_non_archived": true,
-    "all_weights_sum_to_100_per_scenario": true
+    "all_weights_sum_to_100_per_scenario": true,
+    "all_voice_ids_present_and_equal": true,
+    "shared_voice_id": "c7VyuzKrx3xIuZs8QT0P"
   }
 }
