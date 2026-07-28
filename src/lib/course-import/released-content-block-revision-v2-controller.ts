@@ -99,8 +99,28 @@ export type ReleasedContentBlockRevisionV2Dependencies<Client> = {
     mutations: ReleasedContentBlockRevisionV2Mutation[],
   ) => Promise<ReleasedContentBlockRevisionV2Row[]>;
   callRevision: (client: Client, args: Record<string, unknown>) => Promise<ReleasedContentBlockRevisionV2RpcResult>;
+  /** Classifies a SPECIFIC forward revision's standing relative to the
+   * current lineage (fn_classify_revision_lineage): "active_head" (it still
+   * is the resolved state), "superseded" (later activity built on top of
+   * it -- success), "reverted" (a rollback undid it specifically), or
+   * "diverged"/"unknown" (broken lineage). A bare
+   * `active_revision > our_revision` comparison cannot tell "superseded"
+   * apart from "reverted" -- a rollback receipt is also a greater revision
+   * number. */
+  classifyRevisionLineage: (
+    client: Client,
+    importId: string,
+    revision: number,
+  ) => Promise<RevisionLineageClassification>;
   log: (value: string) => void;
 };
+
+export type RevisionLineageClassification =
+  | "active_head"
+  | "superseded"
+  | "reverted"
+  | "diverged"
+  | "unknown";
 
 type ValidatedRpcResult = {
   status: "revised" | "already_revised";
@@ -196,11 +216,14 @@ export async function runReleasedContentBlockRevisionV2Command<Client>(
   // COMMIT PROOF is the immutable receipt at the RPC-returned revision --
   // never the mutable rows or the live catalog, which a SUBSEQUENT revision
   // may legitimately have advanced between our commit and these unlocked
-  // postflight reads. Verify the receipt first; then classify against the
-  // live head: if this revision is still the head, also verify live rows
-  // and catalog against the receipt; if a newer head exists, our write
-  // committed and was then built upon -- that is SUCCESS ("superseded"),
-  // not an error, and retrying would be wrong.
+  // postflight reads. Verify the receipt first; then classify this
+  // revision's LINEAGE (not just compare revision numbers -- a rollback of
+  // exactly this revision is ALSO a greater active-revision number, and a
+  // bare `active_revision > our_revision` check cannot tell the two apart):
+  // if it is still the active head, verify live rows and catalog against
+  // the receipt; if later activity was built on top of it, that is SUCCESS
+  // ("superseded"); if a rollback undid it specifically, report that
+  // distinctly ("rolled_back") rather than claiming success.
   const audit = await dependencies.loadAudit(client, input.importId, rpc.revision);
   assertRevisionAudit(
     audit,
@@ -212,16 +235,31 @@ export async function runReleasedContentBlockRevisionV2Command<Client>(
     rpc.revision,
   );
 
-  const postActive = await dependencies.loadActiveRevision(client, input.importId);
-  const postActiveRevision = Number(postActive.active_revision);
-  if (postActiveRevision > rpc.revision) {
+  const lineage = await dependencies.classifyRevisionLineage(client, input.importId, rpc.revision);
+  if (lineage === "reverted") {
+    dependencies.log(JSON.stringify({
+      phase: "released_content_blocks_v2_rolled_back",
+      environment,
+      prior_state: priorState,
+      mutation_count: mutationCount,
+      revision: rpc.revision,
+      catalog_sha256: rpc.catalog_sha256,
+    }, null, 2));
+    return {
+      status: "rolled_back" as const,
+      environment,
+      priorState,
+      revision: rpc.revision,
+      catalogSha256: rpc.catalog_sha256,
+    };
+  }
+  if (lineage === "superseded") {
     dependencies.log(JSON.stringify({
       phase: "released_content_blocks_v2_superseded",
       environment,
       prior_state: priorState,
       mutation_count: mutationCount,
       revision: rpc.revision,
-      active_revision: postActiveRevision,
       catalog_sha256: rpc.catalog_sha256,
     }, null, 2));
     return {
@@ -232,9 +270,9 @@ export async function runReleasedContentBlockRevisionV2Command<Client>(
       catalogSha256: rpc.catalog_sha256,
     };
   }
-  if (postActiveRevision < rpc.revision) {
+  if (lineage !== "active_head") {
     throw new Error(
-      "Released content revision v2 postflight found an active revision OLDER than its own committed receipt; the shared ledger is inconsistent.",
+      `Released content revision v2 postflight found revision ${rpc.revision} in lineage state "${lineage}"; the shared ledger is inconsistent.`,
     );
   }
 

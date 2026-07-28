@@ -28,6 +28,13 @@ begin;
 set local lock_timeout = '10s';
 select set_config('request.jwt.claim.role', 'service_role', true);
 
+-- Test-scoped only (installed inside this rolled-back transaction, never
+-- touching real schema): enables a genuine SEPARATE-connection two-session
+-- lock race further down, rather than the in-transaction lock-assertion
+-- substitute a prior round used (round-6 review: that substitute "only
+-- proves the mechanism exists, not that it's complete").
+create extension if not exists dblink;
+
 do $$
 begin
   if to_regprocedure(
@@ -54,6 +61,106 @@ begin
   ) then
     raise exception 'content_import_release_revisions was not generalized for content-block revisions';
   end if;
+end;
+$$;
+
+-- Round-6 review findings 2 and 3 (genuine two-session races): a second
+-- REAL backend session (via dblink -- a separate connection and
+-- transaction, not an in-transaction lock-assertion substitute) holds a
+-- plain writer's lock on catalog-hash tables while the main session calls
+-- the backfill and the forward content-block RPC. If the canonical lock set
+-- is complete, each call must BLOCK on those tables and time out under this
+-- session's 10s lock_timeout.
+--
+-- Deliberately: (a) placed here, before any other fixture/RPC call in this
+-- file takes its own SHARE ROW EXCLUSIVE locks on these same tables, and
+-- (b) never followed by a "now it succeeds" call -- this whole file is ONE
+-- transaction (begin; ... rollback;), so any call that actually COMPLETES
+-- would keep holding the full canonical lock set (via
+-- fn_lock_course_import_catalog_tables) for the rest of the file, which
+-- would make THIS session -- not the dblink writer -- the one blocking a
+-- later race check. Every call below is expected to error via
+-- lock_not_available, which unwinds before it holds anything, so multiple
+-- independent race checks can safely share this one transaction.
+do $$
+declare
+  v_blocked boolean;
+  v_mutations jsonb;
+  v_database_payload_sha256 text;
+  v_confirmation text;
+begin
+  -- Built from this backend's OWN live settings (not a hardcoded host/port)
+  -- so the same test works against any cluster's actual socket directory
+  -- and port, local or CI, rather than assuming the default 5432.
+  perform dblink_connect('bmh_lock_race',
+    'host=' || split_part(current_setting('unix_socket_directories'), ',', 1)
+    || ' port=' || current_setting('port')
+    || ' dbname=' || current_database()
+    || ' user=' || current_user
+  );
+
+  -- (1) course_access AND program_courses vs. the backfill (findings 2 and
+  -- 3 -- neither was in the backfill's lock set before this round).
+  perform dblink_exec('bmh_lock_race', 'begin');
+  perform dblink_exec('bmh_lock_race', 'delete from public.course_access where false');
+  perform dblink_exec('bmh_lock_race', 'delete from public.program_courses where false');
+  v_blocked := false;
+  begin
+    perform public.fn_backfill_v1_content_block_revisions();
+  exception when lock_not_available then
+    v_blocked := true;
+  end;
+  if not v_blocked then
+    raise exception 'the backfill did not block on a concurrent course_access/program_courses writer -- findings 2/3 regressed';
+  end if;
+  perform dblink_exec('bmh_lock_race', 'rollback');
+
+  -- (2) quizzes vs. the forward content-block RPC (finding 3 -- quizzes was
+  -- never locked by this RPC before the round-6 fix). Uses a fresh
+  -- non-existent import_id: the shape/evidence checks that run before the
+  -- lock never look it up, so this is valid regardless.
+  perform dblink_exec('bmh_lock_race', 'begin');
+  perform dblink_exec('bmh_lock_race', 'delete from public.quizzes where false');
+  v_blocked := false;
+  v_mutations := jsonb_build_array(jsonb_build_object(
+    'action', 'insert', 'source_key', 'block-lock-race-check',
+    'block_id', '00000000-0000-5000-a000-0000000000f0',
+    'lesson_id', '00000000-0000-5000-a000-000000000098',
+    'block_type', 'role_play', 'expected_content', null,
+    'replacement_content', '{"scenario_id":"pending:lock-race-check"}'::jsonb,
+    'sort_order', 0, 'is_required_for_completion', false,
+    'replacement_sha256', null, 'replacement_size_bytes', null
+  ));
+  -- Confirmation is checked BEFORE the lock, so it must be the real one
+  -- PostgreSQL would compute (same formula the RPC uses internally) --
+  -- otherwise this call errors on the confirmation mismatch instead of ever
+  -- reaching the lock this test means to exercise.
+  v_database_payload_sha256 := encode(sha256(convert_to(v_mutations::text, 'UTF8')), 'hex');
+  v_confirmation := 'REVISE-RELEASED-CONTENT-BLOCKS-V2:' || 'test-lock-race-v2' || ':'
+    || repeat('1', 64) || ':' || repeat('2', 64) || ':'
+    || repeat('3', 64) || ':' || v_database_payload_sha256 || ':' || '1';
+  begin
+    perform public.fn_revise_released_content_blocks_v2(
+      'test-lock-race-v2', repeat('1', 64), repeat('2', 64),
+      repeat('3', 64),
+      v_mutations,
+      repeat('4', 64),
+      jsonb_build_object(
+        'operation', 'released_content_blocks_v2',
+        'manifest_sha256', repeat('2', 64),
+        'expected_prior_catalog_sha256', repeat('3', 64)
+      ),
+      v_confirmation
+    );
+  exception when lock_not_available then
+    v_blocked := true;
+  end;
+  if not v_blocked then
+    raise exception 'the forward content-block RPC did not block on a concurrent quizzes writer -- finding 3 regressed';
+  end if;
+  perform dblink_exec('bmh_lock_race', 'rollback');
+
+  perform dblink_disconnect('bmh_lock_race');
 end;
 $$;
 
@@ -997,7 +1104,10 @@ begin
     repeat('1', 64),
     repeat('9', 64),
     repeat('a', 64),
-    repeat('b', 64),
+    -- Round-6 review fix (finding 1): this MUST be the real live catalog at
+    -- this point, not an arbitrary placeholder -- the backfill now checks
+    -- every receipt's prior catalog unconditionally, including the first.
+    v_live_catalog,
     repeat('5', 64),
     repeat('9', 64),
     repeat('d', 64),
@@ -1249,6 +1359,255 @@ begin
   where import_id = 'test-content-block-revision-v2' and manifest_sha256 = repeat('e', 64);
   alter table public.content_import_released_content_block_revision_records
     enable trigger content_import_released_content_block_revision_records_guard;
+end;
+$$;
+
+-- Round-6 review finding 1: a legacy receipt with NO predecessor mirror at
+-- all (the true first event ever backfilled for a fresh import) must be
+-- validated too, not given a free pass. Prior code special-cased "no mirror
+-- exists yet" to skip the catalog check entirely; the fix processes every
+-- legacy source (v1 content-block receipts, poster/caption replacements) in
+-- one true chronological order, so even the very first receipt is checked
+-- against the real active catalog. Use a FRESH import with no history at
+-- all so this is genuinely the first event, not merely the first of one
+-- source with others already chained.
+do $$
+declare
+  v_program_id uuid := '00000000-0000-6000-a000-000000000f01';
+  v_course_id uuid := '00000000-0000-6000-a000-000000000f02';
+  v_release_catalog text;
+begin
+  perform set_config('bmh.apply_import_id', 'test-first-receipt-v2', true);
+  insert into public.programs (id, title, content_import_id, is_published, certificate_enabled)
+  values (v_program_id, 'Round 6 First Receipt Fixture', 'test-first-receipt-v2', false, true);
+  insert into public.courses (id, title, content_import_id, is_published, certificate_enabled)
+  values (v_course_id, 'Round 6 First Receipt Course', 'test-first-receipt-v2', false, false);
+  insert into public.program_courses (program_id, course_id, sort_order)
+  values (v_program_id, v_course_id, 0);
+  perform set_config('bmh.apply_import_id', '', true);
+
+  v_release_catalog := public.fn_course_import_catalog_sha256('test-first-receipt-v2');
+  perform set_config('bmh.release_import_id', 'test-first-receipt-v2', true);
+  insert into public.content_import_release_records (
+    import_id, program_id, qa_role_group_id, employee_role_group_id,
+    manifest_sha256, reconciliation_sha256, catalog_sha256,
+    rollback_rehearsal_sha256, chrome_desktop_sha256, chrome_mobile_sha256,
+    admin_happy_path_sha256, approval_sha256, approved_by, evidence
+  ) values (
+    'test-first-receipt-v2', v_program_id,
+    '00000000-0000-6000-a000-000000000f03', '00000000-0000-6000-a000-000000000f04',
+    repeat('1', 64), repeat('2', 64), v_release_catalog,
+    repeat('4', 64), repeat('5', 64), repeat('6', 64), repeat('7', 64),
+    repeat('8', 64), 'Jarrad Henry', '{}'::jsonb
+  );
+  update public.programs set is_published = true where content_import_id = 'test-first-receipt-v2';
+  update public.courses set is_published = true where content_import_id = 'test-first-receipt-v2';
+  perform set_config('bmh.release_import_id', '', true);
+
+  -- Crafted first receipt: declares an ARBITRARY prior catalog instead of
+  -- the real release catalog. Must now be refused -- there is no more
+  -- "first receipt" exemption.
+  alter table public.content_import_released_content_block_revision_records
+    disable trigger content_import_released_content_block_revision_records_guard;
+  insert into public.content_import_released_content_block_revision_records (
+    import_id, original_release_manifest_sha256, expected_active_manifest_sha256,
+    manifest_sha256, prior_catalog_sha256, replacement_catalog_sha256,
+    database_payload_sha256, client_payload_sha256,
+    guide_update_count, flashcard_update_count, role_play_insert_count,
+    mutations, evidence
+  ) values (
+    'test-first-receipt-v2',
+    repeat('1', 64), repeat('1', 64), repeat('2', 64),
+    repeat('f', 64), repeat('e', 64), repeat('9', 64), repeat('d', 64),
+    19, 19, 6,
+    (select jsonb_agg(jsonb_build_object('fixture', item)) from generate_series(1, 44) item),
+    '{}'::jsonb
+  );
+  alter table public.content_import_released_content_block_revision_records
+    enable trigger content_import_released_content_block_revision_records_guard;
+  begin
+    perform public.fn_backfill_v1_content_block_revisions();
+    raise exception 'a crafted FIRST receipt with an arbitrary prior catalog was mirrored -- finding 1 regressed';
+  exception when others then
+    if sqlerrm not like '%declares predecessor catalog%' then raise; end if;
+  end;
+  alter table public.content_import_released_content_block_revision_records
+    disable trigger content_import_released_content_block_revision_records_guard;
+  delete from public.content_import_released_content_block_revision_records
+  where import_id = 'test-first-receipt-v2';
+  alter table public.content_import_released_content_block_revision_records
+    enable trigger content_import_released_content_block_revision_records_guard;
+end;
+$$;
+
+-- Round-6 review finding 1 (positive path): a released-poster replacement
+-- that ran between the original release and the first v1 content-block
+-- receipt is absorbed as a validated `legacy_catalog_correction` lineage
+-- row, and the content-block receipt's prior catalog -- which legitimately
+-- differs from the ORIGINAL release catalog because of that poster fix --
+-- chains correctly against it instead of being left unvalidated.
+do $$
+declare
+  v_program_id uuid := '00000000-0000-6000-a000-000000000f11';
+  v_course_id uuid := '00000000-0000-6000-a000-000000000f12';
+  v_release_catalog text;
+  v_after_poster_catalog text;
+  v_result jsonb;
+  v_mirror public.content_import_release_revisions%rowtype;
+begin
+  perform set_config('bmh.apply_import_id', 'test-poster-chain-v2', true);
+  insert into public.programs (id, title, content_import_id, is_published, certificate_enabled)
+  values (v_program_id, 'Round 6 Poster Chain Fixture', 'test-poster-chain-v2', false, true);
+  insert into public.courses (id, title, content_import_id, is_published, certificate_enabled)
+  values (v_course_id, 'Round 6 Poster Chain Course', 'test-poster-chain-v2', false, false);
+  insert into public.program_courses (program_id, course_id, sort_order)
+  values (v_program_id, v_course_id, 0);
+  perform set_config('bmh.apply_import_id', '', true);
+
+  v_release_catalog := public.fn_course_import_catalog_sha256('test-poster-chain-v2');
+  perform set_config('bmh.release_import_id', 'test-poster-chain-v2', true);
+  insert into public.content_import_release_records (
+    import_id, program_id, qa_role_group_id, employee_role_group_id,
+    manifest_sha256, reconciliation_sha256, catalog_sha256,
+    rollback_rehearsal_sha256, chrome_desktop_sha256, chrome_mobile_sha256,
+    admin_happy_path_sha256, approval_sha256, approved_by, evidence
+  ) values (
+    'test-poster-chain-v2', v_program_id,
+    '00000000-0000-6000-a000-000000000f13', '00000000-0000-6000-a000-000000000f14',
+    repeat('1', 64), repeat('2', 64), v_release_catalog,
+    repeat('4', 64), repeat('5', 64), repeat('6', 64), repeat('7', 64),
+    repeat('8', 64), 'Jarrad Henry', '{}'::jsonb
+  );
+  update public.programs set is_published = true where content_import_id = 'test-poster-chain-v2';
+  update public.courses set is_published = true where content_import_id = 'test-poster-chain-v2';
+  perform set_config('bmh.release_import_id', '', true);
+
+  -- Publishing flips is_published, which is itself part of the catalog hash
+  -- -- the release record's OWN catalog_sha256 legitimately reflects the
+  -- PRE-publish state (matching fn_release_course_import_v1's real
+  -- ordering), but the TRUE final live state (what the backfill's reality
+  -- check will actually recompute) is the POST-publish catalog. Nothing
+  -- else in this fixture mutates catalog-relevant rows, so this is the real
+  -- final state the content-block receipt's replacement must land on.
+  v_after_poster_catalog := public.fn_course_import_catalog_sha256('test-poster-chain-v2');
+
+  -- A poster replacement happened after release but before any content-block
+  -- receipt. Its replacement_catalog_sha256 is synthetic here (the real
+  -- mechanism would have actually mutated content_blocks poster paths and
+  -- rehashed) -- what matters for this test is that the BACKFILL absorbs it
+  -- as a lineage edge and the NEXT receipt chains against ITS catalog, not
+  -- the original release's.
+  alter table public.content_import_video_poster_replacement_records
+    disable trigger content_import_video_poster_replacement_records_guard;
+  insert into public.content_import_video_poster_replacement_records (
+    import_id, prior_catalog_sha256, replacement_catalog_sha256,
+    database_payload_sha256, client_payload_sha256,
+    approval_evidence_sha256, preflight_evidence_sha256,
+    replacement_count, replacements, replaced_at
+  ) values (
+    'test-poster-chain-v2', v_release_catalog, repeat('7', 64),
+    repeat('6', 64), repeat('5', 64),
+    repeat('4', 64), repeat('3', 64),
+    1, '[{"block_id":"x"}]'::jsonb, now() - interval '3 minutes'
+  );
+  alter table public.content_import_video_poster_replacement_records
+    enable trigger content_import_video_poster_replacement_records_guard;
+
+  alter table public.content_import_released_content_block_revision_records
+    disable trigger content_import_released_content_block_revision_records_guard;
+  insert into public.content_import_released_content_block_revision_records (
+    import_id, original_release_manifest_sha256, expected_active_manifest_sha256,
+    manifest_sha256, prior_catalog_sha256, replacement_catalog_sha256,
+    database_payload_sha256, client_payload_sha256,
+    guide_update_count, flashcard_update_count, role_play_insert_count,
+    mutations, evidence, revised_at
+  ) values (
+    'test-poster-chain-v2',
+    repeat('1', 64), repeat('1', 64), repeat('2', 64),
+    -- Prior catalog is the POSTER fix's replacement, not the original
+    -- release catalog -- the historically real shape this whole mechanism
+    -- exists to accommodate. Replacement catalog must be the REAL final
+    -- live catalog -- the final reality check recomputes it fresh, not a
+    -- placeholder.
+    repeat('7', 64), v_after_poster_catalog, repeat('9', 64), repeat('d', 64),
+    19, 19, 6,
+    (select jsonb_agg(jsonb_build_object('fixture', item)) from generate_series(1, 44) item),
+    '{}'::jsonb,
+    now() - interval '2 minutes'
+  );
+  alter table public.content_import_released_content_block_revision_records
+    enable trigger content_import_released_content_block_revision_records_guard;
+
+  v_result := public.fn_backfill_v1_content_block_revisions();
+  if (v_result ->> 'rows')::int <> 2 then
+    raise exception 'v1 backfill did not absorb the poster correction plus the content-block receipt: %', v_result;
+  end if;
+
+  select * into v_mirror
+  from public.content_import_release_revisions
+  where import_id = 'test-poster-chain-v2' and revision = 2;
+  if not found
+    or v_mirror.kind <> 'legacy_catalog_correction'
+    or v_mirror.prior_catalog_sha256 <> v_release_catalog
+    or v_mirror.catalog_sha256 <> repeat('7', 64)
+    or v_mirror.manifest_sha256 <> repeat('1', 64)
+    or v_mirror.mutation_count is not null
+    or v_mirror.evidence ->> 'backfilled_from' <> 'released_video_poster_replacement_v1'
+  then
+    raise exception 'the poster replacement was not backfilled as a validated legacy_catalog_correction lineage row: %', to_jsonb(v_mirror);
+  end if;
+
+  select * into v_mirror
+  from public.content_import_release_revisions
+  where import_id = 'test-poster-chain-v2' and revision = 3;
+  if not found
+    or v_mirror.kind <> 'content_blocks'
+    or v_mirror.state_parent_revision <> 2
+    or v_mirror.prior_catalog_sha256 <> repeat('7', 64)
+  then
+    raise exception 'the content-block receipt did not chain against the poster correction''s resulting catalog: %', to_jsonb(v_mirror);
+  end if;
+  if public.fn_current_state_revision('test-poster-chain-v2') <> 3 then
+    raise exception 'the poster-chained lineage did not resolve to the final content-block revision';
+  end if;
+end;
+$$;
+
+-- Round-6 review findings 2 and 3: the canonical catalog-hash lock set must
+-- be the EXACT set of tables fn_course_import_catalog_sha256 reads, not a
+-- remembered list -- mechanically parsed from the function's own source
+-- rather than hand-asserted, per the review's explicit ask.
+do $$
+declare
+  v_source text;
+  v_referenced text[];
+  v_canonical text[];
+  v_missing text[];
+  v_extra text[];
+begin
+  select pg_get_functiondef(proc.oid) into v_source
+  from pg_proc proc
+  join pg_namespace ns on ns.oid = proc.pronamespace
+  where ns.nspname = 'public' and proc.proname = 'fn_course_import_catalog_sha256';
+  if v_source is null then
+    raise exception 'fn_course_import_catalog_sha256 not found for lock-set verification';
+  end if;
+
+  select coalesce(array_agg(distinct lower(m[1]) order by lower(m[1])), '{}')
+  into v_referenced
+  from regexp_matches(v_source, '(?:from|join)\s+public\.([a-z_]+)', 'gi') m;
+
+  select public.fn_course_import_catalog_lock_tables() into v_canonical;
+
+  select coalesce(array_agg(item), '{}') into v_missing
+  from unnest(v_referenced) item where not (item = any(v_canonical));
+  select coalesce(array_agg(item), '{}') into v_extra
+  from unnest(v_canonical) item where not (item = any(v_referenced));
+
+  if array_length(v_missing, 1) > 0 or array_length(v_extra, 1) > 0 then
+    raise exception 'fn_course_import_catalog_lock_tables() (%) does not exactly match the tables fn_course_import_catalog_sha256 references (%) -- missing %, extra %',
+      v_canonical, v_referenced, v_missing, v_extra;
+  end if;
 end;
 $$;
 

@@ -142,6 +142,26 @@ async function main() {
       const result = await client.rpc("fn_revise_released_content_blocks_v2", callArgs);
       return { data: result.data, error: result.error ? { message: result.error.message } : null };
     },
+    classifyRevisionLineage: async (client, lineageImportId, lineageRevision) => {
+      const result = await client.rpc("fn_classify_revision_lineage", {
+        p_import_id: lineageImportId,
+        p_revision: lineageRevision,
+      });
+      const classification = requiredStringQueryData(
+        result,
+        "Released content revision v2 postflight lineage classification failed",
+      );
+      if (
+        classification !== "active_head"
+        && classification !== "superseded"
+        && classification !== "reverted"
+        && classification !== "diverged"
+        && classification !== "unknown"
+      ) {
+        throw new Error(`Released content revision v2 postflight lineage classification returned an unrecognized value: ${classification}`);
+      }
+      return classification;
+    },
     log: console.log,
   });
 }

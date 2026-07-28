@@ -47,7 +47,8 @@ set lock_timeout = '10s';
 -- `check (column > 0)` constraint (NULL comparisons are neither true nor
 -- false, so they never violate a CHECK), so only NOT NULL needs relaxing.
 alter table public.content_import_release_revisions
-  add column kind text not null default 'quiz' check (kind in ('quiz', 'content_blocks')),
+  add column kind text not null default 'quiz'
+    check (kind in ('quiz', 'content_blocks', 'legacy_catalog_correction')),
   alter column quiz_count drop not null,
   alter column question_count drop not null,
   alter column option_count drop not null,
@@ -96,11 +97,77 @@ alter table public.content_import_release_revisions
       and client_payload_sha256 is not null and download_evidence_sha256 is not null
       and quiz_count is null and question_count is null and option_count is null
       and prior_quiz_graph is null and invalidated_incomplete_attempts is null
+    ) or (
+      -- A validated lineage edge for a catalog-touching mechanism that has
+      -- its own append-only, checksum-CAS'd receipt table but never wrote
+      -- this shared ledger directly: the released-poster and
+      -- released-caption replacement mechanisms (20260722043000,
+      -- 20260722235500). Backfilled retroactively, once, alongside the v1
+      -- content-block history -- see 20260727180500 -- so that history's
+      -- FIRST receipt for an import has a real prior state to validate
+      -- against instead of an unvalidated caller-declared checksum. Carries
+      -- only the base identity/evidence columns; never a rollback target
+      -- (reverts_revision is always null -- these mechanisms have no
+      -- rollback of their own to model).
+      kind = 'legacy_catalog_correction'
+      and reverts_revision is null
+      and mutation_count is null and update_count is null and insert_count is null
+      and mutations is null and prior_block_graph is null
+      and client_payload_sha256 is not null and download_evidence_sha256 is null
+      and quiz_count is null and question_count is null and option_count is null
+      and prior_quiz_graph is null and invalidated_incomplete_attempts is null
     )
   );
 
 comment on column public.content_import_release_revisions.kind is
-  'Discriminates which mutation type produced this ledger row. All rows share one revision sequence and one active-state view (content_import_active_release_v1) regardless of kind -- that shared sequence is what prevents a per-kind split-brain.';
+  'Discriminates which mutation type produced this ledger row. All rows share one revision sequence and one active-state view (content_import_active_release_v1) regardless of kind -- that shared sequence is what prevents a per-kind split-brain. legacy_catalog_correction rows are backfilled, retroactive lineage edges for catalog-touching mechanisms that keep their own receipt table (poster/caption replacement) rather than a live mutation kind.';
+
+-- Single source of truth for every table fn_course_import_catalog_sha256
+-- reads, in a fixed order. Every forward and rollback revision RPC (quiz and
+-- content-block) and the v1 backfill lock exactly this set before computing
+-- or relying on a catalog checksum -- a lock on a subset lets a concurrent
+-- write to the omitted table land between hash computation and commit,
+-- producing a receipt whose claimed catalog was never the real committed
+-- state. Test 055 asserts this array is the exact set of tables the hash
+-- function references (parsed from its own source), not a remembered list.
+create or replace function public.fn_course_import_catalog_lock_tables()
+returns text[]
+language sql
+immutable
+set search_path = ''
+as $$
+  select array[
+    'answer_options', 'assignments', 'content_blocks', 'course_access',
+    'courses', 'lessons', 'modules', 'program_access', 'program_courses',
+    'programs', 'questions', 'quizzes', 'role_groups'
+  ]::text[];
+$$;
+
+revoke all on function public.fn_course_import_catalog_lock_tables() from public, anon, authenticated;
+grant execute on function public.fn_course_import_catalog_lock_tables() to service_role;
+
+-- Acquire the canonical catalog-hash lock set in its fixed order, as a
+-- single dynamic LOCK TABLE statement so every caller locks identically
+-- (same tables, same order) regardless of which RPC or migration invokes it.
+create or replace function public.fn_lock_course_import_catalog_tables()
+returns void
+language plpgsql
+set search_path = ''
+as $$
+declare
+  v_statement text;
+begin
+  select 'lock table '
+    || string_agg('public.' || quote_ident(item), ', ' order by item)
+    || ' in share row exclusive mode'
+  into v_statement
+  from unnest(public.fn_course_import_catalog_lock_tables()) item;
+  execute v_statement;
+end;
+$$;
+
+revoke all on function public.fn_lock_course_import_catalog_tables() from public, anon, authenticated;
+grant execute on function public.fn_lock_course_import_catalog_tables() to service_role;
 
 -- ---------------------------------------------------------------------------
 -- Cutover phase 1 (this migration, one committed transaction): retire the v1
@@ -482,6 +549,638 @@ revoke all on function public.fn_current_state_revision(text)
   from public, anon, authenticated;
 grant execute on function public.fn_current_state_revision(text) to service_role;
 
+-- Classify a SPECIFIC forward revision's standing relative to the current
+-- state, for the controller's postflight check. A bare revision-number
+-- comparison (postActiveRevision > rpc.revision) cannot distinguish "later
+-- activity built on top of this revision" from "a rollback reverted this
+-- revision back to an earlier ancestor" -- a rollback receipt is ALSO a
+-- greater revision number. This walks the same state_parent_revision chain
+-- fn_current_state_revision does, but tracks the range each rollback
+-- receipt on that path wiped, so it can tell the two apart:
+--   * active_head    -- p_revision IS the current resolved state.
+--   * superseded     -- p_revision is a genuine ancestor of the current
+--                       state (something later was built on top of it).
+--   * reverted       -- a rollback on the path undid p_revision specifically
+--                       (it falls inside that receipt's wiped range).
+--   * diverged        -- lineage does not connect (broken chain).
+--   * unknown         -- p_revision does not exist for this import.
+create or replace function public.fn_classify_revision_lineage(
+  p_import_id text,
+  p_revision integer
+)
+returns text
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  v_current_state integer;
+  v_cursor integer;
+  v_reverts integer;
+  v_state_parent integer;
+  v_steps integer := 0;
+begin
+  if coalesce(auth.role(), '') <> 'service_role' then
+    raise exception 'Revision lineage classification requires service_role.'
+      using errcode = '42501';
+  end if;
+  if not exists (
+    select 1 from public.content_import_release_revisions
+    where import_id = p_import_id and revision = p_revision
+  ) then
+    return 'unknown';
+  end if;
+
+  v_current_state := public.fn_current_state_revision(p_import_id);
+  if p_revision = v_current_state then
+    return 'active_head';
+  end if;
+
+  select max(revision) into v_cursor
+  from public.content_import_release_revisions
+  where import_id = p_import_id;
+  if v_cursor is null then
+    return 'unknown';
+  end if;
+
+  loop
+    if v_cursor = p_revision then
+      -- Reached the target row walking down from the head without it ever
+      -- falling inside a wiped range below: a genuine ancestor of the
+      -- current state.
+      return 'superseded';
+    end if;
+    select reverts_revision, state_parent_revision
+    into v_reverts, v_state_parent
+    from public.content_import_release_revisions
+    where import_id = p_import_id and revision = v_cursor;
+    if v_reverts is not null and v_state_parent is not null
+      and p_revision > v_state_parent and p_revision <= v_reverts
+    then
+      return 'reverted';
+    end if;
+    if v_state_parent is null or v_state_parent >= v_cursor then
+      return 'diverged';
+    end if;
+    v_cursor := v_state_parent;
+    v_steps := v_steps + 1;
+    if v_steps > 10000 then
+      return 'diverged';
+    end if;
+  end loop;
+end;
+$$;
+
+revoke all on function public.fn_classify_revision_lineage(text, integer)
+  from public, anon, authenticated;
+grant execute on function public.fn_classify_revision_lineage(text, integer) to service_role;
+
+-- Redefine fn_revise_released_quizzes_v1 (from 20260722130000) unchanged
+-- except for its lock statement, per round-6 review finding 3: the original
+-- lock set predates fn_course_import_catalog_lock_tables and omitted
+-- program_courses, program_access, course_access, role_groups, and
+-- assignments -- all read by fn_course_import_catalog_sha256. Editing
+-- 20260722130000 in place would rewrite an already-applied migration's
+-- history, so the fix lands here as a create-or-replace override instead;
+-- CREATE OR REPLACE FUNCTION preserves the existing grants.
+create or replace function public.fn_revise_released_quizzes_v1(
+  p_import_id text,
+  p_expected_prior_manifest_sha256 text,
+  p_manifest_sha256 text,
+  p_quizzes jsonb,
+  p_questions jsonb,
+  p_answer_options jsonb,
+  p_evidence jsonb,
+  p_confirmation text
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_release public.content_import_release_records%rowtype;
+  v_active_revision integer;
+  v_active_manifest_sha256 text;
+  v_active_catalog_sha256 text;
+  v_active_evidence jsonb;
+  v_prior_catalog_sha256 text;
+  v_catalog_sha256 text;
+  v_payload_sha256 text;
+  v_revision integer;
+  v_quiz_ids uuid[];
+  v_question_ids uuid[];
+  v_option_ids uuid[];
+  v_lesson_ids uuid[];
+  v_prior_graph jsonb;
+  v_invalidated_attempts jsonb;
+  v_invalidated_count integer := 0;
+  v_deleted_questions integer := 0;
+  v_deleted_options integer := 0;
+begin
+  if coalesce(auth.role(), '') <> 'service_role' then
+    raise exception 'Released quiz revision requires the service role.' using errcode = '42501';
+  end if;
+  if p_import_id is null or p_import_id !~ '^[a-z0-9][a-z0-9._-]{0,127}$'
+    or p_expected_prior_manifest_sha256 !~ '^[a-f0-9]{64}$'
+    or p_manifest_sha256 !~ '^[a-f0-9]{64}$'
+  then
+    raise exception 'Released quiz revision refused: invalid identity or manifest checksum.'
+      using errcode = '22023';
+  end if;
+  if p_confirmation is distinct from
+    'REVISE-RELEASED-QUIZZES:' || p_import_id || ':'
+      || p_expected_prior_manifest_sha256 || ':' || p_manifest_sha256 || ':19:920'
+  then
+    raise exception 'Released quiz revision refused: confirmation mismatch.'
+      using errcode = '22023';
+  end if;
+  if jsonb_typeof(p_quizzes) is distinct from 'array'
+    or jsonb_array_length(p_quizzes) <> 19
+    or jsonb_typeof(p_questions) is distinct from 'array'
+    or jsonb_array_length(p_questions) <> 920
+    or jsonb_typeof(p_answer_options) is distinct from 'array'
+    or jsonb_array_length(p_answer_options) < 1840
+    or jsonb_array_length(p_answer_options) > 10000
+  then
+    raise exception 'Released quiz revision refused: expected exactly 19 quizzes and 920 questions.'
+      using errcode = '22023';
+  end if;
+  if jsonb_typeof(p_evidence) is distinct from 'object'
+    or p_evidence ->> 'operation' <> 'release'
+    or not (p_evidence ?& array[
+      'question_bank_sha256', 'approval_request_sha256',
+      'approval_ledger_sha256', 'rollback_sha256', 'client_graph_sha256'
+    ])
+    or exists (
+      select 1
+      from jsonb_each_text(p_evidence) item
+      where item.key = any(array[
+        'question_bank_sha256', 'approval_request_sha256',
+        'approval_ledger_sha256', 'rollback_sha256', 'client_graph_sha256'
+      ]) and item.value !~ '^[a-f0-9]{64}$'
+    )
+  then
+    raise exception 'Released quiz revision refused: checksum-bound evidence is incomplete.'
+      using errcode = '22023';
+  end if;
+
+  -- Reject extra or missing fields instead of letting jsonb_to_recordset ignore
+  -- payload drift.
+  if exists (
+    select 1 from jsonb_array_elements(p_quizzes) item
+    where jsonb_typeof(item) <> 'object'
+      or (select array_agg(key order by key) from jsonb_object_keys(item) key)
+        <> array[
+          'description','id','max_attempts','passing_score','questions_per_attempt',
+          'randomize_answers','randomize_questions','retake_cooldown_hours',
+          'show_correct_answers_after','title'
+        ]::text[]
+  ) or exists (
+    select 1 from jsonb_array_elements(p_questions) item
+    where jsonb_typeof(item) <> 'object'
+      or (select array_agg(key order by key) from jsonb_object_keys(item) key)
+        <> array[
+          'explanation','id','points','question_text','question_type','quiz_id','sort_order'
+        ]::text[]
+  ) or exists (
+    select 1 from jsonb_array_elements(p_answer_options) item
+    where jsonb_typeof(item) <> 'object'
+      or (select array_agg(key order by key) from jsonb_object_keys(item) key)
+        <> array['id','is_correct','option_text','question_id','sort_order']::text[]
+  ) then
+    raise exception 'Released quiz revision refused: payload row shape mismatch.'
+      using errcode = '22023';
+  end if;
+
+  perform pg_advisory_xact_lock(hashtextextended('course-import-catalog-mutation', 0));
+  perform pg_advisory_xact_lock(hashtextextended('course-import-release:' || p_import_id, 0));
+  -- Ledger and quiz-review tables plus the full canonical catalog-hash
+  -- table set (see fn_course_import_catalog_lock_tables), fixed in round 6
+  -- review: the prior lock set omitted program_courses, program_access,
+  -- course_access, role_groups, and assignments, all of which
+  -- fn_course_import_catalog_sha256 reads -- a concurrent write to any of
+  -- them could land between this transaction's hash computation and its
+  -- commit.
+  lock table
+    public.content_import_release_records,
+    public.content_import_release_revisions,
+    public.user_quiz_attempts,
+    public.course_import_reviewer_answer_options_v1
+  in share row exclusive mode;
+  perform public.fn_lock_course_import_catalog_tables();
+
+  select * into v_release
+  from public.content_import_release_records release
+  where release.import_id = p_import_id;
+  if not found
+    or not exists (
+      select 1 from public.programs program
+      where program.id = v_release.program_id
+        and program.content_import_id = p_import_id
+        and program.is_published
+    )
+    or exists (
+      select 1
+      from public.program_courses link
+      join public.courses course on course.id = link.course_id
+      where link.program_id = v_release.program_id and not course.is_published
+    )
+  then
+    raise exception 'Released quiz revision refused: exact published release was not found.'
+      using errcode = '42501';
+  end if;
+  if p_import_id <> 'bmh-employee-training-v1'
+    or v_release.manifest_sha256 <> '71f85173bc857d1b3b042fba0a50fdd420b6410ef84b104a751c3ed5982eba5c'
+  then
+    raise exception 'Released quiz revision refused: operation is not bound to the immutable BMH release receipt.'
+      using errcode = '42501';
+  end if;
+
+  select coalesce(max(revision), 1) into v_active_revision
+  from public.content_import_release_revisions
+  where import_id = p_import_id;
+  if v_active_revision = 1 then
+    v_active_manifest_sha256 := v_release.manifest_sha256;
+    v_active_catalog_sha256 := v_release.catalog_sha256;
+    v_active_evidence := '{}'::jsonb;
+  else
+    select manifest_sha256, catalog_sha256, evidence
+      into strict v_active_manifest_sha256, v_active_catalog_sha256, v_active_evidence
+    from public.content_import_release_revisions
+    where import_id = p_import_id and revision = v_active_revision;
+  end if;
+
+  if v_active_manifest_sha256 = p_manifest_sha256 then
+    v_catalog_sha256 := public.fn_course_import_catalog_sha256(p_import_id);
+    if p_expected_prior_manifest_sha256 = p_manifest_sha256
+      or v_catalog_sha256 <> v_active_catalog_sha256
+      or v_active_evidence ->> 'question_bank_sha256' is distinct from p_evidence ->> 'question_bank_sha256'
+      or v_active_evidence ->> 'approval_request_sha256' is distinct from p_evidence ->> 'approval_request_sha256'
+      or v_active_evidence ->> 'approval_ledger_sha256' is distinct from p_evidence ->> 'approval_ledger_sha256'
+      or v_active_evidence ->> 'rollback_sha256' is distinct from p_evidence ->> 'rollback_sha256'
+      or v_active_evidence ->> 'client_graph_sha256' is distinct from p_evidence ->> 'client_graph_sha256'
+    then
+      raise exception 'Released quiz revision retry refused: committed identity or live catalog checksum mismatch.'
+        using errcode = '40001';
+    end if;
+    return jsonb_build_object(
+      'status', 'already_revised',
+      'import_id', p_import_id,
+      'revision', v_active_revision,
+      'manifest_sha256', p_manifest_sha256,
+      'catalog_sha256', v_catalog_sha256
+    );
+  end if;
+  if v_active_manifest_sha256 <> p_expected_prior_manifest_sha256 then
+    raise exception 'Released quiz revision refused: active manifest changed after preflight.'
+      using errcode = '40001';
+  end if;
+
+  select
+    coalesce(array_agg(lesson.id order by lesson.id), '{}'::uuid[]),
+    coalesce(array_agg(lesson.quiz_id order by lesson.quiz_id), '{}'::uuid[])
+    into v_lesson_ids, v_quiz_ids
+  from public.lessons lesson
+  join public.modules module on module.id = lesson.module_id
+  join public.courses course on course.id = module.course_id
+  where coalesce(lesson.content_import_id, course.content_import_id) = p_import_id
+    and lesson.quiz_id is not null;
+  if cardinality(v_quiz_ids) <> 19 then
+    raise exception 'Released quiz revision refused: published import does not own exactly 19 quizzes.'
+      using errcode = '22023';
+  end if;
+
+  select array_agg(row.id order by row.id) into v_question_ids
+  from jsonb_to_recordset(p_questions) as row(
+    id uuid, quiz_id uuid, question_text text, question_type text,
+    explanation text, points integer, sort_order integer
+  );
+  select array_agg(row.id order by row.id) into v_option_ids
+  from jsonb_to_recordset(p_answer_options) as row(
+    id uuid, question_id uuid, option_text text, is_correct boolean, sort_order integer
+  );
+
+  if (select count(distinct row.id) from jsonb_to_recordset(p_quizzes) as row(
+      id uuid, title text, description text, passing_score integer,
+      randomize_questions boolean, randomize_answers boolean,
+      questions_per_attempt integer, max_attempts integer,
+      retake_cooldown_hours integer, show_correct_answers_after text
+    )) <> 19
+    or (select array_agg(row.id order by row.id) from jsonb_to_recordset(p_quizzes) as row(
+      id uuid, title text, description text, passing_score integer,
+      randomize_questions boolean, randomize_answers boolean,
+      questions_per_attempt integer, max_attempts integer,
+      retake_cooldown_hours integer, show_correct_answers_after text
+    )) <> v_quiz_ids
+    or exists (
+      select 1 from jsonb_to_recordset(p_quizzes) as row(
+        id uuid, title text, description text, passing_score integer,
+        randomize_questions boolean, randomize_answers boolean,
+        questions_per_attempt integer, max_attempts integer,
+        retake_cooldown_hours integer, show_correct_answers_after text
+      )
+      where row.passing_score <> 80
+        or row.questions_per_attempt is not null
+        or not row.randomize_questions
+        or not row.randomize_answers
+        or row.max_attempts is not null
+        or row.retake_cooldown_hours <> 0
+        or row.show_correct_answers_after <> 'after_pass'
+        or nullif(btrim(row.title), '') is null
+    )
+  then
+    raise exception 'Released quiz revision refused: quiz identity or exhaustive-delivery contract mismatch.'
+      using errcode = '22023';
+  end if;
+
+  if (select count(distinct id) from unnest(v_question_ids) id) <> 920
+    or (select count(distinct id) from unnest(v_option_ids) id) <> jsonb_array_length(p_answer_options)
+    or exists (
+      select 1 from jsonb_to_recordset(p_questions) as row(
+        id uuid, quiz_id uuid, question_text text, question_type text,
+        explanation text, points integer, sort_order integer
+      )
+      where row.quiz_id <> all(v_quiz_ids)
+        or row.question_type not in ('true_false', 'single_choice', 'multi_select')
+        or nullif(btrim(row.question_text), '') is null
+        or row.points < 0 or row.sort_order < 1
+    )
+    or exists (
+      select 1
+      from jsonb_to_recordset(p_questions) as row(
+        id uuid, quiz_id uuid, question_text text, question_type text,
+        explanation text, points integer, sort_order integer
+      )
+      group by row.quiz_id, row.sort_order having count(*) <> 1
+    )
+    or exists (
+      select 1 from jsonb_to_recordset(p_answer_options) as row(
+        id uuid, question_id uuid, option_text text, is_correct boolean, sort_order integer
+      )
+      where row.question_id <> all(v_question_ids)
+        or nullif(btrim(row.option_text), '') is null or row.sort_order < 1
+    )
+    or exists (
+      select 1
+      from jsonb_to_recordset(p_answer_options) as row(
+        id uuid, question_id uuid, option_text text, is_correct boolean, sort_order integer
+      )
+      group by row.question_id, row.sort_order having count(*) <> 1
+    )
+    or exists (
+      select 1
+      from jsonb_to_recordset(p_questions)
+        as question(id uuid, quiz_id uuid, question_text text, question_type text,
+          explanation text, points integer, sort_order integer)
+      left join lateral (
+        select count(*) as option_count,
+          count(*) filter (where option.is_correct) as correct_count
+        from jsonb_to_recordset(p_answer_options)
+          as option(id uuid, question_id uuid, option_text text, is_correct boolean, sort_order integer)
+        where option.question_id = question.id
+      ) totals on true
+      where totals.option_count < 2
+        or totals.correct_count < 1
+        or (question.question_type in ('single_choice', 'true_false') and totals.correct_count <> 1)
+        or (question.question_type = 'multi_select' and totals.correct_count < 2)
+        or (question.question_type = 'true_false' and totals.option_count <> 2)
+    )
+  then
+    raise exception 'Released quiz revision refused: question or answer-option graph mismatch.'
+      using errcode = '22023';
+  end if;
+
+  if exists (
+    select 1 from public.questions question
+    where question.id = any(v_question_ids) and question.quiz_id <> all(v_quiz_ids)
+  ) or exists (
+    select 1 from public.answer_options option
+    where option.id = any(v_option_ids) and option.question_id <> all(v_question_ids)
+  ) then
+    raise exception 'Released quiz revision refused: replacement IDs collide outside the released graph.'
+      using errcode = '22023';
+  end if;
+
+  if exists (
+    select 1
+    from public.course_import_reviewer_answer_options_v1 evidence
+    join public.questions question on question.id = evidence.question_id
+    where evidence.import_id = p_import_id
+      and question.quiz_id = any(v_quiz_ids)
+      and (
+        evidence.question_id <> all(v_question_ids)
+        or evidence.answer_option_id <> all(v_option_ids)
+      )
+  ) then
+    raise exception 'Released quiz revision refused: reviewer-authored option evidence depends on replaced rows.'
+      using errcode = '23503';
+  end if;
+
+  -- This no-user release is only reversible while no completed quiz activity
+  -- exists. Refuse the forward mutation instead of promising an unsafe rollback.
+  if exists (
+    select 1 from public.user_quiz_attempts attempt
+    where attempt.quiz_id = any(v_quiz_ids)
+      and attempt.completed_at is not null
+  ) then
+    raise exception 'Released quiz revision refused: completed quiz activity exists.'
+      using errcode = '23503';
+  end if;
+
+  v_prior_catalog_sha256 := public.fn_course_import_catalog_sha256(p_import_id);
+  if v_active_revision > 1 and v_prior_catalog_sha256 <> v_active_catalog_sha256 then
+    raise exception 'Released quiz revision refused: live catalog changed after the active release receipt.'
+      using errcode = '40001';
+  end if;
+  select jsonb_build_object(
+    'quizzes', coalesce((
+      select jsonb_agg(jsonb_build_object(
+        'id', quiz.id, 'title', quiz.title, 'description', quiz.description,
+        'passing_score', quiz.passing_score,
+        'randomize_questions', quiz.randomize_questions,
+        'randomize_answers', quiz.randomize_answers,
+        'questions_per_attempt', quiz.questions_per_attempt,
+        'max_attempts', quiz.max_attempts,
+        'retake_cooldown_hours', quiz.retake_cooldown_hours,
+        'show_correct_answers_after', quiz.show_correct_answers_after
+      ) order by quiz.id)
+      from public.quizzes quiz where quiz.id = any(v_quiz_ids)
+    ), '[]'::jsonb),
+    'questions', coalesce((
+      select jsonb_agg(jsonb_build_object(
+        'id', question.id, 'quiz_id', question.quiz_id,
+        'question_text', question.question_text,
+        'question_type', question.question_type,
+        'explanation', question.explanation, 'points', question.points,
+        'sort_order', question.sort_order
+      ) order by question.id)
+      from public.questions question where question.quiz_id = any(v_quiz_ids)
+    ), '[]'::jsonb),
+    'answer_options', coalesce((
+      select jsonb_agg(jsonb_build_object(
+        'id', option.id, 'question_id', option.question_id,
+        'option_text', option.option_text, 'is_correct', option.is_correct,
+        'sort_order', option.sort_order
+      ) order by option.id)
+      from public.answer_options option
+      join public.questions question on question.id = option.question_id
+      where question.quiz_id = any(v_quiz_ids)
+    ), '[]'::jsonb)
+  ) into v_prior_graph;
+
+  if v_active_manifest_sha256 = '71f85173bc857d1b3b042fba0a50fdd420b6410ef84b104a751c3ed5982eba5c'
+    and (
+      jsonb_array_length(v_prior_graph -> 'quizzes') <> 19
+      or jsonb_array_length(v_prior_graph -> 'questions') <> 342
+      or jsonb_array_length(v_prior_graph -> 'answer_options') <> 1292
+      or exists (
+        select 1
+        from jsonb_to_recordset(v_prior_graph -> 'quizzes') as row(
+          id uuid, title text, description text, passing_score integer,
+          randomize_questions boolean, randomize_answers boolean,
+          questions_per_attempt integer, max_attempts integer,
+          retake_cooldown_hours integer, show_correct_answers_after text
+        )
+        where row.questions_per_attempt is distinct from 10
+      )
+    )
+  then
+    raise exception 'Released quiz revision refused: live legacy graph no longer matches the archived 19/342/1292 capped release.'
+      using errcode = '40001';
+  end if;
+
+  select coalesce(jsonb_agg(to_jsonb(attempt) order by attempt.id), '[]'::jsonb)
+    into v_invalidated_attempts
+  from public.user_quiz_attempts attempt
+  where attempt.quiz_id = any(v_quiz_ids) and attempt.completed_at is null;
+
+  delete from public.user_quiz_attempts attempt
+  where attempt.quiz_id = any(v_quiz_ids) and attempt.completed_at is null;
+  get diagnostics v_invalidated_count = row_count;
+
+  perform set_config('bmh.rollback_import_id', p_import_id, true);
+  delete from public.answer_options option
+  using public.questions question
+  where option.question_id = question.id
+    and question.quiz_id = any(v_quiz_ids)
+    and option.id <> all(v_option_ids);
+  get diagnostics v_deleted_options = row_count;
+  delete from public.questions question
+  where question.quiz_id = any(v_quiz_ids)
+    and question.id <> all(v_question_ids);
+  get diagnostics v_deleted_questions = row_count;
+  perform set_config('bmh.rollback_import_id', '', true);
+
+  update public.quizzes quiz set
+    title = row.title,
+    description = row.description,
+    passing_score = row.passing_score,
+    randomize_questions = row.randomize_questions,
+    randomize_answers = row.randomize_answers,
+    questions_per_attempt = row.questions_per_attempt,
+    max_attempts = row.max_attempts,
+    retake_cooldown_hours = row.retake_cooldown_hours,
+    show_correct_answers_after = row.show_correct_answers_after
+  from jsonb_to_recordset(p_quizzes) as row(
+    id uuid, title text, description text, passing_score integer,
+    randomize_questions boolean, randomize_answers boolean,
+    questions_per_attempt integer, max_attempts integer,
+    retake_cooldown_hours integer, show_correct_answers_after text
+  ) where quiz.id = row.id;
+
+  perform set_config('bmh.apply_import_id', p_import_id, true);
+  insert into public.questions (
+    id, quiz_id, question_text, question_type, explanation, points, sort_order
+  )
+  select row.id, row.quiz_id, row.question_text, row.question_type,
+    row.explanation, row.points, row.sort_order
+  from jsonb_to_recordset(p_questions) as row(
+    id uuid, quiz_id uuid, question_text text, question_type text,
+    explanation text, points integer, sort_order integer
+  )
+  on conflict (id) do update set
+    quiz_id = excluded.quiz_id,
+    question_text = excluded.question_text,
+    question_type = excluded.question_type,
+    explanation = excluded.explanation,
+    points = excluded.points,
+    sort_order = excluded.sort_order;
+
+  insert into public.answer_options (
+    id, question_id, option_text, is_correct, sort_order
+  )
+  select row.id, row.question_id, row.option_text, row.is_correct, row.sort_order
+  from jsonb_to_recordset(p_answer_options) as row(
+    id uuid, question_id uuid, option_text text, is_correct boolean, sort_order integer
+  )
+  on conflict (id) do update set
+    question_id = excluded.question_id,
+    option_text = excluded.option_text,
+    is_correct = excluded.is_correct,
+    sort_order = excluded.sort_order;
+  perform set_config('bmh.apply_import_id', '', true);
+
+  if (select count(*) from public.questions question where question.quiz_id = any(v_quiz_ids)) <> 920
+    or (select count(*) from public.answer_options option join public.questions question
+      on question.id = option.question_id where question.quiz_id = any(v_quiz_ids))
+      <> jsonb_array_length(p_answer_options)
+    or exists (
+      select 1 from public.quizzes quiz
+      where quiz.id = any(v_quiz_ids) and quiz.questions_per_attempt is not null
+    )
+  then
+    raise exception 'Released quiz revision failed exact post-mutation reconciliation.';
+  end if;
+
+  v_catalog_sha256 := public.fn_course_import_catalog_sha256(p_import_id);
+  v_payload_sha256 := encode(
+    extensions.digest(
+      convert_to(jsonb_build_object(
+        'quizzes', p_quizzes,
+        'questions', p_questions,
+        'answer_options', p_answer_options
+      )::text, 'UTF8'),
+      'sha256'
+    ),
+    'hex'
+  );
+  v_revision := v_active_revision + 1;
+
+  perform set_config('bmh.release_revision_import_id', p_import_id, true);
+  insert into public.content_import_release_revisions (
+    import_id, revision, prior_manifest_sha256, manifest_sha256,
+    prior_catalog_sha256, catalog_sha256, payload_sha256,
+    quiz_count, question_count, option_count,
+    prior_quiz_graph, invalidated_incomplete_attempts, evidence, revised_by
+  ) values (
+    p_import_id, v_revision, p_expected_prior_manifest_sha256, p_manifest_sha256,
+    v_prior_catalog_sha256, v_catalog_sha256, v_payload_sha256,
+    19, 920, jsonb_array_length(p_answer_options),
+    v_prior_graph, v_invalidated_attempts, p_evidence, auth.uid()
+  );
+  perform set_config('bmh.release_revision_import_id', '', true);
+
+  return jsonb_build_object(
+    'status', 'revised',
+    'import_id', p_import_id,
+    'revision', v_revision,
+    'prior_manifest_sha256', p_expected_prior_manifest_sha256,
+    'manifest_sha256', p_manifest_sha256,
+    'prior_catalog_sha256', v_prior_catalog_sha256,
+    'catalog_sha256', v_catalog_sha256,
+    'payload_sha256', v_payload_sha256,
+    'quizzes', 19,
+    'questions', 920,
+    'answer_options', jsonb_array_length(p_answer_options),
+    'invalidated_incomplete_attempts', v_invalidated_count,
+    'deleted_legacy_questions', v_deleted_questions,
+    'deleted_legacy_answer_options', v_deleted_options
+  );
+end;
+$$;
+
 create or replace function public.fn_revise_released_content_blocks_v2(
   p_import_id text,
   p_expected_prior_manifest_sha256 text,
@@ -664,15 +1363,15 @@ begin
 
   perform pg_advisory_xact_lock(hashtextextended('course-import-catalog-mutation', 0));
   perform pg_advisory_xact_lock(hashtextextended('course-import-release:' || p_import_id, 0));
-  lock table
-    public.content_import_release_records,
-    public.content_import_release_revisions,
-    public.programs,
-    public.courses,
-    public.modules,
-    public.lessons,
-    public.content_blocks
-  in share row exclusive mode;
+  -- Ledger tables plus every table fn_course_import_catalog_sha256 reads
+  -- (the canonical set -- see fn_course_import_catalog_lock_tables): a
+  -- concurrent write to ANY of them (an admin program/course/access edit, a
+  -- quiz mutation) between this transaction's hash computation and its
+  -- commit would otherwise produce a receipt whose claimed catalog was
+  -- never the real committed state.
+  lock table public.content_import_release_records, public.content_import_release_revisions
+    in share row exclusive mode;
+  perform public.fn_lock_course_import_catalog_tables();
 
   select release.program_id, active.active_revision,
     active.active_manifest_sha256, active.active_catalog_sha256
@@ -741,6 +1440,7 @@ begin
       and v_active_row.update_count = v_update_count
       and v_active_row.insert_count = v_insert_count
       and v_active_row.prior_manifest_sha256 = p_expected_prior_manifest_sha256
+      and v_active_row.prior_catalog_sha256 = p_expected_prior_catalog_sha256
       and v_active_row.evidence ->> 'operation' is not distinct from p_evidence ->> 'operation'
       and v_active_row.catalog_sha256 = v_replacement_catalog_sha256
       and v_active_catalog_sha256 = v_replacement_catalog_sha256
@@ -970,18 +1670,20 @@ begin
   -- cascades into user_block_progress, user_video_progress, and
   -- role_play_results, and clears user_course_resume.last_block_id; nothing
   -- may write any of those for a touched block while rollback is deciding
-  -- whether it is safe.
+  -- whether it is safe. Also locks the full canonical catalog-hash table
+  -- set (see fn_course_import_catalog_lock_tables) -- rollback recomputes
+  -- and compares the catalog just as the forward RPC does, so it needs the
+  -- same completeness.
   lock table
     public.content_import_release_records,
     public.content_import_release_revisions,
-    public.programs, public.courses, public.modules, public.lessons,
-    public.content_blocks,
     public.user_block_progress,
     public.user_video_progress,
     public.user_video_completion_history,
     public.role_play_results,
     public.user_course_resume
   in share row exclusive mode;
+  perform public.fn_lock_course_import_catalog_tables();
 
   select * into v_latest
   from public.content_import_release_revisions revision
@@ -1232,14 +1934,16 @@ begin
 
   perform pg_advisory_xact_lock(hashtextextended('course-import-catalog-mutation', 0));
   perform pg_advisory_xact_lock(hashtextextended('course-import-release:' || p_import_id, 0));
+  -- Ledger and quiz-review tables plus the full canonical catalog-hash table
+  -- set (see fn_course_import_catalog_lock_tables): a quiz rollback
+  -- recomputes and compares the catalog exactly as the forward RPC does.
   lock table
     public.content_import_release_records,
     public.content_import_release_revisions,
-    public.programs, public.courses, public.modules, public.lessons,
-    public.quizzes, public.questions, public.answer_options,
     public.user_quiz_attempts,
     public.course_import_reviewer_answer_options_v1
   in share row exclusive mode;
+  perform public.fn_lock_course_import_catalog_tables();
 
   select * into v_latest
   from public.content_import_release_revisions revision

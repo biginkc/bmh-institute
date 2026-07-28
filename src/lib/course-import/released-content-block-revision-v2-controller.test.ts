@@ -162,6 +162,7 @@ function makeHarness(options?: {
       return catalogLoadCount === 1 ? priorCatalogSha256 : replacementCatalogSha256;
     }),
     loadAudit: vi.fn(async () => expectedAudit(2, replay ? replacementCatalogSha256 : priorCatalogSha256)),
+    classifyRevisionLineage: vi.fn(async () => "active_head" as const),
     loadMutationRows: vi.fn(async () => {
       rowLoadCount += 1;
       return rows(replay || rowLoadCount > 1 ? "revised" : "initial");
@@ -302,6 +303,7 @@ describe("released content block revision v2 controller", () => {
       loadMutationRows,
       callRevision,
       log: vi.fn(),
+      classifyRevisionLineage: vi.fn(),
     };
 
     await expect(runReleasedContentBlockRevisionV2Command(makeInput(), dependencies))
@@ -336,6 +338,7 @@ describe("released content block revision v2 controller", () => {
       loadMutationRows: vi.fn(async () => rows("revised")),
       callRevision: vi.fn(),
       log: vi.fn(),
+      classifyRevisionLineage: vi.fn(),
     };
 
     await expect(runReleasedContentBlockRevisionV2Command(makeInput(), dependencies))
@@ -357,6 +360,7 @@ describe("released content block revision v2 controller", () => {
       loadMutationRows: vi.fn(async () => rows("revised")),
       callRevision: vi.fn(),
       log: vi.fn(),
+      classifyRevisionLineage: vi.fn(),
     };
 
     await expect(runReleasedContentBlockRevisionV2Command(makeInput(), dependencies))
@@ -378,6 +382,7 @@ describe("released content block revision v2 controller", () => {
       loadMutationRows: vi.fn(async () => rows("revised")),
       callRevision: vi.fn(),
       log: vi.fn(),
+      classifyRevisionLineage: vi.fn(),
     };
 
     await expect(runReleasedContentBlockRevisionV2Command(makeInput(), dependencies))
@@ -387,36 +392,27 @@ describe("released content block revision v2 controller", () => {
   it("classifies a newer active head after its own commit as superseded success, not failure", async () => {
     // Two-controller post-commit advancement: this command's RPC commits
     // revision 2, but before its unlocked postflight reads run, a SECOND
-    // controller advances the shared ledger to revision 3 -- live rows and
-    // catalog now reflect the newer revision, not ours. The immutable
-    // receipt at OUR revision is the commit proof; the correct outcome is
-    // "superseded" success, never an error (a retry would be wrong).
-    let activeCalls = 0;
+    // controller advances the shared ledger to revision 3, BUILT ON TOP of
+    // ours -- live rows and catalog now reflect the newer revision, not
+    // ours. The immutable receipt at OUR revision is the commit proof, and
+    // the lineage classifier (not a bare revision-number comparison) says
+    // our revision is still a genuine ancestor: "superseded" success, never
+    // an error (a retry would be wrong).
     const loadMutationRows = vi.fn(async () => rows("initial"));
     const loadCatalogSha256 = vi.fn(async () => priorCatalogSha256);
+    const classifyRevisionLineage = vi.fn(async () => "superseded" as const);
     const dependencies: ReleasedContentBlockRevisionV2Dependencies<FakeClient> = {
       classifyEnvironment: vi.fn(assertCourseImportEnvironment),
       createClient: vi.fn(() => ({ name: "fake-client" as const })),
-      loadActiveRevision: vi.fn(async () => {
-        activeCalls += 1;
-        if (activeCalls === 1) {
-          return {
-            import_id: importId,
-            active_revision: 1,
-            active_manifest_sha256: expectedPriorManifestSha256,
-            active_catalog_sha256: priorCatalogSha256,
-          };
-        }
-        // Post-commit: a second controller already advanced the head.
-        return {
-          import_id: importId,
-          active_revision: 3,
-          active_manifest_sha256: "9".repeat(64),
-          active_catalog_sha256: "8".repeat(64),
-        };
-      }),
+      loadActiveRevision: vi.fn(async () => ({
+        import_id: importId,
+        active_revision: 1,
+        active_manifest_sha256: expectedPriorManifestSha256,
+        active_catalog_sha256: priorCatalogSha256,
+      })),
       loadCatalogSha256,
       loadAudit: vi.fn(async () => expectedAudit(2)),
+      classifyRevisionLineage,
       loadMutationRows,
       callRevision: vi.fn(async () => ({
         error: null,
@@ -439,11 +435,71 @@ describe("released content block revision v2 controller", () => {
         revision: 2,
         catalogSha256: replacementCatalogSha256,
       });
+    expect(classifyRevisionLineage).toHaveBeenCalledWith({ name: "fake-client" }, importId, 2);
     // The superseded path must NOT compare live rows or catalog against its
     // own receipt -- they legitimately reflect the newer revision. One row
     // load (the preflight) and one catalog load (the preflight) only.
     expect(loadMutationRows).toHaveBeenCalledTimes(1);
     expect(loadCatalogSha256).toHaveBeenCalledTimes(1);
+  });
+
+  it("reports rolled_back, not superseded success, when a rollback undid this exact revision before postflight", async () => {
+    // Post-commit rollback race: this command's RPC commits revision 2, but
+    // before its unlocked postflight reads run, a rollback receipt reverts
+    // EXACTLY revision 2 (a greater active revision number too -- the same
+    // shape as the forward-supersede case above). A bare
+    // `active_revision > our_revision` comparison cannot tell these apart;
+    // the lineage classifier can, and must report "rolled_back" rather than
+    // claiming success for a revision that is no longer part of the active
+    // state.
+    const loadMutationRows = vi.fn(async () => rows("initial"));
+    const loadCatalogSha256 = vi.fn(async () => priorCatalogSha256);
+    const classifyRevisionLineage = vi.fn(async () => "reverted" as const);
+    const dependencies: ReleasedContentBlockRevisionV2Dependencies<FakeClient> = {
+      classifyEnvironment: vi.fn(assertCourseImportEnvironment),
+      createClient: vi.fn(() => ({ name: "fake-client" as const })),
+      loadActiveRevision: vi.fn(async () => ({
+        import_id: importId,
+        active_revision: 1,
+        active_manifest_sha256: expectedPriorManifestSha256,
+        active_catalog_sha256: priorCatalogSha256,
+      })),
+      loadCatalogSha256,
+      loadAudit: vi.fn(async () => expectedAudit(2)),
+      classifyRevisionLineage,
+      loadMutationRows,
+      callRevision: vi.fn(async () => ({
+        error: null,
+        data: {
+          status: "revised",
+          import_id: importId,
+          revision: 2,
+          mutation_count: mutations.length,
+          update_count: 1,
+          insert_count: 1,
+          catalog_sha256: replacementCatalogSha256,
+        },
+      })),
+      log: vi.fn(),
+    };
+
+    await expect(runReleasedContentBlockRevisionV2Command(makeInput(), dependencies))
+      .resolves.toMatchObject({
+        status: "rolled_back",
+        revision: 2,
+        catalogSha256: replacementCatalogSha256,
+      });
+    expect(classifyRevisionLineage).toHaveBeenCalledWith({ name: "fake-client" }, importId, 2);
+    expect(loadMutationRows).toHaveBeenCalledTimes(1);
+    expect(loadCatalogSha256).toHaveBeenCalledTimes(1);
+  });
+
+  it("refuses when the lineage classifier reports a diverged or unknown state for its own just-committed revision", async () => {
+    const dependencies = makeHarness();
+    (dependencies.classifyRevisionLineage as ReturnType<typeof vi.fn>).mockResolvedValueOnce("diverged");
+
+    await expect(runReleasedContentBlockRevisionV2Command(makeInput(), dependencies))
+      .rejects.toThrow(/lineage state "diverged"/);
   });
 
   it("surfaces the RPC's own error instead of swallowing it", async () => {
