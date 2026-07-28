@@ -158,6 +158,54 @@ function assertNoOutOfScopeManifestDrift(legacyPlan: ImportPlan, targetPlan: Imp
   }
 }
 
+/**
+ * ImportPlan.assets is carried SEPARATELY from plan.operations, so the
+ * operations-level drift check above cannot see it -- an added, removed, or
+ * changed asset alongside a legitimate block edit would otherwise be
+ * silently dropped while the full target manifest hash (including the
+ * unapplied asset change) gets recorded as active. An asset difference is
+ * permitted only when it is explicitly tied to a download mutation in this
+ * revision's own payload (its storage_path is the mutation's replacement
+ * file_path) -- and even then the SQL function independently verifies the
+ * referenced storage object's existence, checksum, size, and import
+ * ownership against storage.objects before applying anything, so the tie is
+ * receipt-verified server-side rather than trusted from the manifest.
+ */
+function assertNoOutOfScopeAssetDrift(
+  legacyPlan: ImportPlan,
+  targetPlan: ImportPlan,
+  mutations: ReleasedContentBlockRevisionV2Mutation[],
+) {
+  const legacyAssets = new Map(legacyPlan.assets.map((asset) => [asset.source_key, asset]));
+  const targetAssets = new Map(targetPlan.assets.map((asset) => [asset.source_key, asset]));
+  const mutationBackedPaths = new Set(
+    mutations
+      .filter((mutation) => mutation.block_type === "download")
+      .map((mutation) => mutation.replacement_content.file_path)
+      .filter((path): path is string => typeof path === "string"),
+  );
+
+  for (const [sourceKey, legacyAsset] of legacyAssets) {
+    if (!targetAssets.has(sourceKey)) {
+      throw new Error(
+        `Released content revision v2 refused: asset ${sourceKey} was removed from the target manifest. This mechanism cannot apply asset removals; the removal would be recorded as part of the active manifest without actually happening.`,
+      );
+    }
+    void legacyAsset;
+  }
+  for (const [sourceKey, targetAsset] of targetAssets) {
+    const legacyAsset = legacyAssets.get(sourceKey);
+    if (legacyAsset && stableJson(legacyAsset) === stableJson(targetAsset)) {
+      continue;
+    }
+    if (!mutationBackedPaths.has(targetAsset.storage_path)) {
+      throw new Error(
+        `Released content revision v2 refused: asset ${sourceKey} was ${legacyAsset ? "changed in" : "added to"} the target manifest without a download mutation binding it. This mechanism only applies content-block mutations; an untied asset change would be recorded as part of the active manifest without actually being applied.`,
+      );
+    }
+  }
+}
+
 function exactContent(operation: ImportOperation, sourceKey: string) {
   const content = operation.row.content;
   if (!content || typeof content !== "object" || Array.isArray(content)) {
@@ -309,6 +357,7 @@ export function buildReleasedContentBlockRevisionV2(input: {
       "Released content revision v2 refused: no drift was found between the legacy and target manifests.",
     );
   }
+  assertNoOutOfScopeAssetDrift(legacyPlan, targetPlan, mutations);
 
   const updateCount = mutations.filter((mutation) => mutation.action === "update").length;
   const insertCount = mutations.filter((mutation) => mutation.action === "insert").length;

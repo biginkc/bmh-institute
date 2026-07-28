@@ -59,7 +59,14 @@ alter table public.content_import_release_revisions
   add column mutations jsonb check (mutations is null or jsonb_typeof(mutations) = 'array'),
   add column prior_block_graph jsonb,
   add column client_payload_sha256 text check (client_payload_sha256 is null or client_payload_sha256 ~ '^[0-9a-f]{64}$'),
-  add column download_evidence_sha256 text check (download_evidence_sha256 is null or download_evidence_sha256 ~ '^[0-9a-f]{64}$');
+  add column download_evidence_sha256 text check (download_evidence_sha256 is null or download_evidence_sha256 ~ '^[0-9a-f]{64}$'),
+  -- The ledger revision this row's state was derived FROM. Receipt numbers
+  -- always append at the end of the shared sequence (max + 1), so on a
+  -- chained rollback the receipt number alone cannot identify which state a
+  -- row restored -- parent_revision records that explicitly. Nullable only
+  -- because pre-existing quiz rows (and quiz rows written by the unchanged
+  -- v1 quiz RPC) do not carry it.
+  add column parent_revision integer check (parent_revision is null or parent_revision >= 1);
 
 alter table public.content_import_release_revisions
   add constraint content_import_release_revisions_kind_shape_check
@@ -84,6 +91,170 @@ alter table public.content_import_release_revisions
 
 comment on column public.content_import_release_revisions.kind is
   'Discriminates which mutation type produced this ledger row. All rows share one revision sequence and one active-state view (content_import_active_release_v1) regardless of kind -- that shared sequence is what prevents a per-kind split-brain.';
+
+-- ---------------------------------------------------------------------------
+-- Absorb the v1 one-shot content-block revision history into the shared
+-- ledger, then retire the v1 RPC. Without this, the already-applied 44-block
+-- correction (recorded only in content_import_released_content_block_revision_records)
+-- is invisible to the shared active-state view: the view would keep exposing
+-- the pre-correction quiz-revision state as "active", and v2 would reject the
+-- real live catalog as drift. The v1 audit table itself is retained untouched
+-- as immutable history; only the shared sequence gains mirror rows.
+--
+-- Exposed as a callable (service-role-only) function rather than inlined so
+-- the SQL test harness can exercise the exact transition -- seed a v1-style
+-- receipt, invoke this, and verify the shared sequence absorbs it -- inside a
+-- rolled-back transaction. Idempotent: a v1 receipt whose payload_sha256 is
+-- already mirrored for its import is skipped, so re-running is always safe.
+create or replace function public.fn_backfill_v1_content_block_revisions()
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_record record;
+  v_next_revision integer;
+  v_download_evidence jsonb;
+  v_backfilled integer := 0;
+begin
+  if coalesce(auth.role(), '') <> 'service_role' then
+    raise exception 'v1 content block revision backfill requires service_role.'
+      using errcode = '42501';
+  end if;
+
+  perform pg_advisory_xact_lock(hashtextextended('course-import-catalog-mutation', 0));
+  lock table
+    public.content_import_release_revisions,
+    public.content_import_released_content_block_revision_records
+  in share row exclusive mode;
+
+  for v_record in
+    select *
+    from public.content_import_released_content_block_revision_records record
+    order by record.revised_at, record.manifest_sha256
+  loop
+    if exists (
+      select 1 from public.content_import_release_revisions mirror
+      where mirror.import_id = v_record.import_id
+        and mirror.kind = 'content_blocks'
+        and mirror.payload_sha256 = v_record.database_payload_sha256
+    ) then
+      continue;
+    end if;
+
+    select coalesce(max(revision), 1) + 1 into v_next_revision
+    from public.content_import_release_revisions
+    where import_id = v_record.import_id;
+
+    select coalesce(jsonb_agg(jsonb_build_object(
+      'block_id', mutation.value ->> 'block_id',
+      'file_path', mutation.value -> 'replacement_content' ->> 'file_path',
+      'sha256', mutation.value ->> 'replacement_sha256',
+      'size_bytes', mutation.value ->> 'replacement_size_bytes'
+    ) order by mutation.value ->> 'block_id'), '[]'::jsonb)
+    into v_download_evidence
+    from jsonb_array_elements(v_record.mutations) mutation(value)
+    where mutation.value ->> 'block_type' = 'download';
+
+    perform set_config('bmh.release_revision_import_id', v_record.import_id, true);
+    insert into public.content_import_release_revisions (
+      import_id, revision, kind, parent_revision,
+      prior_manifest_sha256, manifest_sha256,
+      prior_catalog_sha256, catalog_sha256,
+      payload_sha256, client_payload_sha256, download_evidence_sha256,
+      mutation_count, update_count, insert_count,
+      mutations, prior_block_graph, evidence, revised_at, revised_by
+    ) values (
+      v_record.import_id, v_next_revision, 'content_blocks', v_next_revision - 1,
+      v_record.expected_active_manifest_sha256, v_record.manifest_sha256,
+      v_record.prior_catalog_sha256, v_record.replacement_catalog_sha256,
+      v_record.database_payload_sha256, v_record.client_payload_sha256,
+      encode(sha256(convert_to(v_download_evidence::text, 'UTF8')), 'hex'),
+      v_record.guide_update_count + v_record.flashcard_update_count
+        + v_record.role_play_insert_count,
+      v_record.guide_update_count + v_record.flashcard_update_count,
+      v_record.role_play_insert_count,
+      v_record.mutations,
+      -- The v1 record carried each update's expected (pre-image) content
+      -- inline in its mutations; project it into the same prior_block_graph
+      -- shape v2 writes, so the shared row is uniformly rollback-shaped.
+      jsonb_build_object(
+        'updated_rows', coalesce((
+          select jsonb_agg(jsonb_build_object(
+            'id', mutation.value ->> 'block_id',
+            'lesson_id', mutation.value ->> 'lesson_id',
+            'block_type', mutation.value ->> 'block_type',
+            'content', mutation.value -> 'expected_content',
+            'sort_order', (mutation.value ->> 'sort_order')::integer,
+            'is_required_for_completion',
+              (mutation.value ->> 'is_required_for_completion')::boolean
+          ) order by mutation.value ->> 'block_id')
+          from jsonb_array_elements(v_record.mutations) mutation(value)
+          where mutation.value ->> 'action' = 'update'
+        ), '[]'::jsonb),
+        'inserted_block_ids', coalesce((
+          select jsonb_agg(mutation.value ->> 'block_id')
+          from jsonb_array_elements(v_record.mutations) mutation(value)
+          where mutation.value ->> 'action' = 'insert'
+        ), '[]'::jsonb)
+      ),
+      v_record.evidence || jsonb_build_object('backfilled_from', 'released_content_blocks_v1'),
+      v_record.revised_at, v_record.revised_by
+    );
+    perform set_config('bmh.release_revision_import_id', '', true);
+    v_backfilled := v_backfilled + 1;
+  end loop;
+
+  return jsonb_build_object('status', 'backfilled', 'rows', v_backfilled);
+end;
+$$;
+
+revoke all on function public.fn_backfill_v1_content_block_revisions()
+  from public, anon, authenticated;
+grant execute on function public.fn_backfill_v1_content_block_revisions()
+  to service_role;
+
+-- Run the backfill now, as part of this migration, so the shared ledger is
+-- correct the moment this migration lands -- in production this absorbs the
+-- single applied 44-block correction as the next shared revision.
+do $$
+begin
+  perform set_config('request.jwt.claim.role', 'service_role', true);
+  perform public.fn_backfill_v1_content_block_revisions();
+  perform set_config('request.jwt.claim.role', '', true);
+end;
+$$;
+
+-- Retire the v1 one-shot RPC. It was pinned to the exact already-consumed
+-- 44-block payload (its checksums can never match a second time), and
+-- leaving it callable would let a replay attempt mutate guard markers and
+-- interleave with the shared ledger this migration establishes. The v1
+-- audit table and its immutability guard remain untouched as history.
+create or replace function public.fn_revise_released_content_blocks_v1(
+  p_import_id text,
+  p_expected_active_manifest_sha256 text,
+  p_manifest_sha256 text,
+  p_expected_catalog_sha256 text,
+  p_mutations jsonb,
+  p_client_payload_sha256 text,
+  p_evidence jsonb,
+  p_confirmation text
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  raise exception 'fn_revise_released_content_blocks_v1 is retired: its one-shot payload was already applied and is mirrored in content_import_release_revisions. Use fn_revise_released_content_blocks_v2.'
+    using errcode = '42501';
+end;
+$$;
+
+revoke all on function public.fn_revise_released_content_blocks_v1(
+  text, text, text, text, jsonb, text, jsonb, text
+) from public, anon, authenticated, service_role;
 
 -- Generalize the content_blocks insert guard. Preserve migration 033's base
 -- apply-path branch and migration 20260726170000's exact one-shot branch
@@ -609,12 +780,13 @@ begin
 
   perform set_config('bmh.release_revision_import_id', p_import_id, true);
   insert into public.content_import_release_revisions (
-    import_id, revision, kind, prior_manifest_sha256, manifest_sha256,
+    import_id, revision, kind, parent_revision,
+    prior_manifest_sha256, manifest_sha256,
     prior_catalog_sha256, catalog_sha256, payload_sha256, client_payload_sha256,
     download_evidence_sha256, mutation_count, update_count, insert_count,
     mutations, prior_block_graph, evidence, revised_by
   ) values (
-    p_import_id, v_active_revision + 1, 'content_blocks',
+    p_import_id, v_active_revision + 1, 'content_blocks', v_active_revision,
     p_expected_prior_manifest_sha256, p_manifest_sha256,
     v_prior_catalog_sha256, v_replacement_catalog_sha256,
     v_database_payload_sha256, p_client_payload_sha256, v_download_evidence_sha256,
@@ -663,6 +835,7 @@ set search_path = ''
 as $$
 declare
   v_latest public.content_import_release_revisions%rowtype;
+  v_next_revision integer;
   v_current_catalog_sha256 text;
   v_replacement_catalog_sha256 text;
   v_updated_rows jsonb;
@@ -826,14 +999,25 @@ begin
       using errcode = '40001';
   end if;
 
+  -- The rollback receipt appends at the END of the shared sequence, never at
+  -- v_latest.revision + 1. On a chained rollback (roll back revision N, then
+  -- roll back revision N-1 from the restored state), N-1's successor number
+  -- N already exists -- appending there would PK-collide and atomically
+  -- abort the emergency rollback at exactly the moment it is needed most.
+  -- parent_revision records explicitly which revision this receipt undid.
+  select coalesce(max(revision), 1) + 1 into v_next_revision
+  from public.content_import_release_revisions
+  where import_id = p_import_id;
+
   perform set_config('bmh.release_revision_import_id', p_import_id, true);
   insert into public.content_import_release_revisions (
-    import_id, revision, kind, prior_manifest_sha256, manifest_sha256,
+    import_id, revision, kind, parent_revision,
+    prior_manifest_sha256, manifest_sha256,
     prior_catalog_sha256, catalog_sha256, payload_sha256, client_payload_sha256,
     download_evidence_sha256, mutation_count, update_count, insert_count,
     mutations, prior_block_graph, evidence, revised_by
   ) values (
-    p_import_id, v_latest.revision + 1, 'content_blocks',
+    p_import_id, v_next_revision, 'content_blocks', p_expected_revision,
     v_latest.manifest_sha256, v_latest.prior_manifest_sha256,
     v_current_catalog_sha256, v_replacement_catalog_sha256,
     encode(sha256(convert_to(v_latest.mutations::text, 'UTF8')), 'hex'),
@@ -846,7 +1030,8 @@ begin
   return jsonb_build_object(
     'status', 'rolled_back',
     'import_id', p_import_id,
-    'revision', v_latest.revision + 1,
+    'revision', v_next_revision,
+    'rolled_back_revision', p_expected_revision,
     'prior_catalog_sha256', v_current_catalog_sha256,
     'catalog_sha256', v_replacement_catalog_sha256,
     'restored_updates', v_restored_count,

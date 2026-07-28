@@ -18,44 +18,16 @@ begin
 end;
 $$;
 
+-- Migration 20260727180000 retired the v1 one-shot RPC (its exact 44-block
+-- payload was already consumed and is mirrored into the shared
+-- content_import_release_revisions ledger). Every call -- including the
+-- original refusal-branch inputs this file used to exercise individually --
+-- now fails closed with the retirement error before any other validation.
 do $$
 begin
-  perform set_config('request.jwt.claim.role', 'authenticated', true);
-  begin
-    perform public.fn_revise_released_content_blocks_v1(
-      'bmh-employee-training-v1',
-      repeat('4', 64),
-      repeat('5', 64),
-      repeat('e', 64),
-      '[]'::jsonb,
-      repeat('8', 64),
-      '{}'::jsonb,
-      'invalid'
-    );
-    raise exception 'authenticated caller revised released content';
-  exception when sqlstate '42501' then
-    if sqlerrm not like '%requires service_role%' then raise; end if;
-  end;
-
   perform set_config('request.jwt.claim.role', 'service_role', true);
   begin
     perform public.fn_revise_released_content_blocks_v1(
-      'other-import-v1',
-      repeat('4', 64),
-      repeat('5', 64),
-      repeat('e', 64),
-      '[]'::jsonb,
-      repeat('8', 64),
-      '{}'::jsonb,
-      'invalid'
-    );
-    raise exception 'wrong release identity revised released content';
-  exception when sqlstate '22023' then
-    if sqlerrm not like '%identity or checksum pin mismatch%' then raise; end if;
-  end;
-
-  begin
-    perform public.fn_revise_released_content_blocks_v1(
       'bmh-employee-training-v1',
       '440ec4d85bc6dc0aec9d471fb0f5ecbe0ca8c17236b3012e8b036b8d045a154d',
       '585b72c923a560d2228f6149a5b906ec02958f19d62818dc5c109c3968345a33',
@@ -65,42 +37,20 @@ begin
       '{}'::jsonb,
       'invalid'
     );
-    raise exception 'empty evidence passed the released content revision gate';
-  exception when sqlstate '22023' then
-    if sqlerrm not like '%checksum-bound evidence is incomplete%' then
-      raise;
-    end if;
+    raise exception 'the retired v1 released content revision RPC was callable';
+  exception when sqlstate '42501' then
+    if sqlerrm not like '%retired%' then raise; end if;
   end;
 
-  begin
-    perform public.fn_revise_released_content_blocks_v1(
-      'bmh-employee-training-v1',
-      '440ec4d85bc6dc0aec9d471fb0f5ecbe0ca8c17236b3012e8b036b8d045a154d',
-      '585b72c923a560d2228f6149a5b906ec02958f19d62818dc5c109c3968345a33',
-      'e66250effa99bda93e8dd828077811585a5369e2e142bfa9bc5381f5ccd94eb4',
-      '[]'::jsonb,
-      '81d918fd621bb82da935a81f06a08196ce27b2cb853fafcf0f8a2df88de8201b',
-      jsonb_build_object(
-        'operation', 'released_content_blocks_v1',
-        'original_release_manifest_sha256',
-          '71f85173bc857d1b3b042fba0a50fdd420b6410ef84b104a751c3ed5982eba5c',
-        'expected_active_manifest_sha256',
-          '440ec4d85bc6dc0aec9d471fb0f5ecbe0ca8c17236b3012e8b036b8d045a154d',
-        'manifest_sha256',
-          '585b72c923a560d2228f6149a5b906ec02958f19d62818dc5c109c3968345a33',
-        'expected_prior_catalog_sha256',
-          'e66250effa99bda93e8dd828077811585a5369e2e142bfa9bc5381f5ccd94eb4',
-        'client_payload_sha256',
-          '81d918fd621bb82da935a81f06a08196ce27b2cb853fafcf0f8a2df88de8201b'
-      ),
-      'invalid'
-    );
-    raise exception 'missing upload receipt passed the released content revision gate';
-  exception when sqlstate '22023' then
-    if sqlerrm not like '%checksum-bound evidence is incomplete%' then
-      raise;
-    end if;
-  end;
+  if exists (
+    select 1
+    from information_schema.routine_privileges privilege
+    where privilege.routine_schema = 'public'
+      and privilege.routine_name = 'fn_revise_released_content_blocks_v1'
+      and privilege.grantee in ('anon', 'authenticated', 'service_role', 'PUBLIC')
+  ) then
+    raise exception 'the retired v1 RPC still carries execute grants';
+  end if;
 end;
 $$;
 

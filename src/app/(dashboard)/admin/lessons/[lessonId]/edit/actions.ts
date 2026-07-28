@@ -168,11 +168,16 @@ export async function updateBlock(input: {
     if (!scenarioId) {
       return { ok: false, error: "Scenario ID is required." };
     }
-    // Merge onto whatever is already persisted rather than reconstructing
-    // from scratch: the admin form only edits scenario_id/title/height_px,
-    // so any other backend-only marker already on the block (e.g.
-    // `mode: "oral_check"` for the "Talk with Andrea" oral-check variant)
-    // must survive a save even if the client payload doesn't carry it.
+    // The admin form edits exactly three fields; merge ONLY those onto the
+    // freshly loaded persisted content and ignore every other key the
+    // client may have sent. This direction matters twice over:
+    //  * a backend-only marker the form doesn't expose (e.g.
+    //    `mode: "oral_check"` for the "Talk with Andrea" variant, or an
+    //    attached `scenario_spec`) survives every admin save; and
+    //  * a STALE browser tab cannot clobber newer backend-only fields by
+    //    replaying its old content snapshot -- the server never accepts
+    //    arbitrary content keys from the client for this block type, so
+    //    the stale snapshot simply has nowhere to leak in.
     const existingContent =
       existing.content &&
       typeof existing.content === "object" &&
@@ -181,7 +186,6 @@ export async function updateBlock(input: {
         : {};
     safeContent = {
       ...existingContent,
-      ...input.content,
       scenario_id: scenarioId,
       title:
         typeof input.content.title === "string"

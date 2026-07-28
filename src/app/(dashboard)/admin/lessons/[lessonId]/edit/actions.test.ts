@@ -275,6 +275,50 @@ describe("updateBlock role_play branch", () => {
     });
   });
 
+  it("ignores stale content keys replayed by an outdated tab instead of overwriting newer backend-only fields", async () => {
+    // Freshly persisted state: the block has since been marked as an
+    // oral-check with an attached scenario_spec by a backend publish.
+    blockTypeRow = {
+      block_type: "role_play",
+      content: {
+        mode: "oral_check",
+        scenario_id: "scenario-current",
+        scenario_spec: { context: "Current published spec" },
+        title: "Talk with Andrea",
+        height_px: 760,
+      },
+    };
+
+    const result = await updateBlock({
+      blockId: "block-1",
+      lessonId: "lesson-1",
+      // A STALE tab loaded before the backend publish replays its whole old
+      // snapshot: no mode, no scenario_spec, old scenario_id under a bogus
+      // extra key. Only the three form-exposed fields may take effect; the
+      // stale snapshot's other keys must not leak into persisted content.
+      content: {
+        scenario_id: "scenario-current",
+        title: "Retitled from the stale tab",
+        height_px: 720,
+        mode: undefined,
+        legacy_marker: "should-never-persist",
+        scenario_spec: { context: "Stale pre-publish spec" },
+      },
+    });
+
+    expect(result).toEqual({ ok: true });
+    expect(updatePatch).toEqual({
+      content: {
+        mode: "oral_check",
+        scenario_id: "scenario-current",
+        scenario_spec: { context: "Current published spec" },
+        title: "Retitled from the stale tab",
+        height_px: 720,
+      },
+      is_required_for_completion: false,
+    });
+  });
+
   it("allows an admin to make a role play required", async () => {
     const result = await updateBlock({
       blockId: "block-1",

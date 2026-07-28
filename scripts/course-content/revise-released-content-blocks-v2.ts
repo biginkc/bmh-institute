@@ -112,16 +112,21 @@ async function main() {
       }
       return result.data as ReleasedContentBlockRevisionV2Row[];
     },
-    loadAudit: async (client, auditImportId, auditManifestSha256) => {
-      // Same shared table the quiz-revision mechanism writes to; kind
-      // narrows this lookup to content-block revision rows specifically.
+    loadAudit: async (client, auditImportId, auditRevision) => {
+      // Same shared table the quiz-revision mechanism writes to. Keyed by
+      // the (import_id, revision) primary key -- NEVER by manifest hash:
+      // after a rollback + reapply the same manifest hash appears on
+      // multiple ledger rows and a hash-keyed single-row lookup errors on
+      // the ambiguity (post-commit, which would misreport a successful
+      // write as a failure). The kind filter guards against a same-numbered
+      // quiz row ever being misread as a content-block receipt.
       const result = await client
         .from("content_import_release_revisions")
         .select(
           "import_id,revision,manifest_sha256,prior_catalog_sha256,catalog_sha256,payload_sha256,client_payload_sha256,mutation_count,update_count,insert_count,evidence",
         )
         .eq("import_id", auditImportId)
-        .eq("manifest_sha256", auditManifestSha256)
+        .eq("revision", auditRevision)
         .eq("kind", "content_blocks")
         .maybeSingle();
       if (result.error) {

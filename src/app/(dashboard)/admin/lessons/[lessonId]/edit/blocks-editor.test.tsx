@@ -282,7 +282,7 @@ describe("<BlocksEditor />", () => {
     );
   });
 
-  it("preserves the oral-check mode marker when only the title changes", async () => {
+  it("submits only the three form-exposed fields for a role play, never a content snapshot", async () => {
     const user = userEvent.setup();
     render(
       <BlocksEditor
@@ -294,6 +294,7 @@ describe("<BlocksEditor />", () => {
             content: {
               mode: "oral_check",
               scenario_id: "scenario-1",
+              scenario_spec: { context: "Backend-attached spec" },
               title: "Talk with Andrea",
               height_px: 760,
             },
@@ -305,7 +306,10 @@ describe("<BlocksEditor />", () => {
     );
 
     // There is no "mode" field in the admin form — it's a backend-only
-    // marker — so an admin can only ever change scenario_id/title/height_px.
+    // marker. The client must submit ONLY scenario_id/title/height_px: the
+    // server merges those onto freshly persisted content, so backend-only
+    // fields survive without the client replaying them, and a stale tab can
+    // never overwrite newer backend state with an old snapshot.
     await user.clear(screen.getByLabelText("Title"));
     await user.type(screen.getByLabelText("Title"), "Handle the price objection");
     await user.click(screen.getByRole("button", { name: "Save block" }));
@@ -315,7 +319,6 @@ describe("<BlocksEditor />", () => {
         blockId: "role-play-oral-check",
         lessonId: "lesson-1",
         content: {
-          mode: "oral_check",
           scenario_id: "scenario-1",
           title: "Handle the price objection",
           height_px: 760,

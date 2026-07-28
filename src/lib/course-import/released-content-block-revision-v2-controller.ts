@@ -82,10 +82,17 @@ export type ReleasedContentBlockRevisionV2Dependencies<Client> = {
   createClient: (url: string, serviceRoleKey: string) => Client;
   loadActiveRevision: (client: Client, importId: string) => Promise<ActiveRevision>;
   loadCatalogSha256: (client: Client, importId: string) => Promise<string>;
+  /** Loads the content_blocks-kind ledger row by its unique (import_id,
+   * revision) primary key. Never keyed by manifest hash: after a
+   * rollback + reapply of the same target manifest, multiple ledger rows
+   * legitimately share one manifest_sha256, and a hash-keyed single-row
+   * lookup errors on the multiple matches -- post-commit, which would
+   * report failure for a write that succeeded and leave every retry
+   * unreconcilable. */
   loadAudit: (
     client: Client,
     importId: string,
-    manifestSha256: string,
+    revision: number,
   ) => Promise<ReleasedContentBlockRevisionV2Audit | null>;
   loadMutationRows: (
     client: Client,
@@ -131,10 +138,18 @@ export async function runReleasedContentBlockRevisionV2Command<Client>(
     // would be refused by the RPC's own idempotent-replay branch, but a
     // naive controller that only ever compares against the prior manifest
     // would instead misreport this as "stale" and refuse outright. Reconcile
-    // against the durable audit trail instead: verify the audit record for
-    // this exact target manifest still matches live state, then report
-    // already_revised without touching the mutation path at all.
-    return reconcileAlreadyActiveTarget(client, input, environment, dependencies);
+    // against the durable audit trail instead: verify the ledger row at the
+    // ACTIVE revision number still matches this call's target manifest,
+    // payload, and live state, then report already_revised without touching
+    // the mutation path at all.
+    return reconcileAlreadyActiveTarget(
+      client,
+      input,
+      Number(active.active_revision),
+      databasePayloadSha256,
+      environment,
+      dependencies,
+    );
   }
 
   if (active.active_manifest_sha256 !== input.expectedPriorManifestSha256) {
@@ -186,8 +201,16 @@ export async function runReleasedContentBlockRevisionV2Command<Client>(
       "Released content revision v2 postflight catalog does not match the atomic RPC receipt.",
     );
   }
-  const audit = await dependencies.loadAudit(client, input.importId, input.manifestSha256);
-  assertRevisionAudit(audit, input, evidence, expectedPriorCatalogSha256, catalogSha256, rpc.revision);
+  const audit = await dependencies.loadAudit(client, input.importId, rpc.revision);
+  assertRevisionAudit(
+    audit,
+    input,
+    evidence,
+    databasePayloadSha256,
+    expectedPriorCatalogSha256,
+    catalogSha256,
+    rpc.revision,
+  );
 
   dependencies.log(JSON.stringify({
     phase: "released_content_blocks_v2_revised",
@@ -204,19 +227,30 @@ export async function runReleasedContentBlockRevisionV2Command<Client>(
 async function reconcileAlreadyActiveTarget<Client>(
   client: Client,
   input: ReleasedContentBlockRevisionV2CommandInput,
+  activeRevision: number,
+  databasePayloadSha256: string,
   environment: CourseImportEnvironment,
   dependencies: ReleasedContentBlockRevisionV2Dependencies<Client>,
 ) {
   const catalogSha256 = await dependencies.loadCatalogSha256(client, input.importId);
-  const audit = await dependencies.loadAudit(client, input.importId, input.manifestSha256);
+  // Keyed by the ACTIVE revision number (the ledger's unique PK), never by
+  // manifest hash -- after a rollback + reapply the same manifest hash
+  // legitimately appears on multiple ledger rows and a hash-keyed lookup
+  // would error on the ambiguity.
+  const audit = await dependencies.loadAudit(client, input.importId, activeRevision);
   if (!audit) {
     throw new Error(
-      "Released content revision v2 refused: the live manifest already matches the target, but no audit record exists for it -- refusing to report success for an unverifiable state.",
+      "Released content revision v2 refused: the live manifest already matches the target, but no content-block audit record exists at the active revision -- refusing to report success for an unverifiable state.",
     );
   }
-  if (audit.manifest_sha256 !== input.manifestSha256) {
+  if (audit.revision !== activeRevision || audit.manifest_sha256 !== input.manifestSha256) {
     throw new Error(
-      "Released content revision v2 refused: audit lookup for the active target manifest returned a mismatched record.",
+      "Released content revision v2 refused: the ledger row at the active revision does not match this call's target manifest.",
+    );
+  }
+  if (audit.database_payload_sha256 !== databasePayloadSha256) {
+    throw new Error(
+      "Released content revision v2 refused: the ledger row at the active revision was produced by a different mutation payload than this call's.",
     );
   }
   if (audit.catalog_sha256 !== catalogSha256) {
@@ -274,6 +308,7 @@ function assertRevisionAudit(
   audit: ReleasedContentBlockRevisionV2Audit | null,
   input: ReleasedContentBlockRevisionV2CommandInput,
   evidence: Record<string, unknown>,
+  databasePayloadSha256: string,
   expectedPriorCatalogSha256: string,
   catalogSha256: string,
   revision: number,
@@ -287,6 +322,7 @@ function assertRevisionAudit(
     manifest_sha256: audit.manifest_sha256,
     prior_catalog_sha256: audit.prior_catalog_sha256,
     catalog_sha256: audit.catalog_sha256,
+    database_payload_sha256: audit.database_payload_sha256,
     client_payload_sha256: audit.client_payload_sha256,
     mutation_count: audit.mutation_count,
     update_count: audit.update_count,
@@ -298,6 +334,7 @@ function assertRevisionAudit(
     manifest_sha256: input.manifestSha256,
     prior_catalog_sha256: expectedPriorCatalogSha256,
     catalog_sha256: catalogSha256,
+    database_payload_sha256: databasePayloadSha256,
     client_payload_sha256: input.clientPayloadSha256,
     mutation_count: input.mutations.length,
     update_count: input.mutations.filter((mutation) => mutation.action === "update").length,

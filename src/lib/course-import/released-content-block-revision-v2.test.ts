@@ -233,6 +233,61 @@ describe("released content block revision v2 (versioned, variable-count builder)
     })).toThrow(/added outside content_blocks/i);
   });
 
+  it("refuses a target manifest that adds an asset not tied to any download mutation", () => {
+    const legacy = releaseReadyManifest();
+    const target = releaseReadyManifest();
+    blocksOf(target)[0] = { ...blocksOf(target)[0], content: { cards: [{ front: "X", back: "Y" }] } };
+    // A perfectly valid, approved-but-unused asset smuggled in alongside a
+    // legitimate block edit. plan.assets is carried separately from
+    // plan.operations, so an operations-only guard would accept this while
+    // the full target manifest hash (including the unapplied asset change)
+    // got recorded as active.
+    target.assets.push({
+      source_key: "smuggled-pdf",
+      kind: "pdf",
+      local_path: "assets/smuggled.pdf",
+      storage_path: `courses/training/v1/guides/smuggled.${"2".repeat(64)}.pdf`,
+      mime_type: "application/pdf",
+      checksum_sha256: "2".repeat(64),
+      size_bytes: 10,
+      approval_status: "approved",
+    });
+
+    expect(() => buildReleasedContentBlockRevisionV2({
+      importId: legacy.import_id,
+      legacyManifest: buffer(legacy),
+      targetManifest: buffer(target),
+    })).toThrow(/asset smuggled-pdf was added .* without a download mutation binding it/i);
+  });
+
+  it("refuses a target manifest that changes an asset not tied to any download mutation", () => {
+    const legacy = releaseReadyManifest();
+    const target = releaseReadyManifest();
+    blocksOf(target)[0] = { ...blocksOf(target)[0], content: { cards: [{ front: "X", back: "Y" }] } };
+    const changed = target.assets.find((asset) => asset.source_key === "video-1")!;
+    changed.checksum_sha256 = "3".repeat(64);
+    changed.storage_path = changed.storage_path.replace("0".repeat(64), "3".repeat(64));
+
+    expect(() => buildReleasedContentBlockRevisionV2({
+      importId: legacy.import_id,
+      legacyManifest: buffer(legacy),
+      targetManifest: buffer(target),
+    })).toThrow(/asset video-1 was changed .* without a download mutation binding it/i);
+  });
+
+  it("refuses a target manifest that removes an asset", () => {
+    const legacy = releaseReadyManifest();
+    const target = releaseReadyManifest();
+    blocksOf(target)[0] = { ...blocksOf(target)[0], content: { cards: [{ front: "X", back: "Y" }] } };
+    target.assets = target.assets.filter((asset) => asset.source_key !== "video-1");
+
+    expect(() => buildReleasedContentBlockRevisionV2({
+      importId: legacy.import_id,
+      legacyManifest: buffer(legacy),
+      targetManifest: buffer(target),
+    })).toThrow(/asset video-1 was removed/i);
+  });
+
   it("treats a block moved to a different lesson with byte-identical content as a change, not a silent no-op", () => {
     const legacy = releaseReadyManifest();
     const target = releaseReadyManifest();

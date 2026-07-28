@@ -1178,11 +1178,12 @@ function RolePlayBlockEditor({
           onClick={() =>
             save(
               {
-                // Spread the block's existing content first so any field
-                // this form doesn't expose (e.g. the backend-only
-                // `mode: "oral_check"` marker) survives the save instead of
-                // being dropped when we reconstruct the payload below.
-                ...block.content,
+                // Submit ONLY the fields this form actually edits. The
+                // server merges them onto the freshly persisted content, so
+                // backend-only fields (e.g. the `mode: "oral_check"` marker)
+                // survive without this client ever having to replay them --
+                // and a stale tab can never overwrite newer backend state by
+                // resubmitting an old content snapshot.
                 scenario_id: scenarioId,
                 title,
                 height_px: Number(heightPx) || 720,

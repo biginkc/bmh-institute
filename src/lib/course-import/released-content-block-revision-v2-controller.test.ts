@@ -295,7 +295,34 @@ describe("released content block revision v2 controller", () => {
         catalogSha256: replacementCatalogSha256,
       });
     expect(callRevision).not.toHaveBeenCalled();
-    expect(loadAudit).toHaveBeenCalledWith({ name: "fake-client" }, importId, manifestSha256);
+    // Keyed by the ACTIVE revision number (the ledger PK), never the
+    // manifest hash -- after rollback + reapply the same hash appears on
+    // multiple ledger rows and a hash-keyed lookup errors on the ambiguity.
+    expect(loadAudit).toHaveBeenCalledWith({ name: "fake-client" }, importId, 2);
+  });
+
+  it("refuses the response-loss reconciliation if the active ledger row was produced by a different payload", async () => {
+    const dependencies: ReleasedContentBlockRevisionV2Dependencies<FakeClient> = {
+      classifyEnvironment: vi.fn(assertCourseImportEnvironment),
+      createClient: vi.fn(() => ({ name: "fake-client" as const })),
+      loadActiveRevision: vi.fn(async () => ({
+        import_id: importId,
+        active_revision: 2,
+        active_manifest_sha256: manifestSha256,
+        active_catalog_sha256: replacementCatalogSha256,
+      })),
+      loadCatalogSha256: vi.fn(async () => replacementCatalogSha256),
+      loadAudit: vi.fn(async () => ({
+        ...expectedAudit(2, expectedPriorManifestSha256),
+        database_payload_sha256: "e".repeat(64),
+      })),
+      loadMutationRows: vi.fn(async () => rows("revised")),
+      callRevision: vi.fn(),
+      log: vi.fn(),
+    };
+
+    await expect(runReleasedContentBlockRevisionV2Command(makeInput(), dependencies))
+      .rejects.toThrow(/different mutation payload/);
   });
 
   it("refuses the response-loss reconciliation if no audit record exists for the active target manifest", async () => {
@@ -316,7 +343,7 @@ describe("released content block revision v2 controller", () => {
     };
 
     await expect(runReleasedContentBlockRevisionV2Command(makeInput(), dependencies))
-      .rejects.toThrow(/no audit record exists/);
+      .rejects.toThrow(/no content-block audit record exists at the active revision/);
   });
 
   it("refuses the response-loss reconciliation if live catalog has drifted from the audited target state", async () => {

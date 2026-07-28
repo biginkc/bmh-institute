@@ -676,6 +676,168 @@ begin
   ) <> 5 then
     raise exception 'active-revision view did not advance past the rollback';
   end if;
+  if (
+    select parent_revision from public.content_import_release_revisions
+    where import_id = 'test-content-block-revision-v2' and revision = 5
+  ) <> 4 then
+    raise exception 'the rollback receipt did not record revision 4 as its parent';
+  end if;
+end;
+$$;
+
+-- Chained rollback: with revision 4 already rolled back (receipt 5), rolling
+-- back revision 3 from the restored state must append its receipt at the END
+-- of the shared sequence (6), not at 3 + 1 = 4 -- which already exists and
+-- would PK-collide, atomically aborting the emergency rollback.
+do $$
+declare
+  v_result jsonb;
+begin
+  v_result := public.fn_rollback_released_content_block_revision_v1(
+    'test-content-block-revision-v2', 3,
+    jsonb_build_object('operation', 'rollback', 'rollback_sha256', repeat('f', 64)),
+    'ROLLBACK-RELEASED-CONTENT-BLOCKS-V2:test-content-block-revision-v2:3:'
+      || repeat('2', 64) || ':' || repeat('9', 64) || ':' || repeat('f', 64)
+  );
+  if v_result ->> 'status' <> 'rolled_back'
+    or (v_result ->> 'revision')::int <> 6
+    or (v_result ->> 'rolled_back_revision')::int <> 3
+  then
+    raise exception 'chained rollback returned an unexpected receipt: %', v_result;
+  end if;
+
+  if (
+    select content from public.content_blocks
+    where id = '05500000-0000-5000-a000-000000000007'
+  ) <> '{"html":"<p>Original A</p>"}'::jsonb then
+    raise exception 'chained rollback did not restore the original text block';
+  end if;
+  if exists (
+    select 1 from public.content_blocks
+    where id in (
+      '05500000-0000-5000-a000-000000000009',
+      '05500000-0000-5000-a000-00000000000a'
+    )
+  ) then
+    raise exception 'chained rollback did not remove the blocks revision 3 inserted';
+  end if;
+  if (
+    select active_revision from public.content_import_active_release_v1
+    where import_id = 'test-content-block-revision-v2'
+  ) <> 6 then
+    raise exception 'active-revision view did not advance past the chained rollback';
+  end if;
+  if (
+    select active_manifest_sha256 from public.content_import_active_release_v1
+    where import_id = 'test-content-block-revision-v2'
+  ) <> repeat('9', 64) then
+    raise exception 'chained rollback did not restore the quiz-kind fixture manifest as active (mixed-kind history broke)';
+  end if;
+  if (
+    select parent_revision from public.content_import_release_revisions
+    where import_id = 'test-content-block-revision-v2' and revision = 6
+  ) <> 3 then
+    raise exception 'the chained rollback receipt did not record revision 3 as its parent';
+  end if;
+end;
+$$;
+
+-- Applied-v1-to-v2 transition: a consumed v1 one-shot receipt must be
+-- absorbable into the shared sequence exactly as the migration's own
+-- backfill does it -- appended after whatever revisions (of any kind)
+-- already exist -- and the backfill must be idempotent. Seeds a v1-style
+-- audit record through the v1 table's own operation-bound guard, then
+-- invokes the same fn_backfill_v1_content_block_revisions() the migration
+-- ran, and finally proves the retired v1 RPC cannot run again.
+do $$
+declare
+  v_result jsonb;
+  v_mirror public.content_import_release_revisions%rowtype;
+begin
+  perform set_config(
+    'bmh.revise_content_blocks_import_id', 'test-content-block-revision-v2', true
+  );
+  perform set_config(
+    'bmh.revise_content_blocks_payload_sha256', repeat('9', 64), true
+  );
+  insert into public.content_import_released_content_block_revision_records (
+    import_id,
+    original_release_manifest_sha256,
+    expected_active_manifest_sha256,
+    manifest_sha256,
+    prior_catalog_sha256,
+    replacement_catalog_sha256,
+    database_payload_sha256,
+    client_payload_sha256,
+    guide_update_count,
+    flashcard_update_count,
+    role_play_insert_count,
+    mutations,
+    evidence
+  ) values (
+    'test-content-block-revision-v2',
+    repeat('1', 64),
+    repeat('9', 64),
+    repeat('a', 64),
+    repeat('b', 64),
+    repeat('c', 64),
+    repeat('9', 64),
+    repeat('d', 64),
+    19, 19, 6,
+    (
+      select jsonb_agg(jsonb_build_object('fixture', item))
+      from generate_series(1, 44) item
+    ),
+    '{}'::jsonb
+  );
+  perform set_config('bmh.revise_content_blocks_import_id', '', true);
+  perform set_config('bmh.revise_content_blocks_payload_sha256', '', true);
+
+  v_result := public.fn_backfill_v1_content_block_revisions();
+  if (v_result ->> 'rows')::int <> 1 then
+    raise exception 'v1 backfill did not absorb exactly the seeded receipt: %', v_result;
+  end if;
+
+  select * into v_mirror
+  from public.content_import_release_revisions
+  where import_id = 'test-content-block-revision-v2' and revision = 7;
+  if not found
+    or v_mirror.kind <> 'content_blocks'
+    or v_mirror.parent_revision <> 6
+    or v_mirror.prior_manifest_sha256 <> repeat('9', 64)
+    or v_mirror.manifest_sha256 <> repeat('a', 64)
+    or v_mirror.payload_sha256 <> repeat('9', 64)
+    or v_mirror.mutation_count <> 44
+    or v_mirror.update_count <> 38
+    or v_mirror.insert_count <> 6
+    or v_mirror.evidence ->> 'backfilled_from' <> 'released_content_blocks_v1'
+  then
+    raise exception 'the backfilled mirror row is missing or misshapen';
+  end if;
+  if (
+    select active_manifest_sha256 from public.content_import_active_release_v1
+    where import_id = 'test-content-block-revision-v2'
+  ) <> repeat('a', 64) then
+    raise exception 'the shared active-state view does not surface the backfilled v1 state';
+  end if;
+
+  -- Idempotency: a second run must absorb nothing.
+  v_result := public.fn_backfill_v1_content_block_revisions();
+  if (v_result ->> 'rows')::int <> 0 then
+    raise exception 'v1 backfill re-absorbed an already-mirrored receipt: %', v_result;
+  end if;
+
+  -- The retired v1 RPC must be dead regardless of arguments.
+  begin
+    perform public.fn_revise_released_content_blocks_v1(
+      'test-content-block-revision-v2',
+      repeat('1', 64), repeat('2', 64), repeat('3', 64),
+      '[]'::jsonb, repeat('4', 64), '{}'::jsonb, 'invalid'
+    );
+    raise exception 'the retired v1 RPC was callable after backfill';
+  exception when sqlstate '42501' then
+    if sqlerrm not like '%retired%' then raise; end if;
+  end;
 end;
 $$;
 
