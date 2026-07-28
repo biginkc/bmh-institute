@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { test } from "node:test";
 
@@ -17,9 +18,50 @@ const UUID_PATTERN =
 // ElevenLabs voice IDs are opaque 20-character alphanumeric tokens (not
 // UUIDs) -- e.g. the canonical Andrea PVC clone c7VyuzKrx3xIuZs8QT0P.
 const ELEVENLABS_VOICE_ID_PATTERN = /^[0-9A-Za-z]{16,32}$/;
+const SHA256_PATTERN = /^[0-9a-f]{64}$/;
 
 async function loadAttestation() {
   return JSON.parse(await readFile(ATTESTATION_URL, "utf8"));
+}
+
+// Round-6 review, finding 5: long free-text runtime material (persona
+// system_prompt and opener, role_play description and pre_read, each rubric
+// goal's member_facing_description and ai_explanation) is pinned by hash
+// rather than copied into the attestation, so the evidence file stays
+// reviewable while still detecting a single changed character. Throws rather
+// than hashing a null or a number, because a live field that has gone missing
+// must fail loudly here instead of silently hashing to some stable value that
+// then never matches, or worse, matches an attested hash of "".
+function sha256Hex(value, label) {
+  assert.equal(
+    typeof value,
+    "string",
+    `${label} must be a string in the live response to be hash-compared, got ${value === null ? "null" : typeof value}`,
+  );
+  return createHash("sha256").update(value, "utf8").digest("hex");
+}
+
+// Every sha256 this attestation pins, in one flat list. Used to assert the
+// pins are real, distinct hashes -- a generator bug that copied one scenario's
+// prompt hash across all three would otherwise leave the live recheck
+// asserting the same wrong thing three times and passing.
+function pinnedRuntimeHashes(attestation) {
+  const hashes = [];
+  for (const scenario of attestation.scenarios) {
+    hashes.push(
+      scenario.role_play_runtime.description_sha256,
+      scenario.role_play_runtime.pre_read_sha256,
+      scenario.persona_runtime.system_prompt_sha256,
+      scenario.persona_runtime.opener_sha256,
+    );
+    for (const goal of scenario.rubric_goals) {
+      hashes.push(goal.member_facing_description_sha256, goal.ai_explanation_sha256);
+      for (const document of goal.documents) {
+        hashes.push(document.content_sha256);
+      }
+    }
+  }
+  return hashes;
 }
 
 // Finds the single jsonb_build_object(...) mutation element in the
@@ -124,6 +166,111 @@ test("the oral-check pilot production attestation is internally consistent", asy
   assert.equal(blockIds.size, 3, "all three block IDs are unique");
 });
 
+// Round-6 Codex review, finding 5: before this, the attestation pinned only
+// identity, ordering, weights, and the COUNT of supporting documents. Every
+// mandatory assertion stayed green while the material that actually drives the
+// conversation and the scoring could change underneath: the persona's
+// system_prompt and opener, the role_play's pre_read and talking_points, each
+// rubric goal's ai_explanation and member-facing definition, and the contents
+// of the supporting documents the grader reads. For blocks that are required
+// for lesson completion, that means a different Andrea and a different scoring
+// basis with the deployment evidence still reporting clean. The attestation now
+// pins all of it, and this test proves the pins are structurally real so the
+// live recheck below has something with teeth to compare against.
+test("the attestation pins the mutable conversation and scoring material, not just identity and counts", async () => {
+  const attestation = await loadAttestation();
+
+  for (const scenario of attestation.scenarios) {
+    const label = scenario.block_source_key;
+    const rolePlay = scenario.role_play_runtime;
+    assert.ok(rolePlay, `${label} pins role_play runtime material`);
+    assert.equal(rolePlay.scoring_frame, "knowledge_check", `${label} is scored as a knowledge check`);
+    assert.ok(
+      Number.isInteger(rolePlay.max_turns) && rolePlay.max_turns > 0,
+      `${label} pins a real max_turns bound on the conversation`,
+    );
+    assert.equal(typeof rolePlay.type_tag, "string");
+    assert.equal(typeof rolePlay.allow_anonymous, "boolean");
+    assert.match(rolePlay.description_sha256, SHA256_PATTERN, `${label} pins the role_play description`);
+    assert.match(rolePlay.pre_read_sha256, SHA256_PATTERN, `${label} pins the learner pre_read`);
+    assert.ok(
+      Array.isArray(rolePlay.talking_points) && rolePlay.talking_points.length > 0,
+      `${label} pins the talking points that steer the conversation`,
+    );
+    for (const point of rolePlay.talking_points) {
+      assert.equal(typeof point, "string", `${label} talking point is a string`);
+    }
+
+    const persona = scenario.persona_runtime;
+    assert.ok(persona, `${label} pins persona runtime material`);
+    assert.equal(typeof persona.role, "string");
+    assert.match(persona.system_prompt_sha256, SHA256_PATTERN, `${label} pins the persona system prompt`);
+    assert.match(persona.opener_sha256, SHA256_PATTERN, `${label} pins the persona opener`);
+    assert.match(persona.demeanor_sha256, SHA256_PATTERN, `${label} pins the persona demeanor`);
+
+    for (const goal of scenario.rubric_goals) {
+      assert.equal(typeof goal.goal_type, "string", `${label} goal ${goal.sort_order} pins goal_type`);
+      assert.ok(Array.isArray(goal.anchors_mid), `${label} goal ${goal.sort_order} pins anchors_mid`);
+      assert.match(
+        goal.member_facing_description_sha256,
+        SHA256_PATTERN,
+        `${label} goal ${goal.sort_order} pins its member-facing definition`,
+      );
+      assert.match(
+        goal.ai_explanation_sha256,
+        SHA256_PATTERN,
+        `${label} goal ${goal.sort_order} pins the ai_explanation the grader scores against`,
+      );
+      assert.ok(Array.isArray(goal.documents), `${label} goal ${goal.sort_order} pins its supporting documents`);
+      assert.equal(
+        goal.documents.length,
+        goal.document_count,
+        `${label} goal ${goal.sort_order} pins exactly as many documents as it counts`,
+      );
+      for (const document of goal.documents) {
+        assert.match(document.id, UUID_PATTERN, `${label} goal ${goal.sort_order} document id is a real UUID`);
+        assert.equal(typeof document.storage_path, "string");
+        assert.ok(document.storage_path.length > 0, `${label} goal ${goal.sort_order} document has a storage path`);
+        assert.equal(typeof document.display_name, "string");
+        assert.equal(typeof document.mime_type, "string");
+        assert.ok(Number.isInteger(document.size_bytes) && document.size_bytes > 0);
+        assert.match(
+          document.content_sha256,
+          SHA256_PATTERN,
+          `${label} goal ${goal.sort_order} pins the document's content hash, not just its existence`,
+        );
+      }
+    }
+  }
+
+  const hashes = pinnedRuntimeHashes(attestation);
+  // 3 descriptions + 3 pre_reads + 3 system prompts + 3 openers
+  // + 12 member-facing definitions + 12 ai_explanations + 12 document contents.
+  assert.equal(hashes.length, 48, "every runtime-relevant text field is pinned");
+  assert.equal(
+    new Set(hashes).size,
+    48,
+    "no pinned hash is duplicated, so a copy-paste generator bug cannot make three scenarios attest the same material",
+  );
+  assert.equal(attestation.summary.total_pinned_runtime_hashes, 48);
+
+  const documentIds = new Set();
+  const documentPaths = new Set();
+  let documentCount = 0;
+  for (const scenario of attestation.scenarios) {
+    for (const goal of scenario.rubric_goals) {
+      for (const document of goal.documents) {
+        documentIds.add(document.id);
+        documentPaths.add(document.storage_path);
+        documentCount += 1;
+      }
+    }
+  }
+  assert.equal(documentCount, attestation.summary.total_rubric_goal_documents);
+  assert.equal(documentIds.size, documentCount, "each pinned document is a distinct row");
+  assert.equal(documentPaths.size, documentCount, "each pinned document is a distinct object");
+});
+
 test("each scenario's block_id, source_key, and scenario_id are bound TOGETHER in the migration's own mutation element, not just present somewhere in the file", async () => {
   const [attestation, migrationSql] = await Promise.all([
     loadAttestation(),
@@ -150,6 +297,161 @@ test("each scenario's block_id, source_key, and scenario_id are bound TOGETHER i
   assert.equal(attestedIds.size, 3);
 });
 
+// Round-6 review, finding 5: this comparison is extracted so it can be
+// exercised offline, against a synthetic live payload, by the mutation test
+// below. Without that, the only proof these assertions actually detect
+// drift would be a credentialed production run, which has never happened
+// and cannot happen in normal CI. The live recheck and the mutation test
+// now run the exact same code.
+function assertLiveRowMatchesAttestedScenario(row, scenario) {
+  assert.ok(row, `${scenario.block_source_key} scenario_id ${scenario.role_play_id} still exists in production`);
+  assert.equal(row.archived_at, null, `${scenario.block_source_key} is still not archived`);
+  assert.equal(row.managed_source_key, scenario.role_play_managed_source_key);
+  // Round-3 review (finding 2) caught that this test used to stop at
+  // counts and totals: it never compared the role-play TITLE, the
+  // PERSONA IDENTITY, or each individual goal's id/name/order/weight
+  // against the checked-in attestation. Four different active goals that
+  // happen to also total weight 100 would have passed this test cleanly
+  // while learners were actually scored against the wrong rubric
+  // entirely. Every field below is now deep-compared against the exact
+  // checked-in attestation, not just shape/count/sum.
+  assert.equal(row.title, scenario.title, `${scenario.block_source_key} role_play title matches the attested title exactly`);
+  assert.equal(row.persona.id, scenario.persona_id, `${scenario.block_source_key} persona id matches the attested persona identity`);
+  assert.equal(row.persona.name, scenario.persona_name, `${scenario.block_source_key} persona name matches the attested persona identity`);
+  assert.equal(row.persona.voice_id, scenario.voice_id, `${scenario.block_source_key} voice_id has not drifted`);
+  assert.equal(row.persona.archived_at, null, `${scenario.block_source_key} persona is still not archived`);
+  assert.equal(row.persona.managed_source_key, scenario.persona_managed_source_key);
+
+  // Round-6 review, finding 5: the mutable conversation material. A change
+  // to any of these produces a materially different Andrea for a block that
+  // is required for lesson completion, and every assertion above would still
+  // have passed.
+  const rolePlay = scenario.role_play_runtime;
+  assert.equal(row.type_tag, rolePlay.type_tag, `${scenario.block_source_key} type_tag has not drifted`);
+  assert.equal(Number(row.max_turns), rolePlay.max_turns, `${scenario.block_source_key} max_turns has not drifted`);
+  assert.equal(row.allow_anonymous, rolePlay.allow_anonymous, `${scenario.block_source_key} allow_anonymous has not drifted`);
+  assert.equal(
+    row.call_duration_seconds === null ? null : Number(row.call_duration_seconds),
+    rolePlay.call_duration_seconds,
+    `${scenario.block_source_key} call_duration_seconds has not drifted`,
+  );
+  assert.equal(row.scoring_frame, rolePlay.scoring_frame, `${scenario.block_source_key} scoring_frame has not drifted`);
+  assert.equal(
+    sha256Hex(row.description, `${scenario.block_source_key} role_play description`),
+    rolePlay.description_sha256,
+    `${scenario.block_source_key} role_play description has not drifted`,
+  );
+  assert.equal(
+    sha256Hex(row.pre_read, `${scenario.block_source_key} role_play pre_read`),
+    rolePlay.pre_read_sha256,
+    `${scenario.block_source_key} learner pre_read has not drifted`,
+  );
+  assert.deepEqual(
+    row.talking_points,
+    rolePlay.talking_points,
+    `${scenario.block_source_key} talking points have not drifted, in content or order`,
+  );
+
+  const persona = scenario.persona_runtime;
+  assert.equal(row.persona.role, persona.role, `${scenario.block_source_key} persona role has not drifted`);
+  assert.equal(row.persona.avatar_url, persona.avatar_url, `${scenario.block_source_key} persona avatar has not drifted`);
+  assert.equal(
+    sha256Hex(row.persona.system_prompt, `${scenario.block_source_key} persona system_prompt`),
+    persona.system_prompt_sha256,
+    `${scenario.block_source_key} persona system prompt has not drifted -- this is the instruction set that decides what Andrea actually says`,
+  );
+  assert.equal(
+    sha256Hex(row.persona.opener, `${scenario.block_source_key} persona opener`),
+    persona.opener_sha256,
+    `${scenario.block_source_key} persona opener has not drifted`,
+  );
+  assert.equal(
+    sha256Hex(row.persona.demeanor, `${scenario.block_source_key} persona demeanor`),
+    persona.demeanor_sha256,
+    `${scenario.block_source_key} persona demeanor has not drifted`,
+  );
+  assert.equal(row.role_play_goals.length, 4, `${scenario.block_source_key} has exactly 4 live goal links`);
+  assert.equal(scenario.rubric_goals.length, 4, `${scenario.block_source_key} has exactly 4 attested goal links`);
+
+  const liveSortOrders = row.role_play_goals.map((link) => link.sort_order).slice().sort((left, right) => left - right);
+  assert.deepEqual(liveSortOrders, [0, 1, 2, 3], `${scenario.block_source_key} live goal links have exactly sort_order 0-3, no duplicates or gaps`);
+  const attestedSortOrders = scenario.rubric_goals.map((goal) => goal.sort_order).slice().sort((left, right) => left - right);
+  assert.deepEqual(attestedSortOrders, [0, 1, 2, 3], `${scenario.block_source_key} attested goals have exactly sort_order 0-3, no duplicates or gaps`);
+
+  const liveGoalsBySortOrder = [...row.role_play_goals].sort((left, right) => left.sort_order - right.sort_order);
+  const attestedGoalsBySortOrder = [...scenario.rubric_goals].sort((left, right) => left.sort_order - right.sort_order);
+  for (let index = 0; index < attestedGoalsBySortOrder.length; index += 1) {
+    const liveGoal = liveGoalsBySortOrder[index];
+    const attestedGoal = attestedGoalsBySortOrder[index];
+    // Binds id, name, order, individual weight, and document count
+    // together for the goal AT THIS EXACT rubric position -- a swapped or
+    // substituted rubric (same 4 weights summing to 100, wrong goals)
+    // fails here even though total-weight and count checks alone would
+    // not catch it.
+    assert.equal(liveGoal.rubric_goals.id, attestedGoal.id, `${scenario.block_source_key} goal at sort_order ${attestedGoal.sort_order} id matches`);
+    assert.equal(liveGoal.rubric_goals.name, attestedGoal.name, `${scenario.block_source_key} goal at sort_order ${attestedGoal.sort_order} name matches`);
+    assert.equal(Number(liveGoal.weight), attestedGoal.weight, `${scenario.block_source_key} goal at sort_order ${attestedGoal.sort_order} individual weight matches`);
+    assert.equal(liveGoal.rubric_goals.archived_at, null, `${scenario.block_source_key} goal at sort_order ${attestedGoal.sort_order} is not archived`);
+
+    // Round-6 review, finding 5: the scoring semantics themselves. The
+    // grader reads ai_explanation and the goal's definitions to decide
+    // achieved vs missed; a rewrite there changes what a learner has to say
+    // to pass, with the goal id, name, order, weight, and document count all
+    // unchanged.
+    const goalLabel = `${scenario.block_source_key} goal at sort_order ${attestedGoal.sort_order}`;
+    assert.equal(liveGoal.rubric_goals.goal_type, attestedGoal.goal_type, `${goalLabel} goal_type has not drifted`);
+    assert.equal(liveGoal.rubric_goals.knowledge_subtype, attestedGoal.knowledge_subtype, `${goalLabel} knowledge_subtype has not drifted`);
+    assert.equal(liveGoal.rubric_goals.score_min, attestedGoal.score_min, `${goalLabel} score_min has not drifted`);
+    assert.equal(liveGoal.rubric_goals.score_max, attestedGoal.score_max, `${goalLabel} score_max has not drifted`);
+    assert.equal(liveGoal.rubric_goals.anchor_min, attestedGoal.anchor_min, `${goalLabel} anchor_min has not drifted`);
+    assert.equal(liveGoal.rubric_goals.anchor_max, attestedGoal.anchor_max, `${goalLabel} anchor_max has not drifted`);
+    assert.deepEqual(liveGoal.rubric_goals.anchors_mid, attestedGoal.anchors_mid, `${goalLabel} anchors_mid has not drifted`);
+    assert.equal(liveGoal.rubric_goals.achieved_definition, attestedGoal.achieved_definition, `${goalLabel} achieved_definition has not drifted`);
+    assert.equal(liveGoal.rubric_goals.missed_definition, attestedGoal.missed_definition, `${goalLabel} missed_definition has not drifted`);
+    assert.equal(
+      sha256Hex(liveGoal.rubric_goals.member_facing_description, `${goalLabel} member_facing_description`),
+      attestedGoal.member_facing_description_sha256,
+      `${goalLabel} member-facing definition has not drifted`,
+    );
+    assert.equal(
+      sha256Hex(liveGoal.rubric_goals.ai_explanation, `${goalLabel} ai_explanation`),
+      attestedGoal.ai_explanation_sha256,
+      `${goalLabel} ai_explanation has not drifted -- this is what the grader scores the learner against`,
+    );
+
+    // Round-6 review, finding 5: the supporting documents by identity and
+    // CONTENT, not by count. Swapping a document's bytes, repointing it at
+    // another object, or replacing the row entirely all leave the count at 1.
+    const liveDocuments = [...(liveGoal.rubric_goals.rubric_goal_documents ?? [])].sort(
+      (left, right) => (left.id < right.id ? -1 : left.id > right.id ? 1 : 0),
+    );
+    const attestedDocuments = [...attestedGoal.documents].sort(
+      (left, right) => (left.id < right.id ? -1 : left.id > right.id ? 1 : 0),
+    );
+    assert.equal(liveDocuments.length, attestedGoal.document_count, `${goalLabel} document count matches`);
+    assert.equal(liveDocuments.length, attestedDocuments.length, `${goalLabel} document count matches the pinned list`);
+    assert.ok(liveDocuments.length >= 1, `${goalLabel} has at least one supporting document`);
+    for (let documentIndex = 0; documentIndex < attestedDocuments.length; documentIndex += 1) {
+      const liveDocument = liveDocuments[documentIndex];
+      const attestedDocument = attestedDocuments[documentIndex];
+      assert.equal(liveDocument.id, attestedDocument.id, `${goalLabel} document identity matches`);
+      assert.equal(liveDocument.storage_path, attestedDocument.storage_path, `${goalLabel} document storage_path matches`);
+      assert.equal(liveDocument.display_name, attestedDocument.display_name, `${goalLabel} document display_name matches`);
+      assert.equal(liveDocument.mime_type, attestedDocument.mime_type, `${goalLabel} document mime_type matches`);
+      assert.equal(Number(liveDocument.size_bytes), attestedDocument.size_bytes, `${goalLabel} document size_bytes matches`);
+      assert.equal(Number(liveDocument.token_count), attestedDocument.token_count, `${goalLabel} document token_count matches`);
+      assert.equal(
+        liveDocument.content_sha256,
+        attestedDocument.content_sha256,
+        `${goalLabel} document CONTENT hash matches -- the bytes the grader reads have not been rewritten underneath this attestation`,
+      );
+    }
+  }
+
+  const liveWeightSum = row.role_play_goals.reduce((sum, link) => sum + Number(link.weight), 0);
+  assert.equal(liveWeightSum, 100, `${scenario.block_source_key} live goal weights still sum to 100`);
+}
+
 // A protected, opt-in live recheck: mirrors the frozen 6-scenario chain's
 // BMH_INSTITUTE_ALLOW_LIVE_CLOSER_LAB_VERIFICATION pattern in
 // import-semantic-gate.mjs, but scoped to this attestation instead of the
@@ -159,17 +461,21 @@ test("each scenario's block_id, source_key, and scenario_id are bound TOGETHER i
 // credentials are present, so this never turns into a live production call
 // inside routine CI. DISCLOSED LIMITATION: the PostgREST embed query below
 // (role_plays -> persona, role_play_goals -> rubric_goals ->
-// rubric_goal_documents(count)) was verified column-by-column and FK-by-FK
-// against the live information_schema (read-only, via Supabase MCP
-// execute_sql, 2026-07-28), and the same 3 role_play/persona/goal rows this
-// query targets were independently confirmed live and matching this
-// attestation via direct SQL in that same session -- but the REST embed
-// call itself, through this exact fetch() path with a real service-role
-// bearer token, has NOT been executed end-to-end because no
-// CLOSER_LAB_PRODUCTION_SERVICE_ROLE_KEY was available in this session. Run
-// it for real, once, immediately before the migration is actually applied
-// to production (see the migration's header comment), and fix forward if
-// the exact embed shape needs adjustment, with:
+// rubric_goal_documents) was verified column-by-column and FK-by-FK against
+// the live information_schema (read-only, via Supabase MCP execute_sql), and
+// every value it compares was read directly out of the live closer-lab
+// project in that same way when round-6 review finding 5 widened this query
+// and the attestation together -- after the full 12-scenario oral-check
+// catalog had been applied to Closer Lab production, so the pins describe
+// the state that is actually live. What has NOT been exercised end-to-end is
+// the REST embed call itself, through this exact fetch() path with a real
+// service-role bearer token, because no CLOSER_LAB_PRODUCTION_SERVICE_ROLE_KEY
+// has been available in any session so far. The widened select asks for more
+// columns and returns rubric_goal_documents as rows rather than a count, so
+// if the embed shape needs adjustment that will surface on the first
+// credentialed run. Run it for real, once, immediately before the migration
+// is actually applied to production (see the migration's header comment),
+// and fix forward if needed, with:
 //   BMH_INSTITUTE_ALLOW_LIVE_CLOSER_LAB_VERIFICATION=1 \
 //   CLOSER_LAB_PRODUCTION_SUPABASE_URL=https://xqrkugdxpwhjscrheuqo.supabase.co \
 //   CLOSER_LAB_PRODUCTION_SERVICE_ROLE_KEY=... \
@@ -193,8 +499,13 @@ test("live recheck: the attested role_play/persona/goal data still matches produ
   const canonicalUrl = assertCloserProductionUrl(url);
   const attestation = await loadAttestation();
   const ids = attestation.scenarios.map((scenario) => scenario.role_play_id);
+  // Round-6 review, finding 5 widened this select. It used to stop at
+  // identity, ordering, weights, and rubric_goal_documents(count). It now
+  // pulls every runtime-relevant field so the comparison below can prove the
+  // live conversation and scoring basis, not just that something with the
+  // right IDs and the right number of attachments still exists.
   const endpoint = new URL(
-    `/rest/v1/role_plays?id=in.(${ids.join(",")})&select=id,title,archived_at,managed_source_key,persona:personas(id,name,voice_id,archived_at,managed_source_key),role_play_goals(sort_order,weight,rubric_goals(id,name,archived_at,rubric_goal_documents(count)))`,
+    `/rest/v1/role_plays?id=in.(${ids.join(",")})&select=id,title,archived_at,managed_source_key,type_tag,max_turns,allow_anonymous,call_duration_seconds,scoring_frame,description,pre_read,talking_points,persona:personas(id,name,voice_id,archived_at,managed_source_key,role,avatar_url,system_prompt,opener,demeanor),role_play_goals(sort_order,weight,rubric_goals(id,name,archived_at,goal_type,knowledge_subtype,score_min,score_max,anchor_min,anchor_max,anchors_mid,achieved_definition,missed_definition,member_facing_description,ai_explanation,rubric_goal_documents(id,storage_path,display_name,mime_type,size_bytes,token_count,content_sha256)))`,
     canonicalUrl,
   );
   const response = await fetch(endpoint, {
@@ -213,52 +524,202 @@ test("live recheck: the attested role_play/persona/goal data still matches produ
 
   assert.equal(liveById.size, 3, "live query returned all 3 attested role_plays");
   for (const scenario of attestation.scenarios) {
-    const row = liveById.get(scenario.role_play_id);
-    assert.ok(row, `${scenario.block_source_key} scenario_id ${scenario.role_play_id} still exists in production`);
-    assert.equal(row.archived_at, null, `${scenario.block_source_key} is still not archived`);
-    assert.equal(row.managed_source_key, scenario.role_play_managed_source_key);
-    // Round-3 review (finding 2) caught that this test used to stop at
-    // counts and totals: it never compared the role-play TITLE, the
-    // PERSONA IDENTITY, or each individual goal's id/name/order/weight
-    // against the checked-in attestation. Four different active goals that
-    // happen to also total weight 100 would have passed this test cleanly
-    // while learners were actually scored against the wrong rubric
-    // entirely. Every field below is now deep-compared against the exact
-    // checked-in attestation, not just shape/count/sum.
-    assert.equal(row.title, scenario.title, `${scenario.block_source_key} role_play title matches the attested title exactly`);
-    assert.equal(row.persona.id, scenario.persona_id, `${scenario.block_source_key} persona id matches the attested persona identity`);
-    assert.equal(row.persona.name, scenario.persona_name, `${scenario.block_source_key} persona name matches the attested persona identity`);
-    assert.equal(row.persona.voice_id, scenario.voice_id, `${scenario.block_source_key} voice_id has not drifted`);
-    assert.equal(row.persona.archived_at, null, `${scenario.block_source_key} persona is still not archived`);
-    assert.equal(row.persona.managed_source_key, scenario.persona_managed_source_key);
-    assert.equal(row.role_play_goals.length, 4, `${scenario.block_source_key} has exactly 4 live goal links`);
-    assert.equal(scenario.rubric_goals.length, 4, `${scenario.block_source_key} has exactly 4 attested goal links`);
-
-    const liveSortOrders = row.role_play_goals.map((link) => link.sort_order).slice().sort((left, right) => left - right);
-    assert.deepEqual(liveSortOrders, [0, 1, 2, 3], `${scenario.block_source_key} live goal links have exactly sort_order 0-3, no duplicates or gaps`);
-    const attestedSortOrders = scenario.rubric_goals.map((goal) => goal.sort_order).slice().sort((left, right) => left - right);
-    assert.deepEqual(attestedSortOrders, [0, 1, 2, 3], `${scenario.block_source_key} attested goals have exactly sort_order 0-3, no duplicates or gaps`);
-
-    const liveGoalsBySortOrder = [...row.role_play_goals].sort((left, right) => left.sort_order - right.sort_order);
-    const attestedGoalsBySortOrder = [...scenario.rubric_goals].sort((left, right) => left.sort_order - right.sort_order);
-    for (let index = 0; index < attestedGoalsBySortOrder.length; index += 1) {
-      const liveGoal = liveGoalsBySortOrder[index];
-      const attestedGoal = attestedGoalsBySortOrder[index];
-      // Binds id, name, order, individual weight, and document count
-      // together for the goal AT THIS EXACT rubric position -- a swapped or
-      // substituted rubric (same 4 weights summing to 100, wrong goals)
-      // fails here even though total-weight and count checks alone would
-      // not catch it.
-      assert.equal(liveGoal.rubric_goals.id, attestedGoal.id, `${scenario.block_source_key} goal at sort_order ${attestedGoal.sort_order} id matches`);
-      assert.equal(liveGoal.rubric_goals.name, attestedGoal.name, `${scenario.block_source_key} goal at sort_order ${attestedGoal.sort_order} name matches`);
-      assert.equal(Number(liveGoal.weight), attestedGoal.weight, `${scenario.block_source_key} goal at sort_order ${attestedGoal.sort_order} individual weight matches`);
-      assert.equal(liveGoal.rubric_goals.archived_at, null, `${scenario.block_source_key} goal at sort_order ${attestedGoal.sort_order} is not archived`);
-      const liveDocumentCount = Number(liveGoal.rubric_goals.rubric_goal_documents?.[0]?.count ?? 0);
-      assert.equal(liveDocumentCount, attestedGoal.document_count, `${scenario.block_source_key} goal at sort_order ${attestedGoal.sort_order} document_count matches`);
-      assert.ok(liveDocumentCount >= 1, `${scenario.block_source_key} goal at sort_order ${attestedGoal.sort_order} has at least one supporting document`);
-    }
-
-    const liveWeightSum = row.role_play_goals.reduce((sum, link) => sum + Number(link.weight), 0);
-    assert.equal(liveWeightSum, 100, `${scenario.block_source_key} live goal weights still sum to 100`);
+    assertLiveRowMatchesAttestedScenario(liveById.get(scenario.role_play_id), scenario);
   }
+});
+
+// Round-6 Codex review, finding 5, the part that is easy to get wrong: it is
+// not enough to widen the live query and the attestation. The comparison has
+// to actually FAIL when the material drifts, and the only place that could
+// previously have been demonstrated is a credentialed production run, which
+// has never happened. This builds a self-consistent synthetic attestation and
+// a matching synthetic live row, confirms they compare clean, then mutates one
+// runtime-relevant field at a time and requires every single mutation to be
+// caught by the exact same comparison the live recheck runs.
+//
+// Every mutation listed here is one that the pre-round-6 comparison would have
+// waved through: identity, ordering, individual weights, and document counts
+// are all left untouched by design.
+function buildSyntheticPair() {
+  const text = (value) => value;
+  const hash = (value) => createHash("sha256").update(value, "utf8").digest("hex");
+  const goalSpecs = [
+    { id: "11111111-1111-4111-8111-111111111111", weight: 40, sortOrder: 0 },
+    { id: "22222222-2222-4222-8222-222222222222", weight: 30, sortOrder: 1 },
+    { id: "33333333-3333-4333-8333-333333333333", weight: 20, sortOrder: 2 },
+    { id: "44444444-4444-4444-8444-444444444444", weight: 10, sortOrder: 3 },
+  ];
+  const description = text("A synthetic oral check.");
+  const preRead = text("Watch the lesson first.");
+  const systemPrompt = text("You are Andrea. Ask about the lesson.");
+  const opener = text("Hey, let's talk it through.");
+  const demeanor = text("WARM, ENCOURAGING");
+  const talkingPoints = ["Andrea asks the first thing.", "Andrea asks the second thing."];
+
+  const scenario = {
+    block_source_key: "block-oral-check-synthetic",
+    role_play_id: "55555555-5555-4555-8555-555555555555",
+    role_play_managed_source_key: "synthetic:role-play:one",
+    title: "Synthetic Oral Check",
+    persona_id: "66666666-6666-4666-8666-666666666666",
+    persona_name: "Andrea",
+    persona_managed_source_key: "synthetic:persona:one",
+    voice_id: "c7VyuzKrx3xIuZs8QT0P",
+    role_play_runtime: {
+      type_tag: "Synthetic · Oral Check",
+      max_turns: 12,
+      allow_anonymous: true,
+      call_duration_seconds: null,
+      scoring_frame: "knowledge_check",
+      description_sha256: hash(description),
+      pre_read_sha256: hash(preRead),
+      talking_points: [...talkingPoints],
+    },
+    persona_runtime: {
+      role: "BMH Institute learning coach",
+      avatar_url: "/personas/library/avatar-09-south-asian-woman-young.jpg",
+      system_prompt_sha256: hash(systemPrompt),
+      opener_sha256: hash(opener),
+      demeanor_sha256: hash(demeanor),
+    },
+    rubric_goals: goalSpecs.map((spec) => ({
+      id: spec.id,
+      name: `Synthetic goal ${spec.sortOrder}`,
+      weight: spec.weight,
+      sort_order: spec.sortOrder,
+      document_count: 1,
+      goal_type: "knowledge",
+      knowledge_subtype: "other",
+      score_min: null,
+      score_max: null,
+      anchor_min: null,
+      anchor_max: null,
+      anchors_mid: [],
+      achieved_definition: null,
+      missed_definition: null,
+      member_facing_description_sha256: hash(`member facing ${spec.sortOrder}`),
+      ai_explanation_sha256: hash(`ai explanation ${spec.sortOrder}`),
+      documents: [
+        {
+          id: `7777777${spec.sortOrder}-7777-4777-8777-777777777777`,
+          storage_path: `rubric-docs/synthetic/doc-${spec.sortOrder}.md`,
+          display_name: `Synthetic doc ${spec.sortOrder}`,
+          mime_type: "text/markdown",
+          size_bytes: 100 + spec.sortOrder,
+          token_count: 20 + spec.sortOrder,
+          content_sha256: hash(`document body ${spec.sortOrder}`),
+        },
+      ],
+    })),
+  };
+
+  const row = {
+    id: scenario.role_play_id,
+    title: scenario.title,
+    archived_at: null,
+    managed_source_key: scenario.role_play_managed_source_key,
+    type_tag: scenario.role_play_runtime.type_tag,
+    max_turns: scenario.role_play_runtime.max_turns,
+    allow_anonymous: scenario.role_play_runtime.allow_anonymous,
+    call_duration_seconds: null,
+    scoring_frame: scenario.role_play_runtime.scoring_frame,
+    description,
+    pre_read: preRead,
+    talking_points: [...talkingPoints],
+    persona: {
+      id: scenario.persona_id,
+      name: scenario.persona_name,
+      voice_id: scenario.voice_id,
+      archived_at: null,
+      managed_source_key: scenario.persona_managed_source_key,
+      role: scenario.persona_runtime.role,
+      avatar_url: scenario.persona_runtime.avatar_url,
+      system_prompt: systemPrompt,
+      opener,
+      demeanor,
+    },
+    role_play_goals: goalSpecs.map((spec) => ({
+      sort_order: spec.sortOrder,
+      weight: spec.weight,
+      rubric_goals: {
+        id: spec.id,
+        name: `Synthetic goal ${spec.sortOrder}`,
+        archived_at: null,
+        goal_type: "knowledge",
+        knowledge_subtype: "other",
+        score_min: null,
+        score_max: null,
+        anchor_min: null,
+        anchor_max: null,
+        anchors_mid: [],
+        achieved_definition: null,
+        missed_definition: null,
+        member_facing_description: `member facing ${spec.sortOrder}`,
+        ai_explanation: `ai explanation ${spec.sortOrder}`,
+        rubric_goal_documents: [
+          {
+            id: `7777777${spec.sortOrder}-7777-4777-8777-777777777777`,
+            storage_path: `rubric-docs/synthetic/doc-${spec.sortOrder}.md`,
+            display_name: `Synthetic doc ${spec.sortOrder}`,
+            mime_type: "text/markdown",
+            size_bytes: 100 + spec.sortOrder,
+            token_count: 20 + spec.sortOrder,
+            content_sha256: hash(`document body ${spec.sortOrder}`),
+          },
+        ],
+      },
+    })),
+  };
+
+  return { scenario, row };
+}
+
+test("the live comparison actually detects drift in conversation and scoring material", () => {
+  const control = buildSyntheticPair();
+  assert.doesNotThrow(
+    () => assertLiveRowMatchesAttestedScenario(control.row, control.scenario),
+    "a live row that matches the attestation compares clean",
+  );
+
+  const mutations = [
+    ["persona system prompt rewritten", (row) => { row.persona.system_prompt += " Also ask about pricing."; }],
+    ["persona opener rewritten", (row) => { row.persona.opener = "Different opener."; }],
+    ["persona demeanor changed", (row) => { row.persona.demeanor = "BLUNT"; }],
+    ["persona role changed", (row) => { row.persona.role = "Sales coach"; }],
+    ["persona avatar swapped", (row) => { row.persona.avatar_url = "/personas/library/other.jpg"; }],
+    ["role_play description rewritten", (row) => { row.description = "Something else entirely."; }],
+    ["learner pre_read rewritten", (row) => { row.pre_read = "Read nothing."; }],
+    ["a talking point rewritten", (row) => { row.talking_points[0] = "Andrea asks something else."; }],
+    ["a talking point removed", (row) => { row.talking_points.pop(); }],
+    ["talking points reordered", (row) => { row.talking_points.reverse(); }],
+    ["max_turns widened", (row) => { row.max_turns = 40; }],
+    ["type_tag changed", (row) => { row.type_tag = "Synthetic · Something Else"; }],
+    ["scoring_frame changed", (row) => { row.scoring_frame = "sales_call"; }],
+    ["allow_anonymous flipped", (row) => { row.allow_anonymous = false; }],
+    ["call_duration_seconds set", (row) => { row.call_duration_seconds = 600; }],
+    ["goal ai_explanation rewritten", (row) => { row.role_play_goals[0].rubric_goals.ai_explanation = "Score them generously."; }],
+    ["goal member-facing definition rewritten", (row) => { row.role_play_goals[1].rubric_goals.member_facing_description = "Anything goes."; }],
+    ["goal_type changed", (row) => { row.role_play_goals[0].rubric_goals.goal_type = "skill"; }],
+    ["knowledge_subtype changed", (row) => { row.role_play_goals[0].rubric_goals.knowledge_subtype = "terminology"; }],
+    ["score bounds introduced", (row) => { row.role_play_goals[0].rubric_goals.score_max = 5; }],
+    ["achieved_definition introduced", (row) => { row.role_play_goals[2].rubric_goals.achieved_definition = "Say anything."; }],
+    ["anchors_mid populated", (row) => { row.role_play_goals[0].rubric_goals.anchors_mid = [{ score: 3, label: "ok" }]; }],
+    ["document content rewritten", (row) => { row.role_play_goals[0].rubric_goals.rubric_goal_documents[0].content_sha256 = "0".repeat(64); }],
+    ["document repointed at another object", (row) => { row.role_play_goals[0].rubric_goals.rubric_goal_documents[0].storage_path = "rubric-docs/synthetic/other.md"; }],
+    ["document row replaced", (row) => { row.role_play_goals[0].rubric_goals.rubric_goal_documents[0].id = "88888888-8888-4888-8888-888888888888"; }],
+    ["document display name changed", (row) => { row.role_play_goals[0].rubric_goals.rubric_goal_documents[0].display_name = "Renamed"; }],
+    ["document truncated", (row) => { row.role_play_goals[0].rubric_goals.rubric_goal_documents[0].size_bytes = 1; }],
+    ["a required text field emptied", (row) => { row.persona.system_prompt = null; }],
+  ];
+
+  for (const [label, mutate] of mutations) {
+    const { scenario, row } = buildSyntheticPair();
+    mutate(row);
+    assert.throws(
+      () => assertLiveRowMatchesAttestedScenario(row, scenario),
+      `the live comparison must reject: ${label}`,
+    );
+  }
+
+  assert.ok(mutations.length >= 25, "the drift matrix stays broad");
 });

@@ -408,19 +408,41 @@ Before applying any of the three:
    ```
 
    This is not optional and not a formality: it deep-compares the live
-   Closer Lab `role_plays` → `personas` → `role_play_goals` → `rubric_goals`
-   → `rubric_goal_documents` graph against the checked-in attestation
+   Closer Lab `role_plays` to `personas` to `role_play_goals` to
+   `rubric_goals` to `rubric_goal_documents` graph against the checked-in
+   attestation
    (`docs/course-production/oral-check-pilot-production-attestation.json`),
-   field-for-field — role-play title, persona identity, and each individual
-   rubric goal's id/name/order/weight/document count, not just totals and
-   counts. Round-3 Codex review of PR #130 found the pre-fix version of this
-   test would pass cleanly even if the 4 attached goals for a scenario had
-   been silently swapped for 4 different goals that happened to also sum to
-   weight 100 — learners would be scored against the wrong rubric with a
-   fully "green" test. It only runs opt-in, credentialed, and is otherwise
-   skipped in normal CI. If it fails, stop — do not apply the migration
-   until the attestation is reconciled with the live state or the mismatch
-   is understood and fixed forward.
+   field for field. Round-3 Codex review of PR #130 found the version of
+   this test at the time would pass cleanly even if the 4 attached goals for
+   a scenario had been silently swapped for 4 different goals that happened
+   to also sum to weight 100, so learners would be scored against the wrong
+   rubric with a fully green test. That fix added role-play title, persona
+   identity, and each goal's id, name, order, individual weight, and
+   document count.
+
+   Round-6 review then found that even those checks only covered identity,
+   ordering, weights, and counts. Everything that actually decides what
+   Andrea says and how a learner is graded could still change underneath a
+   green run. The attestation and the live query now also pin, for all 3
+   scenarios: the persona `system_prompt`, `opener`, `demeanor`, `role`, and
+   `avatar_url`; the role-play `description`, `pre_read`, `talking_points`,
+   `type_tag`, `max_turns`, `allow_anonymous`, `call_duration_seconds`, and
+   `scoring_frame`; each rubric goal's `goal_type`, `knowledge_subtype`,
+   score bounds, anchors, `achieved_definition`, `missed_definition`,
+   `member_facing_description`, and `ai_explanation`; and every supporting
+   document's id, `storage_path`, `display_name`, `mime_type`, `size_bytes`,
+   `token_count`, and `content_sha256`. Long free text is pinned by SHA-256
+   so the evidence file stays readable while still catching a single changed
+   character. The pins were taken from live Closer Lab production after the
+   full 12-scenario oral-check catalog was applied.
+
+   It only runs opt-in, credentialed, and is otherwise skipped in normal CI.
+   The drift detection itself is proved in normal CI by a companion mutation
+   test in the same file, which runs the exact same comparison against a
+   synthetic payload and requires 28 separate single-field mutations to be
+   caught. If the live recheck fails, stop. Do not apply the migration until
+   the attestation is reconciled with the live state or the mismatch is
+   understood and fixed forward.
 3. **Target preflight (do this before every apply, not just the first
    time):** prove the connection is genuinely the Institute production
    project (`dhvfsyteqsxagokoerrx`) before running anything. Run this against
