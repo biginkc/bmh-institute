@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { execFileSync, spawn } from "node:child_process";
+import { readFileSync } from "node:fs";
 import { mkdtemp, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
@@ -428,6 +429,7 @@ try {
     end;
     $$;
   `);
+  await runOralCheckPilotChecksumTableContentionTest();
   await runOralCheckPilotRollbackLockTimeoutTest();
   console.log(
     JSON.stringify({
@@ -790,6 +792,173 @@ function exec(command, args, extraEnv = {}) {
     env: { ...pgEnv, ...extraEnv },
     stdio: "pipe",
   });
+}
+
+// Round-6 Codex review, finding 3: fn_insert_oral_check_pilot_role_play_blocks()
+// computes prior_catalog_sha256 and replacement_catalog_sha256 through
+// fn_course_import_catalog_sha256, which reads the whole managed import graph,
+// but it used to lock only the tables it writes. At READ COMMITTED the two
+// hash statements can therefore see different committed snapshots: a
+// concurrent edit to an unlocked quiz, question, or answer option gets
+// absorbed into the replacement receipt, and deleting the 3 blocks later can
+// no longer reproduce the recorded prior hash, so the prepared rollback aborts
+// permanently. The lock set is now widened to cover every table the checksum
+// reads. The reviewer's exact point about the previous coverage was that the
+// existing contention test exercises only content_blocks and so cannot detect
+// this race at all.
+//
+// This proves the widened lock set for real, with two genuinely concurrent
+// connections. The lock list is PARSED OUT OF THE MIGRATION rather than
+// hand-copied here, which is the whole point: narrowing the real lock set
+// makes this test fail immediately instead of silently reintroducing the race.
+// One connection holds exactly the migration's own lock set; a second
+// connection then issues a real write statement against public.questions,
+// which is one of the tables that used to be unlocked, and must be refused
+// with a lock timeout rather than committing underneath the hash computation.
+// A negative control writes to a table that is neither locked nor read by the
+// checksum and must succeed, so a pass here means locking, not a test that
+// times out on everything.
+function forwardCatalogLockTableList() {
+  const sql = readFileSync(
+    resolve(
+      root,
+      "supabase/migrations/20260728020000_insert_oral_check_pilot_role_play_blocks.sql",
+    ),
+    "utf8",
+  );
+  const functionStart = sql.indexOf(
+    "create or replace function public.fn_insert_oral_check_pilot_role_play_blocks()",
+  );
+  if (functionStart === -1) {
+    throw new Error(
+      "checksum contention test: could not find fn_insert_oral_check_pilot_role_play_blocks in the migration",
+    );
+  }
+  const lockStart = sql.indexOf("lock table", functionStart);
+  const lockEnd = sql.indexOf("in share row exclusive mode;", lockStart);
+  if (lockStart === -1 || lockEnd === -1 || lockEnd <= lockStart) {
+    throw new Error(
+      "checksum contention test: could not bound the migration's lock table statement",
+    );
+  }
+  const tables = sql
+    .slice(lockStart + "lock table".length, lockEnd)
+    .split(",")
+    .map((entry) => entry.trim())
+    .filter((entry) => entry.length > 0);
+  for (const table of tables) {
+    if (!/^public\.[a-z_]+$/.test(table)) {
+      throw new Error(
+        `checksum contention test: unexpected entry in the migration's lock list: ${table}`,
+      );
+    }
+  }
+  return tables;
+}
+
+async function runOralCheckPilotChecksumTableContentionTest() {
+  const lockedTables = forwardCatalogLockTableList();
+  // The reviewer's own examples of tables the checksum reads but the forward
+  // operation used to leave unlocked. If a later edit drops any of these from
+  // the lock set, fail here rather than shipping the race.
+  for (const required of [
+    "public.quizzes",
+    "public.questions",
+    "public.answer_options",
+    "public.assignments",
+    "public.program_courses",
+    "public.program_access",
+    "public.course_access",
+    "public.role_groups",
+  ]) {
+    if (!lockedTables.includes(required)) {
+      throw new Error(
+        `checksum contention: ${required} is read by fn_course_import_catalog_sha256 but is missing from the forward migration's lock set (${lockedTables.join(", ")}). A concurrent edit to it between the two hash reads would corrupt the receipt and strand the prepared rollback.`,
+      );
+    }
+  }
+
+  const holderSql = `
+    begin;
+    lock table ${lockedTables.join(", ")} in share row exclusive mode;
+    select pg_sleep(20);
+    rollback;
+  `;
+  const holder = spawn(binary("psql"), ["-v", "ON_ERROR_STOP=1", "-c", holderSql], {
+    env: pgEnv,
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+  let holderOutput = "";
+  holder.stdout.on("data", (chunk) => { holderOutput += chunk; });
+  holder.stderr.on("data", (chunk) => { holderOutput += chunk; });
+  const holderExit = new Promise((resolveHolder, rejectHolder) => {
+    holder.on("exit", (code) => {
+      if (code !== 0) {
+        rejectHolder(
+          new Error(`checksum contention: lock holder failed (exit ${code}):\n${holderOutput}`),
+        );
+      } else {
+        resolveHolder();
+      }
+    });
+    holder.on("error", rejectHolder);
+  });
+
+  // Let the holder actually acquire the locks before the writers start.
+  await new Promise((resolveWait) => setTimeout(resolveWait, 3000));
+
+  // A real write statement, not a bare LOCK: an UPDATE takes ROW EXCLUSIVE on
+  // the table, which is exactly what a concurrent quiz edit would take, and it
+  // conflicts with the SHARE ROW EXCLUSIVE the migration now holds. It matches
+  // zero rows on purpose, so this needs no fixture and leaves nothing behind.
+  const blockedStart = Date.now();
+  let blockedFailed = false;
+  let blockedOutput = "";
+  try {
+    blockedOutput = exec(binary("psql"), [
+      "-v",
+      "ON_ERROR_STOP=1",
+      "-c",
+      "set lock_timeout = '5s'; update public.questions set points = points;",
+    ]).toString();
+  } catch (error) {
+    blockedFailed = true;
+    blockedOutput = `${error.stdout?.toString() ?? ""}${error.stderr?.toString() ?? ""}`;
+  }
+  const blockedElapsedMs = Date.now() - blockedStart;
+
+  if (!blockedFailed) {
+    await holderExit.catch(() => {});
+    throw new Error(
+      `checksum contention: a concurrent write to public.questions committed while the forward operation's lock set was held (elapsed ${blockedElapsedMs}ms). The catalog checksum reads that table, so this edit could land between the prior and replacement hashes and corrupt the receipt. Output:\n${blockedOutput}`,
+    );
+  }
+  if (!blockedOutput.includes("55P03") && !/lock timeout/i.test(blockedOutput)) {
+    await holderExit.catch(() => {});
+    throw new Error(
+      `checksum contention: the concurrent write to public.questions failed, but not with the expected lock_timeout. Output:\n${blockedOutput}`,
+    );
+  }
+
+  // Negative control: public.profiles is neither locked by the migration nor
+  // read by fn_course_import_catalog_sha256, so the identical statement shape
+  // must succeed immediately while the same locks are still held. Without
+  // this, a harness that simply timed out on every statement would pass the
+  // check above for the wrong reason.
+  const controlStart = Date.now();
+  exec(binary("psql"), [
+    "-v",
+    "ON_ERROR_STOP=1",
+    "-c",
+    "set lock_timeout = '5s'; update public.profiles set status = status;",
+  ]);
+  const controlElapsedMs = Date.now() - controlStart;
+
+  await holderExit;
+
+  console.log(
+    `Oral-check pilot checksum-table contention test passed: a real write to public.questions was refused after ${blockedElapsedMs}ms with a lock_timeout while the forward operation's ${lockedTables.length}-table lock set was held, and the unlocked-table control committed in ${controlElapsedMs}ms.`,
+  );
 }
 
 // Round-5 Codex review, finding 3: fn_rollback_oral_check_pilot_role_play_blocks()
