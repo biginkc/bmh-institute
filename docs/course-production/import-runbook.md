@@ -366,7 +366,24 @@ never apply these out of order or skip one):
    step 2 having already committed, it refuses outright (SQLSTATE 55000)
    rather than inserting the 3 blocks with no rollback path prepared — this
    is what makes the deployment order self-enforcing at the SQL level, not
-   just a runbook convention.
+   just a runbook convention. It also FAILS CLOSED (SQLSTATE 55000) if no
+   published release record exists for `bmh-employee-training-v1` at all —
+   round-5 review caught that the original design silently no-op-succeeded
+   in that case, which would let a wrong deploy target, an incomplete
+   restore, or a catalog reloaded after migration replay all produce a
+   green `supabase db push` while the pilot silently never applied. There
+   is no legitimate case where this specific migration, applied to the
+   genuine Institute production target, should find the release missing —
+   see step 3a below.
+
+   Round-5 review also moved the SAME rollback-capability assertion INSIDE
+   `fn_insert_oral_check_pilot_role_play_blocks()` itself (in
+   `20260728020000`) and deferred that function's `EXECUTE` grant to
+   `service_role` until `20260728030000` installs the rollback capability.
+   This means the ordering guarantee no longer depends solely on this
+   wrapper migration — a direct RPC or raw SQL call to the insertion
+   function is refused the same way, and until `20260728030000` commits, no
+   role can call it at all.
 
 Before applying any of the three:
 
@@ -398,13 +415,60 @@ Before applying any of the three:
    skipped in normal CI. If it fails, stop — do not apply the migration
    until the attestation is reconciled with the live state or the mismatch
    is understood and fixed forward.
-3. Apply the 3 migrations to production in numeric order (`20260728020000`,
+3. **Target preflight (do this before every apply, not just the first
+   time):** confirm the connection is genuinely the Institute production
+   project (`dhvfsyteqsxagokoerrx`) before running anything — a SQL
+   migration has no way to verify which Supabase project it is talking to,
+   that is purely an operator/CLI fact:
+
+   ```bash
+   supabase status  # or inspect SUPABASE_DB_URL / --db-url directly
+   ```
+
+   Then confirm the release this migration set targets actually exists on
+   that project:
+
+   ```sql
+   select import_id, program_id from public.content_import_release_records
+   where import_id = 'bmh-employee-training-v1';
+   ```
+
+   If that query returns no row, STOP. Do not proceed to step 3a — the
+   target is wrong, the restore is incomplete, or the catalog has not been
+   released yet. `20260728050000` will also refuse on its own (SQLSTATE
+   55000, fail-closed per round-5 review), but do not rely on that alone —
+   confirm before spending a `supabase db push` cycle finding out.
+3a. Apply the 3 migrations to production in numeric order (`20260728020000`,
    then `20260728030000`, then `20260728050000`) — this is the normal
    `supabase db push` behavior since they sort in that order by filename,
    but if applying by hand, do not reorder them. The actual insertion
    (in `20260728050000`) is atomic, hash-pinned CAS against the exact
    expected prior catalog state, and refuses a second invocation
    (SQLSTATE 40001).
+3b. **Receipt and block postflight (do this immediately after `20260728050000`
+   commits):** confirm the exact evidence row and the exact 3 rows exist,
+   not just that `supabase db push` reported success:
+
+   ```sql
+   select import_id, prior_catalog_sha256, replacement_catalog_sha256,
+     database_payload_sha256, role_play_insert_count
+   from public.content_import_oral_check_pilot_role_play_records
+   where import_id = 'bmh-employee-training-v1';
+   -- expect exactly 1 row, role_play_insert_count = 3
+
+   select id, lesson_id, block_type, sort_order, is_required_for_completion
+   from public.content_blocks
+   where id in (
+     '7300bba9-a9fc-582c-aa20-dd5d58754165',
+     '4464ecdd-2650-59ed-a525-78871e846d20',
+     '34758403-1ddd-5e3c-a054-b2f28310d8b8'
+   )
+   order by id;
+   -- expect exactly 3 rows, block_type = 'role_play', is_required_for_completion = true
+   ```
+
+   A green migration run alone is not sufficient confirmation for this
+   change — verify the receipt and the 3 rows directly, every time.
 4. If a rollback becomes necessary after `20260728050000` has committed, the
    forward-rollback capability installed by `20260728030000` is already in
    place, ready but never auto-invoked:
@@ -417,8 +481,21 @@ Before applying any of the three:
    service-role credentials and run:
 
    ```sql
+   begin;
+   set local lock_timeout = '10s';
    select public.fn_rollback_oral_check_pilot_role_play_blocks();
+   commit;
    ```
+
+   The function itself already sets a `10s` `lock_timeout` for the
+   duration of every call (round-5 review caught that the migration-level
+   `set lock_timeout = '10s'` near the top of
+   `20260728030000_rollback_oral_check_pilot_role_play_blocks.sql` only
+   ever applied to the session that INSTALLED that migration, not to a
+   later incident invocation, which would otherwise wait indefinitely
+   behind a busy writer with Postgres's default `lock_timeout = 0`) — the
+   explicit `BEGIN; SET LOCAL lock_timeout = '10s'; ...; COMMIT;` wrap above
+   is defense in depth on top of that, not a substitute for it.
 
    It pins itself to the forward operation's own immutable evidence row
    (not a second hand-guessed catalog-hash constant), refuses if the live

@@ -249,6 +249,28 @@ begin
       using errcode = '42501';
   end if;
 
+  -- Round-5 Codex review, finding 2: the round-4 ordering fix (splitting
+  -- the self-invoking apply into a later migration that asserts the
+  -- rollback capability exists first) only protected the WRAPPER's own
+  -- invocation path. This function itself was still directly callable --
+  -- by a raw RPC, a direct SQL session, anything holding service_role --
+  -- the instant migration 20260728020000 committed, regardless of whether
+  -- 20260728030000 (the rollback capability) had run yet. That exposed
+  -- call path could still recreate the exact "live insertion, zero
+  -- prepared rollback" incident state the whole 3-migration split exists
+  -- to prevent. The assertion now lives HERE, inside the one function that
+  -- actually mutates the catalog, so every call path -- the apply
+  -- migration's wrapper, a direct RPC, anything -- fails closed the same
+  -- way. (Defense in depth: the EXECUTE grant to service_role for this
+  -- function is also deliberately deferred to 20260728030000, after the
+  -- rollback capability is installed -- see this migration's tail.)
+  if to_regclass('public.content_import_oral_check_pilot_role_play_rollback_records') is null
+    or to_regprocedure('public.fn_rollback_oral_check_pilot_role_play_blocks()') is null
+  then
+    raise exception 'Oral-check pilot role-play insertion refused: the rollback capability (content_import_oral_check_pilot_role_play_rollback_records / fn_rollback_oral_check_pilot_role_play_blocks) is not installed. This function must never mutate the catalog without a prepared rollback path already in place -- see PR #130 round-5 review finding 2.'
+      using errcode = '55000';
+  end if;
+
   -- Genuinely ONE-SHOT: if this has already been performed once (a row
   -- exists in the evidence table for this import), refuse EVERY subsequent
   -- invocation outright -- never re-verify and report success. An earlier
@@ -493,10 +515,18 @@ begin
 end;
 $$;
 
+-- Round-5 review, finding 2 (defense in depth): EXECUTE is revoked from
+-- everyone here, including service_role. It is deliberately NOT granted to
+-- service_role in this migration -- that grant is deferred to
+-- 20260728030000_rollback_oral_check_pilot_role_play_blocks.sql, after the
+-- rollback capability that function's own in-body check now requires has
+-- actually been installed. This function's internal assertion is the
+-- primary fail-closed protection (it fires regardless of who can call it or
+-- when); this deferred grant means that, until the rollback capability
+-- exists, NO role -- not even service_role -- can invoke this function at
+-- all, not just "can invoke it but it refuses."
 revoke all on function public.fn_insert_oral_check_pilot_role_play_blocks()
-from public, anon, authenticated;
-grant execute on function public.fn_insert_oral_check_pilot_role_play_blocks()
-to service_role;
+from public, anon, authenticated, service_role;
 
 -- This migration DELIBERATELY does not self-invoke
 -- fn_insert_oral_check_pilot_role_play_blocks() here (round-4 Codex review,

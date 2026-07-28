@@ -85,6 +85,16 @@ returns jsonb
 language plpgsql
 security definer
 set search_path = ''
+-- Round-5 review, finding 3: the migration-level `set lock_timeout = '10s'`
+-- near the top of this file only applies to the SESSION THAT INSTALLS this
+-- migration -- it has no effect on a later, separate service-role session
+-- that actually invokes this function during a real incident. Postgres's
+-- default lock_timeout is 0 (wait forever), so without a FUNCTION-level
+-- override, a real rollback attempt could hang indefinitely behind a busy
+-- writer while the 3 broken blocks stay live. This SET clause applies for
+-- the duration of every call to this function, in any session, and is
+-- reverted automatically afterward.
+set lock_timeout = '10s'
 as $$
 declare
   v_import_id constant text := 'bmh-employee-training-v1';
@@ -292,6 +302,17 @@ $$;
 revoke all on function public.fn_rollback_oral_check_pilot_role_play_blocks()
 from public, anon, authenticated;
 grant execute on function public.fn_rollback_oral_check_pilot_role_play_blocks()
+to service_role;
+
+-- Round-5 review, finding 2 (defense in depth): fn_insert_oral_check_pilot_role_play_blocks()
+-- (20260728020000) deliberately does NOT grant itself EXECUTE to
+-- service_role -- that grant is issued here instead, now that the
+-- rollback capability that function's own in-body check requires actually
+-- exists. Before this migration commits, NO role can call the insertion
+-- function at all; that function's own internal assertion is still the
+-- primary protection (it fails closed regardless of grants), but this
+-- ordering means the privilege system agrees with it.
+grant execute on function public.fn_insert_oral_check_pilot_role_play_blocks()
 to service_role;
 
 -- Deliberately NOT self-invoked (unlike the forward migration's trailing

@@ -86,4 +86,91 @@ describe("oral-check pilot migration ordering (PR #130 round-4 review, finding 1
       /perform public\.fn_rollback_oral_check_pilot_role_play_blocks\(\)/,
     );
   });
+
+  it("the apply migration fails CLOSED when no release record exists -- no silent no-op success path (round-5 review, finding 1)", () => {
+    const sql = readMigration(APPLY_MIGRATION);
+    // The old design wrapped the invocation in `if exists (select ...
+    // release_records ...) then ... end if;` with no else branch -- a
+    // silent no-op when the release was absent. The fix inverts this to
+    // `if not exists (...) then raise exception ... end if;`, so absence
+    // is now always an error, never a quiet skip.
+    expect(sql).not.toMatch(
+      /if exists \(\s*select 1 from public\.content_import_release_records/,
+    );
+    expect(sql).toMatch(
+      /if not exists \(\s*select 1 from public\.content_import_release_records[\s\S]*raise exception[\s\S]*using errcode = '55000'/,
+    );
+    // The actual invocation must be unconditional after that guard (not
+    // nested inside a second `if exists` block) -- the only thing standing
+    // between "no release" and "invoke" is the raise-and-abort above.
+    const releaseCheckIndex = sql.indexOf(
+      "if not exists (\n    select 1 from public.content_import_release_records",
+    );
+    const insertInvocationIndex = sql.indexOf(
+      "perform public.fn_insert_oral_check_pilot_role_play_blocks();",
+    );
+    expect(releaseCheckIndex).toBeGreaterThan(-1);
+    expect(insertInvocationIndex).toBeGreaterThan(-1);
+    expect(releaseCheckIndex).toBeLessThan(insertInvocationIndex);
+  });
+
+  it("the apply migration is deliberately excluded from the controller-gate harness's blanket migration-application sweep (it would abort every test run otherwise)", () => {
+    const harnessSql = readFileSync(
+      resolve(process.cwd(), "scripts/fixture-boundary/run-controller-gate-pr-harness.mjs"),
+      "utf8",
+    );
+    expect(harnessSql).toMatch(
+      /migration === "20260728050000_apply_oral_check_pilot_role_play_blocks\.sql"/,
+    );
+  });
+
+  it("the insertion function itself (not just the apply wrapper) asserts the rollback capability exists before mutating the catalog -- closes the direct-RPC bypass (round-5 review, finding 2)", () => {
+    const sql = readMigration(INSERT_MIGRATION);
+    const rollbackFunctionCheckIndex = sql.indexOf(
+      "to_regprocedure('public.fn_rollback_oral_check_pilot_role_play_blocks()')",
+    );
+    const rollbackTableCheckIndex = sql.indexOf(
+      "to_regclass('public.content_import_oral_check_pilot_role_play_rollback_records')",
+    );
+    // Must appear inside fn_insert_oral_check_pilot_role_play_blocks()'s own
+    // body -- i.e. after that function's `create or replace function`
+    // header, not merely somewhere in the file (e.g. only in the trigger
+    // guard higher up).
+    const functionHeaderIndex = sql.indexOf(
+      "create or replace function public.fn_insert_oral_check_pilot_role_play_blocks()",
+    );
+    expect(functionHeaderIndex).toBeGreaterThan(-1);
+    expect(rollbackFunctionCheckIndex).toBeGreaterThan(functionHeaderIndex);
+    expect(rollbackTableCheckIndex).toBeGreaterThan(functionHeaderIndex);
+  });
+
+  it("EXECUTE on the insertion function is deliberately NOT granted to service_role until the rollback migration installs it (defense in depth)", () => {
+    const insertSql = readMigration(INSERT_MIGRATION);
+    const rollbackSql = readMigration(ROLLBACK_MIGRATION);
+    expect(insertSql).toMatch(
+      /revoke all on function public\.fn_insert_oral_check_pilot_role_play_blocks\(\)\s*\n\s*from public, anon, authenticated, service_role;/,
+    );
+    expect(insertSql).not.toMatch(
+      /grant execute on function public\.fn_insert_oral_check_pilot_role_play_blocks\(\)/,
+    );
+    expect(rollbackSql).toMatch(
+      /grant execute on function public\.fn_insert_oral_check_pilot_role_play_blocks\(\)\s*\n\s*to service_role;/,
+    );
+  });
+
+  it("the rollback function sets its own function-level lock_timeout -- the migration-level SET only covers the installation session, not a later incident invocation (round-5 review, finding 3)", () => {
+    const sql = readMigration(ROLLBACK_MIGRATION);
+    const functionHeaderIndex = sql.indexOf(
+      "create or replace function public.fn_rollback_oral_check_pilot_role_play_blocks()",
+    );
+    const functionLockTimeoutIndex = sql.indexOf(
+      "set lock_timeout = '10s'",
+      functionHeaderIndex,
+    );
+    const bodyStartIndex = sql.indexOf("as $$", functionHeaderIndex);
+    expect(functionHeaderIndex).toBeGreaterThan(-1);
+    expect(functionLockTimeoutIndex).toBeGreaterThan(functionHeaderIndex);
+    expect(bodyStartIndex).toBeGreaterThan(-1);
+    expect(functionLockTimeoutIndex).toBeLessThan(bodyStartIndex);
+  });
 });

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
 import { mkdtemp, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
@@ -143,6 +143,20 @@ try {
       replayProgressFingerprintMigration(migrationPath);
     } else if (migration === "051_quiz_answer_privacy_snapshots.sql") {
       replayQuizPrivacyMigration(migrationPath);
+    } else if (
+      migration === "20260728050000_apply_oral_check_pilot_role_play_blocks.sql"
+    ) {
+      // Deliberately NOT applied here (round-5 Codex review, finding 1):
+      // this migration now fails CLOSED (raises) when no release record
+      // exists for bmh-employee-training-v1, which every fresh cluster
+      // genuinely lacks at this exact point in a full migration replay.
+      // Applying it here would abort migration application -- and every
+      // other test in this suite -- on every single run. Its real,
+      // unmodified file is instead \i'd directly by
+      // supabase/tests/059_oral_check_pilot_apply_fail_closed.sql, both
+      // against a genuinely empty database (proving the fail-closed
+      // refusal) and against a real populated fixture (proving it still
+      // works when the target is correct).
     } else {
       psqlFile(migrationPath);
     }
@@ -267,6 +281,12 @@ try {
     resolve(
       root,
       "supabase/tests/058_oral_check_pilot_apply_ordering_gate.sql",
+    ),
+  );
+  psqlFile(
+    resolve(
+      root,
+      "supabase/tests/059_oral_check_pilot_apply_fail_closed.sql",
     ),
   );
   psqlText(`
@@ -410,6 +430,7 @@ try {
     end;
     $$;
   `);
+  await runOralCheckPilotRollbackLockTimeoutTest();
   console.log(
     JSON.stringify({
       status: "passed",
@@ -771,4 +792,178 @@ function exec(command, args, extraEnv = {}) {
     env: { ...pgEnv, ...extraEnv },
     stdio: "pipe",
   });
+}
+
+// Round-5 Codex review, finding 3: fn_rollback_oral_check_pilot_role_play_blocks()
+// now sets a function-level `lock_timeout = '10s'`, but nothing had ever
+// exercised it against real lock contention -- the migration-level `set
+// lock_timeout = '10s'` near the top of
+// 20260728030000_rollback_oral_check_pilot_role_play_blocks.sql only ever
+// applied to the session that installed that migration, never to a later,
+// separate incident invocation. This proves it for real, using two
+// genuinely separate, concurrent psql connections (every other oral-check
+// pilot test in this harness runs single-connection, which cannot exercise
+// real lock contention at all): one connection builds a real fixture, runs
+// the real forward insertion, commits it, then holds a conflicting ACCESS
+// EXCLUSIVE lock on content_blocks in a second transaction; the other
+// connection, started shortly after, calls the real rollback function and
+// must fail with SQLSTATE 55P03 (lock_timeout) after roughly 10 real
+// seconds of contention -- not hang indefinitely, and not coincidentally
+// succeed only because the locker happened to finish first. This runs last
+// in the harness, after every other check, and deliberately leaves its own
+// fixture rows committed for the locker's second (lock-holding) writer
+// transaction to exist against -- it cleans up after itself at the end by
+// completing a real, successful rollback once the lock is free again.
+async function runOralCheckPilotRollbackLockTimeoutTest() {
+  const importId = "bmh-employee-training-v1";
+  const blockIds = [
+    "7300bba9-a9fc-582c-aa20-dd5d58754165",
+    "4464ecdd-2650-59ed-a525-78871e846d20",
+    "34758403-1ddd-5e3c-a054-b2f28310d8b8",
+  ];
+  const lockerSql = `
+    select set_config('request.jwt.claim.role', 'service_role', false);
+    create or replace function public.fn_course_import_catalog_sha256(p_import_id text)
+    returns text
+    language sql
+    stable
+    security definer
+    set search_path = ''
+    as $stub$
+      select case
+        when p_import_id <> '${importId}' then repeat('0', 64)
+        when exists (
+          select 1 from public.content_blocks where id in (${blockIds.map((id) => `'${id}'`).join(", ")})
+        ) then repeat('f', 64)
+        else '91bee07c6626d0d113291d925cfc7fa65ac26c57c7d85ea3ca172d5b706120f2'
+      end;
+    $stub$;
+    begin;
+    do $$
+    begin
+      perform set_config('bmh.apply_import_id', '${importId}', true);
+      insert into public.programs (id, title, description, content_import_id, is_published, course_order_mode, certificate_enabled, sort_order) values ('15a382c9-617c-5407-a880-af6303be74b2', 'BMH Employee Training', 'Internal training for serving sellers, operating the pipeline, and growing at BMH Group.', '${importId}', false, 'sequential', true, 0);
+      insert into public.courses (id, title, description, content_import_id, is_published, certificate_enabled, sort_order) values ('e743b27c-7e0d-5760-aa25-5dbd75656718', 'BMH Employee Training', 'Six sequential sections covering the BMH way, seller conversations, operating systems, and performance.', '${importId}', false, false, 0);
+      insert into public.program_courses (id, program_id, course_id, sort_order) values ('8e8b2d86-6e11-59e5-acd2-332488b2341e', '15a382c9-617c-5407-a880-af6303be74b2', 'e743b27c-7e0d-5760-aa25-5dbd75656718', 0);
+      insert into public.modules (id, course_id, title, description, sort_order) values
+        ('b2b26858-4b5c-5e1f-ada4-6814d3c340fe', 'e743b27c-7e0d-5760-aa25-5dbd75656718', 'Orientation', 'Learn the BMH Group service standard, vocabulary, and operating tools.', 1),
+        ('2cf8bd25-600c-5514-a88f-bd964bbd6616', 'e743b27c-7e0d-5760-aa25-5dbd75656718', 'Who We Serve', 'Understand the sellers BMH Group can help and the tradeoffs in our offer.', 2),
+        ('774aa2b9-6460-572c-a8bf-a000020fdfd5', 'e743b27c-7e0d-5760-aa25-5dbd75656718', 'Performance and Career', 'Use scorecards, operating discipline, and coaching to improve and grow.', 6);
+      insert into public.lessons (id, module_id, title, description, lesson_type, sort_order, content_import_id, is_required_for_completion) values
+        ('dc391d4b-58f4-5a94-a97f-ca59c4d98f41', 'b2b26858-4b5c-5e1f-ada4-6814d3c340fe', 'Real Estate Terms Glossary', 'Build the vocabulary needed to follow property, title, financing, and transaction conversations without guessing.', 'content', 3, '${importId}', true),
+        ('823f016f-6e4c-5791-ac42-9f24c28040df', '2cf8bd25-600c-5514-a88f-bd964bbd6616', 'The BMH Offer Playbook', 'Explain how a direct property purchase exchanges maximum retail price for speed, certainty, convenience, and an as-is sale.', 'content', 3, '${importId}', true),
+        ('cccdb0ef-b907-5bce-ade1-3ff0b0d054ce', '774aa2b9-6460-572c-a8bf-a000020fdfd5', 'KPIs and Sales Telemetry', 'Read the funnel from left to right to locate process gaps and choose the right coaching response.', 'content', 1, '${importId}', true);
+      perform set_config('bmh.apply_import_id', '', true);
+      perform set_config('bmh.release_import_id', '${importId}', true);
+      insert into public.content_import_release_records (import_id, program_id, qa_role_group_id, employee_role_group_id, manifest_sha256, reconciliation_sha256, catalog_sha256, rollback_rehearsal_sha256, chrome_desktop_sha256, chrome_mobile_sha256, admin_happy_path_sha256, approval_sha256, approved_by, evidence) values ('${importId}', '15a382c9-617c-5407-a880-af6303be74b2', '05903000-0000-5000-a000-000000000001', '05903000-0000-5000-a000-000000000002', '71f85173bc857d1b3b042fba0a50fdd420b6410ef84b104a751c3ed5982eba5c', repeat('2',64), repeat('3',64), repeat('4',64), repeat('5',64), repeat('6',64), repeat('7',64), repeat('8',64), 'Jarrad Henry', '{}'::jsonb);
+      update public.programs set is_published = true where content_import_id = '${importId}';
+      update public.courses set is_published = true where content_import_id = '${importId}';
+      perform set_config('bmh.release_import_id', '', true);
+    end;
+    $$;
+    select public.fn_insert_oral_check_pilot_role_play_blocks();
+    commit;
+
+    begin;
+    lock table public.content_blocks in access exclusive mode;
+    select pg_sleep(20);
+    rollback;
+  `;
+
+  const locker = spawn(binary("psql"), ["-v", "ON_ERROR_STOP=1", "-c", lockerSql], {
+    env: pgEnv,
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+  let lockerOutput = "";
+  locker.stdout.on("data", (chunk) => { lockerOutput += chunk; });
+  locker.stderr.on("data", (chunk) => { lockerOutput += chunk; });
+  const lockerExit = new Promise((resolveLocker, rejectLocker) => {
+    locker.on("exit", (code) => {
+      if (code !== 0) {
+        rejectLocker(
+          new Error(`lock-timeout rehearsal: locker process failed (exit ${code}):\n${lockerOutput}`),
+        );
+      } else {
+        resolveLocker();
+      }
+    });
+    locker.on("error", rejectLocker);
+  });
+
+  // Give the locker time to build the fixture, commit the real forward
+  // insertion, and acquire the conflicting ACCESS EXCLUSIVE lock before the
+  // roller attempts the rollback.
+  await new Promise((resolveWait) => setTimeout(resolveWait, 4000));
+
+  const rollerSql = `
+    select set_config('request.jwt.claim.role', 'service_role', false);
+    select public.fn_rollback_oral_check_pilot_role_play_blocks();
+  `;
+  const rollerStart = Date.now();
+  let rollerFailed = false;
+  let rollerOutput = "";
+  try {
+    rollerOutput = exec(binary("psql"), [
+      "-v",
+      "ON_ERROR_STOP=1",
+      "-c",
+      rollerSql,
+    ]).toString();
+  } catch (error) {
+    rollerFailed = true;
+    rollerOutput = `${error.stdout?.toString() ?? ""}${error.stderr?.toString() ?? ""}`;
+  }
+  const rollerElapsedMs = Date.now() - rollerStart;
+
+  if (!rollerFailed) {
+    throw new Error(
+      `lock-timeout rehearsal: the rollback call succeeded despite a genuinely held conflicting lock (elapsed ${rollerElapsedMs}ms) -- expected a real lock_timeout failure. Output:\n${rollerOutput}`,
+    );
+  }
+  if (
+    !rollerOutput.includes("55P03") &&
+    !/lock timeout/i.test(rollerOutput)
+  ) {
+    throw new Error(
+      `lock-timeout rehearsal: the rollback call failed, but not with the expected lock_timeout error. Output:\n${rollerOutput}`,
+    );
+  }
+  if (rollerElapsedMs < 7000 || rollerElapsedMs > 19000) {
+    throw new Error(
+      `lock-timeout rehearsal: expected the rollback call to time out after roughly 10s of real lock contention, but it took ${rollerElapsedMs}ms. Output:\n${rollerOutput}`,
+    );
+  }
+
+  await lockerExit;
+
+  console.log(
+    `Oral-check pilot rollback lock-timeout rehearsal passed: refused after ${rollerElapsedMs}ms with a real lock_timeout, while a genuinely concurrent writer held the conflicting lock.`,
+  );
+
+  // Clean up: now that the locker's lock is released, complete a REAL,
+  // successful rollback (no lock contention this time) so this test leaves
+  // the shared harness database exactly as it found it, and so the harness
+  // proves the roller's earlier failed attempt did not leave anything
+  // half-done (the one-shot evidence row was never written, so a second,
+  // genuine attempt succeeds).
+  const cleanupSql = `
+    select set_config('request.jwt.claim.role', 'service_role', false);
+    select public.fn_rollback_oral_check_pilot_role_play_blocks();
+  `;
+  exec(binary("psql"), ["-v", "ON_ERROR_STOP=1", "-c", cleanupSql]);
+
+  const remainingSql = `
+    select count(*) from public.content_blocks
+    where id in (${blockIds.map((id) => `'${id}'`).join(", ")});
+  `;
+  const remaining = Number(
+    exec(binary("psql"), ["-v", "ON_ERROR_STOP=1", "-A", "-t", "-c", remainingSql])
+      .toString()
+      .trim(),
+  );
+  if (remaining !== 0) {
+    throw new Error(
+      `lock-timeout rehearsal cleanup: expected 0 oral-check blocks remaining after the real cleanup rollback, found ${remaining}.`,
+    );
+  }
 }

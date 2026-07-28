@@ -329,6 +329,115 @@ end;
 $$;
 rollback to savepoint before_user_block_progress_activity;
 
+-- Round-5 review: the round-4 activity guard added user_video_progress and
+-- user_video_completion_history to the lock list and the zero-activity
+-- check, but nothing exercised either table with real rows -- prove both
+-- refusal paths actually fire, not just that the SQL text mentions them.
+-- user_video_progress is ON DELETE CASCADE on content_blocks.id (silent
+-- data loss if the guard did not catch it); user_video_completion_history
+-- is ON DELETE RESTRICT (an uncontrolled foreign-key-violation exception,
+-- not this function's own controlled refusal, if the guard did not catch
+-- it first).
+savepoint before_user_video_progress_activity;
+do $$
+begin
+  insert into auth.users (
+    instance_id, id, aud, role, email, encrypted_password,
+    email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at
+  ) values (
+    '00000000-0000-0000-0000-000000000000',
+    '05705705-7057-4057-8057-057057057059',
+    'authenticated', 'authenticated',
+    'migration-057-rollback-video-progress@bmh.invalid',
+    crypt('Migration057RollbackVideoProgress!Aa1', gen_salt('bf')),
+    now(), '{"provider":"email","providers":["email"]}'::jsonb,
+    '{"full_name":"Migration 057 Rollback Video Progress"}'::jsonb, now(), now()
+  );
+  insert into public.user_video_progress (
+    user_id, block_id, position_seconds, duration_seconds,
+    watched_ranges, last_observed_position_seconds, asset_version
+  ) values (
+    '05705705-7057-4057-8057-057057057059',
+    '34758403-1ddd-5e3c-a054-b2f28310d8b8',
+    30, 90, '[[0,30]]'::jsonb, 30,
+    'malformed-or-direct-write-test-asset-version'
+  );
+
+  begin
+    perform public.fn_rollback_oral_check_pilot_role_play_blocks();
+    raise exception 'the rollback ran despite real user_video_progress activity';
+  exception when sqlstate '40001' then
+    if sqlerrm not like '%real learner activity exist%' then raise; end if;
+  end;
+
+  if (select count(*) from public.content_blocks
+      where id in (
+        '7300bba9-a9fc-582c-aa20-dd5d58754165',
+        '4464ecdd-2650-59ed-a525-78871e846d20',
+        '34758403-1ddd-5e3c-a054-b2f28310d8b8'
+      )) <> 3 then
+    raise exception 'the refused rollback changed the target row count despite video-progress activity';
+  end if;
+  if not exists (
+    select 1 from public.user_video_progress
+    where user_id = '05705705-7057-4057-8057-057057057059'
+      and block_id = '34758403-1ddd-5e3c-a054-b2f28310d8b8'
+  ) then
+    raise exception 'the refused rollback silently removed the user_video_progress row it was supposed to refuse over';
+  end if;
+end;
+$$;
+rollback to savepoint before_user_video_progress_activity;
+
+savepoint before_user_video_completion_history_activity;
+do $$
+begin
+  insert into auth.users (
+    instance_id, id, aud, role, email, encrypted_password,
+    email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at
+  ) values (
+    '00000000-0000-0000-0000-000000000000',
+    '05705705-7057-4057-8057-057057057060',
+    'authenticated', 'authenticated',
+    'migration-057-rollback-video-completion@bmh.invalid',
+    crypt('Migration057RollbackVideoCompletion!Aa1', gen_salt('bf')),
+    now(), '{"provider":"email","providers":["email"]}'::jsonb,
+    '{"full_name":"Migration 057 Rollback Video Completion"}'::jsonb, now(), now()
+  );
+  -- user_video_completion_history is ON DELETE RESTRICT on both user_id and
+  -- block_id -- if the rollback's own precondition check did not catch
+  -- this first, the later `delete from public.content_blocks` would hit an
+  -- uncontrolled foreign_key_violation (SQLSTATE 23503) instead of this
+  -- function's own clear, controlled refusal (SQLSTATE 40001). Assert the
+  -- controlled refusal happens, not the raw FK error.
+  insert into public.user_video_completion_history (user_id, block_id, asset_version) values (
+    '05705705-7057-4057-8057-057057057060',
+    '7300bba9-a9fc-582c-aa20-dd5d58754165',
+    'malformed-or-direct-write-test-asset-version'
+  );
+
+  begin
+    perform public.fn_rollback_oral_check_pilot_role_play_blocks();
+    raise exception 'the rollback ran despite real user_video_completion_history activity';
+  exception
+    when sqlstate '40001' then
+      if sqlerrm not like '%real learner activity exist%' then raise; end if;
+    when sqlstate '23503' then
+      raise exception 'the rollback hit an uncontrolled foreign-key violation instead of its own controlled refusal -- the learner-activity guard did not catch user_video_completion_history activity first: %', sqlerrm;
+  end;
+
+  if (select count(*) from public.content_blocks
+      where id in (
+        '7300bba9-a9fc-582c-aa20-dd5d58754165',
+        '4464ecdd-2650-59ed-a525-78871e846d20',
+        '34758403-1ddd-5e3c-a054-b2f28310d8b8'
+      )) <> 3 then
+    raise exception 'the refused rollback changed the target row count despite video-completion-history activity';
+  end if;
+end;
+$$;
+rollback to savepoint before_user_video_completion_history_activity;
+
 -- The genuine end-to-end rollback: every guard above now passes for real
 -- (untampered payload, undrifted catalog, zero learner activity), so this
 -- reaches the actual DELETE, exact-restoration verification, and guarded

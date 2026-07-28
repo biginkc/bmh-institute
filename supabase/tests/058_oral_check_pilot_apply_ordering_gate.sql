@@ -12,6 +12,13 @@ select set_config('request.jwt.claim.role', 'service_role', true);
 -- back), then replay the EXACT, unmodified migration file -- not a
 -- hand-copied approximation of its logic -- and confirm it refuses closed
 -- with SQLSTATE 55000 instead of silently reaching the insert.
+--
+-- Round-5 review, finding 2 extends this file: the round-4 fix above only
+-- protected the apply migration's OWN wrapper invocation. This file's
+-- second section proves the SAME missing-rollback-capability scenario is
+-- now ALSO refused when fn_insert_oral_check_pilot_role_play_blocks() is
+-- called directly, bypassing the apply migration entirely -- the exact
+-- exposed call path that fix closed.
 do $$
 begin
   if to_regprocedure('public.fn_insert_oral_check_pilot_role_play_blocks()') is null then
@@ -99,5 +106,50 @@ begin
   end if;
 end;
 $$;
+
+-- Round-5 review, finding 2: the ordering gate above only protected the
+-- APPLY MIGRATION's own wrapper invocation. fn_insert_oral_check_pilot_role_play_blocks()
+-- itself was still directly callable -- by a raw RPC, a direct SQL
+-- session, anything holding service_role -- the instant 20260728020000
+-- committed, regardless of whether the rollback capability existed yet.
+-- Prove that direct call path is now ALSO refused: simulate "only
+-- 20260728020000 has been applied" the same way as above (temporarily
+-- remove the rollback capability), then call
+-- fn_insert_oral_check_pilot_role_play_blocks() DIRECTLY -- not through the
+-- apply migration file at all.
+savepoint before_direct_call_missing_rollback;
+do $$
+begin
+  drop function public.fn_rollback_oral_check_pilot_role_play_blocks();
+  drop table public.content_import_oral_check_pilot_role_play_rollback_records;
+end;
+$$;
+
+do $$
+begin
+  if to_regprocedure('public.fn_rollback_oral_check_pilot_role_play_blocks()') is not null
+    or to_regclass('public.content_import_oral_check_pilot_role_play_rollback_records') is not null
+  then
+    raise exception 'the rollback capability removal for this rehearsal did not actually take effect';
+  end if;
+  begin
+    perform public.fn_insert_oral_check_pilot_role_play_blocks();
+    raise exception 'a DIRECT call to fn_insert_oral_check_pilot_role_play_blocks() succeeded despite the missing rollback capability -- this is exactly the bypass round-5 review finding 2 caught (the apply migration''s own wrapper check is not the only call path)';
+  exception when sqlstate '55000' then
+    if sqlerrm not like '%rollback capability%' then raise; end if;
+  end;
+  if exists (
+    select 1 from public.content_blocks
+    where id in (
+      '7300bba9-a9fc-582c-aa20-dd5d58754165',
+      '4464ecdd-2650-59ed-a525-78871e846d20',
+      '34758403-1ddd-5e3c-a054-b2f28310d8b8'
+    )
+  ) then
+    raise exception 'the refused direct call left content blocks behind';
+  end if;
+end;
+$$;
+rollback to savepoint before_direct_call_missing_rollback;
 
 rollback;
