@@ -538,6 +538,8 @@ revoke insert, update, delete, truncate on public.hugo_access_grants
 do $$
 declare
   v_source text;
+  v_before_count integer;
+  v_after_count integer;
   v_before text :=
     '  v_durable := public.fn_hugo_has_durable_activity(v_profile.id);';
   v_after text :=
@@ -550,11 +552,21 @@ begin
   v_source := pg_get_functiondef(
     'public.hugo_delete_identity_unhashed(uuid,text)'::regprocedure
   );
-  if position(v_before in v_source) = 0 then
+  v_before_count :=
+    (length(v_source) - length(replace(v_source, v_before, ''))) /
+    length(v_before);
+  v_after_count :=
+    (length(v_source) - length(replace(v_source, v_after, ''))) /
+    length(v_after);
+
+  if v_after_count = 1 and v_before_count = 1 then
+    null;
+  elsif v_after_count = 0 and v_before_count = 1 then
+    v_source := replace(v_source, v_before, v_after);
+    execute v_source;
+  else
     raise exception 'Hugo delete RPC durable recheck insertion point drifted';
   end if;
-  v_source := replace(v_source, v_before, v_after);
-  execute v_source;
 end;
 $$;
 

@@ -657,7 +657,18 @@ insert into public.hugo_access_grants (
 
 do $$
 declare
+  v_after text :=
+    '  perform 1
+  from auth.users auth_user
+  where auth_user.id = v_profile.id
+  for update;
+  v_durable := public.fn_hugo_has_durable_activity(v_profile.id);';
+  v_after_count integer;
+  v_before text :=
+    '  v_durable := public.fn_hugo_has_durable_activity(v_profile.id);';
+  v_before_count integer;
   v_definition text;
+  v_definition_after text;
   v_receipt jsonb;
 begin
   select pg_get_functiondef(procedure_row.oid)
@@ -674,6 +685,38 @@ begin
       'v_durable := public.fn_hugo_has_durable_activity(v_profile.id)'
       in lower(v_definition)
     ), 'delete identity locks Auth after the final durable recheck';
+
+  -- Replay the migration's shape-aware patch step. Because the migration
+  -- already installed the block, a second pass must not execute a replacement
+  -- or change the function definition.
+  v_before_count :=
+    (length(v_definition) - length(replace(v_definition, v_before, ''))) /
+    length(v_before);
+  v_after_count :=
+    (length(v_definition) - length(replace(v_definition, v_after, ''))) /
+    length(v_after);
+  if v_after_count = 1 and v_before_count = 1 then
+    null;
+  elsif v_after_count = 0 and v_before_count = 1 then
+    v_definition := replace(v_definition, v_before, v_after);
+    execute v_definition;
+  else
+    raise exception 'test replay found an unexpected Hugo delete function shape';
+  end if;
+  select pg_get_functiondef(procedure_row.oid)
+  into v_definition_after
+  from pg_catalog.pg_proc procedure_row
+  join pg_catalog.pg_namespace namespace_row
+    on namespace_row.oid = procedure_row.pronamespace
+  where namespace_row.nspname = 'public'
+    and procedure_row.proname = 'hugo_delete_identity_unhashed';
+  assert v_definition_after = v_definition,
+    'replaying the Auth lock patch changed the delete function definition';
+  assert (
+    length(v_definition_after) -
+    length(replace(v_definition_after, v_after, ''))
+  ) / length(v_after) = 1,
+    'replaying the Auth lock patch did not leave exactly one lock block';
 
   v_receipt := public.hugo_prepare_pristine_delete(
     '00000000-0000-4000-8000-000000000308',

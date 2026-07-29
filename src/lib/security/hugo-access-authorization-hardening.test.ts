@@ -60,6 +60,12 @@ describe("Hugo access authorization hardening", () => {
     );
     expect(migration).toContain("where auth_user.id = v_profile.id");
     expect(migration).toContain("for update;");
+    expect(migration).toContain(
+      "if v_after_count = 1 and v_before_count = 1 then",
+    );
+    expect(migration).toContain(
+      "elsif v_after_count = 0 and v_before_count = 1 then",
+    );
     expect(migration).toContain("pg_catalog.pg_constraint");
     expect(migration).toContain("user_role_groups.user_id");
     expect(migration).toContain("hugo_access_grants.user_id");
