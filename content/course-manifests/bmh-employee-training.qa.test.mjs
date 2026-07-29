@@ -29,7 +29,7 @@ test("the draft contains the locked course structure", async () => {
     videos: 29,
     quizQuestions: 920,
     flashcards: 152,
-    rolePlays: 9,
+    rolePlays: 18,
     posterAssets: 29,
     posterReferences: 29,
     guideAssets: 19,
@@ -228,7 +228,7 @@ test("a malformed or duplicated production scenario ID is a publication blocker,
       error.includes("Duplicate role-play production scenario ID"),
     ),
   );
-  assert.ok(rolePlayBlocks.length === 9, "sanity: fixture still has nine role-play blocks to mutate (6 frozen sales role-plays + 3 Andrea Oral Check pilot blocks)");
+  assert.ok(rolePlayBlocks.length === 18, "sanity: fixture still has eighteen role-play blocks to mutate (6 frozen sales role-plays + 12 Andrea Oral Check blocks: 3 pilot + 9 expansion)");
 });
 
 test("marking a role-play block optional does not exempt it from scenario trust checks", async () => {

@@ -33,14 +33,14 @@ export default async function CertificatesPage() {
       id: c.id as string,
       number: c.certificate_number as string,
       issuedAt: c.issued_at as string,
-      title: firstRow(c.programs)?.title ?? "Course",
+          title: firstRow(c.programs)?.title ?? "Program",
       scope: "program" as const,
     })),
     ...(courseCerts.data ?? []).map((c) => ({
       id: c.id as string,
       number: c.certificate_number as string,
       issuedAt: c.issued_at as string,
-      title: firstRow(c.courses)?.title ?? "Course",
+          title: firstRow(c.courses)?.title ?? "Course",
       scope: "course" as const,
     })),
   ];
@@ -56,7 +56,7 @@ export default async function CertificatesPage() {
           Certificates
         </h1>
         <p className="mt-1.5 max-w-2xl font-[family-name:var(--font-body)] text-base font-semibold text-[var(--text-muted)]">
-          Your completed course certificates. Update your name on your profile before printing.
+          Your completed course and program certificates. Update your name on your profile before printing.
         </p>
       </div>
 
@@ -105,7 +105,7 @@ export default async function CertificatesPage() {
                       tone={c.scope === "program" ? "blue" : "green"}
                       size="sm"
                     >
-                      Course
+                      {c.scope === "program" ? "Program" : "Course"}
                     </Badge>
                     <h2 className="mt-2 font-[family-name:var(--font-display)] text-lg leading-tight font-bold text-[var(--ink-900)]">
                       {c.title}
@@ -136,7 +136,7 @@ export default async function CertificatesPage() {
               </span>
               <div>
                 <h2 className="font-[family-name:var(--font-display)] text-lg leading-tight font-bold text-[var(--ink-700)]">
-                  Final course certificate
+                  Final program certificate
                 </h2>
                 <p className="mt-1 font-[family-name:var(--font-body)] text-[13px] font-bold text-[var(--text-muted)]">
                   Finish all courses to unlock

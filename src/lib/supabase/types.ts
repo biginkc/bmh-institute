@@ -1783,6 +1783,23 @@ export type Database = {
         Args: { p_allowed: boolean; p_program_id: string; p_user_id: string }
         Returns: undefined
       }
+      fn_set_role_group_access: {
+        Args: {
+          p_enabled: boolean
+          p_role_group_id: string
+          p_scope: string
+          p_target_id: string
+        }
+        Returns: undefined
+      }
+      fn_attach_course_to_program: {
+        Args: { p_course_id: string; p_program_id: string }
+        Returns: undefined
+      }
+      fn_move_program_course: {
+        Args: { p_course_id: string; p_direction: string; p_program_id: string }
+        Returns: undefined
+      }
       fn_set_user_role_groups: {
         Args: { p_role_group_ids: string[]; p_user_id: string }
         Returns: undefined

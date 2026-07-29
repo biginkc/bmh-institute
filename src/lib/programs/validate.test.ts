@@ -26,6 +26,8 @@ describe("parseProgramInput", () => {
     expect(result.value.course_order_mode).toBe("sequential");
     expect(result.value.is_published).toBe(true);
     expect(result.value.thumbnail_path).toBe("courses/training/v1/thumbnails/program.webp");
+    expect(result.value.certificate_enabled).toBe(false);
+    expect(result.value.certificate_template_id).toBeNull();
   });
 
   it("defaults course_order_mode to free when missing", () => {
@@ -36,6 +38,8 @@ describe("parseProgramInput", () => {
     expect(result.value.is_published).toBe(false);
     expect(result.value.description).toBeNull();
     expect(result.value.thumbnail_path).toBeNull();
+    expect(result.value.certificate_enabled).toBe(false);
+    expect(result.value.certificate_template_id).toBeNull();
   });
 
   it("rejects absolute or traversal thumbnail paths", () => {

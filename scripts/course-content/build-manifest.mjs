@@ -390,29 +390,53 @@ const ROLE_PLAYS = {
 // on those.
 const INCLUDE_CLOSER_LAB_ROLE_PLAYS = true;
 
-// The Andrea Oral Check pilot (PR #130, 2026-07-28): a structurally
-// different role-play type from ROLE_PLAYS above -- a coach persona (Andrea)
-// asking comprehension questions after a lesson, not a seller-persona
-// objection-handling drill -- bound to Closer Lab's separate "BMH Institute
-// Oral Checks v1" scenario namespace. Deliberately keyed by source_key
-// prefix `block-oral-check-slot-` (never `block-role-play-`) so
-// rolePlayBindings() in closer-lab-production-mapping.mjs -- which powers
-// the frozen, hash-pinned 6-scenario sales-role-play ledger/catalog chain --
-// never sees these 3 and the "exactly six" contract stays untouched. content
-// deliberately omits `title`: the "Talk with Andrea" label
-// (content-blocks.tsx / learner-parts.ts) is the render-time fallback
-// whenever content.mode === "oral_check" and no explicit title is set.
+// The Andrea Oral Check blocks: 3 pilot slots from PR #130 (2026-07-28,
+// keys 2/5/16) plus 9 expansion slots from PR #132 (2026-07-29, keys
+// 1/3/4/6/12/14/15/17/19) -- a structurally different role-play type from
+// ROLE_PLAYS above -- a coach persona (Andrea) asking comprehension
+// questions after a lesson, not a seller-persona objection-handling drill --
+// bound to Closer Lab's separate "BMH Institute Oral Checks v1" scenario
+// namespace. Deliberately keyed by source_key prefix `block-oral-check-slot-`
+// (never `block-role-play-`) so rolePlayBindings() in
+// closer-lab-production-mapping.mjs -- which powers the frozen, hash-pinned
+// 6-scenario sales-role-play ledger/catalog chain -- never sees these 12 and
+// the "exactly six" contract stays untouched. content deliberately omits
+// `title`: the "Talk with Andrea" label (content-blocks.tsx /
+// learner-parts.ts) is the render-time fallback whenever
+// content.mode === "oral_check" and no explicit title is set.
 // scenario_id values are the real, live, persona-backed Closer Lab
 // production role_play IDs (read-only-verified against project
-// xqrkugdxpwhjscrheuqo; see docs/course-production/oral-check-pilot-production-attestation.json),
-// not `pending:` placeholders -- these were bound directly, mirroring
-// supabase/migrations/20260728020000_insert_oral_check_pilot_role_play_blocks.sql's
-// hardcoded content exactly (the migration inserted these rows directly
+// xqrkugdxpwhjscrheuqo; see
+// docs/course-production/oral-check-pilot-production-attestation.json for
+// the 3 pilot slots), not `pending:` placeholders -- these were bound
+// directly, mirroring
+// supabase/migrations/20260728020000_insert_oral_check_pilot_role_play_blocks.sql
+// and
+// supabase/migrations/20260729060000_insert_oral_check_expansion_role_play_blocks.sql's
+// hardcoded content exactly (the migrations inserted these rows directly
 // against production; this manifest entry exists so the deterministic block
 // IDs it declares -- and the content it declares -- are recognized as
 // EXPECTED by the real exact-reconciliation path (course:import verify),
 // closing what would otherwise be permanent, undetected drift).
 const ORAL_CHECK_ROLE_PLAYS = {
+  1: [
+    {
+      key: "slot-01",
+      scenarioId: "7f02bec1-94d6-403f-9792-157238c75450",
+      context: "This lesson is a casual first check-in -- what you think the company does, who you'll be talking to, and what it means to be a guide instead of a salesman. Andrea isn't grading you here -- there's no wrong answer, she just wants to hear how it's landing before you ever pick up a phone.",
+      learner_goal: "Talk through what you've taken in so far, in your own words -- there's no wrong answer.",
+      success_criteria: [
+        "Describes what BMH does in their own words (buys houses for cash, as-is, from people who need speed and simplicity)",
+        "Describes who the sellers are with some human framing (real people in tough spots, not just \"homeowners\")",
+        "Puts the guide-not-salesman idea in their own words (helping people find their best path, not pushing for a yes)",
+      ],
+      fail_conditions: [
+        "Gives no grounded answer at all -- doesn't engage or answers a completely different question",
+        "Cannot attempt an answer to more than one of the three warm-up questions",
+        "Only repeats a phrase from the lesson without saying it in their own words",
+      ],
+    },
+  ],
   2: [
     {
       key: "slot-02",
@@ -428,6 +452,44 @@ const ORAL_CHECK_ROLE_PLAYS = {
       fail_conditions: [
         'Confuses or misstates the core property/seller-situation terms (e.g., calls a listed property "off-market")',
         "Cannot describe the wholesaling mechanism (assignment of contract vs. buying and reselling)",
+        "Gives no grounded answer -- guesses or answers a different question",
+      ],
+    },
+  ],
+  3: [
+    {
+      key: "slot-03",
+      scenarioId: "37ac4bc8-5f76-4cd4-9a96-37e6c3e36e7a",
+      context: "This lesson covers the daily tools -- Sandra, Closer Lab, and DialPad -- and why using them right (or working around them) matters before you start calling. Andrea checks it out loud because knowing you've got the map matters more than memorizing menus.",
+      learner_goal: "Demonstrate you understand what each tool is for and why it matters, in your own words.",
+      success_criteria: [
+        "Explains why the tools matter (keeps the team organized, nothing falls through the cracks)",
+        "Explains what Sandra does (the CRM -- leads, notes, deal stages, and tasks; the shared record)",
+        "Explains what Closer Lab does (practice role-plays against an AI before real calls, with feedback on pacing, filler words, confidence)",
+        "Explains what DialPad does (the phone system -- calls go through it and get recorded for coaching, tracks call activity)",
+      ],
+      fail_conditions: [
+        "Confuses or misstates what one of the core tools does",
+        "Cannot explain why the tools matter beyond \"I have to use them\"",
+        "Gives no grounded answer -- guesses or answers a different question",
+      ],
+    },
+  ],
+  4: [
+    {
+      key: "slot-04",
+      scenarioId: "0b3d9673-54b7-4ac5-a5e6-b907f6ec043d",
+      context: "This lesson is the heart of the course -- who's really behind each lead, the difference between a motivated seller and someone just curious, and recognizing who you can and can't help. Andrea checks it out loud because seeing the people, not the list, changes how every call goes.",
+      learner_goal: "Demonstrate you can recognize real seller situations, motivation, and fit, in your own words.",
+      success_criteria: [
+        "Names three real seller situations that bring sellers to us (inherited property, foreclosure, tired landlord, rough house, divorce, out-of-state owner, etc.)",
+        "Explains the difference between a motivated seller and someone just curious (a real reason plus a timeline vs. no urgency)",
+        "Recognizes motivation-signal language (phrases like \"I just need this off my plate\" or \"I'm behind on payments\")",
+        "Recognizes who we can't help (already listed with a realtor, can't authorize the sale, no equity, commercial or vacant land)",
+      ],
+      fail_conditions: [
+        "Confuses or misstates what makes a seller motivated vs. curious",
+        "Cannot name a real seller situation or a signal phrase",
         "Gives no grounded answer -- guesses or answers a different question",
       ],
     },
@@ -451,6 +513,82 @@ const ORAL_CHECK_ROLE_PLAYS = {
       ],
     },
   ],
+  6: [
+    {
+      key: "slot-06",
+      scenarioId: "345d2756-c1df-417f-ac00-8a4509f0a9c8",
+      context: "This lesson covers how deals move through the system, the handoff to acquisition, the 80/20 rule, and what actually counts as a lead moving forward. Andrea checks it out loud because understanding your part in the pipeline matters more than memorizing every stage name.",
+      learner_goal: "Demonstrate you understand how a deal moves and where you fit, in your own words.",
+      success_criteria: [
+        "Knows the acquisition team receives the handoff after qualification",
+        "Explains the 80/20 person-over-property rule and why (the house isn't the problem, the situation is)",
+        "Describes what a clean handoff includes (the seller's story, motivation, expectations, property details, plus a warm transfer or set appointment)",
+        "Understands leads move forward on real conversations, not attempts",
+      ],
+      fail_conditions: [
+        "Confuses or misstates the 80/20 rule or reverses it",
+        "Cannot describe what a clean handoff includes",
+        "Gives no grounded answer -- guesses or answers a different question",
+      ],
+    },
+  ],
+  12: [
+    {
+      key: "slot-12",
+      scenarioId: "abb45d78-8cd6-4167-a567-b78dc1f4fc2e",
+      context: "This lesson covers answering sellers' plain questions like a person, not a script -- the scam concern, the price trade-off, repairs, and what happens after signing. Andrea plays the seller and checks it out loud because a warm, honest answer under real pressure is different from reciting the FAQ.",
+      learner_goal: "Answer a seller's plain questions warmly and honestly, in your own words.",
+      success_criteria: [
+        "Names the underlying concerns sellers usually have (trust, fairness, simplicity) in some form",
+        "Handles the scam concern with warmth and real specifics (licensed title company, attorney can review everything, never pay us anything)",
+        "Explains the price trade-off in plain language (we buy as-is and take on repairs, risk, and cost; the seller gets speed, certainty, and zero hassle)",
+        "Handles the repairs and after-signing questions reassuringly (no repairs needed, our team handles title and logistics through closing)",
+      ],
+      fail_conditions: [
+        "Gets defensive or dismissive instead of acknowledging the concern",
+        "Cannot explain the price trade-off without jargon a neighbor wouldn't understand",
+        "Gives no grounded answer -- guesses or answers a different question",
+      ],
+    },
+  ],
+  14: [
+    {
+      key: "slot-14",
+      scenarioId: "1f4414cb-4d6a-4209-a444-c5903c43cd1d",
+      context: "This lesson stitches the whole call together -- protecting the price anchor, handling a competing offer, painting the finish line, and exiting gracefully when the gap's too wide. Andrea throws real moments at you and checks the reasoning out loud, not a recited script.",
+      learner_goal: "Reason through real call moments and explain your move, in your own words.",
+      success_criteria: [
+        "Protects the price anchor (learns the seller's number before giving ours)",
+        "Answers a higher competing offer with a certainty comparison, not a bigger bid",
+        "Uses the paint-the-finish move to surface non-price obstacles (where they'll live, what's in their pocket, what's hardest about getting there)",
+        "Exits gracefully when the gap's too wide, leaving the door open",
+      ],
+      fail_conditions: [
+        "Gives a number before learning the seller's number",
+        "Panics or chases a competing offer with a higher bid instead of comparing certainty",
+        "Gives no grounded answer -- guesses or answers a different question",
+      ],
+    },
+  ],
+  15: [
+    {
+      key: "slot-15",
+      scenarioId: "e0eadd9b-3261-4470-b46e-da4e292ed3f1",
+      context: "This lesson covers the endgame -- why closing is easy when the earlier work was real, what happens after signing, and why deals fall apart. Andrea checks it out loud because seeing the endgame matters even though you don't present the offers yourself.",
+      learner_goal: "Demonstrate you understand why closings are won or lost weeks earlier, in your own words.",
+      success_criteria: [
+        "Explains why closing is easy when the earlier work was real (the seller already trusts us and has basically decided)",
+        "Describes roughly what happens after signing and the rep's support role (title, logistics, keeping a nervous seller calm)",
+        "Names why deals fall apart (seller's remorse, an undiscovered decision-maker, title problems, a higher offer) and connects it to discovery",
+        "Responds to \"I was hoping for more\" with acknowledge-and-ask, not defensiveness",
+      ],
+      fail_conditions: [
+        "Treats a signed contract as the finish line instead of the start of a process",
+        "Cannot name a real reason deals fall apart",
+        "Gives no grounded answer -- guesses or answers a different question",
+      ],
+    },
+  ],
   16: [
     {
       key: "slot-16",
@@ -467,6 +605,42 @@ const ORAL_CHECK_ROLE_PLAYS = {
         "Confuses or misstates the six metrics or their order",
         "Cannot explain the left-to-right diagnostic logic when asked directly",
         "Gives no grounded answer -- guesses or answers a different question",
+      ],
+    },
+  ],
+  17: [
+    {
+      key: "slot-17",
+      scenarioId: "148bc0c0-e42d-4b57-983b-4fc012f8dcf2",
+      context: "This lesson is deliberately number-free -- how pay thinking works here and where the real answers live. Andrea checks it out loud because knowing WHERE to look matters more than memorizing a number that isn't yours.",
+      learner_goal: "Demonstrate you know where pay answers actually live and why plans differ by role, in your own words.",
+      success_criteria: [
+        "Names the source of truth (your own written agreement and your manager) and rejects hallway sources like a teammate's plan",
+        "Explains why pay isn't one formula for everyone (built around the value each role creates)",
+        "Describes their own role and the value it creates, in their own words",
+      ],
+      fail_conditions: [
+        "Treats a teammate's plan or hallway talk as an authoritative answer about their own pay",
+        "Gives no grounded answer -- guesses or answers a different question",
+        "Cannot name where the real answer actually lives (their own written agreement or their manager)",
+      ],
+    },
+  ],
+  19: [
+    {
+      key: "slot-19",
+      scenarioId: "dc7d2a81-8100-49c4-832a-d0e9e0e2effe",
+      context: "This is the last lesson of the course -- how people actually move up here. Andrea checks it out loud because knowing there's a real path, and what earns it, is the note she wants you to leave on.",
+      learner_goal: "Demonstrate you understand how promotion actually works here, in your own words.",
+      success_criteria: [
+        "Explains promotion as demonstrated performance and readiness, not tenure (consistent numbers, clean CRM, handoffs that turn into closed deals)",
+        "Describes the coachability loop (hear feedback, apply it, come back better) instead of getting defensive",
+        "Shows awareness of the growth ladder (harder leads and mentoring, then closing deals, or leading a team)",
+      ],
+      fail_conditions: [
+        "Treats promotion as being about time served rather than performance",
+        "Gives no grounded answer -- guesses or answers a different question",
+        "Cannot describe the coachability loop (hearing feedback and applying it) at all",
       ],
     },
   ],

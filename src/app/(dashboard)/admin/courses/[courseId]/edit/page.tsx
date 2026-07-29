@@ -18,9 +18,10 @@ export default async function EditCoursePage({
   const { courseId } = await params;
   const supabase = await createClient();
 
-  const { data: raw } = await supabase
-    .from("courses")
-    .select(
+  const [{ data: raw }, { data: templates }] = await Promise.all([
+    supabase
+      .from("courses")
+      .select(
       `
       id,
       title,
@@ -31,6 +32,8 @@ export default async function EditCoursePage({
       thumbnail_asset_key,
       thumbnail_approved_path,
       thumbnail_approved_sha256,
+      certificate_enabled,
+      certificate_template_id,
       modules (
         id,
         title,
@@ -49,9 +52,11 @@ export default async function EditCoursePage({
         )
       )
     `,
-    )
-    .eq("id", courseId)
-    .maybeSingle();
+      )
+      .eq("id", courseId)
+      .maybeSingle(),
+    supabase.from("certificate_templates").select("id, name").eq("scope", "course").order("name"),
+  ]);
 
   const shaped = shapeCourseResponse(raw);
   if (!shaped) notFound();
@@ -93,7 +98,10 @@ export default async function EditCoursePage({
               thumbnail_asset_key: shaped.thumbnail_asset_key,
               thumbnail_approved_path: shaped.thumbnail_approved_path,
               thumbnail_approved_sha256: shaped.thumbnail_approved_sha256,
+              certificate_enabled: raw && "certificate_enabled" in raw ? raw.certificate_enabled as boolean : true,
+              certificate_template_id: raw && "certificate_template_id" in raw ? raw.certificate_template_id as string | null : null,
             }}
+            certificateTemplates={(templates ?? []).map((template) => ({ id: template.id as string, name: template.name as string }))}
           />
         </Card>
 
