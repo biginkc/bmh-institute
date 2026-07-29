@@ -210,6 +210,56 @@ $$;
 revoke all on function public.fn_hugo_apply_config_is_valid(jsonb)
   from public, anon, authenticated, service_role;
 
+create or replace function public.fn_hugo_existing_apply_config(
+  p_config jsonb
+)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  v_config jsonb := public.fn_hugo_canonical_apply_config(p_config);
+  v_value text;
+  v_id uuid;
+  v_ids uuid[] := '{}'::uuid[];
+  v_result jsonb;
+begin
+  if jsonb_typeof(v_config) <> 'object'
+     or jsonb_typeof(v_config->'role_group_ids') <> 'array' then
+    return '{"role_group_ids":[]}'::jsonb;
+  end if;
+
+  for v_value in
+    select item.value
+    from jsonb_array_elements_text(v_config->'role_group_ids') item(value)
+  loop
+    if v_value ~*
+       '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
+    then
+      v_id := v_value::uuid;
+      if exists (
+        select 1
+        from public.role_groups role_group
+        where role_group.id = v_id
+      ) and not v_id = any(v_ids) then
+        v_ids := array_append(v_ids, v_id);
+      end if;
+    end if;
+  end loop;
+
+  select coalesce(jsonb_agg(candidate.id::text order by candidate.id), '[]'::jsonb)
+  into v_result
+  from unnest(v_ids) candidate(id);
+
+  return jsonb_build_object('role_group_ids', v_result);
+end;
+$$;
+
+revoke all on function public.fn_hugo_existing_apply_config(jsonb)
+  from public, anon, authenticated, service_role;
+
 create or replace function public.fn_hugo_store_guard_failure(
   p_operation_id uuid,
   p_operation text,
@@ -655,7 +705,7 @@ begin
   end if;
   v_effective_config := case
     when p_status in ('suspended', 'revoked')
-      then '{"role_group_ids":[]}'::jsonb
+      then public.fn_hugo_existing_apply_config(v_config)
     else v_config
   end;
 

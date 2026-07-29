@@ -46,12 +46,15 @@ describe("Hugo verified identity and orphan deletion guard", () => {
     );
   });
 
-  it("binds invalid requests and clears unsafe group state on access reduction", () => {
+  it("binds invalid requests and filters unsafe group state on access reduction", () => {
     expect(migration).toMatch(
       /p_status = 'active'[\s\S]*fn_hugo_apply_config_is_valid\(v_config\)/,
     );
     expect(migration).toContain(
-      "then '{\"role_group_ids\":[]}'::jsonb",
+      "then public.fn_hugo_existing_apply_config(v_config)",
+    );
+    expect(migration).toContain(
+      "from public.role_groups role_group",
     );
     expect(migration).toContain(
       "'The Institute access request is invalid.'",
@@ -67,6 +70,9 @@ describe("Hugo verified identity and orphan deletion guard", () => {
     );
     expect(migration).toMatch(
       /revoke all on function public\.fn_hugo_apply_config_is_valid\(jsonb\)[\s\S]*?from public, anon, authenticated, service_role;/,
+    );
+    expect(migration).toMatch(
+      /revoke all on function public\.fn_hugo_existing_apply_config\(jsonb\)[\s\S]*?from public, anon, authenticated, service_role;/,
     );
     expect(migration).toMatch(
       /grant execute on function public\.hugo_delete_identity\(uuid, text\)[\s\S]*?to service_role;/,

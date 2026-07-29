@@ -179,10 +179,15 @@ end;
 $$;
 
 insert into public.role_groups (id, name)
-values (
-  '00000000-0000-4000-8000-000000000992',
-  'Hugo deleted-group lifecycle regression'
-);
+values
+  (
+    '00000000-0000-4000-8000-000000000992',
+    'Hugo deleted-group lifecycle regression'
+  ),
+  (
+    '00000000-0000-4000-8000-000000001010',
+    'Hugo valid-group preservation regression'
+  );
 
 insert into auth.users (
   id,
@@ -220,7 +225,7 @@ begin
     '00000000-0000-4000-8000-000000000994',
     'deleted-group-suspend-hugo@example.invalid',
     'learner',
-    '{"role_group_ids":["00000000-0000-4000-8000-000000000992"]}'::jsonb,
+    '{"role_group_ids":["00000000-0000-4000-8000-000000000992","00000000-0000-4000-8000-000000001010"]}'::jsonb,
     'active',
     null,
     '00000000-0000-4000-8000-000000000993'
@@ -249,7 +254,7 @@ declare
   v_preflight jsonb;
   v_receipt jsonb;
   v_stale_config jsonb :=
-    '{"role_group_ids":["00000000-0000-4000-8000-000000000992"]}'::jsonb;
+    '{"role_group_ids":["00000000-0000-4000-8000-000000000992","00000000-0000-4000-8000-000000001010"]}'::jsonb;
 begin
   v_preflight := public.hugo_preflight_access_operation(
     '00000000-0000-4000-8000-000000000995',
@@ -275,11 +280,45 @@ begin
      and v_receipt->>'request_hash' = v_preflight->>'request_hash',
     'deleted role group blocked or unbound suspension';
   assert (
-    select grant_row.config = '{"role_group_ids":[]}'::jsonb
+    select grant_row.config =
+      '{"role_group_ids":["00000000-0000-4000-8000-000000001010"]}'::jsonb
     from public.hugo_access_grants grant_row
     where grant_row.user_id =
       '00000000-0000-4000-8000-000000000993'
-  ), 'suspension retained a deleted role group';
+  ), 'suspension did not preserve only the valid role group';
+  assert exists (
+    select 1
+    from public.user_role_groups membership
+    where membership.user_id =
+      '00000000-0000-4000-8000-000000000993'
+      and membership.role_group_id =
+        '00000000-0000-4000-8000-000000001010'
+  ), 'suspension removed the valid role-group membership';
+
+  v_preflight := public.hugo_preflight_access_operation(
+    '00000000-0000-4000-8000-000000001011',
+    'deleted-group-suspend-hugo@example.invalid',
+    'learner',
+    '{"role_group_ids":["00000000-0000-4000-8000-000000001010"]}'::jsonb,
+    'active',
+    null
+  );
+  assert (v_preflight->>'proceed')::boolean,
+    'valid preserved group blocked reactivation preflight';
+  v_receipt := public.hugo_apply_access(
+    '00000000-0000-4000-8000-000000001011',
+    'deleted-group-suspend-hugo@example.invalid',
+    'learner',
+    '{"role_group_ids":["00000000-0000-4000-8000-000000001010"]}'::jsonb,
+    'active',
+    null,
+    '00000000-0000-4000-8000-000000000993'
+  );
+  assert (v_receipt->>'ok')::boolean
+     and v_receipt#>>'{observed,status}' = 'active'
+     and v_receipt#>>'{observed,config,role_group_ids,0}' =
+       '00000000-0000-4000-8000-000000001010',
+    'reactivation did not restore the preserved valid group';
 
   v_preflight := public.hugo_preflight_access_operation(
     '00000000-0000-4000-8000-000000000999',
