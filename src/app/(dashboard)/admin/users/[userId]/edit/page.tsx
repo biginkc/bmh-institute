@@ -99,16 +99,14 @@ export default async function EditUserPage({
       <Card padding="md">
         <AdminSectionHeading
           title="Settings"
-          description="Role, status, and role-group membership. Changes save together. Adding a role group that unlocks new programs sends an enrollment email to the user."
+          description="Institute role and role-group membership. Adding a role group that unlocks new programs sends an enrollment email to the user."
         />
         <UserEditForm
           userId={profile.id}
           initialSystemRole={profile.system_role}
-          initialStatus={profile.status}
           initialRoleGroupIds={currentRoleGroupIds}
           allRoleGroups={allRoleGroups}
           canModifyRole={!isEditingSelf}
-          canSuspend={!isEditingSelf}
         />
       </Card>
     </main>

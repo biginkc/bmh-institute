@@ -1,0 +1,1214 @@
+-- Keep active Hugo grants bound to a verified Institute Auth email, and never
+-- report a profile-less Auth identity as deleted while the Auth row survives.
+-- This forward migration preserves the frozen public RPC signatures.
+
+begin;
+
+set local lock_timeout = '10s';
+
+create or replace function public.fn_hugo_active_identity_is_unverified(
+  p_email text,
+  p_app_user_id text
+)
+returns boolean
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  v_email text := lower(btrim(coalesce(p_email, '')));
+  v_app_user_id uuid;
+begin
+  if p_app_user_id is not null then
+    begin
+      v_app_user_id := p_app_user_id::uuid;
+    exception when invalid_text_representation then
+      -- The lifecycle implementation returns the existing invalid-id receipt.
+      return false;
+    end;
+    return not exists (
+      select 1
+      from auth.users auth_user
+      where auth_user.id = v_app_user_id
+        and lower(btrim(auth_user.email)) = v_email
+        and auth_user.email_confirmed_at is not null
+    );
+  end if;
+
+  if exists (
+    select 1
+    from public.profiles profile
+    where lower(btrim(profile.email)) = v_email
+  ) then
+    return exists (
+      select 1
+      from public.profiles profile
+      where lower(btrim(profile.email)) = v_email
+        and not exists (
+          select 1
+          from auth.users auth_user
+          where auth_user.id = profile.id
+            and lower(btrim(auth_user.email)) = v_email
+            and auth_user.email_confirmed_at is not null
+        )
+    );
+  end if;
+
+  return exists (
+    select 1
+    from auth.users auth_user
+    where lower(btrim(auth_user.email)) = v_email
+      and auth_user.email_confirmed_at is null
+  );
+end;
+$$;
+
+revoke all on function public.fn_hugo_active_identity_is_unverified(text, text)
+  from public, anon, authenticated, service_role;
+
+create or replace function public.fn_hugo_identity_cardinality_state(
+  p_email text
+)
+returns text
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  with matching_auth as (
+    select auth_user.id
+    from auth.users auth_user
+    where lower(btrim(auth_user.email)) =
+      lower(btrim(coalesce(p_email, '')))
+  ),
+  matching_profiles as (
+    select profile.id
+    from public.profiles profile
+    where lower(btrim(profile.email)) =
+      lower(btrim(coalesce(p_email, '')))
+  ),
+  cardinality as (
+    select
+      (select count(*) from matching_auth) as auth_count,
+      (select count(*) from matching_profiles) as profile_count,
+      (
+        select count(*)
+        from matching_auth auth_match
+        join matching_profiles profile_match
+          on profile_match.id = auth_match.id
+      ) as linked_count
+  )
+  select case
+    when auth_count = 0 and profile_count = 0 then 'absent'
+    when auth_count = 1 and profile_count = 1 and linked_count = 1
+      then 'one_to_one'
+    when auth_count > 0 and profile_count = 0 then 'profile_missing'
+    else 'ambiguous_identity'
+  end
+  from cardinality;
+$$;
+
+revoke all on function public.fn_hugo_identity_cardinality_state(text)
+  from public, anon, authenticated, service_role;
+
+create or replace function public.fn_hugo_email_has_durable_activity(
+  p_email text
+)
+returns boolean
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_user_id uuid;
+begin
+  for v_user_id in
+    select auth_user.id
+    from auth.users auth_user
+    where lower(btrim(auth_user.email)) =
+      lower(btrim(coalesce(p_email, '')))
+    order by auth_user.id
+    for update
+  loop
+    if public.fn_hugo_has_durable_activity(v_user_id) then
+      return true;
+    end if;
+  end loop;
+
+  for v_user_id in
+    select profile.id
+    from public.profiles profile
+    where lower(btrim(profile.email)) =
+      lower(btrim(coalesce(p_email, '')))
+      and not exists (
+        select 1
+        from auth.users auth_user
+        where auth_user.id = profile.id
+      )
+    order by profile.id
+    for update
+  loop
+    if public.fn_hugo_has_durable_activity(v_user_id) then
+      return true;
+    end if;
+  end loop;
+  return false;
+end;
+$$;
+
+revoke all on function public.fn_hugo_email_has_durable_activity(text)
+  from public, anon, authenticated, service_role;
+
+create or replace function public.fn_hugo_apply_config_is_valid(
+  p_config jsonb
+)
+returns boolean
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  v_config jsonb := public.fn_hugo_canonical_apply_config(p_config);
+  v_ids uuid[] := '{}'::uuid[];
+begin
+  if jsonb_typeof(v_config) <> 'object'
+     or jsonb_typeof(v_config->'role_group_ids') <> 'array' then
+    return false;
+  end if;
+  begin
+    if exists (
+      select 1
+      from jsonb_array_elements_text(
+        v_config->'role_group_ids'
+      ) as item(value)
+      where item.value !~*
+        '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
+    ) then
+      return false;
+    end if;
+    select coalesce(
+      array_agg(item.value::uuid order by item.value::uuid),
+      '{}'::uuid[]
+    )
+    into v_ids
+    from jsonb_array_elements_text(
+      v_config->'role_group_ids'
+    ) as item(value);
+  exception when others then
+    return false;
+  end;
+  return (
+    select count(*)
+    from public.role_groups role_group
+    where role_group.id = any(v_ids)
+  ) = cardinality(v_ids);
+end;
+$$;
+
+revoke all on function public.fn_hugo_apply_config_is_valid(jsonb)
+  from public, anon, authenticated, service_role;
+
+create or replace function public.fn_hugo_existing_apply_config(
+  p_config jsonb
+)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  v_config jsonb := public.fn_hugo_canonical_apply_config(p_config);
+  v_value text;
+  v_id uuid;
+  v_ids uuid[] := '{}'::uuid[];
+  v_result jsonb;
+begin
+  if jsonb_typeof(v_config) <> 'object'
+     or jsonb_typeof(v_config->'role_group_ids') <> 'array' then
+    return '{"role_group_ids":[]}'::jsonb;
+  end if;
+
+  for v_value in
+    select item.value
+    from jsonb_array_elements_text(v_config->'role_group_ids') item(value)
+  loop
+    if v_value ~*
+       '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
+    then
+      v_id := v_value::uuid;
+      if exists (
+        select 1
+        from public.role_groups role_group
+        where role_group.id = v_id
+      ) and not v_id = any(v_ids) then
+        v_ids := array_append(v_ids, v_id);
+      end if;
+    end if;
+  end loop;
+
+  select coalesce(jsonb_agg(candidate.id::text order by candidate.id), '[]'::jsonb)
+  into v_result
+  from unnest(v_ids) candidate(id);
+
+  return jsonb_build_object('role_group_ids', v_result);
+end;
+$$;
+
+revoke all on function public.fn_hugo_existing_apply_config(jsonb)
+  from public, anon, authenticated, service_role;
+
+create or replace function public.fn_hugo_reactivation_apply_config(
+  p_config jsonb,
+  p_email text
+)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  v_config jsonb := public.fn_hugo_canonical_apply_config(p_config);
+  v_suspended_config jsonb;
+  v_suspended_count bigint;
+begin
+  -- Only missing role-group references may be discarded during reactivation.
+  -- Malformed payloads must still fail the normal active-grant validation.
+  if jsonb_typeof(v_config) <> 'object'
+     or jsonb_typeof(v_config->'role_group_ids') <> 'array' then
+    return v_config;
+  end if;
+  if exists (
+    select 1
+    from jsonb_array_elements_text(
+      v_config->'role_group_ids'
+    ) item(value)
+    where item.value !~*
+      '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
+  ) then
+    return v_config;
+  end if;
+
+  select
+    count(*),
+    (jsonb_agg(grant_row.config order by profile.id))->0
+  into v_suspended_count, v_suspended_config
+  from public.profiles profile
+  join public.hugo_access_grants grant_row
+    on grant_row.user_id = profile.id
+  where lower(btrim(profile.email)) =
+      lower(btrim(coalesce(p_email, '')))
+    and grant_row.desired_status = 'suspended';
+
+  -- Initial grants, revoked grants, and ambiguous identities retain the exact
+  -- requested config and therefore keep the strict active-grant validator.
+  if v_suspended_count <> 1 then
+    return v_config;
+  end if;
+
+  if p_config is null or p_config = '{}'::jsonb then
+    return public.fn_hugo_existing_apply_config(v_suspended_config);
+  end if;
+  if public.fn_hugo_apply_config_is_valid(v_config) then
+    return v_config;
+  end if;
+  -- A syntactically valid payload can fail only because one of its UUIDs was
+  -- deleted after Hugo recorded desired state. Restore the app's suspended
+  -- valid state instead of treating the stale desired payload as a new edit.
+  return public.fn_hugo_existing_apply_config(v_suspended_config);
+end;
+$$;
+
+revoke all on function public.fn_hugo_reactivation_apply_config(jsonb, text)
+  from public, anon, authenticated, service_role;
+
+create or replace function public.fn_hugo_reactivation_access_expires_at(
+  p_email text,
+  p_access_expires_at timestamptz
+)
+returns timestamptz
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  v_suspended_expires_at timestamptz;
+  v_suspended_count bigint;
+begin
+  if p_access_expires_at is not null then
+    return p_access_expires_at;
+  end if;
+
+  select
+    count(*),
+    (array_agg(grant_row.access_expires_at order by profile.id))[1]
+  into v_suspended_count, v_suspended_expires_at
+  from public.profiles profile
+  join public.hugo_access_grants grant_row
+    on grant_row.user_id = profile.id
+  where lower(btrim(profile.email)) =
+      lower(btrim(coalesce(p_email, '')))
+    and grant_row.desired_status = 'suspended';
+
+  if v_suspended_count = 1 then
+    return v_suspended_expires_at;
+  end if;
+  return p_access_expires_at;
+end;
+$$;
+
+revoke all on function public.fn_hugo_reactivation_access_expires_at(
+  text, timestamptz
+) from public, anon, authenticated, service_role;
+
+create or replace function public.fn_hugo_serialize_role_group_delete()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  -- This statement-level trigger runs before PostgreSQL locks any role-group
+  -- row. Taking the lifecycle locks here prevents delete/apply deadlocks and
+  -- ensures the connector filters against a committed group catalog.
+  perform pg_advisory_xact_lock(
+    hashtextextended('hugo-institute-privileged-lifecycle-v1', 0)
+  );
+  perform pg_advisory_xact_lock(
+    hashtextextended('hugo-institute-grant-mutation-rpc-v1', 0)
+  );
+  return null;
+end;
+$$;
+
+revoke all on function public.fn_hugo_serialize_role_group_delete()
+  from public, anon, authenticated, service_role;
+
+drop trigger if exists role_groups_serialize_hugo_lifecycle_delete
+  on public.role_groups;
+create trigger role_groups_serialize_hugo_lifecycle_delete
+before delete
+on public.role_groups
+for each statement
+execute function public.fn_hugo_serialize_role_group_delete();
+
+-- PostgreSQL takes ACCESS EXCLUSIVE before firing a TRUNCATE trigger. Taking
+-- the Hugo advisory lock from that trigger would invert lifecycle lock order
+-- and can deadlock. Application roles never need this destructive privilege.
+-- A database owner remains serialized naturally by ACCESS EXCLUSIVE.
+revoke truncate
+on public.role_groups
+from public, anon, authenticated, service_role;
+
+create or replace function public.fn_hugo_store_guard_failure(
+  p_operation_id uuid,
+  p_operation text,
+  p_email text,
+  p_request_hash text,
+  p_requested_role text,
+  p_requested_config jsonb,
+  p_requested_status text,
+  p_requested_expires_at timestamptz,
+  p_app_user_id text,
+  p_has_durable_activity boolean,
+  p_error_code text,
+  p_error_message text
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_receipt jsonb;
+begin
+  if p_operation_id is null
+     or p_operation not in (
+       'grant', 'suspend', 'reactivate', 'revoke',
+       'preparePristineDelete', 'deleteIdentity'
+     )
+     or p_request_hash !~ '^[0-9a-f]{64}$' then
+    raise exception 'Hugo guard failure receipt is invalid.'
+      using errcode = '22023';
+  end if;
+
+  v_receipt := public.fn_hugo_receipt(
+    p_operation_id,
+    p_app_user_id,
+    p_requested_role,
+    coalesce(p_requested_config, '{}'::jsonb),
+    p_requested_status,
+    p_requested_expires_at,
+    null,
+    '{}'::jsonb,
+    'missing',
+    null,
+    p_has_durable_activity,
+    false,
+    p_error_code,
+    p_error_message
+  );
+  perform set_config(
+    'hugo.request_operation_id',
+    p_operation_id::text,
+    true
+  );
+  perform set_config('hugo.request_hash', p_request_hash, true);
+  insert into public.hugo_access_operations (
+    operation_id,
+    operation,
+    email,
+    input,
+    receipt
+  ) values (
+    p_operation_id,
+    p_operation,
+    p_email,
+    case
+      when p_operation in ('grant', 'suspend', 'reactivate', 'revoke')
+        then jsonb_build_object(
+        'role', p_requested_role,
+        'config', public.fn_hugo_sanitize_json(
+          coalesce(p_requested_config, '{}'::jsonb)
+        ),
+        'status', p_requested_status,
+        'access_expires_at', p_requested_expires_at,
+        'app_user_id', p_app_user_id
+      )
+      else '{}'::jsonb
+    end,
+    v_receipt
+  );
+  update private.hugo_access_operation_claims
+  set consumed_at = now()
+  where operation_id = p_operation_id;
+  perform set_config('hugo.request_operation_id', '', true);
+  perform set_config('hugo.request_hash', '', true);
+  return public.fn_hugo_bound_operation_receipt(p_operation_id);
+end;
+$$;
+
+revoke all on function public.fn_hugo_store_guard_failure(
+  uuid, text, text, text, text, jsonb, text, timestamptz, text, boolean,
+  text, text
+) from public, anon, authenticated, service_role;
+
+create table if not exists private.hugo_access_operation_claims (
+  operation_id uuid primary key,
+  request_hash text not null check (request_hash ~ '^[0-9a-f]{64}$'),
+  email_fingerprint text not null
+    check (email_fingerprint ~ '^[0-9a-f]{64}$'),
+  requested jsonb not null,
+  consumed_at timestamptz,
+  created_at timestamptz not null default now()
+);
+
+create unique index if not exists
+  hugo_access_operation_claims_live_email_uidx
+on private.hugo_access_operation_claims (email_fingerprint)
+where consumed_at is null;
+
+alter table private.hugo_access_operation_claims enable row level security;
+revoke all on table private.hugo_access_operation_claims
+  from public, anon, authenticated, service_role;
+drop policy if exists hugo_active_authenticated_gate
+  on private.hugo_access_operation_claims;
+create policy hugo_active_authenticated_gate
+  on private.hugo_access_operation_claims
+  as restrictive
+  for all
+  to authenticated
+  using (false)
+  with check (false);
+
+create or replace function public.hugo_preflight_access_operation(
+  p_operation_id uuid,
+  p_email text,
+  p_role text,
+  p_config jsonb,
+  p_status text,
+  p_access_expires_at timestamptz
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_email text := lower(btrim(coalesce(p_email, '')));
+  v_email_fingerprint text :=
+    public.fn_hugo_email_fingerprint(v_email);
+  v_config jsonb := public.fn_hugo_canonical_apply_config(p_config);
+  v_effective_config jsonb;
+  v_hash text;
+  v_claim private.hugo_access_operation_claims%rowtype;
+  v_blocking_claim private.hugo_access_operation_claims%rowtype;
+  v_blocking_status text;
+  v_blocking_operation text;
+  v_requested_rank integer;
+  v_blocking_rank integer;
+  v_existing_operation text;
+  v_existing_hash text;
+  v_existing_input jsonb;
+  v_existing_receipt jsonb;
+  v_existing_app_user_id text;
+  v_legacy_candidate_hash text;
+  v_receipt jsonb;
+begin
+  perform public.fn_hugo_require_service_role();
+  perform pg_advisory_xact_lock(
+    hashtextextended('hugo-institute-privileged-lifecycle-v1', 0)
+  );
+  perform pg_advisory_xact_lock(
+    hashtextextended('hugo-institute-grant-mutation-rpc-v1', 0)
+  );
+  v_effective_config := case
+    when p_status = 'active'
+      then public.fn_hugo_reactivation_apply_config(p_config, v_email)
+    else v_config
+  end;
+
+  v_hash := public.fn_hugo_request_payload_hash(
+    'hugo_apply_access',
+    v_email_fingerprint,
+    p_role,
+    v_config,
+    p_status,
+    to_jsonb(p_access_expires_at),
+    null
+  );
+  if p_operation_id is null then
+    raise exception 'operation_id is required.'
+      using errcode = '22023';
+  end if;
+
+  select claim.*
+  into v_claim
+  from private.hugo_access_operation_claims claim
+  where claim.operation_id = p_operation_id
+  for update;
+  if found then
+    if v_claim.request_hash is distinct from v_hash then
+      v_receipt := public.fn_hugo_bind_mutation_receipt(
+        public.fn_hugo_receipt(
+          p_operation_id, null, p_role, v_config, p_status,
+          p_access_expires_at, null, '{}'::jsonb, 'missing', null, null,
+          false, 'operation_id_reused',
+          'Operation id was already used for a different request.'
+        ),
+        p_operation_id,
+        v_hash
+      );
+      return jsonb_build_object(
+        'proceed', false,
+        'request_hash', v_hash,
+        'receipt', v_receipt
+      );
+    end if;
+    if exists (
+      select 1
+      from public.hugo_access_operations operation_row
+      where operation_row.operation_id = p_operation_id
+    ) then
+      return jsonb_build_object(
+        'proceed', false,
+        'request_hash', v_hash,
+        'receipt', public.fn_hugo_bound_operation_receipt(p_operation_id)
+      );
+    end if;
+    return jsonb_build_object('proceed', true, 'request_hash', v_hash);
+  end if;
+
+  select
+    operation_row.operation,
+    operation_row.request_hash,
+    operation_row.input,
+    operation_row.receipt
+  into
+    v_existing_operation,
+    v_existing_hash,
+    v_existing_input,
+    v_existing_receipt
+  from public.hugo_access_operations operation_row
+  where operation_row.operation_id = p_operation_id;
+  if found then
+    if v_existing_operation in ('grant', 'suspend', 'reactivate', 'revoke')
+    then
+      v_existing_app_user_id := case
+        when coalesce(v_existing_input, '{}'::jsonb) ? 'app_user_id'
+          then v_existing_input->>'app_user_id'
+        else v_existing_receipt->>'app_user_id'
+      end;
+      v_legacy_candidate_hash := public.fn_hugo_request_payload_hash(
+        'hugo_apply_access',
+        v_email_fingerprint,
+        p_role,
+        v_config,
+        p_status,
+        to_jsonb(p_access_expires_at),
+        v_existing_app_user_id
+      );
+      if v_existing_hash is not distinct from v_legacy_candidate_hash then
+        return jsonb_build_object(
+          'proceed', false,
+          'request_hash', v_existing_hash,
+          'receipt', public.fn_hugo_bound_operation_receipt(
+            p_operation_id
+          )
+        );
+      end if;
+    end if;
+    v_receipt := public.fn_hugo_bind_mutation_receipt(
+      public.fn_hugo_receipt(
+        p_operation_id, null, p_role, v_config, p_status,
+        p_access_expires_at, null, '{}'::jsonb, 'missing', null, null,
+        false, 'operation_id_reused',
+        'Operation id already belongs to a legacy request.'
+      ),
+      p_operation_id,
+      v_hash
+    );
+    return jsonb_build_object(
+      'proceed', false,
+      'request_hash', v_hash,
+      'receipt', v_receipt
+    );
+  end if;
+
+  if v_email = ''
+     or v_email !~ '^[^@[:space:]]+@[^@[:space:]]+$'
+     or p_role is null
+     or p_role not in ('owner', 'admin', 'learner')
+     or p_status is null
+     or p_status not in ('active', 'suspended', 'revoked')
+     or (
+       p_status = 'active'
+       and not public.fn_hugo_apply_config_is_valid(v_effective_config)
+     ) then
+    v_receipt := public.fn_hugo_store_guard_failure(
+      p_operation_id,
+      'grant',
+      v_email,
+      v_hash,
+      p_role,
+      v_config,
+      p_status,
+      p_access_expires_at,
+      null,
+      false,
+      'invalid_request',
+      'The Institute access request is invalid.'
+    );
+    return jsonb_build_object(
+      'proceed', false,
+      'request_hash', v_hash,
+      'receipt', v_receipt
+    );
+  end if;
+
+  select claim.*
+  into v_blocking_claim
+  from private.hugo_access_operation_claims claim
+  where claim.email_fingerprint = v_email_fingerprint
+    and claim.consumed_at is null
+  for update;
+  if found then
+    v_blocking_status := v_blocking_claim.requested->>'status';
+    v_requested_rank := case p_status
+      when 'active' then 0
+      when 'suspended' then 1
+      when 'revoked' then 2
+    end;
+    v_blocking_rank := case v_blocking_status
+      when 'active' then 0
+      when 'suspended' then 1
+      when 'revoked' then 2
+      else 99
+    end;
+
+    if p_status in ('suspended', 'revoked')
+       and v_requested_rank >= v_blocking_rank then
+      v_blocking_operation := case v_blocking_status
+        when 'suspended' then 'suspend'
+        when 'revoked' then 'revoke'
+        else 'grant'
+      end;
+      perform public.fn_hugo_store_guard_failure(
+        v_blocking_claim.operation_id,
+        v_blocking_operation,
+        v_email,
+        v_blocking_claim.request_hash,
+        v_blocking_claim.requested->>'role',
+        v_blocking_claim.requested->'config',
+        v_blocking_status,
+        (v_blocking_claim.requested->>'access_expires_at')::timestamptz,
+        null,
+        false,
+        'operation_superseded_by_access_reduction',
+        'A later suspension or revocation superseded this access request.'
+      );
+    else
+      v_receipt := public.fn_hugo_bind_mutation_receipt(
+        public.fn_hugo_receipt(
+          p_operation_id, null, p_role, v_config, p_status,
+          p_access_expires_at, null, '{}'::jsonb, 'missing', null, null,
+          false, 'identity_provision_in_progress',
+          'Another Institute access request is provisioning this identity.'
+        ),
+        p_operation_id,
+        v_hash
+      );
+      return jsonb_build_object(
+        'proceed', false,
+        'request_hash', v_hash,
+        'receipt', v_receipt
+      );
+    end if;
+  end if;
+
+  if exists (
+    select 1
+    from private.hugo_access_operation_claims claim
+    where claim.email_fingerprint = v_email_fingerprint
+      and claim.consumed_at is null
+  ) then
+    v_receipt := public.fn_hugo_bind_mutation_receipt(
+      public.fn_hugo_receipt(
+        p_operation_id, null, p_role, v_config, p_status,
+        p_access_expires_at, null, '{}'::jsonb, 'missing', null, null,
+        false, 'identity_provision_in_progress',
+        'Another Institute access request is provisioning this identity.'
+      ),
+      p_operation_id,
+      v_hash
+    );
+    return jsonb_build_object(
+      'proceed', false,
+      'request_hash', v_hash,
+      'receipt', v_receipt
+    );
+  end if;
+
+  insert into private.hugo_access_operation_claims (
+    operation_id,
+    request_hash,
+    email_fingerprint,
+    requested
+  ) values (
+    p_operation_id,
+    v_hash,
+    v_email_fingerprint,
+    jsonb_build_object(
+      'role', p_role,
+      'config', v_config,
+      'status', p_status,
+      'access_expires_at', p_access_expires_at
+    )
+  );
+  return jsonb_build_object('proceed', true, 'request_hash', v_hash);
+end;
+$$;
+
+revoke all on function public.hugo_preflight_access_operation(
+  uuid, text, text, jsonb, text, timestamptz
+) from public, anon, authenticated;
+grant execute on function public.hugo_preflight_access_operation(
+  uuid, text, text, jsonb, text, timestamptz
+) to service_role;
+
+create or replace function public.hugo_apply_access(
+  p_operation_id uuid,
+  p_email text,
+  p_role text,
+  p_config jsonb,
+  p_status text,
+  p_access_expires_at timestamptz,
+  p_app_user_id text default null
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_email text := lower(btrim(coalesce(p_email, '')));
+  v_config jsonb := public.fn_hugo_canonical_apply_config(p_config);
+  v_effective_config jsonb;
+  v_effective_access_expires_at timestamptz;
+  v_hash text;
+  v_existing_hash text;
+  v_claim_hash text;
+begin
+  perform public.fn_hugo_require_service_role();
+  perform pg_advisory_xact_lock(
+    hashtextextended('hugo-institute-privileged-lifecycle-v1', 0)
+  );
+  perform pg_advisory_xact_lock(
+    hashtextextended('hugo-institute-grant-mutation-rpc-v1', 0)
+  );
+  if p_operation_id is null then
+    raise exception 'operation_id is required.'
+      using errcode = '22023';
+  end if;
+  v_effective_config := case
+    when p_status in ('suspended', 'revoked')
+      then public.fn_hugo_existing_apply_config(v_config)
+    when p_status = 'active'
+      then public.fn_hugo_reactivation_apply_config(p_config, v_email)
+    else v_config
+  end;
+  v_effective_access_expires_at := case
+    when p_status = 'active'
+      then public.fn_hugo_reactivation_access_expires_at(
+        v_email,
+        p_access_expires_at
+      )
+    else p_access_expires_at
+  end;
+
+  select claim.request_hash
+  into v_claim_hash
+  from private.hugo_access_operation_claims claim
+  where claim.operation_id = p_operation_id
+  for update;
+  if found then
+    v_hash := public.fn_hugo_request_payload_hash(
+      'hugo_apply_access',
+      public.fn_hugo_email_fingerprint(v_email),
+      p_role,
+      v_config,
+      p_status,
+      to_jsonb(p_access_expires_at),
+      null
+    );
+  else
+    v_hash := public.fn_hugo_request_payload_hash(
+      'hugo_apply_access',
+      public.fn_hugo_email_fingerprint(v_email),
+      p_role,
+      v_config,
+      p_status,
+      to_jsonb(p_access_expires_at),
+      p_app_user_id
+    );
+  end if;
+  if v_claim_hash is not null
+     and v_claim_hash is distinct from v_hash then
+    return public.fn_hugo_bind_mutation_receipt(
+      public.fn_hugo_receipt(
+        p_operation_id, p_app_user_id, p_role, v_config, p_status,
+        p_access_expires_at, null, '{}'::jsonb, 'missing', null, null,
+        false, 'operation_id_reused',
+        'Operation id was already used for a different request.'
+      ),
+      p_operation_id,
+      v_hash
+    );
+  end if;
+  if v_claim_hash is not null then
+    v_hash := v_claim_hash;
+  end if;
+  select operation_row.request_hash
+  into v_existing_hash
+  from public.hugo_access_operations operation_row
+  where operation_row.operation_id = p_operation_id;
+  if found then
+    if v_existing_hash is distinct from v_hash then
+      return public.fn_hugo_bind_mutation_receipt(
+        public.fn_hugo_receipt(
+          p_operation_id, p_app_user_id, p_role, v_config, p_status,
+          p_access_expires_at, null, '{}'::jsonb, 'missing', null, null,
+          false, 'operation_id_reused',
+          'Operation id was already used for a different request.'
+        ),
+        p_operation_id,
+        v_hash
+      );
+    end if;
+    return public.fn_hugo_bound_operation_receipt(p_operation_id);
+  end if;
+
+  if p_status = 'active'
+     and public.fn_hugo_active_identity_is_unverified(
+       v_email,
+       p_app_user_id
+     ) then
+    return public.fn_hugo_store_guard_failure(
+      p_operation_id,
+      'grant',
+      v_email,
+      v_hash,
+      p_role,
+      v_config,
+      p_status,
+      p_access_expires_at,
+      p_app_user_id,
+      false,
+      'identity_unverified',
+      'The Institute identity email is not verified.'
+    );
+  end if;
+
+  perform set_config(
+    'hugo.request_operation_id',
+    p_operation_id::text,
+    true
+  );
+  perform set_config('hugo.request_hash', v_hash, true);
+  perform public.hugo_apply_access_unhashed(
+    p_operation_id,
+    p_email,
+    p_role,
+    v_effective_config,
+    p_status,
+    v_effective_access_expires_at,
+    p_app_user_id
+  );
+  perform set_config('hugo.request_operation_id', '', true);
+  perform set_config('hugo.request_hash', '', true);
+  update private.hugo_access_operation_claims
+  set consumed_at = now()
+  where operation_id = p_operation_id;
+  return public.fn_hugo_bound_operation_receipt(p_operation_id);
+end;
+$$;
+
+create or replace function public.hugo_prepare_pristine_delete(
+  p_operation_id uuid,
+  p_email text
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_email text := lower(btrim(coalesce(p_email, '')));
+  v_hash text;
+  v_existing_hash text;
+  v_durable boolean;
+  v_identity_state text;
+begin
+  perform public.fn_hugo_require_service_role();
+  perform pg_advisory_xact_lock(
+    hashtextextended('hugo-institute-privileged-lifecycle-v1', 0)
+  );
+  perform pg_advisory_xact_lock(
+    hashtextextended('hugo-institute-grant-mutation-rpc-v1', 0)
+  );
+  if p_operation_id is null then
+    raise exception 'operation_id is required.'
+      using errcode = '22023';
+  end if;
+
+  v_hash := public.fn_hugo_request_payload_hash(
+    'hugo_prepare_pristine_delete',
+    public.fn_hugo_email_fingerprint(v_email),
+    null,
+    '{}'::jsonb,
+    null,
+    null,
+    null
+  );
+  select operation_row.request_hash
+  into v_existing_hash
+  from public.hugo_access_operations operation_row
+  where operation_row.operation_id = p_operation_id;
+  if found then
+    if v_existing_hash is distinct from v_hash then
+      return public.fn_hugo_bind_mutation_receipt(
+        public.fn_hugo_receipt(
+          p_operation_id, null, null, '{}'::jsonb, 'revoked', null,
+          null, '{}'::jsonb, 'missing', null, null, false,
+          'operation_id_reused',
+          'Operation id was already used for a different request.'
+        ),
+        p_operation_id,
+        v_hash
+      );
+    end if;
+    return public.fn_hugo_bound_operation_receipt(p_operation_id);
+  end if;
+
+  v_identity_state :=
+    public.fn_hugo_identity_cardinality_state(v_email);
+  if v_identity_state not in ('absent', 'one_to_one') then
+    v_durable := public.fn_hugo_email_has_durable_activity(v_email);
+    return public.fn_hugo_store_guard_failure(
+      p_operation_id,
+      'preparePristineDelete',
+      v_email,
+      v_hash,
+      null,
+      '{}'::jsonb,
+      'revoked',
+      null,
+      null,
+      v_durable,
+      case
+        when v_durable then 'identity_not_pristine'
+        when v_identity_state = 'profile_missing'
+          then 'identity_profile_missing'
+        else 'ambiguous_identity'
+      end,
+      case
+        when v_durable then
+          'The Institute identity has durable business activity.'
+        when v_identity_state = 'profile_missing' then
+          'The Institute Auth identity has no lifecycle profile.'
+        else
+          'Institute Auth and profile identities are not one-to-one.'
+      end
+    );
+  end if;
+
+  perform set_config(
+    'hugo.request_operation_id',
+    p_operation_id::text,
+    true
+  );
+  perform set_config('hugo.request_hash', v_hash, true);
+  perform public.hugo_prepare_pristine_delete_unhashed(
+    p_operation_id,
+    p_email
+  );
+  perform set_config('hugo.request_operation_id', '', true);
+  perform set_config('hugo.request_hash', '', true);
+  return public.fn_hugo_bound_operation_receipt(p_operation_id);
+end;
+$$;
+
+create or replace function public.hugo_delete_identity(
+  p_operation_id uuid,
+  p_email text
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_email text := lower(btrim(coalesce(p_email, '')));
+  v_hash text;
+  v_existing_hash text;
+  v_durable boolean;
+  v_identity_state text;
+  v_receipt jsonb;
+begin
+  perform public.fn_hugo_require_service_role();
+  perform pg_advisory_xact_lock(
+    hashtextextended('hugo-institute-privileged-lifecycle-v1', 0)
+  );
+  perform pg_advisory_xact_lock(
+    hashtextextended('hugo-institute-grant-mutation-rpc-v1', 0)
+  );
+  if p_operation_id is null then
+    raise exception 'operation_id is required.'
+      using errcode = '22023';
+  end if;
+
+  v_hash := public.fn_hugo_request_payload_hash(
+    'hugo_delete_identity',
+    public.fn_hugo_email_fingerprint(v_email),
+    null,
+    '{}'::jsonb,
+    null,
+    null,
+    null
+  );
+  select operation_row.request_hash
+  into v_existing_hash
+  from public.hugo_access_operations operation_row
+  where operation_row.operation_id = p_operation_id;
+  if found then
+    if v_existing_hash is distinct from v_hash then
+      return public.fn_hugo_bind_mutation_receipt(
+        public.fn_hugo_receipt(
+          p_operation_id, null, null, '{}'::jsonb, 'revoked', null,
+          null, '{}'::jsonb, 'missing', null, null, false,
+          'operation_id_reused',
+          'Operation id was already used for a different request.'
+        ),
+        p_operation_id,
+        v_hash
+      );
+    end if;
+    return public.fn_hugo_bound_operation_receipt(p_operation_id);
+  end if;
+
+  v_identity_state :=
+    public.fn_hugo_identity_cardinality_state(v_email);
+  if v_identity_state not in ('absent', 'one_to_one') then
+    v_durable := public.fn_hugo_email_has_durable_activity(v_email);
+    return public.fn_hugo_store_guard_failure(
+      p_operation_id,
+      'deleteIdentity',
+      v_email,
+      v_hash,
+      null,
+      '{}'::jsonb,
+      'revoked',
+      null,
+      null,
+      v_durable,
+      case
+        when v_durable then 'identity_not_pristine'
+        when v_identity_state = 'profile_missing'
+          then 'identity_profile_missing'
+        else 'ambiguous_identity'
+      end,
+      case
+        when v_durable then
+          'The Institute identity has durable business activity.'
+        when v_identity_state = 'profile_missing' then
+          'The Institute Auth identity has no lifecycle profile.'
+        else
+          'Institute Auth and profile identities are not one-to-one.'
+      end
+    );
+  end if;
+
+  perform set_config(
+    'hugo.request_operation_id',
+    p_operation_id::text,
+    true
+  );
+  perform set_config('hugo.request_hash', v_hash, true);
+  perform public.hugo_delete_identity_unhashed(
+    p_operation_id,
+    p_email
+  );
+  perform set_config('hugo.request_operation_id', '', true);
+  perform set_config('hugo.request_hash', '', true);
+  v_receipt := public.fn_hugo_bound_operation_receipt(p_operation_id);
+  if coalesce((v_receipt->>'ok')::boolean, false)
+     and public.fn_hugo_identity_cardinality_state(v_email) <> 'absent'
+  then
+    raise exception
+      'Institute identity deletion left matching Auth or profile state.'
+      using errcode = '55000';
+  end if;
+  return v_receipt;
+end;
+$$;
+
+revoke all on function public.hugo_apply_access(
+  uuid, text, text, jsonb, text, timestamptz, text
+) from public, anon, authenticated;
+revoke all on function public.hugo_prepare_pristine_delete(uuid, text)
+  from public, anon, authenticated;
+revoke all on function public.hugo_delete_identity(uuid, text)
+  from public, anon, authenticated;
+grant execute on function public.hugo_apply_access(
+  uuid, text, text, jsonb, text, timestamptz, text
+) to service_role;
+grant execute on function public.hugo_prepare_pristine_delete(uuid, text)
+  to service_role;
+grant execute on function public.hugo_delete_identity(uuid, text)
+  to service_role;
+
+commit;

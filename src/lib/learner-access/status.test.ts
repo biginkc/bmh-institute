@@ -2,12 +2,9 @@ import { describe, expect, it } from "vitest";
 
 import { shapeLearnerAccessRows } from "./status";
 
-const NOW = new Date("2026-05-09T12:00:00.000Z");
-
 describe("shapeLearnerAccessRows", () => {
   it("marks active learners with role groups as ready", () => {
     const rows = shapeLearnerAccessRows({
-      now: NOW,
       profiles: [
         profile({
           id: "user-1",
@@ -15,13 +12,11 @@ describe("shapeLearnerAccessRows", () => {
           full_name: "Ready Learner",
         }),
       ],
-      invites: [],
       userRoleGroupsByUserId: { "user-1": ["group-1"] },
     });
 
     expect(rows).toEqual([
       expect.objectContaining({
-        kind: "profile",
         id: "user-1",
         email: "ready@example.com",
         name: "Ready Learner",
@@ -35,7 +30,6 @@ describe("shapeLearnerAccessRows", () => {
 
   it("marks active learners with no role group as missing access", () => {
     const rows = shapeLearnerAccessRows({
-      now: NOW,
       profiles: [
         profile({
           id: "user-2",
@@ -43,7 +37,6 @@ describe("shapeLearnerAccessRows", () => {
           full_name: "Missing Access",
         }),
       ],
-      invites: [],
       userRoleGroupsByUserId: {},
     });
 
@@ -59,7 +52,6 @@ describe("shapeLearnerAccessRows", () => {
 
   it("marks suspended learners separately", () => {
     const rows = shapeLearnerAccessRows({
-      now: NOW,
       profiles: [
         profile({
           id: "user-3",
@@ -67,7 +59,6 @@ describe("shapeLearnerAccessRows", () => {
           email: "suspended@example.com",
         }),
       ],
-      invites: [],
       userRoleGroupsByUserId: { "user-3": ["group-1"] },
     });
 
@@ -79,68 +70,25 @@ describe("shapeLearnerAccessRows", () => {
     );
   });
 
-  it("marks future pending invites as pending invite", () => {
+  it("does not mark an invited profile as ready even when it has a role group", () => {
     const rows = shapeLearnerAccessRows({
-      now: NOW,
-      profiles: [],
-      invites: [
-        invite({
-          id: "invite-1",
-          email: "pending@example.com",
-          expires_at: "2026-05-10T12:00:00.000Z",
-          role_group_ids: ["group-1"],
+      profiles: [
+        profile({
+          id: "user-4",
+          status: "invited",
+          email: "invited@example.com",
         }),
       ],
-      userRoleGroupsByUserId: {},
+      userRoleGroupsByUserId: { "user-4": ["group-1"] },
     });
 
     expect(rows[0]).toEqual(
       expect.objectContaining({
-        kind: "invite",
-        id: "invite-1",
-        statusKey: "pending_invite",
-        statusLabel: "Pending invite",
+        statusKey: "inactive",
+        statusLabel: "Not active",
         accessLabel: "Role group assigned",
       }),
     );
-  });
-
-  it("marks past pending invites as expired", () => {
-    const rows = shapeLearnerAccessRows({
-      now: NOW,
-      profiles: [],
-      invites: [
-        invite({
-          id: "invite-2",
-          email: "expired@example.com",
-          expires_at: "2026-05-08T12:00:00.000Z",
-        }),
-      ],
-      userRoleGroupsByUserId: {},
-    });
-
-    expect(rows[0]).toEqual(
-      expect.objectContaining({
-        statusKey: "expired_invite",
-        statusLabel: "Expired",
-      }),
-    );
-  });
-
-  it("excludes accepted invites from pending setup rows", () => {
-    const rows = shapeLearnerAccessRows({
-      now: NOW,
-      profiles: [],
-      invites: [
-        invite({
-          id: "invite-3",
-          accepted_at: "2026-05-09T11:00:00.000Z",
-        }),
-      ],
-      userRoleGroupsByUserId: {},
-    });
-
-    expect(rows).toEqual([]);
   });
 });
 
@@ -156,19 +104,6 @@ function profile(overrides: Partial<ProfileInput> = {}): ProfileInput {
   };
 }
 
-function invite(overrides: Partial<InviteInput> = {}): InviteInput {
-  return {
-    id: "invite-1",
-    email: "invite@example.com",
-    system_role: "learner",
-    role_group_ids: [],
-    created_at: "2026-05-01T12:00:00.000Z",
-    accepted_at: null,
-    expires_at: "2026-05-20T12:00:00.000Z",
-    ...overrides,
-  };
-}
-
 type ProfileInput = {
   id: string;
   email: string;
@@ -176,14 +111,4 @@ type ProfileInput = {
   system_role: "owner" | "admin" | "learner";
   status: "active" | "invited" | "suspended";
   created_at: string;
-};
-
-type InviteInput = {
-  id: string;
-  email: string;
-  system_role: "owner" | "admin" | "learner";
-  role_group_ids: string[] | null;
-  created_at: string;
-  accepted_at: string | null;
-  expires_at: string;
 };

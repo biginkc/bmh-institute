@@ -1,0 +1,142 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+
+import { describe, expect, it } from "vitest";
+
+const migration = readFileSync(
+  resolve("supabase/migrations/20260728091000_hugo_access_provisioner.sql"),
+  "utf8",
+);
+
+describe("Hugo Institute access provisioner contract", () => {
+  it("exposes the frozen RPC names and normalized receipt fields", () => {
+    expect(migration).toMatch(
+      /create or replace function public\.hugo_apply_access\([\s\S]*?p_operation_id uuid,[\s\S]*?p_email text,[\s\S]*?p_role text,[\s\S]*?p_config jsonb,[\s\S]*?p_status text,[\s\S]*?p_access_expires_at timestamptz,[\s\S]*?p_app_user_id text default null/,
+    );
+    expect(migration).toContain("public.hugo_inspect_access(p_email text)");
+    expect(migration).toContain("create or replace function public.hugo_list_access()");
+    expect(migration).toMatch(
+      /returns table \([\s\S]*?email text,[\s\S]*?app_user_id text,[\s\S]*?role text,[\s\S]*?config jsonb,[\s\S]*?status text,[\s\S]*?access_expires_at timestamptz,[\s\S]*?has_durable_activity boolean/,
+    );
+    expect(migration).toContain(
+      "public.hugo_prepare_pristine_delete(\n  p_operation_id uuid,\n  p_email text",
+    );
+    expect(migration).toContain(
+      "public.hugo_delete_identity(\n  p_operation_id uuid,\n  p_email text",
+    );
+    for (const field of [
+      "operation_id",
+      "app_id",
+      "app_user_id",
+      "requested",
+      "observed",
+      "has_durable_activity",
+      "error_code",
+      "error_message",
+    ]) {
+      expect(migration).toContain(`'${field}'`);
+    }
+  });
+
+  it("fails closed at the service-role boundary and makes retries idempotent", () => {
+    expect(migration).toContain("coalesce(auth.role(), '') <> 'service_role'");
+    expect(migration).toContain(
+      "v_existing := public.fn_hugo_operation_receipt(p_operation_id)",
+    );
+    expect(migration).toMatch(
+      /revoke all on function public\.hugo_apply_access[\s\S]*grant execute on function public\.hugo_apply_access[\s\S]*to service_role;/,
+    );
+    expect(migration).toMatch(
+      /revoke all on function public\.hugo_inspect_access[\s\S]*grant execute on function public\.hugo_inspect_access[\s\S]*to service_role;/,
+    );
+    expect(migration).toMatch(
+      /revoke all on function public\.hugo_list_access\(\)[\s\S]*grant execute on function public\.hugo_list_access\(\)[\s\S]*to service_role;/,
+    );
+  });
+
+  it("fails closed on duplicate email identities instead of choosing a row", () => {
+    expect(migration).not.toMatch(/\blimit\s+1\b/i);
+    expect(migration).toContain("v_auth_count integer");
+    expect(migration).toContain("select count(*) into v_auth_count");
+    expect(migration).toContain("More than one Auth identity matches the email.");
+    expect(migration).toContain("More than one Institute identity matches the email.");
+    expect(migration).toContain("'ambiguous_identity'");
+  });
+
+  it("validates Institute roles and role groups without logging secrets", () => {
+    expect(migration).toContain("('owner', 'admin', 'learner')");
+    expect(migration).toContain("role_group_ids must be an array.");
+    expect(migration).toContain("One or more role groups do not exist.");
+    expect(migration).toMatch(
+      /v_key ~\* '\(secret\|token\|password\|private\.\?key\|cookie\|action\.\?link\|access\.\?key\)'/,
+    );
+  });
+
+  it("enforces expiry/suspension at the content authorization helpers", () => {
+    expect(migration).toContain("g.desired_status = 'active'");
+    expect(migration).toContain(
+      "g.access_expires_at is null or g.access_expires_at > now()",
+    );
+    expect(migration).toContain("public.fn_hugo_access_is_active(p_user_id)");
+    expect(migration).toContain("when v_grant.access_expires_at is not null");
+  });
+
+  it("keeps the inventory read-only, sanitized, and deterministic", () => {
+    const inventory = migration.match(
+      /create or replace function public\.hugo_list_access\(\)[\s\S]*?\n\$\$;/,
+    )?.[0];
+    expect(inventory).toBeDefined();
+    expect(inventory).toContain("fn_hugo_require_service_role");
+    expect(inventory).toContain("fn_hugo_sanitize_json");
+    expect(inventory).toContain("fn_hugo_has_durable_activity");
+    expect(inventory).toContain("from public.profiles p");
+    expect(inventory).toContain("left join public.hugo_access_grants g");
+    expect(inventory).toContain("left join public.user_role_groups urg");
+    expect(inventory).toContain("g.app_user_id");
+    expect(inventory).toContain("g.role");
+    expect(inventory).toContain("g.config");
+    expect(inventory).toContain("p.id::text");
+    expect(inventory).toContain("jsonb_build_object");
+    expect(inventory).toContain("p.status = 'active'");
+    expect(inventory).toContain("order by lower(trim(p.email)), p.id");
+    expect(inventory).not.toMatch(/\b(insert|update|delete)\s+(into\s+)?/i);
+    expect(inventory).not.toContain("hugo_access_operations");
+  });
+
+  it("guards the final owner and requires pristine deletion preparation", () => {
+    expect(migration).toContain("final active Institute owner cannot");
+    expect(migration).toContain("identity_not_pristine");
+    expect(migration).toContain("delete from auth.users where id = v_profile.id");
+    expect(migration).toContain("prepared_for_delete");
+    expect(migration).toContain("fn_hugo_has_durable_activity");
+  });
+
+  it("returns an idempotent success receipt for a safe already-prepared retry", () => {
+    const prepare = migration.match(
+      /create or replace function public\.hugo_prepare_pristine_delete\([\s\S]*?\n\$\$;/,
+    )?.[0];
+    expect(prepare).toBeDefined();
+    const alreadyPrepared = prepare?.match(
+      /if found and v_grant\.prepared_for_delete then[\s\S]*?end if;/,
+    )?.[0];
+    expect(alreadyPrepared).toBeDefined();
+    expect(alreadyPrepared).toContain("false, true, null, null");
+    expect(alreadyPrepared).not.toContain("already_prepared");
+    expect(alreadyPrepared).toContain("'suspended'");
+    expect(alreadyPrepared).toContain("v_grant.access_expires_at");
+  });
+
+  it("serializes final-owner checks with a shared lifecycle lock", () => {
+    expect(migration).toContain(
+      "hashtextextended('hugo-institute-privileged-lifecycle-v1', 0)",
+    );
+    expect(migration).not.toContain(
+      "hashtextextended(p_operation_id::text, 0)",
+    );
+    expect(
+      migration.match(
+        /hashtextextended\('hugo-institute-privileged-lifecycle-v1', 0\)/g,
+      ),
+    ).toHaveLength(4);
+  });
+});

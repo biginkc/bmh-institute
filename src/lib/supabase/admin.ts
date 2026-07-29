@@ -3,9 +3,8 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "./types";
 
 /**
- * Service-role Supabase client — bypasses RLS and unlocks auth.admin.*
- * methods (createUser, listUsers, deleteUser) used for team
- * management and trigger-equivalent server-side operations.
+ * Service-role Supabase client. It bypasses RLS for trusted storage,
+ * notification, and server-side operations.
  *
  * NEVER return this from a server component rendered for an untrusted
  * user. Only call from server actions that have already verified the

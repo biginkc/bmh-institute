@@ -5,6 +5,7 @@ import { Card } from "@/components/bmh-ds/card";
 import { Coach } from "@/components/bmh-ds/coach";
 import { artworkRequestKey } from "@/lib/artwork/paths";
 import { signAuthorizedArtworkPaths } from "@/lib/content-blocks/sign-urls";
+import { getHugoUrl } from "@/lib/hugo-url";
 import { shapeProgramsResponse } from "@/lib/programs/shape";
 import { createClient } from "@/lib/supabase/server";
 
@@ -124,7 +125,7 @@ export default async function DashboardPage({
       />
       <nav aria-label="Account" className="mt-8 flex gap-4 border-t border-[var(--border-hairline)] pt-5 text-sm font-extrabold">
         <Link href="/profile" prefetch={false} className="text-[var(--action)] hover:underline">Profile</Link>
-        <a href="https://hugo.bmhgroupkc.com" className="text-[var(--action)] hover:underline">Manage Hugo account</a>
+        <a href={getHugoUrl()} className="text-[var(--action)] hover:underline">Manage Hugo account</a>
       </nav>
     </main>
   );
@@ -143,7 +144,7 @@ function NoAssignments() {
             </p>
             <div className="mt-5 flex gap-4 text-sm font-extrabold">
               <Link href="/profile" prefetch={false} className="text-[var(--action)] hover:underline">Check your profile</Link>
-              <a href="https://hugo.bmhgroupkc.com" className="text-[var(--action)] hover:underline">Manage Hugo account</a>
+              <a href={getHugoUrl()} className="text-[var(--action)] hover:underline">Manage Hugo account</a>
             </div>
           </div>
           <div className="hidden md:block">

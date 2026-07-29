@@ -6,6 +6,10 @@ import { mkdtemp, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
+import {
+  verifyAuthInsertLifecycleSerialization,
+} from "../hugo-auth-insert-concurrency-test.mjs";
+
 const root = resolve(import.meta.dirname, "../..");
 const externalMode = process.env.FIXTURE_GATE_EXTERNAL_PG;
 if (externalMode !== undefined && externalMode !== "1") {
@@ -80,6 +84,7 @@ try {
     $$;
     grant authenticator to supabase_storage_admin;
     create schema auth;
+    grant usage on schema auth to anon, authenticated, service_role;
     create function auth.uid() returns uuid language sql stable as $$
       select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid
     $$;
@@ -94,12 +99,16 @@ try {
       email text,
       encrypted_password text,
       email_confirmed_at timestamptz,
+      last_sign_in_at timestamptz,
       raw_app_meta_data jsonb,
       raw_user_meta_data jsonb,
       created_at timestamptz,
       updated_at timestamptz
     );
+    grant execute on function auth.uid(), auth.role()
+      to anon, authenticated, service_role;
     create schema storage;
+    grant usage on schema storage to anon, authenticated, service_role;
     create table storage.buckets (
       id text primary key,
       name text not null,
@@ -116,10 +125,13 @@ try {
       user_metadata jsonb
     );
     alter table storage.objects enable row level security;
+    grant select, insert, update, delete on storage.objects to authenticated;
     create function storage.foldername(name text) returns text[]
       language sql immutable as $$ select string_to_array(name, '/') $$;
     create schema extensions;
     create extension pgcrypto with schema extensions;
+    alter default privileges in schema public
+      grant select, insert, update, delete on tables to authenticated;
     alter database postgres set search_path = public, extensions;
   `);
   const migrations = (await readdir(resolve(root, "supabase/migrations")))
@@ -140,6 +152,9 @@ try {
   }
   for (const migration of migrations) {
     const migrationPath = resolve(root, "supabase/migrations", migration);
+    if (migration === "20260729040000_hugo_mutation_receipt_binding.sql") {
+      seedHugoHistoricalUnboundReceipt();
+    }
     if (migration === "038_refresh_fixture_progress_fingerprints.sql") {
       replayProgressFingerprintMigration(migrationPath);
     } else if (migration === "051_quiz_answer_privacy_snapshots.sql") {
@@ -264,6 +279,67 @@ try {
       "supabase/tests/054_released_content_block_revision.sql",
     ),
   );
+  psqlFile(
+    resolve(root, "supabase/tests/055_hugo_access_provisioner.sql"),
+  );
+  psqlFile(
+    resolve(
+      root,
+      "supabase/tests/056_hugo_access_operation_payload_hash.sql",
+    ),
+  );
+  psqlFile(
+    resolve(
+      root,
+      "supabase/tests/057_hugo_access_authorization_hardening.sql",
+    ),
+  );
+  psqlFile(
+    resolve(
+      root,
+      "supabase/tests/058_hugo_missing_identity_durable_proof.sql",
+    ),
+  );
+  psqlFile(
+    resolve(
+      root,
+      "supabase/migrations/20260729001500_hugo_auth_insert_lifecycle_lock.sql",
+    ),
+  );
+  psqlFile(
+    resolve(
+      root,
+      "supabase/migrations/20260729003000_hugo_auth_email_lifecycle_lock.sql",
+    ),
+  );
+  psqlFile(
+    resolve(
+      root,
+      "supabase/tests/059_hugo_auth_insert_lifecycle_lock.sql",
+    ),
+  );
+  psqlFile(
+    resolve(
+      root,
+      "supabase/tests/060_hugo_auth_email_lifecycle_lock.sql",
+    ),
+  );
+  psqlFile(
+    resolve(
+      root,
+      "supabase/tests/061_hugo_mutation_receipt_binding.sql",
+    ),
+  );
+  psqlFile(
+    resolve(
+      root,
+      "supabase/tests/062_hugo_verified_identity_and_orphan_delete_guard.sql",
+    ),
+  );
+  await verifyAuthInsertLifecycleSerialization({
+    psqlPath: binary("psql"),
+    env: pgEnv,
+  });
   psqlFile(
     resolve(
       root,
@@ -457,6 +533,38 @@ try {
 
 function psqlText(sql) {
   exec(binary("psql"), ["-v", "ON_ERROR_STOP=1", "-c", sql]);
+}
+
+function seedHugoHistoricalUnboundReceipt() {
+  psqlText(`
+    set request.jwt.claim.role = 'service_role';
+    select public.hugo_apply_access(
+      '00000000-0000-4000-8000-000000000961',
+      'historical-receipt@example.invalid',
+      'not-a-role',
+      '{}'::jsonb,
+      'active',
+      null,
+      null
+    );
+    do $$
+    declare
+      v_receipt jsonb;
+      v_hash text;
+    begin
+      select receipt, request_hash into v_receipt, v_hash
+      from public.hugo_access_operations
+      where operation_id = '00000000-0000-4000-8000-000000000961';
+      assert v_receipt->>'operation_id' =
+        '00000000-0000-4000-8000-000000000961',
+        'historical receipt must already contain its operation id';
+      assert not (v_receipt ? 'request_hash'),
+        'historical fixture must precede receipt hash binding';
+      assert v_hash ~ '^[0-9a-f]{64}$',
+        'historical fixture must already have a journal request hash';
+    end;
+    $$;
+  `);
 }
 
 function psqlScalar(sql) {

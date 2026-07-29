@@ -46,6 +46,10 @@ vi.mock("@/lib/supabase/server", () => ({
   }),
 }));
 
+vi.mock("@/lib/hugo-url", () => ({
+  getHugoUrl: () => "https://hugo.bmhgroupkc.com",
+}));
+
 import { requireAdmin } from "@/lib/auth/guard";
 import AdminUsersPage from "./page";
 
@@ -104,7 +108,7 @@ describe("AdminUsersPage (WR-05)", () => {
     });
   });
 
-  it("renders pilot setup states", async () => {
+  it("renders profile access states and points account creation to Hugo", async () => {
     tableData = {
       profiles: [
         {
@@ -144,11 +148,14 @@ describe("AdminUsersPage (WR-05)", () => {
     const html = renderToStaticMarkup(await AdminUsersPage());
 
     expect(html).toContain("Learner access");
+    expect(html).toContain("Institute profiles");
     expect(html).toContain("No role group assigned");
-    expect(html).toContain("Expired");
     expect(html).toContain("Role group assigned");
-    expect(html).toContain("Grant Institute access");
-    expect(html).not.toContain("Supabase email with a signup link");
+    expect(html).toContain('href="https://hugo.bmhgroupkc.com"');
+    expect(html).toContain("Add a person in Hugo");
+    expect(html).not.toContain("Historical invites");
+    expect(html).not.toContain("Revoke");
+    expect(html).not.toContain("expired@example.com");
     expect(html).toContain("text-transform:uppercase");
   });
 
@@ -189,12 +196,10 @@ describe("AdminUsersPage (WR-05)", () => {
     expect(html).toMatch(
       /data-testid="active-members-table-scroll" style="[^"]*overflow-x:auto/,
     );
-    expect(html).toMatch(
-      /data-testid="pending-invites-table-scroll" style="[^"]*overflow-x:auto/,
-    );
+    expect(html).not.toContain('data-testid="pending-invites-table-scroll"');
   });
 
-  it("does not offer an unreleased imported QA group in the invite form", async () => {
+  it("does not mix course setup into the Hugo account-creation link", async () => {
     tableData = {
       role_groups: [
         { id: "employee-group", name: "Employees" },
@@ -211,15 +216,15 @@ describe("AdminUsersPage (WR-05)", () => {
 
     const html = renderToStaticMarkup(await AdminUsersPage());
 
-    expect(html).toContain("Employees");
+    expect(html).toContain("Add a person in Hugo");
+    expect(html).not.toContain("Employees");
     expect(html).not.toContain("Imported review QA");
   });
 
-  it("fails closed when protected imported review groups cannot be verified", async () => {
+  it("does not query imported course setup to render account administration", async () => {
     tableErrors = { programs: { message: "database unavailable" } };
 
-    await expect(AdminUsersPage()).rejects.toThrow(
-      "Unable to verify protected imported-course review groups.",
-    );
+    const html = renderToStaticMarkup(await AdminUsersPage());
+    expect(html).toContain("Add a person in Hugo");
   });
 });
