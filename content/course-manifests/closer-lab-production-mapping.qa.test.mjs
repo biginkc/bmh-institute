@@ -205,6 +205,88 @@ test("deferred mapping scaffold covers the exact six authored scenario and assig
   assert.deepEqual(validateScenarioMappingLedgerShape(manifest, ledger), []);
 });
 
+// Round-3 Codex review of PR #130 caught a real regression here: every test
+// above (via base()/attachDeferredRolePlayFixture) strips ALL role_play
+// blocks out of the manifest and hand-rebuilds exactly the frozen six,
+// which means none of them ever exercise finalizeScenarioProductionMapping()
+// against the REAL, current 9-role-play manifest (6 frozen certification +
+// 3 Andrea Oral Check pilot blocks, PR #130). rolePlayBindings() was already
+// correctly scoped to `block-role-play-*` only, but
+// finalizeScenarioProductionMapping()'s own mutation loop re-derived its own
+// unscoped `block.type === "role_play"` walk and would throw trying to
+// process a `block-oral-check-*` block against a Closer Lab export that
+// structurally cannot and should not contain it. This test uses the real,
+// unmodified manifest and asserts finalization processes exactly the six
+// certification entries and leaves all three oral-check blocks completely
+// untouched.
+test("finalization against the real current 9-role-play manifest processes exactly the six certification entries and leaves the three oral-check blocks untouched", async () => {
+  const [manifestBytes, ledgerBytes, catalogBytes] = await Promise.all([
+    readFile(MANIFEST_URL),
+    readFile(LEDGER_URL),
+    readFile(CATALOG_URL),
+  ]);
+  const manifest = JSON.parse(manifestBytes);
+  const catalog = JSON.parse(catalogBytes);
+  const ledger = pendingLedgerFixture(JSON.parse(ledgerBytes));
+
+  const rolePlayBlocksIn = (targetManifest) =>
+    targetManifest.program.courses
+      .flatMap((course) => course.modules)
+      .flatMap((courseModule) => courseModule.lessons)
+      .flatMap((lesson) => lesson.blocks ?? [])
+      .filter((block) => block.type === "role_play");
+
+  const allRolePlayBlocks = rolePlayBlocksIn(manifest);
+  assert.equal(allRolePlayBlocks.length, 9, "the real manifest has 9 role_play blocks (6 certification + 3 oral-check), not a hand-crafted 6");
+  const oralCheckBlocks = allRolePlayBlocks.filter((block) => block.source_key.startsWith("block-oral-check-"));
+  assert.equal(oralCheckBlocks.length, 3);
+  const originalOralCheckContentBySourceKey = new Map(
+    oralCheckBlocks.map((block) => [block.source_key, structuredClone(block.content)]),
+  );
+
+  // Build a synthetic-but-self-consistent attestation the same way
+  // productionAttestation() does elsewhere in this file, sourcing each
+  // frozen block's scenario_id from the block's own real, checked-in
+  // manifest value (no live Closer Lab credentials required) rather than a
+  // fabricated placeholder.
+  const blocksBySourceKey = new Map(allRolePlayBlocks.map((block) => [block.source_key, block]));
+  const provisionalLedger = structuredClone(ledger);
+  for (const record of provisionalLedger.records) {
+    const block = blocksBySourceKey.get(record.block_source_key);
+    assert.ok(block, `${record.block_source_key} exists in the real manifest`);
+    record.production_scenario_id = block.content.scenario_id;
+  }
+  const attestation = productionAttestation(provisionalLedger, catalog);
+
+  const result = finalizeScenarioProductionMapping({
+    manifest,
+    ledger,
+    catalog,
+    closerExport: attestation,
+    approvedVoiceId: APPROVED_VOICE_ID,
+  });
+
+  assert.equal(result.ledger.status, "finalized");
+  assert.equal(result.ledger.records.length, 6);
+  assert.deepEqual(
+    result.ledger.records.map((record) => record.block_source_key).sort(),
+    ledger.records.map((record) => record.block_source_key).sort(),
+  );
+
+  const finalizedRolePlayBlocks = rolePlayBlocksIn(result.manifest);
+  assert.equal(finalizedRolePlayBlocks.length, 9, "finalization must not add or remove role_play blocks");
+
+  const finalizedOralCheckBlocks = finalizedRolePlayBlocks.filter((block) => block.source_key.startsWith("block-oral-check-"));
+  assert.equal(finalizedOralCheckBlocks.length, 3);
+  for (const block of finalizedOralCheckBlocks) {
+    assert.deepEqual(
+      block.content,
+      originalOralCheckContentBySourceKey.get(block.source_key),
+      `${block.source_key} must be byte-for-byte untouched by certification finalization`,
+    );
+  }
+});
+
 test("production attestation finalizes the manifest and ledger without hand-copied UUIDs", async () => {
   const { manifest, ledger, catalog } = await base();
   const expectedManifest = structuredClone(manifest);

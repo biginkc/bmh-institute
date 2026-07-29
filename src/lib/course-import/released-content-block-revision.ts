@@ -6,12 +6,29 @@ import type {
 } from "./manifest";
 import { validateCourseManifest } from "./manifest";
 import { buildImportPlan, type ImportOperation, type ImportPlan } from "./operations";
+import { postgresJsonbText } from "./postgres-jsonb";
 
 export const RELEASED_CONTENT_BLOCK_REVISION = {
   importId: "bmh-employee-training-v1",
   originalReleaseManifestSha256: "71f85173bc857d1b3b042fba0a50fdd420b6410ef84b104a751c3ed5982eba5c",
   expectedActiveManifestSha256: "440ec4d85bc6dc0aec9d471fb0f5ecbe0ca8c17236b3012e8b036b8d045a154d",
   expectedActiveCatalogSha256: "ca42e3d6347a71f46bd1aabee6c7b5c9fc570e797473865ceee30d4fe2a36ae0",
+  // This is an immutable identity pin for the ALREADY-APPLIED
+  // fn_revise_released_content_blocks_v1 historical correction, not a
+  // pointer to whatever the live manifest currently hashes to. It must
+  // equal both the SQL function's hardcoded v_target_manifest_sha256
+  // literal (supabase/migrations/20260726170000_revise_released_content_blocks.sql)
+  // and the archived snapshot at
+  // content/course-manifests/archive/bmh-employee-training.released-content-block-revision-target-20260726.v1.json
+  // -- the released catalog exactly as it stood with the 19 guide + 19
+  // flashcard corrections and the 6 frozen Closer Lab role-play blocks
+  // inserted. The live manifest is expected to keep evolving for unrelated
+  // reasons (e.g. gaining the 2026-07-28 Andrea Oral Check pilot's 3 new
+  // role_play blocks in content/course-manifests/bmh-employee-training.v1.json),
+  // and this pin must NEVER be regenerated to chase that drift -- doing so
+  // once already broke this checksum contract (round-3 Codex review,
+  // PR #130 finding 1); real production evidence/receipts are permanently
+  // tied to this exact value. See released-content-block-revision-checksum-pin.test.ts.
   targetManifestSha256: "585b72c923a560d2228f6149a5b906ec02958f19d62818dc5c109c3968345a33",
   expectedPriorCatalogSha256: "e66250effa99bda93e8dd828077811585a5369e2e142bfa9bc5381f5ccd94eb4",
   expectedClientPayloadSha256: "81d918fd621bb82da935a81f06a08196ce27b2cb853fafcf0f8a2df88de8201b",
@@ -415,24 +432,6 @@ export function assertReleasedContentBlockRevisedState(
       );
     }
   }
-}
-
-function postgresJsonbText(value: unknown): string {
-  if (value === null || typeof value === "boolean" || typeof value === "number") {
-    return JSON.stringify(value);
-  }
-  if (typeof value === "string") return JSON.stringify(value);
-  if (Array.isArray(value)) return `[${value.map(postgresJsonbText).join(", ")}]`;
-  if (typeof value === "object") {
-    const entries = Object.entries(value as Record<string, unknown>)
-      .sort(([left], [right]) =>
-        left.length - right.length || Buffer.compare(Buffer.from(left), Buffer.from(right))
-      );
-    return `{${entries.map(([key, item]) =>
-      `${JSON.stringify(key)}: ${postgresJsonbText(item)}`
-    ).join(", ")}}`;
-  }
-  throw new Error("Released content revision payload contains a non-JSON value.");
 }
 
 export function releasedContentBlockRevisionConfirmation(input: {

@@ -33,8 +33,17 @@ import {
   writeCompletedReleasedContentBlockRevisionAssetReceipt,
 } from "../../src/lib/course-import/released-content-block-revision-receipt";
 
+// This command replays one specific, already-applied historical correction
+// (fn_revise_released_content_blocks_v1). Its target manifest is an
+// immutable archived snapshot, not the live evolving manifest -- the live
+// manifest keeps changing for unrelated reasons (e.g. the 2026-07-28 Andrea
+// Oral Check pilot's 3 new role_play blocks), and this command's checksum
+// pin must never chase that drift. See
+// content/course-manifests/archive/README.md and PR #130 round-3 review
+// finding 1. Pass an explicit manifest path only for an intentionally
+// confirmed rollback rehearsal.
 const DEFAULT_MANIFEST =
-  "content/course-manifests/bmh-employee-training.v1.json";
+  "content/course-manifests/archive/bmh-employee-training.released-content-block-revision-target-20260726.v1.json";
 const LEGACY_MANIFEST =
   "content/course-manifests/archive/bmh-employee-training.legacy-release-20260721.v1.json";
 

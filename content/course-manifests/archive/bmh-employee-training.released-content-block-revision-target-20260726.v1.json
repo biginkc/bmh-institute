@@ -3261,33 +3261,6 @@
                         }
                       ]
                     }
-                  },
-                  {
-                    "source_key": "block-oral-check-slot-02",
-                    "type": "role_play",
-                    "sort_order": 6,
-                    "required": true,
-                    "content": {
-                      "mode": "oral_check",
-                      "height_px": 760,
-                      "scenario_id": "e46baf56-d0ae-4621-87f3-07718f0744b2",
-                      "scenario_spec": {
-                        "assignment_source_key": "oral-check-slot-02",
-                        "context": "This lesson covers the core vocabulary a caller needs on a live call -- property and seller-situation terms, wholesaling mechanics, deal-math terms, and CRM/pipeline terms. Andrea checks it out loud because recognizing these terms in the moment on a real call is different from recognizing them on a written quiz.",
-                        "learner_goal": "Demonstrate accurate understanding of the core terms in your own words, not a memorized definition.",
-                        "success_criteria": [
-                          "Correctly defines core property/seller-situation terms (distressed, off-market, MLS, DOM, FSBO)",
-                          "Explains the wholesaling mechanism (assignment of contract, assignment fee, and/or double close)",
-                          "Correctly defines ARV, MAO, and equity and how they relate to the offer calculation",
-                          "Correctly explains at least 2 transaction/CRM terms (PSA, EMD, title company, lien, Sandra, disposition)"
-                        ],
-                        "fail_conditions": [
-                          "Confuses or misstates the core property/seller-situation terms (e.g., calls a listed property \"off-market\")",
-                          "Cannot describe the wholesaling mechanism (assignment of contract vs. buying and reselling)",
-                          "Gives no grounded answer -- guesses or answers a different question"
-                        ]
-                      }
-                    }
                   }
                 ]
               },
@@ -9241,33 +9214,6 @@
                           "back": "10,000 to 12,000."
                         }
                       ]
-                    }
-                  },
-                  {
-                    "source_key": "block-oral-check-slot-05",
-                    "type": "role_play",
-                    "sort_order": 7,
-                    "required": true,
-                    "content": {
-                      "mode": "oral_check",
-                      "height_px": 760,
-                      "scenario_id": "fd3b4f85-2407-426b-a21b-db9d7163ebbb",
-                      "scenario_spec": {
-                        "assignment_source_key": "oral-check-slot-05",
-                        "context": "This lesson covers the As-Is Cash Home Purchase offer, the four-step process, why sellers accept a below-market price, and how the offer number gets built. Andrea checks it out loud because explaining the offer to a real seller is different from reciting the script.",
-                        "learner_goal": "Demonstrate accurate understanding of the offer and why it works, in your own words.",
-                        "success_criteria": [
-                          "Explains the core offer and the four-step process accurately",
-                          "Explains why sellers accept a below-market price (speed/certainty/simplicity/convenience trade-off)",
-                          "Walks through the offer formula (ARV minus repairs minus margin) with the correct general shape",
-                          "Names at least 2 Ideal-Seller-Profile criteria OR 2 not-a-fit criteria"
-                        ],
-                        "fail_conditions": [
-                          "Confuses or misstates the core offer terms (e.g., says the deal is not cash or claims commissions are charged)",
-                          "Cannot walk through the four-step process or the offer formula's shape",
-                          "Gives no grounded answer -- guesses or answers a different question"
-                        ]
-                      }
                     }
                   }
                 ]
@@ -29118,33 +29064,6 @@
                           "back": "Escalate the document conflict and confirm the target in the current approved operating plan."
                         }
                       ]
-                    }
-                  },
-                  {
-                    "source_key": "block-oral-check-slot-16",
-                    "type": "role_play",
-                    "sort_order": 6,
-                    "required": true,
-                    "content": {
-                      "mode": "oral_check",
-                      "height_px": 760,
-                      "scenario_id": "7765693a-5f8a-4aa1-ac39-c21866624006",
-                      "scenario_spec": {
-                        "assignment_source_key": "oral-check-slot-16",
-                        "context": "This lesson covers what a KPI is, the six pipeline metrics tracked left to right, and how to use that order to diagnose exactly where a funnel is breaking. Andrea checks it out loud because using the numbers to self-diagnose is different from reciting the list.",
-                        "learner_goal": "Demonstrate accurate understanding of the six metrics and how to read them, in your own words.",
-                        "success_criteria": [
-                          "Names the six metrics in the correct left-to-right order",
-                          "Explains dial count as an effort indicator, not a strict goal (names the speed-dialing risk)",
-                          "Correctly diagnoses at least one funnel-gap scenario (e.g., high quality conversations / low process calls = discovery or disqualifying-too-fast problem)",
-                          "Explains why metrics are tracked left-to-right (to pinpoint exactly where in the funnel something broke)"
-                        ],
-                        "fail_conditions": [
-                          "Confuses or misstates the six metrics or their order",
-                          "Cannot explain the left-to-right diagnostic logic when asked directly",
-                          "Gives no grounded answer -- guesses or answers a different question"
-                        ]
-                      }
                     }
                   }
                 ]

@@ -83,6 +83,17 @@ async function applyCheckedInProductionBindings(manifest) {
       for (const lesson of courseModule.lessons) {
         for (const block of lesson.blocks ?? []) {
           if (block.type !== "role_play") continue;
+          // The 3 Andrea Oral Check pilot blocks (block-oral-check-*, PR
+          // #130) never go through the pending:X -> live-reconciled-binding
+          // pipeline at all: build-manifest.mjs emits their real, already
+          // read-only-verified production scenario_id directly (see
+          // ORAL_CHECK_ROLE_PLAYS), the same way the migration
+          // (20260728020000_insert_oral_check_pilot_role_play_blocks.sql)
+          // binds them. They are a deliberately separate namespace from
+          // the frozen 6-scenario closer-lab-production-mapping.json
+          // ledger this function reconciles -- see rolePlayBindings() in
+          // closer-lab-production-mapping.mjs.
+          if (!block.source_key.startsWith("block-role-play-")) continue;
           const record = records.get(block.source_key);
           assert.ok(record, `${block.source_key} has a live-reconciled production binding`);
           assert.match(block.content.scenario_id, /^pending:/);

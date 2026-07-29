@@ -57,7 +57,8 @@
     "course:quizzes:revise": "tsx scripts/course-content/revise-released-quizzes.ts",
     "course:quizzes:rehearsal-sql": "tsx scripts/course-content/build-released-quiz-revision-rehearsal-sql.ts",
     "course:finalize:closer-lab": "node scripts/course-content/finalize-closer-lab-production-mapping.mjs",
-    "course:reconcile:closer-lab": "node scripts/course-content/reconcile-closer-lab-production-mapping.mjs"
+    "course:reconcile:closer-lab": "node scripts/course-content/reconcile-closer-lab-production-mapping.mjs",
+    "course:oral-check:apply": "tsx scripts/course-content/apply-oral-check-pilot-to-production.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",

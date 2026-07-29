@@ -362,6 +362,21 @@ function validateSortOrder(items, context, errors) {
   }
 }
 
+// The 3 Andrea Oral Check pilot blocks (PR #130) use a self-describing
+// operation key for scenario_spec.assignment_source_key ("oral-check-slot-NN")
+// rather than a reference to a real assignment lesson: there is no real
+// BMH assignment these bind to (this is a comprehension check after a
+// content lesson, not a graded submission tied to a section assignment),
+// and pointing them at an unrelated real assignment_source_key just to
+// satisfy the generic lookup below would be a fabricated reference. Exempt
+// exactly these 3, by source_key, from the "must reference a real
+// assignment" check -- never a general escape hatch.
+const ORAL_CHECK_PILOT_BLOCK_SOURCE_KEYS = new Set([
+  "block-oral-check-slot-02",
+  "block-oral-check-slot-05",
+  "block-oral-check-slot-16",
+]);
+
 function validateRolePlaySpec(block, assignmentKeys, errors) {
   const spec = block.content?.scenario_spec;
   if (!spec || typeof spec !== "object" || Array.isArray(spec)) {
@@ -377,6 +392,7 @@ function validateRolePlaySpec(block, assignmentKeys, errors) {
     typeof spec.assignment_source_key === "string"
     && spec.assignment_source_key.trim()
     && !assignmentKeys.has(spec.assignment_source_key)
+    && !ORAL_CHECK_PILOT_BLOCK_SOURCE_KEYS.has(block.source_key)
   ) {
     errors.push(`${block.source_key} maps to unknown assignment ${spec.assignment_source_key}`);
   }
@@ -473,7 +489,13 @@ export function validateManifest(
     quizQuestions: quizBank?.totals.generated
       ?? (manifest.import_id === "bmh-employee-training-v1" ? 920 : summary.quizQuestions),
     flashcards: 152,
-    rolePlays: 6,
+    // 6 frozen sales-role-play blocks (block-role-play-*) + 3 Andrea Oral
+    // Check pilot blocks (block-oral-check-*, PR #130) inserted into
+    // Real Estate Terms Glossary, The BMH Offer Playbook, and KPIs and
+    // Sales Telemetry. See rolePlayBindings() in
+    // closer-lab-production-mapping.mjs for why these stay two separate
+    // namespaces despite both being role_play blocks here.
+    rolePlays: 9,
     posterAssets: 29,
     posterReferences: 29,
     guideAssets: 19,

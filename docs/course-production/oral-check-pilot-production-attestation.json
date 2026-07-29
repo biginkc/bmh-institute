@@ -1,0 +1,506 @@
+{
+  "schema_version": 1,
+  "purpose": "Read-only-verified evidence that the 3 Andrea Oral Check pilot scenario_id values bound in supabase/migrations/20260728020000_insert_oral_check_pilot_role_play_blocks.sql are real, live, persona-backed Closer Lab production role_plays -- not placeholders. This is a STANDALONE artifact for this pilot only. It is deliberately NOT a row in docs/course-production/closer-lab-production-mapping.json (the 6-scenario ledger) or closer-lab-production-catalog.json (the 6-scenario sales-role-play catalog): those are byte-frozen, hash-pinned (see closer-lab-production-mapping.mjs CLOSER_LAB_CATALOG_*_SHA256 constants) to a closed namespace of 6 sales-persona scenarios, and the 3 Andrea Oral Check scenarios are a structurally different type (a coach persona asking comprehension questions, not a seller persona in an objection-handling drill) living in Closer Lab's separate 'BMH Institute Oral Checks v1' catalog namespace. Merging these 3 into that frozen chain would additionally require a Closer Lab-side production-graph export RPC for the oral-check namespace (mirroring export_bmh_institute_production_graph, which only covers the 6 sales scenarios) that does not exist yet -- see the PR description for the full reasoning.",
+  "verification": {
+    "method": "read-only SQL query via Supabase MCP execute_sql",
+    "project_ref": "xqrkugdxpwhjscrheuqo",
+    "project_name": "closer-lab",
+    "verified_at": "2026-07-28T13:42:02Z",
+    "revalidated_at": "2026-07-28T14:05:00Z",
+    "revalidated_note": "Round-2 review (finding 2) required voice_id and complete active goal/document data; re-queried role_plays/personas/role_play_goals/rubric_goals/rubric_goal_documents directly (read-only, service-role MCP access to the live closer-lab project, not the production_rpc used by the frozen 6-scenario chain -- see the qa test's 'purpose' note for why this attestation is a lighter, standalone contract). All fields below -- including voice_id and managed_source_key -- are the live values returned by that revalidation, not carried over unverified from the first pass.",
+    "queries": [
+      "select rp.id as role_play_id, rp.title, rp.managed_source_key as rp_managed_source_key, rp.archived_at as rp_archived_at, p.id as persona_id, p.name as persona_name, p.voice_id, p.archived_at as persona_archived_at, p.managed_source_key as persona_managed_source_key from public.role_plays rp join public.personas p on p.id = rp.persona_id where rp.id in (...)",
+      "select rpg.role_play_id, rpg.sort_order, rpg.weight, rg.id, rg.name, rg.goal_type, rg.knowledge_subtype, rg.archived_at, count(rgd.*) from public.role_play_goals rpg join public.rubric_goals rg on rg.id = rpg.rubric_goal_id left join public.rubric_goal_documents rgd on rgd.rubric_goal_id = rg.id where rpg.role_play_id in (...) group by ...",
+      "select rp.managed_source_key, rp.type_tag, rp.max_turns, rp.allow_anonymous, rp.call_duration_seconds, rp.scoring_frame, rp.talking_points, encode(sha256(convert_to(rp.description,'UTF8')),'hex'), encode(sha256(convert_to(rp.pre_read,'UTF8')),'hex') from public.role_plays rp where rp.scoring_frame = 'knowledge_check'",
+      "select p.managed_source_key, p.role, p.avatar_url, encode(sha256(convert_to(p.system_prompt,'UTF8')),'hex'), encode(sha256(convert_to(p.opener,'UTF8')),'hex'), encode(sha256(convert_to(p.demeanor,'UTF8')),'hex') from public.personas p where p.managed_source_key like 'bmh-institute-oral-checks-v1:persona:%'",
+      "select rpg.sort_order, rg.id, rg.goal_type, rg.knowledge_subtype, rg.score_min, rg.score_max, rg.anchor_min, rg.anchor_max, rg.anchors_mid, rg.achieved_definition, rg.missed_definition, encode(sha256(convert_to(rg.member_facing_description,'UTF8')),'hex'), encode(sha256(convert_to(rg.ai_explanation,'UTF8')),'hex') from public.rubric_goals rg join public.role_play_goals rpg on rpg.rubric_goal_id = rg.id join public.role_plays rp on rp.id = rpg.role_play_id where rp.managed_source_key = ... order by rpg.sort_order",
+      "select rgd.rubric_goal_id, rgd.id, rgd.storage_path, rgd.display_name, rgd.mime_type, rgd.size_bytes, rgd.token_count, rgd.content_sha256 from public.rubric_goal_documents rgd join public.rubric_goals rg on rg.id = rgd.rubric_goal_id where rg.managed_source_key like 'bmh-institute-oral-checks-v1:goal:%'"
+    ],
+    "runtime_material_pinned_at": "2026-07-29T00:00:00Z",
+    "runtime_material_note": "Round-6 review (finding 5) required the mandatory live attestation to pin mutable conversation and scoring material, not just identity, ordering, weights, and document counts. Re-queried the live closer-lab project read-only (Supabase MCP execute_sql) after the full 12-scenario oral-check catalog was applied to Closer Lab production, and pinned every runtime-relevant field: role_play type_tag/max_turns/allow_anonymous/call_duration_seconds/scoring_frame verbatim plus description and pre_read as sha256, the full talking_points array verbatim, persona role/avatar_url verbatim plus system_prompt/opener/demeanor as sha256, each rubric goal's goal_type/knowledge_subtype/score bounds/anchors/achieved and missed definitions verbatim plus member_facing_description and ai_explanation as sha256, and every supporting document's id, storage_path, display_name, mime_type, size_bytes, token_count, and content_sha256. Long free text is pinned by hash rather than copied so this file stays reviewable; short structured configuration is pinned verbatim so a reviewer can read what the scoring basis actually is.",
+    "storage_bucket": "knowledge-docs",
+    "storage_note": "Round-7 review (finding 5): the attestation pinned each supporting document's content_sha256 metadata column but nothing ever hashed the Storage object Closer Lab actually reads at storage_path during scoring, so the bytes could diverge from the pinned metadata while the attestation stayed green. The live recheck now downloads every document from this bucket and hashes the real bytes. Bucket confirmed read-only against the live project: every rubric-docs/* object lives in knowledge-docs, and the object sizes match the pinned size_bytes exactly."
+  },
+  "scenarios": [
+    {
+      "block_source_key": "block-oral-check-slot-02",
+      "block_id": "7300bba9-a9fc-582c-aa20-dd5d58754165",
+      "lesson_source_key": "lesson-content-slot-02",
+      "role_play_id": "e46baf56-d0ae-4621-87f3-07718f0744b2",
+      "role_play_managed_source_key": "bmh-institute-oral-checks-v1:role-play:glossary",
+      "title": "BMH Institute Oral Checks v1: Talk with Andrea — Real Estate Terms Glossary",
+      "persona_id": "2edb3d95-4adc-4bbb-9735-e98a975d5cb9",
+      "persona_name": "Andrea",
+      "persona_managed_source_key": "bmh-institute-oral-checks-v1:persona:andrea-glossary",
+      "voice_id": "c7VyuzKrx3xIuZs8QT0P",
+      "archived_at": null,
+      "persona_archived_at": null,
+      "rubric_goals": [
+        {
+          "id": "99b64db5-b202-4bdc-8f50-b7942912e512",
+          "name": "BMH Institute Oral Checks v1: Glossary — Core Property/Seller-Situation Terms",
+          "weight": 30,
+          "sort_order": 0,
+          "document_count": 1,
+          "goal_type": "knowledge",
+          "knowledge_subtype": "other",
+          "score_min": null,
+          "score_max": null,
+          "anchor_min": null,
+          "anchor_max": null,
+          "anchors_mid": [],
+          "achieved_definition": null,
+          "missed_definition": null,
+          "member_facing_description_sha256": "790dee10cb6fc7e5c429ca39887292e50ce9a8815617fa1cb6484e5b07750d09",
+          "ai_explanation_sha256": "3d2673e380108be6b76609c21de2a0878af2c9203ba037107e5f7d53ce63356a",
+          "documents": [
+            {
+              "id": "1a271d23-6442-4f32-9f68-f3ad1668f658",
+              "storage_path": "rubric-docs/oral-check-glossary/core-terms.cf511e3d53305298.md",
+              "display_name": "Glossary — Core Property/Seller-Situation Terms",
+              "mime_type": "text/markdown",
+              "size_bytes": 1710,
+              "token_count": 425,
+              "content_sha256": "cf511e3d533052982591e31aff5e78ca18a1b5c4d79ab56ba65d0c2b99f941d4"
+            }
+          ]
+        },
+        {
+          "id": "a737b16f-148f-47dc-9e84-c674c9106d52",
+          "name": "BMH Institute Oral Checks v1: Glossary — Wholesaling Mechanics",
+          "weight": 25,
+          "sort_order": 1,
+          "document_count": 1,
+          "goal_type": "knowledge",
+          "knowledge_subtype": "other",
+          "score_min": null,
+          "score_max": null,
+          "anchor_min": null,
+          "anchor_max": null,
+          "anchors_mid": [],
+          "achieved_definition": null,
+          "missed_definition": null,
+          "member_facing_description_sha256": "04f650cbf063759f5bdf20aec3cdf6060dc3c5b8e32b1492b6f78f943ddffd2f",
+          "ai_explanation_sha256": "a96b0abef159affb41570be78b435c9ec42b7b8f3df4ca267403f936141a4b9d",
+          "documents": [
+            {
+              "id": "894fab9c-7394-42d4-a6f6-5dbc920c6546",
+              "storage_path": "rubric-docs/oral-check-glossary/wholesaling-mechanics.a6e55d7fe096afaf.md",
+              "display_name": "Glossary — Wholesaling Mechanics",
+              "mime_type": "text/markdown",
+              "size_bytes": 863,
+              "token_count": 214,
+              "content_sha256": "a6e55d7fe096afafd9bd5e9506c170ba10ef757f67818dafca475e07f6485f2a"
+            }
+          ]
+        },
+        {
+          "id": "8121cdde-87bd-4555-a937-6316f393dac3",
+          "name": "BMH Institute Oral Checks v1: Glossary — ARV, MAO, and Equity",
+          "weight": 25,
+          "sort_order": 2,
+          "document_count": 1,
+          "goal_type": "knowledge",
+          "knowledge_subtype": "other",
+          "score_min": null,
+          "score_max": null,
+          "anchor_min": null,
+          "anchor_max": null,
+          "anchors_mid": [],
+          "achieved_definition": null,
+          "missed_definition": null,
+          "member_facing_description_sha256": "2171fc3a595edf3ec55b17227a0fca5389c025410a9889772ef84d1a22a1f3b4",
+          "ai_explanation_sha256": "622d291995e96adcae3358023baaaaf0b145fe5ae58974074e6cdffed7713399",
+          "documents": [
+            {
+              "id": "5ddb7857-e621-42f5-88d8-79c775f6f9cb",
+              "storage_path": "rubric-docs/oral-check-glossary/deal-math.b96fe60e127497fe.md",
+              "display_name": "Glossary — ARV, MAO, and Equity",
+              "mime_type": "text/markdown",
+              "size_bytes": 1315,
+              "token_count": 328,
+              "content_sha256": "b96fe60e127497fe4839f8458c1899475746c6de38e9d89c5344d056e3774d7c"
+            }
+          ]
+        },
+        {
+          "id": "70348f37-af2e-4065-9d45-764f94255312",
+          "name": "BMH Institute Oral Checks v1: Glossary — Transaction and CRM Terms",
+          "weight": 20,
+          "sort_order": 3,
+          "document_count": 1,
+          "goal_type": "knowledge",
+          "knowledge_subtype": "other",
+          "score_min": null,
+          "score_max": null,
+          "anchor_min": null,
+          "anchor_max": null,
+          "anchors_mid": [],
+          "achieved_definition": null,
+          "missed_definition": null,
+          "member_facing_description_sha256": "f56992c9626092f3fb646bbfbdd63e8180ffd73c3a078ad1834566d2dbffc075",
+          "ai_explanation_sha256": "74b2f1f9a2e53628978f837f10ad1c85518a37a11da0cce430b5ce4f0feb27a0",
+          "documents": [
+            {
+              "id": "10f5e8cd-136c-40a3-be8f-9a713cf283bb",
+              "storage_path": "rubric-docs/oral-check-glossary/transaction-crm-terms.5b33f6ed84955d71.md",
+              "display_name": "Glossary — Transaction and CRM Terms",
+              "mime_type": "text/markdown",
+              "size_bytes": 1291,
+              "token_count": 322,
+              "content_sha256": "5b33f6ed84955d713d0884a9218f625f7485deed2b8750bbbfdb030494271666"
+            }
+          ]
+        }
+      ],
+      "role_play_runtime": {
+        "type_tag": "BMH Institute · Oral Check · Glossary",
+        "max_turns": 18,
+        "allow_anonymous": true,
+        "call_duration_seconds": null,
+        "scoring_frame": "knowledge_check",
+        "description_sha256": "6f89cce372aa0e9684e75ed055ae4827bad33187d711bfd97aac130bd9c4acba",
+        "pre_read_sha256": "a0fb80714542ab627c8c6c101cef3b5c6f831488fd7834af2abdfa4ee71d197e",
+        "talking_points": [
+          "Andrea asks what 'distressed' and 'off-market' actually mean.",
+          "Andrea asks the difference between MLS and DOM, and why high DOM matters.",
+          "Andrea asks why 'the place needs a lot of work' is actually good news (as-is buying).",
+          "Andrea asks how wholesaling profit actually works (assignment of contract, assignment fee).",
+          "Andrea asks what ARV and MAO mean and how equity affects a deal.",
+          "Andrea asks why 'if it's not in Sandra, it didn't happen.'",
+          "Andrea gives one gentle follow-up if an answer is incomplete, then moves on."
+        ]
+      },
+      "persona_runtime": {
+        "role": "BMH Institute learning coach",
+        "avatar_url": "/personas/library/avatar-09-south-asian-woman-young.jpg",
+        "system_prompt_sha256": "d7675c6823c825308e610d0f4000d9ca8309c0509bf8f2fdcf09a78e13f7254c",
+        "opener_sha256": "1f960a13ad854bbf5e45d3851c407a8284cbb6f421f3c31f03a4b9837435680e",
+        "demeanor_sha256": "f8e39fb553b19c5b5f9c1424ed2bd26875a7e2c2d51960e7886cba3fb620d4aa"
+      }
+    },
+    {
+      "block_source_key": "block-oral-check-slot-05",
+      "block_id": "4464ecdd-2650-59ed-a525-78871e846d20",
+      "lesson_source_key": "lesson-content-slot-05",
+      "role_play_id": "fd3b4f85-2407-426b-a21b-db9d7163ebbb",
+      "role_play_managed_source_key": "bmh-institute-oral-checks-v1:role-play:offer-playbook",
+      "title": "BMH Institute Oral Checks v1: Talk with Andrea — BMH Offer Playbook",
+      "persona_id": "f08d3676-4156-4ed9-97bb-c083aafd3e42",
+      "persona_name": "Andrea",
+      "persona_managed_source_key": "bmh-institute-oral-checks-v1:persona:andrea-offer-playbook",
+      "voice_id": "c7VyuzKrx3xIuZs8QT0P",
+      "archived_at": null,
+      "persona_archived_at": null,
+      "rubric_goals": [
+        {
+          "id": "2395e8d4-208b-4f05-86d1-ab197f9a621d",
+          "name": "BMH Institute Oral Checks v1: Offer Playbook — Core Offer and Four-Step Process",
+          "weight": 35,
+          "sort_order": 0,
+          "document_count": 1,
+          "goal_type": "knowledge",
+          "knowledge_subtype": "other",
+          "score_min": null,
+          "score_max": null,
+          "anchor_min": null,
+          "anchor_max": null,
+          "anchors_mid": [],
+          "achieved_definition": null,
+          "missed_definition": null,
+          "member_facing_description_sha256": "c2f2fb6577f99063dc60027683df422674f0914573b288812d85e23f17cfa9ae",
+          "ai_explanation_sha256": "509afe719439b7e9594fafacb0fad4727b698d3691111d0cc0bba76271201e42",
+          "documents": [
+            {
+              "id": "d9c1ba5c-800e-4f3b-a137-0a2ea2f1d5a2",
+              "storage_path": "rubric-docs/oral-check-offer-playbook/core-process.3ff90ed64a0e2807.md",
+              "display_name": "Offer Playbook — Core Offer and Four-Step Process",
+              "mime_type": "text/markdown",
+              "size_bytes": 1150,
+              "token_count": 283,
+              "content_sha256": "3ff90ed64a0e2807b73b6f9b460740b2898b2fd103c8157660c8e904af9f86e9"
+            }
+          ]
+        },
+        {
+          "id": "80841246-66b0-4979-b666-0d19b0db3a7a",
+          "name": "BMH Institute Oral Checks v1: Offer Playbook — Why Sellers Accept Below Market",
+          "weight": 25,
+          "sort_order": 1,
+          "document_count": 1,
+          "goal_type": "knowledge",
+          "knowledge_subtype": "other",
+          "score_min": null,
+          "score_max": null,
+          "anchor_min": null,
+          "anchor_max": null,
+          "anchors_mid": [],
+          "achieved_definition": null,
+          "missed_definition": null,
+          "member_facing_description_sha256": "99c8cc3eb227b89aa4cdd5f61b53b6552a7dc0be15152674836a2ab7fe2339bb",
+          "ai_explanation_sha256": "1da947479c7121d4d63f0e463c105f90999cd2ae26871a1d96df096e15cc2dc6",
+          "documents": [
+            {
+              "id": "a033cd41-d775-4445-bfe4-444ab135b92b",
+              "storage_path": "rubric-docs/oral-check-offer-playbook/below-market-tradeoff.8def1104f91f1601.md",
+              "display_name": "Offer Playbook — Why Sellers Accept Below Market",
+              "mime_type": "text/markdown",
+              "size_bytes": 763,
+              "token_count": 190,
+              "content_sha256": "8def1104f91f16010ad86981e3e55b398153b9ca51475edd62f882f5aa7b9f9e"
+            }
+          ]
+        },
+        {
+          "id": "504b5853-4940-4565-8867-73e380c03466",
+          "name": "BMH Institute Oral Checks v1: Offer Playbook — Offer Formula (shape, not exact numbers)",
+          "weight": 25,
+          "sort_order": 2,
+          "document_count": 1,
+          "goal_type": "knowledge",
+          "knowledge_subtype": "other",
+          "score_min": null,
+          "score_max": null,
+          "anchor_min": null,
+          "anchor_max": null,
+          "anchors_mid": [],
+          "achieved_definition": null,
+          "missed_definition": null,
+          "member_facing_description_sha256": "d0dc7269852894f7ee50acbc4dfd926049dea4d923d615d55083dece2675c28f",
+          "ai_explanation_sha256": "6df19b12838250ebeeb82a80a038ee64565cd8c457144971f701ea0efe0c52e0",
+          "documents": [
+            {
+              "id": "c179907d-4c86-4c22-bddb-15c38d4e23fc",
+              "storage_path": "rubric-docs/oral-check-offer-playbook/offer-formula.5359e1c0b5e3ac2e.md",
+              "display_name": "Offer Playbook — Offer Formula (shape, not exact numbers)",
+              "mime_type": "text/markdown",
+              "size_bytes": 1044,
+              "token_count": 259,
+              "content_sha256": "5359e1c0b5e3ac2edf879a3344268f83b545124a334803414d387c584461e9ea"
+            }
+          ]
+        },
+        {
+          "id": "1a7fed12-0a67-49c6-a515-6c5aeda8d074",
+          "name": "BMH Institute Oral Checks v1: Offer Playbook — Ideal Seller Profile / Not-a-Fit Criteria",
+          "weight": 15,
+          "sort_order": 3,
+          "document_count": 1,
+          "goal_type": "knowledge",
+          "knowledge_subtype": "other",
+          "score_min": null,
+          "score_max": null,
+          "anchor_min": null,
+          "anchor_max": null,
+          "anchors_mid": [],
+          "achieved_definition": null,
+          "missed_definition": null,
+          "member_facing_description_sha256": "3af3eda02207190e589d365a040b3fd51d2d2da415d34bfeace321999000dec3",
+          "ai_explanation_sha256": "97328471ec108b0e72f678087e08dda205007aa8b9b6a947913fcf5c66475032",
+          "documents": [
+            {
+              "id": "d5c48694-6b3b-469e-b693-57ca73a58a42",
+              "storage_path": "rubric-docs/oral-check-offer-playbook/seller-fit.00c736573179a959.md",
+              "display_name": "Offer Playbook — Ideal Seller Profile / Not-a-Fit Criteria",
+              "mime_type": "text/markdown",
+              "size_bytes": 1079,
+              "token_count": 269,
+              "content_sha256": "00c736573179a959e530fb2829036beeb79f241b935a265119b971cc7072d88f"
+            }
+          ]
+        }
+      ],
+      "role_play_runtime": {
+        "type_tag": "BMH Institute · Oral Check · Offer Playbook",
+        "max_turns": 16,
+        "allow_anonymous": true,
+        "call_duration_seconds": null,
+        "scoring_frame": "knowledge_check",
+        "description_sha256": "4c910176de5fdf352a3ad91636f4f777ccac51703de1c5c169f5f2c6eb62dd80",
+        "pre_read_sha256": "c850476e710cd93a9352a6dfef9d045cf2fb8eb6bd029a04d58251c6ed113a6b",
+        "talking_points": [
+          "Andrea asks what the core offer actually is (cash, as-is, no commissions).",
+          "Andrea asks for the four-step process once a seller is interested.",
+          "Andrea asks why a seller says yes to a below-market price.",
+          "Andrea asks for the rough shape of the offer formula (not exact numbers).",
+          "Andrea asks what makes someone an Ideal Seller, or not a fit.",
+          "Andrea gives one gentle follow-up if an answer is incomplete, then moves on."
+        ]
+      },
+      "persona_runtime": {
+        "role": "BMH Institute learning coach",
+        "avatar_url": "/personas/library/avatar-09-south-asian-woman-young.jpg",
+        "system_prompt_sha256": "b874d00dc4e3654321a2e1912ad13abad633cece87cc5003af49cfe3263f02e0",
+        "opener_sha256": "3cca8d93004eb689987b40a886a7f7df19eb8609d5c20813f58c60df163427c3",
+        "demeanor_sha256": "f8e39fb553b19c5b5f9c1424ed2bd26875a7e2c2d51960e7886cba3fb620d4aa"
+      }
+    },
+    {
+      "block_source_key": "block-oral-check-slot-16",
+      "block_id": "34758403-1ddd-5e3c-a054-b2f28310d8b8",
+      "lesson_source_key": "lesson-content-slot-16",
+      "role_play_id": "7765693a-5f8a-4aa1-ac39-c21866624006",
+      "role_play_managed_source_key": "bmh-institute-oral-checks-v1:role-play:kpis-telemetry",
+      "title": "BMH Institute Oral Checks v1: Talk with Andrea — KPIs & Sales Telemetry",
+      "persona_id": "ff5d7dbc-487e-4aec-8710-b15da1f60282",
+      "persona_name": "Andrea",
+      "persona_managed_source_key": "bmh-institute-oral-checks-v1:persona:andrea-kpis-telemetry",
+      "voice_id": "c7VyuzKrx3xIuZs8QT0P",
+      "archived_at": null,
+      "persona_archived_at": null,
+      "rubric_goals": [
+        {
+          "id": "9c08063a-deb7-40a9-943a-af39e17e2007",
+          "name": "BMH Institute Oral Checks v1: KPIs — Six Metrics in Order",
+          "weight": 35,
+          "sort_order": 0,
+          "document_count": 1,
+          "goal_type": "knowledge",
+          "knowledge_subtype": "other",
+          "score_min": null,
+          "score_max": null,
+          "anchor_min": null,
+          "anchor_max": null,
+          "anchors_mid": [],
+          "achieved_definition": null,
+          "missed_definition": null,
+          "member_facing_description_sha256": "93fda4c62aa868f07ab0f1d7f4f55dccdabca97cee0c26ee7208ede3c9ba21b7",
+          "ai_explanation_sha256": "64e573a0984a0561be7e97ffa4d20ece554072bffba1edb4e000d130695113c2",
+          "documents": [
+            {
+              "id": "a8a383fe-5361-4350-aa48-73557e2851c1",
+              "storage_path": "rubric-docs/oral-check-kpis-telemetry/six-metrics.94768abed011656f.md",
+              "display_name": "KPIs — Six Metrics in Order",
+              "mime_type": "text/markdown",
+              "size_bytes": 1224,
+              "token_count": 304,
+              "content_sha256": "94768abed011656f1f68935c49771af12d00e980799c5c4199ca67f7cdd7fdf0"
+            }
+          ]
+        },
+        {
+          "id": "0d8b001c-c3c4-4eae-b4a5-e68742437f31",
+          "name": "BMH Institute Oral Checks v1: KPIs — Dial Count as an Effort Indicator",
+          "weight": 20,
+          "sort_order": 1,
+          "document_count": 1,
+          "goal_type": "knowledge",
+          "knowledge_subtype": "other",
+          "score_min": null,
+          "score_max": null,
+          "anchor_min": null,
+          "anchor_max": null,
+          "anchors_mid": [],
+          "achieved_definition": null,
+          "missed_definition": null,
+          "member_facing_description_sha256": "4149e2b2e5f38d3ab5c5fa43cfa6145cb556a2e1969a04f59d2ed4d38d73ebe1",
+          "ai_explanation_sha256": "ce808fde8804781a6f363883032f07ae26a2f34ac2ee28ec971193549d2ffd35",
+          "documents": [
+            {
+              "id": "3b7cc876-42e3-42ce-ae10-47c73bdccb71",
+              "storage_path": "rubric-docs/oral-check-kpis-telemetry/dial-count.5a713ddcf76fca2b.md",
+              "display_name": "KPIs — Dial Count as an Effort Indicator",
+              "mime_type": "text/markdown",
+              "size_bytes": 595,
+              "token_count": 148,
+              "content_sha256": "5a713ddcf76fca2bdbf88a4eaeed4acd3cb9251001318250c6340c390017b5a5"
+            }
+          ]
+        },
+        {
+          "id": "3c1bd762-6fa8-490c-8044-4d4fbae8d182",
+          "name": "BMH Institute Oral Checks v1: KPIs — Funnel-Gap Diagnosis",
+          "weight": 30,
+          "sort_order": 2,
+          "document_count": 1,
+          "goal_type": "knowledge",
+          "knowledge_subtype": "other",
+          "score_min": null,
+          "score_max": null,
+          "anchor_min": null,
+          "anchor_max": null,
+          "anchors_mid": [],
+          "achieved_definition": null,
+          "missed_definition": null,
+          "member_facing_description_sha256": "47ff9fedb2e0ff911d081b8de9ed317b5e1fcc741a9255f04b37e405cf02a047",
+          "ai_explanation_sha256": "f6d563a3b045d9826a11b3df39afd7e89332291272ed372bab662c98f4a8f4ee",
+          "documents": [
+            {
+              "id": "bbdaadb3-d432-4b1c-bf74-d5a20c362450",
+              "storage_path": "rubric-docs/oral-check-kpis-telemetry/funnel-diagnosis.6d0966752db85d58.md",
+              "display_name": "KPIs — Funnel-Gap Diagnosis",
+              "mime_type": "text/markdown",
+              "size_bytes": 1973,
+              "token_count": 490,
+              "content_sha256": "6d0966752db85d58c2e9086c6f27fbdcd72c612ee395e221f2693e2a80dbe032"
+            }
+          ]
+        },
+        {
+          "id": "422667fa-a7b0-4419-b2b3-92e51a940ac6",
+          "name": "BMH Institute Oral Checks v1: KPIs — Why Left-to-Right Tracking Matters",
+          "weight": 15,
+          "sort_order": 3,
+          "document_count": 1,
+          "goal_type": "knowledge",
+          "knowledge_subtype": "other",
+          "score_min": null,
+          "score_max": null,
+          "anchor_min": null,
+          "anchor_max": null,
+          "anchors_mid": [],
+          "achieved_definition": null,
+          "missed_definition": null,
+          "member_facing_description_sha256": "5147d6bd65c29f8628e35c6adee2a983ef8e294634acbf833dc655822640756f",
+          "ai_explanation_sha256": "c7576954d3e7c8c003cf9596bc08b8580c093e23c65fbf3fac64f477a8ceed99",
+          "documents": [
+            {
+              "id": "f3713dfa-75e7-4eb0-b5a5-069df145bf97",
+              "storage_path": "rubric-docs/oral-check-kpis-telemetry/left-to-right.536feaa8ea7e8ac8.md",
+              "display_name": "KPIs — Why Left-to-Right Tracking Matters",
+              "mime_type": "text/markdown",
+              "size_bytes": 794,
+              "token_count": 197,
+              "content_sha256": "536feaa8ea7e8ac82fadf5faf11834f51b6cc3e8c8f8050959fe02df9160d48c"
+            }
+          ]
+        }
+      ],
+      "role_play_runtime": {
+        "type_tag": "BMH Institute · Oral Check · KPIs",
+        "max_turns": 18,
+        "allow_anonymous": true,
+        "call_duration_seconds": null,
+        "scoring_frame": "knowledge_check",
+        "description_sha256": "f16c47843e86b2a769bdedffb730d35f06e0d219e053a6defb94c8a6e2604b39",
+        "pre_read_sha256": "8a464ba5d9240721859f8e01d4e336b5be5f23dedc799acfe5d8eb02012639b2",
+        "talking_points": [
+          "Andrea asks what a KPI is and why we bother tracking them.",
+          "Andrea asks for the six pipeline metrics, in order, first dial to signed contract.",
+          "Andrea asks why dial count alone isn't the goal (the speed-dialing risk).",
+          "Andrea asks what to check when connection rate suddenly drops.",
+          "Andrea asks the difference between a quality conversation and a process call.",
+          "Andrea asks the learner to diagnose a funnel-gap scenario.",
+          "Andrea asks why we track the six metrics left-to-right instead of just the final number."
+        ]
+      },
+      "persona_runtime": {
+        "role": "BMH Institute learning coach",
+        "avatar_url": "/personas/library/avatar-09-south-asian-woman-young.jpg",
+        "system_prompt_sha256": "0ebb733829fd06fb9f37de2ab1429dd7692570e7b5a82243632b5b539e9c4b0c",
+        "opener_sha256": "553b5bb29d5424efa264292c4810c9cd2873b21bd4d9a789dfd4be40f1b2b642",
+        "demeanor_sha256": "f8e39fb553b19c5b5f9c1424ed2bd26875a7e2c2d51960e7886cba3fb620d4aa"
+      }
+    }
+  ],
+  "summary": {
+    "scenario_count": 3,
+    "total_rubric_goals": 12,
+    "total_rubric_goal_documents": 12,
+    "all_non_archived": true,
+    "all_weights_sum_to_100_per_scenario": true,
+    "all_voice_ids_present_and_equal": true,
+    "shared_voice_id": "c7VyuzKrx3xIuZs8QT0P",
+    "total_pinned_runtime_hashes": 48
+  }
+}
