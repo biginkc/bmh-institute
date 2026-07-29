@@ -98,6 +98,7 @@ declare
   v_expected_prior_content jsonb;
   v_updated_count integer;
   v_target_count integer;
+  v_has_release boolean;
 begin
   -- Mirrors 20260729061000_apply_oral_check_expansion_role_play_blocks.sql:
   -- the migration-runner session is not itself authenticated as
@@ -109,6 +110,22 @@ begin
   if coalesce(auth.role(), '') <> 'service_role' then
     raise exception 'Oral-check expansion fail_conditions fix requires service_role.'
       using errcode = '42501';
+  end if;
+
+  -- Replay-safety, same shape as 20260729061000: a fresh database (CI's
+  -- full migration replay, a local reset, a new preview project) has no
+  -- bmh-employee-training-v1 release at all -- fn_course_import_catalog_sha256
+  -- still returns a real (non-null) hash for a nonexistent import_id, so
+  -- without this check the catalog-drift comparison below would raise on
+  -- every fresh replay instead of skipping. On the real production target
+  -- the release exists, so this branch is unreachable there.
+  select exists (
+    select 1 from public.content_import_release_records where import_id = v_import_id
+  ) into v_has_release;
+  if not v_has_release then
+    raise notice 'Oral-check expansion fail_conditions fix skipped: no release exists for % on this database, so there is nothing for this one-shot correction to fix.', v_import_id;
+    perform set_config('request.jwt.claim.role', '', true);
+    return;
   end if;
 
   if exists (
