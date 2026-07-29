@@ -44,6 +44,12 @@ export async function createCourse(
   }
 
   const supabase = await createClient();
+  const templateError = await certificateTemplateError(
+    supabase,
+    parsed.value.certificate_template_id,
+    "course",
+  );
+  if (templateError) return { ok: false, error: templateError, values: parsed.value };
   const { data, error } = await supabase
     .from("courses")
     .insert({
@@ -51,6 +57,8 @@ export async function createCourse(
       description: parsed.value.description,
       is_published: parsed.value.is_published,
       thumbnail_path: parsed.value.thumbnail_path,
+      certificate_enabled: parsed.value.certificate_enabled,
+      certificate_template_id: parsed.value.certificate_template_id,
     })
     .select("id")
     .single();
@@ -108,6 +116,12 @@ export async function updateCourse(
       values: parsed.value,
     };
   }
+  const templateError = await certificateTemplateError(
+    supabase,
+    parsed.value.certificate_template_id,
+    "course",
+  );
+  if (templateError) return { ok: false, error: templateError, values: parsed.value };
   const { error } = await supabase
     .from("courses")
     .update({
@@ -115,6 +129,8 @@ export async function updateCourse(
       description: parsed.value.description,
       is_published: parsed.value.is_published,
       thumbnail_path: parsed.value.thumbnail_path,
+      certificate_enabled: parsed.value.certificate_enabled,
+      certificate_template_id: parsed.value.certificate_template_id,
     })
     .eq("id", courseId);
   if (error) {
@@ -413,6 +429,24 @@ function fieldResult(
       description: String(formData.get("description") ?? "") || null,
       is_published: formData.get("is_published") === "on",
       thumbnail_path: String(formData.get("thumbnail_path") ?? "") || null,
+      certificate_enabled: formData.get("certificate_enabled") === "on",
+      certificate_template_id: String(formData.get("certificate_template_id") ?? "") || null,
     },
   };
+}
+
+async function certificateTemplateError(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  templateId: string | null,
+  scope: "course" | "program",
+): Promise<string | null> {
+  if (!templateId) return null;
+  const { data, error } = await supabase
+    .from("certificate_templates")
+    .select("id")
+    .eq("id", templateId)
+    .eq("scope", scope)
+    .maybeSingle();
+  if (error || !data) return `Choose a ${scope} certificate template.`;
+  return null;
 }

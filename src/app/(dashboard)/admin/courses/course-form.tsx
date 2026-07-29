@@ -22,18 +22,24 @@ type Defaults = {
   thumbnail_asset_key?: string | null;
   thumbnail_approved_path?: string | null;
   thumbnail_approved_sha256?: string | null;
+  certificate_enabled?: boolean | null;
+  certificate_template_id?: string | null;
 };
+
+export type CertificateTemplateOption = { id: string; name: string };
 
 export function CourseForm({
   action,
   submitLabel,
   defaults,
   entityId,
+  certificateTemplates = [],
 }: {
   action: Action;
   submitLabel: string;
   defaults?: Defaults;
   entityId?: string;
+  certificateTemplates?: CertificateTemplateOption[];
 }) {
   const [state, formAction, pending] = useActionState<
     CourseFormState,
@@ -104,6 +110,38 @@ export function CourseForm({
             <p className="text-xs font-bold text-[var(--danger)]">{fieldError("thumbnail_path")}</p>
           ) : null}
         </div>
+      </div>
+
+      <div className="flex flex-col gap-3 rounded-[var(--bmh-radius-md)] border border-[var(--border-card)] bg-[var(--surface-tint)] px-4 py-4">
+        <div className="flex items-center gap-2.5">
+          <input
+            id="certificate_enabled"
+            name="certificate_enabled"
+            type="checkbox"
+            defaultChecked={defaults?.certificate_enabled ?? true}
+            className="size-[18px] accent-[var(--action)]"
+          />
+          <label htmlFor="certificate_enabled" className="text-sm font-bold text-[var(--ink-800)]">
+            Issue a course certificate
+          </label>
+        </div>
+        <label htmlFor="certificate_template_id" className="text-sm font-bold text-[var(--ink-800)]">
+          Course certificate template
+        </label>
+        <select
+          id="certificate_template_id"
+          name="certificate_template_id"
+          defaultValue={defaults?.certificate_template_id ?? ""}
+          className="w-full rounded-[var(--bmh-radius-md)] border-2 border-[var(--ink-300)] bg-[var(--paper)] px-3 py-3 text-sm font-bold text-[var(--ink-900)]"
+        >
+          <option value="">Use the default course template</option>
+          {certificateTemplates.map((template) => (
+            <option key={template.id} value={template.id}>{template.name}</option>
+          ))}
+        </select>
+        {certificateTemplates.length === 0 ? (
+          <p className="text-xs font-semibold text-[var(--text-muted)]">No course-specific templates exist. The default renderer will be used.</p>
+        ) : null}
       </div>
 
       <div className="flex items-center gap-2.5">

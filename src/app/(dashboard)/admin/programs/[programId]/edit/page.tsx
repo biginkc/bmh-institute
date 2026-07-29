@@ -17,12 +17,12 @@ export default async function EditProgramPage({
   const { programId } = await params;
   const supabase = await createClient();
 
-  const [{ data: program }, { data: programCourses }, { data: allCourses }] =
+  const [{ data: program }, { data: programCourses }, { data: allCourses }, { data: templates }] =
     await Promise.all([
       supabase
         .from("programs")
         .select(
-          "id, title, description, thumbnail_path, content_import_id, thumbnail_asset_key, thumbnail_approved_path, thumbnail_approved_sha256, course_order_mode, is_published, sort_order",
+          "id, title, description, thumbnail_path, content_import_id, thumbnail_asset_key, thumbnail_approved_path, thumbnail_approved_sha256, course_order_mode, is_published, sort_order, certificate_enabled, certificate_template_id",
         )
         .eq("id", programId)
         .maybeSingle(),
@@ -32,6 +32,7 @@ export default async function EditProgramPage({
         .eq("program_id", programId)
         .order("sort_order"),
       supabase.from("courses").select("id, title, is_published").order("title"),
+      supabase.from("certificate_templates").select("id, name").eq("scope", "program").order("name"),
     ]);
 
   if (!program) notFound();
@@ -88,7 +89,10 @@ export default async function EditProgramPage({
               thumbnail_asset_key: program.thumbnail_asset_key as string | null,
               thumbnail_approved_path: program.thumbnail_approved_path as string | null,
               thumbnail_approved_sha256: program.thumbnail_approved_sha256 as string | null,
+              certificate_enabled: program.certificate_enabled as boolean,
+              certificate_template_id: program.certificate_template_id as string | null,
             }}
+            certificateTemplates={(templates ?? []).map((template) => ({ id: template.id as string, name: template.name as string }))}
           />
         </Card>
 

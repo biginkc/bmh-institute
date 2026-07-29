@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Plus, X } from "lucide-react";
+import { ArrowDown, ArrowUp, Plus, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { Badge, Button, IconButton } from "@/components/bmh-ds";
@@ -9,6 +9,7 @@ import { Badge, Button, IconButton } from "@/components/bmh-ds";
 import {
   attachCourseToProgram,
   detachCourseFromProgram,
+  moveProgramCourse,
 } from "../../actions";
 
 type AttachedCourse = {
@@ -59,6 +60,13 @@ export function CourseAttachments({
     });
   }
 
+  function onMove(courseId: string, direction: "up" | "down") {
+    startTransition(async () => {
+      const result = await moveProgramCourse({ programId, courseId, direction });
+      if (result && !result.ok) toast.error(result.error);
+    });
+  }
+
   return (
     <div className="flex flex-col gap-4">
       {attached.length === 0 ? (
@@ -88,15 +96,35 @@ export function CourseAttachments({
                   </Badge>
                 </div>
               </div>
-              <IconButton
-                variant="plain"
-                size="sm"
-                label={`Remove ${c.title}`}
-                onClick={() => onDetach(c.courseId)}
-                disabled={pending}
-              >
-                <X className="size-4" aria-hidden />
-              </IconButton>
+              <div className="flex items-center gap-1">
+                <IconButton
+                  variant="plain"
+                  size="sm"
+                  label={`Move ${c.title} up`}
+                  onClick={() => onMove(c.courseId, "up")}
+                  disabled={pending || idx === 0}
+                >
+                  <ArrowUp className="size-4" aria-hidden />
+                </IconButton>
+                <IconButton
+                  variant="plain"
+                  size="sm"
+                  label={`Move ${c.title} down`}
+                  onClick={() => onMove(c.courseId, "down")}
+                  disabled={pending || idx === attached.length - 1}
+                >
+                  <ArrowDown className="size-4" aria-hidden />
+                </IconButton>
+                <IconButton
+                  variant="plain"
+                  size="sm"
+                  label={`Remove ${c.title}`}
+                  onClick={() => onDetach(c.courseId)}
+                  disabled={pending}
+                >
+                  <X className="size-4" aria-hidden />
+                </IconButton>
+              </div>
             </li>
           ))}
         </ol>
