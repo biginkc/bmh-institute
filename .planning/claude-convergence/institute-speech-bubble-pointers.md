@@ -104,3 +104,18 @@
 - Proposed action: Wait for both PR heads to pass CI, merge Closer Lab before BMH Institute, then capture desktop and mobile Chrome proof on the live Institute lesson.
 - Codex adversarial evaluation: Accepted. This preserves the final automated gate and tests the exact cross-app composition that exposed the original defect.
 - Hard-gate risk: none.
+
+### Iteration 4
+
+- Status: Exact-head CI and final merge-readiness review complete.
+- BMH Institute reviewed head: `636cfa15bfab9ddd451e1f6023baec57975ba80f`.
+- Closer Lab reviewed head: `de11ae4e346d17e3493b21ef69d414d98e3d4398`.
+- CI:
+  - Institute Verify, Seeded Playwright E2E, and Vercel preview passed.
+  - Closer Verify, Playwright golden paths, and test-database migration checks passed.
+- Final test-only follow-up: Closer's inherited lease-TTL test now freezes and restores `Date.now()` per test. This removed the demonstrated 115-to-114 and 25-to-24 wall-clock race without changing product behavior. Focused, full local, CI, and independent test-quality review all passed.
+- Claude verdict: `NEXT_STEP`, confidence high.
+- Proposed action: Merge Closer PR #155, then Institute PR #131. Do not dispatch the Closer production worker/web release workflow or mutate live voice/rollout state without Jarrad's explicit authorization.
+- Reasoning: Both merges are verified UI-only changes. Closer deliberately separates `main` from production; its only reviewed release workflow deploys a matched worker/web pair, resets member/embed rollout to `off`, and requires a fresh ten-session provider-readiness chain before promotion. That operational release is a later hard gate, not a reason to strand reviewed code.
+- Codex adversarial evaluation: Accepted. A web-only Railway deploy would violate the matched release-state contract, while the paired workflow would intentionally disable live voice. Neither is authorized by the merge gate or safe to infer from this UI request.
+- Residual production gate: Native Institute bubbles can ship through the normal Vercel merge deployment. The Andrea iframe bubble remains on the current Closer production SHA until the separate paired release is explicitly authorized and completed.
