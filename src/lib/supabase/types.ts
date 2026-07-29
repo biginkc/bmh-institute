@@ -1804,6 +1804,15 @@ export type Database = {
         Args: { p_role_group_ids: string[]; p_user_id: string }
         Returns: undefined
       }
+      fn_update_institute_role: {
+        Args: {
+          p_actor_id: string
+          p_role: string
+          p_role_group_ids: string[] | null
+          p_target_id: string
+        }
+        Returns: Json
+      }
       fn_settle_sandra_course_completion_delivery: {
         Args: {
           p_acknowledged: boolean

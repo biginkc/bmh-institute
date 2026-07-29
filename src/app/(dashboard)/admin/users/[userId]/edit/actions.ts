@@ -21,22 +21,31 @@ type UserSettingsInput = {
   role_group_ids: string[];
 };
 
+type InstituteRoleUpdateResponse = {
+  ok?: boolean;
+  code?: string;
+};
+
+const INSTITUTE_ROLE_UPDATE_ERRORS: Record<string, string> = {
+  NOT_ADMIN: "Admin access required.",
+  NOT_FOUND: "User not found.",
+  SELF_ROLE_CHANGE:
+    "You can't downgrade your own role. You'd lock yourself out.",
+  INVALID_ROLE: "Invalid role.",
+  ROLE_GROUP_NOT_FOUND: "One or more role groups no longer exist.",
+  FINAL_OWNER_GUARD: "BMH Institute must retain at least one active owner.",
+};
+
 /**
  * Saves only Institute-owned role and role-group settings.
  *
- * Self-demotion guard lives here too: an owner can't downgrade themselves.
+ * PostgreSQL re-authorizes the actor and enforces self-role restrictions.
  */
 export async function saveUserSettings(
   input: UserSettingsInput,
 ): Promise<SaveResult> {
   const me = await requireAdmin();
-  if (me.id === input.userId && input.system_role !== me.system_role) {
-    return {
-      ok: false,
-      error: "You can't downgrade your own role. You'd lock yourself out.",
-    };
-  }
-
+  const targetId = input.userId.trim();
   const supabase = await createClient();
   const roleClient = createAdminClient();
 
@@ -44,7 +53,7 @@ export async function saveUserSettings(
   const { data: existingRgs, error: existingRoleGroupsError } = await supabase
     .from("user_role_groups")
     .select("role_group_id")
-    .eq("user_id", input.userId);
+    .eq("user_id", targetId);
   if (existingRoleGroupsError) {
     return { ok: false, error: existingRoleGroupsError.message };
   }
@@ -70,10 +79,9 @@ export async function saveUserSettings(
   );
 
   const saveResult = await persistInstituteSettings(
-    supabase,
     roleClient,
-    input,
-    Array.from(oldGroupIds),
+    me.id,
+    { ...input, userId: targetId },
   );
   if (!saveResult.ok) return saveResult;
 
@@ -88,7 +96,7 @@ export async function saveUserSettings(
     const { data: profile } = await supabase
       .from("profiles")
       .select("email")
-      .eq("id", input.userId)
+      .eq("id", targetId)
       .maybeSingle();
 
     const programList = ((programs ?? []) as Array<{ id: string; title: string }>).map(
@@ -103,7 +111,7 @@ export async function saveUserSettings(
         programs: programList,
         standaloneCourses: [],
       });
-      const recipient = routeQaNotification(input.userId, profile.email as string);
+      const recipient = routeQaNotification(targetId, profile.email as string);
       if (recipient) {
         await sendEmail({
           to: recipient,
@@ -115,51 +123,33 @@ export async function saveUserSettings(
   }
 
   revalidatePath("/admin/users");
-  revalidatePath(`/admin/users/${input.userId}/edit`);
+  revalidatePath(`/admin/users/${targetId}/edit`);
   revalidatePath("/dashboard");
   return { ok: true, newProgramTitles };
 }
 
 async function persistInstituteSettings(
-  supabase: Awaited<ReturnType<typeof createClient>>,
   roleClient: ReturnType<typeof createAdminClient>,
+  actorId: string,
   input: UserSettingsInput,
-  oldRoleGroupIds: string[],
 ): Promise<{ ok: true } | { ok: false; error: string }> {
-  // Apply the guarded entitlement change before the role change. If the role
-  // write then fails, restore the prior groups so a failed save does not leave
-  // either an unexpected admin role or unexpected course access behind.
-  const { error: saveErr } = await supabase.rpc("fn_set_user_role_groups", {
-    p_user_id: input.userId,
+  const { data, error } = await roleClient.rpc("fn_update_institute_role", {
+    p_actor_id: actorId,
+    p_target_id: input.userId,
+    p_role: input.system_role,
     p_role_group_ids: input.role_group_ids,
   });
-  if (saveErr) {
-    return { ok: false, error: normalizeReleaseControlError(saveErr.message) };
+  if (error) {
+    return { ok: false, error: normalizeReleaseControlError(error.message) };
   }
-
-  const { data: updatedProfile, error: roleError } = await roleClient
-    .from("profiles")
-    .update({ system_role: input.system_role })
-    .eq("id", input.userId)
-    .select("id")
-    .maybeSingle();
-  if (!roleError && updatedProfile) return { ok: true };
-
-  const primaryError = roleError?.message ?? "User not found.";
-  const { error: rollbackError } = await supabase.rpc(
-    "fn_set_user_role_groups",
-    {
-      p_user_id: input.userId,
-      p_role_group_ids: oldRoleGroupIds,
-    },
-  );
-  if (rollbackError) {
-    return {
-      ok: false,
-      error: `${primaryError} Role-group changes could not be restored: ${normalizeReleaseControlError(rollbackError.message)}`,
-    };
-  }
-  return { ok: false, error: primaryError };
+  const result = data as InstituteRoleUpdateResponse | null;
+  if (result?.ok) return { ok: true };
+  return {
+    ok: false,
+    error:
+      INSTITUTE_ROLE_UPDATE_ERRORS[result?.code ?? ""] ??
+      "User settings could not be saved.",
+  };
 }
 
 async function accessibleProgramIdsFor(

@@ -17,6 +17,19 @@ import {
 } from "./hugo-auth-insert-concurrency-test.mjs";
 
 const root = resolve(import.meta.dirname, "..");
+const focusedSqlTests = [
+  "055_hugo_access_provisioner.sql",
+  "056_hugo_access_operation_payload_hash.sql",
+  "057_hugo_access_authorization_hardening.sql",
+  "058_hugo_missing_identity_durable_proof.sql",
+  "059_hugo_auth_insert_lifecycle_lock.sql",
+  "060_hugo_auth_email_lifecycle_lock.sql",
+  "061_hugo_mutation_receipt_binding.sql",
+  "062_hugo_verified_identity_and_orphan_delete_guard.sql",
+  "063_hugo_post_merge_security_closure.sql",
+  "064_institute_app_owned_role_access.sql",
+  "065_atomic_institute_role_update.sql",
+];
 const requestedBin = process.argv.find((value) => value.startsWith("--pg-bin="))
   ?.slice("--pg-bin=".length);
 const candidates = requestedBin
@@ -107,20 +120,8 @@ async function runPostgres(pgBin, index) {
         "supabase/migrations/20260729003000_hugo_auth_email_lifecycle_lock.sql",
       ),
     );
-    for (const test of [
-      "055_hugo_access_provisioner.sql",
-      "056_hugo_access_operation_payload_hash.sql",
-      "057_hugo_access_authorization_hardening.sql",
-      "058_hugo_missing_identity_durable_proof.sql",
-      "059_hugo_auth_insert_lifecycle_lock.sql",
-      "060_hugo_auth_email_lifecycle_lock.sql",
-      "061_hugo_mutation_receipt_binding.sql",
-      "062_hugo_verified_identity_and_orphan_delete_guard.sql",
-      "063_hugo_post_merge_security_closure.sql",
-      "064_institute_app_owned_role_access.sql",
-    ]) {
-      const path = resolve(root, "supabase/tests", test);
-      if (existsSync(path)) psqlFile(binary, env, path);
+    for (const test of focusedSqlTests) {
+      psqlFile(binary, env, resolve(root, "supabase/tests", test));
     }
 
     const authInsertSerialization =
@@ -169,7 +170,7 @@ async function runPostgres(pgBin, index) {
     return {
       postgres_major: major,
       migrations: migrations.length,
-      focused_sql_tests: 9,
+      focused_sql_tests: focusedSqlTests.length,
       auth_insert_lifecycle_serialization: authInsertSerialization,
       role_group_delete_lifecycle_serialization:
         roleGroupDeleteSerialization,

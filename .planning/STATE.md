@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-04-30)
 Phase: Complete
 Plan: Complete
 Status: v1.1 shipped; post-ship QA and workflow cleanup complete
-Last activity: 2026-07-29 - Restored application role writes and found that durable Institute role ownership still needs a Hugo lifecycle database correction.
+Last activity: 2026-07-29 - Made Institute role and role-group edits atomic with write-time admin reauthorization. Durable Hugo lifecycle role overwrite remains separate.
 
 ## Performance Metrics
 

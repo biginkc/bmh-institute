@@ -83,23 +83,10 @@ vi.mock("@/lib/supabase/server", () => ({
 
 vi.mock("@/lib/supabase/admin", () => ({
   createAdminClient: vi.fn(() => ({
-    from: (table: string) => {
-      if (table !== "profiles") {
-        throw new Error(`Unexpected admin table ${table}`);
-      }
-      return {
-        update: () => ({
-          eq: () => ({
-            select: () => ({
-              maybeSingle: async () => ({
-                data: { id: "user-1" },
-                error: null,
-              }),
-            }),
-          }),
-        }),
-      };
-    },
+    rpc: async () => ({
+      data: rpcError ? null : { ok: true, status: "updated" },
+      error: rpcError,
+    }),
   })),
 }));
 

@@ -4,28 +4,20 @@ const mocks = vi.hoisted(() => ({
   requireAdmin: vi.fn(),
   createClient: vi.fn(),
   createAdminClient: vi.fn(),
-  sessionUpdate: vi.fn(),
-  sessionEq: vi.fn(),
-  adminUpdate: vi.fn(),
-  adminEq: vi.fn(),
-  adminSelect: vi.fn(),
-  adminMaybeSingle: vi.fn(),
-  rpc: vi.fn(),
+  sessionRpc: vi.fn(),
+  adminRpc: vi.fn(),
   revalidatePath: vi.fn(),
 }));
 
 vi.mock("@/lib/auth/guard", () => ({
   requireAdmin: mocks.requireAdmin,
 }));
-
 vi.mock("next/cache", () => ({
   revalidatePath: mocks.revalidatePath,
 }));
-
 vi.mock("@/lib/supabase/server", () => ({
   createClient: mocks.createClient,
 }));
-
 vi.mock("@/lib/supabase/admin", () => ({
   createAdminClient: mocks.createAdminClient,
 }));
@@ -41,31 +33,19 @@ describe("Institute user roles and course access", () => {
       system_role: "owner",
     });
     mocks.createClient.mockResolvedValue({
-      from: () => ({
-        update: mocks.sessionUpdate,
-      }),
-      rpc: mocks.rpc,
+      rpc: mocks.sessionRpc,
     });
     mocks.createAdminClient.mockReturnValue({
-      from: () => ({
-        update: mocks.adminUpdate,
-      }),
+      rpc: mocks.adminRpc,
     });
-    mocks.sessionUpdate.mockReturnValue({ eq: mocks.sessionEq });
-    mocks.sessionEq.mockResolvedValue({ error: null });
-    mocks.adminUpdate.mockReturnValue({ eq: mocks.adminEq });
-    mocks.adminEq.mockReturnValue({ select: mocks.adminSelect });
-    mocks.adminSelect.mockReturnValue({
-      maybeSingle: mocks.adminMaybeSingle,
-    });
-    mocks.adminMaybeSingle.mockResolvedValue({
-      data: { id: "learner-1" },
+    mocks.sessionRpc.mockResolvedValue({ data: null, error: null });
+    mocks.adminRpc.mockResolvedValue({
+      data: { ok: true, status: "updated" },
       error: null,
     });
-    mocks.rpc.mockResolvedValue({ data: null, error: null });
   });
 
-  it("keeps Institute system-role editing", async () => {
+  it("keeps standalone Institute system-role editing on the atomic RPC", async () => {
     await expect(
       updateUserRole({
         userId: "learner-1",
@@ -73,13 +53,24 @@ describe("Institute user roles and course access", () => {
       }),
     ).resolves.toEqual({ ok: true });
 
-    expect(mocks.createAdminClient).toHaveBeenCalledOnce();
-    expect(mocks.adminUpdate).toHaveBeenCalledWith({ system_role: "admin" });
-    expect(mocks.adminEq).toHaveBeenCalledWith("id", "learner-1");
-    expect(mocks.sessionUpdate).not.toHaveBeenCalled();
+    expect(mocks.adminRpc).toHaveBeenCalledWith(
+      "fn_update_institute_role",
+      {
+        p_actor_id: "owner-1",
+        p_target_id: "learner-1",
+        p_role: "admin",
+        p_role_group_ids: null,
+      },
+    );
+    expect(mocks.sessionRpc).not.toHaveBeenCalled();
   });
 
   it("keeps the self-demotion guard", async () => {
+    mocks.adminRpc.mockResolvedValueOnce({
+      data: { ok: false, code: "SELF_ROLE_CHANGE" },
+      error: null,
+    });
+
     await expect(
       updateUserRole({
         userId: "owner-1",
@@ -89,13 +80,11 @@ describe("Institute user roles and course access", () => {
       ok: false,
       error: "You can't change your own role here.",
     });
-    expect(mocks.createAdminClient).not.toHaveBeenCalled();
-    expect(mocks.adminUpdate).not.toHaveBeenCalled();
   });
 
   it("reports a missing target instead of returning a false success", async () => {
-    mocks.adminMaybeSingle.mockResolvedValue({
-      data: null,
+    mocks.adminRpc.mockResolvedValueOnce({
+      data: { ok: false, code: "NOT_FOUND" },
       error: null,
     });
 
@@ -116,6 +105,10 @@ describe("Institute user roles and course access", () => {
       email: "admin@example.com",
       system_role: "admin",
     });
+    mocks.adminRpc.mockResolvedValueOnce({
+      data: { ok: false, code: "SELF_ROLE_CHANGE" },
+      error: null,
+    });
 
     await expect(
       updateUserRole({
@@ -126,7 +119,55 @@ describe("Institute user roles and course access", () => {
       ok: false,
       error: "You can't change your own role here.",
     });
-    expect(mocks.createAdminClient).not.toHaveBeenCalled();
+  });
+
+  it("does not let case or whitespace bypass the database self-role guard", async () => {
+    const actorId = "abcdefab-cdef-4abc-8def-abcdefabcdef";
+    mocks.requireAdmin.mockResolvedValue({
+      id: actorId,
+      email: "admin@example.com",
+      system_role: "admin",
+    });
+    mocks.adminRpc.mockResolvedValueOnce({
+      data: { ok: false, code: "SELF_ROLE_CHANGE" },
+      error: null,
+    });
+
+    await expect(
+      updateUserRole({
+        userId: `  ${actorId.toUpperCase()}  `,
+        system_role: "owner",
+      }),
+    ).resolves.toEqual({
+      ok: false,
+      error: "You can't change your own role here.",
+    });
+    expect(mocks.adminRpc).toHaveBeenCalledWith(
+      "fn_update_institute_role",
+      {
+        p_actor_id: actorId,
+        p_target_id: actorId.toUpperCase(),
+        p_role: "owner",
+        p_role_group_ids: null,
+      },
+    );
+  });
+
+  it("rejects a caller who lost admin status before the write", async () => {
+    mocks.adminRpc.mockResolvedValueOnce({
+      data: { ok: false, code: "NOT_ADMIN" },
+      error: null,
+    });
+
+    await expect(
+      updateUserRole({
+        userId: "learner-1",
+        system_role: "admin",
+      }),
+    ).resolves.toEqual({
+      ok: false,
+      error: "Admin access required.",
+    });
   });
 
   it("keeps Institute role-group assignment", async () => {
@@ -137,7 +178,7 @@ describe("Institute user roles and course access", () => {
       }),
     ).resolves.toEqual({ ok: true });
 
-    expect(mocks.rpc).toHaveBeenCalledWith("fn_set_user_role_groups", {
+    expect(mocks.sessionRpc).toHaveBeenCalledWith("fn_set_user_role_groups", {
       p_user_id: "learner-1",
       p_role_group_ids: ["group-1"],
     });

@@ -7,24 +7,42 @@ import { normalizeReleaseControlError } from "@/lib/release-control/admin-guards
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
+type InstituteRoleUpdateResponse = {
+  ok?: boolean;
+  code?: string;
+};
+
+const INSTITUTE_ROLE_UPDATE_ERRORS: Record<string, string> = {
+  NOT_ADMIN: "Admin access required.",
+  NOT_FOUND: "User not found.",
+  SELF_ROLE_CHANGE: "You can't change your own role here.",
+  INVALID_ROLE: "Invalid role.",
+  FINAL_OWNER_GUARD: "BMH Institute must retain at least one active owner.",
+};
+
 export async function updateUserRole(input: {
   userId: string;
   system_role: "owner" | "admin" | "learner";
 }): Promise<{ ok: true } | { ok: false; error: string }> {
   const me = await requireAdmin();
-  if (me.id === input.userId && input.system_role !== me.system_role) {
-    // Role changes to your own account require another administrator.
-    return { ok: false, error: "You can't change your own role here." };
-  }
+  const targetId = input.userId.trim();
   const roleClient = createAdminClient();
-  const { data: updatedProfile, error } = await roleClient
-    .from("profiles")
-    .update({ system_role: input.system_role })
-    .eq("id", input.userId)
-    .select("id")
-    .maybeSingle();
+  const { data, error } = await roleClient.rpc("fn_update_institute_role", {
+    p_actor_id: me.id,
+    p_target_id: targetId,
+    p_role: input.system_role,
+    p_role_group_ids: null,
+  });
   if (error) return { ok: false, error: error.message };
-  if (!updatedProfile) return { ok: false, error: "User not found." };
+  const result = data as InstituteRoleUpdateResponse | null;
+  if (!result?.ok) {
+    return {
+      ok: false,
+      error:
+        INSTITUTE_ROLE_UPDATE_ERRORS[result?.code ?? ""] ??
+        "Role could not be updated.",
+    };
+  }
   revalidatePath("/admin/users");
   return { ok: true };
 }
