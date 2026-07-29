@@ -137,5 +137,5 @@ export async function deleteRoleGroup(id: string): Promise<ActionResult> {
   return { ok: true };
 }
 
-export const IMPORT_QA_ROLE_GROUP_READ_ONLY_ERROR =
+const IMPORT_QA_ROLE_GROUP_READ_ONLY_ERROR =
   "Imported review role groups are read-only until the release workflow completes.";
