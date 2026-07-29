@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { createHash, randomUUID } from "node:crypto";
-import { readFile, writeFile } from "node:fs/promises";
+import { readFile, rm } from "node:fs/promises";
+import { writeFileSync } from "node:fs";
 import { test } from "node:test";
 
 import { assertApprovedVoiceId } from "../../scripts/course-content/closer-lab-production-mapping.mjs";
@@ -23,6 +24,25 @@ const UUID_PATTERN =
 // UUIDs) -- e.g. the canonical Andrea PVC clone c7VyuzKrx3xIuZs8QT0P.
 const ELEVENLABS_VOICE_ID_PATTERN = /^[0-9A-Za-z]{16,32}$/;
 const SHA256_PATTERN = /^[0-9a-f]{64}$/;
+
+// Round-9 review, finding 1. The receipt is staged in memory by the live
+// recheck and committed to disk only if the whole process exits clean, so a
+// run that fails anywhere -- including in the mutation tests that prove the
+// drift detection still works -- leaves no evidence the apply command would
+// accept. Combined with deleting any prior receipt at the start of the live
+// recheck, this means a receipt can only ever describe a run that verified
+// production end to end and then passed every other assertion in the file.
+let stagedReceipt = null;
+
+process.on("exit", () => {
+  if (stagedReceipt === null) {
+    return;
+  }
+  if (process.exitCode !== undefined && process.exitCode !== 0) {
+    return;
+  }
+  writeFileSync(RECEIPT_URL, `${JSON.stringify(stagedReceipt, null, 2)}\n`, "utf8");
+});
 
 async function loadAttestation() {
   return JSON.parse(await readFile(ATTESTATION_URL, "utf8"));
@@ -531,12 +551,26 @@ test("live recheck: the attested role_play/persona/goal data still matches produ
       "BMH_INSTITUTE_ALLOW_LIVE_CLOSER_LAB_VERIFICATION=1 requires CLOSER_LAB_PRODUCTION_SUPABASE_URL and CLOSER_LAB_PRODUCTION_SERVICE_ROLE_KEY to also be set.",
     );
   }
+  // Round-9 review, finding 1. Invalidate any existing receipt BEFORE
+  // verifying anything. Without this, a run that fails partway leaves the
+  // previous run's receipt in place and still inside its 24 hour window, so
+  // the sequence "verify clean, production drifts, recheck fails" left the
+  // apply command accepting evidence that had just been contradicted. The
+  // receipt must never outlive a failed attempt to reconfirm it.
+  await rm(RECEIPT_URL, { force: true });
+
   const {
     assertCloserProductionUrl,
     buildCloserServiceHeaders,
   } = await import("../../scripts/course-content/closer-lab-production-mapping.mjs");
   const canonicalUrl = assertCloserProductionUrl(url);
-  const attestation = await loadAttestation();
+  // Round-9 review, finding 1. ONE read of the attestation, used both for the
+  // comparison and for the hash recorded in the receipt. The previous version
+  // compared one read and hashed a second, independent read, so an edit landing
+  // between them would bind the receipt to bytes that were never verified.
+  const attestationBytes = await readFile(ATTESTATION_URL);
+  const attestationSha256 = createHash("sha256").update(attestationBytes).digest("hex");
+  const attestation = JSON.parse(attestationBytes.toString("utf8"));
   const ids = attestation.scenarios.map((scenario) => scenario.role_play_id);
   // Round-6 review, finding 5 widened this select. It used to stop at
   // identity, ordering, weights, and rubric_goal_documents(count). It now
@@ -616,6 +650,8 @@ test("live recheck: the attested role_play/persona/goal data still matches produ
     );
   }
 
+  assert.equal(documentsByteVerified, attestation.summary.total_rubric_goal_documents);
+
   // Round-8 review, finding 5. This test is documented as a mandatory gate,
   // but it exits SUCCESS with the live case SKIPPED whenever the opt-in flag
   // or the credentials are absent, so nothing stopped an operator from
@@ -624,26 +660,20 @@ test("live recheck: the attested role_play/persona/goal data still matches produ
   // something it can require and check, rather than a runbook instruction it
   // has to trust. The attestation hash is included so a receipt cannot vouch
   // for an attestation that has since changed.
-  const attestationSha256 = createHash("sha256")
-    .update(await readFile(ATTESTATION_URL))
-    .digest("hex");
-  await writeFile(
-    RECEIPT_URL,
-    `${JSON.stringify(
-      {
-        verified_at: new Date().toISOString(),
-        project_ref: attestation.verification.project_ref,
-        storage_bucket: bucket,
-        attestation_sha256: attestationSha256,
-        scenarios_verified: attestation.scenarios.length,
-        documents_byte_verified: documentsByteVerified,
-      },
-      null,
-      2,
-    )}\n`,
-    "utf8",
-  );
-  assert.equal(documentsByteVerified, attestation.summary.total_rubric_goal_documents);
+  //
+  // Round-9 review, finding 1: the receipt is STAGED here and written only if
+  // the entire process exits clean. The previous version wrote it inline,
+  // before this test's own final assertion and before the mutation tests that
+  // follow had run, so a receipt could be produced by a run that then failed,
+  // including a run where the drift-detection logic itself was broken.
+  stagedReceipt = {
+    verified_at: new Date().toISOString(),
+    project_ref: attestation.verification.project_ref,
+    storage_bucket: bucket,
+    attestation_sha256: attestationSha256,
+    scenarios_verified: attestation.scenarios.length,
+    documents_byte_verified: documentsByteVerified,
+  };
 });
 
 // Round-6 Codex review, finding 5, the part that is easy to get wrong: it is

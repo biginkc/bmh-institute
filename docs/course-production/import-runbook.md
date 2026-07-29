@@ -508,6 +508,7 @@ Before applying any of the three:
        '91bee07c6626d0d113291d925cfc7fa65ac26c57c7d85ea3ca172d5b706120f2';
      v_system_identifier text;
      v_live_catalog_sha256 text;
+     v_receipts integer := 0;
    begin
      select system_identifier::text into v_system_identifier from pg_control_system();
      if v_system_identifier is distinct from v_expected_system_identifier then
@@ -531,11 +532,19 @@ Before applying any of the three:
          v_live_catalog_sha256, v_expected_catalog_sha256;
      end if;
 
-     if exists (
-       select 1 from public.content_import_oral_check_pilot_role_play_records
-       where import_id = v_import_id
-     ) then
-       raise exception 'preflight failed: the pilot insertion receipt already exists on this target. This is a one-shot operation and has already been performed.';
+     -- Guarded, because content_import_oral_check_pilot_role_play_records is
+     -- CREATED by 20260728020000. On the genuinely pre-migration production
+     -- state, which is where you run this, a direct reference raises
+     -- undefined_table. Round-9 review caught that this documented SQL still
+     -- had the bug the gate itself had already fixed.
+     if to_regclass('public.content_import_oral_check_pilot_role_play_records') is not null then
+       execute format(
+         'select count(*) from public.content_import_oral_check_pilot_role_play_records where import_id = %L',
+         v_import_id
+       ) into v_receipts;
+       if v_receipts > 0 then
+         raise exception 'preflight failed: the pilot insertion receipt already exists on this target. This is a one-shot operation and has already been performed.';
+       end if;
      end if;
 
      raise notice 'preflight ok: cluster %, % catalog, live hash matches the migration pin, pilot not yet applied',
@@ -642,9 +651,46 @@ Before applying any of the three:
    ```sql
    begin;
    set local lock_timeout = '10s';
+
+   -- Target identity, inside the same transaction that writes. Round-9 review
+   -- caught that this fallback omitted it, which reopened exactly the
+   -- wrong-target window the executable gate exists to close: during an
+   -- incident this SQL would happily run against a clone and report success
+   -- while production stayed broken.
+   do $$
+   declare
+     v_system_identifier text;
+   begin
+     select system_identifier::text into v_system_identifier from pg_control_system();
+     if v_system_identifier is distinct from '7626352619084395911' then
+       raise exception 'target identity failed: this cluster reports system_identifier %, expected 7626352619084395911 (BMH Institute production)',
+         v_system_identifier;
+     end if;
+   end;
+   $$;
+
    select set_config('request.jwt.claim.role', 'service_role', true);
    select public.fn_rollback_oral_check_pilot_role_play_blocks();
    commit;
+   ```
+
+   After it commits, verify rather than assume. The gate does this for you;
+   by hand you must run it yourself:
+
+   ```sql
+   select
+     (select count(*) from public.content_import_oral_check_pilot_role_play_rollback_records
+      where import_id = 'bmh-employee-training-v1' and role_play_removed_count = 3) as rollback_receipts,
+     (select count(*) from public.content_blocks
+      where id in (
+        '7300bba9-a9fc-582c-aa20-dd5d58754165',
+        '4464ecdd-2650-59ed-a525-78871e846d20',
+        '34758403-1ddd-5e3c-a054-b2f28310d8b8'
+      )) as blocks_remaining,
+     public.fn_course_import_catalog_sha256('bmh-employee-training-v1') as live_catalog_sha256,
+     (select prior_catalog_sha256 from public.content_import_oral_check_pilot_role_play_records
+      where import_id = 'bmh-employee-training-v1') as expected_catalog_sha256;
+   -- expect 1 receipt, 0 blocks, and live_catalog_sha256 = expected_catalog_sha256
    ```
 
    The `set_config` line is not optional and not decoration. The function's

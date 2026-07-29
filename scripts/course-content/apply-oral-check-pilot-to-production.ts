@@ -187,26 +187,61 @@ $$;
 select current_setting('bmh.oral_check_gate_state');
 `;
 
+// Round-9 review, finding 2. The previous postflight counted one receipt and
+// three blocks carrying the expected ids, type and required flag. That is
+// presence, not correctness: it never compared the blocks' actual content,
+// lesson binding or ordering, and never re-derived the catalog checksum, so
+// drift after the write, or an ambiguous commit followed by an edit, could be
+// certified green. This now verifies against the operation's own immutable
+// receipt, the same way the rollback function does: every row must byte-match
+// the recorded mutations payload, there must be no extra pilot rows, and the
+// whole managed catalog must still hash to the value the forward operation
+// itself recorded.
 const APPLY_POSTFLIGHT_SQL = `
 do $$
 declare
-  v_receipts integer;
-  v_blocks integer;
+  v_forward public.content_import_oral_check_pilot_role_play_records%rowtype;
+  v_exact integer;
+  v_present integer;
+  v_live_catalog_sha256 text;
 begin
-  select count(*) into v_receipts
+  select * into v_forward
   from public.content_import_oral_check_pilot_role_play_records
-  where import_id = '${IMPORT_ID}' and role_play_insert_count = 3;
-  if v_receipts <> 1 then
-    raise exception 'postflight failed: expected exactly 1 evidence receipt with role_play_insert_count = 3, found %', v_receipts;
+  where import_id = '${IMPORT_ID}';
+  if not found then
+    raise exception 'postflight failed: no forward evidence receipt exists for ${IMPORT_ID}.';
   end if;
-  select count(*) into v_blocks
-  from public.content_blocks
-  where id in (${BLOCK_ID_LIST})
-    and block_type = 'role_play'
-    and is_required_for_completion;
-  if v_blocks <> 3 then
-    raise exception 'postflight failed: expected exactly 3 required role_play blocks, found %', v_blocks;
+  if v_forward.role_play_insert_count <> 3 then
+    raise exception 'postflight failed: receipt records role_play_insert_count %, expected 3.',
+      v_forward.role_play_insert_count;
   end if;
+
+  select count(*) into v_exact
+  from jsonb_array_elements(v_forward.mutations) mutation(value)
+  join public.content_blocks block
+    on block.id = (mutation.value ->> 'block_id')::uuid
+   and block.lesson_id = (mutation.value ->> 'lesson_id')::uuid
+   and block.block_type = 'role_play'
+   and block.content = mutation.value -> 'content'
+   and block.sort_order = (mutation.value ->> 'sort_order')::integer
+   and block.is_required_for_completion = true;
+  if v_exact <> 3 then
+    raise exception 'postflight failed: only % of 3 live rows exactly match the receipt''s own recorded payload (content, lesson, order and required flag). The blocks present are not the blocks this operation recorded.',
+      v_exact;
+  end if;
+
+  select count(*) into v_present
+  from public.content_blocks where id in (${BLOCK_ID_LIST});
+  if v_present <> 3 then
+    raise exception 'postflight failed: expected exactly 3 pilot block rows, found %.', v_present;
+  end if;
+
+  v_live_catalog_sha256 := public.fn_course_import_catalog_sha256('${IMPORT_ID}');
+  if v_live_catalog_sha256 is distinct from v_forward.replacement_catalog_sha256 then
+    raise exception 'postflight failed: the live catalog hashes to %, but the forward operation recorded its post-insert state as %. Something has changed this catalog since the pilot was applied, so this state cannot be certified as the operation that was performed.',
+      v_live_catalog_sha256, v_forward.replacement_catalog_sha256;
+  end if;
+
   raise notice 'postflight ok';
 end;
 $$;
@@ -264,23 +299,45 @@ $$;
 select current_setting('bmh.oral_check_rollback_state');
 `;
 
+// Round-9 review, finding 2, rollback side. Same weakness as the apply
+// postflight: one receipt and zero blocks proves removal happened, not that
+// the catalog was actually restored. The rollback's whole promise is that the
+// catalog returns to the exact pre-insert state the forward operation
+// recorded, so that is what gets verified.
 const ROLLBACK_POSTFLIGHT_SQL = `
 do $$
 declare
+  v_forward public.content_import_oral_check_pilot_role_play_records%rowtype;
   v_rollback_receipts integer;
   v_blocks integer;
+  v_live_catalog_sha256 text;
 begin
+  select * into v_forward
+  from public.content_import_oral_check_pilot_role_play_records
+  where import_id = '${IMPORT_ID}';
+  if not found then
+    raise exception 'rollback postflight failed: no forward evidence receipt exists, so there is nothing to have rolled back.';
+  end if;
+
   select count(*) into v_rollback_receipts
   from public.content_import_oral_check_pilot_role_play_rollback_records
   where import_id = '${IMPORT_ID}' and role_play_removed_count = 3;
   if v_rollback_receipts <> 1 then
     raise exception 'rollback postflight failed: expected exactly 1 rollback receipt with role_play_removed_count = 3, found %', v_rollback_receipts;
   end if;
+
   select count(*) into v_blocks
   from public.content_blocks where id in (${BLOCK_ID_LIST});
   if v_blocks <> 0 then
     raise exception 'rollback postflight failed: expected 0 remaining pilot blocks, found %', v_blocks;
   end if;
+
+  v_live_catalog_sha256 := public.fn_course_import_catalog_sha256('${IMPORT_ID}');
+  if v_live_catalog_sha256 is distinct from v_forward.prior_catalog_sha256 then
+    raise exception 'rollback postflight failed: the 3 blocks are gone, but the live catalog hashes to % rather than the exact pre-insert state the forward operation recorded (%). The catalog was not actually restored, so this rollback cannot be certified.',
+      v_live_catalog_sha256, v_forward.prior_catalog_sha256;
+  end if;
+
   raise notice 'rollback postflight ok';
 end;
 $$;
@@ -642,26 +699,43 @@ function main(): void {
       `Refusing to continue: the target is in an inconsistent pilot state (${state}). A receipt without its blocks, or blocks without their receipt, needs investigation rather than another apply.`,
     );
   }
-  if (state === "applied") {
-    // The recoverable ambiguity finding 3 describes: the apply committed but
-    // its success may never have reached the client. Finish the verification
-    // instead of refusing.
-    runSql(target, APPLY_POSTFLIGHT_SQL);
-    console.log(
-      "The pilot is already applied on this target and is now verified: 1 evidence receipt and exactly 3 required role_play blocks. Nothing further to do.",
-    );
-    return;
-  }
-
-  // Phase 4: preflight.
-  runSql(target, PREFLIGHT_SQL);
-  console.log("Preflight passed: release pin and catalog hash pin both match.");
-
-  // Phase 5: the real plan, from remote history, with names verified.
+  // Phase 4: the real plan, from remote history, with every recorded name
+  // verified against the local file.
+  //
+  // Round-9 review, finding 3: this used to sit AFTER the applied-state
+  // branch returned, so the recovery path certified a target as verified
+  // without ever confirming the three exact version and name pairs. A direct
+  // call to the forward function, a manual repair, a missing history row or a
+  // timestamp collision would all have been reported clean, and a later
+  // ordinary migration push could then retry the one-shot apply against
+  // already-live blocks. It now runs unconditionally, before either branch.
   const { pending, alreadyApplied } = planPilotMigrations(target);
   if (alreadyApplied.length > 0) {
     console.log(`Already applied remotely: ${alreadyApplied.join(", ")}`);
   }
+
+  if (state === "applied") {
+    // The recoverable ambiguity finding 3 of round 8 describes: the apply
+    // committed but its success may never have reached the client. Finish the
+    // verification instead of refusing.
+    if (pending.length > 0) {
+      throw new Error(
+        `Refusing to certify this target: the pilot blocks are live, but remote migration history is missing ${pending
+          .map((migration) => migration.version)
+          .join(", ")}. The blocks were applied by something other than this migration set, or the history row was lost. A later ordinary migration push would retry the one-shot apply against already-live blocks. Investigate and repair the history before treating this as applied.`,
+      );
+    }
+    runSql(target, APPLY_POSTFLIGHT_SQL);
+    console.log(
+      "The pilot is already applied on this target and is now verified against its own receipt: exact recorded payload, no extra rows, and the live catalog still hashes to the recorded post-insert state. All 3 migrations are recorded in history under their expected names. Nothing further to do.",
+    );
+    return;
+  }
+
+  // Phase 5: preflight.
+  runSql(target, PREFLIGHT_SQL);
+  console.log("Preflight passed: release pin and catalog hash pin both match.");
+
   if (pending.length === 0) {
     throw new Error(
       "All three pilot migrations are already recorded in remote history, but the target reports no pilot receipt. Investigate before doing anything else.",

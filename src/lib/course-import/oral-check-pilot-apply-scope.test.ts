@@ -321,3 +321,125 @@ describe("live verification evidence gate (round-8 finding 5)", () => {
     }
   });
 });
+
+// Round-9 review, findings 2 and 3.
+describe("recovery cannot falsely certify drifted state (round-9 finding 2)", () => {
+  const source = readFileSync(SCRIPT_PATH, "utf8");
+  const applyPostflight = source.slice(
+    source.indexOf("const APPLY_POSTFLIGHT_SQL"),
+    source.indexOf("// Round-7 finding 4. The rollback function"),
+  );
+  const rollbackPostflight = source.slice(
+    source.indexOf("const ROLLBACK_POSTFLIGHT_SQL"),
+    source.indexOf("function requiredEnv"),
+  );
+
+  it("re-derives the catalog checksum and compares it to the receipt", () => {
+    // Presence of three rows with the right ids proves nothing about their
+    // content or about the rest of the catalog. The receipt records what the
+    // operation actually produced, so that is the thing to compare against.
+    expect(applyPostflight).toContain("fn_course_import_catalog_sha256");
+    expect(applyPostflight).toContain("v_forward.replacement_catalog_sha256");
+    expect(rollbackPostflight).toContain("fn_course_import_catalog_sha256");
+    expect(rollbackPostflight).toContain("v_forward.prior_catalog_sha256");
+  });
+
+  it("compares every live row against the receipt's own recorded payload", () => {
+    // Same shape the rollback function uses: content, lesson, order and the
+    // required flag, matched per recorded mutation rather than by id alone.
+    expect(applyPostflight).toContain("jsonb_array_elements(v_forward.mutations)");
+    expect(applyPostflight).toContain("block.content = mutation.value -> 'content'");
+    expect(applyPostflight).toContain("block.lesson_id =");
+    expect(applyPostflight).toContain("block.sort_order =");
+    expect(applyPostflight).toContain("block.is_required_for_completion = true");
+  });
+
+  it("refuses extra pilot rows beyond the three recorded", () => {
+    expect(applyPostflight).toMatch(/v_present <> 3/);
+  });
+
+  it("requires the forward receipt to exist before certifying a rollback", () => {
+    expect(rollbackPostflight).toContain(
+      "no forward evidence receipt exists, so there is nothing to have rolled back",
+    );
+  });
+});
+
+describe("applied recovery still validates migration history (round-9 finding 3)", () => {
+  const source = readFileSync(SCRIPT_PATH, "utf8");
+
+  it("runs the version and name plan before the applied branch returns", () => {
+    const planAt = source.indexOf("const { pending, alreadyApplied } = planPilotMigrations(target);");
+    const appliedBranchAt = source.indexOf('if (state === "applied")');
+    const preflightAt = source.indexOf("runSql(target, PREFLIGHT_SQL);");
+    expect(planAt).toBeGreaterThan(-1);
+    expect(appliedBranchAt).toBeGreaterThan(-1);
+    // The plan, which validates all three version/name pairs, must run before
+    // either branch can declare success.
+    expect(planAt).toBeLessThan(appliedBranchAt);
+    expect(planAt).toBeLessThan(preflightAt);
+  });
+
+  it("refuses to certify live blocks whose migration history is missing", () => {
+    const appliedBranch = source.slice(
+      source.indexOf('if (state === "applied")'),
+      source.indexOf("// Phase 5: preflight."),
+    );
+    expect(appliedBranch).toContain("pending.length > 0");
+    expect(appliedBranch).toContain("Refusing to certify this target");
+    // And the refusal must precede the postflight, not follow it.
+    expect(appliedBranch.indexOf("Refusing to certify this target")).toBeLessThan(
+      appliedBranch.indexOf("APPLY_POSTFLIGHT_SQL"),
+    );
+  });
+});
+
+describe("live verification receipt lifecycle (round-9 finding 1)", () => {
+  const verifier = readFileSync(
+    resolve(process.cwd(), "content/course-manifests/oral-check-pilot-production-attestation.qa.test.mjs"),
+    "utf8",
+  );
+
+  it("deletes any existing receipt before re-verifying", () => {
+    // Otherwise "verified clean, production drifted, recheck failed" leaves
+    // the earlier receipt valid for up to 24 hours and the apply accepts it.
+    const liveTest = verifier.slice(
+      verifier.indexOf("test(\"live recheck:"),
+      verifier.indexOf("// Round-6 Codex review, finding 5, the part that is easy"),
+    );
+    const rmAt = liveTest.indexOf("await rm(RECEIPT_URL");
+    const fetchAt = liveTest.indexOf("await fetch(");
+    expect(rmAt).toBeGreaterThan(-1);
+    expect(fetchAt).toBeGreaterThan(-1);
+    expect(rmAt).toBeLessThan(fetchAt);
+  });
+
+  it("writes the receipt only when the whole process exits clean", () => {
+    expect(verifier).toContain("let stagedReceipt = null;");
+    expect(verifier).toContain('process.on("exit"');
+    expect(verifier).toContain("process.exitCode !== 0");
+    // The live test must stage, never write directly.
+    const liveTest = verifier.slice(
+      verifier.indexOf("test(\"live recheck:"),
+      verifier.indexOf("// Round-6 Codex review, finding 5, the part that is easy"),
+    );
+    expect(liveTest).toContain("stagedReceipt = {");
+    expect(liveTest).not.toContain("writeFileSync(RECEIPT_URL");
+  });
+
+  it("hashes the same attestation read it compares against", () => {
+    // A second independent read lets an edit land in between and bind the
+    // receipt to bytes that were never verified.
+    expect(verifier).toContain("const attestationBytes = await readFile(ATTESTATION_URL);");
+    expect(verifier).toContain(
+      "createHash(\"sha256\").update(attestationBytes).digest(\"hex\")",
+    );
+    expect(verifier).toContain("JSON.parse(attestationBytes.toString(\"utf8\"))");
+    const liveTest = verifier.slice(
+      verifier.indexOf("test(\"live recheck:"),
+      verifier.indexOf("// Round-6 Codex review, finding 5, the part that is easy"),
+    );
+    // No second read of the attestation inside the live path.
+    expect(liveTest).not.toContain("await loadAttestation()");
+  });
+});
