@@ -4,7 +4,8 @@
 // script never reads credentials, connects to Supabase, or applies hosted SQL.
 
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdtempSync, readdirSync, rmSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, join, resolve } from "node:path";
 
@@ -78,6 +79,7 @@ try {
 
   psqlText(seedFixtureSql(), "preservation fixture");
   const before = JSON.parse(psqlScalar(snapshotSql(), "baseline snapshot"));
+  const beforeHistory = JSON.parse(psqlScalar(historySnapshotSql(), "baseline migration history"));
 
   for (const file of targetFiles) {
     psqlFile(resolve(migrationsDir, file), `target ${file}`);
@@ -104,21 +106,80 @@ try {
     JSON.stringify(before),
     "rollback preserves identity, grants, groups, and business data",
   );
+  assertEqual(
+    JSON.stringify(JSON.parse(psqlScalar(historySnapshotSql(), "post-rollback migration history"))),
+    JSON.stringify(beforeHistory),
+    "rollback changes only the four target migration-history rows",
+  );
   const gateCount = Number(psqlScalar(
     "select count(*) from pg_catalog.pg_policies where policyname = 'hugo_rollback_fail_closed';",
     "rollback deny-gate policy count",
   ));
   if (gateCount < 2) throw new Error(`Rollback deny gate was vacuous: only ${gateCount} policy rows.`);
+  const gateCoverage = JSON.parse(psqlScalar(rollbackGateCoverageSql(), "rollback gate coverage"));
+  if (gateCoverage.metadata !== gateCoverage.public_policies
+      || gateCoverage.storage_policies !== 1
+      || gateCoverage.metadata === 0) {
+    throw new Error(`Rollback deny gate coverage was incomplete: ${JSON.stringify(gateCoverage)}`);
+  }
   assertEqual(
     psqlScalar(authenticatedProfileCountSql(), "authenticated rollback gate proof"),
     "0",
     "authenticated reads are fail-closed during rollback pause",
   );
+  assertEqual(
+    psqlScalar(authenticatedProfileWriteCountSql(), "authenticated rollback write gate proof"),
+    "0",
+    "authenticated writes are fail-closed during rollback pause",
+  );
+  expectPsqlFailure(
+    () => psqlText(
+      "set role service_role; update public.hugo_access_grants set desired_status = desired_status where user_id = '00000000-0000-4000-8000-000000000101';",
+      "service-role rollback write gate proof",
+    ),
+    "service-role writes are quiesced during rollback pause",
+  );
+  const atomicFailureProbe = join(cluster, "atomic-replay-failure-probe.sql");
+  writeFileSync(
+    atomicFailureProbe,
+    `begin;\n\\ir '${resolve(migrationsDir, targetFiles[0])}'\nselect 1 / 0;\ncommit;\n`,
+  );
+  expectPsqlFailure(
+    () => psqlFile(atomicFailureProbe, "atomic replay failure probe"),
+    "atomic replay rolls back a failed migration",
+  );
+  assertEqual(
+    psqlScalar("select coalesce(string_agg(version, ',' order by version), '') from supabase_migrations.schema_migrations where version in ('20260728230000','20260728235900','20260729001500','20260729003000');", "atomic replay history probe"),
+    "",
+    "failed atomic replay leaves migration history unchanged",
+  );
+  assertEqual(
+    psqlScalar("select coalesce(to_regclass('public.hugo_access_settings')::text, '')", "atomic replay object probe"),
+    "",
+    "failed atomic replay leaves target tables absent",
+  );
 
-  for (const file of targetFiles) {
-    psqlFile(resolve(migrationsDir, file), `replay ${file}`);
-    recordMigration(file);
-  }
+  psqlWithConfirmation(resolve(rollbackDir, "replay-targets.sql"), "atomic target replay");
+  psqlText(
+    `drop trigger hugo_rollback_write_guard on public.hugo_access_enforcement_changes;
+     insert into public.hugo_access_enforcement_changes (
+       operation_id, previous_enforce_grants, enforce_grants, changed_at
+     ) values (
+       '00000000-0000-4000-8000-000000000502', false, true, now()
+     );
+     create trigger hugo_rollback_write_guard
+     before insert or update or delete on public.hugo_access_enforcement_changes
+     for each row execute function public.fn_hugo_rollback_write_guard();`,
+    "replay drift fixture",
+  );
+  expectPsqlFailure(
+    () => psqlWithConfirmation(resolve(rollbackDir, "replay-finalize.sql"), "drifted replay finalization"),
+    "finalizer rejects extra replay rows while gate remains active",
+  );
+  psqlText(
+    "drop trigger hugo_rollback_write_guard on public.hugo_access_enforcement_changes; delete from public.hugo_access_enforcement_changes where operation_id = '00000000-0000-4000-8000-000000000502'; create trigger hugo_rollback_write_guard before insert or update or delete on public.hugo_access_enforcement_changes for each row execute function public.fn_hugo_rollback_write_guard();",
+    "remove replay drift fixture",
+  );
   psqlWithConfirmation(resolve(rollbackDir, "replay-finalize.sql"), "replay finalization");
 
   assertEqual(
@@ -141,6 +202,13 @@ try {
     "0",
     "replay finalization removes only the rollback deny gate",
   );
+  const finalHistory = JSON.parse(psqlScalar(historySnapshotSql(), "final migration history"));
+  const nonTargetFinalHistory = finalHistory.filter((row) => !targetVersions.includes(row.version));
+  assertEqual(
+    JSON.stringify(nonTargetFinalHistory),
+    JSON.stringify(beforeHistory),
+    "replay preserves every non-target migration-history row",
+  );
   assertEqual(
     JSON.stringify(JSON.parse(psqlScalar(
       "set request.jwt.claim.role = 'service_role'; select public.hugo_set_access_enforcement('00000000-0000-4000-8000-000000000501', true)::text;",
@@ -155,7 +223,8 @@ try {
     postgres_major: major,
     pre_target_migrations: preTargetMigrations.length,
     target_migrations: targetFiles,
-    preserved_tables: ["auth.users", "profiles", "hugo_access_grants", "role_groups", "user_role_groups", "programs"],
+    snapshot_scope: "all public tables plus auth.users and storage.objects (target settings compared separately)",
+    preserved_tables: ["auth.users", "profiles", "hugo_access_grants", "hugo_access_operations", "role_groups", "user_role_groups", "programs", "storage.objects"],
     rollback_gate: "authenticated_denied_until_replay_finalize",
     replay_receipt: "exact_preserved_operation_receipt",
   }));
@@ -188,7 +257,7 @@ function psqlWithConfirmation(file, label) {
   try {
     execFileSync(binary("psql"), [
       "-X", "-v", "ON_ERROR_STOP=1", "-c",
-      "select set_config('bmh.hugo_rollback_confirm', 'I_UNDERSTAND_MANUAL_ONLY', false);",
+      "select set_config('bmh.hugo_rollback_confirm', 'I_UNDERSTAND_MANUAL_ONLY', false), set_config('bmh.hugo_rollback_quiesced', 'I_UNDERSTAND_WRITERS_STOPPED', false);",
       "-f", file,
     ], { env, stdio: ["ignore", "pipe", "pipe"] });
   } catch (error) {
@@ -231,11 +300,25 @@ function recordMigration(file) {
   if (!match) throw new Error(`Unexpected migration file ${file}.`);
   const version = match[1];
   const name = match[2].replaceAll("'", "''");
+  const hash = migrationHash(file);
   psqlText(
     `insert into supabase_migrations.schema_migrations (version, statements, name)
-       values ('${version}', array[]::text[], '${name}');`,
+       values ('${version}', array['sha256:${hash}'], '${name}');`,
     `record ${file}`,
   );
+}
+
+function migrationHash(file) {
+  return createHash("sha256").update(readFileSync(resolve(migrationsDir, file))).digest("hex");
+}
+
+function expectPsqlFailure(run, message) {
+  try {
+    run();
+  } catch {
+    return;
+  }
+  throw new Error(`${message}: expected the command to fail`);
 }
 
 function assertEqual(actual, expected, message) {
@@ -246,12 +329,43 @@ function historySql() {
   return "select coalesce(string_agg(version, ',' order by version), '') from supabase_migrations.schema_migrations where version = any (array['20260728230000','20260728235900','20260729001500','20260729003000']::text[]);";
 }
 
+function historySnapshotSql() {
+  return `select coalesce(jsonb_agg(to_jsonb(row_data) order by row_data.version), '[]'::jsonb)
+    from (
+      select version, statements, name
+      from supabase_migrations.schema_migrations
+      where version not in ('20260728230000','20260728235900','20260729001500','20260729003000')
+    ) row_data;`;
+}
+
+function rollbackGateCoverageSql() {
+  return `select jsonb_build_object(
+    'metadata', (select count(*) from public.hugo_rollback_gate_tables),
+    'public_policies', (select count(*) from pg_catalog.pg_policies where policyname = 'hugo_rollback_fail_closed' and schemaname = 'public'),
+    'storage_policies', (select count(*) from pg_catalog.pg_policies where policyname = 'hugo_rollback_fail_closed' and schemaname = 'storage')
+  )::text;`;
+}
+
 function authenticatedProfileCountSql() {
   return `begin;
     set local role authenticated;
     set local request.jwt.claim.role = 'authenticated';
     set local request.jwt.claim.sub = '00000000-0000-4000-8000-000000000101';
     select count(*)::text from public.profiles;
+    rollback;`;
+}
+
+function authenticatedProfileWriteCountSql() {
+  return `begin;
+    set local role authenticated;
+    set local request.jwt.claim.role = 'authenticated';
+    set local request.jwt.claim.sub = '00000000-0000-4000-8000-000000000101';
+    with attempted as (
+      update public.profiles
+      set full_name = full_name
+      where id = '00000000-0000-4000-8000-000000000101'
+      returning id
+    ) select count(*)::text from attempted;
     rollback;`;
 }
 
@@ -287,6 +401,17 @@ function seedFixtureSql() {
     ) values
       ('00000000-0000-4000-8000-000000000101', 'rollback-owner@example.invalid', '00000000-0000-4000-8000-000000000101', 'owner', '{}'::jsonb, 'active'),
       ('00000000-0000-4000-8000-000000000102', 'rollback-learner@example.invalid', '00000000-0000-4000-8000-000000000102', 'learner', jsonb_build_object('role_group_ids', jsonb_build_array('00000000-0000-4000-8000-000000000201')), 'active');
+    insert into public.hugo_access_operations (
+      operation_id, operation, email, input, receipt
+    ) values (
+      '00000000-0000-4000-8000-000000000601', 'inspect', 'rollback-owner@example.invalid',
+      '{"scope":"roundtrip"}'::jsonb, '{"status":"fixture"}'::jsonb
+    );
+    insert into storage.objects (id, bucket_id, name, owner, metadata)
+    values (
+      '00000000-0000-4000-8000-000000000701', 'hugo', 'roundtrip.txt',
+      '00000000-0000-4000-8000-000000000101', '{"fixture":true}'::jsonb
+    );
   `;
 }
 
@@ -300,14 +425,7 @@ function enableStrictFixtureSql() {
 }
 
 function snapshotSql() {
-  return `select jsonb_build_object(
-    'auth_users', (select coalesce(jsonb_agg(to_jsonb(r) order by r.id), '[]'::jsonb) from (select * from auth.users) r),
-    'profiles', (select coalesce(jsonb_agg(to_jsonb(r) order by r.id), '[]'::jsonb) from (select * from public.profiles) r),
-    'hugo_access_grants', (select coalesce(jsonb_agg(to_jsonb(r) order by r.user_id), '[]'::jsonb) from (select * from public.hugo_access_grants) r),
-    'role_groups', (select coalesce(jsonb_agg(to_jsonb(r) order by r.id), '[]'::jsonb) from (select * from public.role_groups) r),
-    'user_role_groups', (select coalesce(jsonb_agg(to_jsonb(r) order by r.user_id, r.role_group_id), '[]'::jsonb) from (select * from public.user_role_groups) r),
-    'programs', (select coalesce(jsonb_agg(to_jsonb(r) order by r.id), '[]'::jsonb) from (select * from public.programs) r)
-  )::text;`;
+  return "select public.hugo_roundtrip_snapshot()::text;";
 }
 
 function targetSnapshotSql() {
@@ -375,5 +493,38 @@ function bootstrapSql() {
       language sql immutable as $$ select string_to_array(name, '/') $$;
     alter default privileges in schema public grant select, insert, update, delete on tables to authenticated;
     alter database postgres set search_path = public, extensions;
+    create or replace function public.hugo_roundtrip_snapshot()
+    returns jsonb
+    language plpgsql
+    security definer
+    set search_path = public, pg_catalog
+    as $snapshot$
+    declare
+      v_result jsonb := jsonb_build_object(
+        'auth.users', (select coalesce(jsonb_agg(to_jsonb(row_data) order by row_data.id), '[]'::jsonb) from (select * from auth.users) row_data),
+        'storage.objects', (select coalesce(jsonb_agg(to_jsonb(row_data) order by row_data.id), '[]'::jsonb) from (select * from storage.objects) row_data)
+      );
+      v_table record;
+      v_rows jsonb;
+    begin
+      for v_table in
+        select relation.relname as table_name
+        from pg_catalog.pg_class relation
+        join pg_catalog.pg_namespace namespace on namespace.oid = relation.relnamespace
+        where namespace.nspname = 'public'
+          and relation.relkind in ('r', 'p')
+          and relation.relname not in ('hugo_access_settings', 'hugo_access_enforcement_changes')
+          and relation.relname not like 'hugo_rollback_%'
+        order by relation.relname
+      loop
+        execute format(
+          'select coalesce(jsonb_agg(to_jsonb(row_data) order by to_jsonb(row_data)::text), ''[]''::jsonb) from (select * from public.%I) row_data',
+          v_table.table_name
+        ) into v_rows;
+        v_result := v_result || jsonb_build_object(format('public.%s', v_table.table_name), v_rows);
+      end loop;
+      return v_result;
+    end;
+    $snapshot$;
   `;
 }

@@ -13,6 +13,8 @@
 -- including this file:
 --   select set_config('bmh.hugo_rollback_confirm',
 --                     'I_UNDERSTAND_MANUAL_ONLY', false);
+--   select set_config('bmh.hugo_rollback_quiesced',
+--                     'I_UNDERSTAND_WRITERS_STOPPED', false);
 
 \set ON_ERROR_STOP on
 
@@ -23,6 +25,12 @@ begin
     raise exception
       'Hugo rollback is manual-only; set bmh.hugo_rollback_confirm in this session.'
       using errcode = '42501';
+  end if;
+  if current_setting('bmh.hugo_rollback_quiesced', true)
+       is distinct from 'I_UNDERSTAND_WRITERS_STOPPED' then
+    raise exception
+      'Hugo rollback requires external writer quiescence; stop Hugo/Auth workers and set bmh.hugo_rollback_quiesced in this session.'
+      using errcode = '55000';
   end if;
 end;
 $$;
@@ -217,10 +225,65 @@ revoke all on function public.fn_can_read_user_state(uuid)
 grant execute on function public.fn_can_read_user_state(uuid)
   to authenticated, service_role;
 
--- 20260728230000 removed direct service-role table privileges. Restore the
--- predecessor grant without changing any row.
-grant insert, update, delete, truncate on public.hugo_access_grants
-  to service_role;
+-- Persist a pause marker and reject every row write while the operator reviews
+-- and replays the target stack. The marker is checked by a trigger rather than
+-- relying only on RLS, because service_role commonly bypasses RLS.
+create table public.hugo_rollback_pause (
+  singleton boolean primary key default true check (singleton),
+  started_at timestamptz not null default now()
+);
+insert into public.hugo_rollback_pause (singleton)
+values (true);
+revoke all on table public.hugo_rollback_pause
+  from public, anon, authenticated, service_role;
+
+create or replace function public.fn_hugo_rollback_write_guard()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if to_regclass('public.hugo_rollback_pause') is not null then
+    raise exception
+      'Hugo rollback pause is active; all identity and business writes are quiesced.'
+      using errcode = '55000';
+  end if;
+  if tg_op = 'DELETE' then
+    return old;
+  end if;
+  return new;
+end;
+$$;
+revoke all on function public.fn_hugo_rollback_write_guard()
+  from public, anon, authenticated, service_role;
+
+do $$
+declare
+  v_table record;
+begin
+  for v_table in
+    select schema_name, table_name
+    from public.hugo_rollback_gate_tables
+  loop
+    if to_regclass(format('%I.%I', v_table.schema_name, v_table.table_name)) is not null then
+      execute format(
+        'drop trigger if exists hugo_rollback_write_guard on %I.%I; create trigger hugo_rollback_write_guard before insert or update or delete on %I.%I for each row execute function public.fn_hugo_rollback_write_guard()',
+        v_table.schema_name, v_table.table_name,
+        v_table.schema_name, v_table.table_name
+      );
+    end if;
+  end loop;
+end;
+$$;
+drop trigger if exists hugo_rollback_write_guard on auth.users;
+create trigger hugo_rollback_write_guard
+before insert or update or delete on auth.users
+for each row execute function public.fn_hugo_rollback_write_guard();
+drop trigger if exists hugo_rollback_write_guard on storage.objects;
+create trigger hugo_rollback_write_guard
+before insert or update or delete on storage.objects
+for each row execute function public.fn_hugo_rollback_write_guard();
 
 delete from supabase_migrations.schema_migrations
 where version = any (array[
