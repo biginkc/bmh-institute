@@ -5,6 +5,10 @@ import { mkdtemp, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
+import {
+  verifyAuthInsertLifecycleSerialization,
+} from "../hugo-auth-insert-concurrency-test.mjs";
+
 const root = resolve(import.meta.dirname, "../..");
 const externalMode = process.env.FIXTURE_GATE_EXTERNAL_PG;
 if (externalMode !== undefined && externalMode !== "1") {
@@ -280,6 +284,22 @@ try {
       "supabase/tests/058_hugo_missing_identity_durable_proof.sql",
     ),
   );
+  psqlFile(
+    resolve(
+      root,
+      "supabase/migrations/20260729001500_hugo_auth_insert_lifecycle_lock.sql",
+    ),
+  );
+  psqlFile(
+    resolve(
+      root,
+      "supabase/tests/059_hugo_auth_insert_lifecycle_lock.sql",
+    ),
+  );
+  await verifyAuthInsertLifecycleSerialization({
+    psqlPath: binary("psql"),
+    env: pgEnv,
+  });
   psqlText(`
     do $$
     begin

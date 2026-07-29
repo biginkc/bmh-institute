@@ -10,6 +10,10 @@ import {
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
+import {
+  verifyAuthInsertLifecycleSerialization,
+} from "./hugo-auth-insert-concurrency-test.mjs";
+
 const root = resolve(import.meta.dirname, "..");
 const requestedBin = process.argv.find((value) => value.startsWith("--pg-bin="))
   ?.slice("--pg-bin=".length);
@@ -82,15 +86,30 @@ async function runPostgres(pgBin, index) {
     for (const migration of migrations) {
       psqlFile(binary, env, resolve(root, "supabase/migrations", migration));
     }
+    psqlFile(
+      binary,
+      env,
+      resolve(
+        root,
+        "supabase/migrations/20260729001500_hugo_auth_insert_lifecycle_lock.sql",
+      ),
+    );
     for (const test of [
       "055_hugo_access_provisioner.sql",
       "056_hugo_access_operation_payload_hash.sql",
       "057_hugo_access_authorization_hardening.sql",
       "058_hugo_missing_identity_durable_proof.sql",
+      "059_hugo_auth_insert_lifecycle_lock.sql",
     ]) {
       const path = resolve(root, "supabase/tests", test);
       if (existsSync(path)) psqlFile(binary, env, path);
     }
+
+    const authInsertSerialization =
+      await verifyAuthInsertLifecycleSerialization({
+        psqlPath: binary("psql"),
+        env,
+      });
 
     psqlText(binary, env, concurrencyFixtureSql);
     const outcomes = await Promise.all([
@@ -122,7 +141,8 @@ async function runPostgres(pgBin, index) {
     return {
       postgres_major: major,
       migrations: migrations.length,
-      focused_sql_tests: 4,
+      focused_sql_tests: 5,
+      auth_insert_lifecycle_serialization: authInsertSerialization,
       concurrent_owner_deletes: "both_direct_mutations_blocked",
     };
   } finally {
