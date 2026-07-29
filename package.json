@@ -18,6 +18,7 @@
     "test:watch": "vitest",
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "test:hugo-access:postgres": "node scripts/test-hugo-access-postgres.mjs",
+    "test:hugo-hardening:roundtrip": "node scripts/hugo-hardening-rollback/run-roundtrip.mjs",
     "test:course-import-provider": "tsx scripts/test-course-import-provider.ts",
     "test:rtl": "vitest run --config vitest.rtl.config.ts",
     "test:e2e": "playwright test",
