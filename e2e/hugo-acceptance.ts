@@ -19,10 +19,10 @@ export type HugoAcceptanceStatus = "PASS" | "PARTIAL" | "FAIL" | "BLOCKED";
  * role from being mistaken for completed coverage.
  */
 export const HUGO_PROJECT_ROLE_MATRIX = Object.freeze([
-  Object.freeze({ project: "institute" as const, roles: Object.freeze(["owner", "learner"] as const), state: "seeded" as const }),
-  Object.freeze({ project: "closer" as const, roles: Object.freeze(["admin", "learner"] as const), state: "placeholder" as const }),
+  Object.freeze({ project: "institute" as const, roles: Object.freeze(["owner", "admin", "learner"] as const), state: "seeded" as const }),
+  Object.freeze({ project: "closer" as const, roles: Object.freeze(["admin", "member"] as const), state: "placeholder" as const }),
   Object.freeze({ project: "sandra" as const, roles: Object.freeze(["owner", "member"] as const), state: "placeholder" as const }),
-  Object.freeze({ project: "jitter" as const, roles: Object.freeze(["operator", "member"] as const), state: "placeholder" as const }),
+  Object.freeze({ project: "jitter" as const, roles: Object.freeze(["admin", "operator"] as const), state: "placeholder" as const }),
 ] as const);
 
 const MAX_RUN_ID_LENGTH = 64;

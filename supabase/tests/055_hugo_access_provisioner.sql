@@ -46,7 +46,7 @@ begin
 
   select pg_get_functiondef(p.oid) into v_definition
   from pg_proc p join pg_namespace n on n.oid = p.pronamespace
-  where n.nspname = 'public' and p.proname = 'hugo_apply_access';
+  where n.nspname = 'public' and p.proname = 'hugo_apply_access_unhashed';
   assert position('fn_hugo_require_service_role' in v_definition) > 0,
     'apply RPC lost the service-role guard';
   assert position('hugo_access_operations' in v_definition) > 0,
@@ -70,7 +70,7 @@ begin
 
   select pg_get_functiondef(p.oid) into v_definition
   from pg_proc p join pg_namespace n on n.oid = p.pronamespace
-  where n.nspname = 'public' and p.proname = 'hugo_prepare_pristine_delete';
+  where n.nspname = 'public' and p.proname = 'hugo_prepare_pristine_delete_unhashed';
   assert position('fn_hugo_has_durable_activity' in v_definition) > 0,
     'prepare RPC lost durable-activity guard';
   assert position('final_owner_guard' in v_definition) > 0,
