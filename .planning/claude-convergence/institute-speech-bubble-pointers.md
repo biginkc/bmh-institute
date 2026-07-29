@@ -61,8 +61,8 @@
 ### Iteration 2
 
 - Status: Implementation, independent manual review, and local real-browser proof complete.
-- BMH Institute commit/PR: `6c2b54c939d676f55d9687c5e0e7be33ddb2381a`, https://github.com/biginkc/bmh-institute/pull/131 (follow-up commit pending).
-- Closer Lab commit/PR: `8badd4060cadf6e798146cd5df1ff2d0e878549b`, https://github.com/biginkc/closer-lab/pull/155 (follow-up commit pending).
+- BMH Institute commit/PR: `1fc30b8d1d817a7829b66e7a97dd3aab8a190d0a`, https://github.com/biginkc/bmh-institute/pull/131.
+- Closer Lab commit/PR: `0c903fb5f22e15b36841a17760fe9eda4ad2878e`, https://github.com/biginkc/closer-lab/pull/155.
 - Regression coverage:
   - Native left/right tail mapping and geometry unit tests.
   - Native mobile browser bounding-box checks for pointer centering, attachment, direction, clipping, and horizontal overflow.
@@ -77,7 +77,7 @@
 - Independent review:
   - Geometry/contract reviewer: no implementation finding; required deployed cross-app proof before acceptance.
   - UX/visual reviewer: no implementation finding; required desktop/mobile screenshots and exact center measurement.
-  - Test-quality reviewer: identified that JSDOM class assertions were insufficient and fake multiline cases added no signal. Both findings were addressed with browser geometry specs and simplified unit tests; re-review pending.
+  - Test-quality reviewer: identified that JSDOM class assertions were insufficient and fake multiline cases added no signal. Both findings were addressed with browser geometry specs and simplified unit tests. Re-review: no findings.
 - Chrome measurements:
   - Native desktop left/right center deltas: `0` and `0.00390625` CSS px.
   - Native 390 px left/right center deltas: `0` and `0.00390625` CSS px; `scrollWidth=390`.
@@ -95,3 +95,12 @@
   - `10-embedded-bubbles-390-local.png`
   - `11-embedded-bubbles-320-local.png`
 - Evidence caveat: the red Next development badge in native local screenshots is caused by the Scribe browser extension adding `data-scribe-recorder-ready` before React hydration. It is unrelated to the speech-bubble code and is absent from production.
+
+### Iteration 3
+
+- Status: Post-code convergence review.
+- Claude verdict: `NEXT_STEP`, confidence high.
+- Reasoning: Both PRs and local Chrome proof are strong, but CI and post-deploy production verification remain open.
+- Proposed action: Wait for both PR heads to pass CI, merge Closer Lab before BMH Institute, then capture desktop and mobile Chrome proof on the live Institute lesson.
+- Codex adversarial evaluation: Accepted. This preserves the final automated gate and tests the exact cross-app composition that exposed the original defect.
+- Hard-gate risk: none.
