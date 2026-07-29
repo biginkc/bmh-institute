@@ -84,6 +84,9 @@ async function runPostgres(pgBin, index) {
       .filter((file) => file.endsWith(".sql"))
       .sort();
     for (const migration of migrations) {
+      if (migration === "20260729040000_hugo_mutation_receipt_binding.sql") {
+        psqlText(binary, env, historicalUnboundReceiptSql);
+      }
       psqlFile(binary, env, resolve(root, "supabase/migrations", migration));
     }
     psqlFile(
@@ -109,6 +112,7 @@ async function runPostgres(pgBin, index) {
       "058_hugo_missing_identity_durable_proof.sql",
       "059_hugo_auth_insert_lifecycle_lock.sql",
       "060_hugo_auth_email_lifecycle_lock.sql",
+      "061_hugo_mutation_receipt_binding.sql",
     ]) {
       const path = resolve(root, "supabase/tests", test);
       if (existsSync(path)) psqlFile(binary, env, path);
@@ -150,7 +154,7 @@ async function runPostgres(pgBin, index) {
     return {
       postgres_major: major,
       migrations: migrations.length,
-      focused_sql_tests: 6,
+      focused_sql_tests: 7,
       auth_insert_lifecycle_serialization: authInsertSerialization,
       concurrent_owner_deletes: "both_direct_mutations_blocked",
     };
@@ -335,6 +339,36 @@ const concurrencyFixtureSql = `
   ) values
     ('00000000-0000-4000-8000-000000000901', 'owner-a@example.invalid', '00000000-0000-4000-8000-000000000901', 'owner', 'active'),
     ('00000000-0000-4000-8000-000000000902', 'owner-b@example.invalid', '00000000-0000-4000-8000-000000000902', 'owner', 'active');
+`;
+
+const historicalUnboundReceiptSql = `
+  set request.jwt.claim.role = 'service_role';
+  select public.hugo_apply_access(
+    '00000000-0000-4000-8000-000000000961',
+    'historical-receipt@example.invalid',
+    'not-a-role',
+    '{}'::jsonb,
+    'active',
+    null,
+    null
+  );
+  do $$
+  declare
+    v_receipt jsonb;
+    v_hash text;
+  begin
+    select receipt, request_hash into v_receipt, v_hash
+    from public.hugo_access_operations
+    where operation_id = '00000000-0000-4000-8000-000000000961';
+    assert v_receipt->>'operation_id' =
+      '00000000-0000-4000-8000-000000000961',
+      'historical receipt must already contain its operation id';
+    assert not (v_receipt ? 'request_hash'),
+      'historical fixture must precede receipt hash binding';
+    assert v_hash ~ '^[0-9a-f]{64}$',
+      'historical fixture must already have a journal request hash';
+  end;
+  $$;
 `;
 
 if (pgBins.length === 0) {
