@@ -9,9 +9,6 @@ before insert or update of email on auth.users
 for each statement
 execute function public.fn_hugo_lock_auth_user_insert_lifecycle();
 
-comment on trigger hugo_auth_users_lifecycle_lock on auth.users is
-  'Serializes Auth inserts and email-key updates with Hugo privileged lifecycle proof before identity rows change.';
-
 -- Replay fails closed unless the function still takes exactly one shared lock,
 -- tgtype 22 remains BEFORE + INSERT + UPDATE + STATEMENT, and the rendered
 -- definition restricts UPDATE to the email identity key.
