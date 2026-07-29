@@ -47,13 +47,13 @@
   "manifest_snapshots": [
     {
       "import_id": "bmh-employee-training-v1",
-      "dialpad_reference_count": 22,
-      "dialpad_reference_sha256": "72dca36446c4e24e1795b46fbef6ebe0a5bfe49fd84e7d98c28043cd2903e693"
+      "dialpad_reference_count": 24,
+      "dialpad_reference_sha256": "60554238e7a5d975446ed2a8867094fcb8873107c749c4c0c5683aff2d990a94"
     },
     {
       "import_id": "bmh-employee-training-canary-v1",
-      "dialpad_reference_count": 12,
-      "dialpad_reference_sha256": "44f2db7c93186f730baafca79c07551e5525a6cf8105af3b7cbc434d02326850"
+      "dialpad_reference_count": 14,
+      "dialpad_reference_sha256": "17059068d3332ecf4a648501ed066a426d30fd6e79285e2c058e5da13941fae7"
     }
   ],
   "audited_assets": [
