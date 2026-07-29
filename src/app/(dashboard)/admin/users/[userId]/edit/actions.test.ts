@@ -19,8 +19,15 @@ const profileUpdateCalls: Array<{
   values: Record<string, unknown>;
   userId: string;
 }> = [];
+const sessionProfileUpdateCalls: Array<{
+  values: Record<string, unknown>;
+  userId: string;
+}> = [];
 const rpcCalls: Array<{ name: string; args: Record<string, unknown> }> = [];
 const mutationEvents: string[] = [];
+const adminMocks = vi.hoisted(() => ({
+  createAdminClient: vi.fn(),
+}));
 
 vi.mock("@/lib/auth/guard", () => ({
   requireAdmin: vi.fn(async () => actor),
@@ -77,8 +84,7 @@ vi.mock("@/lib/supabase/server", () => ({
         }
         return {
           eq: (_column: string, userId: string) => {
-            profileUpdateCalls.push({ values, userId });
-            mutationEvents.push("role");
+            sessionProfileUpdateCalls.push({ values, userId });
             return {
               select: () => ({
                 maybeSingle: async () => ({
@@ -101,6 +107,9 @@ vi.mock("@/lib/supabase/server", () => ({
   })),
 }));
 
+vi.mock("@/lib/supabase/admin", () => ({
+  createAdminClient: adminMocks.createAdminClient,
+}));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("@/lib/app-url", () => ({ getAppUrl: () => "https://institute.test" }));
 vi.mock("@/lib/email/enrollment", () => ({
@@ -129,8 +138,32 @@ describe("saveUserSettings", () => {
     rpcError = null;
     rpcErrors = [];
     profileUpdateCalls.length = 0;
+    sessionProfileUpdateCalls.length = 0;
     rpcCalls.length = 0;
     mutationEvents.length = 0;
+    adminMocks.createAdminClient.mockReturnValue({
+      from: (table: string) => ({
+        update: (values: Record<string, unknown>) => {
+          if (table !== "profiles") {
+            throw new Error(`Unexpected admin update table ${table}`);
+          }
+          return {
+            eq: (_column: string, userId: string) => {
+              profileUpdateCalls.push({ values, userId });
+              mutationEvents.push("role");
+              return {
+                select: () => ({
+                  maybeSingle: async () => ({
+                    data: profileUpdateRow,
+                    error: profileUpdateError,
+                  }),
+                }),
+              };
+            },
+          };
+        },
+      }),
+    });
     vi.mocked(sendEmail).mockClear();
   });
 
@@ -147,6 +180,8 @@ describe("saveUserSettings", () => {
 
     expect(result).toEqual({ ok: true, newProgramTitles: [] });
     expect(mutationEvents).toEqual(["role-groups", "role"]);
+    expect(adminMocks.createAdminClient).toHaveBeenCalledOnce();
+    expect(sessionProfileUpdateCalls).toEqual([]);
     expect(profileUpdateCalls).toEqual([
       {
         values: { system_role: "admin" },
@@ -341,5 +376,40 @@ describe("saveUserSettings", () => {
       error: "You can't downgrade your own role. You'd lock yourself out.",
     });
     expect(rpcCalls).toEqual([]);
+  });
+
+  it("prevents an admin from promoting their own role", async () => {
+    actor = { id: "admin-1", email: "admin@example.com", system_role: "admin" };
+
+    const result = await saveUserSettings({
+      userId: "admin-1",
+      system_role: "owner",
+      role_group_ids: [],
+    });
+
+    expect(result).toEqual({
+      ok: false,
+      error: "You can't downgrade your own role. You'd lock yourself out.",
+    });
+    expect(adminMocks.createAdminClient).not.toHaveBeenCalled();
+    expect(rpcCalls).toEqual([]);
+  });
+
+  it("allows an admin to save their own role groups without changing role", async () => {
+    actor = { id: "admin-1", email: "admin@example.com", system_role: "admin" };
+
+    const result = await saveUserSettings({
+      userId: "admin-1",
+      system_role: "admin",
+      role_group_ids: ["group-1"],
+    });
+
+    expect(result).toEqual({ ok: true, newProgramTitles: [] });
+    expect(profileUpdateCalls).toEqual([
+      {
+        values: { system_role: "admin" },
+        userId: "admin-1",
+      },
+    ]);
   });
 });

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { requireAdmin } from "@/lib/auth/guard";
 import { normalizeReleaseControlError } from "@/lib/release-control/admin-guards";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 export async function updateUserRole(input: {
@@ -11,17 +12,19 @@ export async function updateUserRole(input: {
   system_role: "owner" | "admin" | "learner";
 }): Promise<{ ok: true } | { ok: false; error: string }> {
   const me = await requireAdmin();
-  if (me.id === input.userId && input.system_role !== "owner") {
-    // Owners can't demote themselves by accident. That could leave the
-    // organization without an administrator.
+  if (me.id === input.userId && input.system_role !== me.system_role) {
+    // Role changes to your own account require another administrator.
     return { ok: false, error: "You can't change your own role here." };
   }
-  const supabase = await createClient();
-  const { error } = await supabase
+  const roleClient = createAdminClient();
+  const { data: updatedProfile, error } = await roleClient
     .from("profiles")
     .update({ system_role: input.system_role })
-    .eq("id", input.userId);
+    .eq("id", input.userId)
+    .select("id")
+    .maybeSingle();
   if (error) return { ok: false, error: error.message };
+  if (!updatedProfile) return { ok: false, error: "User not found." };
   revalidatePath("/admin/users");
   return { ok: true };
 }

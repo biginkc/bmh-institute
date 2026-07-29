@@ -8,6 +8,7 @@ import { renderEnrollmentEmail } from "@/lib/email/enrollment";
 import { routeQaNotification } from "@/lib/email/qa-routing";
 import { getAppUrl } from "@/lib/app-url";
 import { normalizeReleaseControlError } from "@/lib/release-control/admin-guards";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 export type SaveResult =
@@ -29,7 +30,7 @@ export async function saveUserSettings(
   input: UserSettingsInput,
 ): Promise<SaveResult> {
   const me = await requireAdmin();
-  if (me.id === input.userId && input.system_role !== "owner") {
+  if (me.id === input.userId && input.system_role !== me.system_role) {
     return {
       ok: false,
       error: "You can't downgrade your own role. You'd lock yourself out.",
@@ -37,6 +38,7 @@ export async function saveUserSettings(
   }
 
   const supabase = await createClient();
+  const roleClient = createAdminClient();
 
   // Current role_groups so we can diff for the enrollment email.
   const { data: existingRgs, error: existingRoleGroupsError } = await supabase
@@ -69,6 +71,7 @@ export async function saveUserSettings(
 
   const saveResult = await persistInstituteSettings(
     supabase,
+    roleClient,
     input,
     Array.from(oldGroupIds),
   );
@@ -119,6 +122,7 @@ export async function saveUserSettings(
 
 async function persistInstituteSettings(
   supabase: Awaited<ReturnType<typeof createClient>>,
+  roleClient: ReturnType<typeof createAdminClient>,
   input: UserSettingsInput,
   oldRoleGroupIds: string[],
 ): Promise<{ ok: true } | { ok: false; error: string }> {
@@ -133,7 +137,7 @@ async function persistInstituteSettings(
     return { ok: false, error: normalizeReleaseControlError(saveErr.message) };
   }
 
-  const { data: updatedProfile, error: roleError } = await supabase
+  const { data: updatedProfile, error: roleError } = await roleClient
     .from("profiles")
     .update({ system_role: input.system_role })
     .eq("id", input.userId)
