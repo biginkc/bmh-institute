@@ -19,7 +19,7 @@ const legacyManifest = readFileSync(resolve(
 ));
 const targetManifest = readFileSync(resolve(
   process.cwd(),
-  "content/course-manifests/bmh-employee-training.v1.json",
+  "content/course-manifests/archive/bmh-employee-training.released-content-block-revision-target-20260726.v1.json",
 ));
 
 describe("released content block revision", () => {

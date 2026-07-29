@@ -29,7 +29,7 @@ test("the draft contains the locked course structure", async () => {
     videos: 29,
     quizQuestions: 920,
     flashcards: 152,
-    rolePlays: 6,
+    rolePlays: 9,
     posterAssets: 29,
     posterReferences: 29,
     guideAssets: 19,
@@ -169,10 +169,17 @@ test("all six reviewed assignments carry usable reviewer rubrics", async () => {
 test("the current release includes the six production-bound Closer Lab interactive scenarios", async () => {
   const manifest = await loadManifest(MANIFEST_URL);
   const modules = manifest.program.courses.flatMap((course) => course.modules);
+  // Scoped to the frozen sales-role-play chain (block-role-play-*) only --
+  // matches rolePlayBindings() in closer-lab-production-mapping.mjs. The 3
+  // Andrea Oral Check pilot blocks (block-oral-check-*, PR #130) are a
+  // deliberately separate, structurally different Closer Lab namespace with
+  // no equivalent production export RPC yet; they are covered by their own
+  // test in oral-check-pilot-exact-reconciliation.test.ts and
+  // oral-check-pilot-production-attestation.qa.test.mjs.
   const rolePlays = modules
     .flatMap((module) => module.lessons)
     .flatMap((lesson) => lesson.blocks ?? [])
-    .filter((block) => block.type === "role_play");
+    .filter((block) => block.type === "role_play" && block.source_key.startsWith("block-role-play-"));
 
   assert.equal(rolePlays.length, 6);
   assert.ok(rolePlays.every((block) => block.required === true));
@@ -221,7 +228,7 @@ test("a malformed or duplicated production scenario ID is a publication blocker,
       error.includes("Duplicate role-play production scenario ID"),
     ),
   );
-  assert.ok(rolePlayBlocks.length === 6, "sanity: fixture still has six role-play blocks to mutate");
+  assert.ok(rolePlayBlocks.length === 9, "sanity: fixture still has nine role-play blocks to mutate (6 frozen sales role-plays + 3 Andrea Oral Check pilot blocks)");
 });
 
 test("marking a role-play block optional does not exempt it from scenario trust checks", async () => {

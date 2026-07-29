@@ -339,6 +339,398 @@ must appear once and the count must not change. Finally upload the canary
 manifest to that test project and run importer verification before scheduling
 any production migration.
 
+### Andrea Oral Check pilot deployment (3 migrations: `20260728020000` / `20260728030000` / `20260728050000`)
+
+This is a standalone, one-shot change (PR #130) that inserts 3 `role_play`
+blocks bound to 3 real, live Closer Lab scenario IDs into 3 already-published
+lessons. It is separate from the general course importer above and from the
+versioned content-block-revision system
+(`claude/versioned-content-block-revision-v2`, PR #128, parked). It is split
+across 3 migrations, applied in this exact order (Supabase applies each
+migration file as its own transactional batch, and round-4 review's finding
+1 is specifically about what can go wrong if this order is violated —
+never apply these out of order or skip one):
+
+1. **`20260728020000_insert_oral_check_pilot_role_play_blocks.sql`** — installs
+   `fn_insert_oral_check_pilot_role_play_blocks()` and its evidence table.
+   Makes NO live catalog changes on its own; it only defines the function.
+2. **`20260728030000_rollback_oral_check_pilot_role_play_blocks.sql`** —
+   installs the forward-rollback capability (see step 4 below) BEFORE the
+   forward insertion is ever allowed to run. Also makes no live catalog
+   changes on its own.
+3. **`20260728050000_apply_oral_check_pilot_role_play_blocks.sql`** — the
+   only one of the three that actually mutates the live catalog. It asserts
+   both `fn_insert_oral_check_pilot_role_play_blocks()` and the rollback
+   capability from step 2 exist, then performs the actual guarded,
+   one-shot-refusing insertion. If this migration is ever applied without
+   step 2 having already committed, it refuses outright (SQLSTATE 55000)
+   rather than inserting the 3 blocks with no rollback path prepared — this
+   is what makes the deployment order self-enforcing at the SQL level, not
+   just a runbook convention. It also FAILS CLOSED (SQLSTATE 55000) when the
+   `bmh-employee-training-v1` catalog exists on the target but has no
+   published release record. That covers an incomplete restore, a catalog reloaded
+   after migration replay, or an import that was applied but never released.
+   Round-5 review caught that the original design silently no-op-succeeded
+   in that case; round-6 review then caught that raising on EVERY absent
+   release was too blunt, because this file ships in `supabase/migrations/`
+   and so runs on every clean-database replay (`supabase db reset`, CI, a
+   fresh preview or test project), which by definition has no release
+   record. It now skips with a NOTICE only when the target holds no
+   `bmh-employee-training-v1` catalog at all, and still refuses when the
+   catalog is there without a release. That leaves one gap, a push aimed at
+   a wrong and entirely empty project skipping quietly, and it is closed by the
+   target preflight in step 3 and the receipt postflight in step 3b, which
+   are the layers that can actually see which project you are connected to.
+
+   Round-5 review also moved the SAME rollback-capability assertion INSIDE
+   `fn_insert_oral_check_pilot_role_play_blocks()` itself (in
+   `20260728020000`) and deferred that function's `EXECUTE` grant to
+   `service_role` until `20260728030000` installs the rollback capability.
+   This means the ordering guarantee no longer depends solely on this
+   wrapper migration — a direct RPC or raw SQL call to the insertion
+   function is refused the same way, and until `20260728030000` commits, no
+   role can call it at all.
+
+Before applying any of the three:
+
+1. **Local verification** (already covered by CI): `run-controller-gate-pr-harness.mjs`
+   test 056 exercises the real insertion and one-shot-refusal path, and
+   test 057 exercises the real rollback path, both against a local PG
+   cluster seeded from real production catalog rows.
+2. **MANDATORY gate — run the live recheck against production, credentialed,
+   immediately before applying the migration:**
+
+   ```bash
+   BMH_INSTITUTE_ALLOW_LIVE_CLOSER_LAB_VERIFICATION=1 \
+     CLOSER_LAB_PRODUCTION_SUPABASE_URL=https://xqrkugdxpwhjscrheuqo.supabase.co \
+     CLOSER_LAB_PRODUCTION_SERVICE_ROLE_KEY=... \
+     node --test content/course-manifests/oral-check-pilot-production-attestation.qa.test.mjs
+   ```
+
+   This is not optional and not a formality: it deep-compares the live
+   Closer Lab `role_plays` to `personas` to `role_play_goals` to
+   `rubric_goals` to `rubric_goal_documents` graph against the checked-in
+   attestation
+   (`docs/course-production/oral-check-pilot-production-attestation.json`),
+   field for field. Round-3 Codex review of PR #130 found the version of
+   this test at the time would pass cleanly even if the 4 attached goals for
+   a scenario had been silently swapped for 4 different goals that happened
+   to also sum to weight 100, so learners would be scored against the wrong
+   rubric with a fully green test. That fix added role-play title, persona
+   identity, and each goal's id, name, order, individual weight, and
+   document count.
+
+   Round-6 review then found that even those checks only covered identity,
+   ordering, weights, and counts. Everything that actually decides what
+   Andrea says and how a learner is graded could still change underneath a
+   green run. The attestation and the live query now also pin, for all 3
+   scenarios: the persona `system_prompt`, `opener`, `demeanor`, `role`, and
+   `avatar_url`; the role-play `description`, `pre_read`, `talking_points`,
+   `type_tag`, `max_turns`, `allow_anonymous`, `call_duration_seconds`, and
+   `scoring_frame`; each rubric goal's `goal_type`, `knowledge_subtype`,
+   score bounds, anchors, `achieved_definition`, `missed_definition`,
+   `member_facing_description`, and `ai_explanation`; and every supporting
+   document's id, `storage_path`, `display_name`, `mime_type`, `size_bytes`,
+   `token_count`, and `content_sha256`. Long free text is pinned by SHA-256
+   so the evidence file stays readable while still catching a single changed
+   character. The pins were taken from live Closer Lab production after the
+   full 12-scenario oral-check catalog was applied.
+
+   This gate is now enforced, not just documented. Round-8 review pointed out
+   that calling it mandatory in prose achieved nothing, because the test exits
+   SUCCESS with the live case SKIPPED whenever the opt-in flag or the
+   credentials are missing, so an operator could apply having hashed zero
+   production documents. When the live recheck genuinely runs it now writes
+   `docs/course-production/oral-check-pilot-live-verification-receipt.json`,
+   recording what it verified and the SHA-256 of the attestation it verified
+   against. The apply in step 3 refuses to execute without a receipt that is
+   less than 24 hours old, matches the current attestation, and records all 12
+   documents byte-verified. The dry run reports the receipt status too, so you
+   find out before the moment of applying rather than during it. The receipt is
+   deliberately not committed, so a stale one cannot be trusted from the repo.
+
+   It only runs opt-in, credentialed, and is otherwise skipped in normal CI.
+   The drift detection itself is proved in normal CI by a companion mutation
+   test in the same file, which runs the exact same comparison against a
+   synthetic payload and requires 28 separate single-field mutations to be
+   caught. If the live recheck fails, stop. Do not apply the migration until
+   the attestation is reconciled with the live state or the mismatch is
+   understood and fixed forward.
+3. **Target preflight and apply, through the executable gate.** Do not run
+   the migration by hand. Use the gate, which resolves the project identity
+   from the connection itself and then uses that same resolved connection for
+   the preflight, the apply, and the postflight:
+
+   ```bash
+   BMH_INSTITUTE_PRODUCTION_DB_URL=... npm run course:oral-check:apply
+   ```
+
+   That is a dry run. It performs the connection gate and the full preflight,
+   writes nothing, and stops. When it passes, apply for real:
+
+   ```bash
+   BMH_INSTITUTE_PRODUCTION_DB_URL=... npm run course:oral-check:apply -- \
+     --execute --allow-production --confirm=bmh-employee-training-v1
+   ```
+
+   The script is `scripts/course-content/apply-oral-check-pilot-to-production.ts`.
+   Its first phase refuses unless the connection resolves to project
+   `dhvfsyteqsxagokoerrx`, which it reads from the pooler username
+   (`postgres.<project-ref>`) rather than from anything the target database
+   says about itself. Round-6 review is the reason that ordering matters: a
+   cloned test project carrying the same release record and the same catalog
+   hash would satisfy every SQL assertion below while production stayed
+   untouched, so project identity has to be established before any query
+   result is trusted. The refusal logic is unit tested against a deliberately
+   adversarial set of near misses in
+   `src/lib/course-import/oral-check-pilot-deploy-target.test.ts`, including a
+   different project ref, a direct connection with no ref, a host that merely
+   contains the real pooler hostname, and the ref smuggled into the password,
+   the database name, or a query parameter.
+
+   Doing this as one command is the point. A human pasting SQL into one
+   session and then running `supabase db push` in another leaves a real window
+   where the connection that was verified and the connection that gets written
+   to are not the same one.
+
+   For reference, these are the exact preflight assertions the gate runs. You
+   can run them by hand against the target to inspect a failure, but the gate
+   is the path of record, and only proceed if it prints `preflight ok`:
+
+   ```sql
+   do $$
+   declare
+     v_expected_system_identifier constant text := '7626352619084395911';
+     v_import_id constant text := 'bmh-employee-training-v1';
+     v_expected_manifest_sha256 constant text :=
+       '71f85173bc857d1b3b042fba0a50fdd420b6410ef84b104a751c3ed5982eba5c';
+     v_expected_catalog_sha256 constant text :=
+       '91bee07c6626d0d113291d925cfc7fa65ac26c57c7d85ea3ca172d5b706120f2';
+     v_system_identifier text;
+     v_live_catalog_sha256 text;
+     v_receipts integer := 0;
+   begin
+     select system_identifier::text into v_system_identifier from pg_control_system();
+     if v_system_identifier is distinct from v_expected_system_identifier then
+       raise exception 'target identity failed: this cluster reports system_identifier %, expected % (BMH Institute production)',
+         v_system_identifier, v_expected_system_identifier;
+     end if;
+
+     if not exists (
+       select 1 from public.content_import_release_records
+       where import_id = v_import_id
+         and program_id = '15a382c9-617c-5407-a880-af6303be74b2'
+         and manifest_sha256 = v_expected_manifest_sha256
+     ) then
+       raise exception 'preflight failed: this database has no % release record matching the exact production program and manifest pin. Wrong target, incomplete restore, or the catalog was never released.',
+         v_import_id;
+     end if;
+
+     v_live_catalog_sha256 := public.fn_course_import_catalog_sha256(v_import_id);
+     if v_live_catalog_sha256 <> v_expected_catalog_sha256 then
+       raise exception 'preflight failed: live catalog hashes to %, the migration is pinned to %. Either this is not the production catalog, or production has drifted since the pin was taken and the migration must be re-authored.',
+         v_live_catalog_sha256, v_expected_catalog_sha256;
+     end if;
+
+     -- Guarded, because content_import_oral_check_pilot_role_play_records is
+     -- CREATED by 20260728020000. On the genuinely pre-migration production
+     -- state, which is where you run this, a direct reference raises
+     -- undefined_table. Round-9 review caught that this documented SQL still
+     -- had the bug the gate itself had already fixed.
+     if to_regclass('public.content_import_oral_check_pilot_role_play_records') is not null then
+       execute format(
+         'select count(*) from public.content_import_oral_check_pilot_role_play_records where import_id = %L',
+         v_import_id
+       ) into v_receipts;
+       if v_receipts > 0 then
+         raise exception 'preflight failed: the pilot insertion receipt already exists on this target. This is a one-shot operation and has already been performed.';
+       end if;
+     end if;
+
+     raise notice 'preflight ok: cluster %, % catalog, live hash matches the migration pin, pilot not yet applied',
+       v_system_identifier, v_import_id;
+   end;
+   $$;
+   ```
+
+   Do not substitute `supabase status` here. It reports the LOCAL Supabase
+   stack and cannot say anything about which remote project a connection
+   points at, so it can report a perfectly healthy local environment while
+   you are pointed somewhere else entirely.
+
+   Note what the identity check is and is not. An earlier version of this
+   block asserted `current_user = 'postgres.<project-ref>'`. That was wrong
+   and round-7 review caught it: the dotted name is the pooler ROUTING
+   username, and the database role the session actually runs as is plain
+   `postgres`. Verified read-only against both real projects. That assertion
+   could never have passed, so the documented procedure would have failed on
+   the correct production connection. The check is now
+   `pg_control_system().system_identifier`, the cluster's own unique id,
+   which is readable by the `postgres` role and genuinely differs between
+   projects. Institute production reports `7626352619084395911` and the BMH
+   test project reports `7637215626725903220`, so it discriminates the
+   mis-aim that matters most here. The release pin and the live catalog hash
+   remain as catalog-level checks on top of that.
+
+   If it raises for any reason, STOP. Do not proceed to step 3a.
+   `20260728050000` will also refuse on its own if this database holds the
+   catalog with no release record (SQLSTATE 55000), but do not rely on that
+   alone. An apply aimed at a wrong and entirely empty project skips quietly
+   by design, so this preflight and the step 3b postflight are what catch it.
+3a. Apply the 3 migrations to production in numeric order (`20260728020000`,
+   then `20260728030000`, then `20260728050000`). The gate's `--execute`
+   phase does this for you over the verified connection, and it is the normal
+   `supabase db push` behavior anyway since they sort in that order by
+   filename. If you ever do apply by hand, do not reorder them. The actual
+   insertion (in `20260728050000`) is atomic, hash-pinned CAS against the
+   exact expected prior catalog state, and refuses a second invocation
+   (SQLSTATE 40001).
+3b. **Receipt and block postflight.** The gate runs this automatically as its
+   final phase over the same verified connection, and exits non-zero if it
+   does not hold. These are the same assertions, if you need to inspect a
+   failure by hand. Confirm the exact evidence row and the exact 3 rows
+   exist, not just that `supabase db push` reported success:
+
+   ```sql
+   select import_id, prior_catalog_sha256, replacement_catalog_sha256,
+     database_payload_sha256, role_play_insert_count
+   from public.content_import_oral_check_pilot_role_play_records
+   where import_id = 'bmh-employee-training-v1';
+   -- expect exactly 1 row, role_play_insert_count = 3
+
+   select id, lesson_id, block_type, sort_order, is_required_for_completion
+   from public.content_blocks
+   where id in (
+     '7300bba9-a9fc-582c-aa20-dd5d58754165',
+     '4464ecdd-2650-59ed-a525-78871e846d20',
+     '34758403-1ddd-5e3c-a054-b2f28310d8b8'
+   )
+   order by id;
+   -- expect exactly 3 rows, block_type = 'role_play', is_required_for_completion = true
+   ```
+
+   A green migration run alone is not sufficient confirmation for this
+   change — verify the receipt and the 3 rows directly, every time.
+4. If a rollback becomes necessary after `20260728050000` has committed, the
+   forward-rollback capability installed by `20260728030000` is already in
+   place, ready but never auto-invoked:
+   `supabase/migrations/20260728030000_rollback_oral_check_pilot_role_play_blocks.sql`
+   defines `public.fn_rollback_oral_check_pilot_role_play_blocks()`,
+   rehearsed end-to-end against a real database state with the insertion
+   already applied in
+   `supabase/tests/057_oral_check_pilot_role_play_rollback.sql`. Do not
+   invent privileged SQL live during an incident — connect with
+   service-role credentials and run:
+
+   Run it through the same executable gate as the apply. Round-7 review
+   caught that this procedure was raw SQL against whichever connection the
+   operator happened to have open, with no project verification and no
+   postflight, so during a real incident it could report success against a
+   clone while production stayed broken. The gate resolves and verifies the
+   target first, in the same two layers the apply uses, then runs the
+   rollback, then verifies the receipt and that the 3 blocks are actually
+   gone:
+
+   ```bash
+   BMH_INSTITUTE_PRODUCTION_DB_URL=... npm run course:oral-check:apply -- --rollback
+   ```
+
+   That is a dry run. It verifies the target and reports how many of the 3
+   pilot blocks are currently live, and writes nothing. To roll back for
+   real:
+
+   ```bash
+   BMH_INSTITUTE_PRODUCTION_DB_URL=... npm run course:oral-check:apply -- \
+     --rollback --execute --allow-production --confirm=bmh-employee-training-v1
+   ```
+
+   For reference, this is the SQL the gate runs. You can run it by hand if
+   the gate itself is unavailable, but you are then responsible for
+   confirming the target and the postflight yourself:
+
+   ```sql
+   begin;
+   set local lock_timeout = '10s';
+
+   -- Target identity, inside the same transaction that writes. Round-9 review
+   -- caught that this fallback omitted it, which reopened exactly the
+   -- wrong-target window the executable gate exists to close: during an
+   -- incident this SQL would happily run against a clone and report success
+   -- while production stayed broken.
+   do $$
+   declare
+     v_system_identifier text;
+   begin
+     select system_identifier::text into v_system_identifier from pg_control_system();
+     if v_system_identifier is distinct from '7626352619084395911' then
+       raise exception 'target identity failed: this cluster reports system_identifier %, expected 7626352619084395911 (BMH Institute production)',
+         v_system_identifier;
+     end if;
+   end;
+   $$;
+
+   select set_config('request.jwt.claim.role', 'service_role', true);
+   select public.fn_rollback_oral_check_pilot_role_play_blocks();
+   commit;
+   ```
+
+   After it commits, verify rather than assume. The gate does this for you;
+   by hand you must run it yourself:
+
+   ```sql
+   select
+     (select count(*) from public.content_import_oral_check_pilot_role_play_rollback_records
+      where import_id = 'bmh-employee-training-v1' and role_play_removed_count = 3) as rollback_receipts,
+     (select count(*) from public.content_blocks
+      where id in (
+        '7300bba9-a9fc-582c-aa20-dd5d58754165',
+        '4464ecdd-2650-59ed-a525-78871e846d20',
+        '34758403-1ddd-5e3c-a054-b2f28310d8b8'
+      )) as blocks_remaining,
+     public.fn_course_import_catalog_sha256('bmh-employee-training-v1') as live_catalog_sha256,
+     (select prior_catalog_sha256 from public.content_import_oral_check_pilot_role_play_records
+      where import_id = 'bmh-employee-training-v1') as expected_catalog_sha256;
+   -- expect 1 receipt, 0 blocks, and live_catalog_sha256 = expected_catalog_sha256
+   ```
+
+   The `set_config` line is not optional and not decoration. The function's
+   first check is `auth.role() = 'service_role'`, and `auth.role()` reads the
+   `request.jwt.claim.role` setting on the current session. PostgREST sets
+   that automatically for RPC calls, but a direct `psql` session does not, so
+   without this line the documented procedure fails immediately with SQLSTATE
+   42501 ("Oral-check pilot role-play rollback requires service_role"),
+   during a real incident, against 3 live published lessons. Holding
+   service-role database credentials is not the same thing as presenting the
+   claim. `true` scopes the setting to this transaction, so it reverts on
+   `COMMIT`. This is the same thing
+   `20260728050000_apply_oral_check_pilot_role_play_blocks.sql` does before
+   calling the forward function.
+
+   The function itself already sets a `10s` `lock_timeout` for the
+   duration of every call (round-5 review caught that the migration-level
+   `set lock_timeout = '10s'` near the top of
+   `20260728030000_rollback_oral_check_pilot_role_play_blocks.sql` only
+   ever applied to the session that INSTALLED that migration, not to a
+   later incident invocation, which would otherwise wait indefinitely
+   behind a busy writer with Postgres's default `lock_timeout = 0`) — the
+   explicit `BEGIN; SET LOCAL lock_timeout = '10s'; ...; COMMIT;` wrap above
+   is defense in depth on top of that, not a substitute for it.
+
+   It pins itself to the forward operation's own immutable evidence row
+   (not a second hand-guessed catalog-hash constant), refuses if the live
+   catalog or the 3 target rows have drifted since the pilot insertion,
+   refuses if real learner activity exists against any of the 3 blocks
+   (role_play_results, user_block_progress, user_video_progress,
+   user_video_completion_history, or user_course_resume — the same 5-table
+   check `20260722032500_prune_deferred_role_play_blocks.sql` uses for the
+   analogous "remove role-play blocks safely" operation) rather than
+   silently cascade-deleting it or hitting an opaque foreign-key error,
+   removes exactly the 3 inserted rows, verifies the catalog hash is
+   restored to the exact pre-insert value, and records its own immutable
+   rollback evidence row
+   (`content_import_oral_check_pilot_role_play_rollback_records`). It is
+   genuinely one-shot: a second invocation is refused unconditionally.
+
 ## Safety model
 
 - Identifiers are deterministic from `import_id` and `source_key`.

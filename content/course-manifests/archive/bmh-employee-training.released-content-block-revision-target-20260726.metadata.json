@@ -1,0 +1,20 @@
+{
+  "schema_version": "bmh-released-content-block-revision-target-archive/v1",
+  "status": "immutable_operation_target",
+  "import_id": "bmh-employee-training-v1",
+  "source_commit": "fb408a510a5ea8c85670dc238d6b81cbe1ffc650",
+  "manifest_path": "content/course-manifests/archive/bmh-employee-training.released-content-block-revision-target-20260726.v1.json",
+  "manifest_sha256": "585b72c923a560d2228f6149a5b906ec02958f19d62818dc5c109c3968345a33",
+  "original_release_manifest_sha256": "71f85173bc857d1b3b042fba0a50fdd420b6410ef84b104a751c3ed5982eba5c",
+  "expected_active_manifest_sha256": "440ec4d85bc6dc0aec9d471fb0f5ecbe0ca8c17236b3012e8b036b8d045a154d",
+  "expected_prior_catalog_sha256": "e66250effa99bda93e8dd828077811585a5369e2e142bfa9bc5381f5ccd94eb4",
+  "database_payload_sha256": "68508b6a1b85c493d1d39ba80d3d661fcf05fa6a86ecf6df8257e42466fded3a",
+  "client_payload_sha256": "81d918fd621bb82da935a81f06a08196ce27b2cb853fafcf0f8a2df88de8201b",
+  "role_play_insert_count": 6,
+  "guide_update_count": 19,
+  "flashcard_update_count": 19,
+  "corresponding_migration": "supabase/migrations/20260726170000_revise_released_content_blocks.sql",
+  "corresponding_function": "public.fn_revise_released_content_blocks_v1",
+  "note": "This is the exact byte-for-byte manifest state fn_revise_released_content_blocks_v1 was built and pinned against: the released bmh-employee-training-v1 catalog with the 19 guide + 19 flashcard corrections applied and the 6 frozen Closer Lab role-play blocks inserted, captured before the 2026-07-28 Andrea Oral Check pilot (PR #130) added its own 3 unrelated role-play blocks to the live manifest. This file's SHA-256 is an immutable identity pin consumed only by scripts/course-content/revise-released-content-blocks.ts and must never be regenerated from the live manifest -- doing so previously broke this checksum contract (round-3 Codex review, PR #130) because the live manifest is expected to keep evolving for unrelated reasons (like gaining the oral-check blocks) while this specific historical operation's target identity must not.",
+  "superseded_by": null
+}

@@ -92,6 +92,44 @@ describe("learner lesson parts", () => {
     ]);
   });
 
+  it("labels an oral-check role-play block Talk with Andrea", () => {
+    const parts = buildLearnerLessonParts({
+      blocks: [
+        block("1", "video"),
+        block("2", "role_play", { mode: "oral_check", scenario_id: "pending:oral-check-1" }),
+      ],
+      completedBlockIds: new Set(["1"]),
+      quizComplete: false,
+      quizUnlocked: false,
+      compositeComplete: false,
+    });
+    expect(parts.map((part) => [part.id, part.label, part.kind])).toEqual([
+      ["video-1", "Video", "video"],
+      ["role-play-1", "Talk with Andrea", "role_play"],
+      ["quiz", "Quiz", "quiz"],
+    ]);
+  });
+
+  it("letters oral-check parts separately from plain role-play parts if a lesson ever mixes both", () => {
+    const parts = buildLearnerLessonParts({
+      blocks: [
+        block("1", "role_play", { scenario_id: "pending:role-play-first" }),
+        block("2", "role_play", { mode: "oral_check", scenario_id: "pending:oral-check-first" }),
+        block("3", "role_play", { scenario_id: "pending:role-play-second" }),
+      ],
+      completedBlockIds: new Set(),
+      quizComplete: false,
+      quizUnlocked: false,
+      compositeComplete: false,
+    });
+    expect(parts.map((part) => [part.id, part.label])).toEqual([
+      ["role-play-1", "Role play A"],
+      ["role-play-2", "Talk with Andrea"],
+      ["role-play-3", "Role play B"],
+      ["quiz", "Quiz"],
+    ]);
+  });
+
   it("assigns every supported non-guide block to a visible part", () => {
     const supported = [
       block("1", "text", { html: "<p>Support text</p>" }),

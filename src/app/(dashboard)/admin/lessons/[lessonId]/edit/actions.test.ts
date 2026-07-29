@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 let blockTypeRow: {
   block_type: string;
   is_required_for_completion?: boolean;
+  content?: Record<string, unknown>;
 } | null = { block_type: "text" };
 let updatePatch: Record<string, unknown> | null = null;
 let updateError: { message: string } | null = null;
@@ -346,5 +347,101 @@ describe("updateBlock role_play branch", () => {
       error: "Scenario ID is required.",
     });
     expect(updatePatch).toBeNull();
+  });
+});
+
+describe("updateBlock role_play branch preserves backend-only oral-check fields (PR #130 finding 4)", () => {
+  beforeEach(() => {
+    blockTypeRow = {
+      block_type: "role_play",
+      content: {
+        mode: "oral_check",
+        height_px: 760,
+        scenario_id: "e46baf56-d0ae-4621-87f3-07718f0744b2",
+        scenario_spec: {
+          assignment_source_key: "oral-check-slot-02",
+          context: "Existing persisted context.",
+          learner_goal: "Existing persisted goal.",
+          success_criteria: ["a", "b", "c"],
+          fail_conditions: ["x", "y", "z"],
+        },
+      },
+    };
+    updatePatch = null;
+    updateError = null;
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("merges onto the persisted content instead of replacing it wholesale, keeping mode and scenario_spec", async () => {
+    const result = await updateBlock({
+      blockId: "block-1",
+      lessonId: "lesson-1",
+      content: {
+        scenario_id: "e46baf56-d0ae-4621-87f3-07718f0744b2",
+        title: "",
+        height_px: 800,
+      },
+    });
+
+    expect(result).toEqual({ ok: true });
+    expect(updatePatch).toEqual({
+      content: {
+        mode: "oral_check",
+        scenario_id: "e46baf56-d0ae-4621-87f3-07718f0744b2",
+        scenario_spec: {
+          assignment_source_key: "oral-check-slot-02",
+          context: "Existing persisted context.",
+          learner_goal: "Existing persisted goal.",
+          success_criteria: ["a", "b", "c"],
+          fail_conditions: ["x", "y", "z"],
+        },
+        height_px: 800,
+      },
+      is_required_for_completion: false,
+    });
+    // No title key at all -- not "Role play" -- so the learner-facing
+    // renderer's oral_check fallback ("Talk with Andrea") keeps applying.
+    expect(updatePatch).not.toHaveProperty("content.title");
+  });
+
+  it("still lets an admin set an explicit title on an oral-check block", async () => {
+    const result = await updateBlock({
+      blockId: "block-1",
+      lessonId: "lesson-1",
+      content: {
+        scenario_id: "e46baf56-d0ae-4621-87f3-07718f0744b2",
+        title: "  Custom oral check title  ",
+        height_px: 760,
+      },
+    });
+
+    expect(result).toEqual({ ok: true });
+    expect(updatePatch).toMatchObject({
+      content: expect.objectContaining({
+        mode: "oral_check",
+        title: "Custom oral check title",
+      }),
+    });
+  });
+
+  it("a non-oral-check role play with a blank submitted title still defaults to 'Role play'", async () => {
+    blockTypeRow = {
+      block_type: "role_play",
+      content: { scenario_id: "old-scenario", title: "Old title", height_px: 720 },
+    };
+
+    const result = await updateBlock({
+      blockId: "block-1",
+      lessonId: "lesson-1",
+      content: { scenario_id: "scenario-2", title: "", height_px: 720 },
+    });
+
+    expect(result).toEqual({ ok: true });
+    expect(updatePatch).toMatchObject({
+      content: expect.objectContaining({ title: "Role play" }),
+    });
   });
 });

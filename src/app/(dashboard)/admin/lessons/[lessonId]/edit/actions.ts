@@ -139,7 +139,7 @@ export async function updateBlock(input: {
   const supabase = await createClient();
   const { data: existing, error: lookupError } = await supabase
     .from("content_blocks")
-    .select("block_type, is_required_for_completion")
+    .select("block_type, is_required_for_completion, content")
     .eq("id", input.blockId)
     .maybeSingle();
   if (lookupError) return { ok: false, error: lookupError.message };
@@ -168,18 +168,46 @@ export async function updateBlock(input: {
     if (!scenarioId) {
       return { ok: false, error: "Scenario ID is required." };
     }
-    safeContent = {
-      ...input.content,
+    // Merge onto the freshly-loaded persisted content instead of replacing
+    // it wholesale: the admin editor UI only ever submits scenario_id,
+    // title, and height_px (see RolePlayBlockEditor in blocks-editor.tsx),
+    // but some role-play blocks (the Andrea Oral Check pilot; see PR #130)
+    // also carry backend-only fields -- mode and scenario_spec -- that the
+    // editor never displays or round-trips. Spreading input.content directly
+    // over an empty object silently dropped those fields on every save,
+    // reverting an "oral_check" block to the generic role-play presentation
+    // and drifting it out of sync with its manifest-declared content.
+    const existingContent = (existing.content ?? {}) as Record<
+      string,
+      unknown
+    >;
+    const isOralCheck = existingContent.mode === "oral_check";
+    const submittedTitle =
+      typeof input.content.title === "string"
+        ? input.content.title.trim()
+        : "";
+    const merged: Record<string, unknown> = {
+      ...existingContent,
       scenario_id: scenarioId,
-      title:
-        typeof input.content.title === "string"
-          ? input.content.title.trim()
-          : "Role play",
       height_px:
         typeof input.content.height_px === "number"
           ? input.content.height_px
           : 720,
-    } as Json;
+    };
+    if (submittedTitle) {
+      // An explicit admin-entered title always wins, oral-check or not.
+      merged.title = submittedTitle;
+    } else if (isOralCheck) {
+      // No title set is the correct default for an oral-check block: the
+      // learner-facing renderer (content-blocks.tsx) falls back to "Talk
+      // with Andrea" whenever content.mode === "oral_check" and no explicit
+      // title is present. Forcing "Role play" here would silently overwrite
+      // that presentation on the very next save.
+      delete merged.title;
+    } else {
+      merged.title = "Role play";
+    }
+    safeContent = merged as Json;
   } else if (existing.block_type === "video") {
     const duration = input.content.duration_seconds;
     if (
