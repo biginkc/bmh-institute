@@ -11,7 +11,6 @@ import {
 
 export default async function AdminOverviewPage() {
   const supabase = await createClient();
-  const now = new Date().toISOString();
   const [
     programs,
     draftPrograms,
@@ -20,8 +19,6 @@ export default async function AdminOverviewPage() {
     profiles,
     certificates,
     pendingSubs,
-    pendingInvites,
-    expiredInvites,
   ] =
     await Promise.all([
       supabase.from("programs").select("id", { count: "exact", head: true }),
@@ -42,21 +39,9 @@ export default async function AdminOverviewPage() {
         .from("assignment_submissions")
         .select("id", { count: "exact", head: true })
         .eq("status", "submitted"),
-      supabase
-        .from("invites")
-        .select("id", { count: "exact", head: true })
-        .is("accepted_at", null)
-        .gt("expires_at", now),
-      supabase
-        .from("invites")
-        .select("id", { count: "exact", head: true })
-        .is("accepted_at", null)
-        .lte("expires_at", now),
     ]);
   const attentionItems = getNeedsAttentionItems({
     pendingSubmissions: pendingSubs.count ?? 0,
-    pendingInvites: pendingInvites.count ?? 0,
-    expiredInvites: expiredInvites.count ?? 0,
     draftPrograms: draftPrograms.count ?? 0,
     draftCourses: draftCourses.count ?? 0,
   });
@@ -71,7 +56,7 @@ export default async function AdminOverviewPage() {
       <Card padding="md" style={{ marginBottom: 24 }}>
         <AdminSectionHeading
           title="Needs attention"
-          description="Current admin follow-ups based on submissions, invites, and draft content."
+          description="Current admin follow-ups based on submissions and draft content."
           action={
             <Link href="/admin/reports" className="text-sm font-extrabold text-[var(--action)]">
               View reports
@@ -158,8 +143,6 @@ export default async function AdminOverviewPage() {
 
 type NeedsAttentionCounts = {
   pendingSubmissions: number;
-  pendingInvites: number;
-  expiredInvites: number;
   draftPrograms: number;
   draftCourses: number;
 };
@@ -173,8 +156,6 @@ export type NeedsAttentionItem = {
 
 export function getNeedsAttentionItems({
   pendingSubmissions,
-  pendingInvites,
-  expiredInvites,
   draftPrograms,
   draftCourses,
 }: NeedsAttentionCounts): NeedsAttentionItem[] {
@@ -193,38 +174,6 @@ export function getNeedsAttentionItems({
       ),
       href: "/admin/submissions",
       tone: "urgent",
-    });
-  }
-
-  if (expiredInvites > 0) {
-    items.push({
-      label: "Expired invites",
-      detail: pluralize(
-        expiredInvites,
-        "invite",
-        "invites",
-        "needs",
-        "need",
-        "cleanup or resending",
-      ),
-      href: "/admin/users",
-      tone: "urgent",
-    });
-  }
-
-  if (pendingInvites > 0) {
-    items.push({
-      label: "Pending invites",
-      detail: pluralize(
-        pendingInvites,
-        "invite",
-        "invites",
-        "is",
-        "are",
-        "waiting for signup",
-      ),
-      href: "/admin/users",
-      tone: "normal",
     });
   }
 

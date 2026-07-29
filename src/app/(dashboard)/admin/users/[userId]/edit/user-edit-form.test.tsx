@@ -5,10 +5,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { UserEditForm } from "./user-edit-form";
 import { saveUserSettings } from "./actions";
 
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: vi.fn() }),
-}));
-
 vi.mock("sonner", () => ({
   toast: {
     error: vi.fn(),
@@ -17,7 +13,6 @@ vi.mock("sonner", () => ({
 }));
 
 vi.mock("./actions", () => ({
-  deleteUser: vi.fn(),
   saveUserSettings: vi.fn(async () => ({ ok: true, newProgramTitles: [] })),
 }));
 
@@ -32,22 +27,37 @@ describe("<UserEditForm />", () => {
       <UserEditForm
         userId="learner-1"
         initialSystemRole="learner"
-        initialStatus="active"
         initialRoleGroupIds={[]}
         allRoleGroups={[{ id: "group-1", name: "Pilot role group" }]}
         canModifyRole
-        canSuspend
       />,
     );
 
     await user.click(screen.getByLabelText("Pilot role group"));
+    await user.selectOptions(screen.getByLabelText("System role"), "admin");
     await user.click(screen.getByRole("button", { name: /^save changes$/i }));
 
     expect(saveUserSettings).toHaveBeenCalledWith({
       userId: "learner-1",
-      system_role: "learner",
-      status: "active",
+      system_role: "admin",
       role_group_ids: ["group-1"],
     });
+  });
+
+  it("does not expose login lifecycle or account deletion controls", () => {
+    render(
+      <UserEditForm
+        userId="learner-1"
+        initialSystemRole="learner"
+        initialRoleGroupIds={[]}
+        allRoleGroups={[]}
+        canModifyRole
+      />,
+    );
+
+    expect(screen.queryByLabelText("Status")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Suspend" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Reactivate" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Delete user" })).not.toBeInTheDocument();
   });
 });

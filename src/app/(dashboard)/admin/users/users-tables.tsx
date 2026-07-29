@@ -1,6 +1,5 @@
 "use client";
 
-import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
 
 import { Badge, Table, type BadgeProps } from "@/components/bmh-ds";
@@ -9,21 +8,12 @@ import type {
   LearnerAccessStatusKey,
 } from "@/lib/learner-access/status";
 
-import { RevokeInviteButton } from "./revoke-invite-button";
-
 type ProfileRow = {
   id: string;
   email: string;
   fullName: string;
   systemRole: string;
   status: string;
-};
-
-type InviteRow = {
-  id: string;
-  email: string;
-  systemRole: string;
-  expiresAt: string;
 };
 
 export function LearnerAccessTable({ rows }: { rows: LearnerAccessRow[] }) {
@@ -40,7 +30,7 @@ export function LearnerAccessTable({ rows }: { rows: LearnerAccessRow[] }) {
         { key: "action", label: "Action", align: "right" },
       ]}
       rows={rows}
-      empty="No learners yet. Grant the first person access when the learning group is ready."
+      empty="No learners yet. Add the first person in Hugo when the learning group is ready."
       cell={{
         email: (row) => muted(row.email),
         statusLabel: (row) => (
@@ -49,14 +39,11 @@ export function LearnerAccessTable({ rows }: { rows: LearnerAccessRow[] }) {
           </Badge>
         ),
         accessLabel: (row) => muted(row.accessLabel),
-        action: (row) =>
-          row.kind === "profile" ? (
-            <Link href={`/admin/users/${row.id}/edit`} style={actionLinkStyle}>
-              Review access
-            </Link>
-          ) : (
-            <InviteActions inviteId={row.id} />
-          ),
+        action: (row) => (
+          <Link href={`/admin/users/${row.id}/edit`} style={actionLinkStyle}>
+            Review access
+          </Link>
+        ),
       }}
       />
       </div>
@@ -102,52 +89,13 @@ export function ActiveMembersTable({ rows }: { rows: ProfileRow[] }) {
   );
 }
 
-export function PendingInvitesTable({ rows }: { rows: InviteRow[] }) {
-  return (
-    <div data-testid="pending-invites-table-scroll" style={{ width: "100%", overflowX: "auto" }}>
-      <div style={{ minWidth: "48rem" }}>
-      <Table
-      rowKey="id"
-      columns={[
-        { key: "email", label: "Email" },
-        { key: "systemRole", label: "Role" },
-        { key: "expiresAt", label: "Expires" },
-        { key: "action", label: "Action", align: "right" },
-      ]}
-      rows={rows}
-      empty="No pending invites."
-      cell={{
-        systemRole: (row) => titleize(row.systemRole),
-        expiresAt: (row) => {
-          const expires = new Date(row.expiresAt);
-          return expires <= new Date() ? (
-            <Badge tone="red" size="sm">Expired</Badge>
-          ) : (
-            muted(`in ${formatDistanceToNow(expires)}`)
-          );
-        },
-        action: (row) => <InviteActions inviteId={row.id} />,
-      }}
-      />
-      </div>
-    </div>
-  );
-}
-
-function InviteActions({ inviteId }: { inviteId: string }) {
-  return (
-    <span style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
-      <RevokeInviteButton inviteId={inviteId} />
-    </span>
-  );
-}
-
 function muted(value: string) {
   return <span style={{ color: "var(--text-muted)", fontSize: 12 }}>{value}</span>;
 }
 
 function learnerAccessTone(status: LearnerAccessStatusKey): BadgeProps["tone"] {
-  if (status === "expired_invite" || status === "suspended") return "red";
+  if (status === "suspended") return "red";
+  if (status === "inactive") return "yellow";
   if (status === "missing_access") return "yellow";
   if (status === "ready") return "green";
   return "blue";

@@ -3,31 +3,31 @@
 import { revalidatePath } from "next/cache";
 
 import { requireAdmin } from "@/lib/auth/guard";
-import { getAppUrl } from "@/lib/app-url";
-import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { sendEmail } from "@/lib/email/send";
 import { renderEnrollmentEmail } from "@/lib/email/enrollment";
 import { routeQaNotification } from "@/lib/email/qa-routing";
+import { getAppUrl } from "@/lib/app-url";
 import { normalizeReleaseControlError } from "@/lib/release-control/admin-guards";
+import { createClient } from "@/lib/supabase/server";
 
 export type SaveResult =
   | { ok: true; newProgramTitles: string[] }
   | { ok: false; error: string };
 
+type UserSettingsInput = {
+  userId: string;
+  system_role: "owner" | "admin" | "learner";
+  role_group_ids: string[];
+};
+
 /**
- * Saves role + status + role_groups for a user in one shot. When the
- * role_groups change grants access to programs the user didn't previously
- * see, sends the enrollment email listing just the new ones.
+ * Saves only Institute-owned role and role-group settings.
  *
  * Self-demotion guard lives here too: an owner can't downgrade themselves.
  */
-export async function saveUserSettings(input: {
-  userId: string;
-  system_role: "owner" | "admin" | "learner";
-  status: "active" | "invited" | "suspended";
-  role_group_ids: string[];
-}): Promise<SaveResult> {
+export async function saveUserSettings(
+  input: UserSettingsInput,
+): Promise<SaveResult> {
   const me = await requireAdmin();
   if (me.id === input.userId && input.system_role !== "owner") {
     return {
@@ -39,10 +39,13 @@ export async function saveUserSettings(input: {
   const supabase = await createClient();
 
   // Current role_groups so we can diff for the enrollment email.
-  const { data: existingRgs } = await supabase
+  const { data: existingRgs, error: existingRoleGroupsError } = await supabase
     .from("user_role_groups")
     .select("role_group_id")
     .eq("user_id", input.userId);
+  if (existingRoleGroupsError) {
+    return { ok: false, error: existingRoleGroupsError.message };
+  }
   const oldGroupIds = new Set(
     (existingRgs ?? []).map((r) => r.role_group_id as string),
   );
@@ -64,15 +67,12 @@ export async function saveUserSettings(input: {
     (id) => !oldProgramIds.includes(id),
   );
 
-  const { error: saveErr } = await supabase.rpc("fn_save_user_settings", {
-    p_user_id: input.userId,
-    p_system_role: input.system_role,
-    p_status: input.status,
-    p_role_group_ids: input.role_group_ids,
-  });
-  if (saveErr) {
-    return { ok: false, error: normalizeReleaseControlError(saveErr.message) };
-  }
+  const saveResult = await persistInstituteSettings(
+    supabase,
+    input,
+    Array.from(oldGroupIds),
+  );
+  if (!saveResult.ok) return saveResult;
 
   let newProgramTitles: string[] = [];
 
@@ -117,6 +117,47 @@ export async function saveUserSettings(input: {
   return { ok: true, newProgramTitles };
 }
 
+async function persistInstituteSettings(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  input: UserSettingsInput,
+  oldRoleGroupIds: string[],
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  // Apply the guarded entitlement change before the role change. If the role
+  // write then fails, restore the prior groups so a failed save does not leave
+  // either an unexpected admin role or unexpected course access behind.
+  const { error: saveErr } = await supabase.rpc("fn_set_user_role_groups", {
+    p_user_id: input.userId,
+    p_role_group_ids: input.role_group_ids,
+  });
+  if (saveErr) {
+    return { ok: false, error: normalizeReleaseControlError(saveErr.message) };
+  }
+
+  const { data: updatedProfile, error: roleError } = await supabase
+    .from("profiles")
+    .update({ system_role: input.system_role })
+    .eq("id", input.userId)
+    .select("id")
+    .maybeSingle();
+  if (!roleError && updatedProfile) return { ok: true };
+
+  const primaryError = roleError?.message ?? "User not found.";
+  const { error: rollbackError } = await supabase.rpc(
+    "fn_set_user_role_groups",
+    {
+      p_user_id: input.userId,
+      p_role_group_ids: oldRoleGroupIds,
+    },
+  );
+  if (rollbackError) {
+    return {
+      ok: false,
+      error: `${primaryError} Role-group changes could not be restored: ${normalizeReleaseControlError(rollbackError.message)}`,
+    };
+  }
+  return { ok: false, error: primaryError };
+}
+
 async function accessibleProgramIdsFor(
   supabase: Awaited<ReturnType<typeof createClient>>,
   roleGroupIds: string[],
@@ -140,67 +181,4 @@ async function accessibleProgramIdsFor(
     }
   }
   return out;
-}
-
-export async function deleteUser(userId: string): Promise<{
-  ok: true;
-} | { ok: false; error: string }> {
-  const me = await requireAdmin();
-  if (me.id === userId) {
-    return { ok: false, error: "You can't delete yourself." };
-  }
-
-  const supabase = await createClient();
-
-  // HARDEN-03 / D-06: refuse to delete the last remaining owner.
-  //
-  // WR-04: the database is the source of truth. Migration 010 installs
-  // a BEFORE DELETE trigger on public.profiles
-  // (fn_prevent_last_owner_deletion) that raises when the delete would
-  // leave zero owners, regardless of which client issues the delete.
-  // The check below is kept for the friendlier toast, but the trigger
-  // closes the concurrent-delete race that this read-then-write pair
-  // could otherwise lose.
-  const { data: target } = await supabase
-    .from("profiles")
-    .select("system_role")
-    .eq("id", userId)
-    .maybeSingle();
-  if (target?.system_role === "owner") {
-    const { count } = await supabase
-      .from("profiles")
-      .select("id", { count: "exact", head: true })
-      .eq("system_role", "owner");
-    if ((count ?? 0) <= 1) {
-      return { ok: false, error: "Can't delete the last owner." };
-    }
-  }
-
-  let admin;
-  try {
-    admin = createAdminClient();
-  } catch (e) {
-    const message = e instanceof Error ? e.message : "Admin client unavailable.";
-    return { ok: false, error: message };
-  }
-
-  // HARDEN-03 / D-04: removing auth.users cascades to public.profiles via
-  // migration 001 (profiles.id references auth.users(id) on delete cascade).
-  // All user-scoped tables cascade off profiles.id per the FKs declared in
-  // migration 001 lines 40, 216, 229, 237, 245, 258, 268, 278.
-  //
-  // WR-04: if a concurrent delete has already removed the only other
-  // owner, the cascade will fire migration 010's trigger and the auth
-  // delete will fail with a check_violation. Surface it with a clear
-  // toast.
-  const { error: authErr } = await admin.auth.admin.deleteUser(userId);
-  if (authErr) {
-    if (authErr.message.includes("last remaining owner")) {
-      return { ok: false, error: "Can't delete the last owner." };
-    }
-    return { ok: false, error: authErr.message };
-  }
-
-  revalidatePath("/admin/users");
-  return { ok: true };
 }
