@@ -191,6 +191,33 @@
                         }
                       ]
                     }
+                  },
+                  {
+                    "source_key": "block-oral-check-slot-03",
+                    "type": "role_play",
+                    "sort_order": 6,
+                    "required": true,
+                    "content": {
+                      "mode": "oral_check",
+                      "height_px": 760,
+                      "scenario_id": "37ac4bc8-5f76-4cd4-9a96-37e6c3e36e7a",
+                      "scenario_spec": {
+                        "assignment_source_key": "oral-check-slot-03",
+                        "context": "This lesson covers the daily tools -- Sandra, Closer Lab, and DialPad -- and why using them right (or working around them) matters before you start calling. Andrea checks it out loud because knowing you've got the map matters more than memorizing menus.",
+                        "learner_goal": "Demonstrate you understand what each tool is for and why it matters, in your own words.",
+                        "success_criteria": [
+                          "Explains why the tools matter (keeps the team organized, nothing falls through the cracks)",
+                          "Explains what Sandra does (the CRM -- leads, notes, deal stages, and tasks; the shared record)",
+                          "Explains what Closer Lab does (practice role-plays against an AI before real calls, with feedback on pacing, filler words, confidence)",
+                          "Explains what DialPad does (the phone system -- calls go through it and get recorded for coaching, tracks call activity)"
+                        ],
+                        "fail_conditions": [
+                          "Confuses or misstates what one of the core tools does",
+                          "Cannot explain why the tools matter beyond \"I have to use them\"",
+                          "Gives no grounded answer -- guesses or answers a different question"
+                        ]
+                      }
+                    }
                   }
                 ]
               },
