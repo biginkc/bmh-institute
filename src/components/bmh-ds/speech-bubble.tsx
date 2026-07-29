@@ -6,7 +6,7 @@ export interface SpeechBubbleProps {
   /** @default "white" */
   tone?: "white" | "blue" | "yellow" | "tint";
   /** Tail position. @default "bottom-left" */
-  tail?: "bottom-left" | "bottom-right" | "left";
+  tail?: "bottom-left" | "bottom-right" | "left" | "right";
   /** @default "md" */
   size?: "sm" | "md" | "lg";
 }
@@ -30,17 +30,17 @@ const tones = {
 } as const;
 
 function tailGeometry(tail: NonNullable<SpeechBubbleProps["tail"]>) {
-  if (tail === "left") {
+  if (tail === "left" || tail === "right") {
     return {
       style: {
         width: 22,
         height: 32,
-        left: -18,
         top: "50%",
         transform: "translateY(-50%)",
+        ...(tail === "left" ? { left: -18 } : { right: -18 }),
       },
       viewBox: "0 0 22 32",
-      points: "21,1 1,16 21,31",
+      points: tail === "left" ? "21,1 1,16 21,31" : "1,1 21,16 1,31",
     };
   }
   return {
