@@ -137,6 +137,7 @@ Recent decisions affecting current work:
 | 260716-1nc | DSF-04 app shell and learner dashboard reskin | 2026-07-16 | bc4b2ed | Verified | [260716-1nc-dsf-04-app-shell-and-learner-dashboard-d](./quick/260716-1nc-dsf-04-app-shell-and-learner-dashboard-d/) |
 | 260716-2ms | DSF-05 course page and lesson viewer reskin | 2026-07-16 | 49f340f | Verified | [260716-2ms-dsf-05-course-page-and-lesson-viewer-des](./quick/260716-2ms-dsf-05-course-page-and-lesson-viewer-des/) |
 | 260720-tmb | Approved thumbnail redesign review package | 2026-07-20 | 69ba1a9 | Verified | [20260720-approved-thumbnail-review](./quick/20260720-approved-thumbnail-review/) |
+| 260729-j49 | Remove Institute account lifecycle controls | 2026-07-29 | 59aba35 | In review | [260729-j49-lane-c-remove-institute-account-lifecycl](./quick/260729-j49-lane-c-remove-institute-account-lifecycl/) |
 
 ## Deferred Items
 
