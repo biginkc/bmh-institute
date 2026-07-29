@@ -4,6 +4,27 @@
 
 set lock_timeout = '10s';
 
+do $$
+declare
+  duplicate_count integer;
+begin
+  select count(*) into duplicate_count
+  from (
+    select program_id, sort_order
+    from public.program_courses
+    group by program_id, sort_order
+    having count(*) > 1
+  ) duplicates;
+
+  if duplicate_count > 0 then
+    raise exception
+      'Cannot install program ordering controls: % duplicate sort-order groups require reconciliation first.',
+      duplicate_count
+      using errcode = '23505';
+  end if;
+end;
+$$;
+
 create unique index if not exists program_courses_program_sort_order_uidx
   on public.program_courses (program_id, sort_order);
 
