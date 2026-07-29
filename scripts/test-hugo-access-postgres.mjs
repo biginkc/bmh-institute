@@ -94,12 +94,21 @@ async function runPostgres(pgBin, index) {
         "supabase/migrations/20260729001500_hugo_auth_insert_lifecycle_lock.sql",
       ),
     );
+    psqlFile(
+      binary,
+      env,
+      resolve(
+        root,
+        "supabase/migrations/20260729003000_hugo_auth_email_lifecycle_lock.sql",
+      ),
+    );
     for (const test of [
       "055_hugo_access_provisioner.sql",
       "056_hugo_access_operation_payload_hash.sql",
       "057_hugo_access_authorization_hardening.sql",
       "058_hugo_missing_identity_durable_proof.sql",
       "059_hugo_auth_insert_lifecycle_lock.sql",
+      "060_hugo_auth_email_lifecycle_lock.sql",
     ]) {
       const path = resolve(root, "supabase/tests", test);
       if (existsSync(path)) psqlFile(binary, env, path);
@@ -141,7 +150,7 @@ async function runPostgres(pgBin, index) {
     return {
       postgres_major: major,
       migrations: migrations.length,
-      focused_sql_tests: 5,
+      focused_sql_tests: 6,
       auth_insert_lifecycle_serialization: authInsertSerialization,
       concurrent_owner_deletes: "both_direct_mutations_blocked",
     };

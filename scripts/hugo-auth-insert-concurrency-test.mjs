@@ -4,11 +4,22 @@ const userId = "00000000-0000-4000-8000-000000000420";
 const prepareOperationId = "00000000-0000-4000-8000-000000000421";
 const deleteOperationId = "00000000-0000-4000-8000-000000000422";
 const email = "concurrent-auth-insert@example.invalid";
+const updateUserId = "00000000-0000-4000-8000-000000000430";
+const updatePrepareOperationId = "00000000-0000-4000-8000-000000000431";
+const updateDeleteOperationId = "00000000-0000-4000-8000-000000000432";
+const originalEmail = "before-concurrent-email-update@example.invalid";
+const updatedEmail = "after-concurrent-email-update@example.invalid";
 
 export async function verifyAuthInsertLifecycleSerialization({
   psqlPath,
   env,
 }) {
+  await verifyInsertSerialization(psqlPath, env);
+  await verifyEmailUpdateSerialization(psqlPath, env);
+  return "auth_insert_and_email_update_serialized_before_lifecycle_proof";
+}
+
+async function verifyInsertSerialization(psqlPath, env) {
   const insert = runPsqlAsync(
     psqlPath,
     env,
@@ -118,10 +129,163 @@ export async function verifyAuthInsertLifecycleSerialization({
     );
   }
 
-  return "auth_insert_locked_before_row_then_lifecycle_deleted";
 }
 
-async function waitForAdvisoryLock(psqlPath, env, insert) {
+async function verifyEmailUpdateSerialization(psqlPath, env) {
+  psqlExec(
+    psqlPath,
+    env,
+    `
+      insert into auth.users (
+        id,
+        email,
+        last_sign_in_at,
+        raw_app_meta_data,
+        raw_user_meta_data,
+        created_at,
+        updated_at
+      ) values (
+        '${updateUserId}',
+        '${originalEmail}',
+        now(),
+        '{}'::jsonb,
+        '{}'::jsonb,
+        now(),
+        now()
+      );
+    `,
+  );
+
+  const update = runPsqlAsync(
+    psqlPath,
+    env,
+    `
+      begin;
+      update auth.users
+      set email = '${updatedEmail}',
+          updated_at = now()
+      where id = '${updateUserId}';
+      select pg_sleep(2);
+      commit;
+    `,
+  );
+
+  await waitForAdvisoryLock(psqlPath, env, update, "Auth email update");
+
+  let lifecycleSettled = false;
+  const lifecycle = runPsqlAsync(
+    psqlPath,
+    env,
+    `
+      begin;
+      set local request.jwt.claim.role = 'service_role';
+      select public.hugo_prepare_pristine_delete(
+        '${updatePrepareOperationId}',
+        '${updatedEmail}'
+      );
+      commit;
+      begin;
+      set local request.jwt.claim.role = 'service_role';
+      select public.hugo_delete_identity(
+        '${updateDeleteOperationId}',
+        '${updatedEmail}'
+      );
+      commit;
+    `,
+  ).finally(() => {
+    lifecycleSettled = true;
+  });
+
+  await delay(250);
+  if (lifecycleSettled) {
+    await Promise.allSettled([update, lifecycle]);
+    throw new Error(
+      "Lifecycle prepare/delete did not wait for the in-flight Auth email update.",
+    );
+  }
+
+  await update;
+  await lifecycle;
+
+  const observed = psqlScalar(
+    psqlPath,
+    env,
+    `
+      select string_agg(
+        concat_ws(
+          ':',
+          operation,
+          receipt #>> '{observed,status}',
+          receipt ->> 'ok',
+          coalesce(receipt ->> 'error_code', 'none')
+        ),
+        '|'
+        order by operation_id
+      )
+      from public.hugo_access_operations
+      where operation_id in (
+        '${updatePrepareOperationId}',
+        '${updateDeleteOperationId}'
+      );
+    `,
+  );
+  if (
+    observed !==
+      "preparePristineDelete:missing:false:identity_not_pristine|deleteIdentity:missing:false:identity_not_pristine"
+  ) {
+    throw new Error(
+      `Lifecycle calls did not observe durable evidence at the updated Auth email: ${observed}`,
+    );
+  }
+
+  const retainedIdentity = psqlScalar(
+    psqlPath,
+    env,
+    `
+      select auth_user.email || '|' || profile.email
+      from auth.users auth_user
+      join public.profiles profile on profile.id = auth_user.id
+      where auth_user.id = '${updateUserId}';
+    `,
+  );
+  if (retainedIdentity !== `${updatedEmail}|${originalEmail}`) {
+    throw new Error(
+      `Durable email-update fixture did not remain fail-closed: ${retainedIdentity}`,
+    );
+  }
+
+  psqlExec(
+    psqlPath,
+    env,
+    `
+      delete from auth.users
+      where id = '${updateUserId}';
+    `,
+  );
+
+  const cleanupCount = psqlScalar(
+    psqlPath,
+    env,
+    `
+      select (
+        (select count(*) from auth.users where id = '${updateUserId}') +
+        (select count(*) from public.profiles where id = '${updateUserId}')
+      )::text;
+    `,
+  );
+  if (cleanupCount !== "0") {
+    throw new Error(
+      `Email-update concurrency fixture cleanup left identity rows behind: ${cleanupCount}`,
+    );
+  }
+}
+
+async function waitForAdvisoryLock(
+  psqlPath,
+  env,
+  concurrentSession,
+  label = "Auth insert",
+) {
   for (let attempt = 0; attempt < 40; attempt += 1) {
     const lockPresent = psqlScalar(
       psqlPath,
@@ -139,16 +303,16 @@ async function waitForAdvisoryLock(psqlPath, env, insert) {
     if (lockPresent === "true" || lockPresent === "t") return;
 
     const completed = await Promise.race([
-      insert.then(() => true),
+      concurrentSession.then(() => true),
       delay(25).then(() => false),
     ]);
     if (completed) {
       throw new Error(
-        "Auth insert completed before its advisory lock was observed.",
+        `${label} completed before its advisory lock was observed.`,
       );
     }
   }
-  throw new Error("Timed out waiting for the Auth insert advisory lock.");
+  throw new Error(`Timed out waiting for the ${label} advisory lock.`);
 }
 
 function runPsqlAsync(psqlPath, env, sql) {
@@ -187,6 +351,14 @@ function psqlScalar(psqlPath, env, sql) {
     ["-X", "-v", "ON_ERROR_STOP=1", "-At", "-c", sql],
     { env, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] },
   ).trim();
+}
+
+function psqlExec(psqlPath, env, sql) {
+  execFileSync(
+    psqlPath,
+    ["-X", "-v", "ON_ERROR_STOP=1", "-c", sql],
+    { env, stdio: ["ignore", "ignore", "pipe"] },
+  );
 }
 
 function delay(milliseconds) {

@@ -36,8 +36,9 @@ begin
     and trigger_row.tgfoid =
       'public.fn_hugo_lock_auth_user_insert_lifecycle()'::regprocedure;
 
-  assert v_trigger_type = 6,
-    'Auth lifecycle lock must be a BEFORE INSERT statement trigger';
+  assert (v_trigger_type::integer & 6) = 6
+    and (v_trigger_type::integer & 1) = 0,
+    'Auth lifecycle lock must include BEFORE INSERT at statement level';
 end;
 $$;
 

@@ -293,7 +293,19 @@ try {
   psqlFile(
     resolve(
       root,
+      "supabase/migrations/20260729003000_hugo_auth_email_lifecycle_lock.sql",
+    ),
+  );
+  psqlFile(
+    resolve(
+      root,
       "supabase/tests/059_hugo_auth_insert_lifecycle_lock.sql",
+    ),
+  );
+  psqlFile(
+    resolve(
+      root,
+      "supabase/tests/060_hugo_auth_email_lifecycle_lock.sql",
     ),
   );
   await verifyAuthInsertLifecycleSerialization({
