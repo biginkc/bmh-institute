@@ -204,6 +204,17 @@ begin
       using errcode = '55000';
   end if;
 
+  if exists (
+    select 1
+    from public.hugo_rollback_gate_tables gate_row
+    left join pg_catalog.pg_class relation
+      on relation.oid = format('%I.%I', gate_row.schema_name, gate_row.table_name)::regclass
+    where relation.relacl is distinct from gate_row.relacl
+  ) then
+    raise exception 'Hugo table ACL drifted during the rollback pause; deny gate remains active.'
+      using errcode = '55000';
+  end if;
+
   if not exists (
     select 1
     from pg_catalog.pg_policy policy_row

@@ -108,10 +108,11 @@ $$;
 create table public.hugo_rollback_gate_tables (
   schema_name text not null,
   table_name text not null,
+  relacl aclitem[],
   primary key (schema_name, table_name)
 );
-insert into public.hugo_rollback_gate_tables (schema_name, table_name)
-select namespace.nspname, relation.relname
+insert into public.hugo_rollback_gate_tables (schema_name, table_name, relacl)
+select namespace.nspname, relation.relname, relation.relacl
 from pg_catalog.pg_class relation
 join pg_catalog.pg_namespace namespace
   on namespace.oid = relation.relnamespace
