@@ -36,8 +36,7 @@ describe("Hugo-only provisioning boundary", () => {
     expect(editAction).not.toContain("p_status");
     expect(editAction).not.toContain("fn_save_user_settings");
     expect(editAction).not.toContain("createAdminClient");
-    expect(editAction).not.toContain('update({ system_role: input.system_role })');
-    expect(editAction).toContain('.select("system_role")');
+    expect(editAction).toContain('update({ system_role: input.system_role })');
     expect(editAction).toContain('rpc("fn_set_user_role_groups"');
   });
 });

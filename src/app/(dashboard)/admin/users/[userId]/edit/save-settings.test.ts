@@ -56,14 +56,21 @@ vi.mock("@/lib/supabase/server", () => ({
       }
       if (table === "profiles") {
         return {
-          select: (columns: string) => ({
+          select: () => ({
             eq: () => ({
               maybeSingle: async () => ({
-                data:
-                  columns === "system_role"
-                    ? { system_role: "learner" }
-                    : { email: "learner@bmh.test" },
+                data: { email: "learner@bmh.test" },
                 error: null,
+              }),
+            }),
+          }),
+          update: () => ({
+            eq: () => ({
+              select: () => ({
+                maybeSingle: async () => ({
+                  data: { id: "user-1" },
+                  error: null,
+                }),
               }),
             }),
           }),

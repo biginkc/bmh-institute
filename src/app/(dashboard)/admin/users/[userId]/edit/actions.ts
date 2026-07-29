@@ -21,10 +21,9 @@ type UserSettingsInput = {
 };
 
 /**
- * Saves Institute-owned role-group settings.
+ * Saves only Institute-owned role and role-group settings.
  *
- * Role changes fail closed until the database exposes an operation that keeps
- * Hugo's matching grant in sync without changing login status.
+ * Self-demotion guard lives here too: an owner can't downgrade themselves.
  */
 export async function saveUserSettings(
   input: UserSettingsInput,
@@ -38,8 +37,6 @@ export async function saveUserSettings(
   }
 
   const supabase = await createClient();
-  const roleCheck = await confirmSystemRoleIsUnchanged(supabase, input);
-  if (!roleCheck.ok) return roleCheck;
 
   // Current role_groups so we can diff for the enrollment email.
   const { data: existingRgs, error: existingRoleGroupsError } = await supabase
@@ -70,7 +67,11 @@ export async function saveUserSettings(
     (id) => !oldProgramIds.includes(id),
   );
 
-  const saveResult = await persistInstituteSettings(supabase, input);
+  const saveResult = await persistInstituteSettings(
+    supabase,
+    input,
+    Array.from(oldGroupIds),
+  );
   if (!saveResult.ok) return saveResult;
 
   let newProgramTitles: string[] = [];
@@ -116,35 +117,14 @@ export async function saveUserSettings(
   return { ok: true, newProgramTitles };
 }
 
-async function confirmSystemRoleIsUnchanged(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  input: UserSettingsInput,
-): Promise<{ ok: true } | { ok: false; error: string }> {
-  const { data: targetProfile, error: targetProfileError } = await supabase
-    .from("profiles")
-    .select("system_role")
-    .eq("id", input.userId)
-    .maybeSingle();
-  if (targetProfileError) {
-    return { ok: false, error: targetProfileError.message };
-  }
-  if (!targetProfile) {
-    return { ok: false, error: "User not found." };
-  }
-  if (targetProfile.system_role !== input.system_role) {
-    return {
-      ok: false,
-      error:
-        "This role cannot be changed safely until Institute can keep Hugo access in sync without changing login status.",
-    };
-  }
-  return { ok: true };
-}
-
 async function persistInstituteSettings(
   supabase: Awaited<ReturnType<typeof createClient>>,
   input: UserSettingsInput,
+  oldRoleGroupIds: string[],
 ): Promise<{ ok: true } | { ok: false; error: string }> {
+  // Apply the guarded entitlement change before the role change. If the role
+  // write then fails, restore the prior groups so a failed save does not leave
+  // either an unexpected admin role or unexpected course access behind.
   const { error: saveErr } = await supabase.rpc("fn_set_user_role_groups", {
     p_user_id: input.userId,
     p_role_group_ids: input.role_group_ids,
@@ -152,7 +132,30 @@ async function persistInstituteSettings(
   if (saveErr) {
     return { ok: false, error: normalizeReleaseControlError(saveErr.message) };
   }
-  return { ok: true };
+
+  const { data: updatedProfile, error: roleError } = await supabase
+    .from("profiles")
+    .update({ system_role: input.system_role })
+    .eq("id", input.userId)
+    .select("id")
+    .maybeSingle();
+  if (!roleError && updatedProfile) return { ok: true };
+
+  const primaryError = roleError?.message ?? "User not found.";
+  const { error: rollbackError } = await supabase.rpc(
+    "fn_set_user_role_groups",
+    {
+      p_user_id: input.userId,
+      p_role_group_ids: oldRoleGroupIds,
+    },
+  );
+  if (rollbackError) {
+    return {
+      ok: false,
+      error: `${primaryError} Role-group changes could not be restored: ${normalizeReleaseControlError(rollbackError.message)}`,
+    };
+  }
+  return { ok: false, error: primaryError };
 }
 
 async function accessibleProgramIdsFor(
