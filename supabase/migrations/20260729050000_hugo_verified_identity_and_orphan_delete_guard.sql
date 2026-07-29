@@ -218,7 +218,7 @@ begin
     end,
     v_receipt
   );
-  update public.hugo_access_operation_claims
+  update private.hugo_access_operation_claims
   set consumed_at = now()
   where operation_id = p_operation_id;
   perform set_config('hugo.request_operation_id', '', true);
@@ -232,7 +232,7 @@ revoke all on function public.fn_hugo_store_guard_failure(
   text, text
 ) from public, anon, authenticated, service_role;
 
-create table if not exists public.hugo_access_operation_claims (
+create table if not exists private.hugo_access_operation_claims (
   operation_id uuid primary key,
   request_hash text not null check (request_hash ~ '^[0-9a-f]{64}$'),
   email_fingerprint text not null
@@ -244,16 +244,16 @@ create table if not exists public.hugo_access_operation_claims (
 
 create unique index if not exists
   hugo_access_operation_claims_live_email_uidx
-on public.hugo_access_operation_claims (email_fingerprint)
+on private.hugo_access_operation_claims (email_fingerprint)
 where consumed_at is null;
 
-alter table public.hugo_access_operation_claims enable row level security;
-revoke all on table public.hugo_access_operation_claims
+alter table private.hugo_access_operation_claims enable row level security;
+revoke all on table private.hugo_access_operation_claims
   from public, anon, authenticated, service_role;
 drop policy if exists hugo_active_authenticated_gate
-  on public.hugo_access_operation_claims;
+  on private.hugo_access_operation_claims;
 create policy hugo_active_authenticated_gate
-  on public.hugo_access_operation_claims
+  on private.hugo_access_operation_claims
   as restrictive
   for all
   to authenticated
@@ -279,7 +279,13 @@ declare
     public.fn_hugo_email_fingerprint(v_email);
   v_config jsonb := public.fn_hugo_canonical_apply_config(p_config);
   v_hash text;
-  v_claim public.hugo_access_operation_claims%rowtype;
+  v_claim private.hugo_access_operation_claims%rowtype;
+  v_existing_operation text;
+  v_existing_hash text;
+  v_existing_input jsonb;
+  v_existing_receipt jsonb;
+  v_existing_app_user_id text;
+  v_legacy_candidate_hash text;
   v_receipt jsonb;
 begin
   perform public.fn_hugo_require_service_role();
@@ -305,7 +311,9 @@ begin
   end if;
   if v_email = ''
      or v_email !~ '^[^@[:space:]]+@[^@[:space:]]+$'
+     or p_role is null
      or p_role not in ('owner', 'admin', 'learner')
+     or p_status is null
      or p_status not in ('active', 'suspended', 'revoked')
      or not public.fn_hugo_apply_config_is_valid(v_config) then
     v_receipt := public.fn_hugo_bind_mutation_receipt(
@@ -327,7 +335,7 @@ begin
 
   select claim.*
   into v_claim
-  from public.hugo_access_operation_claims claim
+  from private.hugo_access_operation_claims claim
   where claim.operation_id = p_operation_id
   for update;
   if found then
@@ -362,11 +370,45 @@ begin
     return jsonb_build_object('proceed', true, 'request_hash', v_hash);
   end if;
 
-  if exists (
-    select 1
-    from public.hugo_access_operations operation_row
-    where operation_row.operation_id = p_operation_id
-  ) then
+  select
+    operation_row.operation,
+    operation_row.request_hash,
+    operation_row.input,
+    operation_row.receipt
+  into
+    v_existing_operation,
+    v_existing_hash,
+    v_existing_input,
+    v_existing_receipt
+  from public.hugo_access_operations operation_row
+  where operation_row.operation_id = p_operation_id;
+  if found then
+    if v_existing_operation in ('grant', 'suspend', 'reactivate', 'revoke')
+    then
+      v_existing_app_user_id := case
+        when coalesce(v_existing_input, '{}'::jsonb) ? 'app_user_id'
+          then v_existing_input->>'app_user_id'
+        else v_existing_receipt->>'app_user_id'
+      end;
+      v_legacy_candidate_hash := public.fn_hugo_request_payload_hash(
+        'hugo_apply_access',
+        v_email_fingerprint,
+        p_role,
+        v_config,
+        p_status,
+        to_jsonb(p_access_expires_at),
+        v_existing_app_user_id
+      );
+      if v_existing_hash is not distinct from v_legacy_candidate_hash then
+        return jsonb_build_object(
+          'proceed', false,
+          'request_hash', v_existing_hash,
+          'receipt', public.fn_hugo_bound_operation_receipt(
+            p_operation_id
+          )
+        );
+      end if;
+    end if;
     v_receipt := public.fn_hugo_bind_mutation_receipt(
       public.fn_hugo_receipt(
         p_operation_id, null, p_role, v_config, p_status,
@@ -386,7 +428,7 @@ begin
 
   if exists (
     select 1
-    from public.hugo_access_operation_claims claim
+    from private.hugo_access_operation_claims claim
     where claim.email_fingerprint = v_email_fingerprint
       and claim.consumed_at is null
   ) then
@@ -407,7 +449,7 @@ begin
     );
   end if;
 
-  insert into public.hugo_access_operation_claims (
+  insert into private.hugo_access_operation_claims (
     operation_id,
     request_hash,
     email_fingerprint,
@@ -469,7 +511,7 @@ begin
 
   select claim.request_hash
   into v_claim_hash
-  from public.hugo_access_operation_claims claim
+  from private.hugo_access_operation_claims claim
   where claim.operation_id = p_operation_id
   for update;
   if found then
@@ -567,7 +609,7 @@ begin
   );
   perform set_config('hugo.request_operation_id', '', true);
   perform set_config('hugo.request_hash', '', true);
-  update public.hugo_access_operation_claims
+  update private.hugo_access_operation_claims
   set consumed_at = now()
   where operation_id = p_operation_id;
   return public.fn_hugo_bound_operation_receipt(p_operation_id);

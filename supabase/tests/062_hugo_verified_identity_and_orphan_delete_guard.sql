@@ -31,24 +31,24 @@ begin
   assert not (
     has_table_privilege(
       'service_role',
-      'public.hugo_access_operation_claims',
+      'private.hugo_access_operation_claims',
       'select'
     )
     or has_table_privilege(
       'service_role',
-      'public.hugo_access_operation_claims',
+      'private.hugo_access_operation_claims',
       'insert'
     )
     or has_table_privilege(
       'authenticated',
-      'public.hugo_access_operation_claims',
+      'private.hugo_access_operation_claims',
       'select'
     )
   ), 'preflight claims have direct role grants';
   assert not exists (
     select 1
     from information_schema.columns
-    where table_schema = 'public'
+    where table_schema = 'private'
       and table_name = 'hugo_access_operation_claims'
       and column_name = 'app_user_id'
   ), 'preflight claims retained a live application user identifier';
@@ -101,13 +101,129 @@ begin
     'invalid Institute configuration passed preflight';
   assert not exists (
     select 1
-    from public.hugo_access_operation_claims claim
+    from private.hugo_access_operation_claims claim
     where claim.operation_id =
       '00000000-0000-4000-8000-000000000979'
   ), 'invalid Institute configuration reserved an operation';
   assert (select count(*) from public.profiles) = v_profile_count
      and (select count(*) from public.hugo_access_grants) = v_grant_count,
     'invalid configuration preflight mutated identity state';
+
+  v_conflict := public.hugo_preflight_access_operation(
+    '00000000-0000-4000-8000-000000000980',
+    'missing-role-hugo@example.invalid',
+    null,
+    '{}'::jsonb,
+    'active',
+    null
+  );
+  assert not (v_conflict->>'proceed')::boolean
+     and v_conflict#>>'{receipt,error_code}' = 'invalid_request',
+    'missing Institute role passed preflight';
+
+  v_conflict := public.hugo_preflight_access_operation(
+    '00000000-0000-4000-8000-000000000981',
+    'missing-status-hugo@example.invalid',
+    'learner',
+    '{}'::jsonb,
+    null,
+    null
+  );
+  assert not (v_conflict->>'proceed')::boolean
+     and v_conflict#>>'{receipt,error_code}' = 'invalid_request',
+    'missing Institute status passed preflight';
+  assert not exists (
+    select 1
+    from private.hugo_access_operation_claims claim
+    where claim.operation_id in (
+      '00000000-0000-4000-8000-000000000980',
+      '00000000-0000-4000-8000-000000000981'
+    )
+  ), 'missing required fields reserved an Institute operation';
+  assert (select count(*) from public.profiles) = v_profile_count
+     and (select count(*) from public.hugo_access_grants) = v_grant_count,
+    'missing required fields mutated Institute identity state';
+end;
+$$;
+
+insert into auth.users (
+  id,
+  email,
+  email_confirmed_at,
+  raw_app_meta_data,
+  raw_user_meta_data,
+  created_at,
+  updated_at
+) values (
+  '00000000-0000-4000-8000-000000000982',
+  'legacy-replay-hugo@example.invalid',
+  now(),
+  '{}'::jsonb,
+  '{}'::jsonb,
+  now(),
+  now()
+);
+
+do $$
+declare
+  v_receipt jsonb;
+  v_preflight jsonb;
+  v_profile_count bigint;
+  v_grant_count bigint;
+begin
+  v_receipt := public.hugo_apply_access(
+    '00000000-0000-4000-8000-000000000983',
+    'legacy-replay-hugo@example.invalid',
+    'learner',
+    '{"role_group_ids":[]}'::jsonb,
+    'active',
+    null,
+    '00000000-0000-4000-8000-000000000982'
+  );
+  assert (v_receipt->>'ok')::boolean,
+    'legacy-style Institute operation setup failed';
+  assert not exists (
+    select 1
+    from private.hugo_access_operation_claims claim
+    where claim.operation_id =
+      '00000000-0000-4000-8000-000000000983'
+  ), 'legacy-style Institute operation unexpectedly has a preflight claim';
+
+  select count(*) into v_profile_count from public.profiles;
+  select count(*) into v_grant_count from public.hugo_access_grants;
+  v_preflight := public.hugo_preflight_access_operation(
+    '00000000-0000-4000-8000-000000000983',
+    'LEGACY-REPLAY-HUGO@example.invalid',
+    'learner',
+    '{"role_group_ids":[]}'::jsonb,
+    'active',
+    null
+  );
+  assert not (v_preflight->>'proceed')::boolean
+     and v_preflight->'receipt' = v_receipt
+     and v_preflight->>'request_hash' = v_receipt->>'request_hash',
+    'exact legacy Institute preflight did not replay its saved receipt';
+
+  v_preflight := public.hugo_preflight_access_operation(
+    '00000000-0000-4000-8000-000000000983',
+    'legacy-replay-hugo@example.invalid',
+    'admin',
+    '{"role_group_ids":[]}'::jsonb,
+    'active',
+    null
+  );
+  assert not (v_preflight->>'proceed')::boolean
+     and v_preflight#>>'{receipt,error_code}' = 'operation_id_reused',
+    'changed legacy Institute preflight did not conflict';
+  assert (select count(*) from public.profiles) = v_profile_count
+     and (select count(*) from public.hugo_access_grants) = v_grant_count,
+    'legacy Institute preflight replay mutated identity state';
+  assert (
+    select grant_row.role = 'learner'
+    from public.hugo_access_grants grant_row
+    where grant_row.user_id =
+      '00000000-0000-4000-8000-000000000982'
+  ), 'changed legacy Institute preflight changed the existing grant';
 end;
 $$;
 
