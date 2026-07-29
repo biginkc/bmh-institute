@@ -77,22 +77,36 @@ try {
   }
 
   psqlText(
-    "grant insert, update, delete, truncate on public.hugo_access_grants to service_role;",
+    "grant insert, update, delete, truncate on public.hugo_access_grants, auth.users, storage.objects to service_role;",
     "pre-hardening service-role ACL fixture",
   );
   psqlText(seedFixtureSql(), "preservation fixture");
   const before = JSON.parse(psqlScalar(snapshotSql(), "baseline snapshot"));
   const beforeHistory = JSON.parse(psqlScalar(historySnapshotSql(), "baseline migration history"));
   const beforeGrantAcl = psqlScalar(grantAclSnapshotSql(), "baseline grant ACL");
+  const beforeStorageAcl = psqlScalar(storageAclSnapshotSql(), "baseline storage ACL");
+  const beforeAuthAcl = psqlScalar(authAclSnapshotSql(), "baseline auth ACL");
 
   for (const file of targetFiles) {
     psqlFile(resolve(migrationsDir, file), `target ${file}`);
     recordMigration(file);
   }
   const targetGrantAcl = psqlScalar(grantAclSnapshotSql(), "forward target grant ACL");
+  const targetStorageAcl = psqlScalar(storageAclSnapshotSql(), "forward target storage ACL");
+  const targetAuthAcl = psqlScalar(authAclSnapshotSql(), "forward target auth ACL");
   if (targetGrantAcl === beforeGrantAcl) {
     throw new Error("Forward hardening did not revoke the service-role grant ACL in the fixture.");
   }
+  assertEqual(
+    targetStorageAcl,
+    beforeStorageAcl,
+    "forward hardening preserves the storage.objects ACL fixture",
+  );
+  assertEqual(
+    targetAuthAcl,
+    beforeAuthAcl,
+    "forward hardening preserves the auth.users ACL fixture",
+  );
   assertEqual(
     psqlScalar("select count(*)::text from public.hugo_access_acl_baseline where singleton and relacl is not null;", "ACL baseline row"),
     "1",
@@ -148,15 +162,25 @@ try {
     beforeGrantAcl,
     "rollback preserves the exact hugo_access_grants ACL baseline",
   );
+  assertEqual(
+    psqlScalar(storageAclSnapshotSql(), "post-rollback storage ACL"),
+    beforeStorageAcl,
+    "rollback preserves the exact storage.objects ACL baseline",
+  );
+  assertEqual(
+    psqlScalar(authAclSnapshotSql(), "post-rollback auth ACL"),
+    beforeAuthAcl,
+    "rollback preserves the exact auth.users ACL baseline",
+  );
   const gateCount = Number(psqlScalar(
     "select count(*) from pg_catalog.pg_policies where policyname = 'hugo_rollback_fail_closed';",
     "rollback deny-gate policy count",
   ));
   if (gateCount < 2) throw new Error(`Rollback deny gate was vacuous: only ${gateCount} policy rows.`);
   const gateCoverage = JSON.parse(psqlScalar(rollbackGateCoverageSql(), "rollback gate coverage"));
-  if (gateCoverage.metadata !== gateCoverage.public_policies
+  if (gateCoverage.rls_metadata !== gateCoverage.protected_policies
       || gateCoverage.storage_policies !== 1
-      || gateCoverage.metadata === 0) {
+      || gateCoverage.metadata <= gateCoverage.rls_metadata) {
     throw new Error(`Rollback deny gate coverage was incomplete: ${JSON.stringify(gateCoverage)}`);
   }
   assertEqual(
@@ -178,6 +202,51 @@ try {
     },
     "service-role writes are quiesced during rollback pause",
     "Hugo rollback pause is active",
+  );
+  expectPsqlFailure(
+    () => {
+      psqlText(
+        "create or replace function public.hugo_roundtrip_service_truncate_probe() returns void language plpgsql security definer set search_path = public as $$ begin truncate public.hugo_access_grants; end; $$; revoke all on function public.hugo_roundtrip_service_truncate_probe() from public; grant execute on function public.hugo_roundtrip_service_truncate_probe() to service_role; set role service_role; select public.hugo_roundtrip_service_truncate_probe();",
+        "service-role grant-table truncate gate proof",
+      );
+    },
+    "service-role TRUNCATE is quiesced during rollback pause",
+    "Hugo rollback pause is active",
+  );
+  assertEqual(
+    psqlScalar("select count(*)::text from public.hugo_access_grants;", "grant rows after truncate gate"),
+    "2",
+    "service-role TRUNCATE leaves hugo_access_grants unchanged",
+  );
+  expectPsqlFailure(
+    () => {
+      psqlText(
+        "create or replace function public.hugo_roundtrip_service_storage_truncate_probe() returns void language plpgsql security definer set search_path = public as $$ begin truncate storage.objects; end; $$; revoke all on function public.hugo_roundtrip_service_storage_truncate_probe() from public; grant execute on function public.hugo_roundtrip_service_storage_truncate_probe() to service_role; set role service_role; select public.hugo_roundtrip_service_storage_truncate_probe();",
+        "service-role storage truncate gate proof",
+      );
+    },
+    "service-role storage.objects TRUNCATE is quiesced during rollback pause",
+    "Hugo rollback pause is active",
+  );
+  assertEqual(
+    psqlScalar("select count(*)::text from storage.objects;", "storage rows after truncate gate"),
+    "1",
+    "service-role TRUNCATE leaves storage.objects unchanged",
+  );
+  expectPsqlFailure(
+    () => {
+      psqlText(
+        "create or replace function public.hugo_roundtrip_service_auth_truncate_probe() returns void language plpgsql security definer set search_path = public as $$ begin truncate auth.users cascade; end; $$; revoke all on function public.hugo_roundtrip_service_auth_truncate_probe() from public; grant execute on function public.hugo_roundtrip_service_auth_truncate_probe() to service_role; set role service_role; select public.hugo_roundtrip_service_auth_truncate_probe();",
+        "service-role auth truncate gate proof",
+      );
+    },
+    "service-role auth.users TRUNCATE is quiesced during rollback pause",
+    "Hugo rollback pause is active",
+  );
+  assertEqual(
+    psqlScalar("select count(*)::text from auth.users;", "auth rows after truncate gate"),
+    "2",
+    "service-role TRUNCATE leaves auth.users unchanged",
   );
   const atomicFailureProbe = join(cluster, "atomic-replay-failure-probe.sql");
   writeFileSync(
@@ -236,6 +305,16 @@ try {
     psqlScalar(grantAclSnapshotSql(), "post-replay grant ACL"),
     targetGrantAcl,
     "replay restores the forward hardening grant ACL",
+  );
+  assertEqual(
+    psqlScalar(storageAclSnapshotSql(), "post-replay storage ACL"),
+    targetStorageAcl,
+    "replay restores the forward storage.objects ACL",
+  );
+  assertEqual(
+    psqlScalar(authAclSnapshotSql(), "post-replay auth ACL"),
+    targetAuthAcl,
+    "replay restores the forward auth.users ACL",
   );
   assertEqual(
     psqlScalar(authenticatedProfileCountSql(), "authenticated replay proof"),
@@ -384,13 +463,22 @@ function historySnapshotSql() {
 function rollbackGateCoverageSql() {
   return `select jsonb_build_object(
     'metadata', (select count(*) from public.hugo_rollback_gate_tables),
-    'public_policies', (select count(*) from pg_catalog.pg_policies where policyname = 'hugo_rollback_fail_closed' and schemaname = 'public'),
+    'rls_metadata', (select count(*) from public.hugo_rollback_gate_tables where rls_gated),
+    'protected_policies', (select count(*) from pg_catalog.pg_policies where policyname = 'hugo_rollback_fail_closed' and schemaname not in ('pg_catalog', 'information_schema')),
     'storage_policies', (select count(*) from pg_catalog.pg_policies where policyname = 'hugo_rollback_fail_closed' and schemaname = 'storage')
   )::text;`;
 }
 
 function grantAclSnapshotSql() {
   return "select jsonb_build_object('owner', (select relowner::regrole::text from pg_catalog.pg_class where oid = 'public.hugo_access_grants'::regclass), 'relacl', (select to_jsonb(relacl) from pg_catalog.pg_class where oid = 'public.hugo_access_grants'::regclass))::text;";
+}
+
+function storageAclSnapshotSql() {
+  return "select jsonb_build_object('owner', (select relowner::regrole::text from pg_catalog.pg_class where oid = 'storage.objects'::regclass), 'relacl', (select to_jsonb(relacl) from pg_catalog.pg_class where oid = 'storage.objects'::regclass))::text;";
+}
+
+function authAclSnapshotSql() {
+  return "select jsonb_build_object('owner', (select relowner::regrole::text from pg_catalog.pg_class where oid = 'auth.users'::regclass), 'relacl', (select to_jsonb(relacl) from pg_catalog.pg_class where oid = 'auth.users'::regclass))::text;";
 }
 
 function authenticatedProfileCountSql() {

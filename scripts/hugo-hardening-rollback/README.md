@@ -15,9 +15,14 @@ Rollback behavior is intentionally conservative. `rollback.sql` requires an
 operator confirmation GUC, takes the Hugo lifecycle advisory lock, installs a
 restrictive deny-all policy on every existing RLS table, quarantines the two
 tables introduced by the authorization migration, restores the reviewed
-pre-hardening function definitions, and removes only the four target history
-rows. It does not delete identities, profiles, grants, role-group membership,
-or business data. The deny gate remains committed after the pause.
+pre-hardening function definitions, snapshots ACL metadata for every protected
+RLS table plus the protected `auth.users` and `storage.objects` surfaces, and
+removes only the four target history rows. It also installs row and
+statement-level TRUNCATE pause triggers on the protected tables plus
+`auth.users` and `storage.objects`, so service-role writes cannot bypass the
+pause. It does not delete identities, profiles,
+grants, role-group membership, or business data. The deny gate remains
+committed after the pause.
 
 After the operator has reviewed the replay output, apply the four target files
 in timestamp order and record each migration in the normal migration history.
@@ -51,13 +56,14 @@ repository migration through `20260728113000`, seeds an owner, learner,
 connector grants and operation receipt, role-group membership, a program row,
 and a storage object, then applies the four target migrations. It records a
 strict-enforcement receipt, runs the rollback pause, proves authenticated reads
-and writes are denied while the gate is live, verifies non-target migration
-history is unchanged, replays all four migrations atomically with canonical
-migration versions and names, rejects an injected extra-row drift while retaining the gate,
-finalizes the pause only after per-table and storage policy coverage checks,
-and compares exact JSON row snapshots for every public table plus `auth.users`
-and `storage.objects` before and after. It also proves the preserved idempotent
-receipt is returned after replay.
+and writes plus service-role row writes and TRUNCATEs are denied while the gate
+is live, verifies non-target migration history and protected-table ACLs are
+unchanged, replays all four migrations atomically with canonical migration
+versions and names, rejects an injected extra-row drift while retaining the
+gate, finalizes the pause only after per-table and storage policy coverage and
+ACL checks, and compares exact JSON row snapshots for every public table plus
+`auth.users` and `storage.objects` before and after. It also proves the
+preserved idempotent receipt is returned after replay.
 
 ```sh
 npm run test:hugo-hardening:roundtrip

@@ -114,6 +114,7 @@ begin
   for v_table in
     select schema_name, table_name
     from public.hugo_rollback_gate_tables
+    where rls_gated
   loop
     if not coalesce((
       select relation.relrowsecurity
@@ -240,12 +241,18 @@ begin
         'drop trigger if exists hugo_rollback_write_guard on %I.%I',
         v_table.schema_name, v_table.table_name
       );
+      execute format(
+        'drop trigger if exists hugo_rollback_truncate_guard on %I.%I',
+        v_table.schema_name, v_table.table_name
+      );
     end if;
   end loop;
 end;
 $$;
 drop trigger if exists hugo_rollback_write_guard on auth.users;
+drop trigger if exists hugo_rollback_truncate_guard on auth.users;
 drop trigger if exists hugo_rollback_write_guard on storage.objects;
+drop trigger if exists hugo_rollback_truncate_guard on storage.objects;
 
 -- Restore the quarantined settings and audit rows exactly. The replayed
 -- migration's default singleton row is replaced by the pre-rollback value.
@@ -302,6 +309,7 @@ begin
   for v_table in
     select schema_name, table_name
     from public.hugo_rollback_gate_tables
+    where rls_gated
   loop
     if to_regclass(format('%I.%I', v_table.schema_name, v_table.table_name)) is not null then
       execute format(

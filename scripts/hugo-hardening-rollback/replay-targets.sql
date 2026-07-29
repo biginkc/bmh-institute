@@ -79,10 +79,18 @@ drop trigger if exists hugo_rollback_write_guard on public.hugo_access_settings;
 create trigger hugo_rollback_write_guard
 before insert or update or delete on public.hugo_access_settings
 for each row execute function public.fn_hugo_rollback_write_guard();
+drop trigger if exists hugo_rollback_truncate_guard on public.hugo_access_settings;
+create trigger hugo_rollback_truncate_guard
+before truncate on public.hugo_access_settings
+for each statement execute function public.fn_hugo_rollback_write_guard();
 drop trigger if exists hugo_rollback_write_guard on public.hugo_access_enforcement_changes;
 create trigger hugo_rollback_write_guard
 before insert or update or delete on public.hugo_access_enforcement_changes
 for each row execute function public.fn_hugo_rollback_write_guard();
+drop trigger if exists hugo_rollback_truncate_guard on public.hugo_access_enforcement_changes;
+create trigger hugo_rollback_truncate_guard
+before truncate on public.hugo_access_enforcement_changes
+for each statement execute function public.fn_hugo_rollback_write_guard();
 
 commit;
 

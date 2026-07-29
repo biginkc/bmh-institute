@@ -122,16 +122,27 @@ create table public.hugo_rollback_gate_tables (
   schema_name text not null,
   table_name text not null,
   relacl aclitem[],
+  rls_gated boolean not null,
   primary key (schema_name, table_name)
 );
-insert into public.hugo_rollback_gate_tables (schema_name, table_name, relacl)
+insert into public.hugo_rollback_gate_tables (schema_name, table_name, relacl, rls_gated)
 select namespace.nspname, relation.relname, relation.relacl
+  , true
 from pg_catalog.pg_class relation
 join pg_catalog.pg_namespace namespace
   on namespace.oid = relation.relnamespace
-where namespace.nspname = 'public'
+where namespace.nspname not in ('pg_catalog', 'information_schema')
   and relation.relkind in ('r', 'p')
-  and relation.relrowsecurity;
+  and relation.relrowsecurity
+union all
+select namespace.nspname, relation.relname, relation.relacl, false
+from pg_catalog.pg_class relation
+join pg_catalog.pg_namespace namespace
+  on namespace.oid = relation.relnamespace
+where namespace.nspname = 'auth'
+  and relation.relname = 'users'
+  and relation.relkind in ('r', 'p')
+  and not relation.relrowsecurity;
 revoke all on table public.hugo_rollback_gate_tables
   from public, anon, authenticated, service_role;
 
@@ -142,6 +153,7 @@ begin
   for v_table in
     select schema_name, table_name
     from public.hugo_rollback_gate_tables
+    where rls_gated
   loop
     execute format(
       'drop policy if exists hugo_rollback_fail_closed on %I.%I',
@@ -175,6 +187,7 @@ begin
   for v_table in
     select schema_name, table_name
     from public.hugo_rollback_gate_tables
+    where rls_gated
   loop
     execute format(
       'drop policy if exists hugo_active_authenticated_gate on %I.%I',
@@ -355,6 +368,9 @@ begin
       'Hugo rollback pause is active; all identity and business writes are quiesced.'
       using errcode = '55000';
   end if;
+  if tg_op = 'TRUNCATE' then
+    return null;
+  end if;
   if tg_op = 'DELETE' then
     return old;
   end if;
@@ -378,6 +394,11 @@ begin
         v_table.schema_name, v_table.table_name,
         v_table.schema_name, v_table.table_name
       );
+      execute format(
+        'drop trigger if exists hugo_rollback_truncate_guard on %I.%I; create trigger hugo_rollback_truncate_guard before truncate on %I.%I for each statement execute function public.fn_hugo_rollback_write_guard()',
+        v_table.schema_name, v_table.table_name,
+        v_table.schema_name, v_table.table_name
+      );
     end if;
   end loop;
 end;
@@ -386,10 +407,18 @@ drop trigger if exists hugo_rollback_write_guard on auth.users;
 create trigger hugo_rollback_write_guard
 before insert or update or delete on auth.users
 for each row execute function public.fn_hugo_rollback_write_guard();
+drop trigger if exists hugo_rollback_truncate_guard on auth.users;
+create trigger hugo_rollback_truncate_guard
+before truncate on auth.users
+for each statement execute function public.fn_hugo_rollback_write_guard();
 drop trigger if exists hugo_rollback_write_guard on storage.objects;
 create trigger hugo_rollback_write_guard
 before insert or update or delete on storage.objects
 for each row execute function public.fn_hugo_rollback_write_guard();
+drop trigger if exists hugo_rollback_truncate_guard on storage.objects;
+create trigger hugo_rollback_truncate_guard
+before truncate on storage.objects
+for each statement execute function public.fn_hugo_rollback_write_guard();
 
 delete from supabase_migrations.schema_migrations
 where version = any (array[
