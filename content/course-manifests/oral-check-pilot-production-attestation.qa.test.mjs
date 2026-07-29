@@ -1,12 +1,16 @@
 import assert from "node:assert/strict";
-import { createHash } from "node:crypto";
-import { readFile } from "node:fs/promises";
+import { createHash, randomUUID } from "node:crypto";
+import { readFile, writeFile } from "node:fs/promises";
 import { test } from "node:test";
 
 import { assertApprovedVoiceId } from "../../scripts/course-content/closer-lab-production-mapping.mjs";
 
 const ATTESTATION_URL = new URL(
   "../../docs/course-production/oral-check-pilot-production-attestation.json",
+  import.meta.url,
+);
+const RECEIPT_URL = new URL(
+  "../../docs/course-production/oral-check-pilot-live-verification-receipt.json",
   import.meta.url,
 );
 const MIGRATION_URL = new URL(
@@ -566,15 +570,30 @@ test("live recheck: the attested role_play/persona/goal data still matches produ
   // metadata column compared above.
   const bucket = attestation.verification.storage_bucket;
   assert.ok(bucket, "the attestation records which Storage bucket the documents live in");
+  // Round-8 review, finding 6: Supabase serves Storage objects through a CDN
+  // whose cache can lag a replace by up to a minute, so a stable URL with no
+  // cache busting can hand back the OLD bytes. Verifying stale content is
+  // worse than not verifying at all, because it reports green. Two defences,
+  // since either alone can be defeated: a unique query parameter per run so
+  // the request cannot match a cached entry, and explicit no-cache request
+  // headers. The authenticated object path is used rather than the public one
+  // because that is the read Closer Lab itself performs with a service role.
+  const cacheBuster = `${Date.now()}-${randomUUID()}`;
   const fetchDocumentBytes = async (storagePath) => {
     const objectEndpoint = new URL(
-      `/storage/v1/object/${bucket}/${storagePath}`,
+      `/storage/v1/object/authenticated/${bucket}/${storagePath}`,
       canonicalUrl,
     );
+    objectEndpoint.searchParams.set("cache_bust", cacheBuster);
     const objectResponse = await fetch(objectEndpoint, {
       method: "GET",
       redirect: "error",
-      headers: buildCloserServiceHeaders(serviceRoleKey),
+      cache: "no-store",
+      headers: {
+        ...buildCloserServiceHeaders(serviceRoleKey),
+        "Cache-Control": "no-cache, no-store, max-age=0",
+        Pragma: "no-cache",
+      },
     });
     if (objectResponse.url !== objectEndpoint.href) {
       throw new Error(
@@ -588,9 +607,43 @@ test("live recheck: the attested role_play/persona/goal data still matches produ
     }
     return new Uint8Array(await objectResponse.arrayBuffer());
   };
+  let documentsByteVerified = 0;
   for (const scenario of attestation.scenarios) {
     await assertLiveDocumentBytesMatchAttestation(scenario, fetchDocumentBytes);
+    documentsByteVerified += scenario.rubric_goals.reduce(
+      (total, goal) => total + goal.documents.length,
+      0,
+    );
   }
+
+  // Round-8 review, finding 5. This test is documented as a mandatory gate,
+  // but it exits SUCCESS with the live case SKIPPED whenever the opt-in flag
+  // or the credentials are absent, so nothing stopped an operator from
+  // applying having hashed zero production documents. Writing a receipt only
+  // on the path that genuinely reached production gives the apply command
+  // something it can require and check, rather than a runbook instruction it
+  // has to trust. The attestation hash is included so a receipt cannot vouch
+  // for an attestation that has since changed.
+  const attestationSha256 = createHash("sha256")
+    .update(await readFile(ATTESTATION_URL))
+    .digest("hex");
+  await writeFile(
+    RECEIPT_URL,
+    `${JSON.stringify(
+      {
+        verified_at: new Date().toISOString(),
+        project_ref: attestation.verification.project_ref,
+        storage_bucket: bucket,
+        attestation_sha256: attestationSha256,
+        scenarios_verified: attestation.scenarios.length,
+        documents_byte_verified: documentsByteVerified,
+      },
+      null,
+      2,
+    )}\n`,
+    "utf8",
+  );
+  assert.equal(documentsByteVerified, attestation.summary.total_rubric_goal_documents);
 });
 
 // Round-6 Codex review, finding 5, the part that is easy to get wrong: it is

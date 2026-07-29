@@ -74,3 +74,4 @@ course-assets/*
 course-assets/posters/*
 !course-assets/posters/redesign-history/
 !course-assets/posters/redesign-history/*.webp
+docs/course-production/oral-check-pilot-live-verification-receipt.json

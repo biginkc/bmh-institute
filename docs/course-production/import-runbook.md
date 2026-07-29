@@ -436,6 +436,19 @@ Before applying any of the three:
    character. The pins were taken from live Closer Lab production after the
    full 12-scenario oral-check catalog was applied.
 
+   This gate is now enforced, not just documented. Round-8 review pointed out
+   that calling it mandatory in prose achieved nothing, because the test exits
+   SUCCESS with the live case SKIPPED whenever the opt-in flag or the
+   credentials are missing, so an operator could apply having hashed zero
+   production documents. When the live recheck genuinely runs it now writes
+   `docs/course-production/oral-check-pilot-live-verification-receipt.json`,
+   recording what it verified and the SHA-256 of the attestation it verified
+   against. The apply in step 3 refuses to execute without a receipt that is
+   less than 24 hours old, matches the current attestation, and records all 12
+   documents byte-verified. The dry run reports the receipt status too, so you
+   find out before the moment of applying rather than during it. The receipt is
+   deliberately not committed, so a stale one cannot be trusted from the repo.
+
    It only runs opt-in, credentialed, and is otherwise skipped in normal CI.
    The drift detection itself is proved in normal CI by a companion mutation
    test in the same file, which runs the exact same comparison against a

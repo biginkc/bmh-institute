@@ -5,7 +5,9 @@ import { describe, expect, it } from "vitest";
 
 import {
   PILOT_MIGRATIONS,
+  assertLiveVerificationReceipt,
   assertPendingIsContiguousTail,
+  buildPsqlEnv,
   scrub,
 } from "../../../scripts/course-content/apply-oral-check-pilot-to-production";
 
@@ -120,5 +122,202 @@ describe("credential scrubbing (round-7 finding 3)", () => {
     // A password of regex metacharacters must not accidentally redact text
     // that merely matches it as a pattern.
     expect(scrub("axxbXcYdZ", [secret])).toBe("axxbXcYdZ");
+  });
+});
+
+// Round-8 review, findings 1, 2, 3 and 5.
+describe("pre-migration safety of the preflight (round-8 finding 1)", () => {
+  const source = readFileSync(SCRIPT_PATH, "utf8");
+
+  it("never references the pilot receipt tables without a to_regclass guard", () => {
+    // The blocker: content_import_oral_check_pilot_role_play_records is
+    // CREATED by 20260728020000, so on genuinely fresh production, which is
+    // our real case, a direct reference makes the statement fail to parse and
+    // the whole gate raises undefined_table before applying anything.
+    // Verified read-only against production: to_regclass on that table returns
+    // null there. Any reference must therefore be inside dynamic SQL behind an
+    // existence check.
+    const pilotTables = [
+      "content_import_oral_check_pilot_role_play_records",
+      "content_import_oral_check_pilot_role_play_rollback_records",
+    ];
+    for (const table of pilotTables) {
+      const guarded = source.includes(`to_regclass('public.${table}')`);
+      expect(guarded, `${table} must be guarded by to_regclass`).toBe(true);
+    }
+    // Static (non-dynamic) references are only allowed in the postflight,
+    // which by definition runs after the migrations exist.
+    const preflight = source.slice(
+      source.indexOf("const PREFLIGHT_SQL"),
+      source.indexOf("const STATE_SQL"),
+    );
+    for (const table of pilotTables) {
+      expect(preflight).not.toContain(table);
+    }
+  });
+
+  it("reads the receipt through dynamic SQL so parsing cannot fail", () => {
+    const state = source.slice(
+      source.indexOf("const STATE_SQL"),
+      source.indexOf("const APPLY_POSTFLIGHT_SQL"),
+    );
+    expect(state).toContain("execute format(");
+    expect(state).toContain("to_regclass(");
+    // All three outcomes must exist, since finding 3 depends on telling them
+    // apart.
+    expect(state).toContain("'fresh'");
+    expect(state).toContain("'applied'");
+    expect(state).toContain("inconsistent");
+  });
+});
+
+describe("session hygiene (round-8 finding 2)", () => {
+  const source = readFileSync(SCRIPT_PATH, "utf8");
+
+  it("passes -X to every psql invocation so startup files cannot run", () => {
+    expect(source).toContain('"-X"');
+    const invocations = source.match(/execFileSync\("psql"/g) ?? [];
+    expect(invocations.length).toBe(1);
+  });
+
+  it("re-asserts identity inside every session that writes", () => {
+    // A one-time check in an earlier session cannot vouch for a later
+    // connection. Both writing paths embed the identity assertion.
+    const applyFn = source.slice(source.indexOf("function applyPilotMigrations"));
+    expect(applyFn.slice(0, applyFn.indexOf("\n}\n"))).toContain("IDENTITY_SQL");
+    const rollbackSql = source.slice(
+      source.indexOf("const ROLLBACK_SQL"),
+      source.indexOf("const ROLLBACK_STATE_SQL"),
+    );
+    expect(rollbackSql).toContain("${IDENTITY_SQL}");
+    // And it must be inside the transaction, before the mutating call.
+    expect(rollbackSql.indexOf("begin;")).toBeLessThan(rollbackSql.indexOf("${IDENTITY_SQL}"));
+    expect(rollbackSql.indexOf("${IDENTITY_SQL}")).toBeLessThan(
+      rollbackSql.indexOf("fn_rollback_oral_check_pilot_role_play_blocks()"),
+    );
+  });
+
+  it("clears every inherited libpq variable that can redirect a connection", () => {
+    const target = {
+      host: "aws-1-us-west-1.pooler.supabase.com",
+      port: "5432",
+      user: "postgres.dhvfsyteqsxagokoerrx",
+      password: "s3cret",
+      database: "postgres",
+    };
+    const hostile = {
+      PATH: "/usr/bin",
+      PGSERVICE: "someone-elses-service",
+      PGSERVICEFILE: "/tmp/evil.conf",
+      PGHOSTADDR: "127.0.0.1",
+      PGOPTIONS: "-c search_path=evil",
+      PGPASSFILE: "/tmp/evil.pgpass",
+      PGSSLROOTCERT: "/tmp/evil.crt",
+      PSQLRC: "/tmp/evil.psqlrc",
+      PGDATABASE: "otherdb",
+      PGHOST: "evil.example.com",
+      PGUSER: "postgres.otherproject",
+    } as unknown as NodeJS.ProcessEnv;
+    const env = buildPsqlEnv(hostile, target);
+
+    for (const name of [
+      "PGSERVICE",
+      "PGSERVICEFILE",
+      "PGHOSTADDR",
+      "PGOPTIONS",
+      "PGPASSFILE",
+      "PGSSLROOTCERT",
+      "PSQLRC",
+    ]) {
+      expect(env[name], `${name} must not survive into the child`).toBeUndefined();
+    }
+    // And the resolved target wins over anything inherited.
+    expect(env.PGHOST).toBe(target.host);
+    expect(env.PGUSER).toBe(target.user);
+    expect(env.PGDATABASE).toBe("postgres");
+    expect(env.PGSSLMODE).toBe("require");
+    // Unrelated variables are left alone.
+    expect(env.PATH).toBe("/usr/bin");
+  });
+});
+
+describe("live verification evidence gate (round-8 finding 5)", () => {
+  const attestationSha256 = "a".repeat(64);
+  const now = Date.parse("2026-07-29T12:00:00Z");
+  const good = {
+    verified_at: "2026-07-29T11:00:00Z",
+    attestation_sha256: attestationSha256,
+    documents_byte_verified: 12,
+  };
+
+  it("accepts a fresh receipt for the current attestation", () => {
+    expect(() =>
+      assertLiveVerificationReceipt(good, attestationSha256, now),
+    ).not.toThrow();
+  });
+
+  it("refuses a missing or unreadable receipt", () => {
+    // This is the actual finding: the verifier exits SUCCESS with the live
+    // case SKIPPED when credentials are absent, so without this the apply
+    // proceeds having hashed zero production documents.
+    expect(() => assertLiveVerificationReceipt(null, attestationSha256, now)).toThrow(
+      /missing or unreadable/,
+    );
+    expect(() => assertLiveVerificationReceipt("nope", attestationSha256, now)).toThrow();
+  });
+
+  it("refuses a receipt produced against a different attestation", () => {
+    expect(() =>
+      assertLiveVerificationReceipt(good, "b".repeat(64), now),
+    ).toThrow(/different attestation/);
+  });
+
+  it("refuses a receipt that did not hash every document", () => {
+    expect(() =>
+      assertLiveVerificationReceipt(
+        { ...good, documents_byte_verified: 11 },
+        attestationSha256,
+        now,
+      ),
+    ).toThrow(/documents byte-verified/);
+    expect(() =>
+      assertLiveVerificationReceipt(
+        { ...good, documents_byte_verified: 0 },
+        attestationSha256,
+        now,
+      ),
+    ).toThrow();
+  });
+
+  it("refuses a stale receipt", () => {
+    expect(() =>
+      assertLiveVerificationReceipt(
+        { ...good, verified_at: "2026-07-27T11:00:00Z" },
+        attestationSha256,
+        now,
+      ),
+    ).toThrow(/older than/);
+  });
+
+  it("refuses an unreadable or future timestamp", () => {
+    expect(() =>
+      assertLiveVerificationReceipt({ ...good, verified_at: "whenever" }, attestationSha256, now),
+    ).toThrow(/verified_at/);
+    expect(() =>
+      assertLiveVerificationReceipt(
+        { ...good, verified_at: "2026-07-30T11:00:00Z" },
+        attestationSha256,
+        now,
+      ),
+    ).toThrow(/future/);
+  });
+
+  it("tells the operator exactly how to produce a valid receipt", () => {
+    try {
+      assertLiveVerificationReceipt(null, attestationSha256, now);
+      expect.unreachable();
+    } catch (error) {
+      expect(String(error)).toContain("BMH_INSTITUTE_ALLOW_LIVE_CLOSER_LAB_VERIFICATION=1");
+    }
   });
 });
