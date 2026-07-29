@@ -87,15 +87,6 @@ insert into public.hugo_access_grants (
   access_expires_at, prepared_for_delete
 ) values
   (
-    'abcdefab-cdef-4abc-8def-abcdefabcdef',
-    'atomic-role-actor@example.invalid',
-    'abcdefab-cdef-4abc-8def-abcdefabcdef',
-    'admin',
-    'active',
-    null,
-    false
-  ),
-  (
     '12345678-abcd-4abc-8def-1234567890ab',
     'atomic-role-target@example.invalid',
     '12345678-abcd-4abc-8def-1234567890ab',
@@ -113,6 +104,24 @@ insert into public.hugo_access_grants (
     null,
     false
   );
+
+update public.hugo_access_settings
+set enforce_grants = true
+where singleton;
+
+do $$
+begin
+  assert not exists (
+    select 1
+    from public.hugo_access_grants grant_row
+    where grant_row.user_id =
+      'abcdefab-cdef-4abc-8def-abcdefabcdef'
+  ), 'Institute-native admin actor unexpectedly has a Hugo grant';
+  assert not public.fn_hugo_access_is_active(
+    'abcdefab-cdef-4abc-8def-abcdefabcdef'
+  ), 'grant enforcement unexpectedly authorized the Institute-native admin';
+end;
+$$;
 
 insert into public.role_groups (id, name)
 values
