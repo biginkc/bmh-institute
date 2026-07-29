@@ -1425,7 +1425,9 @@
                           "Puts the guide-not-salesman idea in their own words (helping people find their best path, not pushing for a yes)"
                         ],
                         "fail_conditions": [
-                          "Gives no grounded answer at all -- doesn't engage or answers a completely different question"
+                          "Gives no grounded answer at all -- doesn't engage or answers a completely different question",
+                          "Cannot attempt an answer to more than one of the three warm-up questions",
+                          "Only repeats a phrase from the lesson without saying it in their own words"
                         ]
                       }
                     }
@@ -30767,7 +30769,8 @@
                         ],
                         "fail_conditions": [
                           "Treats a teammate's plan or hallway talk as an authoritative answer about their own pay",
-                          "Gives no grounded answer -- guesses or answers a different question"
+                          "Gives no grounded answer -- guesses or answers a different question",
+                          "Cannot name where the real answer actually lives (their own written agreement or their manager)"
                         ]
                       }
                     }
@@ -34063,7 +34066,8 @@
                         ],
                         "fail_conditions": [
                           "Treats promotion as being about time served rather than performance",
-                          "Gives no grounded answer -- guesses or answers a different question"
+                          "Gives no grounded answer -- guesses or answers a different question",
+                          "Cannot describe the coachability loop (hearing feedback and applying it) at all"
                         ]
                       }
                     }
