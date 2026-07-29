@@ -4,6 +4,8 @@ export type ProgramInput = {
   course_order_mode: "sequential" | "free";
   is_published: boolean;
   thumbnail_path: string | null;
+  certificate_enabled: boolean;
+  certificate_template_id: string | null;
 };
 
 export type ParseResult<T> =
@@ -37,6 +39,9 @@ export function parseProgramInput(
   }
 
   const is_published = formData.get("is_published") === "on";
+  const certificate_enabled = formData.get("certificate_enabled") === "on";
+  const certificateTemplateRaw = String(formData.get("certificate_template_id") ?? "").trim();
+  const certificate_template_id = certificateTemplateRaw || null;
   const thumbnailRaw = String(formData.get("thumbnail_path") ?? "").trim();
   const thumbnail_path = thumbnailRaw || null;
   if (thumbnail_path && !parseArtworkPath(thumbnail_path)) {
@@ -55,6 +60,8 @@ export function parseProgramInput(
       course_order_mode: orderMode as "sequential" | "free",
       is_published,
       thumbnail_path,
+      certificate_enabled,
+      certificate_template_id,
     },
   };
 }

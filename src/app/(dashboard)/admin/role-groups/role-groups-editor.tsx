@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useTransition } from "react";
 import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -59,13 +60,21 @@ export function RoleGroupsEditor({ initial }: { initial: RoleGroupRow[] }) {
         empty="No role groups yet."
         cell={{
           name: (group) => (
-            <Input
-              aria-label={`${group.name} name`}
-              value={group.name}
-              onChange={(event) => updateField(group.id, "name", event.target.value)}
-              onBlur={() => onSave(group.id)}
-              size="sm"
-            />
+            <div className="flex min-w-52 items-center gap-3">
+              <Input
+                aria-label={`${group.name} name`}
+                value={group.name}
+                onChange={(event) => updateField(group.id, "name", event.target.value)}
+                onBlur={() => onSave(group.id)}
+                size="sm"
+              />
+              <Link
+                href={`/admin/role-groups/${group.id}`}
+                className="shrink-0 text-xs font-extrabold text-[var(--action)] hover:underline"
+              >
+                Manage access
+              </Link>
+            </div>
           ),
           description: (group) => (
             <Input

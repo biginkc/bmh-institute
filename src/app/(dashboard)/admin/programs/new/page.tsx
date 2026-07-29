@@ -2,11 +2,18 @@ import Link from "next/link";
 
 import { Card } from "@/components/bmh-ds";
 import { PageHeader } from "@/components/page-header";
+import { createClient } from "@/lib/supabase/server";
 
 import { ProgramForm } from "../program-form";
 import { createProgram } from "../actions";
 
-export default function NewProgramPage() {
+export default async function NewProgramPage() {
+  const supabase = await createClient();
+  const { data: templates } = await supabase
+    .from("certificate_templates")
+    .select("id, name")
+    .eq("scope", "program")
+    .order("name");
   return (
     <main className="w-full flex-1 px-5 py-8 md:px-7 md:pb-16">
       <Link
@@ -23,7 +30,11 @@ export default function NewProgramPage() {
         />
       </div>
       <Card padding="md">
-        <ProgramForm action={createProgram} submitLabel="Create program" />
+        <ProgramForm
+          action={createProgram}
+          submitLabel="Create program"
+          certificateTemplates={(templates ?? []).map((template) => ({ id: template.id as string, name: template.name as string }))}
+        />
       </Card>
     </main>
   );

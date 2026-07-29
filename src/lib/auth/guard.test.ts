@@ -89,4 +89,22 @@ describe("auth guard suspended sessions", () => {
     await expect(requireAdmin()).rejects.toThrow("redirect:/login");
     expect(mocks.signOut).toHaveBeenCalledTimes(1);
   });
+
+  it.each(["invited", "suspended"] as const)(
+    "signs out and rejects an already-authenticated %s profile",
+    async (status) => {
+      mocks.profile.mockResolvedValueOnce({
+        data: {
+          id: "user-1",
+          email: "admin@bmh.test",
+          full_name: "Admin One",
+          system_role: "admin",
+          status,
+        },
+      });
+
+      await expect(getAuthedProfile()).resolves.toBeNull();
+      expect(mocks.signOut).toHaveBeenCalledTimes(1);
+    },
+  );
 });

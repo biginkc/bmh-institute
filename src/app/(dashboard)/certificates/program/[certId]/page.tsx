@@ -36,7 +36,7 @@ export default async function ProgramCertificatePage({
 
   const programRow = firstRow(cert.programs);
   const profileRow = firstRow(cert.profiles);
-  const title = programRow?.title ?? "Course";
+  const title = programRow?.title ?? "Program";
   const fullName = profileRow?.full_name ?? "Learner";
 
   const templateId = programRow?.certificate_template_id as string | null;
@@ -72,7 +72,7 @@ export default async function ProgramCertificatePage({
     <CertificateLayout
       backHref="/certificates"
       backLabel="Back to certificates"
-      certificateType="Course certificate"
+      certificateType="Program certificate"
       html={html}
     />
   );

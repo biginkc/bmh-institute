@@ -25,6 +25,8 @@ describe("parseCourseInput", () => {
       description: "Intro",
       is_published: true,
       thumbnail_path: "courses/training/v1/thumbnails/course.webp",
+      certificate_enabled: false,
+      certificate_template_id: null,
     });
   });
 

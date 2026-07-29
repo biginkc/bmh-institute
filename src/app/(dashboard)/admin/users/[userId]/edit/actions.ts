@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendEmail } from "@/lib/email/send";
 import { renderEnrollmentEmail } from "@/lib/email/enrollment";
+import { routeQaNotification } from "@/lib/email/qa-routing";
 import { normalizeReleaseControlError } from "@/lib/release-control/admin-guards";
 
 export type SaveResult =
@@ -99,11 +100,14 @@ export async function saveUserSettings(input: {
         programs: programList,
         standaloneCourses: [],
       });
-      await sendEmail({
-        to: profile.email as string,
-        subject,
-        html,
-      });
+      const recipient = routeQaNotification(input.userId, profile.email as string);
+      if (recipient) {
+        await sendEmail({
+          to: recipient,
+          subject,
+          html,
+        });
+      }
     }
   }
 

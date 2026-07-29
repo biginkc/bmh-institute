@@ -3,6 +3,8 @@ export type CourseInput = {
   description: string | null;
   is_published: boolean;
   thumbnail_path: string | null;
+  certificate_enabled: boolean;
+  certificate_template_id: string | null;
 };
 
 export type ParseResult<T> =
@@ -27,6 +29,9 @@ export function parseCourseInput(formData: FormData): ParseResult<CourseInput> {
   }
 
   const is_published = formData.get("is_published") === "on";
+  const certificate_enabled = formData.get("certificate_enabled") === "on";
+  const certificateTemplateRaw = String(formData.get("certificate_template_id") ?? "").trim();
+  const certificate_template_id = certificateTemplateRaw || null;
   const thumbnailRaw = String(formData.get("thumbnail_path") ?? "").trim();
   const thumbnail_path = thumbnailRaw || null;
   if (thumbnail_path && !parseArtworkPath(thumbnail_path)) {
@@ -34,7 +39,17 @@ export function parseCourseInput(formData: FormData): ParseResult<CourseInput> {
   }
 
   if (Object.keys(errors).length > 0) return { ok: false, errors };
-  return { ok: true, value: { title, description, is_published, thumbnail_path } };
+  return {
+    ok: true,
+    value: {
+      title,
+      description,
+      is_published,
+      thumbnail_path,
+      certificate_enabled,
+      certificate_template_id,
+    },
+  };
 }
 
 import { parseArtworkPath } from "@/lib/artwork/paths";

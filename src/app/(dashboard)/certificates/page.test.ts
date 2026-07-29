@@ -52,8 +52,8 @@ describe("CertificatesPage", () => {
   it("shows a locked final course tile until the aggregate certificate is earned", async () => {
     const lockedHtml = renderToStaticMarkup(await CertificatesPage());
 
-    expect(lockedHtml).toContain("Final course certificate");
-    expect(lockedHtml).not.toContain("Program certificate");
+    expect(lockedHtml).toContain("Final program certificate");
+    expect(lockedHtml).not.toContain('>Program</span>');
     expect(lockedHtml).toContain("Finish all courses to unlock");
 
     tableData.program_certificates = [

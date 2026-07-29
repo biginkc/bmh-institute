@@ -44,6 +44,12 @@ export async function createProgram(
   }
 
   const supabase = await createClient();
+  const templateError = await certificateTemplateError(
+    supabase,
+    parsed.value.certificate_template_id,
+    "program",
+  );
+  if (templateError) return { ok: false, error: templateError, values: parsed.value };
   const { data, error } = await supabase
     .from("programs")
     .insert({
@@ -52,6 +58,8 @@ export async function createProgram(
       course_order_mode: parsed.value.course_order_mode,
       is_published: parsed.value.is_published,
       thumbnail_path: parsed.value.thumbnail_path,
+      certificate_enabled: parsed.value.certificate_enabled,
+      certificate_template_id: parsed.value.certificate_template_id,
     })
     .select("id")
     .single();
@@ -109,6 +117,12 @@ export async function updateProgram(
       values: parsed.value,
     };
   }
+  const templateError = await certificateTemplateError(
+    supabase,
+    parsed.value.certificate_template_id,
+    "program",
+  );
+  if (templateError) return { ok: false, error: templateError, values: parsed.value };
   const { error } = await supabase
     .from("programs")
     .update({
@@ -117,6 +131,8 @@ export async function updateProgram(
       course_order_mode: parsed.value.course_order_mode,
       is_published: parsed.value.is_published,
       thumbnail_path: parsed.value.thumbnail_path,
+      certificate_enabled: parsed.value.certificate_enabled,
+      certificate_template_id: parsed.value.certificate_template_id,
     })
     .eq("id", programId);
 
@@ -157,26 +173,33 @@ export async function attachCourseToProgram(input: {
 }): Promise<FormState> {
   await requireAdmin();
   const supabase = await createClient();
-
-  const { data: maxRow } = await supabase
-    .from("program_courses")
-    .select("sort_order")
-    .eq("program_id", input.programId)
-    .order("sort_order", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  const nextOrder = maxRow ? (maxRow.sort_order as number) + 1 : 0;
-
-  const { error } = await supabase.from("program_courses").insert({
-    program_id: input.programId,
-    course_id: input.courseId,
-    sort_order: nextOrder,
+  const { error } = await supabase.rpc("fn_attach_course_to_program", {
+    p_program_id: input.programId,
+    p_course_id: input.courseId,
   });
 
   if (error) {
     return { ok: false, error: normalizeReleaseControlError(error.message) };
   }
+  revalidatePath(`/admin/programs/${input.programId}/edit`);
+  revalidatePath("/dashboard");
+  return { ok: true };
+}
+
+export async function moveProgramCourse(input: {
+  programId: string;
+  courseId: string;
+  direction: "up" | "down";
+}): Promise<{ ok: true } | { ok: false; error: string }> {
+  await requireAdmin();
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("fn_move_program_course", {
+    p_program_id: input.programId,
+    p_course_id: input.courseId,
+    p_direction: input.direction,
+  });
+  if (error) return { ok: false, error: normalizeReleaseControlError(error.message) };
+
   revalidatePath(`/admin/programs/${input.programId}/edit`);
   revalidatePath("/dashboard");
   return { ok: true };
@@ -217,6 +240,24 @@ function fieldResult(
         (formData.get("course_order_mode") as "sequential" | "free") ?? "free",
       is_published: formData.get("is_published") === "on",
       thumbnail_path: String(formData.get("thumbnail_path") ?? "") || null,
+      certificate_enabled: formData.get("certificate_enabled") === "on",
+      certificate_template_id: String(formData.get("certificate_template_id") ?? "") || null,
     },
   };
+}
+
+async function certificateTemplateError(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  templateId: string | null,
+  scope: "course" | "program",
+): Promise<string | null> {
+  if (!templateId) return null;
+  const { data, error } = await supabase
+    .from("certificate_templates")
+    .select("id")
+    .eq("id", templateId)
+    .eq("scope", scope)
+    .maybeSingle();
+  if (error || !data) return `Choose a ${scope} certificate template.`;
+  return null;
 }

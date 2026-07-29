@@ -13,6 +13,7 @@ import {
   renderRevisionEmail,
   type ReviewEmailInput,
 } from "@/lib/email/review";
+import { routeQaNotification } from "@/lib/email/qa-routing";
 import { schedulePostCommitEffect } from "@/lib/actions/post-commit-effect";
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
@@ -235,8 +236,10 @@ async function notifyReview(input: {
       ? renderApprovedEmail(payload)
       : renderRevisionEmail(payload);
 
+  const recipient = routeQaNotification(row.user_id as string, profile.email);
+  if (!recipient) return;
   const result = await sendEmail({
-    to: profile.email,
+    to: recipient,
     subject: rendered.subject,
     html: rendered.html,
   });
