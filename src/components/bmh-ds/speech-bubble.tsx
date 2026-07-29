@@ -111,6 +111,7 @@ export function SpeechBubble(props: SpeechBubbleProps) {
         />
       </svg>
       <div
+        data-speech-bubble-body
         style={{
           position: "relative",
           zIndex: 1,
