@@ -117,6 +117,7 @@ async function runPostgres(pgBin, index) {
       "061_hugo_mutation_receipt_binding.sql",
       "062_hugo_verified_identity_and_orphan_delete_guard.sql",
       "063_hugo_post_merge_security_closure.sql",
+      "064_institute_app_owned_role_access.sql",
     ]) {
       const path = resolve(root, "supabase/tests", test);
       if (existsSync(path)) psqlFile(binary, env, path);
