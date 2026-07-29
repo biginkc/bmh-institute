@@ -66,7 +66,7 @@ export function Coach(props: CoachProps) {
     <SpeechBubble
       tone={tone}
       size={size}
-      tail={side === "left" ? "left" : "bottom-right"}
+      tail={side === "left" ? "left" : "right"}
       style={{ flex: "0 1 340px", minWidth: 0 }}
     >
       {message || children}
