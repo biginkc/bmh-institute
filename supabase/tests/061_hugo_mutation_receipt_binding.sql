@@ -162,6 +162,7 @@ begin
   insert into auth.users (
     id,
     email,
+    email_confirmed_at,
     raw_app_meta_data,
     raw_user_meta_data,
     created_at,
@@ -169,6 +170,7 @@ begin
   ) values (
     v_reactivate_user_id,
     v_reactivate_email,
+    now(),
     '{}'::jsonb,
     '{}'::jsonb,
     now(),

@@ -113,6 +113,7 @@ async function runPostgres(pgBin, index) {
       "059_hugo_auth_insert_lifecycle_lock.sql",
       "060_hugo_auth_email_lifecycle_lock.sql",
       "061_hugo_mutation_receipt_binding.sql",
+      "062_hugo_verified_identity_and_orphan_delete_guard.sql",
     ]) {
       const path = resolve(root, "supabase/tests", test);
       if (existsSync(path)) psqlFile(binary, env, path);
@@ -154,7 +155,7 @@ async function runPostgres(pgBin, index) {
     return {
       postgres_major: major,
       migrations: migrations.length,
-      focused_sql_tests: 7,
+      focused_sql_tests: 8,
       auth_insert_lifecycle_serialization: authInsertSerialization,
       concurrent_owner_deletes: "both_direct_mutations_blocked",
     };

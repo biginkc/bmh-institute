@@ -128,16 +128,17 @@ $$;
 set local request.jwt.claim.role = 'service_role';
 
 insert into auth.users (
-  id, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at
+  id, email, email_confirmed_at, raw_app_meta_data, raw_user_meta_data,
+  created_at, updated_at
 ) values
-  ('00000000-0000-4000-8000-000000000101', 'owner@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now()),
-  ('00000000-0000-4000-8000-000000000102', 'active@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now()),
-  ('00000000-0000-4000-8000-000000000103', 'legacy@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now()),
-  ('00000000-0000-4000-8000-000000000104', 'suspended@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now()),
-  ('00000000-0000-4000-8000-000000000105', 'revoked@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now()),
-  ('00000000-0000-4000-8000-000000000106', 'expired@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now()),
-  ('00000000-0000-4000-8000-000000000107', 'prepared@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now()),
-  ('00000000-0000-4000-8000-000000000109', 'owner-two@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now());
+  ('00000000-0000-4000-8000-000000000101', 'owner@example.invalid', now(), '{}'::jsonb, '{}'::jsonb, now(), now()),
+  ('00000000-0000-4000-8000-000000000102', 'active@example.invalid', now(), '{}'::jsonb, '{}'::jsonb, now(), now()),
+  ('00000000-0000-4000-8000-000000000103', 'legacy@example.invalid', now(), '{}'::jsonb, '{}'::jsonb, now(), now()),
+  ('00000000-0000-4000-8000-000000000104', 'suspended@example.invalid', now(), '{}'::jsonb, '{}'::jsonb, now(), now()),
+  ('00000000-0000-4000-8000-000000000105', 'revoked@example.invalid', now(), '{}'::jsonb, '{}'::jsonb, now(), now()),
+  ('00000000-0000-4000-8000-000000000106', 'expired@example.invalid', now(), '{}'::jsonb, '{}'::jsonb, now(), now()),
+  ('00000000-0000-4000-8000-000000000107', 'prepared@example.invalid', now(), '{}'::jsonb, '{}'::jsonb, now(), now()),
+  ('00000000-0000-4000-8000-000000000109', 'owner-two@example.invalid', now(), '{}'::jsonb, '{}'::jsonb, now(), now());
 
 update public.profiles
 set system_role = 'owner', status = 'active'
@@ -780,10 +781,12 @@ $$;
 -- The insert path must also prevent a lifecycle RPC from replacing the sole
 -- dormant legacy owner with a future-expiring grant.
 insert into auth.users (
-  id, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at
+  id, email, email_confirmed_at, raw_app_meta_data, raw_user_meta_data,
+  created_at, updated_at
 ) values (
   '00000000-0000-4000-8000-000000000311',
   'legacy-sole-owner@example.invalid',
+  now(),
   '{}'::jsonb,
   '{}'::jsonb,
   now(),
