@@ -260,6 +260,142 @@ $$;
 revoke all on function public.fn_hugo_existing_apply_config(jsonb)
   from public, anon, authenticated, service_role;
 
+create or replace function public.fn_hugo_reactivation_apply_config(
+  p_config jsonb,
+  p_email text
+)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  v_config jsonb := public.fn_hugo_canonical_apply_config(p_config);
+  v_suspended_config jsonb;
+  v_suspended_count bigint;
+begin
+  -- Only missing role-group references may be discarded during reactivation.
+  -- Malformed payloads must still fail the normal active-grant validation.
+  if jsonb_typeof(v_config) <> 'object'
+     or jsonb_typeof(v_config->'role_group_ids') <> 'array' then
+    return v_config;
+  end if;
+  if exists (
+    select 1
+    from jsonb_array_elements_text(
+      v_config->'role_group_ids'
+    ) item(value)
+    where item.value !~*
+      '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
+  ) then
+    return v_config;
+  end if;
+
+  select
+    count(*),
+    (jsonb_agg(grant_row.config order by profile.id))->0
+  into v_suspended_count, v_suspended_config
+  from public.profiles profile
+  join public.hugo_access_grants grant_row
+    on grant_row.user_id = profile.id
+  where lower(btrim(profile.email)) =
+      lower(btrim(coalesce(p_email, '')))
+    and grant_row.desired_status = 'suspended';
+
+  -- Initial grants, revoked grants, and ambiguous identities retain the exact
+  -- requested config and therefore keep the strict active-grant validator.
+  if v_suspended_count <> 1 then
+    return v_config;
+  end if;
+
+  if p_config is null or p_config = '{}'::jsonb then
+    return public.fn_hugo_existing_apply_config(v_suspended_config);
+  end if;
+  if public.fn_hugo_apply_config_is_valid(v_config) then
+    return v_config;
+  end if;
+  -- A syntactically valid payload can fail only because one of its UUIDs was
+  -- deleted after Hugo recorded desired state. Restore the app's suspended
+  -- valid state instead of treating the stale desired payload as a new edit.
+  return public.fn_hugo_existing_apply_config(v_suspended_config);
+end;
+$$;
+
+revoke all on function public.fn_hugo_reactivation_apply_config(jsonb, text)
+  from public, anon, authenticated, service_role;
+
+create or replace function public.fn_hugo_reactivation_access_expires_at(
+  p_email text,
+  p_access_expires_at timestamptz
+)
+returns timestamptz
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  v_suspended_expires_at timestamptz;
+  v_suspended_count bigint;
+begin
+  if p_access_expires_at is not null then
+    return p_access_expires_at;
+  end if;
+
+  select
+    count(*),
+    (array_agg(grant_row.access_expires_at order by profile.id))[1]
+  into v_suspended_count, v_suspended_expires_at
+  from public.profiles profile
+  join public.hugo_access_grants grant_row
+    on grant_row.user_id = profile.id
+  where lower(btrim(profile.email)) =
+      lower(btrim(coalesce(p_email, '')))
+    and grant_row.desired_status = 'suspended';
+
+  if v_suspended_count = 1 then
+    return v_suspended_expires_at;
+  end if;
+  return p_access_expires_at;
+end;
+$$;
+
+revoke all on function public.fn_hugo_reactivation_access_expires_at(
+  text, timestamptz
+) from public, anon, authenticated, service_role;
+
+create or replace function public.fn_hugo_serialize_role_group_delete()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  -- This statement-level trigger runs before PostgreSQL locks any role-group
+  -- row. Taking the lifecycle locks here prevents delete/apply deadlocks and
+  -- ensures the connector filters against a committed group catalog.
+  perform pg_advisory_xact_lock(
+    hashtextextended('hugo-institute-privileged-lifecycle-v1', 0)
+  );
+  perform pg_advisory_xact_lock(
+    hashtextextended('hugo-institute-grant-mutation-rpc-v1', 0)
+  );
+  return null;
+end;
+$$;
+
+revoke all on function public.fn_hugo_serialize_role_group_delete()
+  from public, anon, authenticated, service_role;
+
+drop trigger if exists role_groups_serialize_hugo_lifecycle_delete
+  on public.role_groups;
+create trigger role_groups_serialize_hugo_lifecycle_delete
+before delete or truncate
+on public.role_groups
+for each statement
+execute function public.fn_hugo_serialize_role_group_delete();
+
 create or replace function public.fn_hugo_store_guard_failure(
   p_operation_id uuid,
   p_operation text,
@@ -399,6 +535,7 @@ declare
   v_email_fingerprint text :=
     public.fn_hugo_email_fingerprint(v_email);
   v_config jsonb := public.fn_hugo_canonical_apply_config(p_config);
+  v_effective_config jsonb;
   v_hash text;
   v_claim private.hugo_access_operation_claims%rowtype;
   v_blocking_claim private.hugo_access_operation_claims%rowtype;
@@ -421,6 +558,11 @@ begin
   perform pg_advisory_xact_lock(
     hashtextextended('hugo-institute-grant-mutation-rpc-v1', 0)
   );
+  v_effective_config := case
+    when p_status = 'active'
+      then public.fn_hugo_reactivation_apply_config(p_config, v_email)
+    else v_config
+  end;
 
   v_hash := public.fn_hugo_request_payload_hash(
     'hugo_apply_access',
@@ -537,7 +679,7 @@ begin
      or p_status not in ('active', 'suspended', 'revoked')
      or (
        p_status = 'active'
-       and not public.fn_hugo_apply_config_is_valid(v_config)
+       and not public.fn_hugo_apply_config_is_valid(v_effective_config)
      ) then
     v_receipt := public.fn_hugo_store_guard_failure(
       p_operation_id,
@@ -688,6 +830,7 @@ declare
   v_email text := lower(btrim(coalesce(p_email, '')));
   v_config jsonb := public.fn_hugo_canonical_apply_config(p_config);
   v_effective_config jsonb;
+  v_effective_access_expires_at timestamptz;
   v_hash text;
   v_existing_hash text;
   v_claim_hash text;
@@ -706,7 +849,17 @@ begin
   v_effective_config := case
     when p_status in ('suspended', 'revoked')
       then public.fn_hugo_existing_apply_config(v_config)
+    when p_status = 'active'
+      then public.fn_hugo_reactivation_apply_config(p_config, v_email)
     else v_config
+  end;
+  v_effective_access_expires_at := case
+    when p_status = 'active'
+      then public.fn_hugo_reactivation_access_expires_at(
+        v_email,
+        p_access_expires_at
+      )
+    else p_access_expires_at
   end;
 
   select claim.request_hash
@@ -804,7 +957,7 @@ begin
     p_role,
     v_effective_config,
     p_status,
-    p_access_expires_at,
+    v_effective_access_expires_at,
     p_app_user_id
   );
   perform set_config('hugo.request_operation_id', '', true);

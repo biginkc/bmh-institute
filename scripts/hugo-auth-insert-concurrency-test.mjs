@@ -9,6 +9,13 @@ const updatePrepareOperationId = "00000000-0000-4000-8000-000000000431";
 const updateDeleteOperationId = "00000000-0000-4000-8000-000000000432";
 const originalEmail = "before-concurrent-email-update@example.invalid";
 const updatedEmail = "after-concurrent-email-update@example.invalid";
+const roleGroupId = "00000000-0000-4000-8000-000000000440";
+const roleGroupUserId = "00000000-0000-4000-8000-000000000441";
+const roleGroupGrantOperationId =
+  "00000000-0000-4000-8000-000000000442";
+const roleGroupSuspendOperationId =
+  "00000000-0000-4000-8000-000000000443";
+const roleGroupEmail = "concurrent-role-group-delete@example.invalid";
 
 export async function verifyAuthInsertLifecycleSerialization({
   psqlPath,
@@ -17,6 +24,140 @@ export async function verifyAuthInsertLifecycleSerialization({
   await verifyInsertSerialization(psqlPath, env);
   await verifyEmailUpdateSerialization(psqlPath, env);
   return "auth_insert_and_email_update_serialized_before_lifecycle_proof";
+}
+
+export async function verifyRoleGroupDeleteLifecycleSerialization({
+  psqlPath,
+  env,
+}) {
+  psqlExec(
+    psqlPath,
+    env,
+    `
+      set request.jwt.claim.role = 'service_role';
+      insert into public.role_groups (id, name)
+      values ('${roleGroupId}', 'Concurrent Hugo deletion regression');
+      insert into auth.users (
+        id,
+        email,
+        email_confirmed_at,
+        raw_app_meta_data,
+        raw_user_meta_data,
+        created_at,
+        updated_at
+      ) values (
+        '${roleGroupUserId}',
+        '${roleGroupEmail}',
+        now(),
+        '{}'::jsonb,
+        '{}'::jsonb,
+        now(),
+        now()
+      );
+      select public.hugo_apply_access(
+        '${roleGroupGrantOperationId}',
+        '${roleGroupEmail}',
+        'learner',
+        '{"role_group_ids":["${roleGroupId}"]}'::jsonb,
+        'active',
+        null,
+        '${roleGroupUserId}'
+      );
+    `,
+  );
+
+  const deletion = runPsqlAsync(
+    psqlPath,
+    env,
+    `
+      begin;
+      delete from public.role_groups
+      where id = '${roleGroupId}';
+      select pg_sleep(2);
+      commit;
+    `,
+  );
+  await waitForAdvisoryLock(
+    psqlPath,
+    env,
+    deletion,
+    "role-group deletion",
+  );
+
+  let lifecycleSettled = false;
+  const lifecycle = runPsqlAsync(
+    psqlPath,
+    env,
+    `
+      begin;
+      set local request.jwt.claim.role = 'service_role';
+      select public.hugo_preflight_access_operation(
+        '${roleGroupSuspendOperationId}',
+        '${roleGroupEmail}',
+        'learner',
+        '{"role_group_ids":["${roleGroupId}"]}'::jsonb,
+        'suspended',
+        null
+      );
+      select public.hugo_apply_access(
+        '${roleGroupSuspendOperationId}',
+        '${roleGroupEmail}',
+        'learner',
+        '{"role_group_ids":["${roleGroupId}"]}'::jsonb,
+        'suspended',
+        null,
+        '${roleGroupUserId}'
+      );
+      commit;
+    `,
+  ).finally(() => {
+    lifecycleSettled = true;
+  });
+
+  await delay(250);
+  if (lifecycleSettled) {
+    await Promise.allSettled([deletion, lifecycle]);
+    throw new Error(
+      "Lifecycle suspension did not wait for the in-flight role-group deletion.",
+    );
+  }
+
+  await deletion;
+  await lifecycle;
+
+  const observed = psqlScalar(
+    psqlPath,
+    env,
+    `
+      select concat_ws(
+        ':',
+        receipt ->> 'ok',
+        receipt #>> '{observed,status}',
+        jsonb_array_length(
+          receipt #> '{observed,config,role_group_ids}'
+        ),
+        (
+          select profile.status
+          from public.profiles profile
+          where profile.id = '${roleGroupUserId}'
+        ),
+        (
+          select count(*)
+          from public.user_role_groups membership
+          where membership.user_id = '${roleGroupUserId}'
+        )
+      )
+      from public.hugo_access_operations
+      where operation_id = '${roleGroupSuspendOperationId}';
+    `,
+  );
+  if (observed !== "true:suspended:0:suspended:0") {
+    throw new Error(
+      `Serialized role-group deletion left unsafe lifecycle state: ${observed}`,
+    );
+  }
+
+  return "role_group_delete_committed_before_suspension_filter";
 }
 
 async function verifyInsertSerialization(psqlPath, env) {

@@ -12,6 +12,7 @@ import { join, resolve } from "node:path";
 
 import {
   verifyAuthInsertLifecycleSerialization,
+  verifyRoleGroupDeleteLifecycleSerialization,
 } from "./hugo-auth-insert-concurrency-test.mjs";
 
 const root = resolve(import.meta.dirname, "..");
@@ -124,6 +125,11 @@ async function runPostgres(pgBin, index) {
         psqlPath: binary("psql"),
         env,
       });
+    const roleGroupDeleteSerialization =
+      await verifyRoleGroupDeleteLifecycleSerialization({
+        psqlPath: binary("psql"),
+        env,
+      });
 
     psqlText(binary, env, concurrencyFixtureSql);
     const outcomes = await Promise.all([
@@ -157,6 +163,8 @@ async function runPostgres(pgBin, index) {
       migrations: migrations.length,
       focused_sql_tests: 8,
       auth_insert_lifecycle_serialization: authInsertSerialization,
+      role_group_delete_lifecycle_serialization:
+        roleGroupDeleteSerialization,
       concurrent_owner_deletes: "both_direct_mutations_blocked",
     };
   } finally {

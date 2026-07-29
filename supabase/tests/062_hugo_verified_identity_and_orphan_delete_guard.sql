@@ -29,6 +29,31 @@ begin
     'public.fn_hugo_apply_config_is_valid(jsonb)',
     'execute'
   ), 'service_role can directly execute the private config validator';
+  assert not has_function_privilege(
+    'service_role',
+    'public.fn_hugo_reactivation_apply_config(jsonb,text)',
+    'execute'
+  ) and not has_function_privilege(
+    'service_role',
+    'public.fn_hugo_reactivation_access_expires_at(text,timestamptz)',
+    'execute'
+  ) and not has_function_privilege(
+    'service_role',
+    'public.fn_hugo_serialize_role_group_delete()',
+    'execute'
+  ), 'service_role can directly execute a private reactivation helper';
+  assert exists (
+    select 1
+    from pg_catalog.pg_trigger trigger_row
+    where trigger_row.tgrelid = 'public.role_groups'::regclass
+      and trigger_row.tgname =
+        'role_groups_serialize_hugo_lifecycle_delete'
+      and not trigger_row.tgisinternal
+      and pg_catalog.pg_get_triggerdef(trigger_row.oid) ilike
+        '%before delete or truncate%'
+      and pg_catalog.pg_get_triggerdef(trigger_row.oid) ilike
+        '%for each statement%'
+  ), 'role-group lifecycle serialization is not statement-level';
   assert not (
     has_table_privilege(
       'service_role',
@@ -227,7 +252,7 @@ begin
     'learner',
     '{"role_group_ids":["00000000-0000-4000-8000-000000000992","00000000-0000-4000-8000-000000001010"]}'::jsonb,
     'active',
-    null,
+    '2099-01-02 03:04:05+00'::timestamptz,
     '00000000-0000-4000-8000-000000000993'
   );
   assert (v_receipt->>'ok')::boolean,
@@ -299,17 +324,17 @@ begin
     '00000000-0000-4000-8000-000000001011',
     'deleted-group-suspend-hugo@example.invalid',
     'learner',
-    '{"role_group_ids":["00000000-0000-4000-8000-000000001010"]}'::jsonb,
+    '{}'::jsonb,
     'active',
     null
   );
   assert (v_preflight->>'proceed')::boolean,
-    'valid preserved group blocked reactivation preflight';
+    'minimal reactivation blocked by the preserved valid group';
   v_receipt := public.hugo_apply_access(
     '00000000-0000-4000-8000-000000001011',
     'deleted-group-suspend-hugo@example.invalid',
     'learner',
-    '{"role_group_ids":["00000000-0000-4000-8000-000000001010"]}'::jsonb,
+    '{}'::jsonb,
     'active',
     null,
     '00000000-0000-4000-8000-000000000993'
@@ -317,8 +342,77 @@ begin
   assert (v_receipt->>'ok')::boolean
      and v_receipt#>>'{observed,status}' = 'active'
      and v_receipt#>>'{observed,config,role_group_ids,0}' =
-       '00000000-0000-4000-8000-000000001010',
-    'reactivation did not restore the preserved valid group';
+       '00000000-0000-4000-8000-000000001010'
+     and (v_receipt#>>'{observed,access_expires_at}')::timestamptz =
+       '2099-01-02 03:04:05+00'::timestamptz
+     and v_receipt->>'request_hash' = v_preflight->>'request_hash',
+    'minimal reactivation did not restore the preserved valid group';
+
+  v_preflight := public.hugo_preflight_access_operation(
+    '00000000-0000-4000-8000-000000001012',
+    'deleted-group-suspend-hugo@example.invalid',
+    'learner',
+    v_stale_config,
+    'suspended',
+    null
+  );
+  assert (v_preflight->>'proceed')::boolean,
+    'second stale-group suspension preflight was blocked';
+  v_receipt := public.hugo_apply_access(
+    '00000000-0000-4000-8000-000000001012',
+    'deleted-group-suspend-hugo@example.invalid',
+    'learner',
+    v_stale_config,
+    'suspended',
+    null,
+    '00000000-0000-4000-8000-000000000993'
+  );
+  assert (v_receipt->>'ok')::boolean
+     and v_receipt#>>'{observed,status}' = 'suspended',
+    'second stale-group suspension failed';
+
+  v_preflight := public.hugo_preflight_access_operation(
+    '00000000-0000-4000-8000-000000001013',
+    'deleted-group-suspend-hugo@example.invalid',
+    'learner',
+    v_stale_config,
+    'active',
+    null
+  );
+  assert (v_preflight->>'proceed')::boolean,
+    'stale Hugo desired config blocked reactivation preflight';
+  v_receipt := public.hugo_apply_access(
+    '00000000-0000-4000-8000-000000001013',
+    'deleted-group-suspend-hugo@example.invalid',
+    'learner',
+    v_stale_config,
+    'active',
+    null,
+    '00000000-0000-4000-8000-000000000993'
+  );
+  assert (v_receipt->>'ok')::boolean
+     and v_receipt#>>'{observed,status}' = 'active'
+     and v_receipt#>>'{observed,config,role_group_ids,0}' =
+       '00000000-0000-4000-8000-000000001010'
+     and jsonb_array_length(
+       v_receipt#>'{observed,config,role_group_ids}'
+     ) = 1
+     and (v_receipt#>>'{observed,access_expires_at}')::timestamptz =
+       '2099-01-02 03:04:05+00'::timestamptz
+     and v_receipt->>'request_hash' = v_preflight->>'request_hash',
+    'stale Hugo desired config did not reactivate with valid groups only';
+
+  v_preflight := public.hugo_preflight_access_operation(
+    '00000000-0000-4000-8000-000000001014',
+    'fresh-deleted-group-hugo@example.invalid',
+    'learner',
+    v_stale_config,
+    'active',
+    null
+  );
+  assert not (v_preflight->>'proceed')::boolean
+     and v_preflight#>>'{receipt,error_code}' = 'invalid_request',
+    'fresh active grant accepted a deleted role group';
 
   v_preflight := public.hugo_preflight_access_operation(
     '00000000-0000-4000-8000-000000000999',
