@@ -3,6 +3,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 type Profile = { id: string; email: string; system_role: string };
 let actor: Profile = { id: "admin-1", email: "a@b.com", system_role: "admin" };
 let profileEmailRow: { email: string } | null = null;
+let profileRoleRow: { system_role: string } | null = {
+  system_role: "learner",
+};
+let profileRoleError: { message: string } | null = null;
 let userRoleGroupsRows: Array<{ role_group_id: string }> = [];
 let userRoleGroupsError: { message: string } | null = null;
 let programAccessRows: Array<{
@@ -11,16 +15,8 @@ let programAccessRows: Array<{
   is_published?: boolean;
 }> = [];
 let programRows: Array<{ id: string; title: string }> = [];
-let profileUpdateRow: { id: string } | null = { id: "learner-1" };
-let profileUpdateError: { message: string } | null = null;
 let rpcError: { message: string } | null = null;
-let rpcErrors: Array<{ message: string } | null> = [];
-const profileUpdateCalls: Array<{
-  values: Record<string, unknown>;
-  userId: string;
-}> = [];
 const rpcCalls: Array<{ name: string; args: Record<string, unknown> }> = [];
-const mutationEvents: string[] = [];
 
 vi.mock("@/lib/auth/guard", () => ({
   requireAdmin: vi.fn(async () => actor),
@@ -29,7 +25,7 @@ vi.mock("@/lib/auth/guard", () => ({
 vi.mock("@/lib/supabase/server", () => ({
   createClient: vi.fn(async () => ({
     from: (table: string) => ({
-      select: () => {
+      select: (columns: string) => {
         if (table === "user_role_groups") {
           return {
             eq: async () => ({
@@ -65,38 +61,16 @@ vi.mock("@/lib/supabase/server", () => ({
         return {
           eq: () => ({
             maybeSingle: async () => ({
-              data: profileEmailRow,
-              error: null,
+              data: columns === "system_role" ? profileRoleRow : profileEmailRow,
+              error: columns === "system_role" ? profileRoleError : null,
             }),
           }),
-        };
-      },
-      update: (values: Record<string, unknown>) => {
-        if (table !== "profiles") {
-          throw new Error(`Unexpected update table ${table}`);
-        }
-        return {
-          eq: (_column: string, userId: string) => {
-            profileUpdateCalls.push({ values, userId });
-            mutationEvents.push("role");
-            return {
-              select: () => ({
-                maybeSingle: async () => ({
-                  data: profileUpdateRow,
-                  error: profileUpdateError,
-                }),
-              }),
-            };
-          },
         };
       },
     }),
     rpc: async (name: string, args: Record<string, unknown>) => {
       rpcCalls.push({ name, args });
-      mutationEvents.push("role-groups");
-      return {
-        error: rpcErrors.length > 0 ? rpcErrors.shift()! : rpcError,
-      };
+      return { error: rpcError };
     },
   })),
 }));
@@ -120,17 +94,14 @@ describe("saveUserSettings", () => {
   beforeEach(() => {
     actor = { id: "admin-1", email: "a@b.com", system_role: "admin" };
     profileEmailRow = null;
+    profileRoleRow = { system_role: "learner" };
+    profileRoleError = null;
     userRoleGroupsRows = [];
     userRoleGroupsError = null;
     programAccessRows = [];
     programRows = [];
-    profileUpdateRow = { id: "learner-1" };
-    profileUpdateError = null;
     rpcError = null;
-    rpcErrors = [];
-    profileUpdateCalls.length = 0;
     rpcCalls.length = 0;
-    mutationEvents.length = 0;
     vi.mocked(sendEmail).mockClear();
   });
 
@@ -138,7 +109,7 @@ describe("saveUserSettings", () => {
     vi.clearAllMocks();
   });
 
-  it("saves only the Institute role and role groups", async () => {
+  it("saves Institute role groups when the role is unchanged", async () => {
     const result = await saveUserSettings({
       userId: "learner-1",
       system_role: "learner",
@@ -146,13 +117,6 @@ describe("saveUserSettings", () => {
     });
 
     expect(result).toEqual({ ok: true, newProgramTitles: [] });
-    expect(mutationEvents).toEqual(["role-groups", "role"]);
-    expect(profileUpdateCalls).toEqual([
-      {
-        values: { system_role: "learner" },
-        userId: "learner-1",
-      },
-    ]);
     expect(rpcCalls).toEqual([
       {
         name: "fn_set_user_role_groups",
@@ -164,9 +128,7 @@ describe("saveUserSettings", () => {
     ]);
   });
 
-  it("does not mutate anything when the rollback snapshot cannot be read", async () => {
-    userRoleGroupsError = { message: "role-group read failed" };
-
+  it("rejects role changes before mutating role groups", async () => {
     await expect(
       saveUserSettings({
         userId: "learner-1",
@@ -175,15 +137,14 @@ describe("saveUserSettings", () => {
       }),
     ).resolves.toEqual({
       ok: false,
-      error: "role-group read failed",
+      error:
+        "This role cannot be changed safely until Institute can keep Hugo access in sync without changing login status.",
     });
     expect(rpcCalls).toEqual([]);
-    expect(profileUpdateCalls).toEqual([]);
   });
 
-  it("restores the previous role groups when the role update fails", async () => {
-    userRoleGroupsRows = [{ role_group_id: "old-group" }];
-    profileUpdateError = { message: "role update failed" };
+  it("does not mutate anything when the target role cannot be read", async () => {
+    profileRoleError = { message: "profile role read failed" };
 
     await expect(
       saveUserSettings({
@@ -191,28 +152,15 @@ describe("saveUserSettings", () => {
         system_role: "learner",
         role_group_ids: ["new-group"],
       }),
-    ).resolves.toEqual({ ok: false, error: "role update failed" });
-    expect(rpcCalls).toEqual([
-      {
-        name: "fn_set_user_role_groups",
-        args: {
-          p_user_id: "learner-1",
-          p_role_group_ids: ["new-group"],
-        },
-      },
-      {
-        name: "fn_set_user_role_groups",
-        args: {
-          p_user_id: "learner-1",
-          p_role_group_ids: ["old-group"],
-        },
-      },
-    ]);
+    ).resolves.toEqual({
+      ok: false,
+      error: "profile role read failed",
+    });
+    expect(rpcCalls).toEqual([]);
   });
 
-  it("restores role groups when the target profile no longer exists", async () => {
-    userRoleGroupsRows = [{ role_group_id: "old-group" }];
-    profileUpdateRow = null;
+  it("does not mutate anything when the target profile does not exist", async () => {
+    profileRoleRow = null;
 
     await expect(
       saveUserSettings({
@@ -220,14 +168,27 @@ describe("saveUserSettings", () => {
         system_role: "learner",
         role_group_ids: ["new-group"],
       }),
-    ).resolves.toEqual({ ok: false, error: "User not found." });
-    expect(rpcCalls.at(-1)).toEqual({
-      name: "fn_set_user_role_groups",
-      args: {
-        p_user_id: "missing-user",
-        p_role_group_ids: ["old-group"],
-      },
+    ).resolves.toEqual({
+      ok: false,
+      error: "User not found.",
     });
+    expect(rpcCalls).toEqual([]);
+  });
+
+  it("does not mutate anything when current role groups cannot be read", async () => {
+    userRoleGroupsError = { message: "role-group read failed" };
+
+    await expect(
+      saveUserSettings({
+        userId: "learner-1",
+        system_role: "learner",
+        role_group_ids: ["new-group"],
+      }),
+    ).resolves.toEqual({
+      ok: false,
+      error: "role-group read failed",
+    });
+    expect(rpcCalls).toEqual([]);
   });
 
   it("does not change the role when the role-group save fails", async () => {
@@ -242,25 +203,6 @@ describe("saveUserSettings", () => {
     ).resolves.toEqual({
       ok: false,
       error: "role group insert failed",
-    });
-    expect(profileUpdateCalls).toEqual([]);
-  });
-
-  it("reports both failures when role-group rollback also fails", async () => {
-    userRoleGroupsRows = [{ role_group_id: "old-group" }];
-    profileUpdateError = { message: "role update failed" };
-    rpcErrors = [null, { message: "rollback failed" }];
-
-    await expect(
-      saveUserSettings({
-        userId: "learner-1",
-        system_role: "admin",
-        role_group_ids: ["new-group"],
-      }),
-    ).resolves.toEqual({
-      ok: false,
-      error:
-        "role update failed Role-group changes could not be restored: rollback failed",
     });
   });
 
