@@ -73,6 +73,60 @@ export type HugoEvidenceRecord = Readonly<{
   generated_at: string;
 }>;
 
+export type HugoCleanupStep = Readonly<{
+  label: string;
+  run: () => Promise<void>;
+}>;
+
+export type HugoSeedRecorder = Readonly<{
+  current: () => HugoCleanupManifest;
+  record: (resource: HugoCleanupResource) => HugoCleanupManifest;
+}>;
+
+/**
+ * Publish a new immutable manifest after every successful seed insert. If a
+ * later insert fails, afterAll still knows exactly which earlier rows exist.
+ */
+export function createHugoSeedRecorder(
+  initial: HugoCleanupManifest,
+  onChange: (manifest: HugoCleanupManifest) => void,
+): HugoSeedRecorder {
+  let current = initial;
+  onChange(current);
+
+  return Object.freeze({
+    current: () => current,
+    record: (resource: HugoCleanupResource) => {
+      current = addHugoCleanupResource(current, resource);
+      onChange(current);
+      return current;
+    },
+  });
+}
+
+/**
+ * Cleanup is evidence, not a best-effort courtesy. Run every step so one
+ * failure cannot strand the rest of a manifest, then fail with all errors.
+ */
+export async function runHugoCleanupSteps(
+  steps: readonly HugoCleanupStep[],
+): Promise<void> {
+  const failures: string[] = [];
+
+  for (const step of steps) {
+    try {
+      await step.run();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      failures.push(`${step.label}: ${message}`);
+    }
+  }
+
+  if (failures.length > 0) {
+    throw new Error(`Hugo cleanup failed for ${failures.join("; ")}`);
+  }
+}
+
 function normalizeRunId(value: string): string {
   const normalized = value
     .trim()

@@ -361,38 +361,31 @@ begin
     '00000000-0000-4000-8000-000000000109'
   ), 'future-expiring peer was counted as a safety owner';
 
-  begin
-    perform public.hugo_apply_access(
-      '00000000-0000-4000-8000-000000000210',
-      'owner@example.invalid',
-      'owner',
-      '{}'::jsonb,
-      'suspended',
-      null,
-      '00000000-0000-4000-8000-000000000101'
-    );
-    assert false, 'sole non-expiring owner was suspended behind an expiring peer';
-  exception when check_violation then
-    assert sqlerrm = 'Cannot remove the final usable Institute owner.',
-      'expiring-peer owner guard failed for the wrong reason';
-  end;
+  v_blocked := public.hugo_apply_access(
+    '00000000-0000-4000-8000-000000000210',
+    'owner@example.invalid',
+    'owner',
+    '{}'::jsonb,
+    'suspended',
+    null,
+    '00000000-0000-4000-8000-000000000101'
+  );
+  assert not (v_blocked->>'ok')::boolean
+     and v_blocked->>'error_code' = 'final_owner_guard',
+    'sole non-expiring owner suspension did not return a final-owner receipt';
 
-  begin
-    perform public.hugo_apply_access(
-      '00000000-0000-4000-8000-000000000205',
-      'owner@example.invalid',
-      'owner',
-      '{}'::jsonb,
-      'active',
-      now() + interval '1 day',
-      '00000000-0000-4000-8000-000000000101'
-    );
-    assert false, 'sole non-expiring owner unexpectedly received an expiry';
-  exception when check_violation then
-    assert sqlerrm =
-      'Cannot remove the final usable Institute owner grant.',
-      'sole-owner expiry failed for the wrong reason';
-  end;
+  v_blocked := public.hugo_apply_access(
+    '00000000-0000-4000-8000-000000000205',
+    'owner@example.invalid',
+    'owner',
+    '{}'::jsonb,
+    'active',
+    now() + interval '1 day',
+    '00000000-0000-4000-8000-000000000101'
+  );
+  assert not (v_blocked->>'ok')::boolean
+     and v_blocked->>'error_code' = 'final_owner_guard',
+    'sole-owner expiry did not return a final-owner receipt';
   assert (
     select grant_row.access_expires_at is null
     from public.hugo_access_grants grant_row
@@ -804,26 +797,24 @@ where id in (
 );
 
 do $$
+declare
+  v_blocked jsonb;
 begin
   assert public.fn_hugo_owner_is_usable(
     '00000000-0000-4000-8000-000000000311'
   ), 'legacy sole owner fixture is not usable before grant insertion';
-  begin
-    perform public.hugo_apply_access(
-      '00000000-0000-4000-8000-000000000312',
-      'legacy-sole-owner@example.invalid',
-      'owner',
-      '{}'::jsonb,
-      'active',
-      now() + interval '1 day',
-      '00000000-0000-4000-8000-000000000311'
-    );
-    assert false, 'sole legacy owner unexpectedly received an expiring grant';
-  exception when check_violation then
-    assert sqlerrm =
-      'Cannot remove the final usable Institute owner grant.',
-      'sole legacy owner insert failed for the wrong reason';
-  end;
+  v_blocked := public.hugo_apply_access(
+    '00000000-0000-4000-8000-000000000312',
+    'legacy-sole-owner@example.invalid',
+    'owner',
+    '{}'::jsonb,
+    'active',
+    now() + interval '1 day',
+    '00000000-0000-4000-8000-000000000311'
+  );
+  assert not (v_blocked->>'ok')::boolean
+     and v_blocked->>'error_code' = 'final_owner_guard',
+    'sole legacy owner insert did not return a final-owner receipt';
   assert not exists (
     select 1
     from public.hugo_access_grants grant_row

@@ -61,6 +61,17 @@ begin
   end if;
 
   if exists (
+    select 1
+    from supabase_migrations.schema_migrations
+    where version > '20260729003000'
+      and name like 'hugo\_%' escape '\'
+  ) then
+    raise exception
+      'Hugo four-migration rollback is obsolete after later Hugo security migrations; refusing any DDL.'
+      using errcode = '55000';
+  end if;
+
+  if exists (
     select 1 from supabase_migrations.schema_migrations
     where version = '20260728230000'
       and name is distinct from 'hugo_access_authorization_hardening'

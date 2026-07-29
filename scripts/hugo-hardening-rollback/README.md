@@ -7,6 +7,13 @@ This directory is a manual-only rollback artifact for these four migrations:
 - `20260729001500_hugo_auth_insert_lifecycle_lock.sql`
 - `20260729003000_hugo_auth_email_lifecycle_lock.sql`
 
+It is deliberately obsolete once any later Hugo security migration is
+installed. `rollback.sql` refuses all DDL when migration history contains any
+later migration whose canonical name starts with `hugo_`. The current final
+stack rolls back operationally by leaving the additive schema in place and
+disabling Hugo enforcement and launch flags. Do not use this four-migration
+database reversal on the final stack.
+
 The files are deliberately outside `supabase/migrations`. They are not
 included in `supabase db push` and must not be copied into the migration
 directory.

@@ -141,6 +141,25 @@ try {
     "restore canonical migration name",
   );
 
+  psqlText(
+    "insert into supabase_migrations.schema_migrations(version, statements, name) values ('20260729040000', array[]::text[], 'hugo_mutation_receipt_binding');",
+    "later Hugo migration history fixture",
+  );
+  expectPsqlFailure(
+    () => psqlWithConfirmation(resolve(rollbackDir, "rollback.sql"), "obsolete rollback preflight"),
+    "rollback rejects later Hugo migration history before DDL",
+    "four-migration rollback is obsolete",
+  );
+  assertEqual(
+    psqlScalar("select to_regclass('public.hugo_rollback_gate_tables') is null::text;", "obsolete rollback object preservation"),
+    "true",
+    "later Hugo migration history leaves rollback objects untouched",
+  );
+  psqlText(
+    "delete from supabase_migrations.schema_migrations where version = '20260729040000';",
+    "remove later Hugo migration history fixture",
+  );
+
   psqlWithConfirmation(resolve(rollbackDir, "rollback.sql"), "rollback pause");
   assertEqual(
     psqlScalar(historySql(), "rollback history"),

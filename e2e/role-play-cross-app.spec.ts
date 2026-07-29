@@ -8,14 +8,16 @@ import {
   ensureTestUser,
 } from "./fixtures";
 import {
-  addHugoCleanupResource,
   createHugoAcceptanceRun,
   createHugoCleanupManifest,
   createHugoEvidenceRecord,
+  createHugoSeedRecorder,
+  runHugoCleanupSteps,
   syntheticFixtureLabel,
   writeHugoCleanupManifest,
   writeHugoEvidence,
   type HugoCleanupManifest,
+  type HugoCleanupResource,
 } from "./hugo-acceptance";
 
 const closerUrl = process.env.CLOSER_TEST_SUPABASE_URL ?? "";
@@ -56,7 +58,10 @@ function closerAdmin(): SupabaseClient {
   });
 }
 
-async function seedCloserRolePlay(client: SupabaseClient) {
+async function seedCloserRolePlay(
+  client: SupabaseClient,
+  record: (resource: HugoCleanupResource) => void,
+) {
   const stamp = syntheticFixtureLabel(acceptanceRun, "closer-role-play");
   const { data: persona, error: personaError } = await client
     .from("personas")
@@ -71,6 +76,7 @@ async function seedCloserRolePlay(client: SupabaseClient) {
     .select("id")
     .single();
   if (personaError || !persona) throw personaError ?? new Error("No persona");
+  record({ project: "closer", kind: "persona", id: persona.id as string });
 
   const { data: rolePlay, error: rolePlayError } = await client
     .from("role_plays")
@@ -85,6 +91,7 @@ async function seedCloserRolePlay(client: SupabaseClient) {
     .select("id")
     .single();
   if (rolePlayError || !rolePlay) throw rolePlayError ?? new Error("No role play");
+  record({ project: "closer", kind: "role_play", id: rolePlay.id as string });
 
   const { data: goal, error: goalError } = await client
     .from("rubric_goals")
@@ -100,6 +107,7 @@ async function seedCloserRolePlay(client: SupabaseClient) {
     .select("id")
     .single();
   if (goalError || !goal) throw goalError ?? new Error("No rubric goal");
+  record({ project: "closer", kind: "rubric_goal", id: goal.id as string });
 
   const { error: linkError } = await client.from("role_play_goals").insert({
     role_play_id: rolePlay.id,
@@ -118,15 +126,83 @@ async function seedCloserRolePlay(client: SupabaseClient) {
 
 async function cleanupCloserRolePlay(
   client: SupabaseClient,
-  seeded: { personaId: string; rolePlayId: string; goalId: string },
+  manifest: HugoCleanupManifest,
 ) {
-  await client.from("attempts").delete().eq("role_play_id", seeded.rolePlayId);
-  await client.from("role_plays").delete().eq("id", seeded.rolePlayId);
-  await client.from("rubric_goals").delete().eq("id", seeded.goalId);
-  await client.from("personas").delete().eq("id", seeded.personaId);
+  await runHugoCleanupSteps([
+    {
+      label: "Closer attempts",
+      run: () =>
+        deleteTrackedCleanupRows(
+          client,
+          manifest,
+          "closer",
+          "role_play",
+          "attempts",
+          "role_play_id",
+        ),
+    },
+    {
+      label: "Closer role play",
+      run: () =>
+        deleteTrackedCleanupRows(
+          client,
+          manifest,
+          "closer",
+          "role_play",
+          "role_plays",
+          "id",
+        ),
+    },
+    {
+      label: "Closer rubric goal",
+      run: () =>
+        deleteTrackedCleanupRows(
+          client,
+          manifest,
+          "closer",
+          "rubric_goal",
+          "rubric_goals",
+          "id",
+        ),
+    },
+    {
+      label: "Closer persona",
+      run: () =>
+        deleteTrackedCleanupRows(
+          client,
+          manifest,
+          "closer",
+          "persona",
+          "personas",
+          "id",
+        ),
+    },
+  ]);
 }
 
-async function seedBmhLesson(client: SupabaseClient, userId: string, scenarioId: string) {
+async function deleteTrackedCleanupRows(
+  client: SupabaseClient,
+  manifest: HugoCleanupManifest,
+  project: HugoCleanupResource["project"],
+  kind: string,
+  table: string,
+  column: string,
+): Promise<void> {
+  const ids = manifest.resources
+    .filter((resource) => resource.project === project && resource.kind === kind)
+    .map((resource) => resource.id);
+  if (ids.length === 0) return;
+
+  const { error } = await client.from(table).delete().in(column, ids);
+  if (error) throw error;
+}
+
+async function seedBmhLesson(
+  client: SupabaseClient,
+  userId: string,
+  scenarioId: string,
+  record: (resource: HugoCleanupResource) => void,
+) {
   const stamp = syntheticFixtureLabel(acceptanceRun, "institute-role-play");
   const { data: roleGroup, error: roleGroupError } = await client
     .from("role_groups")
@@ -134,6 +210,7 @@ async function seedBmhLesson(client: SupabaseClient, userId: string, scenarioId:
     .select("id")
     .single();
   if (roleGroupError || !roleGroup) throw roleGroupError ?? new Error("No role group");
+  record({ project: "institute", kind: "role_group", id: roleGroup.id as string });
 
   const { data: program, error: programError } = await client
     .from("programs")
@@ -145,6 +222,7 @@ async function seedBmhLesson(client: SupabaseClient, userId: string, scenarioId:
     .select("id")
     .single();
   if (programError || !program) throw programError ?? new Error("No program");
+  record({ project: "institute", kind: "program", id: program.id as string });
 
   const { data: course, error: courseError } = await client
     .from("courses")
@@ -156,6 +234,7 @@ async function seedBmhLesson(client: SupabaseClient, userId: string, scenarioId:
     .select("id")
     .single();
   if (courseError || !course) throw courseError ?? new Error("No course");
+  record({ project: "institute", kind: "course", id: course.id as string });
 
   const { data: module, error: moduleError } = await client
     .from("modules")
@@ -167,6 +246,7 @@ async function seedBmhLesson(client: SupabaseClient, userId: string, scenarioId:
     .select("id")
     .single();
   if (moduleError || !module) throw moduleError ?? new Error("No module");
+  record({ project: "institute", kind: "module", id: module.id as string });
 
   const { data: lesson, error: lessonError } = await client
     .from("lessons")
@@ -180,6 +260,7 @@ async function seedBmhLesson(client: SupabaseClient, userId: string, scenarioId:
     .select("id")
     .single();
   if (lessonError || !lesson) throw lessonError ?? new Error("No lesson");
+  record({ project: "institute", kind: "lesson", id: lesson.id as string });
 
   const { data: quiz, error: quizError } = await client
     .from("quizzes")
@@ -193,6 +274,7 @@ async function seedBmhLesson(client: SupabaseClient, userId: string, scenarioId:
     .select("id")
     .single();
   if (quizError || !quiz) throw quizError ?? new Error("No quiz");
+  record({ project: "institute", kind: "quiz", id: quiz.id as string });
   const { data: quizLesson, error: quizLessonError } = await client
     .from("lessons")
     .insert({
@@ -209,6 +291,11 @@ async function seedBmhLesson(client: SupabaseClient, userId: string, scenarioId:
   if (quizLessonError || !quizLesson) {
     throw quizLessonError ?? new Error("No quiz lesson");
   }
+  record({
+    project: "institute",
+    kind: "quiz_lesson",
+    id: quizLesson.id as string,
+  });
 
   const { data: block, error: blockError } = await client
     .from("content_blocks")
@@ -226,6 +313,11 @@ async function seedBmhLesson(client: SupabaseClient, userId: string, scenarioId:
     .select("id")
     .single();
   if (blockError || !block) throw blockError ?? new Error("No role-play block");
+  record({
+    project: "institute",
+    kind: "content_block",
+    id: block.id as string,
+  });
 
   for (const [table, row] of [
     ["program_courses", { program_id: program.id, course_id: course.id, sort_order: 0 }],
@@ -251,31 +343,178 @@ async function seedBmhLesson(client: SupabaseClient, userId: string, scenarioId:
 
 async function cleanupBmhLesson(
   client: SupabaseClient,
-  seeded: {
-    roleGroupId: string;
-    programId: string;
-    courseId: string;
-    moduleId: string;
-    lessonId: string;
-    blockId: string;
-    quizId: string;
-    quizLessonId: string;
-  },
+  manifest: HugoCleanupManifest,
 ) {
-  await client.from("role_play_results").delete().eq("block_id", seeded.blockId);
-  await client.from("user_block_progress").delete().eq("block_id", seeded.blockId);
-  await client.from("content_blocks").delete().eq("id", seeded.blockId);
-  await client.from("lessons").delete().eq("id", seeded.quizLessonId);
-  await client.from("lessons").delete().eq("id", seeded.lessonId);
-  await client.from("quizzes").delete().eq("id", seeded.quizId);
-  await client.from("modules").delete().eq("id", seeded.moduleId);
-  await client.from("program_courses").delete().eq("program_id", seeded.programId);
-  await client.from("program_access").delete().eq("program_id", seeded.programId);
-  await client.from("course_access").delete().eq("course_id", seeded.courseId);
-  await client.from("courses").delete().eq("id", seeded.courseId);
-  await client.from("programs").delete().eq("id", seeded.programId);
-  await client.from("user_role_groups").delete().eq("role_group_id", seeded.roleGroupId);
-  await client.from("role_groups").delete().eq("id", seeded.roleGroupId);
+  await runHugoCleanupSteps([
+    {
+      label: "Institute role-play results",
+      run: () =>
+        deleteTrackedCleanupRows(
+          client,
+          manifest,
+          "institute",
+          "content_block",
+          "role_play_results",
+          "block_id",
+        ),
+    },
+    {
+      label: "Institute block progress",
+      run: () =>
+        deleteTrackedCleanupRows(
+          client,
+          manifest,
+          "institute",
+          "content_block",
+          "user_block_progress",
+          "block_id",
+        ),
+    },
+    {
+      label: "Institute content block",
+      run: () =>
+        deleteTrackedCleanupRows(
+          client,
+          manifest,
+          "institute",
+          "content_block",
+          "content_blocks",
+          "id",
+        ),
+    },
+    {
+      label: "Institute quiz lesson",
+      run: () =>
+        deleteTrackedCleanupRows(
+          client,
+          manifest,
+          "institute",
+          "quiz_lesson",
+          "lessons",
+          "id",
+        ),
+    },
+    {
+      label: "Institute role-play lesson",
+      run: () =>
+        deleteTrackedCleanupRows(
+          client,
+          manifest,
+          "institute",
+          "lesson",
+          "lessons",
+          "id",
+        ),
+    },
+    {
+      label: "Institute quiz",
+      run: () =>
+        deleteTrackedCleanupRows(
+          client,
+          manifest,
+          "institute",
+          "quiz",
+          "quizzes",
+          "id",
+        ),
+    },
+    {
+      label: "Institute module",
+      run: () =>
+        deleteTrackedCleanupRows(
+          client,
+          manifest,
+          "institute",
+          "module",
+          "modules",
+          "id",
+        ),
+    },
+    {
+      label: "Institute program-course link",
+      run: () =>
+        deleteTrackedCleanupRows(
+          client,
+          manifest,
+          "institute",
+          "program",
+          "program_courses",
+          "program_id",
+        ),
+    },
+    {
+      label: "Institute program access",
+      run: () =>
+        deleteTrackedCleanupRows(
+          client,
+          manifest,
+          "institute",
+          "program",
+          "program_access",
+          "program_id",
+        ),
+    },
+    {
+      label: "Institute course access",
+      run: () =>
+        deleteTrackedCleanupRows(
+          client,
+          manifest,
+          "institute",
+          "course",
+          "course_access",
+          "course_id",
+        ),
+    },
+    {
+      label: "Institute course",
+      run: () =>
+        deleteTrackedCleanupRows(
+          client,
+          manifest,
+          "institute",
+          "course",
+          "courses",
+          "id",
+        ),
+    },
+    {
+      label: "Institute program",
+      run: () =>
+        deleteTrackedCleanupRows(
+          client,
+          manifest,
+          "institute",
+          "program",
+          "programs",
+          "id",
+        ),
+    },
+    {
+      label: "Institute user role group",
+      run: () =>
+        deleteTrackedCleanupRows(
+          client,
+          manifest,
+          "institute",
+          "role_group",
+          "user_role_groups",
+          "role_group_id",
+        ),
+    },
+    {
+      label: "Institute role group",
+      run: () =>
+        deleteTrackedCleanupRows(
+          client,
+          manifest,
+          "institute",
+          "role_group",
+          "role_groups",
+          "id",
+        ),
+    },
+  ]);
 }
 
 test.describe("Phase 5 cross-app role play", () => {
@@ -303,42 +542,46 @@ test.describe("Phase 5 cross-app role play", () => {
   let cleanupManifest: HugoCleanupManifest | null = null;
 
   test.beforeAll(async () => {
+    const recorder = createHugoSeedRecorder(
+      createHugoCleanupManifest(acceptanceRun),
+      (manifest) => {
+        cleanupManifest = manifest;
+      },
+    );
     const bmh = adminClient();
     const closer = closerAdmin();
     const userId = await ensureTestUser(bmh);
-    let manifest = createHugoCleanupManifest(acceptanceRun);
-    closerSeed = await seedCloserRolePlay(closer);
-    for (const resource of [
-      { project: "closer" as const, kind: "persona", id: closerSeed.personaId },
-      { project: "closer" as const, kind: "role_play", id: closerSeed.rolePlayId },
-      { project: "closer" as const, kind: "rubric_goal", id: closerSeed.goalId },
-    ]) {
-      manifest = addHugoCleanupResource(manifest, resource);
-    }
-    cleanupManifest = manifest;
-    bmhSeed = await seedBmhLesson(bmh, userId, closerSeed.rolePlayId);
-
-    for (const resource of [
-      { project: "institute" as const, kind: "role_group", id: bmhSeed.roleGroupId },
-      { project: "institute" as const, kind: "program", id: bmhSeed.programId },
-      { project: "institute" as const, kind: "course", id: bmhSeed.courseId },
-      { project: "institute" as const, kind: "module", id: bmhSeed.moduleId },
-      { project: "institute" as const, kind: "lesson", id: bmhSeed.lessonId },
-      { project: "institute" as const, kind: "content_block", id: bmhSeed.blockId },
-      { project: "institute" as const, kind: "quiz", id: bmhSeed.quizId },
-      { project: "institute" as const, kind: "quiz_lesson", id: bmhSeed.quizLessonId },
-    ]) {
-      manifest = addHugoCleanupResource(manifest, resource);
-    }
-    cleanupManifest = manifest;
+    closerSeed = await seedCloserRolePlay(closer, recorder.record);
+    bmhSeed = await seedBmhLesson(
+      bmh,
+      userId,
+      closerSeed.rolePlayId,
+      recorder.record,
+    );
   });
 
   test.afterAll(async ({}, testInfo) => {
-    if (cleanupManifest) await writeHugoCleanupManifest(testInfo, cleanupManifest);
-    const bmh = adminClient();
-    const closer = closerAdmin();
-    if (bmhSeed) await cleanupBmhLesson(bmh, bmhSeed);
-    if (closerSeed) await cleanupCloserRolePlay(closer, closerSeed);
+    const manifest = cleanupManifest;
+    await runHugoCleanupSteps([
+      {
+        label: "cross-app cleanup manifest",
+        run: async () => {
+          if (manifest) await writeHugoCleanupManifest(testInfo, manifest);
+        },
+      },
+      {
+        label: "Institute cross-app fixtures",
+        run: async () => {
+          if (manifest) await cleanupBmhLesson(adminClient(), manifest);
+        },
+      },
+      {
+        label: "Closer cross-app fixtures",
+        run: async () => {
+          if (manifest) await cleanupCloserRolePlay(closerAdmin(), manifest);
+        },
+      },
+    ]);
   });
 
   test("Closer Lab iframe completion marks the BMH lesson block complete", async ({
