@@ -163,7 +163,7 @@ export function CourseAttachments({
           </div>
           <Button
             onClick={onAttach}
-            disabled={readOnly || pending}
+            disabled={pending}
             iconLeft={<Plus className="size-4" aria-hidden />}
           >
             {pending ? "Saving..." : "Attach"}

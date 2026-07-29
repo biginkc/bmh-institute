@@ -309,10 +309,15 @@ async function notifyAdminsOfNewSubmission(input: {
     : admins.map((admin) => admin.email);
   if (recipients.length === 0) return;
 
+  const routedRecipients = recipients
+    .map((recipient) => routeQaNotification(input.learnerId, recipient))
+    .filter((recipient): recipient is string => Boolean(recipient));
+  if (routedRecipients.length === 0) return;
+
   const results = await Promise.all(
-    recipients.map((recipient) =>
+    routedRecipients.map((recipient) =>
       sendEmail({
-        to: routeQaNotification(input.learnerId, recipient),
+        to: recipient,
         subject: rendered.subject,
         html: rendered.html,
       }),
