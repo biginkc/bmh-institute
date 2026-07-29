@@ -38,6 +38,11 @@ describe("Hugo access authorization hardening", () => {
       "hashtextextended('hugo-institute-privileged-lifecycle-v1', 0)",
     );
     expect(migration).toContain("before delete or update of");
+    expect(migration).toContain(
+      "fn_hugo_owner_has_nonexpiring_grant",
+    );
+    expect(migration).toContain("grant_row.access_expires_at is null");
+    expect(migration).toContain("before insert or delete or update");
     expect(migration).toContain("before truncate on public.hugo_access_grants");
     expect(migration).toContain("from pg_catalog.pg_locks held_lock");
     expect(migration).toContain(
@@ -49,9 +54,30 @@ describe("Hugo access authorization hardening", () => {
   it("treats sign-in and every non-entitlement profile reference as durable", () => {
     expect(migration).toContain("from auth.users auth_user");
     expect(migration).toContain("last_sign_in_at is not null");
+    expect(migration).toContain("object_row.bucket_id = 'submissions'");
+    expect(migration).toContain(
+      "(storage.foldername(object_row.name))[1] = p_user_id::text",
+    );
+    expect(migration).toContain("where auth_user.id = v_profile.id");
+    expect(migration).toContain("for update;");
     expect(migration).toContain("pg_catalog.pg_constraint");
     expect(migration).toContain("user_role_groups.user_id");
     expect(migration).toContain("hugo_access_grants.user_id");
     expect(migration).toContain("fn_hugo_profile_reference_inventory");
+  });
+
+  it("binds every active grant to the exact Institute identity", () => {
+    expect(migration).toContain(
+      "lower(btrim(grant_row.email)) = lower(btrim(profile.email))",
+    );
+    expect(migration).toContain(
+      "grant_row.app_user_id = profile.id::text",
+    );
+    expect(migration).toContain(
+      "identity_grant.user_id = profile.id",
+    );
+    expect(migration).toContain(
+      "lower(btrim(identity_grant.email)) =",
+    );
   });
 });

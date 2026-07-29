@@ -47,6 +47,8 @@ as $$
       on grant_row.user_id = profile.id
     where profile.id = p_user_id
       and profile.status = 'active'
+      and lower(btrim(grant_row.email)) = lower(btrim(profile.email))
+      and grant_row.app_user_id = profile.id::text
       and grant_row.desired_status = 'active'
       and grant_row.role is not null
       and grant_row.role = profile.system_role
@@ -70,25 +72,24 @@ set search_path = ''
 as $$
   select coalesce(
     (
-      select
-        profile.status = 'active'
+      select profile.status = 'active'
         and case
-          when coalesce(
-            (
-              select setting.enforce_grants
-              from public.hugo_access_settings setting
-              where setting.singleton
-            ),
-            true
-          )
+          when coalesce((
+            select setting.enforce_grants
+            from public.hugo_access_settings setting
+            where setting.singleton
+          ), true)
           then public.fn_hugo_grant_row_is_active(profile.id)
-          else
-            grant_row.user_id is null
-            or public.fn_hugo_grant_row_is_active(profile.id)
+          else not exists (
+            select 1
+            from public.hugo_access_grants identity_grant
+            where identity_grant.user_id = profile.id
+              or lower(btrim(identity_grant.email)) =
+                lower(btrim(profile.email))
+          )
+          or public.fn_hugo_grant_row_is_active(profile.id)
         end
       from public.profiles profile
-      left join public.hugo_access_grants grant_row
-        on grant_row.user_id = profile.id
       where profile.id = p_user_id
     ),
     false
@@ -131,6 +132,35 @@ revoke all on function public.fn_can_read_user_state(uuid)
 grant execute on function public.fn_can_read_user_state(uuid)
   to authenticated, service_role;
 
+create or replace function public.fn_hugo_owner_has_nonexpiring_grant(
+  p_user_id uuid
+)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1
+    from public.profiles profile
+    join public.hugo_access_grants grant_row
+      on grant_row.user_id = profile.id
+    where profile.id = p_user_id
+      and profile.system_role = 'owner'
+      and profile.status = 'active'
+      and lower(btrim(grant_row.email)) = lower(btrim(profile.email))
+      and grant_row.app_user_id = profile.id::text
+      and grant_row.role = 'owner'
+      and grant_row.desired_status = 'active'
+      and not grant_row.prepared_for_delete
+      and grant_row.access_expires_at is null
+  );
+$$;
+
+revoke all on function public.fn_hugo_owner_has_nonexpiring_grant(uuid)
+  from public, anon, authenticated, service_role;
+
 create or replace function public.fn_hugo_owner_is_usable(p_user_id uuid)
 returns boolean
 language sql
@@ -143,7 +173,25 @@ as $$
     from public.profiles profile
     where profile.id = p_user_id
       and profile.system_role = 'owner'
-      and public.fn_hugo_access_is_active(profile.id)
+      and profile.status = 'active'
+      and (
+        public.fn_hugo_owner_has_nonexpiring_grant(profile.id)
+        or (
+          exists (
+            select 1
+            from public.hugo_access_settings setting
+            where setting.singleton
+              and not setting.enforce_grants
+          )
+          and not exists (
+            select 1
+            from public.hugo_access_grants identity_grant
+            where identity_grant.user_id = profile.id
+              or lower(btrim(identity_grant.email)) =
+                lower(btrim(profile.email))
+          )
+        )
+      )
   );
 $$;
 
@@ -219,9 +267,9 @@ begin
     select 1
     from public.profiles profile
     where profile.system_role = 'owner'
-      and public.fn_hugo_grant_row_is_active(profile.id)
+      and public.fn_hugo_owner_has_nonexpiring_grant(profile.id)
   ) then
-    raise exception 'Strict Hugo enforcement requires at least one usable Institute owner.'
+    raise exception 'Strict Hugo enforcement requires at least one active, non-expiring Institute owner.'
       using errcode = '23514';
   end if;
 
@@ -484,6 +532,32 @@ grant execute on function public.hugo_delete_identity(uuid, text)
 revoke insert, update, delete, truncate on public.hugo_access_grants
   from service_role;
 
+-- The private delete body predates Auth sign-in as a pristine criterion.
+-- Lock the Auth row before the final durable recheck so a concurrent sign-in
+-- cannot commit between that check and identity deletion.
+do $$
+declare
+  v_source text;
+  v_before text :=
+    '  v_durable := public.fn_hugo_has_durable_activity(v_profile.id);';
+  v_after text :=
+    '  perform 1
+  from auth.users auth_user
+  where auth_user.id = v_profile.id
+  for update;
+  v_durable := public.fn_hugo_has_durable_activity(v_profile.id);';
+begin
+  v_source := pg_get_functiondef(
+    'public.hugo_delete_identity_unhashed(uuid,text)'::regprocedure
+  );
+  if position(v_before in v_source) = 0 then
+    raise exception 'Hugo delete RPC durable recheck insertion point drifted';
+  end if;
+  v_source := replace(v_source, v_before, v_after);
+  execute v_source;
+end;
+$$;
+
 -- The profile trigger and grant trigger share the lifecycle advisory lock.
 -- Two concurrent transitions therefore cannot each count the other owner and
 -- remove both. The grant trigger also covers direct SQL outside the RPCs.
@@ -512,17 +586,30 @@ begin
       new.system_role = 'owner'
       and new.status = 'active'
       and (
-        public.fn_hugo_grant_row_is_active(old.id)
+        exists (
+          select 1
+          from public.hugo_access_grants grant_row
+          where grant_row.user_id = old.id
+            and lower(btrim(grant_row.email)) =
+              lower(btrim(new.email))
+            and grant_row.app_user_id = old.id::text
+            and grant_row.role = 'owner'
+            and grant_row.desired_status = 'active'
+            and not grant_row.prepared_for_delete
+            and grant_row.access_expires_at is null
+        )
         or (
-          not exists (
+          exists (
             select 1
             from public.hugo_access_settings setting
-            where setting.singleton and setting.enforce_grants
+            where setting.singleton and not setting.enforce_grants
           )
           and not exists (
             select 1
-            from public.hugo_access_grants grant_row
-            where grant_row.user_id = old.id
+            from public.hugo_access_grants identity_grant
+            where identity_grant.user_id = old.id
+              or lower(btrim(identity_grant.email)) =
+                lower(btrim(new.email))
           )
         )
       );
@@ -546,7 +633,7 @@ $$;
 
 drop trigger if exists trg_prevent_last_owner_deletion on public.profiles;
 create trigger trg_prevent_last_owner_deletion
-before delete or update of system_role, status on public.profiles
+before delete or update of email, system_role, status on public.profiles
 for each row execute function public.fn_prevent_last_owner_deletion();
 
 create or replace function public.fn_hugo_prevent_last_usable_owner_grant()
@@ -559,6 +646,39 @@ declare
   v_old_usable boolean;
   v_new_usable boolean := false;
 begin
+  -- Inserts are ordinarily available only inside the service-role lifecycle
+  -- RPC because direct service-role table privileges are revoked. The trigger
+  -- still guards a database-owner insert that would replace the sole dormant
+  -- legacy owner with an expiring or otherwise unusable grant.
+  if tg_op = 'INSERT' then
+    v_old_usable := public.fn_hugo_owner_is_usable(new.user_id);
+    select exists (
+      select 1
+      from public.profiles profile
+      where profile.id = new.user_id
+        and profile.system_role = 'owner'
+        and profile.status = 'active'
+        and lower(btrim(new.email)) = lower(btrim(profile.email))
+        and new.app_user_id = profile.id::text
+        and new.role = 'owner'
+        and new.desired_status = 'active'
+        and not new.prepared_for_delete
+        and new.access_expires_at is null
+    ) into v_new_usable;
+
+    if v_old_usable and not v_new_usable and not exists (
+      select 1
+      from public.profiles other_profile
+      where other_profile.id <> new.user_id
+        and other_profile.system_role = 'owner'
+        and public.fn_hugo_owner_is_usable(other_profile.id)
+    ) then
+      raise exception 'Cannot remove the final usable Institute owner grant.'
+        using errcode = '23514';
+    end if;
+    return new;
+  end if;
+
   -- Grant mutations are RPC-only. The lifecycle RPC takes this transaction
   -- advisory lock in a statement before it reaches the grant table. Requiring
   -- the already-held lock rejects direct SQL before a statement snapshot can
@@ -591,13 +711,12 @@ begin
     where profile.id = old.user_id
       and profile.system_role = 'owner'
       and profile.status = 'active'
+      and lower(btrim(old.email)) = lower(btrim(profile.email))
+      and old.app_user_id = profile.id::text
       and old.role = 'owner'
       and old.desired_status = 'active'
       and not old.prepared_for_delete
-      and (
-        old.access_expires_at is null
-        or old.access_expires_at > now()
-      )
+      and old.access_expires_at is null
   ) into v_old_usable;
 
   if not v_old_usable then
@@ -612,13 +731,12 @@ begin
       where profile.id = new.user_id
         and profile.system_role = 'owner'
         and profile.status = 'active'
+        and lower(btrim(new.email)) = lower(btrim(profile.email))
+        and new.app_user_id = profile.id::text
         and new.role = 'owner'
         and new.desired_status = 'active'
         and not new.prepared_for_delete
-        and (
-          new.access_expires_at is null
-          or new.access_expires_at > now()
-        )
+        and new.access_expires_at is null
     ) into v_new_usable;
   end if;
 
@@ -641,8 +759,7 @@ $$;
 drop trigger if exists hugo_access_grants_final_owner_guard
   on public.hugo_access_grants;
 create trigger hugo_access_grants_final_owner_guard
-before delete or update of
-  user_id, role, desired_status, access_expires_at, prepared_for_delete
+before insert or delete or update
 on public.hugo_access_grants
 for each row execute function public.fn_hugo_prevent_last_usable_owner_grant();
 
@@ -758,12 +875,18 @@ as $$
   )
   or exists (
     select 1
+    from storage.objects object_row
+    where object_row.bucket_id = 'submissions'
+      and (storage.foldername(object_row.name))[1] = p_user_id::text
+  )
+  or exists (
+    select 1
     from public.fn_hugo_profile_reference_inventory(p_user_id)
   );
 $$;
 
 comment on function public.fn_hugo_has_durable_activity(uuid) is
-  'Pristine-delete guard covering Auth sign-in and every current durable public.profiles foreign-key reference.';
+  'Pristine-delete guard covering Auth sign-in, owned submission objects, and every current durable public.profiles foreign-key reference.';
 
 revoke all on function public.fn_hugo_profile_reference_inventory(uuid)
   from public, anon, authenticated;

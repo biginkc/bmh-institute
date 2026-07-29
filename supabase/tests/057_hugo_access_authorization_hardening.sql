@@ -192,6 +192,44 @@ begin
 end;
 $$;
 
+-- Dormant mode tolerates only a genuinely absent grant. A row connected by
+-- either identity key must match the profile exactly or deny both identities.
+do $$
+begin
+  perform pg_advisory_xact_lock(
+    hashtextextended('hugo-institute-grant-mutation-rpc-v1', 0)
+  );
+
+  update public.hugo_access_grants
+  set email = 'legacy@example.invalid'
+  where user_id = '00000000-0000-4000-8000-000000000102';
+  assert not public.fn_hugo_access_is_active(
+    '00000000-0000-4000-8000-000000000102'
+  ), 'dormant mode accepted a grant with a mismatched profile email';
+  assert not public.fn_hugo_access_is_active(
+    '00000000-0000-4000-8000-000000000103'
+  ), 'dormant fallback ignored a mismatched grant connected by email';
+
+  update public.hugo_access_grants
+  set email = 'active@example.invalid',
+      app_user_id = 'wrong-app-user-id'
+  where user_id = '00000000-0000-4000-8000-000000000102';
+  assert not public.fn_hugo_access_is_active(
+    '00000000-0000-4000-8000-000000000102'
+  ), 'dormant mode accepted a mismatched app_user_id';
+
+  update public.hugo_access_grants
+  set app_user_id = '00000000-0000-4000-8000-000000000102'
+  where user_id = '00000000-0000-4000-8000-000000000102';
+  assert public.fn_hugo_access_is_active(
+    '00000000-0000-4000-8000-000000000102'
+  ), 'restored exact dormant grant did not become usable';
+  assert public.fn_hugo_access_is_active(
+    '00000000-0000-4000-8000-000000000103'
+  ), 'restored no-row dormant identity did not become usable';
+end;
+$$;
+
 set local role authenticated;
 set local request.jwt.claim.role = '';
 
@@ -306,6 +344,102 @@ begin
   assert public.fn_hugo_owner_is_usable(
     '00000000-0000-4000-8000-000000000101'
   ), 'final usable owner changed after blocked lifecycle RPC';
+
+  v_allowed := public.hugo_apply_access(
+    '00000000-0000-4000-8000-000000000209',
+    'owner-two@example.invalid',
+    'owner',
+    '{"role_group_ids":[],"test":"future-expiring-peer"}'::jsonb,
+    'active',
+    now() + interval '2 days',
+    '00000000-0000-4000-8000-000000000109'
+  );
+  assert (v_allowed->>'ok')::boolean,
+    'lifecycle RPC failed to restore a future-expiring peer owner';
+  assert not public.fn_hugo_owner_is_usable(
+    '00000000-0000-4000-8000-000000000109'
+  ), 'future-expiring peer was counted as a safety owner';
+
+  begin
+    perform public.hugo_apply_access(
+      '00000000-0000-4000-8000-000000000210',
+      'owner@example.invalid',
+      'owner',
+      '{}'::jsonb,
+      'suspended',
+      null,
+      '00000000-0000-4000-8000-000000000101'
+    );
+    assert false, 'sole non-expiring owner was suspended behind an expiring peer';
+  exception when check_violation then
+    assert sqlerrm = 'Cannot remove the final usable Institute owner.',
+      'expiring-peer owner guard failed for the wrong reason';
+  end;
+
+  begin
+    perform public.hugo_apply_access(
+      '00000000-0000-4000-8000-000000000205',
+      'owner@example.invalid',
+      'owner',
+      '{}'::jsonb,
+      'active',
+      now() + interval '1 day',
+      '00000000-0000-4000-8000-000000000101'
+    );
+    assert false, 'sole non-expiring owner unexpectedly received an expiry';
+  exception when check_violation then
+    assert sqlerrm =
+      'Cannot remove the final usable Institute owner grant.',
+      'sole-owner expiry failed for the wrong reason';
+  end;
+  assert (
+    select grant_row.access_expires_at is null
+    from public.hugo_access_grants grant_row
+    where grant_row.user_id =
+      '00000000-0000-4000-8000-000000000101'
+  ), 'blocked sole-owner expiry mutated the grant';
+
+  v_allowed := public.hugo_apply_access(
+    '00000000-0000-4000-8000-000000000206',
+    'owner-two@example.invalid',
+    'owner',
+    '{}'::jsonb,
+    'active',
+    null,
+    '00000000-0000-4000-8000-000000000109'
+  );
+  assert (v_allowed->>'ok')::boolean,
+    'lifecycle RPC failed to restore a non-expiring peer owner';
+
+  v_allowed := public.hugo_apply_access(
+    '00000000-0000-4000-8000-000000000207',
+    'owner@example.invalid',
+    'owner',
+    '{}'::jsonb,
+    'active',
+    now() + interval '1 day',
+    '00000000-0000-4000-8000-000000000101'
+  );
+  assert (v_allowed->>'ok')::boolean,
+    'owner expiry was blocked despite a non-expiring peer owner';
+  assert not public.fn_hugo_owner_is_usable(
+    '00000000-0000-4000-8000-000000000101'
+  ), 'future-expiring owner was counted as the non-expiring safety owner';
+  assert public.fn_hugo_owner_is_usable(
+    '00000000-0000-4000-8000-000000000109'
+  ), 'non-expiring peer owner was not counted';
+
+  v_allowed := public.hugo_apply_access(
+    '00000000-0000-4000-8000-000000000208',
+    'owner@example.invalid',
+    'owner',
+    '{}'::jsonb,
+    'active',
+    null,
+    '00000000-0000-4000-8000-000000000101'
+  );
+  assert (v_allowed->>'ok')::boolean,
+    'lifecycle RPC failed to remove the test owner expiry';
 end;
 $$;
 
@@ -351,6 +485,28 @@ begin
   assert not public.fn_hugo_access_is_active(
     '00000000-0000-4000-8000-000000000107'
   ), 'delete-prepared grant must remain denied in strict mode';
+
+  update public.hugo_access_grants
+  set app_user_id = 'wrong-app-user-id'
+  where user_id = '00000000-0000-4000-8000-000000000102';
+  assert not public.fn_hugo_access_is_active(
+    '00000000-0000-4000-8000-000000000102'
+  ), 'strict mode accepted a mismatched app_user_id';
+
+  update public.hugo_access_grants
+  set app_user_id = '00000000-0000-4000-8000-000000000102',
+      email = 'wrong-active@example.invalid'
+  where user_id = '00000000-0000-4000-8000-000000000102';
+  assert not public.fn_hugo_access_is_active(
+    '00000000-0000-4000-8000-000000000102'
+  ), 'strict mode accepted a mismatched profile email';
+
+  update public.hugo_access_grants
+  set email = 'active@example.invalid'
+  where user_id = '00000000-0000-4000-8000-000000000102';
+  assert public.fn_hugo_access_is_active(
+    '00000000-0000-4000-8000-000000000102'
+  ), 'restored exact strict grant did not become usable';
 end;
 $$;
 
@@ -433,6 +589,117 @@ begin
 end;
 $$;
 
+-- A submission object is durable even before its database submission row
+-- exists. The first storage path segment is the owning profile identifier.
+insert into auth.users (
+  id, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at
+) values (
+  '00000000-0000-4000-8000-000000000305',
+  'stored-submission@example.invalid',
+  '{}'::jsonb,
+  '{}'::jsonb,
+  now(),
+  now()
+);
+insert into public.hugo_access_grants (
+  user_id, email, app_user_id, role, desired_status
+) values (
+  '00000000-0000-4000-8000-000000000305',
+  'stored-submission@example.invalid',
+  '00000000-0000-4000-8000-000000000305',
+  'learner',
+  'active'
+);
+insert into storage.objects (bucket_id, name, owner)
+values (
+  'submissions',
+  '00000000-0000-4000-8000-000000000305/pending.webm',
+  null
+);
+
+do $$
+declare
+  v_receipt jsonb;
+begin
+  assert public.fn_hugo_has_durable_activity(
+    '00000000-0000-4000-8000-000000000305'
+  ), 'owned submission storage path must make an identity non-pristine';
+  v_receipt := public.hugo_prepare_pristine_delete(
+    '00000000-0000-4000-8000-000000000306',
+    'stored-submission@example.invalid'
+  );
+  assert v_receipt->>'error_code' = 'identity_not_pristine',
+    'prepare pristine delete ignored an owned submission object';
+end;
+$$;
+
+-- Preparation can succeed while pristine, but deletion must lock Auth and
+-- recheck after a sign-in that commits between the two lifecycle calls.
+insert into auth.users (
+  id, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at
+) values (
+  '00000000-0000-4000-8000-000000000307',
+  'sign-in-after-prepare@example.invalid',
+  '{}'::jsonb,
+  '{}'::jsonb,
+  now(),
+  now()
+);
+insert into public.hugo_access_grants (
+  user_id, email, app_user_id, role, desired_status
+) values (
+  '00000000-0000-4000-8000-000000000307',
+  'sign-in-after-prepare@example.invalid',
+  '00000000-0000-4000-8000-000000000307',
+  'learner',
+  'active'
+);
+
+do $$
+declare
+  v_definition text;
+  v_receipt jsonb;
+begin
+  select pg_get_functiondef(procedure_row.oid)
+  into v_definition
+  from pg_catalog.pg_proc procedure_row
+  join pg_catalog.pg_namespace namespace_row
+    on namespace_row.oid = procedure_row.pronamespace
+  where namespace_row.nspname = 'public'
+    and procedure_row.proname = 'hugo_delete_identity_unhashed';
+  assert position('from auth.users auth_user' in lower(v_definition)) > 0,
+    'delete identity does not lock the Auth row';
+  assert position('from auth.users auth_user' in lower(v_definition)) <
+    position(
+      'v_durable := public.fn_hugo_has_durable_activity(v_profile.id)'
+      in lower(v_definition)
+    ), 'delete identity locks Auth after the final durable recheck';
+
+  v_receipt := public.hugo_prepare_pristine_delete(
+    '00000000-0000-4000-8000-000000000308',
+    'sign-in-after-prepare@example.invalid'
+  );
+  assert (v_receipt->>'ok')::boolean,
+    'pristine identity did not prepare for deletion';
+
+  update auth.users
+  set last_sign_in_at = now()
+  where id = '00000000-0000-4000-8000-000000000307';
+
+  v_receipt := public.hugo_delete_identity(
+    '00000000-0000-4000-8000-000000000309',
+    'sign-in-after-prepare@example.invalid'
+  );
+  assert v_receipt->>'error_code' = 'identity_not_pristine',
+    'delete identity ignored sign-in after preparation';
+  assert exists (
+    select 1
+    from auth.users auth_user
+    where auth_user.id = '00000000-0000-4000-8000-000000000307'
+  ), 'delete identity removed Auth after the locked recheck failed';
+end;
+$$;
+
 -- A synthetic future profile FK proves the catalog-driven guard cannot miss a
 -- newly installed durable table between manual matrix updates.
 insert into auth.users (
@@ -464,6 +731,59 @@ begin
     where reference_row.reference =
       'public.hugo_test_future_durable_reference.user_id'
   ), 'future durable reference was not named in the inventory';
+end;
+$$;
+
+-- The insert path must also prevent a lifecycle RPC from replacing the sole
+-- dormant legacy owner with a future-expiring grant.
+insert into auth.users (
+  id, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at
+) values (
+  '00000000-0000-4000-8000-000000000311',
+  'legacy-sole-owner@example.invalid',
+  '{}'::jsonb,
+  '{}'::jsonb,
+  now(),
+  now()
+);
+update public.profiles
+set system_role = 'owner',
+    status = 'active'
+where id = '00000000-0000-4000-8000-000000000311';
+update public.profiles
+set status = 'suspended'
+where id in (
+  '00000000-0000-4000-8000-000000000101',
+  '00000000-0000-4000-8000-000000000109'
+);
+
+do $$
+begin
+  assert public.fn_hugo_owner_is_usable(
+    '00000000-0000-4000-8000-000000000311'
+  ), 'legacy sole owner fixture is not usable before grant insertion';
+  begin
+    perform public.hugo_apply_access(
+      '00000000-0000-4000-8000-000000000312',
+      'legacy-sole-owner@example.invalid',
+      'owner',
+      '{}'::jsonb,
+      'active',
+      now() + interval '1 day',
+      '00000000-0000-4000-8000-000000000311'
+    );
+    assert false, 'sole legacy owner unexpectedly received an expiring grant';
+  exception when check_violation then
+    assert sqlerrm =
+      'Cannot remove the final usable Institute owner grant.',
+      'sole legacy owner insert failed for the wrong reason';
+  end;
+  assert not exists (
+    select 1
+    from public.hugo_access_grants grant_row
+    where grant_row.user_id =
+      '00000000-0000-4000-8000-000000000311'
+  ), 'blocked sole-owner grant insertion persisted';
 end;
 $$;
 

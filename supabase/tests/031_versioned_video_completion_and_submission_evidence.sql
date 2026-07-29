@@ -39,8 +39,9 @@ begin
     where policy.schemaname = 'public'
       and policy.tablename = 'user_video_completion_history'
       and policy.cmd <> 'SELECT'
+      and policy.permissive = 'PERMISSIVE'
   ) then
-    raise exception 'video history must not expose write policies';
+    raise exception 'video history must not expose permissive write policies';
   end if;
 end;
 $$;
