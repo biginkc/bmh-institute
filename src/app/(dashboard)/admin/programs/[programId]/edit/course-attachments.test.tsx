@@ -15,7 +15,7 @@ describe("CourseAttachments", () => {
     render(
       <CourseAttachments
         programId="program-1"
-        readOnly
+        isImported
         attached={[{ courseId: "course-1", title: "Imported course", isPublished: false, sortOrder: 0 }]}
         available={[{ id: "course-2", title: "Draft course", isPublished: false }]}
       />,

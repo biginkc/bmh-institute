@@ -29,12 +29,12 @@ export function CourseAttachments({
   programId,
   attached,
   available,
-  readOnly = false,
+  isImported = false,
 }: {
   programId: string;
   attached: AttachedCourse[];
   available: AvailableCourse[];
-  readOnly?: boolean;
+  isImported?: boolean;
 }) {
   const [selected, setSelected] = useState<string>(available[0]?.id ?? "");
   const [pending, startTransition] = useTransition();
@@ -71,7 +71,7 @@ export function CourseAttachments({
 
   return (
     <div className="flex flex-col gap-4">
-      {readOnly ? (
+      {isImported ? (
         <p className="rounded-[var(--bmh-radius-md)] border border-[var(--yellow-500)] bg-[var(--yellow-100)] px-3 py-2 text-xs font-semibold text-[var(--yellow-600)]">
           Imported program membership is managed by the release workflow and is read-only here.
         </p>
@@ -103,7 +103,7 @@ export function CourseAttachments({
                   </Badge>
                 </div>
               </div>
-              {!readOnly ? (
+              {!isImported ? (
                 <div className="flex items-center gap-1">
                   <IconButton
                     variant="plain"
@@ -139,7 +139,7 @@ export function CourseAttachments({
         </ol>
       )}
 
-      {!readOnly && available.length > 0 ? (
+      {!isImported && available.length > 0 ? (
         <div className="flex flex-col gap-3 border-t border-[var(--border-hairline)] pt-4 sm:flex-row sm:items-end">
           <div className="flex-1">
             <label
