@@ -274,6 +274,12 @@ try {
       "supabase/tests/057_hugo_access_authorization_hardening.sql",
     ),
   );
+  psqlFile(
+    resolve(
+      root,
+      "supabase/tests/058_hugo_missing_identity_durable_proof.sql",
+    ),
+  );
   psqlText(`
     do $$
     begin

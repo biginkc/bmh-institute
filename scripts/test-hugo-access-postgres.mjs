@@ -86,6 +86,7 @@ async function runPostgres(pgBin, index) {
       "055_hugo_access_provisioner.sql",
       "056_hugo_access_operation_payload_hash.sql",
       "057_hugo_access_authorization_hardening.sql",
+      "058_hugo_missing_identity_durable_proof.sql",
     ]) {
       const path = resolve(root, "supabase/tests", test);
       if (existsSync(path)) psqlFile(binary, env, path);
@@ -121,7 +122,7 @@ async function runPostgres(pgBin, index) {
     return {
       postgres_major: major,
       migrations: migrations.length,
-      focused_sql_tests: 3,
+      focused_sql_tests: 4,
       concurrent_owner_deletes: "both_direct_mutations_blocked",
     };
   } finally {
