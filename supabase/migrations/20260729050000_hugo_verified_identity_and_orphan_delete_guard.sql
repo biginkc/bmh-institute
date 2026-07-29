@@ -391,10 +391,18 @@ revoke all on function public.fn_hugo_serialize_role_group_delete()
 drop trigger if exists role_groups_serialize_hugo_lifecycle_delete
   on public.role_groups;
 create trigger role_groups_serialize_hugo_lifecycle_delete
-before delete or truncate
+before delete
 on public.role_groups
 for each statement
 execute function public.fn_hugo_serialize_role_group_delete();
+
+-- PostgreSQL takes ACCESS EXCLUSIVE before firing a TRUNCATE trigger. Taking
+-- the Hugo advisory lock from that trigger would invert lifecycle lock order
+-- and can deadlock. Application roles never need this destructive privilege.
+-- A database owner remains serialized naturally by ACCESS EXCLUSIVE.
+revoke truncate
+on public.role_groups
+from public, anon, authenticated, service_role;
 
 create or replace function public.fn_hugo_store_guard_failure(
   p_operation_id uuid,

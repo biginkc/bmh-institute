@@ -50,10 +50,29 @@ begin
         'role_groups_serialize_hugo_lifecycle_delete'
       and not trigger_row.tgisinternal
       and pg_catalog.pg_get_triggerdef(trigger_row.oid) ilike
-        '%before delete or truncate%'
+        '%before delete%'
+      and pg_catalog.pg_get_triggerdef(trigger_row.oid) not ilike
+        '%truncate%'
       and pg_catalog.pg_get_triggerdef(trigger_row.oid) ilike
         '%for each statement%'
   ), 'role-group lifecycle serialization is not statement-level';
+  assert not has_table_privilege(
+    'public',
+    'public.role_groups',
+    'truncate'
+  ) and not has_table_privilege(
+    'anon',
+    'public.role_groups',
+    'truncate'
+  ) and not has_table_privilege(
+    'authenticated',
+    'public.role_groups',
+    'truncate'
+  ) and not has_table_privilege(
+    'service_role',
+    'public.role_groups',
+    'truncate'
+  ), 'an application role can truncate role groups';
   assert not (
     has_table_privilege(
       'service_role',

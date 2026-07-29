@@ -16,6 +16,13 @@ const roleGroupGrantOperationId =
 const roleGroupSuspendOperationId =
   "00000000-0000-4000-8000-000000000443";
 const roleGroupEmail = "concurrent-role-group-delete@example.invalid";
+const truncateRoleGroupId = "00000000-0000-4000-8000-000000000450";
+const truncateUserId = "00000000-0000-4000-8000-000000000451";
+const truncateGrantOperationId =
+  "00000000-0000-4000-8000-000000000452";
+const truncateSuspendOperationId =
+  "00000000-0000-4000-8000-000000000453";
+const truncateEmail = "concurrent-role-group-truncate@example.invalid";
 
 export async function verifyAuthInsertLifecycleSerialization({
   psqlPath,
@@ -158,6 +165,145 @@ export async function verifyRoleGroupDeleteLifecycleSerialization({
   }
 
   return "role_group_delete_committed_before_suspension_filter";
+}
+
+export async function verifyRoleGroupTruncateLifecycleSerialization({
+  psqlPath,
+  env,
+}) {
+  psqlExec(
+    psqlPath,
+    env,
+    `
+      set request.jwt.claim.role = 'service_role';
+      insert into public.role_groups (id, name)
+      values ('${truncateRoleGroupId}', 'Concurrent Hugo truncate regression');
+      insert into auth.users (
+        id,
+        email,
+        email_confirmed_at,
+        raw_app_meta_data,
+        raw_user_meta_data,
+        created_at,
+        updated_at
+      ) values (
+        '${truncateUserId}',
+        '${truncateEmail}',
+        now(),
+        '{}'::jsonb,
+        '{}'::jsonb,
+        now(),
+        now()
+      );
+      select public.hugo_apply_access(
+        '${truncateGrantOperationId}',
+        '${truncateEmail}',
+        'learner',
+        '{"role_group_ids":["${truncateRoleGroupId}"]}'::jsonb,
+        'active',
+        null,
+        '${truncateUserId}'
+      );
+    `,
+  );
+
+  const lifecycle = runPsqlAsync(
+    psqlPath,
+    env,
+    `
+      begin;
+      set local request.jwt.claim.role = 'service_role';
+      select pg_advisory_xact_lock(
+        hashtextextended('hugo-institute-privileged-lifecycle-v1', 0)
+      );
+      select pg_advisory_xact_lock(
+        hashtextextended('hugo-institute-grant-mutation-rpc-v1', 0)
+      );
+      select pg_sleep(2);
+      select public.hugo_preflight_access_operation(
+        '${truncateSuspendOperationId}',
+        '${truncateEmail}',
+        'learner',
+        '{"role_group_ids":["${truncateRoleGroupId}"]}'::jsonb,
+        'suspended',
+        null
+      );
+      select public.hugo_apply_access(
+        '${truncateSuspendOperationId}',
+        '${truncateEmail}',
+        'learner',
+        '{"role_group_ids":["${truncateRoleGroupId}"]}'::jsonb,
+        'suspended',
+        null,
+        '${truncateUserId}'
+      );
+      commit;
+    `,
+  );
+  await waitForAdvisoryLock(
+    psqlPath,
+    env,
+    lifecycle,
+    "truncate-race lifecycle",
+  );
+
+  const truncation = runPsqlAsync(
+    psqlPath,
+    env,
+    `
+      begin;
+      truncate table public.role_groups cascade;
+      select pg_sleep(1);
+      commit;
+    `,
+  );
+  await waitForTableLock(
+    psqlPath,
+    env,
+    truncation,
+    "public.role_groups",
+    "AccessExclusiveLock",
+  );
+
+  await Promise.all([lifecycle, truncation]);
+
+  const observed = psqlScalar(
+    psqlPath,
+    env,
+    `
+      select concat_ws(
+        ':',
+        receipt ->> 'ok',
+        receipt #>> '{observed,status}',
+        jsonb_array_length(
+          receipt #> '{observed,config,role_group_ids}'
+        ),
+        (
+          select profile.status
+          from public.profiles profile
+          where profile.id = '${truncateUserId}'
+        ),
+        (
+          select count(*)
+          from public.role_groups
+        ),
+        (
+          select count(*)
+          from public.user_role_groups membership
+          where membership.user_id = '${truncateUserId}'
+        )
+      )
+      from public.hugo_access_operations
+      where operation_id = '${truncateSuspendOperationId}';
+    `,
+  );
+  if (observed !== "true:suspended:0:suspended:0:0") {
+    throw new Error(
+      `Owner-level role-group truncate did not converge safely: ${observed}`,
+    );
+  }
+
+  return "owner_truncate_and_suspension_converged_without_deadlock";
 }
 
 async function verifyInsertSerialization(psqlPath, env) {
@@ -454,6 +600,46 @@ async function waitForAdvisoryLock(
     }
   }
   throw new Error(`Timed out waiting for the ${label} advisory lock.`);
+}
+
+async function waitForTableLock(
+  psqlPath,
+  env,
+  concurrentSession,
+  relation,
+  mode,
+) {
+  for (let attempt = 0; attempt < 80; attempt += 1) {
+    const lockPresent = psqlScalar(
+      psqlPath,
+      env,
+      `
+        select exists (
+          select 1
+          from pg_catalog.pg_locks held_lock
+          where held_lock.locktype = 'relation'
+            and held_lock.relation = '${relation}'::regclass
+            and held_lock.mode = '${mode}'
+            and held_lock.granted
+            and held_lock.pid <> pg_backend_pid()
+        )::text;
+      `,
+    );
+    if (lockPresent === "true" || lockPresent === "t") return;
+
+    const completed = await Promise.race([
+      concurrentSession.then(() => true),
+      delay(25).then(() => false),
+    ]);
+    if (completed) {
+      throw new Error(
+        `${relation} concurrency session completed before ${mode} was observed.`,
+      );
+    }
+  }
+  throw new Error(
+    `Timed out waiting for ${mode} on ${relation}.`,
+  );
 }
 
 function runPsqlAsync(psqlPath, env, sql) {

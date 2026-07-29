@@ -85,12 +85,16 @@ describe("Hugo verified identity and orphan deletion guard", () => {
     );
   });
 
-  it("serializes every role-group deletion before row locks are taken", () => {
+  it("serializes deletes and denies application-role truncation without a truncate trigger", () => {
     expect(migration).toContain(
       "public.fn_hugo_serialize_role_group_delete",
     );
     expect(migration).toMatch(
-      /before delete or truncate[\s\S]*on public\.role_groups[\s\S]*for each statement/i,
+      /before delete[\s\S]*on public\.role_groups[\s\S]*for each statement/i,
+    );
+    expect(migration).not.toContain("before delete or truncate");
+    expect(migration).toMatch(
+      /revoke truncate[\s\S]*on public\.role_groups[\s\S]*from public, anon, authenticated, service_role/i,
     );
     expect(migration).toContain(
       "hugo-institute-grant-mutation-rpc-v1",
