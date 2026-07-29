@@ -48,9 +48,20 @@ describe("resolveProductionDbTarget", () => {
     expect(resolveProductionDbTarget(REAL.replace("postgresql://", "postgres://")).ok).toBe(true);
   });
 
-  it("never leaks the password in the resolved target", () => {
+  it("confines the password to one dedicated field", () => {
+    // Round-7 finding 3 changed this contract deliberately. The resolver now
+    // returns the password so the caller can hand it to psql through
+    // PGPASSWORD instead of putting the whole URL in argv, where Node would
+    // echo it back inside any thrown execFileSync error. The invariant is no
+    // longer "the password is absent" but "the password appears in exactly
+    // one field, and every field a caller might print or pass along is free
+    // of it".
     const result = resolveProductionDbTarget(REAL);
-    expect(JSON.stringify(result)).not.toContain("s3cret");
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.password).toBe("s3cret");
+    const printable = { ...result, password: undefined };
+    expect(JSON.stringify(printable)).not.toContain("s3cret");
   });
 
   it("refuses a different project ref", () => {
@@ -146,5 +157,117 @@ describe("resolveProductionDbTarget", () => {
       `postgresql://postgres.${INSTITUTE_PRODUCTION_PROJECT_REF.toUpperCase()}:s3cret@aws-1-us-west-1.pooler.supabase.com:5432/postgres`,
       "project refs are lowercase and must match exactly",
     );
+  });
+
+  // Round-7 Codex review, finding 2. The round-6 resolver validated the URL
+  // authority and then passed the raw string through to the CLI. PostgreSQL
+  // connection URIs accept query parameters including host, port, user and
+  // dbname, and those OVERRIDE the authority. The reviewer demonstrated it:
+  // an authority naming production plus
+  // ?host=127.0.0.1&user=postgres.otherproject&dbname=otherdb passed the gate
+  // and the CLI then connected to the override, so the postflight could only
+  // notice after the wrong database had already been mutated.
+  describe("query parameter and multi-host overrides (round-7 finding 2)", () => {
+    it("refuses any query parameter at all, not just the dangerous ones", () => {
+      expectRefused(
+        `postgresql://postgres.${INSTITUTE_PRODUCTION_PROJECT_REF}:s3cret@aws-1-us-west-1.pooler.supabase.com:5432/postgres?host=127.0.0.1`,
+        "host override",
+      );
+      expectRefused(
+        `postgresql://postgres.${INSTITUTE_PRODUCTION_PROJECT_REF}:s3cret@aws-1-us-west-1.pooler.supabase.com:5432/postgres?user=postgres.otherproject`,
+        "user override",
+      );
+      expectRefused(
+        `postgresql://postgres.${INSTITUTE_PRODUCTION_PROJECT_REF}:s3cret@aws-1-us-west-1.pooler.supabase.com:5432/postgres?dbname=otherdb`,
+        "dbname override",
+      );
+      expectRefused(
+        `postgresql://postgres.${INSTITUTE_PRODUCTION_PROJECT_REF}:s3cret@aws-1-us-west-1.pooler.supabase.com:5432/postgres?port=1234`,
+        "port override",
+      );
+      expectRefused(
+        `postgresql://postgres.${INSTITUTE_PRODUCTION_PROJECT_REF}:s3cret@aws-1-us-west-1.pooler.supabase.com:5432/postgres?host=127.0.0.1&user=postgres.otherproject&dbname=otherdb`,
+        "the reviewer's exact combined override",
+      );
+      // Even an apparently harmless parameter is refused. Allow-listing
+      // individual parameters is how this class of bug comes back.
+      expectRefused(
+        `postgresql://postgres.${INSTITUTE_PRODUCTION_PROJECT_REF}:s3cret@aws-1-us-west-1.pooler.supabase.com:5432/postgres?application_name=deploy`,
+        "any parameter",
+      );
+      expectRefused(
+        `postgresql://postgres.${INSTITUTE_PRODUCTION_PROJECT_REF}:s3cret@aws-1-us-west-1.pooler.supabase.com:5432/postgres?`,
+        "empty query string is still a query string",
+      );
+    });
+
+    it("refuses a fragment", () => {
+      expectRefused(
+        `postgresql://postgres.${INSTITUTE_PRODUCTION_PROJECT_REF}:s3cret@aws-1-us-west-1.pooler.supabase.com:5432/postgres#host=127.0.0.1`,
+        "fragment",
+      );
+    });
+
+    it("refuses libpq multi-host syntax", () => {
+      expectRefused(
+        `postgresql://postgres.${INSTITUTE_PRODUCTION_PROJECT_REF}:s3cret@aws-1-us-west-1.pooler.supabase.com,127.0.0.1:5432/postgres`,
+        "comma separated hosts, where the second could win",
+      );
+    });
+
+    it("refuses a trailing path segment beyond the database name", () => {
+      expectRefused(
+        `postgresql://postgres.${INSTITUTE_PRODUCTION_PROJECT_REF}:s3cret@aws-1-us-west-1.pooler.supabase.com:5432/postgres/extra`,
+        "path is the database name and nothing else",
+      );
+    });
+  });
+
+  // Round-7 Codex review, finding 3: the full URL was handed to the CLI as a
+  // process argument, so the password reached argv and any thrown
+  // execFileSync error message. The resolver now returns the pieces the caller
+  // needs separately, so no caller has a reason to pass the raw string around.
+  describe("credential separation (round-7 finding 3)", () => {
+    it("returns a canonical URL that carries no password", () => {
+      const result = resolveProductionDbTarget(REAL);
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        expect(result.canonicalUrlWithoutPassword).not.toContain("s3cret");
+        expect(result.canonicalUrlWithoutPassword).toContain(
+          INSTITUTE_PRODUCTION_PROJECT_REF,
+        );
+        expect(result.canonicalUrlWithoutPassword).toContain(
+          "aws-1-us-west-1.pooler.supabase.com",
+        );
+        // Safe to print, so it must be printable in full.
+        expect(result.canonicalUrlWithoutPassword).toMatch(/^postgresql:\/\//);
+      }
+    });
+
+    it("exposes the password separately and decoded", () => {
+      const encoded = REAL.replace("s3cret", encodeURIComponent("p@ss:word/1"));
+      const result = resolveProductionDbTarget(encoded);
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        expect(result.password).toBe("p@ss:word/1");
+        expect(result.canonicalUrlWithoutPassword).not.toContain("p@ss");
+      }
+    });
+
+    it("refuses a connection with no password rather than silently proceeding", () => {
+      expectRefused(
+        `postgresql://postgres.${INSTITUTE_PRODUCTION_PROJECT_REF}@aws-1-us-west-1.pooler.supabase.com:5432/postgres`,
+        "no password means the apply would prompt or fail midway",
+      );
+    });
+
+    it("resolves the port, defaulting when absent", () => {
+      const withPort = resolveProductionDbTarget(REAL);
+      expect(withPort.ok && withPort.port).toBe("5432");
+      const withoutPort = resolveProductionDbTarget(
+        `postgresql://postgres.${INSTITUTE_PRODUCTION_PROJECT_REF}:s3cret@aws-1-us-west-1.pooler.supabase.com/postgres`,
+      );
+      expect(withoutPort.ok && withoutPort.port).toBe("5432");
+    });
   });
 });

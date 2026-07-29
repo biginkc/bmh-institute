@@ -297,6 +297,41 @@ test("each scenario's block_id, source_key, and scenario_id are bound TOGETHER i
   assert.equal(attestedIds.size, 3);
 });
 
+// Round-7 Codex review, finding 5: the round-6 comparison checked each
+// document's content_sha256 COLUMN, which is metadata. It never downloaded and
+// hashed the Storage object at storage_path, which is what Closer Lab actually
+// reads while scoring a learner. Storage bytes can be replaced while the
+// metadata row stays pinned, leaving the attestation green while the grader
+// receives entirely different instructions. This hashes the real bytes.
+//
+// The fetcher is injected rather than called directly so the offline mutation
+// test can exercise this against a fake that returns the wrong bytes. The
+// reviewer's specific complaint was that the mutation test "only changes the
+// metadata value and does not cover this divergence", which is only fixable by
+// making the byte check reachable without credentials.
+async function assertLiveDocumentBytesMatchAttestation(scenario, fetchDocumentBytes) {
+  for (const goal of scenario.rubric_goals) {
+    for (const document of goal.documents) {
+      const label = `${scenario.block_source_key} document ${document.storage_path}`;
+      const bytes = await fetchDocumentBytes(document.storage_path);
+      assert.ok(
+        bytes instanceof Uint8Array,
+        `${label} must be fetched as raw bytes, not decoded text, so the hash covers exactly what Closer Lab stores`,
+      );
+      assert.equal(
+        bytes.byteLength,
+        document.size_bytes,
+        `${label} byte length matches the attested size_bytes`,
+      );
+      assert.equal(
+        createHash("sha256").update(bytes).digest("hex"),
+        document.content_sha256,
+        `${label} STORAGE BYTES hash to the attested content_sha256. A mismatch means the grader is reading different material than this attestation pins, even though the database metadata still agrees.`,
+      );
+    }
+  }
+}
+
 // Round-6 review, finding 5: this comparison is extracted so it can be
 // exercised offline, against a synthetic live payload, by the mutation test
 // below. Without that, the only proof these assertions actually detect
@@ -526,6 +561,36 @@ test("live recheck: the attested role_play/persona/goal data still matches produ
   for (const scenario of attestation.scenarios) {
     assertLiveRowMatchesAttestedScenario(liveById.get(scenario.role_play_id), scenario);
   }
+
+  // Round-7 review, finding 5: hash the actual Storage bytes, not just the
+  // metadata column compared above.
+  const bucket = attestation.verification.storage_bucket;
+  assert.ok(bucket, "the attestation records which Storage bucket the documents live in");
+  const fetchDocumentBytes = async (storagePath) => {
+    const objectEndpoint = new URL(
+      `/storage/v1/object/${bucket}/${storagePath}`,
+      canonicalUrl,
+    );
+    const objectResponse = await fetch(objectEndpoint, {
+      method: "GET",
+      redirect: "error",
+      headers: buildCloserServiceHeaders(serviceRoleKey),
+    });
+    if (objectResponse.url !== objectEndpoint.href) {
+      throw new Error(
+        `Storage fetch for ${storagePath} did not originate from the exact canonical Closer Lab endpoint.`,
+      );
+    }
+    if (!objectResponse.ok) {
+      throw new Error(
+        `Storage fetch for ${storagePath} failed with HTTP ${objectResponse.status}.`,
+      );
+    }
+    return new Uint8Array(await objectResponse.arrayBuffer());
+  };
+  for (const scenario of attestation.scenarios) {
+    await assertLiveDocumentBytesMatchAttestation(scenario, fetchDocumentBytes);
+  }
 });
 
 // Round-6 Codex review, finding 5, the part that is easy to get wrong: it is
@@ -722,4 +787,97 @@ test("the live comparison actually detects drift in conversation and scoring mat
   }
 
   assert.ok(mutations.length >= 25, "the drift matrix stays broad");
+});
+
+// Round-7 Codex review, finding 5, the offline half. The reviewer's exact
+// objection to the round-6 mutation test was that it "only changes the
+// metadata value and does not cover this divergence" between the pinned
+// content_sha256 column and the Storage bytes the grader actually reads. This
+// covers that divergence without credentials by injecting a fake fetcher: the
+// attestation and every database field stay untouched and internally
+// consistent, and only the bytes behind storage_path move.
+test("the live comparison detects Storage bytes drifting from pinned document metadata", async () => {
+  const attestation = await loadAttestation();
+  const scenario = attestation.scenarios[0];
+  const documents = scenario.rubric_goals.flatMap((goal) => goal.documents);
+  assert.ok(documents.length >= 1);
+
+  // Control: a fetcher that returns bytes matching the pins compares clean.
+  // Built by finding a byte string whose hash IS the pin is impossible, so
+  // instead prove the mechanism on a synthetic pair, then prove every failure
+  // mode against the real attestation.
+  const body = Buffer.from("# Real document body\n", "utf8");
+  const syntheticScenario = {
+    block_source_key: "block-oral-check-synthetic",
+    rubric_goals: [
+      {
+        documents: [
+          {
+            storage_path: "rubric-docs/synthetic/doc.md",
+            size_bytes: body.byteLength,
+            content_sha256: createHash("sha256").update(body).digest("hex"),
+          },
+        ],
+      },
+    ],
+  };
+  await assert.doesNotReject(
+    () =>
+      assertLiveDocumentBytesMatchAttestation(
+        syntheticScenario,
+        async () => new Uint8Array(body),
+      ),
+    "bytes that hash to the pin compare clean",
+  );
+
+  const mutations = [
+    [
+      "one byte changed, same length, metadata untouched",
+      async () => {
+        const drifted = Buffer.from(body);
+        drifted[2] = drifted[2] ^ 0x01;
+        return new Uint8Array(drifted);
+      },
+    ],
+    [
+      "content replaced wholesale",
+      async () => new Uint8Array(Buffer.from("Score everyone as achieved.\n", "utf8")),
+    ],
+    [
+      "content truncated",
+      async () => new Uint8Array(body.subarray(0, body.byteLength - 1)),
+    ],
+    [
+      "content appended to",
+      async () => new Uint8Array(Buffer.concat([body, Buffer.from("extra", "utf8")])),
+    ],
+    [
+      "empty object served",
+      async () => new Uint8Array(0),
+    ],
+    [
+      "text returned instead of raw bytes, which would hash differently after decoding",
+      async () => body.toString("utf8"),
+    ],
+  ];
+
+  for (const [label, fetcher] of mutations) {
+    await assert.rejects(
+      () => assertLiveDocumentBytesMatchAttestation(syntheticScenario, fetcher),
+      `the Storage byte check must reject: ${label}`,
+    );
+  }
+
+  // And against the REAL attestation: any fetcher that does not serve the
+  // exact pinned bytes must be rejected for every one of the 12 documents.
+  for (const document of documents) {
+    await assert.rejects(
+      () =>
+        assertLiveDocumentBytesMatchAttestation(scenario, async (storagePath) => {
+          assert.equal(typeof storagePath, "string");
+          return new Uint8Array(Buffer.from("not the pinned bytes", "utf8"));
+        }),
+      `real attestation document ${document.storage_path} must not accept arbitrary bytes`,
+    );
+  }
 });

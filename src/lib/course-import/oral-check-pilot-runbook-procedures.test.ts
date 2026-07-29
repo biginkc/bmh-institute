@@ -84,17 +84,50 @@ describe("Andrea Oral Check pilot runbook procedures", () => {
     );
   });
 
+  // Round-7 review, finding 1: the round-6 preflight asserted
+  // current_user = 'postgres.<ref>'. That is the pooler routing username, not
+  // the database role, which is plain postgres. The documented procedure could
+  // therefore never have passed on the correct production connection.
+  it("does not gate on the pooler routing username, which the session never sees", () => {
+    for (const block of blocks) {
+      expect(block.body).not.toMatch(/current_user\s*(<>|=)\s*'postgres\./);
+      expect(block.body).not.toContain("'postgres.' || v_project_ref");
+    }
+  });
+
+  it("gates on a value that provably identifies the cluster from inside the session", () => {
+    const preflight = blocks.find(
+      (block) => block.language === "sql" && block.body.includes("system_identifier"),
+    );
+    expect(preflight).toBeDefined();
+    expect(preflight?.body).toContain("pg_control_system()");
+    // The real Institute production cluster id, verified read-only.
+    expect(preflight?.body).toContain("7626352619084395911");
+    expect(preflight?.body).toContain("raise exception");
+  });
+
+  // Round-7 review, finding 4: the emergency rollback ran as raw SQL against
+  // whichever connection the operator had, with no project verification and no
+  // postflight, so during an incident it could report success against a clone.
+  it("runs the emergency rollback through the same verified gate", () => {
+    const rollbackSection = section.slice(section.indexOf("rollback becomes necessary"));
+    expect(rollbackSection).toContain("--rollback");
+    expect(rollbackSection).toContain("npm run course:oral-check:apply");
+    expect(rollbackSection).toContain("--confirm=bmh-employee-training-v1");
+  });
+
   it("proves the production target by querying the target database", () => {
     const preflightBlocks = blocks.filter(
       (block) =>
         block.language === "sql" &&
-        block.body.includes("dhvfsyteqsxagokoerrx"),
+        block.body.includes("fn_course_import_catalog_sha256"),
     );
     expect(preflightBlocks.length).toBeGreaterThanOrEqual(1);
     const preflight = preflightBlocks[0].body;
 
-    // The connection's own identity, as reported by the target server.
-    expect(preflight).toContain("current_user");
+    // The cluster's own identity, as reported by the target server. Round-7
+    // finding 1 replaced the unusable current_user check with this.
+    expect(preflight).toContain("pg_control_system()");
     // The exact production release the migration set targets.
     expect(preflight).toContain(
       "71f85173bc857d1b3b042fba0a50fdd420b6410ef84b104a751c3ed5982eba5c",

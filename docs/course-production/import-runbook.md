@@ -487,17 +487,19 @@ Before applying any of the three:
    ```sql
    do $$
    declare
-     v_project_ref constant text := 'dhvfsyteqsxagokoerrx';
+     v_expected_system_identifier constant text := '7626352619084395911';
      v_import_id constant text := 'bmh-employee-training-v1';
      v_expected_manifest_sha256 constant text :=
        '71f85173bc857d1b3b042fba0a50fdd420b6410ef84b104a751c3ed5982eba5c';
      v_expected_catalog_sha256 constant text :=
        '91bee07c6626d0d113291d925cfc7fa65ac26c57c7d85ea3ca172d5b706120f2';
+     v_system_identifier text;
      v_live_catalog_sha256 text;
    begin
-     if current_user <> 'postgres.' || v_project_ref then
-       raise exception 'target preflight failed: connected as %, expected postgres.% (connect through the Supabase pooler URL for this project, which is what supabase db push uses)',
-         current_user, v_project_ref;
+     select system_identifier::text into v_system_identifier from pg_control_system();
+     if v_system_identifier is distinct from v_expected_system_identifier then
+       raise exception 'target identity failed: this cluster reports system_identifier %, expected % (BMH Institute production)',
+         v_system_identifier, v_expected_system_identifier;
      end if;
 
      if not exists (
@@ -506,13 +508,13 @@ Before applying any of the three:
          and program_id = '15a382c9-617c-5407-a880-af6303be74b2'
          and manifest_sha256 = v_expected_manifest_sha256
      ) then
-       raise exception 'target preflight failed: this database has no % release record matching the exact production program and manifest pin. Wrong target, incomplete restore, or the catalog was never released.',
+       raise exception 'preflight failed: this database has no % release record matching the exact production program and manifest pin. Wrong target, incomplete restore, or the catalog was never released.',
          v_import_id;
      end if;
 
      v_live_catalog_sha256 := public.fn_course_import_catalog_sha256(v_import_id);
      if v_live_catalog_sha256 <> v_expected_catalog_sha256 then
-       raise exception 'target preflight failed: live catalog hashes to %, the migration is pinned to %. Either this is not the production catalog, or production has drifted since the pin was taken and the migration must be re-authored.',
+       raise exception 'preflight failed: live catalog hashes to %, the migration is pinned to %. Either this is not the production catalog, or production has drifted since the pin was taken and the migration must be re-authored.',
          v_live_catalog_sha256, v_expected_catalog_sha256;
      end if;
 
@@ -520,11 +522,11 @@ Before applying any of the three:
        select 1 from public.content_import_oral_check_pilot_role_play_records
        where import_id = v_import_id
      ) then
-       raise exception 'target preflight failed: the pilot insertion receipt already exists on this target. This is a one-shot operation and has already been performed.';
+       raise exception 'preflight failed: the pilot insertion receipt already exists on this target. This is a one-shot operation and has already been performed.';
      end if;
 
-     raise notice 'preflight ok: % catalog on project %, live hash matches the migration pin, pilot not yet applied',
-       v_import_id, v_project_ref;
+     raise notice 'preflight ok: cluster %, % catalog, live hash matches the migration pin, pilot not yet applied',
+       v_system_identifier, v_import_id;
    end;
    $$;
    ```
@@ -532,15 +534,27 @@ Before applying any of the three:
    Do not substitute `supabase status` here. It reports the LOCAL Supabase
    stack and cannot say anything about which remote project a connection
    points at, so it can report a perfectly healthy local environment while
-   you are pointed somewhere else entirely. The block above interrogates the
-   target itself: `current_user` on the Supabase pooler carries the project
-   ref directly, and the release pin plus the live catalog hash are facts
-   only the real Institute production catalog satisfies. If it raises for any
-   reason, STOP. Do not proceed to step 3a. `20260728050000` will also refuse
-   on its own if this database holds the catalog with no release record
-   (SQLSTATE 55000), but do not rely on that alone. A `supabase db push`
-   aimed at a wrong and entirely empty project skips quietly by design, so
-   this preflight and the step 3b postflight are what catch it.
+   you are pointed somewhere else entirely.
+
+   Note what the identity check is and is not. An earlier version of this
+   block asserted `current_user = 'postgres.<project-ref>'`. That was wrong
+   and round-7 review caught it: the dotted name is the pooler ROUTING
+   username, and the database role the session actually runs as is plain
+   `postgres`. Verified read-only against both real projects. That assertion
+   could never have passed, so the documented procedure would have failed on
+   the correct production connection. The check is now
+   `pg_control_system().system_identifier`, the cluster's own unique id,
+   which is readable by the `postgres` role and genuinely differs between
+   projects. Institute production reports `7626352619084395911` and the BMH
+   test project reports `7637215626725903220`, so it discriminates the
+   mis-aim that matters most here. The release pin and the live catalog hash
+   remain as catalog-level checks on top of that.
+
+   If it raises for any reason, STOP. Do not proceed to step 3a.
+   `20260728050000` will also refuse on its own if this database holds the
+   catalog with no release record (SQLSTATE 55000), but do not rely on that
+   alone. An apply aimed at a wrong and entirely empty project skips quietly
+   by design, so this preflight and the step 3b postflight are what catch it.
 3a. Apply the 3 migrations to production in numeric order (`20260728020000`,
    then `20260728030000`, then `20260728050000`). The gate's `--execute`
    phase does this for you over the verified connection, and it is the normal
@@ -585,6 +599,32 @@ Before applying any of the three:
    `supabase/tests/057_oral_check_pilot_role_play_rollback.sql`. Do not
    invent privileged SQL live during an incident — connect with
    service-role credentials and run:
+
+   Run it through the same executable gate as the apply. Round-7 review
+   caught that this procedure was raw SQL against whichever connection the
+   operator happened to have open, with no project verification and no
+   postflight, so during a real incident it could report success against a
+   clone while production stayed broken. The gate resolves and verifies the
+   target first, in the same two layers the apply uses, then runs the
+   rollback, then verifies the receipt and that the 3 blocks are actually
+   gone:
+
+   ```bash
+   BMH_INSTITUTE_PRODUCTION_DB_URL=... npm run course:oral-check:apply -- --rollback
+   ```
+
+   That is a dry run. It verifies the target and reports how many of the 3
+   pilot blocks are currently live, and writes nothing. To roll back for
+   real:
+
+   ```bash
+   BMH_INSTITUTE_PRODUCTION_DB_URL=... npm run course:oral-check:apply -- \
+     --rollback --execute --allow-production --confirm=bmh-employee-training-v1
+   ```
+
+   For reference, this is the SQL the gate runs. You can run it by hand if
+   the gate itself is unavailable, but you are then responsible for
+   confirming the target and the postflight yourself:
 
    ```sql
    begin;

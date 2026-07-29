@@ -26,11 +26,37 @@ const REQUIRED_DATABASE = "postgres";
 // so a host that merely CONTAINS the real one cannot pass.
 const POOLER_HOST_PATTERN = /^[a-z0-9-]+\.pooler\.supabase\.com$/;
 
+// Round-7 review, finding 1: the round-6 preflight asserted
+// current_user = 'postgres.<ref>'. That is the pooler ROUTING username, not
+// the database role. Verified read-only against both real projects: on
+// Institute production and on the BMH test project current_user is plain
+// `postgres`, so that assertion could never have passed and the documented
+// dry run and apply would have failed on the intended connection before
+// reaching any migration.
+//
+// The replacement has to be something that provably identifies the project
+// from inside the session, which rules out anything the session merely
+// repeats back. pg_control_system().system_identifier is the cluster's own
+// unique id, it is readable by the postgres role on Supabase, and it differs
+// between projects. Verified read-only: Institute production reports
+// 7626352619084395911 and the BMH test project reports 7637215626725903220,
+// so this value discriminates exactly the mis-aim that matters most here.
+export const INSTITUTE_PRODUCTION_SYSTEM_IDENTIFIER = "7626352619084395911";
+export const INSTITUTE_PRODUCTION_DB_ROLE = "postgres";
+
 export type ProductionDbTarget = {
   readonly projectRef: string;
   readonly host: string;
+  readonly port: string;
   readonly user: string;
   readonly database: string;
+  /**
+   * The connection with its password removed. Safe to print and safe to pass
+   * as a process argument. Round-7 finding 3: the raw URL must never reach
+   * argv or an error message.
+   */
+  readonly canonicalUrlWithoutPassword: string;
+  readonly password: string;
 };
 
 export type ProductionDbTargetResult =
@@ -68,7 +94,34 @@ export function resolveProductionDbTarget(
     );
   }
 
+  // Round-7 review, finding 2. PostgreSQL connection URIs accept query
+  // parameters, and host, port, user and dbname among them OVERRIDE the
+  // authority. Validating the authority and then handing the raw string to a
+  // client means the client can connect somewhere else entirely: the reviewer
+  // demonstrated an authority naming production plus
+  // ?host=127.0.0.1&user=postgres.otherproject&dbname=otherdb passing this
+  // gate. Every parameter is refused rather than allow-listing the ones known
+  // to be dangerous today, because an allow-list is how this comes back the
+  // next time libpq grows a parameter. The URL is also rebuilt from resolved
+  // parts below, so even a parameter that slipped through here would not
+  // survive into the connection the caller actually uses.
+  if (databaseUrl.includes("?")) {
+    return refuse(
+      "The database URL carries query parameters. PostgreSQL URI parameters such as host, port, user and dbname override the authority, so a URL that names production can connect elsewhere. Supply a connection string with no parameters.",
+    );
+  }
+  if (databaseUrl.includes("#")) {
+    return refuse("The database URL carries a fragment, which is not valid in a connection string.");
+  }
+
   const host = parsed.hostname;
+  // libpq multi-host syntax (host1,host2) lets a second host win. new URL()
+  // does not reliably reject it, so refuse it explicitly.
+  if (host.includes(",") || parsed.href.split("@").length > 2) {
+    return refuse(
+      "The database URL names more than one host or contains more than one authority separator. Supply a single unambiguous host.",
+    );
+  }
   if (host.length === 0) {
     return refuse("The database URL has no host.");
   }
@@ -115,11 +168,34 @@ export function resolveProductionDbTarget(
     );
   }
 
+  let password: string;
+  try {
+    password = decodeURIComponent(parsed.password);
+  } catch {
+    return refuse("The database URL has an unparseable password.");
+  }
+  if (password.length === 0) {
+    return refuse(
+      "The database URL carries no password. Supply the full connection string rather than one that would prompt or fail partway through the apply.",
+    );
+  }
+
+  const port = parsed.port.length > 0 ? parsed.port : "5432";
+
+  // Rebuilt from the resolved parts rather than echoed back, so nothing that
+  // was not explicitly validated above can ride along into the connection the
+  // caller uses. The password is deliberately absent.
+  const canonicalUrlWithoutPassword =
+    `postgresql://${encodeURIComponent(user)}@${host}:${port}/${database}`;
+
   return {
     ok: true,
     projectRef,
     host,
+    port,
     user,
     database,
+    canonicalUrlWithoutPassword,
+    password,
   };
 }
