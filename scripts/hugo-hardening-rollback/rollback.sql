@@ -60,6 +60,32 @@ begin
       using errcode = '55000';
   end if;
 
+  if exists (
+    select 1 from supabase_migrations.schema_migrations
+    where version = '20260728230000'
+      and (statements is distinct from array['sha256:2b13e9f511a3cb3a2797174c9e7b37beb9eb00cd79b55318d2bfa997a6e229c8']
+        or name is distinct from 'hugo_access_authorization_hardening')
+  ) or exists (
+    select 1 from supabase_migrations.schema_migrations
+    where version = '20260728235900'
+      and (statements is distinct from array['sha256:00a9403de2a3357094798e9a9bd22c1604666e68286e5fb01962f65a64623d51']
+        or name is distinct from 'hugo_missing_identity_durable_proof')
+  ) or exists (
+    select 1 from supabase_migrations.schema_migrations
+    where version = '20260729001500'
+      and (statements is distinct from array['sha256:41b3a810997ea932f1e6046e1b353829383789581b3762551d809dd3654a82d8']
+        or name is distinct from 'hugo_auth_insert_lifecycle_lock')
+  ) or exists (
+    select 1 from supabase_migrations.schema_migrations
+    where version = '20260729003000'
+      and (statements is distinct from array['sha256:090addb4f9c8cd5d109a84b05a8db59d60233ed333d90fb689223da4830c8c70']
+        or name is distinct from 'hugo_auth_email_lifecycle_lock')
+  ) then
+    raise exception
+      'Hugo rollback requires canonical target migration names and hashes; refusing any DDL.'
+      using errcode = '55000';
+  end if;
+
   if to_regclass('public.hugo_access_settings') is null
      or to_regclass('public.hugo_access_enforcement_changes') is null then
     raise exception

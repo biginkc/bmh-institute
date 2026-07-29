@@ -29,19 +29,18 @@ the quarantine metadata.
 The exact operator command shape is:
 
 ```sh
-psql "$LOCAL_OR_OPERATOR_DATABASE_URL" -X -v ON_ERROR_STOP=1 \
-  -c "select pg_advisory_lock(hashtextextended('hugo-institute-privileged-lifecycle-v1', 0)), set_config('bmh.hugo_rollback_confirm', 'I_UNDERSTAND_MANUAL_ONLY', false), set_config('bmh.hugo_rollback_quiesced', 'I_UNDERSTAND_WRITERS_STOPPED', false);" \
-  -f scripts/hugo-hardening-rollback/rollback.sql \
-  -f scripts/hugo-hardening-rollback/replay-targets.sql \
-  -f scripts/hugo-hardening-rollback/replay-finalize.sql
+BMH_ROLLBACK_DATABASE_URL="$LOCAL_OR_OPERATOR_DATABASE_URL" \
+  scripts/hugo-hardening-rollback/run-manual.sh
 ```
 
-The URL is intentionally a placeholder. Do not put credentials in this
-directory or in evidence. Before running it, stop Hugo/Auth workers and any
-admin or connector writer. The session-level advisory lock and the explicit
-quiescence GUC are a required operator contract for the entire rollback,
-replay, and finalization pause. Do not run the command against a hosted
-project for this work item.
+The wrapper verifies the exact bytes of all four target files before opening
+one psql session, then runs rollback, atomic replay, and finalization. The URL
+is intentionally a placeholder. Do not put credentials in this directory or
+in evidence. Before running it, stop Hugo/Auth workers and any admin or
+connector writer. The session-level advisory lock and the explicit quiescence
+GUC are a required operator contract for the entire rollback, replay, and
+finalization pause. Do not run the command against a hosted project for this
+work item.
 
 ## PostgreSQL 17 proof
 

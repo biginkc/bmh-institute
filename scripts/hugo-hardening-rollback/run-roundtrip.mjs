@@ -80,6 +80,7 @@ try {
   psqlText(seedFixtureSql(), "preservation fixture");
   const before = JSON.parse(psqlScalar(snapshotSql(), "baseline snapshot"));
   const beforeHistory = JSON.parse(psqlScalar(historySnapshotSql(), "baseline migration history"));
+  const beforeGrantAcl = psqlScalar(grantAclSnapshotSql(), "baseline grant ACL");
 
   for (const file of targetFiles) {
     psqlFile(resolve(migrationsDir, file), `target ${file}`);
@@ -111,6 +112,11 @@ try {
     JSON.stringify(beforeHistory),
     "rollback changes only the four target migration-history rows",
   );
+  assertEqual(
+    psqlScalar(grantAclSnapshotSql(), "post-rollback grant ACL"),
+    beforeGrantAcl,
+    "rollback preserves the exact hugo_access_grants ACL baseline",
+  );
   const gateCount = Number(psqlScalar(
     "select count(*) from pg_catalog.pg_policies where policyname = 'hugo_rollback_fail_closed';",
     "rollback deny-gate policy count",
@@ -133,11 +139,14 @@ try {
     "authenticated writes are fail-closed during rollback pause",
   );
   expectPsqlFailure(
-    () => psqlText(
-      "set role service_role; update public.hugo_access_grants set desired_status = desired_status where user_id = '00000000-0000-4000-8000-000000000101';",
-      "service-role rollback write gate proof",
-    ),
+    () => {
+      psqlText(
+        "create or replace function public.hugo_roundtrip_service_write_probe() returns void language plpgsql security definer set search_path = public as $$ begin update public.hugo_access_grants set desired_status = desired_status where user_id = '00000000-0000-4000-8000-000000000101'; end; $$; revoke all on function public.hugo_roundtrip_service_write_probe() from public; grant execute on function public.hugo_roundtrip_service_write_probe() to service_role; set role service_role; select public.hugo_roundtrip_service_write_probe();",
+        "service-role rollback write gate proof",
+      );
+    },
     "service-role writes are quiesced during rollback pause",
+    "Hugo rollback pause is active",
   );
   const atomicFailureProbe = join(cluster, "atomic-replay-failure-probe.sql");
   writeFileSync(
@@ -312,10 +321,13 @@ function migrationHash(file) {
   return createHash("sha256").update(readFileSync(resolve(migrationsDir, file))).digest("hex");
 }
 
-function expectPsqlFailure(run, message) {
+function expectPsqlFailure(run, message, expectedError) {
   try {
     run();
-  } catch {
+  } catch (error) {
+    if (expectedError && !String(error.stderr ?? "").includes(expectedError)) {
+      throw new Error(`${message}: expected error containing ${expectedError}, got ${error.stderr ?? error.message}`);
+    }
     return;
   }
   throw new Error(`${message}: expected the command to fail`);
@@ -344,6 +356,10 @@ function rollbackGateCoverageSql() {
     'public_policies', (select count(*) from pg_catalog.pg_policies where policyname = 'hugo_rollback_fail_closed' and schemaname = 'public'),
     'storage_policies', (select count(*) from pg_catalog.pg_policies where policyname = 'hugo_rollback_fail_closed' and schemaname = 'storage')
   )::text;`;
+}
+
+function grantAclSnapshotSql() {
+  return "select jsonb_build_object('owner', (select relowner::regrole::text from pg_catalog.pg_class where oid = 'public.hugo_access_grants'::regclass), 'relacl', (select to_jsonb(relacl) from pg_catalog.pg_class where oid = 'public.hugo_access_grants'::regclass))::text;";
 }
 
 function authenticatedProfileCountSql() {
