@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendEmail } from "@/lib/email/send";
 import { renderNewSubmissionEmail } from "@/lib/email/new-submission";
+import { isQaFixtureUser, routeQaNotification } from "@/lib/email/qa-routing";
 import { getAppUrl } from "@/lib/app-url";
 import { emitSandraCourseCompletedForLesson } from "@/lib/integrations/sandra/course-completed";
 import { schedulePostCommitEffect } from "@/lib/actions/post-commit-effect";
@@ -303,10 +304,15 @@ async function notifyAdminsOfNewSubmission(input: {
     submissionsUrl,
   });
 
+  const recipients = isQaFixtureUser(input.learnerId)
+    ? [process.env.INSTITUTE_QA_NOTIFICATION_RECIPIENT?.trim() ?? ""].filter(Boolean)
+    : admins.map((admin) => admin.email);
+  if (recipients.length === 0) return;
+
   const results = await Promise.all(
-    admins.map((a) =>
+    recipients.map((recipient) =>
       sendEmail({
-        to: a.email,
+        to: routeQaNotification(input.learnerId, recipient),
         subject: rendered.subject,
         html: rendered.html,
       }),

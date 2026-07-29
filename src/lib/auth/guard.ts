@@ -26,7 +26,7 @@ export async function getAuthedProfile(): Promise<AuthedProfile | null> {
     .maybeSingle();
 
   if (!profile) return null;
-  if (profile.status === "suspended") {
+  if (profile.status !== "active") {
     await supabase.auth.signOut();
     return null;
   }
