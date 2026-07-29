@@ -4,8 +4,7 @@
 // script never reads credentials, connects to Supabase, or applies hosted SQL.
 
 import { execFileSync } from "node:child_process";
-import { createHash } from "node:crypto";
-import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, join, resolve } from "node:path";
 
@@ -77,6 +76,10 @@ try {
     recordMigration(file);
   }
 
+  psqlText(
+    "grant insert, update, delete, truncate on public.hugo_access_grants to service_role;",
+    "pre-hardening service-role ACL fixture",
+  );
   psqlText(seedFixtureSql(), "preservation fixture");
   const before = JSON.parse(psqlScalar(snapshotSql(), "baseline snapshot"));
   const beforeHistory = JSON.parse(psqlScalar(historySnapshotSql(), "baseline migration history"));
@@ -86,6 +89,15 @@ try {
     psqlFile(resolve(migrationsDir, file), `target ${file}`);
     recordMigration(file);
   }
+  const targetGrantAcl = psqlScalar(grantAclSnapshotSql(), "forward target grant ACL");
+  if (targetGrantAcl === beforeGrantAcl) {
+    throw new Error("Forward hardening did not revoke the service-role grant ACL in the fixture.");
+  }
+  assertEqual(
+    psqlScalar("select count(*)::text from public.hugo_access_acl_baseline where singleton and relacl is not null;", "ACL baseline row"),
+    "1",
+    "forward hardening persisted an exact pre-hardening ACL baseline",
+  );
   const operationReceipt = JSON.parse(psqlScalar(enableStrictFixtureSql(), "strict-mode fixture"));
   const targetBefore = JSON.parse(psqlScalar(targetSnapshotSql(), "target snapshot"));
   const targetActive = psqlScalar(
@@ -95,6 +107,25 @@ try {
   if (!/[Tt]rue$/.test(targetActive)) {
     throw new Error(`Target hardening did not authorize the fixture owner: ${targetActive}`);
   }
+
+  psqlText(
+    "update supabase_migrations.schema_migrations set name = 'wrong_revision' where version = '20260728230000';",
+    "wrong migration-name preflight fixture",
+  );
+  expectPsqlFailure(
+    () => psqlWithConfirmation(resolve(rollbackDir, "rollback.sql"), "wrong migration-name rollback preflight"),
+    "rollback rejects non-canonical migration history before DDL",
+    "canonical target migration names",
+  );
+  assertEqual(
+    psqlScalar("select count(*)::text from public.hugo_access_settings;", "wrong-name rollback object preservation"),
+    "1",
+    "wrong migration history leaves target schema untouched",
+  );
+  psqlText(
+    "update supabase_migrations.schema_migrations set name = 'hugo_access_authorization_hardening' where version = '20260728230000';",
+    "restore canonical migration name",
+  );
 
   psqlWithConfirmation(resolve(rollbackDir, "rollback.sql"), "rollback pause");
   assertEqual(
@@ -200,6 +231,11 @@ try {
     JSON.stringify(JSON.parse(psqlScalar(targetSnapshotSql(), "post-replay target snapshot"))),
     JSON.stringify(targetBefore),
     "replay restores quarantined hardening state exactly",
+  );
+  assertEqual(
+    psqlScalar(grantAclSnapshotSql(), "post-replay grant ACL"),
+    targetGrantAcl,
+    "replay restores the forward hardening grant ACL",
   );
   assertEqual(
     psqlScalar(authenticatedProfileCountSql(), "authenticated replay proof"),
@@ -309,16 +345,11 @@ function recordMigration(file) {
   if (!match) throw new Error(`Unexpected migration file ${file}.`);
   const version = match[1];
   const name = match[2].replaceAll("'", "''");
-  const hash = migrationHash(file);
   psqlText(
     `insert into supabase_migrations.schema_migrations (version, statements, name)
-       values ('${version}', array['sha256:${hash}'], '${name}');`,
+       values ('${version}', array[]::text[], '${name}');`,
     `record ${file}`,
   );
-}
-
-function migrationHash(file) {
-  return createHash("sha256").update(readFileSync(resolve(migrationsDir, file))).digest("hex");
 }
 
 function expectPsqlFailure(run, message, expectedError) {
@@ -529,7 +560,7 @@ function bootstrapSql() {
         join pg_catalog.pg_namespace namespace on namespace.oid = relation.relnamespace
         where namespace.nspname = 'public'
           and relation.relkind in ('r', 'p')
-          and relation.relname not in ('hugo_access_settings', 'hugo_access_enforcement_changes')
+          and relation.relname not in ('hugo_access_settings', 'hugo_access_enforcement_changes', 'hugo_access_acl_baseline')
           and relation.relname not like 'hugo_rollback_%'
         order by relation.relname
       loop

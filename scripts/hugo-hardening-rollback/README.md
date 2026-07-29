@@ -33,14 +33,16 @@ BMH_ROLLBACK_DATABASE_URL="$LOCAL_OR_OPERATOR_DATABASE_URL" \
   scripts/hugo-hardening-rollback/run-manual.sh
 ```
 
-The wrapper verifies the exact bytes of all four target files before opening
-one psql session, then runs rollback, atomic replay, and finalization. The URL
-is intentionally a placeholder. Do not put credentials in this directory or
-in evidence. Before running it, stop Hugo/Auth workers and any admin or
-connector writer. The session-level advisory lock and the explicit quiescence
-GUC are a required operator contract for the entire rollback, replay, and
-finalization pause. Do not run the command against a hosted project for this
-work item.
+The wrapper verifies the exact bytes of both predecessor and all four target
+files before opening one psql session, then runs rollback, atomic replay, and
+finalization. It rejects embedded credentials and non-local targets unless a
+separate operator explicitly sets `BMH_ROLLBACK_ALLOW_REMOTE=I_UNDERSTAND_REMOTE_PAUSE`.
+Use a local socket or a credential-free URL resolved through the process-local
+`.pgpass`; never place credentials in this directory or evidence. Before
+running it, stop Hugo/Auth workers and any admin or connector writer. The
+session-level advisory lock and the explicit quiescence GUC are a required
+operator contract for the entire rollback, replay, and finalization pause. Do
+not run against a hosted project for this work item.
 
 ## PostgreSQL 17 proof
 
@@ -51,7 +53,7 @@ and a storage object, then applies the four target migrations. It records a
 strict-enforcement receipt, runs the rollback pause, proves authenticated reads
 and writes are denied while the gate is live, verifies non-target migration
 history is unchanged, replays all four migrations atomically with canonical
-SQL hashes, rejects an injected extra-row drift while retaining the gate,
+migration versions and names, rejects an injected extra-row drift while retaining the gate,
 finalizes the pause only after per-table and storage policy coverage checks,
 and compares exact JSON row snapshots for every public table plus `auth.users`
 and `storage.objects` before and after. It also proves the preserved idempotent

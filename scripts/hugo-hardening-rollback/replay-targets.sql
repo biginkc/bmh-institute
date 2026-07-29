@@ -1,5 +1,6 @@
--- MANUAL ONLY. Replay the four target migrations atomically and bind each
--- history row to the canonical SQL hash expected by replay-finalize.sql.
+-- MANUAL ONLY. Replay the four target migrations atomically. The executable
+-- run-manual.sh wrapper verifies the SQL bytes before this file is included;
+-- Supabase history stores raw statement arrays (or NULL), not wrapper hashes.
 -- This file is intentionally outside supabase/migrations.
 
 \set ON_ERROR_STOP on
@@ -43,7 +44,7 @@ $$;
 insert into supabase_migrations.schema_migrations (version, statements, name)
 values (
   '20260728230000',
-  array['sha256:2b13e9f511a3cb3a2797174c9e7b37beb9eb00cd79b55318d2bfa997a6e229c8'],
+  array[]::text[],
   'hugo_access_authorization_hardening'
 );
 
@@ -51,7 +52,7 @@ values (
 insert into supabase_migrations.schema_migrations (version, statements, name)
 values (
   '20260728235900',
-  array['sha256:00a9403de2a3357094798e9a9bd22c1604666e68286e5fb01962f65a64623d51'],
+  array[]::text[],
   'hugo_missing_identity_durable_proof'
 );
 
@@ -59,7 +60,7 @@ values (
 insert into supabase_migrations.schema_migrations (version, statements, name)
 values (
   '20260729001500',
-  array['sha256:41b3a810997ea932f1e6046e1b353829383789581b3762551d809dd3654a82d8'],
+  array[]::text[],
   'hugo_auth_insert_lifecycle_lock'
 );
 
@@ -67,7 +68,7 @@ values (
 insert into supabase_migrations.schema_migrations (version, statements, name)
 values (
   '20260729003000',
-  array['sha256:090addb4f9c8cd5d109a84b05a8db59d60233ed333d90fb689223da4830c8c70'],
+  array[]::text[],
   'hugo_auth_email_lifecycle_lock'
 );
 
@@ -85,4 +86,4 @@ for each row execute function public.fn_hugo_rollback_write_guard();
 
 commit;
 
-\echo 'Hugo target migrations replayed atomically with canonical history hashes.'
+\echo 'Hugo target migrations replayed atomically with canonical migration versions and names.'

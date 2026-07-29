@@ -306,6 +306,33 @@ grant execute on function public.hugo_set_access_enforcement(uuid, boolean)
 comment on function public.hugo_set_access_enforcement(uuid, boolean) is
   'Audited service-role-only cutover for strict Hugo grant enforcement; enabling requires an exact profile backfill and one usable owner.';
 
+-- Preserve the exact pre-hardening ACL before removing direct service-role
+-- table writes. The rollback pause restores this committed baseline instead
+-- of guessing which default privileges existed on the deployment.
+create table if not exists public.hugo_access_acl_baseline (
+  singleton boolean primary key default true check (singleton),
+  schema_name text not null,
+  table_name text not null,
+  owner_name text not null,
+  relacl aclitem[]
+);
+insert into public.hugo_access_acl_baseline (
+  singleton, schema_name, table_name, owner_name, relacl
+)
+select
+  true,
+  namespace.nspname,
+  relation.relname,
+  relation.relowner::regrole::text,
+  relation.relacl
+from pg_catalog.pg_class relation
+join pg_catalog.pg_namespace namespace
+  on namespace.oid = relation.relnamespace
+where relation.oid = 'public.hugo_access_grants'::regclass
+on conflict (singleton) do nothing;
+revoke all on table public.hugo_access_acl_baseline
+  from public, anon, authenticated, service_role;
+
 -- A restrictive policy is ANDed with the existing permissive policies. Add
 -- one to every current public RLS table so self, learner, reviewer, and admin
 -- policy paths cannot drift around the Hugo lifecycle boundary.

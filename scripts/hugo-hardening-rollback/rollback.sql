@@ -63,26 +63,22 @@ begin
   if exists (
     select 1 from supabase_migrations.schema_migrations
     where version = '20260728230000'
-      and (statements is distinct from array['sha256:2b13e9f511a3cb3a2797174c9e7b37beb9eb00cd79b55318d2bfa997a6e229c8']
-        or name is distinct from 'hugo_access_authorization_hardening')
+      and name is distinct from 'hugo_access_authorization_hardening'
   ) or exists (
     select 1 from supabase_migrations.schema_migrations
     where version = '20260728235900'
-      and (statements is distinct from array['sha256:00a9403de2a3357094798e9a9bd22c1604666e68286e5fb01962f65a64623d51']
-        or name is distinct from 'hugo_missing_identity_durable_proof')
+      and name is distinct from 'hugo_missing_identity_durable_proof'
   ) or exists (
     select 1 from supabase_migrations.schema_migrations
     where version = '20260729001500'
-      and (statements is distinct from array['sha256:41b3a810997ea932f1e6046e1b353829383789581b3762551d809dd3654a82d8']
-        or name is distinct from 'hugo_auth_insert_lifecycle_lock')
+      and name is distinct from 'hugo_auth_insert_lifecycle_lock'
   ) or exists (
     select 1 from supabase_migrations.schema_migrations
     where version = '20260729003000'
-      and (statements is distinct from array['sha256:090addb4f9c8cd5d109a84b05a8db59d60233ed333d90fb689223da4830c8c70']
-        or name is distinct from 'hugo_auth_email_lifecycle_lock')
+      and name is distinct from 'hugo_auth_email_lifecycle_lock'
   ) then
     raise exception
-      'Hugo rollback requires canonical target migration names and hashes; refusing any DDL.'
+      'Hugo rollback requires canonical target migration names; refusing any DDL.'
       using errcode = '55000';
   end if;
 
@@ -90,6 +86,23 @@ begin
      or to_regclass('public.hugo_access_enforcement_changes') is null then
     raise exception
       'Hugo rollback target tables are missing; refusing a partial rollback.'
+      using errcode = '55000';
+  end if;
+
+  if to_regclass('public.hugo_access_acl_baseline') is null
+     or not exists (
+       select 1
+       from public.hugo_access_acl_baseline baseline
+       join pg_catalog.pg_class relation
+         on relation.oid = 'public.hugo_access_grants'::regclass
+       where baseline.singleton
+         and baseline.schema_name = 'public'
+         and baseline.table_name = 'hugo_access_grants'
+         and baseline.relacl is not null
+         and baseline.owner_name = relation.relowner::regrole::text
+     ) then
+    raise exception
+      'Hugo pre-hardening ACL baseline is missing or unverifiable; refusing rollback DDL.'
       using errcode = '55000';
   end if;
 
@@ -251,6 +264,72 @@ revoke all on function public.fn_can_read_user_state(uuid)
   from public, anon;
 grant execute on function public.fn_can_read_user_state(uuid)
   to authenticated, service_role;
+
+-- Restore the committed pre-hardening ACL exactly. The baseline row was
+-- captured by 20260728230000 before its service-role revoke; fail closed if
+-- the catalog cannot be reconciled to that row.
+do $$
+declare
+  v_baseline record;
+  v_role record;
+  v_acl record;
+begin
+  select * into v_baseline
+  from public.hugo_access_acl_baseline
+  where singleton;
+  if not found or v_baseline.relacl is null then
+    raise exception 'Hugo pre-hardening ACL baseline is unavailable; refusing ACL restoration.'
+      using errcode = '55000';
+  end if;
+
+  revoke all on table public.hugo_access_grants from public;
+  for v_role in
+    select distinct role_name
+    from (
+      select current_role_row.rolname as role_name
+      from lateral aclexplode(
+        coalesce((select relation.relacl from pg_catalog.pg_class relation where relation.oid = 'public.hugo_access_grants'::regclass), '{}'::aclitem[])
+      ) current_acl
+      join pg_catalog.pg_roles current_role_row
+        on current_role_row.oid = current_acl.grantee
+      union
+      select baseline_role_row.rolname as role_name
+      from lateral aclexplode(v_baseline.relacl) baseline_acl
+      join pg_catalog.pg_roles baseline_role_row
+        on baseline_role_row.oid = baseline_acl.grantee
+    ) roles
+  loop
+    execute format('revoke all on table public.hugo_access_grants from %I', v_role.role_name);
+  end loop;
+
+  for v_acl in
+    select expanded.grantee, expanded.privilege_type, expanded.is_grantable
+    from aclexplode(v_baseline.relacl) expanded
+  loop
+    execute format(
+      'grant %s on table public.hugo_access_grants to %s%s',
+      v_acl.privilege_type,
+      case when v_acl.grantee = 0 then 'public' else quote_ident((select rolname from pg_catalog.pg_roles where oid = v_acl.grantee)) end,
+      case when v_acl.is_grantable then ' with grant option' else '' end
+    );
+  end loop;
+
+  if exists (
+    select grantee, privilege_type, is_grantable
+    from aclexplode((select relation.relacl from pg_catalog.pg_class relation where relation.oid = 'public.hugo_access_grants'::regclass))
+    except
+    select grantee, privilege_type, is_grantable from aclexplode(v_baseline.relacl)
+  ) or exists (
+    select grantee, privilege_type, is_grantable from aclexplode(v_baseline.relacl)
+    except
+    select grantee, privilege_type, is_grantable
+    from aclexplode((select relation.relacl from pg_catalog.pg_class relation where relation.oid = 'public.hugo_access_grants'::regclass))
+  ) then
+    raise exception 'Hugo pre-hardening ACL restoration did not match its committed baseline.'
+      using errcode = '55000';
+  end if;
+end;
+$$;
 
 -- Persist a pause marker and reject every row write while the operator reviews
 -- and replays the target stack. The marker is checked by a trigger rather than
