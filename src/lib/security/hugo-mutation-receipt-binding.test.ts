@@ -13,6 +13,12 @@ const postgresTest = readFileSync(
   resolve("supabase/tests/061_hugo_mutation_receipt_binding.sql"),
   "utf8",
 );
+const controllerHarness = readFileSync(
+  resolve(
+    "scripts/fixture-boundary/run-controller-gate-pr-harness.mjs",
+  ),
+  "utf8",
+);
 
 describe("Hugo mutation receipt binding", () => {
   it("backfills historical receipts from the existing operation journal", () => {
@@ -76,6 +82,18 @@ describe("Hugo mutation receipt binding", () => {
     );
     expect(postgresTest).toContain(
       "changed apply request must not mutate identity state",
+    );
+  });
+
+  it("executes receipt and identity behavior in the PostgreSQL 15-17 CI harness", () => {
+    expect(controllerHarness).toContain(
+      "seedHugoHistoricalUnboundReceipt();",
+    );
+    expect(controllerHarness).toContain(
+      "supabase/tests/061_hugo_mutation_receipt_binding.sql",
+    );
+    expect(controllerHarness).toContain(
+      "supabase/tests/062_hugo_verified_identity_and_orphan_delete_guard.sql",
     );
   });
 });

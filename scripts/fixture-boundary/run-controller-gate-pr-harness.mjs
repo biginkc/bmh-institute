@@ -152,6 +152,9 @@ try {
   }
   for (const migration of migrations) {
     const migrationPath = resolve(root, "supabase/migrations", migration);
+    if (migration === "20260729040000_hugo_mutation_receipt_binding.sql") {
+      seedHugoHistoricalUnboundReceipt();
+    }
     if (migration === "038_refresh_fixture_progress_fingerprints.sql") {
       replayProgressFingerprintMigration(migrationPath);
     } else if (migration === "051_quiz_answer_privacy_snapshots.sql") {
@@ -319,6 +322,18 @@ try {
     resolve(
       root,
       "supabase/tests/060_hugo_auth_email_lifecycle_lock.sql",
+    ),
+  );
+  psqlFile(
+    resolve(
+      root,
+      "supabase/tests/061_hugo_mutation_receipt_binding.sql",
+    ),
+  );
+  psqlFile(
+    resolve(
+      root,
+      "supabase/tests/062_hugo_verified_identity_and_orphan_delete_guard.sql",
     ),
   );
   await verifyAuthInsertLifecycleSerialization({
@@ -518,6 +533,38 @@ try {
 
 function psqlText(sql) {
   exec(binary("psql"), ["-v", "ON_ERROR_STOP=1", "-c", sql]);
+}
+
+function seedHugoHistoricalUnboundReceipt() {
+  psqlText(`
+    set request.jwt.claim.role = 'service_role';
+    select public.hugo_apply_access(
+      '00000000-0000-4000-8000-000000000961',
+      'historical-receipt@example.invalid',
+      'not-a-role',
+      '{}'::jsonb,
+      'active',
+      null,
+      null
+    );
+    do $$
+    declare
+      v_receipt jsonb;
+      v_hash text;
+    begin
+      select receipt, request_hash into v_receipt, v_hash
+      from public.hugo_access_operations
+      where operation_id = '00000000-0000-4000-8000-000000000961';
+      assert v_receipt->>'operation_id' =
+        '00000000-0000-4000-8000-000000000961',
+        'historical receipt must already contain its operation id';
+      assert not (v_receipt ? 'request_hash'),
+        'historical fixture must precede receipt hash binding';
+      assert v_hash ~ '^[0-9a-f]{64}$',
+        'historical fixture must already have a journal request hash';
+    end;
+    $$;
+  `);
 }
 
 function psqlScalar(sql) {

@@ -67,30 +67,97 @@ $$;
 revoke all on function public.fn_hugo_active_identity_is_unverified(text, text)
   from public, anon, authenticated, service_role;
 
-create or replace function public.fn_hugo_auth_identity_has_no_profile(
+create or replace function public.fn_hugo_identity_cardinality_state(
   p_email text
 )
-returns boolean
+returns text
 language sql
 stable
 security definer
 set search_path = ''
 as $$
-  select exists (
-    select 1
+  with matching_auth as (
+    select auth_user.id
     from auth.users auth_user
     where lower(btrim(auth_user.email)) =
       lower(btrim(coalesce(p_email, '')))
-  )
-  and not exists (
-    select 1
+  ),
+  matching_profiles as (
+    select profile.id
     from public.profiles profile
     where lower(btrim(profile.email)) =
       lower(btrim(coalesce(p_email, '')))
-  );
+  ),
+  cardinality as (
+    select
+      (select count(*) from matching_auth) as auth_count,
+      (select count(*) from matching_profiles) as profile_count,
+      (
+        select count(*)
+        from matching_auth auth_match
+        join matching_profiles profile_match
+          on profile_match.id = auth_match.id
+      ) as linked_count
+  )
+  select case
+    when auth_count = 0 and profile_count = 0 then 'absent'
+    when auth_count = 1 and profile_count = 1 and linked_count = 1
+      then 'one_to_one'
+    when auth_count > 0 and profile_count = 0 then 'profile_missing'
+    else 'ambiguous_identity'
+  end
+  from cardinality;
 $$;
 
-revoke all on function public.fn_hugo_auth_identity_has_no_profile(text)
+revoke all on function public.fn_hugo_identity_cardinality_state(text)
+  from public, anon, authenticated, service_role;
+
+create or replace function public.fn_hugo_email_has_durable_activity(
+  p_email text
+)
+returns boolean
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_user_id uuid;
+begin
+  for v_user_id in
+    select auth_user.id
+    from auth.users auth_user
+    where lower(btrim(auth_user.email)) =
+      lower(btrim(coalesce(p_email, '')))
+    order by auth_user.id
+    for update
+  loop
+    if public.fn_hugo_has_durable_activity(v_user_id) then
+      return true;
+    end if;
+  end loop;
+
+  for v_user_id in
+    select profile.id
+    from public.profiles profile
+    where lower(btrim(profile.email)) =
+      lower(btrim(coalesce(p_email, '')))
+      and not exists (
+        select 1
+        from auth.users auth_user
+        where auth_user.id = profile.id
+      )
+    order by profile.id
+    for update
+  loop
+    if public.fn_hugo_has_durable_activity(v_user_id) then
+      return true;
+    end if;
+  end loop;
+  return false;
+end;
+$$;
+
+revoke all on function public.fn_hugo_email_has_durable_activity(text)
   from public, anon, authenticated, service_role;
 
 create or replace function public.fn_hugo_apply_config_is_valid(
@@ -167,7 +234,8 @@ declare
 begin
   if p_operation_id is null
      or p_operation not in (
-       'grant', 'preparePristineDelete', 'deleteIdentity'
+       'grant', 'suspend', 'reactivate', 'revoke',
+       'preparePristineDelete', 'deleteIdentity'
      )
      or p_request_hash !~ '^[0-9a-f]{64}$' then
     raise exception 'Hugo guard failure receipt is invalid.'
@@ -207,9 +275,12 @@ begin
     p_operation,
     p_email,
     case
-      when p_operation = 'grant' then jsonb_build_object(
+      when p_operation in ('grant', 'suspend', 'reactivate', 'revoke')
+        then jsonb_build_object(
         'role', p_requested_role,
-        'config', coalesce(p_requested_config, '{}'::jsonb),
+        'config', public.fn_hugo_sanitize_json(
+          coalesce(p_requested_config, '{}'::jsonb)
+        ),
         'status', p_requested_status,
         'access_expires_at', p_requested_expires_at,
         'app_user_id', p_app_user_id
@@ -280,6 +351,11 @@ declare
   v_config jsonb := public.fn_hugo_canonical_apply_config(p_config);
   v_hash text;
   v_claim private.hugo_access_operation_claims%rowtype;
+  v_blocking_claim private.hugo_access_operation_claims%rowtype;
+  v_blocking_status text;
+  v_blocking_operation text;
+  v_requested_rank integer;
+  v_blocking_rank integer;
   v_existing_operation text;
   v_existing_hash text;
   v_existing_input jsonb;
@@ -308,29 +384,6 @@ begin
   if p_operation_id is null then
     raise exception 'operation_id is required.'
       using errcode = '22023';
-  end if;
-  if v_email = ''
-     or v_email !~ '^[^@[:space:]]+@[^@[:space:]]+$'
-     or p_role is null
-     or p_role not in ('owner', 'admin', 'learner')
-     or p_status is null
-     or p_status not in ('active', 'suspended', 'revoked')
-     or not public.fn_hugo_apply_config_is_valid(v_config) then
-    v_receipt := public.fn_hugo_bind_mutation_receipt(
-      public.fn_hugo_receipt(
-        p_operation_id, null, p_role, v_config, p_status,
-        p_access_expires_at, null, '{}'::jsonb, 'missing', null, null,
-        false, 'invalid_request',
-        'The Institute access request is invalid.'
-      ),
-      p_operation_id,
-      v_hash
-    );
-    return jsonb_build_object(
-      'proceed', false,
-      'request_hash', v_hash,
-      'receipt', v_receipt
-    );
   end if;
 
   select claim.*
@@ -426,6 +479,97 @@ begin
     );
   end if;
 
+  if v_email = ''
+     or v_email !~ '^[^@[:space:]]+@[^@[:space:]]+$'
+     or p_role is null
+     or p_role not in ('owner', 'admin', 'learner')
+     or p_status is null
+     or p_status not in ('active', 'suspended', 'revoked')
+     or (
+       p_status = 'active'
+       and not public.fn_hugo_apply_config_is_valid(v_config)
+     ) then
+    v_receipt := public.fn_hugo_store_guard_failure(
+      p_operation_id,
+      'grant',
+      v_email,
+      v_hash,
+      p_role,
+      v_config,
+      p_status,
+      p_access_expires_at,
+      null,
+      false,
+      'invalid_request',
+      'The Institute access request is invalid.'
+    );
+    return jsonb_build_object(
+      'proceed', false,
+      'request_hash', v_hash,
+      'receipt', v_receipt
+    );
+  end if;
+
+  select claim.*
+  into v_blocking_claim
+  from private.hugo_access_operation_claims claim
+  where claim.email_fingerprint = v_email_fingerprint
+    and claim.consumed_at is null
+  for update;
+  if found then
+    v_blocking_status := v_blocking_claim.requested->>'status';
+    v_requested_rank := case p_status
+      when 'active' then 0
+      when 'suspended' then 1
+      when 'revoked' then 2
+    end;
+    v_blocking_rank := case v_blocking_status
+      when 'active' then 0
+      when 'suspended' then 1
+      when 'revoked' then 2
+      else 99
+    end;
+
+    if p_status in ('suspended', 'revoked')
+       and v_requested_rank >= v_blocking_rank then
+      v_blocking_operation := case v_blocking_status
+        when 'suspended' then 'suspend'
+        when 'revoked' then 'revoke'
+        else 'grant'
+      end;
+      perform public.fn_hugo_store_guard_failure(
+        v_blocking_claim.operation_id,
+        v_blocking_operation,
+        v_email,
+        v_blocking_claim.request_hash,
+        v_blocking_claim.requested->>'role',
+        v_blocking_claim.requested->'config',
+        v_blocking_status,
+        (v_blocking_claim.requested->>'access_expires_at')::timestamptz,
+        null,
+        false,
+        'operation_superseded_by_access_reduction',
+        'A later suspension or revocation superseded this access request.'
+      );
+    else
+      v_receipt := public.fn_hugo_bind_mutation_receipt(
+        public.fn_hugo_receipt(
+          p_operation_id, null, p_role, v_config, p_status,
+          p_access_expires_at, null, '{}'::jsonb, 'missing', null, null,
+          false, 'identity_provision_in_progress',
+          'Another Institute access request is provisioning this identity.'
+        ),
+        p_operation_id,
+        v_hash
+      );
+      return jsonb_build_object(
+        'proceed', false,
+        'request_hash', v_hash,
+        'receipt', v_receipt
+      );
+    end if;
+  end if;
+
   if exists (
     select 1
     from private.hugo_access_operation_claims claim
@@ -493,6 +637,7 @@ as $$
 declare
   v_email text := lower(btrim(coalesce(p_email, '')));
   v_config jsonb := public.fn_hugo_canonical_apply_config(p_config);
+  v_effective_config jsonb;
   v_hash text;
   v_existing_hash text;
   v_claim_hash text;
@@ -508,6 +653,11 @@ begin
     raise exception 'operation_id is required.'
       using errcode = '22023';
   end if;
+  v_effective_config := case
+    when p_status in ('suspended', 'revoked')
+      then '{"role_group_ids":[]}'::jsonb
+    else v_config
+  end;
 
   select claim.request_hash
   into v_claim_hash
@@ -602,7 +752,7 @@ begin
     p_operation_id,
     p_email,
     p_role,
-    p_config,
+    v_effective_config,
     p_status,
     p_access_expires_at,
     p_app_user_id
@@ -630,6 +780,7 @@ declare
   v_hash text;
   v_existing_hash text;
   v_durable boolean;
+  v_identity_state text;
 begin
   perform public.fn_hugo_require_service_role();
   perform pg_advisory_xact_lock(
@@ -672,7 +823,9 @@ begin
     return public.fn_hugo_bound_operation_receipt(p_operation_id);
   end if;
 
-  if public.fn_hugo_auth_identity_has_no_profile(v_email) then
+  v_identity_state :=
+    public.fn_hugo_identity_cardinality_state(v_email);
+  if v_identity_state not in ('absent', 'one_to_one') then
     v_durable := public.fn_hugo_email_has_durable_activity(v_email);
     return public.fn_hugo_store_guard_failure(
       p_operation_id,
@@ -687,12 +840,17 @@ begin
       v_durable,
       case
         when v_durable then 'identity_not_pristine'
-        else 'identity_profile_missing'
+        when v_identity_state = 'profile_missing'
+          then 'identity_profile_missing'
+        else 'ambiguous_identity'
       end,
       case
         when v_durable then
           'The Institute identity has durable business activity.'
-        else 'The Institute Auth identity has no lifecycle profile.'
+        when v_identity_state = 'profile_missing' then
+          'The Institute Auth identity has no lifecycle profile.'
+        else
+          'Institute Auth and profile identities are not one-to-one.'
       end
     );
   end if;
@@ -727,6 +885,8 @@ declare
   v_hash text;
   v_existing_hash text;
   v_durable boolean;
+  v_identity_state text;
+  v_receipt jsonb;
 begin
   perform public.fn_hugo_require_service_role();
   perform pg_advisory_xact_lock(
@@ -769,7 +929,9 @@ begin
     return public.fn_hugo_bound_operation_receipt(p_operation_id);
   end if;
 
-  if public.fn_hugo_auth_identity_has_no_profile(v_email) then
+  v_identity_state :=
+    public.fn_hugo_identity_cardinality_state(v_email);
+  if v_identity_state not in ('absent', 'one_to_one') then
     v_durable := public.fn_hugo_email_has_durable_activity(v_email);
     return public.fn_hugo_store_guard_failure(
       p_operation_id,
@@ -784,12 +946,17 @@ begin
       v_durable,
       case
         when v_durable then 'identity_not_pristine'
-        else 'identity_profile_missing'
+        when v_identity_state = 'profile_missing'
+          then 'identity_profile_missing'
+        else 'ambiguous_identity'
       end,
       case
         when v_durable then
           'The Institute identity has durable business activity.'
-        else 'The Institute Auth identity has no lifecycle profile.'
+        when v_identity_state = 'profile_missing' then
+          'The Institute Auth identity has no lifecycle profile.'
+        else
+          'Institute Auth and profile identities are not one-to-one.'
       end
     );
   end if;
@@ -806,7 +973,15 @@ begin
   );
   perform set_config('hugo.request_operation_id', '', true);
   perform set_config('hugo.request_hash', '', true);
-  return public.fn_hugo_bound_operation_receipt(p_operation_id);
+  v_receipt := public.fn_hugo_bound_operation_receipt(p_operation_id);
+  if coalesce((v_receipt->>'ok')::boolean, false)
+     and public.fn_hugo_identity_cardinality_state(v_email) <> 'absent'
+  then
+    raise exception
+      'Institute identity deletion left matching Auth or profile state.'
+      using errcode = '55000';
+  end if;
+  return v_receipt;
 end;
 $$;
 

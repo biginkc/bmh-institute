@@ -20,9 +20,13 @@ describe("Hugo verified identity and orphan deletion guard", () => {
     );
   });
 
-  it("persists a bound failure instead of claiming an Auth-only deletion", () => {
-    expect(migration).toContain("public.fn_hugo_auth_identity_has_no_profile");
+  it("persists a bound failure instead of claiming an ambiguous deletion", () => {
+    expect(migration).toContain("public.fn_hugo_identity_cardinality_state");
     expect(migration).toContain("identity_profile_missing");
+    expect(migration).toContain("ambiguous_identity");
+    expect(migration).toContain(
+      "Institute identity deletion left matching Auth or profile state.",
+    );
     expect(migration).toContain("public.fn_hugo_store_guard_failure");
     expect(migration).toContain("public.fn_hugo_bound_operation_receipt");
   });
@@ -34,6 +38,24 @@ describe("Hugo verified identity and orphan deletion guard", () => {
       "jsonb_build_object('proceed', true, 'request_hash', v_hash)",
     );
     expect(migration).toContain("identity_provision_in_progress");
+    expect(migration).toContain(
+      "operation_superseded_by_access_reduction",
+    );
+    expect(migration).toContain(
+      "when p_status in ('suspended', 'revoked')",
+    );
+  });
+
+  it("binds invalid requests and clears unsafe group state on access reduction", () => {
+    expect(migration).toMatch(
+      /p_status = 'active'[\s\S]*fn_hugo_apply_config_is_valid\(v_config\)/,
+    );
+    expect(migration).toContain(
+      "then '{\"role_group_ids\":[]}'::jsonb",
+    );
+    expect(migration).toContain(
+      "'The Institute access request is invalid.'",
+    );
   });
 
   it("keeps all new helpers private and public RPCs service-role-only", () => {
@@ -41,7 +63,7 @@ describe("Hugo verified identity and orphan deletion guard", () => {
       /revoke all on function public\.fn_hugo_active_identity_is_unverified[\s\S]*?from public, anon, authenticated, service_role;/,
     );
     expect(migration).toMatch(
-      /revoke all on function public\.fn_hugo_auth_identity_has_no_profile[\s\S]*?from public, anon, authenticated, service_role;/,
+      /revoke all on function public\.fn_hugo_identity_cardinality_state[\s\S]*?from public, anon, authenticated, service_role;/,
     );
     expect(migration).toMatch(
       /revoke all on function public\.fn_hugo_apply_config_is_valid\(jsonb\)[\s\S]*?from public, anon, authenticated, service_role;/,

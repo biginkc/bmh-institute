@@ -6,6 +6,7 @@ do $$
 declare
   v_preflight jsonb;
   v_conflict jsonb;
+  v_invalid_receipt jsonb;
   v_profile_count bigint;
   v_grant_count bigint;
 begin
@@ -99,12 +100,43 @@ begin
   assert not (v_conflict->>'proceed')::boolean
      and v_conflict#>>'{receipt,error_code}' = 'invalid_request',
     'invalid Institute configuration passed preflight';
+  v_invalid_receipt := v_conflict->'receipt';
+  v_conflict := public.hugo_preflight_access_operation(
+    '00000000-0000-4000-8000-000000000979',
+    'invalid-config-hugo@example.invalid',
+    'learner',
+    '{"role_group_ids":["not-a-uuid"]}'::jsonb,
+    'active',
+    null
+  );
+  assert not (v_conflict->>'proceed')::boolean
+     and v_conflict->'receipt' = v_invalid_receipt,
+    'exact invalid Institute preflight did not replay its terminal receipt';
+  v_conflict := public.hugo_preflight_access_operation(
+    '00000000-0000-4000-8000-000000000979',
+    'invalid-config-hugo@example.invalid',
+    'learner',
+    '{"role_group_ids":[]}'::jsonb,
+    'active',
+    null
+  );
+  assert not (v_conflict->>'proceed')::boolean
+     and v_conflict#>>'{receipt,error_code}' = 'operation_id_reused',
+    'invalid Institute operation id was reusable with a valid payload';
   assert not exists (
     select 1
     from private.hugo_access_operation_claims claim
     where claim.operation_id =
       '00000000-0000-4000-8000-000000000979'
   ), 'invalid Institute configuration reserved an operation';
+  assert (
+    select operation_row.receipt = v_invalid_receipt
+      and operation_row.input#>>'{config,role_group_ids,0}' =
+        'not-a-uuid'
+    from public.hugo_access_operations operation_row
+    where operation_row.operation_id =
+      '00000000-0000-4000-8000-000000000979'
+  ), 'invalid Institute preflight did not persist a sanitized terminal row';
   assert (select count(*) from public.profiles) = v_profile_count
      and (select count(*) from public.hugo_access_grants) = v_grant_count,
     'invalid configuration preflight mutated identity state';
@@ -143,6 +175,328 @@ begin
   assert (select count(*) from public.profiles) = v_profile_count
      and (select count(*) from public.hugo_access_grants) = v_grant_count,
     'missing required fields mutated Institute identity state';
+end;
+$$;
+
+insert into public.role_groups (id, name)
+values (
+  '00000000-0000-4000-8000-000000000992',
+  'Hugo deleted-group lifecycle regression'
+);
+
+insert into auth.users (
+  id,
+  email,
+  email_confirmed_at,
+  raw_app_meta_data,
+  raw_user_meta_data,
+  created_at,
+  updated_at
+) values
+  (
+    '00000000-0000-4000-8000-000000000993',
+    'deleted-group-suspend-hugo@example.invalid',
+    now(),
+    '{}'::jsonb,
+    '{}'::jsonb,
+    now(),
+    now()
+  ),
+  (
+    '00000000-0000-4000-8000-000000000997',
+    'deleted-group-revoke-hugo@example.invalid',
+    now(),
+    '{}'::jsonb,
+    '{}'::jsonb,
+    now(),
+    now()
+  );
+
+do $$
+declare
+  v_receipt jsonb;
+begin
+  v_receipt := public.hugo_apply_access(
+    '00000000-0000-4000-8000-000000000994',
+    'deleted-group-suspend-hugo@example.invalid',
+    'learner',
+    '{"role_group_ids":["00000000-0000-4000-8000-000000000992"]}'::jsonb,
+    'active',
+    null,
+    '00000000-0000-4000-8000-000000000993'
+  );
+  assert (v_receipt->>'ok')::boolean,
+    'deleted-group suspension fixture did not start active';
+  v_receipt := public.hugo_apply_access(
+    '00000000-0000-4000-8000-000000000998',
+    'deleted-group-revoke-hugo@example.invalid',
+    'learner',
+    '{"role_group_ids":["00000000-0000-4000-8000-000000000992"]}'::jsonb,
+    'active',
+    null,
+    '00000000-0000-4000-8000-000000000997'
+  );
+  assert (v_receipt->>'ok')::boolean,
+    'deleted-group revocation fixture did not start active';
+end;
+$$;
+
+delete from public.role_groups
+where id = '00000000-0000-4000-8000-000000000992';
+
+do $$
+declare
+  v_preflight jsonb;
+  v_receipt jsonb;
+  v_stale_config jsonb :=
+    '{"role_group_ids":["00000000-0000-4000-8000-000000000992"]}'::jsonb;
+begin
+  v_preflight := public.hugo_preflight_access_operation(
+    '00000000-0000-4000-8000-000000000995',
+    'deleted-group-suspend-hugo@example.invalid',
+    'learner',
+    v_stale_config,
+    'suspended',
+    null
+  );
+  assert (v_preflight->>'proceed')::boolean,
+    'deleted role group blocked suspension preflight';
+  v_receipt := public.hugo_apply_access(
+    '00000000-0000-4000-8000-000000000995',
+    'deleted-group-suspend-hugo@example.invalid',
+    'learner',
+    v_stale_config,
+    'suspended',
+    null,
+    '00000000-0000-4000-8000-000000000993'
+  );
+  assert (v_receipt->>'ok')::boolean
+     and v_receipt#>>'{observed,status}' = 'suspended'
+     and v_receipt->>'request_hash' = v_preflight->>'request_hash',
+    'deleted role group blocked or unbound suspension';
+  assert (
+    select grant_row.config = '{"role_group_ids":[]}'::jsonb
+    from public.hugo_access_grants grant_row
+    where grant_row.user_id =
+      '00000000-0000-4000-8000-000000000993'
+  ), 'suspension retained a deleted role group';
+
+  v_preflight := public.hugo_preflight_access_operation(
+    '00000000-0000-4000-8000-000000000999',
+    'deleted-group-revoke-hugo@example.invalid',
+    'learner',
+    v_stale_config,
+    'revoked',
+    null
+  );
+  assert (v_preflight->>'proceed')::boolean,
+    'deleted role group blocked revocation preflight';
+  v_receipt := public.hugo_apply_access(
+    '00000000-0000-4000-8000-000000000999',
+    'deleted-group-revoke-hugo@example.invalid',
+    'learner',
+    v_stale_config,
+    'revoked',
+    null,
+    '00000000-0000-4000-8000-000000000997'
+  );
+  assert (v_receipt->>'ok')::boolean
+     and v_receipt#>>'{observed,status}' = 'revoked'
+     and v_receipt->>'request_hash' = v_preflight->>'request_hash',
+    'deleted role group blocked or unbound revocation';
+  assert (
+    select grant_row.config = '{}'::jsonb
+      and grant_row.desired_status = 'revoked'
+    from public.hugo_access_grants grant_row
+    where grant_row.user_id =
+      '00000000-0000-4000-8000-000000000997'
+  ), 'revocation retained a deleted role group';
+end;
+$$;
+
+insert into auth.users (
+  id,
+  email,
+  email_confirmed_at,
+  raw_app_meta_data,
+  raw_user_meta_data,
+  created_at,
+  updated_at
+) values
+  (
+    '00000000-0000-4000-8000-000000000984',
+    'stranded-suspend-hugo@example.invalid',
+    now(),
+    '{}'::jsonb,
+    '{}'::jsonb,
+    now(),
+    now()
+  ),
+  (
+    '00000000-0000-4000-8000-000000000988',
+    'stranded-revoke-hugo@example.invalid',
+    now(),
+    '{}'::jsonb,
+    '{}'::jsonb,
+    now(),
+    now()
+  );
+
+do $$
+declare
+  v_preflight jsonb;
+  v_receipt jsonb;
+  v_superseded jsonb;
+begin
+  v_receipt := public.hugo_apply_access(
+    '00000000-0000-4000-8000-000000000985',
+    'stranded-suspend-hugo@example.invalid',
+    'learner',
+    '{"role_group_ids":[]}'::jsonb,
+    'active',
+    null,
+    '00000000-0000-4000-8000-000000000984'
+  );
+  assert (v_receipt->>'ok')::boolean,
+    'stranded-suspension fixture did not start active';
+  v_preflight := public.hugo_preflight_access_operation(
+    '00000000-0000-4000-8000-000000000986',
+    'stranded-suspend-hugo@example.invalid',
+    'learner',
+    '{"role_group_ids":[]}'::jsonb,
+    'active',
+    null
+  );
+  assert (v_preflight->>'proceed')::boolean,
+    'active stranded-claim fixture was not reserved';
+  v_preflight := public.hugo_preflight_access_operation(
+    '00000000-0000-4000-8000-000000000987',
+    'stranded-suspend-hugo@example.invalid',
+    'learner',
+    '{"role_group_ids":[]}'::jsonb,
+    'suspended',
+    null
+  );
+  assert (v_preflight->>'proceed')::boolean,
+    'suspension was blocked by a stranded active claim';
+  v_receipt := public.hugo_apply_access(
+    '00000000-0000-4000-8000-000000000987',
+    'stranded-suspend-hugo@example.invalid',
+    'learner',
+    '{"role_group_ids":[]}'::jsonb,
+    'suspended',
+    null,
+    '00000000-0000-4000-8000-000000000984'
+  );
+  assert (v_receipt->>'ok')::boolean
+     and v_receipt#>>'{observed,status}' = 'suspended',
+    'suspension after a stranded active claim did not apply';
+  select operation_row.receipt
+  into v_superseded
+  from public.hugo_access_operations operation_row
+  where operation_row.operation_id =
+    '00000000-0000-4000-8000-000000000986';
+  assert v_superseded->>'error_code' =
+    'operation_superseded_by_access_reduction',
+    'stranded active claim did not persist a superseded receipt';
+  assert public.hugo_apply_access(
+    '00000000-0000-4000-8000-000000000986',
+    'stranded-suspend-hugo@example.invalid',
+    'learner',
+    '{"role_group_ids":[]}'::jsonb,
+    'active',
+    null,
+    '00000000-0000-4000-8000-000000000984'
+  ) = v_superseded,
+    'late active apply did not replay the superseded receipt';
+  assert (
+    select profile.status = 'suspended'
+      and grant_row.desired_status = 'suspended'
+    from public.profiles profile
+    join public.hugo_access_grants grant_row
+      on grant_row.user_id = profile.id
+    where profile.id = '00000000-0000-4000-8000-000000000984'
+  ), 'late active apply restored access after suspension';
+  v_preflight := public.hugo_preflight_access_operation(
+    '00000000-0000-4000-8000-000000000986',
+    'stranded-suspend-hugo@example.invalid',
+    'admin',
+    '{"role_group_ids":[]}'::jsonb,
+    'active',
+    null
+  );
+  assert v_preflight#>>'{receipt,error_code}' = 'operation_id_reused',
+    'changed superseded active request did not conflict';
+
+  v_receipt := public.hugo_apply_access(
+    '00000000-0000-4000-8000-000000000989',
+    'stranded-revoke-hugo@example.invalid',
+    'learner',
+    '{"role_group_ids":[]}'::jsonb,
+    'active',
+    null,
+    '00000000-0000-4000-8000-000000000988'
+  );
+  assert (v_receipt->>'ok')::boolean,
+    'stranded-revocation fixture did not start active';
+  v_preflight := public.hugo_preflight_access_operation(
+    '00000000-0000-4000-8000-000000000990',
+    'stranded-revoke-hugo@example.invalid',
+    'learner',
+    '{"role_group_ids":[]}'::jsonb,
+    'active',
+    null
+  );
+  assert (v_preflight->>'proceed')::boolean,
+    'revocation stranded-claim fixture was not reserved';
+  v_preflight := public.hugo_preflight_access_operation(
+    '00000000-0000-4000-8000-000000000991',
+    'stranded-revoke-hugo@example.invalid',
+    'learner',
+    '{"role_group_ids":[]}'::jsonb,
+    'revoked',
+    null
+  );
+  assert (v_preflight->>'proceed')::boolean,
+    'revocation was blocked by a stranded active claim';
+  v_receipt := public.hugo_apply_access(
+    '00000000-0000-4000-8000-000000000991',
+    'stranded-revoke-hugo@example.invalid',
+    'learner',
+    '{"role_group_ids":[]}'::jsonb,
+    'revoked',
+    null,
+    '00000000-0000-4000-8000-000000000988'
+  );
+  assert (v_receipt->>'ok')::boolean
+     and v_receipt#>>'{observed,status}' = 'revoked',
+    'revocation after a stranded active claim did not apply';
+  select operation_row.receipt
+  into v_superseded
+  from public.hugo_access_operations operation_row
+  where operation_row.operation_id =
+    '00000000-0000-4000-8000-000000000990';
+  assert v_superseded->>'error_code' =
+    'operation_superseded_by_access_reduction',
+    'revocation did not persist the stranded claim refusal';
+  assert public.hugo_apply_access(
+    '00000000-0000-4000-8000-000000000990',
+    'stranded-revoke-hugo@example.invalid',
+    'learner',
+    '{"role_group_ids":[]}'::jsonb,
+    'active',
+    null,
+    '00000000-0000-4000-8000-000000000988'
+  ) = v_superseded,
+    'late active apply did not replay after revocation';
+  assert (
+    select profile.status = 'suspended'
+      and grant_row.desired_status = 'revoked'
+    from public.profiles profile
+    join public.hugo_access_grants grant_row
+      on grant_row.user_id = profile.id
+    where profile.id = '00000000-0000-4000-8000-000000000988'
+  ), 'late active apply restored a revoked grant';
 end;
 $$;
 
@@ -398,6 +752,118 @@ begin
     '00000000-0000-4000-8000-000000000976',
     'profileless-hugo@example.invalid'
   ) = v_delete, 'profile-less delete exact replay changed its receipt';
+end;
+$$;
+
+insert into auth.users (
+  id,
+  email,
+  email_confirmed_at,
+  raw_app_meta_data,
+  raw_user_meta_data,
+  created_at,
+  updated_at
+) values
+  (
+    '00000000-0000-4000-8000-000000001001',
+    'duplicate-delete-hugo@example.invalid',
+    now(),
+    '{}'::jsonb,
+    '{}'::jsonb,
+    now(),
+    now()
+  ),
+  (
+    '00000000-0000-4000-8000-000000001002',
+    'duplicate-delete-hugo@example.invalid',
+    now(),
+    '{"provider":"custom:hugo"}'::jsonb,
+    '{}'::jsonb,
+    now(),
+    now()
+  );
+delete from public.profiles
+where id = '00000000-0000-4000-8000-000000001002';
+
+do $$
+declare
+  v_prepare jsonb;
+  v_delete jsonb;
+begin
+  v_prepare := public.hugo_prepare_pristine_delete(
+    '00000000-0000-4000-8000-000000001003',
+    'duplicate-delete-hugo@example.invalid'
+  );
+  assert not (v_prepare->>'ok')::boolean
+     and v_prepare->>'error_code' = 'ambiguous_identity',
+    'duplicate Auth/profile cardinality was reported prepared';
+  v_delete := public.hugo_delete_identity(
+    '00000000-0000-4000-8000-000000001004',
+    'DUPLICATE-DELETE-HUGO@example.invalid'
+  );
+  assert not (v_delete->>'ok')::boolean
+     and v_delete->>'error_code' = 'ambiguous_identity',
+    'duplicate Auth/profile cardinality was reported deleted';
+  assert (
+    select count(*) = 2
+    from auth.users auth_user
+    where lower(auth_user.email) =
+      'duplicate-delete-hugo@example.invalid'
+  ), 'duplicate-identity refusal removed an Auth identity';
+  assert exists (
+    select 1
+    from public.profiles profile
+    where profile.id = '00000000-0000-4000-8000-000000001001'
+  ), 'duplicate-identity refusal removed the linked profile';
+end;
+$$;
+
+insert into auth.users (
+  id,
+  email,
+  email_confirmed_at,
+  raw_app_meta_data,
+  raw_user_meta_data,
+  created_at,
+  updated_at
+) values (
+  '00000000-0000-4000-8000-000000001005',
+  'one-to-one-delete-hugo@example.invalid',
+  now(),
+  '{}'::jsonb,
+  '{}'::jsonb,
+  now(),
+  now()
+);
+
+do $$
+declare
+  v_prepare jsonb;
+  v_delete jsonb;
+begin
+  v_prepare := public.hugo_prepare_pristine_delete(
+    '00000000-0000-4000-8000-000000001006',
+    'one-to-one-delete-hugo@example.invalid'
+  );
+  assert (v_prepare->>'ok')::boolean,
+    'one-to-one pristine identity was not prepared';
+  v_delete := public.hugo_delete_identity(
+    '00000000-0000-4000-8000-000000001007',
+    'one-to-one-delete-hugo@example.invalid'
+  );
+  assert (v_delete->>'ok')::boolean,
+    'one-to-one pristine identity was not deleted';
+  assert not exists (
+    select 1
+    from auth.users auth_user
+    where lower(auth_user.email) =
+      'one-to-one-delete-hugo@example.invalid'
+  ) and not exists (
+    select 1
+    from public.profiles profile
+    where lower(profile.email) =
+      'one-to-one-delete-hugo@example.invalid'
+  ), 'successful delete left Auth or profile state';
 end;
 $$;
 
