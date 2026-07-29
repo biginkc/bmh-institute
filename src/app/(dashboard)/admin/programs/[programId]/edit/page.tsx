@@ -103,6 +103,7 @@ export default async function EditProgramPage({
           />
           <CourseAttachments
             programId={programId}
+            readOnly={Boolean(program.content_import_id)}
             attached={attached
               .filter((a) => a.course !== null)
               .map((a) => ({

@@ -29,10 +29,12 @@ export function CourseAttachments({
   programId,
   attached,
   available,
+  readOnly = false,
 }: {
   programId: string;
   attached: AttachedCourse[];
   available: AvailableCourse[];
+  readOnly?: boolean;
 }) {
   const [selected, setSelected] = useState<string>(available[0]?.id ?? "");
   const [pending, startTransition] = useTransition();
@@ -69,6 +71,11 @@ export function CourseAttachments({
 
   return (
     <div className="flex flex-col gap-4">
+      {readOnly ? (
+        <p className="rounded-[var(--bmh-radius-md)] border border-[var(--yellow-500)] bg-[var(--yellow-100)] px-3 py-2 text-xs font-semibold text-[var(--yellow-600)]">
+          Imported program membership is managed by the release workflow and is read-only here.
+        </p>
+      ) : null}
       {attached.length === 0 ? (
         <p className="font-[family-name:var(--font-body)] text-sm font-semibold text-[var(--text-muted)]">
           No courses attached yet.
@@ -96,41 +103,43 @@ export function CourseAttachments({
                   </Badge>
                 </div>
               </div>
-              <div className="flex items-center gap-1">
-                <IconButton
-                  variant="plain"
-                  size="sm"
-                  label={`Move ${c.title} up`}
-                  onClick={() => onMove(c.courseId, "up")}
-                  disabled={pending || idx === 0}
-                >
-                  <ArrowUp className="size-4" aria-hidden />
-                </IconButton>
-                <IconButton
-                  variant="plain"
-                  size="sm"
-                  label={`Move ${c.title} down`}
-                  onClick={() => onMove(c.courseId, "down")}
-                  disabled={pending || idx === attached.length - 1}
-                >
-                  <ArrowDown className="size-4" aria-hidden />
-                </IconButton>
-                <IconButton
-                  variant="plain"
-                  size="sm"
-                  label={`Remove ${c.title}`}
-                  onClick={() => onDetach(c.courseId)}
-                  disabled={pending}
-                >
-                  <X className="size-4" aria-hidden />
-                </IconButton>
-              </div>
+              {!readOnly ? (
+                <div className="flex items-center gap-1">
+                  <IconButton
+                    variant="plain"
+                    size="sm"
+                    label={`Move ${c.title} up`}
+                    onClick={() => onMove(c.courseId, "up")}
+                    disabled={pending || idx === 0}
+                  >
+                    <ArrowUp className="size-4" aria-hidden />
+                  </IconButton>
+                  <IconButton
+                    variant="plain"
+                    size="sm"
+                    label={`Move ${c.title} down`}
+                    onClick={() => onMove(c.courseId, "down")}
+                    disabled={pending || idx === attached.length - 1}
+                  >
+                    <ArrowDown className="size-4" aria-hidden />
+                  </IconButton>
+                  <IconButton
+                    variant="plain"
+                    size="sm"
+                    label={`Remove ${c.title}`}
+                    onClick={() => onDetach(c.courseId)}
+                    disabled={pending}
+                  >
+                    <X className="size-4" aria-hidden />
+                  </IconButton>
+                </div>
+              ) : null}
             </li>
           ))}
         </ol>
       )}
 
-      {available.length > 0 ? (
+      {!readOnly && available.length > 0 ? (
         <div className="flex flex-col gap-3 border-t border-[var(--border-hairline)] pt-4 sm:flex-row sm:items-end">
           <div className="flex-1">
             <label
@@ -154,7 +163,7 @@ export function CourseAttachments({
           </div>
           <Button
             onClick={onAttach}
-            disabled={pending}
+            disabled={readOnly || pending}
             iconLeft={<Plus className="size-4" aria-hidden />}
           >
             {pending ? "Saving..." : "Attach"}
