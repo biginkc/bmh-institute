@@ -61,6 +61,7 @@ jobs:
       TEST_SUPABASE_URL: ${{ secrets.TEST_SUPABASE_URL }}
       TEST_SUPABASE_ANON_KEY: ${{ secrets.TEST_SUPABASE_ANON_KEY }}
       TEST_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.TEST_SUPABASE_SERVICE_ROLE_KEY }}
+      TEST_PROJECT_REF: jvaabkchkihkjllehmft
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -77,6 +78,24 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - uses: supabase/setup-cli@ab058987d8d6c725971f6cf9d0b5c98467e30bd1 # v1
+        with:
+          version: 2.109.1
+
+      - name: Apply branch migrations to the shared TEST project
+        env:
+          TEST_SUPABASE_DB_PASSWORD: ${{ secrets.TEST_SUPABASE_DB_PASSWORD }}
+        run: |
+          echo "::add-mask::$TEST_SUPABASE_DB_PASSWORD"
+          if [ -z "$TEST_SUPABASE_DB_PASSWORD" ]; then
+            echo "TEST_SUPABASE_DB_PASSWORD secret is required."
+            exit 1
+          fi
+          ENCODED_PASSWORD="$(node -e 'process.stdout.write(encodeURIComponent(process.env.TEST_SUPABASE_DB_PASSWORD))')"
+          echo "::add-mask::$ENCODED_PASSWORD"
+          DB_URL="postgresql://postgres.${TEST_PROJECT_REF}:${ENCODED_PASSWORD}@aws-1-us-west-1.pooler.supabase.com:5432/postgres"
+          supabase db push --include-all --db-url "$DB_URL" --yes
 
       - name: Reconcile the exact Tech Stack canary poster
         env:
