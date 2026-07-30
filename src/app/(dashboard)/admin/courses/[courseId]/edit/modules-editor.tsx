@@ -14,6 +14,8 @@ import {
 import { toast } from "sonner";
 
 import { Badge, Button, Card, IconButton, Input } from "@/components/bmh-ds";
+import { DestructiveConfirmation } from "@/components/destructive-confirmation";
+import { deletionImpact, deletionMessage, type DeletionPreview } from "@/lib/release-control/admin-deletions";
 import type { ModuleWithLessons } from "@/lib/courses/shape";
 
 import {
@@ -21,6 +23,8 @@ import {
   createModule,
   deleteLesson,
   deleteModule,
+  previewLessonDeletion,
+  previewModuleDeletion,
   moveLesson,
   moveModule,
   updateModule,
@@ -114,6 +118,7 @@ function ModuleCard({
   const [newLessonType, setNewLessonType] = useState<
     "content" | "quiz" | "assignment"
   >("content");
+  const [confirmation, setConfirmation] = useState<DeletionPreview | null>(null);
 
   function onSaveTitle() {
     if (title === mod.title) return;
@@ -129,18 +134,17 @@ function ModuleCard({
   }
 
   function onDelete() {
-    if (
-      !confirm(
-        `Delete "${mod.title}"? All lessons inside it will also be removed.`,
-      )
-    ) {
-      return;
-    }
     startTransition(async () => {
-      const result = await deleteModule({
-        moduleId: mod.id,
-        courseId,
-      });
+      const preview = await previewModuleDeletion(mod.id);
+      if (preview.code !== "ready") toast.error(deletionMessage(preview.code));
+      else setConfirmation(preview);
+    });
+  }
+
+  function confirmDelete() {
+    setConfirmation(null);
+    startTransition(async () => {
+      const result = await deleteModule({ moduleId: mod.id, courseId });
       if (!result.ok) toast.error(result.error);
       else toast.success("Module removed.");
     });
@@ -285,6 +289,15 @@ function ModuleCard({
           </Button>
         </div>
       </div>
+      {confirmation ? (
+        <DestructiveConfirmation
+          title={`Delete “${mod.title}”?`}
+          description="All lessons inside this module will also be removed."
+          impact={deletionImpact(confirmation)}
+          onCancel={() => setConfirmation(null)}
+          onConfirm={confirmDelete}
+        />
+      ) : null}
     </Card>
   );
 }
@@ -306,8 +319,21 @@ function LessonRow({
   pending: boolean;
   startTransition: (cb: () => void | Promise<void>) => void;
 }) {
+  const [confirmation, setConfirmation] = useState<DeletionPreview | null>(null);
+
   function onDelete() {
-    if (!confirm(`Delete "${lesson.title}"?`)) return;
+    startTransition(async () => {
+      const preview = await previewLessonDeletion(lesson.id);
+      if (preview.code !== "ready") {
+        toast.error(deletionMessage(preview.code));
+        return;
+      }
+      setConfirmation(preview);
+    });
+  }
+
+  function confirmDelete() {
+    setConfirmation(null);
     startTransition(async () => {
       const result = await deleteLesson({ lessonId: lesson.id, courseId });
       if (!result.ok) toast.error(result.error);
@@ -383,6 +409,15 @@ function LessonRow({
           <Trash2 className="size-3.5" />
         </IconButton>
       </div>
+      {confirmation ? (
+        <DestructiveConfirmation
+          title={`Delete “${lesson.title}”?`}
+          description="This permanently removes the lesson and its editor content."
+          impact={deletionImpact(confirmation)}
+          onCancel={() => setConfirmation(null)}
+          onConfirm={confirmDelete}
+        />
+      ) : null}
     </li>
   );
 }

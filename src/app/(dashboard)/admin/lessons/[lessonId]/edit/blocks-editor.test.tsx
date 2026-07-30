@@ -14,6 +14,7 @@ vi.mock("sonner", () => ({
 vi.mock("./actions", () => ({
   createBlock: vi.fn(async () => ({ ok: true })),
   deleteBlock: vi.fn(async () => ({ ok: true })),
+  previewBlockDeletion: vi.fn(async () => ({ code: "ready" })),
   moveBlock: vi.fn(async () => ({ ok: true })),
   updateBlock: vi.fn(async () => ({ ok: true })),
 }));
@@ -95,7 +96,6 @@ describe("<BlocksEditor />", () => {
 
   it("preserves block reorder, save, and delete payloads", async () => {
     const user = userEvent.setup();
-    const confirm = vi.spyOn(globalThis, "confirm").mockReturnValue(true);
     render(
       <BlocksEditor
         lessonId="lesson-1"
@@ -139,13 +139,14 @@ describe("<BlocksEditor />", () => {
     );
 
     await user.click(screen.getAllByRole("button", { name: "Delete block" })[0]);
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Delete" }));
     await waitFor(() =>
       expect(deleteBlock).toHaveBeenCalledWith({
         blockId: "block-1",
         lessonId: "lesson-1",
       }),
     );
-    confirm.mockRestore();
   });
 
   it("exposes required completion only for trackable block configurations", async () => {

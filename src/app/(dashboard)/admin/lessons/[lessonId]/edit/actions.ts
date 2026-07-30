@@ -10,8 +10,9 @@ import {
   defaultRequiredForBlock,
   normalizeRequiredForBlock,
 } from "@/lib/content-blocks/completion";
-import { normalizeReleaseControlError } from "@/lib/release-control/admin-guards";
 import { createClient } from "@/lib/supabase/server";
+import { deleteAdminEntity, previewAdminDeletion } from "@/lib/release-control/admin-deletion-actions";
+import type { DeletionPreview } from "@/lib/release-control/admin-deletions";
 import type { Json } from "@/lib/supabase/types";
 
 export type ActionResult =
@@ -272,19 +273,15 @@ export async function deleteBlock(input: {
   blockId: string;
   lessonId: string;
 }): Promise<ActionResult> {
-  await requireAdmin();
-  const supabase = await createClient();
-  const { error } = await supabase
-    .from("content_blocks")
-    .delete()
-    .eq("id", input.blockId);
-  if (error) {
-    return { ok: false, error: normalizeReleaseControlError(error.message) };
-  }
+  return deleteAdminEntity({
+    entityType: "block",
+    entityId: input.blockId,
+    revalidatePaths: [`/admin/lessons/${input.lessonId}/edit`, `/lessons/${input.lessonId}`],
+  });
+}
 
-  revalidatePath(`/admin/lessons/${input.lessonId}/edit`);
-  revalidatePath(`/lessons/${input.lessonId}`);
-  return { ok: true };
+export async function previewBlockDeletion(blockId: string): Promise<DeletionPreview> {
+  return previewAdminDeletion({ entityType: "block", entityId: blockId });
 }
 
 export async function moveBlock(input: {

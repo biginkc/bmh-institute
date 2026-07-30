@@ -6,6 +6,8 @@ import { requireAdmin } from "@/lib/auth/guard";
 import { normalizeReleaseControlError } from "@/lib/release-control/admin-guards";
 import { unreleasedImportQaRoleGroupIds } from "@/lib/release-control/qa-role-groups";
 import { createClient } from "@/lib/supabase/server";
+import { deleteAdminEntity, previewAdminDeletion } from "@/lib/release-control/admin-deletion-actions";
+import type { DeletionPreview } from "@/lib/release-control/admin-deletions";
 
 export type ActionResult =
   | { ok: true }
@@ -106,35 +108,15 @@ export async function updateRoleGroup(input: {
 }
 
 export async function deleteRoleGroup(id: string): Promise<ActionResult> {
-  await requireAdmin();
-  const supabase = await createClient();
-  const { data: importedPrograms, error: importedProgramsError } = await supabase
-    .from("programs")
-    .select("content_import_id, is_published, program_access(role_group_id)")
-    .not("content_import_id", "is", null)
-    .eq("is_published", false);
-  if (importedProgramsError) {
-    return { ok: false, error: "Couldn't verify whether this role group is importer-owned." };
-  }
-  const protectedRoleGroupIds = unreleasedImportQaRoleGroupIds(
-    (importedPrograms ?? []) as Array<{
-      content_import_id: string | null;
-      is_published: boolean;
-      program_access: Array<{ role_group_id: string | null }> | null;
-    }>,
-  );
-  if (protectedRoleGroupIds.has(id)) {
-    return { ok: false, error: IMPORT_QA_ROLE_GROUP_READ_ONLY_ERROR };
-  }
-  const { error } = await supabase.from("role_groups").delete().eq("id", id);
-  if (error) {
-    return { ok: false, error: normalizeReleaseControlError(error.message) };
-  }
+  return deleteAdminEntity({
+    entityType: "role_group",
+    entityId: id,
+    revalidatePaths: ["/admin/role-groups", "/admin/users", "/dashboard"],
+  });
+}
 
-  revalidatePath("/admin/role-groups");
-  revalidatePath("/admin/users");
-  revalidatePath("/dashboard");
-  return { ok: true };
+export async function previewRoleGroupDeletion(id: string): Promise<DeletionPreview> {
+  return previewAdminDeletion({ entityType: "role_group", entityId: id });
 }
 
 const IMPORT_QA_ROLE_GROUP_READ_ONLY_ERROR =

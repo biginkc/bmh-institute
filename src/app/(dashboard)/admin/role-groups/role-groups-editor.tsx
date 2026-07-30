@@ -6,10 +6,13 @@ import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button, IconButton, Input, Table } from "@/components/bmh-ds";
+import { DestructiveConfirmation } from "@/components/destructive-confirmation";
+import { deletionImpact, deletionMessage, type DeletionPreview } from "@/lib/release-control/admin-deletions";
 
 import {
   createRoleGroup,
   deleteRoleGroup,
+  previewRoleGroupDeletion,
   updateRoleGroup,
 } from "./actions";
 
@@ -24,6 +27,7 @@ export function RoleGroupsEditor({ initial }: { initial: RoleGroupRow[] }) {
   const [groups, setGroups] = useState(initial);
   const [newName, setNewName] = useState("");
   const [newDesc, setNewDesc] = useState("");
+  const [confirmation, setConfirmation] = useState<{ groupId: string; preview: DeletionPreview } | null>(null);
 
   function onAdd() {
     const name = newName.trim();
@@ -129,6 +133,15 @@ export function RoleGroupsEditor({ initial }: { initial: RoleGroupRow[] }) {
           </Button>
         </div>
       </div>
+      {confirmation ? (
+        <DestructiveConfirmation
+          title={`Delete “${groups.find((group) => group.id === confirmation.groupId)?.name ?? "this role group"}”?`}
+          description="Learner assignments and access grants for this group will be removed."
+          impact={deletionImpact(confirmation.preview)}
+          onCancel={() => setConfirmation(null)}
+          onConfirm={confirmDelete}
+        />
+      ) : null}
     </div>
   );
 
@@ -164,11 +177,22 @@ export function RoleGroupsEditor({ initial }: { initial: RoleGroupRow[] }) {
   function onDelete(id: string) {
     const group = groups.find((candidate) => candidate.id === id);
     if (!group) return;
-    if (!confirm(`Delete "${group.name}"? Learner assignments and access grants for this group go with it.`)) {
-      return;
-    }
     startTransition(async () => {
-      const result = await deleteRoleGroup(group.id);
+      const preview = await previewRoleGroupDeletion(group.id);
+      if (preview.code !== "ready") {
+        toast.error(deletionMessage(preview.code));
+        return;
+      }
+      setConfirmation({ groupId: group.id, preview });
+    });
+  }
+
+  function confirmDelete() {
+    if (!confirmation) return;
+    const groupId = confirmation.groupId;
+    setConfirmation(null);
+    startTransition(async () => {
+      const result = await deleteRoleGroup(groupId);
       if (!result.ok) toast.error(result.error);
       else toast.success("Role group removed.");
     });

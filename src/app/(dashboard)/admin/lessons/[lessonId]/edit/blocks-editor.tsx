@@ -22,6 +22,8 @@ import {
 import { toast } from "sonner";
 
 import { Badge, Button, Card, IconButton, Input } from "@/components/bmh-ds";
+import { DestructiveConfirmation } from "@/components/destructive-confirmation";
+import { deletionImpact, deletionMessage, type DeletionPreview } from "@/lib/release-control/admin-deletions";
 import { Label } from "@/components/ui/label";
 
 import { FileUpload } from "@/components/file-upload";
@@ -30,6 +32,7 @@ import { parseFlashcardText } from "@/lib/content-security/validate";
 import {
   createBlock,
   deleteBlock,
+  previewBlockDeletion,
   moveBlock,
   updateBlock,
   type BlockType,
@@ -145,8 +148,21 @@ function BlockCard({
   pending: boolean;
   startTransition: (cb: () => void | Promise<void>) => void;
 }) {
+  const [confirmation, setConfirmation] = useState<DeletionPreview | null>(null);
+
   function onDelete() {
-    if (!confirm("Delete this block?")) return;
+    startTransition(async () => {
+      const preview = await previewBlockDeletion(block.id);
+      if (preview.code !== "ready") {
+        toast.error(deletionMessage(preview.code));
+        return;
+      }
+      setConfirmation(preview);
+    });
+  }
+
+  function confirmDelete() {
+    setConfirmation(null);
     startTransition(async () => {
       const result = await deleteBlock({ blockId: block.id, lessonId });
       if (!result.ok) toast.error(result.error);
@@ -200,6 +216,15 @@ function BlockCard({
       <div className="p-4">
         <BlockEditor block={block} lessonId={lessonId} pending={pending} startTransition={startTransition} />
       </div>
+      {confirmation ? (
+        <DestructiveConfirmation
+          title="Delete this block?"
+          description="This removes the block from the lesson for all learners."
+          impact={deletionImpact(confirmation)}
+          onCancel={() => setConfirmation(null)}
+          onConfirm={confirmDelete}
+        />
+      ) : null}
     </Card>
   );
 }
