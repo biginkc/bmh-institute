@@ -23,6 +23,7 @@
 
 - Iteration 0: preflight complete; implementation workers dispatched for quiz, lifecycle, routing/video, security, and deletion lanes.
 - Iteration 1: first implementation wave completed; independent review rejected release readiness. Valid blockers: late quiz restore overwrite and missing durable lock-timeout proof; checkpoint/observation arrival-order race and client-clock baseline; lifecycle upgrade migration source drift; role-play/storage/legacy-content security gaps; deletion activity and quiz-graph races. Four repair workers dispatched in isolated worktrees.
+- Iteration 2: repair waves completed and independently reviewed. Quiz, lifecycle, security, deletion, and routing repository gates pass; hosted TEST SQL credentials and real production Chrome remain outstanding. Claude returned NEXT_STEP: let PR #138 CI finish, then integrate serially; hold/rebase PR #137 because its seeded Playwright role-group assignment flow currently times out after Save Changes.
 - Integration order: amended #138 -> Hugo lifecycle -> Institute lifecycle -> PR #137 reconsideration -> learner routing/video -> security -> deletion -> consolidated Chrome acceptance.
 - The broader 886-question/course acceptance campaign remains separate and must not be called complete by this tranche.
 
