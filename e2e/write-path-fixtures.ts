@@ -92,15 +92,15 @@ export async function createWritePathFixture(
     (program) => program.id,
   );
   if (reviewerProgramIds.length > 0) {
-    await admin
-      .from("course_import_reviewers_v1")
-      .insert(
-        reviewerProgramIds.map((programId) => ({
-          program_id: programId,
-          user_id: adminUser.id,
-        })),
-      )
-      .throwOnError();
+    for (const programId of reviewerProgramIds) {
+      await admin
+        .rpc("fn_set_unreleased_import_reviewer_v1", {
+          p_program_id: programId,
+          p_user_id: adminUser.id,
+          p_allowed: true,
+        })
+        .throwOnError();
+    }
   }
 
   const roleGroupId = await insertOne(admin, "role_groups", {
@@ -300,11 +300,15 @@ export async function cleanupWritePathFixture(
 
   await cleanupSubmissionStorage(admin, fixture.learner.id);
   if (fixture.reviewerProgramIds.length > 0) {
-    await admin
-      .from("course_import_reviewers_v1")
-      .delete()
-      .in("program_id", fixture.reviewerProgramIds)
-      .eq("user_id", fixture.admin.id);
+    for (const programId of fixture.reviewerProgramIds) {
+      await admin
+        .rpc("fn_set_unreleased_import_reviewer_v1", {
+          p_program_id: programId,
+          p_user_id: fixture.admin.id,
+          p_allowed: false,
+        })
+        .throwOnError();
+    }
   }
   await admin.from("programs").delete().eq("id", fixture.programId);
   await admin.from("courses").delete().eq("id", fixture.courseId);
