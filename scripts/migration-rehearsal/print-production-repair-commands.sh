@@ -41,9 +41,11 @@ supabase migration repair 20260423204031 20260423204130 20260423204205 202604232
 #    pg_get_functiondef), because a placeholder row proves nothing about them.
 #    Then paste into scripts/migration-rehearsal/placeholder-baseline.json under
 #    targets["institute-production"].placeholder_versions, update
-#    acknowledged_at, and COMMIT that change. This edit is intentionally manual:
-#    automation must not be able to acknowledge its own repair rows.
-node scripts/migration-rehearsal/check-migration-safety.mjs --target=institute-production
+#    acknowledged_at, and COMMIT that change. This edit is intentionally manual,
+#    and committing it is mandatory rather than tidy: the gate reads the baseline
+#    out of git HEAD, never from the working tree, so an uncommitted edit has no
+#    effect at all. Automation must not be able to acknowledge its own repair rows.
+node scripts/migration-rehearsal/check-migration-safety.mjs --target=institute-production --enforce-canonical-paths
 
 # 4. Read-only repaired-history and push checks. The dry run goes through the
 #    same wrapper so it uses the same target definition as the real push.

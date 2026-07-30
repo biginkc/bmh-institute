@@ -67,7 +67,8 @@ Always work in a git worktree for code, docs, config, and planning changes. Do n
   bypassing this gate. If the gate refuses, stop and report. Do not repair history, do not edit
   `scripts/migration-rehearsal/placeholder-baseline.json`, and do not call `supabase db push`
   directly to make it pass — acknowledging a placeholder row is a human's reviewed commit, and
-  an agent doing it defeats the entire control.
+  an agent doing it defeats the entire control. The gate reads that baseline out of git HEAD,
+  so editing the working-tree file changes nothing; do not try.
 
 ## Writing style
 

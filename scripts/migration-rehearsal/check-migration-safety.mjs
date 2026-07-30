@@ -28,10 +28,64 @@
 //       historical repair freeze the repo forever. See "Placeholder baseline".
 //   (c) Every indeterminate state fails CLOSED. If this script cannot prove the
 //       push is safe, it exits non-zero. It never exits 0 on a shrug.
+//   (d) The thing checked is the thing pushed: same directory, same database,
+//       same history. See "Checked == pushed" below.
 //
 // This script only inspects and reports. It never runs `supabase db push`,
-// `supabase migration repair`, or any writing SQL itself. The single SQL it
-// issues is a SELECT (plus a session-local `set statement_timeout`).
+// `supabase migration repair`, or any writing SQL itself. The SQL it issues is
+// read-only (SELECT, plus a session-local `set statement_timeout`).
+//
+// ---------------------------------------------------------------------------
+// Exit-code contract, stated precisely
+// ---------------------------------------------------------------------------
+// An earlier version of this header claimed "exactly one path exits 0", which
+// was false. What is true: this script has exactly ONE success fallthrough per
+// mode (default check, --verify-fingerprint, --verify-applied), and every other
+// path -- including the top-level catch -- exits non-zero. Sibling scripts are
+// not covered by that statement and never were: guarded-db-push.sh has two
+// success paths (dry run and real push), and print-production-repair-commands.sh
+// exits 0 after printing.
+//
+// ---------------------------------------------------------------------------
+// Checked == pushed (round-2 review findings P1-1, P1-2, P1-3)
+// ---------------------------------------------------------------------------
+// A gate that inspects a different directory, a different database, or an older
+// history than the push touches is not a gate. Three bindings:
+//
+//   Directory. `--migrations-dir` is caller-controlled, so under
+//   `--enforce-canonical-paths` (which guarded-db-push.sh always passes) the
+//   resolved directory must be exactly <repo>/supabase/migrations, the same path
+//   `supabase db push` reads. A symlinked migrations directory -- or a symlinked
+//   path component -- is refused in every mode, because lstat/realpath
+//   divergence is precisely how "the gate read A, the push read B" happens.
+//
+//   Database. Project identity is parsed EXACTLY, never substring-matched: the
+//   ref is extracted from PGUSER (`postgres.<ref>`) or PGHOST
+//   (`db.<ref>.supabase.co`) by anchored pattern, both must agree when both are
+//   present, PGDATABASE must equal the baseline's database, and the LIVE
+//   connection is then interrogated -- `current_database()` must match, and when
+//   the baseline pins a `db_system_identifier` (the cluster's
+//   pg_control_system() system_identifier) the live cluster must present that
+//   exact value. A hostname that merely contains the ref no longer passes.
+//
+//   History. `--emit-fingerprint` records a digest of the history the gate
+//   approved; `--verify-fingerprint` re-reads history and refuses if it moved.
+//   guarded-db-push.sh verifies immediately before the push and reconciles with
+//   `--verify-applied` immediately after it.
+//
+//   RESIDUAL WINDOW, stated rather than implied: `supabase db push` opens its
+//   own connection and offers no pre-push hook, so a `migration repair` or a
+//   competing push landing between the final verify and the CLI's first
+//   statement is still possible. That window is sub-second and is detected after
+//   the fact by --verify-applied, which refuses loudly if the resulting history
+//   is anything other than the prior history plus exactly the pending set the
+//   gate authorised. A cross-process advisory lock was considered and rejected:
+//   `supabase db push` does not take it, so it would only serialise guarded
+//   pushes against each other -- the 2026-07-30 incident was an UNGATED loop,
+//   which by definition would not participate -- while adding a hang-and-leak
+//   failure mode to the one script that must never misbehave. Closing the window
+//   properly needs an upstream "apply only if history is still X" flag in the
+//   Supabase CLI.
 //
 // ---------------------------------------------------------------------------
 // Placeholder baseline (design note -- read this before changing it)
@@ -41,7 +95,7 @@
 // applied, so history stops being proof of what is live.
 //
 // The first version of this gate refused whenever ANY such row existed. That
-// self-deadlocks: `print-production-repair-commands.sh` runs
+// self-deadlocks: print-production-repair-commands.sh runs
 // `migration repair --status applied` immediately before the gate, and BMH
 // Institute production ALREADY carries 8 pre-existing placeholder rows (Sandra
 // carries 36 of 127). A blanket refusal permanently blocks every migration --
@@ -53,16 +107,21 @@
 // scripts/migration-rehearsal/placeholder-baseline.json.
 //   - A placeholder row whose version IS in the baseline for --target is
 //     accepted: a human already reconciled it against the live schema.
-//   - A placeholder row whose version is NOT in the baseline REFUSES. New
-//     untrustworthy history is exactly the signal we want to stop on.
-//   - Adding a version to the baseline is a reviewable commit, not a runtime
-//     flag, so automation cannot self-approve its way past this gate. When the
-//     gate refuses it prints the exact JSON to add, so the legitimate repair
-//     workflow is one reviewed edit away from proceeding.
-// Rejected alternatives: (1) accept all placeholders -- reopens the incident
-// class; (2) snapshot placeholder contents -- placeholders have no contents;
-// (3) auto-record the current placeholder set on first run -- an automated loop
-// would record the very row that should have stopped it.
+//   - A placeholder row whose version is NOT in the baseline REFUSES.
+//   - Adding a version is a reviewable commit, not a runtime flag.
+//
+// BASELINE PROVENANCE (round-2 review finding P1-4). Checking that the baseline
+// path is an ordinary in-repo file does not prove the BYTES are the reviewed,
+// tracked blob: a hardlink at an in-repo pathname shares an inode with a file
+// anywhere on disk, an untracked file passes every filesystem check while never
+// having been reviewed, and lstat-then-readFileSync is two steps over a mutable
+// path with a swap window between them. So the working tree is never consulted
+// for the bytes. The baseline is read straight out of git's content-addressed
+// object store at the current commit (`git show HEAD:<path>`), which has no
+// concept of inodes, hardlinks, or symlinks, and which fails outright for an
+// untracked or merely-staged file. The read IS the check, in one call. This
+// mirrors the identical fix in Sandra's guard (Sandra scripts/check-migration-safety.mjs)
+// so the two guards do not diverge.
 //
 // ---------------------------------------------------------------------------
 // Version comparison (design note)
@@ -79,26 +138,24 @@
 //
 // The Supabase CLI itself orders migrations by version STRING. If our namespace
 // ordering ever disagrees with a plain string sort of the same version list
-// (e.g. legacy "9" would string-sort AFTER timestamp "2026..."), the gate
-// cannot reason about the order the CLI will actually use, so it refuses.
+// (e.g. legacy "9" would string-sort AFTER timestamp "2026..."), the gate cannot
+// reason about the order the CLI will actually use, so it refuses.
 //
 // ---------------------------------------------------------------------------
-// EXIT PATHS -- complete enumeration. Exactly one path exits 0.
+// EXIT PATHS -- complete enumeration.
 // ---------------------------------------------------------------------------
-//   E00  exit 0  Safe: history is trustworthy (or fully acknowledged), and every
-//                pending migration is strictly newer than history's high-water
-//                mark. Proceed to a reviewed `db push --include-all --dry-run`.
+//   E00  exit 0  Safe. One success fallthrough per mode; nothing else exits 0.
 //   E01  exit 1  Unrecognised / malformed command-line argument.
 //   E02  exit 1  --target not supplied.
 //   E03  exit 1  Missing PG* connection env var(s).
-//   E04  exit 1  Baseline file missing, unreadable, or not valid JSON.
-//   E05  exit 1  Baseline file has the wrong shape, or --target has no entry in it.
-//   E06  exit 1  Baseline entry declares a project_ref that does not match the
-//                live PG connection (gate pointed at a different database than
-//                the push would be).
+//   E04  exit 1  Baseline could not be read from git HEAD: outside the repo,
+//                untracked, merely staged, invalid JSON, or git unavailable.
+//   E05  exit 1  Baseline has the wrong shape, or --target has no entry in it.
+//   E06  exit 1  Declared connection identity does not match the target: ref not
+//                parseable from PGUSER/PGHOST, PGUSER and PGHOST disagree, ref
+//                mismatch, or PGDATABASE mismatch.
 //   E07  exit 1  Migrations directory missing, not a directory, or unreadable.
-//   E08  exit 1  Migrations directory contains ZERO .sql files (wrong path, or an
-//                empty checkout -- previously a silent green light).
+//   E08  exit 1  Migrations directory contains ZERO .sql files.
 //   E09  exit 1  A migration filename does not start with a numeric version.
 //   E10  exit 1  A local version string is malformed (non-numeric, or >14 digits).
 //   E11  exit 1  Two local migration files normalise to the same version.
@@ -106,14 +163,11 @@
 //                the string order the Supabase CLI will push in.
 //   E13  exit 1  psql binary not found on PATH.
 //   E14  exit 1  psql connection or query failed (unreachable host, bad
-//                credentials, supabase_migrations.schema_migrations absent,
-//                permission denied, SSL failure, ...).
-//   E15  exit 1  psql timed out (connect timeout, statement timeout, or the hard
-//                wall-clock kill). A blackholed network fails closed here.
+//                credentials, schema_migrations absent, permission denied, ...).
+//   E15  exit 1  psql timed out (connect, statement, or hard wall-clock kill).
 //   E16  exit 1  psql returned output that is not the expected JSON payload.
-//   E17  exit 1  schema_migrations returned ZERO rows -- no baseline to reason
-//                against; refuse rather than guess.
-//   E18  exit 1  A remote version string is malformed (non-numeric, or >14 digits).
+//   E17  exit 1  schema_migrations returned ZERO rows.
+//   E18  exit 1  A remote version string is malformed.
 //   E19  exit 1  Two remote rows normalise to the same version.
 //   E20  exit 1  Remote history ordering is ambiguous (as E12, for history).
 //   E21  exit 1  Placeholder row(s) present whose version is NOT in the
@@ -121,6 +175,16 @@
 //   E22  exit 1  Pending migration(s) OLDER than history's high-water mark --
 //                the 2026-07-30 incident shape.
 //   E23  exit 1  Any unexpected internal error (top-level catch). Fail closed.
+//   E24  exit 1  Migrations directory, or a component of its path, is a symlink.
+//   E25  exit 1  --enforce-canonical-paths violated: migrations directory or
+//                baseline is not the canonical repo path, or --repo-root passed.
+//   E26  exit 1  Remote history changed between the gate and the push
+//                (--verify-fingerprint digest mismatch).
+//   E27  exit 1  Post-push reconciliation failed: the resulting history is not
+//                exactly the prior history plus the authorised pending set.
+//   E28  exit 1  Live database identity probe failed, or the live cluster does
+//                not present the pinned db_system_identifier / current_database.
+//   E29  exit 1  Fingerprint file missing, unreadable, or malformed.
 //
 // ---------------------------------------------------------------------------
 // Usage
@@ -128,34 +192,44 @@
 //   PGHOST=... PGPORT=... PGDATABASE=... PGUSER=... PGPASSWORD=... [PGSSLMODE=require] \
 //     node scripts/migration-rehearsal/check-migration-safety.mjs \
 //       --target=institute-production \
+//       [--enforce-canonical-paths] \
 //       [--migrations-dir=supabase/migrations] \
 //       [--baseline=scripts/migration-rehearsal/placeholder-baseline.json] \
+//       [--emit-fingerprint=PATH | --verify-fingerprint=PATH | --verify-applied=PATH] \
 //       [--timeout-ms=20000]
 //
-// Prefer scripts/migration-rehearsal/guarded-db-push.sh, which runs this gate
-// and the push against ONE connection definition so they cannot diverge.
+// Prefer scripts/migration-rehearsal/guarded-db-push.sh, which passes
+// --enforce-canonical-paths and chains gate, verify, push and reconcile.
 
 import { execFileSync } from "node:child_process";
-import { readFileSync, readdirSync, statSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { createHash } from "node:crypto";
+import { lstatSync, readFileSync, readdirSync, realpathSync, statSync, writeFileSync } from "node:fs";
+import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const DEFAULT_BASELINE = resolve(HERE, "placeholder-baseline.json");
+// This file lives at <repo>/scripts/migration-rehearsal/, so the repo root is two
+// levels up. Everything canonical is derived from here, never from cwd.
+const REPO_ROOT = resolve(HERE, "../..");
+const CANONICAL_MIGRATIONS_DIR = resolve(REPO_ROOT, "supabase/migrations");
+const CANONICAL_BASELINE = resolve(HERE, "placeholder-baseline.json");
 const KNOWN_ARGS = new Set([
   "target",
   "migrations-dir",
   "baseline",
   "timeout-ms",
+  "repo-root",
+  "enforce-canonical-paths",
+  "emit-fingerprint",
+  "verify-fingerprint",
+  "verify-applied",
 ]);
-const REQUIRED_PG_ENV = [
-  "PGHOST",
-  "PGPORT",
-  "PGDATABASE",
-  "PGUSER",
-  "PGPASSWORD",
-];
+const FLAG_ARGS = new Set(["enforce-canonical-paths"]);
+const REQUIRED_PG_ENV = ["PGHOST", "PGPORT", "PGDATABASE", "PGUSER", "PGPASSWORD"];
 const SCHEME_RANK = { legacy: 0, timestamp: 1 };
+// Supabase project refs are exactly 20 lowercase letters.
+const PGUSER_REF = /^postgres\.([a-z]{20})$/;
+const PGHOST_REF = /^db\.([a-z]{20})\.supabase\.co$/;
 
 /** Refusal carrying the exit-path id from the enumeration above. */
 class Refusal extends Error {
@@ -175,7 +249,7 @@ function refuse(code, lines) {
 function parseArguments(argv) {
   const map = {};
   for (const arg of argv) {
-    const match = /^--([a-z0-9-]+)=(.*)$/.exec(arg);
+    const match = /^--([a-z0-9-]+)(?:=(.*))?$/.exec(arg);
     if (!match) {
       refuse("E01", [
         `Unrecognised argument "${arg}".`,
@@ -183,13 +257,14 @@ function parseArguments(argv) {
       ]);
     }
     if (!KNOWN_ARGS.has(match[1])) {
-      refuse("E01", [
-        `Unknown option "--${match[1]}".`,
-        `Known options: ${[...KNOWN_ARGS].join(", ")}.`,
-      ]);
+      refuse("E01", [`Unknown option "--${match[1]}".`, `Known options: ${[...KNOWN_ARGS].join(", ")}.`]);
     }
-    if (match[2].length === 0) {
-      refuse("E01", [`Option "--${match[1]}" was given an empty value.`]);
+    if (FLAG_ARGS.has(match[1])) {
+      map[match[1]] = true;
+      continue;
+    }
+    if (match[2] === undefined || match[2].length === 0) {
+      refuse("E01", [`Option "--${match[1]}" requires a non-empty value.`]);
     }
     map[match[1]] = match[2];
   }
@@ -200,10 +275,10 @@ function parseArguments(argv) {
 
 function parseVersion(raw, origin) {
   const code = origin === "remote" ? "E18" : origin === "baseline" ? "E05" : "E10";
+  const label = origin === "remote" ? "History" : origin === "baseline" ? "Baseline" : "Local";
   if (typeof raw !== "string" || raw.length === 0) {
     refuse(code, [`Empty ${origin} migration version. Refusing to guess its order.`]);
   }
-  const label = origin === "remote" ? "History" : origin === "baseline" ? "Baseline" : "Local";
   if (!/^\d+$/.test(raw)) {
     refuse(code, [
       `${label} migration version "${raw}" is not purely numeric.`,
@@ -257,94 +332,214 @@ function assertOrderingIsUnambiguous(versions, label, code) {
   }
 }
 
-// --- baseline --------------------------------------------------------------
+// --- baseline (read from git's object store, never from the working tree) ---
 
-function loadBaseline(baselinePath, target) {
-  let text;
-  try {
-    text = readFileSync(baselinePath, "utf8");
-  } catch (error) {
+function gitRelativePath(candidate, repoRoot) {
+  const resolved = resolve(candidate);
+  const relativePath = relative(repoRoot, resolved);
+  if (relativePath === "" || relativePath.startsWith(`..${sep}`) || isAbsolute(relativePath)) {
     refuse("E04", [
-      `Cannot read the placeholder baseline file at ${baselinePath}.`,
-      `${error.code ?? error.name}: ${error.message}`,
-      "This gate requires an explicit, committed acknowledgement of which",
-      "`migration repair` placeholder rows a human has already reconciled.",
+      `Baseline path "${resolved}" resolves outside the repository root "${repoRoot}".`,
+      "Refusing: the baseline must be a file committed inside this repo.",
     ]);
   }
+  return relativePath.split(sep).join("/");
+}
+
+/**
+ * Reads the baseline out of git's content-addressed object store at the current
+ * commit. The working tree is never consulted for the bytes, so a symlink,
+ * hardlink, untracked file, or a swap between validate and open at that path is
+ * structurally irrelevant. Mirrors Sandra's guard.
+ */
+function readGitTrackedBaseline(baselinePath, repoRoot) {
+  const relativePath = gitRelativePath(baselinePath, repoRoot);
+  try {
+    return execFileSync("git", ["-C", repoRoot, "show", `HEAD:${relativePath}`], {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+  } catch (error) {
+    const stderr = typeof error.stderr === "string" ? error.stderr.trim() : "";
+    refuse("E04", [
+      `Baseline "${relativePath}" could not be read from git HEAD in "${repoRoot}".`,
+      "It must be COMMITTED at the current HEAD for this gate to treat it as reviewed.",
+      "Untracked, merely staged, symlinked, hardlinked, or working-tree-only content is",
+      "refused on purpose: the allowlist of acknowledged placeholder rows is the single",
+      "highest-value thing to substitute, so it is read from git's object store, never",
+      "from the filesystem.",
+      stderr || `${error.code ?? error.name}: ${error.message}`,
+    ]);
+  }
+}
+
+function loadBaseline(baselinePath, repoRoot, target) {
+  const text = readGitTrackedBaseline(baselinePath, repoRoot);
   let parsed;
   try {
     parsed = JSON.parse(text);
   } catch (error) {
-    refuse("E04", [
-      `The placeholder baseline at ${baselinePath} is not valid JSON.`,
-      error.message,
-    ]);
+    refuse("E04", [`The baseline blob at ${baselinePath} is not valid JSON.`, error.message]);
   }
   if (parsed === null || typeof parsed !== "object" || typeof parsed.targets !== "object" || parsed.targets === null) {
-    refuse("E05", [
-      `The placeholder baseline at ${baselinePath} is malformed.`,
-      'Expected an object with a "targets" object.',
-    ]);
+    refuse("E05", [`The baseline at ${baselinePath} is malformed.`, 'Expected an object with a "targets" object.']);
   }
   if (!Object.hasOwn(parsed.targets, target)) {
     refuse("E05", [
       `No baseline entry for target "${target}" in ${baselinePath}.`,
       `Known targets: ${Object.keys(parsed.targets).join(", ") || "(none)"}.`,
-      "Refusing: an unrecognised target is either a typo or an unreviewed new",
-      "database. Add an explicit entry (project_ref + placeholder_versions) and",
-      "commit it before running this gate against that database.",
+      "Refusing: an unrecognised target is either a typo or an unreviewed new database.",
     ]);
   }
   const entry = parsed.targets[target];
   if (entry === null || typeof entry !== "object") {
     refuse("E05", [`Baseline entry for target "${target}" is not an object.`]);
   }
-  if (!Object.hasOwn(entry, "project_ref")) {
-    refuse("E05", [
-      `Baseline entry for target "${target}" has no "project_ref" key.`,
-      'Set it to the Supabase project ref, or to null for a disposable local cluster.',
-    ]);
+  for (const key of ["project_ref", "database", "db_system_identifier", "placeholder_versions"]) {
+    if (!Object.hasOwn(entry, key)) {
+      refuse("E05", [
+        `Baseline entry for target "${target}" has no "${key}" key.`,
+        "Every identity key must be present explicitly (use null to opt out deliberately);",
+        "an absent key would be an accidental opt-out.",
+      ]);
+    }
   }
   if (!Array.isArray(entry.placeholder_versions)) {
     refuse("E05", [
-      `Baseline entry for target "${target}" has no "placeholder_versions" array.`,
+      `Baseline entry for target "${target}" has a non-array "placeholder_versions".`,
       "Use [] when the target legitimately has no placeholder rows.",
     ]);
   }
   const acknowledged = new Map();
   for (const raw of entry.placeholder_versions) {
-    const version = parseVersion(String(raw), "baseline");
+    if (typeof raw !== "string") {
+      refuse("E05", [
+        `Baseline entry for target "${target}" contains a non-string version ${JSON.stringify(raw)}.`,
+        "Numeric literals lose leading zeros; versions must be quoted strings.",
+      ]);
+    }
+    const version = parseVersion(raw, "baseline");
+    if (acknowledged.has(version.id)) {
+      refuse("E05", [
+        `Baseline entry for target "${target}" lists version ${version.id} twice.`,
+        "Refusing: an unvalidated control file is how a widened allowlist slips past review.",
+      ]);
+    }
     acknowledged.set(version.id, version);
   }
-  return { projectRef: entry.project_ref, acknowledged, path: baselinePath };
+  return {
+    projectRef: entry.project_ref,
+    database: entry.database,
+    systemIdentifier: entry.db_system_identifier,
+    acknowledged,
+    path: baselinePath,
+  };
+}
+
+// --- declared connection identity (exact, never substring) -----------------
+
+function assertConnectionEnvPresent() {
+  const missing = REQUIRED_PG_ENV.filter((name) => {
+    const value = process.env[name];
+    return value === undefined || value === "";
+  });
+  if (missing.length > 0) {
+    refuse("E03", [
+      `Missing required psql connection env var(s): ${missing.join(", ")}.`,
+      "Export PGHOST/PGPORT/PGDATABASE/PGUSER/PGPASSWORD (and PGSSLMODE for hosted",
+      "projects) before running this gate. Refusing rather than connecting to a",
+      "libpq default such as a local socket.",
+    ]);
+  }
 }
 
 /**
- * Guards the "gate checked TEST, push wrote PRODUCTION" mixup. Supabase pooler
- * connections carry the project ref in PGUSER (postgres.<ref>) and direct
- * connections carry it in PGHOST (db.<ref>.supabase.co).
+ * Guards the "gate checked TEST, push wrote PRODUCTION" mixup. The ref is
+ * extracted by ANCHORED pattern from PGUSER (`postgres.<ref>`) and/or PGHOST
+ * (`db.<ref>.supabase.co`). A host or user that merely CONTAINS the ref no
+ * longer passes -- that was round-2 finding P1-2.
  */
-function assertConnectionMatchesTarget(projectRef, target) {
-  if (projectRef === null) return "not bound (baseline project_ref is null)";
-  if (typeof projectRef !== "string" || projectRef.length === 0) {
-    refuse("E06", [`Baseline project_ref for target "${target}" must be a non-empty string or null.`]);
-  }
+function assertDeclaredIdentity(baseline, target) {
   const user = process.env.PGUSER ?? "";
   const host = process.env.PGHOST ?? "";
-  if (!user.includes(projectRef) && !host.includes(projectRef)) {
+  const database = process.env.PGDATABASE ?? "";
+
+  if (baseline.database !== null && database !== baseline.database) {
+    refuse("E06", [`PGDATABASE is "${database}" but target "${target}" expects "${baseline.database}".`]);
+  }
+
+  if (baseline.projectRef === null) {
+    return "not bound (baseline project_ref is null -- disposable local cluster only)";
+  }
+  if (typeof baseline.projectRef !== "string" || !/^[a-z]{20}$/.test(baseline.projectRef)) {
     refuse("E06", [
-      `Connection does not match target "${target}".`,
-      `Baseline expects project ref "${projectRef}", but PGUSER="${user}" and PGHOST="${host}" do not contain it.`,
-      "Refusing: running this gate against one database and pushing to another",
-      "is the failure mode this binding exists to stop.",
+      `Baseline project_ref for target "${target}" is not a 20-lowercase-letter Supabase ref or null.`,
     ]);
   }
-  return `bound to project ref ${projectRef}`;
+
+  const fromUser = PGUSER_REF.exec(user)?.[1] ?? null;
+  const fromHost = PGHOST_REF.exec(host)?.[1] ?? null;
+  if (fromUser === null && fromHost === null) {
+    refuse("E06", [
+      `Cannot parse a Supabase project ref from this connection for target "${target}".`,
+      `PGUSER="${user}" must match postgres.<ref>, or PGHOST="${host}" must match db.<ref>.supabase.co.`,
+      "Refusing: identity is parsed exactly, never inferred from a substring, so that a",
+      "hostname or username that merely contains the ref cannot authorise a push.",
+    ]);
+  }
+  if (fromUser !== null && fromHost !== null && fromUser !== fromHost) {
+    refuse("E06", [`PGUSER declares project ref "${fromUser}" but PGHOST declares "${fromHost}". Refusing.`]);
+  }
+  const declared = fromUser ?? fromHost;
+  if (declared !== baseline.projectRef) {
+    refuse("E06", [
+      `Connection declares project ref "${declared}" but target "${target}" expects "${baseline.projectRef}".`,
+      "Refusing: running this gate against one database and pushing to another is the",
+      "failure mode this binding exists to stop.",
+    ]);
+  }
+  return `declared ref ${declared} (exact match)`;
 }
 
 // --- local migrations ------------------------------------------------------
 
-function loadLocalMigrations(migrationsDir) {
+/**
+ * A symlink anywhere between the repo root and the migrations directory means
+ * the gate and `supabase db push` can resolve the same string to different
+ * directories. Refuse rather than assume they agree.
+ */
+function assertNoSymlinkInPath(target, repoRoot) {
+  const rest = relative(repoRoot, target);
+  const inside = rest !== "" && !rest.startsWith("..") && !isAbsolute(rest);
+  const chain = [];
+  if (inside) {
+    let current = repoRoot;
+    for (const part of rest.split(sep).filter(Boolean)) {
+      current = resolve(current, part);
+      chain.push(current);
+    }
+  } else {
+    chain.push(target);
+  }
+  for (const candidate of chain) {
+    let info;
+    try {
+      info = lstatSync(candidate);
+    } catch {
+      continue; // absence is reported by the caller's statSync as E07
+    }
+    if (info.isSymbolicLink()) {
+      refuse("E24", [
+        `Migrations path component "${candidate}" is a symlink.`,
+        "Refusing: `supabase db push` reads the repository path directly, so a symlink lets",
+        "the gate inspect one directory while the push applies another.",
+      ]);
+    }
+  }
+}
+
+function loadLocalMigrations(migrationsDir, repoRoot) {
+  assertNoSymlinkInPath(migrationsDir, repoRoot);
   let entries;
   try {
     const info = statSync(migrationsDir);
@@ -357,8 +552,8 @@ function loadLocalMigrations(migrationsDir) {
     refuse("E07", [
       `Cannot read the migrations directory at ${migrationsDir}.`,
       `${error.code ?? error.name}: ${error.message}`,
-      "Refusing: without the local migration set there is nothing to compare",
-      "history against, so no push can be proven safe.",
+      "Refusing: without the local migration set there is nothing to compare history",
+      "against, so no push can be proven safe.",
     ]);
   }
 
@@ -370,9 +565,9 @@ function loadLocalMigrations(migrationsDir) {
   if (files.length === 0) {
     refuse("E08", [
       `Migrations directory ${migrationsDir} contains ZERO .sql files.`,
-      "Refusing: an empty or wrong migrations path means every check below is",
-      "vacuously true. The previous version of this gate printed OK here, which",
-      "is a green light manufactured out of nothing.",
+      "Refusing: an empty or wrong migrations path means every check below is vacuously",
+      "true. The previous version of this gate printed OK here, which is a green light",
+      "manufactured out of nothing.",
     ]);
   }
 
@@ -399,43 +594,26 @@ function loadLocalMigrations(migrationsDir) {
     migrations.push({ file, version });
   }
 
-  assertOrderingIsUnambiguous(
-    migrations.map((entry) => entry.version),
-    "Local migration file",
-    "E12",
-  );
-
+  assertOrderingIsUnambiguous(migrations.map((entry) => entry.version), "Local migration file", "E12");
   return migrations;
 }
 
-// --- remote history --------------------------------------------------------
+// --- remote reads ----------------------------------------------------------
 
 const HISTORY_SQL =
   "set statement_timeout = '__TIMEOUT_MS__'; " +
-  "select coalesce(" +
-  "json_agg(json_build_object('version', version, 'placeholder', statements is null) order by version)::text, " +
-  "'[]') from supabase_migrations.schema_migrations;";
+  "select json_build_object(" +
+  "'database', current_database(), " +
+  "'rows', coalesce(json_agg(json_build_object('version', version, 'placeholder', statements is null) " +
+  "order by version), '[]'::json))::text " +
+  "from supabase_migrations.schema_migrations;";
 
-function assertConnectionEnvPresent() {
-  const missing = REQUIRED_PG_ENV.filter((name) => {
-    const value = process.env[name];
-    return value === undefined || value === "";
-  });
-  if (missing.length > 0) {
-    refuse("E03", [
-      `Missing required psql connection env var(s): ${missing.join(", ")}.`,
-      "Export PGHOST/PGPORT/PGDATABASE/PGUSER/PGPASSWORD (and PGSSLMODE for hosted",
-      "projects) before running this gate. Refusing rather than connecting to a",
-      "libpq default such as a local socket.",
-    ]);
-  }
-}
+const IDENTITY_SQL =
+  "set statement_timeout = '__TIMEOUT_MS__'; " +
+  "select json_build_object('database', current_database(), " +
+  "'system_identifier', (select system_identifier::text from pg_control_system()))::text;";
 
-function loadRemoteHistory(timeoutMs) {
-  // Two independent timeouts, both failing closed:
-  //   PGCONNECT_TIMEOUT  -> a blackholed / unroutable host gives up instead of hanging
-  //   statement_timeout  -> a server that accepts but never answers gives up
-  // plus a hard wall-clock kill on the child process as the backstop.
+function runPsqlJson(sql, timeoutMs, codes) {
   const connectSeconds = Math.max(1, Math.ceil(timeoutMs / 2000));
   // Kept strictly below the hard kill so a server that accepts but never answers
   // produces a readable cancellation instead of a bare SIGKILL.
@@ -452,66 +630,94 @@ function loadRemoteHistory(timeoutMs) {
         "--set",
         "ON_ERROR_STOP=1",
         "-c",
-        HISTORY_SQL.replace("__TIMEOUT_MS__", String(statementTimeoutMs)),
+        sql.replace("__TIMEOUT_MS__", String(statementTimeoutMs)),
       ],
       {
         encoding: "utf8",
         timeout: timeoutMs,
         killSignal: "SIGKILL",
         stdio: ["ignore", "pipe", "pipe"],
-        env: {
-          ...process.env,
-          PGCONNECT_TIMEOUT: String(connectSeconds),
-        },
+        env: { ...process.env, PGCONNECT_TIMEOUT: String(connectSeconds) },
       },
     );
   } catch (error) {
     if (error.code === "ENOENT") {
       refuse("E13", [
         "psql was not found on PATH.",
-        "Install the PostgreSQL client before running this gate. Refusing: with no",
-        "way to read remote history, nothing about the push can be verified.",
+        "Install the PostgreSQL client before running this gate. Refusing: with no way to",
+        "read remote state, nothing about the push can be verified.",
       ]);
     }
     if (error.code === "ETIMEDOUT" || error.signal === "SIGKILL" || error.signal === "SIGTERM") {
-      refuse("E15", [
+      refuse(codes.timeout, [
         `psql did not answer within ${timeoutMs} ms and was killed.`,
-        "Refusing: an unreachable or blackholed database must fail closed, never",
-        "hang and never pass.",
+        "Refusing: an unreachable or blackholed database must fail closed, never hang and",
+        "never pass.",
       ]);
     }
     const stderr = String(error.stderr ?? "").trim();
-    if (/statement timeout|canceling statement due to/i.test(stderr) || /timeout expired/i.test(stderr)) {
-      refuse("E15", [`psql timed out reading schema_migrations.`, stderr]);
+    if (/statement timeout|canceling statement due to|timeout expired/i.test(stderr)) {
+      refuse(codes.timeout, ["psql timed out reading remote state.", stderr]);
     }
-    refuse("E14", [
-      "psql could not read supabase_migrations.schema_migrations.",
+    refuse(codes.failure, [
+      "psql could not read the remote database.",
       stderr || `${error.code ?? error.name}: ${error.message}`,
-      "Causes include: host unreachable, wrong or missing credentials, SSL",
-      "rejected, the supabase_migrations schema or schema_migrations table",
-      "absent, or permission denied. All of them are indeterminate, so refuse.",
+      "Causes include: host unreachable, wrong or missing credentials, SSL rejected, the",
+      "supabase_migrations schema or schema_migrations table absent, permission denied, or",
+      "an unreadable pg_control_system(). All are indeterminate, so refuse.",
     ]);
   }
 
   const payload = String(stdout).trim();
-  let rows;
   try {
-    rows = JSON.parse(payload);
+    return JSON.parse(payload);
   } catch {
     refuse("E16", [
-      "psql returned output that is not the expected JSON history payload.",
+      "psql returned output that is not the expected JSON payload.",
       `Received: ${payload.slice(0, 400)}`,
     ]);
   }
+}
+
+/**
+ * Interrogates the LIVE connection rather than trusting the declared env. The
+ * cluster's system_identifier (pg_control_system()) is a stable per-cluster
+ * value, so pinning it in the baseline binds this run to a specific physical
+ * database, not merely to a string that looks like the right hostname.
+ */
+function assertLiveIdentity(baseline, target, timeoutMs) {
+  const observed = runPsqlJson(IDENTITY_SQL, timeoutMs, { failure: "E28", timeout: "E15" });
+  if (baseline.database !== null && observed.database !== baseline.database) {
+    refuse("E28", [
+      `Live connection reports current_database() = "${observed.database}" but target "${target}"`,
+      `expects "${baseline.database}". Refusing.`,
+    ]);
+  }
+  if (baseline.systemIdentifier === null) {
+    return `live database "${observed.database}", cluster ${observed.system_identifier} (not pinned)`;
+  }
+  if (String(observed.system_identifier) !== String(baseline.systemIdentifier)) {
+    refuse("E28", [
+      `Live cluster system_identifier is ${observed.system_identifier} but target "${target}" is`,
+      `pinned to ${baseline.systemIdentifier}.`,
+      "Refusing: this connection is not the physical database this target was reviewed",
+      "against. A correctly-formed hostname is not proof of which cluster answered.",
+    ]);
+  }
+  return `live database "${observed.database}", cluster ${observed.system_identifier} (pinned, matched)`;
+}
+
+function loadRemoteHistory(timeoutMs) {
+  const payload = runPsqlJson(HISTORY_SQL, timeoutMs, { failure: "E14", timeout: "E15" });
+  const rows = payload?.rows;
   if (!Array.isArray(rows)) {
-    refuse("E16", ["History query did not return a JSON array."]);
+    refuse("E16", ["History query did not return a JSON array of rows."]);
   }
   if (rows.length === 0) {
     refuse("E17", [
       "supabase_migrations.schema_migrations returned ZERO rows.",
-      "Refusing to guess a baseline. An empty history makes every local migration",
-      "look pending, which is precisely when a blind --include-all does the most",
-      "damage. A human must confirm this database's real state first.",
+      "Refusing to guess a baseline. An empty history makes every local migration look",
+      "pending, which is precisely when a blind --include-all does the most damage.",
     ]);
   }
 
@@ -532,13 +738,43 @@ function loadRemoteHistory(timeoutMs) {
     history.push({ version, isPlaceholder: row.placeholder === true });
   }
 
-  assertOrderingIsUnambiguous(
-    history.map((entry) => entry.version),
-    "Remote history",
-    "E20",
-  );
-
+  assertOrderingIsUnambiguous(history.map((entry) => entry.version), "Remote history", "E20");
   return history;
+}
+
+// --- fingerprints ----------------------------------------------------------
+
+function historyDigest(history) {
+  const canonical = history
+    .map((row) => `${row.version.id}:${row.isPlaceholder ? 1 : 0}`)
+    .sort()
+    .join("\n");
+  return createHash("sha256").update(canonical).digest("hex");
+}
+
+function readFingerprint(path) {
+  let parsed;
+  try {
+    parsed = JSON.parse(readFileSync(path, "utf8"));
+  } catch (error) {
+    refuse("E29", [
+      `Cannot read the history fingerprint at ${path}.`,
+      `${error.code ?? error.name}: ${error.message}`,
+      "Refusing: without the fingerprint there is no proof the history is still the one",
+      "the gate approved.",
+    ]);
+  }
+  if (
+    parsed === null ||
+    typeof parsed !== "object" ||
+    typeof parsed.digest !== "string" ||
+    typeof parsed.target !== "string" ||
+    !Array.isArray(parsed.historyIds) ||
+    !Array.isArray(parsed.authorizedPendingIds)
+  ) {
+    refuse("E29", [`The history fingerprint at ${path} is malformed.`]);
+  }
+  return parsed;
 }
 
 // --- main ------------------------------------------------------------------
@@ -550,35 +786,136 @@ function main() {
   if (!target) {
     refuse("E02", [
       "--target=<label> is required.",
-      "It selects which acknowledged placeholder baseline applies and binds this",
-      "run to an expected Supabase project ref, so a gate run against TEST cannot",
-      "be quietly reused to authorise a PRODUCTION push.",
-      "See scripts/migration-rehearsal/placeholder-baseline.json for valid labels.",
+      "It selects which acknowledged placeholder baseline applies and binds this run to an",
+      "expected Supabase project ref and cluster, so a gate run against TEST cannot be",
+      "quietly reused to authorise a PRODUCTION push.",
     ]);
   }
+
+  const enforceCanonical = args["enforce-canonical-paths"] === true;
+  if (enforceCanonical && args["repo-root"] !== undefined) {
+    refuse("E25", [
+      "--repo-root was passed together with --enforce-canonical-paths.",
+      "The test-only repo-root override cannot be combined with a real push: it would let a",
+      "scratch git repo supply the acknowledged-placeholder allowlist.",
+    ]);
+  }
+  const repoRoot = args["repo-root"] ? resolve(args["repo-root"]) : REPO_ROOT;
 
   const timeoutMs = Number.parseInt(args["timeout-ms"] ?? "20000", 10);
   if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) {
     refuse("E01", [`--timeout-ms must be a positive integer, got "${args["timeout-ms"]}".`]);
   }
 
-  const migrationsDir = resolve(args["migrations-dir"] ?? "supabase/migrations");
-  const baselinePath = resolve(args.baseline ?? DEFAULT_BASELINE);
+  const migrationsDir = resolve(args["migrations-dir"] ?? resolve(repoRoot, "supabase/migrations"));
+  const baselinePath = resolve(
+    args.baseline ?? resolve(repoRoot, "scripts/migration-rehearsal/placeholder-baseline.json"),
+  );
+
+  if (enforceCanonical) {
+    // `supabase db push` reads <repo>/supabase/migrations. Under enforcement the
+    // gate must read exactly that path -- otherwise the gate can approve
+    // directory A while the push applies directory B (round-2 finding P1-1).
+    if (migrationsDir !== CANONICAL_MIGRATIONS_DIR) {
+      refuse("E25", [
+        "--enforce-canonical-paths requires the canonical migrations directory.",
+        `Given:    ${migrationsDir}`,
+        `Required: ${CANONICAL_MIGRATIONS_DIR}`,
+        "Refusing: `supabase db push` always reads the repository path, so checking any other",
+        "directory proves nothing about what is about to be applied.",
+      ]);
+    }
+    if (baselinePath !== CANONICAL_BASELINE) {
+      refuse("E25", [
+        "--enforce-canonical-paths requires the canonical baseline file.",
+        `Given:    ${baselinePath}`,
+        `Required: ${CANONICAL_BASELINE}`,
+      ]);
+    }
+    let realDir;
+    try {
+      realDir = realpathSync(migrationsDir);
+    } catch (error) {
+      refuse("E07", [`Cannot resolve ${migrationsDir}: ${error.code ?? error.message}`]);
+    }
+    if (realDir !== realpathSync(CANONICAL_MIGRATIONS_DIR)) {
+      refuse("E25", [`${migrationsDir} resolves to ${realDir}, not the canonical migrations directory.`]);
+    }
+  }
+
+  const mode = args["verify-applied"]
+    ? "verify-applied"
+    : args["verify-fingerprint"]
+      ? "verify-fingerprint"
+      : "check";
 
   console.log("== Migration safety gate ==");
+  console.log(`Mode:                 ${mode}${enforceCanonical ? " (canonical paths enforced)" : ""}`);
   console.log(`Target:               ${target}`);
   console.log(`Migrations directory: ${migrationsDir}`);
-  console.log(`Placeholder baseline: ${baselinePath}`);
+  console.log(`Placeholder baseline: ${baselinePath} (read from git HEAD in ${repoRoot})`);
 
   assertConnectionEnvPresent();
-  const baseline = loadBaseline(baselinePath, target);
-  console.log(`Connection identity:  ${assertConnectionMatchesTarget(baseline.projectRef, target)}`);
+  const baseline = loadBaseline(baselinePath, repoRoot, target);
+  console.log(`Declared identity:    ${assertDeclaredIdentity(baseline, target)}`);
+  console.log(`Live identity:        ${assertLiveIdentity(baseline, target, timeoutMs)}`);
 
-  const local = loadLocalMigrations(migrationsDir);
+  // --- post-push reconciliation mode ---------------------------------------
+  if (mode === "verify-applied") {
+    const fingerprint = readFingerprint(args["verify-applied"]);
+    if (fingerprint.target !== target) {
+      refuse("E29", [`Fingerprint was taken for target "${fingerprint.target}" but this run is "${target}".`]);
+    }
+    const history = loadRemoteHistory(timeoutMs);
+    const expected = new Set([...fingerprint.historyIds, ...fingerprint.authorizedPendingIds]);
+    const actual = new Set(history.map((row) => row.version.id));
+    const unexpected = [...actual].filter((id) => !expected.has(id));
+    const missing = [...expected].filter((id) => !actual.has(id));
+    const newPlaceholders = history
+      .filter((row) => row.isPlaceholder && !baseline.acknowledged.has(row.version.id))
+      .map((row) => row.version.raw);
+
+    if (unexpected.length > 0 || missing.length > 0 || newPlaceholders.length > 0) {
+      refuse("E27", [
+        "Post-push reconciliation FAILED. The resulting history is not exactly the history the",
+        "gate approved plus the pending set it authorised.",
+        ...(unexpected.length > 0 ? [`  Unexpected versions now present: ${unexpected.join(", ")}`] : []),
+        ...(missing.length > 0 ? [`  Expected versions now absent: ${missing.join(", ")}`] : []),
+        ...(newPlaceholders.length > 0 ? [`  New unacknowledged placeholder rows: ${newPlaceholders.join(", ")}`] : []),
+        "",
+        "Something other than this push changed history. On 2026-07-30 the damage went",
+        "unnoticed for hours; this check exists so it cannot go unnoticed again. Inspect the",
+        "live schema before running anything else against this database.",
+      ]);
+    }
+    console.log("");
+    console.log("OK: post-push history matches exactly the approved history plus the authorised set.");
+    return;
+  }
+
+  const local = loadLocalMigrations(migrationsDir, repoRoot);
   const history = loadRemoteHistory(timeoutMs);
+  const digest = historyDigest(history);
 
   console.log(`Local migration files: ${local.length}`);
   console.log(`History rows:          ${history.length}`);
+  console.log(`History digest:        ${digest.slice(0, 16)}...`);
+
+  if (mode === "verify-fingerprint") {
+    const fingerprint = readFingerprint(args["verify-fingerprint"]);
+    if (fingerprint.target !== target) {
+      refuse("E29", [`Fingerprint was taken for target "${fingerprint.target}" but this run is "${target}".`]);
+    }
+    if (fingerprint.digest !== digest) {
+      refuse("E26", [
+        "Remote history CHANGED between the safety gate and the push.",
+        `  approved digest: ${fingerprint.digest}`,
+        `  current digest:  ${digest}`,
+        "Refusing: a `supabase migration repair` or a competing push landed in between, so the",
+        "state this push was authorised against no longer exists.",
+      ]);
+    }
+  }
 
   // --- check 1: no unacknowledged placeholder rows -------------------------
   const placeholders = history.filter((row) => row.isPlaceholder);
@@ -606,17 +943,21 @@ function main() {
       ...unacknowledged.map((row) => `  - ${row.version.raw}`),
       "",
       "These rows come from `supabase migration repair`. They record that a version is",
-      "considered applied without recording what content was applied, so history is not",
-      "proof of what is live at that version.",
+      "considered applied without recording what content was applied, so history is not proof",
+      "of what is live at that version.",
       "",
       "If these repairs were intentional, confirm the live schema directly (e.g.",
       "pg_get_functiondef on the objects they touch), then add them to",
-      `${baseline.path} under targets["${target}"].placeholder_versions and commit that`,
-      "change. Adding them is a reviewable edit on purpose: automation must not be able",
-      "to acknowledge its own repair rows. Paste-ready:",
+      `${baseline.path} under targets["${target}"].placeholder_versions, COMMIT that change,`,
+      "and re-run. The gate reads the baseline from git HEAD, so an uncommitted edit will not",
+      "take effect -- acknowledgement is a reviewed commit by construction. Paste-ready:",
       "",
       JSON.stringify(
-        [...new Set([...baseline.acknowledged.values()].map((v) => v.raw).concat(unacknowledged.map((r) => r.version.raw)))].sort(),
+        [
+          ...new Set(
+            [...baseline.acknowledged.values()].map((v) => v.raw).concat(unacknowledged.map((r) => r.version.raw)),
+          ),
+        ].sort(),
         null,
         2,
       ),
@@ -651,10 +992,27 @@ function main() {
     ]);
   }
 
+  if (args["emit-fingerprint"]) {
+    writeFileSync(
+      resolve(args["emit-fingerprint"]),
+      `${JSON.stringify(
+        {
+          createdAt: new Date().toISOString(),
+          target,
+          digest,
+          historyIds: history.map((row) => row.version.id).sort(),
+          authorizedPendingIds: pending.map((entry) => entry.version.id).sort(),
+          authorizedPendingFiles: pending.map((entry) => entry.file),
+        },
+        null,
+        2,
+      )}\n`,
+    );
+    console.log(`Fingerprint written:       ${resolve(args["emit-fingerprint"])}`);
+  }
+
   console.log("");
-  console.log(
-    "OK: history carries no unacknowledged placeholder rows, and every pending migration is",
-  );
+  console.log("OK: history carries no unacknowledged placeholder rows, and every pending migration is");
   console.log("newer than history's high-water mark.");
   if (pending.length > 0) {
     console.log("Pending migrations (safe to include in a reviewed dry-run):");
@@ -663,9 +1021,7 @@ function main() {
     }
   }
   console.log("");
-  console.log(
-    "This gate does not replace review. Run `supabase db push --include-all --dry-run` next and",
-  );
+  console.log("This gate does not replace review. Run `supabase db push --include-all --dry-run` next and");
   console.log("confirm the printed list matches exactly what you expect before running it for real.");
 }
 
@@ -682,6 +1038,6 @@ try {
     console.error(error?.stack ?? String(error));
   }
   console.error("");
-  console.error("No SQL was executed by this gate beyond a read-only SELECT. Do not proceed.");
+  console.error("No SQL was executed by this gate beyond read-only SELECTs. Do not proceed.");
   process.exit(1);
 }

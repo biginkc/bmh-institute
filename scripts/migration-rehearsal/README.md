@@ -95,10 +95,17 @@ merely sits next to the dangerous command in a runbook is a suggestion, not a ga
 is precisely how the incident happened. CI (`.github/workflows/db-migrate-test.yml`) pushes
 through the same wrapper for the same reason.
 
+The wrapper takes **no migrations-directory option** and passes
+`--enforce-canonical-paths`, so the gate is provably reading the same
+`supabase/migrations` the CLI reads. It also emits a digest of the history it approved,
+re-verifies that digest immediately before the push, and reconciles the resulting history
+against it immediately after — so a `migration repair` or competing push landing mid-flight
+is caught rather than silently absorbed.
+
 The gate can also be run on its own for inspection:
 
 ```sh
-node scripts/migration-rehearsal/check-migration-safety.mjs --target=institute-production
+node scripts/migration-rehearsal/check-migration-safety.mjs --target=institute-production --enforce-canonical-paths
 ```
 
 ### What it refuses on
@@ -134,8 +141,18 @@ is not stops the push. Adding a version is a reviewed commit, never a runtime fl
 automated loop cannot acknowledge the very row that should have stopped it. When the gate
 refuses with `E21` it prints the exact paste-ready array.
 
-Each baseline entry also pins a `project_ref`. The gate refuses if the live connection does
-not carry that ref, which stops the "checked TEST, pushed PRODUCTION" mixup.
+The baseline is read out of **git's object store at HEAD**, never from the working tree
+(`git show HEAD:<path>`). An untracked, merely staged, symlinked, or hardlinked file at that
+path cannot substitute for the reviewed blob, and there is no validate-then-open window to
+race. An uncommitted edit therefore has no effect — committing it is the acknowledgement.
+Sandra's guard uses the identical mechanism; keep the two converged.
+
+Each baseline entry also pins identity: `project_ref` (matched **exactly** against
+`postgres.<ref>` in PGUSER or `db.<ref>.supabase.co` in PGHOST — never as a substring),
+`database` (compared to PGDATABASE *and* to the live `current_database()`), and
+`db_system_identifier` (the cluster's `pg_control_system()` value, so the target is bound to
+a specific physical database rather than to a string that merely looks like the right host).
+Every key must be present; `null` is an explicit opt-out for disposable local clusters.
 
 ### Proving the gate still works
 
@@ -144,11 +161,17 @@ npm run test:migration-gate:postgres
 ```
 
 Spins one disposable local PostgreSQL cluster (`LC_ALL=C` plus a short socket path, to avoid
-the "postmaster became multithreaded" startup flake) and runs the real gate against 30
+the "postmaster became multithreaded" startup flake) and runs the real gate against 52
 scenarios: the pass case, the 2026-07-30 incident replay, empty and missing migrations
 directories, `001`/`1` and `0001`/`001` formatting collisions, mixed legacy/timestamp
-schemes, acknowledged versus new placeholder rows, unreachable and silent databases, and
-every malformed-input path. It never touches a hosted project.
+schemes, acknowledged versus new placeholder rows, unreachable and silent databases, every
+malformed-input path, untracked/symlinked/outside-the-repo/working-tree-edited baselines,
+substring-lookalike hostnames and usernames, a mismatched cluster identifier, symlinked and
+non-canonical migrations directories, history changing between gate and push, and post-push
+reconciliation. The last block is a true end-to-end run of `guarded-db-push.sh` in a scratch
+repo with a stub `supabase` on PATH, which proves the push reads the same directory the gate
+approved and that an unauthorised version applied during the push fails the run. It never
+touches a hosted project.
 
 ## Run migrations 039 through 045 integration coverage against BMH Institute test
 

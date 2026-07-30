@@ -98,6 +98,31 @@ test("guarded-db-push runs the safety gate before the push, with no escape hatch
   assert.doesNotMatch(wrapper, /continue-on-error/);
 });
 
+test("guarded-db-push cannot be pointed at a different migrations directory", () => {
+  // Round-2 finding P1-1: a caller-supplied --migrations-dir let the gate
+  // approve directory A while `supabase db push` applied directory B. The
+  // wrapper must expose no such option, and must force the gate onto the
+  // canonical repository path.
+  const wrapper = read("guarded-db-push.sh");
+  const options = [...wrapper.matchAll(/^\s{4}(--[a-z-]+)[=)]/gm)].map((match) => match[1]);
+  assert.deepEqual(options.sort(), ["--dry-run", "--target", "--timeout-ms"]);
+  assert.match(wrapper, /--enforce-canonical-paths/);
+  assert.ok(!/--migrations-dir=\$/.test(wrapper), "wrapper must not forward a migrations directory");
+});
+
+test("guarded-db-push verifies history before the push and reconciles after it", () => {
+  // Round-2 finding P1-3.
+  const wrapper = read("guarded-db-push.sh");
+  const emit = wrapper.indexOf("--emit-fingerprint=");
+  const verify = wrapper.indexOf("--verify-fingerprint=", emit);
+  const push = wrapper.indexOf("supabase db push --include-all --db-url \"$DB_URL\" --yes", verify);
+  const reconcile = wrapper.indexOf("--verify-applied=", push);
+  assert.ok(emit >= 0, "gate must emit a history fingerprint");
+  assert.ok(verify > emit, "history must be re-verified after the initial gate");
+  assert.ok(push > verify, "the push must come after the re-verification");
+  assert.ok(reconcile > push, "post-push reconciliation must come after the push");
+});
+
 test("the TEST migration workflow pushes only through the guarded wrapper", () => {
   const workflow = readFileSync(
     resolve(root, "../../.github/workflows/db-migrate-test.yml"),
