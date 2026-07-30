@@ -16360,6 +16360,33 @@
                         }
                       ]
                     }
+                  },
+                  {
+                    "source_key": "block-oral-check-slot-09",
+                    "type": "role_play",
+                    "sort_order": 6,
+                    "required": true,
+                    "content": {
+                      "mode": "oral_check",
+                      "height_px": 760,
+                      "scenario_id": "c3642915-deab-4b3d-9479-0fc71afee9e6",
+                      "scenario_spec": {
+                        "assignment_source_key": "oral-check-slot-09",
+                        "context": "This lesson covers why an objection is a good sign, the difference between a real objection and silence, venting, or a reactionary brush-off, and the listen-acknowledge-ask-redirect framework. Andrea checks it out loud with real seller moments -- a frustrated seller, a sudden silence, a price pushback -- because recognizing what's actually happening on the call matters more than reciting the framework.",
+                        "learner_goal": "Demonstrate you can recognize what's really happening when a seller pushes back and respond the right way, in your own words.",
+                        "success_criteria": [
+                          "Explains why an objection signals engagement, not rejection",
+                          "Recognizes venting for what it is and responds with empathy plus redirect",
+                          "Holds the silence instead of rambling",
+                          "Handles a real objection framework-style: acknowledges and asks before defending"
+                        ],
+                        "fail_conditions": [
+                          "Confuses venting or silence with a real objection, or argues back instead of acknowledging",
+                          "Fills a silence with rambling instead of holding it",
+                          "Gives no grounded answer -- guesses or answers a different question"
+                        ]
+                      }
+                    }
                   }
                 ]
               },
@@ -19065,6 +19092,33 @@
                           "back": "Highest possible price versus certainty and timeline."
                         }
                       ]
+                    }
+                  },
+                  {
+                    "source_key": "block-oral-check-slot-10",
+                    "type": "role_play",
+                    "sort_order": 6,
+                    "required": true,
+                    "content": {
+                      "mode": "oral_check",
+                      "height_px": 760,
+                      "scenario_id": "c164bec1-fb24-46c7-8790-7ea3bf2fb7fb",
+                      "scenario_spec": {
+                        "assignment_source_key": "oral-check-slot-10",
+                        "context": "This lesson drills thirty real objection-to-comeback scripts. Andrea checks it out loud because the point was never memorizing all thirty -- it's the pattern: get the seller's number before giving ours, and use terms to close a gap cash alone can't. Andrea has the learner pick any drilled objection and deliver their own comeback.",
+                        "learner_goal": "Show the pattern behind the scripts, not a recitation of them, in your own words -- including one full comeback of your choosing.",
+                        "success_criteria": [
+                          "Understands the expectation is framework and reps, not memorized scripts",
+                          "Explains why we never give our number first",
+                          "Sees terms as the path past a cash-price gap",
+                          "Delivers a framework-shaped comeback to a chosen objection in their own words"
+                        ],
+                        "fail_conditions": [
+                          "Believes all thirty scripts need to be memorized word for word",
+                          "Would give a number before getting the seller's number",
+                          "Gives no grounded answer, or a comeback that argues instead of acknowledging and asking"
+                        ]
+                      }
                     }
                   }
                 ]

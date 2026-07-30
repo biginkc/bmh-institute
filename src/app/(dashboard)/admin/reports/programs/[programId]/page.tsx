@@ -358,7 +358,12 @@ export default async function ProgramReportPage({
               presentation: "link",
               hrefKey: "href",
             },
-            { key: "lessons", label: "Lessons", align: "right", tabular: true },
+            // The denominator here is required lesson ROWS (content + quiz +
+            // assignment), not instructional lessons -- a bare "Lessons"
+            // label reads as the smaller instructional count and misstates
+            // what the fraction measures. Matches the "Required lessons"
+            // wording on the per-user report.
+            { key: "lessons", label: "Required lessons", align: "right", tabular: true },
             {
               key: "pct",
               label: "%",
