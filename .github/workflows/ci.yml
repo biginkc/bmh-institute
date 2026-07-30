@@ -94,6 +94,9 @@ jobs:
           echo "::add-mask::$ENCODED_PASSWORD"
           DB_URL="postgresql://postgres.${TEST_PROJECT_REF}:${ENCODED_PASSWORD}@aws-1-us-west-1.pooler.supabase.com:5432/postgres"
           export PGSSLMODE=require
+          if [ "$(psql "$DB_URL" --tuples-only --no-align --command "select to_regprocedure('public.hugo_apply_access_unhashed(uuid,text,text,jsonb,text,timestamptz,text)') is not null")" != "t" ]; then
+            psql "$DB_URL" --set ON_ERROR_STOP=1 --file supabase/migrations/20260728113000_hugo_access_operation_payload_hash.sql
+          fi
           psql "$DB_URL" --set ON_ERROR_STOP=1 --file supabase/migrations/20260729210000_institute_role_group_lifecycle_lock.sql
           psql "$DB_URL" --set ON_ERROR_STOP=1 --file supabase/migrations/20260730200000_hugo_institute_lifecycle_contract.sql
           psql "$DB_URL" --set ON_ERROR_STOP=1 --file supabase/migrations/20260730210000_hugo_institute_lifecycle_contract_forward.sql
