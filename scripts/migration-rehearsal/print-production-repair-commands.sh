@@ -45,7 +45,7 @@ supabase migration repair 20260423204031 20260423204130 20260423204205 202604232
 #    and committing it is mandatory rather than tidy: the gate reads the baseline
 #    out of git HEAD, never from the working tree, so an uncommitted edit has no
 #    effect at all. Automation must not be able to acknowledge its own repair rows.
-node scripts/migration-rehearsal/check-migration-safety.mjs --target=institute-production --enforce-canonical-paths
+node scripts/migration-rehearsal/check-migration-safety.mjs --target=institute-production
 
 # 4. Read-only repaired-history and push checks. The dry run goes through the
 #    same wrapper so it uses the same target definition as the real push.

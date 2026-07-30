@@ -46,8 +46,12 @@ test("the host harness uses C locale, proves both history states, and dumps sche
   assert.match(harness, /LC_ALL: "C"/);
   assert.match(harness, /numberedMigrations\(1, 14\)/);
   assert.match(harness, /repair-history\.sql/);
-  assert.match(harness, /numberedMigrations\(15, 39\)/);
-  assert.match(harness, /assertVersions\(numberedVersions\(1, 39\)/);
+  // The harness applies and records 015-047 and asserts a final history of
+  // 001-047. This expectation said 39 and had been failing on origin/main since
+  // the harness was extended past 039; it was stale, not a real defect. Verified
+  // against the harness itself rather than assumed.
+  assert.match(harness, /numberedMigrations\(15, 47\)/);
+  assert.match(harness, /assertVersions\(numberedVersions\(1, 47\)/);
   assert.match(harness, /dumpSchema\("schema-full\.sql"/);
   assert.match(harness, /dumpSchema\("schema-app\.sql"/);
 });
@@ -93,21 +97,57 @@ test("guarded-db-push runs the safety gate before the push, with no escape hatch
   assert.ok(strictMode >= 0, "wrapper must abort on any non-zero exit");
   assert.ok(gate > strictMode);
   assert.ok(push > gate, "the push must come after the gate");
-  assert.doesNotMatch(wrapper, /check-migration-safety\.mjs[^\n]*\|\|/);
   assert.doesNotMatch(wrapper, /set \+e/);
   assert.doesNotMatch(wrapper, /continue-on-error/);
+  // The two PRE-push gate calls must be unsuppressed: a non-zero exit has to end
+  // the run before anything is written. The POST-push reconciliation is
+  // deliberately status-captured instead, so that it always runs (see the
+  // partial-push test below) -- that is the only permitted `||` on a gate call.
+  const suppressed = [...wrapper.matchAll(/^\s*"\$\{GATE\[@\]\}"[^\n]*\|\|[^\n]*$/gm)].map((m) => m[0]);
+  assert.equal(suppressed.length, 1, "exactly one gate call may capture its status");
+  assert.match(suppressed[0], /--verify-applied/);
 });
 
-test("guarded-db-push cannot be pointed at a different migrations directory", () => {
-  // Round-2 finding P1-1: a caller-supplied --migrations-dir let the gate
-  // approve directory A while `supabase db push` applied directory B. The
-  // wrapper must expose no such option, and must force the gate onto the
-  // canonical repository path.
+test("guarded-db-push exposes no path, baseline or test-mode option", () => {
+  // Round-2 P1-1 and round-3 P1-1/P1-4: a caller-supplied migrations directory
+  // let the gate approve directory A while the push applied directory B, and a
+  // test-only relaxation must never be reachable from something that can push.
   const wrapper = read("guarded-db-push.sh");
   const options = [...wrapper.matchAll(/^\s{4}(--[a-z-]+)[=)]/gm)].map((match) => match[1]);
   assert.deepEqual(options.sort(), ["--dry-run", "--target", "--timeout-ms"]);
-  assert.match(wrapper, /--enforce-canonical-paths/);
-  assert.ok(!/--migrations-dir=\$/.test(wrapper), "wrapper must not forward a migrations directory");
+  // Comments discuss these flags by name on purpose; only executable lines matter.
+  const code = wrapper
+    .split("\n")
+    .filter((line) => !/^\s*#/.test(line))
+    .join("\n");
+  for (const forbidden of ["--test-mode", "--migrations-dir=", "--baseline=", "--repo-root="]) {
+    assert.ok(!code.includes(forbidden), `wrapper must never pass ${forbidden}`);
+  }
+});
+
+test("guarded-db-push holds an advisory lock across the whole run", () => {
+  // Round-3 P1-5: the lock serialises sanctioned wrappers against each other. It
+  // is confirmed by backend pid, not merely requested, and it is released by the
+  // EXIT trap so a crash cannot leak it.
+  const wrapper = read("guarded-db-push.sh");
+  const acquire = wrapper.indexOf("pg_advisory_lock(");
+  const confirm = wrapper.indexOf("from pg_locks where locktype='advisory'", acquire);
+  const gate = wrapper.indexOf('"${GATE[@]}" "--emit-fingerprint=', confirm);
+  assert.ok(acquire >= 0, "wrapper must take an advisory lock");
+  assert.ok(confirm > acquire, "wrapper must confirm the lock is actually granted to its own backend");
+  assert.ok(gate > confirm, "the gate must run only after the lock is confirmed");
+  assert.match(wrapper, /trap cleanup EXIT/);
+});
+
+test("guarded-db-push always reconciles, even when the push fails", () => {
+  // Round-3 P1-3: under a naive `set -e` a failed push would abort the script
+  // before reconciliation, leaving a partially applied database unexamined.
+  const wrapper = read("guarded-db-push.sh");
+  assert.match(wrapper, /PUSH_STATUS=0\n\s*supabase db push[^\n]*\|\| PUSH_STATUS=\$\?/);
+  const pushStatus = wrapper.indexOf("|| PUSH_STATUS=$?");
+  const reconcile = wrapper.indexOf('"--verify-applied=$FINGERPRINT"', pushStatus);
+  assert.ok(reconcile > pushStatus, "reconciliation must run after a captured push failure");
+  assert.match(wrapper, /RECONCILE_STATUS/);
 });
 
 test("guarded-db-push verifies history before the push and reconciles after it", () => {

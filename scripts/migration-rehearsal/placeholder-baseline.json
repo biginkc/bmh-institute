@@ -1,7 +1,8 @@
 {
   "$schema_note": "Acknowledged `supabase migration repair` placeholder rows, per target. Read by scripts/migration-rehearsal/check-migration-safety.mjs -- and read out of git's object store at HEAD, never from the working tree, so an untracked, symlinked, or hardlinked file at this path cannot substitute for the reviewed blob. A placeholder row is one with statements IS NULL: it asserts a version is applied without recording what content was applied, so history stops being proof of what is live. Listing a VERSION here means a human already reconciled that version against the live schema and accepts it as baseline noise. Contents are deliberately NOT recorded -- a placeholder has none. Adding entries must be a reviewed commit, never a runtime flag, so an automated loop cannot acknowledge the very row that should have stopped it.",
   "$how_to_extend": "Run the gate. If it refuses with E21 it prints a paste-ready array containing the existing baseline plus the new versions. Confirm each new version against the live schema first (e.g. pg_get_functiondef on the objects that migration touches), then paste, set acknowledged_at, and COMMIT. An uncommitted edit has no effect: the gate reads HEAD.",
-  "$identity_keys": "project_ref is matched exactly against PGUSER (postgres.<ref>) or PGHOST (db.<ref>.supabase.co), never as a substring. database is compared to PGDATABASE and to the live current_database(). db_system_identifier is the cluster's pg_control_system().system_identifier and binds the target to a specific physical database; null means unpinned (disposable local clusters only). Every key must be present explicitly -- an absent key would be an accidental opt-out.",
+  "$identity_keys": "project_ref is matched exactly against PGUSER (postgres.<ref>) or PGHOST (db.<ref>.supabase.co), never as a substring. database is compared to PGDATABASE and to the live current_database(). db_system_identifier is the cluster's pg_control_system().system_identifier. Every key must be present AND non-null: a null identity field does NOT disable the check, it fails the run closed (E06). Unbound targets are reachable only under the gate's --test-mode, which guarded-db-push.sh cannot pass, so no target in this file can ever authorise a push without full identity. Caveat on db_system_identifier: it identifies a cluster lineage, so a physical restore or byte clone preserves it and a logical branch gets a new one -- it is a fail-closed operational signal, not complete identity proof, and it is one of three independent bindings.",
+  "$no_test_targets": "This file deliberately contains no unbound or test target. An earlier revision shipped a 'local-rehearsal' entry with null identity fields, which -- combined with null meaning 'skip the check' -- was a committed bypass: guarded-db-push.sh --target=local-rehearsal would have run against production with identity verification disabled. Both halves of that are fixed; do not reintroduce either.",
   "targets": {
     "institute-production": {
       "project_ref": "dhvfsyteqsxagokoerrx",
@@ -26,14 +27,6 @@
       "db_system_identifier": "7637215626725903220",
       "acknowledged_at": "2026-07-30",
       "note": "bmh-institute-test had zero placeholder rows when this baseline was taken. Any placeholder appearing here is new and must stop CI.",
-      "placeholder_versions": []
-    },
-    "local-rehearsal": {
-      "project_ref": null,
-      "database": null,
-      "db_system_identifier": null,
-      "acknowledged_at": "2026-07-30",
-      "note": "Disposable local PostgreSQL clusters used by scripts/migration-rehearsal/run-rehearsal.mjs and by the gate's own verification runs. Identity is unpinned because there is no Supabase project or stable cluster to bind to; never point this target at a hosted database. A real push to a hosted project must use one of the pinned targets above.",
       "placeholder_versions": []
     }
   }
