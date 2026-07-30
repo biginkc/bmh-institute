@@ -41,6 +41,8 @@ set local lock_timeout = '10s';
 do $migration$
 declare
   v_source text;
+  v_old_count integer;
+  v_new_count integer;
   v_old text := $old$
   perform public.hugo_apply_access_unhashed(
     p_operation_id,
@@ -94,21 +96,44 @@ begin
   v_source := pg_get_functiondef(
     'public.hugo_apply_access(uuid,text,text,jsonb,text,timestamptz,text)'::regprocedure
   );
-  if strpos(v_source, v_new) > 0 then
-    -- Already patched (for example on a database that skipped 20260730240000
-    -- entirely, or was fixed by a concurrent apply). Nothing to do.
+  -- Count occurrences explicitly. `replace()` rewrites EVERY match and
+  -- `strpos` only proves "at least one", so neither can distinguish the
+  -- single expected call site from an ambiguous source. Every state other
+  -- than exactly-one-old / zero-new, or zero-old / exactly-one-new, is
+  -- treated as drift and refused -- this patch must fail closed.
+  v_old_count := (length(v_source) - length(replace(v_source, v_old, ''))) / nullif(length(v_old), 0);
+  v_new_count := (length(v_source) - length(replace(v_source, v_new, ''))) / nullif(length(v_new), 0);
+
+  if v_new_count = 1 and v_old_count = 0 then
+    -- Already patched (e.g. a database that skipped 20260730240000, or a
+    -- concurrent apply). Nothing to do.
     return;
   end if;
-  if strpos(v_source, v_old) = 0 then
+  if v_new_count > 0 and v_old_count > 0 then
     raise exception
-      'Hugo apply-access source definition drifted; refusing patch.'
+      'Hugo apply-access source contains both patched and unpatched call sites (old=%, new=%); refusing patch.',
+      v_old_count, v_new_count
       using errcode = '55000';
   end if;
-  v_source := replace(v_source, v_old, v_new);
-  if strpos(v_source, v_old) > 0
-     or strpos(v_source, v_new) = 0 then
+  if v_new_count > 1 then
     raise exception
-      'Hugo apply-access source replacement failed.'
+      'Hugo apply-access source contains % patched call sites; refusing patch.', v_new_count
+      using errcode = '55000';
+  end if;
+  if v_old_count <> 1 then
+    raise exception
+      'Hugo apply-access source definition drifted (expected exactly 1 unpatched call site, found %); refusing patch.',
+      v_old_count
+      using errcode = '55000';
+  end if;
+
+  v_source := replace(v_source, v_old, v_new);
+
+  v_old_count := (length(v_source) - length(replace(v_source, v_old, ''))) / nullif(length(v_old), 0);
+  v_new_count := (length(v_source) - length(replace(v_source, v_new, ''))) / nullif(length(v_new), 0);
+  if v_old_count <> 0 or v_new_count <> 1 then
+    raise exception
+      'Hugo apply-access source replacement failed (old=%, new=%).', v_old_count, v_new_count
       using errcode = '55000';
   end if;
   execute v_source;
