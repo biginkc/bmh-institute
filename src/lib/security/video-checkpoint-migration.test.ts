@@ -3,30 +3,54 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const sql = readFileSync(resolve(process.cwd(), "supabase/migrations/20260730120000_video_resume_checkpoint.sql"), "utf8");
+const checkpointFunction = sql.slice(
+  sql.indexOf("create or replace function public.fn_checkpoint_video_playback"),
+  sql.indexOf("create or replace function public.fn_record_video_playback"),
+);
+const playbackFunction = sql.slice(
+  sql.indexOf("create or replace function public.fn_record_video_playback"),
+);
 
 describe("video resume checkpoint migration", () => {
   it("is authenticated, asset-bound, stale-safe, and cannot grant completion", () => {
-    expect(sql).toMatch(/p_user_id is distinct from auth\.uid\(\)/i);
-    expect(sql).toMatch(/p_client_updated_at[\s\S]*> v_now \+ interval '5 minutes'/i);
-    expect(sql).toMatch(/v_existing_updated_at[\s\S]*>= p_client_updated_at/i);
-    expect(sql).toMatch(/fn_lesson_is_unlocked\(p_user_id, v_lesson_id\)/i);
-    expect(sql).not.toMatch(/insert into public\.user_block_progress/i);
-    expect(sql).not.toMatch(/user_video_completion_history/i);
+    expect(checkpointFunction).toMatch(/p_user_id is distinct from auth\.uid\(\)/i);
+    expect(checkpointFunction).toMatch(/p_client_updated_at[\s\S]*> v_now \+ interval '5 minutes'/i);
+    expect(checkpointFunction).toMatch(/checkpoint_client_updated_at[\s\S]*>= p_client_updated_at/i);
+    expect(checkpointFunction).toMatch(/fn_lesson_is_unlocked\(p_user_id, v_lesson_id\)/i);
+    expect(checkpointFunction).not.toMatch(/insert into public\.user_block_progress/i);
+    expect(checkpointFunction).not.toMatch(/user_video_completion_history/i);
   });
 
-  it("uses a resumed checkpoint as the next observation baseline without coverage", () => {
-    const valuesClause = sql.slice(sql.indexOf("values ("));
-    expect(sql).toMatch(
-      /last_observed_position_seconds\s*,\s*last_observed_at/i,
+  it("keeps server time as the observation baseline and client time only for checkpoint ordering", () => {
+    expect(checkpointFunction).toMatch(
+      /last_observed_position_seconds\s*,\s*last_observed_at[\s\S]*?checkpoint_client_updated_at\s*,\s*updated_at/i,
     );
-    expect(valuesClause).toMatch(
-      /'\[\]'::jsonb\s*,\s*least\(p_position_seconds[\s\S]*?\)\s*,\s*p_client_updated_at/i,
+    expect(checkpointFunction).toMatch(
+      /least\(p_position_seconds[\s\S]*?\)\s*,[\s\S]*?'\[\]'::jsonb\s*,\s*0\s*,\s*null\s*,\s*v_asset_version\s*,\s*p_client_updated_at\s*,\s*v_now/i,
     );
-    expect(valuesClause).not.toMatch(
-      /values\s*\([\s\S]*?'\[\]'::jsonb\s*,\s*0\s*,\s*null[\s\S]*?\)/i,
+    expect(checkpointFunction).toMatch(
+      /last_observed_at\s*=\s*case[\s\S]*?then null[\s\S]*?updated_at\s*=\s*v_now/i,
     );
-    expect(sql).toMatch(
-      /last_observed_position_seconds\s*=\s*excluded\.last_observed_position_seconds[\s\S]*?last_observed_at\s*=\s*excluded\.last_observed_at/i,
+    expect(checkpointFunction).not.toMatch(
+      /last_observed_at\s*,[\s\S]*?p_client_updated_at[\s\S]*?v_asset_version/i,
     );
+    expect(playbackFunction).toMatch(
+      /extract\(epoch from \(v_now - v_last_at\)\)/i,
+    );
+    expect(playbackFunction).toMatch(
+      /last_observed_position_seconds\s*,\s*last_observed_at[\s\S]*?v_position\s*,\s*v_now/i,
+    );
+  });
+
+  it("keeps the race regression and positive-skew SQL scenarios in the acceptance test", () => {
+    const raceTest = readFileSync(
+      resolve(process.cwd(), "supabase/tests/063_video_checkpoint_ordering.sql"),
+      "utf8",
+    );
+    expect(raceTest).toMatch(/checkpoint arrival first/i);
+    expect(raceTest).toMatch(/observation arrival first/i);
+    expect(raceTest).toMatch(/positive client clock skew/i);
+    expect(raceTest).toMatch(/watched_ranges/i);
+    expect(raceTest).toMatch(/user_block_progress/i);
   });
 });

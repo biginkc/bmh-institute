@@ -60,7 +60,7 @@ export function VideoBlockPlayer({
   const [mediaError, setMediaError] = useState<string | null>(null);
   const [progressError, setProgressError] = useState<string | null>(null);
   const [watchedPercent, setWatchedPercent] = useState(0);
-  const [progressLoaded, setProgressLoaded] = useState(false);
+  const [progressLoaded, setProgressLoaded] = useState(initialComplete);
   const [completed, setCompleted] = useState(initialComplete);
 
   useEffect(() => {
