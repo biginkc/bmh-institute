@@ -57,6 +57,18 @@ export async function createWritePathFixture(
     process.env.E2E_SEED_PASSWORD?.trim() ||
     `BMHWritePath-${crypto.randomUUID()}!1`;
 
+  // Resolve the existing unreleased imported programs before creating any
+  // disposable users, so a hosted-catalog read failure cannot strand users.
+  const { data: importedPrograms, error: importedProgramsError } = await admin
+    .from("programs")
+    .select("id")
+    .not("content_import_id", "is", null)
+    .eq("is_published", false);
+  if (importedProgramsError) throw importedProgramsError;
+  const reviewerProgramIds = (importedPrograms ?? []).map(
+    (program) => program.id,
+  );
+
   const adminUser = await createFixtureUser(admin, {
     email: `${prefix.toLowerCase()}-admin@bmh-institute.test`,
     password,
@@ -82,15 +94,6 @@ export async function createWritePathFixture(
   // access to that existing test catalog and remove the grants during cleanup;
   // this keeps the E2E fixture aligned with the production authorization
   // boundary instead of weakening the RPC or report page.
-  const { data: importedPrograms, error: importedProgramsError } = await admin
-    .from("programs")
-    .select("id")
-    .not("content_import_id", "is", null)
-    .eq("is_published", false);
-  if (importedProgramsError) throw importedProgramsError;
-  const reviewerProgramIds = (importedPrograms ?? []).map(
-    (program) => program.id,
-  );
   if (reviewerProgramIds.length > 0) {
     const grantedReviewerProgramIds: string[] = [];
     try {
@@ -119,9 +122,14 @@ export async function createWritePathFixture(
           rollbackErrors.push(rollbackError);
         }
       }
-      if (rollbackErrors.length > 0) {
+      const userCleanupErrors = await deleteFixtureUsers(admin, [
+        adminUser.id,
+        learner.id,
+        unassigned.id,
+      ]);
+      if (rollbackErrors.length > 0 || userCleanupErrors.length > 0) {
         throw new AggregateError(
-          [error, ...rollbackErrors],
+          [error, ...rollbackErrors, ...userCleanupErrors],
           "Failed to create and roll back disposable reviewer grants.",
         );
       }
@@ -345,23 +353,69 @@ export async function cleanupWritePathFixture(
       }
     }
   }
-  await admin.from("programs").delete().eq("id", fixture.programId);
-  await admin.from("courses").delete().eq("id", fixture.courseId);
-  await admin
-    .from("assignments")
-    .delete()
-    .in("id", [fixture.textAssignmentId, fixture.fileAssignmentId]);
-  await admin.from("quizzes").delete().eq("id", fixture.quizId);
-  await admin.from("role_groups").delete().eq("id", fixture.roleGroupId);
-  await admin.auth.admin.deleteUser(fixture.admin.id);
-  await admin.auth.admin.deleteUser(fixture.learner.id);
-  await admin.auth.admin.deleteUser(fixture.unassigned.id);
+  await captureCleanupError(cleanupErrors, () =>
+    admin.from("programs").delete().eq("id", fixture.programId).throwOnError(),
+  );
+  await captureCleanupError(cleanupErrors, () =>
+    admin.from("courses").delete().eq("id", fixture.courseId).throwOnError(),
+  );
+  await captureCleanupError(cleanupErrors, () =>
+    admin
+      .from("assignments")
+      .delete()
+      .in("id", [fixture.textAssignmentId, fixture.fileAssignmentId])
+      .throwOnError(),
+  );
+  await captureCleanupError(cleanupErrors, () =>
+    admin.from("quizzes").delete().eq("id", fixture.quizId).throwOnError(),
+  );
+  await captureCleanupError(cleanupErrors, () =>
+    admin
+      .from("role_groups")
+      .delete()
+      .eq("id", fixture.roleGroupId)
+      .throwOnError(),
+  );
+  await captureCleanupError(cleanupErrors, () =>
+    deleteFixtureUsers(admin, [
+      fixture.admin.id,
+      fixture.learner.id,
+      fixture.unassigned.id,
+    ]),
+  );
   if (cleanupErrors.length > 0) {
     throw new AggregateError(
       cleanupErrors,
       "Failed to clean up one or more disposable fixture resources.",
     );
   }
+}
+
+async function captureCleanupError(
+  errors: unknown[],
+  operation: () => Promise<unknown>,
+): Promise<void> {
+  try {
+    await operation();
+  } catch (error) {
+    errors.push(error);
+  }
+}
+
+async function deleteFixtureUsers(
+  admin: SupabaseClient,
+  userIds: string[],
+): Promise<unknown[]> {
+  const errors: unknown[] = [];
+  for (const userId of userIds) {
+    try {
+      const { error } = await admin.auth.admin.deleteUser(userId);
+      if (error) throw error;
+    } catch (error) {
+      errors.push(error);
+    }
+  }
+  return errors;
 }
 
 async function cleanupSubmissionStorage(
