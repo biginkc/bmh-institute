@@ -12,6 +12,21 @@ import {
 
 const PROGRESS_SAMPLE_SECONDS = 2;
 
+function setCheckpointSequence(
+  sequenceRef: { current: number },
+  value: unknown,
+  options: { reset?: boolean } = {},
+) {
+  if (
+    typeof value === "number" &&
+    Number.isSafeInteger(value) &&
+    value >= 0 &&
+    (options.reset || value >= sequenceRef.current)
+  ) {
+    sequenceRef.current = value;
+  }
+}
+
 /**
  * HTML5 video player that records short contiguous playback observations.
  * Seeking moves the resume point but does not add watched coverage.
@@ -47,6 +62,7 @@ export function VideoBlockPlayer({
   const videoRef = useRef<HTMLVideoElement>(null);
   const sampleStartRef = useRef<number | null>(null);
   const resumePositionRef = useRef(0);
+  const checkpointSequenceRef = useRef(0);
   const writeQueueRef = useRef<Promise<void>>(Promise.resolve());
   const mountedRef = useRef(true);
   const completedRef = useRef(initialComplete);
@@ -60,6 +76,8 @@ export function VideoBlockPlayer({
   const [mediaError, setMediaError] = useState<string | null>(null);
   const [progressError, setProgressError] = useState<string | null>(null);
   const [watchedPercent, setWatchedPercent] = useState(0);
+  const [progressLoaded, setProgressLoaded] = useState(initialComplete);
+  const progressLoadedRef = useRef(initialComplete);
   const [completed, setCompleted] = useState(initialComplete);
 
   useEffect(() => {
@@ -93,6 +111,7 @@ export function VideoBlockPlayer({
     if (!result?.ok) return false;
 
     resumePositionRef.current = result.positionSeconds;
+    setCheckpointSequence(checkpointSequenceRef, result.checkpointSequence, { reset: true });
     sampleStartRef.current = result.positionSeconds;
     setWatchedPercent(result.watchedPercent);
     const transitionedToComplete = result.completed && !completedRef.current;
@@ -126,6 +145,7 @@ export function VideoBlockPlayer({
         }
         if (!mountedRef.current) return;
         if (result?.ok) {
+          setCheckpointSequence(checkpointSequenceRef, result.checkpointSequence);
           if (Number.isFinite(result.positionSeconds)) {
             resumePositionRef.current = result.positionSeconds;
           }
@@ -164,6 +184,9 @@ export function VideoBlockPlayer({
         if (result?.ok && Number.isFinite(result.positionSeconds)) {
           resumePositionRef.current = result.positionSeconds;
         }
+        if (result?.ok) {
+          setCheckpointSequence(checkpointSequenceRef, result.checkpointSequence);
+        }
         const recovered = result?.ok ? true : await resynchronizeProgress();
         if (!mountedRef.current) return;
         setProgressError(
@@ -193,12 +216,47 @@ export function VideoBlockPlayer({
     [blockId, enqueueProgress],
   );
 
+  const sendKeepaliveCheckpoint = useCallback((el: HTMLVideoElement) => {
+    if (
+      !progressLoadedRef.current ||
+      (!playbackStartedRef.current && el.currentTime <= 0) ||
+      !Number.isFinite(el.currentTime) ||
+      !Number.isFinite(el.duration) ||
+      el.duration <= 0
+    ) return;
+    const body = JSON.stringify({
+      blockId,
+      positionSeconds: Math.max(0, Math.min(el.currentTime, el.duration)),
+      durationSeconds: el.duration,
+      checkpointSequence: checkpointSequenceRef.current,
+    });
+    void fetch("/api/video-progress/checkpoint", {
+      method: "POST",
+      body,
+      credentials: "same-origin",
+      headers: { "content-type": "application/json" },
+      keepalive: true,
+    }).then(async (response) => {
+      if (!response.ok) return;
+      const result = await response.json().catch(() => null);
+      if (result && typeof result === "object") {
+        const checkpoint = result as Record<string, unknown>;
+        setCheckpointSequence(
+          checkpointSequenceRef,
+          checkpoint.checkpointSequence,
+          { reset: checkpoint.stale === true },
+        );
+      }
+    }).catch(() => undefined);
+  }, [blockId]);
+
   useEffect(() => {
     let active = true;
     const video = videoRef.current;
     mountedRef.current = true;
     void loadVideoProgress(blockId).then((result) => {
       if (!active || !result.ok) return;
+      setCheckpointSequence(checkpointSequenceRef, result.checkpointSequence, { reset: true });
       const canRestorePosition =
         !playbackStartedRef.current && !hasRecordedProgressRef.current;
       if (canRestorePosition) {
@@ -223,24 +281,33 @@ export function VideoBlockPlayer({
       if (transitionedToComplete || result.reconciled) {
         requestRefreshWhenPlaybackSafe();
       }
+    }).finally(() => {
+      if (active) {
+        progressLoadedRef.current = true;
+        setProgressLoaded(true);
+      }
     });
     return () => {
       active = false;
       mountedRef.current = false;
       if (video && !video.paused) flushProgress(video);
+      if (video) sendKeepaliveCheckpoint(video);
     };
-  }, [blockId, flushProgress, requestRefreshWhenPlaybackSafe]);
+  }, [blockId, flushProgress, requestRefreshWhenPlaybackSafe, sendKeepaliveCheckpoint]);
 
   useEffect(() => {
     function flushWhenHidden() {
       if (document.visibilityState !== "hidden") return;
       const video = videoRef.current;
-      if (video) flushProgress(video);
+      if (video) {
+        flushProgress(video);
+        sendKeepaliveCheckpoint(video);
+      }
     }
     document.addEventListener("visibilitychange", flushWhenHidden);
     return () =>
       document.removeEventListener("visibilitychange", flushWhenHidden);
-  }, [flushProgress]);
+  }, [flushProgress, sendKeepaliveCheckpoint]);
 
   function onTimeUpdate(e: React.SyntheticEvent<HTMLVideoElement>) {
     const el = e.currentTarget;
@@ -368,7 +435,7 @@ export function VideoBlockPlayer({
         aria-live="polite"
         className="text-sm font-extrabold text-[var(--text-muted)]"
       >
-        {completed ? "Complete" : `${watchedPercent}% watched`}
+        {!progressLoaded ? "Loading progress…" : completed ? "Complete" : `${watchedPercent}% watched`}
       </p>
       {progressError ? (
         <p role="alert" className="text-sm font-bold text-[var(--danger)]">

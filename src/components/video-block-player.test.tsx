@@ -5,7 +5,7 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const loadVideoProgress = vi.fn();
 const recordVideoProgress = vi.fn();
@@ -34,15 +34,102 @@ describe("<VideoBlockPlayer />", () => {
       watchedRanges: [],
       watchedPercent: 0,
       completed: false,
+      checkpointSequence: 0,
     });
     recordVideoProgress.mockReset();
     recordVideoProgress.mockResolvedValue({
       ok: true,
       watchedPercent: 0,
       completed: false,
+      checkpointSequence: 0,
     });
     recordVideoSeek.mockReset();
-    recordVideoSeek.mockResolvedValue({ ok: true, positionSeconds: 0 });
+    recordVideoSeek.mockResolvedValue({ ok: true, positionSeconds: 0, checkpointSequence: 0 });
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(
+      JSON.stringify({ ok: true, saved: true, stale: false, checkpointSequence: 0 }),
+      { status: 200, headers: { "content-type": "application/json" } },
+    )));
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("does not send a keepalive while the initial progress load is pending", async () => {
+    let resolveLoad: (value: Record<string, unknown>) => void = () => undefined;
+    loadVideoProgress.mockImplementation(() => new Promise((resolve) => {
+      resolveLoad = resolve;
+    }));
+    const { unmount } = render(
+      <VideoBlockPlayer blockId="block-1" src="https://example.com/video.mp4" />,
+    );
+    const video = screen.getByLabelText("Lesson video") as HTMLVideoElement;
+    Object.defineProperties(video, {
+      duration: { configurable: true, value: 100 },
+      currentTime: { configurable: true, writable: true, value: 0 },
+      paused: { configurable: true, value: false },
+    });
+    Object.defineProperty(document, "visibilityState", {
+      configurable: true,
+      value: "hidden",
+    });
+
+    document.dispatchEvent(new Event("visibilitychange"));
+    unmount();
+    expect(globalThis.fetch).not.toHaveBeenCalled();
+
+    await act(async () => {
+      resolveLoad({
+        ok: true,
+        positionSeconds: 12,
+        watchedRanges: [],
+        watchedPercent: 0,
+        completed: false,
+        checkpointSequence: 4,
+      });
+    });
+  });
+
+  it("keeps checkpoint cursors monotonic and resets on an explicit stale response", async () => {
+    const fetchMock = globalThis.fetch as unknown as ReturnType<typeof vi.fn>;
+    fetchMock
+      .mockResolvedValueOnce(new Response(JSON.stringify({ ok: true, saved: true, stale: false, checkpointSequence: 5 }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ ok: true, saved: false, stale: true, checkpointSequence: 1 }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ ok: true, saved: true, stale: false, checkpointSequence: 2 }), { status: 200 }));
+    loadVideoProgress.mockResolvedValue({
+      ok: true,
+      positionSeconds: 10,
+      watchedRanges: [],
+      watchedPercent: 0,
+      completed: false,
+      checkpointSequence: 4,
+    });
+    render(
+      <VideoBlockPlayer blockId="block-1" src="https://example.com/video.mp4" />,
+    );
+    const video = screen.getByLabelText("Lesson video") as HTMLVideoElement;
+    Object.defineProperties(video, {
+      duration: { configurable: true, value: 100 },
+      currentTime: { configurable: true, writable: true, value: 10 },
+    });
+    await waitFor(() => expect(loadVideoProgress).toHaveBeenCalledTimes(1));
+    await act(async () => { await Promise.resolve(); });
+    fireEvent.play(video);
+    Object.defineProperty(document, "visibilityState", { configurable: true, value: "hidden" });
+
+    await act(async () => { document.dispatchEvent(new Event("visibilitychange")); });
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    video.currentTime = 11;
+    await act(async () => { document.dispatchEvent(new Event("visibilitychange")); });
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+    video.currentTime = 12;
+    await act(async () => { document.dispatchEvent(new Event("visibilitychange")); });
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3));
+
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body).checkpointSequence).toBe(4);
+    expect(JSON.parse(fetchMock.mock.calls[1][1].body).checkpointSequence).toBe(5);
+    expect(JSON.parse(fetchMock.mock.calls[2][1].body).checkpointSequence).toBe(1);
   });
 
   it("restores and announces persisted watched progress", async () => {

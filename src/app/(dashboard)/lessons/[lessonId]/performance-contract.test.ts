@@ -26,6 +26,12 @@ describe("lesson page performance contract", () => {
     expect(embed).toBeGreaterThan(sign);
   });
 
+  it("renders a requested locked part before preparation can fall back", () => {
+    expect(source).toMatch(
+      /const selected = resolution\.requestedPartLocked\s*&&\s*resolution\.part\?\.kind === "quiz"\s*\?\s*resolution\.part\s*:\s*await prepareLearnerPart\(/,
+    );
+  });
+
   it("does not perform a second identity lookup for role-play blocks", () => {
     const helper = source.slice(source.indexOf("async function attachRolePlayEmbeds"));
     expect(helper).not.toContain("auth.getUser()");

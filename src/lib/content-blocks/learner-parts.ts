@@ -223,6 +223,46 @@ export function selectLearnerPart(
   );
 }
 
+export type LearnerPartResolution = {
+  part: LearnerLessonPart | null;
+  requestedPart: string | null;
+  requestedPartValid: boolean;
+  requestedPartLocked: boolean;
+  canonicalPartId: string | null;
+};
+
+/**
+ * A locked request must only lock the part that was actually requested. A
+ * locked non-quiz request can otherwise fall back to another selected part
+ * during preparation, and incorrectly render that fallback as locked.
+ */
+export function shouldRenderLearnerPartLock(input: {
+  requestedPartLocked: boolean;
+  requestedPartId: string | null;
+  selectedPartId: string;
+}): boolean {
+  return (
+    input.requestedPartLocked && input.requestedPartId === input.selectedPartId
+  );
+}
+
+/** Resolve routing without letting an unknown value or a forged locked part skip work. */
+export function resolveLearnerPart(
+  parts: LearnerLessonPart[],
+  requestedPartId: string | null,
+): LearnerPartResolution {
+  const requested = parts.find((part) => part.id === requestedPartId);
+  const fallback = selectLearnerPart(parts, null);
+  const part = requested ?? fallback;
+  return {
+    part,
+    requestedPart: requestedPartId,
+    requestedPartValid: Boolean(requested),
+    requestedPartLocked: Boolean(requested && !requested.available),
+    canonicalPartId: part?.id ?? null,
+  };
+}
+
 function partLabel(base: string, index: number, count: number): string {
   if (count <= 1) return base;
   return `${base} ${String.fromCharCode(64 + index)}`;

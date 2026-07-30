@@ -5,7 +5,9 @@ import {
   buildLearnerLessonParts,
   isGuideBlock,
   isObjectivesBlock,
+  resolveLearnerPart,
   selectLearnerPart,
+  shouldRenderLearnerPartLock,
 } from "./learner-parts";
 
 function block(
@@ -258,6 +260,69 @@ describe("optional (not-required) parts", () => {
     });
 
     expect(parts.find((part) => part.id === "role-play-1")?.complete).toBe(true);
+  });
+
+  it("preserves a valid locked quiz request so the page can render an explicit lock", () => {
+    const parts = buildLearnerLessonParts({
+      blocks: [block("1", "video")],
+      completedBlockIds: new Set<string>(),
+      quizComplete: false,
+      quizUnlocked: false,
+      compositeComplete: false,
+    });
+    expect(resolveLearnerPart(parts, "quiz")).toMatchObject({
+      requestedPart: "quiz",
+      requestedPartValid: true,
+      requestedPartLocked: true,
+      part: { id: "quiz", available: false },
+    });
+  });
+
+  it("does not lock a fallback part when a locked non-quiz request falls back", () => {
+    const parts = buildLearnerLessonParts({
+      blocks: [
+        block("1", "video"),
+        block("2", "text", { html: "<h2>Learner Guide</h2>" }),
+      ],
+      completedBlockIds: new Set(["1"]),
+      quizComplete: false,
+      quizUnlocked: true,
+      compositeComplete: false,
+    });
+    const resolution = resolveLearnerPart(parts, "guide");
+
+    expect(resolution).toMatchObject({
+      requestedPart: "guide",
+      requestedPartLocked: true,
+      part: { id: "guide" },
+    });
+    expect(shouldRenderLearnerPartLock({
+      requestedPartLocked: resolution.requestedPartLocked,
+      requestedPartId: resolution.requestedPart,
+      selectedPartId: "quiz",
+    })).toBe(false);
+    expect(shouldRenderLearnerPartLock({
+      requestedPartLocked: resolution.requestedPartLocked,
+      requestedPartId: resolution.requestedPart,
+      selectedPartId: "guide",
+    })).toBe(true);
+  });
+
+  it("canonicalizes an invalid part to the first safe available part", () => {
+    const parts = buildLearnerLessonParts({
+      blocks: [block("1", "video")],
+      completedBlockIds: new Set<string>(),
+      quizComplete: false,
+      quizUnlocked: true,
+      compositeComplete: false,
+    });
+    expect(resolveLearnerPart(parts, "bogus")).toMatchObject({
+      requestedPart: "bogus",
+      requestedPartValid: false,
+      requestedPartLocked: false,
+      part: { id: "video-1" },
+      canonicalPartId: "video-1",
+    });
   });
 
   it("lands on the optional role play by default, not past it", () => {

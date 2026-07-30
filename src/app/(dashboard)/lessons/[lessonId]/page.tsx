@@ -20,6 +20,8 @@ import {
 } from "@/components/ui/card";
 import {
   buildLearnerLessonParts,
+  resolveLearnerPart,
+  shouldRenderLearnerPartLock,
   type LearnerLessonPart,
 } from "@/lib/content-blocks/learner-parts";
 import { prepareLearnerPart } from "@/lib/content-blocks/prepare-learner-part";
@@ -247,18 +249,24 @@ async function ContentCompositeLesson({
     compositeComplete: tile.complete,
     includeQuiz: tile.quizId !== null && tile.pairedQuizLessonId !== null,
   });
-  const selected = await prepareLearnerPart({
-    parts,
-    requestedPart,
-    signBlocks: (blocks) =>
-      withLessonTiming("selected-part-media-signing", () =>
-        enrichBlocksWithSignedUrls(blocks),
-      ),
-    attachEmbeds: (blocks) =>
-      withLessonTiming("selected-role-play-token", () =>
-        attachRolePlayEmbeds(blocks, tile.id, { userId, learnerName }),
-      ),
-  });
+  const resolution = resolveLearnerPart(parts, requestedPart);
+  if (!resolution.requestedPartValid && requestedPart !== null && resolution.canonicalPartId) {
+    redirect(`/lessons/${tile.id}?part=${encodeURIComponent(resolution.canonicalPartId)}`);
+  }
+  const selected = resolution.requestedPartLocked && resolution.part?.kind === "quiz"
+    ? resolution.part
+    : await prepareLearnerPart({
+        parts,
+        requestedPart: resolution.part?.id ?? null,
+        signBlocks: (blocks) =>
+          withLessonTiming("selected-part-media-signing", () =>
+            enrichBlocksWithSignedUrls(blocks),
+          ),
+        attachEmbeds: (blocks) =>
+          withLessonTiming("selected-role-play-token", () =>
+            attachRolePlayEmbeds(blocks, tile.id, { userId, learnerName }),
+          ),
+      });
   if (!selected)
     return (
       <LessonError
@@ -313,6 +321,11 @@ async function ContentCompositeLesson({
             tile={tile}
             courseId={courseId}
             userId={userId}
+            locked={shouldRenderLearnerPartLock({
+              requestedPartLocked: resolution.requestedPartLocked,
+              requestedPartId: resolution.requestedPart,
+              selectedPartId: selected.id,
+            })}
           />
           <div className="mt-6 border-t border-[var(--border-hairline)] pt-4">
             <h1 className="font-[family-name:var(--font-display)] text-xl font-extrabold text-[var(--ink-900)]">
@@ -369,13 +382,25 @@ async function PartBody({
   tile,
   courseId,
   userId,
+  locked,
 }: {
   part: LearnerLessonPart;
   tile: LearnerContentTile;
   courseId: string;
   userId: string;
+  locked?: boolean;
 }) {
   if (part.kind === "quiz") {
+    if (locked) {
+      return (
+        <Card>
+          <CardHeader>
+            <CardTitle>Quiz locked</CardTitle>
+            <CardDescription>Complete the lesson parts above before opening this checkpoint.</CardDescription>
+          </CardHeader>
+        </Card>
+      );
+    }
     if (!tile.quizId || !tile.pairedQuizLessonId) {
       return (
         <Card>
