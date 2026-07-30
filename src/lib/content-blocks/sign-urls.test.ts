@@ -14,6 +14,7 @@ import { artworkRequestKey } from "@/lib/artwork/paths";
 
 const SHA = "a".repeat(64);
 const APPROVED_PATH = `courses/bmh/v1/thumbnails/cover-${SHA}.webp`;
+const STORAGE_ORIGIN = "https://test-project.supabase.co";
 const imported = {
   thumbnailAssetKey: "thumbnail-course",
   thumbnailApprovedPath: APPROVED_PATH,
@@ -24,6 +25,7 @@ describe("enrichBlocksWithSignedUrls", () => {
   beforeEach(() => {
     createSignedUrls.mockReset();
     info.mockReset();
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", STORAGE_ORIGIN);
   });
 
   it("signs primary, poster, caption, and transcript paths in one batch", async () => {
@@ -85,6 +87,30 @@ describe("enrichBlocksWithSignedUrls", () => {
 
     expect(block.content.signed_url).toBe("signed-authorized");
     expect(block.content).not.toHaveProperty("transcript_signed_url");
+  });
+
+  it("strips forged legacy runtime URLs before enrichment but preserves trusted storage URLs", async () => {
+    createSignedUrls.mockResolvedValue({ data: [], error: null });
+    const trusted = `${STORAGE_ORIGIN}/storage/v1/object/sign/content/courses/training/video.mp4?token=trusted`;
+
+    const [block] = await enrichBlocksWithSignedUrls([
+      {
+        id: "block",
+        block_type: "video",
+        sort_order: 0,
+        is_required_for_completion: true,
+        content: {
+          file_path: "courses/training/video.mp4",
+          signed_url: trusted,
+          poster_signed_url: "https://evil.example/forged-poster.mp4",
+          caption_signed_url: "javascript:alert(1)",
+        },
+      },
+    ]);
+
+    expect(block.content.signed_url).toBe(trusted);
+    expect(block.content).not.toHaveProperty("poster_signed_url");
+    expect(block.content).not.toHaveProperty("caption_signed_url");
   });
 
   it("does not send unsafe storage paths to the signer", async () => {

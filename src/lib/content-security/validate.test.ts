@@ -1,11 +1,18 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   MAX_CONTENT_BLOCK_BYTES,
   parseFlashcardText,
   safeFlashcards,
+  safeRuntimeUrl,
   validateAuthoredContent,
 } from "./validate";
+
+const STORAGE_ORIGIN = "https://test-project.supabase.co";
+
+beforeEach(() => {
+  vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", STORAGE_ORIGIN);
+});
 
 describe("authored content validation", () => {
   it("requires absolute HTTPS URLs and exact media provider hosts", () => {
@@ -22,6 +29,14 @@ describe("authored content validation", () => {
     expect(validateAuthoredContent("image", { file_path: "https://evil.example/x" }).ok).toBe(false);
     expect(validateAuthoredContent("image", { file_path: "courses/a/../secret" }).ok).toBe(false);
     expect(validateAuthoredContent("image", { file_path: "courses/a/image.webp" }).ok).toBe(true);
+  });
+
+  it("accepts only signed content URLs from the configured storage origin", () => {
+    const valid = `${STORAGE_ORIGIN}/storage/v1/object/sign/content/courses/a/video.mp4?token=trusted`;
+    expect(safeRuntimeUrl(valid)).toBe(valid);
+    expect(safeRuntimeUrl("https://evil.example/storage/v1/object/sign/content/video.mp4?token=forged")).toBeNull();
+    expect(safeRuntimeUrl(`${STORAGE_ORIGIN}/storage/v1/object/public/content/video.mp4`)).toBeNull();
+    expect(safeRuntimeUrl(`${STORAGE_ORIGIN}/storage/v1/object/sign/content/video.mp4`)).toBeNull();
   });
 
   it("keeps role-play runtime credentials out of authored content", () => {

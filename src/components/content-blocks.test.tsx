@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ refresh: vi.fn() }),
@@ -17,6 +17,14 @@ vi.mock("@/app/(dashboard)/lessons/[lessonId]/actions", () => ({
   recordVideoProgress: vi.fn(),
   recordVideoSeek: vi.fn(),
 }));
+
+const STORAGE_ORIGIN = "https://example.com";
+const signedStorageUrl = (path: string) =>
+  `${STORAGE_ORIGIN}/storage/v1/object/sign/content/${path}?token=trusted`;
+
+beforeEach(() => {
+  vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", STORAGE_ORIGIN);
+});
 
 import { ContentBlockRenderer, type ContentBlock } from "./content-blocks";
 
@@ -39,12 +47,12 @@ function renderBlock(
 
 describe("ContentBlockRenderer BMH treatments", () => {
   it.each([
-    ["video", { source: "upload", signed_url: "https://example.com/video.mp4" }],
+    ["video", { source: "upload", signed_url: signedStorageUrl("video.mp4") }],
     ["text", { html: "<h2>Opening standard</h2><p>Start here.</p>" }],
-    ["pdf", { signed_url: "https://example.com/guide.pdf", filename: "Guide" }],
-    ["image", { signed_url: "https://example.com/framework.png", alt: "Call framework" }],
+    ["pdf", { signed_url: signedStorageUrl("guide.pdf"), filename: "Guide" }],
+    ["image", { signed_url: signedStorageUrl("framework.png"), alt: "Call framework" }],
     ["audio", { source: "url", url: "https://example.com/coach.mp3" }],
-    ["download", { signed_url: "https://example.com/script.pdf", filename: "Script.pdf" }],
+    ["download", { signed_url: signedStorageUrl("script.pdf"), filename: "Script.pdf" }],
     ["external_link", { url: "https://example.com/practice", label: "Practice room" }],
     ["embed", { iframe_src: "https://example.com/embed", aspect_ratio: "16:9" }],
     [
@@ -76,15 +84,15 @@ describe("ContentBlockRenderer BMH treatments", () => {
   it("passes signed video support assets to the learner player", () => {
     const { container } = renderBlock("video", {
       source: "upload",
-      signed_url: "https://example.com/video.mp4",
-      poster_signed_url: "https://example.com/poster.webp",
-      caption_signed_url: "https://example.com/captions.vtt",
-      transcript_signed_url: "https://example.com/transcript.pdf",
+      signed_url: signedStorageUrl("video.mp4"),
+      poster_signed_url: signedStorageUrl("poster.webp"),
+      caption_signed_url: signedStorageUrl("captions.vtt"),
+      transcript_signed_url: signedStorageUrl("transcript.pdf"),
     });
 
     expect(screen.getByLabelText("Lesson video")).toHaveAttribute(
       "poster",
-      "https://example.com/poster.webp",
+      signedStorageUrl("poster.webp"),
     );
     expect(container.querySelector('track[kind="captions"]')).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Open video transcript" })).toBeVisible();
@@ -93,7 +101,7 @@ describe("ContentBlockRenderer BMH treatments", () => {
   it("renders authored video titles and part labels with distinct accessible names", () => {
     renderBlock("video", {
       source: "upload",
-      signed_url: "https://example.com/video.mp4",
+      signed_url: signedStorageUrl("video.mp4"),
       title: "The five-part opening",
       part_label: "Part B",
     });
@@ -181,7 +189,7 @@ describe("ContentBlockRenderer BMH treatments", () => {
           block_type: "video",
           content: {
             source: "upload",
-            signed_url: "https://example.com/video.mp4",
+            signed_url: signedStorageUrl("video.mp4"),
             title: "Opening the call",
           },
           sort_order: 0,
@@ -262,14 +270,14 @@ describe("ContentBlockRenderer BMH treatments", () => {
 
   it("renders clear semantics for every resource block", () => {
     const pdf = renderBlock("pdf", {
-      signed_url: "https://example.com/guide.pdf",
+      signed_url: signedStorageUrl("guide.pdf"),
       filename: "Opening guide",
     });
     expect(screen.getByTitle("Opening guide")).toBeVisible();
     pdf.unmount();
 
     const image = renderBlock("image", {
-      signed_url: "https://example.com/framework.png",
+      signed_url: signedStorageUrl("framework.png"),
       alt: "Call framework",
       caption: "The opening framework",
     });
@@ -285,7 +293,7 @@ describe("ContentBlockRenderer BMH treatments", () => {
     audio.unmount();
 
     const download = renderBlock("download", {
-      signed_url: "https://example.com/script.pdf",
+      signed_url: signedStorageUrl("script.pdf"),
       filename: "Script.pdf",
     });
     expect(screen.getByRole("link", { name: /download script.pdf/i })).toBeVisible();

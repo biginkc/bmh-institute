@@ -29,6 +29,9 @@ const EMBED_HOSTS = new Set([
 const STORAGE_FIELDS = new Set([
   "file_path", "poster_path", "caption_path", "transcript_path",
 ]);
+const SIGNED_URL_FIELDS = new Set([
+  "signed_url", "poster_signed_url", "caption_signed_url", "transcript_signed_url",
+]);
 const ROLE_PLAY_RUNTIME_FIELDS = new Set(["iframe_src", "launch_credential"]);
 const ROLE_PLAY_RUNTIME_ORIGINS = new Set([
   "https://lab.bmhgroupkc.com",
@@ -40,12 +43,31 @@ export function safeRuntimeUrl(value: unknown): string | null {
   if (typeof value !== "string") return null;
   try {
     const url = new URL(value);
-    return url.protocol === "https:" && url.hostname && !url.username && !url.password
-      ? value
-      : null;
+    const configured = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    if (!configured) return null;
+    const trustedOrigin = new URL(configured);
+    if (
+      url.origin !== trustedOrigin.origin ||
+      url.username ||
+      url.password ||
+      !url.pathname.startsWith("/storage/v1/object/sign/content/") ||
+      !url.searchParams.get("token")
+    ) return null;
+    return value;
   } catch {
     return null;
   }
+}
+
+/** Remove runtime URLs that were persisted by an untrusted or legacy writer. */
+export function stripUntrustedRuntimeFields(content: Content): Content {
+  const sanitized = { ...content };
+  for (const key of Object.keys(sanitized)) {
+    if ((SIGNED_URL_FIELDS.has(key) || key.endsWith("_signed_url")) && !safeRuntimeUrl(sanitized[key])) {
+      delete sanitized[key];
+    }
+  }
+  return sanitized;
 }
 
 export function safeRuntimeCredential(value: unknown): string | null {

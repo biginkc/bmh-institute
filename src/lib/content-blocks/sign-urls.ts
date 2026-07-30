@@ -1,7 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { ContentBlock } from "@/components/content-blocks";
 import { isGuideBlock } from "@/lib/content-blocks/learner-parts";
-import { safeStoragePath } from "@/lib/content-security/validate";
+import { safeStoragePath, stripUntrustedRuntimeFields } from "@/lib/content-security/validate";
 import {
   artworkRequestKey,
   artworkMimeMatchesPath,
@@ -28,10 +28,14 @@ export async function enrichBlocksWithSignedUrls(
 ): Promise<ContentBlock[]> {
   // Filter before collecting paths. This prevents a pre-pass request from ever
   // reaching the privileged storage signer with a learner-guide path.
+  const sanitizedBlocks = blocks.map((block) => {
+    const content = stripUntrustedRuntimeFields(block.content);
+    return { ...block, content };
+  });
   const authorizedBlocks =
     options.includeGuides === false
-      ? blocks.filter((block) => !isGuideBlock(block))
-      : blocks;
+      ? sanitizedBlocks.filter((block) => !isGuideBlock(block))
+      : sanitizedBlocks;
   const pathFields = [
     ["file_path", "signed_url"],
     ["poster_path", "poster_signed_url"],
