@@ -231,6 +231,21 @@ export type LearnerPartResolution = {
   canonicalPartId: string | null;
 };
 
+/**
+ * A locked request must only lock the part that was actually requested. A
+ * locked non-quiz request can otherwise fall back to another selected part
+ * during preparation, and incorrectly render that fallback as locked.
+ */
+export function shouldRenderLearnerPartLock(input: {
+  requestedPartLocked: boolean;
+  requestedPartId: string | null;
+  selectedPartId: string;
+}): boolean {
+  return (
+    input.requestedPartLocked && input.requestedPartId === input.selectedPartId
+  );
+}
+
 /** Resolve routing without letting an unknown value or a forged locked part skip work. */
 export function resolveLearnerPart(
   parts: LearnerLessonPart[],

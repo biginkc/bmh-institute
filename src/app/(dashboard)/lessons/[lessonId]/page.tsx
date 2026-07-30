@@ -21,6 +21,7 @@ import {
 import {
   buildLearnerLessonParts,
   resolveLearnerPart,
+  shouldRenderLearnerPartLock,
   type LearnerLessonPart,
 } from "@/lib/content-blocks/learner-parts";
 import { prepareLearnerPart } from "@/lib/content-blocks/prepare-learner-part";
@@ -320,7 +321,11 @@ async function ContentCompositeLesson({
             tile={tile}
             courseId={courseId}
             userId={userId}
-            locked={resolution.requestedPartLocked}
+            locked={shouldRenderLearnerPartLock({
+              requestedPartLocked: resolution.requestedPartLocked,
+              requestedPartId: resolution.requestedPart,
+              selectedPartId: selected.id,
+            })}
           />
           <div className="mt-6 border-t border-[var(--border-hairline)] pt-4">
             <h1 className="font-[family-name:var(--font-display)] text-xl font-extrabold text-[var(--ink-900)]">

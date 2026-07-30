@@ -7,6 +7,7 @@ import {
   isObjectivesBlock,
   resolveLearnerPart,
   selectLearnerPart,
+  shouldRenderLearnerPartLock,
 } from "./learner-parts";
 
 function block(
@@ -275,6 +276,36 @@ describe("optional (not-required) parts", () => {
       requestedPartLocked: true,
       part: { id: "quiz", available: false },
     });
+  });
+
+  it("does not lock a fallback part when a locked non-quiz request falls back", () => {
+    const parts = buildLearnerLessonParts({
+      blocks: [
+        block("1", "video"),
+        block("2", "text", { html: "<h2>Learner Guide</h2>" }),
+      ],
+      completedBlockIds: new Set(["1"]),
+      quizComplete: false,
+      quizUnlocked: true,
+      compositeComplete: false,
+    });
+    const resolution = resolveLearnerPart(parts, "guide");
+
+    expect(resolution).toMatchObject({
+      requestedPart: "guide",
+      requestedPartLocked: true,
+      part: { id: "guide" },
+    });
+    expect(shouldRenderLearnerPartLock({
+      requestedPartLocked: resolution.requestedPartLocked,
+      requestedPartId: resolution.requestedPart,
+      selectedPartId: "quiz",
+    })).toBe(false);
+    expect(shouldRenderLearnerPartLock({
+      requestedPartLocked: resolution.requestedPartLocked,
+      requestedPartId: resolution.requestedPart,
+      selectedPartId: "guide",
+    })).toBe(true);
   });
 
   it("canonicalizes an invalid part to the first safe available part", () => {

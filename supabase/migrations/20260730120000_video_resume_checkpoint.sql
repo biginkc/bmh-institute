@@ -37,7 +37,7 @@ begin
   if v_lesson_id is null then raise exception 'Video block not found.'; end if;
   v_asset_version := public.fn_video_asset_version(v_content);
   if v_asset_version is null or abs((v_content ->> 'duration_seconds')::numeric - p_duration_seconds) > 2
-    or p_position_seconds > (v_content ->> 'duration_seconds')::numeric then
+    or p_position_seconds > (v_content ->> 'duration_seconds')::numeric + 1 then
     raise exception 'Video checkpoint does not match the lesson asset.';
   end if;
   if not public.fn_lesson_is_unlocked(p_user_id, v_lesson_id) then raise exception 'Complete the prerequisite lessons first.'; end if;
@@ -241,13 +241,8 @@ begin
       or (
         v_last_at is null
         and p_observed_from > 1
-        and (
-          v_checkpoint_sequence = 0
-          and (
-            abs(p_observed_from - coalesce(v_resume_position, 0)) > 1
-            and abs(p_observed_to - coalesce(v_resume_position, 0)) > 1
-          )
-        )
+        and abs(p_observed_from - coalesce(v_resume_position, 0)) > 1
+        and abs(p_observed_to - coalesce(v_resume_position, 0)) > 1
       )
       or (
         v_last_at is not null

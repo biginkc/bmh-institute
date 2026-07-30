@@ -31,6 +31,22 @@ describe("POST /api/video-progress/checkpoint", () => {
     expect(rpc).not.toHaveBeenCalled();
   });
 
+  it("rejects cross-site or non-JSON mutation requests before authentication", async () => {
+    const response = await POST(new Request("http://localhost/api/video-progress/checkpoint", {
+      method: "POST",
+      body: JSON.stringify({}),
+      headers: { "content-type": "text/plain", origin: "https://evil.example" },
+    }));
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({
+      ok: false,
+      error: "Invalid checkpoint request origin.",
+    });
+    expect(getUser).not.toHaveBeenCalled();
+    expect(rpc).not.toHaveBeenCalled();
+  });
+
   it("rejects unauthenticated requests", async () => {
     getUser.mockResolvedValue({ data: { user: null } });
 

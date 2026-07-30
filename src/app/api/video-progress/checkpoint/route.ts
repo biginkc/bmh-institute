@@ -3,7 +3,18 @@ import { NextResponse } from "next/server";
 import { parseVideoCheckpoint } from "@/lib/video-progress/checkpoint";
 import { createClient } from "@/lib/supabase/server";
 
+function isSameOriginJsonRequest(request: Request): boolean {
+  const contentType = request.headers.get("content-type")?.split(";", 1)[0].trim().toLowerCase();
+  if (contentType !== "application/json") return false;
+  if (request.headers.get("sec-fetch-site") === "cross-site") return false;
+  const origin = request.headers.get("origin");
+  return !origin || origin === new URL(request.url).origin;
+}
+
 export async function POST(request: Request) {
+  if (!isSameOriginJsonRequest(request)) {
+    return NextResponse.json({ ok: false, error: "Invalid checkpoint request origin." }, { status: 400 });
+  }
   const payload = parseVideoCheckpoint(await request.json().catch(() => null));
   if (!payload) return NextResponse.json({ ok: false, error: "Invalid video checkpoint." }, { status: 400 });
   const supabase = await createClient();
